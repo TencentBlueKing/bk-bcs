@@ -50,7 +50,9 @@
                 </template>
               </div>
             </bk-checkbox>
-            <div v-if="node.fullReleased" class="full-released-tag">All</div>
+            <div v-if="node.fullReleased" v-bk-tooltips="{ content: t('当前线上全量版本') }" class="full-released-tag">
+              All
+            </div>
           </div>
         </template>
         <template #empty>
@@ -107,7 +109,7 @@
         });
       }
       if (groups.length > 0) {
-        list.push({ id, name: `${t('已上线分组：')}${spec.name}`, fullReleased, children: groups });
+        list.push({ id, name: `${t('已上线版本：')}${spec.name}`, fullReleased, children: groups });
       }
     });
 

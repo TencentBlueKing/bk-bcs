@@ -6,6 +6,7 @@ const useModalCloseConfirmation = (title?: string, subTitle?: string) =>
       title: title || localT('确认离开当前页？'),
       subTitle: subTitle || localT('离开会导致未保存信息丢失'),
       confirmText: localT('离开'),
+      cancelText: localT('取消'),
       'ext-cls': 'info-box-style',
       onConfirm: () => {
         resolve(true);

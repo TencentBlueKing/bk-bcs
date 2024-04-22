@@ -60,12 +60,12 @@ func (h *handler) CheckCreateApplicationSet(ctx context.Context,
 	}
 	blog.Infof("RequestID[%s] check application set generator success", RequestID(ctx))
 
-	repoClientSet := apiclient.NewRepoServerClientset(h.option.RepoServerUrl, 60,
+	repoClientSet := apiclient.NewRepoServerClientset(h.option.GitOps.RepoServer, 60,
 		apiclient.TLSConfiguration{
 			DisableTLS:       false,
 			StrictValidation: false,
 		})
-	argoCDService, _ := services.NewArgoCDService(h.option.Storage.GetArgoDB(),
+	argoCDService, _ := services.NewArgoCDService(h.store.GetArgoDB(),
 		true, repoClientSet, false)
 	// this will render the Applications by ApplicationSet's generators
 	// refer to:
@@ -188,7 +188,7 @@ func getTempApplication(applicationSetTemplate v1alpha1.ApplicationSetTemplate) 
 // CheckDeleteApplicationSet check delete applicationset
 func (h *handler) CheckDeleteApplicationSet(ctx context.Context,
 	appsetName string) (*v1alpha1.ApplicationSet, int, error) {
-	appset, err := h.option.Storage.GetApplicationSet(ctx, appsetName)
+	appset, err := h.store.GetApplicationSet(ctx, appsetName)
 	if err != nil {
 		return nil, http.StatusInternalServerError, errors.Wrapf(err, "get applicationset failed")
 	}
@@ -204,7 +204,7 @@ func (h *handler) CheckDeleteApplicationSet(ctx context.Context,
 }
 
 func (h *handler) CheckGetApplicationSet(ctx context.Context, appsetName string) (int, error) {
-	appset, err := h.option.Storage.GetApplicationSet(ctx, appsetName)
+	appset, err := h.store.GetApplicationSet(ctx, appsetName)
 	if err != nil {
 		return http.StatusInternalServerError, errors.Wrapf(err, "get applicationset failed")
 	}
@@ -222,7 +222,7 @@ func (h *handler) CheckGetApplicationSet(ctx context.Context, appsetName string)
 // ListApplicationSets list applicationsets
 func (h *handler) ListApplicationSets(ctx context.Context, query *appsetpkg.ApplicationSetListQuery) (
 	*v1alpha1.ApplicationSetList, error) {
-	appsets, err := h.option.Storage.ListApplicationSets(ctx, query)
+	appsets, err := h.store.ListApplicationSets(ctx, query)
 	if err != nil {
 		return nil, errors.Wrapf(err, "list application swith project '%v' failed", *query)
 	}

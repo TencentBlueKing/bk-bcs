@@ -18,12 +18,12 @@ import (
 )
 
 // GenBkmConfigTarPath gen bkm tar path
-func GenBkmConfigTarPath(downloadPath, bizID string) string {
-	return filepath.Join(downloadPath, fmt.Sprintf("%s_config.tar.gz",
+func GenBkmConfigTarPath(downloadPath, subPath, bizID string) string {
+	return filepath.Join(downloadPath, subPath, fmt.Sprintf("%s_config.tar.gz",
 		bizID))
 }
 
 // GenBkmConfigPath gen bkm config path
-func GenBkmConfigPath(downloadPath, bizID string) string {
-	return filepath.Join(downloadPath, bizID)
+func GenBkmConfigPath(downloadPath, subPath, bizID string) string {
+	return filepath.Join(downloadPath, subPath, bizID)
 }

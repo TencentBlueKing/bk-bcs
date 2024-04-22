@@ -148,7 +148,7 @@ build_bscp:
 
 .PHONY: build_frontend
 build_frontend:
-	cd ui; npm install; npm run build
+	cd ui; npm install --legacy-peer-deps; npm run build
 
 .PHONY: build_ui
 build_ui:

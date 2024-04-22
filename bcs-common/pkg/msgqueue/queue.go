@@ -16,21 +16,22 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/micro/go-micro/v2/broker"
-	rabbitmqv2 "github.com/micro/go-plugins/broker/rabbitmq/v2"
-	stanv2 "github.com/micro/go-plugins/broker/stan/v2"
+	"github.com/go-micro/plugins/v4/broker/rabbitmq"
+	"github.com/go-micro/plugins/v4/broker/stan"
 	natstan "github.com/nats-io/stan.go"
 	"github.com/pkg/errors"
+	"go-micro.dev/v4/broker"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 )
 
 // MessageQueue is an interface used for asynchronous messaging.
 type MessageQueue interface {
-	// Publish pub data to queue
-	// data.Header  map[string]string id: cluster_id; resourceType:Pod; namespace:default; resourceName: name; event: Update
+	// Publish publish pub data to queue
+	// data.Header  map[string]string id: cluster_id;
+	// resourceType:Pod; namespace:default; resourceName: name; event: Update
 	Publish(data *broker.Message) error
-	// Subscribe specified data type
+	// Subscribe subscribe specified data type
 	Subscribe(handler Handler, filters []Filter, resourceType string) (UnSub, error)
 	// SubscribeWithQueueName subscribe topic with custom quenename
 	SubscribeWithQueueName(handler Handler, filters []Filter, queuename, topic string) (UnSub, error)
@@ -71,7 +72,7 @@ func NewMsgQueue(opts ...QueueOption) (MessageQueue, error) {
 
 	messageQueue.broker, err = NewQueueBroker(queueOptions)
 	if err != nil {
-		return nil, errors.Wrapf(err, "messageQueue init broker failed.")
+		return nil, errors.Wrapf(err, "messageQueue init broker failed")
 	}
 
 	messageQueue.ctx, messageQueue.cancel = context.WithCancel(context.Background())
@@ -94,24 +95,24 @@ func (mq *MsgQueue) Publish(data *broker.Message) error {
 
 	queueName, err := mq.isExistResourceQueue(resourceType)
 	if err != nil {
-		return errors.Wrapf(err, "resourceType to queue failed.")
+		return errors.Wrapf(err, "resourceType to queue failed")
 	}
 
 	switch mq.queueOptions.CommonOptions.QueueKind {
 	case RABBITMQ:
-		err = mq.broker.Publish(queueName, data, rabbitmqv2.DeliveryMode(mq.queueOptions.PublishOptions.DeliveryMode))
+		err = mq.broker.Publish(queueName, data, rabbitmq.DeliveryMode(mq.queueOptions.PublishOptions.DeliveryMode))
 	case NATSTREAMING:
 		err = mq.broker.Publish(queueName, data)
 	default:
 		return errors.Errorf("unsupported queue kind '%s'", mq.queueOptions.CommonOptions.QueueKind)
 	}
 	if err != nil {
-		errMsg := fmt.Errorf("[pub] message failed: [messageType: %s], [messageQueue: %s], [cluster_id: %s], [namespace: %s], [resourceName: %s]",
+		errMsg := fmt.Errorf("[pub] message failed: [messageType: %s], [messageQueue: %s], [cluster_id: %s], [namespace: %s], [resourceName: %s]", // nolint
 			data.Header["resourceType"], queueName, data.Header["id"], data.Header["namespace"], data.Header["resourceName"])
 		return errMsg
 	}
 
-	blog.V(4).Infof("[pub] message successful: [messageType: %s], [messageQueue: %s], [cluster_id: %s], [namespace: %s], [resourceName: %s]",
+	blog.V(4).Infof("[pub] message successful: [messageType: %s], [messageQueue: %s], [cluster_id: %s], [namespace: %s], [resourceName: %s]", // nolint
 		data.Header["resourceType"], queueName, data.Header["id"], data.Header["namespace"], data.Header["resourceName"])
 
 	return nil
@@ -127,8 +128,8 @@ func (mq *MsgQueue) Subscribe(handler Handler, filters []Filter, resourceType st
 }
 
 // SubscribeWithQueueName subscribe resourceType data with specific handler and filters
-func (mq *MsgQueue) SubscribeWithQueueName(handler Handler, filters []Filter, queueName, resourceType string) (UnSub,
-	error) {
+func (mq *MsgQueue) SubscribeWithQueueName(handler Handler, filters []Filter,
+	queueName, resourceType string) (UnSub, error) {
 	if !mq.queueOptions.CommonOptions.QueueFlag {
 		return nil, errors.New("queue flag is off")
 	}
@@ -148,7 +149,7 @@ func (mq *MsgQueue) SubscribeWithQueueName(handler Handler, filters []Filter, qu
 
 	subscribe, err := mq.broker.Subscribe(topic, podHandler.selfHandler, subscribeOptions...)
 	if err != nil {
-		return nil, errors.Wrapf(err, "subscribe failed.")
+		return nil, errors.Wrapf(err, "subscribe failed")
 	}
 
 	blog.V(4).Infof("subscribe [%s:%s] successful", subscribe.Options().Queue, subscribe.Topic())
@@ -156,7 +157,6 @@ func (mq *MsgQueue) SubscribeWithQueueName(handler Handler, filters []Filter, qu
 	return subscribe, nil
 }
 
-// isExistResourceQueue xxx
 // Handlers of all topics
 func (mq *MsgQueue) isExistResourceQueue(resourceType string) (string, error) {
 	q, ok := mq.queueOptions.CommonOptions.ResourceToQueue[resourceType]
@@ -191,19 +191,19 @@ func (mq *MsgQueue) getSubOptions(queueName string) ([]broker.SubscribeOption, e
 		subOptions = append(subOptions, broker.DisableAutoAck())
 	}
 	if mq.queueOptions.SubscribeOptions.AckOnSuccess {
-		subOptions = append(subOptions, rabbitmqv2.AckOnSuccess())
+		subOptions = append(subOptions, rabbitmq.AckOnSuccess())
 	}
 
 	switch mq.queueOptions.CommonOptions.QueueKind {
 	case RABBITMQ:
 		if mq.queueOptions.SubscribeOptions.Durable {
-			subOptions = append(subOptions, rabbitmqv2.DurableQueue())
+			subOptions = append(subOptions, rabbitmq.DurableQueue())
 		}
 		if mq.queueOptions.SubscribeOptions.RequeueOnError {
-			subOptions = append(subOptions, rabbitmqv2.RequeueOnError())
+			subOptions = append(subOptions, rabbitmq.RequeueOnError())
 		}
 		if len(mq.queueOptions.SubscribeOptions.QueueArguments) > 0 {
-			subOptions = append(subOptions, rabbitmqv2.QueueArguments(mq.queueOptions.SubscribeOptions.QueueArguments))
+			subOptions = append(subOptions, rabbitmq.QueueArguments(mq.queueOptions.SubscribeOptions.QueueArguments))
 		}
 	case NATSTREAMING:
 		var natsopts []natstan.SubscriptionOption
@@ -222,9 +222,9 @@ func (mq *MsgQueue) getSubOptions(queueName string) ([]broker.SubscribeOption, e
 		if mq.queueOptions.SubscribeOptions.MaxInFlight != 0 {
 			natsopts = append(natsopts, natstan.MaxInflight(mq.queueOptions.SubscribeOptions.MaxInFlight))
 		}
-		subOptions = append(subOptions, stanv2.SubscribeOption(natsopts...))
+		subOptions = append(subOptions, stan.SubscribeOption(natsopts...))
 	default:
-		return nil, errors.New("unsupported queue kind")
+		return nil, errors.Errorf("unsupported queue kind '%s'", mq.queueOptions.CommonOptions.QueueKind)
 	}
 
 	return subOptions, nil

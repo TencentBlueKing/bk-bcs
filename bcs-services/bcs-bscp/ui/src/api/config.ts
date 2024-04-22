@@ -69,7 +69,7 @@ export const updateServiceConfigItem = (id: number, app_id: number, biz_id: stri
   http.put(`/config/update/config_item/config_item/config_item_id/${id}/app_id/${app_id}/biz_id/${biz_id}`, params);
 
 /**
- * 删除配置
+ * 删除非模板配置
  * @param id 配置ID
  * @param bizId 业务ID
  * @param appId 应用ID
@@ -77,6 +77,16 @@ export const updateServiceConfigItem = (id: number, app_id: number, biz_id: stri
  */
 export const deleteServiceConfigItem = (id: number, bizId: string, appId: number) =>
   http.delete(`/config/delete/config_item/config_item/config_item_id/${id}/app_id/${appId}/biz_id/${bizId}`, {});
+
+/**
+ * 批量删除非模板配置
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param ids 配置项ID列表
+ * @returns
+ */
+export const batchDeleteServiceConfigs = (bizId: string, appId: number, ids: number[]) =>
+  http.post(`/config/biz/${bizId}/apps/${appId}/config_items/batch_delete`, { ids });
 
 /**
  * 获取未命名版本配置文件详情
@@ -454,6 +464,15 @@ export const deleteKv = (bizId: string, appId: number, configId: number) =>
   http.delete(`/config/biz/${bizId}/apps/${appId}/kvs/${configId}`);
 
 /**
+ * 批量删除kv
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param ids 配置项ID列表
+ */
+export const batchDeleteKv = (bizId: string, appId: number, ids: number[]) =>
+  http.post(`config/biz/${bizId}/apps/${appId}/kvs/batch_delete`, { ids });
+
+/**
  * 获取已发布kv
  * @param bizId 业务ID
  * @param appId 应用ID
@@ -483,6 +502,16 @@ export const getReleaseKvList = (bizId: string, appId: number, releaseId: number
  */
 export const undeleteKv = (bizId: string, appId: number, key: string) =>
   http.post(`/config/biz/${bizId}/apps/${appId}/kvs/${key}/undelete`);
+
+/**
+ * 恢复修改kv
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param kv 配置键值类型
+ * @returns
+ */
+export const unModifyKv = (bizId: string, appId: number, key: string) =>
+  http.post(`/config/biz/${bizId}/apps/${appId}/kvs/${key}/undo`);
 
 /**
  * 批量导入kv配置文件

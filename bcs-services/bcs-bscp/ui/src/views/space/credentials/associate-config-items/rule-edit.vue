@@ -50,7 +50,7 @@
           <div
             :class="['preview', { 'preview-mode': previewRule?.index === index }, { 'need-preview': rule.needPreview }]"
             @click="handlePreviewRule(rule, index)">
-            <span>预览</span><Arrows-Right class="arrow-icon" />
+            <span>{{ t('预览') }}</span><Arrows-Right class="arrow-icon" />
           </div>
         </div>
         <div class="error-info" v-if="!rule.isRight || !rule.isSelectService">

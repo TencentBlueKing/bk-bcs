@@ -48,6 +48,15 @@ export const deleteScript = (biz_id: string, id: number) =>
   http.delete(`/config/biz/${biz_id}/hooks/${id}`, { params: { force: true } }).then((res) => res.data);
 
 /**
+ * 批量删除脚本
+ * @param biz_id 空间ID
+ * @param ids 脚本ID列表
+ * @returns
+ */
+export const batchDeleteScript = (biz_id: string, ids: number[]) =>
+  http.post(`/config/biz/${biz_id}/hooks/batch_delete`, { force: true, ids }).then((res) => res.data);
+
+/**
  * 获取脚本标签列表
  * @param biz_id 空间ID
  * @param params 查询参数

@@ -129,13 +129,13 @@ func (n *nodePortBindingHandler) postPortBindingUpdate(portBinding *networkexten
 
 	portBindingItemsBytes, err := json.Marshal(portBinding.Spec.PortBindingList)
 	if err != nil {
-		return fmt.Errorf("marshal node %s portbindingLisr failed, err:%w", n.node.GetName(), err)
+		return fmt.Errorf("marshal node %s portbindingLisr failed, err:%s", n.node.GetName(), err.Error())
 	}
 	if err = utils.PatchNodeAnnotation(n.ctx, n.k8sClient, n.node, map[string]interface{}{
 		constant.AnnotationForPortPoolBindingStatus: portBinding.Status.Status,
 		constant.AnnotationForPortPoolBindings:      string(portBindingItemsBytes),
 	}); err != nil {
-		return fmt.Errorf("patch annotataion to node %s failed, err: %w", n.node.GetName(), err)
+		return fmt.Errorf("patch annotataion to node %s failed, err: %s", n.node.GetName(), err.Error())
 	}
 
 	if err = n.updateAllConfigMap(portBinding); err != nil {

@@ -372,12 +372,12 @@ export default function useMenu() {
           icon: 'bcs-icon-control-center',
           route: 'metricManage',
         },
-        {
-          title: 'LoadBalancers',
-          id: 'LOADBALANCERS',
-          icon: 'bcs-icon bcs-icon-loadbalance',
-          route: 'loadBalance',
-        },
+        // {
+        //   title: 'LoadBalancers',
+        //   id: 'LOADBALANCERS',
+        //   icon: 'bcs-icon bcs-icon-loadbalance',
+        //   route: 'loadBalance',
+        // },
         {
           title: $i18n.t('nav.log'),
           id: 'LOG',

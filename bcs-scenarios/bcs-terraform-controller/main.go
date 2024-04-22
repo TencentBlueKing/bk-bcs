@@ -15,6 +15,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
@@ -37,6 +38,7 @@ import (
 
 	// +kubebuilder:scaffold:imports
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-controller/controllers"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-controller/pkg/apis/httpapi"
 	tfv1 "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-controller/pkg/apis/terraformextensions/v1"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-controller/pkg/option"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-controller/pkg/repository"
@@ -93,7 +95,11 @@ func startController(ctx context.Context, op *option.ControllerOption) {
 		blog.Fatalf("init terraform server failed: %s", err.Error())
 	}
 	defer tfServer.Stop()
-	mgr, err := buildControllerManager(ctx, op, tfServer)
+	tfHandler, err := buildTerraformHandler(ctx)
+	if err != nil {
+		blog.Fatalf("build terraform handler failed: %s", err.Error())
+	}
+	mgr, err := buildControllerManager(ctx, op, tfServer, tfHandler)
 	if err != nil {
 		blog.Fatalf("build controller manager failed: %s", err.Error())
 	}
@@ -101,6 +107,7 @@ func startController(ctx context.Context, op *option.ControllerOption) {
 	closeCh := make(chan struct{})
 	go runControllerManager(ctx, mgr, closeCh)
 	go runTerraformServer(ctx, tfServer, closeCh)
+	go runHTTPServer(mgr.GetClient(), tfHandler, closeCh)
 	select {
 	case <-ctx.Done():
 		blog.Warnf("received shutdown signal")
@@ -117,27 +124,39 @@ func runControllerManager(ctx context.Context, mgr manager.Manager, closeCh chan
 	setupLog.Info("starting manager")
 	if err := mgr.Start(ctx); err != nil {
 		blog.Errorf("controller manager running occurred an err: %s", err.Error())
+	} else {
+		blog.Infof("controller manager is stopped")
 	}
-	blog.Infof("controller manager is stopped")
 	closeCh <- struct{}{}
 }
 
 func runTerraformServer(ctx context.Context, tfServer *worker.TerraformServer, closeCh chan struct{}) {
 	if err := tfServer.Start(ctx); err != nil {
 		blog.Errorf("terraform rpc server start failed: %s", err.Error())
+	} else {
+		blog.Infof("tfWorker is stopped")
 	}
-	blog.Infof("tfWorker is stopped")
 	closeCh <- struct{}{}
 }
 
-func buildControllerManager(ctx context.Context, op *option.ControllerOption,
-	tfServer *worker.TerraformServer) (manager.Manager, error) {
+func runHTTPServer(mgrClient client.Client, tfHandler tfhandler.TerraformHandler, closeCh chan struct{}) {
+	tfHTTPServer := httpapi.NewTerraformHTTPServer(mgrClient, tfHandler)
+	if err := tfHTTPServer.Start(); err != nil {
+		blog.Errorf("terraform http server start failed: %s", err.Error())
+	} else {
+		blog.Infof("terraform http server stopped")
+	}
+	closeCh <- struct{}{}
+}
+
+func buildControllerManager(_ context.Context, op *option.ControllerOption,
+	tfServer *worker.TerraformServer, tfHandler tfhandler.TerraformHandler) (manager.Manager, error) {
 	ctrl.SetLogger(zap.New(zap.UseDevMode(false)))
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
-		Scheme: scheme,
-		// Metrics:
-		// Port:                   9443,
-		HealthProbeBindAddress: "0.0.0.0:8083",
+		Scheme:                 scheme,
+		Port:                   op.Port,
+		MetricsBindAddress:     fmt.Sprintf("0.0.0.0:%d", op.MetricPort),
+		HealthProbeBindAddress: fmt.Sprintf("0.0.0.0:%d", op.HealthPort),
 		LeaderElection:         op.EnableLeaderElection,
 		LeaderElectionID:       "gitops-terraform.bkbcs.tencent.com",
 		// LeaderElectionReleaseOnCancel defines if the leader should step down voluntarily
@@ -167,10 +186,6 @@ func buildControllerManager(ctx context.Context, op *option.ControllerOption,
 		return nil, errors.Wrapf(err, "create controller manager failed")
 	}
 
-	tfHandler, err := buildTerraformHandler(ctx)
-	if err != nil {
-		return nil, errors.Wrapf(err, "build terraform handler failed")
-	}
 	if err = (&controllers.TerraformReconciler{
 		Config:    op,
 		Client:    mgr.GetClient(),

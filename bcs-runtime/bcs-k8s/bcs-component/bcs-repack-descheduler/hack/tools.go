@@ -11,8 +11,10 @@
  *
  */
 
+// Package tools xx
 package tools
 
 import (
+	// nolint
 	_ "k8s.io/code-generator"
 )

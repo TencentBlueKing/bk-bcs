@@ -64,7 +64,7 @@ type CachePortList struct {
 	StartPort        int
 	EndPort          int
 	SegmentLength    int
-	AvailablePortNum int
+	AvailablePortNum int // 可用的端口总数（注意这个数量不会变化，代表已分配量+未分配量）
 	AllocatedPortNum int
 	Ports            []*CachePort
 }

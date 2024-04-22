@@ -41,12 +41,17 @@ func newClient(db *gorm.DB, opts ...gen.DOOption) client {
 	_client.OnlineStatus = field.NewString(tableName, "online_status")
 	_client.CpuUsage = field.NewFloat64(tableName, "cpu_usage")
 	_client.CpuMaxUsage = field.NewFloat64(tableName, "cpu_max_usage")
+	_client.CpuMinUsage = field.NewFloat64(tableName, "cpu_min_usage")
+	_client.CpuAvgUsage = field.NewFloat64(tableName, "cpu_avg_usage")
 	_client.MemoryUsage = field.NewUint64(tableName, "memory_usage")
 	_client.MemoryMaxUsage = field.NewUint64(tableName, "memory_max_usage")
+	_client.MemoryMinUsage = field.NewUint64(tableName, "memory_min_usage")
+	_client.MemoryAvgUsage = field.NewUint64(tableName, "memory_avg_usage")
 	_client.CurrentReleaseID = field.NewUint32(tableName, "current_release_id")
 	_client.TargetReleaseID = field.NewUint32(tableName, "target_release_id")
 	_client.ReleaseChangeStatus = field.NewString(tableName, "release_change_status")
 	_client.ReleaseChangeFailedReason = field.NewString(tableName, "release_change_failed_reason")
+	_client.SpecificFailedReason = field.NewString(tableName, "specific_failed_reason")
 	_client.FailedDetailReason = field.NewString(tableName, "failed_detail_reason")
 
 	_client.fillFieldMap()
@@ -72,12 +77,17 @@ type client struct {
 	OnlineStatus              field.String
 	CpuUsage                  field.Float64
 	CpuMaxUsage               field.Float64
+	CpuMinUsage               field.Float64
+	CpuAvgUsage               field.Float64
 	MemoryUsage               field.Uint64
 	MemoryMaxUsage            field.Uint64
+	MemoryMinUsage            field.Uint64
+	MemoryAvgUsage            field.Uint64
 	CurrentReleaseID          field.Uint32
 	TargetReleaseID           field.Uint32
 	ReleaseChangeStatus       field.String
 	ReleaseChangeFailedReason field.String
+	SpecificFailedReason      field.String
 	FailedDetailReason        field.String
 
 	fieldMap map[string]field.Expr
@@ -109,12 +119,17 @@ func (c *client) updateTableName(table string) *client {
 	c.OnlineStatus = field.NewString(table, "online_status")
 	c.CpuUsage = field.NewFloat64(table, "cpu_usage")
 	c.CpuMaxUsage = field.NewFloat64(table, "cpu_max_usage")
+	c.CpuMinUsage = field.NewFloat64(table, "cpu_min_usage")
+	c.CpuAvgUsage = field.NewFloat64(table, "cpu_avg_usage")
 	c.MemoryUsage = field.NewUint64(table, "memory_usage")
 	c.MemoryMaxUsage = field.NewUint64(table, "memory_max_usage")
+	c.MemoryMinUsage = field.NewUint64(table, "memory_min_usage")
+	c.MemoryAvgUsage = field.NewUint64(table, "memory_avg_usage")
 	c.CurrentReleaseID = field.NewUint32(table, "current_release_id")
 	c.TargetReleaseID = field.NewUint32(table, "target_release_id")
 	c.ReleaseChangeStatus = field.NewString(table, "release_change_status")
 	c.ReleaseChangeFailedReason = field.NewString(table, "release_change_failed_reason")
+	c.SpecificFailedReason = field.NewString(table, "specific_failed_reason")
 	c.FailedDetailReason = field.NewString(table, "failed_detail_reason")
 
 	c.fillFieldMap()
@@ -140,7 +155,7 @@ func (c *client) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (c *client) fillFieldMap() {
-	c.fieldMap = make(map[string]field.Expr, 21)
+	c.fieldMap = make(map[string]field.Expr, 26)
 	c.fieldMap["id"] = c.ID
 	c.fieldMap["uid"] = c.UID
 	c.fieldMap["biz_id"] = c.BizID
@@ -155,12 +170,17 @@ func (c *client) fillFieldMap() {
 	c.fieldMap["online_status"] = c.OnlineStatus
 	c.fieldMap["cpu_usage"] = c.CpuUsage
 	c.fieldMap["cpu_max_usage"] = c.CpuMaxUsage
+	c.fieldMap["cpu_min_usage"] = c.CpuMinUsage
+	c.fieldMap["cpu_avg_usage"] = c.CpuAvgUsage
 	c.fieldMap["memory_usage"] = c.MemoryUsage
 	c.fieldMap["memory_max_usage"] = c.MemoryMaxUsage
+	c.fieldMap["memory_min_usage"] = c.MemoryMinUsage
+	c.fieldMap["memory_avg_usage"] = c.MemoryAvgUsage
 	c.fieldMap["current_release_id"] = c.CurrentReleaseID
 	c.fieldMap["target_release_id"] = c.TargetReleaseID
 	c.fieldMap["release_change_status"] = c.ReleaseChangeStatus
 	c.fieldMap["release_change_failed_reason"] = c.ReleaseChangeFailedReason
+	c.fieldMap["specific_failed_reason"] = c.SpecificFailedReason
 	c.fieldMap["failed_detail_reason"] = c.FailedDetailReason
 }
 

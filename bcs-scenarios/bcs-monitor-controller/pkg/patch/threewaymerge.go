@@ -75,9 +75,6 @@ func ThreeWayMergeMonitorRule(original, current, modified []*v1.MonitorRuleDetai
 		mergeResult = append(mergeResult, mergeRule)
 	}
 
-	blog.Infof("original rule: %s, \ncurrent rule: %s, \nmodified rule: %s, \nmerged rule: %s",
-		utils.ToJsonString(original), utils.ToJsonString(current), utils.ToJsonString(modified),
-		utils.ToJsonString(mergeResult))
 	return mergeResult
 }
 

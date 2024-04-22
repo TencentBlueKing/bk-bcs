@@ -112,7 +112,7 @@ func (h *terraformHandler) Plan(ctx context.Context, tf *tfv1.Terraform, commitI
 	if !hasChanged {
 		return hasChanged, nil
 	}
-	if err = h.saveTerraformPlanOrApplyToKubernetes(ctx, typePlan, &TerraformPlanOrApply{
+	if err = h.saveTerraformPlanOrApplyToKube(ctx, typePlan, &TerraformPlanOrApply{
 		Namespace: tf.Namespace,
 		CommitID:  commitID,
 		Result:    planResult,
@@ -162,7 +162,7 @@ func (h *terraformHandler) Apply(ctx context.Context, tf *tfv1.Terraform, commit
 	if err != nil {
 		return err
 	}
-	if err = h.saveTerraformPlanOrApplyToKubernetes(ctx, typeApply, &TerraformPlanOrApply{
+	if err = h.saveTerraformPlanOrApplyToKube(ctx, typeApply, &TerraformPlanOrApply{
 		Namespace:      tf.Namespace,
 		CommitID:       commitID,
 		Result:         applyResult,
@@ -264,7 +264,7 @@ func (h *terraformHandler) GetLastApply(ctx context.Context, tf *tfv1.Terraform)
 	return tfObj, nil
 }
 
-func (h *terraformHandler) saveTerraformPlanOrApplyToKubernetes(ctx context.Context, tfType terraformType,
+func (h *terraformHandler) saveTerraformPlanOrApplyToKube(ctx context.Context, tfType terraformType,
 	tfObj *TerraformPlanOrApply) error {
 	transSecret, err := transTerraformObjToSecret(tfObj, tfType)
 	if err != nil {

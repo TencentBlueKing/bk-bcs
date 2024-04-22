@@ -63,7 +63,7 @@ func (e *ErrorF) GRPCStatus() *status.Status {
 ```
 
 #### 使用示例
-**config-server层** 
+**config-server层**
 - 调用位置示例
 ```go
 // CreateTemplateVariable create a template variable
@@ -151,7 +151,7 @@ func (t VariableType) Validate(kit *kit.Kit) error {
 	case StringVar:
 	case NumberVar:
 	default:
-		return errf.Errorf(kit, errf.InvalidArgument, "unsupported variable type: %s", t)
+		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "unsupported variable type: %s", t))
 	}
 
 	return nil
@@ -176,18 +176,18 @@ func (t VariableType) Validate(kit *kit.Kit) error {
 // ValidateVariableName validate bscp variable's length and format.
 func ValidateVariableName(kit *kit.Kit, name string) error {
 	if len(name) < 9 {
-		return errf.Errorf(kit, errf.InvalidArgument, "invalid name, "+
-			"length should >= 9 and must start with prefix bk_bscp_ (ignore case)")
+		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "invalid name, "+
+			"length should >= 9 and must start with prefix bk_bscp_ (ignore case)"))
 	}
 
 	if len(name) > 128 {
-		return errf.Errorf(kit, errf.InvalidArgument, "invalid name, length should <= 128")
+		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "invalid name, length should <= 128"))
 	}
 
 	if !qualifiedVariableNameRegexp.MatchString(name) {
-		return errf.Errorf(kit, errf.InvalidArgument,
+		return errf.Errorf(errf.InvalidArgument, i18n.T(kit,
 			"invalid name: %s, only allows to include english、numbers、underscore (_)"+
-				", and must start with prefix bk_bscp_ (ignore case)", name)
+				", and must start with prefix bk_bscp_ (ignore case)", name))
 	}
 
 	return nil
@@ -212,27 +212,27 @@ func ValidateVariableName(kit *kit.Kit, name string) error {
 var (
 	// ErrDBOpsFailedF is for db operation failed
 	ErrDBOpsFailedF = func(kit *kit.Kit) *ErrorF {
-		return Errorf(kit, Internal, "db operation failed")
+		return Errorf(Internal, i18n.T(kit, "db operation failed"))
 	}
 	// ErrInvalidArgF is for invalid argument
 	ErrInvalidArgF = func(kit *kit.Kit) *ErrorF {
-		return Errorf(kit, InvalidArgument, "invalid argument")
+		return Errorf(InvalidArgument, i18n.T(kit, "invalid argument"))
 	}
 	// ErrWithIDF is for id should not be set
 	ErrWithIDF = func(kit *kit.Kit) *ErrorF {
-		return Errorf(kit, InvalidArgument, "id should not be set")
+		return Errorf(InvalidArgument, i18n.T(kit, "id should not be set"))
 	}
 	// ErrNoSpecF is for spec not set
 	ErrNoSpecF = func(kit *kit.Kit) *ErrorF {
-		return Errorf(kit, InvalidArgument, "spec not set")
+		return Errorf(InvalidArgument, i18n.T(kit, "spec not set"))
 	}
 	// ErrNoAttachmentF is for attachment not set
 	ErrNoAttachmentF = func(kit *kit.Kit) *ErrorF {
-		return Errorf(kit, InvalidArgument, "attachment not set")
+		return Errorf(InvalidArgument, i18n.T(kit, "attachment not set"))
 	}
 	// ErrNoRevisionF is for revision not set
 	ErrNoRevisionF = func(kit *kit.Kit) *ErrorF {
-		return Errorf(kit, InvalidArgument, "revision not set")
+		return Errorf(InvalidArgument, i18n.T(kit, "revision not set"))
 	}
 )
 ```

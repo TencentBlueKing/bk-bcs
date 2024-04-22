@@ -31,6 +31,7 @@ import (
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 	pbcs "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/cache-service"
+	pbbase "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
 	pbkv "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/kv"
 	pbfs "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/feed-server"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/jsoni"
@@ -188,11 +189,11 @@ func (s *Service) Messaging(ctx context.Context, msg *pbfs.MessagingMeta) (*pbfs
 			return nil, err
 		}
 		// 处理 心跳时间和在线状态
-		vc.BasicData.HeartbeatTime = time.Now()
+		vc.BasicData.HeartbeatTime = time.Now().Local().UTC()
 		vc.BasicData.OnlineStatus = sfs.Online
 		payload, errE := vc.Encode()
 		if errE != nil {
-			logs.Errorf("version change message encoding failed, %s", err.Error())
+			logs.Errorf("version change message encoding failed, %s", errE.Error())
 			return nil, err
 		}
 		s.handleResourceUsageMetrics(vc.BasicData.BizID, vc.Application.App, vc.ResourceUsage)
@@ -206,7 +207,7 @@ func (s *Service) Messaging(ctx context.Context, msg *pbfs.MessagingMeta) (*pbfs
 		if err != nil {
 			return nil, err
 		}
-		heartbeatTime := time.Now()
+		heartbeatTime := time.Now().UTC()
 		onlineStatus := sfs.Online
 		for _, item := range hb.Applications {
 			s.handleResourceUsageMetrics(hb.BasicData.BizID, item.App, hb.ResourceUsage)
@@ -352,7 +353,15 @@ func (s *Service) GetDownloadURL(ctx context.Context, req *pbfs.GetDownloadURLRe
 	*pbfs.GetDownloadURLResp, error) {
 	// check if the sidecar's version can be accepted.
 	if !sfs.IsAPIVersionMatch(req.ApiVersion) {
-		return nil, status.Error(codes.InvalidArgument, "sdk's api version is too low, should be upgraded")
+		st := status.New(codes.FailedPrecondition, "sdk's api version is too low, should be upgraded")
+		st, err := st.WithDetails(&pbbase.ErrDetails{
+			PrimaryError:   uint32(sfs.VersionIsTooLowFailed),
+			SecondaryError: uint32(sfs.SDKVersionIsTooLowFailed),
+		})
+		if err != nil {
+			return nil, status.Error(codes.Internal, "grpc status with details failed")
+		}
+		return nil, st.Err()
 	}
 
 	im, err := sfs.ParseFeedIncomingContext(ctx)

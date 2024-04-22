@@ -11,6 +11,7 @@
  *
  */
 
+// Package calchandler xx
 package calchandler
 
 import (
@@ -26,11 +27,13 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-repack-descheduler/pkg/controller/calculator/remote"
 )
 
+// CalculatorHandler defines the handler of calculator
 type CalculatorHandler struct {
 	ctx          context.Context
 	cacheManager cachemanager.CacheInterface
 }
 
+// NewCalculatorHandler create the calculator handler instance
 func NewCalculatorHandler(ctx context.Context, m cachemanager.CacheInterface) *CalculatorHandler {
 	return &CalculatorHandler{
 		ctx:          ctx,
@@ -106,6 +109,7 @@ func (h *CalculatorHandler) buildOptimizedNodes(resultPlan *calculator.ResultPla
 	return decreaseNodes
 }
 
+// Calc the repack result
 func (h *CalculatorHandler) Calc() (*ClusterRate, error) {
 	request, err := h.cacheManager.BuildCalculatorRequest(h.ctx)
 	if err != nil {

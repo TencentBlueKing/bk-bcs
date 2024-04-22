@@ -332,7 +332,7 @@
   }
 </style>
 <style lang="scss">
-  .release-version-dialog.bk-dialog-wrapper .bk-dialog-header {
+  .release-version-dialog.bk-modal-wrapper .bk-dialog-header {
     padding-bottom: 20px;
   }
 </style>

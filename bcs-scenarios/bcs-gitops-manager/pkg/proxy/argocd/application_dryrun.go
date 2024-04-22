@@ -39,10 +39,8 @@ import (
 	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
 )
 
-// ApplicationDiffOrDryRunRequest defines the request for application diff or dry-run.
-// User can specify application exist, or transfer application manifests which not
-// created.
-type ApplicationDiffOrDryRunRequest struct {
+// ApplicationDryRunRequest defines the dry-run request
+type ApplicationDryRunRequest struct {
 	ApplicationName string   `json:"applicationName"`
 	Revision        string   `json:"revision"`
 	Revisions       []string `json:"revisions"`
@@ -50,35 +48,33 @@ type ApplicationDiffOrDryRunRequest struct {
 	ApplicationManifests string `json:"applicationManifests"`
 }
 
-// ApplicationDiffOrDryRunResponse defines the response of application diff or dry-run
-type ApplicationDiffOrDryRunResponse struct {
-	Code      int32                        `json:"code"`
-	Message   string                       `json:"message"`
-	RequestID string                       `json:"requestID"`
-	Data      *ApplicationDiffOrDryRunData `json:"data"`
+// ApplicationDryRunResponse defines the response of application dry-run
+type ApplicationDryRunResponse struct {
+	Code      int32                  `json:"code"`
+	Message   string                 `json:"message"`
+	RequestID string                 `json:"requestID"`
+	Data      *ApplicationDryRunData `json:"data"`
 }
 
-// ApplicationDiffOrDryRunData defines the data of application diff or dry-run
-type ApplicationDiffOrDryRunData struct {
+// ApplicationDryRunData defines the data of application dry-run
+type ApplicationDryRunData struct {
 	Cluster       string `json:"cluster,omitempty"`
 	RepoUrl       string `json:"repoUrl,omitempty"`
 	LocalRevision string `json:"localRevision,omitempty"`
 	LiveRevision  string `json:"liveRevision,omitempty"`
 
-	Result []*Manifest `json:"result,omitempty"`
+	Result []*ApplicationDryRunManifest `json:"result,omitempty"`
 }
 
-// Manifest defines the dry-run result for every resource
-type Manifest struct {
+// ApplicationDryRunManifest defines the dry-run result for every resource
+type ApplicationDryRunManifest struct {
 	Namespace string `json:"namespace,omitempty"`
 	Name      string `json:"name,omitempty"`
 	Group     string `json:"group,omitempty"`
 	Version   string `json:"version,omitempty"`
 	Kind      string `json:"kind,omitempty"`
 
-	// diff result
-	Local *unstructured.Unstructured `json:"local,omitempty"`
-	Live  *unstructured.Unstructured `json:"live,omitempty"`
+	RenderObj *unstructured.Unstructured `json:"-"`
 
 	// dyr-run result
 	Existed    bool                       `json:"existed"`
@@ -87,49 +83,20 @@ type Manifest struct {
 	Merged     *unstructured.Unstructured `json:"merged,omitempty"`
 }
 
-func (plugin *AppPlugin) applicationDiff(r *http.Request) (*http.Request, *mw.HttpResponse) {
-	req, err := buildDiffOrDryRunRequest(r)
-	if err != nil {
-		return r, mw.ReturnErrorResponse(http.StatusBadRequest, errors.Wrapf(err, "build request failed"))
-	}
-	blog.Infof("RequestID[%s] received diff request: %v", mw.RequestID(r.Context()), req)
-	application, err := plugin.buildApplicationByDifOrDryRunRequest(r.Context(), req)
-	if err != nil {
-		return r, mw.ReturnErrorResponse(http.StatusBadRequest,
-			errors.Wrapf(err, "build application from request failed"))
-	}
-	result, err := plugin.compareApplicationManifests(r.Context(), req, application.DeepCopy(), false)
-	if err != nil {
-		return r, mw.ReturnErrorResponse(http.StatusBadRequest,
-			errors.Wrapf(err, "compare application manifests failed"))
-	}
-	return r, mw.ReturnJSONResponse(&ApplicationDiffOrDryRunResponse{
-		Code:      0,
-		RequestID: mw.RequestID(r.Context()),
-		Data: &ApplicationDiffOrDryRunData{
-			Cluster:       application.Spec.Destination.Server,
-			RepoUrl:       application.Spec.Source.RepoURL,
-			LocalRevision: req.Revision,
-			LiveRevision:  application.Spec.Source.TargetRevision,
-			Result:        result,
-		},
-	})
-}
-
 // applicationDryRun will generate application manifests with argocd first. And then
 // compare every resource with live in Kubernetes cluster.
 func (plugin *AppPlugin) applicationDryRun(r *http.Request) (*http.Request, *mw.HttpResponse) {
-	req, err := buildDiffOrDryRunRequest(r)
+	req, err := buildDryRunRequest(r)
 	if err != nil {
 		return r, mw.ReturnErrorResponse(http.StatusBadRequest, errors.Wrapf(err, "build request failed"))
 	}
 	blog.Infof("RequestID[%s] received dry-run request: %v", mw.RequestID(r.Context()), req)
-	application, err := plugin.buildApplicationByDifOrDryRunRequest(r.Context(), req)
+	application, err := plugin.checkApplicationDryRunRequest(r.Context(), req)
 	if err != nil {
 		return r, mw.ReturnErrorResponse(http.StatusBadRequest,
 			errors.Wrapf(err, "build application from request failed"))
 	}
-	result, err := plugin.compareApplicationManifests(r.Context(), req, application, true)
+	result, err := plugin.handleApplicationDryRun(r.Context(), req, application)
 	if err != nil {
 		return r, mw.ReturnErrorResponse(http.StatusBadRequest,
 			errors.Wrapf(err, "compare application manifests failed"))
@@ -139,10 +106,10 @@ func (plugin *AppPlugin) applicationDryRun(r *http.Request) (*http.Request, *mw.
 		return r, mw.ReturnErrorResponse(http.StatusBadRequest,
 			errors.Wrapf(err, "manifests dry run failed"))
 	}
-	resp := &ApplicationDiffOrDryRunResponse{
+	resp := &ApplicationDryRunResponse{
 		Code:      0,
 		RequestID: mw.RequestID(r.Context()),
-		Data: &ApplicationDiffOrDryRunData{
+		Data: &ApplicationDryRunData{
 			Cluster:       application.Spec.Destination.Server,
 			RepoUrl:       application.Spec.Source.RepoURL,
 			LocalRevision: req.Revision,
@@ -153,9 +120,37 @@ func (plugin *AppPlugin) applicationDryRun(r *http.Request) (*http.Request, *mw.
 	return r, mw.ReturnJSONResponse(resp)
 }
 
+func (plugin *AppPlugin) handleApplicationDryRun(ctx context.Context, req *ApplicationDryRunRequest,
+	application *v1alpha1.Application) ([]*ApplicationDryRunManifest, error) {
+	if len(req.Revisions) != 0 {
+		for i := range application.Spec.Sources {
+			application.Spec.Sources[i].TargetRevision = req.Revisions[i]
+		}
+	} else if req.Revision != "" {
+		application.Spec.Source.TargetRevision = req.Revision
+	}
+	// 获取应用对应目标 Revision 的 manifest
+	manifestMap, err := plugin.applicationManifests(ctx, application)
+	if err != nil {
+		return nil, errors.Wrapf(err, "handle application dry-run manifests failed")
+	}
+	results := make([]*ApplicationDryRunManifest, 0, len(manifestMap))
+	for _, decodeObj := range manifestMap {
+		results = append(results, &ApplicationDryRunManifest{
+			Namespace: decodeObj.GetNamespace(),
+			Name:      decodeObj.GetName(),
+			Group:     decodeObj.GroupVersionKind().Group,
+			Version:   decodeObj.GroupVersionKind().Version,
+			Kind:      decodeObj.GetKind(),
+			RenderObj: decodeObj,
+		})
+	}
+	return results, nil
+}
+
 // nolint
-func (plugin *AppPlugin) buildApplicationByDifOrDryRunRequest(ctx context.Context,
-	req *ApplicationDiffOrDryRunRequest) (*v1alpha1.Application, error) {
+func (plugin *AppPlugin) checkApplicationDryRunRequest(ctx context.Context,
+	req *ApplicationDryRunRequest) (*v1alpha1.Application, error) {
 	application := new(v1alpha1.Application)
 	if req.ApplicationName != "" {
 		var statusCode int
@@ -193,12 +188,12 @@ func (plugin *AppPlugin) buildApplicationByDifOrDryRunRequest(ctx context.Contex
 	return application, nil
 }
 
-func buildDiffOrDryRunRequest(r *http.Request) (*ApplicationDiffOrDryRunRequest, error) {
+func buildDryRunRequest(r *http.Request) (*ApplicationDryRunRequest, error) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		return nil, errors.Wrapf(err, "read body failed")
 	}
-	req := new(ApplicationDiffOrDryRunRequest)
+	req := new(ApplicationDryRunRequest)
 	if err = json.Unmarshal(body, req); err != nil {
 		return nil, errors.Wrapf(err, "unmarshal request body failed")
 	}
@@ -208,18 +203,8 @@ func buildDiffOrDryRunRequest(r *http.Request) (*ApplicationDiffOrDryRunRequest,
 	return req, nil
 }
 
-// nolint
-func (plugin *AppPlugin) compareApplicationManifests(ctx context.Context, req *ApplicationDiffOrDryRunRequest,
-	application *v1alpha1.Application, isDryRun bool) ([]*Manifest, error) {
-	originalApplication := application.DeepCopy()
-	// 使用 Request 的 Revision 版本覆盖应用的版本
-	if len(req.Revisions) != 0 {
-		for i := range application.Spec.Sources {
-			application.Spec.Sources[i].TargetRevision = req.Revisions[i]
-		}
-	} else if req.Revision != "" {
-		application.Spec.Source.TargetRevision = req.Revision
-	}
+func (plugin *AppPlugin) applicationManifests(ctx context.Context, application *v1alpha1.Application) (
+	map[string]*unstructured.Unstructured, error) {
 	resp, err := plugin.storage.GetApplicationManifestsFromRepoServerWithMultiSources(ctx, application)
 	if err != nil {
 		return nil, errors.Wrapf(err, "get application manifests failed")
@@ -232,81 +217,7 @@ func (plugin *AppPlugin) compareApplicationManifests(ctx context.Context, req *A
 	if err != nil {
 		return nil, errors.Wrapf(err, "decode application manifest failed")
 	}
-	// 未指定 revision 或只指定 manifest，表示只是 DryRun 不需要对比，直接返回
-	if (req.Revision == "" && len(req.Revisions) == 0) || req.ApplicationManifests != "" || isDryRun {
-		results := make([]*Manifest, 0, len(manifestMap))
-		for _, decodeObj := range manifestMap {
-			results = append(results, &Manifest{
-				Namespace: decodeObj.GetNamespace(),
-				Name:      decodeObj.GetName(),
-				Group:     decodeObj.GroupVersionKind().Group,
-				Version:   decodeObj.GroupVersionKind().Version,
-				Kind:      decodeObj.GetKind(),
-				Local:     decodeObj,
-			})
-		}
-		return results, nil
-	}
-
-	// 获取已存在的 application 的 revision 结果
-	liveManifestResp, err := plugin.storage.
-		GetApplicationManifestsFromRepoServerWithMultiSources(ctx, originalApplication)
-	if err != nil {
-		return nil, errors.Wrapf(err, "get application manifests with live failed")
-	}
-	if len(liveManifestResp) == 0 {
-		return nil, errors.Errorf("application manifests response length is 0")
-	}
-	liveManifestMap, err := decodeManifest(originalApplication, liveManifestResp[0])
-	if err != nil {
-		return nil, errors.Wrapf(err, "decode live application manifest failed")
-	}
-	results := make([]*Manifest, 0)
-	// 对比目标 revision 和已保存的 revision
-	for k, decodeObj := range manifestMap {
-		liveDecodeObj, ok := liveManifestMap[k]
-		if !ok {
-			continue
-		}
-		if err = plugin.storage.ApplicationNormalizeWhenDiff(originalApplication,
-			decodeObj, liveDecodeObj, true); err != nil {
-			return nil, errors.Wrapf(err, "application normlize failed when diff")
-		}
-		results = append(results, &Manifest{
-			Namespace: decodeObj.GetNamespace(),
-			Name:      decodeObj.GetName(),
-			Group:     decodeObj.GroupVersionKind().Group,
-			Version:   decodeObj.GroupVersionKind().Version,
-			Kind:      decodeObj.GetKind(),
-			Local:     decodeObj,
-			Live:      liveDecodeObj,
-		})
-		delete(manifestMap, k)
-		delete(liveManifestMap, k)
-	}
-	for _, obj := range manifestMap {
-		obj.SetManagedFields(nil)
-		results = append(results, &Manifest{
-			Namespace: obj.GetNamespace(),
-			Name:      obj.GetName(),
-			Group:     obj.GroupVersionKind().Group,
-			Version:   obj.GroupVersionKind().Version,
-			Kind:      obj.GetKind(),
-			Local:     obj,
-		})
-	}
-	for _, obj := range liveManifestMap {
-		obj.SetManagedFields(nil)
-		results = append(results, &Manifest{
-			Namespace: obj.GetNamespace(),
-			Name:      obj.GetName(),
-			Group:     obj.GroupVersionKind().Group,
-			Version:   obj.GroupVersionKind().Version,
-			Kind:      obj.GetKind(),
-			Live:      obj,
-		})
-	}
-	return results, nil
+	return manifestMap, nil
 }
 
 func decodeManifest(application *v1alpha1.Application,
@@ -335,7 +246,7 @@ func decodeManifest(application *v1alpha1.Application,
 // to compare with live.
 // nolint
 func (plugin *AppPlugin) manifestDryRun(ctx context.Context, app *v1alpha1.Application,
-	manifests []*Manifest) ([]*Manifest, error) {
+	manifests []*ApplicationDryRunManifest) ([]*ApplicationDryRunManifest, error) {
 	clusterServer := app.Spec.Destination.Server
 	cluster, err := plugin.storage.GetClusterFromDB(ctx, clusterServer)
 	if err != nil {
@@ -357,10 +268,10 @@ func (plugin *AppPlugin) manifestDryRun(ctx context.Context, app *v1alpha1.Appli
 		return nil, errors.Wrapf(err, "create dynamic client for cluster '%s' failed", clusterServer)
 	}
 
-	results := make([]*Manifest, 0, len(manifests))
+	results := make([]*ApplicationDryRunManifest, 0, len(manifests))
 	for _, manifest := range manifests {
-		local := manifest.Local
-		dryRunManifest := &Manifest{
+		local := manifest.RenderObj
+		dryRunManifest := &ApplicationDryRunManifest{
 			Namespace: local.GetNamespace(),
 			Name:      local.GetName(),
 			Group:     local.GroupVersionKind().Group,
@@ -397,6 +308,7 @@ func (plugin *AppPlugin) manifestDryRun(ctx context.Context, app *v1alpha1.Appli
 		var updatedObj *unstructured.Unstructured
 		var dryRunError error
 		var isExisted bool
+		// there will create resource with dry-run if resource not exist
 		if k8serrors.IsNotFound(err) {
 			isExisted = false
 			if _, err = dynamicClient.Resource(schema.GroupVersionResource{Group: "", Version: "v1",
@@ -405,34 +317,36 @@ func (plugin *AppPlugin) manifestDryRun(ctx context.Context, app *v1alpha1.Appli
 				if k8serrors.IsNotFound(err) {
 					updatedObj = local.DeepCopy()
 				} else {
-					updatedObj, err = dynamicClient.Resource(localGVR).Namespace(localNamespace).
-						Create(ctx, local,
-							metav1.CreateOptions{
-								DryRun:       []string{metav1.DryRunAll},
-								FieldManager: "kubectl-client-side-apply",
-							})
-					if err != nil {
-						dryRunError = errors.Wrapf(err, "dry-run not exist resource '%s' with gvr '%v' "+
-							"and namespace '%s' failed", local.GetName(), localGVR, localNamespace)
-					}
+					dryRunError = errors.Wrapf(err, "get namespace '%s' failed", localNamespace)
+				}
+			} else {
+				updatedObj, err = dynamicClient.Resource(localGVR).Namespace(localNamespace).
+					Create(ctx, local,
+						metav1.CreateOptions{
+							DryRun:       []string{metav1.DryRunAll},
+							FieldManager: "kubectl-client-side-apply",
+						})
+				if err != nil {
+					dryRunError = errors.Wrapf(err, "dry-run not exist resource '%s' with gvr '%v' "+
+						"and namespace '%s' failed", local.GetName(), localGVR, localNamespace)
 				}
 			}
 		} else {
+			// there will patch resource with dry-run if resource exist
 			var localBS []byte
 			localBS, err = local.MarshalJSON()
 			if err != nil {
 				return nil, errors.Wrapf(err, "marshal local object json failed")
 			}
 			isExisted = true
-			updatedObj, err = dynamicClient.
+			if updatedObj, err = dynamicClient.
 				Resource(localGVR).
 				Namespace(localNamespace).
 				Patch(ctx, local.GetName(), types.MergePatchType,
 					localBS, metav1.PatchOptions{
 						DryRun:       []string{metav1.DryRunAll},
 						FieldManager: "kubectl-client-side-apply",
-					})
-			if err != nil {
+					}); err != nil {
 				dryRunError = errors.Wrapf(err, "dry-run with exist resource '%s' with gvr '%v' "+
 					"and namespace '%s' failed", local.GetName(), localGVR, localNamespace)
 			}

@@ -10,6 +10,8 @@
     "port": ${port},
     "metricPort": ${metricPort},
     "grpcPort": ${grpcPort},
+    "healthPort": ${healthPort},
+    "httpPort": ${httpPort},
     "enableLeaderElection": ${enableLeaderElection},
     "kubernetesQPS": ${kubernetesQPS},
     "kubernetesBurst": ${kubernetesBurst},

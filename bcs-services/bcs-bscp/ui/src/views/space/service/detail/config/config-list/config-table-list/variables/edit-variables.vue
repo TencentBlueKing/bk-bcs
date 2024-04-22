@@ -13,11 +13,14 @@
     :before-close="handleBeforeClose"
     @closed="close">
     <bk-loading :loading="loading" class="variables-table-content">
-      <ResetDefaultValue
-        class="reset-default"
-        :bk-biz-id="bkBizId"
-        :list="initialVariables"
-        @reset="handleResetDefault" />
+      <div class="buttons-area">
+        <bk-button @click="handleExport">{{ t('导出变量') }}</bk-button>
+        <ResetDefaultValue
+          class="reset-default"
+          :bk-biz-id="bkBizId"
+          :list="initialVariables"
+          @reset="handleResetDefault" />
+      </div>
       <VariablesTable
         ref="tableRef"
         :list="variableList"
@@ -45,6 +48,7 @@
     getUnReleasedAppVariablesCitedDetail,
     updateUnReleasedAppVariables,
   } from '../../../../../../../../api/variable';
+  import { fileDownload } from '../../../../../../../../utils/file';
   import VariablesTable from './variables-table.vue';
   import ResetDefaultValue from './reset-default-value.vue';
 
@@ -95,6 +99,15 @@
     variableList.value = variables;
   };
 
+  // 导出变量
+  const handleExport = async () => {
+    fileDownload(
+      `${(window as any).BK_BCS_BSCP_API}/api/v1/config/biz/${props.bkBizId}/apps/${props.appId}/variables/export`,
+      '',
+      false,
+    );
+  };
+
   const handleResetDefault = (list: IVariableEditParams[]) => {
     variableList.value = list;
   };
@@ -135,15 +148,21 @@
 </script>
 <style lang="scss" scoped>
   .variables-table-content {
-    position: relative;
-    padding: 48px 24px;
+    padding: 20px 0;
     height: calc(100vh - 101px);
     overflow: auto;
   }
-  .reset-default {
-    position: absolute;
-    top: 20px;
-    right: 24px;
+  .buttons-area {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    padding: 0 24px;
+  }
+  .variables-table-wrapper {
+    padding: 0 24px;
+    max-height: calc(100% - 68px);
+    overflow: auto;
   }
   .action-btns {
     border-top: 1px solid #dcdee5;

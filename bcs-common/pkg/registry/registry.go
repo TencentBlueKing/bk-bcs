@@ -10,14 +10,13 @@
  * limitations under the License.
  */
 
-// Package registry xxx
 package registry
 
 import (
 	"crypto/tls"
 	"time"
 
-	microRegistry "github.com/micro/go-micro/v2/registry"
+	"go-micro.dev/v4/registry"
 )
 
 // Options registry options
@@ -56,5 +55,5 @@ type Registry interface {
 	// it means that registry is ready to exit
 	Deregister() error
 	// Get get specified service by name in local cache
-	Get(name string) (*microRegistry.Service, error)
+	Get(name string) (*registry.Service, error)
 }

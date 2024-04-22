@@ -1,0 +1,694 @@
+syntax = "proto3";
+
+package bcsterraformbkprovider;
+
+option go_package = "./proto;bcsterraformbkprovider";
+
+import "google/api/annotations.proto";
+import "protoc-gen-swagger/options/annotations.proto";
+// import "validate/validate.proto";
+// import "google/protobuf/any.proto";
+// import "google/protobuf/struct.proto";
+
+option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
+  info : {
+    title : "BCS Api Proxy API Doc"
+    version : "0.1.0"
+  };
+  schemes : HTTP
+  consumes : "application/json"
+  produces : "application/json"
+};
+
+
+service BcsTerraformBkProvider {
+  rpc InstallJob(InstallJobRequest) returns (InstallJobResponse) {
+    option (google.api.http) = {
+      post: "/terraform-bkprovider/v1/install_job"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "GSE任务下发接口"
+      summary : "GSE任务下发接口"
+    };
+  }
+  rpc ListHost(ListHostRequest) returns (ListHostResponse) {
+    option (google.api.http) = {
+      post: "/terraform-bkprovider/v1/list_host"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "查询gse agent信息"
+      summary : "查询gse agent信息"
+    };
+  }
+  rpc ListProxyHost(ListProxyHostRequest) returns (ListProxyHostResponse) {
+    option (google.api.http) = {
+      get: "/terraform-bkprovider/v1/list_proxy_host"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "查询gse proxy信息"
+      summary : "查询gse proxy信息"
+    };
+  }
+  rpc CreateCloud(CloudCreateRequest) returns (CloudCreateResponse) {
+    option (google.api.http) = {
+      post: "/terraform-bkprovider/v1/cloud"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "创建云区域"
+      summary : "创建云区域"
+    };
+  }
+  rpc UpdateCloud(CloudUpdateRequest) returns (CloudUpdateResponse) {
+    option (google.api.http) = {
+      put: "/terraform-bkprovider/v1/cloud"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "更新云区域"
+      summary : "更新云区域"
+    };
+  }
+  rpc ListCloud(CloudListRequest) returns (CloudListResponse) {
+    option (google.api.http) = {
+      get: "/terraform-bkprovider/v1/cloud"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "获取云区域"
+      summary : "获取云区域"
+    };
+  }
+  rpc DeleteCloud(CloudDeleteRequest) returns (CloudDeleteResponse) {
+    option (google.api.http) = {
+      delete: "/terraform-bkprovider/v1/cloud"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "删除云区域"
+      summary : "删除云区域"
+    };
+  }
+  rpc GetJobDetail(GetJobDetailRequest) returns(GetJobDetailResponse) {
+    option (google.api.http) = {
+      post: "/terraform-bkprovider/v1/get_job_detail"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "获取Job详情"
+      summary : "获取Job详情"
+    };
+  }
+}
+
+message InstallJobRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "InstallJobRequest"
+      description : "安装任务请求"
+      required : ["job_type", "hosts"]
+    }
+  };
+
+  string job_type = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "job_type",
+    description : "作业类型, 可选值INSTALL_AGENT/RESTART_AGENT/REINSTALL_AGENT/UNINSTALL_AGENT/REMOVE_AGENT/UPGRADE_AGENT/RELOAD_AGENT/INSTALL_PROXY/RESTART_PROXY/REINSTALL_PROXY/UNINSTALL_PROXY/UPGRADE_PROXY/RELOAD_PROXY"
+  }];
+  repeated InstallHost hosts = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "hosts",
+    description : "安装主机列表"
+  }];
+}
+message Condition {
+  string key = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "key",
+    description: "关键词, 可选值inner_ip、node_type、os_type、status、bk_cloud_id、query"
+  }];
+  repeated string value = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "value",
+    description: "值"
+  }];
+}
+
+message ListHostRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListHostRequest"
+      description : "安装任务请求"
+    }
+  };
+
+  repeated Condition conditions = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "conditions",
+    description: "搜索条件"
+  }];
+  int32 page = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "page",
+    description: "当前页数，默认为1"
+  }];
+  int32 pagesize = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "pagesize",
+    description: "分页大小，默认为10"
+  }];
+}
+
+message HostInfo {
+  int32 bk_cloud_id = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "bk_cloud_id",
+    description: "云区域ID"
+  }];
+  int32 bk_biz_id = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "bk_biz_id",
+    description: "业务ID"
+  }];
+  int32 bk_host_id = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "bk_host_id",
+    description: "主机ID"
+  }];
+  string bk_host_name = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "bk_host_name",
+    description: "主机名"
+  }];
+  string bk_addressing = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "bk_addressing",
+    description: "寻址方式，1: 静态 2: 动态"
+  }];
+  string os_type = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "os_type",
+    description: "操作系统，1：LINUX 2：WINDOWS 3：AIX 4：SOLARIS"
+  }];
+  string inner_ip = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "inner_ip",
+    description: "内网IPv4地址"
+  }];
+  string inner_ipv6 = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "inner_ipv6",
+    description: "内网IPv6地址"
+  }];
+  string outer_ip = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "outer_ip",
+    description: "外网IPv4地址"
+  }];
+  string outer_ipv6 = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "outer_ipv6",
+    description: "外网IPv6地址"
+  }];
+  int32 ap_id = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "ap_id",
+    description: "接入点ID"
+  }];
+  int32 install_channel_id = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "install_channel_id",
+    description: "安装通道ID"
+  }];
+  string login_ip = 13 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "login_ip",
+    description: "登录IP"
+  }];
+  string data_ip = 14 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "data_ip",
+    description: "数据IP"
+  }];
+  string status = 15 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "status",
+    description: "运行状态"
+  }];
+  string version = 16 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "version",
+    description: "Agent版本"
+  }];
+  string created_at = 17 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "created_at",
+    description: "创建时间"
+  }];
+  string updated_at = 18 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "updated_at",
+    description: "更新时间"
+  }];
+  bool is_manual = 19 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "is_manual",
+    description: "是否手动模式"
+  }];
+  string status_display = 20 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "status_display",
+    description: "运行执行状态名称"
+  }];
+  string bk_cloud_name = 21 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "bk_cloud_name",
+    description: "云区域名称"
+  }];
+  string install_channel_name = 22 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "install_channel_name",
+    description: "安装通道名称"
+  }];
+  string bk_biz_name = 23 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "bk_biz_name",
+    description: "业务名称"
+  }];
+  bool operate_permission = 24 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "operate_permission",
+    description: "是否具有操作权限"
+  }];
+}
+
+message ListHostData {
+  int32 total = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "total"
+    description: "数量"
+  }];
+  repeated HostInfo list = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "list"
+    description: "主机信息列表"
+  }];
+}
+
+message ListHostResponse {
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+  string message = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  ListHostData data = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "返回主机信息"
+  }];
+}
+
+message ListProxyHostRequest {
+  int64  bk_cloud_id = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "bk_cloud_id",
+    description : "云ID"
+  }];
+}
+
+message ProxyHost {
+  int64 bk_cloud_id = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "bk_cloud_id",
+    description: "云区域ID"
+  }];
+  int64 bk_host_id = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "bk_host_id",
+    description: "主机ID"
+  }];
+  int64 bk_biz_id = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "bk_biz_id",
+    description: "业务ID"
+  }];
+  string inner_ip = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "inner_ip",
+    description: "内网IP"
+  }];
+  string inner_ipv6 = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "inner_ipv6",
+    description: "内网IPv6地址"
+  }];
+  string outer_ip = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "outer_ip",
+    description: "外网IP"
+  }];
+  string outer_ipv6 = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "outer_ipv6",
+    description: "外网IPv6地址"
+  }];
+  string login_ip = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "login_ip",
+    description: "登录IP"
+  }];
+  string data_ip = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "data_ip",
+    description: "数据IP"
+  }];
+  int64 ap_id = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "ap_id",
+    description: "接入点ID"
+  }];
+  string ap_name = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "ap_name",
+    description: "接入点名称"
+  }];
+  string status = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "status",
+    description: "状态"
+  }];
+  string version = 13 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "version",
+    description: "版本"
+  }];
+  int64 port = 14 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "port",
+    description: "端口"
+  }];
+}
+message ListProxyHostResponse {
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+  string message = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  repeated ProxyHost data = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "返回主机信息"
+  }];
+}
+
+
+message InstallHost {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "InstallHost"
+      description : "安装主机信息"
+      required : ["bk_cloud_id", "bk_biz_id", "os_type", "inner_ip"]
+    }
+  };
+
+  int64 bk_cloud_id = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "bk_cloud_id",
+    description : "云ID"
+  }];
+  int64 bk_biz_id = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "bk_biz_id",
+    description : "业务ID"
+  }];
+  int64 bk_host_id = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "bk_host_id",
+    description : "主机ID"
+  }];
+  string os_type = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "os_type",
+    description : "操作系统类型，1：LINUX 2：WINDOWS 3：AIX 4：SOLARIS"
+  }];
+  string inner_ip = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "inner_ip",
+    description : "内网IP"
+  }];
+  string outer_ip = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "outer_ip",
+    description : "外网IP"
+  }];
+  string login_ip = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "login_ip",
+    description : "登录IP"
+  }];
+  string account = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "account",
+    description : "账户"
+  }];
+  int64 port = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "port",
+    description : "端口"
+  }];
+  string auth_type = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "auth_type",
+    description : "认证类型，1：PASSWORD，密码认证 2: KEY，秘钥认证 3：TJJ_PASSWORD，默认为密码认证"
+  }];
+  string password = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "password",
+    description : "密码"
+  }];
+  int64 ap_id = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "ap_id",
+    description : "接入点ID"
+  }];
+  string key = 13 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "key",
+    description : "秘钥"
+  }];
+}
+message InstallJobResponse {
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+  string message = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  InstallJobData data = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "返回数据"
+  }];
+}
+message InstallJobData {
+  int64 job_id = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "job_id",
+    description : "任务ID"
+  }];
+}
+
+
+message Cloud {
+  int32 bk_cloud_id = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "bk_cloud_id",
+    description : "云区域ID"
+  }];
+  string bk_cloud_name = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "bk_cloud_name",
+    description : "云区域名称"
+  }];
+  string isp = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "isp",
+    description : "运营商，如Amazon、Tencent"
+  }];
+  int32 ap_id = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "ap_id",
+    description : "接入点ID"
+  }];
+}
+
+message CloudCreateRequest {
+  string bk_cloud_name = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "bk_cloud_name",
+    description : "云区域名称"
+  }];
+  string isp = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "isp",
+    description : "运营商，如Amazon、Tencent"
+  }];
+  int32 ap_id = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "ap_id",
+    description : "接入点ID"
+  }];
+}
+
+message CloudCreateResponse {
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+  string message = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  int32 data = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "创建的云区域ID"
+  }];
+}
+
+message CloudDeleteRequest {
+  int32 bk_cloud_id = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "bk_cloud_id",
+    description : "云区域ID"
+  }];
+}
+
+message CloudDeleteResponse {
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+  string message = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+}
+
+message CloudListRequest {}
+
+message CloudListResponse {
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+  string message = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  repeated Cloud data = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "云区域列表"
+  }];
+}
+
+message CloudUpdateRequest {
+  int32 bk_cloud_id = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "bk_cloud_id",
+    description : "云区域ID"
+  }];
+  string bk_cloud_name = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "bk_cloud_name",
+    description : "云区域名称"
+  }];
+  string isp = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "isp",
+    description : "运营商，如Amazon、Tencent"
+  }];
+  int32 ap_id = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "ap_id",
+    description : "接入点ID"
+  }];
+}
+
+message CloudUpdateResponse {
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+  string message = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+}
+
+message GetJobDetailRequest{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetJobDetailRequest"
+      description : "获取Job详情"
+    }
+  };
+
+  repeated Condition conditions = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "conditions",
+    description: "搜索条件, 可选Key, 1: ip，IP地址 2:instance_id，主机实例ID 3: status，执行状态"
+  }];
+  int32 page = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "page",
+    description: "当前页数，默认为1"
+  }];
+  int32 pagesize = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "pagesize",
+    description: "分页大小，默认为10"
+  }];
+  int64 job_id = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "job_id",
+    description: "任务ID，必填"
+  }];
+}
+
+message GetJobDetailResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetJobDetailResponse"
+      description : "获取Job详情"
+    }
+  };
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+  string message = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  JobInfo data = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "作业详情"
+  }];
+}
+
+message JobInfo {
+  int64 job_id = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "job_id",
+    description: "任务ID"
+  }];
+  string created_by = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "created_by",
+    description: "创建者"
+  }];
+  string job_type = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "job_type",
+    description: "作业类型，见job_type定义"
+  }];
+  string job_type_display = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "job_type_display",
+    description: "作业类型名称"
+  }];
+  repeated string ip_filter_list = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "ip_filter_list",
+    description: "过滤的IP列表，不在指定的筛选范围内"
+  }];
+  int32 total = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "total",
+    description: "实例记录数量总和"
+  }];
+  repeated List list = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "list",
+    description: "过滤的主机详细信息列表，见list定义"
+  }];
+  Statistics statistics = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "statistics",
+    description: "任务统计信息，见statistics定义"
+  }];
+  string status = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "status",
+    description: "执行状态，见status定义"
+  }];
+  string end_time = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "end_time",
+    description: "完成时间"
+  }];
+  string  start_time = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "start_time",
+    description: "启动时间时间"
+  }];
+  string cost_time = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "cost_time",
+    description: "执行耗时，单位为秒"
+  }];
+  Meta meta = 13 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "meta",
+    description: "执行任务元数据信息，见meta定义"
+  }];
+}
+
+message Statistics {
+  int32 total_count = 1;
+  int32 failed_count = 2;
+  int32 ignored_count = 3;
+  int32 pending_count = 4;
+  int32 running_count = 5;
+  int32 success_count = 6;
+}
+
+message Meta {
+  string type = 1;
+  string step_type = 2;
+  string op_type = 3;
+  string op_type_display = 4;
+  string step_type_display = 5;
+  string name = 6;
+  string category = 7;
+  string plugin_name = 8;
+}
+
+message List {
+  bool filter_host = 1;
+  int64 bk_host_id = 2;
+  string ip = 3;
+  string inner_ip = 4;
+  string inner_ipv6 = 5;
+  int64 bk_cloud_id = 6;
+  string bk_cloud_name = 7;
+  int64 bk_biz_id = 8;
+  string bk_biz_name = 9;
+  int64 job_id = 10;
+  string status = 11;
+  string status_display = 12;
+}

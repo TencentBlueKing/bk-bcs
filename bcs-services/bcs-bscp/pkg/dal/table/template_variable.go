@@ -17,6 +17,7 @@ import (
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/i18n"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
@@ -172,7 +173,7 @@ func (t *TemplateVariableSpec) ValidateUpdate(kit *kit.Kit) error {
 // ValidateDefaultVal validate template variable default value.
 func (t *TemplateVariableSpec) ValidateDefaultVal(kit *kit.Kit) error {
 	if t.Type == NumberVar && !tools.IsNumber(t.DefaultVal) {
-		return errf.Errorf(kit, errf.InvalidArgument, "default_val %s is not a number type", t.DefaultVal)
+		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "default_val %s is not a number type", t.DefaultVal))
 	}
 
 	return nil
@@ -208,7 +209,7 @@ func (t VariableType) Validate(kit *kit.Kit) error {
 	case StringVar:
 	case NumberVar:
 	default:
-		return errf.Errorf(kit, errf.InvalidArgument, "unsupported variable type: %s", t)
+		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "unsupported variable type: %s", t))
 	}
 
 	return nil
