@@ -106,6 +106,8 @@
   watch(
     () => props.appId,
     async () => {
+      isShowSpecificReason.value = false;
+      specificReason.value = [];
       await loadChartData();
       if (data.value.length) {
         if (columnPlot) {
