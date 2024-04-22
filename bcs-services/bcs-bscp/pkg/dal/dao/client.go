@@ -243,8 +243,10 @@ func (dao *clientDao) List(kit *kit.Kit, bizID, appID uint32, heartbeatTime int6
 	}
 
 	var exprs []field.Expr
-	if order != nil {
+	if order.String() != "" {
 		exprs = dao.handleOrder(order)
+	} else {
+		exprs = append(exprs, m.ID.Desc())
 	}
 
 	d := q.Where(conds...).Order(exprs...)
