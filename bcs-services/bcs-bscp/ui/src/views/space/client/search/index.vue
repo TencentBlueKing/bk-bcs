@@ -15,6 +15,7 @@
           :key="appId"
           :checked="selectedClient"
           :is-row-select-enable="isRowSelectEnable"
+          show-overflow-tooltip
           @page-limit-change="handlePageLimitChange"
           @page-value-change="loadList"
           @column-filter="handleFilter">
@@ -23,7 +24,7 @@
           <bk-table-column label="IP" :width="120" prop="spec.ip"></bk-table-column>
           <bk-table-column :label="t('客户端标签')" :min-width="296">
             <template #default="{ row }">
-              <div v-if="row.labels" class="labels">
+              <div v-if="row.spec && row.labels.length" class="labels">
                 <span v-for="(label, index) in row.labels" :key="index">
                   <Tag v-if="index < 3">
                     {{ label.key + '=' + label.value }}
@@ -45,6 +46,7 @@
                 <Share fill="#979BA5" />
                 <span class="text">{{ row.spec.current_release_name }}</span>
               </div>
+              <span v-else>--</span>
             </template>
           </bk-table-column>
           <bk-table-column

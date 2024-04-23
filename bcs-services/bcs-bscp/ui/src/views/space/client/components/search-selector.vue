@@ -427,6 +427,9 @@
 </script>
 
 <style scoped lang="scss">
+  .section {
+    position: relative;
+  }
   .search-wrap {
     position: relative;
     display: flex;
@@ -505,6 +508,7 @@
     position: absolute;
     height: 26px;
     display: flex;
+    align-items: center;
     margin-top: 6px;
   }
   .action-item {

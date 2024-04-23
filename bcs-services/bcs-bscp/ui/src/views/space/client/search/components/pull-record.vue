@@ -46,6 +46,7 @@
                 <Share fill="#979BA5" />
                 <span class="text">{{ row.original_release_name }}</span>
               </div>
+              <span v-else>--</span>
             </template>
           </bk-table-column>
           <bk-table-column :label="$t('目标配置版本')" width="134">
