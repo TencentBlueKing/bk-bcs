@@ -10,6 +10,16 @@ export const createScript = (biz_id: string, params: IScriptEditingForm) =>
   http.post(`/config/biz/${biz_id}/hooks`, params).then((res) => res.data);
 
 /**
+ * 更新脚本
+ * @param biz_id 空间ID
+ * @param hook_id 脚本ID
+ * @param params 编辑参数
+ * @returns
+ */
+export const updateScript = (biz_id: string, hook_id: number, params: { memo: string; tags: string[] }) =>
+  http.put(`/config/biz/${biz_id}/hooks/${hook_id}`, params).then((res) => res.data);
+
+/**
  * 获取脚本列表
  * @param biz_id 空间ID
  * @param params 查询参数
