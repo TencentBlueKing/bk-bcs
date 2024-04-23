@@ -767,4 +767,5 @@ export default {
   主要失败原因: 'Main cause of failure',
   暂无服务: 'No service',
   前往创建: 'Go to create',
+  命令行工具: 'Command line tool',
 };

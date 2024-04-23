@@ -201,7 +201,7 @@
                 item.name = t('主机插件客户端');
                 break;
               case 'command':
-                item.name = 'command';
+                item.name = t('命令行工具');
                 break;
               default:
                 item.name = t('总量');
