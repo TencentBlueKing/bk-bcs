@@ -80,7 +80,7 @@
                 </div>
                 <div v-else class="tag-edit-wrapper">
                   <bk-tag-input
-                    v-model="row.hook.spec.tags"
+                    :model-value="row.hook.spec.tags"
                     ref="tagInputRef"
                     display-key="tag"
                     save-key="tag"
@@ -89,7 +89,11 @@
                     :list="tagsData"
                     :allow-create="true"
                     trigger="focus"
-                    @blur="handleTagEditBlur(row)" />
+                    @blur="
+                      (inputVal: string, tagList: string[]) => {
+                        handleTagEditBlur(row, inputVal, tagList);
+                      }
+                    " />
                 </div>
               </div>
             </template>
@@ -105,13 +109,13 @@
                 </div>
                 <bk-input
                   v-else
-                  v-model="row.hook.spec.memo"
                   ref="memoInputRef"
                   class="memo-input"
                   type="textarea"
+                  :model-value="row.hook.spec.memo"
                   :autosize="{ maxRows: 4 }"
                   :resize="false"
-                  @blur="handleMemoEditBlur(row)" />
+                  @blur="handleMemoEditBlur(row, $event)" />
               </div>
             </template>
           </bk-table-column>
@@ -270,7 +274,7 @@
     };
     if (selectedTag.value === '' && !showAllTag.value) {
       params.not_tag = true;
-    } else {
+    } else if (selectedTag.value) {
       params.tag = selectedTag.value;
     }
     if (searchStr.value) {
@@ -344,10 +348,14 @@
   };
 
   // 保存编辑后的tag
-  const handleTagEditBlur = (script: IScriptItem) => {
+  const handleTagEditBlur = (script: IScriptItem, inputVal: string, tagList: string[]) => {
     tagEditHookId.value = 0;
     const { memo = '', tags = [] } = script.hook.spec;
-    editScript(script.hook.id, { memo, tags });
+    // 判断是否编辑过tag
+    if (tagList.length !== tags.length || tagList.some((item) => !tags.includes(item))) {
+      script.hook.spec.tags = tagList.slice();
+      editScript(script.hook.id, { memo, tags: tagList });
+    }
   };
 
   // 触发编辑脚本描述
@@ -358,10 +366,14 @@
     });
   };
 
-  const handleMemoEditBlur = (script: IScriptItem) => {
+  const handleMemoEditBlur = (script: IScriptItem, e: FocusEvent) => {
     memoEditHookId.value = 0;
     const { memo = '', tags = [] } = script.hook.spec;
-    editScript(script.hook.id, { memo, tags });
+    const val = (e.target as HTMLInputElement).value.trim();
+    if (val !== memo) {
+      script.hook.spec.memo = val;
+      editScript(script.hook.id, { memo: val, tags });
+    }
   };
 
   const handleOpenCitedSlider = (id: number) => {
