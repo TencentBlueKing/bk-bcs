@@ -68,6 +68,7 @@ const (
 	Data_CreateHook_FullMethodName                        = "/pbds.Data/CreateHook"
 	Data_ListHooks_FullMethodName                         = "/pbds.Data/ListHooks"
 	Data_DeleteHook_FullMethodName                        = "/pbds.Data/DeleteHook"
+	Data_UpdateHook_FullMethodName                        = "/pbds.Data/UpdateHook"
 	Data_ListHookTags_FullMethodName                      = "/pbds.Data/ListHookTags"
 	Data_ListHookReferences_FullMethodName                = "/pbds.Data/ListHookReferences"
 	Data_GetHook_FullMethodName                           = "/pbds.Data/GetHook"
@@ -238,6 +239,7 @@ type DataClient interface {
 	CreateHook(ctx context.Context, in *CreateHookReq, opts ...grpc.CallOption) (*CreateResp, error)
 	ListHooks(ctx context.Context, in *ListHooksReq, opts ...grpc.CallOption) (*ListHooksResp, error)
 	DeleteHook(ctx context.Context, in *DeleteHookReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
+	UpdateHook(ctx context.Context, in *UpdateHookReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	ListHookTags(ctx context.Context, in *ListHookTagReq, opts ...grpc.CallOption) (*ListHookTagResp, error)
 	ListHookReferences(ctx context.Context, in *ListHookReferencesReq, opts ...grpc.CallOption) (*ListHookReferencesResp, error)
 	GetHook(ctx context.Context, in *GetHookReq, opts ...grpc.CallOption) (*GetHookResp, error)
@@ -715,6 +717,15 @@ func (c *dataClient) ListHooks(ctx context.Context, in *ListHooksReq, opts ...gr
 func (c *dataClient) DeleteHook(ctx context.Context, in *DeleteHookReq, opts ...grpc.CallOption) (*base.EmptyResp, error) {
 	out := new(base.EmptyResp)
 	err := c.cc.Invoke(ctx, Data_DeleteHook_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) UpdateHook(ctx context.Context, in *UpdateHookReq, opts ...grpc.CallOption) (*base.EmptyResp, error) {
+	out := new(base.EmptyResp)
+	err := c.cc.Invoke(ctx, Data_UpdateHook_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1833,6 +1844,7 @@ type DataServer interface {
 	CreateHook(context.Context, *CreateHookReq) (*CreateResp, error)
 	ListHooks(context.Context, *ListHooksReq) (*ListHooksResp, error)
 	DeleteHook(context.Context, *DeleteHookReq) (*base.EmptyResp, error)
+	UpdateHook(context.Context, *UpdateHookReq) (*base.EmptyResp, error)
 	ListHookTags(context.Context, *ListHookTagReq) (*ListHookTagResp, error)
 	ListHookReferences(context.Context, *ListHookReferencesReq) (*ListHookReferencesResp, error)
 	GetHook(context.Context, *GetHookReq) (*GetHookResp, error)
@@ -2089,6 +2101,9 @@ func (UnimplementedDataServer) ListHooks(context.Context, *ListHooksReq) (*ListH
 }
 func (UnimplementedDataServer) DeleteHook(context.Context, *DeleteHookReq) (*base.EmptyResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteHook not implemented")
+}
+func (UnimplementedDataServer) UpdateHook(context.Context, *UpdateHookReq) (*base.EmptyResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateHook not implemented")
 }
 func (UnimplementedDataServer) ListHookTags(context.Context, *ListHookTagReq) (*ListHookTagResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListHookTags not implemented")
@@ -3118,6 +3133,24 @@ func _Data_DeleteHook_Handler(srv interface{}, ctx context.Context, dec func(int
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DataServer).DeleteHook(ctx, req.(*DeleteHookReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_UpdateHook_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateHookReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).UpdateHook(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_UpdateHook_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).UpdateHook(ctx, req.(*UpdateHookReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -5400,6 +5433,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteHook",
 			Handler:    _Data_DeleteHook_Handler,
+		},
+		{
+			MethodName: "UpdateHook",
+			Handler:    _Data_UpdateHook_Handler,
 		},
 		{
 			MethodName: "ListHookTags",

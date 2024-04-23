@@ -88,6 +88,7 @@ service Data {
   rpc CreateHook(CreateHookReq) returns (CreateResp) {}
   rpc ListHooks(ListHooksReq) returns (ListHooksResp) {}
   rpc DeleteHook(DeleteHookReq) returns (pbbase.EmptyResp) {}
+  rpc UpdateHook(UpdateHookReq) returns (pbbase.EmptyResp) {}
   rpc ListHookTags(ListHookTagReq) returns (ListHookTagResp) {}
   rpc ListHookReferences(ListHookReferencesReq) returns (ListHookReferencesResp) {}
   rpc GetHook(GetHookReq) returns (GetHookResp) {}
@@ -659,7 +660,7 @@ message GetHookResp {
 message GetHookInfoSpec {
   string name = 1;
   string type = 3;
-  string tag = 4;
+  repeated string tags = 4;
   string memo = 5;
   uint32 publish_num = 7;
   message Releases {
@@ -721,6 +722,12 @@ message DeleteHookReq {
   uint32 biz_id = 1;
   uint32 hook_id = 2;
   bool force = 3;
+}
+
+message UpdateHookReq {
+  uint32 id = 1;
+  pbhook.HookAttachment attachment = 2;
+  pbhook.HookSpec spec = 3;
 }
 
 message CreateHookRevisionReq {
