@@ -843,6 +843,29 @@ paths:
         authConfig:
           userVerifiedRequired: false
         disabledStages: []
+    put:
+      operationId: update_hook
+      description: 更新hook脚本
+      tags:
+        - hook脚本管理
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: put
+          path: /api/v1/config/biz/{biz_id}/hooks/{hook_id}
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages: []
     delete:
       operationId: delete_hook
       description: 删除hook脚本
