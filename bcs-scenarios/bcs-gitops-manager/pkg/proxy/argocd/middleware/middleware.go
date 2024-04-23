@@ -43,6 +43,7 @@ type httpWrapper struct {
 	argoSession       *session.ArgoSession
 	argoStreamSession *session.ArgoStreamSession
 	secretSession     *session.SecretSession
+	terraformSession  *session.TerraformSession
 	monitorSession    *session.MonitorSession
 }
 
@@ -80,7 +81,9 @@ func SetContext(rw http.ResponseWriter, r *http.Request, jwtDecoder *jwt.JWTClie
 	} else {
 		requestID = uuid.New().String()
 	}
-	ctx := context.WithValue(r.Context(), traceconst.RequestIDHeaderKey, requestID) // nolint staticcheck
+	// nolint
+	ctx := context.WithValue(r.Context(), traceconst.RequestIDHeaderKey, requestID)
+	// nolint
 	ctx = tracing.ContextWithRequestID(ctx, requestID)
 	rw.Header().Set(traceconst.RequestIDHeaderKey, requestID)
 
@@ -146,6 +149,8 @@ func (p *httpWrapper) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		p.argoStreamSession.ServeHTTP(rw, req)
 	case reverseSecret:
 		p.secretSession.ServeHTTP(rw, req)
+	case reverseTerraform:
+		p.terraformSession.ServeHTTP(rw, req)
 	case reverseMonitor:
 		p.monitorSession.ServeHTTP(rw, req)
 	case returnError:
@@ -185,12 +190,21 @@ const (
 	// jsonResponse 返回 JSON 信息给客户端
 	jsonResponse
 	reverseArgoStream
+	// reverseTerraform 请求反向代理给 terraform 服务
+	reverseTerraform
 )
 
 // ReturnArgoStreamReverse will reverse stream to argocd
 func ReturnArgoStreamReverse() *HttpResponse {
 	return &HttpResponse{
 		respType: reverseArgoStream,
+	}
+}
+
+// ReturnTerraformReverse will reverse to terraform controller
+func ReturnTerraformReverse() *HttpResponse {
+	return &HttpResponse{
+		respType: reverseTerraform,
 	}
 }
 

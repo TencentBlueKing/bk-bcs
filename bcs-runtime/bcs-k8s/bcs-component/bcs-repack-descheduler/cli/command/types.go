@@ -11,6 +11,7 @@
  *
  */
 
+// Package command xx
 package command
 
 import (
@@ -29,6 +30,7 @@ var (
 	ConfigFile string
 )
 
+// InitCacheManager init cache manager
 func InitCacheManager(ctx context.Context, kubeConfig string) (cachemanager.CacheInterface, error) {
 	cacheManager := cachemanager.NewCacheManager()
 	if kubeConfig != "" {
@@ -48,6 +50,7 @@ func InitCacheManager(ctx context.Context, kubeConfig string) (cachemanager.Cach
 	return cacheManager, nil
 }
 
+// InitConfig init config
 func InitConfig() error {
 	cfgHandler := options.GlobalConfigHandler()
 	var bs []byte

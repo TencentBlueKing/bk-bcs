@@ -74,6 +74,7 @@ type AnalysisResponse struct {
 	Data      interface{} `json:"data"`
 }
 
+// analysis return the project analysis
 func (plugin *AnalysisPlugin) analysis(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	isAll, projects, err := plugin.checkQuery(r)
 	if err != nil {
@@ -125,6 +126,7 @@ func (plugin *AnalysisPlugin) checkQuery(r *http.Request) (bool, []v1alpha1.AppP
 	return true, projList.Items, nil
 }
 
+// topProjects return the top projects
 func (plugin *AnalysisPlugin) topProjects(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	user := mw.User(r.Context())
 	if !common.IsAdminUser(user.ClientID) {
@@ -137,6 +139,7 @@ func (plugin *AnalysisPlugin) topProjects(r *http.Request) (*http.Request, *mw.H
 	})
 }
 
+// managedResources return the managed resources
 func (plugin *AnalysisPlugin) managedResources(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	user := mw.User(r.Context())
 	if !common.IsAdminUser(user.ClientID) {
@@ -149,6 +152,7 @@ func (plugin *AnalysisPlugin) managedResources(r *http.Request) (*http.Request, 
 	})
 }
 
+// overview return the overview
 func (plugin *AnalysisPlugin) overview(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	user := mw.User(r.Context())
 	if !common.IsAdminUser(user.ClientID) {
@@ -165,6 +169,7 @@ func (plugin *AnalysisPlugin) overview(r *http.Request) (*http.Request, *mw.Http
 	})
 }
 
+// overviewInternal return the overview internal
 func (plugin *AnalysisPlugin) overviewInternal(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	user := mw.User(r.Context())
 	if !common.IsAdminUser(user.ClientID) {
@@ -177,6 +182,7 @@ func (plugin *AnalysisPlugin) overviewInternal(r *http.Request) (*http.Request, 
 	})
 }
 
+// overviewExternal return the overview external
 func (plugin *AnalysisPlugin) overviewExternal(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	user := mw.User(r.Context())
 	if !common.IsAdminUser(user.ClientID) {
@@ -189,6 +195,7 @@ func (plugin *AnalysisPlugin) overviewExternal(r *http.Request) (*http.Request, 
 	})
 }
 
+// bkmCommon bkmonitor common query
 func (plugin *AnalysisPlugin) bkmCommon(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	user := mw.User(r.Context())
 	if !common.IsAdminUser(user.ClientID) {
@@ -209,12 +216,13 @@ func (plugin *AnalysisPlugin) bkmCommon(r *http.Request) (*http.Request, *mw.Htt
 	})
 }
 
+// bkmActivityProjectsInternal bkmonitor activity projects internl
 func (plugin *AnalysisPlugin) bkmActivityProjectsInternal(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	user := mw.User(r.Context())
 	if !common.IsAdminUser(user.ClientID) {
 		return r, mw.ReturnErrorResponse(http.StatusForbidden, errors.Errorf("admin api"))
 	}
-	projects, err := plugin.analysisClient.BKMonitorTopActivityProjectsInternal()
+	projects, err := plugin.analysisClient.BKMTopActivityProjectsInternal()
 	if err != nil {
 		return r, mw.ReturnErrorResponse(http.StatusInternalServerError, err)
 	}
@@ -230,7 +238,7 @@ func (plugin *AnalysisPlugin) bkmActivityProjectsExternal(r *http.Request) (*htt
 	if !common.IsAdminUser(user.ClientID) {
 		return r, mw.ReturnErrorResponse(http.StatusForbidden, errors.Errorf("admin api"))
 	}
-	projects, err := plugin.analysisClient.BKMonitorTopActivityProjectsExternal()
+	projects, err := plugin.analysisClient.BKMTopActivityProjectsExternal()
 	if err != nil {
 		return r, mw.ReturnErrorResponse(http.StatusInternalServerError, err)
 	}

@@ -597,7 +597,7 @@ cluster:
       cloudProvider:
         title: 公有云集群
         subTitle: 实现多云集群统一管理，降低业务管理成本
-        desc: 目前支持腾讯云、亚马逊云、谷歌云、微软云四种云服务商集群创建
+        desc: 目前支持腾讯云、亚马逊云、谷歌云、微软云、华为云五种云服务商集群创建
     label:
       system: 操作系统
       containerRuntime: 运行时组件
@@ -797,7 +797,6 @@ cluster:
       title: 扩缩容暂停配置
       desc: >-
         自动扩缩容保护机制，如果NotReady节点数量或比例过大，自动扩容上来的节点也有可能会是NotReady状态，导致业务成本增加，当NotReady节点数不符合暂停触发条件时自动恢复自动扩缩容
-      path: 扩缩容暂停配置路径
     autoScalerConfig:
       title: 自动扩容配置
       expander:
@@ -1164,9 +1163,6 @@ cluster:
       retry: 失败重试
       setLabel: 设置标签
       setTaint: 设置污点
-      addTag: 添加标签
-      saveSettings: 保存设置
-      cancel: 取消
       copy:
         text: 复制
         checkedIP: 复制勾选IP
@@ -1197,7 +1193,6 @@ cluster:
       batchSetLabel:
         text: 批量设置标签
         desc: 批量设置只展示相同Key的标签
-      batchSetTaint: 批量设置污点
     label:
       podCounts: Pod数量
       index: 序号
@@ -2536,6 +2531,37 @@ importAzureCloud:
     zones: 可用区级集群
     regions: 区域级集群
     other: 其他
+huaweiCloud:
+  button:
+    create: 新建凭证
+    delete: 删除凭证
+  placeholder:
+    search: 搜索名称/SecretID/集群ID
+  tips:
+    nameRegex: 仅支持英文、数字和字符(-)
+  label:
+    clusterType: 集群类型
+    managed: 托管集群
+    aksDesc: Kubernetes 集群的 Master 和 Etcd 会由 AKS 团队集中管理和维护，集群管理员不需要关心集群 Master的管理和维护。
+    cluster: 关联集群
+    create: 新建凭证
+importHuaweiCloud:
+  title: 导入公有云集群 - 华为云
+  label:
+    clusterName: 集群名称
+    token: 云凭证
+    resourceGroups: 资源组
+    region: 所属区域
+    clusterID: 云集群 ID
+    nodemanArea: 管控区域
+    desc: 集群描述
+  button:
+    test: 连通性测试
+    import: 导入
+  clusterRegion:
+    zones: 可用区级集群
+    regions: 区域级集群
+    other: 其他
 googleCA:
   tips:
     zone: 目前只支持单可用区
@@ -2577,6 +2603,12 @@ publicCloud:
       Azure Kubernetes Service (AKS)
       内置代码到云端管道以及护栏，能够帮助开发人员以最快速的方式开始开发和部署云原生应用。在本地、边缘和多云 Kubernetes
       集群试试统一的管理和治理。提供与 Azure 安全、身份、成本管理和迁移服务的互操作性。
+  huawei:
+    title: 华为云
+    desc: >-
+      Huawei Kubernetes Service
+      (HKS)允许用户在华为云平台上部署、管理和扩展容器化应用程序，无需对底层的计算资源进行复杂配置,
+      能够帮助开发者利用Kubernetes生态系统的强大功能，同时享受华为云提供的安全、可靠和高性能的基础设施。
 updateRecord:
   placeholder:
     search: 搜索 镜像/更新人

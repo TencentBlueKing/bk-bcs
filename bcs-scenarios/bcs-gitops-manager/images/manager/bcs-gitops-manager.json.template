@@ -78,6 +78,10 @@
     "address": "${bcsMonitorAddress}",
     "port": "${bcsMonitorPort}"
   },
+  "terraformServer": {
+    "address": "${bcsTerraformAddress}",
+    "port": "${bcsTerraformPort}"
+  },
   "analysisConfig": {
     "bkMonitorPushUrl": "${bcsAnalysisBKMonitorPushUrl}",
     "bkMonitorPushToken": "${bcsAnalysisBKMonitorPushToken}",

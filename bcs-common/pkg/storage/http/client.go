@@ -16,6 +16,7 @@ package http
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"crypto/tls"
 	"encoding/json"
 	"errors"
@@ -25,8 +26,6 @@ import (
 	syshttp "net/http"
 	"strings"
 	"time"
-
-	"golang.org/x/net/context"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/meta"

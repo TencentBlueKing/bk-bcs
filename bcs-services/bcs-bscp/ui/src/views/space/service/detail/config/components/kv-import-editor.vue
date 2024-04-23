@@ -135,7 +135,7 @@
     let hasSeparatorError = false;
     kvArray.forEach((item, index) => {
       if (item === '') return;
-      const regex = separator.value === ' ' ? /\s+/ : new RegExp(separator.value);
+      const regex = separator.value === ' ' ? /\s+/ : separator.value;
       const kvContent = item.split(regex).map((item) => item.trim());
       const key = kvContent[0];
       const kv_type = kvContent[1] ? kvContent[1].toLowerCase() : '';

@@ -11,6 +11,7 @@
  *
  */
 
+// Package controller xx
 package controller
 
 import (
@@ -39,6 +40,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-repack-descheduler/pkg/controller/sched/extender"
 )
 
+// ControllerManager defines the controller manager
 type ControllerManager struct {
 	op *options.DeSchedulerOption
 
@@ -223,6 +225,7 @@ func (m *ControllerManager) run(fs ...func(errChan chan error)) chan error {
 	return errChan
 }
 
+// Run run the controller manager
 func (m *ControllerManager) Run(ctx context.Context) error {
 	m.internalCtx, m.internalCancel = context.WithCancel(ctx)
 	errChan := m.run(m.runControllerManager, m.runCacheManager, m.runHTPExtender)

@@ -38,12 +38,6 @@ func (s *Service) CreateHook(ctx context.Context, req *pbds.CreateHookReq) (*pbd
 		return nil, fmt.Errorf("hook name %s already exists", req.Spec.Name)
 	}
 
-	// HookSpec convert pb HookSpec to table HookSpec
-	spec, err := req.Spec.HookSpec()
-	if err != nil {
-		logs.Errorf("get hook spec from pb failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, err
-	}
 	res := &table.Revision{
 		Creator: kt.User,
 		Reviser: kt.User,
@@ -53,7 +47,7 @@ func (s *Service) CreateHook(ctx context.Context, req *pbds.CreateHookReq) (*pbd
 
 	// 1. create hook
 	hook := &table.Hook{
-		Spec:       spec,
+		Spec:       req.Spec.HookSpec(),
 		Attachment: req.Attachment.HookAttachment(),
 		Revision:   res,
 	}
@@ -214,6 +208,27 @@ func (s *Service) DeleteHook(ctx context.Context, req *pbds.DeleteHookReq) (*pbb
 	return new(pbbase.EmptyResp), nil
 }
 
+// UpdateHook update hook.
+func (s *Service) UpdateHook(ctx context.Context, req *pbds.UpdateHookReq) (*pbbase.EmptyResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	hook := &table.Hook{
+		ID:         req.Id,
+		Spec:       req.Spec.HookSpec(),
+		Attachment: req.Attachment.HookAttachment(),
+		Revision: &table.Revision{
+			Reviser: kt.User,
+		},
+	}
+	// Update one hook's info.
+	if err := s.dao.Hook().Update(kt, hook); err != nil {
+		logs.Errorf("update hook failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	return new(pbbase.EmptyResp), nil
+}
+
 // ListHookTags list tag
 func (s *Service) ListHookTags(ctx context.Context, req *pbds.ListHookTagReq) (*pbds.ListHookTagResp, error) {
 
@@ -273,7 +288,7 @@ func (s *Service) GetHook(ctx context.Context, req *pbds.GetHookReq) (*pbds.GetH
 		Spec: &pbds.GetHookInfoSpec{
 			Name:     h.Spec.Name,
 			Type:     string(h.Spec.Type),
-			Tag:      h.Spec.Tag,
+			Tags:     h.Spec.Tags,
 			Memo:     h.Spec.Memo,
 			Releases: &pbds.GetHookInfoSpec_Releases{NotReleaseId: revisionID},
 		},

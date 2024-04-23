@@ -80,7 +80,7 @@
             <template #default="{ row }">
               <div v-if="row.spec" class="online-status">
                 <div :class="['dot', row.spec.online_status]"></div>
-                <span>{{ row.spec.online_status === 'online' ? t('在线') : t('离线')}}</span>
+                <span>{{ row.spec.online_status === 'Online' ? t('在线') : t('离线') }}</span>
               </div>
             </template>
           </bk-table-column>
@@ -213,11 +213,11 @@
   const onlineStatusFilterList = [
     {
       text: t('在线'),
-      value: 'online',
+      value: 'Online',
     },
     {
-      text: t('未在线'),
-      value: 'offline',
+      text: t('离线'),
+      value: 'Offline',
     },
   ];
   const onlineStatusFilterChecked = ref<string[]>([]);
@@ -242,7 +242,7 @@
 
   const showResourse = (resourse: IResourseType) => {
     return {
-      cpuResourse: `${resourse.cpu_usage} ${'核'}/${resourse.cpu_max_usage} ${'核'}`,
+      cpuResourse: `${resourse.cpu_usage} ${t('核')}/${resourse.cpu_max_usage} ${t('核')}`,
       memoryResource: `${resourse.memory_usage}MB/${resourse.memory_max_usage}MB`,
     };
   };
@@ -315,6 +315,7 @@
   };
 
   const handleFilter = ({ checked, index }: any) => {
+    console.log(checked, index);
     if (index === 4) {
       // 调整最近一次拉取配置筛选条件
       clientStore.$patch((state) => {
@@ -389,11 +390,11 @@
       width: 13px;
       height: 13px;
       border-radius: 50%;
-      &.online {
+      &.Online {
         background: #3fc06d;
         border: 3px solid #e0f5e7;
       }
-      &.offline {
+      &.Offline {
         background: #979ba5;
         border: 3px solid #eeeef0;
       }

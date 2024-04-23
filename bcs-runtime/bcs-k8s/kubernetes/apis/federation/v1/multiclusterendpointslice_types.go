@@ -20,6 +20,10 @@ import (
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+const (
+	LabelKeyEpsRelatedServiceNamespace = "federation.bkbcs.tencent.com/multi-cluster-service-namespace"
+	LabelKeyEpsRelatedClusterName      = "federation.bkbcs.tencent.com/cluster-name"
+)
 
 // AddressType represents the type of address referred to by an endpoint.
 // +enum
@@ -171,6 +175,20 @@ type MultiClusterEndpointSlice struct {
 
 	Spec   MultiClusterEndpointSliceSpec   `json:"spec,omitempty"`
 	Status MultiClusterEndpointSliceStatus `json:"status,omitempty"`
+}
+
+// GetRelatedServiceNameSpace return related multi-cluster service namespace from label
+func (in *MultiClusterEndpointSlice) GetRelatedServiceNameSpace() string {
+	if in.Labels == nil {
+		return ""
+	}
+
+	namespace, ok := in.Labels[LabelKeyEpsRelatedServiceNamespace]
+	if !ok {
+		return ""
+	}
+
+	return namespace
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

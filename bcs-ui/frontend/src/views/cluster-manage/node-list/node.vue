@@ -83,7 +83,7 @@
                   cluster_id: localClusterId
                 }
               }"
-              :disabled="isKubeConfigImportCluster || curSelectedCluster.provider === 'azureCloud'"
+              :disabled="isKubeConfigImportCluster || ['azureCloud', 'huaweiCloud'].includes(curSelectedCluster.provider)"
               @click="handleAddNode">
               {{$t('cluster.nodeList.create.text')}}
             </bcs-button>
@@ -1094,7 +1094,8 @@ export default defineComponent({
       && curSelectedCluster.value.importCategory === 'kubeConfig');
     // cloud私有节点
     const isCloudSelfNode = row => curSelectedCluster.value.clusterCategory === 'importer'
-      && (curSelectedCluster.value.provider === 'gcpCloud' || curSelectedCluster.value.provider === 'azureCloud')
+      && (curSelectedCluster.value.provider === 'gcpCloud' || curSelectedCluster.value.provider === 'azureCloud'
+      || curSelectedCluster.value.provider === 'huaweiCloud')
       && !row.nodeGroupID;
     // 全量表格数据
     const tableData = ref<any[]>([]);

@@ -45,8 +45,8 @@ type AnalysisOverview interface {
 	ResourceInfos() []ProjectResourceInfo
 
 	BKMonitorCommonGet(message *BKMonitorGetMessage) ([]*AnalysisBKMonitorSeries, error)
-	BKMonitorTopActivityProjectsInternal() ([]*AnalysisBKMonitorActivityProject, error)
-	BKMonitorTopActivityProjectsExternal() ([]*AnalysisBKMonitorActivityProject, error)
+	BKMTopActivityProjectsInternal() ([]*AnalysisBKMonitorActivityProject, error)
+	BKMTopActivityProjectsExternal() ([]*AnalysisBKMonitorActivityProject, error)
 }
 
 type analysisOverviewClient struct {
@@ -327,7 +327,7 @@ func (c *analysisOverviewClient) TopProjects() []*AnalysisProjectOverview {
 			continue
 		}
 		if len(cs) != 1 {
-			blog.Errorf("analysis search business '%s' from cc return '%d' items", item.BizID, len(cs))
+			blog.Errorf("analysis search business '%d' from cc return '%d' items", item.BizID, len(cs))
 			continue
 		}
 		c.businessCache.Store(item.BizID, cs[0].BkBizName)
@@ -548,7 +548,7 @@ func (c *analysisOverviewClient) BKMonitorCommonGet(message *BKMonitorGetMessage
 }
 
 // BKMonitorTopActivityProjectsInternal get top activity projects from bkmonitor
-func (c *analysisOverviewClient) BKMonitorTopActivityProjectsInternal() ([]*AnalysisBKMonitorActivityProject, error) {
+func (c *analysisOverviewClient) BKMTopActivityProjectsInternal() ([]*AnalysisBKMonitorActivityProject, error) {
 	message := &BKMonitorGetMessage{
 		// nolint
 		PromQL: `topk(10, max by (project) (increase(custom:GitOpsOperationData:project_sync{target="internal"}[1440m])) != 0)`,
@@ -558,7 +558,7 @@ func (c *analysisOverviewClient) BKMonitorTopActivityProjectsInternal() ([]*Anal
 }
 
 // BKMonitorTopActivityProjectsExternal get top activity projects from bkmonitor
-func (c *analysisOverviewClient) BKMonitorTopActivityProjectsExternal() ([]*AnalysisBKMonitorActivityProject, error) {
+func (c *analysisOverviewClient) BKMTopActivityProjectsExternal() ([]*AnalysisBKMonitorActivityProject, error) {
 	message := &BKMonitorGetMessage{
 		// nolint
 		PromQL: `topk(10, max by (project) (increase(custom:GitOpsOperationData:project_sync{target="external"}[1440m])) != 0)`,

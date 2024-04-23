@@ -14,9 +14,9 @@
 package reflector
 
 import (
+	"context"
 	"time"
 
-	"golang.org/x/net/context"
 	k8scache "k8s.io/client-go/tools/cache"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"

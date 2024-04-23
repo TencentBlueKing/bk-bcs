@@ -11,6 +11,7 @@
  *
  */
 
+// Package extender xx
 package extender
 
 import (

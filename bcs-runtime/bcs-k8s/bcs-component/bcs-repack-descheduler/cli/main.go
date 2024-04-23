@@ -47,6 +47,7 @@ func main() {
 }
 
 // NewCommand create command
+// nolint
 func NewCommand() *cobra.Command {
 	var root = &cobra.Command{
 		Use:   "bcs-descheduler-cli",

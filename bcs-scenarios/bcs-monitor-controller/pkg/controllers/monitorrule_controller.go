@@ -310,7 +310,7 @@ func (r *MonitorRuleReconciler) processDelete(monitorRule *monitorextensionv1.Mo
 func (r *MonitorRuleReconciler) patchAnnotation(monitorRule *monitorextensionv1.MonitorRule) error {
 	ruleBts, err := json.Marshal(monitorRule.Spec.Rules)
 	if err != nil {
-		return fmt.Errorf("marshal rules[%v] failed, errors: %w", monitorRule.Spec.Rules, err)
+		return fmt.Errorf("marshal rules[%v] failed, errors: %s", monitorRule.Spec.Rules, err.Error())
 	}
 	err = retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		patchStruct := map[string]interface{}{

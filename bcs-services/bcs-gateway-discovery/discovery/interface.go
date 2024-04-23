@@ -13,7 +13,7 @@
 // Package discovery xxx
 package discovery
 
-import "github.com/micro/go-micro/v2/registry"
+import "go-micro.dev/v4/registry"
 
 // all bkbcs module register itself with basic domain .bkbcs.tencent.com
 // for example, bcs-mesh-manager register it as meshmanager.bkbcs.tencent.com

@@ -102,6 +102,7 @@ func (s *ArgoSession) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 	req.URL = newURL
+	req.Header.Set(traceconst.RequestIDHeaderKey, requestID)
 	// all ready to serve
 	blog.Infof("RequestID[%s] GitOps serve %s %s", requestID, req.Method, fullPath)
 	s.reverseProxy.ServeHTTP(rw, req)

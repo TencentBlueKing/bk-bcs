@@ -114,7 +114,7 @@ func (c *client) RefreshAppCache(kt *kit.Kit, bizID uint32, appID uint32) error 
 
 // SetClientMetric set client metric data
 func (c *client) SetClientMetric(kt *kit.Kit, bizID, appID uint32, payload []byte) error {
-	if err := c.bds.LPush(kt.Ctx, keys.Key.ClientMetricKey(bizID, appID), payload); err != nil {
+	if err := c.bds.RPush(kt.Ctx, keys.Key.ClientMetricKey(bizID, appID), payload); err != nil {
 		return err
 	}
 	return nil

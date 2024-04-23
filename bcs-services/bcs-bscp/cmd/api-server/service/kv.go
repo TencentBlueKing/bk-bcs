@@ -128,6 +128,11 @@ func handleKv(result map[string]interface{}) ([]*pbcs.BatchUpsertKvsReq_Kv, erro
 			if err := validateKvType(kvType); err != nil {
 				return nil, fmt.Errorf("key: %s %s", key, err.Error())
 			}
+			var memo string
+			kvMemo, okMemo := entry["memo"].(string)
+			if okMemo {
+				memo = kvMemo
+			}
 			var val string
 			val = fmt.Sprintf("%v", kvValue)
 			// json 和 yaml 都需要格式化
@@ -164,6 +169,7 @@ func handleKv(result map[string]interface{}) ([]*pbcs.BatchUpsertKvsReq_Kv, erro
 				Key:    key,
 				Value:  val,
 				KvType: kvType,
+				Memo:   memo,
 			})
 		}
 	}

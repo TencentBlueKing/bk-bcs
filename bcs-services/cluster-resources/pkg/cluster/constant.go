@@ -43,7 +43,8 @@ var SharedClusterEnabledNativeKinds = []string{
 	resCsts.EP, resCsts.Ing, resCsts.SVC, resCsts.CM, resCsts.Secret, resCsts.PVC, resCsts.SA,
 }
 
-// SharedClusterBypassNativeKinds 共享集群鉴权忽略的原生资源
-var SharedClusterBypassNativeKinds = []string{
+// SharedClusterBypassClusterScopedKinds 共享集群鉴权忽略的原生资源
+var SharedClusterBypassClusterScopedKinds = []string{
 	resCsts.SC,
+	resCsts.CRD,
 }

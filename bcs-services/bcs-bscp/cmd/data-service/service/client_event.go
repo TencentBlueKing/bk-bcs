@@ -15,6 +15,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"sort"
 	"time"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
@@ -26,46 +27,22 @@ import (
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
-func (s *Service) doBatchCreateClientEvents(kt *kit.Kit, tx *gen.QueryTx, clientEvents []*pbce.ClientEvent, // nolint
+func (s *Service) doBatchCreateClientEvents(kt *kit.Kit, tx *gen.QueryTx, clientEvents []*pbce.ClientEvent,
 	clientID map[string]uint32) error {
 
-	// 处理clientID
-	clientEventsData := []*pbce.ClientEvent{}
-	for _, item := range clientEvents {
-		key := fmt.Sprintf("%d-%d-%s", item.Attachment.BizId, item.Attachment.AppId, item.Attachment.Uid)
-		id, ok := clientID[key]
-		if ok {
-			item.Attachment.ClientId = id
-			clientEventsData = append(clientEventsData, &pbce.ClientEvent{
-				Attachment:  item.Attachment,
-				Spec:        item.Spec,
-				MessageType: item.MessageType,
-			})
-		}
-	}
-
-	if len(clientEventsData) == 0 {
+	if len(clientEvents) == 0 {
 		return nil
 	}
 
-	// 根据 bizID + appID + UID + CursorID 查找存在的数据
-	data := [][]interface{}{}
-	for _, item := range clientEventsData {
-		data = append(data, []interface{}{item.Attachment.BizId, item.Attachment.AppId, item.Attachment.Uid,
-			item.Attachment.CursorId})
-	}
-	list, err := s.dao.ClientEvent().ListClientByTuple(kt, data)
+	var err error
+
+	var toCreate []*table.ClientEvent
+	var toUpdate map[string][]*table.ClientEvent
+
+	toCreate, toUpdate, err = s.handleCreateClientEvents(kt, clientEvents, clientID)
 	if err != nil {
 		return err
 	}
-	clientEventID := map[string]uint32{}
-	for _, v := range list {
-		key := fmt.Sprintf("%d-%d-%s-%s", v.Attachment.BizID, v.Attachment.AppID, v.Attachment.UID, v.Attachment.CursorID)
-		clientEventID[key] = v.ID
-	}
-
-	toCreate, toUpdate := s.handleBatchCreateClientEvents(clientEventsData, clientEventID)
-
 	err = s.dao.ClientEvent().BatchCreateWithTx(kt, tx, toCreate)
 	if err != nil {
 		return err
@@ -79,112 +56,93 @@ func (s *Service) doBatchCreateClientEvents(kt *kit.Kit, tx *gen.QueryTx, client
 		createID[key] = item.ID
 	}
 
-	// 判断类型更新对应字段
-	heartbeatData := []*table.ClientEvent{}
-	versionChangeData := []*table.ClientEvent{}
-
-	for _, v := range toUpdate {
-		key := fmt.Sprintf("%d-%d-%s-%s", v.Attachment.BizId, v.Attachment.AppId, v.Attachment.Uid,
-			v.Attachment.CursorId)
-		uid := v.Id
-		if uid == 0 {
-			cid, ok := createID[key]
-			if !ok {
-				uid = 0
-			} else {
-				uid = cid
-			}
-		}
-		if uid != 0 {
-			switch v.MessageType {
-			case "Heartbeat":
-				heartbeatData = append(heartbeatData, &table.ClientEvent{
-					ID:         uid,
-					Attachment: v.Attachment.ClientEventAttachment(),
-					Spec:       v.Spec.ClientEventSpec(),
-				})
-			case "VersionChange":
-				versionChangeData = append(versionChangeData, &table.ClientEvent{
-					ID:         uid,
-					Attachment: v.Attachment.ClientEventAttachment(),
-					Spec:       v.Spec.ClientEventSpec(),
-				})
+	// 更新时id不能为空
+	// 更新 client_event 时需要clientID
+	for _, data := range toUpdate {
+		for _, item := range data {
+			key := fmt.Sprintf("%d-%d-%s-%s", item.Attachment.BizID, item.Attachment.AppID, item.Attachment.UID,
+				item.Attachment.CursorID)
+			if item.ID == 0 {
+				item.ID = createID[key]
 			}
 		}
 	}
 
-	if len(heartbeatData) != 0 {
-		err = s.dao.ClientEvent().BatchUpdateSelectFieldTx(kt, tx, sfs.Heartbeat, heartbeatData)
-		if err != nil {
-			return err
-		}
-	}
-
-	if len(versionChangeData) != 0 {
-		err = s.dao.ClientEvent().BatchUpdateSelectFieldTx(kt, tx, sfs.VersionChangeMessage, versionChangeData)
-		if err != nil {
-			return err
-		}
+	// 先更新心跳，再更新变更
+	errH := s.dao.ClientEvent().UpsertHeartbeat(kt, tx, toUpdate[sfs.Heartbeat.String()])
+	errV := s.dao.ClientEvent().UpsertVersionChange(kt, tx, toUpdate[sfs.VersionChangeMessage.String()])
+	if errH != nil && errV != nil {
+		return fmt.Errorf("upsert heartbeat err: %v, upsert version change err: %v", errH, errV)
 	}
 
 	return nil
 }
 
-func (s *Service) handleBatchCreateClientEvents(clientEventsData []*pbce.ClientEvent,
-	clientEventID map[string]uint32) (toCreate []*table.ClientEvent, clientEUpdateData []*pbce.ClientEvent) {
-	clientEUpdateData = []*pbce.ClientEvent{}
-	clientECreateData := []*pbce.ClientEvent{}
-	// 验证哪些数据需要新增和修改
-	for _, item := range clientEventsData {
-		key := fmt.Sprintf("%d-%d-%s-%s", item.Attachment.BizId, item.Attachment.AppId, item.Attachment.Uid,
-			item.Attachment.CursorId)
-		id, ok := clientEventID[key]
+// handle client event data
+func (s *Service) handleCreateClientEvents(kt *kit.Kit, clientEvents []*pbce.ClientEvent, clientID map[string]uint32) (
+	toCreate []*table.ClientEvent, toUpdate map[string][]*table.ClientEvent, err error) {
 
-		if item.Spec.EndTime.GetSeconds() < 0 {
-			item.GetSpec().EndTime = nil
-		}
-
-		if !ok {
-			clientECreateData = append(clientECreateData, &pbce.ClientEvent{
-				Attachment:  item.GetAttachment(),
-				Spec:        item.GetSpec(),
-				MessageType: item.MessageType,
-			})
-		} else {
-			clientEUpdateData = append(clientEUpdateData, &pbce.ClientEvent{
-				Id:          id,
-				Attachment:  item.GetAttachment(),
-				Spec:        item.GetSpec(),
-				MessageType: item.MessageType,
-			})
-		}
+	data := [][]interface{}{}
+	for _, item := range clientEvents {
+		data = append(data, []interface{}{item.Attachment.BizId, item.Attachment.AppId, item.Attachment.Uid,
+			item.Attachment.CursorId})
+	}
+	list, err := s.dao.ClientEvent().ListClientByTuple(kt, data)
+	if err != nil {
+		return nil, nil, err
+	}
+	oldData := map[string]uint32{}
+	for _, v := range list {
+		key := fmt.Sprintf("%d-%d-%s-%s", v.Attachment.BizID, v.Attachment.AppID, v.Attachment.UID, v.Attachment.CursorID)
+		oldData[key] = v.ID
 	}
 
-	// Client Event数据会存在同一维度下多个类型的消息
-	// 如果同一维度下的数据都存在那么都是更新
-	// 如果同一维度下的数据不存在，只允许一条创建其他都是更新操作
-	createData := make(map[string]*pbce.ClientEvent)
-	otherCreateData := make([]*pbce.ClientEvent, 0)
-	for _, item := range clientECreateData {
-		key := fmt.Sprintf("%d-%d-%s", item.Attachment.BizId, item.Attachment.AppId, item.Attachment.CursorId)
-		_, ok := createData[key]
-		if ok {
-			otherCreateData = append(otherCreateData, item)
-		} else {
-			createData[key] = item
-		}
-	}
+	// 以心跳时间排序时间asc
+	sort.Slice(clientEvents, func(i, j int) bool {
+		return clientEvents[i].HeartbeatTime.AsTime().Before(clientEvents[j].HeartbeatTime.AsTime())
+	})
 
-	// 该数据是最终需要创建的数据
+	// 如果该数据不在 client_event 中有以下两种情况:
+	// 该数据的键不在 existingKeys 中,将其视为新增数据,并添加到 toCreate 中.
+	// 该数据的键已经在 existingKeys 中,将其视为修改数据,并添加到 toUpdate 中.
+	// 如果该数据在 client_event 中,将其视为修改数据,并添加到 toUpdate 中.
+	existingKeys := make(map[string]bool)
 	toCreate = []*table.ClientEvent{}
-	for _, v := range createData {
-		toCreate = append(toCreate, &table.ClientEvent{
-			Spec:       v.Spec.ClientEventSpec(),
-			Attachment: v.Attachment.ClientEventAttachment(),
-		})
+	toUpdate = make(map[string][]*table.ClientEvent)
+	for _, item := range clientEvents {
+		keyWithoutCursor := fmt.Sprintf("%d-%d-%s-%s", item.Attachment.BizId, item.Attachment.AppId, item.Attachment.Uid,
+			item.Attachment.CursorId)
+		v, ok := oldData[keyWithoutCursor]
+		if item.Spec.EndTime.GetSeconds() <= 0 {
+			item.Spec.EndTime = nil
+		}
+		fullKey := fmt.Sprintf("%d-%d-%s", item.Attachment.BizId, item.Attachment.AppId, item.Attachment.Uid)
+		if clientID[fullKey] > 0 {
+			item.Attachment.ClientId = clientID[fullKey]
+			if !ok {
+				if !existingKeys[keyWithoutCursor] {
+					toCreate = append(toCreate, &table.ClientEvent{
+						Attachment: item.Attachment.ClientEventAttachment(),
+						Spec:       item.Spec.ClientEventSpec(),
+					})
+					existingKeys[keyWithoutCursor] = true
+				} else {
+					toUpdate[item.MessageType] = append(toUpdate[item.MessageType], &table.ClientEvent{
+						Attachment: item.Attachment.ClientEventAttachment(),
+						Spec:       item.Spec.ClientEventSpec(),
+					})
+				}
+			} else {
+				toUpdate[item.MessageType] = append(toUpdate[item.MessageType], &table.ClientEvent{
+					ID:         v,
+					Attachment: item.Attachment.ClientEventAttachment(),
+					Spec:       item.Spec.ClientEventSpec(),
+				})
+			}
+		}
 	}
-	clientEUpdateData = append(clientEUpdateData, otherCreateData...)
-	return toCreate, clientEUpdateData
+
+	return toCreate, toUpdate, nil
 }
 
 // ListClientEvents List client details query

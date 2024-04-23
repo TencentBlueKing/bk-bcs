@@ -169,5 +169,5 @@ type Interface interface {
 
 	SaveApplicationHistoryManifest(hm *ApplicationHistoryManifest) error
 	GetApplicationHistoryManifest(appName, appUID string, historyID int64) (*ApplicationHistoryManifest, error)
-	CheckApplicationHistoryManifestExist(appName, appUID string, historyID int64) (bool, error)
+	CheckAppHistoryManifestExist(appName, appUID string, historyID int64) (bool, error)
 }

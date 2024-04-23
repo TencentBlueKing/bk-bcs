@@ -17,8 +17,8 @@ import (
 	"reflect"
 
 	authutils "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
-	"github.com/micro/go-micro/v2/metadata"
-	"github.com/micro/go-micro/v2/server"
+	"go-micro.dev/v4/metadata"
+	"go-micro.dev/v4/server"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/contextx"

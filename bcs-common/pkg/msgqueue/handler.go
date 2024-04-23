@@ -17,7 +17,7 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/micro/go-micro/v2/broker"
+	"go-micro.dev/v4/broker"
 
 	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 )

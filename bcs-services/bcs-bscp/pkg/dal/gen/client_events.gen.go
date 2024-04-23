@@ -45,6 +45,7 @@ func newClientEvent(db *gorm.DB, opts ...gen.DOOption) clientEvent {
 	_clientEvent.DownloadFileNum = field.NewUint32(tableName, "download_file_num")
 	_clientEvent.ReleaseChangeStatus = field.NewString(tableName, "release_change_status")
 	_clientEvent.ReleaseChangeFailedReason = field.NewString(tableName, "release_change_failed_reason")
+	_clientEvent.SpecificFailedReason = field.NewString(tableName, "specific_failed_reason")
 	_clientEvent.FailedDetailReason = field.NewString(tableName, "failed_detail_reason")
 
 	_clientEvent.fillFieldMap()
@@ -74,6 +75,7 @@ type clientEvent struct {
 	DownloadFileNum           field.Uint32
 	ReleaseChangeStatus       field.String
 	ReleaseChangeFailedReason field.String
+	SpecificFailedReason      field.String
 	FailedDetailReason        field.String
 
 	fieldMap map[string]field.Expr
@@ -109,6 +111,7 @@ func (c *clientEvent) updateTableName(table string) *clientEvent {
 	c.DownloadFileNum = field.NewUint32(table, "download_file_num")
 	c.ReleaseChangeStatus = field.NewString(table, "release_change_status")
 	c.ReleaseChangeFailedReason = field.NewString(table, "release_change_failed_reason")
+	c.SpecificFailedReason = field.NewString(table, "specific_failed_reason")
 	c.FailedDetailReason = field.NewString(table, "failed_detail_reason")
 
 	c.fillFieldMap()
@@ -136,7 +139,7 @@ func (c *clientEvent) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (c *clientEvent) fillFieldMap() {
-	c.fieldMap = make(map[string]field.Expr, 19)
+	c.fieldMap = make(map[string]field.Expr, 20)
 	c.fieldMap["id"] = c.ID
 	c.fieldMap["client_id"] = c.ClientID
 	c.fieldMap["cursor_id"] = c.CursorID
@@ -155,6 +158,7 @@ func (c *clientEvent) fillFieldMap() {
 	c.fieldMap["download_file_num"] = c.DownloadFileNum
 	c.fieldMap["release_change_status"] = c.ReleaseChangeStatus
 	c.fieldMap["release_change_failed_reason"] = c.ReleaseChangeFailedReason
+	c.fieldMap["specific_failed_reason"] = c.SpecificFailedReason
 	c.fieldMap["failed_detail_reason"] = c.FailedDetailReason
 }
 

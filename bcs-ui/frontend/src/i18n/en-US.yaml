@@ -663,7 +663,7 @@ cluster:
         subTitle: Unified management of multi-cloud provider clusters
         desc: >-
           Currently supports four cloud providers: Tencent Cloud, AWS, Azure,
-          Google Cloud
+          Google Cloud, Huawei Cloud
     label:
       clusterVersion: Version
       desc: Description
@@ -930,7 +930,6 @@ cluster:
         NotReady, resulting  in increased business costs. When the number of
         NotReady nodes does not meet  the suspension triggering conditions,
         Autoscaler will be automatically restored
-      path: Scaling Pause Configuration Path
     autoScalerConfig:
       title: Autoscaler configuration
       expander:
@@ -1436,9 +1435,6 @@ cluster:
       retry: Failure to retry
       setLabel: Set label
       setTaint: Set taint
-      addTag: Add tag
-      saveSettings: save setting
-      cancel: cancel
       copy:
         text: Copy
         checkedIP: Copy check ip
@@ -1469,7 +1465,6 @@ cluster:
       batchSetLabel:
         text: Set label batch
         desc: Batch settings only show the same key label
-      batchSetTaint: Batch set taint
     label:
       podCounts: Pods
       index: No.
@@ -3125,6 +3120,41 @@ importAzureCloud:
     zones: Zones
     regions: Regions
     other: Other
+huaweiCloud:
+  button:
+    create: Create
+    delete: Delete
+  placeholder:
+    search: Search ID/name/SubscriptionID/tenantID/ClientID/cluster
+  tips:
+    nameRegex: 'Only support English, numbers and characters (-)'
+  label:
+    create: Create
+    clusterType: Cluster type
+    managed: managed cluster
+    aksDesc: >-
+      The Master and Etcd of the Kubernetes cluster will be centrally managed
+      and maintained by the AKS team, and cluster administrators do not need to
+      concern themselves with the management and maintenance of the cluster
+      Master.
+    cluster: ''
+importHuaweiCloud:
+  title: Import a public cloud cluster - Huawei Cloud
+  label:
+    clusterName: Cluster name
+    token: Cloud Credentials
+    resourceGroups: Resource Groups
+    region: Region
+    clusterID: Cluster ID
+    nodemanArea: Nodeman Area
+    desc: Description
+  button:
+    test: Test
+    import: Import
+  clusterRegion:
+    zones: Zones
+    regions: Regions
+    other: Other
 publicCloud:
   tencent:
     title: Tencent Cloud
@@ -3154,6 +3184,16 @@ publicCloud:
       governance across on-premises, edge, and multi-cloud Kubernetes clusters.
       Provides interoperability with Azure security, identity, cost management,
       and migration services.
+  huawei:
+    title: Huawei Cloud
+    desc: >-
+      Huawei Cloud Container Service (Huawei Kubernetes Engine, HKE) Allows
+      users to deploy, manage, and scale containerized applications on the
+      Huawei Cloud platform without the need for complex configuration of
+      underlying computing resources. It can help developers take advantage of
+      the powerful features of the Kubernetes ecosystem while enjoying the
+      secure, reliable, and high-performance infrastructure provided by Huawei
+      Cloud.
 regions:
   asia: Asia
   australia: Australia

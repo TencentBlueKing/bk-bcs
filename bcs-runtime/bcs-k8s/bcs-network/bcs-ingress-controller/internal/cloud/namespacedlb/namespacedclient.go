@@ -17,6 +17,8 @@ import (
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/eventer"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
@@ -29,6 +31,8 @@ import (
 const (
 	// IDKeySecretName secret name to store secret id and secret key
 	IDKeySecretName = "ingress-secret.networkextension.bkbcs.tencent.com"
+	// IDKeyConfigName config name to store controller config, include cloud secret
+	IDKeyConfigName = "ingress-config.networkextension.bkbcs.tencent.com"
 )
 
 // NamespacedLB client for cloud which is aware of listener namespace
@@ -41,12 +45,12 @@ type NamespacedLB struct {
 	nsClientSet map[string]cloud.LoadBalance
 
 	// func for create cloud.LoadBalance
-	newLBFunc func(*k8scorev1.Secret, client.Client, eventer.WatchEventInterface) (cloud.LoadBalance, error)
+	newLBFunc func(map[string][]byte, client.Client, eventer.WatchEventInterface) (cloud.LoadBalance, error)
 }
 
 // NewNamespacedLB create namespaced lb client
 func NewNamespacedLB(k8sClient client.Client, eventWatcher eventer.WatchEventInterface,
-	newLBFunc func(secret *k8scorev1.Secret, cli client.Client, eventWatcher eventer.WatchEventInterface) (cloud.
+	newLBFunc func(data map[string][]byte, cli client.Client, eventWatcher eventer.WatchEventInterface) (cloud.
 		LoadBalance, error)) *NamespacedLB {
 	return &NamespacedLB{
 		k8sClient:    k8sClient,
@@ -59,15 +63,41 @@ func NewNamespacedLB(k8sClient client.Client, eventWatcher eventer.WatchEventInt
 // init client for namespace
 func (nc *NamespacedLB) initNsClient(ns string) (cloud.LoadBalance, error) {
 	var err error
+	var foundSecret, foundConfig = true, true
 	tmpSecret := &k8scorev1.Secret{}
 	err = nc.k8sClient.Get(context.TODO(), k8stypes.NamespacedName{
 		Name:      IDKeySecretName,
 		Namespace: ns,
 	}, tmpSecret)
 	if err != nil {
-		return nil, fmt.Errorf("get secret %s/%s failed, err %s", IDKeySecretName, ns, err.Error())
+		foundSecret = false
+		if !k8serrors.IsNotFound(err) {
+			return nil, fmt.Errorf("get secret %s/%s failed, err %s", IDKeySecretName, ns, err.Error())
+		}
 	}
-	newClient, err := nc.newLBFunc(tmpSecret, nc.k8sClient, nc.eventWatcher)
+
+	controllerConfig := &networkextensionv1.ControllerConfig{}
+	err = nc.k8sClient.Get(context.TODO(), k8stypes.NamespacedName{
+		Name:      IDKeyConfigName,
+		Namespace: ns,
+	}, controllerConfig)
+	if err != nil {
+		foundConfig = false
+		if !k8serrors.IsNotFound(err) {
+			return nil, fmt.Errorf("get controller config %s/%s failed, err %s", IDKeyConfigName, ns, err.Error())
+		}
+	}
+
+	var cloudSecret map[string][]byte
+	if foundSecret {
+		cloudSecret = tmpSecret.Data
+	} else if foundConfig {
+		cloudSecret = controllerConfig.Spec.Secret
+	} else {
+		return nil, fmt.Errorf("not found secret or controllerConfig in namespace %s, "+
+			"please create secret '%s' or controllerConfig %s in namespace", ns, IDKeySecretName, IDKeyConfigName)
+	}
+	newClient, err := nc.newLBFunc(cloudSecret, nc.k8sClient, nc.eventWatcher)
 	if err != nil {
 		return nil, fmt.Errorf("create client for ns %s failed, err %s", ns, err.Error())
 	}

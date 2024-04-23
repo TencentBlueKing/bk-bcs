@@ -28,16 +28,17 @@ func (c *ClientEventSpec) ClientEventSpec() *table.ClientEventSpec {
 	return &table.ClientEventSpec{
 		OriginalReleaseID:         c.OriginalReleaseId,
 		TargetReleaseID:           c.TargetReleaseId,
-		StartTime:                 c.StartTime.AsTime(),
-		EndTime:                   c.EndTime.AsTime(),
+		StartTime:                 c.StartTime.AsTime().UTC(),
+		EndTime:                   c.EndTime.AsTime().UTC(),
 		TotalSeconds:              c.TotalSeconds,
 		TotalFileSize:             c.TotalFileSize,
 		DownloadFileSize:          c.DownloadFileSize,
 		TotalFileNum:              c.TotalFileNum,
 		DownloadFileNum:           c.DownloadFileNum,
 		ReleaseChangeStatus:       table.Status(c.ReleaseChangeStatus),
-		ReleaseChangeFailedReason: table.FailedReason(c.ReleaseChangeFailedReason),
+		ReleaseChangeFailedReason: c.ReleaseChangeFailedReason,
 		FailedDetailReason:        c.FailedDetailReason,
+		SpecificFailedReason:      c.SpecificFailedReason,
 	}
 }
 
@@ -50,15 +51,16 @@ func PbClientEventSpec(spec *table.ClientEventSpec) *ClientEventSpec { //nolint:
 	return &ClientEventSpec{
 		OriginalReleaseId:         spec.OriginalReleaseID,
 		TargetReleaseId:           spec.TargetReleaseID,
-		StartTime:                 timestamppb.New(spec.StartTime),
-		EndTime:                   timestamppb.New(spec.EndTime),
+		StartTime:                 timestamppb.New(spec.StartTime.UTC()),
+		EndTime:                   timestamppb.New(spec.EndTime.UTC()),
 		TotalSeconds:              spec.TotalSeconds,
 		TotalFileSize:             spec.TotalFileSize,
 		DownloadFileSize:          spec.DownloadFileSize,
 		TotalFileNum:              spec.TotalFileNum,
 		DownloadFileNum:           spec.DownloadFileNum,
 		ReleaseChangeStatus:       string(spec.ReleaseChangeStatus),
-		ReleaseChangeFailedReason: string(spec.ReleaseChangeFailedReason),
+		ReleaseChangeFailedReason: spec.ReleaseChangeFailedReason,
+		SpecificFailedReason:      spec.SpecificFailedReason,
 		FailedDetailReason:        spec.FailedDetailReason,
 	}
 }

@@ -15,6 +15,9 @@
           {{ t('新增变量') }}
         </bk-button>
         <bk-button @click="isImportVariableShow = true">{{ t('导入变量') }}</bk-button>
+        <VaribaleExport :biz-id="spaceId" />
+        <bk-button @click="handleExport">{{ t('导出变量') }} </bk-button>
+        <BatchDeleteBtn :bk-biz-id="spaceId" :selected-ids="selectedIds" @deleted="refreshAfterBatchDelete" />
       </div>
       <SearchInput v-model="searchStr" :placeholder="t('请输入变量名称')" :width="320" @search="refreshList()" />
     </div>
@@ -23,9 +26,13 @@
         :border="['outer']"
         :data="list"
         :remote-pagination="true"
+        :checked="checkedVariables"
         :pagination="pagination"
+        @selection-change="handleSelectionChange"
+        @select-all="handleSelectAll"
         @page-limit-change="handlePageLimitChange"
         @page-value-change="refreshList">
+        <bk-table-column type="selection" :width="60"></bk-table-column>
         <bk-table-column :label="t('变量名称')" width="300">
           <template #default="{ row }">
             <div v-if="row.spec" class="var-name-wrapper">
@@ -75,7 +82,7 @@
   </DeleteConfirmDialog>
 </template>
 <script lang="ts" setup>
-  import { onMounted, ref, watch } from 'vue';
+  import { onMounted, ref, computed, watch } from 'vue';
   import { useI18n } from 'vue-i18n';
   import { storeToRefs } from 'pinia';
   import { Plus, Copy } from 'bkui-vue/lib/icon';
@@ -85,9 +92,11 @@
   import { IVariableEditParams, IVariableItem } from '../../../../types/variable';
   import { getVariableList, deleteVariable } from '../../../api/variable';
   import { copyToClipBoard } from '../../../utils/index';
+  import { fileDownload } from '../../../utils/file';
   import VariableCreate from './variable-create.vue';
   import VariableEdit from './variable-edit.vue';
   import VariableImport from './variable-import.vue';
+  import BatchDeleteBtn from './batch-delete-btn.vue';
   import SearchInput from '../../../components/search-input.vue';
   import TableEmpty from '../../../components/table/table-empty.vue';
   import DeleteConfirmDialog from '../../../components/delete-confirm-dialog.vue';
@@ -98,6 +107,7 @@
   const loading = ref(false);
   const list = ref<IVariableItem[]>([]);
   const searchStr = ref('');
+  const selectedIds = ref<number[]>([]);
   const pagination = ref<IPagination>({
     current: 1,
     count: 0,
@@ -118,6 +128,12 @@
     },
   });
   const isSearchEmpty = ref(false);
+
+  // table组件的checked属性需要的类型为string[]|rowItem[]，所以这里传原始数据
+  const checkedVariables = computed(() => {
+    return list.value.filter((item) => selectedIds.value.includes(item.id));
+  });
+
   watch(
     () => spaceId.value,
     () => {
@@ -145,6 +161,11 @@
     loading.value = false;
   };
 
+  // 导出变量
+  const handleExport = async () => {
+    fileDownload(`${(window as any).BK_BCS_BSCP_API}/api/v1/config/biz/${spaceId.value}/variables/export`, '', false);
+  };
+
   const handleEditVar = (variable: IVariableItem) => {
     const { id, spec } = variable;
     editSliderData.value = {
@@ -152,6 +173,27 @@
       id,
       data: { ...spec },
     };
+  };
+
+  // 表格行选择事件
+  const handleSelectionChange = ({ checked, row }: { checked: boolean; row: IVariableItem }) => {
+    const index = selectedIds.value.findIndex((id) => id === row.id);
+    if (checked) {
+      if (index === -1) {
+        selectedIds.value.push(row.id);
+      }
+    } else {
+      selectedIds.value.splice(index, 1);
+    }
+  };
+
+  // 全选
+  const handleSelectAll = ({ checked }: { checked: boolean }) => {
+    if (checked) {
+      selectedIds.value = list.value.map((item) => item.id);
+    } else {
+      selectedIds.value = [];
+    }
   };
 
   // 复制
@@ -185,6 +227,16 @@
   const handlePageLimitChange = (val: number) => {
     pagination.value.limit = val;
     refreshList();
+  };
+
+  // 批量删除变量后刷新列表
+  const refreshAfterBatchDelete = () => {
+    if (selectedIds.value.length === list.value.length && pagination.value.current > 1) {
+      pagination.value.current -= 1;
+    }
+
+    selectedIds.value = [];
+    refreshList(pagination.value.current);
   };
 
   const refreshList = (current = 1) => {
