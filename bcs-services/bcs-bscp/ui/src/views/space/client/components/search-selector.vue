@@ -267,6 +267,7 @@
 
   // 获取最近搜索记录和常用搜索记录
   const handleGetSearchList = async (search_type: string) => {
+    if (!props.appId) return;
     try {
       resentSearchListLoading.value = search_type === 'recent';
       const params = {

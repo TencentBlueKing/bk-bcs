@@ -3,7 +3,7 @@
     <div class="header">
       <ClientHeader :title="t('客户端查询')" @search="loadList" />
     </div>
-    <div class="content">
+    <div v-if="appId" class="content">
       <!-- @todo 重试功能待接口支持 -->
       <!-- <bk-button style="margin-bottom: 16px" :disabled="!selectedClient.length">批量重试</bk-button> -->
       <bk-loading style="min-height: 100px" :loading="listLoading">
@@ -139,6 +139,7 @@
         </bk-table>
       </bk-loading>
     </div>
+    <Exception v-else />
   </section>
   <PullRecord
     :bk-biz-id="bkBizId"
@@ -163,6 +164,7 @@
   import { IClinetCommonQuery } from '../../../../../types/client';
   import useClientStore from '../../../../store/client';
   import TableEmpty from '../../../../components/table/table-empty.vue';
+  import Exception from '../components/exception.vue';
   import { useI18n } from 'vue-i18n';
 
   const { t } = useI18n();
