@@ -201,7 +201,7 @@
                 item.name = t('主机插件客户端');
                 break;
               case 'command':
-                item.name = 'CLI';
+                item.name = `CLI ${t('客户端')}`;
                 break;
               default:
                 item.name = t('总量');

@@ -154,12 +154,20 @@
     try {
       loading.value = true;
       isSearchEmpty.value = searchStr.value !== '';
+      let search_value;
+      if (searchStr.value === '成功') {
+        search_value = 'success';
+      } else if (searchStr.value === '失败') {
+        search_value = 'failed';
+      } else {
+        search_value = searchStr.value;
+      }
       const params = {
         start: pagination.value.limit * (pagination.value.current - 1),
         limit: pagination.value.limit,
         start_time: initDateTime.value[0],
         end_time: initDateTime.value[1],
-        search_value: searchStr.value,
+        search_value,
       };
       const resp = await getClientPullRecord(props.bkBizId, props.appId, props.id, params);
       pagination.value.count = resp.data.count;
@@ -184,7 +192,6 @@
     searchStr.value = '';
     loadTableData();
   };
-
 </script>
 
 <style scoped lang="scss">
