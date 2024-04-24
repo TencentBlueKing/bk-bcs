@@ -797,6 +797,7 @@ cluster:
       title: 扩缩容暂停配置
       desc: >-
         自动扩缩容保护机制，如果NotReady节点数量或比例过大，自动扩容上来的节点也有可能会是NotReady状态，导致业务成本增加，当NotReady节点数不符合暂停触发条件时自动恢复自动扩缩容
+      path: 扩缩容暂停配置路径
     autoScalerConfig:
       title: 自动扩容配置
       expander:
@@ -2550,7 +2551,6 @@ importHuaweiCloud:
   label:
     clusterName: 集群名称
     token: 云凭证
-    resourceGroups: 资源组
     region: 所属区域
     clusterID: 云集群 ID
     nodemanArea: 管控区域

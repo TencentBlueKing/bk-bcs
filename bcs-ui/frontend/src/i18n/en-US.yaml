@@ -930,6 +930,7 @@ cluster:
         NotReady, resulting  in increased business costs. When the number of
         NotReady nodes does not meet  the suspension triggering conditions,
         Autoscaler will be automatically restored
+      path: Scaling Pause Configuration Path
     autoScalerConfig:
       title: Autoscaler configuration
       expander:
@@ -3143,7 +3144,6 @@ importHuaweiCloud:
   label:
     clusterName: Cluster name
     token: Cloud Credentials
-    resourceGroups: Resource Groups
     region: Region
     clusterID: Cluster ID
     nodemanArea: Nodeman Area
