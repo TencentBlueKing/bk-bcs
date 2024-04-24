@@ -17,6 +17,7 @@ package bll
 import (
 	"fmt"
 
+	asyncdownload "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/async-download"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/auth"
 	clientset "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/client-set"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/eventc"
@@ -64,28 +65,35 @@ func New(sd serviced.Discover, authorizer iamauth.Authorizer, name string) (*BLL
 	handler := &eventc.Handler{
 		GetMatchedRelease: rs.GetMatchedRelease,
 	}
-	if err := sch.Run(handler); err != nil {
-		return nil, fmt.Errorf("run scheduler faield, err: %v", err)
+	if e := sch.Run(handler); e != nil {
+		return nil, fmt.Errorf("run scheduler faield, err: %v", e)
+	}
+
+	asyncDownloader, err := asyncdownload.New(client, localCache)
+	if err != nil {
+		return nil, err
 	}
 
 	return &BLL{
-		client:  client,
-		release: rs,
-		auth:    auth.New(localCache),
-		cache:   localCache,
-		ob:      ob,
-		sch:     sch,
+		client:        client,
+		release:       rs,
+		auth:          auth.New(localCache),
+		cache:         localCache,
+		ob:            ob,
+		sch:           sch,
+		asyncdownload: asyncDownloader,
 	}, nil
 }
 
 // BLL defines business logical layer instance.
 type BLL struct {
-	client  *clientset.ClientSet
-	release *release.ReleasedService
-	auth    *auth.AuthService
-	cache   *lcache.Cache
-	ob      observer.Interface
-	sch     *eventc.Scheduler
+	client        *clientset.ClientSet
+	release       *release.ReleasedService
+	auth          *auth.AuthService
+	asyncdownload *asyncdownload.AsyncDownload
+	cache         *lcache.Cache
+	ob            observer.Interface
+	sch           *eventc.Scheduler
 }
 
 // Release return the release service instance.
@@ -111,4 +119,9 @@ func (b *BLL) RKvCache() *lcache.ReleasedKv {
 // ClientMetric return the client metric instance.
 func (b *BLL) ClientMetric() *lcache.ClientMetric {
 	return b.cache.ClientMetric
+}
+
+// AsyncDownload return the async download instance.
+func (b *BLL) AsyncDownload() *asyncdownload.AsyncDownload {
+	return b.asyncdownload
 }

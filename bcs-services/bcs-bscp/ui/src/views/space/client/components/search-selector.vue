@@ -270,6 +270,7 @@
 
   // 获取最近搜索记录和常用搜索记录
   const handleGetSearchList = async (search_type: string) => {
+    if (!props.appId) return;
     try {
       resentSearchListLoading.value = search_type === 'recent';
       const params = {
@@ -430,6 +431,9 @@
 </script>
 
 <style scoped lang="scss">
+  .section {
+    position: relative;
+  }
   .search-wrap {
     position: relative;
     display: flex;
@@ -508,6 +512,7 @@
     position: absolute;
     height: 26px;
     display: flex;
+    align-items: center;
     margin-top: 6px;
   }
   .action-item {
