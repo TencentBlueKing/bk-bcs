@@ -66,6 +66,7 @@ message ClientQueryCondition {
   repeated string online_status = 8;          // 在线状态：online、offline
   string client_version = 9;                  // 客户端组件版本
   string client_type = 10;                    // 客户端组件类型
+  string failed_reason = 11;                  // 客户端失败主类原因
 }
 
 // ClientCommonReq request param

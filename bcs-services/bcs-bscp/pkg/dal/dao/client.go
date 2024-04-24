@@ -261,7 +261,7 @@ func (dao *clientDao) List(kit *kit.Kit, bizID, appID uint32, heartbeatTime int6
 }
 
 // 处理搜索
-func (dao *clientDao) handleSearch(kit *kit.Kit, bizID, appID uint32, search *pbclient.ClientQueryCondition) (
+func (dao *clientDao) handleSearch(kit *kit.Kit, bizID, appID uint32, search *pbclient.ClientQueryCondition) ( // nolint
 	[]rawgen.Condition, error) {
 
 	var conds []rawgen.Condition
@@ -349,6 +349,11 @@ func (dao *clientDao) handleSearch(kit *kit.Kit, bizID, appID uint32, search *pb
 	if len(search.GetClientType()) > 0 {
 		conds = append(conds, q.Where(m.ClientType.Eq(search.GetClientType())))
 	}
+
+	if len(search.GetFailedReason()) > 0 {
+		conds = append(conds, q.Where(m.ReleaseChangeFailedReason.Eq(search.GetFailedReason())))
+	}
+
 	return conds, nil
 }
 
