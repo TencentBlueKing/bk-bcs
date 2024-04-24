@@ -8,7 +8,10 @@
       placement="bottom"
       theme="light"
       @after-show="handleGetSearchList('recent')">
-      <div class="search-wrap" :data-placeholder="inputPlacehoder">
+      <div
+        class="search-wrap"
+        :data-placeholder="inputPlacehoder"
+        v-bk-tooltips="{ content: inputPlacehoder, disabled: locale === 'zh-cn' || !inputPlacehoder }">
         <div class="search-condition-list">
           <bk-tag
             v-for="(condition, index) in searchConditionList"
@@ -128,7 +131,7 @@
   import { useRoute } from 'vue-router';
   import { useI18n } from 'vue-i18n';
 
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
 
   const clientStore = useClientStore();
   const { searchQuery } = storeToRefs(clientStore);

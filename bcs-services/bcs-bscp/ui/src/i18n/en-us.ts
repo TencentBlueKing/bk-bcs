@@ -735,6 +735,7 @@ export default {
   占比: 'Proportion',
   配置版本: 'Configuration version',
   数量: 'Number',
+  客户端配置拉取质量: 'Client configuration pull quality',
   拉取数量趋势: 'Pull quantity trend',
   '近 {n} 天': 'Last {n} days',
   客户端: 'Client',

@@ -24,6 +24,7 @@
             class="search-group-input"
             :placeholder="t('密钥名称/说明/关联规则/更新人')"
             :clearable="true"
+            v-bk-tooltips="{ content: t('密钥名称/说明/关联规则/更新人'), disabled: locale === 'zh-cn' || searchStr }"
             @clear="refreshListWithLoading()"
             @input="handleSearchInputChange">
             <template #suffix>
@@ -129,7 +130,7 @@
                   v-if="row.credential_scopes.length > 3"
                   class="toggle-button"
                   @click="toggleRulesExpanded(row.id)">
-                  {{ row.isExpandedRules ? '收起' : '展开' }}
+                  {{ row.isExpandedRules ? t('收起') : t('展开') }}
                 </span>
               </div>
               <span v-else>--</span>
