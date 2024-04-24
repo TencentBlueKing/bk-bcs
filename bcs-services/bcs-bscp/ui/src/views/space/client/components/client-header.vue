@@ -16,7 +16,8 @@
         @change="handleAppChange">
         <template #trigger>
           <div class="selector-trigger">
-            <span class="app-name">{{ localApp?.name }}</span>
+            <span v-if="localApp.name" class="app-name">{{ localApp?.name }}</span>
+            <span v-else class="no-app">{{ $t('暂无服务') }}</span>
             <AngleUpFill class="arrow-icon arrow-fill" />
           </div>
         </template>
@@ -41,7 +42,7 @@
         <bk-option v-for="item in heartbeatTimeList" :id="item.value" :key="item.value" :name="item.label" />
       </bk-select>
       <SearchSelector :bk-biz-id="bizId" :app-id="localApp.id" />
-      <bk-button theme="primary" style="margin-left: 8px" @click="emits('search')">
+      <bk-button theme="primary" style="margin-left: 8px" :disabled="!localApp.name" @click="emits('search')">
         <Search class="search-icon" />
         {{ $t('查询') }}
       </bk-button>
@@ -130,6 +131,7 @@
     clientStore.$patch((state) => {
       state.searchQuery.last_heartbeat_time = value;
     });
+    if (!localApp.value.name) return;
     emits('search');
   };
 
@@ -178,6 +180,10 @@
           cursor: pointer;
           .app-name {
             color: #63656e;
+          }
+          .no-app {
+            font-size: 16px;
+            color: #c4c6cc;
           }
           .arrow-icon {
             margin-left: 13.5px;

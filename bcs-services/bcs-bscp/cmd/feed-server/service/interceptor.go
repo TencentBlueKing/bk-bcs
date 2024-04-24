@@ -22,16 +22,19 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 var (
-	// 兼容老的请求, 只部分方法使用中间件
-	allowMethod = map[string]struct{}{
-		"/pbfs.Upstream/ListApps":   {},
-		"/pbfs.Upstream/PullKvMeta": {},
-		"/pbfs.Upstream/GetKvValue": {},
+	// 老的请求,不使用中间件
+	disabledMethod = map[string]struct{}{
+		"/pbfs.Upstream/Handshake":       {},
+		"/pbfs.Upstream/Messaging":       {},
+		"/pbfs.Upstream/Watch":           {},
+		"/pbfs.Upstream/PullAppFileMeta": {},
+		"/pbfs.Upstream/GetDownloadURL":  {},
 	}
 )
 
@@ -82,7 +85,7 @@ func (s *Service) authorize(ctx context.Context, bizID uint32) (context.Context,
 		return nil, status.Errorf(codes.Unauthenticated, err.Error())
 	}
 	if !cred.Enabled {
-		return nil, status.Errorf(codes.PermissionDenied, err.Error())
+		return nil, status.Errorf(codes.PermissionDenied, "credential is disabled")
 	}
 
 	// 获取scope，到下一步处理
@@ -94,7 +97,7 @@ func (s *Service) authorize(ctx context.Context, bizID uint32) (context.Context,
 func FeedUnaryAuthInterceptor(
 	ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	// 兼容老的请求
-	if _, ok := allowMethod[info.FullMethod]; !ok {
+	if _, ok := disabledMethod[info.FullMethod]; ok {
 		return handler(ctx, req)
 	}
 
@@ -105,6 +108,8 @@ func FeedUnaryAuthInterceptor(
 	default:
 		return nil, status.Error(codes.Aborted, "missing bizId in request")
 	}
+
+	ctx = context.WithValue(ctx, constant.BizIDKey, bizID) //nolint:staticcheck
 
 	svr := info.Server.(*Service)
 	ctx, err := svr.authorize(ctx, bizID)
@@ -130,7 +135,7 @@ func (s *wrappedStream) Context() context.Context {
 func FeedStreamAuthInterceptor(
 	srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 	// 兼容老的请求
-	if _, ok := allowMethod[info.FullMethod]; !ok {
+	if _, ok := disabledMethod[info.FullMethod]; ok {
 		return handler(srv, ss)
 	}
 

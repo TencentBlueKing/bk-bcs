@@ -893,6 +893,12 @@ service Config {
       body: "*"
     };
   };
+  rpc ClientSpecificFailedReason(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/clients/specific_failed_reason"
+      body: "*"
+    };
+  }
 }
 
 message UpdateCredentialScopeReq {
@@ -2623,4 +2629,5 @@ message DeleteClientQueryResp {}
 message ListClientLabelAndAnnotationReq {
   uint32 biz_id = 1;
   uint32 app_id = 2;
+  int64 last_heartbeat_time = 3;
 }
