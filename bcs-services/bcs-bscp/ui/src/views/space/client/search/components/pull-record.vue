@@ -60,25 +60,29 @@
               </div>
             </template>
           </bk-table-column>
-          <bk-table-column :label="$t('配置拉取方式')" prop="attachment.client_mode" width="104"></bk-table-column>
-          <bk-table-column :label="$t('配置拉取耗时(秒)')" width="128">
+          <bk-table-column :label="$t('配置拉取方式')" prop="attachment.client_mode" width="110"></bk-table-column>
+          <bk-table-column :label="$t('配置拉取耗时')" width="128">
             <template #default="{ row }">
               <span v-if="row.spec">
-                {{ parseInt(row.spec.total_seconds) }}
+                {{
+                  row.spec.total_seconds > 1
+                    ? `${Math.round(row.spec.total_seconds)}s`
+                    : `${Math.round(row.spec.total_seconds * 1000)}ms`
+                }}
               </span>
             </template>
           </bk-table-column>
-          <bk-table-column :label="$t('配置拉取文件数')" width="116">
+          <bk-table-column :label="$t('配置拉取文件数')" width="120">
             <template #default="{ row }">
               <div v-if="row.spec">{{ `${row.spec.download_file_num}/${row.spec.total_file_num}` }}</div>
             </template>
           </bk-table-column>
-          <bk-table-column :label="$t('配置拉取文件大小')" width="128">
+          <bk-table-column :label="$t('配置拉取文件大小')" width="130">
             <template #default="{ row }">
               <div v-if="row.spec">{{ byteUnitConverse(row.spec.download_file_size) }}</div>
             </template>
           </bk-table-column>
-          <bk-table-column :label="$t('配置拉取状态')" width="104">
+          <bk-table-column :label="$t('配置拉取状态')" width="110">
             <template #default="{ row }">
               <div v-if="row.spec" class="release_change_status">
                 <Spinner v-if="row.spec.release_change_status === 'Skip'" class="spinner-icon" fill="#3A84FF" />
@@ -150,12 +154,20 @@
     try {
       loading.value = true;
       isSearchEmpty.value = searchStr.value !== '';
+      let search_value;
+      if (searchStr.value === '成功') {
+        search_value = 'success';
+      } else if (searchStr.value === '失败') {
+        search_value = 'failed';
+      } else {
+        search_value = searchStr.value;
+      }
       const params = {
         start: pagination.value.limit * (pagination.value.current - 1),
         limit: pagination.value.limit,
         start_time: initDateTime.value[0],
         end_time: initDateTime.value[1],
-        search_value: searchStr.value,
+        search_value,
       };
       const resp = await getClientPullRecord(props.bkBizId, props.appId, props.id, params);
       pagination.value.count = resp.data.count;
