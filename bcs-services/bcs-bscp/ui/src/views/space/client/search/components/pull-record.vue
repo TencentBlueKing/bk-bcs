@@ -60,25 +60,29 @@
               </div>
             </template>
           </bk-table-column>
-          <bk-table-column :label="$t('配置拉取方式')" prop="attachment.client_mode" width="104"></bk-table-column>
-          <bk-table-column :label="$t('配置拉取耗时(秒)')" width="128">
+          <bk-table-column :label="$t('配置拉取方式')" prop="attachment.client_mode" width="110"></bk-table-column>
+          <bk-table-column :label="$t('配置拉取耗时')" width="128">
             <template #default="{ row }">
               <span v-if="row.spec">
-                {{ parseInt(row.spec.total_seconds) }}
+                {{
+                  row.spec.total_seconds > 1
+                    ? `${Math.round(row.spec.total_seconds)}s`
+                    : `${Math.round(row.spec.total_seconds * 1000)}ms`
+                }}
               </span>
             </template>
           </bk-table-column>
-          <bk-table-column :label="$t('配置拉取文件数')" width="116">
+          <bk-table-column :label="$t('配置拉取文件数')" width="120">
             <template #default="{ row }">
               <div v-if="row.spec">{{ `${row.spec.download_file_num}/${row.spec.total_file_num}` }}</div>
             </template>
           </bk-table-column>
-          <bk-table-column :label="$t('配置拉取文件大小')" width="128">
+          <bk-table-column :label="$t('配置拉取文件大小')" width="130">
             <template #default="{ row }">
               <div v-if="row.spec">{{ byteUnitConverse(row.spec.download_file_size) }}</div>
             </template>
           </bk-table-column>
-          <bk-table-column :label="$t('配置拉取状态')" width="104">
+          <bk-table-column :label="$t('配置拉取状态')" width="110">
             <template #default="{ row }">
               <div v-if="row.spec" class="release_change_status">
                 <Spinner v-if="row.spec.release_change_status === 'Skip'" class="spinner-icon" fill="#3A84FF" />
@@ -180,6 +184,7 @@
     searchStr.value = '';
     loadTableData();
   };
+
 </script>
 
 <style scoped lang="scss">

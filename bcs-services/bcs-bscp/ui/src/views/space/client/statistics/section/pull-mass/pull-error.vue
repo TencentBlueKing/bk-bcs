@@ -167,9 +167,16 @@
       loading.value = true;
       const res = await getClientPullStatusData(props.bkBizId, props.appId, params);
       data.value = res.failed_reason;
-      Object.entries(res.time_consuming).map(
-        ([key, value]) => (pullTime.value.find((item) => item.key === key)!.value = value as number),
-      );
+      Object.entries(res.time_consuming).forEach(([key, value]) => {
+        const item = pullTime.value.find((item) => item.key === key) as IInfoCard;
+        item.value = value as number;
+        if (item.value > 1) {
+          item.unit = 's';
+        } else {
+          item.value = item.value * 1000;
+          item.unit = 'ms';
+        }
+      });
     } catch (error) {
       console.error(error);
     } finally {
@@ -290,10 +297,15 @@
   };
 
   const refresh = async () => {
-    isShowSpecificReason.value = false;
-    await loadChartData();
-    if (data.value.length) {
-      initChart();
+    if (!isShowSpecificReason.value) {
+      loadChartData();
+    } else {
+      isShowSpecificReason.value = false;
+      await loadChartData();
+      if (data.value.length) {
+        initChart();
+        initialWidth.value = canvasRef.value!.offsetWidth;
+      }
     }
   };
 </script>

@@ -722,7 +722,7 @@ export default {
   开始时间: 'Start time',
   结束时间: 'End time',
   配置拉取方式: 'Configure the pull mode',
-  '配置拉取耗时(秒)': 'Configure the pull time (seconds)',
+  配置拉取耗时: 'Configure the pull time',
   配置拉取文件数: 'The number of pull files was set',
   配置拉取文件大小: 'Configure the pull file size',
   配置拉取状态: 'Configure the pull status',

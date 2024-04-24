@@ -319,7 +319,6 @@
   };
 
   const handleFilter = ({ checked, index }: any) => {
-    console.log(checked, index);
     if (index === 4) {
       // 调整最近一次拉取配置筛选条件
       clientStore.$patch((state) => {
