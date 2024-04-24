@@ -765,4 +765,8 @@ export default {
   组件类型: 'Component type',
   组件版本: 'Component version',
   查看数据详情: 'View data details',
+  主要失败原因: 'Main cause of failure',
+  暂无服务: 'No service',
+  前往创建: 'Go to create',
+  命令行工具: 'Command line tool',
 };

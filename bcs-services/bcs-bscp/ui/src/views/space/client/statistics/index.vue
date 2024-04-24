@@ -3,12 +3,13 @@
     <div class="header">
       <ClientHeader :title="$t('客户端统计')" />
     </div>
-    <div class="management-data-container">
+    <div v-if="appId" class="management-data-container">
       <VersionRelease :bk-biz-id="bkBizId" :app-id="appId" />
       <PullMass :bk-biz-id="bkBizId" :app-id="appId" />
       <LabelAndAnnotations :bk-biz-id="bkBizId" :app-id="appId" />
       <ComponentInfo :bk-biz-id="bkBizId" :app-id="appId" />
     </div>
+    <Exception v-else />
   </section>
 </template>
 
@@ -20,6 +21,7 @@
   import PullMass from './section/pull-mass/index.vue';
   import LabelAndAnnotations from './section/label-and-annotations/index.vue';
   import ComponentInfo from './section/component-info/index.vue';
+  import Exception from '../components/exception.vue';
 
   const route = useRoute();
   const bkBizId = ref(String(route.params.spaceId));
