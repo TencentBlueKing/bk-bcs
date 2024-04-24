@@ -22,13 +22,49 @@ import (
 	pbfs "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/feed-server"
 )
 
-// TransferFileData defines transfer file task data
-type TransferFileData struct {
-	Result TransferFileDataResult `json:"result"`
+// TransferFileReq defines transfer file task request
+type TransferFileReq struct {
+	TimeOutSeconds int                `json:"timeout_seconds"`
+	AutoMkdir      bool               `json:"auto_mkdir"`
+	UploadSpeed    int                `json:"upload_speed"`
+	DownloadSpeed  int                `json:"download_speed"`
+	Tasks          []TransferFileTask `json:"tasks"`
 }
 
-// TransferFileDataResult defines transfer file task result
-type TransferFileDataResult struct {
+// TransferFileTask defines transfer file task
+type TransferFileTask struct {
+	Source TransferFileSource `json:"source"`
+	Target TransferFileTarget `json:"target"`
+}
+
+// TransferFileSource defines transfer file task source
+type TransferFileSource struct {
+	FileName string            `json:"file_name"`
+	StoreDir string            `json:"store_dir"`
+	Agent    TransferFileAgent `json:"agent"`
+}
+
+// TransferFileTarget defines transfer file task target
+type TransferFileTarget struct {
+	FileName string              `json:"file_name"`
+	StoreDir string              `json:"store_dir"`
+	Agents   []TransferFileAgent `json:"agents"`
+}
+
+// TransferFileAgent defines transfer file task agent
+type TransferFileAgent struct {
+	User          string `json:"user"`
+	BkAgentID     string `json:"bk_agent_id"`
+	BkContainerID string `json:"bk_container_id"`
+}
+
+// TransferFileRespData defines transfer file task data
+type TransferFileRespData struct {
+	Result TransferFileRespResult `json:"result"`
+}
+
+// TransferFileRespResult defines transfer file task result
+type TransferFileRespResult struct {
 	TaskID string `json:"task_id"`
 }
 
@@ -45,30 +81,30 @@ func CreateTransferFileTask(ctx context.Context, sourceAgentID, sourceContainerI
 	resp, err := components.GetClient().R().
 		SetContext(ctx).
 		SetHeader("X-Bkapi-Authorization", authHeader).
-		SetBody(map[string]interface{}{
-			"timeout_seconds": 600,
-			"auto_mkdir":      true,
-			"upload_speed":    0,
-			"download_speed":  0,
-			"tasks": []map[string]interface{}{
+		SetBody(TransferFileReq{
+			TimeOutSeconds: 600,
+			AutoMkdir:      true,
+			UploadSpeed:    0,
+			DownloadSpeed:  0,
+			Tasks: []TransferFileTask{
 				{
-					"source": map[string]interface{}{
-						"file_name": targetFileName,
-						"store_dir": sourceFileDir,
-						"agent": map[string]interface{}{
-							"user":            sourceUser,
-							"bk_agent_id":     sourceAgentID,
-							"bk_container_id": sourceContainerID,
+					Source: TransferFileSource{
+						FileName: targetFileDir,
+						StoreDir: sourceFileDir,
+						Agent: TransferFileAgent{
+							User:          sourceUser,
+							BkAgentID:     sourceAgentID,
+							BkContainerID: sourceContainerID,
 						},
 					},
-					"target": map[string]interface{}{
-						"file_name": filename,
-						"store_dir": targetFileDir,
-						"agents": []map[string]interface{}{
+					Target: TransferFileTarget{
+						FileName: filename,
+						StoreDir: targetFileDir,
+						Agents: []TransferFileAgent{
 							{
-								"user":            targetUser,
-								"bk_agent_id":     targetAgentID,
-								"bk_container_id": targetContainerID,
+								User:          targetUser,
+								BkAgentID:     targetAgentID,
+								BkContainerID: targetContainerID,
 							},
 						},
 					},
@@ -81,7 +117,7 @@ func CreateTransferFileTask(ctx context.Context, sourceAgentID, sourceContainerI
 		return "", err
 	}
 
-	data := &TransferFileData{}
+	data := &TransferFileRespData{}
 	if err := components.UnmarshalBKResult(resp, data); err != nil {
 		return "", err
 	}

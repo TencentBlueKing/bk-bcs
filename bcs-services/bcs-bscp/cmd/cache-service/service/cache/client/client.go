@@ -134,10 +134,12 @@ func (c *client) BatchUpsertClientMetrics(kt *kit.Kit, clientData []*pbclient.Cl
 	return nil
 }
 
+// GetAsyncDownloadTask get async download task from cache
 func (c *client) GetAsyncDownloadTask(kt *kit.Kit, bizID uint32, taskID string) (string, error) {
 	return c.bds.Get(kt.Ctx, keys.Key.AsyncDownloadTaskKey(bizID, taskID))
 }
 
+// SetAsyncDownloadTask set async download task to cache
 func (c *client) SetAsyncDownloadTask(kt *kit.Kit, bizID uint32, taskID string,
 	task *types.AsyncDownloadTaskCache) error {
 	js, err := jsoni.Marshal(task)

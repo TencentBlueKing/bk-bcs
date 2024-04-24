@@ -203,12 +203,13 @@ func (fs *feedServer) listenAndServe() error {
 }
 
 func (fs *feedServer) finalizer() {
+
+	fs.cleaner.Stop()
+
 	if err := fs.sd.Deregister(); err != nil {
 		logs.Errorf("process service shutdown, but deregister failed, err: %v", err)
 		return
 	}
-
-	fs.cleaner.Stop()
 
 	logs.Infof("shutting down service, deregister service success.")
 }
