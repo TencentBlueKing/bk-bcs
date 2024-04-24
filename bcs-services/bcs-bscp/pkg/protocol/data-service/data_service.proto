@@ -245,6 +245,7 @@ service Data {
   rpc ClientAnnotationStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {}
   rpc ClientVersionStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {}
   rpc ListClientLabelAndAnnotation(ListClientLabelAndAnnotationReq) returns (google.protobuf.Struct) {}
+  rpc ClientSpecificFailedReason(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {}
 
   // used iam pull resource callback.
   rpc ListInstances(ListInstancesReq) returns (ListInstancesResp) {};
@@ -1773,4 +1774,5 @@ message DeleteClientQueryReq {
 message ListClientLabelAndAnnotationReq {
   uint32 biz_id = 1;
   uint32 app_id = 2;
+  int64 last_heartbeat_time = 3;
 }
