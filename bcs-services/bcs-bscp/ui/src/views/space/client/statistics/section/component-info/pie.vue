@@ -42,7 +42,7 @@
       data: props.data,
       colorField: 'name',
       label: {
-        content: ({ data }) => `${data.percent.toFixed(1)}%`,
+        content: ({ data }) => `${(data.percent * 100).toFixed(0)}%`,
         style: {
           fontSize: 14,
           textAlign: 'center',
@@ -76,5 +76,4 @@
   };
 </script>
 
-<style lang="scss">
-</style>
+<style lang="scss"></style>

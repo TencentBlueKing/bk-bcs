@@ -129,7 +129,7 @@
       angleField: 'count',
       colorField: 'release_change_status',
       color: ({ release_change_status }) => {
-        return release_change_status === '拉取成功' ? '#85CCA8' : '#F5876C';
+        return release_change_status === t('拉取成功') ? '#85CCA8' : '#F5876C';
       },
       radius: 0.9,
       label: {
@@ -153,7 +153,7 @@
         container: tooltipRef.value?.getDom(),
         enterable: true,
         customItems: (originalItems: any[]) => {
-          jumpStatus.value = originalItems[0].data.release_change_status;
+          jumpStatus.value = originalItems[0].data.release_change_status === t('拉取成功') ? 'Success' : 'Failed';
           originalItems[0].name = t('客户端数量');
           originalItems[1].name = t('占比');
           originalItems[1].value = `${(parseFloat(originalItems[1].value) * 100).toFixed(1)}%`;

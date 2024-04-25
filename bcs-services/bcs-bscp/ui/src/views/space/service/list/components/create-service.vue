@@ -16,10 +16,12 @@
     </div>
   </bk-sideslider>
   <bk-dialog
+    ref="dialog"
     ext-cls="confirm-dialog"
     :is-show="isShowConfirmDialog"
     :show-mask="true"
     :quick-close="false"
+    :multi-instance="false"
     @closed="isShowConfirmDialog = false">
     <div class="title-icon"><Done fill="#42C06A" /></div>
     <div class="title-info">{{ t('服务新建成功') }}</div>
@@ -117,13 +119,17 @@
   };
 
   const handleGoCreateConfig = () => {
-    router.push({
-      name: 'service-config',
-      params: {
-        spaceId: spaceId.value,
-        appId: appId.value,
-      },
-    });
+    isShowConfirmDialog.value = false;
+    // 目前组件库dialog关闭自带250ms的延迟，所以这里延时300ms
+    setTimeout(() => {
+      router.push({
+        name: 'service-config',
+        params: {
+          spaceId: spaceId.value,
+          appId: appId.value,
+        },
+      });
+    }, 300);
   };
 
   const close = () => {
@@ -148,8 +154,8 @@
     }
   }
 
-  .confirm-dialog {
-    :deep(.bk-modal-body) {
+  :deep(.confirm-dialog) {
+    .bk-modal-body {
       width: 400px;
       padding: 0;
       .bk-modal-header {

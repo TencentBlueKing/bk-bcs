@@ -38,6 +38,7 @@
         v-model="heartbeatTime"
         class="heartbeat-selector"
         :clearable="false"
+        :filterable="false"
         @change="handleHeartbeatTimeChange">
         <bk-option v-for="item in heartbeatTimeList" :id="item.value" :key="item.value" :name="item.label" />
       </bk-select>

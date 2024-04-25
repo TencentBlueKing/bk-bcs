@@ -9,7 +9,7 @@
             @toggle-full-screen="isOpenFullScreen = !isOpenFullScreen" />
         </template>
         <template #head-suffix>
-          <bk-select v-model="selectTime" class="time-selector" :clearable="false">
+          <bk-select v-model="selectTime" class="time-selector" :filterable="false" :clearable="false">
             <bk-option v-for="item in selectorTimeList" :id="item.value" :key="item.value" :name="item.label" />
           </bk-select>
         </template>
@@ -201,7 +201,7 @@
                 item.name = t('主机插件客户端');
                 break;
               case 'command':
-                item.name = 'CLI';
+                item.name = `CLI ${t('客户端')}`;
                 break;
               default:
                 item.name = t('总量');

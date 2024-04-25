@@ -94,6 +94,7 @@ export interface IInfoCard {
   value: number;
   name: string;
   key: string;
+  unit?: string;
 }
 
 export interface IPullErrorReason {
