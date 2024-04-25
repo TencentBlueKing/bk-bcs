@@ -327,7 +327,7 @@ func checkClusterOsNameInWhiteImages(cls *proto.Cluster, opt *cloudprovider.Comm
 
 // checkIfWhiteImageOsNames check cluster osName if it is white image osName
 func checkIfWhiteImageOsNames(opt *cloudprovider.ClusterGroupOption) bool {
-	if opt == nil || opt.Cluster == nil || opt.Group == nil {
+	if opt == nil || opt.Cluster == nil {
 		blog.Errorf("checkIfWhiteImageOsNames failed: %v", "option empty")
 		return false
 	}
@@ -346,7 +346,7 @@ func checkIfWhiteImageOsNames(opt *cloudprovider.ClusterGroupOption) bool {
 
 	// NOCC:ineffassign/assign(误报)
 	osName := ""
-	if opt.Group.NodeTemplate != nil && opt.Group.NodeTemplate.NodeOS != "" {
+	if opt.Group != nil && opt.Group.NodeTemplate != nil && opt.Group.NodeTemplate.NodeOS != "" {
 		osName = opt.Group.NodeTemplate.NodeOS
 		blog.Infof("checkIfWhiteImageOsNames[%s] osName[%s]", opt.Cluster.ClusterID, osName)
 		return utils.StringInSlice(osName, utils.WhiteImageOsName)

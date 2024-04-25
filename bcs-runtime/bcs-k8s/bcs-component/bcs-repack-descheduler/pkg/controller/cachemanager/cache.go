@@ -293,7 +293,7 @@ func (m *CacheManager) initGameWorkloadInformer() (err error) {
 		if m.kubeConfig == "" {
 			gameClient, err = utils.GetGameDeploymentClient()
 		} else {
-			gameClient, err = utils.GetGameDeploymentClientWithKubeConfig(m.kubeConfig)
+			gameClient, err = utils.GetGameDeployClientWithKubeCfg(m.kubeConfig)
 		}
 		if err != nil {
 			return errors.Wrapf(err, "CacheManager get gamedeployment client failed")
@@ -386,6 +386,7 @@ func (m *CacheManager) Start(ctx context.Context) error {
 	return nil
 }
 
+// CordonNode cordon the node
 func (m *CacheManager) CordonNode(ctx context.Context, name string) error {
 	payload := []map[string]interface{}{{
 		"op":    "replace",

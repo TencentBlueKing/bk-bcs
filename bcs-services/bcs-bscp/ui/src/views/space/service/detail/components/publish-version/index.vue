@@ -32,7 +32,12 @@
           @change="groups = $event" />
         <template #footer>
           <section class="actions-wrapper">
-            <bk-button class="publish-btn" theme="primary" @click="handlePublishOrOpenDiff">
+            <bk-button
+              v-bk-tooltips="{ content: t('请选择分组实例'), disabled: groups.length > 0 }"
+              class="publish-btn"
+              theme="primary"
+              :disabled="groups.length === 0"
+              @click="handlePublishOrOpenDiff">
               {{ diffableVersionList.length ? t('对比并上线') : t('上线版本') }}
             </bk-button>
             <bk-button @click="handlePanelClose">{{ t('取消') }}</bk-button>
@@ -67,7 +72,6 @@
   import { useRouter } from 'vue-router';
   import { ArrowsLeft, AngleRight } from 'bkui-vue/lib/icon';
   import { InfoBox } from 'bkui-vue';
-  import BkMessage from 'bkui-vue/lib/message';
   import { storeToRefs } from 'pinia';
   import useGlobalStore from '../../../../../../store/global';
   import { IGroupToPublish, IGroupItemInService } from '../../../../../../../types/group';
@@ -146,8 +150,21 @@
   const diffableVersionList = computed(() => {
     const list = [] as IConfigVersion[];
     versionList.value.forEach((version) => {
-      version.status.released_groups.some((group) => {
-        if (group.id === 0 || groups.value.findIndex((item) => item.id === group.id)) {
+      if (version.id === versionData.value.id) return; // 忽略当前上线版本
+      version.status.released_groups.some((item) => {
+        // 其他版本包含默认分组，且当前选中分组未上线
+        if (item.id === 0) {
+          return groups.value.some((g) => {
+            // 选中未上线分组或默认分组
+            if (g.release_id === 0 || g.id === 0) {
+              list.push(version);
+              return true;
+            }
+            return false;
+          });
+        }
+        // 其他版本包含的分组在当前已选中的分组中
+        if (groups.value.some((g) => g.id === item.id)) {
           list.push(version);
           return true;
         }
@@ -177,11 +194,6 @@
    * 所有分组都为首次上线，则直接上线，反之先对比再上线
    */
   const handlePublishOrOpenDiff = () => {
-    if (groups.value.length === 0) {
-      BkMessage({ theme: 'error', message: t('请选择分组实例') });
-      return;
-    }
-
     if (diffableVersionList.value.length) {
       baseVersionId.value = diffableVersionList.value[0].id;
       isDiffSliderShow.value = true;

@@ -22,7 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-user-manager/pkg"
 )
 
-// newGetCmd create get command
+// newGetCmd create get command. Return the get command
 func newGetCmd() *cobra.Command {
 	getCmd := &cobra.Command{
 		Use:   "get",
@@ -40,7 +40,7 @@ func newGetCmd() *cobra.Command {
 	return getCmd
 }
 
-// getAdminUserCmd return admin user command
+// getAdminUserCmd return admin user command. Return the command get admin user
 func getAdminUserCmd() *cobra.Command {
 	var userName string
 	subCmd := &cobra.Command{
@@ -71,7 +71,7 @@ func getAdminUserCmd() *cobra.Command {
 	return subCmd
 }
 
-// getSaasUserCmd get saas user command
+// getSaasUserCmd get saas user command. Return the command that get saas user
 func getSaasUserCmd() *cobra.Command {
 	var userName string
 	subCmd := &cobra.Command{
@@ -102,7 +102,7 @@ func getSaasUserCmd() *cobra.Command {
 	return subCmd
 }
 
-// getPlainUserCmd get plain user command
+// getPlainUserCmd get plain user command. Return the command that get plain user
 func getPlainUserCmd() *cobra.Command {
 	var userName string
 	subCmd := &cobra.Command{
@@ -133,7 +133,7 @@ func getPlainUserCmd() *cobra.Command {
 	return subCmd
 }
 
-// getRegisterTokenCmd get register token command
+// getRegisterTokenCmd get register token command. Return the command the get register token
 func getRegisterTokenCmd() *cobra.Command {
 	var clusterId string
 	subCmd := &cobra.Command{
@@ -164,7 +164,7 @@ func getRegisterTokenCmd() *cobra.Command {
 	return subCmd
 }
 
-// getCredentialsCmd get credentials command
+// getCredentialsCmd get credentials command. Return the command that get credentials
 func getCredentialsCmd() *cobra.Command {
 	var clusterId string
 	subCmd := &cobra.Command{
@@ -195,7 +195,7 @@ func getCredentialsCmd() *cobra.Command {
 	return subCmd
 }
 
-// getPermissionCmd get permission command
+// getPermissionCmd get permission command. Return the command get permission
 func getPermissionCmd() *cobra.Command {
 	var permissionForm string
 	subCmd := &cobra.Command{
@@ -226,7 +226,7 @@ func getPermissionCmd() *cobra.Command {
 	return subCmd
 }
 
-// getTokenCmd get token command
+// getTokenCmd get token command. Return the command that get command
 func getTokenCmd() *cobra.Command {
 	var userName string
 	subCmd := &cobra.Command{
@@ -257,7 +257,8 @@ func getTokenCmd() *cobra.Command {
 	return subCmd
 }
 
-// getTokenByUserAndClusterIDCmd get token by user and clusterID command
+// getTokenByUserAndClusterIDCmd get token by user and clusterID command. Return the command tthat
+// get token by user and cluster
 func getTokenByUserAndClusterIDCmd() *cobra.Command {
 	var request pkg.GetTokenByUserAndClusterIDRequest
 	subCmd := &cobra.Command{

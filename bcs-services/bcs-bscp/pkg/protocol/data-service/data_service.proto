@@ -88,6 +88,7 @@ service Data {
   rpc CreateHook(CreateHookReq) returns (CreateResp) {}
   rpc ListHooks(ListHooksReq) returns (ListHooksResp) {}
   rpc DeleteHook(DeleteHookReq) returns (pbbase.EmptyResp) {}
+  rpc UpdateHook(UpdateHookReq) returns (pbbase.EmptyResp) {}
   rpc ListHookTags(ListHookTagReq) returns (ListHookTagResp) {}
   rpc ListHookReferences(ListHookReferencesReq) returns (ListHookReferencesResp) {}
   rpc GetHook(GetHookReq) returns (GetHookResp) {}
@@ -222,6 +223,7 @@ service Data {
   rpc DeleteKv(DeleteKvReq) returns (pbbase.EmptyResp) {};
   rpc BatchUpsertKvs(BatchUpsertKvsReq) returns (BatchUpsertKvsResp) {};
   rpc UnDeleteKv(UnDeleteKvReq) returns (pbbase.EmptyResp) {};
+  rpc UndoKv(UndoKvReq) returns (pbbase.EmptyResp) {};
 
   // client related interface
   rpc ListClients(ListClientsReq) returns (ListClientsResp) {};
@@ -235,9 +237,19 @@ service Data {
   rpc UpdateClientQuery(UpdateClientQueryReq) returns (pbbase.EmptyResp) {};
   rpc DeleteClientQuery(DeleteClientQueryReq) returns (pbbase.EmptyResp) {};
 
+  // client metrics chart related interface
+  rpc ClientConfigVersionStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {}
+  rpc ClientPullTrendStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {}
+  rpc ClientPullStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {}
+  rpc ClientLabelStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {}
+  rpc ClientAnnotationStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {}
+  rpc ClientVersionStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {}
+  rpc ListClientLabelAndAnnotation(ListClientLabelAndAnnotationReq) returns (google.protobuf.Struct) {}
+  rpc ClientSpecificFailedReason(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {}
+
   // used iam pull resource callback.
-  rpc ListInstances(ListInstancesReq) returns (ListInstancesResp) {}
-  rpc FetchInstanceInfo(FetchInstanceInfoReq) returns (FetchInstanceInfoResp) {}
+  rpc ListInstances(ListInstancesReq) returns (ListInstancesResp) {};
+  rpc FetchInstanceInfo(FetchInstanceInfoReq) returns (FetchInstanceInfoResp) {};
 
   // Ping verifies if the grpc connection is still alive.
   rpc Ping(PingMsg) returns (PingMsg) {
@@ -649,7 +661,7 @@ message GetHookResp {
 message GetHookInfoSpec {
   string name = 1;
   string type = 3;
-  string tag = 4;
+  repeated string tags = 4;
   string memo = 5;
   uint32 publish_num = 7;
   message Releases {
@@ -711,6 +723,12 @@ message DeleteHookReq {
   uint32 biz_id = 1;
   uint32 hook_id = 2;
   bool force = 3;
+}
+
+message UpdateHookReq {
+  uint32 id = 1;
+  pbhook.HookAttachment attachment = 2;
+  pbhook.HookSpec spec = 3;
 }
 
 message CreateHookRevisionReq {
@@ -1653,9 +1671,15 @@ message BatchUpsertKvsResp {
 }
 
 message UnDeleteKvReq {
-  uint32 id = 1;
-  pbkv.KvSpec spec = 2;
-  pbkv.KvAttachment attachment = 3;
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  string key = 3;
+}
+
+message UndoKvReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  string key = 3;
 }
 
 message BatchUpsertClientMetricsReq {
@@ -1745,4 +1769,10 @@ message DeleteClientQueryReq {
   uint32 id = 1;
   uint32 biz_id = 2;
   uint32 app_id = 3;
+}
+
+message ListClientLabelAndAnnotationReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  int64 last_heartbeat_time = 3;
 }

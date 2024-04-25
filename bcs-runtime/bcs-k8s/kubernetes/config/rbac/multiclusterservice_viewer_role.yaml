@@ -1,0 +1,20 @@
+# permissions for end users to view multiclusterservices.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: multiclusterservice-viewer-role
+rules:
+- apiGroups:
+  - federation.bkbcs.tencent.com
+  resources:
+  - multiclusterservices
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - federation.bkbcs.tencent.com
+  resources:
+  - multiclusterservices/status
+  verbs:
+  - get

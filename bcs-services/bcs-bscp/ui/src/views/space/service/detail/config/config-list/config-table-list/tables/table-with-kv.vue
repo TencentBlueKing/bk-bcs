@@ -7,11 +7,18 @@
       :remote-pagination="true"
       :pagination="pagination"
       :key="versionData.id"
+      :checked="checkedConfigs"
+      selection-key="id"
+      row-key="id"
       :row-class="getRowCls"
+      :is-row-select-enable="isRowSelectEnable"
       @page-limit-change="handlePageLimitChange"
       @page-value-change="refresh"
       @column-sort="handleSort"
-      @column-filter="handleFilter">
+      @column-filter="handleFilter"
+      @selection-change="handleSelectionChange"
+      @select-all="handleSelectAll">
+      <bk-table-column v-if="versionData.id === 0" type="selection" :width="40" :min-width="40"></bk-table-column>
       <bk-table-column :label="t('配置项名称')" prop="spec.key" :min-width="240">
         <template #default="{ row }">
           <bk-button
@@ -26,19 +33,23 @@
       </bk-table-column>
       <bk-table-column :label="t('配置项值预览')" prop="spec.value">
         <template #default="{ row }">
-          <div v-if="row.spec" class="preview">
-            <div class="preview-value">{{ row.spec.value }}</div>
-            <Copy @click="handleCopyText(row.spec.value)" />
-          </div>
+          <kvValuePreview v-if="row.spec" :key="row.id" :value="row.spec.value" @view-all="handleView(row)" />
+        </template>
+      </bk-table-column>
+      <bk-table-column :label="t('配置项描述')">
+        <template #default="{ row }">
+          <span v-if="row.spec">{{ row.spec.memo || '--' }}</span>
         </template>
       </bk-table-column>
       <bk-table-column
-        :label="t('数据类型')"
         prop="spec.kv_type"
-        :filter="{ filterFn: () => true, list: typeFilterList, checked: typeFilterChecked }"></bk-table-column>
-      <bk-table-column :label="t('创建人')" prop="revision.creator"></bk-table-column>
-      <bk-table-column :label="t('修改人')" prop="revision.reviser"></bk-table-column>
-      <bk-table-column :label="t('修改时间')" :sort="true" :width="220">
+        :label="t('数据类型')"
+        :filter="{ filterFn: () => true, list: typeFilterList, checked: typeFilterChecked }"
+        :width="120">
+      </bk-table-column>
+      <bk-table-column :label="t('创建人')" prop="revision.creator" :width="150"></bk-table-column>
+      <bk-table-column :label="t('修改人')" prop="revision.reviser" :width="150"></bk-table-column>
+      <bk-table-column :label="t('修改时间')" :sort="true" :width="180">
         <template #default="{ row }">
           <span v-if="row.revision">{{ datetimeFormat(row.revision.update_at) }}</span>
         </template>
@@ -46,21 +57,45 @@
       <bk-table-column
         v-if="versionData.id === 0"
         :label="t('变更状态')"
-        :filter="{ filterFn: () => true, list: statusFilterList, checked: statusFilterChecked }">
+        :filter="{ filterFn: () => true, list: statusFilterList, checked: statusFilterChecked }"
+        :width="140">
         <template #default="{ row }">
           <StatusTag :status="row.kv_state" />
         </template>
       </bk-table-column>
-      <bk-table-column :label="t('操作')" fixed="right">
+      <bk-table-column :label="t('操作')" fixed="right" :width="220">
         <template #default="{ row }">
           <div class="operate-action-btns">
-            <bk-button v-if="row.kv_state === 'DELETE'" text theme="primary" @click="handleUndelete(row)">
+            <bk-button
+              v-if="row.kv_state === 'DELETE'"
+              v-cursor="{ active: !hasEditServicePerm }"
+              :class="{ 'bk-text-with-no-perm': !hasEditServicePerm }"
+              :disabled="!hasEditServicePerm"
+              text
+              theme="primary"
+              @click="handleUndelete(row)">
               {{ t('恢复') }}
             </bk-button>
             <template v-else>
-              <bk-button :disabled="row.kv_state === 'DELETE'" text theme="primary" @click="handleEditOrView(row)">{{
-                versionData.id === 0 ? t('编辑') : t('查看')
-              }}</bk-button>
+              <bk-button
+                v-cursor="{ active: !hasEditServicePerm }"
+                :class="{ 'bk-text-with-no-perm': versionData.id === 0 && !hasEditServicePerm }"
+                :disabled="versionData.id === 0 && !hasEditServicePerm"
+                text
+                theme="primary"
+                @click="handleEditOrView(row)">
+                {{ versionData.id === 0 ? t('编辑') : t('查看') }}
+              </bk-button>
+              <bk-button
+                v-cursor="{ active: !hasEditServicePerm }"
+                v-if="row.kv_state === 'REVISE'"
+                :class="{ 'bk-text-with-no-perm': !hasEditServicePerm }"
+                :disabled="!hasEditServicePerm"
+                text
+                theme="primary"
+                @click="handleUnModify(row)">
+                {{ t('撤销') }}
+              </bk-button>
               <bk-button
                 v-if="versionData.status.publish_status !== 'editing'"
                 text
@@ -68,7 +103,14 @@
                 @click="handleDiff(row)">
                 {{ t('对比') }}
               </bk-button>
-              <bk-button v-if="versionData.id === 0" text theme="primary" @click="handleDel(row)">
+              <bk-button
+                v-cursor="{ active: !hasEditServicePerm }"
+                v-if="versionData.id === 0"
+                :class="{ 'bk-text-with-no-perm': !hasEditServicePerm }"
+                :disabled="!hasEditServicePerm"
+                text
+                theme="primary"
+                @click="handleDel(row)">
                 {{ t('删除') }}
               </bk-button>
             </template>
@@ -103,28 +145,28 @@
   import { ref, watch, onMounted, computed } from 'vue';
   import { useI18n } from 'vue-i18n';
   import { storeToRefs } from 'pinia';
+  import Message from 'bkui-vue/lib/message';
   import useConfigStore from '../../../../../../../../store/config';
   import useServiceStore from '../../../../../../../../store/service';
   import { ICommonQuery } from '../../../../../../../../../types/index';
   import { IConfigKvItem, IConfigKvType } from '../../../../../../../../../types/config';
-  import { getKvList, deleteKv, getReleaseKvList, undeleteKv } from '../../../../../../../../api/config';
-  import { datetimeFormat, copyToClipBoard } from '../../../../../../../../utils/index';
+  import { getKvList, deleteKv, getReleaseKvList, undeleteKv, unModifyKv } from '../../../../../../../../api/config';
+  import { datetimeFormat } from '../../../../../../../../utils/index';
   import { getDefaultKvItem } from '../../../../../../../../utils/config';
   import { CONFIG_KV_TYPE } from '../../../../../../../../constants/config';
-  import { Copy } from 'bkui-vue/lib/icon';
   import StatusTag from './status-tag';
   import EditConfig from '../edit-config-kv.vue';
   import ViewConfigKv from '../view-config-kv.vue';
+  import kvValuePreview from './kv-value-preview.vue';
   import VersionDiff from '../../../components/version-diff/index.vue';
   import TableEmpty from '../../../../../../../../components/table/table-empty.vue';
   import DeleteConfirmDialog from '../../../../../../../../components/delete-confirm-dialog.vue';
-  import Message from 'bkui-vue/lib/message';
 
   const configStore = useConfigStore();
   const serviceStore = useServiceStore();
   const { versionData } = storeToRefs(configStore);
   const { checkPermBeforeOperate } = serviceStore;
-  const { permCheckLoading } = storeToRefs(serviceStore);
+  const { permCheckLoading, hasEditServicePerm } = storeToRefs(serviceStore);
   const { t } = useI18n();
 
   const props = defineProps<{
@@ -133,7 +175,7 @@
     searchStr: string;
   }>();
 
-  const emits = defineEmits(['clearStr']);
+  const emits = defineEmits(['clearStr', 'updateSelectedIds']);
 
   const loading = ref(false);
   const configList = ref<IConfigKvType[]>([]);
@@ -142,6 +184,7 @@
   const viewPanelShow = ref(false);
   const activeConfig = ref<IConfigKvType>(getDefaultKvItem());
   const deleteConfig = ref<IConfigKvType>();
+  const selectedConfigIds = ref<number[]>([]);
   const isDiffPanelShow = ref(false);
   const diffConfig = ref(0);
   const isSearchEmpty = ref(false);
@@ -190,10 +233,16 @@
     return '';
   });
 
+  const checkedConfigs = computed(() => {
+    return configList.value.filter((config) => selectedConfigIds.value.includes(config.id));
+  });
+
   watch(
     () => versionData.value.id,
     () => {
       refresh();
+      selectedConfigIds.value = [];
+      emits('updateSelectedIds', []);
     },
   );
 
@@ -259,9 +308,40 @@
     }
   };
 
+  // 表格行是否可以选中
+  const isRowSelectEnable = ({ row, isCheckAll }: { row: IConfigKvType; isCheckAll: boolean }) => {
+    return isCheckAll || row.kv_state !== 'DELETE';
+  };
+
+  // 表格行选择事件
+  const handleSelectionChange = ({ checked, row }: { checked: boolean; row: IConfigKvType }) => {
+    const index = selectedConfigIds.value.findIndex((id) => id === row.id);
+    if (checked) {
+      if (index === -1) {
+        selectedConfigIds.value.push(row.id);
+      }
+    } else {
+      selectedConfigIds.value.splice(index, 1);
+    }
+    emits('updateSelectedIds', selectedConfigIds.value);
+  };
+
+  // 全选
+  const handleSelectAll = ({ checked }: { checked: boolean }) => {
+    if (checked) {
+      selectedConfigIds.value = configList.value.filter((item) => item.kv_state !== 'DELETE').map((item) => item.id);
+    } else {
+      selectedConfigIds.value = [];
+    }
+    emits('updateSelectedIds', selectedConfigIds.value);
+  };
+
   const handleEditOrView = (config: IConfigKvType) => {
     activeConfig.value = config;
     if (isUnNamedVersion.value) {
+      if (permCheckLoading.value || !checkPermBeforeOperate('update')) {
+        return;
+      }
       editPanelShow.value = true;
     } else {
       viewPanelShow.value = true;
@@ -286,37 +366,65 @@
     deleteConfig.value = config;
   };
 
-  const handleCopyText = (text: string) => {
-    copyToClipBoard(text);
-    Message({
-      theme: 'success',
-      message: t('配置项值已复制'),
-    });
+  const handleUnModify = async (config: IConfigKvType) => {
+    if (permCheckLoading.value || !checkPermBeforeOperate('update')) {
+      return;
+    }
+    await unModifyKv(props.bkBizId, props.appId, config.spec.key);
+    Message({ theme: 'success', message: t('撤销修改配置项成功') });
+    refresh();
   };
 
+  // 删除单个配置项
   const handleDeleteConfigConfirm = async () => {
     if (!deleteConfig.value) {
       return;
     }
     await deleteKv(props.bkBizId, props.appId, deleteConfig.value.id);
-    if (configList.value.length === 1 && pagination.value.current > 1) {
-      pagination.value.current -= 1;
+
+    // 删除的配置项如果在多选列表里，需要去掉
+    const index = selectedConfigIds.value.findIndex((id) => id === deleteConfig.value?.id);
+    if (index > -1) {
+      selectedConfigIds.value.splice(index, 1);
     }
+
+    // 新增的配置项被删除后，检查是否需要往前翻一页
+    if (deleteConfig.value.kv_state === 'ADD') {
+      if (configList.value.length === 1 && pagination.value.current > 1) {
+        pagination.value.current -= 1;
+      }
+    }
+
     Message({
       theme: 'success',
       message: t('删除配置项成功'),
     });
-    refresh();
+    refresh(pagination.value.current);
     isDeleteConfigDialogShow.value = false;
   };
 
-  // 撤销删除
+  // 撤销删除单个配置项
   const handleUndelete = async (config: IConfigKvType) => {
+    if (permCheckLoading.value || !checkPermBeforeOperate('update')) {
+      return;
+    }
     await undeleteKv(props.bkBizId, props.appId, config.spec.key);
     Message({ theme: 'success', message: t('恢复配置项成功') });
     refresh();
   };
 
+  // 批量删除配置项后刷新配置项列表
+  const refreshAfterBatchDelete = () => {
+    if (selectedConfigIds.value.length === configList.value.length && pagination.value.current > 1) {
+      pagination.value.current -= 1;
+    }
+
+    selectedConfigIds.value = [];
+    emits('updateSelectedIds', []);
+    refresh(pagination.value.current);
+  };
+
+  // page-limit
   const handlePageLimitChange = (limit: number) => {
     pagination.value.limit = limit;
     refresh();
@@ -329,7 +437,7 @@
 
   const handleFilter = ({ checked, index }: any) => {
     console.log(checked, index);
-    if (index === 2) {
+    if (index === 4) {
       // 调整数据类型筛选条件
       typeFilterChecked.value = checked;
     } else {
@@ -351,6 +459,7 @@
 
   defineExpose({
     refresh,
+    refreshAfterBatchDelete,
   });
 </script>
 <style lang="scss" scoped>
@@ -366,23 +475,6 @@
         .cell {
           color: #c4c6cc !important;
         }
-      }
-    }
-  }
-  .preview {
-    display: flex;
-    justify-content: space-between;
-    .preview-value {
-      width: 80%;
-      overflow: hidden;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-    }
-    span {
-      font-size: 12px;
-      cursor: pointer;
-      &:hover {
-        color: #3a84ff;
       }
     }
   }

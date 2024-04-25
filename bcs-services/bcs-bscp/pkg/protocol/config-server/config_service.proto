@@ -96,6 +96,12 @@ service Config {
       delete: "/api/v1/config/delete/config_item/config_item/config_item_id/{id}/app_id/{app_id}/biz_id/{biz_id}"
     };
   }
+  rpc BatchDeleteConfigItems(BatchDeleteAppResourcesReq) returns (BatchDeleteResp) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/config_items/batch_delete"
+      body: "*"
+    };
+  }
   rpc UnDeleteConfigItem(UnDeleteConfigItemReq) returns (UnDeleteConfigItemResp) {
     option (google.api.http) = {
       post: "/api/v1/config/undelete/config_item/config_item/config_item_id/{id}/app_id/{app_id}/biz_id/{biz_id}"
@@ -204,6 +210,18 @@ service Config {
   rpc DeleteHook(DeleteHookReq) returns (DeleteHookResp) {
     option (google.api.http) = {
       delete: "/api/v1/config/biz/{biz_id}/hooks/{hook_id}"
+    };
+  }
+  rpc BatchDeleteHook(BatchDeleteHookReq) returns (BatchDeleteResp) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/hooks/batch_delete"
+      body: "*"
+    };
+  }
+  rpc UpdateHook(UpdateHookReq) returns (UpdateHookResp) {
+    option (google.api.http) = {
+      put: "/api/v1/config/biz/{biz_id}/hooks/{hook_id}"
+      body: "*"
     };
   }
   rpc ListHooks(ListHooksReq) returns (ListHooksResp) {
@@ -590,6 +608,12 @@ service Config {
       delete: "/api/v1/config/biz/{biz_id}/template_variables/{template_variable_id}"
     };
   }
+  rpc BatchDeleteTemplateVariable(BatchDeleteBizResourcesReq) returns (BatchDeleteResp) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/template_variables/batch_delete"
+      body: "*"
+    };
+  }
   rpc UpdateTemplateVariable(UpdateTemplateVariableReq) returns (UpdateTemplateVariableResp) {
     option (google.api.http) = {
       put: "/api/v1/config/biz/{biz_id}/template_variables/{template_variable_id}"
@@ -649,6 +673,12 @@ service Config {
   rpc DeleteGroup(DeleteGroupReq) returns (DeleteGroupResp) {
     option (google.api.http) = {
       delete: "/api/v1/config/biz/{biz_id}/groups/{group_id}"
+    };
+  }
+  rpc BatchDeleteGroups(BatchDeleteBizResourcesReq) returns (BatchDeleteResp) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/groups/batch_delete"
+      body: "*"
     };
   }
   rpc UpdateGroup(UpdateGroupReq) returns (UpdateGroupResp) {
@@ -759,6 +789,12 @@ service Config {
       delete: "/api/v1/config/biz/{biz_id}/apps/{app_id}/kvs/{id}"
     };
   };
+  rpc BatchDeleteKv(BatchDeleteAppResourcesReq) returns (BatchDeleteResp) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/kvs/batch_delete"
+      body: "*"
+    };
+  };
   rpc BatchUpsertKvs(BatchUpsertKvsReq) returns (BatchUpsertKvsResp) {
     option (google.api.http) = {
       put: "/api/v1/config/biz/{biz_id}/apps/{app_id}/kvs"
@@ -768,6 +804,11 @@ service Config {
   rpc UnDeleteKv(UnDeleteKvReq) returns (UnDeleteKvResp) {
     option (google.api.http) = {
       post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/kvs/{key}/undelete"
+    };
+  };
+  rpc UndoKv(UndoKvReq) returns (UndoKvResp) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/kvs/{key}/undo"
     };
   };
 
@@ -808,6 +849,56 @@ service Config {
       delete: "/api/v1/config/biz/{biz_id}/apps/{app_id}/client_querys/{id}"
     };
   };
+
+  // client chart related interface
+  rpc ClientConfigVersionStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/clients/config_version_statistics"
+      body: "*"
+    };
+  };
+  rpc ClientPullTrendStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/clients/pull_trend_statistics"
+      body: "*"
+    };
+  };
+  rpc ClientPullStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/clients/pull_statistics"
+      body: "*"
+    };
+  };
+  rpc ClientLabelStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/clients/label_statistics"
+      body: "*"
+    };
+  };
+  rpc ClientAnnotationStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/clients/annotation_statistics"
+      body: "*"
+    };
+  };
+  rpc ClientVersionStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/clients/version_statistics"
+      body: "*"
+    };
+  };
+  rpc ListClientLabelAndAnnotation(ListClientLabelAndAnnotationReq) returns (google.protobuf.Struct) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/clients/labels_and_annotations"
+      body: "*"
+    };
+  };
+  rpc ClientSpecificFailedReason(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/clients/specific_failed_reason"
+      body: "*"
+    };
+  }
 }
 
 message UpdateCredentialScopeReq {
@@ -1236,7 +1327,7 @@ message CreateHookReq {
   uint32 biz_id = 1;
   string name = 2;
   string type = 3;
-  string tag = 4;
+  repeated string tags = 4;
   string memo = 5;
   string content = 6;
   string revision_name = 7;
@@ -1253,6 +1344,21 @@ message DeleteHookReq {
 }
 
 message DeleteHookResp {}
+
+message BatchDeleteHookReq {
+  uint32 biz_id = 1;
+  repeated uint32 ids = 2;
+  bool force = 3;
+}
+
+message UpdateHookReq {
+  uint32 biz_id = 1;
+  uint32 hook_id = 2;
+  repeated string tags = 3;
+  string memo = 4;
+}
+
+message UpdateHookResp {}
 
 message ListHooksReq {
   uint32 biz_id = 1;
@@ -1348,7 +1454,7 @@ message GetHookResp {
 message GetHookInfoSpec {
   string name = 1;
   string type = 3;
-  string tag = 4;
+  repeated string tags = 4;
   string memo = 5;
   message Releases {
     uint32 not_release_id = 1;
@@ -2336,6 +2442,7 @@ message CreateKvReq {
   string key = 3;
   string kv_type = 4;
   string value = 5;
+  string memo = 6;
 }
 
 message CreateKvResp {
@@ -2346,6 +2453,7 @@ message UpdateKvReq {
   uint32 biz_id = 1;
   uint32 app_id = 2;
   string key = 4;
+  string memo = 5;
   string value = 6;
 }
 
@@ -2383,11 +2491,28 @@ message DeleteKvReq {
 
 message DeleteKvResp {}
 
+message BatchDeleteBizResourcesReq {
+  uint32 biz_id = 1;
+  repeated uint32 ids = 2;
+}
+
+message BatchDeleteAppResourcesReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  repeated uint32 ids = 3;
+}
+
+message BatchDeleteResp {
+  repeated uint32 successful_ids = 1;
+  repeated uint32 failed_ids = 2;
+}
+
 message BatchUpsertKvsReq {
   message Kv {
     string key = 1;
     string kv_type = 2;
     string value = 3;
+    string memo = 4;
   }
   uint32 biz_id = 1;
   uint32 app_id = 2;
@@ -2406,6 +2531,14 @@ message UnDeleteKvReq {
 }
 
 message UnDeleteKvResp {}
+
+message UndoKvReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  string key = 3;
+}
+
+message UndoKvResp {}
 
 message ListClientsReq {
   message Order {
@@ -2492,3 +2625,9 @@ message DeleteClientQueryReq {
 }
 
 message DeleteClientQueryResp {}
+
+message ListClientLabelAndAnnotationReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  int64 last_heartbeat_time = 3;
+}

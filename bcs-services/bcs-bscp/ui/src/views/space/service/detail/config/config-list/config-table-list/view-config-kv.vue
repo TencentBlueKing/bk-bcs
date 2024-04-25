@@ -12,6 +12,9 @@
         <bk-tab-panel name="content" :label="t('配置项信息')">
           <bk-form label-width="100" form-type="vertical">
             <bk-form-item :label="t('配置项名称')">{{ props.config.spec.key }}</bk-form-item>
+            <bk-form-item :label="t('配置项描述')">
+              <div class="memo">{{ props.config.spec.memo || '--' }}</div>
+            </bk-form-item>
             <bk-form-item :label="t('配置项类型')">{{ props.config.spec.kv_type }}</bk-form-item>
             <bk-form-item :label="t('配置项值')">
               <span v-if="props.config.spec.kv_type === 'string' || props.config.spec.kv_type === 'number'">
@@ -82,7 +85,7 @@
   const setEditorHeight = () => {
     nextTick(() => {
       const el = sideSliderRef.value.$el.querySelector('.view-wrap');
-      editorHeight.value = el.offsetHeight > 310 ? el.offsetHeight - 310 : 300;
+      editorHeight.value = el.offsetHeight > 410 ? el.offsetHeight - 400 : 300;
     });
   };
 
@@ -97,7 +100,6 @@
     overflow: hidden;
     .view-config-tab {
       height: 100%;
-      overflow: auto;
       :deep(.bk-tab-header) {
         padding: 8px 24px 0;
         font-size: 14px;
@@ -105,7 +107,9 @@
       }
       :deep(.bk-tab-content) {
         padding: 24px 40px;
+        height: calc(100% - 48px);
         box-shadow: none;
+        overflow: auto;
       }
     }
     :deep(.bk-form-item) {
@@ -123,6 +127,11 @@
         color: #323339;
       }
     }
+  }
+  .memo {
+    line-height: 20px;
+    white-space: pre-wrap;
+    word-break: break-word;
   }
   .action-btns {
     border-top: 1px solid #dcdee5;

@@ -4,6 +4,10 @@ FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
+# link sh to bash for syntax compatibility
+RUN echo "dash dash/sh boolean false" | debconf-set-selections && \
+    DEBIAN_FRONTEND=noninteractive dpkg-reconfigure dash
+
 RUN export DEBIAN_FRONTEND=noninteractive && \
     sed -i 's/security\.ubuntu\.com/mirrors.cloud.tencent.com/g' /etc/apt/sources.list && \
     sed -i 's/archive\.ubuntu\.com/mirrors.cloud.tencent.com/g' /etc/apt/sources.list && \

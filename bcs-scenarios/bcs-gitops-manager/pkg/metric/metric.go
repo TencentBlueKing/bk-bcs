@@ -49,6 +49,8 @@ var (
 	ManagerSecretOperateFailed *prometheus.CounterVec
 	// ManagerSecretProxyFailed 定义 Proxy 到 Secret 失败的次数
 	ManagerSecretProxyFailed *prometheus.CounterVec
+	// ManagerTerraformProxyFailed 定义 proxy 到 Terraform 失败的次数
+	ManagerTerraformProxyFailed *prometheus.CounterVec
 
 	once sync.Once
 )
@@ -110,6 +112,10 @@ func init() {
 			Name: "gitops_manager_secret_proxy_failed",
 			Help: "defines the secret proxy failed",
 		}, []string{})
+		ManagerTerraformProxyFailed = prometheus.NewCounterVec(prometheus.CounterOpts{
+			Name: "gitops_manager_terraform_proxy_failed",
+			Help: "defines the terraform proxy failed",
+		}, []string{})
 
 		ManagerTunnelConnectStatus.WithLabelValues().Set(0)
 		ManagerTunnelConnectNum.WithLabelValues().Add(0)
@@ -122,6 +128,7 @@ func init() {
 		ManagerArgoProxyFailed.WithLabelValues().Add(0)
 		ManagerSecretOperateFailed.WithLabelValues().Add(0)
 		ManagerSecretProxyFailed.WithLabelValues().Add(0)
+		ManagerTerraformProxyFailed.WithLabelValues().Add(0)
 
 		prometheus.MustRegister(ManagerTunnelConnectStatus)
 		prometheus.MustRegister(ManagerTunnelConnectNum)
@@ -136,5 +143,6 @@ func init() {
 		prometheus.MustRegister(ManagerArgoProxyFailed)
 		prometheus.MustRegister(ManagerSecretOperateFailed)
 		prometheus.MustRegister(ManagerSecretProxyFailed)
+		prometheus.MustRegister(ManagerTerraformProxyFailed)
 	})
 }

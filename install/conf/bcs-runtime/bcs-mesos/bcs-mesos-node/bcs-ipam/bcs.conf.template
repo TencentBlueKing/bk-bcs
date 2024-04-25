@@ -1,8 +1,0 @@
-{
-    "zkHost": "${bcsZkHostSemicolon}",
-    "tls": {
-        "key": "${clientKeyFile}",
-        "pubkey": "${clientCertFile}",
-        "cacert": "${caFile}"
-    }
-}

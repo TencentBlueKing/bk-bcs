@@ -13,7 +13,7 @@
       class="!w-[320px]"
       v-if="isClusterDataEmpty">
     </bcs-exception>
-    <div class="max-h-[400px] overflow-y-auto" v-else>
+    <div class="max-h-[460px] overflow-y-auto" v-else>
       <div v-for="item, index in clusterData" :key="item.type">
         <CollapseTitle
           :title="`${item.title} (${item.list.length})`"
@@ -31,21 +31,33 @@
             :key="cluster.clusterID"
             :class="[
               'px-[40px] hover:bg-[#eaf3ff]',
+              normalStatusList.includes(cluster.status || '')
+                ? 'hover:text-[#3a84ff] cursor-pointer'
+                : 'text-[#c4c6cc] cursor-not-allowed',
               {
                 'bg-[#eaf3ff] text-[#3a84ff]': selectable && localValue === cluster.clusterID,
-                'hover:text-[#3a84ff] cursor-pointer': cluster.status === 'RUNNING',
-                'text-[#c4c6cc] cursor-not-allowed': cluster.status !== 'RUNNING'
               }
             ]"
+            @mouseenter="hoverClusterID = cluster.clusterID"
+            @mouseleave="hoverClusterID = ''"
             @click="handleClick(cluster)">
-            <div class="flex flex-col justify-center h-[50px]" v-bk-tooltips="{
-              content: $t('cluster.tips.clusterStatus', [CLUSTER_MAP[cluster.status || '']]),
-              disabled: cluster.status === 'RUNNING',
-              placement: 'right'
-            }">
-              <span class="bcs-ellipsis" v-bk-overflow-tips>{{ cluster.clusterName }}</span>
+            <div
+              class="flex flex-col justify-center h-[50px]"
+              v-bk-tooltips="{
+                content: $t('cluster.tips.clusterStatus', [CLUSTER_MAP[cluster.status || '']]),
+                disabled: normalStatusList.includes(cluster.status || ''),
+                placement: 'right'
+              }">
+              <span class="bcs-ellipsis leading-[20px]" v-bk-overflow-tips>{{ cluster.clusterName }}</span>
               <span
-                :class="['mt-[8px]', { 'text-[#979BA5]': cluster.status === 'RUNNING' }]">
+                :class="[
+                  'leading-[20px]',
+                  {
+                    'text-[#979BA5]': normalStatusList.includes(cluster.status || ''),
+                    '!text-[#699DF4]': normalStatusList.includes(cluster.status || '')
+                      && hoverClusterID === cluster.clusterID
+                  }
+                ]">
                 {{ cluster.clusterID }}
               </span>
             </div>
@@ -57,7 +69,7 @@
 </template>
 <script lang="ts" setup>
 // popover场景的集群选择器
-import { PropType } from 'vue';
+import { PropType, ref } from 'vue';
 
 import CollapseTitle from './collapse-title.vue';
 import useClusterSelector, { ClusterType } from './use-cluster-selector';
@@ -85,6 +97,9 @@ const props = defineProps({
 
 const emits = defineEmits(['change', 'click']);
 
+const normalStatusList = ['CONNECT-FAILURE', 'RUNNING'];
+
+const hoverClusterID = ref<string>();
 const {
   keyword,
   localValue,

@@ -18,10 +18,10 @@ import (
 
 	elbv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
-	k8scorev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/eventer"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/pkg/common"
@@ -45,16 +45,14 @@ func NewElb() (*Elb, error) {
 }
 
 // NewElbWithSecret create elb client with k8s secret
-func NewElbWithSecret(secret *k8scorev1.Secret, _ client.Client, _ eventer.WatchEventInterface) (cloud.LoadBalance, error) {
-	secretIDBytes, ok := secret.Data[EnvNameAWSAccessKeyID]
+func NewElbWithSecret(data map[string][]byte, _ client.Client, _ eventer.WatchEventInterface) (cloud.LoadBalance, error) {
+	secretIDBytes, ok := data[EnvNameAWSAccessKeyID]
 	if !ok {
-		return nil, fmt.Errorf("lost %s in secret %s/%s", EnvNameAWSAccessKeyID,
-			secret.Namespace, secret.Name)
+		return nil, fmt.Errorf("lost %s in secret", EnvNameAWSAccessKeyID)
 	}
-	secretKeyBytes, ok := secret.Data[EnvNameAWSAccessKey]
+	secretKeyBytes, ok := data[EnvNameAWSAccessKey]
 	if !ok {
-		return nil, fmt.Errorf("lost %s in secret %s/%s", EnvNameAWSAccessKey,
-			secret.Namespace, secret.Name)
+		return nil, fmt.Errorf("lost %s in secret", EnvNameAWSAccessKey)
 	}
 	sdkWrapper, err := NewSdkWrapperWithSecretIDKey(string(secretIDBytes), string(secretKeyBytes))
 	if err != nil {

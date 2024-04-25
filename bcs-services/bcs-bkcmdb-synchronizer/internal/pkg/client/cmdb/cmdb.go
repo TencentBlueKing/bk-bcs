@@ -204,7 +204,7 @@ func (c *cmdbClient) GetBS2IDByBizID(bizID int64) (int, error) {
 	}
 
 	if !respData.Result {
-		blog.Errorf("call api GetBS2IDByBizID failed: %v", respData.Message)
+		blog.Errorf("call api GetBS2IDByBizID failed: %v, rid: %s", respData.Message, respData.RequestID)
 		return 0, fmt.Errorf(respData.Message)
 	}
 	// successfully request
@@ -250,7 +250,7 @@ func (c *cmdbClient) GetBizInfo(bizID int64) (*client.Business, error) {
 	}
 
 	if !respData.Result {
-		blog.Errorf("call api GetBizInfo failed: %v", respData.Message)
+		blog.Errorf("call api GetBizInfo failed: %v, rid: %s", respData.Message, respData.RequestID)
 		return nil, fmt.Errorf(respData.Message)
 	}
 	// successfully request
@@ -328,7 +328,7 @@ func (c *cmdbClient) GetHostInfo(hostIP []string) (*[]client.HostData, error) {
 		}
 
 		if !respData.Result {
-			blog.Errorf("call api QueryHost failed: %v", respData.Message)
+			blog.Errorf("call api QueryHost failed: %v, rid: %s", respData.Message, respData.RequestID)
 			return nil, fmt.Errorf(respData.Message)
 		}
 		// successfully request
@@ -371,7 +371,7 @@ func (c *cmdbClient) GetBcsCluster(request *client.GetBcsClusterRequest) (*[]bkc
 	}
 
 	if !respData.Result {
-		blog.Errorf("call api list_kube_cluster failed: %v", respData.Message)
+		blog.Errorf("call api list_kube_cluster failed: %v, rid: %s", respData.Message, respData.RequestID)
 		return nil, fmt.Errorf(respData.Message)
 	}
 
@@ -406,7 +406,7 @@ func (c *cmdbClient) CreateBcsCluster(request *client.CreateBcsClusterRequest) (
 	}
 
 	if !respData.Result {
-		blog.Errorf("call api create_kube_cluster failed: %v", respData.Message)
+		blog.Errorf("call api create_kube_cluster failed: %v, rid: %s", respData.Message, respData.RequestID)
 		return bkClusterID, fmt.Errorf(respData.Message)
 	}
 
@@ -443,7 +443,7 @@ func (c *cmdbClient) UpdateBcsCluster(request *client.UpdateBcsClusterRequest) e
 	}
 
 	if !respData.Result {
-		blog.Errorf("call api batch_update_kube_cluster failed: %v", respData.Message)
+		blog.Errorf("call api batch_update_kube_cluster failed: %v, rid: %s", respData.Message, respData.RequestID)
 		return fmt.Errorf(respData.Message)
 	}
 
@@ -478,7 +478,7 @@ func (c *cmdbClient) UpdateBcsClusterType(request *client.UpdateBcsClusterTypeRe
 	}
 
 	if !respData.Result {
-		blog.Errorf("call api update_kube_cluster_type failed: %v", respData.Message)
+		blog.Errorf("call api update_kube_cluster_type failed: %v, rid: %s", respData.Message, respData.RequestID)
 		return fmt.Errorf(respData.Message)
 	}
 
@@ -513,7 +513,7 @@ func (c *cmdbClient) DeleteBcsCluster(request *client.DeleteBcsClusterRequest) e
 	}
 
 	if !respData.Result {
-		blog.Errorf("call api batch_delete_kube_cluster failed: %v", respData.Message)
+		blog.Errorf("call api batch_delete_kube_cluster failed: %v, rid: %s", respData.Message, respData.RequestID)
 		return fmt.Errorf(respData.Message)
 	}
 
@@ -549,7 +549,7 @@ func (c *cmdbClient) GetBcsNamespace(request *client.GetBcsNamespaceRequest) (*[
 	}
 
 	if !respData.Result {
-		blog.Errorf("call api list_namespace failed: %v", respData.Message)
+		blog.Errorf("call api list_namespace failed: %v, rid: %s", respData.Message, respData.RequestID)
 		return nil, fmt.Errorf(respData.Message)
 	}
 
@@ -584,7 +584,7 @@ func (c *cmdbClient) CreateBcsNamespace(request *client.CreateBcsNamespaceReques
 	}
 
 	if !respData.Result {
-		blog.Errorf("call api create_kube_namespace failed: %v", respData.Message)
+		blog.Errorf("call api create_kube_namespace failed: %v, rid: %s", respData.Message, respData.RequestID)
 		return nil, fmt.Errorf(respData.Message)
 	}
 
@@ -619,7 +619,7 @@ func (c *cmdbClient) UpdateBcsNamespace(request *client.UpdateBcsNamespaceReques
 	}
 
 	if !respData.Result {
-		blog.Errorf("call api batch_update_namespace failed: %v", respData.Message)
+		blog.Errorf("call api batch_update_namespace failed: %v, rid: %s", respData.Message, respData.RequestID)
 		return fmt.Errorf(respData.Message)
 	}
 
@@ -654,7 +654,7 @@ func (c *cmdbClient) DeleteBcsNamespace(request *client.DeleteBcsNamespaceReques
 	}
 
 	if !respData.Result {
-		blog.Errorf("call api batch_delete_namespace failed: %v", respData.Message)
+		blog.Errorf("call api batch_delete_namespace failed: %v, rid: %s", respData.Message, respData.RequestID)
 		return fmt.Errorf(respData.Message)
 	}
 
@@ -724,7 +724,7 @@ func (c *cmdbClient) CreateBcsWorkload(request *client.CreateBcsWorkloadRequest)
 	}
 
 	if !respData.Result {
-		blog.Errorf("call api batch_create_workload failed: %v", respData.Message)
+		blog.Errorf("call api batch_create_workload failed: %v, rid: %s", respData.Message, respData.RequestID)
 		return nil, fmt.Errorf(respData.Message)
 	}
 
@@ -759,7 +759,7 @@ func (c *cmdbClient) UpdateBcsWorkload(request *client.UpdateBcsWorkloadRequest)
 	}
 
 	if !respData.Result {
-		blog.Errorf("call api batch_update_workload failed: %v", respData.Message)
+		blog.Errorf("call api batch_update_workload failed: %v, rid: %s", respData.Message, respData.RequestID)
 		return fmt.Errorf(respData.Message)
 	}
 
@@ -794,7 +794,9 @@ func (c *cmdbClient) DeleteBcsWorkload(request *client.DeleteBcsWorkloadRequest)
 	}
 
 	if !respData.Result {
-		blog.Errorf("call api batch_delete_workload failed: %v", respData.Message)
+		blog.Errorf(
+			"call api batch_delete_workload failed: %v, rid: %s, request: bkbizid: %d, kind: %s, ids: %v",
+			respData.Message, respData.RequestID, *request.BKBizID, *request.Kind, *request.IDs)
 		return fmt.Errorf(respData.Message)
 	}
 
@@ -829,7 +831,7 @@ func (c *cmdbClient) GetBcsNode(request *client.GetBcsNodeRequest) (*[]bkcmdbkub
 	}
 
 	if !respData.Result {
-		blog.Errorf("call api list_kube_node failed: %v", respData.Message)
+		blog.Errorf("call api list_kube_node failed: %v, rid: %s", respData.Message, respData.RequestID)
 		return nil, fmt.Errorf(respData.Message)
 	}
 
@@ -864,7 +866,7 @@ func (c *cmdbClient) CreateBcsNode(request *client.CreateBcsNodeRequest) (*[]int
 	}
 
 	if !respData.Result {
-		blog.Errorf("call api batch_create_kube_node failed: %v", respData.Message)
+		blog.Errorf("call api batch_create_kube_node failed: %v, rid: %s", respData.Message, respData.RequestID)
 		return nil, fmt.Errorf(respData.Message)
 	}
 
@@ -899,7 +901,7 @@ func (c *cmdbClient) UpdateBcsNode(request *client.UpdateBcsNodeRequest) error {
 	}
 
 	if !respData.Result {
-		blog.Errorf("call api batch_update_kube_node failed: %v", respData.Message)
+		blog.Errorf("call api batch_update_kube_node failed: %v, rid: %s", respData.Message, respData.RequestID)
 		return fmt.Errorf(respData.Message)
 	}
 
@@ -934,7 +936,7 @@ func (c *cmdbClient) DeleteBcsNode(request *client.DeleteBcsNodeRequest) error {
 	}
 
 	if !respData.Result {
-		blog.Errorf("call api batch_delete_kube_node failed: %v", respData.Message)
+		blog.Errorf("call api batch_delete_kube_node failed: %v, rid: %s", respData.Message, respData.RequestID)
 		return fmt.Errorf(respData.Message)
 	}
 
@@ -969,11 +971,45 @@ func (c *cmdbClient) GetBcsPod(request *client.GetBcsPodRequest) (*[]bkcmdbkube.
 	}
 
 	if !respData.Result {
-		blog.Errorf("call api list_pod failed: %v", respData.Message)
+		blog.Errorf("call api list_pod failed: %v, rid: %s", respData.Message, respData.RequestID)
 		return nil, fmt.Errorf(respData.Message)
 	}
 
 	blog.Infof("call api list_pod with url(%s) (%v) successfully", reqURL, request)
+
+	return respData.Data.Info, nil
+}
+
+// GetBcsContainer get bcs container
+// /v2/cc/list_kube_container/
+func (c *cmdbClient) GetBcsContainer(request *client.GetBcsContainerRequest) (*[]bkcmdbkube.Container, error) {
+	if c == nil {
+		return nil, ErrServerNotInit
+	}
+
+	reqURL := fmt.Sprintf("%s/api/c/compapi/v2/cc/list_kube_container/", c.config.Server)
+	respData := &client.GetBcsContainerResponse{}
+
+	_, _, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Post(reqURL).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("X-Bkapi-Authorization", c.userAuth).
+		SetDebug(c.config.Debug).
+		Send(request).
+		EndStruct(&respData)
+	if len(errs) > 0 {
+		blog.Errorf("call api list_kube_container failed: %v", errs[0])
+		return nil, errs[0]
+	}
+
+	if !respData.Result {
+		blog.Errorf("call api list_kube_container failed: %v, rid: %s", respData.Message, respData.RequestID)
+		return nil, fmt.Errorf(respData.Message)
+	}
+
+	blog.Infof("call api list_kube_container with url(%s) (%v) successfully", reqURL, request)
 
 	return respData.Data.Info, nil
 }
@@ -1004,7 +1040,7 @@ func (c *cmdbClient) CreateBcsPod(request *client.CreateBcsPodRequest) (*[]int64
 	}
 
 	if !respData.Result {
-		blog.Errorf("call api batch_create_kube_pod failed: %v", respData.Message)
+		blog.Errorf("call api batch_create_kube_pod failed: %v, rid: %s", respData.Message, respData.RequestID)
 		return nil, fmt.Errorf(respData.Message)
 	}
 
@@ -1039,7 +1075,7 @@ func (c *cmdbClient) DeleteBcsPod(request *client.DeleteBcsPodRequest) error {
 	}
 
 	if !respData.Result {
-		blog.Errorf("call api batch_delete_kube_pod failed: %v", respData.Message)
+		blog.Errorf("call api batch_delete_kube_pod failed: %v, rid: %s", respData.Message, respData.RequestID)
 		return fmt.Errorf(respData.Message)
 	}
 
@@ -1052,4 +1088,15 @@ func (c *cmdbClient) DeleteBcsPod(request *client.DeleteBcsPodRequest) error {
 func (c *cmdbClient) GetCMDBClient() (client.CMDBClient, error) {
 	cli := NewCmdbClient(c.config)
 	return cli.Cmdb(), nil
+}
+
+// DeleteBcsClusterAll delete bcs cluster
+// /api/v3/kube/delete/cluster/bk_biz_id/{bk_biz_id}
+// /v2/cc/batch_delete_kube_cluster/
+func (c *cmdbClient) DeleteBcsClusterAll(request *client.DeleteBcsClusterAllRequest) error {
+	if c == nil {
+		return ErrServerNotInit
+	}
+
+	return nil
 }

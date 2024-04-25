@@ -74,7 +74,7 @@ func (m *BKMonitor) GetNodeInfo(ctx context.Context, projectID, clusterID, nodeN
 	info := &base.NodeInfo{}
 
 	// 节点信息
-	infoPromql := `cadvisor_version_info{cluster_id="%<clusterID>s", bk_instance=~"%<ip>s", %<provider>s}`
+	infoPromql := `cadvisor_version_info{cluster_id="%<clusterID>s", instance=~"%<ip>s", %<provider>s}`
 	infoLabelSet, err := bcsmonitor.QueryLabelSet(ctx, projectID, infoPromql, params, t)
 	if err != nil {
 		return nil, err
@@ -89,11 +89,11 @@ func (m *BKMonitor) GetNodeInfo(ctx context.Context, projectID, clusterID, nodeN
 
 	promqlMap := map[string]string{
 		"coreCount": `sum by (instance) (count without(cpu, mode) (node_cpu_seconds_total{cluster_id="%<clusterID>s` +
-			`", mode="idle", bk_instance=~"%<ip>s", %<provider>s}))`,
+			`", mode="idle", instance=~"%<ip>s", %<provider>s}))`,
 		"memory": `sum by (instance) (node_memory_MemTotal_bytes{cluster_id="%<clusterID>s", ` +
-			`bk_instance=~"%<ip>s", %<provider>s})`,
+			`instance=~"%<ip>s", %<provider>s})`,
 		"disk": `sum by (instance) (node_filesystem_size_bytes{cluster_id="%<clusterID>s", ` +
-			`bk_instance=~"%<ip>s", fstype=~"%<fstype>s", mountpoint=~"%<mountpoint>s", %<provider>s})`,
+			`instance=~"%<ip>s", fstype=~"%<fstype>s", mountpoint=~"%<mountpoint>s", %<provider>s})`,
 	}
 
 	result, err := bcsmonitor.QueryMultiValues(ctx, projectID, promqlMap, params, time.Now())
@@ -129,7 +129,7 @@ func (m *BKMonitor) GetNodeCPURequest(ctx context.Context, projectID, clusterID,
 // GetNodeCPUUsed 节点CPU使用量
 func (m *BKMonitor) GetNodeCPUUsed(ctx context.Context, projectID, clusterID, node string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
-	promql := `sum(irate(node_cpu_seconds_total{cluster_id="%<clusterID>s", mode!="idle", bk_instance=~"%<ip>s", ` +
+	promql := `sum(irate(node_cpu_seconds_total{cluster_id="%<clusterID>s", mode!="idle", instance=~"%<ip>s", ` +
 		`%<provider>s}[2m]))` // nolint
 
 	return m.handleNodeMetric(ctx, projectID, clusterID, node, promql, start, end, step)
@@ -186,11 +186,11 @@ func (m *BKMonitor) GetNodeMemoryRequest(ctx context.Context, projectID, cluster
 // GetNodeMemoryUsed 节点Memory使用量
 func (m *BKMonitor) GetNodeMemoryUsed(ctx context.Context, projectID, clusterID, node string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
-	promql := `sum(node_memory_MemTotal_bytes{cluster_id="%<clusterID>s", bk_instance=~"%<ip>s", %<provider>s}) - ` +
-		`sum(node_memory_MemFree_bytes{cluster_id="%<clusterID>s", bk_instance=~"%<ip>s", %<provider>s}) - ` +
-		`sum(node_memory_Buffers_bytes{cluster_id="%<clusterID>s", bk_instance=~"%<ip>s", %<provider>s}) - ` +
-		`sum(node_memory_Cached_bytes{cluster_id="%<clusterID>s", bk_instance=~"%<ip>s", %<provider>s}) + ` +
-		`sum(node_memory_Shmem_bytes{cluster_id="%<clusterID>s", bk_instance=~"%<ip>s", %<provider>s})`
+	promql := `sum(node_memory_MemTotal_bytes{cluster_id="%<clusterID>s", instance=~"%<ip>s", %<provider>s}) - ` +
+		`sum(node_memory_MemFree_bytes{cluster_id="%<clusterID>s", instance=~"%<ip>s", %<provider>s}) - ` +
+		`sum(node_memory_Buffers_bytes{cluster_id="%<clusterID>s", instance=~"%<ip>s", %<provider>s}) - ` +
+		`sum(node_memory_Cached_bytes{cluster_id="%<clusterID>s", instance=~"%<ip>s", %<provider>s}) + ` +
+		`sum(node_memory_Shmem_bytes{cluster_id="%<clusterID>s", instance=~"%<ip>s", %<provider>s})`
 
 	return m.handleNodeMetric(ctx, projectID, clusterID, node, promql, start, end, step)
 }
@@ -228,7 +228,7 @@ func (m *BKMonitor) GetNodeMemoryRequestUsage(ctx context.Context, projectID, cl
 // GetNodeDiskTotal 节点磁盘总量
 func (m *BKMonitor) GetNodeDiskTotal(ctx context.Context, projectID, clusterID, node string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
-	promql := `sum(node_filesystem_size_bytes{cluster_id="%<clusterID>s", bk_instance=~"%<ip>s", fstype=~"%<fstype>s", ` +
+	promql := `sum(node_filesystem_size_bytes{cluster_id="%<clusterID>s", instance=~"%<ip>s", fstype=~"%<fstype>s", ` +
 		`mountpoint=~"%<mountpoint>s", %<provider>s})`
 
 	return m.handleNodeMetric(ctx, projectID, clusterID, node, promql, start, end, step)
@@ -237,10 +237,10 @@ func (m *BKMonitor) GetNodeDiskTotal(ctx context.Context, projectID, clusterID, 
 // GetNodeDiskUsed 节点磁盘使用量
 func (m *BKMonitor) GetNodeDiskUsed(ctx context.Context, projectID, clusterID, node string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
-	promql := `sum(node_filesystem_size_bytes{cluster_id="%<clusterID>s", bk_instance=~"%<ip>s", ` +
+	promql := `sum(node_filesystem_size_bytes{cluster_id="%<clusterID>s", instance=~"%<ip>s", ` +
 		`fstype=~"%<fstype>s", mountpoint=~"%<mountpoint>s", %<provider>s}) - ` +
 		`sum(node_filesystem_free_bytes{cluster_id="%<clusterID>s", ` +
-		`bk_instance=~"%<ip>s", fstype=~"%<fstype>s", mountpoint=~"%<mountpoint>s", %<provider>s})`
+		`instance=~"%<ip>s", fstype=~"%<fstype>s", mountpoint=~"%<mountpoint>s", %<provider>s})`
 
 	return m.handleNodeMetric(ctx, projectID, clusterID, node, promql, start, end, step)
 }
@@ -248,11 +248,11 @@ func (m *BKMonitor) GetNodeDiskUsed(ctx context.Context, projectID, clusterID, n
 // GetNodeDiskUsage 节点磁盘使用率
 func (m *BKMonitor) GetNodeDiskUsage(ctx context.Context, projectID, clusterID, node string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
-	promql := `(sum(node_filesystem_size_bytes{cluster_id="%<clusterID>s", bk_instance=~"%<ip>s", ` +
+	promql := `(sum(node_filesystem_size_bytes{cluster_id="%<clusterID>s", instance=~"%<ip>s", ` +
 		`fstype=~"%<fstype>s", ` +
 		`mountpoint=~"%<mountpoint>s", %<provider>s}) - sum(node_filesystem_free_bytes{cluster_id="%<clusterID>s", ` +
-		`bk_instance=~"%<ip>s", fstype=~"%<fstype>s", mountpoint=~"%<mountpoint>s", %<provider>s})) / ` +
-		`sum(node_filesystem_size_bytes{cluster_id="%<clusterID>s", bk_instance=~"%<ip>s", fstype=~"%<fstype>s", ` +
+		`instance=~"%<ip>s", fstype=~"%<fstype>s", mountpoint=~"%<mountpoint>s", %<provider>s})) / ` +
+		`sum(node_filesystem_size_bytes{cluster_id="%<clusterID>s", instance=~"%<ip>s", fstype=~"%<fstype>s", ` +
 		`mountpoint=~"%<mountpoint>s", %<provider>s}) * 100`
 
 	return m.handleNodeMetric(ctx, projectID, clusterID, node, promql, start, end, step)
@@ -262,7 +262,7 @@ func (m *BKMonitor) GetNodeDiskUsage(ctx context.Context, projectID, clusterID, 
 func (m *BKMonitor) GetNodeDiskioUsage(ctx context.Context, projectID, clusterID, node string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql :=
-		`max(rate(node_disk_io_time_seconds_total{cluster_id="%<clusterID>s", bk_instance=~"%<ip>s", ` +
+		`max(rate(node_disk_io_time_seconds_total{cluster_id="%<clusterID>s", instance=~"%<ip>s", ` +
 			`%<provider>s}[2m]) * 100)`
 
 	return m.handleNodeMetric(ctx, projectID, clusterID, node, promql, start, end, step)
@@ -273,7 +273,7 @@ func (m *BKMonitor) GetNodePodCount(ctx context.Context, projectID, clusterID, n
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	// 注意 k8s 1.19 版本以前的 metrics 是 kubelet_running_pod_count
 	promql :=
-		`max by (instance) (kubelet_running_pods{cluster_id="%<clusterID>s", bk_instance=~"%<ip>s", %<provider>s})`
+		`max by (instance) (kubelet_running_pods{cluster_id="%<clusterID>s", instance=~"%<ip>s", %<provider>s})`
 
 	return m.handleNodeMetric(ctx, projectID, clusterID, node, promql, start, end, step)
 }
@@ -302,7 +302,7 @@ func (m *BKMonitor) GetNodeContainerCount(ctx context.Context, projectID, cluste
 	// 使用不等于, 兼容高低版本
 	promql :=
 		`max by (instance) (kubelet_running_containers{cluster_id="%<clusterID>s", ` +
-			`container_state!="exited|created|unknown", bk_instance=~"%<ip>s", %<provider>s})`
+			`container_state!="exited|created|unknown", instance=~"%<ip>s", %<provider>s})`
 
 	return m.handleNodeMetric(ctx, projectID, clusterID, node, promql, start, end, step)
 }
@@ -311,7 +311,7 @@ func (m *BKMonitor) GetNodeContainerCount(ctx context.Context, projectID, cluste
 func (m *BKMonitor) GetNodeNetworkTransmit(ctx context.Context, projectID, clusterID, node string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql :=
-		`max(rate(node_network_transmit_bytes_total{cluster_id="%<clusterID>s", bk_instance=~"%<ip>s", ` +
+		`max(rate(node_network_transmit_bytes_total{cluster_id="%<clusterID>s", instance=~"%<ip>s", ` +
 			`%<provider>s}[5m]))`
 
 	return m.handleNodeMetric(ctx, projectID, clusterID, node, promql, start, end, step)
@@ -321,7 +321,7 @@ func (m *BKMonitor) GetNodeNetworkTransmit(ctx context.Context, projectID, clust
 func (m *BKMonitor) GetNodeNetworkReceive(ctx context.Context, projectID, clusterID, node string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql :=
-		`max(rate(node_network_receive_bytes_total{cluster_id="%<clusterID>s", bk_instance=~"%<ip>s", ` +
+		`max(rate(node_network_receive_bytes_total{cluster_id="%<clusterID>s", instance=~"%<ip>s", ` +
 			`%<provider>s}[5m]))`
 
 	return m.handleNodeMetric(ctx, projectID, clusterID, node, promql, start, end, step)

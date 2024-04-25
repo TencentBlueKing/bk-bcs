@@ -15,6 +15,8 @@ package service
 import (
 	"context"
 
+	"google.golang.org/protobuf/types/known/structpb"
+
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	pbcs "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/config-server"
@@ -29,7 +31,7 @@ func (s *Service) ListClients(ctx context.Context, req *pbcs.ListClientsReq) (
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
-		{Basic: meta.Basic{Type: meta.App, Action: meta.View}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.View, ResourceID: req.AppId}, BizID: req.BizId},
 	}
 
 	err := s.authorizer.Authorize(kt, res...)
@@ -50,6 +52,7 @@ func (s *Service) ListClients(ctx context.Context, req *pbcs.ListClientsReq) (
 			ReleaseChangeStatus: req.GetSearch().GetReleaseChangeStatus(),
 			Annotations:         req.GetSearch().GetAnnotations(),
 			OnlineStatus:        req.GetSearch().GetOnlineStatus(),
+			ClientVersion:       req.GetSearch().GetClientVersion(),
 		},
 		Order: &pbds.ListClientsReq_Order{
 			Desc: req.GetOrder().GetDesc(),
@@ -69,4 +72,252 @@ func (s *Service) ListClients(ctx context.Context, req *pbcs.ListClientsReq) (
 	}
 
 	return resp, nil
+}
+
+// ClientConfigVersionStatistics 客户端配置版本统计
+func (s *Service) ClientConfigVersionStatistics(ctx context.Context, req *pbclient.ClientCommonReq) (
+	*structpb.Struct, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.View, ResourceID: req.AppId}, BizID: req.BizId},
+	}
+
+	err := s.authorizer.Authorize(kt, res...)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.client.DS.ClientConfigVersionStatistics(kt.RpcCtx(), &pbclient.ClientCommonReq{
+		BizId: req.GetBizId(),
+		AppId: req.GetAppId(),
+		Search: &pbclient.ClientQueryCondition{
+			Label:               req.GetSearch().GetLabel(),
+			CurrentReleaseName:  req.GetSearch().GetCurrentReleaseName(),
+			TargetReleaseName:   req.GetSearch().GetTargetReleaseName(),
+			ReleaseChangeStatus: req.GetSearch().GetReleaseChangeStatus(),
+			Annotations:         req.GetSearch().GetAnnotations(),
+			ClientVersion:       req.GetSearch().GetClientVersion(),
+			ClientType:          req.GetSearch().GetClientType(),
+		},
+		LastHeartbeatTime: req.GetLastHeartbeatTime(),
+	})
+}
+
+// ClientPullTrendStatistics 客户端拉取趋势统计
+func (s *Service) ClientPullTrendStatistics(ctx context.Context, req *pbclient.ClientCommonReq) (
+	*structpb.Struct, error) {
+
+	kt := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.View, ResourceID: req.AppId}, BizID: req.BizId},
+	}
+
+	err := s.authorizer.Authorize(kt, res...)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.client.DS.ClientPullTrendStatistics(kt.RpcCtx(), &pbclient.ClientCommonReq{
+		BizId: req.GetBizId(),
+		AppId: req.GetAppId(),
+		Search: &pbclient.ClientQueryCondition{
+			Label:               req.GetSearch().GetLabel(),
+			CurrentReleaseName:  req.GetSearch().GetCurrentReleaseName(),
+			TargetReleaseName:   req.GetSearch().GetTargetReleaseName(),
+			ReleaseChangeStatus: req.GetSearch().GetReleaseChangeStatus(),
+			Annotations:         req.GetSearch().GetAnnotations(),
+			ClientVersion:       req.GetSearch().GetClientVersion(),
+			ClientType:          req.GetSearch().GetClientType(),
+		},
+		LastHeartbeatTime: req.GetLastHeartbeatTime(),
+		PullTime:          req.GetPullTime(),
+	})
+}
+
+// ClientPullStatistics 客户端拉取信息统计
+func (s *Service) ClientPullStatistics(ctx context.Context, req *pbclient.ClientCommonReq) (
+	*structpb.Struct, error) {
+
+	kt := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.View, ResourceID: req.AppId}, BizID: req.BizId},
+	}
+
+	err := s.authorizer.Authorize(kt, res...)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.client.DS.ClientPullStatistics(kt.RpcCtx(), &pbclient.ClientCommonReq{
+		BizId: req.GetBizId(),
+		AppId: req.GetAppId(),
+		Search: &pbclient.ClientQueryCondition{
+			Label:               req.GetSearch().GetLabel(),
+			CurrentReleaseName:  req.GetSearch().GetCurrentReleaseName(),
+			TargetReleaseName:   req.GetSearch().GetTargetReleaseName(),
+			ReleaseChangeStatus: req.GetSearch().GetReleaseChangeStatus(),
+			Annotations:         req.GetSearch().GetAnnotations(),
+			ClientVersion:       req.GetSearch().GetClientVersion(),
+			ClientType:          req.GetSearch().GetClientType(),
+		},
+		LastHeartbeatTime: req.GetLastHeartbeatTime(),
+	})
+}
+
+// ClientLabelStatistics 客户端标签统计
+func (s *Service) ClientLabelStatistics(ctx context.Context, req *pbclient.ClientCommonReq) (
+	*structpb.Struct, error) {
+
+	kt := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.View, ResourceID: req.AppId}, BizID: req.BizId},
+	}
+
+	err := s.authorizer.Authorize(kt, res...)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.client.DS.ClientLabelStatistics(kt.RpcCtx(), &pbclient.ClientCommonReq{
+		BizId: req.GetBizId(),
+		AppId: req.GetAppId(),
+		Search: &pbclient.ClientQueryCondition{
+			Label:               req.GetSearch().GetLabel(),
+			CurrentReleaseName:  req.GetSearch().GetCurrentReleaseName(),
+			TargetReleaseName:   req.GetSearch().GetTargetReleaseName(),
+			ReleaseChangeStatus: req.GetSearch().GetReleaseChangeStatus(),
+			Annotations:         req.GetSearch().GetAnnotations(),
+			ClientVersion:       req.GetSearch().GetClientVersion(),
+			ClientType:          req.GetSearch().GetClientType(),
+		},
+		LastHeartbeatTime: req.GetLastHeartbeatTime(),
+	})
+}
+
+// ClientAnnotationStatistics 客户端附加信息统计
+func (s *Service) ClientAnnotationStatistics(ctx context.Context, req *pbclient.ClientCommonReq) (
+	*structpb.Struct, error) {
+
+	kt := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.View, ResourceID: req.AppId}, BizID: req.BizId},
+	}
+
+	err := s.authorizer.Authorize(kt, res...)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.client.DS.ClientAnnotationStatistics(kt.RpcCtx(), &pbclient.ClientCommonReq{
+		BizId: req.GetBizId(),
+		AppId: req.GetAppId(),
+		Search: &pbclient.ClientQueryCondition{
+			Label:               req.GetSearch().GetLabel(),
+			CurrentReleaseName:  req.GetSearch().GetCurrentReleaseName(),
+			TargetReleaseName:   req.GetSearch().GetTargetReleaseName(),
+			ReleaseChangeStatus: req.GetSearch().GetReleaseChangeStatus(),
+			Annotations:         req.GetSearch().GetAnnotations(),
+			ClientVersion:       req.GetSearch().GetClientVersion(),
+			ClientType:          req.GetSearch().GetClientType(),
+		},
+		LastHeartbeatTime: req.GetLastHeartbeatTime(),
+	})
+}
+
+// ClientVersionStatistics 客户端版本统计
+func (s *Service) ClientVersionStatistics(ctx context.Context, req *pbclient.ClientCommonReq) (
+	*structpb.Struct, error) {
+
+	kt := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.View, ResourceID: req.AppId}, BizID: req.BizId},
+	}
+
+	err := s.authorizer.Authorize(kt, res...)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.client.DS.ClientVersionStatistics(kt.RpcCtx(), &pbclient.ClientCommonReq{
+		BizId: req.GetBizId(),
+		AppId: req.GetAppId(),
+		Search: &pbclient.ClientQueryCondition{
+			Label:               req.GetSearch().GetLabel(),
+			CurrentReleaseName:  req.GetSearch().GetCurrentReleaseName(),
+			TargetReleaseName:   req.GetSearch().GetTargetReleaseName(),
+			ReleaseChangeStatus: req.GetSearch().GetReleaseChangeStatus(),
+			Annotations:         req.GetSearch().GetAnnotations(),
+			ClientVersion:       req.GetSearch().GetClientVersion(),
+			ClientType:          req.GetSearch().GetClientType(),
+		},
+		LastHeartbeatTime: req.GetLastHeartbeatTime(),
+	})
+}
+
+// ListClientLabelAndAnnotation 列出客户端标签和注释
+func (s *Service) ListClientLabelAndAnnotation(ctx context.Context, req *pbcs.ListClientLabelAndAnnotationReq) (
+	*structpb.Struct, error) {
+
+	kt := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.View, ResourceID: req.AppId}, BizID: req.BizId},
+	}
+
+	err := s.authorizer.Authorize(kt, res...)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.client.DS.ListClientLabelAndAnnotation(kt.RpcCtx(), &pbds.ListClientLabelAndAnnotationReq{
+		BizId:             req.GetBizId(),
+		AppId:             req.GetAppId(),
+		LastHeartbeatTime: req.GetLastHeartbeatTime(),
+	})
+}
+
+// ClientSpecificFailedReason 统计客户端失败详细原因
+func (s *Service) ClientSpecificFailedReason(ctx context.Context, req *pbclient.ClientCommonReq) (
+	*structpb.Struct, error) {
+
+	kt := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.View, ResourceID: req.AppId}, BizID: req.BizId},
+	}
+
+	err := s.authorizer.Authorize(kt, res...)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.client.DS.ClientSpecificFailedReason(kt.RpcCtx(), &pbclient.ClientCommonReq{
+		BizId: req.GetBizId(),
+		AppId: req.GetAppId(),
+		Search: &pbclient.ClientQueryCondition{
+			Label:               req.GetSearch().GetLabel(),
+			CurrentReleaseName:  req.GetSearch().GetCurrentReleaseName(),
+			TargetReleaseName:   req.GetSearch().GetTargetReleaseName(),
+			ReleaseChangeStatus: req.GetSearch().GetReleaseChangeStatus(),
+			Annotations:         req.GetSearch().GetAnnotations(),
+			ClientVersion:       req.GetSearch().GetClientVersion(),
+			ClientType:          req.GetSearch().GetClientType(),
+			FailedReason:        req.GetSearch().GetFailedReason(),
+		},
+		LastHeartbeatTime: req.GetLastHeartbeatTime(),
+	})
 }

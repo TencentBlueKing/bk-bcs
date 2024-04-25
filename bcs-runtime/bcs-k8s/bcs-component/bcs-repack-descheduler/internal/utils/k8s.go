@@ -19,9 +19,10 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
+	gameversioned "github.com/Tencent/bk-bcs/bcs-scenarios/kourse/pkg/client/clientset/versioned"
+
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-repack-descheduler/pkg/apis"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-repack-descheduler/pkg/client/clientset/versioned"
-	gameversioned "github.com/Tencent/bk-bcs/bcs-scenarios/kourse/pkg/client/clientset/versioned"
 )
 
 // SupportEviction uses Discovery API to find out if the server support eviction subresource
@@ -137,8 +138,8 @@ func GetGameDeploymentClient() (*gameversioned.Clientset, error) {
 	return client, nil
 }
 
-// GetGameDeploymentClientWithKubeConfig get game deployment client
-func GetGameDeploymentClientWithKubeConfig(kubeConfigPath string) (*gameversioned.Clientset, error) {
+// GetGameDeployClientWithKubeCfg get game deployment client
+func GetGameDeployClientWithKubeCfg(kubeConfigPath string) (*gameversioned.Clientset, error) {
 	config, err := clientcmd.BuildConfigFromFlags("", kubeConfigPath)
 	if err != nil {
 		return nil, errors.Wrapf(err, "build config failed")
@@ -163,8 +164,8 @@ func GetGameStatefulSetClient() (*gameversioned.Clientset, error) {
 	return client, nil
 }
 
-// GetGameStatefulSetClientWithKubeConfig get game statefulset client
-func GetGameStatefulSetClientWithKubeConfig(kubeConfigPath string) (*gameversioned.Clientset, error) {
+// GetGameStatefulSetCliWithKubeCfg get game statefulset client
+func GetGameStatefulSetCliWithKubeCfg(kubeConfigPath string) (*gameversioned.Clientset, error) {
 	config, err := clientcmd.BuildConfigFromFlags("", kubeConfigPath)
 	if err != nil {
 		return nil, errors.Wrapf(err, "build config failed")

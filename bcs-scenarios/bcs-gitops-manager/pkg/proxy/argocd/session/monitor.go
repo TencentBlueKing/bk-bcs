@@ -23,49 +23,34 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	traceconst "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/constants"
 
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/cmd/manager/options"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/utils"
 )
 
 // MonitorSession defines the instance that to proxy to monitor server
 type MonitorSession struct {
-	op *proxy.MonitorOption
+	op           *options.Options
+	reverseProxy *httputil.ReverseProxy
 }
 
 // NewMonitorSession create the session of monitor
-func NewMonitorSession(op *proxy.MonitorOption) *MonitorSession {
-	return &MonitorSession{
-		op: op,
+func NewMonitorSession() *MonitorSession {
+	s := &MonitorSession{
+		op: options.GlobalOptions(),
 	}
+	s.initReverseProxy()
+	return s
 }
 
-// ServeHTTP http.Handler implementation
-func (s *MonitorSession) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
-	requestID := req.Context().Value(traceconst.RequestIDHeaderKey).(string)
-	// backend real path with encoded format
-	realPath := strings.TrimPrefix(req.URL.RequestURI(), common.GitOpsProxyURL)
-	// !force https link
-	// fullPath := fmt.Sprintf("http://bcsmonitorcontroller.bcs-system.svc.cluster.local:18088%s", realPath)
-	fullPath := fmt.Sprintf("http://%s:%s%s", s.op.Address, s.op.Port, realPath)
-	newURL, err := url.Parse(fullPath)
-	if err != nil {
-		err = fmt.Errorf("monitor session build new fullpath '%s' failed: %w", fullPath, err)
-		rw.WriteHeader(http.StatusInternalServerError)
-		blog.Errorf(err.Error())
-		_, _ = rw.Write([]byte(err.Error())) // nolint
-		return
-	}
-	reverseProxy := httputil.ReverseProxy{
-		Director: func(request *http.Request) {
-			request.URL = newURL
-		},
-		ErrorHandler: func(res http.ResponseWriter, request *http.Request, e error) {
-			if !utils.IsContextCanceled(e) { // nolint  empty branch (staticcheck)
-				// metric.ManagerSecretProxyFailed.WithLabelValues().Inc()
-			}
+func (s *MonitorSession) initReverseProxy() {
+	s.reverseProxy = &httputil.ReverseProxy{
+		Director: func(request *http.Request) {},
+		ErrorHandler: func(res http.ResponseWriter, req *http.Request, e error) {
+			requestID := req.Context().Value(traceconst.RequestIDHeaderKey).(string)
+			realPath := strings.TrimPrefix(req.URL.RequestURI(), common.GitOpsProxyURL)
+			fullPath := fmt.Sprintf("https://%s%s", s.op.MonitorConfig.Address, realPath)
 			blog.Errorf("RequestID[%s] monitor session proxy '%s' with header '%s' failure: %s",
-				requestID, fullPath, request.Header, e.Error())
+				requestID, fullPath, req.Header, e.Error())
 			res.WriteHeader(http.StatusInternalServerError)
 			_, _ = res.Write([]byte("monitor session proxy failed")) // nolint
 		},
@@ -76,8 +61,26 @@ func (s *MonitorSession) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 			return nil
 		},
 	}
+}
 
+// ServeHTTP http.Handler implementation
+func (s *MonitorSession) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
+	requestID := req.Context().Value(traceconst.RequestIDHeaderKey).(string)
+	// backend real path with encoded format
+	realPath := strings.TrimPrefix(req.URL.RequestURI(), common.GitOpsProxyURL)
+	// !force https link
+	// fullPath := fmt.Sprintf("http://bcsmonitorcontroller.bcs-system.svc.cluster.local:18088%s", realPath)
+	fullPath := fmt.Sprintf("http://%s:%s%s", s.op.MonitorConfig.Address, s.op.MonitorConfig.Port, realPath)
+	newURL, err := url.Parse(fullPath)
+	if err != nil {
+		err = fmt.Errorf("monitor session build new fullpath '%s' failed: %s", fullPath, err.Error())
+		rw.WriteHeader(http.StatusInternalServerError)
+		blog.Errorf(err.Error())
+		_, _ = rw.Write([]byte(err.Error())) // nolint
+		return
+	}
+	req.URL = newURL
 	req.Header.Set(traceconst.RequestIDHeaderKey, requestID)
 	blog.Infof("RequestID[%s] monitor session serve: %s/%s", requestID, req.Method, fullPath)
-	reverseProxy.ServeHTTP(rw, req)
+	s.reverseProxy.ServeHTTP(rw, req)
 }

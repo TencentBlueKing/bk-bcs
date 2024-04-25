@@ -23,6 +23,7 @@ import (
 	k8stypes "k8s.io/apimachinery/pkg/types"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
@@ -65,6 +66,10 @@ func (s *Server) validatePortPool(newPool *networkextensionv1.PortPool) error {
 }
 
 func (s *Server) checkPortPool(newPool *networkextensionv1.PortPool) error {
+	if newPool.GetAllocatePolicy() != networkextensionv1.PortPoolAllocatePolicyAverage && newPool.GetAllocatePolicy() != networkextensionv1.PortPoolAllocatePolicyDefault {
+		return fmt.Errorf("only support allocate policy in ['default', 'average', ''], " +
+			"empty policy is regarded as default")
+	}
 	// key: lbID-port, value: itemName
 	lbPortMap := make(map[string]string)
 	itemNameMap := make(map[string]struct{})

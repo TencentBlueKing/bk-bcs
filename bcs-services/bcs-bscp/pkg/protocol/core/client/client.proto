@@ -32,6 +32,7 @@ message ClientSpec {
   string failed_detail_reason = 13;
   string client_type = 14;
   string current_release_name = 15;
+  string specific_failed_reason = 16;
 }
 
 // ClientAttachment source resource reference: pkg/dal/table/client.go
@@ -43,10 +44,14 @@ message ClientAttachment {
 
 // ClientResource source resource reference: pkg/dal/table/client.go
 message ClientResource {
-  double cpu_usage = 1;
-  double cpu_max_usage = 2;
-  uint64 memory_usage = 3;
-  uint64 memory_max_usage = 4;
+  double cpu_usage = 1;         // 当前cpu使用率
+  double cpu_max_usage = 2;     // 最大cpu使用率
+  double cpu_min_usage = 3;     // 最小cpu使用率
+  double cpu_avg_usage = 4;     // 平均cpu使用率
+  uint64 memory_usage = 5;      // 当前内存使用率
+  uint64 memory_max_usage = 6;  // 最大内存使用率
+  uint64 memory_min_usage = 7;  // 最小内存使用率
+  uint64 memory_avg_usage = 8;  // 平均内存使用率
 }
 
 // ClientQueryCondition 客户端查询条件
@@ -60,4 +65,15 @@ message ClientQueryCondition {
   google.protobuf.Struct annotations = 7;     // 附加信息
   repeated string online_status = 8;          // 在线状态：online、offline
   string client_version = 9;                  // 客户端组件版本
+  string client_type = 10;                    // 客户端组件类型
+  string failed_reason = 11;                  // 客户端失败主类原因
+}
+
+// ClientCommonReq request param
+message ClientCommonReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  pbclient.ClientQueryCondition search = 3;
+  int64 last_heartbeat_time = 4;
+  int64 pull_time = 5;
 }

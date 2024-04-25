@@ -101,6 +101,14 @@ service Cache {
       body: "*"
     };
   }
+
+  rpc GetAsyncDownloadTask(GetAsyncDownloadTaskReq) returns (JsonRawResp) {
+    option (google.api.http) = {
+      get: "/api/v1/cache/async/download/task/{task_id}"
+    };
+  }
+
+  rpc SetAsyncDownloadTask(SetAsyncDownloadTaskReq) returns (SetAsyncDownloadTaskResp) {}
 }
 
 message JsonRawResp {
@@ -231,3 +239,18 @@ message SetClientMetricReq {
 }
 
 message SetClientMetricResp {}
+
+message GetAsyncDownloadTaskReq {
+  uint32 biz_id = 1;
+  string task_id = 2;
+}
+
+message SetAsyncDownloadTaskReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  string task_id = 3;
+  string file_path = 4;
+  string file_name = 5;
+}
+
+message SetAsyncDownloadTaskResp {}

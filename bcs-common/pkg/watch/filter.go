@@ -14,7 +14,7 @@
 package watch
 
 import (
-	"golang.org/x/net/context"
+	"context"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/meta"
 )

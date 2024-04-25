@@ -148,7 +148,7 @@ func importClusterCredential(ctx context.Context, data *cloudprovider.CloudDepen
 		return err
 	}
 
-	credentials, err := cli.GetClusterAdminCredentials(ctx, data, getClusterResourceGroup(data.Cluster))
+	credentials, err := cli.GetClusterAdminCredentials(ctx, data, cloudprovider.GetClusterResourceGroup(data.Cluster))
 	if err != nil {
 		return err
 	}
@@ -228,7 +228,7 @@ func importNodeResourceGroup(info *cloudprovider.CloudDependBasicInfo) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	managedCluster, err := client.GetCluster(ctx, info, getClusterResourceGroup(cluster))
+	managedCluster, err := client.GetCluster(ctx, info, cloudprovider.GetClusterResourceGroup(cluster))
 	if err != nil {
 		return errors.Wrapf(err, "call GetCluster falied")
 	}
@@ -248,7 +248,7 @@ func importVpcID(info *cloudprovider.CloudDependBasicInfo) error {
 		return errors.Wrapf(err, "create AksService failed")
 	}
 
-	nodeResourceGroup := getClusterResourceGroup(cluster)
+	nodeResourceGroup := cloudprovider.GetClusterResourceGroup(cluster)
 	blog.Infof("importVpcID nodeResourceGroup:%s", nodeResourceGroup)
 
 	ctx, cancel := context.WithTimeout(context.TODO(), 30*time.Second)

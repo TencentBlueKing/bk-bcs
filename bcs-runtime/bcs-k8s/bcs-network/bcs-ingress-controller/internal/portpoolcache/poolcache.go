@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/pkg/common"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
@@ -69,12 +70,13 @@ func (c *Cache) IsItemExisted(poolKey, poolItemKey string) bool {
 }
 
 // AddPortPoolItem add port pool item to port pool
-func (c *Cache) AddPortPoolItem(poolKey string, itemStatus *networkextensionv1.PortPoolItemStatus) error {
+func (c *Cache) AddPortPoolItem(poolKey string, allocatePolicy string, itemStatus *networkextensionv1.
+	PortPoolItemStatus) error {
 	// if itemStatus.Status != constant.PortPoolItemStatusReady {
 	// 	return fmt.Errorf("item %s in pool %s is not ready, cannot add to cache", itemStatus.GetKey(), poolKey)
 	// }
 	if _, ok := c.portPoolMap[poolKey]; !ok {
-		c.portPoolMap[poolKey] = NewCachePool(poolKey)
+		c.portPoolMap[poolKey] = NewCachePool(poolKey, allocatePolicy)
 	}
 	if c.portPoolMap[poolKey].HasItem(itemStatus.GetKey()) {
 		return fmt.Errorf("item %s in pool %s already exists", itemStatus.GetKey(), poolKey)

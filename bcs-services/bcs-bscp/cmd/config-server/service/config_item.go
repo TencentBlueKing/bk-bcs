@@ -15,7 +15,12 @@ package service
 import (
 	"context"
 	"fmt"
+	"sync"
 
+	"golang.org/x/sync/errgroup"
+
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/i18n"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
@@ -279,6 +284,72 @@ func (s *Service) DeleteConfigItem(ctx context.Context, req *pbcs.DeleteConfigIt
 	}
 
 	return resp, nil
+}
+
+// BatchDeleteConfigItems is used to batch delete config items.
+func (s *Service) BatchDeleteConfigItems(ctx context.Context, req *pbcs.BatchDeleteAppResourcesReq) (
+	*pbcs.BatchDeleteResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.Update, ResourceID: req.AppId}, BizID: req.BizId},
+	}
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
+		return nil, err
+	}
+
+	if len(req.GetIds()) == 0 {
+		return nil, errf.Errorf(errf.InvalidArgument, i18n.T(grpcKit, "id is required"))
+	}
+
+	eg, egCtx := errgroup.WithContext(grpcKit.RpcCtx())
+	eg.SetLimit(10)
+
+	successfulIDs := []uint32{}
+	failedIDs := []uint32{}
+	var mux sync.Mutex
+
+	// 使用 data-service 原子接口
+	for _, v := range req.GetIds() {
+		v := v
+		eg.Go(func() error {
+			r := &pbds.DeleteConfigItemReq{
+				Id: v,
+				Attachment: &pbci.ConfigItemAttachment{
+					BizId: req.BizId,
+					AppId: req.AppId,
+				},
+			}
+			if _, err := s.client.DS.DeleteConfigItem(egCtx, r); err != nil {
+				logs.Errorf("delete config item %d failed, err: %v, rid: %s", v, err, grpcKit.Rid)
+
+				// 错误不返回异常，记录错误ID
+				mux.Lock()
+				failedIDs = append(failedIDs, v)
+				mux.Unlock()
+				return nil
+			}
+
+			mux.Lock()
+			successfulIDs = append(successfulIDs, v)
+			mux.Unlock()
+
+			return nil
+		})
+	}
+
+	if err := eg.Wait(); err != nil {
+		logs.Errorf("batch delete config items failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, errf.Errorf(errf.Aborted, i18n.T(grpcKit, "batch delete config items failed"))
+	}
+
+	// 全部失败, 当前API视为失败
+	if len(failedIDs) == len(req.Ids) {
+		return nil, errf.Errorf(errf.Aborted, i18n.T(grpcKit, "batch delete config items failed"))
+	}
+
+	return &pbcs.BatchDeleteResp{SuccessfulIds: successfulIDs, FailedIds: failedIDs}, nil
 }
 
 // GetConfigItem get config item with content

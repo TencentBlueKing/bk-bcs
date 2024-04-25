@@ -341,6 +341,16 @@ export default function useMenu() {
               id: 'GOOGLECLOUD',
               route: 'googleCloud',
             },
+            {
+              title: 'Azure Cloud',
+              id: 'AZURECLOUD',
+              route: 'azureCloud',
+            },
+            {
+              title: 'Huawei Cloud',
+              id: 'HUAWEICLOUD',
+              route: 'huaweiCloud',
+            },
           ],
         },
         {
@@ -367,12 +377,12 @@ export default function useMenu() {
           icon: 'bcs-icon-control-center',
           route: 'metricManage',
         },
-        {
-          title: 'LoadBalancers',
-          id: 'LOADBALANCERS',
-          icon: 'bcs-icon bcs-icon-loadbalance',
-          route: 'loadBalance',
-        },
+        // {
+        //   title: 'LoadBalancers',
+        //   id: 'LOADBALANCERS',
+        //   icon: 'bcs-icon bcs-icon-loadbalance',
+        //   route: 'loadBalance',
+        // },
         {
           title: $i18n.t('nav.log'),
           id: 'LOG',

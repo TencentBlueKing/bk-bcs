@@ -38,6 +38,8 @@ type Kv interface {
 	Delete(kit *kit.Kit, kv *table.Kv) error
 	// DeleteWithTx delete kv instance with transaction.
 	DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, kv *table.Kv) error
+	// UpdateWithTx update kv instance with transaction.
+	UpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, kv *table.Kv) error
 	// GetByKvState get kv by KvState.
 	GetByKvState(kit *kit.Kit, bizID, appID uint32, key string, kvState []string) (*table.Kv, error)
 	// GetByID get kv by id.
@@ -53,8 +55,6 @@ type Kv interface {
 	// UpdateSelectedKVStates updates the states of selected kv pairs using a transaction
 	UpdateSelectedKVStates(kit *kit.Kit, tx *gen.QueryTx, bizID, appID uint32, targetKVStates []string,
 		newKVStates table.KvState) error
-	// UpdateStateWithTx updates the state of a kv pair with transaction
-	UpdateStateWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, appID uint32, key string, state table.KvState) error
 	// DeleteByStateWithTx deletes kv pairs with a specific state using a transaction
 	DeleteByStateWithTx(kit *kit.Kit, tx *gen.QueryTx, kv *table.Kv) error
 }
@@ -65,6 +65,31 @@ type kvDao struct {
 	genQ     *gen.Query
 	idGen    IDGenInterface
 	auditDao AuditDao
+}
+
+// UpdateWithTx update kv instance with transaction.
+func (dao *kvDao) UpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, kv *table.Kv) error {
+	// 参数校验
+	if err := kv.ValidateUpdate(); err != nil {
+		return err
+	}
+
+	// 编辑操作, 获取当前记录做审计
+	m := tx.Kv
+	q := tx.Kv.WithContext(kit.Ctx)
+	oldOne, err := q.Where(m.ID.Eq(kv.ID), m.BizID.Eq(kv.Attachment.BizID), m.AppID.Eq(kv.Attachment.AppID)).Take()
+	if err != nil {
+		return err
+	}
+	ad := dao.auditDao.DecoratorV2(kit, kv.Attachment.BizID).PrepareUpdate(kv, oldOne)
+
+	_, err = q.Where(m.BizID.Eq(kv.Attachment.BizID), m.ID.Eq(kv.ID)).Select(m.Version, m.UpdatedAt,
+		m.Reviser, m.KvState, m.Signature, m.Md5, m.ByteSize).Updates(kv)
+	if err != nil {
+		return err
+	}
+
+	return ad.Do(tx.Query)
 }
 
 func (dao *kvDao) Create(kit *kit.Kit, kv *table.Kv) (uint32, error) {
@@ -123,7 +148,7 @@ func (dao *kvDao) Update(kit *kit.Kit, kv *table.Kv) error {
 	updateTx := func(tx *gen.Query) error {
 		q = tx.Kv.WithContext(kit.Ctx)
 		if _, e := q.Where(m.BizID.Eq(kv.Attachment.BizID), m.ID.Eq(kv.ID)).Select(m.Version, m.UpdatedAt,
-			m.Reviser, m.KvState, m.Signature, m.Md5, m.ByteSize).Updates(kv); e != nil {
+			m.Reviser, m.KvState, m.Signature, m.Md5, m.ByteSize, m.Memo).Updates(kv); e != nil {
 			return e
 		}
 
@@ -416,30 +441,6 @@ func (dao *kvDao) UpdateSelectedKVStates(kit *kit.Kit, tx *gen.QueryTx, bizID, a
 	}
 
 	return nil
-}
-
-// UpdateStateWithTx updates the state of a kv pair with transaction
-func (dao *kvDao) UpdateStateWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, appID uint32, key string,
-	state table.KvState) error {
-	if bizID <= 0 {
-		return errors.New("biz id should be set")
-	}
-
-	if appID <= 0 {
-		return errors.New("app id should be set")
-	}
-
-	if key == "" {
-		return errors.New("key cannot be empty")
-	}
-
-	if state.String() == "" {
-		return errors.New("state cannot be empty")
-	}
-
-	m := tx.Kv
-	_, err := m.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID), m.AppID.Eq(appID), m.Key.Eq(key)).Update(m.KvState, state)
-	return err
 }
 
 // ListAllByAppID list all Kv by appID

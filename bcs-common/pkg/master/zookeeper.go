@@ -13,6 +13,7 @@
 package master
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"sort"
@@ -21,7 +22,6 @@ import (
 	"time"
 
 	zktype "github.com/samuel/go-zookeeper/zk"
-	"golang.org/x/net/context"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	bcstypes "github.com/Tencent/bk-bcs/bcs-common/common/types"

@@ -13,6 +13,7 @@
 
 package httpserver
 
+// HttpResult defines the http result
 type HttpResult struct {
 	NodeNum []*NodeNumObj `json:"nodeNum"`
 
@@ -27,26 +28,31 @@ type HttpResult struct {
 	TargetPackingRate float64    `json:"TargetPackingRate"`
 }
 
+// PriceObj defines the price obj
 type PriceObj struct {
 	Kind  string `json:"kind"`
 	Value string `json:"value"`
 }
 
+// NodeNumObj defines the node num obj
 type NodeNumObj struct {
 	Kind string `json:"kind"`
 	Num  int    `json:"num"`
 }
 
+// PackingRateObj defines the rate obj
 type PackingRateObj struct {
 	Kind string  `json:"kind"`
 	Rate float64 `json:"rate"`
 }
 
+// CapacityObj defines the capacity obj
 type CapacityObj struct {
 	Kind     string  `json:"kind"`
 	Capacity float64 `json:"capacity"`
 }
 
+// NodeInfo defines node info
 type NodeInfo struct {
 	Name           string `json:"节点名称"`
 	PodNum         string `json:"POD 数量"`
@@ -56,16 +62,20 @@ type NodeInfo struct {
 	MEMCapacity    string `json:"本身容量 (MEM)"`
 }
 
+// NodeInfoList defines list of NodeINFO
 type NodeInfoList []NodeInfo
 
+// Len defines the len of NodeInfoList
 func (n NodeInfoList) Len() int {
 	return len(n)
 }
 
+// Less defines the less of NodeInfoList
 func (n NodeInfoList) Less(i, j int) bool {
 	return (n[i].CPUPackingRate + n[i].MEMPackingRate) < (n[j].CPUPackingRate + n[j].MEMPackingRate)
 }
 
+// Swap defines the swap of NodeInfoList
 func (n NodeInfoList) Swap(i, j int) {
 	n[i], n[j] = n[j], n[i]
 }

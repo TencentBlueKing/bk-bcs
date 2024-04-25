@@ -44,9 +44,10 @@
         <CodeEditor
           ref="codeEditorRef"
           v-model="kvsContent"
-          @enter="separatorShow = true"
           :error-line="errorLine"
-          :placeholder="editorPlaceholder" />
+          :placeholder="editorPlaceholder"
+          @enter="separatorShow = true"
+          @paste="handlePaste" />
         <div class="separator" v-show="separatorShow">
           <SeparatorSelect @closed="separatorShow = false" @confirm="handleSelectSeparator" />
         </div>
@@ -82,7 +83,7 @@
   const separator = ref(' ');
   const shouldValidate = ref(false);
   const errorLine = ref<errorLineItem[]>([]);
-  const editorPlaceholder = ref([t('格式：'), t('key 类型 value'), 'name string nginx', ' port number 8080']);
+  const editorPlaceholder = ref([t('格式：'), t('key 类型 value 描述'), 'name string nginx', ' port number 8080']);
   const bkBizId = ref(String(route.params.spaceId));
   const appId = ref(Number(route.params.appId));
 
@@ -128,25 +129,30 @@
 
   // 校验编辑器内容 处理上传kv格式
   const handleValidateEditor = () => {
-    const kvArray = kvsContent.value.split('\n');
+    const kvArray = kvsContent.value.split('\n').map((item) => item.trim());
     errorLine.value = [];
     kvs.value = [];
+    let hasSeparatorError = false;
     kvArray.forEach((item, index) => {
       if (item === '') return;
-      const kvContent = item.split(separator.value);
+      const regex = separator.value === ' ' ? /\s+/ : separator.value;
+      const kvContent = item.split(regex).map((item) => item.trim());
       const key = kvContent[0];
       const kv_type = kvContent[1] ? kvContent[1].toLowerCase() : '';
       const value = kvContent[2];
+      const memo = kvContent[3] || '';
       kvs.value.push({
         key,
         kv_type,
         value,
+        memo,
       });
-      if (kvContent.length !== 3) {
+      if (kvContent.length < 3) {
         errorLine.value.push({
           errorInfo: t('请检查是否已正确使用分隔符'),
           lineNumber: index + 1,
         });
+        hasSeparatorError = true;
       } else if (kv_type !== 'string' && kv_type !== 'number') {
         errorLine.value.push({
           errorInfo: t('类型必须为 string 或者 number'),
@@ -165,6 +171,7 @@
       }
     });
     emits('trigger', kvsContent.value && errorLine.value.length === 0);
+    return hasSeparatorError;
   };
 
   // 导入kv
@@ -175,6 +182,10 @@
   const handleSelectSeparator = (selectSeparator: string) => {
     separator.value = selectSeparator;
     handleValidateEditor();
+  };
+
+  const handlePaste = () => {
+    if (handleValidateEditor()) separatorShow.value = true;
   };
 
   defineExpose({

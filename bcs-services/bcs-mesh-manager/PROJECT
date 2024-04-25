@@ -1,7 +1,0 @@
-domain: tencent.com
-repo: github.com/Tencent/bk-bcs
-resources:
-- group: mesh
-  kind: MeshCluster
-  version: v1
-version: "2"

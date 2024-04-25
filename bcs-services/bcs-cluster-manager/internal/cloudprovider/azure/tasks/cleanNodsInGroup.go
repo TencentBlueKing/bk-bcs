@@ -72,6 +72,7 @@ func CleanNodeGroupNodesTask(taskID string, stepName string) error {
 
 	// inject taskID
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
+
 	if err = removeVMSSsInstances(ctx, dependInfo, nodeIDs); err != nil {
 		blog.Errorf("CleanNodeGroupNodesTask[%s] nodegroup %s removeVMSSsInstances failed: %v",
 			taskID, nodeGroupID, err)

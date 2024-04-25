@@ -22,6 +22,7 @@ import (
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/selector"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
 // AppCacheMeta defines app's basic meta info
@@ -71,6 +72,7 @@ type ReleaseKvCache struct {
 	ID          uint32              `json:"id"`
 	ReleaseID   uint32              `json:"reid"`
 	Key         string              `json:"key"`
+	Memo        string              `json:"memo"`
 	KvType      string              `json:"kv_type"`
 	Revision    *table.Revision     `json:"revision"`
 	Attachment  *table.KvAttachment `json:"am"`
@@ -186,6 +188,23 @@ func (c *CredentialCache) MatchKv(app, key string) bool {
 	return false
 }
 
+// MatchConfigItem 是否匹配配置文件
+func (c *CredentialCache) MatchConfigItem(app, path, name string) bool {
+	scopes, ok := c.scopeMap[app]
+	if !ok {
+		return false
+	}
+
+	for _, scope := range scopes {
+		ok, _ := tools.MatchConfigItem(scope, path, name)
+		if ok {
+			return true
+		}
+	}
+
+	return false
+}
+
 // ReleaseCICaches convert ReleasedConfigItem to ReleaseCICache.
 func ReleaseCICaches(rs []*table.ReleasedConfigItem, releaseName string) []*ReleaseCICache {
 	list := make([]*ReleaseCICache, len(rs))
@@ -229,6 +248,7 @@ func ReleaseKvCaches(rs []*table.ReleasedKv) []*ReleaseKvCache {
 			ID:          one.ID,
 			ReleaseID:   one.ReleaseID,
 			Key:         one.Spec.Key,
+			Memo:        one.Spec.Memo,
 			KvType:      string(one.Spec.KvType),
 			Revision:    one.Revision,
 			Attachment:  one.Attachment,
@@ -246,4 +266,13 @@ type ReleaseKvValueCache struct {
 	Key       string `json:"key"`
 	Value     string `json:"value"`
 	KvType    string `json:"kv_type"`
+}
+
+// AsyncDownloadTaskCache is the async download task info which will be stored in cache.
+type AsyncDownloadTaskCache struct {
+	BizID    uint32 `json:"biz_id"`
+	AppID    uint32 `json:"app_id"`
+	TaskID   string `json:"task_id"`
+	FilePath string `json:"file_path"`
+	FileName string `json:"file_name"`
 }

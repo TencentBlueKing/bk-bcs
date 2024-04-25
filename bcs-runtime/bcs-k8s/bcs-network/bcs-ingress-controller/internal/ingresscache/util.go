@@ -14,13 +14,14 @@ package ingresscache
 
 import (
 	"fmt"
+	"strings"
 )
 
 const (
 	// ingressKeyFmt namespace/name
 	ingressKeyFmt = "%s/%s"
 	// serviceKeyFmt namespace/name
-	serviceKeyFmt = "%s/%s"
+	serviceKeyFmt = "%s/%s/%s"
 	// workloadKeyFmt kind/namespace/name
 	// kind is StatefulSet or GameStatefulSet
 	workloadKeyFmt = "%s/%s/%s"
@@ -32,8 +33,8 @@ func buildIngressKey(namespace, name string) string {
 }
 
 // buildServiceKey return cache key of service
-func buildServiceKey(namespace, name string) string {
-	return fmt.Sprintf(serviceKeyFmt, namespace, name)
+func buildServiceKey(kind, namespace, name string) string {
+	return fmt.Sprintf(serviceKeyFmt, strings.ToLower(kind), namespace, name)
 }
 
 // buildWorkloadKey return cache key of workload

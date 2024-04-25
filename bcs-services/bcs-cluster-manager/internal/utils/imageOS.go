@@ -193,3 +193,47 @@ var AKSImageOsList = []*proto.OsImage{
 		Provider:        common.PublicImageProvider,
 	},
 }
+
+// CCEImageOsList cce default images
+var CCEImageOsList = []*proto.OsImage{
+	{
+		Alias:           "",
+		Arch:            "x86_64",
+		ImageID:         "Huawei Cloud EulerOS 2.0",
+		OsCustomizeType: "GENERAL",
+		OsName:          "Huawei Cloud EulerOS 2.0",
+		SeriesName:      "",
+		Status:          "NORMAL",
+		Provider:        common.PublicImageProvider,
+	},
+	{
+		Alias:           "",
+		Arch:            "x86_64",
+		ImageID:         "EulerOS 2.9",
+		OsCustomizeType: "GENERAL",
+		OsName:          "EulerOS 2.9",
+		SeriesName:      "",
+		Status:          "NORMAL",
+		Provider:        common.PublicImageProvider,
+	},
+	{
+		Alias:           "",
+		Arch:            "x86_64",
+		ImageID:         "Ubuntu 22.04",
+		OsCustomizeType: "GENERAL",
+		OsName:          "Ubuntu 22.04",
+		SeriesName:      "",
+		Status:          "NORMAL",
+		Provider:        common.PublicImageProvider,
+	},
+	{
+		Alias:           "",
+		Arch:            "x86_64",
+		ImageID:         "CentOS 7.6",
+		OsCustomizeType: "GENERAL",
+		OsName:          "CentOS 7.6",
+		SeriesName:      "",
+		Status:          "NORMAL",
+		Provider:        common.PublicImageProvider,
+	},
+}

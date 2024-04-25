@@ -16,6 +16,8 @@ const CreateK8SCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/
 // import模式
 const ImportCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/add/import-cluster.vue');
 const ImportGoogleCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/add/google-cloud.vue');
+const ImportAzureCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/add/azure-cloud.vue');
+const ImportHuaweiCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/add/huawei-cloud.vue');
 const ClusterNodeOverview = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/node-list/node-overview.vue');
 // const Node = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/node-list/node.vue');
 const NodeTemplate = () => import(/* webpackChunkName: 'cluster'  */'@/views/cluster-manage/node-template/node-template.vue');
@@ -124,6 +126,30 @@ export default [
     path: 'clusters/import/google-cloud',
     name: 'importGoogleCluster',
     component: ImportGoogleCluster,
+    props: true,
+    meta: {
+      menuId: 'CLUSTER',
+      title: window.i18n.t('cluster.create.title.import'),
+      hideMenu: true,
+    },
+  },
+  // 导入集群 - 微软云
+  {
+    path: 'clusters/import/azure-cloud',
+    name: 'importAzureCluster',
+    component: ImportAzureCluster,
+    props: true,
+    meta: {
+      menuId: 'CLUSTER',
+      title: window.i18n.t('cluster.create.title.import'),
+      hideMenu: true,
+    },
+  },
+  // 导入集群 - 华为云
+  {
+    path: 'clusters/import/huawei-cloud',
+    name: 'importHuaweiCluster',
+    component: ImportHuaweiCluster,
     props: true,
     meta: {
       menuId: 'CLUSTER',

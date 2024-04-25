@@ -60,6 +60,7 @@
             <div v-show="!previewGroup.fold" class="group-list">
               <div v-for="group in previewGroup.children" class="group-item" :key="group.id">
                 <div class="name">{{ group.name }}</div>
+                <div v-if="group.desc" class="desc">{{ group.desc }}</div>
                 <div v-if="group.rules.length > 0" class="rules">
                   <bk-overflow-title type="tips">
                     <span v-for="(rule, index) in group.rules" :key="index" class="rule">
@@ -94,7 +95,7 @@
   import { IGroupToPublish, IGroupPreviewItem } from '../../../../../../../types/group';
   import { IConfigVersion } from '../../../../../../../types/config';
   import useConfigStore from '../../../../../../store/config';
-  import { aggregatePreviewData, aggregateExcludedData } from '../hooks/aggegate-groups';
+  import { aggregatePreviewData, aggregateExcludedData } from '../hooks/aggregate-groups';
   import RuleTag from '../../../../groups/components/rule-tag.vue';
 
   const versionStore = useConfigStore();
@@ -205,8 +206,12 @@
       const params = { ...localVal.value };
       // 全部实例上线，只需要将all置为true
       if (props.releaseType === 'all') {
-        params.groups = [];
-        params.all = true;
+        if (excludeGroups.value.length > 0) {
+          params.all = false;
+        } else {
+          params.all = true;
+          params.groups = [];
+        }
       }
       const resp = await publishVersion(props.bkBizId, props.appId, versionData.value.id, params);
       handleClose();
@@ -308,6 +313,10 @@
       background: #f0f1f5;
       border-radius: 2px;
     }
+    .desc {
+      font-size: 12px;
+      color: #979ba5;
+    }
     .rules {
       margin-left: 8px;
       font-size: 12px;
@@ -323,7 +332,7 @@
   }
 </style>
 <style lang="scss">
-  .release-version-dialog.bk-dialog-wrapper .bk-dialog-header {
+  .release-version-dialog.bk-modal-wrapper .bk-dialog-header {
     padding-bottom: 20px;
   }
 </style>

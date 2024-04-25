@@ -1,5 +1,5 @@
 <template>
-  <div :class="['configs-menu', { 'search-opened': isOpenSearch }]">
+  <div v-bkloading="{ loading }" :class="['configs-menu', { 'search-opened': isOpenSearch }]">
     <div class="title-area">
       <div class="title">{{ t('配置文件') }}</div>
       <div class="title-extend">
@@ -8,7 +8,7 @@
           v-model="isOnlyShowDiff"
           class="view-diff-checkbox"
           @change="handleToggleShowDiff">
-          {{ t('只查看差异文件') }}({{ diffCount }})
+          {{ t('只看差异文件') }}({{ diffCount }})
         </bk-checkbox>
         <div :class="['search-trigger', { actived: isOpenSearch }]" @click="isOpenSearch = !isOpenSearch">
           <Search />
@@ -27,7 +27,6 @@
         <div v-if="group.expand" class="config-list">
           <div
             v-for="config in group.configs"
-            v-overflow-title
             :key="config.id"
             :class="['config-item', { actived: getItemSelectedStatus(group.id, config) }]"
             @click="
@@ -39,7 +38,9 @@
               })
             ">
             <i v-if="config.diffType" :class="['status-icon', config.diffType]"></i>
-            {{ config.name }}
+            <bk-overflow-title type="tips">
+              {{ config.name }}
+            </bk-overflow-title>
           </div>
         </div>
       </div>
@@ -61,6 +62,7 @@
   import { Search, RightShape } from 'bkui-vue/lib/icon';
   import useServiceStore from '../../../../../../../../store/service';
   import { datetimeFormat, byteUnitConverse } from '../../../../../../../../utils';
+  import { joinPathName } from '../../../../../../../../utils/config';
   import { ICommonQuery } from '../../../../../../../../../types/index';
   import {
     IConfigItem,
@@ -68,7 +70,6 @@
     IConfigDiffSelected,
     IFileConfigContentSummary,
   } from '../../../../../../../../../types/config';
-
   import { IVariableEditParams } from '../../../../../../../../../types/variable';
   import {
     getConfigList,
@@ -78,7 +79,6 @@
     getBoundTemplatesByAppVersion,
   } from '../../../../../../../../api/config';
   import { getReleasedAppVariables } from '../../../../../../../../api/variable';
-
   import SearchInput from '../../../../../../../../components/search-input.vue';
   import tableEmpty from '../../../../../../../../components/table/table-empty.vue';
 
@@ -158,6 +158,7 @@
   const isOpenSearch = ref(false);
   const searchStr = ref('');
   const isSearchEmpty = ref(false);
+  const loading = ref(true);
 
   // 是否实际选择了对比的基准版本，为了区分的未命名版本id为0的情况
   const isBaseVersionExist = computed(() => typeof props.baseVersionId === 'number');
@@ -180,13 +181,8 @@
   // 基准版本变化，更新选中对比项
   watch(
     () => props.baseVersionId,
-    async () => {
-      baseGroupList.value = await getConfigsOfVersion(props.baseVersionId);
-      baseVariables.value = await getVariableList(props.baseVersionId);
-      aggregatedList.value = calcDiff();
-      isOnlyShowDiff.value = aggregatedListOfDiff.value.length > 0;
-      groupedConfigListOnShow.value = getMenuList();
-      setDefaultSelected();
+    () => {
+      initData();
     },
   );
 
@@ -203,28 +199,33 @@
     },
   );
 
-  onMounted(async () => {
-    await getAllConfigList();
-    // 未命名版本变量取正在编辑中的变量列表
-    if (isUnNamedVersion(props.currentVersionId)) {
-      currentVariables.value = props.unNamedVersionVariables;
-    } else {
-      currentVariables.value = await getVariableList(props.currentVersionId);
-    }
-    baseVariables.value = await getVariableList(props.baseVersionId);
-    aggregatedList.value = calcDiff();
-    isOnlyShowDiff.value = aggregatedListOfDiff.value.length > 0;
-    groupedConfigListOnShow.value = getMenuList();
-    setDefaultSelected();
+  onMounted(() => {
+    initData(true);
   });
 
   // 判断版本是否为未命名版本
   const isUnNamedVersion = (id: number) => id === 0;
 
-  // 获取当前版本和基准版本的所有配置文件列表(非模板配置和套餐下模板)
-  const getAllConfigList = async () => {
-    currentGroupList.value = await getConfigsOfVersion(props.currentVersionId);
-    baseGroupList.value = await getConfigsOfVersion(props.baseVersionId);
+  // 初始化对比配置文件以及设置默认选中的配置文件
+  const initData = async (needGetCrt = false) => {
+    loading.value = true;
+    if (needGetCrt) {
+      currentGroupList.value = await getConfigsOfVersion(props.currentVersionId);
+      // 未命名版本变量取正在编辑中的变量列表
+      if (isUnNamedVersion(props.currentVersionId)) {
+        currentVariables.value = props.unNamedVersionVariables;
+      } else {
+        currentVariables.value = await getVariableList(props.currentVersionId);
+      }
+    }
+    if (props.baseVersionId) {
+      baseGroupList.value = await getConfigsOfVersion(props.baseVersionId);
+      baseVariables.value = await getVariableList(props.baseVersionId);
+    }
+    aggregatedList.value = calcDiff();
+    groupedConfigListOnShow.value = getMenuList();
+    setDefaultSelected();
+    loading.value = false;
   };
 
   // 获取某一版本下配置文件和模板列表
@@ -267,12 +268,13 @@
         expand: true,
         configs: configs.map((config) => {
           const { id, spec, commit_spec, revision, file_state } = config;
-          const { name, file_type, permission } = spec;
+          const { name, path, file_type, permission } = spec;
           const { origin_byte_size, byte_size, signature, origin_signature } = commit_spec.content;
+
           return {
             type: 'config',
             id,
-            name,
+            name: joinPathName(path, name),
             file_type,
             file_state,
             update_at: datetimeFormat(revision.update_at || revision.create_at),
@@ -313,6 +315,7 @@
         const {
           template_id,
           name,
+          path,
           file_type,
           file_state,
           origin_byte_size,
@@ -321,17 +324,21 @@
           signature,
           template_revision_id,
           create_at,
+          privilege,
+          user,
+          user_group,
         } = tpl;
         if (file_state !== 'DELETE') {
           group.configs.push({
             type: 'template',
             id: template_id,
-            name,
+            name: joinPathName(path, name),
             file_type,
             file_state,
             update_at: datetimeFormat(create_at),
             byte_size: unNamedVersion ? byte_size : origin_byte_size,
             signature: unNamedVersion ? signature : origin_signature,
+            permission: { privilege, user, user_group },
             template_revision_id,
           });
         }
@@ -453,10 +460,10 @@
   };
 
   const getMenuList = () => {
-    const fullList = isOnlyShowDiff.value ? aggregatedListOfDiff.value : aggregatedList.value;
+    const groupList = isOnlyShowDiff.value ? aggregatedListOfDiff.value : aggregatedList.value;
+    let menuList: IDiffGroupData[] = [];
     if (searchStr.value !== '') {
-      const searchedList: IDiffGroupData[] = [];
-      fullList.forEach((group) => {
+      groupList.forEach((group) => {
         const configs = group.configs.filter((item) => {
           const isSearchHit = item.name.toLocaleLowerCase().includes(searchStr.value.toLocaleLowerCase());
           if (isOnlyShowDiff.value) {
@@ -465,15 +472,19 @@
           return isSearchHit;
         });
         if (configs.length > 0) {
-          searchedList.push({
+          menuList.push({
             ...group,
             configs,
           });
         }
       });
-      return searchedList;
+    } else {
+      menuList = groupList.slice();
     }
-    return fullList.slice();
+    if (menuList.length > 0) {
+      menuList[0].expand = true;
+    }
+    return menuList;
   };
 
   // 设置默认选中的配置文件
@@ -481,11 +492,9 @@
   // 如果选中项有值，保持上一次选中项
   // 否则取第一个非空分组的第一个配置文件
   const setDefaultSelected = () => {
-    if (props.selectedConfig.id) {
-      const pkg = aggregatedList.value.find((group) => group.id === props.selectedConfig.pkgId);
-      if (pkg) {
-        pkg.expand = true;
-      }
+    const pkg = aggregatedList.value.find((group) => group.id === props.selectedConfig.pkgId);
+    if (props.selectedConfig.id && pkg) {
+      pkg.expand = true;
       handleSelectItem(props.selectedConfig);
     } else {
       const selectedGroup = aggregatedList.value.find((group) => group.id === selected.value.pkgId);

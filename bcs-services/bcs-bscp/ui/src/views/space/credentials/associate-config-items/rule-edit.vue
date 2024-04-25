@@ -13,6 +13,7 @@
             :input-search="false"
             :disabled="rule.type === 'del'"
             :placeholder="t('请选择服务')"
+            :search-placeholder="$t('请输入')"
             @change="handleSelectApp(index)">
             <bk-option v-for="app in appList" :id="app" :key="app.id" :name="app.spec.name" />
           </bk-select>
@@ -50,7 +51,7 @@
           <div
             :class="['preview', { 'preview-mode': previewRule?.index === index }, { 'need-preview': rule.needPreview }]"
             @click="handlePreviewRule(rule, index)">
-            <span>预览</span><Arrows-Right class="arrow-icon" />
+            <span>{{ t('预览') }}</span><Arrows-Right class="arrow-icon" />
           </div>
         </div>
         <div class="error-info" v-if="!rule.isRight || !rule.isSelectService">

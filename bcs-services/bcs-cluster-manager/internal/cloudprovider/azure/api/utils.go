@@ -14,7 +14,6 @@ package api
 
 import (
 	"context"
-	"encoding/base64"
 	"fmt"
 	"net"
 	"regexp"
@@ -29,6 +28,7 @@ import (
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 )
 
 //	nodeGroupToPool agentPool 转换器
@@ -229,9 +229,19 @@ func (c *nodeGroupToPool) setLabels() {
 // setTaints 设置taints
 func (c *nodeGroupToPool) setTaints() {
 	taints := c.group.NodeTemplate.Taints
-	if len(taints) == 0 {
-		return
+	if taints == nil {
+		taints = make([]*proto.Taint, 0)
 	}
+
+	/*
+		// attention: gke not support addNodes to set unScheduled nodes, thus realize this feature by taint
+		taints = append(taints, &proto.Taint{
+			Key:    cutils.BCSNodeGroupTaintKey,
+			Value:  cutils.BCSNodeGroupTaintValue,
+			Effect: cutils.BCSNodeGroupAzureTaintEffect,
+		})
+	*/
+	// key=value:NoSchedule NoExecute PreferNoSchedule
 	c.pool.Properties.NodeTaints = make([]*string, 0)
 	target := &c.pool.Properties.NodeTaints
 	for _, taint := range taints {
@@ -999,7 +1009,9 @@ func SetVmSetPasswd(group *proto.NodeGroup, set *armcompute.VirtualMachineScaleS
 		set.Properties.VirtualMachineProfile.OSProfile = new(armcompute.VirtualMachineScaleSetOSProfile)
 	}
 	set.Properties.VirtualMachineProfile.OSProfile.AdminUsername = to.Ptr(lc.InitLoginUsername)
-	set.Properties.VirtualMachineProfile.OSProfile.AdminPassword = to.Ptr(lc.InitLoginPassword)
+
+	pwd, _ := encrypt.Decrypt(nil, lc.GetInitLoginPassword())
+	set.Properties.VirtualMachineProfile.OSProfile.AdminPassword = to.Ptr(pwd)
 	// 重置配置
 	set.Properties.VirtualMachineProfile.OSProfile.LinuxConfiguration = new(armcompute.LinuxConfiguration)
 	// 启用密码验证
@@ -1025,20 +1037,24 @@ func SetVmSetSSHPublicKey(group *proto.NodeGroup, set *armcompute.VirtualMachine
 		set.Properties.VirtualMachineProfile.OSProfile = new(armcompute.VirtualMachineScaleSetOSProfile)
 	}
 	osProfile := set.Properties.VirtualMachineProfile.OSProfile
-	adminName := osProfile.AdminUsername
+
+	// adminName := osProfile.AdminUsername
+	osProfile.AdminUsername = to.Ptr(lc.InitLoginUsername)
+
 	if osProfile.LinuxConfiguration == nil {
 		osProfile.LinuxConfiguration = new(armcompute.LinuxConfiguration)
 	}
 	if osProfile.LinuxConfiguration.SSH == nil {
 		osProfile.LinuxConfiguration.SSH = new(armcompute.SSHConfiguration)
 	}
+
 	osProfile.LinuxConfiguration.SSH.PublicKeys = make([]*armcompute.SSHPublicKey, 0)
 	// 设置SSH免密登录公钥
-	dePublicKey, _ := base64.StdEncoding.DecodeString(lc.KeyPair.KeyPublic)
+	dePublicKey, _ := encrypt.Decrypt(nil, lc.GetKeyPair().GetKeyPublic())
 	osProfile.LinuxConfiguration.SSH.PublicKeys = append(osProfile.LinuxConfiguration.SSH.PublicKeys,
 		&armcompute.SSHPublicKey{
-			KeyData: to.Ptr(string(dePublicKey)),
-			Path:    to.Ptr(fmt.Sprintf("/home/%s/.ssh/authorized_keys", *adminName)),
+			KeyData: to.Ptr(dePublicKey),
+			Path:    to.Ptr(fmt.Sprintf("/home/%s/.ssh/authorized_keys", lc.InitLoginUsername)),
 		})
 }
 
@@ -1453,13 +1469,13 @@ func VmIDToNodeID(vm *armcompute.VirtualMachineScaleSetVM) string {
 
 // SetUserData 设置用户数据
 func SetUserData(group *proto.NodeGroup, set *armcompute.VirtualMachineScaleSet) {
-	if group.LaunchTemplate == nil || len(group.LaunchTemplate.UserData) == 0 {
+	if group.GetNodeTemplate() == nil || len(group.GetNodeTemplate().GetPreStartUserScript()) == 0 {
 		return
 	}
 	if set == nil || set.Properties == nil || set.Properties.VirtualMachineProfile == nil {
 		return
 	}
-	set.Properties.VirtualMachineProfile.UserData = to.Ptr(group.LaunchTemplate.UserData)
+	set.Properties.VirtualMachineProfile.UserData = to.Ptr(group.GetNodeTemplate().GetPreStartUserScript())
 }
 
 // SetImageReferenceNull 镜像引用-暂时置空处理，若不置空会导致无法更新set
@@ -1486,17 +1502,33 @@ func SetAgentPoolFromNodeGroup(group *proto.NodeGroup, pool *armcontainerservice
 	for k := range group.Tags {
 		pool.Properties.Tags[k] = to.Ptr(group.Tags[k])
 	}
-	if group.NodeTemplate != nil {
+
+	if group.NodeTemplate != nil && len(group.NodeTemplate.GetLabels()) > 0 {
 		pool.Properties.NodeLabels = make(map[string]*string)
 		for k := range group.NodeTemplate.Labels {
 			pool.Properties.NodeLabels[k] = to.Ptr(group.NodeTemplate.Labels[k])
 		}
-		pool.Properties.NodeTaints = make([]*string, 0)
-		for _, taint := range group.NodeTemplate.Taints {
-			pool.Properties.NodeTaints = append(pool.Properties.NodeTaints,
-				to.Ptr(fmt.Sprintf("%s=%s:%s", taint.Key, taint.Value, taint.Effect)))
-		}
 	}
+
+	taints := group.NodeTemplate.GetTaints()
+	if taints == nil || len(taints) == 0 {
+		taints = make([]*proto.Taint, 0)
+	}
+
+	/*
+		// attention: azure not support addNodes to set unScheduled nodes, thus realize this feature by taint
+		taints = append(taints, &proto.Taint{
+			Key:    cutils.BCSNodeGroupTaintKey,
+			Value:  cutils.BCSNodeGroupTaintValue,
+			Effect: cutils.BCSNodeGroupAzureTaintEffect,
+		})
+	*/
+	pool.Properties.NodeTaints = make([]*string, 0)
+	for _, taint := range taints {
+		pool.Properties.NodeTaints = append(pool.Properties.NodeTaints,
+			to.Ptr(fmt.Sprintf("%s=%s:%s", taint.Key, taint.Value, taint.Effect)))
+	}
+
 	if group.LaunchTemplate != nil && len(group.LaunchTemplate.InstanceType) != 0 &&
 		checkInstanceType(group.LaunchTemplate.InstanceType) {
 		// 检查机型是否在里面

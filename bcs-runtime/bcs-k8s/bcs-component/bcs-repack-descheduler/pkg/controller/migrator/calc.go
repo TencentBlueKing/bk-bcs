@@ -80,16 +80,15 @@ func (m *descheduleMigratorManager) calculate(namespace, name string) {
 	if m.migrating.Load() {
 		blog.Warnf("calculate job for '%s/%s' cannot start, because migrate job is running", namespace, name)
 		return
-	} else {
-		blog.Infof("calculate job for '%s/%s' is running", namespace, name)
 	}
+	blog.Infof("calculate job for '%s/%s' is running", namespace, name)
+
 	resultPlan, err := m.calculateFromRemoteOrLocal()
 	if err != nil {
 		blog.Errorf("calculate job for '%s/%s' is run failed: %s", namespace, name, err.Error())
 		return
-	} else {
-		blog.Infof("calculate job for '%s/%s' is run completed", namespace, name)
 	}
+	blog.Infof("calculate job for '%s/%s' is run completed", namespace, name)
 	if len(resultPlan.Plans) == 0 {
 		blog.Errorf("calculate job have not result plans")
 		return

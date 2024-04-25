@@ -33,6 +33,7 @@ var (
 	kubeConfig string
 )
 
+// NewHTTPCmd create http command
 func NewHTTPCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "http",

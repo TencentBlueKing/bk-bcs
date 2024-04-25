@@ -13,125 +13,68 @@
 package argocd
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
-	"strconv"
-	"sync"
-	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
-	appclient "github.com/argoproj/argo-cd/v2/pkg/apiclient/application"
-	appsetpkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/applicationset"
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/analysis"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/analyze"
 	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store/secretstore"
 )
 
 // AnalysisPlugin for gitops analysis
 type AnalysisPlugin struct {
 	*mux.Router
-	storage        store.Store
-	secretStore    secretstore.SecretInterface
-	middleware     mw.MiddlewareInterface
-	analysisClient analysis.AnalysisInterface
 
-	cachedLock sync.Mutex
-	cachedAll  []*ProjectAnalysis
+	analysisClient analyze.AnalysisOverview
+	middleware     mw.MiddlewareInterface
+	store          store.Store
 }
 
-// Init init the http route for analysis
+// Init the http route for analysis
 func (plugin *AnalysisPlugin) Init() error {
-	plugin.Path("").Methods("GET").Handler(plugin.middleware.HttpWrapper(plugin.analysis))
-	go func() {
-		ticker := time.NewTicker(1 * time.Minute)
-		defer ticker.Stop()
-		for range ticker.C {
-			if err := plugin.cacheAllProjectsAnalysis(); err != nil {
-				blog.Errorf("analysis cache all project failed: %s", err.Error())
-			}
-		}
-	}()
+	plugin.Path("").Methods(http.MethodGet).Handler(plugin.middleware.HttpWrapper(plugin.analysis))
+
+	plugin.Path("/overview/all").Methods(http.MethodGet).
+		Handler(plugin.middleware.HttpWrapper(plugin.overview))
+	plugin.Path("/overview/internal").Methods(http.MethodGet).
+		Handler(plugin.middleware.HttpWrapper(plugin.overviewInternal))
+	plugin.Path("/overview/external").Methods(http.MethodGet).
+		Handler(plugin.middleware.HttpWrapper(plugin.overviewExternal))
+
+	plugin.Path("/top_projects").Methods(http.MethodGet).
+		Handler(plugin.middleware.HttpWrapper(plugin.topProjects))
+	plugin.Path("/managed_resources").Methods(http.MethodGet).
+		Handler(plugin.middleware.HttpWrapper(plugin.managedResources))
+
+	plugin.Path("/bkmonitor/common").Methods(http.MethodPost).
+		Handler(plugin.middleware.HttpWrapper(plugin.bkmCommon))
+	plugin.Path("/bkmonitor/activity_projects/internal").Methods(http.MethodGet).
+		Handler(plugin.middleware.HttpWrapper(plugin.bkmActivityProjectsInternal))
+	plugin.Path("/bkmonitor/activity_projects/external").Methods(http.MethodGet).
+		Handler(plugin.middleware.HttpWrapper(plugin.bkmActivityProjectsExternal))
+
 	blog.Infof("argocd analysis init successfully")
 	return nil
 }
 
 // AnalysisResponse defines the response of analysis data
 type AnalysisResponse struct {
-	Code      int32              `json:"code"`
-	Message   string             `json:"message"`
-	RequestID string             `json:"requestID"`
-	Data      []*ProjectAnalysis `json:"data"`
+	Code      int32       `json:"code"`
+	Message   string      `json:"message"`
+	RequestID string      `json:"requestID"`
+	Data      interface{} `json:"data"`
 }
 
-// ProjectAnalysis defines the analysis data of project
-type ProjectAnalysis struct {
-	BizID           int64                     `json:"bizID"`
-	BizName         string                    `json:"bizName"`
-	ProjectID       string                    `json:"projectID"`
-	ProjectCode     string                    `json:"projectCode"`
-	ProjectName     string                    `json:"projectName"`
-	Clusters        []*AnalysisCluster        `json:"clusters"`
-	ApplicationSets []*AnalysisApplicationSet `json:"applicationSets"`
-	Applications    []*AnalysisApplication    `json:"applications"`
-	Secrets         []*AnalysisSecret         `json:"secrets"`
-	Repos           []*AnalysisRepo           `json:"repos"`
-	ActivityUsers   []*AnalysisActivityUser   `json:"activityUsers"`
-	Syncs           []*AnalysisSync           `json:"syncs"`
-}
-
-// AnalysisCluster defines the cluster info
-type AnalysisCluster struct {
-	ClusterName   string `json:"clusterName"`
-	ClusterServer string `json:"clusterServer"`
-	ClusterID     string `json:"clusterID"`
-}
-
-// AnalysisApplicationSet defines the applicationSet info
-type AnalysisApplicationSet struct {
-	Name string `json:"name"`
-}
-
-// AnalysisApplication defines the application info
-type AnalysisApplication struct {
-	Name   string `json:"name"`
-	Status string `json:"status"`
-}
-
-// AnalysisSecret defines the secret info
-type AnalysisSecret struct {
-	Name string `json:"name"`
-}
-
-// AnalysisRepo defines the repo info
-type AnalysisRepo struct {
-	RepoName string `json:"repoName"`
-	RepoUrl  string `json:"repoUrl"`
-}
-
-// AnalysisActivityUser defines the user info
-type AnalysisActivityUser struct {
-	UserName         string `json:"userName"`
-	OperateNum       int64  `json:"operateNum"`
-	LastActivityTime string `json:"lastActivityTime"`
-}
-
-// AnalysisSync defines the sync info
-type AnalysisSync struct {
-	Application string `json:"application"`
-	Cluster     string `json:"cluster"`
-	SyncTotal   int64  `json:"syncTotal"`
-}
-
+// analysis return the project analysis
 func (plugin *AnalysisPlugin) analysis(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	isAll, projects, err := plugin.checkQuery(r)
 	if err != nil {
@@ -141,140 +84,18 @@ func (plugin *AnalysisPlugin) analysis(r *http.Request) (*http.Request, *mw.Http
 		return r, mw.ReturnJSONResponse(&AnalysisResponse{
 			Code:      0,
 			RequestID: mw.RequestID(r.Context()),
-			Data:      plugin.getCacheAll(),
+			Data:      plugin.analysisClient.AnalysisProjectAll(),
 		})
 	}
-
-	result := make([]*ProjectAnalysis, 0, len(projects))
-	for _, argoProj := range projects {
-		var projAna *ProjectAnalysis
-		projAna, err = plugin.handleProject(r.Context(), &argoProj)
-		if err != nil {
-			return r, mw.ReturnErrorResponse(http.StatusInternalServerError, err)
-		}
-		result = append(result, projAna)
+	result, err := plugin.analysisClient.AnalysisProject(r.Context(), projects)
+	if err != nil {
+		return r, mw.ReturnErrorResponse(http.StatusInternalServerError, err)
 	}
 	return r, mw.ReturnJSONResponse(&AnalysisResponse{
 		Code:      0,
 		RequestID: mw.RequestID(r.Context()),
 		Data:      result,
 	})
-}
-
-// nolint
-func (plugin *AnalysisPlugin) handleProject(ctx context.Context,
-	argoProj *v1alpha1.AppProject) (*ProjectAnalysis, error) {
-	var bizID int64
-	bizIDStr := argoProj.Annotations[common.ProjectBusinessIDKey]
-	if bizIDStr != "" {
-		var err error
-		bizID, err = strconv.ParseInt(bizIDStr, 0, 64)
-		if err != nil {
-			blog.Warnf("project '%s' with businessID '%s' parse failed", argoProj.Name, bizIDStr)
-		}
-	}
-	result := &ProjectAnalysis{
-		BizID:       bizID,
-		BizName:     argoProj.Annotations[common.ProjectBusinessName],
-		ProjectID:   argoProj.Annotations[common.ProjectIDKey],
-		ProjectName: argoProj.Annotations[common.ProjectAliaName],
-		ProjectCode: argoProj.Name,
-	}
-	appsets, err := plugin.storage.ListApplicationSets(ctx, &appsetpkg.ApplicationSetListQuery{
-		Projects: []string{argoProj.Name},
-	})
-	if err != nil {
-		return nil, errors.Wrapf(err, "list applicationsets failed")
-	}
-	result.ApplicationSets = make([]*AnalysisApplicationSet, 0, len(appsets.Items))
-	for i := range appsets.Items {
-		result.ApplicationSets = append(result.ApplicationSets, &AnalysisApplicationSet{
-			Name: appsets.Items[i].Name,
-		})
-	}
-
-	apps, err := plugin.storage.ListApplications(ctx, &appclient.ApplicationQuery{
-		Projects: []string{argoProj.Name},
-	})
-	if err != nil {
-		return nil, errors.Wrapf(err, "list applications failed")
-	}
-	result.Applications = make([]*AnalysisApplication, 0, len(apps.Items))
-	for i := range apps.Items {
-		result.Applications = append(result.Applications, &AnalysisApplication{
-			Name:   apps.Items[i].Name,
-			Status: string(apps.Items[i].Status.Health.Status),
-		})
-	}
-
-	clusters, err := plugin.storage.ListClustersByProject(ctx, result.ProjectID)
-	if err != nil {
-		return nil, errors.Wrapf(err, "list clusters by project '%s' failed", argoProj.Name)
-	}
-	if err != nil {
-		return nil, errors.Wrapf(err, "list clusters failed")
-	}
-	result.Clusters = make([]*AnalysisCluster, 0, len(apps.Items))
-	for i := range clusters.Items {
-		result.Clusters = append(result.Clusters, &AnalysisCluster{
-			ClusterName:   clusters.Items[i].Annotations[common.ClusterAliaName],
-			ClusterServer: clusters.Items[i].Server,
-			ClusterID:     clusters.Items[i].Name,
-		})
-	}
-
-	projectSecrets, err := plugin.secretStore.ListProjectSecrets(ctx, argoProj.Name)
-	if err != nil {
-		return nil, errors.Wrapf(err, "list secrets failed")
-	}
-	for i := range projectSecrets {
-		result.Secrets = append(result.Secrets, &AnalysisSecret{
-			Name: projectSecrets[i],
-		})
-	}
-
-	repos, err := plugin.storage.ListRepository(ctx, []string{argoProj.Name})
-	if err != nil {
-		return nil, errors.Wrapf(err, "list repository failed")
-	}
-	result.Repos = make([]*AnalysisRepo, 0, len(repos.Items))
-	for i := range repos.Items {
-		result.Repos = append(result.Repos, &AnalysisRepo{
-			RepoName: repos.Items[i].Name,
-			RepoUrl:  repos.Items[i].Repo,
-		})
-	}
-
-	syncs, err := plugin.analysisClient.ListSyncs(argoProj.Name)
-	if err != nil {
-		return nil, errors.Wrapf(err, "list sync infos failed")
-	}
-	result.Syncs = make([]*AnalysisSync, 0, len(syncs))
-	for i := range syncs {
-		result.Syncs = append(result.Syncs, &AnalysisSync{
-			Application: syncs[i].Application,
-			Cluster:     syncs[i].Cluster,
-			SyncTotal:   syncs[i].SyncTotal,
-		})
-	}
-
-	users, err := plugin.analysisClient.ListActivityUsers(argoProj.Name)
-	if err != nil {
-		return nil, errors.Wrapf(err, "list activity users failed")
-	}
-	result.ActivityUsers = make([]*AnalysisActivityUser, 0, len(users))
-	for i := range users {
-		username := users[i].UserName
-		if username == proxy.AdminClientUser || username == proxy.AdminGitOpsUser {
-			continue
-		}
-		result.ActivityUsers = append(result.ActivityUsers, &AnalysisActivityUser{
-			UserName:         users[i].UserName,
-			OperateNum:       users[i].OperateNum,
-			LastActivityTime: users[i].LastActivityTime.Format("2006-01-02 15:04:05"),
-		})
-	}
-	return result, nil
 }
 
 // checkQuery it will check the permission with projects
@@ -295,46 +116,147 @@ func (plugin *AnalysisPlugin) checkQuery(r *http.Request) (bool, []v1alpha1.AppP
 	}
 
 	user := mw.User(r.Context())
-	if user.ClientID != proxy.AdminClientUser && user.ClientID != proxy.AdminGitOpsUser {
+	if !common.IsAdminUser(user.ClientID) {
 		return false, nil, fmt.Errorf("query param 'projects' cannot be empty")
 	}
-	projList, _, err := plugin.middleware.ListProjectsWithoutAuth(r.Context())
+	projList, err := plugin.store.ListProjectsWithoutAuth(r.Context())
 	if err != nil {
 		return false, nil, err
 	}
 	return true, projList.Items, nil
 }
 
-// cacheAllProjectsAnalysis 提前缓存全量运营数据，优化查询效率
-func (plugin *AnalysisPlugin) cacheAllProjectsAnalysis() error {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-	projList, _, err := plugin.middleware.ListProjectsWithoutAuth(ctx)
-	if err != nil {
-		return errors.Wrapf(err, "list projects without auth failed")
+// topProjects return the top projects
+func (plugin *AnalysisPlugin) topProjects(r *http.Request) (*http.Request, *mw.HttpResponse) {
+	user := mw.User(r.Context())
+	if !common.IsAdminUser(user.ClientID) {
+		return r, mw.ReturnErrorResponse(http.StatusForbidden, errors.Errorf("admin api"))
 	}
-	result := make([]*ProjectAnalysis, 0, len(projList.Items))
-	for _, argoProj := range projList.Items {
-		var projAna *ProjectAnalysis
-		projAna, err = plugin.handleProject(ctx, &argoProj)
-		if err != nil {
-			return errors.Wrapf(err, "handle project '%s' analysis failed", argoProj.Name)
-		}
-		result = append(result, projAna)
-	}
-
-	plugin.cachedLock.Lock()
-	plugin.cachedAll = result
-	plugin.cachedLock.Unlock()
-	return nil
+	return r, mw.ReturnJSONResponse(&AnalysisResponse{
+		Code:      0,
+		RequestID: mw.RequestID(r.Context()),
+		Data:      plugin.analysisClient.TopProjects(),
+	})
 }
 
-func (plugin *AnalysisPlugin) getCacheAll() []*ProjectAnalysis {
-	plugin.cachedLock.Lock()
-	defer plugin.cachedLock.Unlock()
+// managedResources return the managed resources
+func (plugin *AnalysisPlugin) managedResources(r *http.Request) (*http.Request, *mw.HttpResponse) {
+	user := mw.User(r.Context())
+	if !common.IsAdminUser(user.ClientID) {
+		return r, mw.ReturnErrorResponse(http.StatusForbidden, errors.Errorf("admin api"))
+	}
+	return r, mw.ReturnJSONResponse(&AnalysisResponse{
+		Code:      0,
+		RequestID: mw.RequestID(r.Context()),
+		Data:      plugin.analysisClient.ResourceInfos(),
+	})
+}
 
-	bs, _ := json.Marshal(plugin.cachedAll)
-	c := make([]*ProjectAnalysis, 0, len(plugin.cachedAll))
-	_ = json.Unmarshal(bs, &c)
-	return c
+// overview return the overview
+func (plugin *AnalysisPlugin) overview(r *http.Request) (*http.Request, *mw.HttpResponse) {
+	user := mw.User(r.Context())
+	if !common.IsAdminUser(user.ClientID) {
+		return r, mw.ReturnErrorResponse(http.StatusForbidden, errors.Errorf("admin api"))
+	}
+	internal := plugin.analysisClient.OverviewAllInternal()
+	internal.Type = "国内"
+	external := plugin.analysisClient.OverviewAllExternal()
+	external.Type = "海外"
+	return r, mw.ReturnJSONResponse(&AnalysisResponse{
+		Code:      0,
+		RequestID: mw.RequestID(r.Context()),
+		Data:      []*analyze.AnalysisOverviewAll{internal, external},
+	})
+}
+
+// overviewInternal return the overview internal
+func (plugin *AnalysisPlugin) overviewInternal(r *http.Request) (*http.Request, *mw.HttpResponse) {
+	user := mw.User(r.Context())
+	if !common.IsAdminUser(user.ClientID) {
+		return r, mw.ReturnErrorResponse(http.StatusForbidden, errors.Errorf("admin api"))
+	}
+	return r, mw.ReturnJSONResponse(&AnalysisResponse{
+		Code:      0,
+		RequestID: mw.RequestID(r.Context()),
+		Data:      []*analyze.AnalysisOverviewAll{plugin.analysisClient.OverviewAllInternal()},
+	})
+}
+
+// overviewExternal return the overview external
+func (plugin *AnalysisPlugin) overviewExternal(r *http.Request) (*http.Request, *mw.HttpResponse) {
+	user := mw.User(r.Context())
+	if !common.IsAdminUser(user.ClientID) {
+		return r, mw.ReturnErrorResponse(http.StatusForbidden, errors.Errorf("admin api"))
+	}
+	return r, mw.ReturnJSONResponse(&AnalysisResponse{
+		Code:      0,
+		RequestID: mw.RequestID(r.Context()),
+		Data:      []*analyze.AnalysisOverviewAll{plugin.analysisClient.OverviewAllExternal()},
+	})
+}
+
+// bkmCommon bkmonitor common query
+func (plugin *AnalysisPlugin) bkmCommon(r *http.Request) (*http.Request, *mw.HttpResponse) {
+	user := mw.User(r.Context())
+	if !common.IsAdminUser(user.ClientID) {
+		return r, mw.ReturnErrorResponse(http.StatusForbidden, errors.Errorf("admin api"))
+	}
+	bkmMessage, err := plugin.buildBKMRequest(r)
+	if err != nil {
+		return r, mw.ReturnErrorResponse(http.StatusBadRequest, err)
+	}
+	series, err := plugin.analysisClient.BKMonitorCommonGet(bkmMessage)
+	if err != nil {
+		return r, mw.ReturnErrorResponse(http.StatusInternalServerError, err)
+	}
+	return r, mw.ReturnJSONResponse(&AnalysisResponse{
+		Code:      0,
+		RequestID: mw.RequestID(r.Context()),
+		Data:      series,
+	})
+}
+
+// bkmActivityProjectsInternal bkmonitor activity projects internl
+func (plugin *AnalysisPlugin) bkmActivityProjectsInternal(r *http.Request) (*http.Request, *mw.HttpResponse) {
+	user := mw.User(r.Context())
+	if !common.IsAdminUser(user.ClientID) {
+		return r, mw.ReturnErrorResponse(http.StatusForbidden, errors.Errorf("admin api"))
+	}
+	projects, err := plugin.analysisClient.BKMTopActivityProjectsInternal()
+	if err != nil {
+		return r, mw.ReturnErrorResponse(http.StatusInternalServerError, err)
+	}
+	return r, mw.ReturnJSONResponse(&AnalysisResponse{
+		Code:      0,
+		RequestID: mw.RequestID(r.Context()),
+		Data:      projects,
+	})
+}
+
+func (plugin *AnalysisPlugin) bkmActivityProjectsExternal(r *http.Request) (*http.Request, *mw.HttpResponse) {
+	user := mw.User(r.Context())
+	if !common.IsAdminUser(user.ClientID) {
+		return r, mw.ReturnErrorResponse(http.StatusForbidden, errors.Errorf("admin api"))
+	}
+	projects, err := plugin.analysisClient.BKMTopActivityProjectsExternal()
+	if err != nil {
+		return r, mw.ReturnErrorResponse(http.StatusInternalServerError, err)
+	}
+	return r, mw.ReturnJSONResponse(&AnalysisResponse{
+		Code:      0,
+		RequestID: mw.RequestID(r.Context()),
+		Data:      projects,
+	})
+}
+
+func (plugin *AnalysisPlugin) buildBKMRequest(r *http.Request) (*analyze.BKMonitorGetMessage, error) {
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		return nil, errors.Wrapf(err, "read body failed")
+	}
+	req := new(analyze.BKMonitorGetMessage)
+	if err = json.Unmarshal(body, req); err != nil {
+		return nil, errors.Wrapf(err, "unmarshal request body failed")
+	}
+	return req, nil
 }

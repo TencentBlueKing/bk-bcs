@@ -60,6 +60,9 @@ const (
 	// HPA ...
 	HPA = "HorizontalPodAutoscaler"
 
+	// GPA ...
+	GPA = "GeneralPodAutoscaler"
+
 	// CRD ...
 	CRD = "CustomResourceDefinition"
 	// CObj ...
@@ -124,6 +127,8 @@ const (
 	MetricResCPU = "cpu"
 	// MetricResMem 指标资源：内存
 	MetricResMem = "memory"
+	// MetricResEphemeralStorage 指标资源：临时存储
+	MetricResEphemeralStorage = "ephemeral-storage"
 )
 
 const (
@@ -153,3 +158,45 @@ const (
 	// DSChangeCause DaemonSet 更新原因
 	DSChangeCause = "daemonset.kubernetes.io/change-cause"
 )
+
+const (
+	// AttrResourceType is the resource type
+	AttrResourceType = "resource_type"
+)
+
+// 列出常用的资源类型
+var resourceTypeMap = map[string]string{
+	"deployments":              "Deployment",
+	"replicasets":              "ReplicaSet",
+	"statefulsets":             "StatefulSet",
+	"daemonsets":               "DaemonSet",
+	"pods":                     "Pod",
+	"gamedeployments":          "GameDeployment",
+	"gamestatefulsets":         "GameStatefulSet",
+	"hookruns":                 "HookRun",
+	"hooktemplates":            "HookTemplate",
+	"jobs":                     "Job",
+	"cronjobs":                 "CronJob",
+	"horizontalpodautoscalers": "HorizontalPodAutoscaler",
+	"generalpodautoscalers":    "GeneralPodAutoscaler",
+	"bklogconfigs":             "BkLogConfig",
+	"events":                   "Event",
+	"ingresses":                "Ingress",
+	"podmonitors":              "PodMonitor",
+	"servicemonitors":          "ServiceMonitor",
+	"roles":                    "Role",
+	"rolebindings":             "RoleBinding",
+	"configmaps":               "ConfigMap",
+	"secrets":                  "Secret",
+	"persistentvolumeclaims":   "PersistentVolumeClaim",
+}
+
+// GetResourceAttr returns the resource attr, k8s resource is like secrets, configmaps, pods
+func GetResourceAttr(resource string) string {
+	_, ok := resourceTypeMap[resource]
+	if !ok {
+		// 没有列出的资源类型，统一归类为other
+		return "other"
+	}
+	return resource
+}

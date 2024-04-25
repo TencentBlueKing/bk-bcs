@@ -69,6 +69,7 @@ func MapEqualExceptKey(m1, m2 map[string]string, excludeKey []string) bool {
 		return false
 	}
 	for k, v1 := range m1 {
+		// nolint
 		if slices.Contains[[]string, string](excludeKey, k) {
 			continue
 		}

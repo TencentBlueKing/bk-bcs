@@ -1582,6 +1582,9 @@ func (s *Syncer) SyncPods(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster) e
 	for k, v := range podMap {
 		//var operator []string
 		if _, ok := bkPodMap[k]; !ok {
+			if v.Data.Status.Phase != corev1.PodRunning {
+				continue
+			}
 			bkWorkloadPods, podsErr := s.getBkWorkloadPods(cluster, bkCluster, v)
 			if podsErr != nil {
 				continue
@@ -1598,8 +1601,10 @@ func (s *Syncer) SyncPods(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster) e
 				continue
 			}
 
-			nodeID = bkNodeMap[v.Data.Spec.NodeName].ID
-			hostID = bkNodeMap[v.Data.Spec.NodeName].HostID
+			tnodeID := bkNodeMap[v.Data.Spec.NodeName].ID
+			thostID := bkNodeMap[v.Data.Spec.NodeName].HostID
+
+			blog.Infof("NodeName: %s, nodeID: %d, hostID: %d", v.Data.Spec.NodeName, nodeID, hostID)
 
 			podIPs := make([]bkcmdbkube.PodIP, 0)
 			for _, ip := range v.Data.Status.PodIPs {
@@ -1656,12 +1661,16 @@ func (s *Syncer) SyncPods(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster) e
 					continue
 				}
 
+				cName := container.Name
+				cImage := container.Image
+				cArgs := container.Args
+
 				containers = append(containers, bkcmdbkube.ContainerBaseFields{
-					Name:        &container.Name,
-					Image:       &container.Image,
+					Name:        &cName,
+					Image:       &cImage,
 					ContainerID: &containerID,
 					Ports:       &ports,
-					Args:        &container.Args,
+					Args:        &cArgs,
 					Environment: &env,
 					Mounts:      &mounts,
 				})
@@ -1674,7 +1683,7 @@ func (s *Syncer) SyncPods(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster) e
 						NameSpaceID:  &bkNsMap[v.Data.Namespace].ID,
 						WorkloadKind: &workloadKind,
 						WorkloadID:   &workloadID,
-						NodeID:       &nodeID,
+						NodeID:       &tnodeID,
 						Ref: &bkcmdbkube.Reference{
 							Kind: bkcmdbkube.WorkloadType(workloadKind),
 							Name: workloadName,
@@ -1683,7 +1692,7 @@ func (s *Syncer) SyncPods(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster) e
 					},
 
 					Name:       &v.Data.Name,
-					HostID:     &hostID,
+					HostID:     &thostID,
 					Priority:   v.Data.Spec.Priority,
 					Labels:     &v.Data.Labels,
 					IP:         &v.Data.Status.PodIP,
@@ -1699,7 +1708,7 @@ func (s *Syncer) SyncPods(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster) e
 							NameSpaceID:  &bkNsMap[v.Data.Namespace].ID,
 							WorkloadKind: &workloadKind,
 							WorkloadID:   &workloadID,
-							NodeID:       &nodeID,
+							NodeID:       &tnodeID,
 							Ref: &bkcmdbkube.Reference{
 								Kind: bkcmdbkube.WorkloadType(workloadKind),
 								Name: workloadName,
@@ -1708,7 +1717,7 @@ func (s *Syncer) SyncPods(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster) e
 						},
 
 						Name:       &v.Data.Name,
-						HostID:     &hostID,
+						HostID:     &thostID,
 						Priority:   v.Data.Spec.Priority,
 						Labels:     &v.Data.Labels,
 						IP:         &v.Data.Status.PodIP,
@@ -1718,11 +1727,15 @@ func (s *Syncer) SyncPods(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster) e
 					},
 				}
 			}
+		} else {
+			if v.Data.Status.Phase != corev1.PodRunning {
+				podToDelete = append(podToDelete, bkPodMap[k].ID)
+			}
+
 		}
 	}
-
-	s.CreateBkPods(bkCluster, podToAdd)
 	s.DeleteBkPods(bkCluster, &podToDelete) // nolint  not checked
+	s.CreateBkPods(bkCluster, podToAdd)
 
 	return err
 }
@@ -2696,7 +2709,8 @@ func (s *Syncer) CompareDaemonSet(
 			updateData.Labels = &labelsEmpty
 			needToUpdate = true
 		}
-	} else if bkDaemonSet.Labels == nil || fmt.Sprint(k8sDaemonSet.Data.Labels) != fmt.Sprint(*bkDaemonSet.Labels) {
+	} else if bkDaemonSet.Labels == nil ||
+		fmt.Sprint(k8sDaemonSet.Data.Labels) != fmt.Sprint(*bkDaemonSet.Labels) {
 		updateData.Labels = &k8sDaemonSet.Data.Labels
 		needToUpdate = true
 	}
@@ -2742,8 +2756,7 @@ func (s *Syncer) CompareDaemonSet(
 			updateData.RollingUpdateStrategy = nil
 			needToUpdate = true
 		}
-	} else if bkDaemonSet.RollingUpdateStrategy == nil ||
-		fmt.Sprint(k8sDaemonSet.Data.Spec.UpdateStrategy.RollingUpdate) != fmt.Sprint(*bkDaemonSet.RollingUpdateStrategy) {
+	} else if bkDaemonSet.RollingUpdateStrategy == nil || fmt.Sprint(k8sDaemonSet.Data.Spec.UpdateStrategy.RollingUpdate) != fmt.Sprint(*bkDaemonSet.RollingUpdateStrategy) {
 		rud := bkcmdbkube.RollingUpdateDaemonSet{}
 
 		if k8sDaemonSet.Data.Spec.UpdateStrategy.RollingUpdate != nil {
@@ -2851,10 +2864,10 @@ func (s *Syncer) CompareGameDeployment(
 	updateData = &client.UpdateBcsWorkloadRequestData{}
 	labelsEmpty := map[string]string{}
 
-	// var updateDataIDs []int64
-	// updateData.IDs = &updateDataIDs
-	// var updateDataInfo client.UpdateBcsWorkloadRequestDataInfo
-	// updateData.Info = &updateDataInfo
+	//var updateDataIDs []int64
+	//updateData.IDs = &updateDataIDs
+	//var updateDataInfo client.UpdateBcsWorkloadRequestDataInfo
+	//updateData.Info = &updateDataInfo
 
 	if k8sGameDeployment.Data.Labels == nil {
 		if bkGameDeployment.Labels != nil {
@@ -2913,8 +2926,7 @@ func (s *Syncer) CompareGameDeployment(
 	// NOCC:ineffassign/assign(ignore)
 	var rud bkcmdbkube.RollingUpdateGameDeployment
 
-	if k8sGameDeployment.Data.Spec.UpdateStrategy.MaxUnavailable != nil &&
-		k8sGameDeployment.Data.Spec.UpdateStrategy.MaxSurge != nil {
+	if k8sGameDeployment.Data.Spec.UpdateStrategy.MaxUnavailable != nil && k8sGameDeployment.Data.Spec.UpdateStrategy.MaxSurge != nil {
 		rud = bkcmdbkube.RollingUpdateGameDeployment{
 			MaxUnavailable: &bkcmdbkube.IntOrString{
 				Type:   bkcmdbkube.Type(k8sGameDeployment.Data.Spec.UpdateStrategy.MaxUnavailable.Type),
@@ -2961,7 +2973,8 @@ func (s *Syncer) GenerateBkGameDeployment(
 		})
 	}
 
-	rud := bkcmdbkube.RollingUpdateGameDeployment{}
+	// NOCC:ineffassign/assign(ignore)
+	var rud bkcmdbkube.RollingUpdateGameDeployment
 
 	if k8sGameDeployment.Data.Spec.UpdateStrategy.MaxUnavailable != nil &&
 		k8sGameDeployment.Data.Spec.UpdateStrategy.MaxSurge != nil {
@@ -3017,10 +3030,10 @@ func (s *Syncer) CompareGameStatefulSet(
 	updateData = &client.UpdateBcsWorkloadRequestData{}
 	labelsEmpty := map[string]string{}
 
-	// var updateDataIDs []int64
-	// updateData.IDs = &updateDataIDs
-	// var updateDataInfo client.UpdateBcsWorkloadRequestDataInfo
-	// updateData.Info = &updateDataInfo
+	//var updateDataIDs []int64
+	//updateData.IDs = &updateDataIDs
+	//var updateDataInfo client.UpdateBcsWorkloadRequestDataInfo
+	//updateData.Info = &updateDataInfo
 
 	if k8sGameStatefulSet.Data.Labels == nil {
 		if bkGameStatefulSet.Labels != nil {
@@ -3202,6 +3215,7 @@ func (s *Syncer) UpdateBkWorkloads(bkCluster *bkcmdbkube.Cluster, kind string, t
 // DeleteBkWorkloads delete bkworkloads
 func (s *Syncer) DeleteBkWorkloads(bkCluster *bkcmdbkube.Cluster, kind string, toDelete *[]int64) error {
 	if len(*toDelete) > 0 {
+		// DeleteBcsWorkload deletes the BCS workload with the given request.
 		err := s.CMDBClient.DeleteBcsWorkload(&client.DeleteBcsWorkloadRequest{
 			BKBizID: &bkCluster.BizID,
 			Kind:    &kind,
@@ -3215,7 +3229,6 @@ func (s *Syncer) DeleteBkWorkloads(bkCluster *bkcmdbkube.Cluster, kind string, t
 				} else {
 					section = (*toDelete)[i : i+1]
 				}
-				// DeleteBcsWorkload deletes the BCS workload with the given request.
 				err = s.CMDBClient.DeleteBcsWorkload(&client.DeleteBcsWorkloadRequest{
 					BKBizID: &bkCluster.BizID,
 					Kind:    &kind,
@@ -3318,20 +3331,28 @@ func (s *Syncer) CreateBkPods(bkCluster *bkcmdbkube.Cluster, toCreate map[int64]
 // DeleteBkPods delete bkpods
 func (s *Syncer) DeleteBkPods(bkCluster *bkcmdbkube.Cluster, toDelete *[]int64) error {
 	if len(*toDelete) > 0 {
-		// DeleteBcsPod deletes the BCS pod with the given request.
-		err := s.CMDBClient.DeleteBcsPod(&client.DeleteBcsPodRequest{
-			Data: &[]client.DeleteBcsPodRequestData{
-				{
-					BKBizID: &bkCluster.BizID,
-					IDs:     toDelete,
+		for i := 0; i < len(*toDelete); i += 100 {
+			var ids []int64
+			if i+100 > len(*toDelete) {
+				ids = (*toDelete)[i:]
+			} else {
+				ids = (*toDelete)[i : i+100]
+			}
+			// DeleteBcsPod deletes the BCS pod with the given request.
+			err := s.CMDBClient.DeleteBcsPod(&client.DeleteBcsPodRequest{
+				Data: &[]client.DeleteBcsPodRequestData{
+					{
+						BKBizID: &bkCluster.BizID,
+						IDs:     &ids,
+					},
 				},
-			},
-		})
-		if err != nil {
-			blog.Errorf("delete pod failed, err: %s", err.Error())
-			return err
+			})
+			if err != nil {
+				blog.Errorf("delete pod failed, err: %s", err.Error())
+				return err
+			}
+			blog.Infof("delete pod success, ids: %v", toDelete)
 		}
-		blog.Infof("delete pod success, ids: %v", toDelete)
 	}
 	return nil
 }
@@ -3350,4 +3371,215 @@ func (s *Syncer) GenerateBkWorkloadPods(bkNs *bkcmdbkube.Namespace) *client.Crea
 func (s *Syncer) CompareBkWorkloadPods(workload *bkcmdbkube.PodsWorkload) (
 	needToUpdate bool, updateData *client.UpdateBcsWorkloadRequestData) {
 	return false, nil
+}
+
+// DeleteAllByCluster clean by cluster
+// nolint
+func (s *Syncer) DeleteAllByCluster(bkCluster *bkcmdbkube.Cluster) error {
+	blog.Infof("start delete all: %s", bkCluster.Uid)
+	blog.Infof("start delete all pod: %s", bkCluster.Uid)
+	for {
+		got, err := s.CMDBClient.GetBcsPod(&client.GetBcsPodRequest{
+			CommonRequest: client.CommonRequest{
+				BKBizID: bkCluster.BizID,
+				Fields:  []string{"id"},
+				Page: client.Page{
+					Limit: 200,
+					Start: 0,
+				},
+				Filter: &client.PropertyFilter{
+					Condition: "AND",
+					Rules: []client.Rule{
+						{
+							Field:    "cluster_uid",
+							Operator: "in",
+							Value:    []string{bkCluster.Uid},
+						},
+					},
+				},
+			},
+		})
+		if err != nil {
+			blog.Errorf("GetBcsPod() error = %v", err)
+			return fmt.Errorf("GetBcsPod() error = %v", err)
+		}
+		podToDelete := make([]int64, 0)
+		for _, pod := range *got {
+			podToDelete = append(podToDelete, pod.ID)
+		}
+
+		if len(podToDelete) == 0 {
+			break
+		} else {
+			blog.Infof("delete pod: %v", podToDelete)
+			err := s.CMDBClient.DeleteBcsPod(&client.DeleteBcsPodRequest{
+				Data: &[]client.DeleteBcsPodRequestData{
+					{
+						BKBizID: &bkBizID,
+						IDs:     &podToDelete,
+					},
+				},
+			})
+			if err != nil {
+				blog.Errorf("DeleteBcsPod() error = %v", err)
+				return fmt.Errorf("DeleteBcsPod() error = %v", err)
+			}
+		}
+	}
+	blog.Infof("delete all pod success: %s", bkCluster.Uid)
+
+	blog.Infof("start delete all workload: %s", bkCluster.Uid)
+	workloadTypes := []string{"deployment", "statefulSet", "daemonSet", "gameDeployment", "gameStatefulSet", "pods"}
+
+	for _, workloadType := range workloadTypes {
+		for {
+			got, err := s.CMDBClient.GetBcsWorkload(&client.GetBcsWorkloadRequest{
+				CommonRequest: client.CommonRequest{
+					BKBizID: bkBizID,
+					Fields:  []string{"id"},
+					Page: client.Page{
+						Limit: 200,
+						Start: 0,
+					},
+				},
+				Kind: workloadType,
+			})
+			if err != nil {
+				blog.Errorf("GetBcsWorkload() error = %v", err)
+				return fmt.Errorf("GetBcsWorkload() error = %v", err)
+			}
+			workloadToDelete := make([]int64, 0)
+			for _, workload := range *got {
+				workloadToDelete = append(workloadToDelete, (int64)(workload.(map[string]interface{})["id"].(float64)))
+			}
+
+			if len(workloadToDelete) == 0 {
+				break
+			} else {
+				blog.Infof("delete workload: %v", workloadToDelete)
+				err := s.CMDBClient.DeleteBcsWorkload(&client.DeleteBcsWorkloadRequest{
+					BKBizID: &bkBizID,
+					Kind:    &workloadType,
+					IDs:     &workloadToDelete,
+				})
+				if err != nil {
+					blog.Errorf("DeleteBcsWorkload() error = %v", err)
+					return fmt.Errorf("DeleteBcsWorkload() error = %v", err)
+				}
+			}
+		}
+	}
+	blog.Infof("delete all workload success: %s", bkCluster.Uid)
+
+	blog.Infof("start delete all namespace: %s", bkCluster.Uid)
+	for {
+		got, err := s.CMDBClient.GetBcsNamespace(&client.GetBcsNamespaceRequest{
+			CommonRequest: client.CommonRequest{
+				BKBizID: bkBizID,
+				Fields:  []string{"id"},
+				Page: client.Page{
+					Limit: 200,
+					Start: 0,
+				},
+			},
+		})
+		if err != nil {
+			blog.Errorf("GetBcsNamespace() error = %v", err)
+			return fmt.Errorf("GetBcsNamespace() error = %v", err)
+		}
+		namespaceToDelete := make([]int64, 0)
+		for _, namespace := range *got {
+			namespaceToDelete = append(namespaceToDelete, namespace.ID)
+		}
+
+		if len(namespaceToDelete) == 0 {
+			break
+		} else {
+			blog.Infof("delete namespace: %v", namespaceToDelete)
+			err := s.CMDBClient.DeleteBcsNamespace(&client.DeleteBcsNamespaceRequest{
+				BKBizID: &bkBizID,
+				IDs:     &namespaceToDelete,
+			})
+			if err != nil {
+				blog.Errorf("DeleteBcsNamespace() error = %v", err)
+				return fmt.Errorf("DeleteBcsNamespace() error = %v", err)
+			}
+		}
+	}
+	blog.Infof("delete all namespace success: %s", bkCluster.Uid)
+
+	blog.Infof("start delete all node: %s", bkCluster.Uid)
+	for {
+		got, err := s.CMDBClient.GetBcsNode(&client.GetBcsNodeRequest{
+			CommonRequest: client.CommonRequest{
+				BKBizID: bkBizID,
+				Page: client.Page{
+					Limit: 100,
+					Start: 0,
+				},
+			},
+		})
+		if err != nil {
+			blog.Errorf("GetBcsNode() error = %v", err)
+			return fmt.Errorf("GetBcsNode() error = %v", err)
+		}
+		nodeToDelete := make([]int64, 0)
+		for _, node := range *got {
+			nodeToDelete = append(nodeToDelete, node.ID)
+		}
+
+		if len(nodeToDelete) == 0 {
+			break
+		} else {
+			blog.Infof("delete node: %v", nodeToDelete)
+			err := s.CMDBClient.DeleteBcsNode(&client.DeleteBcsNodeRequest{
+				BKBizID: &bkBizID,
+				IDs:     &nodeToDelete,
+			})
+			if err != nil {
+				blog.Errorf("DeleteBcsNode() error = %v", err)
+				return fmt.Errorf("DeleteBcsNode() error = %v", err)
+			}
+		}
+	}
+	blog.Infof("delete all node success: %s", bkCluster.Uid)
+
+	blog.Infof("start delete all cluster: %s", bkCluster.Uid)
+	for {
+		got, err := s.CMDBClient.GetBcsCluster(&client.GetBcsClusterRequest{
+			CommonRequest: client.CommonRequest{
+				BKBizID: bkBizID,
+				Fields:  []string{"id"},
+				Page: client.Page{
+					Limit: 10,
+					Start: 0,
+				},
+			},
+		})
+		if err != nil {
+			blog.Errorf("GetBcsCluster() error = %v", err)
+			return fmt.Errorf("GetBcsCluster() error = %v", err)
+		}
+		clusterToDelete := make([]int64, 0)
+		for _, cluster := range *got {
+			clusterToDelete = append(clusterToDelete, cluster.ID)
+		}
+
+		if len(clusterToDelete) == 0 {
+			break
+		} else {
+			blog.Infof("delete cluster: %v", clusterToDelete)
+			err := s.CMDBClient.DeleteBcsCluster(&client.DeleteBcsClusterRequest{
+				BKBizID: &bkBizID,
+				IDs:     &clusterToDelete,
+			})
+			if err != nil {
+				blog.Errorf("DeleteBcsCluster() error = %v", err)
+				return fmt.Errorf("DeleteBcsCluster() error = %v", err)
+			}
+		}
+	}
+	blog.Infof("delete all cluster success: %s", bkCluster.Uid)
+	blog.Infof("delete all success: %s", bkCluster.Uid)
+	return nil
 }

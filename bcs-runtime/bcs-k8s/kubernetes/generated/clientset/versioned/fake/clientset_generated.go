@@ -18,6 +18,8 @@ import (
 	clientset "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/generated/clientset/versioned"
 	cloudv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/generated/clientset/versioned/typed/cloud/v1"
 	fakecloudv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/generated/clientset/versioned/typed/cloud/v1/fake"
+	federationv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/generated/clientset/versioned/typed/federation/v1"
+	fakefederationv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/generated/clientset/versioned/typed/federation/v1/fake"
 	monitorv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/generated/clientset/versioned/typed/monitor/v1"
 	fakemonitorv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/generated/clientset/versioned/typed/monitor/v1/fake"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/generated/clientset/versioned/typed/networkextension/v1"
@@ -79,6 +81,11 @@ var _ clientset.Interface = &Clientset{}
 // CloudV1 retrieves the CloudV1Client
 func (c *Clientset) CloudV1() cloudv1.CloudV1Interface {
 	return &fakecloudv1.FakeCloudV1{Fake: &c.Fake}
+}
+
+// FederationV1 retrieves the FederationV1Client
+func (c *Clientset) FederationV1() federationv1.FederationV1Interface {
+	return &fakefederationv1.FakeFederationV1{Fake: &c.Fake}
 }
 
 // MonitorV1 retrieves the MonitorV1Client

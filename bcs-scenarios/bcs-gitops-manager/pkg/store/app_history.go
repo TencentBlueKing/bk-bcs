@@ -24,6 +24,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/internal/dao"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/utils"
 )
 
 type appHistoryStore struct {
@@ -48,6 +49,9 @@ func (s *appHistoryStore) init() {
 func (s *appHistoryStore) handle(ch chan *v1alpha1.Application) {
 	for item := range ch {
 		if err := s.handleApplication(item); err != nil {
+			if utils.IsClusterAskCredentials(err) {
+				continue
+			}
 			blog.Errorf("[HistoryStore] handle application history store failed: %s", err.Error())
 		}
 	}
@@ -60,7 +64,7 @@ func (s *appHistoryStore) handleApplication(item *v1alpha1.Application) error {
 		return nil
 	}
 	history := item.Status.History.LastRevisionHistory()
-	exist, err := s.db.CheckApplicationHistoryManifestExist(item.Name, string(item.UID), history.ID)
+	exist, err := s.db.CheckAppHistoryManifestExist(item.Name, string(item.UID), history.ID)
 	if err != nil {
 		return errors.Wrapf(err, "get application history '%s/%s/%d' manifest failed",
 			item.Name, item.UID, history.ID)

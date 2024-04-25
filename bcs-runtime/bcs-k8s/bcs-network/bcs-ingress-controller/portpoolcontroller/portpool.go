@@ -143,8 +143,8 @@ func (pph *PortPoolHandler) ensurePortPool(pool *networkextensionv1.PortPool) (b
 
 	// update related cache
 	poolKey := ingresscommon.GetNamespacedNameKey(pool.GetName(), pool.GetNamespace())
-	pph.ensureCache(poolKey, tmpItemsStatus, successDeletedKeyMap, failedDeletedKeyMap, newItemStatusList,
-		updateItemStatusMap)
+	pph.ensureCache(poolKey, pool.GetAllocatePolicy(), tmpItemsStatus, successDeletedKeyMap, failedDeletedKeyMap,
+		newItemStatusList, updateItemStatusMap)
 
 	if len(failedDeletedKeyMap) != 0 || shouldRetry {
 		return true, nil
@@ -272,7 +272,8 @@ func (pph *PortPoolHandler) ensurePortBinding(pool *networkextensionv1.PortPool)
 	return nil
 }
 
-func (pph *PortPoolHandler) ensureCache(poolKey string, tmpItemsStatus []*networkextensionv1.PortPoolItemStatus,
+func (pph *PortPoolHandler) ensureCache(poolKey string, allocatePolicy string, tmpItemsStatus []*networkextensionv1.
+	PortPoolItemStatus,
 	successDeletedKeyMap, failedDeletedKeyMap map[string]struct{}, newItemStatusList []*networkextensionv1.
 		PortPoolItemStatus, updateItemStatusMap map[string]*networkextensionv1.PortPoolItemStatus) {
 
@@ -294,7 +295,7 @@ func (pph *PortPoolHandler) ensureCache(poolKey string, tmpItemsStatus []*networ
 	}
 	// add item to pool cache
 	for _, itemStatus := range newItemStatusList {
-		if err := pph.poolCache.AddPortPoolItem(poolKey, itemStatus); err != nil {
+		if err := pph.poolCache.AddPortPoolItem(poolKey, allocatePolicy, itemStatus); err != nil {
 			blog.Warnf("failed to add port pool %s item %v to cache, err %s", poolKey, itemStatus, err.Error())
 		} else {
 			blog.Infof("add port pool %s item %v to cache", poolKey, itemStatus)

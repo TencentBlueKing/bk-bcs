@@ -16,6 +16,7 @@ import (
 	"context"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 	k8scorev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
@@ -73,7 +74,8 @@ func (pf *PodFilter) findPodIngresses(pod *k8scorev1.Pod) []ingresscache.Ingress
 	var retList []ingresscache.IngressMeta
 	for _, svc := range svcList.Items {
 		if isServiceMatchesPod(&svc, pod) {
-			retList = append(retList, pf.ingressCache.GetRelatedIngressOfService(svc.GetNamespace(), svc.GetName())...)
+			retList = append(retList, pf.ingressCache.GetRelatedIngressOfService(networkextensionv1.
+				ServiceKindNativeService, svc.GetNamespace(), svc.GetName())...)
 		}
 	}
 	// find ingresses of pod related workloads

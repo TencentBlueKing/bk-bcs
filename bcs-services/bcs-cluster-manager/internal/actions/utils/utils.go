@@ -32,7 +32,12 @@ import (
 )
 
 const (
-	nodeTemplate = "nt"
+	// NodeTemplate node template
+	NodeTemplate = "nt"
+	// GroupTemplate node group template
+	GroupTemplate = "ng"
+	// NotifyTemplate notify template
+	NotifyTemplate = "nf"
 )
 
 // CheckClusterConnection check cluster connection when delete cluster or other scenes
@@ -184,17 +189,11 @@ func HandleTaskStepData(ctx context.Context, task *proto.Task) {
 	}
 }
 
-// GenerateNodeTemplateID generate random nodeTemplateID
-func GenerateNodeTemplateID() string {
+// GenerateTemplateID generate random templateID
+func GenerateTemplateID(templateType string) string {
 	randomStr := utils.RandomString(8)
 
-	return fmt.Sprintf("BCS-%s-%s", nodeTemplate, randomStr)
-}
-
-// GenerateNodeGroupID build nodegroup id
-func GenerateNodeGroupID() string {
-	str := utils.RandomString(8)
-	return fmt.Sprintf("BCS-ng-%s", str)
+	return fmt.Sprintf("BCS-%s-%s", templateType, randomStr)
 }
 
 // IsKubeConfigImportCluster kubeconfig cluster

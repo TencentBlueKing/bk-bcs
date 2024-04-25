@@ -61,9 +61,34 @@ func mig20240325180808Up(tx *gorm.DB) error {
 		return err
 	}
 
+	tx.Create([]ClientQuerys{
+		{
+			ID:              1,
+			BizID:           0,
+			AppID:           0,
+			SearchName:      "配置拉取失败",
+			SearchType:      "common",
+			SearchCondition: "{\"release_change_status\": [\"failed\"]}",
+			Creator:         "system",
+			CreatedAt:       time.Now(),
+			UpdatedAt:       time.Now(),
+		},
+		{
+			ID:              2,
+			BizID:           0,
+			AppID:           0,
+			SearchName:      "离线客户端",
+			SearchType:      "common",
+			SearchCondition: "{\"online_status\": [\"offline\"]}",
+			Creator:         "system",
+			CreatedAt:       time.Now(),
+			UpdatedAt:       time.Now(),
+		},
+	})
+
 	now := time.Now()
 	if result := tx.Create([]IDGenerators{
-		{Resource: "client_querys", MaxID: 0, UpdatedAt: now},
+		{Resource: "client_querys", MaxID: 2, UpdatedAt: now},
 	}); result.Error != nil {
 		return result.Error
 	}
@@ -73,6 +98,22 @@ func mig20240325180808Up(tx *gorm.DB) error {
 
 // mig20240325180808Down for down migration
 func mig20240325180808Down(tx *gorm.DB) error {
+
+	// IDGenerators : ID生成器
+	type IDGenerators struct {
+		ID        uint      `gorm:"type:bigint(1) unsigned not null;primaryKey"`
+		Resource  string    `gorm:"type:varchar(50) not null;uniqueIndex:idx_resource"`
+		MaxID     uint      `gorm:"type:bigint(1) unsigned not null"`
+		UpdatedAt time.Time `gorm:"type:datetime(6) not null"`
+	}
+
+	var resources = []string{
+		"client_querys",
+	}
+	if result := tx.Where("resource IN ?", resources).Delete(&IDGenerators{}); result.Error != nil {
+		return result.Error
+	}
+
 	if err := tx.Migrator().DropTable("client_querys"); err != nil {
 		return err
 	}

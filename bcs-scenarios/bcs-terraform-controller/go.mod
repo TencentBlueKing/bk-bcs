@@ -66,6 +66,7 @@ require (
 	github.com/go-git/go-git/v5 v5.11.0
 	github.com/golang/protobuf v1.5.3
 	github.com/google/uuid v1.5.0
+	github.com/gorilla/mux v1.8.1
 	github.com/hashicorp/hcl/v2 v2.19.1
 	github.com/hashicorp/terraform-exec v0.20.0
 	github.com/pkg/errors v0.9.1
