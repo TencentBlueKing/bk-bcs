@@ -1,4 +1,4 @@
-FROM centos:latest
+FROM centos:7
 
 COPY  bcs-external-privilege /bin/bcs-external-privilege
 

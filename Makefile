@@ -72,7 +72,7 @@ bcs-component:k8s-driver \
 	cc-agent kube-sche apiserver-proxy \
 	logbeat-sidecar webhook-server \
 	general-pod-autoscaler cluster-autoscaler \
-	netservice-controller
+	netservice-controller external-privilege
 
 bcs-network:network networkpolicy cloud-netservice cloud-netcontroller cloud-netagent
 
@@ -363,6 +363,10 @@ netservice-controller:pre
 	cd ${BCS_COMPONENT_PATH}/bcs-netservice-controller && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-netservice-controller/bcs-netservice-ipam ./ipam/main.go
 	cd ${BCS_COMPONENT_PATH}/bcs-netservice-controller/cni && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-netservice-controller/bcs-underlay-cni ./cni.go
 
+external-privilege:pre
+	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/
+	cp -R ${BCS_CONF_COMPONENT_PATH}/bcs-external-privilege ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
+	cd ${BCS_COMPONENT_PATH}/bcs-external-privilege && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-external-privilege/bcs-external-privilege ./main.go
 
 # network plugins section
 networkpolicy:pre
