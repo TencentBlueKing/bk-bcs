@@ -39,7 +39,7 @@
         <div class="time-info">
           <span v-if="item.value">
             <span class="time">{{ Math.round(item.value) }}</span>
-            <span class="unit">s</span>
+            <span class="unit">{{ item.unit }}</span>
           </span>
           <span v-else class="empty">{{ t('暂无数据') }}</span>
         </div>
@@ -185,11 +185,13 @@
   };
 
   const loadPullFailedReason = async () => {
+    const params = {
+      last_heartbeat_time: searchQuery.value.last_heartbeat_time,
+      search: { failed_reason: selectFailedReason.value },
+    };
     try {
       loading.value = true;
-      const res = await getClientPullFailedReason(props.bkBizId, props.appId, {
-        search: { failed_reason: selectFailedReason.value },
-      });
+      const res = await getClientPullFailedReason(props.bkBizId, props.appId, params);
       specificReason.value = res.data.failed_reason;
     } catch (error) {
       console.error(error);
