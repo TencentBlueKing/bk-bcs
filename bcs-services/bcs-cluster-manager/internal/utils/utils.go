@@ -32,7 +32,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/common/util"
 	"github.com/kirito41dd/xslice"
-	"github.com/micro/go-micro/v2/registry"
+	"go-micro.dev/v4/registry"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 

@@ -9,7 +9,7 @@
             @toggle-full-screen="isOpenFullScreen = !isOpenFullScreen" />
         </template>
         <template #head-suffix>
-          <bk-select v-model="selectTime" class="time-selector" :clearable="false">
+          <bk-select v-model="selectTime" class="time-selector" :filterable="false" :clearable="false">
             <bk-option v-for="item in selectorTimeList" :id="item.value" :key="item.value" :name="item.label" />
           </bk-select>
         </template>
@@ -157,7 +157,6 @@
           min: 0,
         },
       ],
-
       padding: [10, 20, 30, 20],
       geometryOptions: [
         {
@@ -166,6 +165,8 @@
           seriesField: 'type',
           columnWidthRatio: 0.2,
           color: ['#3E96C2', '#61B2C2', '#61B2C2'],
+          // @ts-ignore
+          maxColumnWidth: 80,
         },
         {
           geometry: 'line',
@@ -200,7 +201,7 @@
                 item.name = t('主机插件客户端');
                 break;
               case 'command':
-                item.name = 'command';
+                item.name = `CLI ${t('客户端')}`;
                 break;
               default:
                 item.name = t('总量');
@@ -239,15 +240,10 @@
     width: 100vw;
     height: 100vh;
     z-index: 5000;
-    background-color: rgba(0, 0, 0, 0.6);
     .card {
-      position: absolute;
-      width: 100%;
-      height: 80vh !important;
-      top: 50%;
-      transform: translateY(-50%);
-      .loading-wrap {
-        height: 100%;
+      height: 100vh !important;
+      :deep(.operation-btn) {
+        top: 0 !important;
       }
     }
   }

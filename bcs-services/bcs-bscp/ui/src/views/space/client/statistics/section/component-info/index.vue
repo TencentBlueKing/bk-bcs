@@ -36,7 +36,7 @@
         <div class="resource-info">
           <span v-if="item.value">
             <span class="time">{{ item.key.includes('cpu') ? item.value : Math.round(item.value) }}</span>
-            <span class="unit">{{ item.key.includes('cpu') ? t('核') : 'MB' }}</span>
+            <span class="unit">{{ item.unit }}</span>
           </span>
           <span v-else class="empty">{{ t('暂无数据') }}</span>
         </div>
@@ -66,7 +66,7 @@
   import { storeToRefs } from 'pinia';
   import { useI18n } from 'vue-i18n';
 
-  const {t} = useI18n();
+  const { t } = useI18n();
 
   const clientStore = useClientStore();
   const { searchQuery } = storeToRefs(clientStore);
@@ -162,9 +162,20 @@
       const res = await getClientComponentInfoData(props.bkBizId, props.appId, params);
       data.value = res.version_distribution;
       sunburstData.value.children = convertToTree(res.version_distribution);
-      Object.entries(res.resource_usage).map(
-        ([key, value]) => (resourceData.value.find((item) => item.key === key)!.value = value as number),
-      );
+      Object.entries(res.resource_usage).forEach(([key, value]) => {
+        const item = resourceData.value.find((item) => item.key === key) as IInfoCard;
+        item!.value = value as number;
+        if (!item.key.includes('cpu')) {
+          item.unit = 'MB';
+        } else {
+          if (item.value > 1) {
+            item.unit = t('核');
+          } else {
+            item.value = item.value * 1000;
+            item.unit = 'mCPUs';
+          }
+        }
+      });
     } catch (error) {
       console.error(error);
     } finally {
@@ -202,15 +213,14 @@
     width: 100vw;
     height: 100vh;
     z-index: 5000;
-    background-color: rgba(0, 0, 0, 0.6);
     .card {
-      position: absolute;
       width: 100%;
-      height: 80vh !important;
-      top: 50%;
-      transform: translateY(-50%);
+      height: 100vh !important;
       .loading-wrap {
         height: 100%;
+      }
+      :deep(.operation-btn) {
+        top: 0 !important;
       }
     }
   }

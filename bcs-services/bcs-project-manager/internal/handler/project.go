@@ -130,7 +130,7 @@ func (p *ProjectHandler) ListProjects(ctx context.Context,
 		// with username
 		// 获取 project id, 用以获取对应的权限
 		ids := getProjectIDs(projects)
-		perms, err := auth.ProjectIamClient.GetMultiProjectMultiActionPermission(
+		perms, err := auth.ProjectIamClient.GetMultiProjectMultiActionPerm(
 			authUser.Username, ids,
 			[]string{auth.ProjectCreate, auth.ProjectView, auth.ProjectEdit, auth.ProjectDelete},
 		)
@@ -161,7 +161,7 @@ func (p *ProjectHandler) ListAuthorizedProjects(ctx context.Context,
 		authUser, err := middleware.GetUserFromContext(ctx)
 		if err == nil && authUser.Username != "" {
 			ids := getProjectIDs(projects)
-			perms, err := auth.ProjectIamClient.GetMultiProjectMultiActionPermission(
+			perms, err := auth.ProjectIamClient.GetMultiProjectMultiActionPerm(
 				authUser.Username, ids,
 				[]string{auth.ProjectCreate, auth.ProjectView, auth.ProjectEdit, auth.ProjectDelete},
 			)

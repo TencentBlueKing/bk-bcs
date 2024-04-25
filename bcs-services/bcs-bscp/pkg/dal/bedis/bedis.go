@@ -59,6 +59,7 @@ type RedisClient interface {
 	Do(ctx context.Context, args ...interface{}) *redis.Cmd
 	Ping(ctx context.Context) *redis.StatusCmd
 	LPush(ctx context.Context, key string, values ...interface{}) *redis.IntCmd
+	RPush(ctx context.Context, key string, values ...interface{}) *redis.IntCmd
 	LRange(ctx context.Context, key string, start, stop int64) *redis.StringSliceCmd
 	RPop(ctx context.Context, key string) *redis.StringCmd
 	Keys(ctx context.Context, pattern string) *redis.StringSliceCmd
@@ -85,6 +86,7 @@ type Client interface {
 	Expire(ctx context.Context, key string, ttlSeconds int, mode ExpireMode) error
 	Healthz() error
 	LPush(ctx context.Context, key string, values ...interface{}) error
+	RPush(ctx context.Context, key string, values ...interface{}) error
 	LRange(ctx context.Context, key string, start, stop int64) ([]string, error)
 	RPop(ctx context.Context, key string) (string, error)
 	Keys(ctx context.Context, pattern string) ([]string, error)

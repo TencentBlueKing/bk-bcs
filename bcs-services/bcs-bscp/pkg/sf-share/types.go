@@ -708,6 +708,28 @@ type HeartbeatItem struct {
 	ResourceUsage ResourceUsage `json:"resourceUsage"`
 }
 
+// Decode the HeartbeatItem to bytes.
+func (h *HeartbeatItem) Decode(data []byte) error {
+	if len(data) == 0 {
+		return errors.New("Heartbeat is nil, can not be decoded")
+	}
+
+	err := jsoni.Unmarshal(data, h)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// Encode the HeartbeatItem to bytes.
+func (h *HeartbeatItem) Encode() ([]byte, error) {
+	if h == nil {
+		return nil, errors.New("HeartbeatItem is nil, can not be encoded")
+	}
+
+	return jsoni.Marshal(h)
+}
+
 // ClientType client type (agent、sidecar、sdk、command).
 type ClientType string
 

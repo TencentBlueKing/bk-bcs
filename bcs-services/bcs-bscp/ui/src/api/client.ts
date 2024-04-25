@@ -130,5 +130,14 @@ export const getClientComponentInfoData = (bizId: string, appId: number, query: 
  * @param clientId 客户端id
  * @returns
  */
-export const getClientLabelsAndAnnotations = (bizId: string, appId: number) =>
-  http.post(`/config/biz/${bizId}/apps/${appId}/clients/labels_and_annotations`);
+export const getClientLabelsAndAnnotations = (bizId: string, appId: number, query: any) =>
+  http.post(`/config/biz/${bizId}/apps/${appId}/clients/labels_and_annotations`, query);
+
+/**
+ * 获取客户端拉取失败详细原因
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @returns
+ */
+export const getClientPullFailedReason = (bizId: string, appId: number, query: any) =>
+  http.post(`/config/biz/${bizId}/apps/${appId}/clients/specific_failed_reason`, query);

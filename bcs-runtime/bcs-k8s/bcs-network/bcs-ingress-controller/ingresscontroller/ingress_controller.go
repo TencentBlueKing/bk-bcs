@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	federationv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/federation/v1"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
@@ -53,8 +54,9 @@ type IngressReconciler struct {
 
 	IngressEventer record.EventRecorder
 
-	EpsFIlter *EndpointsFilter
-	PodFilter *PodFilter
+	EpsFIlter                       *EndpointsFilter
+	PodFilter                       *PodFilter
+	MultiClusterEndpointSliceFilter *MultiClusterEpsFilter
 
 	IngressConverter *generator.IngressConverter
 
@@ -244,11 +246,15 @@ func (ir IngressReconciler) patchWarningAnnotationForIngress(ingress *networkext
 
 // SetupWithManager set reconciler
 func (ir *IngressReconciler) SetupWithManager(mgr ctrl.Manager) error {
-
-	return ctrl.NewControllerManagedBy(mgr).
+	builder := ctrl.NewControllerManagedBy(mgr).
 		For(&networkextensionv1.Ingress{}).
 		Watches(&source.Kind{Type: &k8scorev1.Pod{}}, ir.PodFilter).
 		Watches(&source.Kind{Type: &k8scorev1.Endpoints{}}, ir.EpsFIlter).
-		WithEventFilter(ir.getIngressPredicate()).
-		Complete(ir)
+		WithEventFilter(ir.getIngressPredicate())
+	if ir.Option.IsFederationMode {
+		builder = builder.Watches(&source.Kind{Type: &federationv1.MultiClusterEndpointSlice{}},
+			ir.MultiClusterEndpointSliceFilter)
+	}
+
+	return builder.Complete(ir)
 }

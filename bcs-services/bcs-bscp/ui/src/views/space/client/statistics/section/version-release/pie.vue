@@ -72,7 +72,7 @@
         layout: 'horizontal',
         position: 'right',
         flipPage: false,
-        offsetX: -600,
+        offsetX: -400,
       },
     });
     piePlot.render();

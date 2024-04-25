@@ -25,6 +25,7 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/reflection"
 
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/crontab"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/options"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/service"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
@@ -68,6 +69,7 @@ type feedServer struct {
 	gwServe *http.Server //nolint:unused
 	sd      serviced.ServiceDiscover
 	service *service.Service
+	cleaner *crontab.SourceFileCacheCleaner
 }
 
 // prepare do prepare jobs before run feed server.
@@ -114,6 +116,10 @@ func (fs *feedServer) prepare(opt *options.Option) error {
 		return fmt.Errorf("initialize service failed, err: %v", err)
 	}
 	fs.service = svc
+
+	cleaner := crontab.NewSourceFileCacheCleaner()
+	fs.cleaner = cleaner
+	fs.cleaner.Run()
 
 	return nil
 }
@@ -197,6 +203,9 @@ func (fs *feedServer) listenAndServe() error {
 }
 
 func (fs *feedServer) finalizer() {
+
+	fs.cleaner.Stop()
+
 	if err := fs.sd.Deregister(); err != nil {
 		logs.Errorf("process service shutdown, but deregister failed, err: %v", err)
 		return

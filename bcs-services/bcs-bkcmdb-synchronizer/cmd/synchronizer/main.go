@@ -17,9 +17,9 @@ import (
 	"flag"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	microCfg "github.com/micro/go-micro/v2/config"
-	microFile "github.com/micro/go-micro/v2/config/source/file"
-	microFlg "github.com/micro/go-micro/v2/config/source/flag"
+	microCfg "go-micro.dev/v4/config"
+	microFile "go-micro.dev/v4/config/source/file"
+	microFlg "go-micro.dev/v4/config/source/flag"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/option"
