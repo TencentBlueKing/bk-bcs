@@ -14,8 +14,6 @@
 package huawei
 
 import (
-	"fmt"
-	"net"
 	"sync"
 
 	model2 "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/vpc/v2/model"
@@ -75,31 +73,13 @@ func (vm *VPCManager) ListSubnets(vpcID, zone string, opt *cloudprovider.ListNet
 	if err != nil {
 		return nil, err
 	}
-
-	subnetZone := ""
-	subnetZoneName := ""
 	subnets := make([]*proto.Subnet, 0)
 
-	// 获取可用区
-	zones, err := api.GetAvailabilityZones(&opt.CommonOption)
-	if err != nil {
-		return nil, err
-	}
-
 	for _, s := range *rsp.Subnets {
-		for k, v := range zones {
-			if v.ZoneName == s.AvailabilityZone {
-				subnetZone = fmt.Sprintf("%d", k+1)
-				subnetZoneName = fmt.Sprintf("可用区%d", k+1)
-			}
-		}
-
-		rps2, err2 := client.ListPrivateips(&model2.ListPrivateipsRequest{SubnetId: s.Id})
+		availableIPAddressCount, err2 := client.CalculateAvailableIp(s.Id)
 		if err2 != nil {
 			return nil, err
 		}
-
-		total, _ := calculateAvailableIPs(s.Cidr)
 
 		subnets = append(subnets, &proto.Subnet{
 			VpcID:                   s.VpcId,
@@ -107,9 +87,9 @@ func (vm *VPCManager) ListSubnets(vpcID, zone string, opt *cloudprovider.ListNet
 			SubnetName:              s.Name,
 			CidrRange:               s.Cidr,
 			Ipv6CidrRange:           s.CidrV6,
-			Zone:                    subnetZone,
-			ZoneName:                subnetZoneName,
-			AvailableIPAddressCount: uint64(total - len(*rps2.Privateips)),
+			Zone:                    "", // 华为子网可用区只是标识,子网在所有可用区都是可用的
+			ZoneName:                "",
+			AvailableIPAddressCount: uint64(availableIPAddressCount),
 		})
 	}
 
@@ -175,19 +155,4 @@ func (vm *VPCManager) ListBandwidthPacks(opt *cloudprovider.CommonOption) ([]*pr
 func (vm *VPCManager) CheckConflictInVpcCidr(vpcID string, cidr string,
 	opt *cloudprovider.CommonOption) ([]string, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
-}
-
-// calculateAvailableIPs takes a CIDR range and returns the number of available IP addresses.
-func calculateAvailableIPs(cidr string) (int, error) {
-	// Parse the CIDR
-	_, ipNet, err := net.ParseCIDR(cidr)
-	if err != nil {
-		return 0, fmt.Errorf("failed to parse CIDR: %w", err)
-	}
-
-	// Calculate the number of available IPs
-	ones, _ := ipNet.Mask.Size()
-	availableIPs := (1 << uint(32-ones)) - 2
-
-	return availableIPs, nil
 }

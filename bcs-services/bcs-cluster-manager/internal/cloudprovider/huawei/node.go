@@ -22,6 +22,7 @@ import (
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/huawei/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 )
 
 var nodeMgr sync.Once
@@ -149,6 +150,10 @@ func (nm *NodeManager) ListNodeInstanceType(info cloudprovider.InstanceInfo, opt
 
 	instanceTypes := make([]*proto.InstanceType, 0)
 	for _, v := range *flavors {
+		if v.OsExtraSpecs.Condoperationaz == nil {
+			continue
+		}
+
 		var (
 			name string
 			gpu  uint32
@@ -172,7 +177,7 @@ func (nm *NodeManager) ListNodeInstanceType(info cloudprovider.InstanceInfo, opt
 		}
 
 		cpu, _ := strconv.Atoi(v.Vcpus)
-		status := ""
+		status := common.InstanceSoldOut
 		if v.OsExtraSpecs.Condoperationstatus != nil {
 			status = *v.OsExtraSpecs.Condoperationstatus
 		}
@@ -183,17 +188,19 @@ func (nm *NodeManager) ListNodeInstanceType(info cloudprovider.InstanceInfo, opt
 				gpu = uint32(i)
 			}
 		}
+
 		zones := make([]string, 0)
-		if v.OsExtraSpecs.Condoperationaz != nil {
-			res := strings.Split(*v.OsExtraSpecs.Condoperationaz, ",")
-			for _, y := range res {
-				zone := strings.Split(y, "(")
-				if len(zone) > 0 {
+		res := strings.Split(*v.OsExtraSpecs.Condoperationaz, ",")
+		for _, y := range res {
+			zone := strings.Split(y, "(")
+			if len(zone) > 0 {
+				if zone[1] == "normal)" || zone[1] == "promotion)" {
+					status = common.InstanceSell
 					zones = append(zones, zone[0])
 				}
-
 			}
 		}
+
 		instanceTypes = append(instanceTypes, &proto.InstanceType{
 			NodeType:   v.Name,
 			TypeName:   name,

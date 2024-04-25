@@ -288,25 +288,40 @@ func GenerateNodeSpec(nodeGroup *proto.NodeGroup) (*model.NodeSpec, error) {
 	}
 
 	var (
-		nodeBillingMode int32  = 0
-		maxPod          int32  = 256
-		periodType      string = "month"
-		periodNum       int32  = 1
-		az              string = "random" // 随机选择可用区
-		subnetId        string = ""
+		nodeBillingMode   int32 = 0
+		maxPod            int32 = 64
+		periodType              = "month"
+		periodNum         int32 = 1
+		az                      = "random" // 随机选择可用区
+		subnetId                = ""
+		isAutoRenew             = "false"
+		isAutoPay               = "true"
+		runtimeName             = model.GetRuntimeNameEnum().CONTAINERD
+		metadataEncrypted       = "0"
+		matchCount              = "1"
+		cceManaged              = true
 	)
 
 	if nodeGroup.LaunchTemplate != nil {
 		if nodeGroup.LaunchTemplate.InstanceChargeType == common.PREPAID && nodeGroup.LaunchTemplate.Charge != nil {
 			nodeBillingMode = 1
 			periodNum = int32(nodeGroup.LaunchTemplate.Charge.Period)
+			if nodeGroup.LaunchTemplate.Charge.Period >= 12 {
+				periodType = "year"
+				periodNum = int32(nodeGroup.LaunchTemplate.Charge.Period / 12)
+			}
+			if nodeGroup.LaunchTemplate.Charge.RenewFlag == common.NOTIFYANDAUTORENEW {
+				isAutoRenew = "true"
+			}
 		}
 	}
 
 	if nodeGroup.AutoScaling != nil {
+		// 指定可用区
 		if len(nodeGroup.AutoScaling.Zones) > 0 {
 			az = nodeGroup.AutoScaling.Zones[0]
 		}
+		// 华为云只支持设置一个子网
 		if len(nodeGroup.AutoScaling.SubnetIDs) > 0 {
 			subnetId = nodeGroup.AutoScaling.SubnetIDs[0]
 		}
@@ -328,13 +343,21 @@ func GenerateNodeSpec(nodeGroup *proto.NodeGroup) (*model.NodeSpec, error) {
 		maxPod = int32(nodeGroup.AutoScaling.MaxSize)
 	}
 
+	if nodeGroup.NodeTemplate != nil && nodeGroup.NodeTemplate.Runtime != nil {
+		if nodeGroup.NodeTemplate.Runtime.ContainerRuntime == common.DockerContainerRuntime {
+			runtimeName = model.GetRuntimeNameEnum().DOCKER
+		}
+	}
+
 	diskSize, err := strconv.Atoi(nodeGroup.LaunchTemplate.SystemDisk.DiskSize)
 	if err != nil {
 		return nil, err
 	}
 
 	dataVolumes := make([]model.Volume, 0)
-	for _, v := range nodeGroup.LaunchTemplate.DataDisks {
+	storageSelectors := make([]model.StorageSelectors, 0)
+	storageGroups := make([]model.StorageGroups, 0)
+	for k, v := range nodeGroup.NodeTemplate.DataDisks {
 		var size int
 		size, err = strconv.Atoi(v.DiskSize)
 		if err != nil {
@@ -345,6 +368,60 @@ func GenerateNodeSpec(nodeGroup *proto.NodeGroup) (*model.NodeSpec, error) {
 			Volumetype: v.DiskType,
 			Size:       int32(size),
 		})
+
+		selectorName := fmt.Sprintf("selector%d", k)
+		storageSelectors = append(storageSelectors, model.StorageSelectors{
+			Name:        selectorName,
+			StorageType: "evs",
+			MatchLabels: &model.StorageSelectorsMatchLabels{
+				Size:              &v.DiskSize,
+				VolumeType:        &v.DiskType,
+				MetadataEncrypted: &metadataEncrypted,
+				Count:             &matchCount,
+			},
+		})
+
+		if k == 0 {
+			storageGroups = append(storageGroups, model.StorageGroups{
+				Name:          "vgpaas", // 当cceManaged=ture时，name必须为：vgpaas
+				SelectorNames: []string{selectorName},
+				CceManaged:    &cceManaged, // k8s及runtime所属存储空间。有且仅有一个group被设置为true，不填默认false
+				VirtualSpaces: []model.VirtualSpace{
+					{
+						Name: "kubernetes",
+						Size: "10%",
+						LvmConfig: &model.LvmConfig{
+							LvType: "linear",
+						},
+					},
+					{
+						Name: "runtime",
+						Size: "90%",
+						RuntimeConfig: &model.RuntimeConfig{
+							LvType: "linear",
+						},
+					},
+				},
+			})
+		} else {
+			storageGroup := model.StorageGroups{
+				Name:          fmt.Sprintf("group%d", k),
+				SelectorNames: []string{selectorName},
+				VirtualSpaces: []model.VirtualSpace{
+					{
+						Name: "user",
+						Size: "100%",
+						LvmConfig: &model.LvmConfig{
+							LvType: "linear",
+						},
+					},
+				},
+			}
+			if v.FileSystem != "" {
+				storageGroup.VirtualSpaces[0].LvmConfig.Path = &v.FileSystem
+			}
+			storageGroups = append(storageGroups, storageGroup)
+		}
 	}
 
 	password, err := Crypt(nodeGroup.LaunchTemplate.InitLoginPassword)
@@ -358,8 +435,7 @@ func GenerateNodeSpec(nodeGroup *proto.NodeGroup) (*model.NodeSpec, error) {
 		Os:     &nodeGroup.NodeOS,
 		Login: &model.Login{
 			UserPassword: &model.UserPassword{
-				//username不填默认为root，password必须加盐并base64加密
-				Password: password,
+				Password: password, //username不填默认为root，password必须加盐并base64加密
 			},
 		},
 		RootVolume: &model.Volume{
@@ -367,14 +443,31 @@ func GenerateNodeSpec(nodeGroup *proto.NodeGroup) (*model.NodeSpec, error) {
 			Size:       int32(diskSize),
 		},
 		DataVolumes: dataVolumes,
+		Storage: &model.Storage{
+			StorageSelectors: storageSelectors,
+			StorageGroups:    storageGroups,
+		},
 		BillingMode: &nodeBillingMode,
+		Runtime: &model.Runtime{
+			Name: &runtimeName,
+		},
+		InitializedConditions: &[]string{
+			"NodeInitial", // 新增节点调度策略: 设置为不可调度
+		},
 		ExtendParam: &model.NodeExtendParam{
-			MaxPods:    &maxPod,
-			PeriodType: &periodType,
-			PeriodNum:  &periodNum,
+			MaxPods:             &maxPod,
+			PeriodType:          &periodType,
+			PeriodNum:           &periodNum,
+			IsAutoRenew:         &isAutoRenew,
+			IsAutoPay:           &isAutoPay,
+			AlphaCcePreInstall:  &nodeGroup.NodeTemplate.PreStartUserScript,
+			AlphaCcePostInstall: &nodeGroup.NodeTemplate.UserScript,
 		},
 		NodeNicSpec: &model.NodeNicSpec{
 			PrimaryNic: &model.NicSpec{SubnetId: &subnetId},
+		},
+		HostnameConfig: &model.HostnameConfig{
+			Type: model.GetHostnameConfigTypeEnum().PRIVATE_IP, // 节点名称默认与节点私有ip保持一致
 		},
 	}, nil
 }
