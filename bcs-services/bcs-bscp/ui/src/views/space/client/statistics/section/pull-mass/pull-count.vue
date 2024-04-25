@@ -124,6 +124,7 @@
     const params: IClinetCommonQuery = {
       search: searchQuery.value.search,
       pull_time: selectTime.value,
+      last_heartbeat_time: searchQuery.value.last_heartbeat_time,
     };
     try {
       loading.value = true;

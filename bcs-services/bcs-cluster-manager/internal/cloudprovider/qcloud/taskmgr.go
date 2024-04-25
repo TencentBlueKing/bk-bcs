@@ -525,8 +525,9 @@ func (t *Task) BuildDeleteClusterTask(cls *proto.Cluster, opt *cloudprovider.Del
 
 	// setting all steps details
 	deleteClusterTask := &DeleteClusterTaskOption{
-		Cluster:    cls,
-		DeleteMode: opt.DeleteMode.String(),
+		Cluster:           cls,
+		DeleteMode:        opt.DeleteMode.String(),
+		LastClusterStatus: opt.LatsClusterStatus,
 	}
 	// step1: DeleteTKECluster delete tke cluster
 	deleteClusterTask.BuildDeleteTKEClusterStep(task)

@@ -29,6 +29,10 @@ var (
 	cloudName = "qcloud-public"
 )
 
+const (
+	defaultRegion = "ap-nanjing"
+)
+
 // qcloud-public taskName
 const (
 	// createClusterTaskTemplate bk-sops add task template
