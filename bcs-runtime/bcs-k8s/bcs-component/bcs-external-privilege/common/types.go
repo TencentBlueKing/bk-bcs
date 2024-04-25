@@ -23,6 +23,7 @@ type DBPrivEnv struct {
 	UseCDP   bool   `json:"useCDP,omitempty"`
 }
 
+// RequestEsb request esb option
 type RequestEsb struct {
 	AppCode   string `json:"bk_app_code"`
 	AppSecret string `json:"bk_app_secret"`

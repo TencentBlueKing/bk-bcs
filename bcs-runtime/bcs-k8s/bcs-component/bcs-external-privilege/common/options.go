@@ -54,6 +54,7 @@ func LoadOption() *Option {
 	err := json.Unmarshal(envstr, &(ret.DBPrivEnvList))
 	if err != nil {
 		blog.Errorf("Unmarshall json str(%s) to []DBPrivEnv failed: %s\n", string(envstr), err.Error())
+		os.Exit(1)
 	}
 
 	if ret.RequestESB.AppCode == "" || ret.RequestESB.AppSecret == "" || ret.RequestESB.Operator == "" ||
