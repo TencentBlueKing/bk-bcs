@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package dbm
@@ -31,11 +30,11 @@ const (
 type DBMClient struct {
 	Host        string `json:"host"`
 	Environment string `json:"env"`
-	Debug       bool   `json:"debug"`
+	Debug       bool   `json:"debug,omitempty"`
 	AppCode     string `json:"-"`
 	AppSecret   string `json:"-"`
 	Operator    string `json:"-"`
-	Task
+	Task        Task   `json:"-"`
 }
 
 // AuthorizeRequest DBM authorize apply request

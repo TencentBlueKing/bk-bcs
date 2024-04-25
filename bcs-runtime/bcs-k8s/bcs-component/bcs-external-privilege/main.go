@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package main
@@ -18,12 +17,11 @@ import (
 	"runtime"
 	"sync"
 
-	"github.com/TencentBlueKing/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-external-privilege/common"
-	"github.com/TencentBlueKing/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-external-privilege/gcs"
-	"github.com/TencentBlueKing/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-external-privilege/scr"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+
+	"github.com/TencentBlueKing/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-external-privilege/common"
+	"github.com/TencentBlueKing/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-external-privilege/pkg"
 )
 
 const failRetryLimit = 40
@@ -35,55 +33,59 @@ func main() {
 	blog.InitLogs(conf.LogConfig{ToStdErr: true, Verbosity: 3})
 
 	var wg sync.WaitGroup
-	var succ = true
+	var success = false
 	for _, v := range option.DBPrivEnvList {
 		wg.Add(1)
-
 		go func(env common.DBPrivEnv) {
-			blog.Infof("Starting granting privilege to db: %s, dbname: %s", env.TargetDb, env.DbName)
+			blog.Infof("starting granting privilege to db: %s, dbname: %s", env.TargetDb, env.DbName)
 			defer wg.Done()
-			var failRetry = 0
-			var jobId string
-			client, err := env.InitClient(option)
+			var doPriRetry, checkRetry = 0, 0
+			client, err := pkg.InitClient(option, &env)
 			if err != nil {
 				blog.Errorf("failed to init client for external system, %v", err)
-				os.Exit(1)
+				return
 			}
-			for failRetry < failRetryLimit {
+
+			for doPriRetry < failRetryLimit {
 				err = client.DoPri(option, &env)
-				if !env.IsSCR() {
-					jobId, err = gcs.PrivilegeRequest(option, env)
-				} else {
-					jobId, err = scr.PrivilegeRequest(option, env)
-				}
-				if err == nil && jobId != "" {
+				if err == nil {
 					break
 				}
-				blog.Errorf("error calling the privilege api: %s, db: %s, dbname: %s, retry %d", err.Error(), env.TargetDb, env.DbName, failRetry)
-				failRetry++
-				continue
+				blog.Errorf("error calling the privilege api: %s, db: %s, dbname: %s, retry %d",
+					err.Error(), env.TargetDb, env.DbName, doPriRetry)
+				doPriRetry++
 			}
-			if failRetry >= failRetryLimit {
-				blog.Errorf("error calling the privilege api with db: %s, dbname: %s", env.TargetDb, env.DbName)
-				succ = false
+			if doPriRetry >= failRetryLimit {
+				blog.Errorf("error calling the privilege api with db: %s, dbname: %s, max retry times reached",
+					env.TargetDb, env.DbName)
 				return
 			}
-			if !env.IsSCR() {
-				err = gcs.CheckFinalStatus(option, jobId, failRetryLimit)
-			} else {
-				err = scr.CheckFinalStatus(option, jobId, failRetryLimit)
+
+			for checkRetry < failRetryLimit {
+				common.WaitForSeveralSeconds()
+				err = client.CheckFinalStatus()
+				if err == nil {
+					break
+				}
+				blog.Errorf("check operation status failed: %s, db: %s, dbname: %s, retry %d",
+					err.Error(), env.TargetDb, env.DbName, checkRetry)
+				checkRetry++
 			}
-			if err != nil {
-				blog.Errorf("error to check whether the privilege succeed: %s, db: %s, dbname: %s", err.Error(), env.TargetDb, env.DbName)
-				succ = false
+			if checkRetry >= failRetryLimit {
+				blog.Errorf("check operation status failed with db: %s, dbname: %s, max retry times reached",
+					env.TargetDb, env.DbName)
 				return
 			}
-			blog.Infof("Granting privilege to db: %s, dbname: %s succ", env.TargetDb, env.DbName)
+
+			success = true
+			blog.Infof("granting privilege to db: %s, dbname: %s succeeded", env.TargetDb, env.DbName)
 		}(v)
 	}
 	wg.Wait()
-	if !succ {
+
+	if !success {
 		os.Exit(1)
 	}
+
 	os.Exit(0)
 }

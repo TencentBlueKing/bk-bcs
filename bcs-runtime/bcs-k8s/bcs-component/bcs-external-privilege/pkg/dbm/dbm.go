@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package dbm
@@ -26,6 +25,9 @@ import (
 
 // NewDBMClient create DBM client
 func NewDBMClient(option *common.Option) (*DBMClient, error) {
+	if len(option.ExternalSysConfig) == 0 {
+		return nil, fmt.Errorf("create DBM client fialed, empty configuration")
+	}
 	client := DBMClient{}
 	err := json.Unmarshal([]byte(option.ExternalSysConfig), &client)
 	if err != nil {
@@ -49,7 +51,6 @@ func (dc *DBMClient) DoPri(op *common.Option, env *common.DBPrivEnv) error {
 		dc.AppCode, dc.AppSecret, dc.Operator)
 
 	req := AuthorizeRequest{
-		BKBizID:        0,
 		App:            env.AppName,
 		User:           env.CallUser,
 		AccessDB:       env.DbName,
@@ -78,22 +79,22 @@ func (dc *DBMClient) DoPri(op *common.Option, env *common.DBPrivEnv) error {
 		return fmt.Errorf("call DoPri failed, %s", respData.Message)
 	}
 
-	dc.TaskID = respData.Task.TaskID
-	dc.Platform = respData.Task.Platform
+	dc.Task.TaskID = respData.Task.TaskID
+	dc.Task.Platform = respData.Task.Platform
 
 	return nil
 }
 
 // CheckFinalStatus implement ExternalPrivilege interface
 func (dc *DBMClient) CheckFinalStatus() error {
-	if len(dc.TaskID) == 0 || len(dc.Platform) == 0 {
+	if len(dc.Task.TaskID) == 0 || len(dc.Task.Platform) == 0 {
 		return fmt.Errorf("taskid or platform is empty when call CheckFinalStatus")
 	}
 
-	taskid, _ := strconv.Atoi(dc.TaskID)
+	taskid, _ := strconv.Atoi(dc.Task.TaskID)
 	var (
 		reqURL = fmt.Sprintf("%s/%s/plugin/mysql/authorize/query_authorize_apply_result?task_id=%d&platform=%s",
-			dc.Host, dc.Environment, taskid, dc.Platform)
+			dc.Host, dc.Environment, taskid, dc.Task.Platform)
 		respData = &QueryResponse{}
 	)
 

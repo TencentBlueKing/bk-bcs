@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package common
@@ -18,6 +17,7 @@ import (
 	"time"
 )
 
+// WaitForSeveralSeconds wait for several seconds
 func WaitForSeveralSeconds() {
 	time.Sleep(3*time.Second + time.Duration(rand.Float32()*3000)*time.Millisecond)
 }

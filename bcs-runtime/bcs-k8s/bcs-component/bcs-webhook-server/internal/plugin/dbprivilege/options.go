@@ -18,15 +18,11 @@ import (
 
 // DbPrivOptions options for db privilege plugin
 type DbPrivOptions struct {
-	KubeMaster  string `json:"kube_master"`
-	Kubeconfig  string `json:"kubeconfig"`
-	NetworkType string `json:"network_type"`
-	// 此处对于外部系统的配置信息，需要交由各系统对接模块去实现
-	ExternalSysType   string `json:"external_sys_type"`
-	ExternalSysConfig string `json:"external_sys_config"`
-	//EsbURL             string `json:"esb_url"`
-	//CDPGCSURL          string `json:"cdp_gcs_url"`
-	AccessToken        string `json:"access_token"`
+	KubeMaster         string `json:"kube_master"`
+	Kubeconfig         string `json:"kubeconfig"`
+	NetworkType        string `json:"network_type"`
+	ExternalSysType    string `json:"external_sys_type"`
+	ExternalSysConfig  string `json:"external_sys_config"`
 	InitContainerImage string `json:"init_container_image"`
 }
 

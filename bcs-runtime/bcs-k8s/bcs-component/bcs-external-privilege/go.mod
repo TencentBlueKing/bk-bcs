@@ -8,4 +8,7 @@ replace (
 	go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4
 )
 
-require github.com/Tencent/bk-bcs/bcs-common v0.0.0-20210818040851-76fdc539dc33
+require (
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20210818040851-76fdc539dc33
+	github.com/parnurzeal/gorequest v0.2.16
+)
