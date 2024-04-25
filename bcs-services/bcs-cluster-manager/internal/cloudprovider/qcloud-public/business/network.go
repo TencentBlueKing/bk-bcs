@@ -96,16 +96,19 @@ func GetAllocatedSubnetsByVpc(opt *cloudprovider.CommonOption, vpcId string) ([]
 
 // GetFreeIPNets return free subnets
 func GetFreeIPNets(opt *cloudprovider.CommonOption, vpcId string) ([]*net.IPNet, error) {
+	// 获取vpc cidr blocks
 	allBlocks, err := GetVpcCIDRBlocks(opt, vpcId, 0)
 	if err != nil {
 		return nil, err
 	}
 
+	// 获取vpc 已使用子网列表
 	allSubnets, err := GetAllocatedSubnetsByVpc(opt, vpcId)
 	if err != nil {
 		return nil, err
 	}
 
+	// 空闲IP列表
 	return cidrtree.GetFreeIPNets(allBlocks, allSubnets), nil
 }
 

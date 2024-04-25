@@ -19,8 +19,6 @@ import (
 	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/huaweicloud/huaweicloud-sdk-go-v3/services/iam/v3/model"
-
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/huawei/api"
@@ -243,15 +241,17 @@ func (c *CloudValidate) CreateCloudAccountValidate(account *proto.Account) error
 		return fmt.Errorf("%s CreateCloudAccountValidate request lost valid crendential info", cloudName)
 	}
 
-	client, err := api.GetIamClient(&cloudprovider.CommonOption{Account: account})
+	client, err := api.NewIamClient(&cloudprovider.CommonOption{Account: account})
 	if err != nil {
 		return err
 	}
 
-	req := model.KeystoneListRegionsRequest{}
-	_, err = client.KeystoneListRegions(&req)
+	regions, err := client.ListCloudRegions()
 	if err != nil {
 		return err
+	}
+	if len(regions) == 0 {
+		return fmt.Errorf("%s invalid aksk", cloudName)
 	}
 
 	return nil

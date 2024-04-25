@@ -18,20 +18,20 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/huawei/business"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	k8scorev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
-
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/huawei/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
+	k8scorev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // RegisterClusterKubeConfigTask register cluster kubeConfig connection
@@ -79,12 +79,10 @@ func RegisterClusterKubeConfigTask(taskID string, stepName string) error {
 }
 
 func importClusterCredential(data *cloudprovider.CloudDependBasicInfo) error {
-	configByte, err := base64.StdEncoding.DecodeString(data.Cluster.KubeConfig)
-	if err != nil {
-		return fmt.Errorf("failed to decode kubeconfig, %v", err)
-	}
+	configByte, _ := encrypt.Decrypt(nil, data.Cluster.KubeConfig)
+
 	typesConfig := &types.Config{}
-	err = json.Unmarshal(configByte, typesConfig)
+	err := json.Unmarshal([]byte(configByte), typesConfig)
 	if err != nil {
 		return fmt.Errorf("failed to unmarshal kubeconfig, %v", err)
 	}
@@ -149,21 +147,15 @@ func ImportClusterNodesTask(taskID string, stepName string) error {
 }
 
 func importClusterInstances(info *cloudprovider.CloudDependBasicInfo) error {
-	kubeConfigByte, err := base64.StdEncoding.DecodeString(info.Cluster.KubeConfig)
+	kubeConfigByte, err := encrypt.Decrypt(nil, info.Cluster.KubeConfig)
 	if err != nil {
 		return fmt.Errorf("decode kube config failed: %v", err)
 	}
 
-	config, err := clientcmd.RESTConfigFromKubeConfig(kubeConfigByte)
+	kubeRet := base64.StdEncoding.EncodeToString([]byte(kubeConfigByte))
+	kubeCli, err := clusterops.NewKubeClient(kubeRet)
 	if err != nil {
-		return fmt.Errorf("build rest config failed: %v", err)
-	}
-
-	config.Burst = 200
-	config.QPS = 100
-	kubeCli, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		return fmt.Errorf("build kube client failed: %s", err)
+		return fmt.Errorf("importClusterInstances NewKubeClient failed: %v", err)
 	}
 
 	nodes, err := kubeCli.CoreV1().Nodes().List(context.Background(), metav1.ListOptions{})
@@ -182,7 +174,13 @@ func importClusterInstances(info *cloudprovider.CloudDependBasicInfo) error {
 func importClusterNodesToCM(ctx context.Context, nodes []k8scorev1.Node,
 	info *cloudprovider.CloudDependBasicInfo) error {
 	// 获取zones
-	zones, err := api.GetAvailabilityZones(info.CmOption)
+
+	ecsCli, err := api.NewEcsClient(info.CmOption)
+	if err != nil {
+		return err
+	}
+
+	zones, err := ecsCli.ListAvailabilityZones()
 	if err != nil {
 		return err
 	}
@@ -213,10 +211,11 @@ func importClusterNodesToCM(ctx context.Context, nodes []k8scorev1.Node,
 		node.InstanceType = n.Labels[utils.NodeInstanceTypeFlag]
 
 		if nodeZone != "" {
-			for k, v := range zones {
+			for _, v := range zones {
 				if v.ZoneName == nodeZone {
-					node.Zone = uint32(k + 1)
-					node.ZoneName = fmt.Sprintf("可用区%d", k+1)
+					node.ZoneName = fmt.Sprintf("可用区%d", func() int {
+						return business.GetZoneNameByZoneId(info.Cluster.Region, v.ZoneName)
+					}())
 				}
 			}
 		}
