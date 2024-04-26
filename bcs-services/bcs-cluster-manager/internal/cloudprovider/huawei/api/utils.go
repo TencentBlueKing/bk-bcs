@@ -300,7 +300,40 @@ func GenerateNodeSpec(nodeGroup *proto.NodeGroup) (*model.NodeSpec, error) {
 		metadataEncrypted       = "0"
 		matchCount              = "1"
 		cceManaged              = true
+		taints                  = make([]model.Taint, 0)
+		userTags                = make([]model.UserTag, 0)
+		k8sTags                 = make(map[string]string)
 	)
+
+	if nodeGroup.NodeTemplate != nil {
+		for _, v := range nodeGroup.NodeTemplate.Taints {
+			effect := model.GetTaintEffectEnum().NO_SCHEDULE
+			if v.Effect == "PreferNoSchedule" {
+				effect = model.GetTaintEffectEnum().PREFER_NO_SCHEDULE
+			} else if v.Effect == "NoExecute" {
+				effect = model.GetTaintEffectEnum().NO_EXECUTE
+			}
+			value := v.Value
+			taints = append(taints, model.Taint{
+				Key:    v.Key,
+				Value:  &value,
+				Effect: effect,
+			})
+		}
+	}
+
+	if nodeGroup.Tags != nil {
+		k8sTags = nodeGroup.Tags
+
+		for k, v := range nodeGroup.Tags {
+			key := k
+			value := v
+			userTags = append(userTags, model.UserTag{
+				Key:   &key,
+				Value: &value,
+			})
+		}
+	}
 
 	if nodeGroup.LaunchTemplate != nil {
 		if nodeGroup.LaunchTemplate.InstanceChargeType == common.PREPAID && nodeGroup.LaunchTemplate.Charge != nil {
@@ -335,7 +368,7 @@ func GenerateNodeSpec(nodeGroup *proto.NodeGroup) (*model.NodeSpec, error) {
 		return nil, fmt.Errorf("the system disk information of a node cannot be empty")
 	}
 
-	if len(nodeGroup.LaunchTemplate.DataDisks) == 0 {
+	if len(nodeGroup.NodeTemplate.DataDisks) == 0 {
 		return nil, fmt.Errorf("the data disk information of a node cannot be empty")
 	}
 
@@ -417,8 +450,8 @@ func GenerateNodeSpec(nodeGroup *proto.NodeGroup) (*model.NodeSpec, error) {
 					},
 				},
 			}
-			if v.FileSystem != "" {
-				storageGroup.VirtualSpaces[0].LvmConfig.Path = &v.FileSystem
+			if v.MountTarget != "" {
+				storageGroup.VirtualSpaces[0].LvmConfig.Path = &v.MountTarget
 			}
 			storageGroups = append(storageGroups, storageGroup)
 		}
@@ -448,6 +481,9 @@ func GenerateNodeSpec(nodeGroup *proto.NodeGroup) (*model.NodeSpec, error) {
 			StorageGroups:    storageGroups,
 		},
 		BillingMode: &nodeBillingMode,
+		Taints:      &taints,
+		K8sTags:     k8sTags,
+		UserTags:    &userTags,
 		Runtime: &model.Runtime{
 			Name: &runtimeName,
 		},

@@ -18,6 +18,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"unicode"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
@@ -123,11 +124,12 @@ func (nm *NodeManager) GetZoneList(opt *cloudprovider.GetZoneListOption) ([]*pro
 	}
 
 	zoneInfos := make([]*proto.ZoneInfo, 0)
-	for k, v := range zones {
+	for _, v := range zones {
+		zone, _ := convertLastCharToNumber(v.ZoneName)
 		zoneInfos = append(zoneInfos, &proto.ZoneInfo{
 			ZoneID:    v.ZoneName,
-			Zone:      fmt.Sprintf("%d", k+1),
-			ZoneName:  fmt.Sprintf("可用区%d", k+1),
+			Zone:      fmt.Sprintf("%d", zone),
+			ZoneName:  fmt.Sprintf("可用区%d", zone),
 			ZoneState: "AVAILABLE",
 		})
 	}
@@ -154,9 +156,19 @@ func (nm *NodeManager) ListNodeInstanceType(info cloudprovider.InstanceInfo, opt
 			continue
 		}
 
+		cpu, _ := strconv.Atoi(v.Vcpus)
+		memory := uint32(v.Ram / 1024)
+		if info.Cpu > 0 && cpu != int(info.Cpu) {
+			continue
+		}
+		if info.Memory > 0 && memory != info.Memory {
+			continue
+		}
+
 		var (
-			name string
-			gpu  uint32
+			name   string
+			gpu    uint32
+			status = common.InstanceSoldOut
 		)
 
 		if v.OsExtraSpecs.Ecsperformancetype != nil {
@@ -176,11 +188,6 @@ func (nm *NodeManager) ListNodeInstanceType(info cloudprovider.InstanceInfo, opt
 			}
 		}
 
-		cpu, _ := strconv.Atoi(v.Vcpus)
-		status := common.InstanceSoldOut
-		if v.OsExtraSpecs.Condoperationstatus != nil {
-			status = *v.OsExtraSpecs.Condoperationstatus
-		}
 		if v.OsExtraSpecs.Infogpuname != nil {
 			res := strings.Split(*v.OsExtraSpecs.Infogpuname, "*")
 			if len(res) > 0 {
@@ -196,7 +203,8 @@ func (nm *NodeManager) ListNodeInstanceType(info cloudprovider.InstanceInfo, opt
 			if len(zone) > 0 {
 				if zone[1] == "normal)" || zone[1] == "promotion)" {
 					status = common.InstanceSell
-					zones = append(zones, zone[0])
+					zone, _ := convertLastCharToNumber(zone[0])
+					zones = append(zones, fmt.Sprintf("%d", zone))
 				}
 			}
 		}
@@ -206,7 +214,7 @@ func (nm *NodeManager) ListNodeInstanceType(info cloudprovider.InstanceInfo, opt
 			TypeName:   name,
 			NodeFamily: *v.OsExtraSpecs.ResourceType,
 			Cpu:        uint32(cpu),
-			Memory:     uint32(v.Ram / 1024),
+			Memory:     memory,
 			Gpu:        gpu,
 			Status:     status,
 			Zones:      zones,
@@ -219,4 +227,20 @@ func (nm *NodeManager) ListNodeInstanceType(info cloudprovider.InstanceInfo, opt
 // ListOsImage get osimage list
 func (nm *NodeManager) ListOsImage(provider string, opt *cloudprovider.CommonOption) ([]*proto.OsImage, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// convertLastCharToNumber 获取字符串的最后一个字符，将其按英文字母顺序转换为对应的数字（a=1, b=2, ..., z=26）
+func convertLastCharToNumber(input string) (int, error) {
+	// 获取字符串的最后一个字符
+	lastChar := input[len(input)-1]
+
+	// 检查字符是否为小写字母
+	if !unicode.IsLower(rune(lastChar)) {
+		return 0, fmt.Errorf("Invalid input: Last character must be a lowercase English letter")
+	}
+
+	// 计算字符在字母表中的位置
+	charIndex := int(lastChar-'a') + 1
+
+	return charIndex, nil
 }
