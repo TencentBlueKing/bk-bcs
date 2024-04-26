@@ -26,6 +26,7 @@ import (
 	ingresscommon "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/portpoolcache"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/utils"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/pkg/common"
 )
 
@@ -224,7 +225,7 @@ func (pph *PortPoolHandler) deletePortPool(pool *networkextensionv1.PortPool) (b
 func (pph *PortPoolHandler) ensurePortBinding(pool *networkextensionv1.PortPool) error {
 	for i, poolItem := range pool.Spec.PoolItems {
 		portBindingList := &networkextensionv1.PortBindingList{}
-		labelKey := fmt.Sprintf(networkextensionv1.PortPoolBindingLabelKeyFromat, pool.GetName(), pool.GetNamespace())
+		labelKey := utils.GenPortBindingLabel(pool.GetName(), pool.GetNamespace())
 		if err := pph.k8sClient.List(context.Background(), portBindingList,
 			client.MatchingLabels{labelKey: poolItem.ItemName}); err != nil {
 			return errors.Wrapf(err, "list portBinding with label['%s'='%s'] failed", labelKey, poolItem.ItemName)

@@ -29,6 +29,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/generator"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/utils"
 )
 
 // PortPoolItemHandler port pool item
@@ -116,7 +117,7 @@ func (ppih *PortPoolItemHandler) checkPortPoolItemDeletion(itemStatus *netextv1.
 	}
 	// check whether there is port bind object related to this port pool item
 	set := k8slabels.Set(map[string]string{
-		fmt.Sprintf(netextv1.PortPoolBindingLabelKeyFromat, ppih.PortPoolName, ppih.Namespace): itemStatus.ItemName,
+		utils.GenPortBindingLabel(ppih.PortPoolName, ppih.Namespace): itemStatus.ItemName,
 	})
 	selector, err := k8smetav1.LabelSelectorAsSelector(k8smetav1.SetAsLabelSelector(set))
 	if err != nil {
