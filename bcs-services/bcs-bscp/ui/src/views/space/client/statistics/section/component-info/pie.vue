@@ -62,7 +62,6 @@
         container: tooltipRef.value?.getDom(),
         enterable: true,
         customItems: (originalItems: any[]) => {
-          console.log(originalItems[0], originalItems[1]);
           originalItems[0].name = t('客户端数量');
           originalItems[1].name = t('占比');
           originalItems[1].value = `${(originalItems[1].data.data.percent * 100).toFixed(1)}%`;
