@@ -20,7 +20,10 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"os/signal"
 	"strings"
+	"sync"
+	"syscall"
 	"time"
 
 	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -51,6 +54,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/audit/record"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/audit/replay"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/manager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/perf"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/web"
@@ -455,4 +459,19 @@ func (c *WebConsoleManager) Run() error {
 		return err
 	}
 	return nil
+}
+
+// RegistryStop registry stop signal
+func (c *WebConsoleManager) RegistryStop(wg *sync.WaitGroup) {
+	// listening OS shutdown singal
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		defer wg.Done()
+		<-signalChan
+		manager.EndOfMainProcess <- struct{}{}
+		time.Sleep(time.Second * 1)
+		<-manager.EndOfMainProcess
+		logger.Infof("got os shutdown signal, shutting down bcs-webconsole server gracefully...")
+	}()
 }
