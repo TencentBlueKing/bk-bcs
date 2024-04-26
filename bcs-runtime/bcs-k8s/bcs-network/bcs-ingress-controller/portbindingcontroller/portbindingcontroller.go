@@ -269,7 +269,7 @@ func (pbr *PortBindingReconciler) createPortBinding(portBindingType, namespace, 
 	portBinding.SetNamespace(namespace)
 	labels := make(map[string]string)
 	for _, binding := range portBindingList {
-		tmpKey := fmt.Sprintf(networkextensionv1.PortPoolBindingLabelKeyFromat, binding.PoolName, binding.PoolNamespace)
+		tmpKey := utils.GenPortBindingLabel(binding.PoolName, binding.PoolNamespace)
 		labels[tmpKey] = binding.PoolItemName
 	}
 	labels[networkextensionv1.PortBindingTypeLabelKey] = portBindingType

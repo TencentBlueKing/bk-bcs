@@ -21,8 +21,8 @@ import (
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
 const (
-	// PortPoolBindingLabelKeyFromat label key prefix for port pool
-	PortPoolBindingLabelKeyFromat = "portpool.%s.%s"
+	// PortPoolBindingLabelKeyFormat label key prefix for port pool
+	PortPoolBindingLabelKeyFormat = "portpool.%s.%s"
 	// PortPoolBindingAnnotationKeyKeepDuration annotation key for keep duration of port pool binding
 	PortPoolBindingAnnotationKeyKeepDuration = "keepduration.portbinding.bkbcs.tencent.com"
 
