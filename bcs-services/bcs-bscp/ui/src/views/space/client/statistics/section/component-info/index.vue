@@ -116,7 +116,7 @@
   };
   const data = ref<IVersionDistributionItem[]>([]);
   const sunburstData = ref<IVersionDistributionPie>({
-    name: t('配置版本'),
+    name: t('组件版本'),
     children: [],
   });
   const loading = ref(false);
@@ -160,8 +160,29 @@
     try {
       loading.value = true;
       const res = await getClientComponentInfoData(props.bkBizId, props.appId, params);
-      data.value = res.version_distribution;
-      sunburstData.value.children = convertToTree(res.version_distribution);
+      data.value = res.version_distribution.map((item: IVersionDistributionItem) => {
+        const { client_type } = item;
+        let name = '';
+        switch (client_type) {
+          case 'sidecar':
+            name = `SideCar ${t('客户端')}`;
+            break;
+          case 'sdk':
+            name = `SDK ${t('客户端')}`;
+            break;
+          case 'agent':
+            name = t('主机插件客户端');
+            break;
+          case 'command':
+            name = `CLI ${t('客户端')}`;
+            break;
+        }
+        return {
+          ...item,
+          client_type: name,
+        };
+      });
+      sunburstData.value.children = convertToTree(data.value);
       Object.entries(res.resource_usage).forEach(([key, value]) => {
         const item = resourceData.value.find((item) => item.key === key) as IInfoCard;
         item!.value = value as number;

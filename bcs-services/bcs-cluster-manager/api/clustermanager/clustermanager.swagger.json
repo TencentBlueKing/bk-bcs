@@ -5265,6 +5265,125 @@
         ]
       }
     },
+    "/clustermanager/v1/projects/{projectID}/notifytemplates": {
+      "get": {
+        "summary": "查询项目下的节点模版列表",
+        "description": "根据查询条件过滤节点模板列表，如果某项条件值为空，则忽略此条件。如果所有条件都为空，则默认查询项目下所有节点模版",
+        "operationId": "ClusterManager_ListNotifyTemplate",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerListNotifyTemplateResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "description": "项目ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "notifyTemplateID",
+            "description": "notifyTemplateID. 通知模版ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      },
+      "post": {
+        "summary": "创建通知模版",
+        "description": "创建通知模版(项目维度)",
+        "operationId": "ClusterManager_CreateNotifyTemplate",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerCreateNotifyTemplateResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "description": "通知模板所属的项目ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerCreateNotifyTemplateRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/projects/{projectID}/notifytemplates/{notifyTemplateID}": {
+      "delete": {
+        "summary": "删除通知模板信息",
+        "description": "删除特定通知模版",
+        "operationId": "ClusterManager_DeleteNotifyTemplate",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerDeleteNotifyTemplateResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "description": "所属的项目信息",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "notifyTemplateID",
+            "description": "通知模版ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/resourceschema/{cloudID}": {
       "get": {
         "summary": "查询资源模型列表",
@@ -9867,6 +9986,120 @@
         }
       }
     },
+    "clustermanagerCreateNotifyTemplateRequest": {
+      "type": "object",
+      "properties": {
+        "projectID": {
+          "type": "string",
+          "description": "通知模板所属的项目ID",
+          "title": "projectID"
+        },
+        "name": {
+          "type": "string",
+          "description": "通知模板名称",
+          "title": "name"
+        },
+        "desc": {
+          "type": "string",
+          "description": "通知模板描述信息",
+          "title": "desc"
+        },
+        "notifyType": {
+          "type": "string",
+          "description": "通知类型, 目前仅支持bk_monitor_event、bk_monitor_metrics. 未来将支持rtx、email、voice等方式",
+          "title": "notifyType"
+        },
+        "enable": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否开启通知",
+          "title": "enable"
+        },
+        "createCluster": {
+          "$ref": "#/definitions/clustermanagerNotifyData",
+          "description": "创建集群通知",
+          "title": "createCluster"
+        },
+        "deleteCluster": {
+          "$ref": "#/definitions/clustermanagerNotifyData",
+          "description": "删除集群通知",
+          "title": "deleteCluster"
+        },
+        "createNodeGroup": {
+          "$ref": "#/definitions/clustermanagerNotifyData",
+          "description": "节点池新增通知",
+          "title": "createNodeGroup"
+        },
+        "deleteNodeGroup": {
+          "$ref": "#/definitions/clustermanagerNotifyData",
+          "description": "节点池删除通知",
+          "title": "deleteNodeGroup"
+        },
+        "updateNodeGroup": {
+          "$ref": "#/definitions/clustermanagerNotifyData",
+          "description": "节点池更新通知",
+          "title": "updateNodeGroup"
+        },
+        "groupScaleOutNode": {
+          "$ref": "#/definitions/clustermanagerNotifyData",
+          "description": "节点池扩容节点通知",
+          "title": "groupScaleOutNode"
+        },
+        "groupScaleInNode": {
+          "$ref": "#/definitions/clustermanagerNotifyData",
+          "description": "节点池缩容节点通知",
+          "title": "groupScaleOutNode"
+        },
+        "config": {
+          "$ref": "#/definitions/clustermanagerNotifyConfig",
+          "description": "通知系统配置，使用不同的通知方式需要配置不同的config",
+          "title": "config"
+        },
+        "receivers": {
+          "type": "string",
+          "description": "通知接收者,可指定；若无指定, 可使用集群/节点池创建更新者",
+          "title": "receivers"
+        },
+        "creator": {
+          "type": "string"
+        }
+      },
+      "description": "创建通知模板",
+      "title": "CreateNotifyTemplateRequest",
+      "required": [
+        "projectID",
+        "name",
+        "notifyType",
+        "creator"
+      ]
+    },
+    "clustermanagerCreateNotifyTemplateResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/clustermanagerWebAnnotationsV2",
+          "description": "用户所属项目权限",
+          "title": "web_annotations"
+        }
+      }
+    },
     "clustermanagerCreateTaskRequest": {
       "type": "object",
       "properties": {
@@ -10610,6 +10843,33 @@
         "code",
         "data"
       ]
+    },
+    "clustermanagerDeleteNotifyTemplateResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/clustermanagerWebAnnotationsV2",
+          "description": "用户所属项目权限",
+          "title": "web_annotations"
+        }
+      }
     },
     "clustermanagerDeleteTaskResponse": {
       "type": "object",
@@ -13895,6 +14155,42 @@
         "data"
       ]
     },
+    "clustermanagerListNotifyTemplateResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerNotifyTemplate"
+          },
+          "description": "通知模板列表",
+          "title": "data"
+        }
+      },
+      "description": "查询通知模板返回",
+      "title": "ListNotifyTemplateResponse",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
     "clustermanagerListOperationLogsResponse": {
       "type": "object",
       "properties": {
@@ -15239,6 +15535,145 @@
       },
       "description": "节点模版, 主要用于对kubernetes集群节点的通用特性设置",
       "title": "NodeTemplate"
+    },
+    "clustermanagerNotifyConfig": {
+      "type": "object",
+      "properties": {
+        "server": {
+          "type": "string",
+          "description": "不同通知系统使用不同的server",
+          "title": "server"
+        },
+        "dataId": {
+          "type": "string",
+          "format": "uint64",
+          "description": "dataId",
+          "title": "dataId"
+        },
+        "accessToken": {
+          "type": "string",
+          "description": "accessToken",
+          "title": "accessToken"
+        }
+      },
+      "title": "NotifyConfig notify config"
+    },
+    "clustermanagerNotifyData": {
+      "type": "object",
+      "properties": {
+        "enable": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "操作是否开启通知",
+          "title": "enable"
+        },
+        "title": {
+          "type": "string",
+          "description": "通知title即事件名称",
+          "title": "title"
+        },
+        "content": {
+          "type": "string",
+          "description": "通知内容模板, 根据用户需求渲染不同内容。若为空，使用默认模版",
+          "title": "content"
+        }
+      },
+      "title": "NotifyData notify body"
+    },
+    "clustermanagerNotifyTemplate": {
+      "type": "object",
+      "properties": {
+        "notifyTemplateID": {
+          "type": "string",
+          "description": "通知模版ID",
+          "title": "notifyTemplateID"
+        },
+        "name": {
+          "type": "string",
+          "description": "通知模版名称",
+          "title": "name"
+        },
+        "projectID": {
+          "type": "string",
+          "description": "通知模版所关联的项目，该项目为蓝鲸的项目",
+          "title": "projectID"
+        },
+        "notifyType": {
+          "type": "string",
+          "description": "通知类型, 目前仅支持bk_monitor_event、bk_monitor_metrics. 未来将支持rtx、email、voice等方式",
+          "title": "notifyType"
+        },
+        "desc": {
+          "type": "string",
+          "description": "通知模板描述信息",
+          "title": "desc"
+        },
+        "enable": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否开启通知",
+          "title": "enable"
+        },
+        "config": {
+          "$ref": "#/definitions/clustermanagerNotifyConfig",
+          "description": "通知系统配置，使用不同的通知方式需要配置不同的config",
+          "title": "config"
+        },
+        "createCluster": {
+          "$ref": "#/definitions/clustermanagerNotifyData",
+          "description": "创建集群通知",
+          "title": "createCluster"
+        },
+        "deleteCluster": {
+          "$ref": "#/definitions/clustermanagerNotifyData",
+          "description": "删除集群通知",
+          "title": "deleteCluster"
+        },
+        "createNodeGroup": {
+          "$ref": "#/definitions/clustermanagerNotifyData",
+          "description": "节点池新增通知",
+          "title": "createNodeGroup"
+        },
+        "deleteNodeGroup": {
+          "$ref": "#/definitions/clustermanagerNotifyData",
+          "description": "节点池删除通知",
+          "title": "deleteNodeGroup"
+        },
+        "updateNodeGroup": {
+          "$ref": "#/definitions/clustermanagerNotifyData",
+          "description": "节点池更新通知",
+          "title": "updateNodeGroup"
+        },
+        "groupScaleOutNode": {
+          "$ref": "#/definitions/clustermanagerNotifyData",
+          "description": "节点池扩容节点通知",
+          "title": "groupScaleOutNode"
+        },
+        "groupScaleInNode": {
+          "$ref": "#/definitions/clustermanagerNotifyData",
+          "description": "节点池缩容节点通知",
+          "title": "groupScaleOutNode"
+        },
+        "receivers": {
+          "type": "string",
+          "description": "通知接收者,可指定；若无指定, 可使用集群/节点池创建更新者",
+          "title": "receivers"
+        },
+        "creator": {
+          "type": "string"
+        },
+        "updater": {
+          "type": "string"
+        },
+        "createTime": {
+          "type": "string"
+        },
+        "updateTime": {
+          "type": "string"
+        }
+      },
+      "description": "通知模版, 主要用于对用户进行通知(集群、节点池等操作)",
+      "title": "NotifyTemplate"
     },
     "clustermanagerNumberRange": {
       "type": "object",

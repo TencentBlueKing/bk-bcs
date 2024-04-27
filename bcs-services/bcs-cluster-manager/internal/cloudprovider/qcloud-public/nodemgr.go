@@ -102,6 +102,10 @@ func (nm *NodeManager) GetZoneList(opt *cloudprovider.GetZoneListOption) ([]*pro
 
 // GetCloudRegions get regionInfo
 func (nm *NodeManager) GetCloudRegions(opt *cloudprovider.CommonOption) ([]*proto.RegionInfo, error) {
+	if opt.Region == "" {
+		opt.Region = defaultRegion
+	}
+
 	return business.GetCloudRegions(opt)
 }
 

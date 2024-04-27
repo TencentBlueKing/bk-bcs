@@ -33,6 +33,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/node"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/nodegroup"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/nodetemplate"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/notifytemplate"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/operationlog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/project"
@@ -136,6 +137,15 @@ type ClusterManagerModel interface {
 	GetNodeTemplate(ctx context.Context, projectID, templateID string) (*types.NodeTemplate, error)
 	GetNodeTemplateByID(ctx context.Context, templateID string) (*types.NodeTemplate, error)
 
+	// notifyTemplate info storage management
+	CreateNotifyTemplate(ctx context.Context, template *types.NotifyTemplate) error
+	UpdateNotifyTemplate(ctx context.Context, template *types.NotifyTemplate) error
+	DeleteNotifyTemplate(ctx context.Context, projectID string, templateID string) error
+	ListNotifyTemplate(ctx context.Context, cond *operator.Condition, opt *options.ListOption) (
+		[]types.NotifyTemplate, error)
+	GetNotifyTemplate(ctx context.Context, projectID, templateID string) (*types.NotifyTemplate, error)
+	GetNotifyTemplateByID(ctx context.Context, templateID string) (*types.NotifyTemplate, error)
+
 	// nodegroup information storage management
 	CreateNodeGroup(ctx context.Context, group *types.NodeGroup) error
 	UpdateNodeGroup(ctx context.Context, group *types.NodeGroup) error
@@ -201,6 +211,7 @@ type ModelSet struct {
 	*nodetemplate.ModelNodeTemplate
 	*moduleflag.ModelCloudModuleFlag
 	*machinery.ModelMachineryTask
+	*notifytemplate.ModelNotifyTemplate
 }
 
 // NewModelSet create model set
@@ -239,6 +250,7 @@ func NewModelSet(mongoOptions *mongo.Options) (ClusterManagerModel, error) {
 		ModelNodeTemplate:      nodetemplate.New(db),
 		ModelCloudModuleFlag:   moduleflag.New(db),
 		ModelMachineryTask:     mTaskDb,
+		ModelNotifyTemplate:    notifytemplate.New(db),
 	}
 
 	return storeClient, nil

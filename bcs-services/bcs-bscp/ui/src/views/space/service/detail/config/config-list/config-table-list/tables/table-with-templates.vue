@@ -302,6 +302,7 @@
     update_at: string;
     file_state: string;
     permission?: IPermissionType;
+    is_conflict: boolean;
   }
 
   const { t } = useI18n();
@@ -479,6 +480,9 @@
       }
       configList.value = res.details;
       configsCount.value = res.count;
+      configStore.$patch((state) => {
+        state.conflictFileCount = res.conflict_number || 0;
+      });
     } catch (e) {
       console.error(e);
     } finally {
@@ -529,7 +533,7 @@
   // 将非模板配置文件数据转为表格数据
   const transConfigsToTableItemData = (list: IConfigItem[]) =>
     list.map((item: IConfigItem) => {
-      const { id, spec, revision, file_state } = item;
+      const { id, spec, revision, file_state, is_conflict } = item;
       const { name, path, permission } = spec;
       const { creator, reviser, update_at, create_at } = revision;
       return {
@@ -543,6 +547,7 @@
         update_at: datetimeFormat(update_at || create_at),
         file_state,
         permission,
+        is_conflict,
       };
     });
 
@@ -566,6 +571,7 @@
           creator,
           create_at,
           file_state,
+          is_conflict,
         } = tpl;
         group.configs.push({
           id,
@@ -577,6 +583,7 @@
           reviser: creator,
           update_at: datetimeFormat(create_at),
           file_state,
+          is_conflict,
         });
       });
       return group;
@@ -687,14 +694,16 @@
       theme: 'success',
       message: t('删除配置文件成功'),
     });
-    await getCommonConfigList();
+    await getAllConfigList();
     emits('deleteConfig');
-    tableGroupsData.value = transListToTableData();
     isDeleteConfigDialogShow.value = false;
   };
 
   // 设置新增行的标记class
   const getRowCls = (data: IConfigTableItem) => {
+    if (data.is_conflict) {
+      return 'conflict-row config-row';
+    }
     if (batchUploadIds.value.includes(data.id)) {
       return 'new-row-marked config-row';
     }
@@ -868,6 +877,9 @@
   }
   .new-row-marked td {
     background: #f2fff4 !important;
+  }
+  .conflict-row td {
+    background-color: #fff3e1 !important;
   }
   .delete-row td {
     background: #fafbfd !important;
