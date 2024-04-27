@@ -178,13 +178,15 @@ func TransBizNodeModule(ctx context.Context, biz, module int, hostIPs []string) 
 			hostIDs, errGet = nodeManClient.GetHostIDByIPs(biz, hostIPs)
 		*/
 
-		hosts, errGet := cmdbClient.QueryAllHostInfoWithoutBiz(hostIPs)
+		hosts, errGet := cmdbClient.FetchAllHostsByBizID(biz, false)
 		if errGet != nil {
-			blog.Errorf("TransBizNodeModule %v failed, list nodeman hosts err %s", biz, errGet.Error())
+			blog.Errorf("TransBizNodeModule %v failed, cmdb fetchAllHostsByBizID err %s", biz, errGet.Error())
 			return errGet
 		}
 		for i := range hosts {
-			hostIDs = append(hostIDs, int(hosts[i].BKHostID))
+			if utils.StringInSlice(hosts[i].BKHostInnerIP, hostIPs) {
+				hostIDs = append(hostIDs, int(hosts[i].BKHostID))
+			}
 		}
 
 		blog.Infof("TransBizNodeModule %s get hosts id success", taskID)

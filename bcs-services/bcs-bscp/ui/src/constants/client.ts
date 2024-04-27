@@ -36,10 +36,6 @@ export const CLIENT_SEARCH_DATA = [
         name: localT('处理中'),
         value: 'Processing',
       },
-      {
-        name: localT('跳过'),
-        value: 'Skip',
-      },
     ],
   },
   {
@@ -91,10 +87,6 @@ export const CLIENT_STATISTICS_SEARCH_DATA = [
         name: localT('处理中'),
         value: 'Processing',
       },
-      {
-        name: localT('跳过'),
-        value: 'Skip',
-      },
     ],
   },
   {
@@ -111,7 +103,6 @@ export const CLIENT_STATUS_MAP = {
   Success: localT('成功'),
   Failed: localT('失败'),
   Processing: localT('处理中'),
-  Skip: localT('跳过'),
   Online: localT('在线'),
   Offline: localT('离线'),
   failed: localT('失败'),

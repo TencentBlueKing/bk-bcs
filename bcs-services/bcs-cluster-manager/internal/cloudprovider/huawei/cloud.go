@@ -24,6 +24,9 @@ import (
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/huawei/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 var cloudInfoMgr sync.Once
@@ -67,17 +70,19 @@ func (c *CloudInfoManager) SyncClusterCloudInfo(cls *cmproto.Cluster,
 		return err
 	}
 
-	kubeConfig, err := api.GetClusterKubeConfig(client, opt.ImportMode.CloudID)
+	kubeConfig, err := client.GetClusterKubeConfig(opt.ImportMode.CloudID, !opt.ImportMode.Inter)
 	if err != nil {
 		return fmt.Errorf("SyncClusterCloudInfo GetClusterKubeConfig failed: %v", err)
 	}
+	cls.KubeConfig, _ = encrypt.Encrypt(nil, kubeConfig)
 
-	cls.KubeConfig = kubeConfig
 	cls.SystemID = *cluster.Metadata.Uid
 	cls.VpcID = cluster.Spec.HostNetwork.Vpc
 
 	// cluster cloud basic setting
-	clusterBasicSettingByCCE(cls, cluster)
+	clusterBasicSettingByCCE(cls, cluster, opt)
+	// cluster advanced setting
+	clusterAdvancedSettingByCce(cls, cluster)
 
 	// cluster cloud network setting
 	err = clusterNetworkSettingByCCE(cls, cluster)
@@ -93,16 +98,34 @@ func (c *CloudInfoManager) UpdateClusterCloudInfo(cls *cmproto.Cluster) error {
 	return nil
 }
 
-func clusterBasicSettingByCCE(cls *cmproto.Cluster, cluster *model.ShowClusterResponse) {
-	cls.ClusterBasicSettings = &cmproto.ClusterBasicSetting{}
+func clusterBasicSettingByCCE(cls *cmproto.Cluster, cluster *model.ShowClusterResponse,
+	opt *cloudprovider.SyncClusterCloudInfoOption) {
+	cls.ClusterBasicSettings = &cmproto.ClusterBasicSetting{
+		Area: opt.Area,
+	}
 
 	if cluster.Spec != nil {
 		cls.ClusterBasicSettings.Version = *cluster.Spec.Version
 		cls.ClusterBasicSettings.VersionName = *cluster.Spec.Version
+	}
+}
 
-		if cluster.Spec.Type != nil {
-			cls.ClusterBasicSettings.OS = cluster.Spec.Type.Value()
-		}
+func clusterAdvancedSettingByCce(cls *cmproto.Cluster, cluster *model.ShowClusterResponse) {
+	cls.ClusterAdvanceSettings = &cmproto.ClusterAdvanceSetting{
+		IPVS: func() bool {
+			if cluster.Spec != nil && cluster.Spec.KubeProxyMode.Value() == common.Ipvs {
+				return true
+			}
+
+			return false
+		}(),
+		NetworkType: func() string {
+			if cluster.Spec != nil && cluster.Spec.ContainerNetwork != nil {
+				return cluster.Spec.ContainerNetwork.Mode.Value()
+			}
+
+			return ""
+		}(),
 	}
 }
 
@@ -110,18 +133,12 @@ func clusterNetworkSettingByCCE(cls *cmproto.Cluster, cluster *model.ShowCluster
 	cls.NetworkSettings = &cmproto.NetworkSetting{}
 
 	if cluster.Spec != nil {
-		if cluster.Spec.ContainerNetwork != nil {
-			if cluster.Spec.ContainerNetwork.Cidr != nil {
-				cls.NetworkSettings = &cmproto.NetworkSetting{
-					ClusterIPv4CIDR: *cluster.Spec.ContainerNetwork.Cidr,
-					ServiceIPv4CIDR: *cluster.Spec.ContainerNetwork.Cidr,
-				}
-			}
-
-			if cluster.Spec.ContainerNetwork.Cidrs != nil && len(*cluster.Spec.ContainerNetwork.Cidrs) > 0 {
-				cls.NetworkSettings.ClusterIPv4CIDR = (*cluster.Spec.ContainerNetwork.Cidrs)[0].Cidr
-				cls.NetworkSettings.ServiceIPv4CIDR = (*cluster.Spec.ContainerNetwork.Cidrs)[0].Cidr
-			}
+		if cluster.Spec.ContainerNetwork != nil && cluster.Spec.ContainerNetwork.Cidr != nil {
+			cls.NetworkSettings.ClusterIPv4CIDR = *cluster.Spec.ContainerNetwork.Cidr
+		}
+		if cluster.Spec.ServiceNetwork != nil && cluster.Spec.ServiceNetwork.IPv4CIDR != nil {
+			cls.NetworkSettings.ServiceIPv4CIDR = *cluster.Spec.ServiceNetwork.IPv4CIDR
+			cls.NetworkSettings.MaxServiceNum, _ = utils.ConvertCIDRToStep(*cluster.Spec.ServiceNetwork.IPv4CIDR)
 		}
 
 		if cluster.Spec.ExtendParam != nil && cluster.Spec.ExtendParam.AlphaCceFixPoolMask != nil {

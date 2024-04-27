@@ -15,7 +15,6 @@ package huawei
 
 import (
 	"context"
-	"encoding/base64"
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -95,13 +94,13 @@ func (c *Cluster) ListCluster(opt *cloudprovider.ListClusterOption) ([]*proto.Cl
 		return nil, err
 	}
 
-	rsp, err := cli.ListCceCluster()
+	clusters, err := cli.ListCceCluster(nil)
 	if err != nil {
 		return nil, err
 	}
 
 	cloudClusterList := make([]*proto.CloudClusterInfo, 0)
-	for _, v := range *rsp.Items {
+	for _, v := range *clusters {
 		cloudClusterList = append(cloudClusterList, &proto.CloudClusterInfo{
 			ClusterID:          *v.Metadata.Uid,
 			ClusterName:        v.Metadata.Name,
@@ -144,30 +143,16 @@ func (c *Cluster) CheckClusterEndpointStatus(clusterID string, isExtranet bool,
 	if err != nil {
 		return false, err
 	}
-
-	blog.Infof("cluster endpoint status: %s", *cluster.Status.Phase)
-
-	if *cluster.Status.Phase != "Available" {
-		return false, fmt.Errorf("cluster endpoint status is not created")
+	if *cluster.Status.Phase != api.Available {
+		return false, fmt.Errorf("cluster status is not available")
 	}
 
-	kubeConfig := ""
-	// 获取内网的kubeconfig
-	if !isExtranet {
-		kubeConfig, err = api.GetInternalClusterKubeConfig(cli, clusterID)
-	} else {
-		kubeConfig, err = api.GetClusterKubeConfig(cli, clusterID)
-	}
+	kubeConfig, err := cli.GetClusterKubeConfig(clusterID, isExtranet)
 	if err != nil {
 		return false, err
 	}
 
-	data, err := base64.StdEncoding.DecodeString(kubeConfig)
-	if err != nil {
-		return false, fmt.Errorf("decode kube config failed: %v", err)
-	}
-
-	_, err = cloudprovider.GetCRDByKubeConfig(string(data))
+	_, err = cloudprovider.GetCRDByKubeConfig(kubeConfig)
 	if err != nil {
 		return false, err
 	}

@@ -180,6 +180,11 @@ func IsContainerdRuntime(runtime string) bool {
 }
 
 const (
+	// Iptables iptables mode
+	Iptables = "iptables"
+	// Ipvs ipvs mode
+	Ipvs = "ipvs"
+
 	// InitClusterID initClusterID
 	InitClusterID = "BCS-K8S-00000"
 	// RuntimeFlag xxx

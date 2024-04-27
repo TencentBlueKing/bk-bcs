@@ -185,7 +185,7 @@ func ScaleAgentPoolToDesiredSize(ctx context.Context, info *cloudprovider.CloudD
 	agentPool, err := client.GetPoolAndReturn(ctx, cloudprovider.GetClusterResourceGroup(info.Cluster),
 		info.Cluster.SystemID, info.NodeGroup.CloudNodeGroupID)
 	if err != nil {
-		blog.Errorf("ScaleAgentPoolToDesiredSize[%s] GetPoolAndReturn failed: %v", err)
+		blog.Errorf("ScaleAgentPoolToDesiredSize[%s] GetPoolAndReturn failed: %v", taskId, err)
 		return err
 	}
 	agentPool.Properties.Count = &desired

@@ -141,12 +141,13 @@ func GetClusterKubeConfig(opt *cloudprovider.CommonOption, cluster *eks.Cluster)
 
 	cert, err := base64.StdEncoding.DecodeString(*cluster.CertificateAuthority.Data)
 	if err != nil {
-		return "", fmt.Errorf("GetClusterKubeConfig invalid certificate failed, cluster=%s: %w", *cluster.Name, err)
+		return "", fmt.Errorf("GetClusterKubeConfig invalid certificate failed, cluster=%s: %v",
+			*cluster.Name, err)
 	}
 
 	saToken, err := utils.GenerateSATokenByRestConfig(context.Background(), restConfig)
 	if err != nil {
-		return "", fmt.Errorf("getClusterKubeConfig generate k8s serviceaccount token failed,cluster=%s: %w",
+		return "", fmt.Errorf("getClusterKubeConfig generate k8s serviceaccount token failed,cluster=%s: %v",
 			*cluster.Name, err)
 	}
 

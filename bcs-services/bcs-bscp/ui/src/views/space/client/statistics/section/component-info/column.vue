@@ -33,6 +33,7 @@
     columnPlot = new Column(canvasRef.value!, {
       data: props.data,
       isStack: true,
+      color: ['#3E96C2', '#61B2C2', '#85CCA8', '#B5E0AB'],
       xField: 'client_type',
       yField: 'value',
       yAxis: {

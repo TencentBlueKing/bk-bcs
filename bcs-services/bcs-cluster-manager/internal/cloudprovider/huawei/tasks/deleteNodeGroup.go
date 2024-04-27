@@ -18,8 +18,6 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/huaweicloud/huaweicloud-sdk-go-v3/services/cce/v3/model"
-
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/huawei/api"
 )
@@ -75,10 +73,7 @@ func DeleteCloudNodeGroupTask(taskID string, stepName string) error {
 		return err
 	}
 
-	_, err = cceCli.DeleteNodePool(&model.DeleteNodePoolRequest{
-		ClusterId:  cluster.SystemID,
-		NodepoolId: group.CloudNodeGroupID,
-	})
+	err = cceCli.DeleteNodePool(cluster.SystemID, group.CloudNodeGroupID)
 	if err != nil {
 		blog.Errorf("DeleteCloudNodeGroupTask[%s]: call huawei DeleteNodePool[%s] api in task %s step %s failed, %s",
 			taskID, nodeGroupID, taskID, stepName, err.Error())

@@ -14,7 +14,6 @@
 package api
 
 import (
-	"github.com/huaweicloud/huaweicloud-sdk-go-v3/core/auth/basic"
 	kps "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/kps/v3"
 	"github.com/huaweicloud/huaweicloud-sdk-go-v3/services/kps/v3/model"
 	region "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/kps/v3/region"
@@ -24,7 +23,7 @@ import (
 
 // KpsClient dew client
 type KpsClient struct {
-	*kps.KpsClient
+	kps *kps.KpsClient
 }
 
 // NewKpsClient new kps client
@@ -41,8 +40,7 @@ func NewKpsClient(opt *cloudprovider.CommonOption) (*KpsClient, error) {
 		return nil, err
 	}
 
-	auth, err := basic.NewCredentialsBuilder().WithAk(opt.Account.SecretID).WithSk(opt.Account.SecretKey).
-		WithProjectId(projectID).SafeBuild()
+	auth, err := getProjectAuth(opt.Account.SecretID, opt.Account.SecretKey, projectID)
 	if err != nil {
 		return nil, err
 	}
@@ -52,10 +50,7 @@ func NewKpsClient(opt *cloudprovider.CommonOption) (*KpsClient, error) {
 		return nil, err
 	}
 
-	hcClient, err := kps.KpsClientBuilder().
-		WithCredential(auth).
-		WithRegion(rn). //指定region区域
-		SafeBuild()
+	hcClient, err := kps.KpsClientBuilder().WithCredential(auth).WithRegion(rn).SafeBuild()
 	if err != nil {
 		return nil, err
 	}
@@ -65,15 +60,15 @@ func NewKpsClient(opt *cloudprovider.CommonOption) (*KpsClient, error) {
 
 // GetAllUsableKeypairs get all usable keypairs
 func (k *KpsClient) GetAllUsableKeypairs() ([]model.Keypairs, error) {
-	rsp, err := k.ListKeypairs(&model.ListKeypairsRequest{})
+	rsp, err := k.kps.ListKeypairs(&model.ListKeypairsRequest{})
 	if err != nil {
 		return nil, err
 	}
 
-	kps := make([]model.Keypairs, 0)
+	keyPairs := make([]model.Keypairs, 0)
 	for _, kp := range *rsp.Keypairs {
 		if *kp.Keypair.FrozenState == "0" {
-			kps = append(kps, kp)
+			keyPairs = append(keyPairs, kp)
 		}
 	}
 

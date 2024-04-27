@@ -14,14 +14,13 @@
 package huawei
 
 import (
+	"fmt"
 	"sync"
-
-	model2 "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/vpc/v2/model"
-	model3 "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/vpc/v3/model"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/huawei/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/huawei/business"
 )
 
 var vpcMgr sync.Once
@@ -38,12 +37,18 @@ type VPCManager struct{}
 
 // ListVpcs list vpcs
 func (vm *VPCManager) ListVpcs(vpcID string, opt *cloudprovider.ListNetworksOption) ([]*proto.CloudVpc, error) {
-	client, err := api.GetVpc2Client(&opt.CommonOption)
+	client, err := api.NewVpcClient(&opt.CommonOption)
 	if err != nil {
 		return nil, err
 	}
 
-	cloudVpcs, err := client.ListVpcsByID(vpcID)
+	cloudVpcs, err := client.ListVpcs(func() []string {
+		if len(vpcID) == 0 {
+			return nil
+		}
+
+		return []string{vpcID}
+	}())
 	if err != nil {
 		return nil, err
 	}
@@ -56,29 +61,43 @@ func (vm *VPCManager) ListVpcs(vpcID string, opt *cloudprovider.ListNetworksOpti
 			Ipv4Cidr: v.Cidr,
 		})
 	}
+	// vpc 剩余的可用IP数量
 
 	return vpcs, nil
 }
 
 // ListSubnets list vpc subnets
 func (vm *VPCManager) ListSubnets(vpcID, zone string, opt *cloudprovider.ListNetworksOption) ([]*proto.Subnet, error) {
-	client, err := api.GetVpc2Client(&opt.CommonOption)
+	cloudSubnets, err := business.GetCloudSubnetsByVpc(vpcID, opt.CommonOption)
 	if err != nil {
 		return nil, err
 	}
-
-	rsp, err := client.ListSubnets(&model2.ListSubnetsRequest{
-		VpcId: &vpcID,
-	})
+	zones, err := business.GetCloudZones(opt.CommonOption)
 	if err != nil {
 		return nil, err
 	}
 	subnets := make([]*proto.Subnet, 0)
 
-	for _, s := range *rsp.Subnets {
-		availableIPAddressCount, err2 := client.CalculateAvailableIp(s.Id)
-		if err2 != nil {
-			return nil, err
+	for _, s := range cloudSubnets {
+		subnetZone := ""
+		subnetZoneName := ""
+
+		switch *s.Scope {
+		case api.SubnetScopeAz:
+			for _, v := range zones {
+				if v.ZoneName == s.AvailabilityZone {
+					subnetZone = v.ZoneName
+					subnetZoneName = fmt.Sprintf("可用区%d", func() int {
+						return business.GetZoneNameByZoneId(opt.Region, v.ZoneName)
+					}())
+				}
+			}
+		default:
+		}
+
+		cnt, errLocal := business.GetSubnetAvailableIpNum(s.Id, opt.CommonOption)
+		if errLocal != nil {
+			return nil, errLocal
 		}
 
 		subnets = append(subnets, &proto.Subnet{
@@ -87,9 +106,9 @@ func (vm *VPCManager) ListSubnets(vpcID, zone string, opt *cloudprovider.ListNet
 			SubnetName:              s.Name,
 			CidrRange:               s.Cidr,
 			Ipv6CidrRange:           s.CidrV6,
-			Zone:                    "", // 华为子网可用区只是标识,子网在所有可用区都是可用的
-			ZoneName:                "",
-			AvailableIPAddressCount: uint64(availableIPAddressCount),
+			Zone:                    subnetZone,
+			ZoneName:                subnetZoneName,
+			AvailableIPAddressCount: uint64(cnt),
 		})
 	}
 
@@ -98,18 +117,18 @@ func (vm *VPCManager) ListSubnets(vpcID, zone string, opt *cloudprovider.ListNet
 
 // ListSecurityGroups list security groups
 func (vm *VPCManager) ListSecurityGroups(opt *cloudprovider.ListNetworksOption) ([]*proto.SecurityGroup, error) {
-	client, err := api.GetVpc3Client(&opt.CommonOption)
+	client, err := api.NewVpcClient(&opt.CommonOption)
 	if err != nil {
 		return nil, err
 	}
 
-	rsp, err := client.ListSecurityGroups(&model3.ListSecurityGroupsRequest{})
+	secs, err := client.ListSecurityGroups(nil)
 	if err != nil {
 		return nil, err
 	}
 
 	sgs := make([]*proto.SecurityGroup, 0)
-	for _, v := range *rsp.SecurityGroups {
+	for _, v := range secs {
 		sgs = append(sgs, &proto.SecurityGroup{
 			SecurityGroupID:   v.Id,
 			SecurityGroupName: v.Name,

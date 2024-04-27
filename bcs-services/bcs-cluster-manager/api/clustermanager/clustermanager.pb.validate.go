@@ -35994,3 +35994,909 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = GetScopeHostCheckResponseValidationError{}
+
+// Validate checks the field values on NotifyConfig with the rules defined in
+// the proto definition for this message. If any rules are violated, an error
+// is returned.
+func (m *NotifyConfig) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Server
+
+	// no validation rules for DataId
+
+	// no validation rules for AccessToken
+
+	return nil
+}
+
+// NotifyConfigValidationError is the validation error returned by
+// NotifyConfig.Validate if the designated constraints aren't met.
+type NotifyConfigValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e NotifyConfigValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e NotifyConfigValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e NotifyConfigValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e NotifyConfigValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e NotifyConfigValidationError) ErrorName() string { return "NotifyConfigValidationError" }
+
+// Error satisfies the builtin error interface
+func (e NotifyConfigValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sNotifyConfig.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = NotifyConfigValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = NotifyConfigValidationError{}
+
+// Validate checks the field values on NotifyData with the rules defined in the
+// proto definition for this message. If any rules are violated, an error is returned.
+func (m *NotifyData) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Enable
+
+	// no validation rules for Title
+
+	// no validation rules for Content
+
+	return nil
+}
+
+// NotifyDataValidationError is the validation error returned by
+// NotifyData.Validate if the designated constraints aren't met.
+type NotifyDataValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e NotifyDataValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e NotifyDataValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e NotifyDataValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e NotifyDataValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e NotifyDataValidationError) ErrorName() string { return "NotifyDataValidationError" }
+
+// Error satisfies the builtin error interface
+func (e NotifyDataValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sNotifyData.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = NotifyDataValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = NotifyDataValidationError{}
+
+// Validate checks the field values on NotifyTemplate with the rules defined in
+// the proto definition for this message. If any rules are violated, an error
+// is returned.
+func (m *NotifyTemplate) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for NotifyTemplateID
+
+	// no validation rules for Name
+
+	// no validation rules for ProjectID
+
+	// no validation rules for NotifyType
+
+	// no validation rules for Desc
+
+	// no validation rules for Enable
+
+	if v, ok := interface{}(m.GetConfig()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return NotifyTemplateValidationError{
+				field:  "Config",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetCreateCluster()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return NotifyTemplateValidationError{
+				field:  "CreateCluster",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetDeleteCluster()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return NotifyTemplateValidationError{
+				field:  "DeleteCluster",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetCreateNodeGroup()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return NotifyTemplateValidationError{
+				field:  "CreateNodeGroup",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetDeleteNodeGroup()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return NotifyTemplateValidationError{
+				field:  "DeleteNodeGroup",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetUpdateNodeGroup()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return NotifyTemplateValidationError{
+				field:  "UpdateNodeGroup",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetGroupScaleOutNode()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return NotifyTemplateValidationError{
+				field:  "GroupScaleOutNode",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetGroupScaleInNode()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return NotifyTemplateValidationError{
+				field:  "GroupScaleInNode",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for Receivers
+
+	// no validation rules for Creator
+
+	// no validation rules for Updater
+
+	// no validation rules for CreateTime
+
+	// no validation rules for UpdateTime
+
+	return nil
+}
+
+// NotifyTemplateValidationError is the validation error returned by
+// NotifyTemplate.Validate if the designated constraints aren't met.
+type NotifyTemplateValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e NotifyTemplateValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e NotifyTemplateValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e NotifyTemplateValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e NotifyTemplateValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e NotifyTemplateValidationError) ErrorName() string { return "NotifyTemplateValidationError" }
+
+// Error satisfies the builtin error interface
+func (e NotifyTemplateValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sNotifyTemplate.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = NotifyTemplateValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = NotifyTemplateValidationError{}
+
+// Validate checks the field values on CreateNotifyTemplateRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *CreateNotifyTemplateRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 2048 {
+		return CreateNotifyTemplateRequestValidationError{
+			field:  "ProjectID",
+			reason: "value length must be between 1 and 2048 runes, inclusive",
+		}
+	}
+
+	if !_CreateNotifyTemplateRequest_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		return CreateNotifyTemplateRequestValidationError{
+			field:  "ProjectID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
+
+	if utf8.RuneCountInString(m.GetName()) < 1 {
+		return CreateNotifyTemplateRequestValidationError{
+			field:  "Name",
+			reason: "value length must be at least 1 runes",
+		}
+	}
+
+	// no validation rules for Desc
+
+	if _, ok := _CreateNotifyTemplateRequest_NotifyType_InLookup[m.GetNotifyType()]; !ok {
+		return CreateNotifyTemplateRequestValidationError{
+			field:  "NotifyType",
+			reason: "value must be in list [bk_monitor_event bk_monitor_metrics]",
+		}
+	}
+
+	if v, ok := interface{}(m.GetEnable()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateNotifyTemplateRequestValidationError{
+				field:  "Enable",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetCreateCluster()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateNotifyTemplateRequestValidationError{
+				field:  "CreateCluster",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetDeleteCluster()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateNotifyTemplateRequestValidationError{
+				field:  "DeleteCluster",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetCreateNodeGroup()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateNotifyTemplateRequestValidationError{
+				field:  "CreateNodeGroup",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetDeleteNodeGroup()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateNotifyTemplateRequestValidationError{
+				field:  "DeleteNodeGroup",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetUpdateNodeGroup()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateNotifyTemplateRequestValidationError{
+				field:  "UpdateNodeGroup",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetGroupScaleOutNode()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateNotifyTemplateRequestValidationError{
+				field:  "GroupScaleOutNode",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetGroupScaleInNode()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateNotifyTemplateRequestValidationError{
+				field:  "GroupScaleInNode",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetConfig()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateNotifyTemplateRequestValidationError{
+				field:  "Config",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for Receivers
+
+	// no validation rules for Creator
+
+	return nil
+}
+
+// CreateNotifyTemplateRequestValidationError is the validation error returned
+// by CreateNotifyTemplateRequest.Validate if the designated constraints
+// aren't met.
+type CreateNotifyTemplateRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CreateNotifyTemplateRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CreateNotifyTemplateRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CreateNotifyTemplateRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CreateNotifyTemplateRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CreateNotifyTemplateRequestValidationError) ErrorName() string {
+	return "CreateNotifyTemplateRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CreateNotifyTemplateRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCreateNotifyTemplateRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CreateNotifyTemplateRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CreateNotifyTemplateRequestValidationError{}
+
+var _CreateNotifyTemplateRequest_ProjectID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+var _CreateNotifyTemplateRequest_NotifyType_InLookup = map[string]struct{}{
+	"bk_monitor_event":   {},
+	"bk_monitor_metrics": {},
+}
+
+// Validate checks the field values on CreateNotifyTemplateResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *CreateNotifyTemplateResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if v, ok := interface{}(m.GetWebAnnotations()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateNotifyTemplateResponseValidationError{
+				field:  "WebAnnotations",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// CreateNotifyTemplateResponseValidationError is the validation error returned
+// by CreateNotifyTemplateResponse.Validate if the designated constraints
+// aren't met.
+type CreateNotifyTemplateResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CreateNotifyTemplateResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CreateNotifyTemplateResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CreateNotifyTemplateResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CreateNotifyTemplateResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CreateNotifyTemplateResponseValidationError) ErrorName() string {
+	return "CreateNotifyTemplateResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CreateNotifyTemplateResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCreateNotifyTemplateResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CreateNotifyTemplateResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CreateNotifyTemplateResponseValidationError{}
+
+// Validate checks the field values on DeleteNotifyTemplateRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *DeleteNotifyTemplateRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for ProjectID
+
+	// no validation rules for NotifyTemplateID
+
+	return nil
+}
+
+// DeleteNotifyTemplateRequestValidationError is the validation error returned
+// by DeleteNotifyTemplateRequest.Validate if the designated constraints
+// aren't met.
+type DeleteNotifyTemplateRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DeleteNotifyTemplateRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DeleteNotifyTemplateRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DeleteNotifyTemplateRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DeleteNotifyTemplateRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DeleteNotifyTemplateRequestValidationError) ErrorName() string {
+	return "DeleteNotifyTemplateRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DeleteNotifyTemplateRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDeleteNotifyTemplateRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DeleteNotifyTemplateRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DeleteNotifyTemplateRequestValidationError{}
+
+// Validate checks the field values on DeleteNotifyTemplateResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *DeleteNotifyTemplateResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if v, ok := interface{}(m.GetWebAnnotations()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return DeleteNotifyTemplateResponseValidationError{
+				field:  "WebAnnotations",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// DeleteNotifyTemplateResponseValidationError is the validation error returned
+// by DeleteNotifyTemplateResponse.Validate if the designated constraints
+// aren't met.
+type DeleteNotifyTemplateResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DeleteNotifyTemplateResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DeleteNotifyTemplateResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DeleteNotifyTemplateResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DeleteNotifyTemplateResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DeleteNotifyTemplateResponseValidationError) ErrorName() string {
+	return "DeleteNotifyTemplateResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DeleteNotifyTemplateResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDeleteNotifyTemplateResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DeleteNotifyTemplateResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DeleteNotifyTemplateResponseValidationError{}
+
+// Validate checks the field values on ListNotifyTemplateRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ListNotifyTemplateRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for ProjectID
+
+	// no validation rules for NotifyTemplateID
+
+	return nil
+}
+
+// ListNotifyTemplateRequestValidationError is the validation error returned by
+// ListNotifyTemplateRequest.Validate if the designated constraints aren't met.
+type ListNotifyTemplateRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListNotifyTemplateRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListNotifyTemplateRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListNotifyTemplateRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListNotifyTemplateRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListNotifyTemplateRequestValidationError) ErrorName() string {
+	return "ListNotifyTemplateRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListNotifyTemplateRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListNotifyTemplateRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListNotifyTemplateRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListNotifyTemplateRequestValidationError{}
+
+// Validate checks the field values on ListNotifyTemplateResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ListNotifyTemplateResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ListNotifyTemplateResponseValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// ListNotifyTemplateResponseValidationError is the validation error returned
+// by ListNotifyTemplateResponse.Validate if the designated constraints aren't met.
+type ListNotifyTemplateResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListNotifyTemplateResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListNotifyTemplateResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListNotifyTemplateResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListNotifyTemplateResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListNotifyTemplateResponseValidationError) ErrorName() string {
+	return "ListNotifyTemplateResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListNotifyTemplateResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListNotifyTemplateResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListNotifyTemplateResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListNotifyTemplateResponseValidationError{}

@@ -242,7 +242,7 @@ func (s *Service) ClientPullTrendStatistics(ctx context.Context, req *pbclient.C
 	grpcKit := kit.FromGrpcContext(ctx)
 
 	var ClientIDs []uint32
-	if req.GetSearch().String() != "" {
+	if req.GetSearch().String() != "" || req.GetLastHeartbeatTime() > 0 {
 		items, _, err := s.dao.Client().List(grpcKit, req.GetBizId(), req.GetAppId(), req.GetLastHeartbeatTime(),
 			req.GetSearch(), &pbds.ListClientsReq_Order{}, &types.BasePage{All: true})
 		if err != nil {
@@ -578,7 +578,7 @@ func (s *Service) clientPullInfo(kit *kit.Kit, bizID, appID uint32, heartbeatTim
 	// 获取最小最大平均时间
 	// 通过查询条件获取clientID
 	var ClientID []uint32
-	if search.String() != "" {
+	if search.String() != "" || heartbeatTime > 0 {
 		items, _, err := s.dao.Client().List(kit, bizID, appID, heartbeatTime, search,
 			&pbds.ListClientsReq_Order{}, &types.BasePage{All: true})
 		if err != nil {
@@ -702,8 +702,8 @@ func (s *Service) ClientSpecificFailedReason(ctx context.Context, req *pbclient.
 	*structpb.Struct, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 
-	items, _, err := s.dao.Client().List(grpcKit, req.GetBizId(), req.GetAppId(), 0, req.GetSearch(),
-		&pbds.ListClientsReq_Order{}, &types.BasePage{All: true})
+	items, _, err := s.dao.Client().List(grpcKit, req.GetBizId(), req.GetAppId(), req.GetLastHeartbeatTime(),
+		req.GetSearch(), &pbds.ListClientsReq_Order{}, &types.BasePage{All: true})
 	if err != nil {
 		return nil, err
 	}

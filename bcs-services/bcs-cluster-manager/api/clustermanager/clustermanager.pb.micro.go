@@ -565,6 +565,24 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "ClusterManager.CreateNotifyTemplate",
+			Path:    []string{"/clustermanager/v1/projects/{projectID}/notifytemplates"},
+			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "ClusterManager.DeleteNotifyTemplate",
+			Path:    []string{"/clustermanager/v1/projects/{projectID}/notifytemplates/{notifyTemplateID}"},
+			Method:  []string{"DELETE"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "ClusterManager.ListNotifyTemplate",
+			Path:    []string{"/clustermanager/v1/projects/{projectID}/notifytemplates"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "ClusterManager.CreateCloudAccount",
 			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/accounts"},
 			Method:  []string{"POST"},
@@ -938,6 +956,10 @@ type ClusterManagerService interface {
 	DeleteNodeTemplate(ctx context.Context, in *DeleteNodeTemplateRequest, opts ...client.CallOption) (*DeleteNodeTemplateResponse, error)
 	ListNodeTemplate(ctx context.Context, in *ListNodeTemplateRequest, opts ...client.CallOption) (*ListNodeTemplateResponse, error)
 	GetNodeTemplate(ctx context.Context, in *GetNodeTemplateRequest, opts ...client.CallOption) (*GetNodeTemplateResponse, error)
+	// NotifyTemplate info management
+	CreateNotifyTemplate(ctx context.Context, in *CreateNotifyTemplateRequest, opts ...client.CallOption) (*CreateNotifyTemplateResponse, error)
+	DeleteNotifyTemplate(ctx context.Context, in *DeleteNotifyTemplateRequest, opts ...client.CallOption) (*DeleteNotifyTemplateResponse, error)
+	ListNotifyTemplate(ctx context.Context, in *ListNotifyTemplateRequest, opts ...client.CallOption) (*ListNotifyTemplateResponse, error)
 	// Cloud Account information management
 	CreateCloudAccount(ctx context.Context, in *CreateCloudAccountRequest, opts ...client.CallOption) (*CreateCloudAccountResponse, error)
 	UpdateCloudAccount(ctx context.Context, in *UpdateCloudAccountRequest, opts ...client.CallOption) (*UpdateCloudAccountResponse, error)
@@ -1895,6 +1917,36 @@ func (c *clusterManagerService) GetNodeTemplate(ctx context.Context, in *GetNode
 	return out, nil
 }
 
+func (c *clusterManagerService) CreateNotifyTemplate(ctx context.Context, in *CreateNotifyTemplateRequest, opts ...client.CallOption) (*CreateNotifyTemplateResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.CreateNotifyTemplate", in)
+	out := new(CreateNotifyTemplateResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) DeleteNotifyTemplate(ctx context.Context, in *DeleteNotifyTemplateRequest, opts ...client.CallOption) (*DeleteNotifyTemplateResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.DeleteNotifyTemplate", in)
+	out := new(DeleteNotifyTemplateResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) ListNotifyTemplate(ctx context.Context, in *ListNotifyTemplateRequest, opts ...client.CallOption) (*ListNotifyTemplateResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.ListNotifyTemplate", in)
+	out := new(ListNotifyTemplateResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *clusterManagerService) CreateCloudAccount(ctx context.Context, in *CreateCloudAccountRequest, opts ...client.CallOption) (*CreateCloudAccountResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.CreateCloudAccount", in)
 	out := new(CreateCloudAccountResponse)
@@ -2446,6 +2498,10 @@ type ClusterManagerHandler interface {
 	DeleteNodeTemplate(context.Context, *DeleteNodeTemplateRequest, *DeleteNodeTemplateResponse) error
 	ListNodeTemplate(context.Context, *ListNodeTemplateRequest, *ListNodeTemplateResponse) error
 	GetNodeTemplate(context.Context, *GetNodeTemplateRequest, *GetNodeTemplateResponse) error
+	// NotifyTemplate info management
+	CreateNotifyTemplate(context.Context, *CreateNotifyTemplateRequest, *CreateNotifyTemplateResponse) error
+	DeleteNotifyTemplate(context.Context, *DeleteNotifyTemplateRequest, *DeleteNotifyTemplateResponse) error
+	ListNotifyTemplate(context.Context, *ListNotifyTemplateRequest, *ListNotifyTemplateResponse) error
 	// Cloud Account information management
 	CreateCloudAccount(context.Context, *CreateCloudAccountRequest, *CreateCloudAccountResponse) error
 	UpdateCloudAccount(context.Context, *UpdateCloudAccountRequest, *UpdateCloudAccountResponse) error
@@ -2601,6 +2657,9 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		DeleteNodeTemplate(ctx context.Context, in *DeleteNodeTemplateRequest, out *DeleteNodeTemplateResponse) error
 		ListNodeTemplate(ctx context.Context, in *ListNodeTemplateRequest, out *ListNodeTemplateResponse) error
 		GetNodeTemplate(ctx context.Context, in *GetNodeTemplateRequest, out *GetNodeTemplateResponse) error
+		CreateNotifyTemplate(ctx context.Context, in *CreateNotifyTemplateRequest, out *CreateNotifyTemplateResponse) error
+		DeleteNotifyTemplate(ctx context.Context, in *DeleteNotifyTemplateRequest, out *DeleteNotifyTemplateResponse) error
+		ListNotifyTemplate(ctx context.Context, in *ListNotifyTemplateRequest, out *ListNotifyTemplateResponse) error
 		CreateCloudAccount(ctx context.Context, in *CreateCloudAccountRequest, out *CreateCloudAccountResponse) error
 		UpdateCloudAccount(ctx context.Context, in *UpdateCloudAccountRequest, out *UpdateCloudAccountResponse) error
 		MigrateCloudAccount(ctx context.Context, in *MigrateCloudAccountRequest, out *MigrateCloudAccountResponse) error
@@ -3176,6 +3235,24 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.GetNodeTemplate",
 		Path:    []string{"/clustermanager/v1/projects/{projectID}/nodetemplates/{nodeTemplateID}"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.CreateNotifyTemplate",
+		Path:    []string{"/clustermanager/v1/projects/{projectID}/notifytemplates"},
+		Method:  []string{"POST"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.DeleteNotifyTemplate",
+		Path:    []string{"/clustermanager/v1/projects/{projectID}/notifytemplates/{notifyTemplateID}"},
+		Method:  []string{"DELETE"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.ListNotifyTemplate",
+		Path:    []string{"/clustermanager/v1/projects/{projectID}/notifytemplates"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
@@ -3806,6 +3883,18 @@ func (h *clusterManagerHandler) ListNodeTemplate(ctx context.Context, in *ListNo
 
 func (h *clusterManagerHandler) GetNodeTemplate(ctx context.Context, in *GetNodeTemplateRequest, out *GetNodeTemplateResponse) error {
 	return h.ClusterManagerHandler.GetNodeTemplate(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) CreateNotifyTemplate(ctx context.Context, in *CreateNotifyTemplateRequest, out *CreateNotifyTemplateResponse) error {
+	return h.ClusterManagerHandler.CreateNotifyTemplate(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) DeleteNotifyTemplate(ctx context.Context, in *DeleteNotifyTemplateRequest, out *DeleteNotifyTemplateResponse) error {
+	return h.ClusterManagerHandler.DeleteNotifyTemplate(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) ListNotifyTemplate(ctx context.Context, in *ListNotifyTemplateRequest, out *ListNotifyTemplateResponse) error {
+	return h.ClusterManagerHandler.ListNotifyTemplate(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) CreateCloudAccount(ctx context.Context, in *CreateCloudAccountRequest, out *CreateCloudAccountResponse) error {

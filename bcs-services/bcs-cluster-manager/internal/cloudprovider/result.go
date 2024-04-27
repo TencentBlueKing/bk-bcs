@@ -104,6 +104,10 @@ func (sjr *SyncJobResult) UpdateJobResultStatus(isSuccess bool) error {
 	blog.Infof("task[%s] JobType[%s] isSuccess[%v] ClusterID[%s] nodeIPs[%v]",
 		sjr.TaskID, sjr.JobType, isSuccess, sjr.ClusterID, sjr.NodeIPs)
 
+	defer func() {
+		_ = SendUserNotifyByTemplates(sjr.ClusterID, sjr.NodeGroupID, sjr.TaskID, isSuccess)
+	}()
+
 	switch sjr.JobType {
 	case CreateClusterJob, CreateVirtualClusterJob:
 		sjr.Status = generateStatusResult(common.StatusRunning, common.StatusCreateClusterFailed)

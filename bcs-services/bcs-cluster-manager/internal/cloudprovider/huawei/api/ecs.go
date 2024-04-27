@@ -14,7 +14,6 @@
 package api
 
 import (
-	"github.com/huaweicloud/huaweicloud-sdk-go-v3/core/auth/basic"
 	ecs "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/ecs/v2"
 	"github.com/huaweicloud/huaweicloud-sdk-go-v3/services/ecs/v2/model"
 	"github.com/huaweicloud/huaweicloud-sdk-go-v3/services/ecs/v2/region"
@@ -24,7 +23,7 @@ import (
 
 // EcsClient ecs client
 type EcsClient struct {
-	*ecs.EcsClient
+	ecs *ecs.EcsClient
 }
 
 var (
@@ -62,9 +61,7 @@ func NewEcsClient(opt *cloudprovider.CommonOption) (*EcsClient, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	auth, err := basic.NewCredentialsBuilder().WithAk(opt.Account.SecretID).WithSk(opt.Account.SecretKey).
-		WithProjectId(projectID).SafeBuild()
+	auth, err := getProjectAuth(opt.Account.SecretID, opt.Account.SecretKey, projectID)
 	if err != nil {
 		return nil, err
 	}
@@ -74,10 +71,7 @@ func NewEcsClient(opt *cloudprovider.CommonOption) (*EcsClient, error) {
 		return nil, err
 	}
 
-	hcClient, err := ecs.EcsClientBuilder().
-		WithCredential(auth).
-		WithRegion(rn). //指定region区域
-		SafeBuild()
+	hcClient, err := ecs.EcsClientBuilder().WithCredential(auth).WithRegion(rn).SafeBuild()
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +81,15 @@ func NewEcsClient(opt *cloudprovider.CommonOption) (*EcsClient, error) {
 
 // GetAllFlavors get all ecs flavors
 func (e *EcsClient) GetAllFlavors(az string) (*[]model.Flavor, error) {
-	rsp, err := e.ListFlavors(&model.ListFlavorsRequest{AvailabilityZone: &az})
+	request := &model.ListFlavorsRequest{
+		AvailabilityZone: func() *string {
+			if az == "" {
+				return nil
+			}
+			return &az
+		}()}
+
+	rsp, err := e.ecs.ListFlavors(request)
 	if err != nil {
 		return nil, err
 	}
@@ -95,19 +97,47 @@ func (e *EcsClient) GetAllFlavors(az string) (*[]model.Flavor, error) {
 	return rsp.Flavors, nil
 }
 
-// GetAvailabilityZones get all availability zones
-func GetAvailabilityZones(opt *cloudprovider.CommonOption) ([]model.NovaAvailabilityZone, error) {
-	client, err := NewEcsClient(opt)
-	if err != nil {
-		return nil, err
-	}
-
-	rsp, err := client.NovaListAvailabilityZones(&model.NovaListAvailabilityZonesRequest{})
+// ListAvailabilityZones get all availability zones
+func (e *EcsClient) ListAvailabilityZones() ([]model.NovaAvailabilityZone, error) {
+	rsp, err := e.ecs.NovaListAvailabilityZones(&model.NovaListAvailabilityZonesRequest{})
 	if err != nil {
 		return nil, err
 	}
 
 	return *rsp.AvailabilityZoneInfo, nil
+}
+
+// ShowServer server detail info
+func (e *EcsClient) ShowServer(serverId string) (*model.ServerDetail, error) {
+	request := &model.ShowServerRequest{ServerId: serverId}
+	resp, err := e.ecs.ShowServer(request)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.Server, nil
+}
+
+// ListServerBlockDevices 查询弹性云服务器挂载磁盘列表详情信息
+func (e *EcsClient) ListServerBlockDevices(serverId string) (*[]model.ServerBlockDevice, error) {
+	request := &model.ListServerBlockDevicesRequest{ServerId: serverId}
+	resp, err := e.ecs.ListServerBlockDevices(request)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.VolumeAttachments, nil
+}
+
+// ShowServerBlockDevice 查询弹性云服务器单个磁盘信息
+func (e *EcsClient) ShowServerBlockDevice(serverId string, volumeId string) (*model.ServerBlockDevice, error) {
+	request := &model.ShowServerBlockDeviceRequest{ServerId: serverId, VolumeId: volumeId}
+	resp, err := e.ecs.ShowServerBlockDevice(request)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.VolumeAttachment, nil
 }
 
 // ConvertPerformanceType convert performance type

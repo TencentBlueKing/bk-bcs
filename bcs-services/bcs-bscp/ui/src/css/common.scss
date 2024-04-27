@@ -40,3 +40,8 @@
     padding: 0 50px 10px;
   }
 }
+
+// 去掉组件库表格过滤自带的input
+.bk-popover .bk-table-head-filter .bk-input {
+  display: none;
+}

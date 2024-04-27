@@ -26,10 +26,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
-const (
-	defaultRegion = "ap-nanjing"
-)
-
 // cloud region list
 
 // GetCloudRegionsAction action for get cloud regions
@@ -64,8 +60,6 @@ func (ga *GetCloudRegionsAction) listCloudRegions() error {
 			}
 			return nil
 		}(),
-		// Region trick data, cloud need underlying dependence
-		Region: defaultRegion,
 		CommonConf: cloudprovider.CloudConf{
 			CloudInternalEnable: ga.cloud.ConfInfo.CloudInternalEnable,
 			CloudDomain:         ga.cloud.ConfInfo.CloudDomain,
@@ -332,7 +326,6 @@ func (ga *GetCloudAccountTypeAction) getCloudAccountType() error {
 			ga.cloud.CloudID, ga.cloud.CloudProvider, err.Error())
 		return err
 	}
-	cmOption.Region = defaultRegion
 
 	ga.accountType, err = vpcMgr.GetCloudNetworkAccountType(cmOption)
 	if err != nil {

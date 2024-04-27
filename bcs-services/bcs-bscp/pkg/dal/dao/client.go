@@ -98,7 +98,10 @@ func (dao *clientDao) GetResourceUsage(kit *kit.Kit, bizID uint32, appID uint32,
 	} else {
 		conds = append(conds, m.ReleaseChangeStatus.Eq("Success"))
 	}
-
+	if heartbeatTime > 0 {
+		lastHeartbeatTime := time.Now().Add(time.Duration(-heartbeatTime) * time.Minute)
+		conds = append(conds, m.LastHeartbeatTime.Gte(lastHeartbeatTime))
+	}
 	err = q.Select(m.CpuMaxUsage.Max().As("cpu_max_usage"), m.MemoryMaxUsage.Max().As("memory_max_usage"),
 		m.CpuMinUsage.Min().As("cpu_min_usage"), m.CpuAvgUsage.Avg().As("cpu_avg_usage"),
 		m.MemoryMinUsage.Min().As("memory_min_usage"), m.MemoryAvgUsage.Avg().As("memory_avg_usage")).
@@ -143,6 +146,10 @@ func (dao *clientDao) ListClientGroupByFailedReason(kit *kit.Kit, bizID uint32, 
 	} else {
 		conds = append(conds, m.ReleaseChangeStatus.Eq("Failed"))
 	}
+	if heartbeatTime > 0 {
+		lastHeartbeatTime := time.Now().Add(time.Duration(-heartbeatTime) * time.Minute)
+		conds = append(conds, m.LastHeartbeatTime.Gte(lastHeartbeatTime))
+	}
 	var items []types.FailedReasonChart
 	err = q.Select(m.ReleaseChangeFailedReason, m.ID.Count().As("count")).Where(conds...).
 		Group(m.ReleaseChangeFailedReason).
@@ -163,7 +170,6 @@ func (dao *clientDao) ListClientGroupByChangeStatus(kit *kit.Kit, bizID uint32, 
 
 	var err error
 	var conds []rawgen.Condition
-
 	if search.String() != "" {
 		conds, err = dao.handleSearch(kit, bizID, appID, search)
 		if err != nil {
@@ -175,7 +181,10 @@ func (dao *clientDao) ListClientGroupByChangeStatus(kit *kit.Kit, bizID uint32, 
 	} else {
 		conds = append(conds, m.ReleaseChangeStatus.In("Failed", "Success"))
 	}
-
+	if heartbeatTime > 0 {
+		lastHeartbeatTime := time.Now().Add(time.Duration(-heartbeatTime) * time.Minute)
+		conds = append(conds, m.LastHeartbeatTime.Gte(lastHeartbeatTime))
+	}
 	var items []types.ChangeStatusChart
 	err = q.Select(m.ReleaseChangeStatus, m.ID.Count().As("count")).Where(conds...).
 		Group(m.ReleaseChangeStatus).

@@ -382,7 +382,7 @@ func (ca *CreateAction) createNodegroup(cls *cmproto.Cluster) error {
 	timeStr := time.Now().Format(time.RFC3339)
 	if ca.req.NodeGroups != nil {
 		for _, ng := range ca.req.NodeGroups {
-			ng.NodeGroupID = autils.GenerateNodeGroupID()
+			ng.NodeGroupID = autils.GenerateTemplateID(autils.GroupTemplate)
 			ng.Region = cls.Region
 			ng.ClusterID = cls.ClusterID
 			ng.ProjectID = cls.ProjectID

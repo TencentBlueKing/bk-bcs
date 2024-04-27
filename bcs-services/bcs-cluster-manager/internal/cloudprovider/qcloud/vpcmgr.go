@@ -138,6 +138,10 @@ func (c *VPCManager) ListSecurityGroups(opt *cloudprovider.ListNetworksOption) (
 
 // GetCloudNetworkAccountType 查询用户网络类型
 func (c *VPCManager) GetCloudNetworkAccountType(opt *cloudprovider.CommonOption) (*proto.CloudAccountType, error) {
+	if opt.Region == "" {
+		opt.Region = defaultRegion
+	}
+
 	vpcCli, err := api.NewVPCClient(opt)
 	if err != nil {
 		blog.Errorf("create VPC client failed: %v", err)

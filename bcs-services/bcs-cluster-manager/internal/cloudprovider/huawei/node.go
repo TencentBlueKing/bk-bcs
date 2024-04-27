@@ -23,6 +23,7 @@ import (
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/huawei/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/huawei/business"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 )
 
@@ -56,12 +57,12 @@ func (nm *NodeManager) GetCVMImageIDByImageName(imageName string, opt *cloudprov
 
 // GetCloudRegions get cloud regions
 func (nm *NodeManager) GetCloudRegions(opt *cloudprovider.CommonOption) ([]*proto.RegionInfo, error) {
-	client, err := api.GetIamClient(opt)
+	client, err := api.NewIamClient(opt)
 	if err != nil {
 		return nil, err
 	}
 
-	cloudRegions, err := client.GetCloudRegions()
+	cloudRegions, err := client.ListCloudRegions()
 	if err != nil {
 		return nil, err
 	}
@@ -118,18 +119,24 @@ func (nm *NodeManager) GetResourceGroups(opt *cloudprovider.CommonOption) ([]*pr
 
 // GetZoneList get zoneList
 func (nm *NodeManager) GetZoneList(opt *cloudprovider.GetZoneListOption) ([]*proto.ZoneInfo, error) {
-	zones, err := api.GetAvailabilityZones(&opt.CommonOption)
+	client, err := api.NewEcsClient(&opt.CommonOption)
+	if err != nil {
+		return nil, err
+	}
+
+	zones, err := client.ListAvailabilityZones()
 	if err != nil {
 		return nil, err
 	}
 
 	zoneInfos := make([]*proto.ZoneInfo, 0)
 	for _, v := range zones {
-		zone, _ := convertLastCharToNumber(v.ZoneName)
 		zoneInfos = append(zoneInfos, &proto.ZoneInfo{
-			ZoneID:    v.ZoneName,
-			Zone:      fmt.Sprintf("%d", zone),
-			ZoneName:  fmt.Sprintf("可用区%d", zone),
+			ZoneID: v.ZoneName,
+			Zone:   v.ZoneName,
+			ZoneName: fmt.Sprintf("可用区%d", func() int {
+				return business.GetZoneNameByZoneId(opt.Region, v.ZoneName)
+			}()),
 			ZoneState: "AVAILABLE",
 		})
 	}

@@ -124,6 +124,7 @@
     const params: IClinetCommonQuery = {
       search: searchQuery.value.search,
       pull_time: selectTime.value,
+      last_heartbeat_time: searchQuery.value.last_heartbeat_time,
     };
     try {
       loading.value = true;
@@ -142,8 +143,9 @@
       data: [data.value.time_and_type, data.value.time],
       xField: 'time',
       yField: ['value', 'count'],
-      yAxis: [
-        {
+      yAxis: {
+        value: {
+          tickCount: 5,
           grid: {
             line: {
               style: {
@@ -153,20 +155,22 @@
             },
           },
         },
-        {
+        count: {
+          tickCount: 5,
           min: 0,
         },
-      ],
+      },
+      scrollbar: {
+        type: 'horizontal',
+      },
       padding: [10, 20, 30, 20],
       geometryOptions: [
         {
           geometry: 'column',
           isGroup: true,
           seriesField: 'type',
-          columnWidthRatio: 0.2,
-          color: ['#3E96C2', '#61B2C2', '#61B2C2'],
-          // @ts-ignore
-          maxColumnWidth: 80,
+          columnWidthRatio: 0.3,
+          color: ['#3E96C2', '#61B2C2', '#85CCA8', '#B5E0AB'],
         },
         {
           geometry: 'line',

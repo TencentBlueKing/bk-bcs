@@ -294,6 +294,11 @@ func GetClusterByID(clusterID string) (*proto.Cluster, error) {
 	return GetStorageModel().GetCluster(context.Background(), clusterID)
 }
 
+// GetNodeGroupByID get nodeGroup by groupID
+func GetNodeGroupByID(nodeGroupId string) (*proto.NodeGroup, error) {
+	return GetStorageModel().GetNodeGroup(context.Background(), nodeGroupId)
+}
+
 // UpdateCluster set cluster status
 func UpdateCluster(cluster *proto.Cluster) error {
 	err := GetStorageModel().UpdateCluster(context.Background(), cluster)
@@ -1281,4 +1286,18 @@ func GetNodeResourceGroup(cls *proto.Cluster) string {
 	}
 
 	return ""
+}
+
+// ListProjectNotifyTemplates list project notify templates
+func ListProjectNotifyTemplates(projectId string) ([]proto.NotifyTemplate, error) {
+	condM := make(operator.M)
+	condM["projectid"] = projectId
+
+	cond := operator.NewLeafCondition(operator.Eq, condM)
+	templates, err := GetStorageModel().ListNotifyTemplate(context.Background(), cond, &storeopt.ListOption{})
+	if err != nil {
+		return nil, err
+	}
+
+	return templates, nil
 }

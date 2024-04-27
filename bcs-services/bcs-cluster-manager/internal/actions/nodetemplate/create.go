@@ -51,7 +51,7 @@ func NewCreateAction(model store.ClusterManagerModel) *CreateAction {
 
 func (ca *CreateAction) createNodeTemplate() error {
 	timeStr := time.Now().Format(time.RFC3339)
-	templateID := autils.GenerateNodeTemplateID()
+	templateID := autils.GenerateTemplateID(autils.NodeTemplate)
 
 	// 扩容节点脚本 trans user to base64 encoding
 	afterScript := ca.req.UserScript

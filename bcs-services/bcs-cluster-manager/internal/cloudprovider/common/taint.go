@@ -45,8 +45,8 @@ var (
 	}
 )
 
-// BuildRemoveClusterNodesInnerTaintTaskStep 删除预置的污点
-func BuildRemoveClusterNodesInnerTaintTaskStep(task *proto.Task, group *proto.NodeGroup) {
+// BuildRemoveInnerTaintTaskStep 删除预置的污点
+func BuildRemoveInnerTaintTaskStep(task *proto.Task, group *proto.NodeGroup) {
 	removeTaintStep := cloudprovider.InitTaskStep(RemoveClusterNodesInnerTaintStep)
 
 	removeTaintStep.Params[cloudprovider.ClusterIDKey.String()] = group.ClusterID

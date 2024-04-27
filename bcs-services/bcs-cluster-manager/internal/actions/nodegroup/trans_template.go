@@ -68,7 +68,7 @@ func (ta *TransNgToNtAction) transNgToNt() error {
 	nt := ng.NodeTemplate
 	nt.Name = ng.Name
 	nt.ProjectID = ng.ProjectID
-	nt.NodeTemplateID = utils.GenerateNodeTemplateID()
+	nt.NodeTemplateID = utils.GenerateTemplateID(utils.NodeTemplate)
 	nt.Creator = ng.Creator
 	nt.Updater = ng.Updater
 	nt.CreateTime = timeStr

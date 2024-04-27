@@ -14,7 +14,7 @@
 package api
 
 import (
-	"github.com/huaweicloud/huaweicloud-sdk-go-v3/core/auth/global"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 	iam "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/iam/v3"
 	"github.com/huaweicloud/huaweicloud-sdk-go-v3/services/iam/v3/model"
 	"github.com/huaweicloud/huaweicloud-sdk-go-v3/services/iam/v3/region"
@@ -22,39 +22,145 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 )
 
-// IamClient iam client
-type IamClient struct {
-	*iam.IamClient
-}
-
-// GetIamClient get iam client from common option
-func GetIamClient(opt *cloudprovider.CommonOption) (*IamClient, error) {
+// NewIamClient get iam client from common option
+func NewIamClient(opt *cloudprovider.CommonOption) (*IamClient, error) {
 	if opt == nil || len(opt.Account.SecretID) == 0 || len(opt.Account.SecretKey) == 0 {
 		return nil, cloudprovider.ErrCloudCredentialLost
 	}
 
-	auth, err := global.NewCredentialsBuilder().WithAk(opt.Account.SecretID).WithSk(opt.Account.SecretKey).SafeBuild()
+	// global auth
+	auth, err := getGlobalAuth(opt.Account.SecretID, opt.Account.SecretKey)
 	if err != nil {
 		return nil, err
 	}
 
-	rn, err := region.SafeValueOf("cn-north-1")
+	// region
+	defaultRegion := "cn-north-1"
+	if opt.Region != "" {
+		defaultRegion = opt.Region
+	}
+	rn, err := region.SafeValueOf(defaultRegion)
 	if err != nil {
 		return nil, err
 	}
 
-	hcClient, err := iam.IamClientBuilder().WithCredential(auth).WithRegion(rn).SafeBuild()
+	// hc client
+	hcClient, err := iam.IamClientBuilder().
+		WithRegion(rn).
+		WithCredential(auth).
+		SafeBuild()
+	if err != nil {
+		return nil, err
+	}
+	iamClient := iam.NewIamClient(hcClient)
 
 	// 创建IAM client
-	return &IamClient{&iam.IamClient{HcClient: hcClient}}, nil
+	return &IamClient{iam: iamClient}, nil
 }
 
-// GetCloudRegions get cloud all regions
-func (cli *IamClient) GetCloudRegions() ([]model.Region, error) {
-	rsp, err := cli.KeystoneListRegions(&model.KeystoneListRegionsRequest{})
+// IamClient iam client
+type IamClient struct {
+	iam *iam.IamClient
+}
+
+// ListCloudRegions get cloud regions
+func (cli *IamClient) ListCloudRegions() ([]model.Region, error) {
+	// 导入账号时 检验账号的有效性时使用错误的AKSK会panic
+	defer utils.RecoverPrintStack("ListCloudRegions")
+
+	keystoneListRegionsResponse, err := cli.iam.KeystoneListRegions(&model.KeystoneListRegionsRequest{})
 	if err != nil {
 		return nil, err
 	}
 
-	return *rsp.Regions, nil
+	return *keystoneListRegionsResponse.Regions, nil
+}
+
+// ShowCloudRegion show cloud region
+func (cli *IamClient) ShowCloudRegion(region string) (*model.Region, error) {
+	// 区域详情
+	keystoneShowRegionRequest := &model.KeystoneShowRegionRequest{}
+	keystoneShowRegionRequest.RegionId = region
+	keystoneShowRegionResponse, err := cli.iam.KeystoneShowRegion(keystoneShowRegionRequest)
+	if err != nil {
+		return nil, err
+	}
+
+	return keystoneShowRegionResponse.Region, nil
+}
+
+// ListAuthDomains 查询IAM用户可以访问的账号详情
+func (cli *IamClient) ListAuthDomains() ([]model.Domains, error) {
+	keystoneListAuthDomainsRequest := &model.KeystoneListAuthDomainsRequest{}
+	keystoneListAuthDomainsResponse, err := cli.iam.KeystoneListAuthDomains(keystoneListAuthDomainsRequest)
+	if err != nil {
+		return nil, err
+	}
+
+	return *keystoneListAuthDomainsResponse.Domains, nil
+}
+
+// ListAuthProjects 查询IAM用户可以访问的项目列表
+func (cli *IamClient) ListAuthProjects() ([]model.AuthProjectResult, error) {
+	keystoneListAuthProjectsRequest := &model.KeystoneListAuthProjectsRequest{}
+	keystoneListAuthProjectsResponse, err := cli.iam.KeystoneListAuthProjects(keystoneListAuthProjectsRequest)
+	if err != nil {
+		return nil, err
+	}
+
+	return *keystoneListAuthProjectsResponse.Projects, nil
+}
+
+// ListProjects 查询指定条件下的项目列表 (name 项目名称 - 即 regionId)
+func (cli *IamClient) ListProjects(name string) ([]model.ProjectResult, error) {
+	keystoneListProjectsRequest := &model.KeystoneListProjectsRequest{}
+
+	var (
+		defaultPage    int32 = 1
+		defaultPerPage int32 = 5000
+	)
+
+	if name != "" {
+		keystoneListProjectsRequest.Name = &name
+	}
+	keystoneListProjectsRequest.Page = &defaultPage
+	keystoneListProjectsRequest.PerPage = &defaultPerPage
+
+	keystoneListProjectsResponse, err := cli.iam.KeystoneListProjects(keystoneListProjectsRequest)
+	if err != nil {
+		return nil, err
+	}
+
+	return *keystoneListProjectsResponse.Projects, nil
+}
+
+// ShowProject 查询项目详情
+func (cli *IamClient) ShowProject(projectId string) (*model.ProjectResult, error) {
+	keystoneShowProjectRequest := &model.KeystoneShowProjectRequest{}
+	keystoneShowProjectRequest.ProjectId = projectId
+
+	keystoneShowProjectResponse, err := cli.iam.KeystoneShowProject(keystoneShowProjectRequest)
+	if err != nil {
+		return nil, err
+	}
+
+	return keystoneShowProjectResponse.Project, nil
+}
+
+// ShowProjectDetailsAndStatus 查询项目详情与状态
+func (cli *IamClient) ShowProjectDetailsAndStatus(projectId string) (*model.ProjectDetailsAndStatusResult, error) {
+	showProjectDetailsAndStatusRequest := &model.ShowProjectDetailsAndStatusRequest{}
+
+	/*
+		项目的状态信息，参数的值为"suspended"或"normal"。
+		status值为"suspended"时，会将项目设置为冻结状态。
+		status值为"normal"时，会将项目设置为正常（解冻）状态。
+	*/
+	showProjectDetailsAndStatusRequest.ProjectId = projectId
+	showProjectDetailsAndStatusResponse, err := cli.iam.ShowProjectDetailsAndStatus(showProjectDetailsAndStatusRequest)
+	if err != nil {
+		return nil, err
+	}
+
+	return showProjectDetailsAndStatusResponse.Project, nil
 }

@@ -45,6 +45,7 @@ func DeleteTKEClusterTask(taskID string, stepName string) error {
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
 	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
 	deleteMode := step.Params[cloudprovider.DeleteModeKey.String()]
+	clusterStatus := step.Params[cloudprovider.LastClusterStatus.String()]
 
 	// only support retain mode
 	if deleteMode != cloudprovider.Retain.String() {
@@ -64,6 +65,34 @@ func DeleteTKEClusterTask(taskID string, stepName string) error {
 	}
 
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
+
+	// need to clean cluster nodes when cluster create or delete failed
+	if (clusterStatus == icommon.StatusCreateClusterFailed ||
+		clusterStatus == icommon.StatusDeleteClusterFailed) && dependInfo.Cluster.GetSystemID() != "" {
+		_, workerNodes, errLocal := getClusterInstancesByClusterID(dependInfo)
+		if errLocal == nil && len(workerNodes) > 0 {
+			nodeIds := make([]string, 0)
+			for i := range workerNodes {
+				nodeIds = append(nodeIds, workerNodes[i].InstanceId)
+			}
+
+			// nolint
+			ids, err := business.DeleteClusterInstance(ctx, dependInfo, nodeIds, false)
+			if err != nil {
+				blog.Errorf("DeleteTKEClusterTask[%s] DeleteClusterInstance failed: %v", taskID, err)
+			} else {
+				blog.Infof("DeleteTKEClusterTask[%s] DeleteClusterInstance success: %v", taskID, ids)
+			}
+
+			err = business.CheckClusterDeletedNodes(ctx, dependInfo, nodeIds)
+			if err != nil {
+				blog.Errorf("DeleteTKEClusterTask[%s] CheckClusterDeletedNodes failed: %v", taskID, err)
+			}
+			// this need to wait nodes to deleted status because of tke bug
+			time.Sleep(time.Second * 60)
+		}
+	}
+
 	err = business.DeleteTkeClusterByClusterId(ctx, dependInfo.CmOption, dependInfo.Cluster.SystemID, deleteMode)
 	if err != nil {
 		blog.Errorf("DeleteTKEClusterTask[%s]: task[%s] step[%s] call qcloud DeleteTKECluster failed: %v",

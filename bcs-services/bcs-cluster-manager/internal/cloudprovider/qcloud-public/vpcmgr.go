@@ -61,6 +61,7 @@ func (c *VPCManager) ListVpcs(vpcID string, opt *cloudprovider.ListNetworksOptio
 			VpcId:    utils.StringPtrToString(v.VpcId),
 			Ipv4Cidr: utils.StringPtrToString(v.CidrBlock),
 			Ipv6Cidr: utils.StringPtrToString(v.Ipv6CidrBlock),
+			// 除主网段外, 可扩展的网段
 			Cidrs: func() []*proto.AssistantCidr {
 				cidrs := make([]*proto.AssistantCidr, 0)
 
@@ -76,7 +77,7 @@ func (c *VPCManager) ListVpcs(vpcID string, opt *cloudprovider.ListNetworksOptio
 		}
 		result = append(result, cloudVpc)
 
-		// get ip number
+		// get free ipNet list
 		freeIPNets, err := business.GetFreeIPNets(&opt.CommonOption, vpcID)
 		if err != nil {
 			blog.Errorf("vpc GetFreeIPNets failed: %v", err)
@@ -158,6 +159,10 @@ func (c *VPCManager) ListSecurityGroups(opt *cloudprovider.ListNetworksOption) (
 
 // GetCloudNetworkAccountType 查询用户网络类型
 func (c *VPCManager) GetCloudNetworkAccountType(opt *cloudprovider.CommonOption) (*proto.CloudAccountType, error) {
+	if opt.Region == "" {
+		opt.Region = defaultRegion
+	}
+
 	vpcCli, err := api.NewVPCClient(opt)
 	if err != nil {
 		blog.Errorf("create VPC client failed: %v", err)

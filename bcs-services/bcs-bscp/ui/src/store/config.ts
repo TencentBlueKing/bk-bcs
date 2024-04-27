@@ -20,5 +20,15 @@ export default defineStore('config', () => {
   // 是否需要刷新版本列表标识，配置生成版本、发布版本、调整分组上线之后需要更新版本列表
   const refreshVersionListFlag = ref(false);
 
-  return { allConfigCount, versionData, versionDetailView, refreshVersionListFlag, publishedVersionId };
+  // 非配置模板中存在的冲突文件个数
+  const conflictFileCount = ref(0);
+
+  return {
+    allConfigCount,
+    versionData,
+    versionDetailView,
+    refreshVersionListFlag,
+    publishedVersionId,
+    conflictFileCount,
+  };
 });

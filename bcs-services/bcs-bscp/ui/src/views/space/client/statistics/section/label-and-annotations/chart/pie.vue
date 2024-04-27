@@ -45,7 +45,7 @@
       label: {
         type: 'inner',
         offset: '-30%',
-        content: ({ percent }) => `${(percent * 100).toFixed(0)}%`,
+        content: ({ percent }) => `${(percent * 100).toFixed(1)}%`,
         style: {
           fontSize: 14,
           textAlign: 'center',
@@ -61,7 +61,7 @@
         customItems: (originalItems: any[]) => {
           originalItems[0].name = t('客户端数量');
           originalItems[1].name = t('占比');
-          originalItems[1].value = `${(originalItems[1].value * 100).toFixed(0)}%`;
+          originalItems[1].value = `${(originalItems[1].value * 100).toFixed(1)}%`;
           return originalItems;
         },
       },
