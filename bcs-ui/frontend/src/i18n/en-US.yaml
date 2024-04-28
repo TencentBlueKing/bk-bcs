@@ -212,8 +212,18 @@ metrics:
   podUsage: Pod usage
   cpuRequestUsage:
     text: CPU packing rate
+    clusterDesc: >-
+      Cluster CPU box installation rate = sum of all POD CPU REQUEST in the
+      cluster / cluster node CPU total number (excluding MASTER node), the
+      closer the cluster CPU packing rate is closer to the cluster CPU usage
+      rate, the higher the cluster CPU resource utilization rate {0}
   memRequestUsage:
     text: Memory box rate
+    clusterDesc: >-
+      Cluster memory installation box rate = The sum of all POD memory Request /
+      cluster all node memory (excluding Master nodes), the closer the cluster
+      memory box rate is closer to the cluster memory usage rate, the higher the
+      utilization rate of the cluster memory resources {0}
   diskIOUsage: Disk IO
   diskIOUsage1: DiskIO Total
   diskIOUsage2: Disk IO usage rate
@@ -263,6 +273,7 @@ generic:
       noMatchData: No matching data
       searchEmpty:
         text: The search result is empty
+        subTitle: 'You can try adjusting keywords or {action}'
     info:
       tips: Tip
       refreshAuth: 'The current operation is permanent, please refresh the interface'
@@ -745,6 +756,14 @@ cluster:
           The number of nodes can be added with clusters (including Master nodes
           and node nodes) = (Number of IP -quantity of service) / single node
           POD quantity upper limit.
+        article1: >-
+          The container network resources are limited, please allocate it
+          reasonably. Under the current container network configuration, the
+          cluster can be added at most {count} individual nodes.
+        article2: >-
+          When the container network resources are excessive, the container
+          network will be automatically scale-up. After the capacity is
+          expanded, the cluster can be added at most {count}.
       networkMode:
         text: Network Mode
         overlay:
