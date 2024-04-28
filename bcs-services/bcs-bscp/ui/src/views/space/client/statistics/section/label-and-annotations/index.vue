@@ -6,8 +6,8 @@
           v-model="selectedLabel"
           :popover-options="{ theme: 'light bk-select-popover add-chart-wrap' }"
           :popover-min-width="240"
-          multiple
-          filterable>
+          :filterable="false"
+          multiple>
           <template #trigger>
             <div class="add-chart-wrap">
               <Plus class="add-icon" />
@@ -138,7 +138,9 @@
 
   const getAddChartDate = async () => {
     try {
-      const res = await getClientLabelsAndAnnotations(props.bkBizId, props.appId);
+      const res = await getClientLabelsAndAnnotations(props.bkBizId, props.appId, {
+        last_heartbeat_time: searchQuery.value.last_heartbeat_time,
+      });
       addChartData.value = res.data;
       selectedLabel.value = addChartData.value?.labels.slice(0, 2) || addChartData.value?.labels.slice(0, 1) || [];
     } catch (e) {
@@ -210,5 +212,10 @@
     .no-data {
       color: #c4c6cc !important;
     }
+  }
+  :deep(.bk-exception) {
+    height: 100%;
+    justify-content: center;
+    transform: translateY(-20px);
   }
 </style>

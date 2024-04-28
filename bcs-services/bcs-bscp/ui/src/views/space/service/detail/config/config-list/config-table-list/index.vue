@@ -1,4 +1,12 @@
 <template>
+  <bk-alert
+    v-if="conflictFileCount > 0"
+    theme="warning"
+    :title="
+      t('模板套餐导入完成，存在 {n} 个冲突配置项，请修改配置项信息或删除对应模板套餐，否则无法生成版本。', {
+        n: conflictFileCount,
+      })
+    " />
   <section class="config-list-wrapper">
     <div class="operate-area">
       <div class="operate-btns">
@@ -73,7 +81,7 @@
 
   const configStore = useConfigStore();
   const serviceStore = useServiceStore();
-  const { versionData } = storeToRefs(configStore);
+  const { versionData, conflictFileCount } = storeToRefs(configStore);
   const { isFileType } = storeToRefs(serviceStore);
   const { t } = useI18n();
 

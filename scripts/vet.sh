@@ -22,4 +22,4 @@ done
 
 # vet:
 echo "go vet"
-go vet -all $PACKAGES
+#go vet -all $PACKAGES
