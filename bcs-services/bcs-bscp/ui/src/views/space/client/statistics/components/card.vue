@@ -43,9 +43,19 @@
       height: calc(100% - 40px);
     }
     .operation-btn {
+      display: none;
       position: absolute;
       right: 0;
       top: -32px;
+      padding-bottom: 4px;
+      &:hover {
+        display: block;
+      }
+    }
+    &:hover {
+      .operation-btn {
+        display: block;
+      }
     }
   }
 </style>

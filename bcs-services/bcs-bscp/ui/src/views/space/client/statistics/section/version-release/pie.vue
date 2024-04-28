@@ -67,7 +67,7 @@
           return originalItems;
         },
       },
-      interactions: [{ type: 'element-active' }],
+      interactions: [{ type: 'element-highlight' }],
       legend: {
         layout: 'horizontal',
         position: 'right',

@@ -49,7 +49,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref, watch, onMounted, nextTick } from 'vue';
+  import { ref, watch, onMounted } from 'vue';
   import { Column, Pie } from '@antv/g2plot';
   import Card from '../../components/card.vue';
   import Tooltip from '../../components/tooltip.vue';
@@ -258,16 +258,13 @@
       // },
     });
     columnPlot!.render();
-    columnPlot.on(
-      'plot:click',
-      async (event: any) => {
-        selectFailedReason.value = event.data?.data.release_change_failed_reason;
-        if (!selectFailedReason.value) return;
-        isShowSpecificReason.value = true;
-        await loadPullFailedReason();
-        nextTick(() => initSpecificReasonChart());
-      },
-    );
+    columnPlot.on('plot:click', async (event: any) => {
+      selectFailedReason.value = event.data?.data.release_change_failed_reason;
+      if (!selectFailedReason.value) return;
+      isShowSpecificReason.value = true;
+      await loadPullFailedReason();
+      initSpecificReasonChart();
+    });
   };
 
   const initSpecificReasonChart = () => {
@@ -276,6 +273,7 @@
       angleField: 'count',
       colorField: 'release_change_failed_reason',
       padding: [20, 400, 60, 10],
+      interactions: [{ type: 'element-highlight' }],
       label: {
         type: 'inner',
         offset: '-30%',
