@@ -187,7 +187,7 @@ func (s *Service) Messaging(ctx context.Context, msg *pbfs.MessagingMeta) (*pbfs
 		return nil, status.Errorf(codes.PermissionDenied, "no permission to access bscp server")
 	}
 
-	clientMetricData := make(map[string]*sfs.ClientMetricData)
+	clientMetricData := make(map[uint32]*sfs.ClientMetricData)
 	// 按照服务级别上报数据
 	// 上报的事件分两种 心跳事件、变更事件
 	switch sfs.MessagingType(msg.Type) {
@@ -199,6 +199,30 @@ func (s *Service) Messaging(ctx context.Context, msg *pbfs.MessagingMeta) (*pbfs
 			return nil, err
 		}
 
+		appID, errApp := s.bll.AppCache().GetAppID(im.Kit, im.Meta.BizID, vc.Application.App)
+		if errApp != nil {
+			logs.Errorf("get app id failed, %s", errApp.Error())
+			return nil, errApp
+		}
+		vc.Application.AppID = appID
+
+		// pull 首次是需要获取app meta, 会出现权限等问题导致失败，
+		// 因此TargetReleaseID会出现0的情况，
+		// 获取TargetReleaseID时出现错误直接忽略
+		if vc.Application.TargetReleaseID == 0 {
+			meta := &types.AppInstanceMeta{
+				BizID:  vc.BasicData.BizID,
+				App:    vc.Application.App,
+				AppID:  appID,
+				Uid:    vc.Application.Uid,
+				Labels: vc.Application.Labels,
+			}
+			cancel := im.Kit.CtxWithTimeoutMS(1500)
+			defer cancel()
+			metas, _ := s.bll.Release().ListAppLatestReleaseMeta(im.Kit, meta)
+			vc.Application.TargetReleaseID = metas.ReleaseId
+		}
+
 		// 处理 心跳时间和在线状态
 		vc.BasicData.HeartbeatTime = time.Now().Local().UTC()
 		vc.BasicData.OnlineStatus = sfs.Online
@@ -208,7 +232,7 @@ func (s *Service) Messaging(ctx context.Context, msg *pbfs.MessagingMeta) (*pbfs
 			return nil, err
 		}
 		s.handleResourceUsageMetrics(vc.BasicData.BizID, vc.Application.App, vc.ResourceUsage)
-		clientMetricData[vc.Application.App] = &sfs.ClientMetricData{
+		clientMetricData[appID] = &sfs.ClientMetricData{
 			MessagingType: msg.Type,
 			Payload:       payload,
 		}
@@ -223,6 +247,12 @@ func (s *Service) Messaging(ctx context.Context, msg *pbfs.MessagingMeta) (*pbfs
 		onlineStatus := sfs.Online
 		for _, item := range hb.Applications {
 			if item.CursorID != "" {
+				appID, errApp := s.bll.AppCache().GetAppID(im.Kit, im.Meta.BizID, item.App)
+				if errApp != nil {
+					logs.Errorf("get app id failed, %s", errApp.Error())
+					return nil, errApp
+				}
+				item.AppID = appID
 				s.handleResourceUsageMetrics(hb.BasicData.BizID, item.App, hb.ResourceUsage)
 				hb.BasicData.HeartbeatTime = heartbeatTime
 				hb.BasicData.OnlineStatus = onlineStatus
@@ -235,22 +265,15 @@ func (s *Service) Messaging(ctx context.Context, msg *pbfs.MessagingMeta) (*pbfs
 				if errHb != nil {
 					return nil, errHb
 				}
-				clientMetricData[item.App] = &sfs.ClientMetricData{
+				clientMetricData[appID] = &sfs.ClientMetricData{
 					MessagingType: msg.Type,
 					Payload:       marshal,
 				}
 			}
 		}
-
 	}
 
-	for appName, v := range clientMetricData {
-		appID, err := s.bll.AppCache().GetAppID(im.Kit, im.Meta.BizID, appName)
-		if err != nil {
-			logs.Errorf("get app id failed, %s", err.Error())
-			continue
-		}
-		v.AppID = appID
+	for appID, v := range clientMetricData {
 		payload, err := jsoni.Marshal(v)
 		if err != nil {
 			logs.Errorf("failed to serialize clientMetricData, err: %s", err.Error())
@@ -271,12 +294,20 @@ func (s *Service) Messaging(ctx context.Context, msg *pbfs.MessagingMeta) (*pbfs
 }
 
 // PullAppFileMeta pull an app's latest release metadata only when the app's configures is file type.
-func (s *Service) PullAppFileMeta(ctx context.Context, req *pbfs.PullAppFileMetaReq) (
+func (s *Service) PullAppFileMeta(ctx context.Context, req *pbfs.PullAppFileMetaReq) ( // nolint
 	*pbfs.PullAppFileMetaResp, error) {
 
 	// check if the sidecar's version can be accepted.
 	if !sfs.IsAPIVersionMatch(req.ApiVersion) {
-		return nil, status.Error(codes.InvalidArgument, "sdk's api version is too low, should be upgraded")
+		st := status.New(codes.FailedPrecondition, "sdk's api version is too low, should be upgraded")
+		st, err := st.WithDetails(&pbbase.ErrDetails{
+			PrimaryError:   uint32(sfs.VersionIsTooLowFailed),
+			SecondaryError: uint32(sfs.SDKVersionIsTooLowFailed),
+		})
+		if err != nil {
+			return nil, status.Error(codes.Internal, "grpc status with details failed")
+		}
+		return nil, st.Err()
 	}
 
 	im, err := sfs.ParseFeedIncomingContext(ctx)

@@ -95,13 +95,14 @@ func (dao *clientDao) GetResourceUsage(kit *kit.Kit, bizID uint32, appID uint32,
 	}
 	if len(search.GetReleaseChangeStatus()) > 0 {
 		conds = append(conds, q.Where(m.ReleaseChangeStatus.In(search.GetReleaseChangeStatus()...)))
-	} else {
-		conds = append(conds, m.ReleaseChangeStatus.Eq("Success"))
 	}
 	if heartbeatTime > 0 {
-		lastHeartbeatTime := time.Now().Add(time.Duration(-heartbeatTime) * time.Minute)
+		lastHeartbeatTime := time.Now().UTC().Add(time.Duration(-heartbeatTime) * time.Minute)
 		conds = append(conds, m.LastHeartbeatTime.Gte(lastHeartbeatTime))
 	}
+	// 过滤最小0值
+	conds = append(conds, m.CpuMinUsage.Neq(0))
+	conds = append(conds, m.MemoryMinUsage.Neq(0))
 	err = q.Select(m.CpuMaxUsage.Max().As("cpu_max_usage"), m.MemoryMaxUsage.Max().As("memory_max_usage"),
 		m.CpuMinUsage.Min().As("cpu_min_usage"), m.CpuAvgUsage.Avg().As("cpu_avg_usage"),
 		m.MemoryMinUsage.Min().As("memory_min_usage"), m.MemoryAvgUsage.Avg().As("memory_avg_usage")).
@@ -147,7 +148,7 @@ func (dao *clientDao) ListClientGroupByFailedReason(kit *kit.Kit, bizID uint32, 
 		conds = append(conds, m.ReleaseChangeStatus.Eq("Failed"))
 	}
 	if heartbeatTime > 0 {
-		lastHeartbeatTime := time.Now().Add(time.Duration(-heartbeatTime) * time.Minute)
+		lastHeartbeatTime := time.Now().UTC().Add(time.Duration(-heartbeatTime) * time.Minute)
 		conds = append(conds, m.LastHeartbeatTime.Gte(lastHeartbeatTime))
 	}
 	var items []types.FailedReasonChart
@@ -182,7 +183,7 @@ func (dao *clientDao) ListClientGroupByChangeStatus(kit *kit.Kit, bizID uint32, 
 		conds = append(conds, m.ReleaseChangeStatus.In("Failed", "Success"))
 	}
 	if heartbeatTime > 0 {
-		lastHeartbeatTime := time.Now().Add(time.Duration(-heartbeatTime) * time.Minute)
+		lastHeartbeatTime := time.Now().UTC().Add(time.Duration(-heartbeatTime) * time.Minute)
 		conds = append(conds, m.LastHeartbeatTime.Gte(lastHeartbeatTime))
 	}
 	var items []types.ChangeStatusChart
@@ -203,7 +204,7 @@ func (dao *clientDao) ListClientGroupByCurrentReleaseID(kit *kit.Kit, bizID uint
 	var err error
 	var conds []rawgen.Condition
 	if heartbeatTime > 0 {
-		lastHeartbeatTime := time.Now().Add(time.Duration(-heartbeatTime) * time.Minute)
+		lastHeartbeatTime := time.Now().UTC().Add(time.Duration(-heartbeatTime) * time.Minute)
 		conds = append(conds, m.LastHeartbeatTime.Gte(lastHeartbeatTime))
 	}
 	if search.String() != "" {
@@ -247,7 +248,7 @@ func (dao *clientDao) List(kit *kit.Kit, bizID, appID uint32, heartbeatTime int6
 	}
 
 	if heartbeatTime > 0 {
-		lastHeartbeatTime := time.Now().Add(time.Duration(-heartbeatTime) * time.Minute)
+		lastHeartbeatTime := time.Now().UTC().Add(time.Duration(-heartbeatTime) * time.Minute)
 		conds = append(conds, m.LastHeartbeatTime.Gte(lastHeartbeatTime))
 	}
 
