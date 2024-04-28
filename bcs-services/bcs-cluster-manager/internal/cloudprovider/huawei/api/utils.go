@@ -20,7 +20,7 @@ import (
 	"strings"
 
 	"github.com/GehirnInc/crypt"
-	_ "github.com/GehirnInc/crypt/sha512_crypt"
+	_ "github.com/GehirnInc/crypt/sha512_crypt" // use init func
 	"github.com/huaweicloud/huaweicloud-sdk-go-v3/services/cce/v3/model"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"

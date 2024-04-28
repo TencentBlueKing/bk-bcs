@@ -121,6 +121,7 @@ func NewCidrManager(config *Config) (CidrManagerClient, func()) {
 	if config.TLSConfig != nil {
 		opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(config.TLSConfig)))
 	} else {
+		// nolint
 		opts = append(opts, grpc.WithInsecure())
 	}
 	var conn *grpc.ClientConn

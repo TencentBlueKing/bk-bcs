@@ -208,7 +208,7 @@ func (s *Server) initGatewayServer() error {
 	ctx, _ := context.WithCancel(s.svrContext) // nolint
 	// register grpc server information
 	gMux := runtime.NewServeMux(
-		runtime.WithMarshalerOption(runtime.MIMEWildcard,  &runtime.JSONPb{
+		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
 			OrigName:     true,
 			EmitDefaults: true,
 		}),

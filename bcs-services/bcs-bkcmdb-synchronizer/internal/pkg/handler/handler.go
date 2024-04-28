@@ -1675,13 +1675,15 @@ func (b *BcsBkcmdbSynchronizerHandler) handleNamespace(msg amqp.Delivery, bkClus
 	}
 
 	switch msgHeader.Event {
-	case "update":
+	// NOCC:goconst/string(忽略)
+	case "update": // nolint
 		err = b.handleNamespaceUpdate(namespace, bkCluster)
 		if err != nil {
 			blog.Errorf("handleNamespaceUpdate err: %s", err.Error())
 			return fmt.Errorf("handleNamespaceUpdate err: %s", err.Error())
 		}
-	case "delete":
+	// NOCC:goconst/string(忽略)
+	case "delete": // nolint
 		err = b.handleNamespaceDelete(namespace, bkCluster)
 		if err != nil {
 			blog.Errorf("handleNamespaceDelete err: %s", err.Error())

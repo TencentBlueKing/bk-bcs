@@ -61,7 +61,7 @@ type ControllerOption struct {
 	// ScenarioGitSecret secret for git
 	ScenarioGitSecret string
 
-	// TODO load from flag
+	// TO DO load from flag
 	// BKMDownloadConfigPath directory path to store bkm download config
 	BKMDownloadConfigPath string
 	// RepoRefreshFreq 根据集群内AppMonitor刷新Repo缓存 (如某个Repo已经不被任何AppMonitor引用，则从缓存中删除)

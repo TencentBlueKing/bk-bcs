@@ -392,6 +392,7 @@ type HostInfo struct {
 	BkCloudId int
 }
 
+// return Host Ids
 func returnHostIds(hosts []HostInfo) []int64 {
 	hostIds := make([]int64, 0)
 
@@ -401,6 +402,7 @@ func returnHostIds(hosts []HostInfo) []int64 {
 	return hostIds
 }
 
+// return Host Ips
 func returnHostIps(hosts []HostInfo) []string {
 	hostIps := make([]string, 0)
 
@@ -410,6 +412,7 @@ func returnHostIps(hosts []HostInfo) []string {
 	return hostIps
 }
 
+// ip In Host Infos
 func ipInHostInfos(ip string, hosts []HostInfo) bool {
 	for i := range hosts {
 		if hosts[i].HostIp == ip {
@@ -479,6 +482,7 @@ func SyncIpsInfoToCmdb(ctx context.Context, dependInfo *cloudprovider.CloudDepen
 	return nil
 }
 
+// split Node IPs From Cmdb
 func splitNodeIPsFromCmdb(ctx context.Context, nodeIPs []string) ([]HostInfo, []HostInfo, error) {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
@@ -523,6 +527,7 @@ func splitNodeIPsFromCmdb(ctx context.Context, nodeIPs []string) ([]HostInfo, []
 	return nodeInCmdb, nodeNotInCmdb, nil
 }
 
+// handle In Cmdb From Cmpy Node Ips
 func handleInCmdbFromCmpyNodeIps(ctx context.Context, inCmdbIps []HostInfo) error {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
@@ -579,6 +584,7 @@ func handleInCmdbFromCmpyNodeIps(ctx context.Context, inCmdbIps []HostInfo) erro
 	return nil
 }
 
+// handle In Cmdb Node Ips
 func handleInCmdbNodeIps(ctx context.Context, inCmdbIps []HostInfo) error {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
@@ -608,6 +614,7 @@ func handleInCmdbNodeIps(ctx context.Context, inCmdbIps []HostInfo) error {
 	return nil
 }
 
+// handle Not In Cmdb Node Ips
 func handleNotInCmdbNodeIps(ctx context.Context, notInCmdbIps []HostInfo) error {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 

@@ -355,7 +355,7 @@ func (h *handler) CheckRepositoryPermission(ctx context.Context, repoName string
 		return nil, http.StatusNotFound, errors.Errorf("repository '%s' not found", repoName)
 	}
 	// nolint
-	if slices.Contains[[]string](h.option.PublicProjects, repo.Project) {
+	if slices.Contains(h.option.PublicProjects, repo.Project) {
 		return repo, http.StatusOK, nil
 	}
 	projectName := repo.Project

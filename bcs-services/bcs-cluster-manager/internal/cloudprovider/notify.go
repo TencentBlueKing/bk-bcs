@@ -77,6 +77,7 @@ func SendUserNotifyByTemplates(clsId, groupId, taskId string, isSuccess bool) er
 	return nil
 }
 
+// nolint funlen
 func sendNotifyMessage(cluster *proto.Cluster, group *proto.NodeGroup, task *proto.Task,
 	nt proto.NotifyTemplate, isSuccess bool) error {
 	if !nt.GetEnable() {

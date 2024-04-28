@@ -48,12 +48,14 @@ var storeClient ClusterManagerModel
 
 // ClusterManagerModel database operation for
 type ClusterManagerModel interface {
+	// cluster information storage management
 	CreateCluster(ctx context.Context, cluster *types.Cluster) error
 	UpdateCluster(ctx context.Context, cluster *types.Cluster) error
 	DeleteCluster(ctx context.Context, clusterID string) error
 	GetCluster(ctx context.Context, clusterID string) (*types.Cluster, error)
 	ListCluster(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]types.Cluster, error)
 
+	// node information storage management
 	CreateNode(ctx context.Context, node *types.Node) error
 	UpdateNode(ctx context.Context, node *types.Node) error
 	UpdateClusterNodeByNodeID(ctx context.Context, node *types.Node) error
@@ -73,12 +75,14 @@ type ClusterManagerModel interface {
 	GetClusterNodeByIP(ctx context.Context, clusterID, ip string) (*types.Node, error)
 	ListNode(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]*types.Node, error)
 
+	// namespace information storage management
 	CreateNamespace(ctx context.Context, ns *types.Namespace) error
 	UpdateNamespace(ctx context.Context, ns *types.Namespace) error
 	DeleteNamespace(ctx context.Context, name, federationClusterID string) error
 	GetNamespace(ctx context.Context, name, federationClusterID string) (*types.Namespace, error)
 	ListNamespace(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]types.Namespace, error)
 
+	// quota information storage management
 	CreateQuota(ctx context.Context, quota *types.ResourceQuota) error
 	UpdateQuota(ctx context.Context, quota *types.ResourceQuota) error
 	DeleteQuota(ctx context.Context, namespace, federationClusterID, clusterID string) error
@@ -86,6 +90,7 @@ type ClusterManagerModel interface {
 	ListQuota(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]types.ResourceQuota, error)
 	BatchDeleteQuotaByCluster(ctx context.Context, clusterID string) error
 
+	// credential information storage management
 	PutClusterCredential(ctx context.Context, clusterCredential *types.ClusterCredential) error
 	GetClusterCredential(ctx context.Context, serverKey string) (*types.ClusterCredential, bool, error)
 	DeleteClusterCredential(ctx context.Context, serverKey string) error
@@ -141,7 +146,8 @@ type ClusterManagerModel interface {
 	CreateNotifyTemplate(ctx context.Context, template *types.NotifyTemplate) error
 	UpdateNotifyTemplate(ctx context.Context, template *types.NotifyTemplate) error
 	DeleteNotifyTemplate(ctx context.Context, projectID string, templateID string) error
-	ListNotifyTemplate(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]types.NotifyTemplate, error)
+	ListNotifyTemplate(
+		ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]types.NotifyTemplate, error)
 	GetNotifyTemplate(ctx context.Context, projectID, templateID string) (*types.NotifyTemplate, error)
 	GetNotifyTemplateByID(ctx context.Context, templateID string) (*types.NotifyTemplate, error)
 

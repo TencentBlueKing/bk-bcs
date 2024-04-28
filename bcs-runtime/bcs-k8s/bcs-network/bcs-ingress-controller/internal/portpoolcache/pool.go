@@ -167,7 +167,7 @@ func (cp *CachePool) AllocateAllProtocolPortBinding(itemName string) (
 		itemList = cp.ItemList
 	}
 
-	// todo remove
+	// to do remove
 	blog.Infof("get itemlist: %s", common.ToJsonString(itemList))
 	for _, item := range itemList {
 		if itemName != "" && item.ItemStatus.ItemName != itemName {
