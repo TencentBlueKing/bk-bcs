@@ -83,7 +83,7 @@
           @click="searchConditionList = cloneDeep(item.search_condition)"
           @delete="handleConfirmDeleteCommonlyUsed(item.id)" />
       </template>
-      <bk-popover ext-cls="all-commonly-search-popover" placement="bottom" theme="light" :arrow="false">
+      <bk-popover ext-cls="all-commonly-search-popover" placement="bottom-start" theme="light" :arrow="false">
         <bk-button theme="primary" text>{{ t('全部常用查询') }}</bk-button>
         <template #content>
           <div

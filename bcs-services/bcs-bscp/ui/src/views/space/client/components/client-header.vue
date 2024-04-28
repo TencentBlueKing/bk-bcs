@@ -2,6 +2,7 @@
   <div class="head">
     <div class="head-left">
       <span class="title">{{ title }}</span>
+      <div class="line"></div>
       <bk-select
         v-model="localApp.id"
         ref="selectorRef"
@@ -152,18 +153,16 @@
     .head-left {
       display: flex;
       align-items: center;
+      .line {
+        width: 1px;
+        height: 24px;
+        background-color: #dcdee5;
+        margin: 0 16px;
+      }
       .title {
         position: relative;
         color: #313238;
         font-weight: 700;
-        &::after {
-          position: absolute;
-          right: -16px;
-          content: '';
-          width: 1px;
-          height: 24px;
-          background: #dcdee5;
-        }
       }
       .service-selector {
         &.popover-show {
@@ -177,7 +176,6 @@
           }
         }
         .selector-trigger {
-          margin-left: 33px;
           cursor: pointer;
           .app-name {
             color: #63656e;

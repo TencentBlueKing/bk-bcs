@@ -26,7 +26,6 @@
     width: 100%;
     position: relative;
     padding: 12px 16px;
-    margin-bottom: 16px;
     background: #ffffff;
     box-shadow:
       0 2px 4px 0 #0000001a,
