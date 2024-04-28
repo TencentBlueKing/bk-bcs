@@ -225,9 +225,10 @@ func (hpi *HostPortInjector) injectToPod(pod *corev1.Pod) ([]types.PatchOperatio
 	containerPortsIndexList := make([][]int, len(pod.Spec.Containers))
 	containerPortList := make([]int32, 0)
 	needInjectCount := 0
-	for _, portStr := range portStrs {
-		for containerIndex, container := range pod.Spec.Containers {
-			for portIndex, containerPort := range container.Ports {
+
+	for containerIndex, container := range pod.Spec.Containers {
+		for portIndex, containerPort := range container.Ports {
+			for _, portStr := range portStrs {
 				if portStr == containerPort.Name {
 					containerPortsIndexList[containerIndex] = append(containerPortsIndexList[containerIndex], portIndex)
 					containerPortList = append(containerPortList, containerPort.ContainerPort)
@@ -236,7 +237,7 @@ func (hpi *HostPortInjector) injectToPod(pod *corev1.Pod) ([]types.PatchOperatio
 				}
 				portNumber, err := strconv.Atoi(portStr)
 				if err != nil {
-					continue
+					return nil, fmt.Errorf("error parse port string %s to int", portStr)
 				}
 				if int32(portNumber) == containerPort.ContainerPort {
 					containerPortsIndexList[containerIndex] = append(containerPortsIndexList[containerIndex], portIndex)
