@@ -22,7 +22,9 @@
           <!-- <bk-table-column type="selection" :min-width="40" :width="40"> </bk-table-column> -->
           <bk-table-column label="UID" :width="254" prop="attachment.uid"></bk-table-column>
           <bk-table-column label="IP" :width="120" prop="spec.ip"></bk-table-column>
-          <bk-table-column :label="t('客户端标签')" :min-width="296">
+          <bk-table-column
+            :label="t('客户端标签')"
+            :min-width="296">
             <template #default="{ row }">
               <div v-if="row.spec && row.labels.length" class="labels">
                 <span v-for="(label, index) in row.labels" :key="index">
@@ -59,8 +61,7 @@
             }">
             <template #default="{ row }">
               <div v-if="row.spec" class="release_change_status">
-                <Spinner v-if="row.spec.release_change_status === 'Sikp'" class="spinner-icon" fill="#3A84FF" />
-                <div v-else :class="['dot', row.spec.release_change_status]"></div>
+                <div :class="['dot', row.spec.release_change_status]"></div>
                 <span>{{ CLIENT_STATUS_MAP[row.spec.release_change_status as keyof typeof CLIENT_STATUS_MAP] }}</span>
                 <InfoLine
                   v-if="row.spec.release_change_status === 'Failed'"
@@ -153,7 +154,7 @@
 <script lang="ts" setup>
   import { ref, watch } from 'vue';
   import { useRoute, useRouter } from 'vue-router';
-  import { Share, Spinner, InfoLine } from 'bkui-vue/lib/icon';
+  import { Share, InfoLine } from 'bkui-vue/lib/icon';
   import { storeToRefs } from 'pinia';
   import { Tag } from 'bkui-vue';
   import { getClientQueryList, createClientSearchRecord } from '../../../../api/client';
@@ -207,10 +208,6 @@
     {
       text: t('处理中'),
       value: 'Processing',
-    },
-    {
-      text: t('跳过'),
-      value: 'Skip',
     },
   ];
   const releaseChangeStatusFilterChecked = ref<string[]>([]);
@@ -346,6 +343,9 @@
   .labels {
     display: flex;
     flex-wrap: wrap;
+    span {
+      margin-right: 4px;
+    }
   }
 
   .current-version {

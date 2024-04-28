@@ -389,6 +389,7 @@ export default {
   批量删除脚本成功: 'Batch deletion of script items was successful',
   批量删除分组成功: 'Batch deletion of group items was successful',
   撤销修改配置项成功: 'Succeeded in unmodifying the configuration item',
+  '模板套餐导入完成，存在 {n} 个冲突配置项，请修改配置项信息或删除对应模板套餐，否则无法生成版本。': 'The template package is imported. {n} configuration items conflict with each other. Modify the configuration items or delete the corresponding template package.',
 
   // 分组管理
   新增分组: 'New group',

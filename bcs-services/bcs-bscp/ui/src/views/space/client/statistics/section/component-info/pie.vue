@@ -11,6 +11,9 @@
   import Tooltip from '../../components/tooltip.vue';
   import { IVersionDistributionPie } from '../../../../../../../types/client';
   import { useRouter, useRoute } from 'vue-router';
+  import { useI18n } from 'vue-i18n';
+
+  const { t } = useI18n();
 
   const router = useRouter();
   const route = useRoute();
@@ -36,13 +39,12 @@
   onMounted(() => {
     initChart();
   });
-
   const initChart = () => {
     piePlot = new Sunburst(canvasRef.value!, {
       data: props.data,
-      colorField: 'name',
+      color: ['#2C2599', '#FFA66B', '#85CCA8', '#3E96C2'],
       label: {
-        content: ({ data }) => `${(data.percent * 100).toFixed(0)}%`,
+        content: ({ data }) => `${(data.percent * 100).toFixed(1)}%`,
         style: {
           fontSize: 14,
           textAlign: 'center',
@@ -51,22 +53,24 @@
       },
       legend: {
         position: 'right',
-        offsetX: -200,
-        marker: {
-          symbol: 'circle',
+        layout: 'vertical',
+      },
+      tooltip: {
+        fields: ['value', 'name'],
+        showTitle: true,
+        title: 'name',
+        container: tooltipRef.value?.getDom(),
+        enterable: true,
+        customItems: (originalItems: any[]) => {
+          originalItems[0].name = t('客户端数量');
+          originalItems[1].name = t('占比');
+          originalItems[1].value = `${(originalItems[1].data.data.percent * 100).toFixed(1)}%`;
+          return originalItems;
         },
       },
-      // tooltip: {
-      //   fields: ['count', 'percent'],
-      //   showTitle: true,
-      //   title: 'current_release_name',
-      //   container: tooltipRef.value?.getDom(),
-      //   enterable: true,
-      //   customItems: (originalItems: any[]) => {
-      //     originalItems[1].value = `${(parseFloat(originalItems[1].value) * 100).toFixed(1)}%`;
-      //     return originalItems;
-      //   },
-      // },
+      hierarchyConfig: {
+        padding: 0.003,
+      },
     });
     piePlot.render();
   };

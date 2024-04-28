@@ -14,12 +14,11 @@
           </bk-select>
         </template>
         <bk-loading class="loading-wrap" :loading="loading">
-          <div v-if="data.time.length" ref="canvasRef" class="canvas-wrap">
+          <div v-if="!isDataEmpty" ref="canvasRef" class="canvas-wrap">
             <Tooltip ref="tooltipRef" @jump="jumpToSearch" />
           </div>
           <bk-exception
             v-else
-            class="exception-wrap-item exception-part"
             type="empty"
             scene="part"
             :description="$t('暂无数据')">
@@ -34,7 +33,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref, onMounted, watch } from 'vue';
+  import { ref, onMounted, watch, computed } from 'vue';
   import Card from '../../components/card.vue';
   import OperationBtn from '../../components/operation-btn.vue';
   import { DualAxes } from '@antv/g2plot';
@@ -83,9 +82,11 @@
   const loading = ref(false);
   const isOpenFullScreen = ref(false);
 
+  const isDataEmpty = computed(() => !data.value.time.some((item) => item.count > 0));
+
   watch([() => selectTime.value, () => props.appId], async () => {
     await loadChartData();
-    if (data.value.time.length) {
+    if (!isDataEmpty.value) {
       if (dualAxes) {
         dualAxes.changeData([data.value.time_and_type, data.value.time]);
       } else {
@@ -105,8 +106,8 @@
 
   watch(
     () => data.value.time,
-    (val) => {
-      if (!val.length && dualAxes) {
+    () => {
+      if (isDataEmpty.value && dualAxes) {
         dualAxes!.destroy();
         dualAxes = null;
       }
@@ -115,7 +116,7 @@
 
   onMounted(async () => {
     await loadChartData();
-    if (data.value.time.length) {
+    if (!isDataEmpty.value) {
       initChart();
     }
   });
@@ -124,6 +125,7 @@
     const params: IClinetCommonQuery = {
       search: searchQuery.value.search,
       pull_time: selectTime.value,
+      last_heartbeat_time: searchQuery.value.last_heartbeat_time,
     };
     try {
       loading.value = true;
@@ -142,8 +144,9 @@
       data: [data.value.time_and_type, data.value.time],
       xField: 'time',
       yField: ['value', 'count'],
-      yAxis: [
-        {
+      yAxis: {
+        value: {
+          tickCount: 5,
           grid: {
             line: {
               style: {
@@ -153,20 +156,22 @@
             },
           },
         },
-        {
+        count: {
+          tickCount: 5,
           min: 0,
         },
-      ],
+      },
+      scrollbar: {
+        type: 'horizontal',
+      },
       padding: [10, 20, 30, 20],
       geometryOptions: [
         {
           geometry: 'column',
           isGroup: true,
           seriesField: 'type',
-          columnWidthRatio: 0.2,
-          color: ['#3E96C2', '#61B2C2', '#61B2C2'],
-          // @ts-ignore
-          maxColumnWidth: 80,
+          columnWidthRatio: 0.3,
+          color: ['#3E96C2', '#61B2C2', '#85CCA8', '#B5E0AB'],
         },
         {
           geometry: 'line',
@@ -246,5 +251,10 @@
         top: 0 !important;
       }
     }
+  }
+  :deep(.bk-exception) {
+    height:100%;
+    justify-content: center;
+    transform: translateY(-20px);
   }
 </style>
