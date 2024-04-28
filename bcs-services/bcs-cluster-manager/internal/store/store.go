@@ -133,7 +133,8 @@ type ClusterManagerModel interface {
 	CreateNodeTemplate(ctx context.Context, template *types.NodeTemplate) error
 	UpdateNodeTemplate(ctx context.Context, template *types.NodeTemplate) error
 	DeleteNodeTemplate(ctx context.Context, projectID string, templateID string) error
-	ListNodeTemplate(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]types.NodeTemplate, error)
+	ListNodeTemplate(ctx context.Context, cond *operator.Condition, opt *options.ListOption) (
+		[]types.NodeTemplate, error)
 	GetNodeTemplate(ctx context.Context, projectID, templateID string) (*types.NodeTemplate, error)
 	GetNodeTemplateByID(ctx context.Context, templateID string) (*types.NodeTemplate, error)
 
@@ -141,7 +142,8 @@ type ClusterManagerModel interface {
 	CreateNotifyTemplate(ctx context.Context, template *types.NotifyTemplate) error
 	UpdateNotifyTemplate(ctx context.Context, template *types.NotifyTemplate) error
 	DeleteNotifyTemplate(ctx context.Context, projectID string, templateID string) error
-	ListNotifyTemplate(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]types.NotifyTemplate, error)
+	ListNotifyTemplate(ctx context.Context, cond *operator.Condition, opt *options.ListOption) (
+		[]types.NotifyTemplate, error)
 	GetNotifyTemplate(ctx context.Context, projectID, templateID string) (*types.NotifyTemplate, error)
 	GetNotifyTemplateByID(ctx context.Context, templateID string) (*types.NotifyTemplate, error)
 

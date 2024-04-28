@@ -215,6 +215,7 @@ func differentInstance(ctx context.Context, info *cloudprovider.CloudDependBasic
 		if _, ok := nodeMap[nodeID]; !ok {
 			// 如果当前vm不存在于nodeMap中，则为扩容出来的机器
 			res = append(res, instaces[i])
+			blog.Infof("taskID[%s] node %s is new node", taskID, nodeID)
 		}
 	}
 

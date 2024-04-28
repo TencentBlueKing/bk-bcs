@@ -787,7 +787,7 @@ func (cm *ClusterManager) initHTTPGateway(router *mux.Router) error {
 	if cm.tlsConfig != nil && cm.clientTLSConfig != nil {
 		grpcDialOpts = append(grpcDialOpts, grpc.WithTransportCredentials(grpccred.NewTLS(cm.clientTLSConfig)))
 	} else {
-		grpcDialOpts = append(grpcDialOpts, grpc.WithInsecure())
+		grpcDialOpts = append(grpcDialOpts, grpc.WithInsecure()) // nolint
 	}
 	grpcDialOpts = append(grpcDialOpts, grpc.WithDefaultCallOptions(
 		grpc.MaxCallRecvMsgSize(utils.MaxBodySize), grpc.MaxCallSendMsgSize(utils.MaxBodySize)))

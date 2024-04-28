@@ -64,7 +64,7 @@ func (d *Daemon) reportClusterHealthStatus(error chan<- error) {
 			}
 			_, err = kubeCli.Discovery().ServerVersion()
 			if err != nil {
-				//if options.GetEditionInfo().IsCommunicationEdition() {}
+				// if options.GetEditionInfo().IsCommunicationEdition() {}
 				_ = d.updateClusterStatus(cls.ClusterID, common.StatusConnectClusterFailed)
 				metrics.ReportCloudClusterHealthStatus(cls.Provider, cls.ClusterID, 0)
 				error <- err
@@ -72,7 +72,7 @@ func (d *Daemon) reportClusterHealthStatus(error chan<- error) {
 			}
 
 			_ = d.updateClusterStatus(cls.ClusterID, common.StatusRunning)
-			//if options.GetEditionInfo().IsCommunicationEdition() {}
+			// if options.GetEditionInfo().IsCommunicationEdition() {}
 			metrics.ReportCloudClusterHealthStatus(cls.Provider, cls.ClusterID, 1)
 		}(clusterList[i])
 	}

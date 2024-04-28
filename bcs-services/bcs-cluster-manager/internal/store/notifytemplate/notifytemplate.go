@@ -172,7 +172,8 @@ func (m *ModelNotifyTemplate) GetNotifyTemplateByID(ctx context.Context, templat
 }
 
 // ListNotifyTemplate list notifyTemplates
-func (m *ModelNotifyTemplate) ListNotifyTemplate(ctx context.Context, cond *operator.Condition, opt *options.ListOption) (
+func (m *ModelNotifyTemplate) ListNotifyTemplate(ctx context.Context, cond *operator.Condition,
+	opt *options.ListOption) (
 	[]types.NotifyTemplate, error) {
 	templateList := make([]types.NotifyTemplate, 0)
 
