@@ -23,6 +23,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -219,6 +220,166 @@ func (rn RemoveNodesRequest) trans2RemoveNodesRequest(clsId string) (*model.Remo
 	}
 
 	return request, nil
+}
+
+// CreateNodePoolRequest create node pool request
+type CreateNodePoolRequest struct {
+	// ClusterId 集群ID
+	ClusterId string
+	// Name 节点池名称
+	Name string
+	// Spec 节点池配置
+	Spec CreateNodePoolSpec
+}
+
+// CreateNodePoolSpec create node pool spec
+type CreateNodePoolSpec struct {
+	Template CreateNodePoolTemplate
+	// SecurityGroups 安全组ID列表
+	SecurityGroups []string
+	// SubnetId 子网ID
+	SubnetId string
+}
+
+// CreateNodePoolTemplate create node pool template
+type CreateNodePoolTemplate struct {
+	// Flavor 节点规格
+	Flavor string
+	// Az 可用区
+	Az string
+	// Os 节点的操作系统类型
+	Os string
+	// Login 节点登录信息
+	Login Login
+	// RootVolume 节点系统盘配置
+	RootVolume *Volume
+	// DataVolumes 节点数据盘配置
+	DataVolumes []*Volume
+	// Charge 节点计费模式
+	Charge ChargePrepaid
+	// Taints 节点池taints
+	Taints []v1.Taint
+	// Labels 节点池labels
+	Labels map[string]string
+	// ContainerRuntime 节点运行时
+	ContainerRuntime string
+	// MaxPod 节点最大允许创建的实例数(Pod)
+	MaxPod int32
+	// PreScript 前置脚本
+	PreScript string
+	// PostScript 后置脚本
+	PostScript string
+}
+
+type ChargePrepaid struct {
+	// ChargeType 节点池计费模式
+	ChargeType string
+	// Period 节点池计费周期
+	Period uint32
+	// RenewFlag 节点池自动续费标识
+	RenewFlag string
+}
+
+func GetChargeConfig(charge ChargePrepaid) (billingMode int32, periodType string, periodNum int32,
+	isAutoRenew string, isAutoPay string) {
+	periodType = "month"
+	periodNum = 1
+	isAutoRenew = "false"
+	isAutoPay = "true"
+
+	periodNum = int32(charge.Period)
+	if charge.ChargeType == icommon.PREPAID {
+		billingMode = 1
+		if charge.Period >= 12 {
+			periodType = "year"
+			periodNum = int32(charge.Period / 12)
+		}
+		if charge.RenewFlag == icommon.NOTIFYANDAUTORENEW {
+			isAutoRenew = "true"
+		}
+	}
+	return
+}
+
+func GetRuntime(containerRuntime string) *model.Runtime {
+	runtimeName := model.GetRuntimeNameEnum().CONTAINERD
+
+	if containerRuntime == icommon.DockerContainerRuntime {
+		runtimeName = model.GetRuntimeNameEnum().DOCKER
+	}
+
+	return &model.Runtime{
+		Name: &runtimeName,
+	}
+}
+
+func (req CreateNodePoolRequest) trans2NodePoolTemplate() *model.CreateNodePoolRequest {
+	var (
+		NodePoolSpecType = model.GetNodePoolSpecTypeEnum().VM
+		taints           = Taint2ModelTaint(req.Spec.Template.Taints)
+	)
+
+	dataVolumes, storageSelectors, storageGroups := GetDataVolumeAndStorgeConfig(req.Spec.Template.DataVolumes)
+	billingMode, periodType, periodNum, isAutoRenew, isAutoPay := GetChargeConfig(req.Spec.Template.Charge)
+
+	return &model.CreateNodePoolRequest{
+		ClusterId: req.ClusterId,
+		Body: &model.NodePool{
+			Kind:       "NodePool",
+			ApiVersion: "v3",
+			Metadata: &model.NodePoolMetadata{
+				Name: req.Name,
+			},
+			Spec: &model.NodePoolSpec{
+				Type: &NodePoolSpecType,
+				NodeTemplate: &model.NodeSpec{
+					Flavor: req.Spec.Template.Flavor,
+					Az:     req.Spec.Template.Az,
+					Os:     &req.Spec.Template.Os,
+					Login:  Login2ModelLogin(&req.Spec.Template.Login),
+					RootVolume: &model.Volume{
+						Size:       req.Spec.Template.RootVolume.Size,
+						Volumetype: req.Spec.Template.RootVolume.VolumeType,
+					},
+					DataVolumes: dataVolumes,
+					Storage: &model.Storage{
+						StorageSelectors: storageSelectors,
+						StorageGroups:    storageGroups,
+					},
+					BillingMode: &billingMode,
+					Taints:      &taints,
+					K8sTags:     req.Spec.Template.Labels,
+					Runtime:     GetRuntime(req.Spec.Template.ContainerRuntime),
+					InitializedConditions: &[]string{
+						"NodeInitial", // 新增节点调度策略: 设置为不可调度
+					},
+					ExtendParam: &model.NodeExtendParam{
+						MaxPods:             &req.Spec.Template.MaxPod,
+						PeriodType:          &periodType,
+						PeriodNum:           &periodNum,
+						IsAutoRenew:         &isAutoRenew,
+						IsAutoPay:           &isAutoPay,
+						AlphaCcePreInstall:  &req.Spec.Template.PreScript,
+						AlphaCcePostInstall: &req.Spec.Template.PostScript,
+					},
+					NodeNicSpec: &model.NodeNicSpec{
+						PrimaryNic: &model.NicSpec{SubnetId: &req.Spec.SubnetId},
+					},
+					HostnameConfig: &model.HostnameConfig{
+						Type: model.GetHostnameConfigTypeEnum().PRIVATE_IP, // 节点名称默认与节点私有ip保持一致
+					},
+				},
+				CustomSecurityGroups: func() *[]string {
+					securityIds := make([]string, 0)
+					for _, v := range req.Spec.SecurityGroups {
+						id := v
+						securityIds = append(securityIds, id)
+					}
+					return &securityIds
+				}(),
+			},
+		},
+	}
 }
 
 // UpdateNodePoolRequest update node pool request
@@ -598,6 +759,81 @@ func GetStorageConfigByVolume(v *Volume) (model.StorageSelectors, model.StorageG
 	}
 
 	return selector, group
+}
+
+func GetDataVolumeAndStorgeConfig(volumes []*Volume) ([]model.Volume, []model.StorageSelectors, []model.StorageGroups) {
+	var (
+		dataVolumes       = make([]model.Volume, 0)
+		storageSelectors  = make([]model.StorageSelectors, 0)
+		storageGroups     = make([]model.StorageGroups, 0)
+		metadataEncrypted = "0"
+		matchCount        = "1"
+		cceManaged        = true
+	)
+
+	for k, v := range volumes {
+		dataVolumes = append(dataVolumes, model.Volume{
+			Volumetype: v.VolumeType,
+			Size:       v.Size,
+		})
+
+		selectorName := fmt.Sprintf("selector%d", k)
+		size := fmt.Sprintf("%d", v.Size)
+		storageSelectors = append(storageSelectors, model.StorageSelectors{
+			Name:        selectorName,
+			StorageType: "evs",
+			MatchLabels: &model.StorageSelectorsMatchLabels{
+				Size:              &size,
+				VolumeType:        &v.VolumeType,
+				MetadataEncrypted: &metadataEncrypted,
+				Count:             &matchCount,
+			},
+		})
+
+		if k == 0 {
+			storageGroups = append(storageGroups, model.StorageGroups{
+				Name:          "vgpaas", // 当cceManaged=ture时，name必须为：vgpaas
+				SelectorNames: []string{selectorName},
+				CceManaged:    &cceManaged, // k8s及runtime所属存储空间。有且仅有一个group被设置为true，不填默认false
+				VirtualSpaces: []model.VirtualSpace{
+					{
+						Name: "kubernetes",
+						Size: "10%",
+						LvmConfig: &model.LvmConfig{
+							LvType: "linear",
+						},
+					},
+					{
+						Name: "runtime",
+						Size: "90%",
+						RuntimeConfig: &model.RuntimeConfig{
+							LvType: "linear",
+						},
+					},
+				},
+			})
+		} else {
+			storageGroup := model.StorageGroups{
+				Name:          fmt.Sprintf("group%d", k),
+				SelectorNames: []string{selectorName},
+				VirtualSpaces: []model.VirtualSpace{
+					{
+						Name: "user",
+						Size: "100%",
+						LvmConfig: &model.LvmConfig{
+							LvType: "linear",
+						},
+					},
+				},
+			}
+			if v.MountPath != "" {
+				storageGroup.VirtualSpaces[0].LvmConfig.Path = &v.MountPath
+			}
+			storageGroups = append(storageGroups, storageGroup)
+		}
+	}
+
+	return dataVolumes, storageSelectors, storageGroups
 }
 
 func getServerFirstVolume(volumes []*Volume) *Volume {
