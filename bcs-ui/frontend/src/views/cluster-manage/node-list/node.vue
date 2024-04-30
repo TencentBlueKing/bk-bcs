@@ -991,6 +991,14 @@ export default defineComponent({
         // disabled: true,
       },
       {
+        label: $i18n.t('metrics.cpuRequestUsage.text'),
+        id: 'cpu_request_usage',
+      },
+      {
+        label: $i18n.t('metrics.memRequestUsage.text'),
+        id: 'memory_request_usage',
+      },
+      {
         id: 'disk_usage',
         label: $i18n.t('metrics.diskUsage'),
         // disabled: true,
