@@ -21,7 +21,6 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/cmd/manager/options"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store/httputils"
 )
@@ -38,10 +37,9 @@ type secretStore struct {
 }
 
 // NewSecretStore will create the instance of SecretStore
-func NewSecretStore() SecretInterface {
-	op := options.GlobalOptions()
+func NewSecretStore(op *common.SecretStoreOptions) SecretInterface {
 	return &secretStore{
-		op: op.SecretServer,
+		op: op,
 	}
 }
 
