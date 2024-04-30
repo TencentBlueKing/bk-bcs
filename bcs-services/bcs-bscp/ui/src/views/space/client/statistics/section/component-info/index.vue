@@ -36,7 +36,7 @@
         <div class="resource-info">
           <span v-if="item.value">
             <span class="time">{{ item.key.includes('cpu') ? item.value : Math.round(item.value) }}</span>
-            <span class="unit">{{ item.key.includes('cpu') ? t('核') : 'MB' }}</span>
+            <span class="unit">{{ item.unit }}</span>
           </span>
           <span v-else class="empty">{{ t('暂无数据') }}</span>
         </div>
@@ -116,7 +116,7 @@
   };
   const data = ref<IVersionDistributionItem[]>([]);
   const sunburstData = ref<IVersionDistributionPie>({
-    name: t('配置版本'),
+    name: t('组件版本'),
     children: [],
   });
   const loading = ref(false);
@@ -160,11 +160,43 @@
     try {
       loading.value = true;
       const res = await getClientComponentInfoData(props.bkBizId, props.appId, params);
-      data.value = res.version_distribution;
-      sunburstData.value.children = convertToTree(res.version_distribution);
-      Object.entries(res.resource_usage).map(
-        ([key, value]) => (resourceData.value.find((item) => item.key === key)!.value = value as number),
-      );
+      data.value = res.version_distribution.map((item: IVersionDistributionItem) => {
+        const { client_type } = item;
+        let name = '';
+        switch (client_type) {
+          case 'sidecar':
+            name = `SideCar ${t('客户端')}`;
+            break;
+          case 'sdk':
+            name = `SDK ${t('客户端')}`;
+            break;
+          case 'agent':
+            name = t('主机插件客户端');
+            break;
+          case 'command':
+            name = `CLI ${t('客户端')}`;
+            break;
+        }
+        return {
+          ...item,
+          client_type: name,
+        };
+      });
+      sunburstData.value.children = convertToTree(data.value);
+      Object.entries(res.resource_usage).forEach(([key, value]) => {
+        const item = resourceData.value.find((item) => item.key === key) as IInfoCard;
+        item!.value = value as number;
+        if (!item.key.includes('cpu')) {
+          item.unit = 'MB';
+        } else {
+          if (item.value > 1) {
+            item.unit = t('核');
+          } else {
+            item.value = item.value * 1000;
+            item.unit = 'mCPUs';
+          }
+        }
+      });
     } catch (error) {
       console.error(error);
     } finally {
@@ -245,5 +277,10 @@
         }
       }
     }
+  }
+  :deep(.bk-exception-part) {
+    height: 100%;
+    justify-content: center;
+    transform: translateY(-20px);
   }
 </style>

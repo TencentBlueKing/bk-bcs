@@ -33,7 +33,7 @@
 
 <style scoped lang="scss">
   .commonly-item {
-    margin-left: 8px;
+    margin-right: 8px;
     line-height: 22px;
     .action-more-icon {
       transform: rotate(90deg);

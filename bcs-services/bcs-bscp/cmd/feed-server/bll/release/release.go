@@ -130,7 +130,7 @@ func (rs *ReleasedService) ListAppLatestReleaseMeta(kt *kit.Kit, opts *types.App
 				},
 			},
 			ConfigItemAttachment: &pbci.ConfigItemAttachment{
-				BizId: one.Attachment.AppID,
+				BizId: one.Attachment.BizID,
 				AppId: one.Attachment.AppID,
 			},
 			ConfigItemRevision: &pbbase.Revision{

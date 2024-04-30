@@ -83,7 +83,7 @@
                   cluster_id: localClusterId
                 }
               }"
-              :disabled="isKubeConfigImportCluster || curSelectedCluster.provider === 'azureCloud'"
+              :disabled="isKubeConfigImportCluster || ['azureCloud', 'huaweiCloud'].includes(curSelectedCluster.provider || '')"
               @click="handleAddNode">
               {{$t('cluster.nodeList.create.text')}}
             </bcs-button>
@@ -591,7 +591,7 @@
     <!-- 设置污点 -->
     <bcs-sideslider
       :is-show.sync="taintConfig.isShow"
-      :title="$t('cluster.nodeList.button.setTaint')"
+      :title="`${$t('cluster.nodeList.button.setTaint')}(${taintConfig.nodes[0]?.nodeName})`"
       :width="750"
       :before-close="handleBeforeClose"
       quick-close
@@ -956,12 +956,12 @@ export default defineComponent({
       {
         id: 'container_count',
         label: $i18n.t('dashboard.workload.container.counts'),
-        disabled: true,
+        // disabled: true,
       },
       {
         id: 'pod_count',
         label: $i18n.t('cluster.nodeList.label.podCounts'),
-        disabled: true,
+        // disabled: true,
       },
       {
         id: 'labels',
@@ -978,79 +978,82 @@ export default defineComponent({
       {
         id: 'pod_usage',
         label: $i18n.t('metrics.podUsage'),
-        disabled: true,
+        // disabled: true,
       },
       {
         id: 'cpu_usage',
         label: $i18n.t('metrics.cpuUsage'),
-        disabled: true,
+        // disabled: true,
       },
       {
         id: 'memory_usage',
         label: $i18n.t('metrics.memUsage'),
-        disabled: true,
+        // disabled: true,
       },
       {
         id: 'disk_usage',
         label: $i18n.t('metrics.diskUsage'),
-        disabled: true,
+        // disabled: true,
       },
       {
         id: 'diskio_usage',
         label: $i18n.t('metrics.diskIOUsage2'),
-        disabled: true,
+        // disabled: true,
       },
     ];
     // 表格指标列配置
-    const metricColumnConfig = ref([
-      {
-        label: $i18n.t('metrics.podUsage'),
-        prop: 'pod_usage',
-        color: '#3a84ff',
-        percent: ['pod_count', 'pod_total'], // 分子和分母
-        unit: 'int',
-      },
-      {
-        label: $i18n.t('metrics.cpuUsage'),
-        prop: 'cpu_usage',
-        color: '#3ede78',
-        percent: ['cpu_used', 'cpu_total'], // 分子和分母
-        unit: 'cpu',
-      },
-      {
-        label: $i18n.t('metrics.memUsage'),
-        prop: 'memory_usage',
-        color: '#3a84ff',
-        percent: ['memory_used', 'memory_total'], // 分子和分母
-        unit: 'byte',
-      },
-      {
-        label: $i18n.t('metrics.cpuRequestUsage.text'),
-        prop: 'cpu_request_usage',
-        percent: ['cpu_request', 'cpu_total'], // 分子和分母
-        color: '#3ede78',
-        unit: 'cpu',
-      },
-      {
-        label: $i18n.t('metrics.memRequestUsage.text'),
-        prop: 'memory_request_usage',
-        percent: ['memory_request', 'memory_total'], // 分子和分母
-        color: '#3a84ff',
-        unit: 'byte',
-      },
-      {
-        label: $i18n.t('metrics.diskUsage'),
-        prop: 'disk_usage',
-        color: '#853cff',
-        percent: ['disk_used', 'disk_total'], // 分子和分母
-        unit: 'byte',
-      },
-      {
-        label: $i18n.t('metrics.diskIOUsage'),
-        prop: 'diskio_usage',
-        color: '#853cff',
-      },
-    ]);
+    const metricColumnConfig = computed(() => {
+      const data = [
+        {
+          label: $i18n.t('metrics.podUsage'),
+          prop: 'pod_usage',
+          color: '#3a84ff',
+          percent: ['pod_count', 'pod_total'], // 分子和分母
+          unit: 'int',
+        },
+        {
+          label: $i18n.t('metrics.cpuUsage'),
+          prop: 'cpu_usage',
+          color: '#3ede78',
+          percent: ['cpu_used', 'cpu_total'], // 分子和分母
+          unit: 'cpu',
+        },
+        {
+          label: $i18n.t('metrics.memUsage'),
+          prop: 'memory_usage',
+          color: '#3a84ff',
+          percent: ['memory_used', 'memory_total'], // 分子和分母
+          unit: 'byte',
+        },
+        {
+          label: $i18n.t('metrics.cpuRequestUsage.text'),
+          prop: 'cpu_request_usage',
+          percent: ['cpu_request', 'cpu_total'], // 分子和分母
+          color: '#3ede78',
+          unit: 'cpu',
+        },
+        {
+          label: $i18n.t('metrics.memRequestUsage.text'),
+          prop: 'memory_request_usage',
+          percent: ['memory_request', 'memory_total'], // 分子和分母
+          color: '#3a84ff',
+          unit: 'byte',
+        },
+        {
+          label: $i18n.t('metrics.diskUsage'),
+          prop: 'disk_usage',
+          color: '#853cff',
+          percent: ['disk_used', 'disk_total'], // 分子和分母
+          unit: 'byte',
+        },
+        {
+          label: $i18n.t('metrics.diskIOUsage'),
+          prop: 'diskio_usage',
+          color: '#853cff',
+        },
+      ];
+      return data.filter(item => tableSetting.value.selectedFields.some(field => field.id === item.prop));
+    });
 
     const {
       tableSetting,
@@ -1094,7 +1097,8 @@ export default defineComponent({
       && curSelectedCluster.value.importCategory === 'kubeConfig');
     // cloud私有节点
     const isCloudSelfNode = row => curSelectedCluster.value.clusterCategory === 'importer'
-      && (curSelectedCluster.value.provider === 'gcpCloud' || curSelectedCluster.value.provider === 'azureCloud')
+      && (curSelectedCluster.value.provider === 'gcpCloud' || curSelectedCluster.value.provider === 'azureCloud'
+      || curSelectedCluster.value.provider === 'huaweiCloud')
       && !row.nodeGroupID;
     // 全量表格数据
     const tableData = ref<any[]>([]);
@@ -1394,7 +1398,9 @@ export default defineComponent({
       set(setLabelConf, 'value', Object.assign(setLabelConf.value, {
         data: labelArr,
         rows,
-        title: rows.length > 1 ? $i18n.t('cluster.nodeList.title.batchSetLabel.text') : $i18n.t('cluster.nodeList.button.setLabel'),
+        title: rows.length > 1
+          ? $i18n.t('cluster.nodeList.title.batchSetLabel.text')
+          : `${$i18n.t('cluster.nodeList.button.setLabel')}(${rows[0]?.nodeName})`,
         keyDesc: rows.length > 1 ? $i18n.t('cluster.nodeList.title.batchSetLabel.desc') : '',
       }));
       reset();

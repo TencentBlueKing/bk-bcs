@@ -59,6 +59,7 @@ export interface IConfigItem {
     update_at: string;
   };
   file_state: string;
+  is_conflict: boolean;
 }
 
 // 配置文件详情（包含签名信息）
@@ -177,6 +178,7 @@ export interface IBoundTemplateDetail {
   byte_size: string;
   creator: string;
   create_at: string;
+  is_conflict: boolean;
 }
 
 // 配置文件对比选中项

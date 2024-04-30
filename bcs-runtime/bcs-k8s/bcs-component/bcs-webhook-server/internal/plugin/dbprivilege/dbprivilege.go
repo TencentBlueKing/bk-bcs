@@ -381,16 +381,12 @@ func (h *Hooker) generateInitContainer(configs []*bcsv1.BcsDbPrivConfig) (corev1
 				},
 			},
 			{
-				Name:  "io_tencent_bcs_esb_url",
-				Value: h.opt.EsbURL,
+				Name:  "external_sys_type",
+				Value: h.opt.ExternalSysType,
 			},
 			{
-				Name:  "io_tencent_bcs_apigw_cdp_gcs_url",
-				Value: h.opt.CDPGCSURL,
-			},
-			{
-				Name:  "io_tencent_bcs_apigw_access_token",
-				Value: h.opt.AccessToken,
+				Name:  "external_sys_config",
+				Value: h.opt.ExternalSysConfig,
 			},
 			{
 				Name:  "io_tencent_bcs_app_code",

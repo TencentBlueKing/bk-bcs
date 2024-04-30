@@ -87,7 +87,7 @@ func (dao *clientEventDao) GetMinMaxAvgTime(kit *kit.Kit, bizID uint32, appID ui
 
 	m := dao.genQ.ClientEvent
 	q := dao.genQ.ClientEvent.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID),
-		m.AppID.Eq(appID))
+		m.AppID.Eq(appID)).Where(m.OriginalReleaseID.NeqCol(m.TargetReleaseID))
 
 	var err error
 	var items types.MinMaxAvgTimeChart
@@ -115,7 +115,7 @@ func (dao *clientEventDao) List(kit *kit.Kit, bizID, appID, clientID uint32, sta
 
 	m := dao.genQ.ClientEvent
 	q := dao.genQ.ClientEvent.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID), m.AppID.Eq(appID),
-		m.ClientID.Eq(clientID))
+		m.ClientID.Eq(clientID)).Where(m.OriginalReleaseID.NeqCol(m.TargetReleaseID))
 	var err error
 	var conds []rawgen.Condition
 	if len(searchValue) > 0 {

@@ -102,7 +102,7 @@ func (ng *NodeGroup) UpdateNodeGroup(group *proto.NodeGroup, opt *cloudprovider.
 		return nil, err
 	}
 
-	_, err = client.UpdateNodePool(api.GenerateModifyClusterNodePoolInput(group, cluster.SystemID, rsp))
+	_, err = client.UpdateNodePoolV2(api.GenerateModifyClusterNodePoolInput(group, cluster.SystemID, rsp))
 	if err != nil {
 		return nil, err
 	}

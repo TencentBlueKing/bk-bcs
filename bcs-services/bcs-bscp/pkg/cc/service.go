@@ -338,6 +338,8 @@ type FeedServerSetting struct {
 	Log     LogOption `yaml:"log"`
 
 	Repository   Repository          `yaml:"repository"`
+	BCS          BCS                 `yaml:"bcs"`
+	GSE          GSE                 `yaml:"gse"`
 	FSLocalCache FSLocalCache        `yaml:"fsLocalCache"`
 	Downstream   Downstream          `yaml:"downstream"`
 	MRLimiter    MatchReleaseLimiter `yaml:"matchReleaseLimiter"`
@@ -360,6 +362,7 @@ func (s *FeedServerSetting) trySetDefault() {
 	s.Log.trySetDefault()
 	s.FSLocalCache.trySetDefault()
 	s.Downstream.trySetDefault()
+	s.GSE.getFromEnv()
 	s.MRLimiter.trySetDefault()
 }
 

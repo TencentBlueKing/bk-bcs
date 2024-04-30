@@ -389,6 +389,7 @@ export default {
   批量删除脚本成功: 'Batch deletion of script items was successful',
   批量删除分组成功: 'Batch deletion of group items was successful',
   撤销修改配置项成功: 'Succeeded in unmodifying the configuration item',
+  '模板套餐导入完成，存在 {n} 个冲突配置项，请修改配置项信息或删除对应模板套餐，否则无法生成版本。': 'The template package is imported. {n} configuration items conflict with each other. Modify the configuration items or delete the corresponding template package.',
 
   // 分组管理
   新增分组: 'New group',
@@ -585,6 +586,7 @@ export default {
   业务ID: 'BusinessID',
   服务配置目录: 'Service configuration directory',
   当前配置版本名称: 'Current configuration version name',
+  脚本更新成功: 'Script updated successfully',
 
   // 服务密钥
   '密钥仅用于 SDK/API 拉取配置使用。服务管理/配置管理/分组管理等功能的权限申请，请前往': 'The key is only used for SDK/API pull configurations. To apply for permissions for functions such as service management/configuration management/group management, please go to',
@@ -721,7 +723,7 @@ export default {
   开始时间: 'Start time',
   结束时间: 'End time',
   配置拉取方式: 'Configure the pull mode',
-  '配置拉取耗时(秒)': 'Configure the pull time (seconds)',
+  配置拉取耗时: 'Configure the pull time',
   配置拉取文件数: 'The number of pull files was set',
   配置拉取文件大小: 'Configure the pull file size',
   配置拉取状态: 'Configure the pull status',
@@ -734,6 +736,7 @@ export default {
   占比: 'Proportion',
   配置版本: 'Configuration version',
   数量: 'Number',
+  客户端配置拉取质量: 'Client configuration pull quality',
   拉取数量趋势: 'Pull quantity trend',
   '近 {n} 天': 'Last {n} days',
   客户端: 'Client',
@@ -764,4 +767,8 @@ export default {
   组件类型: 'Component type',
   组件版本: 'Component version',
   查看数据详情: 'View data details',
+  主要失败原因: 'Main cause of failure',
+  暂无服务: 'No service',
+  前往创建: 'Go to create',
+  命令行工具: 'Command line tool',
 };

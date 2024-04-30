@@ -8,7 +8,10 @@
       placement="bottom"
       theme="light"
       @after-show="handleGetSearchList('recent')">
-      <div class="search-wrap" :data-placeholder="inputPlacehoder">
+      <div
+        class="search-wrap"
+        :data-placeholder="inputPlacehoder"
+        v-bk-tooltips="{ content: inputPlacehoder, disabled: locale === 'zh-cn' || !inputPlacehoder }">
         <div class="search-condition-list">
           <bk-tag
             v-for="(condition, index) in searchConditionList"
@@ -128,7 +131,7 @@
   import { useRoute } from 'vue-router';
   import { useI18n } from 'vue-i18n';
 
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
 
   const clientStore = useClientStore();
   const { searchQuery } = storeToRefs(clientStore);
@@ -267,6 +270,7 @@
 
   // 获取最近搜索记录和常用搜索记录
   const handleGetSearchList = async (search_type: string) => {
+    if (!props.appId) return;
     try {
       resentSearchListLoading.value = search_type === 'recent';
       const params = {
@@ -427,6 +431,9 @@
 </script>
 
 <style scoped lang="scss">
+  .section {
+    position: relative;
+  }
   .search-wrap {
     position: relative;
     display: flex;
@@ -505,6 +512,7 @@
     position: absolute;
     height: 26px;
     display: flex;
+    align-items: center;
     margin-top: 6px;
   }
   .action-item {

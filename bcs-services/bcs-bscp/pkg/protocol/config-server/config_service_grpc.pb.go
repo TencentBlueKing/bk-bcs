@@ -59,6 +59,7 @@ const (
 	Config_CreateHook_FullMethodName                        = "/pbcs.Config/CreateHook"
 	Config_DeleteHook_FullMethodName                        = "/pbcs.Config/DeleteHook"
 	Config_BatchDeleteHook_FullMethodName                   = "/pbcs.Config/BatchDeleteHook"
+	Config_UpdateHook_FullMethodName                        = "/pbcs.Config/UpdateHook"
 	Config_ListHooks_FullMethodName                         = "/pbcs.Config/ListHooks"
 	Config_ListHookTags_FullMethodName                      = "/pbcs.Config/ListHookTags"
 	Config_GetHook_FullMethodName                           = "/pbcs.Config/GetHook"
@@ -175,6 +176,7 @@ const (
 	Config_ClientAnnotationStatistics_FullMethodName        = "/pbcs.Config/ClientAnnotationStatistics"
 	Config_ClientVersionStatistics_FullMethodName           = "/pbcs.Config/ClientVersionStatistics"
 	Config_ListClientLabelAndAnnotation_FullMethodName      = "/pbcs.Config/ListClientLabelAndAnnotation"
+	Config_ClientSpecificFailedReason_FullMethodName        = "/pbcs.Config/ClientSpecificFailedReason"
 )
 
 // ConfigClient is the client API for Config service.
@@ -217,6 +219,7 @@ type ConfigClient interface {
 	CreateHook(ctx context.Context, in *CreateHookReq, opts ...grpc.CallOption) (*CreateHookResp, error)
 	DeleteHook(ctx context.Context, in *DeleteHookReq, opts ...grpc.CallOption) (*DeleteHookResp, error)
 	BatchDeleteHook(ctx context.Context, in *BatchDeleteHookReq, opts ...grpc.CallOption) (*BatchDeleteResp, error)
+	UpdateHook(ctx context.Context, in *UpdateHookReq, opts ...grpc.CallOption) (*UpdateHookResp, error)
 	ListHooks(ctx context.Context, in *ListHooksReq, opts ...grpc.CallOption) (*ListHooksResp, error)
 	ListHookTags(ctx context.Context, in *ListHookTagsReq, opts ...grpc.CallOption) (*ListHookTagsResp, error)
 	GetHook(ctx context.Context, in *GetHookReq, opts ...grpc.CallOption) (*GetHookResp, error)
@@ -344,6 +347,7 @@ type ConfigClient interface {
 	ClientAnnotationStatistics(ctx context.Context, in *client.ClientCommonReq, opts ...grpc.CallOption) (*structpb.Struct, error)
 	ClientVersionStatistics(ctx context.Context, in *client.ClientCommonReq, opts ...grpc.CallOption) (*structpb.Struct, error)
 	ListClientLabelAndAnnotation(ctx context.Context, in *ListClientLabelAndAnnotationReq, opts ...grpc.CallOption) (*structpb.Struct, error)
+	ClientSpecificFailedReason(ctx context.Context, in *client.ClientCommonReq, opts ...grpc.CallOption) (*structpb.Struct, error)
 }
 
 type configClient struct {
@@ -645,6 +649,15 @@ func (c *configClient) DeleteHook(ctx context.Context, in *DeleteHookReq, opts .
 func (c *configClient) BatchDeleteHook(ctx context.Context, in *BatchDeleteHookReq, opts ...grpc.CallOption) (*BatchDeleteResp, error) {
 	out := new(BatchDeleteResp)
 	err := c.cc.Invoke(ctx, Config_BatchDeleteHook_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) UpdateHook(ctx context.Context, in *UpdateHookReq, opts ...grpc.CallOption) (*UpdateHookResp, error) {
+	out := new(UpdateHookResp)
+	err := c.cc.Invoke(ctx, Config_UpdateHook_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1695,6 +1708,15 @@ func (c *configClient) ListClientLabelAndAnnotation(ctx context.Context, in *Lis
 	return out, nil
 }
 
+func (c *configClient) ClientSpecificFailedReason(ctx context.Context, in *client.ClientCommonReq, opts ...grpc.CallOption) (*structpb.Struct, error) {
+	out := new(structpb.Struct)
+	err := c.cc.Invoke(ctx, Config_ClientSpecificFailedReason_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ConfigServer is the server API for Config service.
 // All implementations should embed UnimplementedConfigServer
 // for forward compatibility
@@ -1735,6 +1757,7 @@ type ConfigServer interface {
 	CreateHook(context.Context, *CreateHookReq) (*CreateHookResp, error)
 	DeleteHook(context.Context, *DeleteHookReq) (*DeleteHookResp, error)
 	BatchDeleteHook(context.Context, *BatchDeleteHookReq) (*BatchDeleteResp, error)
+	UpdateHook(context.Context, *UpdateHookReq) (*UpdateHookResp, error)
 	ListHooks(context.Context, *ListHooksReq) (*ListHooksResp, error)
 	ListHookTags(context.Context, *ListHookTagsReq) (*ListHookTagsResp, error)
 	GetHook(context.Context, *GetHookReq) (*GetHookResp, error)
@@ -1862,6 +1885,7 @@ type ConfigServer interface {
 	ClientAnnotationStatistics(context.Context, *client.ClientCommonReq) (*structpb.Struct, error)
 	ClientVersionStatistics(context.Context, *client.ClientCommonReq) (*structpb.Struct, error)
 	ListClientLabelAndAnnotation(context.Context, *ListClientLabelAndAnnotationReq) (*structpb.Struct, error)
+	ClientSpecificFailedReason(context.Context, *client.ClientCommonReq) (*structpb.Struct, error)
 }
 
 // UnimplementedConfigServer should be embedded to have forward compatible implementations.
@@ -1966,6 +1990,9 @@ func (UnimplementedConfigServer) DeleteHook(context.Context, *DeleteHookReq) (*D
 }
 func (UnimplementedConfigServer) BatchDeleteHook(context.Context, *BatchDeleteHookReq) (*BatchDeleteResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BatchDeleteHook not implemented")
+}
+func (UnimplementedConfigServer) UpdateHook(context.Context, *UpdateHookReq) (*UpdateHookResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateHook not implemented")
 }
 func (UnimplementedConfigServer) ListHooks(context.Context, *ListHooksReq) (*ListHooksResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListHooks not implemented")
@@ -2314,6 +2341,9 @@ func (UnimplementedConfigServer) ClientVersionStatistics(context.Context, *clien
 }
 func (UnimplementedConfigServer) ListClientLabelAndAnnotation(context.Context, *ListClientLabelAndAnnotationReq) (*structpb.Struct, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListClientLabelAndAnnotation not implemented")
+}
+func (UnimplementedConfigServer) ClientSpecificFailedReason(context.Context, *client.ClientCommonReq) (*structpb.Struct, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ClientSpecificFailedReason not implemented")
 }
 
 // UnsafeConfigServer may be embedded to opt out of forward compatibility for this service.
@@ -2917,6 +2947,24 @@ func _Config_BatchDeleteHook_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ConfigServer).BatchDeleteHook(ctx, req.(*BatchDeleteHookReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_UpdateHook_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateHookReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).UpdateHook(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_UpdateHook_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).UpdateHook(ctx, req.(*UpdateHookReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -5009,6 +5057,24 @@ func _Config_ListClientLabelAndAnnotation_Handler(srv interface{}, ctx context.C
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Config_ClientSpecificFailedReason_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(client.ClientCommonReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).ClientSpecificFailedReason(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_ClientSpecificFailedReason_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).ClientSpecificFailedReason(ctx, req.(*client.ClientCommonReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Config_ServiceDesc is the grpc.ServiceDesc for Config service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -5147,6 +5213,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "BatchDeleteHook",
 			Handler:    _Config_BatchDeleteHook_Handler,
+		},
+		{
+			MethodName: "UpdateHook",
+			Handler:    _Config_UpdateHook_Handler,
 		},
 		{
 			MethodName: "ListHooks",
@@ -5611,6 +5681,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListClientLabelAndAnnotation",
 			Handler:    _Config_ListClientLabelAndAnnotation_Handler,
+		},
+		{
+			MethodName: "ClientSpecificFailedReason",
+			Handler:    _Config_ClientSpecificFailedReason_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

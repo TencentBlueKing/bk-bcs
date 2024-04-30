@@ -33,6 +33,7 @@ var Key = &keyGenerator{
 	releasedHookTTLRange:        [2]int{6 * oneDaySeconds, 7 * oneDaySeconds},
 	appMetaTTLRange:             [2]int{6 * oneDaySeconds, 7 * oneDaySeconds},
 	appHasRITTLRange:            [2]int{5 * 60, 10 * 60},
+	asyncDownloadTaskTTLRange:   [2]int{30 * 60, 60 * 60},
 }
 
 type namespace string
@@ -49,6 +50,7 @@ const (
 	appID               namespace = "app-id"
 	releasedKv          namespace = "released-kv"
 	clientMetric        namespace = "client-metric"
+	asyncDownloadTask   namespace = "async-download-task"
 )
 
 type keyGenerator struct {
@@ -61,6 +63,7 @@ type keyGenerator struct {
 	releasedHookTTLRange        [2]int
 	appMetaTTLRange             [2]int
 	appHasRITTLRange            [2]int
+	asyncDownloadTaskTTLRange   [2]int
 }
 
 // ClientMetricKey generate the client metric cache key.
@@ -70,6 +73,27 @@ func (k keyGenerator) ClientMetricKey(bizID uint32, appID uint32) string {
 		ns:  clientMetric,
 		key: strconv.FormatUint(uint64(appID), 10),
 	}.String()
+}
+
+// AsyncDownloadTaskKey generate the async download task cache key.
+func (k keyGenerator) AsyncDownloadTaskKey(bizID uint32, taskID string) string {
+	return element{
+		biz: bizID,
+		ns:  asyncDownloadTask,
+		key: taskID,
+	}.String()
+}
+
+// AsyncDownloadTaskTtlSec generate the async download task's TTL seconds
+func (k keyGenerator) AsyncDownloadTaskTtlSec(withRange bool) int {
+	if withRange {
+		//nolint:gosec
+		r := rand.New(rand.NewSource(time.Now().UnixNano()))
+		seconds := r.Intn(k.asyncDownloadTaskTTLRange[1]-k.asyncDownloadTaskTTLRange[0]) +
+			k.asyncDownloadTaskTTLRange[0]
+		return seconds
+	}
+	return k.asyncDownloadTaskTTLRange[0]
 }
 
 // ReleasedGroup generate a release's released group cache key to save all the released groups under this release

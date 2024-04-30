@@ -7,6 +7,10 @@ all:
 	@cd cache-service && make
 	@cd vault-server && make
 
+feed:
+	@cd feed-server && make
+	@cd cache-service && make
+
 server:
 	@cd api-server && make package
 	@cd config-server && make package

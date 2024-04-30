@@ -13,6 +13,7 @@
             :input-search="false"
             :disabled="rule.type === 'del'"
             :placeholder="t('请选择服务')"
+            :search-placeholder="$t('请输入')"
             @change="handleSelectApp(index)">
             <bk-option v-for="app in appList" :id="app" :key="app.id" :name="app.spec.name" />
           </bk-select>
