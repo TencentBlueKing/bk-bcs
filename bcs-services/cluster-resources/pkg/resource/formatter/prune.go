@@ -124,6 +124,12 @@ func PruneSVC(manifest map[string]interface{}) map[string]interface{} {
 	return ret
 }
 
+// PruneEP 裁剪 Endpoints
+func PruneEP(manifest map[string]interface{}) map[string]interface{} {
+	ret := CommonPrune(manifest)
+	return ret
+}
+
 // PruneConfig 裁剪 Configmap 和 secret
 func PruneConfig(manifest map[string]interface{}) map[string]interface{} {
 	ret := CommonPrune(manifest)
@@ -134,12 +140,13 @@ func PruneConfig(manifest map[string]interface{}) map[string]interface{} {
 func PrunePV(manifest map[string]interface{}) map[string]interface{} {
 	ret := CommonPrune(manifest)
 	phase, _ := mapx.GetItems(manifest, "status.phase")
+	reason, _ := mapx.GetItems(manifest, "status.reason")
 	capacity, _ := mapx.GetItems(manifest, "spec.capacity")
 	persistentVolumeReclaimPolicy, _ := mapx.GetItems(manifest, "spec.persistentVolumeReclaimPolicy")
 	claimRef, _ := mapx.GetItems(manifest, "spec.claimRef")
 	storageClassName, _ := mapx.GetItems(manifest, "spec.storageClassName")
 	volumeMode, _ := mapx.GetItems(manifest, "spec.volumeMode")
-	ret["status"] = map[string]interface{}{"phase": phase}
+	ret["status"] = map[string]interface{}{"phase": phase, "reason": reason}
 	ret["spec"] = map[string]interface{}{"capacity": capacity,
 		"persistentVolumeReclaimPolicy": persistentVolumeReclaimPolicy, "claimRef": claimRef,
 		"storageClassName": storageClassName, "volumeMode": volumeMode}
@@ -166,5 +173,50 @@ func PruneSC(manifest map[string]interface{}) map[string]interface{} {
 	ret["provisioner"] = mapx.GetStr(manifest, "provisioner")
 	ret["reclaimPolicy"] = mapx.GetStr(manifest, "reclaimPolicy")
 	ret["volumeBindingMode"] = mapx.GetStr(manifest, "volumeBindingMode")
+	ret["allowVolumeExpansion"] = mapx.GetBool(manifest, "allowVolumeExpansion")
+	ret["mountOptions"], _ = mapx.GetItems(manifest, "mountOptions")
+	ret["parameters"], _ = mapx.GetItems(manifest, "parameters")
+	return ret
+}
+
+// PruneSA 裁剪 ServiceAccounts
+func PruneSA(manifest map[string]interface{}) map[string]interface{} {
+	ret := CommonPrune(manifest)
+	return ret
+}
+
+// PruneHPA 裁剪 HPA
+func PruneHPA(manifest map[string]interface{}) map[string]interface{} {
+	ret := CommonPrune(manifest)
+	return ret
+}
+
+// PruneGDeploy 裁剪 GameDeployments
+func PruneGDeploy(manifest map[string]interface{}) map[string]interface{} {
+	ret := CommonPrune(manifest)
+	return ret
+}
+
+// PruneGSTS 裁剪 GameStatefulSets
+func PruneGSTS(manifest map[string]interface{}) map[string]interface{} {
+	ret := CommonPrune(manifest)
+	return ret
+}
+
+// PruneHookTmpl 裁剪 HookTemplates
+func PruneHookTmpl(manifest map[string]interface{}) map[string]interface{} {
+	ret := CommonPrune(manifest)
+	return ret
+}
+
+// PruneCObj 裁剪 CustomObjects
+func PruneCObj(manifest map[string]interface{}) map[string]interface{} {
+	ret := CommonPrune(manifest)
+	return ret
+}
+
+// PruneCRD 裁剪 CRD
+func PruneCRD(manifest map[string]interface{}) map[string]interface{} {
+	ret := CommonPrune(manifest)
 	return ret
 }
