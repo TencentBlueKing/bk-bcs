@@ -10,8 +10,7 @@
  * limitations under the License.
  */
 
-// Package analyze xx
-package analyze
+package collect
 
 import (
 	"context"
@@ -26,56 +25,32 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/cmd/manager/options"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/internal/dao"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/metric"
+
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-analysis/internal/dao"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-analysis/options"
 )
 
-// AnalysisCollection 用来采集运营数据的相关信息
-// - 采集 argocd metrics: 获取到 argo metric 后，将数据存储到数据库中进行打点记录
-// - 更新活跃用户信息
-type AnalysisCollection interface {
-	Init() error
-	Start(ctx context.Context) error
-	UpdateActivityUser(project, user string)
+// MetricCollect defines the collector of metric
+type MetricCollect struct {
+	op *options.AnalysisOptions
+	db dao.Interface
+
+	monitorClient *monitoring.Clientset
+	k8sClient     *kubernetes.Clientset
+	metricQuery   *metric.ServiceMonitorQuery
 }
 
-type activityUserItem struct {
-	Project string
-	User    string
-}
-
-type analysisClient struct {
-	db               dao.Interface
-	metricConfig     *common.MetricConfig
-	monitorClient    *monitoring.Clientset
-	k8sClient        *kubernetes.Clientset
-	metricQuery      *metric.ServiceMonitorQuery
-	activityUserChan chan *activityUserItem
-}
-
-var (
-	globalAnalysisClient *analysisClient
-)
-
-// NewAnalysisClient create the analysis client
-func NewAnalysisClient() AnalysisCollection {
-	globalAnalysisClient = &analysisClient{
-		db:               dao.GlobalDB(),
-		metricConfig:     options.GlobalOptions().MetricConfig,
-		activityUserChan: make(chan *activityUserItem, 10000),
+// NewMetricCollect create the metric collector
+func NewMetricCollect() *MetricCollect {
+	return &MetricCollect{
+		op: options.GlobalOptions(),
+		db: dao.GlobalDB(),
 	}
-	return globalAnalysisClient
-}
-
-// GetAnalysisClient return the global analysis client
-func GetAnalysisClient() AnalysisCollection {
-	return globalAnalysisClient
 }
 
 // Init the in-cluster client
-func (c *analysisClient) Init() error {
+func (c *MetricCollect) Init() error {
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		return errors.Wrapf(err, "get k8s incluster config failed")
@@ -92,64 +67,30 @@ func (c *analysisClient) Init() error {
 		MonitorClient: c.monitorClient,
 		K8sClient:     c.k8sClient,
 	}
+	blog.Infof("metric collector init success")
 	return nil
 }
 
-// Start the for-select to handle activity user and metrics
-func (c *analysisClient) Start(ctx context.Context) error {
+// Start the metric collector
+func (c *MetricCollect) Start(ctx context.Context) {
 	ticker := time.NewTicker(1 * time.Minute)
+	blog.Infof("metric collection started")
 	defer ticker.Stop()
+	defer blog.Infof("analysis metric collection finished")
 	for {
 		select {
 		case <-ticker.C:
-			go c.handleAppMetric(ctx)
-		case userItem := <-c.activityUserChan:
-			c.handleActivityUser(userItem)
+			go c.collectApplicationMetric(ctx)
 		case <-ctx.Done():
-			blog.Warnf("analysis closed")
-			return nil
-		}
-	}
-}
-
-// UpdateActivityUser update activity user, it will add operation num into db
-func (c *analysisClient) UpdateActivityUser(project, user string) {
-	c.activityUserChan <- &activityUserItem{
-		Project: project,
-		User:    user,
-	}
-}
-
-func (c *analysisClient) handleActivityUser(item *activityUserItem) {
-	activityUser, err := c.db.GetActivityUser(item.Project, item.User)
-	if err != nil {
-		blog.Errorf("[analysis] get activity user '%s/%s' failed: %s", item.Project, item.User, err.Error())
-		return
-	}
-	if activityUser == nil {
-		activityUser = &dao.ActivityUser{
-			Project:          item.Project,
-			UserName:         item.User,
-			OperateNum:       1,
-			LastActivityTime: time.Now(),
-		}
-		if err = c.db.SaveActivityUser(activityUser); err != nil {
-			blog.Errorf("[analysis] save activity user failed: %s", err.Error())
+			blog.Infof("metric collector stopped")
 			return
 		}
-		return
-	}
-	activityUser.OperateNum++
-	if err = c.db.UpdateActivityUser(activityUser); err != nil {
-		blog.Errorf("[analysis] update activity user failed: %s", err.Error())
-		return
 	}
 }
 
-// handleAppMetric used to calculate the sync number of every application with cluster
-func (c *analysisClient) handleAppMetric(ctx context.Context) {
+func (c *MetricCollect) collectApplicationMetric(ctx context.Context) {
 	syncInfos := c.parseAppMetrics(ctx)
-	blog.Infof("[analysis] parse application metrics succeed: %d", len(syncInfos))
+	blog.Infof("analysis parse application metrics succeed: %d", len(syncInfos))
 	for _, item := range syncInfos {
 		syncInfo, err := c.db.GetSyncInfo(item.Project, item.Cluster,
 			item.Application, item.Phase)
@@ -186,9 +127,9 @@ var (
 // parseAppMetrics will get the argocd application-controller's metrics, and then parse
 // them to get the sync info of every application and cluster
 // nolint funlen
-func (c *analysisClient) parseAppMetrics(ctx context.Context) []*dao.SyncInfo {
-	ns := c.metricConfig.AppMetricNamespace
-	name := c.metricConfig.AppMetricName
+func (c *MetricCollect) parseAppMetrics(ctx context.Context) []*dao.SyncInfo {
+	ns := c.op.AppMetricNamespace
+	name := c.op.AppMetricName
 	metrics, err := c.metricQuery.Do(ctx, ns, name)
 	if err != nil {
 		blog.Errorf("[analysis] query service monitor '%s/%s' failed: %s", ns, name, err.Error())
