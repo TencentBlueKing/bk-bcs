@@ -39,7 +39,8 @@ func NewEC2Client(opt *cloudprovider.CommonOption) (*EC2Client, error) {
 }
 
 // DescribeAvailabilityZones describes availability zones
-func (c *EC2Client) DescribeAvailabilityZones(input *ec2.DescribeAvailabilityZonesInput) ([]*ec2.AvailabilityZone, error) {
+func (c *EC2Client) DescribeAvailabilityZones(input *ec2.DescribeAvailabilityZonesInput) (
+	[]*ec2.AvailabilityZone, error) {
 	blog.Infof("DescribeAvailabilityZones input: %", utils.ToJSONString(input))
 	output, err := c.ec2Client.DescribeAvailabilityZones(input)
 	if err != nil {

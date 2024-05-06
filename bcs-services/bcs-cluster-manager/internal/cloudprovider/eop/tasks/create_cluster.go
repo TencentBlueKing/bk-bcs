@@ -957,13 +957,13 @@ func checkClusterNodesStatus(ctx context.Context, info *cloudprovider.CloudDepen
 	}
 	blog.Infof("checkClusterNodesStatus[%s] success[%v] failure[%v]", taskID, addSuccessNodes, addFailureNodes)
 
-	// set cluster node status
-	for _, n := range addFailureNodes {
-		err = cloudprovider.UpdateNodeStatus(false, n, common.StatusAddNodesFailed)
-		if err != nil {
-			blog.Errorf("checkClusterNodesStatus[%s] UpdateNodeStatus[%s] failed: %v", taskID, n, err)
-		}
-	}
+	// TODO: create failed nodes in DB
+	// for _, n := range addFailureNodes {
+	// 	err = cloudprovider.UpdateNodeStatus(false, n, common.StatusAddNodesFailed)
+	// 	if err != nil {
+	// 		blog.Errorf("checkClusterNodesStatus[%s] UpdateNodeStatus[%s] failed: %v", taskID, n, err)
+	// 	}
+	// }
 
 	return addSuccessNodes, addFailureNodes, nil
 }

@@ -36,6 +36,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 // CreateAKSClusterTask call azure interface to create cluster
@@ -223,7 +224,7 @@ func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo, grou
 	return req, nil
 }
 
-func genAgentPoolReq(ng *proto.NodeGroup, subscriptionID, rgName string, podNum uint32) ( // nolint
+func genAgentPoolReq(ng *proto.NodeGroup, subscriptionID, rgName string, podNum uint32) (
 	*armcontainerservice.ManagedClusterAgentPoolProfile, error) {
 	if ng.LaunchTemplate == nil {
 		return nil, fmt.Errorf("generateCreateClusterRequest empty LaunchTemplate for nodegroup %s", ng.Name)
@@ -251,8 +252,8 @@ func genAgentPoolReq(ng *proto.NodeGroup, subscriptionID, rgName string, podNum 
 			return to.Ptr(int32(0))
 		}(),
 		EnableNodePublicIP: to.Ptr(func(group *proto.NodeGroup) bool {
-			if ng.LaunchTemplate.InternetAccess != nil {
-				return ng.LaunchTemplate.InternetAccess.PublicIPAssigned
+			if group.LaunchTemplate.InternetAccess != nil {
+				return group.LaunchTemplate.InternetAccess.PublicIPAssigned
 			}
 			return false
 		}(ng)),
@@ -525,10 +526,14 @@ func checkNodesGroupStatus(ctx context.Context, info *cloudprovider.CloudDependB
 
 			switch *aksAgentPool.Properties.ProvisioningState {
 			case api.AgentPoolPodIdentityProvisioningStateSucceeded:
-				running = append(running, ng.NodeGroupID)
+				if !utils.StringInSlice(ng.NodeGroupID, running) {
+					running = append(running, ng.NodeGroupID)
+				}
 				index++
 			case api.AgentPoolPodIdentityProvisioningStateFailed:
-				failure = append(failure, ng.NodeGroupID)
+				if !utils.StringInSlice(ng.NodeGroupID, failure) {
+					failure = append(failure, ng.NodeGroupID)
+				}
 				index++
 			}
 		}
@@ -879,14 +884,6 @@ func checkClusterNodesStatus(ctx context.Context, info *cloudprovider.CloudDepen
 	}
 	blog.Infof("checkClusterNodesStatus[%s] success[%v] failure[%v]", taskID, addSuccessNodes, addFailureNodes)
 
-	// set cluster node status
-	for _, n := range addFailureNodes {
-		err = cloudprovider.UpdateNodeStatus(false, n, common.StatusAddNodesFailed)
-		if err != nil {
-			blog.Errorf("checkClusterNodesStatus[%s] UpdateNodeStatus[%s] failed: %v", taskID, n, err)
-		}
-	}
-
 	return addSuccessNodes, addFailureNodes, nil
 }
 
@@ -926,7 +923,7 @@ func UpdateAKSNodesToDBTask(taskID string, stepName string) error {
 
 	// check cluster status
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
-	err = updateNodeToDB(ctx, dependInfo, nodeGroupIDs)
+	err = updateNodeToDB(ctx, state, dependInfo, nodeGroupIDs)
 	if err != nil {
 		blog.Errorf("UpdateNodesToDBTask[%s] checkNodesGroupStatus[%s] failed: %v",
 			taskID, clusterID, err)
@@ -952,7 +949,8 @@ func UpdateAKSNodesToDBTask(taskID string, stepName string) error {
 	return nil
 }
 
-func updateNodeToDB(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, nodeGroupIDs []string) error {
+func updateNodeToDB(ctx context.Context, state *cloudprovider.TaskState, info *cloudprovider.CloudDependBasicInfo,
+	nodeGroupIDs []string) error {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 	nodeResourceGroup := info.Cluster.ExtraInfo[common.NodeResourceGroup]
 	// get azureCloud client
@@ -990,9 +988,10 @@ func updateNodeToDB(ctx context.Context, info *cloudprovider.CloudDependBasicInf
 		if err != nil {
 			return fmt.Errorf("updateNodeToDB vmToNode failed, %v", err)
 		}
+		addSuccessNodes := make([]string, 0)
 		for _, n := range nodes {
-			if n.Status != "running" {
-				continue
+			if n.Status == "running" {
+				addSuccessNodes = append(addSuccessNodes, n.InnerIP)
 			}
 			n.NodeGroupID = nodeGroup.NodeGroupID
 			err = cloudprovider.GetStorageModel().CreateNode(context.Background(), n)
@@ -1000,6 +999,7 @@ func updateNodeToDB(ctx context.Context, info *cloudprovider.CloudDependBasicInf
 				return fmt.Errorf("updateNodeToDB CreateNode[%s] failed, %v", n.NodeName, err)
 			}
 		}
+		state.Task.CommonParams[cloudprovider.NodeIPsKey.String()] = strings.Join(addSuccessNodes, ",")
 	}
 
 	return nil

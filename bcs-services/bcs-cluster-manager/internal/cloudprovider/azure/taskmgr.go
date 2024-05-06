@@ -174,7 +174,14 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 		AllowReviseCloudId: icommon.True,
 	}, cloudprovider.WithStepAllowSkip(true))
 
-	// step10: 业务后置自定义流程: 支持标准运维任务 或者 后置脚本
+	// step10: transfer host module
+	moduleID := cls.GetClusterBasicSettings().GetModule().GetWorkerModuleID()
+	if moduleID != "" {
+		common.BuildTransferHostModuleStep(task, cls.BusinessID, cls.GetClusterBasicSettings().GetModule().
+			GetWorkerModuleID(), cls.GetClusterBasicSettings().GetModule().GetMasterModuleID())
+	}
+
+	// step11: 业务后置自定义流程: 支持标准运维任务 或者 后置脚本
 	if opt.NodeTemplate != nil && len(opt.NodeTemplate.UserScript) > 0 {
 		common.BuildJobExecuteScriptStep(task, common.JobExecParas{
 			ClusterID: cls.ClusterID,
