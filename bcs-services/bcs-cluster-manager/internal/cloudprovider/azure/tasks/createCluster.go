@@ -223,7 +223,7 @@ func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo, grou
 	return req, nil
 }
 
-func genAgentPoolReq(ng *proto.NodeGroup, subscriptionID, rgName string, podNum uint32) ( // nolint
+func genAgentPoolReq(ng *proto.NodeGroup, subscriptionID, rgName string, podNum uint32) (
 	*armcontainerservice.ManagedClusterAgentPoolProfile, error) {
 	if ng.LaunchTemplate == nil {
 		return nil, fmt.Errorf("generateCreateClusterRequest empty LaunchTemplate for nodegroup %s", ng.Name)
@@ -251,8 +251,8 @@ func genAgentPoolReq(ng *proto.NodeGroup, subscriptionID, rgName string, podNum 
 			return to.Ptr(int32(0))
 		}(),
 		EnableNodePublicIP: to.Ptr(func(group *proto.NodeGroup) bool {
-			if ng.LaunchTemplate.InternetAccess != nil {
-				return ng.LaunchTemplate.InternetAccess.PublicIPAssigned
+			if group.LaunchTemplate.InternetAccess != nil {
+				return group.LaunchTemplate.InternetAccess.PublicIPAssigned
 			}
 			return false
 		}(ng)),
