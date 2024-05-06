@@ -441,15 +441,15 @@ func TestInjectPod(t *testing.T) {
 						{
 							Ports: []corev1.ContainerPort{
 								{
-									ContainerPort: 8080,
+									Name:          "http",
+									ContainerPort: 8081,
 								},
 							},
 						},
 						{
 							Ports: []corev1.ContainerPort{
 								{
-									Name:          "http",
-									ContainerPort: 8081,
+									ContainerPort: 8080,
 								},
 							},
 						},
@@ -483,8 +483,8 @@ func TestInjectPod(t *testing.T) {
 					Annotations: map[string]string{
 						pluginAnnotationKey:                    pluginAnnotationValue,
 						pluginPortsAnnotationKey:               "8080,http",
-						annotationsRandHostportPrefix + "8080": "31000",
-						annotationsRandHostportPrefix + "8081": "31001",
+						annotationsRandHostportPrefix + "8081": "31000",
+						annotationsRandHostportPrefix + "8080": "31001",
 					},
 				},
 				Spec: corev1.PodSpec{
@@ -493,11 +493,11 @@ func TestInjectPod(t *testing.T) {
 							Image: "test-image",
 							Env: []corev1.EnvVar{
 								{
-									Name:  envRandHostportPrefix + "8080",
+									Name:  envRandHostportPrefix + "8081",
 									Value: "31000",
 								},
 								{
-									Name:  envRandHostportPrefix + "8081",
+									Name:  envRandHostportPrefix + "8080",
 									Value: "31001",
 								},
 								{
@@ -531,17 +531,18 @@ func TestInjectPod(t *testing.T) {
 						{
 							Ports: []corev1.ContainerPort{
 								{
-									ContainerPort: 8080,
+									Name:          "http",
+									ContainerPort: 8081,
 									HostPort:      31000,
 								},
 							},
 							Env: []corev1.EnvVar{
 								{
-									Name:  envRandHostportPrefix + "8080",
+									Name:  envRandHostportPrefix + "8081",
 									Value: "31000",
 								},
 								{
-									Name:  envRandHostportPrefix + "8081",
+									Name:  envRandHostportPrefix + "8080",
 									Value: "31001",
 								},
 								{
@@ -573,18 +574,17 @@ func TestInjectPod(t *testing.T) {
 						{
 							Ports: []corev1.ContainerPort{
 								{
-									Name:          "http",
-									ContainerPort: 8081,
+									ContainerPort: 8080,
 									HostPort:      31001,
 								},
 							},
 							Env: []corev1.EnvVar{
 								{
-									Name:  envRandHostportPrefix + "8080",
+									Name:  envRandHostportPrefix + "8081",
 									Value: "31000",
 								},
 								{
-									Name:  envRandHostportPrefix + "8081",
+									Name:  envRandHostportPrefix + "8080",
 									Value: "31001",
 								},
 								{

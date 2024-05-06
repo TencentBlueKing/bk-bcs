@@ -343,6 +343,10 @@ gitops-manager:
 	mkdir -p ${SCENARIOSPACKAGE}/bcs-gitops-manager
 	cd bcs-scenarios/bcs-gitops-manager && make manager && cd -
 
+gitops-analysis:
+	mkdir -p ${SCENARIOSPACKAGE}/bcs-gitops-analysis
+	cd bcs-scenarios/bcs-gitops-analysis && make analysis && cd -
+
 gitops-webhook:
 	mkdir -p ${SCENARIOSPACKAGE}/bcs-gitops-webhook
 	cd bcs-scenarios/bcs-gitops-manager && make webhook && cd -

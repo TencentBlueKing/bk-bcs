@@ -88,7 +88,7 @@ func (plugin *AppPlugin) applicationDiff(r *http.Request) (*http.Request, *mw.Ht
 			Cluster:       application.Spec.Destination.Server,
 			RepoUrl:       application.Spec.Source.RepoURL,
 			LocalRevision: req.Revision,
-			LiveRevision:  application.Spec.Source.TargetRevision,
+			LiveRevision:  application.Status.Sync.Revision,
 			Result:        result,
 		},
 	})

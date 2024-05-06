@@ -11,13 +11,13 @@ export interface IField {
 }
 // 表格设置功能
 export default function useTableSetting(fieldsData: Array<IField>) {
-  const stroageFields = JSON.parse(localStorage.getItem(CLUSTER_NODE_TABLE_COL) || '{}');
+  const storageFields = JSON.parse(localStorage.getItem(CLUSTER_NODE_TABLE_COL) || '{}');
   const tableSetting = ref({
     size: 'medium',
     fields: fieldsData,
     selectedFields: fieldsData.filter((item) => {
       if (item.disabled) return true;
-      if (item.id in stroageFields) return stroageFields[item.id];
+      if (item.id in storageFields) return storageFields[item.id];
       return !!item.defaultChecked;
     }),
   });

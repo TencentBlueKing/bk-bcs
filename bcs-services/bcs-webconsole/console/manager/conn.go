@@ -39,6 +39,9 @@ import (
 // End-of-Transmission character ctrl-d
 const EndOfTransmission = "\u0004"
 
+// EndOfMainProcess main process stop
+var EndOfMainProcess = make(chan struct{}, 1)
+
 type wsMessage struct {
 	msgType int
 	msg     []byte
@@ -238,6 +241,10 @@ func (r *RemoteStreamConn) Run(c *gin.Context) error {
 			if err := r.wsConn.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
 				return errors.Wrap(err, "ping")
 			}
+		case <-EndOfMainProcess:
+			EndOfMainProcess <- struct{}{}
+			logger.Info("main process stop")
+			return errors.New(i18n.T(c, "连接已断开"))
 		}
 	}
 }

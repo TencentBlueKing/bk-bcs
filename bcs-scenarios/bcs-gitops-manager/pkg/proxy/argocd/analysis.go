@@ -13,9 +13,7 @@
 package argocd
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -25,7 +23,6 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/analyze"
 	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
 )
@@ -34,33 +31,29 @@ import (
 type AnalysisPlugin struct {
 	*mux.Router
 
-	analysisClient analyze.AnalysisOverview
-	middleware     mw.MiddlewareInterface
-	store          store.Store
+	middleware mw.MiddlewareInterface
+	store      store.Store
 }
 
 // Init the http route for analysis
 func (plugin *AnalysisPlugin) Init() error {
 	plugin.Path("").Methods(http.MethodGet).Handler(plugin.middleware.HttpWrapper(plugin.analysis))
+	plugin.Path("/overview").Methods(http.MethodGet).Handler(plugin.middleware.HttpWrapper(plugin.common))
+	plugin.Path("/overview/compare").Methods(http.MethodGet).Handler(plugin.middleware.HttpWrapper(plugin.common))
+	plugin.Path("/top_projects").Methods(http.MethodGet).Handler(plugin.middleware.HttpWrapper(plugin.common))
+	plugin.Path("/managed_resources").Methods(http.MethodGet).Handler(plugin.middleware.HttpWrapper(plugin.common))
 
-	plugin.Path("/overview/all").Methods(http.MethodGet).
-		Handler(plugin.middleware.HttpWrapper(plugin.overview))
-	plugin.Path("/overview/internal").Methods(http.MethodGet).
-		Handler(plugin.middleware.HttpWrapper(plugin.overviewInternal))
-	plugin.Path("/overview/external").Methods(http.MethodGet).
-		Handler(plugin.middleware.HttpWrapper(plugin.overviewExternal))
+	plugin.Path("/bkmonitor/activity_projects").Methods(http.MethodGet).Handler(
+		plugin.middleware.HttpWrapper(plugin.common))
+	plugin.Path("/bkmonitor/common").Methods(http.MethodPost).Handler(plugin.middleware.HttpWrapper(plugin.common))
+	plugin.Path("/bkmonitor/slo").Methods(http.MethodPost).Handler(plugin.middleware.HttpWrapper(plugin.common))
+	plugin.Path("/bkmonitor/slo_unavailable").Methods(http.MethodPost).Handler(plugin.middleware.
+		HttpWrapper(plugin.common))
 
-	plugin.Path("/top_projects").Methods(http.MethodGet).
-		Handler(plugin.middleware.HttpWrapper(plugin.topProjects))
-	plugin.Path("/managed_resources").Methods(http.MethodGet).
-		Handler(plugin.middleware.HttpWrapper(plugin.managedResources))
-
-	plugin.Path("/bkmonitor/common").Methods(http.MethodPost).
-		Handler(plugin.middleware.HttpWrapper(plugin.bkmCommon))
-	plugin.Path("/bkmonitor/activity_projects/internal").Methods(http.MethodGet).
-		Handler(plugin.middleware.HttpWrapper(plugin.bkmActivityProjectsInternal))
-	plugin.Path("/bkmonitor/activity_projects/external").Methods(http.MethodGet).
-		Handler(plugin.middleware.HttpWrapper(plugin.bkmActivityProjectsExternal))
+	plugin.Path("/query/projects").Methods(http.MethodGet).Handler(plugin.middleware.
+		HttpWrapper(plugin.common))
+	plugin.Path("/query/applications").Methods(http.MethodGet).Handler(plugin.middleware.
+		HttpWrapper(plugin.common))
 
 	blog.Infof("argocd analysis init successfully")
 	return nil
@@ -76,26 +69,11 @@ type AnalysisResponse struct {
 
 // analysis return the project analysis
 func (plugin *AnalysisPlugin) analysis(r *http.Request) (*http.Request, *mw.HttpResponse) {
-	isAll, projects, err := plugin.checkQuery(r)
+	_, _, err := plugin.checkQuery(r)
 	if err != nil {
 		return r, mw.ReturnErrorResponse(http.StatusBadRequest, err)
 	}
-	if isAll {
-		return r, mw.ReturnJSONResponse(&AnalysisResponse{
-			Code:      0,
-			RequestID: mw.RequestID(r.Context()),
-			Data:      plugin.analysisClient.AnalysisProjectAll(),
-		})
-	}
-	result, err := plugin.analysisClient.AnalysisProject(r.Context(), projects)
-	if err != nil {
-		return r, mw.ReturnErrorResponse(http.StatusInternalServerError, err)
-	}
-	return r, mw.ReturnJSONResponse(&AnalysisResponse{
-		Code:      0,
-		RequestID: mw.RequestID(r.Context()),
-		Data:      result,
-	})
+	return r, mw.ReturnAnalysisReverse()
 }
 
 // checkQuery it will check the permission with projects
@@ -126,137 +104,11 @@ func (plugin *AnalysisPlugin) checkQuery(r *http.Request) (bool, []v1alpha1.AppP
 	return true, projList.Items, nil
 }
 
-// topProjects return the top projects
-func (plugin *AnalysisPlugin) topProjects(r *http.Request) (*http.Request, *mw.HttpResponse) {
+// common check admin user
+func (plugin *AnalysisPlugin) common(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	user := mw.User(r.Context())
 	if !common.IsAdminUser(user.ClientID) {
 		return r, mw.ReturnErrorResponse(http.StatusForbidden, errors.Errorf("admin api"))
 	}
-	return r, mw.ReturnJSONResponse(&AnalysisResponse{
-		Code:      0,
-		RequestID: mw.RequestID(r.Context()),
-		Data:      plugin.analysisClient.TopProjects(),
-	})
-}
-
-// managedResources return the managed resources
-func (plugin *AnalysisPlugin) managedResources(r *http.Request) (*http.Request, *mw.HttpResponse) {
-	user := mw.User(r.Context())
-	if !common.IsAdminUser(user.ClientID) {
-		return r, mw.ReturnErrorResponse(http.StatusForbidden, errors.Errorf("admin api"))
-	}
-	return r, mw.ReturnJSONResponse(&AnalysisResponse{
-		Code:      0,
-		RequestID: mw.RequestID(r.Context()),
-		Data:      plugin.analysisClient.ResourceInfos(),
-	})
-}
-
-// overview return the overview
-func (plugin *AnalysisPlugin) overview(r *http.Request) (*http.Request, *mw.HttpResponse) {
-	user := mw.User(r.Context())
-	if !common.IsAdminUser(user.ClientID) {
-		return r, mw.ReturnErrorResponse(http.StatusForbidden, errors.Errorf("admin api"))
-	}
-	internal := plugin.analysisClient.OverviewAllInternal()
-	internal.Type = "国内"
-	external := plugin.analysisClient.OverviewAllExternal()
-	external.Type = "海外"
-	return r, mw.ReturnJSONResponse(&AnalysisResponse{
-		Code:      0,
-		RequestID: mw.RequestID(r.Context()),
-		Data:      []*analyze.AnalysisOverviewAll{internal, external},
-	})
-}
-
-// overviewInternal return the overview internal
-func (plugin *AnalysisPlugin) overviewInternal(r *http.Request) (*http.Request, *mw.HttpResponse) {
-	user := mw.User(r.Context())
-	if !common.IsAdminUser(user.ClientID) {
-		return r, mw.ReturnErrorResponse(http.StatusForbidden, errors.Errorf("admin api"))
-	}
-	return r, mw.ReturnJSONResponse(&AnalysisResponse{
-		Code:      0,
-		RequestID: mw.RequestID(r.Context()),
-		Data:      []*analyze.AnalysisOverviewAll{plugin.analysisClient.OverviewAllInternal()},
-	})
-}
-
-// overviewExternal return the overview external
-func (plugin *AnalysisPlugin) overviewExternal(r *http.Request) (*http.Request, *mw.HttpResponse) {
-	user := mw.User(r.Context())
-	if !common.IsAdminUser(user.ClientID) {
-		return r, mw.ReturnErrorResponse(http.StatusForbidden, errors.Errorf("admin api"))
-	}
-	return r, mw.ReturnJSONResponse(&AnalysisResponse{
-		Code:      0,
-		RequestID: mw.RequestID(r.Context()),
-		Data:      []*analyze.AnalysisOverviewAll{plugin.analysisClient.OverviewAllExternal()},
-	})
-}
-
-// bkmCommon bkmonitor common query
-func (plugin *AnalysisPlugin) bkmCommon(r *http.Request) (*http.Request, *mw.HttpResponse) {
-	user := mw.User(r.Context())
-	if !common.IsAdminUser(user.ClientID) {
-		return r, mw.ReturnErrorResponse(http.StatusForbidden, errors.Errorf("admin api"))
-	}
-	bkmMessage, err := plugin.buildBKMRequest(r)
-	if err != nil {
-		return r, mw.ReturnErrorResponse(http.StatusBadRequest, err)
-	}
-	series, err := plugin.analysisClient.BKMonitorCommonGet(bkmMessage)
-	if err != nil {
-		return r, mw.ReturnErrorResponse(http.StatusInternalServerError, err)
-	}
-	return r, mw.ReturnJSONResponse(&AnalysisResponse{
-		Code:      0,
-		RequestID: mw.RequestID(r.Context()),
-		Data:      series,
-	})
-}
-
-// bkmActivityProjectsInternal bkmonitor activity projects internl
-func (plugin *AnalysisPlugin) bkmActivityProjectsInternal(r *http.Request) (*http.Request, *mw.HttpResponse) {
-	user := mw.User(r.Context())
-	if !common.IsAdminUser(user.ClientID) {
-		return r, mw.ReturnErrorResponse(http.StatusForbidden, errors.Errorf("admin api"))
-	}
-	projects, err := plugin.analysisClient.BKMTopActivityProjectsInternal()
-	if err != nil {
-		return r, mw.ReturnErrorResponse(http.StatusInternalServerError, err)
-	}
-	return r, mw.ReturnJSONResponse(&AnalysisResponse{
-		Code:      0,
-		RequestID: mw.RequestID(r.Context()),
-		Data:      projects,
-	})
-}
-
-func (plugin *AnalysisPlugin) bkmActivityProjectsExternal(r *http.Request) (*http.Request, *mw.HttpResponse) {
-	user := mw.User(r.Context())
-	if !common.IsAdminUser(user.ClientID) {
-		return r, mw.ReturnErrorResponse(http.StatusForbidden, errors.Errorf("admin api"))
-	}
-	projects, err := plugin.analysisClient.BKMTopActivityProjectsExternal()
-	if err != nil {
-		return r, mw.ReturnErrorResponse(http.StatusInternalServerError, err)
-	}
-	return r, mw.ReturnJSONResponse(&AnalysisResponse{
-		Code:      0,
-		RequestID: mw.RequestID(r.Context()),
-		Data:      projects,
-	})
-}
-
-func (plugin *AnalysisPlugin) buildBKMRequest(r *http.Request) (*analyze.BKMonitorGetMessage, error) {
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		return nil, errors.Wrapf(err, "read body failed")
-	}
-	req := new(analyze.BKMonitorGetMessage)
-	if err = json.Unmarshal(body, req); err != nil {
-		return nil, errors.Wrapf(err, "unmarshal request body failed")
-	}
-	return req, nil
+	return r, mw.ReturnAnalysisReverse()
 }

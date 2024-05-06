@@ -22,12 +22,12 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/cmd/manager/options"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-analysis/options"
 )
 
 // Handler the struct that used to query cc
 type handler struct {
-	op *options.Options
+	op *options.AnalysisOptions
 }
 
 // NewHandler create cc query handler
@@ -116,7 +116,7 @@ func (h *handler) query(request interface{}, uri string) (resp []byte, err error
 	if err != nil {
 		return nil, errors.Wrapf(err, "marshal failed")
 	}
-	httpRequest, err := http.NewRequest("POST", h.op.AnalysisConfig.BKCCUrl+uri,
+	httpRequest, err := http.NewRequest("POST", h.op.BKCCUrl+uri,
 		bytes.NewBuffer(data))
 	if err != nil {
 		return nil, errors.Wrapf(err, "create request failed")

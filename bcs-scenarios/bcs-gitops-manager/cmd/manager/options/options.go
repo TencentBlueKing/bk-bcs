@@ -71,14 +71,13 @@ type Options struct {
 	GitOps               *GitOps                    `json:"gitops,omitempty"`
 	PublicProjectsStr    string                     `json:"publicProjects,omitempty"`
 	PublicProjects       []string                   `json:"-"`
-	AnalysisConfig       *common.AnalysisConfig     `json:"analysisConfig,omitempty"`
+	AnalysisServer       *common.AnalysisServer     `json:"analysisServer,omitempty"`
 	SecretServer         *common.SecretStoreOptions `json:"secretserver,omitempty"`
 	TerraformServer      *common.TerraformConfig    `json:"terraformServer,omitempty"`
 	Auth                 *common.AuthConfig         `json:"auth,omitempty"`
 	TraceConfig          *common.TraceConfig        `json:"traceConfig,omitempty"`
 	AuditConfig          *common.AuditConfig        `json:"auditConfig,omitempty"`
 	DBConfig             *common.DBConfig           `json:"dbConfig,omitempty"`
-	MetricConfig         *common.MetricConfig       `json:"metricConfig,omitempty"`
 	MonitorConfig        *common.MonitorConfig      `json:"monitorConfig,omitempty"`
 	AdminUsersStr        string                     `json:"adminUsers,omitempty"`
 	AdminUsers           []string                   `json:"-"`

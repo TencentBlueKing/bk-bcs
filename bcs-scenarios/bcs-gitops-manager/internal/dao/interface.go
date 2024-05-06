@@ -138,30 +138,15 @@ func (ahm *ApplicationHistoryManifest) GetApplicationYaml() string {
 
 const (
 	tableActivityUser       = "bcs_gitops_activity_user" // nolint
-	tableSyncInfo           = "bcs_gitops_sync_info"
 	tableResourcePreference = "bcs_gitops_resource_preference"
 	tableHistoryManifest    = "bcs_gitops_app_history_manifest"
-	// nolint
-	tableResourceInfo = "bcs_gitops_resource_info"
 )
 
 // Interface xxx interface
 type Interface interface {
 	Init() error
 
-	SaveActivityUser(user *ActivityUser) error
-	GetActivityUser(project, user string) (*ActivityUser, error)
-	UpdateActivityUser(user *ActivityUser) error
-	ListActivityUser(project string) ([]ActivityUser, error)
-
-	GetSyncInfo(project, cluster, app, phase string) (*SyncInfo, error)
-	ListSyncInfosForProject(project string) ([]SyncInfo, error)
-	SaveSyncInfo(info *SyncInfo) error
-	UpdateSyncInfo(info *SyncInfo) error
-
-	SaveOrUpdateResourceInfo(info *ResourceInfo) error
-	ListResourceInfosByProject(projects []string) ([]ResourceInfo, error)
-	GetResourceInfo(project, app string) (*ResourceInfo, error)
+	UpdateActivityUserWithName(item *ActivityUserItem)
 
 	SaveResourcePreference(prefer *ResourcePreference) error
 	DeleteResourcePreference(project, resourceType, name string) error

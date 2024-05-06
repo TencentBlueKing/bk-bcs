@@ -10,7 +10,8 @@
  * limitations under the License.
  */
 
-package analyze
+// Package bkm xx
+package bkm
 
 import (
 	"bytes"
@@ -23,71 +24,84 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/pkg/errors"
 
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/cmd/manager/options"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-analysis/options"
 )
 
-type bkMonitorMessage struct {
+// BKMonitorMessage defines the struct send to bkm
+type BKMonitorMessage struct {
 	DataID      int64                   `json:"data_id"`
 	AccessToken string                  `json:"access_token"`
-	Data        []*bkMonitorMessageData `json:"data"`
+	Data        []*BKMonitorMessageData `json:"data"`
 }
 
-type bkMonitorMessageData struct {
+// BKMonitorMessageData defines the data that send to bkm
+type BKMonitorMessageData struct {
 	Metrics   map[string]interface{} `json:"metrics"`
 	Target    string                 `json:"target"`
 	Dimension map[string]string      `json:"dimension"`
 	Timestamp int64                  `json:"timestamp"`
 }
 
-type bkMonitorClient struct {
-	op *options.Options
+// BKMonitorClient defies the handler to bkmonitor
+type BKMonitorClient struct {
+	op *options.AnalysisOptions
 }
 
-func (b *bkMonitorClient) IsPushTurnOn() bool {
-	if b.op.AnalysisConfig == nil || b.op.AnalysisConfig.BKMonitorPushUrl == "" {
-		return false
+// NewBKMonitorClient create the bkmonitor client
+func NewBKMonitorClient() *BKMonitorClient {
+	return &BKMonitorClient{
+		op: options.GlobalOptions(),
 	}
-	return true
 }
 
-func (b *bkMonitorClient) Push(message *bkMonitorMessage) {
+// IsPushTurnOn check push to bkm is turn-on
+func (b *BKMonitorClient) IsPushTurnOn() bool {
+	return b.op.BKMonitorPushUrl != ""
+}
+
+// Push the message to bkmonitor
+func (b *BKMonitorClient) Push(message *BKMonitorMessage) {
 	if !b.IsPushTurnOn() {
 		return
 	}
 	bs, _ := json.Marshal(message)
 	httpClient := http.DefaultClient
 	httpClient.Timeout = 30 * time.Second
-	resp, err := httpClient.Post(b.op.AnalysisConfig.BKMonitorPushUrl,
-		"application/json", bytes.NewBuffer(bs))
+	blog.Infof("push to bkmonitor: %s", string(bs))
+	resp, err := httpClient.Post(b.op.BKMonitorPushUrl, "application/json", bytes.NewBuffer(bs))
 	if err != nil {
 		blog.Errorf("analysis push to bkmonitor failed: %s", err.Error())
 		return
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode == http.StatusOK {
-		blog.Infof("analysis push to bkmonitor success")
+		blog.Infof("push to bkmonitor success")
 		return
 	}
 	if bs, err = io.ReadAll(resp.Body); err != nil {
-		blog.Errorf("analysis push to bkmonitor failed: read resp body failed(%d): %s",
+		blog.Errorf("push to bkmonitor failed: read resp body failed(%d): %s",
 			resp.StatusCode, err.Error())
 		return
 	}
-	blog.Errorf("analysis push to bkmonitor failed, resp not 200 but %d: %s", resp.StatusCode, string(bs))
+	blog.Errorf("push to bkmonitor failed, resp not 200 but %d: %s", resp.StatusCode, string(bs))
 }
 
 // BKMonitorGetMessage defines the message of query bkmonitor
 type BKMonitorGetMessage struct {
-	PromQL string `json:"promql"`
-	Start  string `json:"start"`
-	End    string `json:"end"`
-	Step   string `json:"step"`
+	PromQL         string `json:"promql"`
+	Start          string `json:"start"`
+	End            string `json:"end"`
+	RecentDuration int64  `json:"recentDuration,omitempty"` // unit:second
+	Step           string `json:"step"`
 }
 
 // Complete the start/end/step with default
 func (m *BKMonitorGetMessage) Complete() {
 	timeNow := time.Now()
-	if m.Start == "" {
+	if m.RecentDuration != 0 {
+		m.Start = fmt.Sprintf("%d", timeNow.Add(-time.Duration(m.RecentDuration)*time.Second).Unix())
+		m.RecentDuration = 0
+	} else if m.Start == "" {
 		m.Start = fmt.Sprintf("%d", timeNow.Add(-24*time.Hour).Unix())
 	}
 	if m.End == "" {
@@ -98,26 +112,37 @@ func (m *BKMonitorGetMessage) Complete() {
 	}
 }
 
-type bkMonitorGetResponse struct {
-	Series []bkMonitorSeries `json:"series"`
+// BKMonitorGetResponse defines the message that bkmonitor response
+type BKMonitorGetResponse struct {
+	Series []BKMonitorSeries `json:"series"`
 }
 
-type bkMonitorSeries struct {
-	GroupKeys   []string  `json:"group_keys"`
-	GroupValues []string  `json:"group_values"`
-	Values      [][]int64 `json:"values"`
+// BKMonitorSeries defines the bkmonitor response series
+type BKMonitorSeries struct {
+	GroupKeys   []string    `json:"group_keys"`
+	GroupValues []string    `json:"group_values"`
+	Values      [][]float64 `json:"values"`
 }
 
-func (b *bkMonitorClient) Get(message *BKMonitorGetMessage) (*bkMonitorGetResponse, error) {
+// BKMonitorSeriesItem defines the series of bkmonitor search
+type BKMonitorSeriesItem struct {
+	Timestamp int64   `json:"timestamp"`
+	Value     float64 `json:"value"`
+}
+
+// Get the bkmonitor data with queryh
+func (b *BKMonitorClient) Get(message *BKMonitorGetMessage) (*BKMonitorGetResponse, error) {
+	message.Complete()
 	paseJSON, _ := json.Marshal(message) // nolint
-	req, err := http.NewRequest(http.MethodPost, b.op.AnalysisConfig.BKMonitorGetUrl, bytes.NewBuffer(paseJSON))
+	blog.Infof("query bkmonitor: %s", string(paseJSON))
+	req, err := http.NewRequest(http.MethodPost, b.op.BKMonitorGetUrl, bytes.NewBuffer(paseJSON))
 	if err != nil {
 		return nil, errors.Wrapf(err, "create http request failed")
 	}
 	req.Header.Set("X-Bkapi-Authorization",
 		fmt.Sprintf(`{"bk_app_code":"%s","bk_app_secret":"%s", "bk_username": "%s"}`,
-			b.op.Auth.AppCode, b.op.Auth.AppSecret, b.op.AnalysisConfig.BKMonitorGetUser))
-	req.Header.Set("X-Bk-Scope-Space-Uid", fmt.Sprintf("bkcc__%d", b.op.AnalysisConfig.BKMonitorGetBizID))
+			b.op.Auth.AppCode, b.op.Auth.AppSecret, b.op.BKMonitorGetUser))
+	req.Header.Set("X-Bk-Scope-Space-Uid", fmt.Sprintf("bkcc__%d", b.op.BKMonitorGetBizID))
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -132,7 +157,7 @@ func (b *bkMonitorClient) Get(message *BKMonitorGetMessage) (*bkMonitorGetRespon
 	if resp.StatusCode != http.StatusOK {
 		return nil, errors.Errorf("bkmonitor get resp code not 200 but %d: %s", resp.StatusCode, string(body))
 	}
-	bkmResp := new(bkMonitorGetResponse)
+	bkmResp := new(BKMonitorGetResponse)
 	if err = json.Unmarshal(body, bkmResp); err != nil {
 		return nil, errors.Wrapf(err, "bkmonitor get resp unmarshal '%s' failed", string(body))
 	}

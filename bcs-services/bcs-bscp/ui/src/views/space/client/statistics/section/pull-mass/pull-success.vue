@@ -192,4 +192,9 @@
       }
     }
   }
+  :deep(.bk-exception) {
+    height:100%;
+    justify-content: center;
+    transform: translateY(-20px);
+  }
 </style>

@@ -40,7 +40,6 @@
 <style scoped lang="scss">
   .client-statistics-page {
     padding: 0 24px;
-    height: 100%;
     background: #f5f7fa;
     .header {
       padding: 24px 0;

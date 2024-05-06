@@ -987,7 +987,9 @@ func (cd *argo) handleApplicationWatch() error {
 			switch event.Type {
 			case watch.Added, watch.Modified:
 				cd.storeApplication(&application)
-				cd.historyStore.enqueue(application)
+				if cd.historyStore != nil {
+					cd.historyStore.enqueue(application)
+				}
 			case watch.Deleted:
 				cd.deleteApplication(&application)
 			}

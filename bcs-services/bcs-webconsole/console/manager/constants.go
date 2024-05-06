@@ -57,12 +57,12 @@ var (
 	ShCommand = []string{
 		"/bin/sh",
 		"-c",
-		"export TERM=xterm-256color; export PS1=\"\\u:\\W$ \"; exec /bin/sh",
+		"export MANAGED_BY=bcs-webconsole; export TERM=xterm-256color; export PS1=\"\\u:\\W$ \"; exec /bin/sh",
 	}
 	// BashCommand bash 命令
 	BashCommand = []string{
 		"/bin/bash",
 		"-c",
-		"export TERM=xterm-256color; export PS1=\"\\u:\\W$ \"; exec /bin/bash",
+		"export MANAGED_BY=bcs-webconsole; export TERM=xterm-256color; export PS1=\"\\u:\\W$ \"; exec /bin/bash",
 	}
 )

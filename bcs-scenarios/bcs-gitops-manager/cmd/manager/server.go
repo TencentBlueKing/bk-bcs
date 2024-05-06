@@ -53,7 +53,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/controller"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/analyze"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store/secretstore"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/tunnel"
@@ -91,8 +90,7 @@ type Server struct {
 	// gitops revese proxy, including auth plugin
 	gitops proxy.GitOpsProxy
 	// gitops data storage
-	storage        store.Store
-	analysisClient analyze.AnalysisCollection
+	storage store.Store
 }
 
 // Init all subsystems
@@ -103,7 +101,7 @@ func (s *Server) Init() error {
 		Token:   s.option.AuditConfig.Token,
 	})
 	initializer := []func() error{
-		s.initDB, s.initAnalysisClient, s.initIamJWTClient,
+		s.initDB, s.initIamJWTClient,
 		s.initStorage, s.initController, s.initMicroService, s.initHTTPService,
 		s.initLeaderElection,
 	}
@@ -118,7 +116,7 @@ func (s *Server) Init() error {
 // Run all service, blocking
 func (s *Server) Run() error {
 	runners := []func(){
-		s.startSignalHandler, s.startAnalysis, s.startMicroService,
+		s.startSignalHandler, s.startMicroService,
 		s.startHTTPService, s.startLeaderElection,
 	}
 	for _, run := range runners {
@@ -154,15 +152,6 @@ func (s *Server) initDB() error {
 		return errors.Wrapf(err, "init db failed")
 	}
 	blog.Infof("init db success.")
-	return nil
-}
-
-func (s *Server) initAnalysisClient() error {
-	s.analysisClient = analyze.NewAnalysisClient()
-	if err := s.analysisClient.Init(); err != nil {
-		return errors.Wrapf(err, "init analysis client failed")
-	}
-	blog.Infof("init analysis client success.")
 	return nil
 }
 
@@ -242,7 +231,7 @@ func (s *Server) initMicroService() error {
 		AdminNamespace: s.option.GitOps.AdminNamespace,
 		ClusterControl: s.clusterCtl,
 		ProjectControl: s.projectCtl,
-		SecretClient:   secretstore.NewSecretStore(),
+		SecretClient:   secretstore.NewSecretStore(s.option.SecretServer),
 	}
 	gitopsHandler := handler.NewGitOpsHandler(opt)
 	if err := gitopsHandler.Init(); err != nil {
@@ -525,13 +514,6 @@ func (s *Server) startTunnelClient(cxt context.Context) error {
 	client.Start()
 	blog.Infof("manager start tunnel client successufully")
 	return nil
-}
-
-func (s *Server) startAnalysis() {
-	if err := s.analysisClient.Start(s.cxt); err != nil {
-		blog.Fatalf("start analysis failed: %s", err.Error())
-	}
-	blog.Infof("analysis started")
 }
 
 func (s *Server) startSignalHandler() {

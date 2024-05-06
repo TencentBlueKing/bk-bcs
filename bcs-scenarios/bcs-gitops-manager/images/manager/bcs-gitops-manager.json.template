@@ -82,15 +82,8 @@
     "address": "${bcsTerraformAddress}",
     "port": "${bcsTerraformPort}"
   },
-  "analysisConfig": {
-    "bkMonitorPushUrl": "${bcsAnalysisBKMonitorPushUrl}",
-    "bkMonitorPushToken": "${bcsAnalysisBKMonitorPushToken}",
-    "bkMonitorPushDataID": ${bcsAnalysisBKMonitorPushDataID},
-    "bkMonitorGetUrl": "${bcsAnalysisBKMonitorGetUrl}",
-    "bkMonitorGetBizID": ${bcsAnalysisBKMonitorGetBizID},
-    "bkMonitorGetUser": "${bcsAnalysisBKMonitorGetUser}",
-    "bkccUrl": "${bcsAnalysisBKCCUrl}",
-    "gitOpsAnalysisUrlSG": "${bcsAnalysisSGUrl}",
-    "gitOpsAnalysisTokenSG": "${bcsAnalysisSGToken}"
+  "analysisServer": {
+    "address": "${bcsAnalysisAddress}",
+    "port": "${bcsAnalysisPort}"
   }
 }

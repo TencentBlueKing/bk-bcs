@@ -258,13 +258,16 @@
       // },
     });
     columnPlot!.render();
-    columnPlot.on('plot:click', async (event: any) => {
-      selectFailedReason.value = event.data?.data.release_change_failed_reason;
-      if (!selectFailedReason.value) return;
-      isShowSpecificReason.value = true;
-      await loadPullFailedReason();
-      nextTick(() => initSpecificReasonChart());
-    });
+    columnPlot.on(
+      'plot:click',
+      async (event: any) => {
+        selectFailedReason.value = event.data?.data.release_change_failed_reason;
+        if (!selectFailedReason.value) return;
+        isShowSpecificReason.value = true;
+        await loadPullFailedReason();
+        nextTick(() => initSpecificReasonChart());
+      },
+    );
   };
 
   const initSpecificReasonChart = () => {
@@ -380,5 +383,10 @@
         margin-left: 8px;
       }
     }
+  }
+  :deep(.bk-exception) {
+    height: 100%;
+    justify-content: center;
+    transform: translateY(-20px);
   }
 </style>
