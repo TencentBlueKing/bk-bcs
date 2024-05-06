@@ -151,9 +151,8 @@ func (ops *ArgocdProxy) initArgoPathHandler() error {
 		middleware: middleware,
 	}
 	analysisPlugin := &AnalysisPlugin{
-		Router:         ops.PathPrefix(common.GitOpsProxyURL + "/api/analysis").Subrouter(),
+		Router:         ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/analysis").Subrouter(),
 		middleware:     middleware,
-		analysisClient: analyze.NewAnalysisOverview(),
 		store:          store.GlobalStore(),
 	}
 	monitorPlugin := &MonitorPlugin{

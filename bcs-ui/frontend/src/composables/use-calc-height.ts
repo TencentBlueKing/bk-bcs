@@ -76,7 +76,7 @@ export default function useContentHeight(config: IConfig | IConfig[]) {
     }));
 
     observer.observe(document.body, {
-      subtree: true,
+      // subtree: true,// 性能问题
       childList: true,
       attributes: true,
     });

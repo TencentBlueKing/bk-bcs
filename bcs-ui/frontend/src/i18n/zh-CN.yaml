@@ -197,8 +197,14 @@ metrics:
   podUsage: Pod使用率
   cpuRequestUsage:
     text: CPU装箱率
+    clusterDesc: >-
+      集群CPU装箱率 = 集群所有Pod CPU Request之和 /
+      集群所有节点CPU总核数（不包含Master节点），集群CPU装箱率越接近集群CPU使用率，集群CPU资源利用率越高 {0}
   memRequestUsage:
     text: 内存装箱率
+    clusterDesc: >-
+      集群内存装箱率 = 集群所有Pod 内存 Request之和 /
+      集群所有节点内存总大小（不包含Master节点），集群内存装箱率越接近集群内存使用率，集群内存资源利用率越高 {0}
   diskIOUsage: 磁盘IO
   diskIOUsage1: 磁盘IO总量
   diskIOUsage2: 磁盘IO使用率
@@ -247,6 +253,7 @@ generic:
       noMatchData: 无匹配数据
       searchEmpty:
         text: 搜索结果为空
+        subTitle: '可以尝试 调整关键词 或{action}'
     info:
       tips: 提示
       refreshAuth: 当前操作有权限，请刷新界面
@@ -674,6 +681,8 @@ cluster:
           text: 单节点Pod数量上限
           desc: 单节点Pod数量上限一旦分配后将无法调整，请谨慎评估后再填写
         article3: 集群可添加节点数（包含Master节点与Node节点）= (IP数量 - Service的数量) / 单节点Pod数量上限
+        article1: '容器网络资源有限，请合理分配，当前容器网络配置下，集群最多可以添加 {count} 个节点'
+        article2: '当容器网络资源超额使用时，会触发容器网络自动扩容，扩容后集群最多可以添加 {count} 个节点'
       networkMode:
         text: 网络模式
         overlay:

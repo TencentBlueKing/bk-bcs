@@ -21,6 +21,7 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
 	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"google.golang.org/grpc"
@@ -191,14 +192,22 @@ func (as *authService) listenAndServe() error {
 		logs.Infof("shutdown auth server grpc server success...")
 	}()
 
-	addr := net.JoinHostPort(network.BindIP, strconv.Itoa(int(network.RpcPort)))
-	listener, err := net.Listen("tcp", addr)
-	if err != nil {
-		return fmt.Errorf("lisen addr: %s failed, err: %v", addr, err)
+	addr := tools.GetListenAddr(network.BindIP, int(network.HttpPort))
+	ipv6Addr := tools.GetListenAddr(network.BindIPv6, int(network.HttpPort))
+	dualStackListener := listener.NewDualStackListener()
+	if err := dualStackListener.AddListenerWithAddr(addr); err != nil {
+		return err
+	}
+
+	if network.BindIPv6 != "" && network.BindIPv6 != network.BindIP {
+		if err := dualStackListener.AddListenerWithAddr(ipv6Addr); err != nil {
+			return err
+		}
+		logs.Infof("grpc serve dualStackListener with ipv6: %s", ipv6Addr)
 	}
 
 	go func() {
-		if err := serve.Serve(listener); err != nil {
+		if err := serve.Serve(dualStackListener); err != nil {
 			logs.Errorf("serve grpc server failed, err: %v", err)
 			shutdown.SignalShutdownGracefully()
 		}
@@ -212,8 +221,19 @@ func (as *authService) listenAndServe() error {
 // gwListenAndServe listen the http serve and set up the shutdown gracefully job.
 func (as *authService) gwListenAndServe() error {
 	network := cc.AuthServer().Network
-	addr := net.JoinHostPort(network.BindIP, strconv.Itoa(int(network.HttpPort)))
+	addr := tools.GetListenAddr(network.BindIP, int(network.HttpPort))
+	ipv6Addr := tools.GetListenAddr(network.BindIPv6, int(network.HttpPort))
+	dualStackListener := listener.NewDualStackListener()
+	if err := dualStackListener.AddListenerWithAddr(addr); err != nil {
+		return err
+	}
 
+	if network.BindIPv6 != "" && network.BindIPv6 != network.BindIP {
+		if err := dualStackListener.AddListenerWithAddr(ipv6Addr); err != nil {
+			return err
+		}
+		logs.Infof("api serve dualStackListener with ipv6: %s", ipv6Addr)
+	}
 	handler, err := as.service.Handler()
 	if err != nil {
 		return err
@@ -242,7 +262,7 @@ func (as *authService) gwListenAndServe() error {
 		as.gwServe.TLSConfig = tlsC
 
 		go func() {
-			if err := as.gwServe.ListenAndServeTLS("", ""); err != nil {
+			if err := as.gwServe.ServeTLS(dualStackListener, "", ""); err != nil {
 				logs.Errorf("gateway https server listen and serve failed, err: %v", err)
 				shutdown.SignalShutdownGracefully()
 			}
@@ -250,7 +270,7 @@ func (as *authService) gwListenAndServe() error {
 
 	} else {
 		go func() {
-			if err := as.gwServe.ListenAndServe(); err != nil {
+			if err := as.gwServe.Serve(dualStackListener); err != nil {
 				logs.Errorf("gateway http server listen and serve failed, err: %v", err)
 				shutdown.SignalShutdownGracefully()
 			}
