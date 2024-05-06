@@ -121,6 +121,7 @@ func GenerateCreateNodePoolRequest(group *proto.NodeGroup,
 		period           uint32 = 0
 		renewFlag               = ""
 		containerRuntime        = ""
+		password                = ""
 	)
 
 	if group.AutoScaling != nil {
@@ -134,17 +135,8 @@ func GenerateCreateNodePoolRequest(group *proto.NodeGroup,
 		}
 	}
 
-	if group.LaunchTemplate.KeyPair != nil {
-		sshKey = group.LaunchTemplate.KeyPair.KeyID
-	}
-
 	for _, v := range group.LaunchTemplate.SecurityGroupIDs {
 		securityGroups = append(securityGroups, v)
-	}
-
-	password, err := Crypt(group.LaunchTemplate.InitLoginPassword)
-	if err != nil {
-		return nil, err
 	}
 
 	diskSize, err := strconv.Atoi(group.LaunchTemplate.SystemDisk.DiskSize)
@@ -178,6 +170,15 @@ func GenerateCreateNodePoolRequest(group *proto.NodeGroup,
 
 	if group.NodeTemplate.Runtime != nil {
 		containerRuntime = group.NodeTemplate.Runtime.ContainerRuntime
+	}
+
+	if group.LaunchTemplate.KeyPair != nil {
+		sshKey = group.LaunchTemplate.KeyPair.KeyID
+	} else if group.LaunchTemplate.InitLoginPassword != "" {
+		password, err = Crypt(group.LaunchTemplate.InitLoginPassword)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return &CreateNodePoolRequest{

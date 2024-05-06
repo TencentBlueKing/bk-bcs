@@ -18,7 +18,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"unicode"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
@@ -210,8 +209,7 @@ func (nm *NodeManager) ListNodeInstanceType(info cloudprovider.InstanceInfo, opt
 			if len(zone) > 0 {
 				if zone[1] == "normal)" || zone[1] == "promotion)" {
 					status = common.InstanceSell
-					zone, _ := convertLastCharToNumber(zone[0])
-					zones = append(zones, fmt.Sprintf("%d", zone))
+					zones = append(zones, zone[0])
 				}
 			}
 		}
@@ -234,20 +232,4 @@ func (nm *NodeManager) ListNodeInstanceType(info cloudprovider.InstanceInfo, opt
 // ListOsImage get osimage list
 func (nm *NodeManager) ListOsImage(provider string, opt *cloudprovider.CommonOption) ([]*proto.OsImage, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
-}
-
-// convertLastCharToNumber 获取字符串的最后一个字符，将其按英文字母顺序转换为对应的数字（a=1, b=2, ..., z=26）
-func convertLastCharToNumber(input string) (int, error) {
-	// 获取字符串的最后一个字符
-	lastChar := input[len(input)-1]
-
-	// 检查字符是否为小写字母
-	if !unicode.IsLower(rune(lastChar)) {
-		return 0, fmt.Errorf("Invalid input: Last character must be a lowercase English letter")
-	}
-
-	// 计算字符在字母表中的位置
-	charIndex := int(lastChar-'a') + 1
-
-	return charIndex, nil
 }
