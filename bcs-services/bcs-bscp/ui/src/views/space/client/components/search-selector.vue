@@ -1,21 +1,23 @@
 <template>
   <section class="section">
     <bk-popover
-      trigger="click"
+      trigger="manual"
       ext-cls="search-selector"
       :is-show="isShowPopover"
       :arrow="false"
-      placement="bottom"
+      placement="bottom-start"
       theme="light"
       @after-show="handleGetSearchList('recent')">
       <div
         class="search-wrap"
         :data-placeholder="inputPlacehoder"
-        v-bk-tooltips="{ content: inputPlacehoder, disabled: locale === 'zh-cn' || !inputPlacehoder }">
+        v-bk-tooltips="{ content: inputPlacehoder, disabled: locale === 'zh-cn' || !inputPlacehoder }"
+        @click="isShowPopover = !isShowPopover">
         <div class="search-condition-list">
           <bk-tag
             v-for="(condition, index) in searchConditionList"
             :key="condition.key"
+            style="margin-right: 6px"
             closable
             @close="handleConditionClose(index)">
             {{ condition.content }}
@@ -34,29 +36,18 @@
         </div>
         <div
           v-if="searchConditionList.length && isClientSearch"
-          :class="['set-used', { light: isCommonlyUsed }]"
+          :class="['set-used', { light: isCommonlyUsedBtnLight }]"
           v-bk-tooltips="{ content: t('设为常用') }"
           @click.stop="handleOpenSetCommonlyDialg(true)">
           <span class="bk-bscp-icon icon-star-fill"></span>
         </div>
       </div>
       <template #content>
-        <div class="menu-wrap">
+        <div v-if="!showChildSelector" class="menu-wrap">
           <div class="search-condition">
             <div class="title">{{ t('查询条件') }}</div>
-            <div v-if="!showChildSelector">
-              <div v-for="item in selectorData" :key="item.value" class="search-item" @click="handleSelectParent(item)">
-                {{ item.name }}
-              </div>
-            </div>
-            <div v-else>
-              <div
-                v-for="item in childSelectorData"
-                :key="item.value"
-                class="search-item"
-                @click="handleSelectChild(item)">
-                {{ item.name }}
-              </div>
+            <div v-for="item in selectorData" :key="item.value" class="search-item" @click="handleSelectParent(item)">
+              {{ item.name }}
             </div>
           </div>
           <div class="resent-search">
@@ -66,10 +57,15 @@
                 v-for="item in recentSearchList"
                 :key="item.id"
                 class="search-item"
-                @click="searchConditionList = cloneDeep(item.search_condition)">
+                @click="handleSelectRecentSearch(item)">
                 <bk-overflow-title type="tips">{{ item.spec.search_name }}</bk-overflow-title>
               </div>
             </bk-loading>
+          </div>
+        </div>
+        <div v-else class="children-menu-wrap">
+          <div v-for="item in childSelectorData" :key="item.value" class="search-item" @click="handleSelectChild(item)">
+            {{ item.name }}
           </div>
         </div>
       </template>
@@ -81,22 +77,30 @@
           :commonly-search-item="item"
           @update="handleOpenSetCommonlyDialg(false, item)"
           @click="searchConditionList = cloneDeep(item.search_condition)"
-          @delete="handleConfirmDeleteCommonlyUsed(item.id)" />
+          @delete="handleOpenDeleteCommonlyDialog(item)" />
       </template>
-      <bk-popover ext-cls="all-commonly-search-popover" placement="bottom-start" theme="light" :arrow="false">
-        <bk-button theme="primary" text>{{ t('全部常用查询') }}</bk-button>
+      <bk-popover
+        trigger="manual"
+        ext-cls="all-commonly-search-popover"
+        placement="bottom-start"
+        theme="light"
+        :is-show="isShowAllCommonSearchPopover"
+        :arrow="false">
+        <bk-button theme="primary" text @click="isShowAllCommonSearchPopover = !isShowAllCommonSearchPopover">
+          {{ t('全部常用查询') }}
+        </bk-button>
         <template #content>
           <div
             v-for="item in commonlySearchList"
             :key="item.id"
             class="search-item"
-            @click="searchConditionList = item.search_condition">
+            @click="handleSelectCommonSearch(item)">
             <div class="name">
               <bk-overflow-title>{{ item.spec.search_name }}</bk-overflow-title>
             </div>
             <div class="action-icon" v-if="item.spec.creator !== 'system'">
               <EditLine class="icon edit" @click.stop="handleOpenSetCommonlyDialg(false, item)" />
-              <CloseLine class="icon close" @click.stop="handleConfirmDeleteCommonlyUsed(item.id)" />
+              <Error class="icon close" @click.stop="handleOpenDeleteCommonlyDialog(item)" />
             </div>
           </div>
         </template>
@@ -105,16 +109,34 @@
     <SetCommonlyDialog
       :is-show="isShowSetCommonlyDialog"
       :is-create="isCreateCommonlyUsed"
+      :name="selectedCommomlyItem?.spec.search_name"
       @create="handleConfirmCreateCommonlyUsed"
       @update="handleConfirmUpdateCommonlyUsed"
       @close="isShowSetCommonlyDialog = false" />
+    <bk-dialog
+      :is-show="isShowDeleteCommonlyDialog"
+      :ext-cls="'delete-commonly-dialog'"
+      :width="400"
+      @closed="isShowDeleteCommonlyDialog = false">
+      <div class="head">{{ t('确认删除该常用查询?') }}</div>
+      <div class="body">
+        <span class="label">{{ t('名称') }} : </span>
+        <span class="name">{{ selectedDeleteCommonlyItem?.spec.search_name }}</span>
+      </div>
+      <div class="footer">
+        <div class="btns">
+          <bk-button theme="danger" @click="handleConfirmDeleteCommonlyUsed">{{ t('删除') }}</bk-button>
+          <bk-button @click="isShowDeleteCommonlyDialog = false">{{ t('取消') }}</bk-button>
+        </div>
+      </div>
+    </bk-dialog>
   </section>
 </template>
 
 <script lang="ts" setup>
   import { nextTick, ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
   import { storeToRefs } from 'pinia';
-  import { EditLine, CloseLine } from 'bkui-vue/lib/icon';
+  import { EditLine, Error } from 'bkui-vue/lib/icon';
   import { CLIENT_SEARCH_DATA, CLIENT_STATISTICS_SEARCH_DATA, CLIENT_STATUS_MAP } from '../../../../constants/client';
   import { ISelectorItem, ISearchCondition, ICommonlyUsedItem } from '../../../../../types/client';
   import {
@@ -153,7 +175,9 @@
   const isCreateCommonlyUsed = ref(true);
   const selectedCommomlyItem = ref<ICommonlyUsedItem>();
   const isShowSetCommonlyDropdown = ref(false);
-  const isCommonlyUsed = ref(false);
+  const isShowDeleteCommonlyDialog = ref(false);
+  const selectedDeleteCommonlyItem = ref<ICommonlyUsedItem>();
+  const isShowAllCommonSearchPopover = ref(false);
 
   const props = defineProps<{
     bkBizId: string;
@@ -169,10 +193,19 @@
 
   const selectorData = computed(() => (isClientSearch.value ? CLIENT_SEARCH_DATA : CLIENT_STATISTICS_SEARCH_DATA));
 
+  const isCommonlyUsedBtnLight = computed(() => {
+    return commonlySearchList.value.some((commonlySearchItem) => {
+      if (commonlySearchItem.search_condition.length !== searchConditionList.value.length) return false;
+      return commonlySearchItem.search_condition.every((commonlySearchConditionList) => {
+        const { key, value } = commonlySearchConditionList;
+        return searchConditionList.value.findIndex((item) => item.key === key && item.value === value) > -1;
+      });
+    });
+  });
+
   watch(
     () => searchConditionList.value,
     () => {
-      isCommonlyUsed.value = false;
       // 搜索框和查询条件都为空时不需要转换查询参数
       if (searchConditionList.value.length === 0 && Object.keys(searchQuery.value.search!).length === 0) return;
       handleSearchConditionChangeQuery();
@@ -192,6 +225,16 @@
     (val) => {
       if (Object.keys(val!).length === 0) {
         searchConditionList.value = [];
+      }
+    },
+  );
+
+  watch(
+    () => isShowPopover.value,
+    (val) => {
+      if (val && !searchStr.value) {
+        showChildSelector.value = false;
+        parentSelecte.value = undefined;
       }
     },
   );
@@ -221,14 +264,21 @@
       childSelectorData.value = parentSelectorItem.children;
       showChildSelector.value = true;
     } else {
+      isShowPopover.value = false;
       nextTick(() => inputRef.value.focus());
     }
-    searchStr.value = `${parentSelectorItem?.name}:`;
+    searchStr.value = `${parentSelectorItem?.name} : `;
   };
 
   // 选择子选择器
   const handleSelectChild = (childrenSelectoreItem: ISelectorItem) => {
     showChildSelector.value = false;
+    isShowPopover.value = false;
+    // 重复的查询项去重
+    const index = searchConditionList.value.findIndex(
+      (item) => item.key === parentSelecte.value?.value && item.key !== 'label',
+    );
+    if (index > -1) handleConditionClose(index);
     searchConditionList.value.push({
       key: parentSelecte.value!.value,
       value: childrenSelectoreItem.value,
@@ -239,9 +289,12 @@
 
   // 手动输入确认搜索项
   const handleConfirmConditionItem = () => {
-    const conditionValue = searchStr.value.split(':', 2);
+    const conditionValue = searchStr.value.split(' : ', 2);
     inputFocus.value = false;
-    if (!conditionValue[1]) return;
+    if (!conditionValue[1]) {
+      searchStr.value = '';
+      return;
+    }
     // 重复的查询项去重
     const index = searchConditionList.value.findIndex(
       (item) => item.key === parentSelecte.value?.value && item.key !== 'label',
@@ -308,7 +361,6 @@
       });
       isShowSetCommonlyDialog.value = false;
       handleGetSearchList('common');
-      isCommonlyUsed.value = true;
       Message({
         theme: 'success',
         message: t('常用查询添加成功'),
@@ -338,9 +390,15 @@
   };
 
   // 删除常用查询
-  const handleConfirmDeleteCommonlyUsed = async (id: number) => {
+  const handleOpenDeleteCommonlyDialog = (item: ICommonlyUsedItem) => {
+    selectedDeleteCommonlyItem.value = item;
+    isShowDeleteCommonlyDialog.value = true;
+  };
+
+  const handleConfirmDeleteCommonlyUsed = async () => {
     try {
-      await deleteClientSearchRecord(props.bkBizId, props.appId, id);
+      await deleteClientSearchRecord(props.bkBizId, props.appId, selectedDeleteCommonlyItem.value!.id);
+      isShowDeleteCommonlyDialog.value = false;
       handleGetSearchList('common');
       Message({
         theme: 'success',
@@ -353,6 +411,7 @@
 
   const handleOpenSetCommonlyDialg = (isCreate: boolean, item?: ICommonlyUsedItem) => {
     if (isCreate) {
+      if (isCommonlyUsedBtnLight.value) return;
       isCreateCommonlyUsed.value = true;
     } else {
       isCreateCommonlyUsed.value = false;
@@ -378,7 +437,7 @@
           query[item.key] = [item.value];
         }
       } else {
-        query[item.key] = item.value;
+        query[item.key] = item.value.trim();
       }
     });
     clientStore.$patch((state) => {
@@ -405,7 +464,7 @@
         });
       } else if (key === 'online_status' || key === 'release_change_status') {
         query[key].forEach((value: string) => {
-          const content = `${selectorData.value.find((item) => item.value === key)?.name}:${
+          const content = `${selectorData.value.find((item) => item.value === key)?.name} : ${
             CLIENT_STATUS_MAP[value as keyof typeof CLIENT_STATUS_MAP]
           }`;
           searchList.push({
@@ -416,7 +475,7 @@
           searchName.push(content);
         });
       } else {
-        const content = `${selectorData.value.find((item) => item.value === key)?.name}:${query[key]}`;
+        const content = `${selectorData.value.find((item) => item.value === key)?.name} : ${query[key]}`;
         searchList.push({
           key,
           value: query[key],
@@ -427,6 +486,16 @@
     });
     item.search_condition = searchList;
     item.spec.search_name = item.spec.search_name || searchName.join(';');
+  };
+
+  const handleSelectRecentSearch = (item: ICommonlyUsedItem) => {
+    searchConditionList.value = cloneDeep(item.search_condition);
+    isShowPopover.value = false;
+  };
+
+  const handleSelectCommonSearch = (item: ICommonlyUsedItem) => {
+    searchConditionList.value = cloneDeep(item.search_condition);
+    isShowAllCommonSearchPopover.value = false;
   };
 </script>
 
@@ -488,6 +557,7 @@
     display: flex;
     justify-content: space-between;
     width: calc(670px - 16px);
+    padding: 8px;
     .title {
       width: 319px;
       height: 24px;
@@ -503,6 +573,21 @@
       height: 32px;
       padding-left: 12px;
       line-height: 32px;
+      &:hover {
+        background: #f5f7fa;
+      }
+    }
+  }
+  .children-menu-wrap {
+    min-width: 200px;
+    padding: 4px 0;
+    div {
+      display: flex;
+      align-items: center;
+      height: 32px;
+      padding: 0 8px;
+      color: #63656e;
+      cursor: pointer;
       &:hover {
         background: #f5f7fa;
       }
@@ -530,7 +615,7 @@
 
 <style lang="scss">
   .bk-popover.bk-pop2-content.search-selector {
-    padding: 8px;
+    padding: 0;
   }
   .commonly-search-item-popover.bk-popover.bk-pop2-content {
     padding: 4px 0;
@@ -555,11 +640,59 @@
         max-width: 120px;
       }
       .action-icon {
+        display: flex;
+        align-items: center;
         .icon:hover {
           color: #3a84ff;
         }
         .edit {
           margin-right: 17px;
+        }
+        .close {
+          font-size: 14px;
+        }
+      }
+    }
+  }
+
+  .delete-commonly-dialog .bk-modal-body {
+    .bk-modal-header {
+      display: none;
+    }
+    .bk-modal-footer {
+      display: none;
+    }
+    .bk-modal-content {
+      padding: 48px 24px 0 24px;
+      .head {
+        font-size: 20px;
+        color: #313238;
+        text-align: center;
+      }
+      .body {
+        min-height: 32px;
+        line-height: 32px;
+        background: #f5f7fa;
+        padding-left: 16px;
+        margin-top: 16px;
+        .label {
+          color: #63656e;
+        }
+        .name {
+          color: #313238;
+        }
+      }
+      .footer {
+        display: flex;
+        justify-content: space-around;
+        .btns {
+          margin-top: 24px;
+          .bk-button {
+            width: 88px;
+          }
+          .bk-button:nth-child(1) {
+            margin-right: 8px;
+          }
         }
       }
     }

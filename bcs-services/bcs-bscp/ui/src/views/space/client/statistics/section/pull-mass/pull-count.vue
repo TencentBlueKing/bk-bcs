@@ -159,7 +159,6 @@
       yField: ['count', 'value'],
       yAxis: {
         value: {
-          tickCount: 5,
           grid: {
             line: {
               style: {
