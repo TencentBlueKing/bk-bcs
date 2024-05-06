@@ -1081,11 +1081,10 @@ type BCS struct {
 
 // GSE defines all the gse related runtime.-
 type GSE struct {
+	// Enabled is the flag to enable gse p2p download.
+	Enabled bool `yaml:"enabled"`
+	// Host is the gse bk api gateway address.
 	Host string `yaml:"host"`
-	// AppCode blueking belong to bscp's appcode.
-	AppCode string `yaml:"appCode"`
-	// AppSecret blueking belong to bscp app's secret.
-	AppSecret string `yaml:"appSecret"`
 	// NodeAgentID is the node's agent id where feed server deployded, it might be different in different instance,
 	// so recommend to get it from the environment variable.
 	NodeAgentID string `yaml:"nodeAgentID"`
@@ -1112,10 +1111,22 @@ func (g *GSE) getFromEnv() {
 	}
 
 	if len(g.PodID) == 0 {
-		g.PodID = os.Getenv("POD_UID")
+		g.PodID = os.Getenv("POD_ID")
 	}
 
 	if len(g.ContainerName) == 0 {
 		g.ContainerName = os.Getenv("BSCP_CONTAINER_NAME")
 	}
+}
+
+// validate gse runtime
+func (g GSE) validate() error {
+	if !g.Enabled {
+		return nil
+	}
+	if g.NodeAgentID == "" && (g.ClusterID == "" || g.PodID == "" || g.ContainerName == "") {
+		return errors.New("to enable p2p download, either agent id must be set or cluster id, " +
+			"pod id, container name must all be set")
+	}
+	return nil
 }

@@ -425,9 +425,10 @@ type SidecarHandshakePayload struct {
 type SidecarRuntimeOption struct {
 	// BounceIntervalHour sidecar connect bounce interval, if reach this bounce interval, sidecar will
 	// reconnect stream server instance.
-	BounceIntervalHour uint          `json:"bounceInterval"`
-	RepositoryTLS      *TLSBytes     `json:"repositoryTLS"`
-	Repository         *RepositoryV1 `json:"repository"`
+	BounceIntervalHour  uint          `json:"bounceInterval"`
+	RepositoryTLS       *TLSBytes     `json:"repositoryTLS"`
+	Repository          *RepositoryV1 `json:"repository"`
+	EnableAsyncDownload bool          `json:"enableAsyncDownload"`
 }
 
 // ServiceInfo defines the sidecar's need info from the upstream server with handshake.

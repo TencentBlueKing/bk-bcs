@@ -338,6 +338,7 @@ type FeedServerSetting struct {
 	Log     LogOption `yaml:"log"`
 
 	Repository   Repository          `yaml:"repository"`
+	Esb          Esb                 `yaml:"esb"`
 	BCS          BCS                 `yaml:"bcs"`
 	GSE          GSE                 `yaml:"gse"`
 	FSLocalCache FSLocalCache        `yaml:"fsLocalCache"`
@@ -390,6 +391,14 @@ func (s FeedServerSetting) Validate() error {
 	}
 
 	if err := s.MRLimiter.validate(); err != nil {
+		return err
+	}
+
+	if err := s.Esb.validate(); err != nil {
+		return err
+	}
+
+	if err := s.GSE.validate(); err != nil {
 		return err
 	}
 
