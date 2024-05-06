@@ -82,8 +82,8 @@ func (t *Task) BuildDeleteVirtualClusterTask(cls *proto.Cluster,
 }
 
 // BuildCreateClusterTask build create cluster task
-func (t *Task) BuildCreateClusterTask(
-	cls *proto.Cluster, opt *cloudprovider.CreateClusterOption) (*proto.Task, error) {
+func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.CreateClusterOption) ( // nolint
+	*proto.Task, error) {
 	// validate request params
 	if cls == nil {
 		return nil, fmt.Errorf("BuildCreateClusterTask cluster info empty")

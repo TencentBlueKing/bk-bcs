@@ -223,7 +223,7 @@ func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo, grou
 	return req, nil
 }
 
-func genAgentPoolReq(ng *proto.NodeGroup, subscriptionID, rgName string, podNum uint32) (
+func genAgentPoolReq(ng *proto.NodeGroup, subscriptionID, rgName string, podNum uint32) ( // nolint
 	*armcontainerservice.ManagedClusterAgentPoolProfile, error) {
 	if ng.LaunchTemplate == nil {
 		return nil, fmt.Errorf("generateCreateClusterRequest empty LaunchTemplate for nodegroup %s", ng.Name)
@@ -780,8 +780,8 @@ func CheckAKSClusterNodesStatusTask(taskID string, stepName string) error {
 	return nil
 }
 
-func checkClusterNodesStatus(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, nodeGroupIDs []string) (
-	[]string, []string, error) {
+func checkClusterNodesStatus(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, // nolint
+	nodeGroupIDs []string) ([]string, []string, error) {
 	var totalNodesNum uint32
 	var addSuccessNodes, addFailureNodes = make([]string, 0), make([]string, 0)
 	nodePoolList := make([]string, 0)
