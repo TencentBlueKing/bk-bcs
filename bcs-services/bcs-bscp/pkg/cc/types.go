@@ -610,8 +610,13 @@ func (log LogOption) Logs() logs.LogConfig {
 
 // Network defines all the network related options
 type Network struct {
-	// BindIP is ip where server working on
+	// BindIP is the advertised IP address for service discovery.
+	// if in ipv4 single stack mode, the BindIP would be ipv4 address.
+	// if in ipv6 single stack mode, the BindIP would be ipv6 address.
 	BindIP string `yaml:"bindIP"`
+	// BindIPv6 is the ipv6 address, which service would listen to.
+	// it would be set only in single ipv6 stack mode or dual stack mode.
+	BindIPv6 string `yaml:"bindIPv6"`
 	// RpcPort is port where server listen to rpc port.
 	RpcPort uint `yaml:"rpcPort"`
 	// HttpPort is port where server listen to http port.
@@ -649,6 +654,9 @@ func (n *Network) trySetFlagPort(port, grpcPort int) error {
 func (n *Network) trySetDefault() {
 	if len(n.BindIP) == 0 {
 		n.BindIP = "127.0.0.1"
+	}
+	if len(n.BindIPv6) == 0 {
+		n.BindIPv6 = tools.GetIPv6AddrFromEnv()
 	}
 }
 
