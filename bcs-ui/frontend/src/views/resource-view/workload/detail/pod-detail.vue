@@ -1,5 +1,5 @@
 <template>
-  <div class="workload-detail bcs-content-wrapper">
+  <div class="workload-detail">
     <div class="workload-detail-info" v-bkloading="{ isLoading }">
       <div class="workload-info-basic">
         <div class="basic-left">
@@ -37,6 +37,10 @@
         </div>
       </div>
       <div class="workload-main-info">
+        <div class="info-item">
+          <span class="label">{{ $t('cluster.labels.name') }}</span>
+          <span class="value">{{ clusterNameMap[clusterId] }}</span>
+        </div>
         <div class="info-item">
           <span class="label">{{ $t('k8s.namespace') }}</span>
           <span class="value" v-bk-overflow-tips>{{ metadata.namespace }}</span>
@@ -155,14 +159,14 @@
           </bk-table>
         </bcs-tab-panel>
         <bcs-tab-panel name="event" :label="$t('generic.label.event')">
-          <EventQueryTableVue
+          <EventQueryTable
             class="min-h-[360px]"
             hide-cluster-and-namespace
             :kinds="['Pod']"
             :cluster-id="clusterId"
             :namespace="namespace"
             :name="name">
-          </EventQueryTableVue>
+          </EventQueryTable>
         </bcs-tab-panel>
         <bcs-tab-panel name="conditions" :label="$t('k8s.conditions')">
           <bk-table :data="conditions">
@@ -334,10 +338,10 @@ import { timeFormat } from '@/common/util';
 import Metric from '@/components/metric.vue';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 import StatusIcon from '@/components/status-icon';
-import { useConfig, useProject } from '@/composables/use-app';
+import { useCluster, useConfig, useProject } from '@/composables/use-app';
 import fullScreen from '@/directives/full-screen';
 import $store from '@/store';
-import EventQueryTableVue from '@/views/project-manage/event-query/event-query-table.vue';
+import EventQueryTable from '@/views/project-manage/event-query/event-query-table.vue';
 
 export interface IDetail {
   manifest: any;
@@ -356,7 +360,7 @@ export default defineComponent({
     StatusIcon,
     Metric,
     CodeEditor,
-    EventQueryTableVue,
+    EventQueryTable,
   },
   directives: {
     bkOverflowTips,
@@ -386,6 +390,7 @@ export default defineComponent({
     },
   },
   setup(props, ctx) {
+    const { clusterNameMap } = useCluster();
     const {
       isLoading,
       detail,
@@ -551,6 +556,7 @@ export default defineComponent({
       handleUpdateResource,
       handleDeleteResource,
       handleShowTerminal,
+      clusterNameMap,
     };
   },
 });

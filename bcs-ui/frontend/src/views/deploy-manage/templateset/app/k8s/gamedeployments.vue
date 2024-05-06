@@ -150,7 +150,7 @@ import GamedeploymentsUpdate from './gamedeployments-update';
 import { catchErrorHandler } from '@/common/util';
 import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
 import Header from '@/components/layout/Header.vue';
-import { useNamespace } from '@/views/resource-view/namespace/use-namespace';
+import { useNamespace } from '@/views/cluster-manage/namespace/use-namespace';
 
 export default {
   name: 'GameDeployments',

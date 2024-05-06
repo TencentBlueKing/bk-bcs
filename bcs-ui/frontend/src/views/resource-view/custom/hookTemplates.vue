@@ -1,12 +1,13 @@
 <template>
   <BaseLayout
     title="HookTemplates"
-    kind="HookTemplate" type="crd"
+    kind="HookTemplate"
+    type="crd"
     category="custom_objects"
-    default-crd="hooktemplates.tkex.tencent.com"
+    :crd="crd"
     default-active-detail-type="yaml"
     :show-detail-tab="false"
-    :show-crd="false">
+    scope="Namespaced">
     <template
       #default="{
         curPageData, pageConf,
@@ -15,7 +16,9 @@
         handleDeleteResource,handleSortChange,
         handleShowDetail, renderCrdHeader,
         getJsonPathValue, additionalColumns,
-        webAnnotations,nameValue, handleClearSearchData
+        webAnnotations, handleShowViewConfig,
+        clusterNameMap, goNamespace, isViewEditable,
+        isClusterMode
       }">
       <bk-table
         :data="curPageData"
@@ -23,16 +26,32 @@
         @page-change="handlePageChange"
         @page-limit-change="handlePageSizeChange"
         @sort-change="handleSortChange">
-        <bk-table-column :label="$t('generic.label.name')" prop="metadata.name" sortable>
+        <bk-table-column :label="$t('generic.label.name')" prop="metadata.name" sortable fixed="left">
           <template #default="{ row }">
             <bk-button
-              class="bcs-button-ellipsis" text
+              class="bcs-button-ellipsis"
+              text
+              :disabled="isViewEditable"
               @click="handleShowDetail(row)">{{ row.metadata.name }}</bk-button>
+          </template>
+        </bk-table-column>
+        <bk-table-column :label="$t('cluster.labels.nameAndId')" v-if="!isClusterMode">
+          <template #default="{ row }">
+            <div class="flex flex-col py-[6px] h-[50px]">
+              <span class="bcs-ellipsis">{{ clusterNameMap[handleGetExtData(row.metadata.uid, 'clusterID')] }}</span>
+              <span class="bcs-ellipsis mt-[6px]">{{ handleGetExtData(row.metadata.uid, 'clusterID') }}</span>
+            </div>
           </template>
         </bk-table-column>
         <bk-table-column :label="$t('k8s.namespace')" prop="metadata.namespace" min-width="100" sortable>
           <template #default="{ row }">
-            {{ row.metadata.namespace || '--' }}
+            <bk-button
+              class="bcs-button-ellipsis"
+              text
+              :disabled="isViewEditable"
+              @click="goNamespace(row)">
+              {{ row.metadata.namespace }}
+            </bk-button>
           </template>
         </bk-table-column>
         <bk-table-column
@@ -62,7 +81,12 @@
             </span>
           </template>
         </bk-table-column>
-        <bk-table-column :label="$t('generic.label.action')" :resizable="false" width="150">
+        <bk-table-column
+          :label="$t('generic.label.action')"
+          :resizable="false"
+          width="150"
+          fixed="right"
+          v-if="isViewEditable">
           <template #default="{ row }">
             <bk-button
               text
@@ -80,7 +104,10 @@
           </template>
         </bk-table-column>
         <template #empty>
-          <BcsEmptyTableStatus :type="nameValue ? 'search-empty' : 'empty'" @clear="handleClearSearchData" />
+          <BcsEmptyTableStatus
+            :button-text="$t('generic.button.resetSearch')"
+            type="search-empty"
+            @clear="handleShowViewConfig" />
         </template>
       </bk-table>
     </template>
@@ -94,5 +121,11 @@ import BaseLayout from '@/views/resource-view/common/base-layout';
 export default defineComponent({
   name: 'HookTemplates',
   components: { BaseLayout },
+  props: {
+    crd: {
+      type: String,
+      default: 'hooktemplates.tkex.tencent.com',
+    },
+  },
 });
 </script>

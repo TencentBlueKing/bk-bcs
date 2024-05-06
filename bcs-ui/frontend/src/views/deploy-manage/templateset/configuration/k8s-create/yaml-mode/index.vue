@@ -570,7 +570,7 @@
     </div>
 </template>
 
-<script>
+<script lang="jsx">
     import yamljs from 'js-yaml'
     import MonacoEditor from './editor'
     // import CollapseTransition from '@/components/menu/collapse-transition'

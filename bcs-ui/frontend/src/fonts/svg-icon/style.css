@@ -38,3 +38,6 @@ url("fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .bcs-icon-color-kubeconfig:before {
 	content: "\e103";
 }
+.bcs-icon-color-edit-tag:before {
+	content: "\e107";
+}

@@ -174,7 +174,7 @@ export default defineComponent({
       // $store.commit('updateCurProject', project);
       // 特殊界面切换项目时跳转到首页
       const name = ['403', '404'].includes(currentRoute.name || '')
-        ? 'dashboardIndex' : $store.state.curSideMenu?.route;
+        ? 'dashboardIndex' : $store.state.curNav?.route;
       const { href } = $router.resolve({
         name: name || 'dashboardIndex',
         params: {

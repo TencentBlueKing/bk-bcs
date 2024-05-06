@@ -1,268 +1,253 @@
 <template>
-  <LayoutContent
-    hide-back
-    :title="$t('k8s.namespace')"
-    v-bkloading="{ isLoading: namespaceLoading }">
-    <div class="wrapper flex flex-col place-content-between">
-      <div>
-        <LayoutRow class="mb15">
-          <template #left>
-            <!-- 权限详情接口目前暂不支持多个actionID -->
-            <bcs-button
-              theme="primary"
-              icon="plus"
-              v-authority="{
-                clickable: true,
-                actionId: 'namespace_create',
-                autoUpdatePerms: true,
-                permCtx: {
-                  resource_type: 'cluster',
-                  project_id: projectID,
-                  cluster_id: clusterID
-                }
-              }"
-              @click="handleToCreatedPage">
-              {{ $t('generic.button.create') }}
-            </bcs-button>
-          </template>
-          <template #right>
-            <ClusterSelect
-              v-if="!curClusterId"
-              v-model="clusterID"
-              class="mr-[10px]"
-              searchable
-              :disabled="!!curClusterId">
-            </ClusterSelect>
-            <bcs-input
-              class="search-input"
-              right-icon="bk-icon icon-search"
-              :placeholder="$t('dashboard.placeholder.search1')"
-              clearable
-              v-model="searchValue">
-            </bcs-input>
-          </template>
-        </LayoutRow>
-        <bcs-table
-          :data="curPageData"
-          :pagination="pagination"
-          size="medium"
-          @page-change="pageChange"
-          @page-limit-change="pageSizeChange">
-          <bcs-table-column :label="$t('generic.label.name')" prop="name" min-width="200" show-overflow-tooltip>
-            <template #default="{ row }">
-              <bk-button
-                class="bcs-button-ellipsis"
-                text
-                v-authority="{
-                  clickable: webAnnotations.perms[row.name]
-                    && webAnnotations.perms[row.name].namespace_view,
-                  actionId: 'namespace_view',
-                  resourceName: row.name,
-                  disablePerms: true,
-                  permCtx: {
-                    project_id: projectID,
-                    cluster_id: clusterID,
-                    name: row.name
-                  }
-                }"
-                @click="showDetail(row)">
-                <span class="bcs-ellipsis">{{ row.name }}</span>
-              </bk-button>
-            </template>
-          </bcs-table-column>
-          <bcs-table-column :label="$t('generic.label.status')">
-            <template #default="{ row }">
-              <span
-                v-if="row.itsmTicketURL"
-                class="text-[#3a84ff] cursor-pointer"
-                @click="handleToITSM(row.itsmTicketURL)">
-                {{ $t('dashboard.ns.status.waitingApproval') }}（{{ itsmTicketTypeMap[row.itsmTicketType] }})
-              </span>
-              <StatusIcon
-                :status-color-map="{
-                  'Active': 'green',
-                }"
-                :status="row.status"
-                :pending="['Terminating'].includes(row.status)"
-                v-else>
-                {{ row.status || '--' }}
-              </StatusIcon>
-            </template>
-          </bcs-table-column>
-          <bcs-table-column :label="$t('metrics.cpuUsage')" prop="cpuUseRate" :render-header="renderHeader">
-            <template #default="{ row }">
-              <bcs-round-progress
-                v-if="row.quota"
-                ext-cls="biz-cluster-ring"
-                width="50px"
-                :percent="row.cpuUseRate"
-                :config="{
-                  strokeWidth: 10,
-                  bgColor: '#f0f1f5',
-                  activeColor: '#3a84ff'
-                }"
-                :num-style="{
-                  fontSize: '12px',
-                  width: '100%'
-                }"
-                v-bk-tooltips="{
-                  content: `${$t('dashboard.ns.quota.cpuUsageRatio', {
-                    used: row.used ? row.used.cpuLimits : 0,
-                    total: row.quota.cpuLimits,
-                  })}`
-                }"
-              ></bcs-round-progress>
-              <span
-                class="ml-[16px]"
-                v-else
-                v-bk-tooltips="{ content: $t('dashboard.ns.tips.notEnabledNamespaceQuota') }">--</span>
-            </template>
-          </bcs-table-column>
-          <bcs-table-column :label="$t('metrics.memUsage')" prop="memoryUseRate" :render-header="renderHeader">
-            <template #default="{ row }">
-              <bcs-round-progress
-                v-if="row.quota"
-                ext-cls="biz-cluster-ring"
-                width="50px"
-                :percent="row.memoryUseRate"
-                :config="{
-                  strokeWidth: 10,
-                  bgColor: '#f0f1f5',
-                  activeColor: '#3a84ff'
-                }"
-                :num-style="{
-                  fontSize: '12px',
-                  width: '100%'
-                }"
-                v-bk-tooltips="{
-                  content: `${$t('dashboard.ns.quota.usageRatio', {
-                    used: row.used ? `${unitConvert(row.used.memoryLimits, 'Gi', 'mem')}GiB` : 0,
-                    total: `${row.quota.memoryLimits}B`,
-                  })}`
-                }"
-              ></bcs-round-progress>
-              <span
-                class="ml-[16px]"
-                v-else
-                v-bk-tooltips="{ content: $t('dashboard.ns.tips.notEnabledNamespace') }">--</span>
-            </template>
-          </bcs-table-column>
-          <bcs-table-column :label="$t('cluster.labels.createdAt')">
-            <template #default="{ row }">
-              {{ row.createTime ? timeZoneTransForm(row.createTime, false) : '--' }}
-            </template>
-          </bcs-table-column>
-          <bcs-table-column :label="$t('generic.label.action')" width="200">
-            <template #default="{ row }">
-              <bk-button
-                text
-                class="mr-[10px]"
-                :disabled="applyMap(row.itsmTicketType).setQuota"
-                v-authority="{
-                  clickable: webAnnotations.perms[row.name]
-                    && webAnnotations.perms[row.name].namespace_update,
-                  actionId: 'namespace_update',
-                  resourceName: row.name,
-                  disablePerms: true,
-                  permCtx: {
-                    project_id: projectID,
-                    cluster_id: clusterID,
-                    name: row.name
-                  }
-                }"
-                @click="showSetQuota(row)">
-                {{ $t('cluster.detail.title.quota') }}
-              </bk-button>
-              <bk-button
-                text
-                class="mr-[10px]"
-                :disabled="applyMap(row.itsmTicketType).setVar"
-                @click="showSetVariable(row)">
-                {{ $t('dashboard.ns.action.setEnv') }}
-              </bk-button>
-              <bk-popover
-                placement="bottom"
-                theme="light dropdown"
-                :arrow="false"
-                trigger="click">
-                <span class="bcs-icon-more-btn"><i class="bcs-icon bcs-icon-more"></i></span>
-                <template #content>
-                  <ul class="bcs-dropdown-list">
-                    <template v-if="!isSharedCluster">
-                      <li
-                        class="bcs-dropdown-item"
-                        v-authority="{
-                          clickable: webAnnotations.perms[row.name]
-                            && webAnnotations.perms[row.name].namespace_update,
-                          actionId: 'namespace_update',
-                          resourceName: row.name,
-                          disablePerms: true,
-                          permCtx: {
-                            project_id: projectID,
-                            cluster_id: clusterID,
-                            name: row.name
-                          }
-                        }"
-                        @click="handleSetLabel(row)">
-                        {{ $t('cluster.nodeList.button.setLabel') }}
-                      </li>
-                      <li
-                        class="bcs-dropdown-item"
-                        v-authority="{
-                          clickable: webAnnotations.perms[row.name]
-                            && webAnnotations.perms[row.name].namespace_update,
-                          actionId: 'namespace_update',
-                          resourceName: row.name,
-                          disablePerms: true,
-                          permCtx: {
-                            project_id: projectID,
-                            cluster_id: clusterID,
-                            name: row.name
-                          }
-                        }"
-                        @click="handleSetAnnotations(row)">
-                        {{ $t('dashboard.ns.action.setAnnotation') }}
-                      </li>
-                    </template>
-                    <li
-                      v-if="row.itsmTicketURL"
-                      class="bcs-dropdown-item w-[80px]"
-                      @click="withdrawNamespace(row)">
-                      {{ $t('dashboard.ns.action.undo') }}
-                    </li>
-                    <li
-                      v-else
-                      class="bcs-dropdown-item w-[80px]"
-                      :disabled="applyMap(row.itsmTicketType).delete"
-                      v-authority="{
-                        clickable: webAnnotations.perms[row.name]
-                          && webAnnotations.perms[row.name].namespace_delete,
-                        actionId: 'namespace_delete',
-                        resourceName: row.name,
-                        disablePerms: true,
-                        permCtx: {
-                          project_id: projectID,
-                          cluster_id: clusterID,
-                          name: row.name
-                        }
-                      }"
-                      @click="handleDeleteNamespace(row)">
-                      {{ $t('generic.button.delete') }}
-                    </li>
-                  </ul>
+  <div v-bkloading="{ isLoading: namespaceLoading }">
+    <LayoutRow class="mb15">
+      <template #left>
+        <!-- 权限详情接口目前暂不支持多个actionID -->
+        <bcs-button
+          theme="primary"
+          icon="plus"
+          v-authority="{
+            clickable: true,
+            actionId: 'namespace_create',
+            autoUpdatePerms: true,
+            permCtx: {
+              resource_type: 'cluster',
+              project_id: projectID,
+              cluster_id: clusterId
+            }
+          }"
+          @click="handleToCreatedPage">
+          {{ $t('generic.button.create') }}
+        </bcs-button>
+      </template>
+      <template #right>
+        <bcs-input
+          class="search-input"
+          right-icon="bk-icon icon-search"
+          :placeholder="$t('dashboard.placeholder.search1')"
+          clearable
+          v-model="searchValue">
+        </bcs-input>
+      </template>
+    </LayoutRow>
+    <bcs-table
+      :data="curPageData"
+      :pagination="pagination"
+      size="medium"
+      @page-change="pageChange"
+      @page-limit-change="pageSizeChange">
+      <bcs-table-column :label="$t('generic.label.name')" prop="name" min-width="200" show-overflow-tooltip>
+        <template #default="{ row }">
+          <bk-button
+            class="bcs-button-ellipsis"
+            text
+            v-authority="{
+              clickable: webAnnotations.perms[row.name]
+                && webAnnotations.perms[row.name].namespace_view,
+              actionId: 'namespace_view',
+              resourceName: row.name,
+              disablePerms: true,
+              permCtx: {
+                project_id: projectID,
+                cluster_id: clusterId,
+                name: row.name
+              }
+            }"
+            @click="showDetail(row)">
+            <span class="bcs-ellipsis">{{ row.name }}</span>
+          </bk-button>
+        </template>
+      </bcs-table-column>
+      <bcs-table-column :label="$t('generic.label.status')">
+        <template #default="{ row }">
+          <span
+            v-if="row.itsmTicketURL"
+            class="text-[#3a84ff] cursor-pointer"
+            @click="handleToITSM(row.itsmTicketURL)">
+            {{ $t('dashboard.ns.status.waitingApproval') }}（{{ itsmTicketTypeMap[row.itsmTicketType] }})
+          </span>
+          <StatusIcon
+            :status-color-map="{
+              'Active': 'green',
+            }"
+            :status="row.status"
+            :pending="['Terminating'].includes(row.status)"
+            v-else>
+            {{ row.status || '--' }}
+          </StatusIcon>
+        </template>
+      </bcs-table-column>
+      <bcs-table-column :label="$t('metrics.cpuUsage')" prop="cpuUseRate" :render-header="renderHeader">
+        <template #default="{ row }">
+          <bcs-round-progress
+            v-if="row.quota"
+            ext-cls="biz-cluster-ring"
+            width="50px"
+            :percent="row.cpuUseRate"
+            :config="{
+              strokeWidth: 10,
+              bgColor: '#f0f1f5',
+              activeColor: '#3a84ff'
+            }"
+            :num-style="{
+              fontSize: '12px',
+              width: '100%'
+            }"
+            v-bk-tooltips="{
+              content: `${$t('dashboard.ns.quota.cpuUsageRatio', {
+                used: row.used ? row.used.cpuLimits : 0,
+                total: row.quota.cpuLimits,
+              })}`
+            }"
+          ></bcs-round-progress>
+          <span
+            class="ml-[16px]"
+            v-else
+            v-bk-tooltips="{ content: $t('dashboard.ns.tips.notEnabledNamespaceQuota') }">--</span>
+        </template>
+      </bcs-table-column>
+      <bcs-table-column :label="$t('metrics.memUsage')" prop="memoryUseRate" :render-header="renderHeader">
+        <template #default="{ row }">
+          <bcs-round-progress
+            v-if="row.quota"
+            ext-cls="biz-cluster-ring"
+            width="50px"
+            :percent="row.memoryUseRate"
+            :config="{
+              strokeWidth: 10,
+              bgColor: '#f0f1f5',
+              activeColor: '#3a84ff'
+            }"
+            :num-style="{
+              fontSize: '12px',
+              width: '100%'
+            }"
+            v-bk-tooltips="{
+              content: `${$t('dashboard.ns.quota.usageRatio', {
+                used: row.used ? `${unitConvert(row.used.memoryLimits, 'Gi', 'mem')}GiB` : 0,
+                total: `${row.quota.memoryLimits}B`,
+              })}`
+            }"
+          ></bcs-round-progress>
+          <span
+            class="ml-[16px]"
+            v-else
+            v-bk-tooltips="{ content: $t('dashboard.ns.tips.notEnabledNamespace') }">--</span>
+        </template>
+      </bcs-table-column>
+      <bcs-table-column :label="$t('cluster.labels.createdAt')">
+        <template #default="{ row }">
+          {{ row.createTime ? timeZoneTransForm(row.createTime, false) : '--' }}
+        </template>
+      </bcs-table-column>
+      <bcs-table-column :label="$t('generic.label.action')" width="200">
+        <template #default="{ row }">
+          <bk-button
+            text
+            class="mr-[10px]"
+            :disabled="applyMap(row.itsmTicketType).setQuota"
+            v-authority="{
+              clickable: webAnnotations.perms[row.name]
+                && webAnnotations.perms[row.name].namespace_update,
+              actionId: 'namespace_update',
+              resourceName: row.name,
+              disablePerms: true,
+              permCtx: {
+                project_id: projectID,
+                cluster_id: clusterId,
+                name: row.name
+              }
+            }"
+            @click="showSetQuota(row)">
+            {{ $t('cluster.detail.title.quota') }}
+          </bk-button>
+          <bk-button
+            text
+            class="mr-[10px]"
+            :disabled="applyMap(row.itsmTicketType).setVar"
+            @click="showSetVariable(row)">
+            {{ $t('dashboard.ns.action.setEnv') }}
+          </bk-button>
+          <bk-popover
+            placement="bottom"
+            theme="light dropdown"
+            :arrow="false"
+            trigger="click">
+            <span class="bcs-icon-more-btn"><i class="bcs-icon bcs-icon-more"></i></span>
+            <template #content>
+              <ul class="bcs-dropdown-list">
+                <template v-if="!isSharedCluster">
+                  <li
+                    class="bcs-dropdown-item"
+                    v-authority="{
+                      clickable: webAnnotations.perms[row.name]
+                        && webAnnotations.perms[row.name].namespace_update,
+                      actionId: 'namespace_update',
+                      resourceName: row.name,
+                      disablePerms: true,
+                      permCtx: {
+                        project_id: projectID,
+                        cluster_id: clusterId,
+                        name: row.name
+                      }
+                    }"
+                    @click="handleSetLabel(row)">
+                    {{ $t('cluster.nodeList.button.setLabel') }}
+                  </li>
+                  <li
+                    class="bcs-dropdown-item"
+                    v-authority="{
+                      clickable: webAnnotations.perms[row.name]
+                        && webAnnotations.perms[row.name].namespace_update,
+                      actionId: 'namespace_update',
+                      resourceName: row.name,
+                      disablePerms: true,
+                      permCtx: {
+                        project_id: projectID,
+                        cluster_id: clusterId,
+                        name: row.name
+                      }
+                    }"
+                    @click="handleSetAnnotations(row)">
+                    {{ $t('dashboard.ns.action.setAnnotation') }}
+                  </li>
                 </template>
-              </bk-popover>
+                <li
+                  v-if="row.itsmTicketURL"
+                  class="bcs-dropdown-item w-[80px]"
+                  @click="withdrawNamespace(row)">
+                  {{ $t('dashboard.ns.action.undo') }}
+                </li>
+                <li
+                  v-else
+                  class="bcs-dropdown-item w-[80px]"
+                  :disabled="applyMap(row.itsmTicketType).delete"
+                  v-authority="{
+                    clickable: webAnnotations.perms[row.name]
+                      && webAnnotations.perms[row.name].namespace_delete,
+                    actionId: 'namespace_delete',
+                    resourceName: row.name,
+                    disablePerms: true,
+                    permCtx: {
+                      project_id: projectID,
+                      cluster_id: clusterId,
+                      name: row.name
+                    }
+                  }"
+                  @click="handleDeleteNamespace(row)">
+                  {{ $t('generic.button.delete') }}
+                </li>
+              </ul>
             </template>
-          </bcs-table-column>
-          <template #empty>
-            <BcsEmptyTableStatus :type="searchValue ? 'search-empty' : 'empty'" @clear="searchValue = ''" />
-          </template>
-        </bcs-table>
-      </div>
-      <AppFooter />
-    </div>
+          </bk-popover>
+        </template>
+      </bcs-table-column>
+      <template #empty>
+        <BcsEmptyTableStatus :type="searchValue ? 'search-empty' : 'empty'" @clear="searchValue = ''" />
+      </template>
+    </bcs-table>
     <!-- 设置变量 -->
-    <bcs-sideslider
+    <bk-sideslider
       :is-show.sync="setVariableConf.isShow"
       :title="setVariableConf.title"
       :width="600"
@@ -314,7 +299,7 @@
           </template>
         </div>
       </div>
-    </bcs-sideslider>
+    </bk-sideslider>
     <!-- 配额管理 -->
     <bcs-dialog
       v-model="setQuotaConf.isShow"
@@ -451,11 +436,11 @@
         ></KeyValue>
       </div>
     </bk-sideslider>
-  </LayoutContent>
+  </div>
 </template>
 
 <script lang="ts">
-import { computed, CreateElement, defineComponent, reactive, ref, toRef, watch } from 'vue';
+import { computed, CreateElement, defineComponent, onBeforeMount, reactive, ref, toRef, watch } from 'vue';
 
 import StatusIcon from '../../../components/status-icon';
 import usePage from '../../../composables/use-page';
@@ -468,39 +453,39 @@ import $bkMessage from '@/common/bkmagic';
 import { KEY_REGEXP, VALUE_REGEXP } from '@/common/constant';
 import { timeZoneTransForm } from '@/common/util';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
-import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
 import KeyValue from '@/components/key-value.vue';
-import LayoutContent from '@/components/layout/Content.vue';
 import LayoutRow from '@/components/layout/Row.vue';
 import { useCluster, useProject } from '@/composables/use-app';
 import useInterval from '@/composables/use-interval';
 import useSideslider from '@/composables/use-sideslider';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
-import $store from '@/store';
-import AppFooter from '@/views/app/app-footer.vue';
 
 export default defineComponent({
   name: 'NamespaceList',
   components: {
-    ClusterSelect,
-    LayoutContent,
     LayoutRow,
     Detail,
     KeyValue,
     StatusIcon,
-    AppFooter,
   },
-  setup() {
+  props: {
+    clusterId: {
+      type: String,
+    },
+    namespace: {
+      type: String,
+      default: '',
+    },
+  },
+  setup(props) {
     const $route = computed(() => toRef(reactive($router), 'currentRoute').value);
 
     const { handleBeforeClose, reset, setChanged } = useSideslider();
     const { projectID } = useProject();
-    const { isSharedCluster } = useCluster();
-
-    const curClusterId = computed(() => $store.getters.curClusterId);
-
-    const clusterID = ref(curClusterId.value);
+    const { clusterList } = useCluster();
+    const isSharedCluster = computed(() => !!clusterList.value
+      .find(item => item.clusterID === props.clusterId)?.is_shared);
 
     const keys = ref(['name']);
 
@@ -542,7 +527,7 @@ export default defineComponent({
       getNamespaceInfo,
     } = useNamespace();
 
-    const { start, stop } = useInterval(() => getNamespaceData({ $clusterId: clusterID.value }, false));
+    const { start, stop } = useInterval(() => getNamespaceData({ $clusterId: props.clusterId }, false));
     watch(namespaceData, () => {
       if (namespaceData.value.some(item => ['Terminating'].includes(item.status))) {
         start();
@@ -586,12 +571,12 @@ export default defineComponent({
         defaultInfo: true,
         confirmFn: async () => {
           const result = await handleDeleteNameSpace({
-            $clusterId: clusterID.value,
+            $clusterId: props.clusterId,
             $namespace: row?.name,
           });
           if (result) {
             getNamespaceData({
-              $clusterId: clusterID.value,
+              $clusterId: props.clusterId,
             });
             $bkMessage({
               theme: 'success',
@@ -614,7 +599,7 @@ export default defineComponent({
       setVariableConf.value.namespace = namespace;
       setVariableConf.value.title = $i18n.t('generic.title.setVar') + namespace;
       await handleGetVariablesList({
-        $clusterId: clusterID.value,
+        $clusterId: props.clusterId,
         $namespace: namespace,
       });
       reset();
@@ -630,7 +615,7 @@ export default defineComponent({
     const updateVariable = async () => {
       variableLoading.value = true;
       const result = await handleUpdateVariablesList({
-        $clusterId: clusterID.value,
+        $clusterId: props.clusterId,
         $namespace: setVariableConf.value.namespace,
         data: variablesList.value,
       });
@@ -642,7 +627,7 @@ export default defineComponent({
         });
         hideSetVariable();
         getNamespaceData({
-          $clusterId: clusterID.value,
+          $clusterId: props.clusterId,
         });
       }
     };
@@ -669,7 +654,7 @@ export default defineComponent({
       setQuotaConf.value.namespace = row.name;
       setQuotaConf.value.loading = true;
       curNamespace.value = await getNamespaceInfo({
-        $clusterId: clusterID.value,
+        $clusterId: props.clusterId,
         $name: row.name,
       });
       setQuotaConf.value.loading = false;
@@ -694,7 +679,7 @@ export default defineComponent({
         const { namespace, labels, annotations, quota } = setQuotaConf.value;
         setQuotaConf.value.loading = true;
         const result = await handleUpdateNameSpace({
-          $clusterId: clusterID.value,
+          $clusterId: props.clusterId,
           $namespace: namespace,
           labels,
           annotations,
@@ -711,7 +696,7 @@ export default defineComponent({
             message: $i18n.t('generic.msg.success.update'),
           });
           getNamespaceData({
-            $clusterId: clusterID.value,
+            $clusterId: props.clusterId,
           });
           cancelUpdateNamespace();
         };
@@ -725,7 +710,10 @@ export default defineComponent({
 
     const handleToCreatedPage = () => {
       $router.push({
-        name: 'dashboardNamespaceCreate',
+        name: 'createNamespace',
+        params: {
+          clusterId: props.clusterId,
+        },
         query: {
           kind: 'Namespace',
         },
@@ -757,9 +745,9 @@ export default defineComponent({
       const toUnitIndex = list.indexOf(toUnit) || -1;
       const factorial = index - toUnitIndex;
       if (factorial >= 0) {
-        return num * (base ** (digit * factorial));
+        return (Number(num * (base ** (digit * factorial)))).toFixed(2);
       }
-      return num / (base ** (Math.abs(digit) * Math.abs(factorial)));
+      return Number(num / (base ** (Math.abs(digit) * Math.abs(factorial)))).toFixed(2);
     };
 
     const itsmTicketTypeMap = {
@@ -845,7 +833,7 @@ export default defineComponent({
       }, []);
       updateBtnLoading.value = true;
       const result = await handleUpdateNameSpace({
-        $clusterId: clusterID.value,
+        $clusterId: props.clusterId,
         $namespace: curNamespaceData.value.name,
         ...curNamespaceData.value,
         labels,
@@ -858,7 +846,7 @@ export default defineComponent({
           message: $i18n.t('generic.msg.success.save'),
         });
         getNamespaceData({
-          $clusterId: clusterID.value,
+          $clusterId: props.clusterId,
         });
       }
     };
@@ -881,7 +869,7 @@ export default defineComponent({
       }, []);
       updateBtnLoading.value = true;
       const result = await handleUpdateNameSpace({
-        $clusterId: clusterID.value,
+        $clusterId: props.clusterId,
         $namespace: curNamespaceData.value.name,
         ...curNamespaceData.value,
         annotations,
@@ -894,7 +882,7 @@ export default defineComponent({
           message: $i18n.t('generic.msg.success.save'),
         });
         getNamespaceData({
-          $clusterId: clusterID.value,
+          $clusterId: props.clusterId,
         });
       }
     };
@@ -905,7 +893,7 @@ export default defineComponent({
     const withdrawNamespace = async (row) => {
       namespaceLoading.value = true;
       const result = await handleWithdrawNamespace({
-        $clusterId: clusterID.value,
+        $clusterId: props.clusterId,
         $namespace: row.name,
       });
       namespaceLoading.value = false;
@@ -915,32 +903,30 @@ export default defineComponent({
           message: $i18n.t('dashboard.ns.msg.undoSuccess'),
         });
         getNamespaceData({
-          $clusterId: clusterID.value,
+          $clusterId: props.clusterId,
         });
       }
     };
 
-    watch(curClusterId, () => {
-      if (!curClusterId.value) return;
-      clusterID.value = curClusterId.value;
-    });
-    watch(clusterID, () => {
+    watch(() => props.clusterId, () => {
       pageConf.current = 1;
       getNamespaceData({
-        $clusterId: clusterID.value,
+        $clusterId: props.clusterId,
       });
     });
 
     getNamespaceData({
-      $clusterId: clusterID.value,
+      $clusterId: props.clusterId,
+    });
+
+    onBeforeMount(() => {
+      searchValue.value = props.namespace;
     });
 
     return {
       namespaceLoading,
       webAnnotations,
-      curClusterId,
       isSharedCluster,
-      clusterID,
       projectID,
       pagination,
       showQuota,
@@ -1007,6 +993,6 @@ export default defineComponent({
     text-align: left;
   }
   .wrapper {
-    min-height: calc(100vh - 144px);
+    min-height: calc(100vh - 192px);
   }
 </style>

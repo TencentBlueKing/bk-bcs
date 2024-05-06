@@ -1,5 +1,5 @@
 <template>
-  <LayoutContent :title="$tc('dashboard.ns.create.title')">
+  <LayoutContent :title="$tc('dashboard.ns.create.title')" :cluster-id="clusterId">
     <div class="p-[20px] h-full overflow-auto">
       <div class="border border-solid border-[#dcdee5] p-[20px] bg-[#ffffff]">
         <bk-form
@@ -49,7 +49,8 @@
                     :placeholder="$t('generic.label.value')"
                     v-model="label.value"
                     class="w-[300px]"
-                    @blur="validate"></bk-input>
+                    @blur="validate">
+                  </bk-input>
                 </bk-form-item>
                 <i class="bk-icon icon-minus-line ml-[5px] cursor-pointer" @click="handleRemoveLabel(index)" />
               </bk-form>
@@ -114,7 +115,7 @@
                 </bcs-input>
               </div>
               <div class="flex">
-                <span class="mr-[15px] text-[14px]">Mem</span>
+                <span class="mr-[15px] text-[14px]">MEM</span>
                 <bcs-input
                   v-model="formData.quota.memoryRequests"
                   class="w-[250px]"
@@ -145,7 +146,7 @@
 </template>
 
 <script lang='ts'>
-import { computed, defineComponent, reactive, ref, toRef } from 'vue';
+import { computed, defineComponent, ref } from 'vue';
 
 import { useNamespace } from './use-namespace';
 
@@ -153,7 +154,7 @@ import $bkMessage from '@/common/bkmagic';
 import { KEY_REGEXP } from '@/common/constant';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import LayoutContent from '@/components/layout/Content.vue';
-import { useCluster } from '@/composables/use-app';
+import { useCluster, useProject } from '@/composables/use-app';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 
@@ -162,9 +163,13 @@ export default defineComponent({
   components: {
     LayoutContent,
   },
-  setup() {
-    const $route = computed(() => toRef(reactive($router), 'currentRoute').value);
-
+  props: {
+    clusterId: {
+      type: String,
+      default: '',
+    },
+  },
+  setup(props) {
     const formData = ref<{
       name: string
       quota: {
@@ -187,9 +192,8 @@ export default defineComponent({
       annotations: [],
     });
 
-    const clusterId = computed(() => $route.value.params.clusterId);
-
-    const { isSharedCluster } = useCluster();
+    const { clusterMap } = useCluster();
+    const isSharedCluster = computed(() => !!clusterMap.value[props.clusterId]?.is_shared);
     const { handleCreatedNamespace } = useNamespace();
 
     const rules = {
@@ -207,7 +211,7 @@ export default defineComponent({
           validator() {
             return Number(formData.value.quota.cpuRequests) >= 1 && Number(formData.value.quota.memoryRequests) >= 1;
           },
-          message: $i18n.t('dashboard.ns.validate.sharedQuota'),
+          message: $i18n.t('dashboard.ns.validate.setMinMaxMemCpu'),
           trigger: 'blur',
         },
       ] : [],
@@ -236,7 +240,7 @@ export default defineComponent({
 
     };
 
-    const projectCode = computed(() => $route.value.params.projectCode);
+    const { projectCode } = useProject();
     const namespaceForm = ref();
     const isLoading = ref(false);
 
@@ -277,6 +281,7 @@ export default defineComponent({
     const nsPrefix = computed(() => `${window.BCS_NAMESPACE_PREFIX || 'bcs'}-${projectCode.value}-`);
     const handleCreated = () => {
       namespaceForm.value.validate().then(async () => {
+        if (!props.clusterId) return;
         let { name } = formData.value;
         if (isSharedCluster.value) {
           name = `${nsPrefix.value}${name}`;
@@ -292,7 +297,7 @@ export default defineComponent({
           };
         }
         const result = await handleCreatedNamespace({
-          $clusterId: clusterId.value,
+          $clusterId: props.clusterId,
           ...formData.value,
           name,
           quota,

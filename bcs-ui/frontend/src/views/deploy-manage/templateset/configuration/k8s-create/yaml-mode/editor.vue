@@ -96,7 +96,7 @@ export default {
     this.monaco.editor.defineTheme('monokai', monokaiTheme);
     this.initMonaco(monaco);
     this.$nextTick(() => {
-      const rect = this.$refs.mancoEditor.getBoundingClientRect();
+      const rect = this.$refs.mancoEditor?.getBoundingClientRect();
       this.defaultWidth = rect.width;
       this.defaultHeight = rect.height;
     });

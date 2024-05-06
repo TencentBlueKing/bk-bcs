@@ -2,6 +2,7 @@ bcs:
   title: 容器管理平台 | 腾讯蓝鲸智云
   name: 容器管理平台
   newVersion: '有版本更新, 是否刷新界面'
+  preVersion: 返回旧版
   TKEx:
     title: TKEx-IEG 容器平台
     welcome: 欢迎使用 TKEx-IEG 容器平台
@@ -20,8 +21,6 @@ bcs:
     federation: 联邦集群
     kubeConfig: kubeConfig导入
     cloud: 云凭证导入
-    publicIcon: 共享
-    privateIcon: 专用
     platform: 平台创建
   msg:
     emptyHostResource: 您在当前业务下没有主机资源，请联系业务运维
@@ -100,7 +99,7 @@ nav:
   workload: 工作负载
   configuration: 配置
   storage: 存储
-  customResource: 自定义资源
+  tkexCRD: 游戏场景CRD
   cluster: 集群管理
   clusterList: 集群列表
   nodeList: 节点列表
@@ -278,6 +277,7 @@ generic:
     command: 多个命令用空格分隔，例如/bin/bash &quot;-c&quot
     searchIp: '输入IP搜索, 多个IP用逗号或空格隔开'
   button:
+    resetSearch: 调整筛选条件
     validate: 校验
     confirm: 确定
     confirm1: 确认
@@ -381,6 +381,7 @@ generic:
     start: 开始
     stop: 停止
     basicConfig: 基本配置
+    abnormal: 异常
   status:
     part_failure: 部分失败
     support: 支持
@@ -547,8 +548,8 @@ cluster:
   tips:
     highMetricData: 集群指标过载
     createK8SCluster: 新建 K8S 原生集群
-    clusterStatus: '集群状态: {0}'
   labels:
+    hideSharedCluster: 隐藏共享集群
     nameAndId: 集群名称/ID
     name: 集群名称
     status: 集群状态
@@ -2146,11 +2147,10 @@ dashboard:
     confirmDelete: 确认删除当前资源
     overview: 总览
     confirmSchedule: '确认{action}当前资源下所有Pod'
+  button:
+    createResource: 创建资源
   placeholder:
-    selectCRD: 选择CRD
     search1: 搜索名称
-    search2: 输入名称、创建人搜索
-    search3: 输入名称、创建人、IP搜索
   label:
     formMode: 表单模式
     yamlMode: YAML模式
@@ -2174,7 +2174,6 @@ dashboard:
       emptyNs: 请选择命名空间
       name: 命名空间名称只能包含小写字母、数字以及连字符(-)，连字符（-）后面必须接英文或者数字
       sharedClusterNs: '命名规则：{prefix}自定义名称'
-      sharedQuota: 共享集群需设置MEN、CPU配额，且两者最小值不小于0
       setMinMaxMemCpu: 请设置MEN、CPU配额，且两者最小值不小于0
     status:
       waitingApproval: 待审批
@@ -2427,6 +2426,50 @@ logCollector:
         tips: 如果添加多个标签，只会采集Pod上同时存在多个标签的容器日志
       workload: 按工作负载选择
       container: 按容器名选择
+view:
+  labels:
+    creator: 创建人
+    allNs: 全部命名空间
+    clusterAndNs: 集群/命名空间
+    saveAs: 另存为
+    name: 视图名称
+    all: 全部
+    resourceName: 资源名称
+    viewDataRange: 视图数据范围
+    editView: 编辑视图
+    newView: 新建视图
+    custom: 自定义
+  button:
+    addField: 添加条件
+    addQueryField: 添加查询条件
+    query: 查询
+    saveAsView: 另存为视图
+    moreResource: 更多资源
+    addCluster: 添加集群
+    edit: 编辑
+    clone: 克隆
+    delete: 删除
+    reset: 重置条件
+    confirmAndChangeView: 保存并进入新视图
+    clusterView: 集群视图
+    customView: 自定义视图
+    addCustomView: 添加自定义视图
+  tips:
+    selectMultiCluster: 批量选择集群
+    confirmDelete: 确定删除视图
+    sharedClusterDoNotSupportTheKind: 共享集群不支持创建该资源
+    editMode: 视图结果预览
+    invalidate: 部分条件已失效，请重新选择
+  placeholder:
+    searchCluster: 搜索集群名称
+    creator: 请输入创建人
+    resourceName: 请输入资源名称
+    searchView: 搜索视图
+    searchNameOrCreator: 搜索资源名称/创建人
+    searchNameOrCreatorOrIP: 搜索资源名称/创建人/IP
+    searchResourceKind: 搜索资源类型
+  status:
+    saveAs: 另存成功
 manualNode:
   title:
     source:

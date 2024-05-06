@@ -1,6 +1,6 @@
 <template>
   <div>
-    <Header :title="$t('deploy.helm.history')" :desc="name" />
+    <Header :title="$t('deploy.helm.history')" :desc="name" :cluster-id="clusterId" :namespace="namespace" />
     <div class="px-[24px] pt-[8px]">
       <Row>
         <template #right>

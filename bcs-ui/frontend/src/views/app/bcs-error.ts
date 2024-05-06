@@ -1,5 +1,7 @@
 import { VueConstructor } from 'vue';
 
+import $store from '@/store';
+
 export interface IConfig {
   filename?: string // 当前组件文件名
   parentFileName?: string // 父组件文件名
@@ -39,6 +41,23 @@ export function errorHandler(err, config: IConfig = {}) {
   console.error(err);
   console.groupEnd();
   console.groupEnd();
+
+  // 数据上报
+  window.BkTrace?.startReported({
+    module: 'error',
+    operation: 'error',
+    desc: '前端异常',
+    username: $store.state.user.username,
+    projectCode: $store.getters.curProjectCode,
+    error: {
+      version: localStorage.getItem('__bcs_latest_version__'), // 前端版本
+      filename, // 错误组件名称
+      parentFileName, // 父组件名称
+      route, // 路径
+      info, // 抛错位置
+      stack: `${err?.name}: ${err?.message}`, // 堆栈信息
+    },
+  }, 'error');
 }
 
 export default class BcsErrorPlugin {
