@@ -28,6 +28,10 @@ var (
 	cloudName = "qcloud"
 )
 
+const (
+	defaultRegion = "ap-nanjing"
+)
+
 // qcloud taskName
 const (
 	// createClusterTaskTemplate bk-sops add task template
@@ -478,8 +482,12 @@ func (ic *ImportClusterTaskOption) BuildRegisterClusterKubeConfigStep(task *prot
 
 // DeleteClusterTaskOption 删除集群
 type DeleteClusterTaskOption struct {
-	Cluster    *proto.Cluster
+	// Cluster cluster
+	Cluster *proto.Cluster
+	// DeleteMode delete mode
 	DeleteMode string
+	// LastClusterStatus last cluster status
+	LastClusterStatus string
 }
 
 // BuildDeleteTKEClusterStep 删除集群
@@ -488,6 +496,7 @@ func (dc *DeleteClusterTaskOption) BuildDeleteTKEClusterStep(task *proto.Task) {
 	deleteStep.Params[cloudprovider.ClusterIDKey.String()] = dc.Cluster.ClusterID
 	deleteStep.Params[cloudprovider.CloudIDKey.String()] = dc.Cluster.Provider
 	deleteStep.Params[cloudprovider.DeleteModeKey.String()] = dc.DeleteMode
+	deleteStep.Params[cloudprovider.LastClusterStatus.String()] = dc.LastClusterStatus
 
 	task.Steps[deleteTKEClusterStep.StepMethod] = deleteStep
 	task.StepSequence = append(task.StepSequence, deleteTKEClusterStep.StepMethod)

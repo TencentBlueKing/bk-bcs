@@ -180,6 +180,11 @@ func IsContainerdRuntime(runtime string) bool {
 }
 
 const (
+	// Iptables iptables mode
+	Iptables = "iptables"
+	// Ipvs ipvs mode
+	Ipvs = "ipvs"
+
 	// InitClusterID initClusterID
 	InitClusterID = "BCS-K8S-00000"
 	// RuntimeFlag xxx
@@ -539,4 +544,6 @@ const (
 	PREPAID = "PREPAID" // 预付费，即包年包月
 	// POSTPAIDBYHOUR xxx
 	POSTPAIDBYHOUR = "POSTPAID_BY_HOUR" // 按小时后付费
+	// NOTIFYANDAUTORENEW // 自动续期
+	NOTIFYANDAUTORENEW = "NOTIFY_AND_AUTO_RENEW"
 )

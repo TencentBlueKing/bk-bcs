@@ -9,6 +9,9 @@
   import { Column } from '@antv/g2plot';
   import { IClientConfigVersionItem } from '../../../../../../../types/client';
   import Tooltip from '../../components/tooltip.vue';
+  import { useI18n } from 'vue-i18n';
+
+  const { t } = useI18n();
 
   const props = defineProps<{
     data: IClientConfigVersionItem[];
@@ -50,7 +53,7 @@
         items: [
           {
             id: '1',
-            name: '客户端数量',
+            name: t('客户端数量'),
             value: 'count',
             marker: {
               symbol: 'square',
@@ -74,7 +77,7 @@
         enterable: true,
         customItems: (originalItems: any[]) => {
           emits('update', originalItems[0].title);
-          originalItems[0].name = '客户端数量';
+          originalItems[0].name = t('客户端数量');
           return originalItems;
         },
       },

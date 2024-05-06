@@ -80,14 +80,14 @@ func (f *FileOperator) Decompress(path, outputDir string) error {
 	// 打开已下载的 tar.gz 文件
 	file, err := os.Open(path)
 	if err != nil {
-		return fmt.Errorf("open compress file failed, err: %w", err)
+		return fmt.Errorf("open compress file failed, err: %s", err.Error())
 	}
 	defer file.Close()
 
 	// 解压缩文件
 	gzipReader, err := gzip.NewReader(file)
 	if err != nil {
-		return fmt.Errorf("create gzip reader failed, err: %w", err)
+		return fmt.Errorf("create gzip reader failed, err: %s", err.Error())
 	}
 	defer gzipReader.Close() // nolint
 
@@ -184,8 +184,8 @@ func (f *FileOperator) createDirectoriesAndFile(obj interface{}, basePath string
 }
 
 func (f *FileOperator) compressFolder(basePath, output string) error {
-	tar := archiver.NewTarGz()
-	tar.OverwriteExisting = true
+	tarFile := archiver.NewTarGz()
+	tarFile.OverwriteExisting = true
 
 	items, err := ioutil.ReadDir(basePath)
 	if err != nil {
@@ -198,7 +198,7 @@ func (f *FileOperator) compressFolder(basePath, output string) error {
 		pathsToArchive = append(pathsToArchive, itemPath)
 	}
 
-	return tar.Archive(pathsToArchive, output)
+	return tarFile.Archive(pathsToArchive, output)
 }
 
 func (f *FileOperator) validateType(i interface{}) error {
@@ -240,32 +240,32 @@ func (f *FileOperator) exportFileFromTar(tarReader *tar.Reader, outputDir string
 		return true, nil
 	}
 	if err != nil {
-		return false, fmt.Errorf("read tar file failed, err: %w", err)
+		return false, fmt.Errorf("read tar file failed, err: %s", err.Error())
 	}
 
 	target := filepath.Join(outputDir, header.Name)
 	switch header.Typeflag {
 	case tar.TypeDir:
 		if err := os.MkdirAll(target, os.FileMode(header.Mode)); err != nil {
-			return false, fmt.Errorf("create directory failed, err: %w", err)
+			return false, fmt.Errorf("create directory failed, err: %s", err.Error())
 		}
 	case tar.TypeReg:
 		if err := os.MkdirAll(filepath.Dir(target), 0755); err != nil {
-			return false, fmt.Errorf("create directory failed, err: %w", err)
+			return false, fmt.Errorf("create directory failed, err: %s", err.Error())
 		}
 
 		outFile, err := os.Create(target)
 		if err != nil {
-			return false, fmt.Errorf("create output file failed, err: %w", err)
+			return false, fmt.Errorf("create output file failed, err: %s", err.Error())
 		}
 		defer outFile.Close()
 
 		if _, err := io.Copy(outFile, tarReader); err != nil {
-			return false, fmt.Errorf("write output file failed, err: %w", err)
+			return false, fmt.Errorf("write output file failed, err: %s", err.Error())
 		}
 
 		if err := outFile.Chmod(os.FileMode(header.Mode)); err != nil {
-			return false, fmt.Errorf("change file mode failed, err: %w", err)
+			return false, fmt.Errorf("change file mode failed, err: %s", err.Error())
 		}
 	default:
 		return false, fmt.Errorf("unknown file type: %v", header.Typeflag)

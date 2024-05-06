@@ -27,6 +27,7 @@ import (
 	pbds "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/jsoni"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/lock"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // Interface defines all the supported operations to get resource cache.
@@ -42,6 +43,8 @@ type Interface interface {
 	GetReleasedKvValue(kt *kit.Kit, bizID, appID, releaseID uint32, key string) (string, error)
 	SetClientMetric(kt *kit.Kit, bizID, appID uint32, payload []byte) error
 	BatchUpsertClientMetrics(kt *kit.Kit, clientData []*pbclient.Client, clientEventData []*pbce.ClientEvent) error
+	GetAsyncDownloadTask(kt *kit.Kit, bizID uint32, taskID string) (string, error)
+	SetAsyncDownloadTask(kt *kit.Kit, bizID uint32, taskID string, task *types.AsyncDownloadTaskCache) error
 }
 
 // New initialize a cache client.
@@ -111,7 +114,7 @@ func (c *client) RefreshAppCache(kt *kit.Kit, bizID uint32, appID uint32) error 
 
 // SetClientMetric set client metric data
 func (c *client) SetClientMetric(kt *kit.Kit, bizID, appID uint32, payload []byte) error {
-	if err := c.bds.LPush(kt.Ctx, keys.Key.ClientMetricKey(bizID, appID), payload); err != nil {
+	if err := c.bds.RPush(kt.Ctx, keys.Key.ClientMetricKey(bizID, appID), payload); err != nil {
 		return err
 	}
 	return nil
@@ -126,6 +129,25 @@ func (c *client) BatchUpsertClientMetrics(kt *kit.Kit, clientData []*pbclient.Cl
 	}
 	_, err := c.db.BatchUpsertClientMetrics(kt.Ctx, in)
 	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// GetAsyncDownloadTask get async download task from cache
+func (c *client) GetAsyncDownloadTask(kt *kit.Kit, bizID uint32, taskID string) (string, error) {
+	return c.bds.Get(kt.Ctx, keys.Key.AsyncDownloadTaskKey(bizID, taskID))
+}
+
+// SetAsyncDownloadTask set async download task to cache
+func (c *client) SetAsyncDownloadTask(kt *kit.Kit, bizID uint32, taskID string,
+	task *types.AsyncDownloadTaskCache) error {
+	js, err := jsoni.Marshal(task)
+	if err != nil {
+		return err
+	}
+	if err := c.bds.Set(kt.Ctx, keys.Key.AsyncDownloadTaskKey(bizID, taskID), string(js),
+		keys.Key.AppMetaTtlSec(false)); err != nil {
 		return err
 	}
 	return nil

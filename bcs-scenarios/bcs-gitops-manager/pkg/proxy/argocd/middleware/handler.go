@@ -91,16 +91,17 @@ type handler struct {
 	clusterPermission   *cluster.BCSClusterPerm
 	namespacePermission *namespace.BCSNamespacePerm
 
-	option             *options.Options
-	store              store.Store
-	analysisCollection analyze.AnalysisCollection
-	appCollect         analyze.CollectApplication
+	option     *options.Options
+	store      store.Store
+	appCollect analyze.CollectApplication
+	db         dao.Interface
 
 	secretSession     *session.SecretSession
 	monitorSession    *session.MonitorSession
 	argoSession       *session.ArgoSession
 	argoStreamSession *session.ArgoStreamSession
 	terraformSession  *session.TerraformSession
+	analysisSession   *session.AnalysisSession
 
 	tracer func(context.Context) error
 }
@@ -110,16 +111,17 @@ func NewMiddlewareHandler() MiddlewareInterface {
 	op := options.GlobalOptions()
 	return &handler{
 		option:              op,
+		db:                  dao.GlobalDB(),
 		store:               store.GlobalStore(),
 		argoSession:         session.NewArgoSession(),
 		argoStreamSession:   session.NewArgoStreamSession(),
 		secretSession:       session.NewSecretSession(),
 		terraformSession:    session.NewTerraformSession(),
+		analysisSession:     session.NewAnalysisSession(),
 		monitorSession:      session.NewMonitorSession(),
 		projectPermission:   project.NewBCSProjectPermClient(op.IAMClient),
 		clusterPermission:   cluster.NewBCSClusterPermClient(op.IAMClient),
 		namespacePermission: namespace.NewBCSNamespacePermClient(op.IAMClient),
-		analysisCollection:  analyze.GetAnalysisClient(),
 		appCollect:          analyze.NewCollectApplication(),
 	}
 }
@@ -153,6 +155,7 @@ func (h *handler) HttpWrapper(handler HttpHandler) http.Handler {
 		argoStreamSession: h.argoStreamSession,
 		secretSession:     h.secretSession,
 		terraformSession:  h.terraformSession,
+		analysisSession:   h.analysisSession,
 		monitorSession:    h.monitorSession,
 	}
 	blog.Infof("[Trace] request handler '%s' add to otel", handlerName)
@@ -277,7 +280,9 @@ func (h *handler) CheckNamespaceScopedResourcePermission(ctx context.Context, pr
 func (h *handler) CheckProjectPermissionByID(ctx context.Context, projectName, projectID string,
 	action iam.ActionID) (int, error) {
 	user := ctx.Value(ctxKeyUser).(*proxy.UserInfo)
-	h.analysisCollection.UpdateActivityUser(projectName, user.GetUser())
+	go h.db.UpdateActivityUserWithName(&dao.ActivityUserItem{
+		Project: projectName, User: user.GetUser(),
+	})
 	if h.isAdminUser(user.GetUser()) {
 		return http.StatusOK, nil
 	}
@@ -354,6 +359,7 @@ func (h *handler) CheckRepositoryPermission(ctx context.Context, repoName string
 	if repo == nil {
 		return nil, http.StatusNotFound, errors.Errorf("repository '%s' not found", repoName)
 	}
+	// nolint
 	if slices.Contains[[]string](h.option.PublicProjects, repo.Project) {
 		return repo, http.StatusOK, nil
 	}
@@ -371,6 +377,7 @@ func (h *handler) checkRepositoryBelongProject(ctx context.Context, repoUrl, pro
 		return false, fmt.Errorf("repo '%s' not found", repoUrl)
 	}
 	// passthrough if repository's project equal to public projects
+	// nolint
 	if slices.Contains[[]string](h.option.PublicProjects, repo.Project) {
 		return true, nil
 	}
@@ -559,6 +566,7 @@ func (h *handler) ListClusters(ctx context.Context, projectNames []string) (
 	projectClusters := make(map[string][]string)
 	controlledClusters := make(map[string]v1alpha1.Cluster)
 	for _, cls := range clusterList.Items {
+		// nolint
 		if !slices.Contains[[]string](projectNames, cls.Project) {
 			continue
 		}
@@ -655,5 +663,6 @@ func (h *handler) ListApplications(ctx context.Context, query *appclient.Applica
 }
 
 func (h *handler) isAdminUser(user string) bool {
+	// nolint
 	return slices.Contains[[]string](h.option.AdminUsers, user)
 }

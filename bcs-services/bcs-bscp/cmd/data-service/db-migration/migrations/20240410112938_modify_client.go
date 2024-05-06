@@ -33,16 +33,20 @@ func init() {
 func mig20240410112938Up(tx *gorm.DB) error {
 	// Clients : client
 	type Clients struct {
-		CpuMinUsage          float64 `gorm:"column:cpu_min_usage;type:double unsigned;default:0;NOT NULL"`
-		CpuAvgUsage          float64 `gorm:"column:cpu_avg_usage;type:double unsigned;default:0;NOT NULL"`
-		MemoryMinUsage       uint64  `gorm:"column:memory_min_usage;type:bigint(1) unsigned;default:0;NOT NULL"`
-		MemoryAvgUsage       uint64  `gorm:"column:memory_avg_usage;type:bigint(1) unsigned;default:0;NOT NULL"`
-		SpecificFailedReason string  `gorm:"column:specific_failed_reason;type:varchar(20);default:'';NOT NULL"`
+		CpuMinUsage               float64 `gorm:"column:cpu_min_usage;type:double unsigned;default:0;NOT NULL"`
+		CpuAvgUsage               float64 `gorm:"column:cpu_avg_usage;type:double unsigned;default:0;NOT NULL"`
+		MemoryMinUsage            uint64  `gorm:"column:memory_min_usage;type:bigint(1) unsigned;default:0;NOT NULL"`
+		MemoryAvgUsage            uint64  `gorm:"column:memory_avg_usage;type:bigint(1) unsigned;default:0;NOT NULL"`
+		SpecificFailedReason      string  `gorm:"column:specific_failed_reason;type:varchar(50);default:'';NOT NULL"`
+		ReleaseChangeFailedReason string  `gorm:"column:release_change_failed_reason;type:varchar(50);default:'';NOT NULL"`
+		FailedDetailReason        string  `gorm:"column:failed_detail_reason;type:varchar(600);default:'';NOT NULL"`
 	}
 
 	// ClientEvents : client_events
 	type ClientEvents struct {
-		SpecificFailedReason string `gorm:"column:specific_failed_reason;type:varchar(20);default:'';NOT NULL"`
+		SpecificFailedReason      string `gorm:"column:specific_failed_reason;type:varchar(50);default:'';NOT NULL"`
+		ReleaseChangeFailedReason string `gorm:"column:release_change_failed_reason;type:varchar(50);default:'';NOT NULL"`
+		FailedDetailReason        string `gorm:"column:failed_detail_reason;type:varchar(600);default:'';NOT NULL"`
 	}
 
 	// add new column
@@ -76,8 +80,31 @@ func mig20240410112938Up(tx *gorm.DB) error {
 		}
 	}
 
+	if tx.Migrator().HasColumn(&Clients{}, "release_change_failed_reason") {
+		if err := tx.Migrator().AlterColumn(&Clients{}, "release_change_failed_reason"); err != nil {
+			return err
+		}
+	}
+
+	if tx.Migrator().HasColumn(&Clients{}, "failed_detail_reason") {
+		if err := tx.Migrator().AlterColumn(&Clients{}, "failed_detail_reason"); err != nil {
+			return err
+		}
+	}
+
 	if !tx.Migrator().HasColumn(&ClientEvents{}, "specific_failed_reason") {
 		if err := tx.Migrator().AddColumn(&ClientEvents{}, "specific_failed_reason"); err != nil {
+			return err
+		}
+	}
+	if tx.Migrator().HasColumn(&ClientEvents{}, "release_change_failed_reason") {
+		if err := tx.Migrator().AlterColumn(&ClientEvents{}, "release_change_failed_reason"); err != nil {
+			return err
+		}
+	}
+
+	if tx.Migrator().HasColumn(&ClientEvents{}, "failed_detail_reason") {
+		if err := tx.Migrator().AlterColumn(&ClientEvents{}, "failed_detail_reason"); err != nil {
 			return err
 		}
 	}
@@ -89,16 +116,20 @@ func mig20240410112938Up(tx *gorm.DB) error {
 func mig20240410112938Down(tx *gorm.DB) error {
 	// Clients : client
 	type Clients struct {
-		CpuMinUsage          float64 `gorm:"column:cpu_min_usage;type:double unsigned;default:0;NOT NULL"`
-		CpuAvgUsage          float64 `gorm:"column:cpu_avg_usage;type:double unsigned;default:0;NOT NULL"`
-		MemoryMinUsage       uint64  `gorm:"column:memory_min_usage;type:bigint(1) unsigned;default:0;NOT NULL"`
-		MemoryAvgUsage       uint64  `gorm:"column:memory_avg_usage;type:bigint(1) unsigned;default:0;NOT NULL"`
-		SpecificFailedReason string  `gorm:"column:specific_failed_reason;type:varchar(20);default:'';NOT NULL"`
+		CpuMinUsage               float64 `gorm:"column:cpu_min_usage;type:double unsigned;default:0;NOT NULL"`
+		CpuAvgUsage               float64 `gorm:"column:cpu_avg_usage;type:double unsigned;default:0;NOT NULL"`
+		MemoryMinUsage            uint64  `gorm:"column:memory_min_usage;type:bigint(1) unsigned;default:0;NOT NULL"`
+		MemoryAvgUsage            uint64  `gorm:"column:memory_avg_usage;type:bigint(1) unsigned;default:0;NOT NULL"`
+		SpecificFailedReason      string  `gorm:"column:specific_failed_reason;type:varchar(50);default:'';NOT NULL"`
+		ReleaseChangeFailedReason string  `gorm:"column:release_change_failed_reason;type:varchar(50);default:'';NOT NULL"`
+		FailedDetailReason        string  `gorm:"column:failed_detail_reason;type:varchar(600);default:'';NOT NULL"`
 	}
 
 	// ClientEvents : client_events
 	type ClientEvents struct {
-		SpecificFailedReason string `gorm:"column:specific_failed_reason;type:varchar(20);default:'';NOT NULL"`
+		SpecificFailedReason      string `gorm:"column:specific_failed_reason;type:varchar(50);default:'';NOT NULL"`
+		ReleaseChangeFailedReason string `gorm:"column:release_change_failed_reason;type:varchar(50);default:'';NOT NULL"`
+		FailedDetailReason        string `gorm:"column:failed_detail_reason;type:varchar(600);default:'';NOT NULL"`
 	}
 
 	// add new column

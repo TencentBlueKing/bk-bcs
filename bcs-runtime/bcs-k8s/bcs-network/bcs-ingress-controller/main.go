@@ -25,6 +25,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/ipv6server"
 	clbv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated/apis/clb/v1"
+	federationv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/federation/v1"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 	gocache "github.com/patrickmn/go-cache"
 	"github.com/pkg/errors"
@@ -77,6 +78,7 @@ var (
 func init() {
 	_ = clientgoscheme.AddToScheme(scheme)
 	_ = networkextensionv1.AddToScheme(scheme)
+	_ = federationv1.AddToScheme(scheme)
 	_ = clbv1.AddToScheme(scheme)
 }
 
@@ -168,15 +170,16 @@ func main() {
 	// ingressCache 缓存ingress相关的service/workload信息，避免量大时影响ingress调谐时间
 	ingressCache := ingresscache.NewDefaultCache()
 	if err = (&ingressctrl.IngressReconciler{
-		Ctx:              context.Background(),
-		Client:           mgr.GetClient(),
-		Log:              ctrl.Log.WithName("controllers").WithName("Ingress"),
-		Option:           opts,
-		IngressEventer:   mgr.GetEventRecorderFor("bcs-ingress-controller"),
-		EpsFIlter:        ingressctrl.NewEndpointsFilter(mgr.GetClient(), ingressCache),
-		PodFilter:        ingressctrl.NewPodFilter(mgr.GetClient(), ingressCache),
-		IngressConverter: ingressConverter,
-		Cache:            ingressCache,
+		Ctx:                             context.Background(),
+		Client:                          mgr.GetClient(),
+		Log:                             ctrl.Log.WithName("controllers").WithName("Ingress"),
+		Option:                          opts,
+		IngressEventer:                  mgr.GetEventRecorderFor("bcs-ingress-controller"),
+		EpsFIlter:                       ingressctrl.NewEndpointsFilter(mgr.GetClient(), ingressCache),
+		PodFilter:                       ingressctrl.NewPodFilter(mgr.GetClient(), ingressCache),
+		MultiClusterEndpointSliceFilter: ingressctrl.NewMultiClusterEpsFilter(mgr.GetClient(), ingressCache),
+		IngressConverter:                ingressConverter,
+		Cache:                           ingressCache,
 	}).SetupWithManager(mgr); err != nil {
 		blog.Errorf("unable to create ingress reconciler, err %s", err.Error())
 		os.Exit(1)

@@ -831,6 +831,11 @@ type FSLocalCache struct {
 	ReleasedHookCacheSize uint `yaml:"releasedHookCacheSize"`
 	// ReleasedHookCacheTTLSec defines how long will this released hooks can be cached in seconds.
 	ReleasedHookCacheTTLSec uint `yaml:"releasedHookCacheTTLSec"`
+
+	// AsyncDownloadCacheSize defines how many async download task can be cached.
+	AsyncDownloadCacheSize uint `yaml:"asyncDownloadCacheSize"`
+	// AsyncDownloadCacheTTLSec defines how long will this async download task can be cached in seconds.
+	AsyncDownloadCacheTTLSec uint `yaml:"asyncDownloadCacheTTLSec"`
 }
 
 // validate if the feed server's local cache runtime is valid or not.
@@ -919,6 +924,14 @@ func (fc *FSLocalCache) trySetDefault() {
 
 	if fc.ReleasedHookCacheTTLSec == 0 {
 		fc.ReleasedHookCacheTTLSec = 120
+	}
+
+	if fc.AsyncDownloadCacheSize == 0 {
+		fc.AsyncDownloadCacheSize = 5000
+	}
+
+	if fc.AsyncDownloadCacheTTLSec == 0 {
+		fc.AsyncDownloadCacheTTLSec = 600
 	}
 }
 
@@ -1074,4 +1087,62 @@ func (v *Vault) getConfigFromEnv() {
 type BKNotice struct {
 	Enable bool   `yaml:"enable"`
 	Host   string `yaml:"host"`
+}
+
+// BCS defines all the bcs related runtime.
+type BCS struct {
+	Host  string `yaml:"host"`
+	Token string `yaml:"token"`
+}
+
+// GSE defines all the gse related runtime.-
+type GSE struct {
+	// Enabled is the flag to enable gse p2p download.
+	Enabled bool `yaml:"enabled"`
+	// Host is the gse bk api gateway address.
+	Host string `yaml:"host"`
+	// NodeAgentID is the node's agent id where feed server deployded, it might be different in different instance,
+	// so recommend to get it from the environment variable.
+	NodeAgentID string `yaml:"nodeAgentID"`
+	// ClusterID is the cluster id where feed server deployded.
+	ClusterID string `yaml:"clusterID"`
+	// PodID is the pod's id where feed server deployded, it must be different in different instance,
+	// so must get it from the environment variable.
+	PodID string `yaml:"podID"`
+	// ContainerName is the container's name of the feed server
+	ContainerName string `yaml:"containerName"`
+	// AgentUser is the user exists in the feed server container/node.
+	AgentUser string `yaml:"agentUser"`
+	// SourceDir is the directory where the source file download to and stored.
+	SourceDir string `yaml:"sourceDir"`
+}
+
+func (g *GSE) getFromEnv() {
+	if len(g.NodeAgentID) == 0 {
+		g.NodeAgentID = os.Getenv("BSCP_NODE_AGENT_ID")
+	}
+
+	if len(g.ClusterID) == 0 {
+		g.ClusterID = os.Getenv("BSCP_CLUSTER_ID")
+	}
+
+	if len(g.PodID) == 0 {
+		g.PodID = os.Getenv("POD_ID")
+	}
+
+	if len(g.ContainerName) == 0 {
+		g.ContainerName = os.Getenv("BSCP_CONTAINER_NAME")
+	}
+}
+
+// validate gse runtime
+func (g GSE) validate() error {
+	if !g.Enabled {
+		return nil
+	}
+	if g.NodeAgentID == "" && (g.ClusterID == "" || g.PodID == "" || g.ContainerName == "") {
+		return errors.New("to enable p2p download, either agent id must be set or cluster id, " +
+			"pod id, container name must all be set")
+	}
+	return nil
 }

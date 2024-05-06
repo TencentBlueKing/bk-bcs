@@ -1,10 +1,10 @@
 <template>
-  <SectionTitle :title="'客户端组件信息统计'" />
+  <SectionTitle :title="t('客户端组件信息统计')" />
   <div class="content-wrap">
     <div class="left">
       <Teleport :disabled="!isOpenFullScreen" to="body">
         <div ref="containerRef" :class="{ fullscreen: isOpenFullScreen }">
-          <Card title="组件版本分布" :height="416">
+          <Card :title="t('组件版本分布')" :height="416">
             <template #operation>
               <OperationBtn
                 :is-open-full-screen="isOpenFullScreen"
@@ -21,7 +21,7 @@
                 class="exception-wrap-item exception-part"
                 type="empty"
                 scene="part"
-                description="暂无数据">
+                :description="t('暂无数据')">
                 <template #type>
                   <span class="bk-bscp-icon icon-bar-chart exception-icon" />
                 </template>
@@ -36,9 +36,9 @@
         <div class="resource-info">
           <span v-if="item.value">
             <span class="time">{{ item.key.includes('cpu') ? item.value : Math.round(item.value) }}</span>
-            <span class="unit">{{ item.key.includes('cpu') ? '核' : 'MB' }}</span>
+            <span class="unit">{{ item.unit }}</span>
           </span>
-          <span v-else class="empty">暂无数据</span>
+          <span v-else class="empty">{{ t('暂无数据') }}</span>
         </div>
       </Card>
     </div>
@@ -64,6 +64,9 @@
   } from '../../../../../../../types/client';
   import useClientStore from '../../../../../../store/client';
   import { storeToRefs } from 'pinia';
+  import { useI18n } from 'vue-i18n';
+
+  const { t } = useI18n();
 
   const clientStore = useClientStore();
   const { searchQuery } = storeToRefs(clientStore);
@@ -76,32 +79,32 @@
   const resourceData = ref<IInfoCard[]>([
     {
       value: 0,
-      name: '平均 CPU 资源占用',
+      name: t('平均 CPU 资源占用'),
       key: 'cpu_avg_usage',
     },
     {
       value: 0,
-      name: '平均内存资源占用',
+      name: t('平均内存资源占用'),
       key: 'memory_avg_usage',
     },
     {
       value: 0,
-      name: '最大 CPU 资源占用',
+      name: t('最大 CPU 资源占用'),
       key: 'cpu_max_usage',
     },
     {
       value: 0,
-      name: '最大内存资源占用',
+      name: t('最大内存资源占用'),
       key: 'memory_max_usage',
     },
     {
       value: 0,
-      name: '最小 CPU 资源占用',
+      name: t('最小 CPU 资源占用'),
       key: 'cpu_min_usage',
     },
     {
       value: 0,
-      name: '最小内存资源占用',
+      name: t('最小内存资源占用'),
       key: 'memory_min_usage',
     },
   ]);
@@ -113,7 +116,7 @@
   };
   const data = ref<IVersionDistributionItem[]>([]);
   const sunburstData = ref<IVersionDistributionPie>({
-    name: '配置版本',
+    name: t('组件版本'),
     children: [],
   });
   const loading = ref(false);
@@ -157,11 +160,43 @@
     try {
       loading.value = true;
       const res = await getClientComponentInfoData(props.bkBizId, props.appId, params);
-      data.value = res.version_distribution;
-      sunburstData.value.children = convertToTree(res.version_distribution);
-      Object.entries(res.resource_usage).map(
-        ([key, value]) => (resourceData.value.find((item) => item.key === key)!.value = value as number),
-      );
+      data.value = res.version_distribution.map((item: IVersionDistributionItem) => {
+        const { client_type } = item;
+        let name = '';
+        switch (client_type) {
+          case 'sidecar':
+            name = `SideCar ${t('客户端')}`;
+            break;
+          case 'sdk':
+            name = `SDK ${t('客户端')}`;
+            break;
+          case 'agent':
+            name = t('主机插件客户端');
+            break;
+          case 'command':
+            name = `CLI ${t('客户端')}`;
+            break;
+        }
+        return {
+          ...item,
+          client_type: name,
+        };
+      });
+      sunburstData.value.children = convertToTree(data.value);
+      Object.entries(res.resource_usage).forEach(([key, value]) => {
+        const item = resourceData.value.find((item) => item.key === key) as IInfoCard;
+        item!.value = value as number;
+        if (!item.key.includes('cpu')) {
+          item.unit = 'MB';
+        } else {
+          if (item.value > 1) {
+            item.unit = t('核');
+          } else {
+            item.value = item.value * 1000;
+            item.unit = 'mCPUs';
+          }
+        }
+      });
     } catch (error) {
       console.error(error);
     } finally {
@@ -199,15 +234,14 @@
     width: 100vw;
     height: 100vh;
     z-index: 5000;
-    background-color: rgba(0, 0, 0, 0.6);
     .card {
-      position: absolute;
       width: 100%;
-      height: 80vh !important;
-      top: 50%;
-      transform: translateY(-50%);
+      height: 100vh !important;
       .loading-wrap {
         height: 100%;
+      }
+      :deep(.operation-btn) {
+        top: 0 !important;
       }
     }
   }
@@ -243,5 +277,10 @@
         }
       }
     }
+  }
+  :deep(.bk-exception-part) {
+    height: 100%;
+    justify-content: center;
+    transform: translateY(-20px);
   }
 </style>

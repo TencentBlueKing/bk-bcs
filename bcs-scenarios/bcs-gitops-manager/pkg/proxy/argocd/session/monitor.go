@@ -73,7 +73,7 @@ func (s *MonitorSession) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	fullPath := fmt.Sprintf("http://%s:%s%s", s.op.MonitorConfig.Address, s.op.MonitorConfig.Port, realPath)
 	newURL, err := url.Parse(fullPath)
 	if err != nil {
-		err = fmt.Errorf("monitor session build new fullpath '%s' failed: %w", fullPath, err)
+		err = fmt.Errorf("monitor session build new fullpath '%s' failed: %s", fullPath, err.Error())
 		rw.WriteHeader(http.StatusInternalServerError)
 		blog.Errorf(err.Error())
 		_, _ = rw.Write([]byte(err.Error())) // nolint

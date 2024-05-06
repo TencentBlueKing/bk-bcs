@@ -113,7 +113,7 @@ func (s *Service) handleCreateClientEvents(kt *kit.Kit, clientEvents []*pbce.Cli
 		keyWithoutCursor := fmt.Sprintf("%d-%d-%s-%s", item.Attachment.BizId, item.Attachment.AppId, item.Attachment.Uid,
 			item.Attachment.CursorId)
 		v, ok := oldData[keyWithoutCursor]
-		if item.Spec.EndTime.GetSeconds() < 0 {
+		if item.Spec.EndTime.GetSeconds() <= 0 {
 			item.Spec.EndTime = nil
 		}
 		fullKey := fmt.Sprintf("%d-%d-%s", item.Attachment.BizId, item.Attachment.AppId, item.Attachment.Uid)
@@ -158,12 +158,12 @@ func (s *Service) ListClientEvents(ctx context.Context, req *pbds.ListClientEven
 			return nil, err
 		}
 		// 设置时分秒为 00:00:00
-		starTime = time.Date(starTime.Year(), starTime.Month(), starTime.Day(), 0, 0, 0, 0, starTime.Location())
+		starTime = time.Date(starTime.Year(), starTime.Month(), starTime.Day(), 0, 0, 0, 0, starTime.UTC().Location())
 	}
 	if len(req.GetEndTime()) > 0 {
 		endTime, err = time.Parse("2006-01-02", req.GetEndTime())
 		// 设置时分秒为 23:59:59
-		endTime = time.Date(endTime.Year(), endTime.Month(), endTime.Day(), 23, 59, 59, 0, endTime.Location())
+		endTime = time.Date(endTime.Year(), endTime.Month(), endTime.Day(), 23, 59, 59, 0, endTime.UTC().Location())
 		if err != nil {
 			return nil, err
 		}

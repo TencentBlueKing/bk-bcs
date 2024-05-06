@@ -17,12 +17,14 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-repack-descheduler/pkg/controller/calculator"
 )
 
+// ClusterRate defines the instance
 type ClusterRate struct {
 	OriginalRate   *PackingRate `json:"originalRate"`
 	OptimizedRate  *PackingRate `json:"optimizedRate"`
 	OptimizedNodes []string     `json:"optimizedNodes"`
 }
 
+// PackingRate defines the instance
 type PackingRate struct {
 	TotalRate *RateObj `json:"totalRate"`
 
@@ -30,6 +32,7 @@ type PackingRate struct {
 	NodePackingRate map[string]*RateObj              `json:"nodePackingRate"`
 }
 
+// RateObj defines the instance
 type RateObj struct {
 	MemVal      float64 `json:"memVal"`
 	MemCapacity float64 `json:"memCapacity"`

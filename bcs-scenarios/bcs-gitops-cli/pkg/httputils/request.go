@@ -27,6 +27,7 @@ import (
 	"github.com/moul/http2curl"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-cli/options"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-cli/pkg/utils"
 )
@@ -64,6 +65,8 @@ func DoRequest(ctx context.Context, hr *HTTPRequest) []byte {
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+op.Token)
+	req.Header.Set("X-BCS-Client", "bcs-gitops-manager")
+	req.Header.Set("bkUserName", "admin")
 	if hr.QueryParams != nil {
 		query := req.URL.Query()
 		for k, v := range hr.QueryParams {

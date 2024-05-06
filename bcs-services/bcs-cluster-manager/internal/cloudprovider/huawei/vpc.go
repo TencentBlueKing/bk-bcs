@@ -15,15 +15,12 @@ package huawei
 
 import (
 	"fmt"
-	"net"
 	"sync"
-
-	model2 "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/vpc/v2/model"
-	model3 "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/vpc/v3/model"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/huawei/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/huawei/business"
 )
 
 var vpcMgr sync.Once
@@ -40,12 +37,18 @@ type VPCManager struct{}
 
 // ListVpcs list vpcs
 func (vm *VPCManager) ListVpcs(vpcID string, opt *cloudprovider.ListNetworksOption) ([]*proto.CloudVpc, error) {
-	client, err := api.GetVpc2Client(&opt.CommonOption)
+	client, err := api.NewVpcClient(&opt.CommonOption)
 	if err != nil {
 		return nil, err
 	}
 
-	cloudVpcs, err := client.ListVpcsByID(vpcID)
+	cloudVpcs, err := client.ListVpcs(func() []string {
+		if len(vpcID) == 0 {
+			return nil
+		}
+
+		return []string{vpcID}
+	}())
 	if err != nil {
 		return nil, err
 	}
@@ -58,48 +61,44 @@ func (vm *VPCManager) ListVpcs(vpcID string, opt *cloudprovider.ListNetworksOpti
 			Ipv4Cidr: v.Cidr,
 		})
 	}
+	// vpc 剩余的可用IP数量
 
 	return vpcs, nil
 }
 
 // ListSubnets list vpc subnets
 func (vm *VPCManager) ListSubnets(vpcID, zone string, opt *cloudprovider.ListNetworksOption) ([]*proto.Subnet, error) {
-	client, err := api.GetVpc2Client(&opt.CommonOption)
+	cloudSubnets, err := business.GetCloudSubnetsByVpc(vpcID, opt.CommonOption)
 	if err != nil {
 		return nil, err
 	}
-
-	rsp, err := client.ListSubnets(&model2.ListSubnetsRequest{
-		VpcId: &vpcID,
-	})
+	zones, err := business.GetCloudZones(opt.CommonOption)
 	if err != nil {
 		return nil, err
 	}
-
-	subnetZone := ""
-	subnetZoneName := ""
 	subnets := make([]*proto.Subnet, 0)
 
-	// 获取可用区
-	zones, err := api.GetAvailabilityZones(&opt.CommonOption)
-	if err != nil {
-		return nil, err
-	}
+	for _, s := range cloudSubnets {
+		subnetZone := ""
+		subnetZoneName := ""
 
-	for _, s := range *rsp.Subnets {
-		for k, v := range zones {
-			if v.ZoneName == s.AvailabilityZone {
-				subnetZone = fmt.Sprintf("%d", k+1)
-				subnetZoneName = fmt.Sprintf("可用区%d", k+1)
+		switch *s.Scope {
+		case api.SubnetScopeAz:
+			for _, v := range zones {
+				if v.ZoneName == s.AvailabilityZone {
+					subnetZone = v.ZoneName
+					subnetZoneName = fmt.Sprintf("可用区%d", func() int {
+						return business.GetZoneNameByZoneId(opt.Region, v.ZoneName)
+					}())
+				}
 			}
+		default:
 		}
 
-		rps2, err2 := client.ListPrivateips(&model2.ListPrivateipsRequest{SubnetId: s.Id})
-		if err2 != nil {
-			return nil, err
+		cnt, errLocal := business.GetSubnetAvailableIpNum(s.Id, opt.CommonOption)
+		if errLocal != nil {
+			return nil, errLocal
 		}
-
-		total, _ := calculateAvailableIPs(s.Cidr)
 
 		subnets = append(subnets, &proto.Subnet{
 			VpcID:                   s.VpcId,
@@ -109,7 +108,7 @@ func (vm *VPCManager) ListSubnets(vpcID, zone string, opt *cloudprovider.ListNet
 			Ipv6CidrRange:           s.CidrV6,
 			Zone:                    subnetZone,
 			ZoneName:                subnetZoneName,
-			AvailableIPAddressCount: uint64(total - len(*rps2.Privateips)),
+			AvailableIPAddressCount: uint64(cnt),
 		})
 	}
 
@@ -118,18 +117,18 @@ func (vm *VPCManager) ListSubnets(vpcID, zone string, opt *cloudprovider.ListNet
 
 // ListSecurityGroups list security groups
 func (vm *VPCManager) ListSecurityGroups(opt *cloudprovider.ListNetworksOption) ([]*proto.SecurityGroup, error) {
-	client, err := api.GetVpc3Client(&opt.CommonOption)
+	client, err := api.NewVpcClient(&opt.CommonOption)
 	if err != nil {
 		return nil, err
 	}
 
-	rsp, err := client.ListSecurityGroups(&model3.ListSecurityGroupsRequest{})
+	secs, err := client.ListSecurityGroups(nil)
 	if err != nil {
 		return nil, err
 	}
 
 	sgs := make([]*proto.SecurityGroup, 0)
-	for _, v := range *rsp.SecurityGroups {
+	for _, v := range secs {
 		sgs = append(sgs, &proto.SecurityGroup{
 			SecurityGroupID:   v.Id,
 			SecurityGroupName: v.Name,
@@ -175,19 +174,4 @@ func (vm *VPCManager) ListBandwidthPacks(opt *cloudprovider.CommonOption) ([]*pr
 func (vm *VPCManager) CheckConflictInVpcCidr(vpcID string, cidr string,
 	opt *cloudprovider.CommonOption) ([]string, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
-}
-
-// calculateAvailableIPs takes a CIDR range and returns the number of available IP addresses.
-func calculateAvailableIPs(cidr string) (int, error) {
-	// Parse the CIDR
-	_, ipNet, err := net.ParseCIDR(cidr)
-	if err != nil {
-		return 0, fmt.Errorf("failed to parse CIDR: %w", err)
-	}
-
-	// Calculate the number of available IPs
-	ones, _ := ipNet.Mask.Size()
-	availableIPs := (1 << uint(32-ones)) - 2
-
-	return availableIPs, nil
 }

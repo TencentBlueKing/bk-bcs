@@ -23,10 +23,13 @@
     </div>
     <div class="script-list-wrapper">
       <div class="operate-area">
-        <bk-button theme="primary" @click="showCreateScript = true">
-          <Plus class="button-icon" />
-          {{ t('新建脚本') }}
-        </bk-button>
+        <div class="btns">
+          <bk-button theme="primary" @click="showCreateScript = true">
+            <Plus class="button-icon" />
+            {{ t('新建脚本') }}
+          </bk-button>
+          <BatchDeleteBtn :bk-biz-id="spaceId" :selected-ids="selectedIds" @deleted="refreshAfterBatchDelete" />
+        </div>
         <bk-input
           v-model="searchStr"
           class="search-script-input"
@@ -43,10 +46,17 @@
         <bk-table
           :border="['outer']"
           :data="scriptsData"
+          :checked="checkedScripts"
           :remote-pagination="true"
           :pagination="pagination"
+          :class="memoEditHookId > 0 || tagEditHookId > 0 ? 'table-with-memo-edit' : ''"
+          show-overflow-tooltip
+          :cell-class="getCellCls"
+          @selection-change="handleSelectionChange"
+          @select-all="handleSelectAll"
           @page-limit-change="handlePageLimitChange"
           @page-value-change="handlePageCurrentChange">
+          <bk-table-column type="selection" width="60"></bk-table-column>
           <bk-table-column :label="t('脚本名称')">
             <template #default="{ row }">
               <div v-if="row.hook" class="hook-name" @click="handleViewVersionClick(row.hook.id)">
@@ -56,21 +66,69 @@
           </bk-table-column>
           <bk-table-column prop="hook.spec.type" :label="t('脚本语言')" :width="locale === 'zh-CN' ? '120' : '150'">
           </bk-table-column>
-          <bk-table-column :label="t('分类标签')">
+          <bk-table-column :label="t('分类标签')" property="tag">
             <template #default="{ row }">
-              <span v-if="row.hook">{{ row.hook.spec.tag || '--' }}</span>
+              <div v-if="row.hook" class="script-tags">
+                <div v-if="tagEditHookId !== row.hook.id" class="tags-display">
+                  <div v-if="row.hook.spec.tags?.length > 0" class="tags-list">
+                    <bk-tag v-for="tag in row.hook.spec.tags" :key="tag">{{ tag }}</bk-tag>
+                  </div>
+                  <template v-else>--</template>
+                  <span class="edit-icon" @click="handleOpenTagEdit(row.hook.id)">
+                    <EditLine />
+                  </span>
+                </div>
+                <div v-else class="tag-edit-wrapper">
+                  <bk-tag-input
+                    :model-value="row.hook.spec.tags"
+                    ref="tagInputRef"
+                    display-key="tag"
+                    save-key="tag"
+                    search-key="tag"
+                    :placeholder="t('请选择标签或输入新标签按Enter结束')"
+                    :list="tagsData"
+                    :allow-create="true"
+                    trigger="focus"
+                    @blur="
+                      (inputVal: string, tagList: string[]) => {
+                        handleTagEditBlur(row, inputVal, tagList);
+                      }
+                    " />
+                </div>
+              </div>
+            </template>
+          </bk-table-column>
+          <bk-table-column :label="t('脚本描述')" property="memo">
+            <template #default="{ row }">
+              <div v-if="row.hook" class="script-memo">
+                <div v-if="memoEditHookId !== row.hook.id" class="memo-display">
+                  <span class="memo-text">{{ row.hook.spec.memo || '--' }}</span>
+                  <span class="edit-icon" @click="handleOpenMemoEdit(row.hook.id)">
+                    <EditLine />
+                  </span>
+                </div>
+                <bk-input
+                  v-else
+                  ref="memoInputRef"
+                  class="memo-input"
+                  type="textarea"
+                  :model-value="row.hook.spec.memo"
+                  :autosize="{ maxRows: 4 }"
+                  :resize="false"
+                  @blur="handleMemoEditBlur(row, $event)" />
+              </div>
             </template>
           </bk-table-column>
           <bk-table-column :label="t('被引用')" width="100">
             <template #default="{ row }">
-              <bk-button v-if="row.bound_num > 0" text theme="primary" @click="handleOpenCitedSlider(row.hook.id)">{{
-                row.bound_num
-              }}</bk-button>
+              <bk-button v-if="row.bound_num > 0" text theme="primary" @click="handleOpenCitedSlider(row.hook.id)">
+                {{ row.bound_num }}
+              </bk-button>
               <span v-else>0</span>
             </template>
           </bk-table-column>
-          <bk-table-column :label="t('更新人')" prop="hook.revision.reviser"></bk-table-column>
-          <bk-table-column :label="t('更新时间')" width="220">
+          <bk-table-column :label="t('更新人')" prop="hook.revision.reviser" width="140"></bk-table-column>
+          <bk-table-column :label="t('更新时间')" width="180">
             <template #default="{ row }">
               <span v-if="row.hook">{{ datetimeFormat(row.hook.revision.update_at) }}</span>
             </template>
@@ -125,17 +183,24 @@
   </DeleteConfirmDialog>
 </template>
 <script setup lang="ts">
-  import { ref, watch, onMounted, computed } from 'vue';
+  import { ref, watch, onMounted, computed, nextTick } from 'vue';
   import { useI18n } from 'vue-i18n';
   import { useRouter } from 'vue-router';
   import Message from 'bkui-vue/lib/message';
-  import { Plus, Search } from 'bkui-vue/lib/icon';
+  import { Plus, Search, EditLine } from 'bkui-vue/lib/icon';
   import { storeToRefs } from 'pinia';
   import useGlobalStore from '../../../../store/global';
   import useScriptStore from '../../../../store/script';
-  import { getScriptList, getScriptTagList, deleteScript, getScriptCiteList } from '../../../../api/script';
+  import {
+    getScriptList,
+    getScriptTagList,
+    deleteScript,
+    updateScript,
+    getScriptCiteList,
+  } from '../../../../api/script';
   import { IScriptItem, IScriptTagItem, IScriptListQuery } from '../../../../../types/script';
   import { datetimeFormat } from '../../../../utils/index';
+  import BatchDeleteBtn from './batch-delete-btn.vue';
   import CreateScript from './create-script.vue';
   import ScriptCited from './script-cited.vue';
   import TableEmpty from '../../../../components/table/table-empty.vue';
@@ -166,11 +231,21 @@
   const deleteScriptItem = ref<IScriptItem>();
   const appsLoading = ref(false);
   const appList = ref<IAppItem[]>([]);
+  const selectedIds = ref<number[]>([]);
+  const memoEditHookId = ref(0); // 当前正在编辑描述的脚本id
+  const memoInputRef = ref();
+  const tagEditHookId = ref(0); // 当前正在编辑标签的脚本id
+  const tagInputRef = ref();
 
   const maxTableHeight = computed(() => {
     const windowHeight = window.innerHeight;
     return windowHeight * 0.6 - 200;
   });
+
+  const checkedScripts = computed(() => {
+    return scriptsData.value.filter((item) => selectedIds.value.includes(item.hook.id));
+  });
+
   const pagination = ref({
     current: 1,
     count: 0,
@@ -199,7 +274,7 @@
     };
     if (selectedTag.value === '' && !showAllTag.value) {
       params.not_tag = true;
-    } else {
+    } else if (selectedTag.value) {
       params.tag = selectedTag.value;
     }
     if (searchStr.value) {
@@ -222,11 +297,83 @@
     tagsLoading.value = false;
   };
 
+  // 编辑脚本标签、描述
+  const editScript = async (id: number, params: { memo: string; tags: string[] }) => {
+    await updateScript(spaceId.value, id, params);
+    Message({
+      theme: 'success',
+      message: t('脚本更新成功'),
+    });
+  };
+
+  // 添加自定义单元格class
+  const getCellCls = ({ property }: { property: string }) => {
+    return ['tag', 'memo'].includes(property) ? 'memo-cell' : '';
+  };
+
+  // 表格行选择事件
+  const handleSelectionChange = ({ checked, row }: { checked: boolean; row: IScriptItem }) => {
+    const index = selectedIds.value.findIndex((id) => id === row.hook.id);
+    if (checked) {
+      if (index === -1) {
+        selectedIds.value.push(row.hook.id);
+      }
+    } else {
+      selectedIds.value.splice(index, 1);
+    }
+  };
+
+  // 全选
+  const handleSelectAll = ({ checked }: { checked: boolean }) => {
+    if (checked) {
+      selectedIds.value = scriptsData.value.map((item) => item.hook.id);
+    } else {
+      selectedIds.value = [];
+    }
+  };
+
   const handleSelectTag = (tag: string, all = false) => {
     searchStr.value = '';
     selectedTag.value = tag;
     showAllTag.value = all;
     refreshList();
+  };
+
+  // 触发编辑tag
+  const handleOpenTagEdit = (id: number) => {
+    tagEditHookId.value = id;
+    nextTick(() => {
+      tagInputRef.value?.focusInputTrigger();
+    });
+  };
+
+  // 保存编辑后的tag
+  const handleTagEditBlur = (script: IScriptItem, inputVal: string, tagList: string[]) => {
+    tagEditHookId.value = 0;
+    const { memo = '', tags = [] } = script.hook.spec;
+    // 判断是否编辑过tag
+    if (tagList.length !== tags.length || tagList.some((item) => !tags.includes(item))) {
+      script.hook.spec.tags = tagList.slice();
+      editScript(script.hook.id, { memo, tags: tagList });
+    }
+  };
+
+  // 触发编辑脚本描述
+  const handleOpenMemoEdit = (id: number) => {
+    memoEditHookId.value = id;
+    nextTick(() => {
+      memoInputRef.value?.focus();
+    });
+  };
+
+  const handleMemoEditBlur = (script: IScriptItem, e: FocusEvent) => {
+    memoEditHookId.value = 0;
+    const { memo = '', tags = [] } = script.hook.spec;
+    const val = (e.target as HTMLInputElement).value.trim();
+    if (val !== memo) {
+      script.hook.spec.memo = val;
+      editScript(script.hook.id, { memo: val, tags });
+    }
   };
 
   const handleOpenCitedSlider = (id: number) => {
@@ -283,17 +430,6 @@
     getScripts();
   };
 
-  // const getRelatedApps = async () => {
-  //   appsLoading.value = true;
-  //   const params = {
-  //     start: 0,
-  //     all: true,
-  //   };
-  //   const res = await getUnNamedVersionAppsBoundByPackage(spaceId.value, props.templateSpaceId, props.pkg.id, params);
-  //   appList.value = res.details;
-  //   appsLoading.value = false;
-  // };
-
   const goToConfigPageImport = (id: number) => {
     const { href } = router.resolve({
       name: 'service-config',
@@ -309,9 +445,18 @@
     getTags();
   };
 
-  const refreshList = () => {
+  const refreshAfterBatchDelete = () => {
+    if (selectedIds.value.length === scriptsData.value.length && pagination.value.current > 1) {
+      pagination.value.current -= 1;
+    }
+
+    selectedIds.value = [];
+    refreshList(pagination.value.current);
+  };
+
+  const refreshList = (current = 1) => {
     isSearchEmpty.value = searchStr.value !== '';
-    pagination.value.current = 1;
+    pagination.value.current = current;
     getScripts();
   };
 
@@ -416,6 +561,13 @@
     align-items: center;
     justify-content: space-between;
     margin-bottom: 16px;
+    .btns {
+      display: flex;
+      align-items: center;
+      :deep(.bk-button:not(:first-child)) {
+        margin-left: 8px;
+      }
+    }
     .button-icon {
       font-size: 18px;
     }
@@ -428,9 +580,12 @@
     color: #979ba5;
     background: #ffffff;
   }
-  .action-btns {
-    .bk-button {
-      margin-right: 8px;
+  :deep(.bk-table) {
+    &.table-with-memo-edit .bk-table-body {
+      overflow: visible;
+    }
+    .bk-table-body table td.memo-cell .cell {
+      overflow: visible;
     }
   }
   .hook-name {
@@ -450,6 +605,82 @@
     .link-icon {
       flex-shrink: 0;
       margin-left: 10px;
+    }
+  }
+  .script-tags {
+    position: relative;
+    .tags-display {
+      display: flex;
+      align-items: center;
+      &:hover {
+        .edit-icon {
+          display: block;
+        }
+      }
+      .tags-list {
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+      }
+      .bk-tag:not(:last-child) {
+        margin-right: 4px;
+      }
+      .edit-icon {
+        display: none;
+        margin-left: 4px;
+        font-size: 12px;
+        color: #979ba5;
+        cursor: pointer;
+        &:hover {
+          color: #3a84ff;
+        }
+      }
+    }
+    .tag-edit-wrapper {
+      position: absolute;
+      top: 4px;
+      left: 0;
+      right: 0;
+      z-index: 2;
+    }
+  }
+  .script-memo {
+    position: relative;
+    .memo-display {
+      display: flex;
+      align-items: center;
+      &:hover {
+        .edit-icon {
+          display: block;
+        }
+      }
+    }
+    .memo-text {
+      margin-right: 4px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+    .edit-icon {
+      display: none;
+      font-size: 12px;
+      color: #979ba5;
+      cursor: pointer;
+      &:hover {
+        color: #3a84ff;
+      }
+    }
+    .memo-input {
+      position: absolute;
+      top: 4px;
+      left: 0;
+      right: 0;
+      z-index: 2;
+    }
+  }
+  .action-btns {
+    .bk-button {
+      margin-right: 8px;
     }
   }
 </style>

@@ -1,7 +1,7 @@
 <template>
   <Teleport :disabled="!isOpenFullScreen" to="body">
     <div :class="{ fullscreen: isOpenFullScreen }">
-      <Card title="拉取数量趋势" :height="360">
+      <Card :title="$t('拉取数量趋势')" :height="360">
         <template #operation>
           <OperationBtn
             :is-open-full-screen="isOpenFullScreen"
@@ -9,20 +9,19 @@
             @toggle-full-screen="isOpenFullScreen = !isOpenFullScreen" />
         </template>
         <template #head-suffix>
-          <bk-select v-model="selectTime" class="time-selector" :clearable="false">
+          <bk-select v-model="selectTime" class="time-selector" :filterable="false" :clearable="false">
             <bk-option v-for="item in selectorTimeList" :id="item.value" :key="item.value" :name="item.label" />
           </bk-select>
         </template>
         <bk-loading class="loading-wrap" :loading="loading">
-          <div v-if="data.time.length" ref="canvasRef" class="canvas-wrap">
+          <div v-if="!isDataEmpty" ref="canvasRef" class="canvas-wrap">
             <Tooltip ref="tooltipRef" @jump="jumpToSearch" />
           </div>
           <bk-exception
             v-else
-            class="exception-wrap-item exception-part"
             type="empty"
             scene="part"
-            description="暂无数据">
+            :description="$t('暂无数据')">
             <template #type>
               <span class="bk-bscp-icon icon-bar-chart exception-icon" />
             </template>
@@ -34,7 +33,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref, onMounted, watch } from 'vue';
+  import { ref, onMounted, watch, computed } from 'vue';
   import Card from '../../components/card.vue';
   import OperationBtn from '../../components/operation-btn.vue';
   import { DualAxes } from '@antv/g2plot';
@@ -44,6 +43,9 @@
   import useClientStore from '../../../../../../store/client';
   import { storeToRefs } from 'pinia';
   import { useRouter } from 'vue-router';
+  import { useI18n } from 'vue-i18n';
+
+  const { t } = useI18n();
 
   const router = useRouter();
 
@@ -62,15 +64,15 @@
   const selectorTimeList = [
     {
       value: 7,
-      label: '近7天',
+      label: t('近 {n} 天', { n: 7 }),
     },
     {
       value: 15,
-      label: '近15天',
+      label: t('近 {n} 天', { n: 15 }),
     },
     {
       value: 30,
-      label: '近30天',
+      label: t('近 {n} 天', { n: 30 }),
     },
   ];
   const data = ref<IPullCount>({
@@ -80,9 +82,11 @@
   const loading = ref(false);
   const isOpenFullScreen = ref(false);
 
+  const isDataEmpty = computed(() => !data.value.time.some((item) => item.count > 0));
+
   watch([() => selectTime.value, () => props.appId], async () => {
     await loadChartData();
-    if (data.value.time.length) {
+    if (!isDataEmpty.value) {
       if (dualAxes) {
         dualAxes.changeData([data.value.time_and_type, data.value.time]);
       } else {
@@ -102,8 +106,8 @@
 
   watch(
     () => data.value.time,
-    (val) => {
-      if (!val.length && dualAxes) {
+    () => {
+      if (isDataEmpty.value && dualAxes) {
         dualAxes!.destroy();
         dualAxes = null;
       }
@@ -112,7 +116,7 @@
 
   onMounted(async () => {
     await loadChartData();
-    if (data.value.time.length) {
+    if (!isDataEmpty.value) {
       initChart();
     }
   });
@@ -121,6 +125,7 @@
     const params: IClinetCommonQuery = {
       search: searchQuery.value.search,
       pull_time: selectTime.value,
+      last_heartbeat_time: searchQuery.value.last_heartbeat_time,
     };
     try {
       loading.value = true;
@@ -139,8 +144,9 @@
       data: [data.value.time_and_type, data.value.time],
       xField: 'time',
       yField: ['value', 'count'],
-      yAxis: [
-        {
+      yAxis: {
+        value: {
+          tickCount: 5,
           grid: {
             line: {
               style: {
@@ -150,19 +156,22 @@
             },
           },
         },
-        {
+        count: {
+          tickCount: 5,
           min: 0,
         },
-      ],
-
-      padding: [10, 10, 30, 20],
+      },
+      scrollbar: {
+        type: 'horizontal',
+      },
+      padding: [10, 20, 30, 20],
       geometryOptions: [
         {
           geometry: 'column',
           isGroup: true,
           seriesField: 'type',
-          columnWidthRatio: 0.2,
-          color: ['#3E96C2', '#61B2C2', '#61B2C2'],
+          columnWidthRatio: 0.3,
+          color: ['#3E96C2', '#61B2C2', '#85CCA8', '#B5E0AB'],
         },
         {
           geometry: 'line',
@@ -188,19 +197,19 @@
           originalItems.forEach((item) => {
             switch (item.data.type) {
               case 'sidecar':
-                item.name = 'SideCar 客户端';
+                item.name = `SideCar ${t('客户端')}`;
                 break;
               case 'sdk':
-                item.name = 'SDK 客户端';
+                item.name = `SDK ${t('客户端')}`;
                 break;
               case 'agent':
-                item.name = '主机插件客户端';
+                item.name = t('主机插件客户端');
                 break;
               case 'command':
-                item.name = 'command';
+                item.name = `CLI ${t('客户端')}`;
                 break;
               default:
-                item.name = '总量';
+                item.name = t('总量');
             }
           });
           return originalItems;
@@ -236,16 +245,16 @@
     width: 100vw;
     height: 100vh;
     z-index: 5000;
-    background-color: rgba(0, 0, 0, 0.6);
     .card {
-      position: absolute;
-      width: 100%;
-      height: 80vh !important;
-      top: 50%;
-      transform: translateY(-50%);
-      .loading-wrap {
-        height: 100%;
+      height: 100vh !important;
+      :deep(.operation-btn) {
+        top: 0 !important;
       }
     }
+  }
+  :deep(.bk-exception) {
+    height:100%;
+    justify-content: center;
+    transform: translateY(-20px);
   }
 </style>

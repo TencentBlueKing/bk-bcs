@@ -17,11 +17,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-controller/pkg/apis/httpapi"
 	"github.com/spf13/cobra"
 
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-cli/options"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-cli/pkg/terraform"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-cli/pkg/utils"
 )
@@ -52,7 +50,6 @@ func apply() *cobra.Command {
 		Use:   "apply",
 		Short: "Apply the terraform resource configuration",
 		Run: func(cmd *cobra.Command, args []string) {
-			blog.SetV(int32(options.LogV))
 			h := terraform.NewHandler()
 			bs, err := os.ReadFile(applyFile)
 			if err != nil {
@@ -75,7 +72,6 @@ func list() *cobra.Command {
 		Use:   "list",
 		Short: "List terraforms",
 		Run: func(cmd *cobra.Command, args []string) {
-			blog.SetV(int32(options.LogV))
 			h := terraform.NewHandler()
 			h.List(cmd.Context(), listProjects)
 		},
@@ -90,15 +86,18 @@ var (
 
 func create() *cobra.Command {
 	c := &cobra.Command{
-		Use:   "create",
+		Use:   "create NAME",
 		Short: "Create terraform by command line params (User also can use apply to replace this command)",
 		Run: func(cmd *cobra.Command, args []string) {
-			blog.SetV(int32(options.LogV))
+			if len(args) == 0 {
+				cmd.HelpFunc()(cmd, args)
+				os.Exit(1)
+			}
+			createReq.Name = args[0]
 			h := terraform.NewHandler()
 			h.Create(cmd.Context(), createReq)
 		},
 	}
-	c.Flags().StringVar(&createReq.Name, "name", "", "Resource name(must start with project name)")
 	c.Flags().BoolVar(&createReq.Destroy, "destroy", false, "Whether to destroy resources when delete")
 	c.Flags().StringVar(&createReq.Project, "project", "", "Terraform project name")
 	c.Flags().StringVar(&createReq.Repo, "repo", "", "Repository URL(argocd repo)")
@@ -117,71 +116,86 @@ var (
 
 func del() *cobra.Command {
 	c := &cobra.Command{
-		Use:   "delete",
+		Use:   "delete NAME",
 		Short: "Delete resource by name",
 		Run: func(cmd *cobra.Command, args []string) {
-			blog.SetV(int32(options.LogV))
+			if len(args) == 0 {
+				cmd.HelpFunc()(cmd, args)
+				os.Exit(1)
+			}
+			getName = args[0]
 			h := terraform.NewHandler()
 			h.Delete(cmd.Context(), &getName)
 		},
 	}
-	c.Flags().StringVar(&getName, "name", "", "Resource name")
 	return c
 }
 
 func get() *cobra.Command {
 	c := &cobra.Command{
-		Use:   "get",
+		Use:   "get NAME",
 		Short: "Get terraform details",
 		Run: func(cmd *cobra.Command, args []string) {
-			blog.SetV(int32(options.LogV))
+			if len(args) == 0 {
+				cmd.HelpFunc()(cmd, args)
+				os.Exit(1)
+			}
+			getName = args[0]
 			h := terraform.NewHandler()
 			h.Get(cmd.Context(), &getName, &getOutput)
 		},
 	}
-	c.Flags().StringVar(&getName, "name", "", "Resource name")
 	c.Flags().StringVarP(&getOutput, "output", "o", "", "Output format. One of: (json, yaml)")
 	return c
 }
 
 func getDiff() *cobra.Command {
 	c := &cobra.Command{
-		Use:   "get-diff",
+		Use:   "get-diff NAME",
 		Short: "Perform a diff against the target and live state (terraform plan result)",
 		Run: func(cmd *cobra.Command, args []string) {
-			blog.SetV(int32(options.LogV))
+			if len(args) == 0 {
+				cmd.HelpFunc()(cmd, args)
+				os.Exit(1)
+			}
+			getName = args[0]
 			h := terraform.NewHandler()
 			h.GetDiff(cmd.Context(), &getName)
 		},
 	}
-	c.Flags().StringVar(&getName, "name", "", "Resource name")
 	return c
 }
 
 func getApply() *cobra.Command {
 	c := &cobra.Command{
-		Use:   "get-apply",
+		Use:   "get-apply NAME",
 		Short: "Get the latest apply result of terraform",
 		Run: func(cmd *cobra.Command, args []string) {
-			blog.SetV(int32(options.LogV))
+			if len(args) == 0 {
+				cmd.HelpFunc()(cmd, args)
+				os.Exit(1)
+			}
+			getName = args[0]
 			h := terraform.NewHandler()
 			h.GetApply(cmd.Context(), &getName)
 		},
 	}
-	c.Flags().StringVar(&getName, "name", "", "Resource name")
 	return c
 }
 
 func sync() *cobra.Command {
 	c := &cobra.Command{
-		Use:   "sync",
+		Use:   "sync NAME",
 		Short: "Trigger the sync operation",
 		Run: func(cmd *cobra.Command, args []string) {
-			blog.SetV(int32(options.LogV))
+			if len(args) == 0 {
+				cmd.HelpFunc()(cmd, args)
+				os.Exit(1)
+			}
+			getName = args[0]
 			h := terraform.NewHandler()
 			h.Sync(cmd.Context(), &getName)
 		},
 	}
-	c.Flags().StringVar(&getName, "name", "", "Resource name")
 	return c
 }

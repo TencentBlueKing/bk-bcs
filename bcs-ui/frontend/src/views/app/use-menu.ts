@@ -346,6 +346,11 @@ export default function useMenu() {
               id: 'AZURECLOUD',
               route: 'azureCloud',
             },
+            {
+              title: 'Huawei Cloud',
+              id: 'HUAWEICLOUD',
+              route: 'huaweiCloud',
+            },
           ],
         },
         {

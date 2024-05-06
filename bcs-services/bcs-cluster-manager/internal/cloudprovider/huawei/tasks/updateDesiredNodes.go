@@ -112,14 +112,17 @@ func applyInstanceMachines(ctx context.Context, info *cloudprovider.CloudDependB
 		return err
 	}
 
-	_, err = client.UpdateDesiredNodes(info.Cluster.SystemID, info.NodeGroup.CloudNodeGroupID, nodeNum)
+	_, err = client.UpdateNodePoolDesiredNodes(info.Cluster.SystemID, info.NodeGroup.CloudNodeGroupID, nodeNum)
 	if err != nil {
 		return err
 	}
 
-	var nodePool *model.ShowNodePoolResponse
 	err = loop.LoopDoFunc(context.Background(), func() error {
-		nodePool, err = client.GetClusterNodePool(info.Cluster.SystemID, info.NodeGroup.CloudNodeGroupID)
+		nodePool, errLocal := client.GetClusterNodePool(info.Cluster.SystemID, info.NodeGroup.CloudNodeGroupID)
+		if errLocal != nil {
+			blog.Errorf("applyInstanceMachines[%s] GetClusterNodePool failed: %v", taskID, errLocal)
+			return nil
+		}
 
 		if *nodePool.Status.CurrentNode == nodeNum && nodePool.Status.Phase.Value() == "" {
 			return loop.EndLoop
@@ -212,6 +215,7 @@ func differentInstance(ctx context.Context, info *cloudprovider.CloudDependBasic
 		if _, ok := nodeMap[nodeID]; !ok {
 			// 如果当前vm不存在于nodeMap中，则为扩容出来的机器
 			res = append(res, instaces[i])
+			blog.Infof("taskID[%s] node %s is new node", taskID, nodeID)
 		}
 	}
 

@@ -50,7 +50,7 @@ func (s *Service) CreateHook(ctx context.Context, req *pbcs.CreateHookReq) (*pbc
 		Spec: &pbhook.HookSpec{
 			Name:         req.Name,
 			Type:         req.Type,
-			Tag:          req.Tag,
+			Tags:         req.Tags,
 			RevisionName: req.RevisionName,
 			Memo:         req.Memo,
 			Content:      req.Content,
@@ -156,6 +156,36 @@ func (s *Service) BatchDeleteHook(ctx context.Context, req *pbcs.BatchDeleteHook
 	}
 
 	return &pbcs.BatchDeleteResp{SuccessfulIds: successfulIDs, FailedIds: failedIDs}, nil
+}
+
+// UpdateHook update a hook
+func (s *Service) UpdateHook(ctx context.Context, req *pbcs.UpdateHookReq) (*pbcs.UpdateHookResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+	resp := new(pbcs.UpdateHookResp)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+	}
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
+		return nil, err
+	}
+
+	r := &pbds.UpdateHookReq{
+		Id: req.HookId,
+		Attachment: &pbhook.HookAttachment{
+			BizId: req.BizId,
+		},
+		Spec: &pbhook.HookSpec{
+			Tags: req.Tags,
+			Memo: req.Memo,
+		},
+	}
+	if _, err := s.client.DS.UpdateHook(grpcKit.RpcCtx(), r); err != nil {
+		logs.Errorf("update hook failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	return resp, nil
 }
 
 // ListHooks list hooks with filter
@@ -265,7 +295,7 @@ func (s *Service) GetHook(ctx context.Context, req *pbcs.GetHookReq) (*pbcs.GetH
 		Spec: &pbcs.GetHookInfoSpec{
 			Name:     hook.Spec.Name,
 			Type:     hook.Spec.Type,
-			Tag:      hook.Spec.Tag,
+			Tags:     hook.Spec.Tags,
 			Memo:     hook.Spec.Memo,
 			Releases: &pbcs.GetHookInfoSpec_Releases{NotReleaseId: hook.Spec.Releases.NotReleaseId},
 		},

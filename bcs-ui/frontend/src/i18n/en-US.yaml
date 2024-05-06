@@ -212,8 +212,18 @@ metrics:
   podUsage: Pod usage
   cpuRequestUsage:
     text: CPU packing rate
+    clusterDesc: >-
+      Cluster CPU box installation rate = sum of all POD CPU REQUEST in the
+      cluster / cluster node CPU total number (excluding MASTER node), the
+      closer the cluster CPU packing rate is closer to the cluster CPU usage
+      rate, the higher the cluster CPU resource utilization rate {0}
   memRequestUsage:
     text: Memory box rate
+    clusterDesc: >-
+      Cluster memory installation box rate = The sum of all POD memory Request /
+      cluster all node memory (excluding Master nodes), the closer the cluster
+      memory box rate is closer to the cluster memory usage rate, the higher the
+      utilization rate of the cluster memory resources {0}
   diskIOUsage: Disk IO
   diskIOUsage1: DiskIO Total
   diskIOUsage2: Disk IO usage rate
@@ -263,6 +273,7 @@ generic:
       noMatchData: No matching data
       searchEmpty:
         text: The search result is empty
+        subTitle: 'You can try adjusting keywords or {action}'
     info:
       tips: Tip
       refreshAuth: 'The current operation is permanent, please refresh the interface'
@@ -663,7 +674,7 @@ cluster:
         subTitle: Unified management of multi-cloud provider clusters
         desc: >-
           Currently supports four cloud providers: Tencent Cloud, AWS, Azure,
-          Google Cloud
+          Google Cloud, Huawei Cloud
     label:
       clusterVersion: Version
       desc: Description
@@ -745,6 +756,14 @@ cluster:
           The number of nodes can be added with clusters (including Master nodes
           and node nodes) = (Number of IP -quantity of service) / single node
           POD quantity upper limit.
+        article1: >-
+          The container network resources are limited, please allocate it
+          reasonably. Under the current container network configuration, the
+          cluster can be added at most {count} individual nodes.
+        article2: >-
+          When the container network resources are excessive, the container
+          network will be automatically scale-up. After the capacity is
+          expanded, the cluster can be added at most {count}.
       networkMode:
         text: Network Mode
         overlay:
@@ -1436,9 +1455,6 @@ cluster:
       retry: Failure to retry
       setLabel: Set label
       setTaint: Set taint
-      addTag: Add tag
-      saveSettings: save setting
-      cancel: cancel
       copy:
         text: Copy
         checkedIP: Copy check ip
@@ -1469,7 +1485,6 @@ cluster:
       batchSetLabel:
         text: Set label batch
         desc: Batch settings only show the same key label
-      batchSetTaint: Batch set taint
     label:
       podCounts: Pods
       index: No.
@@ -3125,6 +3140,40 @@ importAzureCloud:
     zones: Zones
     regions: Regions
     other: Other
+huaweiCloud:
+  button:
+    create: Create
+    delete: Delete
+  placeholder:
+    search: Search ID/name/SubscriptionID/tenantID/ClientID/cluster
+  tips:
+    nameRegex: 'Only support English, numbers and characters (-)'
+  label:
+    create: Create
+    clusterType: Cluster type
+    managed: managed cluster
+    aksDesc: >-
+      The Master and Etcd of the Kubernetes cluster will be centrally managed
+      and maintained by the AKS team, and cluster administrators do not need to
+      concern themselves with the management and maintenance of the cluster
+      Master.
+    cluster: ''
+importHuaweiCloud:
+  title: Import a public cloud cluster - Huawei Cloud
+  label:
+    clusterName: Cluster name
+    token: Cloud Credentials
+    region: Region
+    clusterID: Cluster ID
+    nodemanArea: Nodeman Area
+    desc: Description
+  button:
+    test: Test
+    import: Import
+  clusterRegion:
+    zones: Zones
+    regions: Regions
+    other: Other
 publicCloud:
   tencent:
     title: Tencent Cloud
@@ -3154,6 +3203,16 @@ publicCloud:
       governance across on-premises, edge, and multi-cloud Kubernetes clusters.
       Provides interoperability with Azure security, identity, cost management,
       and migration services.
+  huawei:
+    title: Huawei Cloud
+    desc: >-
+      Huawei Cloud Container Service (Huawei Kubernetes Engine, HKE) Allows
+      users to deploy, manage, and scale containerized applications on the
+      Huawei Cloud platform without the need for complex configuration of
+      underlying computing resources. It can help developers take advantage of
+      the powerful features of the Kubernetes ecosystem while enjoying the
+      secure, reliable, and high-performance infrastructure provided by Huawei
+      Cloud.
 regions:
   asia: Asia
   australia: Australia

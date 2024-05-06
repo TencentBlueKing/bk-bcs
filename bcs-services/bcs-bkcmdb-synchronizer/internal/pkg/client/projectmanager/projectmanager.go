@@ -25,10 +25,11 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
 	pmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
 	cmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
-	"github.com/micro/go-micro/v2/registry"
 	"github.com/patrickmn/go-cache"
+	"go-micro.dev/v4/registry"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/client"
@@ -111,7 +112,7 @@ func (pm *projectManagerClient) GetProjectManagerConnWithURL() (*grpc.ClientConn
 	if pm.opts.ClientTLSConfig != nil {
 		opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(pm.opts.ClientTLSConfig)))
 	} else {
-		opts = append(opts, grpc.WithInsecure())
+		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	}
 	var conn *grpc.ClientConn
 	conn, err := grpc.Dial(pm.opts.Address, opts...)
@@ -240,7 +241,7 @@ func (pm *projectManagerClient) GetProjectManagerConn() (*grpc.ClientConn, error
 	if pm.opts.ClientTLSConfig != nil {
 		opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(pm.opts.ClientTLSConfig)))
 	} else {
-		opts = append(opts, grpc.WithInsecure())
+		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	}
 	var conn *grpc.ClientConn
 	conn, err = grpc.Dial(node.Address, opts...)
@@ -283,7 +284,7 @@ func (pm *projectManagerClient) NewPMGrpcClientWithHeader(ctx context.Context,
 
 // NewProjectManager create ClusterManager SDK implementation
 func NewProjectManager(config *client.Config) pmp.BCSProjectClient {
-	rand.Seed(time.Now().UnixNano())
+	rand.Seed(time.Now().UnixNano()) // nolint
 	if len(config.Hosts) == 0 {
 		//! pay more attention for nil return
 		return nil
@@ -303,7 +304,7 @@ func NewProjectManager(config *client.Config) pmp.BCSProjectClient {
 	if config.TLSConfig != nil {
 		opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(config.TLSConfig)))
 	} else {
-		opts = append(opts, grpc.WithInsecure())
+		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	}
 	var conn *grpc.ClientConn
 	var err error

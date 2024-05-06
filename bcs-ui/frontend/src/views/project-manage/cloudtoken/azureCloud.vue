@@ -103,7 +103,7 @@
       header-position="left"
       width="600"
       :title="$t('azureCloud.label.create')">
-      <bk-form :label-width="150" :model="account" :rules="formRules" ref="formRef">
+      <bk-form :label-width="130" :model="account" :rules="formRules" ref="formRef">
         <bk-form-item :label="$t('generic.label.name')" property="accountName" error-display-type="normal" required>
           <bk-input :maxlength="64" v-model="account.accountName"></bk-input>
         </bk-form-item>
@@ -125,12 +125,6 @@
       </bk-form>
       <template #footer>
         <div>
-          <!-- <bk-button
-            :loading="validating"
-            theme="primary"
-            @click="handleValidate">
-            {{ $t('generic.button.validate') }}
-          </bk-button> -->
           <bcs-badge
             :theme="isValidate ? 'success' : 'danger'"
             class="badge-icon"
@@ -162,11 +156,11 @@
     </bcs-dialog>
   </div>
 </template>
-<script lang="ts">
-import { computed, defineComponent, onMounted, ref, watch } from 'vue';
+<script setup lang="ts">
+import { computed, onMounted, ref, watch } from 'vue';
 
 import $bkMessage from '@/common/bkmagic';
-import { AZURE_VALIDATOR_LABEL, AZURE_VALIDATOR_SECRET } from '@/common/constant';
+import { NAME_REGEX, SECRET_REGEX } from '@/common/constant';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import usePage from '@/composables/use-page';
 import useTableSearch from '@/composables/use-search';
@@ -174,18 +168,32 @@ import $i18n from '@/i18n/i18n-setup';
 import $store from '@/store';
 import useCloud from '@/views/cluster-manage/use-cloud';
 
-export default defineComponent({
-  setup() {
-    const cloudID = 'azureCloud';
-    const curProject = computed(() => $store.state.curProject);
-    const user = computed(() => $store.state.user);
+const cloudID = 'azureCloud';
+const curProject = computed(() => $store.state.curProject);
+const user = computed(() => $store.state.user);
 
-    const loading = ref(false);
-    const createLoading = ref(false);
-    const showDialog = ref(false);
-    const data = ref([]);
-    const formRef = ref<any>();
-    const account = ref({
+const loading = ref(false);
+const createLoading = ref(false);
+const showDialog = ref(false);
+const data = ref([]);
+const formRef = ref<any>();
+const account = ref({
+  accountName: '',
+  desc: '',
+  account: {
+    subscriptionID: '',
+    tenantID: '',
+    clientID: '',
+    clientSecret: '',
+  },
+  enable: true,
+  creator: user.value.username,
+  projectID: curProject.value.project_id,
+});
+watch(showDialog, () => {
+  if (!showDialog.value) {
+    // 重置数据
+    account.value = {
       accountName: '',
       desc: '',
       account: {
@@ -197,201 +205,169 @@ export default defineComponent({
       enable: true,
       creator: user.value.username,
       projectID: curProject.value.project_id,
-    });
-    watch(showDialog, () => {
-      if (!showDialog.value) {
-        // 重置数据
-        account.value = {
-          accountName: '',
-          desc: '',
-          account: {
-            subscriptionID: '',
-            tenantID: '',
-            clientID: '',
-            clientSecret: '',
-          },
-          enable: true,
-          creator: user.value.username,
-          projectID: curProject.value.project_id,
-        };
-      }
-    });
-    const formRules = ref({
-      accountName: [
-        {
-          required: true,
-          message: $i18n.t('generic.validate.required'),
-          trigger: 'blur',
-        },
-        {
-          message: $i18n.t('azureCloud.tips.nameRegex'),
-          trigger: 'blur',
-          validator: AZURE_VALIDATOR_LABEL
-        },
-      ],
-      'account.subscriptionID': [
-        {
-          required: true,
-          message: $i18n.t('generic.validate.required'),
-          trigger: 'blur',
-        },
-        {
-          message: $i18n.t('azureCloud.tips.nameRegex'),
-          trigger: 'blur',
-          validator: AZURE_VALIDATOR_LABEL
-        },
-      ],
-      'account.tenantID': [
-        {
-          required: true,
-          message: $i18n.t('generic.validate.required'),
-          trigger: 'blur',
-        },
-        {
-          message: $i18n.t('azureCloud.tips.nameRegex'),
-          trigger: 'blur',
-          validator: AZURE_VALIDATOR_LABEL
-        },
-      ],
-      'account.clientID': [
-        {
-          required: true,
-          message: $i18n.t('generic.validate.required'),
-          trigger: 'blur',
-        },
-        {
-          message: $i18n.t('azureCloud.tips.nameRegex'),
-          trigger: 'blur',
-          validator: AZURE_VALIDATOR_LABEL
-        },
-      ],
+    };
+  }
+});
+const formRules = ref({
+  accountName: [
+    {
+      required: true,
+      message: $i18n.t('generic.validate.required'),
+      trigger: 'blur',
+    },
+    {
+      message: $i18n.t('azureCloud.tips.nameRegex'),
+      trigger: 'blur',
+      validator(val) {
+        return new RegExp(NAME_REGEX, 'g').test(val);
+      },
+    },
+  ],
+  'account.subscriptionID': [
+    {
+      required: true,
+      message: $i18n.t('generic.validate.required'),
+      trigger: 'blur',
+    },
+    {
+      message: $i18n.t('azureCloud.tips.nameRegex'),
+      trigger: 'blur',
+      validator(val) {
+        return new RegExp(NAME_REGEX, 'g').test(val);
+      },
+    },
+  ],
+  'account.tenantID': [
+    {
+      required: true,
+      message: $i18n.t('generic.validate.required'),
+      trigger: 'blur',
+    },
+    {
+      message: $i18n.t('azureCloud.tips.nameRegex'),
+      trigger: 'blur',
+      validator(val) {
+        return new RegExp(NAME_REGEX, 'g').test(val);
+      },
+    },
+  ],
+  'account.clientID': [
+    {
+      required: true,
+      message: $i18n.t('generic.validate.required'),
+      trigger: 'blur',
+    },
+    {
+      message: $i18n.t('azureCloud.tips.nameRegex'),
+      trigger: 'blur',
+      validator(val) {
+        return new RegExp(NAME_REGEX, 'g').test(val);
+      },
+    },
+  ],
 
-      'account.clientSecret': [
-        {
-          required: true,
-          message: $i18n.t('generic.validate.required'),
-          trigger: 'blur',
-        },
-        {
-          message: $i18n.t('azureCloud.tips.secretRegex'),
-          trigger: 'blur',
-          validator: AZURE_VALIDATOR_SECRET
-        },
-      ],
-    });
-    const webAnnotations = ref({ perms: {} });
-    const keys = ref(['account.accountName', 'account.account.subscriptionID', 'account.account.tenantID',
-    'account.account.clientID', 'clusters']); // 模糊搜索字段
-    const { tableDataMatchSearch, searchValue } = useTableSearch(data, keys);
-    const { pageChange, pageSizeChange, curPageData, pagination } = usePage(tableDataMatchSearch);
+  'account.clientSecret': [
+    {
+      required: true,
+      message: $i18n.t('generic.validate.required'),
+      trigger: 'blur',
+    },
+    {
+      message: $i18n.t('azureCloud.tips.secretRegex'),
+      trigger: 'blur',
+      validator(val) {
+        return new RegExp(SECRET_REGEX, 'g').test(val);
+      },
+    },
+  ],
+});
+const webAnnotations = ref({ perms: {} });
+const keys = ref(['account.accountName', 'account.account.subscriptionID', 'account.account.tenantID',
+  'account.account.clientID', 'clusters']); // 模糊搜索字段
+const { tableDataMatchSearch, searchValue } = useTableSearch(data, keys);
+const { pageChange, pageSizeChange, curPageData, pagination } = usePage(tableDataMatchSearch);
 
-    const handleGetCloud = async () => {
+const handleGetCloud = async () => {
+  loading.value = true;
+  const res = await $store.dispatch('clustermanager/cloudAccounts', {
+    $cloudId: cloudID,
+    projectID: curProject.value.project_id,
+    operator: user.value.username,
+  });
+  data.value = res.data;
+  webAnnotations.value = res.web_annotations || { perms: {} };
+  loading.value = false;
+};
+const handleDeleteAccount = (row) => {
+  $bkInfo({
+    type: 'warning',
+    clsName: 'custom-info-confirm',
+    subTitle: row.account.accountID,
+    title: $i18n.t('azureCloud.button.delete'),
+    defaultInfo: true,
+    confirmFn: async () => {
       loading.value = true;
-      const res = await $store.dispatch('clustermanager/cloudAccounts', {
+      const result = await $store.dispatch('clustermanager/deleteCloudAccounts', {
         $cloudId: cloudID,
-        projectID: curProject.value.project_id,
-        operator: user.value.username,
+        $accountID: row.account.accountID,
       });
-      data.value = res.data;
-      webAnnotations.value = res.web_annotations || { perms: {} };
+      if (result) {
+        $bkMessage({
+          theme: 'success',
+          message: $i18n.t('generic.msg.success.delete'),
+        });
+        await handleGetCloud();
+      }
       loading.value = false;
-    };
-    const handleDeleteAccount = (row) => {
-      $bkInfo({
-        type: 'warning',
-        clsName: 'custom-info-confirm',
-        subTitle: row.account.accountID,
-        title: $i18n.t('azureCloud.button.delete'),
-        defaultInfo: true,
-        confirmFn: async () => {
-          loading.value = true;
-          const result = await $store.dispatch('clustermanager/deleteCloudAccounts', {
-            $cloudId: cloudID,
-            $accountID: row.account.accountID,
-          });
-          if (result) {
-            $bkMessage({
-              theme: 'success',
-              message: $i18n.t('generic.msg.success.delete'),
-            });
-            await handleGetCloud();
-          }
-          loading.value = false;
-        },
-      });
-    };
-    // 校验云凭证
-    const { validateCloudAccounts } = useCloud();
-    const isValidate = ref(false);
-    const validateErrMsg = ref('');
-    const validating = ref(false);
-    watch(() => account.value.account, () => {
-      isValidate.value = false;
-    }, { deep: true });
-    const handleValidate = async () => {
-      const valid = await formRef.value?.validate().catch(() => false);
-      if (!valid) return;
+    },
+  });
+};
+// 校验云凭证
+const { validateCloudAccounts } = useCloud();
+const isValidate = ref(false);
+const validateErrMsg = ref('');
+const validating = ref(false);
+watch(() => account.value.account, () => {
+  isValidate.value = false;
+}, { deep: true });
+const handleValidate = async () => {
+  const valid = await formRef.value?.validate().catch(() => false);
+  if (!valid) return;
 
-      validating.value = true;
-      const errMsg = await validateCloudAccounts({
-        $cloudId: cloudID,
-        account: account.value.account,
-      });
-      validateErrMsg.value = errMsg ?? '';
-      isValidate.value = !errMsg;
-      validating.value = false;
-    };
-    // 创建云凭证
-    const handleCreateAccount = async () => {
-      const valid = await formRef.value?.validate();
-      if (!valid) return;
+  validating.value = true;
+  const errMsg = await validateCloudAccounts({
+    $cloudId: cloudID,
+    account: account.value.account,
+  });
+  validateErrMsg.value = errMsg ?? '';
+  isValidate.value = !errMsg;
+  validating.value = false;
+};
+// 创建云凭证
+const handleCreateAccount = async () => {
+  const valid = await formRef.value?.validate();
+  if (!valid) return;
 
-      createLoading.value = true;
-      const result = await $store.dispatch('clustermanager/createCloudAccounts', {
-        $cloudId: cloudID,
-        ...account.value,
-      });
-      createLoading.value = false;
-      if (!result) return;
+  createLoading.value = true;
+  const result = await $store.dispatch('clustermanager/createCloudAccounts', {
+    $cloudId: cloudID,
+    ...account.value,
+  });
+  createLoading.value = false;
+  if (!result) return;
 
-      showDialog.value = false;
-      $bkMessage({
-        theme: 'success',
-        message: $i18n.t('generic.msg.success.create'),
-      });
-      handleGetCloud();
-    };
-    const handleShowCreateDialog = () => {
-      showDialog.value = true;
-    };
-    onMounted(() => {
-      handleGetCloud();
-    });
-    return {
-      validating,
-      isValidate,
-      validateErrMsg,
-      curProject,
-      user,
-      webAnnotations,
-      curPageData,
-      searchValue,
-      showDialog,
-      loading,
-      createLoading,
-      data,
-      formRules,
-      account,
-      formRef,
-      pagination,
-      pageChange,
-      pageSizeChange,
-      handleCreateAccount,
-      handleDeleteAccount,
-      handleShowCreateDialog,
-      handleValidate,
-    };
-  },
+  showDialog.value = false;
+  $bkMessage({
+    theme: 'success',
+    message: $i18n.t('generic.msg.success.create'),
+  });
+  handleGetCloud();
+};
+const handleShowCreateDialog = () => {
+  showDialog.value = true;
+};
+onMounted(() => {
+  handleGetCloud();
 });
 </script>
 <style lang="postcss" scoped>

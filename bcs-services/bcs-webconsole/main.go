@@ -17,6 +17,7 @@ import (
 	"context"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
@@ -54,8 +55,15 @@ func main() {
 		}()
 	}
 
+	// 等待RegistryStop结束
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+	// 程序结束时取消掉各种操作
+	mgr.RegistryStop(wg)
+
 	if err := mgr.Run(); err != nil {
 		logger.Errorf("run webconsole error: %s", err)
 		os.Exit(1) // nolint
 	}
+	wg.Wait()
 }

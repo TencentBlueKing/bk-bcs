@@ -7,7 +7,7 @@
     <!-- 自定义尾部-->
     <li class="g2-tooltip-bottom" @click="emits('jump')">
       <span class="bk-bscp-icon icon-help-fill"></span>
-      <span class="g2-tooltip-name">查看数据详情</span>
+      <span class="g2-tooltip-name">{{ $t('查看数据详情') }}</span>
     </li>
   </div>
 </template>

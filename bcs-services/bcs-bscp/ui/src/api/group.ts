@@ -80,6 +80,15 @@ export const deleteGroup = (biz_id: string, group_id: number) =>
   http.delete(`/config/biz/${biz_id}/groups/${group_id}`);
 
 /**
+ * 批量删除分组
+ * @param biz_id 空间ID
+ * @param ids 分组ID列表
+ * @returns
+ */
+export const batchDeleteGroup = (biz_id: string, ids: number[]) =>
+  http.post(`/config/biz/${biz_id}/groups/batch_delete`, { ids });
+
+/**
  * 获取分组已上线服务
  * @param biz_id 空间ID
  * @param group_id 分组ID

@@ -1,8 +1,8 @@
 <template>
-  <SectionTitle :title="'配置版本发布'" />
+  <SectionTitle :title="$t('配置版本发布')" />
   <Teleport :disabled="!isOpenFullScreen" to="body">
     <div :class="{ fullscreen: isOpenFullScreen }">
-      <Card title="客户端配置版本" :height="344">
+      <Card :title="$t('客户端配置版本')" :height="344">
         <template #operation>
           <OperationBtn
             :is-open-full-screen="isOpenFullScreen"
@@ -21,7 +21,7 @@
             :data="data"
             @update="jumpVersionName = $event as string"
             @jump="jumpToSearch" />
-          <bk-exception v-else type="empty" scene="part" description="暂无数据">
+          <bk-exception v-else type="empty" scene="part" :description="$t('暂无数据')">
             <template #type>
               <span class="bk-bscp-icon icon-pie-chart exception-icon" />
             </template>
@@ -121,19 +121,20 @@
     width: 100vw;
     height: 100vh;
     z-index: 5000;
-    background-color: rgba(0, 0, 0, 0.6);
     .card {
-      position: absolute;
-      width: 100%;
-      height: 80vh !important;
-      top: 50%;
-      transform: translateY(-50%);
-      .loading-wrap {
-        height: 100%;
+      height: 100vh !important;
+      :deep(.operation-btn) {
+        top: 0 !important;
       }
     }
   }
   .loading-wrap {
     height: 100%;
+  }
+
+  :deep(.bk-exception) {
+    height:100%;
+    justify-content: center;
+    transform: translateY(-20px);
   }
 </style>

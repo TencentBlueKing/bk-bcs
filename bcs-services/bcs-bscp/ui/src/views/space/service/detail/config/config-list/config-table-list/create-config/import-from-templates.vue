@@ -76,7 +76,6 @@
   import { ITemplateBoundByAppData } from '../../../../../../../../../types/config';
   import { IAllPkgsGroupBySpaceInBiz } from '../../../../../../../../../types/template';
   import {
-    checkAppTemplateBinding,
     importTemplateConfigPkgs,
     updateTemplateConfigPkgs,
   } from '../../../../../../../../api/config';
@@ -210,13 +209,6 @@
   const handleImportConfirm = async () => {
     try {
       pending.value = true;
-      conflictDetail.value = await checkAppTemplateBinding(props.bkBizId, props.appId, {
-        bindings: selectedPkgs.value.concat(importedPkgs.value),
-      });
-      if (hasConflict.value) {
-        pending.value = false;
-        return;
-      }
       if (bindingId.value) {
         await updateTemplateConfigPkgs(props.bkBizId, props.appId, bindingId.value, {
           bindings: selectedPkgs.value.concat(importedPkgs.value),
@@ -318,7 +310,7 @@
   }
 </style>
 <style lang="scss">
-  .import-template-config-dialog.bk-dialog-wrapper {
+  .import-template-config-dialog.bk-modal-wrapper {
     .bk-modal-header,
     .bk-modal-close {
       display: none;

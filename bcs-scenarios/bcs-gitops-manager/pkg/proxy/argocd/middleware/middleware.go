@@ -44,6 +44,7 @@ type httpWrapper struct {
 	argoStreamSession *session.ArgoStreamSession
 	secretSession     *session.SecretSession
 	terraformSession  *session.TerraformSession
+	analysisSession   *session.AnalysisSession
 	monitorSession    *session.MonitorSession
 }
 
@@ -81,7 +82,9 @@ func SetContext(rw http.ResponseWriter, r *http.Request, jwtDecoder *jwt.JWTClie
 	} else {
 		requestID = uuid.New().String()
 	}
-	ctx := context.WithValue(r.Context(), traceconst.RequestIDHeaderKey, requestID) // nolint staticcheck
+	// nolint
+	ctx := context.WithValue(r.Context(), traceconst.RequestIDHeaderKey, requestID)
+	// nolint
 	ctx = tracing.ContextWithRequestID(ctx, requestID)
 	rw.Header().Set(traceconst.RequestIDHeaderKey, requestID)
 
@@ -110,24 +113,6 @@ func (p *httpWrapper) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 	r = r.WithContext(ctx)
-	defer func() {
-		cost := time.Since(start)
-		blog.Infof("RequestID[%s] handle request '%s' cost time: %v", requestID, r.URL.Path, cost)
-
-		// 对于包含 stream/webhook 的请求过滤
-		if !strings.Contains(r.URL.Path, "/api/v1/stream") &&
-			!strings.Contains(r.URL.Path, "/api/webhook") &&
-			!strings.Contains(r.URL.Path, "/clean") {
-			if strings.Contains(r.URL.Path, "Service/") {
-				metric.ManagerGRPCRequestTotal.WithLabelValues().Inc()
-				metric.ManagerGRPCRequestDuration.WithLabelValues().Observe(cost.Seconds())
-			} else {
-				metric.ManagerHTTPRequestTotal.WithLabelValues().Inc()
-				metric.ManagerHTTPRequestDuration.WithLabelValues().Observe(cost.Seconds())
-			}
-		}
-	}()
-
 	req, resp := p.handler(r)
 	if resp == nil {
 		blog.Warnf("RequestID[%s] response should not be nil", requestID)
@@ -135,6 +120,30 @@ func (p *httpWrapper) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 			respType: reverseArgo,
 		}
 	}
+	defer func() {
+		cost := time.Since(start)
+		blog.Infof("RequestID[%s] handle request '%s' cost time: %v", requestID, r.URL.Path, cost)
+		// ignore metric proxy
+		if strings.Contains(r.URL.Path, "/api/metric") ||
+			strings.Contains(r.URL.Path, "/api/v1/analysis") {
+			return
+		}
+
+		if strings.Contains(r.URL.Path, "Service/") {
+			metric.ManagerGRPCRequestTotal.WithLabelValues().Inc()
+		} else {
+			metric.ManagerHTTPRequestTotal.WithLabelValues().Inc()
+		}
+		// 对于包含 stream/webhook 的请求过滤，不需要统计请求时间
+		if !strings.Contains(r.URL.Path, "/api/v1/stream") && !strings.Contains(r.URL.Path, "/api/webhook") &&
+			!strings.Contains(r.URL.Path, "/clean") && !strings.Contains(r.URL.Path, "Watch") {
+			if strings.Contains(r.URL.Path, "Service/") {
+				metric.ManagerGRPCRequestDuration.WithLabelValues().Observe(float64(cost.Milliseconds()))
+			} else {
+				metric.ManagerHTTPRequestDuration.WithLabelValues().Observe(float64(cost.Milliseconds()))
+			}
+		}
+	}()
 	if resp.statusCode >= 500 {
 		if !utils.IsContextCanceled(resp.err) {
 			metric.ManagerReturnErrorNum.WithLabelValues().Inc()
@@ -149,10 +158,14 @@ func (p *httpWrapper) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		p.secretSession.ServeHTTP(rw, req)
 	case reverseTerraform:
 		p.terraformSession.ServeHTTP(rw, req)
+	case reverseAnalysis:
+		p.analysisSession.ServeHTTP(rw, req)
 	case reverseMonitor:
 		p.monitorSession.ServeHTTP(rw, req)
 	case returnError:
-		blog.Errorf("RequestID[%s] handler return code '%d': %s", requestID, resp.statusCode, resp.err.Error())
+		if resp.statusCode >= 500 {
+			blog.Errorf("RequestID[%s] handler return code '%d': %s", requestID, resp.statusCode, resp.err.Error())
+		}
 		http.Error(rw, resp.err.Error(), resp.statusCode)
 	case returnGrpcError:
 		blog.Warnf("RequestID[%s] handler grpc request return code '%d': %s",
@@ -190,6 +203,7 @@ const (
 	reverseArgoStream
 	// reverseTerraform 请求反向代理给 terraform 服务
 	reverseTerraform
+	reverseAnalysis
 )
 
 // ReturnArgoStreamReverse will reverse stream to argocd
@@ -210,6 +224,13 @@ func ReturnTerraformReverse() *HttpResponse {
 func ReturnArgoReverse() *HttpResponse {
 	return &HttpResponse{
 		respType: reverseArgo,
+	}
+}
+
+// ReturnAnalysisReverse will reverse to analysis server
+func ReturnAnalysisReverse() *HttpResponse {
+	return &HttpResponse{
+		respType: reverseAnalysis,
 	}
 }
 

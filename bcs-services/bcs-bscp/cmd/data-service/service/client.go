@@ -237,12 +237,12 @@ func (s *Service) ClientConfigVersionStatistics(ctx context.Context, req *pbclie
 }
 
 // ClientPullTrendStatistics 客户端拉取趋势统计
-func (s *Service) ClientPullTrendStatistics(ctx context.Context, req *pbclient.ClientCommonReq) (
+func (s *Service) ClientPullTrendStatistics(ctx context.Context, req *pbclient.ClientCommonReq) ( // nolint
 	*structpb.Struct, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 
 	var ClientIDs []uint32
-	if req.GetSearch().String() != "" {
+	if req.GetSearch().String() != "" || req.GetLastHeartbeatTime() > 0 {
 		items, _, err := s.dao.Client().List(grpcKit, req.GetBizId(), req.GetAppId(), req.GetLastHeartbeatTime(),
 			req.GetSearch(), &pbds.ListClientsReq_Order{}, &types.BasePage{All: true})
 		if err != nil {
@@ -284,11 +284,29 @@ func (s *Service) ClientPullTrendStatistics(ctx context.Context, req *pbclient.C
 			}
 		}
 
+		count := int(req.PullTime)
+		dateMap := make(map[string]struct{})
+		for i := 0; i < count; i++ {
+			previousDate := time.Now().AddDate(0, 0, -i).Format("2006/01/02")
+			dateMap[previousDate] = struct{}{}
+		}
+
+		// agent、sidecar、sdk、command
+		// 补充数据类型和时间
+		tyTime := make(map[string]int)
+		for k := range dateMap {
+			for _, t := range []string{string(table.Agent), string(table.Sidecar), string(table.SDK), string(table.Command)} {
+				if _, ok := tyTime[k+"_"+t]; !ok {
+					tyTime[k+"_"+t] = 0
+				}
+			}
+		}
+
 		var typeAndTime []interface{}
-		for key, count := range typeCountByTimeAndType {
-			parts := strings.Split(key, "_")
+		for k := range tyTime {
+			parts := strings.Split(k, "_")
 			item := map[string]interface{}{
-				"time": parts[0], "value": count, "type": parts[1],
+				"time": parts[0], "value": typeCountByTimeAndType[k], "type": parts[1],
 			}
 			typeAndTime = append(typeAndTime, item)
 		}
@@ -301,9 +319,9 @@ func (s *Service) ClientPullTrendStatistics(ctx context.Context, req *pbclient.C
 		}
 
 		var byTime []interface{}
-		for key, count := range typeCountByTime {
+		for k := range dateMap {
 			item := map[string]interface{}{
-				"time": key, "count": count,
+				"time": k, "count": typeCountByTime[k],
 			}
 			byTime = append(byTime, item)
 		}
@@ -350,8 +368,8 @@ func (s *Service) ClientLabelStatistics(ctx context.Context, req *pbclient.Clien
 	}
 
 	counts := make(map[string]map[string]int)
-	total := len(items)
 
+	total := make(map[string]int)
 	for _, item := range items {
 		lable := map[string]string{}
 		_ = json.Unmarshal([]byte(item.Spec.Labels), &lable)
@@ -360,6 +378,7 @@ func (s *Service) ClientLabelStatistics(ctx context.Context, req *pbclient.Clien
 				counts[key] = make(map[string]int)
 			}
 			counts[key][value]++
+			total[key]++
 		}
 	}
 
@@ -371,7 +390,7 @@ func (s *Service) ClientLabelStatistics(ctx context.Context, req *pbclient.Clien
 				"key":     key,
 				"value":   k,
 				"count":   v,
-				"percent": float64(v) / float64(total) * 100,
+				"percent": float64(v) / float64(total[key]),
 			})
 		}
 		resp[key] = items
@@ -476,7 +495,7 @@ func (s *Service) clientVersionDistribution(kit *kit.Kit, bizID, appID uint32, h
 	for _, item := range items {
 		key := string(item.Spec.ClientType) + "_" + item.Spec.ClientVersion
 		count := counts[key]
-		percent := float64(count) / float64(totalCount) * 100
+		percent := float64(count) / float64(totalCount)
 		data = append(data, map[string]interface{}{
 			"client_type":    string(item.Spec.ClientType),
 			"client_version": item.Spec.ClientVersion,
@@ -559,7 +578,7 @@ func (s *Service) clientPullInfo(kit *kit.Kit, bizID, appID uint32, heartbeatTim
 	// 获取最小最大平均时间
 	// 通过查询条件获取clientID
 	var ClientID []uint32
-	if search.String() != "" {
+	if search.String() != "" || heartbeatTime > 0 {
 		items, _, err := s.dao.Client().List(kit, bizID, appID, heartbeatTime, search,
 			&pbds.ListClientsReq_Order{}, &types.BasePage{All: true})
 		if err != nil {
@@ -598,9 +617,9 @@ func (s *Service) getResourceUsage(kit *kit.Kit, bizID, appID uint32, heartbeatT
 	}
 
 	usage := map[string]interface{}{}
-	usage["cpu_max_usage"] = math.Round(item.CpuMaxUsage*10) / 10
-	usage["cpu_min_usage"] = math.Round(item.CpuMinUsage*10) / 10
-	usage["cpu_avg_usage"] = math.Round(item.CpuAvgUsage*10) / 10
+	usage["cpu_max_usage"] = math.Round(item.CpuMaxUsage*1000) / 1000
+	usage["cpu_min_usage"] = math.Round(item.CpuMinUsage*1000) / 1000
+	usage["cpu_avg_usage"] = math.Round(item.CpuAvgUsage*1000) / 1000
 	usage["memory_max_usage"] = item.MemoryMaxUsage / (1024 * 1024)
 	usage["memory_min_usage"] = item.MemoryMinUsage / (1024 * 1024)
 	usage["memory_avg_usage"] = item.MemoryAvgUsage / (1024 * 1024)
@@ -635,7 +654,7 @@ func (s *Service) ListClientLabelAndAnnotation(ctx context.Context, req *pbds.Li
 	*structpb.Struct, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 
-	items, _, err := s.dao.Client().List(grpcKit, req.GetBizId(), req.GetAppId(), 0,
+	items, _, err := s.dao.Client().List(grpcKit, req.GetBizId(), req.GetAppId(), req.GetLastHeartbeatTime(),
 		nil, &pbds.ListClientsReq_Order{}, &types.BasePage{All: true})
 	if err != nil {
 		return nil, err
@@ -675,5 +694,39 @@ func (s *Service) ListClientLabelAndAnnotation(ctx context.Context, req *pbds.Li
 	resp := make(map[string]interface{})
 	resp["labels"] = lables
 	resp["annotations"] = annotations
+	return structpb.NewStruct(resp)
+}
+
+// ClientSpecificFailedReason 统计客户端失败详细原因
+func (s *Service) ClientSpecificFailedReason(ctx context.Context, req *pbclient.ClientCommonReq) (
+	*structpb.Struct, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	items, _, err := s.dao.Client().List(grpcKit, req.GetBizId(), req.GetAppId(), req.GetLastHeartbeatTime(),
+		req.GetSearch(), &pbds.ListClientsReq_Order{}, &types.BasePage{All: true})
+	if err != nil {
+		return nil, err
+	}
+
+	var count float64
+	specificFailedReasonCounts := make(map[string]int)
+	for _, v := range items {
+		if v.Spec.SpecificFailedReason != "" {
+			count++
+			specificFailedReasonCounts[v.Spec.SpecificFailedReason]++
+		}
+	}
+
+	var charts []interface{}
+	for k, v := range specificFailedReasonCounts {
+		chart := make(map[string]interface{})
+		ratio := float64(v) / count
+		chart["release_change_failed_reason"] = k
+		chart["count"] = v
+		chart["percent"] = ratio
+		charts = append(charts, chart)
+	}
+	resp := make(map[string]interface{})
+	resp["failed_reason"] = charts
 	return structpb.NewStruct(resp)
 }

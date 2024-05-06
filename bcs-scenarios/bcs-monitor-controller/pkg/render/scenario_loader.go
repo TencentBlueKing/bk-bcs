@@ -158,7 +158,7 @@ func (r *MonitorRender) LoadRule(
 	err := filepath.Walk(path, func(path string, info os.FileInfo,
 		err error) error {
 		if err != nil {
-			return fmt.Errorf("walk through directory'%s' failed, err: %w", path, err)
+			return fmt.Errorf("walk through directory'%s' failed, err: %s", path, err.Error())
 		}
 
 		if !info.IsDir() && strings.HasSuffix(info.Name(), ".yaml") {
@@ -169,12 +169,12 @@ func (r *MonitorRender) LoadRule(
 			}
 			data, inErr := ioutil.ReadFile(path)
 			if inErr != nil {
-				return fmt.Errorf("read file'%s' failed, err: %w", path, inErr)
+				return fmt.Errorf("read file'%s' failed, err: %s", path, inErr.Error())
 			}
 
 			var rule monitorextensionv1.MonitorRuleDetail
 			if inErr = yaml.Unmarshal(data, &rule); inErr != nil {
-				return fmt.Errorf("unmarshal rule in'%s' failed, err: %w", info.Name(), inErr)
+				return fmt.Errorf("unmarshal rule in'%s' failed, err: %s", info.Name(), inErr.Error())
 			}
 			rules = append(rules, &rule)
 		}
@@ -214,7 +214,7 @@ func (r *MonitorRender) loadPanel(path string) ([]*v1.ConfigMap, *monitorextensi
 		if !info.IsDir() && strings.HasSuffix(info.Name(), ".json") {
 			data, inErr := ioutil.ReadFile(path)
 			if inErr != nil {
-				return fmt.Errorf("read file'%s' failed, err: %w", path, inErr)
+				return fmt.Errorf("read file'%s' failed, err: %s", path, inErr.Error())
 			}
 			dataMap := make(map[string]string)
 			dataMap["panel"] = string(data)
@@ -278,11 +278,11 @@ func (r *MonitorRender) LoadDashBoard(path string, filterFunc ...func(string) bo
 			}
 			data, inErr := ioutil.ReadFile(path)
 			if inErr != nil {
-				return fmt.Errorf("read file'%s' failed, err: %w", path, inErr)
+				return fmt.Errorf("read file'%s' failed, err: %s", path, inErr.Error())
 			}
 			var panel DashBoard
 			if inErr = yaml.Unmarshal(data, &panel); inErr != nil {
-				return fmt.Errorf("unmarshal panel in'%s' failed, err: %w", info.Name(), inErr)
+				return fmt.Errorf("unmarshal panel in'%s' failed, err: %s", info.Name(), inErr.Error())
 			}
 			panels = append(panels, &panel)
 		}
@@ -304,7 +304,7 @@ func (r *MonitorRender) loadNoticeGroup(path string) (*monitorextensionv1.Notice
 	err := filepath.Walk(path, func(path string, info os.FileInfo,
 		err error) error {
 		if err != nil {
-			return fmt.Errorf("walk through directory'%s' failed, err: %w", path, err)
+			return fmt.Errorf("walk through directory'%s' failed, err: %s", path, err.Error())
 		}
 
 		if !info.IsDir() && strings.HasSuffix(info.Name(), ".yaml") {

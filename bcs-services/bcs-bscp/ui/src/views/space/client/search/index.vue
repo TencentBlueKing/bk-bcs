@@ -3,7 +3,7 @@
     <div class="header">
       <ClientHeader :title="t('客户端查询')" @search="loadList" />
     </div>
-    <div class="content">
+    <div v-if="appId" class="content">
       <!-- @todo 重试功能待接口支持 -->
       <!-- <bk-button style="margin-bottom: 16px" :disabled="!selectedClient.length">批量重试</bk-button> -->
       <bk-loading style="min-height: 100px" :loading="listLoading">
@@ -15,15 +15,18 @@
           :key="appId"
           :checked="selectedClient"
           :is-row-select-enable="isRowSelectEnable"
+          show-overflow-tooltip
           @page-limit-change="handlePageLimitChange"
           @page-value-change="loadList"
           @column-filter="handleFilter">
           <!-- <bk-table-column type="selection" :min-width="40" :width="40"> </bk-table-column> -->
           <bk-table-column label="UID" :width="254" prop="attachment.uid"></bk-table-column>
           <bk-table-column label="IP" :width="120" prop="spec.ip"></bk-table-column>
-          <bk-table-column :label="t('客户端标签')" :min-width="296">
+          <bk-table-column
+            :label="t('客户端标签')"
+            :min-width="296">
             <template #default="{ row }">
-              <div v-if="row.labels" class="labels">
+              <div v-if="row.spec && row.labels.length" class="labels">
                 <span v-for="(label, index) in row.labels" :key="index">
                   <Tag v-if="index < 3">
                     {{ label.key + '=' + label.value }}
@@ -45,6 +48,7 @@
                 <Share fill="#979BA5" />
                 <span class="text">{{ row.spec.current_release_name }}</span>
               </div>
+              <span v-else>--</span>
             </template>
           </bk-table-column>
           <bk-table-column
@@ -57,8 +61,7 @@
             }">
             <template #default="{ row }">
               <div v-if="row.spec" class="release_change_status">
-                <Spinner v-if="row.spec.release_change_status === 'Sikp'" class="spinner-icon" fill="#3A84FF" />
-                <div v-else :class="['dot', row.spec.release_change_status]"></div>
+                <div :class="['dot', row.spec.release_change_status]"></div>
                 <span>{{ CLIENT_STATUS_MAP[row.spec.release_change_status as keyof typeof CLIENT_STATUS_MAP] }}</span>
                 <InfoLine
                   v-if="row.spec.release_change_status === 'Failed'"
@@ -80,7 +83,7 @@
             <template #default="{ row }">
               <div v-if="row.spec" class="online-status">
                 <div :class="['dot', row.spec.online_status]"></div>
-                <span>{{ row.spec.online_status === 'online' ? t('在线') : t('离线')}}</span>
+                <span>{{ row.spec.online_status === 'Online' ? t('在线') : t('离线') }}</span>
               </div>
             </template>
           </bk-table-column>
@@ -137,6 +140,7 @@
         </bk-table>
       </bk-loading>
     </div>
+    <Exception v-else />
   </section>
   <PullRecord
     :bk-biz-id="bkBizId"
@@ -150,7 +154,7 @@
 <script lang="ts" setup>
   import { ref, watch } from 'vue';
   import { useRoute, useRouter } from 'vue-router';
-  import { Share, Spinner, InfoLine } from 'bkui-vue/lib/icon';
+  import { Share, InfoLine } from 'bkui-vue/lib/icon';
   import { storeToRefs } from 'pinia';
   import { Tag } from 'bkui-vue';
   import { getClientQueryList, createClientSearchRecord } from '../../../../api/client';
@@ -161,6 +165,7 @@
   import { IClinetCommonQuery } from '../../../../../types/client';
   import useClientStore from '../../../../store/client';
   import TableEmpty from '../../../../components/table/table-empty.vue';
+  import Exception from '../components/exception.vue';
   import { useI18n } from 'vue-i18n';
 
   const { t } = useI18n();
@@ -204,20 +209,16 @@
       text: t('处理中'),
       value: 'Processing',
     },
-    {
-      text: t('跳过'),
-      value: 'Skip',
-    },
   ];
   const releaseChangeStatusFilterChecked = ref<string[]>([]);
   const onlineStatusFilterList = [
     {
       text: t('在线'),
-      value: 'online',
+      value: 'Online',
     },
     {
-      text: t('未在线'),
-      value: 'offline',
+      text: t('离线'),
+      value: 'Offline',
     },
   ];
   const onlineStatusFilterChecked = ref<string[]>([]);
@@ -237,11 +238,12 @@
       isSearchEmpty.value = Object.keys(val!).length !== 0;
       loadList();
     },
+    { deep: true },
   );
 
   const showResourse = (resourse: IResourseType) => {
     return {
-      cpuResourse: `${resourse.cpu_usage} ${'核'}/${resourse.cpu_max_usage} ${'核'}`,
+      cpuResourse: `${resourse.cpu_usage} ${t('核')}/${resourse.cpu_max_usage} ${t('核')}`,
       memoryResource: `${resourse.memory_usage}MB/${resourse.memory_max_usage}MB`,
     };
   };
@@ -341,6 +343,9 @@
   .labels {
     display: flex;
     flex-wrap: wrap;
+    span {
+      margin-right: 4px;
+    }
   }
 
   .current-version {
@@ -388,11 +393,11 @@
       width: 13px;
       height: 13px;
       border-radius: 50%;
-      &.online {
+      &.Online {
         background: #3fc06d;
         border: 3px solid #e0f5e7;
       }
-      &.offline {
+      &.Offline {
         background: #979ba5;
         border: 3px solid #eeeef0;
       }

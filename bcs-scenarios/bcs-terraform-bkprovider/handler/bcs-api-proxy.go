@@ -1,3 +1,16 @@
+/*
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// Package handler xxx
 package handler
 
 import (
@@ -10,12 +23,14 @@ import (
 	pb "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-bkprovider/proto"
 )
 
+// BcsApiHandler api handler
 type BcsApiHandler struct {
 	bkAppCode   string
 	bkAppSecret string
 	bkEnv       string
 }
 
+// NewBcsApiHandler return new instance
 func NewBcsApiHandler(bkAppCode, bkAppSecret, bkEnv string) *BcsApiHandler {
 	return &BcsApiHandler{
 		bkAppCode:   bkAppCode,
@@ -24,6 +39,7 @@ func NewBcsApiHandler(bkAppCode, bkAppSecret, bkEnv string) *BcsApiHandler {
 	}
 }
 
+// InstallJob create job
 func (b *BcsApiHandler) InstallJob(ctx context.Context, request *pb.InstallJobRequest,
 	response *pb.InstallJobResponse) error {
 	user, code, msg := getUserInfo(ctx)
@@ -67,6 +83,7 @@ func (b *BcsApiHandler) InstallJob(ctx context.Context, request *pb.InstallJobRe
 	return nil
 }
 
+// CreateCloud create cloud
 func (b *BcsApiHandler) CreateCloud(ctx context.Context, request *pb.CloudCreateRequest,
 	response *pb.CloudCreateResponse) error {
 	user, code, msg := getUserInfo(ctx)
@@ -94,6 +111,7 @@ func (b *BcsApiHandler) CreateCloud(ctx context.Context, request *pb.CloudCreate
 	return nil
 }
 
+// UpdateCloud update cloud
 func (b *BcsApiHandler) UpdateCloud(ctx context.Context, request *pb.CloudUpdateRequest,
 	response *pb.CloudUpdateResponse) error {
 	user, code, msg := getUserInfo(ctx)
@@ -121,6 +139,7 @@ func (b *BcsApiHandler) UpdateCloud(ctx context.Context, request *pb.CloudUpdate
 	return nil
 }
 
+// ListCloud list all clouds
 func (b *BcsApiHandler) ListCloud(ctx context.Context, request *pb.CloudListRequest,
 	response *pb.CloudListResponse) error {
 	user, code, msg := getUserInfo(ctx)
@@ -151,6 +170,7 @@ func (b *BcsApiHandler) ListCloud(ctx context.Context, request *pb.CloudListRequ
 	return nil
 }
 
+// DeleteCloud delete a cloud
 func (b *BcsApiHandler) DeleteCloud(ctx context.Context, request *pb.CloudDeleteRequest,
 	response *pb.CloudDeleteResponse) error {
 	user, code, msg := getUserInfo(ctx)
@@ -175,6 +195,7 @@ func (b *BcsApiHandler) DeleteCloud(ctx context.Context, request *pb.CloudDelete
 	return nil
 }
 
+// ListHost list hosts
 func (b *BcsApiHandler) ListHost(ctx context.Context, request *pb.ListHostRequest,
 	response *pb.ListHostResponse) error {
 	user, code, msg := getUserInfo(ctx)
@@ -215,6 +236,7 @@ func (b *BcsApiHandler) ListHost(ctx context.Context, request *pb.ListHostReques
 	return nil
 }
 
+// ListProxyHost list proxy host
 func (b *BcsApiHandler) ListProxyHost(ctx context.Context, request *pb.ListProxyHostRequest,
 	response *pb.ListProxyHostResponse) error {
 	user, code, msg := getUserInfo(ctx)
@@ -247,6 +269,7 @@ func (b *BcsApiHandler) ListProxyHost(ctx context.Context, request *pb.ListProxy
 	return nil
 }
 
+// GetJobDetail get job detail
 func (b *BcsApiHandler) GetJobDetail(ctx context.Context, request *pb.GetJobDetailRequest,
 	response *pb.GetJobDetailResponse) error {
 	user, code, msg := getUserInfo(ctx)

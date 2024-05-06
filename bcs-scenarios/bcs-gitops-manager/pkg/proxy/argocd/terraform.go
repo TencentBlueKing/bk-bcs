@@ -55,6 +55,7 @@ func (plugin *TerraformPlugin) Init() error {
 	return nil
 }
 
+// applyHandler apply the terraform with request json/yaml
 func (plugin *TerraformPlugin) applyHandler(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -103,6 +104,7 @@ func (plugin *TerraformPlugin) applyHandler(r *http.Request) (*http.Request, *mw
 	return r, mw.ReturnTerraformReverse()
 }
 
+// listHandler list the terraforms
 func (plugin *TerraformPlugin) listHandler(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	projectList, statusCode, err := plugin.middleware.ListProjects(r.Context())
 	if statusCode != http.StatusOK {
@@ -140,6 +142,7 @@ func (plugin *TerraformPlugin) listHandler(r *http.Request) (*http.Request, *mw.
 	return r, mw.ReturnTerraformReverse()
 }
 
+// createHandler create terraform
 func (plugin *TerraformPlugin) createHandler(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -184,6 +187,7 @@ func (plugin *TerraformPlugin) createHandler(r *http.Request) (*http.Request, *m
 	return r, mw.ReturnTerraformReverse()
 }
 
+// getHandler get terraform
 func (plugin *TerraformPlugin) getHandler(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	name := mux.Vars(r)["name"]
 	tf, err := plugin.terraformStore.Get(r.Context(), name)
@@ -197,6 +201,7 @@ func (plugin *TerraformPlugin) getHandler(r *http.Request) (*http.Request, *mw.H
 	return r, mw.ReturnJSONResponse(tf)
 }
 
+// deleteHandler delete terraform
 func (plugin *TerraformPlugin) deleteHandler(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	name := mux.Vars(r)["name"]
 	tf, err := plugin.terraformStore.Get(r.Context(), name)
@@ -210,6 +215,7 @@ func (plugin *TerraformPlugin) deleteHandler(r *http.Request) (*http.Request, *m
 	return r, mw.ReturnTerraformReverse()
 }
 
+// getDiffHandler get-diff the terraform
 func (plugin *TerraformPlugin) getDiffHandler(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	name := mux.Vars(r)["name"]
 	data, err := plugin.terraformStore.GetDiff(r.Context(), name)
@@ -224,6 +230,7 @@ func (plugin *TerraformPlugin) getDiffHandler(r *http.Request) (*http.Request, *
 	return r, mw.ReturnJSONResponse(data.Result)
 }
 
+// getApplyHandler get the terraform's apply
 func (plugin *TerraformPlugin) getApplyHandler(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	name := mux.Vars(r)["name"]
 	data, err := plugin.terraformStore.GetApply(r.Context(), name)
@@ -238,6 +245,7 @@ func (plugin *TerraformPlugin) getApplyHandler(r *http.Request) (*http.Request, 
 	return r, mw.ReturnJSONResponse(data.Result)
 }
 
+// syncHandler sync the terraform
 func (plugin *TerraformPlugin) syncHandler(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	name := mux.Vars(r)["name"]
 	tf, err := plugin.terraformStore.Get(r.Context(), name)
@@ -251,6 +259,7 @@ func (plugin *TerraformPlugin) syncHandler(r *http.Request) (*http.Request, *mw.
 	return r, mw.ReturnTerraformReverse()
 }
 
+// cleanHandler clean the terraform resources
 func (plugin *TerraformPlugin) cleanHandler(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	name := mux.Vars(r)["name"]
 	tf, err := plugin.terraformStore.Get(r.Context(), name)

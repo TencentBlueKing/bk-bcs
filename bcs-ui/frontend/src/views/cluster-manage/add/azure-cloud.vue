@@ -27,17 +27,13 @@
                 :id="item.account.accountID"
                 :name="item.account.accountName">
               </bcs-option>
-              <div slot="extension" class="extension-item" style="cursor: pointer" @click="handleGotoCloudToken">
-                <i class="bk-icon icon-plus-circle"></i>
-                <span>{{ $t('cluster.create.button.createCloudToken') }}</span>
-              </div>
+              <template slot="extension">
+                <SelectExtension
+                  :link-text="$t('cluster.create.button.createCloudToken')"
+                  :link="CloudTokenLink"
+                  @refresh="handleGetAccountsList" />
+              </template>
             </bcs-select>
-            <span
-              class="refresh ml10"
-              v-bk-tooltips="$t('generic.button.refresh')"
-              @click="handleGetAccountsList">
-              <i class="bcs-icon bcs-icon-reset"></i>
-            </span>
           </div>
         </bk-form-item>
         <bk-form-item
@@ -93,7 +89,7 @@
         </bk-form-item>
         <bk-form-item
           :label="$t('importAzureCloud.label.nodemanArea')"
-          property="nodemanArea"
+          property="bkCloudID"
           error-display-type="normal"
           required>
           <bk-select
@@ -107,12 +103,6 @@
               :id="item.bk_cloud_id"
               :name="item.bk_cloud_name">
             </bk-option>
-            <template slot="extension">
-              <SelectExtension
-                :link-text="$t('tke.link.nodeman')"
-                :link="`${PROJECT_CONFIG.nodemanHost}/#/cloud-manager`"
-                @refresh="handleGetNodeManCloud" />
-            </template>
           </bk-select>
         </bk-form-item>
         <bk-form-item :label="$t('importAzureCloud.label.desc')" property="description" error-display-type="normal">
@@ -159,6 +149,7 @@ import $bkMessage from '@/common/bkmagic';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store';
+// 管控区域跳转链接
 import SelectExtension from '@/views/cluster-manage/add/common/select-extension.vue';
 import { INodeManCloud } from '@/views/cluster-manage/add/tencent/types';
 import useCloud, { ICloudAccount } from '@/views/cluster-manage/use-cloud';
@@ -169,7 +160,6 @@ interface IGroup<T = any> {
   children: Array<T>
 }
 const { cloudAccounts, clusterConnect } = useCloud();
-
 const formRef = ref<any>();
 const formData = ref({
   clusterName: '',
@@ -248,10 +238,10 @@ const handleGetAccountsList = async () => {
   accountList.value = data;
   accountLoading.value = false;
 };
-const handleGotoCloudToken = () => {
+const CloudTokenLink = computed(() => {
   const { href } = $router.resolve({ name: 'azureCloud' });
-  window.open(href);
-};
+  return href;
+});
 // 根据云凭证获取资源组
 watch(() => formData.value.accountID, () => {
   getResourceGroups();

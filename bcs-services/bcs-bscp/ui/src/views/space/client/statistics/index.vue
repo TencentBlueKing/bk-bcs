@@ -1,14 +1,15 @@
 <template>
   <section class="client-statistics-page">
     <div class="header">
-      <ClientHeader title="客户端统计" />
+      <ClientHeader :title="$t('客户端统计')" />
     </div>
-    <div class="management-data-container">
+    <div v-if="appId" class="management-data-container">
       <VersionRelease :bk-biz-id="bkBizId" :app-id="appId" />
       <PullMass :bk-biz-id="bkBizId" :app-id="appId" />
-      <ClientLabel :bk-biz-id="bkBizId" :app-id="appId" />
+      <LabelAndAnnotations :bk-biz-id="bkBizId" :app-id="appId" />
       <ComponentInfo :bk-biz-id="bkBizId" :app-id="appId" />
     </div>
+    <Exception v-else />
   </section>
 </template>
 
@@ -18,8 +19,9 @@
   import ClientHeader from '../components/client-header.vue';
   import VersionRelease from './section/version-release/index.vue';
   import PullMass from './section/pull-mass/index.vue';
-  import ClientLabel from './section/client-label/index.vue';
+  import LabelAndAnnotations from './section/label-and-annotations/index.vue';
   import ComponentInfo from './section/component-info/index.vue';
+  import Exception from '../components/exception.vue';
 
   const route = useRoute();
   const bkBizId = ref(String(route.params.spaceId));
@@ -38,7 +40,6 @@
 <style scoped lang="scss">
   .client-statistics-page {
     padding: 0 24px;
-    height: 100%;
     background: #f5f7fa;
     .header {
       padding: 24px 0;

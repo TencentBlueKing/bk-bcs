@@ -15,29 +15,29 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"path"
 
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-cli/cmd/argocd"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-cli/cmd/secret"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-cli/cmd/terraform"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-cli/options"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-cli/pkg/version"
 )
 
-const (
-	defaultCfgFile = "/root/.bcs/config.yaml"
-)
-
 var (
-	cfgFile string
+	defaultCfgFile = "./.bcs/config.yaml"
 )
 
 func ensureConfig() {
-	if cfgFile == "" {
-		cfgFile = defaultCfgFile
+	if options.ConfigFile == "" {
+		options.ConfigFile = defaultCfgFile
 	}
 
 	blog.InitLogs(conf.LogConfig{
@@ -47,7 +47,10 @@ func ensureConfig() {
 		Verbosity:       2,
 		StdErrThreshold: "2",
 	})
-	options.Parse(cfgFile)
+	if options.LogV != 0 {
+		blog.SetV(int32(options.LogV))
+	}
+	options.Parse(options.ConfigFile)
 }
 
 // NewRootCommand returns the rootCmd instance
@@ -63,12 +66,33 @@ func NewRootCommand() *cobra.Command {
 			fmt.Println(version.GetVersion())
 		},
 	}
-	ensureConfig()
+	rootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
+		ensureConfig()
+		blog.SetV(int32(options.LogV))
+	}
 
 	rootCmd.AddCommand(versionCmd)
-	rootCmd.AddCommand(argocd.NewArgoCmd())
 	rootCmd.AddCommand(terraform.NewTerraformCmd())
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", defaultCfgFile,
+	rootCmd.AddCommand(secret.NewSecretCmd())
+	argoCmd := argocd.NewArgoCmd()
+	argoCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
+		ensureConfig()
+		_ = argoCmd.PersistentFlags().Set("header", "X-BCS-Client: bcs-gitops-manager")
+		_ = argoCmd.PersistentFlags().Set("header", "bkUserName: admin")
+		_ = argoCmd.PersistentFlags().Set("grpc-web-root-path", options.GlobalOption().ProxyPath)
+		_ = argoCmd.PersistentFlags().Set("server", options.GlobalOption().Server)
+		_ = argoCmd.PersistentFlags().Set("header", fmt.Sprintf("Authorization: Bearer %s",
+			options.GlobalOption().Token))
+	}
+	rootCmd.AddCommand(argoCmd)
+
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		panic(errors.Wrapf(err, "get user home directory failed"))
+	} else {
+		defaultCfgFile = path.Join(homeDir, defaultCfgFile)
+	}
+	rootCmd.PersistentFlags().StringVar(&options.ConfigFile, "bcscfg", defaultCfgFile,
 		"Config file. Example: '{\"server\": \"bcs-api.gateway.com\", \"token\": \"\"}'")
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
 	rootCmd.PersistentFlags().IntVarP(&options.LogV, "verbose", "v", 2,

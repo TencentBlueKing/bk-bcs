@@ -340,6 +340,9 @@ type FeedServerSetting struct {
 	Log     LogOption `yaml:"log"`
 
 	Repository   Repository          `yaml:"repository"`
+	Esb          Esb                 `yaml:"esb"`
+	BCS          BCS                 `yaml:"bcs"`
+	GSE          GSE                 `yaml:"gse"`
 	FSLocalCache FSLocalCache        `yaml:"fsLocalCache"`
 	Downstream   Downstream          `yaml:"downstream"`
 	MRLimiter    MatchReleaseLimiter `yaml:"matchReleaseLimiter"`
@@ -362,6 +365,7 @@ func (s *FeedServerSetting) trySetDefault() {
 	s.Log.trySetDefault()
 	s.FSLocalCache.trySetDefault()
 	s.Downstream.trySetDefault()
+	s.GSE.getFromEnv()
 	s.MRLimiter.trySetDefault()
 }
 
@@ -389,6 +393,14 @@ func (s FeedServerSetting) Validate() error {
 	}
 
 	if err := s.MRLimiter.validate(); err != nil {
+		return err
+	}
+
+	if err := s.Esb.validate(); err != nil {
+		return err
+	}
+
+	if err := s.GSE.validate(); err != nil {
 		return err
 	}
 
