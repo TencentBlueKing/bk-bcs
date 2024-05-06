@@ -34,8 +34,14 @@
 <style scoped lang="scss">
   .commonly-item {
     margin-right: 8px;
-    line-height: 22px;
+    cursor: pointer;
+    :deep(.bk-tag-text) {
+      display: flex;
+      align-items: center;
+    }
     .action-more-icon {
+      display: flex !important;
+      align-items: center;
       transform: rotate(90deg);
       color: #63656e;
       cursor: pointer;

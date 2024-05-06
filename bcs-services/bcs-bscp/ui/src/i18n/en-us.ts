@@ -714,8 +714,9 @@ export default {
   名称: 'Name',
   客户端标签: 'Client label',
   首次连接时间: 'First connection time',
-  'CPU资源占用(当前/最大)': 'CPU usage (current/Max)',
-  '内容资源占用(当前/最大)': 'Content resource usage (current/Max)',
+  CPU资源占用: 'CPU usage',
+  内存资源占用: 'Memory resource usage',
+  '(当前/最大)': '(Current/Max)',
   客户端组件类型: 'Client component type',
   配置拉取记录: 'Configured pull record',
   离线: 'offline',
@@ -771,4 +772,5 @@ export default {
   暂无服务: 'No service',
   前往创建: 'Go to create',
   命令行工具: 'Command line tool',
+  '确认删除该常用查询?': 'Confirm to delete the common query?',
 };
