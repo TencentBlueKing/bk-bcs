@@ -251,8 +251,8 @@ func genAgentPoolReq(ng *proto.NodeGroup, subscriptionID, rgName string, podNum 
 			return to.Ptr(int32(0))
 		}(),
 		EnableNodePublicIP: to.Ptr(func(group *proto.NodeGroup) bool {
-			if ng.LaunchTemplate.InternetAccess != nil {
-				return ng.LaunchTemplate.InternetAccess.PublicIPAssigned
+			if group.LaunchTemplate.InternetAccess != nil {
+				return group.LaunchTemplate.InternetAccess.PublicIPAssigned
 			}
 			return false
 		}(ng)),
@@ -504,10 +504,10 @@ func checkNodesGroupStatus(ctx context.Context, info *cloudprovider.CloudDependB
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Minute)
 	defer cancel()
 
-	running, failure := make([]string, 0), make([]string, 0)
 	// loop cluster status
 	err = loop.LoopDoFunc(ctx, func() error {
 		index := 0
+		running, failure := make([]string, 0), make([]string, 0)
 		for _, ng := range nodeGroups {
 			aksAgentPool, errQuery := cli.GetPoolAndReturn(ctx, info.Cluster.ExtraInfo[common.ClusterResourceGroup],
 				systemID, getCloudNodeGroupID(ng))
@@ -780,8 +780,8 @@ func CheckAKSClusterNodesStatusTask(taskID string, stepName string) error {
 	return nil
 }
 
-func checkClusterNodesStatus(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, nodeGroupIDs []string) (
-	[]string, []string, error) {
+func checkClusterNodesStatus(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, // nolint
+	nodeGroupIDs []string) ([]string, []string, error) {
 	var totalNodesNum uint32
 	var addSuccessNodes, addFailureNodes = make([]string, 0), make([]string, 0)
 	nodePoolList := make([]string, 0)
@@ -879,14 +879,6 @@ func checkClusterNodesStatus(ctx context.Context, info *cloudprovider.CloudDepen
 	}
 	blog.Infof("checkClusterNodesStatus[%s] success[%v] failure[%v]", taskID, addSuccessNodes, addFailureNodes)
 
-	// set cluster node status
-	for _, n := range addFailureNodes {
-		err = cloudprovider.UpdateNodeStatus(false, n, common.StatusAddNodesFailed)
-		if err != nil {
-			blog.Errorf("checkClusterNodesStatus[%s] UpdateNodeStatus[%s] failed: %v", taskID, n, err)
-		}
-	}
-
 	return addSuccessNodes, addFailureNodes, nil
 }
 
@@ -926,7 +918,7 @@ func UpdateAKSNodesToDBTask(taskID string, stepName string) error {
 
 	// check cluster status
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
-	err = updateNodeToDB(ctx, dependInfo, nodeGroupIDs)
+	err = updateNodeToDB(ctx, state, dependInfo, nodeGroupIDs)
 	if err != nil {
 		blog.Errorf("UpdateNodesToDBTask[%s] checkNodesGroupStatus[%s] failed: %v",
 			taskID, clusterID, err)
@@ -952,7 +944,8 @@ func UpdateAKSNodesToDBTask(taskID string, stepName string) error {
 	return nil
 }
 
-func updateNodeToDB(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, nodeGroupIDs []string) error {
+func updateNodeToDB(ctx context.Context, state *cloudprovider.TaskState, info *cloudprovider.CloudDependBasicInfo,
+	nodeGroupIDs []string) error {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 	nodeResourceGroup := info.Cluster.ExtraInfo[common.NodeResourceGroup]
 	// get azureCloud client
@@ -962,6 +955,7 @@ func updateNodeToDB(ctx context.Context, info *cloudprovider.CloudDependBasicInf
 		return fmt.Errorf("updateNodeToDB get aks client err, %s", err.Error())
 	}
 
+	addSuccessNodes := make([]string, 0)
 	for _, ngID := range nodeGroupIDs {
 		nodeGroup, err := actions.GetNodeGroupByGroupID(cloudprovider.GetStorageModel(), ngID)
 		if err != nil {
@@ -991,8 +985,8 @@ func updateNodeToDB(ctx context.Context, info *cloudprovider.CloudDependBasicInf
 			return fmt.Errorf("updateNodeToDB vmToNode failed, %v", err)
 		}
 		for _, n := range nodes {
-			if n.Status != "running" {
-				continue
+			if n.Status == "running" {
+				addSuccessNodes = append(addSuccessNodes, n.InnerIP)
 			}
 			n.NodeGroupID = nodeGroup.NodeGroupID
 			err = cloudprovider.GetStorageModel().CreateNode(context.Background(), n)
@@ -1001,6 +995,7 @@ func updateNodeToDB(ctx context.Context, info *cloudprovider.CloudDependBasicInf
 			}
 		}
 	}
+	state.Task.CommonParams[cloudprovider.NodeIPsKey.String()] = strings.Join(addSuccessNodes, ",")
 
 	return nil
 }

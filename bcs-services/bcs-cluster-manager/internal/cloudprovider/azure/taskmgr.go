@@ -96,7 +96,8 @@ func (t *Task) GetAllTask() map[string]interface{} {
 }
 
 // BuildCreateClusterTask build create cluster task
-func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.CreateClusterOption) (*proto.Task, error) {
+func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.CreateClusterOption) ( // nolint
+	*proto.Task, error) {
 	// create cluster currently only has three steps:
 	// 0. check if need to generate master instance. you need to call cvm api to produce master instance if necessary.
 	//    but we only support add existed instance to cluster as master currently.
@@ -173,7 +174,14 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 		AllowReviseCloudId: icommon.True,
 	}, cloudprovider.WithStepAllowSkip(true))
 
-	// step10: 业务后置自定义流程: 支持标准运维任务 或者 后置脚本
+	// step10: transfer host module
+	moduleID := cls.GetClusterBasicSettings().GetModule().GetWorkerModuleID()
+	if moduleID != "" {
+		common.BuildTransferHostModuleStep(task, cls.BusinessID, cls.GetClusterBasicSettings().GetModule().
+			GetWorkerModuleID(), cls.GetClusterBasicSettings().GetModule().GetMasterModuleID())
+	}
+
+	// step11: 业务后置自定义流程: 支持标准运维任务 或者 后置脚本
 	if opt.NodeTemplate != nil && len(opt.NodeTemplate.UserScript) > 0 {
 		common.BuildJobExecuteScriptStep(task, common.JobExecParas{
 			ClusterID: cls.ClusterID,
