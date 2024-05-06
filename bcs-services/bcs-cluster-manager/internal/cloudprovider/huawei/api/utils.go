@@ -172,7 +172,7 @@ func GenerateCreateNodePoolRequest(group *proto.NodeGroup,
 		containerRuntime = group.NodeTemplate.Runtime.ContainerRuntime
 	}
 
-	if group.LaunchTemplate.KeyPair != nil {
+	if group.LaunchTemplate.KeyPair != nil && group.LaunchTemplate.KeyPair.KeyID != "" {
 		sshKey = group.LaunchTemplate.KeyPair.KeyID
 	} else if group.LaunchTemplate.InitLoginPassword != "" {
 		password, err = Crypt(group.LaunchTemplate.InitLoginPassword)
