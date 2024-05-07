@@ -77,6 +77,7 @@
   });
   const loading = ref(false);
   const isOpenFullScreen = ref(false);
+  const jumpSearchTime = ref('');
 
   const isDataEmpty = computed(() => !data.value.time.some((item) => item.count > 0));
 
@@ -214,6 +215,7 @@
         container: tooltipRef.value?.getDom(),
         enterable: true,
         customItems: (originalItems: any[]) => {
+          jumpSearchTime.value = originalItems[0].title.replace(/\//g, '-');
           originalItems.forEach((item) => {
             if (item.name === 'count') {
               item.name = t('总量');
@@ -233,6 +235,7 @@
     router.push({
       name: 'client-search',
       params: { appId: props.appId, bizId: props.bkBizId },
+      query: { pull_time: jumpSearchTime.value },
     });
   };
 </script>

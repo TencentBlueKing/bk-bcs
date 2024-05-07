@@ -773,4 +773,5 @@ export default {
   前往创建: 'Go to create',
   命令行工具: 'Command line tool',
   '确认删除该常用查询?': 'Confirm to delete the common query?',
+  配置拉取时间范围: 'Set the pull time range',
 };

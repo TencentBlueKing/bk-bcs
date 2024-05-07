@@ -127,7 +127,6 @@
   }>();
   const emits = defineEmits(['close']);
 
-  const isShowSlider = ref(false);
   const initDateTime = ref([dayjs(new Date()).format('YYYY-MM-DD'), dayjs(new Date()).format('YYYY-MM-DD')]);
   const searchStr = ref('');
   const tableData = ref();
@@ -144,7 +143,6 @@
     () => props.show,
     (val) => {
       if (val) {
-        isShowSlider.value = true;
         loadTableData();
       }
     },
@@ -185,6 +183,7 @@
   };
 
   const linkToApp = (versionId: number) => {
+    emits('close');
     router.push({ name: 'service-config', params: { spaceId: props.bkBizId, appId: props.appId, versionId } });
   };
 

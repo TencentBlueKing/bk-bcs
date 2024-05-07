@@ -62,7 +62,6 @@
         showMarkers: false,
         showContent: true,
         customItems: (originalItems: any[]) => {
-          console.log(originalItems);
           emits('update', originalItems[0].title);
           originalItems[0].name = t('客户端数量');
           originalItems[0].marker = false;
