@@ -180,7 +180,7 @@ func VaultServer() VaultServerSetting {
 
 	s, ok := rt.settings.(*VaultServerSetting)
 	if !ok {
-		logs.ErrorDepthf(1, "current %s service can not get data service setting", ServiceName())
+		logs.ErrorDepthf(1, "current %s service can not get vault server setting", ServiceName())
 		return VaultServerSetting{}
 	}
 
@@ -199,7 +199,7 @@ func VaultSidecar() VaultSidecarSetting {
 
 	s, ok := rt.settings.(*VaultSidecarSetting)
 	if !ok {
-		logs.ErrorDepthf(1, "current %s service can not get data service setting", ServiceName())
+		logs.ErrorDepthf(1, "current %s service can not get vault sidecar setting", ServiceName())
 		return VaultSidecarSetting{}
 	}
 
