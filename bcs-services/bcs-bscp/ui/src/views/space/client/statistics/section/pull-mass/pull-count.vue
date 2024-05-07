@@ -96,7 +96,13 @@
     () => searchQuery.value,
     async () => {
       await loadChartData();
-      dualAxes!.changeData([data.value.time, data.value.time_and_type]);
+      if (!isDataEmpty.value) {
+        if (dualAxes) {
+          dualAxes.changeData([data.value.time, data.value.time_and_type]);
+        } else {
+          initChart();
+        }
+      }
     },
     { deep: true },
   );
@@ -237,7 +243,7 @@
       params: { appId: props.appId, bizId: props.bkBizId },
       query: { pull_time: jumpSearchTime.value },
     });
-    window.open(`${routeData.href}`, '_blank');
+    window.open(routeData.href, '_blank');
   };
 </script>
 

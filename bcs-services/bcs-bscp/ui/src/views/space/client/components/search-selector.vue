@@ -300,19 +300,6 @@
       (item) => item.key === parentSelecte.value?.value && item.key !== 'label',
     );
     if (index > -1) handleConditionClose(index);
-    // 标签项不符合输入规则清空
-    if (parentSelecte.value?.value === 'label') {
-      const [labelKey, labelValue] = conditionValue[1].split('=', 2);
-      if (!labelKey || !labelValue) {
-        searchStr.value = '';
-        return;
-      }
-      // 重复的标签项key去重
-      const index = searchConditionList.value.findIndex(
-        (item) => item.key === 'label' && item.value.split('=', 2)[0] === labelKey,
-      );
-      if (index > -1) handleConditionClose(index);
-    }
     searchConditionList.value.push({
       key: parentSelecte.value!.value,
       value: conditionValue[1],
@@ -428,7 +415,7 @@
     searchConditionList.value.forEach((item) => {
       if (item.key === 'label') {
         const labelValue = item.value.split('=', 2);
-        label[labelValue[0]] = labelValue[1];
+        label[labelValue[0]] = labelValue[1] || '';
         query[item.key] = label;
       } else if (item.key === 'online_status' || item.key === 'release_change_status') {
         if (query[item.key]) {

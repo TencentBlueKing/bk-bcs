@@ -295,7 +295,7 @@
       name: 'client-search',
       params: { appId: props.appId, bizId: props.bkBizId },
     });
-    window.open(`${routeData.href}`, '_blank');
+    window.open(routeData.href, '_blank');
   };
 
   const refresh = async () => {

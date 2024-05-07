@@ -170,7 +170,7 @@
       params: { appId: props.appId, bizId: props.bkBizId },
       query: { release_change_status: jumpStatus.value },
     });
-    window.open(`${routeData.href}`, '_blank');
+    window.open(routeData.href, '_blank');
   };
 </script>
 

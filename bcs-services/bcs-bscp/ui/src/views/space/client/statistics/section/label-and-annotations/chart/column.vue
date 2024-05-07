@@ -1,6 +1,6 @@
 <template>
   <div ref="canvasRef" class="canvas-wrap">
-    <Tooltip ref="tooltipRef" @jump="emits('jump')" />
+    <Tooltip ref="tooltipRef" @jump="emits('jump', labelValue)" />
   </div>
 </template>
 
@@ -21,6 +21,7 @@
 
   const canvasRef = ref<HTMLElement>();
   const tooltipRef = ref();
+  const labelValue = ref('');
   let columnPlot: Column;
 
   watch(
@@ -73,7 +74,7 @@
         container: tooltipRef.value?.getDom(),
         enterable: true,
         customItems: (originalItems: any[]) => {
-          // process originalItems,
+          labelValue.value = originalItems[0].title;
           originalItems[0].name = t('客户端数量');
           return originalItems;
         },
