@@ -2,6 +2,7 @@
   <bk-dialog
     :is-show="isShow"
     :title="isCreate ? $t('设为常用') : $t('重命名')"
+    ext-cls="set-commonly-dialog"
     theme="primary"
     confirm-text="保存"
     @closed="handleClose"
@@ -19,6 +20,7 @@
   const props = defineProps<{
     isShow: boolean;
     isCreate: boolean;
+    name?: string;
   }>();
   const emits = defineEmits(['close', 'update', 'create']);
 
@@ -30,7 +32,9 @@
   watch(
     () => props.isShow,
     (val) => {
-      if (val) formData.value.name = '';
+      if (val) {
+        formData.value.name = props.isCreate ? '' : props.name || '';
+      }
     },
   );
 
@@ -45,4 +49,15 @@
   };
 </script>
 
-<style scoped lang="scss"></style>
+<style lang="scss">
+  .set-commonly-dialog {
+    .bk-modal-body .bk-modal-content {
+      min-height: 100px !important;
+      display: flex;
+      align-items: center;
+      .bk-input--text {
+        width: 274px;
+      }
+    }
+  }
+</style>

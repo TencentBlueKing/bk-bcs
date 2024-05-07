@@ -34,7 +34,7 @@
         </Card>
       </div>
     </Teleport>
-    <div>
+    <div class="time-list">
       <Card v-for="item in pullTime" :key="item.key" :title="item.name" :width="207" :height="128">
         <div class="time-info">
           <span v-if="item.value">
@@ -49,7 +49,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref, watch, onMounted, nextTick } from 'vue';
+  import { ref, watch, onMounted } from 'vue';
   import { Column, Pie } from '@antv/g2plot';
   import Card from '../../components/card.vue';
   import Tooltip from '../../components/tooltip.vue';
@@ -235,7 +235,6 @@
             },
           },
         },
-        top: true,
       },
       label: {
         // 可手动配置 label 数据标签位置
@@ -245,29 +244,25 @@
           fill: '#979BA5',
         },
       },
-      // tooltip: {
-      //   fields: ['value', 'count'],
-      //   showTitle: true,
-      //   title: 'release_change_failed_reason',
-      //   container: tooltipRef.value?.getDom(),
-      //   enterable: true,
-      //   customItems: (originalItems: any[]) => {
-      //     originalItems[0].name = t('客户端数量');
-      //     return originalItems;
-      //   },
-      // },
+      tooltip: {
+        fields: ['value', 'count'],
+        showTitle: false,
+        container: tooltipRef.value?.getDom(),
+        enterable: true,
+        customItems: (originalItems: any[]) => {
+          originalItems[0].name = originalItems[0].data.release_change_failed_reason;
+          return originalItems;
+        },
+      },
     });
     columnPlot!.render();
-    columnPlot.on(
-      'plot:click',
-      async (event: any) => {
-        selectFailedReason.value = event.data?.data.release_change_failed_reason;
-        if (!selectFailedReason.value) return;
-        isShowSpecificReason.value = true;
-        await loadPullFailedReason();
-        nextTick(() => initSpecificReasonChart());
-      },
-    );
+    columnPlot.on('plot:click', async (event: any) => {
+      selectFailedReason.value = event.data?.data.release_change_failed_reason;
+      if (!selectFailedReason.value) return;
+      isShowSpecificReason.value = true;
+      await loadPullFailedReason();
+      initSpecificReasonChart();
+    });
   };
 
   const initSpecificReasonChart = () => {
@@ -276,6 +271,7 @@
       angleField: 'count',
       colorField: 'release_change_failed_reason',
       padding: [20, 400, 60, 10],
+      interactions: [{ type: 'element-highlight' }],
       label: {
         type: 'inner',
         offset: '-30%',
@@ -325,6 +321,11 @@
       .loading-wrap {
         height: 100%;
       }
+    }
+    .time-list {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
     }
     .time-info {
       margin-left: 8px;

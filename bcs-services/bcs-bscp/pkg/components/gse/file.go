@@ -77,7 +77,7 @@ func CreateTransferFileTask(ctx context.Context, sourceAgentID, sourceContainerI
 
 	url := fmt.Sprintf("%s/api/v2/task/extensions/async_transfer_file", cc.FeedServer().GSE.Host)
 	authHeader := fmt.Sprintf("{\"bk_app_code\": \"%s\", \"bk_app_secret\": \"%s\"}",
-		cc.FeedServer().GSE.AppCode, cc.FeedServer().GSE.AppSecret)
+		cc.FeedServer().Esb.AppCode, cc.FeedServer().Esb.AppSecret)
 	resp, err := components.GetClient().R().
 		SetContext(ctx).
 		SetHeader("X-Bkapi-Authorization", authHeader).
@@ -164,7 +164,7 @@ func TransferFileResult(ctx context.Context, taskID string) (pbfs.AsyncDownloadS
 
 	url := fmt.Sprintf("%s/api/v2/task/extensions/get_transfer_file_result", cc.FeedServer().GSE.Host)
 	authHeader := fmt.Sprintf("{\"bk_app_code\": \"%s\", \"bk_app_secret\": \"%s\"}",
-		cc.FeedServer().GSE.AppCode, cc.FeedServer().GSE.AppSecret)
+		cc.FeedServer().Esb.AppCode, cc.FeedServer().Esb.AppSecret)
 	resp, err := components.GetClient().R().
 		SetContext(ctx).
 		SetHeader("X-Bkapi-Authorization", authHeader).
