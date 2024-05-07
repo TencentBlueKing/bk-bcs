@@ -695,7 +695,6 @@ func (cm ClientMode) String() string {
 
 // ClientMetricData feed-server 和 cache-service 通信的结构体
 type ClientMetricData struct {
-	AppID         uint32
 	MessagingType uint32
 	Payload       []byte
 }
