@@ -27,7 +27,7 @@ func init() {
 	pflag.String("tamplate", "./template/nginx-template.conf", "tamplate use for proxy configuration generation")
 	viper.BindEnv("tamplate") // nolint
 	pflag.String("generate_dir", "./generate/", "directory for configuration generating")
-	viper.BindEnv("generate_dir") // nolint
+	viper.BindEnv("generate_dir")       // nolint
 	viper.BindPFlags(pflag.CommandLine) // nolint
 }
 

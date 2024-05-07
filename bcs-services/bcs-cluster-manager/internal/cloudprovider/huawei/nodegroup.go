@@ -94,14 +94,14 @@ func (ng *NodeGroup) UpdateNodeGroup(group *proto.NodeGroup, opt *cloudprovider.
 
 	client, err := api.NewCceClient(&opt.CommonOption)
 	if err != nil {
-		blog.Errorf("UpdateNodeGroup[%s]: get cce client failed, %s", err.Error())
+		blog.Errorf("UpdateNodeGroup[]: get cce client failed, %s", err.Error())
 		return nil, err
 	}
 
 	// 获取节点池信息
 	rsp, err := client.GetClusterNodePool(cluster.SystemID, group.CloudNodeGroupID)
 	if err != nil {
-		blog.Errorf("GetClusterNodePool[%s]: get cluster nodePool failed, %s", err.Error())
+		blog.Errorf("GetClusterNodePool[]: get cluster nodePool failed, %s", err.Error())
 		return nil, err
 	}
 
@@ -134,7 +134,7 @@ func (ng *NodeGroup) GetNodesInGroupV2(group *proto.NodeGroup,
 
 	client, err := api.NewCceClient(opt)
 	if err != nil {
-		blog.Errorf("GetNodesInGroup[%s]: get cce client  failed, %s", err.Error())
+		blog.Errorf("GetNodesInGroup[]: get cce client  failed, %s", err.Error())
 		return nil, err
 	}
 
