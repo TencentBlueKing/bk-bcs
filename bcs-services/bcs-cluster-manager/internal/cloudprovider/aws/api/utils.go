@@ -17,6 +17,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"net"
 	"time"
 
@@ -158,7 +159,8 @@ func GetClusterKubeConfig(opt *cloudprovider.CommonOption, cluster *eks.Cluster)
 			{
 				Name: *cluster.Name,
 				Cluster: types.ClusterInfo{
-					Server:                   "https://" + *cluster.Endpoint,
+					//Server:                   "https://" + *cluster.Endpoint,
+					Server:                   *cluster.Endpoint,
 					CertificateAuthorityData: cert,
 				},
 			},
@@ -188,7 +190,8 @@ func GetClusterKubeConfig(opt *cloudprovider.CommonOption, cluster *eks.Cluster)
 		return "", fmt.Errorf("GetClusterKubeConfig marsh kubeconfig failed, %v", err)
 	}
 
-	return base64.StdEncoding.EncodeToString(configByte), nil
+	//return base64.StdEncoding.EncodeToString(configByte), nil
+	return encrypt.Encrypt(nil, string(configByte))
 }
 
 // MapToTaints converts a map of string-string to a slice of Taint

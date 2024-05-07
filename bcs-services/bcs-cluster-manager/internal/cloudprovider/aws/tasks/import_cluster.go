@@ -14,9 +14,9 @@ package tasks
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -79,12 +79,13 @@ func RegisterClusterKubeConfigTask(taskID string, stepName string) error {
 }
 
 func importClusterCredential(ctx context.Context, data *cloudprovider.CloudDependBasicInfo) error { // nolint
-	configByte, err := base64.StdEncoding.DecodeString(data.Cluster.KubeConfig)
+	//configByte, err := base64.StdEncoding.DecodeString(data.Cluster.KubeConfig)
+	configByte, err := encrypt.Decrypt(nil, data.Cluster.KubeConfig)
 	if err != nil {
 		return fmt.Errorf("failed to decode kubeconfig, %v", err)
 	}
 	typesConfig := &types.Config{}
-	err = json.Unmarshal(configByte, typesConfig)
+	err = json.Unmarshal([]byte(configByte), typesConfig)
 	if err != nil {
 		return fmt.Errorf("failed to unmarshal kubeconfig, %v", err)
 	}
@@ -149,10 +150,12 @@ func ImportClusterNodesTask(taskID string, stepName string) error {
 }
 
 func importClusterInstances(data *cloudprovider.CloudDependBasicInfo) error {
-	kubeConfigByte, err := base64.StdEncoding.DecodeString(data.Cluster.KubeConfig)
+	kubeConfig, err := encrypt.Decrypt(nil, data.Cluster.KubeConfig)
+	//kubeConfigByte, err := base64.StdEncoding.DecodeString(data.Cluster.KubeConfig)
 	if err != nil {
 		return fmt.Errorf("decode kube config failed: %v", err)
 	}
+	kubeConfigByte := []byte(kubeConfig)
 
 	config, err := clientcmd.RESTConfigFromKubeConfig(kubeConfigByte)
 	if err != nil {
