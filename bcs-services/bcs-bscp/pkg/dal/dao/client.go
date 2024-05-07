@@ -332,6 +332,35 @@ func (dao *clientDao) handleSearch(kit *kit.Kit, bizID, appID uint32, search *pb
 		conds = append(conds, q.Where(m.ID.In(cid...)))
 	}
 
+	// 处理拉取时间
+	if search.GetPullTime() != "" {
+		starTime, err := time.Parse("2006-01-02", search.GetPullTime())
+		if err != nil {
+			return nil, err
+		}
+		// 设置时分秒为 00:00:00
+		starTime = time.Date(starTime.Year(), starTime.Month(), starTime.Day(), 0, 0, 0, 0, starTime.UTC().Location())
+		endTime, err := time.Parse("2006-01-02", search.GetPullTime())
+		// 设置时分秒为 23:59:59
+		endTime = time.Date(endTime.Year(), endTime.Month(), endTime.Day(), 23, 59, 59, 0, endTime.UTC().Location())
+		if err != nil {
+			return nil, err
+		}
+		var clientEvent []struct {
+			ClientID uint32
+		}
+		err = ce.WithContext(kit.Ctx).Select(ce.ClientID).Where(ce.StartTime.Gte(starTime), ce.EndTime.Lte(endTime)).
+			Group(ce.ClientID).Scan(&clientEvent)
+		if err != nil {
+			return conds, err
+		}
+		cid := []uint32{}
+		for _, v := range clientEvent {
+			cid = append(cid, v.ClientID)
+		}
+		conds = append(conds, q.Where(m.ID.In(cid...)))
+	}
+
 	if len(search.GetReleaseChangeStatus()) > 0 {
 		conds = append(conds, q.Where(m.ReleaseChangeStatus.In(search.GetReleaseChangeStatus()...)))
 	}
