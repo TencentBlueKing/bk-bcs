@@ -104,7 +104,7 @@ export default defineComponent({
   setup(props, ctx) {
     const { value, clusterType, validateClusterId } = toRefs(props);
 
-    const normalStatusList = ['CONNECT-FAILURE', 'RUNNING'];
+    const normalStatusList = ['RUNNING'];
     const hoverClusterID = ref<string>();
 
     const {
