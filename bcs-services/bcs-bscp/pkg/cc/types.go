@@ -1052,6 +1052,14 @@ type Vault struct {
 	Address string `yaml:"address"`
 	// Token is used for accessing the Vault server
 	Token string `yaml:"token"`
+	// PluginDir is the directory where the Vault plugin is located
+	PluginDir string `yaml:"pluginDir"`
+	// UnsealKeys is used to unseal vault server
+	UnsealKeys []string `yaml:"unsealKeys"`
+	// SecretShares is the number of key shares to split the master key into
+	SecretShares int `yaml:"secretShares"`
+	// SecretThreshold is the number of key shares required to reconstruct the master key
+	SecretThreshold int `yaml:"secretThreshold"`
 }
 
 // validate Vault options

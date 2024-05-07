@@ -179,8 +179,8 @@ func (ds *configServer) listenAndServe() error {
 
 	}()
 
-	addr := tools.GetListenAddr(network.BindIP, int(network.HttpPort))
-	ipv6Addr := tools.GetListenAddr(network.BindIPv6, int(network.HttpPort))
+	addr := tools.GetListenAddr(network.BindIP, int(network.RpcPort))
+	ipv6Addr := tools.GetListenAddr(network.BindIPv6, int(network.RpcPort))
 	dualStackListener := listener.NewDualStackListener()
 	if err := dualStackListener.AddListenerWithAddr(addr); err != nil {
 		return err

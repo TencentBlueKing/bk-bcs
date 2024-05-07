@@ -46,7 +46,7 @@ func (so ServiceOption) Validate() error {
 		return errors.New("service name is empty")
 	}
 
-	if len(so.IP) == 0 || so.IP == "0.0.0.0" {
+	if len(so.IP) == 0 || so.IP == "0.0.0.0" || so.IP == "::" {
 		return errors.New("invalid service ip")
 	}
 
