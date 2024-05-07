@@ -107,11 +107,12 @@
   };
 
   const jumpToSearch = () => {
-    router.push({
+    const routeData = router.resolve({
       name: 'client-search',
       params: { appId: props.appId, bizId: props.bkBizId },
       query: { current_release_name: jumpVersionName.value },
     });
+    window.open(routeData.href, '_blank');
   };
 </script>
 

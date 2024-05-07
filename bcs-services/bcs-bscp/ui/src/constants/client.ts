@@ -57,6 +57,28 @@ export const CLIENT_SEARCH_DATA = [
     value: 'client_version',
   },
   {
+    name: localT('客户端组件类型'),
+    value: 'client_type',
+    children: [
+      {
+        name: `SideCar ${localT('客户端')}`,
+        value: 'sidecar',
+      },
+      {
+        name: `SDK ${localT('客户端')}`,
+        value: 'sdk',
+      },
+      {
+        name: localT('主机插件客户端'),
+        value: 'agent',
+      },
+      {
+        name: `CLI ${localT('客户端')}`,
+        value: 'command',
+      },
+    ],
+  },
+  {
     name: localT('配置拉取时间范围'),
     value: 'pull_time',
   },
@@ -100,6 +122,24 @@ export const CLIENT_STATISTICS_SEARCH_DATA = [
   {
     name: localT('客户端组件类型'),
     value: 'client_type',
+    children: [
+      {
+        name: `SideCar ${localT('客户端')}`,
+        value: 'sidecar',
+      },
+      {
+        name: `SDK ${localT('客户端')}`,
+        value: 'sdk',
+      },
+      {
+        name: localT('主机插件客户端'),
+        value: 'agent',
+      },
+      {
+        name: `CLI ${localT('客户端')}`,
+        value: 'command',
+      },
+    ],
   },
 ];
 

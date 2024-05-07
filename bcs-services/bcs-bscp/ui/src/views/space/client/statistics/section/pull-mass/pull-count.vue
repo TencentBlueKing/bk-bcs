@@ -232,11 +232,12 @@
   };
 
   const jumpToSearch = () => {
-    router.push({
+    const routeData = router.resolve({
       name: 'client-search',
       params: { appId: props.appId, bizId: props.bkBizId },
       query: { pull_time: jumpSearchTime.value },
     });
+    window.open(`${routeData.href}`, '_blank');
   };
 </script>
 

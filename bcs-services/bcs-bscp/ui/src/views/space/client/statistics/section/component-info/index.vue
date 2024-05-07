@@ -181,7 +181,7 @@
         }
         return {
           ...item,
-          client_type: name,
+          name,
         };
       });
       sunburstData.value.children = convertToTree(data.value);
@@ -209,16 +209,17 @@
   const convertToTree = (data: IVersionDistributionItem[]) => {
     const tree: IVersionDistributionPieItem[] = [];
     data.forEach((item) => {
-      const { client_type, client_version, value, percent } = item;
-      let typeNode = tree.find((node) => node.name === client_type);
+      const { client_type, client_version, value, percent, name } = item;
+      let typeNode = tree.find((node) => node.name === name);
       if (!typeNode) {
-        typeNode = { name: client_type, children: [], percent: 0, value: 0 };
+        typeNode = { name: name!, children: [], percent: 0, value: 0, client_type };
         tree.push(typeNode);
       }
       const versionNode: IVersionDistributionPieItem = {
         name: client_version,
         percent,
         value,
+        client_type,
       };
       typeNode.children?.push(versionNode);
       typeNode.percent += percent;
