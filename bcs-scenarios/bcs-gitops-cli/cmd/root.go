@@ -15,7 +15,10 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"path"
 
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -28,8 +31,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-cli/pkg/version"
 )
 
-const (
-	defaultCfgFile = "/root/.bcs/config.yaml"
+var (
+	defaultCfgFile = "./.bcs/config.yaml"
 )
 
 func ensureConfig() {
@@ -44,6 +47,9 @@ func ensureConfig() {
 		Verbosity:       2,
 		StdErrThreshold: "2",
 	})
+	if options.LogV != 0 {
+		blog.SetV(int32(options.LogV))
+	}
 	options.Parse(options.ConfigFile)
 }
 
@@ -80,6 +86,12 @@ func NewRootCommand() *cobra.Command {
 	}
 	rootCmd.AddCommand(argoCmd)
 
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		panic(errors.Wrapf(err, "get user home directory failed"))
+	} else {
+		defaultCfgFile = path.Join(homeDir, defaultCfgFile)
+	}
 	rootCmd.PersistentFlags().StringVar(&options.ConfigFile, "bcscfg", defaultCfgFile,
 		"Config file. Example: '{\"server\": \"bcs-api.gateway.com\", \"token\": \"\"}'")
 	rootCmd.CompletionOptions.DisableDefaultCmd = true

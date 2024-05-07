@@ -96,6 +96,7 @@ func (s *Service) Handshake(ctx context.Context, hm *pbfs.HandshakeMessage) (*pb
 				Root: decorator.Root(),
 				Url:  decorator.Url(),
 			},
+			EnableAsyncDownload: cc.FeedServer().GSE.Enabled,
 		},
 	}
 
@@ -624,9 +625,8 @@ func (s *Service) AsyncDownload(ctx context.Context, req *pbfs.AsyncDownloadReq)
 	}
 
 	gseConf := cc.FeedServer().GSE
-	if gseConf.NodeAgentID == "" && (gseConf.ClusterID == "" || gseConf.PodID == "" || gseConf.ContainerName == "") {
-		logs.Warnf("")
-		return nil, status.Error(codes.Internal, "server cluster_id, pod_id and container_name is required")
+	if !gseConf.Enabled {
+		return nil, status.Error(codes.FailedPrecondition, "p2p download was disabled in server")
 	}
 
 	// 2. 获取服务端 agent_id 和 container_id

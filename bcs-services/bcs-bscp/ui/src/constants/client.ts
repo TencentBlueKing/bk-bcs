@@ -47,7 +47,7 @@ export const CLIENT_SEARCH_DATA = [
         value: 'online',
       },
       {
-        name: localT('未在线'),
+        name: localT('离线'),
         value: 'offline',
       },
     ],

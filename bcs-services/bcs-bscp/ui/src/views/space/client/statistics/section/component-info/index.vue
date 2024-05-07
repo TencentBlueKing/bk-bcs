@@ -1,46 +1,48 @@
 <template>
-  <SectionTitle :title="t('客户端组件信息统计')" />
-  <div class="content-wrap">
-    <div class="left">
-      <Teleport :disabled="!isOpenFullScreen" to="body">
-        <div ref="containerRef" :class="{ fullscreen: isOpenFullScreen }">
-          <Card :title="t('组件版本分布')" :height="416">
-            <template #operation>
-              <OperationBtn
-                :is-open-full-screen="isOpenFullScreen"
-                @refresh="loadChartData"
-                @toggle-full-screen="isOpenFullScreen = !isOpenFullScreen" />
-            </template>
-            <template #head-suffix>
-              <TriggerBtn v-model:currentType="currentType" style="margin-left: 16px" />
-            </template>
-            <bk-loading class="loading-wrap" :loading="loading">
-              <component v-if="data?.length" :is="currentComponent" :data="needDataType" />
-              <bk-exception
-                v-else
-                class="exception-wrap-item exception-part"
-                type="empty"
-                scene="part"
-                :description="t('暂无数据')">
-                <template #type>
-                  <span class="bk-bscp-icon icon-bar-chart exception-icon" />
-                </template>
-              </bk-exception>
-            </bk-loading>
-          </Card>
-        </div>
-      </Teleport>
-    </div>
-    <div class="right">
-      <Card v-for="item in resourceData" :key="item.name" :title="item.name" :width="207" :height="128">
-        <div class="resource-info">
-          <span v-if="item.value">
-            <span class="time">{{ item.key.includes('cpu') ? item.value : Math.round(item.value) }}</span>
-            <span class="unit">{{ item.unit }}</span>
-          </span>
-          <span v-else class="empty">{{ t('暂无数据') }}</span>
-        </div>
-      </Card>
+  <div>
+    <SectionTitle :title="t('客户端组件信息统计')" />
+    <div class="content-wrap">
+      <div class="left">
+        <Teleport :disabled="!isOpenFullScreen" to="body">
+          <div ref="containerRef" :class="{ fullscreen: isOpenFullScreen }">
+            <Card :title="t('组件版本分布')" :height="416">
+              <template #operation>
+                <OperationBtn
+                  :is-open-full-screen="isOpenFullScreen"
+                  @refresh="loadChartData"
+                  @toggle-full-screen="isOpenFullScreen = !isOpenFullScreen" />
+              </template>
+              <template #head-suffix>
+                <TriggerBtn v-model:currentType="currentType" style="margin-left: 16px" />
+              </template>
+              <bk-loading class="loading-wrap" :loading="loading">
+                <component v-if="data?.length" :is="currentComponent" :data="needDataType" />
+                <bk-exception
+                  v-else
+                  class="exception-wrap-item exception-part"
+                  type="empty"
+                  scene="part"
+                  :description="t('暂无数据')">
+                  <template #type>
+                    <span class="bk-bscp-icon icon-bar-chart exception-icon" />
+                  </template>
+                </bk-exception>
+              </bk-loading>
+            </Card>
+          </div>
+        </Teleport>
+      </div>
+      <div class="right">
+        <Card v-for="item in resourceData" :key="item.name" :title="item.name" :width="207" :height="128">
+          <div class="resource-info">
+            <span v-if="item.value">
+              <span class="time">{{ item.key.includes('cpu') ? item.value : Math.round(item.value) }}</span>
+              <span class="unit">{{ item.unit }}</span>
+            </span>
+            <span v-else class="empty">{{ t('暂无数据') }}</span>
+          </div>
+        </Card>
+      </div>
     </div>
   </div>
 </template>
@@ -257,6 +259,7 @@
     .right {
       display: flex;
       justify-content: space-between;
+      align-content: space-between;
       flex-wrap: wrap;
       width: 430px;
       .resource-info {

@@ -186,3 +186,22 @@ func VaultServer() VaultServerSetting {
 
 	return *s
 }
+
+// VaultSidecar return vault sidecar service Setting.
+func VaultSidecar() VaultSidecarSetting {
+	rt.lock.Lock()
+	defer rt.lock.Unlock()
+
+	if !rt.Ready() {
+		logs.ErrorDepthf(1, "runtime not ready, return empty data service setting")
+		return VaultSidecarSetting{}
+	}
+
+	s, ok := rt.settings.(*VaultSidecarSetting)
+	if !ok {
+		logs.ErrorDepthf(1, "current %s service can not get data service setting", ServiceName())
+		return VaultSidecarSetting{}
+	}
+
+	return *s
+}
