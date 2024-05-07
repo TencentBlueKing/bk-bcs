@@ -395,6 +395,12 @@
           a {
             color: #96a2b9;
           }
+          &:hover {
+            color: #c2cee5;
+            a {
+              color: #c2cee5;
+            }
+          }
           &.actived {
             color: #ffffff;
             a {
@@ -620,7 +626,7 @@
       min-width: 102px;
       height: 40px;
       line-height: 40px;
-      padding:0 16px;
+      padding: 0 16px;
       font-size: 14px;
       a {
         color: #96a2b9;

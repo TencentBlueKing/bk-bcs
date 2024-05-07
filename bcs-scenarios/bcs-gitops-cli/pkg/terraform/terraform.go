@@ -23,7 +23,6 @@ import (
 	"time"
 
 	"github.com/fatih/color"
-	"gopkg.in/yaml.v3"
 	"k8s.io/apimachinery/pkg/runtime"
 	k8sjson "k8s.io/apimachinery/pkg/runtime/serializer/json"
 
@@ -116,19 +115,7 @@ func (h *Handler) List(ctx context.Context, projects *[]string) {
 
 // Apply terraform with json or yaml
 func (h *Handler) Apply(ctx context.Context, body []byte) {
-	var jsonData map[string]interface{}
-	var yamlData map[string]interface{}
-	jsonErr := json.Unmarshal(body, &jsonData)
-	yamlErr := yaml.Unmarshal(body, &yamlData)
-	if jsonErr != nil && yamlErr != nil {
-		utils.ExitError("request body not json or yaml type")
-	}
-	if yamlErr == nil {
-		var err error
-		if body, err = json.Marshal(yamlData); err != nil {
-			utils.ExitError(fmt.Sprintf("yaml to json failed: %s", err.Error()))
-		}
-	}
+	body = utils.CheckStringJsonOrYaml(body)
 	terraform := &terraformextensionsv1.Terraform{}
 	if err := json.Unmarshal(body, terraform); err != nil {
 		utils.ExitError(fmt.Sprintf("json unmarshal failed: %s", err.Error()))

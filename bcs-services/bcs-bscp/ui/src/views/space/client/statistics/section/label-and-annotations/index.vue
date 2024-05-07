@@ -2,9 +2,10 @@
   <div>
     <SectionTitle :title="$t('客户端标签/附加信息分布')">
       <template #suffix>
+        <div class="line"></div>
         <bk-select
           v-model="selectedLabel"
-          :popover-options="{ theme: 'light bk-select-popover add-chart-wrap' }"
+          :popover-options="{ theme: 'light bk-select-popover add-chart-popover', placement: 'bottom-start' }"
           :popover-min-width="240"
           :filterable="false"
           multiple>
@@ -178,13 +179,16 @@
 </script>
 
 <style scoped lang="scss">
+  .line {
+    width: 1px;
+    height: 16px;
+    background-color: #dcdee5;
+    margin: 0 16px;
+  }
   .add-chart-wrap {
     display: flex;
     align-items: center;
     height: 16px;
-    margin-left: 16px;
-    padding: 0 16px;
-    border-left: 1px solid #dcdee5;
     cursor: pointer;
     .add-icon {
       border-radius: 50%;

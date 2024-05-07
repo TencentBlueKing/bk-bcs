@@ -137,14 +137,14 @@ type DBConfig struct {
 	LimitQPS int64  `json:"limitQps"`
 }
 
-// MetricConfig defines the service monitor info
-type MetricConfig struct {
-	AppMetricNamespace string `json:"appMetricNamespace"`
-	AppMetricName      string `json:"appMetricName"`
-}
-
 // MonitorConfig monitor server info
 type MonitorConfig struct {
+	Address string `json:"address"`
+	Port    string `json:"port"`
+}
+
+// AnalysisServer defines the configuration of analysis server
+type AnalysisServer struct {
 	Address string `json:"address"`
 	Port    string `json:"port"`
 }

@@ -65,7 +65,7 @@
           return originalItems;
         },
       },
-      interactions: [{ type: 'element-active' }],
+      interactions: [{ type: 'element-highlight' }],
       legend: {
         position: 'right',
         offsetX: -200,

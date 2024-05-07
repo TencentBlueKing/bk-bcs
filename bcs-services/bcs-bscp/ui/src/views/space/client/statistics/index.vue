@@ -45,6 +45,9 @@
       padding: 24px 0;
     }
   }
+  .management-data-container > div {
+    padding-bottom: 24px;
+  }
 </style>
 
 <style>

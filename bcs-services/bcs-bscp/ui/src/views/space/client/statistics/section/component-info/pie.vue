@@ -43,6 +43,7 @@
     piePlot = new Sunburst(canvasRef.value!, {
       data: props.data,
       color: ['#2C2599', '#FFA66B', '#85CCA8', '#3E96C2'],
+      interactions: [{ type: 'element-highlight' }],
       label: {
         content: ({ data }) => `${(data.percent * 100).toFixed(1)}%`,
         style: {

@@ -1,7 +1,10 @@
 <template>
   <div class="g2-tooltip" ref="tooltipRef">
     <!-- 标题容器，会自己填充 -->
-    <div class="g2-tooltip-title"></div>
+    <div class="g2-tooltip-title">
+    </div>
+    <slot name="title" />
+
     <!-- 列表容器，会自己填充 -->
     <ul class="g2-tooltip-list"></ul>
     <!-- 自定义尾部-->

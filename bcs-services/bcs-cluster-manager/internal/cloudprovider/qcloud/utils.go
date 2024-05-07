@@ -482,8 +482,11 @@ func (ic *ImportClusterTaskOption) BuildRegisterClusterKubeConfigStep(task *prot
 
 // DeleteClusterTaskOption 删除集群
 type DeleteClusterTaskOption struct {
-	Cluster           *proto.Cluster
-	DeleteMode        string
+	// Cluster cluster
+	Cluster *proto.Cluster
+	// DeleteMode delete mode
+	DeleteMode string
+	// LastClusterStatus last cluster status
 	LastClusterStatus string
 }
 

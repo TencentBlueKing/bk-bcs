@@ -142,7 +142,7 @@
         },
         autoRotate: false,
       },
-      interactions: [{ type: 'element-active' }],
+      interactions: [{ type: 'element-highlight' }],
       legend: {
         position: 'bottom',
       },

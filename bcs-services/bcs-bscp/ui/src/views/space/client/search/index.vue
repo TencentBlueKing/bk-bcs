@@ -10,21 +10,21 @@
         <bk-table
           :data="tableData"
           :border="['outer', 'row']"
+          class="client-search-table"
           :remote-pagination="true"
           :pagination="pagination"
           :key="appId"
           :checked="selectedClient"
           :is-row-select-enable="isRowSelectEnable"
+          :settings="settings"
           show-overflow-tooltip
           @page-limit-change="handlePageLimitChange"
           @page-value-change="loadList"
           @column-filter="handleFilter">
           <!-- <bk-table-column type="selection" :min-width="40" :width="40"> </bk-table-column> -->
-          <bk-table-column label="UID" :width="254" prop="attachment.uid"></bk-table-column>
+          <bk-table-column label="UID" fixed="left" :width="254" prop="attachment.uid"></bk-table-column>
           <bk-table-column label="IP" :width="120" prop="spec.ip"></bk-table-column>
-          <bk-table-column
-            :label="t('客户端标签')"
-            :min-width="296">
+          <bk-table-column :label="t('客户端标签')" :min-width="296">
             <template #default="{ row }">
               <div v-if="row.spec && row.labels.length" class="labels">
                 <span v-for="(label, index) in row.labels" :key="index">
@@ -45,7 +45,7 @@
                 v-if="row.spec && row.spec.current_release_id"
                 class="current-version"
                 @click="linkToApp(row.spec.current_release_id)">
-                <Share fill="#979BA5" />
+                <Share class="icon" />
                 <span class="text">{{ row.spec.current_release_name }}</span>
               </div>
               <span v-else>--</span>
@@ -101,14 +101,30 @@
               </span>
             </template>
           </bk-table-column>
-          <bk-table-column :label="t('CPU资源占用(当前/最大)')" :width="174">
+          <bk-table-column
+            :label="
+              () =>
+                h('div', [
+                  h('span', t('CPU资源占用')),
+                  h('span', { style: 'color: #979BA5; margin-left: 4px' }, t('(当前/最大)')),
+                ])
+            "
+            :width="174">
             <template #default="{ row }">
               <span v-if="row.spec">
                 {{ showResourse(row.spec.resource).cpuResourse }}
               </span>
             </template>
           </bk-table-column>
-          <bk-table-column :label="t('内容资源占用(当前/最大)')" :width="170">
+          <bk-table-column
+            :label="
+              () =>
+                h('div', [
+                  h('span', t('内存资源占用')),
+                  h('span', { style: 'color: #979BA5; margin-left: 4px' }, t('(当前/最大)')),
+                ])
+            "
+            :width="170">
             <template #default="{ row }">
               <span v-if="row.spec">
                 {{ showResourse(row.spec.resource).memoryResource }}
@@ -152,7 +168,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref, watch } from 'vue';
+  import { ref, watch, h } from 'vue';
   import { useRoute, useRouter } from 'vue-router';
   import { Share, InfoLine } from 'bkui-vue/lib/icon';
   import { storeToRefs } from 'pinia';
@@ -251,6 +267,75 @@
   const isRowSelectEnable = ({ row, isCheckAll }: any) =>
     isCheckAll || !(row.spec && row.spec.release_change_status !== 'Failed');
 
+  const settings = {
+    trigger: 'click',
+    extCls: 'settings-custom-class',
+    fields: [
+      {
+        name: 'UID',
+        id: 'uid',
+      },
+      {
+        name: 'IP',
+        id: 'ip',
+      },
+      {
+        name: t('客户端标签'),
+        id: 'label',
+      },
+      {
+        name: t('当前配置版本'),
+        id: 'current-version',
+      },
+      {
+        name: t('最近一次拉取配置状态'),
+        id: 'pull-status',
+      },
+      {
+        name: t('在线状态'),
+        id: 'online-status',
+      },
+      {
+        name: t('首次连接时间'),
+        id: 'first-connect-time',
+      },
+      {
+        name: t('最后心跳时间'),
+        id: 'last-heartbeat-time',
+      },
+      {
+        name: t('CPU资源占用'),
+        id: 'cpu-resource',
+      },
+      {
+        name: t('内存资源占用'),
+        id: 'memory-resource',
+      },
+      {
+        name: t('客户端组件类型'),
+        id: 'client-type',
+      },
+      {
+        name: t('客户端组件版本'),
+        id: 'client-version',
+      },
+    ],
+    checked: [
+      'uid',
+      'ip',
+      'label',
+      'current-version',
+      'pull-status',
+      'online-status',
+      'first-connect-time',
+      'last-heartbeat-time',
+      'cpu-resource',
+      'memory-resource',
+      'client-type',
+      'client-version',
+    ],
+  };
+
   // const tableTips = {
   //   clientTag: '客户端标签与服务分组配合使用实现服务配置灰度发布场景',
   //   information: '主要用于记录客户端非标识性元数据，例如客户端用途等附加信息（标识性元数据使用客户端标签）',
@@ -332,9 +417,20 @@
 
 <style scoped lang="scss">
   .header {
+    position: relative;
     height: 120px;
     padding: 40px 120px 0 40px;
-    background: #eff5ff;
+    background-image: linear-gradient(-82deg, #e8f0ff 10%, #f0f5ff 93%);
+    box-shadow: 0 2px 4px 0 #1919290d;
+    &::after {
+      position: absolute;
+      right: 0;
+      top: 10px;
+      content: '';
+      width: 80px;
+      height: 120px;
+      background-image: url('../../../../assets/client-head.png');
+    }
   }
   .content {
     padding: 24px;
@@ -354,6 +450,12 @@
     cursor: pointer;
     .text {
       margin-left: 4px;
+    }
+    .icon {
+      color: #979ba5;
+    }
+    &:hover {
+      color: #3a84ff;
     }
   }
   .release_change_status {
@@ -400,6 +502,13 @@
       &.Offline {
         background: #979ba5;
         border: 3px solid #eeeef0;
+      }
+    }
+  }
+  .client-search-table {
+    :deep(.bk-table-body) {
+      table tbody tr td .cell {
+        display: flex !important;
       }
     }
   }

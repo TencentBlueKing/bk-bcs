@@ -18,26 +18,24 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
-	"net"
 	"net/http"
 	"os"
 	"path"
-	"strconv"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/hashicorp/vault/api"
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v3"
 	"k8s.io/klog/v2"
+
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
-var (
-	port     = 8202
-	bindAddr = "0.0.0.0"
-	confPath string
-)
+// SysOpt is the system option
+var SysOpt *Option
 
 func serverCmd() *cobra.Command {
 	cmd := &cobra.Command{
@@ -51,22 +49,16 @@ func serverCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&bindAddr, "bind-addr", "0.0.0.0", "the IP address on which to listen")
-	cmd.Flags().IntVar(&port, "port", 8202, "listen http/metrics port")
-	cmd.Flags().StringVar(&confPath, "config", "", "config path")
 	return cmd
 }
 
-func getPort() string {
-	p := os.Getenv("PORT")
-	if p != "" {
-		return p
+func runServerCmd() error {
+
+	// load settings from config file.
+	if err := cc.LoadSettings(SysOpt.Sys); err != nil {
+		return fmt.Errorf("load settings from config files failed, err: %v", err)
 	}
 
-	return strconv.Itoa(port)
-}
-
-func runServerCmd() error {
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
@@ -78,16 +70,7 @@ func runServerCmd() error {
 	r.Get("/-/ready", ReadyHandler)
 	r.Get("/healthz", HealthzHandler)
 
-	confIn, err := os.ReadFile(confPath)
-	if err != nil {
-		return err
-	}
-	conf := vaultConf{}
-	if e := yaml.Unmarshal(confIn, &conf); e != nil {
-		return e
-	}
-
-	plugins, err := getPlugins(conf)
+	plugins, err := getPlugins()
 	if err != nil {
 		return err
 	}
@@ -105,7 +88,7 @@ func runServerCmd() error {
 			}
 
 			klog.InfoS("try unseal vault")
-			if err := tryUnseal(conf); err != nil {
+			if err := tryUnseal(); err != nil {
 				klog.Warningf("unseal vault failed, will try later, err: %s", err)
 				continue
 			}
@@ -128,7 +111,7 @@ func runServerCmd() error {
 				continue
 			}
 
-			if err := tryRegisterPlugin(conf, plugins); err != nil {
+			if err := tryRegisterPlugin(plugins); err != nil {
 				klog.Warningf("register failed, err: %s", err)
 				continue
 			}
@@ -138,9 +121,23 @@ func runServerCmd() error {
 		}
 	}()
 
-	addr := net.JoinHostPort(bindAddr, getPort())
+	network := cc.VaultServer().Network
+	addr := tools.GetListenAddr(network.BindIP, int(network.HttpPort))
+	ipv6Addr := tools.GetListenAddr(network.BindIPv6, int(network.HttpPort))
+	dualStackListener := listener.NewDualStackListener()
+	if e := dualStackListener.AddListenerWithAddr(addr); e != nil {
+		return e
+	}
+
+	if network.BindIPv6 != "" && network.BindIPv6 != network.BindIP {
+		if e := dualStackListener.AddListenerWithAddr(ipv6Addr); e != nil {
+			return e
+		}
+		klog.Infof("api serve dualStackListener with ipv6: %s", ipv6Addr)
+	}
+
 	klog.InfoS("listening for requests and metrics", "addr", addr)
-	return http.ListenAndServe(addr, r)
+	return http.Serve(dualStackListener, r)
 }
 
 // HealthzHandler Healthz 接口
@@ -193,7 +190,8 @@ func ReadyHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // tryUnseal auto unseal by keys
-func tryUnseal(conf vaultConf) error {
+func tryUnseal() error {
+	conf := cc.VaultSidecar().Vault
 	c, err := api.NewClient(api.DefaultConfig())
 	if err != nil {
 		return err
@@ -237,7 +235,8 @@ func tryUnseal(conf vaultConf) error {
 	return fmt.Errorf("unseal with all keys failed")
 }
 
-func getPlugins(conf vaultConf) (map[string]string, error) {
+func getPlugins() (map[string]string, error) {
+	conf := cc.VaultSidecar().Vault
 	dir, err := os.ReadDir(conf.PluginDir)
 	if err != nil {
 		return nil, err
@@ -271,12 +270,13 @@ func getPlugins(conf vaultConf) (map[string]string, error) {
 }
 
 // tryRegisterPlugin auto register plugin in pluginDir
-func tryRegisterPlugin(conf vaultConf, plugins map[string]string) error {
+func tryRegisterPlugin(plugins map[string]string) error {
+	conf := cc.VaultSidecar().Vault
 	c, err := api.NewClient(api.DefaultConfig())
 	if err != nil {
 		return err
 	}
-	c.SetToken(conf.RootToken)
+	c.SetToken(conf.Token)
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
@@ -294,4 +294,13 @@ func tryRegisterPlugin(conf vaultConf, plugins map[string]string) error {
 	}
 
 	return nil
+}
+
+func init() {
+
+	rootCmd.CompletionOptions.DisableDefaultCmd = true
+
+	SysOpt = InitOptions()
+
+	cc.InitService(cc.VaultSidecarName)
 }

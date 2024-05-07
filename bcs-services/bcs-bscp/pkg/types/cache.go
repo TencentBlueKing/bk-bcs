@@ -220,6 +220,7 @@ func ReleaseCICaches(rs []*table.ReleasedConfigItem, releaseName string) []*Rele
 				ContentID: one.CommitSpec.ContentID,
 				Signature: one.CommitSpec.Content.Signature,
 				ByteSize:  one.CommitSpec.Content.ByteSize,
+				Md5:       one.CommitSpec.Content.Md5,
 			},
 			ConfigItemSpec: &ConfigItemSpecCache{
 				Name:     one.ConfigItemSpec.Name,
