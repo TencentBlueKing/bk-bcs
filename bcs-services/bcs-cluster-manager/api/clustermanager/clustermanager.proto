@@ -3246,9 +3246,7 @@ message NodeGroup {
   string clusterID = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "clusterID", 
     description: "节点组所关联的集群，该ID为BCS集群ID"
-  },
-  (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
-  ];
+  }];
   string region = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "region", 
     description: "节点组所关联区域信息"

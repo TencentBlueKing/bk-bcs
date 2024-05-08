@@ -147,6 +147,28 @@ func NewAKsServiceImpl(subscriptionID, tenantID, clientID, clientSecret string) 
 	}, nil
 }
 
+// CreateCluster 创建集群
+//
+// resourceGroupName - 资源组名称(Account.resourceGroupName)
+//
+// resourceName -集群名称
+//
+// cluster - 集群参数
+func (aks *AksServiceImpl) CreateCluster(ctx context.Context, resourceGroupName, resourceName string,
+	cluster armcontainerservice.ManagedCluster) (*armcontainerservice.ManagedCluster, error) {
+	poller, err := aks.clustersClient.BeginCreateOrUpdate(ctx, resourceGroupName, resourceName, cluster, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := poller.PollUntilDone(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return &res.ManagedCluster, nil
+}
+
 // GetCluster 查询集群
 //
 // resourceGroupName - 资源组名称(Account.resourceGroupName)

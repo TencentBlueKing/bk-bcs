@@ -27,7 +27,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 )
 
@@ -184,9 +183,9 @@ func (c *nodeGroupToPool) setOSAndInstanceType() {
 func (c *nodeGroupToPool) setOrchestratorVersion() { // nolint
 	// BCS暂无设置K8S版本需求
 	// runTimeInfo := b.group.NodeTemplate.Runtime
-	//// 默认为空
+	// 默认为空
 	// b.pool.Properties.OrchestratorVersion = to.Ptr("")
-	//// 若有运行时，则按Runtime版本
+	// 若有运行时，则按Runtime版本
 	// if runTimeInfo != nil {
 	//	b.pool.Properties.OrchestratorVersion = to.Ptr(runTimeInfo.RuntimeVersion)
 	// }
@@ -229,19 +228,9 @@ func (c *nodeGroupToPool) setLabels() {
 // setTaints 设置taints
 func (c *nodeGroupToPool) setTaints() {
 	taints := c.group.NodeTemplate.Taints
-	if taints == nil {
-		taints = make([]*proto.Taint, 0)
+	if len(taints) == 0 {
+		return
 	}
-
-	/*
-		// attention: gke not support addNodes to set unScheduled nodes, thus realize this feature by taint
-		taints = append(taints, &proto.Taint{
-			Key:    cutils.BCSNodeGroupTaintKey,
-			Value:  cutils.BCSNodeGroupTaintValue,
-			Effect: cutils.BCSNodeGroupAzureTaintEffect,
-		})
-	*/
-	// key=value:NoSchedule NoExecute PreferNoSchedule
 	c.pool.Properties.NodeTaints = make([]*string, 0)
 	target := &c.pool.Properties.NodeTaints
 	for _, taint := range taints {
@@ -509,11 +498,11 @@ func (c *poolToNodeGroup) setCurrentOrchestratorVersion() { // nolint
 func (c *poolToNodeGroup) setStatus() {
 	switch *c.properties.ProvisioningState {
 	case NormalState:
-		c.group.Status = api.NodeGroupLifeStateNormal
+		c.group.Status = NodeGroupLifeStateNormal
 	case CreatingState:
-		c.group.Status = api.NodeGroupLifeStateCreating
+		c.group.Status = NodeGroupLifeStateCreating
 	case UpdatingState:
-		c.group.Status = api.NodeGroupLifeStateUpdating
+		c.group.Status = NodeGroupLifeStateUpdating
 	default:
 		c.group.Status = strings.ToLower(*c.properties.ProvisioningState)
 	}
@@ -938,54 +927,36 @@ func (c *nodeToVm) setLocation() {
 }
 
 // SetVmSetNetWork 设置虚拟规模集网络
-func SetVmSetNetWork(ctx context.Context, client AksService, group *proto.NodeGroup,
+func SetVmSetNetWork(ctx context.Context, client AksService, group *proto.NodeGroup, crg string,
 	set *armcompute.VirtualMachineScaleSet) error {
 	vpcID := group.AutoScaling.VpcID
-	subnets := group.AutoScaling.SubnetIDs
-	if len(vpcID) == 0 || len(subnets) == 0 {
-		return fmt.Errorf("SetVmSetNetWork vpcID or subnetID can not be empty")
+	subnetIDs := group.AutoScaling.SubnetIDs
+	if len(vpcID) == 0 || len(subnetIDs) == 0 || len(group.LaunchTemplate.SecurityGroupIDs) == 0 {
+		return fmt.Errorf("SetVmSetNetWork vpcID, subnetID or SecurityGroupIDs can not be empty")
 	}
 
 	defaultVpcIDs := ParseSetReturnSubnetNames(set)
 	defaultSubnets := ParseSetReturnSubnetIDs(set)
-	ipConfigs := set.Properties.VirtualMachineProfile.NetworkProfile.NetworkInterfaceConfigurations[0].Properties.
-		IPConfigurations
-
-	if len(defaultVpcIDs) == 0 || len(defaultSubnets) == 0 || len(ipConfigs) == 0 {
-		return fmt.Errorf("SetVmSetNetWork vpcID, subnetID or ipConfigs for scaleset %s is empty", *set.Name)
+	if len(defaultVpcIDs) == 0 || len(defaultSubnets) == 0 {
+		return fmt.Errorf("SetVmSetNetWork vpcID or subnetID for scaleset %s is empty", *set.Name)
 	}
 
-	defaultSubnetID := ipConfigs[0].Properties.Subnet.ID
-	newSubnetID := to.Ptr(strings.ReplaceAll(
-		strings.ReplaceAll(*defaultSubnetID, defaultVpcIDs[0], vpcID), defaultSubnets[0], subnets[0]))
-
-	// 设置子网
-	for k := range ipConfigs {
-		ipConfigs[k].Properties.Subnet.ID = newSubnetID
-	}
-
-	if len(group.LaunchTemplate.SecurityGroupIDs) == 0 {
-		return fmt.Errorf("SetVmSetNetWork security group can not be empty")
-	}
-
-	subnetDetail, err := client.GetSubnet(ctx, group.AutoScaling.AutoScalingName, vpcID, subnets[0])
+	subnetDetail, err := client.GetSubnet(ctx, crg, vpcID, subnetIDs[0])
 	if err != nil {
-		blog.Errorf("SetVmSetNetWork GetSubnet %s failed, %v", subnets[0], err)
+		blog.Errorf("SetVmSetNetWork GetSubnet %s failed, %v", subnetIDs[0], err)
 		return err
 	}
+	set.Properties.VirtualMachineProfile.NetworkProfile.NetworkInterfaceConfigurations[0].Properties.
+		IPConfigurations[0].Properties.Subnet.ID = subnetDetail.ID
 
-	// 设置网络安全组
-	idx := strings.LastIndex(*subnetDetail.Properties.NetworkSecurityGroup.ID, "/")
-	oldSg := (*subnetDetail.Properties.NetworkSecurityGroup.ID)[idx+1:]
-	newSgID := strings.ReplaceAll(*subnetDetail.Properties.NetworkSecurityGroup.ID,
-		oldSg, group.LaunchTemplate.SecurityGroupIDs[0])
-	subnetDetail.Properties.NetworkSecurityGroup.ID = to.Ptr(newSgID)
-
-	_, err = client.UpdateSubnet(ctx, group.AutoScaling.AutoScalingName, vpcID, subnets[0], *subnetDetail)
+	sg, err := client.GetNetworkSecurityGroups(ctx, crg, group.LaunchTemplate.SecurityGroupIDs[0])
 	if err != nil {
-		blog.Errorf("SetVmSetNetWork UpdateSubnet security group failed, %v", err)
+		blog.Errorf("SetVmSetNetWork GetNetworkSecurityGroups %s failed, %v",
+			group.LaunchTemplate.SecurityGroupIDs[0], err)
 		return err
 	}
+	set.Properties.VirtualMachineProfile.NetworkProfile.NetworkInterfaceConfigurations[0].Properties.
+		NetworkSecurityGroup.ID = sg.ID
 
 	return nil
 }
@@ -999,6 +970,7 @@ func SetVmSetPasswd(group *proto.NodeGroup, set *armcompute.VirtualMachineScaleS
 	if lc == nil || len(lc.InitLoginPassword) == 0 || len(lc.InitLoginUsername) == 0 {
 		return
 	}
+	password, _ := encrypt.Decrypt(nil, lc.InitLoginPassword)
 	if set.Properties == nil {
 		set.Properties = new(armcompute.VirtualMachineScaleSetProperties)
 	}
@@ -1009,9 +981,7 @@ func SetVmSetPasswd(group *proto.NodeGroup, set *armcompute.VirtualMachineScaleS
 		set.Properties.VirtualMachineProfile.OSProfile = new(armcompute.VirtualMachineScaleSetOSProfile)
 	}
 	set.Properties.VirtualMachineProfile.OSProfile.AdminUsername = to.Ptr(lc.InitLoginUsername)
-
-	pwd, _ := encrypt.Decrypt(nil, lc.GetInitLoginPassword())
-	set.Properties.VirtualMachineProfile.OSProfile.AdminPassword = to.Ptr(pwd)
+	set.Properties.VirtualMachineProfile.OSProfile.AdminPassword = to.Ptr(password)
 	// 重置配置
 	set.Properties.VirtualMachineProfile.OSProfile.LinuxConfiguration = new(armcompute.LinuxConfiguration)
 	// 启用密码验证
@@ -1036,25 +1006,22 @@ func SetVmSetSSHPublicKey(group *proto.NodeGroup, set *armcompute.VirtualMachine
 	if set.Properties.VirtualMachineProfile.OSProfile == nil {
 		set.Properties.VirtualMachineProfile.OSProfile = new(armcompute.VirtualMachineScaleSetOSProfile)
 	}
-	osProfile := set.Properties.VirtualMachineProfile.OSProfile
-
-	// adminName := osProfile.AdminUsername
-	osProfile.AdminUsername = to.Ptr(lc.InitLoginUsername)
-
-	if osProfile.LinuxConfiguration == nil {
-		osProfile.LinuxConfiguration = new(armcompute.LinuxConfiguration)
+	adminName := set.Properties.VirtualMachineProfile.OSProfile.AdminUsername
+	if set.Properties.VirtualMachineProfile.OSProfile.LinuxConfiguration == nil {
+		set.Properties.VirtualMachineProfile.OSProfile.LinuxConfiguration = new(armcompute.LinuxConfiguration)
 	}
-	if osProfile.LinuxConfiguration.SSH == nil {
-		osProfile.LinuxConfiguration.SSH = new(armcompute.SSHConfiguration)
+	if set.Properties.VirtualMachineProfile.OSProfile.LinuxConfiguration.SSH == nil {
+		set.Properties.VirtualMachineProfile.OSProfile.LinuxConfiguration.SSH = new(armcompute.SSHConfiguration)
 	}
-
-	osProfile.LinuxConfiguration.SSH.PublicKeys = make([]*armcompute.SSHPublicKey, 0)
+	set.Properties.VirtualMachineProfile.OSProfile.LinuxConfiguration.SSH.PublicKeys =
+		make([]*armcompute.SSHPublicKey, 0)
 	// 设置SSH免密登录公钥
-	dePublicKey, _ := encrypt.Decrypt(nil, lc.GetKeyPair().GetKeyPublic())
-	osProfile.LinuxConfiguration.SSH.PublicKeys = append(osProfile.LinuxConfiguration.SSH.PublicKeys,
+	dePublicKey, _ := encrypt.Decrypt(nil, lc.KeyPair.KeyPublic)
+	set.Properties.VirtualMachineProfile.OSProfile.LinuxConfiguration.SSH.PublicKeys = append(
+		set.Properties.VirtualMachineProfile.OSProfile.LinuxConfiguration.SSH.PublicKeys,
 		&armcompute.SSHPublicKey{
 			KeyData: to.Ptr(dePublicKey),
-			Path:    to.Ptr(fmt.Sprintf("/home/%s/.ssh/authorized_keys", lc.InitLoginUsername)),
+			Path:    to.Ptr(fmt.Sprintf("/home/%s/.ssh/authorized_keys", *adminName)),
 		})
 }
 
@@ -1310,6 +1277,20 @@ func regexpSetSubnetName(set *armcompute.VirtualMachineScaleSet) []string {
 	return result
 }
 
+// RegexpSetSubnetResourceGroup 通过正则解析 VMSSs subnet resourceGroup
+func RegexpSetSubnetResourceGroup(set *armcompute.VirtualMachineScaleSet) string {
+	subnetIDs := checkSetSubnetID(set)
+	reg := regexp.MustCompile("/resourceGroups/(.+?)/")
+	for _, id := range subnetIDs {
+		res := reg.FindStringSubmatch(id)
+		if len(res) <= 1 {
+			continue
+		}
+		return res[1]
+	}
+	return ""
+}
+
 // checkVmSubnetID VirtualMachineScaleSetVM subnetID字段不为空检查
 func checkVmSubnetID(vm *armcompute.VirtualMachineScaleSetVM) []string {
 	if vm == nil {
@@ -1469,13 +1450,13 @@ func VmIDToNodeID(vm *armcompute.VirtualMachineScaleSetVM) string {
 
 // SetUserData 设置用户数据
 func SetUserData(group *proto.NodeGroup, set *armcompute.VirtualMachineScaleSet) {
-	if group.GetNodeTemplate() == nil || len(group.GetNodeTemplate().GetPreStartUserScript()) == 0 {
+	if group.LaunchTemplate == nil || len(group.LaunchTemplate.UserData) == 0 {
 		return
 	}
 	if set == nil || set.Properties == nil || set.Properties.VirtualMachineProfile == nil {
 		return
 	}
-	set.Properties.VirtualMachineProfile.UserData = to.Ptr(group.GetNodeTemplate().GetPreStartUserScript())
+	set.Properties.VirtualMachineProfile.UserData = to.Ptr(group.LaunchTemplate.UserData)
 }
 
 // SetImageReferenceNull 镜像引用-暂时置空处理，若不置空会导致无法更新set
@@ -1502,33 +1483,17 @@ func SetAgentPoolFromNodeGroup(group *proto.NodeGroup, pool *armcontainerservice
 	for k := range group.Tags {
 		pool.Properties.Tags[k] = to.Ptr(group.Tags[k])
 	}
-
-	if group.NodeTemplate != nil && len(group.NodeTemplate.GetLabels()) > 0 {
+	if group.NodeTemplate != nil {
 		pool.Properties.NodeLabels = make(map[string]*string)
 		for k := range group.NodeTemplate.Labels {
 			pool.Properties.NodeLabels[k] = to.Ptr(group.NodeTemplate.Labels[k])
 		}
+		pool.Properties.NodeTaints = make([]*string, 0)
+		for _, taint := range group.NodeTemplate.Taints {
+			pool.Properties.NodeTaints = append(pool.Properties.NodeTaints,
+				to.Ptr(fmt.Sprintf("%s=%s:%s", taint.Key, taint.Value, taint.Effect)))
+		}
 	}
-
-	taints := group.NodeTemplate.GetTaints()
-	if taints == nil || len(taints) == 0 {
-		taints = make([]*proto.Taint, 0)
-	}
-
-	/*
-		// attention: azure not support addNodes to set unScheduled nodes, thus realize this feature by taint
-		taints = append(taints, &proto.Taint{
-			Key:    cutils.BCSNodeGroupTaintKey,
-			Value:  cutils.BCSNodeGroupTaintValue,
-			Effect: cutils.BCSNodeGroupAzureTaintEffect,
-		})
-	*/
-	pool.Properties.NodeTaints = make([]*string, 0)
-	for _, taint := range taints {
-		pool.Properties.NodeTaints = append(pool.Properties.NodeTaints,
-			to.Ptr(fmt.Sprintf("%s=%s:%s", taint.Key, taint.Value, taint.Effect)))
-	}
-
 	if group.LaunchTemplate != nil && len(group.LaunchTemplate.InstanceType) != 0 &&
 		checkInstanceType(group.LaunchTemplate.InstanceType) {
 		// 检查机型是否在里面

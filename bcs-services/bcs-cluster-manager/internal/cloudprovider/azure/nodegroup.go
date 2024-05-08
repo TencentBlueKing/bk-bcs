@@ -134,10 +134,10 @@ func (ng *NodeGroup) UpdateNodeGroup(group *proto.NodeGroup, opt *cloudprovider.
 	}
 
 	// note:Azure不支持更换镜像
-	//// update imageName
+	// update imageName
 	// if err = ng.updateImageInfo(group); err != nil {
 	//	return err
-	//}
+	// }
 
 	return nil, nil
 }

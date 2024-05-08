@@ -82,8 +82,8 @@ func (t *Task) BuildDeleteVirtualClusterTask(cls *proto.Cluster,
 }
 
 // BuildCreateClusterTask build create cluster task
-func (t *Task) BuildCreateClusterTask(
-	cls *proto.Cluster, opt *cloudprovider.CreateClusterOption) (*proto.Task, error) {
+func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.CreateClusterOption) ( // nolint
+	*proto.Task, error) {
 	// validate request params
 	if cls == nil {
 		return nil, fmt.Errorf("BuildCreateClusterTask cluster info empty")
@@ -116,7 +116,7 @@ func (t *Task) BuildCreateClusterTask(
 
 	// setting all steps details
 	createClusterTask := &CreateClusterTaskOption{Cluster: cls, NodeGroupIDs: opt.NodeGroupIDs}
-	// step0: createTKECluster and return clusterID inject common paras
+	// step0: createCluster and return clusterID inject common paras
 	createClusterTask.BuildCreateClusterStep(task)
 	// step1: check cluster status by clusterID
 	createClusterTask.BuildCheckClusterStatusStep(task)
