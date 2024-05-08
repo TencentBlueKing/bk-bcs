@@ -16,15 +16,18 @@ package aws
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/aws/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/aws/business"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 func init() {
@@ -56,15 +59,15 @@ func (c *Cluster) DeleteVirtualCluster(cls *proto.Cluster,
 func (c *Cluster) ImportCluster(cls *proto.Cluster, opt *cloudprovider.ImportClusterOption) (*proto.Task, error) {
 	// call aws interface to create cluster
 	if cls == nil {
-		return nil, fmt.Errorf("qcloud ImportCluster cluster is empty")
+		return nil, fmt.Errorf("awsCloud ImportCluster cluster is empty")
 	}
 
 	if opt == nil || opt.Cloud == nil {
-		return nil, fmt.Errorf("qcloud ImportCluster cluster opt or cloud is empty")
+		return nil, fmt.Errorf("awsCloud ImportCluster cluster opt or cloud is empty")
 	}
 
 	if len(opt.Account.SecretID) == 0 || len(opt.Account.SecretKey) == 0 || len(opt.Region) == 0 {
-		return nil, fmt.Errorf("qcloud CreateCluster opt lost valid crendential info")
+		return nil, fmt.Errorf("awsCloud CreateCluster opt lost valid crendential info")
 	}
 
 	mgr, err := cloudprovider.GetTaskManager(opt.Cloud.CloudProvider)
@@ -94,6 +97,7 @@ func (c *Cluster) DeleteCluster(cls *proto.Cluster, opt *cloudprovider.DeleteClu
 
 // GetCluster get kubenretes cluster detail information according cloudprovider
 func (c *Cluster) GetCluster(cloudID string, opt *cloudprovider.GetClusterOption) (*proto.Cluster, error) {
+	return opt.Cluster, nil
 	runtimeInfo, err := business.GetRuntimeInfo(opt.Cluster.ClusterID)
 	if err != nil {
 		return nil, err
@@ -121,7 +125,7 @@ func (c *Cluster) GetCluster(cloudID string, opt *cloudprovider.GetClusterOption
 // ListCluster get cloud cluster list by region
 func (c *Cluster) ListCluster(opt *cloudprovider.ListClusterOption) ([]*proto.CloudClusterInfo, error) {
 	if opt == nil || len(opt.Account.SecretID) == 0 || len(opt.Account.SecretKey) == 0 || len(opt.Region) == 0 {
-		return nil, fmt.Errorf("qcloud ListCluster cluster lost operation")
+		return nil, fmt.Errorf("%s ListCluster cluster lost operation", cloudName)
 	}
 
 	cli, err := api.NewEksClient(&opt.CommonOption)
@@ -187,7 +191,12 @@ func (c *Cluster) EnableExternalNodeSupport(cls *proto.Cluster, opt *cloudprovid
 
 // ListOsImage get osimage list
 func (c *Cluster) ListOsImage(provider string, opt *cloudprovider.CommonOption) ([]*proto.OsImage, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+	if opt == nil || opt.Account == nil || len(opt.Account.SecretID) == 0 ||
+		len(opt.Account.SecretKey) == 0 || len(opt.Region) == 0 {
+		return nil, fmt.Errorf("awsCloud ListOsImage lost authoration")
+	}
+
+	return utils.EKSImageOsList, nil
 }
 
 // ListProjects list cloud projects
@@ -198,33 +207,32 @@ func (c *Cluster) ListProjects(opt *cloudprovider.CommonOption) ([]*proto.CloudP
 // CheckClusterEndpointStatus check cluster endpoint status
 func (c *Cluster) CheckClusterEndpointStatus(clusterID string, isExtranet bool,
 	opt *cloudprovider.CheckEndpointStatusOption) (bool, error) {
-	if opt == nil || len(opt.Account.SecretID) == 0 || len(opt.Account.SecretKey) == 0 || len(opt.Region) == 0 {
-		return false, fmt.Errorf("cloud CheckClusterEndpointStatus lost authoration")
-	}
-
 	client, err := api.NewEksClient(&opt.CommonOption)
 	if err != nil {
-		return false, fmt.Errorf("CheckClusterEndpointStatus get eks client failed, %v", err)
+		return false, fmt.Errorf("CheckClusterEndpointStatus get NewEksClient failed: %v", err)
 	}
 
 	cluster, err := client.GetEksCluster(clusterID)
 	if err != nil {
-		return false, fmt.Errorf("CheckClusterEndpointStatus get cluster failed, %v", err)
+		return false, fmt.Errorf("CheckClusterEndpointStatus GetEksCluster failed: %v", err)
 	}
 
-	kubeConfig, err := api.GetClusterKubeConfig(&opt.CommonOption, cluster)
+	restConfig, err := api.GenerateAwsRestConf(&opt.CommonOption, cluster)
 	if err != nil {
-		return false, fmt.Errorf("CheckClusterEndpointStatus get kubeConfig failed, %v", err)
+		return false, fmt.Errorf("CheckClusterEndpointStatus GenerateAwsRestConf failed: %v", err)
 	}
 
-	data, err := encrypt.Decrypt(nil, kubeConfig)
+	clientSet, err := clientset.NewForConfig(restConfig)
 	if err != nil {
-		return false, fmt.Errorf("decode kube config failed: %v", err)
+		return false, fmt.Errorf("CheckClusterEndpointStatus get clientset failed: %v", err)
 	}
 
-	_, err = cloudprovider.GetCRDByKubeConfig(data)
+	// 获取 CRD
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*120)
+	defer cancel()
+	_, err = clientSet.ApiextensionsV1().CustomResourceDefinitions().List(ctx, metav1.ListOptions{})
 	if err != nil {
-		return false, fmt.Errorf("CheckClusterEndpointStatus get CRDB failed, %v", err)
+		return false, fmt.Errorf("CheckClusterEndpointStatus failed: %v", err)
 	}
 
 	return true, nil

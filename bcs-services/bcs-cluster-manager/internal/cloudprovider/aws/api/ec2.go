@@ -40,7 +40,7 @@ func NewEC2Client(opt *cloudprovider.CommonOption) (*EC2Client, error) {
 
 // DescribeAvailabilityZones describes availability zones
 func (c *EC2Client) DescribeAvailabilityZones(input *ec2.DescribeAvailabilityZonesInput) ([]*ec2.AvailabilityZone, error) {
-	blog.Infof("DescribeAvailabilityZones input: %", utils.ToJSONString(input))
+	blog.Infof("DescribeAvailabilityZones input: %s", utils.ToJSONString(input))
 	output, err := c.ec2Client.DescribeAvailabilityZones(input)
 	if err != nil {
 		blog.Errorf("DescribeAvailabilityZones failed: %v", err)
@@ -50,16 +50,15 @@ func (c *EC2Client) DescribeAvailabilityZones(input *ec2.DescribeAvailabilityZon
 		blog.Errorf("DescribeAvailabilityZones lose response information")
 		return nil, cloudprovider.ErrCloudLostResponse
 	}
-	blog.Infof("DescribeAvailabilityZones %s successful: %", utils.ToJSONString(input))
+	blog.Infof("DescribeAvailabilityZones %s successful: %s", utils.ToJSONString(input))
 
 	return output.AvailabilityZones, nil
 }
 
 // CreateLaunchTemplate creates a LaunchTemplate
-func (c *EC2Client) CreateLaunchTemplate(input *CreateLaunchTemplateInput) (*ec2.LaunchTemplate, error) {
-	blog.Infof("CreateLaunchTemplate input: %", utils.ToJSONString(input))
-	awsInput := buildLaunchTemplateData(input)
-	output, err := c.ec2Client.CreateLaunchTemplate(awsInput)
+func (c *EC2Client) CreateLaunchTemplate(input *ec2.CreateLaunchTemplateInput) (*ec2.LaunchTemplate, error) {
+	blog.Infof("CreateLaunchTemplate input: %s", utils.ToJSONString(input))
+	output, err := c.ec2Client.CreateLaunchTemplate(input)
 	if err != nil {
 		blog.Errorf("CreateLaunchTemplate failed: %v", err)
 		return nil, err
@@ -75,7 +74,7 @@ func (c *EC2Client) CreateLaunchTemplate(input *CreateLaunchTemplateInput) (*ec2
 
 // DescribeLaunchTemplates describes a LaunchTemplate
 func (c *EC2Client) DescribeLaunchTemplates(input *ec2.DescribeLaunchTemplatesInput) ([]*ec2.LaunchTemplate, error) {
-	blog.Infof("DescribeLaunchTemplates input: %", utils.ToJSONString(input))
+	blog.Infof("DescribeLaunchTemplates input: %s", utils.ToJSONString(input))
 	output, err := c.ec2Client.DescribeLaunchTemplates(input)
 	if err != nil {
 		blog.Errorf("DescribeLaunchTemplates failed: %v", err)
@@ -89,10 +88,26 @@ func (c *EC2Client) DescribeLaunchTemplates(input *ec2.DescribeLaunchTemplatesIn
 	return output.LaunchTemplates, nil
 }
 
+// ModifyLaunchTemplate modify a LaunchTemplate
+func (c *EC2Client) ModifyLaunchTemplate(input *ec2.ModifyLaunchTemplateInput) (*ec2.LaunchTemplate, error) {
+	blog.Infof("ModifyLaunchTemplate input: %s", utils.ToJSONString(input))
+	output, err := c.ec2Client.ModifyLaunchTemplate(input)
+	if err != nil {
+		blog.Errorf("ModifyLaunchTemplate failed: %v", err)
+		return nil, err
+	}
+	if output == nil || output.LaunchTemplate == nil {
+		blog.Errorf("ModifyLaunchTemplate lose response information")
+		return nil, cloudprovider.ErrCloudLostResponse
+	}
+
+	return output.LaunchTemplate, nil
+}
+
 // CreateLaunchTemplateVersion creates a versioned LaunchTemplate
 func (c *EC2Client) CreateLaunchTemplateVersion(input *ec2.CreateLaunchTemplateVersionInput) (
 	*ec2.LaunchTemplateVersion, error) {
-	blog.Infof("CreateLaunchTemplateVersion input: %", utils.ToJSONString(input))
+	blog.Infof("CreateLaunchTemplateVersion input: %s", utils.ToJSONString(input))
 	output, err := c.ec2Client.CreateLaunchTemplateVersion(input)
 	if err != nil {
 		blog.Errorf("CreateLaunchTemplateVersion failed: %v", err)
@@ -111,7 +126,7 @@ func (c *EC2Client) CreateLaunchTemplateVersion(input *ec2.CreateLaunchTemplateV
 // DescribeLaunchTemplateVersions describes versioned LaunchTemplate
 func (c *EC2Client) DescribeLaunchTemplateVersions(input *ec2.DescribeLaunchTemplateVersionsInput) (
 	[]*ec2.LaunchTemplateVersion, error) {
-	blog.Infof("DescribeLaunchTemplateVersions input: %", utils.ToJSONString(input))
+	blog.Infof("DescribeLaunchTemplateVersions input: %s", utils.ToJSONString(input))
 	output, err := c.ec2Client.DescribeLaunchTemplateVersions(input)
 	if err != nil {
 		blog.Errorf("DescribeLaunchTemplateVersions failed: %v", err)
@@ -121,14 +136,14 @@ func (c *EC2Client) DescribeLaunchTemplateVersions(input *ec2.DescribeLaunchTemp
 		blog.Errorf("DescribeLaunchTemplateVersions lose response information")
 		return nil, cloudprovider.ErrCloudLostResponse
 	}
-	blog.Infof("DescribeLaunchTemplateVersions %s successful: %", *input.LaunchTemplateName)
+	blog.Infof("DescribeLaunchTemplateVersions %s successful", *input.LaunchTemplateName)
 
 	return output.LaunchTemplateVersions, nil
 }
 
 // DescribeImages gets image info
 func (c *EC2Client) DescribeImages(input *ec2.DescribeImagesInput) ([]*ec2.Image, error) {
-	blog.Infof("DescribeImages input: %", utils.ToJSONString(input))
+	blog.Infof("DescribeImages input: %s", utils.ToJSONString(input))
 	output, err := c.ec2Client.DescribeImages(input)
 	if err != nil {
 		blog.Errorf("DescribeImages failed: %v", err)
@@ -143,9 +158,9 @@ func (c *EC2Client) DescribeImages(input *ec2.DescribeImagesInput) ([]*ec2.Image
 	return output.Images, nil
 }
 
-// DescribeInstances gets image info
+// DescribeInstances gets vm instances
 func (c *EC2Client) DescribeInstances(input *ec2.DescribeInstancesInput) ([]*ec2.Instance, error) {
-	blog.Infof("DescribeInstances input: %", utils.ToJSONString(input))
+	blog.Infof("DescribeInstances input: %s", utils.ToJSONString(input))
 	output, err := c.ec2Client.DescribeInstances(input)
 	if err != nil {
 		blog.Errorf("DescribeInstances failed: %v", err)
@@ -161,7 +176,7 @@ func (c *EC2Client) DescribeInstances(input *ec2.DescribeInstancesInput) ([]*ec2
 
 // TerminateInstances terminates instances
 func (c *EC2Client) TerminateInstances(input *ec2.TerminateInstancesInput) ([]*ec2.InstanceStateChange, error) {
-	blog.Infof("TerminateInstances input: %", utils.ToJSONString(input))
+	blog.Infof("TerminateInstances input: %s", utils.ToJSONString(input))
 	output, err := c.ec2Client.TerminateInstances(input)
 	if err != nil {
 		blog.Errorf("TerminateInstances failed: %v", err)
@@ -173,4 +188,39 @@ func (c *EC2Client) TerminateInstances(input *ec2.TerminateInstancesInput) ([]*e
 	}
 	blog.Infof("ec2 client TerminateInstances successful")
 	return output.TerminatingInstances, nil
+}
+
+// DescribeInstanceTypes gets vm instance types
+func (c *EC2Client) DescribeInstanceTypes(input *ec2.DescribeInstanceTypesInput) (
+	*ec2.DescribeInstanceTypesOutput, error) {
+	blog.Infof("DescribeInstanceTypes input: %s", utils.ToJSONString(input))
+	output, err := c.ec2Client.DescribeInstanceTypes(input)
+	if err != nil {
+		blog.Errorf("DescribeInstanceTypes failed: %v", err)
+		return nil, err
+	}
+	if output == nil || output.InstanceTypes == nil {
+		blog.Errorf("DescribeInstanceTypes lose response information")
+		return nil, cloudprovider.ErrCloudLostResponse
+	}
+	blog.Infof("ec2 client DescribeInstanceTypes successful")
+	return output, nil
+}
+
+// DescribeKeyPairs gets key pairs
+func (c *EC2Client) DescribeKeyPairs(input *ec2.DescribeKeyPairsInput) (
+	[]*ec2.KeyPairInfo, error) {
+	blog.Infof("DescribeKeyPairs input: %s", utils.ToJSONString(input))
+	output, err := c.ec2Client.DescribeKeyPairs(input)
+	if err != nil {
+		blog.Errorf("DescribeKeyPairs failed: %v", err)
+		return nil, err
+	}
+	if output == nil || output.KeyPairs == nil {
+		blog.Errorf("DescribeKeyPairs lose response information")
+		return nil, cloudprovider.ErrCloudLostResponse
+	}
+	blog.Infof("ec2 client DescribeKeyPairs successful")
+
+	return output.KeyPairs, nil
 }

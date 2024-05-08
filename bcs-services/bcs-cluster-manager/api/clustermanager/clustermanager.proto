@@ -1050,6 +1050,15 @@ service ClusterManager {
   }
 
   // Cloud Resource management
+  rpc GetNodeRoles(GetNodeRolesRequest) returns (GetNodeRolesResponse) {
+    option (google.api.http) = {
+      get : "/clustermanager/v1/clouds/{cloudID}/noderoles"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "查询awsCloud noderole列表"
+      summary : "查询awsCloud noderole列表"
+    };
+  }
   rpc GetResourceGroups(GetResourceGroupsRequest) returns (GetResourceGroupsResponse) {
     option (google.api.http) = {
       get : "/clustermanager/v1/clouds/{cloudID}/resourcegroups"
@@ -10382,6 +10391,76 @@ message UpdateAutoScalingStatusResponse {
   WebAnnotationsV2 web_annotations = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "web_annotations",
     description : "用户所属集群权限"
+  }];
+}
+
+message NodeRoleInfo {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "NodeRoleInfo"
+      description : "noderole信息"
+    }
+  };
+
+  string roleName = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "roleName",
+    description : "noderole名称"
+  }];
+  string roleID = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "roleID",
+    description : "noderole ID"
+  }];
+  string arn = 3 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "arn",
+    description : "noderole arn"
+  }];
+  string description = 4 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "description",
+    description : "noderole描述"
+  }];
+}
+
+message GetNodeRolesRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetNodeRolesRequest"
+      description : "获取noderole列表请求"
+    }
+  };
+
+  string cloudID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "cloudID",
+    description : "云信息"
+  },(validate.rules).string = {min_len : 2}];
+  string accountID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "accountID",
+    description : "云凭证ID"
+  }];
+}
+
+message GetNodeRolesResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetNodeRolesResponse"
+      description : "获取noderole列表"
+    }
+  };
+
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  bool result = 3 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+  repeated NodeRoleInfo data = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "获取到的信息"
   }];
 }
 

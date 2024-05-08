@@ -314,7 +314,20 @@ func (c *CloudValidate) ListCloudVpcsValidate(req *proto.ListCloudVpcsRequest, a
 
 // ListKeyPairsValidate list keyPairs validate
 func (c *CloudValidate) ListKeyPairsValidate(req *proto.ListKeyPairsRequest, account *proto.Account) error {
-	return cloudprovider.ErrCloudNotImplemented
+	// call awsCloud interface to check account
+	if c == nil || req == nil {
+		return fmt.Errorf("%s ListKeyPairsValidate request is empty", cloudName)
+	}
+
+	if len(req.Region) == 0 {
+		return fmt.Errorf("%s ListKeyPairsValidate request lost valid region info", cloudName)
+	}
+
+	if account == nil || len(account.SecretID) == 0 || len(account.SecretKey) == 0 {
+		return fmt.Errorf("%s ListKeyPairsValidate request lost valid crendential info", cloudName)
+	}
+
+	return nil
 }
 
 // ListInstancesValidate list instance validate
