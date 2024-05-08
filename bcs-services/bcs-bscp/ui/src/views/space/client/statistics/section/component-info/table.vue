@@ -4,7 +4,7 @@
     <bk-table-column :label="$t('组件版本')" prop="client_version"></bk-table-column>
     <bk-table-column :label="$t('数量')" prop="value"></bk-table-column>
     <bk-table-column :label="$t('占比')">
-      <template #default="{ row }">{{ `${parseFloat(row.percent).toFixed(1)}%` }}</template>
+      <template #default="{ row }">{{ `${(parseFloat(row.percent) * 100).toFixed(1)}%` }}</template>
     </bk-table-column>
   </bk-table>
 </template>

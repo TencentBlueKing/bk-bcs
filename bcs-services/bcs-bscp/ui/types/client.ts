@@ -130,6 +130,7 @@ export interface IVersionDistributionItem {
   client_version: string;
   percent: number;
   value: number;
+  name?: string;
 }
 
 // 组件版本发布(旭日图)
@@ -140,6 +141,7 @@ export interface IVersionDistributionPie {
 
 export interface IVersionDistributionPieItem {
   name: string;
+  client_type: string;
   value: number;
   percent: number;
   children?: IVersionDistributionPieItem[];

@@ -205,6 +205,7 @@
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
+    gap: 16px;
     .chart {
       width: calc(50% - 8px);
     }

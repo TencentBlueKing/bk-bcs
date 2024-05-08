@@ -43,7 +43,7 @@
         </div>
       </div>
       <template #content>
-        <div v-if="!showChildSelector" class="menu-wrap">
+        <div v-if="!showChildSelector" v-click-outside="() => (isShowPopover = false)" class="menu-wrap">
           <div class="search-condition">
             <div class="title">{{ t('查询条件') }}</div>
             <div v-for="item in selectorData" :key="item.value" class="search-item" @click="handleSelectParent(item)">
@@ -63,7 +63,7 @@
             </bk-loading>
           </div>
         </div>
-        <div v-else class="children-menu-wrap">
+        <div v-else class="children-menu-wrap" v-click-outside="() => (isShowPopover = false)">
           <div v-for="item in childSelectorData" :key="item.value" class="search-item" @click="handleSelectChild(item)">
             {{ item.name }}
           </div>
@@ -94,6 +94,7 @@
             v-for="item in commonlySearchList"
             :key="item.id"
             class="search-item"
+            v-click-outside="() => (isShowAllCommonSearchPopover = false)"
             @click="handleSelectCommonSearch(item)">
             <div class="name">
               <bk-overflow-title>{{ item.spec.search_name }}</bk-overflow-title>
@@ -138,7 +139,7 @@
   import { storeToRefs } from 'pinia';
   import { EditLine, Error } from 'bkui-vue/lib/icon';
   import { CLIENT_SEARCH_DATA, CLIENT_STATISTICS_SEARCH_DATA, CLIENT_STATUS_MAP } from '../../../../constants/client';
-  import { ISelectorItem, ISearchCondition, ICommonlyUsedItem } from '../../../../../types/client';
+  import { ISelectorItem, ISearchCondition, ICommonlyUsedItem, IClinetCommonQuery } from '../../../../../types/client';
   import {
     getClientSearchRecord,
     createClientSearchRecord,
@@ -160,6 +161,11 @@
 
   const route = useRoute();
 
+  const props = defineProps<{
+    bkBizId: string;
+    appId: number;
+  }>();
+
   const isShowPopover = ref(false);
   const searchConditionList = ref<ISearchCondition[]>([]);
   const showChildSelector = ref(false);
@@ -178,11 +184,6 @@
   const isShowDeleteCommonlyDialog = ref(false);
   const selectedDeleteCommonlyItem = ref<ICommonlyUsedItem>();
   const isShowAllCommonSearchPopover = ref(false);
-
-  const props = defineProps<{
-    bkBizId: string;
-    appId: number;
-  }>();
 
   const inputPlacehoder = computed(() => {
     if (searchConditionList.value.length || searchStr.value || inputFocus.value) return '';
@@ -225,6 +226,18 @@
     (val) => {
       if (Object.keys(val!).length === 0) {
         searchConditionList.value = [];
+      } else {
+        handleAddRecentSearch();
+      }
+    },
+  );
+
+  watch(
+    () => isShowPopover.value,
+    (val) => {
+      if (val && !searchStr.value) {
+        showChildSelector.value = false;
+        parentSelecte.value = undefined;
       }
     },
   );
@@ -240,6 +253,7 @@
   );
 
   onMounted(() => {
+    handleGetSearchList('common');
     const entries = Object.entries(route.query);
     if (entries.length === 0) return;
     const { name, value } = CLIENT_SEARCH_DATA.find((item) => item.value === entries[0][0])!;
@@ -300,19 +314,6 @@
       (item) => item.key === parentSelecte.value?.value && item.key !== 'label',
     );
     if (index > -1) handleConditionClose(index);
-    // 标签项不符合输入规则清空
-    if (parentSelecte.value?.value === 'label') {
-      const [labelKey, labelValue] = conditionValue[1].split('=', 2);
-      if (!labelKey || !labelValue) {
-        searchStr.value = '';
-        return;
-      }
-      // 重复的标签项key去重
-      const index = searchConditionList.value.findIndex(
-        (item) => item.key === 'label' && item.value.split('=', 2)[0] === labelKey,
-      );
-      if (index > -1) handleConditionClose(index);
-    }
     searchConditionList.value.push({
       key: parentSelecte.value!.value,
       value: conditionValue[1],
@@ -326,11 +327,16 @@
     if (!props.appId) return;
     try {
       resentSearchListLoading.value = search_type === 'recent';
-      const params = {
+      const params: IClinetCommonQuery = {
         start: 0,
         limit: 10,
         search_type,
       };
+      if (search_type === 'common') {
+        params.all = true;
+      } else {
+        isClientSearch.value ? (params.search_type = 'query') : (params.search_type = 'statistic');
+      }
       const res = await getClientSearchRecord(props.bkBizId, props.appId, params);
       const searchList = res.data.details;
       searchList.forEach((item: ICommonlyUsedItem) => handleQueryChangeSearchCondition(item));
@@ -349,6 +355,14 @@
   // 删除查询条件
   const handleConditionClose = (index: number) => {
     searchConditionList.value.splice(index, 1);
+  };
+
+  // 添加最近查询
+  const handleAddRecentSearch = async () => {
+    await createClientSearchRecord(props.bkBizId, props.appId, {
+      search_type: isClientSearch.value ? 'query' : 'statistic',
+      search_condition: searchQuery.value.search!,
+    });
   };
 
   // 设置常用查询
@@ -428,7 +442,7 @@
     searchConditionList.value.forEach((item) => {
       if (item.key === 'label') {
         const labelValue = item.value.split('=', 2);
-        label[labelValue[0]] = labelValue[1];
+        label[labelValue[0]] = labelValue[1] || '';
         query[item.key] = label;
       } else if (item.key === 'online_status' || item.key === 'release_change_status') {
         if (query[item.key]) {
@@ -454,10 +468,11 @@
       if (key === 'label') {
         const labelValue = query[key];
         Object.keys(labelValue).forEach((label) => {
-          const content = `${t('标签')}:${label}=${labelValue[label]}`;
+          const value = labelValue[label] || '';
+          const content = value ? `${t('标签')}:${label}=${labelValue[label]}` : `${t('标签')}:${label}`;
           searchList.push({
             key,
-            value: `${label}=${labelValue[label]}`,
+            value: `${label}=${value}`,
             content,
           });
           searchName.push(content);
