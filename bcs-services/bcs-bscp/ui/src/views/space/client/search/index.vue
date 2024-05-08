@@ -73,7 +73,7 @@
                   v-if="row.spec.release_change_status === 'Failed'"
                   class="info-icon"
                   fill="#979BA5"
-                  v-bk-tooltips="{ content: row.spec.failed_detail_reason }" />
+                  v-bk-tooltips="{ content: getErrorDetails(row.spec) }" />
               </div>
             </template>
           </bk-table-column>
@@ -196,11 +196,15 @@
   import { Share, InfoLine } from 'bkui-vue/lib/icon';
   import { storeToRefs } from 'pinia';
   import { Tag } from 'bkui-vue';
-  import { getClientQueryList, createClientSearchRecord } from '../../../../api/client';
+  import { getClientQueryList } from '../../../../api/client';
   import ClientHeader from '../components/client-header.vue';
   import PullRecord from './components/pull-record.vue';
   import { datetimeFormat } from '../../../../utils';
-  import { CLIENT_STATUS_MAP } from '../../../../constants/client';
+  import {
+    CLIENT_STATUS_MAP,
+    CLIENT_ERROR_CATEGORY_MAP,
+    CLIENT_ERROR_SUBCLASSES_MAP,
+  } from '../../../../constants/client';
   import { IClinetCommonQuery } from '../../../../../types/client';
   import useClientStore from '../../../../store/client';
   import TableEmpty from '../../../../components/table/table-empty.vue';
@@ -261,6 +265,7 @@
     },
   ];
   const onlineStatusFilterChecked = ref<string[]>([]);
+
   watch(
     () => route.params.appId,
     (val) => {
@@ -382,13 +387,6 @@
         item.labels = Object.entries(JSON.parse(item.spec.labels)).map(([key, value]) => ({ key, value }));
       });
       pagination.value.count = res.data.count;
-      // 添加最近查询
-      if (Object.keys(searchQuery.value.search!).length > 0) {
-        await createClientSearchRecord(bkBizId.value, appId.value, {
-          search_type: 'recent',
-          search_condition: searchQuery.value.search!,
-        });
-      }
     } catch (error) {
       console.error(error);
     } finally {
@@ -441,6 +439,15 @@
   const handleSettingsChange = ({ checked }: any) => {
     console.log(settings.value.checked, checked);
     settings.value.checked = checked;
+  };
+
+  const getErrorDetails = (item: any) => {
+    const { release_change_failed_reason, specific_failed_reason, failed_detail_reason } = item;
+    const category = CLIENT_ERROR_CATEGORY_MAP.find((item) => item.value === release_change_failed_reason)?.name;
+    const subclasses = CLIENT_ERROR_SUBCLASSES_MAP.find((item) => item.value === specific_failed_reason)?.name || '--';
+    return `${t('错误类别')}: ${category}
+    ${t('错误子类别')}: ${subclasses}
+    ${t('错误详情')}: ${failed_detail_reason}`;
   };
 </script>
 

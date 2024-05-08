@@ -77,7 +77,7 @@
   const loading = ref(false);
   const localApp = ref({
     name: '',
-    id: 0,
+    id: Number(route.params.appId),
   });
   const serviceList = ref<IAppItem[]>([]);
   const heartbeatTime = ref(searchQuery.value.last_heartbeat_time);
@@ -144,6 +144,7 @@
 
 <style scoped lang="scss">
   .head {
+    position: relative;
     font-size: 20px;
     line-height: 28px;
     height: 32px;
@@ -191,9 +192,9 @@
       }
     }
     .head-right {
-      position: relative;
+      position: absolute;
       left: 27%;
-      top: -24px;
+      top: 0;
       display: flex;
       align-items: center;
       font-size: 12px;

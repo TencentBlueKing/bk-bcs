@@ -16,7 +16,7 @@
             <div v-else-if="specificReason.length && isShowSpecificReason" class="specific-reason">
               <div class="nav">
                 <span class="main-reason" @click="refresh">{{ t('主要失败原因') }}</span> /
-                <span class="reason">{{ selectFailedReason }}</span>
+                <span class="reason">{{ selectFailedReason.mapName }}</span>
               </div>
               <div ref="specificReasonRef" class="canvas-wrap"></div>
             </div>
@@ -56,6 +56,7 @@
   import OperationBtn from '../../components/operation-btn.vue';
   import { IPullErrorReason, IInfoCard, IClinetCommonQuery } from '../../../../../../../types/client';
   import { getClientPullStatusData, getClientPullFailedReason } from '../../../../../../api/client';
+  import { CLIENT_ERROR_CATEGORY_MAP, CLIENT_ERROR_SUBCLASSES_MAP } from '../../../../../../constants/client';
   import useClientStore from '../../../../../../store/client';
   import { storeToRefs } from 'pinia';
   import { useRouter } from 'vue-router';
@@ -101,7 +102,10 @@
   const isOpenFullScreen = ref(false);
   const initialWidth = ref(0);
   const isShowSpecificReason = ref(false);
-  const selectFailedReason = ref('');
+  const selectFailedReason = ref({
+    name: '',
+    mapName: '',
+  });
 
   watch(
     () => props.appId,
@@ -173,7 +177,15 @@
     try {
       loading.value = true;
       const res = await getClientPullStatusData(props.bkBizId, props.appId, params);
-      data.value = res.failed_reason;
+      data.value = res.failed_reason?.map((item: IPullErrorReason) => {
+        const mapName = CLIENT_ERROR_CATEGORY_MAP.find(
+          (errorItem) => errorItem.value === item.release_change_failed_reason,
+        )?.name;
+        return {
+          ...item,
+          mapName,
+        };
+      });
       Object.entries(res.time_consuming).forEach(([key, value]) => {
         const item = pullTime.value.find((item) => item.key === key) as IInfoCard;
         item.value = value as number;
@@ -194,12 +206,20 @@
   const loadPullFailedReason = async () => {
     const params = {
       last_heartbeat_time: searchQuery.value.last_heartbeat_time,
-      search: { failed_reason: selectFailedReason.value },
+      search: { failed_reason: selectFailedReason.value.name },
     };
     try {
       loading.value = true;
       const res = await getClientPullFailedReason(props.bkBizId, props.appId, params);
-      specificReason.value = res.data.failed_reason;
+      specificReason.value = res.data.failed_reason?.map((item: IPullErrorReason) => {
+        const mapName = CLIENT_ERROR_SUBCLASSES_MAP.find(
+          (errorItem) => errorItem.value === item.release_change_failed_reason,
+        )?.name;
+        return {
+          ...item,
+          mapName,
+        };
+      });
     } catch (error) {
       console.error(error);
     } finally {
@@ -210,7 +230,7 @@
   const initChart = () => {
     columnPlot = new Column(canvasRef.value!, {
       data: data.value,
-      xField: 'release_change_failed_reason',
+      xField: 'mapName',
       yField: 'count',
       seriesField: 'count',
       color: '#FFA66B',
@@ -257,15 +277,16 @@
         container: tooltipRef.value?.getDom(),
         enterable: true,
         customItems: (originalItems: any[]) => {
-          originalItems[0].name = originalItems[0].data.release_change_failed_reason;
+          originalItems[0].name = originalItems[0].data.mapName;
           return originalItems;
         },
       },
     });
     columnPlot!.render();
     columnPlot.on('plot:click', async (event: any) => {
-      selectFailedReason.value = event.data?.data.release_change_failed_reason;
-      if (!selectFailedReason.value) return;
+      selectFailedReason.value.name = event.data?.data.release_change_failed_reason;
+      selectFailedReason.value.mapName = event.data?.data.mapName;
+      if (!selectFailedReason.value.name) return;
       isShowSpecificReason.value = true;
       await loadPullFailedReason();
       initSpecificReasonChart();
@@ -276,7 +297,7 @@
     piePlot = new Pie(specificReasonRef.value!, {
       data: specificReason.value,
       angleField: 'count',
-      colorField: 'release_change_failed_reason',
+      colorField: 'mapName',
       padding: [20, 400, 60, 10],
       interactions: [{ type: 'element-highlight' }],
       label: {

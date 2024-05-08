@@ -135,7 +135,7 @@
       const res = await getClientPullCountData(props.bkBizId, props.appId, params);
       data.value.time = res.time || [];
       data.value.time_and_type =
-        res.time_and_type.map((item: any) => {
+        res.time_and_type?.map((item: any) => {
           switch (item.type) {
             case 'sidecar':
               item.type = `SideCar ${t('客户端')}`;
@@ -220,6 +220,7 @@
         title: 'time',
         container: tooltipRef.value?.getDom(),
         enterable: true,
+        offset: 50,
         customItems: (originalItems: any[]) => {
           jumpSearchTime.value = originalItems[0].title.replace(/\//g, '-');
           originalItems.forEach((item) => {
