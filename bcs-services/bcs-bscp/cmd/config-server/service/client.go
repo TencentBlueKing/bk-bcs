@@ -54,6 +54,7 @@ func (s *Service) ListClients(ctx context.Context, req *pbcs.ListClientsReq) (
 			OnlineStatus:        req.GetSearch().GetOnlineStatus(),
 			ClientVersion:       req.GetSearch().GetClientVersion(),
 			PullTime:            req.GetSearch().GetPullTime(),
+			ClientType:          req.GetSearch().GetClientType(),
 		},
 		Order: &pbds.ListClientsReq_Order{
 			Desc: req.GetOrder().GetDesc(),
@@ -136,6 +137,7 @@ func (s *Service) ClientPullTrendStatistics(ctx context.Context, req *pbclient.C
 		},
 		LastHeartbeatTime: req.GetLastHeartbeatTime(),
 		PullTime:          req.GetPullTime(),
+		IsDuplicates:      req.GetIsDuplicates(),
 	})
 }
 
