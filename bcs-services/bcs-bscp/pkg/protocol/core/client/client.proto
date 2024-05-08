@@ -75,6 +75,7 @@ message ClientCommonReq {
   uint32 biz_id = 1;
   uint32 app_id = 2;
   pbclient.ClientQueryCondition search = 3;
-  int64 last_heartbeat_time = 4;
-  int64 pull_time = 5;
+  int64 last_heartbeat_time = 4;  // 心跳时间
+  int64 pull_time = 5;            // 拉取趋势时间
+  bool is_duplicates = 6;         // 拉取趋势是否去重
 }
