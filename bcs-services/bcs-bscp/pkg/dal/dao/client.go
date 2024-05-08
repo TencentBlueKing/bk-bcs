@@ -367,7 +367,13 @@ func (dao *clientDao) handleSearch(kit *kit.Kit, bizID, appID uint32, search *pb
 
 	if search.GetLabel() != nil && len(search.GetLabel().GetFields()) != 0 {
 		for k, v := range search.GetLabel().GetFields() {
-			conds = append(conds, rawgen.Cond(datatypes.JSONQuery("labels").Equals(v.AsInterface(), k))...)
+			// 不空搜索键值对，否则搜索键
+			if v.GetStringValue() != "" {
+				conds = append(conds, rawgen.Cond(datatypes.JSONQuery("labels").Equals(v.AsInterface(), k))...)
+			} else {
+				conds = append(conds, rawgen.Cond(datatypes.JSONQuery("labels").HasKey(k))...)
+			}
+
 		}
 	}
 
