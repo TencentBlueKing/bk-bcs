@@ -37,7 +37,7 @@
               </span>
             </template>
           </bk-table-column>
-          <bk-table-column :label="$t('当前配置版本')" width="133">
+          <bk-table-column :label="$t('源版本')" width="133">
             <template #default="{ row }">
               <div
                 v-if="row.spec && row.spec.original_release_id"

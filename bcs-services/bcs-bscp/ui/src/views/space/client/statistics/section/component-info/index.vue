@@ -191,12 +191,7 @@
         if (!item.key.includes('cpu')) {
           item.unit = 'MB';
         } else {
-          if (item.value > 1) {
-            item.unit = t('核');
-          } else {
-            item.value = item.value * 1000;
-            item.unit = 'mCPUs';
-          }
+          item.unit = t('核');
         }
       });
     } catch (error) {

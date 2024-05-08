@@ -729,6 +729,7 @@ export default {
   配置拉取文件大小: 'Configure the pull file size',
   配置拉取状态: 'Configure the pull status',
   核: 'Core',
+  源版本: 'Source version',
 
   // 客户端统计
   配置版本发布: 'Configuration version release',

@@ -150,6 +150,7 @@ export const CLIENT_STATUS_MAP = {
   Online: localT('在线'),
   Offline: localT('离线'),
   failed: localT('失败'),
+  online: localT('在线'),
   offline: localT('离线'),
 };
 

@@ -43,7 +43,7 @@
         </div>
       </div>
       <template #content>
-        <div v-if="!showChildSelector" class="menu-wrap">
+        <div v-if="!showChildSelector" ref="menuRef" v-click-outside="() => (isShowPopover = false)" class="menu-wrap">
           <div class="search-condition">
             <div class="title">{{ t('查询条件') }}</div>
             <div v-for="item in selectorData" :key="item.value" class="search-item" @click="handleSelectParent(item)">
@@ -63,7 +63,7 @@
             </bk-loading>
           </div>
         </div>
-        <div v-else class="children-menu-wrap">
+        <div v-else class="children-menu-wrap" v-click-outside="() => (isShowPopover = false)">
           <div v-for="item in childSelectorData" :key="item.value" class="search-item" @click="handleSelectChild(item)">
             {{ item.name }}
           </div>
@@ -94,6 +94,7 @@
             v-for="item in commonlySearchList"
             :key="item.id"
             class="search-item"
+            v-click-outside="() => (isShowAllCommonSearchPopover = false)"
             @click="handleSelectCommonSearch(item)">
             <div class="name">
               <bk-overflow-title>{{ item.spec.search_name }}</bk-overflow-title>
@@ -441,10 +442,11 @@
       if (key === 'label') {
         const labelValue = query[key];
         Object.keys(labelValue).forEach((label) => {
-          const content = `${t('标签')}:${label}=${labelValue[label]}`;
+          const value = labelValue[label] || '';
+          const content = value ? `${t('标签')}:${label}=${labelValue[label]}` : `${t('标签')}:${label}`;
           searchList.push({
             key,
-            value: `${label}=${labelValue[label]}`,
+            value: `${label}=${value}`,
             content,
           });
           searchName.push(content);

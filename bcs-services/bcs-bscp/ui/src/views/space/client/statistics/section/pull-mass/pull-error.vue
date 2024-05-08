@@ -133,8 +133,15 @@
 
   watch(
     () => searchQuery.value,
-    () => {
-      loadChartData();
+    async () => {
+      await loadChartData();
+      if (data.value.length) {
+        if (columnPlot) {
+          columnPlot!.changeData(data.value);
+        } else {
+          initChart();
+        }
+      }
     },
     { deep: true },
   );

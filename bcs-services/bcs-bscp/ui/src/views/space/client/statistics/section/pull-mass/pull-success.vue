@@ -81,16 +81,21 @@
       if (!val.length && piePlot) {
         piePlot!.destroy();
         piePlot = null;
-      } else {
-        piePlot?.changeData(data.value);
       }
     },
   );
 
   watch(
     () => searchQuery.value,
-    () => {
-      loadChartData();
+    async () => {
+      await loadChartData();
+      if (data.value.length) {
+        if (piePlot) {
+          piePlot!.changeData(data.value);
+        } else {
+          initChart();
+        }
+      }
     },
     { deep: true },
   );
