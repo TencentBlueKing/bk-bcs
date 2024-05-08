@@ -38,6 +38,8 @@ const GoogleNodePool = () => import(/* webpackChunkName: 'cluster' */'@/views/cl
 const GoogleNodePoolDetail = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/autoscaler/google/node-pool-detail.vue');
 const GoogleEditNodePool = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/autoscaler/google/edit-node-pool.vue');
 
+const NamespaceCreate = () => import(/* webpackChunkName: 'dashboard' */'@/views/cluster-manage/namespace/create.vue');
+
 // 集群管理
 export default [
   {
@@ -46,6 +48,16 @@ export default [
     props: route => ({ ...route.query, ...route.params }),
     component: Cluster,
     meta: {
+      hideMenu: true,
+    },
+  },
+  {
+    path: 'clusters/:clusterId/namespaces/create',
+    name: 'createNamespace',
+    props: true,
+    component: NamespaceCreate,
+    meta: {
+      menuId: 'CLUSTER',
       hideMenu: true,
     },
   },
@@ -172,7 +184,7 @@ export default [
   {
     path: 'clusters/:clusterId/nodes/:nodeName/:category/namespaces/:namespace/:name',
     name: 'nodePodDetail',
-    props: route => ({ ...route.params, kind: route.query.kind, crd: route.query.crd }),
+    props: route => ({ ...route.params, ...route.query }),
     component: PodDetail,
     meta: {
       menuId: 'CLUSTER',
@@ -227,6 +239,7 @@ export default [
       title: window.i18n.t('cluster.nodeList.create.text'),
       menuId: 'CLUSTER',
       hideMenu: true,
+      showClusterName: true,
     },
   },
   {

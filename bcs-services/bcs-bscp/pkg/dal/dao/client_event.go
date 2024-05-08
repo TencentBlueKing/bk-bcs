@@ -40,7 +40,8 @@ type ClientEvent interface {
 	GetMinMaxAvgTime(kit *kit.Kit, bizID, appID uint32, clientID []uint32, releaseChangeStatus []string) (
 		types.MinMaxAvgTimeChart, error)
 	// GetPullTrend 获取拉取趋势
-	GetPullTrend(kit *kit.Kit, bizID uint32, appID uint32, clientID []uint32, pullTime int64) ([]types.PullTrend, error)
+	GetPullTrend(kit *kit.Kit, bizID uint32, appID uint32, clientID []uint32, pullTime int64, isDuplicates bool) (
+		[]types.PullTrend, error)
 	// UpsertHeartbeat 更新插入心跳
 	UpsertHeartbeat(kit *kit.Kit, tx *gen.QueryTx, data []*table.ClientEvent) error
 	// UpsertVersionChange 更新插入版本更改
@@ -56,7 +57,8 @@ type clientEventDao struct {
 }
 
 // GetPullTrend 获取拉取趋势
-func (dao *clientEventDao) GetPullTrend(kit *kit.Kit, bizID uint32, appID uint32, clientID []uint32, pullTime int64) (
+func (dao *clientEventDao) GetPullTrend(kit *kit.Kit, bizID uint32, appID uint32, clientID []uint32, pullTime int64,
+	isDuplicates bool) (
 	[]types.PullTrend, error) {
 
 	m := dao.genQ.ClientEvent
@@ -71,13 +73,15 @@ func (dao *clientEventDao) GetPullTrend(kit *kit.Kit, bizID uint32, appID uint32
 	if len(clientID) > 0 {
 		conds = append(conds, m.ClientID.In(clientID...))
 	}
+	q = q.Select(m.ClientID, m.StartTime.Date().As("pull_time")).Where(conds...)
+	// 是否去重
+	if isDuplicates {
+		q = q.Group(m.ClientID, field.NewField("", "pull_time"))
+	}
 
 	var items []types.PullTrend
 
-	err := q.Select(m.ClientID, m.StartTime.Date().As("pull_time")).
-		Where(conds...).
-		Group(m.ClientID, field.NewField("", "pull_time")).
-		Scan(&items)
+	err := q.Scan(&items)
 	return items, err
 }
 

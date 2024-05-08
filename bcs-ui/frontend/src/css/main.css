@@ -129,6 +129,14 @@
     font-size: 12px;
     height: 32px;
   }
+
+  .bcs-rotate {
+    transform: rotate(180deg);
+  }
+}
+
+#app {
+  overflow: hidden;
 }
 
 .bcs-tippy-theme .tippy-content {
@@ -157,5 +165,16 @@
   .panel-checkbox-group {
     max-height: 380px;
     overflow: auto;
+  }
+}
+
+.tippy-arrow {
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.bcs-select-group {
+  .bk-option-group-name {
+    border-bottom: 0px !important;
   }
 }

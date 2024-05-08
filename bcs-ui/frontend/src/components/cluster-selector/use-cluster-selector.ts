@@ -78,7 +78,7 @@ export default function useClusterSelector(
     },
   ])
     .filter(item => !!item.list.length));
-  // 当前集群分类数据
+  // 当前场景的集群分类数据
   const clusterData = computed(() => {
     if (Array.isArray(clusterType)) {
       return clusterListByType.value.filter(item => clusterType.includes(item.type));
@@ -99,7 +99,7 @@ export default function useClusterSelector(
 
   const handleValidateClusterID = () => {
     if (!clusterList.value.length) return;// 资源视图的左侧菜单是单独routerview，如果clusterList为空就不重置当前集群ID
-    // 判断当前集群ID在当前场景中是否能使用
+    // 判断当前集群ID在当前场景中是否能使用（当前场景下，不能从全量数据中判断）
     const data = clusterData.value.find(data => data.list.some(item => item.clusterID === localValue.value));
     if (!data) {
       handleClusterChange(clusterData.value[0]?.list?.[0]?.clusterID);

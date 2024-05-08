@@ -4,9 +4,10 @@
       class="px-[24px] py-[16px] h-full overflow-x-hidden"
       v-bkloading="{ isLoading, color: '#fafbfd' }"
       ref="contentRef">
-      <template v-if="filterSharedClusterList.length">
-        <div class="flex">
-          <div class="flex items-center place-content-between mb-[16px] flex-1">
+      <template v-if="clusterData.length">
+        <!-- 撑满屏幕, 让右侧搜索框宽度跟detail详情一致 -->
+        <div class="flex mx-[-24px]">
+          <div class="flex items-center place-content-between mb-[16px] flex-1 pl-[24px]">
             <div class="flex items-center">
               <span
                 v-bk-tooltips="{
@@ -35,19 +36,33 @@
                 v-if="flagsMap['NODETEMPLATE']"
                 @click="goNodeTemplate">{{ $t('nav.nodeTemplate') }}</bk-button>
             </div>
-            <bk-input
-              right-icon="bk-icon icon-search"
-              class="flex-1 ml-[10px] max-w-[360px]"
-              :placeholder="$t('cluster.placeholder.searchCluster')"
-              v-model.trim="searchValue"
-              clearable>
-            </bk-input>
+            <div class="flex items-center flex-1 ml-[10px] max-w-[480px]">
+              <!-- 隐藏共享集群 -->
+              <bcs-checkbox
+                class="mr-[8px] whitespace-nowrap"
+                :value="hideSharedCluster"
+                @change="changeSharedClusterVisible">
+                {{ $t('cluster.labels.hideSharedCluster') }}
+              </bcs-checkbox>
+              <bk-input
+                right-icon="bk-icon icon-search"
+                class="flex-1"
+                :placeholder="$t('cluster.placeholder.searchCluster')"
+                v-model.trim="searchValue"
+                clearable>
+              </bk-input>
+            </div>
           </div>
           <!-- flex左右布局空div -->
-          <div :style="{ width: activeClusterID ? detailWidth : 0 }"></div>
+          <div
+            :style="{
+              width: activeClusterID ? detailWidth : 0
+            }"
+            class="ml-[24px]">
+          </div>
         </div>
         <ListMode
-          :cluster-list="clusterList"
+          :cluster-list="curClusterList"
           :overview="clusterOverviewMap"
           :perms="webAnnotations.perms"
           :search-value="searchValue"
@@ -74,6 +89,7 @@
         :key="activeClusterID"
         :cluster-id="activeClusterID"
         :active="activeTabName"
+        :namespace="namespace"
         v-if="activeClusterID"
         ref="clusterDetailRef"
         @width-change="handleDetailWidthChange" />
@@ -169,7 +185,7 @@ import useNode from '@/views/cluster-manage/node-list/use-node';
 import ProjectConfig from '@/views/project-manage/project/project-config.vue';
 
 export default defineComponent({
-  name: 'ClusterOverview',
+  name: 'ClusterMain',
   components: {
     ApplyHost,
     ProjectConfig,
@@ -191,6 +207,10 @@ export default defineComponent({
       type: String,
       default: '',
     },
+    namespace: {
+      type: String,
+      default: '',
+    },
     highlightClusterId: {
       type: String,
       default: '',
@@ -200,6 +220,10 @@ export default defineComponent({
     const { flagsMap } = useAppData();
     const { curProject, isMaintainer } = useProject();
 
+    const hideSharedCluster = computed(() => $store.state.hideSharedCluster);
+    const changeSharedClusterVisible = (v) => {
+      $store.commit('updateHideClusterStatus', v);
+    };
     // 集群状态
     const statusTextMap = {
       INITIALIZATION: $i18n.t('generic.status.initializing'),
@@ -216,9 +240,10 @@ export default defineComponent({
       clusterExtraInfo,
       webAnnotations,
     } = useClusterList();
-    const filterSharedClusterList = computed<ICluster[]>(() => clusterData.value.filter(item => !item.is_shared));
+    const filterSharedClusterList = computed<ICluster[]>(() => clusterData.value
+      .filter(item => (hideSharedCluster.value ? !item.is_shared : true)));
     const keys = ref(['name', 'clusterID']);
-    const { searchValue, tableDataMatchSearch: clusterList } = useSearch(filterSharedClusterList, keys);
+    const { searchValue, tableDataMatchSearch: curClusterList } = useSearch(filterSharedClusterList, keys);
     const isLoading = ref(false);
     const handleGetClusterList = async () => {
       isLoading.value = true;
@@ -226,7 +251,7 @@ export default defineComponent({
       isLoading.value = false;
     };
     // 集群指标
-    const { getClusterOverview, clusterOverviewMap } = useClusterOverview(clusterList);
+    const { getClusterOverview, clusterOverviewMap } = useClusterOverview(curClusterList);
 
     // 集群信息编辑
     const isProjectConfDialogShow = ref(false);
@@ -451,8 +476,8 @@ export default defineComponent({
     const clusterNodesMap = ref({});
     const handleGetClusterNodes = async () => {
       clusterNodesMap.value = {};
-      clusterList.value
-        .filter(cluster => webAnnotations.value.perms[cluster.clusterID]?.cluster_manage && cluster.clusterType !== 'virtual')
+      curClusterList.value
+        .filter(cluster => webAnnotations.value.perms[cluster.clusterID]?.cluster_manage && !cluster.is_shared && cluster.clusterType !== 'virtual')
         .forEach((item) => {
           getNodeList(item.clusterID).then((data) => {
             set(clusterNodesMap.value, item.clusterID, data);
@@ -467,8 +492,14 @@ export default defineComponent({
     const activeTabName = computed<string>(() => props.active || 'overview');
     // 当前active 集群id
     const activeClusterID = ref(props.clusterId);
-    watch(clusterList, () => {
-      const activeCluster = clusterList.value.find(item => item.clusterID === activeClusterID.value);
+    watch(activeClusterID, () => {
+      const isShared = clusterData.value.find(item => item.clusterID === activeClusterID.value)?.is_shared;
+      if (!!isShared) {
+        changeSharedClusterVisible(false);
+      }
+    }, { immediate: true });
+    watch(curClusterList, () => {
+      const activeCluster = curClusterList.value.find(item => item.clusterID === activeClusterID.value);
       if (activeClusterID.value && !supportDetailStatusList.includes(activeCluster?.status)) {
         handleChangeDetail('');
       }
@@ -495,9 +526,11 @@ export default defineComponent({
     // 详情宽度
     const detailWidth = ref<string|number>('70%');
     const handleDetailWidthChange = (width: string|number) => {
-      detailWidth.value = width;
-      if (width === 0) {
+      if (!width || width === '0%' || width === '0px') {
+        detailWidth.value = '0px';
         throttleClusterNodesFunc();
+      } else {
+        detailWidth.value = `${width}`;
       }
     };
 
@@ -506,8 +539,19 @@ export default defineComponent({
       $router.push({ name: 'nodeTemplate' });
     };
 
+    // scroll cluster into view
+    const handleScollActiveClusterIntoView = () => {
+      setTimeout(() => {
+        const activeDom = document.getElementsByClassName('active-row');
+        activeDom[0]?.scrollIntoView();
+      });
+    };
+
     onMounted(async () => {
-      detailPanelMaxWidth.value = contentRef.value.clientWidth - minTableWidth.value;
+      setTimeout(() => {
+        detailPanelMaxWidth.value = document.body.clientWidth - minTableWidth.value;
+      });
+      handleScollActiveClusterIntoView();
       await handleGetClusterList();
       await handleGetClusterNodes();
     });
@@ -522,8 +566,9 @@ export default defineComponent({
       clusterNodesMap,
       searchValue,
       isLoading,
+      clusterData,
       filterSharedClusterList,
-      clusterList,
+      curClusterList,
       curProject,
       clusterOverviewMap,
       isProjectConfDialogShow,
@@ -562,6 +607,8 @@ export default defineComponent({
       goNodeTemplate,
       clusterDetailRef,
       handleRetryTask,
+      hideSharedCluster,
+      changeSharedClusterVisible,
       showInstallGseAgent,
     };
   },

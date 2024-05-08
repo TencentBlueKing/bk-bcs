@@ -1,7 +1,7 @@
 <!-- eslint-disable max-len -->
 <template>
   <div class="add-tke-cluster">
-    <Header :title="$t('cluster.button.addCluster')" :desc="$t('generic.title.createPublicCluster')" />
+    <Header :title="$t('cluster.button.addCluster')" :desc="$t('generic.title.createPublicCluster')" ref="contentHeaderRef" />
     <div class="pt-[8px] bg-[#f0f1f5]">
       <bcs-tab
         :label-height="42"
@@ -114,9 +114,18 @@ import $bkMessage from '@/common/bkmagic';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import Header from '@/components/layout/Header.vue';
 import { useProject } from '@/composables/use-app';
+import useCalcHeight from '@/composables/use-calc-height';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
-import $store from '@/store';;
+import $store from '@/store';
+
+// 设置tab内容高度
+const contentHeaderRef = ref();
+useCalcHeight({
+  el: '.add-tke-cluster .bk-tab-section',
+  offset: 48 + 8, // 48: footer高度，8: 内边距
+  calc: ['#bcs-notice-com', '.bk-navigation-header', contentHeaderRef, '.add-tke-cluster .bk-tab-header'],
+});
 
 const cloudID = 'tencentPublicCloud';
 
@@ -260,9 +269,7 @@ const handleCreateCluster = async () => {
 >>> .bk-tab-header {
   padding: 0 8px;
 }
->>> .bk-tab-content {
-  height: calc(100vh - 224px);
-  padding-bottom: 24px;
+>>> .bk-tab-section {
   overflow: auto;
 }
 

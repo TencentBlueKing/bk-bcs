@@ -68,7 +68,7 @@ type AuthConfig struct {
 type BkSystemConfig struct {
 	BkAppCode   string `json:"bkAppCode"`
 	BkAppSecret string `json:"bkAppSecret"`
-	BkEnv       string `json:bkEnv`
+	BkEnv       string `json:"bkEnv"`
 }
 
 // Options is the options for server

@@ -19,7 +19,7 @@ import (
 	"strings"
 
 	"github.com/GehirnInc/crypt"
-	_ "github.com/GehirnInc/crypt/sha512_crypt"
+	_ "github.com/GehirnInc/crypt/sha512_crypt" // use init func
 	"github.com/huaweicloud/huaweicloud-sdk-go-v3/services/cce/v3/model"
 	v1 "k8s.io/api/core/v1"
 

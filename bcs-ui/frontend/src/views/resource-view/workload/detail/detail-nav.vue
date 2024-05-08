@@ -3,19 +3,19 @@
     <span class="icon-wrapper" @click="handleBack">
       <i class="bcs-icon bcs-icon-arrows-left icon-back"></i>
     </span>
-    <span class="title-wrapper" v-for="(item, index) in titles" :key="index">
+    <span class="title-wrapper" v-for="(item, index) in curNavList" :key="index">
       <span class="title-item" @click="routeHop(item, index)">{{item.name}}</span>
-      <span class="separator" v-if="index < (titles.length - 1)">/</span>
+      <span class="separator" v-if="index < (curNavList.length - 1)">/</span>
     </span>
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, PropType, toRefs } from 'vue';
+import { computed, defineComponent, PropType, toRefs } from 'vue';
 
 export default defineComponent({
   name: 'DetailTopNav',
   props: {
-    titles: {
+    list: {
       type: Array as PropType<any[]>,
       default: () => [],
     },
@@ -23,18 +23,26 @@ export default defineComponent({
       type: String,
       default: '',
     },
+    active: {
+      type: String,
+      default: '',
+    },
   },
   setup(props, ctx) {
-    const { titles } = toRefs(props);
+    const { list } = toRefs(props);
+    const curNavList = computed(() => {
+      const index = list.value.findIndex(item => item.id === props.active);
+      return index > -1 ? list.value.slice(0, index + 1) : list.value;
+    });
 
     const handleBack = () => {
-      const index = titles.value.length - 2;
-      if (!titles.value[index]) return;
-      routeHop(titles.value[index], index);
+      const index = curNavList.value.length - 2;
+      if (!curNavList.value[index]) return;
+      routeHop(curNavList.value[index], index);
     };
 
     const routeHop = (item, index) => {
-      if (index === (props.titles.length - 1)) return;
+      if (index === (curNavList.value.length - 1)) return;
 
       ctx.emit('change', item);
     };
@@ -42,6 +50,7 @@ export default defineComponent({
     return {
       handleBack,
       routeHop,
+      curNavList,
     };
   },
 });

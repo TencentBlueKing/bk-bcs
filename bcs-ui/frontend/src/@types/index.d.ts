@@ -13,3 +13,5 @@ declare module '*.yaml'
 declare module '*.svg'
 
 declare module '*.png'
+
+declare module '@blueking/user-selector'

@@ -99,16 +99,26 @@ export function useNamespace() {
   };
 }
 
+export interface INamespace {
+  annotations: any[]
+  cpuUseRate: number
+  createTime: string
+  labels: any[]
+  name: string
+  status: string
+}
 export function useSelectItemsNamespace() {
   const namespaceValue = ref('');
   const namespaceLoading = ref(false);
-  const namespaceList = ref<any[]>([]);
+  const namespaceList = ref<INamespace[]>([]);
 
   const getNamespaceData = async ({ clusterId }, initNsValue = true) => {
     if (!clusterId) return;
     namespaceLoading.value = true;
     const data = await getNamespaceList({
       $clusterId: clusterId,
+    }, {
+      cancelWhenRouteChange: false,
     }).catch(() => []);
     // 过滤未创建成功的命名空间
     namespaceList.value = (data || []).filter(item => item.itsmTicketType !== 'CREATE');

@@ -43,7 +43,7 @@
         </div>
       </div>
       <template #content>
-        <div v-if="!showChildSelector" ref="menuRef" v-click-outside="() => (isShowPopover = false)" class="menu-wrap">
+        <div v-if="!showChildSelector" v-click-outside="() => (isShowPopover = false)" class="menu-wrap">
           <div class="search-condition">
             <div class="title">{{ t('查询条件') }}</div>
             <div v-for="item in selectorData" :key="item.value" class="search-item" @click="handleSelectParent(item)">
@@ -228,6 +228,16 @@
         searchConditionList.value = [];
       } else {
         handleAddRecentSearch();
+      }
+    },
+  );
+
+  watch(
+    () => isShowPopover.value,
+    (val) => {
+      if (val && !searchStr.value) {
+        showChildSelector.value = false;
+        parentSelecte.value = undefined;
       }
     },
   );
