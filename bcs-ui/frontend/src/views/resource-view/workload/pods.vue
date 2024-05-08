@@ -121,7 +121,8 @@
           </bk-table-column>
           <bk-table-column label="Ready" width="100" :resizable="false">
             <template #default="{ row }">
-              {{handleGetExtData(row.metadata.uid, 'readyCnt')}}/{{handleGetExtData(row.metadata.uid, 'totalCnt')}}
+              {{handleGetExtData(row.metadata.uid, 'readyCnt') || 0}}
+              / {{handleGetExtData(row.metadata.uid, 'totalCnt') || 0}}
             </template>
           </bk-table-column>
           <bk-table-column label="Restarts" width="100" :resizable="false">

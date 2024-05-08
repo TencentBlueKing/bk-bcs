@@ -326,10 +326,12 @@ const onMousedownEvent = (e: MouseEvent) => {
   // 鼠标松开事件
   document.onmouseup =  () => {
     document.body.style.userSelect = '';
-    resizeRef.value.style.borderRight = '';
     document.onmousemove = null;
     document.onmouseup = null;
-    resizeRef.value?.releaseCapture?.();
+    if (resizeRef.value) {
+      resizeRef.value.style.borderRight = '';
+      resizeRef.value?.releaseCapture?.();
+    }
   };
   resizeRef.value?.setCapture?.();
 };
