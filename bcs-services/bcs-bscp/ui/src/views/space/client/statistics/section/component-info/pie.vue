@@ -28,6 +28,7 @@
   let piePlot: Sunburst;
   const canvasRef = ref<HTMLElement>();
   const tooltipRef = ref();
+  const jumpQuery = ref<{ [key: string]: string }>({});
 
   watch(
     () => props.data.children,
@@ -63,6 +64,12 @@
         container: tooltipRef.value?.getDom(),
         enterable: true,
         customItems: (originalItems: any[]) => {
+          console.log(originalItems);
+          if (originalItems[0].data.childNodeCount > 0) {
+            jumpQuery.value = { client_type: originalItems[0].data.data.client_type };
+          } else {
+            jumpQuery.value = { client_version: originalItems[0].data.name };
+          }
           originalItems[0].name = t('客户端数量');
           originalItems[1].name = t('占比');
           originalItems[1].value = `${(originalItems[1].data.data.percent * 100).toFixed(1)}%`;
@@ -77,7 +84,13 @@
   };
 
   const jumpToSearch = () => {
-    router.push({ name: 'client-search', params: { appId: appId.value, bizId: bizId.value } });
+    console.log(jumpQuery.value);
+    const routeData = router.resolve({
+      name: 'client-search',
+      params: { appId: appId.value, bizId: bizId.value },
+      query: jumpQuery.value,
+    });
+    window.open(routeData.href, '_blank');
   };
 </script>
 

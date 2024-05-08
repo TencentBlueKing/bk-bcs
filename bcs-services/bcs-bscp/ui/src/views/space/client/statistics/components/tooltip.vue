@@ -33,7 +33,7 @@
 <style lang="scss">
   .g2-tooltip {
     position: absolute;
-    width: 160px;
+    min-width: 160px;
     .g2-tooltip-bottom {
       display: flex;
       align-items: center;

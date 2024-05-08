@@ -181,7 +181,7 @@
         }
         return {
           ...item,
-          client_type: name,
+          name,
         };
       });
       sunburstData.value.children = convertToTree(data.value);
@@ -191,12 +191,7 @@
         if (!item.key.includes('cpu')) {
           item.unit = 'MB';
         } else {
-          if (item.value > 1) {
-            item.unit = t('核');
-          } else {
-            item.value = item.value * 1000;
-            item.unit = 'mCPUs';
-          }
+          item.unit = t('核');
         }
       });
     } catch (error) {
@@ -209,16 +204,17 @@
   const convertToTree = (data: IVersionDistributionItem[]) => {
     const tree: IVersionDistributionPieItem[] = [];
     data.forEach((item) => {
-      const { client_type, client_version, value, percent } = item;
-      let typeNode = tree.find((node) => node.name === client_type);
+      const { client_type, client_version, value, percent, name } = item;
+      let typeNode = tree.find((node) => node.name === name);
       if (!typeNode) {
-        typeNode = { name: client_type, children: [], percent: 0, value: 0 };
+        typeNode = { name: name!, children: [], percent: 0, value: 0, client_type };
         tree.push(typeNode);
       }
       const versionNode: IVersionDistributionPieItem = {
         name: client_version,
         percent,
         value,
+        client_type,
       };
       typeNode.children?.push(versionNode);
       typeNode.percent += percent;

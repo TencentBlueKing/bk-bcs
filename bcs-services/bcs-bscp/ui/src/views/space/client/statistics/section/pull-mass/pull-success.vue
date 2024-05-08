@@ -81,16 +81,21 @@
       if (!val.length && piePlot) {
         piePlot!.destroy();
         piePlot = null;
-      } else {
-        piePlot?.changeData(data.value);
       }
     },
   );
 
   watch(
     () => searchQuery.value,
-    () => {
-      loadChartData();
+    async () => {
+      await loadChartData();
+      if (data.value.length) {
+        if (piePlot) {
+          piePlot!.changeData(data.value);
+        } else {
+          initChart();
+        }
+      }
     },
     { deep: true },
   );
@@ -165,11 +170,12 @@
   };
 
   const jumpToSearch = () => {
-    router.push({
+    const routeData = router.resolve({
       name: 'client-search',
       params: { appId: props.appId, bizId: props.bkBizId },
       query: { release_change_status: jumpStatus.value },
     });
+    window.open(routeData.href, '_blank');
   };
 </script>
 
@@ -193,7 +199,7 @@
     }
   }
   :deep(.bk-exception) {
-    height:100%;
+    height: 100%;
     justify-content: center;
     transform: translateY(-20px);
   }
