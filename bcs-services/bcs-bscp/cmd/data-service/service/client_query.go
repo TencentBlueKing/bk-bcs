@@ -13,8 +13,13 @@
 package service
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	"errors"
 	"time"
+
+	"gorm.io/gorm"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
@@ -34,23 +39,77 @@ func (s *Service) CreateClientQuery(ctx context.Context, req *pbds.CreateClientQ
 		return nil, err
 	}
 
-	id, err := s.dao.ClientQuery().Create(grpcKit, &table.ClientQuery{
-		Spec: &table.ClientQuerySpec{
-			Creator:         grpcKit.User,
-			SearchName:      req.SearchName,
-			SearchType:      table.SearchType(req.SearchType),
-			SearchCondition: string(searchCondition),
-			CreatedAt:       time.Now(),
-			UpdatedAt:       time.Now(),
-		},
-		Attachment: &table.ClientQueryAttachment{
-			BizID: req.BizId,
-			AppID: req.AppId,
-		},
-	})
-	if err != nil {
+	if req.SearchName != "" {
+		query, errQ := s.dao.ClientQuery().GetBySearchName(grpcKit, req.GetBizId(), req.GetAppId(),
+			grpcKit.User, req.SearchName)
+		if errQ != nil && !errors.Is(errQ, gorm.ErrRecordNotFound) {
+			return nil, errQ
+		}
+		if query != nil {
+			return nil, errors.New("search name already exists")
+		}
+	}
+
+	data, err := s.dao.ClientQuery().ListBySearchCondition(grpcKit, req.GetBizId(), req.GetAppId(),
+		grpcKit.User, string(searchCondition))
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err
 	}
+
+	oldData := new(table.ClientQuery)
+	if len(data) > 0 {
+		// 对比两个json串是否一致
+		buf := new(bytes.Buffer)
+		if err = json.Compact(buf, searchCondition); err != nil {
+			return nil, err
+		}
+		for _, v := range data {
+			dst := new(bytes.Buffer)
+			_ = json.Compact(dst, []byte(v.Spec.SearchCondition))
+			if dst.String() == buf.String() {
+				oldData = v
+			}
+		}
+	}
+
+	var id uint32
+	// 更新
+	if oldData.ID > 0 {
+		err = s.dao.ClientQuery().Update(grpcKit, &table.ClientQuery{
+			ID:         oldData.ID,
+			Attachment: oldData.Attachment,
+			Spec: &table.ClientQuerySpec{
+				Creator:         grpcKit.User,
+				SearchName:      req.SearchName,
+				SearchType:      table.SearchType(req.SearchType),
+				SearchCondition: string(searchCondition),
+				UpdatedAt:       time.Now().UTC(),
+			},
+		})
+		if err != nil {
+			return nil, err
+		}
+		id = oldData.ID
+	} else {
+		id, err = s.dao.ClientQuery().Create(grpcKit, &table.ClientQuery{
+			Spec: &table.ClientQuerySpec{
+				Creator:         grpcKit.User,
+				SearchName:      req.SearchName,
+				SearchType:      table.SearchType(req.SearchType),
+				SearchCondition: string(searchCondition),
+				CreatedAt:       time.Now().UTC(),
+				UpdatedAt:       time.Now().UTC(),
+			},
+			Attachment: &table.ClientQueryAttachment{
+				BizID: req.BizId,
+				AppID: req.AppId,
+			},
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return &pbds.CreateClientQueryResp{
 		Id: id,
 	}, nil
@@ -84,13 +143,24 @@ func (s *Service) UpdateClientQuery(ctx context.Context, req *pbds.UpdateClientQ
 		return nil, err
 	}
 
+	if req.SearchName != "" {
+		query, errQ := s.dao.ClientQuery().GetBySearchName(grpcKit, req.GetBizId(), req.GetAppId(),
+			grpcKit.User, req.SearchName)
+		if errQ != nil && !errors.Is(errQ, gorm.ErrRecordNotFound) {
+			return nil, errQ
+		}
+		if query != nil && query.ID != req.Id {
+			return nil, errors.New("search name already exists")
+		}
+	}
+
 	err = s.dao.ClientQuery().Update(grpcKit, &table.ClientQuery{
 		ID: req.Id,
 		Spec: &table.ClientQuerySpec{
 			Creator:         grpcKit.User,
 			SearchName:      req.SearchName,
 			SearchCondition: string(searchCondition),
-			UpdatedAt:       time.Now(),
+			UpdatedAt:       time.Now().UTC(),
 		},
 		Attachment: &table.ClientQueryAttachment{
 			BizID: req.BizId,
