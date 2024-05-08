@@ -341,7 +341,7 @@ func (t *Task) BuildDeleteNodeGroupTask(group *proto.NodeGroup, nodes []*proto.N
 	// step1. call gke delete node group
 	deleteNodeGroup.BuildDeleteNodeGroupStep(task)
 	// step2: update autoscaler component
-	common.BuildEnsureAutoScalerTaskStep(task, group.ClusterID, group.Provider)
+	//common.BuildEnsureAutoScalerTaskStep(task, group.ClusterID, group.Provider)
 
 	// set current step
 	if len(task.StepSequence) == 0 {

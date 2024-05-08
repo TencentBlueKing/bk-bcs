@@ -447,6 +447,11 @@ func (nm *NodeManager) GetResourceGroups(opt *cloudprovider.CommonOption) ([]*pr
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
+// GetNodeRoles node roles list
+func (nm *NodeManager) GetNodeRoles(opt *cloudprovider.CommonOption) ([]*proto.NodeRoleInfo, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
 // ListOsImage list image os
 func (nm *NodeManager) ListOsImage(provider string, opt *cloudprovider.CommonOption) ([]*proto.OsImage, error) {
 	os := make([]*proto.OsImage, 0)
