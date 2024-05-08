@@ -255,7 +255,8 @@ func (s *Service) ClientPullTrendStatistics(ctx context.Context, req *pbclient.C
 
 	resp := make(map[string]interface{})
 	if req.GetSearch().String() == "" || len(ClientIDs) > 0 {
-		data, err := s.dao.ClientEvent().GetPullTrend(grpcKit, req.GetBizId(), req.GetAppId(), ClientIDs, req.GetPullTime())
+		data, err := s.dao.ClientEvent().GetPullTrend(grpcKit, req.GetBizId(), req.GetAppId(), ClientIDs,
+			req.GetPullTime(), req.GetIsDuplicates())
 		if err != nil {
 			return nil, err
 		}
