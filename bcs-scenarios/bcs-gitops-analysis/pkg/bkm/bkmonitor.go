@@ -93,6 +93,8 @@ type BKMonitorGetMessage struct {
 	End            string `json:"end"`
 	RecentDuration int64  `json:"recentDuration,omitempty"` // unit:second
 	Step           string `json:"step"`
+
+	BKBizType string `json:"bkBizType"`
 }
 
 // Complete the start/end/step with default
@@ -142,7 +144,11 @@ func (b *BKMonitorClient) Get(message *BKMonitorGetMessage) (*BKMonitorGetRespon
 	req.Header.Set("X-Bkapi-Authorization",
 		fmt.Sprintf(`{"bk_app_code":"%s","bk_app_secret":"%s", "bk_username": "%s"}`,
 			b.op.Auth.AppCode, b.op.Auth.AppSecret, b.op.BKMonitorGetUser))
-	req.Header.Set("X-Bk-Scope-Space-Uid", fmt.Sprintf("bkcc__%d", b.op.BKMonitorGetBizID))
+	if message.BKBizType != "" {
+		req.Header.Set("X-Bk-Scope-Space-Uid", message.BKBizType)
+	} else {
+		req.Header.Set("X-Bk-Scope-Space-Uid", fmt.Sprintf("bkcc__%d", b.op.BKMonitorGetBizID))
+	}
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
