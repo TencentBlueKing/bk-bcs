@@ -45,8 +45,10 @@ type ClientQueryAttachment struct {
 type SearchType string
 
 const (
-	// Recent 最近查询
-	Recent SearchType = "recent"
+	// Query 客户端查询
+	Query SearchType = "query"
+	// Statistic 客户端统计
+	Statistic SearchType = "statistic"
 	// Common 常用查询
 	Common SearchType = "common"
 )
@@ -54,7 +56,8 @@ const (
 // Validate the search type is valid or not.
 func (st SearchType) Validate() error {
 	switch st {
-	case Recent:
+	case Query:
+	case Statistic:
 	case Common:
 	default:
 		return fmt.Errorf("unknown %s search type", st)
