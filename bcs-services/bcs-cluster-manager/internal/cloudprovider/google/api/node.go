@@ -283,3 +283,9 @@ func InstanceToNode(cli *ComputeServiceClient, ins *compute.Instance) *proto.Nod
 func (n *NodeManager) ListRuntimeInfo(opt *cloudprovider.ListRuntimeInfoOption) (map[string][]string, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
+
+// GetServiceRoles service roles list
+func (n *NodeManager) GetServiceRoles(opt *cloudprovider.CommonOption, roleType string) (
+	[]*proto.ServiceRoleInfo, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}

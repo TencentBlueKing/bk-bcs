@@ -264,6 +264,8 @@ type NodeManager interface {
 	GetResourceGroups(opt *CommonOption) ([]*proto.ResourceGroupInfo, error)
 	// ListRuntimeInfo get runtime info list
 	ListRuntimeInfo(opt *ListRuntimeInfoOption) (map[string][]string, error)
+	// GetServiceRoles service roles list
+	GetServiceRoles(opt *CommonOption, roleType string) ([]*proto.ServiceRoleInfo, error)
 }
 
 // CloudValidateManager validate interface for check cloud resourceInfo

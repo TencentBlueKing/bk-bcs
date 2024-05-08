@@ -1050,6 +1050,15 @@ service ClusterManager {
   }
 
   // Cloud Resource management
+  rpc GetServiceRoles(GetServiceRolesRequest) returns (GetServiceRolesResponse) {
+    option (google.api.http) = {
+      get : "/clustermanager/v1/clouds/{cloudID}/serviceroles"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "查询awsCloud service role列表"
+      summary : "查询awsCloud service role列表"
+    };
+  }
   rpc GetResourceGroups(GetResourceGroupsRequest) returns (GetResourceGroupsResponse) {
     option (google.api.http) = {
       get : "/clustermanager/v1/clouds/{cloudID}/resourcegroups"
@@ -3485,8 +3494,8 @@ message AutoScalingGroup {
     title: "autoUpgrade",
     description: "开启自动升级GKE版本功能,如果集群为发布版本,则强制开启"
   }];
-  string nodeRole = 16[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "nodeRole",
+  string serviceRole = 16[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "serviceRole",
     description: "创建eks节点池时指定的iam角色名称"
   }];
 }
@@ -10382,6 +10391,81 @@ message UpdateAutoScalingStatusResponse {
   WebAnnotationsV2 web_annotations = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "web_annotations",
     description : "用户所属集群权限"
+  }];
+}
+
+message ServiceRoleInfo {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ServiceRoleInfo"
+      description : "service role信息"
+    }
+  };
+
+  string roleName = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "roleName",
+    description : "service role名称"
+  }];
+  string roleID = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "roleID",
+    description : "service role ID"
+  }];
+  string arn = 3 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "arn",
+    description : "service role arn"
+  }];
+  string description = 4 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "description",
+    description : "service role描述"
+  }];
+}
+
+message GetServiceRolesRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetServiceRolesRequest"
+      description : "获取service role列表请求"
+      required : [ "cloudID", "accountID", "roleType" ]
+    }
+  };
+
+  string cloudID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "cloudID",
+    description : "云信息"
+  },(validate.rules).string = {min_len : 2}];
+  string accountID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "accountID",
+    description : "云凭证ID"
+  }];
+  string roleType = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "roleType",
+    description : "aws service role类型, 可选值为cluster,nodeGroup"
+  },(validate.rules).string = { in: ["cluster", "nodeGroup"]}];
+}
+
+message GetServiceRolesResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetServiceRolesResponse"
+      description : "获取service role列表"
+    }
+  };
+
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  bool result = 3 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+  repeated ServiceRoleInfo data = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "获取到的信息"
   }];
 }
 
