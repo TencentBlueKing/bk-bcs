@@ -13,10 +13,10 @@
 package service
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
+	"reflect"
 	"time"
 
 	"gorm.io/gorm"
@@ -51,7 +51,7 @@ func (s *Service) CreateClientQuery(ctx context.Context, req *pbds.CreateClientQ
 	}
 
 	data, err := s.dao.ClientQuery().ListBySearchCondition(grpcKit, req.GetBizId(), req.GetAppId(),
-		grpcKit.User, string(searchCondition))
+		grpcKit.User, req.SearchType, string(searchCondition))
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err
 	}
@@ -59,14 +59,12 @@ func (s *Service) CreateClientQuery(ctx context.Context, req *pbds.CreateClientQ
 	oldData := new(table.ClientQuery)
 	if len(data) > 0 {
 		// 对比两个json串是否一致
-		buf := new(bytes.Buffer)
-		if err = json.Compact(buf, searchCondition); err != nil {
-			return nil, err
-		}
+		var obj1 map[string]interface{}
+		_ = json.Unmarshal(searchCondition, &obj1)
 		for _, v := range data {
-			dst := new(bytes.Buffer)
-			_ = json.Compact(dst, []byte(v.Spec.SearchCondition))
-			if dst.String() == buf.String() {
+			var obj2 map[string]interface{}
+			_ = json.Unmarshal([]byte(v.Spec.SearchCondition), &obj2)
+			if reflect.DeepEqual(obj1, obj2) {
 				oldData = v
 			}
 		}
