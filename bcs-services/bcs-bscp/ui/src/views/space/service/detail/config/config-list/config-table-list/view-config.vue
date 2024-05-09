@@ -47,6 +47,9 @@
       </bk-tab>
     </bk-loading>
     <section class="action-btns">
+      <bk-button v-if="props.versionId === 0 && props.type === 'config'" theme="primary" @click="emits('openEdit')">{{
+        t('编辑')
+      }}</bk-button>
       <bk-button @click="close">{{ t('关闭') }}</bk-button>
     </section>
   </bk-sideslider>
@@ -108,7 +111,7 @@
     show: Boolean;
   }>();
 
-  const emits = defineEmits(['update:show']);
+  const emits = defineEmits(['update:show', 'openEdit']);
 
   const detailLoading = ref(true);
   const activeTab = ref('content');
