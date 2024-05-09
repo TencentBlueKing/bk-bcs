@@ -38,10 +38,10 @@ type ETCDAuthConfig struct {
 // ServiceConfig for etcd discovery service
 type ServiceConfig struct {
 	ETCDAuthConfig
-	tlsConfig           *tls.Config `json:"-"`
-	noAuth              bool        `json:"-"`
+	tlsConfig           *tls.Config `json:"-"` // NOCC:vet/vet(设计如此)
+	noAuth              bool        `json:"-"` // NOCC:vet/vet(设计如此)
 	ServicePortOverride *int64      `json:"servicePortOverride,omitempty"`
-	portOverride        int64       `json:"-"`
+	portOverride        int64       `json:"-"` // NOCC:vet/vet(设计如此)
 	DisableIPv6         bool        `json:"disableIPv6"`
 	IPv6Only            bool        `json:"ipv6Only"`
 }
@@ -71,6 +71,7 @@ func (c *ServiceConfig) Validate(kubeclient client.Client, namespace string) (bo
 				return false, err
 			}
 			c.tlsConfig = &tls.Config{
+				// NOCC:gas/tls(设计如此)
 				InsecureSkipVerify: c.TLSInsecure,
 				Certificates:       []tls.Certificate{tlsCert},
 			}

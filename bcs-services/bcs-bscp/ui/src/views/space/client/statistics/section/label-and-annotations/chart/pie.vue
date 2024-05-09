@@ -1,6 +1,6 @@
 <template>
   <div ref="canvasRef" class="canvas-wrap">
-    <Tooltip ref="tooltipRef" @jump="emits('jump')" />
+    <Tooltip ref="tooltipRef" @jump="emits('jump', labelValue)" />
   </div>
 </template>
 
@@ -23,6 +23,7 @@
   let piePlot: Pie;
   const canvasRef = ref<HTMLElement>();
   const tooltipRef = ref();
+  const labelValue = ref('');
 
   watch(
     () => props.data,
@@ -59,6 +60,7 @@
         container: tooltipRef.value?.getDom(),
         enterable: true,
         customItems: (originalItems: any[]) => {
+          labelValue.value = originalItems[0].title;
           originalItems[0].name = t('客户端数量');
           originalItems[1].name = t('占比');
           originalItems[1].value = `${(originalItems[1].value * 100).toFixed(1)}%`;

@@ -77,6 +77,7 @@
   });
   const loading = ref(false);
   const isOpenFullScreen = ref(false);
+  const jumpSearchTime = ref('');
 
   const isDataEmpty = computed(() => !data.value.time.some((item) => item.count > 0));
 
@@ -95,7 +96,13 @@
     () => searchQuery.value,
     async () => {
       await loadChartData();
-      dualAxes!.changeData([data.value.time, data.value.time_and_type]);
+      if (!isDataEmpty.value) {
+        if (dualAxes) {
+          dualAxes.changeData([data.value.time, data.value.time_and_type]);
+        } else {
+          initChart();
+        }
+      }
     },
     { deep: true },
   );
@@ -128,7 +135,7 @@
       const res = await getClientPullCountData(props.bkBizId, props.appId, params);
       data.value.time = res.time || [];
       data.value.time_and_type =
-        res.time_and_type.map((item: any) => {
+        res.time_and_type?.map((item: any) => {
           switch (item.type) {
             case 'sidecar':
               item.type = `SideCar ${t('客户端')}`;
@@ -213,7 +220,9 @@
         title: 'time',
         container: tooltipRef.value?.getDom(),
         enterable: true,
+        offset: 50,
         customItems: (originalItems: any[]) => {
+          jumpSearchTime.value = originalItems[0].title.replace(/\//g, '-');
           originalItems.forEach((item) => {
             if (item.name === 'count') {
               item.name = t('总量');
@@ -230,10 +239,12 @@
   };
 
   const jumpToSearch = () => {
-    router.push({
+    const routeData = router.resolve({
       name: 'client-search',
       params: { appId: props.appId, bizId: props.bkBizId },
+      query: { pull_time: jumpSearchTime.value },
     });
+    window.open(routeData.href, '_blank');
   };
 </script>
 

@@ -171,7 +171,6 @@ func (cm *ClientMetric) handleClientMetricData(kt *kit.Kit, payload []string) er
 				return err
 			}
 
-			hb.Application.AppID = clientMetricData.AppID
 			clientMetric, errHb := hb.PbClientMetric()
 			if errHb != nil {
 				return errHb
@@ -191,7 +190,6 @@ func (cm *ClientMetric) handleClientMetricData(kt *kit.Kit, payload []string) er
 				return err
 			}
 
-			vc.Application.AppID = clientMetricData.AppID
 			clientMetric, errCeVc := vc.PbClientMetric()
 			if errCeVc != nil {
 				return errCeVc

@@ -95,13 +95,14 @@ func (dao *clientDao) GetResourceUsage(kit *kit.Kit, bizID uint32, appID uint32,
 	}
 	if len(search.GetReleaseChangeStatus()) > 0 {
 		conds = append(conds, q.Where(m.ReleaseChangeStatus.In(search.GetReleaseChangeStatus()...)))
-	} else {
-		conds = append(conds, m.ReleaseChangeStatus.Eq("Success"))
 	}
 	if heartbeatTime > 0 {
-		lastHeartbeatTime := time.Now().Add(time.Duration(-heartbeatTime) * time.Minute)
+		lastHeartbeatTime := time.Now().UTC().Add(time.Duration(-heartbeatTime) * time.Minute)
 		conds = append(conds, m.LastHeartbeatTime.Gte(lastHeartbeatTime))
 	}
+	// 过滤最小0值
+	conds = append(conds, m.CpuMinUsage.Neq(0))
+	conds = append(conds, m.MemoryMinUsage.Neq(0))
 	err = q.Select(m.CpuMaxUsage.Max().As("cpu_max_usage"), m.MemoryMaxUsage.Max().As("memory_max_usage"),
 		m.CpuMinUsage.Min().As("cpu_min_usage"), m.CpuAvgUsage.Avg().As("cpu_avg_usage"),
 		m.MemoryMinUsage.Min().As("memory_min_usage"), m.MemoryAvgUsage.Avg().As("memory_avg_usage")).
@@ -147,7 +148,7 @@ func (dao *clientDao) ListClientGroupByFailedReason(kit *kit.Kit, bizID uint32, 
 		conds = append(conds, m.ReleaseChangeStatus.Eq("Failed"))
 	}
 	if heartbeatTime > 0 {
-		lastHeartbeatTime := time.Now().Add(time.Duration(-heartbeatTime) * time.Minute)
+		lastHeartbeatTime := time.Now().UTC().Add(time.Duration(-heartbeatTime) * time.Minute)
 		conds = append(conds, m.LastHeartbeatTime.Gte(lastHeartbeatTime))
 	}
 	var items []types.FailedReasonChart
@@ -182,7 +183,7 @@ func (dao *clientDao) ListClientGroupByChangeStatus(kit *kit.Kit, bizID uint32, 
 		conds = append(conds, m.ReleaseChangeStatus.In("Failed", "Success"))
 	}
 	if heartbeatTime > 0 {
-		lastHeartbeatTime := time.Now().Add(time.Duration(-heartbeatTime) * time.Minute)
+		lastHeartbeatTime := time.Now().UTC().Add(time.Duration(-heartbeatTime) * time.Minute)
 		conds = append(conds, m.LastHeartbeatTime.Gte(lastHeartbeatTime))
 	}
 	var items []types.ChangeStatusChart
@@ -203,7 +204,7 @@ func (dao *clientDao) ListClientGroupByCurrentReleaseID(kit *kit.Kit, bizID uint
 	var err error
 	var conds []rawgen.Condition
 	if heartbeatTime > 0 {
-		lastHeartbeatTime := time.Now().Add(time.Duration(-heartbeatTime) * time.Minute)
+		lastHeartbeatTime := time.Now().UTC().Add(time.Duration(-heartbeatTime) * time.Minute)
 		conds = append(conds, m.LastHeartbeatTime.Gte(lastHeartbeatTime))
 	}
 	if search.String() != "" {
@@ -247,7 +248,7 @@ func (dao *clientDao) List(kit *kit.Kit, bizID, appID uint32, heartbeatTime int6
 	}
 
 	if heartbeatTime > 0 {
-		lastHeartbeatTime := time.Now().Add(time.Duration(-heartbeatTime) * time.Minute)
+		lastHeartbeatTime := time.Now().UTC().Add(time.Duration(-heartbeatTime) * time.Minute)
 		conds = append(conds, m.LastHeartbeatTime.Gte(lastHeartbeatTime))
 	}
 
@@ -331,13 +332,48 @@ func (dao *clientDao) handleSearch(kit *kit.Kit, bizID, appID uint32, search *pb
 		conds = append(conds, q.Where(m.ID.In(cid...)))
 	}
 
+	// 处理拉取时间
+	if search.GetPullTime() != "" {
+		starTime, err := time.Parse("2006-01-02", search.GetPullTime())
+		if err != nil {
+			return nil, err
+		}
+		// 设置时分秒为 00:00:00
+		starTime = time.Date(starTime.Year(), starTime.Month(), starTime.Day(), 0, 0, 0, 0, starTime.UTC().Location())
+		endTime, err := time.Parse("2006-01-02", search.GetPullTime())
+		// 设置时分秒为 23:59:59
+		endTime = time.Date(endTime.Year(), endTime.Month(), endTime.Day(), 23, 59, 59, 0, endTime.UTC().Location())
+		if err != nil {
+			return nil, err
+		}
+		var clientEvent []struct {
+			ClientID uint32
+		}
+		err = ce.WithContext(kit.Ctx).Select(ce.ClientID).Where(ce.StartTime.Gte(starTime), ce.EndTime.Lte(endTime)).
+			Group(ce.ClientID).Scan(&clientEvent)
+		if err != nil {
+			return conds, err
+		}
+		cid := []uint32{}
+		for _, v := range clientEvent {
+			cid = append(cid, v.ClientID)
+		}
+		conds = append(conds, q.Where(m.ID.In(cid...)))
+	}
+
 	if len(search.GetReleaseChangeStatus()) > 0 {
 		conds = append(conds, q.Where(m.ReleaseChangeStatus.In(search.GetReleaseChangeStatus()...)))
 	}
 
 	if search.GetLabel() != nil && len(search.GetLabel().GetFields()) != 0 {
 		for k, v := range search.GetLabel().GetFields() {
-			conds = append(conds, rawgen.Cond(datatypes.JSONQuery("labels").Equals(v.AsInterface(), k))...)
+			// 不空搜索键值对，否则搜索键
+			if v.GetStringValue() != "" {
+				conds = append(conds, rawgen.Cond(datatypes.JSONQuery("labels").Equals(v.AsInterface(), k))...)
+			} else {
+				conds = append(conds, rawgen.Cond(datatypes.JSONQuery("labels").HasKey(k))...)
+			}
+
 		}
 	}
 

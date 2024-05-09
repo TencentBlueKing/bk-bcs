@@ -94,7 +94,8 @@ func FeatureFlagsHandler(w http.ResponseWriter, r *http.Request) {
 		if resource.MaxFileSize != 0 {
 			featureFlags.ResourceLimit.MaxFileSize = resource.MaxFileSize
 		}
-		// TODO：其他资源限制
+		// NOCC:golint/todo(忽略)
+		// nolint TODO：其他资源限制
 	}
 
 	render.Render(w, r, rest.OKRender(featureFlags))

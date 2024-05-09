@@ -1079,8 +1079,12 @@ func (v Vault) validate() error {
 // getConfigFromEnv Read configuration from environment variables
 func (v *Vault) getConfigFromEnv() {
 
-	v.Token = os.Getenv(VaultTokenEnv)
-	v.Address = os.Getenv(VaultAddressEnv)
+	if v.Token == "" {
+		v.Token = os.Getenv(VaultTokenEnv)
+	}
+	if v.Address == "" {
+		v.Address = os.Getenv(VaultAddressEnv)
+	}
 }
 
 // BKNotice defines all the bk notice related runtime.

@@ -65,6 +65,30 @@ func PodCPUUsage(c *rest.Context) (interface{}, error) {
 	return handlePodMetric(c, promql)
 }
 
+// PodCPULimitUsage Pod Limit CPU使用率
+// @Summary Pod Limit CPU使用率
+// @Tags    Metrics
+// @Success 200 {string} string
+// @Router  /namespaces/:namespace/pods/cpu_limit_usage [POST]
+func PodCPULimitUsage(c *rest.Context) (interface{}, error) {
+	promql :=
+		`bcs:pod:cpu_limit_usage{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podNameList>s", %<provider>s}` // nolint
+
+	return handlePodMetric(c, promql)
+}
+
+// PodCPURequestUsage Pod Request CPU使用率
+// @Summary Pod Request CPU使用率
+// @Tags    Metrics
+// @Success 200 {string} string
+// @Router  /namespaces/:namespace/pods/cpu_request_usage [POST]
+func PodCPURequestUsage(c *rest.Context) (interface{}, error) {
+	promql :=
+		`bcs:pod:cpu_request_usage{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podNameList>s", %<provider>s}` // nolint
+
+	return handlePodMetric(c, promql)
+}
+
 // PodMemoryUsed Pod 内存使用量
 // @Summary Pod 内存使用量
 // @Tags    Metrics

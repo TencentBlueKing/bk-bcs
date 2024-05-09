@@ -84,7 +84,8 @@ func (zkRD *ZkRegDiscv) RegisterAndWatch(path string, data []byte) error {
 			return
 		}
 
-		watchCtx, _ := context.WithCancel(zkRD.rootCxt)
+		// NOCC:vet/vet(忽略)
+		watchCtx, _ := context.WithCancel(zkRD.rootCxt) // nolint
 
 		_, _, watchEvn, err := zkRD.zkcli.ExistW(newPath)
 		if err != nil {
@@ -112,7 +113,8 @@ func (zkRD *ZkRegDiscv) RegisterAndWatch(path string, data []byte) error {
 // Discover watch the children
 func (zkRD *ZkRegDiscv) Discover(path string) (<-chan *DiscoverEvent, error) {
 	blog.V(3).Infof("begin to discover by watch children of path(%s)", path)
-	discvCtx, _ := context.WithCancel(zkRD.rootCxt)
+	// NOCC:vet/vet(忽略)
+	discvCtx, _ := context.WithCancel(zkRD.rootCxt) // nolint
 
 	env := make(chan *DiscoverEvent, 1)
 

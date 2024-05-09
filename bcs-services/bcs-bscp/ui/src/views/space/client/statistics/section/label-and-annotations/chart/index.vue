@@ -19,7 +19,7 @@
             :is="currentComponent"
             :data="data"
             :label="label"
-            @jump="jumpToSearch" />
+            @jump="jumpToSearch($event as string)" />
         </bk-loading>
       </Card>
     </div>
@@ -72,11 +72,13 @@
     },
   );
 
-  const jumpToSearch = () => {
-    router.push({
+  const jumpToSearch = (value: string) => {
+    const routeData = router.resolve({
       name: 'client-search',
       params: { appId: props.appId, bizId: props.bkBizId },
+      query: { label: `${props.label}=${value}` },
     });
+    window.open(routeData.href, '_blank');
   };
 </script>
 
