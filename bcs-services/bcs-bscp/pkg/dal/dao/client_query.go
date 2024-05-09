@@ -34,8 +34,8 @@ type ClientQuery interface {
 	// Delete ..
 	Delete(kit *kit.Kit, data *table.ClientQuery) error
 	// ListBySearchCondition Get by search criteria
-	ListBySearchCondition(kit *kit.Kit, bizID, appID uint32, creator, searchCondition string) (
-		[]*table.ClientQuery, error)
+	ListBySearchCondition(kit *kit.Kit, bizID, appID uint32, creator, searchType,
+		searchCondition string) ([]*table.ClientQuery, error)
 	// GetBySearchName Get by search name
 	GetBySearchName(kit *kit.Kit, bizID, appID uint32, creator, searchName string) (
 		*table.ClientQuery, error)
@@ -59,12 +59,12 @@ func (dao *clientQueryDao) GetBySearchName(kit *kit.Kit, bizID uint32, appID uin
 }
 
 // ListBySearchCondition Get by search criteria
-func (dao *clientQueryDao) ListBySearchCondition(kit *kit.Kit, bizID, appID uint32, creator, searchCondition string) (
-	[]*table.ClientQuery, error) {
+func (dao *clientQueryDao) ListBySearchCondition(kit *kit.Kit, bizID, appID uint32, creator, searchType,
+	searchCondition string) ([]*table.ClientQuery, error) {
 	m := dao.genQ.ClientQuery
 
 	return dao.genQ.ClientQuery.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID), m.AppID.Eq(appID)).
-		Where(m.Creator.Eq(creator)).
+		Where(m.Creator.Eq(creator), m.SearchType.Eq(searchType)).
 		Where(utils.RawCond("JSON_CONTAINS(?,?)", utils.Field{
 			Field: m.SearchCondition,
 		}, searchCondition)).
