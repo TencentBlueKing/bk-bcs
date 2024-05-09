@@ -1,7 +1,7 @@
 <template>
   <Teleport :disabled="!isOpenFullScreen" to="body">
     <div :class="{ fullscreen: isOpenFullScreen }">
-      <Card :title="$t('拉取数量趋势')" :height="360" style="margin-bottom: 16px">
+      <Card :title="props.title" :height="360" style="margin-bottom: 16px">
         <template #operation>
           <OperationBtn
             :is-open-full-screen="isOpenFullScreen"
@@ -51,6 +51,8 @@
   const props = defineProps<{
     bkBizId: string;
     appId: number;
+    title: string;
+    isDuplicates: boolean;
   }>();
 
   let dualAxes: DualAxes | null;
@@ -129,6 +131,7 @@
       search: searchQuery.value.search,
       pull_time: selectTime.value,
       last_heartbeat_time: searchQuery.value.last_heartbeat_time,
+      is_duplicates: props.isDuplicates,
     };
     try {
       loading.value = true;

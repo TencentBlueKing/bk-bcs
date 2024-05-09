@@ -94,4 +94,13 @@
   };
 </script>
 
-<style scoped lang="scss"></style>
+<style scoped lang="scss">
+  :deep(.g2-tooltip) {
+    visibility: hidden;
+    .g2-tooltip-list-item {
+      .g2-tooltip-marker {
+        border-radius: initial !important;
+      }
+    }
+  }
+</style>

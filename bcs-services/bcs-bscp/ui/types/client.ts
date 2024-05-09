@@ -28,6 +28,7 @@ export interface IClinetCommonQuery {
   search_value?: string;
   search_type?: string;
   pull_time?: number;
+  is_duplicates?: boolean;
 }
 
 // 客户端查询列表接口查询条件

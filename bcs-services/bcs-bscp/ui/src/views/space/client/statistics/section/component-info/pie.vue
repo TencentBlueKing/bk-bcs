@@ -7,7 +7,6 @@
 <script lang="ts" setup>
   import { ref, onMounted, watch } from 'vue';
   import { Sunburst } from '@antv/g2plot';
-
   import Tooltip from '../../components/tooltip.vue';
   import { IVersionDistributionPie } from '../../../../../../../types/client';
   import { useRouter, useRoute } from 'vue-router';
@@ -64,7 +63,6 @@
         container: tooltipRef.value?.getDom(),
         enterable: true,
         customItems: (originalItems: any[]) => {
-          console.log(originalItems);
           if (originalItems[0].data.childNodeCount > 0) {
             jumpQuery.value = { client_type: originalItems[0].data.data.client_type };
           } else {
