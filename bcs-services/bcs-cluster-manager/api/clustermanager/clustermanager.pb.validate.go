@@ -225,6 +225,8 @@ func (m *Cluster) Validate() error {
 
 	// no validation rules for Message
 
+	// no validation rules for IsMixed
+
 	return nil
 }
 
@@ -1752,6 +1754,16 @@ func (m *ClusterMgr) Validate() error {
 		if err := v.Validate(); err != nil {
 			return ClusterMgrValidationError{
 				field:  "ImportCluster",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetCommonMixedAction()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ClusterMgrValidationError{
+				field:  "CommonMixedAction",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}
@@ -9201,6 +9213,8 @@ func (m *CreateClusterReq) Validate() error {
 
 	}
 
+	// no validation rules for IsMixed
+
 	return nil
 }
 
@@ -11612,6 +11626,16 @@ func (m *UpdateClusterReq) Validate() error {
 	// no validation rules for ImportCategory
 
 	// no validation rules for CloudAccountID
+
+	if v, ok := interface{}(m.GetIsMixed()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateClusterReqValidationError{
+				field:  "IsMixed",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
 
 	return nil
 }
@@ -20569,6 +20593,8 @@ func (m *NodeGroupNode) Validate() error {
 	// no validation rules for InstanceRole
 
 	// no validation rules for UnSchedulable
+
+	// no validation rules for NodeName
 
 	return nil
 }
