@@ -85,7 +85,7 @@
                   cluster_id: localClusterId
                 }
               }"
-              :disabled="isKubeConfigImportCluster || ['azureCloud', 'huaweiCloud'].includes(curSelectedCluster.provider || '')"
+              :disabled="isKubeConfigImportCluster || ['huaweiCloud'].includes(curSelectedCluster.provider || '')"
               @click="handleAddNode">
               {{$t('cluster.nodeList.create.text')}}
             </bcs-button>
