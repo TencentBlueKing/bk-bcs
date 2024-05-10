@@ -35,7 +35,6 @@ var (
 
 // BaseRequest contains the common information of all requests
 type BaseRequest struct {
-	BkBizId     int64  `json:"bk_biz_id,omitempty"`
 	BkAppCode   string `json:"bk_app_code,omitempty"`
 	BkAppSecret string `json:"bk_app_secret,omitempty"`
 	AccessToken string `json:"access_token,omitempty"`
@@ -58,9 +57,8 @@ type ApiResponse struct {
 }
 
 // NewBaseRequest create a request object
-func NewBaseRequest(bkBizId int64, bkAppCode, bkAppSecret, accessToken, bkUsername string) *BaseRequest {
+func NewBaseRequest(bkAppCode, bkAppSecret, accessToken, bkUsername string) *BaseRequest {
 	return &BaseRequest{
-		BkBizId:     bkBizId,
 		BkAppCode:   bkAppCode,
 		BkAppSecret: bkAppSecret,
 		AccessToken: accessToken,

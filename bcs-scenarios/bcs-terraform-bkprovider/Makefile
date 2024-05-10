@@ -27,7 +27,7 @@ init:
 .PHONY: proto
 proto:
 	protoc --proto_path=. \
-    		--proto_path=../../bcs-common/pkg/third_party \
+    		--proto_path=../../bcs-services/bcs-cluster-manager/third_party \
     		--go_out=. \
     		--micro_out=. \
     		--go-grpc_out=. \
