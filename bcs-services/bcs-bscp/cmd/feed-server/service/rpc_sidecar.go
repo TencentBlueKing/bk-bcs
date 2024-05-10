@@ -686,8 +686,7 @@ func (s *Service) AsyncDownload(ctx context.Context, req *pbfs.AsyncDownloadReq)
 
 	// 5. 创建文件传输任务
 	taskID, err := gse.CreateTransferFileTask(ctx, serverAgentID, serverContainerID, sourceDir, gseConf.AgentUser,
-		req.FileMeta.ConfigItemSpec.Name, clientAgentID, clientContainerID, req.FileDir,
-		req.FileMeta.CommitSpec.Content.Signature, req.FileMeta.ConfigItemSpec.Permission.User)
+		signature, clientAgentID, clientContainerID, req.FileDir, req.FileMeta.ConfigItemSpec.Permission.User)
 	if err != nil {
 		return nil, fmt.Errorf("create transfer file task failed, %s", err.Error())
 	}
