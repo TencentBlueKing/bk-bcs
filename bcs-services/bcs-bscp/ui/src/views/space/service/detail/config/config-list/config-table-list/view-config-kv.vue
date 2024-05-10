@@ -40,6 +40,7 @@
       </bk-tab>
     </div>
     <section class="action-btns">
+      <bk-button theme="primary" @click="emits('openEdit')">{{ t('编辑') }}</bk-button>
       <bk-button @click="close">{{ t('关闭') }}</bk-button>
     </section>
   </bk-sideslider>
@@ -55,9 +56,10 @@
   const props = defineProps<{
     config: IConfigKvType;
     show: boolean;
+    showEditBtn?: boolean;
   }>();
 
-  const emits = defineEmits(['update:show', 'confirm']);
+  const emits = defineEmits(['update:show', 'confirm', 'openEdit']);
 
   const activeTab = ref('content');
   const isFormChange = ref(false);
