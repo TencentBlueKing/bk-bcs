@@ -190,7 +190,11 @@
 
   const linkToApp = (versionId: number) => {
     emits('close');
-    router.push({ name: 'service-config', params: { spaceId: props.bkBizId, appId: props.appId, versionId } });
+    const routeData = router.resolve({
+      name: 'service-config',
+      params: { spaceId: props.bkBizId, appId: props.appId, versionId },
+    });
+    window.open(routeData.href, '_blank');
   };
 
   const handleClearSearchStr = () => {

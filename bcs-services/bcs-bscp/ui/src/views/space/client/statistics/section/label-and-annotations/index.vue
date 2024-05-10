@@ -38,15 +38,12 @@
       </template>
     </SectionTitle>
     <div class="chart-list">
-      <div v-if="selectedChart?.length" v-for="item in selectedChart" :key="item.label" class="chart">
+      <div v-if="selectedLabel?.length" v-for="primaryDimension in selectedLabel" :key="primaryDimension" class="chart">
         <Chart
-          :data="item.data as IClientLabelItem[]"
-          :primary-dimension="item.label"
+          :primary-dimension="primaryDimension"
           :all-label="addChartData!.labels"
           :bk-biz-id="bkBizId"
-          :app-id="appId"
-          :loading="loading"
-          @refresh="loadLabelsAndAnnotationsData" />
+          :app-id="appId" />
       </div>
       <Card v-else :height="368">
         <bk-exception
@@ -66,18 +63,12 @@
 <script lang="ts" setup>
   import { ref, onMounted, watch } from 'vue';
   import { Plus } from 'bkui-vue/lib/icon';
-  import { getClientLabelsAndAnnotations, getClientLabelData } from '../../../../../../api/client';
+  import { getClientLabelsAndAnnotations } from '../../../../../../api/client';
   import { storeToRefs } from 'pinia';
-  import { IClientLabelItem, IClinetCommonQuery } from '../../../../../../../types/client';
   import useClientStore from '../../../../../../store/client';
   import SectionTitle from '../../components/section-title.vue';
   import Chart from './chart/index.vue';
   import Card from '../../components/card.vue';
-
-  interface ISelectedChart {
-    label: string;
-    data: IClientLabelItem[];
-  }
 
   const clientStore = useClientStore();
   const { searchQuery } = storeToRefs(clientStore);
@@ -89,12 +80,6 @@
 
   const selectedLabel = ref<string[]>([]);
 
-  const allLabelData = ref<{ [key: string]: IClientLabelItem[] }>(); // 所有标签图表数据
-
-  const selectedChart = ref<ISelectedChart[]>([]); // 选择展示的图表
-
-  const loading = ref(false);
-
   const addChartData = ref<{
     annotations: string[];
     labels: string[];
@@ -104,7 +89,6 @@
     () => props.appId,
     () => {
       getAddChartDate();
-      loadLabelsAndAnnotationsData();
     },
   );
 
@@ -112,29 +96,16 @@
     () => searchQuery.value,
     () => {
       getAddChartDate();
-      loadLabelsAndAnnotationsData();
     },
     { deep: true },
   );
 
   watch(
     () => selectedLabel.value,
-    () => {
-      selectedChart.value = [];
-      selectedLabel.value.forEach((item) => {
-        const data = allLabelData.value?.[item];
-        if (data) {
-          selectedChart.value.push({
-            label: item,
-            data,
-          });
-        }
-      });
-    },
+    () => {},
   );
 
   onMounted(() => {
-    loadLabelsAndAnnotationsData();
     getAddChartDate();
   });
 
@@ -147,34 +118,6 @@
       selectedLabel.value = addChartData.value?.labels.slice(0, 2) || addChartData.value?.labels.slice(0, 1) || [];
     } catch (e) {
       console.error(e);
-    }
-  };
-
-  const loadLabelsAndAnnotationsData = async () => {
-    const params: IClinetCommonQuery = {
-      last_heartbeat_time: searchQuery.value.last_heartbeat_time,
-      search: searchQuery.value.search,
-    };
-    try {
-      loading.value = true;
-      const res = await getClientLabelData(props.bkBizId, props.appId, params);
-      allLabelData.value = res;
-      selectedChart.value = [];
-      if (Object.keys(res).length) {
-        selectedLabel.value.forEach((item) => {
-          const data = allLabelData.value?.[item];
-          if (data) {
-            selectedChart.value.push({
-              label: item,
-              data,
-            });
-          }
-        });
-      }
-    } catch (error) {
-      console.error(error);
-    } finally {
-      loading.value = false;
     }
   };
 </script>

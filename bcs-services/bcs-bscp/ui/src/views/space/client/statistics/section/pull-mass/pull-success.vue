@@ -208,4 +208,29 @@
     justify-content: center;
     transform: translateY(-20px);
   }
+
+  :deep(.g2-tooltip) {
+    visibility: hidden;
+    .g2-tooltip-title {
+      padding-left: 16px;
+      font-size: 14px;
+    }
+    .g2-tooltip-list-item:nth-child(2) {
+      .g2-tooltip-marker {
+        display: none !important;
+      }
+      .g2-tooltip-name {
+        margin-left: 16px;
+      }
+    }
+    .g2-tooltip-list-item:nth-child(1) {
+      .g2-tooltip-marker {
+        position: absolute;
+        top: 15px;
+      }
+      .g2-tooltip-name {
+        margin-left: 16px;
+      }
+    }
+  }
 </style>

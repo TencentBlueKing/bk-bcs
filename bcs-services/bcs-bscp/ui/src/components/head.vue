@@ -419,6 +419,7 @@
             z-index: 1000;
             background: #182132;
             border-radius: 0 0 2px 2px;
+            padding: 4px 1px;
             .secondNav-item {
               min-width: 102px;
               height: 40px;
@@ -427,6 +428,12 @@
               font-size: 14px;
               a {
                 color: #96a2b9;
+              }
+              &:hover {
+                color: #c2cee5;
+                a {
+                  color: #c2cee5;
+                }
               }
               &.actived {
                 background: #2f3746;

@@ -395,7 +395,11 @@
   };
 
   const linkToApp = (versionId: number) => {
-    router.push({ name: 'service-config', params: { spaceId: bkBizId.value, appId: appId.value, versionId } });
+    const routeData = router.resolve({
+      name: 'service-config',
+      params: { spaceId: bkBizId.value, appId: appId.value, versionId },
+    });
+    window.open(routeData.href, '_blank');
   };
 
   const handleShowPullRecord = (uid: string, id: number) => {

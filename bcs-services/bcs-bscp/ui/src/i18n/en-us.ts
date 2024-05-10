@@ -810,4 +810,10 @@ export default {
   错误类别: 'Error category',
   错误子类别: 'Error subclass',
   错误详情: 'Error details',
+  设置维度: 'Set dimension',
+  展示方式: 'Display mode',
+  平铺: 'Tile',
+  三个以上维度不支持堆叠展示效果: 'More than three dimensions do not support the stacking effect',
+  堆叠: 'Pile',
+  设置下钻: 'Set trip',
 };

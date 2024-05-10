@@ -4,9 +4,11 @@
       v-model="minorDimension"
       :popover-options="{ theme: 'light bk-select-popover add-dimensionality-popover', placement: 'bottom-start' }"
       :popover-min-width="353"
-      :filterable="true"
+      :search-placeholder="$t('请输入关键字')"
+      filterable
       multiple
-      @toggle="handleToggle">
+      @toggle="handleToggle"
+      @change="emits('selectDimension', minorDimension)">
       <template #trigger>
         <span
           v-if="needDown"
@@ -38,6 +40,7 @@
       :popover-options="{ theme: 'light bk-select-popover', placement: 'bottom-start' }"
       :popover-min-width="238"
       :filterable="true"
+      :search-placeholder="$t('请输入关键字')"
       @toggle="handleToggle">
       <template #trigger>
         <span
@@ -67,7 +70,7 @@
     primaryDimension?: string;
     needDown?: boolean;
   }>();
-  const emits = defineEmits(['refresh', 'toggleFullScreen', 'toggleShow']);
+  const emits = defineEmits(['refresh', 'toggleFullScreen', 'toggleShow', 'selectDimension']);
 
   const showType = ref('tile');
   const minorDimension = ref([`${props.primaryDimension}`]);

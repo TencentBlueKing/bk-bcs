@@ -13,9 +13,10 @@
             :is-open-full-screen="isOpenFullScreen"
             :all-label="allLabel"
             :primary-dimension="primaryDimension"
-            @refresh="emits('refresh')"
+            @refresh="loadChartData"
             @toggle-full-screen="isOpenFullScreen = !isOpenFullScreen"
-            @toggle-show="isOpenPopover = $event" />
+            @toggle-show="isOpenPopover = $event"
+            @select-dimension="selectedDimension = $event" />
         </template>
         <template #head-suffix>
           <bk-tag theme="info" type="stroke" style="margin-left: 8px"> {{ $t('标签') }} </bk-tag>
@@ -26,6 +27,7 @@
             :bk-biz-id="bkBizId"
             :app-id="appId"
             :is="currentComponent"
+            :label="primaryDimension"
             :data="data"
             @jump="jumpToSearch($event as string)" />
         </bk-loading>
@@ -36,6 +38,9 @@
 
 <script lang="ts" setup>
   import { ref, onMounted, computed, watch } from 'vue';
+  import { getClientLabelData } from '../../../../../../../api/client';
+  import { storeToRefs } from 'pinia';
+  import useClientStore from '../../../../../../../store/client';
   import Card from '../../../components/card.vue';
   import TriggerBtn from '../../../components/trigger-btn.vue';
   import Pie from './pie.vue';
@@ -45,16 +50,15 @@
   import { IClientLabelItem } from '../../../../../../../../types/client';
   import { useRouter } from 'vue-router';
 
-  const router = useRouter();
+  const clientStore = useClientStore();
+  const { searchQuery } = storeToRefs(clientStore);
 
-  const emits = defineEmits(['refresh']);
+  const router = useRouter();
 
   const props = defineProps<{
     bkBizId: string;
     appId: number;
     primaryDimension: string;
-    data: IClientLabelItem[];
-    loading: boolean;
     allLabel: string[];
   }>();
 
@@ -69,12 +73,17 @@
   const initialWidth = ref(0);
   const isMouseEnter = ref(false);
   const isOpenPopover = ref(false);
+  const loading = ref(false);
+  const data = ref<IClientLabelItem[]>([]);
+  const selectedDimension = ref<string[]>([]);
+
   const isShowOperationBtn = computed(() => isMouseEnter.value || isOpenPopover.value);
 
   const currentComponent = computed(() => componentMap[currentType.value as keyof typeof componentMap]);
 
   onMounted(() => {
     initialWidth.value = containerRef.value.offsetWidth;
+    loadChartData();
   });
 
   watch(
@@ -83,6 +92,46 @@
       containerRef.value!.style.width = val ? '100%' : `${initialWidth.value}px`;
     },
   );
+
+  const loadChartData = async () => {
+    const params = {
+      last_heartbeat_time: searchQuery.value.last_heartbeat_time,
+      search: searchQuery.value.search,
+      primary_key: props.primaryDimension,
+    };
+    const allDimension: { [key: string]: string } = {};
+    selectedDimension.value.forEach((item: string) => {
+      allDimension[item] = '';
+    });
+    params.search = Object.assign({}, searchQuery.value.search, {
+      label: {
+        ...searchQuery.value.search.label,
+        ...allDimension,
+      },
+    });
+    try {
+      loading.value = true;
+      const res = await getClientLabelData(props.bkBizId, props.appId, params);
+      data.value = res[props.primaryDimension];
+      // allLabelData.value = res;
+      // selectedChart.value = [];
+      // if (Object.keys(res).length) {
+      //   selectedLabel.value.forEach((item) => {
+      //     const data = allLabelData.value?.[item];
+      //     if (data) {
+      //       selectedChart.value.push({
+      //         label: item,
+      //         data,
+      //       });
+      //     }
+      //   });
+      // }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      loading.value = false;
+    }
+  };
 
   const jumpToSearch = (value: string) => {
     const routeData = router.resolve({

@@ -71,11 +71,42 @@
       legend: {
         position: 'right',
         offsetX: -200,
+        layout: 'horizontal',
+        flipPage: false,
+        maxWidth: 300,
+        reversed: true,
       },
     });
     piePlot.render();
   };
 </script>
+
+<style lang="scss" scoped>
+  :deep(.g2-tooltip) {
+    visibility: hidden;
+    .g2-tooltip-title {
+      padding-left: 16px;
+      font-size: 14px;
+    }
+    .g2-tooltip-list-item:nth-child(2) {
+      .g2-tooltip-marker {
+        display: none !important;
+      }
+      .g2-tooltip-name {
+        margin-left: 16px;
+      }
+    }
+    .g2-tooltip-list-item:nth-child(1) {
+      .g2-tooltip-marker {
+        position: absolute;
+        top: 15px;
+      }
+      .g2-tooltip-name {
+        margin-left: 16px;
+      }
+    }
+  }
+</style>
 
 <style lang="scss">
   .canvas-wrap {
@@ -83,8 +114,5 @@
     display: flex;
     align-items: center;
     height: 100%;
-  }
-  .g2-tooltip {
-    visibility: hidden;
   }
 </style>

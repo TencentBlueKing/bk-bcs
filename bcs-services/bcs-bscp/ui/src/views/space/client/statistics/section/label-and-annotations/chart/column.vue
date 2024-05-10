@@ -38,12 +38,13 @@
   const initChart = () => {
     columnPlot = new Column(canvasRef.value!, {
       data: props.data,
-      xField: 'value',
+      xField: 'value0',
       yField: 'count',
       padding: [30, 10, 50, 20],
       limitInPlot: false,
-      color: '#3E96C2',
-      seriesField: 'count',
+      isStack: true,
+      color: ['#3E96C2', '#61B2C2', '#85CCA8', '#B5E0AB'],
+      seriesField: 'value1',
       maxColumnWidth: 40,
       legend: {
         custom: true,
@@ -70,7 +71,7 @@
       tooltip: {
         fields: ['count'],
         showTitle: true,
-        title: 'value',
+        title: 'value0',
         container: tooltipRef.value?.getDom(),
         enterable: true,
         customItems: (originalItems: any[]) => {
