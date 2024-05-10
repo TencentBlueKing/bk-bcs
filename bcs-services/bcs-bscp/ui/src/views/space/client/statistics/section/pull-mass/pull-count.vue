@@ -1,9 +1,13 @@
 <template>
   <Teleport :disabled="!isOpenFullScreen" to="body">
-    <div :class="{ fullscreen: isOpenFullScreen }">
+    <div
+      :class="{ fullscreen: isOpenFullScreen }"
+      @mouseenter="isShowOperationBtn = true"
+      @mouseleave="isShowOperationBtn = false">
       <Card :title="props.title" :height="360" style="margin-bottom: 16px">
         <template #operation>
           <OperationBtn
+            v-show="isShowOperationBtn"
             :is-open-full-screen="isOpenFullScreen"
             @refresh="loadChartData"
             @toggle-full-screen="isOpenFullScreen = !isOpenFullScreen" />
@@ -80,6 +84,7 @@
   const loading = ref(false);
   const isOpenFullScreen = ref(false);
   const jumpSearchTime = ref('');
+  const isShowOperationBtn = ref(false);
 
   const isDataEmpty = computed(() => !data.value.time.some((item) => item.count > 0));
 

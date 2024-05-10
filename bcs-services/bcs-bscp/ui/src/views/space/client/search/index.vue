@@ -492,6 +492,9 @@
     }
     &:hover {
       color: #3a84ff;
+      .icon {
+        color: #3a84ff;
+      }
     }
   }
   .release_change_status {

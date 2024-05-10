@@ -68,6 +68,7 @@
           } else {
             jumpQuery.value = { client_version: originalItems[0].data.name };
           }
+          originalItems[0].marker = false;
           originalItems[0].name = t('客户端数量');
           originalItems[1].name = t('占比');
           originalItems[1].value = `${(originalItems[1].data.data.percent * 100).toFixed(1)}%`;
@@ -92,4 +93,29 @@
   };
 </script>
 
-<style lang="scss"></style>
+<style scoped lang="scss">
+  :deep(.g2-tooltip) {
+    visibility: hidden;
+    .g2-tooltip-title {
+      padding-left: 16px;
+      font-size: 14px;
+    }
+    .g2-tooltip-list-item:nth-child(2) {
+      .g2-tooltip-marker {
+        display: none !important;
+      }
+      .g2-tooltip-name {
+        margin-left: 16px;
+      }
+    }
+    .g2-tooltip-list-item:nth-child(1) {
+      .g2-tooltip-marker {
+        position: absolute;
+        top: 15px;
+      }
+      .g2-tooltip-name {
+        margin-left: 16px;
+      }
+    }
+  }
+</style>

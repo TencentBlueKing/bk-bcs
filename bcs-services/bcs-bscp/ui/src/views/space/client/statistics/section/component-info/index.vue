@@ -4,10 +4,15 @@
     <div class="content-wrap">
       <div class="left">
         <Teleport :disabled="!isOpenFullScreen" to="body">
-          <div ref="containerRef" :class="{ fullscreen: isOpenFullScreen }">
+          <div
+            ref="containerRef"
+            :class="{ fullscreen: isOpenFullScreen }"
+            @mouseenter="isShowOperationBtn = true"
+            @mouseleave="isShowOperationBtn = false">
             <Card :title="t('组件版本分布')" :height="416">
               <template #operation>
                 <OperationBtn
+                  v-show="isShowOperationBtn"
                   :is-open-full-screen="isOpenFullScreen"
                   @refresh="loadChartData"
                   @toggle-full-screen="isOpenFullScreen = !isOpenFullScreen" />
@@ -125,6 +130,7 @@
   const isOpenFullScreen = ref(false);
   const containerRef = ref();
   const initialWidth = ref(0);
+  const isShowOperationBtn = ref(false);
 
   const currentComponent = computed(() => componentMap[currentType.value as keyof typeof componentMap]);
   const needDataType = computed(() => (currentType.value === 'pie' ? sunburstData.value : data.value));

@@ -43,7 +43,7 @@
                 v-if="row.spec && row.spec.original_release_id"
                 class="config-version"
                 @click="linkToApp(row.spec.original_release_id)">
-                <Share fill="#979BA5" />
+                <Share class="icon" />
                 <span class="text">{{ row.original_release_name }}</span>
               </div>
               <span v-else>--</span>
@@ -55,7 +55,7 @@
                 v-if="row.spec && row.spec.target_release_id"
                 class="config-version"
                 @click="linkToApp(row.spec.target_release_id)">
-                <Share fill="#979BA5" />
+                <Share class="icon" />
                 <span class="text">{{ row.target_release_name }}</span>
               </div>
             </template>
@@ -273,6 +273,15 @@
     cursor: pointer;
     .text {
       margin-left: 4px;
+    }
+    .icon {
+      color: #979ba5;
+    }
+    &:hover {
+      color: #3a84ff;
+      .icon {
+        color: #3a84ff;
+      }
     }
   }
 </style>

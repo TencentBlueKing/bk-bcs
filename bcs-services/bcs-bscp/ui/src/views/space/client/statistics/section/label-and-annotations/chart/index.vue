@@ -1,12 +1,21 @@
 <template>
   <Teleport :disabled="!isOpenFullScreen" to="body">
-    <div ref="containerRef" :class="{ fullscreen: isOpenFullScreen }">
-      <Card :title="$t(`按 {n} 统计`, { n: label })" :height="368">
+    <div
+      ref="containerRef"
+      :class="{ fullscreen: isOpenFullScreen }"
+      @mouseenter="isMouseEnter = true"
+      @mouseleave="isMouseEnter = false">
+      <Card :title="$t(`按 {n} 统计`, { n: primaryDimension })" :height="368">
         <template #operation>
           <OperationBtn
+            v-show="isShowOperationBtn"
+            :need-down="true"
             :is-open-full-screen="isOpenFullScreen"
+            :all-label="allLabel"
+            :primary-dimension="primaryDimension"
             @refresh="emits('refresh')"
-            @toggle-full-screen="isOpenFullScreen = !isOpenFullScreen" />
+            @toggle-full-screen="isOpenFullScreen = !isOpenFullScreen"
+            @toggle-show="isOpenPopover = $event" />
         </template>
         <template #head-suffix>
           <bk-tag theme="info" type="stroke" style="margin-left: 8px"> {{ $t('标签') }} </bk-tag>
@@ -18,7 +27,6 @@
             :app-id="appId"
             :is="currentComponent"
             :data="data"
-            :label="label"
             @jump="jumpToSearch($event as string)" />
         </bk-loading>
       </Card>
@@ -44,9 +52,10 @@
   const props = defineProps<{
     bkBizId: string;
     appId: number;
-    label: string;
+    primaryDimension: string;
     data: IClientLabelItem[];
     loading: boolean;
+    allLabel: string[];
   }>();
 
   const currentType = ref('column');
@@ -58,6 +67,9 @@
   const isOpenFullScreen = ref(false);
   const containerRef = ref();
   const initialWidth = ref(0);
+  const isMouseEnter = ref(false);
+  const isOpenPopover = ref(false);
+  const isShowOperationBtn = computed(() => isMouseEnter.value || isOpenPopover.value);
 
   const currentComponent = computed(() => componentMap[currentType.value as keyof typeof componentMap]);
 
@@ -76,7 +88,7 @@
     const routeData = router.resolve({
       name: 'client-search',
       params: { appId: props.appId, bizId: props.bkBizId },
-      query: { label: `${props.label}=${value}` },
+      query: { label: `${props.primaryDimension}=${value}` },
     });
     window.open(routeData.href, '_blank');
   };

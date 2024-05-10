@@ -41,7 +41,8 @@
       <div v-if="selectedChart?.length" v-for="item in selectedChart" :key="item.label" class="chart">
         <Chart
           :data="item.data as IClientLabelItem[]"
-          :label="item.label"
+          :primary-dimension="item.label"
+          :all-label="addChartData!.labels"
           :bk-biz-id="bkBizId"
           :app-id="appId"
           :loading="loading"

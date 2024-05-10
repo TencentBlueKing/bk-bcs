@@ -1,9 +1,13 @@
 <template>
   <Teleport :disabled="!isOpenFullScreen" to="body">
-    <div :class="{ fullscreen: isOpenFullScreen }">
+    <div
+      :class="{ fullscreen: isOpenFullScreen }"
+      @mouseenter="isShowOperationBtn = true"
+      @mouseleave="isShowOperationBtn = false">
       <Card :title="t('拉取成功率')" :height="416" :width="318">
         <template #operation>
           <OperationBtn
+            v-show="isShowOperationBtn"
             :is-open-full-screen="isOpenFullScreen"
             @refresh="loadChartData"
             @toggle-full-screen="isOpenFullScreen = !isOpenFullScreen" />
@@ -60,6 +64,7 @@
   const tooltipRef = ref();
   const jumpStatus = ref('');
   const isOpenFullScreen = ref(false);
+  const isShowOperationBtn = ref(false);
 
   watch(
     () => props.appId,
