@@ -558,7 +558,11 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 		cloudprovider.GetAnnotationsByNg(opt.NodeGroup))
 
 	// step5: remove nodes inner taints
-	// common.BuildRemoveClusterNodesInnerTaintTaskStep(task, group)
+	// azure not allow to remove nodePool taint
+	// admission webhook "aks-node-validating-webhook.azmk8s.io" denied the request:
+	// Taint delete request "bcs-cluster-manager=noSchedule:NoExecute" refused. User is attempting to delete a taint
+	// configured on aks node pool "hsboykuj".
+	// common.BuildRemoveInnerTaintTaskStep(task, group)
 
 	// set current step
 	if len(task.StepSequence) == 0 {

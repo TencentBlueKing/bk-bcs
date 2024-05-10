@@ -1586,6 +1586,10 @@ message Cluster {
     title: "message",
     description: "集群状态异常时的失败原因展示"
   }];
+  bool isMixed = 42[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "isMixed",
+    description: "标记该集群是否是混部集群"
+  }];
 }
 
 message Node {
@@ -2103,6 +2107,10 @@ message ClusterMgr {
   Action importCluster = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "importCluster",
     description: "纳管集群时相关的自动化流程定义"
+  }];
+  Action commonMixedAction = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "commonMixedAction",
+    description: "集群混部自动化流程定义"
   }];
 }
 
@@ -5016,6 +5024,10 @@ message CreateClusterReq {
     title: "nodeGroups",
     description: "创建集群时的节点池信息"
   }];
+  bool isMixed = 42[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "isMixed",
+    description: "标记该集群是否是混部集群, 默认是false"
+  }];
 }
 
 message CreateClusterResp {
@@ -5955,6 +5967,10 @@ message UpdateClusterReq {
   string cloudAccountID = 37[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "cloudAccountID",
     description: "集群关联的云账号ID,默认为空。主要功能是获取云账号凭证。私有云场景下统一管理cloud账号，而公有云场景纳管不同云账号凭证"
+  }];
+  google.protobuf.BoolValue isMixed = 38[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "isMixed",
+    description: "标记该集群是否是混部集群"
   }];
 }
 
@@ -8887,6 +8903,10 @@ message NodeGroupNode {
   uint32 unSchedulable = 17[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "unSchedulable",
     description: "调度状态，默认值0表示参与调度，1表示不参与调度"
+  }];
+  string nodeName = 18[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "nodeName",
+    description: "节点名称"
   }];
 }
 

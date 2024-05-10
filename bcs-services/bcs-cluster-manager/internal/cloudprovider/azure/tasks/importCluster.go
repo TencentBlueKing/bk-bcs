@@ -248,7 +248,7 @@ func importVpcID(info *cloudprovider.CloudDependBasicInfo) error {
 		return errors.Wrapf(err, "create AksService failed")
 	}
 
-	nodeResourceGroup := cloudprovider.GetClusterResourceGroup(cluster)
+	nodeResourceGroup := cloudprovider.GetNodeResourceGroup(cluster)
 	blog.Infof("importVpcID nodeResourceGroup:%s", nodeResourceGroup)
 
 	ctx, cancel := context.WithTimeout(context.TODO(), 30*time.Second)
@@ -261,7 +261,7 @@ func importVpcID(info *cloudprovider.CloudDependBasicInfo) error {
 
 	// blog.Infof("importVpcID list:%s", toPrettyJsonString(list))
 	if len(list) > 0 {
-		cluster.VpcID = *list[0].Name
+		cluster.VpcID = *list[0].ID
 	}
 
 	return nil

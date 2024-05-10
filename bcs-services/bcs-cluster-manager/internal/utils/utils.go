@@ -506,7 +506,7 @@ func K8sTaintToTaint(taint []corev1.Taint) []*proto.Taint {
 	return taints
 }
 
-// AllocateMachinesToAZs alocate num machines ro num zones
+// AllocateMachinesToAZs allocate num machines ro num zones
 func AllocateMachinesToAZs(numMachines, numAZs int) [][]int {
 	if numAZs <= 0 {
 		return nil

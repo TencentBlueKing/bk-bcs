@@ -8012,6 +8012,12 @@
           "type": "string",
           "description": "集群状态异常时的失败原因展示",
           "title": "message"
+        },
+        "isMixed": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "标记该集群是否是混部集群",
+          "title": "isMixed"
         }
       },
       "description": "记录集群信息，用于维护集群状态",
@@ -8472,6 +8478,11 @@
           "$ref": "#/definitions/clustermanagerAction",
           "description": "纳管集群时相关的自动化流程定义",
           "title": "importCluster"
+        },
+        "commonMixedAction": {
+          "$ref": "#/definitions/clustermanagerAction",
+          "description": "集群混部自动化流程定义",
+          "title": "commonMixedAction"
         }
       },
       "description": "用于记录集群层面固定、模板信息，帮助集群创建与维护.目前仅支持action(创建集群/删除集群/集群添加节点/集群删除节点)",
@@ -9607,6 +9618,12 @@
           },
           "description": "创建集群时的节点池信息",
           "title": "nodeGroups"
+        },
+        "isMixed": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "标记该集群是否是混部集群, 默认是false",
+          "title": "isMixed"
         }
       },
       "description": "创建集群请求，如果集群已经存在，直接报错。更新集群信息请使用Update接口",
@@ -15105,6 +15122,11 @@
           "format": "int64",
           "description": "调度状态，默认值0表示参与调度，1表示不参与调度",
           "title": "unSchedulable"
+        },
+        "nodeName": {
+          "type": "string",
+          "description": "节点名称",
+          "title": "nodeName"
         }
       }
     },
@@ -17998,6 +18020,12 @@
           "type": "string",
           "description": "集群关联的云账号ID,默认为空。主要功能是获取云账号凭证。私有云场景下统一管理cloud账号，而公有云场景纳管不同云账号凭证",
           "title": "cloudAccountID"
+        },
+        "isMixed": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "标记该集群是否是混部集群",
+          "title": "isMixed"
         }
       },
       "description": "更新集群信息请求，该接口仅用于信息更新和修正，不会触发任何行为动作。如果需要执行自动化相关流程，请根据需要使用对应的接口",
