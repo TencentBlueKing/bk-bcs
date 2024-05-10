@@ -217,7 +217,8 @@
     v-bind="viewConfigSliderData.data"
     :bk-biz-id="props.bkBizId"
     :app-id="props.appId"
-    :version-id="versionData.id" />
+    :version-id="versionData.id"
+    @openEdit="handleSwitchToEdit" />
   <VersionDiff v-model:show="isDiffPanelShow" :current-version="versionData" :selected-config="diffConfig" />
   <ReplaceTemplateVersion
     v-model:show="replaceDialogData.open"
@@ -633,6 +634,18 @@
       open: true,
       data: { id, type },
     };
+  };
+
+  // 由查看态切换为编辑态
+  const handleSwitchToEdit = () => {
+    if (permCheckLoading.value || !checkPermBeforeOperate('update')) {
+      return;
+    }
+    if (!permCheckLoading.value && checkPermBeforeOperate('update')) {
+      viewConfigSliderData.value.open = false;
+      activeConfig.value = viewConfigSliderData.value.data.id;
+      editPanelShow.value = true;
+    }
   };
 
   const handleOpenReplaceVersionDialog = (pkgId: number, config: IConfigTableItem) => {
