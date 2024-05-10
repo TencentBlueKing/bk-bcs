@@ -198,6 +198,7 @@ func (b *BcsApiHandler) DeleteCloud(ctx context.Context, request *pb.CloudDelete
 // ListHost list hosts
 func (b *BcsApiHandler) ListHost(ctx context.Context, request *pb.ListHostRequest,
 	response *pb.ListHostResponse) error {
+	blog.Info("request: %s", common.ToJsonString(request))
 	user, code, msg := getUserInfo(ctx)
 	if code != common.CodeSuccess {
 		response.Code = code
@@ -217,7 +218,14 @@ func (b *BcsApiHandler) ListHost(ctx context.Context, request *pb.ListHostReques
 			Value: cond.Value,
 		})
 	}
+	if len(request.BkBizIds) != 0 {
+		listReq.BkBizId = make([]int64, 0)
+		for _, bkBizID := range request.BkBizIds {
+			listReq.BkBizId = append(listReq.BkBizId, int64(bkBizID))
+		}
+	}
 
+	blog.Info("gen request: %s", common.ToJsonString(listReq))
 	resp, err := nodeManCli.ListHosts(ctx, listReq)
 	if err != nil {
 		response.Code = common.CodeInternalError
@@ -312,5 +320,5 @@ func (b *BcsApiHandler) GetJobDetail(ctx context.Context, request *pb.GetJobDeta
 }
 
 func (b *BcsApiHandler) newBkNodeManCli(userName string) *xbknodeman.Client {
-	return xbknodeman.NewClient(0, b.bkEnv, b.bkAppCode, b.bkAppSecret, "", userName)
+	return xbknodeman.NewClient(b.bkEnv, b.bkAppCode, b.bkAppSecret, "", userName)
 }
