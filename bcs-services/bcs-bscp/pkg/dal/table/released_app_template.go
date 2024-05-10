@@ -120,7 +120,8 @@ type ReleasedAppTemplateSpec struct {
 	ByteSize             uint64 `json:"byte_size" gorm:"column:byte_size"`
 	OriginSignature      string `json:"origin_signature" gorm:"column:origin_signature"`
 	OriginByteSize       uint64 `json:"origin_byte_size" gorm:"column:origin_byte_size"`
-	Md5                  string `json:"md5" gorm:"column:md5"`
+	// Md5 hashed by rendered content
+	Md5 string `json:"md5" gorm:"column:md5"`
 }
 
 // ValidateCreate validate ReleasedAppTemplate spec when it is created.

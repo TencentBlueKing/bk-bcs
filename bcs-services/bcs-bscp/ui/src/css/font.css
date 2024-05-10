@@ -128,3 +128,9 @@
 .icon-bar-chart:before {
   content: '\e11f';
 }
+.icon-bar-chart-thin:before {
+  content: '\e123';
+}
+.icon-bar-chart-stack:before {
+  content: '\e124';
+}

@@ -67,6 +67,13 @@
             'text-[#96A2B9] text-[12px] mr-[24px] hover:bg-[linear-gradient(270deg,#253047,#263247)] rounded-sm'
           ]"
           v-if="showPreVersionBtn"
+          v-bk-trace.click="{
+            module: 'app',
+            operation: 'backToLegacy',
+            desc: '返回旧版',
+            username: $store.state.user.username,
+            projectCode: $store.getters.curProjectCode,
+          }"
           @click="backToPreVersion">
           {{ $t('bcs.preVersion') }}
         </span>
