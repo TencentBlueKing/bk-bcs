@@ -129,7 +129,11 @@
     :app-id="props.appId"
     :editable="true"
     @confirm="getListData" />
-  <ViewConfigKv v-model:show="viewPanelShow" :config="activeConfig" />
+  <ViewConfigKv
+    v-model:show="viewPanelShow"
+    :config="activeConfig"
+    :show-edit-btn="isUnNamedVersion"
+    @openEdit="handleSwitchToEdit" />
   <VersionDiff v-model:show="isDiffPanelShow" :current-version="versionData" :selected-kv-config-id="diffConfig" />
   <DeleteConfirmDialog
     v-model:isShow="isDeleteConfigDialogShow"
@@ -373,6 +377,14 @@
     await unModifyKv(props.bkBizId, props.appId, config.spec.key);
     Message({ theme: 'success', message: t('撤销修改配置项成功') });
     refresh();
+  };
+
+  // 由查看态切换为编辑态
+  const handleSwitchToEdit = () => {
+    if (!permCheckLoading.value && checkPermBeforeOperate('update')) {
+      editPanelShow.value = true;
+      viewPanelShow.value = false;
+    }
   };
 
   // 删除单个配置项
