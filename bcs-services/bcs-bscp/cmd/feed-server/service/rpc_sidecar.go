@@ -355,11 +355,25 @@ func (s *Service) PullAppFileMeta(ctx context.Context, req *pbfs.PullAppFileMeta
 	}
 
 	fileMetas := make([]*pbfs.FileMeta, 0, len(metas.ConfigItems))
+	// 支持req.Match多个匹配，且兼容原有req.Key单个匹配，当req.Match和req.Key都未设置时则获取全部配置项
+	match := req.Match
+	if req.Key != "" {
+		match = append(match, req.Key)
+	}
 	for _, ci := range metas.ConfigItems {
-		ok, _ := tools.MatchConfigItem(req.Key, ci.ConfigItemSpec.Path, ci.ConfigItemSpec.Name)
-		if req.Key != "" && !ok {
-			continue
+		if len(match) > 0 {
+			isMatch := false
+			for _, scope := range match {
+				if ok, _ := tools.MatchConfigItem(scope, ci.ConfigItemSpec.Path, ci.ConfigItemSpec.Name); ok {
+					isMatch = true
+					break
+				}
+			}
+			if !isMatch {
+				continue
+			}
 		}
+
 		app, err := s.bll.AppCache().GetMeta(im.Kit, req.BizId, ci.ConfigItemAttachment.AppId)
 		if err != nil {
 			return nil, status.Errorf(codes.Aborted, "get app meta failed, %s", err.Error())
