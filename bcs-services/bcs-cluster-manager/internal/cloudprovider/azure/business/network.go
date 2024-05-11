@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-// package business xxx
+// Package business xxx
 package business
 
 import (
@@ -23,7 +23,7 @@ import (
 
 // SubnetUsedIpCount 子网已使用IP数目统计
 func SubnetUsedIpCount(ctx context.Context, opt *cloudprovider.ListNetworksOption, subnetID string) (uint32, error) {
-	var usedIPCount uint32 = 0
+	var usedIPCount uint32
 
 	client, err := api.NewAksServiceImplWithCommonOption(&opt.CommonOption)
 	if err != nil {
