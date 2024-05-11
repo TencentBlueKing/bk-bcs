@@ -51,6 +51,9 @@ const (
 	Statistic SearchType = "statistic"
 	// Common 常用查询
 	Common SearchType = "common"
+
+	// System 内置系统用户
+	System string = "system"
 )
 
 // Validate the search type is valid or not.
