@@ -378,6 +378,13 @@ type ListNetworksOption struct {
 	ResourceGroupName string
 }
 
+// ListRuntimeInfoOption list runtime info option
+type ListRuntimeInfoOption struct {
+	CommonOption
+	// Cluster clusterInfo
+	Cluster *proto.Cluster
+}
+
 // ResourcePoolData xxx
 type ResourcePoolData struct {
 	Provider       string

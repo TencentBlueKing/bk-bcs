@@ -19,11 +19,14 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/huawei/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/huawei/business"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 var nodeMgr sync.Once
@@ -232,4 +235,35 @@ func (nm *NodeManager) ListNodeInstanceType(info cloudprovider.InstanceInfo, opt
 // ListOsImage get osimage list
 func (nm *NodeManager) ListOsImage(provider string, opt *cloudprovider.CommonOption) ([]*proto.OsImage, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// ListRuntimeInfo get runtime info list
+func (nm *NodeManager) ListRuntimeInfo(opt *cloudprovider.ListRuntimeInfoOption) (map[string][]string, error) {
+	client, err := api.NewCceClient(&opt.CommonOption)
+	if err != nil {
+		return nil, err
+	}
+
+	rsp, err := client.GetCceCluster(opt.Cluster.SystemID)
+	if err != nil {
+		return nil, err
+	}
+
+	if rsp.Spec.Version == nil {
+		return nil, fmt.Errorf("cloud cluster version is nil")
+	}
+
+	blog.Infof("cluster version: %s", *rsp.Spec.Version)
+
+	clusterVer := (*rsp.Spec.Version)[1:]
+	if utils.CompareVersion(clusterVer, "1.25") > 0 && utils.CompareVersion(clusterVer, "1.29") < 0 {
+		return map[string][]string{
+			common.ContainerdRuntime: {},
+		}, nil
+	}
+
+	return map[string][]string{
+		common.ContainerdRuntime:      {},
+		common.DockerContainerRuntime: {},
+	}, nil
 }
