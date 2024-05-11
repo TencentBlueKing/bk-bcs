@@ -18,7 +18,7 @@ import (
 	"strconv"
 
 	"github.com/olekukonko/tablewriter"
-	"k8s.io/klog"
+	klog "k8s.io/klog/v2"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-user-manager/pkg"
 )

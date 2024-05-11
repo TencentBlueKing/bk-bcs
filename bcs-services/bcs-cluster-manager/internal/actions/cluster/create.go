@@ -151,6 +151,7 @@ func (ca *CreateAction) constructCluster(cloud *cmproto.Cloud) (*cmproto.Cluster
 		CreateTime:              createTime,
 		UpdateTime:              createTime,
 		Status:                  common.StatusInitialization,
+		IsMixed:                 ca.req.IsMixed,
 	}
 
 	// set cloud default values

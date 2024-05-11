@@ -63,12 +63,11 @@ func DeleteCloudNodeGroupTask(taskID string, stepName string) error {
 		return retErr
 	}
 
-	if dependInfo.NodeGroup.AutoScaling == nil || len(dependInfo.NodeGroup.CloudNodeGroupID) == 0 {
+	if len(dependInfo.NodeGroup.CloudNodeGroupID) == 0 {
 		blog.Errorf("DeleteCloudNodeGroupTask[%s]: nodegroup %s in task %s step %s has no autoscaling group",
 			taskID, nodeGroupID, taskID, stepName)
-		retErr := fmt.Errorf("get autoScalingID err, %v", err)
-		_ = state.UpdateStepFailure(start, stepName, retErr)
-		return retErr
+		_ = state.UpdateStepSucc(start, stepName)
+		return nil
 	}
 
 	// delete agentPool
@@ -78,11 +77,6 @@ func DeleteCloudNodeGroupTask(taskID string, stepName string) error {
 		retErr := fmt.Errorf("call deleteAgentPool[%s] api err, %s", nodeGroupID, err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
-	}
-
-	// update response information to task common params
-	if state.Task.CommonParams == nil {
-		state.Task.CommonParams = make(map[string]string)
 	}
 
 	// update step
@@ -116,6 +110,8 @@ func deleteAgentPool(rootCtx context.Context, info *cloudprovider.CloudDependBas
 		}
 		blog.Warnf("DeleteCloudNodeGroupTask[%s]: nodegroup[%s/%s] not found, skip delete",
 			taskID, group.CloudNodeGroupID, group.CloudNodeGroupID)
+
+		return nil
 	}
 
 	ctx, cancel = context.WithTimeout(rootCtx, 20*time.Minute)

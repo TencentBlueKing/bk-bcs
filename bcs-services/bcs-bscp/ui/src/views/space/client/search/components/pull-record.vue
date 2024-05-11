@@ -37,7 +37,7 @@
               </span>
             </template>
           </bk-table-column>
-          <bk-table-column :label="$t('当前配置版本')" width="133">
+          <bk-table-column :label="$t('源版本')" width="133">
             <template #default="{ row }">
               <div
                 v-if="row.spec && row.spec.original_release_id"
@@ -92,7 +92,7 @@
                   v-if="row.spec.release_change_status === 'Failed'"
                   class="info-icon"
                   fill="#979BA5"
-                  v-bk-tooltips="{ content: row.spec.failed_detail_reason }" />
+                  v-bk-tooltips="{ content: getErrorDetails(row.spec) }" />
               </div>
             </template>
           </bk-table-column>
@@ -112,9 +112,15 @@
   import SearchInput from '../../../../../components/search-input.vue';
   import { getClientPullRecord } from '../../../../../api/client';
   import { datetimeFormat, byteUnitConverse } from '../../../../../utils';
-  import { CLIENT_STATUS_MAP } from '../../../../../constants/client';
+  import {
+    CLIENT_STATUS_MAP,
+    CLIENT_ERROR_SUBCLASSES_MAP,
+    CLIENT_ERROR_CATEGORY_MAP,
+  } from '../../../../../constants/client';
   import dayjs from 'dayjs';
   import TableEmpty from '../../../../../components/table/table-empty.vue';
+  import { useI18n } from 'vue-i18n';
+  const { t } = useI18n();
 
   const router = useRouter();
 
@@ -127,7 +133,6 @@
   }>();
   const emits = defineEmits(['close']);
 
-  const isShowSlider = ref(false);
   const initDateTime = ref([dayjs(new Date()).format('YYYY-MM-DD'), dayjs(new Date()).format('YYYY-MM-DD')]);
   const searchStr = ref('');
   const tableData = ref();
@@ -144,7 +149,6 @@
     () => props.show,
     (val) => {
       if (val) {
-        isShowSlider.value = true;
         loadTableData();
       }
     },
@@ -185,12 +189,22 @@
   };
 
   const linkToApp = (versionId: number) => {
+    emits('close');
     router.push({ name: 'service-config', params: { spaceId: props.bkBizId, appId: props.appId, versionId } });
   };
 
   const handleClearSearchStr = () => {
     searchStr.value = '';
     loadTableData();
+  };
+
+  const getErrorDetails = (item: any) => {
+    const { release_change_failed_reason, specific_failed_reason, failed_detail_reason } = item;
+    const category = CLIENT_ERROR_CATEGORY_MAP.find((item) => item.value === release_change_failed_reason)?.name;
+    const subclasses = CLIENT_ERROR_SUBCLASSES_MAP.find((item) => item.value === specific_failed_reason)?.name || '--';
+    return `${t('错误类别')}: ${category}
+    ${t('错误子类别')}: ${subclasses}
+    ${t('错误详情')}: ${failed_detail_reason}`;
   };
 </script>
 

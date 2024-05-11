@@ -259,10 +259,9 @@ func (s *Service) ImportTemplateVariables(ctx context.Context, req *pbcs.ImportT
 		if line == "" {
 			continue
 		}
-
 		var fields []string
 		if req.Separator == whiteSpace {
-			fields = strings.SplitN(line, " ", 4)
+			fields = strings.Fields(line)
 		} else {
 			fields = strings.SplitN(line, req.Separator, 4)
 		}
@@ -282,7 +281,7 @@ func (s *Service) ImportTemplateVariables(ctx context.Context, req *pbcs.ImportT
 		}
 
 		if len(fields) > 3 {
-			v.Memo = strings.TrimSpace(fields[3])
+			v.Memo = strings.TrimSpace(strings.Join(fields[3:], " "))
 		}
 
 		vars = append(vars, v)

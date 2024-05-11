@@ -1,9 +1,10 @@
 <!-- eslint-disable max-len -->
 <template>
-  <div :class="[
-    'cluster-node',
-    { 'px-[24px] py-[16px]': !fromCluster }
-  ]">
+  <div
+    :class="[
+      'cluster-node',
+      { 'px-[24px] py-[16px]': !fromCluster }
+    ]">
     <bcs-alert type="info" class="cluster-node-tip">
       <div slot="title">
         {{$t('cluster.nodeList.article1')}}
@@ -64,10 +65,11 @@
     <div class="cluster-node-operate">
       <div class="left">
         <template v-if="fromCluster">
-          <span v-bk-tooltips="{
-            disabled: !isKubeConfigImportCluster,
-            content: $t('cluster.nodeList.tips.disableImportClusterAction')
-          }">
+          <span
+            v-bk-tooltips="{
+              disabled: !isKubeConfigImportCluster,
+              content: $t('cluster.nodeList.tips.disableImportClusterAction')
+            }">
             <bcs-button
               theme="primary"
               icon="plus"
@@ -83,7 +85,7 @@
                   cluster_id: localClusterId
                 }
               }"
-              :disabled="isKubeConfigImportCluster || ['azureCloud', 'huaweiCloud'].includes(curSelectedCluster.provider || '')"
+              :disabled="isKubeConfigImportCluster || ['huaweiCloud'].includes(curSelectedCluster.provider || '')"
               @click="handleAddNode">
               {{$t('cluster.nodeList.create.text')}}
             </bcs-button>
@@ -334,6 +336,7 @@
             {{ row.zoneName || row.zoneID ||'--' }}
           </template>
         </bcs-table-column>
+        <!-- 容器数量 -->
         <bcs-table-column
           :label="$t('dashboard.workload.container.counts')"
           min-width="100"
@@ -346,6 +349,24 @@
               <LoadingCell v-if="!nodeMetric[row.nodeName]" />
               <span v-else>
                 {{nodeMetric[row.nodeName].container_count || '--'}}
+              </span>
+            </template>
+            <span v-else>--</span>
+          </template>
+        </bcs-table-column>
+        <!-- Pod数量 -->
+        <bcs-table-column
+          :label="$t('cluster.nodeList.label.podCounts')"
+          min-width="100"
+          align="right"
+          prop="pod_count"
+          key="pod_count"
+          v-if="isColumnRender('pod_count')">
+          <template #default="{ row }">
+            <template v-if="['RUNNING', 'REMOVABLE'].includes(row.status)">
+              <LoadingCell v-if="!nodeMetric[row.nodeName]" />
+              <span v-else>
+                {{nodeMetric[row.nodeName].pod_count || '--'}}
               </span>
             </template>
             <span v-else>--</span>

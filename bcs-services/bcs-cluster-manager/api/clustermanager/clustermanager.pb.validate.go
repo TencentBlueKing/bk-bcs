@@ -428,6 +428,8 @@ func (m *Cluster) validate(all bool) error {
 
 	// no validation rules for Message
 
+	// no validation rules for IsMixed
+
 	if len(errors) > 0 {
 		return ClusterMultiError(errors)
 	}
@@ -2897,6 +2899,35 @@ func (m *ClusterMgr) validate(all bool) error {
 		if err := v.Validate(); err != nil {
 			return ClusterMgrValidationError{
 				field:  "ImportCluster",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetCommonMixedAction()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ClusterMgrValidationError{
+					field:  "CommonMixedAction",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ClusterMgrValidationError{
+					field:  "CommonMixedAction",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetCommonMixedAction()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ClusterMgrValidationError{
+				field:  "CommonMixedAction",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}
@@ -15109,6 +15140,8 @@ func (m *CreateClusterReq) validate(all bool) error {
 
 	}
 
+	// no validation rules for IsMixed
+
 	if len(errors) > 0 {
 		return CreateClusterReqMultiError(errors)
 	}
@@ -19172,6 +19205,35 @@ func (m *UpdateClusterReq) validate(all bool) error {
 	// no validation rules for ImportCategory
 
 	// no validation rules for CloudAccountID
+
+	if all {
+		switch v := interface{}(m.GetIsMixed()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, UpdateClusterReqValidationError{
+					field:  "IsMixed",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, UpdateClusterReqValidationError{
+					field:  "IsMixed",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetIsMixed()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateClusterReqValidationError{
+				field:  "IsMixed",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
 
 	if len(errors) > 0 {
 		return UpdateClusterReqMultiError(errors)
@@ -33899,6 +33961,8 @@ func (m *NodeGroupNode) validate(all bool) error {
 	// no validation rules for InstanceRole
 
 	// no validation rules for UnSchedulable
+
+	// no validation rules for NodeName
 
 	if len(errors) > 0 {
 		return NodeGroupNodeMultiError(errors)

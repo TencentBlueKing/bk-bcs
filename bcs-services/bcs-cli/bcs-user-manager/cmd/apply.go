@@ -17,7 +17,7 @@ import (
 	"context"
 
 	"github.com/spf13/cobra"
-	"k8s.io/klog"
+	klog "k8s.io/klog/v2"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-user-manager/cmd/printer"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-user-manager/pkg"

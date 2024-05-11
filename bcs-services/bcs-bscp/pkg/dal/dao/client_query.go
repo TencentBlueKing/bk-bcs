@@ -17,6 +17,7 @@ import (
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/utils"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
@@ -32,6 +33,12 @@ type ClientQuery interface {
 		[]*table.ClientQuery, int64, error)
 	// Delete ..
 	Delete(kit *kit.Kit, data *table.ClientQuery) error
+	// ListBySearchCondition Get by search criteria
+	ListBySearchCondition(kit *kit.Kit, bizID, appID uint32, creator, searchType,
+		searchCondition string) ([]*table.ClientQuery, error)
+	// GetBySearchName Get by search name
+	GetBySearchName(kit *kit.Kit, bizID, appID uint32, creator, searchName string) (
+		*table.ClientQuery, error)
 }
 
 var _ ClientQuery = new(clientQueryDao)
@@ -40,6 +47,28 @@ type clientQueryDao struct {
 	genQ     *gen.Query
 	idGen    IDGenInterface
 	auditDao AuditDao
+}
+
+// GetBySearchName Get by search name
+func (dao *clientQueryDao) GetBySearchName(kit *kit.Kit, bizID uint32, appID uint32, creator string,
+	searchName string) (*table.ClientQuery, error) {
+	m := dao.genQ.ClientQuery
+
+	return dao.genQ.ClientQuery.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID), m.AppID.Eq(appID)).
+		Where(m.Creator.Eq(creator)).Where(m.SearchName.IsNotNull()).Where(m.SearchName.Eq(searchName)).Take()
+}
+
+// ListBySearchCondition Get by search criteria
+func (dao *clientQueryDao) ListBySearchCondition(kit *kit.Kit, bizID, appID uint32, creator, searchType,
+	searchCondition string) ([]*table.ClientQuery, error) {
+	m := dao.genQ.ClientQuery
+
+	return dao.genQ.ClientQuery.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID), m.AppID.Eq(appID)).
+		Where(m.Creator.Eq(creator), m.SearchType.Eq(searchType)).
+		Where(utils.RawCond("JSON_CONTAINS(?,?)", utils.Field{
+			Field: m.SearchCondition,
+		}, searchCondition)).
+		Find()
 }
 
 // Delete ..

@@ -21,6 +21,7 @@ import (
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/azure/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 )
 
 var nodeMgr sync.Once
@@ -106,7 +107,8 @@ func (n *NodeManager) ListNodeInstanceType(info cloudprovider.InstanceInfo, opt 
 				}
 			}
 
-			if cpu == 0 || mem == 0 {
+			// filter cpu && mem
+			if cpu == 0 || mem == 0 || cpu < 4 || mem < 4 {
 				continue
 			}
 
@@ -118,12 +120,20 @@ func (n *NodeManager) ListNodeInstanceType(info cloudprovider.InstanceInfo, opt 
 			}
 
 			instanceTypes = append(instanceTypes, &proto.InstanceType{
+				NodeType:   *v.Name,
 				TypeName:   *v.Name,
 				NodeFamily: *v.Family,
 				Cpu:        uint32(cpu),
 				Memory:     uint32(mem),
 				Gpu:        uint32(gpu),
 				Zones:      zones,
+				Status: func() string {
+					if len(zones) == 0 {
+						return common.InstanceSoldOut
+					}
+
+					return common.InstanceSell
+				}(),
 			})
 		}
 	}

@@ -940,6 +940,12 @@ cluster:
             hssd: 增强型SSD云硬盘
             balanced: 平衡性磁盘
             standard: 标准磁盘
+            Standard_LRS: 标准 HDD
+            StandardSSD_LRS: 标准 SSD
+            StandardSSD_ZRS: 标准 SSD_ZRS
+            Premium_LRS: 高级 SSD
+            PremiumV2_LRS: 高级 SSD v2
+            Premium_ZRS: 高级 SSD_ZRS
           disk:
             system: 系统盘
             data: 数据盘
@@ -2562,6 +2568,7 @@ azureCloud:
     nameRegex: 仅支持英文、数字和字符(-)
     secretRegex: 仅支持英文、数字和字符(-或~)
   label:
+    loginUser: 登录用户
     create: 新建凭证
     cluster: 关联集群
     clusterType: 集群类型
@@ -2625,6 +2632,20 @@ googleCA:
     securityGroup: '节点池使用 VPC 防火墙规则控制节点实例的出/入流量，请前往{0}页面设置'
   button:
     vpcRule: VPC 防火墙规则
+azureCA:
+  tips:
+    zone: 目前只支持单可用区
+    system: >-
+      因为操作系统“包含 Containerd 的 Container-Optimized OS (cos_containerd)
+      （默认）”有诸多限制，蓝鲸组件依赖这些被限制的功能，目前只支持操作系统“包含 Containerd 的 Ubuntu
+      (ubuntu_containerd)”
+    dataDisk: 购买数据盘后添加节点后需要手工格式化与挂载磁盘
+    securityGroup: '节点池使用 VPC 防火墙规则控制节点实例的出/入流量，请前往{0}页面设置'
+  button:
+    vpcRule: VPC 防火墙规则
+  password:
+    set: 设置密码
+    confirm: 确认密码
 regions:
   asia: 亚洲
   australia: 澳洲

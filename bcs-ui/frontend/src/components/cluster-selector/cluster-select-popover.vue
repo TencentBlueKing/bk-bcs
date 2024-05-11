@@ -102,7 +102,7 @@ const props = defineProps({
 
 const emits = defineEmits(['change', 'click']);
 
-const normalStatusList = ['CONNECT-FAILURE', 'RUNNING'];
+const normalStatusList = ['RUNNING'];
 
 const hoverClusterID = ref<string>();
 const {
@@ -116,7 +116,7 @@ const {
 } = useClusterSelector(emits, props.value, props.clusterType, props.updateStore);
 
 const handleClick = (cluster) => {
-  if (cluster.status !== 'RUNNING') return;
+  if (!normalStatusList.includes(cluster.status)) return;
 
   handleClusterChange(cluster.clusterID);
 

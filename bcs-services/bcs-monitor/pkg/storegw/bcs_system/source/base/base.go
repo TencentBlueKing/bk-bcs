@@ -144,8 +144,12 @@ type MetricHandler interface {
 		step time.Duration) ([]*prompb.TimeSeries, error)
 	GetNodeContainerCount(ctx context.Context, projectId, clusterId, nodeName string, start, end time.Time,
 		step time.Duration) ([]*prompb.TimeSeries, error)
-	GetPodCPUUsage(ctx context.Context, projectId, clusterId, namespace string, podNameList []string, start, end time.Time,
-		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetPodCPUUsage(ctx context.Context, projectId, clusterId, namespace string, podNameList []string, start,
+		end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
+	GetPodCPULimitUsage(ctx context.Context, projectId, clusterId, namespace string, podNameList []string, start,
+		end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
+	GetPodCPURequestUsage(ctx context.Context, projectId, clusterId, namespace string, podNameList []string, start,
+		end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
 	GetPodMemoryUsed(ctx context.Context, projectId, clusterId, namespace string, podNameList []string, start,
 		end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
 	GetPodNetworkReceive(ctx context.Context, projectId, clusterId, namespace string, podNameList []string, start,

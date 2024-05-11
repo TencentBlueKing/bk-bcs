@@ -121,7 +121,7 @@ func runServerCmd() error {
 		}
 	}()
 
-	network := cc.VaultServer().Network
+	network := cc.VaultSidecar().Network
 	addr := tools.GetListenAddr(network.BindIP, int(network.HttpPort))
 	ipv6Addr := tools.GetListenAddr(network.BindIPv6, int(network.HttpPort))
 	dualStackListener := listener.NewDualStackListener()

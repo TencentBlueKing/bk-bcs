@@ -190,6 +190,9 @@ func (ua *UpdateAction) validateAdditionalInfo() {
 	if ua.req.NodeSettings != nil {
 		ua.cluster.NodeSettings = ua.req.NodeSettings
 	}
+	if ua.req.IsMixed != nil {
+		ua.cluster.IsMixed = ua.req.IsMixed.GetValue()
+	}
 }
 
 // updateCluster update cluster info

@@ -22,7 +22,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/wrappers"
 	"github.com/spf13/cobra"
-	"k8s.io/klog"
+	klog "k8s.io/klog/v2"
 	cmdutil "k8s.io/kubectl/pkg/cmd/util"
 	"k8s.io/kubectl/pkg/cmd/util/editor"
 	"k8s.io/kubectl/pkg/util/i18n"

@@ -38,6 +38,10 @@ const (
 	UserAfterInit = "用户后置初始化"
 	// UserPreInit bksops user pre init
 	UserPreInit = "缩容节点清理"
+	// NodeMixedInit mixed init
+	NodeMixedInit = "nodeMixedInit"
+	// NodeMixedInitCh mixed init ch
+	NodeMixedInitCh = "混部集群节点初始化"
 )
 
 // using task commonName inject dynamic parameters when processing
