@@ -44,7 +44,6 @@
   watch(
     () => props.data,
     () => {
-      console.log(props.isShowSunburst);
       convertToTree(props.data);
       if (props.isShowSunburst) {
         if (sunburstPlot) {
@@ -55,11 +54,9 @@
           initSunburstChart();
         }
       } else {
-        console.log(1);
         if (piePlot) {
           piePlot.changeData(props.data);
         } else {
-          console.log(2);
           sunburstPlot!.destroy();
           sunburstPlot = null;
           initPieChart();

@@ -82,7 +82,6 @@
   };
 
   const jumpToSearch = () => {
-    console.log(jumpQuery.value);
     const routeData = router.resolve({
       name: 'client-search',
       params: { appId: appId.value, bizId: bizId.value },

@@ -478,7 +478,6 @@
 
   const handleSettingsChange = ({ checked }: any) => {
     selectedShowColumn.value = [...checked];
-    console.log(selectedShowColumn.value);
   };
 
   const getErrorDetails = (item: any) => {

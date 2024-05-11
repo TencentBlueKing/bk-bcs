@@ -9,18 +9,11 @@
 </template>
 
 <script lang="ts" setup>
-  import { onMounted } from 'vue';
   import { IClientLabelItem } from '../../../../../../../../types/client';
-  const props = defineProps<{
+  defineProps<{
     data: IClientLabelItem[];
     label: string;
   }>();
-
-  onMounted(() => {
-    console.log(props.data);
-    // const dimension = [];
-    // props
-  });
 </script>
 
 <style scoped lang="scss"></style>
