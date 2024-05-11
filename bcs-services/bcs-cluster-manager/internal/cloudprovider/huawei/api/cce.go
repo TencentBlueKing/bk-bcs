@@ -97,6 +97,14 @@ func (cli *CceClient) ListCceCluster(filter *ClusterFilterCond) (*[]model.Cluste
 	return rsp.Items, nil
 }
 
+func (cli *CceClient) CreateCluster(req *CreateClusterRequest) (*model.CreateClusterResponse, error) {
+	if cli == nil {
+		return nil, cloudprovider.ErrServerIsNil
+	}
+
+	return cli.cce.CreateCluster(req.Trans2CreateClusterRequest())
+}
+
 // GetCceCluster get cce cluster
 func (cli *CceClient) GetCceCluster(clusterID string) (*model.ShowClusterResponse, error) {
 	if cli == nil {

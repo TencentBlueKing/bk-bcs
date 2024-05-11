@@ -45,6 +45,16 @@ func newtask() *Task {
 	task.works[importClusterNodesStep.StepMethod] = tasks.ImportClusterNodesTask
 	task.works[registerClusterKubeConfigStep.StepMethod] = tasks.RegisterClusterKubeConfigTask
 
+	// create cluster task
+	task.works[createClusterStep.StepMethod] = tasks.CreateClusterTask
+	task.works[checkClusterStatusStep.StepMethod] = tasks.CheckClusterStatusTask
+	task.works[registerClusterKubeConfigStep.StepMethod] = tasks.RegisterClusterKubeConfigTask
+	task.works[updateCreateClusterDBInfoStep.StepMethod] = tasks.UpdateCreateClusterDBInfoTask
+
+	// delete cluster task
+	task.works[deleteClusterStep.StepMethod] = tasks.DeleteTKEClusterTask
+	task.works[cleanClusterDBInfoStep.StepMethod] = tasks.CleanClusterDBInfoTask
+
 	// create nodeGroup task
 	task.works[createCloudNodeGroupStep.StepMethod] = tasks.CreateCloudNodeGroupTask
 	task.works[checkCloudNodeGroupStatusStep.StepMethod] = tasks.CheckCloudNodeGroupStatusTask

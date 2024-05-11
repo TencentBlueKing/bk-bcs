@@ -887,3 +887,93 @@ func GetAddNodesReinstallVolumeConfig(serverId string, opt *cloudprovider.Common
 
 	return volumeConfig, nil
 }
+
+// CreateClusterRequest create cluster request
+type CreateClusterRequest struct {
+	// Name 集群名称
+	Name string
+	// Spec 集群配置
+	Spec CreateClusterSpec
+}
+
+func (c *CreateClusterRequest) Trans2CreateClusterRequest() *model.CreateClusterRequest {
+	category := model.GetClusterSpecCategoryEnum().CCE
+	clusterType := model.GetClusterSpecTypeEnum().VIRTUAL_MACHINE
+
+	billingMode, periodType, periodNum, isAutoRenew, isAutoPay := GetChargeConfig(c.Spec.Charge)
+
+	return &model.CreateClusterRequest{
+		Body: &model.Cluster{
+			Kind:       "Cluster",
+			ApiVersion: "v3",
+			Metadata: &model.ClusterMetadata{
+				Name: c.Name,
+			},
+			Spec: &model.ClusterSpec{
+				Category:    &category,
+				Type:        &clusterType,
+				Flavor:      c.Spec.Flavor,
+				Version:     &c.Spec.Version,
+				Description: &c.Spec.Description,
+				Ipv6enable:  &c.Spec.Ipv6Enable,
+				HostNetwork: &model.HostNetwork{
+					Vpc:           c.Spec.VpcID,
+					Subnet:        c.Spec.SubnetID,
+					SecurityGroup: &c.Spec.SecurityGroupID,
+				},
+				ContainerNetwork: &model.ContainerNetwork{
+					Mode: func() model.ContainerNetworkMode {
+						mode := model.GetContainerNetworkModeEnum().OVERLAY_L2
+						if c.Spec.ContainerMode == model.GetContainerNetworkModeEnum().VPC_ROUTER.Value() {
+							mode = model.GetContainerNetworkModeEnum().VPC_ROUTER
+						}
+
+						return mode
+					}(),
+					Cidrs: &[]model.ContainerCidr{
+						{Cidr: c.Spec.ContainerCidr},
+					},
+				},
+				ServiceNetwork:       &model.ServiceNetwork{IPv4CIDR: &c.Spec.ServiceCidr},
+				BillingMode:          &billingMode,
+				Masters:              &[]model.MasterSpec{},
+				KubernetesSvcIpRange: new(string),
+				ClusterTags:          &[]model.ResourceTag{},
+				KubeProxyMode:        &model.ClusterSpecKubeProxyMode{},
+				Az:                   new(string),
+				ExtendParam: &model.ClusterExtendParam{
+					PeriodType:  &periodType,
+					PeriodNum:   &periodNum,
+					IsAutoRenew: &isAutoRenew,
+					IsAutoPay:   &isAutoPay,
+				},
+			},
+		},
+	}
+}
+
+// CreateClusterSpec create cluster spec
+type CreateClusterSpec struct {
+	// Flavor 节点规格
+	Flavor string
+	// Version 集群版本
+	Version string
+	// Description 集群描述
+	Description string
+	// VpcID vpc ID
+	VpcID string
+	// SubnetID 子网ID
+	SubnetID string
+	// SecurityGroupID 安全组ID
+	SecurityGroupID string
+	// ContainerMode 容器网络类型
+	ContainerMode string
+	// ContainerCidr 容器网段
+	ContainerCidr string
+	// ServiceCidr 服务网段
+	ServiceCidr string
+	// Charge 节点计费模式
+	Charge ChargePrepaid
+	// Ipv6Enable 是否开启ipv6
+	Ipv6Enable bool
+}

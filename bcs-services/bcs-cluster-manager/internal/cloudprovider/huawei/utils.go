@@ -66,6 +66,31 @@ var (
 		StepName:   "导入集群节点",
 	}
 
+	// create cluster task
+	// nolint
+	createClusterStep = cloudprovider.StepInfo{
+		StepMethod: fmt.Sprintf("%s-CreateClusterTask", cloudName),
+		StepName:   "创建集群",
+	}
+	checkClusterStatusStep = cloudprovider.StepInfo{
+		StepMethod: fmt.Sprintf("%s-CheckClusterStatusTask", cloudName),
+		StepName:   "检测集群状态",
+	}
+	updateCreateClusterDBInfoStep = cloudprovider.StepInfo{
+		StepMethod: fmt.Sprintf("%s-UpdateCreateClusterDBInfoTask", cloudName),
+		StepName:   "更新任务状态",
+	}
+
+	// delete cluster task
+	deleteClusterStep = cloudprovider.StepInfo{
+		StepMethod: fmt.Sprintf("%s-DeleteTKEClusterTask", cloudName),
+		StepName:   "删除集群",
+	}
+	cleanClusterDBInfoStep = cloudprovider.StepInfo{
+		StepMethod: fmt.Sprintf("%s-CleanClusterDBInfoTask", cloudName),
+		StepName:   "清理集群数据",
+	}
+
 	// create nodeGroup task
 	createCloudNodeGroupStep = cloudprovider.StepInfo{
 		StepMethod: fmt.Sprintf("%s-CreateCloudNodeGroupTask", cloudName),
