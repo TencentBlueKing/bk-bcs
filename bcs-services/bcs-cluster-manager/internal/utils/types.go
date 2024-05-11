@@ -65,6 +65,11 @@ const (
 	// CloudAreaLabelKey for host id
 	CloudAreaLabelKey = "bkcmdb.tencent.com/cloud-area-id"
 
+	// MixedNodeLabelKey mixed node label key
+	MixedNodeLabelKey = "node.info.kubernetes.io/cpu-type"
+	// MixedNodeLabelValue mixed node label value
+	MixedNodeLabelValue = "cvm_low"
+
 	// PrefixKubernetesIo for special label
 	PrefixKubernetesIo = "node.info.kubernetes.io"
 

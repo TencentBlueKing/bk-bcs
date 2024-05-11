@@ -388,6 +388,23 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 			return nil, fmt.Errorf("BuildScalingNodesTask business BuildBkSopsStepAction failed: %v", err)
 		}
 	}
+
+	// 混部集群需要执行混部节点流程
+	if opt.Cluster.GetIsMixed() && opt.Cloud != nil && opt.Cloud.ClusterManagement != nil &&
+		opt.Cloud.ClusterManagement.CommonMixedAction != nil {
+		err := template.BuildSopsFactory{
+			StepName: template.NodeMixedInitCh,
+			Cluster:  opt.Cluster,
+			Extra: template.ExtraInfo{
+				NodeIPList:      "",
+				ShowSopsUrl:     true,
+				TranslateMethod: template.NodeMixedInit,
+			}}.BuildSopsStep(task, opt.Cloud.ClusterManagement.CommonMixedAction, false)
+		if err != nil {
+			return nil, fmt.Errorf("BuildScalingNodesTask BuildBkSopsStepAction failed: %v", err)
+		}
+	}
+
 	// step3: annotation nodes
 	updateDesiredNodes.BuildNodeAnnotationsStep(task)
 	// step4: nodes common labels: sZoneID / bizID

@@ -14,7 +14,7 @@
 package main
 
 import (
-	"k8s.io/klog"
+	klog "k8s.io/klog/v2"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/cmd"
 )

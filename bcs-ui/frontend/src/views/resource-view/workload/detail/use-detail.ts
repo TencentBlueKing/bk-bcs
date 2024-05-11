@@ -94,7 +94,7 @@ export default function useDetail(options: IDetailOptions) {
       $clusterId: clusterId,
     });
     detail.value = res.data;
-    webAnnotations.value = res.webAnnotations;
+    webAnnotations.value = res.webAnnotations || {};
     isLoading.value = false;
     return detail.value;
   };

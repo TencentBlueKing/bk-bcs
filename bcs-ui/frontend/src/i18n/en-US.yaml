@@ -1144,6 +1144,12 @@ cluster:
             hssd: Enhanced SSD cloud hard disk
             balanced: Balanced Disk
             standard: Standard Disk
+            Standard_LRS: Standard HDD
+            StandardSSD_LRS: Standard SSD
+            StandardSSD_ZRS: Standard SSD_ZRS
+            Premium_LRS: Premium SSD
+            PremiumV2_LRS: Premium SSD v2
+            Premium_ZRS: Premium SSD_ZRS
           disk:
             system: System disk
             data: Data disk
@@ -3155,6 +3161,7 @@ azureCloud:
     nameRegex: 'Only support English, numbers and characters (-)'
     secretRegex: 'Only support English, numbers and characters (- or ~)'
   label:
+    loginUser: loginUser
     create: Create
     cluster: Associated cluster
     clusterType: Cluster type
@@ -3300,6 +3307,25 @@ googleCA:
       of node instances, please go to the {0} page to set up.
   button:
     vpcRule: VPC Rule
+azureCA:
+  tips:
+    system: >-
+      Because the operating system “Container-Optimized OS (cos_containerd)
+      including Containerd (default)” has many restrictions, BlueKing components
+      depend on these restricted features, currently only the operating system
+      “Ubuntu including Containerd (ubuntu_containerd)” is supported.
+    zone: 'Currently, only a single availability zone is supported.'
+    dataDisk: >-
+      After purchasing a data disk and adding nodes, you need to manually format
+      and mount the disk.
+    securityGroup: >-
+      Node pool uses VPC firewall rules to control the incoming/outgoing traffic
+      of node instances, please go to the {0} page to set up.
+  button:
+    vpcRule: VPC Rule
+  password:
+    set: Set password
+    confirm: Confirm password
 tke:
   label:
     ipAndPort: IP and port

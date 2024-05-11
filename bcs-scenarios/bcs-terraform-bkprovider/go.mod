@@ -1,8 +1,6 @@
 module github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-bkprovider
 
-go 1.21
-
-toolchain go1.21.8
+go 1.20
 
 replace go-micro.dev/v4/cmd => github.com/micro/go-micro v1.18.0
 
@@ -88,7 +86,7 @@ require (
 	golang.org/x/sys v0.18.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/tools v0.19.0 // indirect
-	google.golang.org/protobuf v1.33.0
+	google.golang.org/protobuf v1.34.1
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 )

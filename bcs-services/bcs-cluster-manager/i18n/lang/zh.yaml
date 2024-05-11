@@ -104,6 +104,7 @@ userAfterInit: "用户后置初始化"
 userBeforeInit: "用户前置初始化"
 preInitJob: "前置初始化作业"
 postInitJob: "后置初始化作业"
+nodeMixedInit: "混部集群节点初始化"
 
 #
 CreateCluster: "创建集群"
