@@ -289,3 +289,40 @@ func (m *ModelAction) ListNodeGroupActionByTaskID(taskID string,
 	}
 	return nodeGroupActionList, nil
 }
+
+// ListNodeGroupActionByEvent list NodeGroupAction by nodeGroupID, if nodeGroupID is empty, return all
+func (m *ModelAction) ListNodeGroupActionByEvent(event string,
+	opt *storage.ListOptions) ([]*storage.NodeGroupAction, error) {
+	if opt == nil {
+		return nil, fmt.Errorf("ListOption is nil")
+	}
+	ctx := context.Background()
+	err := ensureTable(ctx, &m.Public)
+	if err != nil {
+		return nil, err
+	}
+	page := opt.Page
+	limit := opt.Limit
+
+	cond := operator.NewLeafCondition(operator.Eq, operator.M{
+		eventKey:     event,
+		isDeletedKey: opt.ReturnSoftDeletedItems,
+	})
+	if !opt.DoPagination && opt.Limit == 0 {
+		count, countErr := m.DB.Table(m.TableName).Find(cond).Count(ctx)
+		if countErr != nil {
+			return nil, fmt.Errorf("get action count err:%v", countErr)
+		}
+		limit = int(count)
+	} else if limit == 0 {
+		limit = defaultSize
+	}
+	nodeGroupActionList := make([]*storage.NodeGroupAction, 0)
+	err = m.DB.Table(m.TableName).Find(cond).
+		WithSort(map[string]interface{}{nodeGroupIDKey: 1}).
+		WithStart(int64(page*limit)).WithLimit(int64(limit)).All(ctx, &nodeGroupActionList)
+	if err != nil {
+		return nil, err
+	}
+	return nodeGroupActionList, nil
+}

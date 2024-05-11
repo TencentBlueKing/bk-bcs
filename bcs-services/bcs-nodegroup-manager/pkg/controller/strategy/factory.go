@@ -14,7 +14,9 @@ package strategy
 
 import (
 	"fmt"
+	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-nodegroup-manager/pkg/cluster"
 	mgr "github.com/Tencent/bk-bcs/bcs-services/bcs-nodegroup-manager/pkg/resourcemgr"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-nodegroup-manager/pkg/storage"
 )
@@ -42,6 +44,8 @@ type Options struct {
 	ResourceManager mgr.Client
 	// storage for access database
 	Storage storage.Storage
+	// client for cluster request
+	ClusterClient cluster.Client
 }
 
 // NewFactory new strategy factory
@@ -72,5 +76,23 @@ func (f *strategyFactory) GetStrategyExecutor(strategy *storage.Strategy) (Execu
 // Executor interface of strategy executor, implement by different kind of executors
 type Executor interface {
 	IsAbleToScaleDown(strategy *storage.NodeGroupMgrStrategy) (int, bool, error)
-	IsAbleToScaleUp(strategy *storage.NodeGroupMgrStrategy) (int, bool, error)
+	IsAbleToScaleUp(strategy *storage.NodeGroupMgrStrategy) (int, bool, int, error)
+	HandleNodeMetadata()
+	CreateNodeUpdateAction(strategy *storage.NodeGroupMgrStrategy, action *storage.NodeGroupAction) error
+}
+
+func checkIfTaskExecuting(strategyName string, storageCli storage.Storage) (bool, error) {
+	tasks, err := storageCli.ListTasksByStrategy(strategyName, &storage.ListOptions{})
+	if err != nil {
+		return false, fmt.Errorf("list strategy %s tasks err:%s", strategyName, err.Error())
+	}
+	for _, task := range tasks {
+		if time.Now().Add(5 * time.Minute).After(task.BeginExecuteTime) {
+			return true, nil
+		}
+		if task.IsExecuting() {
+			return true, nil
+		}
+	}
+	return false, nil
 }

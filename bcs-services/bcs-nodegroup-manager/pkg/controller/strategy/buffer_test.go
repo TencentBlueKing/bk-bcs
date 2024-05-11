@@ -13,6 +13,7 @@
 package strategy
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -263,9 +264,126 @@ func TestIsAbleToScaleUp(t *testing.T) {
 				Storage:         mockFields.storage,
 			}
 			executor := NewBufferStrategyExecutor(opts)
-			num, result, _ := executor.IsAbleToScaleUp(tt.strategy)
+			num, result, _, _ := executor.IsAbleToScaleUp(tt.strategy)
 			assert.Equal(t, tt.expectedScaleUp, result)
 			assert.Equal(t, tt.expectedNum, num)
 		})
 	}
+}
+
+func Test_getTimeModeDeadline(t *testing.T) {
+	timeMode := &storage.BufferTimeMode{
+		ScaleDownWhenTimeout: false,
+		TimePeriods: []*storage.TimePeriod{{
+			ScaleOutCron: "",
+			ScaleInCron:  "",
+			ScaleOutTime: time.Now().Add(-1 * time.Hour).Format(time.RFC3339),
+			ScaleInTime:  time.Now().Add(10 * time.Hour).Format(time.RFC3339),
+		}},
+		ReservedHours: 0,
+	}
+	deadline, drainDelay := getTimeModeDeadline(timeMode)
+	fmt.Println(drainDelay)
+	fmt.Println(deadline)
+
+	timeMode = &storage.BufferTimeMode{
+		ScaleDownWhenTimeout: false,
+		TimePeriods: []*storage.TimePeriod{{
+			ScaleOutCron: "",
+			ScaleInCron:  "",
+			ScaleOutTime: time.Now().Add(-10 * time.Hour).Format(time.RFC3339),
+			ScaleInTime:  time.Now().Add(-2 * time.Hour).Format(time.RFC3339),
+		},
+			{
+				ScaleOutCron: "",
+				ScaleInCron:  "",
+				ScaleOutTime: time.Now().Add(-1 * time.Hour).Format(time.RFC3339),
+				ScaleInTime:  time.Now().Add(10 * time.Hour).Format(time.RFC3339),
+			},
+		},
+		ReservedHours: 0,
+	}
+	deadline, drainDelay = getTimeModeDeadline(timeMode)
+	fmt.Println(drainDelay)
+	fmt.Println(deadline)
+
+	timeMode = &storage.BufferTimeMode{
+		ScaleDownWhenTimeout: false,
+		TimePeriods: []*storage.TimePeriod{{
+			ScaleOutCron: "* * 6 * * 4",
+			ScaleInCron:  "* * 12 * * 0",
+			ScaleOutTime: time.Now().Add(-10 * time.Hour).Format(time.RFC3339),
+			ScaleInTime:  time.Now().Add(-2 * time.Hour).Format(time.RFC3339),
+		},
+			{
+				ScaleOutCron: "",
+				ScaleInCron:  "",
+				ScaleOutTime: time.Now().Add(-1 * time.Hour).Format(time.RFC3339),
+				ScaleInTime:  time.Now().Add(10 * time.Hour).Format(time.RFC3339),
+			},
+		},
+		ReservedHours: 0,
+	}
+	deadline, drainDelay = getTimeModeDeadline(timeMode)
+	fmt.Println(drainDelay)
+	fmt.Println(deadline)
+
+	timeMode = &storage.BufferTimeMode{
+		ScaleDownWhenTimeout: false,
+		TimePeriods: []*storage.TimePeriod{{
+			ScaleOutCron: "* * 6 * * 1",
+			ScaleInCron:  "* * 12 * * 2",
+			ScaleOutTime: time.Now().Add(-10 * time.Hour).Format(time.RFC3339),
+			ScaleInTime:  time.Now().Add(-2 * time.Hour).Format(time.RFC3339),
+		}},
+		ReservedHours: 0,
+	}
+	deadline, drainDelay = getTimeModeDeadline(timeMode)
+	fmt.Println(drainDelay)
+	fmt.Println(deadline)
+
+	timeMode = &storage.BufferTimeMode{
+		ScaleDownWhenTimeout: false,
+		TimePeriods: []*storage.TimePeriod{{
+			ScaleOutCron: "* 0 6 * * 1",
+			ScaleInCron:  "* 0 10 * * 2",
+		}, {
+			ScaleOutCron: "* 30 15 * * 2",
+			ScaleInCron:  "* 0 16 * * 2",
+		}},
+		ReservedHours: 0,
+	}
+	deadline, drainDelay = getTimeModeDeadline(timeMode)
+	fmt.Println(drainDelay)
+	fmt.Println(deadline)
+}
+
+func Test_checkIfInScaleOutPeriod(t *testing.T) {
+	//timeMode := &storage.BufferTimeMode{
+	//	ScaleDownWhenTimeout: false,
+	//	TimePeriods: []*storage.TimePeriod{{
+	//		ScaleOutCron: "* * 6 * * 1",
+	//		ScaleInCron:  "* * 10 * * 2",
+	//		ScaleOutTime: time.Now().Add(-10 * time.Hour).Format(time.RFC3339),
+	//		ScaleInTime:  time.Now().Add(-2 * time.Hour).Format(time.RFC3339),
+	//	},
+	//		{
+	//			ScaleOutCron: "* 0 11 * * 2",
+	//			ScaleInCron:  "* 0 12 * * 2",
+	//			ScaleOutTime: time.Now().Add(-10 * time.Hour).Format(time.RFC3339),
+	//			ScaleInTime:  time.Now().Add(-2 * time.Hour).Format(time.RFC3339),
+	//		},
+	//	},
+	//	ReservedHours: 0,
+	//}
+	//fmt.Println(checkIfInScaleOutPeriod(timeMode, 10))
+	timeMode := &storage.BufferTimeMode{
+		ScaleDownWhenTimeout: false,
+		TimePeriods: []*storage.TimePeriod{{
+			ScaleOutCron: "0 0 * * 1",
+			ScaleInCron:  "0 15 * * 5",
+		}},
+		ReservedHours: 0,
+	}
+	fmt.Println(checkIfInScaleOutPeriod(timeMode, 10))
 }
