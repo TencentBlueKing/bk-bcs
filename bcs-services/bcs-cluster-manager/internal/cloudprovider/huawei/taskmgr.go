@@ -52,7 +52,7 @@ func newtask() *Task {
 	task.works[updateCreateClusterDBInfoStep.StepMethod] = tasks.UpdateCreateClusterDBInfoTask
 
 	// delete cluster task
-	task.works[deleteClusterStep.StepMethod] = tasks.DeleteTKEClusterTask
+	task.works[deleteClusterStep.StepMethod] = tasks.DeleteClusterTask
 	task.works[cleanClusterDBInfoStep.StepMethod] = tasks.CleanClusterDBInfoTask
 
 	// create nodeGroup task

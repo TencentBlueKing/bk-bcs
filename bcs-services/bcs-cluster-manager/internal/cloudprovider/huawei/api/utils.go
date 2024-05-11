@@ -14,7 +14,9 @@
 package api
 
 import (
+	"context"
 	"encoding/base64"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -24,6 +26,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 )
 
 // Crypt encryption node password
@@ -214,4 +217,65 @@ func GenerateCreateNodePoolRequest(group *proto.NodeGroup,
 			SubnetId:       subnetId,
 		},
 	}, nil
+}
+
+// GenerateCreateClusterRequest get cce cluster create request
+func GenerateCreateClusterRequest(ctx context.Context, cluster *proto.Cluster,
+	operator string) (*CreateClusterRequest, error) {
+
+	flavor, err := trans2CCEFlavor(cluster.ClusterBasicSettings.ClusterLevel)
+	if err != nil {
+		return nil, err
+	}
+
+	containerMode := model.GetContainerNetworkModeEnum().OVERLAY_L2.Value()
+	if cluster.ClusterAdvanceSettings.NetworkType == common.VpcCni {
+		containerMode = model.GetContainerNetworkModeEnum().VPC_ROUTER.Value()
+	}
+
+	return &CreateClusterRequest{
+		Name: cluster.ClusterID,
+		Spec: CreateClusterSpec{
+			Flavor:          flavor,
+			Version:         cluster.ClusterBasicSettings.Version,
+			Description:     cluster.GetDescription(),
+			VpcID:           cluster.VpcID,
+			SubnetID:        cluster.ClusterBasicSettings.SubnetID,
+			SecurityGroupID: cluster.ClusterAdvanceSettings.ClusterConnectSetting.SecurityGroup,
+			ContainerMode:   containerMode,
+			ContainerCidr:   cluster.NetworkSettings.ClusterIPv4CIDR,
+			ServiceCidr:     cluster.NetworkSettings.ServiceIPv4CIDR,
+			Charge: ChargePrepaid{
+				ChargeType: "POSTPAID_BY_HOUR",
+				Period:     0,
+				RenewFlag:  "",
+			},
+			Ipv6Enable: false,
+		},
+	}, nil
+}
+
+func trans2CCEFlavor(s string) (string, error) {
+	if len(s) < 2 || string(s[0]) != "L" {
+		return "", fmt.Errorf("invalid format, expected prefix 'L'")
+	}
+
+	numStr := s[1:]                       // 提取首字母后的部分
+	levelNum, err := strconv.Atoi(numStr) // 尝试转换为整数
+	if err != nil {
+		return "", fmt.Errorf("failed to parse number: %w", err)
+	}
+
+	if levelNum <= 0 {
+		return "", fmt.Errorf("cluster level must be greater than 0")
+	} else if levelNum <= 50 {
+		return "cce.s1.small", nil
+	} else if levelNum <= 200 {
+		return "cce.s1.medium", nil
+	} else if levelNum <= 1000 {
+		return "cce.s2.large", nil
+	}
+
+	// levelNum > 1000
+	return "cce.s2.xlarge", nil
 }
