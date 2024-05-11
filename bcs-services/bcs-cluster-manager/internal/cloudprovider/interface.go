@@ -234,6 +234,8 @@ type NodeManager interface {
 	ListKeyPairs(opt *ListNetworksOption) ([]*proto.KeyPair, error)
 	// GetResourceGroups resource groups list
 	GetResourceGroups(opt *CommonOption) ([]*proto.ResourceGroupInfo, error)
+	// ListRuntimeInfo get runtime info list
+	ListRuntimeInfo(opt *ListRuntimeInfoOption) (map[string][]string, error)
 }
 
 // CloudValidateManager validate interface for check cloud resourceInfo
