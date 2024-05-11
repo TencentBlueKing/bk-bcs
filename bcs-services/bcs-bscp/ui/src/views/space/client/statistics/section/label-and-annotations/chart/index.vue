@@ -15,21 +15,39 @@
             :primary-dimension="primaryDimension"
             @refresh="loadChartData"
             @toggle-full-screen="isOpenFullScreen = !isOpenFullScreen"
-            @toggle-show="isOpenPopover = $event"
-            @select-dimension="selectedDimension = $event" />
+            @toggle-show-btn="isOpenPopover = $event"
+            @select-dimension="selectedDimension = $event"
+            @select-down-dimension="selectedDownDimension = $event"
+            @toggle-chart-show-type="chartShowType = $event" />
         </template>
         <template #head-suffix>
-          <bk-tag theme="info" type="stroke" style="margin-left: 8px"> {{ $t('标签') }} </bk-tag>
-          <TriggerBtn v-model:currentType="currentType" style="margin-left: 8px" />
+          <div class="head-suffix">
+            <bk-tag theme="info" type="stroke"> {{ $t('标签') }} </bk-tag>
+            <div class="icon-wrap">
+              <span
+                class="action-icon bk-bscp-icon icon-download"
+                v-bk-tooltips="{
+                  content: `${$t('支持点击数据下钻')}\n${$t('下钻维度')}\: ${selectedDownDimension}`,
+                }" />
+            </div>
+            <TriggerBtn v-model:currentType="currentType" />
+          </div>
         </template>
         <bk-loading class="loading-wrap" :loading="loading">
+          <div v-if="isDrillDown && currentType === 'column'" class="nav">
+            <span class="group-dimension" @click="handleCancelDrillDown">{{ $t('组合维度') }}</span> /
+            <span class="drill-down-data">{{ navDrillDownData }}</span>
+          </div>
           <component
             :bk-biz-id="bkBizId"
             :app-id="appId"
             :is="currentComponent"
             :label="primaryDimension"
             :data="data"
-            @jump="jumpToSearch($event as string)" />
+            :chart-show-type="chartShowType"
+            :is-show-sunburst="isShowSunburst"
+            @jump="jumpToSearch($event as string)"
+            @drill-down="handleDrillDown" />
         </bk-loading>
       </Card>
     </div>
@@ -75,9 +93,15 @@
   const isOpenPopover = ref(false);
   const loading = ref(false);
   const data = ref<IClientLabelItem[]>([]);
-  const selectedDimension = ref<string[]>([]);
+  const selectedDimension = ref<string[]>([props.primaryDimension]);
+  const selectedDownDimension = ref('');
+  const navDrillDownData = ref('');
+  const isDrillDown = ref(false);
+  const chartShowType = ref('tile');
 
   const isShowOperationBtn = computed(() => isMouseEnter.value || isOpenPopover.value);
+
+  const isShowSunburst = computed(() => selectedDimension.value.length > 1 && !isDrillDown.value);
 
   const currentComponent = computed(() => componentMap[currentType.value as keyof typeof componentMap]);
 
@@ -93,39 +117,49 @@
     },
   );
 
-  const loadChartData = async () => {
+  watch(
+    () => selectedDimension.value,
+    () => {
+      selectedDownDimension.value = '';
+      loadChartData();
+    },
+  );
+
+  const loadChartData = async (drillDownData?: any) => {
+    const allDimension: { [key: string]: string } = {};
+    selectedDimension.value.forEach((item: string) => {
+      if (item === props.primaryDimension) return;
+      allDimension[item] = '';
+    });
     const params = {
       last_heartbeat_time: searchQuery.value.last_heartbeat_time,
       search: searchQuery.value.search,
       primary_key: props.primaryDimension,
+      foreign_keys: allDimension,
     };
-    const allDimension: { [key: string]: string } = {};
-    selectedDimension.value.forEach((item: string) => {
-      allDimension[item] = '';
-    });
-    params.search = Object.assign({}, searchQuery.value.search, {
-      label: {
-        ...searchQuery.value.search.label,
-        ...allDimension,
-      },
-    });
+    if (drillDownData) {
+      params.primary_key = selectedDownDimension.value;
+      params.foreign_keys = drillDownData;
+    }
     try {
       loading.value = true;
       const res = await getClientLabelData(props.bkBizId, props.appId, params);
-      data.value = res[props.primaryDimension];
-      // allLabelData.value = res;
-      // selectedChart.value = [];
-      // if (Object.keys(res).length) {
-      //   selectedLabel.value.forEach((item) => {
-      //     const data = allLabelData.value?.[item];
-      //     if (data) {
-      //       selectedChart.value.push({
-      //         label: item,
-      //         data,
-      //       });
-      //     }
-      //   });
-      // }
+      if (drillDownData) {
+        // 下钻后的数据组合为普通柱状图
+        const drillDownData: IClientLabelItem[] = [];
+        res[selectedDownDimension.value].forEach((item: IClientLabelItem) => {
+          const index = drillDownData.findIndex((drillDownItem) => drillDownItem.primary_val === item.primary_val);
+          if (index > -1) {
+            drillDownData[index].count += item.count;
+            drillDownData[index].percent += item.percent;
+          } else {
+            drillDownData.push(item);
+          }
+        });
+        data.value = drillDownData;
+      } else {
+        data.value = res[props.primaryDimension];
+      }
     } catch (error) {
       console.error(error);
     } finally {
@@ -137,9 +171,26 @@
     const routeData = router.resolve({
       name: 'client-search',
       params: { appId: props.appId, bizId: props.bkBizId },
-      query: { label: `${props.primaryDimension}=${value}` },
+      query: { label: value ? `${props.primaryDimension}=${value}` : props.primaryDimension },
     });
     window.open(routeData.href, '_blank');
+  };
+
+  // 下钻
+  const handleDrillDown = (data: any) => {
+    if (!selectedDownDimension.value || selectedDimension.value.length < 2 || isDrillDown.value) return;
+    loadChartData({
+      [data.foreign_key]: data.foreign_val,
+      [data.primary_key]: data.primary_val,
+    });
+    navDrillDownData.value = `${data.foreign_val}, ${data.primary_val}`;
+    isDrillDown.value = true;
+  };
+
+  const handleCancelDrillDown = () => {
+    loadChartData();
+    navDrillDownData.value = '';
+    isDrillDown.value = false;
   };
 </script>
 
@@ -161,5 +212,30 @@
   }
   .loading-wrap {
     height: 100%;
+    .nav {
+      color: #313238;
+      .group-dimension {
+        cursor: pointer;
+      }
+      .drill-down-data {
+        color: #979ba5;
+      }
+    }
+  }
+  .head-suffix {
+    margin-left: 8px;
+    display: flex;
+    align-items: center;
+    .icon-wrap {
+      margin: 0 8px;
+      font-size: 12px;
+      width: 18px;
+      height: 18px;
+      background: #f0f3ff;
+      border-radius: 2px;
+      text-align: center;
+      line-height: 18px;
+      color: #7594ef;
+    }
   }
 </style>

@@ -425,4 +425,7 @@
     justify-content: center;
     transform: translateY(-20px);
   }
+  :deep(.g2-tooltip) {
+    visibility: hidden;
+  }
 </style>

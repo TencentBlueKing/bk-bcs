@@ -7,8 +7,8 @@
       :search-placeholder="$t('请输入关键字')"
       filterable
       multiple
-      @toggle="handleToggle"
-      @change="emits('selectDimension', minorDimension)">
+      @toggle="emits('toggleShowBtn', $event)"
+      @change="handleSelectedDimensionChange">
       <template #trigger>
         <span
           v-if="needDown"
@@ -17,14 +17,14 @@
       </template>
       <template #extension>
         <span class="title">{{ t('展示方式') }}</span>
-        <bk-radio-group v-model="showType">
+        <bk-radio-group v-model="chartShowType">
           <bk-radio label="tile">
-            <span class="bk-bscp-icon icon-download" />
+            <span class="bk-bscp-icon icon-bar-chart-thin" />
             <span>{{ t('平铺') }}</span>
           </bk-radio>
           <bk-radio label="pile" :disabled="minorDimension.length > 2">
             <span
-              class="bk-bscp-icon icon-download"
+              class="bk-bscp-icon icon-bar-chart-stack"
               v-bk-tooltips="{
                 content: t('三个以上维度不支持堆叠展示效果'),
                 disabled: minorDimension.length <= 2,
@@ -37,18 +37,26 @@
       <bk-option v-for="item in allLabel" :id="item" :key="item" :name="item" :disabled="item === primaryDimension" />
     </bk-select>
     <bk-select
+      v-model="downDimension"
+      ref="downDimensionSelectRef"
       :popover-options="{ theme: 'light bk-select-popover', placement: 'bottom-start' }"
       :popover-min-width="238"
       :filterable="true"
       :search-placeholder="$t('请输入关键字')"
-      @toggle="handleToggle">
+      @toggle="emits('toggleShowBtn', $event)"
+      @change="handleSelectedDownDimension">
       <template #trigger>
         <span
           v-if="needDown"
           class="action-icon bk-bscp-icon icon-download"
           v-bk-tooltips="{ content: t('设置下钻') }" />
       </template>
-      <bk-option v-for="(item, index) in 10" :id="item" :key="index" :name="item" />
+      <bk-option
+        v-for="item in allLabel"
+        :id="item"
+        :key="item"
+        :name="item"
+        :disabled="item === primaryDimension || minorDimension.includes(item)" />
     </bk-select>
     <left-turn-line class="action-icon" @click="emits('refresh')" />
     <FilliscreenLine v-if="!isOpenFullScreen" class="action-icon" @click="handleOpenFullScreen" />
@@ -57,7 +65,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref } from 'vue';
+  import { ref, watch } from 'vue';
   import { LeftTurnLine, FilliscreenLine, UnfullScreen } from 'bkui-vue/lib/icon';
   import BkMessage from 'bkui-vue/lib/message';
   import { useI18n } from 'vue-i18n';
@@ -70,10 +78,27 @@
     primaryDimension?: string;
     needDown?: boolean;
   }>();
-  const emits = defineEmits(['refresh', 'toggleFullScreen', 'toggleShow', 'selectDimension']);
 
-  const showType = ref('tile');
+  const emits = defineEmits([
+    'refresh',
+    'toggleFullScreen',
+    'toggleShowBtn',
+    'selectDimension',
+    'toggleChartShowType',
+    'selectDownDimension',
+  ]);
+
+  const chartShowType = ref('tile');
   const minorDimension = ref([`${props.primaryDimension}`]);
+  const downDimension = ref('');
+  const downDimensionSelectRef = ref();
+
+  watch(
+    () => chartShowType.value,
+    (val) => {
+      emits('toggleChartShowType', val);
+    },
+  );
 
   // 打开全屏
   const handleOpenFullScreen = () => {
@@ -97,8 +122,20 @@
     }
   };
 
-  const handleToggle = (val: boolean) => {
-    emits('toggleShow', val);
+  // 设置副维度
+  const handleSelectedDimensionChange = () => {
+    if (minorDimension.value.length > 2) {
+      chartShowType.value = 'tile';
+    }
+    if (minorDimension.value.includes(downDimension.value)) {
+      downDimension.value = '';
+      emits('selectDownDimension', '');
+    }
+    emits('selectDimension', minorDimension.value);
+  };
+
+  const handleSelectedDownDimension = (val: string) => {
+    emits('selectDownDimension', val);
   };
 </script>
 
@@ -155,6 +192,10 @@
           gap: 12px;
           .bk-radio {
             margin-left: 0;
+          }
+          .bk-bscp-icon {
+            font-size: 16px;
+            margin-right: 3px;
           }
         }
       }

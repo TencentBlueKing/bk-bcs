@@ -120,9 +120,11 @@ export interface IPullCount {
 // 客户端标签
 export interface IClientLabelItem {
   count: number;
+  foreign_key: string;
+  foreign_val: string;
   percent: number;
-  value: string;
-  key: string;
+  primary_key: string;
+  primary_val: string;
 }
 
 // 组件版本发布(柱状图和表格)
