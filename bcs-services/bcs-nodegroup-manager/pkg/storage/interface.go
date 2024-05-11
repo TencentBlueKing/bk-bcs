@@ -66,6 +66,7 @@ type Storage interface {
 	// NodeGroup scaleUp or scaleDown action operations
 	// ScaleUp and ScaleDown will happened at the same time sometimes.
 	ListNodeGroupAction(nodeGroupID string, opt *ListOptions) ([]*NodeGroupAction, error)
+	ListNodeGroupActionByEvent(event string, opt *ListOptions) ([]*NodeGroupAction, error)
 	ListNodeGroupActionByTaskID(taskID string, opt *ListOptions) ([]*NodeGroupAction, error)
 	GetNodeGroupAction(nodeGroupID, event string, opt *GetOptions) (*NodeGroupAction, error)
 	CreateNodeGroupAction(action *NodeGroupAction, opt *CreateOptions) error
