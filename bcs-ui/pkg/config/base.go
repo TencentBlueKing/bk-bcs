@@ -47,7 +47,7 @@ type BaseConf struct {
 func (c *BaseConf) Init() error {
 	var err error
 	c.TimeZone = "Asia/Shanghai"
-	c.LanguageCode = "en-us"
+	c.LanguageCode = "zh-cn"
 	c.RunEnv = DevEnv
 	c.Region = "ce"
 	c.Location, err = time.LoadLocation(c.TimeZone)

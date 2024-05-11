@@ -281,7 +281,6 @@ export default defineComponent({
     const langRef = ref();
     const handleChangeLang = async (item) => {
       // $i18n.locale = item.id;// 后面 $router.go(0) 会重新加载界面，这里会导致一瞬间被切换了，然后界面再刷新
-      setCookie('blueking_language', item.locale);
       langRef.value?.hide();
       await switchLanguage({
         lang: item.locale,
