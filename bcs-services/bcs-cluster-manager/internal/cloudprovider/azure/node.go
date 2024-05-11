@@ -190,3 +190,8 @@ func (n *NodeManager) GetResourceGroups(opt *cloudprovider.CommonOption) ([]*pro
 
 	return groups, nil
 }
+
+// ListRuntimeInfo get runtime info list
+func (n *NodeManager) ListRuntimeInfo(opt *cloudprovider.ListRuntimeInfoOption) (map[string][]string, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
