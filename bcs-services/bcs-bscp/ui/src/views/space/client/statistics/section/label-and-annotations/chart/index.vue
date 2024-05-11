@@ -121,6 +121,7 @@
     () => selectedDimension.value,
     () => {
       selectedDownDimension.value = '';
+      isDrillDown.value = false;
       loadChartData();
     },
   );
@@ -178,6 +179,7 @@
 
   // 下钻
   const handleDrillDown = (data: any) => {
+    console.log(data);
     if (!selectedDownDimension.value || selectedDimension.value.length < 2 || isDrillDown.value) return;
     loadChartData({
       [data.foreign_key]: data.foreign_val,
