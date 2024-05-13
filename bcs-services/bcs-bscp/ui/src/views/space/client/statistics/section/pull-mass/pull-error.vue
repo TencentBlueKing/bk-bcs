@@ -1,10 +1,15 @@
 <template>
   <div class="wrap">
     <Teleport :disabled="!isOpenFullScreen" to="body">
-      <div class="pull-error-wrap" :class="{ fullscreen: isOpenFullScreen }">
+      <div
+        class="pull-error-wrap"
+        :class="{ fullscreen: isOpenFullScreen }"
+        @mouseenter="isShowOperationBtn = true"
+        @mouseleave="isShowOperationBtn = false">
         <Card :title="t('拉取失败原因')" :height="416">
           <template #operation>
             <OperationBtn
+              v-show="isShowOperationBtn"
               :is-open-full-screen="isOpenFullScreen"
               @refresh="refresh"
               @toggle-full-screen="isOpenFullScreen = !isOpenFullScreen" />
@@ -106,6 +111,7 @@
     name: '',
     mapName: '',
   });
+  const isShowOperationBtn = ref(false);
 
   watch(
     () => props.appId,
@@ -418,5 +424,8 @@
     height: 100%;
     justify-content: center;
     transform: translateY(-20px);
+  }
+  :deep(.g2-tooltip) {
+    visibility: hidden;
   }
 </style>

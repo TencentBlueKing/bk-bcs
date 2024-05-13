@@ -9,15 +9,9 @@
       </div>
       <div class="head-routes">
         <div v-for="nav in navList" :key="nav.id" :class="['nav-item', { actived: isFirstNavActived(nav.module) }]">
-          <bk-popover
-            v-if="nav.children"
-            ext-cls="nav-popover"
-            placement="bottom"
-            :arrow="false"
-            :offset="0"
-            :popover-delay="0">
+          <div v-if="nav.children">
             <div :class="['firstNav-item', { actived: isFirstNavActived(nav.module) }]">{{ nav.name }}</div>
-            <template #content>
+            <div class="secondNav-list">
               <div
                 v-for="secondNav in nav.children"
                 :key="secondNav.id"
@@ -26,8 +20,8 @@
                   {{ secondNav.name }}
                 </router-link>
               </div>
-            </template>
-          </bk-popover>
+            </div>
+          </div>
           <router-link v-else :to="{ name: nav.id, params: { spaceId: spaceId || 0 } }" @click="handleNavClick(nav.id)">
             {{ nav.name }}
           </router-link>
@@ -386,6 +380,7 @@
         padding-left: 90px;
         font-size: 14px;
         .nav-item {
+          position: relative;
           display: flex;
           align-items: center;
           height: 52px;
@@ -400,6 +395,9 @@
             a {
               color: #c2cee5;
             }
+            .secondNav-list {
+              display: block;
+            }
           }
           &.actived {
             color: #ffffff;
@@ -412,6 +410,38 @@
             display: flex;
             align-items: center;
             cursor: default;
+          }
+          .secondNav-list {
+            display: none;
+            position: absolute;
+            top: 52px;
+            left: 0;
+            z-index: 1000;
+            background: #182132;
+            border-radius: 0 0 2px 2px;
+            padding: 4px 1px;
+            .secondNav-item {
+              min-width: 102px;
+              height: 40px;
+              line-height: 40px;
+              padding: 0 16px;
+              font-size: 14px;
+              a {
+                color: #96a2b9;
+              }
+              &:hover {
+                color: #c2cee5;
+                a {
+                  color: #c2cee5;
+                }
+              }
+              &.actived {
+                background: #2f3746;
+                a {
+                  color: #fff;
+                }
+              }
+            }
           }
         }
       }
@@ -617,26 +647,5 @@
   }
   .login-out-popover.bk-popover.bk-pop2-content {
     padding: 4px 0;
-  }
-  .nav-popover.bk-popover.bk-pop2-content {
-    padding: 4px 1px;
-    background: #182132;
-    border-radius: 0 0 2px 2px;
-    .secondNav-item {
-      min-width: 102px;
-      height: 40px;
-      line-height: 40px;
-      padding: 0 16px;
-      font-size: 14px;
-      a {
-        color: #96a2b9;
-      }
-      &.actived {
-        background: #2f3746;
-        a {
-          color: #fff;
-        }
-      }
-    }
   }
 </style>

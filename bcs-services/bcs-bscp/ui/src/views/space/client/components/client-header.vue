@@ -95,7 +95,7 @@
         id: service.id!,
       };
       emits('search');
-    } else {
+    } else if (serviceList.value.length) {
       handleAppChange(serviceList.value[0].id!);
     }
   });
