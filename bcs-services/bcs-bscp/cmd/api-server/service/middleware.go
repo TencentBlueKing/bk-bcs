@@ -19,6 +19,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/metrics"
 	pbcs "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/config-server"
@@ -60,7 +61,7 @@ func (p *proxy) HttpServerHandledTotal(serviceName, handler string) func(next ht
 			kt := kit.MustGetKit(r.Context())
 			var status string
 			if serviceName == "" {
-				serviceName = chi.RouteContext(r.Context()).RoutePattern()
+				serviceName = string(cc.APIServerName)
 			}
 			if handler == "" {
 				handler = r.URL.String()
