@@ -17,6 +17,7 @@
     data: IClientConfigVersionItem[];
     bkBizId: string;
     appId: number;
+    isFullScreen: boolean;
   }>();
 
   const emits = defineEmits(['update', 'jump']);
@@ -29,6 +30,25 @@
     () => props.data,
     () => {
       piePlot.changeData(props.data);
+    },
+  );
+
+  watch(
+    () => props.isFullScreen,
+    (val) => {
+      if (val) {
+        piePlot.update({
+          legend: {
+            offsetX: -200,
+          },
+        });
+      } else {
+        piePlot.update({
+          legend: {
+            offsetX: -800,
+          },
+        });
+      }
     },
   );
 
@@ -62,7 +82,6 @@
         showMarkers: false,
         showContent: true,
         customItems: (originalItems: any[]) => {
-          console.log(originalItems);
           emits('update', originalItems[0].title);
           originalItems[0].name = t('客户端数量');
           originalItems[0].marker = false;
@@ -76,7 +95,9 @@
         layout: 'horizontal',
         position: 'right',
         flipPage: false,
-        offsetX: -600,
+        offsetX: -800,
+        maxWidth: 300,
+        reversed: true,
       },
     });
     piePlot.render();
