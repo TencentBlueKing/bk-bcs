@@ -26,7 +26,6 @@
           :bk-biz-id="props.bkBizId"
           :app-id="props.appId"
           :groups="versionData.status.released_groups"
-          :is-default-group="hasDefaultGroup"
           :disabled="publishStatus === 'full_released'">
           <div class="released-groups">
             <i class="bk-bscp-icon icon-resources-fill"></i>
@@ -143,7 +142,7 @@
       if (versionData.value.status.publish_status === 'full_released') {
         return t('全部实例');
       }
-      return hasDefaultGroup.value ? t('默认分组') : versionData.value.status.released_groups[0].name;
+      return hasDefaultGroup.value ? t('全部实例') : versionData.value.status.released_groups[0].name;
     }
     return '';
   });
@@ -290,10 +289,11 @@
     }
     .version-operations {
       position: absolute;
-      top: 5px;
+      top: 0;
       right: 24px;
       display: flex;
       align-items: center;
+      height: 100%;
       z-index: 10;
       .released-groups {
         display: flex;

@@ -23,6 +23,12 @@ import (
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+const (
+	// PortPoolAllocatePolicyAverage 每次从分配量最少的Item分配
+	PortPoolAllocatePolicyAverage = "average"
+	// PortPoolAllocatePolicyDefault 从以一个可用item开始分配
+	PortPoolAllocatePolicyDefault = "default"
+)
 
 // PortPoolItem item of port pool
 type PortPoolItem struct {
@@ -64,7 +70,7 @@ func (ppi *PortPoolItem) Validate() error {
 type PortPoolSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-
+	AllocatePolicy    string                    `json:"allocatePolicy,omitempty"`
 	PoolItems         []*PortPoolItem           `json:"poolItems"`
 	ListenerAttribute *IngressListenerAttribute `json:"listenerAttribute,omitempty"`
 }
@@ -132,4 +138,18 @@ type PortPoolList struct {
 
 func init() {
 	SchemeBuilder.Register(&PortPool{}, &PortPoolList{})
+}
+
+// GetAllocatePolicy return allocate policy
+func (p *PortPool) GetAllocatePolicy() string {
+	if p.Spec.AllocatePolicy == "" {
+		return PortPoolAllocatePolicyDefault
+	}
+
+	switch strings.ToLower(p.Spec.AllocatePolicy) {
+	case PortPoolAllocatePolicyAverage:
+		return PortPoolAllocatePolicyAverage
+	default:
+		return PortPoolAllocatePolicyDefault
+	}
 }

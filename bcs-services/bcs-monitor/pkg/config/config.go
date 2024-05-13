@@ -16,6 +16,7 @@ package config
 import (
 	"sync"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v3"
@@ -35,7 +36,7 @@ type Configuration struct {
 	Redis       *RedisConf               `yaml:"redis"`
 	Mongo       *MongoConf               `yaml:"mongo"`
 	StoreGWList []*StoreConf             `yaml:"storegw"`
-	Logging     *LogConf                 `yaml:"logging"`
+	Logging     *conf.LogConfig          `yaml:"logging"`
 	BKAPIGW     *BKAPIGWConf             `yaml:"bkapigw_conf"`
 	BKMonitor   *BKMonitorConf           `yaml:"bk_monitor_conf"`
 	BKLog       *BKLogConf               `yaml:"bk_log_conf"`
@@ -53,19 +54,11 @@ func (c *Configuration) init() error {
 		return err
 	}
 
-	if err := c.Logging.init(); err != nil {
-		return err
-	}
-
 	if err := c.BCS.InitJWTPubKey(); err != nil {
 		return err
 	}
 
 	if err := c.BKAPIGW.InitJWTPubKey(); err != nil {
-		return err
-	}
-
-	if err := c.BKMonitor.init(); err != nil {
 		return err
 	}
 

@@ -8,15 +8,13 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package namespacecontroller
 
 import (
-	k8scorev1 "k8s.io/api/core/v1"
-
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
+	k8scorev1 "k8s.io/api/core/v1"
 )
 
 func checkNodeBindLabel(ns *k8scorev1.Namespace) bool {

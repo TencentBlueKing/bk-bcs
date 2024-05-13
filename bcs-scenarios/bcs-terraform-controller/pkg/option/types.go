@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package option
@@ -18,5 +17,10 @@ const (
 	TerraformBinPath = "/usr/local/bin/terraform"
 
 	// RepositoryStorePath 代码存储路径
-	RepositoryStorePath = "/data/bcs/terraform/repository"
+	RepositoryStorePath = "/data/bcs/terraform"
 )
+
+// GetRepoStoragePath 返回仓库的存储位置
+func GetRepoStoragePath(tfName, tfUID string) string {
+	return RepositoryStorePath + "/" + tfName + "/" + tfUID
+}

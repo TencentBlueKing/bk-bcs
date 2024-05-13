@@ -9,6 +9,7 @@
     :remote-method="remoteMethod"
     :search-placeholder="$t('cluster.placeholder.searchCluster')"
     :size="size"
+    :scroll-height="460"
     @change="handleClusterChange">
     <bcs-option-group
       v-for="item, index in clusterData"
@@ -30,30 +31,36 @@
         :key="cluster.clusterID"
         :id="cluster.clusterID"
         :name="cluster.clusterName"
-        :disabled="cluster.status !== 'RUNNING'">
-        <div
-          class="flex flex-col justify-center h-[50px] px-[12px]"
-          v-bk-tooltips="{
-            content: $t('cluster.tips.clusterStatus', [CLUSTER_MAP[cluster.status || '']]),
-            disabled: cluster.status === 'RUNNING',
-            placement: 'right'
-          }">
-          <span class="leading-6 bcs-ellipsis" v-bk-overflow-tips>{{ cluster.clusterName }}</span>
-          <span
-            :class="[
-              'leading-4',
-              {
-                'text-[#979BA5]': cluster.status === 'RUNNING'
-              }]">
-            {{ cluster.clusterID }}
-          </span>
+        :disabled="cluster.status && !normalStatusList.includes(cluster.status)">
+        <div class="flex items-center justify-between">
+          <div
+            class="flex-1 flex flex-col justify-center h-[50px] px-[12px]"
+            @mouseenter="hoverClusterID = cluster.clusterID"
+            @mouseleave="hoverClusterID = ''">
+            <span class="leading-[20px] bcs-ellipsis" v-bk-overflow-tips>{{ cluster.clusterName }}</span>
+            <span
+              :class="[
+                'leading-[20px]',
+                {
+                  'text-[#979BA5]': normalStatusList.includes(cluster.status || ''),
+                  '!text-[#699DF4]': normalStatusList.includes(cluster.status || '')
+                    && (hoverClusterID === cluster.clusterID || localValue === cluster.clusterID)
+                }]">
+              ({{ cluster.clusterID }})
+            </span>
+          </div>
+          <bcs-tag
+            theme="danger"
+            v-if="!normalStatusList.includes(cluster.status || '')">
+            {{ $t('generic.label.abnormal') }}
+          </bcs-tag>
         </div>
       </bcs-option>
     </bcs-option-group>
   </bcs-select>
 </template>
 <script lang="ts">
-import {  defineComponent, PropType, toRefs, watch } from 'vue';
+import {  defineComponent, PropType, ref, toRefs, watch } from 'vue';
 
 import CollapseTitle from './collapse-title.vue';
 import useClusterSelector, { ClusterType } from './use-cluster-selector';
@@ -88,10 +95,17 @@ export default defineComponent({
       type: String,
       default: '',
     },
+    validateClusterId: {
+      type: Boolean,
+      default: true,
+    },
   },
   emits: ['change'],
   setup(props, ctx) {
-    const { value, clusterType } = toRefs(props);
+    const { value, clusterType, validateClusterId } = toRefs(props);
+
+    const normalStatusList = ['RUNNING'];
+    const hoverClusterID = ref<string>();
 
     const {
       localValue,
@@ -100,7 +114,7 @@ export default defineComponent({
       clusterData,
       handleToggleCollapse,
       handleClusterChange,
-    } = useClusterSelector(ctx.emit, value.value, clusterType.value);
+    } = useClusterSelector(ctx.emit, value.value, clusterType.value, true, validateClusterId.value);
 
     watch(value, (v) => {
       localValue.value = v;
@@ -116,6 +130,8 @@ export default defineComponent({
       collapseList,
       clusterData,
       CLUSTER_MAP,
+      normalStatusList,
+      hoverClusterID,
       handleToggleCollapse,
       remoteMethod,
       handleClusterChange,

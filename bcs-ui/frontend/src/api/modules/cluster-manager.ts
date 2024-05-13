@@ -44,6 +44,7 @@ export const deleteCloudAccounts = request('delete', '/clouds/$cloudId/accounts/
 export const updateCloudAccounts = request('put', '/clouds/$cloudId/accounts/$accountID');
 export const validateCloudAccounts = request('post', '/clouds/$cloudId/accounts/available');
 export const clusterConnect = request('get', '/clouds/$cloudId/clusters/$clusterID/connect');
+export const cloudResourceGroupByAccount = request('get', '/clouds/$cloudId/resourcegroups');
 export const cloudRegionByAccount = request('get', '/clouds/$cloudId/regions');
 export const cloudClusterList = request('get', '/clouds/$cloudId/clusters');
 export const taskRetry = request('put', '/task/$taskId/retry');

@@ -6,31 +6,25 @@ package clustermanager
 import (
 	fmt "fmt"
 	_ "github.com/envoyproxy/protoc-gen-validate/validate"
-	proto "github.com/golang/protobuf/proto"
 	_ "github.com/golang/protobuf/ptypes/struct"
 	_ "github.com/golang/protobuf/ptypes/wrappers"
 	_ "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger/options"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
+	proto "google.golang.org/protobuf/proto"
 	math "math"
 )
 
 import (
 	context "context"
-	api "github.com/micro/go-micro/v2/api"
-	client "github.com/micro/go-micro/v2/client"
-	server "github.com/micro/go-micro/v2/server"
+	api "go-micro.dev/v4/api"
+	client "go-micro.dev/v4/client"
+	server "go-micro.dev/v4/server"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
-
-// This is a compile-time assertion to ensure that this generated file
-// is compatible with the proto package it is being compiled against.
-// A compilation error at this line likely means your copy of the
-// proto package needs to be updated.
-const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ api.Endpoint
@@ -42,868 +36,829 @@ var _ server.Option
 
 func NewClusterManagerEndpoints() []*api.Endpoint {
 	return []*api.Endpoint{
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.CreateCluster",
 			Path:    []string{"/clustermanager/v1/cluster"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.RetryCreateClusterTask",
 			Path:    []string{"/clustermanager/v1/cluster/{clusterID}/retry"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.CheckCloudKubeConfig",
 			Path:    []string{"/clustermanager/v1/cloud/kubeConfig"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.CheckCloudKubeConfigConnect",
 			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/clusters/{clusterID}/connect"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.ImportCluster",
 			Path:    []string{"/clustermanager/v1/cluster/import"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.UpdateCluster",
 			Path:    []string{"/clustermanager/v1/cluster/{clusterID}"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.AddNodesToCluster",
 			Path:    []string{"/clustermanager/v1/cluster/{clusterID}/node"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.DeleteNodesFromCluster",
 			Path:    []string{"/clustermanager/v1/cluster/{clusterID}/node"},
 			Method:  []string{"DELETE"},
-			Body:    "",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.BatchDeleteNodesFromCluster",
 			Path:    []string{"/clustermanager/v1/clusters/{clusterID}/nodes/-/batch"},
 			Method:  []string{"DELETE"},
-			Body:    "",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
-			Name:    "ClusterManager.GetExternalNodeScriptByGroupID",
-			Path:    []string{"/clustermanager/v1/nodegroups/{nodeGroupID}/script"},
-			Method:  []string{"GET"},
-			Handler: "rpc",
-		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.ListNodesInCluster",
 			Path:    []string{"/clustermanager/v1/cluster/{clusterID}/node"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.ListMastersInCluster",
 			Path:    []string{"/clustermanager/v1/cluster/{clusterID}/master"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.DeleteCluster",
 			Path:    []string{"/clustermanager/v1/cluster/{clusterID}"},
 			Method:  []string{"DELETE"},
-			Body:    "",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.GetCluster",
 			Path:    []string{"/clustermanager/v1/cluster/{clusterID}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.ListProjectCluster",
 			Path:    []string{"/clustermanager/v1/projects/{projectID}/clusters"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.ListCluster",
 			Path:    []string{"/clustermanager/v1/cluster"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.ListCommonCluster",
 			Path:    []string{"/clustermanager/v1/sharedclusters"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.AddSubnetToCluster",
 			Path:    []string{"/clustermanager/v1/clusters/{clusterID}/subnets"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.CreateVirtualCluster",
 			Path:    []string{"/clustermanager/v1/vcluster"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.DeleteVirtualCluster",
 			Path:    []string{"/clustermanager/v1/vcluster/{clusterID}"},
 			Method:  []string{"DELETE"},
-			Body:    "",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.UpdateVirtualClusterQuota",
 			Path:    []string{"/clustermanager/v1/vcluster/{clusterID}/quota"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.GetNode",
 			Path:    []string{"/clustermanager/v1/node/{innerIP}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.GetNodeInfo",
 			Path:    []string{"/clustermanager/v1/node/{innerIP}/info"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.RecordNodeInfo",
 			Path:    []string{"/clustermanager/v1/node"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.UpdateNode",
 			Path:    []string{"/clustermanager/v1/node"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.UpdateClusterModule",
 			Path:    []string{"/clustermanager/v1/clusters/{clusterID}/module"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.CheckNodeInCluster",
 			Path:    []string{"/clustermanager/v1/node/available"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.CordonNode",
 			Path:    []string{"/clustermanager/v1/node/cordon"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.UnCordonNode",
 			Path:    []string{"/clustermanager/v1/node/uncordon"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.DrainNode",
 			Path:    []string{"/clustermanager/v1/node/drain"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.UpdateNodeLabels",
 			Path:    []string{"/clustermanager/v1/node/labels"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.UpdateNodeAnnotations",
 			Path:    []string{"/clustermanager/v1/node/annotations"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.UpdateNodeTaints",
 			Path:    []string{"/clustermanager/v1/node/taints"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.GetClusterCredential",
 			Path:    []string{"/clustermanager/v1/clustercredential/{serverKey}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.UpdateClusterCredential",
 			Path:    []string{"/clustermanager/v1/clustercredential/{serverKey}"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.DeleteClusterCredential",
 			Path:    []string{"/clustermanager/v1/clustercredential/{serverKey}"},
 			Method:  []string{"DELETE"},
-			Body:    "",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.ListClusterCredential",
 			Path:    []string{"/clustermanager/v1/clustercredential"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.InitFederationCluster",
 			Path:    []string{"/clustermanager/v1/initfedcluster"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.AddFederatedCluster",
 			Path:    []string{"/clustermanager/v1/addfederatedcluster"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.CreateCloud",
 			Path:    []string{"/clustermanager/v1/cloud"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.UpdateCloud",
 			Path:    []string{"/clustermanager/v1/cloud/{cloudID}"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.DeleteCloud",
 			Path:    []string{"/clustermanager/v1/cloud/{cloudID}"},
 			Method:  []string{"DELETE"},
-			Body:    "",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.GetCloud",
 			Path:    []string{"/clustermanager/v1/cloud/{cloudID}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.ListCloud",
 			Path:    []string{"/clustermanager/v1/cloud"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.CreateCloudVPC",
 			Path:    []string{"/clustermanager/v1/cloudvpc"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.UpdateCloudVPC",
 			Path:    []string{"/clustermanager/v1/cloudvpc/{cloudID}/{vpcID}"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.DeleteCloudVPC",
 			Path:    []string{"/clustermanager/v1/cloudvpc/{cloudID}/{vpcID}"},
 			Method:  []string{"DELETE"},
-			Body:    "",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.ListCloudVPC",
 			Path:    []string{"/clustermanager/v1/cloudvpc"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.ListCloudRegions",
 			Path:    []string{"/clustermanager/v1/cloudregion/{cloudID}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.GetVPCCidr",
 			Path:    []string{"/clustermanager/v1/vpccidr/{vpcID}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.CreateNodeGroup",
 			Path:    []string{"/clustermanager/v1/nodegroup"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.UpdateNodeGroup",
 			Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.DeleteNodeGroup",
 			Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}"},
 			Method:  []string{"DELETE"},
-			Body:    "",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.GetNodeGroup",
 			Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.ListClusterNodeGroup",
 			Path:    []string{"/clustermanager/v1/clusters/{clusterID}/nodegroups"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.ListNodeGroup",
 			Path:    []string{"/clustermanager/v1/nodegroup"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.MoveNodesToGroup",
 			Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}/node"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.RemoveNodesFromGroup",
 			Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}/node"},
 			Method:  []string{"DELETE"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.CleanNodesInGroup",
 			Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}/groupnode"},
 			Method:  []string{"DELETE"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.CleanNodesInGroupV2",
 			Path:    []string{"/clustermanager/v2/nodegroup/{nodeGroupID}/groupnode"},
 			Method:  []string{"DELETE"},
-			Body:    "",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.ListNodesInGroup",
 			Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}/node"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.ListNodesInGroupV2",
 			Path:    []string{"/clustermanager/v2/nodegroup/{nodeGroupID}/node"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.UpdateGroupDesiredNode",
 			Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}/desirednode"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.UpdateGroupDesiredSize",
 			Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}/desiredsize"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.UpdateGroupMinMaxSize",
 			Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}/boundsize"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
+			Name:    "ClusterManager.GetExternalNodeScriptByGroupID",
+			Path:    []string{"/clustermanager/v1/nodegroups/{nodeGroupID}/script"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "ClusterManager.TransNodeGroupToNodeTemplate",
+			Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}/template"},
+			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "ClusterManager.EnableNodeGroupAutoScale",
 			Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}/autoscale/enable"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.DisableNodeGroupAutoScale",
 			Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}/autoscale/disable"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.CreateTask",
 			Path:    []string{"/clustermanager/v1/task"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.RetryTask",
 			Path:    []string{"/clustermanager/v1/task/{taskID}/retry"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.SkipTask",
 			Path:    []string{"/clustermanager/v1/task/{taskID}/skip"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.UpdateTask",
 			Path:    []string{"/clustermanager/v1/task/{taskID}"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.DeleteTask",
 			Path:    []string{"/clustermanager/v1/task/{taskID}"},
 			Method:  []string{"DELETE"},
-			Body:    "",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.GetTask",
 			Path:    []string{"/clustermanager/v1/task/{taskID}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.ListTask",
 			Path:    []string{"/clustermanager/v1/task"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.CreateAutoScalingOption",
 			Path:    []string{"/clustermanager/v1/autoscalingoption"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.UpdateAutoScalingOption",
 			Path:    []string{"/clustermanager/v1/autoscalingoption/{clusterID}"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.UpdateAsOptionDeviceProvider",
 			Path:    []string{"/clustermanager/v1/autoscalingoption/{clusterID}/providers/{provider}"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.DeleteAutoScalingOption",
 			Path:    []string{"/clustermanager/v1/autoscalingoption/{clusterID}"},
 			Method:  []string{"DELETE"},
-			Body:    "",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.GetAutoScalingOption",
 			Path:    []string{"/clustermanager/v1/autoscalingoption/{clusterID}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.ListAutoScalingOption",
 			Path:    []string{"/clustermanager/v1/autoscalingoption"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.UpdateAutoScalingStatus",
 			Path:    []string{"/clustermanager/v1/autoscalingoption/{clusterID}/status"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.SyncAutoScalingOption",
 			Path:    []string{"/clustermanager/v1/autoscalingoption/{clusterID}/sync"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.CreateNodeTemplate",
 			Path:    []string{"/clustermanager/v1/projects/{projectID}/nodetemplates"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.UpdateNodeTemplate",
 			Path:    []string{"/clustermanager/v1/projects/{projectID}/nodetemplates/{nodeTemplateID}"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.DeleteNodeTemplate",
 			Path:    []string{"/clustermanager/v1/projects/{projectID}/nodetemplates/{nodeTemplateID}"},
 			Method:  []string{"DELETE"},
-			Body:    "",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.ListNodeTemplate",
 			Path:    []string{"/clustermanager/v1/projects/{projectID}/nodetemplates"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.GetNodeTemplate",
 			Path:    []string{"/clustermanager/v1/projects/{projectID}/nodetemplates/{nodeTemplateID}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
+			Name:    "ClusterManager.CreateNotifyTemplate",
+			Path:    []string{"/clustermanager/v1/projects/{projectID}/notifytemplates"},
+			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "ClusterManager.DeleteNotifyTemplate",
+			Path:    []string{"/clustermanager/v1/projects/{projectID}/notifytemplates/{notifyTemplateID}"},
+			Method:  []string{"DELETE"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "ClusterManager.ListNotifyTemplate",
+			Path:    []string{"/clustermanager/v1/projects/{projectID}/notifytemplates"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "ClusterManager.CreateCloudAccount",
 			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/accounts"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.UpdateCloudAccount",
 			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/accounts/{accountID}"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.MigrateCloudAccount",
 			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/accounts"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.DeleteCloudAccount",
 			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/accounts/{accountID}"},
 			Method:  []string{"DELETE"},
-			Body:    "",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.ListCloudAccount",
 			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/accounts"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.ListCloudAccountToPerm",
 			Path:    []string{"/clustermanager/v1/accounts"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.VerifyCloudAccount",
 			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/accounts/available"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.GetResourceGroups",
 			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/resourcegroups"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.GetCloudRegions",
 			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/regions"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.GetCloudRegionZones",
 			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/zones"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.ListCloudRegionCluster",
 			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/clusters"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.ListCloudVpcs",
 			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/vpcs"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.CheckCidrConflictFromVpc",
 			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/vpcs/{vpcId}/cidrconflict"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.ListCloudSubnets",
 			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/subnets"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.ListCloudSecurityGroups",
 			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/securitygroups"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.ListKeypairs",
 			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/keypairs"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.ListCloudInstanceTypes",
 			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/instancetypes"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.GetMasterSuggestedMachines",
 			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/regions/{region}/clusterlevels/{level}/instancetypes"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.ListCloudProjects",
 			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/projects"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.ListCloudOsImage",
 			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/osimage"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.ListCloudInstances",
 			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/instances"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.GetCloudAccountType",
 			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/accounttype"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.GetCloudBandwidthPackages",
 			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/bwps"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
+			Name:    "ClusterManager.ListCloudRuntimeInfo",
+			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/runtimeinfo"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "ClusterManager.ListOperationLogs",
 			Path:    []string{"/clustermanager/v1/operationlogs"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.ListTaskStepLogs",
 			Path:    []string{"/clustermanager/v1/tasksteplogs"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
+			Name:    "ClusterManager.CleanDbHistoryData",
+			Path:    []string{"/clustermanager/v1/dbdatas/{dataType}"},
+			Method:  []string{"DELETE"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "ClusterManager.ListResourceSchema",
 			Path:    []string{"/clustermanager/v1/resourceschema/{cloudID}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.GetResourceSchema",
 			Path:    []string{"/clustermanager/v1/resourceschema/{cloudID}/{name}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.QueryPermByActionID",
 			Path:    []string{"/clustermanager/v1/perms/actions/{actionID}"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.ListBKCloud",
 			Path:    []string{"/clustermanager/v1/nodeman/cloud"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.ListCCTopology",
 			Path:    []string{"/clustermanager/v1/cluster/{clusterID}/cc/topology"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.GetBkSopsTemplateList",
 			Path:    []string{"/clustermanager/v1/bksops/business/{businessID}/templates"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.GetBkSopsTemplateInfo",
 			Path:    []string{"/clustermanager/v1/bksops/business/{businessID}/templates/{templateID}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.GetInnerTemplateValues",
 			Path:    []string{"/clustermanager/v1/bksops/templatevalues"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.DebugBkSopsTask",
 			Path:    []string{"/clustermanager/v1/bksops/debug"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.GetBatchCustomSetting",
 			Path:    []string{"/clustermanager/v1/web/customSettings/scope/{scopeType}/{scopeId}/batchGet"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.GetBizTopologyHost",
 			Path:    []string{"/clustermanager/v1/web/scope/{scopeType}/{scopeId}/topology/hostCount"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.GetTopologyNodes",
 			Path:    []string{"/clustermanager/v1/web/scope/{scopeType}/{scopeId}/topology/hosts/nodes"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.GetTopologyHostIdsNodes",
 			Path:    []string{"/clustermanager/v1/web/scope/{scopeType}/{scopeId}/topology/hostids/nodes"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.GetHostsDetails",
 			Path:    []string{"/clustermanager/v1/web/scope/{scopeType}/{scopeId}/hosts/details"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.GetScopeHostCheck",
 			Path:    []string{"/clustermanager/v1/web/scope/{scopeType}/{scopeId}/host/check"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.CreateCloudModuleFlag",
 			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/versions/{version}/modules"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.UpdateCloudModuleFlag",
 			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/versions/{version}/modules/{moduleID}"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.DeleteCloudModuleFlag",
 			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/versions/{version}/modules/{moduleID}"},
 			Method:  []string{"DELETE"},
-			Body:    "",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.ListCloudModuleFlag",
 			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/versions/{version}/modules/{moduleID}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterManager.Health",
 			Path:    []string{"/clustermanager/v1/health"},
 			Method:  []string{"GET"},
@@ -925,7 +880,6 @@ type ClusterManagerService interface {
 	AddNodesToCluster(ctx context.Context, in *AddNodesRequest, opts ...client.CallOption) (*AddNodesResponse, error)
 	DeleteNodesFromCluster(ctx context.Context, in *DeleteNodesRequest, opts ...client.CallOption) (*DeleteNodesResponse, error)
 	BatchDeleteNodesFromCluster(ctx context.Context, in *BatchDeleteClusterNodesRequest, opts ...client.CallOption) (*BatchDeleteClusterNodesResponse, error)
-	GetExternalNodeScriptByGroupID(ctx context.Context, in *GetExternalNodeScriptRequest, opts ...client.CallOption) (*GetExternalNodeScriptResponse, error)
 	ListNodesInCluster(ctx context.Context, in *ListNodesInClusterRequest, opts ...client.CallOption) (*ListNodesInClusterResponse, error)
 	ListMastersInCluster(ctx context.Context, in *ListMastersInClusterRequest, opts ...client.CallOption) (*ListMastersInClusterResponse, error)
 	DeleteCluster(ctx context.Context, in *DeleteClusterReq, opts ...client.CallOption) (*DeleteClusterResp, error)
@@ -987,6 +941,8 @@ type ClusterManagerService interface {
 	UpdateGroupDesiredNode(ctx context.Context, in *UpdateGroupDesiredNodeRequest, opts ...client.CallOption) (*UpdateGroupDesiredNodeResponse, error)
 	UpdateGroupDesiredSize(ctx context.Context, in *UpdateGroupDesiredSizeRequest, opts ...client.CallOption) (*UpdateGroupDesiredSizeResponse, error)
 	UpdateGroupMinMaxSize(ctx context.Context, in *UpdateGroupMinMaxSizeRequest, opts ...client.CallOption) (*UpdateGroupMinMaxSizeResponse, error)
+	GetExternalNodeScriptByGroupID(ctx context.Context, in *GetExternalNodeScriptRequest, opts ...client.CallOption) (*GetExternalNodeScriptResponse, error)
+	TransNodeGroupToNodeTemplate(ctx context.Context, in *TransNodeGroupToNodeTemplateRequest, opts ...client.CallOption) (*TransNodeGroupToNodeTemplateResponse, error)
 	EnableNodeGroupAutoScale(ctx context.Context, in *EnableNodeGroupAutoScaleRequest, opts ...client.CallOption) (*EnableNodeGroupAutoScaleResponse, error)
 	DisableNodeGroupAutoScale(ctx context.Context, in *DisableNodeGroupAutoScaleRequest, opts ...client.CallOption) (*DisableNodeGroupAutoScaleResponse, error)
 	//* Task information management *
@@ -1012,6 +968,10 @@ type ClusterManagerService interface {
 	DeleteNodeTemplate(ctx context.Context, in *DeleteNodeTemplateRequest, opts ...client.CallOption) (*DeleteNodeTemplateResponse, error)
 	ListNodeTemplate(ctx context.Context, in *ListNodeTemplateRequest, opts ...client.CallOption) (*ListNodeTemplateResponse, error)
 	GetNodeTemplate(ctx context.Context, in *GetNodeTemplateRequest, opts ...client.CallOption) (*GetNodeTemplateResponse, error)
+	// NotifyTemplate info management
+	CreateNotifyTemplate(ctx context.Context, in *CreateNotifyTemplateRequest, opts ...client.CallOption) (*CreateNotifyTemplateResponse, error)
+	DeleteNotifyTemplate(ctx context.Context, in *DeleteNotifyTemplateRequest, opts ...client.CallOption) (*DeleteNotifyTemplateResponse, error)
+	ListNotifyTemplate(ctx context.Context, in *ListNotifyTemplateRequest, opts ...client.CallOption) (*ListNotifyTemplateResponse, error)
 	// Cloud Account information management
 	CreateCloudAccount(ctx context.Context, in *CreateCloudAccountRequest, opts ...client.CallOption) (*CreateCloudAccountResponse, error)
 	UpdateCloudAccount(ctx context.Context, in *UpdateCloudAccountRequest, opts ...client.CallOption) (*UpdateCloudAccountResponse, error)
@@ -1037,10 +997,13 @@ type ClusterManagerService interface {
 	ListCloudInstances(ctx context.Context, in *ListCloudInstancesRequest, opts ...client.CallOption) (*ListCloudInstancesResponse, error)
 	GetCloudAccountType(ctx context.Context, in *GetCloudAccountTypeRequest, opts ...client.CallOption) (*GetCloudAccountTypeResponse, error)
 	GetCloudBandwidthPackages(ctx context.Context, in *GetCloudBandwidthPackagesRequest, opts ...client.CallOption) (*GetCloudBandwidthPackagesResponse, error)
+	ListCloudRuntimeInfo(ctx context.Context, in *ListCloudRuntimeInfoRequest, opts ...client.CallOption) (*ListCloudRuntimeInfoResponse, error)
 	// Operation logs
 	ListOperationLogs(ctx context.Context, in *ListOperationLogsRequest, opts ...client.CallOption) (*ListOperationLogsResponse, error)
 	// Task Step logs
 	ListTaskStepLogs(ctx context.Context, in *ListTaskStepLogsRequest, opts ...client.CallOption) (*ListTaskStepLogsResponse, error)
+	// CleanDbHistoryData clean DB history data
+	CleanDbHistoryData(ctx context.Context, in *CleanDbHistoryDataRequest, opts ...client.CallOption) (*CleanDbHistoryDataResponse, error)
 	// ** ResourceSchema **
 	// ListResourceSchema
 	ListResourceSchema(ctx context.Context, in *ListResourceSchemaRequest, opts ...client.CallOption) (*CommonListResp, error)
@@ -1172,16 +1135,6 @@ func (c *clusterManagerService) DeleteNodesFromCluster(ctx context.Context, in *
 func (c *clusterManagerService) BatchDeleteNodesFromCluster(ctx context.Context, in *BatchDeleteClusterNodesRequest, opts ...client.CallOption) (*BatchDeleteClusterNodesResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.BatchDeleteNodesFromCluster", in)
 	out := new(BatchDeleteClusterNodesResponse)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *clusterManagerService) GetExternalNodeScriptByGroupID(ctx context.Context, in *GetExternalNodeScriptRequest, opts ...client.CallOption) (*GetExternalNodeScriptResponse, error) {
-	req := c.c.NewRequest(c.name, "ClusterManager.GetExternalNodeScriptByGroupID", in)
-	out := new(GetExternalNodeScriptResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -1739,6 +1692,26 @@ func (c *clusterManagerService) UpdateGroupMinMaxSize(ctx context.Context, in *U
 	return out, nil
 }
 
+func (c *clusterManagerService) GetExternalNodeScriptByGroupID(ctx context.Context, in *GetExternalNodeScriptRequest, opts ...client.CallOption) (*GetExternalNodeScriptResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.GetExternalNodeScriptByGroupID", in)
+	out := new(GetExternalNodeScriptResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) TransNodeGroupToNodeTemplate(ctx context.Context, in *TransNodeGroupToNodeTemplateRequest, opts ...client.CallOption) (*TransNodeGroupToNodeTemplateResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.TransNodeGroupToNodeTemplate", in)
+	out := new(TransNodeGroupToNodeTemplateResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *clusterManagerService) EnableNodeGroupAutoScale(ctx context.Context, in *EnableNodeGroupAutoScaleRequest, opts ...client.CallOption) (*EnableNodeGroupAutoScaleResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.EnableNodeGroupAutoScale", in)
 	out := new(EnableNodeGroupAutoScaleResponse)
@@ -1952,6 +1925,36 @@ func (c *clusterManagerService) ListNodeTemplate(ctx context.Context, in *ListNo
 func (c *clusterManagerService) GetNodeTemplate(ctx context.Context, in *GetNodeTemplateRequest, opts ...client.CallOption) (*GetNodeTemplateResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.GetNodeTemplate", in)
 	out := new(GetNodeTemplateResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) CreateNotifyTemplate(ctx context.Context, in *CreateNotifyTemplateRequest, opts ...client.CallOption) (*CreateNotifyTemplateResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.CreateNotifyTemplate", in)
+	out := new(CreateNotifyTemplateResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) DeleteNotifyTemplate(ctx context.Context, in *DeleteNotifyTemplateRequest, opts ...client.CallOption) (*DeleteNotifyTemplateResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.DeleteNotifyTemplate", in)
+	out := new(DeleteNotifyTemplateResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) ListNotifyTemplate(ctx context.Context, in *ListNotifyTemplateRequest, opts ...client.CallOption) (*ListNotifyTemplateResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.ListNotifyTemplate", in)
+	out := new(ListNotifyTemplateResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -2189,6 +2192,16 @@ func (c *clusterManagerService) GetCloudBandwidthPackages(ctx context.Context, i
 	return out, nil
 }
 
+func (c *clusterManagerService) ListCloudRuntimeInfo(ctx context.Context, in *ListCloudRuntimeInfoRequest, opts ...client.CallOption) (*ListCloudRuntimeInfoResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.ListCloudRuntimeInfo", in)
+	out := new(ListCloudRuntimeInfoResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *clusterManagerService) ListOperationLogs(ctx context.Context, in *ListOperationLogsRequest, opts ...client.CallOption) (*ListOperationLogsResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.ListOperationLogs", in)
 	out := new(ListOperationLogsResponse)
@@ -2202,6 +2215,16 @@ func (c *clusterManagerService) ListOperationLogs(ctx context.Context, in *ListO
 func (c *clusterManagerService) ListTaskStepLogs(ctx context.Context, in *ListTaskStepLogsRequest, opts ...client.CallOption) (*ListTaskStepLogsResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.ListTaskStepLogs", in)
 	out := new(ListTaskStepLogsResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) CleanDbHistoryData(ctx context.Context, in *CleanDbHistoryDataRequest, opts ...client.CallOption) (*CleanDbHistoryDataResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.CleanDbHistoryData", in)
+	out := new(CleanDbHistoryDataResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -2422,7 +2445,6 @@ type ClusterManagerHandler interface {
 	AddNodesToCluster(context.Context, *AddNodesRequest, *AddNodesResponse) error
 	DeleteNodesFromCluster(context.Context, *DeleteNodesRequest, *DeleteNodesResponse) error
 	BatchDeleteNodesFromCluster(context.Context, *BatchDeleteClusterNodesRequest, *BatchDeleteClusterNodesResponse) error
-	GetExternalNodeScriptByGroupID(context.Context, *GetExternalNodeScriptRequest, *GetExternalNodeScriptResponse) error
 	ListNodesInCluster(context.Context, *ListNodesInClusterRequest, *ListNodesInClusterResponse) error
 	ListMastersInCluster(context.Context, *ListMastersInClusterRequest, *ListMastersInClusterResponse) error
 	DeleteCluster(context.Context, *DeleteClusterReq, *DeleteClusterResp) error
@@ -2484,6 +2506,8 @@ type ClusterManagerHandler interface {
 	UpdateGroupDesiredNode(context.Context, *UpdateGroupDesiredNodeRequest, *UpdateGroupDesiredNodeResponse) error
 	UpdateGroupDesiredSize(context.Context, *UpdateGroupDesiredSizeRequest, *UpdateGroupDesiredSizeResponse) error
 	UpdateGroupMinMaxSize(context.Context, *UpdateGroupMinMaxSizeRequest, *UpdateGroupMinMaxSizeResponse) error
+	GetExternalNodeScriptByGroupID(context.Context, *GetExternalNodeScriptRequest, *GetExternalNodeScriptResponse) error
+	TransNodeGroupToNodeTemplate(context.Context, *TransNodeGroupToNodeTemplateRequest, *TransNodeGroupToNodeTemplateResponse) error
 	EnableNodeGroupAutoScale(context.Context, *EnableNodeGroupAutoScaleRequest, *EnableNodeGroupAutoScaleResponse) error
 	DisableNodeGroupAutoScale(context.Context, *DisableNodeGroupAutoScaleRequest, *DisableNodeGroupAutoScaleResponse) error
 	//* Task information management *
@@ -2509,6 +2533,10 @@ type ClusterManagerHandler interface {
 	DeleteNodeTemplate(context.Context, *DeleteNodeTemplateRequest, *DeleteNodeTemplateResponse) error
 	ListNodeTemplate(context.Context, *ListNodeTemplateRequest, *ListNodeTemplateResponse) error
 	GetNodeTemplate(context.Context, *GetNodeTemplateRequest, *GetNodeTemplateResponse) error
+	// NotifyTemplate info management
+	CreateNotifyTemplate(context.Context, *CreateNotifyTemplateRequest, *CreateNotifyTemplateResponse) error
+	DeleteNotifyTemplate(context.Context, *DeleteNotifyTemplateRequest, *DeleteNotifyTemplateResponse) error
+	ListNotifyTemplate(context.Context, *ListNotifyTemplateRequest, *ListNotifyTemplateResponse) error
 	// Cloud Account information management
 	CreateCloudAccount(context.Context, *CreateCloudAccountRequest, *CreateCloudAccountResponse) error
 	UpdateCloudAccount(context.Context, *UpdateCloudAccountRequest, *UpdateCloudAccountResponse) error
@@ -2534,10 +2562,13 @@ type ClusterManagerHandler interface {
 	ListCloudInstances(context.Context, *ListCloudInstancesRequest, *ListCloudInstancesResponse) error
 	GetCloudAccountType(context.Context, *GetCloudAccountTypeRequest, *GetCloudAccountTypeResponse) error
 	GetCloudBandwidthPackages(context.Context, *GetCloudBandwidthPackagesRequest, *GetCloudBandwidthPackagesResponse) error
+	ListCloudRuntimeInfo(context.Context, *ListCloudRuntimeInfoRequest, *ListCloudRuntimeInfoResponse) error
 	// Operation logs
 	ListOperationLogs(context.Context, *ListOperationLogsRequest, *ListOperationLogsResponse) error
 	// Task Step logs
 	ListTaskStepLogs(context.Context, *ListTaskStepLogsRequest, *ListTaskStepLogsResponse) error
+	// CleanDbHistoryData clean DB history data
+	CleanDbHistoryData(context.Context, *CleanDbHistoryDataRequest, *CleanDbHistoryDataResponse) error
 	// ** ResourceSchema **
 	// ListResourceSchema
 	ListResourceSchema(context.Context, *ListResourceSchemaRequest, *CommonListResp) error
@@ -2585,7 +2616,6 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		AddNodesToCluster(ctx context.Context, in *AddNodesRequest, out *AddNodesResponse) error
 		DeleteNodesFromCluster(ctx context.Context, in *DeleteNodesRequest, out *DeleteNodesResponse) error
 		BatchDeleteNodesFromCluster(ctx context.Context, in *BatchDeleteClusterNodesRequest, out *BatchDeleteClusterNodesResponse) error
-		GetExternalNodeScriptByGroupID(ctx context.Context, in *GetExternalNodeScriptRequest, out *GetExternalNodeScriptResponse) error
 		ListNodesInCluster(ctx context.Context, in *ListNodesInClusterRequest, out *ListNodesInClusterResponse) error
 		ListMastersInCluster(ctx context.Context, in *ListMastersInClusterRequest, out *ListMastersInClusterResponse) error
 		DeleteCluster(ctx context.Context, in *DeleteClusterReq, out *DeleteClusterResp) error
@@ -2641,6 +2671,8 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		UpdateGroupDesiredNode(ctx context.Context, in *UpdateGroupDesiredNodeRequest, out *UpdateGroupDesiredNodeResponse) error
 		UpdateGroupDesiredSize(ctx context.Context, in *UpdateGroupDesiredSizeRequest, out *UpdateGroupDesiredSizeResponse) error
 		UpdateGroupMinMaxSize(ctx context.Context, in *UpdateGroupMinMaxSizeRequest, out *UpdateGroupMinMaxSizeResponse) error
+		GetExternalNodeScriptByGroupID(ctx context.Context, in *GetExternalNodeScriptRequest, out *GetExternalNodeScriptResponse) error
+		TransNodeGroupToNodeTemplate(ctx context.Context, in *TransNodeGroupToNodeTemplateRequest, out *TransNodeGroupToNodeTemplateResponse) error
 		EnableNodeGroupAutoScale(ctx context.Context, in *EnableNodeGroupAutoScaleRequest, out *EnableNodeGroupAutoScaleResponse) error
 		DisableNodeGroupAutoScale(ctx context.Context, in *DisableNodeGroupAutoScaleRequest, out *DisableNodeGroupAutoScaleResponse) error
 		CreateTask(ctx context.Context, in *CreateTaskRequest, out *CreateTaskResponse) error
@@ -2663,6 +2695,9 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		DeleteNodeTemplate(ctx context.Context, in *DeleteNodeTemplateRequest, out *DeleteNodeTemplateResponse) error
 		ListNodeTemplate(ctx context.Context, in *ListNodeTemplateRequest, out *ListNodeTemplateResponse) error
 		GetNodeTemplate(ctx context.Context, in *GetNodeTemplateRequest, out *GetNodeTemplateResponse) error
+		CreateNotifyTemplate(ctx context.Context, in *CreateNotifyTemplateRequest, out *CreateNotifyTemplateResponse) error
+		DeleteNotifyTemplate(ctx context.Context, in *DeleteNotifyTemplateRequest, out *DeleteNotifyTemplateResponse) error
+		ListNotifyTemplate(ctx context.Context, in *ListNotifyTemplateRequest, out *ListNotifyTemplateResponse) error
 		CreateCloudAccount(ctx context.Context, in *CreateCloudAccountRequest, out *CreateCloudAccountResponse) error
 		UpdateCloudAccount(ctx context.Context, in *UpdateCloudAccountRequest, out *UpdateCloudAccountResponse) error
 		MigrateCloudAccount(ctx context.Context, in *MigrateCloudAccountRequest, out *MigrateCloudAccountResponse) error
@@ -2686,8 +2721,10 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		ListCloudInstances(ctx context.Context, in *ListCloudInstancesRequest, out *ListCloudInstancesResponse) error
 		GetCloudAccountType(ctx context.Context, in *GetCloudAccountTypeRequest, out *GetCloudAccountTypeResponse) error
 		GetCloudBandwidthPackages(ctx context.Context, in *GetCloudBandwidthPackagesRequest, out *GetCloudBandwidthPackagesResponse) error
+		ListCloudRuntimeInfo(ctx context.Context, in *ListCloudRuntimeInfoRequest, out *ListCloudRuntimeInfoResponse) error
 		ListOperationLogs(ctx context.Context, in *ListOperationLogsRequest, out *ListOperationLogsResponse) error
 		ListTaskStepLogs(ctx context.Context, in *ListTaskStepLogsRequest, out *ListTaskStepLogsResponse) error
+		CleanDbHistoryData(ctx context.Context, in *CleanDbHistoryDataRequest, out *CleanDbHistoryDataResponse) error
 		ListResourceSchema(ctx context.Context, in *ListResourceSchemaRequest, out *CommonListResp) error
 		GetResourceSchema(ctx context.Context, in *GetResourceSchemaRequest, out *CommonResp) error
 		QueryPermByActionID(ctx context.Context, in *QueryPermByActionIDRequest, out *QueryPermByActionIDResponse) error
@@ -2717,21 +2754,18 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Name:    "ClusterManager.CreateCluster",
 		Path:    []string{"/clustermanager/v1/cluster"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.RetryCreateClusterTask",
 		Path:    []string{"/clustermanager/v1/cluster/{clusterID}/retry"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.CheckCloudKubeConfig",
 		Path:    []string{"/clustermanager/v1/cloud/kubeConfig"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -2744,41 +2778,30 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Name:    "ClusterManager.ImportCluster",
 		Path:    []string{"/clustermanager/v1/cluster/import"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.UpdateCluster",
 		Path:    []string{"/clustermanager/v1/cluster/{clusterID}"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.AddNodesToCluster",
 		Path:    []string{"/clustermanager/v1/cluster/{clusterID}/node"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.DeleteNodesFromCluster",
 		Path:    []string{"/clustermanager/v1/cluster/{clusterID}/node"},
 		Method:  []string{"DELETE"},
-		Body:    "",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.BatchDeleteNodesFromCluster",
 		Path:    []string{"/clustermanager/v1/clusters/{clusterID}/nodes/-/batch"},
 		Method:  []string{"DELETE"},
-		Body:    "",
-		Handler: "rpc",
-	}))
-	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "ClusterManager.GetExternalNodeScriptByGroupID",
-		Path:    []string{"/clustermanager/v1/nodegroups/{nodeGroupID}/script"},
-		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -2797,7 +2820,6 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Name:    "ClusterManager.DeleteCluster",
 		Path:    []string{"/clustermanager/v1/cluster/{clusterID}"},
 		Method:  []string{"DELETE"},
-		Body:    "",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -2828,28 +2850,24 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Name:    "ClusterManager.AddSubnetToCluster",
 		Path:    []string{"/clustermanager/v1/clusters/{clusterID}/subnets"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.CreateVirtualCluster",
 		Path:    []string{"/clustermanager/v1/vcluster"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.DeleteVirtualCluster",
 		Path:    []string{"/clustermanager/v1/vcluster/{clusterID}"},
 		Method:  []string{"DELETE"},
-		Body:    "",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.UpdateVirtualClusterQuota",
 		Path:    []string{"/clustermanager/v1/vcluster/{clusterID}/quota"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -2868,70 +2886,60 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Name:    "ClusterManager.RecordNodeInfo",
 		Path:    []string{"/clustermanager/v1/node"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.UpdateNode",
 		Path:    []string{"/clustermanager/v1/node"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.UpdateClusterModule",
 		Path:    []string{"/clustermanager/v1/clusters/{clusterID}/module"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.CheckNodeInCluster",
 		Path:    []string{"/clustermanager/v1/node/available"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.CordonNode",
 		Path:    []string{"/clustermanager/v1/node/cordon"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.UnCordonNode",
 		Path:    []string{"/clustermanager/v1/node/uncordon"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.DrainNode",
 		Path:    []string{"/clustermanager/v1/node/drain"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.UpdateNodeLabels",
 		Path:    []string{"/clustermanager/v1/node/labels"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.UpdateNodeAnnotations",
 		Path:    []string{"/clustermanager/v1/node/annotations"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.UpdateNodeTaints",
 		Path:    []string{"/clustermanager/v1/node/taints"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -2944,14 +2952,12 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Name:    "ClusterManager.UpdateClusterCredential",
 		Path:    []string{"/clustermanager/v1/clustercredential/{serverKey}"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.DeleteClusterCredential",
 		Path:    []string{"/clustermanager/v1/clustercredential/{serverKey}"},
 		Method:  []string{"DELETE"},
-		Body:    "",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -2964,35 +2970,30 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Name:    "ClusterManager.InitFederationCluster",
 		Path:    []string{"/clustermanager/v1/initfedcluster"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.AddFederatedCluster",
 		Path:    []string{"/clustermanager/v1/addfederatedcluster"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.CreateCloud",
 		Path:    []string{"/clustermanager/v1/cloud"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.UpdateCloud",
 		Path:    []string{"/clustermanager/v1/cloud/{cloudID}"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.DeleteCloud",
 		Path:    []string{"/clustermanager/v1/cloud/{cloudID}"},
 		Method:  []string{"DELETE"},
-		Body:    "",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -3011,21 +3012,18 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Name:    "ClusterManager.CreateCloudVPC",
 		Path:    []string{"/clustermanager/v1/cloudvpc"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.UpdateCloudVPC",
 		Path:    []string{"/clustermanager/v1/cloudvpc/{cloudID}/{vpcID}"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.DeleteCloudVPC",
 		Path:    []string{"/clustermanager/v1/cloudvpc/{cloudID}/{vpcID}"},
 		Method:  []string{"DELETE"},
-		Body:    "",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -3050,21 +3048,18 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Name:    "ClusterManager.CreateNodeGroup",
 		Path:    []string{"/clustermanager/v1/nodegroup"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.UpdateNodeGroup",
 		Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.DeleteNodeGroup",
 		Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}"},
 		Method:  []string{"DELETE"},
-		Body:    "",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -3089,28 +3084,24 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Name:    "ClusterManager.MoveNodesToGroup",
 		Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}/node"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.RemoveNodesFromGroup",
 		Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}/node"},
 		Method:  []string{"DELETE"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.CleanNodesInGroup",
 		Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}/groupnode"},
 		Method:  []string{"DELETE"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.CleanNodesInGroupV2",
 		Path:    []string{"/clustermanager/v2/nodegroup/{nodeGroupID}/groupnode"},
 		Method:  []string{"DELETE"},
-		Body:    "",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -3129,70 +3120,72 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Name:    "ClusterManager.UpdateGroupDesiredNode",
 		Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}/desirednode"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.UpdateGroupDesiredSize",
 		Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}/desiredsize"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.UpdateGroupMinMaxSize",
 		Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}/boundsize"},
 		Method:  []string{"POST"},
-		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.GetExternalNodeScriptByGroupID",
+		Path:    []string{"/clustermanager/v1/nodegroups/{nodeGroupID}/script"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.TransNodeGroupToNodeTemplate",
+		Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}/template"},
+		Method:  []string{"POST"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.EnableNodeGroupAutoScale",
 		Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}/autoscale/enable"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.DisableNodeGroupAutoScale",
 		Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}/autoscale/disable"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.CreateTask",
 		Path:    []string{"/clustermanager/v1/task"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.RetryTask",
 		Path:    []string{"/clustermanager/v1/task/{taskID}/retry"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.SkipTask",
 		Path:    []string{"/clustermanager/v1/task/{taskID}/skip"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.UpdateTask",
 		Path:    []string{"/clustermanager/v1/task/{taskID}"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.DeleteTask",
 		Path:    []string{"/clustermanager/v1/task/{taskID}"},
 		Method:  []string{"DELETE"},
-		Body:    "",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -3211,28 +3204,24 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Name:    "ClusterManager.CreateAutoScalingOption",
 		Path:    []string{"/clustermanager/v1/autoscalingoption"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.UpdateAutoScalingOption",
 		Path:    []string{"/clustermanager/v1/autoscalingoption/{clusterID}"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.UpdateAsOptionDeviceProvider",
 		Path:    []string{"/clustermanager/v1/autoscalingoption/{clusterID}/providers/{provider}"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.DeleteAutoScalingOption",
 		Path:    []string{"/clustermanager/v1/autoscalingoption/{clusterID}"},
 		Method:  []string{"DELETE"},
-		Body:    "",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -3251,35 +3240,30 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Name:    "ClusterManager.UpdateAutoScalingStatus",
 		Path:    []string{"/clustermanager/v1/autoscalingoption/{clusterID}/status"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.SyncAutoScalingOption",
 		Path:    []string{"/clustermanager/v1/autoscalingoption/{clusterID}/sync"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.CreateNodeTemplate",
 		Path:    []string{"/clustermanager/v1/projects/{projectID}/nodetemplates"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.UpdateNodeTemplate",
 		Path:    []string{"/clustermanager/v1/projects/{projectID}/nodetemplates/{nodeTemplateID}"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.DeleteNodeTemplate",
 		Path:    []string{"/clustermanager/v1/projects/{projectID}/nodetemplates/{nodeTemplateID}"},
 		Method:  []string{"DELETE"},
-		Body:    "",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -3295,31 +3279,45 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.CreateNotifyTemplate",
+		Path:    []string{"/clustermanager/v1/projects/{projectID}/notifytemplates"},
+		Method:  []string{"POST"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.DeleteNotifyTemplate",
+		Path:    []string{"/clustermanager/v1/projects/{projectID}/notifytemplates/{notifyTemplateID}"},
+		Method:  []string{"DELETE"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.ListNotifyTemplate",
+		Path:    []string{"/clustermanager/v1/projects/{projectID}/notifytemplates"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.CreateCloudAccount",
 		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/accounts"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.UpdateCloudAccount",
 		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/accounts/{accountID}"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.MigrateCloudAccount",
 		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/accounts"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.DeleteCloudAccount",
 		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/accounts/{accountID}"},
 		Method:  []string{"DELETE"},
-		Body:    "",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -3338,7 +3336,6 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Name:    "ClusterManager.VerifyCloudAccount",
 		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/accounts/available"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -3438,6 +3435,12 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.ListCloudRuntimeInfo",
+		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/runtimeinfo"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.ListOperationLogs",
 		Path:    []string{"/clustermanager/v1/operationlogs"},
 		Method:  []string{"GET"},
@@ -3447,6 +3450,12 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Name:    "ClusterManager.ListTaskStepLogs",
 		Path:    []string{"/clustermanager/v1/tasksteplogs"},
 		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.CleanDbHistoryData",
+		Path:    []string{"/clustermanager/v1/dbdatas/{dataType}"},
+		Method:  []string{"DELETE"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -3465,7 +3474,6 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Name:    "ClusterManager.QueryPermByActionID",
 		Path:    []string{"/clustermanager/v1/perms/actions/{actionID}"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -3502,70 +3510,60 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Name:    "ClusterManager.DebugBkSopsTask",
 		Path:    []string{"/clustermanager/v1/bksops/debug"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.GetBatchCustomSetting",
 		Path:    []string{"/clustermanager/v1/web/customSettings/scope/{scopeType}/{scopeId}/batchGet"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.GetBizTopologyHost",
 		Path:    []string{"/clustermanager/v1/web/scope/{scopeType}/{scopeId}/topology/hostCount"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.GetTopologyNodes",
 		Path:    []string{"/clustermanager/v1/web/scope/{scopeType}/{scopeId}/topology/hosts/nodes"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.GetTopologyHostIdsNodes",
 		Path:    []string{"/clustermanager/v1/web/scope/{scopeType}/{scopeId}/topology/hostids/nodes"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.GetHostsDetails",
 		Path:    []string{"/clustermanager/v1/web/scope/{scopeType}/{scopeId}/hosts/details"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.GetScopeHostCheck",
 		Path:    []string{"/clustermanager/v1/web/scope/{scopeType}/{scopeId}/host/check"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.CreateCloudModuleFlag",
 		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/versions/{version}/modules"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.UpdateCloudModuleFlag",
 		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/versions/{version}/modules/{moduleID}"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.DeleteCloudModuleFlag",
 		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/versions/{version}/modules/{moduleID}"},
 		Method:  []string{"DELETE"},
-		Body:    "",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -3621,10 +3619,6 @@ func (h *clusterManagerHandler) DeleteNodesFromCluster(ctx context.Context, in *
 
 func (h *clusterManagerHandler) BatchDeleteNodesFromCluster(ctx context.Context, in *BatchDeleteClusterNodesRequest, out *BatchDeleteClusterNodesResponse) error {
 	return h.ClusterManagerHandler.BatchDeleteNodesFromCluster(ctx, in, out)
-}
-
-func (h *clusterManagerHandler) GetExternalNodeScriptByGroupID(ctx context.Context, in *GetExternalNodeScriptRequest, out *GetExternalNodeScriptResponse) error {
-	return h.ClusterManagerHandler.GetExternalNodeScriptByGroupID(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) ListNodesInCluster(ctx context.Context, in *ListNodesInClusterRequest, out *ListNodesInClusterResponse) error {
@@ -3847,6 +3841,14 @@ func (h *clusterManagerHandler) UpdateGroupMinMaxSize(ctx context.Context, in *U
 	return h.ClusterManagerHandler.UpdateGroupMinMaxSize(ctx, in, out)
 }
 
+func (h *clusterManagerHandler) GetExternalNodeScriptByGroupID(ctx context.Context, in *GetExternalNodeScriptRequest, out *GetExternalNodeScriptResponse) error {
+	return h.ClusterManagerHandler.GetExternalNodeScriptByGroupID(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) TransNodeGroupToNodeTemplate(ctx context.Context, in *TransNodeGroupToNodeTemplateRequest, out *TransNodeGroupToNodeTemplateResponse) error {
+	return h.ClusterManagerHandler.TransNodeGroupToNodeTemplate(ctx, in, out)
+}
+
 func (h *clusterManagerHandler) EnableNodeGroupAutoScale(ctx context.Context, in *EnableNodeGroupAutoScaleRequest, out *EnableNodeGroupAutoScaleResponse) error {
 	return h.ClusterManagerHandler.EnableNodeGroupAutoScale(ctx, in, out)
 }
@@ -3933,6 +3935,18 @@ func (h *clusterManagerHandler) ListNodeTemplate(ctx context.Context, in *ListNo
 
 func (h *clusterManagerHandler) GetNodeTemplate(ctx context.Context, in *GetNodeTemplateRequest, out *GetNodeTemplateResponse) error {
 	return h.ClusterManagerHandler.GetNodeTemplate(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) CreateNotifyTemplate(ctx context.Context, in *CreateNotifyTemplateRequest, out *CreateNotifyTemplateResponse) error {
+	return h.ClusterManagerHandler.CreateNotifyTemplate(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) DeleteNotifyTemplate(ctx context.Context, in *DeleteNotifyTemplateRequest, out *DeleteNotifyTemplateResponse) error {
+	return h.ClusterManagerHandler.DeleteNotifyTemplate(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) ListNotifyTemplate(ctx context.Context, in *ListNotifyTemplateRequest, out *ListNotifyTemplateResponse) error {
+	return h.ClusterManagerHandler.ListNotifyTemplate(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) CreateCloudAccount(ctx context.Context, in *CreateCloudAccountRequest, out *CreateCloudAccountResponse) error {
@@ -4027,12 +4041,20 @@ func (h *clusterManagerHandler) GetCloudBandwidthPackages(ctx context.Context, i
 	return h.ClusterManagerHandler.GetCloudBandwidthPackages(ctx, in, out)
 }
 
+func (h *clusterManagerHandler) ListCloudRuntimeInfo(ctx context.Context, in *ListCloudRuntimeInfoRequest, out *ListCloudRuntimeInfoResponse) error {
+	return h.ClusterManagerHandler.ListCloudRuntimeInfo(ctx, in, out)
+}
+
 func (h *clusterManagerHandler) ListOperationLogs(ctx context.Context, in *ListOperationLogsRequest, out *ListOperationLogsResponse) error {
 	return h.ClusterManagerHandler.ListOperationLogs(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) ListTaskStepLogs(ctx context.Context, in *ListTaskStepLogsRequest, out *ListTaskStepLogsResponse) error {
 	return h.ClusterManagerHandler.ListTaskStepLogs(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) CleanDbHistoryData(ctx context.Context, in *CleanDbHistoryDataRequest, out *CleanDbHistoryDataResponse) error {
+	return h.ClusterManagerHandler.CleanDbHistoryData(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) ListResourceSchema(ctx context.Context, in *ListResourceSchemaRequest, out *CommonListResp) error {

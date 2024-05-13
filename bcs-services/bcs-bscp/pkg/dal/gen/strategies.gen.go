@@ -32,7 +32,6 @@ func newStrategy(db *gorm.DB, opts ...gen.DOOption) strategy {
 	_strategy.ReleaseID = field.NewUint32(tableName, "release_id")
 	_strategy.AsDefault = field.NewBool(tableName, "as_default")
 	_strategy.Scope = field.NewField(tableName, "scope")
-	_strategy.Mode = field.NewString(tableName, "mode")
 	_strategy.Namespace = field.NewString(tableName, "namespace")
 	_strategy.Memo = field.NewString(tableName, "memo")
 	_strategy.PubState = field.NewString(tableName, "pub_state")
@@ -58,7 +57,6 @@ type strategy struct {
 	ReleaseID     field.Uint32
 	AsDefault     field.Bool
 	Scope         field.Field
-	Mode          field.String
 	Namespace     field.String
 	Memo          field.String
 	PubState      field.String
@@ -90,7 +88,6 @@ func (s *strategy) updateTableName(table string) *strategy {
 	s.ReleaseID = field.NewUint32(table, "release_id")
 	s.AsDefault = field.NewBool(table, "as_default")
 	s.Scope = field.NewField(table, "scope")
-	s.Mode = field.NewString(table, "mode")
 	s.Namespace = field.NewString(table, "namespace")
 	s.Memo = field.NewString(table, "memo")
 	s.PubState = field.NewString(table, "pub_state")
@@ -125,13 +122,12 @@ func (s *strategy) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (s *strategy) fillFieldMap() {
-	s.fieldMap = make(map[string]field.Expr, 16)
+	s.fieldMap = make(map[string]field.Expr, 15)
 	s.fieldMap["id"] = s.ID
 	s.fieldMap["name"] = s.Name
 	s.fieldMap["release_id"] = s.ReleaseID
 	s.fieldMap["as_default"] = s.AsDefault
 	s.fieldMap["scope"] = s.Scope
-	s.fieldMap["mode"] = s.Mode
 	s.fieldMap["namespace"] = s.Namespace
 	s.fieldMap["memo"] = s.Memo
 	s.fieldMap["pub_state"] = s.PubState

@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package controllers xxx
 package controllers
 
 import (
@@ -20,6 +20,7 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -32,7 +33,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	monitorextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/api/v1"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/render"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/repo"
@@ -124,7 +124,9 @@ func (r *AppMonitorReconciler) eventPredicate() predicate.Predicate {
 		CreateFunc: func(createEvent event.CreateEvent) bool {
 			monitor := createEvent.Object.(*monitorextensionv1.AppMonitor)
 			// if appMonitor open IgnoreChange, do not retry when state is completed
-			if monitor.DeletionTimestamp == nil && monitor.Status.SyncStatus.State == monitorextensionv1.SyncStateCompleted && monitor.Spec.IgnoreChange == true {
+			if monitor.DeletionTimestamp == nil &&
+				monitor.Status.SyncStatus.State == monitorextensionv1.SyncStateCompleted &&
+				monitor.Spec.IgnoreChange {
 				blog.V(3).Infof("appMonitor '%s/%s' got create event, but is synced and ignore change",
 					monitor.GetNamespace(), monitor.GetName())
 				return false
@@ -147,7 +149,9 @@ func (r *AppMonitorReconciler) eventPredicate() predicate.Predicate {
 				return false
 			}
 			// if appMonitor open IgnoreChange, do not retry when state is completed
-			if newMonitor.DeletionTimestamp == nil && newMonitor.Status.SyncStatus.State == monitorextensionv1.SyncStateCompleted && newMonitor.Spec.IgnoreChange == true {
+			if newMonitor.DeletionTimestamp == nil &&
+				newMonitor.Status.SyncStatus.State == monitorextensionv1.SyncStateCompleted &&
+				newMonitor.Spec.IgnoreChange {
 				blog.V(3).Infof("appMonitor '%s/%s' updated, but is synced and ignore change",
 					newMonitor.GetNamespace(), newMonitor.GetName())
 				return false
@@ -447,6 +451,7 @@ func (r *AppMonitorReconciler) deleteNoticeGroup(monitor *monitorextensionv1.App
 }
 
 // deleteConfigMap delete related configmap
+// nolint unused
 func (r *AppMonitorReconciler) deleteConfigmap(monitor *monitorextensionv1.AppMonitor) error {
 	configmap := &v1.ConfigMap{}
 	selector, err := metav1.LabelSelectorAsSelector(metav1.SetAsLabelSelector(map[string]string{

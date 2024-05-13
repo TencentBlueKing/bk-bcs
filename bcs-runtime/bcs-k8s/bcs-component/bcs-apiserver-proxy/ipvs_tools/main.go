@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package main xxx
 package main
 
 import (
@@ -37,23 +37,23 @@ const (
 // Operation for operation command
 type Operation string
 
-func (o Operation) validate() bool {
+func (o Operation) validate() bool { // nolint unused
 	return o == Init || o == Add || o == Delete || o == Reload
 }
 
-func (o Operation) isInitCommand() bool {
+func (o Operation) isInitCommand() bool { // nolint unused
 	return o == Init
 }
 
-func (o Operation) isReloadCommand() bool {
+func (o Operation) isReloadCommand() bool { // nolint unused
 	return o == Reload
 }
 
-func (o Operation) isAddCommand() bool {
+func (o Operation) isAddCommand() bool { // nolint unused
 	return o == Add
 }
 
-func (o Operation) isDeleteCommand() bool {
+func (o Operation) isDeleteCommand() bool { // nolint unused
 	return o == Delete
 }
 
@@ -97,8 +97,6 @@ func main() {
 	default:
 		log.Printf("invalid operation command")
 	}
-
-	return
 }
 
 func initFunc() {
@@ -144,7 +142,6 @@ func initFunc() {
 		return
 	}
 	log.Printf("lvs[%s] init real servers %v successful", opts.virtualServer, opts.realServer)
-	return
 }
 
 func reloadFunc() {
@@ -171,7 +168,6 @@ func addFunc() {
 	}
 
 	log.Printf("lvs[%s] add real servers %v successful", opts.virtualServer, opts.realServer)
-	return
 }
 
 func deleteFunc() {
@@ -186,7 +182,6 @@ func deleteFunc() {
 	}
 
 	log.Printf("lvs[%s] delete successful", opts.virtualServer)
-	return
 }
 
 func validateInitOptions(opt options) bool {
@@ -212,7 +207,8 @@ func init() {
 	flag.Var(&opts.realServer, "rs", "virtual server backend real server, for example: "+
 		"-rs=127.0.0.1:6443 -rs=127.0.0.2:6443")
 	flag.StringVar(&opts.ipvsPersistDir, "persistDir", "/root/.bcs", "persistent ipvs rules path")
-	flag.StringVar(&opts.toolPath, "toolPath", "/root/bcs-apiserver-proxy-tools", "absolute path for bcs-apiserver-proxy-tools")
+	flag.StringVar(&opts.toolPath, "toolPath", "/root/bcs-apiserver-proxy-tools",
+		"absolute path for bcs-apiserver-proxy-tools")
 	flag.StringVar(&opts.healthScheme, "healthScheme", "https", "scheme for health check")
 	flag.StringVar(&opts.healthPath, "healthPath", "/healthz", "path for health check")
 

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package core implements the core methods of cluster autoscaler
@@ -18,11 +17,6 @@ import (
 	"fmt"
 	"sort"
 	"time"
-
-	contextinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/context"
-	estimatorinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/estimator"
-	metricsinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/metrics"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/scalingconfig"
 
 	apiv1 "k8s.io/api/core/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -45,6 +39,11 @@ import (
 	kubeclient "k8s.io/client-go/kubernetes"
 	"k8s.io/klog"
 	schedulernodeinfo "k8s.io/kubernetes/pkg/scheduler/nodeinfo"
+
+	contextinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/context"
+	estimatorinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/estimator"
+	metricsinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/metrics"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/scalingconfig"
 )
 
 // BufferedAutoscaler is an autoscaler which has all the core functionality of a CA
@@ -62,8 +61,11 @@ type BufferedAutoscaler struct {
 	processors              *ca_processors.AutoscalingProcessors
 	processorCallbacks      *bufferedAutoscalerProcessorCallbacks
 	initialized             bool
+	// last time that remove unregistered nodes
+	lastRemoveUnregisteredTime time.Time
+	scaleDownDelayAfterRemove  time.Duration
 	// Caches nodeInfo computed for previously seen nodes
-	nodeInfoCache       map[string]*schedulernodeinfo.NodeInfo
+	nodeInfoCache       map[string]cacheItem
 	ignoredTaints       taintKeySet
 	CPURatio            float64
 	MemRatio            float64
@@ -161,22 +163,24 @@ func NewBufferedAutoscaler(
 	initialScaleTime := time.Now().Add(-time.Hour)
 
 	return &BufferedAutoscaler{
-		Context:                 autoscalingContext,
-		startTime:               time.Now(),
-		lastScaleUpTime:         initialScaleTime,
-		lastScaleDownDeleteTime: initialScaleTime,
-		lastScaleDownFailTime:   initialScaleTime,
-		scaleDown:               scaleDown,
-		processors:              processors,
-		processorCallbacks:      processorCallbacks,
-		clusterStateRegistry:    clusterStateRegistry,
-		nodeInfoCache:           make(map[string]*schedulernodeinfo.NodeInfo),
-		ignoredTaints:           ignoredTaints,
-		CPURatio:                opts.BufferedCPURatio,
-		MemRatio:                opts.BufferedMemRatio,
-		ratio:                   opts.BufferedResourceRatio,
-		webhook:                 webhook,
-		maxBulkScaleUpCount:     opts.MaxBulkScaleUpCount,
+		Context:                    autoscalingContext,
+		startTime:                  time.Now(),
+		lastScaleUpTime:            initialScaleTime,
+		lastScaleDownDeleteTime:    initialScaleTime,
+		lastScaleDownFailTime:      initialScaleTime,
+		lastRemoveUnregisteredTime: initialScaleTime,
+		scaleDownDelayAfterRemove:  opts.ScaleDownDelayAfterRemove,
+		scaleDown:                  scaleDown,
+		processors:                 processors,
+		processorCallbacks:         processorCallbacks,
+		clusterStateRegistry:       clusterStateRegistry,
+		nodeInfoCache:              make(map[string]cacheItem),
+		ignoredTaints:              ignoredTaints,
+		CPURatio:                   opts.BufferedCPURatio,
+		MemRatio:                   opts.BufferedMemRatio,
+		ratio:                      opts.BufferedResourceRatio,
+		webhook:                    webhook,
+		maxBulkScaleUpCount:        opts.MaxBulkScaleUpCount,
 	}
 }
 
@@ -209,6 +213,7 @@ func (b *BufferedAutoscaler) cleanUpIfRequired() {
 }
 
 // RunOnce iterates over node groups and scales them up/down if necessary
+// nolint
 func (b *BufferedAutoscaler) RunOnce(currentTime time.Time) errors.AutoscalerError {
 	stateUpdateStart := time.Now()
 	allNodes, readyNodes, typedErr := b.preRun(currentTime)
@@ -228,6 +233,9 @@ func (b *BufferedAutoscaler) RunOnce(currentTime time.Time) errors.AutoscalerErr
 		daemonsets, contexts.PredicateChecker, b.ignoredTaints)
 	if autoscalerError != nil {
 		return autoscalerError.AddPrefix("failed to build node infos for node groups: ")
+	}
+	for ng, node := range nodeInfosForGroups {
+		klog.Infof("ng: %s, labels: %v", ng, node.Node().Labels)
 	}
 
 	typedErr = b.updateClusterState(allNodes, nodeInfosForGroups, currentTime)
@@ -357,7 +365,7 @@ func (b *BufferedAutoscaler) checkClusterState(autoscalingContext *context.Autos
 	// Check if there are any nodes that failed to register in Kubernetes
 	// master.
 	unregisteredNodes := b.clusterStateRegistry.GetUnregisteredNodes()
-	if len(unregisteredNodes) > 0 {
+	if len(unregisteredNodes) > 0 && b.lastRemoveUnregisteredTime.Add(b.scaleDownDelayAfterRemove).Before(currentTime) {
 		klog.V(1).Infof("%d unregistered nodes present", len(unregisteredNodes))
 		removedAny, err := removeOldUnregisteredNodes(unregisteredNodes, autoscalingContext,
 			currentTime, autoscalingContext.LogRecorder)
@@ -366,6 +374,7 @@ func (b *BufferedAutoscaler) checkClusterState(autoscalingContext *context.Autos
 			klog.Warningf("Failed to remove unregistered nodes: %v", err)
 		}
 		if removedAny {
+			b.lastRemoveUnregisteredTime = currentTime
 			klog.V(0).Infof("Some unregistered nodes were removed, skipping iteration")
 			return nil
 		}
@@ -394,6 +403,7 @@ func (b *BufferedAutoscaler) checkClusterState(autoscalingContext *context.Autos
 	return nil
 }
 
+// nolint
 func (b *BufferedAutoscaler) doScaleDown(autoscalingContext *context.AutoscalingContext,
 	currentTime time.Time, allNodes []*corev1.Node, scheduledPods []*corev1.Pod) (
 	*status.ScaleDownStatus, bool, errors.AutoscalerError) {
@@ -543,6 +553,7 @@ func (b *BufferedAutoscaler) processNodes(autoscalingContext *context.Autoscalin
 	return scaleDownCandidates, podDestinations, temporaryNodes, nil
 }
 
+// nolint
 func (b *BufferedAutoscaler) doScaleUp(autoscalingContext *contextinternal.Context,
 	currentTime time.Time, allNodes []*corev1.Node, readyNodes []*corev1.Node,
 	originalScheduledPods []*corev1.Pod, nodeInfosForGroups map[string]*schedulernodeinfo.NodeInfo) (

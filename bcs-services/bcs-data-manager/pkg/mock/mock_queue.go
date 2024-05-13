@@ -14,8 +14,8 @@ package mock
 
 import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/msgqueue"
-	"github.com/micro/go-micro/v2/broker"
 	"github.com/stretchr/testify/mock"
+	"go-micro.dev/v4/broker"
 )
 
 var (

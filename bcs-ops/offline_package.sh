@@ -187,7 +187,7 @@ v${version}/containerd-${version}-linux-amd64.tar.gz"
   fi
 
   mkdir -pv "${cache_dir}/systemd"
-  url="https://raw.githubusercontent.com/containerd/containerd/v1.6.20/containerd.service"
+  url="https://raw.githubusercontent.com/containerd/containerd/v${version}/containerd.service"
   url="https://raw.githubusercontent.com/containerd/containerd\
 /v${version}/containerd.service"
   safe_curl "${url}" "${cache_dir}/systemd/containerd.service"

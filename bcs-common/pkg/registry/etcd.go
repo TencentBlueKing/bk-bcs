@@ -19,10 +19,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/go-micro/plugins/v4/registry/etcd"
 	"github.com/google/uuid"
-	"github.com/micro/go-micro/v2/registry"
-	"github.com/micro/go-micro/v2/registry/etcd"
-	"github.com/micro/go-micro/v2/util/backoff"
+	"go-micro.dev/v4/registry"
+	"go-micro.dev/v4/util/backoff"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
@@ -32,10 +32,10 @@ import (
 func NewEtcdRegistry(option *Options) Registry {
 	// setting default options
 	if option.TTL == time.Duration(0) {
-		option.TTL = time.Duration(time.Second * 40)
+		option.TTL = time.Second * 40
 	}
 	if option.Interval == time.Duration(0) {
-		option.Interval = time.Duration(time.Second * 30)
+		option.Interval = time.Second * 30
 	}
 	// create etcd registry
 	r := etcd.NewRegistry(
@@ -131,13 +131,13 @@ func (e *etcdRegister) Register() error {
 func (e *etcdRegister) innerRegister() (err error) {
 	for i := 0; i < 3; i++ {
 		if err = e.etcdregistry.Register(e.localService, registry.RegisterTTL(e.option.TTL)); err != nil {
-			//try again until max failed
+			// try again until max failed
 			roption := e.etcdregistry.Options()
 			blog.Errorf("etcd registry register err, %s, options: %+v\n", err.Error(), roption)
 			time.Sleep(backoff.Do(i + 1))
 			continue
 		}
-		//register success, clean error
+		// register success, clean error
 		err = nil
 		break
 	}
@@ -171,6 +171,7 @@ func (e *etcdRegister) Get(name string) (*registry.Service, error) {
 	return svc, nil
 }
 
+// nolint
 func (e *etcdRegister) innerGet(name string) (*registry.Service, error) {
 	// first, get details from registry
 	svcs, err := e.etcdregistry.GetService(name)

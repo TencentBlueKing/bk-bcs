@@ -10,15 +10,16 @@
  * limitations under the License.
  */
 
+// Package server xxx
 package server
 
 import (
 	"fmt"
 	"os"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/spf13/cobra"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 )
 
@@ -36,7 +37,7 @@ func NewCommand() *cobra.Command {
 		Short: "bcs-gitops-proxy is a proxy for gitops-manager",
 		Long:  `bcs-gitops-proxy integrates BKIAM and websocket tunnel for gitops-manager.`,
 		RunE: func(cmd *cobra.Command, args []string) error { // nolint
-			//loading configuration file for options
+			// loading configuration file for options
 			if err := common.LoadConfigFile(configFile, option); err != nil {
 				fmt.Fprintf(os.Stderr, "proxy load json config file failure, %s\n", err.Error())
 				return err
@@ -62,7 +63,7 @@ func NewCommand() *cobra.Command {
 			return proxy.Run()
 		},
 	}
-	//setting server configuration flag
+	// setting server configuration flag
 	cmd.Flags().StringVarP(&configFile, "config", "c", configFile, "proxy configuration json file")
 	return cmd
 }

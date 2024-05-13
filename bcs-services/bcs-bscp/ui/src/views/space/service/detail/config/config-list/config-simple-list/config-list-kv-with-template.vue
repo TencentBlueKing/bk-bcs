@@ -16,10 +16,10 @@
       v-model:show="isShowEdit"
       :bk-biz-id="props.bkBizId"
       :app-id="props.appId"
-      :config="selectedConfig as IConfigKvItem"
+      :config="selectedConfig.spec"
       :editable="true"
       @confirm="getListData" />
-    <ViewConfig v-model:show="isShowView" :config="selectedConfig as IConfigKvItem" />
+    <ViewConfig v-model:show="isShowView" :config="selectedConfig" />
   </section>
 </template>
 <script setup lang="ts">
@@ -27,9 +27,10 @@
   import { useI18n } from 'vue-i18n';
   import { storeToRefs } from 'pinia';
   import useConfigStore from '../../../../../../../store/config';
-  import { IConfigKvType, IConfigKvItem } from '../../../../../../../../types/config';
+  import { IConfigKvType } from '../../../../../../../../types/config';
   import { ICommonQuery } from '../../../../../../../../types/index';
   import { getKvList, getReleaseKvList } from '../../../../../../../api/config';
+  import { getDefaultKvItem } from '../../../../../../../utils/config';
   import SearchInput from '../../../../../../../components/search-input.vue';
   import EditConfig from '../config-table-list/edit-config-kv.vue';
   import ViewConfig from '../config-table-list/view-config-kv.vue';
@@ -47,7 +48,7 @@
   const loading = ref(false);
   const configList = ref<IConfigKvType[]>([]);
   const searchStr = ref('');
-  const selectedConfig = ref<IConfigKvItem>();
+  const selectedConfig = ref<IConfigKvType>(getDefaultKvItem());
   const isShowEdit = ref(false);
   const isShowView = ref(false);
   const isSearchEmpty = ref(false);
@@ -104,7 +105,7 @@
   };
 
   const handleConfigClick = (config: IConfigKvType) => {
-    selectedConfig.value = config.spec;
+    selectedConfig.value = config;
     if (isUnNamedVersion.value) {
       isShowEdit.value = true;
     } else {

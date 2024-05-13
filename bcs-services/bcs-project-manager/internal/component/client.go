@@ -14,6 +14,7 @@
 package component
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"sync"
@@ -26,6 +27,13 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/stringx"
 )
+
+// CommonResp blueking common response
+type CommonResp struct {
+	Code    int    `json:"code"`
+	Result  bool   `json:"result"`
+	Message string `json:"message"`
+}
 
 // Request request third api client
 func Request(req goReq.SuperAgent, timeout int, proxy string, headers map[string]string) (string, error) {
@@ -53,6 +61,20 @@ func Request(req goReq.SuperAgent, timeout int, proxy string, headers map[string
 		client = client.Set(key, req.Header.Get(key))
 	}
 	// request data
+
+	curlCmd := fmt.Sprintf("curl -X %s '%s' ", req.Method, req.Url)
+
+	for key := range client.Header {
+		curlCmd += fmt.Sprintf(" -H %q", fmt.Sprintf("%s: %s", key, client.Header.Get(key)))
+	}
+
+	dataBytes, err := json.Marshal(req.Data)
+	if err != nil {
+		logging.Error("Failed to encode request data to JSON: %s", err)
+		return "", err
+	}
+	curlCmd += fmt.Sprintf("-d '%s'", string(dataBytes))
+	fmt.Println(curlCmd)
 
 	client = client.Send(req.Data)
 	client = client.SetDebug(req.Debug)
@@ -82,4 +104,13 @@ func GetAuditClient() *audit.Client {
 		})
 	}
 	return auditClient
+}
+
+// GetAuthHeader 获取蓝鲸网关通用认证头
+func GetAuthHeader() map[string]string {
+	return map[string]string{
+		"Content-Type": "application/json",
+		"X-Bkapi-Authorization": fmt.Sprintf(`{"bk_app_code": "%s", "bk_app_secret": "%s", "bk_username": "%s"}`,
+			config.GlobalConf.App.Code, config.GlobalConf.App.Secret, config.GlobalConf.App.BkUsername),
+	}
 }

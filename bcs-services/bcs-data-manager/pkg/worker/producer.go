@@ -22,9 +22,9 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/msgqueue"
-	"github.com/micro/go-micro/v2/broker"
 	"github.com/panjf2000/ants/v2"
 	"github.com/robfig/cron/v3"
+	"go-micro.dev/v4/broker"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/bcsmonitor"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/cmanager"

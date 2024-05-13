@@ -16,7 +16,7 @@ package client
 import (
 	"context"
 
-	bkcmdbkube "configcenter/src/kube/types"
+	bkcmdbkube "configcenter/src/kube/types" // nolint
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
 	pmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
 	cmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
@@ -69,6 +69,8 @@ type CMDBClient interface {
 	GetBcsPod(*GetBcsPodRequest) (*[]bkcmdbkube.Pod, error)
 	// GetBcsCluster returns the BCS cluster information for the given request.
 	GetBcsCluster(*GetBcsClusterRequest) (*[]bkcmdbkube.Cluster, error)
+	// GetBcsContainer retrieves the BCS container information based on the provided request.
+	GetBcsContainer(request *GetBcsContainerRequest) (*[]bkcmdbkube.Container, error)
 
 	// CreateBcsNode creates a new BCS node with the given request.
 	CreateBcsNode(*CreateBcsNodeRequest) (*[]int64, error)
@@ -104,4 +106,6 @@ type CMDBClient interface {
 	DeleteBcsCluster(*DeleteBcsClusterRequest) error
 	// UpdateBcsClusterType updates the BCS cluster type with the given request.
 	UpdateBcsClusterType(request *UpdateBcsClusterTypeRequest) error
+
+	DeleteBcsClusterAll(*DeleteBcsClusterAllRequest) error
 }

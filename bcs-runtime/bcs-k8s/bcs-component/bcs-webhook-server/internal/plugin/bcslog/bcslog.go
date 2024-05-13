@@ -1,10 +1,10 @@
 /*
- * Tencent is pleased to support the open source community by making Blueking Container Service available.,
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
  * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -23,6 +23,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	bcsv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubebkbcs/apis/bkbcs/v1"
+	internalclientset "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubebkbcs/generated/clientset/versioned"
+	informers "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubebkbcs/generated/informers/externalversions"
+	listers "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubebkbcs/generated/listers/bkbcs/v1"
 	mapset "github.com/deckarep/golang-set"
 	"k8s.io/api/admission/v1beta1"
 	corev1 "k8s.io/api/core/v1"
@@ -34,14 +39,9 @@ import (
 	clientGoCache "k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/internal/pluginutil"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/internal/types"
-	bcsv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubebkbcs/apis/bkbcs/v1"
-	internalclientset "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubebkbcs/generated/clientset/versioned"
-	informers "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubebkbcs/generated/informers/externalversions"
-	listers "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubebkbcs/generated/listers/bkbcs/v1"
 )
 
 // Hooker webhook for bcslog
@@ -71,6 +71,7 @@ func (h *Hooker) Init(configFilePath string) error {
 	return nil
 }
 
+// nolint unused
 func (h *Hooker) initKubeClient() error {
 	cfg, err := clientcmd.BuildConfigFromFlags(h.opt.KubeMaster, h.opt.Kubeconfig)
 	if err != nil {
@@ -109,6 +110,7 @@ func (h *Hooker) initKubeClient() error {
 
 // createBcsLogConfig xxx
 // create crd of BcsLogConf
+// nolint unused
 func (h *Hooker) createBcsLogConfig(clientset apiextensionsclient.Interface) (bool, error) {
 	bcsLogConfigPlural := "bcslogconfigs"
 
@@ -241,18 +243,17 @@ func (h *Hooker) createPatch(pod *corev1.Pod) ([]types.PatchOperation, error) {
 				}
 			}
 		}
-	} else {
-		if defaultLogConf != nil {
-			for i, container := range pod.Spec.Containers {
-				patchedContainer := h.injectK8sContainer(pod.Namespace, &container, defaultLogConf, -1)
-				patch = append(patch, replaceContainer(i, *patchedContainer))
-			}
+	} else if defaultLogConf != nil {
+		for i, container := range pod.Spec.Containers {
+			patchedContainer := h.injectK8sContainer(pod.Namespace, &container, defaultLogConf, -1)
+			patch = append(patch, replaceContainer(i, *patchedContainer))
 		}
 	}
 
 	return patch, nil
 }
 
+// nolint funlen
 func (h *Hooker) injectK8sContainer(
 	namespace string, container *corev1.Container,
 	bcsLogConf *bcsv1.BcsLogConfig, index int) *corev1.Container {

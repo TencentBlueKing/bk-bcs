@@ -16,7 +16,7 @@ export interface IScriptListQuery {
 // 新建脚本编辑参数
 export interface IScriptEditingForm {
   name: string;
-  tag: string;
+  tags: string[];
   memo: string;
   type: EScriptType;
   content: string;
@@ -32,9 +32,9 @@ export interface IScriptItem {
     spec: {
       name: string;
       type: string;
-      tag: string;
+      tags: string[];
       publish_num: number;
-      momo: string;
+      memo: string;
     };
     attachment: {
       biz_id: number;

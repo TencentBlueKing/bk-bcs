@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package server
@@ -20,10 +19,10 @@ import (
 	"net/url"
 	"strconv"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-vaultplugin-server/pkg/secret"
 )
 
@@ -69,7 +68,6 @@ func (s *Server) routerSaveOrUpdateSecret(w http.ResponseWriter, r *http.Request
 		s.responseSuccess(w, nil)
 		return
 	}
-	return
 }
 
 func (s *Server) routerDeleteSecret(w http.ResponseWriter, r *http.Request) {
@@ -92,7 +90,6 @@ func (s *Server) routerDeleteSecret(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.responseSuccess(w, nil)
-	return
 }
 
 func (s *Server) routerGetSecret(w http.ResponseWriter, r *http.Request) {
@@ -123,7 +120,6 @@ func (s *Server) routerGetSecret(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.responseSuccess(w, sec)
-	return
 }
 
 func (s *Server) routerListSecret(w http.ResponseWriter, r *http.Request) {
@@ -141,7 +137,6 @@ func (s *Server) routerListSecret(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.responseSuccess(w, secretList)
-	return
 }
 
 func (s *Server) routerGetMetadata(w http.ResponseWriter, r *http.Request) {
@@ -164,7 +159,6 @@ func (s *Server) routerGetMetadata(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.responseSuccess(w, metadata)
-	return
 }
 
 func (s *Server) routerGetVersion(w http.ResponseWriter, r *http.Request) {
@@ -188,7 +182,6 @@ func (s *Server) routerGetVersion(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.responseSuccess(w, version)
-	return
 }
 
 func (s *Server) routerRollback(w http.ResponseWriter, r *http.Request) {
@@ -208,7 +201,7 @@ func (s *Server) routerRollback(w http.ResponseWriter, r *http.Request) {
 	v, err := strconv.Atoi(version)
 	if err != nil {
 		s.responseError(r, w, http.StatusBadRequest,
-			errors.Wrapf(err, "version %d not int format for '%s/%s'", version, opt.Project, path))
+			errors.Wrapf(err, "version %s not int format for '%s/%s'", version, opt.Project, path))
 		return
 	}
 
@@ -219,7 +212,6 @@ func (s *Server) routerRollback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.responseSuccess(w, nil)
-	return
 }
 
 func (s *Server) routerInitProject(w http.ResponseWriter, r *http.Request) {
@@ -241,7 +233,6 @@ func (s *Server) routerInitProject(w http.ResponseWriter, r *http.Request) {
 	}
 	blog.Infof("init project '%s' success", project)
 	s.responseSuccess(w, nil)
-	return
 }
 
 func (s *Server) routerGetSecretAnnotation(w http.ResponseWriter, r *http.Request) {
@@ -249,5 +240,4 @@ func (s *Server) routerGetSecretAnnotation(w http.ResponseWriter, r *http.Reques
 
 	anno := s.secretManager.GetSecretAnnotation(project)
 	s.responseSuccess(w, anno)
-	return
 }

@@ -79,7 +79,7 @@
             </template>
           </template>
         </bk-table-column>
-        <bk-table-column :label="t('操作')" :width="locale === 'zh-CN' ? '140' : '200'" fixed="right">
+        <bk-table-column :label="t('操作')" :width="locale === 'zh-CN' ? '160' : '200'" fixed="right">
           <template #default="{ row, index }">
             <div class="actions-wrapper">
               <slot name="columnOperations" :config="row">
@@ -97,10 +97,20 @@
                     <div class="config-actions">
                       <div class="action-item" @click="handleOpenAddToPkgsDialog(row)">{{ t('添加至套餐') }}</div>
                       <div
-                        v-if="citeByPkgsList[index].length > 0"
+                        v-if="citeByPkgsList[index]?.length > 0"
                         class="action-item"
                         @click="handleOpenMoveOutFromPkgsDialog(row)">
                         {{ t('移出套餐') }}
+                      </div>
+                      <DownloadConfig
+                        class="action-item"
+                        theme="default"
+                        :text="$t('下载模板文件')"
+                        :space-id="spaceId"
+                        :template-space-id="currentTemplateSpace"
+                        :template-id="row.id" />
+                      <div v-if="props.showDeleteAction" class="action-item" @click="handleDeleteClick(row)">
+                        {{ t('删除模板文件') }}
                       </div>
                     </div>
                   </template>
@@ -126,6 +136,7 @@
       :space-id="spaceId"
       :current-template-space="currentTemplateSpace"
       :config="appBoundByTemplateSliderData.data" />
+    <DeleteConfigDialog v-model:show="isDeleteConfigDialogShow" :configs="crtConfig" @deleted="handleConfigsDeleted" />
   </div>
 </template>
 <script lang="ts" setup>
@@ -134,6 +145,7 @@
   import { useRouter } from 'vue-router';
   import { storeToRefs } from 'pinia';
   import { Ellipsis, Search, Spinner } from 'bkui-vue/lib/icon';
+  import { debounce } from 'lodash';
   import useGlobalStore from '../../../../../../store/global';
   import useTemplateStore from '../../../../../../store/template';
   import { ICommonQuery } from '../../../../../../../types/index';
@@ -149,7 +161,8 @@
   import PkgsTag from '../../components/packages-tag.vue';
   import AppsBoundByTemplate from '../apps-bound-by-template.vue';
   import TableEmpty from '../../../../../../components/table/table-empty.vue';
-  import { debounce } from 'lodash';
+  import DownloadConfig from '../operations/download-config/download-config.vue';
+  import DeleteConfigDialog from '../operations/delete-configs/delete-config-dialog.vue';
 
   const router = useRouter();
   const { t, locale } = useI18n();
@@ -163,6 +176,7 @@
     selectedConfigs: ITemplateConfigItem[];
     showCitedByPkgsCol?: boolean; // 是否显示模板被套餐引用列
     showBoundByAppsCol?: boolean; // 是否显示模板被服务引用列
+    showDeleteAction?: boolean; // 是否显示删除操作
     getConfigList: Function;
   }>();
 
@@ -180,8 +194,9 @@
     count: 0,
     limit: 10,
   });
-  const isAddToPkgsDialogShow = ref(false);
-  const isMoveOutFromPkgsDialogShow = ref(false);
+  const isAddToPkgsDialogShow = ref(false); // 显示添加至套餐弹窗
+  const isMoveOutFromPkgsDialogShow = ref(false); // 显示从套餐移除弹窗
+  const isDeleteConfigDialogShow = ref(false); // 显示删除配置弹窗
   const appBoundByTemplateSliderData = ref<{ open: boolean; data: { id: number; name: string } }>({
     open: false,
     data: {
@@ -245,6 +260,7 @@
     }
   };
 
+  // 配置项被套餐引用数据
   const loadCiteByPkgsCountList = async (ids: number[]) => {
     citedByPkgsLoading.value = true;
     const res = await getPackagesByTemplateIds(spaceId.value, currentTemplateSpace.value, ids);
@@ -301,11 +317,13 @@
   const isSelectedFn = ({ row }: { row: ITemplateConfigItem }) =>
     props.selectedConfigs.findIndex((item) => item.id === row.id) > -1;
 
+  // 添加至套餐
   const handleOpenAddToPkgsDialog = (config: ITemplateConfigItem) => {
     isAddToPkgsDialogShow.value = true;
     crtConfig.value = [config];
   };
 
+  // 从套餐移除
   const handleOpenMoveOutFromPkgsDialog = (config: ITemplateConfigItem) => {
     isMoveOutFromPkgsDialogShow.value = true;
     crtConfig.value = [config];
@@ -330,6 +348,18 @@
         name: config.spec.name,
       },
     };
+  };
+
+  // 删除配置项
+  const handleDeleteClick = async (config: ITemplateConfigItem) => {
+    isDeleteConfigDialogShow.value = true;
+    crtConfig.value = [config];
+  };
+
+  const handleConfigsDeleted = () => {
+    refreshListAfterDeleted(1);
+    crtConfig.value = [];
+    updateRefreshFlag();
   };
 
   const updateRefreshFlag = () => {

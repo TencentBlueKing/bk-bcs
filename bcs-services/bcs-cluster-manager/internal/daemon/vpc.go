@@ -29,12 +29,14 @@ func (d *Daemon) reportVpcAvailableIPCount(error chan<- error) {
 	cloudVPCs, err := d.model.ListCloudVPC(d.ctx, cond, &storeopt.ListOption{})
 	if err != nil {
 		error <- err
+		return
 	}
 
 	cidrCli, conClose, err := cidrmanager.GetCidrClient().GetCidrManagerClient()
 	if err != nil || cidrCli == nil {
 		errMsg := fmt.Errorf("GetCidrManagerClient failed: %v", err)
 		error <- errMsg
+		return
 	}
 	defer func() {
 		if conClose != nil {

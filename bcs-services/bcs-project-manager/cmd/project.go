@@ -59,11 +59,14 @@ func start(cmd *cobra.Command, args []string) {
 
 // Execute 执行命令
 func Execute() {
-	rootCmd.Flags().StringVarP(
-		&configPath, "config", "c", "", "path of project service config files",
-	)
 	if err := rootCmd.Execute(); err != nil {
 		logging.Info("start bcs project service error, %v", err)
 		os.Exit(1)
 	}
+}
+
+func init() {
+	rootCmd.PersistentFlags().StringVarP(
+		&configPath, "config", "c", "", "path of project service config files",
+	)
 }

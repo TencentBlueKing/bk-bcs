@@ -1,10 +1,10 @@
 /*
- * Tencent is pleased to support the open source community by making Blueking Container Service available.,
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
  * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -26,10 +26,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/k8s"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metric_manager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin_manager"
-
 	"github.com/dlclark/regexp2"
 	"github.com/prometheus/client_golang/prometheus"
 	"gopkg.in/yaml.v2"
@@ -41,6 +37,10 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/remotecommand"
 	"k8s.io/klog"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/k8s"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metric_manager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin_manager"
 )
 
 var (
@@ -83,7 +83,7 @@ type MetricLabel struct {
 
 // ToLabelList xxx
 func (l *MetricLabel) ToLabelList() []string {
-	result := make([]string, 0, 0)
+	result := make([]string, 0)
 	result = append(result, l.Target)
 	result = append(result, l.TargetBiz)
 	result = append(result, l.Status)
@@ -153,6 +153,7 @@ func (p *Plugin) Name() string {
 }
 
 // Check xxx
+// nolint funlen
 func (p *Plugin) Check() {
 	start := time.Now()
 	p.checkLock.Lock()
@@ -255,7 +256,7 @@ func (p *Plugin) Check() {
 // check Master Pod
 func (p *Plugin) checkMasterPod(clientSet *kubernetes.Clientset, podList []corev1.Pod, podName string,
 	nodeLabelSelector string, clusterId string, clusterBiz string, config *rest.Config) []*metric_manager.GaugeVecSet {
-	result := make([]*metric_manager.GaugeVecSet, 0, 0)
+	result := make([]*metric_manager.GaugeVecSet, 0)
 
 	metricLabel := MetricLabel{
 		Target:    clusterId,
@@ -265,7 +266,7 @@ func (p *Plugin) checkMasterPod(clientSet *kubernetes.Clientset, podList []corev
 	var err error
 
 	// 获取本次要检查的master pod列表
-	masterPodList := make([]corev1.Pod, 0, 0)
+	masterPodList := make([]corev1.Pod, 0)
 	for _, pod := range podList {
 		if strings.Contains(pod.Name, podName) {
 			masterPodList = append(masterPodList, pod)
@@ -443,6 +444,7 @@ func checkArguments(argList1 []string, argList2 []string) error {
 		arg2 := argList2[index]
 		if arg1 != arg2 {
 			// exclude ip address
+			// nolint
 			re, _ := regexp.Compile(
 				"(([1-9]?[0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])")
 			arg1WithoutIp := re.ReplaceAllString(arg1, "")
@@ -530,12 +532,10 @@ func (p *Plugin) checkPodFileConsistency(restConfig *rest.Config, clientSet *kub
 		if sampleFile == "" {
 			sampleFile = execMsg
 			sampleName = pod.Name
-		} else {
-			if sampleFile != execMsg {
-				klog.Infof("pod %s policy %s doesn't equal pod %s policy %s",
-					sampleName, sampleFile, pod.Name, execMsg)
-				return "配置不一致", nil // nolint
-			}
+		} else if sampleFile != execMsg {
+			klog.Infof("pod %s policy %s doesn't equal pod %s policy %s",
+				sampleName, sampleFile, pod.Name, execMsg)
+			return "配置不一致", nil // nolint
 		}
 	}
 	return "ok", nil
@@ -549,17 +549,16 @@ func (p *Plugin) checkPodConfig(obj interface{}, path string, regex string) (boo
 		if value.Kind() != reflect.Struct && value.Kind() != reflect.Slice && value.Kind() != reflect.Pointer {
 			return false, fmt.Errorf("invalid field %s in path %s %s", field, path, value)
 		}
-		if value.Kind() == reflect.Slice {
+		if value.Kind() == reflect.Slice { // nolint rewrite if-else to switch statement
 			indexStr := strings.Trim(field, "[]")
 			index, err := strconv.Atoi(indexStr)
 			if err != nil {
 				return false, fmt.Errorf("invalid field %s in path %s %s", field, path, value)
 			}
-			if value.Len() >= index+1 {
-				value = value.Index(index)
-			} else {
+			if !(value.Len() >= index+1) {
 				return true, nil
 			}
+			value = value.Index(index)
 		} else if value.Kind() == reflect.Struct {
 			// 如果当前值是结构体，就按照字段名获取对应属性值
 			fieldValue := value.FieldByName(field)

@@ -1,24 +1,26 @@
 /* eslint-disable camelcase */
 import yamljs from 'js-yaml';
 import jp from 'jsonpath';
-import { computed, defineComponent, onMounted, ref, toRefs, watch } from 'vue';
+import { isEqual } from 'lodash';
+import { computed, defineComponent, onBeforeMount, onBeforeUnmount, onMounted, PropType, ref, toRefs, watch } from 'vue';
 
-import usePage from '../../../composables/use-page';
-import { useSelectItemsNamespace } from '../namespace/use-namespace';
+import NSSelect from '../view-manage/ns-select.vue';
+import useViewConfig from '../view-manage/use-view-config';
 import Rollback from '../workload/rollback.vue';
 
-import useSubscribe, { ISubscribeData, ISubscribeParams } from './use-subscribe';
+import ConfirmContent from './confirm-content.vue';
+import CreateResource from './create-resource.vue';
+import useSearch from './use-search';
+import { ISubscribeData } from './use-subscribe';
 import useTableData from './use-table-data';
 
-import './base-layout.css';
 import { restartGameWorkloads, restartWorkloads } from '@/api/modules/cluster-resource';
 import $bkMessage from '@/common/bkmagic';
-import { CUR_SELECT_CRD } from '@/common/constant';
-import { padIPv6 } from '@/common/util';
-import $bkInfo from '@/components/bk-magic-2.0/bk-info';
+import { bus } from '@/common/bus';
 import Header from '@/components/layout/Header.vue';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';
-import useTableSort from '@/composables/use-table-sort';
+import { useCluster } from '@/composables/use-app';
+import useInterval from '@/composables/use-interval';
 import fullScreen from '@/directives/full-screen';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
@@ -53,25 +55,20 @@ export default defineComponent({
       default: '',
       required: true,
     },
-    // 是否显示命名空间（不展示的话不会发送获取命名空间列表的请求）
-    showNameSpace: {
-      type: Boolean,
-      default: true,
-    },
     // 是否显示创建资源按钮
     showCreate: {
       type: Boolean,
       default: true,
     },
     // 默认CRD值
-    defaultCrd: {
+    crd: {
       type: String,
       default: '',
     },
-    // 是否显示crd下拉菜单
-    showCrd: {
-      type: Boolean,
-      default: false,
+    // CRD资源的作用域
+    scope: {
+      type: String as PropType<'Namespaced'|'Cluster'>,
+      default: '',
     },
     // 是否显示总览和yaml切换的tab
     showDetailTab: {
@@ -89,12 +86,20 @@ export default defineComponent({
       type,
       category,
       kind,
-      showNameSpace,
-      showCrd,
       defaultActiveDetailType,
-      defaultCrd,
+      crd,
+      scope,
     } = toRefs(props);
-    const defaultCustomObjectsMap = ref(['gamedeployments.tkex.tencent.com', 'gamestatefulsets.tkex.tencent.com', 'hooktemplates.tkex.tencent.com']);
+    const { clusterNameMap } = useCluster();
+    const isViewConfigShow = computed(() => $store.state.isViewConfigShow);
+    const { curViewData, isViewEditable, isClusterMode } = useViewConfig();
+    const {
+      searchSelectData,
+      searchSelectChange,
+      searchSelectValue,
+      searchSelectKey,
+    } = useSearch();
+
     const updateStrategyMap = ref({
       RollingUpdate: $i18n.t('k8s.updateStrategy.rollingUpdate'),
       InplaceUpdate: $i18n.t('k8s.updateStrategy.inplaceUpdate'),
@@ -102,42 +107,6 @@ export default defineComponent({
       Recreate: $i18n.t('k8s.updateStrategy.reCreate'),
     });
 
-    // crd
-    const currentCrd = ref(defaultCrd.value || localStorage.getItem(CUR_SELECT_CRD) || '');
-    const crdLoading = ref(false);
-    // crd 数据
-    const crdData = ref<ISubscribeData|null>(null);
-    // crd 列表
-    const crdList = computed(() => (crdData.value?.manifest?.items)
-      ?.filter(i => !defaultCustomObjectsMap.value.includes(i.metadata.name)) || []);
-    // 自定义资源当前CRD是从列表里面读取的
-    const currentCrdExt = computed(() => {
-      const item = crdList.value.find(item => item.metadata.name === currentCrd.value);
-      return crdData.value?.manifestExt?.[item?.metadata?.uid] || {};
-    });
-    // 未选择crd时提示
-    const crdTips = computed(() => (type.value === 'crd' && !currentCrd.value ? $i18n.t('dashboard.validate.selectCRD') : ''));
-    // 自定义资源的kind类型是根据选择的crd确定的
-    const crdKind = computed(() => currentCrdExt.value.kind);
-    // 自定义CRD（GameStatefulSets、GameDeployments、CustomObjects）
-    const customCrd = computed(() => (type.value === 'crd' && kind.value !== 'CustomResourceDefinition'));
-    const clusterId = computed(() => $store.getters.curClusterId);
-    const handleGetCrdData = async () => {
-      crdLoading.value = true;
-      const res = await fetchCRDData(clusterId.value);
-      crdData.value = res.data;
-      crdLoading.value = false;
-      // 校验初始化的crd值是否正确
-      const crd = crdData.value?.manifest?.items?.find(item => item.metadata.name === currentCrd.value);
-      if (!crd) {
-        currentCrd.value = crdList.value[0]?.metadata?.name;
-        localStorage.removeItem(CUR_SELECT_CRD);
-      }
-    };
-    const handleCrdChange = async (value) => {
-      localStorage.setItem(CUR_SELECT_CRD, value);
-      handleGetTableData();
-    };
     const renderCrdHeader = (h, { column }) => {
       const additionalData = additionalColumns.value.find(item => item.name === column.label);
       return h('span', {
@@ -166,128 +135,130 @@ export default defineComponent({
       text: statusMap[key],
       value: key,
     })));
-    const statusFilterMethod = (value, row) => handleGetExtData(row.metadata.uid, 'status') === value;
 
-    // 命名空间
-    const namespaceDisabled = computed(() => {
-      const { scope } = currentCrdExt.value;
-      return type.value === 'crd' && scope && scope !== 'Namespaced';
+    const pageConf = ref({
+      current: 1,
+      limit: $store.state.globalPageSize,
+      showTotalCount: true,
+      count: 0,
     });
-    // 获取命名空间
-    const { namespaceLoading, namespaceValue, namespaceList, getNamespaceData } = useSelectItemsNamespace();
-
-    // 表格数据
-    const {
-      isLoading,
-      data,
-      webAnnotations,
-      handleFetchList,
-      fetchCRDData,
-      handleFetchCustomResourceList,
-    } = useTableData();
-
-    // 获取表格数据
-    const handleGetTableData = async (subscribe = true) => {
-      // 获取表格数据
-      if (type.value === 'crd') {
-        // crd scope 为Namespaced时需要传递命名空间（gamedeployments、gamestatefulsets、hooktemplates三个特殊的资源）
-        const customResourceNamespace = currentCrdExt.value?.scope === 'Namespaced'
-                    || defaultCustomObjectsMap.value.includes(defaultCrd.value)
-          ? namespaceValue.value
-          : undefined;
-        // crd 界面无需传当前crd参数
-        const crd = customCrd.value ? currentCrd.value : '';
-        await handleFetchCustomResourceList(clusterId.value, crd, category.value, customResourceNamespace);
-      } else {
-        await handleFetchList(type.value, category.value, namespaceValue.value, clusterId.value);
-      }
-
-      // 重新订阅（获取表格数据之后，resourceVersion可能会变更）
-      subscribe && handleStartSubscribe();
+    const handlePageChange = (page: number) => {
+      pageConf.value.current = page;
+      handleGetTableData();
     };
-
-    // 动态表格字段
-    const additionalColumns = computed(() => webAnnotations.value.additionalColumns || []);
-    // 表格数据（排序后）
-    const allTableData = computed(() => data.value.manifest.items || []);
-    const {
-      sortTableData: tableData,
-      handleSortChange,
-    } = useTableSort(allTableData, item => handleGetExtData(item.metadata.uid) || {});
-    const resourceVersion = computed(() => data.value.manifest?.metadata?.resourceVersion || '');
-
-    // 模糊搜索功能
-    const keys = ref(kind.value === 'Pod'
-      ? ['metadata.name', 'creator', 'status.hostIP', 'podIPv4', 'podIPv6']
-      : ['metadata.name', 'creator']); // 模糊搜索字段
-    const searchValue = ref('');
-    const tableDataMatchSearch = computed(() => {
-      if (!searchValue.value) return tableData.value;
-
-      return tableData.value.filter(item => keys.value.some((key) => {
-        const extData = data.value.manifestExt?.[item.metadata?.uid] || {};
-        const newItem = {
-          ...extData,
-          ...item,
-        };
-        const tmpKey = String(key).split('.');
-        const str = tmpKey.reduce((pre, key) => {
-          if (typeof pre === 'object') {
-            return pre[key];
-          }
-          return pre;
-        }, newItem);
-        if (key === 'podIPv6') {
-          return padIPv6(str).includes(padIPv6(searchValue.value));
-        }
-        return String(str).toLowerCase()
-          .includes(padIPv6(searchValue.value.toLowerCase()));
-      }));
+    const handlePageSizeChange = (size: number) => {
+      pageConf.value.current = 1;
+      pageConf.value.limit = size;
+      $store.commit('updatePageSize', size);
+      handleGetTableData();
+    };
+    // 排序
+    const sortData = ref<{
+      sortBy: string
+      order: 'desc' | 'asc' | ''
+    }>({
+      sortBy: '',
+      order: '',
     });
-
-    const handleNamespaceSelected = (value) => {
-      $store.commit('updateCurNamespace', value);
+    const propMap = {
+      'metadata.name': 'name',
+      'metadata.namespace': 'namespace',
+      createTime: 'age',
+    };
+    const handleSortChange = ({ prop, order }) => {
+      sortData.value = {
+        sortBy: propMap[prop] || prop,
+        order: order === 'ascending' ? 'asc' : 'desc',
+      };
+      handleGetTableData();
+    };
+    // 表头过滤
+    const customFilters = ref<Record<string, string[]>>({});
+    const filters = ref<Record<string, string[]>>({});
+    const handleFilterChange = (data) => {
+      filters.value = data;
       handleGetTableData();
     };
 
-    // 分页
-    const { pagination, curPageData, pageConf, pageChange, pageSizeChange } = usePage(tableDataMatchSearch);
-    // 搜索时重置分页
-    watch([searchValue, namespaceValue, currentCrd], () => {
-      pageConf.current = 1;
-    });
+    // 集群级别CRD
+    const isClusterScopeCRD = computed(() => type.value === 'crd' && scope.value !== 'Namespaced');
+    // 集群ID（集群视图下才会有）
+    const clusterID = computed(() => $router.currentRoute?.params?.clusterId);
+    // 显示过滤条件
+    const showFilter = computed(() => !isClusterScopeCRD.value && isClusterMode.value);
+    // 命名空间变更
+    const curNsList = computed(() => $store.state.viewNsList);
+    const handleNsChange = (nsList: string[]) => {
+      if (!isClusterMode.value) return; // 自定义视图模式下命名空间只能在配置面板修改
 
-    // 订阅事件
-    const { handleSubscribe } = useSubscribe(data);
-    const subscribeKind = computed(() =>
-    // 自定义资源（非CustomResourceDefinition类型的crd）的kind是根据选择的crd动态获取的，不能取props的kind值
-      (kind.value === 'CustomObject' ? crdKind.value : kind.value));
-
-    // GameDeployment、GameStatefulSet apiVersion前端固定
-    const apiVersion = computed(() => (['GameDeployment', 'GameStatefulSet'].includes(kind.value) ? 'tkex.tencent.com/v1alpha1' : currentCrdExt.value.api_version));
-
-    const handleStartSubscribe = () => {
-      // 自定义的CRD订阅时必须传apiVersion
-      if (!subscribeKind.value || !resourceVersion.value || (customCrd.value && !apiVersion.value)) return;
-
-      const params: ISubscribeParams = {
-        kind: subscribeKind.value,
-        resourceVersion: resourceVersion.value,
-        namespace: namespaceValue.value,
-      };
-      if (apiVersion.value) {
-        params.apiVersion = apiVersion.value;
-      }
-      if (customCrd.value) {
-        params.CRDName = currentCrd.value;
-      }
-      handleSubscribe(params);
+      $store.commit('updateViewNsList', nsList);
     };
 
+    // 表格数据
+    const data = ref<ISubscribeData>({
+      manifestExt: {},
+      manifest: {},
+      total: 0,
+    });
+    const {
+      isLoading,
+      webAnnotations,
+      getMultiClusterResources,
+      getMultiClusterResourcesCRD,
+    } = useTableData();
+    const curPageData = computed(() => data.value.manifest?.items || []);
+    // 动态表格字段
+    const additionalColumns = computed(() => webAnnotations.value.additionalColumns || []);
+    // 获取表格数据
+    const handleGetTableData = async (loading = true) => {
+      if (!curViewData.value) return;
+
+      isLoading.value = loading;
+      let resourceData: ISubscribeData;
+
+      if (type.value === 'crd') {
+        // 自定义资源
+        resourceData = await getMultiClusterResourcesCRD({
+          ...curViewData.value,
+          ...sortData.value,
+          status: filters.value.status || [],
+          $crd: crd.value,
+          offset: (pageConf.value.current - 1) * pageConf.value.limit,
+          limit: pageConf.value.limit,
+        });
+        // 设置资源数量（批量获取的接口比较慢，这里单个资源先出来就先回显数量）
+        if (['GameDeployment', 'GameStatefulSet', 'HookTemplate'].includes(kind.value)) {
+          bus.$emit('set-resource-count', kind.value, resourceData.total);
+        }
+      } else {
+        // 普通资源
+        resourceData = await getMultiClusterResources({
+          ...curViewData.value,
+          ...sortData.value,
+          status: filters.value.status || [],
+          ip: customFilters.value.ip?.join(','),
+          $kind: kind.value,
+          offset: (pageConf.value.current - 1) * pageConf.value.limit,
+          limit: pageConf.value.limit,
+        });
+        // 设置资源数量（批量获取的接口比较慢，这里单个资源先出来就先回显数量）
+        bus.$emit('set-resource-count', kind.value, resourceData.total);
+      }
+      pageConf.value.count = resourceData.total;
+      data.value = resourceData;
+      isLoading.value = false;
+    };
+    // 重新搜索
+    watch(curViewData, (newValue, oldValue) => {
+      if (!curViewData.value || isEqual(newValue, oldValue)) return;
+      pageConf.value.current = 1;
+      handleGetTableData();
+    }, { deep: true });
+
     // 获取额外字段方法
-    const handleGetExtData = (uid: string, ext?: string) => {
-      const extData = data.value.manifestExt[uid] || {};
-      return ext ? extData[ext] : extData;
+    const handleGetExtData = (uid: string, ext?: string, defaultData?: any) => {
+      const extData = data.value.manifestExt?.[uid] || {};
+      return ext ? (extData[ext] || defaultData) : extData;
     };
 
     // 跳转详情界面
@@ -298,22 +269,40 @@ export default defineComponent({
           category: category.value,
           name: row.metadata.name,
           namespace: row.metadata.namespace,
-          clusterId: clusterId.value,
+          clusterId: handleGetExtData(row.metadata.uid, 'clusterID'),
         },
         query: {
-          kind: subscribeKind.value,
-          crd: currentCrd.value,
+          kind: kind.value,
+          crd: crd.value,
         },
       });
+    };
+
+    // 跳转命名空间
+    const goNamespace = (row) => {
+      const { href } = $router.resolve({
+        name: 'clusterMain',
+        // params: {
+        //   namespace: row?.metadata?.namespace,
+        // },
+        query: {
+          clusterId: handleGetExtData(row?.metadata?.uid, 'clusterID'),
+          active: 'namespace',
+          namespace: row?.metadata?.namespace,
+        },
+      });
+      window.open(href);
     };
 
     // 详情侧栏
     const showDetailPanel = ref(false);
     // 当前详情行数据
-    const curDetailRow = ref<any>({
+    const curDetailRow = ref<{
+      data: any
+      extData: any
+    }>({
       data: {},
       extData: {},
-      clusterId: clusterId.value,
     });
     // 侧栏展示类型
     const detailType = ref({
@@ -347,12 +336,12 @@ export default defineComponent({
     // 确定扩缩容
     const handleConfirmChangeCapacity = async () => {
       let result = false;
-      const { name, namespace } = curDetailRow.value.data?.metadata || {};
+      const { name, namespace, uid } = curDetailRow.value.data?.metadata || {};
       if (type.value === 'crd') {
         result = await $store.dispatch('dashboard/crdEnlargeCapacityChange', {
-          $crdName: defaultCrd.value,
+          $crdName: crd.value,
           $cobjName: name,
-          $clusterId: clusterId.value,
+          $clusterId: handleGetExtData(uid, 'clusterID'),
           replicas: replicas.value,
           namespace,
         });
@@ -361,7 +350,7 @@ export default defineComponent({
           $namespace: namespace,
           $category: category.value,
           $name: name,
-          $clusterId: clusterId.value,
+          $clusterId: handleGetExtData(uid, 'clusterID'),
           replicas: replicas.value,
         });
       }
@@ -392,42 +381,9 @@ export default defineComponent({
       return yamljs.dump(newDetailRow || {});
     });
     // 创建资源
-    const handleCreateResource = () => {
-      const curKind = currentCrdExt.value.kind || kind.value;
-      $router.push({
-        name: 'dashboardResourceUpdate',
-        params: {
-          defaultShowExample: (kind.value !== 'CustomObject') as any,
-          namespace: namespaceValue.value,
-        },
-        query: {
-          type: type.value,
-          category: category.value,
-          kind: curKind,
-          crd: currentCrd.value,
-          formUpdate: webAnnotations.value?.featureFlag?.FORM_CREATE,
-          menuId: showCrd.value ? 'CUSTOMOBJECT' : '',
-        },
-      });
-    };
-    // 创建资源（表单模式）
-    const handleCreateFormResource = () => {
-      const curKind = currentCrdExt.value.kind || kind.value;
-      $router.push({
-        name: 'dashboardFormResourceUpdate',
-        params: {
-          namespace: namespaceValue.value,
-        },
-        query: {
-          type: type.value,
-          category: category.value,
-          kind: curKind,
-          crd: currentCrd.value,
-          formUpdate: webAnnotations.value?.featureFlag?.FORM_CREATE,
-          menuId: showCrd.value ? 'CUSTOMOBJECT' : '',
-        },
-      });
-    };
+    const showCreateDialog = ref(false);
+    const formUpdate = computed(() => webAnnotations.value?.featureFlag?.FORM_CREATE);
+
     // 更新资源
     const handleUpdateResource = (row) => {
       const { name, namespace, uid } = row.metadata || {};
@@ -438,13 +394,13 @@ export default defineComponent({
           params: {
             namespace,
             name,
+            clusterId: handleGetExtData(uid, 'clusterID'),
           },
           query: {
             type: type.value,
             category: category.value,
-            kind: type.value === 'crd' ? kind.value : row.kind,
-            crd: currentCrd.value,
-            menuId: showCrd.value ? 'CUSTOMOBJECT' : '',
+            kind: kind.value,
+            crd: crd.value,
           },
         });
       } else {
@@ -453,69 +409,88 @@ export default defineComponent({
           params: {
             namespace,
             name,
+            clusterId: handleGetExtData(uid, 'clusterID'),
           },
           query: {
             type: type.value,
             category: category.value,
-            kind: type.value === 'crd' ? kind.value : row.kind,
-            crd: currentCrd.value,
+            kind: kind.value,
+            crd: crd.value,
             formUpdate: webAnnotations.value?.featureFlag?.FORM_CREATE,
-            menuId: showCrd.value ? 'CUSTOMOBJECT' : '',
           },
         });
       }
     };
-    // 删除资源
-    const handleDeleteResource = (row) => {
-      const { name, namespace } = row.metadata || {};
-      $bkInfo({
-        type: 'warning',
-        clsName: 'custom-info-confirm',
-        title: $i18n.t('dashboard.title.confirmDelete'),
-        subTitle: `${row.kind} ${name}`,
-        defaultInfo: true,
-        confirmFn: async () => {
-          let result = false;
-          if (type.value === 'crd') {
-            result = await $store.dispatch('dashboard/customResourceDelete', {
-              namespace,
-              $crd: currentCrd.value,
-              $category: category.value,
-              $clusterId: clusterId.value,
-              $name: name,
-            });
-          } else {
-            result = await $store.dispatch('dashboard/resourceDelete', {
-              $namespaceId: namespace,
-              $type: type.value,
-              $category: category.value,
-              $clusterId: clusterId.value,
-              $name: name,
-            });
-          };
-          result && $bkMessage({
-            theme: 'success',
-            message: $i18n.t('generic.msg.success.delete'),
-          });
-          handleGetTableData();
-        },
-      });
+
+    // 确认对话框
+    const confirmDialog = ref({
+      show: false,
+      title: '',
+      type: '',
+      loading: false,
+      confirmText: '',
+    });
+    const confirmFn = async () => {
+      confirmDialog.value.loading = true;
+      if (confirmDialog.value.type === 'delete') {
+        await confirmDelete();
+      } else if (confirmDialog.value.type === 'restart') {
+        await confirmRestart();
+      }
+      confirmDialog.value.loading = false;
+      confirmDialog.value.show = false;
     };
 
+    // 删除资源
+    const handleDeleteResource = (row) => {
+      curDetailRow.value.data = row;
+      confirmDialog.value.title = $i18n.t('dashboard.title.confirmDelete');
+      confirmDialog.value.confirmText = $i18n.t('generic.button.delete');
+      confirmDialog.value.type = 'delete';
+      confirmDialog.value.show = true;
+    };
+    const confirmDelete = async () => {
+      const { name, namespace, uid } = curDetailRow.value.data?.metadata || {};
+      let result = false;
+      if (type.value === 'crd') {
+        result = await $store.dispatch('dashboard/customResourceDelete', {
+          namespace,
+          $crd: crd.value,
+          $category: category.value,
+          $clusterId: handleGetExtData(uid, 'clusterID'),
+          $name: name,
+        });
+      } else {
+        result = await $store.dispatch('dashboard/resourceDelete', {
+          $namespaceId: namespace,
+          $type: type.value,
+          $category: category.value,
+          $clusterId: handleGetExtData(uid, 'clusterID'),
+          $name: name,
+        });
+      };
+      if (result) {
+        $bkMessage({
+          theme: 'success',
+          message: $i18n.t('generic.msg.success.delete'),
+        });
+        handleGetTableData();
+      }
+    };
     // 更新记录
     const handleGotoUpdateRecord = (row) => {
-      const { name, namespace } = row.metadata || {};
+      const { name, namespace, uid } = row.metadata || {};
       $router.push({
         name: 'workloadRecord',
         params: {
           name,
           namespace,
           category: category.value,
-          clusterId: clusterId.value,
+          clusterId: handleGetExtData(uid, 'clusterID'),
         },
         query: {
-          kind: type.value === 'crd' ? kind.value : row.kind,
-          crd: currentCrd.value,
+          kind: kind.value,
+          crd: crd.value,
         },
       });
     };
@@ -525,6 +500,7 @@ export default defineComponent({
       metadata: {
         name: '',
         namespace: '',
+        uid: '',
       },
     });
     const handleRollback = (row) => {
@@ -537,259 +513,224 @@ export default defineComponent({
 
     // 滚动重启
     const handleRestart = (row, actionName: string) => {
-      const { name, namespace } = row.metadata || {};
-      $bkInfo({
-        type: 'warning',
-        clsName: 'custom-info-confirm',
-        title: $i18n.t('dashboard.title.confirmSchedule', { action: actionName ||  $i18n.t('dashboard.workload.button.restart') }),
-        subTitle: `${row.kind} ${name}`,
-        defaultInfo: true,
-        confirmFn: async () => {
-          let result = false;
-          if (category.value === 'custom_objects') {
-            result = await restartGameWorkloads({
-              $crd: currentCrd.value,
-              $type: type.value,
-              $category: category.value,
-              $clusterId: clusterId.value,
-              $name: name,
-              namespace,
-            }).then(() => true)
-              .catch(() => false);
-          } else {
-            result = await restartWorkloads({
-              $namespaceId: namespace,
-              $type: type.value,
-              $category: category.value,
-              $clusterId: clusterId.value,
-              $name: name,
-            }).then(() => true)
-              .catch(() => false);
-          }
-
-          if (result) {
-            $bkMessage({
-              theme: 'success',
-              message: $i18n.t('generic.msg.success.restart'),
-            });
-            handleGetTableData();
-          }
-        },
-      });
+      curDetailRow.value.data = row;
+      confirmDialog.value.title = $i18n.t('dashboard.title.confirmSchedule', { action: actionName ||  $i18n.t('dashboard.workload.button.restart') });
+      confirmDialog.value.confirmText = actionName;
+      confirmDialog.value.type = 'restart';
+      confirmDialog.value.show = true;
     };
+    const confirmRestart = async () => {
+      const { name, namespace, uid } = curDetailRow.value.data?.metadata || {};
+      let result = false;
+      if (category.value === 'custom_objects') {
+        result = await restartGameWorkloads({
+          $crd: crd.value,
+          $type: type.value,
+          $category: category.value,
+          $clusterId: handleGetExtData(uid, 'clusterID'),
+          $name: name,
+          namespace,
+        }).then(() => true)
+          .catch(() => false);
+      } else {
+        result = await restartWorkloads({
+          $namespaceId: namespace,
+          $type: type.value,
+          $category: category.value,
+          $clusterId: handleGetExtData(uid, 'clusterID'),
+          $name: name,
+        }).then(() => true)
+          .catch(() => false);
+      }
+
+      if (result) {
+        $bkMessage({
+          theme: 'success',
+          message: $i18n.t('generic.msg.success.restart'),
+        });
+        handleGetTableData();
+      }
+    };
+
+    // 显示视图配置面板
+    const handleShowViewConfig = () => {
+      bus.$emit('toggle-show-view-config');
+    };
+
+    const { start, stop } = useInterval(() => handleGetTableData(false), 5000);
+    onBeforeMount(() => {
+      // 轮询资源
+      start();
+    });
 
     onMounted(async () => {
       isLoading.value = true;
-      const list: Promise<any>[] = [];
-      // 获取命名空间下拉列表
-      if (showNameSpace.value) {
-        list.push(getNamespaceData({
-          clusterId: clusterId.value,
-        }));
-      }
-
-      // 获取CRD下拉列表
-      if (showCrd.value) {
-        list.push(handleGetCrdData());
-      }
-      await Promise.all(list); // 等待初始数据加载完毕
-
-      await handleGetTableData(false);// 关闭默认触发订阅的逻辑，等待CRD类型的列表初始化完后开始订阅
+      await handleGetTableData();
       isLoading.value = false;
-
-      // 所有资源就绪后开始订阅
-      handleStartSubscribe();
     });
 
-    // 清空搜索数据
-    const handleClearSearchData = () => {
-      searchValue.value = '';
-    };
+    onBeforeUnmount(() => {
+      stop();
+    });
+
     return {
+      customFilters, // hack 暴露过滤参数，其他组件会手动修改这个值
+      clusterNameMap,
       updateStrategyMap,
-      namespaceValue,
-      namespaceLoading,
-      namespaceDisabled,
       showDetailPanel,
       curDetailRow,
       replicas,
       yaml,
       detailType,
       isLoading,
-      pageConf: pagination,
-      nameValue: searchValue,
-      data,
+      pageConf,
       curPageData,
-      namespaceList,
-      currentCrd,
-      crdLoading,
-      crdList,
-      currentCrdExt,
       additionalColumns,
-      crdTips,
       webAnnotations,
       statusMap,
       showCapacityDialog,
       getJsonPathValue,
       renderCrdHeader,
-      stop,
-      handlePageChange: pageChange,
-      handlePageSizeChange: pageSizeChange,
+      handlePageChange,
+      handlePageSizeChange,
       handleGetExtData,
       handleSortChange,
+      handleFilterChange,
       gotoDetail,
       handleShowDetail,
       handleChangeDetailType,
       handleUpdateResource,
       handleDeleteResource,
-      handleCreateResource,
-      handleCreateFormResource,
-      handleCrdChange,
-      handleNamespaceSelected,
       handleEnlargeCapacity,
       handleConfirmChangeCapacity,
       statusFilters,
-      statusFilterMethod,
-      handleClearSearchData,
+      handleShowViewConfig,
       handleGotoUpdateRecord,
       handleRestart,
       showRollbackSideslider,
       curRow,
-      clusterId,
       handleRollback,
       handleRollbackSidesilderHide,
+      goNamespace,
+      showCreateDialog,
+      formUpdate,
+      handleGetTableData,
+      confirmDialog,
+      confirmFn,
+      isViewEditable,
+      showFilter,
+      clusterID,
+      curNsList,
+      handleNsChange,
+      isViewConfigShow,
+      isClusterMode,
+      searchSelectData,
+      searchSelectChange,
+      searchSelectValue,
+      searchSelectKey,
     };
   },
   render() {
-    const renderCreate = () => {
-      if (this.showCreate && !this.isLoading) {
-        if (this.webAnnotations?.featureFlag?.FORM_CREATE) {
-          return (
-            <bk-dropdown-menu trigger="click" {...{
-              scopedSlots: {
-                'dropdown-trigger': () => (
-                        <bk-button
-                            theme="primary"
-                            icon-right="icon-angle-down">
-                            { this.$t('generic.button.create') }
-                        </bk-button>
-                ),
-                'dropdown-content': () => (
-                        <ul class="bk-dropdown-list">
-                            <li onClick={this.handleCreateFormResource}><a href="javascript:;">{this.$t('dashboard.label.formMode')}</a></li>
-                            <li onClick={this.handleCreateResource}>
-                                <a href="javascript:;">{this.$t('dashboard.label.yamlMode')}</a>
-                            </li>
-                        </ul>
-                ),
-              },
-            }}>
-            </bk-dropdown-menu>
-          );
-        }
+    // 渲染筛选条件
+    const renderSearch = () => {
+      if (this.isViewEditable) return undefined;
+      if (this.$scopedSlots?.search) return this.$scopedSlots?.search({
+        handleShowViewConfig: this.handleShowViewConfig,
+        clusterID: this.clusterID,
+        handleNsChange: this.handleNsChange,
+        curNsList: this.curNsList,
+        showFilter: this.showFilter,
+        isViewConfigShow: this.isViewConfigShow,
+      });
+      if (this.showFilter) {
         return (
-          <bk-button
-              icon="plus"
-              theme="primary"
-              onClick={this.handleCreateResource}>
-              { this.$t('generic.button.create') }
-          </bk-button>
+          <div class="flex items-start justify-end pl-[24px] flex-1 text-[12px] h-[32px] z-10">
+            <span class={[
+              'inline-flex items-center justify-center bg-[#fff] w-[32px] h-[32px] mr-[8px]',
+              'border border-solid border-[#C4C6CC] rounded-sm cursor-pointer',
+              this.isViewConfigShow ? '!border-[#3a84ff] text-[#3a84ff]' : 'text-[#979BA5] hover:!border-[#979BA5]',
+            ]}
+            v-bk-trace_click={{
+              module: 'view',
+              operation: 'filter2',
+              desc: '视图筛选按钮2',
+              username: $store.state.user.username,
+              projectCode: $store.getters.curProjectCode,
+            }}
+            onClick={this.handleShowViewConfig}>
+              <i class="bk-icon icon-funnel text-[14px]"></i>
+            </span>
+            <span class={[
+              'inline-flex items-center justify-center h-[32px] px-[8px]',
+              'border border-solid border-[#C4C6CC] rounded-l-sm bg-[#FAFBFD] mr-[-1px]',
+            ]}>
+              {this.$t('k8s.namespace')}
+            </span>
+            <NSSelect
+              value={this.curNsList}
+              clusterId={this.clusterID}
+              class="flex-1 bg-[#fff] max-w-[240px] mr-[8px]"
+              displayTag={true}
+              { ...{ on: { change: this.handleNsChange } }}/>
+            <bcs-search-select
+              class="flex-1 bg-[#fff] max-w-[460px]"
+              clearable
+              show-condition={false}
+              show-popover-tag-change={false}
+              data={this.searchSelectData}
+              values={this.searchSelectValue}
+              placeholder={this.$t('view.placeholder.searchNameOrCreator')}
+              key={this.searchSelectKey}
+              onChange={this.searchSelectChange}
+              onClear={() => this.searchSelectChange()} />
+          </div>
         );
       }
-      return <div></div>;
+      return undefined;
     };
+
     return (
-      <div class="biz-content base-layout">
-        <Header hide-back title={this.title} />
-        <div class="biz-content-wrapper" v-bkloading={{ isLoading: this.isLoading, opacity: 1 }}>
-          <div class="base-layout-operate mb20">
-              {
-                renderCreate()
-              }
-              <div class="search-wapper">
-                  {
-                    this.showCrd
-                      ? (
-                        <div class="select-wrapper">
-                            <span class="select-prefix">CRD</span>
-                            <bcs-select loading={this.crdLoading}
-                                class="w-[250px] mr-[5px] bg-[#fff]"
-                                v-model={this.currentCrd}
-                                searchable
-                                clearable={false}
-                                placeholder={this.$t('dashboard.placeholder.selectCRD')}
-                                onChange={this.handleCrdChange}>
-                                {
-                                    this.crdList.map(option => (
-                                        <bcs-option
-                                            key={option.metadata.name}
-                                            id={option.metadata.name}
-                                            name={option.metadata.name}>
-                                        </bcs-option>
-                                    ))
-                                }
-                            </bcs-select>
-                        </div>
-                      )
-                      : null
-                  }
-                  {/** Scope类型不为Namespace时，隐藏命名空间方式会跳动，暂时用假的select替换 */}
-                  {
-                      this.showNameSpace
-                        ? (
-                          <div class="select-wrapper">
-                              <span class="select-prefix">{this.$t('k8s.namespace')}</span>
-                              {
-                                  this.namespaceDisabled
-                                    ? <bcs-select
-                                        class="w-[250px] mr-[5px] bg-[#fff]"
-                                        placeholder={this.$t('dashboard.ns.validate.emptyNs')}
-                                        disabled />
-                                    : <bcs-select
-                                        v-bk-tooltips={{ disabled: !this.namespaceDisabled, content: this.crdTips }}
-                                        loading={this.namespaceLoading}
-                                        class="w-[250px] mr-[5px] bg-[#fff]"
-                                        v-model={this.namespaceValue}
-                                        onSelected={this.handleNamespaceSelected}
-                                        searchable
-                                        clearable={false}
-                                        disabled={this.namespaceDisabled}
-                                        placeholder={this.$t('dashboard.ns.validate.emptyNs')}>
-                                        {
-                                            this.namespaceList.map(option => (
-                                                <bcs-option
-                                                    key={option.name}
-                                                    id={option.name}
-                                                    name={option.name}>
-                                                </bcs-option>
-                                            ))
-                                        }
-                                      </bcs-select>
-                              }
-                          </div>
-                        )
-                        : null
-                  }
-                  <bk-input
-                      class="search-input"
-                      clearable
-                      v-model={this.nameValue}
-                      right-icon="bk-icon icon-search"
-                      placeholder={this.kind === 'Pod' ? this.$t('dashboard.placeholder.search3') : this.$t('dashboard.placeholder.search2')}>
-                  </bk-input>
-              </div>
+      <div class="flex flex-col relative h-full overflow-hidden"
+        v-bkloading={{ isLoading: this.isLoading, opacity: 1, color: '#f5f7fa' }}>
+        <Header
+          class="flex-[0_0_auto] !h-[66px] !border-b-0 !shadow-none !bg-inherit"
+          {
+            ...{
+              scopedSlots: {
+                right: () => renderSearch(),
+              },
+            }
+          }>
+          <div class="flex items-center">
+            <span class="text-[16px] text-[#313238] font-bold leading-[18px]">{this.title}</span>
+            {
+              !this.isViewEditable ? (
+                <span class="inline-flex items-center">
+                  <bcs-divider direction="vertical"></bcs-divider>
+                  <bk-button text onClick={() => this.showCreateDialog = true}>
+                    <span class="flex items-center">
+                      <i class="flex items-center justify-center w-[14px] !leading-[16px] !top-0 bk-icon icon-plus-circle text-[#3a84ff] text-[14px]"></i>
+                      <span class="flex !leading-[16px] text-[12px] ml-[4px]">{this.$t('generic.button.create')}</span>
+                    </span>
+                  </bk-button>
+                </span>
+              ) : null
+            }
           </div>
+        </Header>
+        <div class="dashboard-content flex-1 px-[24px] pb-[16px] overflow-auto">
           {
               this.$scopedSlots.default?.({
+                clusterNameMap: this.clusterNameMap,
                 isLoading: this.isLoading,
                 pageConf: this.pageConf,
-                data: this.data,
                 curPageData: this.curPageData,
                 statusMap: this.statusMap,
                 handlePageChange: this.handlePageChange,
                 handlePageSizeChange: this.handlePageSizeChange,
                 handleGetExtData: this.handleGetExtData,
                 handleSortChange: this.handleSortChange,
+                handleFilterChange: this.handleFilterChange,
                 gotoDetail: this.gotoDetail,
                 handleShowDetail: this.handleShowDetail,
                 handleEnlargeCapacity: this.handleEnlargeCapacity,
@@ -798,16 +739,16 @@ export default defineComponent({
                 getJsonPathValue: this.getJsonPathValue,
                 renderCrdHeader: this.renderCrdHeader,
                 additionalColumns: this.additionalColumns,
-                namespaceDisabled: this.namespaceDisabled,
                 webAnnotations: this.webAnnotations,
                 updateStrategyMap: this.updateStrategyMap,
                 statusFilters: this.statusFilters,
-                statusFilterMethod: this.statusFilterMethod,
-                nameValue: this.nameValue,
-                handleClearSearchData: this.handleClearSearchData,
+                handleShowViewConfig: this.handleShowViewConfig,
                 handleGotoUpdateRecord: this.handleGotoUpdateRecord,
                 handleRestart: this.handleRestart,
                 handleRollback: this.handleRollback,
+                goNamespace: this.goNamespace,
+                isViewEditable: this.isViewEditable,
+                isClusterMode: this.isClusterMode,
               })
           }
         </div>
@@ -824,7 +765,7 @@ export default defineComponent({
               },
               scopedSlots: {
                 header: () => (
-                  <div class="detail-header">
+                  <div class="flex items-center justify-between pr-[30px]">
                       <span>{this.curDetailRow.data?.metadata?.name}</span>
                       {
                         this.showDetailTab
@@ -844,44 +785,98 @@ export default defineComponent({
                       }
                   </div>
                 ),
-                content: () => (this.detailType.active === 'overview'
-                  ? (this.$scopedSlots.detail?.({
-                    ...this.curDetailRow,
-                  }))
-                  : <CodeEditor
-                    v-full-screen={{ tools: ['fullscreen', 'copy'], content: this.yaml }}
-                    options={{
-                      roundedSelection: false,
-                      scrollBeyondLastLine: false,
-                      renderLineHighlight: false,
-                    }}
-                    width="100%" height="100%" lang="yaml"
-                    readonly={true} value={this.yaml} />),
+                content: () => <div class="h-[calc(100vh-60px)] overflow-auto">
+                  {
+                    (this.detailType.active === 'overview'
+                      ? (this.$scopedSlots.detail?.({
+                        ...this.curDetailRow,
+                      }))
+                      : <CodeEditor
+                      v-full-screen={{ tools: ['fullscreen', 'copy'], content: this.yaml }}
+                      options={{
+                        roundedSelection: false,
+                        scrollBeyondLastLine: false,
+                        renderLineHighlight: false,
+                      }}
+                      width="100%" height="100%" lang="yaml"
+                      readonly={true} value={this.yaml} />)
+                  }
+                </div>,
               },
             }
-            }></bcs-sideslider>
+            }>
+        </bcs-sideslider>
         <bcs-dialog
           v-model={this.showCapacityDialog}
           mask-close={false}
-          title={`${this.curDetailRow?.data?.metadata?.name}${this.$t('deploy.templateset.scale')}`}
+          title={this.$t('deploy.templateset.scale')}
+          header-position="left"
           on-confirm={this.handleConfirmChangeCapacity}
+          width={480}
         >
-          <span class="capacity-dialog-content">
-            { this.$t('dashboard.workload.label.scaleNum') }
-            <bk-input v-model={this.replicas} type="number" class="ml10" style="flex: 1;" min={0}></bk-input>
-          </span>
+          <bk-form label-width={100}>
+            <div class="bg-[#F5F7FA] py-[8px]">
+              <bk-form-item label={this.$t('cluster.labels.name')}>
+                {this.clusterNameMap[this.handleGetExtData(this.curDetailRow?.data?.metadata?.uid, 'clusterID')]}
+              </bk-form-item>
+              <bk-form-item label={this.$t('k8s.namespace')} class="!mt-0">
+                {this.curDetailRow?.data?.metadata?.namespace}
+              </bk-form-item>
+              <bk-form-item label={this.$t('view.labels.resourceName')} class="!mt-0">
+                {this.curDetailRow?.data?.metadata?.name}
+              </bk-form-item>
+            </div>
+            <bk-form-item label={this.$t('dashboard.workload.label.scaleNum')} class="mt-[16px]" required>
+              <bk-input v-model={this.replicas} type="number" class="w-[100px]" min={0}></bk-input>
+            </bk-form-item>
+          </bk-form>
+        </bcs-dialog>
+        <bcs-dialog
+          v-model={this.confirmDialog.show}
+          show-footer={false}
+          width={480}
+          render-directive="if">
+          <ConfirmContent
+            title={this.confirmDialog.title}
+            loading={this.confirmDialog.loading}
+            confirmText={this.confirmDialog.confirmText}
+            confirm={() => this.confirmFn()}
+            cancel={() => this.confirmDialog.show = false}>
+            <bk-form label-width={100} class="mt-[16px]">
+              <div class="bg-[#F5F7FA] py-[8px]">
+                <bk-form-item label={this.$t('cluster.labels.name')}>
+                  {this.clusterNameMap[this.handleGetExtData(this.curDetailRow?.data?.metadata?.uid, 'clusterID')]}
+                </bk-form-item>
+                <bk-form-item label={this.$t('k8s.namespace')} class="!mt-0">
+                  {this.curDetailRow?.data?.metadata?.namespace}
+                </bk-form-item>
+                <bk-form-item label={this.$t('view.labels.resourceName')} class="!mt-0">
+                  {this.curDetailRow?.data?.metadata?.name}
+                </bk-form-item>
+              </div>
+            </bk-form>
+          </ConfirmContent>
         </bcs-dialog>
         <Rollback
           name={this.curRow.metadata.name}
           namespace={this.curRow.metadata.namespace}
           category={this.category}
-          cluster-id={this.clusterId}
+          cluster-id={this.handleGetExtData(this.curRow.metadata.uid, 'clusterID')}
           revision={''}
-          crd={this.currentCrd}
+          crd={this.crd}
           value={this.showRollbackSideslider}
           rollback={true}
           on-hidden={this.handleRollbackSidesilderHide}
           on-rollback-success={this.handleRollbackSidesilderHide}/>
+        <CreateResource
+          show={this.showCreateDialog}
+          type={this.type}
+          category={this.category}
+          kind={this.kind}
+          crd={this.crd}
+          scope={this.scope}
+          formUpdate={this.formUpdate}
+          cancel={() => this.showCreateDialog = false} />
       </div>
     );
   },

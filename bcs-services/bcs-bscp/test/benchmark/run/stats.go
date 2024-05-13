@@ -148,7 +148,7 @@ func (s *Statistic) CalculateMetrics() Metrics {
 	var m Metrics
 	m.SustainSeconds = s.SustainSecond
 	m.Concurrent = s.Concurrent
-	m.QPS = float64(float64(len(s.Values)) / s.SustainSecond)
+	m.QPS = float64(len(s.Values)) / s.SustainSecond
 	m.MaxDuration = s.MaxCostDuration
 	m.MinDuration = s.MinCostDuration
 

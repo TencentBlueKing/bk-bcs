@@ -15,8 +15,9 @@ package nodegroup
 import (
 	"errors"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/pkg/manager/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/pkg/manager/types"
 )
 
 // Create 创建节点池,创建成功返回节点池ID和任务ID
@@ -59,7 +60,7 @@ func (c *NodeGroupMgr) Create(req types.CreateNodeGroupReq) (types.CreateNodeGro
 	// nodeGroup dataDisks
 	nodeDataDisk := make([]*clustermanager.DataDisk, 0)
 	for _, v := range req.NodeTemplate.DataDisks {
-		nodeDataDisk = append(nodeDataDisk, &clustermanager.DataDisk{
+		nodeDataDisk = append(nodeDataDisk, &clustermanager.DataDisk{ // nolint  this result of append is never used
 			DiskType: v.DiskType,
 			DiskSize: v.DiskSize,
 		})

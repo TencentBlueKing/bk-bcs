@@ -119,10 +119,9 @@
   };
 
   const handleDownload = async (version: ITemplateVersionItem) => {
-    const { name, file_type, revision_name, content_spec } = version.spec;
+    const { name, revision_name, content_spec } = version.spec;
     const content = await downloadTemplateContent(props.spaceId, props.templateSpaceId, content_spec.signature);
-    const fileName = file_type === 'binary' ? `${name}(${revision_name}).bin` : `${name}(${revision_name})`;
-    fileDownload(content, fileName);
+    fileDownload(content, `${name}_${revision_name}`);
   };
 
   // const handleDeleteVersion = (version: ITemplateVersionItem) => {

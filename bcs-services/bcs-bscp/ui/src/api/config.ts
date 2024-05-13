@@ -1,5 +1,10 @@
 import http from '../request';
-import { IConfigEditParams, IConfigVersionQueryParams, ITemplateBoundByAppData } from '../../types/config';
+import {
+  IConfigEditParams,
+  IConfigVersionQueryParams,
+  ITemplateBoundByAppData,
+  IConfigVersion,
+} from '../../types/config';
 import { IVariableEditParams } from '../../types/variable';
 import { ICommonQuery } from '../../types/index';
 
@@ -64,7 +69,7 @@ export const updateServiceConfigItem = (id: number, app_id: number, biz_id: stri
   http.put(`/config/update/config_item/config_item/config_item_id/${id}/app_id/${app_id}/biz_id/${biz_id}`, params);
 
 /**
- * 删除配置
+ * 删除非模板配置
  * @param id 配置ID
  * @param bizId 业务ID
  * @param appId 应用ID
@@ -72,6 +77,16 @@ export const updateServiceConfigItem = (id: number, app_id: number, biz_id: stri
  */
 export const deleteServiceConfigItem = (id: number, bizId: string, appId: number) =>
   http.delete(`/config/delete/config_item/config_item/config_item_id/${id}/app_id/${appId}/biz_id/${bizId}`, {});
+
+/**
+ * 批量删除非模板配置
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param ids 配置项ID列表
+ * @returns
+ */
+export const batchDeleteServiceConfigs = (bizId: string, appId: number, ids: number[]) =>
+  http.post(`/config/biz/${bizId}/apps/${appId}/config_items/batch_delete`, { ids });
 
 /**
  * 获取未命名版本配置文件详情
@@ -197,7 +212,15 @@ export const deleteVersion = (bizId: string, appId: number, releaseId: number) =
  * @returns
  */
 export const getConfigVersionList = (bizId: string, appId: number, params: IConfigVersionQueryParams) =>
-  http.get(`config/biz/${bizId}/apps/${appId}/releases`, { params });
+  http.get(`config/biz/${bizId}/apps/${appId}/releases`, { params }).then((res) => {
+    res.data.details.forEach((item: IConfigVersion) => {
+      const defaultGroup = item.status.released_groups.find((group) => group.id === 0);
+      if (defaultGroup) {
+        defaultGroup.name = '全部实例';
+      }
+    });
+    return res;
+  });
 
 /**
  * 发布版本
@@ -427,8 +450,8 @@ export const batchUpsertKv = (bizId: string, appId: number, kvs: any) =>
  * @param value 配置值
  * @returns
  */
-export const updateKv = (bizId: string, appId: number, key: string, value: string) =>
-  http.put(`/config/biz/${bizId}/apps/${appId}/kvs/${key}`, { value });
+export const updateKv = (bizId: string, appId: number, key: string, value: string, memo: string) =>
+  http.put(`/config/biz/${bizId}/apps/${appId}/kvs/${key}`, { value, memo });
 
 /**
  * 删除kv
@@ -439,6 +462,15 @@ export const updateKv = (bizId: string, appId: number, key: string, value: strin
  */
 export const deleteKv = (bizId: string, appId: number, configId: number) =>
   http.delete(`/config/biz/${bizId}/apps/${appId}/kvs/${configId}`);
+
+/**
+ * 批量删除kv
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param ids 配置项ID列表
+ */
+export const batchDeleteKv = (bizId: string, appId: number, ids: number[]) =>
+  http.post(`config/biz/${bizId}/apps/${appId}/kvs/batch_delete`, { ids });
 
 /**
  * 获取已发布kv
@@ -472,6 +504,16 @@ export const undeleteKv = (bizId: string, appId: number, key: string) =>
   http.post(`/config/biz/${bizId}/apps/${appId}/kvs/${key}/undelete`);
 
 /**
+ * 恢复修改kv
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param kv 配置键值类型
+ * @returns
+ */
+export const unModifyKv = (bizId: string, appId: number, key: string) =>
+  http.post(`/config/biz/${bizId}/apps/${appId}/kvs/${key}/undo`);
+
+/**
  * 批量导入kv配置文件
  * @param bizId 业务ID
  * @param appId 应用ID
@@ -490,3 +532,23 @@ export const batchImportKvFile = (bizId: string, appId: number, File: any) =>
  */
 export const getExportKvFile = (bizId: string, appId: number, releaseId: number, format: string) =>
   http.get(`biz/${bizId}/apps/${appId}/releases/${releaseId}/kvs/export`, { params: { format } });
+
+/**
+ * 撤销修改配置文件
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param id 配置文件ID
+ * @returns
+ */
+export const unModifyConfigItem = (bizId: string, appId: number, id: number) =>
+  http.post(`/config/undo/config_item/config_item/config_item_id/${id}/app_id/${appId}/biz_id/${bizId}`);
+
+/**
+ * 恢复删除配置文件
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param id 配置文件ID
+ * @returns
+ */
+export const unDeleteConfigItem = (bizId: string, appId: number, id: number) =>
+  http.post(`/config/undelete/config_item/config_item/config_item_id/${id}/app_id/${appId}/biz_id/${bizId}`);

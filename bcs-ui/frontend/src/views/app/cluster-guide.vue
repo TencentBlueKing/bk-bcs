@@ -7,6 +7,7 @@
         class="min-w-[116px]"
         theme="primary"
         :disabled="!hasSharedCluster"
+        v-if="hasSharedCluster"
         @click="handleGotoResourceView">{{ $t('cluster.button.useSharedCluster') }}</bk-button>
       <bk-button
         class="min-w-[116px]"

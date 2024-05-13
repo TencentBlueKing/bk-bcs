@@ -178,10 +178,10 @@ func (dao *hookRevisionDao) List(kit *kit.Kit,
 		m.HookID.Eq(opt.HookID)).Order(m.ID.Desc())
 
 	if opt.SearchKey != "" {
-		searchKey := "%" + opt.SearchKey + "%"
+		searchKey := "(?i)" + opt.SearchKey
 		// Where 内嵌表示括号, 例如: q.Where(q.Where(a).Or(b)) => (a or b)
 		// 参考: https://gorm.io/zh_CN/gen/query.html#Group-%E6%9D%A1%E4%BB%B6
-		q = q.Where(q.Where(m.Name.Like(searchKey)).Or(m.Memo.Like(searchKey)).Or(m.Reviser.Like(searchKey)))
+		q = q.Where(q.Where(m.Name.Regexp(searchKey)).Or(m.Memo.Regexp(searchKey)).Or(m.Reviser.Regexp(searchKey)))
 	}
 
 	if opt.State != "" {
@@ -225,11 +225,11 @@ func (dao *hookRevisionDao) ListWithRefer(kit *kit.Kit, opt *types.ListHookRevis
 	q := dao.genQ.HookRevision.WithContext(kit.Ctx)
 
 	if opt.SearchKey != "" {
-		searchKey := "%" + opt.SearchKey + "%"
+		searchKey := "(?i)" + opt.SearchKey
 		// Where 内嵌表示括号, 例如: q.Where(q.Where(a).Or(b)) => (a or b)
 		// 参考: https://gorm.io/zh_CN/gen/query.html#Group-%E6%9D%A1%E4%BB%B6
 		q = q.Where(m.BizID.Eq(opt.BizID), m.HookID.Eq(opt.HookID)).
-			Where(q.Where(m.Name.Like(searchKey)).Or(m.Memo.Like(searchKey)).Or(m.Reviser.Like(searchKey)))
+			Where(q.Where(m.Name.Regexp(searchKey)).Or(m.Memo.Regexp(searchKey)).Or(m.Reviser.Regexp(searchKey)))
 	} else {
 		q = q.Where(m.BizID.Eq(opt.BizID), m.HookID.Eq(opt.HookID))
 	}
@@ -290,11 +290,11 @@ func (dao *hookRevisionDao) ListHookRevisionReferences(kit *kit.Kit, opt *types.
 		Where(rh.HookID.Eq(opt.HookID), rh.HookRevisionID.Eq(opt.HookRevisionsID), rh.BizID.Eq(opt.BizID))
 
 	if opt.SearchKey != "" {
-		searchKey := "%" + opt.SearchKey + "%"
+		searchKey := "(?i)" + opt.SearchKey
 		// Where 内嵌表示括号, 例如: q.Where(q.Where(a).Or(b)) => (a or b)
 		// 参考: https://gorm.io/zh_CN/gen/query.html#Group-%E6%9D%A1%E4%BB%B6
 		query = query.Where(query.Where(
-			a.Name.Like(searchKey)).Or(r.Name.Like(searchKey)).Or(rh.HookRevisionName.Like(searchKey)))
+			a.Name.Regexp(searchKey)).Or(r.Name.Regexp(searchKey)).Or(rh.HookRevisionName.Regexp(searchKey)))
 	}
 
 	count, err = query.Order(rh.ID.Desc()).ScanByPage(&details, opt.Page.Offset(), opt.Page.LimitInt())

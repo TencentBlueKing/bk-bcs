@@ -1,10 +1,10 @@
 /*
- * Tencent is pleased to support the open source community by making Blueking Container Service available.,
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
  * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -23,6 +23,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 )
 
@@ -110,6 +111,9 @@ type ControllerOption struct {
 	Conf Conf
 	// ServCert http server cert
 	ServCert ServCert
+
+	// IsFederationMode if true, watch multiClusterEndpoints for ingress
+	IsFederationMode bool
 }
 
 // Conf 服务配置
@@ -224,6 +228,7 @@ func (op *ControllerOption) BindFromCommandLine() {
 
 	flag.IntVar(&op.ListenerAutoReconcileSeconds, "listener_auto_reconcile_seconds", 1200,
 		"seconds to auto reconcile listeners")
+	flag.BoolVar(&op.IsFederationMode, "is_federation_mode", false, "if true, watch multiClusterEndpoints for ingress ")
 
 	flag.Parse()
 

@@ -36,17 +36,44 @@ func init() {
 
 // ListAttr implements the list_attr
 func (p NamespaceProvider) ListAttr(req resource.Request) resource.Response {
+	attrs := make([]Instance, 0)
+	for k, v := range utils.GetAttrValues() {
+		attrs = append(attrs, Instance{k, v.DisplayName, nil})
+	}
 	return resource.Response{
 		Code: 0,
-		Data: []interface{}{},
+		Data: attrs,
 	}
 }
 
 // ListAttrValue implements the list_attr_value
 func (p NamespaceProvider) ListAttrValue(req resource.Request) resource.Response {
+	filter := convertFilter(req.Filter)
+	if filter.Attr == "" {
+		return resource.Response{
+			Code:    NotFoundCode,
+			Message: "attr is empty",
+		}
+	}
+	result, ok := utils.GetAttrValues()[filter.Attr]
+	if !ok {
+		return resource.Response{
+			Code:    NotFoundCode,
+			Message: "attr is not found",
+		}
+	}
+	results := make([]interface{}, 0)
+	for _, r := range result.Values {
+		kw := strings.ToLower(filter.Keyword)
+		name := strings.ToLower(r.DisplayName)
+		if filter.Keyword != "" && !strings.Contains(name, kw) {
+			continue
+		}
+		results = append(results, r)
+	}
 	return resource.Response{
 		Code: 0,
-		Data: ListResult{Count: 0, Results: []interface{}{}},
+		Data: ListResult{Count: len(results), Results: results},
 	}
 }
 

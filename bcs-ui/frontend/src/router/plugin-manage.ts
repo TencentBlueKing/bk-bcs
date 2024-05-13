@@ -5,7 +5,6 @@ const LogList = () => import(/* webpackChunkName: 'plugin' */'@/views/plugin-man
 const Detail = () => import(/* webpackChunkName: 'plugin' */'@/views/plugin-manage/tools/detail.vue');
 const BcsPolaris = () => import(/* webpackChunkName: 'plugin' */'@/views/plugin-manage/tools/polaris_list.vue');
 const MetricManage = () => import(/* webpackChunkName: 'plugin' */'@/views/plugin-manage/metric/metric-manage.vue');
-const LoadBalance = () => import(/* webpackChunkName: 'plugin' */'@/views/deploy-manage/templateset/network/loadbalance.vue');
 const LoadBalanceDetail = () => import(/* webpackChunkName: 'plugin' */'@/views/deploy-manage/templateset/network/loadbalance-detail.vue');
 
 // 日志采集
@@ -30,6 +29,7 @@ export default [
   // DB授权配置
   {
     path: 'clusters/:clusterId/tools/db',
+    props: true,
     name: 'crdcontrollerDBInstances',
     component: DBList,
     meta: {
@@ -39,6 +39,7 @@ export default [
   // polaris配置
   {
     path: 'clusters/:clusterId/tools/polaris',
+    props: true,
     name: 'crdcontrollerPolarisInstances',
     component: BcsPolaris,
     meta: {
@@ -70,12 +71,12 @@ export default [
     name: 'metricManage',
     component: MetricManage,
   },
-  // loadBalance
-  {
-    path: 'loadbalance',
-    name: 'loadBalance',
-    component: LoadBalance,
-  },
+  // // loadBalance
+  // {
+  //   path: 'loadbalance',
+  //   name: 'loadBalance',
+  //   component: LoadBalance,
+  // },
   // loadBalance 详情
   {
     path: 'clusters/:clusterId/namespaces/:namespace/loadbalance/:lbId',

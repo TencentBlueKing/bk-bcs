@@ -27,6 +27,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/tasks"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/template"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -170,9 +171,6 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 
 	// init instance passwd
 	passwd := utils.BuildInstancePwd()
-	if opt.InitPassword != "" {
-		passwd = opt.InitPassword
-	}
 	task.CommonParams[cloudprovider.PasswordKey.String()] = passwd
 
 	// setting all steps details
@@ -527,8 +525,9 @@ func (t *Task) BuildDeleteClusterTask(cls *proto.Cluster, opt *cloudprovider.Del
 
 	// setting all steps details
 	deleteClusterTask := &DeleteClusterTaskOption{
-		Cluster:    cls,
-		DeleteMode: opt.DeleteMode.String(),
+		Cluster:           cls,
+		DeleteMode:        opt.DeleteMode.String(),
+		LastClusterStatus: opt.LatsClusterStatus,
 	}
 	// step1: DeleteTKECluster delete tke cluster
 	deleteClusterTask.BuildDeleteTKEClusterStep(task)
@@ -614,7 +613,7 @@ func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Nod
 	// init instance passwd
 	passwd := utils.BuildInstancePwd()
 	if opt.Login != nil && opt.Login.GetInitLoginPassword() != "" {
-		passwd = opt.Login.GetInitLoginPassword()
+		passwd, _ = encrypt.Decrypt(nil, opt.Login.GetInitLoginPassword())
 	}
 	task.CommonParams[cloudprovider.PasswordKey.String()] = passwd
 
@@ -686,6 +685,22 @@ func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Nod
 			}}.BuildSopsStep(task, opt.NodeTemplate.ScaleOutExtraAddons, false)
 		if err != nil {
 			return nil, fmt.Errorf("BuildScalingNodesTask business BuildBkSopsStepAction failed: %v", err)
+		}
+	}
+
+	// 混部集群需要执行混部节点流程
+	if cls.GetIsMixed() && opt.Cloud != nil && opt.Cloud.ClusterManagement != nil &&
+		opt.Cloud.ClusterManagement.CommonMixedAction != nil {
+		err := template.BuildSopsFactory{
+			StepName: template.NodeMixedInitCh,
+			Cluster:  cls,
+			Extra: template.ExtraInfo{
+				NodeIPList:      "",
+				ShowSopsUrl:     true,
+				TranslateMethod: template.NodeMixedInit,
+			}}.BuildSopsStep(task, opt.Cloud.ClusterManagement.CommonMixedAction, false)
+		if err != nil {
+			return nil, fmt.Errorf("BuildAddNodesToClusterTask BuildBkSopsStepAction failed: %v", err)
 		}
 	}
 
@@ -951,7 +966,14 @@ func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.Node
 	task.CommonParams[cloudprovider.TaskNameKey.String()] = taskName
 
 	// instance passwd
-	passwd := group.LaunchTemplate.InitLoginPassword
+	passwd := func() string {
+		if len(group.LaunchTemplate.InitLoginPassword) == 0 {
+			return group.LaunchTemplate.InitLoginPassword
+		}
+
+		pwd, _ := encrypt.Decrypt(nil, group.LaunchTemplate.InitLoginPassword)
+		return pwd
+	}()
 	task.CommonParams[cloudprovider.PasswordKey.String()] = passwd
 
 	// setting all steps details
@@ -1177,7 +1199,7 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 	taskName := fmt.Sprintf(updateNodeGroupDesiredNodeTemplate, group.ClusterID, group.Name)
 	task.CommonParams[cloudprovider.TaskNameKey.String()] = taskName
 
-	passwd := group.LaunchTemplate.InitLoginPassword
+	passwd := group.LaunchTemplate.GetInitLoginPassword()
 	task.CommonParams[cloudprovider.PasswordKey.String()] = passwd
 
 	// setting all steps details

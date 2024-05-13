@@ -17,6 +17,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/pkg/errors"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
@@ -34,19 +35,19 @@ func (aks *AksServiceImpl) CreateSet(ctx context.Context, info *cloudprovider.Cl
 
 // CreateSetWithName 从名称创建虚拟机规模集(不建议手动创建).
 // set - 虚拟机规模集.
-// nodeResourceGroup - 基础结构资源组(AutoScalingGroup.autoScalingName/Cluster.ExtraInfo["nodeResourceGroup"]).
+// resourceGroupName - 基础结构资源组(AutoScalingGroup.autoScalingName/Cluster.ExtraInfo["nodeResourceGroup"]).
 // setName - 虚拟机规模集名称(AutoScalingGroup.autoScalingID).
 func (aks *AksServiceImpl) CreateSetWithName(ctx context.Context, set *armcompute.VirtualMachineScaleSet,
-	nodeResourceGroup, setName string) (*armcompute.VirtualMachineScaleSet, error) {
-	poller, err := aks.setClient.BeginCreateOrUpdate(ctx, nodeResourceGroup, setName, *set, nil)
+	resourceGroupName, setName string) (*armcompute.VirtualMachineScaleSet, error) {
+	poller, err := aks.setClient.BeginCreateOrUpdate(ctx, resourceGroupName, setName, *set, nil)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to finish the request,resourcesGroupName:%s,setName:%s",
-			nodeResourceGroup, setName)
+			resourceGroupName, setName)
 	}
 	resp, err := poller.PollUntilDone(ctx, pollFrequency5)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to pull the result,resourcesGroupName:%s,setName:%s",
-			nodeResourceGroup, setName)
+			resourceGroupName, setName)
 	}
 	return &resp.VirtualMachineScaleSet, nil
 }
@@ -58,16 +59,16 @@ func (aks *AksServiceImpl) DeleteSet(ctx context.Context, info *cloudprovider.Cl
 }
 
 // DeleteSetWithName 从名称删除虚拟机规模集.
-// nodeResourceGroup - 基础结构资源组(AutoScalingGroup.autoScalingName/Cluster.ExtraInfo["nodeResourceGroup"]).
+// resourceGroupName - 基础结构资源组(AutoScalingGroup.autoScalingName/Cluster.ExtraInfo["nodeResourceGroup"]).
 // setName - 虚拟机规模集名称(AutoScalingGroup.autoScalingID).
-func (aks *AksServiceImpl) DeleteSetWithName(ctx context.Context, nodeResourceGroup, setName string) error {
-	poller, err := aks.setClient.BeginDelete(ctx, nodeResourceGroup, setName, nil)
+func (aks *AksServiceImpl) DeleteSetWithName(ctx context.Context, resourceGroupName, setName string) error {
+	poller, err := aks.setClient.BeginDelete(ctx, resourceGroupName, setName, nil)
 	if err != nil {
-		return errors.Wrapf(err, "failed to finish the request,resourcesGroupName:%s,setName:%s", nodeResourceGroup,
+		return errors.Wrapf(err, "failed to finish the request,resourcesGroupName:%s,setName:%s", resourceGroupName,
 			setName)
 	}
 	if _, err = poller.PollUntilDone(ctx, pollFrequency4); err != nil {
-		return errors.Wrapf(err, "failed to pull the result,resourcesGroupName:%s,setName:%s", nodeResourceGroup,
+		return errors.Wrapf(err, "failed to pull the result,resourcesGroupName:%s,setName:%s", resourceGroupName,
 			setName)
 	}
 	return nil
@@ -82,10 +83,10 @@ func (aks *AksServiceImpl) BatchDeleteVMs(ctx context.Context, info *cloudprovid
 }
 
 // BatchDeleteVMsWithName 批量删除节点
-// nodeResourceGroup - 基础结构资源组(AutoScalingGroup.autoScalingName/Cluster.ExtraInfo["nodeResourceGroup"]).
+// resourceGroupName - 基础结构资源组(AutoScalingGroup.autoScalingName/Cluster.ExtraInfo["nodeResourceGroup"]).
 // setName - 虚拟机规模集名称(AutoScalingGroup.autoScalingID).
 // instanceIDs - 节点ID.
-func (aks *AksServiceImpl) BatchDeleteVMsWithName(ctx context.Context, nodeResourceGroup, setName string,
+func (aks *AksServiceImpl) BatchDeleteVMsWithName(ctx context.Context, resourceGroupName, setName string,
 	instanceIDs []string) error {
 	vmIDs := armcompute.VirtualMachineScaleSetVMInstanceRequiredIDs{
 		InstanceIDs: make([]*string, len(instanceIDs)),
@@ -94,7 +95,7 @@ func (aks *AksServiceImpl) BatchDeleteVMsWithName(ctx context.Context, nodeResou
 		vmIDs.InstanceIDs[i] = to.Ptr(instanceIDs[i])
 	}
 	// 删除
-	poller, err := aks.setClient.BeginDeleteInstances(ctx, nodeResourceGroup, setName, vmIDs, nil)
+	poller, err := aks.setClient.BeginDeleteInstances(ctx, resourceGroupName, setName, vmIDs, nil)
 	if err != nil {
 		return errors.Wrapf(err, "failed to finish the request")
 	}
@@ -109,7 +110,7 @@ func (aks *AksServiceImpl) BatchDeleteVMsWithName(ctx context.Context, nodeResou
 func (aks *AksServiceImpl) UpdateSet(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) (
 	*armcompute.VirtualMachineScaleSet, error) {
 	asg := info.NodeGroup.AutoScaling
-	nodeResourceGroup, ok := info.Cluster.ExtraInfo[NodeResourceGroup]
+	nodeResourceGroup, ok := info.Cluster.ExtraInfo[common.NodeResourceGroup]
 	if !ok || len(nodeResourceGroup) == 0 {
 		return nil, errors.New("cluster extraInfo not nodeResourceGroup")
 	}
@@ -125,19 +126,19 @@ func (aks *AksServiceImpl) UpdateSet(ctx context.Context, info *cloudprovider.Cl
 
 // UpdateSetWithName 从名称修改虚拟机规模集.
 // set - 虚拟机规模集.
-// nodeResourceGroup - 基础结构资源组(AutoScalingGroup.autoScalingName/Cluster.ExtraInfo["nodeResourceGroup"]).
+// resourceGroupName - 基础结构资源组(AutoScalingGroup.autoScalingName/Cluster.ExtraInfo["nodeResourceGroup"]).
 // setName - 虚拟机规模集名称(AutoScalingGroup.autoScalingID).
 func (aks *AksServiceImpl) UpdateSetWithName(ctx context.Context, set *armcompute.VirtualMachineScaleSet,
-	nodeResourceGroup, setName string) (*armcompute.VirtualMachineScaleSet, error) {
-	poller, err := aks.setClient.BeginCreateOrUpdate(ctx, nodeResourceGroup, setName, *set, nil)
+	resourceGroupName, setName string) (*armcompute.VirtualMachineScaleSet, error) {
+	poller, err := aks.setClient.BeginCreateOrUpdate(ctx, resourceGroupName, setName, *set, nil)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to finish the request,resourcesGroupName:%s,setName:%s",
-			nodeResourceGroup, setName)
+			resourceGroupName, setName)
 	}
 	resp, err := poller.PollUntilDone(ctx, pollFrequency3)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to pull the result,resourcesGroupName:%s,setName:%s",
-			nodeResourceGroup, setName)
+			resourceGroupName, setName)
 	}
 	return &resp.VirtualMachineScaleSet, nil
 }
@@ -150,14 +151,14 @@ func (aks *AksServiceImpl) GetSet(ctx context.Context, info *cloudprovider.Cloud
 }
 
 // GetSetWithName 从名称获取虚拟机规模集.
-// nodeResourceGroup - 基础结构资源组(AutoScalingGroup.autoScalingName/Cluster.ExtraInfo["nodeResourceGroup"]).
+// resourceGroupName - 基础结构资源组(AutoScalingGroup.autoScalingName/Cluster.ExtraInfo["nodeResourceGroup"]).
 // setName - 虚拟机规模集名称(AutoScalingGroup.autoScalingID).
-func (aks *AksServiceImpl) GetSetWithName(ctx context.Context, nodeResourceGroup, setName string) (
+func (aks *AksServiceImpl) GetSetWithName(ctx context.Context, resourceGroupName, setName string) (
 	*armcompute.VirtualMachineScaleSet, error) {
-	resp, err := aks.setClient.Get(ctx, nodeResourceGroup, setName, nil)
+	resp, err := aks.setClient.Get(ctx, resourceGroupName, setName, nil)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to finish the request,resourcesGroupName:%s,setName:%s",
-			nodeResourceGroup, setName)
+			resourceGroupName, setName)
 	}
 	return &resp.VirtualMachineScaleSet, nil
 }
@@ -169,11 +170,11 @@ func (aks *AksServiceImpl) ListSet(ctx context.Context, info *cloudprovider.Clou
 }
 
 // ListSetWithName 从名称获取虚拟机规模集列表.
-// nodeResourceGroup - 基础结构资源组(AutoScalingGroup.autoScalingName/Cluster.ExtraInfo["nodeResourceGroup"]).
-func (aks *AksServiceImpl) ListSetWithName(ctx context.Context, nodeResourceGroup string) (
+// resourceGroupName - 基础结构资源组(AutoScalingGroup.autoScalingName/Cluster.ExtraInfo["nodeResourceGroup"]).
+func (aks *AksServiceImpl) ListSetWithName(ctx context.Context, resourceGroupName string) (
 	[]*armcompute.VirtualMachineScaleSet, error) {
 	resp := make([]*armcompute.VirtualMachineScaleSet, 0)
-	pager := aks.setClient.NewListPager(nodeResourceGroup, nil)
+	pager := aks.setClient.NewListPager(resourceGroupName, nil)
 	for pager.More() {
 		nextResult, err := pager.NextPage(ctx)
 		if err != nil {
@@ -186,12 +187,12 @@ func (aks *AksServiceImpl) ListSetWithName(ctx context.Context, nodeResourceGrou
 
 // MatchNodeGroup 匹配节点池
 //
-// nodeResourceGroup - 基础结构资源组(AutoScalingGroup.autoScalingName/Cluster.ExtraInfo["nodeResourceGroup"]).
+// resourceGroupName - 基础结构资源组(AutoScalingGroup.autoScalingName/Cluster.ExtraInfo["nodeResourceGroup"]).
 //
 // poolName - 节点池名称(NodeGroup.CloudNodeGroupID).
-func (aks *AksServiceImpl) MatchNodeGroup(ctx context.Context, nodeResourceGroup, poolName string) (
+func (aks *AksServiceImpl) MatchNodeGroup(ctx context.Context, resourceGroupName, poolName string) (
 	*armcompute.VirtualMachineScaleSet, error) {
-	pager := aks.setClient.NewListPager(nodeResourceGroup, nil)
+	pager := aks.setClient.NewListPager(resourceGroupName, nil)
 	for pager.More() {
 		nextResult, err := pager.NextPage(ctx)
 		if err != nil {

@@ -1,10 +1,10 @@
 /*
- * Tencent is pleased to support the open source community by making Blueking Container Service available.,
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
  * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -15,6 +15,7 @@ package tencentcloud
 import (
 	"fmt"
 
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
@@ -50,7 +51,7 @@ func (cv *ClbValidater) validateIngressRule(rule *networkextensionv1.IngressRule
 	if rule.Port <= 0 || rule.Port >= 65536 {
 		return false, fmt.Sprintf("invalid port %d, available [1-65535]", rule.Port)
 	}
-	if rule.Protocol == ClbProtocolHTTPS {
+	if rule.Protocol == ClbProtocolHTTPS || rule.Protocol == ClbProtocolTCPSSL {
 		// sni off
 		if rule.ListenerAttribute == nil || rule.ListenerAttribute.SniSwitch == 0 {
 			if rule.Certificate == nil {
@@ -77,20 +78,20 @@ func (cv *ClbValidater) validateIngressRule(rule *networkextensionv1.IngressRule
 			return false, msg
 		}
 	}
-	switch rule.Protocol {
-	case ClbProtocolHTTP, ClbProtocolHTTPS:
+	protocol := rule.Protocol
+	if common.InLayer7Protocol(protocol) {
 		for _, r := range rule.Routes {
 			if ok, msg := cv.validateListenerRoute(&r); !ok {
 				return false, msg
 			}
 		}
-	case ClbProtocolTCP, ClbProtocolUDP:
+	} else if common.InLayer4Protocol(protocol) {
 		for _, svc := range rule.Services {
 			if ok, msg := cv.validateListenerService(&svc); !ok {
 				return false, msg
 			}
 		}
-	default:
+	} else {
 		return false, fmt.Sprintf("invalid protocol %s, available [HTTP, HTTPS, TCP, UDP]", rule.Protocol)
 	}
 	return true, ""
@@ -202,8 +203,8 @@ func (cv *ClbValidater) validateCertificate(certs *networkextensionv1.IngressLis
 
 // validateListenerMapping check listener mapping
 func (cv *ClbValidater) validateListenerMapping(mapping *networkextensionv1.IngressPortMapping) (bool, string) {
-	switch mapping.Protocol {
-	case ClbProtocolHTTP, ClbProtocolHTTPS:
+	protocol := mapping.Protocol
+	if common.InLayer7Protocol(protocol) {
 		if len(mapping.Routes) == 0 {
 			return false, fmt.Sprintf("no routes in 7 layer mapping, startPort %d", mapping.StartPort)
 		}
@@ -220,13 +221,13 @@ func (cv *ClbValidater) validateListenerMapping(mapping *networkextensionv1.Ingr
 				return ok, msg
 			}
 		}
-	case ClbProtocolTCP, ClbProtocolUDP:
+	} else if common.InLayer4Protocol(protocol) {
 		if mapping.ListenerAttribute != nil {
 			if ok, msg := cv.validateListenerAttribute(mapping.ListenerAttribute); !ok {
 				return ok, msg
 			}
 		}
-	default:
+	} else {
 		return false, fmt.Sprintf("invalid mapping protocol %s", mapping.Protocol)
 	}
 	return true, ""

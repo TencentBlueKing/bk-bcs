@@ -25,13 +25,16 @@ type MonitorSourceType string
 const (
 	// MonitorSourceCompute 算力 metrics
 	MonitorSourceCompute MonitorSourceType = "compute"
+	// MonitorSourceComputeV2 算力 metrics v2，数据来源于 bk-monitor
+	MonitorSourceComputeV2 MonitorSourceType = "compute_v2"
 	// MonitorSourceFederation 联邦集群 metrics
 	MonitorSourceFederation MonitorSourceType = "federation"
 )
 
 // DispatchConf xxx
 type DispatchConf struct {
-	ClusterID  string            `yaml:"cluster_id"`
-	URL        string            `yaml:"url"`
-	SourceType MonitorSourceType `yaml:"source_type"`
+	ClusterID     string            `yaml:"cluster_id"`
+	URL           string            `yaml:"url"`
+	MetricsPrefix string            `yaml:"metrics_prefix"` // 某些集群 metrics 有特定的前缀
+	SourceType    MonitorSourceType `yaml:"source_type"`
 }

@@ -18,6 +18,7 @@ import (
 	"fmt"
 
 	v1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/cloud/v1"
+	federationv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/federation/v1"
 	monitorv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/monitor/v1"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -59,6 +60,12 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Cloud().V1().CloudSubnets().Informer()}, nil
 	case v1.SchemeGroupVersion.WithResource("nodenetworks"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Cloud().V1().NodeNetworks().Informer()}, nil
+
+		// Group=federation, Version=v1
+	case federationv1.SchemeGroupVersion.WithResource("multiclusterendpointslices"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Federation().V1().MultiClusterEndpointSlices().Informer()}, nil
+	case federationv1.SchemeGroupVersion.WithResource("multiclusterservices"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Federation().V1().MultiClusterServices().Informer()}, nil
 
 		// Group=monitor, Version=v1
 	case monitorv1.SchemeGroupVersion.WithResource("servicemonitors"):

@@ -32,7 +32,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/common/util"
 	"github.com/kirito41dd/xslice"
-	"github.com/micro/go-micro/v2/registry"
+	"go-micro.dev/v4/registry"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 
@@ -136,6 +136,20 @@ func SplitStringsChunks(strList []string, limit int) [][]string {
 	}
 	i := xslice.SplitToChunks(strList, limit)
 	ss, ok := i.([][]string)
+	if !ok {
+		return nil
+	}
+
+	return ss
+}
+
+// SplitInt64sChunks split int64 chunk
+func SplitInt64sChunks(strList []int64, limit int) [][]int64 {
+	if limit <= 0 || len(strList) == 0 {
+		return nil
+	}
+	i := xslice.SplitToChunks(strList, limit)
+	ss, ok := i.([][]int64)
 	if !ok {
 		return nil
 	}
@@ -492,7 +506,7 @@ func K8sTaintToTaint(taint []corev1.Taint) []*proto.Taint {
 	return taints
 }
 
-// AllocateMachinesToAZs alocate num machines ro num zones
+// AllocateMachinesToAZs allocate num machines ro num zones
 func AllocateMachinesToAZs(numMachines, numAZs int) [][]int {
 	if numAZs <= 0 {
 		return nil
@@ -529,4 +543,36 @@ func ExistRunningNodes(nodes []*proto.ClusterNode) bool {
 	}
 
 	return false
+}
+
+// FilterEmptyString filter empty string
+func FilterEmptyString(strList []string) []string {
+	filterStrings := make([]string, 0)
+
+	for i := range strList {
+		if len(strList[i]) > 0 {
+			filterStrings = append(filterStrings, strList[i])
+		}
+	}
+
+	return filterStrings
+}
+
+// CompareVersion 比较两个版本号字符串
+func CompareVersion(v1, v2 string) int {
+	parts1 := strings.Split(v1, ".")
+	parts2 := strings.Split(v2, ".")
+
+	for i := 0; i < len(parts1) || i < len(parts2); i++ {
+		num1, _ := strconv.Atoi(parts1[i])
+		num2, _ := strconv.Atoi(parts2[i])
+
+		if num1 < num2 {
+			return -1
+		} else if num1 > num2 {
+			return 1
+		}
+	}
+
+	return 0
 }

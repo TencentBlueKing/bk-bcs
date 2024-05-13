@@ -34,6 +34,8 @@ type Content interface {
 	BatchCreateWithTx(kit *kit.Kit, tx *gen.QueryTx, contents []*table.Content) error
 	// Get get content by id
 	Get(kit *kit.Kit, id, bizID uint32) (*table.Content, error)
+	// BatchDeleteWithTx batch delete content data instance with transaction.
+	BatchDeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, contentIDs []uint32) error
 }
 
 var _ Content = new(contentDao)
@@ -42,6 +44,18 @@ type contentDao struct {
 	genQ     *gen.Query
 	idGen    IDGenInterface
 	auditDao AuditDao
+}
+
+// BatchDeleteWithTx batch delete content data instance with transaction.
+func (*contentDao) BatchDeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, contentIDs []uint32) error {
+
+	m := tx.Content
+	q := tx.Content.WithContext(kit.Ctx)
+	_, err := q.Where(m.ID.In(contentIDs...)).Delete()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // Create one content instance

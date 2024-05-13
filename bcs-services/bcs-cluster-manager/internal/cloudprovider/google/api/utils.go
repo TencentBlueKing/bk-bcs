@@ -38,13 +38,6 @@ import (
 
 const (
 	gceURLPrefix = "https://www.googleapis.com/compute/v1/"
-
-	// BCSNodeGroupTaintKey xxx
-	BCSNodeGroupTaintKey = "bcs-cluster-manager"
-	// BCSNodeGroupTaintValue xxx
-	BCSNodeGroupTaintValue = "noSchedule"
-	// BCSNodeGroupTaintEffect xxx
-	BCSNodeGroupTaintEffect = "NO_EXECUTE"
 )
 
 // GenerateInstanceUrl generates url for instance.
@@ -198,9 +191,9 @@ func MapTaints(cmt []*cmproto.Taint) []*Taint {
 
 	// attention: gke not support addNodes to set unScheduled nodes, thus realize this feature by taint
 	t = append(t, &Taint{
-		Key:    BCSNodeGroupTaintKey,
-		Value:  BCSNodeGroupTaintValue,
-		Effect: BCSNodeGroupTaintEffect})
+		Key:    cutils.BCSNodeGroupTaintKey,
+		Value:  cutils.BCSNodeGroupTaintValue,
+		Effect: cutils.BCSNodeGroupGkeTaintEffect})
 
 	return t
 }

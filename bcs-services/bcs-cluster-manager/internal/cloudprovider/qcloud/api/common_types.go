@@ -130,6 +130,9 @@ type DescribeExternalNodeScriptRequest struct {
 
 	// 节点名称
 	Name *string `json:"Name,omitempty" name:"Name"`
+
+	// 内外网脚本
+	Internal *bool `json:"Internal,omitempty" name:"Internal"`
 }
 
 // ToJsonString xxx

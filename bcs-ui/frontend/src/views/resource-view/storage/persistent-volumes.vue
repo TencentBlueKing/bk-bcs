@@ -1,10 +1,12 @@
 <template>
   <BaseLayout
     title="PersistentVolumes"
-    kind="PersistentVolume" category="persistent_volumes" type="storages" :show-name-space="false" :show-create="false">
+    kind="PersistentVolume" category="persistent_volumes" type="storages" :show-create="false">
     <template
-      #default="{ curPageData, pageConf, nameValue, handleClearSearchData,
-                  handlePageChange, handlePageSizeChange, handleGetExtData, handleSortChange }">
+      #default="{
+        curPageData, pageConf, handleShowViewConfig, clusterNameMap, isClusterMode,
+        handlePageChange, handlePageSizeChange, handleGetExtData, handleSortChange
+      }">
       <bk-table
         :data="curPageData"
         :pagination="pageConf"
@@ -12,6 +14,14 @@
         @page-limit-change="handlePageSizeChange"
         @sort-change="handleSortChange">
         <bk-table-column :label="$t('generic.label.name')" prop="metadata.name" sortable></bk-table-column>
+        <bk-table-column :label="$t('cluster.labels.nameAndId')" v-if="!isClusterMode">
+          <template #default="{ row }">
+            <div class="flex flex-col py-[6px] h-[50px]">
+              <span class="bcs-ellipsis">{{ clusterNameMap[handleGetExtData(row.metadata.uid, 'clusterID')] }}</span>
+              <span class="bcs-ellipsis mt-[6px]">{{ handleGetExtData(row.metadata.uid, 'clusterID') }}</span>
+            </div>
+          </template>
+        </bk-table-column>
         <bk-table-column label="Capacity">
           <template #default="{ row }">
             <span>{{ row.spec.capacity.storage || 'null' }}</span>
@@ -58,14 +68,11 @@
               {{ handleGetExtData(row.metadata.uid, 'age') }}</span>
           </template>
         </bk-table-column>
-        <!-- <bk-table-column :label="$t('generic.label.action')" :resizable="false" width="150">
-                    <template #default="{ row }">
-                        <bk-button text @click="handleUpdateResource(row)">{{ $t('generic.button.update') }}</bk-button>
-                        <bk-button class="ml10" text @click="handleDeleteResource(row)">{{ $t('generic.button.delete') }}</bk-button>
-                    </template>
-                </bk-table-column> -->
         <template #empty>
-          <BcsEmptyTableStatus :type="nameValue ? 'search-empty' : 'empty'" @clear="handleClearSearchData" />
+          <BcsEmptyTableStatus
+            :button-text="$t('generic.button.resetSearch')"
+            type="search-empty"
+            @clear="handleShowViewConfig" />
         </template>
       </bk-table>
     </template>

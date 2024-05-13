@@ -1,6 +1,6 @@
 <template>
   <bcs-popover
-    theme="light navigation-message"
+    :theme="`light ${theme}`"
     :offset="offset"
     :placement="placement"
     :arrow="false"
@@ -8,6 +8,7 @@
     :tippy-options="tippyOptions"
     :always="always"
     :on-hide="onHide"
+    :on-show="onShow"
     :disabled="disabled"
     ref="popoverRef">
     <slot></slot>
@@ -45,9 +46,14 @@ export default defineComponent({
       default: () => ({}),
     },
     onHide: Function,
+    onShow: Function,
     disabled: {
       type: Boolean,
       default: false,
+    },
+    theme: {
+      type: String,
+      default: 'navigation-message',
     },
   },
   setup() {

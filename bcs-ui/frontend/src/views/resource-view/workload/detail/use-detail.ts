@@ -61,7 +61,12 @@ export default function useDetail(options: IDetailOptions) {
   // manifestExt 数据
   const manifestExt = computed(() => detail.value?.manifestExt || {});
   // updateStrategy数据(GameDeployments需要)
-  const updateStrategy = computed(() => detail.value?.manifest?.spec?.updateStrategy || {});
+  const updateStrategy = computed(() => {
+    if (options.category === 'deployments') {
+      return detail.value?.manifest?.spec?.strategy || {};
+    }
+    return detail.value?.manifest?.spec?.updateStrategy || {};
+  });
   // yaml数据
   const yaml = computed(() => yamljs.dump(detail.value?.manifest || {}));
   const webAnnotations = ref<any>({});
@@ -89,7 +94,7 @@ export default function useDetail(options: IDetailOptions) {
       $clusterId: clusterId,
     });
     detail.value = res.data;
-    webAnnotations.value = res.webAnnotations;
+    webAnnotations.value = res.webAnnotations || {};
     isLoading.value = false;
     return detail.value;
   };

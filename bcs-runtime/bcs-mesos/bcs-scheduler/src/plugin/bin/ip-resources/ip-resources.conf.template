@@ -1,6 +1,0 @@
-{
-  "bcsZk": "${bcsZkHost}",
-  "ca_file": "${caFile}",
-  "client_cert_file": "${clientCertFile}",
-  "client_key_file": "${clientKeyFile}"
-}

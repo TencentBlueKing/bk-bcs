@@ -79,17 +79,26 @@
   import BkMessage from 'bkui-vue/lib/message';
   import { AngleRight } from 'bkui-vue/lib/icon';
   import { IScriptItem } from '../../../../../../types/script';
+  import { ICommonQuery } from '../../../../../../types/index';
+  import { IBoundTemplateGroup } from '../../../../../../types/config';
   import useGlobalStore from '../../../../../store/global';
   import useServiceStore from '../../../../../store/service';
   import useConfigStore from '../../../../../store/config';
   import { getScriptList, getScriptVersionDetail } from '../../../../../api/script';
-  import { getConfigScript, getDefaultConfigScriptData, updateConfigInitScript } from '../../../../../api/config';
+  import {
+    getConfigList,
+    getBoundTemplates,
+    getConfigScript,
+    getDefaultConfigScriptData,
+    updateConfigInitScript,
+  } from '../../../../../api/config';
   import ScriptEditor from '../../../scripts/components/script-editor.vue';
   import ScriptSelector from './script-selector.vue';
 
   const { spaceId } = storeToRefs(useGlobalStore());
-  const { versionData } = storeToRefs(useConfigStore());
+  const configStore = useConfigStore();
   const serviceStore = useServiceStore();
+  const { versionData } = storeToRefs(configStore);
   const { checkPermBeforeOperate } = serviceStore;
   const { permCheckLoading, hasEditServicePerm } = storeToRefs(serviceStore);
   const { t } = useI18n();
@@ -130,15 +139,21 @@
 
   watch(
     () => versionData.value.id,
-    () => {
+    (id) => {
       getScriptSetting();
       previewConfig.value.open = false;
+      if (id === 0) {
+        getAllConfigList();
+      }
     },
   );
 
   onMounted(() => {
     getScripts();
     getScriptSetting();
+    if (versionData.value.id === 0) {
+      getAllConfigList();
+    }
   });
   // 获取脚本列表
   const getScripts = async () => {
@@ -183,6 +198,33 @@
     const res = await getScriptVersionDetail(spaceId.value, scriptId, versionId);
     previewConfig.value.content = res.spec.content;
     contentLoading.value = false;
+  };
+
+  const getAllConfigList = async () => {
+    const [commonConfigCount, tplConfigCount] = await Promise.all([getCommonConfigList(), getBoundTemplateList()]);
+    configStore.$patch((state) => {
+      state.allConfigCount = commonConfigCount + tplConfigCount;
+    });
+  };
+
+  // 获取非模板配置文件列表
+  const getCommonConfigList = async () => {
+    const params: ICommonQuery = {
+      start: 0,
+      all: true,
+    };
+    const res = await getConfigList(spaceId.value, props.appId, params);
+    return res.count;
+  };
+
+  // 获取模板配置文件列表
+  const getBoundTemplateList = async () => {
+    const params: ICommonQuery = {
+      start: 0,
+      all: true,
+    };
+    const res = await getBoundTemplates(spaceId.value, props.appId, params);
+    return res.details.reduce((acc: number, crt: IBoundTemplateGroup) => acc + crt.template_revisions.length, 0);
   };
 
   // 选择脚本

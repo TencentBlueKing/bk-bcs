@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package simulator
@@ -174,6 +173,7 @@ func checkControllerRef(pod *apiv1.Pod, controllerRef *metav1.OwnerReference,
 	// For now, owner controller must be in the same namespace as the pod
 	// so OwnerReference doesn't have its own Namespace field
 	// controllerNamespace := pod.Namespace
+	// nolint
 	if refKind == "ReplicationController" {
 		blockingPod, err := checkRC(&replicated, checkReferences, pod, controllerRef, listers, minReplica)
 		if err != nil {
@@ -423,6 +423,7 @@ func checkRC(replicated *bool, checkReferences bool, pod *apiv1.Pod, controllerR
 		// Assume a reason for an error is because the RC is either
 		// gone/missing or that the rc has too few replicas configured.
 		// DOTO: replace the minReplica check with pod disruption budget.
+		// nolint
 		if err == nil && rc != nil {
 			if rc.Spec.Replicas != nil && *rc.Spec.Replicas < minReplica {
 				return &BlockingPod{Pod: pod, Reason: MinReplicasReached},
@@ -441,6 +442,7 @@ func checkRC(replicated *bool, checkReferences bool, pod *apiv1.Pod, controllerR
 	return nil, nil
 }
 
+// nolint `replicated` is unused
 func checkDS(replicated *bool, checkReferences bool, pod *apiv1.Pod, controllerRef *metav1.OwnerReference,
 	listers kube_util.ListerRegistry, minReplica int32) (*BlockingPod, error) {
 	controllerNamespace := pod.Namespace
@@ -458,6 +460,7 @@ func checkDS(replicated *bool, checkReferences bool, pod *apiv1.Pod, controllerR
 	return nil, nil
 }
 
+// nolint `minReplica` is unused
 func checkJob(replicated *bool, checkReferences bool, pod *apiv1.Pod, controllerRef *metav1.OwnerReference,
 	listers kube_util.ListerRegistry, minReplica int32) (*BlockingPod, error) {
 	controllerNamespace := pod.Namespace
@@ -467,6 +470,7 @@ func checkJob(replicated *bool, checkReferences bool, pod *apiv1.Pod, controller
 		// Assume the only reason for an error is because the Job is
 		// gone/missing, not for any other cause.  DOTO(mml): something more
 		// sophisticated than this
+		// nolint
 		if err == nil && job != nil {
 			*replicated = true
 		} else {
@@ -488,6 +492,7 @@ func checkRS(replicated *bool, checkReferences bool, pod *apiv1.Pod, controllerR
 		// Assume the only reason for an error is because the RS is
 		// gone/missing, not for any other cause.  DOTO(mml): something more
 		// sophisticated than this
+		// nolint
 		if err == nil && rs != nil {
 			if rs.Spec.Replicas != nil && *rs.Spec.Replicas < minReplica {
 				return &BlockingPod{Pod: pod, Reason: MinReplicasReached},
@@ -505,6 +510,7 @@ func checkRS(replicated *bool, checkReferences bool, pod *apiv1.Pod, controllerR
 	return nil, nil
 }
 
+// nolint `minReplica` is unused
 func checkSts(replicated *bool, checkReferences bool, pod *apiv1.Pod, controllerRef *metav1.OwnerReference,
 	listers kube_util.ListerRegistry, minReplica int32) (*BlockingPod, error) {
 	controllerNamespace := pod.Namespace
@@ -514,6 +520,7 @@ func checkSts(replicated *bool, checkReferences bool, pod *apiv1.Pod, controller
 		// Assume the only reason for an error is because the StatefulSet is
 		// gone/missing, not for any other cause.  DOTO(mml): something more
 		// sophisticated than this
+		// nolint
 		if err == nil && ss != nil {
 			*replicated = true
 		} else {

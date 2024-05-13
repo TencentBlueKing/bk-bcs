@@ -10,16 +10,17 @@
  * limitations under the License.
  */
 
+// Package manager xxx
 package manager
 
 import (
 	"fmt"
 	"os"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/spf13/cobra"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/cmd/manager/options"
 )
 
 var (
@@ -29,32 +30,31 @@ var (
 
 // NewCommand create command line for gitops manager
 func NewCommand() *cobra.Command {
-	option := DefaultOptions()
-
 	cmd := &cobra.Command{
 		Use:   commandName,
 		Short: "bcs-gitops-manager is a bcs-service for gitops",
 		Long:  `bcs-gitops-manager integrates gitops sulotion into bcs-services.`,
 		RunE: func(cmd *cobra.Command, args []string) error { // nolint
-			//loading configuration file for options
-			if err := common.LoadConfigFile(configFile, option); err != nil {
-				fmt.Fprintf(os.Stderr, "server load json config file failure, %s\n", err.Error())
+			if err := options.Parse(configFile); err != nil {
+				fmt.Printf("option parse failed: %s\n", err.Error())
 				return err
 			}
-			blog.InitLogs(option.LogConfig)
+
+			op := options.GlobalOptions()
+			blog.InitLogs(op.LogConfig)
 			defer blog.CloseLogs()
 			// config option verification
-			if err := option.Complete(); err != nil {
+			if err := op.Complete(); err != nil {
 				fmt.Fprintf(os.Stderr, "server option complete failed, %s\n", err.Error())
 				return err
 			}
-			if err := option.Validate(); err != nil {
+			if err := op.Validate(); err != nil {
 				fmt.Fprintf(os.Stderr, "server option validate failed, %s\n", err.Error())
 				return err
 			}
 
 			// run server
-			serv := NewServer(option)
+			serv := NewServer(op)
 			if err := serv.Init(); err != nil {
 				fmt.Fprintf(os.Stderr, "server init failed, %s", err.Error())
 				return err
@@ -62,7 +62,7 @@ func NewCommand() *cobra.Command {
 			return serv.Run()
 		},
 	}
-	//setting server configuration flag
+	// setting server configuration flag
 	cmd.Flags().StringVarP(&configFile, "config", "c", configFile, "manager configuration json file")
 	return cmd
 }

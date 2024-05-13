@@ -1,6 +1,0 @@
-apiVersion: terraformextesions.bkbcs.tencent.com/v1
-kind: Terraform
-metadata:
-  name: terraform-sample
-spec:
-  # TODO(user): Add fields here

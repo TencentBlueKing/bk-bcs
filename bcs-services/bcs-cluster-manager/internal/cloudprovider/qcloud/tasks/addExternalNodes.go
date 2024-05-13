@@ -379,7 +379,7 @@ func GetExternalNodeScriptTask(taskID string, stepName string) error { // nolint
 	}
 
 	// get add external nodes script from cluster
-	script, err := business.GetClusterExternalNodeScript(ctx, dependInfo)
+	script, err := business.GetClusterExternalNodeScript(ctx, dependInfo, GetExternalNgScriptType(dependInfo.NodeGroup))
 	if err != nil {
 		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
 			fmt.Sprintf("get cluster external node script failed [%s]", err))

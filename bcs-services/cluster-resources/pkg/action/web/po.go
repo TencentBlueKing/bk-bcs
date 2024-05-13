@@ -27,7 +27,7 @@ func GenNodePodListWebAnnos(
 ) (*spb.Struct, error) {
 	username := ctx.Value(ctxkey.UsernameKey).(string)
 	scopePerms, err := nsAuth.FetchBatchNSScopedResMultiActPerm(
-		username, projectID, clusterID, namespaces,
+		username, projectID, clusterID, namespaces, "pods",
 	)
 	if err != nil {
 		return nil, err

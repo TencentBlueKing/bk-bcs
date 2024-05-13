@@ -18,9 +18,8 @@ import (
 	"path"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
-	"github.com/TencentBlueKing/bkmonitor-kits/logger"
-	"github.com/TencentBlueKing/bkmonitor-kits/logger/gokit"
 	"github.com/oklog/run"
 	"github.com/opentracing/opentracing-go"
 	"github.com/prometheus/client_golang/prometheus"
@@ -56,17 +55,17 @@ type QueryAPI struct { // nolint
 // 使用配置文件配置
 // 启动 query 模块，暴露http
 // query模块对应我们的store
-func NewQueryAPI(ctx context.Context, reg *prometheus.Registry, tracer opentracing.Tracer, kitLogger gokit.Logger,
+func NewQueryAPI(ctx context.Context, reg *prometheus.Registry, tracer opentracing.Tracer, logKit blog.GlogKit,
 	httpAddr string, httpPort string, addrIPv6 string, strictStoreList []string, storeList []string,
 	httpSDURLs []string, g *run.Group,
 ) (*QueryAPI, error) {
-	discoveryClient, err := NewDiscoveryClient(ctx, reg, tracer, kitLogger, strictStoreList, storeList, httpSDURLs, g)
+	discoveryClient, err := NewDiscoveryClient(ctx, reg, tracer, logKit, strictStoreList, storeList, httpSDURLs, g)
 	if err != nil {
 		return nil, err
 	}
 
-	queryableCreator := NewQueryableCreator(reg, kitLogger, discoveryClient)
-	queryEngine := NewQueryEngine(reg, kitLogger)
+	queryableCreator := NewQueryableCreator(reg, logKit, discoveryClient)
+	queryEngine := NewQueryEngine(reg, logKit)
 
 	apiServer := &QueryAPI{
 		ctx:       ctx,
@@ -75,7 +74,7 @@ func NewQueryAPI(ctx context.Context, reg *prometheus.Registry, tracer opentraci
 		httpPort:  httpPort,
 		addrIPv6:  addrIPv6,
 	}
-	logger.Infof("store list: [%v]", storeList)
+	blog.Infof("store list: [%v]", storeList)
 
 	var comp = component.Query
 
@@ -84,14 +83,14 @@ func NewQueryAPI(ctx context.Context, reg *prometheus.Registry, tracer opentraci
 	apiServer.statusProber = prober.Combine(
 		httpProbe,
 		grpcProbe,
-		prober.NewInstrumentation(comp, kitLogger, extprom.WrapRegistererWithPrefix("bcs_monitor_", reg)),
+		prober.NewInstrumentation(comp, logKit, extprom.WrapRegistererWithPrefix("bcs_monitor_", reg)),
 	)
 
 	// Start query API + UI HTTP server.
 	router := route.New()
 
 	// Configure Request Logging for HTTP calls.
-	logMiddleware := logging.NewHTTPServerMiddleware(kitLogger)
+	logMiddleware := logging.NewHTTPServerMiddleware(logKit)
 
 	ins := extpromhttp.NewInstrumentationMiddleware(reg, nil)
 	tenantAuthMiddleware, _ := NewTenantAuthMiddleware(ctx, ins)
@@ -102,10 +101,10 @@ func NewQueryAPI(ctx context.Context, reg *prometheus.Registry, tracer opentraci
 		// 正式环境, 接入到网关后面
 		prefix = path.Join(config.G.Web.RoutePrefix, config.QueryServicePrefix)
 	}
-	ui.NewQueryUI(kitLogger, discoveryClient.Endpoints(), prefix, "", "").Register(router, ins)
+	ui.NewQueryUI(logKit, discoveryClient.Endpoints(), prefix, "", "").Register(router, ins)
 
 	api := v1.NewQueryAPI(
-		kitLogger,
+		logKit,
 		discoveryClient.Endpoints().GetEndpointStatus,
 		queryEngine,
 		queryableCreator,
@@ -133,14 +132,14 @@ func NewQueryAPI(ctx context.Context, reg *prometheus.Registry, tracer opentraci
 		reg,
 	)
 
-	api.Register(router.WithPrefix("/api/v1"), tracer, kitLogger, tenantAuthMiddleware, logMiddleware)
+	api.Register(router.WithPrefix("/api/v1"), tracer, logKit, tenantAuthMiddleware, logMiddleware)
 
-	srv := httpserver.New(kitLogger, reg, comp, httpProbe, httpserver.WithGracePeriod(time.Minute*2))
+	srv := httpserver.New(logKit, reg, comp, httpProbe, httpserver.WithGracePeriod(time.Minute*2))
 	srv.Handle("/", router)
 
 	apiServer.srv = srv
 
-	logger.Infof("starting query node")
+	blog.Infof("starting query node")
 	return apiServer, nil
 }
 
@@ -154,14 +153,14 @@ func (a *QueryAPI) Run() error {
 	if err := dualStackListener.AddListenerWithAddr(addr); err != nil {
 		return err
 	}
-	logger.Infow("listening for requests and metrics", "service", "query", "address", addr)
+	blog.Infow("listening for requests and metrics", "service", "query", "address", addr)
 
 	if a.addrIPv6 != "" && a.addrIPv6 != a.httpAddr {
 		v6Addr := utils.GetListenAddr(a.addrIPv6, a.httpPort)
 		if err := dualStackListener.AddListenerWithAddr(v6Addr); err != nil {
 			return err
 		}
-		logger.Infof("query serve dualStackListener with ipv6: %s", v6Addr)
+		blog.Infof("query serve dualStackListener with ipv6: %s", v6Addr)
 	}
 
 	return a.srv.Serve(dualStackListener)

@@ -318,6 +318,7 @@ func (la *ListNodesV2Action) listNodesInGroup() error {
 			VPC:          v.VPC,
 			Region:       v.Region,
 			Zone:         v.Zone,
+			NodeName:     v.NodeName,
 		})
 	}
 
@@ -353,6 +354,11 @@ func (la *ListNodesV2Action) appendNodeInfo() {
 				// append unschedulable status
 				la.resp.Data[i].UnSchedulable = 1
 			}
+
+			if la.resp.Data[i].NodeName == "" {
+				la.resp.Data[i].NodeName = node.Name
+			}
+
 			la.resp.Data[i].Status = actions.TransNodeStatus(la.resp.Data[i].Status, node)
 		}
 	}

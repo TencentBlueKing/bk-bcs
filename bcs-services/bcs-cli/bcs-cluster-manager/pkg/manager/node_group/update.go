@@ -15,8 +15,9 @@ package nodegroup
 import (
 	"errors"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/pkg/manager/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/pkg/manager/types"
 )
 
 // Update 更新节点池,更新成功返回nil
@@ -55,7 +56,7 @@ func (c *NodeGroupMgr) Update(req types.UpdateNodeGroupReq) error { // nolint
 	// nodeGroup node dataDisks
 	nodeDataDisk := make([]*clustermanager.DataDisk, 0)
 	for _, v := range req.NodeTemplate.DataDisks {
-		nodeDataDisk = append(nodeDataDisk, &clustermanager.DataDisk{
+		nodeDataDisk = append(nodeDataDisk, &clustermanager.DataDisk{ // nolint  this result of append is never used
 			DiskType: v.DiskType,
 			DiskSize: v.DiskSize,
 		})

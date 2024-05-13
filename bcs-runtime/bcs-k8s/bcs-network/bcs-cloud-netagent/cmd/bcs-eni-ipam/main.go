@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package main
@@ -35,13 +34,13 @@ var (
 	defaultLogDir = "./logs"
 )
 
-//BcsIPAMConfig represents the IP related network configuration.
+// BcsIPAMConfig represents the IP related network configuration.
 type BcsIPAMConfig struct {
 	Routes []types.Route       `json:"routes"`
 	Args   *cloudagent.K8sArgs `json:"-"`
 }
 
-//NetConf network configuration from json config, reading from stdin
+// NetConf network configuration from json config, reading from stdin
 type NetConf struct {
 	Name               string         `json:"name"`
 	CNIVersion         string         `json:"cniVersion"`
@@ -50,7 +49,7 @@ type NetConf struct {
 	IPAM               *BcsIPAMConfig `json:"ipam"`
 }
 
-//LoadBcsIPAMConfig creates a NetworkConfig from the given network name.
+// LoadBcsIPAMConfig creates a NetworkConfig from the given network name.
 func LoadBcsIPAMConfig(bytes []byte, args string) (*NetConf, *BcsIPAMConfig, error) {
 	n := &NetConf{}
 	if err := json.Unmarshal(bytes, n); err != nil {
@@ -78,7 +77,7 @@ func init() {
 	util.InitFlags()
 }
 
-//cmdAdd handle add command, reply available ip info
+// cmdAdd handle add command, reply available ip info
 func cmdAdd(args *skel.CmdArgs) error {
 	//loading config from stdin
 	netConf, ipamConf, err := LoadBcsIPAMConfig(args.StdinData, args.Args)
@@ -143,7 +142,7 @@ func cmdAdd(args *skel.CmdArgs) error {
 	return types.PrintResult(result, netConf.CNIVersion)
 }
 
-//cmdDel release ip address
+// cmdDel release ip address
 func cmdDel(args *skel.CmdArgs) error {
 	//loading config from stdin
 	netConf, _, err := LoadBcsIPAMConfig(args.StdinData, args.Args)

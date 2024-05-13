@@ -23,9 +23,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	bkiam "github.com/TencentBlueKing/iam-go-sdk"
+	blog "k8s.io/klog/v2"
 )
 
 var (

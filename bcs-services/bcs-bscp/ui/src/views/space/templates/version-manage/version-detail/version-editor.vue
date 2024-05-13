@@ -225,7 +225,6 @@
   // 上传配置内容
   const uploadContent = async () => {
     const signature = await getSignature();
-    if (typeof stringContent.value === 'string' && !stringContent.value.endsWith('\n')) stringContent.value += '\n';
     const data = formData.value.file_type === 'binary' ? fileContent.value : stringContent.value;
     uploadPending.value = true;
     // @ts-ignore
@@ -256,6 +255,7 @@
       }
       return (fileContent.value as IFileConfigContentSummary).signature;
     }
+    if (!stringContent.value.endsWith('\n')) stringContent.value += '\n';
     return SHA256(stringContent.value).toString();
   };
 
@@ -263,7 +263,7 @@
   const handleDownloadFile = async () => {
     const { signature, name } = fileContent.value as IFileConfigContentSummary;
     const res = await downloadTemplateContent(props.spaceId, props.templateSpaceId, signature);
-    fileDownload(String(res), `${name}.bin`);
+    fileDownload(String(res), name);
   };
 
   const validate = async () => {
@@ -274,8 +274,8 @@
         return false;
       }
     } else if (formData.value.file_type === 'text') {
-      if (stringLengthInBytes(stringContent.value) > 1024 * 1024 * 50) {
-        Message({ theme: 'error', message: t('配置内容不能超过50M') });
+      if (stringLengthInBytes(stringContent.value) > 1024 * 1024 * 100) {
+        Message({ theme: 'error', message: `${t('配置内容不能超过')} 100M` });
         return false;
       }
     }

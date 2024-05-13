@@ -17,7 +17,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/TencentBlueKing/bkmonitor-kits/logger"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/gin-contrib/sse"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/k8sclient"
@@ -54,7 +54,7 @@ func PodLogStream(c *rest.Context) { // nolint
 	if lastEventId != "" {
 		sinceTime, err := base64.StdEncoding.DecodeString(lastEventId)
 		if err == nil {
-			logger.Infow("send log stream from Last-Event-ID", "Last-Event-ID", sinceTime)
+			blog.Infow("send log stream from Last-Event-ID", "Last-Event-ID", sinceTime)
 			logQuery.StartedAt = string(sinceTime)
 		}
 	}

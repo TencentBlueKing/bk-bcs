@@ -27,7 +27,7 @@ import (
 
 var (
 	// gRPCComponentTag component tag: grpc
-	gRPCComponentTag = opentrace.Tag{string(ext.Component), "gRPC"}
+	gRPCComponentTag = opentrace.Tag{Key: string(ext.Component), Value: "gRPC"}
 )
 
 // OpenTracingServerInterceptor returns a grpc.UnaryServerInterceptor suitable for use in a grpc.NewServer call.

@@ -2,8 +2,24 @@ import { ref } from 'vue';
 
 import { ISubscribeData } from './use-subscribe';
 
+import {
+  multiClusterCustomResourceDefinition,
+  multiClusterResources,
+  multiClusterResourcesCount,
+  multiClusterResourcesCRD,
+} from '@/api/modules/cluster-resource';
 import $store from '@/store';
 
+export type MultiClusterResourcesType = IViewFilter & {
+  clusterNamespaces?: IClusterNamespace[]
+  status?: string[]
+  ip?: string
+  sortBy?: string
+  order?: 'desc' | 'asc' | ''
+  viewID?: string
+  limit: number
+  offset: number
+};
 /**
  * 加载表格数据
  * @param ctx
@@ -14,6 +30,7 @@ export default function useTableData() {
   const data = ref<ISubscribeData>({
     manifestExt: {},
     manifest: {},
+    total: 0,
   });
   const webAnnotations = ref<any>({});
 
@@ -36,7 +53,12 @@ export default function useTableData() {
     // persistent_volumes、storage_classes资源和命名空间无关，其余资源必须传命名空间
     if (!namespaceId && !['persistent_volumes', 'storage_classes'].includes(category)) return;
     isLoading.value = true;
-    const res = await fetchList(type, category, namespaceId, clusterId);
+    const res = await fetchList(
+      type,
+      category,
+      ['persistent_volumes', 'storage_classes'].includes(category) ? '' : namespaceId,
+      clusterId,
+    );
     data.value = res.data;
     webAnnotations.value = res.webAnnotations || {};
     isLoading.value = false;
@@ -68,6 +90,64 @@ export default function useTableData() {
     return res.data;
   };
 
+  const defaultManifestData: ISubscribeData = {
+    manifest: {},
+    manifestExt: {},
+    total: 0,
+  };
+  const getMultiClusterResources = async (params: MultiClusterResourcesType & {
+    $kind: string
+  }) => {
+    const res = await multiClusterResources(params, { needRes: true }).catch(() => ({
+      data: {
+        manifest: {},
+        manifestExt: {},
+        total: 0,
+      },
+    }));
+    data.value = res.data || defaultManifestData;
+    webAnnotations.value = res.webAnnotations || {};
+    return (res.data || defaultManifestData) as ISubscribeData;
+  };
+
+  const getMultiClusterResourcesCRD = async (params: MultiClusterResourcesType & {
+    $crd: string
+  }) => {
+    const res = await multiClusterResourcesCRD(params, { needRes: true }).catch(() => ({
+      data: {
+        manifest: {},
+        manifestExt: {},
+        total: 0,
+      },
+    }));
+    data.value = res.data || defaultManifestData;
+    webAnnotations.value = res.webAnnotations || {};
+    return (res.data || defaultManifestData) as ISubscribeData;
+  };
+
+  const getMultiClusterCustomResourceDefinition = async (params: MultiClusterResourcesType & {
+    $crd: string
+  }) => {
+    const res = await multiClusterCustomResourceDefinition(
+      params,
+      { needRes: true, cancelPrevious: true },
+    ).catch(() => ({
+      data: {
+        manifest: {},
+        manifestExt: {},
+        total: 0,
+      },
+    }));
+    data.value = res.data || defaultManifestData;
+    webAnnotations.value = res.webAnnotations || {};
+    return (res.data || defaultManifestData) as ISubscribeData;
+  };
+
+  const getMultiClusterResourcesCount = async (params: Omit<MultiClusterResourcesType, 'limit'|'offset'>) => {
+    const data = await multiClusterResourcesCount(params, { cancelPrevious: true }).catch(() => ({}));
+    return data as Record<string, number>;
+  };
+
   return {
     isLoading,
     data,
@@ -76,5 +156,9 @@ export default function useTableData() {
     handleFetchList,
     fetchCRDData,
     handleFetchCustomResourceList,
+    getMultiClusterResources,
+    getMultiClusterResourcesCRD,
+    getMultiClusterResourcesCount,
+    getMultiClusterCustomResourceDefinition,
   };
 }

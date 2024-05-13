@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package controllers
@@ -23,6 +22,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -33,7 +33,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	monitorextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/api/v1"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/apiclient"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/fileoperator"
@@ -53,14 +52,17 @@ type MonitorRuleReconciler struct {
 	MonitorApiCli apiclient.IMonitorApiClient
 	MonitorRender *render.MonitorRender
 
-	Opts *option.ControllerOption
+	Opts    *option.ControllerOption
+	SubPath string
 }
 
-// +kubebuilder:rbac:groups=monitorextension.bkbcs.tencent.com,resources=monitorrules,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=monitorextension.bkbcs.tencent.com,resources=monitorrules,
+// verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=monitorextension.bkbcs.tencent.com,resources=monitorrules/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=monitorextension.bkbcs.tencent.com,resources=monitorrules/finalizers,verbs=update
 
 // Reconcile monitor rule
+// nolint funlen
 func (r *MonitorRuleReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	blog.Infof("MonitorRule '%s' triggered", req.NamespacedName)
 
@@ -116,17 +118,19 @@ func (r *MonitorRuleReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 			return ctrl.Result{}, err
 		}
 
-		if err := r.FileOp.Decompress(utils.GenBkmConfigTarPath(r.Opts.BKMDownloadConfigPath, monitorRule.Spec.BizID),
-			utils.GenBkmConfigPath(r.Opts.BKMDownloadConfigPath, monitorRule.Spec.BizID)); err != nil {
+		if err := r.FileOp.Decompress(utils.GenBkmConfigTarPath(r.Opts.BKMDownloadConfigPath,
+			r.SubPath, monitorRule.Spec.BizID),
+			utils.GenBkmConfigPath(r.Opts.BKMDownloadConfigPath, r.SubPath, monitorRule.Spec.BizID)); err != nil {
 			blog.Errorf("decompress bkm config for bizID[%s] failed, err: %s", monitorRule.Spec.BizID, err.Error())
 			return ctrl.Result{}, err
 		}
-		defer os.RemoveAll(utils.GenBkmConfigPath(r.Opts.BKMDownloadConfigPath, monitorRule.Spec.BizID))
-		defer os.RemoveAll(utils.GenBkmConfigTarPath(r.Opts.BKMDownloadConfigPath, monitorRule.Spec.BizID))
+		defer os.RemoveAll(utils.GenBkmConfigPath(r.Opts.BKMDownloadConfigPath, r.SubPath, monitorRule.Spec.BizID))
+		defer os.RemoveAll(utils.GenBkmConfigTarPath(r.Opts.BKMDownloadConfigPath, r.SubPath, monitorRule.Spec.BizID))
 
-		currentRule, err := r.MonitorRender.LoadRule(filepath.Join(r.Opts.BKMDownloadConfigPath,
+		currentRule, err := r.MonitorRender.LoadRule(filepath.Join(r.Opts.BKMDownloadConfigPath, r.SubPath,
 			monitorRule.Spec.BizID, "configs/rule"), func(fileName string) bool {
 			fileRuleName := strings.Split(fileName, ".")
+			// todo bkm支持文件名中多个 '.'   后续如果告警规则中有'.'需要修改
 			if len(fileRuleName) != 2 {
 				blog.Warnf("unknown file name format, file name: %s", fileName)
 				return false
@@ -144,7 +148,6 @@ func (r *MonitorRuleReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 
 		blog.Infof("load rule: %s", utils.ToJsonString(currentRule))
 		if currentRule != nil {
-			// todo remove
 			blog.Infof("currentRules: %s, monitorRule: %s", utils.ToJsonString(currentRule), utils.ToJsonString(monitorRule))
 			mergeRules := patch.ThreeWayMergeMonitorRule(originalRules, currentRule.Spec.Rules, monitorRule.Spec.Rules)
 
@@ -190,8 +193,8 @@ func (r *MonitorRuleReconciler) eventPredicate() predicate.Predicate {
 	return predicate.Funcs{
 		CreateFunc: func(createEvent event.CreateEvent) bool {
 			mr := createEvent.Object.(*monitorextensionv1.MonitorRule)
-			if mr.DeletionTimestamp == nil && mr.Status.SyncStatus.State == monitorextensionv1.SyncStateCompleted &&
-				mr.Spec.IgnoreChange == true {
+			if mr.DeletionTimestamp == nil &&
+				mr.Status.SyncStatus.State == monitorextensionv1.SyncStateCompleted && mr.Spec.IgnoreChange {
 				blog.V(3).Infof("monitor rule  '%s/%s' got create event, but is synced and ignore change",
 					mr.GetNamespace(), mr.GetName())
 				return false
@@ -212,7 +215,7 @@ func (r *MonitorRuleReconciler) eventPredicate() predicate.Predicate {
 				return false
 			}
 			if newMr.DeletionTimestamp == nil && newMr.Status.SyncStatus.
-				State == monitorextensionv1.SyncStateCompleted && newMr.Spec.IgnoreChange == true {
+				State == monitorextensionv1.SyncStateCompleted && newMr.Spec.IgnoreChange {
 				blog.V(3).Infof("monitor rule '%s/%s' updated, but is synced and ignore change",
 					newMr.GetNamespace(), newMr.GetName())
 				return false
@@ -245,7 +248,8 @@ func (r *MonitorRuleReconciler) updateSyncStatus(monitorRule *monitorextensionv1
 	if inErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		return r.Client.Status().Update(r.Ctx, monitorRule)
 	}); inErr != nil {
-		blog.Warnf("update monitorRule'%s/%s' failed, err: %s", monitorRule.GetNamespace(), monitorRule.GetName(), inErr.Error())
+		blog.Warnf("update monitorRule'%s/%s' failed, err: %s", monitorRule.GetNamespace(),
+			monitorRule.GetName(), inErr.Error())
 		return inErr
 	}
 
@@ -306,7 +310,7 @@ func (r *MonitorRuleReconciler) processDelete(monitorRule *monitorextensionv1.Mo
 func (r *MonitorRuleReconciler) patchAnnotation(monitorRule *monitorextensionv1.MonitorRule) error {
 	ruleBts, err := json.Marshal(monitorRule.Spec.Rules)
 	if err != nil {
-		return fmt.Errorf("marshal rules[%v] failed, errors: %w", monitorRule.Spec.Rules, err)
+		return fmt.Errorf("marshal rules[%v] failed, errors: %s", monitorRule.Spec.Rules, err.Error())
 	}
 	err = retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		patchStruct := map[string]interface{}{

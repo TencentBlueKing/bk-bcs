@@ -27,9 +27,9 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, ref, toRefs, watch } from 'vue';
+import { defineComponent, PropType, ref, toRefs, watch } from 'vue';
 
-import Validate from '@/components/validate.vue';
+import Validate, { IValidate } from '@/components/validate.vue';
 import clickoutside from '@/directives/clickoutside';
 
 export default defineComponent({
@@ -57,7 +57,7 @@ export default defineComponent({
       default: false,
     },
     rules: {
-      type: Array,
+      type: Array as PropType<IValidate[]>,
       default: () => [],
     },
     disableEdit: {

@@ -8,19 +8,23 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package postinplace xxx
 package postinplace
 
 import (
 	hookv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
 )
 
+// PostInplaceHookObjectInterface xxx
+// nolint
 type PostInplaceHookObjectInterface interface {
 	GetPostInplaceHook() *hookv1alpha1.HookStep
 }
 
+// PostInplaceHookStatusInterface xxx
+// nolint
 type PostInplaceHookStatusInterface interface {
 	GetPostInplaceHookConditions() []hookv1alpha1.PostInplaceHookCondition
 	SetPostInplaceHookConditions([]hookv1alpha1.PostInplaceHookCondition)

@@ -1,16 +1,18 @@
 <template>
   <div class="biz-content">
-    <Header
+    <ContentHeader
       :title="title"
       :desc="desc"
       :hide-back="hideBack"
       :tabs="tabs"
       :active="activeTab"
+      :cluster-id="clusterId"
+      :namespace="namespace"
       @tab-change="handleTabChange">
       <template #right>
         <slot name="header-right"></slot>
       </template>
-    </Header>
+    </ContentHeader>
     <div class="biz-content-wrapper content" ref="contentRef">
       <slot></slot>
     </div>
@@ -19,11 +21,11 @@
 <script lang="ts">
 import { defineComponent, PropType, ref } from 'vue';
 
-import Header from '@/components/layout/Header.vue';
+import ContentHeader from '@/components/layout/Header.vue';
 export default defineComponent({
   name: 'LayoutContent',
   components: {
-    Header,
+    ContentHeader,
   },
   props: {
     title: {
@@ -43,6 +45,14 @@ export default defineComponent({
       default: () => ([]),
     },
     activeTab: {
+      type: String,
+      default: '',
+    },
+    clusterId: {
+      type: String,
+      default: '',
+    },
+    namespace: {
       type: String,
       default: '',
     },
@@ -66,6 +76,6 @@ export default defineComponent({
 </script>
 <style lang="postcss" scoped>
 .content {
-  padding: 20px;
+  padding: 20px 24px 0px 24px;
 }
 </style>

@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -95,7 +95,7 @@ func (h *HeapsterMetricsClient) GetResourceMetric(resource v1.ResourceName, name
 		podSum := int64(0)
 		missing := len(m.Containers) == 0
 		for _, c := range m.Containers {
-			resValue, found := c.Usage[v1.ResourceName(resource)]
+			resValue, found := c.Usage[resource]
 			if !found {
 				missing = true
 				klog.V(2).Infof("missing resource metric %v for container %s in pod %s/%s", resource, c.Name, namespace, m.Name)
@@ -108,7 +108,7 @@ func (h *HeapsterMetricsClient) GetResourceMetric(resource v1.ResourceName, name
 			res[m.Name] = PodMetric{
 				Timestamp: m.Timestamp.Time,
 				Window:    m.Window.Duration,
-				Value:     int64(podSum),
+				Value:     podSum,
 			}
 		}
 	}
@@ -175,7 +175,7 @@ func (h *HeapsterMetricsClient) GetRawMetric(metricName string, namespace string
 			res[podNames[i]] = PodMetric{
 				Timestamp: podTimestamp,
 				Window:    heapsterDefaultMetricWindow,
-				Value:     int64(val),
+				Value:     val,
 			}
 
 			if timestamp == nil || podTimestamp.Before(*timestamp) {

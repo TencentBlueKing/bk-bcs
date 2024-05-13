@@ -91,6 +91,12 @@ var (
 		Buckets: []float64{10.0, 25.0, 50.0, 100.0, 125.0, 150.0, 175.0, 200.0, 250.0, 300.0,
 			350.0, 400.0, 500.0, 600.0, 700.0, 800.0},
 	}, []string{"task_type", "status", "child_task"})
+
+	reportMachineryTaskNum = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: BkBcsClusterManager,
+		Name:      "machinery_task",
+		Help:      "cluster manager machinery task",
+	}, []string{"task_name", "state"})
 )
 
 func init() {
@@ -104,6 +110,7 @@ func init() {
 	prometheus.MustRegister(reportClusterHealthStatus)
 	prometheus.MustRegister(reportClusterGroupResourceNum)
 	prometheus.MustRegister(reportClusterGroupMaxResourceNum)
+	prometheus.MustRegister(reportMachineryTaskNum)
 }
 
 // ReportMasterTaskMetric report lib call metrics
@@ -142,4 +149,9 @@ func ReportCloudVpcAvailableIPNum(cloud, vpc string, num float64) {
 // ReportCloudClusterHealthStatus report cluster status
 func ReportCloudClusterHealthStatus(cloud, cluster string, status float64) {
 	reportClusterHealthStatus.WithLabelValues(cloud, cluster).Set(status)
+}
+
+// ReportMachineryTaskNum report cluster-manager machinery tasks
+func ReportMachineryTaskNum(taskName, state string, num float64) {
+	reportMachineryTaskNum.WithLabelValues(taskName, state).Set(num)
 }

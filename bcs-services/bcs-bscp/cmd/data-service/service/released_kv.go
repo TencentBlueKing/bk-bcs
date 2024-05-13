@@ -19,6 +19,7 @@ import (
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 	pbbase "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
+	pbcontent "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/content"
 	pbkv "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/kv"
 	pbrkv "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/released-kv"
 	released_kv "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/released-kv"
@@ -55,7 +56,8 @@ func (s *Service) GetReleasedKv(ctx context.Context, req *pbds.GetReleasedKvReq)
 			BizId: req.BizId,
 			AppId: req.AppId,
 		},
-		Revision: pbbase.PbRevision(rkv.Revision),
+		Revision:    pbbase.PbRevision(rkv.Revision),
+		ContentSpec: pbcontent.PbContentSpec(rkv.ContentSpec),
 	}, nil
 
 }

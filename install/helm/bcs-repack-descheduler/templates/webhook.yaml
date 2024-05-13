@@ -1,0 +1,73 @@
+{{- $altNames := list ( printf "%s.%s" .Release.Name .Release.Namespace ) ( printf "%s.%s.svc" .Release.Name .Release.Namespace ) -}}
+{{- $ca := genCA "bcs-repack-descheduler-ca" 3650 -}}
+{{- $cert := genSignedCert .Release.Name nil $altNames 3650 $ca -}}
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: bcs-repack-descheduler-certs
+  namespace: {{ .Release.Namespace }}
+type: Opaque
+data:
+  tls.crt: {{ $cert.Cert | b64enc | quote }}
+  tls.key: {{ $cert.Key | b64enc | quote }}
+
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: bcs-repack-descheduler-webhook
+  labels:
+    app: bcs-repack-descheduler-webhook
+webhooks:
+- admissionReviewVersions:
+  - v1beta1
+  clientConfig:
+    caBundle: {{ $ca.Cert | b64enc | quote }}
+    service:
+      name: bcs-repack-descheduler
+      namespace: {{ .Release.Namespace }} 
+      path: "/mutate-tkex-bkbcs-tencent-com-v1alpha1-deschedulepolicy"
+      port: {{ .Values.env.BK_BCS_httpPort }}
+  name: bcs-repack-descheduler.tkex.bkbcs.tencent.com
+  rules:
+  - apiGroups:
+    - tkex.bkbcs.tencent.com
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - deschedulepolicies
+    scope: "*"
+  sideEffects: None 
+  timeoutSeconds: 5
+
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: bcs-repack-descheduler-webhook
+  labels:
+    app: bcs-repack-descheduler-webhook
+webhooks:
+- name: bcs-repack-descheduler.tkex.bkbcs.tencent.com
+  rules:
+  - apiGroups:
+    - tkex.bkbcs.tencent.com
+    apiVersions: ["v1alpha1"]
+    operations:  ["CREATE", "UPDATE"]
+    resources:   ["deschedulepolicies"]
+    scope:       "*"
+  clientConfig:
+    service:
+      namespace: {{ .Release.Namespace }}
+      name: bcs-repack-descheduler
+      path: "/validate-tkex-bkbcs-tencent-com-v1alpha1-deschedulepolicy"
+      port: {{ .Values.env.BK_BCS_httpPort }}
+    caBundle: {{ $ca.Cert | b64enc | quote }} 
+  admissionReviewVersions: ["v1beta1"]
+  sideEffects: None
+  timeoutSeconds: 5

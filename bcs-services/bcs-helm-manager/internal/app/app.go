@@ -40,18 +40,19 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
 	middleauth "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
+	microEtcd "github.com/go-micro/plugins/v4/registry/etcd"
+	microGrpcServer "github.com/go-micro/plugins/v4/server/grpc"
 	"github.com/gorilla/mux"
 	ggRuntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
-	microCfg "github.com/micro/go-micro/v2/config"
-	"github.com/micro/go-micro/v2/config/source"
-	microRgt "github.com/micro/go-micro/v2/registry"
-	microEtcd "github.com/micro/go-micro/v2/registry/etcd"
-	microSvc "github.com/micro/go-micro/v2/service"
-	microGrpc "github.com/micro/go-micro/v2/service/grpc"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	microSvc "go-micro.dev/v4"
+	microCfg "go-micro.dev/v4/config"
+	"go-micro.dev/v4/config/source"
+	microRgt "go-micro.dev/v4/registry"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 	gCred "google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 	"gopkg.in/yaml.v2"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
@@ -366,11 +367,15 @@ func (hm *HelmManager) initMicro() error { // nolint
 		EnableSkipClient(auth.SkipClient).
 		SetCheckUserPerm(auth.CheckUserPerm)
 
+	// with tls
+	grpcSvr := microGrpcServer.NewServer(microGrpcServer.AuthTLS(hm.tlsConfig))
+
 	// init micro service
-	svc := microGrpc.NewService(
+	svc := microSvc.NewService(
+		microSvc.Server(grpcSvr),
+		microSvc.Cmd(util.NewDummyMicroCmd()),
 		microSvc.Name(common.ServiceDomain),
 		microSvc.Metadata(metadata),
-		microGrpc.WithTLS(hm.tlsConfig),
 		microSvc.Address(net.JoinHostPort(ipv4, port)),
 		microSvc.Registry(hm.microRgt),
 		microSvc.Version(version.BcsVersion),
@@ -448,7 +453,7 @@ func (hm *HelmManager) initHTTPService() error {
 	if hm.tlsConfig != nil && hm.clientTLSConfig != nil {
 		grpcDialOpts = append(grpcDialOpts, grpc.WithTransportCredentials(gCred.NewTLS(hm.clientTLSConfig)))
 	} else {
-		grpcDialOpts = append(grpcDialOpts, grpc.WithInsecure())
+		grpcDialOpts = append(grpcDialOpts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	}
 
 	// register helmmanager gatewasy

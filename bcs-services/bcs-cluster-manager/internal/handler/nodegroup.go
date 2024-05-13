@@ -320,3 +320,18 @@ func (cm *ClusterManager) GetExternalNodeScriptByGroupID(ctx context.Context,
 	blog.Infof("reqID: %s, action: GetExternalNodeScriptByGroupID, req %v, resp %v", reqID, req, resp)
 	return nil
 }
+
+// TransNodeGroupToNodeTemplate implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) TransNodeGroupToNodeTemplate(ctx context.Context,
+	req *cmproto.TransNodeGroupToNodeTemplateRequest, resp *cmproto.TransNodeGroupToNodeTemplateResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	ta := nodegroup.NewTransNgToNtAction(cm.model)
+	ta.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("TransNodeGroupToNodeTemplate", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: TransNodeGroupToNodeTemplate, req %v, resp %v", reqID, req, resp)
+	return nil
+}

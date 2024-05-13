@@ -315,6 +315,6 @@ func (ng *NodeGroup) DeleteExternalNodeFromCluster(group *proto.NodeGroup, nodes
 }
 
 // GetExternalNodeScript get nodegroup external node script
-func (ng *NodeGroup) GetExternalNodeScript(group *proto.NodeGroup) (string, error) {
+func (ng *NodeGroup) GetExternalNodeScript(group *proto.NodeGroup, internal bool) (string, error) {
 	return "", cloudprovider.ErrCloudNotImplemented
 }

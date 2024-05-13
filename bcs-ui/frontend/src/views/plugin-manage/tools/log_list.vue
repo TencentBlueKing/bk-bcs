@@ -790,7 +790,7 @@ import bkExpression from './expression';
 import { catchErrorHandler } from '@/common/util';
 import bkKeyer from '@/components/keyer';
 import Header from '@/components/layout/Header.vue';
-import { useNamespace } from '@/views/resource-view/namespace/use-namespace';
+import { useNamespace } from '@/views/cluster-manage/namespace/use-namespace';
 
 export default {
   components: {

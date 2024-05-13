@@ -81,7 +81,7 @@
         </span>
       </bk-radio-group>
     </bk-form-item>
-    <bk-form-item
+    <!-- <bk-form-item
       :label="$t('cluster.ca.nodePool.create.cloudArea.title')"
       :desc="$t('cluster.ca.nodePool.create.cloudArea.desc')">
       <bcs-select
@@ -97,7 +97,7 @@
           :name="item.bk_cloud_name">
         </bcs-option>
       </bcs-select>
-    </bk-form-item>
+    </bk-form-item> -->
   </bk-form>
 </template>
 <script lang="ts">
@@ -133,7 +133,7 @@ export default defineComponent({
     },
   },
   setup(props) {
-    const { defaultValues, schema } = toRefs(props);
+    const { defaultValues, schema, isEdit } = toRefs(props);
     const formRef = ref<any>(null);
     const nodePoolInfo = ref({
       // name: defaultValues.value.name || '', // 节点名称
@@ -157,7 +157,7 @@ export default defineComponent({
         //   scaleInModuleName: defaultValues.value.nodeTemplate?.module?.scaleInModuleName || '',
         // },
       },
-      bkCloudID: defaultValues.value.area?.bkCloudID || 0,
+      bkCloudID: isEdit.value ? defaultValues.value.area?.bkCloudID : 0,
       bkCloudName: defaultValues.value.area?.bkCloudName || '',
     });
 

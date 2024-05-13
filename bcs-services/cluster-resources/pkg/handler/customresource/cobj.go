@@ -40,9 +40,6 @@ func (h *Handler) ListCObj(
 	if err != nil {
 		return err
 	}
-	if err = validateNSParam(ctx, crdInfo, req.Namespace); err != nil {
-		return err
-	}
 	if err = perm.CheckCObjAccess(ctx, req.ClusterID, req.CRDName, req.Namespace); err != nil {
 		return err
 	}

@@ -19,6 +19,7 @@ import (
 )
 
 // ConvertAdmissionRequestToV1 converts AdmissionRequest to v1.AdmissionRequest.
+// nolint
 func ConvertAdmissionRequestToV1(r *v1beta1.AdmissionRequest) *v1.AdmissionRequest {
 	return &v1.AdmissionRequest{
 		Kind:               r.Kind,
@@ -40,6 +41,7 @@ func ConvertAdmissionRequestToV1(r *v1beta1.AdmissionRequest) *v1.AdmissionReque
 }
 
 // ConvertAdmissionRequestToV1beta1 converts AdmissionRequest to v1beta1.AdmissionRequest.
+// nolint
 func ConvertAdmissionRequestToV1beta1(r *v1.AdmissionRequest) *v1beta1.AdmissionRequest {
 	return &v1beta1.AdmissionRequest{
 		Kind:               r.Kind,
@@ -61,6 +63,7 @@ func ConvertAdmissionRequestToV1beta1(r *v1.AdmissionRequest) *v1beta1.Admission
 }
 
 // ConvertAdmissionResponseToV1 converts AdmissionResponse to v1.AdmissionResponse.
+// nolint
 func ConvertAdmissionResponseToV1(r *v1beta1.AdmissionResponse) *v1.AdmissionResponse {
 	var pt *v1.PatchType
 	if r.PatchType != nil {
@@ -79,6 +82,7 @@ func ConvertAdmissionResponseToV1(r *v1beta1.AdmissionResponse) *v1.AdmissionRes
 }
 
 // ConvertAdmissionResponseToV1beta1 converts AdmissionResponse to v1beta1.AdmissionResponse.
+// nolint
 func ConvertAdmissionResponseToV1beta1(r *v1.AdmissionResponse) *v1beta1.AdmissionResponse {
 	var pt *v1beta1.PatchType
 	if r.PatchType != nil {

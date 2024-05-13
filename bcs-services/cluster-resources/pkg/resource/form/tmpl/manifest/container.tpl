@@ -193,6 +193,9 @@ resources:
     {{- if .requests.memory }}
     memory: {{ .requests.memory }}Mi
     {{- end }}
+    {{- if index . "requests" "ephemeral-storage" }}
+    ephemeral-storage: {{ index . "requests" "ephemeral-storage" }}Gi
+    {{- end }}
     {{- if .requests.extra }}
     {{- range .requests.extra }}
     {{ .key }}: {{ .value | quote }}
@@ -206,6 +209,9 @@ resources:
     {{- end }}
     {{- if .limits.memory }}
     memory: {{ .limits.memory }}Mi
+    {{- end }}
+    {{- if index . "limits" "ephemeral-storage" }}
+    ephemeral-storage: {{ index . "limits" "ephemeral-storage" }}Gi
     {{- end }}
     {{- if .limits.extra }}
     {{- range .limits.extra }}

@@ -11,11 +11,15 @@
         handleSortChange,
         handleUpdateResource,
         handleDeleteResource,
-        nameValue, handleClearSearchData,
+        handleShowViewConfig,
         handleRestart,
         handleGotoUpdateRecord,
         handleRollback,
-        updateStrategyMap
+        updateStrategyMap,
+        clusterNameMap,
+        goNamespace,
+        isViewEditable,
+        isClusterMode
       }">
       <bk-table
         :data="curPageData"
@@ -23,9 +27,21 @@
         @page-change="handlePageChange"
         @page-limit-change="handlePageSizeChange"
         @sort-change="handleSortChange">
-        <bk-table-column :label="$t('generic.label.name')" prop="metadata.name" min-width="100" sortable>
+        <bk-table-column :label="$t('generic.label.name')" prop="metadata.name" min-width="100" sortable fixed="left">
           <template #default="{ row }">
-            <bk-button class="bcs-button-ellipsis" text @click="gotoDetail(row)">{{ row.metadata.name }}</bk-button>
+            <bk-button
+              class="bcs-button-ellipsis"
+              :disabled="isViewEditable"
+              text
+              @click="gotoDetail(row)">{{ row.metadata.name }}</bk-button>
+          </template>
+        </bk-table-column>
+        <bk-table-column :label="$t('cluster.labels.nameAndId')" v-if="!isClusterMode">
+          <template #default="{ row }">
+            <div class="flex flex-col py-[6px] h-[50px]">
+              <span class="bcs-ellipsis">{{ clusterNameMap[handleGetExtData(row.metadata.uid, 'clusterID')] }}</span>
+              <span class="bcs-ellipsis mt-[6px]">{{ handleGetExtData(row.metadata.uid, 'clusterID') }}</span>
+            </div>
           </template>
         </bk-table-column>
         <bk-table-column
@@ -33,6 +49,15 @@
           prop="metadata.namespace"
           min-width="100"
           sortable>
+          <template #default="{ row }">
+            <bk-button
+              class="bcs-button-ellipsis"
+              text
+              :disabled="isViewEditable"
+              @click="goNamespace(row)">
+              {{ row.metadata.namespace }}
+            </bk-button>
+          </template>
         </bk-table-column>
         <bk-table-column :label="$t('k8s.updateStrategy.text')" min-width="100">
           <template slot-scope="{ row }">
@@ -80,7 +105,12 @@
             </span>
           </template>
         </bk-table-column>
-        <bk-table-column :label="$t('generic.label.action')" :resizable="false" width="200">
+        <bk-table-column
+          :label="$t('generic.label.action')"
+          :resizable="false"
+          width="200"
+          fixed="right"
+          v-if="!isViewEditable">
           <template #default="{ row }">
             <bk-button
               text
@@ -125,7 +155,10 @@
           </template>
         </bk-table-column>
         <template #empty>
-          <BcsEmptyTableStatus :type="nameValue ? 'search-empty' : 'empty'" @clear="handleClearSearchData" />
+          <BcsEmptyTableStatus
+            :button-text="$t('generic.button.resetSearch')"
+            type="search-empty"
+            @clear="handleShowViewConfig" />
         </template>
       </bk-table>
     </template>

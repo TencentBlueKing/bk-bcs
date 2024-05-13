@@ -644,6 +644,7 @@ export default {
       this.cancelLoopAppList();
       this.cancelLoopInstanceList();
 
+      this.refresh();
       // this.$refs.bkSearcher.$emit('resetSearchParams', true);
     },
 

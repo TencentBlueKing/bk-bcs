@@ -42,5 +42,4 @@ func (s *Service) createRepo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp.WriteResp(w, nil)
-	return
 }

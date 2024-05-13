@@ -14,10 +14,13 @@ package node
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
@@ -26,11 +29,12 @@ import (
 
 // UpdateNodeLabelsAction action for update node labels
 type UpdateNodeLabelsAction struct {
-	ctx   context.Context
-	model store.ClusterManagerModel
-	req   *cmproto.UpdateNodeLabelsRequest
-	resp  *cmproto.UpdateNodeLabelsResponse
-	k8sOp *clusterops.K8SOperator
+	ctx     context.Context
+	model   store.ClusterManagerModel
+	req     *cmproto.UpdateNodeLabelsRequest
+	resp    *cmproto.UpdateNodeLabelsResponse
+	k8sOp   *clusterops.K8SOperator
+	cluster *cmproto.Cluster
 }
 
 // NewUpdateNodeLabelsAction create update action
@@ -44,6 +48,11 @@ func NewUpdateNodeLabelsAction(model store.ClusterManagerModel, k8sOp *clusterop
 func (ua *UpdateNodeLabelsAction) validate() error {
 	if err := ua.req.Validate(); err != nil {
 		return err
+	}
+	// get relative cluster for information injection
+	cluster, err := ua.model.GetCluster(ua.ctx, ua.req.ClusterID)
+	if err == nil {
+		ua.cluster = cluster
 	}
 
 	return nil
@@ -86,6 +95,23 @@ func (ua *UpdateNodeLabelsAction) updateNodeLabels() error { // nolint
 	for v := range failCh {
 		ua.resp.Data.Fail = append(ua.resp.Data.Fail, v)
 	}
+
+	// record operation log
+	err := ua.model.CreateOperationLog(ua.ctx, &cmproto.OperationLog{
+		ResourceType: common.Cluster.String(),
+		ResourceID:   ua.req.GetClusterID(),
+		TaskID:       "",
+		Message:      fmt.Sprintf("集群%s更新节点标签", ua.req.ClusterID),
+		OpUser:       auth.GetUserFromCtx(ua.ctx),
+		CreateTime:   time.Now().Format(time.RFC3339),
+		ClusterID:    ua.req.ClusterID,
+		ProjectID:    ua.cluster.ProjectID,
+		ResourceName: ua.cluster.ClusterName,
+	})
+	if err != nil {
+		blog.Errorf("updateNodeLabels[%s] CreateOperationLog failed: %v", ua.cluster.ClusterID, err)
+	}
+
 	return nil
 }
 

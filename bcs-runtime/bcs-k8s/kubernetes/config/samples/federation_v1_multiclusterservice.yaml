@@ -1,0 +1,7 @@
+apiVersion: federation.bkbcs.tencent.com/v1
+kind: MultiClusterService
+metadata:
+  name: multiclusterservice-sample
+spec:
+  # Add fields here
+  foo: bar

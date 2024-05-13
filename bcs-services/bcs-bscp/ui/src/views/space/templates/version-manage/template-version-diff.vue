@@ -66,6 +66,7 @@
   const versionListLoading = ref(false);
   const configDiffData = ref<IDiffDetail>({
     contentType: 'text',
+    id: 0,
     current: {
       content: '',
     },
@@ -120,6 +121,7 @@
   const handleSelectVersion = async (id: number) => {
     const version = versionList.value.find((item) => item.id === id);
     if (version) {
+      configDiffData.value.id = id;
       configDiffData.value.base.content = await getConfigContent(version);
       configDiffData.value.base.permission = version.spec.permission;
     }
@@ -130,6 +132,7 @@
     versionList.value = [];
     configDiffData.value = {
       contentType: 'text',
+      id: 0,
       current: {
         content: '',
       },

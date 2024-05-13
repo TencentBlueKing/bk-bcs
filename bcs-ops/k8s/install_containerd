@@ -23,7 +23,7 @@ safe_source() {
     #shellcheck source=/dev/null
     source "${source_file}"
   else
-    echo "[ERROR]: FAIL to source, missing ${source_file}"
+    echo "[ERROR]: FAIL to source, missing ${source_file}" >&2
     exit 1
   fi
   return 0
@@ -39,8 +39,15 @@ _yum_containerd() {
     curl -fsSL "$yum_repo" \
       | sed "s#https://download.docker.com#${MIRROR_URL}/docker-ce#g" \
       | tee "${repo_file}"
-    [[ ! -f /etc/tlinux-release ]] \
-      || sed -i "s/\$releasever/7/g" "$ROOT_DIR/docker-ce.repo"
+    if [[ -f /etc/tlinux-release ]];then
+      if grep "TencentOS Server 3.[0-9]*" /etc/tlinux-release;then
+        sed -i "s/\$releasever/8/g" "$ROOT_DIR/docker-ce.repo"
+      elif grep "TencentOS Server 2.[0-9]*" /etc/tlinux-release;then
+        sed -i "s/\$releasever/7/g" "$ROOT_DIR/docker-ce.repo"
+      elif grep "Tencent tlinux release 2.[0-9]*" /etc/tlinux-release;then
+        sed -i "s/\$releasever/7/g" "$ROOT_DIR/docker-ce.repo"
+      fi
+    fi
   else
     yum_repo="https://download.docker.com/linux/centos/docker-ce.repo"
     curl -fsSL "$yum_repo" -O "${repo_file}"
@@ -104,7 +111,7 @@ _offline_containerd() {
   if [[ -z ${tar_name} ]]; then
     utils::log "FATAL" "can't find docker installation package in ${bin_path}"
   else
-    tar xvzf "${tar_name}" -C /usr/bin/ --strip-components=1 bin/
+    tar xvzf "${tar_name}" -C /usr/local/bin/ --strip-components=1 bin/
     tar xvzf "${tar_name}" -C /etc/systemd/system/ --strip-components=1 systemd/
   fi
 
@@ -234,9 +241,11 @@ main() {
   test_img_url=${BK_PUBLIC_REPO:-"docker.io"}/library/hello-world:latest
   utils::log "DEBUG" "hello-world: ${test_img_url}"
 
-  if ! (ctr -n k8s.io i pull --hosts-dir "/etc/containerd/certs.d" "$test_img_url" \
+  if ! ctr -n k8s.io i list|grep ${test_img_url};then
+    if ! (ctr -n k8s.io i pull --hosts-dir "/etc/containerd/certs.d" "$test_img_url" \
     && ctr -n k8s.io run --rm "$test_img_url" hello-world."$(date +%s)"); then
-    utils::log "ERROR" "Could not get containerd to run ${test_img_url}"
+      utils::log "ERROR" "Could not get containerd to run ${test_img_url}"
+    fi
   fi
   return 0
 }

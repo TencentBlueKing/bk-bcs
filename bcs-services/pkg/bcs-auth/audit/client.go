@@ -16,10 +16,10 @@ package audit
 import (
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/TencentBlueKing/bk-audit-go-sdk/bkaudit"
 	"github.com/google/uuid"
+	blog "k8s.io/klog/v2"
 
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 )

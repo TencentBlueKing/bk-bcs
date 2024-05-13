@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package secret xxx
 package secret
 
 import (
@@ -23,6 +24,7 @@ import (
 // project 是项目根路径，作为项目入口，来实现不同项目的软隔离隔离，通过token-policy-project来保证项目的认证
 // path 是密钥存储路径，方便区分管理密钥，实现不同环境不同路径等。 类似文件系统，每个path下有目录和文件，文件里保存具体data密钥
 // data 是具体密钥数据，由多个键值对组成，结构是一个 map[string]interface{}
+// nolint
 type SecretRequest struct {
 	Project string                 `json:"project"`
 	Path    string                 `json:"path"`
@@ -30,6 +32,7 @@ type SecretRequest struct {
 }
 
 // SecretMetadata secret metadata
+// nolint
 type SecretMetadata struct {
 	CreateTime     time.Time                `json:"CreatedTime"`
 	UpdatedTime    time.Time                `json:"UpdatedTime"`
@@ -38,6 +41,7 @@ type SecretMetadata struct {
 }
 
 // SecretVersion secret version
+// nolint
 type SecretVersion struct {
 	Version      int       `mapstructure:"version"`
 	CreatedTime  time.Time `mapstructure:"created_time"`
@@ -46,6 +50,7 @@ type SecretVersion struct {
 }
 
 // SecretManager secret interface
+// nolint
 type SecretManager interface {
 	// Init init client
 	Init() error
@@ -77,10 +82,12 @@ type SecretManager interface {
 	UpdateSecret(ctx context.Context, req *SecretRequest) error
 
 	// DeleteSecret 完全移除文件或目录的data和metadata
+	// nolint
 	DeleteSecret(ctx context.Context, req *SecretRequest) error
 }
 
 // SecretManagerWithVersion 基于SecretManager实现版本控制管理
+// nolint
 type SecretManagerWithVersion interface {
 	SecretManager
 

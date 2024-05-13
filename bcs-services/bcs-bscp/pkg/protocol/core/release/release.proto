@@ -37,6 +37,8 @@ message ReleaseStatus {
   }
   string publish_status = 1;
   repeated ReleasedGroup released_groups = 2;
+  // 是否全量发布过,或者发布过默认分组
+  bool fully_released = 3;
 }
 
 // ReleaseAttachment source resource reference: pkg/dal/table/release.go

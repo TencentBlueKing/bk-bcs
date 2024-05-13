@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package predicate xxx
@@ -18,14 +17,14 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/emicklei/go-restful"
+	schedulerapi "k8s.io/kubernetes/pkg/scheduler/api"
+
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/pkg/actions"
 	v1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/pkg/ipscheduler/v1"
 	v2 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/pkg/ipscheduler/v2"
 	v3 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/pkg/ipscheduler/v3"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/pkg/metrics"
-
-	"github.com/emicklei/go-restful"
-	schedulerapi "k8s.io/kubernetes/pkg/scheduler/api"
 )
 
 const (
@@ -67,11 +66,12 @@ func handleIpSchedulerPredicate(req *restful.Request, resp *restful.Response) {
 		}
 
 		metricsArgs.Status = metrics.ErrStatus
-		resp.WriteEntity(extenderFilterResult)
+		resp.WriteEntity(extenderFilterResult) // nolint
 		return
 	}
 
 	metricsArgs.Status = metrics.SucStatus
+	// nolint
 	if ipSchedulerVersion == actions.IpSchedulerV1 {
 		extenderFilterResult, err = v1.HandleIpSchedulerPredicate(extenderArgs)
 	} else if ipSchedulerVersion == actions.IpSchedulerV2 {
@@ -94,6 +94,5 @@ func handleIpSchedulerPredicate(req *restful.Request, resp *restful.Response) {
 		metricsArgs.Status = metrics.ErrStatus
 	}
 
-	resp.WriteEntity(extenderFilterResult)
-	return
+	resp.WriteEntity(extenderFilterResult) // nolint
 }

@@ -239,6 +239,14 @@ var metricsMaps = map[string]metricsFn{
 		return mp.client.GetPodCPUUsage(mp.ctx, mp.projectID, mp.clusterID, mp.namespace,
 			mp.podNames, mp.startTime, mp.endTime, mp.stepDuration)
 	},
+	"bcs:pod:cpu_limit_usage": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
+		return mp.client.GetPodCPULimitUsage(mp.ctx, mp.projectID, mp.clusterID, mp.namespace,
+			mp.podNames, mp.startTime, mp.endTime, mp.stepDuration)
+	},
+	"bcs:pod:cpu_request_usage": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
+		return mp.client.GetPodCPURequestUsage(mp.ctx, mp.projectID, mp.clusterID, mp.namespace,
+			mp.podNames, mp.startTime, mp.endTime, mp.stepDuration)
+	},
 	"bcs:pod:memory_used": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
 		return mp.client.GetPodMemoryUsed(mp.ctx, mp.projectID, mp.clusterID, mp.namespace,
 			mp.podNames, mp.startTime, mp.endTime, mp.stepDuration)

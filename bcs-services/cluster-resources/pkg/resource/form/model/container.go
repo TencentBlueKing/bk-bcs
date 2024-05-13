@@ -95,9 +95,10 @@ type ContainerRes struct {
 
 // ResRequirement 资源集
 type ResRequirement struct {
-	CPU    int        `structs:"cpu"`
-	Memory int        `structs:"memory"`
-	Extra  []ResExtra `structs:"extra"`
+	CPU              int        `structs:"cpu"`
+	Memory           int        `structs:"memory"`
+	EphemeralStorage int        `structs:"ephemeral-storage"`
+	Extra            []ResExtra `structs:"extra"`
 }
 
 // ResExtra 额外资源集

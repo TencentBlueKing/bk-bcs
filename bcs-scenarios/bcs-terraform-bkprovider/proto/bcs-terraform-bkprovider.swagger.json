@@ -1,0 +1,1169 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "BCS Api Proxy API Doc",
+    "version": "0.1.0"
+  },
+  "schemes": [
+    "http"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/terraform-bkprovider/v1/cloud": {
+      "get": {
+        "summary": "获取云区域",
+        "description": "获取云区域",
+        "operationId": "BcsTerraformBkProvider_ListCloud",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsterraformbkproviderCloudListResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "tags": [
+          "BcsTerraformBkProvider"
+        ]
+      },
+      "delete": {
+        "summary": "删除云区域",
+        "description": "删除云区域",
+        "operationId": "BcsTerraformBkProvider_DeleteCloud",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsterraformbkproviderCloudDeleteResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "bk_cloud_id",
+            "description": "bk_cloud_id. 云区域ID",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "BcsTerraformBkProvider"
+        ]
+      },
+      "post": {
+        "summary": "创建云区域",
+        "description": "创建云区域",
+        "operationId": "BcsTerraformBkProvider_CreateCloud",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsterraformbkproviderCloudCreateResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/bcsterraformbkproviderCloudCreateRequest"
+            }
+          }
+        ],
+        "tags": [
+          "BcsTerraformBkProvider"
+        ]
+      },
+      "put": {
+        "summary": "更新云区域",
+        "description": "更新云区域",
+        "operationId": "BcsTerraformBkProvider_UpdateCloud",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsterraformbkproviderCloudUpdateResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/bcsterraformbkproviderCloudUpdateRequest"
+            }
+          }
+        ],
+        "tags": [
+          "BcsTerraformBkProvider"
+        ]
+      }
+    },
+    "/terraform-bkprovider/v1/get_job_detail": {
+      "post": {
+        "summary": "获取Job详情",
+        "description": "获取Job详情",
+        "operationId": "BcsTerraformBkProvider_GetJobDetail",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsterraformbkproviderGetJobDetailResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/bcsterraformbkproviderGetJobDetailRequest"
+            }
+          }
+        ],
+        "tags": [
+          "BcsTerraformBkProvider"
+        ]
+      }
+    },
+    "/terraform-bkprovider/v1/install_job": {
+      "post": {
+        "summary": "GSE任务下发接口",
+        "description": "GSE任务下发接口",
+        "operationId": "BcsTerraformBkProvider_InstallJob",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsterraformbkproviderInstallJobResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/bcsterraformbkproviderInstallJobRequest"
+            }
+          }
+        ],
+        "tags": [
+          "BcsTerraformBkProvider"
+        ]
+      }
+    },
+    "/terraform-bkprovider/v1/list_host": {
+      "post": {
+        "summary": "查询gse agent信息",
+        "description": "查询gse agent信息",
+        "operationId": "BcsTerraformBkProvider_ListHost",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsterraformbkproviderListHostResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/bcsterraformbkproviderListHostRequest"
+            }
+          }
+        ],
+        "tags": [
+          "BcsTerraformBkProvider"
+        ]
+      }
+    },
+    "/terraform-bkprovider/v1/list_proxy_host": {
+      "get": {
+        "summary": "查询gse proxy信息",
+        "description": "查询gse proxy信息",
+        "operationId": "BcsTerraformBkProvider_ListProxyHost",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsterraformbkproviderListProxyHostResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "bk_cloud_id",
+            "description": "bk_cloud_id. 云ID",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "BcsTerraformBkProvider"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "bcsterraformbkproviderCloud": {
+      "type": "object",
+      "properties": {
+        "bk_cloud_id": {
+          "type": "integer",
+          "format": "int32",
+          "description": "云区域ID",
+          "title": "bk_cloud_id"
+        },
+        "bk_cloud_name": {
+          "type": "string",
+          "description": "云区域名称",
+          "title": "bk_cloud_name"
+        },
+        "isp": {
+          "type": "string",
+          "description": "运营商，如Amazon、Tencent",
+          "title": "isp"
+        },
+        "ap_id": {
+          "type": "integer",
+          "format": "int32",
+          "description": "接入点ID",
+          "title": "ap_id"
+        }
+      }
+    },
+    "bcsterraformbkproviderCloudCreateRequest": {
+      "type": "object",
+      "properties": {
+        "bk_cloud_name": {
+          "type": "string",
+          "description": "云区域名称",
+          "title": "bk_cloud_name"
+        },
+        "isp": {
+          "type": "string",
+          "description": "运营商，如Amazon、Tencent",
+          "title": "isp"
+        },
+        "ap_id": {
+          "type": "integer",
+          "format": "int32",
+          "description": "接入点ID",
+          "title": "ap_id"
+        }
+      }
+    },
+    "bcsterraformbkproviderCloudCreateResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "type": "integer",
+          "format": "int32",
+          "description": "创建的云区域ID",
+          "title": "data"
+        }
+      }
+    },
+    "bcsterraformbkproviderCloudDeleteResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        }
+      }
+    },
+    "bcsterraformbkproviderCloudListResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bcsterraformbkproviderCloud"
+          },
+          "description": "云区域列表",
+          "title": "data"
+        }
+      }
+    },
+    "bcsterraformbkproviderCloudUpdateRequest": {
+      "type": "object",
+      "properties": {
+        "bk_cloud_id": {
+          "type": "integer",
+          "format": "int32",
+          "description": "云区域ID",
+          "title": "bk_cloud_id"
+        },
+        "bk_cloud_name": {
+          "type": "string",
+          "description": "云区域名称",
+          "title": "bk_cloud_name"
+        },
+        "isp": {
+          "type": "string",
+          "description": "运营商，如Amazon、Tencent",
+          "title": "isp"
+        },
+        "ap_id": {
+          "type": "integer",
+          "format": "int32",
+          "description": "接入点ID",
+          "title": "ap_id"
+        }
+      }
+    },
+    "bcsterraformbkproviderCloudUpdateResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        }
+      }
+    },
+    "bcsterraformbkproviderCondition": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string",
+          "description": "关键词, 可选值inner_ip、node_type、os_type、status、bk_cloud_id、query",
+          "title": "key"
+        },
+        "value": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "值",
+          "title": "value"
+        }
+      }
+    },
+    "bcsterraformbkproviderGetJobDetailRequest": {
+      "type": "object",
+      "properties": {
+        "conditions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bcsterraformbkproviderCondition"
+          },
+          "description": "搜索条件, 可选Key, 1: ip，IP地址 2:instance_id，主机实例ID 3: status，执行状态",
+          "title": "conditions"
+        },
+        "page": {
+          "type": "integer",
+          "format": "int32",
+          "description": "当前页数，默认为1",
+          "title": "page"
+        },
+        "pagesize": {
+          "type": "integer",
+          "format": "int32",
+          "description": "分页大小，默认为10",
+          "title": "pagesize"
+        },
+        "job_id": {
+          "type": "string",
+          "format": "int64",
+          "description": "任务ID，必填",
+          "title": "job_id"
+        }
+      },
+      "description": "获取Job详情",
+      "title": "GetJobDetailRequest"
+    },
+    "bcsterraformbkproviderGetJobDetailResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "$ref": "#/definitions/bcsterraformbkproviderJobInfo",
+          "description": "作业详情",
+          "title": "data"
+        }
+      },
+      "description": "获取Job详情",
+      "title": "GetJobDetailResponse"
+    },
+    "bcsterraformbkproviderHostInfo": {
+      "type": "object",
+      "properties": {
+        "bk_cloud_id": {
+          "type": "integer",
+          "format": "int32",
+          "description": "云区域ID",
+          "title": "bk_cloud_id"
+        },
+        "bk_biz_id": {
+          "type": "integer",
+          "format": "int32",
+          "description": "业务ID",
+          "title": "bk_biz_id"
+        },
+        "bk_host_id": {
+          "type": "integer",
+          "format": "int32",
+          "description": "主机ID",
+          "title": "bk_host_id"
+        },
+        "bk_host_name": {
+          "type": "string",
+          "description": "主机名",
+          "title": "bk_host_name"
+        },
+        "bk_addressing": {
+          "type": "string",
+          "description": "寻址方式，1: 静态 2: 动态",
+          "title": "bk_addressing"
+        },
+        "os_type": {
+          "type": "string",
+          "description": "操作系统，1：LINUX 2：WINDOWS 3：AIX 4：SOLARIS",
+          "title": "os_type"
+        },
+        "inner_ip": {
+          "type": "string",
+          "description": "内网IPv4地址",
+          "title": "inner_ip"
+        },
+        "inner_ipv6": {
+          "type": "string",
+          "description": "内网IPv6地址",
+          "title": "inner_ipv6"
+        },
+        "outer_ip": {
+          "type": "string",
+          "description": "外网IPv4地址",
+          "title": "outer_ip"
+        },
+        "outer_ipv6": {
+          "type": "string",
+          "description": "外网IPv6地址",
+          "title": "outer_ipv6"
+        },
+        "ap_id": {
+          "type": "integer",
+          "format": "int32",
+          "description": "接入点ID",
+          "title": "ap_id"
+        },
+        "install_channel_id": {
+          "type": "integer",
+          "format": "int32",
+          "description": "安装通道ID",
+          "title": "install_channel_id"
+        },
+        "login_ip": {
+          "type": "string",
+          "description": "登录IP",
+          "title": "login_ip"
+        },
+        "data_ip": {
+          "type": "string",
+          "description": "数据IP",
+          "title": "data_ip"
+        },
+        "status": {
+          "type": "string",
+          "description": "运行状态",
+          "title": "status"
+        },
+        "version": {
+          "type": "string",
+          "description": "Agent版本",
+          "title": "version"
+        },
+        "created_at": {
+          "type": "string",
+          "description": "创建时间",
+          "title": "created_at"
+        },
+        "updated_at": {
+          "type": "string",
+          "description": "更新时间",
+          "title": "updated_at"
+        },
+        "is_manual": {
+          "type": "boolean",
+          "description": "是否手动模式",
+          "title": "is_manual"
+        },
+        "status_display": {
+          "type": "string",
+          "description": "运行执行状态名称",
+          "title": "status_display"
+        },
+        "bk_cloud_name": {
+          "type": "string",
+          "description": "云区域名称",
+          "title": "bk_cloud_name"
+        },
+        "install_channel_name": {
+          "type": "string",
+          "description": "安装通道名称",
+          "title": "install_channel_name"
+        },
+        "bk_biz_name": {
+          "type": "string",
+          "description": "业务名称",
+          "title": "bk_biz_name"
+        },
+        "operate_permission": {
+          "type": "boolean",
+          "description": "是否具有操作权限",
+          "title": "operate_permission"
+        }
+      }
+    },
+    "bcsterraformbkproviderInstallHost": {
+      "type": "object",
+      "properties": {
+        "bk_cloud_id": {
+          "type": "string",
+          "format": "int64",
+          "description": "云ID",
+          "title": "bk_cloud_id"
+        },
+        "bk_biz_id": {
+          "type": "string",
+          "format": "int64",
+          "description": "业务ID",
+          "title": "bk_biz_id"
+        },
+        "bk_host_id": {
+          "type": "string",
+          "format": "int64",
+          "description": "主机ID",
+          "title": "bk_host_id"
+        },
+        "os_type": {
+          "type": "string",
+          "description": "操作系统类型，1：LINUX 2：WINDOWS 3：AIX 4：SOLARIS",
+          "title": "os_type"
+        },
+        "inner_ip": {
+          "type": "string",
+          "description": "内网IP",
+          "title": "inner_ip"
+        },
+        "outer_ip": {
+          "type": "string",
+          "description": "外网IP",
+          "title": "outer_ip"
+        },
+        "login_ip": {
+          "type": "string",
+          "description": "登录IP",
+          "title": "login_ip"
+        },
+        "account": {
+          "type": "string",
+          "description": "账户",
+          "title": "account"
+        },
+        "port": {
+          "type": "string",
+          "format": "int64",
+          "description": "端口",
+          "title": "port"
+        },
+        "auth_type": {
+          "type": "string",
+          "description": "认证类型，1：PASSWORD，密码认证 2: KEY，秘钥认证 3：TJJ_PASSWORD，默认为密码认证",
+          "title": "auth_type"
+        },
+        "password": {
+          "type": "string",
+          "description": "密码",
+          "title": "password"
+        },
+        "ap_id": {
+          "type": "string",
+          "format": "int64",
+          "description": "接入点ID",
+          "title": "ap_id"
+        },
+        "key": {
+          "type": "string",
+          "description": "秘钥",
+          "title": "key"
+        }
+      },
+      "description": "安装主机信息",
+      "title": "InstallHost",
+      "required": [
+        "bk_cloud_id",
+        "bk_biz_id",
+        "os_type",
+        "inner_ip"
+      ]
+    },
+    "bcsterraformbkproviderInstallJobData": {
+      "type": "object",
+      "properties": {
+        "job_id": {
+          "type": "string",
+          "format": "int64",
+          "description": "任务ID",
+          "title": "job_id"
+        }
+      }
+    },
+    "bcsterraformbkproviderInstallJobRequest": {
+      "type": "object",
+      "properties": {
+        "job_type": {
+          "type": "string",
+          "description": "作业类型, 可选值INSTALL_AGENT/RESTART_AGENT/REINSTALL_AGENT/UNINSTALL_AGENT/REMOVE_AGENT/UPGRADE_AGENT/RELOAD_AGENT/INSTALL_PROXY/RESTART_PROXY/REINSTALL_PROXY/UNINSTALL_PROXY/UPGRADE_PROXY/RELOAD_PROXY",
+          "title": "job_type"
+        },
+        "hosts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bcsterraformbkproviderInstallHost"
+          },
+          "description": "安装主机列表",
+          "title": "hosts"
+        }
+      },
+      "description": "安装任务请求",
+      "title": "InstallJobRequest",
+      "required": [
+        "job_type",
+        "hosts"
+      ]
+    },
+    "bcsterraformbkproviderInstallJobResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "$ref": "#/definitions/bcsterraformbkproviderInstallJobData",
+          "description": "返回数据",
+          "title": "data"
+        }
+      }
+    },
+    "bcsterraformbkproviderJobInfo": {
+      "type": "object",
+      "properties": {
+        "job_id": {
+          "type": "string",
+          "format": "int64",
+          "description": "任务ID",
+          "title": "job_id"
+        },
+        "created_by": {
+          "type": "string",
+          "description": "创建者",
+          "title": "created_by"
+        },
+        "job_type": {
+          "type": "string",
+          "description": "作业类型，见job_type定义",
+          "title": "job_type"
+        },
+        "job_type_display": {
+          "type": "string",
+          "description": "作业类型名称",
+          "title": "job_type_display"
+        },
+        "ip_filter_list": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "过滤的IP列表，不在指定的筛选范围内",
+          "title": "ip_filter_list"
+        },
+        "total": {
+          "type": "integer",
+          "format": "int32",
+          "description": "实例记录数量总和",
+          "title": "total"
+        },
+        "list": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bcsterraformbkproviderList"
+          },
+          "description": "过滤的主机详细信息列表，见list定义",
+          "title": "list"
+        },
+        "statistics": {
+          "$ref": "#/definitions/bcsterraformbkproviderStatistics",
+          "description": "任务统计信息，见statistics定义",
+          "title": "statistics"
+        },
+        "status": {
+          "type": "string",
+          "description": "执行状态，见status定义",
+          "title": "status"
+        },
+        "end_time": {
+          "type": "string",
+          "description": "完成时间",
+          "title": "end_time"
+        },
+        "start_time": {
+          "type": "string",
+          "description": "启动时间时间",
+          "title": "start_time"
+        },
+        "cost_time": {
+          "type": "string",
+          "description": "执行耗时，单位为秒",
+          "title": "cost_time"
+        },
+        "meta": {
+          "$ref": "#/definitions/bcsterraformbkproviderMeta",
+          "description": "执行任务元数据信息，见meta定义",
+          "title": "meta"
+        }
+      }
+    },
+    "bcsterraformbkproviderList": {
+      "type": "object",
+      "properties": {
+        "filter_host": {
+          "type": "boolean"
+        },
+        "bk_host_id": {
+          "type": "string",
+          "format": "int64"
+        },
+        "ip": {
+          "type": "string"
+        },
+        "inner_ip": {
+          "type": "string"
+        },
+        "inner_ipv6": {
+          "type": "string"
+        },
+        "bk_cloud_id": {
+          "type": "string",
+          "format": "int64"
+        },
+        "bk_cloud_name": {
+          "type": "string"
+        },
+        "bk_biz_id": {
+          "type": "string",
+          "format": "int64"
+        },
+        "bk_biz_name": {
+          "type": "string"
+        },
+        "job_id": {
+          "type": "string",
+          "format": "int64"
+        },
+        "status": {
+          "type": "string"
+        },
+        "status_display": {
+          "type": "string"
+        }
+      }
+    },
+    "bcsterraformbkproviderListHostData": {
+      "type": "object",
+      "properties": {
+        "total": {
+          "type": "integer",
+          "format": "int32",
+          "description": "数量",
+          "title": "total"
+        },
+        "list": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bcsterraformbkproviderHostInfo"
+          },
+          "description": "主机信息列表",
+          "title": "list"
+        }
+      }
+    },
+    "bcsterraformbkproviderListHostRequest": {
+      "type": "object",
+      "properties": {
+        "conditions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bcsterraformbkproviderCondition"
+          },
+          "description": "搜索条件",
+          "title": "conditions"
+        },
+        "page": {
+          "type": "integer",
+          "format": "int32",
+          "description": "当前页数，默认为1",
+          "title": "page"
+        },
+        "pagesize": {
+          "type": "integer",
+          "format": "int32",
+          "description": "分页大小，默认为10",
+          "title": "pagesize"
+        },
+        "bk_biz_ids": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "description": "蓝鲸业务ID",
+          "title": "bk_biz_ids"
+        }
+      },
+      "description": "安装任务请求",
+      "title": "ListHostRequest"
+    },
+    "bcsterraformbkproviderListHostResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "$ref": "#/definitions/bcsterraformbkproviderListHostData",
+          "description": "返回主机信息",
+          "title": "data"
+        }
+      }
+    },
+    "bcsterraformbkproviderListProxyHostResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bcsterraformbkproviderProxyHost"
+          },
+          "description": "返回主机信息",
+          "title": "data"
+        }
+      }
+    },
+    "bcsterraformbkproviderMeta": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "step_type": {
+          "type": "string"
+        },
+        "op_type": {
+          "type": "string"
+        },
+        "op_type_display": {
+          "type": "string"
+        },
+        "step_type_display": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        },
+        "plugin_name": {
+          "type": "string"
+        }
+      }
+    },
+    "bcsterraformbkproviderProxyHost": {
+      "type": "object",
+      "properties": {
+        "bk_cloud_id": {
+          "type": "string",
+          "format": "int64",
+          "description": "云区域ID",
+          "title": "bk_cloud_id"
+        },
+        "bk_host_id": {
+          "type": "string",
+          "format": "int64",
+          "description": "主机ID",
+          "title": "bk_host_id"
+        },
+        "bk_biz_id": {
+          "type": "string",
+          "format": "int64",
+          "description": "业务ID",
+          "title": "bk_biz_id"
+        },
+        "inner_ip": {
+          "type": "string",
+          "description": "内网IP",
+          "title": "inner_ip"
+        },
+        "inner_ipv6": {
+          "type": "string",
+          "description": "内网IPv6地址",
+          "title": "inner_ipv6"
+        },
+        "outer_ip": {
+          "type": "string",
+          "description": "外网IP",
+          "title": "outer_ip"
+        },
+        "outer_ipv6": {
+          "type": "string",
+          "description": "外网IPv6地址",
+          "title": "outer_ipv6"
+        },
+        "login_ip": {
+          "type": "string",
+          "description": "登录IP",
+          "title": "login_ip"
+        },
+        "data_ip": {
+          "type": "string",
+          "description": "数据IP",
+          "title": "data_ip"
+        },
+        "ap_id": {
+          "type": "string",
+          "format": "int64",
+          "description": "接入点ID",
+          "title": "ap_id"
+        },
+        "ap_name": {
+          "type": "string",
+          "description": "接入点名称",
+          "title": "ap_name"
+        },
+        "status": {
+          "type": "string",
+          "description": "状态",
+          "title": "status"
+        },
+        "version": {
+          "type": "string",
+          "description": "版本",
+          "title": "version"
+        },
+        "port": {
+          "type": "string",
+          "format": "int64",
+          "description": "端口",
+          "title": "port"
+        }
+      }
+    },
+    "bcsterraformbkproviderStatistics": {
+      "type": "object",
+      "properties": {
+        "total_count": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "failed_count": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "ignored_count": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "pending_count": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "running_count": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "success_count": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "type_url": {
+          "type": "string",
+          "description": "A URL/resource name that uniquely identifies the type of the serialized\nprotocol buffer message. This string must contain at least\none \"/\" character. The last segment of the URL's path must represent\nthe fully qualified name of the type (as in\n`path/google.protobuf.Duration`). The name should be in a canonical form\n(e.g., leading \".\" is not accepted).\n\nIn practice, teams usually precompile into the binary all types that they\nexpect it to use in the context of Any. However, for URLs which use the\nscheme `http`, `https`, or no scheme, one can optionally set up a type\nserver that maps type URLs to message definitions as follows:\n\n* If no scheme is provided, `https` is assumed.\n* An HTTP GET on the URL must yield a [google.protobuf.Type][]\n  value in binary format, or produce an error.\n* Applications are allowed to cache lookup results based on the\n  URL, or have them precompiled into a binary to avoid any\n  lookup. Therefore, binary compatibility needs to be preserved\n  on changes to types. (Use versioned type names to manage\n  breaking changes.)\n\nNote: this functionality is not currently available in the official\nprotobuf release, and it is not used for type URLs beginning with\ntype.googleapis.com.\n\nSchemes other than `http`, `https` (or the empty scheme) might be\nused with implementation specific semantics."
+        },
+        "value": {
+          "type": "string",
+          "format": "byte",
+          "description": "Must be a valid serialized protocol buffer of the above specified type."
+        }
+      },
+      "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(\u0026foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n\n Example 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\n Example 4: Pack and unpack a message in Go\n\n     foo := \u0026pb.Foo{...}\n     any, err := ptypes.MarshalAny(foo)\n     ...\n     foo := \u0026pb.Foo{}\n     if err := ptypes.UnmarshalAny(any, foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\n\nJSON\n====\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": \u003cstring\u003e,\n      \"lastName\": \u003cstring\u003e\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }"
+    },
+    "runtimeError": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string"
+        },
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    }
+  }
+}

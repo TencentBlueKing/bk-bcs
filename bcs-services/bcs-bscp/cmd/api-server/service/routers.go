@@ -162,6 +162,14 @@ func (p *proxy) routers() http.Handler {
 		r.Post("/", p.configImportService.ConfigFileImport)
 	})
 
+	// 导出配置压缩包
+	r.Route("/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/config_item/export", func(r chi.Router) {
+		r.Use(p.authorizer.UnifiedAuthentication)
+		r.Use(p.authorizer.BizVerified)
+		r.Use(p.HttpServerHandledTotal("", "ConfigFileExport"))
+		r.Get("/", p.configExportService.ConfigFileExport)
+	})
+
 	// 获取通知中心通知列表
 	r.Route("/api/v1/announcements", func(r chi.Router) {
 		r.Get("/", p.bkNotice.GetCurrentAnnouncements)
@@ -179,6 +187,27 @@ func (p *proxy) routers() http.Handler {
 		r.Use(p.authorizer.UnifiedAuthentication)
 		r.Use(p.authorizer.BizVerified)
 		r.Get("/", p.kvService.Export)
+	})
+
+	// 导出全局变量
+	r.Route("/api/v1/config/biz/{biz_id}/variables/export", func(r chi.Router) {
+		r.Use(p.authorizer.UnifiedAuthentication)
+		r.Use(p.authorizer.BizVerified)
+		r.Get("/", p.varService.ExportGlobalVariables)
+	})
+	// 导出未命名版本服务变量
+	r.Route("/api/v1/config/biz/{biz_id}/apps/{app_id}/variables/export", func(r chi.Router) {
+		r.Use(p.authorizer.UnifiedAuthentication)
+		r.Use(p.authorizer.BizVerified)
+		r.Use(p.authorizer.AppVerified)
+		r.Get("/", p.varService.ExportAppVariables)
+	})
+	// 导出已命名版本服务变量
+	r.Route("/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/variables/export", func(r chi.Router) {
+		r.Use(p.authorizer.UnifiedAuthentication)
+		r.Use(p.authorizer.BizVerified)
+		r.Use(p.authorizer.AppVerified)
+		r.Get("/", p.varService.ExportReleasedAppVariables)
 	})
 
 	return r

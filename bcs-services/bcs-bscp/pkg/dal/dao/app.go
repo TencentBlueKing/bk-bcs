@@ -74,7 +74,7 @@ func (dao *appDao) List(kit *kit.Kit, bizList []uint32, name, operator string, o
 	}
 	if name != "" {
 		// 按名称模糊搜索
-		conds = append(conds, m.Name.Like("%"+name+"%"))
+		conds = append(conds, m.Name.Regexp("(?i)"+name))
 	}
 
 	var (
@@ -186,7 +186,7 @@ func (dao *appDao) Create(kit *kit.Kit, g *table.App) (uint32, error) {
 		}
 		if err = eDecorator.Fire(one); err != nil {
 			logs.Errorf("fire create app: %s event failed, err: %v, rid: %s", g.ID, err, kit.Rid)
-			return errors.New("fire event failed, " + err.Error())
+			return errors.New("fire event failed, " + err.Error()) // nolint goconst
 		}
 
 		return nil
@@ -392,7 +392,7 @@ func (dao *appDao) ListAppMetaForCache(kit *kit.Kit, bizID uint32, appIDs []uint
 	m := dao.genQ.App
 	q := dao.genQ.App.WithContext(kit.Ctx)
 
-	result, err := q.Select(m.ID, m.Name, m.ConfigType, m.Mode, m.ReloadType, m.ReloadFilePath).
+	result, err := q.Select(m.ID, m.Name, m.ConfigType).
 		Where(m.BizID.Eq(bizID), m.ID.In(appIDs...)).Find()
 	if err != nil {
 		return nil, err
@@ -403,8 +403,6 @@ func (dao *appDao) ListAppMetaForCache(kit *kit.Kit, bizID uint32, appIDs []uint
 		meta[one.ID] = &types.AppCacheMeta{
 			Name:       one.Spec.Name,
 			ConfigType: one.Spec.ConfigType,
-			Mode:       one.Spec.Mode,
-			Reload:     one.Spec.Reload,
 		}
 	}
 

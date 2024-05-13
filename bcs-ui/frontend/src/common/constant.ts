@@ -13,6 +13,10 @@ export const K8S_LABEL_KEY = '^((([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9
 export const K8S_LABEL_VALUE = '^([a-zA-Z0-9]?([-_.a-zA-Z0-9]{0,61}[a-zA-Z0-9])?)?$';
 export const K8S_ANNOTATIONS_KEY = '^(?:(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?.)+[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?/)?[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$';
 
+// 凭证 正则
+export const NAME_REGEX = '^[0-9a-zA-Z-]+$';
+export const SECRET_REGEX = '^[0-9a-zA-Z-~]+$';
+
 // 集群环境
 export const CLUSTER_ENV = {
   stag: 'UAT',

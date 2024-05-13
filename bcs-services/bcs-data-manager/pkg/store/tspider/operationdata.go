@@ -17,10 +17,10 @@ import (
 	"fmt"
 
 	sq "github.com/Masterminds/squirrel"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/jmoiron/sqlx"
 	"google.golang.org/protobuf/types/known/structpb"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 	datamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
 )
@@ -30,7 +30,7 @@ const (
 	ProjectRequestType = "project"
 	// ClusterRequestType type of operation data supportted
 	ClusterRequestType = "cluster"
-	//NamespaceRequestType type of operation data supportted
+	// NamespaceRequestType type of operation data supportted
 	NamespaceRequestType = "namespace"
 
 	// ProjectCodeColumnKey column key for project type data

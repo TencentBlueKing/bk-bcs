@@ -351,6 +351,7 @@ func TestAddr(t *testing.T) {
 }
 
 type GreeterServer struct {
+	helloworld.UnimplementedGreeterServer
 }
 
 func (gs *GreeterServer) SayHello(ctx context.Context, request *helloworld.HelloRequest) (*helloworld.HelloReply, error) {

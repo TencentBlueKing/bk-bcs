@@ -17,9 +17,13 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync"
+
+	"golang.org/x/sync/errgroup"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/i18n"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
@@ -41,8 +45,8 @@ func (s *Service) CreateTemplateVariable(ctx context.Context, req *pbcs.CreateTe
 	}
 
 	if !strings.HasPrefix(strings.ToLower(req.Name), constant.TemplateVariablePrefix) {
-		return nil, errf.Errorf(grpcKit, errf.InvalidArgument, "template variable name must start with %s",
-			constant.TemplateVariablePrefix)
+		return nil, errf.Errorf(errf.InvalidArgument, i18n.T(grpcKit,
+			"template variable name must start with %s", constant.TemplateVariablePrefix))
 	}
 
 	r := &pbds.CreateTemplateVariableReq{
@@ -92,6 +96,72 @@ func (s *Service) DeleteTemplateVariable(ctx context.Context, req *pbcs.DeleteTe
 	}
 
 	return &pbcs.DeleteTemplateVariableResp{}, nil
+}
+
+// BatchDeleteTemplateVariable batch delete template variable
+func (s *Service) BatchDeleteTemplateVariable(ctx context.Context, req *pbcs.BatchDeleteBizResourcesReq) (
+	*pbcs.BatchDeleteResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+	}
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
+		return nil, err
+	}
+
+	idsLen := len(req.Ids)
+	if idsLen == 0 || idsLen > constant.ArrayInputLenLimit {
+		return nil, errf.Errorf(errf.InvalidArgument, i18n.T(grpcKit,
+			"the length of template variable ids is %d, it must be within the range of [1,%d]",
+			idsLen, constant.ArrayInputLenLimit))
+	}
+
+	eg, egCtx := errgroup.WithContext(grpcKit.RpcCtx())
+	eg.SetLimit(10)
+
+	var successfulIDs, failedIDs []uint32
+	var mux sync.Mutex
+
+	// 使用 data-service 原子接口
+	for _, v := range req.Ids {
+		v := v
+		eg.Go(func() error {
+			r := &pbds.DeleteTemplateVariableReq{
+				Id: v,
+				Attachment: &pbtv.TemplateVariableAttachment{
+					BizId: req.BizId,
+				},
+			}
+			if _, err := s.client.DS.DeleteTemplateVariable(egCtx, r); err != nil {
+				logs.Errorf("delete template variable failed, err: %v, rid: %s", err, grpcKit.Rid)
+
+				// 错误不返回异常，记录错误ID
+				mux.Lock()
+				failedIDs = append(failedIDs, v)
+				mux.Unlock()
+				return nil
+			}
+
+			mux.Lock()
+			successfulIDs = append(successfulIDs, v)
+			mux.Unlock()
+
+			return nil
+		})
+	}
+
+	if err := eg.Wait(); err != nil {
+		logs.Errorf("batch delete failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, errf.Errorf(errf.Aborted, i18n.T(grpcKit, "batch delete failed"))
+	}
+
+	// 全部失败, 当前API视为失败
+	if len(failedIDs) == len(req.Ids) {
+		return nil, errf.Errorf(errf.Aborted, i18n.T(grpcKit, "batch delete failed"))
+	}
+
+	return &pbcs.BatchDeleteResp{SuccessfulIds: successfulIDs, FailedIds: failedIDs}, nil
 }
 
 // UpdateTemplateVariable update a template variable
@@ -189,16 +259,16 @@ func (s *Service) ImportTemplateVariables(ctx context.Context, req *pbcs.ImportT
 		if line == "" {
 			continue
 		}
-
 		var fields []string
 		if req.Separator == whiteSpace {
 			fields = strings.Fields(line)
 		} else {
-			fields = strings.Split(line, req.Separator)
+			fields = strings.SplitN(line, req.Separator, 4)
 		}
+
 		// validate variables content
-		if len(fields) != 3 && len(fields) != 4 {
-			return nil, fmt.Errorf("the line [%s] is not valid, which must be 3 or 4 fields", line)
+		if len(fields) < 3 {
+			return nil, fmt.Errorf("the line [%s] is not valid, minimum is 3 fields", line)
 		}
 		if !strings.HasPrefix(strings.ToLower(fields[0]), constant.TemplateVariablePrefix) {
 			return nil, fmt.Errorf("template variable name must start with %s", constant.TemplateVariablePrefix)
@@ -209,9 +279,11 @@ func (s *Service) ImportTemplateVariables(ctx context.Context, req *pbcs.ImportT
 			Type:       strings.TrimSpace(fields[1]),
 			DefaultVal: strings.TrimSpace(fields[2]),
 		}
-		if len(fields) == 4 {
-			v.Memo = strings.TrimSpace(fields[3])
+
+		if len(fields) > 3 {
+			v.Memo = strings.TrimSpace(strings.Join(fields[3:], " "))
 		}
+
 		vars = append(vars, v)
 	}
 

@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gomicro-discovery-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gomicro-discovery-operator
+  template:
+    metadata:
+      labels:
+        app: gomicro-discovery-operator
+    spec:
+      serviceAccountName: testadmin
+      containers:
+        - name: gomicro-discovery-operator
+          image: "gomicro-discovery-operator:latest"
+          imagePullPolicy: IfNotPresent
+          command:
+            - "/app/gomicro-discovery-operator"

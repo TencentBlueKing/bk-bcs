@@ -150,7 +150,7 @@ func ListNodesByIP(ips []string, opt *cloudprovider.ListNodesOption) ([]*proto.N
 func ListExternalNodesByIP(ips []string, opt *cloudprovider.ListNodesOption) ([]*proto.Node, error) {
 	var nodes []*proto.Node
 
-	hostDataList, err := cmdb.GetCmdbClient().QueryHostInfoWithoutBiz(ips, cmdb.Page{
+	hostDataList, err := cmdb.GetCmdbClient().QueryHostInfoWithoutBiz(cmdb.FieldHostIP, ips, cmdb.Page{
 		Start: 0,
 		Limit: len(ips),
 	})

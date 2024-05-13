@@ -219,11 +219,12 @@ func (da *DeleteAction) Handle( // nolint
 			}
 			return task.TaskID
 		}(),
-		Message:    fmt.Sprintf("集群%s删除节点池%s", da.group.ClusterID, da.group.NodeGroupID),
-		OpUser:     req.Operator,
-		CreateTime: time.Now().Format(time.RFC3339),
-		ClusterID:  da.group.ClusterID,
-		ProjectID:  da.group.ProjectID,
+		Message:      fmt.Sprintf("集群%s删除节点池%s", da.group.ClusterID, da.group.NodeGroupID),
+		OpUser:       req.Operator,
+		CreateTime:   time.Now().Format(time.RFC3339),
+		ClusterID:    da.group.ClusterID,
+		ProjectID:    da.group.ProjectID,
+		ResourceName: da.group.GetName(),
 	})
 	if err != nil {
 		blog.Errorf("DeleteNodeGroup[%s] CreateOperationLog failed: %v", da.group.NodeGroupID, err)
@@ -406,6 +407,7 @@ func (da *RemoveNodeAction) Handle(
 		Message:      fmt.Sprintf("集群%s节点池%s移除节点", da.group.ClusterID, da.group.NodeGroupID),
 		OpUser:       da.group.Creator,
 		CreateTime:   time.Now().Format(time.RFC3339),
+		ResourceName: da.group.GetName(),
 	})
 	if err != nil {
 		blog.Errorf("RemoveNodesFromNodeGroup[%s] CreateOperationLog failed: %v", da.group.NodeGroupID, err)
@@ -677,6 +679,7 @@ func (da *CleanNodesAction) Handle(
 		CreateTime:   time.Now().Format(time.RFC3339),
 		ClusterID:    da.cluster.ClusterID,
 		ProjectID:    da.cluster.ProjectID,
+		ResourceName: da.group.GetName(),
 	})
 	if err != nil {
 		blog.Errorf("CleanNodesFromNodeGroup[%s] CreateOperationLog failed: %v", da.group.NodeGroupID, err)

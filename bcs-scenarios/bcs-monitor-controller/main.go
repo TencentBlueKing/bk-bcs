@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package main xxx
 package main
 
 import (
@@ -19,22 +19,20 @@ import (
 	"os"
 	"strconv"
 
-	corev1 "k8s.io/api/core/v1"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
-
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
-	_ "k8s.io/client-go/plugin/pkg/client/auth"
-
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
+	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
 	monitorextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/api/v1"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/apiclient"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/controllers"
@@ -59,6 +57,7 @@ func init() {
 	// +kubebuilder:scaffold:scheme
 }
 
+// nolint funlen
 func main() {
 	opts := &option.ControllerOption{}
 	opts.BindFromCommandLine()
@@ -92,7 +91,6 @@ func main() {
 	}
 
 	ctx := context.Background()
-	monitorCli := apiclient.NewBkmApiClient(opts)
 	fileOp := fileoperator.NewFileOperator(mgr.GetClient())
 
 	repoManager, err := repo.NewRepoManager(mgr.GetClient(), opts)
@@ -113,9 +111,10 @@ func main() {
 
 		Ctx:           ctx,
 		FileOp:        fileOp,
-		MonitorApiCli: monitorCli,
+		MonitorApiCli: apiclient.NewBkmApiClient("rule", opts),
 		MonitorRender: monitorRender,
 		Opts:          opts,
+		SubPath:       "rule",
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "MonitorRule")
 		os.Exit(1)
@@ -126,7 +125,7 @@ func main() {
 
 		Ctx:           ctx,
 		FileOp:        fileOp,
-		MonitorApiCli: monitorCli,
+		MonitorApiCli: apiclient.NewBkmApiClient("noticeGroup", opts),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "NoticeGroup")
 		os.Exit(1)
@@ -137,7 +136,10 @@ func main() {
 
 		Ctx:           ctx,
 		FileOp:        fileOp,
-		MonitorApiCli: monitorCli,
+		MonitorApiCli: apiclient.NewBkmApiClient("panel", opts),
+		MonitorRender: monitorRender,
+		SubPath:       "panel",
+		Opts:          opts,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Panel")
 		os.Exit(1)
@@ -151,7 +153,7 @@ func main() {
 		Render:      monitorRender,
 		RepoManager: repoManager,
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Panel")
+		setupLog.Error(err, "unable to create controller", "controller", "AppMonitor")
 		os.Exit(1)
 	}
 	// +kubebuilder:scaffold:builder

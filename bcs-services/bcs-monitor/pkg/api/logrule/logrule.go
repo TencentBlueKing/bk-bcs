@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"sort"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/util/rand"
@@ -304,7 +305,8 @@ func DeleteLogRule(c *rest.Context) (interface{}, error) {
 		// 删除 bklog 数据
 		err = bklog.DeleteLogCollectors(c.Request.Context(), lc.RuleID)
 		if err != nil {
-			return nil, err
+			// 有可能日志平台侧已经删除，这时删除会失败，可以忽略报错，继续删除数据库记录
+			blog.Errorf("delete bklog rule error, %s", err.Error())
 		}
 	}
 

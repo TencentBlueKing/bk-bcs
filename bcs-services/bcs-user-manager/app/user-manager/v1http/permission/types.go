@@ -67,11 +67,12 @@ type UserInfo struct {
 
 // ClusterResource cluster permission metadata
 type ClusterResource struct {
-	ClusterType ClusterType
-	ProjectID   string
-	ClusterID   string
-	Namespace   string
-	URL         string
+	ClusterType  ClusterType
+	ProjectID    string
+	ClusterID    string
+	Namespace    string
+	ResourceType string
+	URL          string
 }
 
 // VerifyClusterPermissionRequest cluster request permission

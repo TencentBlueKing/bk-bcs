@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -44,7 +44,7 @@ type GeneralPodAutoscaler struct {
 	// +optional
 	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 
-	// spec is the specification for the behaviour of the autoscaler.
+	// spec is the specification for the behavior of the autoscaler.
 	// More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status.
 	// +optional
 	// +kubebuilder:validation:Required
@@ -207,7 +207,7 @@ type MetricSpec struct {
 	// available to normal per-pod metrics using the "pods" source.
 	// This is an alpha feature and can be enabled by the HPAContainerMetrics feature flag.
 	// +optional
-	ContainerResource *ContainerResourceMetricSource `json:"containerResource,omitempty" protobuf:"bytes,6,opt,name=containerResource"`
+	ContainerResource *ContainerResourceMetricSource `json:"containerResource,omitempty" protobuf:"bytes,6,opt,name=containerResource"` // nolint
 }
 
 // GeneralPodAutoscalerBehavior configures the scaling behavior of the target
@@ -254,7 +254,7 @@ type GPAScalingRules struct {
 	// - For scale up: 0 (i.e. no stabilization is done).
 	// - For scale down: 300 (i.e. the stabilization window is 300 seconds long).
 	// +optional
-	StabilizationWindowSeconds *int32 `json:"stabilizationWindowSeconds,omitempty" protobuf:"varint,3,opt,name=stabilizationWindowSeconds"`
+	StabilizationWindowSeconds *int32 `json:"stabilizationWindowSeconds,omitempty" protobuf:"varint,3,opt,name=stabilizationWindowSeconds"` // nolint
 	// selectPolicy is used to specify which policy should be used.
 	// If not set, the default value MaxPolicySelect is used.
 	// +optional
@@ -452,7 +452,7 @@ type GeneralPodAutoscalerStatus struct {
 
 	// LastCronScheduleTime is the schedule time of time mode
 	// +optional
-	LastCronScheduleTime *metav1.Time `json:"lastCronScheduleTime,omitempty" protobuf:"bytes,7,rep,name=lastCronScheduleTime"`
+	LastCronScheduleTime *metav1.Time `json:"lastCronScheduleTime,omitempty" protobuf:"bytes,7,rep,name=lastCronScheduleTime"` // nolint
 }
 
 // GeneralPodAutoscalerConditionType are the valid conditions of
@@ -522,7 +522,7 @@ type MetricStatus struct {
 	External *ExternalMetricStatus `json:"external,omitempty" protobuf:"bytes,5,opt,name=external"`
 	// to normal per-pod metrics using the "pods" source.
 	// +optional
-	ContainerResource *ContainerResourceMetricStatus `json:"containerResource,omitempty" protobuf:"bytes,6,opt,name=containerResource"`
+	ContainerResource *ContainerResourceMetricStatus `json:"containerResource,omitempty" protobuf:"bytes,6,opt,name=containerResource"` // nolint
 }
 
 // ObjectMetricStatus indicates the current value of a metric describing a

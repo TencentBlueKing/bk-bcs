@@ -104,6 +104,7 @@ func (cli *PermVerifyClient) VerifyClusterPermission(ctx context.Context, user *
 		if resource.Namespace == "" {
 			resource.Namespace = requestInfo.Namespace
 		}
+		resource.ResourceType = requestInfo.Resource
 
 		// retry verify permission
 		allowed := false
@@ -309,7 +310,7 @@ func (cli *PermVerifyClient) verifyUserNamespaceScopedPermission(ctx context.Con
 		}
 		if !exist {
 			blog.Log(ctx).Infof("PermVerifyClient verifyUserNamespaceScopedPermission namespace[%s] not exist "+
-				"project[%s] cluster[%s]", resource.Namespace, projectID, resource.ClusterID)
+				"project[%s] cluster[%s]", resource.Namespace, projectID, resource.ClusterID) // nolint goconst
 			return false, nil
 		}
 		blog.Log(ctx).Infof("PermVerifyClient verifyUserNamespaceScopedPermission namespace[%s] exist "+
@@ -331,6 +332,7 @@ func (cli *PermVerifyClient) verifyUserNamespaceScopedPermission(ctx context.Con
 			ProjectID: projectID,
 			ClusterID: resource.ClusterID,
 		},
+		Attr: utils.GetResourceAttr(resource.ResourceType),
 	}
 	blog.Log(ctx).Infof("PermVerifyClient verifyUserNamespaceScopedPermission user[%s] actionID[%s] resource[%+v]",
 		user, actionID, rn1)

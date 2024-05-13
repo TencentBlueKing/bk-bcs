@@ -17,8 +17,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+	blog "k8s.io/klog/v2"
 
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"

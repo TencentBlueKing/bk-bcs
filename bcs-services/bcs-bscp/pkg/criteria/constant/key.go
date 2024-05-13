@@ -83,7 +83,7 @@ const (
 	DefaultTmplSetMemo = "当前空间下的所有模版"
 
 	// DefaultLanguage is default language
-	DefaultLanguage = "zh"
+	DefaultLanguage = "zh-cn"
 )
 
 // Note:

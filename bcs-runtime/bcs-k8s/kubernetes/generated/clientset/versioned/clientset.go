@@ -18,6 +18,7 @@ import (
 	"fmt"
 
 	cloudv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/generated/clientset/versioned/typed/cloud/v1"
+	federationv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/generated/clientset/versioned/typed/federation/v1"
 	monitorv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/generated/clientset/versioned/typed/monitor/v1"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/generated/clientset/versioned/typed/networkextension/v1"
 	discovery "k8s.io/client-go/discovery"
@@ -28,6 +29,7 @@ import (
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
 	CloudV1() cloudv1.CloudV1Interface
+	FederationV1() federationv1.FederationV1Interface
 	MonitorV1() monitorv1.MonitorV1Interface
 	NetworkextensionV1() networkextensionv1.NetworkextensionV1Interface
 }
@@ -37,6 +39,7 @@ type Interface interface {
 type Clientset struct {
 	*discovery.DiscoveryClient
 	cloudV1            *cloudv1.CloudV1Client
+	federationV1       *federationv1.FederationV1Client
 	monitorV1          *monitorv1.MonitorV1Client
 	networkextensionV1 *networkextensionv1.NetworkextensionV1Client
 }
@@ -44,6 +47,11 @@ type Clientset struct {
 // CloudV1 retrieves the CloudV1Client
 func (c *Clientset) CloudV1() cloudv1.CloudV1Interface {
 	return c.cloudV1
+}
+
+// FederationV1 retrieves the FederationV1Client
+func (c *Clientset) FederationV1() federationv1.FederationV1Interface {
+	return c.federationV1
 }
 
 // MonitorV1 retrieves the MonitorV1Client
@@ -81,6 +89,10 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 	if err != nil {
 		return nil, err
 	}
+	cs.federationV1, err = federationv1.NewForConfig(&configShallowCopy)
+	if err != nil {
+		return nil, err
+	}
 	cs.monitorV1, err = monitorv1.NewForConfig(&configShallowCopy)
 	if err != nil {
 		return nil, err
@@ -102,6 +114,7 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 func NewForConfigOrDie(c *rest.Config) *Clientset {
 	var cs Clientset
 	cs.cloudV1 = cloudv1.NewForConfigOrDie(c)
+	cs.federationV1 = federationv1.NewForConfigOrDie(c)
 	cs.monitorV1 = monitorv1.NewForConfigOrDie(c)
 	cs.networkextensionV1 = networkextensionv1.NewForConfigOrDie(c)
 
@@ -113,6 +126,7 @@ func NewForConfigOrDie(c *rest.Config) *Clientset {
 func New(c rest.Interface) *Clientset {
 	var cs Clientset
 	cs.cloudV1 = cloudv1.New(c)
+	cs.federationV1 = federationv1.New(c)
 	cs.monitorV1 = monitorv1.New(c)
 	cs.networkextensionV1 = networkextensionv1.New(c)
 

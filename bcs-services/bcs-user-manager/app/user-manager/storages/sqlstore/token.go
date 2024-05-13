@@ -214,6 +214,7 @@ func (u *realTokenStore) decryptToken(token string) (string, error) {
 func (u *realTokenStore) GetAllClients() []models.BcsClientUser {
 	var err error
 	var tokens []models.BcsClientUser
+	// nolint goconst
 	u.db.Raw(`SELECT c.project_code, c.name, c.manager, c.authority_user, c.created_by, c.created_at, c.updated_at, `+
 		`u.expires_at, u.user_token FROM bcs_clients AS c JOIN bcs_users AS u on u.name = c.name WHERE u.user_type = ? `+
 		`AND u.deleted_at IS NULL AND c.deleted_at IS NULL`, models.PlainUser).

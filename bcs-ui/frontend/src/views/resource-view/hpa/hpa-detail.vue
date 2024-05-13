@@ -81,11 +81,12 @@
         </bk-table>
       </bcs-tab-panel>
       <bcs-tab-panel name="event" :label="$t('generic.label.event')">
-        <EventQueryTableVue
+        <EventQueryTable
           hide-cluster-and-namespace
           :kinds="data.kind"
           :namespace="data.metadata.namespace"
-          :name="data.metadata.name" />
+          :name="data.metadata.name"
+          :cluster-id="extData.clusterID" />
       </bcs-tab-panel>
     </bcs-tab>
   </div>
@@ -96,11 +97,11 @@ import { defineComponent } from 'vue';
 import StatusIcon from '../../../components/status-icon';
 
 import { formatTime } from '@/common/util';
-import EventQueryTableVue from '@/views/project-manage/event-query/event-query-table.vue';
+import EventQueryTable from '@/views/project-manage/event-query/event-query-table.vue';
 
 export default defineComponent({
   name: 'HPADetail',
-  components: { StatusIcon, EventQueryTableVue },
+  components: { StatusIcon, EventQueryTable },
   props: {
     // 当前行数据
     data: {

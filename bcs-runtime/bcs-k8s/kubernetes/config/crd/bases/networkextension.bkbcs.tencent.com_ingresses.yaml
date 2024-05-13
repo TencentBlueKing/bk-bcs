@@ -349,6 +349,9 @@ spec:
                                   type: boolean
                                 isDirectConnect:
                                   type: boolean
+                                serviceKind:
+                                  description: default service
+                                  type: string
                                 serviceName:
                                   type: string
                                 serviceNamespace:
@@ -472,6 +475,9 @@ spec:
                             type: boolean
                           isDirectConnect:
                             type: boolean
+                          serviceKind:
+                            description: default service
+                            type: string
                           serviceName:
                             type: string
                           serviceNamespace:

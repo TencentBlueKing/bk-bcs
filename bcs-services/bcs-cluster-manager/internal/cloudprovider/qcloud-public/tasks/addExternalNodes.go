@@ -361,7 +361,7 @@ func GetExternalNodeScriptTask(taskID string, stepName string) error { // nolint
 	}
 
 	// get add external nodes script from cluster
-	script, err := business.GetClusterExternalNodeScript(ctx, dependInfo)
+	script, err := business.GetClusterExternalNodeScript(ctx, dependInfo, false)
 	if err != nil {
 		blog.Errorf("GetExternalNodeScriptTask[%s]: GetClusterExternalNodeScript for cluster[%s] failed, %s",
 			taskID, clusterID, err.Error())

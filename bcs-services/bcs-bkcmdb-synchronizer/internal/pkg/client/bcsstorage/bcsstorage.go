@@ -15,6 +15,7 @@ package bcsstorage
 
 import (
 	"context"
+
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
 	pmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
 	cmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
@@ -29,68 +30,68 @@ type bcsStorageClient struct {
 
 // GetCMDBClient returns a CMDB client instance.
 func (bsc *bcsStorageClient) GetCMDBClient() (client.CMDBClient, error) {
-	//implement me
+	// implement me
 	panic("implement me")
 }
 
 // GetProjectManagerConnWithURL get a project manager grpc connection with url
 func (bsc *bcsStorageClient) GetProjectManagerConnWithURL() (*grpc.ClientConn, error) {
-	//implement me
+	// implement me
 	panic("implement me")
 }
 
 // GetProjectManagerClient get a project manager grpc client
 func (bsc *bcsStorageClient) GetProjectManagerClient() (pmp.BCSProjectClient, error) {
-	//implement me
+	// implement me
 	panic("implement me")
 }
 
 // GetProjectManagerConn get a project manager grpc connection
 func (bsc *bcsStorageClient) GetProjectManagerConn() (*grpc.ClientConn, error) {
-	//implement me
+	// implement me
 	panic("implement me")
 }
 
 // NewPMGrpcClientWithHeader create a project manager grpc client with header
 func (bsc *bcsStorageClient) NewPMGrpcClientWithHeader(ctx context.Context,
 	conn *grpc.ClientConn) *client.ProjectManagerClientWithHeader {
-	//implement me
+	// implement me
 	panic("implement me")
 }
 
 // GetDataManagerConnWithURL get a data manager grpc connection with url
 func (bsc *bcsStorageClient) GetDataManagerConnWithURL() (*grpc.ClientConn, error) {
-	//implement me
+	// implement me
 	panic("implement me")
 }
 
 func (bsc *bcsStorageClient) GetDataManagerConn() (*grpc.ClientConn, error) {
-	//implement me
+	// implement me
 	panic("implement me")
 }
 
 // GetClusterManagerConnWithURL get a cluster manager grpc connection with url
 func (bsc *bcsStorageClient) GetClusterManagerConnWithURL() (*grpc.ClientConn, error) {
-	//implement me
+	// implement me
 	panic("implement me")
 }
 
 // GetClusterManagerClient get a cluster manager grpc client
 func (bsc *bcsStorageClient) GetClusterManagerClient() (cmp.ClusterManagerClient, error) {
-	//implement me
+	// implement me
 	panic("implement me")
 }
 
 // GetClusterManagerConn get a cluster manager grpc connection
 func (bsc *bcsStorageClient) GetClusterManagerConn() (*grpc.ClientConn, error) {
-	//implement me
+	// implement me
 	panic("implement me")
 }
 
 // NewCMGrpcClientWithHeader create a cluster manager grpc client with header
 func (bsc *bcsStorageClient) NewCMGrpcClientWithHeader(ctx context.Context,
 	conn *grpc.ClientConn) *client.ClusterManagerClientWithHeader {
-	//implement me
+	// implement me
 	panic("implement me")
 }
 

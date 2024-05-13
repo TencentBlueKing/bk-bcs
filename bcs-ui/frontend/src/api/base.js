@@ -99,6 +99,7 @@ export const nodeAvailable = request('post', `${prefix}/clustermanager/v1/node/a
 export const cloudAccounts = request('get', `${prefix}/clustermanager/v1/clouds/$cloudId/accounts`);
 export const createCloudAccounts = request('post', `${prefix}/clustermanager/v1/clouds/$cloudId/accounts`);
 export const deleteCloudAccounts = request('delete', `${prefix}/clustermanager/v1/clouds/$cloudId/accounts/$accountID`);
+export const cloudResourceGroupByAccount = request('get', `${prefix}/clustermanager/v1/clouds/$cloudId/resourcegroups`);
 export const cloudRegionByAccount = request('get', `${prefix}/clustermanager/v1/clouds/$cloudId/regions`);
 export const cloudClusterList = request('get', `${prefix}/clustermanager/v1/clouds/$cloudId/clusters`);
 export const taskRetry = request('put', `${prefix}/clustermanager/v1/task/$taskId/retry`);

@@ -41,6 +41,7 @@ func DeleteCloudNodeGroupTask(taskID string, stepName string) error {
 	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
 	nodeGroupID := step.Params[cloudprovider.NodeGroupIDKey.String()]
+
 	// inject taskID
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
 	// check validate
@@ -61,32 +62,21 @@ func DeleteCloudNodeGroupTask(taskID string, stepName string) error {
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
-	if dependInfo.NodeGroup.AutoScaling == nil || len(dependInfo.NodeGroup.CloudNodeGroupID) == 0 {
+
+	if len(dependInfo.NodeGroup.CloudNodeGroupID) == 0 {
 		blog.Errorf("DeleteCloudNodeGroupTask[%s]: nodegroup %s in task %s step %s has no autoscaling group",
 			taskID, nodeGroupID, taskID, stepName)
-		retErr := fmt.Errorf("get autoScalingID err, %v", err)
-		_ = state.UpdateStepFailure(start, stepName, retErr)
-		return retErr
+		_ = state.UpdateStepSucc(start, stepName)
+		return nil
 	}
 
-	//// 默认不保留实例
-	// keepInstance := false
-	// if step.Params["KeepInstance"] == "true" {
-	//	keepInstance = true
-	// }
-
 	// delete agentPool
-	if err = deleteAgentPool(ctx, dependInfo, stepName); err != nil {
+	if err = deleteAgentPool(ctx, dependInfo); err != nil {
 		blog.Errorf("DeleteCloudNodeGroupTask[%s]: deleteAgentPool[%s] in task %s step %s failed, %s",
 			taskID, nodeGroupID, taskID, stepName, err.Error())
 		retErr := fmt.Errorf("call deleteAgentPool[%s] api err, %s", nodeGroupID, err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
-	}
-
-	// update response information to task common params
-	if state.Task.CommonParams == nil {
-		state.Task.CommonParams = make(map[string]string)
 	}
 
 	// update step
@@ -98,7 +88,7 @@ func DeleteCloudNodeGroupTask(taskID string, stepName string) error {
 }
 
 // deleteAgentPool 删除节点池
-func deleteAgentPool(rootCtx context.Context, info *cloudprovider.CloudDependBasicInfo, stepName string) error {
+func deleteAgentPool(rootCtx context.Context, info *cloudprovider.CloudDependBasicInfo) error {
 	var (
 		group       = info.NodeGroup
 		cluster     = info.Cluster
@@ -112,18 +102,21 @@ func deleteAgentPool(rootCtx context.Context, info *cloudprovider.CloudDependBas
 		return errors.Wrapf(err, "call NewAgentPoolClientWithOpt[%s] falied", taskID)
 	}
 
-	if _, err = client.GetPoolAndReturn(ctx, cluster.SystemID, group.CloudNodeGroupID); err != nil {
+	if _, err = client.GetPoolAndReturn(ctx, cloudprovider.GetClusterResourceGroup(info.Cluster),
+		cluster.SystemID, group.CloudNodeGroupID); err != nil {
 		if !(strings.Contains(err.Error(), "NotFound") || strings.Contains(err.Error(), "not found")) {
 			return errors.Wrapf(err, "deleteAgentPool[%s]: call GetPoolAndReturn[%s][%s] failed", taskID,
 				cluster.SystemID, group.CloudNodeGroupID)
 		}
-		blog.Warnf("DeleteCloudNodeGroupTask[%s]: nodegroup[%s/%s] in task %s step %s not found, skip delete",
-			taskID, group.CloudNodeGroupID, group.CloudNodeGroupID, stepName, stepName)
+		blog.Warnf("DeleteCloudNodeGroupTask[%s]: nodegroup[%s/%s] not found, skip delete",
+			taskID, group.CloudNodeGroupID, group.CloudNodeGroupID)
+
+		return nil
 	}
 
 	ctx, cancel = context.WithTimeout(rootCtx, 20*time.Minute)
 	defer cancel()
-	if err = client.DeletePool(ctx, info); err != nil {
+	if err = client.DeletePool(ctx, info, cloudprovider.GetClusterResourceGroup(info.Cluster)); err != nil {
 		return errors.Wrapf(err, "deleteAgentPool[%s]: call DeletePool[%s][%s] failed", taskID,
 			cluster.SystemID, group.CloudNodeGroupID)
 	}

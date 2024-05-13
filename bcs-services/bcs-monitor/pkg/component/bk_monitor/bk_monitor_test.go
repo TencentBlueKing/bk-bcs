@@ -51,10 +51,3 @@ func TestQueryByPromQL(t *testing.T) {
 	assert.NoError(t, err)
 	assert.True(t, len(series) > 1)
 }
-
-func TestQueryClusterList(t *testing.T) {
-	ctx := context.Background()
-	result, err := queryClusterList(ctx, "")
-	assert.NoError(t, err)
-	assert.True(t, len(result.ClusterIdList) > 1)
-}

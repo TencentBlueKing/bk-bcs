@@ -7,6 +7,8 @@ run:
     - bcs-runtime/bcs-mesos
     - bcs-runtime/bcs-k8s/bcs-component/bcs-cc-agent
     - bcs-runtime/bcs-k8s/bcs-component/bcs-cpuset-device
+    - apis/*
+    - generated/*
     - .*/third_party/*
   skip-files:
     - .*\.docs\.go$

@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package requeueduration xxx
 package requeueduration
 
 import (
@@ -23,6 +23,7 @@ type DurationStore struct {
 	store sync.Map
 }
 
+// Push xxx
 func (dm *DurationStore) Push(key string, newDuration time.Duration) {
 	value, _ := dm.store.LoadOrStore(key, &Duration{})
 	requeueDuration, ok := value.(*Duration)
@@ -33,6 +34,7 @@ func (dm *DurationStore) Push(key string, newDuration time.Duration) {
 	requeueDuration.Update(newDuration)
 }
 
+// Pop xxx
 func (dm *DurationStore) Pop(key string) time.Duration {
 	value, ok := dm.store.Load(key)
 	if !ok {
@@ -52,6 +54,7 @@ type Duration struct {
 	duration time.Duration
 }
 
+// Update xxx
 func (rd *Duration) Update(newDuration time.Duration) {
 	rd.Lock()
 	defer rd.Unlock()
@@ -62,6 +65,7 @@ func (rd *Duration) Update(newDuration time.Duration) {
 	}
 }
 
+// Get xxx
 func (rd *Duration) Get() time.Duration {
 	rd.Lock()
 	defer rd.Unlock()

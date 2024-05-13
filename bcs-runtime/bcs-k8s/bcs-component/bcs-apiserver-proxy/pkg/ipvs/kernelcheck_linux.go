@@ -1,3 +1,4 @@
+//  nolint
 // NOCC:tosa/license(设计如此)
 //go:build linux
 // +build linux
@@ -12,7 +13,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package ipvs
@@ -23,10 +23,10 @@ import (
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/lithammer/dedent"
+
 	utilsexec "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-apiserver-proxy/pkg/ipvs/exec"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-apiserver-proxy/pkg/utils/sets"
-
-	"github.com/lithammer/dedent"
 )
 
 // RequiredIPVSKernelModulesAvailableCheck tests IPVS required kernel modules.
@@ -76,7 +76,7 @@ func (r RequiredIPVSKernelModulesAvailableCheck) Check() (warnings, errors []err
 		for _, builtInMode := range ipvsModules {
 			match, _ := regexp.Match(builtInMode+".ko", out)
 			if !match {
-				builtInModules.Insert(string(builtInMode))
+				builtInModules.Insert(builtInMode)
 			}
 		}
 		if len(builtInModules) != 0 {

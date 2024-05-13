@@ -1,5 +1,5 @@
 <template>
-  <BcsContent>
+  <BcsContent :title="$t('cluster.button.addCluster')">
     <div class="flex flex-col items-center justify-center">
       <div
         v-for="card, index in cardGroupList"
@@ -72,13 +72,13 @@
 <script lang="ts">
 import { computed, defineComponent, ref } from 'vue';
 
-import BcsContent from '../components/bcs-content.vue';
-
+import BcsContent from '@/components/layout/Content.vue';
 import { useAppData, useConfig } from '@/composables/use-app';
 import $i18n from '@/i18n/i18n-setup';
 import amazonLogo from '@/images/amazon.png';
 import azureLogo from '@/images/azure.png';
 import googleLogo from '@/images/google.png';
+import huaweiLogo from '@/images/huawei.png';
 import $router from '@/router';
 
 interface ICard {
@@ -141,6 +141,13 @@ export default defineComponent({
             type: 'azureCloud',
             disabled: true,
           },
+          {
+            icon: huaweiLogo,
+            title: $i18n.t('publicCloud.huawei.title'),
+            desc: $i18n.t('publicCloud.huawei.desc'),
+            type: 'azureCloud',
+            disabled: true,
+          },
         ],
       },
       {
@@ -195,7 +202,14 @@ export default defineComponent({
             title: $i18n.t('publicCloud.azure.title'),
             desc: $i18n.t('publicCloud.azure.desc'),
             type: 'azureCloud',
-            disabled: true,
+            disabled: _INTERNAL_.value,
+          },
+          {
+            icon: huaweiLogo,
+            title: $i18n.t('publicCloud.huawei.title'),
+            desc: $i18n.t('publicCloud.huawei.desc'),
+            type: 'huaweiCloud',
+            disabled: _INTERNAL_.value,
           },
         ],
       },
@@ -271,6 +285,16 @@ export default defineComponent({
         case 'googleCloud':
           $router.push({
             name: 'importGoogleCluster',
+          });
+          break;
+        case 'azureCloud':
+          $router.push({
+            name: 'importAzureCluster',
+          });
+          break;
+        case 'huaweiCloud':
+          $router.push({
+            name: 'importHuaweiCluster',
           });
           break;
       }

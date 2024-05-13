@@ -36,10 +36,26 @@ document.addEventListener('mouseup', (event) => {
   }
 });
 
+function checkMousePosition(event, el) {
+  const { clientX, clientY } = event;
+
+  const dom_x = Number(el.getBoundingClientRect().left);
+  const dom_x_width = Number(el.getBoundingClientRect().left + el.clientWidth);
+
+  const dom_y = Number(el.getBoundingClientRect().top);
+  const dom_y_height = Number(el.getBoundingClientRect().top + el.clientHeight);
+
+  if (clientX > dom_x && clientX < dom_x_width && clientY > dom_y && clientY < dom_y_height) {
+    return true;
+  }
+  return false;
+}
+
 export default {
   bind(el, binding, vnode) {
     const id = nodeList.push(el) - 1;
     const clickoutsideHandler = (mouseup = {}, mousedown = {}) => {
+      if (binding.modifiers?.pos && checkMousePosition(mouseup, el)) return;
       if (!vnode.context // 点击在vue实例之外的DOM上
                 || !mouseup.target
                 || !mousedown.target
@@ -62,7 +78,7 @@ export default {
       ) {
         vnode.context[el[clickctx].callbackName]();
       } else {
-        el[clickctx].bindingFn?.();
+        el[clickctx].callbackFn?.();
       }
     };
 

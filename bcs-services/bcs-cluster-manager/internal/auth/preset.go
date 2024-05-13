@@ -81,6 +81,7 @@ var NoAuthMethod = []string{
 	"ClusterManager.ListCloudSecurityGroups",
 	"ClusterManager.ListCloudInstanceTypes",
 	"ClusterManager.ListCloudOsImage",
+	"ClusterManager.ListCloudRuntimeInfo",
 	"ClusterManager.ListCloudInstances",
 	"ClusterManager.ListKeypairs",
 	"ClusterManager.ListCloudProjects",
@@ -180,6 +181,8 @@ var ActionPermissions = map[string]string{
 	"ClusterManager.EnableNodeGroupAutoScale":       cluster.CanManageClusterOperation,
 	"ClusterManager.DisableNodeGroupAutoScale":      cluster.CanManageClusterOperation,
 	"ClusterManager.GetExternalNodeScriptByGroupID": cluster.CanManageClusterOperation,
+	"ClusterManager.TransNodeGroupToNodeTemplate":   cluster.CanManageClusterOperation,
+	"ClusterManager.CleanDbHistoryData":             "",
 
 	// cloud template
 	"ClusterManager.CreateCloud": "",
@@ -244,6 +247,7 @@ var ActionPermissions = map[string]string{
 	"ClusterManager.ListCloudSecurityGroups": "",
 	"ClusterManager.ListCloudInstanceTypes":  "",
 	"ClusterManager.ListCloudOsImage":        "",
+	"ClusterManager.ListCloudRuntimeInfo":    "",
 	"ClusterManager.ListCloudInstances":      "",
 	"ClusterManager.ListOperationLogs":       "",
 	"ClusterManager.ListTaskStepLogs":        "",

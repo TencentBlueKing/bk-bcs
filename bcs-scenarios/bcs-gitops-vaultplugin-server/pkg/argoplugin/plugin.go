@@ -8,19 +8,19 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package argoplugin xxx
 package argoplugin
 
 import (
 	"context"
 	"fmt"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/argoproj-labs/argocd-vault-plugin/pkg/types"
 	"github.com/hashicorp/vault/api"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-vaultplugin-server/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-vaultplugin-server/pkg/secret"
 )
@@ -72,7 +72,8 @@ func (v *VaultArgoPlugin) GetSecrets(kvpath string, version string,
 }
 
 // GetIndividualSecret will get the specific secret (placeholder) from the SM backend
-// For Vault, we only support placeholders replaced from the k/v pairs of a secret which cannot be individually addressed
+// For Vault,
+// we only support placeholders replaced from the k/v pairs of a secret which cannot be individually addressed
 // So, we use GetSecrets and extract the specific placeholder we want
 func (v *VaultArgoPlugin) GetIndividualSecret(kvpath, secret, version string,
 	annotations map[string]string) (interface{}, error) {

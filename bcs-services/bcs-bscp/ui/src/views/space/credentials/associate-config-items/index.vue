@@ -1,28 +1,49 @@
 <template>
   <bk-sideslider
     :title="t('关联服务配置')"
-    width="400"
+    width="960"
     :is-show="props.show"
     :before-close="handleBeforeClose"
     @closed="handleClose">
+    <template #header>
+      <div class="header-wrapper">
+        <span>{{ t('关联服务配置') }}</span>
+        <bk-popover placement="bottom-start" theme="light" trigger="click" ext-cls="view-rule-wrap">
+          <span class="view-rule">{{ t('查看规则示例') }}</span>
+          <template #content>
+            <ViewRuleExample />
+          </template>
+        </bk-popover>
+      </div>
+    </template>
     <section class="associate-config-items">
       <div :class="['rules-wrapper', { 'edit-mode': isRuleEdit }]">
         <RuleEdit
           v-if="isRuleEdit"
+          v-model:preview-rule="previewRule"
           ref="ruleEdit"
           :id="props.id"
           :rules="rules"
           :app-list="appList"
           @change="handleRuleChange"
-          @form-change="isFormChange = true" />
-        <RuleView v-else :rules="rules" @edit="isRuleEdit = true" />
+          @form-change="isFormChange = true"
+          @trigger-save-btn-disabled="saveBtnDisabled = $event" />
+        <RuleView v-else v-model:preview-rule="previewRule" :rules="rules" @edit="isRuleEdit = true" />
       </div>
-      <!-- <div class="results-wrapper">
-        <MatchingResult />
-      </div> -->
+      <div v-if="rules.length || isRuleEdit" class="results-wrapper">
+        <MatchingResult :rule="previewRule" :bk-biz-id="spaceId" />
+      </div>
     </section>
     <div class="action-btns">
-      <bk-button v-if="isRuleEdit" theme="primary" :loading="pending" @click="handleSave"> {{ t('保存') }} </bk-button>
+      <bk-button
+        v-if="isRuleEdit"
+        theme="primary"
+        :loading="pending"
+        :disabled="saveBtnDisabled"
+        v-bk-tooltips="{ content: '请先预览所有关联规则修改结果后，才能保存', disabled: !saveBtnDisabled }"
+        @click="handleSave">
+        {{ t('保存') }}
+      </bk-button>
       <bk-button
         v-else
         v-cursor="{ active: !props.hasManagePerm }"
@@ -41,14 +62,15 @@
   import { storeToRefs } from 'pinia';
   import useGlobalStore from '../../../../store/global';
   import { getCredentialScopes, updateCredentialScopes } from '../../../../api/credentials';
-  import { ICredentialRule, IRuleUpdateParams } from '../../../../../types/credential';
+  import { ICredentialRule, IRuleUpdateParams, IPreviewRule } from '../../../../../types/credential';
   import useModalCloseConfirmation from '../../../../utils/hooks/use-modal-close-confirmation';
   import { getAppList } from '../../../../api/index';
   import { IAppItem } from '../../../../../types/app';
-  // import MatchingResult from './matching-result.vue'
+  import MatchingResult from './matching-result.vue';
   import RuleView from './rule-view.vue';
   import RuleEdit from './rule-edit.vue';
   import { Message } from 'bkui-vue';
+  import ViewRuleExample from './view-rule-example.vue';
 
   const { spaceId } = storeToRefs(useGlobalStore());
   const { t } = useI18n();
@@ -74,6 +96,8 @@
   const pending = ref(false);
   const ruleEdit = ref();
   const appList = ref<IAppItem[]>([]);
+  const previewRule = ref<IPreviewRule | null>(null);
+  const saveBtnDisabled = ref(false);
 
   onMounted(async () => {
     const resp = await getAppList(spaceId.value, { start: 0, all: true });
@@ -90,6 +114,7 @@
           alter_scope: [],
         };
       }
+      previewRule.value = null;
     },
   );
 
@@ -156,8 +181,8 @@
     height: calc(100vh - 101px);
   }
   .rules-wrapper {
+    flex: 1;
     padding: 16px 24px;
-    width: 400px;
     height: 100%;
     background: #ffffff;
     overflow: auto;
@@ -167,7 +192,7 @@
   }
   .results-wrapper {
     padding: 16px 24px;
-    width: 560px;
+    width: 360px;
     height: 100%;
     background: #f5f7fa;
     overflow: auto;
@@ -178,6 +203,14 @@
     .bk-button {
       margin-right: 8px;
       min-width: 88px;
+    }
+  }
+  .header-wrapper {
+    .view-rule {
+      margin-left: 24px;
+      font-size: 12px;
+      color: #3a84ff;
+      cursor: pointer;
     }
   }
 </style>

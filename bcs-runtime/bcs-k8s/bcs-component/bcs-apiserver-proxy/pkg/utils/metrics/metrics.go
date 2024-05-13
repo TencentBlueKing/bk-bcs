@@ -8,16 +8,15 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package metrics xxx
 package metrics
 
 import (
-	"github.com/prometheus/client_golang/prometheus"
-
 	"time"
+
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 const (
@@ -54,6 +53,7 @@ func init() {
 }
 
 // reportBcsApiserverProxyAPIMetrics report all api action metrics
+// nolint unused
 func reportBcsApiserverProxyAPIMetrics(handler, method, code string, started time.Time) {
 	requestTotalAPI.WithLabelValues(handler, method, code).Inc()
 	requestLatencyAPI.WithLabelValues(handler, method, code).Observe(time.Since(started).Seconds())

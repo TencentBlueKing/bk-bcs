@@ -145,7 +145,7 @@ export default defineComponent({
           $namespaceId: props.namespaceId,
           $podId: props.podId,
           $containerName: state.container,
-          $startedAt: state.log[state.log.length - 1]?.time || '',
+          $startedAt: encodeURIComponent(String(state.log[state.log.length - 1]?.time || '')),
         });
         state.contentLoading = false;
         logSSR?.addEventListener('open', () => {

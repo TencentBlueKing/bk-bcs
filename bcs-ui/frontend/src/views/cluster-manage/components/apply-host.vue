@@ -47,7 +47,10 @@
         :label-width="100"
         :model="formdata"
         :rules="rules">
-        <bk-form-item property="region" :label="$t('cluster.labels.region')" :required="true" :desc="defaultInfo.areaDesc">
+        <bk-form-item
+          property="region"
+          :label="$t('cluster.labels.region')"
+          :required="true" :desc="defaultInfo.areaDesc">
           <bcs-select
             :placeholder="$t('cluster.placeholder.region')"
             v-model="formdata.region"
@@ -63,7 +66,10 @@
               :name="item.regionName" />
           </bcs-select>
         </bk-form-item>
-        <bk-form-item property="networkKey" :label="$t('cluster.labels.networkType')" :desc="defaultInfo.netWorkDesc" :required="true">
+        <bk-form-item
+          property="networkKey"
+          :label="$t('cluster.labels.networkType')"
+          :desc="defaultInfo.netWorkDesc" :required="true">
           <div class="bk-button-group">
             <bcs-button
               :disabled="defaultInfo.networkKey && defaultInfo.networkKey !== 'overlay'"
@@ -98,7 +104,10 @@
               :name="item.label" />
           </bcs-select>
         </bk-form-item>
-        <bk-form-item property="vpc_name" :label="$t('cluster.create.label.vpc.text')" :required="true" :desc="defaultInfo.vpcDesc">
+        <bk-form-item
+          property="vpc_name"
+          :label="$t('cluster.create.label.vpc.text')"
+          :required="true" :desc="defaultInfo.vpcDesc">
           <bcs-select
             :placeholder="$t('generic.applyHost.placeholder.vpc')"
             v-model="formdata.vpc_name"
@@ -110,7 +119,10 @@
             <bcs-option v-for="item in vpcList" :key="item.vpcId" :id="item.vpcId" :name="item.vpcName" />
           </bcs-select>
         </bk-form-item>
-        <bk-form-item ext-cls="has-append-item" :label="$t('cluster.ca.nodePool.create.instanceTypeConfig.disk.data')" property="disk_size">
+        <bk-form-item
+          ext-cls="has-append-item"
+          :label="$t('cluster.ca.nodePool.create.instanceTypeConfig.disk.data')"
+          property="disk_size">
           <div class="disk-inner">
             <bcs-select class="w200" v-model="formdata.disk_type" :clearable="false">
               <bcs-option
@@ -123,7 +135,9 @@
             </bcs-select>
             <bk-input
               class="ml-[-1px]"
-              v-model="formdata.disk_size" type="number" :min="50" :placeholder="$t('generic.applyHost.validate.diskSize')">
+              v-model="formdata.disk_size" type="number"
+              :min="50"
+              :placeholder="$t('generic.applyHost.validate.diskSize')">
               <div class="group-text" slot="append">GB</div>
             </bk-input>
           </div>
@@ -161,7 +175,12 @@
               </bcs-select>
             </div>
           </div>
-          <bk-button theme="primary" :disabled="isHostLoading" @click.stop="hanldeReloadHosts">{{$t('generic.button.query')}}</bk-button>
+          <bk-button
+            theme="primary"
+            :disabled="isHostLoading"
+            @click.stop="hanldeReloadHosts">
+            {{$t('generic.button.query')}}
+          </bk-button>
         </bk-form-item>
         <bk-form-item
           ref="hostItem"
@@ -223,7 +242,12 @@
         <i18n v-show="isShowFooterTips" class="tips" target path="generic.applyHost.msg.path">
           <a href="wxwork://message/?username=dommyzhang" style="color: #3A84FF;" place="name">dommyzhang</a>
         </i18n>
-        <bk-button theme="primary" :loading="isSubmitLoading" @click.stop="handleSubmitApply">{{$t('generic.button.confirm')}}</bk-button>
+        <bk-button
+          theme="primary"
+          :loading="isSubmitLoading"
+          @click.stop="handleSubmitApply">
+          {{$t('generic.button.confirm')}}
+        </bk-button>
         <bk-button
           theme="default"
           :disabled="isSubmitLoading"
@@ -397,6 +421,9 @@ export default {
   computed: {
     maintainers() {
       return this.$store.state.cluster.maintainers || [];
+    },
+    curProject() {
+      return this.$store.state.curProject;
     },
     projectId() {
       return this.$store.getters.curProjectId;
@@ -592,11 +619,12 @@ export default {
           cloudID: 'tencentCloud',
           region: this.formdata.region,
           networkType: this.formdata.networkKey,
+          businessID: this.curProject?.businessID,
         });
         this.vpcLoading = false;
         const vpcList = data.map(item => ({
           vpcId: item.vpcID,
-          vpcName: item.vpcName,
+          vpcName: `${item.vpcName}(${item.vpcId})`,
         }));
         this.vpcList.splice(0, this.vpcList.length, ...vpcList);
         if (this.clusterInfo.vpcID && this.isBackfill) {

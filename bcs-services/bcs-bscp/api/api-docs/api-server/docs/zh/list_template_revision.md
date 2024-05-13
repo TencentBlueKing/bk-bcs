@@ -1,28 +1,29 @@
-#### 描述
+### 描述
 
 该接口提供版本：v1.0.0+
 
 查询模版版本列表
 
-#### 输入参数
+### 输入参数
 
-| 参数名称          | 参数类型 | 必选 | 描述           |
-| ----------------- | -------- | ---- |--------------|
-| biz_id            | uint32   | 是   | 业务ID         |
-| template_space_id | uint32   | 是   | 模版空间ID       |
-| template_id       | uint32   | 是   | 模版ID         |
-| search_key | string | 否   | 搜索条件（版本号、描述） |
-| start             | uint32   | 是   | 分页起始值        |
-| limit             | uint32   | 是   | 分页大小         |
+| 参数名称          | 参数类型 | 必选 | 描述                                                         |
+| ----------------- | -------- | ---- | ------------------------------------------------------------ |
+| biz_id            | uint32   | 是   | 业务ID                                                       |
+| template_space_id | uint32   | 是   | 模版空间ID                                                   |
+| template_id       | uint32   | 是   | 模版ID                                                       |
+| search_fields     | string   | 否   | 要搜索的字段，search_value有设置时才生效；<br>可支持的字段有revision_name(版本名称)、revision_memo(版本描述)，creator(创建人)，默认为revision_name；指定多个字段时以逗号分隔，比如revision_name,revision_memo |
+| search_value      | string   | 否   | 要搜索的值                                                   |
+| start             | uint32   | 否   | 分页起始值，默认为0                                          |
+| limit             | uint32   | 否   | 分页大小，all参数设为true时可以不设置，否则必须设置          |
+| all               | bool     | 否   | 是否查询全量，默认为false，为true时忽略分页相关参数并获取全量数据 |
 
-
-#### 调用示例
+### 调用示例
 
 ```json
 
 ```
 
-#### 响应示例
+### 响应示例
 
 ```json
 {
@@ -34,8 +35,8 @@
         "spec": {
           "revision_name": "v20230712150315",
           "revision_memo": "my second version",
-          "name": "server11.yaml",
-          "path": "/etc11",
+          "name": "server.yaml",
+          "path": "/etc",
           "file_type": "json",
           "file_mode": "unix",
           "permission": {
@@ -63,7 +64,7 @@
 }
 ```
 
-#### 响应参数说明
+### 响应参数说明
 
 | 参数名称 | 参数类型 | 描述     |
 | -------- | -------- | -------- |
@@ -76,7 +77,7 @@
 | count    | uint32   | 当前规则能匹配到的总记录条数 |
 | detail   | array    | 查询返回的数据               |
 
-#### data.detail[n]
+#### data.details[n]
 
 | 参数名称   | 参数类型 | 描述     |
 | ---------- | -------- | -------- |
@@ -120,3 +121,4 @@
 | --------- | -------- | -------- |
 | creator   | string   | 创建者   |
 | create_at | string   | 创建时间 |
+

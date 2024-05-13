@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package webhook xxx
@@ -22,6 +21,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	clusterclient "github.com/argoproj/argo-cd/v2/pkg/apiclient/cluster"
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application"
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
@@ -31,7 +31,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/cmd/gitgenerator-webhook/options"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
 )
@@ -81,7 +80,7 @@ func (s *AdmissionWebhookServer) Run() error {
 	srv := &http.Server{
 		Addr:    fmt.Sprintf("%s:%d", s.cfg.ListenAddr, s.cfg.ListenPort),
 		Handler: s.HttpHandler,
-		TLSConfig: &tls.Config{
+		TLSConfig: &tls.Config{ // nolint
 			Certificates: []tls.Certificate{pair},
 		},
 	}
@@ -117,14 +116,13 @@ func (s *AdmissionWebhookServer) check(ctx *gin.Context) {
 	}
 	// Check request whether is nil.
 	req := ar.Request
-	if req != nil {
-		blog.Infof("Received request. UID: %s, Name: %s, Operation: %s, Kind: %v.", req.UID, req.Name,
-			req.Operation, req.Kind)
-	} else {
+	if req == nil {
 		blog.Errorf("request is nil")
 		s.webhookAllow(ctx, true, "", "")
 		return
 	}
+	blog.Infof("Received request. UID: %s, Name: %s, Operation: %s, Kind: %v.", req.UID, req.Name,
+		req.Operation, req.Kind)
 
 	switch req.Kind.Kind {
 	case application.ApplicationKind:
@@ -143,6 +141,7 @@ var (
 	defaultTimeout = 15 * time.Second
 )
 
+// nolint funlen
 func (s *AdmissionWebhookServer) checkApplication(ctx context.Context, bs []byte) error {
 	app := new(v1alpha1.Application)
 	if err := json.Unmarshal(bs, app); err != nil {

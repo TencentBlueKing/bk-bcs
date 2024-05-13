@@ -170,7 +170,7 @@ func (s *DiscoveryServer) formatKubeAPIServerInfo(module string) ([]*register.Se
 	if s.clusterCli == nil {
 		blog.Infof("No cluster manager client, get random cluster-manager instance [%s] "+
 			"from etcd registry for query kube-apiserver", node.Address)
-		s.clusterCli = bcsapi.NewClusterManager(config)
+		s.clusterCli, _ = bcsapicm.NewClusterManager(config)
 	}
 	req := &bcsapicm.ListClusterCredentialReq{
 		ClientMode:  modules.BCSModuleKubeagent,
@@ -181,9 +181,9 @@ func (s *DiscoveryServer) formatKubeAPIServerInfo(module string) ([]*register.Se
 		return nil, fmt.Errorf("no available clustermanager client")
 	}
 
-	clusterResp, err := s.clusterCli.ListClusterCredential(bcsapi.XRequestID(), req)
+	clusterResp, err := s.clusterCli.ListClusterCredential(bcsapicm.XRequestID(), req)
 	if err != nil {
-		s.clusterCli = bcsapi.NewClusterManager(config)
+		s.clusterCli, _ = bcsapicm.NewClusterManager(config)
 		blog.Errorf(
 			"request all kube-apiserver cluster info from previous bcs-cluster-manager instance failed. "+
 				"TIPS: search for `cluster manager instance` to find the previous instance. err: %s", err.Error())

@@ -155,7 +155,7 @@ func (p *NamespaceHandler) ListNamespaces(ctx context.Context,
 				Namespace: ns.GetName(),
 			})
 		}
-		perms, err := auth.NamespaceIamClient.GetMultiNamespaceMultiActionPermission(
+		perms, err := auth.NamespaceIamClient.GetMultiNamespaceMultiActionPerm(
 			authUser.Username, namespaces,
 			[]string{auth.NamespaceCreate, auth.NamespaceView,
 				auth.NamespaceUpdate, auth.NamespaceDelete,

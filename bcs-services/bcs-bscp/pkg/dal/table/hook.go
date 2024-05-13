@@ -18,6 +18,7 @@ import (
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/enumor"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/types"
 )
 
 // Hook defines a hook for an app to publish.
@@ -97,14 +98,44 @@ func (h Hook) ValidateDelete() error {
 	return nil
 }
 
+// ValidateUpdate validate the hook's info when update it.
+func (h Hook) ValidateUpdate() error {
+	if h.ID <= 0 {
+		return errors.New("hook id should be set")
+	}
+
+	if h.Spec != nil {
+		if err := h.Spec.ValidateUpdate(); err != nil {
+			return err
+		}
+	}
+
+	if h.Attachment == nil {
+		return errors.New("attachment should be set")
+	}
+
+	if err := h.Attachment.Validate(); err != nil {
+		return err
+	}
+
+	if h.Revision == nil {
+		return errors.New("revision not set")
+	}
+
+	if err := h.Revision.ValidateUpdate(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // HookSpec defines all the specifics for hook set by user.
 type HookSpec struct {
 	Name string `json:"name" gorm:"column:name"`
 	// Type is the hook type of hook
-	Type ScriptType `json:"type" gorm:"column:type"`
-	// Tag
-	Tag  string `json:"tag" gorm:"column:tag"`
-	Memo string `json:"memo" gorm:"column:memo"`
+	Type ScriptType        `json:"type" gorm:"column:type"`
+	Tags types.StringSlice `json:"tags" gorm:"column:tags;type:json;default:'[]'"`
+	Memo string            `json:"memo" gorm:"column:memo"`
 }
 
 const (
@@ -149,6 +180,15 @@ func (s HookSpec) ValidateCreate() error {
 	}
 
 	if err := s.Type.Validate(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// ValidateUpdate validate hook spec when it is updated.
+func (s HookSpec) ValidateUpdate() error {
+	if err := validator.ValidateMemo(s.Memo, false); err != nil {
 		return err
 	}
 

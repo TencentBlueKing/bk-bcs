@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/avast/retry-go"
 	vault "github.com/hashicorp/vault/api"
 	"github.com/pkg/errors"
@@ -26,7 +27,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-vaultplugin-server/options"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-vaultplugin-server/pkg/common"
 )
@@ -210,7 +210,7 @@ func (m *VaultSecretManager) GetMetadata(ctx context.Context, req *SecretRequest
 
 	s, err := json.Marshal(meta)
 	if err != nil {
-		return nil, errors.Wrapf(err, "json marshal failed.")
+		return nil, errors.Wrap(err, "json marshal failed")
 	}
 	data := &SecretMetadata{}
 	if err := json.Unmarshal(s, data); err != nil {
@@ -266,7 +266,8 @@ func (m *VaultSecretManager) DeleteSecret(ctx context.Context, req *SecretReques
 }
 
 // GetSecretWithVersion interface
-func (m *VaultSecretManager) GetSecretWithVersion(ctx context.Context, req *SecretRequest, version int) (map[string]interface{}, error) {
+func (m *VaultSecretManager) GetSecretWithVersion(
+	ctx context.Context, req *SecretRequest, version int) (map[string]interface{}, error) {
 	secret, err := m.client.KVv2(req.Project).GetVersion(ctx, req.Path, version)
 	if err != nil {
 		return nil, err
@@ -283,7 +284,7 @@ func (m *VaultSecretManager) GetVersionsAsList(ctx context.Context, req *SecretR
 
 	s, err := json.Marshal(version)
 	if err != nil {
-		return nil, errors.Wrapf(err, "json marshal failed.")
+		return nil, errors.Wrap(err, "json marshal failed")
 	}
 	var data []*SecretVersion
 	if err = json.Unmarshal(s, &data); err != nil {

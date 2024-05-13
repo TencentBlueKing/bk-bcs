@@ -78,7 +78,7 @@ func GetHealth() metric.HealthMeta {
 	message := storageHealth.Message
 
 	if !storageHealth.Data[mongodbConfigKey].OK {
-		message += " | " + storageHealth.Data[mongodbConfigKey].Message
+		message += " | " + storageHealth.Data[mongodbConfigKey].Message // nolint goconst
 	}
 	if !storageHealth.Data[zkConfigKey].OK {
 		message += " | " + storageHealth.Data[zkConfigKey].Message

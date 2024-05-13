@@ -16,7 +16,7 @@ package contextx
 import (
 	"context"
 
-	"github.com/micro/go-micro/v2/metadata"
+	"go-micro.dev/v4/metadata"
 )
 
 // GetRequestIDFromCtx 通过 ctx 获取 requestID

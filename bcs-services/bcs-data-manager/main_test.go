@@ -21,9 +21,9 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/service"
+	"github.com/go-micro/plugins/v4/sync/etcd"
 	"github.com/google/uuid"
-	"github.com/micro/go-micro/v2/sync"
-	"github.com/micro/go-micro/v2/sync/etcd"
+	"go-micro.dev/v4/sync"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/cmd"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
@@ -45,7 +45,7 @@ func Test_becomeLeader(t *testing.T) { // nolint
 	id := uuid.New().String()
 	fmt.Printf("id:%s\n", id)
 	fmt.Printf("Node %s waiting to become a leader...", id)
-	leader, err := etcdSync.Leader(id, sync.LeaderContext(rootCtx))
+	leader, err := etcdSync.Leader(id)
 	if err != nil {
 		fmt.Printf("create etcd leader election failed: %s, service exit.\n", err.Error())
 		os.Exit(-1)

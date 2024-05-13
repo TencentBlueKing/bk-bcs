@@ -61,12 +61,12 @@ func RegisterSystem(ctx context.Context) error {
 
 // GetCurrentAnnouncements 获取系统当前通知
 // 请求通知中心失败时，返回空数组
-func GetCurrentAnnouncements(ctx context.Context) ([]Announcement, error) {
+func GetCurrentAnnouncements(ctx context.Context, lang string) ([]Announcement, error) {
 
 	announcements := []Announcement{}
 
-	url := fmt.Sprintf("%s/v1/announcement/get_current_announcements/?platform=%s",
-		config.G.BKNotice.Host, config.G.Base.AppCode)
+	url := fmt.Sprintf("%s/v1/announcement/get_current_announcements/?platform=%s&language=%s",
+		config.G.BKNotice.Host, config.G.Base.AppCode, lang)
 
 	authHeader := fmt.Sprintf("{\"bk_app_code\": \"%s\", \"bk_app_secret\": \"%s\"}",
 		config.G.Base.AppCode, config.G.Base.AppSecret)

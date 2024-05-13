@@ -43,7 +43,8 @@ func (m *Federation) handlePodMetric(ctx context.Context, projectID, clusterID, 
 	for _, cls := range clusters {
 		clusterID := cls
 		groupFunc := func() error {
-			client, err := ClientFactory(ctx, clusterID, m.dispatch[clusterID].SourceType)
+			client, err := ClientFactory(ctx, clusterID, m.dispatch[clusterID].SourceType,
+				m.dispatch[clusterID].MetricsPrefix)
 			if err != nil {
 				klog.Warningf("get client in cluster %s error, %s", clusterID, err)
 				return nil
@@ -68,6 +69,20 @@ func (m *Federation) handlePodMetric(ctx context.Context, projectID, clusterID, 
 func (m *Federation) GetPodCPUUsage(ctx context.Context, projectID, clusterID, namespace string, podNameList []string,
 	start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
 	fn := base.MetricHandler.GetPodCPUUsage
+	return m.handlePodMetric(ctx, projectID, clusterID, namespace, podNameList, start, end, step, fn)
+}
+
+// GetPodCPULimitUsage POD CPU Limit 使用率
+func (m *Federation) GetPodCPULimitUsage(ctx context.Context, projectID, clusterID, namespace string,
+	podNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
+	fn := base.MetricHandler.GetPodCPULimitUsage
+	return m.handlePodMetric(ctx, projectID, clusterID, namespace, podNameList, start, end, step, fn)
+}
+
+// GetPodCPURequestUsage POD CPU Request 使用率
+func (m *Federation) GetPodCPURequestUsage(ctx context.Context, projectID, clusterID, namespace string,
+	podNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
+	fn := base.MetricHandler.GetPodCPURequestUsage
 	return m.handlePodMetric(ctx, projectID, clusterID, namespace, podNameList, start, end, step, fn)
 }
 

@@ -25,9 +25,8 @@ import (
 
 // SubClient defines the interface for azure subscription client
 type SubClient struct {
-	resourceGroupName string
-	subscriptionID    string
-	subClient         *armsubscriptions.Client
+	subscriptionID string
+	subClient      *armsubscriptions.Client
 }
 
 // NewAMClient create azure api management client
@@ -51,9 +50,8 @@ func NewAMClient(opt *cloudprovider.CommonOption) (*SubClient, error) {
 	}
 
 	return &SubClient{
-		resourceGroupName: opt.Account.ResourceGroupName,
-		subscriptionID:    opt.Account.SubscriptionID,
-		subClient:         clientFactory.NewClient(),
+		subscriptionID: opt.Account.SubscriptionID,
+		subClient:      clientFactory.NewClient(),
 	}, nil
 }
 

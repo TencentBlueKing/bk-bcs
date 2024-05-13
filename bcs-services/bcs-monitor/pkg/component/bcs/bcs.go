@@ -80,7 +80,7 @@ func (c *Cluster) IsVirtual() bool {
 func CacheListClusters() {
 	go func() {
 		ListClusters()
-		for range time.Tick(time.Minute * 10) {
+		for range time.Tick(time.Minute * 1) {
 			klog.Infof("list clusters running")
 			ListClusters()
 			klog.Infof("list clusters end")
@@ -111,11 +111,6 @@ func ListClusters() {
 
 	clusterMap := map[string]*Cluster{}
 	for _, cluster := range result {
-		// 集群状态 https://github.com/Tencent/bk-bcs/blob/master/bcs-services/bcs-cluster-manager/
-		// api/clustermanager/clustermanager.proto#L1003
-		if cluster.Status != "RUNNING" {
-			continue
-		}
 		cls := cluster
 		if cls.IsVirtual() {
 			cls.VclusterInfo, err = parseVClusterInfo(cls.ExtraInfo.NamespaceInfo)
@@ -147,7 +142,7 @@ func GetClusterMap() (map[string]*Cluster, error) {
 	if cacheResult, ok := storage.LocalCache.Slot.Get(listClustersCacheKey); ok {
 		return cacheResult.(map[string]*Cluster), nil
 	}
-	return nil, fmt.Errorf("not found clusters")
+	return nil, errNotFoundCluster
 }
 
 var errNotFoundCluster = errors.New("not found cluster")
@@ -158,7 +153,7 @@ func GetCluster(clusterID string) (*Cluster, error) {
 		var cacheResult interface{}
 		var ok bool
 		if cacheResult, ok = storage.LocalCache.Slot.Get(listClustersCacheKey); !ok {
-			return nil, fmt.Errorf("not found cluster")
+			return nil, errNotFoundCluster
 		}
 		if clusterMap, ok := cacheResult.(map[string]*Cluster); ok {
 			if cls, ok := clusterMap[clusterID]; ok {

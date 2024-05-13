@@ -428,6 +428,8 @@ func (m *Cluster) validate(all bool) error {
 
 	// no validation rules for Message
 
+	// no validation rules for IsMixed
+
 	if len(errors) > 0 {
 		return ClusterMultiError(errors)
 	}
@@ -2897,6 +2899,35 @@ func (m *ClusterMgr) validate(all bool) error {
 		if err := v.Validate(); err != nil {
 			return ClusterMgrValidationError{
 				field:  "ImportCluster",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetCommonMixedAction()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ClusterMgrValidationError{
+					field:  "CommonMixedAction",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ClusterMgrValidationError{
+					field:  "CommonMixedAction",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetCommonMixedAction()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ClusterMgrValidationError{
+				field:  "CommonMixedAction",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}
@@ -9312,6 +9343,8 @@ func (m *AutoScalingGroup) validate(all bool) error {
 
 	// no validation rules for AutoUpgrade
 
+	// no validation rules for NodeRole
+
 	if len(errors) > 0 {
 		return AutoScalingGroupMultiError(errors)
 	}
@@ -15073,6 +15106,42 @@ func (m *CreateClusterReq) validate(all bool) error {
 
 	// no validation rules for NodeTemplateID
 
+	for idx, item := range m.GetNodeGroups() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, CreateClusterReqValidationError{
+						field:  fmt.Sprintf("NodeGroups[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, CreateClusterReqValidationError{
+						field:  fmt.Sprintf("NodeGroups[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return CreateClusterReqValidationError{
+					field:  fmt.Sprintf("NodeGroups[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	// no validation rules for IsMixed
+
 	if len(errors) > 0 {
 		return CreateClusterReqMultiError(errors)
 	}
@@ -17073,6 +17142,8 @@ func (m *ImportCloudMode) validate(all bool) error {
 
 	// no validation rules for Inter
 
+	// no validation rules for ResourceGroup
+
 	if len(errors) > 0 {
 		return ImportCloudModeMultiError(errors)
 	}
@@ -17396,6 +17467,35 @@ func (m *ImportClusterReq) validate(all bool) error {
 			return err
 		}
 		errors = append(errors, err)
+	}
+
+	if all {
+		switch v := interface{}(m.GetArea()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ImportClusterReqValidationError{
+					field:  "Area",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ImportClusterReqValidationError{
+					field:  "Area",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetArea()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ImportClusterReqValidationError{
+				field:  "Area",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
 	}
 
 	if len(errors) > 0 {
@@ -19105,6 +19205,35 @@ func (m *UpdateClusterReq) validate(all bool) error {
 	// no validation rules for ImportCategory
 
 	// no validation rules for CloudAccountID
+
+	if all {
+		switch v := interface{}(m.GetIsMixed()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, UpdateClusterReqValidationError{
+					field:  "IsMixed",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, UpdateClusterReqValidationError{
+					field:  "IsMixed",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetIsMixed()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateClusterReqValidationError{
+				field:  "IsMixed",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
 
 	if len(errors) > 0 {
 		return UpdateClusterReqMultiError(errors)
@@ -28627,6 +28756,8 @@ func (m *GroupExtraInfo) validate(all bool) error {
 
 	// no validation rules for PoolID
 
+	// no validation rules for ScriptType
+
 	if len(errors) > 0 {
 		return GroupExtraInfoMultiError(errors)
 	}
@@ -33831,6 +33962,8 @@ func (m *NodeGroupNode) validate(all bool) error {
 
 	// no validation rules for UnSchedulable
 
+	// no validation rules for NodeName
+
 	if len(errors) > 0 {
 		return NodeGroupNodeMultiError(errors)
 	}
@@ -34377,6 +34510,275 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = UpdateGroupMinMaxSizeResponseValidationError{}
+
+// Validate checks the field values on TransNodeGroupToNodeTemplateRequest with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the first error encountered is returned, or nil if there are
+// no violations.
+func (m *TransNodeGroupToNodeTemplateRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on TransNodeGroupToNodeTemplateRequest
+// with the rules defined in the proto definition for this message. If any
+// rules are violated, the result is a list of violation errors wrapped in
+// TransNodeGroupToNodeTemplateRequestMultiError, or nil if none found.
+func (m *TransNodeGroupToNodeTemplateRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *TransNodeGroupToNodeTemplateRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetNodeGroupID()); l < 1 || l > 100 {
+		err := TransNodeGroupToNodeTemplateRequestValidationError{
+			field:  "NodeGroupID",
+			reason: "value length must be between 1 and 100 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_TransNodeGroupToNodeTemplateRequest_NodeGroupID_Pattern.MatchString(m.GetNodeGroupID()) {
+		err := TransNodeGroupToNodeTemplateRequestValidationError{
+			field:  "NodeGroupID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return TransNodeGroupToNodeTemplateRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// TransNodeGroupToNodeTemplateRequestMultiError is an error wrapping multiple
+// validation errors returned by
+// TransNodeGroupToNodeTemplateRequest.ValidateAll() if the designated
+// constraints aren't met.
+type TransNodeGroupToNodeTemplateRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m TransNodeGroupToNodeTemplateRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m TransNodeGroupToNodeTemplateRequestMultiError) AllErrors() []error { return m }
+
+// TransNodeGroupToNodeTemplateRequestValidationError is the validation error
+// returned by TransNodeGroupToNodeTemplateRequest.Validate if the designated
+// constraints aren't met.
+type TransNodeGroupToNodeTemplateRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e TransNodeGroupToNodeTemplateRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e TransNodeGroupToNodeTemplateRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e TransNodeGroupToNodeTemplateRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e TransNodeGroupToNodeTemplateRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e TransNodeGroupToNodeTemplateRequestValidationError) ErrorName() string {
+	return "TransNodeGroupToNodeTemplateRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e TransNodeGroupToNodeTemplateRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sTransNodeGroupToNodeTemplateRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = TransNodeGroupToNodeTemplateRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = TransNodeGroupToNodeTemplateRequestValidationError{}
+
+var _TransNodeGroupToNodeTemplateRequest_NodeGroupID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+// Validate checks the field values on TransNodeGroupToNodeTemplateResponse
+// with the rules defined in the proto definition for this message. If any
+// rules are violated, the first error encountered is returned, or nil if
+// there are no violations.
+func (m *TransNodeGroupToNodeTemplateResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on TransNodeGroupToNodeTemplateResponse
+// with the rules defined in the proto definition for this message. If any
+// rules are violated, the result is a list of violation errors wrapped in
+// TransNodeGroupToNodeTemplateResponseMultiError, or nil if none found.
+func (m *TransNodeGroupToNodeTemplateResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *TransNodeGroupToNodeTemplateResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if all {
+		switch v := interface{}(m.GetTemplate()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, TransNodeGroupToNodeTemplateResponseValidationError{
+					field:  "Template",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, TransNodeGroupToNodeTemplateResponseValidationError{
+					field:  "Template",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetTemplate()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return TransNodeGroupToNodeTemplateResponseValidationError{
+				field:  "Template",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return TransNodeGroupToNodeTemplateResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// TransNodeGroupToNodeTemplateResponseMultiError is an error wrapping multiple
+// validation errors returned by
+// TransNodeGroupToNodeTemplateResponse.ValidateAll() if the designated
+// constraints aren't met.
+type TransNodeGroupToNodeTemplateResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m TransNodeGroupToNodeTemplateResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m TransNodeGroupToNodeTemplateResponseMultiError) AllErrors() []error { return m }
+
+// TransNodeGroupToNodeTemplateResponseValidationError is the validation error
+// returned by TransNodeGroupToNodeTemplateResponse.Validate if the designated
+// constraints aren't met.
+type TransNodeGroupToNodeTemplateResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e TransNodeGroupToNodeTemplateResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e TransNodeGroupToNodeTemplateResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e TransNodeGroupToNodeTemplateResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e TransNodeGroupToNodeTemplateResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e TransNodeGroupToNodeTemplateResponseValidationError) ErrorName() string {
+	return "TransNodeGroupToNodeTemplateResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e TransNodeGroupToNodeTemplateResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sTransNodeGroupToNodeTemplateResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = TransNodeGroupToNodeTemplateResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = TransNodeGroupToNodeTemplateResponseValidationError{}
 
 // Validate checks the field values on UpdateGroupDesiredSizeRequest with the
 // rules defined in the proto definition for this message. If any rules are
@@ -42372,6 +42774,8 @@ func (m *OperationLog) validate(all bool) error {
 
 	// no validation rules for ProjectID
 
+	// no validation rules for ResourceName
+
 	if len(errors) > 0 {
 		return OperationLogMultiError(errors)
 	}
@@ -42490,6 +42894,8 @@ func (m *TaskOperationLog) validate(all bool) error {
 	// no validation rules for Status
 
 	// no validation rules for TaskType
+
+	// no validation rules for ResourceName
 
 	if len(errors) > 0 {
 		return TaskOperationLogMultiError(errors)
@@ -45119,6 +45525,377 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ClusterInfoValidationError{}
+
+// Validate checks the field values on ListCloudRuntimeInfoRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListCloudRuntimeInfoRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListCloudRuntimeInfoRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListCloudRuntimeInfoRequestMultiError, or nil if none found.
+func (m *ListCloudRuntimeInfoRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListCloudRuntimeInfoRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ClusterID
+
+	if utf8.RuneCountInString(m.GetCloudID()) < 2 {
+		err := ListCloudRuntimeInfoRequestValidationError{
+			field:  "CloudID",
+			reason: "value length must be at least 2 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return ListCloudRuntimeInfoRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListCloudRuntimeInfoRequestMultiError is an error wrapping multiple
+// validation errors returned by ListCloudRuntimeInfoRequest.ValidateAll() if
+// the designated constraints aren't met.
+type ListCloudRuntimeInfoRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListCloudRuntimeInfoRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListCloudRuntimeInfoRequestMultiError) AllErrors() []error { return m }
+
+// ListCloudRuntimeInfoRequestValidationError is the validation error returned
+// by ListCloudRuntimeInfoRequest.Validate if the designated constraints
+// aren't met.
+type ListCloudRuntimeInfoRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListCloudRuntimeInfoRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListCloudRuntimeInfoRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListCloudRuntimeInfoRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListCloudRuntimeInfoRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListCloudRuntimeInfoRequestValidationError) ErrorName() string {
+	return "ListCloudRuntimeInfoRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListCloudRuntimeInfoRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListCloudRuntimeInfoRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListCloudRuntimeInfoRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListCloudRuntimeInfoRequestValidationError{}
+
+// Validate checks the field values on ListCloudRuntimeInfoResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListCloudRuntimeInfoResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListCloudRuntimeInfoResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListCloudRuntimeInfoResponseMultiError, or nil if none found.
+func (m *ListCloudRuntimeInfoResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListCloudRuntimeInfoResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	{
+		sorted_keys := make([]string, len(m.GetData()))
+		i := 0
+		for key := range m.GetData() {
+			sorted_keys[i] = key
+			i++
+		}
+		sort.Slice(sorted_keys, func(i, j int) bool { return sorted_keys[i] < sorted_keys[j] })
+		for _, key := range sorted_keys {
+			val := m.GetData()[key]
+			_ = val
+
+			// no validation rules for Data[key]
+
+			if all {
+				switch v := interface{}(val).(type) {
+				case interface{ ValidateAll() error }:
+					if err := v.ValidateAll(); err != nil {
+						errors = append(errors, ListCloudRuntimeInfoResponseValidationError{
+							field:  fmt.Sprintf("Data[%v]", key),
+							reason: "embedded message failed validation",
+							cause:  err,
+						})
+					}
+				case interface{ Validate() error }:
+					if err := v.Validate(); err != nil {
+						errors = append(errors, ListCloudRuntimeInfoResponseValidationError{
+							field:  fmt.Sprintf("Data[%v]", key),
+							reason: "embedded message failed validation",
+							cause:  err,
+						})
+					}
+				}
+			} else if v, ok := interface{}(val).(interface{ Validate() error }); ok {
+				if err := v.Validate(); err != nil {
+					return ListCloudRuntimeInfoResponseValidationError{
+						field:  fmt.Sprintf("Data[%v]", key),
+						reason: "embedded message failed validation",
+						cause:  err,
+					}
+				}
+			}
+
+		}
+	}
+
+	if len(errors) > 0 {
+		return ListCloudRuntimeInfoResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListCloudRuntimeInfoResponseMultiError is an error wrapping multiple
+// validation errors returned by ListCloudRuntimeInfoResponse.ValidateAll() if
+// the designated constraints aren't met.
+type ListCloudRuntimeInfoResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListCloudRuntimeInfoResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListCloudRuntimeInfoResponseMultiError) AllErrors() []error { return m }
+
+// ListCloudRuntimeInfoResponseValidationError is the validation error returned
+// by ListCloudRuntimeInfoResponse.Validate if the designated constraints
+// aren't met.
+type ListCloudRuntimeInfoResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListCloudRuntimeInfoResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListCloudRuntimeInfoResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListCloudRuntimeInfoResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListCloudRuntimeInfoResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListCloudRuntimeInfoResponseValidationError) ErrorName() string {
+	return "ListCloudRuntimeInfoResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListCloudRuntimeInfoResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListCloudRuntimeInfoResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListCloudRuntimeInfoResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListCloudRuntimeInfoResponseValidationError{}
+
+// Validate checks the field values on RunTimeVersion with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *RunTimeVersion) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on RunTimeVersion with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in RunTimeVersionMultiError,
+// or nil if none found.
+func (m *RunTimeVersion) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *RunTimeVersion) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if len(errors) > 0 {
+		return RunTimeVersionMultiError(errors)
+	}
+
+	return nil
+}
+
+// RunTimeVersionMultiError is an error wrapping multiple validation errors
+// returned by RunTimeVersion.ValidateAll() if the designated constraints
+// aren't met.
+type RunTimeVersionMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m RunTimeVersionMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m RunTimeVersionMultiError) AllErrors() []error { return m }
+
+// RunTimeVersionValidationError is the validation error returned by
+// RunTimeVersion.Validate if the designated constraints aren't met.
+type RunTimeVersionValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e RunTimeVersionValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e RunTimeVersionValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e RunTimeVersionValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e RunTimeVersionValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e RunTimeVersionValidationError) ErrorName() string { return "RunTimeVersionValidationError" }
+
+// Error satisfies the builtin error interface
+func (e RunTimeVersionValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sRunTimeVersion.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = RunTimeVersionValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = RunTimeVersionValidationError{}
 
 // Validate checks the field values on ListCloudProjectsRequest with the rules
 // defined in the proto definition for this message. If any rules are
@@ -48052,6 +48829,8 @@ func (m *OperationLogDetail) validate(all bool) error {
 
 	// no validation rules for Status
 
+	// no validation rules for ResourceName
+
 	if len(errors) > 0 {
 		return OperationLogDetailMultiError(errors)
 	}
@@ -48131,6 +48910,236 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = OperationLogDetailValidationError{}
+
+// Validate checks the field values on CleanDbHistoryDataRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *CleanDbHistoryDataRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CleanDbHistoryDataRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// CleanDbHistoryDataRequestMultiError, or nil if none found.
+func (m *CleanDbHistoryDataRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CleanDbHistoryDataRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if _, ok := _CleanDbHistoryDataRequest_DataType_InLookup[m.GetDataType()]; !ok {
+		err := CleanDbHistoryDataRequestValidationError{
+			field:  "DataType",
+			reason: "value must be in list [task operationlog]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for StartTime
+
+	// no validation rules for EndTime
+
+	if len(errors) > 0 {
+		return CleanDbHistoryDataRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// CleanDbHistoryDataRequestMultiError is an error wrapping multiple validation
+// errors returned by CleanDbHistoryDataRequest.ValidateAll() if the
+// designated constraints aren't met.
+type CleanDbHistoryDataRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CleanDbHistoryDataRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CleanDbHistoryDataRequestMultiError) AllErrors() []error { return m }
+
+// CleanDbHistoryDataRequestValidationError is the validation error returned by
+// CleanDbHistoryDataRequest.Validate if the designated constraints aren't met.
+type CleanDbHistoryDataRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CleanDbHistoryDataRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CleanDbHistoryDataRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CleanDbHistoryDataRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CleanDbHistoryDataRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CleanDbHistoryDataRequestValidationError) ErrorName() string {
+	return "CleanDbHistoryDataRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CleanDbHistoryDataRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCleanDbHistoryDataRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CleanDbHistoryDataRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CleanDbHistoryDataRequestValidationError{}
+
+var _CleanDbHistoryDataRequest_DataType_InLookup = map[string]struct{}{
+	"task":         {},
+	"operationlog": {},
+}
+
+// Validate checks the field values on CleanDbHistoryDataResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *CleanDbHistoryDataResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CleanDbHistoryDataResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// CleanDbHistoryDataResponseMultiError, or nil if none found.
+func (m *CleanDbHistoryDataResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CleanDbHistoryDataResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if len(errors) > 0 {
+		return CleanDbHistoryDataResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// CleanDbHistoryDataResponseMultiError is an error wrapping multiple
+// validation errors returned by CleanDbHistoryDataResponse.ValidateAll() if
+// the designated constraints aren't met.
+type CleanDbHistoryDataResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CleanDbHistoryDataResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CleanDbHistoryDataResponseMultiError) AllErrors() []error { return m }
+
+// CleanDbHistoryDataResponseValidationError is the validation error returned
+// by CleanDbHistoryDataResponse.Validate if the designated constraints aren't met.
+type CleanDbHistoryDataResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CleanDbHistoryDataResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CleanDbHistoryDataResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CleanDbHistoryDataResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CleanDbHistoryDataResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CleanDbHistoryDataResponseValidationError) ErrorName() string {
+	return "CleanDbHistoryDataResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CleanDbHistoryDataResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCleanDbHistoryDataResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CleanDbHistoryDataResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CleanDbHistoryDataResponseValidationError{}
 
 // Validate checks the field values on ListTaskStepLogsResponse with the rules
 // defined in the proto definition for this message. If any rules are
@@ -55185,6 +56194,8 @@ func (m *GetExternalNodeScriptRequest) validate(all bool) error {
 
 	// no validation rules for Operator
 
+	// no validation rules for Internal
+
 	if len(errors) > 0 {
 		return GetExternalNodeScriptRequestMultiError(errors)
 	}
@@ -58360,3 +59371,1619 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = GetScopeHostCheckResponseValidationError{}
+
+// Validate checks the field values on NotifyConfig with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *NotifyConfig) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on NotifyConfig with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in NotifyConfigMultiError, or
+// nil if none found.
+func (m *NotifyConfig) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *NotifyConfig) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Server
+
+	// no validation rules for DataId
+
+	// no validation rules for AccessToken
+
+	if len(errors) > 0 {
+		return NotifyConfigMultiError(errors)
+	}
+
+	return nil
+}
+
+// NotifyConfigMultiError is an error wrapping multiple validation errors
+// returned by NotifyConfig.ValidateAll() if the designated constraints aren't met.
+type NotifyConfigMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m NotifyConfigMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m NotifyConfigMultiError) AllErrors() []error { return m }
+
+// NotifyConfigValidationError is the validation error returned by
+// NotifyConfig.Validate if the designated constraints aren't met.
+type NotifyConfigValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e NotifyConfigValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e NotifyConfigValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e NotifyConfigValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e NotifyConfigValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e NotifyConfigValidationError) ErrorName() string { return "NotifyConfigValidationError" }
+
+// Error satisfies the builtin error interface
+func (e NotifyConfigValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sNotifyConfig.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = NotifyConfigValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = NotifyConfigValidationError{}
+
+// Validate checks the field values on NotifyData with the rules defined in the
+// proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *NotifyData) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on NotifyData with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in NotifyDataMultiError, or
+// nil if none found.
+func (m *NotifyData) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *NotifyData) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Enable
+
+	// no validation rules for Title
+
+	// no validation rules for Content
+
+	if len(errors) > 0 {
+		return NotifyDataMultiError(errors)
+	}
+
+	return nil
+}
+
+// NotifyDataMultiError is an error wrapping multiple validation errors
+// returned by NotifyData.ValidateAll() if the designated constraints aren't met.
+type NotifyDataMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m NotifyDataMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m NotifyDataMultiError) AllErrors() []error { return m }
+
+// NotifyDataValidationError is the validation error returned by
+// NotifyData.Validate if the designated constraints aren't met.
+type NotifyDataValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e NotifyDataValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e NotifyDataValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e NotifyDataValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e NotifyDataValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e NotifyDataValidationError) ErrorName() string { return "NotifyDataValidationError" }
+
+// Error satisfies the builtin error interface
+func (e NotifyDataValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sNotifyData.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = NotifyDataValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = NotifyDataValidationError{}
+
+// Validate checks the field values on NotifyTemplate with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *NotifyTemplate) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on NotifyTemplate with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in NotifyTemplateMultiError,
+// or nil if none found.
+func (m *NotifyTemplate) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *NotifyTemplate) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for NotifyTemplateID
+
+	// no validation rules for Name
+
+	// no validation rules for ProjectID
+
+	// no validation rules for NotifyType
+
+	// no validation rules for Desc
+
+	// no validation rules for Enable
+
+	if all {
+		switch v := interface{}(m.GetConfig()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, NotifyTemplateValidationError{
+					field:  "Config",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, NotifyTemplateValidationError{
+					field:  "Config",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetConfig()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return NotifyTemplateValidationError{
+				field:  "Config",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetCreateCluster()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, NotifyTemplateValidationError{
+					field:  "CreateCluster",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, NotifyTemplateValidationError{
+					field:  "CreateCluster",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetCreateCluster()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return NotifyTemplateValidationError{
+				field:  "CreateCluster",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetDeleteCluster()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, NotifyTemplateValidationError{
+					field:  "DeleteCluster",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, NotifyTemplateValidationError{
+					field:  "DeleteCluster",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetDeleteCluster()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return NotifyTemplateValidationError{
+				field:  "DeleteCluster",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetCreateNodeGroup()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, NotifyTemplateValidationError{
+					field:  "CreateNodeGroup",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, NotifyTemplateValidationError{
+					field:  "CreateNodeGroup",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetCreateNodeGroup()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return NotifyTemplateValidationError{
+				field:  "CreateNodeGroup",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetDeleteNodeGroup()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, NotifyTemplateValidationError{
+					field:  "DeleteNodeGroup",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, NotifyTemplateValidationError{
+					field:  "DeleteNodeGroup",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetDeleteNodeGroup()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return NotifyTemplateValidationError{
+				field:  "DeleteNodeGroup",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetUpdateNodeGroup()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, NotifyTemplateValidationError{
+					field:  "UpdateNodeGroup",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, NotifyTemplateValidationError{
+					field:  "UpdateNodeGroup",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetUpdateNodeGroup()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return NotifyTemplateValidationError{
+				field:  "UpdateNodeGroup",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetGroupScaleOutNode()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, NotifyTemplateValidationError{
+					field:  "GroupScaleOutNode",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, NotifyTemplateValidationError{
+					field:  "GroupScaleOutNode",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetGroupScaleOutNode()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return NotifyTemplateValidationError{
+				field:  "GroupScaleOutNode",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetGroupScaleInNode()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, NotifyTemplateValidationError{
+					field:  "GroupScaleInNode",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, NotifyTemplateValidationError{
+					field:  "GroupScaleInNode",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetGroupScaleInNode()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return NotifyTemplateValidationError{
+				field:  "GroupScaleInNode",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for Receivers
+
+	// no validation rules for Creator
+
+	// no validation rules for Updater
+
+	// no validation rules for CreateTime
+
+	// no validation rules for UpdateTime
+
+	if len(errors) > 0 {
+		return NotifyTemplateMultiError(errors)
+	}
+
+	return nil
+}
+
+// NotifyTemplateMultiError is an error wrapping multiple validation errors
+// returned by NotifyTemplate.ValidateAll() if the designated constraints
+// aren't met.
+type NotifyTemplateMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m NotifyTemplateMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m NotifyTemplateMultiError) AllErrors() []error { return m }
+
+// NotifyTemplateValidationError is the validation error returned by
+// NotifyTemplate.Validate if the designated constraints aren't met.
+type NotifyTemplateValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e NotifyTemplateValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e NotifyTemplateValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e NotifyTemplateValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e NotifyTemplateValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e NotifyTemplateValidationError) ErrorName() string { return "NotifyTemplateValidationError" }
+
+// Error satisfies the builtin error interface
+func (e NotifyTemplateValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sNotifyTemplate.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = NotifyTemplateValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = NotifyTemplateValidationError{}
+
+// Validate checks the field values on CreateNotifyTemplateRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *CreateNotifyTemplateRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CreateNotifyTemplateRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// CreateNotifyTemplateRequestMultiError, or nil if none found.
+func (m *CreateNotifyTemplateRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CreateNotifyTemplateRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 2048 {
+		err := CreateNotifyTemplateRequestValidationError{
+			field:  "ProjectID",
+			reason: "value length must be between 1 and 2048 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_CreateNotifyTemplateRequest_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		err := CreateNotifyTemplateRequestValidationError{
+			field:  "ProjectID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetName()) < 1 {
+		err := CreateNotifyTemplateRequestValidationError{
+			field:  "Name",
+			reason: "value length must be at least 1 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for Desc
+
+	if _, ok := _CreateNotifyTemplateRequest_NotifyType_InLookup[m.GetNotifyType()]; !ok {
+		err := CreateNotifyTemplateRequestValidationError{
+			field:  "NotifyType",
+			reason: "value must be in list [bk_monitor_event bk_monitor_metrics]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if all {
+		switch v := interface{}(m.GetEnable()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CreateNotifyTemplateRequestValidationError{
+					field:  "Enable",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CreateNotifyTemplateRequestValidationError{
+					field:  "Enable",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetEnable()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateNotifyTemplateRequestValidationError{
+				field:  "Enable",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetCreateCluster()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CreateNotifyTemplateRequestValidationError{
+					field:  "CreateCluster",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CreateNotifyTemplateRequestValidationError{
+					field:  "CreateCluster",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetCreateCluster()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateNotifyTemplateRequestValidationError{
+				field:  "CreateCluster",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetDeleteCluster()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CreateNotifyTemplateRequestValidationError{
+					field:  "DeleteCluster",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CreateNotifyTemplateRequestValidationError{
+					field:  "DeleteCluster",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetDeleteCluster()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateNotifyTemplateRequestValidationError{
+				field:  "DeleteCluster",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetCreateNodeGroup()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CreateNotifyTemplateRequestValidationError{
+					field:  "CreateNodeGroup",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CreateNotifyTemplateRequestValidationError{
+					field:  "CreateNodeGroup",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetCreateNodeGroup()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateNotifyTemplateRequestValidationError{
+				field:  "CreateNodeGroup",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetDeleteNodeGroup()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CreateNotifyTemplateRequestValidationError{
+					field:  "DeleteNodeGroup",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CreateNotifyTemplateRequestValidationError{
+					field:  "DeleteNodeGroup",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetDeleteNodeGroup()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateNotifyTemplateRequestValidationError{
+				field:  "DeleteNodeGroup",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetUpdateNodeGroup()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CreateNotifyTemplateRequestValidationError{
+					field:  "UpdateNodeGroup",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CreateNotifyTemplateRequestValidationError{
+					field:  "UpdateNodeGroup",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetUpdateNodeGroup()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateNotifyTemplateRequestValidationError{
+				field:  "UpdateNodeGroup",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetGroupScaleOutNode()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CreateNotifyTemplateRequestValidationError{
+					field:  "GroupScaleOutNode",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CreateNotifyTemplateRequestValidationError{
+					field:  "GroupScaleOutNode",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetGroupScaleOutNode()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateNotifyTemplateRequestValidationError{
+				field:  "GroupScaleOutNode",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetGroupScaleInNode()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CreateNotifyTemplateRequestValidationError{
+					field:  "GroupScaleInNode",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CreateNotifyTemplateRequestValidationError{
+					field:  "GroupScaleInNode",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetGroupScaleInNode()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateNotifyTemplateRequestValidationError{
+				field:  "GroupScaleInNode",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetConfig()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CreateNotifyTemplateRequestValidationError{
+					field:  "Config",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CreateNotifyTemplateRequestValidationError{
+					field:  "Config",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetConfig()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateNotifyTemplateRequestValidationError{
+				field:  "Config",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for Receivers
+
+	// no validation rules for Creator
+
+	if len(errors) > 0 {
+		return CreateNotifyTemplateRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// CreateNotifyTemplateRequestMultiError is an error wrapping multiple
+// validation errors returned by CreateNotifyTemplateRequest.ValidateAll() if
+// the designated constraints aren't met.
+type CreateNotifyTemplateRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CreateNotifyTemplateRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CreateNotifyTemplateRequestMultiError) AllErrors() []error { return m }
+
+// CreateNotifyTemplateRequestValidationError is the validation error returned
+// by CreateNotifyTemplateRequest.Validate if the designated constraints
+// aren't met.
+type CreateNotifyTemplateRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CreateNotifyTemplateRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CreateNotifyTemplateRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CreateNotifyTemplateRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CreateNotifyTemplateRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CreateNotifyTemplateRequestValidationError) ErrorName() string {
+	return "CreateNotifyTemplateRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CreateNotifyTemplateRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCreateNotifyTemplateRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CreateNotifyTemplateRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CreateNotifyTemplateRequestValidationError{}
+
+var _CreateNotifyTemplateRequest_ProjectID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+var _CreateNotifyTemplateRequest_NotifyType_InLookup = map[string]struct{}{
+	"bk_monitor_event":   {},
+	"bk_monitor_metrics": {},
+}
+
+// Validate checks the field values on CreateNotifyTemplateResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *CreateNotifyTemplateResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CreateNotifyTemplateResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// CreateNotifyTemplateResponseMultiError, or nil if none found.
+func (m *CreateNotifyTemplateResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CreateNotifyTemplateResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if all {
+		switch v := interface{}(m.GetWebAnnotations()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CreateNotifyTemplateResponseValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CreateNotifyTemplateResponseValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetWebAnnotations()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateNotifyTemplateResponseValidationError{
+				field:  "WebAnnotations",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return CreateNotifyTemplateResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// CreateNotifyTemplateResponseMultiError is an error wrapping multiple
+// validation errors returned by CreateNotifyTemplateResponse.ValidateAll() if
+// the designated constraints aren't met.
+type CreateNotifyTemplateResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CreateNotifyTemplateResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CreateNotifyTemplateResponseMultiError) AllErrors() []error { return m }
+
+// CreateNotifyTemplateResponseValidationError is the validation error returned
+// by CreateNotifyTemplateResponse.Validate if the designated constraints
+// aren't met.
+type CreateNotifyTemplateResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CreateNotifyTemplateResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CreateNotifyTemplateResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CreateNotifyTemplateResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CreateNotifyTemplateResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CreateNotifyTemplateResponseValidationError) ErrorName() string {
+	return "CreateNotifyTemplateResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CreateNotifyTemplateResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCreateNotifyTemplateResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CreateNotifyTemplateResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CreateNotifyTemplateResponseValidationError{}
+
+// Validate checks the field values on DeleteNotifyTemplateRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *DeleteNotifyTemplateRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on DeleteNotifyTemplateRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// DeleteNotifyTemplateRequestMultiError, or nil if none found.
+func (m *DeleteNotifyTemplateRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *DeleteNotifyTemplateRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ProjectID
+
+	// no validation rules for NotifyTemplateID
+
+	if len(errors) > 0 {
+		return DeleteNotifyTemplateRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// DeleteNotifyTemplateRequestMultiError is an error wrapping multiple
+// validation errors returned by DeleteNotifyTemplateRequest.ValidateAll() if
+// the designated constraints aren't met.
+type DeleteNotifyTemplateRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m DeleteNotifyTemplateRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m DeleteNotifyTemplateRequestMultiError) AllErrors() []error { return m }
+
+// DeleteNotifyTemplateRequestValidationError is the validation error returned
+// by DeleteNotifyTemplateRequest.Validate if the designated constraints
+// aren't met.
+type DeleteNotifyTemplateRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DeleteNotifyTemplateRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DeleteNotifyTemplateRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DeleteNotifyTemplateRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DeleteNotifyTemplateRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DeleteNotifyTemplateRequestValidationError) ErrorName() string {
+	return "DeleteNotifyTemplateRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DeleteNotifyTemplateRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDeleteNotifyTemplateRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DeleteNotifyTemplateRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DeleteNotifyTemplateRequestValidationError{}
+
+// Validate checks the field values on DeleteNotifyTemplateResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *DeleteNotifyTemplateResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on DeleteNotifyTemplateResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// DeleteNotifyTemplateResponseMultiError, or nil if none found.
+func (m *DeleteNotifyTemplateResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *DeleteNotifyTemplateResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if all {
+		switch v := interface{}(m.GetWebAnnotations()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, DeleteNotifyTemplateResponseValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, DeleteNotifyTemplateResponseValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetWebAnnotations()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return DeleteNotifyTemplateResponseValidationError{
+				field:  "WebAnnotations",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return DeleteNotifyTemplateResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// DeleteNotifyTemplateResponseMultiError is an error wrapping multiple
+// validation errors returned by DeleteNotifyTemplateResponse.ValidateAll() if
+// the designated constraints aren't met.
+type DeleteNotifyTemplateResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m DeleteNotifyTemplateResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m DeleteNotifyTemplateResponseMultiError) AllErrors() []error { return m }
+
+// DeleteNotifyTemplateResponseValidationError is the validation error returned
+// by DeleteNotifyTemplateResponse.Validate if the designated constraints
+// aren't met.
+type DeleteNotifyTemplateResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DeleteNotifyTemplateResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DeleteNotifyTemplateResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DeleteNotifyTemplateResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DeleteNotifyTemplateResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DeleteNotifyTemplateResponseValidationError) ErrorName() string {
+	return "DeleteNotifyTemplateResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DeleteNotifyTemplateResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDeleteNotifyTemplateResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DeleteNotifyTemplateResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DeleteNotifyTemplateResponseValidationError{}
+
+// Validate checks the field values on ListNotifyTemplateRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListNotifyTemplateRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListNotifyTemplateRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListNotifyTemplateRequestMultiError, or nil if none found.
+func (m *ListNotifyTemplateRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListNotifyTemplateRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ProjectID
+
+	// no validation rules for NotifyTemplateID
+
+	if len(errors) > 0 {
+		return ListNotifyTemplateRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListNotifyTemplateRequestMultiError is an error wrapping multiple validation
+// errors returned by ListNotifyTemplateRequest.ValidateAll() if the
+// designated constraints aren't met.
+type ListNotifyTemplateRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListNotifyTemplateRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListNotifyTemplateRequestMultiError) AllErrors() []error { return m }
+
+// ListNotifyTemplateRequestValidationError is the validation error returned by
+// ListNotifyTemplateRequest.Validate if the designated constraints aren't met.
+type ListNotifyTemplateRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListNotifyTemplateRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListNotifyTemplateRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListNotifyTemplateRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListNotifyTemplateRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListNotifyTemplateRequestValidationError) ErrorName() string {
+	return "ListNotifyTemplateRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListNotifyTemplateRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListNotifyTemplateRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListNotifyTemplateRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListNotifyTemplateRequestValidationError{}
+
+// Validate checks the field values on ListNotifyTemplateResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListNotifyTemplateResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListNotifyTemplateResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListNotifyTemplateResponseMultiError, or nil if none found.
+func (m *ListNotifyTemplateResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListNotifyTemplateResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ListNotifyTemplateResponseValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ListNotifyTemplateResponseValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ListNotifyTemplateResponseValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return ListNotifyTemplateResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListNotifyTemplateResponseMultiError is an error wrapping multiple
+// validation errors returned by ListNotifyTemplateResponse.ValidateAll() if
+// the designated constraints aren't met.
+type ListNotifyTemplateResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListNotifyTemplateResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListNotifyTemplateResponseMultiError) AllErrors() []error { return m }
+
+// ListNotifyTemplateResponseValidationError is the validation error returned
+// by ListNotifyTemplateResponse.Validate if the designated constraints aren't met.
+type ListNotifyTemplateResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListNotifyTemplateResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListNotifyTemplateResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListNotifyTemplateResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListNotifyTemplateResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListNotifyTemplateResponseValidationError) ErrorName() string {
+	return "ListNotifyTemplateResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListNotifyTemplateResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListNotifyTemplateResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListNotifyTemplateResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListNotifyTemplateResponseValidationError{}

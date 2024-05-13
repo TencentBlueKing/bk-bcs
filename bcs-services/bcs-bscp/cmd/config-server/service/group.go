@@ -14,7 +14,12 @@ package service
 
 import (
 	"context"
+	"sync"
 
+	"golang.org/x/sync/errgroup"
+
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/i18n"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
@@ -86,6 +91,70 @@ func (s *Service) DeleteGroup(ctx context.Context, req *pbcs.DeleteGroupReq) (*p
 	}
 
 	return resp, nil
+}
+
+// BatchDeleteGroups batch delete groups
+func (s *Service) BatchDeleteGroups(ctx context.Context, req *pbcs.BatchDeleteBizResourcesReq) (
+	*pbcs.BatchDeleteResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+	}
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
+		return nil, err
+	}
+
+	if len(req.GetIds()) == 0 {
+		return nil, errf.Errorf(errf.InvalidArgument, i18n.T(grpcKit, "id is required"))
+	}
+
+	eg, egCtx := errgroup.WithContext(grpcKit.RpcCtx())
+	eg.SetLimit(10)
+
+	successfulIDs := []uint32{}
+	failedIDs := []uint32{}
+	var mux sync.Mutex
+
+	// 使用 data-service 原子接口
+	for _, v := range req.GetIds() {
+		v := v
+		eg.Go(func() error {
+			r := &pbds.DeleteGroupReq{
+				Id: v,
+				Attachment: &pbgroup.GroupAttachment{
+					BizId: req.BizId,
+				},
+			}
+			if _, err := s.client.DS.DeleteGroup(egCtx, r); err != nil {
+				logs.Errorf("delete group %d failed, err: %v, rid: %s", v, err, grpcKit.Rid)
+
+				// 错误不返回异常，记录错误ID
+				mux.Lock()
+				failedIDs = append(failedIDs, v)
+				mux.Unlock()
+				return nil
+			}
+
+			mux.Lock()
+			successfulIDs = append(successfulIDs, v)
+			mux.Unlock()
+
+			return nil
+		})
+	}
+
+	if err := eg.Wait(); err != nil {
+		logs.Errorf("batch delete groups failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, errf.Errorf(errf.Aborted, i18n.T(grpcKit, "batch delete groups failed"))
+	}
+
+	// 全部失败, 当前API视为失败
+	if len(failedIDs) == len(req.Ids) {
+		return nil, errf.Errorf(errf.Aborted, i18n.T(grpcKit, "batch delete groups failed"))
+	}
+
+	return &pbcs.BatchDeleteResp{SuccessfulIds: successfulIDs, FailedIds: failedIDs}, nil
 }
 
 // UpdateGroup update a group

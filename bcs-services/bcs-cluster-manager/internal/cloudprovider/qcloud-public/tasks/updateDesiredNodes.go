@@ -54,6 +54,10 @@ func ApplyInstanceMachinesTask(taskID string, stepName string) error { // nolint
 	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
 	desiredNodes := step.Params[cloudprovider.ScalingNodesNumKey.String()]
 	manual := state.Task.CommonParams[cloudprovider.ManualKey.String()]
+	scheduleStr := step.Params[cloudprovider.NodeSchedule.String()]
+
+	// parse node schedule status
+	schedule, _ := strconv.ParseBool(scheduleStr)
 
 	nodeNum, _ := strconv.Atoi(desiredNodes)
 	operator := step.Params[cloudprovider.OperatorKey.String()]
@@ -85,6 +89,33 @@ func ApplyInstanceMachinesTask(taskID string, stepName string) error { // nolint
 
 	// inject taskID
 	ctx := cloudprovider.WithTaskIDAndStepNameForContext(context.Background(), taskID, stepName)
+
+	// need to on nodePool schedule when cluster cannot have nodes
+	if schedule {
+		err = business.UpdateNodePoolScheduleStatus(ctx, dependInfo, 0)
+		if err != nil {
+			blog.Errorf("ApplyInstanceMachinesTask[%s] UpdateNodePoolScheduleStatus[%v] on failed: %v",
+				taskID, schedule, err)
+		} else {
+			// wait nodePool update
+			time.Sleep(10 * time.Second)
+			blog.Infof("ApplyInstanceMachinesTask[%s] UpdateNodePoolScheduleStatus[%v] on success",
+				taskID, schedule)
+		}
+	}
+	defer func() {
+		if schedule {
+			err = business.UpdateNodePoolScheduleStatus(ctx, dependInfo, 1)
+			if err != nil {
+				blog.Errorf("ApplyInstanceMachinesTask[%s] UpdateNodePoolScheduleStatus[%v] off failed: %v",
+					taskID, schedule, err)
+			} else {
+				blog.Infof("ApplyInstanceMachinesTask[%s] UpdateNodePoolScheduleStatus[%v] off success",
+					taskID, schedule)
+			}
+		}
+	}()
+
 	activity, err := applyInstanceMachines(ctx, dependInfo, uint64(nodeNum))
 	if err != nil {
 		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
@@ -411,7 +442,7 @@ func CheckClusterNodesStatusTask(taskID string, stepName string) error { // noli
 			// rollback failed nodes
 			_ = returnInstancesAndCleanNodes(ctx, dependInfo, successInstanceID)
 		}
-		blog.Errorf("CheckClusterNodesStatusTask[%s]: checkClusterInstanceStatus failed: %s", taskID, err.Error())
+		blog.Errorf("CheckClusterNodesStatusTask[%s]: checkClusterInstanceStatus failed: %s", taskID, err)
 		retErr := fmt.Errorf("CheckClusterNodesStatusTask checkClusterInstanceStatus failed")
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr

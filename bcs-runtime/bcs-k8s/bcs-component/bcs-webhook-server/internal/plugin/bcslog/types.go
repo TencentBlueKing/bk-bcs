@@ -1,10 +1,10 @@
 /*
- * Tencent is pleased to support the open source community by making Blueking Container Service available.,
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
  * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -95,6 +95,7 @@ func FindK8sMatchedConfigType(pod *corev1.Pod, bcsLogConfs []*bcsv1.BcsLogConfig
 	for _, logConf := range bcsLogConfs {
 		if logConf.Spec.ConfigType == CustomConfigType {
 			if pod.OwnerReferences[0].Kind == "ReplicaSet" {
+				// nolint use strings.EqualFold instead
 				if strings.ToLower(logConf.Spec.WorkloadType) == strings.ToLower("Deployment") &&
 					strings.HasPrefix(pod.OwnerReferences[0].Name, logConf.Spec.WorkloadName) { // nolint
 					matchedLogConf = logConf
@@ -102,6 +103,7 @@ func FindK8sMatchedConfigType(pod *corev1.Pod, bcsLogConfs []*bcsv1.BcsLogConfig
 				}
 				continue
 			}
+			// nolint use strings.EqualFold instead
 			if strings.ToLower(pod.OwnerReferences[0].Kind) == strings.ToLower(logConf.Spec.WorkloadType) &&
 				pod.OwnerReferences[0].Name == logConf.Spec.WorkloadName { // nolint
 				matchedLogConf = logConf

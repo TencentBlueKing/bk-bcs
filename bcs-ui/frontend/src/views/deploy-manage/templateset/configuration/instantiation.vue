@@ -383,7 +383,7 @@ import yamljs from 'js-yaml';
 import { catchErrorHandler } from '@/common/util';
 import ace from '@/components/ace-editor';
 import Header from '@/components/layout/Header.vue';
-import { useNamespace } from '@/views/resource-view/namespace/use-namespace';
+import { useNamespace } from '@/views/cluster-manage/namespace/use-namespace';
 
 const ARR = [
   'Application',

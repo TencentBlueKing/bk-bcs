@@ -56,16 +56,9 @@ func (s *Service) CreateApp(ctx context.Context, req *pbcs.CreateAppReq) (*pbcs.
 		Spec: &pbapp.AppSpec{
 			Name:       req.Name,
 			ConfigType: req.ConfigType,
-			Mode:       req.Mode,
 			Memo:       req.Memo,
 			Alias:      req.Alias,
 			DataType:   req.DataType,
-			Reload: &pbapp.Reload{
-				ReloadType: req.ReloadType,
-				FileReloadSpec: &pbapp.FileReloadSpec{
-					ReloadFilePath: req.ReloadFilePath,
-				},
-			},
 		},
 	}
 	rp, err := s.client.DS.CreateApp(kt.RpcCtx(), r)
@@ -109,12 +102,6 @@ func (s *Service) UpdateApp(ctx context.Context, req *pbcs.UpdateAppReq) (*pbapp
 			Memo:     req.Memo,
 			Alias:    req.Alias,
 			DataType: req.DataType,
-			Reload: &pbapp.Reload{
-				ReloadType: req.ReloadType,
-				FileReloadSpec: &pbapp.FileReloadSpec{
-					ReloadFilePath: req.ReloadFilePath,
-				},
-			},
 		},
 	}
 	app, err := s.client.DS.UpdateApp(grpcKit.RpcCtx(), r)

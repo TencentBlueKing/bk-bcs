@@ -213,7 +213,10 @@ func (s *Service) ListTmplRevisionNamesByTmplIDs(ctx context.Context,
 		details = append(details, &pbtr.TemplateRevisionNamesDetail{
 			TemplateId:               t.ID,
 			TemplateName:             t.Spec.Name,
-			LatestTemplateRevisionId: latestRevisionMap[t.ID],
+			LatestTemplateRevisionId: latestRevisionMap[t.ID].ID,
+			LatestRevisionName:       latestRevisionMap[t.ID].Spec.RevisionName,
+			LatestSignature:          latestRevisionMap[t.ID].Spec.ContentSpec.Signature,
+			LatestByteSize:           latestRevisionMap[t.ID].Spec.ContentSpec.ByteSize,
 			TemplateRevisions:        tmplRevisionMap[t.ID].TemplateRevisions,
 		})
 	}
@@ -224,14 +227,14 @@ func (s *Service) ListTmplRevisionNamesByTmplIDs(ctx context.Context,
 	return resp, nil
 }
 
-// getLatestTmplRevisions get the map: tmplID => latest tmplRevisionID
-func getLatestTmplRevisions(tmplRevisions []*table.TemplateRevision) map[uint32]uint32 {
-	latestRevisionMap := make(map[uint32]uint32)
+// getLatestTmplRevisions get the map: tmplID => latest tmplRevision
+func getLatestTmplRevisions(tmplRevisions []*table.TemplateRevision) map[uint32]*table.TemplateRevision {
+	latestRevisionMap := make(map[uint32]*table.TemplateRevision)
 	for _, t := range tmplRevisions {
 		if _, ok := latestRevisionMap[t.Attachment.TemplateID]; !ok {
-			latestRevisionMap[t.Attachment.TemplateID] = t.ID
-		} else if t.ID > latestRevisionMap[t.Attachment.TemplateID] {
-			latestRevisionMap[t.Attachment.TemplateID] = t.ID
+			latestRevisionMap[t.Attachment.TemplateID] = t
+		} else if t.ID > latestRevisionMap[t.Attachment.TemplateID].ID {
+			latestRevisionMap[t.Attachment.TemplateID] = t
 		}
 	}
 

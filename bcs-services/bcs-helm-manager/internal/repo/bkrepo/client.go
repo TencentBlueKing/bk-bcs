@@ -35,22 +35,22 @@ var (
 )
 
 func (h *handler) get(ctx context.Context, uri string, header http.Header, data []byte) ( // nolint
-	*httpclient.HttpRespone, error) {
+	*httpclient.HttpResponse, error) {
 	return h.bkRepo.client.request(ctx, "GET", h.getURI(uri), h.auth, header, data)
 }
 
 func (h *handler) post(ctx context.Context, uri string, header http.Header, data []byte) ( // nolint
-	*httpclient.HttpRespone, error) {
+	*httpclient.HttpResponse, error) {
 	return h.bkRepo.client.request(ctx, "POST", h.getURI(uri), h.auth, header, data)
 }
 
 func (h *handler) put(ctx context.Context, uri string, header http.Header, data []byte) ( // nolint
-	*httpclient.HttpRespone, error) {
+	*httpclient.HttpResponse, error) {
 	return h.bkRepo.client.request(ctx, "PUT", h.getURI(uri), h.auth, header, data)
 }
 
 func (h *handler) delete(ctx context.Context, uri string, header http.Header, data []byte) (
-	*httpclient.HttpRespone, error) {
+	*httpclient.HttpResponse, error) {
 	return h.bkRepo.client.request(ctx, "DELETE", h.getURI(uri), h.auth, header, data)
 }
 
@@ -74,7 +74,7 @@ type client struct {
 
 func (c *client) request(
 	_ context.Context, method, uri string, auth *bkRepoAuth.Auth, header http.Header, data []byte) (
-	*httpclient.HttpRespone, error) {
+	*httpclient.HttpResponse, error) {
 
 	// init header
 	if header == nil {
@@ -86,7 +86,7 @@ func (c *client) request(
 	}
 	blog.V(5).Infof("request to bk-repo [%s] %s, header(%v), body(%s)", method, uri, header, data)
 
-	var request func(string, http.Header, []byte) (*httpclient.HttpRespone, error)
+	var request func(string, http.Header, []byte) (*httpclient.HttpResponse, error)
 	switch strings.ToUpper(method) {
 	case "GET":
 		request = c.cli.Get

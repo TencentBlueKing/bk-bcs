@@ -234,6 +234,8 @@ type NodeManager interface {
 	ListKeyPairs(opt *ListNetworksOption) ([]*proto.KeyPair, error)
 	// GetResourceGroups resource groups list
 	GetResourceGroups(opt *CommonOption) ([]*proto.ResourceGroupInfo, error)
+	// ListRuntimeInfo get runtime info list
+	ListRuntimeInfo(opt *ListRuntimeInfoOption) (map[string][]string, error)
 }
 
 // CloudValidateManager validate interface for check cloud resourceInfo
@@ -367,7 +369,7 @@ type NodeGroupManager interface {
 	DeleteExternalNodeFromCluster(group *proto.NodeGroup, nodes []*proto.Node,
 		opt *DeleteExternalNodesOption) (*proto.Task, error)
 	// GetExternalNodeScript get external node script from cluster nodeGroup
-	GetExternalNodeScript(group *proto.NodeGroup) (string, error)
+	GetExternalNodeScript(group *proto.NodeGroup, internal bool) (string, error)
 }
 
 // VPCManager cloud interface for vpc management

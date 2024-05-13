@@ -27,6 +27,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/google/api"
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
@@ -367,7 +368,7 @@ func newItFromBaseIt(newIt *compute.InstanceTemplate, group *proto.NodeGroup, //
 
 	if group.LaunchTemplate.KeyPair != nil && len(group.LaunchTemplate.KeyPair.KeyPublic) > 0 {
 		var existSshKeys string
-		rawKeyPub, _ := utils.Base64Decode(group.LaunchTemplate.KeyPair.KeyPublic)
+		rawKeyPub, _ := encrypt.Decrypt(nil, group.LaunchTemplate.KeyPair.KeyPublic)
 		newSshKey := group.LaunchTemplate.InitLoginUsername + ":" + rawKeyPub
 		for k := range newIt.Properties.Metadata.Items {
 			if newIt.Properties.Metadata.Items[k].Key == api.MetadataKeySshKey {

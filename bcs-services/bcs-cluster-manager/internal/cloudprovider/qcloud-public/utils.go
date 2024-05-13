@@ -29,6 +29,10 @@ var (
 	cloudName = "qcloud-public"
 )
 
+const (
+	defaultRegion = "ap-nanjing"
+)
+
 // qcloud-public taskName
 const (
 	// createClusterTaskTemplate bk-sops add task template
@@ -830,9 +834,10 @@ func (dn *DeleteNodeGroupTaskOption) BuildDeleteNodeGroupStep(task *proto.Task) 
 
 // UpdateDesiredNodesTaskOption 扩容节点组节点
 type UpdateDesiredNodesTaskOption struct {
-	Group    *proto.NodeGroup
-	Desired  uint32
-	Operator string
+	Group        *proto.NodeGroup
+	Desired      uint32
+	Operator     string
+	NodeSchedule bool
 }
 
 // BuildApplyInstanceMachinesStep 申请节点实例
@@ -844,6 +849,7 @@ func (ud *UpdateDesiredNodesTaskOption) BuildApplyInstanceMachinesStep(task *pro
 	applyInstanceStep.Params[cloudprovider.CloudIDKey.String()] = ud.Group.Provider
 	applyInstanceStep.Params[cloudprovider.ScalingNodesNumKey.String()] = strconv.Itoa(int(ud.Desired))
 	applyInstanceStep.Params[cloudprovider.OperatorKey.String()] = ud.Operator
+	applyInstanceStep.Params[cloudprovider.NodeSchedule.String()] = strconv.FormatBool(ud.NodeSchedule)
 
 	task.Steps[applyInstanceMachinesStep.StepMethod] = applyInstanceStep
 	task.StepSequence = append(task.StepSequence, applyInstanceMachinesStep.StepMethod)

@@ -234,9 +234,10 @@ function handleReject(error, config) {
         assistant: window.BCS_CONFIG?.contact,
         type: 'key-value',
         details: {
-          traceparent: error.response?.config?.headers?.Traceparent,
+          traceparent: error.response?.config?.headers?.Traceparent || '--',
           requestId: error.response?.headers?.['x-request-id'] || data?.requestID || data?.request_id || '--',
-          message: data.message,
+          message: data.message || '--',
+          URL: error.response?.config?.url || '--',
         },
       });
     }

@@ -14,6 +14,7 @@ package multicluster
 
 import (
 	"context"
+	"regexp"
 	"strings"
 	"sync"
 
@@ -34,6 +35,7 @@ import (
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/formatter"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/storage"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/store/entity"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
@@ -49,13 +51,15 @@ type Query interface {
 type StorageQuery struct {
 	ClusterdNamespaces []*clusterRes.ClusterNamespaces
 	QueryFilter        QueryFilter
+	ViewFilter         QueryFilter
 }
 
 // NewStorageQuery creates a new query for multicluster resources.
-func NewStorageQuery(ns []*clusterRes.ClusterNamespaces, filter QueryFilter) Query {
+func NewStorageQuery(ns []*clusterRes.ClusterNamespaces, queryFilter, viewFilter QueryFilter) Query {
 	return &StorageQuery{
 		ClusterdNamespaces: ns,
-		QueryFilter:        filter,
+		QueryFilter:        queryFilter,
+		ViewFilter:         viewFilter,
 	}
 }
 
@@ -76,15 +80,17 @@ func (q *StorageQuery) Fetch(ctx context.Context, groupVersion, kind string) (ma
 	resources, err := storage.ListAllMultiClusterResources(ctx, storage.ListMultiClusterResourcesReq{
 		Kind:                kind,
 		ClusteredNamespaces: clusteredNamespaces,
-		Conditions:          q.QueryFilter.ToConditions(),
+		Conditions:          q.ViewFilter.ToConditions(),
 	})
 	if err != nil {
 		return nil, err
 	}
-	resources = ApplyFilter(resources, q.QueryFilter.StatusFilter, q.QueryFilter.IPFilter)
+	// 第二次过滤
+	resources = ApplyFilter(resources, q.QueryFilter.CreatorFilter, q.QueryFilter.NameFilter,
+		q.QueryFilter.StatusFilter, q.QueryFilter.LabelSelectorFilter, q.QueryFilter.IPFilter)
 	total := len(resources)
 	resources = q.QueryFilter.Page(resources)
-	resp := buildList(resources)
+	resp := buildList(ctx, resources)
 	resp["total"] = total
 	return resp, nil
 }
@@ -93,15 +99,15 @@ func (q *StorageQuery) Fetch(ctx context.Context, groupVersion, kind string) (ma
 type APIServerQuery struct {
 	ClusterdNamespaces []*clusterRes.ClusterNamespaces
 	QueryFilter        QueryFilter
-	Limit              int
-	Offset             int
+	ViewFilter         QueryFilter
 }
 
 // NewAPIServerQuery creates a new query for multicluster resources.
-func NewAPIServerQuery(ns []*clusterRes.ClusterNamespaces, filter QueryFilter) Query {
+func NewAPIServerQuery(ns []*clusterRes.ClusterNamespaces, queryFilter, viewFilter QueryFilter) Query {
 	return &APIServerQuery{
 		ClusterdNamespaces: ns,
-		QueryFilter:        filter,
+		QueryFilter:        queryFilter,
+		ViewFilter:         viewFilter,
 	}
 }
 
@@ -113,15 +119,17 @@ func (q *APIServerQuery) Fetch(ctx context.Context, groupVersion, kind string) (
 	}
 	log.Info(ctx, "fetch multi cluster resources, kind: %s, clusterdNamespaces: %v", kind, q.ClusterdNamespaces)
 	resources, err := listResource(ctx, q.ClusterdNamespaces, groupVersion, kind, metav1.ListOptions{
-		LabelSelector: q.QueryFilter.LabelSelectorString()})
+		LabelSelector: q.ViewFilter.LabelSelectorString()})
 	if err != nil {
 		return nil, err
 	}
+	resources = ApplyFilter(resources, q.ViewFilter.CreatorFilter, q.ViewFilter.NameFilter)
+	// 第二次过滤
 	resources = ApplyFilter(resources, q.QueryFilter.CreatorFilter, q.QueryFilter.NameFilter,
-		q.QueryFilter.StatusFilter, q.QueryFilter.IPFilter)
+		q.QueryFilter.StatusFilter, q.QueryFilter.LabelSelectorFilter, q.QueryFilter.IPFilter)
 	total := len(resources)
 	resources = q.QueryFilter.Page(resources)
-	resp := buildList(resources)
+	resp := buildList(ctx, resources)
 	resp["total"] = total
 	return resp, nil
 }
@@ -168,15 +176,17 @@ func listNamespaceResources(ctx context.Context, clusterID string, namespaces []
 		}
 		return nil, err
 	}
-	if len(namespaces) == 0 {
-		namespaces = append(namespaces, "")
+	// 如果命名空间为空，则查询所有命名空间，如果命名空间数量大于 5，则查全部命名空间并最后筛选命名空间，这样能减少并发请求
+	filterNamespace := namespaces
+	if len(namespaces) == 0 || len(namespaces) >= 5 {
+		filterNamespace = []string{""}
 	}
 	errGroups := errgroup.Group{}
 	errGroups.SetLimit(20)
 	result := []*storage.Resource{}
 	mux := sync.Mutex{}
 	// 根据命名空间列表，并发查询资源
-	for _, v := range namespaces {
+	for _, v := range filterNamespace {
 		ns := v
 		errGroups.Go(func() error {
 			ret, innerErr := cli.NewResClient(clusterConf, k8sRes).ListAllWithoutPerm(ctx, ns, opts)
@@ -189,8 +199,11 @@ func listNamespaceResources(ctx context.Context, clusterID string, namespaces []
 			mux.Lock()
 			defer mux.Unlock()
 			for _, item := range ret {
-				result = append(result, &storage.Resource{ClusterID: clusterID, ResourceType: kind,
-					Data: item.UnstructuredContent()})
+				// 过滤命名空间，如果命名空间为空，则表示查询全部命名空间或者集群域资源，这种直接通过。其他情况则筛选命名空间
+				if len(namespaces) == 0 || slice.StringInSlice(item.GetNamespace(), namespaces) {
+					result = append(result, &storage.Resource{ClusterID: clusterID, ResourceType: kind,
+						Data: item.UnstructuredContent()})
+				}
 			}
 			return nil
 		})
@@ -202,7 +215,7 @@ func listNamespaceResources(ctx context.Context, clusterID string, namespaces []
 }
 
 // BuildList build list response data
-func buildList(resources []*storage.Resource) map[string]interface{} {
+func buildList(ctx context.Context, resources []*storage.Resource) map[string]interface{} {
 	result := map[string]interface{}{}
 	if len(resources) == 0 {
 		return result
@@ -219,6 +232,14 @@ func buildList(resources []*storage.Resource) map[string]interface{} {
 	for _, item := range resources {
 		uid, _ := mapx.GetItems(item.Data, "metadata.uid")
 		ext := formatFunc(item.Data)
+		// 共享集群不展示集群域资源
+		clusterInfo, err := cluster.GetClusterInfo(ctx, item.ClusterID)
+		if err != nil {
+			continue
+		}
+		if ext["scope"] == "Cluster" && clusterInfo.IsShared {
+			continue
+		}
 		ext["clusterID"] = item.ClusterID
 		manifestExt[uid.(string)] = ext
 		manifestItems = append(manifestItems, pruneFunc(item.Data))
@@ -261,6 +282,7 @@ func checkMultiClusterAccess(ctx context.Context, kind string, clusters []*clust
 			}
 			nss = append(nss, ns)
 		}
+		// 命名空间为空，则查询集群下用户所有命名空间
 		if len(nss) == 0 {
 			clusterNs, err := project.GetProjectNamespace(ctx, projInfo.Code, v.ClusterID)
 			if err != nil {
@@ -279,8 +301,8 @@ func checkMultiClusterAccess(ctx context.Context, kind string, clusters []*clust
 		}
 
 		// SC 允许用户查看
-		if slice.StringInSlice(kind, cluster.SharedClusterBypassNativeKinds) {
-			newClusters = append(newClusters, &clusterRes.ClusterNamespaces{ClusterID: v.ClusterID, Namespaces: nss})
+		if slice.StringInSlice(kind, cluster.SharedClusterBypassClusterScopedKinds) {
+			newClusters = append(newClusters, &clusterRes.ClusterNamespaces{ClusterID: v.ClusterID})
 			continue
 		}
 		// 共享集群不允许访问的资源类型
@@ -339,4 +361,49 @@ func filterClusteredNamespace(clusterNs []*clusterRes.ClusterNamespaces,
 		newClusterNs = append(newClusterNs, &clusterRes.ClusterNamespaces{ClusterID: v.ClusterID})
 	}
 	return newClusterNs
+}
+
+// viewQueryToQueryFilter transform view filter to query filter
+func viewQueryToQueryFilter(filter *entity.ViewFilter) QueryFilter {
+	if filter == nil {
+		return QueryFilter{}
+	}
+	ls := make([]*clusterRes.LabelSelector, 0, len(filter.LabelSelector))
+	for _, v := range filter.LabelSelector {
+		ls = append(ls, &clusterRes.LabelSelector{
+			Key:    v.Key,
+			Op:     v.Op,
+			Values: v.Values,
+		})
+	}
+	return QueryFilter{
+		Creator:       filter.Creator,
+		Name:          filter.Name,
+		LabelSelector: ls,
+	}
+}
+
+// 检查集群是否在黑名单中，如果在黑名单中，则禁止从 api server 查询
+// 先匹配项目，再匹配集群
+func inBlackList(projectCode string, clusterIDs []*clusterRes.ClusterNamespaces) bool {
+	var reg string
+	for _, v := range config.G.MultiCluster.BlacklistForAPIServerQuery {
+		// 项目配置只允许一个，多个以最后一个为准
+		if v.ProjectCode == projectCode {
+			reg = v.ClusterIDReg
+		}
+	}
+	if reg == "" {
+		return false
+	}
+	regexp, err := regexp.Compile(reg)
+	if err != nil {
+		return false
+	}
+	for _, v := range clusterIDs {
+		if regexp.MatchString(v.ClusterID) {
+			return true
+		}
+	}
+	return false
 }

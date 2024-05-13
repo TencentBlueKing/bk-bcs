@@ -16,7 +16,7 @@ import (
 	"strconv"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
-	"k8s.io/klog"
+	klog "k8s.io/klog/v2"
 )
 
 // PrintClustersListInTable prints the response that list projects

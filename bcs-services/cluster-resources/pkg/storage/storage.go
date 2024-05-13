@@ -64,6 +64,9 @@ var defaultLimit = 1000
 // ListAllMultiClusterResources list all multi cluster resources
 func ListAllMultiClusterResources(ctx context.Context, req ListMultiClusterResourcesReq) ([]*Resource, error) {
 	result := make([]*Resource, 0)
+	if len(req.ClusteredNamespaces) == 0 {
+		return result, nil
+	}
 	// reset
 	req.Limit = defaultLimit
 	req.Offset = 0

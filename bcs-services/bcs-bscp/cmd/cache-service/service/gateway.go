@@ -99,7 +99,6 @@ func newCacheServiceMux() (*runtime.ServeMux, error) {
 		opts = append(opts, grpc.WithTransportCredentials(cred))
 	}
 
-	// build conn.
 	addr := net.JoinHostPort(network.BindIP, strconv.Itoa(int(network.RpcPort)))
 	conn, err := grpc.Dial(addr, opts...)
 	if err != nil {

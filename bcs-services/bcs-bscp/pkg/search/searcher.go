@@ -220,18 +220,18 @@ func (s *searcher) SearchExprs(q *gen.Query) []field.Expr {
 		return []field.Expr{}
 	}
 
-	searchVal := "%" + s.value + "%"
+	searchVal := "(?i)" + s.value
 	exprs := make([]field.Expr, 0)
 	// if search fields is not specified, use the default search fields
 	if len(s.fields) == 0 {
 		for _, f := range defaultFields[s.tableName] {
-			exprs = append(exprs, getGenFieldsMap(q)[s.tableName][f].Like(searchVal))
+			exprs = append(exprs, getGenFieldsMap(q)[s.tableName][f].Regexp(searchVal))
 		}
 		return exprs
 	}
 
 	for _, f := range s.fields {
-		exprs = append(exprs, getGenFieldsMap(q)[s.tableName][f].Like(searchVal))
+		exprs = append(exprs, getGenFieldsMap(q)[s.tableName][f].Regexp(searchVal))
 	}
 	return exprs
 }

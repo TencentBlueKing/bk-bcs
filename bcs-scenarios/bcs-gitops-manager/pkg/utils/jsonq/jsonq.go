@@ -1,5 +1,5 @@
 /*
- * Tencent is pleased to support the open source community by making Blueking container Service available.
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
  * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package jsonq used to reserve some field from object
@@ -22,12 +21,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-// ReserveField will reserve some fields from object
-func ReserveField(obj interface{}, path []string) ([]byte, error) {
-	bs, err := json.Marshal(obj)
-	if err != nil {
-		return nil, errors.Wrapf(err, "marshal object failed")
-	}
+// ReserveFieldBytes reserve with bytes
+func ReserveFieldBytes(bs []byte, path []string) ([]byte, error) {
 	c, err := parsed(bs)
 	if err != nil {
 		return nil, errors.Wrapf(err, "jsonq parsed bytes failed")
@@ -37,6 +32,15 @@ func ReserveField(obj interface{}, path []string) ([]byte, error) {
 		return nil, errors.Wrapf(err, "jsonq reserve path failed")
 	}
 	return bs, nil
+}
+
+// ReserveField will reserve some fields from object
+func ReserveField(obj interface{}, path []string) ([]byte, error) {
+	bs, err := json.Marshal(obj)
+	if err != nil {
+		return nil, errors.Wrapf(err, "marshal object failed")
+	}
+	return ReserveFieldBytes(bs, path)
 }
 
 // container defines the jsonq traverse instance

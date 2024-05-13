@@ -90,19 +90,40 @@ func buildApplyInstanceRequest(group *proto.NodeGroup, operator string) *resourc
 
 // 申请机器
 func applyInstanceFromResourcePool(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
-	desired int, operator string) (*RecordInstanceList, string, error) {
-	orderID, err := consumeDevicesFromResourcePool(ctx, info.NodeGroup, desired, operator)
-	if err != nil {
-		return nil, orderID, err
+	state *cloudprovider.TaskState, oldOrderId string, desired int, operator string) (*RecordInstanceList, string, error) {
+	var (
+		orderID string
+		err     error
+	)
+
+	getOrderId := func() string {
+		if len(orderID) > 0 {
+			return orderID
+		}
+
+		return oldOrderId
 	}
 
-	record, err := checkOrderStateFromResourcePool(ctx, orderID)
-	if err != nil {
-		return nil, orderID, err
+	// check if already submit old task
+	if len(oldOrderId) == 0 {
+		orderID, err = consumeDevicesFromResourcePool(ctx, info.NodeGroup, desired, operator)
+		if err != nil {
+			return nil, orderID, err
+		}
 	}
-	record.OrderID = orderID
 
-	return record, orderID, nil
+	if len(orderID) > 0 {
+		state.Task.CommonParams[cloudprovider.DeviceRecordIDKey.String()] = orderID
+		_ = cloudprovider.GetStorageModel().UpdateTask(context.Background(), state.Task)
+	}
+
+	record, err := checkOrderStateFromResourcePool(ctx, getOrderId())
+	if err != nil {
+		return nil, getOrderId(), err
+	}
+	record.OrderID = getOrderId()
+
+	return record, getOrderId(), nil
 }
 
 // consumeDevicesFromResourcePool apply cvm instances to generate orderID form resource pool

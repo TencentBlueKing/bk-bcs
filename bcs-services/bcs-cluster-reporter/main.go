@@ -10,10 +10,13 @@
  * limitations under the License.
  */
 
+// Package main xxx
 package main
 
 import (
 	"runtime/debug"
+
+	"k8s.io/klog"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/cmd"
 	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin/clustercheck"
@@ -23,8 +26,6 @@ import (
 	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin/masterpodcheck"
 	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin/netcheck"
 	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin/systemappcheck"
-
-	"k8s.io/klog"
 )
 
 func main() {

@@ -26,6 +26,13 @@ export interface ITencentAccount {
   secretKey: string
 }
 
+export interface IAzureAccount {
+  subscriptionID: string
+  tenantID: string
+  clientID: string
+  clientSecret: string
+}
+
 export interface ICreateAccountParams<T> {
   $cloudId: CloudID
   accountName: string
@@ -111,7 +118,7 @@ export default function () {
   // 校验云账号
   const validateCloudAccounts = async (params: {
     $cloudId: CloudID
-    account: IGoogleAccount | ITencentAccount
+    account: IGoogleAccount | ITencentAccount | IAzureAccount
   }) => {
     const result = await validateCloudAccountsAPI(params).then(() => '')
       .catch(data => data?.response?.data?.message || data);
@@ -125,6 +132,7 @@ export default function () {
     isExtranet: boolean
     accountID: string
     region: string
+    resourceGroupName?: string
   }) => {
     const result = await clusterConnectAPI(params).then(() => '')
       .catch(data => data?.response?.data?.message || data);
@@ -159,7 +167,7 @@ export default function () {
   // vpc列表
   const vpcLoading = ref(false);
   const vpcList = ref<Array<IVpcItem>>($store.state.cloudMetadata.vpcList);
-  const handleGetVPCList = async ({ region, cloudAccountID,  cloudID }) => {
+  const handleGetVPCList = async ({ region, cloudAccountID,  cloudID, resourceGroupName }) => {
     // gcpCloud 不支持vpc获取
     if (!region || !cloudAccountID || !cloudID || cloudID === 'gcpCloud') return;
     vpcLoading.value = true;
@@ -167,6 +175,7 @@ export default function () {
       $cloudId: cloudID,
       accountID: cloudAccountID,
       region,
+      resourceGroupName,
     }).catch(() => []);
     vpcLoading.value = false;
     return vpcList.value;

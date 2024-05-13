@@ -57,7 +57,8 @@ func genPermAndCtx(res, action, username, projectID, clusterID, namespace string
 	case namespace == "":
 		return criam.NewClusterScopedPerm(projectID), clusterAuth.NewPermCtx(username, projectID, clusterID)
 	default:
-		return criam.NewNSScopedPerm(projectID, clusterID), nsAuth.NewPermCtx(username, projectID, clusterID, namespace)
+		return criam.NewNSScopedPerm(projectID, clusterID, res), nsAuth.
+			NewPermCtx(username, projectID, clusterID, namespace)
 	}
 }
 

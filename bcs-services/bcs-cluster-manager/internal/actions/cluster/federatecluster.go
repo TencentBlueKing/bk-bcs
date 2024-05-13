@@ -137,9 +137,10 @@ func (fa *FederateAction) Handle(ctx context.Context,
 		TaskID:       "",
 		Message:      fmt.Sprintf("添加集群%s为联邦集群%s", fa.req.ClusterID, fa.req.FederationClusterID),
 		OpUser:       fa.cluster.Creator,
-		CreateTime:   time.Now().String(),
+		CreateTime:   time.Now().Format(time.RFC3339),
 		ClusterID:    fa.cluster.ClusterID,
 		ProjectID:    fa.cluster.ProjectID,
+		ResourceName: fa.cluster.ClusterName,
 	})
 	if err != nil {
 		blog.Errorf("AddFederatedCluster[%s] CreateOperationLog failed: %v", fa.req.ClusterID, err)

@@ -15,6 +15,7 @@ package tasks
 import (
 	"context"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"strconv"
 	"strings"
 	"time"
@@ -100,7 +101,7 @@ func CreateCloudNodeGroupTask(taskID string, stepName string) error { // nolint
 	dependInfo.NodeGroup.CloudNodeGroupID = npID
 
 	// update nodegorup cloudNodeGroupID
-	err = updateNodeGroupCloudNodeGroupID(nodeGroupID, dependInfo.NodeGroup)
+	err = cloudprovider.UpdateNodeGroupCloudNodeGroupID(nodeGroupID, dependInfo.NodeGroup)
 	if err != nil {
 		blog.Errorf("CreateCloudNodeGroupTask[%s]: updateNodeGroupCloudNodeGroupID[%s] in task %s "+
 			"step %s failed, %s", taskID, nodeGroupID, taskID, stepName, err.Error())
@@ -545,7 +546,13 @@ func generateLaunchConfigurePara(template *proto.LaunchConfiguration,
 		InstanceType:            &template.InstanceType,
 		InstanceChargeType:      &template.InstanceChargeType,
 		LoginSettings: &api.LoginSettings{
-			Password: template.InitLoginPassword,
+			Password: func() string {
+				if len(template.InitLoginPassword) == 0 {
+					return ""
+				}
+				passwd, _ := encrypt.Decrypt(nil, template.InitLoginPassword)
+				return passwd
+			}(),
 			KeyIds: func() []string {
 				if template.GetKeyPair() == nil || template.GetKeyPair().GetKeyID() == "" {
 					return nil
@@ -643,7 +650,7 @@ func generateInstanceAdvanceSettings(template *proto.NodeTemplate) *api.Instance
 	// parse kubelet extra args
 	kubeletArgs := strings.Split(kubeletMap[icommon.Kubelet], ";")
 	if len(kubeletArgs) > 0 {
-		result.ExtraArgs = &api.InstanceExtraArgs{Kubelet: kubeletArgs}
+		result.ExtraArgs = &api.InstanceExtraArgs{Kubelet: utils.FilterEmptyString(kubeletArgs)}
 	}
 
 	return result

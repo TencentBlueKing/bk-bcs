@@ -18,15 +18,14 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/utils"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/utils"
 	bcsdatamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
 )
 
@@ -246,7 +245,7 @@ func (m *ModelProject) GetProjectInfo(ctx context.Context,
 			"label":        map[string]interface{}{"$max": "$label"},
 		}},
 	)
-	pipeline = append(pipeline)
+	pipeline = append(pipeline) // nolint no-op append call
 	err = m.DB.Table(m.TableName).Aggregation(ctx, pipeline, &projectMetricsMap)
 	if err != nil {
 		blog.Errorf("find project data fail, err:%v", err)

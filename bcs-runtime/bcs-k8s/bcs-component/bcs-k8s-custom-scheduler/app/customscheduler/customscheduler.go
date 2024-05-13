@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package customscheduler custom scheduler
@@ -18,6 +17,7 @@ import (
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
+
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/config"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/pkg/actions"
 )
@@ -51,7 +51,7 @@ func NewCustomScheduler(conf *config.CustomSchedulerConfig) *CustomScheduler {
 // Start xxx
 func (p *CustomScheduler) Start() error {
 
-	p.httpServ.RegisterWebServer("", nil, actions.GetApiAction())
+	p.httpServ.RegisterWebServer("", nil, actions.GetApiAction()) // nolint
 	router := p.httpServ.GetRouter()
 	webContainer := p.httpServ.GetWebContainer()
 	router.Handle("/{sub_path:.*}", webContainer)

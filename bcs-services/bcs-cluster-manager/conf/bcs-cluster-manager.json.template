@@ -30,6 +30,7 @@
         "exchange": "${exchange}"
     },
     "bkOps": {
+        "esbServer": "${bcsSopsEsbServer}",
         "server": "${bcsSopsServer}",
         "appCode": "${bcsAppCode}",
         "appSecret": "${bcsAppSecret}",

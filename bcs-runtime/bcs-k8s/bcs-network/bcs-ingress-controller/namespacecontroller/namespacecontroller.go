@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package namespacecontroller add configmap to specified namespace
@@ -18,6 +17,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 	k8scorev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	k8stypes "k8s.io/apimachinery/pkg/types"
@@ -26,9 +27,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/portbindingcontroller"
-	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
 // NamespaceReconciler reconciler for namespace
@@ -67,7 +66,8 @@ func (nr *NamespaceReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 	}
 
 	configMap := &k8scorev1.ConfigMap{}
-	if err := nr.k8sClient.Get(nr.ctx, k8stypes.NamespacedName{Namespace: ns.Name, Name: networkextensionv1.NodePortBindingConfigMapName},
+	if err := nr.k8sClient.Get(nr.ctx, k8stypes.NamespacedName{Namespace: ns.Name,
+		Name: networkextensionv1.NodePortBindingConfigMapName},
 		configMap); err != nil {
 		if k8serrors.IsNotFound(err) {
 			blog.Infof("not found configMap '%s/%s'", req.Namespace, networkextensionv1.NodePortBindingConfigMapName)

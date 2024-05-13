@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -65,6 +65,7 @@ func (s *RunOptions) addElectionFlags() {
 }
 
 // addGPAFlags addFlags adds flags related to GPAController for controller manager to the specified FlagSet
+// nolint o should be consistent with previous receiver name s
 func (o *RunOptions) addGPAFlags() {
 	if o == nil {
 		return
@@ -79,7 +80,8 @@ func (o *RunOptions) addGPAFlags() {
 	pflag.DurationVar(&o.GeneralPodAutoscalerDownscaleStabilizationWindow.Duration,
 		"general-pod-autoscaler-downscale-stabilization",
 		o.GeneralPodAutoscalerDownscaleStabilizationWindow.Duration,
-		"The period for which autoscaler will look backwards and not scale down below any recommendation it made during that period.")
+		"The period for which autoscaler will look backwards and "+
+			"not scale down below any recommendation it made during that period.")
 	pflag.DurationVar(
 		&o.GeneralPodAutoscalerDownscaleForbiddenWindow.Duration,
 		"general-pod-autoscaler-downscale-delay",
@@ -87,7 +89,8 @@ func (o *RunOptions) addGPAFlags() {
 		"The period since last downscale, before another downscale can be performed in general pod autoscaler.")
 	pflag.Float64Var(&o.GeneralPodAutoscalerTolerance,
 		"general-pod-autoscaler-tolerance", o.GeneralPodAutoscalerTolerance,
-		"The minimum change (from 1.0) in the desired-to-actual metrics ratio for the general pod autoscaler to consider scaling.")
+		"The minimum change (from 1.0) in the desired-to-actual metrics ratio for "+
+			"the general pod autoscaler to consider scaling.")
 	pflag.BoolVar(&o.GeneralPodAutoscalerUseRESTClients,
 		"general-pod-autoscaler-use-rest-clients",
 		o.GeneralPodAutoscalerUseRESTClients,

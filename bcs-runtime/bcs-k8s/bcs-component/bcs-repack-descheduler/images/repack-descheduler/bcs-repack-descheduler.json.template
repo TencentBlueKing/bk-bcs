@@ -1,0 +1,32 @@
+{
+  "log_dir": "${log_dir}",
+  "v": ${verbosity},
+  "alsologtostderr": true,
+  "log_max_size": 500,
+  "log_max_num": 10,
+  "logtostderr": false,
+  "stderrthreshold": "2",
+
+  "debug": ${debug},
+  "address": "${localIP}",
+  "httpPort": "${httpPort}",
+  "metricPort": "${metricPort}",
+  "extenderPort": "${extenderPort}",
+
+  "servercert": "${servercert}",
+  "serverkey": "${serverkey}",
+  "serverca": "${serverca}",
+  "webhookHost": "${webhookHost}",
+  "webhookPort": "${webhookPort}",
+  "webhookCertDir": "${webhookCertDir}",
+  "webhookCertName": "${webhookCertName}",
+  "webhookKeyName": "${webhookKeyName}",
+
+  "maxEvictionNodes": ${maxEvictionNodes},
+  "maxEvictionParallel": ${maxEvictionParallel},
+
+  "bkDataUrl": "${bkDataUrl}",
+  "bkDataAppCode": "${bkDataAppCode}",
+  "bkDataAppSecret": "${bkDataAppSecret}",
+  "bkDataToken": "${bkDataToken}"
+}

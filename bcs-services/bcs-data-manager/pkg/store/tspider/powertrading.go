@@ -17,10 +17,10 @@ import (
 	"fmt"
 
 	sq "github.com/Masterminds/squirrel"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/jmoiron/sqlx"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 	datamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
 )
@@ -61,7 +61,8 @@ func NewModelPowerTrading(dbs map[string]*sqlx.DB, bkbaseConf *types.BkbaseConfi
 }
 
 // GetPowerTradingInfo get operation data ofr power trading
-func (pt *ModelPowerTrading) GetPowerTradingInfo(ctx context.Context, request *datamanager.GetPowerTradingDataRequest) ([]*any.Any, int64, error) {
+func (pt *ModelPowerTrading) GetPowerTradingInfo(
+	ctx context.Context, request *datamanager.GetPowerTradingDataRequest) ([]*any.Any, int64, error) {
 	// validate params
 	if err := pt.validate(request); err != nil {
 		return nil, 0, err
@@ -103,7 +104,8 @@ func (pt *ModelPowerTrading) validate(request *datamanager.GetPowerTradingDataRe
 	// validate page info params
 	page, size := request.GetPage(), request.GetSize()
 	if (page == 0 && size != 0) || (page != 0 && size == 0) {
-		return fmt.Errorf("page and size should greater than 0 or both equal to 0, if both 0 return data will without page info")
+		return fmt.Errorf("page and size should greater than 0 or both equal to 0, " +
+			"if both 0 return data will without page info")
 	}
 
 	return nil

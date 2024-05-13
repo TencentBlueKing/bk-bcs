@@ -1,6 +1,0 @@
-{
-    "ip_masq_configmap_name": "${ipMasqCidrSyncConfigmapName}",
-    "ip_masq_configmap_namespace": "${ipMasqCidrSyncConfigmapNamespace}",
-    "log_dir": "${ipMasqCidrSyncLogDir}",
-    "alsologtostderr": ${ipMasqCidrSyncAlsoLogToStderr}
-}

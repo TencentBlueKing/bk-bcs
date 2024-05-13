@@ -21,10 +21,10 @@ import (
 	"sync"
 	"time"
 
-	"go-micro.dev/v4/registry"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/websocketDialer"
+	"go-micro.dev/v4/registry"
+
 	localcommon "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 )
 

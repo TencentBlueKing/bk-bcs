@@ -82,9 +82,6 @@
     alias: '',
     config_type: 'file',
     data_type: 'any',
-    reload_type: 'file',
-    reload_file_path: '/data/reload.json',
-    mode: 'normal',
     memo: '',
   });
   const serviceData = ref<IAppItem>();
@@ -98,16 +95,12 @@
         isFormChange.value = false;
         isViewMode.value = true;
         const { spec } = props.service;
-        const { name, memo, mode, config_type, reload, data_type, alias } = spec;
-        const { reload_type, file_reload_spec } = reload;
+        const { name, memo, config_type, data_type, alias } = spec;
         serviceEditForm.value = {
           name,
           memo,
-          mode,
           config_type,
           data_type,
-          reload_type,
-          reload_file_path: file_reload_spec.reload_file_path,
           alias,
         };
         serviceData.value = props.service;

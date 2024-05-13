@@ -42,6 +42,8 @@ type Release interface {
 	UpdateDeprecated(kit *kit.Kit, bizID, appID, releaseID uint32, deprecated bool) error
 	// DeleteWithTx delete release with tx.
 	DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, appID, releaseID uint32) error
+	// GetReleaseLately get release lately info
+	GetReleaseLately(kit *kit.Kit, bizID uint32, appID uint32) (*table.Release, error)
 }
 
 var _ Release = new(releaseDao)
@@ -51,6 +53,12 @@ type releaseDao struct {
 	sd       *sharding.Sharding
 	idGen    IDGenInterface
 	auditDao AuditDao
+}
+
+// GetReleaseLately get release lately info
+func (dao *releaseDao) GetReleaseLately(kit *kit.Kit, bizID uint32, appID uint32) (*table.Release, error) {
+	m := dao.genQ.Release
+	return m.WithContext(kit.Ctx).Where(m.AppID.Eq(appID), m.BizID.Eq(bizID)).Order(m.ID.Desc()).Take()
 }
 
 // CreateWithTx create one release instance with tx.
@@ -120,9 +128,9 @@ func (dao *releaseDao) List(kit *kit.Kit, opts *types.ListReleasesOption) (*type
 	if opts.SearchKey == "" {
 		q = q.Where(m.BizID.Eq(opts.BizID), m.AppID.Eq(opts.AppID), m.Deprecated.Is(opts.Deprecated))
 	} else {
-		searchKey := "%" + opts.SearchKey + "%"
+		searchKey := "(?i)" + opts.SearchKey
 		q = q.Where(m.BizID.Eq(opts.BizID), m.AppID.Eq(opts.AppID), m.Deprecated.Is(opts.Deprecated)).Where(
-			q.Where(m.Name.Like(searchKey)).Or(m.Memo.Like(searchKey)).Or(m.Creator.Like(searchKey)))
+			q.Where(m.Name.Regexp(searchKey)).Or(m.Memo.Regexp(searchKey)).Or(m.Creator.Regexp(searchKey)))
 	}
 	q = q.Order(m.ID.Desc())
 

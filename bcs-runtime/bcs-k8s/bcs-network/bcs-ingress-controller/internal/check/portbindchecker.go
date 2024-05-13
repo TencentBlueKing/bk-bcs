@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package check
@@ -74,7 +73,10 @@ func (p *PortBindChecker) Run() {
 		blog.Errorf("port allocate conflict: %s", msg)
 		p.sendEventToPortPool(conflictKey, msg)
 
-		metrics.PortBindingConflictGauge.WithLabelValues(conflictKey).Set(float64(len(conflictNamespaceNameList)))
+		for _, namespacedName := range conflictNamespaceNameList {
+			metrics.PortBindingConflictGauge.WithLabelValues(conflictKey,
+				namespacedName).Set(float64(len(conflictNamespaceNameList)))
+		}
 	}
 }
 

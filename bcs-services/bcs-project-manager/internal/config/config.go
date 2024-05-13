@@ -94,8 +94,9 @@ type JWTConfig struct {
 
 // AppConfig  app code and secret for requesting third service api
 type AppConfig struct {
-	Code   string `yaml:"code" usage:"app code"`
-	Secret string `yaml:"secret" usage:"app secret"`
+	Code       string `yaml:"code" usage:"app code"`
+	Secret     string `yaml:"secret" usage:"app secret"`
+	BkUsername string `yaml:"bkUsername" usage:"blueking username"`
 }
 
 // IAMConfig iam操作需要的配置
@@ -110,10 +111,14 @@ type IAMConfig struct {
 // ITSMConfig itsm操作需要的配置
 type ITSMConfig struct {
 	Enable                   bool   `yaml:"enable" usage:"enable ITSM sync"`
+	AutoRegister             bool   `yaml:"autoRegister" usage:"auto register itsm services"`
+	External                 bool   `yaml:"external" usage:"use itsm as external"`
 	GatewayHost              string `yaml:"gatewayHost" usage:"gateway host"`
+	Host                     string `yaml:"host" usage:"itsm esb host"`
 	CreateNamespaceServiceID int    `yaml:"createNsSvcID" usage:"service id for create ns service"`
 	UpdateNamespaceServiceID int    `yaml:"updateNsSvcID" usage:"service id for update ns service"`
 	DeleteNamespaceServiceID int    `yaml:"deleteNsSvcID" usage:"service id for delete ns service"`
+	Approvers                string `yaml:"approvers" usage:"approvers for itsm"`
 }
 
 // BkMonitorConfig 蓝鲸监控操作需要的配置

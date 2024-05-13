@@ -109,7 +109,7 @@
                     {{$t('cluster.detail.title.autoScaler')}}
                   </li>
                 </template>
-                <li class="bcs-dropdown-item" @click="handleGotoToken">KubeConfig</li>
+                <li class="bcs-dropdown-item" @click="handleGotoToken">Kubeconfig</li>
                 <li class="bcs-dropdown-item" @click="handleGotoWebConsole(cluster)">WebConsole</li>
                 <!-- vCluster集群和导入删除 -->
                 <li

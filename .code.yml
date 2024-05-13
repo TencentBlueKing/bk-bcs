@@ -88,6 +88,7 @@ source:
       - /bcs-services/bcs-cluster-manager/internal/cloudprovider/component/.*
       - /bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api/common_.*
       - /bcs-services/bcs-data-manager/pkg/mock/.*
+      - /bcs-services/bcs-bscp/test/.*
 
   # 提供产品代码库中工具或框架自动生成的且在代码库中的代码，没有可为空。以便后续代码统计环节进行排除等特殊处理。
   auto_generate_source:

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package v1alpha1
@@ -20,18 +19,26 @@ import (
 )
 
 const (
-	Kind     = "GameDeployment"
-	Plural   = "gamedeployments"
+	// Kind xxx
+	Kind = "GameDeployment"
+	// Plural xxx
+	Plural = "gamedeployments"
+	// Singular xxx
 	Singular = "gamedeployment"
 
+	// GroupName xxx
 	GroupName = "tkex.tencent.com"
-	Version   = "v1alpha1"
+	// Version xxx
+	Version = "v1alpha1"
 )
 
 var (
+	// SchemeBuilder xxx
 	SchemeBuilder = runtime.NewSchemeBuilder(addKnownTypes)
-	AddToScheme   = SchemeBuilder.AddToScheme
+	// AddToScheme xxx
+	AddToScheme = SchemeBuilder.AddToScheme
 
+	// SchemeGroupVersion xxx
 	SchemeGroupVersion = schema.GroupVersion{Group: GroupName, Version: Version}
 )
 

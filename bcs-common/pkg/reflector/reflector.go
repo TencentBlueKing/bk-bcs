@@ -14,9 +14,9 @@
 package reflector
 
 import (
+	"context"
 	"time"
 
-	"golang.org/x/net/context"
 	k8scache "k8s.io/client-go/tools/cache"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -68,7 +68,8 @@ func (r *Reflector) Run() {
 	blog.V(3).Infof("%s ready to start, begin to cache data", r.name)
 	// sync all data object from remote event storage
 	// r.listAllData()
-	watchCxt, _ := context.WithCancel(r.cxt)
+	// NOCC:vet/vet(忽略)
+	watchCxt, _ := context.WithCancel(r.cxt) // nolint
 	go r.handleWatch(watchCxt)
 	blog.V(3).Infof("%s first resynchronization & watch success, register all ticker", r.name)
 	// create ticker for data object resync

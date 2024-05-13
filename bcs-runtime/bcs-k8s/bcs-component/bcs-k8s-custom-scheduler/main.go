@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package main xxx
 package main
 
 import (
@@ -22,6 +22,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/app"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/options"
 	v1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/pkg/ipscheduler/v1"
@@ -63,7 +64,7 @@ func main() {
 		defaultIpScheduler, err := v2.NewIpScheduler(conf)
 		if err != nil {
 			blog.Errorf("failed to build IpSchedulerV2: %s", err.Error())
-			os.Exit(1)
+			os.Exit(1) // nolint
 		}
 		v2.DefaultIpScheduler = defaultIpScheduler
 		defer v2.DefaultIpScheduler.Stop()
@@ -71,12 +72,12 @@ func main() {
 		defaultIpScheduler, err := v3.NewIpScheduler(conf)
 		if err != nil {
 			blog.Errorf("failed to build IpSchedulerV3: %s", err.Error())
-			os.Exit(1)
+			os.Exit(1) // nolint
 		}
 		v3.DefaultIpScheduler = defaultIpScheduler
 		if err := v3.StartInformers(); err != nil {
 			blog.Errorf("start informers failed, err %s", err.Error())
-			os.Exit(1)
+			os.Exit(1) // nolint
 		}
 	}
 

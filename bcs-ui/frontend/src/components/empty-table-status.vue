@@ -6,7 +6,9 @@
         tag="div"
         path="generic.msg.empty.searchEmpty.subTitle"
         class="mt-[8px] text-[12px] text-[#979BA5]">
-        <button place="action" class="bk-text-button" @click="handleClear">{{$t('generic.button.clearSearch')}}</button>
+        <button place="action" class="bk-text-button" @click="handleClear">
+          {{ buttonText || $t('generic.button.clearSearch')}}
+        </button>
       </i18n>
     </template>
     <slot></slot>
@@ -23,6 +25,10 @@ export default defineComponent({
     type: {
       type: String,
       default: 'empty',
+    },
+    buttonText: {
+      type: String,
+      default: '',
     },
   },
   setup(props, ctx) {

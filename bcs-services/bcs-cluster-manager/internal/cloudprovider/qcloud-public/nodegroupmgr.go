@@ -259,10 +259,9 @@ func (ng *NodeGroup) updateNormalNodePool(
 		}
 	*/
 	// update bkCloudName
-	if group.Area == nil {
-		group.Area = &proto.CloudArea{}
+	if group.Area != nil {
+		group.Area.BkCloudName = cloudprovider.GetBKCloudName(int(group.Area.BkCloudID))
 	}
-	group.Area.BkCloudName = cloudprovider.GetBKCloudName(int(group.Area.BkCloudID))
 
 	// module info
 	if group.NodeTemplate != nil && group.NodeTemplate.Module != nil &&
@@ -341,7 +340,7 @@ func (ng *NodeGroup) generateModifyClusterNodePoolInput(
 		if req.ExtraArgs == nil {
 			req.ExtraArgs = &tke.InstanceExtraArgs{}
 		}
-		req.ExtraArgs.Kubelet = common.StringPtrs(strings.Split(paras, ";"))
+		req.ExtraArgs.Kubelet = common.StringPtrs(utils.FilterEmptyString(strings.Split(paras, ";")))
 	}
 
 	return req
@@ -884,7 +883,7 @@ func deleteExternalNodePool(group *proto.NodeGroup, opt *cloudprovider.DeleteNod
 }
 
 // GetExternalNodeScript get nodegroup external node script
-func (ng *NodeGroup) GetExternalNodeScript(group *proto.NodeGroup) (string, error) {
+func (ng *NodeGroup) GetExternalNodeScript(group *proto.NodeGroup, internal bool) (string, error) {
 	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
 		ClusterID:   group.ClusterID,
 		CloudID:     group.Provider,
@@ -896,7 +895,7 @@ func (ng *NodeGroup) GetExternalNodeScript(group *proto.NodeGroup) (string, erro
 		return "", errMsg
 	}
 
-	script, err := business.GetClusterExternalNodeScript(context.Background(), dependInfo)
+	script, err := business.GetClusterExternalNodeScript(context.Background(), dependInfo, internal)
 	if err != nil {
 		blog.Errorf("GetExternalNodeScript[%s] GetClusterExternalNodeScript failed: %v", group.NodeGroupID, err)
 		return "", err

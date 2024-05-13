@@ -246,3 +246,21 @@ zh: Missing entry for "unsupported variable type: {VariableType}".
   }
 }
 ```
+
+## i18n.T 使用
+
+i18n.T 是国际化的唯一入口，结合 errf.Errorf, 可以完成 API 返回的国际化
+
+grpc 接口使用方式
+```go
+// 转换带 lang 的kit.Kit
+grpcKit := kit.FromGrpcContext(ctx)
+
+// ...(your code)
+
+if len(req.GetIds()) == 0 {
+		return nil, errf.Errorf(errf.InvalidArgument, i18n.T(grpcKit, "id is required"))
+}
+```
+
+注： 添加后 make i18n 提测和翻译后再编译

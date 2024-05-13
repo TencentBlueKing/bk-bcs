@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package server
@@ -19,6 +18,8 @@ import (
 	"net/http"
 	"regexp"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	"github.com/argoproj-labs/argocd-vault-plugin/pkg/auth/vault"
 	"github.com/argoproj-labs/argocd-vault-plugin/pkg/config"
 	"github.com/argoproj-labs/argocd-vault-plugin/pkg/kube"
@@ -29,8 +30,6 @@ import (
 	"github.com/spf13/viper"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-vaultplugin-server/pkg/argoplugin"
 )
 
@@ -60,7 +59,7 @@ func (s *Server) routerDecryptManifest(w http.ResponseWriter, r *http.Request) {
 	secretKey, err := s.getSecretKeyForProject(r.Context(), projectName)
 	if err != nil {
 		s.responseError(r, w, http.StatusBadRequest,
-			errors.Errorf("get secret key for project '%s' failed", projectName))
+			errors.Wrapf(err, "get secret key for project '%s' failed", projectName))
 		return
 	}
 	res, err := s.decryptVaultSecret(r.Context(), projectName, secretKey, req.Manifests)

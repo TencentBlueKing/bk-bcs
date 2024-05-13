@@ -19,8 +19,8 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
-	"github.com/micro/go-micro/v2/metadata"
-	"github.com/micro/go-micro/v2/server"
+	"go-micro.dev/v4/metadata"
+	"go-micro.dev/v4/server"
 )
 
 // GoMicroAuth is the authentication middleware for go-micro
@@ -45,8 +45,8 @@ func (g *GoMicroAuth) EnableSkipHandler(skipHandler func(ctx context.Context, re
 }
 
 // EnableSkipClient enable skip client, if skip client return true, skip authorization
-func (g *GoMicroAuth) EnableSkipClient(exemptClient func(ctx context.Context, req server.Request,
-	client string) bool) *GoMicroAuth {
+// nolint
+func (g *GoMicroAuth) EnableSkipClient(exemptClient func(ctx context.Context, req server.Request, client string) bool) *GoMicroAuth {
 	g.exemptClient = exemptClient
 	return g
 }
@@ -126,11 +126,15 @@ func (g *GoMicroAuth) AuthorizationFunc(fn server.HandlerFunc) server.HandlerFun
 			return fn(ctx, req, rsp)
 		}
 
+		if len(authUser.Username) == 0 {
+			return errors.New("username is empty")
+		}
+
 		if g.checkUserPerm == nil {
 			return errors.New("check user permission function is not set")
 		}
 
-		if allow, err := g.checkUserPerm(ctx, req, authUser.GetUsername()); err != nil {
+		if allow, err := g.checkUserPerm(ctx, req, authUser.Username); err != nil {
 			return err
 		} else if !allow {
 			return errors.New("user not authorized")

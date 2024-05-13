@@ -110,6 +110,8 @@ func loadFromFile(conf []byte) (Setting, error) {
 		s = new(FeedServerSetting)
 	case VaultServerName:
 		s = new(VaultServerSetting)
+	case VaultSidecarName:
+		s = new(VaultSidecarSetting)
 	default:
 		return nil, fmt.Errorf("unknown %s service name", ServiceName())
 	}

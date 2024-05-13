@@ -109,6 +109,12 @@ func FromGrpcContext(ctx context.Context) *Kit {
 		}
 	}
 
+	// set bizID in feedserver middleware
+	ctxBizID, ok := ctx.Value(constant.BizIDKey).(uint32)
+	if ok && ctxBizID != 0 {
+		kit.BizID = ctxBizID
+	}
+
 	kit.Ctx = context.WithValue(kit.Ctx, constant.RidKey, rid) //nolint
 
 	// Note: need to add supplier id and authorization field.

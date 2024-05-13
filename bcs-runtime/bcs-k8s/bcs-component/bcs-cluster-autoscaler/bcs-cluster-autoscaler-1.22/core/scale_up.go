@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package core
@@ -19,13 +18,9 @@ import (
 	"strings"
 	"time"
 
-	contextinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/context"
-
 	appsv1 "k8s.io/api/apps/v1"
 	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
-	klog "k8s.io/klog/v2"
-
 	"k8s.io/autoscaler/cluster-autoscaler/cloudprovider"
 	"k8s.io/autoscaler/cluster-autoscaler/clusterstate"
 	"k8s.io/autoscaler/cluster-autoscaler/context"
@@ -40,7 +35,10 @@ import (
 	"k8s.io/autoscaler/cluster-autoscaler/utils/gpu"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/klogx"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/taints"
+	klog "k8s.io/klog/v2"
 	schedulerframework "k8s.io/kubernetes/pkg/scheduler/framework"
+
+	contextinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/context"
 )
 
 type scaleUpResourcesLimits map[string]int64
@@ -131,8 +129,8 @@ func calculateScaleUpCoresMemoryTotal(
 		}
 		if currentSize > 0 {
 			nodeCPU, nodeMemory := getNodeInfoCoresAndMemory(nodeInfo)
-			coresTotal = coresTotal + int64(currentSize)*nodeCPU
-			memoryTotal = memoryTotal + int64(currentSize)*nodeMemory
+			coresTotal += int64(currentSize) * nodeCPU
+			memoryTotal += int64(currentSize) * nodeMemory
 		}
 	}
 
@@ -291,6 +289,7 @@ func maxResourceLimitReached(resources []string) *skippedReasons {
 }
 
 // computeExpansionOption computes scale up options
+// nolint
 func computeExpansionOption(context *contextinternal.Context, podEquivalenceGroups []*podEquivalenceGroup,
 	nodeGroup cloudprovider.NodeGroup, nodeInfo *schedulerframework.NodeInfo,
 	upcomingNodes []*schedulerframework.NodeInfo, bufferNotEnough bool) (expander.Option, error) {
@@ -356,6 +355,7 @@ func computeExpansionOption(context *contextinternal.Context, podEquivalenceGrou
 // false if it didn't and error if an error occurred. Assumes that all nodes in the cluster are
 // ready and in sync with instance groups.
 // NOCC:golint/fnsize(设计如此)
+// nolint funlen
 func ScaleUp(context *contextinternal.Context, processors *ca_processors.AutoscalingProcessors,
 	clusterStateRegistry *clusterstate.ClusterStateRegistry, unschedulablePods []*apiv1.Pod, nodes []*apiv1.Node,
 	daemonSets []*appsv1.DaemonSet, nodeInfos map[string]*schedulerframework.NodeInfo,
@@ -459,6 +459,7 @@ func ScaleUp(context *contextinternal.Context, processors *ca_processors.Autosca
 
 // optimizeBestOption generates the best scale up options
 // NOCC:golint/fnsize(设计如此)
+// nolint funlen
 func optimizeBestOption(context *contextinternal.Context, processors *ca_processors.AutoscalingProcessors,
 	clusterStateRegistry *clusterstate.ClusterStateRegistry, daemonSets []*appsv1.DaemonSet,
 	nodes []*apiv1.Node, upcomingNodes []*schedulerframework.NodeInfo,

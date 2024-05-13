@@ -20,11 +20,14 @@ import (
 	"k8s.io/klog/v2"
 
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/component/notice"
+	"github.com/Tencent/bk-bcs/bcs-ui/pkg/config"
+	"github.com/Tencent/bk-bcs/bcs-ui/pkg/i18n"
 )
 
 // GetCurrentAnnouncements 获取当前公告
 func (s *WebServer) GetCurrentAnnouncements(w http.ResponseWriter, r *http.Request) {
-	announcements, err := notice.GetCurrentAnnouncements(r.Context())
+	lang := i18n.GetLangByRequest(r, config.G.Base.LanguageCode)
+	announcements, err := notice.GetCurrentAnnouncements(r.Context(), lang)
 	if err != nil {
 		klog.Warningf("get current announcements failed: %s", err.Error())
 	}

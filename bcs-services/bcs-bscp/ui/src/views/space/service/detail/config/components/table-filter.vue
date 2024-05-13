@@ -2,7 +2,7 @@
   <div class="popover-wrap">
     <bk-popover
       ext-cls="table-filter-popover"
-      trigger="click"
+      trigger="manual"
       :is-show="isShowSelect"
       theme="light"
       placement="bottom-start"

@@ -21,7 +21,7 @@ import (
 	restclient "github.com/Tencent/bk-bcs/bcs-common/pkg/esb/client"
 )
 
-func configureRequest(r *gorequest.SuperAgent, config *Config) *gorequest.SuperAgent {
+func configureRequest(r *gorequest.SuperAgent, config *Config) *gorequest.SuperAgent { // nolint
 	// setting insecureSkipVerify
 	if config.TLSConfig != nil {
 		config.TLSConfig.InsecureSkipVerify = true
@@ -36,17 +36,17 @@ func configureRequest(r *gorequest.SuperAgent, config *Config) *gorequest.SuperA
 	return r
 }
 
-func newGet(config *Config, address string) *gorequest.SuperAgent {
+func newGet(config *Config, address string) *gorequest.SuperAgent { // nolint
 	r := gorequest.New().Get(address)
 	return configureRequest(r, config)
 }
 
-func newPost(config *Config, address string) *gorequest.SuperAgent {
+func newPost(config *Config, address string) *gorequest.SuperAgent { // nolint
 	r := gorequest.New().Post(address)
 	return configureRequest(r, config)
 }
 
-func newDelete(config *Config, address string) *gorequest.SuperAgent {
+func newDelete(config *Config, address string) *gorequest.SuperAgent { // nolint
 	r := gorequest.New().Delete(address)
 	return configureRequest(r, config)
 }

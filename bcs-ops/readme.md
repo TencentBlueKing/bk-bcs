@@ -20,6 +20,10 @@ Usage:
 
 ## 准备环境（可选）
 
+### linux 内核版本要求
+对于 ipv4 集群，linux 内核至少为 `3.10.0`
+对于 ipv6 集群，linux 内核版本至少为 `4.19.1`
+
 ### iptables 策略
 
 > 在安装的过程中`bcs-ops`会关闭机器的防火墙，`systemctl stop firewalld;systemctl disable firewalld`。
@@ -79,7 +83,7 @@ set +x
 
 1. 通过`set -a 命令`配置环境变量，环境变量配置见[`环境变量`](#环境变量)
 2. `./bcs-ops -r bcsenv` 在第一台主机（后称中控机）上渲染配置文件 `env/bcs.env`
-3. 在中控机上启动集群控制平面：`./bcs-ops --instal master`，集群启动成功后会显示加入集群的指令
+3. 在中控机上启动集群控制平面：`./bcs-ops --install master`，集群启动成功后会显示加入集群的指令
 4. 集群加入指令有效期为 1 小时，中控机执行 `./bcs-ops --render joincmd` 可再次渲染生成加入集群的指令，渲染结果如下所示
 
    ```plaintext
@@ -149,13 +153,13 @@ set +x
 
 #### k8s 基础环境变量
 
-| 环境变量         | 默认值                                            | 说明                                                                                  |
-| ---------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| `K8S_VER`        | `1.20.15`                                         | k8s 版本，现支持 `1.20.151.23.171.24.15`                                              |
-| `ETCD_LIB`       | `${BK_HOME}/lib/etcd`                             | 控制平面 etcd 根目录                                                                  |
-| `KUBELET_LIB`    | `${BK_HOME}/lib/kubelet`                          | kubelet 根目录                                                                        |
-| `K8S_EXTRA_ARGS` | `allowed-unsafe-sysctls: 'net.ipv4.tcp_tw_reuse'` | [cluster sysctl](https://kubernetes.io/docs/tasks/administer-cluster/sysctl-cluster/) |
-| `BCS_CP_WORKER`  | `0`                                               | 是否单节点集群，`0`关闭，`1`开启，开启后控制平面污点取消                              |
+| 环境变量         | 默认值                                            | 说明                                                                                                                |
+| ---------------- | ------------------------------------------------- |-------------------------------------------------------------------------------------------------------------------|
+| `K8S_VER`        | `1.20.15`                                         | k8s 版本，现支持 `1.20.151.23.171.24.15`                                                                                |
+| `ETCD_LIB`       | `${BK_HOME}/lib/etcd`                             | 控制平面 etcd 根目录                                                                                                     |
+| `KUBELET_LIB`    | `${BK_HOME}/lib/kubelet`                          | kubelet 根目录                                                                                                       |
+| `K8S_EXTRA_ARGS` | `allowed-unsafe-sysctls: 'net.ipv4.tcp_tw_reuse'` | 配置kubelet自定义参数，格式为A: B, C: D[cluster sysctl](https://kubernetes.io/docs/tasks/administer-cluster/sysctl-cluster/) |
+| `BCS_CP_WORKER`  | `0`                                               | 是否单节点集群，`0`关闭，`1`开启，开启后控制平面污点取消                                                                                   |
 
 #### k8s 网络配置
 
@@ -196,22 +200,24 @@ set +x
 
 #### apiserver ha 环境变量
 
-| 环境变量                  | 默认值                      | 说明                                                                                                                                                                                                                         |
-| ------------------------- | --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ENABLE_APISERVER_HA`     | `false`                     | apiserver ha 模式，默认关闭。                                                                                                                                                                                                |
-| `APISERVER_HA_MODE`       | `bcs-apiserver-proxy`       | 模式选择，支持 [bcs-apiserver-proxy](https://github.com/TencentBlueKing/bk-bcs/blob/625be3183d99ee3500123016a6dea99d78165565/docs/features/bcs-apiserver-proxy/bcs-apiserver-proxy.md#L1)`​[kube-vip](https://kube-vip.io/)` |
-| `VIP`                     |                             | VIP 地址，可配置与集群内不冲突的 ip 地址                                                                                                                                                                                     |
-| `VS_PORT`                 | `6443`                      | bap 代理端口                                                                                                                                                                                                                 |
-| `APISERVER_PROXY_VERSION` | `v1.29.0-alpha.130-tencent` | bap 镜像版本                                                                                                                                                                                                                 |
-| `PROXY_TOOL_PATH`         | `/usr/bin`                  | bap 工具安装目录                                                                                                                                                                                                             |
-| `PERSIST_DIR`             | `/root/.bcs`                | bap 持久化目录                                                                                                                                                                                                               |
-| `LVS_SCHEDULER`           | `rr`                        | bap 负载均衡策略                                                                                                                                                                                                             |
-| `MANAGER_INTERVAL`        | `10`                        | bap 监听时间                                                                                                                                                                                                                 |
-| `DEBUG_MODE`              | `true`                      | bap DEBUG 模式 默认开启                                                                                                                                                                                                      |
-| `LOG_LEVEL`               | `3`                         | bap 日志等级                                                                                                                                                                                                                 |
-| `KUBE_VIP_VERSION`        | `v0.5.12`                   | kube-vip 镜像版本                                                                                                                                                                                                            |
-| `BIND_INTERFACE`          | `""`                        | kube-vip 绑定网卡名                                                                                                                                                                                                          |
-| `VIP_CIDR`                | `32`                        | VIP CIDR 掩码长度                                                                                                                                                                                                            |
+| 环境变量                  | 默认值                      | 说明                                                                                                                                                                                                                        |
+| ------------------------- | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ENABLE_APISERVER_HA`     | `false`                     | apiserver ha 模式，默认关闭。                                                                                                                                                                                               |
+| `APISERVER_HA_MODE`       | `bcs-apiserver-proxy`       | 模式选择，支持 [bcs-apiserver-proxy](https://github.com/TencentBlueKing/bk-bcs/blob/625be3183d99ee3500123016a6dea99d78165565/docs/features/bcs-apiserver-proxy/bcs-apiserver-proxy.md#L1), [kube-vip](https://kube-vip.io/) |
+| `VIP`                     |                             | VIP 地址，可配置与集群内不冲突的 ip 地址                                                                                                                                                                                    |
+| `VS_PORT`                 | `6443`                      | bap 代理端口                                                                                                                                                                                                                |
+| `APISERVER_PROXY_VERSION` | `v1.29.0-alpha.130-tencent` | bap 镜像版本                                                                                                                                                                                                                |
+| `PROXY_TOOL_PATH`         | `/usr/bin`                  | bap 工具安装目录                                                                                                                                                                                                            |
+| `PERSIST_DIR`             | `/root/.bcs`                | bap 持久化目录                                                                                                                                                                                                              |
+| `LVS_SCHEDULER`           | `rr`                        | bap 负载均衡策略                                                                                                                                                                                                            |
+| `MANAGER_INTERVAL`        | `10`                        | bap 监听时间                                                                                                                                                                                                                |
+| `DEBUG_MODE`              | `true`                      | bap DEBUG 模式 默认开启                                                                                                                                                                                                     |
+| `LOG_LEVEL`               | `3`                         | bap 日志等级                                                                                                                                                                                                                |
+| `KUBE_VIP_VERSION`        | `v0.5.12`                   | kube-vip 镜像版本                                                                                                                                                                                                           |
+| `BIND_INTERFACE`          | `""`                        | kube-vip 绑定网卡名                                                                                                                                                                                                         |
+| `VIP_CIDR`                | `32`                        | VIP CIDR 掩码长度                                                                                                                                                                                                           |
+| `EXTERNAL_VIP`            | `""`                        | 外部 LB ip                                                                                                                                                                                                                  |
+| `EXTERNAL_HOST`           | `""`                        | 外部域名解析域名                                                                                                                                                                                                            |
 
 ### 示例
 
@@ -359,24 +365,6 @@ etcdctl member remove xxx
 
 4.故障节点如果能够登录，执行`./bcs-ops -c master`清理节点
 
-## 标准运维
-
-### 1. 【BCS】K8S master replace
-
-参数
-
-1. master_ip 一个当前存在于集群的 master，且不是本次被替换的 master 的 ip
-2. new_master_ip 本次将被替换进集群的 master 的 ip
-3. unwanted_master_ip 本次将被替换出集群的 master 的 ip
-4. unwanted_master_name 本次将被替换进集群的 master 的节点名
-5. workspace 节点上的 bcs-ops 目录
-
-功能描述
-
-1. 扩容 new_master_ip 指定的 master 节点
-
-2. 清理掉 unwanted_master_ip 指定的 master 节点上的 k8s 环境以及 unwanted_master_name 对应的 k8s 节点以及 etcd 节点
-
 ---
 
 # etcd 操作
@@ -431,54 +419,6 @@ etcdctl member remove xxx
 
 1. 根据参数基于原本 kubeadm 创建出来的 etcd.yaml 文件进行替换，并用静态 pod 的方式拉起新集群的本机节点
 
-## 标准运维
+# 标准运维操作
 
-### 1. 【BCS】etcd backup
-
-参数
-
-1. host_ip_list 需要进行备份的 etcd 节点 ip，多个使用,隔开
-2. cacert 访问 etcd 的 ca 证书文件路径
-3. cert 访问 etcd 的证书文件路径
-4. key 访问 etcd 的 key 文件路径
-5. backup_file 备份文件路径
-6. workspace 节点上的 bcs-ops 目录
-
-功能描述
-
-1. 在各个 etcd 节点上，通过本机的 endpoint 获取 snapshot 到 backup_file 指定目录
-
-### 2. 【BCS】etcd restore
-
-参数
-
-1. host_ip_list 需要进行备份的 etcd 节点 ip，多个使用,隔开
-2. source_host 备份文件来源机器
-3. source_file 备份文件路径
-4. data_dir etcd 数据目录
-5. clusterinfo_file 集群信息文件路径
-6. workspace 节点上的 bcs-ops 目录
-
-功能描述
-
-1. 将 source_file 备份文件从 source_host 传到各台 etcd 节点机器上后，根据 clusterinfo_file 中的信息将数据恢复到 data_dir 指定的目录
-
-### 3. etcd new
-
-参数
-
-1. host_ip_list 新集群的 etcd 节点 ip，多个使用,隔开
-2. name etcd 集群名
-3. data_dir 数据目录
-4. peer_port etcd 节点 peer port
-5. service_port etcd 节点 service port
-6. metric_port etcd 节点 metric port
-7. initial_cluster 此次恢复的 etcd 集群所有成员信息
-8. cacert 访问 etcd 的 ca 证书文件路径
-9. cert 访问 etcd 的证书文件路径
-10. key 访问 etcd 的 key 文件路径
-11. workspace 节点上的 bcs-ops 目录
-
-功能描述
-
-1. 根据参数基于原本 kubeadm 创建出来的 etcd.yaml 文件进行替换，并用静态 pod 的方式拉起新集群的所有节点
+见 ["bcs-ops X bk-sops 使用文档.md"](sops/bcs-ops%20X%20bk-sops%20使用文档.md)

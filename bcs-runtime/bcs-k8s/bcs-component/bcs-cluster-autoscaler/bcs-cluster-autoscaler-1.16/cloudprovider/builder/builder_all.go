@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package builder xxx
 package builder
 
 import (
@@ -30,6 +30,7 @@ const DefaultCloudProvider = bcs.ProviderName
 
 func buildCloudProvider(opts scalingconfig.Options, do cloudprovider.NodeGroupDiscoveryOptions,
 	rl *cloudprovider.ResourceLimiter) cloudprovider.CloudProvider {
+	// nolint
 	switch opts.CloudProviderName {
 	case bcs.ProviderName:
 		return bcs.BuildCloudProvider(opts, do, rl)

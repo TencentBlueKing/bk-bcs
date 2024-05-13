@@ -300,9 +300,10 @@ func (ca *CreateVirtualClusterAction) Handle(ctx context.Context, req *cmproto.C
 		TaskID:       ca.task.TaskID,
 		Message:      fmt.Sprintf("创建%s虚拟集群%s", cls.Provider, cls.ClusterID),
 		OpUser:       cls.Creator,
-		CreateTime:   time.Now().String(),
+		CreateTime:   time.Now().Format(time.RFC3339),
 		ClusterID:    cls.ClusterID,
 		ProjectID:    ca.req.ProjectID,
+		ResourceName: ca.req.GetClusterName(),
 	})
 	if err != nil {
 		blog.Errorf("create cluster[%s] CreateOperationLog failed: %v", cls.ClusterID, err)

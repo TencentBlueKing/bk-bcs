@@ -27,4 +27,38 @@ interface IRuntimeModuleParams {
   networkType: string
 }
 
-type CloudID = 'tencentCloud'|'gcpCloud'|'tencentPublicCloud'|'bluekingCloud';
+type CloudID = 'tencentCloud'|'gcpCloud'|'tencentPublicCloud'|'bluekingCloud'|'azureCloud'|'huaweiCloud';
+
+interface IViewFilter {
+  name?: string
+  creator?: string[]
+  labelSelector?: Array<{
+    key: string
+    op: '='|'In'|'NotIn'|'Exists'|'DoesNotExist'
+    values: string[]
+  }>
+}
+
+interface IClusterNamespace {
+  clusterID: string
+  namespaces: string[]
+}
+
+interface IViewData {
+  id?: string
+  name?: string
+  projectCode?: string
+  scope?: number
+  filter: IViewFilter
+  clusterNamespaces: IClusterNamespace[]
+  createBy?: string
+  createAt?: string
+  updateAt?: string
+}
+
+interface IFieldItem {
+  title: string
+  id: string
+  status: 'added' | ''// added: 已经添加的条件, 空: 为添加的条件
+  placeholder?: string
+}

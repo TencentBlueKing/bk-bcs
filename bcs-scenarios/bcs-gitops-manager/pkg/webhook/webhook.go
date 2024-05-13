@@ -1,14 +1,13 @@
 /*
-* Tencent is pleased to support the open source community by making Blueking Container Service available.
-* Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-* Licensed under the MIT License (the "License"); you may not use this file except
-* in compliance with the License. You may obtain a copy of the License at
-* http://opensource.org/licenses/MIT
-* Unless required by applicable law or agreed to in writing, software distributed under
-* the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-* either express or implied. See the License for the specific language governing permissions and
-* limitations under the License.
-*
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 // Package webhook defines the handle of webhook
@@ -25,30 +24,29 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
+	"github.com/Tencent/bk-bcs/bcs-common/common/static"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace"
+	traceconst "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/constants"
 	grpccli "github.com/go-micro/plugins/v4/client/grpc"
 	"github.com/go-micro/plugins/v4/registry/etcd"
 	grpcsvr "github.com/go-micro/plugins/v4/server/grpc"
 	"github.com/google/uuid"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go-micro.dev/v4"
 	"go-micro.dev/v4/metadata"
 	"go-micro.dev/v4/registry"
 	"go-micro.dev/v4/server"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
+	oteltrace "go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc"
 	grpccred "google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-	oteltrace "go.opentelemetry.io/otel/trace"
-
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
-	"github.com/Tencent/bk-bcs/bcs-common/common/static"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace"
-	traceconst "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/constants"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/cmd/webhook/options"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/webhook/homepage"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/webhook/transfer"
@@ -56,14 +54,21 @@ import (
 )
 
 const (
+	// ServiceName service name
 	ServiceName = "gitopswebhook.bkbcs.tencent.com"
 
-	RetryTimes        = 30
-	RetryDuration     = 10
-	RpcDialTimeout    = 20
+	// RetryTimes xxx
+	RetryTimes = 30
+	// RetryDuration xxx
+	RetryDuration = 10
+	// RpcDialTimeout xxx
+	RpcDialTimeout = 20
+	// RpcRequestTimeout xxx
 	RpcRequestTimeout = 20
 
-	RegisterTTL      = 20
+	// RegisterTTL xxx
+	RegisterTTL = 20
+	// RegisterInterval xxx
 	RegisterInterval = 10
 )
 
@@ -202,12 +207,12 @@ func (s *Server) initMetricServer() {
 }
 
 func (s *Server) initPProf(mux *http.ServeMux) {
-	//blog.Infof("pprof is enabled")
-	//mux.HandleFunc("/debug/pprof/", pprof.Index)
-	//mux.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
-	//mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
-	//mux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
-	//mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
+	// blog.Infof("pprof is enabled")
+	// mux.HandleFunc("/debug/pprof/", pprof.Index)
+	// mux.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
+	// mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
+	// mux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+	// mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
 }
 
 func (s *Server) initMetric(mux *http.ServeMux) {
@@ -247,7 +252,7 @@ func (s *Server) initRpcServer() error {
 				if !ok {
 					requestID = uuid.New().String()
 				}
-				ctx = context.WithValue(ctx, traceconst.RequestIDHeaderKey, requestID)
+				ctx = context.WithValue(ctx, traceconst.RequestIDHeaderKey, requestID) // nolint staticcheck
 				return handlerFunc(ctx, req, rsp)
 			}
 		}),

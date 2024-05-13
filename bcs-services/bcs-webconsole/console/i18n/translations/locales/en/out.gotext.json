@@ -202,6 +202,11 @@
             "translation": "The BCS Console server is disconnected, please login again"
         },
         {
+            "id": "连接已断开",
+            "message": "连接已断开",
+            "translation": "The connection is disconnected"
+        },
+        {
             "id": "支持常用Bash快捷键; Windows下Ctrl-W为关闭窗口快捷键, 请使用Alt-W代替; 使用Alt-Num切换Tab",
             "message": "支持常用Bash快捷键; Windows下Ctrl-W为关闭窗口快捷键, 请使用Alt-W代替; 使用Alt-Num切换Tab",
             "translation": "Support common Bash shortcuts; Ctrl-W in Windows is to close the window shortcut, please use Alt-W instead; use Alt-Num to switch Tab"

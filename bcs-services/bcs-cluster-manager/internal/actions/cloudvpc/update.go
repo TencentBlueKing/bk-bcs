@@ -120,7 +120,8 @@ func (ua *UpdateAction) Handle(
 		TaskID:       "",
 		Message:      fmt.Sprintf("更新云[%s]vpc网络[%s]信息", req.CloudID, req.VpcID),
 		OpUser:       req.Updater,
-		CreateTime:   time.Now().String(),
+		CreateTime:   time.Now().Format(time.RFC3339),
+		ResourceName: destCloudVPC.GetVpcName(),
 	})
 	if err != nil {
 		blog.Errorf("UpdateCloudVPC[%s] CreateOperationLog failed: %v", req.VpcID, err)

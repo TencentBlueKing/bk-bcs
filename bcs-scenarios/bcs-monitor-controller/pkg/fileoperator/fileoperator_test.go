@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package fileoperator
@@ -123,11 +122,13 @@ func TestCompress(t *testing.T) {
 	// 	},
 	// }
 
+	enable := true
+	unable := false
 	mr1 := v1.MonitorRuleSpec{
 		Rules: []*v1.MonitorRuleDetail{
 			{
 				Name:       "a",
-				Enabled:    true,
+				Enabled:    &enable,
 				ActiveTime: "1234",
 				Detect: &v1.Detect{
 					Algorithm: &v1.Algorithm{
@@ -150,7 +151,7 @@ func TestCompress(t *testing.T) {
 		Rules: []*v1.MonitorRuleDetail{
 			{
 				Name:       "a",
-				Enabled:    true,
+				Enabled:    &enable,
 				ActiveTime: "1234",
 				Detect: &v1.Detect{
 					Algorithm: &v1.Algorithm{
@@ -174,7 +175,7 @@ func TestCompress(t *testing.T) {
 		Rules: []*v1.MonitorRuleDetail{
 			{
 				Name:       "a",
-				Enabled:    true,
+				Enabled:    &enable,
 				ActiveTime: "1234",
 				Detect: &v1.Detect{
 					Algorithm: &v1.Algorithm{
@@ -193,7 +194,7 @@ func TestCompress(t *testing.T) {
 			},
 			{
 				Name:       "b",
-				Enabled:    false,
+				Enabled:    &unable,
 				ActiveTime: "1234",
 				Detect: &v1.Detect{
 					Algorithm: &v1.Algorithm{

@@ -14,7 +14,6 @@
               display-key="tag"
               save-key="tag"
               search-key="tag"
-              :max-data="1"
               :list="tagsData"
               :allow-create="true"
               trigger="focus" />
@@ -28,12 +27,12 @@
               :maxlength="200"
               :resize="true" />
           </bk-form-item>
-          <bk-form-item class="fixed-width-form" property="revision_name" :label="t('form_版本号')">
+          <bk-form-item class="fixed-width-form" property="revision_name" :label="t('form_版本号')" required>
             <bk-input v-model="formData.revision_name" :placeholder="t('请输入')"></bk-input>
           </bk-form-item>
           <bk-form-item :label="t('脚本内容')" property="content" required>
-            <div class="script-content-wrapper">
-              <ScriptEditor v-model="showContent" :language="formData.type">
+            <div :class="['script-content-wrapper', { 'show-variable': isShowVariable }]">
+              <ScriptEditor v-model="showContent" :language="formData.type" v-model:is-show-variable="isShowVariable">
                 <template #header>
                   <div class="language-tabs">
                     <div
@@ -44,6 +43,9 @@
                       {{ item.name }}
                     </div>
                   </div>
+                </template>
+                <template #sufContent>
+                  <InternalVariable v-if="isShowVariable" :language="formData.type" />
                 </template>
               </ScriptEditor>
             </div>
@@ -69,6 +71,7 @@
   import { createScript, getScriptTagList } from '../../../../api/script';
   import DetailLayout from '../components/detail-layout.vue';
   import ScriptEditor from '../components/script-editor.vue';
+  import InternalVariable from '../components/internal-variable.vue';
   import dayjs from 'dayjs';
 
   const { spaceId } = storeToRefs(useGlobalStore());
@@ -88,15 +91,17 @@
   const selectTags = ref<string[]>([]);
   const formData = ref<IScriptEditingForm>({
     name: '',
-    tag: '',
+    tags: [],
     memo: '',
     type: EScriptType.Shell,
     content: '',
     revision_name: `v${dayjs().format('YYYYMMDDHHmmss')}`,
   });
   const formDataContent = ref({
-    shell: '#!/bin/bash',
-    python: '#!/usr/bin/env python\n# -*- coding: utf8 -*-',
+    shell:
+      '#!/bin/bash\n##### 进入配置文件存放目录： cd ${bk_bscp_app_temp_dir}/files\n##### 进入前/后置脚本存放目录： cd ${bk_bscp_app_temp_dir}/hooks',
+    python:
+      '#!/usr/bin/env python\n# -*- coding: utf8 -*-\n##### 进入配置文件存放目录： config_dir = os.environ.get(‘bk_bscp_app_temp_dir’)+”/files”;os.chdir(config_dir)\n##### 进入前/后置脚本存放目录： hook_dir = os.environ.get(‘bk_bscp_app_temp_dir’)+”/hooks”;os.chdir(hook_dir)',
   });
   const showContent = computed({
     get: () => (formData.value.type === 'shell' ? formDataContent.value.shell : formDataContent.value.python),
@@ -104,6 +109,7 @@
       formData.value.type === 'shell' ? (formDataContent.value.shell = val) : (formDataContent.value.python = val);
     },
   });
+  const isShowVariable = ref(true);
 
   const rules = {
     name: [
@@ -154,7 +160,7 @@
     await formRef.value.validate();
     try {
       pending.value = true;
-      formData.value.tag = selectTags.value[0];
+      formData.value.tags = selectTags.value;
       if (!formData.value.content.endsWith('\n')) {
         formData.value.content += '\n';
       }
@@ -189,6 +195,13 @@
   .script-content-wrapper {
     min-width: 520px;
   }
+  .show-variable {
+    :deep(.script-editor) {
+      .code-editor-wrapper {
+        width: calc(100% - 272px);
+      }
+    }
+  }
 
   .language-tabs {
     display: flex;
@@ -213,6 +226,15 @@
     .bk-button {
       margin-right: 8px;
       min-width: 88px;
+    }
+  }
+
+  :deep(.script-editor) {
+    .content-wrapper {
+      display: flex;
+    }
+    .code-editor-wrapper {
+      width: 100%;
     }
   }
 </style>

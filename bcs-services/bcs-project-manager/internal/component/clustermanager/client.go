@@ -25,6 +25,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 	grpc "google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/cache"
@@ -129,7 +130,7 @@ func NewClusterManager(config *Config) (ClusterManagerClient, func()) {
 	if config.TLSConfig != nil {
 		opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(config.TLSConfig)))
 	} else {
-		opts = append(opts, grpc.WithInsecure())
+		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	}
 	var conn *grpc.ClientConn
 	var err error
@@ -181,7 +182,7 @@ func GetCluster(clusterID string) (*Cluster, error) {
 		logging.Error("get cluster from cluster manager failed, msg: %s", resp.GetMessage())
 		return nil, errors.New(resp.GetMessage())
 	}
-	_ = c.Add(fmt.Sprintf(CacheKeyClusterPrefix, clusterID), resp.GetData(), time.Hour)
+	_ = c.Add(fmt.Sprintf(CacheKeyClusterPrefix, clusterID), resp.GetData(), 5*time.Minute)
 	return resp.GetData(), nil
 }
 

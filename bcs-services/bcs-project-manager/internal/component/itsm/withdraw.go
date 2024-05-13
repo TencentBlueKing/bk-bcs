@@ -27,29 +27,28 @@ import (
 )
 
 var (
-	operateTicketPath = "/v2/itsm/operate_ticket/"
+	operateTicketPath = "/itsm/operate_ticket/"
 )
 
 // OperateTicketResp itsm operate ticket resp
 type OperateTicketResp struct {
-	Code    int         `json:"code"`
-	Result  bool        `json:"result"`
-	Message string      `json:"message"`
-	Data    interface{} `json:"data"`
+	component.CommonResp
+	Data interface{} `json:"data"`
 }
 
 // WithdrawTicket withdraw itsm ticket
 func WithdrawTicket(username, sn string) error {
 	itsmConf := config.GlobalConf.ITSM
-	// 使用网关访问
-	reqURL := fmt.Sprintf("%s%s", itsmConf.GatewayHost, operateTicketPath)
-	headers := map[string]string{"Content-Type": "application/json"}
+	// 默认使用网关访问，如果为外部版，则使用ESB访问
+	host := itsmConf.GatewayHost
+	if itsmConf.External {
+		host = itsmConf.Host
+	}
+	reqURL := fmt.Sprintf("%s%s", host, operateTicketPath)
 	req := gorequest.SuperAgent{
 		Url:    reqURL,
 		Method: "POST",
 		Data: map[string]interface{}{
-			"bk_app_code":    config.GlobalConf.App.Code,
-			"bk_app_secret":  config.GlobalConf.App.Secret,
 			"sn":             sn,
 			"operator":       username,
 			"action_type":    "WITHDRAW",
@@ -58,7 +57,7 @@ func WithdrawTicket(username, sn string) error {
 	}
 	// 请求API
 	proxy := ""
-	body, err := component.Request(req, timeout, proxy, headers)
+	body, err := component.Request(req, timeout, proxy, component.GetAuthHeader())
 	if err != nil {
 		logging.Error("request itsm withdraw ticket %s failed, %s", sn, err.Error())
 		return errorx.NewRequestITSMErr(err.Error())

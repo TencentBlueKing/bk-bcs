@@ -24,12 +24,14 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/avast/retry-go"
 	qcommon "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
+	tke "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tke/v20180525"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/template"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
@@ -280,7 +282,8 @@ func DeleteClusterInstance(ctx context.Context, info *cloudprovider.CloudDependB
 }
 
 // GetClusterExternalNodeScript get cluster externalNode script，获取第三方节点上架脚本
-func GetClusterExternalNodeScript(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) (string, error) {
+func GetClusterExternalNodeScript(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
+	internal bool) (string, error) {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 	tkeCli, err := api.NewTkeClient(info.CmOption)
 	if err != nil {
@@ -295,6 +298,7 @@ func GetClusterExternalNodeScript(ctx context.Context, info *cloudprovider.Cloud
 	err = retry.Do(func() error {
 		nodeScriptResp, err = tkeCli.DescribeExternalNodeScript(info.Cluster.SystemID, api.DescribeExternalNodeScriptConfig{
 			NodePoolId: info.NodeGroup.CloudNodeGroupID,
+			Internal:   internal,
 		})
 		if err != nil {
 			blog.Errorf("GetClusterExternalNodeScript[%s] DescribeExternalNodeScript failed: %v", taskID, err)
@@ -337,7 +341,8 @@ func GenerateNTAddExistedInstanceReq(info *cloudprovider.CloudDependBasicInfo, n
 			return &api.LoginSettings{
 				Password: func() string {
 					if len(login.GetInitLoginPassword()) > 0 {
-						return login.GetInitLoginPassword()
+						pwd, _ := encrypt.Decrypt(nil, login.GetInitLoginPassword())
+						return pwd
 					}
 					return ""
 				}(),
@@ -468,7 +473,7 @@ func GenerateInstanceAdvanceInfo(cluster *proto.Cluster,
 
 		if kubelet, ok := cluster.NodeSettings.ExtraArgs[common.Kubelet]; ok {
 			paras := strings.Split(kubelet, ";")
-			advanceInfo.ExtraArgs.Kubelet = paras
+			advanceInfo.ExtraArgs.Kubelet = utils.FilterEmptyString(paras)
 		}
 	}
 
@@ -507,7 +512,8 @@ func GenerateNGAddExistedInstanceReq(info *cloudprovider.CloudDependBasicInfo, n
 			return &api.LoginSettings{
 				Password: func() string {
 					if len(login.GetInitLoginPassword()) > 0 {
-						return login.GetInitLoginPassword()
+						pwd, _ := encrypt.Decrypt(nil, login.GetInitLoginPassword())
+						return pwd
 					}
 					return ""
 				}(),
@@ -551,7 +557,7 @@ func getDefaultNodePath(cluster *proto.Cluster) (string, string) {
 
 // getNodeCommonLabels common labels
 // nolint
-func getNodeCommonLabels(cls *proto.Cluster, group *proto.NodeGroup) []*api.KeyValue {
+func getNodeCommonLabels(cls *proto.Cluster, group *proto.NodeGroup) []*api.KeyValue { // nolint
 	labels := make([]*api.KeyValue, 0)
 
 	if group != nil {
@@ -686,11 +692,11 @@ func generateInstanceAdvanceInfoFromNp(cls *proto.Cluster, nodeTemplate *proto.N
 		kubeletParams := make([]string, 0)
 		if kubePara, ok := nodeTemplate.ExtraArgs[common.Kubelet]; ok {
 			paras := strings.Split(kubePara, ";")
-			kubeletParams = append(kubeletParams, paras...)
+			kubeletParams = append(kubeletParams, utils.FilterEmptyString(paras)...)
 		}
 		if kubelet, ok := cls.NodeSettings.ExtraArgs[common.Kubelet]; ok {
 			paras := strings.Split(kubelet, ";")
-			kubeletParams = append(kubeletParams, paras...)
+			kubeletParams = append(kubeletParams, utils.FilterEmptyString(paras)...)
 		}
 		advanceInfo.ExtraArgs.Kubelet = kubeletParams
 	}
@@ -1057,4 +1063,25 @@ func DeleteTkeClusterByClusterId(ctx context.Context, opt *cloudprovider.CommonO
 	blog.Infof("DeleteTkeClusterByClusterId[%s] deleteCluster[%s] success", taskID, clsId)
 
 	return nil
+}
+
+// UpdateNodePoolScheduleStatus update nodePool schedule state 默认值为0，表示参与调度；非0表示不参与调度
+func UpdateNodePoolScheduleStatus(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
+	nodeSchedule int64) error {
+	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+
+	tkeCli, err := api.NewTkeClient(info.CmOption)
+	if err != nil {
+		blog.Errorf("DeleteTkeClusterByClusterId[%s] init tkeClient failed: %v", taskID, err)
+		return err
+	}
+
+	req := tke.NewModifyClusterNodePoolRequest()
+
+	req.ClusterId = qcommon.StringPtr(info.Cluster.GetSystemID())
+	req.NodePoolId = qcommon.StringPtr(info.NodeGroup.GetCloudNodeGroupID())
+	req.Unschedulable = qcommon.Int64Ptr(nodeSchedule)
+
+	// 设置加入的节点是否参与调度，
+	return tkeCli.ModifyClusterNodePool(req)
 }

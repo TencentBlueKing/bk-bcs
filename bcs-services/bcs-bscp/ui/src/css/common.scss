@@ -31,6 +31,17 @@
   border-color: #3a84ff;
 }
 
-.info-box-style .bk-modal-content {
-  min-height: auto !important;
+.info-box-style .bk-modal-body{
+  .bk-dialog-header {
+    padding: 24px 24px 0;
+  }
+  .bk-modal-content {
+    min-height: auto;
+    padding: 0 50px 10px;
+  }
+}
+
+// 去掉组件库表格过滤自带的input
+.bk-popover .bk-table-head-filter .bk-input {
+  display: none;
 }

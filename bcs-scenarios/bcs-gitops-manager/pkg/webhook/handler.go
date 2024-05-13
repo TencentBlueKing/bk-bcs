@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package webhook
@@ -19,10 +18,10 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/pkg/errors"
 	"go-micro.dev/v4/metadata"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
 	pb "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/proto"
 )
@@ -52,7 +51,8 @@ func (s *Server) TGitWebhook(ctx context.Context, req *pb.TGitWebhookRequest, re
 }
 
 // GeneralWebhook defines the handler of general webhook, it will add the authorization header
-func (s *Server) GeneralWebhook(ctx context.Context, req *pb.GeneralWebhookRequest, resp *pb.GeneralWebhookResponse) error {
+func (s *Server) GeneralWebhook(
+	ctx context.Context, req *pb.GeneralWebhookRequest, resp *pb.GeneralWebhookResponse) error {
 	_, span := s.tracer.Start(ctx, "general")
 	defer span.End()
 

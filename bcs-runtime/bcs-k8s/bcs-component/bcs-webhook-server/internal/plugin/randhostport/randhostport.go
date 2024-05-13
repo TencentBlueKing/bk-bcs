@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -22,11 +22,6 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/internal/metrics"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/internal/pluginmanager"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/internal/pluginutil"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/internal/types"
-
 	"k8s.io/api/admission/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -37,6 +32,11 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
+
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/internal/metrics"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/internal/pluginmanager"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/internal/pluginutil"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/internal/types"
 )
 
 func init() {
@@ -108,7 +108,7 @@ func (hpi *HostPortInjector) Init(configFilePath string) error {
 		}
 	} else {
 		portPeriod := hpi.conf.EndPort - hpi.conf.StartPort
-		hpi.nextAssignPort = uint64(rand.Int63n(int64(portPeriod)) + int64(hpi.conf.StartPort))
+		hpi.nextAssignPort = uint64(rand.Int63n(int64(portPeriod)) + int64(hpi.conf.StartPort)) // nolint
 	}
 
 	blog.Infof("randhostport plugin init cache successfully")
@@ -134,11 +134,12 @@ func (hpi *HostPortInjector) Init(configFilePath string) error {
 	return nil
 }
 
+// nolint always nil
 func (hpi *HostPortInjector) initCache() error {
 	hpi.portCache = NewPortCache()
 	for i := hpi.conf.StartPort; i <= hpi.conf.EndPort; i++ {
 		hpi.portCache.PushPortEntry(&PortEntry{
-			Port:     uint64(i),
+			Port:     i,
 			Quantity: uint64(0),
 		})
 	}
@@ -211,6 +212,7 @@ func (hpi *HostPortInjector) injectRequired(pod *corev1.Pod) bool {
 	return true
 }
 
+// nolint funlen
 func (hpi *HostPortInjector) injectToPod(pod *corev1.Pod) ([]types.PatchOperation, error) {
 	portStrs := getPortStringsFromPodAnnotations(pod.Annotations)
 	if len(portStrs) == 0 {
@@ -225,9 +227,10 @@ func (hpi *HostPortInjector) injectToPod(pod *corev1.Pod) ([]types.PatchOperatio
 	containerPortsIndexList := make([][]int, len(pod.Spec.Containers))
 	containerPortList := make([]int32, 0)
 	needInjectCount := 0
-	for _, portStr := range portStrs {
-		for containerIndex, container := range pod.Spec.Containers {
-			for portIndex, containerPort := range container.Ports {
+
+	for containerIndex, container := range pod.Spec.Containers {
+		for portIndex, containerPort := range container.Ports {
+			for _, portStr := range portStrs {
 				if portStr == containerPort.Name {
 					containerPortsIndexList[containerIndex] = append(containerPortsIndexList[containerIndex], portIndex)
 					containerPortList = append(containerPortList, containerPort.ContainerPort)
@@ -236,7 +239,7 @@ func (hpi *HostPortInjector) injectToPod(pod *corev1.Pod) ([]types.PatchOperatio
 				}
 				portNumber, err := strconv.Atoi(portStr)
 				if err != nil {
-					continue
+					return nil, fmt.Errorf("error parse port string %s to int", portStr)
 				}
 				if int32(portNumber) == containerPort.ContainerPort {
 					containerPortsIndexList[containerIndex] = append(containerPortsIndexList[containerIndex], portIndex)
@@ -260,7 +263,7 @@ func (hpi *HostPortInjector) injectToPod(pod *corev1.Pod) ([]types.PatchOperatio
 			hostPorts = append(hostPorts, portEntry)
 		}
 		for _, hostPort := range hostPorts {
-			hostPort.Quantity = hostPort.Quantity + 1
+			hostPort.Quantity++
 			hpi.portCache.PushPortEntry(hostPort)
 		}
 		hpi.portCache.Unlock()
@@ -297,9 +300,9 @@ func (hpi *HostPortInjector) injectToPod(pod *corev1.Pod) ([]types.PatchOperatio
 					Op:    PatchOperationAdd,
 					Value: hostPorts[hostPortCount].Port,
 				})
-				hostPortMapping[hostPorts[hostPortCount].Port] = uint64(hostPorts[hostPortCount].Port)
+				hostPortMapping[hostPorts[hostPortCount].Port] = hostPorts[hostPortCount].Port
 			} else {
-				hostPortMapping[uint64(containerPort)] = uint64(hostPorts[hostPortCount].Port)
+				hostPortMapping[uint64(containerPort)] = hostPorts[hostPortCount].Port
 			}
 			hostPortCount++
 		}
@@ -323,7 +326,8 @@ func (hpi *HostPortInjector) injectToPod(pod *corev1.Pod) ([]types.PatchOperatio
 }
 
 // generateAnnotationsPatch generate patch for pod annotations
-func (hpi *HostPortInjector) generateAnnotationsPatch(pod *corev1.Pod, hostPortMapping map[uint64]uint64) types.PatchOperation {
+func (hpi *HostPortInjector) generateAnnotationsPatch(
+	pod *corev1.Pod, hostPortMapping map[uint64]uint64) types.PatchOperation {
 	annotations := pod.Annotations
 	op := PatchOperationReplace
 	if len(annotations) == 0 {

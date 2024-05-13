@@ -32,6 +32,8 @@ import (
 	bcssystem "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/bcs_system"
 	bkmonitor "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/bk_monitor"
 	prom "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/prometheus"
+	suanlicpu "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/suanli_cpu"
+	suanligpunative "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/suanli_gpu_native"
 )
 
 // Store GW Store 基类
@@ -60,6 +62,10 @@ func GetStoreSvr(logger log.Logger, reg *prometheus.Registry, conf *config.Store
 		return bcssystem.NewBCSSystemStore(c)
 	case string(config.PROMETHEUS):
 		return prom.NewPromStore(c)
+	case string(config.SUANLI_CPU):
+		return suanlicpu.NewSuanLiCPUStore(reg, c)
+	case string(config.SUANLI_GPU_NATIVE):
+		return suanligpunative.NewSuanLiGPUNativeStore(reg, c)
 	default:
 		return nil, errors.Errorf("store with type %s is not supported", conf.Type)
 	}

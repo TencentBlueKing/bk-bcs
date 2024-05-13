@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package scalingconfig xxx
 package scalingconfig
 
 import (
@@ -22,13 +22,14 @@ import (
 // Options are the option of autoscaler
 type Options struct {
 	config.AutoscalingOptions
-	BufferedCPURatio      float64
-	BufferedMemRatio      float64
-	BufferedResourceRatio float64
-	WebhookMode           string
-	WebhookModeConfig     string
-	WebhookModeToken      string
-	MaxBulkScaleUpCount   int
-	ScanInterval          time.Duration
-	EvictLatest           bool
+	BufferedCPURatio          float64
+	BufferedMemRatio          float64
+	BufferedResourceRatio     float64
+	WebhookMode               string
+	WebhookModeConfig         string
+	WebhookModeToken          string
+	MaxBulkScaleUpCount       int
+	ScanInterval              time.Duration
+	EvictLatest               bool
+	ScaleDownDelayAfterRemove time.Duration
 }

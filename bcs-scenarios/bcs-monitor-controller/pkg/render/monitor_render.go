@@ -8,20 +8,20 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package render xxx
 package render
 
 import (
 	"fmt"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	monitorextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/api/v1"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/option"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/repo"
@@ -237,7 +237,7 @@ func (r *MonitorRender) renderPanel(appMonitor *monitorextensionv1.AppMonitor, r
 				for _, rawBoard := range panel.Spec.DashBoard {
 					if rawBoard.Board == board.Board {
 						find = true
-						boardList = append(boardList, rawBoard)
+						boardList = append(boardList, rawBoard) // nolint never used
 						break
 					}
 				}

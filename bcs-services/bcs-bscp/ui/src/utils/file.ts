@@ -14,12 +14,18 @@ export const transFileToObject = (file: File) => {
 };
 
 // 文件下载
-export const fileDownload = (content: string, name: string) => {
-  const blob = new Blob([content], { type: 'text/plain;charset=UTF-8' });
+export const fileDownload = (content = '', name = '', isBlob = true) => {
+  let url = '';
+  if (isBlob) {
+    // 定义MIME类型为二进制流，避免浏览器为文件名称默认添加.txt后缀
+    const blob = new Blob([content], { type: 'application/octet-stream' });
+    url = window.URL.createObjectURL(blob);
+  } else {
+    url = content;
+  }
   const eleLink = document.createElement('a');
-  const blobURL = window.URL.createObjectURL(blob);
   eleLink.style.display = 'none';
-  eleLink.href = blobURL;
+  eleLink.href = url;
   eleLink.setAttribute('download', name);
 
   // hack HTML5 download attribute
@@ -29,5 +35,7 @@ export const fileDownload = (content: string, name: string) => {
   document.body.appendChild(eleLink);
   eleLink.click();
   document.body.removeChild(eleLink);
-  window.URL.revokeObjectURL(blobURL);
+  if (isBlob) {
+    window.URL.revokeObjectURL(url);
+  }
 };

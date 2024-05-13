@@ -42,6 +42,39 @@ func initMetric(name string) *metric {
 		}, []string{"biz"})
 	metrics.Register().MustRegister(m.watchCounter)
 
+	m.clientMaxCPUUsage = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace:   metrics.Namespace,
+		Subsystem:   metrics.FSConfigConsume,
+		Name:        "client_max_cpu_usage",
+		Help:        "record the maximum cpu usage",
+		ConstLabels: labels,
+	}, []string{"bizID", "appName"})
+	metrics.Register().MustRegister(m.clientMaxCPUUsage)
+	m.clientMaxMemUsage = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace:   metrics.Namespace,
+		Subsystem:   metrics.FSConfigConsume,
+		Name:        "client_max_memory_usage",
+		Help:        "record the maximum memory usage",
+		ConstLabels: labels,
+	}, []string{"bizID", "appName"})
+	metrics.Register().MustRegister(m.clientMaxMemUsage)
+	m.clientCurrentCPUUsage = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace:   metrics.Namespace,
+		Subsystem:   metrics.FSConfigConsume,
+		Name:        "client_current_cpu_usage",
+		Help:        "record the current cpu usage",
+		ConstLabels: labels,
+	}, []string{"bizID", "appName"})
+	metrics.Register().MustRegister(m.clientCurrentCPUUsage)
+	m.clientCurrentMemUsage = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace:   metrics.Namespace,
+		Subsystem:   metrics.FSConfigConsume,
+		Name:        "client_current_memory_usage",
+		Help:        "record the current memory usage",
+		ConstLabels: labels,
+	}, []string{"bizID", "appName"})
+	metrics.Register().MustRegister(m.clientCurrentMemUsage)
+
 	return m
 }
 
@@ -51,4 +84,12 @@ type metric struct {
 	// watchCounter record the total connection count of sidecars with watch, used to get the new the connection count
 	// within a specified time range.
 	watchCounter *prometheus.CounterVec
+	// clientMaxCPUUsage The maximum cpu usage of the client was collected
+	clientMaxCPUUsage *prometheus.GaugeVec
+	// clientMaxMemUsage the maximum memory usage was collected
+	clientMaxMemUsage *prometheus.GaugeVec
+	// clientCurrentCPUUsage the cpu usage of the client was collected
+	clientCurrentCPUUsage *prometheus.GaugeVec
+	// clientCurrentMemUsage the current memory usage of the client is collected
+	clientCurrentMemUsage *prometheus.GaugeVec
 }

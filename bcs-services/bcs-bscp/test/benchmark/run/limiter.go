@@ -56,7 +56,5 @@ func (sl *Limiter) Execute(ch chan<- *Status, f func() error) {
 		s.Error = f()
 		s.CostDuration = time.Since(start)
 		ch <- s
-		return
 	}()
-	return
 }

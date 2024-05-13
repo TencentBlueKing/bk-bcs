@@ -5,35 +5,36 @@
 package mock
 
 import (
-	bcsapi "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
-	gomock "github.com/golang/mock/gomock"
 	reflect "reflect"
+
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
+	gomock "github.com/golang/mock/gomock"
 )
 
-// MockUserManager is a mock of UserManager interface
+// MockUserManager is a mock of UserManager interface.
 type MockUserManager struct {
 	ctrl     *gomock.Controller
 	recorder *MockUserManagerMockRecorder
 }
 
-// MockUserManagerMockRecorder is the mock recorder for MockUserManager
+// MockUserManagerMockRecorder is the mock recorder for MockUserManager.
 type MockUserManagerMockRecorder struct {
 	mock *MockUserManager
 }
 
-// NewMockUserManager creates a new mock instance
+// NewMockUserManager creates a new mock instance.
 func NewMockUserManager(ctrl *gomock.Controller) *MockUserManager {
 	mock := &MockUserManager{ctrl: ctrl}
 	mock.recorder = &MockUserManagerMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockUserManager) EXPECT() *MockUserManagerMockRecorder {
 	return m.recorder
 }
 
-// ListAllClusters mocks base method
+// ListAllClusters mocks base method.
 func (m *MockUserManager) ListAllClusters() ([]*bcsapi.ClusterCredential, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListAllClusters")
@@ -42,7 +43,7 @@ func (m *MockUserManager) ListAllClusters() ([]*bcsapi.ClusterCredential, error)
 	return ret0, ret1
 }
 
-// ListAllClusters indicates an expected call of ListAllClusters
+// ListAllClusters indicates an expected call of ListAllClusters.
 func (mr *MockUserManagerMockRecorder) ListAllClusters() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAllClusters", reflect.TypeOf((*MockUserManager)(nil).ListAllClusters))

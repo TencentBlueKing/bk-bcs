@@ -18,11 +18,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 )
 
 const (
@@ -65,7 +65,7 @@ const (
 	WorkloadKindKey = "workload_kind"
 	// MetricKey key for metric
 	MetricKey = "metric"
-	// DTEventTimeKey for dtEventTime
+	// DTEventTimeStampKey for dtEventTime
 	DTEventTimeStampKey = "dt_event_time_stamp"
 	// ContainerNameKey key for container name
 	ContainerNameKey = "container_name"
@@ -78,6 +78,7 @@ const (
 	DefaultSize = 10
 )
 
+// EnsuredTables xxx
 var EnsuredTables = map[string]bool{}
 
 // Public public model set
@@ -90,7 +91,7 @@ type Public struct {
 }
 
 func ensureTable(ctx context.Context, public *Public) error {
-	if EnsuredTables[public.TableName] == true {
+	if EnsuredTables[public.TableName] {
 		return nil
 	}
 	public.IsTableEnsuredMutex.RLock()
@@ -153,6 +154,7 @@ func getStartTime(dimension string) time.Time {
 	}
 }
 
+// nolint unused
 func getMinCreateTime(dimension string) time.Time {
 	switch dimension {
 	case types.DimensionDay:

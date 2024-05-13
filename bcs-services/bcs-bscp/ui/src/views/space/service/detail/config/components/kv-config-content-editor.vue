@@ -1,6 +1,6 @@
 <template>
   <Teleport :disabled="!isOpenFullScreen" to="body">
-    <div :class="['config-content-editor', { fullscreen: isOpenFullScreen }]">
+    <div :class="['config-content-editor', { fullscreen: isOpenFullScreen }]" :style="editorStyle">
       <div class="editor-title">
         <div class="tips">
           <InfoLine class="info-icon" />
@@ -37,7 +37,7 @@
   </Teleport>
 </template>
 <script setup lang="ts">
-  import { ref, onBeforeUnmount } from 'vue';
+  import { ref, computed, onBeforeUnmount } from 'vue';
   import { useI18n } from 'vue-i18n';
   import BkMessage from 'bkui-vue/lib/message';
   import { InfoLine, FilliscreenLine, UnfullScreen } from 'bkui-vue/lib/icon';
@@ -49,9 +49,11 @@
       content: string;
       languages: string;
       editable: boolean;
+      height?: number;
     }>(),
     {
       editable: true,
+      height: 640,
     },
   );
 
@@ -59,6 +61,12 @@
 
   const isOpenFullScreen = ref(false);
   const codeEditorRef = ref();
+
+  const editorStyle = computed(() => {
+    return {
+      height: isOpenFullScreen.value ? '100vh' : `${props.height}px`,
+    };
+  });
 
   onBeforeUnmount(() => {
     codeEditorRef.value.destroy();
@@ -96,13 +104,11 @@
 </script>
 <style lang="scss" scoped>
   .config-content-editor {
-    height: 640px;
     &.fullscreen {
       position: fixed;
       top: 0;
       left: 0;
       width: 100vw;
-      height: 100vh;
       z-index: 5000;
     }
     .editor-title {

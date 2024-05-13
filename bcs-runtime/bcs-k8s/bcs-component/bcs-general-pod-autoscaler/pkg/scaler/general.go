@@ -4,22 +4,22 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 
+// Package scaler xxx
 package scaler
 
 import (
 	"fmt"
 	"math"
-
-	// "reflect"
 	"sync"
 	"time"
 
+	// "k8s.io/apimachinery/pkg/types"
 	pkgerrors "github.com/pkg/errors"
 	autoscalinginternal "k8s.io/api/autoscaling/v1"
 	v1 "k8s.io/api/core/v1"
@@ -30,8 +30,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-
-	// "k8s.io/apimachinery/pkg/types"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	coreinformers "k8s.io/client-go/informers/core/v1"
@@ -44,6 +42,7 @@ import (
 	"k8s.io/client-go/util/workqueue"
 	"k8s.io/klog"
 
+	// "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/util"
 	autoscaling "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/apis/autoscaling/v1alpha1"
 	autoscalingscheme "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/client/clientset/versioned/scheme"
 	autoscalingclient "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/client/clientset/versioned/typed/autoscaling/v1alpha1"
@@ -51,7 +50,6 @@ import (
 	autoscalinglisters "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/client/listers/autoscaling/v1alpha1"
 	metricsclient "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/metrics"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/scalercore"
-	// "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/util"
 )
 
 var (
@@ -112,7 +110,7 @@ type GeneralController struct {
 	scaleUpEventsLock   sync.Mutex
 	scaleDownEventsLock sync.Mutex
 
-	doingCron sync.Map
+	doingCron sync.Map // nolint
 
 	// Multi goroutines for autoscaler
 	workers int
@@ -281,7 +279,7 @@ func getTargetRefKey(gpa *autoscaling.GeneralPodAutoscaler) string {
 func getMetricName(metricSpec autoscaling.MetricSpec) string {
 	switch metricSpec.Type {
 	case autoscaling.ObjectMetricSourceType:
-		return string(metricSpec.Object.Metric.Name)
+		return metricSpec.Object.Metric.Name
 	case autoscaling.PodsMetricSourceType:
 		return metricSpec.Pods.Metric.Name
 	case autoscaling.ResourceMetricSourceType:
@@ -376,6 +374,7 @@ func (a *GeneralController) computeReplicasForMetrics(gpa *autoscaling.GeneralPo
 // computeReplicasForSimple computes the desired number of replicas for the metric specifications listed in the GPA,
 // returning the maximum  of the computed replica counts, a description of the associated metric, and the statuses of
 // all metrics computed.
+// nolint
 func (a *GeneralController) computeReplicasForSimple(gpa *autoscaling.GeneralPodAutoscaler,
 	scale *autoscalinginternal.Scale) (replicas int32, metric string, statuses []autoscaling.MetricStatus,
 	timestamp time.Time, err error) {
@@ -432,6 +431,7 @@ func (a *GeneralController) buildScalerChain(gpa *autoscaling.GeneralPodAutoscal
 // computeStatusForResourceMG 原方法名 computeStatusForResourceMetricGeneric
 // Computes the desired number of replicas for a specific gpa and metric specification,
 // returning the metric status and a proposed condition to be set on the GPA object.
+// nolint
 func (a *GeneralController) computeStatusForResourceMG(
 	currentReplicas int32,
 	target autoscaling.MetricTarget,
@@ -532,7 +532,7 @@ func (a *GeneralController) computeReplicasForMetric(
 
 	switch spec.Type {
 	case autoscaling.ObjectMetricSourceType:
-		metricSelector, err := metav1.LabelSelectorAsSelector(spec.Object.Metric.Selector)
+		metricSelector, err := metav1.LabelSelectorAsSelector(spec.Object.Metric.Selector) // nolint
 		if err != nil {
 			condition2 := a.getUnableComputeReplicaCC(gpa, "FailedGetObjectMetric", err)
 			return 0, "", time.Time{}, condition2,
@@ -545,7 +545,7 @@ func (a *GeneralController) computeReplicasForMetric(
 				fmt.Errorf("failed to get object metric value: %v", err)
 		}
 	case autoscaling.PodsMetricSourceType:
-		metricSelector, err := metav1.LabelSelectorAsSelector(spec.Pods.Metric.Selector)
+		metricSelector, err := metav1.LabelSelectorAsSelector(spec.Pods.Metric.Selector) // nolint
 		if err != nil {
 			condition2 := a.getUnableComputeReplicaCC(gpa, "FailedGetPodsMetric", err)
 			return 0, "", time.Time{}, condition2,
@@ -962,6 +962,7 @@ func (a *GeneralController) recordInitialRecommendation(currentReplicas int32, k
 	}
 }
 
+// nolint funlen
 func (a *GeneralController) reconcileAutoscaler(gpa *autoscaling.GeneralPodAutoscaler, key string) error {
 	// set default value, call Default() function will invoke scheme's defaulterFuncs
 	scheme.Scheme.Default(gpa)
@@ -1045,6 +1046,7 @@ func (a *GeneralController) reconcileAutoscaler(gpa *autoscaling.GeneralPodAutos
 	}
 
 	rescale := true
+	// nolint
 	if scale.Spec.Replicas == 0 && minReplicas != 0 {
 		// Autoscaling is disabled for this resource
 		desiredReplicas = 0
@@ -1635,7 +1637,7 @@ func calculateScaleUpLimitWithSR(currentReplicas int32, scaleEvents []timestampe
 		replicasAddedInCurrentPeriod := getReplicasChangePerPeriod(policy.PeriodSeconds, scaleEvents)
 		periodStartReplicas := currentReplicas - replicasAddedInCurrentPeriod
 		if policy.Type == autoscaling.PodsScalingPolicy {
-			proposed = int32(periodStartReplicas + policy.Value)
+			proposed = periodStartReplicas + policy.Value
 		} else if policy.Type == autoscaling.PercentScalingPolicy {
 			// the proposal has to be rounded up because the proposed change might not increase the replica count
 			// causing the target to never scale up

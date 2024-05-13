@@ -15,6 +15,7 @@ package errf
 import (
 	"errors"
 
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/i18n"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 )
 
@@ -43,26 +44,26 @@ var (
 var (
 	// ErrDBOpsFailedF is for db operation failed
 	ErrDBOpsFailedF = func(kit *kit.Kit) *ErrorF {
-		return Errorf(kit, Internal, "db operation failed")
+		return Errorf(Internal, i18n.T(kit, "db operation failed"))
 	}
 	// ErrInvalidArgF is for invalid argument
 	ErrInvalidArgF = func(kit *kit.Kit) *ErrorF {
-		return Errorf(kit, InvalidArgument, "invalid argument")
+		return Errorf(InvalidArgument, i18n.T(kit, "invalid argument"))
 	}
 	// ErrWithIDF is for id should not be set
 	ErrWithIDF = func(kit *kit.Kit) *ErrorF {
-		return Errorf(kit, InvalidArgument, "id should not be set")
+		return Errorf(InvalidArgument, i18n.T(kit, "id should not be set"))
 	}
 	// ErrNoSpecF is for spec not set
 	ErrNoSpecF = func(kit *kit.Kit) *ErrorF {
-		return Errorf(kit, InvalidArgument, "spec not set")
+		return Errorf(InvalidArgument, i18n.T(kit, "spec not set"))
 	}
 	// ErrNoAttachmentF is for attachment not set
 	ErrNoAttachmentF = func(kit *kit.Kit) *ErrorF {
-		return Errorf(kit, InvalidArgument, "attachment not set")
+		return Errorf(InvalidArgument, i18n.T(kit, "attachment not set"))
 	}
 	// ErrNoRevisionF is for revision not set
 	ErrNoRevisionF = func(kit *kit.Kit) *ErrorF {
-		return Errorf(kit, InvalidArgument, "revision not set")
+		return Errorf(InvalidArgument, i18n.T(kit, "revision not set"))
 	}
 )

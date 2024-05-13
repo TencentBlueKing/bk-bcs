@@ -145,6 +145,7 @@ func (ua *UpdateAction) updateAutoScaling() error {
 		CreateTime:   time.Now().Format(time.RFC3339),
 		ClusterID:    ua.req.ClusterID,
 		ProjectID:    ua.cluster.ProjectID,
+		ResourceName: ua.cluster.ClusterName,
 	})
 	if err != nil {
 		blog.Errorf("UpdateAutoScalingOption[%s] CreateOperationLog failed: %v", ua.req.ClusterID, err)

@@ -131,7 +131,7 @@ func (b *backend) pathKvWrite(ctx context.Context, req *logical.Request,
 		return nil, err
 	}
 	name := d.Get("name").(string)
-	if err := b.ValidateName(appID); err != nil {
+	if err := b.ValidateName(name); err != nil {
 		return nil, err
 	}
 	value := d.Get("value").(string)

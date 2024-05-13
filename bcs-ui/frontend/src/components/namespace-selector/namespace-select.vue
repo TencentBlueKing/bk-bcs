@@ -14,16 +14,25 @@
       :id="option.name"
       :name="option.name"
     ></bcs-option>
+    <template #extension>
+      <SelectExtension
+        :link-text="$t('dashboard.ns.create.title')"
+        @link="handleGotoNs"
+        @refresh="handleGetNsData" />
+    </template>
   </bcs-select>
 </template>
 <script lang="ts">
-import { computed, defineComponent, toRefs, watch } from 'vue';
+import { computed, defineComponent, PropType, toRefs, watch } from 'vue';
 
+import $router from '@/router';
 import $store from '@/store';
-import { useSelectItemsNamespace } from '@/views/resource-view/namespace/use-namespace';
+import SelectExtension from '@/views/cluster-manage/add/common/select-extension.vue';
+import { useSelectItemsNamespace } from '@/views/cluster-manage/namespace/use-namespace';
 
 export default defineComponent({
   name: 'NamespaceSelect',
+  components: { SelectExtension },
   model: {
     prop: 'value',
     event: 'change',
@@ -57,15 +66,19 @@ export default defineComponent({
     },
     // 数据源
     list: {
-      type: Array,
+      type: Array as PropType<any[]>,
     },
     loading: {
       type: Boolean,
       default: false,
     },
+    updateStorage: {
+      type: Boolean,
+      default: true,
+    },
   },
   setup(props, ctx) {
-    const { clusterId, value, required, list } = toRefs(props);
+    const { clusterId, value, required, list, updateStorage } = toRefs(props);
     const { namespaceLoading, namespaceList, getNamespaceData } = useSelectItemsNamespace();
 
     watch(clusterId,  () => {
@@ -77,10 +90,22 @@ export default defineComponent({
     const handleNamespaceChange = (name) => {
       if (value.value === name) return;
 
-      $store.commit('updateCurNamespace', name);
+      updateStorage.value && $store.commit('updateCurNamespace', name);
       ctx.emit('change', name);
     };
 
+    // 创建命名空间
+    const handleGotoNs = () => {
+      const { href } = $router.resolve({
+        name: 'createNamespace',
+        params: {
+          clusterId: props.clusterId,
+        },
+      });
+      window.open(href);
+    };
+
+    // 获取命名空间数据
     const handleGetNsData = async () => {
       if (!clusterId.value) return;
       await getNamespaceData({
@@ -99,6 +124,8 @@ export default defineComponent({
       namespaceLoading,
       nsList,
       handleNamespaceChange,
+      handleGotoNs,
+      handleGetNsData,
     };
   },
 });

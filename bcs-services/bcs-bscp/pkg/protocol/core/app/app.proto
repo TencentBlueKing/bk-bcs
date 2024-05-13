@@ -22,20 +22,7 @@ message App {
 message AppSpec {
   string name = 1;
   string config_type = 2;  // config_type is enum type
-  string mode = 4;         // mode is enum type.
-  string memo = 5;
-  Reload reload = 6;
-  string alias = 7;
-  string data_type = 8;  // data_type is enum type.
-}
-
-// ReloadSpec source resource reference: pkg/dal/table/app.go
-message Reload {
-  string reload_type = 1;  // reload_type is enum type
-  FileReloadSpec file_reload_spec = 2;
-}
-
-// FileReloadSpec source resource reference: pkg/dal/table/app.go
-message FileReloadSpec {
-  string reload_file_path = 1;
+  string memo = 3;
+  string alias = 4;
+  string data_type = 5;  // data_type is enum type.
 }

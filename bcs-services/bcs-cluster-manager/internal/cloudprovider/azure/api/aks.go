@@ -28,7 +28,6 @@ import (
 
 // AksServiceImpl azure服务
 type AksServiceImpl struct {
-	resourcesGroup       string
 	netClient            *armnetwork.InterfacesClient
 	resourceClient       *armcompute.ResourceSKUsClient
 	poolClient           *armcontainerservice.AgentPoolsClient
@@ -50,12 +49,10 @@ func NewAksServiceImplWithCommonOption(opt *cloudprovider.CommonOption) (AksServ
 	}
 	account := opt.Account
 	if len(account.SubscriptionID) == 0 || len(account.TenantID) == 0 ||
-		len(account.ClientID) == 0 || len(account.ClientSecret) == 0 ||
-		len(account.ResourceGroupName) == 0 {
+		len(account.ClientID) == 0 || len(account.ClientSecret) == 0 {
 		return nil, cloudprovider.ErrCloudCredentialLost
 	}
-	return NewAKsServiceImpl(account.SubscriptionID, account.TenantID, account.ClientID, account.ClientSecret,
-		account.ResourceGroupName)
+	return NewAKsServiceImpl(account.SubscriptionID, account.TenantID, account.ClientID, account.ClientSecret)
 }
 
 // NewAksServiceImplWithAccount 从 Account 创建 AksService
@@ -64,17 +61,16 @@ func NewAksServiceImplWithAccount(account *proto.Account) (AksService, error) {
 		return nil, cloudprovider.ErrCloudCredentialLost
 	}
 	if len(account.SubscriptionID) == 0 || len(account.TenantID) == 0 ||
-		len(account.ClientID) == 0 || len(account.ClientSecret) == 0 ||
-		len(account.ResourceGroupName) == 0 {
+		len(account.ClientID) == 0 || len(account.ClientSecret) == 0 {
 		return nil, cloudprovider.ErrCloudCredentialLost
 	}
 
-	return NewAKsServiceImpl(account.SubscriptionID, account.TenantID, account.ClientID, account.ClientSecret,
-		account.ResourceGroupName)
+	// attention: resourcesGroup may be empty, please
+	return NewAKsServiceImpl(account.SubscriptionID, account.TenantID, account.ClientID, account.ClientSecret)
 }
 
 // NewAKsServiceImpl 创建AksService
-func NewAKsServiceImpl(subscriptionID, tenantID, clientID, clientSecret, resourceGroupName string) (AksService, error) {
+func NewAKsServiceImpl(subscriptionID, tenantID, clientID, clientSecret string) (AksService, error) {
 	if len(subscriptionID) == 0 || len(tenantID) == 0 || len(clientID) == 0 || len(clientSecret) == 0 {
 		return nil, cloudprovider.ErrCloudCredentialLost
 	}
@@ -136,7 +132,6 @@ func NewAKsServiceImpl(subscriptionID, tenantID, clientID, clientSecret, resourc
 	}
 
 	return &AksServiceImpl{
-		resourcesGroup:       resourceGroupName,
 		vmClient:             vmClient,
 		vmSizeClient:         vmSizeClient,
 		vmImageClient:        vmimageClient,
@@ -157,9 +152,8 @@ func NewAKsServiceImpl(subscriptionID, tenantID, clientID, clientSecret, resourc
 // resourceGroupName - 资源组名称(Account.resourceGroupName)
 //
 // resourceName - K8S名称(Cluster.SystemID).
-func (aks *AksServiceImpl) GetCluster(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) (
-	*armcontainerservice.ManagedCluster, error) {
-	resourceGroupName := info.CmOption.Account.ResourceGroupName
+func (aks *AksServiceImpl) GetCluster(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
+	resourceGroupName string) (*armcontainerservice.ManagedCluster, error) {
 	return aks.GetClusterWithName(ctx, resourceGroupName, info.Cluster.SystemID)
 }
 
@@ -226,8 +220,8 @@ func (aks *AksServiceImpl) ListClusterByResourceGroupName(ctx context.Context, l
 // resourceGroupName - 资源组名称(Account.resourceGroupName)
 //
 // resourceName - K8S名称(Cluster.SystemID).
-func (aks *AksServiceImpl) DeleteCluster(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) error {
-	resourceGroupName := info.CmOption.Account.ResourceGroupName
+func (aks *AksServiceImpl) DeleteCluster(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
+	resourceGroupName string) error {
 	return aks.DeleteClusterWithName(ctx, resourceGroupName, info.Cluster.SystemID)
 }
 
@@ -254,9 +248,8 @@ func (aks *AksServiceImpl) DeleteClusterWithName(ctx context.Context, resourceGr
 // resourceGroupName - 资源组名称(Account.resourceGroupName)
 //
 // resourceName - K8S名称(Cluster.SystemID).
-func (aks *AksServiceImpl) GetClusterAdminCredentials(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) (
-	[]*armcontainerservice.CredentialResult, error) {
-	resourceGroupName := info.CmOption.Account.ResourceGroupName
+func (aks *AksServiceImpl) GetClusterAdminCredentials(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
+	resourceGroupName string) ([]*armcontainerservice.CredentialResult, error) {
 	return aks.GetClusterAdminCredentialsWithName(ctx, resourceGroupName, info.Cluster.SystemID)
 }
 
@@ -280,9 +273,8 @@ func (aks *AksServiceImpl) GetClusterAdminCredentialsWithName(
 // resourceGroupName - 资源组名称(Account.resourceGroupName)
 //
 // resourceName - K8S名称(Cluster.SystemID).
-func (aks *AksServiceImpl) GetClusterUserCredentials(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) (
-	[]*armcontainerservice.CredentialResult, error) {
-	resourceGroupName := info.CmOption.Account.ResourceGroupName
+func (aks *AksServiceImpl) GetClusterUserCredentials(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
+	resourceGroupName string) ([]*armcontainerservice.CredentialResult, error) {
 	return aks.GetClusterUserCredentialsWithName(ctx, resourceGroupName, info.Cluster.SystemID)
 }
 
@@ -307,9 +299,8 @@ func (aks *AksServiceImpl) GetClusterUserCredentialsWithName(
 //
 // resourceName - K8S名称(Cluster.SystemID).
 func (aks *AksServiceImpl) GetClusterMonitoringUserCredentials(
-	ctx context.Context, info *cloudprovider.CloudDependBasicInfo) (
+	ctx context.Context, info *cloudprovider.CloudDependBasicInfo, resourceGroupName string) (
 	[]*armcontainerservice.CredentialResult, error) {
-	resourceGroupName := info.CmOption.Account.ResourceGroupName
 	return aks.GetClusterMonitorUserCredWithName(ctx, resourceGroupName, info.Cluster.SystemID)
 }
 

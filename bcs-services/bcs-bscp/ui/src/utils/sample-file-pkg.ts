@@ -26,8 +26,8 @@ export default () =>
 
     // 生成YAML文件内容
     const yamlData = `string_demo:
-kv_type: string
-value: "blueking"
+  kv_type: string
+  value: "blueking"
 
 number_demo:
   kv_type: number
@@ -78,8 +78,8 @@ yaml_demo:
     const zip = new JSZip();
 
     // 将JSON和YAML文件添加到压缩包
-    zip.file('json_demo', jsonContent);
-    zip.file('yaml_demo', yamlData);
+    zip.file('json_demo.json', jsonContent);
+    zip.file('yaml_demo.yaml', yamlData);
 
     // 生成压缩包
     zip

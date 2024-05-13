@@ -1,0 +1,1226 @@
+swagger: '2.0'
+basePath: /
+info:
+  version: '0.1'
+  title: API Gateway Resources
+  description: ''
+schemes:
+- http
+paths:
+  /api/projects/{project_id}/clusters/{cluster_id}/telemetry/bkmonitor_agent/:
+    get:
+      operationId: telemetry_bkmonitor_agent
+      description: ''
+      tags:
+      - bcs
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: false
+        allowApplyPermission: false
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /bcsapi/v4/monitor/api/projects/{project_id}/clusters/{cluster_id}/telemetry/bkmonitor_agent/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages: []
+        descriptionEn:
+  /bcsproject/v1/authorized_projects:
+    get:
+      operationId: list_auth_projects
+      description: 查询用户有权限的项目
+      tags:
+      - bcs-project-manager
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /bcsapi/v4/bcsproject/v1/authorized_projects
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages: []
+        descriptionEn:
+  /bcsproject/v1/business:
+    get:
+      operationId: list_business
+      description: 获取业务列表
+      tags:
+      - bcs-project-manager
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /bcsapi/v4/bcsproject/v1/business
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages: []
+        descriptionEn:
+  /bcsproject/v1/projects:
+    get:
+      operationId: list_projects
+      description: 查询所有项目
+      tags:
+      - bcs-project-manager
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /bcsapi/v4/bcsproject/v1/projects
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages:
+        - autotest
+        descriptionEn:
+  /bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces:
+    post:
+      operationId: create_namespace
+      description: 创建命名空间
+      tags:
+      - bcs-project-manager
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /bcsapi/v4/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages:
+        - autotest
+        descriptionEn:
+  /bcsproject/v1/projects/{projectIDOrCode}:
+    get:
+      operationId: get_project
+      description: 获取项目详情
+      tags:
+      - bcs-project-manager
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /bcsapi/v4/bcsproject/v1/projects/{projectIDOrCode}
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages:
+        - autotest
+        descriptionEn:
+  /bcsproject/v1/projects/{projectIDOrCode}/clusters/{clusterID}/native/namespaces:
+    get:
+      operationId: list_native_namespaces
+      description: 获取集群命名空间列表
+      tags:
+      - bcs-project-manager
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /bcsapi/v4/bcsproject/v1/projects/{projectIDOrCode}/clusters/{clusterID}/native/namespaces
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages:
+        - autotest
+        descriptionEn:
+  /bcsproject/v1/projects_for_iam:
+    get:
+      operationId: projects_for_iam
+      description: 权限中心拉取项目接口
+      tags:
+      - bcs-project-manager
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /bcsapi/v4/bcsproject/v1/projects_for_iam
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages: []
+        descriptionEn:
+  /clustermanager/v1/nodegroup:
+    get:
+      operationId: list_nodegroup
+      description: 节点池列表
+      tags:
+      - bcs-cluster-manager
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /bcsapi/v4/clustermanager/v1/nodegroup
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages: []
+        descriptionEn:
+  /clustermanager/v1/sharedclusters:
+    get:
+      operationId: list_shared_clusters
+      description: 查询共享集群列表
+      tags:
+      - bcs-cluster-manager
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /bcsapi/v4/clustermanager/v1/sharedclusters
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages: []
+        descriptionEn:
+  /clusters/{clusterID}/:
+    x-bk-apigateway-method-any:
+      operationId: kubernetes
+      description: bk-bcs后台kubernetes集群透传接口
+      tags:
+      - bcs-k8s
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: true
+        backend:
+          type: HTTP
+          method: any
+          path: /clusters/{clusterID}/
+          matchSubpath: true
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:
+  /helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}:
+    delete:
+      operationId: uninstall_release
+      description: 删除 release
+      tags:
+      - bcs-helm-manager
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: delete
+          path: /bcsapi/v4/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages:
+        - autotest
+        descriptionEn:
+    get:
+      operationId: get_release_detail
+      description: 查询 release 详细信息
+      tags:
+      - bcs-helm-manager
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /bcsapi/v4/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages:
+        - autotest
+        descriptionEn:
+    post:
+      operationId: install_release
+      description: 安装 release
+      tags:
+      - bcs-helm-manager
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /bcsapi/v4/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages:
+        - autotest
+        descriptionEn:
+    put:
+      operationId: upgrade_release
+      description: 升级 release
+      tags:
+      - bcs-helm-manager
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: put
+          path: /bcsapi/v4/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages:
+        - autotest
+        descriptionEn:
+  /helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/history:
+    get:
+      operationId: get_release_history
+      description: 获取 release 历史记录
+      tags:
+      - bcs-helm-manager
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /bcsapi/v4/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/history
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages:
+        - autotest
+        descriptionEn:
+  /helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/preview:
+    post:
+      operationId: release_preview
+      description: 安装、升级、回滚时预览 release yaml
+      tags:
+      - bcs-helm-manager
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /bcsapi/v4/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/preview
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages:
+        - autotest
+        descriptionEn:
+  /helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/rollback:
+    put:
+      operationId: rollback_release
+      description: 回滚 release
+      tags:
+      - bcs-helm-manager
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: put
+          path: /bcsapi/v4/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/rollback
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages:
+        - autotest
+        descriptionEn:
+  /helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/releases:
+    get:
+      operationId: list_releases
+      description: 获取 release 列表
+      tags:
+      - bcs-helm-manager
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /bcsapi/v4/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/releases
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages:
+        - autotest
+        descriptionEn:
+  /helmmanager/v1/projects/{projectCode}/repos:
+    get:
+      operationId: list_repos
+      description: 获取仓库列表
+      tags:
+      - bcs-helm-manager
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /bcsapi/v4/helmmanager/v1/projects/{projectCode}/repos
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages:
+        - autotest
+        descriptionEn:
+  /helmmanager/v1/projects/{projectCode}/repos/{name}:
+    get:
+      operationId: get_repo
+      description: 获取仓库列表
+      tags:
+      - bcs-helm-manager
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /bcsapi/v4/helmmanager/v1/projects/{projectCode}/repos/{name}
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages:
+        - autotest
+        descriptionEn:
+  /helmmanager/v1/projects/{projectCode}/repos/{repoName}/charts:
+    get:
+      operationId: list_charts
+      description: 获取 charts 列表
+      tags:
+      - bcs-helm-manager
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /bcsapi/v4/helmmanager/v1/projects/{projectCode}/repos/{repoName}/charts
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages:
+        - autotest
+        descriptionEn:
+  /helmmanager/v1/projects/{projectCode}/repos/{repoName}/charts/{name}:
+    delete:
+      operationId: delete_chart
+      description: 删除 chart
+      tags:
+      - bcs-helm-manager
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: delete
+          path: /bcsapi/v4/helmmanager/v1/projects/{projectCode}/repos/{repoName}/charts/{name}
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages:
+        - autotest
+        descriptionEn:
+    get:
+      operationId: get_chart_detail
+      description: 获取 chart 详情
+      tags:
+      - bcs-helm-manager
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /bcsapi/v4/helmmanager/v1/projects/{projectCode}/repos/{repoName}/charts/{name}
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages:
+        - autotest
+        descriptionEn:
+  /helmmanager/v1/projects/{projectCode}/repos/{repoName}/charts/{name}/versions:
+    get:
+      operationId: get_chart_versions
+      description: 获取 chart versions 列表
+      tags:
+      - bcs-helm-manager
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /bcsapi/v4/helmmanager/v1/projects/{projectCode}/repos/{repoName}/charts/{name}/versions
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages:
+        - autotest
+        descriptionEn:
+  /helmmanager/v1/projects/{projectCode}/repos/{repoName}/charts/{name}/versions/{version}:
+    delete:
+      operationId: delete_chart_version
+      description: 删除 chart version
+      tags:
+      - bcs-helm-manager
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: delete
+          path: /bcsapi/v4/helmmanager/v1/projects/{projectCode}/repos/{repoName}/charts/{name}/versions/{version}
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages:
+        - autotest
+        descriptionEn:
+    get:
+      operationId: get_chart_version_detail
+      description: 获取 chart version 详情
+      tags:
+      - bcs-helm-manager
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /bcsapi/v4/helmmanager/v1/projects/{projectCode}/repos/{repoName}/charts/{name}/versions/{version}
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages:
+        - autotest
+        descriptionEn:
+  /storage/k8s/dynamic/all_resources/clusters/{clusterID}/{resourceName}:
+    get:
+      operationId: dynamic_all_resources
+      description: 查询指定集群的指定类型的资源
+      tags:
+      - bcs-storage
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /bcsapi/v4/storage/k8s/dynamic/all_resources/clusters/{clusterID}/{resourceName}
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages: []
+        descriptionEn:
+  /v4/resourcemanager/v1/resource_pools:
+    get:
+      operationId: list_resource_pool
+      description: 获取资源池列表
+      tags:
+      - bcs-resource-manager
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /bcsapi/v4/resourcemanager/v1/resource_pools
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages: []
+        descriptionEn:
+  /v4/resourcemanager/v1/resource_pools/{resource_pool_id}/resources:
+    get:
+      operationId: list_resource
+      description: 通过资源池ID查询资源列表
+      tags:
+      - bcs-resource-manager
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /bcsapi/v4/resourcemanager/v1/resource_pools/{resource_pool_id}/resources
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages: []
+        descriptionEn:
+  /{version}/bcsproject/:
+    x-bk-apigateway-method-any:
+      operationId: bcsproject
+      description: 项目相关API
+      tags:
+      - bcs-service
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: false
+        allowApplyPermission: false
+        matchSubpath: true
+        backend:
+          type: HTTP
+          method: any
+          path: /bcsapi/{version}/bcsproject/
+          matchSubpath: true
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages: []
+        descriptionEn:
+  /{version}/clustermanager/:
+    x-bk-apigateway-method-any:
+      operationId: clustermanager
+      description: bk-bcs后台bcs-cluster-manager模块http接口
+      tags:
+      - bcs-service
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: false
+        allowApplyPermission: false
+        matchSubpath: true
+        backend:
+          type: HTTP
+          method: any
+          path: /bcsapi/{version}/clustermanager/
+          matchSubpath: true
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:
+  /{version}/clustermanager/v1/cluster:
+    get:
+      operationId: list_project_clusters
+      description: 查询项目下的集群列表
+      tags:
+      - bcs-cluster-manager
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /bcsapi/{version}/clustermanager/v1/cluster
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages: []
+        descriptionEn:
+  /{version}/helmmanager/:
+    x-bk-apigateway-method-any:
+      operationId: helmmanager
+      description: BCS Helm 相关功能
+      tags:
+      - bcs-service
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: false
+        allowApplyPermission: false
+        matchSubpath: true
+        backend:
+          type: HTTP
+          method: any
+          path: /bcsapi/{version}/helmmanager/
+          matchSubpath: true
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+        disabledStages: []
+        descriptionEn:
+  /{version}/monitor/query/api/v1/label/{name}/values:
+    get:
+      operationId: label_values
+      description: 查询label对应的values
+      tags:
+      - bcs-monitor
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /bcsapi/{version}/monitor/query/api/v1/label/{name}/values
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages: []
+        descriptionEn:
+  /{version}/monitor/query/api/v1/labels:
+    get:
+      operationId: labels
+      description: 查询labels
+      tags:
+      - bcs-monitor
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /bcsapi/{version}/monitor/query/api/v1/labels
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages: []
+        descriptionEn:
+    post:
+      operationId: labels_by_post
+      description: 查询labels
+      tags:
+      - bcs-monitor
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /bcsapi/{version}/monitor/query/api/v1/labels
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages: []
+        descriptionEn:
+  /{version}/monitor/query/api/v1/query:
+    get:
+      operationId: query
+      description: 查询最新的时序数据
+      tags:
+      - bcs-monitor
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /bcsapi/{version}/monitor/query/api/v1/query
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages: []
+        descriptionEn:
+    post:
+      operationId: query_by_post
+      description: 查询最新的时序数据
+      tags:
+      - bcs-monitor
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /bcsapi/{version}/monitor/query/api/v1/query
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages: []
+        descriptionEn:
+  /{version}/monitor/query/api/v1/query_range:
+    get:
+      operationId: query_range
+      description: 查询时间段的时序数据
+      tags:
+      - bcs-monitor
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /bcsapi/{version}/monitor/query/api/v1/query_range
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages: []
+        descriptionEn:
+    post:
+      operationId: query_range_by_post
+      description: 查询时间段的时序数据
+      tags:
+      - bcs-monitor
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /bcsapi/{version}/monitor/query/api/v1/query_range
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages: []
+        descriptionEn:
+  /{version}/monitor/query/api/v1/series:
+    get:
+      operationId: series
+      description: 查询series
+      tags:
+      - bcs-monitor
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /bcsapi/{version}/monitor/query/api/v1/series
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages: []
+        descriptionEn:
+    post:
+      operationId: series_by_post
+      description: 查询series
+      tags:
+      - bcs-monitor
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /bcsapi/{version}/monitor/query/api/v1/series
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages: []
+        descriptionEn:
+  /{version}/storage/:
+    x-bk-apigateway-method-any:
+      operationId: storage
+      description: bk-bcs后台bcs-storage模块http接口
+      tags:
+      - bcs-service
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: false
+        allowApplyPermission: false
+        matchSubpath: true
+        backend:
+          type: HTTP
+          method: any
+          path: /bcsapi/{version}/storage/
+          matchSubpath: true
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: []
+        descriptionEn:
+  /{version}/usermanager/:
+    x-bk-apigateway-method-any:
+      operationId: usermanager
+      description: bk-bcs usermanager模块http接口转发
+      tags:
+      - bcs-service
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: false
+        allowApplyPermission: false
+        matchSubpath: true
+        backend:
+          type: HTTP
+          method: any
+          path: /bcsapi/{version}/usermanager/
+          matchSubpath: true
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: []
+        descriptionEn:
+  /{version}/usermanager/v1/tokens/extra/getClusterUserToken:
+    get:
+      operationId: getClusterUserToken
+      description: ''
+      tags:
+      - bcs-user-manager
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: false
+        allowApplyPermission: false
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /bcsapi/{version}/usermanager/v1/tokens/extra/getClusterUserToken
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages: []
+        descriptionEn:
+  /{version}/webconsole/:
+    x-bk-apigateway-method-any:
+      operationId: webconsole
+      description: ''
+      tags:
+      - bcs-service
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: false
+        allowApplyPermission: false
+        matchSubpath: true
+        backend:
+          type: HTTP
+          method: get
+          path: /bcsapi/{version}/webconsole/
+          matchSubpath: true
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages: []
+        descriptionEn:
+  /{version}/webconsole/api/portal/projects/{project_id_or_code}/clusters/{cluster_id}/web_console/sessions/:
+    post:
+      operationId: create_web_console_sessions
+      description: 申请容器 webconsole session_id
+      tags:
+      - bcs-webconsole
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /bcsapi/{version}/webconsole/api/portal/projects/{project_id_or_code}/clusters/{cluster_id}/container/
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages: []
+        descriptionEn:

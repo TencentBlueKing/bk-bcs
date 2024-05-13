@@ -260,10 +260,12 @@
                   <span
                     v-bk-tooltips="{
                       content: row.message,
-                      disabled: !row.message || row.status !== 'FAILED',
+                      disabled: !row.message || !['FAILED', 'DELETED'].includes(row.status),
                       theme: 'bcs-tippy'
                     }"
-                    :class="row.message && row.status === 'FAILED' ? 'border-dashed border-0 border-b' : ''">
+                    :class="row.message && ['FAILED', 'DELETED'].includes(row.status)
+                      ? 'border-dashed border-0 border-b'
+                      : ''">
                     {{statusTextMap[row.status] || $t('generic.status.unknown1')}}
                   </span>
                 </StatusIcon>

@@ -18,6 +18,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/client"
 )
 
+// nolint unused
 func splitCountToPage(counts int, pageLimit int) []client.Page {
 	var pages = make([]client.Page, 0)
 

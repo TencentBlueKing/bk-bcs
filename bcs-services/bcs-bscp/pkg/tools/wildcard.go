@@ -19,23 +19,31 @@ import (
 )
 
 // MatchConfigItem checks if the scope string matches the config item.
-func MatchConfigItem(scope, path, name string) bool {
+func MatchConfigItem(scope, path, name string) (bool, error) {
 	scope = strings.Trim(scope, "/")
 	path = strings.Trim(path, "/")
 	fullPath := strings.Trim(path+"/"+name, "/")
-	return glob.MustCompile(scope, '/').Match(fullPath)
+	g, err := glob.Compile(scope, '/')
+	if err != nil {
+		return false, err
+	}
+	return g.Match(fullPath), nil
 }
 
 // MatchAppConfigItem checks if the scope string matches the app and config item.
-func MatchAppConfigItem(scope, app, path, name string) bool {
+func MatchAppConfigItem(scope, app, path, name string) (bool, error) {
 	arr := strings.Split(scope, "/")
 	if len(arr) < 2 {
-		return false
+		return false, nil
 	}
 	appPattern := arr[0]
 	ciPattern := arr[1]
-	if !glob.MustCompile(appPattern).Match(app) {
-		return false
+	g, err := glob.Compile(appPattern)
+	if err != nil {
+		return false, err
+	}
+	if !g.Match(app) {
+		return false, nil
 	}
 	return MatchConfigItem(ciPattern, path, name)
 }

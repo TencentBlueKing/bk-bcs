@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/struct.proto";
+
+package pbcq;
+
+option go_package = "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/client-query;pbcq";
+
+// ClientQuery source resource reference: pkg/dal/table/client-query.go
+message ClientQuery {
+  uint32 id = 1;
+  ClientQuerySpec spec = 2;
+  ClientQueryAttachment attachment = 3;
+}
+
+// ClientQuerySpec source resource reference: pkg/dal/table/client-query.go
+message ClientQuerySpec {
+  string creator = 1;
+  string search_type = 2;  // 搜索类型：recent、common
+  string search_name = 3;
+  google.protobuf.Struct search_condition = 4;  // 搜索条件 json
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp updated_at = 6;
+}
+
+// ClientQueryAttachment source resource reference: pkg/dal/table/client-query.go
+message ClientQueryAttachment {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+}

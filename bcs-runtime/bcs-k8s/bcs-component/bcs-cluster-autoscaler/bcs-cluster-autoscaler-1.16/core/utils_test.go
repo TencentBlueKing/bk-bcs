@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package core
@@ -349,7 +348,7 @@ func TestGetNodeInfosForGroupsCache(t *testing.T) {
 
 	predicateChecker := simulator.NewTestPredicateChecker()
 
-	nodeInfoCache := make(map[string]*schedulernodeinfo.NodeInfo)
+	nodeInfoCache := make(map[string]cacheItem)
 
 	// Fill cache
 	res, err := getNodeInfosForGroups([]*apiv1.Node{unready4, unready3, ready2, ready1}, nodeInfoCache,
@@ -413,7 +412,7 @@ func TestGetNodeInfosForGroupsCache(t *testing.T) {
 	infoNg4Node6 := schedulernodeinfo.NewNodeInfo()
 	err2 := infoNg4Node6.SetNode(ready6.DeepCopy())
 	assert.NoError(t, err2)
-	nodeInfoCache = map[string]*schedulernodeinfo.NodeInfo{"ng4": infoNg4Node6}
+	nodeInfoCache = map[string]cacheItem{"ng4": {NodeInfo: infoNg4Node6, added: time.Now()}}
 	// Check if cache was used
 	res, err = getNodeInfosForGroups([]*apiv1.Node{ready1, ready2}, nodeInfoCache,
 		provider1, registry, []*appsv1.DaemonSet{}, predicateChecker, nil)

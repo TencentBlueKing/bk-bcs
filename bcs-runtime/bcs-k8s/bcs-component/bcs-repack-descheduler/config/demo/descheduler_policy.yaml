@@ -1,0 +1,13 @@
+kind: DeschedulePolicy
+apiVersion: tkex.bkbcs.tencent.com/v1alpha1
+metadata:
+  name: test
+spec:
+  type: "converge"
+  converge:
+    disabled: true
+    timeRange: "0 */1 * * *"
+    minPods: 2
+    maxPods: 100
+    lowWaterLevel: 0.2
+    highWaterLevel: 0.8

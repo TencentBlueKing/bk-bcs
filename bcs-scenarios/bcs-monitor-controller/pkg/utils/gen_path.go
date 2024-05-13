@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package utils
@@ -19,12 +18,12 @@ import (
 )
 
 // GenBkmConfigTarPath gen bkm tar path
-func GenBkmConfigTarPath(downloadPath, bizID string) string {
-	return filepath.Join(downloadPath, fmt.Sprintf("%s_config.tar.gz",
+func GenBkmConfigTarPath(downloadPath, subPath, bizID string) string {
+	return filepath.Join(downloadPath, subPath, fmt.Sprintf("%s_config.tar.gz",
 		bizID))
 }
 
 // GenBkmConfigPath gen bkm config path
-func GenBkmConfigPath(downloadPath, bizID string) string {
-	return filepath.Join(downloadPath, bizID)
+func GenBkmConfigPath(downloadPath, subPath, bizID string) string {
+	return filepath.Join(downloadPath, subPath, bizID)
 }

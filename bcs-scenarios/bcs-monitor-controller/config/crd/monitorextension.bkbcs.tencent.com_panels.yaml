@@ -76,6 +76,16 @@ spec:
           status:
             description: PanelStatus defines the observed state of Panel
             properties:
+              dashBoards:
+                items:
+                  description: DashBoardStatus 面板内容
+                  properties:
+                    board:
+                      type: string
+                    id:
+                      type: string
+                  type: object
+                type: array
               syncStatus:
                 description: 'INSERT ADDITIONAL STATUS FIELD - define observed state
                   of cluster Important: Run "make" to regenerate code after modifying

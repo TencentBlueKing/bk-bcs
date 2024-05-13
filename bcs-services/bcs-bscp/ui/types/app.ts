@@ -12,16 +12,8 @@ export interface IAppItem {
   space_id: string;
   spec: {
     name: string;
-    deploy_type: string;
     config_type: string;
-    mode: string;
     memo: string;
-    reload: {
-      file_reload_spec: {
-        reload_file_path: string;
-      };
-      reload_type: string;
-    };
     alias: string;
     data_type: string;
   };

@@ -17,13 +17,14 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	blog "k8s.io/klog/v2"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/storage"
 	restclient "github.com/Tencent/bk-bcs/bcs-common/pkg/esb/client"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/registry"
+	registry "github.com/Tencent/bk-bcs/bcs-common/pkg/registry"
 )
 
 const (
@@ -118,7 +119,7 @@ type StorageCli struct {
 
 // QueryK8sReplicaSet query k8s replicaset in specified cluster and namespace
 func (c *StorageCli) QueryK8sReplicaSet(cluster, namespace, name string) ([]*storage.ReplicaSet, error) {
-	subPath := "/k8s/dynamic/namespace_resources/clusters/%s/namespaces/" + namespace + "/ReplicaSet?"
+	subPath := "/k8s/dynamic/namespace_resources/clusters/%s/namespaces/" + namespace + "/ReplicaSet?" // nolint
 	if name != "" {
 		subPath += "resourceName=" + name + "&"
 	}
@@ -859,7 +860,7 @@ func (c *StorageCli) handlerEtcdEvent(svcName string) {
 		return
 	}
 	if len(svc.Nodes) == 0 {
-		blog.Warnf("Non service found from etcd named %s", svcName)
+		blog.Warningf("Non service found from etcd named %s", svcName)
 	}
 	endpoints := make([]string, 0)
 	for _, node := range svc.Nodes {

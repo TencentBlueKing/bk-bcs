@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -14,21 +14,27 @@
 package portpoolcache
 
 import (
+	"container/heap"
 	"fmt"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/pkg/common"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
 // CachePool pool of ports
 type CachePool struct {
-	PoolKey  string
-	ItemList []*CachePoolItem
+	PoolKey        string
+	ItemList       []*CachePoolItem
+	AllocatePolicy string
 }
 
 // NewCachePool create cache pool
-func NewCachePool(key string) *CachePool {
+func NewCachePool(key string, allocatePolicy string) *CachePool {
 	return &CachePool{
-		PoolKey: key,
+		PoolKey:        key,
+		AllocatePolicy: allocatePolicy,
 	}
 }
 
@@ -100,7 +106,27 @@ func (cp *CachePool) SetItemStatus(itemStatus *networkextensionv1.PortPoolItemSt
 // AllocatePortBinding allocate port by protocol
 func (cp *CachePool) AllocatePortBinding(protocol, itemName string) (
 	*networkextensionv1.PortPoolItemStatus, AllocatedPortItem, error) {
-	for _, item := range cp.ItemList {
+	var itemList []*CachePoolItem
+	blog.Infof("allocate policy: %s", cp.AllocatePolicy)
+	switch cp.AllocatePolicy {
+	case networkextensionv1.PortPoolAllocatePolicyAverage:
+		itemHeap := &maxHeap{}
+		heap.Init(itemHeap)
+		for _, item := range cp.ItemList {
+			heap.Push(itemHeap, poolItemStat{
+				PoolItem:         item,
+				AvailablePortNum: item.GetAllocatablePortNum(protocol),
+			})
+		}
+		for itemHeap.Len() != 0 {
+			itemList = append(itemList, heap.Pop(itemHeap).(poolItemStat).PoolItem)
+		}
+	default:
+		itemList = cp.ItemList
+	}
+	blog.Infof("get itemlist: %s", common.ToJsonString(itemList))
+
+	for _, item := range itemList {
 		if itemName != "" && item.ItemStatus.ItemName != itemName {
 			continue
 		}
@@ -123,7 +149,27 @@ func (cp *CachePool) AllocatePortBinding(protocol, itemName string) (
 // only allocate port from the specified item
 func (cp *CachePool) AllocateAllProtocolPortBinding(itemName string) (
 	*networkextensionv1.PortPoolItemStatus, map[string]AllocatedPortItem, error) {
-	for _, item := range cp.ItemList {
+	var itemList []*CachePoolItem
+	switch cp.AllocatePolicy {
+	case networkextensionv1.PortPoolAllocatePolicyAverage:
+		itemHeap := &maxHeap{}
+		heap.Init(itemHeap)
+		for _, item := range cp.ItemList {
+			heap.Push(itemHeap, poolItemStat{
+				PoolItem:         item,
+				AvailablePortNum: item.GetAllocatablePortNum(""), // empty protocol means allocate all protocols
+			})
+		}
+		for itemHeap.Len() != 0 {
+			itemList = append(itemList, heap.Pop(itemHeap).(poolItemStat).PoolItem)
+		}
+	default:
+		itemList = cp.ItemList
+	}
+
+	// to do remove
+	blog.Infof("get itemlist: %s", common.ToJsonString(itemList))
+	for _, item := range itemList {
 		if itemName != "" && item.ItemStatus.ItemName != itemName {
 			continue
 		}

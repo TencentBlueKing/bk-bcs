@@ -9,7 +9,8 @@
         handleGetExtData, handleSortChange,
         handleUpdateResource, handleDeleteResource,
         handleShowDetail, webAnnotations,
-        nameValue, handleClearSearchData
+        handleShowViewConfig,
+        clusterNameMap, isViewEditable
       }">
       <bk-table
         :data="curPageData"
@@ -20,8 +21,18 @@
         <bk-table-column :label="$t('generic.label.name')" prop="metadata.name" sortable>
           <template #default="{ row }">
             <bk-button
-              class="bcs-button-ellipsis" text
+              class="bcs-button-ellipsis"
+              text
+              :disabled="isViewEditable"
               @click="handleShowDetail(row)">{{ row.metadata.name }}</bk-button>
+          </template>
+        </bk-table-column>
+        <bk-table-column :label="$t('cluster.labels.nameAndId')">
+          <template #default="{ row }">
+            <div class="flex flex-col py-[6px] h-[50px]">
+              <span class="bcs-ellipsis">{{ clusterNameMap[handleGetExtData(row.metadata.uid, 'clusterID')] }}</span>
+              <span class="bcs-ellipsis mt-[6px]">{{ handleGetExtData(row.metadata.uid, 'clusterID') }}</span>
+            </div>
           </template>
         </bk-table-column>
         <bk-table-column :label="$t('k8s.namespace')" prop="metadata.namespace" sortable></bk-table-column>
@@ -69,7 +80,11 @@
             </span>
           </template>
         </bk-table-column>
-        <bk-table-column :label="$t('generic.label.action')" :resizable="false" width="150">
+        <bk-table-column
+          :label="$t('generic.label.action')"
+          :resizable="false"
+          width="150"
+          v-if="!isViewEditable">
           <template #default="{ row }">
             <bk-button text @click="handleUpdateResource(row)">{{ $t('generic.button.update') }}</bk-button>
             <bk-button
@@ -88,12 +103,15 @@
           </template>
         </bk-table-column>
         <template #empty>
-          <BcsEmptyTableStatus :type="nameValue ? 'search-empty' : 'empty'" @clear="handleClearSearchData" />
+          <BcsEmptyTableStatus
+            :button-text="$t('generic.button.resetSearch')"
+            type="search-empty"
+            @clear="handleShowViewConfig" />
         </template>
       </bk-table>
     </template>
-    <template #detail="{ data, extData, clusterId }">
-      <PvcDetail :data="data" :ext-data="extData" :cluster-id="clusterId"></PvcDetail>
+    <template #detail="{ data, extData }">
+      <PvcDetail :data="data" :ext-data="extData" :cluster-id="extData.clusterID"></PvcDetail>
     </template>
   </BaseLayout>
 </template>

@@ -15,6 +15,7 @@ package vcluster
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/component"
 	cmoptions "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
@@ -38,7 +39,8 @@ func GetVclusterInstaller(projectID string, cluster, namespace string) (install.
 			defaultName := fmt.Sprintf("%s-%s", op.ComponentDeploy.Vcluster.ReleaseName, namespace)
 			// releaseName length limit for prevent exceeding the character limit
 			if len(defaultName) > releaseNameLength {
-				defaultName = fmt.Sprintf("%s-%s", op.ComponentDeploy.Vcluster.ReleaseName, cluster)
+				defaultName = fmt.Sprintf("%s-%s", op.ComponentDeploy.Vcluster.ReleaseName,
+					strings.ToLower(cluster))
 			}
 
 			return defaultName

@@ -69,24 +69,32 @@ func CloseLogs() {
 
 var (
 	// Info xxx
-	Info = glog.Infof
+	Info = glog.Info
 	// Infof xxx
 	Infof = glog.Infof
+	// Infow 支持 key-values 方式输出
+	Infow = glog.Infow.LogFormatw
 
 	// Warn xxx
-	Warn = glog.Warningf
+	Warn = glog.Warning
 	// Warnf xxx
 	Warnf = glog.Warningf
+	// Warnw 支持 key-values 方式输出
+	Warnw = glog.Warnw.LogFormatw
 
 	// Error xxx
-	Error = glog.Errorf
+	Error = glog.Error
 	// Errorf xxx
 	Errorf = glog.Errorf
+	// Errorw 支持 key-values 方式输出
+	Errorw = glog.Errorw.LogFormatw
 
 	// Fatal xxx
 	Fatal = glog.Fatal
 	// Fatalf xxx
 	Fatalf = glog.Fatalf
+	// Fatalw 支持 key-values 方式输出
+	Fatalw = glog.Fatalw.LogFormatw
 
 	// V xxx
 	V = glog.V
@@ -175,3 +183,11 @@ func Wrap(handler WrapFunc) *Wrapper {
 	}
 	return &Wrapper{verbose: true, Handler: handler}
 }
+
+// GlogKit 适配 https://github.com/go-kit/log 接口
+type GlogKit interface {
+	Log(keyvals ...interface{}) error
+}
+
+// LogKit 适配 https://github.com/go-kit/log 接口
+var LogKit = glog.LogKit{}

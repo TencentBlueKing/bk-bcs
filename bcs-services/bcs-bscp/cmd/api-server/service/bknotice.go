@@ -13,11 +13,14 @@
 package service
 
 import (
-	"fmt"
-	"io"
 	"net/http"
 
-	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/go-chi/render"
+
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/components/bknotice"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/rest"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
 // bkNoticeService is http handler for bknotice service.
@@ -27,42 +30,12 @@ type bkNoticeService struct {
 // GetCurrentAnnouncements get current announcements
 func (s *bkNoticeService) GetCurrentAnnouncements(w http.ResponseWriter, r *http.Request) {
 	// Prepare the new request
-
-	proxyURL := fmt.Sprintf("%s/v1/announcement/get_current_announcements/?platform=%s",
-		cc.ApiServer().BKNotice.Host, cc.ApiServer().Esb.AppCode)
-
-	proxyReq, err := http.NewRequest("GET", proxyURL, nil)
+	lang := tools.GetLangFromReq(r)
+	annotations, err := bknotice.GetCurrentAnnouncements(r.Context(), lang)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		logs.Errorf("get current announcements failed, err %s", err.Error())
 	}
-
-	authHeader := fmt.Sprintf("{\"bk_app_code\": \"%s\", \"bk_app_secret\": \"%s\"}",
-		cc.ApiServer().Esb.AppCode, cc.ApiServer().Esb.AppSecret)
-
-	proxyReq.Header.Set("X-Bkapi-Authorization", authHeader)
-
-	// Send the request to the target API
-	client := &http.Client{}
-	resp, err := client.Do(proxyReq)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadGateway)
-		return
-	}
-	defer resp.Body.Close()
-
-	// Copy the response headers and status code
-	for key, values := range resp.Header {
-		for _, value := range values {
-			w.Header().Add(key, value)
-		}
-	}
-	w.WriteHeader(resp.StatusCode)
-
-	_, err = io.Copy(w, resp.Body)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
+	_ = render.Render(w, r, rest.OKRender(annotations))
 }
 
 func newBKNoticeService() (*bkNoticeService, error) {

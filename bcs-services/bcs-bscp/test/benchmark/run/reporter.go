@@ -58,7 +58,7 @@ func (a *Reporter) GenReport(path string) error {
 
 	write := bufio.NewWriter(outFile)
 	tp.render(write, reporter.Data)
-	write.Flush()
+	write.Flush() // nolint error not checked
 
 	return nil
 }

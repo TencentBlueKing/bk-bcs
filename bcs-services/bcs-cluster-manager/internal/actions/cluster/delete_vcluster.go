@@ -193,9 +193,10 @@ func (da *DeleteVirtualAction) Handle(ctx context.Context,
 		TaskID:       da.task.TaskID,
 		Message:      fmt.Sprintf("删除%s虚拟集群%s", da.cluster.Provider, da.cluster.ClusterID),
 		OpUser:       da.req.Operator,
-		CreateTime:   time.Now().String(),
+		CreateTime:   time.Now().Format(time.RFC3339),
 		ClusterID:    da.cluster.ClusterID,
 		ProjectID:    da.cluster.ProjectID,
+		ResourceName: da.cluster.ClusterName,
 	})
 	if err != nil {
 		blog.Errorf("delete vCluster[%s] CreateOperationLog failed: %v", da.cluster.ClusterID, err)

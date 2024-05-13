@@ -222,7 +222,6 @@ type StatefulSetInfo struct {
 	Data     interface{} `json:"data"`
 }
 
-// validateNatsMqOptions xxx
 // check options validation
 func validateNatsMqOptions(n *QueueOptions) error {
 	if !(len(n.CommonOptions.Address) > 0 && regexp.MustCompile("^nat(s)?://.*").MatchString(n.CommonOptions.Address)) {

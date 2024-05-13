@@ -114,8 +114,9 @@ func (dao *releasedKvDao) List(kit *kit.Kit, opt *types.ListRKvOption) ([]*table
 	}
 
 	if opt.SearchKey != "" {
-		searchKey := "%" + opt.SearchKey + "%"
-		q = q.Where(q.Where(q.Or(m.Key.Like(searchKey)).Or(m.Creator.Like(searchKey)).Or(m.Reviser.Like(searchKey))))
+		searchKey := "(?i)" + opt.SearchKey
+		q = q.Where(q.Where(q.Or(m.Key.Regexp(searchKey)).Or(m.Creator.Regexp(searchKey)).Or(
+			m.Reviser.Regexp(searchKey))))
 	}
 
 	q = q.Where(m.BizID.Eq(opt.BizID), m.AppID.Eq(opt.AppID), m.ReleaseID.Eq(opt.ReleaseID))

@@ -1,5 +1,0 @@
-{
-  "v": 3,
-  "logbeat_dir": "/usr/local/gse_bkte/plugins/etc/task",
-  "prefix_file": "unifytlogc"
-}

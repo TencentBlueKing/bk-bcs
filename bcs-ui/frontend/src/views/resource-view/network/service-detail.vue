@@ -51,7 +51,9 @@
       </div>
       <div class="basic-info-item">
         <label>{{ $t('dashboard.network.clbUsage') }}</label>
-        <span>{{ extData.clbUseType === 'useExists' ? $t('dashboard.network.usingExisting') : $t('dashboard.network.autoCreate') }}</span>
+        <span>{{ extData.clbUseType === 'useExists'
+          ? $t('dashboard.network.usingExisting')
+          : $t('dashboard.network.autoCreate') }}</span>
       </div>
       <div class="basic-info-item">
         <label>CLB ID</label>
@@ -113,11 +115,12 @@
         </bk-table>
       </bcs-tab-panel>
       <bcs-tab-panel name="event" :label="$t('generic.label.event')">
-        <EventQueryTableVue
+        <EventQueryTable
           hide-cluster-and-namespace
           :kinds="data.kind"
           :namespace="data.metadata.namespace"
-          :name="data.metadata.name" />
+          :name="data.metadata.name"
+          :cluster-id="clusterId" />
       </bcs-tab-panel>
     </bcs-tab>
   </div>
@@ -126,11 +129,11 @@
 import { defineComponent, onMounted, ref } from 'vue';
 
 import $store from '@/store';
-import EventQueryTableVue from '@/views/project-manage/event-query/event-query-table.vue';
+import EventQueryTable from '@/views/project-manage/event-query/event-query-table.vue';
 
 export default defineComponent({
   name: 'ServiceDetail',
-  components: { EventQueryTableVue },
+  components: { EventQueryTable },
   props: {
     // 当前行数据
     data: {

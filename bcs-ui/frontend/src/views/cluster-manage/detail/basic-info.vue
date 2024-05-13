@@ -129,12 +129,12 @@
           <span>{{ clusterData.region }}</span>
         </bk-form-item>
         <bk-form-item
-          :label="$t('tke.label.nodemanArea')"
-          v-if="clusterData.clusterBasicSettings && clusterData.clusterBasicSettings.area">
+          :label="$t('tke.label.nodemanArea')">
           <template v-if="isEditModule">
             <div class="flex items-center">
               <NodemanArea
                 v-model="newCloudID"
+                class="flex-1"
                 @list-change="handleAreaListChange" />
               <span
                 class="text-[12px] text-[#3a84ff] ml-[8px] cursor-pointer"

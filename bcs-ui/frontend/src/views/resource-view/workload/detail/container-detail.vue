@@ -1,5 +1,5 @@
 <template>
-  <div class="workload-detail bcs-content-wrapper">
+  <div class="workload-detail">
     <div class="workload-detail-info" v-bkloading="{ isLoading }">
       <div class="workload-info-basic">
         <div class="basic-left">
@@ -211,11 +211,11 @@ export default defineComponent({
       required: true,
     },
     // 容器ID
-    id: {
-      type: String,
-      default: '',
-      required: true,
-    },
+    // id: {
+    //   type: String,
+    //   default: '',
+    //   required: true,
+    // },
     clusterId: {
       type: String,
       default: '',

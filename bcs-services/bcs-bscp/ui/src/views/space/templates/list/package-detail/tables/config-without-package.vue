@@ -5,7 +5,8 @@
     :current-template-space="currentTemplateSpace"
     current-pkg="no_specified"
     :space-id="spaceId"
-    :get-config-list="getConfigList">
+    :get-config-list="getConfigList"
+    :show-delete-action="true">
     <template #tableOperations>
       <BatchAddTo :configs="selectedConfigs" @refresh="refreshConfigList" />
       <DeleteConfigs
@@ -13,10 +14,6 @@
         :current-template-space="currentTemplateSpace"
         :configs="selectedConfigs"
         @deleted="handleConfigsDeleted" />
-    </template>
-    <template #columnOperations="{ config }">
-      <bk-button theme="primary" text @click="handleAddToPkgsClick(config)">{{ t('添加至') }}</bk-button>
-      <bk-button class="delete-btn" theme="primary" text @click="handleDeleteClick(config)">{{ t('删除') }}</bk-button>
     </template>
   </CommonConfigTable>
   <AddToDialog v-model:show="isAddToPkgsDialogShow" :value="selectedConfigs" @added="refreshConfigList" />
@@ -27,7 +24,6 @@
 </template>
 <script lang="ts" setup>
   import { ref } from 'vue';
-  import { useI18n } from 'vue-i18n';
   import { storeToRefs } from 'pinia';
   import useGlobalStore from '../../../../../../store/global';
   import useTemplateStore from '../../../../../../store/template';
@@ -43,7 +39,6 @@
   const { spaceId } = storeToRefs(useGlobalStore());
   const templateStore = useTemplateStore();
   const { currentTemplateSpace } = storeToRefs(templateStore);
-  const { t } = useI18n();
 
   const configTable = ref();
   const selectedConfigs = ref<ITemplateConfigItem[]>([]);
@@ -60,16 +55,6 @@
     updateRefreshFlag();
   };
 
-  const handleAddToPkgsClick = (config: ITemplateConfigItem) => {
-    isAddToPkgsDialogShow.value = true;
-    selectedConfigs.value = [config];
-  };
-
-  const handleDeleteClick = async (config: ITemplateConfigItem) => {
-    isDeleteConfigDialogShow.value = true;
-    selectedConfigs.value = [config];
-  };
-
   const handleConfigsDeleted = () => {
     configTable.value.refreshListAfterDeleted(selectedConfigs.value.length);
     selectedConfigs.value = [];
@@ -83,7 +68,7 @@
   };
 </script>
 <style lang="scss" scoped>
-  .delete-btn {
+  .opt-btn:not(:first-child) {
     margin-left: 16px;
   }
 </style>

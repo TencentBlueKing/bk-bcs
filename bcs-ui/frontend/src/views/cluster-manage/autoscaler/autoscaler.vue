@@ -288,7 +288,7 @@
                 trigger="click"
                 :ref="row.nodeGroupID">
                 <span class="more-icon"><i class="bcs-icon bcs-icon-more"></i></span>
-                <div slot="content">
+                <div class="bg-[#fff]" slot="content">
                   <ul>
                     <li class="dropdown-item" @click="handleAddNode(row)">{{$t('cluster.nodeList.create.text')}}</li>
                     <li
@@ -302,6 +302,11 @@
                       }"
                       @click="handleToggleNodeScaler(row)">
                       {{row.enableAutoscale ? $t('cluster.ca.nodePool.action.off') : $t('cluster.ca.nodePool.action.on')}}
+                    </li>
+                    <li
+                      class="dropdown-item"
+                      @click="handleClonePool(row)">
+                      {{$t('cluster.ca.nodePool.action.clone')}}
                     </li>
                     <li class="dropdown-item" @click="handleEditPool(row)">{{$t('cluster.ca.nodePool.action.edit')}}</li>
                     <li
@@ -1836,6 +1841,21 @@ export default defineComponent({
         console.warn(err);
       });
     };
+    // 克隆节点
+    const handleClonePool = (row) => {
+      $router.push({
+        name: 'nodePool',
+        params: {
+          clusterId: props.clusterId,
+          nodeGroupID: row.nodeGroupID,
+        },
+        query: {
+          provider: autoscalerData.value.devicePoolProvider || 'yunti',
+        },
+      }).catch((err) => {
+        console.warn(err);
+      });
+    };
     // 编辑节点规格
     const handleEditPool = (row) => {
       $router.push({
@@ -2034,6 +2054,7 @@ export default defineComponent({
       filtersStatusValue,
       handleNodeFilterChange,
       searchIpData,
+      handleClonePool,
     };
   },
 });

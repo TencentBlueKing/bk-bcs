@@ -13,6 +13,8 @@
 package tools
 
 import (
+	// NOCC:gas/crypto(设计如此)
+	"crypto/md5"
 	"crypto/sha256"
 	"fmt"
 	"io"
@@ -31,7 +33,7 @@ func SHA256(data string) string {
 // ByteSHA256 returns a sha256 string of the data byte.
 func ByteSHA256(data []byte) string {
 	hash := sha256.New()
-	hash.Write(data) //nolint
+	hash.Write(data) // nolint
 	return fmt.Sprintf("%x", hash.Sum(nil))
 }
 
@@ -48,4 +50,20 @@ func FileSHA256(file string) (string, error) {
 		return "", err
 	}
 	return fmt.Sprintf("%x", hash.Sum(nil)), nil
+}
+
+// MD5 returns a md5 string of the data string.
+func MD5(data string) string {
+	hash := md5.New() // nolint
+	if _, err := io.WriteString(hash, data); err != nil {
+		return ""
+	}
+	return fmt.Sprintf("%x", hash.Sum(nil))
+}
+
+// ByteMD5 returns a md5 string of the data byte.
+func ByteMD5(data []byte) string {
+	hash := md5.New() // nolint
+	hash.Write(data)  // nolint
+	return fmt.Sprintf("%x", hash.Sum(nil))
 }

@@ -159,7 +159,6 @@
       padding: 0 24px 0 10px;
       line-height: 1;
       font-size: 14px;
-      font-family: MicrosoftYaHei;
       color: #313238;
       background: #f0f1f5;
       border-radius: 2px;

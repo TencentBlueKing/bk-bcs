@@ -29,19 +29,20 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/util"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/i18n"
-	"github.com/coreos/etcd/clientv3"
+	microEtcd "github.com/go-micro/plugins/v4/registry/etcd"
+	serverGrpc "github.com/go-micro/plugins/v4/server/grpc"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	microRgt "github.com/micro/go-micro/v2/registry"
-	microEtcd "github.com/micro/go-micro/v2/registry/etcd"
-	"github.com/micro/go-micro/v2/server"
-	serverGrpc "github.com/micro/go-micro/v2/server/grpc"
-	microSvc "github.com/micro/go-micro/v2/service"
-	microGrpc "github.com/micro/go-micro/v2/service/grpc"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	microSvc "go-micro.dev/v4"
+	microRgt "go-micro.dev/v4/registry"
+	"go-micro.dev/v4/server"
+	clientv3 "go.etcd.io/etcd/client/v3"
 	"google.golang.org/grpc"
 	grpcCred "google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 
 	i18n2 "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/auth"
@@ -286,12 +287,18 @@ func (p *ProjectService) initMicro() error {
 	}
 
 	authWrapper := wrapper.NewAuthWrapper()
-	server := serverGrpc.NewServer(serverGrpc.MaxMsgSize(constant.MaxMsgSize))
-	svc := microGrpc.NewService(
+
+	// with tls
+	server := serverGrpc.NewServer(
+		serverGrpc.AuthTLS(p.tlsConfig),
+		serverGrpc.MaxMsgSize(constant.MaxMsgSize),
+	)
+
+	svc := microSvc.NewService(
 		microSvc.Server(server),
+		microSvc.Cmd(util.NewDummyMicroCmd()),
 		microSvc.Name(constant.ServiceDomain),
 		microSvc.Metadata(metadata),
-		microGrpc.WithTLS(p.tlsConfig),
 		microSvc.Address(net.JoinHostPort(ipv4, port)),
 		microSvc.Registry(p.microRgt),
 		microSvc.Version(version.Version),
@@ -397,7 +404,7 @@ func (p *ProjectService) initHTTPGateway(router *mux.Router) error {
 	if p.tlsConfig != nil && p.clientTLSConfig != nil {
 		grpcDialOpts = append(grpcDialOpts, grpc.WithTransportCredentials(grpcCred.NewTLS(p.clientTLSConfig)))
 	} else {
-		grpcDialOpts = append(grpcDialOpts, grpc.WithInsecure())
+		grpcDialOpts = append(grpcDialOpts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	}
 
 	grpcDialOpts = append(grpcDialOpts, grpc.WithDefaultCallOptions(

@@ -23,6 +23,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 
 	types "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/util"
 )
@@ -34,6 +35,9 @@ const (
 	//! all struct key in mongo is lowcase in default
 	tableKey              = "taskid"
 	defaultTaskListLength = 1000
+
+	status = "status"
+	start  = "start"
 )
 
 var (
@@ -176,4 +180,26 @@ func (m *ModelTask) ListTask(ctx context.Context, cond *operator.Condition, opt 
 		return nil, err
 	}
 	return taskList, nil
+}
+
+// DeleteFinishedTaskByDate delete finished task by date
+func (m *ModelTask) DeleteFinishedTaskByDate(ctx context.Context, startTime, endTime string) error {
+	if err := m.ensureTable(ctx); err != nil {
+		return err
+	}
+
+	startCond := operator.NewLeafCondition(operator.Gte, operator.M{start: startTime})
+	endCond := operator.NewLeafCondition(operator.Lte, operator.M{start: endTime})
+
+	statusCond := operator.NewLeafCondition(operator.In, operator.M{
+		status: []string{common.TaskStatusSuccess, common.TaskStatusFailure, common.TaskStatusTimeout},
+	})
+
+	cond := operator.NewBranchCondition(operator.And, statusCond, startCond, endCond)
+
+	_, err := m.db.Table(m.tableName).Delete(ctx, cond)
+	if err != nil {
+		return err
+	}
+	return nil
 }

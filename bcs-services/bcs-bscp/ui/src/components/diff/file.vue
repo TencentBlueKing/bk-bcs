@@ -65,7 +65,7 @@
     const { signature, name } = config;
     const getConfigContent = props.isTpl ? downloadTemplateContent : downloadConfigContent;
     const res = await getConfigContent(bkBizId, props.id, signature);
-    fileDownload(res, `${name}.bin`);
+    fileDownload(res, name);
   };
 </script>
 <style lang="scss" scoped>

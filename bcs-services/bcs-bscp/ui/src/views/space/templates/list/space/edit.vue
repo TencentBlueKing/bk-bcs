@@ -79,7 +79,7 @@
     emits('update:show', false);
   };
 </script>
-<style lang="postcss" scoped>
+<style lang="scss" scoped>
   .header-wrapper {
     display: flex;
     align-items: center;

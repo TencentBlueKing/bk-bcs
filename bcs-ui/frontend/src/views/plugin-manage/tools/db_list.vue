@@ -1,950 +1,336 @@
-<!-- eslint-disable max-len -->
 <template>
-  <div class="biz-content">
-    <Header :title="$t('plugin.tools.dbAtuh')" :desc="`(${$t('plugin.tools.cluster', { name: clusterName })})`" />
-    <div class="biz-content-wrapper" style="padding: 0;" v-bkloading="{ isLoading: isInitLoading, opacity: 0.1 }">
-      <template v-if="!isInitLoading">
-        <div class="biz-panel-header">
-          <div class="left">
-            <bk-button icon="plus" type="primary" @click.stop.prevent="createLoadBlance">
-              <span>{{$t('plugin.tools.add')}}</span>
-            </bk-button>
+  <BcsContent
+    :title="$t('plugin.tools.dbAtuh')"
+    :desc="`(${$t('plugin.tools.cluster', { name: curCluster?.clusterName })})`">
+    <div class="flex items-center justify-between mb-[16px]">
+      <bcs-button theme="primary" icon="plus" @click="showCreateCrdSideslider">
+        {{$t('plugin.tools.add')}}
+      </bcs-button>
+      <bcs-input
+        class="w-[320px]"
+        right-icon="bk-icon icon-search"
+        clearable
+        :placeholder="$t('generic.placeholder.searchName')"
+        v-model.trim="searchValue">
+      </bcs-input>
+    </div>
+    <bcs-table
+      size="medium"
+      :data="curPageData"
+      :pagination="pagination"
+      v-bkloading="{ isLoading: tableLoading }"
+      @page-change="pageChange"
+      @page-limit-change="pageSizeChange">
+      <bcs-table-column :label="$t('generic.label.name')" show-overflow-tooltip min-width="150">
+        <template #default="{ row }">
+          <bcs-button text @click="showDbDetail(row)">{{ row.metadata.name || '--' }}</bcs-button>
+        </template>
+      </bcs-table-column>
+      <bcs-table-column :label="$t('k8s.namespace')" prop="metadata.namespace" min-width="100">
+      </bcs-table-column>
+      <bcs-table-column :label="$t('cluster.labels.createdAt')" min-width="100">
+        <template #default="{ row }">
+          {{ formatDate(handleGetExtData(row.metadata.uid, 'createTime')) || '--' }}
+        </template>
+      </bcs-table-column>
+      <bcs-table-column :label="$t('generic.label.updator')" min-width="100">
+        <template #default="{ row }">
+          {{ handleGetExtData(row.metadata.uid, 'updater') || '--' }}
+        </template>
+      </bcs-table-column>
+      <bcs-table-column :label="$t('generic.label.action')" width="150">
+        <template #default="{ row }">
+          <bcs-button text @click="showUpdateCrdSideslider(row)">{{$t('generic.label.update')}}</bcs-button>
+          <bcs-button text class="ml-[8px]" @click="deleteCrd(row)">{{$t('generic.label.delete')}}</bcs-button>
+        </template>
+      </bcs-table-column>
+      <template #empty>
+        <BcsEmptyTableStatus
+          :type="searchValue ? 'search-empty' : 'empty'"
+          @clear="handleClearSearchData" />
+      </template>
+    </bcs-table>
+    <!-- 创建 & 更新 -->
+    <bcs-sideslider
+      :is-show.sync="isShowCreate"
+      :title="title"
+      quick-close
+      :width="660">
+      <template #content>
+        <bk-form
+          :model="formData"
+          :rules="rules"
+          form-type="vertical"
+          class="grid grid-cols-2 gap-x-[35px] p-[30px]"
+          ref="formRef">
+          <bk-form-item class="mt-[8px]" :label="$t('generic.label.cluster1')" required>
+            <bcs-input readonly :value="curCluster?.clusterName"></bcs-input>
+          </bk-form-item>
+          <bk-form-item
+            property="metadata.namespace"
+            :label="$t('k8s.namespace')"
+            error-display-type="normal"
+            required>
+            <NamespaceSelect :disabled="!!currentRow" :cluster-id="clusterId" v-model="formData.metadata.namespace" />
+          </bk-form-item>
+          <bk-form-item
+            property="metadata.name"
+            :label="$t('generic.label.name')"
+            error-display-type="normal"
+            required>
+            <bcs-input :disabled="!!currentRow" v-model="formData.metadata.name"></bcs-input>
+          </bk-form-item>
+          <bk-form-item
+            property="spec.appName"
+            :label="$t('plugin.tools.biz')"
+            desc-type="icon"
+            :desc="$t('plugin.tools.bizTips')"
+            error-display-type="normal"
+            required>
+            <bcs-input v-model="formData.spec.appName"></bcs-input>
+          </bk-form-item>
+          <bk-form-item
+            property="spec.targetDb"
+            :label="$t('plugin.tools.DBAddress')"
+            error-display-type="normal"
+            required>
+            <bcs-input v-model="formData.spec.targetDb"></bcs-input>
+          </bk-form-item>
+          <bk-form-item
+            property="spec.dbType"
+            :label="$t('plugin.tools.DBType')"
+            error-display-type="normal"
+            required>
+            <bcs-select v-model="formData.spec.dbType">
+              <bcs-option id="mysql" name="mysql"></bcs-option>
+              <bcs-option id="spider" name="spider"></bcs-option>
+            </bcs-select>
+          </bk-form-item>
+          <bk-form-item
+            property="spec.callUser"
+            :label="$t('plugin.tools.user')"
+            desc-type="icon"
+            :desc="$t('plugin.tools.userTips')"
+            error-display-type="normal"
+            required>
+            <bcs-input v-model="formData.spec.callUser"></bcs-input>
+          </bk-form-item>
+          <bk-form-item
+            property="spec.dbName"
+            :label="$t('plugin.tools.DBName')"
+            desc-type="icon"
+            :desc="$t('plugin.tools.DBTips')"
+            error-display-type="normal"
+            required>
+            <bcs-input v-model="formData.spec.dbName"></bcs-input>
+          </bk-form-item>
+          <bk-form-item
+            class="col-span-2"
+            property="spec.podSelector"
+            desc-type="icon"
+            :desc="$t('plugin.tools.DBAuthTips')"
+            :label="$t('generic.label.labelManage')"
+            error-display-type="normal"
+            required>
+            <KeyValue v-model="formData.spec.podSelector" />
+          </bk-form-item>
+          <div>
+            <bcs-button :loading="saving" theme="primary" @click="createOrUpdateCrd">
+              {{ currentRow ? $t('generic.button.update') : $t('generic.button.create') }}
+            </bcs-button>
+            <bcs-button @click="isShowCreate = false">{{ $t('generic.button.cancel') }}</bcs-button>
           </div>
-          <div class="right">
-            <ClusterSelectComb
-              :placeholder="$t('generic.placeholder.search')"
-              :search.sync="searchKeyword"
-              :cluster-id.sync="clusterId"
-              :show-cluster-select="false"
-              @search-change="searchCrdInstance"
-              @refresh="refresh"
-            />
+        </bk-form>
+      </template>
+    </bcs-sideslider>
+    <!-- 详情 -->
+    <bcs-sideslider
+      :is-show.sync="isShowDetail"
+      :title="currentRow && currentRow.metadata.name"
+      quick-close
+      :width="800">
+      <template #content>
+        <div class="p-[30px] text-[14px]">
+          <!-- 基本信息 -->
+          <div class="mb-[10px] text-[#333948]">{{$t('generic.title.basicInfo')}}</div>
+          <div
+            :class="[
+              'flex items-center border-solid border-[1px] border-[#dfe0e5]',
+              'h-[82px] text-[#737987] mb-[15px]'
+            ]">
+            <div class="flex-1 flex flex-col justify-center h-full p-[15px] bcs-border-right">
+              <span class="mb-[10px]">{{ $t('generic.label.cluster1') }}:</span>
+              <span>{{ curCluster?.clusterName || '--' }}</span>
+            </div>
+            <div class="flex-1 flex flex-col justify-center h-full p-[15px] bcs-border-right">
+              <span class="mb-[10px]">{{ $t('k8s.namespace') }}:</span>
+              <span>{{ currentRow.metadata.namespace || '--' }}</span>
+            </div>
+            <div class="flex-1 flex flex-col justify-center h-full p-[15px]">
+              <span class="mb-[10px]">{{ $t('generic.label.name') }}:</span>
+              <span>{{ currentRow.metadata.name }}</span>
+            </div>
           </div>
-        </div>
-
-        <div class="biz-crd-instance">
-          <div class="biz-table-wrapper" v-bkloading="{ isLoading: isPageLoading && !isInitLoading }">
-            <bk-table
-              class="biz-namespace-table"
-              v-bkloading="{ isLoading: isPageLoading && !isInitLoading }"
-              :size="'medium'"
-              :data="curPageData"
-              :pagination="pageConf"
-              @page-change="handlePageChange"
-              @page-limit-change="handlePageSizeChange">
-              <bk-table-column :label="$t('generic.label.name')" prop="name" :show-overflow-tooltip="true" min-width="150">
-                <template slot-scope="{ row }">
-                  <a href="javascript: void(0)" class="bk-text-button biz-table-title biz-resource-title" @click.stop.prevent="editCrdInstance(row, true)">{{row.name || '--'}}</a>
-                </template>
-              </bk-table-column>
-              <bk-table-column :label="$t('k8s.namespace')" min-width="100">
-                <template slot-scope="{ row }">
-                  {{row.namespace || '--'}}
-                </template>
-              </bk-table-column>
-              <bk-table-column :label="$t('generic.label.status')" min-width="100">
-                <template slot-scope="{ row }">
-                  <bk-tag type="filled" v-if="row.bind_success" theme="success">{{$t('generic.status.ready')}}</bk-tag>
-                  <bk-tag type="filled" v-else theme="danger">{{$t('generic.status.error')}}</bk-tag>
-                </template>
-              </bk-table-column>
-              <bk-table-column :label="$t('cluster.labels.updatedAt')" min-width="100">
-                <template slot-scope="{ row }">
-                  {{row.updated || '--'}}
-                </template>
-              </bk-table-column>
-              <bk-table-column :label="$t('generic.label.updator')" min-width="100">
-                <template slot-scope="{ row }">
-                  {{row.operator || '--'}}
-                </template>
-              </bk-table-column>
-              <bk-table-column :label="$t('generic.label.action')" min-width="100">
-                <template slot-scope="{ row }">
-                  <a href="javascript:void(0);" class="bk-text-button" @click="editCrdInstance(row)">{{$t('generic.button.update')}}</a>
-                  <a href="javascript:void(0);" class="bk-text-button" @click="removeCrdInstance(row)">{{$t('generic.button.delete')}}</a>
-                </template>
-              </bk-table-column>
-              <template #empty>
-                <BcsEmptyTableStatus
-                  :type="searchKeyword ? 'search-empty' : 'empty'"
-                  @clear="handleClearSearchData" />
-              </template>
-            </bk-table>
+          <!-- DB信息 -->
+          <div class="mb-[10px] text-[#333948]">
+            {{$t('plugin.tools.DBInfo')}}
+          </div>
+          <div
+            :class="[
+              'flex items-center border-solid border-[1px] border-[#dfe0e5]',
+              'h-[82px] text-[#737987] mb-[15px]'
+            ]">
+            <div class="flex-1 flex flex-col justify-center h-full p-[15px] bcs-border-right">
+              <span class="mb-[10px]">{{$t('plugin.tools.biz')}}：</span>
+              <span>{{ currentRow.spec.appName || '--'}}</span>
+            </div>
+            <div class="flex-1 flex flex-col justify-center h-full p-[15px] bcs-border-right">
+              <span class="mb-[10px]">{{$t('plugin.tools.DBAddress')}}：</span>
+              <span>{{ currentRow.spec.targetDb || '--'}}</span>
+            </div>
+            <div class="flex-1 flex flex-col justify-center h-full p-[15px] bcs-border-right">
+              <span class="mb-[10px]">{{$t('plugin.tools.DBType')}}：</span>
+              <span>{{ currentRow.spec.dbType || '--'}}</span>
+            </div>
+            <div class="flex-1 flex flex-col justify-center h-full p-[15px] bcs-border-right">
+              <span class="mb-[10px]">{{$t('plugin.tools.user')}}：</span>
+              <span>{{ currentRow.spec.callUser || '--'}}</span>
+            </div>
+            <div class="flex-1 flex flex-col justify-center h-full p-[15px]">
+              <span class="mb-[10px]">{{$t('plugin.tools.DBName')}}：</span>
+              <span>{{ currentRow.spec.dbName || '--'}}</span>
+            </div>
+          </div>
+          <!-- 标签 -->
+          <div class="mb-[10px] text-[#333948]">
+            {{$t('k8s.label')}}
+          </div>
+          <div>
+            <bcs-tag v-for="(value, key) in currentRow.spec.podSelector" :key="key">
+              {{ `${key}:${value}` }}
+            </bcs-tag>
           </div>
         </div>
       </template>
-
-      <bk-sideslider
-        :quick-close="false"
-        :is-show.sync="crdInstanceSlider.isShow"
-        :title="crdInstanceSlider.title"
-        :width="660">
-        <div class="p30" slot="content">
-          <div class="bk-form bk-form-vertical">
-            <div class="bk-form-item">
-              <div class="bk-form-content">
-                <div class="bk-form-inline-item is-required" style="width: 270px;">
-                  <label class="bk-label">{{$t('generic.label.cluster1')}}：</label>
-                  <div class="bk-form-content">
-                    <bk-selector
-                      :placeholder="$t('generic.placeholder.input')"
-                      :setting-key="'cluster_id'"
-                      :display-key="'name'"
-                      :selected.sync="clusterId"
-                      :list="clusterList"
-                      :disabled="true">
-                    </bk-selector>
-                  </div>
-                </div>
-
-                <div class="bk-form-inline-item is-required" style="width: 270px; margin-left: 35px;">
-                  <label class="bk-label">{{$t('k8s.namespace')}}：</label>
-                  <div class="bk-form-content">
-                    <bk-selector
-                      :searchable="true"
-                      :placeholder="$t('generic.placeholder.select')"
-                      :selected.sync="curCrdInstance.namespace_id"
-                      :list="nameSpaceList"
-                      :disabled="!!curCrdInstance.crd_id"
-                      @item-selected="handleNamespaceSelect">
-                    </bk-selector>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="bk-form-item">
-              <div class="bk-form-content">
-                <div class="bk-form-inline-item is-required" style="width: 270px;">
-                  <label class="bk-label">{{$t('generic.label.name')}}：</label>
-                  <div class="bk-form-content">
-                    <bkbcs-input
-                      :placeholder="$t('generic.placeholder.input')"
-                      :value.sync="curCrdInstance.name"
-                      :disabled="!!curCrdInstance.crd_id">
-                    </bkbcs-input>
-                  </div>
-                </div>
-                <div class="bk-form-inline-item is-required" style="width: 270px; margin-left: 35px;">
-                  <label class="bk-label">
-                    {{$t('plugin.tools.biz')}}：
-                    <i class="bcs-icon bcs-icon-question-circle label-icon" v-bk-tooltips.left="$t('plugin.tools.bizTips')"></i>
-                  </label>
-                  <div class="bk-form-content">
-                    <bkbcs-input
-                      :placeholder="$t('generic.placeholder.input')"
-                      :value.sync="curCrdInstance.app_name">
-                    </bkbcs-input>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="bk-form-item">
-              <div class="bk-form-content">
-                <div class="bk-form-inline-item is-required" style="width: 270px;">
-                  <label class="bk-label">{{$t('plugin.tools.DBAddress')}}：</label>
-                  <div class="bk-form-content">
-                    <bkbcs-input
-                      :placeholder="$t('generic.placeholder.input')"
-                      :value.sync="curCrdInstance.db_host">
-                    </bkbcs-input>
-                  </div>
-                </div>
-                <div class="bk-form-inline-item is-required" style="width: 270px; margin-left: 35px;">
-                  <label class="bk-label">{{$t('plugin.tools.DBType')}}：</label>
-                  <div class="bk-form-content">
-                    <bk-selector
-                      :placeholder="$t('generic.placeholder.select')"
-                      :selected.sync="curCrdInstance.db_type"
-                      :list="dbTypes">
-                    </bk-selector>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="bk-form-item">
-              <div class="bk-form-content">
-                <div class="bk-form-inline-item is-required" style="width: 270px;">
-                  <label class="bk-label">
-                    {{$t('plugin.tools.user')}}：
-                    <i class="bcs-icon bcs-icon-question-circle label-icon" v-bk-tooltips.right="$t('plugin.tools.userTips')"></i>
-                  </label>
-                  <div class="bk-form-content">
-                    <bkbcs-input
-                      :placeholder="$t('generic.placeholder.input')"
-                      :value.sync="curCrdInstance.call_user">
-                    </bkbcs-input>
-                  </div>
-                </div>
-                <div class="bk-form-inline-item is-required" style="width: 270px; margin-left: 35px;">
-                  <label class="bk-label">
-                    {{$t('plugin.tools.DBName')}}：
-                    <i class="bcs-icon bcs-icon-question-circle label-icon" v-bk-tooltips.left="$t('plugin.tools.DBTips')"></i>
-                  </label>
-                  <div class="bk-form-content">
-                    <bkbcs-input
-                      :placeholder="$t('generic.placeholder.input')"
-                      :value.sync="curCrdInstance.db_name">
-                    </bkbcs-input>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="bk-form-item is-required">
-              <label class="bk-label">
-                {{$t('generic.label.labelManage')}}：
-                <i class="bcs-icon bcs-icon-question-circle label-icon" v-bk-tooltips.right="{ width: 400, content: $t('plugin.tools.DBAuthTips') }"></i>
-              </label>
-              <div class="bk-form-content">
-                <bk-keyer :key-list.sync="curLabelList" ref="labelKeyer" @change="changeLabels"></bk-keyer>
-              </div>
-            </div>
-
-            <div class="bk-form-item mt25">
-              <bk-button type="primary" :loading="isDataSaveing" @click.stop.prevent="saveCrdInstance">{{curCrdInstance.crd_id ? $t('generic.button.update') : $t('generic.button.create')}}</bk-button>
-              <bk-button @click.stop.prevent="hideCrdInstanceSlider" :disabled="isDataSaveing">{{$t('generic.button.cancel')}}</bk-button>
-            </div>
-          </div>
-        </div>
-      </bk-sideslider>
-
-      <bk-sideslider
-        :quick-close="true"
-        :is-show.sync="detailSliderConf.isShow"
-        :title="detailSliderConf.title"
-        :width="800">
-        <div class="p30" slot="content">
-          <p class="data-title">
-            {{$t('generic.title.basicInfo')}}
-          </p>
-          <div class="biz-metadata-box mb15">
-            <div class="data-item">
-              <p class="key">{{$t('generic.label.cluster1')}}：</p>
-              <p class="value">{{clusterName || '--'}}</p>
-            </div>
-            <div class="data-item">
-              <p class="key">{{$t('k8s.namespace')}}：</p>
-              <p class="value">{{curCrdInstance.namespace || '--'}}</p>
-            </div>
-            <div class="data-item">
-              <p class="key">{{$t('generic.label.name')}}：</p>
-              <p class="value">{{curCrdInstance.name || '--'}}</p>
-            </div>
-          </div>
-
-          <p class="data-title">
-            {{$t('plugin.tools.DBInfo')}}
-          </p>
-          <div class="biz-metadata-box">
-            <div class="data-item">
-              <p class="key">{{$t('plugin.tools.biz')}}：</p>
-              <p class="value">{{curCrdInstance.app_name || '--'}}</p>
-            </div>
-            <div class="data-item">
-              <p class="key">{{$t('plugin.tools.DBAddress')}}：</p>
-              <p class="value">{{curCrdInstance.db_host || '--'}}</p>
-            </div>
-            <div class="data-item">
-              <p class="key">{{$t('plugin.tools.DBType')}}：</p>
-              <p class="value">{{curCrdInstance.db_type || '--'}}</p>
-            </div>
-            <div class="data-item">
-              <p class="key">{{$t('plugin.tools.user')}}：</p>
-              <p class="value">{{curCrdInstance.call_user || '--'}}</p>
-            </div>
-            <div class="data-item">
-              <p class="key">{{$t('plugin.tools.DBName')}}：</p>
-              <p class="value">{{curCrdInstance.db_name || '--'}}</p>
-            </div>
-          </div>
-
-          <div class="actions">
-            <span class="show-labels-btn bk-button bk-button-small bk-primary">{{$t('k8s.label')}}</span>
-          </div>
-          <div class="point-box">
-            <template v-if="curLabelList.length">
-              <ul class="key-list" style="display: flex;">
-                <li v-for="(label, index) in curLabelList" :key="index">
-                  <span class="key">{{label.key}}</span>
-                  <span class="value">{{label.value}}</span>
-                </li>
-              </ul>
-            </template>
-            <template v-else>
-              <div class="bk-message-box" style="min-height: auto;">
-                <bcs-exception type="empty" scene="part"></bcs-exception>
-              </div>
-            </template>
-          </div>
-        </div>
-      </bk-sideslider>
-    </div>
-  </div>
+    </bcs-sideslider>
+  </BcsContent>
 </template>
+<script setup lang="ts">
+import { ref } from 'vue';
 
-<script>
-import { catchErrorHandler } from '@/common/util';
-import ClusterSelectComb from '@/components/cluster-selector/cluster-select-comb.vue';
-import bkKeyer from '@/components/keyer';
-import Header from '@/components/layout/Header.vue';
+import useCustomCrdList from './use-custom-crd';
 
-export default {
-  components: {
-    bkKeyer,
-    Header,
-    ClusterSelectComb,
+import { formatDate } from '@/common/util';
+import BcsContent from '@/components/layout/Content.vue';
+import NamespaceSelect from '@/components/namespace-selector/namespace-select.vue';
+import $i18n from '@/i18n/i18n-setup';
+import KeyValue from '@/views/cluster-manage/components/key-value.vue';
+
+const props = defineProps({
+  clusterId: {
+    type: String,
+    default: '',
+    required: true,
   },
-  data() {
-    return {
-      isInitLoading: true,
-      isPageLoading: false,
-      curPageData: [],
-      isDataSaveing: false,
-      prmissions: {},
-      pageConf: {
-        count: 0,
-        totalPage: 1,
-        limit: 5,
-        current: 1,
-        show: true,
-      },
-      crdInstanceSlider: {
-        title: this.$t('plugin.tools.add'),
-        isShow: false,
-      },
-      clusterIndex: 0,
-      searchKeyword: '',
-      searchScope: '',
-      nameSpaceList: [],
-      curLabelList: [
-        {
-          key: '',
-          value: '',
-        },
-      ],
+});
 
-      dbTypes: [
-        {
-          id: 'mysql',
-          name: 'mysql',
-        },
-        {
-          id: 'spider',
-          name: 'spider',
-        },
-      ],
-
-      curCrdInstance: {
-        cluster_id: '',
-        name: '',
-        namespace: '',
-        namespace_id: 0,
-        pod_selector: {},
-        app_name: '',
-        db_host: '',
-        db_type: 'mysql',
-        call_user: '',
-        db_name: '',
-        crd_kind: '',
-        labels: [
-          {
-            key: '',
-            value: '',
-          },
-        ],
-      },
-      detailSliderConf: {
-        isShow: false,
-        title: '',
-      },
-      crdKind: 'BcsDbPrivConfig',
-    };
+// 表单数据
+const initFormData = {
+  metadata: {
+    name: '',
+    namespace: '',
   },
-  computed: {
-    isEn() {
-      return this.$store.state.isEn;
-    },
-    varList() {
-      return this.$store.state.variable.varList;
-    },
-    projectId() {
-      return this.$route.params.projectId;
-    },
-    crdInstanceList() {
-      return Object.assign([], this.$store.state.crdcontroller.crdInstanceList);
-    },
-    clusterList() {
-      return this.$store.state.cluster.clusterList;
-    },
-    curProject() {
-      return this.$store.state.curProject;
-    },
-    clusterId() {
-      return this.$route.params.clusterId;
-    },
-    clusterName() {
-      const cluster = this.clusterList.find(item => item.cluster_id === this.clusterId);
-      return cluster ? cluster.name : '';
-    },
-    searchScopeList() {
-      const { clusterList } = this.$store.state.cluster;
-      let results = [];
-      if (clusterList.length) {
-        results = [];
-        clusterList.forEach((item) => {
-          results.push({
-            id: item.cluster_id,
-            name: item.name,
-          });
-        });
-      }
-
-      return results;
-    },
-  },
-  watch: {
-    crdInstanceList() {
-      this.curPageData = this.getDataByPage(this.pageConf.current);
-    },
-    curPageData() {
-      this.curPageData.forEach((item) => {
-        if (item.clb_status && item.clb_status !== 'Running') {
-          this.getCrdInstanceStatus(item);
-        }
-      });
-    },
-  },
-  created() {
-    this.getCrdInstanceList();
-    this.getNameSpaceList();
-  },
-  methods: {
-    goBack() {
-      this.$router.push({
-        name: 'dbCrdcontroller',
-        params: {
-          projectId: this.projectId,
-        },
-      });
-    },
-
-    /**
-             * 刷新列表
-             */
-    refresh() {
-      this.pageConf.current = 1;
-      this.isPageLoading = true;
-      this.getCrdInstanceList();
-    },
-
-    /**
-             * 分页大小更改
-             *
-             * @param {number} pageSize pageSize
-             */
-    handlePageSizeChange(pageSize) {
-      this.pageConf.limit = pageSize;
-      this.pageConf.current = 1;
-      this.initPageConf();
-      this.handlePageChange();
-    },
-
-    /**
-             * 新建
-             */
-    createLoadBlance() {
-      this.curCrdInstance = {
-        // 'crd_kind': this.crdKind,
-        // 'cluster_id': this.clusterId,
-        name: '',
-        namespace: '',
-        namespace_id: 0,
-        pod_selector: {},
-        app_name: '',
-        db_host: '',
-        db_type: 'mysql',
-        call_user: '',
-        db_name: '',
-        labels: [
-          {
-            key: '',
-            value: '',
-          },
-        ],
-      };
-
-      this.curLabelList = [
-        {
-          key: '',
-          value: '',
-        },
-      ];
-
-      this.crdInstanceSlider.isShow = true;
-    },
-
-    /**
-             * 编辑
-             * @param  {object} crdInstance crdInstance
-             * @param  {number} index 索引
-             */
-    async editCrdInstance(crdInstance, isReadonly) {
-      try {
-        const { projectId } = this;
-        const { clusterId } = this;
-        const { crdKind } = this;
-        const crdId = crdInstance.id;
-        const res = await this.$store.dispatch('crdcontroller/getCrdInstanceDetail', {
-          crdKind,
-          projectId,
-          clusterId,
-          crdId,
-        });
-
-        res.data.labels = [];
-        const selector = res.data.crd_data.pod_selector;
-        this.curLabelList = [];
-        for (const key in selector) {
-          res.data.labels.push({
-            key,
-            value: selector[key],
-          });
-          this.curLabelList.push({
-            key,
-            value: selector[key],
-          });
-        }
-
-        if (!this.curLabelList) {
-          this.curLabelList = [
-            {
-              key: '',
-              value: '',
-            },
-          ];
-        }
-        this.curCrdInstance = { ...res.data, ...res.data.crd_data };
-        this.curCrdInstance.crd_id = crdId;
-
-        if (isReadonly) {
-          this.detailSliderConf.title = `${this.curCrdInstance.name}`;
-          this.detailSliderConf.isShow = true;
-        } else {
-          this.crdInstanceSlider.title = this.$t('generic.button.edit');
-          this.crdInstanceSlider.isShow = true;
-        }
-      } catch (e) {
-        catchErrorHandler(e, this);
-      }
-    },
-
-    /**
-             * 删除
-             * @param  {object} crdInstance crdInstance
-             * @param  {number} index 索引
-             */
-    async removeCrdInstance(crdInstance) {
-      // eslint-disable-next-line @typescript-eslint/no-this-alias
-      const self = this;
-      const { projectId } = this;
-      const { clusterId } = this;
-      const { crdKind } = this;
-      const crdId = crdInstance.id;
-
-      this.$bkInfo({
-        title: this.$t('generic.title.confirmDelete'),
-        clsName: 'biz-remove-dialog',
-        content: this.$createElement('p', {
-          class: 'biz-confirm-desc',
-        }, `${this.$t('plugin.tools.confirmDelete')}【${crdInstance.name}】？`),
-        async confirmFn() {
-          self.isPageLoading = true;
-          try {
-            await self.$store.dispatch('crdcontroller/deleteCrdInstance', { projectId, clusterId, crdKind, crdId });
-            self.$bkMessage({
-              theme: 'success',
-              message: self.$t('generic.msg.success.delete'),
-            });
-            self.getCrdInstanceList();
-          } catch (e) {
-            catchErrorHandler(e, this);
-          } finally {
-            self.isPageLoading = false;
-          }
-        },
-      });
-    },
-
-    /**
-             * 获取
-             * @param  {number} crdInstanceId id
-             * @return {object} crdInstance crdInstance
-             */
-    getCrdInstanceById(crdInstanceId) {
-      return this.crdInstanceList.find(item => item.id === crdInstanceId);
-    },
-
-    /**
-             * 清空搜索
-             */
-    clearSearch() {
-      this.searchKeyword = '';
-      this.searchCrdInstance();
-    },
-
-    /**
-             * 搜索
-             */
-    searchCrdInstance() {
-      const keyword = this.searchKeyword.trim();
-      const list = this.$store.state.crdcontroller.crdInstanceList;
-      let results = [];
-
-      results = list.filter((item) => {
-        // eslint-disable-next-line max-len
-        if (item.name.indexOf(keyword) > -1 || item.namespace.indexOf(keyword) > -1 || item.operator.indexOf(keyword) > -1) {
-          return true;
-        }
-        return false;
-      });
-      this.crdInstanceList.splice(0, this.crdInstanceList.length, ...results);
-      this.pageConf.current = 1;
-      this.initPageConf();
-      this.curPageData = this.getDataByPage(this.pageConf.current);
-    },
-
-    /**
-             * 初始化分页配置
-             */
-    initPageConf() {
-      const total = this.crdInstanceList.length;
-      this.pageConf.count = total;
-      this.pageConf.totalPage = Math.ceil(total / this.pageConf.limit);
-      if (this.pageConf.current > this.pageConf.totalPage) {
-        this.pageConf.current = this.pageConf.totalPage;
-      }
-    },
-
-    /**
-             * 重新加载当前页
-             */
-    reloadCurPage() {
-      this.initPageConf();
-      if (this.pageConf.current > this.pageConf.totalPage) {
-        this.pageConf.current = this.pageConf.totalPage;
-      }
-      this.curPageData = this.getDataByPage(this.pageConf.current);
-    },
-
-    /**
-             * 获取页数据
-             * @param  {number} page 页
-             * @return {object} data lb
-             */
-    getDataByPage(page) {
-      // 如果没有page，重置
-      if (!page) {
-        // eslint-disable-next-line no-multi-assign
-        this.pageConf.current = page = 1;
-      }
-      let startIndex = (page - 1) * this.pageConf.limit;
-      let endIndex = page * this.pageConf.limit;
-      // this.isPageLoading = true
-      if (startIndex < 0) {
-        startIndex = 0;
-      }
-      if (endIndex > this.crdInstanceList.length) {
-        endIndex = this.crdInstanceList.length;
-      }
-      this.isPageLoading = false;
-      return this.crdInstanceList.slice(startIndex, endIndex);
-    },
-
-    /**
-             * 分页改变回调
-             * @param  {number} page 页
-             */
-    handlePageChange(page = 1) {
-      this.isPageLoading = true;
-      this.pageConf.current = page;
-      const data = this.getDataByPage(page);
-      this.curPageData = JSON.parse(JSON.stringify(data));
-    },
-
-    /**
-             * 隐藏lb侧面板
-             */
-    hideCrdInstanceSlider() {
-      this.crdInstanceSlider.isShow = false;
-    },
-
-    /**
-             * 加载数据
-             */
-    async getCrdInstanceList() {
-      try {
-        const { projectId } = this;
-        const { clusterId } = this;
-        const { crdKind } = this;
-        const params = {};
-
-        await this.$store.dispatch('crdcontroller/getCrdInstanceList', {
-          projectId,
-          clusterId,
-          crdKind,
-          params,
-        });
-
-        this.initPageConf();
-        this.curPageData = this.getDataByPage(this.pageConf.current);
-
-        // 如果有搜索关键字，继续显示过滤后的结果
-        if (this.searchKeyword) {
-          this.searchCrdInstance();
-        }
-      } catch (e) {
-        catchErrorHandler(e, this);
-      } finally {
-        // 晚消失是为了防止整个页面loading和表格数据loading效果叠加产生闪动
-        setTimeout(() => {
-          this.isInitLoading = false;
-        }, 200);
-      }
-    },
-
-    /**
-             * 获取命名空间列表
-             */
-    async getNameSpaceList() {
-      try {
-        const { projectId } = this;
-        const { clusterId } = this;
-        const res = await this.$store.dispatch('crdcontroller/getNameSpaceListByCluster', { projectId, clusterId });
-        const list = res.data;
-        list.forEach((item) => {
-          item.isSelected = false;
-        });
-        this.nameSpaceList.splice(0, this.nameSpaceList.length, ...list);
-      } catch (e) {
-        catchErrorHandler(e, this);
-      }
-    },
-
-    /**
-             * 选择/取消选择命名空间
-             * @param  {object} nameSpace 命名空间
-             * @param  {number} index 索引
-             */
-    toggleSelected(nameSpace) {
-      nameSpace.isSelected = !nameSpace.isSelected;
-      this.nameSpaceList = JSON.parse(JSON.stringify(this.nameSpaceList));
-    },
-
-    /**
-             * 检查提交的数据
-             * @return {boolean} true/false 是否合法
-             */
-    checkData() {
-      if (!this.curCrdInstance.namespace_id) {
-        this.$bkMessage({
-          theme: 'error',
-          message: this.$t('dashboard.ns.validate.emptyNs'),
-          delay: 5000,
-        });
-        return false;
-      }
-
-      if (this.curCrdInstance.name === '') {
-        this.$bkMessage({
-          theme: 'error',
-          message: this.$t('deploy.templateset.validate.name1'),
-        });
-        return false;
-      }
-
-      if (!this.curCrdInstance.app_name) {
-        this.$bkMessage({
-          theme: 'error',
-          message: this.$t('plugin.tools.input.biz'),
-          delay: 5000,
-        });
-        return false;
-      }
-
-      if (!this.curCrdInstance.db_host) {
-        this.$bkMessage({
-          theme: 'error',
-          message: this.$t('plugin.tools.input.dbAddress'),
-          delay: 5000,
-        });
-        return false;
-      }
-
-      if (!this.curCrdInstance.call_user) {
-        this.$bkMessage({
-          theme: 'error',
-          message: this.$t('plugin.tools.input.user'),
-          delay: 5000,
-        });
-        return false;
-      }
-
-      if (!this.curCrdInstance.db_name) {
-        this.$bkMessage({
-          theme: 'error',
-          message: this.$t('plugin.tools.input.dbName'),
-          delay: 5000,
-        });
-        return false;
-      }
-
-      if (JSON.stringify(this.curCrdInstance.pod_selector) === '{}') {
-        this.$bkMessage({
-          theme: 'error',
-          message: this.$t('plugin.tools.input.label'),
-          delay: 5000,
-        });
-        return false;
-      }
-
-      if (this.curCrdInstance.labels.length) {
-        let result = true;
-        this.curCrdInstance.labels.forEach((item, index) => {
-          if (!/^(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?$/.test(item.value)) {
-            this.$bkMessage({
-              theme: 'error',
-              message: this.$t('plugin.tools.labelIndexRegex', { index: index + 1 }),
-              delay: 5000,
-            });
-            result = false;
-          }
-        });
-        return result;
-      }
-      // !/^(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?$/.test(this.curCrdInstance.labels)
-      if (!/^(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?$/.test(this.curCrdInstance.labels)) {
-        this.$bkMessage({
-          theme: 'error',
-          message: this.$t('plugin.tools.labelRegex'),
-          delay: 5000,
-        });
-        return false;
-      }
-
-      return true;
-    },
-
-    showCrdInstanceDetail(data) {
-      data.labels = [];
-      for (const key in data.pod_selector) {
-        data.labels.push({
-          key,
-          value: data.pod_selector[key],
-        });
-      }
-      this.curCrdInstance = data;
-
-      this.detailSliderConf.title = `${data.name}`;
-      this.detailSliderConf.isShow = true;
-    },
-
-    /**
-             * 格式化数据，符合接口需要的格式
-             */
-    formatData() {
-      const { labels } = this.curCrdInstance;
-      this.curCrdInstance.pod_selector = {};
-      labels.forEach((item) => {
-        if (item.key) {
-          this.curCrdInstance.pod_selector[item.key] = item.value;
-        }
-      });
-    },
-
-    /**
-             * 保存新建的
-             */
-    async createCrdInstance() {
-      const { crdKind } = this;
-      const { clusterId } = this;
-      const { projectId } = this;
-      const data = this.curCrdInstance;
-      this.isDataSaveing = true;
-
-      try {
-        await this.$store.dispatch('crdcontroller/addCrdInstance', { projectId, clusterId, crdKind, data });
-
-        this.$bkMessage({
-          theme: 'success',
-          message: this.$t('generic.msg.success.save1'),
-        });
-        this.getCrdInstanceList();
-        this.hideCrdInstanceSlider();
-      } catch (e) {
-      } finally {
-        this.isDataSaveing = false;
-      }
-    },
-
-    /**
-             * 保存更新的
-             */
-    async updateCrdInstance() {
-      const { crdKind } = this;
-      const { clusterId } = this;
-      const { projectId } = this;
-      const data = this.curCrdInstance;
-      this.isDataSaveing = true;
-
-      data.crd_kind = this.crdKind;
-      try {
-        await this.$store.dispatch('crdcontroller/updateCrdInstance', { projectId, clusterId, crdKind, data });
-
-        this.$bkMessage({
-          theme: 'success',
-          message: this.$t('generic.msg.success.save1'),
-        });
-        this.getCrdInstanceList();
-        this.hideCrdInstanceSlider();
-      } catch (e) {
-      } finally {
-        this.isDataSaveing = false;
-      }
-    },
-
-    /**
-             * 保存
-             */
-    saveCrdInstance() {
-      this.formatData();
-      if (this.checkData() && !this.isDataSaveing) {
-        if (this.curCrdInstance.crd_id > 0) {
-          this.updateCrdInstance();
-        } else {
-          this.createCrdInstance();
-        }
-      }
-    },
-
-    handleNamespaceSelect(index, data) {
-      this.curCrdInstance.namespace = data.name;
-    },
-
-    changeLabels(labels) {
-      // this.curCrdInstance.pod_selector = data
-      this.curCrdInstance.labels = labels;
-    },
-    handleClearSearchData() {
-      this.searchKeyword = '';
-      this.searchCrdInstance();
-    },
+  spec: {
+    appName: '',
+    callUser: '',
+    dbName: '',
+    dbType: '',
+    // operator: '',
+    podSelector: {},
+    targetDb: '',
   },
 };
-</script>
+const formData = ref({
+  ...initFormData,
+});
 
-<style scoped>
-    @import './db_list.css';
-</style>
+// hooks
+const {
+  curCluster,
+  currentRow,
+  curPageData,
+  pagination,
+  tableLoading,
+  saving,
+  searchValue,
+  isShowCreate,
+  title,
+  formRef,
+  pageChange,
+  pageSizeChange,
+  handleGetExtData,
+  showCreateCrdSideslider,
+  showUpdateCrdSideslider,
+  createOrUpdateCrd,
+  deleteCrd,
+  handleClearSearchData,
+} = useCustomCrdList({
+  $crd: 'bcsdbprivconfigs.bkbcs.tencent.com',
+  $apiVersion: 'bkbcs.tencent.com/v1',
+  $kind: 'BcsDbPrivConfig',
+  clusterId: props.clusterId,
+  formData,
+  initFormData,
+});
+
+// 表单校验
+const rules = ref({
+  'metadata.name': [{
+    required: true,
+    message: $i18n.t('generic.validate.required'),
+    trigger: 'blur',
+  }],
+  'metadata.namespace': [{
+    required: true,
+    message: $i18n.t('generic.validate.required'),
+    trigger: 'blur',
+  }],
+  'spec.appName': [{
+    required: true,
+    message: $i18n.t('generic.validate.required'),
+    trigger: 'blur',
+  }],
+  'spec.callUser': [{
+    required: true,
+    message: $i18n.t('generic.validate.required'),
+    trigger: 'blur',
+  }],
+  'spec.dbName': [{
+    required: true,
+    message: $i18n.t('generic.validate.required'),
+    trigger: 'blur',
+  }],
+  'spec.dbType': [{
+    required: true,
+    message: $i18n.t('generic.validate.required'),
+    trigger: 'blur',
+  }],
+  'spec.targetDb': [{
+    required: true,
+    message: $i18n.t('generic.validate.required'),
+    trigger: 'blur',
+  }],
+  'spec.podSelector': [{
+    validator: () => !!Object.keys(formData.value.spec.podSelector).length,
+    message: $i18n.t('generic.validate.required'),
+    trigger: 'blur',
+  }],
+});
+
+// 详情页
+const isShowDetail = ref(false);
+const showDbDetail = (row) => {
+  currentRow.value = row;
+  isShowDetail.value = true;
+};
+</script>

@@ -64,5 +64,6 @@ export const GET_UNNAMED_VERSION_DATA = (): IConfigVersion => ({
   status: {
     publish_status: 'editing',
     released_groups: [],
+    fully_released: false,
   },
 });

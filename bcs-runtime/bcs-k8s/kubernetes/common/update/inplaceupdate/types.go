@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package inplaceupdate
@@ -35,6 +34,7 @@ const (
 )
 
 // InPlaceUpdateState records latest inplace-update state, including old statuses of containers.
+// nolint
 type InPlaceUpdateState struct {
 	// Revision is the updated revision hash.
 	Revision string `json:"revision"`
@@ -49,11 +49,13 @@ type InPlaceUpdateState struct {
 
 // InPlaceUpdateContainerStatus records the statuses of the container that are mainly used
 // to determine whether the InPlaceUpdate is completed.
+// nolint
 type InPlaceUpdateContainerStatus struct {
 	ImageID string `json:"imageID,omitempty"`
 }
 
 // InPlaceUpdateStrategy defines the strategies for in-place update.
+// nolint
 type InPlaceUpdateStrategy struct {
 	// GracePeriodSeconds is the timespan between set Pod status to not-ready and update images in Pod spec
 	// when in-place update a Pod.

@@ -8,15 +8,16 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package context xxx
 package context
 
 import (
 	hookv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
 )
 
+// CanaryContext xxx
 type CanaryContext interface {
 	CurrentHookRuns() []*hookv1alpha1.HookRun
 	OtherHookRuns() []*hookv1alpha1.HookRun

@@ -100,11 +100,12 @@
         </bk-table>
       </bcs-tab-panel>
       <bcs-tab-panel name="event" :label="$t('generic.label.event')">
-        <EventQueryTableVue
+        <EventQueryTable
           hide-cluster-and-namespace
           :kinds="data.kind"
           :namespace="data.metadata.namespace"
-          :name="data.metadata.name" />
+          :name="data.metadata.name"
+          :cluster-id="extData.clusterID" />
       </bcs-tab-panel>
     </bcs-tab>
   </div>
@@ -113,11 +114,11 @@
 import { defineComponent, ref, toRefs, watch } from 'vue';
 
 import StatusIcon from '@/components/status-icon';
-import EventQueryTableVue from '@/views/project-manage/event-query/event-query-table.vue';
+import EventQueryTable from '@/views/project-manage/event-query/event-query-table.vue';
 
 export default defineComponent({
   name: 'EndpointsDetail',
-  components: { StatusIcon, EventQueryTableVue },
+  components: { StatusIcon, EventQueryTable },
   props: {
     // 当前行数据
     data: {

@@ -677,10 +677,10 @@ func (l *loggingT) printf(s severity, format string, args ...interface{}) {
 	// if log content <= LineMaxSize, not need to handle.
 	logContentLen := uint32(len(logContent))
 	if logContentLen <= LineMaxSize() {
-		fmt.Fprintf(buf, logContent)
+		fmt.Fprint(buf, logContent)
 	} else {
 		halfLineMaxSize := LineMaxSize() / 2
-		fmt.Fprintf(buf, logContent[:halfLineMaxSize]+lineWrapStandard+logContent[logContentLen-halfLineMaxSize:])
+		fmt.Fprint(buf, logContent[:halfLineMaxSize]+lineWrapStandard+logContent[logContentLen-halfLineMaxSize:])
 	}
 
 	if buf.Bytes()[buf.Len()-1] != '\n' {
@@ -698,10 +698,10 @@ func (l *loggingT) printDepthf(s severity, format string, depth int, args ...int
 	// if log content <= LineMaxSize, not need to handle.
 	logContentLen := uint32(len(logContent))
 	if logContentLen <= LineMaxSize() {
-		fmt.Fprintf(buf, logContent)
+		fmt.Fprint(buf, logContent)
 	} else {
 		halfLineMaxSize := LineMaxSize() / 2
-		fmt.Fprintf(buf, logContent[:halfLineMaxSize]+lineWrapStandard+logContent[logContentLen-halfLineMaxSize:])
+		fmt.Fprint(buf, logContent[:halfLineMaxSize]+lineWrapStandard+logContent[logContentLen-halfLineMaxSize:])
 	}
 
 	if buf.Bytes()[buf.Len()-1] != '\n' {
@@ -732,19 +732,20 @@ func (l *loggingT) output(s severity, buf *buffer, file string, line int, alsoTo
 	}
 	data := buf.Bytes()
 	if l.toStderr {
-		os.Stderr.Write(data)
+		os.Stderr.Write(data) // nolint error not checked
 	} else {
 		if alsoToStderr || l.alsoToStderr || s >= l.stderrThreshold.get() {
-			os.Stderr.Write(data)
+			os.Stderr.Write(data) // nolint error not checked
 		}
 		if l.file == nil {
 			if err := l.createFiles(); err != nil {
+				// nolint error not checked
 				os.Stderr.Write(data) // Make sure the message appears somewhere.
 				l.exit(err)
 			}
 		}
 
-		l.file.Write(data)
+		l.file.Write(data) // nolint error not checked
 	}
 	if s == fatalLog {
 		// If we got here via Exit rather than Fatal, print no stacks.
@@ -758,14 +759,14 @@ func (l *loggingT) output(s severity, buf *buffer, file string, line int, alsoTo
 		// If -logtostderr has been specified, the loop below will do that anyway
 		// as the first stack in the full dump.
 		if !l.toStderr {
-			os.Stderr.Write(stacks(false))
+			os.Stderr.Write(stacks(false)) // nolint error not checked
 		}
 		// Write the stack trace for all goroutines to the files.
 		trace := stacks(true)
 		logExitFunc = func(error) {} // If we get a write error, we'll still exit below.
 		for log := fatalLog; log >= infoLog; log-- {
 			if l.file != nil { // Can be nil if -logtostderr is set.
-				l.file.Write(trace)
+				l.file.Write(trace) // nolint error not checked
 			}
 		}
 		l.mu.Unlock()
@@ -953,8 +954,8 @@ func (l *loggingT) lockAndFlushAll() {
 func (l *loggingT) flushAll() {
 	// Flush from fatal down, in case there's trouble flushing.
 	if l.file != nil {
-		l.file.Flush() // ignore error
-		l.file.Sync()  // ignore error
+		l.file.Flush() // nolint error not checked ignore error
+		l.file.Sync()  // nolint error not checked ignore error
 	}
 }
 
@@ -1016,7 +1017,7 @@ func (l *loggingT) setV(pc uintptr) Level {
 	fn := runtime.FuncForPC(pc)
 	file, _ := fn.FileLine(pc)
 	// The file is something like /a/b/c/d.go. We want just the d.
-	if strings.HasSuffix(file, ".go") {
+	if strings.HasSuffix(file, ".go") { // nolint
 		file = file[:len(file)-3]
 	}
 	if slash := strings.LastIndex(file, "/"); slash >= 0 {

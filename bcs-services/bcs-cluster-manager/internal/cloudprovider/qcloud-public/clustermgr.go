@@ -15,6 +15,7 @@ package qcloud
 import (
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"sort"
 	"sync"
@@ -326,7 +327,7 @@ func checkClusterOsNameInWhiteImages(cls *proto.Cluster, opt *cloudprovider.Comm
 
 // checkIfWhiteImageOsNames check cluster osName if it is white image osName
 func checkIfWhiteImageOsNames(opt *cloudprovider.ClusterGroupOption) bool {
-	if opt == nil || opt.Cluster == nil || opt.Group == nil {
+	if opt == nil || opt.Cluster == nil {
 		blog.Errorf("checkIfWhiteImageOsNames failed: %v", "option empty")
 		return false
 	}
@@ -345,7 +346,7 @@ func checkIfWhiteImageOsNames(opt *cloudprovider.ClusterGroupOption) bool {
 
 	// NOCC:ineffassign/assign(误报)
 	osName := ""
-	if opt.Group.NodeTemplate != nil && opt.Group.NodeTemplate.NodeOS != "" {
+	if opt.Group != nil && opt.Group.NodeTemplate != nil && opt.Group.NodeTemplate.NodeOS != "" {
 		osName = opt.Group.NodeTemplate.NodeOS
 		blog.Infof("checkIfWhiteImageOsNames[%s] osName[%s]", opt.Cluster.ClusterID, osName)
 		return utils.StringInSlice(osName, utils.WhiteImageOsName)
@@ -381,6 +382,7 @@ func updateClusterInfo(cloudID string, opt *cloudprovider.GetClusterOption) (*pr
 	if opt.Cluster.ClusterAdvanceSettings != nil {
 		opt.Cluster.ClusterAdvanceSettings.ContainerRuntime = *cls.ContainerRuntime
 		opt.Cluster.ClusterAdvanceSettings.RuntimeVersion = *cls.RuntimeVersion
+		opt.Cluster.ClusterAdvanceSettings.NetworkType = getTkeClusterNetworkType(cls)
 	}
 	if opt.Cluster.ClusterBasicSettings != nil {
 		opt.Cluster.ClusterBasicSettings.Version = *cls.ClusterVersion
@@ -1102,6 +1104,25 @@ func autoScaleClusterCidr(cls *proto.Cluster, needIPNum uint32) ([]string, error
 	}
 
 	return cidrList, nil
+}
+
+func getTkeClusterNetworkType(cluster *tke.Cluster) string {
+	property := *cluster.Property
+
+	propertyInfo := make(map[string]interface{})
+	err := json.Unmarshal([]byte(property), &propertyInfo)
+	if err != nil {
+		return ""
+	}
+	nType, ok := propertyInfo["NetworkType"]
+	if ok {
+		v, ok1 := nType.(string)
+		if ok1 {
+			return v
+		}
+	}
+
+	return ""
 }
 
 func getSurplusCidrList(mulList []string, step uint32) []uint32 {

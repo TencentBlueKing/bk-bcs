@@ -659,7 +659,7 @@ func (la *ListNodesInClusterAction) listNodes() error {
 
 	// get cluster nodes
 	k8sNodes := filterNodesRole(la.getK8sNodes(cmNodes), false)
-	la.nodes = mergeClusterNodes(la.req.ClusterID, cmNodes, k8sNodes)
+	la.nodes = mergeClusterNodes(la.cluster, cmNodes, k8sNodes)
 
 	return nil
 }

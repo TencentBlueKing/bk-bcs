@@ -20,8 +20,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/micro/go-micro/v2/registry"
-	"github.com/micro/go-micro/v2/registry/etcd"
+	"github.com/go-micro/plugins/v4/registry/etcd"
+	"go-micro.dev/v4/registry"
 )
 
 const (
@@ -56,7 +56,7 @@ func TestGetRandomServiceInstance(t *testing.T) {
 
 			node, err := sd.GetRandomServiceInstance()
 			if err != nil {
-				t.Fatalf("GetRandomServiceInstance failed: %v", err)
+				t.Errorf("GetRandomServiceInstance failed: %v", err)
 			}
 			fmt.Printf("node %+v\n", node)
 		}

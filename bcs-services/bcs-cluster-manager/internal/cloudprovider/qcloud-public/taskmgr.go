@@ -1077,9 +1077,10 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 
 	// setting all steps details
 	updateDesiredNodesTask := &UpdateDesiredNodesTaskOption{
-		Group:    group,
-		Desired:  desired,
-		Operator: opt.Operator,
+		Group:        group,
+		Desired:      desired,
+		Operator:     opt.Operator,
+		NodeSchedule: opt.NodeSchedule,
 	}
 
 	// step1. call qcloud interface to set desired nodes

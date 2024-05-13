@@ -25,9 +25,9 @@ const (
 	// DescendingFlag descending flag for query datas
 	DescendingFlag = "DESC"
 
-	// SQL select all columns
+	// SqlSelectAll SQL select all columns
 	SqlSelectAll = "*"
-	// SQL count all records
+	// SqlSelectCount SQL count all records
 	SqlSelectCount = "COUNT(*)"
 )
 

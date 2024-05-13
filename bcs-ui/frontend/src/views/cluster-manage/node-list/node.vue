@@ -1,9 +1,10 @@
 <!-- eslint-disable max-len -->
 <template>
-  <div :class="[
-    'cluster-node',
-    { 'px-[24px] py-[16px]': !fromCluster }
-  ]">
+  <div
+    :class="[
+      'cluster-node',
+      { 'px-[24px] py-[16px]': !fromCluster }
+    ]">
     <bcs-alert type="info" class="cluster-node-tip">
       <div slot="title">
         {{$t('cluster.nodeList.article1')}}
@@ -20,7 +21,7 @@
       </div>
     </bcs-alert>
     <!-- 修改节点转移模块 -->
-    <template v-if="['tencentCloud', 'tencentPublicCloud'].includes(curSelectedCluster.provider || '')">
+    <template v-if="['tencentCloud', 'tencentPublicCloud', 'gcpCloud', 'azureCloud'].includes(curSelectedCluster.provider || '')">
       <div class="flex items-center text-[12px]">
         <div class="text-[#979BA5] bcs-border-tips" v-bk-tooltips="$t('tke.tips.transferNodeCMDBModule')">
           {{ $t('tke.label.nodeModule.text') }}
@@ -64,10 +65,11 @@
     <div class="cluster-node-operate">
       <div class="left">
         <template v-if="fromCluster">
-          <span v-bk-tooltips="{
-            disabled: !isKubeConfig,
-            content: $t('cluster.nodeList.tips.disableImportClusterAction')
-          }">
+          <span
+            v-bk-tooltips="{
+              disabled: !isKubeConfigImportCluster,
+              content: $t('cluster.nodeList.tips.disableImportClusterAction')
+            }">
             <bcs-button
               theme="primary"
               icon="plus"
@@ -83,7 +85,7 @@
                   cluster_id: localClusterId
                 }
               }"
-              :disabled="isKubeConfig"
+              :disabled="isKubeConfigImportCluster || ['huaweiCloud'].includes(curSelectedCluster.provider || '')"
               @click="handleAddNode">
               {{$t('cluster.nodeList.create.text')}}
             </bcs-button>
@@ -128,9 +130,10 @@
             <li @click="handleBatchStopNodes">{{$t('generic.button.cordon.text')}}</li>
             <!-- 'REMOVE-FAILURE', 'ADD-FAILURE' 才支持删除 -->
             <li
-              :disabled="isImportCluster || selections.some(item => !['REMOVE-FAILURE', 'ADD-FAILURE'].includes(item.status))"
+              :disabled="isKubeConfigImportCluster
+                || selections.some(item => !['REMOVE-FAILURE', 'ADD-FAILURE'].includes(item.status))"
               v-bk-tooltips="{
-                disabled: !isImportCluster,
+                disabled: !isKubeConfigImportCluster,
                 content: $t('cluster.nodeList.tips.disableImportClusterAction')
               }"
               @click="handleBatchReAddNodes">{{$t('cluster.nodeList.button.retry')}}</li>
@@ -333,6 +336,7 @@
             {{ row.zoneName || row.zoneID ||'--' }}
           </template>
         </bcs-table-column>
+        <!-- 容器数量 -->
         <bcs-table-column
           :label="$t('dashboard.workload.container.counts')"
           min-width="100"
@@ -345,6 +349,24 @@
               <LoadingCell v-if="!nodeMetric[row.nodeName]" />
               <span v-else>
                 {{nodeMetric[row.nodeName].container_count || '--'}}
+              </span>
+            </template>
+            <span v-else>--</span>
+          </template>
+        </bcs-table-column>
+        <!-- Pod数量 -->
+        <bcs-table-column
+          :label="$t('cluster.nodeList.label.podCounts')"
+          min-width="100"
+          align="right"
+          prop="pod_count"
+          key="pod_count"
+          v-if="isColumnRender('pod_count')">
+          <template #default="{ row }">
+            <template v-if="['RUNNING', 'REMOVABLE'].includes(row.status)">
+              <LoadingCell v-if="!nodeMetric[row.nodeName]" />
+              <span v-else>
+                {{nodeMetric[row.nodeName].pod_count || '--'}}
               </span>
             </template>
             <span v-else>--</span>
@@ -490,7 +512,7 @@
                 text
                 class="mr10"
                 v-if="['REMOVE-FAILURE', 'ADD-FAILURE'].includes(row.status)"
-                :disabled="!row.inner_ip"
+                :disabled="!row.inner_ip || isCloudSelfNode(row)"
                 @click="handleRetry(row)"
               >{{ $t('cluster.ca.nodePool.records.action.retry') }}</bk-button>
               <bk-popover
@@ -513,9 +535,9 @@
                       </li>
                     </template>
                     <li
-                      :class="['bcs-dropdown-item', { disabled: isImportCluster && !row.nodeGroupID }]"
+                      :class="['bcs-dropdown-item', { disabled: isKubeConfigImportCluster || isCloudSelfNode(row) }]"
                       v-bk-tooltips="{
-                        disabled: !isImportCluster || row.nodeGroupID,
+                        disabled: !isKubeConfigImportCluster && !isCloudSelfNode(row),
                         content: $t('cluster.nodeList.tips.disableImportClusterAction'),
                         placement: 'right'
                       }"
@@ -590,7 +612,7 @@
     <!-- 设置污点 -->
     <bcs-sideslider
       :is-show.sync="taintConfig.isShow"
-      :title="$t('cluster.nodeList.button.setTaint')"
+      :title="`${$t('cluster.nodeList.button.setTaint')}(${taintConfig.nodes[0]?.nodeName})`"
       :width="750"
       :before-close="handleBeforeClose"
       quick-close
@@ -761,10 +783,10 @@ export default defineComponent({
       curNodeModule.value = node;
     };
     const handleSaveWorkerModule = async () => {
-      if (curModuleID.value === clusterData.value.clusterBasicSettings?.module?.workerModuleID) {
-        isEditModule.value = false;
-        return;
-      };
+      // if (String(curModuleID.value) === String(clusterData.value.clusterBasicSettings?.module?.workerModuleID)) {
+      //   isEditModule.value = false;
+      //   return;
+      // };
 
       $bkInfo({
         type: 'warning',
@@ -777,7 +799,7 @@ export default defineComponent({
           const result = await setClusterModule({
             $clusterId: props.clusterId,
             module: {
-              workerModuleID: curModuleID.value,
+              workerModuleID: String(curModuleID.value),
             },
             operator: $store.state.user?.username,
           }).then(() => true)
@@ -955,12 +977,12 @@ export default defineComponent({
       {
         id: 'container_count',
         label: $i18n.t('dashboard.workload.container.counts'),
-        disabled: true,
+        // disabled: true,
       },
       {
         id: 'pod_count',
         label: $i18n.t('cluster.nodeList.label.podCounts'),
-        disabled: true,
+        // disabled: true,
       },
       {
         id: 'labels',
@@ -977,79 +999,90 @@ export default defineComponent({
       {
         id: 'pod_usage',
         label: $i18n.t('metrics.podUsage'),
-        disabled: true,
+        // disabled: true,
       },
       {
         id: 'cpu_usage',
         label: $i18n.t('metrics.cpuUsage'),
-        disabled: true,
+        // disabled: true,
       },
       {
         id: 'memory_usage',
         label: $i18n.t('metrics.memUsage'),
-        disabled: true,
+        // disabled: true,
+      },
+      {
+        label: $i18n.t('metrics.cpuRequestUsage.text'),
+        id: 'cpu_request_usage',
+      },
+      {
+        label: $i18n.t('metrics.memRequestUsage.text'),
+        id: 'memory_request_usage',
       },
       {
         id: 'disk_usage',
         label: $i18n.t('metrics.diskUsage'),
-        disabled: true,
+        // disabled: true,
       },
       {
         id: 'diskio_usage',
         label: $i18n.t('metrics.diskIOUsage2'),
-        disabled: true,
+        // disabled: true,
       },
     ];
     // 表格指标列配置
-    const metricColumnConfig = ref([
-      {
-        label: $i18n.t('metrics.podUsage'),
-        prop: 'pod_usage',
-        color: '#3a84ff',
-        percent: ['pod_count', 'pod_total'], // 分子和分母
-        unit: 'int',
-      },
-      {
-        label: $i18n.t('metrics.cpuUsage'),
-        prop: 'cpu_usage',
-        color: '#3ede78',
-        percent: ['cpu_used', 'cpu_total'], // 分子和分母
-        unit: 'cpu',
-      },
-      {
-        label: $i18n.t('metrics.memUsage'),
-        prop: 'memory_usage',
-        color: '#3a84ff',
-        percent: ['memory_used', 'memory_total'], // 分子和分母
-        unit: 'byte',
-      },
-      {
-        label: $i18n.t('metrics.cpuRequestUsage.text'),
-        prop: 'cpu_request_usage',
-        percent: ['cpu_request', 'cpu_total'], // 分子和分母
-        color: '#3ede78',
-        unit: 'cpu',
-      },
-      {
-        label: $i18n.t('metrics.memRequestUsage.text'),
-        prop: 'memory_request_usage',
-        percent: ['memory_request', 'memory_total'], // 分子和分母
-        color: '#3a84ff',
-        unit: 'byte',
-      },
-      {
-        label: $i18n.t('metrics.diskUsage'),
-        prop: 'disk_usage',
-        color: '#853cff',
-        percent: ['disk_used', 'disk_total'], // 分子和分母
-        unit: 'byte',
-      },
-      {
-        label: $i18n.t('metrics.diskIOUsage'),
-        prop: 'diskio_usage',
-        color: '#853cff',
-      },
-    ]);
+    const metricColumnConfig = computed(() => {
+      const data = [
+        {
+          label: $i18n.t('metrics.podUsage'),
+          prop: 'pod_usage',
+          color: '#3a84ff',
+          percent: ['pod_count', 'pod_total'], // 分子和分母
+          unit: 'int',
+        },
+        {
+          label: $i18n.t('metrics.cpuUsage'),
+          prop: 'cpu_usage',
+          color: '#3ede78',
+          percent: ['cpu_used', 'cpu_total'], // 分子和分母
+          unit: 'cpu',
+        },
+        {
+          label: $i18n.t('metrics.memUsage'),
+          prop: 'memory_usage',
+          color: '#3a84ff',
+          percent: ['memory_used', 'memory_total'], // 分子和分母
+          unit: 'byte',
+        },
+        {
+          label: $i18n.t('metrics.cpuRequestUsage.text'),
+          prop: 'cpu_request_usage',
+          percent: ['cpu_request', 'cpu_total'], // 分子和分母
+          color: '#3ede78',
+          unit: 'cpu',
+        },
+        {
+          label: $i18n.t('metrics.memRequestUsage.text'),
+          prop: 'memory_request_usage',
+          percent: ['memory_request', 'memory_total'], // 分子和分母
+          color: '#3a84ff',
+          unit: 'byte',
+        },
+        {
+          label: $i18n.t('metrics.diskUsage'),
+          prop: 'disk_usage',
+          color: '#853cff',
+          percent: ['disk_used', 'disk_total'], // 分子和分母
+          unit: 'byte',
+        },
+        {
+          label: $i18n.t('metrics.diskIOUsage'),
+          prop: 'diskio_usage',
+          color: '#853cff',
+        },
+      ];
+      return data.filter(item => tableSetting.value.selectedFields.some(field => field.id === item.prop));
+    });
 
     const {
       tableSetting,
@@ -1087,9 +1120,15 @@ export default defineComponent({
     const { clusterList } = useClusterList();
     const curSelectedCluster = computed<Partial<ICluster>>(() => clusterList.value
       .find(item => item.clusterID === localClusterId.value) || {});
-    // 导入集群
     const isImportCluster = computed(() => curSelectedCluster.value.clusterCategory === 'importer');
-    const isKubeConfig = computed(() => isImportCluster.value && curSelectedCluster.value.importCategory === 'kubeConfig');
+    // kubeConfig导入集群
+    const isKubeConfigImportCluster = computed(() => curSelectedCluster.value.clusterCategory === 'importer'
+      && curSelectedCluster.value.importCategory === 'kubeConfig');
+    // cloud私有节点
+    const isCloudSelfNode = row => curSelectedCluster.value.clusterCategory === 'importer'
+      && (curSelectedCluster.value.provider === 'gcpCloud' || curSelectedCluster.value.provider === 'azureCloud'
+      || curSelectedCluster.value.provider === 'huaweiCloud')
+      && !row.nodeGroupID;
     // 全量表格数据
     const tableData = ref<any[]>([]);
 
@@ -1244,12 +1283,12 @@ export default defineComponent({
       curPageData: filterFailureCurTableData,
     });
     // kubeConfig导入、选中节点含有运行中状态、含有非节点池节点不让删除
-    const disableBatchDelete = computed(() => isKubeConfig.value
+    const disableBatchDelete = computed(() => isKubeConfigImportCluster.value
     || selections.value.some(item => item.status === 'RUNNING')
     || (isImportCluster.value && selections.value.some(item => !item.nodeGroupID)));
 
     const disableBatchDeleteTips = computed(() => {
-      if (isKubeConfig.value) {
+      if (isKubeConfigImportCluster.value) {
         return $i18n.t('cluster.nodeList.tips.disableImportClusterAction');
       }
       if ((isImportCluster.value && selections.value.some(item => !item.nodeGroupID))) {
@@ -1388,7 +1427,9 @@ export default defineComponent({
       set(setLabelConf, 'value', Object.assign(setLabelConf.value, {
         data: labelArr,
         rows,
-        title: rows.length > 1 ? $i18n.t('cluster.nodeList.title.batchSetLabel.text') : $i18n.t('cluster.nodeList.button.setLabel'),
+        title: rows.length > 1
+          ? $i18n.t('cluster.nodeList.title.batchSetLabel.text')
+          : `${$i18n.t('cluster.nodeList.button.setLabel')}(${rows[0]?.nodeName})`,
         keyDesc: rows.length > 1 ? $i18n.t('cluster.nodeList.title.batchSetLabel.desc') : '',
       }));
       reset();
@@ -1512,7 +1553,7 @@ export default defineComponent({
       curCheckedNodes.value = [];
     };
     const handleDeleteNode = async (row) => {
-      if (isImportCluster.value && !row.nodeGroupID) return;
+      if (isKubeConfigImportCluster.value || isCloudSelfNode(row)) return;
 
       curCheckedNodes.value = [row];
       showDeleteDialog.value = true;
@@ -1670,7 +1711,7 @@ export default defineComponent({
     // 重新添加节点
     const handleBatchReAddNodes = () => {
       if (!selections.value.length
-      || isImportCluster.value
+      || isKubeConfigImportCluster.value
       || selections.value.some(item => !['REMOVE-FAILURE', 'ADD-FAILURE'].includes(item.status))) return;
 
       bkComfirmInfo({
@@ -2010,8 +2051,7 @@ export default defineComponent({
       podDisabled,
       webAnnotations,
       curProject,
-      isImportCluster,
-      isKubeConfig,
+      isKubeConfigImportCluster,
       KEY_REGEXP,
       VALUE_REGEXP,
       showBatchMenu,
@@ -2032,6 +2072,7 @@ export default defineComponent({
       delNode,
       deleteMode,
       deleting,
+      isCloudSelfNode,
     };
   },
 });

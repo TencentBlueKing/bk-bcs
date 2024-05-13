@@ -14,8 +14,11 @@ package bcs
 
 import (
 	"context"
+	"fmt"
 	"testing"
+	"time"
 
+	cachenum30 "github.com/num30/go-cache"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
@@ -28,4 +31,43 @@ func TestGetProject(t *testing.T) {
 	project, err := GetProject(ctx, config.G.BCS, getTestProjectId())
 	assert.NoError(t, err)
 	assert.Equal(t, project.ProjectId, getTestProjectId())
+}
+
+func BenchmarkCacheNum30Set(b *testing.B) {
+	b.StopTimer()
+	cacheKey := fmt.Sprintf("bcs.GetProject:%s", "bluking")
+	project := Project{
+		Name:          "blueking",
+		ProjectId:     "blueking",
+		Code:          "1",
+		CcBizID:       "1",
+		Creator:       "joker",
+		Kind:          "project",
+		RawCreateTime: "20240220",
+	}
+	goCache := cachenum30.New[*Project](5*time.Second, 10*time.Second)
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		goCache.Set(cacheKey, &project, cachenum30.DefaultExpiration)
+	}
+}
+
+func BenchmarkCacheNum30Get(b *testing.B) {
+	b.StopTimer()
+	cacheKey := fmt.Sprintf("bcs.GetProject:%s", "bluking")
+	project := Project{
+		Name:          "blueking",
+		ProjectId:     "blueking",
+		Code:          "1",
+		CcBizID:       "1",
+		Creator:       "joker",
+		Kind:          "project",
+		RawCreateTime: "20240220",
+	}
+	goCache := cachenum30.New[*Project](5*time.Second, 10*time.Second)
+	goCache.Set(cacheKey, &project, cachenum30.DefaultExpiration)
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		goCache.Get(cacheKey)
+	}
 }

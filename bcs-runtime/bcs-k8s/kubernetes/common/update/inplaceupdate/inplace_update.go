@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package inplaceupdate xxx
 package inplaceupdate
 
 import (
@@ -18,13 +18,14 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/update"
 	apps "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/util/retry"
 	"k8s.io/klog"
+
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/update"
 )
 
 // UpdateOptions is the option of update
@@ -119,6 +120,7 @@ func (c *realControl) Update(pod *v1.Pod, oldRevision, newRevision *apps.Control
 	return UpdateResult{InPlaceUpdate: true, DelayDuration: delayDuration}
 }
 
+// nolint `opts` is unused
 func (c *realControl) refreshCondition(pod *v1.Pod, opts *UpdateOptions) error {
 	// no need to update condition because of no readiness-gate
 	if !containsReadinessGate(pod) {
@@ -156,6 +158,7 @@ func (c *realControl) updateCondition(pod *v1.Pod, condition v1.PodCondition) er
 	})
 }
 
+// nolint `opts` is unused
 func (c *realControl) finishGracePeriod(pod *v1.Pod, opts *UpdateOptions) (time.Duration, error) {
 	var delayDuration time.Duration
 	err := retry.RetryOnConflict(retry.DefaultBackoff, func() error {
@@ -204,6 +207,7 @@ func (c *realControl) finishGracePeriod(pod *v1.Pod, opts *UpdateOptions) (time.
 	return delayDuration, err
 }
 
+// nolint `opts` is unused
 func (c *realControl) updatePodInPlace(pod *v1.Pod, spec *update.UpdateSpec, opts *UpdateOptions) error {
 	return retry.RetryOnConflict(retry.DefaultBackoff, func() error {
 		clone, err := c.adp.GetPod(pod.Namespace, pod.Name)

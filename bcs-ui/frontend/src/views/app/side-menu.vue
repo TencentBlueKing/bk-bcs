@@ -17,18 +17,32 @@
       :has-child="menu.children && !!menu.children.length"
       :disabled="disabledMenuIDs.includes(menu.id)"
       @click="handleChangeMenu(menu)">
-      <span :title="menu.title">{{ menu.title }}</span>
-      <bcs-tag theme="danger" v-if="menu.tag">{{ menu.tag }}</bcs-tag>
+      <a
+        :class="[
+          'flex items-center justify-between no-underline',
+          activeMenu.id === menu.id ? 'text-[#3a84ff]' : 'text-[#63656e]'
+        ]"
+        :href="menu.children && !!menu.children.length ? 'javascript:void(0)' : resolveMenuLink(menu)">
+        <span :title="menu.title">{{ menu.title }}</span>
+        <bcs-tag theme="danger" v-if="menu.tag">{{ menu.tag }}</bcs-tag>
+      </a>
       <template #child>
         <bcs-navigation-menu-item
           v-for="child in menu.children"
           :key="child.id"
           :id="child.id"
-          :icon="['bcs-icon', child.icon]"
+          :icon="child.icon ? ['bcs-icon', child.icon] : ' '"
           :disabled="disabledMenuIDs.includes(child.id)"
           @click="handleChangeMenu(child)">
-          <span :title="child.title">{{ child.title }}</span>
-          <bcs-tag theme="danger" v-if="child.tag">{{ child.tag }}</bcs-tag>
+          <a
+            :class="[
+              'flex items-center justify-between no-underline',
+              activeMenu.id === child.id ? 'text-[#3a84ff]' : 'text-[#63656e]'
+            ]"
+            :href="resolveMenuLink(child)">
+            <span :title="child.title">{{ child.title }}</span>
+            <bcs-tag theme="danger" v-if="child.tag">{{ child.tag }}</bcs-tag>
+          </a>
         </bcs-navigation-menu-item>
       </template>
     </bcs-navigation-menu-item>
@@ -73,12 +87,24 @@ export default defineComponent({
         } else {
           activeMenu.value = menu || {};
           activeNav.value = menu?.root || {};
-          $store.commit('updateCurSideMenu', activeMenu.value);
+          // 更新当前一级导航信息
+          $store.commit('updateCurNav', activeMenu.value);
         }
       },
       { immediate: true },
     );
 
+    // 菜单link
+    const resolveMenuLink = (item: IMenu) => {
+      if (item.id === 'MONITOR') return `${window.BKMONITOR_HOST}/?space_uid=bkci__${projectCode.value}#/k8s`;
+      const { href } = $router.resolve({
+        name: item.route || item.children?.[0]?.route || '404',
+        params: {
+          projectCode: $store.getters.curProjectCode,
+        },
+      });
+      return href;
+    };
     // 切换菜单
     const { projectCode } = useProject();
     const handleBeforeNavChange = () => false;
@@ -103,6 +129,7 @@ export default defineComponent({
       disabledMenuIDs,
       handleChangeMenu,
       handleBeforeNavChange,
+      resolveMenuLink,
     };
   },
 });

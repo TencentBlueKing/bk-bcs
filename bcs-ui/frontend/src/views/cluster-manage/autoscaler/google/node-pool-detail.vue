@@ -314,15 +314,16 @@ export default defineComponent({
       {
         title: clusterList.value.find(item => item.clusterID === props.clusterId)?.clusterName,
         link: {
-          name: 'clusterDetail',
+          name: 'clusterMain',
         },
       },
       {
         title: 'Cluster Autoscaler',
         link: {
-          name: 'clusterDetail',
+          name: 'clusterMain',
           query: {
             active: 'autoscaler',
+            clusterId: props.clusterId,
           },
         },
       },

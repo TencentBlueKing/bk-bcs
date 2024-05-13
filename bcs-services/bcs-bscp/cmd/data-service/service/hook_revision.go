@@ -40,7 +40,7 @@ func (s *Service) CreateHookRevision(ctx context.Context,
 
 	if _, err := s.dao.HookRevision().GetByName(kt, req.Attachment.BizId, req.Attachment.HookId,
 		req.Spec.Name); err == nil {
-		return nil, fmt.Errorf("hook name %s already exists", req.Spec.Name)
+		return nil, fmt.Errorf("hook revision name %s already exists", req.Spec.Name)
 	}
 
 	spec, err := req.Spec.HookRevisionSpec()
@@ -346,11 +346,6 @@ func (s *Service) ListHookRevisionReferences(ctx context.Context,
 			Type:         result.HookType,
 			Deprecated:   result.Deprecated,
 		})
-	}
-
-	if err != nil {
-		logs.Errorf("list group current releases failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, err
 	}
 
 	resp := &pbds.ListHookRevisionReferencesResp{

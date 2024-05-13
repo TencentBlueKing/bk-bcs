@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package clustermanager
@@ -27,6 +26,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/scalingconfig"
 )
 
+// httpTimeOut time out 5 second
 const httpTimeOut = 5 * time.Second
 
 // NodePoolClientInterface defines the interface of node pool client
@@ -379,10 +379,12 @@ func (npc *NodePoolClient) SyncParams(opts scalingconfig.Options) error {
 	return nil
 }
 
+// new uint32 pointer
 func newUint32Ptr(val uint32) *uint32 {
 	return &val
 }
 
+// new int32 pointer
 func newInt32Ptr(val int32) *int32 {
 	return &val
 }

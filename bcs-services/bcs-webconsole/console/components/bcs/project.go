@@ -33,6 +33,9 @@ type Project struct {
 	RawCreateTime string `json:"createTime"`
 }
 
+// localProjectCache : project cache with generics
+var localProjectCache = storage.NewSlotCache[*Project]()
+
 // String :
 func (p *Project) String() string {
 	var displayCode string
@@ -52,8 +55,8 @@ func (p *Project) CreateTime() (time.Time, error) {
 // GetProject 通过 project_id/code 获取项目信息
 func GetProject(ctx context.Context, bcsConf *config.BCSConf, projectIDOrCode string) (*Project, error) {
 	cacheKey := fmt.Sprintf("bcs.GetProject:%s", projectIDOrCode)
-	if cacheResult, ok := storage.LocalCache.Slot.Get(cacheKey); ok {
-		return cacheResult.(*Project), nil
+	if cacheResult, ok := localProjectCache.Slot.Get(cacheKey); ok {
+		return cacheResult, nil
 	}
 
 	url := fmt.Sprintf("%s/bcsapi/v4/bcsproject/v1/projects/%s", bcsConf.InnerHost, projectIDOrCode)
@@ -71,7 +74,7 @@ func GetProject(ctx context.Context, bcsConf *config.BCSConf, projectIDOrCode st
 		return nil, err
 	}
 
-	storage.LocalCache.Slot.Set(cacheKey, project, storage.LocalCache.DefaultExpiration)
+	localProjectCache.Slot.Set(cacheKey, project, localProjectCache.DefaultExpiration)
 
 	return project, nil
 }

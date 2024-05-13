@@ -24,6 +24,14 @@
           @click="handleSelectVersion(version)">
           <div :class="['dot', version.status.publish_status]"></div>
           <div class="version-name">{{ version.spec.name }}</div>
+          <div
+            v-if="version.status.fully_released"
+            :class="['all-tag', { 'full-release': version.status.fully_release }]"
+            v-bk-tooltips="{
+              content: version.status.fully_release ? t('当前线上全量版本') : t('历史全量上线过的版本'),
+            }">
+            All
+          </div>
           <Ellipsis class="action-more-icon" @mouseenter="handlePopShow(version, $event)" @mouseleave="handlePopHide" />
         </section>
         <TableEmpty v-if="searchStr && versionsInView.length === 0" :is-search-empty="true" @clear="searchStr = ''" />
@@ -158,6 +166,10 @@
       };
       const res = await getConfigVersionList(props.bkBizId, props.appId, params);
       versionList.value = [unNamedVersion, ...res.data.details];
+      const index = versionList.value.findIndex((version: IConfigVersion) =>
+        version.status.released_groups.some((group) => group.id === 0),
+      );
+      if (index > -1) versionList.value[index].status.fully_release = true;
     } catch (e) {
       console.error(e);
     } finally {
@@ -319,9 +331,31 @@
         background: #e5f6ea;
       }
     }
+    .all-tag {
+      position: absolute;
+      right: 53px;
+      top: 0;
+      transform: translateY(50%);
+      width: 31px;
+      height: 22px;
+      font-size: 12px;
+      background: #fafbfd;
+      border: 1px solid #dcdee5;
+      border-radius: 2px;
+      color: #63656e;
+      text-align: center;
+      line-height: 22px;
+      &.full-release {
+        background: #e4faf0;
+        border: 1px solid #14a5684d;
+        border-radius: 2px;
+        color: #14a568;
+      }
+    }
   }
   .version-name {
     height: 42px;
+    width: 140px;
     line-height: 42px;
     font-size: 12px;
     color: #313238;

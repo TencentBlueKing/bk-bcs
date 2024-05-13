@@ -6,31 +6,25 @@ package bcsproject
 import (
 	fmt "fmt"
 	_ "github.com/envoyproxy/protoc-gen-validate/validate"
-	proto "github.com/golang/protobuf/proto"
 	_ "github.com/golang/protobuf/ptypes/struct"
 	_ "github.com/golang/protobuf/ptypes/wrappers"
 	_ "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger/options"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
+	proto "google.golang.org/protobuf/proto"
 	math "math"
 )
 
 import (
 	context "context"
-	api "github.com/micro/go-micro/v2/api"
-	client "github.com/micro/go-micro/v2/client"
-	server "github.com/micro/go-micro/v2/server"
+	api "go-micro.dev/v4/api"
+	client "go-micro.dev/v4/client"
+	server "go-micro.dev/v4/server"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
-
-// This is a compile-time assertion to ensure that this generated file
-// is compatible with the proto package it is being compiled against.
-// A compilation error at this line likely means your copy of the
-// proto package needs to be updated.
-const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ api.Endpoint
@@ -42,46 +36,43 @@ var _ server.Option
 
 func NewBCSProjectEndpoints() []*api.Endpoint {
 	return []*api.Endpoint{
-		&api.Endpoint{
+		{
 			Name:    "BCSProject.CreateProject",
 			Path:    []string{"/bcsproject/v1/projects"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "BCSProject.GetProject",
 			Path:    []string{"/bcsproject/v1/projects/{projectIDOrCode}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "BCSProject.UpdateProject",
 			Path:    []string{"/bcsproject/v1/projects/{projectID}"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "BCSProject.DeleteProject",
 			Path:    []string{"/bcsproject/v1/projects/{projectID}"},
 			Method:  []string{"DELETE"},
-			Body:    "",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "BCSProject.ListProjects",
 			Path:    []string{"/bcsproject/v1/projects"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "BCSProject.ListAuthorizedProjects",
 			Path:    []string{"/bcsproject/v1/authorized_projects"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "BCSProject.ListProjectsForIAM",
 			Path:    []string{"/bcsproject/v1/projects_for_iam"},
 			Method:  []string{"GET"},
@@ -214,7 +205,6 @@ func RegisterBCSProjectHandler(s server.Server, hdlr BCSProjectHandler, opts ...
 		Name:    "BCSProject.CreateProject",
 		Path:    []string{"/bcsproject/v1/projects"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -227,14 +217,12 @@ func RegisterBCSProjectHandler(s server.Server, hdlr BCSProjectHandler, opts ...
 		Name:    "BCSProject.UpdateProject",
 		Path:    []string{"/bcsproject/v1/projects/{projectID}"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "BCSProject.DeleteProject",
 		Path:    []string{"/bcsproject/v1/projects/{projectID}"},
 		Method:  []string{"DELETE"},
-		Body:    "",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -294,19 +282,19 @@ func (h *bCSProjectHandler) ListProjectsForIAM(ctx context.Context, in *ListProj
 
 func NewBusinessEndpoints() []*api.Endpoint {
 	return []*api.Endpoint{
-		&api.Endpoint{
+		{
 			Name:    "Business.GetBusiness",
 			Path:    []string{"/bcsproject/v1/projects/{projectCode}/business"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Business.ListBusiness",
 			Path:    []string{"/bcsproject/v1/business"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Business.GetBusinessTopology",
 			Path:    []string{"/bcsproject/v1/projects/{projectCode}/business/topology"},
 			Method:  []string{"GET"},
@@ -424,75 +412,67 @@ func (h *businessHandler) GetBusinessTopology(ctx context.Context, in *GetBusine
 
 func NewNamespaceEndpoints() []*api.Endpoint {
 	return []*api.Endpoint{
-		&api.Endpoint{
+		{
 			Name:    "Namespace.CreateNamespace",
 			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Namespace.CreateNamespaceCallback",
 			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/callback/create"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Namespace.UpdateNamespace",
 			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Namespace.UpdateNamespaceCallback",
 			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/callback/update"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Namespace.GetNamespace",
 			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Namespace.ListNamespaces",
 			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Namespace.DeleteNamespace",
 			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}"},
 			Method:  []string{"DELETE"},
-			Body:    "",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Namespace.DeleteNamespaceCallback",
 			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/callback/delete"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Namespace.SyncNamespace",
 			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/sync"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Namespace.WithdrawNamespace",
 			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/withdraw"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Namespace.ListNativeNamespaces",
 			Path:    []string{"/bcsproject/v1/projects/{projectIDOrCode}/clusters/{clusterID}/native/namespaces"},
 			Method:  []string{"GET"},
@@ -677,28 +657,24 @@ func RegisterNamespaceHandler(s server.Server, hdlr NamespaceHandler, opts ...se
 		Name:    "Namespace.CreateNamespace",
 		Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Namespace.CreateNamespaceCallback",
 		Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/callback/create"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Namespace.UpdateNamespace",
 		Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Namespace.UpdateNamespaceCallback",
 		Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/callback/update"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -717,28 +693,24 @@ func RegisterNamespaceHandler(s server.Server, hdlr NamespaceHandler, opts ...se
 		Name:    "Namespace.DeleteNamespace",
 		Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}"},
 		Method:  []string{"DELETE"},
-		Body:    "",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Namespace.DeleteNamespaceCallback",
 		Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/callback/delete"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Namespace.SyncNamespace",
 		Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/sync"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Namespace.WithdrawNamespace",
 		Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/withdraw"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -802,93 +774,85 @@ func (h *namespaceHandler) ListNativeNamespaces(ctx context.Context, in *ListNat
 
 func NewVariableEndpoints() []*api.Endpoint {
 	return []*api.Endpoint{
-		&api.Endpoint{
+		{
 			Name:    "Variable.CreateVariable",
 			Path:    []string{"/bcsproject/v1/projects/{projectCode}/variables"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Variable.UpdateVariable",
 			Path:    []string{"/bcsproject/v1/projects/{projectCode}/variables/{variableID}"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Variable.ListVariableDefinitions",
 			Path:    []string{"/bcsproject/v1/projects/{projectCode}/variables"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Variable.DeleteVariableDefinitions",
 			Path:    []string{"/bcsproject/v1/projects/{projectCode}/variables"},
 			Method:  []string{"DELETE"},
-			Body:    "",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Variable.ListClustersVariables",
 			Path:    []string{"/bcsproject/v1/projects/{projectCode}/variables/{variableID}/cluster"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Variable.ListNamespacesVariables",
 			Path:    []string{"/bcsproject/v1/projects/{projectCode}/variables/{variableID}/namespace"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Variable.UpdateClustersVariables",
 			Path:    []string{"/bcsproject/v1/projects/{projectCode}/variables/{variableID}/cluster"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Variable.UpdateNamespacesVariables",
 			Path:    []string{"/bcsproject/v1/projects/{projectCode}/variables/{variableID}/namespace"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Variable.ListClusterVariables",
 			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/variables"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Variable.ListNamespaceVariables",
 			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/variables"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Variable.UpdateClusterVariables",
 			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/variables"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Variable.UpdateNamespaceVariables",
 			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/variables"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Variable.ImportVariables",
 			Path:    []string{"/bcsproject/v1/projects/{projectCode}/variables/import"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Variable.RenderVariables",
 			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/variables/render"},
 			Method:  []string{"GET"},
@@ -1112,14 +1076,12 @@ func RegisterVariableHandler(s server.Server, hdlr VariableHandler, opts ...serv
 		Name:    "Variable.CreateVariable",
 		Path:    []string{"/bcsproject/v1/projects/{projectCode}/variables"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Variable.UpdateVariable",
 		Path:    []string{"/bcsproject/v1/projects/{projectCode}/variables/{variableID}"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -1132,7 +1094,6 @@ func RegisterVariableHandler(s server.Server, hdlr VariableHandler, opts ...serv
 		Name:    "Variable.DeleteVariableDefinitions",
 		Path:    []string{"/bcsproject/v1/projects/{projectCode}/variables"},
 		Method:  []string{"DELETE"},
-		Body:    "",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -1151,14 +1112,12 @@ func RegisterVariableHandler(s server.Server, hdlr VariableHandler, opts ...serv
 		Name:    "Variable.UpdateClustersVariables",
 		Path:    []string{"/bcsproject/v1/projects/{projectCode}/variables/{variableID}/cluster"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Variable.UpdateNamespacesVariables",
 		Path:    []string{"/bcsproject/v1/projects/{projectCode}/variables/{variableID}/namespace"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -1177,21 +1136,18 @@ func RegisterVariableHandler(s server.Server, hdlr VariableHandler, opts ...serv
 		Name:    "Variable.UpdateClusterVariables",
 		Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/variables"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Variable.UpdateNamespaceVariables",
 		Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/variables"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Variable.ImportVariables",
 		Path:    []string{"/bcsproject/v1/projects/{projectCode}/variables/import"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -1267,13 +1223,13 @@ func (h *variableHandler) RenderVariables(ctx context.Context, in *RenderVariabl
 
 func NewHealthzEndpoints() []*api.Endpoint {
 	return []*api.Endpoint{
-		&api.Endpoint{
+		{
 			Name:    "Healthz.Healthz",
 			Path:    []string{"/bcsproject/v1/healthz"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "Healthz.Ping",
 			Path:    []string{"/bcsproject/v1/ping"},
 			Method:  []string{"GET"},

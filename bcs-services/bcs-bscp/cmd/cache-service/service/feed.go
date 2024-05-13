@@ -226,3 +226,45 @@ func (s *Service) ListEventsMeta(ctx context.Context, req *pbcs.ListEventsReq) (
 
 	return &pbcs.ListEventsResp{List: pbcs.PbEventMeta(metas)}, nil
 }
+
+// SetClientMetric set client metric
+func (s *Service) SetClientMetric(ctx context.Context, req *pbcs.SetClientMetricReq) (*pbcs.SetClientMetricResp,
+	error) {
+	kt := kit.FromGrpcContext(ctx)
+	err := s.op.SetClientMetric(kt, req.BizId, req.AppId, req.Payload)
+	if err != nil {
+		return nil, err
+	}
+	return &pbcs.SetClientMetricResp{}, nil
+}
+
+// SetAsyncDownloadTask set async download task
+func (s *Service) SetAsyncDownloadTask(ctx context.Context, req *pbcs.SetAsyncDownloadTaskReq) (
+	*pbcs.SetAsyncDownloadTaskResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+	task := &types.AsyncDownloadTaskCache{
+		BizID:    req.BizId,
+		AppID:    req.AppId,
+		TaskID:   req.TaskId,
+		FilePath: req.FilePath,
+		FileName: req.FileName,
+	}
+	err := s.op.SetAsyncDownloadTask(kt, req.BizId, req.TaskId, task)
+	if err != nil {
+		return nil, err
+	}
+	return &pbcs.SetAsyncDownloadTaskResp{}, nil
+}
+
+// GetAsyncDownloadTask get async download task
+func (s *Service) GetAsyncDownloadTask(ctx context.Context, req *pbcs.GetAsyncDownloadTaskReq) (
+	*pbcs.JsonRawResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+	task, err := s.op.GetAsyncDownloadTask(kt, req.BizId, req.TaskId)
+	if err != nil {
+		return nil, err
+	}
+	return &pbcs.JsonRawResp{
+		JsonRaw: task,
+	}, nil
+}

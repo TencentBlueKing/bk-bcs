@@ -48,6 +48,19 @@ func PbReleaseSpec(spec *table.ReleaseSpec) *ReleaseSpec {
 	}
 }
 
+// PbReleaseStatus convert table ReleaseSpec to pb ReleaseStatus
+//
+//nolint:revive
+func PbReleaseStatus(spec *table.ReleaseSpec) *ReleaseStatus {
+	if spec == nil {
+		return nil
+	}
+
+	return &ReleaseStatus{
+		FullyReleased: spec.FullyReleased,
+	}
+}
+
 // ReleaseAttachment convert pb ReleaseAttachment to table ReleaseAttachment
 func (m *ReleaseAttachment) ReleaseAttachment() *table.ReleaseAttachment {
 	if m == nil {
@@ -97,5 +110,6 @@ func PbRelease(rl *table.Release) *Release {
 		Spec:       PbReleaseSpec(rl.Spec),
 		Attachment: PbReleaseAttachment(rl.Attachment),
 		Revision:   pbbase.PbCreatedRevision(rl.Revision),
+		Status:     PbReleaseStatus(rl.Spec),
 	}
 }

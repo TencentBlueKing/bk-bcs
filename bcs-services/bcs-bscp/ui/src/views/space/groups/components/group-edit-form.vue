@@ -42,7 +42,7 @@
         <bk-input v-model="rule.key" style="width: 174px" placeholder="key" @change="ruleChange"></bk-input>
         <bk-select
           :model-value="rule.op"
-          style="width: 72px"
+          style="width: 82px"
           :clearable="false"
           @change="handleLogicChange(index, $event)">
           <bk-option v-for="op in GROUP_RULE_OPS" :key="op.id" :value="op.id" :label="op.name"></bk-option>

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package v2
@@ -27,13 +26,8 @@ import (
 	networkclientset "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/clientset/versioned"
 	networkinformers "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/informers/externalversions"
 	networklisters "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/listers/cloud/v1"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/config"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/internal/cache"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/pkg/actions"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/pkg/metrics"
 	pbcloudnet "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/api/protocol/cloudnetservice"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/pkg/grpclb"
-
 	"google.golang.org/grpc"
 	grpccredentials "google.golang.org/grpc/credentials"
 	v1 "k8s.io/api/core/v1"
@@ -46,6 +40,11 @@ import (
 	clientGoCache "k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
 	schedulerapi "k8s.io/kubernetes/pkg/scheduler/api"
+
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/config"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/internal/cache"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/pkg/actions"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/pkg/metrics"
 )
 
 // IpScheduler k8s scheduler extender api for bcs cloud netservice
@@ -76,6 +75,7 @@ type IpScheduler struct {
 var DefaultIpScheduler *IpScheduler
 
 // NewIpScheduler create a v2 IpScheduler
+// nolint funlen
 func NewIpScheduler(conf *config.CustomSchedulerConfig) (*IpScheduler, error) {
 	// set up signals so we handle the first shutdown signal gracefully
 	stopCh := signals.SetupSignalHandler()
@@ -98,6 +98,7 @@ func NewIpScheduler(conf *config.CustomSchedulerConfig) (*IpScheduler, error) {
 		conn, err = grpc.Dial(
 			"",
 			grpc.WithInsecure(),
+			// nolint grpc.WithBalancer is deprecated
 			grpc.WithBalancer(grpc.RoundRobin(grpclb.NewPseudoResolver(conf.CloudNetserviceEndpoints))),
 		)
 	} else {
@@ -113,6 +114,7 @@ func NewIpScheduler(conf *config.CustomSchedulerConfig) (*IpScheduler, error) {
 		conn, err = grpc.Dial(
 			"",
 			grpc.WithTransportCredentials(grpccredentials.NewTLS(tlsConfig)),
+			// nolint grpc.WithBalancer is deprecated
 			grpc.WithBalancer(grpc.RoundRobin(grpclb.NewPseudoResolver(conf.CloudNetserviceEndpoints))),
 		)
 	}
@@ -212,9 +214,7 @@ func HandleIpSchedulerPredicate(extenderArgs schedulerapi.ExtenderArgs) (*schedu
 	} else {
 		// unmatched annotation, skip to schedule with IpSchedulerV2
 		blog.Infof("pod %s without cni annotation, skip to schedule with IpSchedulerV2 ", extenderArgs.Pod.Name)
-		for _, node := range extenderArgs.Nodes.Items {
-			canSchedule = append(canSchedule, node)
-		}
+		canSchedule = append(canSchedule, extenderArgs.Nodes.Items...)
 	}
 
 	metrics.ReportK8sCustomSchedulerNodeNum(actions.IpSchedulerV2, actions.CanSchedulerNodeNumKey,
@@ -268,6 +268,7 @@ func HandleIpSchedulerBinding(extenderBindingArgs schedulerapi.ExtenderBindingAr
 		DefaultIpScheduler.CacheLock.Unlock()
 		return fmt.Errorf("no enough resource to bind to node %s/%s", extenderBindingArgs.Node, nodeAddr)
 	}
+	// nolint
 	DefaultIpScheduler.NodeIPCache.UpdateResource(&cache.Resource{
 		PodName:      extenderBindingArgs.PodName,
 		PodNamespace: extenderBindingArgs.PodNamespace,
@@ -292,6 +293,7 @@ func HandleIpSchedulerBinding(extenderBindingArgs schedulerapi.ExtenderBindingAr
 		context.Background(), bind, metav1.CreateOptions{})
 	if err != nil {
 		DefaultIpScheduler.CacheLock.Lock()
+		// nolint
 		DefaultIpScheduler.NodeIPCache.DeleteResource(
 			cache.GetMetaKey(extenderBindingArgs.PodName, extenderBindingArgs.PodNamespace))
 		DefaultIpScheduler.CacheLock.Unlock()
@@ -331,6 +333,7 @@ func (i *IpScheduler) OnDelete(del interface{}) {
 	}
 	blog.Infof("pod %s/%s is deletd", delPod.GetName(), delPod.GetNamespace())
 	i.CacheLock.Lock()
+	// nolint
 	i.NodeIPCache.DeleteResource(cache.GetMetaKey(delPod.GetName(), delPod.GetNamespace()))
 	i.CacheLock.Unlock()
 }
@@ -349,6 +352,7 @@ func (i *IpScheduler) initCache() error {
 	}
 	for _, ip := range cloudIPs {
 		if ip.GetNamespace() != "bcs-system" {
+			// nolint
 			i.NodeIPCache.UpdateResource(&cache.Resource{
 				PodName:      ip.Spec.PodName,
 				PodNamespace: ip.Spec.Namespace,
@@ -406,10 +410,7 @@ func (i *IpScheduler) checkQuota() bool {
 	i.QuotaLock.Lock()
 	defer i.QuotaLock.Unlock()
 	resList := i.NodeIPCache.GetAllResources()
-	if len(resList) < i.QuotaLimit {
-		return true
-	}
-	return false
+	return len(resList) < i.QuotaLimit
 }
 
 // checkSchedulable check whether a node is schedulable

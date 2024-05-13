@@ -1,10 +1,10 @@
 /*
- * Tencent is pleased to support the open source community by making Blueking Container Service available.,
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
  * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -22,12 +22,6 @@ import (
 	"sync"
 	"time"
 
-	"k8s.io/client-go/kubernetes"
-
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/k8s"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metric_manager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin_manager"
-
 	"github.com/prometheus/client_golang/prometheus"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -35,9 +29,14 @@ import (
 	"k8s.io/apimachinery/pkg/util/json"
 	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/restmapper"
 	"k8s.io/klog"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/k8s"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metric_manager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin_manager"
 )
 
 const (
@@ -49,7 +48,7 @@ type Plugin struct {
 	stopChan       chan int
 	opt            *Options
 	checkLock      sync.Mutex
-	testYamlString string
+	testYamlString string // nolint unused
 }
 
 var (
@@ -105,11 +104,11 @@ func (p *Plugin) Setup(configFilePath string) error {
 		objectMap := unstructuredObj.Object
 		updateNestedMap(objectMap, []string{"spec", "template", "metadata", "labels", "bcs-cluster-reporter"},
 			"bcs-cluster-reporter")
-		//updateNestedMap(objectMap, []string{"spec", "selector", "matchLabels", "bcs-cluster-reporter"},
+		// updateNestedMap(objectMap, []string{"spec", "selector", "matchLabels", "bcs-cluster-reporter"},
 		//      "bcs-cluster-reporter")
-		//updateNestedMap(objectMap, []string{"spec", "selector", "matchLabels", "bcs-cluster-reporter"},
+		// updateNestedMap(objectMap, []string{"spec", "selector", "matchLabels", "bcs-cluster-reporter"},
 		//      "bcs-cluster-reporter")
-		//klog.Info(objectMap)
+		// klog.Info(objectMap)
 		unstructuredObj.SetUnstructuredContent(objectMap)
 	default:
 		klog.Fatalf("workload %s type is %s, not supported, please use job, deployment, replicaset",
@@ -160,6 +159,7 @@ func (p *Plugin) Name() string {
 func int64Ptr(i int64) *int64 { return &i }
 
 // Check xxx
+// nolint funlen
 func (p *Plugin) Check() {
 	start := time.Now()
 	p.checkLock.Lock()
@@ -282,6 +282,7 @@ func (p *Plugin) Check() {
 }
 
 // test ClusterByCreateUnstructuredObj
+// nolint funlen
 func testClusterByCreateUnstructuredObj(unstructuredObj *unstructured.Unstructured, config *rest.Config, status *string,
 	interval int, clusterID string) (
 	workloadToScheduleCost, workloadToPodCost, worloadToRunningCost time.Duration, err error) {
@@ -531,7 +532,8 @@ func getWatchStatus(clientSet *kubernetes.Clientset, clusterUnstructuredObj *uns
 }
 
 // get Pod Life Cycle Time Point
-func getPodLifeCycleTimePoint(pod *v1.Pod, createStartTime time.Time) (workloadToScheduleCost, worloadToRunningCost time.Duration) {
+func getPodLifeCycleTimePoint(
+	pod *v1.Pod, createStartTime time.Time) (workloadToScheduleCost, worloadToRunningCost time.Duration) {
 	workloadToScheduleCost = 0
 	worloadToRunningCost = 0
 	for _, condition := range pod.Status.Conditions {

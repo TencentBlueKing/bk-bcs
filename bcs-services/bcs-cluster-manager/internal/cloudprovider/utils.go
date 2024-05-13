@@ -89,6 +89,8 @@ const (
 	ResourcePoolLabelAction = "resourcePoolLabel"
 	// CheckClusterCleanNodesAction 检测集群销毁节点状态
 	CheckClusterCleanNodesAction = "checkClusterCleanNodes"
+	// RemoveClusterNodesInnerTaintAction remove nodes inner taints
+	RemoveClusterNodesInnerTaintAction = "removeClusterNodesInnerTaint"
 	// LadderResourcePoolLabelAction 标签设置
 	LadderResourcePoolLabelAction = "yunti-ResourcePoolLabelTask"
 )
@@ -293,9 +295,30 @@ func UpdateClusterStatus(clusterID string, status string) (*proto.Cluster, error
 	return cluster, nil
 }
 
+// UpdateNodeGroupStatus set nodegroup status
+func UpdateNodeGroupStatus(nodeGroupID, status string) error {
+	group, err := GetStorageModel().GetNodeGroup(context.Background(), nodeGroupID)
+	if err != nil {
+		return err
+	}
+
+	group.Status = status
+	err = GetStorageModel().UpdateNodeGroup(context.Background(), group)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // GetClusterByID get cluster by clusterID
 func GetClusterByID(clusterID string) (*proto.Cluster, error) {
 	return GetStorageModel().GetCluster(context.Background(), clusterID)
+}
+
+// GetNodeGroupByID get nodeGroup by groupID
+func GetNodeGroupByID(nodeGroupId string) (*proto.NodeGroup, error) {
+	return GetStorageModel().GetNodeGroup(context.Background(), nodeGroupId)
 }
 
 // UpdateCluster set cluster status
@@ -1238,4 +1261,68 @@ func UpdateClusterErrMessage(clusterId string, message string) error {
 	}
 
 	return errLocal
+}
+
+// UpdateNodeGroupCloudNodeGroupID set nodegroup cloudNodeGroupID
+func UpdateNodeGroupCloudNodeGroupID(nodeGroupID string, newGroup *proto.NodeGroup) error {
+	group, err := GetStorageModel().GetNodeGroup(context.Background(), nodeGroupID)
+	if err != nil {
+		return err
+	}
+
+	group.CloudNodeGroupID = newGroup.CloudNodeGroupID
+	if group.AutoScaling != nil && group.AutoScaling.VpcID == "" {
+		group.AutoScaling.VpcID = newGroup.AutoScaling.VpcID
+	}
+	if group.LaunchTemplate != nil {
+		group.LaunchTemplate.InstanceChargeType = newGroup.LaunchTemplate.InstanceChargeType
+	}
+	err = GetStorageModel().UpdateNodeGroup(context.Background(), group)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// GetClusterResourceGroup cluster resource group
+func GetClusterResourceGroup(cls *proto.Cluster) string {
+	if cls.GetExtraInfo() == nil {
+		return ""
+	}
+
+	rg, ok := cls.GetExtraInfo()[common.ClusterResourceGroup]
+	if ok {
+		return rg
+	}
+
+	return ""
+}
+
+// GetNodeResourceGroup other resource group
+func GetNodeResourceGroup(cls *proto.Cluster) string {
+	if cls.GetExtraInfo() == nil {
+		return ""
+	}
+
+	rg, ok := cls.GetExtraInfo()[common.NodeResourceGroup]
+	if ok {
+		return rg
+	}
+
+	return ""
+}
+
+// ListProjectNotifyTemplates list project notify templates
+func ListProjectNotifyTemplates(projectId string) ([]proto.NotifyTemplate, error) {
+	condM := make(operator.M)
+	condM["projectid"] = projectId
+
+	cond := operator.NewLeafCondition(operator.Eq, condM)
+	templates, err := GetStorageModel().ListNotifyTemplate(context.Background(), cond, &storeopt.ListOption{})
+	if err != nil {
+		return nil, err
+	}
+
+	return templates, nil
 }

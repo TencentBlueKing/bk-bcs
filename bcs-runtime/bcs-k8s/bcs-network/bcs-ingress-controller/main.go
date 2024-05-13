@@ -1,15 +1,16 @@
 /*
- * Tencent is pleased to support the open source community by making Blueking Container Service available.,
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
  * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 
+// Package main xxx
 package main
 
 import (
@@ -20,26 +21,27 @@ import (
 	"strconv"
 	"time"
 
-	gocache "github.com/patrickmn/go-cache"
-	"github.com/pkg/errors"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
-	"sigs.k8s.io/controller-runtime/pkg/cache"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
-
-	"k8s.io/apimachinery/pkg/runtime"
-	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
-	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/log/zap"
-	"sigs.k8s.io/controller-runtime/pkg/metrics"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/ipv6server"
 	clbv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated/apis/clb/v1"
+	federationv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/federation/v1"
+	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
+	gocache "github.com/patrickmn/go-cache"
+	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/kubernetes"
+	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
+	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
+	"k8s.io/client-go/rest"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/cache"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
+	"sigs.k8s.io/controller-runtime/pkg/metrics"
+
 	ingressctrl "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/ingresscontroller"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/check"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
@@ -67,7 +69,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/nodecontroller"
 	portbindingctrl "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/portbindingcontroller"
 	portpoolctrl "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/portpoolcontroller"
-	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
 var (
@@ -77,9 +78,11 @@ var (
 func init() {
 	_ = clientgoscheme.AddToScheme(scheme)
 	_ = networkextensionv1.AddToScheme(scheme)
+	_ = federationv1.AddToScheme(scheme)
 	_ = clbv1.AddToScheme(scheme)
 }
 
+// nolint  funlen
 func main() {
 
 	opts := &option.ControllerOption{}
@@ -167,15 +170,16 @@ func main() {
 	// ingressCache 缓存ingress相关的service/workload信息，避免量大时影响ingress调谐时间
 	ingressCache := ingresscache.NewDefaultCache()
 	if err = (&ingressctrl.IngressReconciler{
-		Ctx:              context.Background(),
-		Client:           mgr.GetClient(),
-		Log:              ctrl.Log.WithName("controllers").WithName("Ingress"),
-		Option:           opts,
-		IngressEventer:   mgr.GetEventRecorderFor("bcs-ingress-controller"),
-		EpsFIlter:        ingressctrl.NewEndpointsFilter(mgr.GetClient(), ingressCache),
-		PodFilter:        ingressctrl.NewPodFilter(mgr.GetClient(), ingressCache),
-		IngressConverter: ingressConverter,
-		Cache:            ingressCache,
+		Ctx:                             context.Background(),
+		Client:                          mgr.GetClient(),
+		Log:                             ctrl.Log.WithName("controllers").WithName("Ingress"),
+		Option:                          opts,
+		IngressEventer:                  mgr.GetEventRecorderFor("bcs-ingress-controller"),
+		EpsFIlter:                       ingressctrl.NewEndpointsFilter(mgr.GetClient(), ingressCache),
+		PodFilter:                       ingressctrl.NewPodFilter(mgr.GetClient(), ingressCache),
+		MultiClusterEndpointSliceFilter: ingressctrl.NewMultiClusterEpsFilter(mgr.GetClient(), ingressCache),
+		IngressConverter:                ingressConverter,
+		Cache:                           ingressCache,
 	}).SetupWithManager(mgr); err != nil {
 		blog.Errorf("unable to create ingress reconciler, err %s", err.Error())
 		os.Exit(1)
@@ -238,9 +242,9 @@ func main() {
 		mgr.GetEventRecorderFor("bcs-ingress-controller"))
 	if err != nil {
 		blog.Errorf("create hook server failed, err %s", err.Error())
-		os.Exit(1)
+		os.Exit(1) // nolint
 	}
-	mgr.Add(webhookServer)
+	mgr.Add(webhookServer) // nolint
 
 	// init cloud loadbalance backend status collector
 	collector := cloudcollector.NewCloudCollector(lbClient, mgr.GetClient())

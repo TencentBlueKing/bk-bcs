@@ -20,6 +20,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/page"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/config"
 	nsm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/namespace"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/project"
 	vdm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/variabledefinition"
@@ -68,6 +69,9 @@ type ProjectModel interface {
 	ListVariableValuesInNamespace(ctx context.Context, clusterID, namespace string) ([]vvm.VariableValue, error)
 	ListVariableValuesInAllNamespace(ctx context.Context, clusterID string) ([]vvm.VariableValue, error)
 	DeleteVariableValuesByNamespace(ctx context.Context, clusterID, namespace string) (int64, error)
+
+	GetConfig(ctx context.Context, key string) (string, error)
+	SetConfig(ctx context.Context, key, value string) error
 }
 
 type modelSet struct {
@@ -75,6 +79,7 @@ type modelSet struct {
 	*nsm.ModelNamespace
 	*vdm.ModelVariableDefinition
 	*vvm.ModelVariableValue
+	*config.ModelConfig
 }
 
 var model *modelSet
@@ -86,6 +91,7 @@ func New(db drivers.DB) ProjectModel {
 		ModelNamespace:          nsm.New(db),
 		ModelVariableDefinition: vdm.New(db),
 		ModelVariableValue:      vvm.New(db),
+		ModelConfig:             config.New(db),
 	}
 }
 
@@ -96,6 +102,7 @@ func InitModel(db drivers.DB) {
 		ModelNamespace:          nsm.New(db),
 		ModelVariableDefinition: vdm.New(db),
 		ModelVariableValue:      vvm.New(db),
+		ModelConfig:             config.New(db),
 	}
 }
 

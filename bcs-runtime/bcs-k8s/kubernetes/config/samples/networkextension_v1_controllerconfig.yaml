@@ -1,0 +1,6 @@
+apiVersion: networkextension.bkbcs.tencent.com/v1
+kind: ControllerConfig
+metadata:
+  name: controllerconfig-sample
+spec:
+  # TODO(user): Add fields here

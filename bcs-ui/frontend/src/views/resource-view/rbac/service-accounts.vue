@@ -1,23 +1,46 @@
 <template>
   <BaseLayout title="ServiceAccounts" kind="ServiceAccount" category="service_accounts" type="rbac">
     <template
-      #default="{ curPageData, pageConf, nameValue, handleClearSearchData,
-                  handlePageChange, handlePageSizeChange, handleGetExtData,
-                  handleShowDetail, handleSortChange,handleUpdateResource,handleDeleteResource }">
+      #default="{
+        curPageData, pageConf, handleShowViewConfig,
+        handlePageChange, handlePageSizeChange, handleGetExtData,
+        handleShowDetail, handleSortChange,handleUpdateResource,handleDeleteResource,
+        clusterNameMap, goNamespace, isViewEditable, isClusterMode
+      }">
       <bk-table
         :data="curPageData"
         :pagination="pageConf"
         @page-change="handlePageChange"
         @page-limit-change="handlePageSizeChange"
         @sort-change="handleSortChange">
-        <bk-table-column :label="$t('generic.label.name')" prop="metadata.name" sortable>
+        <bk-table-column :label="$t('generic.label.name')" prop="metadata.name" sortable fixed="left">
           <template #default="{ row }">
             <bk-button
-              class="bcs-button-ellipsis" text
+              class="bcs-button-ellipsis"
+              text
+              :disabled="isViewEditable"
               @click="handleShowDetail(row)">{{ row.metadata.name }}</bk-button>
           </template>
         </bk-table-column>
-        <bk-table-column :label="$t('k8s.namespace')" prop="metadata.namespace" sortable></bk-table-column>
+        <bk-table-column :label="$t('cluster.labels.nameAndId')" v-if="!isClusterMode">
+          <template #default="{ row }">
+            <div class="flex flex-col py-[6px] h-[50px]">
+              <span class="bcs-ellipsis">{{ clusterNameMap[handleGetExtData(row.metadata.uid, 'clusterID')] }}</span>
+              <span class="bcs-ellipsis mt-[6px]">{{ handleGetExtData(row.metadata.uid, 'clusterID') }}</span>
+            </div>
+          </template>
+        </bk-table-column>
+        <bk-table-column :label="$t('k8s.namespace')" prop="metadata.namespace" sortable>
+          <template #default="{ row }">
+            <bk-button
+              class="bcs-button-ellipsis"
+              text
+              :disabled="isViewEditable"
+              @click="goNamespace(row)">
+              {{ row.metadata.namespace }}
+            </bk-button>
+          </template>
+        </bk-table-column>
         <bk-table-column label="Secrets">
           <template #default="{ row }">
             <span>{{ handleGetExtData(row.metadata.uid, 'secrets') || '--' }}</span>
@@ -29,7 +52,12 @@
               {{ handleGetExtData(row.metadata.uid, 'age') }}</span>
           </template>
         </bk-table-column>
-        <bk-table-column :label="$t('generic.label.action')" :resizable="false" width="150">
+        <bk-table-column
+          :label="$t('generic.label.action')"
+          :resizable="false"
+          width="150"
+          fixed="right"
+          v-if="!isViewEditable">
           <template #default="{ row }">
             <bk-button
               text
@@ -40,7 +68,10 @@
           </template>
         </bk-table-column>
         <template #empty>
-          <BcsEmptyTableStatus :type="nameValue ? 'search-empty' : 'empty'" @clear="handleClearSearchData" />
+          <BcsEmptyTableStatus
+            :button-text="$t('generic.button.resetSearch')"
+            type="search-empty"
+            @clear="handleShowViewConfig" />
         </template>
       </bk-table>
     </template>

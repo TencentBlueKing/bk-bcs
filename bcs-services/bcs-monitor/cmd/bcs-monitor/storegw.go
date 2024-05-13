@@ -16,8 +16,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/TencentBlueKing/bkmonitor-kits/logger"
-	"github.com/TencentBlueKing/bkmonitor-kits/logger/gokit"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/oklog/run"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
@@ -67,8 +66,8 @@ func StoreGWCmd() *cobra.Command {
 
 // runStoreGW
 func runStoreGW(ctx context.Context, g *run.Group, opt *option) error {
-	kitLogger := gokit.NewLogger(logger.StandardLogger())
-	gw, err := storegw.NewStoreGW(ctx, kitLogger, opt.reg, grpcAdvertiseIP, grpcAdvertisePortRangeStr,
+	logKit := blog.LogKit
+	gw, err := storegw.NewStoreGW(ctx, logKit, opt.reg, grpcAdvertiseIP, grpcAdvertisePortRangeStr,
 		config.G.StoreGWList, storegw.GetStoreSvr)
 	if err != nil {
 		return err
@@ -81,11 +80,11 @@ func runStoreGW(ctx context.Context, g *run.Group, opt *option) error {
 		httpProbe := prober.NewHTTP()
 		statusProber := prober.Combine(
 			httpProbe,
-			prober.NewInstrumentation(component.Store, kitLogger,
+			prober.NewInstrumentation(component.Store, logKit,
 				extprom.WrapRegistererWithPrefix("bcsmonitor_", opt.reg)),
 		)
 
-		httpSrv := httpserver.New(kitLogger, opt.reg, component.Store, httpProbe,
+		httpSrv := httpserver.New(logKit, opt.reg, component.Store, httpProbe,
 			httpserver.WithListen(utils.GetListenAddr(bindAddress, httpPort)),
 			httpserver.WithGracePeriod(time.Second*5),
 		)
@@ -110,7 +109,7 @@ func runStoreGW(ctx context.Context, g *run.Group, opt *option) error {
 	var endpoints *query.EndpointSet
 	{
 		var dialOpts []grpc.DialOption
-		dialOpts, err = extgrpc.StoreClientGRPCOpts(kitLogger, opt.reg, opt.tracer, false, false, "", "", "", "")
+		dialOpts, err = extgrpc.StoreClientGRPCOpts(logKit, opt.reg, opt.tracer, false, false, "", "", "", "")
 		if err != nil {
 			return errors.Wrap(err, "building gRPC client")
 		}
@@ -118,7 +117,7 @@ func runStoreGW(ctx context.Context, g *run.Group, opt *option) error {
 		// 现在的模式 thanos_store_nodes_grpc_connections metric 会有大量的 external_labels 且无实际用途, 使用一个临时 reg drop 掉
 		_reg := prometheus.NewRegistry()
 
-		endpoints = query.NewEndpointSet(kitLogger, _reg,
+		endpoints = query.NewEndpointSet(logKit, _reg,
 			func() (specs []*query.GRPCEndpointSpec) {
 				for _, addr := range gw.GetStoreAddrs() {
 					specs = append(specs, query.NewGRPCEndpointSpec(addr, true))
@@ -143,7 +142,7 @@ func runStoreGW(ctx context.Context, g *run.Group, opt *option) error {
 	}
 
 	// proxyStore grpc 服务
-	registryProxyStore(g, kitLogger, opt, endpoints)
+	registryProxyStore(g, logKit, opt, endpoints)
 
 	// 自定义 store grpc 服务
 	{
@@ -160,12 +159,12 @@ func runStoreGW(ctx context.Context, g *run.Group, opt *option) error {
 }
 
 // registryProxyStore registry proxy store
-func registryProxyStore(g *run.Group, kitLogger gokit.Logger, opt *option, endpoints *query.EndpointSet) {
+func registryProxyStore(g *run.Group, logKit blog.GlogKit, opt *option, endpoints *query.EndpointSet) {
 
-	proxyStore := store.NewProxyStore(kitLogger, opt.reg, endpoints.GetStoreClients, component.Query, nil,
+	proxyStore := store.NewProxyStore(logKit, opt.reg, endpoints.GetStoreClients, component.Query, nil,
 		time.Minute*2)
 	grpcProbe := prober.NewGRPC()
-	grpcSrv := grpcserver.New(kitLogger, opt.reg, nil, nil, nil, component.Store, grpcProbe,
+	grpcSrv := grpcserver.New(logKit, opt.reg, nil, nil, nil, component.Store, grpcProbe,
 		grpcserver.WithServer(store.RegisterStoreServer(proxyStore)),
 		grpcserver.WithListen(utils.GetListenAddr(bindAddress, grpcPort)),
 		grpcserver.WithGracePeriod(time.Duration(0)),

@@ -80,7 +80,11 @@ func NewDataJobHandler(opts HandlerOptions, client HandleClients, concurrency in
 
 // Consume consume data
 func (h *DataJobHandler) Consume(sub msgqueue.MessageQueue) error {
-	unSub, err := sub.Subscribe(msgqueue.HandlerWrap("data-job-handler", h.HandleQueue), h.filters, types.DataJobQueue)
+	unSub, err := sub.Subscribe(
+		msgqueue.NewHandlerWrapper("data-job-handler", h.HandleQueue),
+		h.filters,
+		types.DataJobQueue,
+	)
 	if err != nil {
 		blog.Errorf("subscribe err :%v", err)
 		return fmt.Errorf("subscribe err :%v", err)

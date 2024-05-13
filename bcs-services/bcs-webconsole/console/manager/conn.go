@@ -175,8 +175,12 @@ func (r *RemoteStreamConn) Write(p []byte) (int, error) {
 		return 0, nil
 	}
 
-	r.outputMsgChan <- outputMsg
-	return len(p), nil
+	select {
+	case <-r.ctx.Done():
+		return 0, r.ctx.Err()
+	case r.outputMsgChan <- outputMsg:
+		return len(p), nil
+	}
 }
 
 // Next : executor回调获取web是否resize
@@ -243,7 +247,7 @@ func (r *RemoteStreamConn) Run(c *gin.Context) error {
 }
 
 // WaitStreamDone : stream 流处理
-func (r *RemoteStreamConn) WaitStreamDone(podCtx *types.PodContext) error {
+func (r *RemoteStreamConn) WaitStreamDone(c *gin.Context, podCtx *types.PodContext) error {
 	defer r.Close()
 
 	k8sClient, err := k8sclient.GetK8SClientByClusterId(podCtx.AdminClusterId)
@@ -291,7 +295,7 @@ func (r *RemoteStreamConn) WaitStreamDone(podCtx *types.PodContext) error {
 	}
 
 	logger.Infof("close %s WaitStreamDone done", podCtx.PodName)
-	return nil
+	return errors.New(i18n.T(c, "BCS Console 服务端连接断开，请重新登录"))
 }
 
 // PreparedGuideMessage , 使用 PreparedMessage, gorilla 有缓存, 提高性能

@@ -585,6 +585,7 @@ export default defineComponent({
         cloudID: basicInfo.value.provider,
         region: networkConfig.value.region,
         networkType: networkConfig.value.networkType,
+        businessID: curProject.value.businessID,
       });
       vpcList.value = data.filter(item => item.available === 'true');
       vpcLoading.value = false;

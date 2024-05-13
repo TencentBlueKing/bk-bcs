@@ -22,6 +22,7 @@ import (
 
 func getClient() *Client {
 	cli, err := NewClient(Options{
+		EsbServer:  "xxx",
 		Server:     "xxx",
 		AppCode:    "xxx",
 		BKUserName: "xxx",
@@ -41,18 +42,16 @@ func TestClient_CreateBkOpsTask(t *testing.T) {
 		t.Fatal("client nil")
 	}
 
-	response, err := cli.CreateBkOpsTask("", &CreateTaskPathParas{
+	response, err := cli.CreateBkOpsTask(&CreateTaskPathParas{
 		BkBizID:    "3",
-		TemplateID: "xxx",
-		Operator:   "xxx",
+		TemplateID: "19",
+		Operator:   "admin",
 	}, &CreateTaskRequest{
 		// 模板来源
-		TemplateSource: string(CommonTpl),
+		TemplateSource: string(BusinessTpl),
 		TaskName:       fmt.Sprintf("add node:%s", "BCS-K8S-123"),
 		Constants: map[string]string{
-			"${biz_cc_id}":   "3",
-			"${job_ip_list}": "xxx,",
-			"${message}":     "xxxyyy",
+			"${ip}": "1.2.3.4",
 		},
 	})
 	if err != nil {
@@ -73,7 +72,7 @@ func TestClient_StartBkOpsTask(t *testing.T) {
 		TaskID:   "26",
 		Operator: "xxx",
 	}
-	result, err := cli.StartBkOpsTask("", req, &StartTaskRequest{
+	result, err := cli.StartBkOpsTask(req, &StartTaskRequest{
 		Scope: "cmdb_biz",
 	})
 	if err != nil {
@@ -90,7 +89,7 @@ func TestClient_StartBkOpsTask(t *testing.T) {
 		case <-ticker.C:
 		}
 
-		data, err := cli.GetTaskStatus("", req, &StartTaskRequest{
+		data, err := cli.GetTaskStatus(req, &StartTaskRequest{
 			Scope: "cmdb_biz",
 		})
 		if err != nil {

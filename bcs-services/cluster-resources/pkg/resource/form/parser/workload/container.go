@@ -178,9 +178,11 @@ func setDefaultProbe(probe *model.Probe) {
 func parseContainerRes(raw map[string]interface{}, res *model.ContainerRes) {
 	res.Requests.CPU = util.ConvertCPUUnit(mapx.GetStr(raw, "resources.requests.cpu"))
 	res.Requests.Memory = util.ConvertMemoryUnit(mapx.GetStr(raw, "resources.requests.memory"))
+	res.Requests.EphemeralStorage = util.ConvertStorageUnit(mapx.GetStr(raw, "resources.requests.ephemeral-storage"))
 	res.Requests.Extra = genResExtra(mapx.GetMap(raw, "resources.requests"))
 	res.Limits.CPU = util.ConvertCPUUnit(mapx.GetStr(raw, "resources.limits.cpu"))
 	res.Limits.Memory = util.ConvertMemoryUnit(mapx.GetStr(raw, "resources.limits.memory"))
+	res.Limits.EphemeralStorage = util.ConvertStorageUnit(mapx.GetStr(raw, "resources.limits.ephemeral-storage"))
 	res.Limits.Extra = genResExtra(mapx.GetMap(raw, "resources.limits"))
 }
 
@@ -188,7 +190,7 @@ func genResExtra(requirement map[string]interface{}) []model.ResExtra {
 	extra := []model.ResExtra{}
 	for key, value := range requirement {
 		// cpu, memory 作为固定的指标，不会加入到 extra
-		if key == resCsts.MetricResCPU || key == resCsts.MetricResMem {
+		if key == resCsts.MetricResCPU || key == resCsts.MetricResMem || key == resCsts.MetricResEphemeralStorage {
 			continue
 		}
 		extra = append(extra, model.ResExtra{

@@ -27,4 +27,10 @@ resources:
 - group: networkextension
   kind: PortBinding
   version: v1
+- group: federation
+  kind: MultiClusterService
+  version: v1
+- group: federation
+  kind: MultiClusterEndpointSlice
+  version: v1
 version: "2"

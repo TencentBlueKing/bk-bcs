@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -79,8 +79,8 @@ func (c *Clb) batchDescribeListeners(region, lbID string, ports []int) (
 		}
 		var rules []networkextensionv1.ListenerRule
 		var tg *networkextensionv1.ListenerTargetGroup
-		switch *retLi.Protocol {
-		case ClbProtocolHTTP, ClbProtocolHTTPS:
+		protocol := *retLi.Protocol
+		if common.InLayer7Protocol(protocol) {
 			for _, retRule := range retLi.Rules {
 				rules = append(rules, networkextensionv1.ListenerRule{
 					RuleID:      *retRule.LocationId,
@@ -90,9 +90,9 @@ func (c *Clb) batchDescribeListeners(region, lbID string, ports []int) (
 					Certificate: ruleIDCertMap[*retRule.LocationId],
 				})
 			}
-		case ClbProtocolTCP, ClbProtocolUDP:
+		} else if common.InLayer4Protocol(protocol) {
 			tg = convertClbBackends(retLi.Targets)
-		default:
+		} else {
 			blog.Errorf("invalid protocol %s listener", *retLi.Protocol)
 			return nil, fmt.Errorf("invalid protocol %s listener", *retLi.Protocol)
 		}
@@ -153,6 +153,7 @@ func (c *Clb) batchCreate4LayerListener(
 		}
 		req.HealthCheck = transIngressHealtchCheck(listener.Spec.ListenerAttribute.HealthCheck)
 	}
+	req.Certificate = transIngressCertificate(listener.Spec.Certificate)
 
 	ctime := time.Now()
 	listenerIDs, err := c.sdkWrapper.CreateListener(region, req)
@@ -851,22 +852,21 @@ func (c *Clb) resolveCreateListener(region string, addListeners []*networkextens
 // resolveCreateListenerBatch listeners in same batch have same lb and attribute&cert
 func (c *Clb) resolveCreateListenerBatch(region, protocol string, batch []*networkextensionv1.Listener) (map[string]cloud.Result,
 	error) {
-	switch protocol {
-	case ClbProtocolHTTP, ClbProtocolHTTPS:
+	if common.InLayer7Protocol(protocol) {
 		liIDMap, err := c.batchCreate7LayerListener(region, batch)
 		if err != nil {
 			blog.Warnf("batch create 7 layer listener failed, err %s", err.Error())
 			return nil, err
 		}
 		return liIDMap, nil
-	case ClbProtocolTCP, ClbProtocolUDP:
+	} else if common.InLayer4Protocol(protocol) {
 		liIDMap, err := c.batchCreate4LayerListener(region, batch)
 		if err != nil {
 			blog.Warnf("batch create 4 layer listener failed, err %s", err.Error())
 			return nil, err
 		}
 		return liIDMap, nil
-	default:
+	} else {
 		blog.Warnf("invalid batch protocol %s", protocol)
 		return nil, fmt.Errorf("invalid batch protocol %s", protocol)
 	}
@@ -915,8 +915,9 @@ func (c *Clb) resolveUpdateListener(lbID, region string, updatedListeners []*net
 // group listeners have same protocol
 func (c *Clb) resolveUpdateListenerGroup(region string, group []*networkextensionv1.Listener,
 	cloudListenerGroup []*networkextensionv1.Listener) ([]error, error) {
-	switch group[0].Spec.Protocol {
-	case ClbProtocolHTTP, ClbProtocolHTTPS:
+	protocol := group[0].Spec.Protocol
+
+	if common.InLayer7Protocol(protocol) {
 		// layer7 -> http / https
 		isErrArr, err := c.batchUpdate7LayerListeners(region, group, cloudListenerGroup)
 		if err != nil {
@@ -924,7 +925,7 @@ func (c *Clb) resolveUpdateListenerGroup(region string, group []*networkextensio
 			return nil, err
 		}
 		return isErrArr, nil
-	case ClbProtocolTCP, ClbProtocolUDP:
+	} else if common.InLayer4Protocol(protocol) {
 		// layer4 -< tcp / udp
 		isErrArr, err := c.batchUpdate4LayerListener(region, group, cloudListenerGroup)
 		if err != nil {
@@ -932,7 +933,7 @@ func (c *Clb) resolveUpdateListenerGroup(region string, group []*networkextensio
 			return nil, err
 		}
 		return isErrArr, nil
-	default:
+	} else {
 		blog.Warnf("invalid batch protocol %s", group[0].Spec.Protocol)
 		return nil, fmt.Errorf("invalid batch protocol %s", group[0].Spec.Protocol)
 	}

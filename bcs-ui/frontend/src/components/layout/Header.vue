@@ -2,9 +2,23 @@
   <div class="content-header">
     <div class="content-header-title">
       <slot>
-        <i class="bcs-icon bcs-icon-arrows-left back" v-if="!hideBack" @click="goBack"></i>
+        <i class="bcs-icon bcs-icon-arrows-left back mr-[4px]" v-if="!hideBack" @click="goBack"></i>
         {{ title }}
         <span class="desc ml-[4px]" v-if="desc">{{ desc }}</span>
+        <template v-if="clusterId || namespace">
+          <bcs-divider direction="vertical"></bcs-divider>
+          <bcs-tag class="!ml-[0px]">
+            <template v-if="clusterId && namespace">
+              {{ $t('view.labels.clusterAndNs') }}: {{ `${clusterNameMap[clusterId]}/${namespace}` }}
+            </template>
+            <template v-else-if="clusterId && !namespace">
+              {{ $t('generic.label.cluster') }}: {{ clusterNameMap[clusterId] }}
+            </template>
+            <template v-else-if="!clusterId && namespace">
+              {{ $t('k8s.namespace') }}: {{ namespace }}
+            </template>
+          </bcs-tag>
+        </template>
       </slot>
     </div>
     <div class="content-header-doc">
@@ -24,6 +38,7 @@
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
 
+import { useCluster } from '@/composables/use-app';
 import $router from '@/router';
 
 export default defineComponent({
@@ -49,9 +64,18 @@ export default defineComponent({
       type: String,
       default: '',
     },
+    clusterId: {
+      type: String,
+      default: '',
+    },
+    namespace: {
+      type: String,
+      default: '',
+    },
   },
   emits: ['tab-change'],
   setup(props, ctx) {
+    const { clusterNameMap } = useCluster();
     const goBack = () => {
       $router.back();
     };
@@ -64,6 +88,7 @@ export default defineComponent({
     return {
       goBack,
       handleChangeTab,
+      clusterNameMap,
     };
   },
 });
@@ -80,6 +105,8 @@ export default defineComponent({
     padding: 0 24px;
     position: relative;
     &-title {
+        display: flex;
+        align-items: center;
         font-size: 16px;
         i {
             cursor: pointer;
@@ -116,8 +143,10 @@ export default defineComponent({
     }
     &-doc {
       font-size: 14px;
+      flex: 1;
       display: flex;
       align-items: center;
+      justify-content: flex-end;
     }
 }
 </style>

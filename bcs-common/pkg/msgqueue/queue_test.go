@@ -20,7 +20,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/micro/go-micro/v2/broker"
+	"go-micro.dev/v4/broker"
 )
 
 // MockPod data
@@ -152,7 +152,7 @@ func (h *testHandler) Name() string {
 }
 
 // Handle handle data
-func (h *testHandler) Handle(_ context.Context, data []byte) error {
+func (h *testHandler) Handle(ctx context.Context, data []byte) error {
 	var (
 		handlerData = &HandlerData{}
 		pod         = &MockPod{}

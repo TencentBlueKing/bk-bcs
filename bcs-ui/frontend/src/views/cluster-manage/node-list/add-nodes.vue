@@ -5,10 +5,11 @@
         <bk-radio-group v-model="nodeSource">
           <bk-radio
             value="ip"
-            :disabled="isImportCluster">
+            :disabled="isKubeConfigImportCluster"
+            v-if="['tencentCloud','tencentPublicCloud','bluekingCloud'].includes(provider)">
             <span
               v-bk-tooltips="{
-                disabled: !isImportCluster,
+                disabled: !isKubeConfigImportCluster,
                 content: $t('cluster.nodeList.tips.disableImportClusterAddNode')
               }">
               {{ $t('manualNode.title.source.existingServer') }}
@@ -16,7 +17,7 @@
           </bk-radio>
           <bk-radio
             value="nodePool"
-            v-if="curCluster && curCluster.autoScale">
+            v-if="curCluster && curCluster.autoScale && provider !== 'bluekingCloud'">
             {{ $t('manualNode.title.source.addFromNodePool') }}
           </bk-radio>
         </bk-radio-group>
@@ -54,19 +55,21 @@ export default defineComponent({
   setup(props) {
     const curCluster = computed<ICluster>(() => ($store.state as any).cluster.clusterList
       ?.find(item => item.clusterID === props.clusterId) || {});
-    const isImportCluster = computed(() => curCluster.value.clusterCategory === 'importer');
-
+    const isKubeConfigImportCluster = computed(() => curCluster.value.clusterCategory === 'importer'
+      && curCluster.value.importCategory === 'kubeConfig');
+    const provider = computed(() => curCluster.value.provider);
 
     const nodeSource = ref<'nodePool'|'ip'>('ip');
     const setDefaultNodeSource = () => {
-      if (isImportCluster.value) {
-        nodeSource.value = 'nodePool';
-      } else if (props.source) {
-        nodeSource.value = props.source;
-      } else if (curCluster.value.provider === 'tencentPublicCloud') {
-        nodeSource.value = 'nodePool';
-      } else {
-        nodeSource.value = 'ip';
+      switch (provider.value) {
+        case 'bluekingCloud':
+          nodeSource.value = 'ip';// bluekingCloud 只能添加IP节点
+          break;
+        case 'gcpCloud':
+          nodeSource.value = 'nodePool';// gcpCloud 只能通过节点池添加节点
+          break;
+        default:
+          nodeSource.value = props.source || 'nodePool';// 默认推荐节点池方式添加
       }
     };
 
@@ -75,7 +78,8 @@ export default defineComponent({
     });
 
     return {
-      isImportCluster,
+      isKubeConfigImportCluster,
+      provider,
       curCluster,
       nodeSource,
     };

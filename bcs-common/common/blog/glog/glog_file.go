@@ -35,7 +35,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -127,7 +126,9 @@ func (lk *logKeeper) remove(tag string) (ok bool) {
 		return
 	}
 	if err := lk.removeFile(block.name); err != nil {
-		log.Printf("remove file '%s' failed: %s", block.name, err.Error())
+		// 不能使用log输出，否则会死锁问题
+		// log.Printf("remove file '%s' failed: %s", block.name, err.Error())
+		fmt.Printf("remove file '%s' failed: %s", block.name, err.Error())
 	}
 	lk.head[tag] = block.next
 	block = nil // for GC
@@ -181,7 +182,7 @@ func (lk *logKeeper) load() {
 				lk.total[tag]++
 			} else {
 				if err = lk.removeFile(block.name); err != nil {
-					log.Printf("remove file '%s' failed: %s", block.name, err.Error())
+					fmt.Printf("remove file '%s' failed: %s", block.name, err.Error())
 				}
 			}
 		}

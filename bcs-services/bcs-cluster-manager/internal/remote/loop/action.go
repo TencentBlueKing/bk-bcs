@@ -69,8 +69,8 @@ func LoopDoFunc(ctx context.Context, do func() error, ops ...LoopOption) error {
 		case <-coldStart:
 		case <-tick:
 		case <-ctx.Done():
-			if errors.Is(ctx.Err(), context.Canceled) {
-				blog.Errorf("LoopDoFunc is canceled")
+			if errors.Is(ctx.Err(), context.Canceled) || errors.Is(ctx.Err(), context.DeadlineExceeded) {
+				blog.Errorf("LoopDoFunc is canceled or timeOut")
 			}
 			return ctx.Err()
 		}

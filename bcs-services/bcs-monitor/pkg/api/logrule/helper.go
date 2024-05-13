@@ -423,6 +423,10 @@ func (resp *GetLogRuleResp) loadFromEntity(e *entity.LogRule, lcs []bklog.ListBC
 			if v.Message() != "" {
 				resp.Message = v.Message()
 			}
+			if v.IsFileDeleted || v.IsSTDDeleted {
+				resp.Status = entity.DeletedStatus
+				resp.Message = getBkLogDeleteMessage(v.IsFileDeleted, v.IsSTDDeleted, resp.Message)
+			}
 			break
 		}
 	}
@@ -432,6 +436,19 @@ func (resp *GetLogRuleResp) loadFromEntity(e *entity.LogRule, lcs []bklog.ListBC
 		resp.RuleID = 0
 		resp.Status = entity.DeletedStatus
 	}
+}
+
+func getBkLogDeleteMessage(isFileDeleted, isSTDDeleted bool, originMessage string) string {
+	if isFileDeleted && isSTDDeleted {
+		return "log rule is deleted from bklog"
+	}
+	if isFileDeleted {
+		return "file log rule is deleted from bklog"
+	}
+	if isSTDDeleted {
+		return "std log rule is deleted from bklog"
+	}
+	return originMessage
 }
 
 // getContainerQueryLogLinks get container query log links

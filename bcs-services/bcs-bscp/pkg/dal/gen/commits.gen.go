@@ -31,6 +31,7 @@ func newCommit(db *gorm.DB, opts ...gen.DOOption) commit {
 	_commit.ContentID = field.NewUint32(tableName, "content_id")
 	_commit.Signature = field.NewString(tableName, "signature")
 	_commit.ByteSize = field.NewUint64(tableName, "byte_size")
+	_commit.Md5 = field.NewString(tableName, "md5")
 	_commit.Memo = field.NewString(tableName, "memo")
 	_commit.BizID = field.NewUint32(tableName, "biz_id")
 	_commit.AppID = field.NewUint32(tableName, "app_id")
@@ -51,6 +52,7 @@ type commit struct {
 	ContentID    field.Uint32
 	Signature    field.String
 	ByteSize     field.Uint64
+	Md5          field.String
 	Memo         field.String
 	BizID        field.Uint32
 	AppID        field.Uint32
@@ -77,6 +79,7 @@ func (c *commit) updateTableName(table string) *commit {
 	c.ContentID = field.NewUint32(table, "content_id")
 	c.Signature = field.NewString(table, "signature")
 	c.ByteSize = field.NewUint64(table, "byte_size")
+	c.Md5 = field.NewString(table, "md5")
 	c.Memo = field.NewString(table, "memo")
 	c.BizID = field.NewUint32(table, "biz_id")
 	c.AppID = field.NewUint32(table, "app_id")
@@ -107,11 +110,12 @@ func (c *commit) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (c *commit) fillFieldMap() {
-	c.fieldMap = make(map[string]field.Expr, 10)
+	c.fieldMap = make(map[string]field.Expr, 11)
 	c.fieldMap["id"] = c.ID
 	c.fieldMap["content_id"] = c.ContentID
 	c.fieldMap["signature"] = c.Signature
 	c.fieldMap["byte_size"] = c.ByteSize
+	c.fieldMap["md5"] = c.Md5
 	c.fieldMap["memo"] = c.Memo
 	c.fieldMap["biz_id"] = c.BizID
 	c.fieldMap["app_id"] = c.AppID

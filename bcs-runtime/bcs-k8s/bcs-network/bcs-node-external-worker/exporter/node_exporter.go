@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package exporter xxx
 package exporter
 
 import (
@@ -23,6 +23,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/google/uuid"
 	k8scorev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -30,7 +31,6 @@ import (
 	"k8s.io/client-go/util/retry"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-node-external-worker/httpsvr"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-node-external-worker/options"
 )
@@ -50,6 +50,7 @@ func (n *NodeExporter) Watch() {
 	ticker := time.NewTicker(time.Second * 5)
 	defer ticker.Stop()
 
+	// nolint
 	for {
 		select {
 		case <-ticker.C:
@@ -79,7 +80,7 @@ func (n *NodeExporter) Watch() {
 func (n *NodeExporter) retrieveExternalIP() (string, error) {
 	resp, err := n.HttpClient.Get(n.Opts.ExternalIPWebURL)
 	if err != nil {
-		return "", fmt.Errorf("http get failed, err: %w", err)
+		return "", fmt.Errorf("http get failed, err: %s", err.Error())
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
@@ -89,7 +90,7 @@ func (n *NodeExporter) retrieveExternalIP() (string, error) {
 	// 读取响应内容
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return "", fmt.Errorf("read response body failed, err: %w", err)
+		return "", fmt.Errorf("read response body failed, err: %s", err.Error())
 	}
 
 	externalIP := string(body)
@@ -142,7 +143,7 @@ func (n *NodeExporter) updateExternalIPInConfigMap(externalIP string) error {
 		if err := n.K8sClient.Get(context.Background(), k8stypes.NamespacedName{Namespace: n.Opts.Namespace,
 			Name: n.Opts.ExternalIPConfigMapName}, configMap); err != nil {
 			if !k8serrors.IsNotFound(err) {
-				return fmt.Errorf("get configmap failed, err: %w", err)
+				return fmt.Errorf("get configmap failed, err: %s", err.Error())
 			}
 			blog.Infof("not found configMap '%s/%s'", n.Opts.Namespace, n.Opts.ExternalIPConfigMapName)
 			if err = n.createExternalIPConfigmap(); err != nil {
@@ -154,8 +155,8 @@ func (n *NodeExporter) updateExternalIPInConfigMap(externalIP string) error {
 		configMap.Data[n.Opts.NodeName] = externalIP
 		return n.K8sClient.Update(n.Ctx, configMap)
 	}); err != nil {
-		return fmt.Errorf("get and update configmap'%s/%s' failed, %w ", n.Opts.Namespace,
-			n.Opts.ExternalIPConfigMapName, err)
+		return fmt.Errorf("get and update configmap'%s/%s' failed, %s ", n.Opts.Namespace,
+			n.Opts.ExternalIPConfigMapName, err.Error())
 	}
 	return nil
 }
@@ -171,7 +172,7 @@ func (n *NodeExporter) createExternalIPConfigmap() error {
 	}
 
 	if err := n.K8sClient.Create(n.Ctx, configMap); err != nil {
-		return fmt.Errorf("create config map in namespace[%s] failed, err %w", n.Opts.Namespace, err)
+		return fmt.Errorf("create config map in namespace[%s] failed, err %s", n.Opts.Namespace, err.Error())
 	}
 
 	return nil

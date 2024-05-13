@@ -22,6 +22,8 @@ import (
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/azure/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/azure/business"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 var vpcMgr sync.Once
@@ -95,13 +97,26 @@ func (vm *VPCManager) ListSubnets(vpcID, zone string, opt *cloudprovider.ListNet
 		var cidr string
 		if v.Properties != nil && v.Properties.AddressPrefix != nil {
 			cidr = *v.Properties.AddressPrefix
-
 		}
+
 		result = append(result, &proto.Subnet{
 			VpcID:      vpcID,
 			SubnetID:   *v.Name,
 			SubnetName: *v.Name,
 			CidrRange:  cidr,
+			AvailableIPAddressCount: func() uint64 {
+				totalIPs, errLocal := utils.ConvertCIDRToStep(cidr)
+				if errLocal != nil {
+					return 0
+				}
+
+				usedIpCnt, errLocal := business.SubnetUsedIpCount(context.Background(), opt, *v.ID)
+				if errLocal != nil {
+					return 0
+				}
+
+				return uint64(totalIPs - usedIpCnt - 5) // 减去5个系统保留的IP地址
+			}(),
 		})
 	}
 	return result, nil

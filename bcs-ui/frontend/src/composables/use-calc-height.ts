@@ -1,9 +1,10 @@
 import { throttle } from 'lodash';
-import { isRef, onBeforeUnmount, onMounted, Ref } from 'vue';
+import { isRef, onBeforeUnmount, onMounted, Ref, ref } from 'vue';
 
 type ElementType = string | HTMLElement | Ref<any>; // 节点
 
 interface IConfig {
+  id?: string | number
   offset?: number
   prop?: 'height' | 'max-height'
   el?: ElementType | ElementType[] // 要设置高度的元素
@@ -18,6 +19,7 @@ interface IConfig {
  * @returns
  */
 export default function useContentHeight(config: IConfig | IConfig[]) {
+  const style = ref<Record<string, any>>({});
   // 统一数据结构为数组
   const parseToArr = (data) => {
     if (!data) return [];
@@ -53,15 +55,21 @@ export default function useContentHeight(config: IConfig | IConfig[]) {
       return pre;
     }, config.offset || 0);
 
-    const style = {
+    const sty = {
       [prop || 'max-height']: `calc(100vh - ${offset}px)`,
     };
+
+    if (config.id) {
+      style.value[config.id] = sty;
+    } else {
+      style.value = sty;
+    }
 
     // 设置元素高度
     const elData = parseDomData(config.el);
     elData.forEach((el) => {
-      Object.keys(style).forEach((key) => {
-        el.style[key] = style[key];
+      Object.keys(sty).forEach((key) => {
+        el.style[key] = sty[key];
       });
     });
   };
@@ -76,7 +84,7 @@ export default function useContentHeight(config: IConfig | IConfig[]) {
     }));
 
     observer.observe(document.body, {
-      subtree: true,
+      subtree: true, // 性能问题
       childList: true,
       attributes: true,
     });
@@ -86,4 +94,8 @@ export default function useContentHeight(config: IConfig | IConfig[]) {
       observer.disconnect();
     });
   });
+
+  return {
+    style,
+  };
 }

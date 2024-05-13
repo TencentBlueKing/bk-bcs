@@ -14,12 +14,15 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"path"
 	"reflect"
 	"sort"
 	"strings"
 	"time"
+
+	"gorm.io/gorm"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
@@ -36,7 +39,7 @@ import (
 )
 
 // CreateConfigItem create config item.
-func (s *Service) CreateConfigItem(ctx context.Context, req *pbds.CreateConfigItemReq) (*pbds.CreateResp, error) {
+func (s *Service) CreateConfigItem(ctx context.Context, req *pbds.CreateConfigItemReq) (*pbds.CreateResp, error) { // nolint
 	grpcKit := kit.FromGrpcContext(ctx)
 
 	// validates unique key name+path both in table app_template_bindings and config_items
@@ -729,4 +732,186 @@ func (s *Service) ListConfigItemByTuple(ctx context.Context, req *pbds.ListConfi
 	}
 	resp := &pbds.ListConfigItemByTupleResp{ConfigItems: configItems}
 	return resp, nil
+}
+
+// UnDeleteConfigItem 配置项未命名版本恢复
+func (s *Service) UnDeleteConfigItem(ctx context.Context, req *pbds.UnDeleteConfigItemReq) (*pbbase.EmptyResp, error) { // nolint
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	// 判断是否需要恢复
+	configItem, err := s.dao.ConfigItem().Get(grpcKit, req.GetId(), req.Attachment.BizId)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	}
+	if configItem != nil && configItem.ID != 0 {
+		return nil, errors.New("The data has not been deleted")
+	}
+
+	// 获取该服务最新发布的 release_id
+	release, err := s.dao.Release().GetReleaseLately(grpcKit, req.Attachment.BizId, req.Attachment.AppId)
+	if err != nil {
+		return nil, err
+	}
+
+	// 通过最新发布 release_id + config_item_id 获取需要恢复的数据
+	releaseCi, err := s.dao.ReleasedCI().Get(grpcKit, req.Attachment.BizId,
+		release.Attachment.AppID, release.ID, req.GetId())
+	if err != nil {
+		return nil, err
+	}
+
+	ci, err := s.dao.ConfigItem().GetByUniqueKey(grpcKit, req.Attachment.BizId, req.Attachment.AppId,
+		releaseCi.ConfigItemSpec.Name, releaseCi.ConfigItemSpec.Path)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	}
+
+	commitID := []uint32{}
+	contentID := []uint32{}
+	tx := s.dao.GenQuery().Begin()
+	// 判断是不是新增的数据
+	if ci != nil && ci.ID != 0 {
+		rci, errCi := s.dao.ReleasedCI().Get(grpcKit, req.Attachment.BizId,
+			release.Attachment.AppID, release.ID, ci.ID)
+		if errCi != nil && !errors.Is(errCi, gorm.ErrRecordNotFound) {
+			return nil, errCi
+		}
+		if rci != nil && rci.ID != 0 {
+			return nil, errors.New("recovery failed. A file with the same path exists and is not in a new state")
+		}
+
+		err = s.dao.ConfigItem().DeleteWithTx(grpcKit, tx, ci)
+		if err != nil {
+			logs.Errorf("recover config item failed, err: %v, rid: %s", err, grpcKit.Rid)
+			if rErr := tx.Rollback(); rErr != nil {
+				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
+			}
+			return nil, err
+		}
+	}
+
+	// 恢复到最新发布的版本，删除修改的数据
+	// 获取大于最新发布版本的记录
+	rc, err := s.dao.Commit().ListCommitsByGtID(grpcKit, releaseCi.CommitID, req.Attachment.BizId,
+		req.Attachment.AppId, req.Id)
+	if err != nil {
+		return nil, err
+	}
+	for _, v := range rc {
+		commitID = append(commitID, v.ID)
+		contentID = append(contentID, v.Spec.ContentID)
+	}
+
+	if err = s.dao.Commit().BatchDeleteWithTx(grpcKit, tx, commitID); err != nil {
+		logs.Errorf("undo commit failed, err: %v, rid: %s", err, grpcKit.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
+		}
+		return nil, err
+	}
+
+	if err = s.dao.Content().BatchDeleteWithTx(grpcKit, tx, contentID); err != nil {
+		logs.Errorf("undo content failed, err: %v, rid: %s", err, grpcKit.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
+		}
+		return nil, err
+	}
+
+	data := &table.ConfigItem{
+		ID:         releaseCi.ConfigItemID,
+		Spec:       releaseCi.ConfigItemSpec,
+		Attachment: releaseCi.Attachment,
+		Revision:   releaseCi.Revision,
+	}
+	if err = s.dao.ConfigItem().RecoverConfigItem(grpcKit, tx, data); err != nil {
+		logs.Errorf("recover config item failed, err: %v, rid: %s", err, grpcKit.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
+		}
+		return nil, err
+	}
+	if e := tx.Commit(); e != nil {
+		logs.Errorf("commit transaction failed, err: %v, rid: %s", e, grpcKit.Rid)
+		return nil, e
+	}
+
+	return new(pbbase.EmptyResp), nil
+}
+
+// UndoConfigItem 撤消配置项
+func (s *Service) UndoConfigItem(ctx context.Context, req *pbds.UndoConfigItemReq) (*pbbase.EmptyResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	// 判断是否存在
+	_, err := s.dao.ConfigItem().Get(grpcKit, req.GetId(), req.Attachment.BizId)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("data does not exist")
+		}
+	}
+
+	// 获取该服务最新发布的 release_id
+	release, err := s.dao.Release().GetReleaseLately(grpcKit, req.Attachment.BizId, req.Attachment.AppId)
+	if err != nil {
+		return nil, err
+	}
+
+	// 通过最新发布 release_id + config_item_id 获取需要恢复的数据
+	releaseCi, err := s.dao.ReleasedCI().Get(grpcKit, req.Attachment.BizId,
+		release.Attachment.AppID, release.ID, req.GetId())
+	if err != nil {
+		return nil, err
+	}
+
+	rc, err := s.dao.Commit().ListCommitsByGtID(grpcKit, releaseCi.CommitID, req.Attachment.BizId,
+		req.Attachment.AppId, req.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	commitID := []uint32{}
+	contentID := []uint32{}
+	for _, v := range rc {
+		commitID = append(commitID, v.ID)
+		contentID = append(contentID, v.Spec.ContentID)
+	}
+
+	tx := s.dao.GenQuery().Begin()
+	if err = s.dao.Commit().BatchDeleteWithTx(grpcKit, tx, commitID); err != nil {
+		logs.Errorf("undo commit failed, err: %v, rid: %s", err, grpcKit.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
+		}
+		return nil, err
+	}
+
+	if err = s.dao.Content().BatchDeleteWithTx(grpcKit, tx, contentID); err != nil {
+		logs.Errorf("undo content failed, err: %v, rid: %s", err, grpcKit.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
+		}
+		return nil, err
+	}
+
+	data := &table.ConfigItem{
+		ID:         releaseCi.ConfigItemID,
+		Spec:       releaseCi.ConfigItemSpec,
+		Attachment: releaseCi.Attachment,
+		Revision:   releaseCi.Revision,
+	}
+
+	if err = s.dao.ConfigItem().UpdateWithTx(grpcKit, tx, data); err != nil {
+		logs.Errorf("recover config item failed, err: %v, rid: %s", err, grpcKit.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
+		}
+		return nil, err
+	}
+	if e := tx.Commit(); e != nil {
+		logs.Errorf("commit transaction failed, err: %v, rid: %s", e, grpcKit.Rid)
+		return nil, e
+	}
+
+	return new(pbbase.EmptyResp), nil
 }

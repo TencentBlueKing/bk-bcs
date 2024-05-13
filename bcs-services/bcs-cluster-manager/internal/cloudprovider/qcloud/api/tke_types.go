@@ -1435,6 +1435,8 @@ type DescribeExternalNodeScriptConfig struct {
 	Interface string `json:"Interface,omitempty"`
 	// 节点名称
 	Name string `json:"Name,omitempty"`
+	// 内外网脚本
+	Internal bool `json:"Internal,omitempty"`
 }
 
 func (cfg DescribeExternalNodeScriptConfig) validate() error {

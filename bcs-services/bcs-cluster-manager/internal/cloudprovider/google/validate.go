@@ -41,9 +41,9 @@ func init() {
 type CloudValidate struct {
 }
 
-// CreateClusterValidate check createCluster operation
+// CreateClusterValidate create cluster validate
 func (c *CloudValidate) CreateClusterValidate(req *proto.CreateClusterReq, opt *cloudprovider.CommonOption) error {
-	return nil
+	return cloudprovider.ErrCloudNotImplemented
 }
 
 // ImportClusterValidate check importCluster operation
@@ -215,7 +215,7 @@ func (c *CloudValidate) ListCloudSubnetsValidate(req *proto.ListCloudSubnetsRequ
 	return nil
 }
 
-// ListCloudVpcsValidate xxx
+// ListCloudVpcsValidate list vpcs validate
 func (c *CloudValidate) ListCloudVpcsValidate(req *proto.ListCloudVpcsRequest,
 	account *proto.Account) error {
 	return cloudprovider.ErrCloudNotImplemented

@@ -29,11 +29,12 @@
           </bk-table>
         </bcs-tab-panel>
         <bcs-tab-panel name="event" :label="$t('generic.label.event')">
-          <EventQueryTableVue
+          <EventQueryTable
             hide-cluster-and-namespace
             :kinds="data.kind"
             :namespace="data.metadata.namespace"
-            :name="data.metadata.name" />
+            :name="data.metadata.name"
+            :cluster-id="extData.clusterID" />
         </bcs-tab-panel>
       </bcs-tab>
     </div>
@@ -42,11 +43,11 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 
-import EventQueryTableVue from '@/views/project-manage/event-query/event-query-table.vue';
+import EventQueryTable from '@/views/project-manage/event-query/event-query-table.vue';
 
 export default defineComponent({
   name: 'ConfigMapsDetail',
-  components: { EventQueryTableVue },
+  components: { EventQueryTable },
   props: {
     // 当前行数据
     data: {

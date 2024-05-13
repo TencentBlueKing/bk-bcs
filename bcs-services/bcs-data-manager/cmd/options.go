@@ -15,7 +15,7 @@ package cmd
 
 import (
 	"crypto/tls"
-	"io/ioutil"
+	"os"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
@@ -207,7 +207,7 @@ func (opt *DataManagerOptions) GetEtcdRegistryTLS() (*tls.Config, error) {
 // ParseTspiderConfig parse config for tspider db
 func (opt *DataManagerOptions) ParseTspiderConfig() ([]*TspiderOption, error) {
 	config := []*TspiderOption{}
-	bytes, err := ioutil.ReadFile(opt.TspiderConfigPath)
+	bytes, err := os.ReadFile(opt.TspiderConfigPath)
 	if err != nil {
 		blog.Errorf("open tspider config file(%s) failed: %s", opt.TspiderConfigPath, err.Error())
 		return nil, err
@@ -226,7 +226,7 @@ func (opt *DataManagerOptions) ParseTspiderConfig() ([]*TspiderOption, error) {
 // ParseBkbaseConfig parse config for bkbase data
 func (opt *DataManagerOptions) ParseBkbaseConfig() (*types.BkbaseConfig, error) {
 	config := &types.BkbaseConfig{}
-	bytes, err := ioutil.ReadFile(opt.BkbaseConfigPath)
+	bytes, err := os.ReadFile(opt.BkbaseConfigPath)
 	if err != nil {
 		blog.Errorf("open bkbase config file(%s) failed: %s", opt.BkbaseConfigPath, err.Error())
 		return nil, err

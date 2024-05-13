@@ -38,6 +38,8 @@ type Kv interface {
 	Delete(kit *kit.Kit, kv *table.Kv) error
 	// DeleteWithTx delete kv instance with transaction.
 	DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, kv *table.Kv) error
+	// UpdateWithTx update kv instance with transaction.
+	UpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, kv *table.Kv) error
 	// GetByKvState get kv by KvState.
 	GetByKvState(kit *kit.Kit, bizID, appID uint32, key string, kvState []string) (*table.Kv, error)
 	// GetByID get kv by id.
@@ -63,6 +65,31 @@ type kvDao struct {
 	genQ     *gen.Query
 	idGen    IDGenInterface
 	auditDao AuditDao
+}
+
+// UpdateWithTx update kv instance with transaction.
+func (dao *kvDao) UpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, kv *table.Kv) error {
+	// 参数校验
+	if err := kv.ValidateUpdate(); err != nil {
+		return err
+	}
+
+	// 编辑操作, 获取当前记录做审计
+	m := tx.Kv
+	q := tx.Kv.WithContext(kit.Ctx)
+	oldOne, err := q.Where(m.ID.Eq(kv.ID), m.BizID.Eq(kv.Attachment.BizID), m.AppID.Eq(kv.Attachment.AppID)).Take()
+	if err != nil {
+		return err
+	}
+	ad := dao.auditDao.DecoratorV2(kit, kv.Attachment.BizID).PrepareUpdate(kv, oldOne)
+
+	_, err = q.Where(m.BizID.Eq(kv.Attachment.BizID), m.ID.Eq(kv.ID)).Select(m.Version, m.UpdatedAt,
+		m.Reviser, m.KvState, m.Signature, m.Md5, m.ByteSize).Updates(kv)
+	if err != nil {
+		return err
+	}
+
+	return ad.Do(tx.Query)
 }
 
 func (dao *kvDao) Create(kit *kit.Kit, kv *table.Kv) (uint32, error) {
@@ -121,7 +148,7 @@ func (dao *kvDao) Update(kit *kit.Kit, kv *table.Kv) error {
 	updateTx := func(tx *gen.Query) error {
 		q = tx.Kv.WithContext(kit.Ctx)
 		if _, e := q.Where(m.BizID.Eq(kv.Attachment.BizID), m.ID.Eq(kv.ID)).Select(m.Version, m.UpdatedAt,
-			m.Reviser, m.KvState).Updates(kv); e != nil {
+			m.Reviser, m.KvState, m.Signature, m.Md5, m.ByteSize, m.Memo).Updates(kv); e != nil {
 			return e
 		}
 
@@ -160,8 +187,9 @@ func (dao *kvDao) List(kit *kit.Kit, opt *types.ListKvOption) ([]*table.Kv, int6
 	}
 
 	if opt.SearchKey != "" {
-		searchKey := "%" + opt.SearchKey + "%"
-		q = q.Where(q.Where(q.Or(m.Key.Like(searchKey)).Or(m.Creator.Like(searchKey)).Or(m.Reviser.Like(searchKey))))
+		searchKey := "(?i)" + opt.SearchKey
+		q = q.Where(q.Where(q.Or(m.Key.Regexp(searchKey)).Or(m.Creator.Regexp(searchKey)).Or(
+			m.Reviser.Regexp(searchKey))))
 	}
 
 	if len(opt.Status) != 0 {

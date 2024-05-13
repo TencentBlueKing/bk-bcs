@@ -24,6 +24,7 @@ import (
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/i18n"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 	pbapp "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/app"
@@ -306,7 +307,7 @@ func (s *Service) GetAppByID(ctx context.Context, req *pbds.GetAppByIDReq) (*pba
 	if err != nil {
 		logs.Errorf("get app by id failed, err: %v, rid: %s", err, grpcKit.Rid)
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errf.Errorf(grpcKit, errf.AppNotExists, "app %d not found", req.AppId)
+			return nil, errf.Errorf(errf.AppNotExists, i18n.T(grpcKit, "app %d not found", req.AppId))
 		}
 		return nil, errors.Wrapf(err, "query app by id %d", req.GetAppId())
 	}

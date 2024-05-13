@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package config xxx
@@ -38,15 +37,15 @@ type Configurations struct {
 // ReadFrom : read from file
 func (c *Configurations) Init() error {
 	c.Base = &BaseConf{}
-	c.Base.Init()
+	c.Base.Init() // nolint
 
 	// logging
 	c.Logging = &LogConf{}
-	c.Logging.Init()
+	c.Logging.Init() // nolint
 
 	// BCS Config
 	c.BCS = &BCSConf{}
-	c.BCS.Init()
+	c.BCS.Init() // nolint
 
 	c.BCSEnvConf = []*BCSConf{}
 	c.BCSEnvMap = map[BCSClusterEnv]*BCSConf{}
@@ -64,7 +63,7 @@ var G = &Configurations{}
 
 // init 初始化
 func init() {
-	G.Init()
+	G.Init() // nolint
 }
 
 // ReadFrom : read from file
@@ -80,9 +79,9 @@ func (c *Configurations) ReadFrom(content []byte) error {
 	if err != nil {
 		return err
 	}
-	c.Logging.InitBlog()
-	c.Base.InitManagers()
-	c.InitClusterResources()
+	c.Logging.InitBlog()     // nolint
+	c.Base.InitManagers()    // nolint
+	c.InitClusterResources() // nolint
 
 	// 把列表类型转换为map，方便检索
 	for _, conf := range c.BCSEnvConf {

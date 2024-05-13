@@ -83,6 +83,24 @@
             {{ maxNodePodNum }}
           </bk-form-item>
         </template>
+        <!-- Microsoft 云 -->
+        <template v-else-if="clusterData.provider === 'azureCloud'">
+          <bk-form-item
+            :label="$t('cluster.labels.maxPodNum')">
+            <span>{{ cidrStep }}</span>
+            <span>({{ clusterIPv4CIDR }})</span>
+          </bk-form-item>
+          <bk-form-item
+            :label="$t('cluster.create.label.networkSetting.maxServiceNum.text')">
+            <span>{{ maxServiceNum }}</span>
+            <span>({{ serviceIPv4CIDR }})</span>
+          </bk-form-item>
+          <!-- 单节点Pod数量上限 -->
+          <bk-form-item
+            :label="$t('cluster.create.label.networkSetting.maxNodePodNum.text')">
+            {{ maxNodePodNum }}
+          </bk-form-item>
+        </template>
         <!-- 腾讯公有云 -->
         <template v-else-if="clusterData.provider === 'tencentPublicCloud'">
           <bk-form-item :label="$t('tke.label.containerNet')">
@@ -113,7 +131,7 @@
           </bk-form-item>
           <bk-form-item
             :label="$t('cluster.create.label.networkSetting.cidrStep.text')">
-            {{ cidrStep }}
+            {{ clusterIPv4CIDRCount }}
           </bk-form-item>
           <bk-form-item
             :label="$t('cluster.create.label.networkSetting.maxServiceNum.text')">
@@ -232,6 +250,7 @@ export default defineComponent({
         accountID: cloudAccountID,
         vpcID,
         subnetID: clusterData.value.networkSettings?.eniSubnetIDs?.join(','),
+        resourceGroupName: clusterData.value.extraInfo?.nodeResourceGroup,
       }).catch(() => []);
       firstRowspan.value = {};
       // 排序子网，将相同子网放在一起
@@ -298,7 +317,7 @@ export default defineComponent({
       }).then(() => true)
         .catch(() => false);
       if (result) {
-        await getClusterDetail(props.clusterId);
+        await getClusterDetail(props.clusterId, true);
         await handleGetSubnets();
         showSubnets.value = false;
       }
@@ -347,7 +366,7 @@ export default defineComponent({
     });
 
     onMounted(async () => {
-      await getClusterDetail(props.clusterId);
+      await getClusterDetail(props.clusterId, true);
       await Promise.all([
         handleGetSubnets(),
         handleGetRegionList({
@@ -358,6 +377,7 @@ export default defineComponent({
           region: clusterData.value.region,
           cloudAccountID: clusterData.value.cloudAccountID,
           cloudID: clusterData.value.provider,
+          resourceGroupName: clusterData.value.extraInfo?.nodeResourceGroup,
         }),
       ]);
     });

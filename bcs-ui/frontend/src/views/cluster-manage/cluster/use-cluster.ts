@@ -336,7 +336,7 @@ export function getClusterTypeName(clusterData) {
   if (clusterData.clusterType === 'virtual') return 'vCluster'; // 虚拟集群
   if (clusterData.clusterType === 'federation') return $i18n.t('bcs.cluster.federation'); // 联邦集群
 
-  if (clusterData.clusterCategory === 'builder' || clusterData.clusterCategory === '') {
+  if (clusterData.clusterCategory === 'builder' || clusterData.clusterCategory === '' || clusterData.clusterType === 'single') {
     // 托管和独立集群
     return clusterData.manageType === 'INDEPENDENT_CLUSTER' ? $i18n.t('bcs.cluster.selfDeployed') : $i18n.t('bcs.cluster.managed');
   }

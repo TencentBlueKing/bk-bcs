@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package render
@@ -20,19 +19,23 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"gopkg.in/yaml.v3"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	monitorextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/api/v1"
 )
 
 const (
-	GenerateMonitorRuleName       = "auto-generate-monitor-rule"
-	GeneratePanelName             = "auto-generate-monitor-panel"
-	GenerateNoticeGroupName       = "auto-generate-monitor-notice-group"
+	// GenerateMonitorRuleName xxx
+	GenerateMonitorRuleName = "auto-generate-monitor-rule"
+	// GeneratePanelName xxx
+	GeneratePanelName = "auto-generate-monitor-panel"
+	// GenerateNoticeGroupName xxx
+	GenerateNoticeGroupName = "auto-generate-monitor-notice-group"
+	// GenerateAppendNoticeGroupName xxx
 	GenerateAppendNoticeGroupName = "auto-generate-monitor-append-ng"
 )
 
@@ -40,6 +43,7 @@ const (
 // scenario支持两种配置方式 （允许同时存在）
 // 1. 蓝鲸监控导出 （通过文件夹名称区分不同YAML文件， 例如grafana下认为是告警面板配置）
 // 2. cr模式配置 （通过文件名称区分，例如monitorrule&mr开头文件认为是告警规则配置）
+// nolint funlen
 func (r *MonitorRender) ReadScenario(repoKey, scenario string) (*Result, error) {
 	res := &Result{}
 	repo, ok := r.repoManager.GetRepo(repoKey)
@@ -143,7 +147,8 @@ func (r *MonitorRender) ReadScenario(repoKey, scenario string) (*Result, error) 
 }
 
 // LoadRule load rule from certain path, filterFunc 根据告警名判断
-func (r *MonitorRender) LoadRule(path string, filterFunc ...func(string) bool) (*monitorextensionv1.MonitorRule, error) {
+func (r *MonitorRender) LoadRule(
+	path string, filterFunc ...func(string) bool) (*monitorextensionv1.MonitorRule, error) {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		blog.Infof("empty raw rule, continue...")
 		return nil, nil
@@ -153,7 +158,7 @@ func (r *MonitorRender) LoadRule(path string, filterFunc ...func(string) bool) (
 	err := filepath.Walk(path, func(path string, info os.FileInfo,
 		err error) error {
 		if err != nil {
-			return fmt.Errorf("walk through directory'%s' failed, err: %w", path, err)
+			return fmt.Errorf("walk through directory'%s' failed, err: %s", path, err.Error())
 		}
 
 		if !info.IsDir() && strings.HasSuffix(info.Name(), ".yaml") {
@@ -164,12 +169,12 @@ func (r *MonitorRender) LoadRule(path string, filterFunc ...func(string) bool) (
 			}
 			data, inErr := ioutil.ReadFile(path)
 			if inErr != nil {
-				return fmt.Errorf("read file'%s' failed, err: %w", path, inErr)
+				return fmt.Errorf("read file'%s' failed, err: %s", path, inErr.Error())
 			}
 
 			var rule monitorextensionv1.MonitorRuleDetail
 			if inErr = yaml.Unmarshal(data, &rule); inErr != nil {
-				return fmt.Errorf("unmarshal rule in'%s' failed, err: %w", info.Name(), inErr)
+				return fmt.Errorf("unmarshal rule in'%s' failed, err: %s", info.Name(), inErr.Error())
 			}
 			rules = append(rules, &rule)
 		}
@@ -209,7 +214,7 @@ func (r *MonitorRender) loadPanel(path string) ([]*v1.ConfigMap, *monitorextensi
 		if !info.IsDir() && strings.HasSuffix(info.Name(), ".json") {
 			data, inErr := ioutil.ReadFile(path)
 			if inErr != nil {
-				return fmt.Errorf("read file'%s' failed, err: %w", path, inErr)
+				return fmt.Errorf("read file'%s' failed, err: %s", path, inErr.Error())
 			}
 			dataMap := make(map[string]string)
 			dataMap["panel"] = string(data)
@@ -249,6 +254,46 @@ func (r *MonitorRender) loadPanel(path string) ([]*v1.ConfigMap, *monitorextensi
 	return configmaps, panel, nil
 }
 
+// LoadDashBoard return DashBoard info, use filterFunc to filter file name
+func (r *MonitorRender) LoadDashBoard(path string, filterFunc ...func(string) bool) ([]*DashBoard, error) {
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		blog.Infof("empty raw grafana panel, continue...")
+		return nil, nil
+	}
+	panels := make([]*DashBoard, 0)
+
+	err := filepath.Walk(path, func(path string, info os.FileInfo,
+		err error) error {
+		if err != nil {
+			blog.Errorf("walk through directory'%s' failed, err: %s", path, err.Error())
+			return err
+		}
+
+		// load grafana panel json config
+		if !info.IsDir() && strings.HasSuffix(info.Name(), ".json") {
+			for _, filter := range filterFunc {
+				if !filter(info.Name()) {
+					return nil
+				}
+			}
+			data, inErr := ioutil.ReadFile(path)
+			if inErr != nil {
+				return fmt.Errorf("read file'%s' failed, err: %s", path, inErr.Error())
+			}
+			var panel DashBoard
+			if inErr = yaml.Unmarshal(data, &panel); inErr != nil {
+				return fmt.Errorf("unmarshal panel in'%s' failed, err: %s", info.Name(), inErr.Error())
+			}
+			panels = append(panels, &panel)
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return panels, nil
+}
+
 func (r *MonitorRender) loadNoticeGroup(path string) (*monitorextensionv1.NoticeGroup, error) {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		blog.Infof("empty raw notice , continue...")
@@ -259,7 +304,7 @@ func (r *MonitorRender) loadNoticeGroup(path string) (*monitorextensionv1.Notice
 	err := filepath.Walk(path, func(path string, info os.FileInfo,
 		err error) error {
 		if err != nil {
-			return fmt.Errorf("walk through directory'%s' failed, err: %w", path, err)
+			return fmt.Errorf("walk through directory'%s' failed, err: %s", path, err.Error())
 		}
 
 		if !info.IsDir() && strings.HasSuffix(info.Name(), ".yaml") {

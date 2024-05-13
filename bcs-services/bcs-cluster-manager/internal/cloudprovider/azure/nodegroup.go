@@ -396,7 +396,7 @@ func (ng *NodeGroup) DeleteExternalNodeFromCluster(group *proto.NodeGroup, nodes
 }
 
 // GetExternalNodeScript get nodegroup external node script
-func (ng *NodeGroup) GetExternalNodeScript(group *proto.NodeGroup) (string, error) {
+func (ng *NodeGroup) GetExternalNodeScript(group *proto.NodeGroup, internal bool) (string, error) {
 	return "", cloudprovider.ErrCloudNotImplemented
 }
 
@@ -429,7 +429,8 @@ func (ng *NodeGroup) updateAgentPoolProperties(client api.AksService, cluster *p
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	pool, err := client.GetPoolAndReturn(ctx, cluster.SystemID, group.CloudNodeGroupID)
+	pool, err := client.GetPoolAndReturn(ctx, cloudprovider.GetClusterResourceGroup(cluster),
+		cluster.SystemID, group.CloudNodeGroupID)
 	if err != nil {
 		return errors.Wrapf(err, "UpdateNodeGroup: call GetAgentPool api failed")
 	}
@@ -443,7 +444,7 @@ func (ng *NodeGroup) updateAgentPoolProperties(client api.AksService, cluster *p
 	// update agent pool
 	ctx, cancel = context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
-	if _, err = client.UpdatePoolAndReturn(ctx, pool, cluster.SystemID, *pool.Name); err != nil {
+	if _, err = client.UpdatePoolAndReturn(ctx, pool, "", cluster.SystemID, *pool.Name); err != nil {
 		return errors.Wrapf(err, "UpdateNodeGroup: call UpdateAgentPool api failed")
 	}
 

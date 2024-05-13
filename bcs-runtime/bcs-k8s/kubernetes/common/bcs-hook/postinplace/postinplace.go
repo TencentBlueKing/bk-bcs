@@ -6,9 +6,8 @@
  * http://opensource.org/licenses/MIT
  * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
- * either expostss or implied. See the License for the specific language governing permissions and
+ * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package postinplace
@@ -20,12 +19,6 @@ import (
 	"strings"
 	"time"
 
-	hookv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
-	hookclientset "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/client/clientset/versioned"
-	hooklister "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/client/listers/tkex/v1alpha1"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/metrics"
-	commonhookutil "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/util/hook"
-
 	apps "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -34,16 +27,29 @@ import (
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/klog"
+
+	hookv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
+	hookclientset "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/client/clientset/versioned"
+	hooklister "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/client/listers/tkex/v1alpha1"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/metrics"
+	commonhookutil "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/util/hook"
 )
 
 const (
-	PodNameArgKey   = "PodName"
+	// PodNameArgKey xxx
+	PodNameArgKey = "PodName"
+	// NamespaceArgKey xxx
 	NamespaceArgKey = "PodNamespace"
-	PodIPArgKey     = "PodIP"
-	PodImageArgKey  = "PodContainer"
-	HostArgKey      = "HostIP"
+	// PodIPArgKey xxx
+	PodIPArgKey = "PodIP"
+	// PodImageArgKey xxx
+	PodImageArgKey = "PodContainer"
+	// HostArgKey xxx
+	HostArgKey = "HostIP"
 )
 
+// PostInplaceInterface xxx
+// nolint
 type PostInplaceInterface interface {
 	CreatePostInplaceHook(obj PostInplaceHookObjectInterface,
 		pod *v1.Pod,
@@ -56,6 +62,8 @@ type PostInplaceInterface interface {
 		podNameLabelKey string) error
 }
 
+// PostInplaceControl xxx
+// nolint
 type PostInplaceControl struct {
 	kubeClient         clientset.Interface
 	hookClient         hookclientset.Interface
@@ -64,6 +72,7 @@ type PostInplaceControl struct {
 	hookTemplateLister hooklister.HookTemplateLister
 }
 
+// New xxx
 func New(kubeClient clientset.Interface, hookClient hookclientset.Interface, recorder record.EventRecorder,
 	hookRunLister hooklister.HookRunLister, hookTemplateLister hooklister.HookTemplateLister) PostInplaceInterface {
 	return &PostInplaceControl{kubeClient: kubeClient, hookClient: hookClient, recorder: recorder,
@@ -171,7 +180,7 @@ func (p *PostInplaceControl) UpdatePostInplaceHook(obj PostInplaceHookObjectInte
 		return nil
 	}
 	if existHookRuns[0].Status.Phase == hookv1alpha1.HookPhaseSuccessful {
-		err := deletePostInplaceHookCondition(newStatus, pod.Name)
+		err = deletePostInplaceHookCondition(newStatus, pod.Name)
 		if err != nil {
 			klog.Warningf("expected the %s %s/%s exists a PostInplaceHookCondition for pod %s, but got an error: %s",
 				objectKind, namespace, name, pod.Name, err.Error())
@@ -291,7 +300,7 @@ func deletePostInplaceHookCondition(status PostInplaceHookStatusInterface, podNa
 		return fmt.Errorf("no PostInplaceHookCondition to delete")
 	}
 
-	newConditions := append(conditions[:index], conditions[index+1:]...)
+	newConditions := append(conditions[:index], conditions[index+1:]...) // nolint
 	status.SetPostInplaceHookConditions(newConditions)
 	return nil
 }

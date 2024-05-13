@@ -20,6 +20,7 @@ import (
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/cache-service/service/cache/keys"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/jsoni"
@@ -116,7 +117,19 @@ func (c *client) refreshReleasedCICache(kt *kit.Kit, bizID uint32, releaseID uin
 		return "", errf.New(errf.RecordNotFound, "release not exist in db")
 	}
 
-	js, err := jsoni.Marshal(types.ReleaseCICaches(releasedCIs))
+	var releases []*table.Release
+	releases, err = c.op.Release().ListAllByIDs(kt, []uint32{releaseID}, bizID)
+	if err != nil {
+		logs.Errorf("list releases by ids failed, bizID: %d, releaseIDs: %v, err: %v, rid: %s", bizID,
+			[]uint32{releaseID}, err, kt.Rid)
+		return "", err
+	}
+	if len(releases) == 0 {
+		logs.Errorf("no release detail found for id %d, rid: %s", releaseID, kt.Rid)
+		return "", fmt.Errorf("no release detail found for id %d", releaseID)
+	}
+
+	js, err := jsoni.Marshal(types.ReleaseCICaches(releasedCIs, releases[0].Spec.Name))
 	if err != nil {
 		return "", err
 	}

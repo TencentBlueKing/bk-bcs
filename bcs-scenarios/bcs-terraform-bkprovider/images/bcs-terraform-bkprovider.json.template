@@ -1,0 +1,37 @@
+{
+  "log_dir": "${log_dir}",
+  "v": ${bcsVerbosity},
+  "alsologtostderr": true,
+  "log_max_size": 500,
+  "log_max_num": 10,
+  "logtostderr": false,
+  "stderrthreshold": "2",
+  "registry": {
+    "endpoints": "${bcsEtcdHost}",
+    "cert": "${bcsEtcdCertFile}",
+    "key": "${bcsEtcdKeyFile}",
+    "ca": "${bcsEtcdCAFile}"
+  },
+  "swagger": {
+        "dir": "${bcsSwaggerDir}"
+    },
+  "auth": {
+      "publicKeyFile": "${bcsAuthPublicKeyFile}",
+      "privateKeyFile": "${bcsAuthPrivateKeyFile}"
+  },
+  "bkSystem": {
+      "bkAppCode": "${bkAppCode}",
+      "bkAppSecret": "${bkAppSecret}",
+      "bkEnv": "${bkEnv}"
+  },
+  "address": "${localIp}",
+  "port": ${bcsPort},
+  "httpport": ${bcsHTTPPort},
+  "metricport": ${bcsMetricPort},
+  "serverca": "${caFile}",
+  "servercert": "${serverCertFile}",
+  "serverkey": "${serverKeyFile}",
+  "clientca": "${caFile}",
+  "clientcert": "${clientCertFile}",
+  "clientkey": "${clientKeyFile}"
+}

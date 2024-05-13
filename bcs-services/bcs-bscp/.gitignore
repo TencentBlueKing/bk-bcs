@@ -5,3 +5,4 @@ bin
 .codecc
 .idea
 .vscode
+__debug_bin

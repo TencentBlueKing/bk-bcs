@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -18,19 +18,17 @@ import (
 	"sort"
 	"strings"
 
-	"k8s.io/client-go/util/retry"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	netextv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
+	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	k8slabels "k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/util/retry"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/generator"
-	netextv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
-
-	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	k8slabels "k8s.io/apimachinery/pkg/labels"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // PortPoolItemHandler port pool item
@@ -93,7 +91,8 @@ func (ppih *PortPoolItemHandler) ensurePortPoolItem(
 			segmentLen = 1
 		}
 		if err := ppih.ensureListeners(
-			lbObj.Region, lbObj.LoadbalancerID, item.ItemName, item.StartPort, item.EndPort, segmentLen, item.Protocol); err != nil {
+			lbObj.Region, lbObj.LoadbalancerID, item.ItemName, item.StartPort, item.EndPort, segmentLen,
+			item.Protocol); err != nil {
 			blog.Warnf("listeners of loadbalance %s not all ready, err %s", lbObj.LoadbalancerID, err.Error())
 			errMsgs = append(errMsgs, fmt.Sprintf("lb %s: %s", lbObj.LoadbalancerID, err.Error()))
 		}
@@ -177,7 +176,8 @@ func (ppih *PortPoolItemHandler) getCloudListenersByRegionIDs(regionIDs []string
 			tmpID = lbID
 		}
 		if ppih.LbClient.IsNamespaced() {
-			lbObj, err = ppih.LbClient.DescribeLoadBalancerWithNs(ppih.Namespace, tmpRegion, tmpID, "", constant.ProtocolLayerTransport)
+			lbObj, err = ppih.LbClient.DescribeLoadBalancerWithNs(ppih.Namespace, tmpRegion, tmpID, "",
+				constant.ProtocolLayerTransport)
 		} else {
 			lbObj, err = ppih.LbClient.DescribeLoadBalancer(tmpRegion, tmpID, "", constant.ProtocolLayerTransport)
 		}
@@ -209,7 +209,8 @@ func (ppih *PortPoolItemHandler) getLBListenerList(lbID string) (*netextv1.Liste
 }
 
 // get portpool item's listener
-func (ppih *PortPoolItemHandler) getListenerListWithItemName(lbID, portpoolName, itemName string) (*netextv1.ListenerList, error) {
+func (ppih *PortPoolItemHandler) getListenerListWithItemName(
+	lbID, portpoolName, itemName string) (*netextv1.ListenerList, error) {
 	set := k8slabels.Set(map[string]string{
 		netextv1.LabelKeyForPortPoolListener:                       netextv1.LabelValueTrue,
 		netextv1.LabelKeyForLoadbalanceID:                          generator.GetLabelLBId(lbID),
@@ -258,7 +259,7 @@ func (ppih *PortPoolItemHandler) ensureListeners(region, lbID, itemName string, 
 			if segment > 1 {
 				tmpEndPort = int(p + segment - 1)
 			}
-			tmpName := common.GetListenerNameWithProtocol(lbID, protocol, int(tmpStartPort), int(tmpEndPort))
+			tmpName := common.GetListenerNameWithProtocol(lbID, protocol, int(tmpStartPort), tmpEndPort)
 			listener, ok := listenerMap[tmpName]
 			if !ok {
 				notReady = true

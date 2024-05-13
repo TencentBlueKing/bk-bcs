@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -27,7 +27,7 @@ import (
 	"k8s.io/klog"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/util"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/validator"
+	webhook "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/validator"
 )
 
 // Run run
@@ -71,6 +71,7 @@ func Run(s *ServerRunOptions) error {
 		}()
 	}
 
+	// nolint
 	select {
 	case <-stopCh:
 		klog.Info("http server received stop signal, waiting for all requests to finish")
@@ -84,7 +85,7 @@ func Run(s *ServerRunOptions) error {
 }
 
 func getTLSConfig(s *ServerRunOptions) (*tls.Config, error) {
-	tlsConfig := &tls.Config{
+	tlsConfig := &tls.Config{ // nolint TLS MinVersion too low
 		NextProtos: []string{"http/1.1"},
 		//		Certificates: []tls.Certificate{cert},
 		// Avoid fallback on insecure SSL protocols

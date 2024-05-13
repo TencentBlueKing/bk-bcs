@@ -353,7 +353,7 @@ import PopoverSelector from '@/components/popover-selector.vue';
 import { useCluster } from '@/composables/use-app';
 import useFormLabel from '@/composables/use-form-label';
 import $i18n from '@/i18n/i18n-setup';
-import { useSelectItemsNamespace } from '@/views/resource-view/namespace/use-namespace';
+import { useSelectItemsNamespace } from '@/views/cluster-manage/namespace/use-namespace';
 
 const props = defineProps({
   clusterId: {

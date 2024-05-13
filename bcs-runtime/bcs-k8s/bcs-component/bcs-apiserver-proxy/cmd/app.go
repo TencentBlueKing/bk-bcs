@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package cmd xxx
 package cmd
 
 import (
@@ -25,18 +25,17 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-apiserver-proxy/pkg/health"
-	ipvsConfig "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-apiserver-proxy/pkg/ipvs/config"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-apiserver-proxy/pkg/utils"
-
+	"github.com/Tencent/bk-bcs/bcs-common/common"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common"
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-apiserver-proxy/cmd/config"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-apiserver-proxy/pkg/endpoint"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-apiserver-proxy/pkg/health"
+	ipvsConfig "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-apiserver-proxy/pkg/ipvs/config"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-apiserver-proxy/pkg/service"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-apiserver-proxy/pkg/utils"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-apiserver-proxy/pkg/utils/sets"
 )
 
@@ -278,11 +277,11 @@ func (pm *ProxyManager) persistLvsConfig() error {
 }
 
 func (pm *ProxyManager) initProxyOptions(options *config.ProxyAPIServerOptions) {
-	if pm == nil {
+	if pm == nil { // nolint
 		blog.Errorf("server failed:%v", ErrProxyManagerNotInited)
 	}
 
-	pm.options = options
+	pm.options = options // nolint
 }
 
 func (pm *ProxyManager) checkVirtualServerIsExist() error {
@@ -434,7 +433,7 @@ func (pm *ProxyManager) waitQuitHandler() error {
 	}
 
 	quitSignal := make(chan os.Signal, 10)
-	signal.Notify(quitSignal, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGKILL, syscall.SIGTERM)
+	signal.Notify(quitSignal, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGKILL, syscall.SIGTERM) // nolint
 
 	go func() {
 		select {
@@ -456,7 +455,7 @@ func (pm *ProxyManager) close() {
 		return
 	}
 
-	pm.lvsProxy.DeleteVirtualServer(pm.options.ProxyLvs.VirtualAddress)
+	pm.lvsProxy.DeleteVirtualServer(pm.options.ProxyLvs.VirtualAddress) // nolint
 	pm.cancel()
 }
 

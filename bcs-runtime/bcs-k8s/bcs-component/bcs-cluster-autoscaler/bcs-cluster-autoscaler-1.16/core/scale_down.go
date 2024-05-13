@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package core
@@ -36,7 +35,6 @@ import (
 	simulatorinternal "k8s.io/autoscaler/cluster-autoscaler/simulator"
 	"k8s.io/autoscaler/cluster-autoscaler/utils"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/deletetaint"
-	"k8s.io/autoscaler/cluster-autoscaler/utils/drain"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/errors"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/gpu"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/kubernetes"
@@ -269,9 +267,11 @@ func calculateScaleDownGpusTotal(nodes []*apiv1.Node, cp cloudprovider.CloudProv
 				"can not get node group for node %v when calculating cluster gpu usage", node.Name)
 		}
 		if nodeGroup == nil || reflect.ValueOf(nodeGroup).IsNil() {
-			// We do not trust cloud providers to return properly constructed nil for interface type - hence the reflection check
+			// We do not trust cloud providers to return properly constructed nil for interface type -
+			// hence the reflection check
 			// See https://golang.org/doc/faq#nil_error
-			// DOTO[lukaszos] consider creating cloud_provider sanitizer which will wrap cloud provider and ensure sane behaviour
+			// DOTO[lukaszos] consider creating cloud_provider sanitizer which will wrap cloud provider and
+			// ensure sane behavior
 			nodeGroup = nil
 		}
 
@@ -448,6 +448,7 @@ func (sd *ScaleDown) CleanUpUnneededNodes() {
 // * timestamp is the current timestamp.
 // * pdbs is a list of pod disruption budgets.
 // * tempNodesPerNodeGroup is a map of node group id and the number of temporary nodes that node group contains.
+// nolint
 func (sd *ScaleDown) UpdateUnneededNodes(
 	allNodes []*apiv1.Node,
 	destinationNodes []*apiv1.Node,
@@ -624,6 +625,7 @@ func (sd *ScaleDown) checkFilteredNodes(filteredNodesToCheck []*apiv1.Node, time
 	return utilizationMap, currentlyUnneededNodes
 }
 
+// nolint `currentCandidates` is unused
 func (sd *ScaleDown) findAdditionalCandidates(nodesToRemove []simulator.NodeToBeRemoved,
 	unremovable []*simulator.UnremovableNode, currentCandidates []*apiv1.Node,
 	currentNonCandidates []*apiv1.Node, allNodes []*apiv1.Node, destinationNodes []*apiv1.Node,
@@ -683,7 +685,7 @@ func (sd *ScaleDown) isNodeBelowUtilzationThreshold(node *apiv1.Node, utilInfo s
 // state of the cluster. Removes from the map nodes that are no longer in the
 // nodes list.
 func (sd *ScaleDown) updateUnremovableNodes(nodes []*apiv1.Node) {
-	if len(sd.unremovableNodes) <= 0 {
+	if len(sd.unremovableNodes) == 0 {
 		return
 	}
 	// A set of nodes to delete from unremovableNodes map.
@@ -793,6 +795,7 @@ func (sd *ScaleDown) SoftTaintUnneededNodes(allNodes []*apiv1.Node) (errors []er
 
 // TryToScaleDown tries to scale down the cluster. It returns a result inside a ScaleDownStatus indicating
 // if any node was removed and error if such occurred.
+// nolint
 func (sd *ScaleDown) TryToScaleDown(allNodes []*apiv1.Node, pods []*apiv1.Pod,
 	pdbs []*policyv1.PodDisruptionBudget, currentTime time.Time, tempNodes []*apiv1.Node,
 	tempNodesPerNodeGroup map[string]int) (*status.ScaleDownStatus, errors.AutoscalerError) {
@@ -1008,6 +1011,7 @@ func getTempNodesPerNodeGroup(cp cloudprovider.CloudProvider, tempNodes []*apiv1
 	return tempNodesPerNg
 }
 
+// nolint `resourceLimiter` is unused
 func (sd *ScaleDown) checkNodeRemovable(node *apiv1.Node,
 	val time.Time, currentTime time.Time,
 	nodeGroupSize map[string]int, resourceLimiter *cloudprovider.ResourceLimiter,
@@ -1254,25 +1258,7 @@ func (sd *ScaleDown) deleteNode(node *apiv1.Node, pods []*apiv1.Pod,
 		return status.NodeDeleteResult{ResultType: status.NodeDeleteErrorFailedToMarkToBeDeleted,
 			Err: errors.ToAutoscalerError(errors.ApiCallError, err)}
 	}
-
-	var podsToDrain []*apiv1.Pod
 	var err error
-	if sd.evictLatest {
-		podsToDrain, err = getLatestPodsToDrain(sd, node)
-		if err != nil {
-			return status.NodeDeleteResult{ResultType: status.NodeDeleteErrorFailedToEvictPods, Err: err}
-		}
-	} else {
-		podsToDrain = pods
-	}
-
-	if hasGameServer(podsToDrain) {
-		sd.context.Recorder.Eventf(node, apiv1.EventTypeWarning, "ScaleDownFailed",
-			"failed to evict pods: have gameserver pod")
-		return status.NodeDeleteResult{ResultType: status.NodeDeleteErrorFailedToEvictPods,
-			Err: errors.ToAutoscalerError(errors.ApiCallError,
-				fmt.Errorf("failed to evict pods: have gameserver pod"))}
-	}
 
 	sd.nodeDeletionTracker.StartDeletion(nodeGroup.Id())
 	defer sd.nodeDeletionTracker.EndDeletion(nodeGroup.Id())
@@ -1293,6 +1279,16 @@ func (sd *ScaleDown) deleteNode(node *apiv1.Node, pods []*apiv1.Pod,
 			}
 		}
 	}()
+
+	var podsToDrain []*apiv1.Pod
+	if sd.evictLatest {
+		podsToDrain, err = getLatestPodsToDrain(sd, node)
+		if err != nil {
+			return status.NodeDeleteResult{ResultType: status.NodeDeleteErrorFailedToEvictPods, Err: err}
+		}
+	} else {
+		podsToDrain = pods
+	}
 
 	sd.context.Recorder.Eventf(node, apiv1.EventTypeNormal, "ScaleDown", "marked the node as toBeDeleted/unschedulable")
 
@@ -1551,26 +1547,6 @@ func filterOutMasters(nodes []*apiv1.Node, pods []*apiv1.Pod) []*apiv1.Node {
 	}
 
 	return others
-}
-
-func hasGameServer(pods []*apiv1.Pod) bool {
-	for _, pod := range pods {
-		if pod.GetAnnotations()[drain.PodSafeToEvictKey] == valueTrue {
-			continue
-		}
-		ctlRef := metav1.GetControllerOf(pod)
-		refKind := ""
-		if ctlRef != nil {
-			refKind = ctlRef.Kind
-		}
-		if refKind == "GameDeployment" {
-			return true
-		}
-		if refKind == "GameStatefulSet" {
-			return true
-		}
-	}
-	return false
 }
 
 func sortNodesByDeletionCost(nodes []simulator.NodeToBeRemoved) []simulator.NodeToBeRemoved {

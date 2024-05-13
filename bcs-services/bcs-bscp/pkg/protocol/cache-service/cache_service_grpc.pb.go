@@ -33,6 +33,9 @@ const (
 	Cache_BenchReleasedCI_FullMethodName          = "/pbcs.Cache/BenchReleasedCI"
 	Cache_GetReleasedKv_FullMethodName            = "/pbcs.Cache/GetReleasedKv"
 	Cache_GetReleasedKvValue_FullMethodName       = "/pbcs.Cache/GetReleasedKvValue"
+	Cache_SetClientMetric_FullMethodName          = "/pbcs.Cache/SetClientMetric"
+	Cache_GetAsyncDownloadTask_FullMethodName     = "/pbcs.Cache/GetAsyncDownloadTask"
+	Cache_SetAsyncDownloadTask_FullMethodName     = "/pbcs.Cache/SetAsyncDownloadTask"
 )
 
 // CacheClient is the client API for Cache service.
@@ -53,6 +56,9 @@ type CacheClient interface {
 	BenchReleasedCI(ctx context.Context, in *BenchReleasedCIReq, opts ...grpc.CallOption) (*BenchReleasedCIResp, error)
 	GetReleasedKv(ctx context.Context, in *GetReleasedKvReq, opts ...grpc.CallOption) (*JsonRawResp, error)
 	GetReleasedKvValue(ctx context.Context, in *GetReleasedKvValueReq, opts ...grpc.CallOption) (*JsonRawResp, error)
+	SetClientMetric(ctx context.Context, in *SetClientMetricReq, opts ...grpc.CallOption) (*SetClientMetricResp, error)
+	GetAsyncDownloadTask(ctx context.Context, in *GetAsyncDownloadTaskReq, opts ...grpc.CallOption) (*JsonRawResp, error)
+	SetAsyncDownloadTask(ctx context.Context, in *SetAsyncDownloadTaskReq, opts ...grpc.CallOption) (*SetAsyncDownloadTaskResp, error)
 }
 
 type cacheClient struct {
@@ -180,6 +186,33 @@ func (c *cacheClient) GetReleasedKvValue(ctx context.Context, in *GetReleasedKvV
 	return out, nil
 }
 
+func (c *cacheClient) SetClientMetric(ctx context.Context, in *SetClientMetricReq, opts ...grpc.CallOption) (*SetClientMetricResp, error) {
+	out := new(SetClientMetricResp)
+	err := c.cc.Invoke(ctx, Cache_SetClientMetric_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *cacheClient) GetAsyncDownloadTask(ctx context.Context, in *GetAsyncDownloadTaskReq, opts ...grpc.CallOption) (*JsonRawResp, error) {
+	out := new(JsonRawResp)
+	err := c.cc.Invoke(ctx, Cache_GetAsyncDownloadTask_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *cacheClient) SetAsyncDownloadTask(ctx context.Context, in *SetAsyncDownloadTaskReq, opts ...grpc.CallOption) (*SetAsyncDownloadTaskResp, error) {
+	out := new(SetAsyncDownloadTaskResp)
+	err := c.cc.Invoke(ctx, Cache_SetAsyncDownloadTask_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // CacheServer is the server API for Cache service.
 // All implementations should embed UnimplementedCacheServer
 // for forward compatibility
@@ -198,6 +231,9 @@ type CacheServer interface {
 	BenchReleasedCI(context.Context, *BenchReleasedCIReq) (*BenchReleasedCIResp, error)
 	GetReleasedKv(context.Context, *GetReleasedKvReq) (*JsonRawResp, error)
 	GetReleasedKvValue(context.Context, *GetReleasedKvValueReq) (*JsonRawResp, error)
+	SetClientMetric(context.Context, *SetClientMetricReq) (*SetClientMetricResp, error)
+	GetAsyncDownloadTask(context.Context, *GetAsyncDownloadTaskReq) (*JsonRawResp, error)
+	SetAsyncDownloadTask(context.Context, *SetAsyncDownloadTaskReq) (*SetAsyncDownloadTaskResp, error)
 }
 
 // UnimplementedCacheServer should be embedded to have forward compatible implementations.
@@ -242,6 +278,15 @@ func (UnimplementedCacheServer) GetReleasedKv(context.Context, *GetReleasedKvReq
 }
 func (UnimplementedCacheServer) GetReleasedKvValue(context.Context, *GetReleasedKvValueReq) (*JsonRawResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetReleasedKvValue not implemented")
+}
+func (UnimplementedCacheServer) SetClientMetric(context.Context, *SetClientMetricReq) (*SetClientMetricResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetClientMetric not implemented")
+}
+func (UnimplementedCacheServer) GetAsyncDownloadTask(context.Context, *GetAsyncDownloadTaskReq) (*JsonRawResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAsyncDownloadTask not implemented")
+}
+func (UnimplementedCacheServer) SetAsyncDownloadTask(context.Context, *SetAsyncDownloadTaskReq) (*SetAsyncDownloadTaskResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetAsyncDownloadTask not implemented")
 }
 
 // UnsafeCacheServer may be embedded to opt out of forward compatibility for this service.
@@ -489,6 +534,60 @@ func _Cache_GetReleasedKvValue_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Cache_SetClientMetric_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetClientMetricReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CacheServer).SetClientMetric(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Cache_SetClientMetric_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CacheServer).SetClientMetric(ctx, req.(*SetClientMetricReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Cache_GetAsyncDownloadTask_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetAsyncDownloadTaskReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CacheServer).GetAsyncDownloadTask(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Cache_GetAsyncDownloadTask_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CacheServer).GetAsyncDownloadTask(ctx, req.(*GetAsyncDownloadTaskReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Cache_SetAsyncDownloadTask_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetAsyncDownloadTaskReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CacheServer).SetAsyncDownloadTask(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Cache_SetAsyncDownloadTask_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CacheServer).SetAsyncDownloadTask(ctx, req.(*SetAsyncDownloadTaskReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Cache_ServiceDesc is the grpc.ServiceDesc for Cache service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -547,6 +646,18 @@ var Cache_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetReleasedKvValue",
 			Handler:    _Cache_GetReleasedKvValue_Handler,
+		},
+		{
+			MethodName: "SetClientMetric",
+			Handler:    _Cache_SetClientMetric_Handler,
+		},
+		{
+			MethodName: "GetAsyncDownloadTask",
+			Handler:    _Cache_GetAsyncDownloadTask_Handler,
+		},
+		{
+			MethodName: "SetAsyncDownloadTask",
+			Handler:    _Cache_SetAsyncDownloadTask_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

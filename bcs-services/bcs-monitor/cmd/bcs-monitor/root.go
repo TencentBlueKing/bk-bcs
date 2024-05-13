@@ -18,8 +18,9 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
-	"github.com/TencentBlueKing/bkmonitor-kits/logger"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -128,17 +129,25 @@ func initConfig() {
 		cobra.CheckErr(err)
 	}
 
-	// 命令行日志级别
-	if err := config.G.Logging.SetByCmd(logLevel); err != nil {
-		cobra.CheckErr(err)
-	}
+	// blog初始化
+	blog.InitLogs(conf.LogConfig{
+		LogDir:          config.G.Logging.LogDir,
+		LogMaxSize:      config.G.Logging.LogMaxSize,
+		LogMaxNum:       config.G.Logging.LogMaxNum,
+		ToStdErr:        config.G.Logging.ToStdErr,
+		AlsoToStdErr:    config.G.Logging.AlsoToStdErr,
+		Verbosity:       config.G.Logging.Verbosity,
+		StdErrThreshold: config.G.Logging.StdErrThreshold,
+		VModule:         config.G.Logging.VModule,
+		TraceLocation:   config.G.Logging.TraceLocation,
+	})
 
 	// 日志配置已经Ready, 后面都需要使用日志
-	logger.Infof("Using config file:%s", viper.ConfigFileUsed())
+	blog.Infof("Using config file:%s", viper.ConfigFileUsed())
 
 	// watch 凭证文件
 	if err := watch.MultiCredWatch(certCfgFiles); err != nil {
-		logger.Fatal(err.Error())
+		blog.Fatal(err.Error())
 	}
 }
 

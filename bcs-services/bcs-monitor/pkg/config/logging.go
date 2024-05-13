@@ -13,39 +13,13 @@
 package config
 
 import (
-	"github.com/TencentBlueKing/bkmonitor-kits/logger"
+	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 )
 
-// LogConf : config for logging
-type LogConf struct {
-	logger.Options `yaml:",inline"`
-}
-
-// init : init default logging config
-func (c *LogConf) init() error {
-	logger.SetOptions(c.Options)
-	return nil
-}
-
-// SetByCmd 命令配置, 优先级最高
-func (c *LogConf) SetByCmd(level string) error {
-	if level == "" {
-		return nil
-	}
-
-	c.Level = level
-	return c.init()
-}
-
 // defaultLogConf 默认配置
-func defaultLogConf() *LogConf {
-	opt := logger.Options{
-		Stdout: true,
-		Level:  "info",
-		Format: "logfmt",
+func defaultLogConf() *conf.LogConfig {
+	logconfig := conf.LogConfig{
+		ToStdErr: true,
 	}
-	c := &LogConf{
-		Options: opt,
-	}
-	return c
+	return &logconfig
 }

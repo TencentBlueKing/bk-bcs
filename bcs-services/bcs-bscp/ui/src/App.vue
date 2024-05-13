@@ -1,6 +1,6 @@
 <template>
   <div class="page-content-container">
-    <notice-component v-if="showNotice" :api-url="noticeApiURL" @show-alert-change="showNotice = $event" />
+    <notice-component v-if="enableNotice" :api-url="noticeApiURL" @show-alert-change="showNotice = $event" />
     <Header></Header>
     <div :class="['content', { 'show-notice': showNotice }]">
       <router-view></router-view>
@@ -10,34 +10,20 @@
 </template>
 
 <script setup lang="ts">
-  import { watch } from 'vue';
   import { storeToRefs } from 'pinia';
   import useGlobalStore from './store/global';
-  import useUserStore from './store/user';
-  import isCrossOriginIFrame from './utils/is-cross-origin-iframe';
   import NoticeComponent from '@blueking/notice-component';
   import '@blueking/notice-component/dist/style.css';
   import Header from './components/head.vue';
   import PermissionDialog from './components/permission/apply-dialog.vue';
 
-  const userStore = useUserStore();
   const globalStore = useGlobalStore();
-  const { showLoginModal } = storeToRefs(userStore);
   const { showApplyPermDialog, showNotice } = storeToRefs(globalStore);
 
   // @ts-ignore
   const noticeApiURL = `${window.BK_BCS_BSCP_API}/api/v1/announcements`;
-
-  watch(
-    () => showLoginModal.value,
-    (val) => {
-      if (val) {
-        const topWindow = isCrossOriginIFrame() ? window : window.top;
-        // @ts-ignore
-        topWindow.BLUEKING.corefunc.open_login_dialog(userStore.loginUrl);
-      }
-    },
-  );
+  // @ts-ignore
+  const enableNotice = window.ENABLE_BK_NOTICE === 'true';
 </script>
 
 <style scoped lang="scss">

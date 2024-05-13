@@ -60,7 +60,6 @@ func newtask() *Task {
 	// update desired nodes task
 	task.works[applyInstanceMachinesStep.StepMethod] = tasks.ApplyInstanceMachinesTask
 	task.works[checkClusterNodesStatusStep.StepMethod] = tasks.CheckClusterNodesStatusTask
-	task.works[removeClusterNodesTaintStep.StepMethod] = tasks.RemoveClusterNodesTaintTask
 
 	// clean node in nodeGroup task
 	task.works[cleanNodeGroupNodesStep.StepMethod] = tasks.CleanNodeGroupNodesTask
@@ -544,13 +543,13 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 	updateDesired.BuildCheckClusterNodeStatusStep(task)
 	// install gse agent
 	common.BuildInstallGseAgentTaskStep(task, &common.GseInstallInfo{
-		ClusterId:  opt.Cluster.ClusterID,
-		BusinessId: opt.Cluster.BusinessID,
-		CloudArea:  group.GetArea(),
-		User:       group.GetLaunchTemplate().GetInitLoginUsername(),
-		Passwd:     passwd,
-		KeyInfo:    group.GetLaunchTemplate().GetKeyPair(),
-		Port:       "",
+		ClusterId:   opt.Cluster.ClusterID,
+		NodeGroupId: group.NodeGroupID,
+		BusinessId:  opt.Cluster.BusinessID,
+		User:        group.GetLaunchTemplate().GetInitLoginUsername(),
+		Passwd:      passwd,
+		KeyInfo:     group.GetLaunchTemplate().GetKeyPair(),
+		Port:        "",
 	})
 	// transfer host module
 	moduleID := cloudprovider.GetTransModuleInfo(opt.Cluster, opt.AsOption, opt.NodeGroup)
@@ -597,8 +596,8 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 	common.BuildNodeAnnotationsTaskStep(task, opt.Cluster.ClusterID, nil,
 		cloudprovider.GetAnnotationsByNg(opt.NodeGroup))
 
-	// common.BuildUnCordonNodesTaskStep(task, group.ClusterID, nil)
-	updateDesired.BuildRemoveClusterNodesTaintStep(task)
+	// step5: remove inner nodes taints
+	common.BuildRemoveInnerTaintTaskStep(task, group)
 
 	// set current step
 	if len(task.StepSequence) == 0 {

@@ -45,5 +45,8 @@ message TemplateRevisionNamesDetail {
   uint32 template_id = 1;
   string template_name = 2;
   uint32 latest_template_revision_id = 3;
+  string latest_revision_name = 5;
+  string latest_signature = 6;
+  uint64 latest_byte_size = 7;
   repeated revision_names template_revisions = 4;
 }

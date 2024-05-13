@@ -1,7 +1,0 @@
-apiVersion: mesh.bkbcs.tencent.com/v1
-kind: MeshCluster
-metadata:
-  name: istio
-  namespace: default
-spec:
-  clusterId: xxxxxxxxxx

@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -36,7 +36,7 @@ func (r *responder) Error(w http.ResponseWriter, req *http.Request, err error) {
 // makeTarget 提取连接地址
 func makeTarget(serverAddress string) (*url.URL, error) {
 	if !strings.HasSuffix(serverAddress, "/") {
-		serverAddress = serverAddress + "/"
+		serverAddress += "/"
 	}
 	target, err := url.Parse(serverAddress)
 	if err != nil {
@@ -46,7 +46,8 @@ func makeTarget(serverAddress string) (*url.URL, error) {
 }
 
 // makeUpgradeTransport creates a transport for proxy connections that must upgrade.
-// reference implementation https://github.com/kubernetes/kubectl/blob/master/pkg/proxy/proxy_server.go#L153 and remove tlsConfig
+// reference implementation https://github.com/kubernetes/kubectl/blob/master/pkg/proxy/proxy_server.go#L153
+// and remove tlsConfig
 func makeUpgradeTransport(config *rest.Config) (proxy.UpgradeRequestRoundTripper, error) {
 	transportConfig, err := config.TransportConfig()
 	if err != nil {
@@ -87,6 +88,7 @@ func makeUpgradeAwareHandler(config *rest.Config) (*proxy.UpgradeAwareHandler, e
 }
 
 // ProxyHandler 代理请求
+// nolint
 type ProxyHandler struct {
 	handler *proxy.UpgradeAwareHandler
 	config  *rest.Config

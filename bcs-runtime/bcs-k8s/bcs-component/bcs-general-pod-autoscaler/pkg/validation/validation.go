@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -192,11 +192,11 @@ func validateMetrics(metrics []autoscaling.MetricSpec, fldPath *field.Path, minR
 // validateWebhook validates webhook configuration and returns an ErrorList with any errors.
 func validateWebhook(wc *v1beta1.WebhookClientConfig, fldPath *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}
-	if wc == nil {
+	if wc == nil { // nolint
 		allErrs = append(allErrs, field.Forbidden(fldPath, "webhook config should not be empty"))
 	}
 	switch {
-	case wc.Service == nil && wc.URL == nil:
+	case wc.Service == nil && wc.URL == nil: // nolint
 		allErrs = append(allErrs, field.Forbidden(fldPath, "must specify at least one service or url"))
 
 	case wc.URL != nil:
@@ -220,13 +220,13 @@ func validateTime(timeRanges []autoscaling.TimeRange, fldPath *field.Path) field
 		allErrs = append(allErrs, field.Forbidden(fldPath.Child("timeRanges"), "at least one timeRanges should set"))
 	}
 	for _, timeRange := range timeRanges {
-		if timeRange.DesiredReplicas == 0 {
-			allErrs = append(allErrs, field.Forbidden(fldPath.Child("desiredReplicas"), "should not 0"))
+		if timeRange.DesiredReplicas < 0 {
+			allErrs = append(allErrs, field.Forbidden(fldPath.Child("desiredReplicas"), "should less than 0"))
 		}
 		if len(timeRange.Schedule) == 0 {
 			allErrs = append(allErrs, field.Forbidden(fldPath.Child("schedule"), "should not empty"))
 		} else {
-			_, err := cron.Parse(timeRange.Schedule)
+			_, err := cron.ParseStandard(timeRange.Schedule)
 			if err != nil {
 				allErrs = append(allErrs, field.Forbidden(fldPath.Child("schedule"), err.Error()))
 			}

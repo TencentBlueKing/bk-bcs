@@ -16,15 +16,16 @@ package app
 import (
 	"fmt"
 	"net"
-	"net/http"
 	"strconv"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
 	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/reflection"
 
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/crontab"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/options"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/service"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
@@ -65,9 +66,9 @@ func Run(opt *options.Option) error {
 
 type feedServer struct {
 	serve   *grpc.Server
-	gwServe *http.Server //nolint:unused
 	sd      serviced.ServiceDiscover
 	service *service.Service
+	cleaner *crontab.SourceFileCacheCleaner
 }
 
 // prepare do prepare jobs before run feed server.
@@ -114,6 +115,10 @@ func (fs *feedServer) prepare(opt *options.Option) error {
 		return fmt.Errorf("initialize service failed, err: %v", err)
 	}
 	fs.service = svc
+
+	cleaner := crontab.NewSourceFileCacheCleaner()
+	fs.cleaner = cleaner
+	fs.cleaner.Run()
 
 	return nil
 }
@@ -179,15 +184,22 @@ func (fs *feedServer) listenAndServe() error {
 		logs.Infof("shutdown feed server grpc server success...")
 	}()
 
-	addr := net.JoinHostPort(network.BindIP, strconv.Itoa(int(network.RpcPort)))
-	listener, err := net.Listen("tcp", addr)
-	if err != nil {
-		return fmt.Errorf("lisen addr: %s failed, err: %v", addr, err)
+	addr := tools.GetListenAddr(network.BindIP, int(network.RpcPort))
+	ipv6Addr := tools.GetListenAddr(network.BindIPv6, int(network.RpcPort))
+	dualStackListener := listener.NewDualStackListener()
+	if err := dualStackListener.AddListenerWithAddr(addr); err != nil {
+		return err
 	}
 
-	logs.Infof("listen grpc server at %s now.", addr)
+	if network.BindIPv6 != "" && network.BindIPv6 != network.BindIP {
+		if err := dualStackListener.AddListenerWithAddr(ipv6Addr); err != nil {
+			return err
+		}
+		logs.Infof("grpc serve dualStackListener with ipv6: %s", ipv6Addr)
+	}
+
 	go func() {
-		if err := serve.Serve(listener); err != nil {
+		if err := serve.Serve(dualStackListener); err != nil {
 			logs.Errorf("serve grpc server failed, err: %v", err)
 			shutdown.SignalShutdownGracefully()
 		}
@@ -197,6 +209,9 @@ func (fs *feedServer) listenAndServe() error {
 }
 
 func (fs *feedServer) finalizer() {
+
+	fs.cleaner.Stop()
+
 	if err := fs.sd.Deregister(); err != nil {
 		logs.Errorf("process service shutdown, but deregister failed, err: %v", err)
 		return

@@ -19,6 +19,7 @@ import (
 
 	conf "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam/perm"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 )
 
 // ResRequest xxx
@@ -26,11 +27,12 @@ type ResRequest struct {
 	ProjectID string
 	ClusterID string
 	ResType   string
+	Resource  string
 }
 
 // NewResRequest xxx
-func NewResRequest(projectID, clusterID string) *ResRequest {
-	return &ResRequest{ProjectID: projectID, ClusterID: clusterID, ResType: perm.ResTypeNS}
+func NewResRequest(projectID, clusterID, resource string) *ResRequest {
+	return &ResRequest{ProjectID: projectID, ClusterID: clusterID, ResType: perm.ResTypeNS, Resource: resource}
 }
 
 // MakeResources xxx
@@ -49,9 +51,13 @@ func (r *ResRequest) MakeResources(resIDs []string) []bkiam.ResourceNode {
 
 // MakeAttribute xxx
 func (r *ResRequest) MakeAttribute(_ string) map[string]interface{} {
-	return map[string]interface{}{
+	attr := map[string]interface{}{
 		"_bk_iam_path_": fmt.Sprintf("/project,%s/cluster,%s/", r.ProjectID, r.ClusterID),
 	}
+	if r.Resource != "" {
+		attr[constants.AttrResourceType] = constants.GetResourceAttr(r.Resource)
+	}
+	return attr
 }
 
 // FormMap xxx

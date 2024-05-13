@@ -34,6 +34,7 @@ type CreateAction struct {
 	model store.ClusterManagerModel
 	req   *cmproto.CreateCloudRequest
 	resp  *cmproto.CreateCloudResponse
+	cloud *cmproto.Cloud
 }
 
 // NewCreateAction create namespace action
@@ -67,6 +68,8 @@ func (ca *CreateAction) createCloud() error {
 		ConfInfo:            ca.req.ConfInfo,
 		PlatformInfo:        ca.req.PlatformInfo,
 	}
+	ca.cloud = cloud
+
 	return ca.model.CreateCloud(ca.ctx, cloud)
 }
 
@@ -118,7 +121,8 @@ func (ca *CreateAction) Handle(ctx context.Context,
 		TaskID:       "",
 		Message:      fmt.Sprintf("创建云[%s]模板", req.CloudID),
 		OpUser:       req.Creator,
-		CreateTime:   time.Now().String(),
+		CreateTime:   time.Now().Format(time.RFC3339),
+		ResourceName: ca.cloud.Name,
 	})
 	if err != nil {
 		blog.Errorf("CreateCloud[%s] CreateOperationLog failed: %v", req.CloudID, err)

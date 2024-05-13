@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package v1 xxx
 package v1
 
 import (
@@ -23,16 +23,16 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
 	types "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/netservice"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/config"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/pkg/actions"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/pkg/metrics"
-
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	schedulerapi "k8s.io/kubernetes/pkg/scheduler/api"
+
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/config"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/pkg/actions"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/pkg/metrics"
 )
 
 // IpScheduler ip scheduler
@@ -96,6 +96,7 @@ func (i *IpScheduler) UpdateNetPoolsPeriodically() {
 
 		i.NetPools = netPools
 
+		// nolint
 		select {
 		case <-ticker.C:
 		}
@@ -112,11 +113,9 @@ func HandleIpSchedulerPredicate(extenderArgs schedulerapi.ExtenderArgs) (*schedu
 	metrics.ReportK8sCustomSchedulerNodeNum(actions.IpSchedulerV1, actions.TotalNodeNumKey,
 		float64(len(extenderArgs.Nodes.Items)))
 
-	if extenderArgs.Pod.Spec.HostNetwork == true {
+	if extenderArgs.Pod.Spec.HostNetwork {
 		blog.Infof("hostNetwork pod %s, skip to interact with netService", extenderArgs.Pod.Name)
-		for _, node := range extenderArgs.Nodes.Items {
-			canSchedule = append(canSchedule, node)
-		}
+		canSchedule = append(canSchedule, extenderArgs.Nodes.Items...)
 	} else {
 		blog.Infof("starting to predicate for pod %s", extenderArgs.Pod.Name)
 		for _, node := range extenderArgs.Nodes.Items {
@@ -156,7 +155,7 @@ func HandleIpSchedulerBinding(extenderBindingArgs schedulerapi.ExtenderBindingAr
 	if err != nil {
 		return fmt.Errorf("error when getting pod from cluster: %s", err.Error())
 	}
-	if pod.Spec.HostNetwork != true {
+	if !pod.Spec.HostNetwork {
 		blog.Infof("starting to bind pod %s, update netService data in cache", extenderBindingArgs.PodName)
 
 		strArray := strings.Split(extenderBindingArgs.Node, "-")
@@ -168,6 +167,7 @@ func HandleIpSchedulerBinding(extenderBindingArgs schedulerapi.ExtenderBindingAr
 				length := len(netPool.Available)
 				blog.Info(netPool.Net)
 				blog.Info("%d", length)
+				// nolint
 				if length > 0 {
 					DefaultIpScheduler.NetPools[i].Available = netPool.Available[:length-1]
 					blog.Info("%d", len(DefaultIpScheduler.NetPools[i].Available))

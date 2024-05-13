@@ -36,7 +36,17 @@ const (
 	// TraceID resource trace
 	TraceID        = "traceID"
 	defaultTraceID = "1234567890zxcvbnm"
+	taskID         = "taskID"
 )
+
+// GetTaskIDFromContext get taskID from context
+func GetTaskIDFromContext(ctx context.Context) string {
+	if id, ok := ctx.Value(taskID).(string); ok {
+		return id
+	}
+
+	return ""
+}
 
 // GetTraceIDFromContext get traceID from context
 func GetTraceIDFromContext(ctx context.Context) string {

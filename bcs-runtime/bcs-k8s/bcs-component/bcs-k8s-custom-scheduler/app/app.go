@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package app xxx
@@ -21,11 +20,11 @@ import (
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/app/customscheduler"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/config"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/options"
-
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 // Run the customScheduler
@@ -37,15 +36,13 @@ func Run(conf *config.CustomSchedulerConfig) {
 		blog.Errorf("start processor error %s, and exit", err.Error())
 		os.Exit(1)
 	}
-
-	return
 }
 
 // RunPrometheusMetricsServer starting prometheus metrics handler
 func RunPrometheusMetricsServer(conf *config.CustomSchedulerConfig) {
 	http.Handle("/metrics", promhttp.Handler())
 	addr := conf.Address + ":" + strconv.Itoa(int(conf.MetricPort))
-	go http.ListenAndServe(addr, nil)
+	go http.ListenAndServe(addr, nil) // nolint
 }
 
 // ParseConfig xxx

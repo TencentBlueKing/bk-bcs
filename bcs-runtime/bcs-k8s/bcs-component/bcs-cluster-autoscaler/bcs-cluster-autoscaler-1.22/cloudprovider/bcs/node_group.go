@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package bcs
@@ -23,12 +22,11 @@ import (
 	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	schedulerframework "k8s.io/kubernetes/pkg/scheduler/framework"
-
 	"k8s.io/autoscaler/cluster-autoscaler/cloudprovider"
 	ca_config "k8s.io/autoscaler/cluster-autoscaler/config"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/gpu"
 	klog "k8s.io/klog/v2"
+	schedulerframework "k8s.io/kubernetes/pkg/scheduler/framework"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/cloudprovider/bcs/clustermanager"
 )
@@ -104,7 +102,7 @@ func (group *NodeGroup) IncreaseSize(delta int) error {
 		return err
 	}
 	if size+delta > group.MaxSize() {
-		return fmt.Errorf("size increase too large - desired:%d max:%d", int(size)+delta, group.MaxSize())
+		return fmt.Errorf("size increase too large - desired:%d max:%d", size+delta, group.MaxSize())
 	}
 	if group.IsSoldOut() {
 		if group.scalingType != ScalingTypeWakeUpStopped {
@@ -112,7 +110,7 @@ func (group *NodeGroup) IncreaseSize(delta int) error {
 		}
 		if group.scalingType == ScalingTypeWakeUpStopped {
 			if group.closedSize < delta {
-				taskID, err := group.client.UpdateDesiredNode(group.nodeGroupID, size)
+				taskID, err := group.client.UpdateDesiredNode(group.nodeGroupID, size) // nolint
 				if err != nil {
 					return fmt.Errorf("available instance type in selected-zone are sold out,"+
 						" starting up %v closed instances meet error %v - group: %v",
@@ -246,7 +244,7 @@ func (group *NodeGroup) DeleteNodes(nodes []*apiv1.Node) error {
 		klog.Infof("DeleteInstances len(%d)", len(ips))
 		return group.deleteInstances(ips)
 	}
-	for i := 0; i < len(ips); i = i + maxRecordsReturnedByAPI {
+	for i := 0; i < len(ips); i += maxRecordsReturnedByAPI {
 		klog.Infof("page DeleteInstances i %d, len(%d)", i, len(ips))
 		idx := math.Min(float64(i+maxRecordsReturnedByAPI), float64(len(ips)))
 		err := group.deleteInstances(ips[i:int(idx)])
@@ -394,9 +392,10 @@ func (group *NodeGroup) getNodeTemplate() (*nodeTemplate, error) {
 	return template, nil
 }
 
+// nolint
 func (group *NodeGroup) buildNodeFromTemplate(template *nodeTemplate) (*apiv1.Node, error) {
 	node := apiv1.Node{}
-	nodeName := fmt.Sprintf("%s-%d", group.nodeGroupID, rand.Int63())
+	nodeName := fmt.Sprintf("%s-%d", group.nodeGroupID, rand.Int63()) // nolint
 
 	node.ObjectMeta = metav1.ObjectMeta{
 		Name:     nodeName,

@@ -2573,6 +2573,13 @@ div.jsoneditor {
     top: -10px;
     padding: 0 !important;
 }
+.popover-select-theme {
+    position: relative;
+    border: 1pt solid #DCDEE5;
+    box-shadow: 0 2pt 6pt 0 #0000001a;
+    border-radius: 2pt;
+    padding: 0 !important;
+}
 
 .content-loading {
     z-index: 999 !important;

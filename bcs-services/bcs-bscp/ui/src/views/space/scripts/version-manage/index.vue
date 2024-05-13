@@ -303,6 +303,7 @@
       'ext-cls': 'info-box-style',
       // infoType: 'warning',
       confirmText: t('确定'),
+      cancelText: t('取消'),
       onConfirm: async () => {
         await publishVersion(spaceId.value, scriptId.value, version.id);
         unPublishVersion.value = null;
@@ -378,7 +379,7 @@
   };
 
   const refreshList = () => {
-    searchStr.value ? (isSearchEmpty.value = true) : (isSearchEmpty.value = false);
+    isSearchEmpty.value = searchStr.value !== '';
     pagination.value.current = 1;
     getVersionList();
   };

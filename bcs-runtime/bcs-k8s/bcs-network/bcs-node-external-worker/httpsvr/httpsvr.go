@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package httpsvr xxx
@@ -17,9 +16,9 @@ package httpsvr
 import (
 	"fmt"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
 	"github.com/emicklei/go-restful"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-node-external-worker/options"
 )
 

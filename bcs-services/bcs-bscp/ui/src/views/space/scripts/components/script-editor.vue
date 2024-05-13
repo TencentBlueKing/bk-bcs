@@ -6,6 +6,14 @@
           <slot name="header"></slot>
         </div>
         <div class="actions">
+          <span
+            v-bk-tooltips="{
+              content: t('内置变量'),
+              placement: 'top',
+              distance: 20,
+            }"
+            :class="['bk-bscp-icon', 'icon-variable', { 'show-var': isShowVariable }]"
+            @click="emits('update:isShowVariable',!isShowVariable)"></span>
           <ReadFileContent
             v-if="props.uploadIcon"
             v-bk-tooltips="{
@@ -43,6 +51,7 @@
           :editable="props.editable"
           :language="props.language"
           @change="emits('update:modelValue', $event)" />
+        <slot name="sufContent" :fullscreen="isOpenFullScreen" :is-show-variable="isShowVariable"></slot>
       </div>
     </div>
   </Teleport>
@@ -60,6 +69,7 @@
   const props = withDefaults(
     defineProps<{
       modelValue: string;
+      isShowVariable?: boolean;
       language?: string;
       editable?: boolean;
       uploadIcon?: boolean;
@@ -70,7 +80,7 @@
     },
   );
 
-  const emits = defineEmits(['update:modelValue']);
+  const emits = defineEmits(['update:modelValue', 'update:isShowVariable']);
 
   const isOpenFullScreen = ref(false);
 
@@ -122,11 +132,15 @@
     .head-title {
       flex: 1;
     }
-    .action-icon {
-      color: #979ba5;
-      cursor: pointer;
-      &:hover {
-        color: #3a84ff;
+    .actions {
+      display: flex;
+      align-items: center;
+      .action-icon {
+        color: #979ba5;
+        cursor: pointer;
+        &:hover {
+          color: #3a84ff;
+        }
       }
     }
   }
@@ -135,5 +149,21 @@
   }
   .pre-content {
     height: 100%;
+  }
+  .bk-bscp-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    width: 24px;
+    height: 24px;
+    margin-right: 10px;
+    color: #979ba5;
+    cursor: pointer;
+  }
+  .show-var {
+    background: #000000;
+    border-radius: 2px;
+    color: #bdbfc5;
   }
 </style>
