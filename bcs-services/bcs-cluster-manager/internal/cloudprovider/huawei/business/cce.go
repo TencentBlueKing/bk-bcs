@@ -31,3 +31,7 @@ func DeleteClusterInstance(client *api.CceClient, clusterID string, nodes []mode
 
 	return success, nil
 }
+
+func deleteNode(client *api.CceClient, clusterID string, nodes model.Node) {
+
+}
