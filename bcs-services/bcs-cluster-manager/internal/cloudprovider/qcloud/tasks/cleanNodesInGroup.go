@@ -30,6 +30,8 @@ import (
 
 // CleanNodeGroupNodesTask clean node group nodes task
 func CleanNodeGroupNodesTask(taskID string, stepName string) error {
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start clean nodegroup nodes")
 	start := time.Now()
 	// get task and task current step
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
@@ -78,12 +80,17 @@ func CleanNodeGroupNodesTask(taskID string, stepName string) error {
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
 	err = removeAsgInstances(ctx, dependInfo, nodeIDs)
 	if err != nil {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
+			fmt.Sprintf("remove asg instances failed [%s]", err))
 		blog.Errorf("CleanNodeGroupNodesTask[%s] nodegroup %s removeAsgInstances failed: %v",
 			taskID, nodeGroupID, err)
 		retErr := fmt.Errorf("removeAsgInstances err, %v", err)
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"clean nodegroup nodes successful")
 
 	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
@@ -151,6 +158,8 @@ func removeAsgInstances(ctx context.Context, info *cloudprovider.CloudDependBasi
 
 // CheckClusterCleanNodsTask check cluster clean nodes task
 func CheckClusterCleanNodsTask(taskID string, stepName string) error {
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start check cluster clean nodes")
 	start := time.Now()
 	// get task and task current step
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
@@ -205,6 +214,9 @@ func CheckClusterCleanNodsTask(taskID string, stepName string) error {
 		blog.Infof("CheckClusterCleanNodsTask[%s] nodeIDs[%v] exist[%v] notExist[%v]",
 			taskID, nodeIDs, exist, notExist)
 
+		cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+			fmt.Sprintf("nodeIDs [%v] exist [%v] notExist [%v]", nodeIDs, exist, notExist))
+
 		if len(exist) == 0 {
 			return loop.EndLoop
 		}
@@ -219,6 +231,9 @@ func CheckClusterCleanNodsTask(taskID string, stepName string) error {
 	if errors.Is(err, context.DeadlineExceeded) {
 		blog.Infof("CheckClusterCleanNodsTask[%s] cluster[%s] timeout failed: %v", taskID, clusterID, err)
 	}
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"check cluster clean nodes successful")
 
 	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {

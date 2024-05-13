@@ -72,6 +72,8 @@ func RunBKsopsJob(taskID string, stepName string) error {
 	// step2: create bkops task
 	// step3: start task & query status
 
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start run bksops job")
 	start := time.Now()
 
 	// get task and task current step
@@ -139,6 +141,8 @@ func RunBKsopsJob(taskID string, stepName string) error {
 		stepName:       stepName,
 	})
 	if err != nil {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
+			fmt.Sprintf("run bksops job failed [%s]", err))
 		state.TaskUrl = taskUrl
 		if step.GetSkipOnFailed() {
 			_ = state.SkipFailure(start, stepName, err)
@@ -147,6 +151,9 @@ func RunBKsopsJob(taskID string, stepName string) error {
 		_ = state.UpdateStepFailure(start, stepName, err)
 		return err
 	}
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"run bksops job successful")
 
 	state.TaskUrl = taskUrl
 	_ = state.UpdateStepSucc(start, stepName)

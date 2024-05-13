@@ -181,6 +181,14 @@ type ClusterManagerModel interface {
 		opt *options.ListOption) ([]types.TaskOperationLog, error)
 	DeleteOperationLogByDate(ctx context.Context, startTime, endTime string) error
 
+	// TaskStepLog
+	CreateTaskStepLogInfo(ctx context.Context, taskID, stepName, message string)
+	CreateTaskStepLogWarn(ctx context.Context, taskID, stepName, message string)
+	CreateTaskStepLogError(ctx context.Context, taskID, stepName, message string)
+	DeleteTaskStepLogByTaskID(ctx context.Context, taskID string) error
+	CountTaskStepLog(ctx context.Context, cond *operator.Condition) (int64, error)
+	ListTaskStepLog(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]types.TaskStepLog, error)
+
 	// project information storage management
 	CreateAutoScalingOption(ctx context.Context, option *types.ClusterAutoScalingOption) error
 	UpdateAutoScalingOption(ctx context.Context, option *types.ClusterAutoScalingOption) error
@@ -213,6 +221,7 @@ type ModelSet struct {
 	*scalingoption.ModelAutoScalingOption
 	*cloudvpc.ModelCloudVPC
 	*operationlog.ModelOperationLog
+	*operationlog.ModelTaskStepLog
 	*account.ModelCloudAccount
 	*nodetemplate.ModelNodeTemplate
 	*moduleflag.ModelCloudModuleFlag
@@ -252,6 +261,7 @@ func NewModelSet(mongoOptions *mongo.Options) (ClusterManagerModel, error) {
 		ModelAutoScalingOption: scalingoption.New(db),
 		ModelCloudVPC:          cloudvpc.New(db),
 		ModelOperationLog:      operationlog.New(db),
+		ModelTaskStepLog:       operationlog.NewTaskStepLog(db),
 		ModelCloudAccount:      account.New(db),
 		ModelNodeTemplate:      nodetemplate.New(db),
 		ModelCloudModuleFlag:   moduleflag.New(db),

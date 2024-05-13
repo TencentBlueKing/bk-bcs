@@ -53,6 +53,8 @@ func EmptyAction(taskID, stepName string) error {
 
 // SetResourcePoolDeviceLabels set resourcePool device labels
 func SetResourcePoolDeviceLabels(taskID, stepName string) error {
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start set resourcePool device labels")
 	start := time.Now()
 
 	// get task and task current step
@@ -79,7 +81,7 @@ func SetResourcePoolDeviceLabels(taskID, stepName string) error {
 		return nil
 	}
 
-	ctx := utils.WithTraceIDForContext(context.Background(), taskID)
+	ctx := cloudprovider.WithTaskIDAndStepNameForContext(context.Background(), taskID, stepName)
 
 	for i := range deviceList {
 		device, errLocal := tresource.GetResourceManagerClient().GetDeviceInfoByDeviceID(ctx, deviceList[i])
@@ -96,6 +98,9 @@ func SetResourcePoolDeviceLabels(taskID, stepName string) error {
 		} else {
 			blog.Infof("SetResourcePoolDeviceLabels[%s] setNodeDeviceLabels[%s:%s] successful",
 				taskID, device.DeviceID, device.InnerIP)
+
+			cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+				fmt.Sprintf("[%s] successful", device.InnerIP))
 		}
 
 		// device annotations
@@ -107,6 +112,9 @@ func SetResourcePoolDeviceLabels(taskID, stepName string) error {
 				taskID, device.DeviceID, device.InnerIP)
 		}
 	}
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"set resource pool device labels successful")
 
 	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {

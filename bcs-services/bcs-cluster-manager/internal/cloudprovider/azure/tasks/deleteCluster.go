@@ -46,7 +46,7 @@ func DeleteAKSClusterTask(taskID string, stepName string) error {
 	if err != nil {
 		blog.Errorf("DeleteAKSClusterTask[%s]: get cloud/project for cluster %s in BasicInfo %s step %s failed, %s",
 			taskID, clusterID, taskID, stepName, err.Error())
-		retErr := fmt.Errorf("get cloud/project information failed, %s", err.Error())
+		retErr := fmt.Errorf("get cluster depend basic info failed, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
