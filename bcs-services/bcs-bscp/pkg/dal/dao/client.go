@@ -373,7 +373,7 @@ func (dao *clientDao) handleSearch(kit *kit.Kit, bizID, appID uint32, search *pb
 	// 支持多个 key:valul 以及 key
 	if search.GetLabel() != nil && len(search.GetLabel().GetFields()) != 0 {
 		for k, v := range search.GetLabel().GetFields() {
-			if v.GetStringValue() != "" {
+			if k != "" {
 				if v.GetStringValue() != "" {
 					conds = append(conds, q.Where(rawgen.Cond(datatypes.JSONQuery("labels").Equals(v.AsInterface(), k))...))
 				} else {
@@ -386,7 +386,7 @@ func (dao *clientDao) handleSearch(kit *kit.Kit, bizID, appID uint32, search *pb
 	// 根据附加标签搜索
 	if search.GetAnnotations() != nil && len(search.GetAnnotations().GetFields()) != 0 {
 		for k, v := range search.GetLabel().GetFields() {
-			if v.GetStringValue() != "" {
+			if k != "" {
 				conds = append(conds, q.Where(rawgen.Cond(datatypes.JSONQuery("annotations").Equals(v.AsInterface(), k))...))
 			}
 		}
