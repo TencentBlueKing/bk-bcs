@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package options xxx
 package options
 
 import (
@@ -22,10 +22,13 @@ import (
 )
 
 const (
-	EnvNameNodeName     = "NODE_NAME"
+	// EnvNameNodeName xxx
+	EnvNameNodeName = "NODE_NAME"
+	// EnvNamePodNamespace xxx
 	EnvNamePodNamespace = "POD_NAMESPACE"
 )
 
+// Options xxx
 type Options struct {
 	// ExternalIPWebURL URL to get external IP
 	ExternalIPWebURL string
@@ -50,6 +53,7 @@ type Options struct {
 	conf.LogConfig
 }
 
+// BindFromCommandLine xxx
 func (op *Options) BindFromCommandLine() {
 	var verbosity int
 
@@ -75,6 +79,7 @@ func (op *Options) BindFromCommandLine() {
 
 }
 
+// SetFromEnv set form env
 func (op *Options) SetFromEnv() {
 	nodeName := os.Getenv(EnvNameNodeName)
 	if len(nodeName) == 0 {

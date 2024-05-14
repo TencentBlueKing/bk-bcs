@@ -15,10 +15,10 @@ package dao
 import (
 	"sort"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 )
 
 // ReleasedAppTemplateVariable supplies all the template revision related operations.
@@ -29,6 +29,8 @@ type ReleasedAppTemplateVariable interface {
 	ListVariables(kit *kit.Kit, bizID, appID, releaseID uint32) ([]*table.TemplateVariableSpec, error)
 	// BatchDeleteByAppIDWithTx batch delete by app id with transaction.
 	BatchDeleteByAppIDWithTx(kit *kit.Kit, tx *gen.QueryTx, appID, bizID uint32) error
+	// BatchDeleteByReleaseIDWithTx batch delete by release id with transaction.
+	BatchDeleteByReleaseIDWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, appID, releaseID uint32) error
 }
 
 var _ ReleasedAppTemplateVariable = new(releasedAppTemplateVariableDao)
@@ -104,5 +106,25 @@ func (dao *releasedAppTemplateVariableDao) BatchDeleteByAppIDWithTx(kit *kit.Kit
 	m := tx.ReleasedAppTemplateVariable
 
 	_, err := m.WithContext(kit.Ctx).Where(m.AppID.Eq(appID), m.BizID.Eq(bizID)).Delete()
+	return err
+}
+
+// BatchDeleteByReleaseIDWithTx batch delete by release id with transaction.
+func (dao *releasedAppTemplateVariableDao) BatchDeleteByReleaseIDWithTx(kit *kit.Kit, tx *gen.QueryTx,
+	appID, bizID, releaseID uint32) error {
+
+	if bizID == 0 {
+		return errf.New(errf.InvalidParameter, "bizID is 0")
+	}
+	if appID == 0 {
+		return errf.New(errf.InvalidParameter, "appID is 0")
+	}
+	if releaseID == 0 {
+		return errf.New(errf.InvalidParameter, "releaseID is 0")
+	}
+
+	m := tx.ReleasedAppTemplateVariable
+
+	_, err := m.WithContext(kit.Ctx).Where(m.AppID.Eq(appID), m.BizID.Eq(bizID), m.ReleaseID.Eq(releaseID)).Delete()
 	return err
 }

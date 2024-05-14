@@ -55,28 +55,39 @@ func (c *CloudInfoManager) SyncClusterCloudInfo(cls *proto.Cluster,
 		return fmt.Errorf("%s SyncClusterCloudInfo option is empty", cloudName)
 	}
 	// get cloud cluster
-	cluster, err := getCloudCluster(opt)
+	cluster, err := getCloudCluster(opt, opt.ImportMode.GetResourceGroup())
 	if err != nil {
 		return fmt.Errorf("SyncClusterCloudInfo failed: %v", err)
 	}
 	cls.SystemID = *cluster.Name
 	// cluster cloud basic setting
-	clusterBasicSettingByQCloud(cls, cluster)
+	clusterBasicSettingByAzure(cls, cluster, opt)
 	// cluster cloud network setting
-	err = clusterNetworkSettingByQCloud(cls, cluster)
+	err = clusterNetworkSettingByAzure(cls, cluster)
 	if err != nil {
-		blog.Errorf("SyncClusterCloudInfo clusterNetworkSettingByQCloud failed: %v", err)
+		blog.Errorf("SyncClusterCloudInfo clusterNetworkSettingByAzure failed: %v", err)
 	}
 
 	return nil
 }
 
-func getCloudCluster(opt *cloudprovider.SyncClusterCloudInfoOption) (*armcontainerservice.ManagedCluster, error) {
+// UpdateClusterCloudInfo update cluster info by cloud
+func (c *CloudInfoManager) UpdateClusterCloudInfo(cls *proto.Cluster) error {
+	// call qcloud interface to init cluster defaultConfig
+	if c == nil || cls == nil {
+		return fmt.Errorf("%s UpdateClusterCloudInfo request is empty", cloudName)
+	}
+
+	return nil
+}
+
+func getCloudCluster(opt *cloudprovider.SyncClusterCloudInfoOption,
+	resourceGroupName string) (*armcontainerservice.ManagedCluster, error) {
 	client, err := api.NewAksServiceImplWithCommonOption(opt.Common)
 	if err != nil {
 		return nil, fmt.Errorf("%s getCloudCluster NewContainerServiceClient failed: %v", cloudName, err)
 	}
-	mc, err := client.GetClusterWithName(context.Background(), opt.Common.Account.ResourceGroupName,
+	mc, err := client.GetClusterWithName(context.Background(), resourceGroupName,
 		opt.ImportMode.CloudID)
 	if err != nil {
 		return nil, fmt.Errorf("%s getCloudCluster GetCluster failed: %v", cloudName, err)
@@ -84,7 +95,8 @@ func getCloudCluster(opt *cloudprovider.SyncClusterCloudInfoOption) (*armcontain
 	return mc, nil
 }
 
-func clusterBasicSettingByQCloud(cls *proto.Cluster, cluster *armcontainerservice.ManagedCluster) {
+func clusterBasicSettingByAzure(cls *proto.Cluster, cluster *armcontainerservice.ManagedCluster,
+	opt *cloudprovider.SyncClusterCloudInfoOption) {
 	clusterOs := ""
 	if len(cluster.Properties.AgentPoolProfiles) > 0 {
 		p := cluster.Properties.AgentPoolProfiles
@@ -94,19 +106,24 @@ func clusterBasicSettingByQCloud(cls *proto.Cluster, cluster *armcontainerservic
 		OS:          clusterOs,
 		Version:     *cluster.Properties.CurrentKubernetesVersion,
 		VersionName: *cluster.Properties.CurrentKubernetesVersion,
+		Area:        opt.Area,
 	}
 }
 
-func clusterNetworkSettingByQCloud(cls *proto.Cluster, cluster *armcontainerservice.ManagedCluster) error { // nolint
+func clusterNetworkSettingByAzure(cls *proto.Cluster, cluster *armcontainerservice.ManagedCluster) error { // nolint
 	cidrs := cluster.Properties.NetworkProfile.PodCidrs
 	podCidrs := make([]string, len(cidrs))
 	for i := range cidrs {
 		podCidrs[i] = *cidrs[i]
 	}
 	cls.NetworkSettings = &proto.NetworkSetting{
-		ClusterIPv4CIDR:  *cluster.Properties.NetworkProfile.PodCidr,
 		ServiceIPv4CIDR:  *cluster.Properties.NetworkProfile.ServiceCidr,
 		MultiClusterCIDR: podCidrs,
 	}
+	// 有时cluster不会返回pod cidr
+	if cluster.Properties.NetworkProfile.PodCidr != nil {
+		cls.NetworkSettings.ClusterIPv4CIDR = *cluster.Properties.NetworkProfile.PodCidr
+	}
+
 	return nil
 }

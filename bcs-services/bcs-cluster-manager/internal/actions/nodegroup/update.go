@@ -494,11 +494,12 @@ func (ua *UpdateAction) Handle(
 			}
 			return ua.task.TaskID
 		}(),
-		Message:    fmt.Sprintf("集群%s节点规格%s更新配置信息", ua.req.ClusterID, ua.req.NodeGroupID),
-		OpUser:     req.Updater,
-		CreateTime: time.Now().Format(time.RFC3339),
-		ClusterID:  ua.cluster.ClusterID,
-		ProjectID:  ua.cluster.ProjectID,
+		Message:      fmt.Sprintf("集群%s节点池%s更新配置信息", ua.req.ClusterID, ua.req.NodeGroupID),
+		OpUser:       req.Updater,
+		CreateTime:   time.Now().Format(time.RFC3339),
+		ClusterID:    ua.cluster.ClusterID,
+		ProjectID:    ua.cluster.ProjectID,
+		ResourceName: ua.group.GetName(),
 	}); err != nil {
 		blog.Errorf("UpdateNodeGroup[%s] CreateOperationLog failed: %v", ua.req.NodeGroupID, err)
 	}
@@ -637,11 +638,12 @@ func (ua *MoveNodeAction) Handle(
 		ResourceType: common.NodeGroup.String(),
 		ResourceID:   req.NodeGroupID,
 		TaskID:       "",
-		Message:      fmt.Sprintf("集群%s移入节点至节点规格%s", ua.cluster.ClusterID, req.NodeGroupID),
+		Message:      fmt.Sprintf("集群%s移入节点至节点池%s", ua.cluster.ClusterID, req.NodeGroupID),
 		OpUser:       ua.group.Updater,
 		CreateTime:   time.Now().Format(time.RFC3339),
 		ClusterID:    ua.group.ClusterID,
 		ProjectID:    ua.group.ProjectID,
+		ResourceName: ua.group.GetName(),
 	})
 	if err != nil {
 		blog.Errorf("MoveNodesToGroup[%s] CreateOperationLog failed: %v", req.NodeGroupID, err)
@@ -735,6 +737,8 @@ type UpdateDesiredNodeAction struct {
 	// 兼容clusterManager和nodeManager
 	clusterCloud *cmproto.Cloud
 	task         *cmproto.Task
+
+	nodeScheduler bool
 }
 
 // NewUpdateDesiredNodeAction create update action for online cluster credential
@@ -800,6 +804,7 @@ func (ua *UpdateDesiredNodeAction) handleTask(scaling uint32) error {
 		AsOption:     ua.asOption,
 		Operator:     ua.req.Operator,
 		Manual:       ua.req.Manual,
+		NodeSchedule: ua.nodeScheduler,
 	})
 	if err != nil {
 		blog.Errorf("build scaling task for NodeGroup %s with cloudprovider %s failed, %s",
@@ -851,6 +856,12 @@ func (ua *UpdateDesiredNodeAction) getRelativeData() error {
 	ua.clusterCloud = clusterCloud
 
 	ua.asOption, _ = actions.GetAsOptionByClusterID(ua.model, ua.group.ClusterID)
+
+	nodeScheduler, err := utils.CheckClusterNodeNum(ua.model, ua.cluster)
+	if err != nil {
+		blog.Errorf("CheckClusterNodeNum[%s:%s] failed: %v", ua.cluster.ClusterID, ua.group.NodeGroupID, err)
+	}
+	ua.nodeScheduler = nodeScheduler
 
 	return nil
 }
@@ -1012,11 +1023,12 @@ func (ua *UpdateDesiredNodeAction) Handle(
 		ResourceType: common.NodeGroup.String(),
 		ResourceID:   req.NodeGroupID,
 		TaskID:       ua.task.TaskID,
-		Message:      fmt.Sprintf("集群%s扩容节点规格%s节点数至%v", ua.cluster.ClusterID, req.NodeGroupID, req.DesiredNode),
+		Message:      fmt.Sprintf("集群%s扩容节点池%s节点数至%v", ua.cluster.ClusterID, req.NodeGroupID, req.DesiredNode),
 		OpUser:       ua.group.Updater,
 		CreateTime:   time.Now().Format(time.RFC3339),
 		ClusterID:    ua.cluster.ClusterID,
 		ProjectID:    ua.cluster.ProjectID,
+		ResourceName: ua.group.GetName(),
 	})
 	if err != nil {
 		blog.Errorf("UpdateDesiredNode[%s] CreateOperationLog failed: %v", req.NodeGroupID, err)
@@ -1105,11 +1117,12 @@ func (ua *UpdateDesiredSizeAction) Handle(
 		ResourceType: common.NodeGroup.String(),
 		ResourceID:   req.NodeGroupID,
 		TaskID:       "",
-		Message:      fmt.Sprintf("更新集群%s节点规格%s期望扩容节点数至%d", destGroup.ClusterID, req.NodeGroupID, req.DesiredSize),
+		Message:      fmt.Sprintf("更新集群%s节点池%s期望扩容节点数至%d", destGroup.ClusterID, req.NodeGroupID, req.DesiredSize),
 		OpUser:       req.Operator,
 		CreateTime:   time.Now().Format(time.RFC3339),
 		ClusterID:    destGroup.ClusterID,
 		ProjectID:    destGroup.ProjectID,
+		ResourceName: destGroup.GetName(),
 	})
 	if err != nil {
 		blog.Errorf("UpdateGroupDesiredSize[%s] CreateOperationLog failed: %v", req.NodeGroupID, err)

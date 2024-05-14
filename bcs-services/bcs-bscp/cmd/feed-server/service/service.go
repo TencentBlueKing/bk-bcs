@@ -25,17 +25,17 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/repository"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/auth"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/rest"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/handler"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/shutdown"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/serviced"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/repository"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/auth"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/rest"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/handler"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/shutdown"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/serviced"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
 // Service do all the data service's work
@@ -52,6 +52,7 @@ type Service struct {
 	// dsSetting down stream related setting.
 	dsSetting cc.Downstream
 	mc        *metric
+	fileLock  *fileLockManager
 }
 
 // NewService create a service instance.
@@ -84,6 +85,7 @@ func NewService(sd serviced.Discover, name string) (*Service, error) {
 		name:       name,
 		dsSetting:  cc.FeedServer().Downstream,
 		provider:   provider,
+		fileLock:   newFileLockManager(),
 		mc:         initMetric(name),
 	}, nil
 }

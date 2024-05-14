@@ -22,13 +22,14 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
-	"github.com/micro/go-micro/v2/registry"
 	"github.com/parnurzeal/gorequest"
+	"go-micro.dev/v4/registry"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/discovery"
 )
 
 const (
+	prefix              = "/bcsapi/v4/"
 	usermanagerPrefixV1 = types.BCS_MODULE_USERMANAGER + "/v1"
 	usermanagerPrefixV2 = types.BCS_MODULE_USERMANAGER + "/v2"
 )
@@ -135,7 +136,7 @@ func NewUserManagerClient(opts *Options) *UserManagerClient {
 func (um *UserManagerClient) getUserManagerServerPath(url string) (string, error) {
 	// call server by gateway
 	if len(um.opts.GateWay) != 0 {
-		return um.opts.GateWay + url, nil
+		return um.opts.GateWay + prefix + url, nil
 	}
 
 	// get bcs-user-manager server from etcd registry

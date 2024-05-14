@@ -6336,6 +6336,8 @@ func (m *Release) validate(all bool) error {
 
 	// no validation rules for ClusterID
 
+	// no validation rules for Env
+
 	if len(errors) > 0 {
 		return ReleaseMultiError(errors)
 	}
@@ -7258,6 +7260,8 @@ func (m *InstallReleaseV1Req) validate(all bool) error {
 
 	// no validation rules for Operator
 
+	// no validation rules for Env
+
 	if len(errors) > 0 {
 		return InstallReleaseV1ReqMultiError(errors)
 	}
@@ -7837,6 +7841,8 @@ func (m *UpgradeReleaseV1Req) validate(all bool) error {
 	// no validation rules for ValueFile
 
 	// no validation rules for Operator
+
+	// no validation rules for Env
 
 	if len(errors) > 0 {
 		return UpgradeReleaseV1ReqMultiError(errors)
@@ -9781,6 +9787,152 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = GetReleaseStatusReqValidationError{}
+
+// Validate checks the field values on GetReleaseDetailExtendReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetReleaseDetailExtendReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetReleaseDetailExtendReq with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetReleaseDetailExtendReqMultiError, or nil if none found.
+func (m *GetReleaseDetailExtendReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetReleaseDetailExtendReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if utf8.RuneCountInString(m.GetName()) < 1 {
+		err := GetReleaseDetailExtendReqValidationError{
+			field:  "Name",
+			reason: "value length must be at least 1 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetNamespace()); l < 1 || l > 64 {
+		err := GetReleaseDetailExtendReqValidationError{
+			field:  "Namespace",
+			reason: "value length must be between 1 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 1 || l > 64 {
+		err := GetReleaseDetailExtendReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 1 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+		err := GetReleaseDetailExtendReqValidationError{
+			field:  "ProjectCode",
+			reason: "value length must be between 1 and 32 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return GetReleaseDetailExtendReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetReleaseDetailExtendReqMultiError is an error wrapping multiple validation
+// errors returned by GetReleaseDetailExtendReq.ValidateAll() if the
+// designated constraints aren't met.
+type GetReleaseDetailExtendReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetReleaseDetailExtendReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetReleaseDetailExtendReqMultiError) AllErrors() []error { return m }
+
+// GetReleaseDetailExtendReqValidationError is the validation error returned by
+// GetReleaseDetailExtendReq.Validate if the designated constraints aren't met.
+type GetReleaseDetailExtendReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetReleaseDetailExtendReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetReleaseDetailExtendReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetReleaseDetailExtendReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetReleaseDetailExtendReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetReleaseDetailExtendReqValidationError) ErrorName() string {
+	return "GetReleaseDetailExtendReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetReleaseDetailExtendReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetReleaseDetailExtendReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetReleaseDetailExtendReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetReleaseDetailExtendReqValidationError{}
 
 // Validate checks the field values on GetReleasePodsReq with the rules defined
 // in the proto definition for this message. If any rules are violated, the

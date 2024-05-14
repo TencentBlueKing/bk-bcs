@@ -16,7 +16,7 @@ import (
 
 	"gorm.io/plugin/dbresolver"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
 )
 
 func newHook(db *gorm.DB, opts ...gen.DOOption) hook {
@@ -30,7 +30,7 @@ func newHook(db *gorm.DB, opts ...gen.DOOption) hook {
 	_hook.ID = field.NewUint32(tableName, "id")
 	_hook.Name = field.NewString(tableName, "name")
 	_hook.Type = field.NewString(tableName, "type")
-	_hook.Tag = field.NewString(tableName, "tag")
+	_hook.Tags = field.NewField(tableName, "tags")
 	_hook.Memo = field.NewString(tableName, "memo")
 	_hook.BizID = field.NewUint32(tableName, "biz_id")
 	_hook.Creator = field.NewString(tableName, "creator")
@@ -50,7 +50,7 @@ type hook struct {
 	ID        field.Uint32
 	Name      field.String
 	Type      field.String
-	Tag       field.String
+	Tags      field.Field
 	Memo      field.String
 	BizID     field.Uint32
 	Creator   field.String
@@ -76,7 +76,7 @@ func (h *hook) updateTableName(table string) *hook {
 	h.ID = field.NewUint32(table, "id")
 	h.Name = field.NewString(table, "name")
 	h.Type = field.NewString(table, "type")
-	h.Tag = field.NewString(table, "tag")
+	h.Tags = field.NewField(table, "tags")
 	h.Memo = field.NewString(table, "memo")
 	h.BizID = field.NewUint32(table, "biz_id")
 	h.Creator = field.NewString(table, "creator")
@@ -111,7 +111,7 @@ func (h *hook) fillFieldMap() {
 	h.fieldMap["id"] = h.ID
 	h.fieldMap["name"] = h.Name
 	h.fieldMap["type"] = h.Type
-	h.fieldMap["tag"] = h.Tag
+	h.fieldMap["tags"] = h.Tags
 	h.fieldMap["memo"] = h.Memo
 	h.fieldMap["biz_id"] = h.BizID
 	h.fieldMap["creator"] = h.Creator

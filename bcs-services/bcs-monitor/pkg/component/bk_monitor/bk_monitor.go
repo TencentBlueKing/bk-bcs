@@ -32,6 +32,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storage"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/utils"
 )
 
 const (
@@ -173,7 +174,7 @@ func QueryByPromQLRaw(ctx context.Context, rawURL, bkBizID string, start, end, s
 		return nil, err
 	}
 
-	resp, err := component.GetClient().R().
+	resp, err := component.GetNoTraceClient().R().
 		SetContext(ctx).
 		SetBody(body).
 		SetHeader("X-Bkapi-Authorization", authInfo).
@@ -262,98 +263,9 @@ type BaseResponse struct {
 	Result  bool   `json:"result"`
 }
 
-// BKMonitorResult 蓝鲸监控返回的结构体, 和component下的BKResult数据接口规范不一致, 重新定义一份
-type BKMonitorResult struct { // nolint
-	BaseResponse
-	Data *GrayClusterList `json:"data"`
-}
-
-// GrayClusterList 灰度列表
-type GrayClusterList struct {
-	Enabled       bool                `json:"enable_bsc_gray_cluster"`
-	ClusterIdList []string            `json:"bcs_gray_cluster_id_list"`
-	ClusterMap    map[string]struct{} `json:"-"`
-}
-
-func (c *GrayClusterList) initClusterMap() {
-	c.ClusterMap = map[string]struct{}{}
-	for _, id := range c.ClusterIdList {
-		c.ClusterMap[id] = struct{}{}
-	}
-}
-
-// queryClusterList 查询已经接入蓝鲸监控的集群列表
-func queryClusterList(ctx context.Context, host string) (*GrayClusterList, error) {
-	url := fmt.Sprintf("%s/get_bcs_gray_cluster_list", host)
-
-	authInfo, err := component.GetBKAPIAuthorization()
-	if err != nil {
-		return nil, err
-	}
-
-	resp, err := component.GetClient().R().
-		SetContext(ctx).
-		SetHeader("X-Bkapi-Authorization", authInfo).
-		Get(url)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if resp.StatusCode() != http.StatusOK {
-		return nil, errors.Errorf("http code %d != 200, body: %s", resp.StatusCode(), resp.Body())
-	}
-
-	bkMonitorResult := &BKMonitorResult{}
-	if err := json.Unmarshal(resp.Body(), bkMonitorResult); err != nil {
-		return nil, err
-	}
-
-	if !bkMonitorResult.Result {
-		return nil, errors.Errorf("result = %t, shoud be true", bkMonitorResult.Result)
-	}
-
-	bkMonitorResult.Data.initClusterMap()
-
-	return bkMonitorResult.Data, nil
-}
-
-// QueryGrayClusterMap 查询灰度集群, 有缓存
-func QueryGrayClusterMap(ctx context.Context, host string) (map[string]struct{}, error) {
-	cacheKey := "bcs.QueryGrayClusterMap"
-	if cacheResult, ok := storage.LocalCache.Slot.Get(cacheKey); ok {
-		return cacheResult.(map[string]struct{}), nil
-	}
-
-	clusterList, err := queryClusterList(ctx, host)
-	if err != nil {
-		return nil, err
-	}
-
-	grepClusterMap := map[string]struct{}{}
-
-	for _, clusterId := range clusterList.ClusterIdList {
-		grepClusterMap[clusterId] = struct{}{}
-	}
-
-	storage.LocalCache.Slot.Set(cacheKey, grepClusterMap, time.Minute*10)
-
-	return grepClusterMap, nil
-}
-
 // IsBKMonitorEnabled 集群是否接入到蓝鲸监控
-func IsBKMonitorEnabled(ctx context.Context, clusterId string) (bool, error) {
-	// 不配置则全量接入
-	if !config.G.BKMonitor.EnableGrey {
-		return true, nil
-	}
-	grayClusterMap, err := QueryGrayClusterMap(ctx, config.G.BKMonitor.MetadataURL)
-	if err != nil {
-		return false, err
-	}
-
-	_, ok := grayClusterMap[clusterId]
-	return ok, nil
+func IsBKMonitorEnabled(clusterID string) bool {
+	return !utils.StringInSlice(clusterID, config.G.BKMonitor.DisableClusters)
 }
 
 // MetricsListResult metrics 列表

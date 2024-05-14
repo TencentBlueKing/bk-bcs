@@ -154,7 +154,7 @@ func (ga *GetExternalNodeScriptAction) getExternalNodeScript() error {
 		return err
 	}
 
-	script, err := mgr.GetExternalNodeScript(ga.nodeGroup)
+	script, err := mgr.GetExternalNodeScript(ga.nodeGroup, ga.req.GetInternal())
 	if err != nil {
 		blog.Errorf("GetExternalNodeScriptAction GetExternalNodeScript failed: %v", err)
 		return err

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package option include controller options from command line and env
@@ -16,101 +15,92 @@ package option
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-exec/tfexec"
-	"github.com/pkg/errors"
 	"path"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
+	secretop "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-vaultplugin-server/options"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-vaultplugin-server/pkg/secret"
+	"github.com/hashicorp/terraform-exec/tfexec"
+	"github.com/pkg/errors"
 )
 
 var (
-	// GlobalGitopsOpt gitops opt
-	GlobalGitopsOpt *store.Options
-
 	// consulScheme consul scheme
 	consulScheme *tfexec.BackendConfigOption
 	// consulAddress consul address
 	consulAddress *tfexec.BackendConfigOption
 	// consulPathPrefix consul path prefix(bcs-terraform-controller)
 	consulPathPrefix string
-	// vault private ca dir
-	vaultCaPath string
 )
 
 // ControllerOption options for controller
 type ControllerOption struct {
-	// Address for server
-	Address string
-
-	// PodIPs contains ipv4 and ipv6 address get from status.podIPs
-	PodIPs []string
-
-	// Port port for server
-	Port int
-
-	// MetricPort port for metric server
-	MetricPort int
-
-	// LogConfig for blog
+	conf.FileConfig
 	conf.LogConfig
 
-	// KubernetesQPS the qps of k8s client request
-	KubernetesQPS int
+	Address    string `json:"address" value:"0.0.0.0" usage:"local address"`
+	Port       int    `json:"port" value:"8080" usage:"http port"`
+	MetricPort int    `json:"metricPort" value:"8081" usage:"metric port"`
+	GRPCPort   int    `json:"grpcPort" value:"8082" usage:"grpc port"`
+	HealthPort int    `json:"healthPort" value:"8083" usage:"health port"`
+	HTTPPort   int    `json:"httpPort" value:"8088" usage:"http port"`
 
-	// KubernetesBurst the burst of k8s client request
-	KubernetesBurst int
+	EnableLeaderElection bool `json:"enableLeaderElection" value:"true" usage:"whether enable leader election"`
+	KubernetesQPS        int  `json:"kubernetesQPS" value:"50" usage:"kubernetes qps"`
+	KubernetesBurst      int  `json:"kubernetesBurst" value:"100" usage:"kubernetes burst"`
 
-	// ConsulScheme consul协议(http)
-	ConsulScheme string
-	// ConsulAddress consul地址
-	ConsulAddress string
-	// ConsulPath consul前缀
-	ConsulPath string
+	ConsulScheme  string `json:"consulScheme" value:"" usage:"the scheme of consul"`
+	ConsulAddress string `json:"consulAddress" value:"" usage:"the address of consul"`
+	ConsulPath    string `json:"consulPath" value:"" usage:"the path of consul"`
 
-	// GitopsHost gitops host
-	GitopsHost string
-	// GitopsUsername gitops username
-	GitopsUsername string
-	// GitopsPassword gitops password
-	GitopsPassword string
+	SecretType      string `json:"secretType" value:"" usage:"the type of secret"`
+	SecretEndpoints string `json:"secretEndpoints" value:"" usage:"the endpoints of secret"`
+	SecretToken     string `json:"secretToken" value:"" usage:"the token of secret"`
+	SecretCA        string `json:"secretCA" value:"" usage:"the ca path of secret"`
 
-	// vault私有证书路径，通过secret挂载到pod中
-	VaultCaPath string
+	WorkerQueue     int    `json:"workerQueue" value:"" usage:"the queue number of worker"`
+	WorkerNamespace string `json:"workerNamespace" value:"" usage:"the namespace of worker"`
+	WorkerName      string `json:"workerName" value:"" usage:"the name of worker statefulset"`
+
+	ControllerGRPCAddress string `json:"controllerGRPCAddress" value:"" usage:"the grpc address of controller manager"`
+	ArgoAdminNamespace    string `json:"argoAdminNamespace" value:"" usage:"the admin namespace of argo"`
+	IsWorker              bool   `json:"isWorker" value:"false" usage:"whether is worker"`
 }
 
-// CheckControllerOption ControllerOption参数校验
-func CheckControllerOption(o *ControllerOption) error {
-	if len(o.ConsulScheme) == 0 {
-		return errors.New("controller start param consul_scheme is nil")
-	}
-	if len(o.ConsulAddress) == 0 {
-		return errors.New("controller start param consul_address is nil")
-	}
-	if len(o.ConsulPath) == 0 {
-		return errors.New("controller start param consul_path is nil")
-	}
-	if len(o.GitopsHost) == 0 {
-		return errors.New("controller start param gitops_host is nil")
-	}
-	if len(o.GitopsUsername) == 0 {
-		return errors.New("controller start param gitops_username is nil")
-	}
-	if len(o.GitopsPassword) == 0 {
-		return errors.New("controller start param gitops_password is nil")
-	}
+var (
+	globalOption  *ControllerOption
+	secretManager secret.SecretManagerWithVersion
+)
 
-	GlobalGitopsOpt = &store.Options{
-		Service: o.GitopsHost,
-		User:    o.GitopsUsername,
-		Pass:    o.GitopsPassword,
+// Parse the ControllerOperation from config file
+func Parse() error {
+	globalOption = &ControllerOption{}
+	conf.Parse(globalOption)
+	consulPathPrefix = globalOption.ConsulPath
+	consulScheme = tfexec.BackendConfig(fmt.Sprintf("scheme=%s", globalOption.ConsulScheme))
+	consulAddress = tfexec.BackendConfig(fmt.Sprintf("address=%s", globalOption.ConsulAddress))
+	secretManager = secret.NewSecretManager(&secretop.Options{
+		Secret: secretop.SecretOptions{
+			CA:        globalOption.SecretCA,
+			Type:      globalOption.SecretType,
+			Endpoints: globalOption.SecretEndpoints,
+			Token:     globalOption.SecretToken,
+		},
+	})
+	if err := secretManager.Init(); err != nil {
+		return errors.Wrapf(err, "secret manager init failed")
 	}
-	consulPathPrefix = o.ConsulPath
-	consulScheme = tfexec.BackendConfig(fmt.Sprintf("scheme=%s", o.ConsulScheme))
-	consulAddress = tfexec.BackendConfig(fmt.Sprintf("address=%s", o.ConsulAddress))
-	vaultCaPath = o.VaultCaPath
-
 	return nil
+}
+
+// GlobalOption return the global option
+func GlobalOption() *ControllerOption {
+	return globalOption
+}
+
+// GetSecretManager return the SecretManager instance
+func GetSecretManager() secret.SecretManagerWithVersion {
+	return secretManager
 }
 
 // GetConsulScheme return consul scheme
@@ -124,11 +114,6 @@ func GetConsulAddress() *tfexec.BackendConfigOption {
 }
 
 // GetConsulPath return consul path
-func GetConsulPath(namespace, name string) *tfexec.BackendConfigOption {
-	return tfexec.BackendConfig(fmt.Sprintf("path=%s", path.Join(consulPathPrefix, namespace, name)))
-}
-
-// GetVaultCaPath return vault ca path
-func GetVaultCaPath() string {
-	return vaultCaPath
+func GetConsulPath(namespace, name, uid string) *tfexec.BackendConfigOption {
+	return tfexec.BackendConfig(fmt.Sprintf("path=%s", path.Join(consulPathPrefix, namespace, name, uid)))
 }

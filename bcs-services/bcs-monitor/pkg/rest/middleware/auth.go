@@ -108,7 +108,6 @@ func NsScopeAuthorization() gin.HandlerFunc {
 
 		projectID := restContext.ProjectId
 		clusterID := restContext.ClusterId
-		namespace := c.Param("namespace")
 		username := restContext.Username
 
 		// check cluster
@@ -123,12 +122,12 @@ func NsScopeAuthorization() gin.HandlerFunc {
 		}
 
 		// call iam
-		client, err := iam.GetNsScopePermClient()
+		client, err := iam.GetClusterPermClient()
 		if err != nil {
 			rest.AbortWithWithForbiddenError(restContext, err)
 			return
 		}
-		allow, url, _, err := client.CanViewNamespaceScopedResource(username, projectID, clusterID, namespace)
+		allow, url, _, err := client.CanViewCluster(username, projectID, clusterID)
 		if err != nil {
 			rest.AbortWithWithForbiddenError(restContext, err)
 			return

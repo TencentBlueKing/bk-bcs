@@ -10,15 +10,16 @@
  * limitations under the License.
  */
 
+// Package main xxx
 package main
 
 import (
 	"fmt"
 	"os"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/test/mock/repo/app"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/test/mock/repo/options"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/test/mock/repo/app"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/test/mock/repo/options"
 )
 
 func main() {

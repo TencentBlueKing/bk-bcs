@@ -16,12 +16,14 @@ package types
 import (
 	"net/http"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
-	pbcommit "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/commit"
-	pbci "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/config-item"
-	pbhook "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/hook"
-	pbkv "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/kv"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
+	pbbase "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
+	pbcommit "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/commit"
+	pbci "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/config-item"
+	pbcontent "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/content"
+	pbhook "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/hook"
+	pbkv "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/kv"
 )
 
 // AppInstanceMeta defines an app instance's metadata information.
@@ -76,6 +78,7 @@ type ReleasedCIMeta struct {
 	CommitSpec           *pbcommit.CommitSpec       `json:"commit_spec,omitempty"`
 	ConfigItemSpec       *pbci.ConfigItemSpec       `json:"config_item_spec,omitempty"`
 	ConfigItemAttachment *pbci.ConfigItemAttachment `json:"config_item_attachment,omitempty"`
+	ConfigItemRevision   *pbbase.Revision           `json:"config_item_revision,omitempty"`
 	RepositorySpec       *RepositorySpec            `json:"repository_spec,omitempty"`
 }
 
@@ -89,6 +92,7 @@ type RepositorySpec struct {
 type AppLatestReleaseMeta struct {
 	// ReleaseId the app's latest release's id.
 	ReleaseId   uint32            `json:"release_id,omitempty"`
+	ReleaseName string            `json:"release_name,omitempty"`
 	Repository  *Repository       `json:"repository,omitempty"`
 	ConfigItems []*ReleasedCIMeta `json:"config_items,omitempty"`
 	PreHook     *pbhook.HookSpec  `json:"pre_hook,omitempty"`
@@ -118,6 +122,18 @@ type AppLatestReleaseKvMeta struct {
 
 // ReleasedKvMeta defines a release's released kv metadata
 type ReleasedKvMeta struct {
-	Key          string             `json:"key,omitempty"`
-	KvAttachment *pbkv.KvAttachment `json:"kv_attachment,omitempty"`
+	Key          string                 `json:"key,omitempty"`
+	KvType       string                 `json:"kv_type,omitempty"`
+	Revision     *pbbase.Revision       `json:"revision,omitempty"`
+	KvAttachment *pbkv.KvAttachment     `json:"kv_attachment,omitempty"`
+	ContentSpec  *pbcontent.ContentSpec `json:"content_spec,omitempty"`
+}
+
+// AsyncDownloadTask defines async download task.
+type AsyncDownloadTask struct {
+	BizID    uint32 `json:"biz_id"`
+	AppID    uint32 `json:"app_id"`
+	TaskID   string `json:"task_id"`
+	FilePath string `json:"file_path"`
+	FileName string `json:"file_name"`
 }

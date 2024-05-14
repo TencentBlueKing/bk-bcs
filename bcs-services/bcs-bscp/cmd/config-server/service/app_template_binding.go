@@ -16,21 +16,25 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"path"
+	"sort"
+	"strings"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
-	pbcs "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/config-server"
-	pbatb "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/app-template-binding"
-	pbtset "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/template-set"
-	pbds "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbcs "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/config-server"
+	pbatb "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/app-template-binding"
+	pbtset "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/template-set"
+	pbds "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
 // CreateAppTemplateBinding create an app template binding
 func (s *Service) CreateAppTemplateBinding(ctx context.Context, req *pbcs.CreateAppTemplateBindingReq) (
 	*pbcs.CreateAppTemplateBindingResp, error) {
+	// FromGrpcContext used only to obtain Kit through grpc context.
 	grpcKit := kit.FromGrpcContext(ctx)
 
 	// validate input param
@@ -39,6 +43,7 @@ func (s *Service) CreateAppTemplateBinding(ctx context.Context, req *pbcs.Create
 		logs.Errorf("create app template binding failed, parse bindings err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
+	// SliceRepeatedElements get the repeated elements in a slice, and the keep the sequence of result
 	repeatedTmplSetIDs := tools.SliceRepeatedElements(templateSetIDs)
 	if len(repeatedTmplSetIDs) > 0 {
 		return nil, fmt.Errorf("repeated template set ids: %v, id must be unique", repeatedTmplSetIDs)
@@ -56,6 +61,8 @@ func (s *Service) CreateAppTemplateBinding(ctx context.Context, req *pbcs.Create
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 		{Basic: meta.Basic{Type: meta.App, Action: meta.Update, ResourceID: req.AppId}, BizID: req.BizId},
 	}
+	// Authorize authorize if user has permission to the resources.
+	// If user is unauthorized, assign apply url and resources into error.
 	if err = s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
@@ -85,6 +92,7 @@ func (s *Service) CreateAppTemplateBinding(ctx context.Context, req *pbcs.Create
 // DeleteAppTemplateBinding delete an app template binding
 func (s *Service) DeleteAppTemplateBinding(ctx context.Context, req *pbcs.DeleteAppTemplateBindingReq) (
 	*pbcs.DeleteAppTemplateBindingResp, error) {
+	// FromGrpcContext used only to obtain Kit through grpc context.
 	grpcKit := kit.FromGrpcContext(ctx)
 
 	res := []*meta.ResourceAttribute{
@@ -113,6 +121,7 @@ func (s *Service) DeleteAppTemplateBinding(ctx context.Context, req *pbcs.Delete
 // UpdateAppTemplateBinding update an app template binding
 func (s *Service) UpdateAppTemplateBinding(ctx context.Context, req *pbcs.UpdateAppTemplateBindingReq) (
 	*pbcs.UpdateAppTemplateBindingResp, error) {
+	// FromGrpcContext used only to obtain Kit through grpc context.
 	grpcKit := kit.FromGrpcContext(ctx)
 
 	// validate input param
@@ -121,6 +130,7 @@ func (s *Service) UpdateAppTemplateBinding(ctx context.Context, req *pbcs.Update
 		logs.Errorf("update app template binding failed, parse bindings err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
+	// SliceRepeatedElements get the repeated elements in a slice, and the keep the sequence of result
 	repeatedTmplSetIDs := tools.SliceRepeatedElements(templateSetIDs)
 	if len(repeatedTmplSetIDs) > 0 {
 		return nil, fmt.Errorf("repeated template set ids: %v, id must be unique", repeatedTmplSetIDs)
@@ -267,6 +277,12 @@ func (s *Service) ListAppBoundTmplRevisions(ctx context.Context, req *pbcs.ListA
 		}
 
 		revisions := tmplSetMap[tmplSet.TemplateSetId]
+		// 先按照path+name排序好
+		sort.SliceStable(revisions, func(i, j int) bool {
+			iPath := path.Join(revisions[i].Path, revisions[i].Name)
+			jPath := path.Join(revisions[j].Path, revisions[j].Name)
+			return iPath < jPath
+		})
 		for _, r := range revisions {
 			group.TemplateRevisions = append(group.TemplateRevisions,
 				&pbatb.AppBoundTmplRevisionGroupBySetTemplateRevisionDetail{
@@ -287,10 +303,11 @@ func (s *Service) ListAppBoundTmplRevisions(ctx context.Context, req *pbcs.ListA
 					Creator:              r.Creator,
 					CreateAt:             r.CreateAt,
 					FileState:            r.FileState,
+					Md5:                  r.Md5,
 				})
 		}
 		if req.WithStatus {
-			sortFileStateInGroup(group)
+			sortFileStateInGroup(group, req.Status)
 		}
 		details = append(details, group)
 	}
@@ -334,8 +351,8 @@ func (s *Service) getAllAppTmplSets(grpcKit *kit.Kit, bizID, appID uint32) ([]*p
 	return tsbRsp.Details, nil
 }
 
-// sortFileStateInGroup sort as add > revise > unchange > delete
-func sortFileStateInGroup(g *pbatb.AppBoundTmplRevisionGroupBySet) {
+// sortFileStateInGroup sort as add > revise > delete > unchange
+func sortFileStateInGroup(g *pbatb.AppBoundTmplRevisionGroupBySet, status []string) {
 	if len(g.TemplateRevisions) <= 1 {
 		return
 	}
@@ -357,11 +374,26 @@ func sortFileStateInGroup(g *pbatb.AppBoundTmplRevisionGroupBySet) {
 			unchange = append(unchange, ci)
 		}
 	}
-	result = append(result, add...)
-	result = append(result, revise...)
-	result = append(result, unchange...)
-	result = append(result, del...)
 
+	if len(status) == 0 {
+		result = append(result, add...)
+		result = append(result, revise...)
+		result = append(result, del...)
+		result = append(result, unchange...)
+	} else {
+		for _, v := range status {
+			switch strings.ToUpper(v) {
+			case constant.FileStateAdd:
+				result = append(result, add...)
+			case constant.FileStateRevise:
+				result = append(result, revise...)
+			case constant.FileStateDelete:
+				result = append(result, del...)
+			case constant.FileStateUnchange:
+				result = append(result, unchange...)
+			}
+		}
+	}
 	g.TemplateRevisions = result
 }
 
@@ -434,6 +466,7 @@ func (s *Service) ListReleasedAppBoundTmplRevisions(ctx context.Context,
 					Reviser:              r.Reviser,
 					CreateAt:             r.CreateAt,
 					UpdateAt:             r.UpdateAt,
+					Md5:                  r.Md5,
 				})
 		}
 		details = append(details, group)

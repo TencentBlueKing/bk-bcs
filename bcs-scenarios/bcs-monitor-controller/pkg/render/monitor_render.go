@@ -8,22 +8,23 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package render xxx
 package render
 
 import (
 	"fmt"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	monitorextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/api/v1"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/option"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/repo"
 )
 
 // Result transfer AppMonitor to Sub CR
@@ -39,25 +40,22 @@ type IRender interface {
 	Render(appMonitor *monitorextensionv1.AppMonitor) (*Result, error)
 
 	// ReadScenario return related resource of scenario
-	ReadScenario(scenario string) (*Result, error)
+	ReadScenario(repoKey, scenario string) (*Result, error)
 }
 
 // MonitorRender render monitor
 type MonitorRender struct {
-	gitRepo *gitRepo
-
-	decoder runtime.Decoder
+	// gitRepo *gitRepo
+	repoManager *repo.Manager
+	decoder     runtime.Decoder
 }
 
 // NewMonitorRender return new monitor render
-func NewMonitorRender(scheme *runtime.Scheme, cli client.Client, opt *option.ControllerOption) (*MonitorRender, error) {
-	gr, err := newGitRepo(cli, opt)
-	if err != nil {
-		return nil, err
-	}
+func NewMonitorRender(scheme *runtime.Scheme, cli client.Client, repoManager *repo.Manager,
+	opt *option.ControllerOption) (*MonitorRender, error) {
 	return &MonitorRender{
-		gitRepo: gr,
-		decoder: serializer.NewCodecFactory(scheme).UniversalDeserializer(),
+		repoManager: repoManager,
+		decoder:     serializer.NewCodecFactory(scheme).UniversalDeserializer(),
 	}, nil
 }
 
@@ -67,7 +65,7 @@ func (r *MonitorRender) Render(appMonitor *monitorextensionv1.AppMonitor) (*Resu
 		return nil, fmt.Errorf("nil appMonitor")
 	}
 
-	rawResult, err := r.ReadScenario(appMonitor.Spec.Scenario)
+	rawResult, err := r.ReadScenario(repo.GenRepoKeyFromAppMonitor(appMonitor), appMonitor.Spec.Scenario)
 	if err != nil {
 		return nil, err
 	}
@@ -89,6 +87,7 @@ func (r *MonitorRender) renderMonitorRule(appMonitor *monitorextensionv1.AppMoni
 	namespace := appMonitor.GetNamespace()
 	ignoreChange := appMonitor.Spec.IgnoreChange
 	override := appMonitor.Spec.Override
+	conflictHandle := appMonitor.Spec.ConflictHandle
 	// render monitor rule
 	for _, mr := range rawResult.MonitorRule {
 		mr.SetNamespace(namespace)
@@ -103,6 +102,7 @@ func (r *MonitorRender) renderMonitorRule(appMonitor *monitorextensionv1.AppMoni
 		mr.Spec.BizToken = bizToken
 		mr.Spec.Scenario = scenario
 		mr.Spec.Override = override
+		mr.Spec.ConflictHandle = conflictHandle
 		if appMonitor.Spec.RuleEnhance != nil {
 			mr.Spec.IgnoreChange = appMonitor.Spec.RuleEnhance.IgnoreChange || ignoreChange
 		} else {
@@ -237,7 +237,7 @@ func (r *MonitorRender) renderPanel(appMonitor *monitorextensionv1.AppMonitor, r
 				for _, rawBoard := range panel.Spec.DashBoard {
 					if rawBoard.Board == board.Board {
 						find = true
-						boardList = append(boardList, rawBoard)
+						boardList = append(boardList, rawBoard) // nolint never used
 						break
 					}
 				}

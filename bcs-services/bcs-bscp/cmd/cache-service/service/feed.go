@@ -15,12 +15,14 @@ package service
 import (
 	"context"
 	"errors"
+	"math"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	pbcs "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/cache-service"
-	pbbase "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	pbcs "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/cache-service"
+	pbapp "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/app"
+	pbbase "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // GetAppID get app id by app name.
@@ -30,7 +32,7 @@ func (s *Service) GetAppID(ctx context.Context, req *pbcs.GetAppIDReq) (*pbcs.Ge
 	}
 
 	kt := kit.FromGrpcContext(ctx)
-	appID, err := s.op.GetAppID(kt, req.BizId, req.AppName)
+	appID, err := s.op.GetAppID(kt, req.BizId, req.AppName, req.GetRefresh())
 	if err != nil {
 		return nil, err
 	}
@@ -55,6 +57,27 @@ func (s *Service) GetAppMeta(ctx context.Context, req *pbcs.GetAppMetaReq) (*pbc
 	return &pbcs.JsonRawResp{
 		JsonRaw: meta,
 	}, nil
+}
+
+// ListApps 获取服务列表
+func (s *Service) ListApps(ctx context.Context, req *pbcs.ListAppsReq) (*pbcs.ListAppsResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	opt := &types.BasePage{
+		Start: 0,
+		Limit: math.MaxUint32, // 不需要分页, 直接使用 max 获取
+	}
+
+	apps, count, err := s.dao.App().List(kt, []uint32{req.GetBizId()}, "", "", opt)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := &pbcs.ListAppsResp{
+		Count:   uint32(count),
+		Details: pbapp.PbApps(apps),
+	}
+	return resp, nil
 }
 
 // GetReleasedCI get released config items from cache.
@@ -202,4 +225,46 @@ func (s *Service) ListEventsMeta(ctx context.Context, req *pbcs.ListEventsReq) (
 	}
 
 	return &pbcs.ListEventsResp{List: pbcs.PbEventMeta(metas)}, nil
+}
+
+// SetClientMetric set client metric
+func (s *Service) SetClientMetric(ctx context.Context, req *pbcs.SetClientMetricReq) (*pbcs.SetClientMetricResp,
+	error) {
+	kt := kit.FromGrpcContext(ctx)
+	err := s.op.SetClientMetric(kt, req.BizId, req.AppId, req.Payload)
+	if err != nil {
+		return nil, err
+	}
+	return &pbcs.SetClientMetricResp{}, nil
+}
+
+// SetAsyncDownloadTask set async download task
+func (s *Service) SetAsyncDownloadTask(ctx context.Context, req *pbcs.SetAsyncDownloadTaskReq) (
+	*pbcs.SetAsyncDownloadTaskResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+	task := &types.AsyncDownloadTaskCache{
+		BizID:    req.BizId,
+		AppID:    req.AppId,
+		TaskID:   req.TaskId,
+		FilePath: req.FilePath,
+		FileName: req.FileName,
+	}
+	err := s.op.SetAsyncDownloadTask(kt, req.BizId, req.TaskId, task)
+	if err != nil {
+		return nil, err
+	}
+	return &pbcs.SetAsyncDownloadTaskResp{}, nil
+}
+
+// GetAsyncDownloadTask get async download task
+func (s *Service) GetAsyncDownloadTask(ctx context.Context, req *pbcs.GetAsyncDownloadTaskReq) (
+	*pbcs.JsonRawResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+	task, err := s.op.GetAsyncDownloadTask(kt, req.BizId, req.TaskId)
+	if err != nil {
+		return nil, err
+	}
+	return &pbcs.JsonRawResp{
+		JsonRaw: task,
+	}, nil
 }

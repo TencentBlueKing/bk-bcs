@@ -20,6 +20,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/bcs_system/source/base"
 	bkmonitor "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/bcs_system/source/bk_monitor"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/bcs_system/source/compute"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/bcs_system/source/computev2"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/bcs_system/source/federation"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/bcs_system/source/prometheus"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/bcs_system/source/vcluster"
@@ -34,17 +35,15 @@ func ClientFactory(ctx context.Context, clusterId string, source clientutil.Moni
 		return compute.NewCompute(), nil
 	case clientutil.MonitorSourceFederation:
 		return federation.NewFederation(dispatch), nil
+	case clientutil.MonitorSourceComputeV2:
+		return computev2.NewCompute(dispatch[clusterId].MetricsPrefix), nil
 	default:
-		ok, err := bkmonitor_client.IsBKMonitorEnabled(ctx, clusterId)
-		if err != nil {
-			return nil, err
+		if !bkmonitor_client.IsBKMonitorEnabled(clusterId) {
+			return prometheus.NewPrometheus(), nil
 		}
-		if ok {
-			if isVCluster {
-				return vcluster.NewVCluster(), nil
-			}
-			return bkmonitor.NewBKMonitor(), nil
+		if isVCluster {
+			return vcluster.NewVCluster(), nil
 		}
-		return prometheus.NewPrometheus(), nil
+		return bkmonitor.NewBKMonitor(), nil
 	}
 }

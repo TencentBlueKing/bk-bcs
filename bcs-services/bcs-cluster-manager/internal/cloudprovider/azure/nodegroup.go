@@ -23,6 +23,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"github.com/pkg/errors"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
@@ -30,6 +31,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/azure/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 )
 
 // errors
@@ -244,59 +246,36 @@ func (ng *NodeGroup) UpdateDesiredNodes(desired uint32, group *proto.NodeGroup,
 	if group == nil || opt == nil || opt.Cluster == nil || opt.Cloud == nil {
 		return nil, fmt.Errorf("invalid request")
 	}
-	if err = ng.scaleUpPreCheck(opt.Cluster.ClusterID, opt.Cloud.CloudID, group.NodeGroupID); err != nil { // 扩容前置检查
-		return nil, errors.Wrapf(err, "nodeGroupID: %s unable to sacle up", group.NodeGroupID)
-	}
 
-	// scaling nodes with desired, first get all node for status filtering
-	// check if nodes are already in cluster
-	goodNodes, err := cloudprovider.ListNodesInClusterNodePool(opt.Cluster.ClusterID, group.NodeGroupID)
+	taskType := cloudprovider.GetTaskType(opt.Cloud.CloudProvider, cloudprovider.UpdateNodeGroupDesiredNode)
+
+	cond := operator.NewLeafCondition(operator.Eq, operator.M{
+		"clusterid":   opt.Cluster.ClusterID,
+		"tasktype":    taskType,
+		"nodegroupid": group.NodeGroupID,
+		"status":      cloudprovider.TaskStatusRunning,
+	})
+	taskList, err := cloudprovider.GetStorageModel().ListTask(context.Background(), cond, &storeopt.ListOption{})
 	if err != nil {
-		return nil, errors.Wrapf(err, "cloudprovider aks get NodeGroup %s all Nodes failed", group.NodeGroupID)
+		blog.Errorf("UpdateDesiredNodes failed: %v", err)
+		return nil, err
+	}
+	if len(taskList) != 0 {
+		return nil, fmt.Errorf("there are %d tasks still running for %s", len(taskList), taskType)
 	}
 
-	// check incoming nodes
-	inComingNodes, err := cloudprovider.GetNodesNumWhenApplyInstanceTask(
-		opt.Cluster.ClusterID,
-		group.NodeGroupID,
-		cloudprovider.GetTaskType(opt.Cloud.CloudProvider, cloudprovider.UpdateNodeGroupDesiredNode),
-		cloudprovider.TaskStatusRunning,
-		[]string{cloudprovider.GetTaskType(opt.Cloud.CloudProvider, cloudprovider.ApplyInstanceMachinesTask)},
-	)
-	if err != nil {
-		return nil, errors.Wrapf(err, "UpdateDesiredNodes GetNodesNumWhenApplyInstanceTask failed")
-	}
-	if inComingNodes > 0 {
-		return nil, errors.Wrapf(nodePoolScaleUpErr, "nodeGroupID: %s is scale up, incoming nodes %d",
-			group.NodeGroupID, inComingNodes)
+	needScaleOutNodes := desired - group.GetAutoScaling().GetDesiredSize()
+
+	blog.Infof("cluster[%s] nodeGroup[%s] current nodes[%d] desired nodes[%d] needNodes[%s]",
+		group.ClusterID, group.NodeGroupID, group.GetAutoScaling().GetDesiredSize(), desired, needScaleOutNodes)
+
+	if desired <= group.GetAutoScaling().GetDesiredSize() {
+		return nil, fmt.Errorf("NodeGroup %s current nodes %d larger than or equel to desired %d nodes",
+			group.Name, group.GetAutoScaling().GetDesiredSize(), desired)
 	}
 
-	// cluster current node
-	current := len(goodNodes) + inComingNodes
-	nodeNames := make([]string, 0)
-	for _, node := range goodNodes {
-		nodeNames = append(nodeNames, node.InnerIP)
-	}
-	blog.Infof("NodeGroup %s has total nodes %d, current capable nodes %d, current incoming nodes %d, details %v",
-		group.NodeGroupID, len(goodNodes), current, inComingNodes, nodeNames)
-
-	if current >= int(desired) {
-		blog.Infof("NodeGroup %s current capable nodes %d larger than desired %d nodes, nothing to do",
-			group.NodeGroupID, current, desired)
-		res = &cloudprovider.ScalingResponse{
-			ScalingUp:    0,
-			CapableNodes: nodeNames,
-		}
-		err = fmt.Errorf("NodeGroup %s UpdateDesiredNodes nodes %d larger than desired %d nodes",
-			group.NodeGroupID, current, desired)
-		return res, err
-	}
-
-	// current scale nodeNum
-	scalingUp := int(desired) - current
 	return &cloudprovider.ScalingResponse{
-		ScalingUp:    uint32(scalingUp),
-		CapableNodes: nodeNames,
+		ScalingUp: needScaleOutNodes,
 	}, nil
 }
 
@@ -417,7 +396,7 @@ func (ng *NodeGroup) DeleteExternalNodeFromCluster(group *proto.NodeGroup, nodes
 }
 
 // GetExternalNodeScript get nodegroup external node script
-func (ng *NodeGroup) GetExternalNodeScript(group *proto.NodeGroup) (string, error) {
+func (ng *NodeGroup) GetExternalNodeScript(group *proto.NodeGroup, internal bool) (string, error) {
 	return "", cloudprovider.ErrCloudNotImplemented
 }
 
@@ -450,7 +429,8 @@ func (ng *NodeGroup) updateAgentPoolProperties(client api.AksService, cluster *p
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	pool, err := client.GetPoolAndReturn(ctx, cluster.SystemID, group.CloudNodeGroupID)
+	pool, err := client.GetPoolAndReturn(ctx, cloudprovider.GetClusterResourceGroup(cluster),
+		cluster.SystemID, group.CloudNodeGroupID)
 	if err != nil {
 		return errors.Wrapf(err, "UpdateNodeGroup: call GetAgentPool api failed")
 	}
@@ -464,7 +444,7 @@ func (ng *NodeGroup) updateAgentPoolProperties(client api.AksService, cluster *p
 	// update agent pool
 	ctx, cancel = context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
-	if _, err = client.UpdatePoolAndReturn(ctx, pool, cluster.SystemID, *pool.Name); err != nil {
+	if _, err = client.UpdatePoolAndReturn(ctx, pool, "", cluster.SystemID, *pool.Name); err != nil {
 		return errors.Wrapf(err, "UpdateNodeGroup: call UpdateAgentPool api failed")
 	}
 
@@ -495,32 +475,6 @@ func (ng *NodeGroup) updateVMSSProperties(client api.AksService, group *proto.No
 	}
 
 	return nil
-}
-
-// scaleUpPreCheck 扩容前置检查
-func (ng *NodeGroup) scaleUpPreCheck(clusterID, cloudID, nodeGroupID string) error {
-	info, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
-		ClusterID:   clusterID,
-		CloudID:     cloudID,
-		NodeGroupID: nodeGroupID,
-	})
-	if err != nil {
-		return errors.Wrapf(err, "call GetClusterDependBasicInfo failed")
-	}
-
-	client, err := api.NewAksServiceImplWithCommonOption(info.CmOption)
-	if err != nil {
-		return errors.Wrapf(err, "new azure client failed")
-	}
-
-	ctx, cancel := context.WithTimeout(context.TODO(), 30*time.Second)
-	defer cancel()
-	pool, err := client.GetPoolAndReturn(ctx, info.Cluster.SystemID, info.NodeGroup.CloudNodeGroupID)
-	if err != nil {
-		return errors.Wrapf(err, "call GetPoolAndReturn failed")
-	}
-
-	return checkPoolState(pool)
 }
 
 // checkPoolState 更新前，检查节点池的状态

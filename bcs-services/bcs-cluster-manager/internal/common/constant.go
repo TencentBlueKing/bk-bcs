@@ -84,6 +84,32 @@ var (
 	External NodeGroupType = "external"
 )
 
+// ScriptType external nodeGroup script type
+type ScriptType string
+
+// String xxx
+func (st ScriptType) String() string {
+	return string(st)
+}
+
+// IsInterType inter
+func (st ScriptType) IsInterType() bool {
+	return st == ScriptInterType
+}
+
+// IsExtraType extra
+func (st ScriptType) IsExtraType() bool {
+	return st == ScriptExtraType
+}
+
+// external nodeGroup script type
+var (
+	// ScriptInterType inter type
+	ScriptInterType ScriptType = "inter"
+	// ScriptExtraType extra type
+	ScriptExtraType ScriptType = "extra"
+)
+
 const (
 	// MasterRole label
 	MasterRole = "node-role.kubernetes.io/master"
@@ -154,10 +180,20 @@ func IsContainerdRuntime(runtime string) bool {
 }
 
 const (
+	// Iptables iptables mode
+	Iptables = "iptables"
+	// Ipvs ipvs mode
+	Ipvs = "ipvs"
+
 	// InitClusterID initClusterID
 	InitClusterID = "BCS-K8S-00000"
 	// RuntimeFlag xxx
 	RuntimeFlag = "runtime"
+
+	// ClusterApiServer cluster api server
+	ClusterApiServer = "apiServer"
+	// RegionName regionName
+	RegionName = "regionName"
 
 	// ShowSharedCluster flag show shared cluster
 	ShowSharedCluster = "showSharedCluster"
@@ -185,6 +221,18 @@ const (
 	Regions = "regions"
 	// Zones gke zone cluster
 	Zones = "zones"
+
+	// CloudClusterTypeKey cloud cluster type
+	CloudClusterTypeKey = "CloudClusterType"
+	// CloudClusterTypeEdge cloud cluster type for ECK EDGE
+	CloudClusterTypeEdge = "K8SEXTENSION_EDGE"
+	// CloudClusterTypeNative cloud cluster type for ECK native
+	CloudClusterTypeNative = "K8SEXTENSION_NATIVE"
+
+	// NodeRoleMaster node role master
+	NodeRoleMaster = "MASTER_ETCD"
+	// NodeRoleWorker node role worker
+	NodeRoleWorker = "WORKER"
 
 	// ClusterAddNodesLimit cluster addNodes limit
 	ClusterAddNodesLimit = 100
@@ -217,6 +265,8 @@ const (
 
 	// DefaultImageName default image name
 	DefaultImageName = "TencentOS Server 2.6 (TK4)"
+	// DefaultECKImageName default ECK image name
+	DefaultECKImageName = "CentOS-7.6-BITS64"
 
 	// DockerContainerRuntime runtime
 	DockerContainerRuntime = "docker"
@@ -265,16 +315,24 @@ const (
 	KubeConfigImport = "kubeConfig"
 	// CloudImport import
 	CloudImport = "cloud"
+	// ImportType cloud import type
+	ImportType = "importType"
+	// ClusterResourceGroup cluster resource group
+	ClusterResourceGroup = "clusterResourceGroup"
+	// NodeResourceGroup xxx
+	NodeResourceGroup = "nodeResourceGroup"
 
 	// CloudProjectId cloud project id
 	CloudProjectId = "cloudProjectId"
 	// TagClusterResourceKey resource tag key
 	TagClusterResourceKey = "cluster"
 
-	// StatusInitialization node/cluster/nodegroup status
+	// StatusInitialization node/cluster/nodegroup/task status
 	StatusInitialization = "INITIALIZATION"
 	// StatusCreateClusterFailed status create failed
 	StatusCreateClusterFailed = "CREATE-FAILURE"
+	// StatusConnectClusterFailed status connect failed
+	StatusConnectClusterFailed = "CONNECT-FAILURE"
 	// StatusImportClusterFailed status import failed
 	StatusImportClusterFailed = "IMPORT-FAILURE"
 	// StatusRunning status running
@@ -331,6 +389,13 @@ const (
 	StatusAutoScalingOptionUpdateFailed = "UPDATE-FAILURE"
 	// StatusAutoScalingOptionStopped stopped status
 	StatusAutoScalingOptionStopped = "STOPPED"
+
+	// TaskStatusSuccess task success
+	TaskStatusSuccess = "SUCCESS"
+	// TaskStatusFailure task failed
+	TaskStatusFailure = "FAILURE"
+	// TaskStatusTimeout task run timeout
+	TaskStatusTimeout = "TIMEOUT"
 )
 
 const (
@@ -456,4 +521,29 @@ const (
 	MetadataCookiesKey = "Grpcgateway-Cookie"
 	// LangCookieName 语言版本 Cookie 名称
 	LangCookieName = "blueking_language"
+)
+
+// HeaderKey string
+const (
+	// ForwardedForHeaderKey is the header name of X-Forwarded-For.
+	ForwardedForHeaderKey = "X-Forwarded-For"
+	// UserAgentHeaderKey is the header name of User-Agent.
+	UserAgentHeaderKey = "Grpcgateway-User-Agent"
+)
+
+const (
+	// InterImport cloud inter import
+	InterImport = "internal"
+	// ExternalImport cloud external import
+	ExternalImport = "external"
+)
+
+// InstanceChargeType
+const (
+	// PREPAID xxx
+	PREPAID = "PREPAID" // 预付费，即包年包月
+	// POSTPAIDBYHOUR xxx
+	POSTPAIDBYHOUR = "POSTPAID_BY_HOUR" // 按小时后付费
+	// NOTIFYANDAUTORENEW // 自动续期
+	NOTIFYANDAUTORENEW = "NOTIFY_AND_AUTO_RENEW"
 )

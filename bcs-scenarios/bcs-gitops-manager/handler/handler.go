@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package handler xxx
 package handler
 
 import (
@@ -17,11 +18,13 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
+
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/cmd/manager/options"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/controller"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store/secretstore"
 	pb "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/proto"
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
 )
 
 // Options for Handler
@@ -41,6 +44,10 @@ type Options struct {
 
 // NewGitOpsHandler create handler
 func NewGitOpsHandler(opt *Options) *BcsGitopsHandler {
+	op := options.GlobalOptions()
+	opt.JwtClient = op.JWTDecoder
+	opt.IamClient = op.IAMClient
+	opt.Storage = store.GlobalStore()
 	return &BcsGitopsHandler{
 		option: opt,
 	}

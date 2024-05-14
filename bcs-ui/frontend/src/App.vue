@@ -1,6 +1,7 @@
 <template>
   <!-- 加Loading会导致跟index的loading错位的效果 -->
   <div id="app">
+    <NoticeComponent :api-url="apiUrl" ref="noticeRef" id="bcs-notice-com" />
     <Navigation>
       <RouterView />
       <template #sideMenu>
@@ -16,9 +17,13 @@
 <script lang="ts">
 import { defineComponent, onBeforeUnmount, onMounted, ref } from 'vue';
 
+import NoticeComponent from '@blueking/notice-component-vue2';
+
+import '@blueking/notice-component-vue2/dist/style.css';
 import { bus } from '@/common/bus';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import { useAppData } from '@/composables/use-app';
+import useCalcHeight from '@/composables/use-calc-height';
 import $i18n from '@/i18n/i18n-setup';
 import PermDialog from '@/views/app/apply-perm.vue';
 import BkPaaSLogin from '@/views/app/login.vue';
@@ -26,12 +31,41 @@ import Navigation from '@/views/app/navigation.vue';
 
 export default defineComponent({
   name: 'App',
-  components: { Navigation, BkPaaSLogin, PermDialog },
+  components: { Navigation, BkPaaSLogin, PermDialog, NoticeComponent },
   setup() {
     const { getUserInfo } = useAppData();
     const isLoading = ref(false);
     const applyPermRef = ref<any>(null);
     const loginRef = ref<any>(null);
+
+    // 通知
+    const apiUrl = ref('/bcsapi/v4/ui/announcements');
+    // 设置内容高度
+    const noticeRef = ref();
+    useCalcHeight([
+      {
+        el: '.biz-content-wrapper',
+        calc: [noticeRef, '.bk-navigation-header', '.content-header'],
+      },
+      {
+        el: '.bcs-content-wrapper',
+        calc: [noticeRef, '.bk-navigation-header', '.content-header'],
+      },
+      {
+        el: '.container-content',
+        calc: [noticeRef, '.bk-navigation-header'],
+      },
+      {
+        prop: 'height',
+        el: '.nav-slider-list',
+        calc: [noticeRef, '.bk-navigation-header', '.nav-slider-footer'],
+      },
+      {
+        prop: 'height',
+        el: '.bk-navigation',
+        calc: noticeRef,
+      },
+    ]);
 
     // 权限弹窗
     bus.$on('show-apply-perm-modal', (data) => {
@@ -61,7 +95,7 @@ export default defineComponent({
       setTimeout(async () => {
         try {
           const res = await fetch(`${window.BK_STATIC_URL}/static/static_version.txt`, { cache: 'no-store' });
-          const hash = await res.text();
+          const hash = await res?.text();
           if (resourceHash.value && (resourceHash.value !== hash)) {
             $bkInfo({
               type: 'warning',
@@ -103,6 +137,8 @@ export default defineComponent({
       isLoading,
       applyPermRef,
       loginRef,
+      noticeRef,
+      apiUrl,
     };
   },
 });

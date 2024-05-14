@@ -45,6 +45,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/component/project"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	basicHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/basic"
 	configHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/config"
@@ -57,10 +58,10 @@ import (
 	rbacHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/rbac"
 	resHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/resource"
 	storageHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/storage"
+	templateSetHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/templateset"
 	viewHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/view"
 	workloadHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/workload"
 	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/project"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/store"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	httpUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/http"
@@ -229,7 +230,11 @@ func (crSvc *clusterResourcesService) initHandler() error { // nolint:cyclop
 	if err := clusterRes.RegisterViewConfigHandler(crSvc.microSvc.Server(), viewHdlr.New(crSvc.model)); err != nil {
 		return err
 	}
-	if err := clusterRes.RegisterMultiClusterHandler(crSvc.microSvc.Server(), multiHdlr.New()); err != nil {
+	if err := clusterRes.RegisterTemplateSetHandler(
+		crSvc.microSvc.Server(), templateSetHdlr.New(crSvc.model)); err != nil {
+		return err
+	}
+	if err := clusterRes.RegisterMultiClusterHandler(crSvc.microSvc.Server(), multiHdlr.New(crSvc.model)); err != nil {
 		return err
 	}
 	return nil
@@ -323,6 +328,7 @@ func (crSvc *clusterResourcesService) initHTTPService() error {
 		clusterRes.RegisterRBACGwFromEndpoint, clusterRes.RegisterHPAGwFromEndpoint,
 		clusterRes.RegisterCustomResGwFromEndpoint, clusterRes.RegisterResourceGwFromEndpoint,
 		clusterRes.RegisterViewConfigGwFromEndpoint, clusterRes.RegisterMultiClusterGwFromEndpoint,
+		clusterRes.RegisterTemplateSetGwFromEndpoint,
 	} {
 		err := epRegister(crSvc.ctx, rmMux, endpoint, grpcDialOpts)
 		if err != nil {

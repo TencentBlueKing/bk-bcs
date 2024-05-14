@@ -20,6 +20,7 @@ import (
 	bcsmonitor "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bcs_monitor"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/clientutil"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/utils"
 )
 
 // NodeOveriewMetric 节点概览
@@ -71,7 +72,7 @@ func (q *UsageQuery) GetQueryTime() (*clientutil.PromQueryTime, error) {
 	queryTime := &clientutil.PromQueryTime{}
 
 	if q.EndAt == "" {
-		queryTime.End = time.Now()
+		queryTime.End = utils.GetNowQueryTime()
 	} else {
 		t, err := parseTime(q.EndAt)
 		if err != nil {
@@ -135,7 +136,7 @@ func GetNodeInfo(c *rest.Context) (interface{}, error) {
 	}
 
 	promql := `bcs:node:info{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`
-	labelSet, err := bcsmonitor.QueryLabelSet(c.Request.Context(), c.ProjectId, promql, params, time.Now())
+	labelSet, err := bcsmonitor.QueryLabelSet(c.Request.Context(), c.ProjectId, promql, params, utils.GetNowQueryTime())
 	if err != nil {
 		return nil, err
 	}
@@ -174,7 +175,8 @@ func GetNodeOverview(c *rest.Context) (interface{}, error) {
 		"diskio_usage":         `bcs:node:diskio:usage{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
 	}
 
-	result, err := bcsmonitor.QueryMultiValues(c.Request.Context(), c.ProjectId, promqlMap, params, time.Now())
+	result, err := bcsmonitor.QueryMultiValues(c.Request.Context(), c.ProjectId, promqlMap, params,
+		utils.GetNowQueryTime())
 	if err != nil {
 		return nil, err
 	}

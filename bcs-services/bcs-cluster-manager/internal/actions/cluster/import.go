@@ -93,6 +93,18 @@ func (ia *ImportAction) constructCluster() *cmproto.Cluster {
 		CloudAccountID: ia.req.AccountID,
 	}
 
+	if cls.ExtraInfo == nil {
+		cls.ExtraInfo = make(map[string]string)
+	}
+	// default cloud external import
+	cls.ExtraInfo[common.ImportType] = common.ExternalImport
+	if ia.req.CloudMode.GetInter() {
+		cls.ExtraInfo[common.ImportType] = common.InterImport
+	}
+	if ia.req.GetCloudMode().GetResourceGroup() != "" {
+		cls.ExtraInfo[common.ClusterResourceGroup] = ia.req.GetCloudMode().GetResourceGroup()
+	}
+
 	return cls
 }
 
@@ -151,6 +163,7 @@ func (ia *ImportAction) syncClusterCloudConfig(cls *cmproto.Cluster) error {
 		Common:         cmOption,
 		Cloud:          ia.cloud,
 		ImportMode:     ia.req.CloudMode,
+		Area:           ia.req.GetArea(),
 		ClusterVersion: ia.req.Version,
 	})
 	if err != nil {
@@ -252,9 +265,10 @@ func (ia *ImportAction) Handle(ctx context.Context, req *cmproto.ImportClusterRe
 		TaskID:       ia.task.TaskID,
 		Message:      fmt.Sprintf("导入%s集群%s", cls.Provider, cls.ClusterID),
 		OpUser:       cls.Creator,
-		CreateTime:   time.Now().String(),
+		CreateTime:   time.Now().Format(time.RFC3339),
 		ClusterID:    ia.cluster.ClusterID,
 		ProjectID:    ia.cluster.ProjectID,
+		ResourceName: cls.GetClusterName(),
 	})
 	if err != nil {
 		blog.Errorf("import cluster[%s] CreateOperationLog failed: %v", cls.ClusterID, err)
@@ -356,13 +370,19 @@ func (ia *ImportAction) commonValidate(req *cmproto.ImportClusterReq) error {
 		req.IsExclusive = &wrappers.BoolValue{Value: true}
 	}
 	if req.ClusterType == "" {
-		req.ClusterType = common.ClusterManageTypeIndependent
+		req.ClusterType = common.ClusterTypeSingle
+	}
+	if req.ManageType == "" {
+		req.ManageType = common.ClusterManageTypeIndependent
 	}
 	if req.NetworkType == "" {
 		req.NetworkType = common.ClusterOverlayNetwork
 	}
 	if req.ClusterCategory == "" {
 		req.ClusterCategory = common.Importer
+	}
+	if req.Area == nil {
+		req.Area = &cmproto.CloudArea{BkCloudID: 0}
 	}
 
 	if req.CloudMode == nil {
@@ -588,7 +608,10 @@ func (ka *CheckKubeConnectAction) Handle(ctx context.Context, req *cmproto.KubeC
 	}
 
 	ok, err := provider.CheckClusterEndpointStatus(req.ClusterID, req.IsExtranet,
-		&cloudprovider.CheckEndpointStatusOption{CommonOption: *cmOption})
+		&cloudprovider.CheckEndpointStatusOption{
+			CommonOption:      *cmOption,
+			ResourceGroupName: req.ResourceGroupName,
+		})
 	if err != nil {
 		ka.setResp(common.BcsErrClusterManagerCheckKubeConnErr, err.Error())
 		return

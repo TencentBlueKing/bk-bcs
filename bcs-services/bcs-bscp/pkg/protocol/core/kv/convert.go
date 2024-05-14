@@ -14,8 +14,9 @@
 package pbkv
 
 import (
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
-	pbbase "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	pbbase "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
+	pbcontent "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/content"
 )
 
 // Kv convert pb Kv to table Kv
@@ -40,6 +41,7 @@ func (k *KvSpec) KvSpec() *table.KvSpec {
 	return &table.KvSpec{
 		Key:    k.Key,
 		KvType: table.DataType(k.KvType),
+		Memo:   k.Memo,
 	}
 }
 
@@ -62,11 +64,12 @@ func PbKv(k *table.Kv, value string) *Kv {
 	}
 
 	return &Kv{
-		Id:         k.ID,
-		KvState:    string(k.KvState),
-		Spec:       PbKvSpec(k.Spec, value),
-		Attachment: PbKvAttachment(k.Attachment),
-		Revision:   pbbase.PbRevision(k.Revision),
+		Id:          k.ID,
+		KvState:     string(k.KvState),
+		Spec:        PbKvSpec(k.Spec, value),
+		Attachment:  PbKvAttachment(k.Attachment),
+		Revision:    pbbase.PbRevision(k.Revision),
+		ContentSpec: pbcontent.PbContentSpec(k.ContentSpec),
 	}
 }
 
@@ -82,6 +85,7 @@ func PbKvSpec(spec *table.KvSpec, value string) *KvSpec {
 		Key:    spec.Key,
 		KvType: string(spec.KvType),
 		Value:  value,
+		Memo:   spec.Memo,
 	}
 }
 

@@ -7,15 +7,19 @@
         <ContentHeader
           :title="routeMeta.title"
           :hide-back="routeMeta.hideBack"
+          :cluster-id="routeMeta.showClusterName ? $route.params.clusterId : ''"
           v-if="routeMeta.title" />
-        <RouterView :key="$route.path" />
+        <!-- key为了解决旧版模板集刷新问题, 资源视图视图管理切换集群后不能刷新界面(不能用path作为Key) -->
+        <RouterView :key="isDashboard ? 'dashboard' : $route.path" />
         <!-- 终端 -->
         <Terminal />
       </template>
-      <!-- 未注册容器服务 -->
-      <Unregistry :cur-project="curProject" v-else-if="!isEmptyProjectList" />
-      <!-- 空项目引导 -->
-      <ProjectGuide v-else-if="isEmptyProjectList" />
+      <template v-else>
+        <!-- 未注册容器服务 -->
+        <Unregistry :cur-project="curProject" v-if="!hasNoAuthorizedProject" />
+        <!-- 空项目引导 -->
+        <ProjectGuide v-else-if="hasNoAuthorizedProject" />
+      </template>
     </template>
   </div>
 </template>
@@ -46,9 +50,10 @@ export default defineComponent({
     const { fetchProjectInfo, getProjectList } = useProjects();
     const loading = ref(true);// 默认不加载视图，等待集群接口加载完
     const currentRoute = computed(() => toRef(reactive($router), 'currentRoute').value);
+    const isDashboard = computed(() => currentRoute.value.matched.some(item => item.name === 'dashboardIndex'));
     const routeMeta = computed(() => currentRoute.value?.meta || {});
     const curProject = computed(() => $store.state.curProject);
-    const isEmptyProjectList = ref(false);
+    const hasNoAuthorizedProject = ref(false);
 
     // 设置项目缓存
     const handleSetProjectStorage = (data: IProject) => {
@@ -68,17 +73,17 @@ export default defineComponent({
 
         if (authorizedProject) {
           // 跳转第一个有权限项目
-          $router.replace({
-            name: 'clusterMain',
-            params: {
-              projectCode: data?.results?.[0]?.projectCode,
-            },
-          });
+          // $router.replace({
+          //   name: 'clusterMain',
+          //   params: {
+          //     projectCode: data?.results?.[0]?.projectCode,
+          //   },
+          // });
           handleSetProjectStorage(authorizedProject);
           return true;
         }
         // 无任何项目权限
-        isEmptyProjectList.value = true;
+        hasNoAuthorizedProject.value = true;
         return false;
       }
 
@@ -127,7 +132,7 @@ export default defineComponent({
           // 校验集群ID是否正确
           const clusterList = data || [];
           const cluster = clusterList.find(item => item.clusterID ===  $store.getters.curClusterId);
-          $store.commit('updateCurCluster', cluster || clusterList[0]);
+          $store.commit('updateCurCluster', cluster || clusterList.find(item => item.status === 'RUNNING'));
         }),
       ];
       if (curProject.value?.kind && curProject.value?.businessID && (curProject.value?.businessID !== '0')) {
@@ -149,10 +154,11 @@ export default defineComponent({
 
     return {
       loading,
+      isDashboard,
       currentRoute,
       routeMeta,
       curProject,
-      isEmptyProjectList,
+      hasNoAuthorizedProject,
     };
   },
 });

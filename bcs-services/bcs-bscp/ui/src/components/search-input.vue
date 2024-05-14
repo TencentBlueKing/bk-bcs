@@ -6,38 +6,44 @@
       :clearable="true"
       @clear="triggerSearch"
       @input="triggerSearch">
-        <template #suffix>
-          <Search class="search-input-icon" />
-        </template>
+      <template #suffix>
+        <Search class="search-input-icon" />
+      </template>
     </bk-input>
   </div>
 </template>
 <script lang="ts" setup>
-import { ref, watch } from 'vue';
-import { Search } from 'bkui-vue/lib/icon';
-import { debounce } from 'lodash';
+  import { ref, watch } from 'vue';
+  import { Search } from 'bkui-vue/lib/icon';
+  import { debounce } from 'lodash';
+  import { localT } from '../i18n';
 
-const props = withDefaults(defineProps<{
-    modelValue: string;
-    placeholder?: string;
-    width?: number;
-  }>(), {
-  placeholder: '请输入',
-});
+  const props = withDefaults(
+    defineProps<{
+      modelValue: string;
+      placeholder?: string;
+      width?: number;
+    }>(),
+    {
+      placeholder: localT('请输入'),
+    },
+  );
 
-const emits = defineEmits(['update:modelValue', 'search']);
+  const emits = defineEmits(['update:modelValue', 'search']);
 
-const inputVal = ref('');
+  const inputVal = ref('');
 
-watch(() => props.modelValue, (val) => {
-  inputVal.value = val;
-});
+  watch(
+    () => props.modelValue,
+    (val) => {
+      inputVal.value = val;
+    },
+  );
 
-const triggerSearch = debounce(() => {
-  emits('update:modelValue', inputVal.value);
-  emits('search', inputVal.value);
-}, 300);
-
+  const triggerSearch = debounce(() => {
+    emits('update:modelValue', inputVal.value);
+    emits('search', inputVal.value);
+  }, 300);
 </script>
 <style lang="scss" scoped>
   .search-input-icon {

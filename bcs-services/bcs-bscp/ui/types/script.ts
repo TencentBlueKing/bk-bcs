@@ -1,6 +1,6 @@
 export const enum EScriptType {
   Shell = 'shell',
-  Python = 'python'
+  Python = 'python',
 }
 
 // 脚本列表查询请求参数
@@ -16,10 +16,11 @@ export interface IScriptListQuery {
 // 新建脚本编辑参数
 export interface IScriptEditingForm {
   name: string;
-  tag: string;
+  tags: string[];
   memo: string;
   type: EScriptType;
   content: string;
+  revision_name: string;
 }
 
 // 脚本
@@ -29,22 +30,22 @@ export interface IScriptItem {
   hook: {
     id: number;
     spec: {
-        name: string;
-        type: string;
-        tag: string;
-        publish_num: number;
-        momo: string;
+      name: string;
+      type: string;
+      tags: string[];
+      publish_num: number;
+      memo: string;
     };
     attachment: {
-        biz_id: number;
-    },
+      biz_id: number;
+    };
     revision: {
-        creator: string;
-        reviser: string;
-        create_at: string;
-        update_at: string;
-    }
-  },
+      creator: string;
+      reviser: string;
+      create_at: string;
+      update_at: string;
+    };
+  };
   published_revision_id: number;
 }
 
@@ -58,29 +59,29 @@ export interface IScriptTagItem {
 export interface IScriptVersion {
   id: number;
   spec: {
-      name: string;
-      content: string;
-      publish_num: number;
-      state: string;
-      memo: string;
+    name: string;
+    content: string;
+    publish_num: number;
+    state: string;
+    memo: string;
   };
   attachment: {
-      biz_id: number;
-      hook_id: number;
+    biz_id: number;
+    hook_id: number;
   };
   revision: {
-      creator: string;
-      reviser: string;
-      create_at: string;
-      update_at: string;
-  }
+    creator: string;
+    reviser: string;
+    create_at: string;
+    update_at: string;
+  };
 }
 
 // 脚本版本列表项
 export interface IScriptVersionListItem {
   bound_num: number;
   confirm_delete: boolean;
-  hook_revision: IScriptVersion
+  hook_revision: IScriptVersion;
 }
 
 // 脚本版本新建、编辑表单
@@ -114,4 +115,5 @@ export interface IScriptMapItem {
   id: number;
   name: string;
   content: string;
+  isOnline: string;
 }

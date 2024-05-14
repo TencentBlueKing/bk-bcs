@@ -19,15 +19,16 @@ import (
 
 	"gorm.io/gorm"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
-	pbbase "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
-	pbtv "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/template-variable"
-	pbds "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/search"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/i18n"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbbase "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
+	pbtv "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/template-variable"
+	pbds "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/search"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // CreateTemplateVariable create template variable.
@@ -40,7 +41,8 @@ func (s *Service) CreateTemplateVariable(ctx context.Context, req *pbds.CreateTe
 		return nil, errf.ErrDBOpsFailedF(kt).WithCause(err)
 	}
 	if err == nil {
-		return nil, errf.Errorf(kt, errf.AlreadyExists, "same template variable name %s already exists", req.Spec.Name)
+		return nil, errf.Errorf(errf.AlreadyExists,
+			i18n.T(kt, "same template variable name %s already exists", req.Spec.Name))
 	}
 
 	templateVariable := &table.TemplateVariable{

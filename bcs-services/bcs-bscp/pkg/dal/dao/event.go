@@ -20,12 +20,12 @@ import (
 	"gorm.io/gen/field"
 	"gorm.io/gorm"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // Event defines all the event related operations.
@@ -288,7 +288,7 @@ func (dao *eventDao) LatestCursor(kit *kit.Kit) (uint32, error) {
 	return cursor, nil
 }
 
-const eventUser = "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp"
+const eventUser = "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp"
 
 // RecordCursor is used to record the cursor which describe where
 // the event has already been consumed with event id.

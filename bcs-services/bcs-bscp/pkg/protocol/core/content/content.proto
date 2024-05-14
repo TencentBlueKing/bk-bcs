@@ -4,7 +4,7 @@ import "pkg/protocol/core/base/base.proto";
 
 package pbcontent;
 
-option go_package = "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/content;pbcontent";
+option go_package = "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/content;pbcontent";
 
 // Content source resource reference: pkg/dal/table/content.go
 message Content {
@@ -18,6 +18,7 @@ message Content {
 message ContentSpec {
   string signature = 1;
   uint64 byte_size = 2;
+  string md5 = 3;
 }
 
 // ReleasedContentSpec source resource reference: pkg/dal/table/content.go
@@ -26,6 +27,7 @@ message ReleasedContentSpec {
   uint64 byte_size = 2;
   string origin_signature = 3;
   uint64 origin_byte_size = 4;
+  string md5 = 5;
 }
 
 // ContentAttachment source resource reference: pkg/dal/table/content.go

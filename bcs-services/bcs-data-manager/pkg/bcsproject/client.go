@@ -21,10 +21,11 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	bcsProject "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
-	"github.com/micro/go-micro/v2/registry"
 	"github.com/patrickmn/go-cache"
+	"go-micro.dev/v4/registry"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/discovery"
@@ -152,7 +153,7 @@ func (pm *bcsProjectManagerClient) GetBcsProjectManagerConn() (*grpc.ClientConn,
 	if pm.opts.ClientTLSConfig != nil {
 		opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(pm.opts.ClientTLSConfig)))
 	} else {
-		opts = append(opts, grpc.WithInsecure())
+		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	}
 	var conn *grpc.ClientConn
 	conn, err = grpc.Dial(node.Address, opts...)
@@ -183,7 +184,7 @@ func (pm *bcsProjectManagerClient) GetProjectManagerConnWithURL() (*grpc.ClientC
 	if pm.opts.ClientTLSConfig != nil {
 		opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(pm.opts.ClientTLSConfig)))
 	} else {
-		opts = append(opts, grpc.WithInsecure())
+		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	}
 	var conn *grpc.ClientConn
 	conn, err := grpc.Dial(pm.opts.Address, opts...)

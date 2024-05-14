@@ -18,11 +18,11 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/cache-service/service/cache/client"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/cache-service/service/cache/event"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/bedis"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/dao"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/serviced"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/cache-service/service/cache/client"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/cache-service/service/cache/event"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/bedis"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/dao"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/serviced"
 )
 
 // Service do all the cache service's work
@@ -41,7 +41,8 @@ func NewService(sd serviced.State, daoSet dao.Set, bs bedis.Client, op client.In
 	if err != nil {
 		return nil, fmt.Errorf("run event handling task failed, err: %v", err)
 	}
-
+	metric := event.NewClientMetric(daoSet, sd, bs, op)
+	metric.Run()
 	gateway, err := newGateway(sd, daoSet, bs)
 	if err != nil {
 		return nil, fmt.Errorf("new gateway failed, err: %v", err)

@@ -16,8 +16,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/enumor"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/enumor"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
 )
 
 // ReleaseColumns defines Release's columns
@@ -121,6 +121,8 @@ type ReleaseSpec struct {
 	Memo       string `db:"memo" json:"memo"`
 	Deprecated bool   `db:"deprecated" json:"deprecated"`
 	PublishNum uint32 `db:"publish_num" json:"publish_num"`
+	// 是否全量发布过
+	FullyReleased bool `db:"fully_released" json:"fully_released"`
 }
 
 // Validate a release specifics when it is created.

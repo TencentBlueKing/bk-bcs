@@ -16,7 +16,8 @@ package store
 import (
 	"context"
 
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"go.mongodb.org/mongo-driver/bson"
 
@@ -26,11 +27,13 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/cloudvpc"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/clustercredential"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/machinery"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/moduleflag"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/namespace"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/node"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/nodegroup"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/nodetemplate"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/notifytemplate"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/operationlog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/project"
@@ -38,18 +41,21 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/scalingoption"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/task"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/tke"
+	stypes "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/types"
 )
 
 var storeClient ClusterManagerModel
 
 // ClusterManagerModel database operation for
 type ClusterManagerModel interface {
+	// cluster information storage management
 	CreateCluster(ctx context.Context, cluster *types.Cluster) error
 	UpdateCluster(ctx context.Context, cluster *types.Cluster) error
 	DeleteCluster(ctx context.Context, clusterID string) error
 	GetCluster(ctx context.Context, clusterID string) (*types.Cluster, error)
 	ListCluster(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]types.Cluster, error)
 
+	// node information storage management
 	CreateNode(ctx context.Context, node *types.Node) error
 	UpdateNode(ctx context.Context, node *types.Node) error
 	UpdateClusterNodeByNodeID(ctx context.Context, node *types.Node) error
@@ -69,12 +75,14 @@ type ClusterManagerModel interface {
 	GetClusterNodeByIP(ctx context.Context, clusterID, ip string) (*types.Node, error)
 	ListNode(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]*types.Node, error)
 
+	// namespace information storage management
 	CreateNamespace(ctx context.Context, ns *types.Namespace) error
 	UpdateNamespace(ctx context.Context, ns *types.Namespace) error
 	DeleteNamespace(ctx context.Context, name, federationClusterID string) error
 	GetNamespace(ctx context.Context, name, federationClusterID string) (*types.Namespace, error)
 	ListNamespace(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]types.Namespace, error)
 
+	// quota information storage management
 	CreateQuota(ctx context.Context, quota *types.ResourceQuota) error
 	UpdateQuota(ctx context.Context, quota *types.ResourceQuota) error
 	DeleteQuota(ctx context.Context, namespace, federationClusterID, clusterID string) error
@@ -82,6 +90,7 @@ type ClusterManagerModel interface {
 	ListQuota(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]types.ResourceQuota, error)
 	BatchDeleteQuotaByCluster(ctx context.Context, clusterID string) error
 
+	// credential information storage management
 	PutClusterCredential(ctx context.Context, clusterCredential *types.ClusterCredential) error
 	GetClusterCredential(ctx context.Context, serverKey string) (*types.ClusterCredential, bool, error)
 	DeleteClusterCredential(ctx context.Context, serverKey string) error
@@ -129,9 +138,19 @@ type ClusterManagerModel interface {
 	CreateNodeTemplate(ctx context.Context, template *types.NodeTemplate) error
 	UpdateNodeTemplate(ctx context.Context, template *types.NodeTemplate) error
 	DeleteNodeTemplate(ctx context.Context, projectID string, templateID string) error
-	ListNodeTemplate(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]types.NodeTemplate, error)
+	ListNodeTemplate(ctx context.Context, cond *operator.Condition, opt *options.ListOption) (
+		[]types.NodeTemplate, error)
 	GetNodeTemplate(ctx context.Context, projectID, templateID string) (*types.NodeTemplate, error)
 	GetNodeTemplateByID(ctx context.Context, templateID string) (*types.NodeTemplate, error)
+
+	// notifyTemplate info storage management
+	CreateNotifyTemplate(ctx context.Context, template *types.NotifyTemplate) error
+	UpdateNotifyTemplate(ctx context.Context, template *types.NotifyTemplate) error
+	DeleteNotifyTemplate(ctx context.Context, projectID string, templateID string) error
+	ListNotifyTemplate(ctx context.Context, cond *operator.Condition, opt *options.ListOption) (
+		[]types.NotifyTemplate, error)
+	GetNotifyTemplate(ctx context.Context, projectID, templateID string) (*types.NotifyTemplate, error)
+	GetNotifyTemplateByID(ctx context.Context, templateID string) (*types.NotifyTemplate, error)
 
 	// nodegroup information storage management
 	CreateNodeGroup(ctx context.Context, group *types.NodeGroup) error
@@ -148,6 +167,9 @@ type ClusterManagerModel interface {
 	DeleteTask(ctx context.Context, taskID string) error
 	GetTask(ctx context.Context, taskID string) (*types.Task, error)
 	ListTask(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]types.Task, error)
+	DeleteFinishedTaskByDate(ctx context.Context, startTime, endTime string) error
+	ListMachineryTasks(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]stypes.Task, error)
+	GetTasksFieldDistinct(ctx context.Context, fieldName string, filter interface{}) ([]string, error)
 
 	// OperationLog
 	CreateOperationLog(ctx context.Context, log *types.OperationLog) error
@@ -157,6 +179,15 @@ type ClusterManagerModel interface {
 	CountOperationLog(ctx context.Context, cond *operator.Condition) (int64, error)
 	ListAggreOperationLog(ctx context.Context, condSrc, condDst []bson.E,
 		opt *options.ListOption) ([]types.TaskOperationLog, error)
+	DeleteOperationLogByDate(ctx context.Context, startTime, endTime string) error
+
+	// TaskStepLog
+	CreateTaskStepLogInfo(ctx context.Context, taskID, stepName, message string)
+	CreateTaskStepLogWarn(ctx context.Context, taskID, stepName, message string)
+	CreateTaskStepLogError(ctx context.Context, taskID, stepName, message string)
+	DeleteTaskStepLogByTaskID(ctx context.Context, taskID string) error
+	CountTaskStepLog(ctx context.Context, cond *operator.Condition) (int64, error)
+	ListTaskStepLog(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]types.TaskStepLog, error)
 
 	// project information storage management
 	CreateAutoScalingOption(ctx context.Context, option *types.ClusterAutoScalingOption) error
@@ -190,14 +221,33 @@ type ModelSet struct {
 	*scalingoption.ModelAutoScalingOption
 	*cloudvpc.ModelCloudVPC
 	*operationlog.ModelOperationLog
+	*operationlog.ModelTaskStepLog
 	*account.ModelCloudAccount
 	*nodetemplate.ModelNodeTemplate
 	*moduleflag.ModelCloudModuleFlag
+	*machinery.ModelMachineryTask
+	*notifytemplate.ModelNotifyTemplate
 }
 
 // NewModelSet create model set
-func NewModelSet(db drivers.DB) ClusterManagerModel {
-	storeClient = &ModelSet{
+func NewModelSet(mongoOptions *mongo.Options) (ClusterManagerModel, error) {
+	db, err := mongo.NewDB(mongoOptions)
+	if err != nil {
+		blog.Errorf("init mongo db failed, err %s", err.Error())
+		return nil, err
+	}
+	if err = db.Ping(); err != nil {
+		blog.Errorf("ping mongo db failed, err %s", err.Error())
+		return nil, err
+	}
+	blog.Infof("init mongo db successfully")
+
+	mTaskDb, err := machinery.New(db, mongoOptions)
+	if err != nil {
+		return nil, err
+	}
+
+	storeClient = &ModelSet{ // nolint
 		ModelCluster:           cluster.New(db),
 		ModelNode:              node.New(db),
 		ModelClusterCredential: clustercredential.New(db),
@@ -211,12 +261,15 @@ func NewModelSet(db drivers.DB) ClusterManagerModel {
 		ModelAutoScalingOption: scalingoption.New(db),
 		ModelCloudVPC:          cloudvpc.New(db),
 		ModelOperationLog:      operationlog.New(db),
+		ModelTaskStepLog:       operationlog.NewTaskStepLog(db),
 		ModelCloudAccount:      account.New(db),
 		ModelNodeTemplate:      nodetemplate.New(db),
 		ModelCloudModuleFlag:   moduleflag.New(db),
+		ModelMachineryTask:     mTaskDb,
+		ModelNotifyTemplate:    notifytemplate.New(db),
 	}
 
-	return storeClient
+	return storeClient, nil
 }
 
 // GetStoreModel get store client

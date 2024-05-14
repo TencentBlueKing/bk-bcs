@@ -19,11 +19,11 @@ import (
 	rawgen "gorm.io/gen"
 	"gorm.io/gorm"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/search"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/search"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // TemplateRevision supplies all the template revision related operations.
@@ -289,6 +289,7 @@ func (dao *templateRevisionDao) BatchCreateWithTx(kit *kit.Kit, tx *gen.QueryTx,
 }
 
 // ListLatestRevisionsGroupByTemplateIds Lists the latest version groups by template ids
+// nolint
 func (dao *templateRevisionDao) ListLatestRevisionsGroupByTemplateIds(kit *kit.Kit,
 	templateIDs []uint32) ([]*table.TemplateRevision, error) {
 	m := dao.genQ.TemplateRevision

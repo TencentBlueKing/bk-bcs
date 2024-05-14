@@ -16,7 +16,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
 )
 
 // Template 模版
@@ -138,7 +138,7 @@ type TemplateSpec struct {
 
 // ValidateCreate validate template spec when it is created.
 func (t *TemplateSpec) ValidateCreate() error {
-	if err := validator.ValidateCfgItemName(t.Name); err != nil {
+	if err := validator.ValidateFileName(t.Name); err != nil {
 		return err
 	}
 

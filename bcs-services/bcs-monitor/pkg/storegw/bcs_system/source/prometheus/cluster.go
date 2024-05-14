@@ -45,9 +45,9 @@ func NewPrometheus() *Prometheus {
 // handleClusterMetric Cluster 处理公共函数
 func (m *Prometheus) handleClusterMetric(ctx context.Context, projectID, clusterID string, promql string, start,
 	end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
-	nodeMatch, nodeNameMatch, err := base.GetNodeMatch(ctx, clusterID)
-	if err != nil {
-		return nil, err
+	nodeMatch, nodeNameMatch, ok := base.GetNodeMatchIgnoreErr(ctx, clusterID)
+	if !ok {
+		return nil, nil
 	}
 
 	params := map[string]interface{}{
@@ -286,7 +286,7 @@ func (m *Prometheus) GetClusterDiskioUsage(ctx context.Context, projectID, clust
 func (m *Prometheus) GetClusterDiskioUsed(ctx context.Context, projectID, clusterID string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql :=
-		`sum(max by(bk_instance) (rate(node_disk_io_time_seconds_total{cluster_id="%<clusterID>s", ` +
+		`sum(max by(instance) (rate(node_disk_io_time_seconds_total{cluster_id="%<clusterID>s", ` +
 			`instance=~"%<instance>s", %<provider>s}[2m])))`
 
 	return m.handleClusterMetric(ctx, projectID, clusterID, promql, start, end, step)
@@ -296,7 +296,7 @@ func (m *Prometheus) GetClusterDiskioUsed(ctx context.Context, projectID, cluste
 func (m *Prometheus) GetClusterDiskioTotal(ctx context.Context, projectID, clusterID string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql :=
-		`count(max by(bk_instance) (rate(node_disk_io_time_seconds_total{cluster_id="%<clusterID>s", ` +
+		`count(max by(instance) (rate(node_disk_io_time_seconds_total{cluster_id="%<clusterID>s", ` +
 			`instance=~"%<instance>s", %<provider>s}[2m])))`
 
 	return m.handleClusterMetric(ctx, projectID, clusterID, promql, start, end, step)

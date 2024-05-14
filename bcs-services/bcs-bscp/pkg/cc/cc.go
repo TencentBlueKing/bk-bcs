@@ -16,7 +16,7 @@ package cc
 import (
 	"sync"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 )
 
 var runtimeOnce sync.Once
@@ -180,8 +180,27 @@ func VaultServer() VaultServerSetting {
 
 	s, ok := rt.settings.(*VaultServerSetting)
 	if !ok {
-		logs.ErrorDepthf(1, "current %s service can not get data service setting", ServiceName())
+		logs.ErrorDepthf(1, "current %s service can not get vault server setting", ServiceName())
 		return VaultServerSetting{}
+	}
+
+	return *s
+}
+
+// VaultSidecar return vault sidecar service Setting.
+func VaultSidecar() VaultSidecarSetting {
+	rt.lock.Lock()
+	defer rt.lock.Unlock()
+
+	if !rt.Ready() {
+		logs.ErrorDepthf(1, "runtime not ready, return empty data service setting")
+		return VaultSidecarSetting{}
+	}
+
+	s, ok := rt.settings.(*VaultSidecarSetting)
+	if !ok {
+		logs.ErrorDepthf(1, "current %s service can not get vault sidecar setting", ServiceName())
+		return VaultSidecarSetting{}
 	}
 
 	return *s

@@ -899,3 +899,15 @@ url("@/fonts/font-icon/fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .bcs-icon-shujuqingxi:before {
 	content: "\e231";
 }
+.bcs-icon-pilianggouxuan:before {
+	content: "\e232";
+}
+.bcs-icon-zhiding:before {
+	content: "\e233";
+}
+.bcs-icon-bcs:before {
+	content: "\e234";
+}
+.bcs-icon-crd-3:before {
+	content: "\e23a";
+}

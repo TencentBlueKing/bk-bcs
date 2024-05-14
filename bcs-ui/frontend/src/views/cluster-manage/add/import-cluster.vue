@@ -26,10 +26,15 @@
         </bk-radio-group>
       </BkFormItem>
       <BkFormItem :label="$t('cluster.create.label.desc1')">
-        <bk-input v-model="importClusterInfo.description" type="textarea"></bk-input>
+        <bcs-input
+          :maxlength="100"
+          class="max-w-[640px]"
+          v-model="importClusterInfo.description"
+          type="textarea">
+        </bcs-input>
       </BkFormItem>
       <template v-if="importClusterInfo.importType === 'provider'">
-        <BkFormItem
+        <!-- <BkFormItem
           :label="$t('cluster.create.label.provider')"
           property="provider"
           error-display-type="normal"
@@ -46,7 +51,7 @@
               :name="item.name">
             </bcs-option>
           </bcs-select>
-        </BkFormItem>
+        </BkFormItem> -->
         <BkFormItem
           :label="$t('cluster.create.label.cloudToken')"
           property="accountID"
@@ -135,6 +140,13 @@
             <bcs-option id="true" :name="$t('cluster.create.label.network.extranet')"></bcs-option>
           </bcs-select>
         </BkFormItem>
+        <bk-form-item
+          :label="$t('importGoogleCloud.label.nodemanArea')"
+          property="area.bkCloudID"
+          error-display-type="normal"
+          required>
+          <NodeManArea class="w640" v-model="importClusterInfo.area.bkCloudID" />
+        </bk-form-item>
       </template>
       <BkFormItem
         :label="$t('cluster.create.label.kubeConfig')"
@@ -165,6 +177,9 @@
           theme="primary"
           class="mr-[5px]"
           :loading="testLoading"
+          :disabled="importClusterInfo.importType === 'provider'
+            ? !importClusterInfo.cloudID
+            : !importClusterInfo.yaml"
           @click="handleTest">{{$t('cluster.create.button.textKubeConfig')}}</bk-button>
         <span
           v-bk-tooltips="{
@@ -199,6 +214,7 @@ import useFormLabel from '@/composables/use-form-label';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store';
+import NodeManArea from '@/views/cluster-manage/add/form/nodeman-area.vue';
 
 export default defineComponent({
   name: 'ImportCluster',
@@ -206,6 +222,7 @@ export default defineComponent({
     CodeEditor,
     BkForm,
     BkFormItem,
+    NodeManArea,
   },
   props: {
     importType: {
@@ -214,30 +231,35 @@ export default defineComponent({
     },
   },
   setup(props) {
+    const provider = props.importType === 'kubeconfig' ? 'bluekingCloud' : 'tencentPublicCloud';
+
     const importClusterInfo = ref({
       importType: props.importType,
       clusterName: '',
       environment: 'prod',
       description: '',
       yaml: '',
-      provider: '',
+      // provider: '',
       region: '',
       accountID: '',
       cloudID: '',
       isExtranet: 'false',
+      area: {
+        bkCloudID: 0,
+      },
     });
     const isTestSuccess = ref(false);
     const testLoading = ref(false);
     const loading = ref(false);
     const importFormRef = ref<any>(null);
     const formRules = ref({
-      provider: [
-        {
-          required: true,
-          message: $i18n.t('generic.validate.required'),
-          trigger: 'blur',
-        },
-      ],
+      // provider: [
+      //   {
+      //     required: true,
+      //     message: $i18n.t('generic.validate.required'),
+      //     trigger: 'blur',
+      //   },
+      // ],
       yaml: [
         {
           required: true,
@@ -296,24 +318,24 @@ export default defineComponent({
     const user = computed(() => $store.state.user);
 
     // 云服务商
-    const templateList = ref<any[]>([]);
-    const availableTemplateList = computed(() => templateList.value
-      .filter(item => item.enable === 'true' && !item?.confInfo?.disableImportCluster));
-    const templateLoading = ref(false);
-    const handleGetCloudList = async () => {
-      templateLoading.value = true;
-      templateList.value = await $store.dispatch('clustermanager/fetchCloudList');
-      templateLoading.value = false;
-    };
+    // const templateList = ref<any[]>([]);
+    // const availableTemplateList = computed(() => templateList.value
+    //   .filter(item => item.enable === 'true' && !item?.confInfo?.disableImportCluster));
+    // const templateLoading = ref(false);
+    // const handleGetCloudList = async () => {
+    //   templateLoading.value = true;
+    //   templateList.value = await $store.dispatch('clustermanager/fetchCloudList');
+    //   templateLoading.value = false;
+    // };
 
     // 区域列表
     const regionList = ref<any[]>([]);
     const regionLoading = ref(false);
     const getRegionList = async () => {
-      if (!importClusterInfo.value.provider || !importClusterInfo.value.accountID) return;
+      if (!importClusterInfo.value.accountID) return;
       regionLoading.value = true;
       regionList.value = await $store.dispatch('clustermanager/cloudRegionByAccount', {
-        $cloudId: importClusterInfo.value.provider,
+        $cloudId: provider,
         accountID: importClusterInfo.value.accountID,
       });
       regionLoading.value = false;
@@ -324,10 +346,9 @@ export default defineComponent({
     const accountsLoading = ref(false);
     const accountsList = ref<any[]>([]);
     const handleGetCloudAccounts = async () => {
-      if (!importClusterInfo.value.provider) return;
       accountsLoading.value = true;
       const res = await $store.dispatch('clustermanager/cloudAccounts', {
-        $cloudId: importClusterInfo.value.provider,
+        $cloudId: provider,
         projectID: curProject.value.project_id,
         operator: user.value.username,
       });
@@ -340,28 +361,21 @@ export default defineComponent({
     const clusterLoading = ref(false);
     const clusterList = ref<any[]>([]);
     const handleGetClusterList = async () => {
-      if (!importClusterInfo.value.region || !importClusterInfo.value.provider) return;
+      if (!importClusterInfo.value.region) return;
 
       clusterLoading.value = true;
       clusterList.value = await $store.dispatch('clustermanager/cloudClusterList', {
         region: importClusterInfo.value.region,
-        $cloudId: importClusterInfo.value.provider,
+        $cloudId: provider,
         accountID: importClusterInfo.value.accountID,
       });
       clusterLoading.value = false;
     };
 
-    watch(() => importClusterInfo.value.importType, (type) => {
-      type === 'provider' && !templateList.value.length && handleGetCloudList();
-    });
-    watch(() => importClusterInfo.value.provider, () => {
-      importClusterInfo.value.accountID = '';
-      handleGetCloudAccounts();
-      importClusterInfo.value.region = '';
-      getRegionList();
-      importClusterInfo.value.cloudID = '';
-      handleGetClusterList();
-    });
+    // watch(() => importClusterInfo.value.importType, (type) => {
+    //   type === 'provider' && !templateList.value.length && handleGetCloudList();
+    // });
+
     watch(() => importClusterInfo.value.accountID, () => {
       importClusterInfo.value.region = '';
       getRegionList();
@@ -399,10 +413,10 @@ export default defineComponent({
       testLoading.value = false;
     };
     const testCloudKubeConfig = async () => {
-      if (!importClusterInfo.value.cloudID || !importClusterInfo.value.provider) return;
+      if (!importClusterInfo.value.cloudID) return;
       testLoading.value = true;
       const { result } = await cloudConnect({
-        $cloudId: importClusterInfo.value.provider,
+        $cloudId: provider,
         $clusterID: importClusterInfo.value.cloudID,
         isExtranet: importClusterInfo.value.isExtranet,
         accountID: importClusterInfo.value.accountID,
@@ -435,8 +449,7 @@ export default defineComponent({
         description: importClusterInfo.value.description,
         projectID: curProject.value.project_id,
         businessID: String(curProject.value.businessID),
-        provider: importClusterInfo.value.importType === 'kubeconfig'
-          ? 'bluekingCloud' : importClusterInfo.value.provider, // importClusterInfo.value.provider,
+        provider,
         region: importClusterInfo.value.importType === 'kubeconfig'
           ? 'default' : importClusterInfo.value.region,
         environment: importClusterInfo.value.environment,
@@ -449,10 +462,12 @@ export default defineComponent({
           cloudID: importClusterInfo.value.importType === 'kubeconfig'
             ? '' : importClusterInfo.value.cloudID,
           kubeConfig: importClusterInfo.value.yaml,
+          inter: importClusterInfo.value.isExtranet === 'false',
         },
         networkType: 'overlay',
         accountID: importClusterInfo.value.importType === 'kubeconfig'
           ? '' : importClusterInfo.value.accountID,
+        area: importClusterInfo.value.area,
       };
       const result = await $store.dispatch('clustermanager/importCluster', params);
       loading.value = false;
@@ -473,12 +488,12 @@ export default defineComponent({
     onMounted(() => {
       initFormLabelWidth(importFormRef.value);
       if (props.importType === 'provider') {
-        handleGetCloudList();
+        handleGetCloudAccounts();
       }
     });
     return {
       regionLoading,
-      templateLoading,
+      // templateLoading,
       user,
       codeEditorRef,
       clusterLoading,
@@ -487,7 +502,7 @@ export default defineComponent({
       isTestSuccess,
       testLoading,
       labelWidth,
-      availableTemplateList,
+      // availableTemplateList,
       importClusterInfo,
       importFormRef,
       loading,

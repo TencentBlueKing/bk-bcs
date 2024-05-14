@@ -23,12 +23,12 @@ import (
 	"github.com/pkg/errors"
 	cos "github.com/tencentyun/cos-go-sdk-v5"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/thirdparty/repo"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/thirdparty/repo"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
 const (
@@ -137,10 +137,13 @@ func (c *cosClient) Metadata(kt *kit.Kit, sign string) (*ObjectMetadata, error) 
 		return nil, errors.Errorf("metadata status %d != 200", resp.StatusCode)
 	}
 
+	md5 := strings.Trim(resp.Header.Get("Etag"), "\"")
+
 	// cos only have etag, not for validate
 	metadata := &ObjectMetadata{
 		ByteSize: resp.ContentLength,
 		Sha256:   sign,
+		Md5:      md5,
 	}
 
 	return metadata, nil

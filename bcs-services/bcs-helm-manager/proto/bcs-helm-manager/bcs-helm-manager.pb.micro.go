@@ -6,31 +6,25 @@ package helmmanager
 import (
 	fmt "fmt"
 	_ "github.com/envoyproxy/protoc-gen-validate/validate"
-	proto "github.com/golang/protobuf/proto"
 	_ "github.com/golang/protobuf/ptypes/struct"
 	_ "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger/options"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	httpbody "google.golang.org/genproto/googleapis/api/httpbody"
+	proto "google.golang.org/protobuf/proto"
 	math "math"
 )
 
 import (
 	context "context"
-	api "github.com/micro/go-micro/v2/api"
-	client "github.com/micro/go-micro/v2/client"
-	server "github.com/micro/go-micro/v2/server"
+	api "go-micro.dev/v4/api"
+	client "go-micro.dev/v4/client"
+	server "go-micro.dev/v4/server"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
-
-// This is a compile-time assertion to ensure that this generated file
-// is compatible with the proto package it is being compiled against.
-// A compilation error at this line likely means your copy of the
-// proto package needs to be updated.
-const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ api.Endpoint
@@ -42,179 +36,172 @@ var _ server.Option
 
 func NewHelmManagerEndpoints() []*api.Endpoint {
 	return []*api.Endpoint{
-		&api.Endpoint{
+		{
 			Name:    "HelmManager.Available",
 			Path:    []string{"/helmmanager/v1/available"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "HelmManager.CreateRepository",
 			Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "HelmManager.CreatePersonalRepo",
 			Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos/personal"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "HelmManager.UpdateRepository",
 			Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos/{name}"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "HelmManager.GetRepository",
 			Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos/{name}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "HelmManager.DeleteRepository",
 			Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos/{name}"},
 			Method:  []string{"DELETE"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "HelmManager.ListRepository",
 			Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "HelmManager.ListChartV1",
 			Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos/{repoName}/charts"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "HelmManager.GetChartDetailV1",
 			Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos/{repoName}/charts/{name}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "HelmManager.ListChartVersionV1",
 			Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos/{repoName}/charts/{name}/versions"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "HelmManager.GetVersionDetailV1",
 			Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos/{repoName}/charts/{name}/versions/{version}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "HelmManager.DeleteChart",
 			Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos/{repoName}/charts/{name}"},
 			Method:  []string{"DELETE"},
-			Body:    "",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "HelmManager.DeleteChartVersion",
 			Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos/{repoName}/charts/{name}/versions/{version}"},
 			Method:  []string{"DELETE"},
-			Body:    "",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "HelmManager.DownloadChart",
 			Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos/{repoName}/charts/{name}/versions/{version}/download"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "HelmManager.GetChartRelease",
 			Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos/{repoName}/charts/{name}/releases"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "HelmManager.ListReleaseV1",
 			Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/releases"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "HelmManager.GetReleaseDetailV1",
 			Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "HelmManager.InstallReleaseV1",
 			Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "HelmManager.UninstallReleaseV1",
 			Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}"},
 			Method:  []string{"DELETE"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "HelmManager.UpgradeReleaseV1",
 			Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "HelmManager.RollbackReleaseV1",
 			Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/rollback"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "HelmManager.ReleasePreview",
 			Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/preview"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "HelmManager.GetReleaseHistory",
 			Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/history"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "HelmManager.GetReleaseManifest",
 			Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/revisions/{revision}/manifest"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "HelmManager.GetReleaseStatus",
 			Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/status"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
+			Name:    "HelmManager.GetReleaseDetailExtend",
+			Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/expend"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "HelmManager.GetReleasePods",
 			Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/pods"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "HelmManager.ImportClusterRelease",
 			Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/import"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 	}
@@ -252,6 +239,7 @@ type HelmManagerService interface {
 	GetReleaseHistory(ctx context.Context, in *GetReleaseHistoryReq, opts ...client.CallOption) (*GetReleaseHistoryResp, error)
 	GetReleaseManifest(ctx context.Context, in *GetReleaseManifestReq, opts ...client.CallOption) (*GetReleaseManifestResp, error)
 	GetReleaseStatus(ctx context.Context, in *GetReleaseStatusReq, opts ...client.CallOption) (*CommonListResp, error)
+	GetReleaseDetailExtend(ctx context.Context, in *GetReleaseDetailExtendReq, opts ...client.CallOption) (*CommonResp, error)
 	GetReleasePods(ctx context.Context, in *GetReleasePodsReq, opts ...client.CallOption) (*CommonListResp, error)
 	ImportClusterRelease(ctx context.Context, in *ImportClusterReleaseReq, opts ...client.CallOption) (*ImportClusterReleaseResp, error)
 }
@@ -518,6 +506,16 @@ func (c *helmManagerService) GetReleaseStatus(ctx context.Context, in *GetReleas
 	return out, nil
 }
 
+func (c *helmManagerService) GetReleaseDetailExtend(ctx context.Context, in *GetReleaseDetailExtendReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "HelmManager.GetReleaseDetailExtend", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *helmManagerService) GetReleasePods(ctx context.Context, in *GetReleasePodsReq, opts ...client.CallOption) (*CommonListResp, error) {
 	req := c.c.NewRequest(c.name, "HelmManager.GetReleasePods", in)
 	out := new(CommonListResp)
@@ -570,6 +568,7 @@ type HelmManagerHandler interface {
 	GetReleaseHistory(context.Context, *GetReleaseHistoryReq, *GetReleaseHistoryResp) error
 	GetReleaseManifest(context.Context, *GetReleaseManifestReq, *GetReleaseManifestResp) error
 	GetReleaseStatus(context.Context, *GetReleaseStatusReq, *CommonListResp) error
+	GetReleaseDetailExtend(context.Context, *GetReleaseDetailExtendReq, *CommonResp) error
 	GetReleasePods(context.Context, *GetReleasePodsReq, *CommonListResp) error
 	ImportClusterRelease(context.Context, *ImportClusterReleaseReq, *ImportClusterReleaseResp) error
 }
@@ -601,6 +600,7 @@ func RegisterHelmManagerHandler(s server.Server, hdlr HelmManagerHandler, opts .
 		GetReleaseHistory(ctx context.Context, in *GetReleaseHistoryReq, out *GetReleaseHistoryResp) error
 		GetReleaseManifest(ctx context.Context, in *GetReleaseManifestReq, out *GetReleaseManifestResp) error
 		GetReleaseStatus(ctx context.Context, in *GetReleaseStatusReq, out *CommonListResp) error
+		GetReleaseDetailExtend(ctx context.Context, in *GetReleaseDetailExtendReq, out *CommonResp) error
 		GetReleasePods(ctx context.Context, in *GetReleasePodsReq, out *CommonListResp) error
 		ImportClusterRelease(ctx context.Context, in *ImportClusterReleaseReq, out *ImportClusterReleaseResp) error
 	}
@@ -618,21 +618,18 @@ func RegisterHelmManagerHandler(s server.Server, hdlr HelmManagerHandler, opts .
 		Name:    "HelmManager.CreateRepository",
 		Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "HelmManager.CreatePersonalRepo",
 		Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos/personal"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "HelmManager.UpdateRepository",
 		Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos/{name}"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -645,7 +642,6 @@ func RegisterHelmManagerHandler(s server.Server, hdlr HelmManagerHandler, opts .
 		Name:    "HelmManager.DeleteRepository",
 		Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos/{name}"},
 		Method:  []string{"DELETE"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -682,14 +678,12 @@ func RegisterHelmManagerHandler(s server.Server, hdlr HelmManagerHandler, opts .
 		Name:    "HelmManager.DeleteChart",
 		Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos/{repoName}/charts/{name}"},
 		Method:  []string{"DELETE"},
-		Body:    "",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "HelmManager.DeleteChartVersion",
 		Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos/{repoName}/charts/{name}/versions/{version}"},
 		Method:  []string{"DELETE"},
-		Body:    "",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -702,7 +696,6 @@ func RegisterHelmManagerHandler(s server.Server, hdlr HelmManagerHandler, opts .
 		Name:    "HelmManager.GetChartRelease",
 		Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos/{repoName}/charts/{name}/releases"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -721,35 +714,30 @@ func RegisterHelmManagerHandler(s server.Server, hdlr HelmManagerHandler, opts .
 		Name:    "HelmManager.InstallReleaseV1",
 		Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "HelmManager.UninstallReleaseV1",
 		Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}"},
 		Method:  []string{"DELETE"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "HelmManager.UpgradeReleaseV1",
 		Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "HelmManager.RollbackReleaseV1",
 		Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/rollback"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "HelmManager.ReleasePreview",
 		Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/preview"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -771,6 +759,12 @@ func RegisterHelmManagerHandler(s server.Server, hdlr HelmManagerHandler, opts .
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "HelmManager.GetReleaseDetailExtend",
+		Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/expend"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "HelmManager.GetReleasePods",
 		Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/pods"},
 		Method:  []string{"GET"},
@@ -780,7 +774,6 @@ func RegisterHelmManagerHandler(s server.Server, hdlr HelmManagerHandler, opts .
 		Name:    "HelmManager.ImportClusterRelease",
 		Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/import"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	return s.Handle(s.NewHandler(&HelmManager{h}, opts...))
@@ -890,6 +883,10 @@ func (h *helmManagerHandler) GetReleaseStatus(ctx context.Context, in *GetReleas
 	return h.HelmManagerHandler.GetReleaseStatus(ctx, in, out)
 }
 
+func (h *helmManagerHandler) GetReleaseDetailExtend(ctx context.Context, in *GetReleaseDetailExtendReq, out *CommonResp) error {
+	return h.HelmManagerHandler.GetReleaseDetailExtend(ctx, in, out)
+}
+
 func (h *helmManagerHandler) GetReleasePods(ctx context.Context, in *GetReleasePodsReq, out *CommonListResp) error {
 	return h.HelmManagerHandler.GetReleasePods(ctx, in, out)
 }
@@ -902,44 +899,40 @@ func (h *helmManagerHandler) ImportClusterRelease(ctx context.Context, in *Impor
 
 func NewClusterAddonsEndpoints() []*api.Endpoint {
 	return []*api.Endpoint{
-		&api.Endpoint{
+		{
 			Name:    "ClusterAddons.ListAddons",
 			Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/addons"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterAddons.GetAddonsDetail",
 			Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/addons/{name}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterAddons.InstallAddons",
 			Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/addons"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterAddons.UpgradeAddons",
 			Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/addons/{name}"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterAddons.StopAddons",
 			Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/addons/{name}/stop"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
-		&api.Endpoint{
+		{
 			Name:    "ClusterAddons.UninstallAddons",
 			Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/addons/{name}"},
 			Method:  []string{"DELETE"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 	}
@@ -1068,28 +1061,24 @@ func RegisterClusterAddonsHandler(s server.Server, hdlr ClusterAddonsHandler, op
 		Name:    "ClusterAddons.InstallAddons",
 		Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/addons"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterAddons.UpgradeAddons",
 		Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/addons/{name}"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterAddons.StopAddons",
 		Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/addons/{name}/stop"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterAddons.UninstallAddons",
 		Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/addons/{name}"},
 		Method:  []string{"DELETE"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	return s.Handle(s.NewHandler(&ClusterAddons{h}, opts...))

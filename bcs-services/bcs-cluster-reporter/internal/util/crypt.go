@@ -1,16 +1,16 @@
 /*
- * Tencent is pleased to support the open source community by making Blueking Container Service available.,
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
  * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 
-// Package util
+// Package util xxx
 package util
 
 import (
@@ -34,33 +34,33 @@ import (
 const letterBytes = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 const (
-	// ValidateSignatureError
+	// ValidateSignatureError xxx
 	ValidateSignatureError int = -40001
-	// ParseXmlError
+	// ParseXmlError xxx
 	ParseXmlError int = -40002
-	// ComputeSignatureError
+	// ComputeSignatureError xxx
 	ComputeSignatureError int = -40003
-	// IllegalAesKey
+	// IllegalAesKey xxx
 	IllegalAesKey int = -40004
-	// ValidateCorpidError
+	// ValidateCorpidError xxx
 	ValidateCorpidError int = -40005
-	// EncryptAESError
+	// EncryptAESError xxx
 	EncryptAESError int = -40006
-	// DecryptAESError
+	// DecryptAESError xxx
 	DecryptAESError int = -40007
-	// IllegalBuffer
+	// IllegalBuffer xxx
 	IllegalBuffer int = -40008
-	// EncodeBase64Error
+	// EncodeBase64Error xxx
 	EncodeBase64Error int = -40009
-	// DecodeBase64Error
+	// DecodeBase64Error xxx
 	DecodeBase64Error int = -40010
-	// GenXmlError
+	// GenXmlError xxx
 	GenXmlError int = -40010
-	// ParseJsonError
+	// ParseJsonError xxx
 	ParseJsonError int = -40012
-	// GenJsonError
+	// GenJsonError xxx
 	GenJsonError int = -40013
-	// IllegalProtocolType
+	// IllegalProtocolType xxx
 	IllegalProtocolType int = -40014
 )
 
@@ -145,11 +145,11 @@ func (xmlp *XmlProcessor) serialize(msg4_send *WXBizMsg4Send) ([]byte, *CryptErr
 	return xml_msg, nil
 }
 
-// NewWXBizMsgCrypt
+// NewWXBizMsgCrypt new WXBizMsgCrypt
 func NewWXBizMsgCrypt(token, encoding_aeskey, receiver_id string, protocol_type ProtocolType) *WXBizMsgCrypt {
 	var protocol_processor ProtocolProcessor
 	if protocol_type != XmlType {
-		panic("unsupport protocal")
+		panic("unsupport protocol")
 	} else {
 		protocol_processor = new(XmlProcessor)
 	}
@@ -161,7 +161,7 @@ func NewWXBizMsgCrypt(token, encoding_aeskey, receiver_id string, protocol_type 
 func (wx *WXBizMsgCrypt) randString(n int) string {
 	b := make([]byte, n)
 	for i := range b {
-		b[i] = letterBytes[rand.Int63()%int64(len(letterBytes))]
+		b[i] = letterBytes[rand.Int63()%int64(len(letterBytes))] // nolint math/rand instead of crypto/rand
 	}
 	return string(b)
 }
@@ -253,10 +253,10 @@ func (wx *WXBizMsgCrypt) calSignature(timestamp, nonce, data string) string {
 		buffer.WriteString(value)
 	}
 
-	sha := sha1.New()
+	sha := sha1.New() // nolint  Use of weak cryptographic primitive
 	sha.Write(buffer.Bytes())
 	signature := fmt.Sprintf("%x", sha.Sum(nil))
-	return string(signature)
+	return signature
 }
 
 // ParsePlainText xxx

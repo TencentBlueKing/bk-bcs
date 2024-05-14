@@ -20,17 +20,17 @@ import (
 	"strings"
 	"time"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
-	pbbase "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
-	pbtemplate "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/template"
-	pbtr "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/template-revision"
-	pbds "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/search"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbbase "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
+	pbtemplate "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/template"
+	pbtr "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/template-revision"
+	pbds "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/search"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // CreateTemplate create template.
@@ -39,11 +39,13 @@ import (
 func (s *Service) CreateTemplate(ctx context.Context, req *pbds.CreateTemplateReq) (*pbds.CreateResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
+	// GetByUniqueKey get template by unique key.
 	if _, err := s.dao.Template().GetByUniqueKey(kt, req.Attachment.BizId, req.Attachment.TemplateSpaceId,
 		req.Spec.Name, req.Spec.Path); err == nil {
 		return nil, fmt.Errorf("config item's same name %s and path %s already exists", req.Spec.Name, req.Spec.Path)
 	}
 	if len(req.TemplateSetIds) > 0 {
+		// ValidateTmplSetsExist validate if template sets exists
 		if err := s.dao.Validator().ValidateTmplSetsExist(kt, req.TemplateSetIds); err != nil {
 			return nil, err
 		}
@@ -60,6 +62,7 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbds.CreateTemplateRe
 			Reviser: kt.User,
 		},
 	}
+	// CreateWithTx create one template instance with transaction.
 	id, err := s.dao.Template().CreateWithTx(kt, tx, template)
 	if err != nil {
 		logs.Errorf("create template failed, err: %v, rid: %s", err, kt.Rid)
@@ -71,7 +74,10 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbds.CreateTemplateRe
 
 	// 2. create template revision
 	spec := req.TrSpec.TemplateRevisionSpec()
-	spec.RevisionName = generateRevisionName()
+	// if no revision name is specified, generate it by system
+	if spec.RevisionName == "" {
+		spec.RevisionName = tools.GenerateRevisionName()
+	}
 	templateRevision := &table.TemplateRevision{
 		Spec: spec,
 		Attachment: &table.TemplateRevisionAttachment{
@@ -83,6 +89,7 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbds.CreateTemplateRe
 			Creator: kt.User,
 		},
 	}
+	// CreateWithTx create one template revision instance with transaction.
 	if _, err = s.dao.TemplateRevision().CreateWithTx(kt, tx, templateRevision); err != nil {
 		logs.Errorf("create template revision failed, err: %v, rid: %s", err, kt.Rid)
 		if rErr := tx.Rollback(); rErr != nil {
@@ -145,6 +152,7 @@ func (s *Service) ListTemplates(ctx context.Context, req *pbds.ListTemplatesReq)
 		return nil, err
 	}
 	topIds, _ := tools.StrToUint32Slice(req.Ids)
+	// List templates with options.
 	details, count, err := s.dao.Template().List(kt, req.BizId, req.TemplateSpaceId, searcher, opt, topIds)
 
 	if err != nil {
@@ -171,6 +179,7 @@ func (s *Service) UpdateTemplate(ctx context.Context, req *pbds.UpdateTemplateRe
 			Reviser: kt.User,
 		},
 	}
+	// Update one template's info.
 	if err := s.dao.Template().Update(kt, template); err != nil {
 		logs.Errorf("update template failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
@@ -655,15 +664,10 @@ func (s *Service) ListTmplsOfTmplSet(ctx context.Context, req *pbds.ListTmplsOfT
 	}
 	topId, _ := tools.StrToUint32Slice(req.Ids)
 	sort.SliceStable(details, func(i, j int) bool {
-		// 检测模板id是否在topId中
 		iInTopID := tools.Contains(topId, details[i].Id)
 		jInTopID := tools.Contains(topId, details[j].Id)
-		// 两者都在则按照path+name排序
-		if iInTopID && jInTopID || len(topId) == 0 {
-			if details[i].GetSpec().GetPath() != details[j].GetSpec().GetPath() {
-				return details[i].GetSpec().GetPath() < details[j].GetSpec().GetPath()
-			}
-			return details[i].GetSpec().GetName() < details[j].GetSpec().GetName()
+		if iInTopID && jInTopID {
+			return i < j
 		}
 		if iInTopID {
 			return true

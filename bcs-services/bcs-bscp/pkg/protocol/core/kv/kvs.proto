@@ -3,8 +3,9 @@ syntax = "proto3";
 package pbkv;
 
 import "pkg/protocol/core/base/base.proto";
+import "pkg/protocol/core/content/content.proto";
 
-option go_package = "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/kv;pbkv";
+option go_package = "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/kv;pbkv";
 
 // Kv source resource reference: pkg/dal/table/kvs.go
 message Kv {
@@ -13,6 +14,7 @@ message Kv {
   KvSpec spec = 3;
   KvAttachment attachment = 4;
   pbbase.Revision revision = 5;
+  pbcontent.ContentSpec content_spec = 6;
 }
 
 // KvSpec source resource reference: pkg/dal/table/kvs.go
@@ -20,6 +22,7 @@ message KvSpec {
   string key = 1;
   string kv_type = 2;
   string value = 3;
+  string memo = 4;
 }
 
 // KvAttachment source resource reference: pkg/dal/table/kvs.go

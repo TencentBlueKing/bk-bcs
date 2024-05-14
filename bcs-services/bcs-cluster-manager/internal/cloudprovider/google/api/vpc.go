@@ -35,30 +35,30 @@ func init() {
 type VPCManager struct{}
 
 // ListVpcs list vpcs
-func (vm *VPCManager) ListVpcs(vpcID string, opt *cloudprovider.CommonOption) ([]*proto.CloudVpc, error) {
+func (vm *VPCManager) ListVpcs(vpcID string, opt *cloudprovider.ListNetworksOption) ([]*proto.CloudVpc, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
 // ListSubnets list vpc subnets
-func (vm *VPCManager) ListSubnets(vpcID, zone string, opt *cloudprovider.CommonOption) ([]*proto.Subnet, error) {
+func (vm *VPCManager) ListSubnets(vpcID, zone string, opt *cloudprovider.ListNetworksOption) ([]*proto.Subnet, error) {
 	locationList := strings.Split(opt.Region, "-")
 	if len(locationList) == 3 {
 		opt.Region = strings.Join(locationList[:2], "-")
 	}
 
-	client, err := NewComputeServiceClient(opt)
+	client, err := NewComputeServiceClient(&opt.CommonOption)
 	if err != nil {
 		return nil, fmt.Errorf("create google client failed, err %s", err.Error())
 	}
 	subnets, err := client.ListSubnetworks(context.Background(), opt.Region)
 	if err != nil {
-		return nil, fmt.Errorf("list regions failed, err %s", err.Error())
+		return nil, fmt.Errorf("list subnets failed, err %s", err.Error())
 	}
 
 	result := make([]*proto.Subnet, 0)
 	for _, v := range subnets.Items {
 		networkInfo := strings.Split(v.Network, "/")
-		if vpcID != networkInfo[len(networkInfo)-1] {
+		if vpcID != "" && vpcID != networkInfo[len(networkInfo)-1] {
 			continue
 		}
 		regionInfo := strings.Split(v.Region, "/")
@@ -75,7 +75,7 @@ func (vm *VPCManager) ListSubnets(vpcID, zone string, opt *cloudprovider.CommonO
 }
 
 // ListSecurityGroups list security groups
-func (vm *VPCManager) ListSecurityGroups(opt *cloudprovider.CommonOption) ([]*proto.SecurityGroup, error) {
+func (vm *VPCManager) ListSecurityGroups(opt *cloudprovider.ListNetworksOption) ([]*proto.SecurityGroup, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 

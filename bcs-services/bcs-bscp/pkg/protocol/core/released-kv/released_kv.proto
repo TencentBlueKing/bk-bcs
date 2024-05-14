@@ -2,10 +2,11 @@ syntax = "proto3";
 
 import "pkg/protocol/core/base/base.proto";
 import "pkg/protocol/core/kv/kvs.proto";
+import "pkg/protocol/core/content/content.proto";
 
 package pbrkv;
 
-option go_package = "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/released-kv;pbrkv";
+option go_package = "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/released-kv;pbrkv";
 
 // ReleasedKv source resource reference: pkg/dal/table/released_kv.go
 message ReleasedKv {
@@ -14,4 +15,5 @@ message ReleasedKv {
   pbkv.KvSpec spec = 3;
   pbkv.KvAttachment attachment = 4;
   pbbase.Revision revision = 5;
+  pbcontent.ContentSpec content_spec = 6;
 }

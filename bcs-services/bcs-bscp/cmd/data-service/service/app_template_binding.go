@@ -19,17 +19,17 @@ import (
 	"strings"
 	"time"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
-	pbatb "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/app-template-binding"
-	pbbase "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
-	pbds "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/search"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbatb "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/app-template-binding"
+	pbbase "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
+	pbds "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/search"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // CreateAppTemplateBinding create app template binding.
@@ -203,7 +203,7 @@ func (s *Service) ListAppBoundTmplRevisions(ctx context.Context,
 		tmplRevisionMap[t.ID] = t
 	}
 
-	/// combine resp details
+	// combine resp details
 	details := make([]*pbatb.AppBoundTmplRevision, 0)
 	for _, b := range atb[0].Spec.Bindings {
 		for _, r := range b.TemplateRevisions {
@@ -226,6 +226,7 @@ func (s *Service) ListAppBoundTmplRevisions(ctx context.Context,
 				UserGroup:            d.Spec.Permission.UserGroup,
 				Privilege:            d.Spec.Permission.Privilege,
 				Signature:            d.Spec.ContentSpec.Signature,
+				Md5:                  d.Spec.ContentSpec.Md5,
 				ByteSize:             d.Spec.ContentSpec.ByteSize,
 				Creator:              d.Revision.Creator,
 				CreateAt:             d.Revision.CreatedAt.Format(time.RFC3339),
@@ -606,12 +607,12 @@ func (s *Service) getPBSForCascade(kt *kit.Kit, tx *gen.QueryTx, bindings []*tab
 		logs.Errorf("list template revision names by template ids failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
-	// template id => the latest template revision id
+	// template id => the latest template revision
 	latestRevisionMap := getLatestTmplRevisions(latestTmplRevisions)
 
-	for tID, rID := range latestRevisionMap {
-		pbs.TemplateRevisionIDs = append(pbs.TemplateRevisionIDs, rID)
-		allTmplRevisionMap[tID] = rID
+	for tID, r := range latestRevisionMap {
+		pbs.TemplateRevisionIDs = append(pbs.TemplateRevisionIDs, r.ID)
+		allTmplRevisionMap[tID] = r.ID
 	}
 
 	for tsID, tmpls := range allTmplMap {

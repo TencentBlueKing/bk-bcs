@@ -22,9 +22,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/pkg/errors"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/pkg/errors"
 )
 
 // StopFunc define subsystem graceful stop interface
@@ -61,6 +60,7 @@ func DeepCopyMap(m map[string]string) map[string]string {
 	return r
 }
 
+// DeepCopyHttpRequest Deep Copy Http Request
 func DeepCopyHttpRequest(r *http.Request, newUrl string) (*http.Request, error) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {

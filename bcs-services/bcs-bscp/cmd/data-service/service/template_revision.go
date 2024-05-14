@@ -15,17 +15,17 @@ package service
 import (
 	"context"
 	"fmt"
-	"time"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
-	pbbase "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
-	pbtr "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/template-revision"
-	pbds "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/search"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbbase "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
+	pbtr "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/template-revision"
+	pbds "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/search"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // CreateTemplateRevision create template revision.
@@ -51,7 +51,7 @@ func (s *Service) CreateTemplateRevision(ctx context.Context,
 	spec := req.Spec.TemplateRevisionSpec()
 	// if no revision name is specified, generate it by system
 	if spec.RevisionName == "" {
-		spec.RevisionName = generateRevisionName()
+		spec.RevisionName = tools.GenerateRevisionName()
 	}
 
 	// keep the revision's name and path same with template
@@ -213,7 +213,10 @@ func (s *Service) ListTmplRevisionNamesByTmplIDs(ctx context.Context,
 		details = append(details, &pbtr.TemplateRevisionNamesDetail{
 			TemplateId:               t.ID,
 			TemplateName:             t.Spec.Name,
-			LatestTemplateRevisionId: latestRevisionMap[t.ID],
+			LatestTemplateRevisionId: latestRevisionMap[t.ID].ID,
+			LatestRevisionName:       latestRevisionMap[t.ID].Spec.RevisionName,
+			LatestSignature:          latestRevisionMap[t.ID].Spec.ContentSpec.Signature,
+			LatestByteSize:           latestRevisionMap[t.ID].Spec.ContentSpec.ByteSize,
 			TemplateRevisions:        tmplRevisionMap[t.ID].TemplateRevisions,
 		})
 	}
@@ -224,30 +227,24 @@ func (s *Service) ListTmplRevisionNamesByTmplIDs(ctx context.Context,
 	return resp, nil
 }
 
-// getLatestTmplRevisions get the map: tmplID => latest tmplRevisionID
-func getLatestTmplRevisions(tmplRevisions []*table.TemplateRevision) map[uint32]uint32 {
-	latestRevisionMap := make(map[uint32]uint32)
+// getLatestTmplRevisions get the map: tmplID => latest tmplRevision
+func getLatestTmplRevisions(tmplRevisions []*table.TemplateRevision) map[uint32]*table.TemplateRevision {
+	latestRevisionMap := make(map[uint32]*table.TemplateRevision)
 	for _, t := range tmplRevisions {
 		if _, ok := latestRevisionMap[t.Attachment.TemplateID]; !ok {
-			latestRevisionMap[t.Attachment.TemplateID] = t.ID
-		} else if t.ID > latestRevisionMap[t.Attachment.TemplateID] {
-			latestRevisionMap[t.Attachment.TemplateID] = t.ID
+			latestRevisionMap[t.Attachment.TemplateID] = t
+		} else if t.ID > latestRevisionMap[t.Attachment.TemplateID].ID {
+			latestRevisionMap[t.Attachment.TemplateID] = t
 		}
 	}
 
 	return latestRevisionMap
 }
 
-func generateRevisionName() string {
-	// Format the current time as YYYYMMDDHHMMSS
-	timestamp := time.Now().Format("20060102150405")
-	return fmt.Sprintf("v%s", timestamp)
-}
-
 func (s *Service) doCreateTemplateRevisions(kt *kit.Kit, tx *gen.QueryTx, data []*table.TemplateRevision) error {
 	for i := range data {
 		// 生成 RevisionName
-		data[i].Spec.RevisionName = generateRevisionName()
+		data[i].Spec.RevisionName = tools.GenerateRevisionName()
 	}
 	// Write template revisions table
 	if err := s.dao.TemplateRevision().BatchCreateWithTx(kt, tx, data); err != nil {

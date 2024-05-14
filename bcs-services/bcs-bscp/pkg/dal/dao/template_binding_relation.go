@@ -16,10 +16,10 @@ import (
 	"gorm.io/datatypes"
 	rawgen "gorm.io/gen"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // TemplateBindingRelation supplies all the template binding relation query operations.
@@ -124,6 +124,7 @@ func (dao *templateBindingRelationDao) GetTemplateBoundTemplateSetCount(kit *kit
 }
 
 // GetTemplateRevisionBoundUnnamedAppCount get bound unnamed app count of the target template release.
+// nolint
 func (dao *templateBindingRelationDao) GetTemplateRevisionBoundUnnamedAppCount(kit *kit.Kit, bizID,
 	templateRevisionID uint32) (uint32, error) {
 	m := dao.genQ.AppTemplateBinding
@@ -140,6 +141,7 @@ func (dao *templateBindingRelationDao) GetTemplateRevisionBoundUnnamedAppCount(k
 }
 
 // GetTemplateRevisionBoundNamedAppCount get bound named app count of the target template release.
+// nolint
 func (dao *templateBindingRelationDao) GetTemplateRevisionBoundNamedAppCount(kit *kit.Kit, bizID,
 	templateRevisionID uint32) (uint32, error) {
 	m := dao.genQ.ReleasedAppTemplate

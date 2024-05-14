@@ -20,13 +20,13 @@ set -euo pipefail
 # $1: mount_dir, default /mnt/blueking
 #######################################
 
-VERSION="v2.4.0"
+LOCALPV_VER="v2.4.0"
 PROGRAM="$(basename "$0")"
 
 SELF_DIR=$(dirname "$(readlink -f "$0")")
 ROOT_DIR="${SELF_DIR}/.."
 
-readonly VERSION PROGRAM SELF_DIR ROOT_DIR
+readonly LOCALPV_VER PROGRAM SELF_DIR ROOT_DIR
 
 usage_and_exit() {
   cat <<EOF
@@ -39,7 +39,7 @@ EOF
 }
 
 version() {
-  echo "$PROGRAM version $VERSION"
+  echo "$PROGRAM version $LOCALPV_VER"
 }
 
 safe_source() {
@@ -48,7 +48,7 @@ safe_source() {
     #shellcheck source=/dev/null
     source "${source_file}"
   else
-    echo "[ERROR]: FAIL to source, missing ${source_file}"
+    echo "[ERROR]: FAIL to source, missing ${source_file}" >&2
     exit 1
   fi
 }
@@ -58,33 +58,26 @@ install_localpv() {
   kubectl get ns "$namespace" || kubectl create ns $namespace
 
   if [[ -n ${BCS_OFFLINE:-} ]]; then
-    chart_path="$(find "${ROOT_DIR}/version-${K8S_VER}/charts/" -iname "provisioner-*.tgz" -type f | head -1)"
+    chart_path="$(find "${ROOT_DIR}/charts/" -name "provisioner-${LOCALPV_VER}.tgz" -type f)"
     if [[ -z $chart_path ]]; then
       utils::log "FATAL" "can't find provisioner chart in ${ROOT_DIR}/version-${K8S_VER}/charts/"
     fi
-  else
-    [[ -n ${BKREPO_URL:-} ]] || utils::log "FAIL" "missing bkrepo url ${BKREPO_URL}"
-    if ! k8s::safe_add_helmrepo blueking "${BKREPO_URL}"; then
-      utils::log "WARNING" "something wrong with helm, skip install provisioner"
-      return 1
-    fi
-    chart_path="blueking/provisioner"
   fi
 
   local image
   if [[ -n ${BK_PUBLIC_REPO:-} ]]; then
-    image="${BK_PUBLIC_REPO}/k8s.gcr.io/sig-storage/local-volume-provisioner:${VERSION}"
+    image="${BK_PUBLIC_REPO}/k8s.gcr.io/sig-storage/local-volume-provisioner:${LOCALPV_VER}"
   else
-    image="registry.k8s.io/sig-storage/local-volume-provisioner:${VERSION}"
+    image="registry.k8s.io/sig-storage/local-volume-provisioner:${LOCALPV_VER}"
   fi
 
   utils::log "INFO" "installing localpv"
-  cat <<EOF | helm upgrade --install provisioner blueking/provisioner -n $namespace --version ${VERSION} --debug -f - || utils::log "FATAL" "helm upgrade localpv failed"
+  cat <<EOF | helm upgrade --install provisioner blueking/provisioner -n $namespace --version ${LOCALPV_VER} --debug -f - || utils::log "FATAL" "helm upgrade localpv failed"
 daemonset:
   image: ${image}
 classes:
 - name: local-storage
-  hostDir: "${LOCALPV_DIR}"
+  hostDir: "${LOCALPV_DST_DIR:-"/mnt/blueking"}"
   volumeMode: Filesystem
   storageClass:
     # create and set storage class as default

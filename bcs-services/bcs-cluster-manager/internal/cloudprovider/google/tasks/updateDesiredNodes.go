@@ -23,7 +23,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/avast/retry-go"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
@@ -254,6 +253,7 @@ func recordClusterInstanceToDB(ctx context.Context, state *cloudprovider.TaskSta
 
 	if len(instancesNames) > 0 {
 		state.Task.CommonParams[cloudprovider.SuccessNodeIDsKey.String()] = strings.Join(instancesNames, ",")
+		state.Task.CommonParams[cloudprovider.NodeNamesKey.String()] = strings.Join(instancesNames, ",")
 		state.Task.CommonParams[cloudprovider.NodeIDsKey.String()] = strings.Join(instancesNames, ",")
 	}
 
@@ -462,7 +462,7 @@ func CheckClusterNodesStatusTask(taskID string, stepName string) error {
 	if err != nil || len(successInstances) == 0 {
 		if manual != common.True {
 			// rollback failed nodes
-			_ = returnGkeInstancesAndCleanNodes(ctx, dependInfo, successInstances)
+			_ = returnGkeInstancesAndCleanNodes(ctx, dependInfo, failureInstances)
 		}
 		blog.Errorf("CheckClusterNodesStatusTask[%s]: checkClusterInstanceStatus failed: %s", taskID, err.Error())
 		retErr := fmt.Errorf("CheckClusterNodesStatusTask checkClusterInstanceStatus failed")
@@ -505,99 +505,6 @@ func CheckClusterNodesStatusTask(taskID string, stepName string) error {
 	if err = state.UpdateStepSucc(start, stepName); err != nil {
 		blog.Errorf("CheckClusterNodesStatusTask[%s] task %s %s update to storage fatal", taskID, taskID, stepName)
 		return err
-	}
-
-	return nil
-}
-
-// RemoveClusterNodesTaintTask removes cluster nodes taint
-func RemoveClusterNodesTaintTask(taskID string, stepName string) error {
-	start := time.Now()
-
-	// get task and task current step
-	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
-	if err != nil {
-		return err
-	}
-	// previous step successful when retry task
-	if step == nil {
-		return nil
-	}
-
-	// step login started here
-	// extract parameter && check validate
-	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
-	nodeGroupID := step.Params[cloudprovider.NodeGroupIDKey.String()]
-	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
-	successInstanceID := strings.Split(state.Task.CommonParams[cloudprovider.SuccessNodeIDsKey.String()], ",")
-
-	if len(clusterID) == 0 || len(nodeGroupID) == 0 || len(cloudID) == 0 || len(successInstanceID) == 0 {
-		blog.Errorf("RemoveClusterNodesTaintTask[%s]: check parameter validate failed", taskID)
-		retErr := fmt.Errorf("RemoveClusterNodesTaintTask check parameters failed")
-		_ = state.UpdateStepFailure(start, stepName, retErr)
-		return retErr
-	}
-	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
-		ClusterID:   clusterID,
-		CloudID:     cloudID,
-		NodeGroupID: nodeGroupID,
-	})
-	if err != nil {
-		blog.Errorf("RemoveClusterNodesTaintTask[%s]: GetClusterDependBasicInfo failed: %s", taskID, err.Error())
-		retErr := fmt.Errorf("RemoveClusterNodesTaintTask GetClusterDependBasicInfo failed")
-		_ = state.UpdateStepFailure(start, stepName, retErr)
-		return retErr
-	}
-
-	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
-	err = removeClusterNodesTaint(ctx, dependInfo.Cluster.ClusterID, successInstanceID)
-	if err != nil {
-		blog.Errorf("RemoveClusterNodesTaintTask[%s]: removeClusterNodesTaint failed: %s", taskID, err.Error())
-		retErr := fmt.Errorf("RemoveClusterNodesTaintTask removeClusterNodesTaint failed")
-		_ = state.UpdateStepFailure(start, stepName, retErr)
-		return retErr
-	}
-
-	// update step
-	if err = state.UpdateStepSucc(start, stepName); err != nil {
-		blog.Errorf("RemoveClusterNodesTaintTask[%s] task %s %s update to storage fatal", taskID, taskID, stepName)
-		return err
-	}
-
-	return nil
-}
-
-func removeClusterNodesTaint(ctx context.Context, clusterID string, successInstanceID []string) error {
-	taskID := cloudprovider.GetTaskIDFromContext(ctx)
-
-	k8sOperator := clusterops.NewK8SOperator(options.GetGlobalCMOptions(), cloudprovider.GetStorageModel())
-	kubeCli, err := k8sOperator.GetClusterClient(clusterID)
-	if err != nil {
-		return err
-	}
-
-	for _, ins := range successInstanceID {
-		node, errLocal := kubeCli.CoreV1().Nodes().Get(context.Background(), ins, metav1.GetOptions{})
-		if errLocal != nil {
-			blog.Errorf("removeClusterNodesTaint[%s] nodeName[%s] failed: %v", taskID, ins, err)
-			continue
-		}
-
-		newTaints := make([]corev1.Taint, 0)
-		for _, taint := range node.Spec.Taints {
-			if taint.Key != api.BCSNodeGroupTaintKey {
-				newTaints = append(newTaints, taint)
-			}
-		}
-		node.Spec.Taints = newTaints
-
-		_, errLocal = kubeCli.CoreV1().Nodes().Update(context.TODO(), node, metav1.UpdateOptions{})
-		if errLocal != nil {
-			blog.Errorf("removeClusterNodesTaint[%s] nodeName[%s] failed: %v", taskID, ins, err)
-			continue
-		}
-
-		blog.Errorf("removeClusterNodesTaint[%s] nodeName[%s] success", taskID, ins)
 	}
 
 	return nil

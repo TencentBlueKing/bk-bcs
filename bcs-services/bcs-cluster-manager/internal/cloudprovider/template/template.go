@@ -28,14 +28,20 @@ import (
 
 // bksops task category
 const (
+	// UserBeforeInit before init
+	UserBeforeInit = "userBeforeInit"
+	// UserPostInit post init
+	UserPostInit = "userAfterInit"
 	// SystemInit bksops system init
 	SystemInit = "系统初始化"
 	// UserAfterInit bksops user after init
 	UserAfterInit = "用户后置初始化"
-	// UserBeforeInit bksops user defore init
-	UserBeforeInit = "用户前置初始化"
 	// UserPreInit bksops user pre init
 	UserPreInit = "缩容节点清理"
+	// NodeMixedInit mixed init
+	NodeMixedInit = "nodeMixedInit"
+	// NodeMixedInitCh mixed init ch
+	NodeMixedInitCh = "混部集群节点初始化"
 )
 
 // using task commonName inject dynamic parameters when processing
@@ -60,6 +66,7 @@ type ExtraInfo struct {
 	ClusterKubeConfig  string
 	NodeGroupID        string
 	ShowSopsUrl        bool
+	TranslateMethod    string
 }
 
 // BuildSopsFactory xxx
@@ -144,6 +151,7 @@ func GenerateBKopsStep(taskName, stepName string, cls *proto.Cluster, plugin *pr
 		TaskMethod:   cloudprovider.BKSOPTask,
 		TaskName:     taskName,
 		SkipOnFailed: plugin.AllowSkipWhenFailed,
+		Translate:    info.TranslateMethod,
 	}
 	step.Params[cloudprovider.BkSopsUrlKey.String()] = plugin.Link
 	step.Params[cloudprovider.ShowSopsUrlKey.String()] = fmt.Sprintf("%v", info.ShowSopsUrl)

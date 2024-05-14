@@ -137,10 +137,45 @@ type DBConfig struct {
 	LimitQPS int64  `json:"limitQps"`
 }
 
-// MetricConfig defines the service monitor info
-type MetricConfig struct {
-	AppMetricNamespace string `json:"appMetricNamespace"`
-	AppMetricName      string `json:"appMetricName"`
+// MonitorConfig monitor server info
+type MonitorConfig struct {
+	Address string `json:"address"`
+	Port    string `json:"port"`
+}
+
+// AnalysisServer defines the configuration of analysis server
+type AnalysisServer struct {
+	Address string `json:"address"`
+	Port    string `json:"port"`
+}
+
+// AnalysisConfig defines the config of analysis
+type AnalysisConfig struct {
+	BKMonitorPushUrl    string `json:"bkMonitorPushUrl"`
+	BKMonitorPushToken  string `json:"bkMonitorPushToken"`
+	BKMonitorPushDataID int64  `json:"bkMonitorPushDataID"`
+
+	BKMonitorGetUrl   string `json:"bkMonitorGetUrl"`
+	BKMonitorGetBizID int64  `json:"bkMonitorGetBizID"`
+	BKMonitorGetUser  string `json:"bkMonitorGetUser"`
+
+	BKCCUrl string `json:"bkccUrl"`
+
+	GitOpsAnalysisUrlSG   string `json:"gitOpsAnalysisUrlSG"`
+	GitOpsAnalysisTokenSG string `json:"gitOpsAnalysisTokenSG"`
+}
+
+// SecretStoreOptions defines the options of secret store
+// nolint
+type SecretStoreOptions struct {
+	Address string `json:"address"`
+	Port    string `json:"port"`
+}
+
+// TerraformConfig terraform config option
+type TerraformConfig struct {
+	Address string `json:"address"`
+	Port    string `json:"port"`
 }
 
 // Complete unset item

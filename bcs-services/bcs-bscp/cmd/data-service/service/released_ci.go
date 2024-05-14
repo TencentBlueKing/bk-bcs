@@ -14,13 +14,15 @@ package service
 
 import (
 	"context"
+	"path"
+	"sort"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
-	pbrci "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/released-ci"
-	pbds "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/search"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbrci "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/released-ci"
+	pbds "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/search"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // GetReleasedConfigItem get released config item
@@ -60,7 +62,12 @@ func (s *Service) ListReleasedConfigItems(ctx context.Context,
 		logs.Errorf("list released app bound templates revisions failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
-
+	// 先按照path+name排序好
+	sort.SliceStable(details, func(i, j int) bool {
+		iPath := path.Join(details[i].ConfigItemSpec.Path, details[i].ConfigItemSpec.Name)
+		jPath := path.Join(details[j].ConfigItemSpec.Path, details[j].ConfigItemSpec.Name)
+		return iPath < jPath
+	})
 	resp := &pbds.ListReleasedConfigItemsResp{
 		Count:   uint32(count),
 		Details: pbrci.PbReleasedConfigItems(details),

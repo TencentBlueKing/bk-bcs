@@ -1,0 +1,4 @@
+# 忽略国际化文件
+
+src/i18n/en-us.ts
+src/i18n/zh-cn.ts

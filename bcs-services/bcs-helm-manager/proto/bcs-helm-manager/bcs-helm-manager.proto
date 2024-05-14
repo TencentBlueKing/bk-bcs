@@ -278,6 +278,15 @@ service HelmManager {
             summary: "获取 release 资源的状态"
         };
     }
+    rpc GetReleaseDetailExtend(GetReleaseDetailExtendReq) returns (CommonResp) {
+        option (google.api.http) = {
+            get: "/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/expend"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "Helm Release 详情扩展(ingress/service/secret)"
+            summary: "Helm Release 详情扩展(ingress/service/secret)"
+        };
+    }
     rpc GetReleasePods(GetReleasePodsReq) returns (CommonListResp) {
         option (google.api.http) = {
             get: "/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/pods"
@@ -1721,6 +1730,10 @@ message Release {
         title: "clusterID",
         description: "集群 ID"
     }];
+    optional string env = 16[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "env",
+        description: "环境"
+    }];
 }
 
 message ReleaseDetail {
@@ -1974,6 +1987,10 @@ message InstallReleaseV1Req {
         title: "operator",
         description: "操作者"
     }];
+    optional string env = 12[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "env",
+        description: "环境"
+    }];
 }
 
 message InstallReleaseV1Resp {
@@ -2113,6 +2130,10 @@ message UpgradeReleaseV1Req {
     optional string operator = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "operator",
         description: "操作者"
+    }];
+    optional string env = 12[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "env",
+        description: "环境"
     }];
 }
 
@@ -2511,6 +2532,32 @@ message GetReleaseStatusReq {
         title: "projectCode",
         description: "项目代码"
     }, (validate.rules).string = {min_len : 1 , max_len : 32}];
+}
+
+message GetReleaseDetailExtendReq {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema : {
+            title : "GetReleaseDetailExtendReq"
+            description : "获取 release 详情扩展的参数"
+        }
+    };
+
+    required string name = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "name",
+        description: "chart release名称"
+    }, (validate.rules).string = {min_len : 1}];
+    required string namespace = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "namespace",
+        description: "所在的namespace"
+    }, (validate.rules).string = {min_len : 1, max_len : 64}];
+    required string clusterID = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "clusterID",
+        description: "所在的集群ID"
+    }, (validate.rules).string = {min_len : 1, max_len : 64}];
+    required string projectCode = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "projectCode",
+        description: "项目代码"
+    }, (validate.rules).string = {min_len : 1, max_len : 32}];
 }
 
 message GetReleasePodsReq {

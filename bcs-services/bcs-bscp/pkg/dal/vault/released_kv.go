@@ -15,9 +15,9 @@ package vault
 import (
 	"fmt"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // CreateRKv create released kv
@@ -64,5 +64,5 @@ func (s *set) GetRKv(kit *kit.Kit, opt *types.GetRKvOption) (kvType table.DataTy
 		return "", "", fmt.Errorf("value type assertion failed: err : %v", err)
 	}
 
-	return
+	return kvType, value, nil
 }

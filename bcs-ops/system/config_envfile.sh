@@ -46,6 +46,7 @@ version() {
 
 # default env value in function `init_env`
 init_env() {
+  trap "utils::on_ERR;" ERR
   # host
   BK_HOME=${BK_HOME:-"/data/bcs"}
   K8S_IPv6_STATUS=${K8S_IPv6_STATUS:-"Disable"}
@@ -66,12 +67,12 @@ init_env() {
   ## insregistry
   INSECURE_REGISTRY=${INSECURE_REGISTRY:-""}
   ## DOCKER
-  DOCKER_VER=${DOCKER_VER:-"19.03.9"}
+  DOCKER_VER=${DOCKER_VER:-"19.03"}
   DOCKER_LIB=${DOCKER_LIB:-"${BK_HOME}/lib/docker"}
   DOCKER_LIVE_RESTORE=${DOCKER_LIVE_RESTORE:-false}
   DOCKER_BRIDGE=${DOCKER_BRIDGE:-}
   ## CONTAINERD
-  CONTAINERD_VER=${CONTAINERD_VER:-"1.6.21"}
+  CONTAINERD_VER=${CONTAINERD_VER:-"1.6"}
   CONTAINERD_LIB=${CONTAINERD_LIB:-"${BK_HOME}/lib/containerd"}
 
   # k8s
@@ -94,13 +95,14 @@ init_env() {
   local kubectl_extra_args
   kubectl_extra_args="allowed-unsafe-sysctls: 'net.ipv4.tcp_tw_reuse'"
   K8S_EXTRA_ARGS=${K8S_EXTRA_ARGS:-${kubectl_extra_args}}
-  ## if BCS_CP_WORKER==0, then untaint master
+  ## if BCS_CP_WORKER==1, means single master cluster, then untaint master
   BCS_CP_WORKER=${BCS_CP_WORKER:-0}
 
   # csi
   K8S_CSI=${K8S_CSI:-""}
   ## localpv
   LOCALPV_DIR=${LOCALPV_DIR:-${BK_HOME}/localpv}
+  LOCALPV_DST_DIR=${LOCALPV_DST_DIR:-"/mnt/blueking"}
   LOCALPV_COUNT=${LOCALPV_COUNT:-20}
   LOCALPV_reclaimPolicy=${LOCALPV_reclaimPolicy:-"Delete"}
 
@@ -137,6 +139,9 @@ init_env() {
   KUBE_VIP_VERSION=${KUBE_VIP_VERSION:-"v0.5.12"}
   BIND_INTERFACE=${BIND_INTERFACE:-}
   VIP_CIDR=${VIP_CIDR:-"32"}
+  ## external-vip
+  EXTERNAL_VIP=${EXTERNAL_VIP:-}
+  EXTERNAL_HOST=${EXTERNAL_HOST:-}
   ## multus
   ENABLE_MULTUS_HA=${ENABLE_MULTUS_HA:-"true"}
 }
@@ -149,6 +154,17 @@ source_cluster_env() {
     # shellcheck source=/dev/null
     source <(echo "${cluster_env}")
   fi
+}
+
+_setIPUsage_and_exit() {
+  cat <<EOF
+you can set LAN_IP manually by following:
+set -x
+LAN_IP=<YOUR LAN IP>
+LAN_IPv6<YOUR LAN ipv6> #if enable K8S_IPv6_STATUS=dualstack
+set -x
+EOF
+  exit 1
 }
 
 check_env() {
@@ -176,10 +192,16 @@ check_env() {
   # ToDo: ip format check
   case ${K8S_IPv6_STATUS,,} in
     "disable")
-      [[ -n $LAN_IP ]] || utils::log "ERROR, missing LAN_IP"
+      if [[ -z $LAN_IP ]]; then
+        utils::log "WARN" "missing LAN_IP"
+        _setIPUsage_and_exit
+      fi
       ;;
     "singlestack")
-      [[ -n $LAN_IPv6 ]] || utils::log "ERROR, missing LAN_IPv6"
+      if [[ -z $LAN_IPv6 ]]; then
+        utils::log "WARN" "missing LAN_IPv6"
+        _setIPUsage_and_exit
+      fi
       if [[ $K8S_VER =~ ^1\.2[0-2] ]]; then
         utils::log "ERROR" \
           "ipv6 DualStack only support 1.2[3-4].x, here is ${K8S_VER}"
@@ -189,8 +211,10 @@ check_env() {
       K8S_POD_CIDR=${K8S_POD_CIDRv6}
       ;;
     "dualstack")
-      [[ -n $LAN_IP ]] || utils::log "ERROR, missing LAN_IP"
-      [[ -n $LAN_IPv6 ]] || utils::log "ERROR, missing LAN_IPv6"
+      if [[ -z $LAN_IP ]] || [[ -z $LAN_IPv6 ]]; then
+        utils::log "WARN" "missing LAN_IP or LAN_IPv6"
+        _setIPUsage_and_exit
+      fi
       if [[ $K8S_VER =~ ^1\.2[0-2] ]]; then
         utils::log "ERROR" \
           "ipv6 DualStack only support 1.2[3-4].x, here is ${K8S_VER}"
@@ -266,6 +290,7 @@ $(
   )
 K8S_CNI="${K8S_CNI}"
 K8S_EXTRA_ARGS="${K8S_EXTRA_ARGS}"
+## if BCS_CP_WORKER==1, means single master cluster, then untaint master
 BCS_CP_WORKER="${BCS_CP_WORKER}"
 
 # csi
@@ -275,6 +300,7 @@ $(
       "localpv")
         cat <<CSI_EOF
 LOCALPV_DIR="${LOCALPV_DIR}"
+LOCALPV_DST_DIR="${LOCALPV_DST_DIR}"
 LOCALPV_COUNT="${LOCALPV_COUNT}"
 LOCALPV_reclaimPolicy="${LOCALPV_reclaimPolicy}"
 CSI_EOF
@@ -313,6 +339,9 @@ DEBUG_MODE="${DEBUG_MODE}"
 KUBE_VIP_VERSION="${KUBE_VIP_VERSION}"
 BIND_INTERFACE="${BIND_INTERFACE}"
 VIP_CIDR="${VIP_CIDR}"
+## external-vip
+EXTERNAL_VIP="${EXTERNAL_VIP}"
+EXTERNAL_HOST="${EXTERNAL_HOST}"
 ## multus
 ENABLE_MULTUS_HA="${ENABLE_MULTUS_HA}"
 # bcs config end

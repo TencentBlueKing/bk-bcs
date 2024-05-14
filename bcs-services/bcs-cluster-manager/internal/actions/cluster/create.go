@@ -23,10 +23,12 @@ import (
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
+	autils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/lock"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cidrmanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/taskserver"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
@@ -149,6 +151,7 @@ func (ca *CreateAction) constructCluster(cloud *cmproto.Cloud) (*cmproto.Cluster
 		CreateTime:              createTime,
 		UpdateTime:              createTime,
 		Status:                  common.StatusInitialization,
+		IsMixed:                 ca.req.IsMixed,
 	}
 
 	// set cloud default values
@@ -376,8 +379,67 @@ func (ca *CreateAction) generateClusterID(cls *cmproto.Cluster) error {
 	return nil
 }
 
+func (ca *CreateAction) createNodegroup(cls *cmproto.Cluster) error {
+	timeStr := time.Now().Format(time.RFC3339)
+	if ca.req.NodeGroups != nil {
+		for _, ng := range ca.req.NodeGroups {
+			ng.NodeGroupID = autils.GenerateTemplateID(autils.GroupTemplate)
+			ng.Region = cls.Region
+			ng.ClusterID = cls.ClusterID
+			ng.ProjectID = cls.ProjectID
+			ng.Provider = cls.Provider
+			ng.Status = common.StatusCreateNodeGroupCreating
+			ng.CreateTime = timeStr
+			ng.UpdateTime = timeStr
+
+			if ng.LaunchTemplate == nil {
+				return fmt.Errorf("createNodegroup[%s] empty LaunchTemplate", ng.Name)
+			}
+
+			if ng.LaunchTemplate.InitLoginPassword != "" {
+				enPasswd, err := encrypt.Encrypt(nil, ng.LaunchTemplate.InitLoginPassword)
+				if err != nil {
+					return fmt.Errorf("createNodegroup[%s] Encrypt InitLoginPassword failed", ng.Name)
+				}
+				ng.LaunchTemplate.InitLoginPassword = enPasswd
+			}
+			if ng.LaunchTemplate.GetKeyPair() != nil && ng.LaunchTemplate.GetKeyPair().GetKeySecret() != "" {
+				keySecret, err := encrypt.Encrypt(nil, ng.LaunchTemplate.GetKeyPair().GetKeySecret())
+				if err != nil {
+					return fmt.Errorf("createNodegroup[%s] Encrypt KeySecret failed", ng.Name)
+				}
+				ng.LaunchTemplate.KeyPair.KeySecret = keySecret
+			}
+			if ng.LaunchTemplate.GetKeyPair() != nil && ng.LaunchTemplate.GetKeyPair().GetKeyPublic() != "" {
+				keyPublic, err := encrypt.Encrypt(nil, ng.LaunchTemplate.GetKeyPair().GetKeyPublic())
+				if err != nil {
+					return fmt.Errorf("createNodegroup[%s] Encrypt KeyPublic failed", ng.Name)
+				}
+				ng.LaunchTemplate.KeyPair.KeyPublic = keyPublic
+			}
+
+			err := ca.model.CreateNodeGroup(context.Background(), ng)
+			if err != nil {
+				blog.Errorf("save NodeGroup %s information to store failed, %s", ng.NodeGroupID, err.Error())
+				if errors.Is(err, drivers.ErrTableRecordDuplicateKey) {
+					ca.resp.Data = cls
+					ca.setResp(common.BcsErrClusterManagerDatabaseRecordDuplicateKey, err.Error())
+					return err
+				}
+				// other db operation error
+				ca.resp.Data = cls
+				ca.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
 // Handle create cluster request
-func (ca *CreateAction) Handle(ctx context.Context, req *cmproto.CreateClusterReq, resp *cmproto.CreateClusterResp) {
+func (ca *CreateAction) Handle(ctx context.Context, req *cmproto.CreateClusterReq, // nolint
+	resp *cmproto.CreateClusterResp) {
 	if req == nil || resp == nil {
 		blog.Errorf("create cluster failed, req or resp is empty")
 		return
@@ -428,6 +490,13 @@ func (ca *CreateAction) Handle(ctx context.Context, req *cmproto.CreateClusterRe
 		return
 	}
 
+	// create nodeGroups
+	err = ca.createNodegroup(cls)
+	if err != nil {
+		blog.Errorf("createNodegroup failed: %v", err)
+		return
+	}
+
 	// import cluster nodes
 	_ = ca.checkClusterWorkerNodes(cls)
 
@@ -455,9 +524,10 @@ func (ca *CreateAction) Handle(ctx context.Context, req *cmproto.CreateClusterRe
 		TaskID:       ca.task.TaskID,
 		Message:      fmt.Sprintf("创建%s集群%s", cls.Provider, cls.ClusterID),
 		OpUser:       cls.Creator,
-		CreateTime:   time.Now().String(),
+		CreateTime:   time.Now().Format(time.RFC3339),
 		ClusterID:    cls.ClusterID,
 		ProjectID:    req.ProjectID,
+		ResourceName: cls.GetClusterName(),
 	})
 	if err != nil {
 		blog.Errorf("create cluster[%s] CreateOperationLog failed: %v", cls.ClusterID, err)
@@ -468,7 +538,22 @@ func (ca *CreateAction) Handle(ctx context.Context, req *cmproto.CreateClusterRe
 	ca.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 }
 
+// nolint
 func (ca *CreateAction) createClusterTask(ctx context.Context, cls *cmproto.Cluster) error {
+	// encrypt password
+	if len(cls.Template) != 0 {
+		for _, t := range cls.Template {
+			if t.InitLoginPassword != "" {
+				enPasswd, err := encrypt.Encrypt(nil, t.InitLoginPassword)
+				if err != nil {
+					blog.Errorf("createClusterTask encrypt template password failed, %v", err)
+					return err
+				}
+				t.InitLoginPassword = enPasswd
+			}
+		}
+	}
+
 	// step1: create cluster to save mongo
 	// step2: call cloud provider cluster_manager feature to create cluster task
 	err := ca.model.CreateCluster(ctx, cls)
@@ -510,6 +595,13 @@ func (ca *CreateAction) createClusterTask(ctx context.Context, cls *cmproto.Clus
 	}
 	coption.Region = ca.req.Region
 
+	var nodeGroupIDs []string
+	if len(ca.req.NodeGroups) > 0 {
+		for _, ng := range ca.req.NodeGroups {
+			nodeGroupIDs = append(nodeGroupIDs, ng.NodeGroupID)
+		}
+	}
+
 	// create cluster task by task manager
 	task, err := provider.CreateCluster(cls, &cloudprovider.CreateClusterOption{
 		CommonOption: *coption,
@@ -518,8 +610,9 @@ func (ca *CreateAction) createClusterTask(ctx context.Context, cls *cmproto.Clus
 		Operator:     ca.req.Creator,
 		Cloud:        ca.cloud,
 		// worker nodes info
-		WorkerNodes: ca.req.Nodes,
-		MasterNodes: ca.req.Master,
+		WorkerNodes:  ca.req.Nodes,
+		MasterNodes:  ca.req.Master,
+		NodeGroupIDs: nodeGroupIDs,
 		NodeTemplate: func() *cmproto.NodeTemplate {
 			if ca.req.NodeTemplateID == "" {
 				return nil

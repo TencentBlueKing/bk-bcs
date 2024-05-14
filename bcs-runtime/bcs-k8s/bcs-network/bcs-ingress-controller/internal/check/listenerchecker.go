@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package check
@@ -65,12 +64,12 @@ func (l *ListenerChecker) setMetric(listenerList *networkextensionv1.ListenerLis
 		status := listener.Status.Status
 
 		targetGroupType := networkextensionv1.LabelValueForTargetGroupNormal
-		switch strings.ToLower(listener.Spec.Protocol) {
-		case networkextensionv1.ProtocolTCP, networkextensionv1.ProtocolUDP:
+		protocol := listener.Spec.Protocol
+		if common.InLayer4Protocol(protocol) {
 			if listener.Spec.TargetGroup == nil || len(listener.Spec.TargetGroup.Backends) == 0 {
 				targetGroupType = networkextensionv1.LabelValueForTargetGroupEmpty
 			}
-		case networkextensionv1.ProtocolHTTP, networkextensionv1.ProtocolHTTPS:
+		} else if common.InLayer7Protocol(protocol) {
 			for _, rule := range listener.Spec.Rules {
 				if rule.TargetGroup == nil || len(rule.TargetGroup.Backends) == 0 {
 					targetGroupType = networkextensionv1.LabelValueForTargetGroupEmpty
@@ -149,7 +148,7 @@ func (l *ListenerChecker) deletePortPoolUnusedListener(listenerList *networkexte
 		ownerKind, kok := listener.Labels[networkextensionv1.LabelKeyForOwnerKind]
 		ownerName, nok := listener.Labels[networkextensionv1.LabelKeyForOwnerName]
 		if !kok || !nok {
-			blog.Warnf("listener '%s/%s' has no owner labels")
+			blog.Warnf("listener '%s/%s' has no owner labels", listener.GetNamespace(), listener.GetName())
 			continue
 		}
 

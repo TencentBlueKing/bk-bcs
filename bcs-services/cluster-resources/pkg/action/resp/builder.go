@@ -48,17 +48,19 @@ type ManifestRespBuilder struct {
 // BuildList ...
 func (b *ManifestRespBuilder) BuildList() (map[string]interface{}, error) {
 	manifestExt := map[string]interface{}{}
+	manifestItems := []interface{}{}
 	// 获取 apiVersion
 	apiVersion := mapx.GetStr(b.manifest, "apiVersion")
 	formatFunc := formatter.GetFormatFunc(b.kind, apiVersion)
+	pruneFunc := formatter.GetPruneFunc(b.kind)
 	// 遍历列表中的每个资源，生成 manifestExt
 	for _, item := range mapx.GetList(b.manifest, "items") {
 		uid, _ := mapx.GetItems(item.(map[string]interface{}), "metadata.uid")
 		manifestExt[uid.(string)] = formatFunc(item.(map[string]interface{}))
+		manifestItems = append(manifestItems, pruneFunc(item.(map[string]interface{})))
 	}
-	// 处理pod资源manifest返回数据过多问题
-	newManifest := formatter.FormatPodManifestRes(b.kind, b.manifest)
-	return map[string]interface{}{"manifest": newManifest, "manifestExt": manifestExt}, nil
+	b.manifest["items"] = manifestItems
+	return map[string]interface{}{"manifest": b.manifest, "manifestExt": manifestExt}, nil
 }
 
 // Build ...

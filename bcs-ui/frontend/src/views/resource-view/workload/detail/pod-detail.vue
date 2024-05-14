@@ -1,5 +1,5 @@
 <template>
-  <div class="workload-detail bcs-content-wrapper">
+  <div class="workload-detail">
     <div class="workload-detail-info" v-bkloading="{ isLoading }">
       <div class="workload-info-basic">
         <div class="basic-left">
@@ -38,6 +38,10 @@
       </div>
       <div class="workload-main-info">
         <div class="info-item">
+          <span class="label">{{ $t('cluster.labels.name') }}</span>
+          <span class="value">{{ clusterNameMap[clusterId] }}</span>
+        </div>
+        <div class="info-item">
           <span class="label">{{ $t('k8s.namespace') }}</span>
           <span class="value" v-bk-overflow-tips>{{ metadata.namespace }}</span>
         </div>
@@ -59,7 +63,7 @@
         </div>
         <div class="info-item">
           <span class="label">{{ $t('cluster.labels.createdAt') }}</span>
-          <span class="value">{{ manifestExt.createTime }}</span>
+          <span class="value">{{ timeFormat(manifestExt.createTime) }}</span>
         </div>
         <div class="info-item">
           <span class="label">{{ $t('k8s.age') }}</span>
@@ -111,6 +115,12 @@
                 <StatusIcon :status="row.status"></StatusIcon>
               </template>
             </bk-table-column>
+            <bk-table-column :label="$t('container.label.startedAt')" prop="startedAt">
+              <template #default="{ row }">
+                {{ timeFormat(row.startedAt) }}
+              </template>
+            </bk-table-column>
+            <bk-table-column :label="$t('container.label.restartCnt')" prop="restartCnt"></bk-table-column>
             <bk-table-column :label="$t('k8s.image')" prop="image"></bk-table-column>
             <bk-table-column
               :label="$t('generic.label.action')"
@@ -149,14 +159,14 @@
           </bk-table>
         </bcs-tab-panel>
         <bcs-tab-panel name="event" :label="$t('generic.label.event')">
-          <EventQueryTableVue
+          <EventQueryTable
             class="min-h-[360px]"
             hide-cluster-and-namespace
             :kinds="['Pod']"
             :cluster-id="clusterId"
             :namespace="namespace"
             :name="name">
-          </EventQueryTableVue>
+          </EventQueryTable>
         </bcs-tab-panel>
         <bcs-tab-panel name="conditions" :label="$t('k8s.conditions')">
           <bk-table :data="conditions">
@@ -168,7 +178,7 @@
             </bk-table-column>
             <bk-table-column :label="$t('k8s.lastTransitionTime')" prop="lastTransitionTime">
               <template #default="{ row }">
-                {{ formatTime(row.lastTransitionTime, 'yyyy-MM-dd hh:mm:ss') }}
+                {{ timeFormat(row.lastTransitionTime) }}
               </template>
             </bk-table-column>
             <bk-table-column :label="$t('dashboard.workload.label.reason')">
@@ -324,14 +334,14 @@ import { computed, defineComponent, onMounted, ref, toRefs } from 'vue';
 import useDetail from './use-detail';
 
 import { logCollectorEntrypoints } from '@/api/modules/monitor';
-import { formatTime, timeZoneTransForm } from '@/common/util';
+import { timeFormat } from '@/common/util';
 import Metric from '@/components/metric.vue';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 import StatusIcon from '@/components/status-icon';
-import { useConfig, useProject } from '@/composables/use-app';
+import { useCluster, useConfig, useProject } from '@/composables/use-app';
 import fullScreen from '@/directives/full-screen';
 import $store from '@/store';
-import EventQueryTableVue from '@/views/project-manage/event-query/event-query-table.vue';
+import EventQueryTable from '@/views/project-manage/event-query/event-query-table.vue';
 
 export interface IDetail {
   manifest: any;
@@ -350,7 +360,7 @@ export default defineComponent({
     StatusIcon,
     Metric,
     CodeEditor,
-    EventQueryTableVue,
+    EventQueryTable,
   },
   directives: {
     bkOverflowTips,
@@ -380,6 +390,7 @@ export default defineComponent({
     },
   },
   setup(props, ctx) {
+    const { clusterNameMap } = useCluster();
     const {
       isLoading,
       detail,
@@ -536,16 +547,16 @@ export default defineComponent({
       showYamlPanel,
       isDropdownShow,
       logLinks,
-      timeZoneTransForm,
       handleShowYamlPanel,
       handleGetStorage,
       gotoContainerDetail,
       handleGetExtData,
-      formatTime,
+      timeFormat,
       getImagesTips,
       handleUpdateResource,
       handleDeleteResource,
       handleShowTerminal,
+      clusterNameMap,
     };
   },
 });

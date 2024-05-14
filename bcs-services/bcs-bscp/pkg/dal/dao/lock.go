@@ -18,11 +18,11 @@ import (
 
 	"gorm.io/gorm"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 )
 
 // LockDao supplies all the lock operations.
@@ -95,6 +95,7 @@ func (dao *lockDao) IncreaseCount(kit *kit.Kit, tx *gen.Query, lock *table.Resou
 	lock.ID = id
 
 	if e := m.WithContext(kit.Ctx).Create(lock); e != nil {
+		// nolint
 		// TODO: 压测看看并发插入时是否会导致死锁，再如果死锁是否需要重试事务
 		logs.Errorf("insert lock failed, lock: %v, err: %v, rid: %s", lock, err, kit.Rid)
 		return 0, fmt.Errorf("insert lock failed, err: %v", err)

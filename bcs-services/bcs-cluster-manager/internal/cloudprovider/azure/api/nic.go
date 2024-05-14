@@ -14,6 +14,7 @@ package api
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork"
 	"github.com/pkg/errors"
@@ -40,6 +41,22 @@ func (aks *AksServiceImpl) GetVmInterfaceAndReturn(ctx context.Context, nodeReso
 		return nil, errors.Wrapf(err, "failed to finish the request")
 	}
 	return &resp.Interface, nil
+}
+
+// ListNetworkNicAll 获取全量网络接口
+func (aks *AksServiceImpl) ListNetworkNicAll(ctx context.Context) (
+	[]*armnetwork.Interface, error) {
+	pager := aks.netClient.NewListAllPager(nil)
+	result := make([]*armnetwork.Interface, 0)
+	for pager.More() {
+		next, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to advance page")
+		}
+		result = append(result, next.Value...)
+	}
+
+	return result, nil
 }
 
 // GetVirtualNetworks 查询vpc
@@ -73,6 +90,60 @@ func (aks *AksServiceImpl) ListVirtualNetwork(ctx context.Context, nodeResourceG
 	return resp, nil
 }
 
+// ListSubnets 虚拟子网列表
+//
+// nodeResourceGroup - 基础结构资源组(AutoScalingGroup.autoScalingName/Cluster.ExtraInfo["nodeResourceGroup"]).
+func (aks *AksServiceImpl) ListSubnets(ctx context.Context, nodeResourceGroup, vpcName string) (
+	[]*armnetwork.Subnet, error) {
+	if nodeResourceGroup == "" || vpcName == "" {
+		return nil, fmt.Errorf("nodeResourceGroup or vpcName cannot be empty")
+	}
+	resp := make([]*armnetwork.Subnet, 0)
+	page := aks.subnetClient.NewListPager(nodeResourceGroup, vpcName, nil)
+	for page.More() {
+		nextPage, err := page.NextPage(ctx)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to finish the request")
+		}
+		resp = append(resp, nextPage.Value...)
+	}
+	return resp, nil
+}
+
+// GetSubnet 虚拟子网
+//
+// nodeResourceGroup - 基础结构资源组(AutoScalingGroup.autoScalingName/Cluster.ExtraInfo["nodeResourceGroup"]).
+func (aks *AksServiceImpl) GetSubnet(ctx context.Context, nodeResourceGroup, vpcName, subnetName string) (
+	*armnetwork.Subnet, error) {
+	if nodeResourceGroup == "" || vpcName == "" || subnetName == "" {
+		return nil, fmt.Errorf("nodeResourceGroup or vpcName or subnetName cannot be empty")
+	}
+	resp, err := aks.subnetClient.Get(ctx, nodeResourceGroup, vpcName, subnetName, nil)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to finish the request")
+	}
+	return &resp.Subnet, nil
+}
+
+// UpdateSubnet 创建或更新虚拟子网
+//
+// nodeResourceGroup - 基础结构资源组(AutoScalingGroup.autoScalingName/Cluster.ExtraInfo["nodeResourceGroup"]).
+func (aks *AksServiceImpl) UpdateSubnet(ctx context.Context, nodeResourceGroup, vpcName, subnetName string,
+	subnet armnetwork.Subnet) (*armnetwork.Subnet, error) {
+	if nodeResourceGroup == "" || vpcName == "" || subnetName == "" {
+		return nil, fmt.Errorf("nodeResourceGroup or vpcName or subnetName cannot be empty")
+	}
+	poller, err := aks.subnetClient.BeginCreateOrUpdate(ctx, nodeResourceGroup, vpcName, subnetName, subnet, nil)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to finish the request")
+	}
+	resp, err := poller.PollUntilDone(ctx, pollFrequency1)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to pull the result")
+	}
+	return &resp.Subnet, nil
+}
+
 // GetNetworkSecurityGroups 查询安全组
 //
 // nodeResourceGroup - 基础结构资源组(AutoScalingGroup.autoScalingName/Cluster.ExtraInfo["nodeResourceGroup"]).
@@ -85,6 +156,40 @@ func (aks *AksServiceImpl) GetNetworkSecurityGroups(ctx context.Context, nodeRes
 		return nil, errors.Wrapf(err, "failed to finish the request")
 	}
 	return &resp.SecurityGroup, nil
+}
+
+// ListNetworkSecurityGroups 安全组列表
+//
+// nodeResourceGroup - 基础结构资源组(AutoScalingGroup.autoScalingName/Cluster.ExtraInfo["nodeResourceGroup"]).
+func (aks *AksServiceImpl) ListNetworkSecurityGroups(ctx context.Context, nodeResourceGroup string) (
+	[]*armnetwork.SecurityGroup, error) {
+	pager := aks.securityGroupsClient.NewListPager(nodeResourceGroup, nil)
+	result := make([]*armnetwork.SecurityGroup, 0)
+	for pager.More() {
+		next, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to advance page")
+		}
+		result = append(result, next.Value...)
+	}
+
+	return result, nil
+}
+
+// ListNetworkSecurityGroupsAll 全量安全组列表
+func (aks *AksServiceImpl) ListNetworkSecurityGroupsAll(ctx context.Context) (
+	[]*armnetwork.SecurityGroup, error) {
+	pager := aks.securityGroupsClient.NewListAllPager(nil)
+	result := make([]*armnetwork.SecurityGroup, 0)
+	for pager.More() {
+		next, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to advance page")
+		}
+		result = append(result, next.Value...)
+	}
+
+	return result, nil
 }
 
 // ListSetInterfaceAndReturn 查询set中vm的网卡

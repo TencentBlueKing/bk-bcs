@@ -2,6 +2,39 @@
     "language": "zh",
     "messages": [
         {
+            "id": "the length of hook ids is {IdsLen}, it must be within the range of [1,{ArrayInputLenLimit}]",
+            "message": "the length of hook ids is {IdsLen}, it must be within the range of [1,{ArrayInputLenLimit}]",
+            "translation": "脚本id列表的长度为{IdsLen}, 长度范围必须为[1,{ArrayInputLenLimit}]",
+            "placeholders": [
+                {
+                    "id": "IdsLen",
+                    "string": "%[1]d",
+                    "type": "int",
+                    "underlyingType": "int",
+                    "argNum": 1,
+                    "expr": "idsLen"
+                },
+                {
+                    "id": "ArrayInputLenLimit",
+                    "string": "%[2]d",
+                    "type": "int",
+                    "underlyingType": "int",
+                    "argNum": 2,
+                    "expr": "constant.ArrayInputLenLimit"
+                }
+            ]
+        },
+        {
+            "id": "batch delete failed",
+            "message": "batch delete failed",
+            "translation": "批量删除失败"
+        },
+        {
+            "id": "id is required",
+            "message": "id is required",
+            "translation": "id不能为空"
+        },
+        {
             "id": "template variable name must start with {TemplateVariablePrefix}",
             "message": "template variable name must start with {TemplateVariablePrefix}",
             "translation": "模版变量名必须以{TemplateVariablePrefix}前缀开头",
@@ -13,6 +46,29 @@
                     "underlyingType": "string",
                     "argNum": 1,
                     "expr": "constant.TemplateVariablePrefix"
+                }
+            ]
+        },
+        {
+            "id": "the length of template variable ids is {IdsLen}, it must be within the range of [1,{ArrayInputLenLimit}]",
+            "message": "the length of template variable ids is {IdsLen}, it must be within the range of [1,{ArrayInputLenLimit}]",
+            "translation": "全局变量id列表的长度为{IdsLen}, 长度范围必须为[1,{ArrayInputLenLimit}]",
+            "placeholders": [
+                {
+                    "id": "IdsLen",
+                    "string": "%[1]d",
+                    "type": "int",
+                    "underlyingType": "int",
+                    "argNum": 1,
+                    "expr": "idsLen"
+                },
+                {
+                    "id": "ArrayInputLenLimit",
+                    "string": "%[2]d",
+                    "type": "int",
+                    "underlyingType": "int",
+                    "argNum": 2,
+                    "expr": "constant.ArrayInputLenLimit"
                 }
             ]
         },
@@ -124,7 +180,7 @@
                 {
                     "id": "VariableType",
                     "string": "%[1]s",
-                    "type": "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table.VariableType",
+                    "type": "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table.VariableType",
                     "underlyingType": "string",
                     "argNum": 1,
                     "expr": "t"

@@ -4,18 +4,37 @@
       #default="{
         curPageData, pageConf, statusMap, updateStrategyMap, handlePageChange, handlePageSizeChange,
         handleGetExtData, handleSortChange, gotoDetail, handleUpdateResource, handleDeleteResource,
-        handleEnlargeCapacity, statusFilters, statusFilterMethod, nameValue, handleClearSearchData,
-        handleGotoUpdateRecord, handleRestart, handleRollback
+        handleEnlargeCapacity, statusFilters, handleShowViewConfig, handleFilterChange,
+        handleGotoUpdateRecord, handleRestart, handleRollback, clusterNameMap, goNamespace, isViewEditable,
+        isClusterMode
       }">
       <bk-table
         :data="curPageData"
         :pagination="pageConf"
         @page-change="handlePageChange"
         @page-limit-change="handlePageSizeChange"
-        @sort-change="handleSortChange">
-        <bk-table-column :label="$t('generic.label.name')" prop="metadata.name" min-width="100" sortable="custom">
+        @sort-change="handleSortChange"
+        @filter-change="handleFilterChange">
+        <bk-table-column
+          :label="$t('generic.label.name')"
+          prop="metadata.name"
+          min-width="100"
+          sortable="custom"
+          fixed="left">
           <template #default="{ row }">
-            <bk-button class="bcs-button-ellipsis" text @click="gotoDetail(row)">{{ row.metadata.name }}</bk-button>
+            <bk-button
+              :disabled="isViewEditable"
+              class="bcs-button-ellipsis"
+              text
+              @click="gotoDetail(row)">{{ row.metadata.name }}</bk-button>
+          </template>
+        </bk-table-column>
+        <bk-table-column :label="$t('cluster.labels.nameAndId')" v-if="!isClusterMode">
+          <template #default="{ row }">
+            <div class="flex flex-col py-[6px] h-[50px]">
+              <span class="bcs-ellipsis">{{ clusterNameMap[handleGetExtData(row.metadata.uid, 'clusterID')] }}</span>
+              <span class="bcs-ellipsis mt-[6px]">{{ handleGetExtData(row.metadata.uid, 'clusterID') }}</span>
+            </div>
           </template>
         </bk-table-column>
         <bk-table-column
@@ -23,6 +42,15 @@
           prop="metadata.namespace"
           min-width="100"
           sortable="custom">
+          <template #default="{ row }">
+            <bk-button
+              class="bcs-button-ellipsis"
+              text
+              :disabled="isViewEditable"
+              @click="goNamespace(row)">
+              {{ row.metadata.namespace }}
+            </bk-button>
+          </template>
         </bk-table-column>
         <bk-table-column :label="$t('k8s.updateStrategy.text')" min-width="115">
           <template slot-scope="{ row }">
@@ -57,8 +85,8 @@
         <bk-table-column
           :label="$t('generic.label.status')"
           prop="status"
+          column-key="status"
           :filters="statusFilters"
-          :filter-method="statusFilterMethod"
           filter-multiple
           min-width="100">
           <template slot-scope="{ row }">
@@ -70,7 +98,7 @@
             </LoadingIcon>
           </template>
         </bk-table-column>
-        <bk-table-column label="Ready" width="100" :resizable="false">
+        <bk-table-column label="Ready" width="100" :render-header="renderReadyHeader" :resizable="false">
           <template slot-scope="{ row }">{{row.status.readyReplicas || 0}} / {{row.spec.replicas}}</template>
         </bk-table-column>
         <bk-table-column label="Up-to-date" width="110" :resizable="false">
@@ -97,7 +125,12 @@
             </span>
           </template>
         </bk-table-column>
-        <bk-table-column :label="$t('generic.label.action')" :resizable="false" width="250">
+        <bk-table-column
+          :label="$t('generic.label.action')"
+          :resizable="false"
+          width="230"
+          fixed="right"
+          v-if="!isViewEditable">
           <template #default="{ row }">
             <bk-button
               text
@@ -143,11 +176,13 @@
           </template>
         </bk-table-column>
         <template #empty>
-          <BcsEmptyTableStatus :type="nameValue ? 'search-empty' : 'empty'" @clear="handleClearSearchData" />
+          <BcsEmptyTableStatus
+            :button-text="$t('generic.button.resetSearch')"
+            type="search-empty"
+            @clear="handleShowViewConfig" />
         </template>
       </bk-table>
     </template>
-
   </BaseLayout>
 </template>
 <script>
@@ -156,11 +191,32 @@ import { defineComponent } from 'vue';
 import StatusIcon from '../../../components/status-icon';
 
 import LoadingIcon from '@/components/loading-icon.vue';
+import $i18n from '@/i18n/i18n-setup';
 import BaseLayout from '@/views/resource-view/common/base-layout';
 
 export default defineComponent({
   name: 'DashboardDeploy',
   components: { BaseLayout, StatusIcon, LoadingIcon },
+  setup() {
+    const renderReadyHeader = (h, { column }) => h(
+      'span',
+      {
+        class: 'bcs-border-tips',
+        directives: [
+          {
+            name: 'bkTooltips',
+            value: {
+              content: $i18n.t('k8s.deploy.readyTips'),
+            },
+          },
+        ],
+      },
+      column.label,
+    );
+    return {
+      renderReadyHeader,
+    };
+  },
 });
 </script>
 <style lang="postcss" scoped>

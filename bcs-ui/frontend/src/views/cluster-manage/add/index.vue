@@ -1,53 +1,67 @@
 <template>
-  <BcsContent>
-    <div
-      v-for="card, index in cardGroupList"
-      :key="index"
-      :class="{
-        'mt-[16px]': index !== 0
-      }">
-      <div class="text-[#333C48] text-[16px] mb-[16px]">{{ card.name }}</div>
-      <div class="grid gap-[16px] grid-cols-[repeat(auto-fill,minmax(350px,1fr))]">
+  <BcsContent :title="$t('cluster.button.addCluster')">
+    <div class="flex flex-col items-center justify-center">
+      <div
+        v-for="card, index in cardGroupList"
+        :key="index"
+        :class="[
+          'px-[56px] max-w-[1318px] w-full',
+          {
+            'mt-[32px]': index !== 0
+          }
+        ]">
         <div
-          v-for="item, i in card.data"
-          :key="i"
           :class="[
-            'cluster-type-card',
-            { disabled: item.disabled }
-          ]"
-          @click="handleAddCluster(item, card)">
-          <div class="cluster-type-card-top">
-            <div :style="{ filter: item.disabled ? 'grayscale(1)' : '' }">
-              <svg class="icon svg-icon" width="48px" height="48px">
-                <use :xlink:href="`#${item.icon}`"></use>
-              </svg>
-            </div>
-            <div class="text-[14px] font-bold mt-[10px]">{{ item.title }}</div>
-            <div class="text-[14px] mt-[10px] bcs-ellipsis line-clamp-2">{{ item.subTitle }}</div>
-          </div>
-          <div class="flex-1 flex items-center justify-center text-[#979BA5] text-[12px] h-[78px]">
-            {{ item.desc }}
-          </div>
+            'flex items-center justify-center rounded-[16px] min-w-[720px]',
+            'text-[#313238] text-[16px] mb-[16px] h-[32px] bg-[#EAEBF0]'
+          ]">
+          {{ card.name }}
         </div>
-        <div
-          class="row-start-2 col-span-full text-[12px] grid gap-[16px] grid-cols-[repeat(2,minmax(350px,1fr))]"
-          v-if="activeItem && activeGroupID === card.id">
+        <div class="grid gap-[16px] grid-cols-[repeat(auto-fill,minmax(350px,1fr))] min-w-[720px]">
           <div
-            v-for="child in activeItem.children"
-            :key="child.type"
-            :class="['cluster-type-card-2', { disabled: child.disabled }]"
-            @click="handleAddCluster(child, card)">
-            <div class="flex items-center">
-              <div :style="{ filter: child.disabled ? 'grayscale(1)' : '' }">
-                <img :src="child.icon" v-if="child.icon.indexOf('data:image/png') === 0" />
-                <svg class="icon svg-icon" width="48px" height="48px" v-else>
-                  <use :xlink:href="`#${child.icon}`"></use>
+            v-for="item, i in card.data"
+            :key="i"
+            :class="[
+              'cluster-type-card',
+              { disabled: item.disabled }
+            ]"
+            @click="handleAddCluster(item, card)">
+            <div class="cluster-type-card-top">
+              <div :style="{ filter: item.disabled ? 'grayscale(1)' : '' }">
+                <svg class="icon svg-icon" width="48px" height="48px">
+                  <use :xlink:href="`#${item.icon}`"></use>
                 </svg>
               </div>
-              <span class="font-bold text-[14px] ml-[16px]">{{ child.title }}</span>
+              <div class="text-[14px] font-bold mt-[10px]">{{ item.title }}</div>
+              <div class="text-[14px] mt-[10px] bcs-ellipsis line-clamp-2">{{ item.subTitle }}</div>
             </div>
-            <div class="mt-[6px] text-[#979BA5]">
-              {{ child.desc }}
+            <div class="flex-1 flex items-center justify-center text-[#979BA5] text-[12px] h-[78px]">
+              {{ item.desc }}
+            </div>
+          </div>
+          <div
+            :class="[
+              'grid gap-[16px] grid-cols-[repeat(2,minmax(350px,1fr))]',
+              'p-[16px] bg-[#F0F1F5] row-start-2 col-span-full text-[12px]'
+            ]"
+            v-if="activeItem && activeGroupID === card.id">
+            <div
+              v-for="child in activeItem.children"
+              :key="child.type"
+              :class="['cluster-type-card-2', { disabled: child.disabled }]"
+              @click="handleAddCluster(child, card)">
+              <div class="flex items-center">
+                <div :style="{ filter: child.disabled ? 'grayscale(1)' : '' }">
+                  <img :src="child.icon" v-if="child.icon.indexOf('data:image/png') === 0" />
+                  <svg class="icon svg-icon" width="48px" height="48px" v-else>
+                    <use :xlink:href="`#${child.icon}`"></use>
+                  </svg>
+                </div>
+                <span class="font-bold text-[14px] ml-[16px]">{{ child.title }}</span>
+              </div>
+              <div class="mt-[6px] text-[#979BA5]">
+                {{ child.desc }}
+              </div>
             </div>
           </div>
         </div>
@@ -58,13 +72,13 @@
 <script lang="ts">
 import { computed, defineComponent, ref } from 'vue';
 
-import BcsContent from '../components/bcs-content.vue';
-
+import BcsContent from '@/components/layout/Content.vue';
 import { useAppData, useConfig } from '@/composables/use-app';
 import $i18n from '@/i18n/i18n-setup';
 import amazonLogo from '@/images/amazon.png';
 import azureLogo from '@/images/azure.png';
 import googleLogo from '@/images/google.png';
+import huaweiLogo from '@/images/huawei.png';
 import $router from '@/router';
 
 interface ICard {
@@ -84,19 +98,11 @@ export default defineComponent({
     const { flagsMap } = useAppData();
     const createList = ref<ICard[]>([
       {
-        icon: 'bcs-icon-color-vcluster',
-        title: 'vCluster',
-        subTitle: $i18n.t('cluster.create.type.vCluster.subTitle'),
-        desc: $i18n.t('cluster.create.type.vCluster.desc'),
-        type: 'vCluster',
-        disabled: !flagsMap.value.VCLUSTER,
-      },
-      {
         icon: 'bcs-icon-color-tencentcloud',
         title: $i18n.t('cluster.create.type.tencentCloud.title'),
         subTitle: $i18n.t('cluster.create.type.tencentCloud.subTitle'),
         desc: $i18n.t('cluster.create.type.tencentCloud.desc'),
-        type: 'tke',
+        type: '_tke',
         disabled: !_INTERNAL_.value,
       },
       {
@@ -105,13 +111,13 @@ export default defineComponent({
         subTitle: $i18n.t('cluster.create.type.cloudProvider.subTitle'),
         desc: $i18n.t('cluster.create.type.cloudProvider.desc'),
         type: 'cloud',
-        disabled: true,
+        disabled: _INTERNAL_.value,
         children: [
           {
             icon: 'bcs-icon-color-tencentcloud',
             title: $i18n.t('publicCloud.tencent.title'),
             desc: $i18n.t('publicCloud.tencent.desc'),
-            type: 'createTencentCloud',
+            type: 'tke',
             disabled: _INTERNAL_.value,
           },
           {
@@ -135,6 +141,13 @@ export default defineComponent({
             type: 'azureCloud',
             disabled: true,
           },
+          {
+            icon: huaweiLogo,
+            title: $i18n.t('publicCloud.huawei.title'),
+            desc: $i18n.t('publicCloud.huawei.desc'),
+            type: 'azureCloud',
+            disabled: true,
+          },
         ],
       },
       {
@@ -145,16 +158,16 @@ export default defineComponent({
         type: 'k8s',
         disabled: !flagsMap.value.k8s,
       },
+      {
+        icon: 'bcs-icon-color-vcluster',
+        title: 'vCluster',
+        subTitle: $i18n.t('cluster.create.type.vCluster.subTitle'),
+        desc: $i18n.t('cluster.create.type.vCluster.desc'),
+        type: 'vCluster',
+        disabled: !flagsMap.value.VCLUSTER,
+      },
     ]);
     const importList = ref<ICard[]>([
-      {
-        icon: 'bcs-icon-color-kubeconfig',
-        title: $i18n.t('cluster.create.type.kubeconfig.title'),
-        subTitle: $i18n.t('cluster.create.type.kubeconfig.subTitle'),
-        desc: $i18n.t('cluster.create.type.kubeconfig.desc'),
-        type: 'kubeconfig',
-        disabled: _INTERNAL_.value,
-      },
       {
         icon: 'bcs-icon-color-publiccloud',
         title: $i18n.t('cluster.create.type.cloudProvider.title'),
@@ -189,9 +202,24 @@ export default defineComponent({
             title: $i18n.t('publicCloud.azure.title'),
             desc: $i18n.t('publicCloud.azure.desc'),
             type: 'azureCloud',
-            disabled: true,
+            disabled: _INTERNAL_.value,
+          },
+          {
+            icon: huaweiLogo,
+            title: $i18n.t('publicCloud.huawei.title'),
+            desc: $i18n.t('publicCloud.huawei.desc'),
+            type: 'huaweiCloud',
+            disabled: _INTERNAL_.value,
           },
         ],
+      },
+      {
+        icon: 'bcs-icon-color-kubeconfig',
+        title: $i18n.t('cluster.create.type.kubeconfig.title'),
+        subTitle: $i18n.t('cluster.create.type.kubeconfig.subTitle'),
+        desc: $i18n.t('cluster.create.type.kubeconfig.desc'),
+        type: 'kubeconfig',
+        disabled: _INTERNAL_.value,
       },
     ]);
     const cardGroupList = computed(() => [
@@ -202,7 +230,7 @@ export default defineComponent({
           if (_INTERNAL_.value) {
             return item.type !== 'cloud';
           }
-          return item.type !== 'tke';
+          return item.type !== '_tke';
         }),
       },
       {
@@ -231,16 +259,16 @@ export default defineComponent({
         case 'vCluster':
           $router.push({ name: 'createVCluster' });
           break;
-        case 'tke':
+        case '_tke':
           // 创建腾讯云集群
           $router.push({ name: 'createTencentCloudCluster' });
           break;
-        case 'k8s':
-          $router.push({ name: 'createK8SCluster' });
-          break;
-        case 'createTencentCloud':
+        case 'tke':
           // 创建腾讯云公有云集群
           $router.push({ name: 'createTKECluster' });
+          break;
+        case 'k8s':
+          $router.push({ name: 'createK8SCluster' });
           break;
         case 'kubeconfig':
           $router.push({
@@ -257,6 +285,16 @@ export default defineComponent({
         case 'googleCloud':
           $router.push({
             name: 'importGoogleCluster',
+          });
+          break;
+        case 'azureCloud':
+          $router.push({
+            name: 'importAzureCluster',
+          });
+          break;
+        case 'huaweiCloud':
+          $router.push({
+            name: 'importHuaweiCluster',
           });
           break;
       }

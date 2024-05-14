@@ -17,8 +17,8 @@ import (
 
 	"gorm.io/gorm"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/data-service/db-migration/migrator"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/data-service/db-migration/migrator"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
 )
 
 func init() {
@@ -35,15 +35,13 @@ func init() {
 // mig20231123143015Up for up migration
 func mig20231123143015Up(tx *gorm.DB) error {
 
-	// Applications: 服务
+	// Applications : 服务
 	type Applications struct {
 		Alias    string `gorm:"type:varchar(255) not null;"`
 		DataType string `gorm:"type:varchar(255) not null;"`
 	}
 
-	if err := tx.Set("gorm:table_options", "ENGINE=InnoDB CHARSET=utf8mb4").AutoMigrate(
-		&Applications{},
-	); err != nil {
+	if err := tx.Set("gorm:table_options", "ENGINE=InnoDB CHARSET=utf8mb4").AutoMigrate(&Applications{}); err != nil {
 		return err
 	}
 
@@ -58,7 +56,9 @@ func mig20231123143015Up(tx *gorm.DB) error {
 			// 原有的kv类型app，数据类型全部记为any
 			app.Spec.DataType = table.KvAny
 		}
-		tx.Save(&apps)
+
+		// 只更新必须的字段, 不刷新updated_at
+		tx.Select("Alias", "DataType").UpdateColumns(&app)
 	}
 
 	return nil
@@ -68,7 +68,7 @@ func mig20231123143015Up(tx *gorm.DB) error {
 // mig20231123143015Down for down migration
 func mig20231123143015Down(tx *gorm.DB) error {
 
-	// Applications: 服务
+	// Applications : 服务
 	type Applications struct {
 		Alias    string `gorm:"type:varchar(255) not null;"`
 		DataType string `gorm:"type:varchar(255) not null;"`

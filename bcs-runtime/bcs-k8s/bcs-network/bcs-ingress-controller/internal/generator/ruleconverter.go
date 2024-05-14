@@ -1,10 +1,10 @@
 /*
- * Tencent is pleased to support the open source community by making Blueking Container Service available.,
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
  * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -28,8 +28,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
+	federationv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/federation/v1"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
@@ -91,8 +94,8 @@ func (rc *RuleConverter) SetTCPUDPPortReuse(isTCPUDPPortReuse bool) {
 // DoConvert do convert action
 func (rc *RuleConverter) DoConvert() ([]networkextensionv1.Listener, error) {
 	var retListeners []networkextensionv1.Listener
-	switch strings.ToLower(rc.rule.Protocol) {
-	case networkextensionv1.ProtocolHTTP, networkextensionv1.ProtocolHTTPS:
+	protocol := rc.rule.Protocol
+	if common.InLayer7Protocol(protocol) {
 		for _, lb := range rc.lbs {
 			listener, err := rc.generate7LayerListener(lb.Region, lb.LbID)
 			if err != nil {
@@ -100,7 +103,7 @@ func (rc *RuleConverter) DoConvert() ([]networkextensionv1.Listener, error) {
 			}
 			retListeners = append(retListeners, *listener)
 		}
-	case networkextensionv1.ProtocolTCP, networkextensionv1.ProtocolUDP:
+	} else if common.InLayer4Protocol(protocol) {
 		for _, lb := range rc.lbs {
 			listener, err := rc.generate4LayerListener(lb.Region, lb.LbID)
 			if err != nil {
@@ -108,7 +111,7 @@ func (rc *RuleConverter) DoConvert() ([]networkextensionv1.Listener, error) {
 			}
 			retListeners = append(retListeners, *listener)
 		}
-	default:
+	} else {
 		blog.Errorf("invalid protocol %s", rc.rule.Protocol)
 		return nil, fmt.Errorf("invalid protocol %s", rc.rule.Protocol)
 	}
@@ -228,11 +231,20 @@ func (rc *RuleConverter) generateTargetGroup(protocol string, routes []networkex
 
 	var retBackends []networkextensionv1.ListenerBackend
 	for _, route := range routes {
-		backends, err := rc.generateServiceBackendList(&route)
-		if err != nil {
-			return nil, err
+		switch strings.ToLower(route.GetServiceKind()) {
+		case networkextensionv1.ServiceKindNativeService:
+			backends, err := rc.generateServiceBackendList(&route)
+			if err != nil {
+				return nil, err
+			}
+			retBackends = mergeBackendList(retBackends, backends)
+		case networkextensionv1.ServiceKindMultiClusterService:
+			backends, err := rc.generateMcsBackendList(&route)
+			if err != nil {
+				return nil, err
+			}
+			retBackends = mergeBackendList(retBackends, backends)
 		}
-		retBackends = mergeBackendList(retBackends, backends)
 	}
 	sort.Sort(networkextensionv1.ListenerBackendList(retBackends))
 	return &networkextensionv1.ListenerTargetGroup{
@@ -244,7 +256,6 @@ func (rc *RuleConverter) generateTargetGroup(protocol string, routes []networkex
 // generate service backend list
 func (rc *RuleConverter) generateServiceBackendList(svcRoute *networkextensionv1.ServiceRoute) (
 	[]networkextensionv1.ListenerBackend, error) {
-
 	// set namespace when namespaced flag is set
 	svcNamespace := svcRoute.ServiceNamespace
 	// use ingressNS as default
@@ -279,7 +290,8 @@ func (rc *RuleConverter) generateServiceBackendList(svcRoute *networkextensionv1
 		blog.Warnf("port %d is not found in service %s/%s",
 			svcRoute.ServicePort, svcRoute.ServiceName, svcNamespace)
 		rc.eventer.Eventf(rc.ingress, k8scorev1.EventTypeWarning, constant.EventIngressBindFailed,
-			fmt.Sprintf("port %d is not found in service %s/%s", svcRoute.ServicePort, svcRoute.ServiceName, svcNamespace))
+			fmt.Sprintf("port %d is not found in service %s/%s, please add port definition on service",
+				svcRoute.ServicePort, svcRoute.ServiceName, svcNamespace))
 		return nil, nil
 	}
 
@@ -312,6 +324,79 @@ func (rc *RuleConverter) generateServiceBackendList(svcRoute *networkextensionv1
 	retBackends, err := rc.getNodePortBackends(svc, svcPort, svcRoute.GetWeight())
 	if err != nil {
 		return nil, err
+	}
+	return retBackends, nil
+}
+
+func (rc *RuleConverter) generateMcsBackendList(svcRoute *networkextensionv1.ServiceRoute) (
+	[]networkextensionv1.ListenerBackend, error) {
+	if svcRoute.IsDirectConnect == false {
+		return nil, fmt.Errorf("serviceKind MultiClusterService can only support DirectConnect")
+	}
+
+	// set namespace when namespaced flag is set
+	svcNamespace := svcRoute.ServiceNamespace
+	// use ingressNS as default
+	if rc.isNamespaced || svcNamespace == "" {
+		svcNamespace = rc.ingressNamespace
+	}
+
+	multiClusterService := &federationv1.MultiClusterService{}
+	if err := rc.cli.Get(context.TODO(), k8stypes.NamespacedName{
+		Namespace: svcNamespace,
+		Name:      svcRoute.ServiceName,
+	}, multiClusterService); err != nil {
+		if k8serrors.IsNotFound(err) {
+			rc.eventer.Eventf(rc.ingress, k8scorev1.EventTypeWarning, constant.EventIngressBindFailed,
+				fmt.Sprintf("multiClusterService '%s/%s' not found", svcNamespace, svcRoute.ServiceName))
+			return nil, nil
+		}
+		return nil, fmt.Errorf("get multiClusterService %s/%s failed, err %s",
+			svcNamespace, svcRoute.ServiceName, err.Error())
+	}
+	var svcPort *k8scorev1.ServicePort
+	for _, port := range multiClusterService.Spec.Ports {
+		if port.Port == int32(svcRoute.ServicePort) {
+			svcPort = &port
+			break
+		}
+	}
+
+	// 遍历所有mEps找到和service对应的eps（MultiClusterService和MultiClusterEndpoints可能不在一个命名空间）
+	multiClusterEndpointsList := &federationv1.MultiClusterEndpointSliceList{}
+	matchedMultiClusterEpsList := make([]federationv1.MultiClusterEndpointSlice, 0)
+	if err := rc.cli.List(context.TODO(), multiClusterEndpointsList); err != nil {
+		return nil, fmt.Errorf("list multiClusterEndpoints failed, err %s", err.Error())
+	}
+	for _, mEps := range multiClusterEndpointsList.Items {
+		if mEps.GetRelatedServiceNameSpace() == svcNamespace && mEps.GetName() == svcRoute.ServiceName {
+			matchedMultiClusterEpsList = append(matchedMultiClusterEpsList, mEps)
+		}
+	}
+
+	var retBackends []networkextensionv1.ListenerBackend
+	for _, mEps := range matchedMultiClusterEpsList {
+		for _, ep := range mEps.Spec.Endpoints {
+			for _, port := range ep.Ports {
+				if (*port.Name == svcPort.TargetPort.String() || int(*port.Port) == svcPort.TargetPort.IntValue()) && *port.Protocol == svcPort.
+					Protocol {
+					// 这里默认都是直通模式
+					if svcRoute.HostPort {
+						retBackends = append(retBackends, networkextensionv1.ListenerBackend{
+							IP:     ep.NodeAddresses[0],
+							Port:   int(*port.HostPort),
+							Weight: svcRoute.GetWeight(),
+						})
+					} else {
+						retBackends = append(retBackends, networkextensionv1.ListenerBackend{
+							IP:     ep.Addresses[0],
+							Port:   int(*port.Port),
+							Weight: svcRoute.GetWeight(),
+						})
+					}
+				}
+			}
+		}
 	}
 	return retBackends, nil
 }
@@ -410,7 +495,8 @@ func (rc *RuleConverter) getServiceBackendsFromPods(
 		}
 		if !found {
 			rc.eventer.Eventf(rc.ingress, k8scorev1.EventTypeWarning, constant.EventIngressBindFailed,
-				fmt.Sprintf("port %s is not found in pod %s/%s", svcPort.TargetPort.String(), pod.Namespace, pod.Name))
+				fmt.Sprintf("port %s is not found in pod %s/%s, please add port definition on pod(containerPort)",
+					svcPort.TargetPort.String(), pod.Namespace, pod.Name))
 		}
 	}
 	return retBackends, nil
@@ -424,6 +510,10 @@ func (rc *RuleConverter) getNodePortBackends(
 	if svcPort.NodePort <= 0 {
 		blog.Warnf("get no node port of service %s/%s 's port %+v",
 			svc.GetNamespace(), svc.GetName(), svcPort)
+		rc.eventer.Eventf(rc.ingress, k8scorev1.EventTypeWarning, constant.EventIngressBindFailed,
+			fmt.Sprintf("get no node port of service %s/%s 's port %+v, "+
+				"please check if service type is NodePort or LoadBalancer",
+				svc.GetNamespace(), svc.GetName(), svcPort))
 		return nil, nil
 	}
 

@@ -25,8 +25,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/mysql"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 
 	types "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/tke"
@@ -90,13 +90,18 @@ func dumpsMysql() {
 		blog.Fatalf("dsn cannot be empty")
 	}
 
-	db, err := gorm.Open("mysql", dsn)
+	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		blog.Fatalf("err %s", err.Error())
 	}
-	db.DB().SetConnMaxLifetime(60 * time.Second)
-	db.DB().SetMaxIdleConns(20)
-	db.DB().SetMaxOpenConns(20)
+
+	connDB, err := db.DB()
+	if err != nil {
+		blog.Fatalf("err %s", err.Error())
+	}
+	connDB.SetConnMaxLifetime(60 * time.Second)
+	connDB.SetMaxIdleConns(20)
+	connDB.SetMaxOpenConns(20)
 
 	var cidrList []Cidr
 	db.Table("tke_cidrs").Select("*").Scan(&cidrList)

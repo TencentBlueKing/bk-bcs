@@ -17,9 +17,9 @@ import (
 
 	. "github.com/smartystreets/goconvey/convey" // import convey.
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/test/suite"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/test/suite/cases"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/test/util"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/test/suite"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/test/suite/cases"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/test/util"
 )
 
 // ResourceManager instance

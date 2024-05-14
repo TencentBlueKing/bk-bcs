@@ -7,6 +7,9 @@ import "pkg/protocol/core/config-item/config_item.proto";
 import "pkg/protocol/core/content/content.proto";
 import "pkg/protocol/core/group/group.proto";
 import "pkg/protocol/core/credential/credential.proto";
+import "pkg/protocol/core/client/client.proto";
+import "pkg/protocol/core/client-event/client_event.proto";
+import "pkg/protocol/core/client-query/client_query.proto";
 import "pkg/protocol/core/credential-scope/credential-scope.proto";
 import "pkg/protocol/core/hook/hook.proto";
 import "pkg/protocol/core/hook-revision/hook_revision.proto";
@@ -26,7 +29,7 @@ import "google/protobuf/struct.proto";
 
 package pbcs;
 
-option go_package = "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/config-server;pbcs";
+option go_package = "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/config-server;pbcs";
 
 service Config {
   rpc CreateApp(CreateAppReq) returns (CreateAppResp) {
@@ -91,6 +94,22 @@ service Config {
   rpc DeleteConfigItem(DeleteConfigItemReq) returns (DeleteConfigItemResp) {
     option (google.api.http) = {
       delete: "/api/v1/config/delete/config_item/config_item/config_item_id/{id}/app_id/{app_id}/biz_id/{biz_id}"
+    };
+  }
+  rpc BatchDeleteConfigItems(BatchDeleteAppResourcesReq) returns (BatchDeleteResp) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/config_items/batch_delete"
+      body: "*"
+    };
+  }
+  rpc UnDeleteConfigItem(UnDeleteConfigItemReq) returns (UnDeleteConfigItemResp) {
+    option (google.api.http) = {
+      post: "/api/v1/config/undelete/config_item/config_item/config_item_id/{id}/app_id/{app_id}/biz_id/{biz_id}"
+    };
+  }
+  rpc UndoConfigItem(UndoConfigItemReq) returns (UndoConfigItemResp) {
+    option (google.api.http) = {
+      post: "/api/v1/config/undo/config_item/config_item/config_item_id/{id}/app_id/{app_id}/biz_id/{biz_id}"
     };
   }
   rpc GetConfigItem(GetConfigItemReq) returns (GetConfigItemResp) {
@@ -161,7 +180,27 @@ service Config {
       get: "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/query/name/{release_name}"
     };
   }
-
+  rpc GetRelease(GetReleaseReq) returns (pbrelease.Release) {
+    option (google.api.http) = {
+      get: "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}"
+    };
+  }
+  rpc DeprecateRelease(DeprecateReleaseReq) returns (DeprecateReleaseResp) {
+    option (google.api.http) = {
+      put: "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/deprecate"
+    };
+  }
+  rpc UnDeprecateRelease(UnDeprecateReleaseReq) returns (UnDeprecateReleaseResp) {
+    option (google.api.http) = {
+      put: "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/undeprecate"
+      body: "*"
+    };
+  }
+  rpc DeleteRelease(DeleteReleaseReq) returns (DeleteReleaseResp) {
+    option (google.api.http) = {
+      delete: "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}"
+    };
+  }
   rpc CreateHook(CreateHookReq) returns (CreateHookResp) {
     option (google.api.http) = {
       post: "/api/v1/config/biz/{biz_id}/hooks"
@@ -171,6 +210,18 @@ service Config {
   rpc DeleteHook(DeleteHookReq) returns (DeleteHookResp) {
     option (google.api.http) = {
       delete: "/api/v1/config/biz/{biz_id}/hooks/{hook_id}"
+    };
+  }
+  rpc BatchDeleteHook(BatchDeleteHookReq) returns (BatchDeleteResp) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/hooks/batch_delete"
+      body: "*"
+    };
+  }
+  rpc UpdateHook(UpdateHookReq) returns (UpdateHookResp) {
+    option (google.api.http) = {
+      put: "/api/v1/config/biz/{biz_id}/hooks/{hook_id}"
+      body: "*"
     };
   }
   rpc ListHooks(ListHooksReq) returns (ListHooksResp) {
@@ -557,6 +608,12 @@ service Config {
       delete: "/api/v1/config/biz/{biz_id}/template_variables/{template_variable_id}"
     };
   }
+  rpc BatchDeleteTemplateVariable(BatchDeleteBizResourcesReq) returns (BatchDeleteResp) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/template_variables/batch_delete"
+      body: "*"
+    };
+  }
   rpc UpdateTemplateVariable(UpdateTemplateVariableReq) returns (UpdateTemplateVariableResp) {
     option (google.api.http) = {
       put: "/api/v1/config/biz/{biz_id}/template_variables/{template_variable_id}"
@@ -616,6 +673,12 @@ service Config {
   rpc DeleteGroup(DeleteGroupReq) returns (DeleteGroupResp) {
     option (google.api.http) = {
       delete: "/api/v1/config/biz/{biz_id}/groups/{group_id}"
+    };
+  }
+  rpc BatchDeleteGroups(BatchDeleteBizResourcesReq) returns (BatchDeleteResp) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/groups/batch_delete"
+      body: "*"
     };
   }
   rpc UpdateGroup(UpdateGroupReq) returns (UpdateGroupResp) {
@@ -681,6 +744,11 @@ service Config {
       body: "*"
     };
   }
+  rpc CheckCredentialName(CheckCredentialNameReq) returns (CheckCredentialNameResp) {
+    option (google.api.http) = {
+      get: "/api/v1/config/biz_id/{biz_id}/credential/{credential_name}/check"
+    };
+  }
 
   rpc ListCredentialScopes(ListCredentialScopesReq) returns (ListCredentialScopesResp) {
     option (google.api.http) = {
@@ -691,6 +759,11 @@ service Config {
     option (google.api.http) = {
       put: "/api/v1/config/biz_id/{biz_id}/credential/{credential_id}/scope"
       body: "*"
+    };
+  }
+  rpc CredentialScopePreview(CredentialScopePreviewReq) returns (CredentialScopePreviewResp) {
+    option (google.api.http) = {
+      get: "/api/v1/config/biz_id/{biz_id}/credential/scope/preview"
     };
   }
 
@@ -716,6 +789,12 @@ service Config {
       delete: "/api/v1/config/biz/{biz_id}/apps/{app_id}/kvs/{id}"
     };
   };
+  rpc BatchDeleteKv(BatchDeleteAppResourcesReq) returns (BatchDeleteResp) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/kvs/batch_delete"
+      body: "*"
+    };
+  };
   rpc BatchUpsertKvs(BatchUpsertKvsReq) returns (BatchUpsertKvsResp) {
     option (google.api.http) = {
       put: "/api/v1/config/biz/{biz_id}/apps/{app_id}/kvs"
@@ -727,17 +806,128 @@ service Config {
       post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/kvs/{key}/undelete"
     };
   };
+  rpc UndoKv(UndoKvReq) returns (UndoKvResp) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/kvs/{key}/undo"
+    };
+  };
+
+  rpc ListClients(ListClientsReq) returns (ListClientsResp) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/clients"
+      body: "*"
+    };
+  };
+
+  rpc ListClientEvents(ListClientEventsReq) returns (ListClientEventsResp) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/client_events/{client_id}"
+      body: "*"
+    };
+  };
+
+  // client query related interface
+  rpc ListClientQuerys(ListClientQuerysReq) returns (ListClientQuerysResp) {
+    option (google.api.http) = {
+      get: "/api/v1/config/biz/{biz_id}/apps/{app_id}/client_querys"
+    };
+  };
+  rpc CreateClientQuery(CreateClientQueryReq) returns (CreateClientQueryResp) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/client_querys"
+      body: "*"
+    };
+  };
+  rpc UpdateClientQuery(UpdateClientQueryReq) returns (UpdateClientQueryResp) {
+    option (google.api.http) = {
+      put: "/api/v1/config/biz/{biz_id}/apps/{app_id}/client_querys/{id}"
+      body: "*"
+    };
+  };
+  rpc DeleteClientQuery(DeleteClientQueryReq) returns (DeleteClientQueryResp) {
+    option (google.api.http) = {
+      delete: "/api/v1/config/biz/{biz_id}/apps/{app_id}/client_querys/{id}"
+    };
+  };
+
+  // client chart related interface
+  rpc ClientConfigVersionStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/clients/config_version_statistics"
+      body: "*"
+    };
+  };
+  rpc ClientPullTrendStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/clients/pull_trend_statistics"
+      body: "*"
+    };
+  };
+  rpc ClientPullStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/clients/pull_statistics"
+      body: "*"
+    };
+  };
+  rpc ClientLabelStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/clients/label_statistics"
+      body: "*"
+    };
+  };
+  rpc ClientAnnotationStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/clients/annotation_statistics"
+      body: "*"
+    };
+  };
+  rpc ClientVersionStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/clients/version_statistics"
+      body: "*"
+    };
+  };
+  rpc ListClientLabelAndAnnotation(ListClientLabelAndAnnotationReq) returns (google.protobuf.Struct) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/clients/labels_and_annotations"
+      body: "*"
+    };
+  };
+  rpc ClientSpecificFailedReason(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/clients/specific_failed_reason"
+      body: "*"
+    };
+  }
 }
 
 message UpdateCredentialScopeReq {
-  repeated uint32 del_id = 1;
-  repeated string add_scope = 2;
-  uint32 biz_id = 3;
-  uint32 credential_id = 4;
-  repeated pbcrs.UpdateScopeSpec alter_scope = 5;
+  uint32 biz_id = 1;
+  uint32 credential_id = 2;
+  repeated pbcrs.CredentialScopeSpec add_scope = 3;
+  repeated pbcrs.UpdateScopeSpec alter_scope = 4;
+  repeated uint32 del_id = 5;
 }
 
 message UpdateCredentialScopeResp {}
+
+message CredentialScopePreviewReq {
+  uint32 biz_id = 1;
+  string app_name = 2;
+  string scope = 3;
+  string search_value = 4;
+  uint32 start = 5;
+  uint32 limit = 6;
+}
+
+message CredentialScopePreviewResp {
+  message Detail {
+    string name = 1;
+    string path = 2;
+  }
+  uint32 count = 1;
+  repeated Detail details = 2;
+}
 
 message ListCredentialScopesReq {
   uint32 biz_id = 1;
@@ -773,11 +963,21 @@ message UpdateCredentialsReq {
 
 message UpdateCredentialsResp {}
 
+message CheckCredentialNameReq {
+  uint32 biz_id = 1;
+  string credential_name = 2;
+}
+
+message CheckCredentialNameResp {
+  bool exist = 1;
+}
+
 message ListCredentialsReq {
   uint32 biz_id = 1;
   string searchKey = 2;
   uint32 start = 3;
   uint32 limit = 4;
+  string top_ids = 5;
 }
 
 message ListCredentialsResp {
@@ -800,12 +1000,9 @@ message CreateAppReq {
   uint32 biz_id = 1;
   string name = 2;
   string config_type = 3;  // config_type is enum type, source resource reference: pkg/dal/table/app.go
-  string mode = 4;         // deploy_type is enum type, source resource reference: pkg/dal/table/app.go
-  string memo = 5;
-  string reload_type = 6;
-  string reload_file_path = 7;
-  string alias = 8;
-  string data_type = 9;  // data_type is enum type, source resource reference: pkg/dal/table/app.go
+  string memo = 4;
+  string alias = 5;
+  string data_type = 6;  // data_type is enum type, source resource reference: pkg/dal/table/app.go
 }
 
 message CreateAppResp {
@@ -817,10 +1014,8 @@ message UpdateAppReq {
   uint32 biz_id = 2;
   string name = 3;
   string memo = 4;
-  string reload_type = 5;
-  string reload_file_path = 6;
-  string alias = 7;
-  string data_type = 8;
+  string alias = 5;
+  string data_type = 6;
 }
 
 message DeleteAppReq {
@@ -854,6 +1049,7 @@ message ListAppsBySpaceRestReq {
   uint32 limit = 3;
   string operator = 4;
   string name = 5;
+  bool all = 6;
 }
 
 message ListAppsResp {
@@ -929,6 +1125,22 @@ message DeleteConfigItemReq {
 
 message DeleteConfigItemResp {}
 
+message UnDeleteConfigItemReq {
+  uint32 id = 1;
+  uint32 biz_id = 2;
+  uint32 app_id = 3;
+}
+
+message UnDeleteConfigItemResp {}
+
+message UndoConfigItemReq {
+  uint32 id = 1;
+  uint32 biz_id = 2;
+  uint32 app_id = 3;
+}
+
+message UndoConfigItemResp {}
+
 message GetConfigItemReq {
   uint32 biz_id = 1;
   uint32 app_id = 2;
@@ -961,6 +1173,8 @@ message ListConfigItemsReq {
   string ids = 7;
   bool all = 8;
   bool with_status = 9;
+  // ADD、REVISE、DELETE、UNCHANGE
+  repeated string status = 10;
 }
 
 message ListConfigItemsResp {
@@ -1022,9 +1236,14 @@ message ListReleasedKvsReq {
   uint32 biz_id = 1;
   uint32 app_id = 2;
   uint32 release_id = 3;
-  uint32 start = 6;
-  uint32 limit = 7;
-  bool all = 8;
+  uint32 start = 4;
+  uint32 limit = 5;
+  bool all = 6;
+  string search_key = 7;
+  repeated string key = 8;
+  repeated string kv_type = 9;
+  string sort = 10;
+  string order = 11;
 }
 
 message ListReleasedKvsResp {
@@ -1074,13 +1293,44 @@ message GetReleaseByNameReq {
   string release_name = 3;
 }
 
+message GetReleaseReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  uint32 release_id = 3;
+}
+
+message DeprecateReleaseReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  uint32 release_id = 3;
+}
+
+message DeprecateReleaseResp {}
+
+message UnDeprecateReleaseReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  uint32 release_id = 3;
+}
+
+message UnDeprecateReleaseResp {}
+
+message DeleteReleaseReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  uint32 release_id = 3;
+}
+
+message DeleteReleaseResp {}
+
 message CreateHookReq {
   uint32 biz_id = 1;
   string name = 2;
   string type = 3;
-  string tag = 4;
+  repeated string tags = 4;
   string memo = 5;
   string content = 6;
+  string revision_name = 7;
 }
 
 message CreateHookResp {
@@ -1094,6 +1344,21 @@ message DeleteHookReq {
 }
 
 message DeleteHookResp {}
+
+message BatchDeleteHookReq {
+  uint32 biz_id = 1;
+  repeated uint32 ids = 2;
+  bool force = 3;
+}
+
+message UpdateHookReq {
+  uint32 biz_id = 1;
+  uint32 hook_id = 2;
+  repeated string tags = 3;
+  string memo = 4;
+}
+
+message UpdateHookResp {}
 
 message ListHooksReq {
   uint32 biz_id = 1;
@@ -1130,6 +1395,7 @@ message CreateHookRevisionReq {
   uint32 hook_id = 2;
   string memo = 3;
   string content = 4;
+  string name = 5;
 }
 
 message CreateHookRevisionResp {
@@ -1188,7 +1454,7 @@ message GetHookResp {
 message GetHookInfoSpec {
   string name = 1;
   string type = 3;
-  string tag = 4;
+  repeated string tags = 4;
   string memo = 5;
   message Releases {
     uint32 not_release_id = 1;
@@ -1231,6 +1497,7 @@ message ListHookRevisionReferencesResp {
     uint32 release_id = 5;
     string release_name = 6;
     string type = 7;
+    bool deprecated = 8;
   }
   uint32 count = 1;
   repeated Detail details = 2;
@@ -1253,6 +1520,7 @@ message ListHookReferencesResp {
     uint32 release_id = 5;
     string release_name = 6;
     string type = 7;
+    bool deprecated = 8;
   }
   uint32 count = 1;
   repeated Detail details = 2;
@@ -1343,7 +1611,7 @@ message CreateTemplateReq {
   string name = 3;
   string path = 4;
   string memo = 5;
-  // string          revision_name     = 6;
+  string revision_name = 6;
   string revision_memo = 7;
   string file_type = 8;  // file_type is enum type
   string file_mode = 9;  // file_mode is enum type
@@ -1688,6 +1956,8 @@ message ListAppBoundTmplRevisionsReq {
   string search_fields = 3;
   string search_value = 4;
   bool with_status = 5;
+  // ADD、REVISE、DELETE、UNCHANGE
+  repeated string status = 6;
 }
 
 message ListAppBoundTmplRevisionsResp {
@@ -2163,6 +2433,7 @@ message GenerateReleaseAndPublishResp {
 
 message PublishResp {
   uint32 id = 1;
+  bool have_credentials = 2;
 }
 
 message CreateKvReq {
@@ -2171,6 +2442,7 @@ message CreateKvReq {
   string key = 3;
   string kv_type = 4;
   string value = 5;
+  string memo = 6;
 }
 
 message CreateKvResp {
@@ -2181,6 +2453,7 @@ message UpdateKvReq {
   uint32 biz_id = 1;
   uint32 app_id = 2;
   string key = 4;
+  string memo = 5;
   string value = 6;
 }
 
@@ -2200,6 +2473,9 @@ message ListKvsReq {
   repeated string kv_type = 11;
   string sort = 12;
   string order = 13;
+  string top_ids = 14;
+  // ADD、REVISE、DELETE、UNCHANGE
+  repeated string status = 15;
 }
 
 message ListKvsResp {
@@ -2215,11 +2491,28 @@ message DeleteKvReq {
 
 message DeleteKvResp {}
 
+message BatchDeleteBizResourcesReq {
+  uint32 biz_id = 1;
+  repeated uint32 ids = 2;
+}
+
+message BatchDeleteAppResourcesReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  repeated uint32 ids = 3;
+}
+
+message BatchDeleteResp {
+  repeated uint32 successful_ids = 1;
+  repeated uint32 failed_ids = 2;
+}
+
 message BatchUpsertKvsReq {
   message Kv {
     string key = 1;
     string kv_type = 2;
     string value = 3;
+    string memo = 4;
   }
   uint32 biz_id = 1;
   uint32 app_id = 2;
@@ -2227,7 +2520,9 @@ message BatchUpsertKvsReq {
   bool replace_all = 4;
 }
 
-message BatchUpsertKvsResp {}
+message BatchUpsertKvsResp {
+  repeated uint32 ids = 1;
+}
 
 message UnDeleteKvReq {
   uint32 biz_id = 1;
@@ -2236,3 +2531,103 @@ message UnDeleteKvReq {
 }
 
 message UnDeleteKvResp {}
+
+message UndoKvReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  string key = 3;
+}
+
+message UndoKvResp {}
+
+message ListClientsReq {
+  message Order {
+    string desc = 1;
+    string asc = 2;
+  }
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  bool all = 3;
+  uint32 start = 4;
+  uint32 limit = 5;
+  Order order = 6;
+  int64 last_heartbeat_time = 7;
+  pbclient.ClientQueryCondition search = 8;
+}
+
+message ListClientsResp {
+  uint32 count = 1;
+  repeated pbclient.Client details = 2;
+}
+
+message ListClientEventsReq {
+  message Order {
+    string desc = 1;
+    string asc = 2;
+  }
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  uint32 client_id = 3;
+  bool all = 4;
+  uint32 start = 5;
+  uint32 limit = 6;
+  Order order = 7;
+  string search_value = 8;
+  string start_time = 9;
+  string end_time = 10;
+}
+
+message ListClientEventsResp {
+  uint32 count = 1;
+  repeated pbce.ClientEvent details = 2;
+}
+
+message ListClientQuerysReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  string search_type = 3;  // 搜索类型：recent、common
+  uint32 start = 4;
+  uint32 limit = 5;
+  bool all = 6;
+}
+
+message ListClientQuerysResp {
+  uint32 count = 1;
+  repeated pbcq.ClientQuery details = 2;
+}
+
+message CreateClientQueryReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  string search_type = 3;
+  string search_name = 4;
+  google.protobuf.Struct search_condition = 5;
+}
+
+message CreateClientQueryResp {
+  uint32 id = 1;
+}
+
+message UpdateClientQueryReq {
+  uint32 id = 1;
+  uint32 biz_id = 2;
+  uint32 app_id = 3;
+  string search_name = 4;
+  google.protobuf.Struct search_condition = 5;
+}
+
+message UpdateClientQueryResp {}
+
+message DeleteClientQueryReq {
+  uint32 id = 1;
+  uint32 biz_id = 2;
+  uint32 app_id = 3;
+}
+
+message DeleteClientQueryResp {}
+
+message ListClientLabelAndAnnotationReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  int64 last_heartbeat_time = 3;
+}

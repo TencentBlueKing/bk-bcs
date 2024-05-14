@@ -8,14 +8,11 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package core
 
 import (
-	contextinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/context"
-	estimatorinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/estimator"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -40,6 +37,9 @@ import (
 	kube_client "k8s.io/client-go/kubernetes"
 	kube_record "k8s.io/client-go/tools/record"
 	schedulernodeinfo "k8s.io/kubernetes/pkg/scheduler/nodeinfo"
+
+	contextinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/context"
+	estimatorinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/estimator"
 )
 
 type nodeConfig struct {

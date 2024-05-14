@@ -18,6 +18,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 	bcsdatamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
 )
@@ -41,14 +42,15 @@ func NewModelCloudNative(db drivers.DB, bkbaseConf *types.BkbaseConfig) *ModelCl
 
 }
 
-// GetCloudNativeWorkloadList
+// GetCloudNativeWorkloadList get cloud native workload list
+// nolint funlen
 func (m *ModelCloudNative) GetCloudNativeWorkloadList(ctx context.Context,
 	req *bcsdatamanager.GetCloudNativeWorkloadListRequest) (*bcsdatamanager.TEGMessage, error) {
 	// page info
 	currentPage := int(req.GetCurrentPage())
 	pageSize := int(req.GetPageSize())
 	if pageSize > 10000 {
-		return nil, fmt.Errorf("The max pageSize currently supported is 10000.")
+		return nil, fmt.Errorf("the max pageSize currently supported is 10000")
 	}
 	if currentPage <= 0 {
 		currentPage = 1

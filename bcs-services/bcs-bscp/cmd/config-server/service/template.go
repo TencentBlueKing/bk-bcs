@@ -15,29 +15,33 @@ package service
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	"golang.org/x/sync/errgroup"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
-	pbcs "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/config-server"
-	pbci "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/config-item"
-	pbcontent "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/content"
-	pbtemplate "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/template"
-	pbtr "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/template-revision"
-	pbds "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbcs "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/config-server"
+	pbci "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/config-item"
+	pbcontent "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/content"
+	pbtemplate "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/template"
+	pbtr "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/template-revision"
+	pbds "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
 // CreateTemplate create a template
 func (s *Service) CreateTemplate(ctx context.Context, req *pbcs.CreateTemplateReq) (*pbcs.CreateTemplateResp, error) {
+	// FromGrpcContext used only to obtain Kit through grpc context.
 	grpcKit := kit.FromGrpcContext(ctx)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 	}
+	// Authorize authorize if user has permission to the resources.
+	// If user is unauthorized, assign apply url and resources into error.
 	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
@@ -47,6 +51,13 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbcs.CreateTemplateRe
 	if idsLen > constant.ArrayInputLenLimit {
 		return nil, fmt.Errorf("the length of template set ids is %d, it must be within the range of [0,%d]",
 			idsLen, constant.ArrayInputLenLimit)
+	}
+
+	// validate if file content uploaded.
+	metadata, err := s.client.provider.Metadata(grpcKit, req.Sign)
+	if err != nil {
+		logs.Errorf("validate file content uploaded failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
 	}
 
 	r := &pbds.CreateTemplateReq{
@@ -60,6 +71,7 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbcs.CreateTemplateRe
 			Memo: req.Memo,
 		},
 		TrSpec: &pbtr.TemplateRevisionSpec{
+			RevisionName: req.RevisionName,
 			RevisionMemo: req.RevisionMemo,
 			Name:         req.Name,
 			Path:         req.Path,
@@ -73,6 +85,7 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbcs.CreateTemplateRe
 			ContentSpec: &pbcontent.ContentSpec{
 				Signature: req.Sign,
 				ByteSize:  req.ByteSize,
+				Md5:       metadata.Md5,
 			},
 		},
 		TemplateSetIds: req.TemplateSetIds,
@@ -96,6 +109,8 @@ func (s *Service) DeleteTemplate(ctx context.Context, req *pbcs.DeleteTemplateRe
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 	}
+	// Authorize authorize if user has permission to the resources.
+	// If user is unauthorized, assign apply url and resources into error.
 	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
@@ -157,11 +172,14 @@ func (s *Service) BatchDeleteTemplate(ctx context.Context, req *pbcs.BatchDelete
 
 // UpdateTemplate update a template
 func (s *Service) UpdateTemplate(ctx context.Context, req *pbcs.UpdateTemplateReq) (*pbcs.UpdateTemplateResp, error) {
+	// FromGrpcContext used only to obtain Kit through grpc context.
 	grpcKit := kit.FromGrpcContext(ctx)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 	}
+	// Authorize authorize if user has permission to the resources.
+	// If user is unauthorized, assign apply url and resources into error.
 	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
@@ -186,11 +204,14 @@ func (s *Service) UpdateTemplate(ctx context.Context, req *pbcs.UpdateTemplateRe
 
 // ListTemplates list templates
 func (s *Service) ListTemplates(ctx context.Context, req *pbcs.ListTemplatesReq) (*pbcs.ListTemplatesResp, error) {
+	// FromGrpcContext used only to obtain Kit through grpc context.
 	grpcKit := kit.FromGrpcContext(ctx)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 	}
+	// Authorize authorize if user has permission to the resources.
+	// If user is unauthorized, assign apply url and resources into error.
 	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
@@ -456,59 +477,62 @@ func (s *Service) BatchUpsertTemplates(ctx context.Context, req *pbcs.BatchUpser
 	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
+	items := make([]*pbds.BatchUpsertTemplatesReq_Item, 0, len(req.Items))
+	var mu sync.Mutex
 	var g errgroup.Group
 	g.SetLimit(constant.MaxConcurrentUpload)
 	for _, item := range req.Items {
-		sign := item.Sign
+		i := item
 		g.Go(func() error {
 			// validate if file content uploaded.
-			if err := s.validateContentExist(grpcKit, req.BizId, sign); err != nil {
+			metadata, err := s.client.provider.Metadata(grpcKit, i.Sign)
+			if err != nil {
 				logs.Errorf("validate file content uploaded failed, err: %v, rid: %s", err, grpcKit.Rid)
 				return err
 			}
+			mu.Lock()
+			items = append(items, &pbds.BatchUpsertTemplatesReq_Item{
+				Template: &pbtemplate.Template{
+					Id: i.Id,
+					Spec: &pbtemplate.TemplateSpec{
+						Name: i.Name,
+						Path: i.Path,
+						Memo: i.Memo,
+					},
+					Attachment: &pbtemplate.TemplateAttachment{
+						BizId:           req.BizId,
+						TemplateSpaceId: req.TemplateSpaceId,
+					},
+				},
+				TemplateRevision: &pbtr.TemplateRevision{
+					Spec: &pbtr.TemplateRevisionSpec{
+						Name:     i.Name,
+						Path:     i.Path,
+						FileType: i.FileType,
+						FileMode: i.FileMode,
+						Permission: &pbci.FilePermission{
+							User:      i.User,
+							UserGroup: i.UserGroup,
+							Privilege: i.Privilege,
+						},
+						ContentSpec: &pbcontent.ContentSpec{
+							Signature: i.Sign,
+							ByteSize:  i.ByteSize,
+							Md5:       metadata.Md5,
+						},
+					},
+					Attachment: &pbtr.TemplateRevisionAttachment{
+						BizId:           req.BizId,
+						TemplateSpaceId: req.TemplateSpaceId,
+					},
+				},
+			})
+			mu.Unlock()
 			return nil
 		})
 	}
 	if err := g.Wait(); err != nil {
 		return nil, err
-	}
-	items := make([]*pbds.BatchUpsertTemplatesReq_Item, 0, len(req.Items))
-	for _, item := range req.Items {
-		items = append(items, &pbds.BatchUpsertTemplatesReq_Item{
-			Template: &pbtemplate.Template{
-				Id: item.Id,
-				Spec: &pbtemplate.TemplateSpec{
-					Name: item.Name,
-					Path: item.Path,
-					Memo: item.Memo,
-				},
-				Attachment: &pbtemplate.TemplateAttachment{
-					BizId:           req.BizId,
-					TemplateSpaceId: req.TemplateSpaceId,
-				},
-			},
-			TemplateRevision: &pbtr.TemplateRevision{
-				Spec: &pbtr.TemplateRevisionSpec{
-					Name:     item.Name,
-					Path:     item.Path,
-					FileType: item.FileType,
-					FileMode: item.FileMode,
-					Permission: &pbci.FilePermission{
-						User:      item.User,
-						UserGroup: item.UserGroup,
-						Privilege: item.Privilege,
-					},
-					ContentSpec: &pbcontent.ContentSpec{
-						Signature: item.Sign,
-						ByteSize:  item.ByteSize,
-					},
-				},
-				Attachment: &pbtr.TemplateRevisionAttachment{
-					BizId:           req.BizId,
-					TemplateSpaceId: req.TemplateSpaceId,
-				},
-			},
-		})
 	}
 	in := &pbds.BatchUpsertTemplatesReq{Items: items}
 	data, err := s.client.DS.BatchUpsertTemplates(grpcKit.RpcCtx(), in)

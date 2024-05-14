@@ -15,9 +15,9 @@ package vault
 import (
 	"fmt"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 const (
@@ -63,6 +63,7 @@ func (s *set) GetLastKv(kit *kit.Kit, opt *types.GetLastKvOpt) (kvType table.Dat
 
 	kvTypeStr, ok := kv.Data["kv_type"].(string)
 	if !ok {
+		// nolint goconst
 		return "", "", fmt.Errorf("failed to get 'kv_type' as a string from kv.Data,"+
 			" err : %v", err)
 	}
@@ -73,7 +74,7 @@ func (s *set) GetLastKv(kit *kit.Kit, opt *types.GetLastKvOpt) (kvType table.Dat
 		return "", "", fmt.Errorf("value type assertion failed, err : %v", err)
 	}
 
-	return
+	return kvType, value, nil
 }
 
 // GetKvByVersion 根据版本获取kv
@@ -100,7 +101,7 @@ func (s *set) GetKvByVersion(kit *kit.Kit, opt *types.GetKvByVersion) (kvType ta
 		return "", "", fmt.Errorf("value type assertion failed: err : %v", err)
 	}
 
-	return
+	return kvType, value, nil
 
 }
 

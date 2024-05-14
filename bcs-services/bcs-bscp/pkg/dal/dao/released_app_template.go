@@ -17,12 +17,13 @@ import (
 
 	rawgen "gorm.io/gen"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/search"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/utils"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/search"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // ReleasedAppTemplate supplies all the released app template related operations.
@@ -38,6 +39,8 @@ type ReleasedAppTemplate interface {
 	GetReleasedLately(kit *kit.Kit, bizID, appID uint32) ([]*table.ReleasedAppTemplate, error)
 	// BatchDeleteByAppIDWithTx batch delete by app id with transaction.
 	BatchDeleteByAppIDWithTx(kit *kit.Kit, tx *gen.QueryTx, appID, bizID uint32) error
+	// BatchDeleteByReleaseIDWithTx batch delete by release id with transaction.
+	BatchDeleteByReleaseIDWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, appID, releaseID uint32) error
 }
 
 var _ ReleasedAppTemplate = new(releasedAppTemplateDao)
@@ -138,9 +141,12 @@ func (dao *releasedAppTemplateDao) GetReleasedLately(kit *kit.Kit, bizID, appId 
 	[]*table.ReleasedAppTemplate, error) {
 	m := dao.genQ.ReleasedAppTemplate
 	q := dao.genQ.ReleasedAppTemplate.WithContext(kit.Ctx)
-
 	query := q.Where(m.BizID.Eq(bizID), m.AppID.Eq(appId))
-	subQuery := q.Where(m.BizID.Eq(bizID), m.AppID.Eq(appId)).Order(m.ReleaseID.Desc()).Limit(1).Select(m.ReleaseID)
+	subQuery := q.Where(m.BizID.Eq(bizID), m.AppID.Eq(appId)).
+		Order(m.ReleaseID.Desc(), utils.NewCustomExpr("CASE WHEN RIGHT(path, 1) = '/' THEN CONCAT(path,'name') ELSE "+
+			"CONCAT_WS('/', path, 'name') END", nil)).
+		Limit(1).
+		Select(m.ReleaseID)
 	return query.Where(q.Columns(m.ReleaseID).Eq(subQuery)).Find()
 }
 
@@ -157,5 +163,25 @@ func (dao *releasedAppTemplateDao) BatchDeleteByAppIDWithTx(kit *kit.Kit, tx *ge
 	m := tx.ReleasedAppTemplate
 
 	_, err := m.WithContext(kit.Ctx).Where(m.AppID.Eq(appID), m.BizID.Eq(bizID)).Delete()
+	return err
+}
+
+// BatchDeleteByReleaseIDWithTx batch delete by release id with transaction.
+func (dao *releasedAppTemplateDao) BatchDeleteByReleaseIDWithTx(kit *kit.Kit, tx *gen.QueryTx,
+	bizID, appID, releaseID uint32) error {
+
+	if bizID == 0 {
+		return errf.New(errf.InvalidParameter, "bizID is 0")
+	}
+	if appID == 0 {
+		return errf.New(errf.InvalidParameter, "appID is 0")
+	}
+	if releaseID == 0 {
+		return errf.New(errf.InvalidParameter, "releaseID is 0")
+	}
+
+	m := tx.ReleasedAppTemplate
+
+	_, err := m.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID), m.AppID.Eq(appID), m.ReleaseID.Eq(releaseID)).Delete()
 	return err
 }

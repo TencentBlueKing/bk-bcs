@@ -63,7 +63,14 @@ var (
 )
 
 const (
-	// NodeResourceGroup xxx
-	NodeResourceGroup  = "nodeResourceGroup"
 	aksManagedPoolName = "aks-managed-poolName"
 )
+
+// ImagePublishers for OS image publishers info
+var ImagePublishers = map[string]string{
+	"Canonical": "UbuntuServer",
+	"OpenLogic": "CentOS",
+	"RedHat":    "RHEL",
+	"credativ":  "Debian",
+	"SUSE":      "SLES",
+}

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package store
@@ -19,12 +18,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	applicationpkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/application"
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 	"github.com/pkg/errors"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/internal/dao"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/utils"
 )
 
 type appHistoryStore struct {
@@ -49,23 +49,27 @@ func (s *appHistoryStore) init() {
 func (s *appHistoryStore) handle(ch chan *v1alpha1.Application) {
 	for item := range ch {
 		if err := s.handleApplication(item); err != nil {
+			if utils.IsClusterAskCredentials(err) {
+				continue
+			}
 			blog.Errorf("[HistoryStore] handle application history store failed: %s", err.Error())
 		}
 	}
 }
 
+// nolint funlen
 func (s *appHistoryStore) handleApplication(item *v1alpha1.Application) error {
 	if len(item.Status.History) == 0 {
 		blog.Warnf("[HistoryStore] application '%s' have not history", item.Name)
 		return nil
 	}
 	history := item.Status.History.LastRevisionHistory()
-	hm, err := s.db.GetApplicationHistoryManifest(item.Name, string(item.UID), history.ID)
+	exist, err := s.db.CheckAppHistoryManifestExist(item.Name, string(item.UID), history.ID)
 	if err != nil {
-		return errors.Wrapf(err, "get application history '%s/%s/%d' manfiest failed",
+		return errors.Wrapf(err, "get application history '%s/%s/%d' manifest failed",
 			item.Name, item.UID, history.ID)
 	}
-	if hm != nil {
+	if exist {
 		return nil
 	}
 	applicationYaml, err := json.Marshal(item)
@@ -92,7 +96,7 @@ func (s *appHistoryStore) handleApplication(item *v1alpha1.Application) error {
 	if err != nil {
 		return errors.Wrapf(err, "marshal managed resources from application '%s' failed", item.Name)
 	}
-	hm = &dao.ApplicationHistoryManifest{
+	hm := &dao.ApplicationHistoryManifest{
 		Project:                item.Spec.Project,
 		Name:                   item.Name,
 		ApplicationUID:         string(item.UID),
@@ -106,7 +110,10 @@ func (s *appHistoryStore) handleApplication(item *v1alpha1.Application) error {
 		HistorySource:          string(source),
 		HistorySources:         string(sources),
 	}
-	if err = s.db.CreateApplicationHistoryManifest(hm); err != nil {
+	if err = hm.Encode(); err != nil {
+		blog.Warnf("application history manifest encode failed: %s", err.Error())
+	}
+	if err = s.db.SaveApplicationHistoryManifest(hm); err != nil {
 		return errors.Wrapf(err, "save application '%s/%s' history '%d' to db failed",
 			item.Name, item.UID, history.ID)
 	}

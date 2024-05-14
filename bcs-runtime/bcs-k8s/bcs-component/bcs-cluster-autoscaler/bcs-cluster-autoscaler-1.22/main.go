@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package main implements main function
@@ -26,11 +25,6 @@ import (
 	"strings"
 	"syscall"
 	"time"
-
-	cloudBuilder "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/cloudprovider/builder"
-	coreinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/core"
-	metricsinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/metrics"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/scalingconfig"
 
 	"github.com/spf13/pflag"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -59,6 +53,11 @@ import (
 	"k8s.io/component-base/config/options"
 	"k8s.io/component-base/metrics/legacyregistry"
 	klog "k8s.io/klog/v2"
+
+	cloudBuilder "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/cloudprovider/builder"
+	coreinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/core"
+	metricsinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/metrics"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/scalingconfig"
 )
 
 // MultiStringFlag is a flag for passing multiple parameters using same flag
@@ -107,6 +106,8 @@ var (
 	// scaleDownDelayAfterFailure How long after scale down failure that scale down evaluation resumes
 	scaleDownDelayAfterFailure = flag.Duration("scale-down-delay-after-failure", 3*time.Minute,
 		"How long after scale down failure that scale down evaluation resumes")
+	scaleDownDelayAfterRemove = flag.Duration("scale-down-delay-after-remove", 3*time.Minute,
+		"How long after remove unregistered nodes that remove nodes resumes")
 	// scaleDownUnneededTime How long a node should be unneeded before it is eligible for scale down
 	scaleDownUnneededTime = flag.Duration("scale-down-unneeded-time", 10*time.Minute,
 		"How long a node should be unneeded before it is eligible for scale down")
@@ -200,8 +201,10 @@ var (
 		"node-group-auto-discovery",
 		"One or more definition(s) of node group auto-discovery. "+
 			"A definition is expressed `<name of discoverer>:[<key>[=<value>]]`. "+
-			"The `aws` and `gce` cloud providers are currently supported. AWS matches by ASG tags, e.g. `asg:tag=tagKey,anotherTagKey`. "+
-			"GCE matches by IG name prefix, and requires you to specify min and max nodes per IG, e.g. `mig:namePrefix=pfx,min=0,max=10` "+
+			"The `aws` and `gce` cloud providers are currently supported. AWS matches by ASG tags, "+
+			"e.g. `asg:tag=tagKey,anotherTagKey`. "+
+			"GCE matches by IG name prefix, and requires you to specify min and max nodes per IG, "+
+			"e.g. `mig:namePrefix=pfx,min=0,max=10` "+
 			"Can be used multiple times.")
 
 	estimatorFlag = flag.String("estimator", estimator.BinpackingEstimatorName,
@@ -279,6 +282,7 @@ var (
 	evictLatest = flag.Bool("should-evict-latest", true, "If true, get latest pod lists when scale down node")
 )
 
+// nolint
 func createAutoscalingOptions() scalingconfig.Options {
 	minCoresTotal, maxCoresTotal, err := parseMinMaxFlag(*coresTotal)
 	if err != nil {
@@ -289,8 +293,8 @@ func createAutoscalingOptions() scalingconfig.Options {
 		klog.Fatalf("Failed to parse flags: %v", err)
 	}
 	// Convert memory limits to bytes.
-	minMemoryTotal = minMemoryTotal * units.GiB
-	maxMemoryTotal = maxMemoryTotal * units.GiB
+	minMemoryTotal *= units.GiB
+	maxMemoryTotal *= units.GiB
 
 	parsedGpuTotal, err := parseMultipleGpuLimits(*gpuTotal)
 	if err != nil {
@@ -359,17 +363,18 @@ func createAutoscalingOptions() scalingconfig.Options {
 			DaemonSetEvictionForOccupiedNodes:  *daemonSetEvictionForOccupiedNodes,
 			UserAgent:                          *userAgent,
 		},
-		MaxBulkScaleUpCount:      *maxBulkScaleUpCount,
-		BufferedCPURatio:         *bufferedCPURatio,
-		BufferedMemRatio:         *bufferedMemRatio,
-		BufferedResourceRatio:    *bufferedResourceRatio,
-		WebhookMode:              *webhookMode,
-		WebhookModeConfig:        *webhookModeConfig,
-		WebhookModeToken:         *webhookModeToken,
-		MaxNodeStartScheduleTime: *maxNodeStartScheduleTime,
-		MaxNodeStartupTime:       *maxNodeStartupTime,
-		ScanInterval:             *scanInterval,
-		EvictLatest:              *evictLatest,
+		MaxBulkScaleUpCount:       *maxBulkScaleUpCount,
+		BufferedCPURatio:          *bufferedCPURatio,
+		BufferedMemRatio:          *bufferedMemRatio,
+		BufferedResourceRatio:     *bufferedResourceRatio,
+		WebhookMode:               *webhookMode,
+		WebhookModeConfig:         *webhookModeConfig,
+		WebhookModeToken:          *webhookModeToken,
+		MaxNodeStartScheduleTime:  *maxNodeStartScheduleTime,
+		MaxNodeStartupTime:        *maxNodeStartupTime,
+		ScanInterval:              *scanInterval,
+		EvictLatest:               *evictLatest,
+		ScaleDownDelayAfterRemove: *scaleDownDelayAfterRemove,
 	}
 }
 
@@ -407,7 +412,7 @@ func createKubeClient(kubeConfig *rest.Config) kube_client.Interface {
 // registerSignalHandlers register handler for grace termination
 func registerSignalHandlers(autoscaler core.Autoscaler) {
 	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, os.Interrupt, os.Kill, syscall.SIGTERM, syscall.SIGQUIT)
+	signal.Notify(sigs, os.Interrupt, os.Kill, syscall.SIGTERM, syscall.SIGQUIT) // nolint
 	klog.V(1).Info("Registered cleanup signal handler")
 
 	go func() {
@@ -473,6 +478,7 @@ func run(healthCheck *metrics.HealthCheck) {
 	}
 
 	// Autoscale ad infinitum.
+	// nolint
 	for {
 		select {
 		case <-time.After(*scanInterval):
@@ -514,6 +520,7 @@ func main() {
 	// start web server for prometheus and health check
 	go func() {
 		pathRecorderMux := mux.NewPathRecorderMux("cluster-autoscaler")
+		// nolint
 		defaultMetricsHandler := legacyregistry.Handler().ServeHTTP
 		pathRecorderMux.HandleFunc("/metrics", func(w http.ResponseWriter, req *http.Request) {
 			defaultMetricsHandler(w, req)

@@ -24,10 +24,10 @@ import (
 	"github.com/go-redis/redis/v8"
 	"golang.org/x/time/rate"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
 // ExpireMode defines the mode that how a key is to expire.
@@ -58,6 +58,13 @@ type RedisClient interface {
 	Del(ctx context.Context, keys ...string) *redis.IntCmd
 	Do(ctx context.Context, args ...interface{}) *redis.Cmd
 	Ping(ctx context.Context) *redis.StatusCmd
+	LPush(ctx context.Context, key string, values ...interface{}) *redis.IntCmd
+	RPush(ctx context.Context, key string, values ...interface{}) *redis.IntCmd
+	LRange(ctx context.Context, key string, start, stop int64) *redis.StringSliceCmd
+	RPop(ctx context.Context, key string) *redis.StringCmd
+	Keys(ctx context.Context, pattern string) *redis.StringSliceCmd
+	LLen(ctx context.Context, key string) *redis.IntCmd
+	LTrim(ctx context.Context, key string, start, stop int64) *redis.StatusCmd
 }
 
 // Client defines all the bscp used redis command
@@ -78,6 +85,13 @@ type Client interface {
 	Delete(ctx context.Context, keys ...string) error
 	Expire(ctx context.Context, key string, ttlSeconds int, mode ExpireMode) error
 	Healthz() error
+	LPush(ctx context.Context, key string, values ...interface{}) error
+	RPush(ctx context.Context, key string, values ...interface{}) error
+	LRange(ctx context.Context, key string, start, stop int64) ([]string, error)
+	RPop(ctx context.Context, key string) (string, error)
+	Keys(ctx context.Context, pattern string) ([]string, error)
+	LLen(ctx context.Context, key string) (int64, error)
+	LTrim(ctx context.Context, key string, start, stop int64) (string, error)
 }
 
 // NewRedisCache create a redis cluster client.

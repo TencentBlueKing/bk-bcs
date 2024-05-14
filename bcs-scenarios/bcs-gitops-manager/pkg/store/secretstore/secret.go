@@ -8,44 +8,36 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package secretstore defines the function for vaultplugin
 package secretstore
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 
 	"github.com/pkg/errors"
 
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/metric"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/utils"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store/httputils"
 )
 
 // SecretInterface defines the interface of secret
 type SecretInterface interface {
 	InitProjectSecret(ctx context.Context, project string) error
 	GetProjectSecret(ctx context.Context, project string) (string, error)
+	ListProjectSecrets(ctx context.Context, project string) ([]string, error)
 }
 
 type secretStore struct {
-	op *SecretStoreOptions
-}
-
-// SecretStoreOptions defines the options of secret store
-type SecretStoreOptions struct {
-	Address string `json:"address"`
-	Port    string `json:"port"`
+	op *common.SecretStoreOptions
 }
 
 // NewSecretStore will create the instance of SecretStore
-func NewSecretStore(op *SecretStoreOptions) SecretInterface {
+func NewSecretStore(op *common.SecretStoreOptions) SecretInterface {
 	return &secretStore{
 		op: op,
 	}
@@ -63,14 +55,15 @@ type secretResponse struct {
 
 // InitProjectSecret init the secret when project is open
 func (s *secretStore) InitProjectSecret(ctx context.Context, project string) error {
-	hr := &httpRequest{
-		path:   initPath,
-		method: http.MethodPost,
-		queryParams: map[string]string{
+	bs, err := httputils.Send(ctx, &httputils.HTTPRequest{
+		Address: s.op.Address,
+		Port:    s.op.Port,
+		Path:    initPath,
+		Method:  http.MethodPost,
+		QueryParams: map[string]string{
 			"project": project,
 		},
-	}
-	bs, err := s.send(ctx, hr)
+	})
 	if err != nil {
 		return errors.Wrapf(err, "init secret for project '%s' failed", project)
 	}
@@ -87,93 +80,74 @@ func (s *secretStore) InitProjectSecret(ctx context.Context, project string) err
 }
 
 const (
-	getSecretPath = "/api/v1/secrets/annotation" // nolint
+	// nolint
+	getSecretPath = "/api/v1/secrets/annotation"
 )
 
 // GetProjectSecret get the secret by project name
 func (s *secretStore) GetProjectSecret(ctx context.Context, project string) (string, error) {
-	hr := &httpRequest{
-		path:   getSecretPath, // nolint
-		method: http.MethodGet,
-		queryParams: map[string]string{
+	bs, err := httputils.Send(ctx, &httputils.HTTPRequest{
+		Address: s.op.Address,
+		Port:    s.op.Port,
+		Path:    getSecretPath, // nolint
+		Method:  http.MethodGet,
+		QueryParams: map[string]string{
 			"project": project,
 		},
-	}
-	var secretName string
-	bs, err := s.send(ctx, hr)
+	})
 	if err != nil {
-		return secretName, errors.Wrapf(err, "get project '%s' secret failed", project)
+		return "", errors.Wrapf(err, "get project '%s' secret failed", project)
 	}
 	response := new(secretResponse)
 	if err = json.Unmarshal(bs, response); err != nil {
-		return secretName, errors.Wrapf(err, "get project '%s' secret unmarshal '%s' failed", project, string(bs))
+		return "", errors.Wrapf(err, "get project '%s' secret unmarshal '%s' failed", project, string(bs))
 	}
 	if response.Code != 0 {
-		return secretName, errors.Errorf("get project '%s' secret resp code not 0 but %d: %s",
+		return "", errors.Errorf("get project '%s' secret resp code not 0 but %d: %s",
 			project, response.Code, response.Message)
 	}
-
 	if str, ok := response.Data.(string); ok {
 		return str, nil
 	}
-	return secretName, errors.Errorf("get project '%s' secret response convert to string failed", project)
+	return "", errors.Errorf("get project '%s' secret response convert to string failed", project)
 }
 
-type httpRequest struct {
-	path        string
-	method      string
-	queryParams map[string]string
-	body        interface{}
-	header      map[string]string
-}
+const (
+	// nolint
+	listProjectSecretsPath = "/api/v1/secrets/%s/list"
+)
 
-func (s *secretStore) send(ctx context.Context, hr *httpRequest) ([]byte, error) {
-	var req *http.Request
-	var err error
-
-	urlStr := fmt.Sprintf("http://%s:%s%s", s.op.Address, s.op.Port, hr.path) // nolint
-	if hr.body != nil {
-		var body []byte
-		body, err = json.Marshal(hr.body)
-		if err != nil {
-			return nil, errors.Wrapf(err, "marshal body failed")
-		}
-		req, err = http.NewRequestWithContext(ctx, hr.method, urlStr, bytes.NewBuffer(body))
-	} else {
-		req, err = http.NewRequestWithContext(ctx, hr.method, urlStr, nil)
-	}
+func (s *secretStore) ListProjectSecrets(ctx context.Context, project string) ([]string, error) {
+	bs, err := httputils.Send(ctx, &httputils.HTTPRequest{
+		Address: s.op.Address,
+		Port:    s.op.Port,
+		Path:    fmt.Sprintf(listProjectSecretsPath, project),
+		Method:  http.MethodGet,
+		QueryParams: map[string]string{
+			"path": "/",
+		},
+	})
 	if err != nil {
-		return nil, errors.Wrapf(err, "create http request failed")
+		return nil, errors.Wrapf(err, "list project '%s' secret failed", project)
 	}
-	for k, v := range hr.header {
-		req.Header.Set(k, v)
+	response := new(secretResponse)
+	if err = json.Unmarshal(bs, response); err != nil {
+		return nil, errors.Wrapf(err, "init secret for project '%s' unmarshal '%s' failed",
+			project, string(bs))
 	}
-	req.Header.Set("Content-Type", "application/json")
-
-	if hr.queryParams != nil {
-		query := req.URL.Query()
-		for k, v := range hr.queryParams {
-			query.Set(k, v)
+	if response.Code != 0 {
+		return nil, errors.Errorf("list secrets for project '%s' response code not 0 but %d: %s",
+			project, response.Code, response.Message)
+	}
+	if response.Data == nil {
+		return nil, nil
+	}
+	if secrets, ok := response.Data.([]interface{}); ok {
+		result := make([]string, 0, len(secrets))
+		for i := range secrets {
+			result = append(result, secrets[i].(string))
 		}
-		req.URL.RawQuery = query.Encode()
+		return result, nil
 	}
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		if !utils.IsContextCanceled(err) {
-			metric.ManagerSecretOperateFailed.WithLabelValues().Inc()
-		}
-		return nil, errors.Wrap(err, "http request failed when proxy send")
-	}
-	defer resp.Body.Close()
-
-	respBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, errors.Wrap(err, "read response body failed when proxy send")
-	}
-	if resp.StatusCode != http.StatusOK {
-		return nil, errors.Errorf("http response code not 200 but %d, resp: %s",
-			resp.StatusCode, string(respBody))
-	}
-	return respBody, err
+	return nil, errors.Errorf("list secrets for project '%s' convert failed", project)
 }

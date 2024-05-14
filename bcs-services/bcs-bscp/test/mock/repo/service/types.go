@@ -20,9 +20,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/jsoni"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/jsoni"
 )
 
 // BaseResp defines repo base response struct.
@@ -49,7 +49,6 @@ func (r *BaseResp) Err(w http.ResponseWriter, err error) {
 
 	w.WriteHeader(http.StatusInternalServerError)
 	w.Write(marshal)
-	return
 }
 
 // WriteResp write base repo to ResponseWriter with result data.
@@ -63,7 +62,6 @@ func (r *BaseResp) WriteResp(w http.ResponseWriter, data interface{}) {
 	}
 
 	w.Write(marshal)
-	return
 }
 
 func unmarshal(body io.ReadCloser, data interface{}) error {

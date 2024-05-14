@@ -15,13 +15,18 @@ package service
 import (
 	"context"
 	"errors"
+	"sync"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
-	pbcs "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/config-server"
-	pbkv "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/kv"
-	pbds "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
+	"golang.org/x/sync/errgroup"
+
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/i18n"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbcs "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/config-server"
+	pbkv "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/kv"
+	pbds "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
 )
 
 // CreateKv is used to create key-value data.
@@ -43,6 +48,7 @@ func (s *Service) CreateKv(ctx context.Context, req *pbcs.CreateKvReq) (*pbcs.Cr
 		},
 		Spec: &pbkv.KvSpec{
 			Key:    req.Key,
+			Memo:   req.Memo,
 			KvType: req.KvType,
 			Value:  req.Value,
 		},
@@ -79,6 +85,7 @@ func (s *Service) UpdateKv(ctx context.Context, req *pbcs.UpdateKvReq) (*pbcs.Up
 		Spec: &pbkv.KvSpec{
 			Key:   req.Key,
 			Value: req.Value,
+			Memo:  req.Memo,
 		},
 	}
 	if _, err := s.client.DS.UpdateKv(grpcKit.RpcCtx(), r); err != nil {
@@ -114,6 +121,8 @@ func (s *Service) ListKvs(ctx context.Context, req *pbcs.ListKvsReq) (*pbcs.List
 		KvType:     req.KvType,
 		Sort:       req.Sort,
 		Order:      req.Order,
+		TopIds:     req.TopIds,
+		Status:     req.Status,
 	}
 	if !req.All {
 		if req.Limit == 0 {
@@ -165,6 +174,71 @@ func (s *Service) DeleteKv(ctx context.Context, req *pbcs.DeleteKvReq) (*pbcs.De
 
 }
 
+// BatchDeleteKv is used to batch delete key-value data.
+func (s *Service) BatchDeleteKv(ctx context.Context, req *pbcs.BatchDeleteAppResourcesReq) (
+	*pbcs.BatchDeleteResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.Update, ResourceID: req.AppId}, BizID: req.BizId},
+	}
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
+		return nil, err
+	}
+
+	if len(req.GetIds()) == 0 {
+		return nil, errf.Errorf(errf.InvalidArgument, i18n.T(grpcKit, "id is required"))
+	}
+
+	eg, egCtx := errgroup.WithContext(grpcKit.RpcCtx())
+	eg.SetLimit(10)
+
+	var successfulIDs, failedIDs []uint32
+	var mux sync.Mutex
+
+	// 使用 data-service 原子接口
+	for _, v := range req.GetIds() {
+		v := v
+		eg.Go(func() error {
+			r := &pbds.DeleteKvReq{
+				Id: v,
+				Attachment: &pbkv.KvAttachment{
+					BizId: req.BizId,
+					AppId: req.AppId,
+				},
+			}
+			if _, err := s.client.DS.DeleteKv(egCtx, r); err != nil {
+				logs.Errorf("delete kv failed, err: %v, rid: %s", err, grpcKit.Rid)
+
+				// 错误不返回异常，记录错误ID
+				mux.Lock()
+				failedIDs = append(failedIDs, v)
+				mux.Unlock()
+				return nil
+			}
+
+			mux.Lock()
+			successfulIDs = append(successfulIDs, v)
+			mux.Unlock()
+
+			return nil
+		})
+	}
+
+	if err := eg.Wait(); err != nil {
+		logs.Errorf("batch delete failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, errf.Errorf(errf.Aborted, i18n.T(grpcKit, "batch delete failed"))
+	}
+
+	// 全部失败, 当前API视为失败
+	if len(failedIDs) == len(req.Ids) {
+		return nil, errf.Errorf(errf.Aborted, i18n.T(grpcKit, "batch delete failed"))
+	}
+
+	return &pbcs.BatchDeleteResp{SuccessfulIds: successfulIDs, FailedIds: failedIDs}, nil
+}
+
 // BatchUpsertKvs is used to insert or update key-value data in bulk.
 func (s *Service) BatchUpsertKvs(ctx context.Context, req *pbcs.BatchUpsertKvsReq) (*pbcs.BatchUpsertKvsResp, error) {
 
@@ -188,6 +262,7 @@ func (s *Service) BatchUpsertKvs(ctx context.Context, req *pbcs.BatchUpsertKvsRe
 				Key:    kv.Key,
 				KvType: kv.KvType,
 				Value:  kv.Value,
+				Memo:   kv.Memo,
 			},
 		})
 	}
@@ -198,12 +273,13 @@ func (s *Service) BatchUpsertKvs(ctx context.Context, req *pbcs.BatchUpsertKvsRe
 		Kvs:        kvs,
 		ReplaceAll: true,
 	}
-	if _, err := s.client.DS.BatchUpsertKvs(grpcKit.RpcCtx(), r); err != nil {
+	data, err := s.client.DS.BatchUpsertKvs(grpcKit.RpcCtx(), r)
+	if err != nil {
 		logs.Errorf("batch upsert kv failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
-	return &pbcs.BatchUpsertKvsResp{}, nil
+	return &pbcs.BatchUpsertKvsResp{Ids: data.Ids}, nil
 }
 
 // UnDeleteKv reverses the deletion of a key-value pair by reverting the current kvType and value to the previous
@@ -219,13 +295,9 @@ func (s *Service) UnDeleteKv(ctx context.Context, req *pbcs.UnDeleteKvReq) (*pbc
 	}
 
 	r := &pbds.UnDeleteKvReq{
-		Spec: &pbkv.KvSpec{
-			Key: req.Key,
-		},
-		Attachment: &pbkv.KvAttachment{
-			BizId: req.BizId,
-			AppId: req.AppId,
-		},
+		Key:   req.GetKey(),
+		BizId: req.GetBizId(),
+		AppId: req.GetAppId(),
 	}
 	if _, err := s.client.DS.UnDeleteKv(grpcKit.RpcCtx(), r); err != nil {
 		logs.Errorf("delete kv failed, err: %v, rid: %s", err, grpcKit.Rid)
@@ -233,4 +305,29 @@ func (s *Service) UnDeleteKv(ctx context.Context, req *pbcs.UnDeleteKvReq) (*pbc
 	}
 
 	return &pbcs.UnDeleteKvResp{}, nil
+}
+
+// UndoKv Undo edited data and return to the latest published version
+func (s *Service) UndoKv(ctx context.Context, req *pbcs.UndoKvReq) (*pbcs.UndoKvResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.Update, ResourceID: req.AppId}, BizID: req.BizId},
+	}
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
+		return nil, err
+	}
+
+	r := &pbds.UndoKvReq{
+		Key:   req.GetKey(),
+		BizId: req.GetBizId(),
+		AppId: req.GetAppId(),
+	}
+	if _, err := s.client.DS.UndoKv(grpcKit.RpcCtx(), r); err != nil {
+		logs.Errorf("undo kv failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	return &pbcs.UndoKvResp{}, nil
 }

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package azure load balancer related api wrapper
@@ -18,10 +17,10 @@ import (
 	"fmt"
 
 	"github.com/pkg/errors"
-	k8scorev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/eventer"
@@ -48,16 +47,14 @@ func NewAlb() (*Alb, error) {
 }
 
 // NewAlbWithSecret create alb client with k8s secret
-func NewAlbWithSecret(secret *k8scorev1.Secret, _ client.Client, _ eventer.WatchEventInterface) (cloud.LoadBalance, error) {
-	secretIDBytes, ok := secret.Data[envNameAzureClientID]
+func NewAlbWithSecret(data map[string][]byte, _ client.Client, _ eventer.WatchEventInterface) (cloud.LoadBalance, error) {
+	secretIDBytes, ok := data[envNameAzureClientID]
 	if !ok {
-		return nil, fmt.Errorf("lost %s in secret %s/%s", envNameAzureClientID,
-			secret.Namespace, secret.Name)
+		return nil, fmt.Errorf("lost %s in secret", envNameAzureClientID)
 	}
-	secretKeyBytes, ok := secret.Data[envNameAzureClientSecret]
+	secretKeyBytes, ok := data[envNameAzureClientSecret]
 	if !ok {
-		return nil, fmt.Errorf("lost %s in secret %s/%s", envNameAzureClientSecret,
-			secret.Namespace, secret.Name)
+		return nil, fmt.Errorf("lost %s in secret", envNameAzureClientSecret)
 	}
 	sdkWrapper, err := NewSdkWrapperWithSecretIDKey(string(secretIDBytes), string(secretKeyBytes))
 	if err != nil {

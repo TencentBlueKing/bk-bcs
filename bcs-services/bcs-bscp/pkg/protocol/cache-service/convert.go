@@ -14,10 +14,9 @@
 package pbcs
 
 import (
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
-	pbapp "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/app"
-	pbevent "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/event"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	pbevent "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/event"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // PbAppMetaMap convert app meta map.
@@ -31,10 +30,8 @@ func PbAppMetaMap(m map[ /*appID*/ uint32]*types.AppCacheMeta) map[ /*appID*/ ui
 
 	for key, val := range m {
 		meta[key] = &AppMeta{
-			Name:   val.Name,
-			Cft:    string(val.ConfigType),
-			Mod:    string(val.Mode),
-			Reload: pbapp.PbReload(val.Reload),
+			Name: val.Name,
+			Cft:  string(val.ConfigType),
 		}
 	}
 

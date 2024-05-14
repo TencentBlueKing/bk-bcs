@@ -32,32 +32,32 @@ import (
 	"google.golang.org/protobuf/proto"
 	structpb "google.golang.org/protobuf/types/known/structpb"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/auth-server/options"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/auth-server/service/auth"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/auth-server/service/iam"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/auth-server/service/initial"
-	confsvc "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/config-server/service"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/components/bkpaas"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
-	iamauth "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/auth"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/client"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
-	pkgauth "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/sdk/auth"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/sys"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/metrics"
-	pbas "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/auth-server"
-	pbcs "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/config-server"
-	base "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
-	basepb "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
-	pbds "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/rest/view/webannotation"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/serviced"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/space"
-	esbcli "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/thirdparty/esb/client"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/auth-server/options"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/auth-server/service/auth"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/auth-server/service/iam"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/auth-server/service/initial"
+	confsvc "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/config-server/service"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/components/bkpaas"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	iamauth "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/auth"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/client"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
+	pkgauth "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/sdk/auth"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/sys"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/metrics"
+	pbas "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/auth-server"
+	pbcs "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/config-server"
+	base "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
+	basepb "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
+	pbds "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/rest/view/webannotation"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/serviced"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/space"
+	esbcli "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/thirdparty/esb/client"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
 // Service do all the data service's work
@@ -215,14 +215,15 @@ func newClientSet(sd serviced.Discover, tls cc.TLSConfig, iamSettings cc.IAM, di
 		ReportCaller: false,
 	}
 	bkiamlogger.SetLogger(log)
-	iam := bkiam.NewAPIGatewayIAM(sys.SystemIDBSCP, iamSettings.AppCode, iamSettings.AppSecret, iamSettings.APIURL)
+	apiGatewayIAM := bkiam.NewAPIGatewayIAM(
+		sys.SystemIDBSCP, iamSettings.AppCode, iamSettings.AppSecret, iamSettings.APIURL)
 
 	cs := &ClientSet{
 		DS:        ds,
 		sys:       iamSys,
 		auth:      authSdk,
 		Esb:       esbCli,
-		iamClient: iam,
+		iamClient: apiGatewayIAM,
 	}
 	logs.Infof("initialize the client set success.")
 	return cs, nil
@@ -505,12 +506,13 @@ func (s *Service) QuerySpace(ctx context.Context, req *pbas.QuerySpaceReq) (*pba
 
 // QuerySpaceByAppID 查询space
 func (s *Service) QuerySpaceByAppID(ctx context.Context, req *pbas.QuerySpaceByAppIDReq) (*pbas.Space, error) {
+	kt := kit.FromGrpcContext(ctx)
 	appID := req.GetAppId()
 	if appID == 0 {
 		return nil, errors.New("app_id is required")
 	}
 
-	app, err := s.client.DS.GetAppByID(ctx, &pbds.GetAppByIDReq{AppId: appID})
+	app, err := s.client.DS.GetAppByID(kt.RpcCtx(), &pbds.GetAppByIDReq{AppId: appID})
 	if err != nil {
 		return nil, err
 	}

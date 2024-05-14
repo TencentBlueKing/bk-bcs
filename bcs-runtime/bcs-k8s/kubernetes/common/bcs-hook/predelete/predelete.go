@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package predelete
@@ -22,12 +21,6 @@ import (
 	"strings"
 	"time"
 
-	hookv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
-	hookclientset "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/client/clientset/versioned"
-	hooklister "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/client/listers/tkex/v1alpha1"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/metrics"
-	commonhookutil "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/util/hook"
-
 	apps "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -37,21 +30,38 @@ import (
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/klog"
+
+	hookv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
+	hookclientset "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/client/clientset/versioned"
+	hooklister "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/client/listers/tkex/v1alpha1"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/metrics"
+	commonhookutil "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/util/hook"
 )
 
 const (
-	PodNameArgKey      = "PodName"
-	NamespaceArgKey    = "PodNamespace"
-	PodIPArgKey        = "PodIP"
-	PodImageArgKey     = "PodContainer"
-	HostArgKey         = "HostIP"
+	// PodNameArgKey xxx
+	PodNameArgKey = "PodName"
+	// NamespaceArgKey xxx
+	NamespaceArgKey = "PodNamespace"
+	// PodIPArgKey xxx
+	PodIPArgKey = "PodIP"
+	// PodImageArgKey xxx
+	PodImageArgKey = "PodContainer"
+	// HostArgKey xxx
+	HostArgKey = "HostIP"
+	// DeletingAnnotation xxx
 	DeletingAnnotation = "io.tencent.bcs.dev/game-pod-deleting"
 )
 
+// PreDeleteInterface xxx
+// nolint
 type PreDeleteInterface interface {
-	CheckDelete(obj PreDeleteHookObjectInterface, pod *v1.Pod, newStatus PreDeleteHookStatusInterface, podNameLabelKey string) (bool, error)
+	CheckDelete(obj PreDeleteHookObjectInterface, pod *v1.Pod, newStatus PreDeleteHookStatusInterface,
+		podNameLabelKey string) (bool, error)
 }
 
+// PreDeleteControl xxx
+// nolint
 type PreDeleteControl struct {
 	kubeClient         clientset.Interface
 	hookClient         hookclientset.Interface
@@ -60,14 +70,16 @@ type PreDeleteControl struct {
 	hookTemplateLister hooklister.HookTemplateLister
 }
 
+// New xxx
 func New(kubeClient clientset.Interface, hookClient hookclientset.Interface, recorder record.EventRecorder,
 	hookRunLister hooklister.HookRunLister, hookTemplateLister hooklister.HookTemplateLister) PreDeleteInterface {
-	return &PreDeleteControl{kubeClient: kubeClient, hookClient: hookClient, recorder: recorder, hookRunLister: hookRunLister,
-		hookTemplateLister: hookTemplateLister}
+	return &PreDeleteControl{kubeClient: kubeClient, hookClient: hookClient, recorder: recorder,
+		hookRunLister: hookRunLister, hookTemplateLister: hookTemplateLister}
 }
 
 // CheckDelete check whether the pod can be deleted safely
-func (p *PreDeleteControl) CheckDelete(obj PreDeleteHookObjectInterface, pod *v1.Pod, newStatus PreDeleteHookStatusInterface, podNameLabelKey string) (bool, error) {
+func (p *PreDeleteControl) CheckDelete(obj PreDeleteHookObjectInterface, pod *v1.Pod,
+	newStatus PreDeleteHookStatusInterface, podNameLabelKey string) (bool, error) {
 	if pod.Status.Phase != v1.PodRunning {
 		return true, nil
 	}
@@ -108,7 +120,9 @@ func (p *PreDeleteControl) CheckDelete(obj PreDeleteHookObjectInterface, pod *v1
 	if len(existHookRuns) == 0 {
 		var ps metrics.PromServer
 		startTime := time.Now()
-		preDeleteHookRun, err := p.createHookRun(metaObj, runtimeObj, preDeleteHook, pod, preDeleteLabels, podNameLabelKey)
+		// nolint
+		preDeleteHookRun, err := p.createHookRun(metaObj, runtimeObj, preDeleteHook, pod, preDeleteLabels,
+			podNameLabelKey)
 		if err != nil {
 			klog.Warningf("Created PreDelete HookRun failed for pod %s of %s %s/%s, err:%s",
 				pod.Name, objectKind, namespace, name, err)
@@ -118,7 +132,8 @@ func (p *PreDeleteControl) CheckDelete(obj PreDeleteHookObjectInterface, pod *v1
 		ps.CollectHRCreateDurations(namespace, name, "success", "predelete", objectKind, time.Since(startTime))
 
 		updatePreDeleteHookCondition(newStatus, pod.Name)
-		klog.Infof("Created PreDelete HookRun %s for pod %s of %s %s/%s", preDeleteHookRun.Name, pod.Name, objectKind, namespace, name)
+		klog.Infof("Created PreDelete HookRun %s for pod %s of %s %s/%s", preDeleteHookRun.Name, pod.Name, objectKind,
+			namespace, name)
 
 		err = p.injectPodDeletingAnnotation(pod)
 		if err != nil {
@@ -128,7 +143,7 @@ func (p *PreDeleteControl) CheckDelete(obj PreDeleteHookObjectInterface, pod *v1
 		return false, nil
 	}
 	if existHookRuns[0].Status.Phase == hookv1alpha1.HookPhaseSuccessful {
-		err := deletePreDeleteHookCondition(newStatus, pod.Name)
+		err = deletePreDeleteHookCondition(newStatus, pod.Name)
 		if err != nil {
 			klog.Warningf("expected the %s %s/%s exists a PreDeleteHookCondition for pod %s, but got an error: %s",
 				objectKind, namespace, name, pod.Name, err.Error())
@@ -146,8 +161,9 @@ func (p *PreDeleteControl) CheckDelete(obj PreDeleteHookObjectInterface, pod *v1
 }
 
 // createHookRun create a PreDelete HookRun
-func (p *PreDeleteControl) createHookRun(metaObj metav1.Object, runtimeObj runtime.Object, preDeleteHook *hookv1alpha1.HookStep,
-	pod *v1.Pod, labels map[string]string, podNameLabelKey string) (*hookv1alpha1.HookRun, error) {
+func (p *PreDeleteControl) createHookRun(metaObj metav1.Object, runtimeObj runtime.Object,
+	preDeleteHook *hookv1alpha1.HookStep, pod *v1.Pod, labels map[string]string,
+	podNameLabelKey string) (*hookv1alpha1.HookRun, error) {
 	arguments := []hookv1alpha1.Argument{}
 	for _, arg := range preDeleteHook.Args {
 		value := arg.Value
@@ -199,8 +215,9 @@ func (p *PreDeleteControl) createHookRun(metaObj metav1.Object, runtimeObj runti
 }
 
 // newHookRunFromGameStatefulSet generate a HookRun from HookTemplate
-func (p *PreDeleteControl) newHookRunFromHookTemplate(metaObj metav1.Object, runtimeObj runtime.Object, args []hookv1alpha1.Argument,
-	pod *v1.Pod, preDeleteHook *hookv1alpha1.HookStep, labels map[string]string, podNameLabelKey string) (*hookv1alpha1.HookRun, error) {
+func (p *PreDeleteControl) newHookRunFromHookTemplate(metaObj metav1.Object, runtimeObj runtime.Object,
+	args []hookv1alpha1.Argument, pod *v1.Pod, preDeleteHook *hookv1alpha1.HookStep, labels map[string]string,
+	podNameLabelKey string) (*hookv1alpha1.HookRun, error) {
 	template, err := p.hookTemplateLister.HookTemplates(pod.Namespace).Get(preDeleteHook.TemplateName)
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
@@ -209,7 +226,8 @@ func (p *PreDeleteControl) newHookRunFromHookTemplate(metaObj metav1.Object, run
 		return nil, err
 	}
 
-	nameParts := []string{"predelete", pod.Labels[apps.ControllerRevisionHashLabelKey], pod.Labels[podNameLabelKey], preDeleteHook.TemplateName}
+	nameParts := []string{"predelete", pod.Labels[apps.ControllerRevisionHashLabelKey], pod.Labels[podNameLabelKey],
+		preDeleteHook.TemplateName}
 	name := strings.Join(nameParts, "-")
 
 	run, err := commonhookutil.NewHookRunFromTemplate(template, args, name, "", pod.Namespace)
@@ -217,7 +235,8 @@ func (p *PreDeleteControl) newHookRunFromHookTemplate(metaObj metav1.Object, run
 		return nil, err
 	}
 	run.Labels = labels
-	run.OwnerReferences = []metav1.OwnerReference{*metav1.NewControllerRef(metaObj, runtimeObj.GetObjectKind().GroupVersionKind())}
+	run.OwnerReferences = []metav1.OwnerReference{*metav1.NewControllerRef(metaObj,
+		runtimeObj.GetObjectKind().GroupVersionKind())}
 	return run, nil
 }
 
@@ -237,7 +256,7 @@ func deletePreDeleteHookCondition(status PreDeleteHookStatusInterface, podName s
 		return fmt.Errorf("no PreDeleteHookCondition to delete")
 	}
 
-	newConditions := append(conditions[:index], conditions[index+1:]...)
+	newConditions := append(conditions[:index], conditions[index+1:]...) // nolint  not assigned to the same slice
 	status.SetPreDeleteHookConditions(newConditions)
 	return nil
 }
@@ -261,7 +280,8 @@ func updatePreDeleteHookCondition(status PreDeleteHookStatusInterface, podName s
 }
 
 // reset PreDeleteHookConditionPhase of a pod
-func resetPreDeleteHookConditionPhase(status PreDeleteHookStatusInterface, podName string, phase hookv1alpha1.HookPhase) error {
+func resetPreDeleteHookConditionPhase(
+	status PreDeleteHookStatusInterface, podName string, phase hookv1alpha1.HookPhase) error {
 	var index int
 	found := false
 	conditions := status.GetPreDeleteHookConditions()

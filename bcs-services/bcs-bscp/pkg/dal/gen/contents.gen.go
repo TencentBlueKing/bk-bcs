@@ -16,7 +16,7 @@ import (
 
 	"gorm.io/plugin/dbresolver"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
 )
 
 func newContent(db *gorm.DB, opts ...gen.DOOption) content {
@@ -30,6 +30,7 @@ func newContent(db *gorm.DB, opts ...gen.DOOption) content {
 	_content.ID = field.NewUint32(tableName, "id")
 	_content.Signature = field.NewString(tableName, "signature")
 	_content.ByteSize = field.NewUint64(tableName, "byte_size")
+	_content.Md5 = field.NewString(tableName, "md5")
 	_content.BizID = field.NewUint32(tableName, "biz_id")
 	_content.AppID = field.NewUint32(tableName, "app_id")
 	_content.ConfigItemID = field.NewUint32(tableName, "config_item_id")
@@ -48,6 +49,7 @@ type content struct {
 	ID           field.Uint32
 	Signature    field.String
 	ByteSize     field.Uint64
+	Md5          field.String
 	BizID        field.Uint32
 	AppID        field.Uint32
 	ConfigItemID field.Uint32
@@ -72,6 +74,7 @@ func (c *content) updateTableName(table string) *content {
 	c.ID = field.NewUint32(table, "id")
 	c.Signature = field.NewString(table, "signature")
 	c.ByteSize = field.NewUint64(table, "byte_size")
+	c.Md5 = field.NewString(table, "md5")
 	c.BizID = field.NewUint32(table, "biz_id")
 	c.AppID = field.NewUint32(table, "app_id")
 	c.ConfigItemID = field.NewUint32(table, "config_item_id")
@@ -101,10 +104,11 @@ func (c *content) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (c *content) fillFieldMap() {
-	c.fieldMap = make(map[string]field.Expr, 8)
+	c.fieldMap = make(map[string]field.Expr, 9)
 	c.fieldMap["id"] = c.ID
 	c.fieldMap["signature"] = c.Signature
 	c.fieldMap["byte_size"] = c.ByteSize
+	c.fieldMap["md5"] = c.Md5
 	c.fieldMap["biz_id"] = c.BizID
 	c.fieldMap["app_id"] = c.AppID
 	c.fieldMap["config_item_id"] = c.ConfigItemID

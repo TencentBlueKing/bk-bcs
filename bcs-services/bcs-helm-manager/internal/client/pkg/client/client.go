@@ -40,7 +40,8 @@ type Config struct {
 const (
 	resultCodeSuccess = 0
 
-	urlPrefix = "/helmmanager/v1"
+	urlPrefix            = "/helmmanager/v1"
+	urlUploadChartPrefix = "/helmmanager/api/v1"
 )
 
 // New return a new Client instance
@@ -58,35 +59,35 @@ type Client struct {
 }
 
 func (c *Client) get(ctx context.Context, uri string, header http.Header, data []byte) ( // nolint
-	*httpclient.HttpRespone, error) {
+	*httpclient.HttpResponse, error) {
 	return c.request(ctx, "GET", uri, header, data)
 }
 
 func (c *Client) post(ctx context.Context, uri string, header http.Header, data []byte) (
-	*httpclient.HttpRespone, error) {
+	*httpclient.HttpResponse, error) {
 	return c.request(ctx, "POST", uri, header, data)
 }
 
 func (c *Client) put(ctx context.Context, uri string, header http.Header, data []byte) (
-	*httpclient.HttpRespone, error) {
+	*httpclient.HttpResponse, error) {
 	return c.request(ctx, "PUT", uri, header, data)
 }
 
 func (c *Client) delete(ctx context.Context, uri string, header http.Header, data []byte) ( // nolint
-	*httpclient.HttpRespone, error) {
+	*httpclient.HttpResponse, error) {
 	return c.request(ctx, "DELETE", uri, header, data)
 }
 
 func (c *Client) request(_ context.Context, method, uri string, header http.Header, data []byte) (
-	*httpclient.HttpRespone, error) {
+	*httpclient.HttpResponse, error) {
 
 	if header == nil {
 		header = http.Header{}
 	}
-	header.Set("Content-Type", "application/json")
+	header.Add("Content-Type", "application/json")
 	header.Set("Authorization", "Bearer "+c.conf.AuthToken)
 
-	var request func(string, http.Header, []byte) (*httpclient.HttpRespone, error)
+	var request func(string, http.Header, []byte) (*httpclient.HttpResponse, error)
 	switch strings.ToUpper(method) {
 	case "GET":
 		request = c.cli.Get

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package check
@@ -67,11 +66,17 @@ func (p *PortBindChecker) Run() {
 	// poolNamespace/poolName/poolItemName:port -> [podName...] 记录itemKey+port下有哪些pod发生冲突
 	conflictMap := p.getPortConflictMap(portBindingList)
 
+	metrics.PortBindingConflictGauge.Reset()
 	for conflictKey, conflictNamespaceNameList := range conflictMap {
 		conflictNamespaceNames := strings.Join(conflictNamespaceNameList, ",")
 		msg := fmt.Sprintf("[%s] conflict on pod %s", conflictKey, conflictNamespaceNames)
 		blog.Errorf("port allocate conflict: %s", msg)
 		p.sendEventToPortPool(conflictKey, msg)
+
+		for _, namespacedName := range conflictNamespaceNameList {
+			metrics.PortBindingConflictGauge.WithLabelValues(conflictKey,
+				namespacedName).Set(float64(len(conflictNamespaceNameList)))
+		}
 	}
 }
 

@@ -14,7 +14,6 @@ package qcloud
 
 import (
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 	"strconv"
 	"strings"
 
@@ -22,10 +21,15 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 var (
 	cloudName = "qcloud"
+)
+
+const (
+	defaultRegion = "ap-nanjing"
 )
 
 // qcloud taskName
@@ -478,8 +482,12 @@ func (ic *ImportClusterTaskOption) BuildRegisterClusterKubeConfigStep(task *prot
 
 // DeleteClusterTaskOption 删除集群
 type DeleteClusterTaskOption struct {
-	Cluster    *proto.Cluster
+	// Cluster cluster
+	Cluster *proto.Cluster
+	// DeleteMode delete mode
 	DeleteMode string
+	// LastClusterStatus last cluster status
+	LastClusterStatus string
 }
 
 // BuildDeleteTKEClusterStep 删除集群
@@ -488,6 +496,7 @@ func (dc *DeleteClusterTaskOption) BuildDeleteTKEClusterStep(task *proto.Task) {
 	deleteStep.Params[cloudprovider.ClusterIDKey.String()] = dc.Cluster.ClusterID
 	deleteStep.Params[cloudprovider.CloudIDKey.String()] = dc.Cluster.Provider
 	deleteStep.Params[cloudprovider.DeleteModeKey.String()] = dc.DeleteMode
+	deleteStep.Params[cloudprovider.LastClusterStatus.String()] = dc.LastClusterStatus
 
 	task.Steps[deleteTKEClusterStep.StepMethod] = deleteStep
 	task.StepSequence = append(task.StepSequence, deleteTKEClusterStep.StepMethod)
@@ -717,6 +726,19 @@ func (rn *RemoveNodesFromClusterTaskOption) BuildRemoveNodesFromClusterStep(task
 
 	task.Steps[removeNodesFromClusterStep.StepMethod] = removeStep
 	task.StepSequence = append(task.StepSequence, removeNodesFromClusterStep.StepMethod)
+}
+
+// BuildCheckClusterCleanNodsStep 检测集群清理节点池节点
+func (rn *RemoveNodesFromClusterTaskOption) BuildCheckClusterCleanNodsStep(task *proto.Task) {
+	checkStep := cloudprovider.InitTaskStep(checkClusterCleanNodsStep)
+
+	checkStep.Params[cloudprovider.ClusterIDKey.String()] = rn.Cluster.ClusterID
+	checkStep.Params[cloudprovider.CloudIDKey.String()] = rn.Cluster.Provider
+	checkStep.Params[cloudprovider.NodeIPsKey.String()] = strings.Join(rn.NodeIPs, ",")
+	checkStep.Params[cloudprovider.NodeIDsKey.String()] = strings.Join(rn.NodeIDs, ",")
+
+	task.Steps[checkClusterCleanNodsStep.StepMethod] = checkStep
+	task.StepSequence = append(task.StepSequence, checkClusterCleanNodsStep.StepMethod)
 }
 
 // BuildUpdateRemoveNodeDBInfoStep 清理节点数据

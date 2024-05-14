@@ -298,7 +298,7 @@ func wrapIP(s []string, df string) (r []string) {
 		}
 		r = append(r, v)
 	}
-	return
+	return r
 }
 
 func unwrapIP(s []string) (r []string) {
@@ -309,5 +309,5 @@ func unwrapIP(s []string) (r []string) {
 		}
 		r = append(r, v)
 	}
-	return
+	return r
 }

@@ -21,15 +21,11 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/i18n/localizer"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 )
 
 // ErrorF defines an error with error code and message.
 type ErrorF struct {
-	// Kit is bscp kit
-	Kit *kit.Kit
 	// Code is bscp errCode
 	Code int32 `json:"code"`
 	// Message is error detail
@@ -39,12 +35,11 @@ type ErrorF struct {
 // Errorf 返回自定义封装的bscp错误，包括错误码、错误信息
 // bcs-services/bcs-bscp/pkg/rest/response.go中的错误中间件方法GRPCErr会统一进行错误码转换处理
 // 需要返回给普通用户看的错误，统一使用该方法返回错误，且对错误信息进行国际化处理，便于普通用户理解
-func Errorf(kit *kit.Kit, code int32, format string, args ...interface{}) *ErrorF {
+func Errorf(code int32, format string, args ...interface{}) *ErrorF {
 	return &ErrorF{
-		Kit:  kit,
 		Code: code,
 		// 错误信息国际化
-		Message: localizer.Get(kit.Lang).Translate(format, args...),
+		Message: fmt.Sprintf(format, args...),
 	}
 }
 
@@ -70,7 +65,7 @@ func (e *ErrorF) WithCause(cause error) *ErrorF {
 		return c
 	}
 	// 打印其他错误根因日志
-	logs.ErrorDepthf(1, "bscp inner err cause: %v, rid: %s", cause, e.Kit.Rid)
+	logs.ErrorDepthf(1, "bscp inner err cause: %v", cause)
 
 	return e
 }

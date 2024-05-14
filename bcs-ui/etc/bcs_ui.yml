@@ -42,6 +42,7 @@ frontend_conf:
     bk_monitor_host: ""
     bk_sre_host: ""
     bk_user_host: ""
+    bk_log_host: ""
   features:
     zh_cn: ""
 feature_flags: {}

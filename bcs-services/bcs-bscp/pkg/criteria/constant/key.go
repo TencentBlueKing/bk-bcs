@@ -83,7 +83,7 @@ const (
 	DefaultTmplSetMemo = "当前空间下的所有模版"
 
 	// DefaultLanguage is default language
-	DefaultLanguage = "zh"
+	DefaultLanguage = "zh-cn"
 )
 
 // Note:
@@ -94,8 +94,6 @@ const (
 	SidecarMetaKey = "sidecar-meta"
 	// SideRidKey defines the incoming request id between sidecar and feed server.
 	SideRidKey = "side-rid"
-	// SideUserKey defines the sidecar's user key.
-	SideUserKey = "side-user"
 	// SideWorkspaceDir sidecar workspace dir name.
 	SideWorkspaceDir = "bk-bscp"
 )

@@ -14,8 +14,8 @@
 package pbcrs
 
 import (
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
-	pbbase "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	pbbase "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
 )
 
 // CredentialAttachment convert pb CredentialAttachment to table CredentialScopeAttachment
@@ -73,8 +73,14 @@ func PbCredentialScopeSpec(spec *table.CredentialScopeSpec) (*CredentialScopeSpe
 		return nil, nil
 	}
 
+	app, scope, err := spec.CredentialScope.Split()
+	if err != nil {
+		return nil, err
+	}
+
 	return &CredentialScopeSpec{
-		CredentialScope: string(spec.CredentialScope),
+		App:   app,
+		Scope: scope,
 	}, nil
 }
 

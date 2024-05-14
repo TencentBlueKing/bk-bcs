@@ -27,11 +27,10 @@ bcs:
     share: Shared cluster
     managed: TKE (Managed cluster)
     selfDeployed: Self-deployed cluster
-    publicIcon: S
-    privateIcon: D
     federation: Federation
     kubeConfig: KubeConfig
     cloud: Cloud credential import
+    platform: Platform created
   msg:
     emptyHostResource: >-
       You do not have any host resources under the current business. Please
@@ -60,6 +59,7 @@ bcs:
         placeholder: Please select the CMDB business you want to bind
         emptyMsg: Please contact the operator of the CMDB business
   newVersion: 'Version updated, would you like to refresh the interface?'
+  preVersion: Return Old Version
 blueking:
   onCall: Contact BK Customer Service
   support: Support
@@ -104,13 +104,17 @@ k8s:
     partition: Partition rolling update
     podManagementPolicy: POD management strategy
   containerNetwork: Container network
+  deploy:
+    readyTips: >-
+      A Pod instance is considered Ready when it meets the following two
+      conditions <br/> 1.All containers within the Pod are ready. <br/> 2.All
+      conditions in Readiness Gates are True.
 nav:
   dashboard: Dashboard
   namespace: Namespaces
   workload: Workload
   configuration: Configuration
   storage: Storage
-  customResource: CRD
   cluster: Clusters
   clusterList: Cluster List
   nodeList: Nodes
@@ -131,6 +135,7 @@ nav:
   monitor: Monitor
   network: Network
   cloudToken: Cloud Token
+  tkexCRD: Kourse
 iam:
   title:
     perms: This operation requires the following permissions
@@ -203,7 +208,7 @@ metrics:
   diskUsage: Disk usage
   memUsage: Memory usage
   memUsage1: Memory usage
-  podUsage: pod Usage
+  podUsage: Pod usage
   cpuRequestUsage:
     text: CPU packing rate
     clusterDesc: >-
@@ -234,6 +239,7 @@ metrics:
     disk:
       read: read
       write: write
+  usage: 'Usage {0}'
 generic:
   msg:
     error:
@@ -291,8 +297,10 @@ generic:
     command: >-
       Multiple commands are separated by spaces, eg: / bin / bash &amp; quote; -
       C &amp; quote; &amp; quote
-    searchIp: Search ip
+    searchIp: 'Enter IP to search, separate multiple IPs with commas or spaces'
   button:
+    resetSearch: Reset search
+    validate: Validate
     confirm: Confirm
     confirm1: Confirm
     cancel: Cancel
@@ -322,7 +330,7 @@ generic:
       subTitle: 'Confirm that you need to expel the POD on the node {IP}'
       subTitle2: 'Confirm that {ip} and other {num} pods on the node node'
     cordon:
-      text: UnCordon
+      text: Cordon
       title: 'Confirm stops scheduling {ip} '
       title1: Confirm batch stop dispatch
       subTitle: >-
@@ -331,7 +339,7 @@ generic:
         LB to NodePort
       subTitle2: 'Please confirm whether to stop {ip} and other {num} IP scheduling'
     uncordon:
-      text: Cordon
+      text: UnCordon
       title: Confirm the allowable scheduling
       title2: Confirm batch dispatch
       subTitle: 'Confirm allows dispatch  {ip}'
@@ -344,6 +352,9 @@ generic:
     create: Create
     submit: SUBMIT
     reload: Reload
+    copyAll: Copy All
+    retry: Retry
+    skip: Skip
   label:
     basicConfig: Basic config
     key: Key
@@ -351,7 +362,7 @@ generic:
     status: Status
     action: Actions
     total: All
-    mem: Mem
+    mem: MEM
     specifications: Specification
     clusterList: Cluster List
     nsList: Namespaces
@@ -384,7 +395,7 @@ generic:
     time: Time
     type: Type
     message: message
-    step: step
+    step: Step
     execTime: Started
     execTime2: Time cost
     whenFailed: After failed
@@ -393,7 +404,9 @@ generic:
     delete: Delete
     start: Start
     stop: Stop
+    abnormal: Abnormal
   status:
+    part_failure: Part failure
     support: Support
     unSupport: Not support
     ready: Normal
@@ -428,6 +441,7 @@ generic:
     taskNotEnable: To-Do
     restarting: Restarting
     pending: Pending
+    skip: Skipped
   validate:
     repeatKey: Repeat key
     required: Requiring item
@@ -435,6 +449,7 @@ generic:
     labelKey: 'only support letters, numbers and characters (-_./)'
     required1: TAINTS cannot have vacant fields
     annotationValueEmpty: The annotation value cannot be empty
+    annotations: 'only support letters, numbers, space and characters (-_./)'
     labelKey1: >-
       Only support the letters, numbers and characters (-_./), and need to start
       with the letter number
@@ -448,11 +463,12 @@ generic:
       Only letters, numbers and characters (-) are supported and start with a
       letter
     notRootName: The username cannot be root.
-    cidr: The CIDR format is incorrect
+    cidr: 'The format of CIDR is incorrect, please re-enter, for example: 10.0.0.0/8'
     label: >-
       Tags must be made up of alphanumeric characters, hyphens, underscores, or
       dots.
-    cidrConflict: CIDR conflict
+    cidrConflict: 'CIDR conflicts with {cidr}, please re-enter.'
+    fieldRequired: '{0} required'
   title:
     curVersion: Current
     basicInfo: Basic Information
@@ -554,12 +570,12 @@ cluster:
       It is recommended to use shared clusters.You can add a new cluster if you
       need it
   title:
-    retryCreate: Confirm retrying to create cluster
-    confirmDelete: Confirm the deletion cluster
     clusterInfo: Cluster Info
     clusterConfig: Cluster Config
     operationRecord: Operation Record
     setClusterVar: Set Variables
+    skipTask: Confirm skip current task
+    retryTask: Confirm retry task
   button:
     useSharedCluster: Use shared cluster
     addCluster: Add
@@ -570,7 +586,7 @@ cluster:
     delete:
       title: Are you sure want to delete the cluster?
       article1: >-
-        You are trying to delete the cluster {clustername}, this operation is
+        You are trying to delete the cluster {clusterName}, this operation is
         irreversible, please do it carefully
       article2: Please confirm that all applications have been cleaned up
       article3: >-
@@ -584,14 +600,12 @@ cluster:
         Delete the import cluster and do not clean any resources on the cluster.
         After deleting the cluster, please clean up as depending on the
         situation
-      article7: Please confirm that all applications and nodes have been cleaned up
       article8: >-
         If the cluster is deleted, the server is recycled as soon as possible if
         it is not used to avoid unnecessary costs
   tips:
     highMetricData: Cluster indicator overload
     createK8SCluster: Create K8S native cluster
-    clusterStatus: 'Cluster status: {0}'
   labels:
     nameAndId: Cluster name/ID
     name: Name
@@ -617,11 +631,14 @@ cluster:
     importCategory: Import category
     maxPodNum: Max pod number
     clusterLabel: Label
+    hideSharedCluster: Hide shared cluster
   status:
     unknown: Unknown cluster status
     importFailed: Import failed
+    connectFailed: Connect failed
   validate:
     exitNodes: 'There are nodes under the cluster, which cannot be deleted'
+    maxNumberOfDeletion: The maximum number of single deletions is 100
   create:
     title:
       newCluster: New cluster
@@ -658,7 +675,7 @@ cluster:
         subTitle: Unified management of multi-cloud provider clusters
         desc: >-
           Currently supports four cloud providers: Tencent Cloud, AWS, Azure,
-          Google Cloud
+          Google Cloud, Huawei Cloud
     label:
       clusterVersion: Version
       desc: Description
@@ -670,7 +687,7 @@ cluster:
         kubeletPath: Kubelet data directory
         k8sServiceCIDR: Cluster service network segment
         k8sPodCIDR: Cluster POD network segment
-      region: Area
+      region: Region
       initNodeTemplate: Node initialization template
       Kubernetes:
         text: Provider
@@ -717,7 +734,7 @@ cluster:
         maxNodePodNum: Number of pod ip
         maxServiceNum: Number of service ip
       networkSetting:
-        text: Global route network
+        text: Global router network
         cidrStep:
           text: Total IP
           desc: >-
@@ -736,6 +753,10 @@ cluster:
           desc: >-
             Node pod CIDR cannot be adjusted after allocation Please fill in
             after careful evaluation
+        article3: >-
+          The number of nodes can be added with clusters (including Master nodes
+          and node nodes) = (Number of IP -quantity of service) / single node
+          POD quantity upper limit.
         article1: >-
           The container network resources are limited, please allocate it
           reasonably. Under the current container network configuration, the
@@ -744,10 +765,6 @@ cluster:
           When the container network resources are excessive, the container
           network will be automatically scale-up. After the capacity is
           expanded, the cluster can be added at most {count}.
-        article3: >-
-          The number of nodes can be added with clusters (including Master nodes
-          and node nodes) = (Number of IP -quantity of service) / single node
-          POD quantity upper limit.
       networkMode:
         text: Network Mode
         overlay:
@@ -757,7 +774,7 @@ cluster:
             TKE based on the underlying private network (VPC), which realizes
             the routing strategy of container network and VPC interoperability.
         vpc-cni:
-          text: Global route with VPC-CNI hybrid mode
+          text: Global router with VPC-CNI hybrid mode
           desc: >-
             The cluster supports the global routing mode and VPC-CNI mode. The
             VPC-CNI network mode is a container network capability implemented
@@ -772,7 +789,7 @@ cluster:
       quotaAllocation: CPU/MEM
       coefficient: Factor
       cpuQuota: CPU (Cores)
-      memQuota: Mem (GiB)
+      memQuota: MEM (GiB)
       chooseMaster: Select Master
       importType: Import Type
       cloudToken: Cloud Token
@@ -793,7 +810,7 @@ cluster:
         customNet: Custom network
       defaultNetPlugin: Network plugin
       clusterIPType:
-        text: Cluster ip type
+        text: Cluster IP type
         dual: IPv4/IPv6
         dualSingle: IPv4 or IPv6 single stack (automatically assigned by the platform)
       netSetting: Network setting
@@ -863,7 +880,7 @@ cluster:
       putAwayConfig: Put more settings
       createCloudToken: New voucher
       fileImport: File Import
-      textKubeConfig: kubeconfig usability testing
+      textKubeConfig: Usability testing
   detail:
     title:
       overview: Overview
@@ -927,15 +944,13 @@ cluster:
         placeholder: Please select business Topo module from CMDB
     unreadyConfig:
       title: Scaling Pause Configuration
-      path: >-
-        Pause automatic scaling when the number of NotReady nodes is greater
-        than {0} and exceeds {1} of the total number of nodes in the cluster
       desc: >-
         Autoscaler protection mechanism. If the number or proportion of
         NotReady  nodes is too large, the newly added nodes may also be
         NotReady, resulting  in increased business costs. When the number of
         NotReady nodes does not meet  the suspension triggering conditions,
         Autoscaler will be automatically restored
+      path: Scaling Pause Configuration Path
     autoScalerConfig:
       title: Autoscaler configuration
       expander:
@@ -962,9 +977,9 @@ cluster:
       bufferResourceRatio:
         title: Resource threshold (Pods)
         desc: >-
-          The cluster Pod number usage exceeds the threshold to trigger capacity
-          expansion, regardless of whether the CPU/memory resource usage reaches
-          the threshold or not
+          The cluster resource usage of Pod numbers exceeding this threshold
+          will trigger scaling out regardless of whether CPU/memory resource
+          usage has reached the threshold.
       maxNodeProvisionTime:
         title: Provide node maximum time
         desc: >-
@@ -1066,6 +1081,7 @@ cluster:
         'off': Close
         'on': Enable
         edit: Edit
+        clone: Clone
         delete:
           text: Delete
           title: 'Determine delete node pool {name}'
@@ -1103,9 +1119,10 @@ cluster:
             mountPath: Format and mount it on
             configurationFee:
               text: Configuration fee
-              unit: '￥ {Price} yuan/hour'
+              unit: '￥ {price} yuan/hour'
           validate:
-            dataDisks: 'Scope: 50 ~ 16380, steppe: 10'
+            dataDisks: 'Scope: 50 ~ 16380, step: 10'
+            systemDisk: 'Scope: 50 ~ 16380, step: 10'
             repeatPath: Directory cannot be repeated
             maxDataDisks: Up to 4 data disks
           button:
@@ -1127,6 +1144,12 @@ cluster:
             hssd: Enhanced SSD cloud hard disk
             balanced: Balanced Disk
             standard: Standard Disk
+            Standard_LRS: Standard HDD
+            StandardSSD_LRS: Standard SSD
+            StandardSSD_ZRS: Standard SSD_ZRS
+            Premium_LRS: Premium SSD
+            PremiumV2_LRS: Premium SSD v2
+            Premium_ZRS: Premium SSD_ZRS
           disk:
             system: System disk
             data: Data disk
@@ -1186,7 +1209,7 @@ cluster:
             The runtime component inherits the TKE cluster and does not support
             modification
         runtimeVersion:
-          title: Container runtime version
+          title: Runtime version
           desc: >-
             The runtime component version inherits the TKE cluster and does not
             support modification
@@ -1422,9 +1445,15 @@ cluster:
     article2: >-
       The number of nodes (including Master) {nodes} has been added to the
       current cluster, and the number of nodes {realRemainNodesCount} can be
-      added. When the container network resources are overused, the container
-      network will be automatically expanded. After the expansion, a maximum of
+      added.
+    article3: >-
+      When the container network resources are overused, the container network
+      will be automatically expanded. After the expansion, a maximum of
       {maxRemainNodesCount} nodes can be added.
+    article4: >-
+      The number of container network segments has reached the maximum limit. If
+      you need to continue expanding the container network, please contact the
+      container platform administrator.
     button:
       selectPage: Selected on this page
       selectAcrossPage: Cross page
@@ -1440,13 +1469,6 @@ cluster:
       cancelSelectAll: Cancel all data
       delete:
         subTitle: 'Confirm whether to delete {ip} and other {num} nodes'
-        article1: >-
-          Containers running on the current node are scheduled to other
-          available nodes
-        article2: Clean up container service system components
-        article3: >-
-          After the node is deleted, the server is recycled as soon as possible
-          if it is not used to avoid unnecessary costs
     msg:
       labelDesc: Tag helps to sort out your resources
       selectedData: 'Selected {num}'
@@ -1458,8 +1480,8 @@ cluster:
       max10NodeDrain: 'At most, it can only expel 10 nodes in batches'
     tips:
       disableImportClusterAction: 'Kubeconfig imports cluster, node management function is unavailable'
-      hasNotNodePoolNode: There are nodes added by non-node pools among the selected nodes.
       disableImportClusterAddNode: Importing a cluster does not support adding nodes from existing servers.
+      hasNotNodePoolNode: There are nodes added by non-node pools among the selected nodes.
     placeholder:
       searchNode: 'Search for IP, label, taints, annotations, status, node source, nodePool'
     title:
@@ -1478,7 +1500,7 @@ cluster:
       source:
         text: Node source
         add: Manually added
-      nodePool: NodePool
+      nodePool: Node pool
     metric:
       cpuUsageAndRequestUsage: CPU usage rate/packing rate
       memUsageAndRequestUsage: Memory usage/packing rate
@@ -2492,18 +2514,7 @@ plugin:
     DBInfo: DB Configuration
     confirmDelete: 'Are you sure you want to delete the '
     input:
-      biz: Please enter the business name
-      dbAddress: Please enter the DB access address
-      user: please enter your DB account
-      dbName: Please enter the DB name
-      label: Please enter the tag
       values: Please fill in Values content
-    labelIndexRegex: >-
-      The value of the label of the group {index} group does not meet the
-      regular expression^([[a-za-z0-9] [-a-za-z0-9 _.]? [A-Za-Z0-9])? $
-    labelRegex: >-
-      The label value does not meet the regular expression^([[a-za-z0-9]
-      [-a-za-z0-9 _.]*)? [A-Za-Z0-9]? $
     content: content
     confirmUpgradeTips: >-
       The content of value changes the following, please confirm after you click
@@ -2575,8 +2586,6 @@ plugin:
     filePath: Please enter the file path
     success: Rule created successfully
     upgraded: Rule updated successfully
-    polarisNS: Polaris naming space
-    polarisSvcName: Polaris service name
     cluster_ns: Clusters/Namespaces
     polarisInfo: Polaris info
     syncStatus: Synchronous state
@@ -2591,21 +2600,13 @@ plugin:
     pod: Whether to directly connect to pod
     nodePort: Nodeport mode is not checked
     weight: Weight
-    rule: Please enter the rules name
-    ruleRegex: The rules must be less than or equal to 63 characters
     ruleCharacterCriteria: >-
       The rules start and end and end with letters ([A-Z0-9A-Z]), with a broken
       number (-), the lower line (_), the point (.) And between the letters
-    enterPolarisInfoName: Please enter the Polaris information name
     polarisInfoNameCriteria: >-
       Polaris information name only allows numbers, English letters,.,-, _,
       limited 128 characters
-    selectPolarisNamespace: Please select Polaris naming space
-    inputSvcName: Please enter the associated service service name
-    portInt: Please enter the port of the association service (integer type)
-    portNoNegative: The port of the associated service cannot be negative
-    weightInt: Please enter the weight of the associated service (integer type)
-    weightNoNegative: The weight of the associated service cannot be negative
+    ipPortAndWeight: 'IP: Port Weight'
 projects:
   cloudToken:
     add: New voucher
@@ -2672,10 +2673,7 @@ dashboard:
     overview: Overview
     confirmSchedule: 'Confirm {action} all Pods under the current resource'
   placeholder:
-    selectCRD: Select CRD
     search1: Search name
-    search2: 'Enter the name, search for the creator'
-    search3: 'Enter name, founder, IP search'
   label:
     formMode: FORM Mode
     yamlMode: YAML Mode
@@ -2702,12 +2700,9 @@ dashboard:
         joint characters (-), and even characters (-) must be connected in
         English or numbers later
       sharedClusterNs: 'Name rule: {prefix}Custom Name'
-      sharedQuota: >-
-        The shared cluster needs to set the MEM and CPU quotas, and the minimum
-        value of the two is not less than 0
       setMinMaxMemCpu: >-
-        Please set up Mem and CPU quotas, and the minimum value of the two is
-        not less than 0
+        Please set CPU and MEM quotas, and the minimum value must be greater
+        than 0.
     status:
       waitingApproval: Pending
       createNamespace: Create naming space
@@ -2815,6 +2810,8 @@ dashboard:
       copy: Copy
   storage:
     usedBy: Mount
+  button:
+    createResource: Create
 apiToken:
   text: API Token
   desc:
@@ -2852,7 +2849,7 @@ apiToken:
     deleteConfirm:
       text: 'This operation cannot be withdrawn, please confirm'
       desc: >-
-        All API interfaces with the API Token and Kubeconfig will not be
+        All API interfaces with the API Token and kubeconfig will not be
         available
   msg:
     emptyDataTips: >-
@@ -2865,9 +2862,35 @@ logCollector:
     oldRuleHasNewRule: >-
       New rule generated: <br/> {0}<br/>This rule will be automatically cleaned
       up after: <br/>{1}
+    bizPrivateCluster: Business Dedicated Cluster
+    privateData: Sensitive Data
+    greaterThan100GB: Greater than 100GB
+    exceed14d: Exceeds 14 days
+    storageCluster:
+      text: >-
+        Container log data defaults to using a public cluster; it is recommended
+        to use {0} under the following conditions
+      p1: >-
+        Container log data contains {0}, requiring physical isolation for data
+        storage
+      p2: 'Daily volume of container log data is {0}'
+      p3: 'The effective storage period for container log data should be {0}'
+    volumeOfClusterIsExcessivelyHigh: >-
+      The log volume of this cluster is excessively high, it is recommended to
+      promptly switch to a business dedicated cluster
+    volumeOfPrivateClusterIsExcessivelyHigh: >-
+      The storage utilization rate of this cluster has exceeded 80%, it is
+      recommended to expand or clean up cluster storage space
+    disabledEdit: Editing Disabled
+    name: >-
+      Data name related to index and data source names, after the collection
+      item {0}
   placeholder:
     search: Rule name / Namespace / Updated by
     workloadName: 'Please enter the application name, supports regular expressions'
+    multiLabel: >-
+      Separate multiple values with an English comma (,), also known as a
+      half-width comma.
   validate:
     name: >-
       Only supports English, numbers and underscores, and the length is 5~30
@@ -2895,6 +2918,7 @@ logCollector:
       retry: Retry task submitted successfully
       enable: Enabled successfully
       stop: Disabled successfully
+    canNotEditBkLogRule: Rules created from the bk-log currently do not support editing.
   title:
     exitNewRule: '{0} has generated a new rule, do you want to generate it again?'
     confirmRetry: 'Are you sure to retry rule {0}?'
@@ -2906,6 +2930,7 @@ logCollector:
       desc: >-
         All selected ranges can be superimposed and applied to each other. At
         least one range must be added except for the namespace
+    confirmSwitchStorageCluster: Confirm switching to the ES (Elasticsearch) storage cluster.
   label:
     newChartVersion: Latest version
     newChartDesc: Description
@@ -2951,9 +2976,19 @@ logCollector:
     dataID:
       text: DataID
       tips: To BkBase
+    esStorages: ES Storage Cluster
+    displayName: Collection item name
+    name: Name
+    logType:
+      text: Log Type
+      line: Single-line Log File
+      multiline: Multi-line Log File
+    beginOfLineRegex: Beginning of Line Regex
+    multilineMaxLineAndTimeout: 'Match up to {0} lines, with a maximum duration of {1} seconds'
   status:
     pending: Issuing
     failed: Failed
+    delete: Deleted
   action:
     enable: Enable
     stop: Disable
@@ -2968,6 +3003,7 @@ logCollector:
     queryFileLog: Query file log
     queryStdLog: Query standard output log
     addPodLabel: Automatically add labels in Pod
+    goBKLog: GO BK-Log
     addRange:
       text: Add range
       label:
@@ -2977,6 +3013,50 @@ logCollector:
           labels that exist on the Pod will be collected
       workload: Select by workload
       container: Select by container name
+view:
+  labels:
+    creator: Creator
+    allNs: All namespaces
+    clusterAndNs: Cluster/Namespace
+    saveAs: Save as
+    name: View name
+    all: All
+    resourceName: Resource name
+    viewDataRange: View data range
+    editView: Edit view
+    newView: New view
+    custom: Custom
+  button:
+    query: Search
+    saveAsView: Save as view
+    moreResource: More
+    addCluster: Add cluster
+    edit: Edit
+    clone: Clone
+    delete: Delete
+    reset: Reset
+    confirmAndChangeView: Confirm and switch
+    addQueryField: Add query field
+    addField: Add field
+    addCustomView: Add
+    clusterView: Cluster view
+    customView: Custom view
+  tips:
+    selectMultiCluster: Select clusters in bulk
+    confirmDelete: Confirm to delete the view
+    sharedClusterDoNotSupportTheKind: Shared clusters do not support the creation of this resource.
+    editMode: Edit mode
+    invalidate: Some conditions are invalid. Please select again
+  placeholder:
+    searchCluster: Search cluster name
+    creator: Search creator
+    resourceName: Please input resource name
+    searchView: Search view name
+    searchNameOrCreator: Search resource name and creator
+    searchNameOrCreatorOrIP: 'Search resource name, creator, IP'
+    searchResourceKind: Search resource kinds
+  status:
+    saveAs: Saved
 manualNode:
   title:
     source:
@@ -3013,6 +3093,8 @@ ca:
     bandwidthPackage: Package
     button:
       createBandWidth: Create bandWidth
+  tips:
+    requiredBandwidthPackage: Bandwidth package is required
 googleCloud:
   button:
     create: Create
@@ -3059,6 +3141,7 @@ importGoogleCloud:
     region: Region
     clusterID: Cluster ID
     desc: Description
+    nodemanArea: NodeMan area
   button:
     test: Test
     import: Import
@@ -3068,6 +3151,77 @@ importGoogleCloud:
     regions: Regions
   tips:
     disabledTips: Credentials associated with the cluster and cannot be deleted
+azureCloud:
+  button:
+    create: Create
+    delete: Delete
+  placeholder:
+    search: Search ID/name/SubscriptionID/tenantID/ClientID/cluster
+  tips:
+    nameRegex: 'Only support English, numbers and characters (-)'
+    secretRegex: 'Only support English, numbers and characters (- or ~)'
+  label:
+    loginUser: loginUser
+    create: Create
+    cluster: Associated cluster
+    clusterType: Cluster type
+    managed: managed cluster
+    aksDesc: >-
+      The Master and Etcd of the Kubernetes cluster will be centrally managed
+      and maintained by the AKS team, and cluster administrators do not need to
+      concern themselves with the management and maintenance of the cluster
+      Master.
+importAzureCloud:
+  title: Import a public cloud cluster - Azure Cloud
+  label:
+    clusterName: Cluster name
+    token: Cloud Credentials
+    resourceGroups: Resource Groups
+    region: Region
+    clusterID: Cluster ID
+    nodemanArea: Nodeman Area
+    desc: Description
+  button:
+    test: Test
+    import: Import
+  clusterRegion:
+    zones: Zones
+    regions: Regions
+    other: Other
+huaweiCloud:
+  button:
+    create: Create
+    delete: Delete
+  placeholder:
+    search: Search ID/name/SubscriptionID/tenantID/ClientID/cluster
+  tips:
+    nameRegex: 'Only support English, numbers and characters (-)'
+  label:
+    create: Create
+    clusterType: Cluster type
+    managed: managed cluster
+    aksDesc: >-
+      The Master and Etcd of the Kubernetes cluster will be centrally managed
+      and maintained by the AKS team, and cluster administrators do not need to
+      concern themselves with the management and maintenance of the cluster
+      Master.
+    cluster: ''
+importHuaweiCloud:
+  title: Import a public cloud cluster - Huawei Cloud
+  label:
+    clusterName: Cluster name
+    token: Cloud Credentials
+    region: Region
+    clusterID: Cluster ID
+    nodemanArea: Nodeman Area
+    desc: Description
+  button:
+    test: Test
+    import: Import
+  clusterRegion:
+    zones: Zones
+    regions: Regions
+    other: Other
 publicCloud:
   tencent:
     title: Tencent Cloud
@@ -3097,6 +3251,16 @@ publicCloud:
       governance across on-premises, edge, and multi-cloud Kubernetes clusters.
       Provides interoperability with Azure security, identity, cost management,
       and migration services.
+  huawei:
+    title: Huawei Cloud
+    desc: >-
+      Huawei Cloud Container Service (Huawei Kubernetes Engine, HKE) Allows
+      users to deploy, manage, and scale containerized applications on the
+      Huawei Cloud platform without the need for complex configuration of
+      underlying computing resources. It can help developers take advantage of
+      the powerful features of the Kubernetes ecosystem while enjoying the
+      secure, reliable, and high-performance infrastructure provided by Huawei
+      Cloud.
 regions:
   asia: Asia
   australia: Australia
@@ -3143,8 +3307,28 @@ googleCA:
       of node instances, please go to the {0} page to set up.
   button:
     vpcRule: VPC Rule
+azureCA:
+  tips:
+    system: >-
+      Because the operating system “Container-Optimized OS (cos_containerd)
+      including Containerd (default)” has many restrictions, BlueKing components
+      depend on these restricted features, currently only the operating system
+      “Ubuntu including Containerd (ubuntu_containerd)” is supported.
+    zone: 'Currently, only a single availability zone is supported.'
+    dataDisk: >-
+      After purchasing a data disk and adding nodes, you need to manually format
+      and mount the disk.
+    securityGroup: >-
+      Node pool uses VPC firewall rules to control the incoming/outgoing traffic
+      of node instances, please go to the {0} page to set up.
+  button:
+    vpcRule: VPC Rule
+  password:
+    set: Set password
+    confirm: Confirm password
 tke:
   label:
+    ipAndPort: IP and port
     tencentCloud: Tencent cloud
     account: Account
     project:
@@ -3169,10 +3353,10 @@ tke:
         access. Otherwise, you will need to choose public network access. An
         incorrect choice will result in the failure to add the cluster.
     masterModule:
-      text: Master cmdb module
+      text: CMDB
       desc: >-
         Transfer the control plane nodes from the idle machine module of the
-        BlueKing configuration platform to the specified business module.
+        BK-CMDB to the specified business module.
     loginType:
       text: Login type
       password: Password
@@ -3184,15 +3368,15 @@ tke:
     confirmPassword: Confirm password
     publicKey: Public key
     secretKey: Secret key
-    ipNum: Number of IPs
+    ipNum: IPs
     zone: Zone
     staticIpMode: Static ip mode
     enableStaticIpMode: Enable static ip mode
     nodeModule:
-      text: Nodes cmdb module
+      text: CMDB
       desc: >-
-        Transfer the Node nodes from the idle machine module of the BlueKing
-        configuration platform to the specified business module.
+        Transfer the Node from the idle machine module of the BK-CMDB to the
+        specified business module.
     region: Region
     system: System
     configRec: Recommendations
@@ -3228,11 +3412,14 @@ tke:
         Security group inbound rules must allow traffic from the BlueKing
         platform's network egress IP address on TCP port 443; otherwise, adding
         the cluster will fail.
-    serviceIpNum: Service IP
-    podIpNum: Pod IP
-    podCidr: Pod CIDR
+      defaultSecurityGroupTips: >-
+        The default security group of Cloud Ladder has been configured with
+        security rules for self-developed cloud segments, and users do not need
+        to configure additional rules; if there are special security rule
+        configurations required for the business, custom security groups can be
+        created and used in conjunction with the Cloud Ladder default security
+        group.
     availableIpNum: Available number of IPs
-    port: Port
     serviceCidr: Service CIDR
     subnetID: Subnet ID
     subnetName: Subnet name
@@ -3246,6 +3433,8 @@ tke:
         traffic_postpaid_by_hour: Charge by hour
         bandwidth_prepaid: Charge by bandwidth
       maxBandWidth: Max bandwidth
+    clusterAvailableNodes: Node capacity
+    retain: Destruction node
   title:
     connectFailure:
       text: >-
@@ -3264,6 +3453,13 @@ tke:
       Console to create subnets. If using VPC-CNI network plugin, the
       availability zone of the subnet must be consistent with the availability
       zone subnet of Pod IP of the VPC-CNI network plugin.
+    installGseAgentFailed:
+      text: Install agent failed
+      reason: 'Install agent failed, please change agent area'
+    confirmUpdateMasterCMDBModule: Confirm modification of the CMDB module for the control plane nodes.
+    confirmUpdateMasterCMDBModuleSubTitle: 'Confirm transferring all control plane nodes to {0}.'
+    confirmUpdateNodeCMDBModule: Confirm the modification of the CMDB module where the Worker node resides.
+    confirmUpdateNodeCMDBModuleSubTitle: 'Confirm the transfer of all Worker nodes to {0}.'
   button:
     chargeTypeDiff: Mode Comparison
     addNodeConfig: Add Configuration
@@ -3283,6 +3479,9 @@ tke:
     staticIpMode: Static IP
     cmdb: Go to CMDB
   validate:
+    cidrMaskLen: 'Subnet mask length range: {0}'
+    minPodIP: The Pod IP count must be greater than 0
+    podIPsNeedLessThanVpcIPs: Pod IPs need less than VPC IPs
     passwordNotSame: The passwords entered do not match
     minIpNum: >-
       To ensure that the cluster has enough IPs, the container network segment
@@ -3291,6 +3490,7 @@ tke:
       The container network segment must not have fewer than {0} IPs. Please
       re-enter.
     supportCidrList: 'Supports only network segments between {0}.'
+    formErr: The form was filled in incorrectly. Please modify it
   configRec:
     l100:
       text: Node Count 1~100
@@ -3326,6 +3526,7 @@ tke:
       qGPU: qGPU Shared Scenarios
       privateImage: Custom Image Explanation
   tips:
+    subnetNum: 'available subnet number: {0}'
     nodeNotInSubnetZone: >-
       The availability zone of the server is {0}, which is inconsistent with the
       availability zone for the VPC-CNI Pod IP. Please use a server that is in
@@ -3352,6 +3553,9 @@ tke:
       VPC as the cloud server
     notSupport: Not supported temporarily
     supportCidr: 'Tencent Cloud supports private network range: '
+    ipCannotBeAdjustedWhenCreated2: >-
+      Once {0} is allocated, it will not be adjustable, please evaluate
+      carefully before filling out
     ipCannotBeAdjustedWhenCreated: >-
       Once {0} IP amount is allocated, it will not be adjustable, please
       evaluate carefully before filling out
@@ -3368,6 +3572,28 @@ tke:
         IP. It is not recommended to use fixed IP mode for services without IP
         restrictions, for more details please refer to {0}
     totalIpNum: 'Total {0} IPs'
+    needSameResourceType: >-
+      The Control Plane configuration steps must be consistent with the resource
+      provisioning method used in the Add Node steps (due to Tencent Cloud TKE
+      functionality restrictions).
+    hasSelected: Selected
+    clusterAvailableNodes: Node capacity
+    nodeNum: '{0} nodes have been configured.'
+    maxNodeNum: 'The number of nodes added at one time cannot exceed {0}.'
+    prepaidOfEnableCA: >-
+      The annual/monthly billing mode is suitable for long-term use of nodes and
+      is not applicable to enabling node elastic scaling. If you need to enable
+      scaling, it is recommended to choose the pay-as-you-go billing mode.
+    prepaidOfCA: >-
+      The annual/monthly billing mode is not suitable for scenarios involving
+      elastic scaling of nodes. If you plan to manually adjust the number of
+      nodes in the node pool, please ignore this notice.
+    transferMasterCMDBModule: >-
+      Transfer all control plane node servers to the specified Configuration
+      Management Database (CMDB) module.
+    transferNodeCMDBModule: >-
+      Transfer all Worker node servers to the specified Configuration Management
+      Database (CMDB) module.
   placeholder:
     example: 'Example: {0}'
 tkeCa:
@@ -3392,3 +3618,11 @@ tkeCa:
       more is required.
 provider:
   tencentPublicCloud: TencentPublicCloud
+container:
+  label:
+    restartCnt: Restart count
+    startedAt: Started at
+    lastState: Last state
+    reason: Reason
+    exitCode: Exit code
+    finishedAt: Finished at

@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -19,20 +19,12 @@ import (
 	"strings"
 	"time"
 
-	contextinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/context"
-	metricsinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/metrics"
-
 	"github.com/google/uuid"
 	"gopkg.in/yaml.v2"
 	corev1 "k8s.io/api/core/v1"
 	kube_errors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	apitypes "k8s.io/apimachinery/pkg/types"
-	v1lister "k8s.io/client-go/listers/core/v1"
-	klog "k8s.io/klog/v2"
-	"k8s.io/kubernetes/pkg/kubelet/types"
-	schedulerframework "k8s.io/kubernetes/pkg/scheduler/framework"
-
 	"k8s.io/autoscaler/cluster-autoscaler/cloudprovider"
 	"k8s.io/autoscaler/cluster-autoscaler/clusterstate"
 	core_utils "k8s.io/autoscaler/cluster-autoscaler/core/utils"
@@ -43,6 +35,13 @@ import (
 	simulator "k8s.io/autoscaler/cluster-autoscaler/simulator"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/errors"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/gpu"
+	v1lister "k8s.io/client-go/listers/core/v1"
+	klog "k8s.io/klog/v2"
+	"k8s.io/kubernetes/pkg/kubelet/types"
+	schedulerframework "k8s.io/kubernetes/pkg/scheduler/framework"
+
+	contextinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/context"
+	metricsinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/metrics"
 )
 
 type priorities map[string]int
@@ -144,7 +143,7 @@ func HandleResponse(review ClusterAutoscalerReview, nodes []*corev1.Node,
 // handleScaleUpResponse abstracts options of scale up from response
 func handleScaleUpResponse(req *AutoscalerRequest, policies []*ScaleUpPolicy) (ScaleUpOptions, error) {
 	options := make(ScaleUpOptions, 0)
-	if len(policies) <= 0 {
+	if len(policies) == 0 {
 		return options, nil
 	}
 	for _, policy := range policies {
@@ -172,7 +171,7 @@ func handleScaleDownResponse(req *AutoscalerRequest, policies []*ScaleDownPolicy
 	nodeNameToNodeInfo map[string]*schedulerframework.NodeInfo, sd *ScaleDown,
 	scaleDownDelay time.Duration) (ScaleDownCandidates, error) {
 	candidates := make(ScaleDownCandidates, 0)
-	if len(policies) <= 0 {
+	if len(policies) == 0 {
 		return candidates, nil
 	}
 	for _, policy := range policies {
@@ -423,13 +422,13 @@ func simpleGetPodsToMove(nodeInfo *schedulerframework.NodeInfo) ([]*corev1.Pod, 
 	daemonsetPods := make([]*corev1.Pod, 0)
 	for _, podInfo := range nodeInfo.Pods {
 		pod := podInfo.Pod
-		if _, found := pod.ObjectMeta.Annotations[types.ConfigMirrorAnnotationKey]; found {
+		if pod.Annotations != nil && pod.Annotations[types.ConfigMirrorAnnotationKey] != "" {
 			continue
 		}
 		if pod.DeletionTimestamp != nil {
 			continue
 		}
-		if controllerRef := metav1.GetControllerOf(pod); controllerRef.Kind == "DaemonSet" {
+		if controllerRef := metav1.GetControllerOf(pod); controllerRef != nil && controllerRef.Kind == "DaemonSet" {
 			daemonsetPods = append(daemonsetPods, pod)
 			continue
 		}
@@ -536,7 +535,7 @@ func processMultiNodeGroupWithPriority(req *AutoscalerRequest, policy *ScaleUpPo
 			break
 		} else {
 			options[nodeGroups[i].NodeGroupID] = nodeGroups[i].MaxSize
-			diff = diff - (nodeGroups[i].MaxSize - nodeGroups[i].DesiredSize)
+			diff -= (nodeGroups[i].MaxSize - nodeGroups[i].DesiredSize)
 		}
 	}
 	return options, nil
@@ -618,8 +617,8 @@ func calculateWebhookScaleUpCoresMemoryTotal(options ScaleUpOptions,
 				"Failed to get node template of %v: %v", nodeGroup.Id(), err)
 		}
 		nodes := int64(options[nodeGroup.Id()])
-		coresTotal = coresTotal + int64(template.Allocatable.MilliCPU/1000)*nodes
-		memoryTotal = memoryTotal + int64(template.Allocatable.Memory)*nodes
+		coresTotal += template.Allocatable.MilliCPU / 1000 * nodes
+		memoryTotal += template.Allocatable.Memory * nodes
 	}
 
 	// nodes from not autoscaled group
@@ -674,6 +673,7 @@ func checkScaleDownResourcesLimits(candidates ScaleDownCandidates,
 
 // calculateWebhookScaleDownCoresMemoryTotal return the total resources after scaling down
 // NOCC:tosa/fn_length(设计如此)
+// nolint
 func calculateWebhookScaleDownCoresMemoryTotal(candidates ScaleDownCandidates, nodes []*corev1.Node,
 	cp cloudprovider.CloudProvider) (int64, int64, errors.AutoscalerError) {
 	timestamp := time.Now()

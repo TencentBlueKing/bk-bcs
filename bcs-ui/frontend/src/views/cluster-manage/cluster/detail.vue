@@ -12,8 +12,9 @@
         <i class="bk-icon icon-angle-right"></i>
       </span>
     </span>
+    <div class="absolute left-[-24px] h-full w-[24px] bg-[#f5f7fa]"></div>
     <div class="resize-line" ref="resizeRef" @mousedown="onMousedownEvent"></div>
-    <div class="h-[56px] flex items-center px-[24px] pt-[16px] pb-[8px] text-[12px]">
+    <div class="h-[56px] flex items-center px-[24px] pt-[16px] pb-[8px] text-[12px]" ref="detailHeaderRef">
       <span class="font-bold text-[14px] leading-[22px]">{{ curCluster.clusterName || '--' }}</span>
       <span class="ml-[14px] text-[#979BA5] leading-[22px] select-all">{{ curCluster.clusterID }}</span>
       <bcs-divider direction="vertical"></bcs-divider>
@@ -23,6 +24,7 @@
             'CREATE-FAILURE': 'red',
             'DELETE-FAILURE': 'red',
             'IMPORT-FAILURE': 'red',
+            'CONNECT-FAILURE': 'red',
             RUNNING: 'green'
           }"
           :status-text-map="{
@@ -31,6 +33,7 @@
             'CREATE-FAILURE': $t('generic.status.createFailed'),
             'DELETE-FAILURE': $t('generic.status.deleteFailed'),
             'IMPORT-FAILURE': $t('cluster.status.importFailed'),
+            'CONNECT-FAILURE': $t('cluster.status.connectFailed'),
             RUNNING: $t('generic.status.ready')
           }"
           :status="curCluster.status"
@@ -45,29 +48,85 @@
       type="card-tab"
       class="cluster-detail-tab"
       v-if="panelStatus !== 'hidden'">
-      <bcs-tab-panel name="overview" :label="$t('cluster.detail.title.overview')" render-directive="if">
-        <Overview class="px-[20px]" :cluster-id="clusterId" />
-      </bcs-tab-panel>
-      <bcs-tab-panel name="info" :label="$t('generic.title.basicInfo1')" render-directive="if">
-        <Info class="p-[20px]" :cluster-id="clusterId" />
-      </bcs-tab-panel>
-      <bcs-tab-panel
-        name="quota"
-        :label="$t('cluster.detail.title.quota')"
-        render-directive="if"
-        v-if="curCluster.clusterType === 'virtual'">
-        <VClusterQuota class="p-[20px]" :cluster-id="clusterId" />
-      </bcs-tab-panel>
-      <template v-else>
+      <!-- 共享集群 -->
+      <template v-if="curCluster.is_shared">
+        <bcs-tab-panel name="namespace" :label="$t('k8s.namespace')" render-directive="if">
+          <Namespace class="p-[20px]" :cluster-id="clusterId" :namespace="namespace" />
+        </bcs-tab-panel>
+        <bcs-tab-panel name="info" :label="$t('generic.title.basicInfo1')" render-directive="if">
+          <Info class="p-[20px]" :cluster-id="clusterId" />
+        </bcs-tab-panel>
         <bcs-tab-panel name="network" :label="$t('cluster.detail.title.network')" render-directive="if">
           <Network class="p-[20px]" :cluster-id="clusterId" />
         </bcs-tab-panel>
-        <bcs-tab-panel name="master" :label="$t('cluster.detail.title.controlConfig')" render-directive="if">
+      </template>
+      <!--vcluster-->
+      <template v-else-if="curCluster.clusterType === 'virtual'">
+        <bcs-tab-panel
+          name="overview"
+          :label="$t('cluster.detail.title.overview')"
+          render-directive="if"
+          v-if="normalStatusList.includes(curCluster.status || '')">
+          <Overview class="px-[20px]" :cluster-id="clusterId" />
+        </bcs-tab-panel>
+        <bcs-tab-panel
+          name="namespace"
+          :label="$t('k8s.namespace')"
+          render-directive="if"
+          v-if="normalStatusList.includes(curCluster.status || '')">
+          <Namespace class="p-[20px]" :cluster-id="clusterId" :namespace="namespace" />
+        </bcs-tab-panel>
+        <bcs-tab-panel name="info" :label="$t('generic.title.basicInfo1')" render-directive="if">
+          <Info class="p-[20px]" :cluster-id="clusterId" />
+        </bcs-tab-panel>
+        <bcs-tab-panel
+          name="quota"
+          :label="$t('cluster.detail.title.quota')"
+          render-directive="if"
+          v-if="normalStatusList.includes(curCluster.status || '')">
+          <VClusterQuota class="p-[20px]" :cluster-id="clusterId" />
+        </bcs-tab-panel>
+      </template>
+      <!--其他集群-->
+      <template v-else>
+        <bcs-tab-panel
+          name="overview"
+          :label="$t('cluster.detail.title.overview')"
+          render-directive="if"
+          v-if="normalStatusList.includes(curCluster.status || '')">
+          <Overview class="px-[20px]" :cluster-id="clusterId" />
+        </bcs-tab-panel>
+        <bcs-tab-panel
+          name="namespace"
+          :label="$t('k8s.namespace')"
+          render-directive="if"
+          v-if="normalStatusList.includes(curCluster.status || '')">
+          <Namespace class="p-[20px]" :cluster-id="clusterId" :namespace="namespace" />
+        </bcs-tab-panel>
+        <bcs-tab-panel name="info" :label="$t('generic.title.basicInfo1')" render-directive="if">
+          <Info class="p-[20px]" :cluster-id="clusterId" />
+        </bcs-tab-panel>
+        <bcs-tab-panel
+          name="network"
+          :label="$t('cluster.detail.title.network')"
+          render-directive="if"
+          v-if="!isKubeConfigImportCluster">
+          <Network class="p-[20px]" :cluster-id="clusterId" />
+        </bcs-tab-panel>
+        <bcs-tab-panel
+          name="master"
+          :label="$t('cluster.detail.title.controlConfig')"
+          render-directive="if"
+          v-if="!isKubeConfigImportCluster">
           <Master class="p-[20px]" :cluster-id="clusterId" />
         </bcs-tab-panel>
-        <bcs-tab-panel name="node" :label="$t('cluster.detail.title.nodeList')" render-directive="if">
+        <bcs-tab-panel
+          name="node"
+          :label="$t('cluster.detail.title.nodeList')"
+          render-directive="if"
+          v-if="normalStatusList.includes(curCluster.status || '')">
           <Node
-            class="p-[20px] max-h-[calc(100vh-188px)]"
+            class="p-[20px]"
             :cluster-id="clusterId"
             hide-cluster-select
             from-cluster />
@@ -77,10 +136,9 @@
           :label="$t('cluster.detail.title.autoScaler')"
           render-directive="if"
           ref="autoScalerTabRef"
-          v-if="showAutoScaler">
+          v-if="showAutoScaler && normalStatusList.includes(curCluster.status || '')">
           <template #label>
             {{ $t('cluster.detail.title.autoScaler') }}
-            <bk-tag theme="danger">NEW</bk-tag>
           </template>
           <AutoScaler :cluster-id="clusterId" />
         </bcs-tab-panel>
@@ -95,13 +153,15 @@ import AutoScaler from '../autoscaler/autoscaler.vue';
 import Node from '../node-list/node.vue';
 
 import StatusIcon from '@/components/status-icon';
-import { useCluster } from '@/composables/use-app';
+import { ICluster, useCluster } from '@/composables/use-app';
+import useCalcHeight from '@/composables/use-calc-height';
 import $router from '@/router';
 import Info from '@/views/cluster-manage/detail/basic-info.vue';
 import Master from '@/views/cluster-manage/detail/master.vue';
 import Network from '@/views/cluster-manage/detail/network.vue';
 import Overview from '@/views/cluster-manage/detail/overview.vue';
 import VClusterQuota from '@/views/cluster-manage/detail/vcluster-quota.vue';
+import Namespace from '@/views/cluster-manage/namespace/namespace.vue';
 
 const props = defineProps({
   maxWidth: {
@@ -117,13 +177,28 @@ const props = defineProps({
     default: '',
     required: true,
   },
+  namespace: {
+    type: String,
+    default: '',
+  },
 });
 
 const emits = defineEmits(['width-change']);
 
+// 设置content高度
+const detailHeaderRef = ref();
+useCalcHeight({
+  prop: 'height',
+  el: '.cluster-detail-tab .bk-tab-content',
+  calc: ['#bcs-notice-com', '.bk-navigation-header', detailHeaderRef, '.cluster-detail-tab .bk-tab-header'],
+});
+
 watch(() => props.active, () => {
   activeTabName.value = props.active;
 });
+
+// 正常状态
+const normalStatusList = ref(['CONNECT-FAILURE', 'RUNNING']);
 
 const activeTabName = ref(props.active);
 watch(activeTabName, () => {
@@ -137,12 +212,11 @@ watch(activeTabName, () => {
   });
 });
 const { clusterList } = useCluster();
-const curCluster = computed(() => clusterList.value.find(item => item.clusterID === props.clusterId) || {
-  provider: '',
-  clusterName: '',
-  clusterID: '',
-  clusterType: '',
-});
+const curCluster = computed<Partial<ICluster>>(() => clusterList.value
+  .find(item => item.clusterID === props.clusterId) || {});
+  // kubeConfig导入集群
+const isKubeConfigImportCluster = computed(() => curCluster.value.clusterCategory === 'importer'
+      && curCluster.value.importCategory === 'kubeConfig');
 // // 云区域详情
 // const cloudDetail = ref<Record<string, any>|null>(null);
 // const handleGetCloudDetail = async () => {
@@ -150,7 +224,7 @@ const curCluster = computed(() => clusterList.value.find(item => item.clusterID 
 //     $cloudId: curCluster.value?.provider,
 //   });
 // };
-const showAutoScaler = computed(() => !!curCluster.value.autoScale);
+const showAutoScaler = computed(() => !!curCluster.value?.autoScale);
 
 watch(
   [
@@ -163,12 +237,28 @@ watch(
       /**
        * - 当前集群不支持autoscaler需要跳转回overview tab
        * - 托管集群只有overview、basicInfo和quota三个tab详情
+       * - 共享集群只有命名空间、基本信息和网络配置
        */
       if (
         (!showAutoScaler.value && activeTabName.value === 'autoscaler')
         || (curCluster.value.clusterType === 'virtual' && !['overview', 'info', 'quota'].includes(activeTabName.value))
         || (curCluster.value.clusterType !== 'virtual' && activeTabName.value === 'quota')
       ) {
+        activeTabName.value = 'overview';
+      }
+
+      if (curCluster.value.is_shared && !['namespace', 'info', 'network'].includes(activeTabName.value)) {
+        activeTabName.value = 'namespace';
+      }
+
+      // 非正常集群只能看基本信息、网络和master
+      if (!normalStatusList.value.includes(curCluster.value.status || '')
+        && !['info', 'network', 'master'].includes(activeTabName.value)) {
+        activeTabName.value = 'info';
+      }
+
+      // kubeconfig集群只有总揽、基本信息、节点列表
+      if (isKubeConfigImportCluster.value && !['overview', 'info', 'node'].includes(activeTabName.value)) {
         activeTabName.value = 'overview';
       }
     });
@@ -196,7 +286,7 @@ const onMousedownEvent = (e: MouseEvent) => {
     } else if (width > props.maxWidth && moveLen <= 0) {
       expandDetailPanel();
     } else {
-      setPanelWidth(`${width}px`);
+      setPanelWidth(`${(width / document.body.clientWidth) * 100}%`);
     }
   };
   // 鼠标松开事件
@@ -223,8 +313,7 @@ const expandDetailPanel = () => {
 };
 // 显示面板
 const showDetailPanel = () => {
-  const defaultWidth = document.body.clientWidth * 0.7;
-  setPanelWidth(`${defaultWidth}px`);
+  setPanelWidth('70%');
 };
 const toggleDetailPanel = (show: boolean) => {
   if (modalRef.value.style.width === '100%' || modalRef.value.style.width === '0px') {
@@ -249,7 +338,9 @@ const hideDetailPanel = () => {
 // });
 
 onMounted(() => {
-  setPanelWidth(`${modalRef.value?.clientWidth}px`);
+  setTimeout(() => {
+    setPanelWidth(`${(modalRef.value?.clientWidth / document.body.clientWidth) * 100}%`);
+  });
 });
 
 defineExpose({
@@ -341,7 +432,6 @@ defineExpose({
     padding: 0;
   }
   .bk-tab-content {
-    height: calc(100vh - 150px);
     overflow-y: auto;
     overflow-x: hidden;
   }

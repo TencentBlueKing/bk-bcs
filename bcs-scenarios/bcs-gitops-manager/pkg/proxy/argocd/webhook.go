@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package argocd
@@ -18,9 +17,9 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/gorilla/mux"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
 )
 
@@ -47,6 +46,7 @@ func (plugin *WebhookPlugin) executeWebhook(r *http.Request) (*http.Request, *mw
 	return r, mw.ReturnArgoReverse()
 }
 
+// nolint  unused
 func (plugin *WebhookPlugin) forwardToApplicationSet(r *http.Request, requestID string) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
@@ -57,7 +57,7 @@ func (plugin *WebhookPlugin) forwardToApplicationSet(r *http.Request, requestID 
 		return
 	}
 	if resp.StatusCode != http.StatusOK {
-		blog.Errorf("RequestID[%s] webhook forward to appset controller resp code %d: %s",
+		blog.Errorf("RequestID[%s] webhook forward to appset controller resp code %d",
 			requestID, resp.StatusCode)
 		return
 	}

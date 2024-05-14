@@ -16,9 +16,9 @@ package sys
 import (
 	"context"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/client"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/client"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 )
 
 // Sys iam system related operate.
@@ -335,18 +335,19 @@ func (s *Sys) registerSystem(ctx context.Context, host string) (*client.Register
 		return nil, err
 	}
 
+	sys := client.System{
+		ID:          SystemIDBSCP,
+		Name:        SystemNameBSCP,
+		EnglishName: SystemNameBSCPEn,
+		Clients:     SystemIDBSCP,
+		ProviderConfig: &client.SysConfig{
+			Host: host,
+			Auth: "basic",
+		},
+	}
+
 	// if iam bscp system has not been registered, register system
 	if err == client.ErrNotFound {
-		sys := client.System{
-			ID:          SystemIDBSCP,
-			Name:        SystemNameBSCP,
-			EnglishName: SystemNameBSCPEn,
-			Clients:     SystemIDBSCP,
-			ProviderConfig: &client.SysConfig{
-				Host: host,
-				Auth: "basic",
-			},
-		}
 
 		if err = s.client.RegisterSystem(ctx, sys); err != nil {
 			logs.Errorf("register system failed, system: %v, err: %v", sys, err)
@@ -357,26 +358,14 @@ func (s *Sys) registerSystem(ctx context.Context, host string) (*client.Register
 			logs.Infof("register new system succeed, system: %v", sys)
 		}
 
-	} else if resp.Data.BaseInfo.ProviderConfig == nil || resp.Data.BaseInfo.ProviderConfig.Host != host {
-		// if iam registered bscp system has no ProviderConfig
-		// or registered host config is different with current host config, update system host config
-		if err = s.client.UpdateSystemConfig(ctx, &client.SysConfig{Host: host}); err != nil {
+	} else {
+		// else update bscp system in iam
+		if err = s.client.UpdateSystem(ctx, sys); err != nil {
 			logs.Errorf("update system host config failed, host: %s, err: %v", host, err)
 			return nil, err
 		}
 
-		if resp.Data.BaseInfo.ProviderConfig == nil {
-			if logs.V(5) {
-				logs.Infof("update system host succeed, new: %s", host)
-			}
-
-		} else {
-			if logs.V(5) {
-				logs.Infof("update system host succeed, old: %s, new: %s", resp.Data.BaseInfo.
-					ProviderConfig.Host, host)
-			}
-
-		}
+		logs.V(5).Infof("update system host succeed, old: %s, new: %s", resp.Data.BaseInfo.ProviderConfig.Host, host)
 	}
 
 	return &resp.Data, nil

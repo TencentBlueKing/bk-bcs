@@ -31,7 +31,7 @@
   </div>
 </template>
 <script>
-import { debounce } from 'throttle-debounce';
+import { debounce } from 'lodash';
 
 import { getActualTop } from '@/common/util';
 
@@ -223,10 +223,10 @@ export default {
   },
   mounted() {
     this.initInputLayout();
-    this.numberInput = debounce(this.debounceTimer, (event) => {
+    this.numberInput = debounce((event) => {
       const { value } = event.target;
       this.numberInputHandler(value, event.target);
-    });
+    }, this.debounceTimer);
   },
   methods: {
     changeCurValue(isTrigger) {

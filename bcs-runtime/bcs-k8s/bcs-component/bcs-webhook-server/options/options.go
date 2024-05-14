@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package options xxx
@@ -22,6 +21,7 @@ import (
 )
 
 // ServerOption is option in flags
+// nolint
 type ServerOption struct {
 	conf.FileConfig
 	conf.MetricConfig
@@ -56,6 +56,6 @@ func Parse(ops *ServerOption) error {
 	if ops.EngineType != EngineTypeKubernetes && ops.EngineType != EngineTypeMesos {
 		return fmt.Errorf("unsupported engine type %s", ops.EngineType)
 	}
-	strings.Replace(ops.Plugins, ";", ",", -1)
+	strings.Replace(ops.Plugins, ";", ",", -1) // nolint
 	return nil
 }

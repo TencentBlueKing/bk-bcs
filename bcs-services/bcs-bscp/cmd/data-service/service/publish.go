@@ -22,22 +22,31 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 	"gorm.io/gorm"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
-	pbgroup "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/group"
-	pbds "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/selector"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbgroup "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/group"
+	pbds "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/selector"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // Publish exec publish strategy.
+// nolint: funlen
 func (s *Service) Publish(ctx context.Context, req *pbds.PublishReq) (*pbds.PublishResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 
 	groupIDs := make([]uint32, 0)
 	tx := s.dao.GenQuery().Begin()
+
+	release, err := s.dao.Release().Get(grpcKit, req.BizId, req.AppId, req.ReleaseId)
+	if err != nil {
+		return nil, err
+	}
+	if release.Spec.Deprecated {
+		return nil, fmt.Errorf("release %s is deprecated, can not be published", release.Spec.Name)
+	}
 
 	if !req.All {
 		if req.GrayPublishMode == "" {
@@ -45,11 +54,11 @@ func (s *Service) Publish(ctx context.Context, req *pbds.PublishReq) (*pbds.Publ
 			req.GrayPublishMode = table.PublishByGroups.String()
 		}
 		publishMode := table.GrayPublishMode(req.GrayPublishMode)
-		if err := publishMode.Validate(); err != nil {
+		if e := publishMode.Validate(); e != nil {
 			if rErr := tx.Rollback(); rErr != nil {
 				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
 			}
-			return nil, err
+			return nil, e
 		}
 		// validate and query group ids.
 		if publishMode == table.PublishByGroups {
@@ -69,13 +78,13 @@ func (s *Service) Publish(ctx context.Context, req *pbds.PublishReq) (*pbds.Publ
 			}
 		}
 		if publishMode == table.PublishByLabels {
-			groupID, err := s.getOrCreateGroupByLabels(grpcKit, tx, req.BizId, req.AppId, req.GroupName, req.Labels)
-			if err != nil {
-				logs.Errorf("create group by labels failed, err: %v, rid: %s", err, grpcKit.Rid)
+			groupID, gErr := s.getOrCreateGroupByLabels(grpcKit, tx, req.BizId, req.AppId, req.GroupName, req.Labels)
+			if gErr != nil {
+				logs.Errorf("create group by labels failed, err: %v, rid: %s", gErr, grpcKit.Rid)
 				if rErr := tx.Rollback(); rErr != nil {
 					logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
 				}
-				return nil, err
+				return nil, gErr
 			}
 			groupIDs = append(groupIDs, groupID)
 		}
@@ -102,13 +111,60 @@ func (s *Service) Publish(ctx context.Context, req *pbds.PublishReq) (*pbds.Publ
 		}
 		return nil, err
 	}
+	haveCredentials, err := s.checkAppHaveCredentials(grpcKit, req.BizId, req.AppId)
+	if err != nil {
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
+		}
+		return nil, err
+	}
 	if err := tx.Commit(); err != nil {
 		logs.Errorf("commit transaction failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
-	resp := &pbds.PublishResp{PublishedStrategyHistoryId: pshID}
+	resp := &pbds.PublishResp{
+		PublishedStrategyHistoryId: pshID,
+		HaveCredentials:            haveCredentials,
+	}
 	return resp, nil
+}
+
+// checkAppHaveCredentials check if there is available credential for app.
+// 1. credential scope can match app name.
+// 2. credential is enabled.
+func (s *Service) checkAppHaveCredentials(grpcKit *kit.Kit, bizID, appID uint32) (bool, error) {
+	app, err := s.dao.App().Get(grpcKit, bizID, appID)
+	if err != nil {
+		return false, err
+	}
+	matchedCredentials := make([]uint32, 0)
+	scopes, err := s.dao.CredentialScope().ListAll(grpcKit, bizID)
+	if err != nil {
+		return false, err
+	}
+	if len(scopes) == 0 {
+		return false, nil
+	}
+	for _, scope := range scopes {
+		match, e := scope.Spec.CredentialScope.MatchApp(app.Spec.Name)
+		if e != nil {
+			return false, e
+		}
+		if match {
+			matchedCredentials = append(matchedCredentials, scope.Attachment.CredentialId)
+		}
+	}
+	credentials, e := s.dao.Credential().BatchListByIDs(grpcKit, bizID, matchedCredentials)
+	if e != nil {
+		return false, e
+	}
+	for _, credential := range credentials {
+		if credential.Spec.Enable {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 // GenerateReleaseAndPublish generate release and publish.

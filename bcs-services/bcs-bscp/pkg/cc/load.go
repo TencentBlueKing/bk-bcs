@@ -20,7 +20,7 @@ import (
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v3"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/config"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/config"
 )
 
 // LoadSettings load service's configuration
@@ -110,6 +110,8 @@ func loadFromFile(conf []byte) (Setting, error) {
 		s = new(FeedServerSetting)
 	case VaultServerName:
 		s = new(VaultServerSetting)
+	case VaultSidecarName:
+		s = new(VaultSidecarSetting)
 	default:
 		return nil, fmt.Errorf("unknown %s service name", ServiceName())
 	}

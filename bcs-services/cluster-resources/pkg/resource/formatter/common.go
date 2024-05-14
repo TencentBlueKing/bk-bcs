@@ -21,7 +21,7 @@ import (
 // CommonFormatRes 通用资源格式化
 func CommonFormatRes(manifest map[string]interface{}) map[string]interface{} {
 	rawCreateTime, _ := mapx.GetItems(manifest, "metadata.creationTimestamp")
-	createTime, _ := timex.NormalizeDatetime(rawCreateTime.(string))
+	createTime, _ := rawCreateTime.(string)
 	ret := map[string]interface{}{
 		"namespace":  mapx.GetStr(manifest, []string{"metadata", "namespace"}),
 		"age":        timex.CalcAge(rawCreateTime.(string)),
@@ -50,37 +50,13 @@ func GetFormatFunc(kind string, apiVersion string) func(manifest map[string]inte
 	return formatFunc
 }
 
-// FormatPodManifestRes 针对pod返回需要用到的字段
-func FormatPodManifestRes(kind string, manifest map[string]interface{}) map[string]interface{} {
-	// NOCC:ineffassign/assign(误报)
-	// nolint
-	newManifest := map[string]interface{}{}
-	if kind == resCsts.Po {
-		metadata, _ := mapx.GetItems(manifest, "metadata")
-		newManifest = map[string]interface{}{"kind": mapx.GetStr(manifest, "kind"),
-			"apiVersion": mapx.GetStr(manifest, "apiVersion"), "metadata": metadata}
-		items := make([]interface{}, 0)
-		for _, item := range mapx.GetList(manifest, "items") {
-			name, _ := mapx.GetItems(item.(map[string]interface{}), "metadata.name")
-			namespace, _ := mapx.GetItems(item.(map[string]interface{}), "metadata.namespace")
-			uid, _ := mapx.GetItems(item.(map[string]interface{}), "metadata.uid")
-			labels, _ := mapx.GetItems(item.(map[string]interface{}), "metadata.labels")
-			hostIP, _ := mapx.GetItems(item.(map[string]interface{}), "status.hostIP")
-			nodeName, _ := mapx.GetItems(item.(map[string]interface{}), "spec.nodeName")
-			items = append(items, map[string]interface{}{
-				"metadata": map[string]interface{}{
-					"name": name, "namespace": namespace, "uid": uid, "labels": labels},
-				"status":     map[string]interface{}{"hostIP": hostIP},
-				"spec":       map[string]interface{}{"nodeName": nodeName},
-				"kind":       mapx.GetStr(item.(map[string]interface{}), "kind"),
-				"apiVersion": mapx.GetStr(item.(map[string]interface{}), "apiVersion"),
-			})
-		}
-		newManifest["items"] = items
-	} else {
-		newManifest = manifest
+// GetPruneFunc 获取资源对应 PruneFunc
+func GetPruneFunc(kind string) func(manifest map[string]interface{}) map[string]interface{} {
+	pruneFunc, ok := Kind2PruneFuncMap[kind]
+	if !ok {
+		return DefaultPruneFunc
 	}
-	return newManifest
+	return pruneFunc
 }
 
 // 解析labels是否包含helm发布

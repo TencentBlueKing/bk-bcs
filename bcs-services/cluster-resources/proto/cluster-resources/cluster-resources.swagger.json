@@ -149,6 +149,280 @@
         ]
       }
     },
+    "/clusterresources/v1/projects/{projectCode}/envs": {
+      "get": {
+        "summary": "Get env manages list",
+        "description": "获取环境管理列表",
+        "operationId": "TemplateSet_ListEnvManages",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonListResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "TemplateSet"
+        ]
+      },
+      "post": {
+        "summary": "Create env manage",
+        "description": "创建环境管理",
+        "operationId": "TemplateSet_CreateEnvManage",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCreateEnvManageReq"
+            }
+          }
+        ],
+        "tags": [
+          "TemplateSet"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectCode}/envs/{id}": {
+      "get": {
+        "summary": "Get env manage detail",
+        "description": "获取环境管理详情",
+        "operationId": "TemplateSet_GetEnvManage",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "TemplateSet"
+        ]
+      },
+      "delete": {
+        "summary": "Delete env manage",
+        "description": "删除环境管理",
+        "operationId": "TemplateSet_DeleteEnvManage",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "TemplateSet"
+        ]
+      },
+      "put": {
+        "summary": "Update env manage",
+        "description": "更新环境管理",
+        "operationId": "TemplateSet_UpdateEnvManage",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesUpdateEnvManageReq"
+            }
+          }
+        ],
+        "tags": [
+          "TemplateSet"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectCode}/envs/{id}/rename": {
+      "put": {
+        "summary": "Update env manage name",
+        "description": "环境管理重命名",
+        "operationId": "TemplateSet_RenameEnvManage",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesRenameEnvManageReq"
+            }
+          }
+        ],
+        "tags": [
+          "TemplateSet"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectCode}/label_suggest": {
+      "post": {
+        "summary": "Label suggest",
+        "description": "label 联想",
+        "operationId": "ViewConfig_LabelSuggest",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesViewSuggestReq"
+            }
+          }
+        ],
+        "tags": [
+          "ViewConfig"
+        ]
+      }
+    },
     "/clusterresources/v1/projects/{projectCode}/multi_cluster_resources/{crd}/custom_objects": {
       "post": {
         "summary": "Get multi cluster custom resources",
@@ -278,6 +552,681 @@
         ],
         "tags": [
           "MultiCluster"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectCode}/resource_name_suggest": {
+      "post": {
+        "summary": "Resource name suggest",
+        "description": "资源名称联想",
+        "operationId": "ViewConfig_ResourceNameSuggest",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesViewSuggestReq"
+            }
+          }
+        ],
+        "tags": [
+          "ViewConfig"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectCode}/template/metadatas": {
+      "get": {
+        "summary": "Get template metadata list",
+        "description": "获取模板文件元数据列表",
+        "operationId": "TemplateSet_ListTemplateMetadata",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonListResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "templateSpace",
+            "description": "模板文件文件夹.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "TemplateSet"
+        ]
+      },
+      "post": {
+        "summary": "Create template metadata",
+        "description": "创建模板文件元数据",
+        "operationId": "TemplateSet_CreateTemplateMetadata",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCreateTemplateMetadataReq"
+            }
+          }
+        ],
+        "tags": [
+          "TemplateSet"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectCode}/template/metadatas/{id}": {
+      "get": {
+        "summary": "Get template metadata detail",
+        "description": "获取模板文件元数据详情",
+        "operationId": "TemplateSet_GetTemplateMetadata",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "TemplateSet"
+        ]
+      },
+      "delete": {
+        "summary": "Delete template metadata",
+        "description": "删除模板文件元数据",
+        "operationId": "TemplateSet_DeleteTemplateMetadata",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "isRelateDelete",
+            "description": "是否把相关的版本删除.",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          }
+        ],
+        "tags": [
+          "TemplateSet"
+        ]
+      },
+      "put": {
+        "summary": "Update template metadata",
+        "description": "更新模板文件元数据",
+        "operationId": "TemplateSet_UpdateTemplateMetadata",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesUpdateTemplateMetadataReq"
+            }
+          }
+        ],
+        "tags": [
+          "TemplateSet"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectCode}/template/spaces": {
+      "get": {
+        "summary": "Get template space list",
+        "description": "获取模板文件文件夹列表",
+        "operationId": "TemplateSet_ListTemplateSpace",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonListResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "TemplateSet"
+        ]
+      },
+      "post": {
+        "summary": "Create template space",
+        "description": "创建模板文件文件夹",
+        "operationId": "TemplateSet_CreateTemplateSpace",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCreateTemplateSpaceReq"
+            }
+          }
+        ],
+        "tags": [
+          "TemplateSet"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectCode}/template/spaces/{id}": {
+      "get": {
+        "summary": "Get template space detail",
+        "description": "获取模板文件文件夹详情",
+        "operationId": "TemplateSet_GetTemplateSpace",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "TemplateSet"
+        ]
+      },
+      "delete": {
+        "summary": "Delete template space",
+        "description": "删除模板文件文件夹",
+        "operationId": "TemplateSet_DeleteTemplateSpace",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "isRelateDelete",
+            "description": "是否把相关的版本删除.",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          }
+        ],
+        "tags": [
+          "TemplateSet"
+        ]
+      },
+      "put": {
+        "summary": "Update template space",
+        "description": "更新模板文件文件夹",
+        "operationId": "TemplateSet_UpdateTemplateSpace",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesUpdateTemplateSpaceReq"
+            }
+          }
+        ],
+        "tags": [
+          "TemplateSet"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectCode}/template/versions": {
+      "get": {
+        "summary": "Get template version list",
+        "description": "获取模板文件版本列表",
+        "operationId": "TemplateSet_ListTemplateVersion",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonListResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "templateName",
+            "description": "模板文件元数据名称.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "templateSpace",
+            "description": "模板文件文件夹名称.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "TemplateSet"
+        ]
+      },
+      "post": {
+        "summary": "Create template version",
+        "description": "创建模板文件版本",
+        "operationId": "TemplateSet_CreateTemplateVersion",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCreateTemplateVersionReq"
+            }
+          }
+        ],
+        "tags": [
+          "TemplateSet"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectCode}/template/versions/{id}": {
+      "get": {
+        "summary": "Get template version detail",
+        "description": "获取模板文件版本详情",
+        "operationId": "TemplateSet_GetTemplateVersion",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "TemplateSet"
+        ]
+      },
+      "delete": {
+        "summary": "Delete template version",
+        "description": "删除模板文件版本",
+        "operationId": "TemplateSet_DeleteTemplateVersion",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "TemplateSet"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectCode}/templatesets": {
+      "post": {
+        "summary": "Create template set",
+        "description": "创建模板集",
+        "operationId": "TemplateSet_CreateTemplateSet",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCreateTemplateSetReq"
+            }
+          }
+        ],
+        "tags": [
+          "TemplateSet"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectCode}/values_suggest": {
+      "post": {
+        "summary": "Values suggest",
+        "description": "values 联想",
+        "operationId": "ViewConfig_ValuesSuggest",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesViewSuggestReq"
+            }
+          }
+        ],
+        "tags": [
+          "ViewConfig"
         ]
       }
     },
@@ -8582,6 +9531,181 @@
       "description": "通用响应体，适用于资源型 API 请求返回，如需定义详细的 data 结构则不使用该响应体",
       "title": "CommonResp"
     },
+    "clusterresourcesCreateEnvManageReq": {
+      "type": "object",
+      "properties": {
+        "projectCode": {
+          "type": "string",
+          "title": "项目编码"
+        },
+        "env": {
+          "type": "string",
+          "title": "环境名称"
+        },
+        "clusterNamespaces": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterresourcesClusterNamespaces"
+          },
+          "title": "关联命名空间"
+        }
+      },
+      "description": "创建环境管理",
+      "title": "CreateEnvManageReq"
+    },
+    "clusterresourcesCreateTemplateMetadataReq": {
+      "type": "object",
+      "properties": {
+        "projectCode": {
+          "type": "string",
+          "title": "项目编码"
+        },
+        "name": {
+          "type": "string",
+          "title": "模板文件元数据名称"
+        },
+        "description": {
+          "type": "string",
+          "title": "模板文件元数据描述"
+        },
+        "templateSpace": {
+          "type": "string",
+          "title": "模板文件文件夹"
+        },
+        "resourceType": {
+          "type": "string",
+          "title": "模板文件元数据资源类型"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "模板文件元数据标签"
+        },
+        "versionDescription": {
+          "type": "string",
+          "title": "模板文件版本描述"
+        },
+        "version": {
+          "type": "string",
+          "title": "模板文件版本"
+        },
+        "content": {
+          "type": "string",
+          "title": "模板文件版本Content"
+        }
+      },
+      "description": "创建模板文件元数据",
+      "title": "CreateTemplateMetadataReq"
+    },
+    "clusterresourcesCreateTemplateSetReq": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "title": "模板集名称"
+        },
+        "description": {
+          "type": "string",
+          "title": "模板集描述"
+        },
+        "projectCode": {
+          "type": "string",
+          "title": "项目编码"
+        },
+        "version": {
+          "type": "string",
+          "title": "模板集版本"
+        },
+        "category": {
+          "type": "string",
+          "title": "模板集分类"
+        },
+        "keywords": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "模板集关键字"
+        },
+        "readme": {
+          "type": "string",
+          "title": "模板集 README"
+        },
+        "templates": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterresourcesTemplateID"
+          },
+          "title": "模板集包含的模板"
+        },
+        "values": {
+          "type": "string",
+          "title": "模板集默认值"
+        },
+        "force": {
+          "type": "boolean",
+          "title": "是否覆盖"
+        }
+      },
+      "description": "创建模板集",
+      "title": "CreateTemplateSetReq"
+    },
+    "clusterresourcesCreateTemplateSpaceReq": {
+      "type": "object",
+      "properties": {
+        "projectCode": {
+          "type": "string",
+          "title": "项目编码"
+        },
+        "name": {
+          "type": "string",
+          "title": "文件夹名称"
+        },
+        "description": {
+          "type": "string",
+          "title": "文件夹描述"
+        }
+      },
+      "description": "创建模板文件文件夹",
+      "title": "CreateTemplateSpaceReq"
+    },
+    "clusterresourcesCreateTemplateVersionReq": {
+      "type": "object",
+      "properties": {
+        "projectCode": {
+          "type": "string",
+          "title": "项目编码"
+        },
+        "description": {
+          "type": "string",
+          "title": "模板文件版本描述"
+        },
+        "version": {
+          "type": "string",
+          "title": "模板文件版本"
+        },
+        "content": {
+          "type": "string",
+          "title": "模板文件版本Content"
+        },
+        "templateName": {
+          "type": "string",
+          "title": "模板文件元数据名称"
+        },
+        "templateSpace": {
+          "type": "string",
+          "title": "模板文件文件夹名称"
+        },
+        "force": {
+          "type": "boolean",
+          "title": "能否被覆盖"
+        }
+      },
+      "description": "创建模板文件版本",
+      "title": "CreateTemplateVersionReq"
+    },
     "clusterresourcesCreateViewConfigReq": {
       "type": "object",
       "properties": {
@@ -8589,13 +9713,12 @@
           "type": "string",
           "title": "项目编码"
         },
-        "clusterID": {
-          "type": "string",
-          "title": "集群 ID"
-        },
-        "namespace": {
-          "type": "string",
-          "title": "命名空间"
+        "clusterNamespaces": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterresourcesClusterNamespaces"
+          },
+          "title": "集群和命名空间"
         },
         "name": {
           "type": "string",
@@ -8655,8 +9778,15 @@
           "type": "string",
           "title": "crd"
         },
-        "creator": {
+        "viewID": {
           "type": "string",
+          "title": "viewID"
+        },
+        "creator": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
           "title": "creator"
         },
         "labelSelector": {
@@ -8669,6 +9799,25 @@
         "name": {
           "type": "string",
           "title": "name"
+        },
+        "ip": {
+          "type": "string",
+          "title": "ip"
+        },
+        "status": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "status"
+        },
+        "sortBy": {
+          "type": "string",
+          "title": "sortBy"
+        },
+        "order": {
+          "type": "string",
+          "title": "desc"
         },
         "limit": {
           "type": "integer",
@@ -8702,8 +9851,15 @@
           "type": "string",
           "title": "资源类型"
         },
-        "creator": {
+        "viewID": {
           "type": "string",
+          "title": "viewID"
+        },
+        "creator": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
           "title": "creator"
         },
         "labelSelector": {
@@ -8716,6 +9872,25 @@
         "name": {
           "type": "string",
           "title": "name"
+        },
+        "ip": {
+          "type": "string",
+          "title": "ip"
+        },
+        "status": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "status"
+        },
+        "sortBy": {
+          "type": "string",
+          "title": "sortBy"
+        },
+        "order": {
+          "type": "string",
+          "title": "desc"
         },
         "limit": {
           "type": "integer",
@@ -8829,8 +10004,15 @@
           },
           "title": "集群和命名空间"
         },
-        "creator": {
+        "viewID": {
           "type": "string",
+          "title": "viewID"
+        },
+        "creator": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
           "title": "creator"
         },
         "labelSelector": {
@@ -8859,6 +10041,25 @@
       },
       "description": "Ping API 响应",
       "title": "PingResp"
+    },
+    "clusterresourcesRenameEnvManageReq": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "title": "环境管理 ID"
+        },
+        "projectCode": {
+          "type": "string",
+          "title": "项目编码"
+        },
+        "env": {
+          "type": "string",
+          "title": "环境名称"
+        }
+      },
+      "description": "环境管理重命名",
+      "title": "RenameEnvManageReq"
     },
     "clusterresourcesRenameViewConfigReq": {
       "type": "object",
@@ -9114,6 +10315,114 @@
         }
       }
     },
+    "clusterresourcesTemplateID": {
+      "type": "object",
+      "properties": {
+        "templateSpace": {
+          "type": "string",
+          "title": "模板文件文件夹名称"
+        },
+        "templateName": {
+          "type": "string",
+          "title": "模板文件元数据名称"
+        },
+        "version": {
+          "type": "string",
+          "title": "模板文件版本"
+        }
+      }
+    },
+    "clusterresourcesUpdateEnvManageReq": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "title": "环境管理 ID"
+        },
+        "projectCode": {
+          "type": "string",
+          "title": "项目编码"
+        },
+        "clusterNamespaces": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterresourcesClusterNamespaces"
+          },
+          "title": "关联命名空间"
+        },
+        "env": {
+          "type": "string",
+          "title": "环境名称"
+        }
+      },
+      "description": "更新环境管理",
+      "title": "UpdateEnvManageReq"
+    },
+    "clusterresourcesUpdateTemplateMetadataReq": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "title": "模板文件元数据 ID"
+        },
+        "projectCode": {
+          "type": "string",
+          "title": "项目编码"
+        },
+        "name": {
+          "type": "string",
+          "title": "模板文件元数据名称"
+        },
+        "description": {
+          "type": "string",
+          "title": "模板文件元数据描述"
+        },
+        "resourceType": {
+          "type": "string",
+          "title": "模板文件元数据资源类型"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "模板文件元数据标签"
+        },
+        "version": {
+          "type": "string",
+          "title": "模板文件版本"
+        },
+        "versionMode": {
+          "$ref": "#/definitions/clusterresourcesVersionMode",
+          "title": "模板文件版本模式"
+        }
+      },
+      "description": "更新模板文件元数据",
+      "title": "UpdateTemplateMetadataReq"
+    },
+    "clusterresourcesUpdateTemplateSpaceReq": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "title": "文件夹 ID"
+        },
+        "projectCode": {
+          "type": "string",
+          "title": "项目编码"
+        },
+        "name": {
+          "type": "string",
+          "title": "文件夹名称"
+        },
+        "description": {
+          "type": "string",
+          "title": "文件夹描述"
+        }
+      },
+      "description": "更新模板文件文件夹",
+      "title": "UpdateTemplateSpaceReq"
+    },
     "clusterresourcesUpdateViewConfigReq": {
       "type": "object",
       "properties": {
@@ -9125,13 +10434,12 @@
           "type": "string",
           "title": "项目编码"
         },
-        "clusterID": {
-          "type": "string",
-          "title": "集群 ID"
-        },
-        "namespace": {
-          "type": "string",
-          "title": "命名空间"
+        "clusterNamespaces": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterresourcesClusterNamespaces"
+          },
+          "title": "集群和命名空间"
         },
         "name": {
           "type": "string",
@@ -9144,6 +10452,14 @@
       },
       "description": "更新视图配置",
       "title": "UpdateViewConfigReq"
+    },
+    "clusterresourcesVersionMode": {
+      "type": "string",
+      "enum": [
+        "SpecifyVersion",
+        "LatestUpdateTime"
+      ],
+      "default": "SpecifyVersion"
     },
     "clusterresourcesVersionResp": {
       "type": "object",
@@ -9195,12 +10511,34 @@
           }
         },
         "labelSelector": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterresourcesLabelSelector"
           }
         }
       }
+    },
+    "clusterresourcesViewSuggestReq": {
+      "type": "object",
+      "properties": {
+        "projectCode": {
+          "type": "string",
+          "title": "项目编码"
+        },
+        "clusterNamespaces": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterresourcesClusterNamespaces"
+          },
+          "title": "集群和命名空间"
+        },
+        "label": {
+          "type": "string",
+          "title": "标签"
+        }
+      },
+      "description": "获取视图配置建议",
+      "title": "ViewSuggestReq"
     },
     "protobufAny": {
       "type": "object",

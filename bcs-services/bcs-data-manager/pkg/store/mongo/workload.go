@@ -18,15 +18,14 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/utils"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/utils"
 	bcsdatamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
 )
 
@@ -210,6 +209,7 @@ func NewModelWorkload(db drivers.DB) *ModelWorkload {
 // InsertWorkloadInfo insert workload info
 // It takes in the ctx, metrics, and opts parameters.
 // It inserts the workload information into the database.
+// nolint funlen
 func (m *ModelWorkload) InsertWorkloadInfo(ctx context.Context, metrics *types.WorkloadMetrics,
 	opts *types.JobCommonOpts) error {
 	newTableInfo := &Public{
@@ -313,6 +313,7 @@ func (m *ModelWorkload) InsertWorkloadInfo(ctx context.Context, metrics *types.W
 // It takes in the ctx and request parameters.
 // If the startTime or endTime parameters are empty, it returns metrics with the default time range.
 // It retrieves the workload data from the database and returns it along with the count of workloads.
+// nolint funlen
 func (m *ModelWorkload) GetWorkloadInfoList(ctx context.Context,
 	request *bcsdatamanager.GetWorkloadInfoListRequest) ([]*bcsdatamanager.Workload, int64, error) {
 	var total int64
@@ -415,6 +416,7 @@ func (m *ModelWorkload) GetWorkloadInfoList(ctx context.Context,
 // It takes in the ctx and request parameters.
 // If the startTime or endTime parameters are empty, it returns metrics with the default time range.
 // It retrieves the workload data from the database and returns it.
+// nolint funlen
 func (m *ModelWorkload) GetWorkloadInfo(ctx context.Context,
 	request *bcsdatamanager.GetWorkloadInfoRequest) (*bcsdatamanager.Workload, error) {
 	newTableInfo := &Public{

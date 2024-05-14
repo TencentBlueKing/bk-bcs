@@ -51,7 +51,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/audit/record"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/audit/replay"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/perf"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/web"
@@ -129,11 +128,13 @@ func (c *WebConsoleManager) Init() error {
 	microService.Init(
 		micro.Server(mhttp.NewServer(mhttp.Listener(dualStackListener))),
 		micro.AfterStop(func() error {
+			logger.Info("receive interput, gracefully shutdown...")
+
 			// close audit client
 			consoleAudit.GetAuditClient().Close()
-			// 会让 websocket 发送 EndOfTransmission, 不能保证一定发送成功
-			logger.Info("receive interput, gracefully shutdown")
-			<-c.ctx.Done()
+
+			// 会让 websocket 发送 EndOfTransmission
+			api.WaitWebsocketClose(time.Second * 5)
 			return nil
 		}),
 	)
@@ -230,7 +231,6 @@ func (c *WebConsoleManager) initHTTPService() *gin.Engine {
 	router.Use(cors.New(cors.Config{
 		AllowAllOrigins: true,
 	}))
-	router.Use(i18n.Localize())
 
 	// 注册模板和静态资源
 	router.SetHTMLTemplate(web.WebTemplate())
@@ -250,6 +250,7 @@ func (c *WebConsoleManager) initHTTPService() *gin.Engine {
 	router.Group("").StaticFS("/casts", http.Dir(replayPath))
 
 	handlerOpts := &route.Options{
+		StopSignCtx: c.ctx,
 		RoutePrefix: routePrefix,
 		Client:      c.microService.Client(),
 		Router:      router,

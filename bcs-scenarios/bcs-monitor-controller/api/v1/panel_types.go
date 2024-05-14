@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package v1
@@ -51,11 +50,18 @@ type PanelSpec struct {
 	DashBoard []DashBoardConfig `json:"dashBoard,omitempty" yaml:"dashBoard"`
 }
 
+// DashBoardStatus 面板内容
+type DashBoardStatus struct {
+	Board string `json:"board,omitempty"`
+	ID    string `json:"id,omitempty"`
+}
+
 // PanelStatus defines the observed state of Panel
 type PanelStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-	SyncStatus SyncStatus `json:"syncStatus,omitempty"`
+	SyncStatus SyncStatus        `json:"syncStatus,omitempty"`
+	DashBoards []DashBoardStatus `json:"dashBoards,omitempty"`
 }
 
 // +kubebuilder:object:root=true

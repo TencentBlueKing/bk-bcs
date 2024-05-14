@@ -19,7 +19,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/enumor"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/enumor"
 )
 
 // Columns defines the column's details prepared for
@@ -247,6 +247,10 @@ const (
 	TemplateRevisionsTable Name = "template_revisions"
 	// ReleasedKvTable is released kv table's name
 	ReleasedKvTable Name = "released_kvs"
+	// ClientTable is clients table's name
+	ClientTable Name = "clients"
+	// ClientEventTable is client_events table's name
+	ClientEventTable Name = "client_events"
 )
 
 // RevisionColumns defines all the Revision table's columns.

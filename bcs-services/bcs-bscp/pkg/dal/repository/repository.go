@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package repository is interface and its implementation for different repositories
 package repository
 
 import (
@@ -23,10 +24,10 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/thirdparty/repo"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/thirdparty/repo"
 )
 
 const (
@@ -58,6 +59,7 @@ var (
 type ObjectMetadata struct {
 	ByteSize int64  `json:"byte_size"`
 	Sha256   string `json:"sha256"`
+	Md5      string `json:"md5"`
 }
 
 // DecoratorInter ..

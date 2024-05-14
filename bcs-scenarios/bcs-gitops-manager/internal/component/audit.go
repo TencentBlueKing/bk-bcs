@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package component xxx
 package component
 
 import (
@@ -19,6 +19,7 @@ import (
 
 var auditClient *audit.Client
 
+// Option gateway and token
 type Option struct {
 	Gateway string
 	Token   string

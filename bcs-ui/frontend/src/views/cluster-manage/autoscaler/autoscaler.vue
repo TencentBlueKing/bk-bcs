@@ -68,6 +68,21 @@
                   })
                 }}
               </span>
+              <span
+                class="text-[#699DF4] ml-[5px] h-[20px] flex items-center"
+                style="border-bottom: 1px dashed #699DF4;"
+                v-else-if="data.prop === 'bufferResourceRatio'"
+                v-bk-tooltips="overview.pod_usage
+                  ?`${Number((overview.pod_usage.used || 0))} / ${Number(Math.ceil(overview.pod_usage.total) || 0)}`
+                  : '--'">
+                {{
+                  $t('cluster.ca.metric.curUsagePath', {
+                    val: overview.pod_usage
+                      ?conversionPercentUsed(overview.pod_usage.used, overview.pod_usage.total)
+                      : '--'
+                  })
+                }}
+              </span>
             </template>
           </AutoScalerFormItem>
         </LayoutGroup>
@@ -144,7 +159,7 @@
       </div>
     </section>
     <!-- 资源池配置 -->
-    <section class="group-border-top">
+    <section class="group-border-top" v-if="curCluster.provider === 'tencentCloud'">
       <div class="group-header">
         <div class="group-header-title">{{$t('tkeCa.label.poolManage')}}</div>
       </div>
@@ -237,7 +252,7 @@
         <bcs-table-column :label="$t('cluster.ca.nodePool.label.system')" show-overflow-tooltip>
           <template #default>{{clusterOS}}</template>
         </bcs-table-column>
-        <bcs-table-column :label="$t('tkeCa.label.provider.text')" show-overflow-tooltip>
+        <bcs-table-column :label="$t('tkeCa.label.provider.text')" show-overflow-tooltip v-if="curCluster.provider === 'tencentCloud'">
           <template #default="{ row }">
             {{ (row.extraInfo && row.extraInfo.resourcePoolType ? row.extraInfo.resourcePoolType : 'yunti') === 'yunti'
               ? $t('tkeCa.label.provider.yunti')
@@ -273,7 +288,7 @@
                 trigger="click"
                 :ref="row.nodeGroupID">
                 <span class="more-icon"><i class="bcs-icon bcs-icon-more"></i></span>
-                <div slot="content">
+                <div class="bg-[#fff]" slot="content">
                   <ul>
                     <li class="dropdown-item" @click="handleAddNode(row)">{{$t('cluster.nodeList.create.text')}}</li>
                     <li
@@ -287,6 +302,11 @@
                       }"
                       @click="handleToggleNodeScaler(row)">
                       {{row.enableAutoscale ? $t('cluster.ca.nodePool.action.off') : $t('cluster.ca.nodePool.action.on')}}
+                    </li>
+                    <li
+                      class="dropdown-item"
+                      @click="handleClonePool(row)">
+                      {{$t('cluster.ca.nodePool.action.clone')}}
                     </li>
                     <li class="dropdown-item" @click="handleEditPool(row)">{{$t('cluster.ca.nodePool.action.edit')}}</li>
                     <li
@@ -689,13 +709,20 @@
       header-position="left"
       :title="$t('cluster.ca.nodePool.records.action.ipList')"
       v-model="showIPList">
-      <bk-table
-        :key="ipTableKey"
-        :data="currentOperateRow.task ? currentOperateRow.task.nodeIPList : []">
-        <bcs-table-column label="IP">
-          <template #default="{ row }">{{ row }}</template>
-        </bcs-table-column>
-      </bk-table>
+      <div class="relative">
+        <bk-button text size="small" class="absolute z-10 right-[10px] top-[8px]" @click="handleCopyAllIP">
+          <i class="bcs-icon bcs-icon-copy"></i>
+          {{ $t('generic.button.copyAll') }}
+        </bk-button>
+        <bcs-table
+          :key="ipTableKey"
+          :data="currentOperateRow.task ? currentOperateRow.task.nodeIPList : []"
+          :max-height="600">
+          <bcs-table-column label="IP">
+            <template #default="{ row }">{{ row }}</template>
+          </bcs-table-column>
+        </bcs-table>
+      </div>
     </bcs-dialog>
     <!-- 低优先级Pod配置 -->
     <bcs-dialog
@@ -737,7 +764,7 @@ import AutoScalerFormItem from './form-item.vue';
 import { updateClusterAutoScalingProviders } from '@/api/modules/cluster-manager';
 import { clusterOverview } from '@/api/modules/monitor';
 import $bkMessage from '@/common/bkmagic';
-import { formatBytes } from '@/common/util';
+import { copyText, formatBytes } from '@/common/util';
 import { CheckType } from '@/components/across-check.vue';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import Row from '@/components/layout/Row.vue';
@@ -777,11 +804,11 @@ export default defineComponent({
         name: $i18n.t('cluster.ca.basic.scanInterval.label'),
         unit: $i18n.t('units.suffix.seconds'),
       },
-      {
-        prop: 'scaleOutModuleName',
-        name: $i18n.t('cluster.ca.basic.module.label'),
-        desc: $i18n.t('cluster.ca.basic.module.desc'),
-      },
+      // {
+      //   prop: 'scaleOutModuleName',
+      //   name: $i18n.t('cluster.ca.basic.module.label'),
+      //   desc: $i18n.t('cluster.ca.basic.module.desc'),
+      // },
     ]);
     const autoScalerConfig = ref([
       {
@@ -895,7 +922,7 @@ export default defineComponent({
     const user = computed(() => $store.state.user);
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     const handleToggleAutoScaler = async value => new Promise(async (resolve, reject) => {
-      if (!autoscalerData.value.module?.scaleOutModuleID) {
+      if (!clusterData.value?.clusterBasicSettings?.module?.workerModuleID) {
         $bkInfo({
           type: 'warning',
           clsName: 'custom-info-confirm',
@@ -903,7 +930,7 @@ export default defineComponent({
           defaultInfo: true,
           okText: $i18n.t('cluster.ca.button.edit'),
           confirmFn: () => {
-            handleEditAutoScaler();
+            $router.replace({ query: { clusterId: props.clusterId, active: 'node' } });
           },
           cancelFn: () => {
             // eslint-disable-next-line prefer-promise-reject-errors
@@ -1056,6 +1083,8 @@ export default defineComponent({
       ?.find(item => item.clusterID === props.clusterId) || {});
     // 判断是否支持self资源池
     const getSelfDevicePool = async () => {
+      if (curCluster.value.provider !== 'tencentCloud') return;
+
       const data = await $store.dispatch('clustermanager/cloudInstanceTypes', {
         $cloudID: curCluster.value.provider,
         region: curCluster.value.region,
@@ -1170,10 +1199,34 @@ export default defineComponent({
           $nodeGroupID: row.nodeGroupID,
         });
       } else {
-        // 启用
-        result = await $store.dispatch('clustermanager/enableNodeGroupAutoScale', {
-          $nodeGroupID: row.nodeGroupID,
-        });
+        // 包年包月模式不建议开启节点池
+        if (curCluster.value.provider === 'tencentPublicCloud' && row.launchTemplate.instanceChargeType === 'PREPAID') {
+          $bkInfo({
+            type: 'warning',
+            clsName: 'custom-info-confirm',
+            title: $i18n.t('cluster.ca.nodePool.action.on'),
+            subTitle: $i18n.t('tke.tips.prepaidOfEnableCA'),
+            defaultInfo: true,
+            confirmFn: async () => {
+              // 启用
+              const result = await $store.dispatch('clustermanager/enableNodeGroupAutoScale', {
+                $nodeGroupID: row.nodeGroupID,
+              });
+              if (result) {
+                $bkMessage({
+                  theme: 'success',
+                  message: $i18n.t('generic.msg.success.ok'),
+                });
+                await handleGetNodePoolList();
+              }
+            },
+          });
+        } else {
+          // 启用
+          result = await $store.dispatch('clustermanager/enableNodeGroupAutoScale', {
+            $nodeGroupID: row.nodeGroupID,
+          });
+        }
       }
       if (result) {
         $bkMessage({
@@ -1788,6 +1841,21 @@ export default defineComponent({
         console.warn(err);
       });
     };
+    // 克隆节点
+    const handleClonePool = (row) => {
+      $router.push({
+        name: 'nodePool',
+        params: {
+          clusterId: props.clusterId,
+          nodeGroupID: row.nodeGroupID,
+        },
+        query: {
+          provider: autoscalerData.value.devicePoolProvider || 'yunti',
+        },
+      }).catch((err) => {
+        console.warn(err);
+      });
+    };
     // 编辑节点规格
     const handleEditPool = (row) => {
       $router.push({
@@ -1804,7 +1872,7 @@ export default defineComponent({
       });
     };
     // 集群详情
-    const { clusterOS, getClusterDetail } = useClusterInfo();
+    const { clusterOS, clusterData, getClusterDetail } = useClusterInfo();
 
     // 重试任务
     // const handleRetryTask = async (row) => {
@@ -1821,6 +1889,17 @@ export default defineComponent({
       ipTableKey.value = String(Math.random() * 100);// 修复dialog嵌套表格自适应问题
       showIPList.value = true;
       currentOperateRow.value = row;
+    };
+    // 复制所有IP
+    const handleCopyAllIP = () => {
+      const ipList = currentOperateRow.value.task.nodeIPList || [];
+      if (!ipList.length) return;
+
+      copyText(ipList.join('\n'));
+      $bkMessage({
+        theme: 'success',
+        message: $i18n.t('generic.msg.success.copy'),
+      });
     };
 
     // 跳转标准运维
@@ -1876,6 +1955,7 @@ export default defineComponent({
       stopTaskPool();
     });
     return {
+      curCluster,
       searchIp,
       isPodsPriorityEnable,
       podsPriorityLoading,
@@ -1887,6 +1967,7 @@ export default defineComponent({
       filterValues,
       ipTableKey,
       showIPList,
+      handleCopyAllIP,
       conversionPercentUsed,
       formatBytes,
       overview,
@@ -1973,6 +2054,7 @@ export default defineComponent({
       filtersStatusValue,
       handleNodeFilterChange,
       searchIpData,
+      handleClonePool,
     };
   },
 });

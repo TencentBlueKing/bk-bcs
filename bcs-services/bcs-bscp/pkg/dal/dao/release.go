@@ -18,12 +18,12 @@ import (
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/sharding"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/sharding"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // Release supplies all the release related operations.
@@ -34,8 +34,16 @@ type Release interface {
 	List(kit *kit.Kit, opts *types.ListReleasesOption) (*types.ListReleaseDetails, error)
 	// ListAllByIDs list all releases by releaseIDs.
 	ListAllByIDs(kit *kit.Kit, ids []uint32, bizID uint32) ([]*table.Release, error)
-	// GetByName ..
+	// GetByName get release by name
 	GetByName(kit *kit.Kit, bizID uint32, appID uint32, name string) (*table.Release, error)
+	// Get get release by id
+	Get(kit *kit.Kit, bizID, appID, releaseID uint32) (*table.Release, error)
+	// UpdateDeprecated update release deprecated status.
+	UpdateDeprecated(kit *kit.Kit, bizID, appID, releaseID uint32, deprecated bool) error
+	// DeleteWithTx delete release with tx.
+	DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, appID, releaseID uint32) error
+	// GetReleaseLately get release lately info
+	GetReleaseLately(kit *kit.Kit, bizID uint32, appID uint32) (*table.Release, error)
 }
 
 var _ Release = new(releaseDao)
@@ -45,6 +53,12 @@ type releaseDao struct {
 	sd       *sharding.Sharding
 	idGen    IDGenInterface
 	auditDao AuditDao
+}
+
+// GetReleaseLately get release lately info
+func (dao *releaseDao) GetReleaseLately(kit *kit.Kit, bizID uint32, appID uint32) (*table.Release, error) {
+	m := dao.genQ.Release
+	return m.WithContext(kit.Ctx).Where(m.AppID.Eq(appID), m.BizID.Eq(bizID)).Order(m.ID.Desc()).Take()
 }
 
 // CreateWithTx create one release instance with tx.
@@ -82,6 +96,12 @@ func (dao *releaseDao) CreateWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.Rele
 }
 
 // GetByName 通过名称获取, 可以做唯一性校验
+func (dao *releaseDao) Get(kit *kit.Kit, bizID uint32, appID, releaseID uint32) (*table.Release, error) {
+	m := dao.genQ.Release
+	return m.WithContext(kit.Ctx).Where(m.ID.Eq(releaseID), m.AppID.Eq(appID), m.BizID.Eq(bizID)).Take()
+}
+
+// GetByName 通过名称获取, 可以做唯一性校验
 func (dao *releaseDao) GetByName(kit *kit.Kit, bizID uint32, appID uint32, name string) (*table.Release, error) {
 	m := dao.genQ.Release
 	return m.WithContext(kit.Ctx).Where(m.Name.Eq(name), m.AppID.Eq(appID), m.BizID.Eq(bizID)).Take()
@@ -108,9 +128,9 @@ func (dao *releaseDao) List(kit *kit.Kit, opts *types.ListReleasesOption) (*type
 	if opts.SearchKey == "" {
 		q = q.Where(m.BizID.Eq(opts.BizID), m.AppID.Eq(opts.AppID), m.Deprecated.Is(opts.Deprecated))
 	} else {
-		searchKey := "%" + opts.SearchKey + "%"
+		searchKey := "(?i)" + opts.SearchKey
 		q = q.Where(m.BizID.Eq(opts.BizID), m.AppID.Eq(opts.AppID), m.Deprecated.Is(opts.Deprecated)).Where(
-			q.Where(m.Name.Like(searchKey)).Or(m.Memo.Like(searchKey)).Or(m.Creator.Like(searchKey)))
+			q.Where(m.Name.Regexp(searchKey)).Or(m.Memo.Regexp(searchKey)).Or(m.Creator.Regexp(searchKey)))
 	}
 	q = q.Order(m.ID.Desc())
 
@@ -155,4 +175,19 @@ func (dao *releaseDao) validateAttachmentResExist(kit *kit.Kit, am *table.Releas
 		return fmt.Errorf("get release attached app %d failed", am.AppID)
 	}
 	return nil
+}
+
+func (dao *releaseDao) UpdateDeprecated(kit *kit.Kit, bizID, appID, releaseID uint32, deprecated bool) error {
+	m := dao.genQ.Release
+	_, err := m.WithContext(kit.Ctx).
+		Where(m.ID.Eq(releaseID), m.AppID.Eq(appID), m.BizID.Eq(bizID)).
+		Update(m.Deprecated, deprecated)
+	return err
+}
+
+// DeleteWithTx delete release with tx.
+func (dao *releaseDao) DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, appID, releaseID uint32) error {
+	m := tx.Release
+	_, err := m.WithContext(kit.Ctx).Where(m.ID.Eq(releaseID), m.AppID.Eq(appID), m.BizID.Eq(bizID)).Delete()
+	return err
 }

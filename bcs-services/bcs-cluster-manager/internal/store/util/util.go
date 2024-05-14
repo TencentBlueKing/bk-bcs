@@ -32,7 +32,7 @@ const (
 	DataTableNamePrefix = "bcsclustermanagerv2_"
 
 	// DefaultLimit table default limit
-	DefaultLimit = 3000
+	DefaultLimit = 5000
 )
 
 // EnsureTable ensure object database table and table indexes
@@ -60,6 +60,21 @@ func EnsureTable(ctx context.Context, db drivers.DB, tableName string, indexes [
 		}
 	}
 	return nil
+}
+
+// SliceInterface2String to string slice
+func SliceInterface2String(interfaceSlice []interface{}) []string {
+	stringSlice := make([]string, 0)
+
+	for _, v := range interfaceSlice {
+		str, ok := v.(string)
+		if !ok {
+			continue
+		}
+		stringSlice = append(stringSlice, str)
+	}
+
+	return stringSlice
 }
 
 // MapInt2MapIf convert map[string]int to map[string]interface{}
@@ -223,6 +238,7 @@ func BuildTaskOperationLogProject() map[string]interface{} {
 	return map[string]interface{}{
 		"resourcetype": "$resourcetype",
 		"resourceid":   "$resourceid",
+		"resourcename": "$resourcename",
 		"taskid":       "$taskid",
 		"message":      "$message",
 		"opuser":       "$opuser",

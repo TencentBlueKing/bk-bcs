@@ -8,12 +8,12 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package portbindingcontroller
 
 import (
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	k8scorev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/util/workqueue"
@@ -21,7 +21,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/metrics"
 )
 
@@ -59,7 +58,7 @@ func (nf *NodeFilter) Create(e event.CreateEvent, q workqueue.RateLimitingInterf
 	}})
 
 	// check if related portBinding created success
-	go checkPortBindingCreate(nf.cli, node.GetNamespace(), node.GetName())
+	go checkPortBindingCreate(nf.cli, nf.nodePortBindingNs, node.GetName())
 }
 
 // Update implement EventFilter
@@ -84,7 +83,7 @@ func (nf *NodeFilter) Update(e event.UpdateEvent, q workqueue.RateLimitingInterf
 
 	// 如果删除portpool相关annotation，认为用户不再需要绑定端口，会在portBinding reconcile过程中删除相关PortBinding
 	if !checkPortPoolAnnotation(newNode.Annotations) && checkPortPoolAnnotation(oldNode.Annotations) {
-		go checkPortBindingDelete(nf.cli, newNode.GetNamespace(), newNode.GetName())
+		go checkPortBindingDelete(nf.cli, nf.nodePortBindingNs, newNode.GetName())
 	}
 }
 
@@ -105,7 +104,7 @@ func (nf *NodeFilter) Delete(e event.DeleteEvent, q workqueue.RateLimitingInterf
 		Namespace: nf.nodePortBindingNs,
 	}})
 
-	go checkPortBindingDelete(nf.cli, node.GetNamespace(), node.GetName())
+	go checkPortBindingDelete(nf.cli, nf.nodePortBindingNs, node.GetName())
 }
 
 // Generic implement EventFilter

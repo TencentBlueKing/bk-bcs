@@ -2,6 +2,45 @@
     "language": "en",
     "messages": [
         {
+            "id": "the length of hook ids is {IdsLen}, it must be within the range of [1,{ArrayInputLenLimit}]",
+            "message": "the length of hook ids is {IdsLen}, it must be within the range of [1,{ArrayInputLenLimit}]",
+            "translation": "the length of hook ids is {IdsLen}, it must be within the range of [1,{ArrayInputLenLimit}]",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "IdsLen",
+                    "string": "%[1]d",
+                    "type": "int",
+                    "underlyingType": "int",
+                    "argNum": 1,
+                    "expr": "idsLen"
+                },
+                {
+                    "id": "ArrayInputLenLimit",
+                    "string": "%[2]d",
+                    "type": "int",
+                    "underlyingType": "int",
+                    "argNum": 2,
+                    "expr": "constant.ArrayInputLenLimit"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "batch delete failed",
+            "message": "batch delete failed",
+            "translation": "batch delete failed",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "id is required",
+            "message": "id is required",
+            "translation": "id is required",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
             "id": "template variable name must start with {TemplateVariablePrefix}",
             "message": "template variable name must start with {TemplateVariablePrefix}",
             "translation": "template variable name must start with {TemplateVariablePrefix}",
@@ -14,6 +53,31 @@
                     "underlyingType": "string",
                     "argNum": 1,
                     "expr": "constant.TemplateVariablePrefix"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "the length of template variable ids is {IdsLen}, it must be within the range of [1,{ArrayInputLenLimit}]",
+            "message": "the length of template variable ids is {IdsLen}, it must be within the range of [1,{ArrayInputLenLimit}]",
+            "translation": "the length of template variable ids is {IdsLen}, it must be within the range of [1,{ArrayInputLenLimit}]",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "IdsLen",
+                    "string": "%[1]d",
+                    "type": "int",
+                    "underlyingType": "int",
+                    "argNum": 1,
+                    "expr": "idsLen"
+                },
+                {
+                    "id": "ArrayInputLenLimit",
+                    "string": "%[2]d",
+                    "type": "int",
+                    "underlyingType": "int",
+                    "argNum": 2,
+                    "expr": "constant.ArrayInputLenLimit"
                 }
             ],
             "fuzzy": true
@@ -151,7 +215,7 @@
                 {
                     "id": "VariableType",
                     "string": "%[1]s",
-                    "type": "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table.VariableType",
+                    "type": "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table.VariableType",
                     "underlyingType": "string",
                     "argNum": 1,
                     "expr": "t"

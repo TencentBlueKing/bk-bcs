@@ -17,9 +17,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
-	pbbase "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
-	pbkv "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/kv"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	pbbase "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
+	pbcontent "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/content"
+	pbkv "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/kv"
 )
 
 // PbRKv convert table ReleasedKv to pb ReleasedKv
@@ -29,11 +30,12 @@ func PbRKv(k *table.ReleasedKv, value string) *ReleasedKv {
 	}
 
 	return &ReleasedKv{
-		Id:         k.ID,
-		ReleaseId:  k.ReleaseID,
-		Spec:       pbkv.PbKvSpec(k.Spec, value),
-		Attachment: pbkv.PbKvAttachment(k.Attachment),
-		Revision:   pbbase.PbRevision(k.Revision),
+		Id:          k.ID,
+		ReleaseId:   k.ReleaseID,
+		Spec:        pbkv.PbKvSpec(k.Spec, value),
+		Attachment:  pbkv.PbKvAttachment(k.Attachment),
+		Revision:    pbbase.PbRevision(k.Revision),
+		ContentSpec: pbcontent.PbContentSpec(k.ContentSpec),
 	}
 }
 
@@ -58,6 +60,11 @@ func RKvs(kvs []*pbkv.Kv, versionMap map[string]int, releaseID uint32) ([]*table
 				Reviser:   kv.Revision.Reviser,
 				CreatedAt: createdAt,
 				UpdatedAt: createdAt,
+			},
+			ContentSpec: &table.ContentSpec{
+				Signature: kv.ContentSpec.Signature,
+				Md5:       kv.ContentSpec.Md5,
+				ByteSize:  kv.ContentSpec.ByteSize,
 			},
 		}
 		rkv.Spec.Version = uint32(versionMap[kv.Spec.Key])

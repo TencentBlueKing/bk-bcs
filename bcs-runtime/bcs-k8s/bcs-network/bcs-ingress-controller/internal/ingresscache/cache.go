@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package ingresscache 缓存service/workload到ingress的对应信息，提高ingress的调谐效率
@@ -22,6 +21,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
@@ -43,24 +43,24 @@ func NewDefaultCache() *Cache {
 func (c *Cache) Add(ingress *networkextensionv1.Ingress) {
 	ingressKey := buildIngressKey(ingress.GetNamespace(), ingress.GetName())
 	for _, rule := range ingress.Spec.Rules {
-		if strings.ToLower(rule.Protocol) == "tcp" || strings.ToLower(rule.Protocol) == "udp" {
+		if common.InLayer4Protocol(rule.Protocol) {
 			for _, route := range rule.Services {
 				ns := route.ServiceNamespace
 				if ns == "" {
 					ns = ingress.GetNamespace()
 				}
-				svcKey := buildServiceKey(ns, route.ServiceName)
+				svcKey := buildServiceKey(route.GetServiceKind(), ns, route.ServiceName)
 				c.serviceCache.add(svcKey, ingressKey)
 			}
 		}
-		if strings.ToLower(rule.Protocol) == "http" || strings.ToLower(rule.Protocol) == "https" {
+		if common.InLayer7Protocol(rule.Protocol) {
 			for _, httpRoute := range rule.Routes {
 				for _, route := range httpRoute.Services {
 					ns := route.ServiceNamespace
 					if ns == "" {
 						ns = ingress.GetNamespace()
 					}
-					svcKey := buildServiceKey(ns, route.ServiceName)
+					svcKey := buildServiceKey(route.GetServiceKind(), ns, route.ServiceName)
 					c.serviceCache.add(svcKey, ingressKey)
 				}
 			}
@@ -76,24 +76,24 @@ func (c *Cache) Add(ingress *networkextensionv1.Ingress) {
 func (c *Cache) Remove(ingress *networkextensionv1.Ingress) {
 	ingressKey := buildIngressKey(ingress.GetNamespace(), ingress.GetName())
 	for _, rule := range ingress.Spec.Rules {
-		if strings.ToLower(rule.Protocol) == "tcp" || strings.ToLower(rule.Protocol) == "udp" {
+		if common.InLayer4Protocol(rule.Protocol) {
 			for _, route := range rule.Services {
 				ns := route.ServiceNamespace
 				if ns == "" {
 					ns = ingress.GetNamespace()
 				}
-				svcKey := buildServiceKey(ns, route.ServiceName)
+				svcKey := buildServiceKey(route.GetServiceKind(), ns, route.ServiceName)
 				c.serviceCache.remove(svcKey, ingressKey)
 			}
 		}
-		if strings.ToLower(rule.Protocol) == "http" || strings.ToLower(rule.Protocol) == "https" {
+		if common.InLayer7Protocol(rule.Protocol) {
 			for _, httpRoute := range rule.Routes {
 				for _, route := range httpRoute.Services {
 					ns := route.ServiceNamespace
 					if ns == "" {
 						ns = ingress.GetNamespace()
 					}
-					svcKey := buildServiceKey(ns, route.ServiceName)
+					svcKey := buildServiceKey(route.GetServiceKind(), ns, route.ServiceName)
 					c.serviceCache.remove(svcKey, ingressKey)
 				}
 			}
@@ -107,8 +107,8 @@ func (c *Cache) Remove(ingress *networkextensionv1.Ingress) {
 }
 
 // GetRelatedIngressOfService 获取service相关的ingress信息
-func (c *Cache) GetRelatedIngressOfService(serviceNamespace, serviceName string) []IngressMeta {
-	serviceKey := buildServiceKey(serviceNamespace, serviceName)
+func (c *Cache) GetRelatedIngressOfService(serviceKind, serviceNamespace, serviceName string) []IngressMeta {
+	serviceKey := buildServiceKey(serviceKind, serviceNamespace, serviceName)
 	return c.serviceCache.getRelatedIngress(serviceKey)
 }
 

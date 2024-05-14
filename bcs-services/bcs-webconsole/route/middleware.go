@@ -115,9 +115,11 @@ func APIAuthRequired() gin.HandlerFunc {
 		case initContextWithBCSJwt(c, authCtx):
 		case initContextWithDevEnv(c, authCtx):
 		default:
+			// 统一翻译格式解决冲突问题
+			err := UnauthorizedError
 			c.AbortWithStatusJSON(http.StatusUnauthorized, types.APIResponse{
 				Code:      types.ApiErrorCode,
-				Message:   i18n.GetMessage(c, UnauthorizedError.Error()),
+				Message:   i18n.T(c, "%s", err),
 				RequestID: authCtx.RequestId,
 			})
 			return

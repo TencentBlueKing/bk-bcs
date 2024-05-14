@@ -8,7 +8,7 @@ import "google/api/annotations.proto";
 
 package pbcs;
 
-option go_package = "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/cache-service;pbcs";
+option go_package = "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/cache-service;pbcs";
 
 service Cache {
   rpc GetAppID(GetAppIDReq) returns (GetAppIDResp) {
@@ -23,6 +23,8 @@ service Cache {
       body: "*"
     };
   }
+
+  rpc ListApps(ListAppsReq) returns (ListAppsResp) {}
 
   rpc GetReleasedCI(GetReleasedCIReq) returns (JsonRawResp) {
     // response data is a json array raw of RCI(released config item)
@@ -92,6 +94,21 @@ service Cache {
       body: "*"
     };
   }
+
+  rpc SetClientMetric(SetClientMetricReq) returns (SetClientMetricResp) {
+    option (google.api.http) = {
+      post: "/api/v1/cache/biz/{biz_id}/apps/{app_id}/client_metric"
+      body: "*"
+    };
+  }
+
+  rpc GetAsyncDownloadTask(GetAsyncDownloadTaskReq) returns (JsonRawResp) {
+    option (google.api.http) = {
+      get: "/api/v1/cache/async/download/task/{task_id}"
+    };
+  }
+
+  rpc SetAsyncDownloadTask(SetAsyncDownloadTaskReq) returns (SetAsyncDownloadTaskResp) {}
 }
 
 message JsonRawResp {
@@ -101,6 +118,7 @@ message JsonRawResp {
 message GetAppIDReq {
   uint32 biz_id = 1;
   string app_name = 2;
+  bool refresh = 3;
 }
 
 message GetAppIDResp {
@@ -110,6 +128,15 @@ message GetAppIDResp {
 message GetAppMetaReq {
   uint32 biz_id = 1;
   uint32 app_id = 2;
+}
+
+message ListAppsReq {
+  uint32 biz_id = 1;  // 多个以逗号分割
+}
+
+message ListAppsResp {
+  uint32 count = 1;
+  repeated pbapp.App details = 2;
 }
 
 message GetReleasedCIReq {
@@ -145,7 +172,6 @@ message AppMeta {
   string cft = 2;
   string dpt = 3;
   string mod = 4;
-  pbapp.Reload reload = 5;
 }
 
 message AppCRIMeta {
@@ -205,3 +231,26 @@ message GetReleasedKvValueReq {
   uint32 app_id = 3;
   string key = 4;
 }
+
+message SetClientMetricReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  bytes payload = 3;
+}
+
+message SetClientMetricResp {}
+
+message GetAsyncDownloadTaskReq {
+  uint32 biz_id = 1;
+  string task_id = 2;
+}
+
+message SetAsyncDownloadTaskReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  string task_id = 3;
+  string file_path = 4;
+  string file_name = 5;
+}
+
+message SetAsyncDownloadTaskResp {}

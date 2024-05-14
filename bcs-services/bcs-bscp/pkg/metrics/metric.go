@@ -18,8 +18,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/version"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/version"
 )
 
 // globalRegister is a global register which is used to collect metrics we need.
@@ -80,21 +80,24 @@ var (
 
 	// http 请求总量
 	httpRequestsTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: "http_requests_total",
-		Help: "Counter of HTTP requests to bscp",
+		Namespace: Namespace,
+		Name:      "http_requests_total",
+		Help:      "Counter of HTTP requests to bscp",
 	}, []string{"handler", "method", "code"})
 
 	// http 请求耗时
 	httpRequestDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Name:    "http_request_duration_seconds",
-		Help:    "Histogram of latencies for HTTP requests to bscp.",
-		Buckets: []float64{0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1},
+		Namespace: Namespace,
+		Name:      "http_request_duration_seconds",
+		Help:      "Histogram of latencies for HTTP requests to bscp.",
+		Buckets:   []float64{0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1},
 	}, []string{"handler", "method", "code"})
 
 	// BSCPServerHandledTotal 请求数
 	BSCPServerHandledTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: "bscp_server_handled_total",
-		Help: "Total number of platform user operations",
+		Namespace: Namespace,
+		Name:      "server_handled_total",
+		Help:      "Total number of platform user operations",
 	}, []string{"service", "handler", "code", "biz", "username"})
 )
 

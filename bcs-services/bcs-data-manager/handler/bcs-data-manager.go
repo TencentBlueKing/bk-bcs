@@ -35,7 +35,8 @@ type BcsDataManager struct {
 }
 
 // NewBcsDataManager create DataManager Handler
-func NewBcsDataManager(mongoModel store.Server, tspiderModel store.Server, resourceGetter common.GetterInterface) *BcsDataManager {
+func NewBcsDataManager(
+	mongoModel store.Server, tspiderModel store.Server, resourceGetter common.GetterInterface) *BcsDataManager {
 	return &BcsDataManager{
 		mongoModel:     mongoModel,
 		tspiderModel:   tspiderModel,
@@ -449,8 +450,10 @@ func (e *BcsDataManager) GetPowerTrading(ctx context.Context, req *bcsdatamanage
 // currentPage: min 1
 // pageSize: max 10000
 func (e *BcsDataManager) GetCloudNativeWorkloadList(ctx context.Context,
-	req *bcsdatamanager.GetCloudNativeWorkloadListRequest, rsp *bcsdatamanager.GetCloudNativeWorkloadListResponse) error {
-	blog.Infof("Received GetCloudNativeWorkload.Call request. PageSize: %d, CurrentPage: %d", req.GetPageSize(), req.GetCurrentPage())
+	req *bcsdatamanager.GetCloudNativeWorkloadListRequest,
+	rsp *bcsdatamanager.GetCloudNativeWorkloadListResponse) error {
+	blog.Infof("Received GetCloudNativeWorkload.Call request. PageSize: %d, CurrentPage: %d",
+		req.GetPageSize(), req.GetCurrentPage())
 
 	start := time.Now()
 	result, err := e.tspiderModel.GetCloudNativeWorkloadList(ctx, req)
@@ -466,7 +469,7 @@ func (e *BcsDataManager) GetCloudNativeWorkloadList(ctx context.Context,
 	rsp.Msg = bcsCommon.BcsSuccessStr
 	rsp.Data = result
 
-	//appid和data和platform在函数内部填充
+	// appid和data和platform在函数内部填充
 	rsp.Data.Status = rsp.Code
 	rsp.Data.Message = rsp.Msg
 	rsp.Data.PageSize = req.GetPageSize()
@@ -504,7 +507,9 @@ func (e *BcsDataManager) GetUserOperationDataList(ctx context.Context,
 	return nil
 }
 
-func (e *BcsDataManager) GetWorkloadRequestResult(ctx context.Context, req *bcsdatamanager.GetWorkloadRequestRecommendResultReq,
+// GetWorkloadRequestResult get workload request result
+func (e *BcsDataManager) GetWorkloadRequestResult(ctx context.Context,
+	req *bcsdatamanager.GetWorkloadRequestRecommendResultReq,
 	rsp *bcsdatamanager.GetWorkloadRequestRecommendResultRsp) error {
 	blog.Infof("Received GetWorkloadRequestResult.Call request. cluster id: %s, namespace: %s, workloadType:%s"+
 		"workloadName:%s",
@@ -525,7 +530,9 @@ func (e *BcsDataManager) GetWorkloadRequestResult(ctx context.Context, req *bcsd
 	return nil
 }
 
-func (e *BcsDataManager) GetWorkloadOriginRequestResult(ctx context.Context, req *bcsdatamanager.GetWorkloadOriginRequestResultReq,
+// GetWorkloadOriginRequestResult get workload origin request result
+func (e *BcsDataManager) GetWorkloadOriginRequestResult(
+	ctx context.Context, req *bcsdatamanager.GetWorkloadOriginRequestResultReq,
 	rsp *bcsdatamanager.GetWorkloadOriginRequestResultRsp) error {
 	blog.Infof("Received GetWorkloadOriginRequestResult.Call request. projectID:%s, cluster id: %s, "+
 		"namespace: %s, workloadType:%s, workloadName:%s",

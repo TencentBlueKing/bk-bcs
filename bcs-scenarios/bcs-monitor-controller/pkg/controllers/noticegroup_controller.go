@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package controllers
@@ -20,6 +19,7 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -29,7 +29,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	monitorextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/api/v1"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/apiclient"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/fileoperator"
@@ -46,7 +45,8 @@ type NoticeGroupReconciler struct {
 	MonitorApiCli apiclient.IMonitorApiClient
 }
 
-// +kubebuilder:rbac:groups=monitorextension.bkbcs.tencent.com,resources=noticegroups,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=monitorextension.bkbcs.tencent.com,
+// resources=noticegroups,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=monitorextension.bkbcs.tencent.com,resources=noticegroups/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=monitorextension.bkbcs.tencent.com,resources=noticegroups/finalizers,verbs=update
 
@@ -88,7 +88,7 @@ func (r *NoticeGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		}
 		return ctrl.Result{}, err
 	}
-	defer os.Remove(outputPath)
+	defer os.RemoveAll(outputPath)
 
 	if err = r.MonitorApiCli.UploadConfig(noticeGroup.Spec.BizID, noticeGroup.Spec.BizToken, outputPath,
 		r.getAppName(noticeGroup), noticeGroup.Spec.Override); err != nil {
@@ -114,7 +114,7 @@ func (r *NoticeGroupReconciler) eventPredicate() predicate.Predicate {
 		CreateFunc: func(createEvent event.CreateEvent) bool {
 			ng := createEvent.Object.(*monitorextensionv1.NoticeGroup)
 			if ng.DeletionTimestamp == nil && ng.Status.SyncStatus.State == monitorextensionv1.SyncStateCompleted &&
-				ng.Spec.IgnoreChange == true {
+				ng.Spec.IgnoreChange {
 				blog.V(3).Infof("notice group '%s/%s' got create event, but is synced and ignore change",
 					ng.GetNamespace(), ng.GetName())
 				return false
@@ -135,7 +135,7 @@ func (r *NoticeGroupReconciler) eventPredicate() predicate.Predicate {
 				return false
 			}
 			if newNg.DeletionTimestamp == nil && newNg.Status.SyncStatus.
-				State == monitorextensionv1.SyncStateCompleted && newNg.Spec.IgnoreChange == true {
+				State == monitorextensionv1.SyncStateCompleted && newNg.Spec.IgnoreChange {
 				blog.V(3).Infof("noticeGroup '%s/%s' updated, but is synced and ignore change",
 					newNg.GetNamespace(), newNg.GetName())
 				return false
@@ -169,7 +169,8 @@ func (r *NoticeGroupReconciler) updateSyncStatus(noticeGroup *monitorextensionv1
 	if inErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		return r.Client.Status().Update(r.Ctx, noticeGroup)
 	}); inErr != nil {
-		blog.Warnf("update noticeGroup'%s/%s' failed, err: %s", noticeGroup.GetNamespace(), noticeGroup.GetName(), inErr.Error())
+		blog.Warnf("update noticeGroup'%s/%s' failed, err: %s", noticeGroup.GetNamespace(),
+			noticeGroup.GetName(), inErr.Error())
 		return inErr
 	}
 

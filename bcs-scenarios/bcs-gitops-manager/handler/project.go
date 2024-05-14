@@ -16,13 +16,13 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapiv4/bcsproject"
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 	"github.com/grpc-ecosystem/go-grpc-middleware/util/metautils"
 	"github.com/pkg/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapiv4/bcsproject"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/utils"
@@ -71,7 +71,7 @@ func (e *BcsGitopsHandler) StartupProject(ctx context.Context, req *pb.ProjectSy
 			errors.Wrapf(err, "request project '%s' from bcs-project failed", req.GetProjectCode()))
 	}
 	// check the user whether have the project edit permission
-	if err := e.checkStartupProjectPermission(ctx, project.ProjectID); err != nil {
+	if err = e.checkStartupProjectPermission(ctx, project.ProjectID); err != nil {
 		return e.startProjectResult(resp, failedCode, "",
 			errors.Wrapf(err, "check startup project '%s' permission failed", req.GetProjectCode()))
 	}
@@ -96,11 +96,11 @@ func (e *BcsGitopsHandler) StartupProject(ctx context.Context, req *pb.ProjectSy
 		destPro.ObjectMeta.Annotations[common.SecretKey] = secretAnnotation
 	}
 
-	if err := e.option.Storage.CreateProject(ctx, destPro); err != nil {
+	if err = e.option.Storage.CreateProject(ctx, destPro); err != nil {
 		return e.startProjectResult(resp, failedCode, "",
 			errors.Wrapf(err, "create project '%s' to storage failed", project.ProjectCode))
 	}
-	if err := e.option.ClusterControl.SyncProject(ctx, project.ProjectCode); err != nil {
+	if err = e.option.ClusterControl.SyncProject(ctx, project.ProjectCode); err != nil {
 		return e.startProjectResult(resp, failedCode, "",
 			errors.Wrapf(err, "sync project '%s' clusters failed", project.ProjectCode))
 	}

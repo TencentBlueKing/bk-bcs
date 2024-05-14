@@ -67,14 +67,18 @@ func updateClusterSystemID(clusterID string, systemID string) error {
 }
 
 // updateNodeStatusByNodeID set node status
-func updateFailedNodeStatusByNodeID(insInfos map[string]business.InstanceInfo, status string) error { // nolint
+func updateFailedNodeStatusByNodeID(ctx context.Context, insInfos map[string]business.InstanceInfo, status string) error { // nolint
+	taskId := cloudprovider.GetTaskIDFromContext(ctx)
+
 	if len(insInfos) == 0 {
+		blog.Infof("updateFailedNodeStatusByNodeID[%s] failed: insInfos empty", taskId)
 		return nil
 	}
 
 	for id, data := range insInfos {
 		node, err := cloudprovider.GetStorageModel().GetNode(context.Background(), id)
 		if err != nil {
+			blog.Errorf("updateFailedNodeStatusByNodeID[%s] GetNode[%s] failed: %v", taskId, id, err)
 			continue
 		}
 		node.Status = status
@@ -83,6 +87,7 @@ func updateFailedNodeStatusByNodeID(insInfos map[string]business.InstanceInfo, s
 		}
 		err = cloudprovider.GetStorageModel().UpdateNode(context.Background(), node)
 		if err != nil {
+			blog.Errorf("updateFailedNodeStatusByNodeID[%s] UpdateNode[%s] failed: %v", taskId, id, err)
 			continue
 		}
 	}
@@ -171,9 +176,9 @@ func importClusterNodesToCM(ctx context.Context, ipList []string, opt *cloudprov
 			continue
 		}
 
+		n.ClusterID = opt.ClusterID
+		n.Status = common.StatusRunning
 		if node == nil {
-			n.ClusterID = opt.ClusterID
-			n.Status = common.StatusRunning
 			err = cloudprovider.GetStorageModel().CreateNode(ctx, n)
 			if err != nil {
 				blog.Errorf("importClusterNodes CreateNode[%s] failed: %v", n.InnerIP, err)
@@ -191,7 +196,7 @@ func importClusterNodesToCM(ctx context.Context, ipList []string, opt *cloudprov
 
 // releaseClusterCIDR release cluster CIDR
 func releaseClusterCIDR(cls *cmproto.Cluster) error {
-	if len(cls.NetworkSettings.ClusterIPv4CIDR) > 0 {
+	if len(cls.GetNetworkSettings().GetClusterIPv4CIDR()) > 0 {
 		cidr, err := cloudprovider.GetStorageModel().GetTkeCidr(context.Background(),
 			cls.VpcID, cls.NetworkSettings.ClusterIPv4CIDR)
 		if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) {
@@ -207,34 +212,12 @@ func releaseClusterCIDR(cls *cmproto.Cluster) error {
 			updateCidr := cidr
 			updateCidr.Status = common.TkeCidrStatusAvailable
 			updateCidr.Cluster = ""
-			updateCidr.UpdateTime = time.Now().String()
+			updateCidr.UpdateTime = time.Now().Format(time.RFC3339)
 			err = cloudprovider.GetStorageModel().UpdateTkeCidr(context.Background(), updateCidr)
 			if err != nil {
 				return err
 			}
 		}
-	}
-
-	return nil
-}
-
-// updateNodeGroupCloudNodeGroupID set nodegroup cloudNodeGroupID
-func updateNodeGroupCloudNodeGroupID(nodeGroupID string, newGroup *cmproto.NodeGroup) error {
-	group, err := cloudprovider.GetStorageModel().GetNodeGroup(context.Background(), nodeGroupID)
-	if err != nil {
-		return err
-	}
-
-	group.CloudNodeGroupID = newGroup.CloudNodeGroupID
-	if group.AutoScaling != nil && group.AutoScaling.VpcID == "" {
-		group.AutoScaling.VpcID = newGroup.AutoScaling.VpcID
-	}
-	if group.LaunchTemplate != nil {
-		group.LaunchTemplate.InstanceChargeType = newGroup.LaunchTemplate.InstanceChargeType
-	}
-	err = cloudprovider.GetStorageModel().UpdateNodeGroup(context.Background(), group)
-	if err != nil {
-		return err
 	}
 
 	return nil
@@ -257,4 +240,18 @@ func updateNodeGroupDesiredSize(nodeGroupID string, desiredSize uint32) error {
 	}
 
 	return nil
+}
+
+// GetExternalNgScriptType get external nodeGroup script type (true: inter; false extra)
+func GetExternalNgScriptType(ng *cmproto.NodeGroup) bool {
+	if ng.GetExtraInfo() == nil {
+		return false
+	}
+
+	_, ok := ng.GetExtraInfo()[common.ScriptInterType.String()]
+	if ok {
+		return ok
+	}
+
+	return false
 }

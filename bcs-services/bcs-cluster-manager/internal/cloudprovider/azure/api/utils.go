@@ -13,6 +13,7 @@
 package api
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"regexp"
@@ -23,9 +24,11 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 )
 
 //	nodeGroupToPool agentPool 转换器
@@ -56,18 +59,24 @@ func (c *nodeGroupToPool) convert() {
 	// 设置机型
 	properties.VMSize = to.Ptr(c.group.LaunchTemplate.InstanceType)
 	// 当前节点池为手动扩缩容模式，不可以指定最大、最小节点数!!!
-	//// 设置最大节点数
-	// b.pool.MaxCount = to.Ptr(int32(ng.AutoScaling.MaxSize))
-	//// 设置最小节点数
-	// b.pool.MinCount = to.Ptr(int32(ng.AutoScaling.MinSize))
+	// 设置最大节点数
+	// properties.MaxCount = to.Ptr(int32(c.group.AutoScaling.MaxSize))
+	// 设置最小节点数
+	// properties.MinCount = to.Ptr(int32(c.group.AutoScaling.MinSize))
 	// 设置节点池大小
 	properties.Count = to.Ptr(int32(c.group.AutoScaling.DesiredSize))
 	// 设置节点池为用户模式
 	properties.Mode = to.Ptr(armcontainerservice.AgentPoolModeUser)
 	// 设置Azure节点池的弹性伸缩
 	properties.EnableAutoScaling = to.Ptr(false)
+	// 是否分配公网IP
+	if c.group.LaunchTemplate.InternetAccess != nil {
+		properties.EnableNodePublicIP = to.Ptr(c.group.LaunchTemplate.InternetAccess.PublicIPAssigned)
+
+	}
 
 	// 以下为可选参数
+
 	// 设置tags
 	c.setTags()
 	// 设置labels
@@ -76,8 +85,8 @@ func (c *nodeGroupToPool) convert() {
 	c.setTaints()
 	// 设置每一个节点的最大pod数量
 	c.setMaxPods()
-	// 设置操作系统类型
-	c.setOSType()
+	// 设置系统和机型
+	c.setOSAndInstanceType()
 	// 设置节点系统盘类型
 	c.setOSDiskType()
 	// 设置节点系统盘大小
@@ -114,23 +123,23 @@ func (c *nodeGroupToPool) setScalingMode() {
 
 // setOSDiskType 设置系统盘类型
 func (c *nodeGroupToPool) setOSDiskType() {
-	//// 默认 使用托管类型(Managed)
-	// c.pool.Properties.OSDiskType = to.Ptr(armcontainerservice.OSDiskTypeManaged)
-	// lc := c.group.LaunchTemplate
-	// if lc.SystemDisk == nil || len(lc.SystemDisk.DiskType) == 0 {
-	//	return
-	// }
-	// found := false
-	// for _, osDiskType := range armcontainerservice.PossibleOSDiskTypeValues() {
-	//	if string(osDiskType) == lc.SystemDisk.DiskType {
-	//		found = true
-	//		break
-	//	}
-	// }
-	// if !found {
-	//	return
-	// }
-	// c.pool.Properties.OSDiskType = to.Ptr(armcontainerservice.OSDiskType(lc.SystemDisk.DiskType))
+	// 默认 使用托管类型(Managed)
+	c.pool.Properties.OSDiskType = to.Ptr(armcontainerservice.OSDiskTypeManaged)
+	lc := c.group.LaunchTemplate
+	if lc.SystemDisk == nil || len(lc.SystemDisk.DiskType) == 0 {
+		return
+	}
+	found := false
+	for _, osDiskType := range armcontainerservice.PossibleOSDiskTypeValues() {
+		if string(osDiskType) == lc.SystemDisk.DiskType {
+			found = true
+			break
+		}
+	}
+	if !found {
+		return
+	}
+	c.pool.Properties.OSDiskType = to.Ptr(armcontainerservice.OSDiskType(lc.SystemDisk.DiskType))
 }
 
 // setOSDiskSizeGB 设置系统盘大小
@@ -141,25 +150,33 @@ func (c *nodeGroupToPool) setOSDiskSizeGB() {
 	// 16至63核 - 512G
 	// 64+核 - 1024G
 	// Azure节点系统盘 默认为128GB
-	// sysDisk := c.group.LaunchTemplate.SystemDisk
-	// if sysDisk == nil || len(sysDisk.DiskSize) == 0 {
-	//	return
-	// }
-	//// 自定义节点系统盘 大小
-	// size, err := strconv.ParseInt(sysDisk.DiskSize, 10, 32)
-	// if err != nil {
-	//	return
-	// }
-	// c.pool.Properties.OSDiskSizeGB = to.Ptr(int32(size))
+	sysDisk := c.group.LaunchTemplate.SystemDisk
+	if sysDisk == nil || len(sysDisk.DiskSize) == 0 {
+		return
+	}
+	// 自定义节点系统盘 大小
+	size, err := strconv.ParseInt(sysDisk.DiskSize, 10, 32)
+	if err != nil {
+		return
+	}
+	c.pool.Properties.OSDiskSizeGB = to.Ptr(int32(size))
 }
 
-// setOSType  设置系统类型
-func (c *nodeGroupToPool) setOSType() {
+// setOSAndInstanceType  设置系统和机型
+func (c *nodeGroupToPool) setOSAndInstanceType() {
 	nodeOS := c.group.NodeOS
-	// 默认为linux
+	// 默认系统类型为linux
 	c.pool.Properties.OSType = to.Ptr(armcontainerservice.OSTypeLinux)
 	if strings.Contains(nodeOS, winTypeOS) {
 		c.pool.Properties.OSType = to.Ptr(armcontainerservice.OSTypeWindows)
+	}
+	// 默认OS为Ubuntu
+	c.pool.Properties.OSSKU = to.Ptr(armcontainerservice.OSSKUUbuntu)
+	if c.group.LaunchTemplate != nil && c.group.LaunchTemplate.ImageInfo != nil {
+		c.pool.Properties.OSSKU = to.Ptr(armcontainerservice.OSSKU(c.group.LaunchTemplate.ImageInfo.ImageName))
+	}
+	if c.group.LaunchTemplate != nil {
+		c.pool.Properties.VMSize = to.Ptr(c.group.LaunchTemplate.InstanceType)
 	}
 }
 
@@ -177,16 +194,11 @@ func (c *nodeGroupToPool) setOrchestratorVersion() { // nolint
 
 // setMaxPods 设置每一个节点的最大pod数量
 func (c *nodeGroupToPool) setMaxPods() {
-	extra := c.group.NodeTemplate.ExtraArgs
-	if extra == nil {
-		// Azure默认 maxPods=110(个)
-		return
-	}
 	// 根据解析参数获得
-	c.pool.Properties.MaxPods = to.Ptr(c.getMaxPods(extra))
+	c.pool.Properties.MaxPods = to.Ptr(int32(c.group.NodeTemplate.MaxPodsPerNode))
 	// 默认为250个
 	if *c.pool.Properties.MaxPods == 0 {
-		c.pool.Properties.MaxPods = to.Ptr[int32](250)
+		c.pool.Properties.MaxPods = to.Ptr(int32(250))
 	}
 }
 
@@ -217,9 +229,20 @@ func (c *nodeGroupToPool) setLabels() {
 // setTaints 设置taints
 func (c *nodeGroupToPool) setTaints() {
 	taints := c.group.NodeTemplate.Taints
-	if len(taints) == 0 {
-		return
+	if taints == nil {
+		taints = make([]*proto.Taint, 0)
 	}
+
+	/*
+		// attention: azure not support addNodes to set unScheduled nodes, thus realize this feature by taint
+		taints = append(taints, &proto.Taint{
+			Key:    cutils.BCSNodeGroupTaintKey,
+			Value:  cutils.BCSNodeGroupTaintValue,
+			Effect: cutils.BCSNodeGroupAzureTaintEffect,
+		})
+	*/
+
+	// key=value:NoSchedule NoExecute PreferNoSchedule
 	c.pool.Properties.NodeTaints = make([]*string, 0)
 	target := &c.pool.Properties.NodeTaints
 	for _, taint := range taints {
@@ -314,7 +337,7 @@ func (c *poolToNodeGroup) convert() {
 	// 设置tags
 	c.setTags()
 	// 设置状态
-	c.setStatus()
+	// c.setStatus()
 	// 设置CloudNodeGroupID
 	c.setCloudNodeGroupID()
 	// 设置NodeGroupID
@@ -554,26 +577,14 @@ func (c *setToNodeGroup) convert() {
 	c.setAutoScalingID()
 	// 设置asg name
 	c.setAutoScalingName()
-	// 设置VpcID
-	c.setVpcID()
-	// 设置subnet id
-	c.setSubnetIDs()
 	// 系统盘
 	c.setSystemDisk()
 	// 数据盘
 	c.setDataDisks()
-	// 用户数据
-	c.setUserData()
 	// 设置可用性区域
 	c.setZones()
 	// 设置用户名
 	c.setUsername()
-}
-
-// setSubnetIDs 设置subnet id(子网id)
-func (c *setToNodeGroup) setSubnetIDs() {
-	asg := c.group.AutoScaling
-	asg.SubnetIDs = ParseSetReturnSubnetIDs(c.set)
 }
 
 // setLaunchConfigureName 设置lc name
@@ -603,7 +614,7 @@ func (c *setToNodeGroup) setAutoScalingID() {
 // setAutoScalingName 设置asg name
 func (c *setToNodeGroup) setAutoScalingName() {
 	asg := c.group.AutoScaling
-	asg.AutoScalingName = regexpSetNodeGroupResourcesName(c.set)
+	asg.AutoScalingName = RegexpSetNodeGroupResourcesName(c.set)
 }
 
 // setZones 设置可用性区域
@@ -623,15 +634,6 @@ func (c *setToNodeGroup) setZones() {
 func (c *setToNodeGroup) setRegion() {
 	if c.set.Location != nil {
 		c.group.Region = *c.set.Location
-	}
-}
-
-// 设置VpcID
-func (c *setToNodeGroup) setVpcID() {
-	asg := c.group.AutoScaling
-	vpcIDs := ParseSetReturnSubnetNames(c.set)
-	if len(vpcIDs) >= 1 {
-		asg.VpcID = vpcIDs[0]
 	}
 }
 
@@ -681,16 +683,6 @@ func (c *setToNodeGroup) setDataDisks() {
 			DiskType: d.DiskType,
 			DiskSize: d.DiskSize,
 		})
-	}
-}
-
-// setUserData 用户数据
-func (c *setToNodeGroup) setUserData() {
-	lc := c.group.LaunchTemplate
-	// VirtualMachineScaleSet.properties.virtualMachineProfile.userData（用户数据）
-	userData := c.set.Properties.VirtualMachineProfile.UserData
-	if userData != nil && len(*userData) != 0 {
-		lc.UserData = *userData
 	}
 }
 
@@ -946,6 +938,59 @@ func (c *nodeToVm) setLocation() {
 	}
 }
 
+// SetVmSetNetWork 设置虚拟规模集网络
+func SetVmSetNetWork(ctx context.Context, client AksService, group *proto.NodeGroup,
+	set *armcompute.VirtualMachineScaleSet) error {
+	vpcID := group.AutoScaling.VpcID
+	subnets := group.AutoScaling.SubnetIDs
+	if len(vpcID) == 0 || len(subnets) == 0 {
+		return fmt.Errorf("SetVmSetNetWork vpcID or subnetID can not be empty")
+	}
+
+	defaultVpcIDs := ParseSetReturnSubnetNames(set)
+	defaultSubnets := ParseSetReturnSubnetIDs(set)
+	ipConfigs := set.Properties.VirtualMachineProfile.NetworkProfile.NetworkInterfaceConfigurations[0].Properties.
+		IPConfigurations
+
+	if len(defaultVpcIDs) == 0 || len(defaultSubnets) == 0 || len(ipConfigs) == 0 {
+		return fmt.Errorf("SetVmSetNetWork vpcID, subnetID or ipConfigs for scaleset %s is empty", *set.Name)
+	}
+
+	defaultSubnetID := ipConfigs[0].Properties.Subnet.ID
+	newSubnetID := to.Ptr(strings.ReplaceAll(
+		strings.ReplaceAll(*defaultSubnetID, defaultVpcIDs[0], vpcID), defaultSubnets[0], subnets[0]))
+
+	// 设置子网
+	for k := range ipConfigs {
+		ipConfigs[k].Properties.Subnet.ID = newSubnetID
+	}
+
+	if len(group.LaunchTemplate.SecurityGroupIDs) == 0 {
+		return fmt.Errorf("SetVmSetNetWork security group can not be empty")
+	}
+
+	subnetDetail, err := client.GetSubnet(ctx, group.AutoScaling.AutoScalingName, vpcID, subnets[0])
+	if err != nil {
+		blog.Errorf("SetVmSetNetWork GetSubnet %s failed, %v", subnets[0], err)
+		return err
+	}
+
+	// 设置网络安全组
+	idx := strings.LastIndex(*subnetDetail.Properties.NetworkSecurityGroup.ID, "/")
+	oldSg := (*subnetDetail.Properties.NetworkSecurityGroup.ID)[idx+1:]
+	newSgID := strings.ReplaceAll(*subnetDetail.Properties.NetworkSecurityGroup.ID,
+		oldSg, group.LaunchTemplate.SecurityGroupIDs[0])
+	subnetDetail.Properties.NetworkSecurityGroup.ID = to.Ptr(newSgID)
+
+	_, err = client.UpdateSubnet(ctx, group.AutoScaling.AutoScalingName, vpcID, subnets[0], *subnetDetail)
+	if err != nil {
+		blog.Errorf("SetVmSetNetWork UpdateSubnet security group failed, %v", err)
+		return err
+	}
+
+	return nil
+}
+
 // SetVmSetPasswd 创建节点池时，调用本方法，用于设置虚拟规模集的密码
 func SetVmSetPasswd(group *proto.NodeGroup, set *armcompute.VirtualMachineScaleSet) {
 	if group == nil || set == nil || group.LaunchTemplate == nil {
@@ -965,11 +1010,98 @@ func SetVmSetPasswd(group *proto.NodeGroup, set *armcompute.VirtualMachineScaleS
 		set.Properties.VirtualMachineProfile.OSProfile = new(armcompute.VirtualMachineScaleSetOSProfile)
 	}
 	set.Properties.VirtualMachineProfile.OSProfile.AdminUsername = to.Ptr(lc.InitLoginUsername)
-	set.Properties.VirtualMachineProfile.OSProfile.AdminPassword = to.Ptr(lc.InitLoginPassword)
+
+	pwd, _ := encrypt.Decrypt(nil, lc.GetInitLoginPassword())
+	set.Properties.VirtualMachineProfile.OSProfile.AdminPassword = to.Ptr(pwd)
 	// 重置配置
 	set.Properties.VirtualMachineProfile.OSProfile.LinuxConfiguration = new(armcompute.LinuxConfiguration)
 	// 启用密码验证
 	set.Properties.VirtualMachineProfile.OSProfile.LinuxConfiguration.DisablePasswordAuthentication = to.Ptr(false)
+}
+
+// SetVmSetSSHPublicKey 创建节点池时，调用本方法，用于设置虚拟规模集SSH免密登录公钥
+func SetVmSetSSHPublicKey(group *proto.NodeGroup, set *armcompute.VirtualMachineScaleSet) {
+	if group == nil || set == nil || group.LaunchTemplate == nil {
+		return
+	}
+	lc := group.LaunchTemplate
+	if lc == nil || lc.KeyPair == nil || len(lc.KeyPair.KeyPublic) == 0 {
+		return
+	}
+	if set.Properties == nil {
+		set.Properties = new(armcompute.VirtualMachineScaleSetProperties)
+	}
+	if set.Properties.VirtualMachineProfile == nil {
+		set.Properties.VirtualMachineProfile = new(armcompute.VirtualMachineScaleSetVMProfile)
+	}
+	if set.Properties.VirtualMachineProfile.OSProfile == nil {
+		set.Properties.VirtualMachineProfile.OSProfile = new(armcompute.VirtualMachineScaleSetOSProfile)
+	}
+	osProfile := set.Properties.VirtualMachineProfile.OSProfile
+
+	// adminName := osProfile.AdminUsername
+	osProfile.AdminUsername = to.Ptr(lc.InitLoginUsername)
+
+	if osProfile.LinuxConfiguration == nil {
+		osProfile.LinuxConfiguration = new(armcompute.LinuxConfiguration)
+	}
+	if osProfile.LinuxConfiguration.SSH == nil {
+		osProfile.LinuxConfiguration.SSH = new(armcompute.SSHConfiguration)
+	}
+
+	osProfile.LinuxConfiguration.SSH.PublicKeys = make([]*armcompute.SSHPublicKey, 0)
+	// 设置SSH免密登录公钥
+	dePublicKey, _ := encrypt.Decrypt(nil, lc.GetKeyPair().GetKeyPublic())
+	osProfile.LinuxConfiguration.SSH.PublicKeys = append(osProfile.LinuxConfiguration.SSH.PublicKeys,
+		&armcompute.SSHPublicKey{
+			KeyData: to.Ptr(dePublicKey),
+			Path:    to.Ptr(fmt.Sprintf("/home/%s/.ssh/authorized_keys", lc.InitLoginUsername)),
+		})
+}
+
+// SetVmSetCustomScript 创建节点池时，调用本方法，用于设置虚拟规模集用户脚本
+func SetVmSetCustomScript(group *proto.NodeGroup, set *armcompute.VirtualMachineScaleSet) {
+
+	if set.Properties == nil {
+		set.Properties = new(armcompute.VirtualMachineScaleSetProperties)
+	}
+	if set.Properties.VirtualMachineProfile == nil {
+		set.Properties.VirtualMachineProfile = new(armcompute.VirtualMachineScaleSetVMProfile)
+	}
+	if set.Properties.VirtualMachineProfile.ExtensionProfile == nil {
+		set.Properties.VirtualMachineProfile.ExtensionProfile = new(armcompute.VirtualMachineScaleSetExtensionProfile)
+	}
+	if set.Properties.VirtualMachineProfile.ExtensionProfile.Extensions == nil {
+		set.Properties.VirtualMachineProfile.ExtensionProfile.Extensions =
+			make([]*armcompute.VirtualMachineScaleSetExtension, 0)
+	}
+
+	exist := false
+	for _, e := range set.Properties.VirtualMachineProfile.ExtensionProfile.Extensions {
+		if *e.Properties.Type == "CustomScript" {
+			e.Properties.Settings = map[string]interface{}{
+				"script": group.NodeTemplate.PreStartUserScript,
+			}
+			exist = true
+			break
+		}
+	}
+	if !exist {
+		set.Properties.VirtualMachineProfile.ExtensionProfile.Extensions =
+			append(set.Properties.VirtualMachineProfile.ExtensionProfile.Extensions,
+				&armcompute.VirtualMachineScaleSetExtension{
+					Name: to.Ptr("vmssCSEBCS"),
+					Properties: &armcompute.VirtualMachineScaleSetExtensionProperties{
+						AutoUpgradeMinorVersion: to.Ptr(true),
+						Publisher:               to.Ptr("Microsoft.Azure.Extensions"),
+						Settings: map[string]interface{}{
+							"script": group.NodeTemplate.PreStartUserScript,
+						},
+						Type:               to.Ptr("CustomScript"),
+						TypeHandlerVersion: to.Ptr("2.0"),
+					},
+				})
+	}
 }
 
 // BuySystemDisk 购买系统盘
@@ -1015,8 +1147,10 @@ func BuyDataDisk(group *proto.NodeGroup, set *armcompute.VirtualMachineScaleSet)
 	if set.Properties.VirtualMachineProfile.StorageProfile == nil {
 		set.Properties.VirtualMachineProfile.StorageProfile = new(armcompute.VirtualMachineScaleSetStorageProfile)
 	}
+
 	set.Properties.VirtualMachineProfile.StorageProfile.DataDisks = make([]*armcompute.VirtualMachineScaleSetDataDisk, 0)
 	disks := &set.Properties.VirtualMachineProfile.StorageProfile.DataDisks
+
 	for i, d := range lc.DataDisks {
 		disk := new(armcompute.VirtualMachineScaleSetDataDisk)
 		if len(d.DiskType) != 0 && checkDataDiskType(d.DiskType) { // 设置磁盘类型
@@ -1060,7 +1194,7 @@ func setUltraSSD(set *armcompute.VirtualMachineScaleSet) {
 
 // ParseSetReturnNgResourcesName 解析 VMSSs 资源名称(ParseSetReturnNodeGroupResourcesName)
 func ParseSetReturnNgResourcesName(set *armcompute.VirtualMachineScaleSet) string {
-	return regexpSetNodeGroupResourcesName(set)
+	return RegexpSetNodeGroupResourcesName(set)
 }
 
 // ParseSetReturnSubnetNames 解析 VMSSs subnet name(私有网络名称)
@@ -1099,8 +1233,8 @@ func checkInterfaceConfigNameEmpty(vm *armcompute.VirtualMachineScaleSetVM) (str
 	return *interfaceConfig[0].Name, true
 }
 
-// regexpSetNodeGroupResourcesName 通过正则解析 VMSSs resources name
-func regexpSetNodeGroupResourcesName(set *armcompute.VirtualMachineScaleSet) string {
+// RegexpSetNodeGroupResourcesName 通过正则解析 VMSSs resources name
+func RegexpSetNodeGroupResourcesName(set *armcompute.VirtualMachineScaleSet) string {
 	if set == nil || set.Identity == nil {
 		return ""
 	}
@@ -1336,6 +1470,17 @@ func VmIDToNodeID(vm *armcompute.VirtualMachineScaleSetVM) string {
 	return fmt.Sprintf("%s/%s/%s", *vm.Name, *vm.InstanceID, nodeGroupResource)
 }
 
+// SetUserData 设置用户数据
+func SetUserData(group *proto.NodeGroup, set *armcompute.VirtualMachineScaleSet) {
+	if group.GetNodeTemplate() == nil || len(group.GetNodeTemplate().GetPreStartUserScript()) == 0 {
+		return
+	}
+	if set == nil || set.Properties == nil || set.Properties.VirtualMachineProfile == nil {
+		return
+	}
+	set.Properties.VirtualMachineProfile.UserData = to.Ptr(group.GetNodeTemplate().GetPreStartUserScript())
+}
+
 // SetImageReferenceNull 镜像引用-暂时置空处理，若不置空会导致无法更新set
 func SetImageReferenceNull(set *armcompute.VirtualMachineScaleSet) {
 	if set == nil || set.Properties == nil || set.Properties.VirtualMachineProfile == nil {
@@ -1360,17 +1505,33 @@ func SetAgentPoolFromNodeGroup(group *proto.NodeGroup, pool *armcontainerservice
 	for k := range group.Tags {
 		pool.Properties.Tags[k] = to.Ptr(group.Tags[k])
 	}
-	if group.NodeTemplate != nil {
+
+	if group.NodeTemplate != nil && len(group.NodeTemplate.GetLabels()) > 0 {
 		pool.Properties.NodeLabels = make(map[string]*string)
 		for k := range group.NodeTemplate.Labels {
 			pool.Properties.NodeLabels[k] = to.Ptr(group.NodeTemplate.Labels[k])
 		}
-		pool.Properties.NodeTaints = make([]*string, 0)
-		for _, taint := range group.NodeTemplate.Taints {
-			pool.Properties.NodeTaints = append(pool.Properties.NodeTaints,
-				to.Ptr(fmt.Sprintf("%s=%s:%s", taint.Key, taint.Value, taint.Effect)))
-		}
 	}
+
+	taints := group.NodeTemplate.GetTaints()
+	if taints == nil || len(taints) == 0 {
+		taints = make([]*proto.Taint, 0)
+	}
+
+	/*
+		// attention: azure not support addNodes to set unScheduled nodes, thus realize this feature by taint
+		taints = append(taints, &proto.Taint{
+			Key:    cutils.BCSNodeGroupTaintKey,
+			Value:  cutils.BCSNodeGroupTaintValue,
+			Effect: cutils.BCSNodeGroupAzureTaintEffect,
+		})
+	*/
+	pool.Properties.NodeTaints = make([]*string, 0)
+	for _, taint := range taints {
+		pool.Properties.NodeTaints = append(pool.Properties.NodeTaints,
+			to.Ptr(fmt.Sprintf("%s=%s:%s", taint.Key, taint.Value, taint.Effect)))
+	}
+
 	if group.LaunchTemplate != nil && len(group.LaunchTemplate.InstanceType) != 0 &&
 		checkInstanceType(group.LaunchTemplate.InstanceType) {
 		// 检查机型是否在里面

@@ -17,13 +17,14 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
-	pbbase "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
-	hr "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/hook-revision"
-	pbds "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbbase "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
+	hr "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/hook-revision"
+	pbds "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // CreateHookRevision create hook revision with option
@@ -39,10 +40,14 @@ func (s *Service) CreateHookRevision(ctx context.Context,
 
 	if _, err := s.dao.HookRevision().GetByName(kt, req.Attachment.BizId, req.Attachment.HookId,
 		req.Spec.Name); err == nil {
-		return nil, fmt.Errorf("hook name %s already exists", req.Spec.Name)
+		return nil, fmt.Errorf("hook revision name %s already exists", req.Spec.Name)
 	}
 
 	spec, err := req.Spec.HookRevisionSpec()
+	// if no revision name is specified, generate it by system
+	if spec.Name == "" {
+		spec.Name = tools.GenerateRevisionName()
+	}
 	spec.State = table.HookRevisionStatusNotDeployed
 	if err != nil {
 		logs.Errorf("get HookRevisionSpec spec from pb failed, err: %v, rid: %s", err, kt.Rid)
@@ -210,7 +215,7 @@ func (s *Service) PublishHookRevision(ctx context.Context, req *pbds.PublishHook
 	}
 
 	// 2. 上线脚本版本
-	hr, err := s.dao.HookRevision().Get(kt, req.BizId, req.HookId, req.Id)
+	hookRevision, err := s.dao.HookRevision().Get(kt, req.BizId, req.HookId, req.Id)
 	if err != nil {
 		logs.Errorf("get HookRevision failed, err: %v, rid: %s", err, kt.Rid)
 		if rErr := tx.Rollback(); rErr != nil {
@@ -218,9 +223,9 @@ func (s *Service) PublishHookRevision(ctx context.Context, req *pbds.PublishHook
 		}
 		return nil, err
 	}
-	hr.Revision.Reviser = kt.User
-	hr.Spec.State = table.HookRevisionStatusDeployed
-	if e := s.dao.HookRevision().UpdatePubStateWithTx(kt, tx, hr); e != nil {
+	hookRevision.Revision.Reviser = kt.User
+	hookRevision.Spec.State = table.HookRevisionStatusDeployed
+	if e := s.dao.HookRevision().UpdatePubStateWithTx(kt, tx, hookRevision); e != nil {
 		logs.Errorf("update HookRevision State failed, err: %v, rid: %s", e, kt.Rid)
 		if rErr := tx.Rollback(); rErr != nil {
 			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
@@ -230,7 +235,7 @@ func (s *Service) PublishHookRevision(ctx context.Context, req *pbds.PublishHook
 
 	// 3. 修改未命名版本绑定的脚本版本为上线版本
 	if e := s.dao.ReleasedHook().UpdateHookRevisionByReleaseIDWithTx(kt, tx,
-		req.BizId, 0, req.HookId, hr); e != nil {
+		req.BizId, 0, req.HookId, hookRevision); e != nil {
 		logs.Errorf("update released hook failed, err: %v, rid: %s", e, kt.Rid)
 		if rErr := tx.Rollback(); rErr != nil {
 			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
@@ -339,12 +344,8 @@ func (s *Service) ListHookRevisionReferences(ctx context.Context,
 			ReleaseId:    result.ReleaseID,
 			ReleaseName:  result.ReleaseName,
 			Type:         result.HookType,
+			Deprecated:   result.Deprecated,
 		})
-	}
-
-	if err != nil {
-		logs.Errorf("list group current releases failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, err
 	}
 
 	resp := &pbds.ListHookRevisionReferencesResp{

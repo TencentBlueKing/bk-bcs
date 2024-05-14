@@ -16,9 +16,9 @@ package pbhook
 import (
 	pbstruct "github.com/golang/protobuf/ptypes/struct"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
-	pbbase "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/selector"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	pbbase "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/selector"
 )
 
 // Hook convert pb Hook to table Hook
@@ -27,30 +27,25 @@ func (m *Hook) Hook() (*table.Hook, error) {
 		return nil, nil
 	}
 
-	spec, err := m.Spec.HookSpec()
-	if err != nil {
-		return nil, err
-	}
-
 	return &table.Hook{
 		ID:         m.Id,
-		Spec:       spec,
+		Spec:       m.Spec.HookSpec(),
 		Attachment: m.Attachment.HookAttachment(),
 	}, nil
 }
 
 // HookSpec convert pb HookSpec to table HookSpec
-func (m *HookSpec) HookSpec() (*table.HookSpec, error) {
+func (m *HookSpec) HookSpec() *table.HookSpec {
 	if m == nil {
-		return nil, nil
+		return nil
 	}
 
 	return &table.HookSpec{
 		Name: m.Name,
 		Type: table.ScriptType(m.Type),
-		Tag:  m.Tag,
+		Tags: m.Tags,
 		Memo: m.Memo,
-	}, nil
+	}
 }
 
 // PbHookSpec convert table HookSpec to pb HookSpec
@@ -62,7 +57,7 @@ func PbHookSpec(spec *table.HookSpec) *HookSpec { //nolint:revive
 	return &HookSpec{
 		Name: spec.Name,
 		Type: string(spec.Type),
-		Tag:  spec.Tag,
+		Tags: spec.Tags,
 		Memo: spec.Memo,
 	}
 }

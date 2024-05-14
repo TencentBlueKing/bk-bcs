@@ -24,39 +24,58 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/store"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/store/entity"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
 // Handler Multicluster handler
-type Handler struct{}
+type Handler struct {
+	model store.ClusterResourcesModel
+}
 
 // New Multicluster handler
-func New() *Handler {
-	return &Handler{}
+func New(model store.ClusterResourcesModel) *Handler {
+	return &Handler{model: model}
 }
 
 // FetchMultiClusterResource Fetch multi cluster resource
 func (h *Handler) FetchMultiClusterResource(ctx context.Context, req *clusterRes.FetchMultiClusterResourceReq,
 	resp *clusterRes.CommonResp) (err error) {
+	// 获取视图信息
+	view := &entity.View{}
+	if req.GetViewID() != "" {
+		view, err = h.model.GetView(ctx, req.GetViewID())
+		if err != nil {
+			return err
+		}
+	}
 	filter := QueryFilter{
 		Creator:       req.GetCreator(),
 		Name:          req.GetName(),
 		LabelSelector: req.GetLabelSelector(),
+		IP:            req.GetIp(),
+		Status:        req.GetStatus(),
+		SortBy:        SortBy(req.GetSortBy()),
+		Order:         Order(req.GetOrder()),
 		Limit:         int(req.GetLimit()),
 		Offset:        int(req.GetOffset()),
 	}
+	clusterNS := filterClusteredNamespace(req.GetClusterNamespaces(), string(getScopedByKind(req.GetKind())))
+
 	// from api server
-	var query = NewAPIServerQuery(req.GetClusterNamespaces(), filter)
+	var query = NewAPIServerQuery(clusterNS, filter, viewQueryToQueryFilter(view.Filter))
 	// 多集群且 bcs-storage 支持的资源则从 bcs-storage 查询
-	if len(req.GetClusterNamespaces()) > 1 &&
-		slice.StringInSlice(req.GetKind(), config.G.MultiCluster.EnabledQueryFromStorageKinds) {
+	if slice.StringInSlice(req.GetKind(), config.G.MultiCluster.EnabledQueryFromStorageKinds) && (len(clusterNS) > 1 ||
+		inBlackList(req.GetProjectCode(), clusterNS)) {
 		// from storage
-		query = NewStorageQuery(req.GetClusterNamespaces(), filter)
+		query = NewStorageQuery(clusterNS, filter, viewQueryToQueryFilter(view.Filter))
 	}
 
-	data, err := query.Fetch(ctx, "", req.GetKind())
+	var data map[string]interface{}
+	data, err = query.Fetch(ctx, "", req.GetKind())
 	if err != nil {
 		return err
 	}
@@ -74,14 +93,25 @@ func (h *Handler) FetchMultiClusterResource(ctx context.Context, req *clusterRes
 func (h *Handler) FetchMultiClusterCustomResource(ctx context.Context,
 	req *clusterRes.FetchMultiClusterCustomResourceReq,
 	resp *clusterRes.CommonResp) (err error) {
+	// 获取视图信息
+	view := &entity.View{}
+	if req.GetViewID() != "" {
+		view, err = h.model.GetView(ctx, req.GetViewID())
+		if err != nil {
+			return err
+		}
+	}
 	filter := QueryFilter{
 		Creator:       req.GetCreator(),
 		Name:          req.GetName(),
 		LabelSelector: req.GetLabelSelector(),
+		IP:            req.GetIp(),
+		Status:        req.GetStatus(),
+		SortBy:        SortBy(req.GetSortBy()),
+		Order:         Order(req.GetOrder()),
 		Limit:         int(req.GetLimit()),
 		Offset:        int(req.GetOffset()),
 	}
-	var query = NewAPIServerQuery(req.GetClusterNamespaces(), filter)
 
 	var groupVersion string
 	var kind string
@@ -95,7 +125,9 @@ func (h *Handler) FetchMultiClusterCustomResource(ctx context.Context,
 		return nil
 	}
 	kind, groupVersion = crdInfo["kind"].(string), crdInfo["apiVersion"].(string)
+	clusterNS := filterClusteredNamespace(req.GetClusterNamespaces(), crdInfo["scope"].(string))
 
+	var query = NewAPIServerQuery(clusterNS, filter, viewQueryToQueryFilter(view.Filter))
 	data, err := query.Fetch(ctx, groupVersion, kind)
 	if err != nil {
 		return err
@@ -104,35 +136,48 @@ func (h *Handler) FetchMultiClusterCustomResource(ctx context.Context,
 	if err != nil {
 		return err
 	}
-	resp.WebAnnotations, err = web.NewAnnos(
-		web.NewFeatureFlag(featureflag.FormCreate, true),
-	).ToPbStruct()
+	resp.WebAnnotations, err = web.GenListCObjWebAnnos(ctx, data, crdInfo, "")
 	return err
 }
 
 // MultiClusterResourceCount get mul
-func (h *Handler) MultiClusterResourceCount(ctx context.Context,
-	req *clusterRes.MultiClusterResourceCountReq,
-	resp *clusterRes.CommonResp) (err error) {
+func (h *Handler) MultiClusterResourceCount(ctx context.Context, req *clusterRes.MultiClusterResourceCountReq,
+	resp *clusterRes.CommonResp) error {
 	filter := QueryFilter{
 		Creator:       req.GetCreator(),
 		Name:          req.GetName(),
 		LabelSelector: req.GetLabelSelector(),
 		Limit:         1,
 	}
-	var query = NewStorageQuery(req.GetClusterNamespaces(), filter)
+	var err error
+
+	// 获取视图信息
+	view := &entity.View{}
+	if req.GetViewID() != "" {
+		view, err = h.model.GetView(ctx, req.GetViewID())
+		if err != nil {
+			return err
+		}
+	}
 
 	errgroup := errgroup.Group{}
 	mux := sync.Mutex{}
 	data := map[string]interface{}{}
-	for _, kind := range config.G.MultiCluster.EnabledQueryFromStorageKinds {
+	for _, kind := range config.G.MultiCluster.EnabledCountKinds {
 		kind := kind
 		errgroup.Go(func() error {
+			clusterNS := filterClusteredNamespace(req.GetClusterNamespaces(), string(getScopedByKind(kind)))
+			var query = NewAPIServerQuery(clusterNS, filter, viewQueryToQueryFilter(view.Filter))
+			// 多集群且 bcs-storage 支持的资源则从 bcs-storage 查询
+			if slice.StringInSlice(kind, config.G.MultiCluster.EnabledQueryFromStorageKinds) && (len(clusterNS) > 1 ||
+				inBlackList(req.GetProjectCode(), clusterNS)) {
+				query = NewStorageQuery(clusterNS, filter, viewQueryToQueryFilter(view.Filter))
+			}
 			result, innerErr := query.Fetch(ctx, "", kind)
 			mux.Lock()
 			defer mux.Unlock()
-			if err != nil {
-				log.Error(ctx, "query storage failed, %v", innerErr)
+			if innerErr != nil {
+				log.Error(ctx, "query resource %s failed, %v", kind, innerErr)
 				data[kind] = 0
 				return nil
 			}

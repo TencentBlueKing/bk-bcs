@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package middleware
@@ -19,6 +18,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/argoproj/argo-cd/v2/applicationset/generators"
 	"github.com/argoproj/argo-cd/v2/applicationset/services"
 	"github.com/argoproj/argo-cd/v2/applicationset/utils"
@@ -27,8 +28,6 @@ import (
 	"github.com/argoproj/argo-cd/v2/reposerver/apiclient"
 	"github.com/pkg/errors"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 )
 
@@ -61,15 +60,16 @@ func (h *handler) CheckCreateApplicationSet(ctx context.Context,
 	}
 	blog.Infof("RequestID[%s] check application set generator success", RequestID(ctx))
 
-	repoClientSet := apiclient.NewRepoServerClientset(h.option.RepoServerUrl, 60,
+	repoClientSet := apiclient.NewRepoServerClientset(h.option.GitOps.RepoServer, 60,
 		apiclient.TLSConfiguration{
 			DisableTLS:       false,
 			StrictValidation: false,
 		})
-	argoCDService, err := services.NewArgoCDService(h.option.Storage.GetArgoDB(),
+	argoCDService, _ := services.NewArgoCDService(h.store.GetArgoDB(),
 		true, repoClientSet, false)
 	// this will render the Applications by ApplicationSet's generators
-	// refer to: https://github.com/argoproj/argo-cd/blob/v2.8.2/applicationset/controllers/applicationset_controller.go#L499
+	// refer to:
+	// https://github.com/argoproj/argo-cd/blob/v2.8.2/applicationset/controllers/applicationset_controller.go#L499
 	results := make([]*v1alpha1.Application, 0)
 	for i := range appset.Spec.Generators {
 		generator := appset.Spec.Generators[i]
@@ -171,7 +171,8 @@ func (h *handler) checkApplicationSetGenerator(ctx context.Context, appset *v1al
 	return nil
 }
 
-// refer to: https://github.com/argoproj/argo-cd/blob/v2.8.2/applicationset/controllers/applicationset_controller.go#L487
+// refer to:
+// https://github.com/argoproj/argo-cd/blob/v2.8.2/applicationset/controllers/applicationset_controller.go#L487
 func getTempApplication(applicationSetTemplate v1alpha1.ApplicationSetTemplate) *v1alpha1.Application {
 	var tmplApplication v1alpha1.Application
 	tmplApplication.Annotations = applicationSetTemplate.Annotations
@@ -187,7 +188,7 @@ func getTempApplication(applicationSetTemplate v1alpha1.ApplicationSetTemplate) 
 // CheckDeleteApplicationSet check delete applicationset
 func (h *handler) CheckDeleteApplicationSet(ctx context.Context,
 	appsetName string) (*v1alpha1.ApplicationSet, int, error) {
-	appset, err := h.option.Storage.GetApplicationSet(ctx, appsetName)
+	appset, err := h.store.GetApplicationSet(ctx, appsetName)
 	if err != nil {
 		return nil, http.StatusInternalServerError, errors.Wrapf(err, "get applicationset failed")
 	}
@@ -203,7 +204,7 @@ func (h *handler) CheckDeleteApplicationSet(ctx context.Context,
 }
 
 func (h *handler) CheckGetApplicationSet(ctx context.Context, appsetName string) (int, error) {
-	appset, err := h.option.Storage.GetApplicationSet(ctx, appsetName)
+	appset, err := h.store.GetApplicationSet(ctx, appsetName)
 	if err != nil {
 		return http.StatusInternalServerError, errors.Wrapf(err, "get applicationset failed")
 	}
@@ -221,7 +222,7 @@ func (h *handler) CheckGetApplicationSet(ctx context.Context, appsetName string)
 // ListApplicationSets list applicationsets
 func (h *handler) ListApplicationSets(ctx context.Context, query *appsetpkg.ApplicationSetListQuery) (
 	*v1alpha1.ApplicationSetList, error) {
-	appsets, err := h.option.Storage.ListApplicationSets(ctx, query)
+	appsets, err := h.store.ListApplicationSets(ctx, query)
 	if err != nil {
 		return nil, errors.Wrapf(err, "list application swith project '%v' failed", *query)
 	}

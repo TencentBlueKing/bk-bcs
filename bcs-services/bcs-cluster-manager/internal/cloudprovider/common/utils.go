@@ -14,7 +14,6 @@ package common
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -62,12 +61,6 @@ var (
 	NodeSetLabelsActionStep = cloudprovider.StepInfo{
 		StepMethod: cloudprovider.SetNodeLabelsAction,
 		StepName:   "节点设置通用标签",
-	}
-
-	// NodeSetTaintsActionStep 节点设置污点任务
-	NodeSetTaintsActionStep = cloudprovider.StepInfo{
-		StepMethod: cloudprovider.SetNodeTaintsAction,
-		StepName:   "节点设置通用污点",
 	}
 
 	// CheckKubeAgentStatusStep 检测kubeAgent状态
@@ -147,6 +140,8 @@ func BuildCheckKubeAgentStatusTaskStep(task *proto.Task, clusterID string) {
 
 // CheckKubeAgentStatusTask check cluster kubeAgent status task
 func CheckKubeAgentStatusTask(taskID string, stepName string) error {
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start check cluster kubeagent status")
 	start := time.Now()
 
 	// get task and task current step
@@ -179,12 +174,17 @@ func CheckKubeAgentStatusTask(taskID string, stepName string) error {
 	// check cluster kubeAgent status
 	err = checkKubeAgentStatusByClusterID(ctx, clusterID)
 	if err != nil {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
+			fmt.Sprintf("check cluster kubeagent status failed [%s]", err))
 		blog.Errorf("CheckKubeAgentStatusTask[%s] failed: %v", taskID, err)
 		retErr := fmt.Errorf("CheckKubeAgentStatusTask err: %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
 	blog.Infof("CheckKubeAgentStatusTask[%s] clusterID[%s] kubeAgent status successful", taskID, clusterID)
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"check cluster kubeagent status successful")
 
 	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
@@ -258,6 +258,8 @@ func BuildCreateNamespaceTaskStep(task *proto.Task, clusterID string, ns Namespa
 
 // CreateNamespaceTask create cluster namespace
 func CreateNamespaceTask(taskID string, stepName string) error {
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start create cluster namespace")
 	start := time.Now()
 
 	// get task and task current step
@@ -298,12 +300,17 @@ func CreateNamespaceTask(taskID string, stepName string) error {
 		Annotations: annotations,
 	})
 	if err != nil {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
+			fmt.Sprintf("create cluster namespace failed [%s]", err))
 		blog.Errorf("CreateNamespaceTask[%s] failed: %v", taskID, err)
 		retErr := fmt.Errorf("CreateNamespaceTask err: %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
 	blog.Infof("CreateNamespaceTask[%s] clusterID[%s] namespace[%v] successful", taskID, clusterID, namespace)
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"create cluster namespace successful")
 
 	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
@@ -327,6 +334,8 @@ func BuildDeleteNamespaceTaskStep(task *proto.Task, clusterID, name string) {
 
 // DeleteNamespaceTask delete cluster namespace
 func DeleteNamespaceTask(taskID string, stepName string) error {
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start delete cluster namespace")
 	start := time.Now()
 
 	// get task and task current step
@@ -361,12 +370,17 @@ func DeleteNamespaceTask(taskID string, stepName string) error {
 	// check cluster namespace and delete namespace when exist
 	err = DeleteClusterNamespace(ctx, clusterID, namespace)
 	if err != nil {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
+			fmt.Sprintf("delete cluster namespace failed [%s]", err))
 		blog.Errorf("DeleteNamespaceTask[%s] failed: %v", taskID, err)
 		retErr := fmt.Errorf("DeleteNamespaceTask err: %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
 	blog.Infof("DeleteNamespaceTask[%s] clusterID[%s] namespace[%v] successful", taskID, clusterID, namespace)
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"delete cluster namespace successful")
 
 	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
@@ -395,6 +409,8 @@ func BuildNodeAnnotationsTaskStep(task *proto.Task, clusterID string, nodeIPs []
 
 // SetNodeAnnotationsTask set cluster nodes annotations
 func SetNodeAnnotationsTask(taskID string, stepName string) error {
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start set node annotations")
 	start := time.Now()
 
 	// get task and task current step
@@ -425,13 +441,16 @@ func SetNodeAnnotationsTask(taskID string, stepName string) error {
 	}
 
 	// inject taskID
-	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
+	ctx := cloudprovider.WithTaskIDAndStepNameForContext(context.Background(), taskID, stepName)
 	_ = updateClusterNodesAnnotations(ctx, NodeAnnotationsData{
 		clusterID:   clusterID,
 		nodeIPs:     nodeIPs,
 		annotations: annotations,
 	})
 	blog.Infof("SetNodeAnnotationsTask[%s] clusterID[%s] IPs[%v] successful", taskID, clusterID, nodeIPs)
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"set node annotations successful")
 
 	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
@@ -450,7 +469,7 @@ type NodeAnnotationsData struct {
 }
 
 func updateClusterNodesAnnotations(ctx context.Context, data NodeAnnotationsData) error { // nolint
-	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+	taskID, stepName := cloudprovider.GetTaskIDAndStepNameFromContext(ctx)
 
 	if len(data.annotations) == 0 {
 		blog.Infof("updateClusterNodesAnnotations[%s] clusterID[%s] annotations empty", taskID, data.clusterID)
@@ -488,6 +507,9 @@ func updateClusterNodesAnnotations(ctx context.Context, data NodeAnnotationsData
 			continue
 		}
 		blog.Infof("updateClusterNodesAnnotations[%s] ip[%s] successful", taskID, name)
+
+		cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+			fmt.Sprintf("ip [%s] successful", name))
 	}
 
 	return nil
@@ -509,6 +531,8 @@ func BuildNodeLabelsTaskStep(task *proto.Task, clusterID string, nodeIPs []strin
 
 // SetNodeLabelsTask set cluster nodes labels
 func SetNodeLabelsTask(taskID string, stepName string) error {
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start set cluster nodes labels")
 	start := time.Now()
 
 	// get task and task current step
@@ -539,13 +563,16 @@ func SetNodeLabelsTask(taskID string, stepName string) error {
 	}
 
 	// inject taskID
-	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
+	ctx := cloudprovider.WithTaskIDAndStepNameForContext(context.Background(), taskID, stepName)
 	_ = UpdateClusterNodesLabels(ctx, NodeLabelsData{
 		ClusterID: clusterID,
 		NodeIPs:   nodeIPs,
 		Labels:    labels,
 	})
 	blog.Infof("SetNodeLabelsTask[%s] clusterID[%s] IPs[%v] successful", taskID, clusterID, nodeIPs)
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"set cluster nodes labels successful")
 
 	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
@@ -573,7 +600,7 @@ type NodeInfo struct {
 
 // UpdateClusterNodesLabels update cluster labels
 func UpdateClusterNodesLabels(ctx context.Context, data NodeLabelsData) error {
-	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+	taskID, stepName := cloudprovider.GetTaskIDAndStepNameFromContext(ctx)
 
 	k8sOperator := clusterops.NewK8SOperator(options.GetGlobalCMOptions(), cloudprovider.GetStorageModel())
 	// trans nodeIPs to nodeNames: k8s cluster register nodeName not nodeIP
@@ -601,6 +628,11 @@ func UpdateClusterNodesLabels(ctx context.Context, data NodeLabelsData) error {
 		})
 	}
 	blog.Infof("updateClusterNodesLabels[%s] ListClusterNodesByIPsOrNames successful[%v]", taskID, nodeNames)
+
+	cls, err := cloudprovider.GetStorageModel().GetCluster(ctx, data.ClusterID)
+	if err != nil {
+		blog.Errorf("updateClusterNodesLabels[%s] GetCluster[%s] failed: %v", taskID, data.ClusterID, err)
+	}
 
 	hostsMap, hostIDs, err := GetCmdbNodeDetailInfo(data.NodeIPs)
 	if err != nil {
@@ -632,6 +664,11 @@ func UpdateClusterNodesLabels(ctx context.Context, data NodeLabelsData) error {
 			}
 		}
 
+		// mixed labels if cluster is mixed cluster
+		if cls != nil && cls.GetIsMixed() {
+			labels[utils.MixedNodeLabelKey] = utils.MixedNodeLabelValue
+		}
+
 		if len(labels) == 0 {
 			blog.Infof("updateClusterNodesLabels[%s] node[%s] labels empty", taskID, node.NodeIP)
 			continue
@@ -647,6 +684,9 @@ func UpdateClusterNodesLabels(ctx context.Context, data NodeLabelsData) error {
 			continue
 		}
 		blog.Infof("updateClusterNodesLabels[%s] ip[%s] successful", taskID, node.NodeName)
+
+		cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+			fmt.Sprintf("ip [%s] successful", node.NodeName))
 	}
 
 	return nil
@@ -767,6 +807,8 @@ func BuildCreateResourceQuotaTaskStep(task *proto.Task, clusterID string, quota 
 
 // CreateResourceQuotaTask create cluster namespace resource quota
 func CreateResourceQuotaTask(taskID string, stepName string) error {
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start create cluster namespace resource quota")
 	start := time.Now()
 
 	// get task and task current step
@@ -802,6 +844,8 @@ func CreateResourceQuotaTask(taskID string, stepName string) error {
 	// check cluster namespace resourceQuota and create namespace resourceQuota when not exist
 	err = CreateNamespaceResourceQuota(ctx, clusterID, quotaObject)
 	if err != nil {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
+			fmt.Sprintf("create cluster namespace resource quota failed [%s]", err))
 		blog.Errorf("CreateResourceQuotaTask[%s] failed: %v", taskID, err)
 		retErr := fmt.Errorf("CreateResourceQuotaTask err: %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
@@ -809,6 +853,9 @@ func CreateResourceQuotaTask(taskID string, stepName string) error {
 	}
 	blog.Infof("CreateResourceQuotaTask[%s] clusterID[%s] namespace[%v] successful",
 		taskID, clusterID, quotaObject.Name)
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"create cluster namespace resource quota successful")
 
 	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
@@ -864,6 +911,8 @@ func BuildDeleteResourceQuotaTaskStep(task *proto.Task, clusterID, namespace, na
 
 // DeleteResourceQuotaTask delete cluster namespace resource quota
 func DeleteResourceQuotaTask(taskID string, stepName string) error {
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start delete cluster namespace resource quota")
 	start := time.Now()
 
 	// get task and task current step
@@ -899,6 +948,8 @@ func DeleteResourceQuotaTask(taskID string, stepName string) error {
 	// check cluster namespace quota and delete namespace quota when exist
 	err = DeleteNamespaceResourceQuota(ctx, clusterID, namespace, quotaName)
 	if err != nil {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
+			fmt.Sprintf("delete cluster namespace resource quota failed [%s]", err))
 		blog.Errorf("DeleteNamespaceResourceQuota[%s] failed: %v", taskID, err)
 		retErr := fmt.Errorf("DeleteNamespaceResourceQuota err: %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
@@ -906,6 +957,9 @@ func DeleteResourceQuotaTask(taskID string, stepName string) error {
 	}
 	blog.Infof("DeleteNamespaceResourceQuota[%s] clusterID[%s] namespace[%v] successful",
 		taskID, clusterID, namespace)
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"delete cluster namespace resource quota successful")
 
 	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
@@ -956,6 +1010,8 @@ func BuildCheckClusterCleanNodesTaskStep(task *proto.Task, cloudID, clusterID st
 
 // CheckClusterCleanNodsTask check cluster clean nodes task
 func CheckClusterCleanNodsTask(taskID string, stepName string) error {
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start check cluster clean nodes")
 	start := time.Now()
 	// get task and task current step
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
@@ -1007,6 +1063,9 @@ func CheckClusterCleanNodsTask(taskID string, stepName string) error {
 		blog.Infof("CheckClusterCleanNodsTask[%s] nodeIDs[%v] exist[%v] notExist[%v]",
 			taskID, nodeNames, exist, notExist)
 
+		cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+			fmt.Sprintf("nodeIDs [%v] exist [%v] notExist [%v]", nodeNames, exist, notExist))
+
 		if len(exist) == 0 {
 			return loop.EndLoop
 		}
@@ -1021,6 +1080,9 @@ func CheckClusterCleanNodsTask(taskID string, stepName string) error {
 	if errors.Is(err, context.DeadlineExceeded) {
 		blog.Infof("CheckClusterCleanNodsTask[%s] cluster[%s] timeout failed: %v", taskID, clusterID, err)
 	}
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"check cluster clean nodes successful")
 
 	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
@@ -1063,160 +1125,4 @@ func FilterClusterNodesByNodeNames(ctx context.Context, info *cloudprovider.Clou
 	}
 
 	return existNodeNames, notExistNodeNames, nil
-}
-
-// BuildNodeTaintsTaskStep build node taints(user define taints) task step
-func BuildNodeTaintsTaskStep(task *proto.Task, clusterID string, nodeIPs []string, taints []*proto.Taint) {
-	if len(taints) == 0 {
-		return
-	}
-
-	taintStep := cloudprovider.InitTaskStep(NodeSetTaintsActionStep)
-
-	taintStep.Params[cloudprovider.ClusterIDKey.String()] = clusterID
-	taintStep.Params[cloudprovider.NodeIPsKey.String()] = strings.Join(nodeIPs, ",")
-
-	taintBytes, _ := json.Marshal(taints)
-	taintStep.Params[cloudprovider.TaintsKey.String()] = string(taintBytes)
-
-	task.Steps[NodeSetTaintsActionStep.StepMethod] = taintStep
-	task.StepSequence = append(task.StepSequence, NodeSetTaintsActionStep.StepMethod)
-}
-
-// SetNodeTaintsTask set cluster nodes taints
-func SetNodeTaintsTask(taskID string, stepName string) error {
-	start := time.Now()
-
-	// get task and task current step
-	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
-	if err != nil {
-		return err
-	}
-	// previous step successful when retry task
-	if step == nil {
-		blog.Infof("SetNodeTaintsTask[%s]: current step[%s] successful and skip", taskID, stepName)
-		return nil
-	}
-	blog.Infof("SetNodeTaintsTask[%s]: run step %s, system: %s, old state: %s, params %v",
-		taskID, stepName, step.System, step.Status, step.Params)
-
-	// extract parameter
-	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
-	nodeIPs := cloudprovider.ParseNodeIpOrIdFromCommonMap(state.Task.CommonParams,
-		cloudprovider.NodeIPsKey.String(), ",")
-
-	taintBytes := step.Params[cloudprovider.TaintsKey.String()]
-
-	var taints []*proto.Taint
-	err = json.Unmarshal([]byte(taintBytes), &taints)
-	if err != nil {
-		errMsg := fmt.Sprintf("SetNodeTaintsTask[%s] validateParameter failed: taints error", taskID)
-		blog.Errorf(errMsg)
-		retErr := fmt.Errorf("SetNodeTaintsTask err: %v", err)
-		_ = state.UpdateStepFailure(start, stepName, retErr)
-		return retErr
-	}
-
-	if len(clusterID) == 0 || len(nodeIPs) == 0 {
-		errMsg := fmt.Sprintf("SetNodeTaintsTask[%s] validateParameter failed: clusterID or nodeIPs empty", taskID)
-		blog.Errorf(errMsg)
-		retErr := fmt.Errorf("SetNodeTaintsTask err: %s", errMsg)
-		_ = state.UpdateStepFailure(start, stepName, retErr)
-		return retErr
-	}
-
-	// inject taskID
-	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
-	_ = UpdateClusterNodesTaints(ctx, NodeTaintData{
-		ClusterID: clusterID,
-		NodeIPs:   nodeIPs,
-		Taints:    taints,
-	})
-	blog.Infof("SetNodeTaintsTask[%s] clusterID[%s] IPs[%v] successful", taskID, clusterID, nodeIPs)
-
-	// update step
-	if err := state.UpdateStepSucc(start, stepName); err != nil {
-		blog.Errorf("task %s %s update to storage fatal", taskID, stepName)
-		return err
-	}
-
-	return nil
-}
-
-// NodeTaintData Node data
-type NodeTaintData struct {
-	ClusterID string
-	NodeNames []string
-	NodeIPs   []string
-	Taints    []*proto.Taint
-}
-
-// UpdateClusterNodesTaints update cluster taints
-func UpdateClusterNodesTaints(ctx context.Context, data NodeTaintData) error {
-	taskID := cloudprovider.GetTaskIDFromContext(ctx)
-
-	k8sOperator := clusterops.NewK8SOperator(options.GetGlobalCMOptions(), cloudprovider.GetStorageModel())
-
-	// trans nodeIPs to nodeNames: k8s cluster register nodeName not nodeIP
-	nodeNames := make([]NodeInfo, 0)
-	nodes, err := k8sOperator.ListClusterNodesByIPsOrNames(ctx, clusterops.ListNodeOption{
-		ClusterID: data.ClusterID,
-		NodeIPs:   data.NodeIPs,
-		NodeNames: data.NodeNames,
-	})
-	if err != nil {
-		blog.Errorf("UpdateClusterNodesTaints[%s] ListClusterNodesByIPsOrNames failed: %v", taskID, err)
-		return err
-	}
-	for i := range nodes {
-		nodeNames = append(nodeNames, NodeInfo{
-			NodeName: nodes[i].Name,
-			NodeIP: func(n *v1.Node) string {
-				ipv4s, _ := utils.GetNodeIPAddress(n)
-				if len(ipv4s) > 0 {
-					return ipv4s[0]
-				}
-
-				return ""
-			}(nodes[i]),
-			NodeTaint: func() []proto.Taint {
-				var nodeTaints []proto.Taint
-				for _, taint := range nodes[i].Spec.Taints {
-					nodeTaints = append(nodeTaints, proto.Taint{
-						Key:    taint.Key,
-						Value:  taint.Value,
-						Effect: string(taint.Effect),
-					})
-				}
-
-				return nodeTaints
-			}(),
-		})
-	}
-	blog.Infof("UpdateClusterNodesTaints[%s] ListClusterNodesByIPsOrNames successful[%v]", taskID, nodeNames)
-
-	for _, node := range nodeNames {
-		// user defined labels
-		taints := data.Taints
-		if taints == nil {
-			taints = make([]*proto.Taint, 0)
-		}
-
-		// merge source node labels
-		for i := range node.NodeTaint {
-			taints = append(taints, &proto.Taint{
-				Key:    node.NodeTaint[i].Key,
-				Value:  node.NodeTaint[i].Value,
-				Effect: node.NodeTaint[i].Effect,
-			})
-		}
-		err := k8sOperator.UpdateNodeTaints(ctx, data.ClusterID, node.NodeName, utils.TaintToK8sTaint(taints))
-		if err != nil {
-			blog.Errorf("UpdateClusterNodesTaints[%s] ip[%s] failed: %v", taskID, node.NodeName, err)
-			continue
-		}
-		blog.Infof("UpdateClusterNodesTaints[%s] ip[%s] successful", taskID, node.NodeName)
-	}
-
-	return nil
 }

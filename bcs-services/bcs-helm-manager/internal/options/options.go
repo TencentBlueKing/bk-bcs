@@ -13,6 +13,8 @@
 // Package options xxx
 package options
 
+import "fmt"
+
 // EtcdOption option for etcd
 type EtcdOption struct {
 	EtcdEndpoints string `json:"endpoints" yaml:"endpoints" value:"" usage:"endpoints of etcd"`
@@ -65,7 +67,10 @@ type MongoConfig struct {
 
 // RepoConfig option for repo platform
 type RepoConfig struct {
-	URL               string `json:"url" yaml:"url"`
+	// bkrepo api url
+	URL string `json:"url" yaml:"url"`
+	// repo base url
+	BaseURL           string `json:"baseurl" yaml:"baseurl"`
 	UID               string `json:"uid" yaml:"uid"`
 	Username          string `json:"username" yaml:"username"`
 	Password          string `json:"password" yaml:"password"`
@@ -73,6 +78,14 @@ type RepoConfig struct {
 	PublicRepoProject string `json:"publicRepoProject" yaml:"publicRepoProject"`
 	PublicRepoName    string `json:"publicRepoName" yaml:"publicRepoName"`
 	Encrypted         bool   `json:"encrypted" yaml:"encrypted"`
+}
+
+// GetRepoBaseURL get repo base url
+func (r *RepoConfig) GetRepoBaseURL() string {
+	if r.BaseURL != "" {
+		return r.BaseURL
+	}
+	return fmt.Sprintf("%s/helm", r.URL)
 }
 
 // ReleaseConfig option for helm release handler
@@ -94,13 +107,13 @@ type JWTConfig struct {
 
 // IAMConfig for perm interface
 type IAMConfig struct {
-	SystemID      string `json:"systemID" yaml:"systemID"`
-	AppCode       string `json:"appCode" yaml:"appCode"`
-	AppSecret     string `json:"appSecret" yaml:"appSecret"`
+	SystemID      string `json:"systemid" yaml:"systemid"`
+	AppCode       string `json:"appcode" yaml:"appcode"`
+	AppSecret     string `json:"appsecret" yaml:"appsecret"`
 	External      bool   `json:"external" yaml:"external"`
-	GatewayServer string `json:"gateWayServer" yaml:"gateWayServer"`
-	IAMServer     string `json:"iamServer" yaml:"iamServer"`
-	BkiIAMServer  string `json:"bkiIamServer" yaml:"bkiIamServer"`
+	GatewayServer string `json:"gatewayserver" yaml:"gatewayserver"`
+	IAMServer     string `json:"iamserver" yaml:"iamserver"`
+	BkiIAMServer  string `json:"bkiiamserver" yaml:"bkiiamserver"`
 	Metric        bool   `json:"metric" yaml:"metric"`
 	Debug         bool   `json:"debug" yaml:"debug"`
 }

@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package controllers xxx
 package controllers
 
 import (
@@ -20,6 +20,7 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -32,9 +33,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	monitorextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/api/v1"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/render"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/repo"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/utils"
 )
 
@@ -45,8 +46,9 @@ type AppMonitorReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
 
-	Ctx    context.Context
-	Render render.IRender
+	Ctx         context.Context
+	Render      render.IRender
+	RepoManager *repo.Manager
 }
 
 // Reconcile app monitor
@@ -86,6 +88,9 @@ func (r *AppMonitorReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	if err := r.checkLabels(appMonitor); err != nil {
 		return ctrl.Result{}, err
 	}
+	if err := r.checkRepo(appMonitor); err != nil {
+		return ctrl.Result{}, err
+	}
 
 	// transfer appMonitor to sub resource, i.e. MonitorRule\NoticeGroup\Panel
 	result, err := r.Render.Render(appMonitor)
@@ -119,7 +124,9 @@ func (r *AppMonitorReconciler) eventPredicate() predicate.Predicate {
 		CreateFunc: func(createEvent event.CreateEvent) bool {
 			monitor := createEvent.Object.(*monitorextensionv1.AppMonitor)
 			// if appMonitor open IgnoreChange, do not retry when state is completed
-			if monitor.DeletionTimestamp == nil && monitor.Status.SyncStatus.State == monitorextensionv1.SyncStateCompleted && monitor.Spec.IgnoreChange == true {
+			if monitor.DeletionTimestamp == nil &&
+				monitor.Status.SyncStatus.State == monitorextensionv1.SyncStateCompleted &&
+				monitor.Spec.IgnoreChange {
 				blog.V(3).Infof("appMonitor '%s/%s' got create event, but is synced and ignore change",
 					monitor.GetNamespace(), monitor.GetName())
 				return false
@@ -142,7 +149,9 @@ func (r *AppMonitorReconciler) eventPredicate() predicate.Predicate {
 				return false
 			}
 			// if appMonitor open IgnoreChange, do not retry when state is completed
-			if newMonitor.DeletionTimestamp == nil && newMonitor.Status.SyncStatus.State == monitorextensionv1.SyncStateCompleted && newMonitor.Spec.IgnoreChange == true {
+			if newMonitor.DeletionTimestamp == nil &&
+				newMonitor.Status.SyncStatus.State == monitorextensionv1.SyncStateCompleted &&
+				newMonitor.Spec.IgnoreChange {
 				blog.V(3).Infof("appMonitor '%s/%s' updated, but is synced and ignore change",
 					newMonitor.GetNamespace(), newMonitor.GetName())
 				return false
@@ -209,6 +218,7 @@ func (r *AppMonitorReconciler) checkLabels(monitor *monitorextensionv1.AppMonito
 			"labels": map[string]interface{}{
 				monitorextensionv1.LabelKeyForScenarioName: monitor.Spec.Scenario,
 				monitorextensionv1.LabelKeyForBizID:        monitor.Spec.BizId,
+				// monitorextensionv1.LabelKeyForScenarioRepo: repo.GenRepoKeyFromAppMonitor(monitor),
 			},
 		},
 	}
@@ -228,6 +238,23 @@ func (r *AppMonitorReconciler) checkLabels(monitor *monitorextensionv1.AppMonito
 		return errors.Wrapf(err, "patch app monitor %s/%s annotation failed, patcheStruct: %s",
 			monitor.GetNamespace(), monitor.GetName(), string(patchBytes))
 	}
+	return nil
+}
+
+func (r *AppMonitorReconciler) checkRepo(monitor *monitorextensionv1.AppMonitor) error {
+	repoRef := monitor.Spec.RepoRef
+	if repoRef == nil {
+		return nil
+	}
+
+	repoKey := repo.GenRepoKeyFromAppMonitor(monitor)
+	_, ok := r.RepoManager.GetRepo(repoKey)
+	if !ok {
+		if err := r.RepoManager.RegisterRepoFromArgo(repoRef.URL, repoRef.TargetRevision); err != nil {
+			return fmt.Errorf("register repo failed, err: %s", err.Error())
+		}
+	}
+
 	return nil
 }
 
@@ -424,6 +451,7 @@ func (r *AppMonitorReconciler) deleteNoticeGroup(monitor *monitorextensionv1.App
 }
 
 // deleteConfigMap delete related configmap
+// nolint unused
 func (r *AppMonitorReconciler) deleteConfigmap(monitor *monitorextensionv1.AppMonitor) error {
 	configmap := &v1.ConfigMap{}
 	selector, err := metav1.LabelSelectorAsSelector(metav1.SetAsLabelSelector(map[string]string{

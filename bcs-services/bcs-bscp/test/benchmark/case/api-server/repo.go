@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package main xxx
 package main
 
 import (
@@ -25,11 +26,12 @@ import (
 
 	"k8s.io/klog/v2"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
 // dd if=/dev/urandom of=/tmp/100Mib.bin bs=1M count=100
-func upload(ctx context.Context, host string, bizID, appID string, sign string, body io.Reader) (*http.Response, error) {
+func upload(
+	ctx context.Context, host string, bizID, appID string, sign string, body io.Reader) (*http.Response, error) {
 	u := fmt.Sprintf("http://%s/api/v1/api/create/content/upload/biz_id/%s/app_id/%s", host, bizID, appID)
 	req, err := http.NewRequestWithContext(ctx, "PUT", u, body)
 	if err != nil {
@@ -53,7 +55,9 @@ func upload(ctx context.Context, host string, bizID, appID string, sign string, 
 	return resp, nil
 }
 
-func download(ctx context.Context, host string, bizID, appID string, sign string, body io.Reader) (*http.Response, error) {
+// nolint unused
+func download(
+	ctx context.Context, host string, bizID, appID string, sign string, body io.Reader) (*http.Response, error) {
 	u := fmt.Sprintf("http://%s/api/v1/api/get/content/download/biz_id/%s/app_id/%s", host, bizID, appID)
 	req, err := http.NewRequestWithContext(ctx, "GET", u, nil)
 	if err != nil {

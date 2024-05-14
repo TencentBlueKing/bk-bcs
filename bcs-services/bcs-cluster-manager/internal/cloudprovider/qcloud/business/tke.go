@@ -16,6 +16,7 @@ import (
 	"context"
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -40,7 +41,7 @@ import (
 // RemoveExternalNodesFromCluster remove external nodes from cluster, 移除第三方节点
 func RemoveExternalNodesFromCluster(
 	ctx context.Context, info *cloudprovider.CloudDependBasicInfo, nodeIPs []string) error {
-	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+	taskID, stepName := cloudprovider.GetTaskIDAndStepNameFromContext(ctx)
 
 	// filter exist external nodes
 	clusterNodes, err := FilterClusterExternalNodesByIPs(ctx, info, nodeIPs)
@@ -62,6 +63,9 @@ func RemoveExternalNodesFromCluster(
 		return err
 	}
 	blog.Infof("RemoveExternalNodesFromCluster[%s] success[%v]", taskID, nodeIPs)
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		fmt.Sprintf("success [%v]", nodeIPs))
 
 	return nil
 }
@@ -165,7 +169,7 @@ func DeleteClusterExternalNodes(
 // RemoveNodesFromCluster remove nodes from cluster
 func RemoveNodesFromCluster(
 	ctx context.Context, info *cloudprovider.CloudDependBasicInfo, nodeIDs []string, force bool) ([]string, error) {
-	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+	taskID, stepName := cloudprovider.GetTaskIDAndStepNameFromContext(ctx)
 
 	// filter exist instanceIDs
 	existInClusterNodes, _, err := FilterClusterInstanceFromNodesIDs(ctx, info, nodeIDs)
@@ -192,6 +196,9 @@ func RemoveNodesFromCluster(
 		return nil, err
 	}
 	blog.Infof("removeNodesFromCluster[%s] success, origin[%v] success[%v]", taskID, nodeIDs, success)
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		fmt.Sprintf("origin [%v] success [%v]", nodeIDs, success))
 
 	return success, nil
 }
@@ -276,7 +283,8 @@ func DeleteClusterInstance(
 }
 
 // GetClusterExternalNodeScript get cluster externalNode script，获取第三方节点上架脚本
-func GetClusterExternalNodeScript(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) (string, error) {
+func GetClusterExternalNodeScript(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
+	internal bool) (string, error) {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 	tkeCli, err := api.NewTkeClient(info.CmOption)
 	if err != nil {
@@ -291,6 +299,7 @@ func GetClusterExternalNodeScript(ctx context.Context, info *cloudprovider.Cloud
 	err = retry.Do(func() error {
 		nodeScriptResp, err = tkeCli.DescribeExternalNodeScript(info.Cluster.SystemID, api.DescribeExternalNodeScriptConfig{
 			NodePoolId: info.NodeGroup.CloudNodeGroupID,
+			Internal:   internal,
 		})
 		if err != nil {
 			blog.Errorf("GetClusterExternalNodeScript[%s] DescribeExternalNodeScript failed: %v", taskID, err)
@@ -428,7 +437,7 @@ func generateInstanceAdvanceInfo(cluster *proto.Cluster, options *NodeAdvancedOp
 
 		if kubelet, ok := cluster.NodeSettings.ExtraArgs[common.Kubelet]; ok {
 			paras := strings.Split(kubelet, ";")
-			advanceInfo.ExtraArgs.Kubelet = paras
+			advanceInfo.ExtraArgs.Kubelet = utils.FilterEmptyString(paras)
 		}
 	}
 
@@ -640,11 +649,11 @@ func generateInstanceAdvanceInfoFromNp(cls *proto.Cluster, nodeTemplate *proto.N
 		kubeletParams := make([]string, 0)
 		if kubePara, ok := nodeTemplate.ExtraArgs[common.Kubelet]; ok {
 			paras := strings.Split(kubePara, ";")
-			kubeletParams = append(kubeletParams, paras...)
+			kubeletParams = append(kubeletParams, utils.FilterEmptyString(paras)...)
 		}
 		if kubelet, ok := cls.NodeSettings.ExtraArgs[common.Kubelet]; ok {
 			paras := strings.Split(kubelet, ";")
-			kubeletParams = append(kubeletParams, paras...)
+			kubeletParams = append(kubeletParams, utils.FilterEmptyString(paras)...)
 		}
 		advanceInfo.ExtraArgs.Kubelet = kubeletParams
 	}
@@ -670,7 +679,7 @@ type AddExistedInstanceResult struct {
 func AddNodesToCluster(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, options *NodeAdvancedOptions,
 	nodeIDs []string, passwd string, isNodeGroup bool, idToIP map[string]string,
 	operator string) (*AddExistedInstanceResult, error) {
-	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+	taskID, stepName := cloudprovider.GetTaskIDAndStepNameFromContext(ctx)
 
 	tkeCli, err := api.NewTkeClient(info.CmOption)
 	if err != nil {
@@ -723,7 +732,61 @@ func AddNodesToCluster(ctx context.Context, info *cloudprovider.CloudDependBasic
 	blog.Infof("AddNodesToCluster[%s] AddExistedInstancesToCluster success[%v] failed[%v]"+
 		"reasons[%v]", taskID, result.SuccessNodes, result.FailedNodes, resp.FailedReasons)
 
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		fmt.Sprintf("success [%v] failed [%v]", result.SuccessNodes, result.FailedNodes))
+
 	return result, nil
+}
+
+// CheckClusterDeletedNodes check if nodeIds are deleted in cluster
+func CheckClusterDeletedNodes(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, nodeIds []string) error {
+	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+
+	// get qcloud client
+	cli, err := api.NewTkeClient(info.CmOption)
+	if err != nil {
+		blog.Errorf("checkClusterInstanceStatus[%s] failed, %s", taskID, err)
+		return err
+	}
+
+	// wait node group state to normal
+	timeCtx, cancel := context.WithTimeout(context.TODO(), 5*time.Minute)
+	defer cancel()
+
+	// wait all nodes to be ready
+	err = loop.LoopDoFunc(timeCtx, func() error {
+		instances, errQuery := cli.QueryTkeClusterAllInstances(ctx, info.Cluster.GetSystemID(), nil)
+		if errQuery != nil {
+			blog.Errorf("CheckClusterDeletedNodes[%s] QueryTkeClusterAllInstances failed: %v", taskID, errQuery)
+			return nil
+		}
+
+		if len(instances) == 0 {
+			return loop.EndLoop
+		}
+
+		clusterNodeIds := make([]string, 0)
+		for i := range instances {
+			clusterNodeIds = append(clusterNodeIds, instances[i].InstanceID)
+		}
+
+		for i := range nodeIds {
+			if utils.StringInSlice(nodeIds[i], clusterNodeIds) {
+				blog.Infof("CheckClusterDeletedNodes[%s] %s in cluster[%v]", taskID, nodeIds[i], clusterNodeIds)
+				return nil
+			}
+		}
+
+		return loop.EndLoop
+	}, loop.LoopInterval(20*time.Second))
+	// other error
+	if err != nil {
+		blog.Errorf("CheckClusterDeletedNodes[%s] failed: %v", taskID, err)
+		return err
+	}
+
+	blog.Infof("CheckClusterDeletedNodes[%s] deleted nodes success[%v]", taskID, nodeIds)
+	return nil
 }
 
 // CheckClusterInstanceStatus 检测集群节点状态 && 更新节点状态
@@ -734,7 +797,7 @@ func CheckClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 		addFailureNodes = make([]string, 0)
 	)
 
-	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+	taskID, stepName := cloudprovider.GetTaskIDAndStepNameFromContext(ctx)
 
 	// get qcloud client
 	cli, err := api.NewTkeClient(info.CmOption)
@@ -813,6 +876,9 @@ func CheckClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 	}
 	blog.Infof("checkClusterInstanceStatus[%s] success[%v] failure[%v]", taskID, addSuccessNodes, addFailureNodes)
 
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		fmt.Sprintf("success [%v] failure [%v]", addSuccessNodes, addFailureNodes))
+
 	// set cluster node status
 	for _, n := range addFailureNodes {
 		err = cloudprovider.UpdateNodeStatus(false, n, common.StatusAddNodesFailed)
@@ -851,4 +917,31 @@ func GetFailedNodesReason(ctx context.Context, info *cloudprovider.CloudDependBa
 	}
 
 	return insMapInfo, strings.Join(allInsReason, ";"), nil
+}
+
+// DeleteTkeClusterByClusterId delete cluster by clsId
+func DeleteTkeClusterByClusterId(ctx context.Context, opt *cloudprovider.CommonOption,
+	clsId string, deleteMode string) error {
+	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+
+	if len(clsId) == 0 {
+		blog.Warnf("DeleteTkeClusterByClusterId[%s] clusterID empty", taskID)
+		return nil
+	}
+
+	tkeCli, err := api.NewTkeClient(opt)
+	if err != nil {
+		blog.Errorf("DeleteTkeClusterByClusterId[%s] init tkeClient failed: %v", taskID, err)
+		return err
+	}
+
+	err = tkeCli.DeleteTKECluster(clsId, api.DeleteMode(deleteMode))
+	if err != nil && !strings.Contains(err.Error(), api.ErrClusterNotFound.Error()) {
+		blog.Errorf("DeleteTkeClusterByClusterId[%s] deleteCluster failed: %v", taskID, err)
+		return err
+	}
+
+	blog.Infof("DeleteTkeClusterByClusterId[%s] deleteCluster[%s] success", taskID, clsId)
+
+	return nil
 }

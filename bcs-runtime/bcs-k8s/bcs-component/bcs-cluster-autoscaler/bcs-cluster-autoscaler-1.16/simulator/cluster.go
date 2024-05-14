@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package simulator xxx
 package simulator
 
 import (
@@ -148,6 +148,7 @@ candidateloop:
 		var err error
 
 		nodeInfo, found := nodeNameToNodeInfo[node.Name]
+		// nolint
 		if found {
 			if fastCheck {
 				podsToRemove, _, blockingPod, err = FastGetPodsToMove(nodeInfo, skipNodesWithSystemPods,
@@ -212,6 +213,7 @@ func FindEmptyNodesToRemove(candidates []*apiv1.Node, pods []*apiv1.Pod) []*apiv
 
 // findPlaceFor xxx
 // DOTO: We don't need to pass list of nodes here as they are already available in nodeInfos.
+// nolint funlen
 func findPlaceFor(removedNode string, pods []*apiv1.Pod, nodes []*apiv1.Node,
 	nodeInfos map[string]*schedulernodeinfo.NodeInfo,
 	predicateChecker *simulatorinternal.PredicateChecker, oldHints map[string]string, newHints map[string]string,
@@ -239,6 +241,7 @@ func findPlaceFor(removedNode string, pods []*apiv1.Pod, nodes []*apiv1.Node,
 				return false
 			}
 			err := predicateChecker.CheckPredicates(pod, predicateMeta, nodeInfo)
+			// nolint
 			if err != nil {
 				glogx.V(4).UpTo(loggingQuota).Infof("Evaluation %s for %s/%s -> %v",
 					nodename, pod.Namespace, pod.Name, err.VerboseError())
@@ -311,7 +314,7 @@ func shuffleNodes(nodes []*apiv1.Node) []*apiv1.Node {
 	result := make([]*apiv1.Node, len(nodes))
 	copy(result, nodes)
 	for i := range result {
-		j := rand.Intn(len(result))
+		j := rand.Intn(len(result)) // nolint instead of crypto/rand
 		result[i], result[j] = result[j], result[i]
 	}
 	return result

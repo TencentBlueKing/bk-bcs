@@ -41,15 +41,23 @@ spec:
           - --v
           - "3"
           - --log_dir
-          - /data/bcs/logs/bcs
+          - /data/bcs/logs
           - --scenario_refresh_req
           - {{ .Values.scenarioGitConfig.refreshFreqSec | quote }}
+          - --bkm_download_config_path
+          - {{ .Values.bkmConfig.configStorePath | quote}}
+          - --argo_admin_namespace
+          - "default"
           - --alsologtostderr
           resources:
           {{- toYaml .Values.resources | nindent 12 }}
           env:
             - name: GIT_URL
               value: {{ .Values.scenarioGitConfig.URL }}
+            - name: GIT_USERNAME
+              value: {{ .Values.scenarioGitConfig.username}}
+            - name: GIT_SECRET
+              value: {{ .Values.scenarioGitConfig.secret}}
             - name: BKM_FULL_AUTH_TOKEN
               valueFrom:
                 secretKeyRef:

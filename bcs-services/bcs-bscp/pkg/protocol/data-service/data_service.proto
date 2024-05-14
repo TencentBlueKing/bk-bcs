@@ -4,6 +4,9 @@ import "pkg/protocol/core/app/app.proto";
 import "pkg/protocol/core/app-template-binding/app_template_binding.proto";
 import "pkg/protocol/core/base/base.proto";
 import "pkg/protocol/core/config-item/config_item.proto";
+import "pkg/protocol/core/client/client.proto";
+import "pkg/protocol/core/client-event/client_event.proto";
+import "pkg/protocol/core/client-query/client_query.proto";
 import "pkg/protocol/core/commit/commit.proto";
 import "pkg/protocol/core/content/content.proto";
 import "pkg/protocol/core/credential/credential.proto";
@@ -27,7 +30,7 @@ import "google/protobuf/struct.proto";
 
 package pbds;
 
-option go_package = "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service;pbds";
+option go_package = "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service;pbds";
 
 service Data {
   // app related interface.
@@ -45,6 +48,8 @@ service Data {
   rpc BatchUpsertConfigItems(BatchUpsertConfigItemsReq) returns (BatchUpsertConfigItemsResp) {}
   rpc UpdateConfigItem(UpdateConfigItemReq) returns (pbbase.EmptyResp) {}
   rpc DeleteConfigItem(DeleteConfigItemReq) returns (pbbase.EmptyResp) {}
+  rpc UnDeleteConfigItem(UnDeleteConfigItemReq) returns (pbbase.EmptyResp) {}
+  rpc UndoConfigItem(UndoConfigItemReq) returns (pbbase.EmptyResp) {}
   rpc GetConfigItem(GetConfigItemReq) returns (pbci.ConfigItem) {}
 
   rpc ListConfigItems(ListConfigItemsReq) returns (ListConfigItemsResp) {}
@@ -67,6 +72,10 @@ service Data {
   rpc CreateRelease(CreateReleaseReq) returns (CreateResp) {}
   rpc ListReleases(ListReleasesReq) returns (ListReleasesResp) {}
   rpc GetReleaseByName(GetReleaseByNameReq) returns (pbrelease.Release) {}
+  rpc GetRelease(GetReleaseReq) returns (pbrelease.Release) {}
+  rpc DeprecateRelease(DeprecateReleaseReq) returns (pbbase.EmptyResp) {}
+  rpc UnDeprecateRelease(UnDeprecateReleaseReq) returns (pbbase.EmptyResp) {}
+  rpc DeleteRelease(DeleteReleaseReq) returns (pbbase.EmptyResp) {}
 
   // released config item related interface.
   rpc GetReleasedConfigItem(GetReleasedCIReq) returns (pbrci.ReleasedConfigItem) {}
@@ -79,6 +88,7 @@ service Data {
   rpc CreateHook(CreateHookReq) returns (CreateResp) {}
   rpc ListHooks(ListHooksReq) returns (ListHooksResp) {}
   rpc DeleteHook(DeleteHookReq) returns (pbbase.EmptyResp) {}
+  rpc UpdateHook(UpdateHookReq) returns (pbbase.EmptyResp) {}
   rpc ListHookTags(ListHookTagReq) returns (ListHookTagResp) {}
   rpc ListHookReferences(ListHookReferencesReq) returns (ListHookReferencesResp) {}
   rpc GetHook(GetHookReq) returns (GetHookResp) {}
@@ -199,22 +209,47 @@ service Data {
   rpc ListCredentials(ListCredentialReq) returns (ListCredentialResp) {}
   rpc DeleteCredential(DeleteCredentialReq) returns (pbbase.EmptyResp) {}
   rpc UpdateCredential(UpdateCredentialReq) returns (pbbase.EmptyResp) {}
+  rpc CheckCredentialName(CheckCredentialNameReq) returns (CheckCredentialNameResp) {}
 
   // credential scope related interface
   rpc ListCredentialScopes(ListCredentialScopesReq) returns (ListCredentialScopesResp) {}
   rpc UpdateCredentialScopes(UpdateCredentialScopesReq) returns (UpdateCredentialScopesResp) {}
+  rpc CredentialScopePreview(CredentialScopePreviewReq) returns (CredentialScopePreviewResp) {}
 
   // kv related interface
   rpc CreateKv(CreateKvReq) returns (CreateResp) {};
   rpc UpdateKv(UpdateKvReq) returns (pbbase.EmptyResp) {};
   rpc ListKvs(ListKvsReq) returns (ListKvsResp) {};
   rpc DeleteKv(DeleteKvReq) returns (pbbase.EmptyResp) {};
-  rpc BatchUpsertKvs(BatchUpsertKvsReq) returns (pbbase.EmptyResp) {};
+  rpc BatchUpsertKvs(BatchUpsertKvsReq) returns (BatchUpsertKvsResp) {};
   rpc UnDeleteKv(UnDeleteKvReq) returns (pbbase.EmptyResp) {};
+  rpc UndoKv(UndoKvReq) returns (pbbase.EmptyResp) {};
+
+  // client related interface
+  rpc ListClients(ListClientsReq) returns (ListClientsResp) {};
+
+  // client event related interface
+  rpc ListClientEvents(ListClientEventsReq) returns (ListClientEventsResp) {};
+
+  // client query related interface
+  rpc ListClientQuerys(ListClientQuerysReq) returns (ListClientQuerysResp) {};
+  rpc CreateClientQuery(CreateClientQueryReq) returns (CreateClientQueryResp) {};
+  rpc UpdateClientQuery(UpdateClientQueryReq) returns (pbbase.EmptyResp) {};
+  rpc DeleteClientQuery(DeleteClientQueryReq) returns (pbbase.EmptyResp) {};
+
+  // client metrics chart related interface
+  rpc ClientConfigVersionStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {}
+  rpc ClientPullTrendStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {}
+  rpc ClientPullStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {}
+  rpc ClientLabelStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {}
+  rpc ClientAnnotationStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {}
+  rpc ClientVersionStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {}
+  rpc ListClientLabelAndAnnotation(ListClientLabelAndAnnotationReq) returns (google.protobuf.Struct) {}
+  rpc ClientSpecificFailedReason(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {}
 
   // used iam pull resource callback.
-  rpc ListInstances(ListInstancesReq) returns (ListInstancesResp) {}
-  rpc FetchInstanceInfo(FetchInstanceInfoReq) returns (FetchInstanceInfoResp) {}
+  rpc ListInstances(ListInstancesReq) returns (ListInstancesResp) {};
+  rpc FetchInstanceInfo(FetchInstanceInfoReq) returns (FetchInstanceInfoResp) {};
 
   // Ping verifies if the grpc connection is still alive.
   rpc Ping(PingMsg) returns (PingMsg) {
@@ -223,15 +258,36 @@ service Data {
       body: "*"
     };
   }
+
+  // client metric related interface
+  rpc BatchUpsertClientMetrics(BatchUpsertClientMetricsReq) returns (BatchUpsertClientMetricsResp) {}
 }
 message UpdateCredentialScopesReq {
   uint32 biz_id = 1;
   uint32 credential_id = 2;
-  repeated pbcrs.UpdateScopeSpec updated = 3;
-  repeated string created = 4;
+  repeated pbcrs.CredentialScopeSpec created = 3;
+  repeated pbcrs.UpdateScopeSpec updated = 4;
   repeated uint32 deleted = 5;
 }
 message UpdateCredentialScopesResp {}
+
+message CredentialScopePreviewReq {
+  uint32 biz_id = 1;
+  string app_name = 2;
+  string scope = 3;
+  string search_value = 4;
+  uint32 start = 5;
+  uint32 limit = 6;
+}
+
+message CredentialScopePreviewResp {
+  message Detail {
+    string name = 1;
+    string path = 2;
+  }
+  uint32 count = 1;
+  repeated Detail details = 2;
+}
 
 message DeleteCredentialScopesReq {
   repeated uint32 id = 1;
@@ -265,6 +321,7 @@ message ListCredentialReq {
   string searchKey = 2;
   uint32 start = 3;
   uint32 limit = 4;
+  string top_ids = 5;
 }
 
 message ListCredentialResp {
@@ -276,6 +333,15 @@ message UpdateCredentialReq {
   uint32 id = 1;
   pbcredential.CredentialAttachment attachment = 2;
   pbcredential.CredentialSpec spec = 3;
+}
+
+message CheckCredentialNameReq {
+  uint32 biz_id = 1;
+  string credential_name = 2;
+}
+
+message CheckCredentialNameResp {
+  bool exist = 1;
 }
 
 message DeleteCredentialReq {
@@ -341,6 +407,7 @@ message ListAppsRestReq {
   uint32 limit = 3;
   string operator = 4;
   string name = 5;
+  bool all = 6;
 }
 
 message ListAppsResp {
@@ -389,6 +456,16 @@ message DeleteConfigItemReq {
   pbci.ConfigItemAttachment attachment = 2;
 }
 
+message UnDeleteConfigItemReq {
+  uint32 id = 1;
+  pbci.ConfigItemAttachment attachment = 2;
+}
+
+message UndoConfigItemReq {
+  uint32 id = 1;
+  pbci.ConfigItemAttachment attachment = 2;
+}
+
 message GetConfigItemReq {
   uint32 id = 1;
   uint32 biz_id = 2;
@@ -405,6 +482,8 @@ message ListConfigItemsReq {
   string ids = 7;
   bool all = 8;
   bool with_status = 9;
+  // ADD、REVISE、DELETE、UNCHANGE
+  repeated string status = 10;
 }
 
 message ListConfigItemsResp {
@@ -501,6 +580,30 @@ message GetReleaseByNameReq {
   string release_name = 3;
 }
 
+message GetReleaseReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  uint32 release_id = 3;
+}
+
+message DeprecateReleaseReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  uint32 release_id = 3;
+}
+
+message UnDeprecateReleaseReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  uint32 release_id = 3;
+}
+
+message DeleteReleaseReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  uint32 release_id = 3;
+}
+
 message GetReleasedCIReq {
   uint32 biz_id = 1;
   uint32 app_id = 2;
@@ -520,10 +623,13 @@ message ListReleasedKvReq {
   uint32 app_id = 2;
   uint32 release_id = 3;
   string search_key = 4;
+  repeated string key = 5;
   uint32 start = 6;
   uint32 limit = 7;
   bool all = 8;
-  string key = 9;
+  repeated string kv_type = 9;
+  string sort = 10;
+  string order = 11;
 }
 
 message ListReleasedKvResp {
@@ -555,7 +661,7 @@ message GetHookResp {
 message GetHookInfoSpec {
   string name = 1;
   string type = 3;
-  string tag = 4;
+  repeated string tags = 4;
   string memo = 5;
   uint32 publish_num = 7;
   message Releases {
@@ -607,6 +713,7 @@ message ListHookReferencesResp {
     uint32 release_id = 5;
     string release_name = 6;
     string type = 7;
+    bool deprecated = 8;
   }
   uint32 count = 1;
   repeated Detail details = 2;
@@ -616,6 +723,12 @@ message DeleteHookReq {
   uint32 biz_id = 1;
   uint32 hook_id = 2;
   bool force = 3;
+}
+
+message UpdateHookReq {
+  uint32 id = 1;
+  pbhook.HookAttachment attachment = 2;
+  pbhook.HookSpec spec = 3;
 }
 
 message CreateHookRevisionReq {
@@ -692,6 +805,7 @@ message ListHookRevisionReferencesResp {
     uint32 release_id = 5;
     string release_name = 6;
     string type = 7;
+    bool deprecated = 8;
   }
   uint32 count = 1;
   repeated Detail details = 2;
@@ -1460,6 +1574,7 @@ message GenerateReleaseAndPublishReq {
 
 message PublishResp {
   uint32 published_strategy_history_id = 1;
+  bool have_credentials = 2;
 }
 
 message ListInstancesReq {
@@ -1524,6 +1639,9 @@ message ListKvsReq {
   repeated string kv_type = 11;
   string sort = 12;
   string order = 13;
+  string top_ids = 14;
+  // ADD、REVISE、DELETE、UNCHANGE
+  repeated string status = 15;
 }
 
 message ListKvsResp {
@@ -1548,8 +1666,113 @@ message BatchUpsertKvsReq {
   bool replace_all = 4;
 }
 
+message BatchUpsertKvsResp {
+  repeated uint32 ids = 1;
+}
+
 message UnDeleteKvReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  string key = 3;
+}
+
+message UndoKvReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  string key = 3;
+}
+
+message BatchUpsertClientMetricsReq {
+  repeated pbclient.Client client_items = 1;
+  repeated pbce.ClientEvent client_event_items = 2;
+}
+
+message BatchUpsertClientMetricsResp {}
+
+message ListClientsReq {
+  message Order {
+    string desc = 1;
+    string asc = 2;
+  }
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  bool all = 3;
+  uint32 start = 4;
+  uint32 limit = 5;
+  Order order = 6;
+  int64 last_heartbeat_time = 7;
+  pbclient.ClientQueryCondition search = 8;
+}
+
+message ListClientsResp {
+  uint32 count = 1;
+  repeated pbclient.Client details = 2;
+}
+
+message ListClientEventsReq {
+  message Order {
+    string desc = 1;
+    string asc = 2;
+  }
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  uint32 client_id = 3;
+  bool all = 4;
+  uint32 start = 5;
+  uint32 limit = 6;
+  Order order = 7;
+  string search_value = 8;
+  string start_time = 9;
+  string end_time = 10;
+}
+
+message ListClientEventsResp {
+  uint32 count = 1;
+  repeated pbce.ClientEvent details = 2;
+}
+
+message ListClientQuerysReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  string search_type = 3;  // 搜索类型：recent、common
+  uint32 start = 4;
+  uint32 limit = 5;
+  bool all = 6;
+}
+
+message ListClientQuerysResp {
+  uint32 count = 1;
+  repeated pbcq.ClientQuery details = 2;
+}
+
+message CreateClientQueryReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  string search_type = 3;
+  string search_name = 4;
+  google.protobuf.Struct search_condition = 5;
+}
+
+message CreateClientQueryResp {
   uint32 id = 1;
-  pbkv.KvSpec spec = 2;
-  pbkv.KvAttachment attachment = 3;
+}
+
+message UpdateClientQueryReq {
+  uint32 id = 1;
+  uint32 biz_id = 2;
+  uint32 app_id = 3;
+  string search_name = 4;
+  google.protobuf.Struct search_condition = 5;
+}
+
+message DeleteClientQueryReq {
+  uint32 id = 1;
+  uint32 biz_id = 2;
+  uint32 app_id = 3;
+}
+
+message ListClientLabelAndAnnotationReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  int64 last_heartbeat_time = 3;
 }

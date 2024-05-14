@@ -79,7 +79,7 @@ func (nm *NodeManager) GetCloudRegions(opt *cloudprovider.CommonOption) ([]*prot
 }
 
 // GetZoneList get zoneList
-func (nm *NodeManager) GetZoneList(opt *cloudprovider.CommonOption) ([]*proto.ZoneInfo, error) {
+func (nm *NodeManager) GetZoneList(opt *cloudprovider.GetZoneListOption) ([]*proto.ZoneInfo, error) {
 	// blueking cloud not need to implement interface
 	return nil, nil
 }
@@ -137,6 +137,16 @@ func (nm *NodeManager) ListExternalNodesByIP(ips []string, opt *cloudprovider.Li
 }
 
 // ListKeyPairs keyPairs list
-func (nm *NodeManager) ListKeyPairs(opt *cloudprovider.CommonOption) ([]*proto.KeyPair, error) {
+func (nm *NodeManager) ListKeyPairs(opt *cloudprovider.ListNetworksOption) ([]*proto.KeyPair, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// GetResourceGroups resource groups list
+func (nm *NodeManager) GetResourceGroups(opt *cloudprovider.CommonOption) ([]*proto.ResourceGroupInfo, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// ListRuntimeInfo get runtime info list
+func (nm *NodeManager) ListRuntimeInfo(opt *cloudprovider.ListRuntimeInfoOption) (map[string][]string, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }

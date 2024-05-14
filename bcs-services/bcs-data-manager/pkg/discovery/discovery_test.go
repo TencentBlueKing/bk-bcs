@@ -20,8 +20,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/micro/go-micro/v2/registry"
-	"github.com/micro/go-micro/v2/registry/etcd"
+	"github.com/go-micro/plugins/v4/registry/etcd"
+	"go-micro.dev/v4/registry"
 )
 
 const (

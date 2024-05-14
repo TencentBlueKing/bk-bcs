@@ -59,10 +59,10 @@ func NewExtraTokenHandler(tokenStore sqlstore.TokenStore, notifyStore sqlstore.T
 
 // ExtraTokenResponse is the response of extra token
 type ExtraTokenResponse struct {
-	UserName  string       `json:"username"`
-	Token     string       `json:"token"`
-	Status    *TokenStatus `json:"status,omitempty"`
-	ExpiredAt *time.Time   `json:"expired_at"` // nil means never expired
+	UserName  string             `json:"username"`
+	Token     string             `json:"token"`
+	Status    *utils.TokenStatus `json:"status,omitempty"`
+	ExpiredAt *time.Time         `json:"expired_at"` // nil means never expired
 }
 
 // GetTokenByUserAndClusterID get token by user and cluster id
@@ -130,9 +130,9 @@ func (t *ExtraTokenHandler) GetTokenByUserAndClusterID(request *restful.Request,
 		utils.WriteForbiddenError(response, 400, fmt.Sprintf("can't find user %s token", username))
 		return
 	}
-	status := TokenStatusActive
+	status := utils.TokenStatusActive
 	if tokenInDB.HasExpired() {
-		status = TokenStatusExpired
+		status = utils.TokenStatusExpired
 	}
 	expiresAt := &tokenInDB.ExpiresAt
 	// transfer never expired

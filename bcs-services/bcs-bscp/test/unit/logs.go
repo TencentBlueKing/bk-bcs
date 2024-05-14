@@ -10,12 +10,13 @@
  * limitations under the License.
  */
 
+// Package unit xxx
 package unit
 
 import (
 	"os"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 )
 
 // DefaultTestLogDir default test log save dir.
@@ -24,7 +25,7 @@ const DefaultTestLogDir = "./log"
 // InitTestLogOptions init logs, if log dir not exist, will to create dir.
 func InitTestLogOptions(logDir string) {
 	// ignore error, if log dir create failed, logs will use tmp dir to save log file.
-	os.MkdirAll(logDir, os.ModePerm)
+	os.MkdirAll(logDir, os.ModePerm) // nolint error not checked
 
 	logs.InitLogger(
 		logs.LogConfig{

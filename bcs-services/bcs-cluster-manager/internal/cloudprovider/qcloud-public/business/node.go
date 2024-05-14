@@ -62,6 +62,32 @@ func GetCVMImageIDByImageName(imageName string, opt *cloudprovider.CommonOption)
 	return imageIDList[0], nil
 }
 
+// GetCloudRegions get cloud regions
+func GetCloudRegions(opt *cloudprovider.CommonOption) ([]*proto.RegionInfo, error) {
+	client, err := api.GetCVMClient(opt)
+	if err != nil {
+		blog.Errorf("create CVM client when GetRegionsInfo failed: %v", err)
+		return nil, err
+	}
+
+	cloudRegions, err := client.GetCloudRegions()
+	if err != nil {
+		blog.Errorf("GetCloudRegions failed, %s", err.Error())
+		return nil, err
+	}
+
+	regions := make([]*proto.RegionInfo, 0)
+	for i := range cloudRegions {
+		regions = append(regions, &proto.RegionInfo{
+			Region:      *cloudRegions[i].Region,
+			RegionName:  *cloudRegions[i].RegionName,
+			RegionState: *cloudRegions[i].RegionState,
+		})
+	}
+
+	return regions, nil
+}
+
 // ListNodesByInstanceID list node by instanceIDs
 func ListNodesByInstanceID(ids []string, opt *cloudprovider.ListNodesOption) ([]*proto.Node, error) {
 	idChunks := utils.SplitStringsChunks(ids, common.Limit)
@@ -124,7 +150,7 @@ func ListNodesByIP(ips []string, opt *cloudprovider.ListNodesOption) ([]*proto.N
 func ListExternalNodesByIP(ips []string, opt *cloudprovider.ListNodesOption) ([]*proto.Node, error) {
 	var nodes []*proto.Node
 
-	hostDataList, err := cmdb.GetCmdbClient().QueryHostInfoWithoutBiz(ips, cmdb.Page{
+	hostDataList, err := cmdb.GetCmdbClient().QueryHostInfoWithoutBiz(cmdb.FieldHostIP, ips, cmdb.Page{
 		Start: 0,
 		Limit: len(ips),
 	})
@@ -186,27 +212,41 @@ func InstanceToNode(inst *cvm.Instance, zoneInfo map[string]*proto.ZoneInfo) *pr
 			}
 			return ""
 		}(),
+		ChargeType: *inst.InstanceChargeType,
 	}
 	return node
 }
 
 // GetZoneInfoByRegion region: ap-nanjing/ap-shenzhen
-func GetZoneInfoByRegion(opt *cloudprovider.CommonOption) (map[string]*proto.ZoneInfo, error) {
+func GetZoneInfoByRegion(opt *cloudprovider.CommonOption) (map[string]*proto.ZoneInfo,
+	map[string]*proto.ZoneInfo, error) {
 	cvmClient, err := api.GetCVMClient(opt)
 	if err != nil {
-		return nil, fmt.Errorf("getZoneInfoByRegion GetZoneInfo failed: %v", err)
+		return nil, nil, fmt.Errorf("getZoneInfoByRegion GetZoneInfo failed: %v", err)
 	}
 
 	zones, err := cvmClient.DescribeZones()
 	if err != nil {
-		return nil, fmt.Errorf("getZoneInfoByRegion GetZoneInfo failed: %v", err)
+		return nil, nil, fmt.Errorf("getZoneInfoByRegion GetZoneInfo failed: %v", err)
 	}
 
-	zoneIDMap := make(map[string]*proto.ZoneInfo)
+	var (
+		zoneMap   = make(map[string]*proto.ZoneInfo)
+		zoneIdMap = make(map[string]*proto.ZoneInfo)
+	)
+
 	for i := range zones {
-		if _, ok := zoneIDMap[*zones[i].Zone]; !ok {
+		if _, ok := zoneMap[*zones[i].Zone]; !ok {
 			// zoneID, _ := strconv.ParseUint(zones[i].ZoneID, 10, 32)
-			zoneIDMap[*zones[i].Zone] = &proto.ZoneInfo{
+			zoneMap[*zones[i].Zone] = &proto.ZoneInfo{
+				ZoneID:   *zones[i].ZoneId,
+				Zone:     *zones[i].Zone,
+				ZoneName: *zones[i].ZoneName,
+			}
+		}
+
+		if _, ok := zoneIdMap[*zones[i].ZoneId]; !ok {
+			zoneIdMap[*zones[i].ZoneId] = &proto.ZoneInfo{
 				ZoneID:   *zones[i].ZoneId,
 				Zone:     *zones[i].Zone,
 				ZoneName: *zones[i].ZoneName,
@@ -214,7 +254,7 @@ func GetZoneInfoByRegion(opt *cloudprovider.CommonOption) (map[string]*proto.Zon
 		}
 	}
 
-	return zoneIDMap, nil
+	return zoneIdMap, zoneMap, nil
 }
 
 // TransInstanceIDsToNodes trans IDList to Nodes
@@ -231,7 +271,7 @@ func TransInstanceIDsToNodes(
 		blog.Errorf("cvm client GetInstancesById len(%d) failed, %s", len(ids), err.Error())
 		return nil, err
 	}
-	zoneInfo, err := GetZoneInfoByRegion(opt.Common)
+	_, zoneInfo, err := GetZoneInfoByRegion(opt.Common)
 	if err != nil {
 		blog.Errorf("cvm client GetZoneInfoByRegion failed: %v", err)
 	}
@@ -278,7 +318,7 @@ func TransIPsToNodes(ips []string, opt *cloudprovider.ListNodesOption) ([]*proto
 			"ip address failed, %s", len(ips), err.Error())
 		return nil, err
 	}
-	zoneInfo, err := GetZoneInfoByRegion(opt.Common)
+	_, zoneInfo, err := GetZoneInfoByRegion(opt.Common)
 	if err != nil {
 		blog.Errorf("cvm client transIPsToNodes GetZoneInfoByRegion failed: %v", err)
 	}

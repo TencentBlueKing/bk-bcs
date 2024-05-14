@@ -16,7 +16,7 @@ import (
 
 	"gorm.io/plugin/dbresolver"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
 )
 
 func newKv(db *gorm.DB, opts ...gen.DOOption) kv {
@@ -30,6 +30,7 @@ func newKv(db *gorm.DB, opts ...gen.DOOption) kv {
 	_kv.ID = field.NewUint32(tableName, "id")
 	_kv.KvState = field.NewString(tableName, "kv_state")
 	_kv.Key = field.NewString(tableName, "key")
+	_kv.Memo = field.NewString(tableName, "memo")
 	_kv.KvType = field.NewString(tableName, "kv_type")
 	_kv.Version = field.NewUint32(tableName, "version")
 	_kv.BizID = field.NewUint32(tableName, "biz_id")
@@ -38,6 +39,9 @@ func newKv(db *gorm.DB, opts ...gen.DOOption) kv {
 	_kv.Reviser = field.NewString(tableName, "reviser")
 	_kv.CreatedAt = field.NewTime(tableName, "created_at")
 	_kv.UpdatedAt = field.NewTime(tableName, "updated_at")
+	_kv.Signature = field.NewString(tableName, "signature")
+	_kv.ByteSize = field.NewUint64(tableName, "byte_size")
+	_kv.Md5 = field.NewString(tableName, "md5")
 
 	_kv.fillFieldMap()
 
@@ -51,6 +55,7 @@ type kv struct {
 	ID        field.Uint32
 	KvState   field.String
 	Key       field.String
+	Memo      field.String
 	KvType    field.String
 	Version   field.Uint32
 	BizID     field.Uint32
@@ -59,6 +64,9 @@ type kv struct {
 	Reviser   field.String
 	CreatedAt field.Time
 	UpdatedAt field.Time
+	Signature field.String
+	ByteSize  field.Uint64
+	Md5       field.String
 
 	fieldMap map[string]field.Expr
 }
@@ -78,6 +86,7 @@ func (k *kv) updateTableName(table string) *kv {
 	k.ID = field.NewUint32(table, "id")
 	k.KvState = field.NewString(table, "kv_state")
 	k.Key = field.NewString(table, "key")
+	k.Memo = field.NewString(table, "memo")
 	k.KvType = field.NewString(table, "kv_type")
 	k.Version = field.NewUint32(table, "version")
 	k.BizID = field.NewUint32(table, "biz_id")
@@ -86,6 +95,9 @@ func (k *kv) updateTableName(table string) *kv {
 	k.Reviser = field.NewString(table, "reviser")
 	k.CreatedAt = field.NewTime(table, "created_at")
 	k.UpdatedAt = field.NewTime(table, "updated_at")
+	k.Signature = field.NewString(table, "signature")
+	k.ByteSize = field.NewUint64(table, "byte_size")
+	k.Md5 = field.NewString(table, "md5")
 
 	k.fillFieldMap()
 
@@ -110,10 +122,11 @@ func (k *kv) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (k *kv) fillFieldMap() {
-	k.fieldMap = make(map[string]field.Expr, 11)
+	k.fieldMap = make(map[string]field.Expr, 15)
 	k.fieldMap["id"] = k.ID
 	k.fieldMap["kv_state"] = k.KvState
 	k.fieldMap["key"] = k.Key
+	k.fieldMap["memo"] = k.Memo
 	k.fieldMap["kv_type"] = k.KvType
 	k.fieldMap["version"] = k.Version
 	k.fieldMap["biz_id"] = k.BizID
@@ -122,6 +135,9 @@ func (k *kv) fillFieldMap() {
 	k.fieldMap["reviser"] = k.Reviser
 	k.fieldMap["created_at"] = k.CreatedAt
 	k.fieldMap["updated_at"] = k.UpdatedAt
+	k.fieldMap["signature"] = k.Signature
+	k.fieldMap["byte_size"] = k.ByteSize
+	k.fieldMap["md5"] = k.Md5
 }
 
 func (k kv) clone(db *gorm.DB) kv {

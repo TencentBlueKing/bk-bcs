@@ -17,14 +17,14 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/cache-service/service/cache/keys"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/bedis"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/dao"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/jsoni"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/cache-service/service/cache/keys"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/bedis"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/dao"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/jsoni"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // MaxCacheConcurrent is the max concurrent(goroutine) number of cache.
@@ -263,7 +263,6 @@ func (c *consumer) deleteCredentialCache(kt *kit.Kit, events []*table.Event) err
 func (c *consumer) cacheReleasedCI(kt *kit.Kit, releaseBizID map[uint32]uint32) error {
 	reminder := make(map[uint32][]uint32, 0)
 	for rlID, bizID := range releaseBizID {
-		// remove useless revision info
 		reminder[bizID] = append(reminder[bizID], rlID)
 	}
 
@@ -281,10 +280,20 @@ func (c *consumer) cacheReleasedCI(kt *kit.Kit, releaseBizID map[uint32]uint32) 
 			return nil
 		}
 
+		var releases []*table.Release
+		releases, err = c.op.Release().ListAllByIDs(kt, releaseIDs, bizID)
+		if err != nil {
+			logs.Errorf("list releases by ids failed, bizID: %d, releaseIDs: %v, err: %v, rid: %s", bizID, releaseIDs,
+				err, kt.Rid)
+			return err
+		}
+		var releaseDetail = make(map[uint32]*table.Release)
+		for _, r := range releases {
+			releaseDetail[r.ID] = r
+		}
+
 		ciList := make(map[string][]*table.ReleasedConfigItem)
 		for _, one := range releasedCI {
-			// remove useless revision info
-			one.Revision = nil
 			key := keys.Key.ReleasedCI(one.Attachment.BizID, one.ReleaseID)
 			ciList[key] = append(ciList[key], one)
 		}
@@ -295,7 +304,12 @@ func (c *consumer) cacheReleasedCI(kt *kit.Kit, releaseBizID map[uint32]uint32) 
 			if len(list) == 0 {
 				continue
 			}
-			js, err = json.Marshal(types.ReleaseCICaches(list))
+			release, ok := releaseDetail[list[0].ReleaseID]
+			if !ok {
+				logs.Errorf("get release detail for id %d failed, rid: %s", list[0].ReleaseID, kt.Rid)
+				continue
+			}
+			js, err = json.Marshal(types.ReleaseCICaches(list, release.Spec.Name))
 			if err != nil {
 				logs.Errorf("marshal ci list failed, skip, list: %+v, err: %v, rid: %s", list, err, kt.Rid)
 				continue
@@ -341,8 +355,6 @@ func (c *consumer) cacheReleasedKv(kt *kit.Kit, releaseBizID map[uint32]uint32) 
 
 		kvList := make(map[string][]*table.ReleasedKv)
 		for _, one := range releasedKv {
-			// remove useless revision info
-			one.Revision = nil
 			key := keys.Key.ReleasedKv(one.Attachment.BizID, one.ReleaseID)
 			kvList[key] = append(kvList[key], one)
 		}

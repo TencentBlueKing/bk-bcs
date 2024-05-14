@@ -31,6 +31,7 @@ const (
 )
 
 // #nosec G101
+// NOCC:tosa/indent(ignore)
 var secretTmpl = `global:
   vault:
     unsealKeys:
@@ -38,15 +39,6 @@ var secretTmpl = `global:
       - {{ . }}
     {{- end }}
     rootToken: {{ .RootToken }}`
-
-// vaultConf ..
-type vaultConf struct {
-	PluginDir       string   `yaml:"pluginDir"`
-	UnsealKeys      []string `yaml:"unsealKeys"`
-	RootToken       string   `yaml:"rootToken"`
-	SecretShares    int      `yaml:"secretShares"`
-	SecretThreshold int      `yaml:"secretThreshold"`
-}
 
 func initCmd() *cobra.Command {
 	cmd := &cobra.Command{

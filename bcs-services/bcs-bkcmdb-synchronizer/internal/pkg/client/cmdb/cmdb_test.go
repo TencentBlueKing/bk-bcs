@@ -768,7 +768,7 @@ func Test_cmdbClient_CreateBcsWorkload(t *testing.T) {
 	}
 
 	rudMap := make(map[string]interface{})
-	err = json.Unmarshal(jsonBytes, &rudMap)
+	_ = json.Unmarshal(jsonBytes, &rudMap)
 
 	type fields struct {
 		config   *Options
@@ -955,9 +955,9 @@ func Test_cmdbClient_GetBcsNode(t *testing.T) {
 			args: args{
 				request: &client.GetBcsNodeRequest{
 					CommonRequest: client.CommonRequest{
-						BKBizID: 41,
+						BKBizID: 111,
 						Page: client.Page{
-							Limit: 100,
+							Limit: 200,
 							Start: 0,
 						},
 						Filter: &client.PropertyFilter{
@@ -966,7 +966,7 @@ func Test_cmdbClient_GetBcsNode(t *testing.T) {
 								{
 									Field:    "bk_cluster_id",
 									Operator: "in",
-									Value:    []int64{4625},
+									Value:    []int64{0},
 								},
 							},
 						},
@@ -1561,6 +1561,7 @@ func Test_deleteAllByBkBizID(t *testing.T) {
 }
 
 // Test_getAllByBkBizID tests get all bcs resources by bizid
+// nolint
 func Test_getAllByBkBizID(t *testing.T) {
 	workloadTypes := []string{"deployment", "statefulSet", "daemonSet", "gameDeployment", "gameStatefulSet"}
 	c := getCli()
@@ -1808,6 +1809,7 @@ func Test_getAllByBkBizID(t *testing.T) {
 }
 
 // Test_cmdbClient_UpdateBcsClusterType tests the UpdateBcsClusterType method of the cmdbClient.
+// nolint
 func Test_cmdbClient_UpdateBcsClusterType(t *testing.T) {
 	id := int64(4583)
 	clusterType := "SHARE_CLUSTER"
@@ -1842,6 +1844,91 @@ func Test_cmdbClient_UpdateBcsClusterType(t *testing.T) {
 			if err := c.UpdateBcsClusterType(tt.args.request); (err != nil) != tt.wantErr {
 				t.Errorf("UpdateBcsClusterType() error = %v, wantErr %v", err, tt.wantErr)
 			}
+		})
+	}
+}
+
+// Test_cmdbClient_GetHostInfo 测试cmdbClient的GetHostInfo方法
+// nolint
+func Test_cmdbClient_GetHostInfo(t *testing.T) {
+	type fields struct {
+		config   *Options
+		userAuth string
+	}
+	type args struct {
+		hostIP []string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *[]client.HostData
+		wantErr bool
+	}{
+		{
+			name: "test GetHostInfo",
+			args: args{
+				hostIP: []string{"xxx"},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := getCli()
+			got, err := c.GetHostInfo(tt.args.hostIP)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetHostInfo() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			t.Logf("GetHostInfo() got %v", got)
+		})
+	}
+}
+
+// Test_cmdbClient_GetBcsContainer 是一个测试函数，用于测试 cmdbClient 类型的 GetBcsContainer 方法。
+// nolint
+func Test_cmdbClient_GetBcsContainer(t *testing.T) {
+	bizid := int64(2)
+
+	type fields struct {
+		config   *Options
+		userAuth string
+	}
+	type args struct {
+		request *client.GetBcsContainerRequest
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *[]bkcmdbkube.Container
+		wantErr bool
+	}{
+		{
+			name: "test GetBcsContainer",
+			args: args{
+				request: &client.GetBcsContainerRequest{
+					CommonRequest: client.CommonRequest{
+						BKBizID: bizid,
+						Page: client.Page{
+							Limit: 200,
+							Start: 0,
+						},
+					},
+					BkPodID: int64(111),
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := getCli()
+			got, err := c.GetBcsContainer(tt.args.request)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetBcsContainer() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			t.Logf("GetBcsContainer() got %v", got)
 		})
 	}
 }

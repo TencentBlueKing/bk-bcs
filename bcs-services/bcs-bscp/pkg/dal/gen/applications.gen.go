@@ -16,7 +16,7 @@ import (
 
 	"gorm.io/plugin/dbresolver"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
 )
 
 func newApp(db *gorm.DB, opts ...gen.DOOption) app {
@@ -31,10 +31,7 @@ func newApp(db *gorm.DB, opts ...gen.DOOption) app {
 	_app.BizID = field.NewUint32(tableName, "biz_id")
 	_app.Name = field.NewString(tableName, "name")
 	_app.ConfigType = field.NewString(tableName, "config_type")
-	_app.Mode = field.NewString(tableName, "mode")
 	_app.Memo = field.NewString(tableName, "memo")
-	_app.ReloadType = field.NewString(tableName, "reload_type")
-	_app.ReloadFilePath = field.NewString(tableName, "reload_file_path")
 	_app.Alias_ = field.NewString(tableName, "alias")
 	_app.DataType = field.NewString(tableName, "data_type")
 	_app.Creator = field.NewString(tableName, "creator")
@@ -50,21 +47,18 @@ func newApp(db *gorm.DB, opts ...gen.DOOption) app {
 type app struct {
 	appDo appDo
 
-	ALL            field.Asterisk
-	ID             field.Uint32
-	BizID          field.Uint32
-	Name           field.String
-	ConfigType     field.String
-	Mode           field.String
-	Memo           field.String
-	ReloadType     field.String
-	ReloadFilePath field.String
-	Alias_         field.String
-	DataType       field.String
-	Creator        field.String
-	Reviser        field.String
-	CreatedAt      field.Time
-	UpdatedAt      field.Time
+	ALL        field.Asterisk
+	ID         field.Uint32
+	BizID      field.Uint32
+	Name       field.String
+	ConfigType field.String
+	Memo       field.String
+	Alias_     field.String
+	DataType   field.String
+	Creator    field.String
+	Reviser    field.String
+	CreatedAt  field.Time
+	UpdatedAt  field.Time
 
 	fieldMap map[string]field.Expr
 }
@@ -85,10 +79,7 @@ func (a *app) updateTableName(table string) *app {
 	a.BizID = field.NewUint32(table, "biz_id")
 	a.Name = field.NewString(table, "name")
 	a.ConfigType = field.NewString(table, "config_type")
-	a.Mode = field.NewString(table, "mode")
 	a.Memo = field.NewString(table, "memo")
-	a.ReloadType = field.NewString(table, "reload_type")
-	a.ReloadFilePath = field.NewString(table, "reload_file_path")
 	a.Alias_ = field.NewString(table, "alias")
 	a.DataType = field.NewString(table, "data_type")
 	a.Creator = field.NewString(table, "creator")
@@ -119,15 +110,12 @@ func (a *app) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (a *app) fillFieldMap() {
-	a.fieldMap = make(map[string]field.Expr, 14)
+	a.fieldMap = make(map[string]field.Expr, 11)
 	a.fieldMap["id"] = a.ID
 	a.fieldMap["biz_id"] = a.BizID
 	a.fieldMap["name"] = a.Name
 	a.fieldMap["config_type"] = a.ConfigType
-	a.fieldMap["mode"] = a.Mode
 	a.fieldMap["memo"] = a.Memo
-	a.fieldMap["reload_type"] = a.ReloadType
-	a.fieldMap["reload_file_path"] = a.ReloadFilePath
 	a.fieldMap["alias"] = a.Alias_
 	a.fieldMap["data_type"] = a.DataType
 	a.fieldMap["creator"] = a.Creator

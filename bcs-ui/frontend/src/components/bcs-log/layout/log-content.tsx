@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-expressions */
-import { debounce } from 'throttle-debounce';
+import { debounce } from 'lodash';
 import { computed, defineComponent, onMounted, PropType, ref, watch } from 'vue';
 
 import AnsiParser from '../common/ansi-parser';
@@ -124,12 +124,12 @@ export default defineComponent({
       return arr;
     };
     // 纵向滚动
-    const handleScrollChange = debounce(200, () => {
+    const handleScrollChange = debounce(() => {
       // 置顶
       if (virtualScrollRef.value?.$refs.scrollMain?.style.top === '0px') {
         ctx.emit('scroll-top');
       }
-    });
+    }, 200);
     // 悬浮
     const handleMouseEnter = (data: IInnerLogData) => {
       const index = hoverIds.value.findIndex(time => data.time === time);

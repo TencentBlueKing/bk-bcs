@@ -91,10 +91,10 @@ func (h *HelmInstaller) IsInstalled(clusterID string) (bool, error) {
 	}
 
 	resp, err := h.client.GetReleaseDetailV1(context.Background(), &helmmanager.GetReleaseDetailV1Req{
-		ProjectCode: &h.projectID,
-		ClusterID:   &clusterID,
-		Namespace:   &h.releaseNamespace,
-		Name:        &h.releaseName,
+		ProjectCode: h.projectID,
+		ClusterID:   clusterID,
+		Namespace:   h.releaseNamespace,
+		Name:        h.releaseName,
 	})
 	if err != nil {
 		blog.Errorf("[HelmInstaller] GetReleaseDetail failed, err: %s", err.Error())
@@ -105,34 +105,34 @@ func (h *HelmInstaller) IsInstalled(clusterID string) (bool, error) {
 		return false, fmt.Errorf("GetReleaseDetail failed, resp is empty")
 	}
 	// not found release
-	if *resp.Code != 0 {
-		blog.Errorf("[HelmInstaller] GetReleaseDetail failed, code: %d, message: %s", resp.Code, *resp.Message)
+	if resp.Code != 0 {
+		blog.Errorf("[HelmInstaller] GetReleaseDetail failed, code: %d, message: %s", resp.Code, resp.Message)
 		return false, nil
 	}
 
 	blog.Infof("[HelmInstaller] [%s:%s] GetReleaseDetail success[%s:%s] status: %s",
-		*resp.Data.Chart, *resp.Data.ChartVersion, *resp.Data.Namespace, *resp.Data.Name, *resp.Data.Status)
+		resp.Data.Chart, resp.Data.ChartVersion, resp.Data.Namespace, resp.Data.Name, resp.Data.Status)
 
 	return true, nil
 }
 
 func (h *HelmInstaller) getChartLatestVersion(project string, repo, chart string) (string, error) {
 	resp, err := h.client.GetChartDetailV1(context.Background(), &helmmanager.GetChartDetailV1Req{
-		ProjectCode: &project,
-		RepoName:    &repo,
-		Name:        &chart,
+		ProjectCode: project,
+		RepoName:    repo,
+		Name:        chart,
 	})
 	if err != nil {
 		blog.Errorf("[HelmInstaller] getChartLatestVersion failed: %v", err)
 		return "", err
 	}
 
-	if *resp.Code != 0 || !*resp.Result {
-		blog.Errorf("[HelmInstaller] getChartLatestVersion[%s] failed: %v", *resp.RequestID, *resp.Message)
+	if resp.Code != 0 || !resp.Result {
+		blog.Errorf("[HelmInstaller] getChartLatestVersion[%s] failed: %v", resp.RequestID, resp.Message)
 		return "", err
 	}
 
-	return *resp.Data.LatestVersion, nil
+	return resp.Data.LatestVersion, nil
 }
 
 func (h *HelmInstaller) setRepo() {
@@ -158,13 +158,13 @@ func (h *HelmInstaller) Install(clusterID, values string) error {
 
 	// create app
 	req := &helmmanager.InstallReleaseV1Req{
-		ProjectCode: &h.projectID,
-		ClusterID:   &clusterID,
-		Namespace:   &h.releaseNamespace,
-		Name:        &h.releaseName,
-		Repository:  &h.repo,
-		Chart:       &h.chartName,
-		Version:     &version,
+		ProjectCode: h.projectID,
+		ClusterID:   clusterID,
+		Namespace:   h.releaseNamespace,
+		Name:        h.releaseName,
+		Repository:  h.repo,
+		Chart:       h.chartName,
+		Version:     version,
 		Values:      []string{values},
 		Args:        install.DefaultArgsFlag,
 	}
@@ -181,9 +181,9 @@ func (h *HelmInstaller) Install(clusterID, values string) error {
 			return fmt.Errorf("InstallRelease failed, resp is empty")
 		}
 
-		if *resp.Code != 0 || !*resp.Result {
-			blog.Errorf("[HelmInstaller] InstallRelease failed, code: %d, message: %s", *resp.Code, *resp.Message)
-			return fmt.Errorf("InstallRelease failed, code: %d, message: %s", *resp.Code, *resp.Message)
+		if resp.Code != 0 || !resp.Result {
+			blog.Errorf("[HelmInstaller] InstallRelease failed, code: %d, message: %s", resp.Code, resp.Message)
+			return fmt.Errorf("InstallRelease failed, code: %d, message: %s", resp.Code, resp.Message)
 		}
 
 		return nil
@@ -223,13 +223,13 @@ func (h *HelmInstaller) Upgrade(clusterID, values string) error {
 
 	// update app: default not update chart version
 	req := &helmmanager.UpgradeReleaseV1Req{
-		ProjectCode: &h.projectID,
-		ClusterID:   &clusterID,
-		Namespace:   &h.releaseNamespace,
-		Name:        &h.releaseName,
-		Repository:  &h.repo,
-		Chart:       &h.chartName,
-		//Version:     &version,
+		ProjectCode: h.projectID,
+		ClusterID:   clusterID,
+		Namespace:   h.releaseNamespace,
+		Name:        h.releaseName,
+		Repository:  h.repo,
+		Chart:       h.chartName,
+		//Version:     version,
 		Values: []string{values},
 		Args:   install.DefaultArgsFlag,
 	}
@@ -243,10 +243,10 @@ func (h *HelmInstaller) Upgrade(clusterID, values string) error {
 		blog.Errorf("[HelmInstaller] UpgradeRelease failed, resp is empty")
 		return fmt.Errorf("UpgradeRelease failed, resp is empty")
 	}
-	if *resp.Code != 0 {
-		blog.Errorf("[HelmInstaller] UpgradeRelease failed, code: %d, message: %s", *resp.Code, *resp.Message)
-		return fmt.Errorf("UpgradeRelease failed, code: %d, message: %s, requestID: %s", *resp.Code, *resp.Message,
-			*resp.RequestID)
+	if resp.Code != 0 {
+		blog.Errorf("[HelmInstaller] UpgradeRelease failed, code: %d, message: %s", resp.Code, resp.Message)
+		return fmt.Errorf("UpgradeRelease failed, code: %d, message: %s, requestID: %s", resp.Code, resp.Message,
+			resp.RequestID)
 	}
 
 	return nil
@@ -271,19 +271,19 @@ func (h *HelmInstaller) Uninstall(clusterID string) error {
 
 	// delete app
 	resp, err := h.client.UninstallReleaseV1(context.Background(), &helmmanager.UninstallReleaseV1Req{
-		ProjectCode: &h.projectID,
-		Name:        &h.releaseName,
-		Namespace:   &h.releaseNamespace,
-		ClusterID:   &clusterID,
+		ProjectCode: h.projectID,
+		Name:        h.releaseName,
+		Namespace:   h.releaseNamespace,
+		ClusterID:   clusterID,
 	})
 	if err != nil {
 		blog.Errorf("[HelmInstaller] delete app failed, err: %s", err.Error())
 		return err
 	}
-	if *resp.Code != 0 {
-		blog.Errorf("[HelmInstaller] UninstallRelease failed, code: %d, message: %s", *resp.Code, *resp.Message)
-		return fmt.Errorf("UninstallRelease failed, code: %d, message: %s, requestID: %s", *resp.Code, *resp.Message,
-			*resp.RequestID)
+	if resp.Code != 0 {
+		blog.Errorf("[HelmInstaller] UninstallRelease failed, code: %d, message: %s", resp.Code, resp.Message)
+		return fmt.Errorf("UninstallRelease failed, code: %d, message: %s, requestID: %s", resp.Code, resp.Message,
+			resp.RequestID)
 	}
 
 	blog.Infof("[HelmInstaller] delete app successful[%s:%s:%v]", clusterID, h.releaseNamespace, h.releaseName)
@@ -313,10 +313,10 @@ func (h *HelmInstaller) CheckAppStatus(clusterID string, timeout time.Duration, 
 	err = loop.LoopDoFunc(ctx, func() error {
 		// get app
 		resp, err := h.client.GetReleaseDetailV1(ctx, &helmmanager.GetReleaseDetailV1Req{ // nolint
-			ProjectCode: &h.projectID,
-			ClusterID:   &clusterID,
-			Namespace:   &h.releaseNamespace,
-			Name:        &h.releaseName,
+			ProjectCode: h.projectID,
+			ClusterID:   clusterID,
+			Namespace:   h.releaseNamespace,
+			Name:        h.releaseName,
 		})
 		if err != nil {
 			blog.Errorf("[HelmInstaller] GetReleaseDetail failed, err: %s", err.Error())
@@ -325,16 +325,16 @@ func (h *HelmInstaller) CheckAppStatus(clusterID string, timeout time.Duration, 
 		if resp == nil {
 			return fmt.Errorf("[HelmInstaller] GetReleaseDetail failed, resp is empty")
 		}
-		if *resp.Code != 0 {
+		if resp.Code != 0 {
 			return fmt.Errorf("[HelmInstaller] GetReleaseDetail failed, code: %d, message: %s, requestID: %s",
-				*resp.Code, *resp.Message, *resp.RequestID)
+				resp.Code, resp.Message, resp.RequestID)
 		}
 
-		blog.Infof("[HelmInstaller] GetReleaseDetail status: %s", *resp.Data.Status)
+		blog.Infof("[HelmInstaller] GetReleaseDetail status: %s", resp.Data.Status)
 
 		// 前置检查
 		if pre {
-			switch *resp.Data.Status {
+			switch resp.Data.Status {
 			case DeployedInstall, DeployedRollback, DeployedUpgrade, FailedInstall,
 				FailedRollback, FailedUpgrade, FailedState, FailedUninstall:
 				return loop.EndLoop
@@ -349,11 +349,11 @@ func (h *HelmInstaller) CheckAppStatus(clusterID string, timeout time.Duration, 
 		// 后置检查
 
 		// 成功状态 / 失败状态 则终止
-		switch *resp.Data.Status {
+		switch resp.Data.Status {
 		case DeployedInstall, DeployedRollback, DeployedUpgrade:
 			return loop.EndLoop
 		case FailedInstall, FailedRollback, FailedUpgrade, FailedState:
-			return fmt.Errorf("[HelmInstaller] CheckAppStatus[%s] failed: %s", *resp.RequestID, *resp.Data.Status)
+			return fmt.Errorf("[HelmInstaller] CheckAppStatus[%s] failed: %s", resp.RequestID, resp.Data.Status)
 		default:
 		}
 

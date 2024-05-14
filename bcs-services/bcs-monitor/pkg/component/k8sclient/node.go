@@ -14,9 +14,14 @@ package k8sclient
 
 import (
 	"context"
+	"time"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
+
+const (
+	defaultTimeout = 20 * time.Second
 )
 
 // GetNodeList 获取集群节点列表
@@ -97,4 +102,34 @@ func GetNodeInfo(ctx context.Context, clusterId, nodeName string) (*v1.Node, err
 		return nil, err
 	}
 	return node, nil
+}
+
+// GetMasterNodeList 获取集群节点列表
+func GetMasterNodeList(ctx context.Context, clusterID string) ([]string, []string, error) {
+	client, err := GetK8SClientByClusterId(clusterID)
+	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
+	defer cancel()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	listOptions := metav1.ListOptions{}
+	listOptions.LabelSelector = "node-role.kubernetes.io/master=true,io.tencent.bcs.dev/filter-node-resource!=true"
+
+	nodeList, err := client.CoreV1().Nodes().List(ctx, listOptions)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	nodeIPList := make([]string, 0)
+	nodeNameList := make([]string, 0)
+	for _, item := range nodeList.Items {
+		nodeNameList = append(nodeNameList, item.Name)
+		for _, addr := range item.Status.Addresses {
+			if addr.Type == v1.NodeInternalIP {
+				nodeIPList = append(nodeIPList, addr.Address)
+			}
+		}
+	}
+	return nodeIPList, nodeNameList, nil
 }

@@ -29,6 +29,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
 	putils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
@@ -120,9 +121,9 @@ func (c *CloudInfoManager) SyncClusterCloudInfo(cls *cmproto.Cluster,
 	cls.ManageType = *tkeCluster.ClusterType
 
 	// cluster cloud basic setting
-	clusterBasicSettingByQCloud(cls, tkeCluster)
+	clusterBasicSettingByQCloud(cls, tkeCluster, opt)
 	// cluster cloud node setting
-	clusterCloudDefaultNodeSetting(cls, false)
+	_ = clusterCloudDefaultNodeSetting(cls, false)
 	// cluster cloud advanced setting
 	clusterAdvancedSettingByQCloud(cls, tkeCluster)
 
@@ -130,6 +131,23 @@ func (c *CloudInfoManager) SyncClusterCloudInfo(cls *cmproto.Cluster,
 	err = clusterNetworkSettingByQCloud(cls, tkeCluster)
 	if err != nil {
 		blog.Errorf("SyncClusterCloudInfo clusterNetworkSettingByQCloud failed: %v", err)
+	}
+
+	return nil
+}
+
+// UpdateClusterCloudInfo update cluster info by cloud
+func (c *CloudInfoManager) UpdateClusterCloudInfo(cls *cmproto.Cluster) error {
+	// call qcloud interface to init cluster defaultConfig
+	if c == nil || cls == nil {
+		return fmt.Errorf("%s UpdateClusterCloudInfo request is empty", cloudName)
+	}
+
+	// cluster cloud advanced setting
+	err := clusterCloudConnectSetting(cls)
+	if err != nil {
+		blog.Errorf("UpdateClusterCloudInfo clusterNetworkSettingByQCloud failed: %v", err)
+		return err
 	}
 
 	return nil
@@ -254,13 +272,15 @@ func clusterAdvancedSettingByQCloud(cls *cmproto.Cluster, cluster *tke.Cluster) 
 	}
 }
 
-func clusterBasicSettingByQCloud(cls *cmproto.Cluster, cluster *tke.Cluster) {
+func clusterBasicSettingByQCloud(cls *cmproto.Cluster, cluster *tke.Cluster,
+	opt *cloudprovider.SyncClusterCloudInfoOption) {
 	cls.ClusterBasicSettings = &cmproto.ClusterBasicSetting{
 		OS:                        *cluster.ClusterOs,
 		Version:                   *cluster.ClusterVersion,
 		VersionName:               *cluster.ClusterVersion,
 		ClusterLevel:              *cluster.ClusterLevel,
 		IsAutoUpgradeClusterLevel: *cluster.AutoUpgradeClusterLevel,
+		Area:                      opt.Area,
 	}
 }
 
@@ -351,13 +371,37 @@ func clusterCloudDefaultNodeSetting(cls *cmproto.Cluster, defaultNodeConfig bool
 			return fmt.Errorf("master&node login info empty")
 		}
 
-		if cls.NodeSettings.GetMasterLogin() != nil && cls.NodeSettings.GetMasterLogin().GetKeyPair() != nil {
-			cls.NodeSettings.GetMasterLogin().GetKeyPair().KeySecret = utils.Base64Encode(
-				cls.NodeSettings.GetMasterLogin().GetKeyPair().GetKeySecret())
+		if cls.NodeSettings.GetMasterLogin() != nil {
+			if cls.NodeSettings.GetMasterLogin().GetKeyPair() != nil &&
+				len(cls.NodeSettings.GetMasterLogin().GetKeyPair().GetKeySecret()) > 0 {
+				cls.NodeSettings.GetMasterLogin().GetKeyPair().KeySecret, _ = encrypt.Encrypt(nil,
+					cls.NodeSettings.GetMasterLogin().GetKeyPair().GetKeySecret())
+			}
+			if cls.NodeSettings.GetMasterLogin().GetKeyPair() != nil &&
+				len(cls.NodeSettings.GetMasterLogin().GetKeyPair().GetKeyPublic()) > 0 {
+				cls.NodeSettings.GetMasterLogin().GetKeyPair().KeyPublic, _ = encrypt.Encrypt(nil,
+					cls.NodeSettings.GetMasterLogin().GetKeyPair().GetKeyPublic())
+			}
+			if len(cls.NodeSettings.GetMasterLogin().InitLoginPassword) > 0 {
+				cls.NodeSettings.GetMasterLogin().InitLoginPassword, _ = encrypt.Encrypt(nil,
+					cls.NodeSettings.GetMasterLogin().GetInitLoginPassword())
+			}
 		}
-		if cls.NodeSettings.GetWorkerLogin() != nil && cls.NodeSettings.GetWorkerLogin().GetKeyPair() != nil {
-			cls.NodeSettings.GetWorkerLogin().GetKeyPair().KeySecret = utils.Base64Encode(
-				cls.NodeSettings.GetWorkerLogin().GetKeyPair().GetKeySecret())
+		if cls.NodeSettings.GetWorkerLogin() != nil {
+			if cls.NodeSettings.GetWorkerLogin().GetKeyPair() != nil &&
+				len(cls.NodeSettings.GetWorkerLogin().GetKeyPair().GetKeySecret()) > 0 {
+				cls.NodeSettings.GetWorkerLogin().GetKeyPair().KeySecret, _ = encrypt.Encrypt(nil,
+					cls.NodeSettings.GetWorkerLogin().GetKeyPair().GetKeySecret())
+			}
+			if cls.NodeSettings.GetWorkerLogin().GetKeyPair() != nil &&
+				len(cls.NodeSettings.GetWorkerLogin().GetKeyPair().GetKeyPublic()) > 0 {
+				cls.NodeSettings.GetWorkerLogin().GetKeyPair().KeyPublic, _ = encrypt.Encrypt(nil,
+					cls.NodeSettings.GetWorkerLogin().GetKeyPair().GetKeyPublic())
+			}
+			if len(cls.NodeSettings.GetWorkerLogin().InitLoginPassword) > 0 {
+				cls.NodeSettings.GetWorkerLogin().InitLoginPassword, _ = encrypt.Encrypt(nil,
+					cls.NodeSettings.GetWorkerLogin().GetInitLoginPassword())
+			}
 		}
 	}
 
@@ -402,7 +446,8 @@ func clusterCloudNetworkSetting(cls *cmproto.Cluster) error {
 		if cls.NetworkSettings.ServiceIPv4CIDR == "" {
 			return fmt.Errorf("network[%s] ServiceIPv4CIDR empty", common.VpcCni)
 		}
-		if cls.NetworkSettings.SubnetSource == nil || (len(cls.NetworkSettings.SubnetSource.New) == 0 && cls.NetworkSettings.SubnetSource.Existed == nil) {
+		if cls.NetworkSettings.SubnetSource == nil ||
+			(len(cls.NetworkSettings.SubnetSource.New) == 0 && cls.NetworkSettings.SubnetSource.Existed == nil) {
 			return fmt.Errorf("network[%s] subnet resource empty", common.VpcCni)
 		}
 	}
@@ -411,11 +456,7 @@ func clusterCloudNetworkSetting(cls *cmproto.Cluster) error {
 }
 
 func clusterCloudConnectSetting(cls *cmproto.Cluster) error {
-	if cls.GetClusterAdvanceSettings().GetClusterConnectSetting() == nil {
-		return fmt.Errorf("initCloudCluster connect setting empty")
-	}
-
-	if cls.GetClusterAdvanceSettings().GetClusterConnectSetting().IsExtranet {
+	if cls.GetClusterAdvanceSettings().GetClusterConnectSetting().GetIsExtranet() {
 		if len(cls.GetClusterAdvanceSettings().GetClusterConnectSetting().GetSecurityGroup()) == 0 {
 			return fmt.Errorf("%s clusterCloudConnectSetting securityGroup empty", cloudName)
 		}

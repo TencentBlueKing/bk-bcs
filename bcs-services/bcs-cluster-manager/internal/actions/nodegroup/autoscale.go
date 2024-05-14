@@ -209,11 +209,12 @@ func (ua *EnableNodeGroupAutoScaleAction) enableNodeGroupAutoScale() error {
 		ResourceType: common.NodeGroup.String(),
 		ResourceID:   ua.group.NodeGroupID,
 		TaskID:       taskID,
-		Message:      fmt.Sprintf("%s 开启节点规格 ", ua.group.NodeGroupID),
+		Message:      fmt.Sprintf("%s 开启节点池", ua.group.NodeGroupID),
 		OpUser:       ua.group.Updater,
 		CreateTime:   time.Now().Format(time.RFC3339),
 		ClusterID:    ua.cluster.ClusterID,
 		ProjectID:    ua.cluster.ProjectID,
+		ResourceName: ua.group.GetName(),
 	})
 	if err != nil {
 		blog.Errorf("EnableNodeGroupAutoScale[%s] CreateOperationLog failed: %v", ua.group.NodeGroupID, err)
@@ -385,7 +386,7 @@ func (ua *DisableNodeGroupAutoScaleAction) disableNodeGroupAutoScale() error {
 		ResourceType: common.NodeGroup.String(),
 		ResourceID:   ua.group.NodeGroupID,
 		TaskID:       taskID,
-		Message:      fmt.Sprintf("%s 关闭节点规格", ua.group.NodeGroupID),
+		Message:      fmt.Sprintf("%s 关闭节点池", ua.group.NodeGroupID),
 		OpUser:       ua.group.Updater,
 		CreateTime:   time.Now().Format(time.RFC3339),
 		ClusterID:    ua.cluster.ClusterID,

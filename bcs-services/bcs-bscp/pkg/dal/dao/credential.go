@@ -18,14 +18,15 @@ import (
 
 	rawgen "gorm.io/gen"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/utils"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // Credential supplies all the Credential related operations.
@@ -36,10 +37,13 @@ type Credential interface {
 	GetByCredentialString(kit *kit.Kit, bizID uint32, credential string) (*table.Credential, error)
 	// ListByCredentialString list credential by credential string array
 	ListByCredentialString(kit *kit.Kit, bizID uint32, credentials []string) ([]*table.Credential, error)
+	// BatchListByIDs batch list credential by ids
+	BatchListByIDs(kit *kit.Kit, bizID uint32, ids []uint32) ([]*table.Credential, error)
 	// Create one credential instance.
 	Create(kit *kit.Kit, credential *table.Credential) (uint32, error)
 	// List get credentials
-	List(kit *kit.Kit, bizID uint32, searchKey string, opt *types.BasePage) ([]*table.Credential, int64, error)
+	List(kit *kit.Kit, bizID uint32, searchKey string, opt *types.BasePage,
+		topIds []uint32) ([]*table.Credential, int64, error)
 	// DeleteWithTx delete credential with transaction
 	DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, id uint32) error
 	// Update update credential
@@ -137,6 +141,20 @@ func (dao *credentialDao) ListByCredentialString(kit *kit.Kit, bizID uint32, str
 	return q.Where(m.BizID.Eq(bizID), m.EncCredential.In(encryptedArr...)).Find()
 }
 
+// BatchListByIDs batch list credential by ids
+func (dao *credentialDao) BatchListByIDs(kit *kit.Kit, bizID uint32, ids []uint32) ([]*table.Credential, error) {
+	if bizID == 0 {
+		return nil, errors.New("bizID is empty")
+	}
+	if len(ids) == 0 {
+		return []*table.Credential{}, nil
+	}
+
+	m := dao.genQ.Credential
+
+	return dao.genQ.Credential.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID), m.ID.In(ids...)).Find()
+}
+
 // Create create credential
 func (dao *credentialDao) Create(kit *kit.Kit, g *table.Credential) (uint32, error) {
 	if err := g.ValidateCreate(); err != nil {
@@ -173,21 +191,45 @@ func (dao *credentialDao) Create(kit *kit.Kit, g *table.Credential) (uint32, err
 }
 
 // List get credentials
-func (dao *credentialDao) List(kit *kit.Kit, bizID uint32, searchKey string, opt *types.BasePage) (
-	[]*table.Credential, int64, error) {
+func (dao *credentialDao) List(kit *kit.Kit, bizID uint32, searchKey string, opt *types.BasePage,
+	topIds []uint32) ([]*table.Credential, int64, error) {
 	m := dao.genQ.Credential
 	q := dao.genQ.Credential.WithContext(kit.Ctx)
+	cs := dao.genQ.CredentialScope
 
 	var conds []rawgen.Condition
 	if searchKey != "" {
-		searchVal := "%" + searchKey + "%"
-		conds = append(conds, q.Where(m.Memo.Like(searchVal)).Or(m.Reviser.Like(searchVal)).
-			Or(m.Name.Like(searchKey)))
+		searchVal := "(?i)" + searchKey
+
+		var item []struct {
+			CredentialID uint32
+		}
+		err := cs.WithContext(kit.Ctx).Select(cs.CredentialId).
+			Where(cs.BizID.Eq(bizID), cs.CredentialScope.Regexp(searchVal)).Group(cs.CredentialId).Scan(&item)
+		if err != nil {
+			return nil, 0, err
+		}
+		if len(item) > 0 {
+			credentialID := []uint32{}
+			for _, v := range item {
+				credentialID = append(credentialID, v.CredentialID)
+			}
+			conds = append(conds, q.Where(m.Memo.Regexp(searchVal)).Or(m.Reviser.Regexp(searchVal)).
+				Or(m.Name.Regexp(searchVal)).Or(m.ID.In(credentialID...)))
+		} else {
+			conds = append(conds, q.Where(m.Memo.Regexp(searchVal)).Or(m.Reviser.Regexp(searchVal)).
+				Or(m.Name.Regexp(searchVal)))
+		}
+	}
+
+	if len(topIds) != 0 {
+		q = q.Order(utils.NewCustomExpr(`CASE WHEN id IN (?) THEN 0 ELSE 1 END,name ASC`, []interface{}{topIds}))
+	} else {
+		q = q.Order(m.Name)
 	}
 
 	result, count, err := q.Where(m.BizID.Eq(bizID)).
 		Where(conds...).
-		Order(m.ID.Desc()).
 		FindByPage(opt.Offset(), opt.LimitInt())
 	if err != nil {
 		return nil, 0, err
@@ -239,7 +281,7 @@ func (dao *credentialDao) DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, id 
 	}
 	eDecorator := dao.event.Eventf(kit)
 	if err = eDecorator.FireWithTx(tx, one); err != nil {
-		logs.Errorf("fire delete credential: %s event failed, err: %v, rid: %s", id, err, kit.Rid)
+		logs.Errorf("fire delete credential: %d event failed, err: %v, rid: %s", id, err, kit.Rid)
 		return errors.New("fire event failed, " + err.Error())
 	}
 
@@ -346,7 +388,7 @@ func (dao *credentialDao) UpdateRevisionWithTx(kit *kit.Kit, tx *gen.QueryTx, bi
 	}
 	eDecorator := dao.event.Eventf(kit)
 	if err = eDecorator.FireWithTx(tx, one); err != nil {
-		logs.Errorf("fire update credential: %s event failed, err: %v, rid: %s", id, err, kit.Rid)
+		logs.Errorf("fire update credential: %d event failed, err: %v, rid: %s", id, err, kit.Rid)
 		return errors.New("fire event failed, " + err.Error())
 	}
 

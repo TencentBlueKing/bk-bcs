@@ -8,34 +8,31 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package main xxx
 package main
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"os"
-	"time"
-
-	corev1 "k8s.io/api/core/v1"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
+	"strconv"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
-	_ "k8s.io/client-go/plugin/pkg/client/auth"
-
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
+	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
 	monitorextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/api/v1"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/apiclient"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/controllers"
@@ -43,6 +40,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/httpsvr"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/option"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/render"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/repo"
 )
 
 var (
@@ -59,35 +57,10 @@ func init() {
 	// +kubebuilder:scaffold:scheme
 }
 
+// nolint funlen
 func main() {
 	opts := &option.ControllerOption{}
-
-	var metricsAddr string
-	var enableLeaderElection bool
-	var probeAddr string
-	var verbosity int
-	var scenarioRefreshFreqSec int64
-	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
-	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
-	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
-		"Enable leader election for controller manager. "+
-			"Enabling this will ensure there is only one active controller manager.")
-
-	// log config
-	flag.IntVar(&verbosity, "v", 3, "log level for V logs")
-	flag.StringVar(&opts.LogDir, "log_dir", "./logs", "If non-empty, write log files in this directory")
-	flag.Uint64Var(&opts.LogMaxSize, "log_max_size", 500, "Max size (MB) per log file.")
-	flag.IntVar(&opts.LogMaxNum, "log_max_num", 10, "Max num of log file.")
-	flag.BoolVar(&opts.ToStdErr, "logtostderr", false, "log to standard error instead of files")
-	flag.BoolVar(&opts.AlsoToStdErr, "alsologtostderr", false, "log to standard error as well as files")
-
-	flag.StringVar(&opts.Address, "address", "0.0.0.0", "address for controller")
-	flag.StringVar(&opts.ScenarioPath, "scenario_path", "/data/bcs", "Store scenario templates")
-	flag.Int64Var(&scenarioRefreshFreqSec, "scenario_refresh_req", 60, "refresh frequency ")
-	flag.UintVar(&opts.HttpServerPort, "http_server_port", 8088, "http server port")
-	opts.ScenarioGitRefreshFreq = time.Second * time.Duration(scenarioRefreshFreqSec)
-	opts.Verbosity = int32(verbosity)
-	flag.Parse()
+	opts.BindFromCommandLine()
 
 	blog.InitLogs(opts.LogConfig)
 	defer blog.CloseLogs()
@@ -95,10 +68,10 @@ func main() {
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,
-		MetricsBindAddress:     metricsAddr,
+		MetricsBindAddress:     opts.Address + ":" + strconv.Itoa(opts.MetricPort),
 		Port:                   9443,
-		HealthProbeBindAddress: probeAddr,
-		LeaderElection:         enableLeaderElection,
+		HealthProbeBindAddress: opts.Address + ":" + strconv.Itoa(opts.ProbePort),
+		LeaderElection:         true,
 		LeaderElectionID:       "333fb49e.monitorextension.bkbcs.tencent.com",
 		// LeaderElectionReleaseOnCancel defines if the leader should step down voluntarily
 		// when the Manager ends. This requires the binary to immediately end when the
@@ -118,15 +91,30 @@ func main() {
 	}
 
 	ctx := context.Background()
-	monitorCli := apiclient.NewBkmApiClient()
 	fileOp := fileoperator.NewFileOperator(mgr.GetClient())
+
+	repoManager, err := repo.NewRepoManager(mgr.GetClient(), opts)
+	if err != nil {
+		blog.Errorf("create repoManager failed, err: %s", err.Error())
+		os.Exit(1)
+	}
+
+	monitorRender, err := render.NewMonitorRender(scheme, mgr.GetClient(), repoManager, opts)
+	if err != nil {
+		blog.Errorf("new render failed, err: %v", err)
+		os.Exit(1)
+	}
+
 	if err = (&controllers.MonitorRuleReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 
 		Ctx:           ctx,
 		FileOp:        fileOp,
-		MonitorApiCli: monitorCli,
+		MonitorApiCli: apiclient.NewBkmApiClient("rule", opts),
+		MonitorRender: monitorRender,
+		Opts:          opts,
+		SubPath:       "rule",
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "MonitorRule")
 		os.Exit(1)
@@ -137,7 +125,7 @@ func main() {
 
 		Ctx:           ctx,
 		FileOp:        fileOp,
-		MonitorApiCli: monitorCli,
+		MonitorApiCli: apiclient.NewBkmApiClient("noticeGroup", opts),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "NoticeGroup")
 		os.Exit(1)
@@ -148,34 +136,33 @@ func main() {
 
 		Ctx:           ctx,
 		FileOp:        fileOp,
-		MonitorApiCli: monitorCli,
+		MonitorApiCli: apiclient.NewBkmApiClient("panel", opts),
+		MonitorRender: monitorRender,
+		SubPath:       "panel",
+		Opts:          opts,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Panel")
 		os.Exit(1)
 	}
 
-	monitorRender, err := render.NewMonitorRender(scheme, mgr.GetClient(), opts)
-	if err != nil {
-		blog.Errorf("new render failed, err: %v", err)
-		os.Exit(1)
-	}
 	if err = (&controllers.AppMonitorReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 
-		Ctx:    ctx,
-		Render: monitorRender,
+		Ctx:         ctx,
+		Render:      monitorRender,
+		RepoManager: repoManager,
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Panel")
+		setupLog.Error(err, "unable to create controller", "controller", "AppMonitor")
 		os.Exit(1)
 	}
 	// +kubebuilder:scaffold:builder
 
-	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
+	if err = mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
 		setupLog.Error(err, "unable to set up health check")
 		os.Exit(1)
 	}
-	if err := mgr.AddReadyzCheck("readyz", healthz.Ping); err != nil {
+	if err = mgr.AddReadyzCheck("readyz", healthz.Ping); err != nil {
 		setupLog.Error(err, "unable to set up ready check")
 		os.Exit(1)
 	}
@@ -186,7 +173,7 @@ func main() {
 		os.Exit(1)
 	}
 	setupLog.Info("starting manager")
-	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
+	if err = mgr.Start(ctrl.SetupSignalHandler()); err != nil {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}

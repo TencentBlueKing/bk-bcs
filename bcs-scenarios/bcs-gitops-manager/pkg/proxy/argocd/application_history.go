@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package argocd
@@ -19,12 +18,12 @@ import (
 	"net/http"
 	"strconv"
 
+	iamnamespace "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/namespace"
 	argoappv1 "github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
 )
 
@@ -67,7 +66,8 @@ func (plugin *AppPlugin) applicationHistoryState(r *http.Request) (*http.Request
 			errors.Wrapf(err, "request query param 'historyID' %s not int", historyIDStr))
 	}
 
-	app, statusCode, err := plugin.middleware.CheckApplicationPermission(r.Context(), appName, iam.ProjectEdit)
+	app, statusCode, err := plugin.middleware.CheckApplicationPermission(r.Context(), appName,
+		iamnamespace.NameSpaceScopedView)
 	if statusCode != http.StatusOK {
 		return r, mw.ReturnErrorResponse(statusCode, errors.Wrapf(err, "check application permission failed"))
 	}
@@ -77,14 +77,14 @@ func (plugin *AppPlugin) applicationHistoryState(r *http.Request) (*http.Request
 	}
 	hm, err := plugin.db.GetApplicationHistoryManifest(appName, applicationUID, historyID)
 	if err != nil {
-		return r, mw.ReturnErrorResponse(statusCode, errors.Wrapf(err, "get application history manfiest failed"))
+		return r, mw.ReturnErrorResponse(statusCode, errors.Wrapf(err, "get application history manifest failed"))
 	}
 	if hm == nil {
 		return r, mw.ReturnErrorResponse(http.StatusNotFound,
 			fmt.Errorf("application '%s/%s' with history '%s' not found", appName, applicationUID, historyIDStr))
 	}
 	resources := make([]*argoappv1.ResourceDiff, 0)
-	if err = json.Unmarshal([]byte(hm.ManagedResources), &resources); err != nil {
+	if err = json.Unmarshal(hm.GetManagedResources(), &resources); err != nil {
 		return r, mw.ReturnErrorResponse(http.StatusInternalServerError,
 			errors.Wrapf(err, "unmarshal application history managedResources failed"))
 	}

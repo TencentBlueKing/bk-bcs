@@ -123,7 +123,9 @@ func (la *ListCloudInstancesAction) listCloudInstancesByIPs() error {
 
 	// get region zones
 	zoneMap := make(map[string]*cmproto.ZoneInfo, 0)
-	zones, err := nodeMgr.GetZoneList(cmOption)
+	zones, err := nodeMgr.GetZoneList(&cloudprovider.GetZoneListOption{
+		CommonOption: *cmOption,
+	})
 	if err != nil {
 		blog.Errorf("cloudprovider %s/%s get zones failed, %s",
 			la.cloud.CloudID, la.cloud.CloudProvider, err.Error())
@@ -303,7 +305,10 @@ func (la *ListKeyPairsAction) listKeyPairs() error {
 	cmOption.Region = la.req.Region
 
 	// get key list
-	keys, err := nodeMgr.ListKeyPairs(cmOption)
+	keys, err := nodeMgr.ListKeyPairs(&cloudprovider.ListNetworksOption{
+		CommonOption:      *cmOption,
+		ResourceGroupName: la.req.ResourceGroupName,
+	})
 	if err != nil {
 		return err
 	}

@@ -1,17 +1,17 @@
 /*
- * Tencent is pleased to support the open source community by making Blueking Container Service available.,
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
  * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 
-// Package plugin_manager
-package plugin_manager
+// Package plugin_manager xxx
+package plugin_manager // nolint
 
 import (
 	"fmt"
@@ -19,10 +19,10 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/prometheus/client_golang/prometheus"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metric_manager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/util"
-
-	"github.com/prometheus/client_golang/prometheus"
 )
 
 var (
@@ -69,9 +69,8 @@ func (pm *pluginManager) Register(plugin Plugin) {
 func (pm *pluginManager) GetPlugin(plugin string) Plugin {
 	if p, ok := pm.plugins[plugin]; ok {
 		return p
-	} else {
-		return nil
 	}
+	return nil
 }
 
 // SetConfig configure pluginmanager by config file
@@ -95,6 +94,8 @@ func (pm *pluginManager) GetConfig() *Config {
 	return pm.config
 }
 
+// SetupPlugin setup plugin
+// nolint
 func (pm *pluginManager) SetupPlugin(plugins string, pluginDir string) error {
 	for _, plugin := range strings.Split(plugins, ",") {
 		if p := pm.GetPlugin(plugin); p == nil {
@@ -125,6 +126,8 @@ func (pm *pluginManager) Done() {
 	pm.routinePool.Done()
 }
 
+// StopPlugin  stop plugin
+// nolint
 func (pm *pluginManager) StopPlugin(plugins string) error {
 	for _, plugin := range strings.Split(plugins, ",") {
 		if p := pm.GetPlugin(plugin); p == nil {
@@ -140,6 +143,7 @@ func (pm *pluginManager) StopPlugin(plugins string) error {
 }
 
 // NewPluginManager xxx
+// nolint
 func NewPluginManager() *pluginManager {
 	return &pluginManager{
 		routinePool: util.NewRoutinePool(40),

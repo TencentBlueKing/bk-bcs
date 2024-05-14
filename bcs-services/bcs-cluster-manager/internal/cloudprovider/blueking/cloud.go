@@ -83,6 +83,16 @@ func (c *CloudInfoManager) SyncClusterCloudInfo(cls *proto.Cluster,
 	return nil
 }
 
+// UpdateClusterCloudInfo update cluster info by cloud
+func (c *CloudInfoManager) UpdateClusterCloudInfo(cls *proto.Cluster) error {
+	// call qcloud interface to init cluster defaultConfig
+	if c == nil || cls == nil {
+		return fmt.Errorf("%s UpdateClusterCloudInfo request is empty", cloudName)
+	}
+
+	return nil
+}
+
 func clusterCloudNetworkSetting(cls *proto.Cluster) error {
 	if cls == nil || cls.NetworkSettings == nil {
 		return nil
@@ -127,8 +137,6 @@ func clusterCloudAdvancedSetting(cls *proto.Cluster) {
 	if cls.ClusterAdvanceSettings.NetworkType == "" {
 		cls.ClusterAdvanceSettings.NetworkType = common.Flannel
 	}
-
-	return
 }
 
 func clusterCloudDefaultNodeSetting(cls *proto.Cluster) {

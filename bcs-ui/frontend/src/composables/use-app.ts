@@ -28,15 +28,15 @@ export interface ICluster {
   networkSettings: {
     maxNodePodNum: number
     maxServiceNum: number
-    clusterIPv4CIDR: number
-    multiClusterCIDR: number[]
+    clusterIPv4CIDR: string
+    multiClusterCIDR: string[]
     cidrStep: number
     serviceIPv4CIDR: string
     isStaticIpMode: boolean
     eniSubnetIDs: string[]
   }
   master: any
-  provider: string
+  provider: CloudID,
   clusterBasicSettings: any
   environment: 'stag'|'debug'|'prod'
   extraInfo?: Record<string, any>
@@ -95,10 +95,18 @@ export function useProject() {
  * 获取集群相关信息
  */
 export function useCluster() {
-  const curCluster = computed<Partial<ICluster>>(() => $store.state.curCluster || {});
+  const curCluster = computed<ICluster>(() => $store.state.curCluster || {});
   const curClusterId = computed<string>(() => $store.getters.curClusterId);
   const isSharedCluster = computed<boolean>(() => $store.state.curCluster?.is_shared);
-  const clusterList = computed<Partial<ICluster>[]>(() => $store.state.cluster.clusterList || []);
+  const clusterList = computed<ICluster[]>(() => $store.state.cluster.clusterList || []);
+  const clusterNameMap = computed<Record<string, string>>(() => clusterList.value.reduce((pre, item) => {
+    pre[item.clusterID] = item.clusterName;
+    return pre;
+  }, {}));
+  const clusterMap = computed<Record<string, ICluster>>(() => clusterList.value.reduce((pre, item) => {
+    pre[item.clusterID] = item;
+    return pre;
+  }, {}));
 
   const { projectCode } = useProject();
   // const terminalWins = ref<Window | null>(null);
@@ -130,6 +138,8 @@ export function useCluster() {
     curClusterId,
     isSharedCluster,
     clusterList,
+    clusterNameMap,
+    clusterMap,
     handleGotoConsole,
   };
 }

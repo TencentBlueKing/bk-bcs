@@ -19,29 +19,25 @@ import (
 
 	"gorm.io/gorm"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
-	pbbase "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
-	pbhook "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/hook"
-	pbds "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbbase "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
+	pbhook "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/hook"
+	pbds "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // CreateHook create hook.
 func (s *Service) CreateHook(ctx context.Context, req *pbds.CreateHookReq) (*pbds.CreateResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
+	// GetByName get hook by name
 	if _, err := s.dao.Hook().GetByName(kt, req.Attachment.BizId, req.Spec.Name); err == nil {
 		return nil, fmt.Errorf("hook name %s already exists", req.Spec.Name)
 	}
 
-	spec, err := req.Spec.HookSpec()
-	if err != nil {
-		logs.Errorf("get hook spec from pb failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, err
-	}
 	res := &table.Revision{
 		Creator: kt.User,
 		Reviser: kt.User,
@@ -51,11 +47,12 @@ func (s *Service) CreateHook(ctx context.Context, req *pbds.CreateHookReq) (*pbd
 
 	// 1. create hook
 	hook := &table.Hook{
-		Spec:       spec,
+		Spec:       req.Spec.HookSpec(),
 		Attachment: req.Attachment.HookAttachment(),
 		Revision:   res,
 	}
 
+	// CreateWithTx create one hook instance with transaction.
 	id, err := s.dao.Hook().CreateWithTx(kt, tx, hook)
 	if err != nil {
 		logs.Errorf("create hook failed, err: %v, rid: %s", err, kt.Rid)
@@ -66,9 +63,13 @@ func (s *Service) CreateHook(ctx context.Context, req *pbds.CreateHookReq) (*pbd
 	}
 
 	// 2. create hook revision
+	// it must be the first hook revision, so no need to check the revision name uniqueness
+	if req.Spec.RevisionName == "" {
+		req.Spec.RevisionName = tools.GenerateRevisionName()
+	}
 	revision := &table.HookRevision{
 		Spec: &table.HookRevisionSpec{
-			Name:    tools.GenerateRevisionName(),
+			Name:    req.Spec.RevisionName,
 			Content: req.Spec.Content,
 			Memo:    req.Spec.Memo,
 			State:   table.HookRevisionStatusDeployed,
@@ -79,6 +80,7 @@ func (s *Service) CreateHook(ctx context.Context, req *pbds.CreateHookReq) (*pbd
 		},
 		Revision: res,
 	}
+	// CreateWithTx create hook revision instance with transaction.
 	_, err = s.dao.HookRevision().CreateWithTx(kt, tx, revision)
 	if err != nil {
 		logs.Errorf("create hook revision failed, err: %v, rid: %s", err, kt.Rid)
@@ -100,6 +102,7 @@ func (s *Service) CreateHook(ctx context.Context, req *pbds.CreateHookReq) (*pbd
 // ListHooks list hooks.
 func (s *Service) ListHooks(ctx context.Context, req *pbds.ListHooksReq) (*pbds.ListHooksResp, error) {
 
+	// FromGrpcContext used only to obtain Kit through grpc context.
 	kt := kit.FromGrpcContext(ctx)
 
 	page := &types.BasePage{Start: req.Start, Limit: uint(req.Limit)}
@@ -120,12 +123,8 @@ func (s *Service) ListHooks(ctx context.Context, req *pbds.ListHooksReq) (*pbds.
 		return nil, err
 	}
 
+	// ListWithRefer hooks with refer info.
 	details, count, err := s.dao.Hook().ListWithRefer(kt, opt)
-	if err != nil {
-		logs.Errorf("list hook failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, err
-	}
-
 	if err != nil {
 		logs.Errorf("list hook failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
@@ -193,6 +192,7 @@ func (s *Service) DeleteHook(ctx context.Context, req *pbds.DeleteHookReq) (*pbb
 			BizID: req.BizId,
 		},
 	}
+	// DeleteWithTx delete hook instance with transaction.
 	if e := s.dao.Hook().DeleteWithTx(kt, tx, hook); e != nil {
 		logs.Errorf("delete hook failed, err: %v, rid: %s", e, kt.Rid)
 		if rErr := tx.Rollback(); rErr != nil {
@@ -208,11 +208,34 @@ func (s *Service) DeleteHook(ctx context.Context, req *pbds.DeleteHookReq) (*pbb
 	return new(pbbase.EmptyResp), nil
 }
 
+// UpdateHook update hook.
+func (s *Service) UpdateHook(ctx context.Context, req *pbds.UpdateHookReq) (*pbbase.EmptyResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	hook := &table.Hook{
+		ID:         req.Id,
+		Spec:       req.Spec.HookSpec(),
+		Attachment: req.Attachment.HookAttachment(),
+		Revision: &table.Revision{
+			Reviser: kt.User,
+		},
+	}
+	// Update one hook's info.
+	if err := s.dao.Hook().Update(kt, hook); err != nil {
+		logs.Errorf("update hook failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	return new(pbbase.EmptyResp), nil
+}
+
 // ListHookTags list tag
 func (s *Service) ListHookTags(ctx context.Context, req *pbds.ListHookTagReq) (*pbds.ListHookTagResp, error) {
 
+	// FromGrpcContext used only to obtain Kit through grpc context.
 	kt := kit.FromGrpcContext(ctx)
 
+	// CountHookTag count hook tag
 	ht, err := s.dao.Hook().CountHookTag(kt, req.BizId)
 	if err != nil {
 		logs.Errorf("list hook failed, err: %v, rid: %s", err, kt.Rid)
@@ -234,6 +257,7 @@ func (s *Service) ListHookTags(ctx context.Context, req *pbds.ListHookTagReq) (*
 // GetHook get a hook
 func (s *Service) GetHook(ctx context.Context, req *pbds.GetHookReq) (*pbds.GetHookResp, error) {
 
+	// FromGrpcContext used only to obtain Kit through grpc context.
 	kt := kit.FromGrpcContext(ctx)
 
 	h, err := s.dao.Hook().GetByID(kt, req.BizId, req.HookId)
@@ -264,7 +288,7 @@ func (s *Service) GetHook(ctx context.Context, req *pbds.GetHookReq) (*pbds.GetH
 		Spec: &pbds.GetHookInfoSpec{
 			Name:     h.Spec.Name,
 			Type:     string(h.Spec.Type),
-			Tag:      h.Spec.Tag,
+			Tags:     h.Spec.Tags,
 			Memo:     h.Spec.Memo,
 			Releases: &pbds.GetHookInfoSpec_Releases{NotReleaseId: revisionID},
 		},
@@ -308,12 +332,8 @@ func (s *Service) ListHookReferences(ctx context.Context,
 			ReleaseId:        result.ReleaseID,
 			ReleaseName:      result.ReleaseName,
 			Type:             result.HookType,
+			Deprecated:       result.Deprecated,
 		})
-	}
-
-	if err != nil {
-		logs.Errorf("list group current releases failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, err
 	}
 
 	resp := &pbds.ListHookReferencesResp{

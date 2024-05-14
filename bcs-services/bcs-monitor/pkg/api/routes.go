@@ -19,9 +19,9 @@ import (
 	"net/http"
 	"path"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
 	ginTracing "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/gin"
-	"github.com/TencentBlueKing/bkmonitor-kits/logger"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/requestid"
 	"github.com/gin-gonic/gin"
@@ -35,7 +35,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api/pod"
 	podmonitor "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api/pod_monitor"
 	service_monitor "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api/servicemonitor"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api/telemetry"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest/middleware"
@@ -81,14 +80,14 @@ func (a *APIServer) Run() error {
 	if err := dualStackListener.AddListenerWithAddr(utils.GetListenAddr(a.addr, a.port)); err != nil {
 		return err
 	}
-	logger.Infow("listening for requests and metrics", "address", addr)
+	blog.Infow("listening for requests and metrics", "address", addr)
 
 	if a.addrIPv6 != "" && a.addrIPv6 != a.addr {
 		v6Addr := utils.GetListenAddr(a.addrIPv6, a.port)
 		if err := dualStackListener.AddListenerWithAddr(v6Addr); err != nil {
 			return err
 		}
-		logger.Infof("api serve dualStackListener with ipv6: %s", v6Addr)
+		blog.Infof("api serve dualStackListener with ipv6: %s", v6Addr)
 	}
 
 	return a.srv.Serve(dualStackListener)
@@ -142,9 +141,6 @@ func registerRoutes(engine *gin.RouterGroup) {
 		// sse 实时日志流
 		route.GET("/namespaces/:namespace/pods/:pod/logs/stream", rest.StreamHandler(pod.PodLogStream))
 
-		// 蓝鲸监控采集器
-		route.GET("/telemetry/bkmonitor_agent/", rest.STDRestHandlerFunc(telemetry.IsBKMonitorAgent))
-
 		// bk-log 日志采集规则
 		route.POST("/log_collector/entrypoints", rest.RestHandlerFunc(logrule.GetEntrypoints))
 		route.GET("/log_collector/rules", rest.RestHandlerFunc(logrule.ListLogCollectors))
@@ -155,6 +151,8 @@ func registerRoutes(engine *gin.RouterGroup) {
 		route.POST("/log_collector/rules/:id/retry", rest.RestHandlerFunc(logrule.RetryLogRule))
 		route.POST("/log_collector/rules/:id/enable", rest.RestHandlerFunc(logrule.EnableLogRule))
 		route.POST("/log_collector/rules/:id/disable", rest.RestHandlerFunc(logrule.DisableLogRule))
+		route.GET("/log_collector/storages/cluster_groups", rest.RestHandlerFunc(logrule.GetStorageClusters))
+		route.POST("/log_collector/storages/switch_storage", rest.RestHandlerFunc(logrule.SwitchStorage))
 	}
 }
 
@@ -191,6 +189,8 @@ func registerMetricsRoutes(engine *gin.RouterGroup) {
 		route.GET("/nodes/:node/diskio_usage", rest.RestHandlerFunc(metrics.GetNodeDiskioUsage))
 		route.POST("/namespaces/:namespace/pods/cpu_usage", rest.RestHandlerFunc(
 			metrics.PodCPUUsage)) // 多个Pod场景, 可能有几十，上百Pod场景, 需要使用 Post 传递参数
+		route.POST("/namespaces/:namespace/pods/cpu_limit_usage", rest.RestHandlerFunc(metrics.PodCPULimitUsage))
+		route.POST("/namespaces/:namespace/pods/cpu_request_usage", rest.RestHandlerFunc(metrics.PodCPURequestUsage))
 		route.POST("/namespaces/:namespace/pods/memory_used", rest.RestHandlerFunc(metrics.PodMemoryUsed))
 		route.POST("/namespaces/:namespace/pods/network_receive", rest.RestHandlerFunc(metrics.PodNetworkReceive))
 		route.POST("/namespaces/:namespace/pods/network_transmit", rest.RestHandlerFunc(metrics.PodNetworkTransmit))

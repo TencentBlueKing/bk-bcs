@@ -17,12 +17,12 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/rest"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/shutdown"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/rest"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/shutdown"
 )
 
 // HealthyHandler livenessProbe 健康检查
@@ -67,28 +67,35 @@ func UserInfoHandler(w http.ResponseWriter, r *http.Request) {
 	render.Render(w, r, rest.OKRender(user))
 }
 
-// FeatureFlags map of feature flags
-type FeatureFlags map[cc.FeatureFlag]bool
+// FeatureFlags feature flags
+type FeatureFlags struct {
+	// BizView 是否开启业务体验
+	BizView bool `json:"BIZ_VIEW"`
+	// ResourceLimit 业务资源限制
+	ResourceLimit cc.ResourceLimit `json:"RESOURCE_LIMIT"`
+}
 
 // FeatureFlagsHandler 特性开关接口
 func FeatureFlagsHandler(w http.ResponseWriter, r *http.Request) {
 	featureFlags := FeatureFlags{}
 
 	biz := r.URL.Query().Get("biz")
-	for k, v := range cc.ApiServer().FeatureFlags {
-		// 默认和开关开启保持一致
-		featureFlags[k] = v.Enabled
+	// set biz_view feature flag
+	bizViewConf := cc.ApiServer().FeatureFlags.BizView
+	featureFlags.BizView = bizViewConf.Default
+	if enable, ok := bizViewConf.Spec[biz]; ok {
+		featureFlags.BizView = enable
+	}
+	// set biz resource limit
+	resourceLimitConf := cc.ApiServer().FeatureFlags.ResourceLimit
+	featureFlags.ResourceLimit = resourceLimitConf.Default
 
-		if biz == "" {
-			continue
+	if resource, ok := resourceLimitConf.Spec[biz]; ok {
+		if resource.MaxFileSize != 0 {
+			featureFlags.ResourceLimit.MaxFileSize = resource.MaxFileSize
 		}
-
-		// 默认未开启, 设置是白名单模式，否则取反
-		for _, w := range v.List {
-			if biz == w {
-				featureFlags[k] = !v.Enabled
-			}
-		}
+		// NOCC:golint/todo(忽略)
+		// nolint TODO：其他资源限制
 	}
 
 	render.Render(w, r, rest.OKRender(featureFlags))

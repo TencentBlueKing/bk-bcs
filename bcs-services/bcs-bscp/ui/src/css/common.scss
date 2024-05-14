@@ -23,3 +23,25 @@
 .bk-switcher-with-no-perm {
   opacity: 0.3;
 }
+
+// 表单校验错误时，表单项边框会被设置为红色，设计师要求表单项获取焦点时，将边框保持为蓝色
+.bk-input.is-focused:not(.is-readonly),
+.bk-textarea.is-focused:not(.is-readonly),
+.bk-select.is-focus .bk-select-trigger .bk-input--default {
+  border-color: #3a84ff;
+}
+
+.info-box-style .bk-modal-body{
+  .bk-dialog-header {
+    padding: 24px 24px 0;
+  }
+  .bk-modal-content {
+    min-height: auto;
+    padding: 0 50px 10px;
+  }
+}
+
+// 去掉组件库表格过滤自带的input
+.bk-popover .bk-table-head-filter .bk-input {
+  display: none;
+}

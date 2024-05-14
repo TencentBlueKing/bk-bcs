@@ -1,5 +1,10 @@
 import http from '../request';
-import { IConfigEditParams, IConfigVersionQueryParams, ITemplateBoundByAppData } from '../../types/config';
+import {
+  IConfigEditParams,
+  IConfigVersionQueryParams,
+  ITemplateBoundByAppData,
+  IConfigVersion,
+} from '../../types/config';
 import { IVariableEditParams } from '../../types/variable';
 import { ICommonQuery } from '../../types/index';
 
@@ -20,9 +25,10 @@ export const getDefaultConfigScriptData = () => ({
  * @param query 查询参数
  * @returns
  */
-export const getConfigList = (biz_id: string, app_id: number, query: ICommonQuery) => http
-  .get(`/config/biz/${biz_id}/apps/${app_id}/config_items`, { params: { ...query, with_status: true } })
-  .then(res => res.data);
+export const getConfigList = (biz_id: string, app_id: number, query: ICommonQuery) =>
+  http
+    .get(`/config/biz/${biz_id}/apps/${app_id}/config_items`, { params: { ...query, with_status: true } })
+    .then((res) => res.data);
 
 /**
  * 获取已发布版本的非模板配置文件列表
@@ -32,13 +38,14 @@ export const getConfigList = (biz_id: string, app_id: number, query: ICommonQuer
  * @param params 查询参数
  * @returns
  */
-export const getReleasedConfigList = (biz_id: string, app_id: number, release_id: number, params: ICommonQuery) => http.get(`/config/biz/${biz_id}/apps/${app_id}/releases/${release_id}/config_items`, { params }).then((res) => {
-  res.data.details.forEach((item: any) => {
-    // 接口返回的config_item_id为实际的配置文件id，id字段没有到，统一替换
-    item.id = item.config_item_id;
+export const getReleasedConfigList = (biz_id: string, app_id: number, release_id: number, params: ICommonQuery) =>
+  http.get(`/config/biz/${biz_id}/apps/${app_id}/releases/${release_id}/config_items`, { params }).then((res) => {
+    res.data.details.forEach((item: any) => {
+      // 接口返回的config_item_id为实际的配置文件id，id字段没有到，统一替换
+      item.id = item.config_item_id;
+    });
+    return res.data;
   });
-  return res.data;
-});
 
 /**
  * 新增配置
@@ -47,7 +54,8 @@ export const getReleasedConfigList = (biz_id: string, app_id: number, release_id
  * @param params 配置参数内容
  * @returns
  */
-export const createServiceConfigItem = (app_id: number, biz_id: string, params: IConfigEditParams) => http.post(`/config/create/config_item/config_item/app_id/${app_id}/biz_id/${biz_id}`, params);
+export const createServiceConfigItem = (app_id: number, biz_id: string, params: IConfigEditParams) =>
+  http.post(`/config/create/config_item/config_item/app_id/${app_id}/biz_id/${biz_id}`, params);
 
 /**
  * 更新配置
@@ -57,16 +65,28 @@ export const createServiceConfigItem = (app_id: number, biz_id: string, params: 
  * @param params 配置参数内容
  * @returns
  */
-export const updateServiceConfigItem = (id: number, app_id: number, biz_id: string, params: IConfigEditParams) => http.put(`/config/update/config_item/config_item/config_item_id/${id}/app_id/${app_id}/biz_id/${biz_id}`, params);
+export const updateServiceConfigItem = (id: number, app_id: number, biz_id: string, params: IConfigEditParams) =>
+  http.put(`/config/update/config_item/config_item/config_item_id/${id}/app_id/${app_id}/biz_id/${biz_id}`, params);
 
 /**
- * 删除配置
+ * 删除非模板配置
  * @param id 配置ID
  * @param bizId 业务ID
  * @param appId 应用ID
  * @returns
  */
-export const deleteServiceConfigItem = (id: number, bizId: string, appId: number) => http.delete(`/config/delete/config_item/config_item/config_item_id/${id}/app_id/${appId}/biz_id/${bizId}`, {});
+export const deleteServiceConfigItem = (id: number, bizId: string, appId: number) =>
+  http.delete(`/config/delete/config_item/config_item/config_item_id/${id}/app_id/${appId}/biz_id/${bizId}`, {});
+
+/**
+ * 批量删除非模板配置
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param ids 配置项ID列表
+ * @returns
+ */
+export const batchDeleteServiceConfigs = (bizId: string, appId: number, ids: number[]) =>
+  http.post(`/config/biz/${bizId}/apps/${appId}/config_items/batch_delete`, { ids });
 
 /**
  * 获取未命名版本配置文件详情
@@ -75,7 +95,8 @@ export const deleteServiceConfigItem = (id: number, bizId: string, appId: number
  * @param appId 应用ID
  * @returns
  */
-export const getConfigItemDetail = (biz_id: string, id: number, appId: number) => http.get(`/config/biz/${biz_id}/apps/${appId}/config_items/${id}`).then(resp => resp.data);
+export const getConfigItemDetail = (biz_id: string, id: number, appId: number) =>
+  http.get(`/config/biz/${biz_id}/apps/${appId}/config_items/${id}`).then((resp) => resp.data);
 
 /**
  * 获取已发布版本配置文件详情
@@ -90,12 +111,13 @@ export const getReleasedConfigItemDetail = (
   app_id: number,
   release_id: number,
   config_item_id: number,
-) => http
-  .get(`/config/biz/${biz_id}/apps/${app_id}/releases/${release_id}/config_items/${config_item_id}`)
-  .then((resp) => {
-    resp.data.config_item.id = resp.data.config_item_id;
-    return resp.data;
-  });
+) =>
+  http
+    .get(`/config/biz/${biz_id}/apps/${app_id}/releases/${release_id}/config_items/${config_item_id}`)
+    .then((resp) => {
+      resp.data.config_item.id = resp.data.config_item_id;
+      return resp.data;
+    });
 
 /**
  * 上传配置文件内容
@@ -105,16 +127,17 @@ export const getReleasedConfigItemDetail = (
  * @param signature 文件内容的SHA256值
  * @returns
  */
-export const updateConfigContent = (bizId: string, appId: number, data: string | File, signature: string) => http
-  .put(`/biz/${bizId}/content/upload`, data, {
-    headers: {
-      'X-Bscp-App-Id': appId,
-      'X-Bkapi-File-Content-Id': signature,
-      'X-Bkapi-File-Content-Overwrite': 'false',
-      'Content-Type': 'text/plain',
-    },
-  })
-  .then(res => res.data);
+export const updateConfigContent = (bizId: string, appId: number, data: string | File, signature: string) =>
+  http
+    .put(`/biz/${bizId}/content/upload`, data, {
+      headers: {
+        'X-Bscp-App-Id': appId,
+        'X-Bkapi-File-Content-Id': signature,
+        'X-Bkapi-File-Content-Overwrite': 'false',
+        'Content-Type': 'text/plain',
+      },
+    })
+    .then((res) => res.data);
 
 /**
  * 下载配置文件内容
@@ -123,17 +146,18 @@ export const updateConfigContent = (bizId: string, appId: number, data: string |
  * @param signature sha256签名
  * @returns
  */
-export const downloadConfigContent = (bizId: string, appId: number, signature: string) => http
-  .get<string, string>(`/biz/${bizId}/content/download`, {
-    headers: {
-      'X-Bscp-Template-Space-Id': appId,
-      'X-Bkapi-File-Content-Id': signature,
-    },
-    transitional: {
-      forcedJSONParsing: false,
-    },
-  })
-  .then(res => res);
+export const downloadConfigContent = (bizId: string, appId: number, signature: string) =>
+  http
+    .get<string, string>(`/biz/${bizId}/content/download`, {
+      headers: {
+        'X-Bscp-Template-Space-Id': appId,
+        'X-Bkapi-File-Content-Id': signature,
+      },
+      transitional: {
+        forcedJSONParsing: false,
+      },
+    })
+    .then((res) => res);
 
 /**
  * 创建配置版本
@@ -147,7 +171,38 @@ interface ICreateVersionParams {
   memo: string;
   variables: IVariableEditParams[];
 }
-export const createVersion = (bizId: string, appId: number, params: ICreateVersionParams) => http.post(`/config/create/release/release/app_id/${appId}/biz_id/${bizId}`, params);
+export const createVersion = (bizId: string, appId: number, params: ICreateVersionParams) =>
+  http.post(`/config/create/release/release/app_id/${appId}/biz_id/${bizId}`, params);
+
+/**
+ * 废弃版本
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param releaseId 版本ID
+ * @returns
+ */
+export const deprecateVersion = (bizId: string, appId: number, releaseId: number) =>
+  http.put(`/config/biz/${bizId}/apps/${appId}/releases/${releaseId}/deprecate`);
+
+/**
+ * 恢复版本
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param releaseId 版本ID
+ * @returns
+ */
+export const undeprecateVersion = (bizId: string, appId: number, releaseId: number) =>
+  http.put(`/config/biz/${bizId}/apps/${appId}/releases/${releaseId}/undeprecate`);
+
+/**
+ * 删除版本
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param releaseId 版本ID
+ * @returns
+ */
+export const deleteVersion = (bizId: string, appId: number, releaseId: number) =>
+  http.delete(`/config/biz/${bizId}/apps/${appId}/releases/${releaseId}`);
 
 /**
  * 获取版本列表
@@ -156,7 +211,16 @@ export const createVersion = (bizId: string, appId: number, params: ICreateVersi
  * @param params 查询参数
  * @returns
  */
-export const getConfigVersionList = (bizId: string, appId: number, params: IConfigVersionQueryParams) => http.get(`config/biz/${bizId}/apps/${appId}/releases`, { params });
+export const getConfigVersionList = (bizId: string, appId: number, params: IConfigVersionQueryParams) =>
+  http.get(`config/biz/${bizId}/apps/${appId}/releases`, { params }).then((res) => {
+    res.data.details.forEach((item: IConfigVersion) => {
+      const defaultGroup = item.status.released_groups.find((group) => group.id === 0);
+      if (defaultGroup) {
+        defaultGroup.name = '全部实例';
+      }
+    });
+    return res;
+  });
 
 /**
  * 发布版本
@@ -184,20 +248,21 @@ export const publishVersion = (
  * @param releaseId 版本ID
  * @returns
  */
-export const getConfigScript = (bizId: string, appId: number, releaseId: number) => http.get(`/config/biz/${bizId}/apps/${appId}/releases/${releaseId}/hooks`).then((response) => {
-  const { pre_hook, post_hook } = response.data;
-  const data = {
-    pre_hook: getDefaultConfigScriptData(),
-    post_hook: getDefaultConfigScriptData(),
-  };
-  if (pre_hook) {
-    data.pre_hook = pre_hook;
-  }
-  if (post_hook) {
-    data.post_hook = post_hook;
-  }
-  return data;
-});
+export const getConfigScript = (bizId: string, appId: number, releaseId: number) =>
+  http.get(`/config/biz/${bizId}/apps/${appId}/releases/${releaseId}/hooks`).then((response) => {
+    const { pre_hook, post_hook } = response.data;
+    const data = {
+      pre_hook: getDefaultConfigScriptData(),
+      post_hook: getDefaultConfigScriptData(),
+    };
+    if (pre_hook) {
+      data.pre_hook = pre_hook;
+    }
+    if (post_hook) {
+      data.post_hook = post_hook;
+    }
+    return data;
+  });
 
 /**
  * 更新服务下初始化脚本引用配置
@@ -222,18 +287,20 @@ export const checkAppTemplateBinding = (
   bizId: string,
   appId: number,
   params: { bindings: ITemplateBoundByAppData[] },
-) => http.post(`/config/biz/${bizId}/apps/${appId}/template_bindings/conflict_check`, params).then((res) => {
-  const conflictData: { [key: number]: number[] } = {};
-  res.data.details.forEach((item:
-    { template_id: number; template_name: string; template_set_id: number; template_set_name: string }) => {
-    if (Array.isArray(conflictData[item.template_set_id])) {
-      conflictData[item.template_set_id].push(item.template_id);
-    } else {
-      conflictData[item.template_set_id] = [item.template_id];
-    }
+) =>
+  http.post(`/config/biz/${bizId}/apps/${appId}/template_bindings/conflict_check`, params).then((res) => {
+    const conflictData: { [key: number]: number[] } = {};
+    res.data.details.forEach(
+      (item: { template_id: number; template_name: string; template_set_id: number; template_set_name: string }) => {
+        if (Array.isArray(conflictData[item.template_set_id])) {
+          conflictData[item.template_set_id].push(item.template_id);
+        } else {
+          conflictData[item.template_set_id] = [item.template_id];
+        }
+      },
+    );
+    return conflictData;
   });
-  return conflictData;
-});
 
 /**
  * 新建模板配置文件和服务绑定关系
@@ -270,9 +337,10 @@ export const updateTemplateConfigPkgs = (
  * @param query 查询参数
  * @returns
  */
-export const getBoundTemplates = (bizId: string, appId: number, query: ICommonQuery) => http
-  .get(`/config/biz/${bizId}/apps/${appId}/template_revisions`, { params: { ...query, with_status: true } })
-  .then(res => res.data);
+export const getBoundTemplates = (bizId: string, appId: number, query: ICommonQuery) =>
+  http
+    .get(`/config/biz/${bizId}/apps/${appId}/template_revisions`, { params: { ...query, with_status: true } })
+    .then((res) => res.data);
 
 /**
  * 获取服务下已命名版本绑定的模板配置文件列表
@@ -281,10 +349,10 @@ export const getBoundTemplates = (bizId: string, appId: number, query: ICommonQu
  * @param releaseId
  * @returns
  */
-export const getBoundTemplatesByAppVersion =
-  (bizId: string, appId: number, releaseId: number, params: ICommonQuery) => http
+export const getBoundTemplatesByAppVersion = (bizId: string, appId: number, releaseId: number, params: ICommonQuery) =>
+  http
     .get(`/config/biz/${bizId}/apps/${appId}/releases/${releaseId}/template_revisions`, { params })
-    .then(res => res.data);
+    .then((res) => res.data);
 
 /**
  * 更新服务下模板配置文件版本
@@ -309,9 +377,10 @@ export const updateBoundTemplateVersion = (
  * @param template_set_ids 模板套餐ID列表
  * @returns
  */
-export const deleteBoundPkg = (bizId: string, appId: number, bindingId: number, template_set_ids: number[]) => http.delete(`/config/biz/${bizId}/apps/${appId}/template_bindings/${bindingId}/template_sets`, {
-  params: { template_set_ids: template_set_ids.join(',') },
-});
+export const deleteBoundPkg = (bizId: string, appId: number, bindingId: number, template_set_ids: number[]) =>
+  http.delete(`/config/biz/${bizId}/apps/${appId}/template_bindings/${bindingId}/template_sets`, {
+    params: { template_set_ids: template_set_ids.join(',') },
+  });
 
 /**
  * 导入非模板配置文件压缩包
@@ -320,13 +389,14 @@ export const deleteBoundPkg = (bizId: string, appId: number, bindingId: number, 
  * @param fill 导入文件
  * @returns
  */
-export const importNonTemplateConfigFile = (biz_id: string, appId: number, fill: any) => http
-  .post(`/config/biz/${biz_id}/apps/${appId}/config_item/import`, fill, {
-    headers: {
-      'Content-Type': 'application/zip',
-    },
-  })
-  .then(res => res.data);
+export const importNonTemplateConfigFile = (biz_id: string, appId: number, fill: any) =>
+  http
+    .post(`/config/biz/${biz_id}/apps/${appId}/config_item/import`, fill, {
+      headers: {
+        'Content-Type': 'application/zip',
+      },
+    })
+    .then((res) => res.data);
 
 /**
  * 批量添加非模板配置列表
@@ -336,9 +406,12 @@ export const importNonTemplateConfigFile = (biz_id: string, appId: number, fill:
  * @param template_set_ids 模板套餐ID列表
  * @returns
  */
-export const batchAddConfigList = (bizId: string, appId: number, list: any) => http.put(`/config/biz/${bizId}/apps/${appId}/config_items`, {
-  items: list,
-}).then(res => res.data);
+export const batchAddConfigList = (bizId: string, appId: number, list: any) =>
+  http
+    .put(`/config/biz/${bizId}/apps/${appId}/config_items`, {
+      items: list,
+    })
+    .then((res) => res.data);
 
 /**
  * 创建kv
@@ -347,8 +420,8 @@ export const batchAddConfigList = (bizId: string, appId: number, list: any) => h
  * @param kv 配置键值类型
  * @returns
  */
-export const createKv = (bizId: string, appId: number, kv: any) => http.post(`/config/biz/${bizId}/apps/${appId}/kvs`, kv);
-
+export const createKv = (bizId: string, appId: number, kv: any) =>
+  http.post(`/config/biz/${bizId}/apps/${appId}/kvs`, kv);
 
 /**
  * 获取kv
@@ -356,7 +429,8 @@ export const createKv = (bizId: string, appId: number, kv: any) => http.post(`/c
  * @param appId 应用ID
  * @returns
  */
-export const getKvList = (bizId: string, appId: number, query: ICommonQuery) => http.get(`/config/biz/${bizId}/apps/${appId}/kvs`, { params: query }).then(res => res.data);
+export const getKvList = (bizId: string, appId: number, query: ICommonQuery) =>
+  http.get(`/config/biz/${bizId}/apps/${appId}/kvs`, { params: query }).then((res) => res.data);
 
 /**
  * 批量上传｜更新kv
@@ -365,7 +439,8 @@ export const getKvList = (bizId: string, appId: number, query: ICommonQuery) => 
  * @param kvs 上传kv列表
  * @returns
  */
-export const batchUpsertKv = (bizId: string, appId: number, kvs: any) => http.put(`/config/biz/${bizId}/apps/${appId}/kvs`, { kvs });
+export const batchUpsertKv = (bizId: string, appId: number, kvs: any) =>
+  http.put(`/config/biz/${bizId}/apps/${appId}/kvs`, { kvs });
 
 /**
  * 更新kv
@@ -375,7 +450,8 @@ export const batchUpsertKv = (bizId: string, appId: number, kvs: any) => http.pu
  * @param value 配置值
  * @returns
  */
-export const updateKv = (bizId: string, appId: number, key: string, value: string) => http.put(`/config/biz/${bizId}/apps/${appId}/kvs/${key}`, { value });
+export const updateKv = (bizId: string, appId: number, key: string, value: string, memo: string) =>
+  http.put(`/config/biz/${bizId}/apps/${appId}/kvs/${key}`, { value, memo });
 
 /**
  * 删除kv
@@ -384,8 +460,17 @@ export const updateKv = (bizId: string, appId: number, key: string, value: strin
  * @param configId 配置项ID
  * @returns
  */
-export const deleteKv = (bizId: string, appId: number, configId: number) => http.delete(`/config/biz/${bizId}/apps/${appId}/kvs/${configId}`);
+export const deleteKv = (bizId: string, appId: number, configId: number) =>
+  http.delete(`/config/biz/${bizId}/apps/${appId}/kvs/${configId}`);
 
+/**
+ * 批量删除kv
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param ids 配置项ID列表
+ */
+export const batchDeleteKv = (bizId: string, appId: number, ids: number[]) =>
+  http.post(`config/biz/${bizId}/apps/${appId}/kvs/batch_delete`, { ids });
 
 /**
  * 获取已发布kv
@@ -395,8 +480,8 @@ export const deleteKv = (bizId: string, appId: number, configId: number) => http
  * @param key 配置键
  * @returns
  */
-export const getReleaseKv = (bizId: string, appId: number, releaseId: number, key: string) => http.get(`/config/biz/${bizId}/apps/${appId}/releases/${releaseId}/kvs/${key}`).then(res => res.data);
-
+export const getReleaseKv = (bizId: string, appId: number, releaseId: number, key: string) =>
+  http.get(`/config/biz/${bizId}/apps/${appId}/releases/${releaseId}/kvs/${key}`).then((res) => res.data);
 
 /**
  * 获取已发布kv列表
@@ -405,7 +490,8 @@ export const getReleaseKv = (bizId: string, appId: number, releaseId: number, ke
  * @param releaseId 版本id
  * @returns
  */
-export const getReleaseKvList = (bizId: string, appId: number, releaseId: number, query: ICommonQuery) => http.get(`/config/biz/${bizId}/apps/${appId}/releases/${releaseId}/kvs`, { params: query }).then(res => res.data);
+export const getReleaseKvList = (bizId: string, appId: number, releaseId: number, query: ICommonQuery) =>
+  http.get(`/config/biz/${bizId}/apps/${appId}/releases/${releaseId}/kvs`, { params: query }).then((res) => res.data);
 
 /**
  * 撤销删除kv
@@ -414,5 +500,55 @@ export const getReleaseKvList = (bizId: string, appId: number, releaseId: number
  * @param kv 配置键值类型
  * @returns
  */
-export const undeleteKv = (bizId: string, appId: number, key: string) => http.post(`/config/biz/${bizId}/apps/${appId}/kvs/${key}/undelete`);
+export const undeleteKv = (bizId: string, appId: number, key: string) =>
+  http.post(`/config/biz/${bizId}/apps/${appId}/kvs/${key}/undelete`);
 
+/**
+ * 恢复修改kv
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param kv 配置键值类型
+ * @returns
+ */
+export const unModifyKv = (bizId: string, appId: number, key: string) =>
+  http.post(`/config/biz/${bizId}/apps/${appId}/kvs/${key}/undo`);
+
+/**
+ * 批量导入kv配置文件
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param File 配置文件
+ * @returns
+ */
+export const batchImportKvFile = (bizId: string, appId: number, File: any) =>
+  http.post(`/biz/${bizId}/apps/${appId}/kvs/import`, File);
+
+/**
+ * 导出kv配置文件
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param releaseId 发布版本ID
+ * @returns
+ */
+export const getExportKvFile = (bizId: string, appId: number, releaseId: number, format: string) =>
+  http.get(`biz/${bizId}/apps/${appId}/releases/${releaseId}/kvs/export`, { params: { format } });
+
+/**
+ * 撤销修改配置文件
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param id 配置文件ID
+ * @returns
+ */
+export const unModifyConfigItem = (bizId: string, appId: number, id: number) =>
+  http.post(`/config/undo/config_item/config_item/config_item_id/${id}/app_id/${appId}/biz_id/${bizId}`);
+
+/**
+ * 恢复删除配置文件
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param id 配置文件ID
+ * @returns
+ */
+export const unDeleteConfigItem = (bizId: string, appId: number, id: number) =>
+  http.post(`/config/undelete/config_item/config_item/config_item_id/${id}/app_id/${appId}/biz_id/${bizId}`);

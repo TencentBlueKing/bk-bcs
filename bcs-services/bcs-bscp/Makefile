@@ -15,15 +15,15 @@ GOBUILD=CGO_ENABLED=0 go build -trimpath
 # output directory for release package and version for command line
 ifeq ("$(VERSION)", "")
 	export OUTPUT_DIR = ${PRO_DIR}/build/bk-bscp
-	export LDVersionFLAG = "-X github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/version.BUILDTIME=${BUILDTIME} \
-    	-X github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/version.GITHASH=${GITHASH} \
-		-X github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/version.DEBUG=${DEBUG}"
+	export LDVersionFLAG = "-X github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/version.BUILDTIME=${BUILDTIME} \
+    	-X github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/version.GITHASH=${GITHASH} \
+		-X github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/version.DEBUG=${DEBUG}"
 else
 	export OUTPUT_DIR = ${PRO_DIR}/build/bk-bscp-${VERSION}
-	export LDVersionFLAG = "-X github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/version.VERSION=${VERSION} \
-    	-X github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/version.BUILDTIME=${BUILDTIME} \
-    	-X github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/version.GITHASH=${GITHASH} \
-    	-X github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/version.DEBUG=${DEBUG}"
+	export LDVersionFLAG = "-X github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/version.VERSION=${VERSION} \
+    	-X github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/version.BUILDTIME=${BUILDTIME} \
+    	-X github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/version.GITHASH=${GITHASH} \
+    	-X github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/version.DEBUG=${DEBUG}"
 endif
 
 include ./scripts/makefile/uname.mk
@@ -146,9 +146,13 @@ openapi:
 build_bscp:
 	@cd ${PRO_DIR}/cmd && make all
 
+.PHONY: build_feed
+build_feed:
+	@cd ${PRO_DIR}/cmd && make feed
+
 .PHONY: build_frontend
 build_frontend:
-	cd ui; npm install; npm run build
+	cd ui; npm install --legacy-peer-deps; npm run build
 
 .PHONY: build_ui
 build_ui:

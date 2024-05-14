@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package bcsegress xxx
 package bcsegress
 
 import (
@@ -18,8 +18,6 @@ import (
 	"fmt"
 	"strings"
 	"time"
-
-	bkbcsv1alpha1 "bcs-egress/pkg/apis/bkbcs/v1alpha1"
 
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -33,6 +31,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
+
+	bkbcsv1alpha1 "bcs-egress/pkg/apis/bkbcs/v1alpha1"
 )
 
 const (
@@ -102,6 +102,7 @@ type ReconcileBCSEgress struct {
 // and what is in the BCSEgress.Spec
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
+// nolint
 func (r *ReconcileBCSEgress) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	klog.Infof(">BCSEgress %s reconcile", request.String())
 	// Fetch the BCSEgress instance
@@ -117,7 +118,7 @@ func (r *ReconcileBCSEgress) Reconcile(request reconcile.Request) (reconcile.Res
 			// Return and don't requeue
 			klog.Infof("BCSEgress %s is actually deleted, try to clean all rules reference to %s", request.String(),
 				request.String())
-			if err := r.cleanRulesByLabel(controlReference); err != nil {
+			if err = r.cleanRulesByLabel(controlReference); err != nil {
 				klog.Errorf(">sync all reference rules failed when %s Egress deleted, %s. try next reconcile", request.String(),
 					err.Error())
 				return reconcile.Result{RequeueAfter: time.Second * 3}, err
@@ -183,12 +184,14 @@ func (r *ReconcileBCSEgress) Reconcile(request reconcile.Request) (reconcile.Res
 		instance.Status.SyncedAt = metav1.Now()
 		if err = r.client.Update(context.TODO(), instance); err != nil {
 			klog.Errorf(
-				"update BCSEgress %s last Reconcile status[%s] failed, %s. push to ReconcileQueue for updating again in 5 seconds", request.String(), instance.Status.State, err.Error())
+				"update BCSEgress %s last Reconcile status[%s] failed, %s. "+
+					"push to ReconcileQueue for updating again in 5 seconds", request.String(), instance.Status.State,
+				err.Error())
 			return reconcile.Result{RequeueAfter: time.Second * 5}, nil
 		}
 		return reconcile.Result{}, nil
 	}
-	if err := r.proxy.Reload(request.String()); err != nil {
+	if err = r.proxy.Reload(request.String()); err != nil {
 		klog.Errorf("EgressController reload %s proxy rules failed, %s. try to reload in 15 seconds", request.String(),
 			err.Error())
 		// try to update BCSEgress status
@@ -208,7 +211,8 @@ func (r *ReconcileBCSEgress) Reconcile(request reconcile.Request) (reconcile.Res
 	instance.Status.SyncedAt = metav1.Now()
 	if err = r.client.Update(context.TODO(), instance); err != nil {
 		klog.Errorf(
-			"update BCSEgress %s last Reconcile status[%s] after proxy reload failed, %s. try to Update again in next reconciler", request.String(), instance.Status.State, err.Error())
+			"update BCSEgress %s last Reconcile status[%s] after proxy reload failed, %s. "+
+				"try to Update again in next reconciler", request.String(), instance.Status.State, err.Error())
 		return reconcile.Result{RequeueAfter: time.Second * 5}, nil
 	}
 	klog.Warningf(">update BCSEgress %s Reconcile status done, Status [%s]", request.String(), instance.Status.State)
@@ -249,7 +253,7 @@ func (r *ReconcileBCSEgress) Run() {
 		case <-tick.C:
 			// time to check sync flag
 			klog.Infoln("Force synchronization in tick...")
-			r.synchronizationAllRules()
+			r.synchronizationAllRules() // nolint
 			klog.Infoln("nothing need to synchronize in tick...")
 		case <-r.stop.Done():
 			// ready to exit
@@ -269,6 +273,7 @@ func (r *ReconcileBCSEgress) Stop() {
 // ! Every synchronization maybe affect business container, it's never too much
 // ! to emphasize importance of synchronization. Sometimes synchronization will
 // ! interrupt long connection that maintained by proxy without expectation
+// nolint
 func (r *ReconcileBCSEgress) synchronizationAllRules() error {
 	// all datas changed Egress were in update channel
 	klog.V(5).Infof("BCSEgress ready to sync all rules")

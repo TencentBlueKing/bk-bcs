@@ -15,7 +15,7 @@ package types
 import (
 	"errors"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
 )
 
 // UpsertKvOption is used to define options for inserting or updating key-value data.
@@ -138,6 +138,8 @@ type ListKvOption struct {
 	Page      *BasePage `json:"page"`
 	IDs       []uint32  `json:"ids"`
 	KvType    []string  `json:"kv_type"`
+	TopIDs    []uint32  `json:"top_ids"`
+	Status    []string  `json:"status"`
 }
 
 // Validate is used to validate the effectiveness of the ListKvOption structure.

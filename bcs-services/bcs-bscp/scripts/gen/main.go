@@ -16,7 +16,7 @@ package main
 import (
 	"gorm.io/gen"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
 )
 
 func main() {
@@ -60,6 +60,9 @@ func main() {
 		table.ReleasedAppTemplateVariable{},
 		table.Kv{},
 		table.ReleasedKv{},
+		table.Client{},
+		table.ClientEvent{},
+		table.ClientQuery{},
 	)
 
 	g.Execute()

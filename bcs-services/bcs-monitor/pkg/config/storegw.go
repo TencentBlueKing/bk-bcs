@@ -24,8 +24,12 @@ type StoreConf struct {
 const (
 	// BKMONITOR 蓝鲸监控数据源
 	BKMONITOR StoreProvider = "BK_MONITOR"
-	// BCS_SYSTEM xxx
+	// BCS_SYSTEM bcs 自定义 metrics
 	BCS_SYSTEM StoreProvider = "BCS_SYSTEM"
 	// PROMETHEUS prometheus 原生数据源
 	PROMETHEUS StoreProvider = "PROMETHEUS"
+	// SUANLI_CPU 算力 cpu 数据源
+	SUANLI_CPU StoreProvider = "SUANLI_CPU"
+	// SUANLI_GPU_NATIVE 算力 gpu 数据源
+	SUANLI_GPU_NATIVE StoreProvider = "SUANLI_GPU_NATIVE"
 )

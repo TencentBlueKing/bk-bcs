@@ -10,7 +10,7 @@
       @confirm="handleChangeMode">
       <FixedButton position="unset" :title="$t('deploy.variable.toForm')" />
     </bcs-popconfirm>
-    <Header :title="title" />
+    <ContentHeader :title="title" :cluster-id="clusterId" :namespace="isEdit ? namespace : ''" />
     <div :class="['resource-update', { 'full-screen': fullScreen }]">
       <template v-if="!showDiff">
         <div class="code-editor" ref="editorWrapperRef">
@@ -19,15 +19,24 @@
             <span class="tools">
               <span
                 v-if="isEdit"
-                v-bk-tooltips.top="$t('dashboard.workload.editor.reset')" @click="handleReset"><i class="bcs-icon bcs-icon-reset"></i></span>
+                v-bk-tooltips.top="$t('dashboard.workload.editor.reset')"
+                @click="handleReset">
+                <i class="bcs-icon bcs-icon-reset"></i>
+              </span>
               <span class="upload" v-bk-tooltips.top="$t('dashboard.workload.editor.uploadYAML')">
                 <input type="file" ref="fileRef" tabindex="-1" accept=".yaml,.yml" @change="handleFileChange">
                 <i class="bcs-icon bcs-icon-upload"></i>
               </span>
-              <span :class="{ active: showExample }" v-bk-tooltips.top="$t('dashboard.workload.editor.example')" @click="handleToggleExample">
+              <span
+                :class="{ active: showExample }"
+                v-bk-tooltips.top="$t('dashboard.workload.editor.example')"
+                @click="handleToggleExample">
                 <i class="bcs-icon bcs-icon-code-example"></i>
               </span>
-              <span v-bk-tooltips.top="fullScreen ? $t('dashboard.workload.editor.zoomOut') : $t('dashboard.workload.editor.zoomIn')" @click="handleFullScreen">
+              <span
+                v-bk-tooltips.top="fullScreen
+                  ? $t('dashboard.workload.editor.zoomOut') : $t('dashboard.workload.editor.zoomIn')"
+                @click="handleFullScreen">
                 <i :class="['bcs-icon', fullScreen ? 'bcs-icon-zoom-out' : 'bcs-icon-enlarge']"></i>
               </span>
             </span>
@@ -80,7 +89,11 @@
             </bk-dropdown-menu>
             <span v-else><!-- 空元素为了flex布局 --></span>
             <span class="tools">
-              <span v-bk-tooltips.top="$t('dashboard.workload.editor.copy')" @click="handleCopy"><i class="bcs-icon bcs-icon-copy"></i></span>
+              <span
+                v-bk-tooltips.top="$t('dashboard.workload.editor.copy')"
+                @click="handleCopy">
+                <i class="bcs-icon bcs-icon-copy"></i>
+              </span>
               <span
                 v-bk-tooltips.top="$t('blueking.help')"
                 @click="handleHelp"><i :class="['bcs-icon bcs-icon-help-2', { active: showHelp }]"></i></span>
@@ -149,7 +162,11 @@
       </div>
     </div>
     <div class="resource-btn-group">
-      <div v-bk-tooltips.top="{ disabled: !disabledResourceUpdate, content: $t('dashboard.workload.editor.tips.contentUnchangedOrInvalidFormat') }">
+      <div
+        v-bk-tooltips.top="{
+          disabled: !disabledResourceUpdate,
+          content: $t('dashboard.workload.editor.tips.contentUnchangedOrInvalidFormat')
+        }">
         <bk-button
           theme="primary"
           class="main-btn"
@@ -165,7 +182,9 @@
         :disabled="!showDiff && disabledResourceUpdate"
         @click="toggleDiffEditor"
       >
-        {{ showDiff ? $t('dashboard.workload.editor.continueEditing') : $t('dashboard.workload.editor.showDifference') }}
+        {{ showDiff
+          ? $t('dashboard.workload.editor.continueEditing')
+          : $t('dashboard.workload.editor.showDifference') }}
       </bk-button>
       <bk-button class="ml10" @click="handleCancel">{{ $t('generic.button.cancel') }}</bk-button>
     </div>
@@ -183,7 +202,7 @@ import $bkMessage from '@/common/bkmagic';
 import { copyText } from '@/common/util';
 import BcsMd from '@/components/bcs-md/index.vue';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
-import Header from '@/components/layout/Header.vue';
+import ContentHeader from '@/components/layout/Header.vue';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
@@ -196,7 +215,7 @@ export default defineComponent({
     EditorStatus,
     BcsMd,
     FixedButton,
-    Header,
+    ContentHeader,
   },
   props: {
     // 命名空间（更新的时候需要--crd类型编辑是可能没有，创建的时候为空）
@@ -570,7 +589,7 @@ export default defineComponent({
         });
         $store.commit('updateCurNamespace', detail.value.metadata?.namespace);
         // 跳转回列表页
-        $router.push({ name: $store.state.curSideMenu?.route });
+        $router.back();
       }
     };
     const handleUpdateResource = () => {
@@ -623,7 +642,7 @@ export default defineComponent({
               message: $i18n.t('generic.msg.success.update'),
             });
             // 跳转回列表页
-            $router.push({ name: $store.state.curSideMenu?.route });
+            $router.back();
           }
         },
       });
@@ -646,13 +665,13 @@ export default defineComponent({
         defaultInfo: true,
         confirmFn: () => {
           // 跳转回列表页
-          $router.push({ name: $store.state.curSideMenu?.route });
+          $router.back();
         },
       });
     };
     // 切换到表单模式
     const handleChangeMode = () => {
-      $router.push({
+      $router.replace({
         name: 'dashboardFormResourceUpdate',
         params: {
           ...(isEdit.value ? { name: name.value } : {}),
@@ -728,7 +747,7 @@ export default defineComponent({
 <style lang="postcss" scoped>
 .resource-content {
     padding-bottom: 0;
-    height: calc(100vh - 52px);
+    height: 100%;
     .switch-button-pop {
         position: absolute;
         right: 32px;
@@ -751,10 +770,10 @@ export default defineComponent({
     }
     .resource-update {
         width: 100%;
-        height: calc(100% - 120px);
+        height: calc(100% - 112px);
         border-radius: 2px;
         display: flex;
-        padding: 20px 20px 0 20px;
+        padding: 8px 24px 0 24px;
         &.full-screen {
             position: fixed;
             top: 0;

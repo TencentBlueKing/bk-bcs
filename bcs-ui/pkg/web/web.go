@@ -14,8 +14,11 @@
 package web
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -23,12 +26,15 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
 	"github.com/go-chi/chi/v5"
 	chimid "github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/render"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	httpSwagger "github.com/swaggo/http-swagger"
 	"k8s.io/klog/v2"
 
 	bcsui "github.com/Tencent/bk-bcs/bcs-ui"
+	"github.com/Tencent/bk-bcs/bcs-ui/pkg/component/notice"
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/config"
+	"github.com/Tencent/bk-bcs/bcs-ui/pkg/constants"
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/metrics"
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/middleware"
 )
@@ -53,6 +59,13 @@ func NewWebServer(ctx context.Context, addr string, addrIPv6 string) (*WebServer
 	// 初始化版本日志和特性
 	if err := s.initReleaseNote(); err != nil {
 		return nil, err
+	}
+
+	// 注册系统到通知中心
+	if config.G.BKNotice.Enable {
+		if err := notice.RegisterSystem(ctx); err != nil {
+			klog.Infof("register system to notice center failed: %s", err.Error())
+		}
 	}
 
 	srv := &http.Server{Addr: addr, Handler: s.newRouter()}
@@ -125,10 +138,13 @@ func (w *WebServer) subRouter() http.Handler {
 	r.With(metrics.RequestCollect("FeatureFlagsHandler"), middleware.NeedProjectAuthorization).
 		Get("/feature_flags", w.FeatureFlagsHandler)
 
+	r.With(metrics.RequestCollect("GetCurrentAnnouncements")).Get("/announcements", w.GetCurrentAnnouncements)
+
 	// 静态资源
 	r.Get("/web/*", w.embedWebServer.StaticFileHandler("/web").ServeHTTP)
 	r.With(metrics.RequestCollect("SwitchLanguageHandler")).Put("/switch_language", w.CookieSwitchLanguage)
 	r.With(metrics.RequestCollect("ReleaseNoteHandler")).Get("/release_note", w.ReleaseNoteHandler)
+	r.With(metrics.RequestCollect("ReportHandler")).Post("/report", ReportHandler)
 
 	r.With(metrics.RequestCollect("no_permission")).Get("/403.html", w.embedWebServer.Render403Handler().ServeHTTP)
 
@@ -187,4 +203,29 @@ func ReadyHandler(w http.ResponseWriter, r *http.Request) {
 // HealthzHandler 健康检查
 func HealthzHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("OK"))
+}
+
+// ReportHandler 通过标准输出落地到日志采集，前端埋点接口
+func ReportHandler(w http.ResponseWriter, r *http.Request) {
+	okResponse := &OKResponse{Message: "OK", RequestID: r.Header.Get(constants.RequestIDHeaderKey)}
+	// response message
+	defer render.JSON(w, r, okResponse)
+
+	b, err := io.ReadAll(r.Body)
+	if err != nil {
+		// failure return
+		okResponse.Code = http.StatusBadRequest
+		okResponse.Message = err.Error()
+		return
+	}
+	var stringBuffer bytes.Buffer
+	err = json.Compact(&stringBuffer, b)
+	if err != nil {
+		// failure return
+		okResponse.Code = http.StatusBadRequest
+		okResponse.Message = err.Error()
+		return
+	}
+	// 通过标准输出落地到日志采集
+	fmt.Println(stringBuffer.String())
 }

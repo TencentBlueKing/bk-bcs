@@ -15,6 +15,7 @@ package tasks
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -34,6 +35,8 @@ import (
 
 // ApplyExternalNodeMachinesTask from resource-manager service
 func ApplyExternalNodeMachinesTask(taskID string, stepName string) error { // nolint
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start apply instance from resource pool")
 	start := time.Now()
 
 	// get task and task current step
@@ -83,6 +86,8 @@ func ApplyExternalNodeMachinesTask(taskID string, stepName string) error { // no
 
 	recordInstanceList, err := applyInstanceFromResourcePool(ctx, dependInfo, scalingNum, operator)
 	if err != nil {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
+			fmt.Sprintf("apply instance from resource pool failed [%s]", err))
 		blog.Errorf("ApplyExternalNodeMachinesTask[%s] applyInstanceFromResourcePool for NodeGroup %s step %s failed, %s",
 			taskID, nodeGroupID, stepName, err.Error())
 		retErr := fmt.Errorf("applyInstanceFromResourcePool failed: %s", err.Error())
@@ -91,24 +96,13 @@ func ApplyExternalNodeMachinesTask(taskID string, stepName string) error { // no
 		return retErr
 	}
 
-	// update response information to task common params
-	if state.Task.CommonParams == nil {
-		state.Task.CommonParams = make(map[string]string)
-	}
-
-	if len(recordInstanceList.InstanceIPList) > 0 && len(recordInstanceList.DeviceIDList) > 0 {
-		state.Task.CommonParams[cloudprovider.DeviceIDsKey.String()] = strings.Join(recordInstanceList.DeviceIDList, ",")
-		// Job Result parameter
-		state.Task.NodeIPList = recordInstanceList.InstanceIPList
-		state.Task.CommonParams[cloudprovider.NodeIPsKey.String()] = strings.Join(recordInstanceList.InstanceIPList, ",")
-		state.Task.CommonParams[cloudprovider.NodeIDsKey.String()] = strings.Join(recordInstanceList.InstanceIDList, ",")
-	}
-
-	err = recordClusterExternalNodeToDB(ctx, dependInfo, &RecordInstanceToDBOption{
+	err = recordClusterExternalNodeToDB(ctx, dependInfo, state.Task, &RecordInstanceToDBOption{
 		InstanceIPs: recordInstanceList.InstanceIPList,
 		DeviceIDs:   recordInstanceList.DeviceIDList,
 	})
 	if err != nil {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
+			fmt.Sprintf("record cluster external node to db failed [%s]", err))
 		blog.Errorf("ApplyExternalNodeMachinesTask[%s] recordClusterExternalNodeToDB for NodeGroup %s step %s failed, %s",
 			taskID, nodeGroupID, stepName, err.Error())
 		retErr := fmt.Errorf("ApplyExternalNodeMachinesTask failed, %s", err.Error())
@@ -117,6 +111,12 @@ func ApplyExternalNodeMachinesTask(taskID string, stepName string) error { // no
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"record cluster external node to db successful")
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"apply instance from resource pool successful")
 
 	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
@@ -221,7 +221,7 @@ type RecordInstanceToDBOption struct {
 
 // 录入第三方节点
 func recordClusterExternalNodeToDB(
-	ctx context.Context, info *cloudprovider.CloudDependBasicInfo, opt *RecordInstanceToDBOption) error {
+	ctx context.Context, info *cloudprovider.CloudDependBasicInfo, task *proto.Task, opt *RecordInstanceToDBOption) error {
 	var (
 		nodes = make([]*proto.Node, 0)
 		err   error
@@ -248,6 +248,22 @@ func recordClusterExternalNodeToDB(
 	if err != nil {
 		blog.Errorf("recordClusterExternalNodeToDB[%s] failed: %v", taskID, err)
 		return err
+	}
+	if len(nodes) == 0 {
+		blog.Errorf("recordClusterExternalNodeToDB[%s] cmdb sync nodes failed: %v", taskID, opt.InstanceIPs)
+		return errors.New("cmdb sync nodes failed")
+	}
+
+	// update response information to task common params
+	if task.CommonParams == nil {
+		task.CommonParams = make(map[string]string)
+	}
+	if len(opt.InstanceIPs) > 0 && len(opt.DeviceIDs) > 0 {
+		task.CommonParams[cloudprovider.DeviceIDsKey.String()] = strings.Join(opt.DeviceIDs, ",")
+		// Job Result parameter
+		task.NodeIPList = opt.InstanceIPs
+		task.CommonParams[cloudprovider.NodeIPsKey.String()] = strings.Join(opt.InstanceIPs, ",")
+		task.CommonParams[cloudprovider.NodeIDsKey.String()] = strings.Join(opt.InstanceIDs, ",")
 	}
 
 	for _, n := range nodes {
@@ -291,6 +307,8 @@ func destroyIDCDeviceList(ctx context.Context, info *cloudprovider.CloudDependBa
 
 // GetExternalNodeScriptTask get cluster external node script
 func GetExternalNodeScriptTask(taskID string, stepName string) error { // nolint
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start get cluster external node script")
 	start := time.Now()
 
 	// get task and task current step
@@ -361,8 +379,10 @@ func GetExternalNodeScriptTask(taskID string, stepName string) error { // nolint
 	}
 
 	// get add external nodes script from cluster
-	script, err := business.GetClusterExternalNodeScript(ctx, dependInfo)
+	script, err := business.GetClusterExternalNodeScript(ctx, dependInfo, GetExternalNgScriptType(dependInfo.NodeGroup))
 	if err != nil {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
+			fmt.Sprintf("get cluster external node script failed [%s]", err))
 		blog.Errorf("GetExternalNodeScriptTask[%s]: GetClusterExternalNodeScript for cluster[%s] failed, %s",
 			taskID, clusterID, err.Error())
 		retErr := fmt.Errorf("GetClusterExternalNodeScript err, %s", err.Error())
@@ -381,6 +401,9 @@ func GetExternalNodeScriptTask(taskID string, stepName string) error { // nolint
 	state.Task.CommonParams[cloudprovider.DynamicNodeIPListKey.String()] =
 		strings.Join(clusterExternalNodes.NotExistInClusterIPs, ",")
 	state.Task.CommonParams[cloudprovider.DynamicNodeScriptKey.String()] = script
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"get cluster external node script successful")
 
 	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {

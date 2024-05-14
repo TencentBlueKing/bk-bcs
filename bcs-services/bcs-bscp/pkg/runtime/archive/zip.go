@@ -82,6 +82,7 @@ func (z *ZipHandler) unzipFile(f *zip.File, destPath string) error {
 		return err
 	}
 	defer func() {
+		// NOCC:gas/error(ignore)
 		_ = rc.Close()
 	}()
 

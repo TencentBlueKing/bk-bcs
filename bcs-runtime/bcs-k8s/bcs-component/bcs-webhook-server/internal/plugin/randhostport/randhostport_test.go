@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -441,15 +441,15 @@ func TestInjectPod(t *testing.T) {
 						{
 							Ports: []corev1.ContainerPort{
 								{
-									ContainerPort: 8080,
+									Name:          "http",
+									ContainerPort: 8081,
 								},
 							},
 						},
 						{
 							Ports: []corev1.ContainerPort{
 								{
-									Name:          "http",
-									ContainerPort: 8081,
+									ContainerPort: 8080,
 								},
 							},
 						},
@@ -483,8 +483,8 @@ func TestInjectPod(t *testing.T) {
 					Annotations: map[string]string{
 						pluginAnnotationKey:                    pluginAnnotationValue,
 						pluginPortsAnnotationKey:               "8080,http",
-						annotationsRandHostportPrefix + "8080": "31000",
-						annotationsRandHostportPrefix + "8081": "31001",
+						annotationsRandHostportPrefix + "8081": "31000",
+						annotationsRandHostportPrefix + "8080": "31001",
 					},
 				},
 				Spec: corev1.PodSpec{
@@ -493,11 +493,11 @@ func TestInjectPod(t *testing.T) {
 							Image: "test-image",
 							Env: []corev1.EnvVar{
 								{
-									Name:  envRandHostportPrefix + "8080",
+									Name:  envRandHostportPrefix + "8081",
 									Value: "31000",
 								},
 								{
-									Name:  envRandHostportPrefix + "8081",
+									Name:  envRandHostportPrefix + "8080",
 									Value: "31001",
 								},
 								{
@@ -531,17 +531,18 @@ func TestInjectPod(t *testing.T) {
 						{
 							Ports: []corev1.ContainerPort{
 								{
-									ContainerPort: 8080,
+									Name:          "http",
+									ContainerPort: 8081,
 									HostPort:      31000,
 								},
 							},
 							Env: []corev1.EnvVar{
 								{
-									Name:  envRandHostportPrefix + "8080",
+									Name:  envRandHostportPrefix + "8081",
 									Value: "31000",
 								},
 								{
-									Name:  envRandHostportPrefix + "8081",
+									Name:  envRandHostportPrefix + "8080",
 									Value: "31001",
 								},
 								{
@@ -573,18 +574,17 @@ func TestInjectPod(t *testing.T) {
 						{
 							Ports: []corev1.ContainerPort{
 								{
-									Name:          "http",
-									ContainerPort: 8081,
+									ContainerPort: 8080,
 									HostPort:      31001,
 								},
 							},
 							Env: []corev1.EnvVar{
 								{
-									Name:  envRandHostportPrefix + "8080",
+									Name:  envRandHostportPrefix + "8081",
 									Value: "31000",
 								},
 								{
-									Name:  envRandHostportPrefix + "8081",
+									Name:  envRandHostportPrefix + "8080",
 									Value: "31001",
 								},
 								{

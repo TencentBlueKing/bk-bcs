@@ -63,8 +63,14 @@
             </bcs-option-group>
           </bcs-select>
         </bk-form-item>
+        <bk-form-item
+          :label="$t('importGoogleCloud.label.nodemanArea')"
+          property="area.bkCloudID"
+          error-display-type="normal">
+          <NodeManArea v-model="formData.area.bkCloudID" />
+        </bk-form-item>
         <bk-form-item :label="$t('importGoogleCloud.label.desc')" property="description" error-display-type="normal">
-          <bcs-input type="textarea" v-model="formData.description"></bcs-input>
+          <bcs-input :maxlength="100" type="textarea" v-model="formData.description"></bcs-input>
         </bk-form-item>
         <bk-form-item>
           <bcs-badge
@@ -106,7 +112,8 @@ import $bkMessage from '@/common/bkmagic';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store';
-import useCloud, { ICloudAccount } from '@/views/project-manage/cloudtoken/use-cloud';
+import NodeManArea from '@/views/cluster-manage/add/form/nodeman-area.vue';
+import useCloud, { ICloudAccount } from '@/views/cluster-manage/use-cloud';
 
 interface IGroup<T = any> {
   id: string
@@ -122,6 +129,9 @@ const formData = ref({
   region: '',
   cloudID: '',
   accountID: '',
+  area: {  // 云区域
+    bkCloudID: 0,
+  },
 });
 const formRules = ref({
   clusterName: [
@@ -146,6 +156,13 @@ const formRules = ref({
     },
   ],
   accountID: [
+    {
+      required: true,
+      message: $i18n.t('generic.validate.required'),
+      trigger: 'blur',
+    },
+  ],
+  'area.bkCloudID': [
     {
       required: true,
       message: $i18n.t('generic.validate.required'),
@@ -320,6 +337,7 @@ const handleImport = async () => {
     clusterCategory: 'importer',
     networkType: 'overlay',
     accountID: formData.value.accountID,
+    area: formData.value.area,
   };
   const result = await $store.dispatch('clustermanager/importCluster', params);
   importLoading.value = false;

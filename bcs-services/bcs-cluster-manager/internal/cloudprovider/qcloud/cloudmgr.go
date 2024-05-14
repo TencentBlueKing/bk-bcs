@@ -122,6 +122,16 @@ func (c *CloudInfoManager) SyncClusterCloudInfo(cls *cmproto.Cluster,
 	return nil
 }
 
+// UpdateClusterCloudInfo update cluster info by cloud
+func (c *CloudInfoManager) UpdateClusterCloudInfo(cls *cmproto.Cluster) error {
+	// call qcloud interface to init cluster defaultConfig
+	if c == nil || cls == nil {
+		return fmt.Errorf("%s UpdateClusterCloudInfo request is empty", cloudName)
+	}
+
+	return nil
+}
+
 func getCloudClusterInfo(opt *cloudprovider.SyncClusterCloudInfoOption) (
 	*tke.Cluster, map[string]*cmproto.Node, error) {
 	var (

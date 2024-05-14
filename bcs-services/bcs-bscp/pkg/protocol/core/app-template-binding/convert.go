@@ -16,8 +16,8 @@ package pbatb
 import (
 	"time"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
-	pbbase "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	pbbase "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
 )
 
 // AppTemplateBinding convert pb AppTemplateBinding to table AppTemplateBinding
@@ -232,6 +232,7 @@ func PbReleasedAppBoundTmplRevision(s *table.ReleasedAppTemplate) *ReleasedAppBo
 		Reviser:              s.Revision.Reviser,
 		CreateAt:             s.Revision.CreatedAt.Format(time.RFC3339),
 		UpdateAt:             s.Revision.UpdatedAt.Format(time.RFC3339),
+		Md5:                  s.Spec.Md5,
 	}
 }
 

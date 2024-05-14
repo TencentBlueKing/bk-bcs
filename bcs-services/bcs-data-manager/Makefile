@@ -31,6 +31,9 @@ LDFLAG=-ldflags "-X github.com/Tencent/bk-bcs/bcs-common/common/static.Zookeeper
 # build path config
 INNER_PACKAGEPATH=build/bcs.${VERSION}
 
+proto:
+	protoc -I./third_party/ --proto_path=. --validate_out=paths=source_relative,lang=go:. --grpc-gateway_out=logtostderr=true,register_func_suffix=Gw:. --swagger_out=logtostderr=true:. --micro_out=. --go_out=plugins=grpc:. proto/bcs-data-manager/bcs-data-manager.proto
+
 build:
 	mkdir -p ../${INNER_PACKAGEPATH}/bcs-services/bcs-data-manager/swagger
 	cp -R ./third_party/swagger-ui/* ../${INNER_PACKAGEPATH}/bcs-services/bcs-data-manager/swagger/

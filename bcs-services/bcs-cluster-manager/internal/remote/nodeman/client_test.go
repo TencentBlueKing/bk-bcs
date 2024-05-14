@@ -12,7 +12,10 @@
 
 package nodeman
 
-import "testing"
+import (
+	"context"
+	"testing"
+)
 
 // NewClient xxx
 func NewClient() *Client {
@@ -29,7 +32,7 @@ func NewClient() *Client {
 
 func TestClient_CloudList(t *testing.T) {
 	cli := NewClient()
-	cloudAreas, err := cli.CloudList()
+	cloudAreas, err := cli.CloudList(context.Background())
 	if err != nil {
 		t.Fatal(err)
 	}

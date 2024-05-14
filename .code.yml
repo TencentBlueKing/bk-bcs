@@ -7,8 +7,23 @@ source:
     #用于匹配文件; 匹配方式为正则表达式。
     filepath_regex:
       # Deprecated module
-      - /bcs-services/bcs-argocd-manager/
-      - /bcs-services/bcs-log-manager/
+      - /bcs-services/bcs-mesh-manager/.*
+      - /bcs-services/bcs-api/.*
+      - /bcs-services/bcs-alert-manager/.*
+      - /bcs-services/bcs-log-manager/.*
+      - /bcs-services/bcs-netservice/.*
+      - /bcs-services/bcs-netservice/bcs-ipam/.*
+      - /bcs-services/bcs-argocd-manager/.*
+      - /bcs-services/bcs-client/.*
+      - /bcs-runtime/bcs-k8s/kubebkbcs/.*
+      - /bcs-runtime/bcs-k8s/kubedeprecated/.*
+      - /bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-driver/.*
+      - /bcs-services/bcs-upgrader/.*
+      - /bcs-services/bcs-service-prometheus/.*
+      - /bcs-network/.*
+      - /bcs-runtime/bcs-mesos/.*
+      - /bcs-runtime/bcs-k8s/bcs-component/bcs-cc-agent/.*
+      - /bcs-runtime/bcs-k8s/bcs-component/bcs-cpuset-device/.*
 
       # Comment ratio
       - /bcs-services/bcs-bscp/cmd/data-service/service/config_item.go
@@ -17,7 +32,6 @@ source:
       - /bcs-services/bcs-bscp/test/mock/repo/service/node.go
       - /bcs-services/bcs-cli/bcs-user-manager/cmd/create.go
       - /bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/tasks/createNodeGroup.go
-      - /bcs-services/bcs-mesh-manager/config/options.go
       - /bcs-services/bcs-upgrader/upgrades/u1.21.202203082112/migrate.go
       - /bcs-services/bcs-upgrader/upgrades/u1.21.202203082112/types.go
       - /bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/tasks/createNodeGroup.go
@@ -28,8 +42,6 @@ source:
       - /bcs-common/go.mod
       - /bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/bcs-cluster-autoscaler-1.16/go.mod
       - /bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/bcs-cluster-autoscaler-1.22/go.mod
-      - /bcs-services/bcs-alert-manager/go.mod
-      - /bcs-services/bcs-client/go.mod
       - /bcs-services/bcs-data-manager/go.mod
       - /bcs-services/bcs-gateway-discovery/plugins/t/bcs-auth.t
       - /bcs-services/bcs-k8s-watch/go.mod
@@ -41,6 +53,10 @@ source:
       - /bcs-scenarios/kourse
       - /bcs-common/pkg/bcsapi/storage/tkex/gamedeployment/v1alpha1/gamedeployment.go
       - /bcs-common/pkg/bcsapiv4/storage/tkex/gamedeployment/v1alpha1/gamedeployment.go
+      - /bcs-common/pkg/bcsapi/storage/tkex/gamestatefulset/v1alpha1/gamestatefulset.go
+      - /bcs-common/pkg/bcsapiv4/storage/tkex/gamestatefulset/v1alpha1/gamestatefulset.go
+      - /bcs-common/pkg/bcsapi/storage/tkex/generalpodautoscaler/v1alpha1/generalpodautoscaler.go
+      - /bcs-common/pkg/bcsapiv4/storage/tkex/generalpodautoscaler/v1alpha1/generalpodautoscaler.go
       - /bcs-common/pkg/esb/apigateway/bkdata/types.go
       - /bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/core/scale_up.go
       - /bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/simulator/drain.go
@@ -64,21 +80,7 @@ source:
       - /bcs-runtime/bcs-k8s/bcs-network/internal/.*
       - /bcs-runtime/bcs-k8s/bcs-network/pkg/.*
       - /bcs-runtime/bcs-k8s/bcs-network/qcloud-eip/.*
-      - /bcs-runtime/bcs-k8s/kubebkbcs/.*
-      - /bcs-runtime/bcs-k8s/kubedeprecated/.*
       - /bcs-runtime/bcs-k8s/kubernetes/.*
-      - /bcs-runtime/bcs-mesos/bcs-clb-controller/.*
-      - /bcs-runtime/bcs-mesos/bcs-container-executor/.*
-      - /bcs-runtime/bcs-mesos/bcs-dns/.*
-      - /bcs-runtime/bcs-mesos/bcs-hpacontroller/.*
-      - /bcs-runtime/bcs-mesos/bcs-loadbalance/.*
-      - /bcs-runtime/bcs-mesos/bcs-mesos-driver/.*
-      - /bcs-runtime/bcs-mesos/bcs-mesos-watch/.*
-      - /bcs-runtime/bcs-mesos/bcs-scheduler/.*
-      - /bcs-runtime/bcs-mesos/bmsf-mesh/pkg/.*
-      - /bcs-runtime/bcs-mesos/kubebkbcsv2/.*
-      - /bcs-runtime/bcs-mesos/mesosv2/.*
-      - /bcs-runtime/bcs-mesos/pkg/.*
       - /bcs-services/bcs-bscp/pkg/version/version.go
       - /bcs-services/bcs-clb-controller/apis/.*
       - /bcs-services/bcs-clb-controller/client/.*
@@ -86,7 +88,7 @@ source:
       - /bcs-services/bcs-cluster-manager/internal/cloudprovider/component/.*
       - /bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api/common_.*
       - /bcs-services/bcs-data-manager/pkg/mock/.*
-      - /bcs-services/bcs-mesh-manager/api/.*
+      - /bcs-services/bcs-bscp/test/.*
 
   # 提供产品代码库中工具或框架自动生成的且在代码库中的代码，没有可为空。以便后续代码统计环节进行排除等特殊处理。
   auto_generate_source:

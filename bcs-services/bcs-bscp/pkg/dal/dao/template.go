@@ -20,12 +20,12 @@ import (
 	"gorm.io/gen/field"
 	"gorm.io/gorm"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/utils"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/search"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/utils"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/search"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // Template supplies all the template related operations.
@@ -236,9 +236,12 @@ func (dao *templateDao) List(kit *kit.Kit, bizID, templateSpaceID uint32, s sear
 	}
 	d := q.Where(m.BizID.Eq(bizID), m.TemplateSpaceID.Eq(templateSpaceID)).Where(conds...)
 	if len(topIds) != 0 {
-		d = d.Order(utils.NewCustomExpr(`CASE WHEN id IN (?) THEN 0 ELSE 1 END,path,name ASC`, []interface{}{topIds}))
+		d = d.Order(utils.NewCustomExpr("CASE WHEN id IN (?) THEN 0 ELSE 1 END,"+
+			"CASE WHEN RIGHT(path, 1) = '/' THEN CONCAT(path,'name') ELSE CONCAT_WS('/', path, 'name') END",
+			[]interface{}{topIds}))
 	} else {
-		d = d.Order(m.Path, m.Name)
+		d = d.Order(utils.NewCustomExpr("CASE WHEN RIGHT(path, 1) = '/' THEN CONCAT(path,'name') ELSE "+
+			"CONCAT_WS('/', path, 'name') END", nil))
 	}
 
 	if opt.All {
@@ -343,7 +346,9 @@ func (dao *templateDao) GetByID(kit *kit.Kit, bizID, templateID uint32) (*table.
 func (dao *templateDao) ListByIDs(kit *kit.Kit, ids []uint32) ([]*table.Template, error) {
 	m := dao.genQ.Template
 	q := dao.genQ.Template.WithContext(kit.Ctx)
-	result, err := q.Where(m.ID.In(ids...)).Find()
+	result, err := q.Where(m.ID.In(ids...)).
+		Order(utils.NewCustomExpr("CASE WHEN RIGHT(path, 1) = '/' THEN CONCAT(path,'name') "+
+			"ELSE CONCAT_WS('/', path, 'name') END", nil)).Find()
 	if err != nil {
 		return nil, err
 	}

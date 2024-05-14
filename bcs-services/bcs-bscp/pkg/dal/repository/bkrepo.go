@@ -10,7 +10,6 @@
  * limitations under the License.
  */
 
-// Package repository is interface and its implementation for different repositories
 package repository
 
 import (
@@ -23,13 +22,13 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/metrics"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/thirdparty/repo"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/metrics"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/thirdparty/repo"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
 const (
@@ -320,9 +319,17 @@ func (c *bkrepoClient) Metadata(kt *kit.Kit, sign string) (*ObjectMetadata, erro
 		return nil, errors.Errorf("metadata status %d != 200", resp.StatusCode)
 	}
 
+	sha256 := resp.Header.Get("X-Checksum-Sha256")
+	md5 := resp.Header.Get("X-Checksum-Md5")
+
+	if sha256 != sign {
+		return nil, errors.Errorf("metadata sha256 [%s] does not match the given signature [%s]", sha256, sign)
+	}
+
 	metadata := &ObjectMetadata{
 		ByteSize: resp.ContentLength,
 		Sha256:   sign,
+		Md5:      md5,
 	}
 
 	return metadata, nil

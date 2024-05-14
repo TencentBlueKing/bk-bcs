@@ -18,8 +18,9 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/i18n"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 )
 
 // reservedResNamePrefix internal reserved string prefix, case-insensitive.
@@ -95,18 +96,20 @@ var qualifiedVariableNameRegexp = regexp.MustCompile(`^(?i)(bk_bscp_)\w*$`)
 // ValidateVariableName validate bscp variable's length and format.
 func ValidateVariableName(kit *kit.Kit, name string) error {
 	if len(name) < 9 {
-		return errf.Errorf(kit, errf.InvalidArgument, "invalid name, "+
-			"length should >= 9 and must start with prefix bk_bscp_ (ignore case)")
+		return errf.Errorf(errf.InvalidArgument,
+			i18n.T(kit, "invalid name, "+
+				"length should >= 9 and must start with prefix bk_bscp_ (ignore case)"))
 	}
 
 	if len(name) > 128 {
-		return errf.Errorf(kit, errf.InvalidArgument, "invalid name, length should <= 128")
+		return errf.Errorf(errf.InvalidArgument,
+			i18n.T(kit, "invalid name, length should <= 128"))
 	}
 
 	if !qualifiedVariableNameRegexp.MatchString(name) {
-		return errf.Errorf(kit, errf.InvalidArgument,
-			"invalid name: %s, only allows to include english、numbers、underscore (_)"+
-				", and must start with prefix bk_bscp_ (ignore case)", name)
+		return errf.Errorf(errf.InvalidArgument,
+			i18n.T(kit, "invalid name: %s, only allows to include english、numbers、underscore (_)"+
+				", and must start with prefix bk_bscp_ (ignore case)", name))
 	}
 
 	return nil
@@ -176,15 +179,12 @@ func ValidateReleaseName(name string) error {
 	return nil
 }
 
-const (
-	qualifiedCfgItemNameFmt string = "^[A-Za-z0-9-_.]+$"
-)
+// qualifiedFileNameRegexp file name regexp.
+// support character: chinese, english, number, '-', '_', '#', '%', ',', '@', '^', '+', '=', '[', ']', '{', '}'.
+var qualifiedFileNameRegexp = regexp.MustCompile("^[\u4e00-\u9fa5A-Za-z0-9-_#%,.@^+=\\[\\]\\{\\}]+$")
 
-// qualifiedCfgItemNameRegexp config item name regexp.
-var qualifiedCfgItemNameRegexp = regexp.MustCompile(qualifiedCfgItemNameFmt)
-
-// ValidateCfgItemName validate config item's name.
-func ValidateCfgItemName(name string) error {
+// ValidateFileName validate config item's name.
+func ValidateFileName(name string) error {
 	if len(name) < 1 {
 		return errors.New("invalid name, length should >= 1")
 	}
@@ -197,13 +197,13 @@ func ValidateCfgItemName(name string) error {
 		return err
 	}
 
-	if name == "." || name == ".." {
-		return fmt.Errorf("invalid name: %s, not allows to be '.' or '..'", name)
+	if strings.HasPrefix(name, ".") {
+		return fmt.Errorf("invalid name %s, should not start with '.'", name)
 	}
 
-	if !qualifiedCfgItemNameRegexp.MatchString(name) {
-		return fmt.Errorf("invalid name: %s, only allows to include english、numbers、underscore (_)"+
-			"、hyphen (-)、point (.)", name)
+	if !qualifiedFileNameRegexp.MatchString(name) {
+		return fmt.Errorf("invalid name %s, should only contains chinese, english, "+
+			"number, '-', '_', '#', '%%', ',', '@', '^', '+', '=', '[', ']', '{', '}'", name)
 	}
 
 	return nil

@@ -18,9 +18,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/enumor"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/enumor"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
 )
 
 // ConfigItemColumns defines config item's columns
@@ -34,7 +34,7 @@ var ConfigItemColumnDescriptor = mergeColumnDescriptors("",
 	mergeColumnDescriptors("revision", RevisionColumnDescriptor))
 
 // maxConfigItemsLimitForApp defines the max limit of config item for an app for user to create.
-const maxConfigItemsLimitForApp = 500
+const maxConfigItemsLimitForApp = 2000
 
 // ValidateAppCINumber verify whether the current number of app config items has reached the maximum.
 func ValidateAppCINumber(count int64) error {
@@ -154,6 +154,39 @@ func (c ConfigItem) ValidateDelete() error {
 	return nil
 }
 
+// ValidateRecover validate the config item's specific when recover it.
+func (c ConfigItem) ValidateRecover() error {
+	if c.ID == 0 {
+		return errors.New("config item id can not be set")
+	}
+
+	if c.Spec == nil {
+		return errors.New("spec should be set")
+	}
+
+	if err := c.Spec.ValidateCreate(); err != nil {
+		return err
+	}
+
+	if c.Attachment == nil {
+		return errors.New("attachment should be set")
+	}
+
+	if err := c.Attachment.Validate(); err != nil {
+		return err
+	}
+
+	if c.Revision == nil {
+		return errors.New("revision should be set")
+	}
+
+	if err := c.Revision.ValidateCreate(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // ConfigItemSpecColumns defines commit attachment's columns
 var ConfigItemSpecColumns = mergeColumns(CISpecColumnDescriptor)
 
@@ -198,7 +231,7 @@ type ConfigItemSpec struct {
 // ValidateCreate validate the config item's specifics
 func (ci ConfigItemSpec) ValidateCreate() error {
 
-	if err := validator.ValidateCfgItemName(ci.Name); err != nil {
+	if err := validator.ValidateFileName(ci.Name); err != nil {
 		return err
 	}
 
@@ -283,7 +316,7 @@ func (f FilePermission) Validate(mode FileMode) error {
 func (ci ConfigItemSpec) ValidateUpdate() error {
 
 	if len(ci.Name) != 0 {
-		if err := validator.ValidateCfgItemName(ci.Name); err != nil {
+		if err := validator.ValidateFileName(ci.Name); err != nil {
 			return err
 		}
 	}
@@ -361,12 +394,6 @@ type FilePermission struct {
 }
 
 const (
-	// Json file format
-	Json FileFormat = "json"
-	// Yaml file format
-	Yaml FileFormat = "yaml"
-	// Xml file format
-	Xml FileFormat = "xml"
 	// Text file format
 	Text FileFormat = "text"
 	// Binary file format
@@ -379,9 +406,6 @@ type FileFormat string
 // Validate the file format is supported or not.
 func (f FileFormat) Validate() error {
 	switch f {
-	case Json:
-	case Yaml:
-	case Xml:
 	case Text:
 	case Binary:
 	default:

@@ -15,14 +15,15 @@ package utils
 import (
 	"context"
 	"reflect"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/i18n"
 	authutils "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
-	"github.com/micro/go-micro/v2/metadata"
-	"github.com/micro/go-micro/v2/server"
-	"github.com/micro/go-micro/v2/server/grpc"
-	microSvc "github.com/micro/go-micro/v2/service"
+	"github.com/go-micro/plugins/v4/server/grpc"
+	microSvc "go-micro.dev/v4"
+	"go-micro.dev/v4/metadata"
+	"go-micro.dev/v4/server"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
@@ -61,6 +62,18 @@ func ResponseWrapper(fn server.HandlerFunc) server.HandlerFunc {
 		ctx = context.WithValue(ctx, RequestIDContextKey, requestID)
 		err = fn(ctx, req, rsp)
 		return renderResponse(rsp, requestID, err)
+	}
+}
+
+// NewAuditWrapper 审计
+func NewAuditWrapper(fn server.HandlerFunc) server.HandlerFunc {
+	return func(ctx context.Context, req server.Request, rsp interface{}) error {
+		startTime := time.Now()
+		err := fn(ctx, req, rsp)
+		endTime := time.Now()
+		// async add audit
+		go addAudit(ctx, req, rsp, startTime, endTime)
+		return err
 	}
 }
 

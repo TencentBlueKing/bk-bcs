@@ -14,15 +14,18 @@
 package pbrci
 
 import (
+	"path"
+	"sort"
+	"strings"
 	"time"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
-	pbbase "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
-	pbcommit "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/commit"
-	pbci "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/config-item"
-	pbcontent "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/content"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	pbbase "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
+	pbcommit "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/commit"
+	pbci "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/config-item"
+	pbcontent "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/content"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // PbReleasedConfigItems convert table ReleasedConfigItems to pb ReleasedConfigItems
@@ -130,10 +133,15 @@ func PbConfigItem(rci *table.ReleasedConfigItem, fileState string) *pbci.ConfigI
 }
 
 // PbConfigItemState convert config item state
-func PbConfigItemState(cis []*table.ConfigItem, fileRelease []*table.ReleasedConfigItem) []*pbci.ConfigItem {
+func PbConfigItemState(cis []*table.ConfigItem, fileRelease []*table.ReleasedConfigItem,
+	commits []*table.Commit, status []string) []*pbci.ConfigItem {
 	releaseMap := make(map[uint32]*table.ReleasedConfigItem, len(fileRelease))
 	for _, release := range fileRelease {
 		releaseMap[release.ConfigItemID] = release
+	}
+	commitMap := make(map[uint32]*table.Commit, len(commits))
+	for _, commit := range commits {
+		commitMap[commit.ID] = commit
 	}
 
 	result := make([]*pbci.ConfigItem, 0)
@@ -143,10 +151,10 @@ func PbConfigItemState(cis []*table.ConfigItem, fileRelease []*table.ReleasedCon
 			fileState = constant.FileStateAdd
 		} else {
 			if _, ok := releaseMap[ci.ID]; ok {
-				if ci.Revision.UpdatedAt.After(releaseMap[ci.ID].Revision.CreatedAt) {
-					fileState = constant.FileStateRevise
-				} else {
+				if _, exists := commitMap[releaseMap[ci.ID].CommitID]; exists {
 					fileState = constant.FileStateUnchange
+				} else {
+					fileState = constant.FileStateRevise
 				}
 				delete(releaseMap, ci.ID)
 			}
@@ -159,11 +167,17 @@ func PbConfigItemState(cis []*table.ConfigItem, fileRelease []*table.ReleasedCon
 	for _, file := range releaseMap {
 		result = append(result, PbConfigItem(file, constant.FileStateDelete))
 	}
-	return sortConfigItemsByState(result)
+	// 先按照path+name排序好
+	sort.SliceStable(result, func(i, j int) bool {
+		iPath := path.Join(result[i].Spec.Path, result[i].Spec.Name)
+		jPath := path.Join(result[j].Spec.Path, result[j].Spec.Name)
+		return iPath < jPath
+	})
+	return sortConfigItemsByState(result, status)
 }
 
-// sortConfigItemsByState sort as add > revise > unchange > delete
-func sortConfigItemsByState(cis []*pbci.ConfigItem) []*pbci.ConfigItem {
+// sortConfigItemsByState sort as add > revise > delete >  unchange
+func sortConfigItemsByState(cis []*pbci.ConfigItem, status []string) []*pbci.ConfigItem {
 	result := make([]*pbci.ConfigItem, 0)
 	add := make([]*pbci.ConfigItem, 0)
 	del := make([]*pbci.ConfigItem, 0)
@@ -173,17 +187,34 @@ func sortConfigItemsByState(cis []*pbci.ConfigItem) []*pbci.ConfigItem {
 		switch ci.FileState {
 		case constant.FileStateAdd:
 			add = append(add, ci)
-		case constant.FileStateDelete:
-			del = append(del, ci)
 		case constant.FileStateRevise:
 			revise = append(revise, ci)
+		case constant.FileStateDelete:
+			del = append(del, ci)
 		case constant.FileStateUnchange:
 			unchange = append(unchange, ci)
 		}
 	}
-	result = append(result, add...)
-	result = append(result, revise...)
-	result = append(result, unchange...)
-	result = append(result, del...)
+
+	if len(status) == 0 {
+		result = append(result, add...)
+		result = append(result, revise...)
+		result = append(result, del...)
+		result = append(result, unchange...)
+	} else {
+		for _, v := range status {
+			switch strings.ToUpper(v) {
+			case constant.FileStateAdd:
+				result = append(result, add...)
+			case constant.FileStateRevise:
+				result = append(result, revise...)
+			case constant.FileStateDelete:
+				result = append(result, del...)
+			case constant.FileStateUnchange:
+				result = append(result, unchange...)
+			}
+		}
+	}
+
 	return result
 }

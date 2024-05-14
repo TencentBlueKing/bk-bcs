@@ -15,6 +15,7 @@ replace (
 
 require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-00010101000000-000000000000
+	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/json-iterator/go v1.1.10
 	github.com/parnurzeal/gorequest v0.2.16
 	github.com/prometheus/client_golang v1.9.0
@@ -43,7 +44,7 @@ require (
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/mitchellh/mapstructure v1.1.2 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
-	github.com/modern-go/reflect2 v1.0.1 // indirect
+	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/pelletier/go-toml v1.7.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/client_model v0.2.0 // indirect

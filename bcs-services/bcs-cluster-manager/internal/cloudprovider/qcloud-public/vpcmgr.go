@@ -21,6 +21,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud-public/business"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cidrtree"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -37,8 +38,8 @@ func init() {
 type VPCManager struct{}
 
 // ListVpcs list vpcs
-func (c *VPCManager) ListVpcs(vpcID string, opt *cloudprovider.CommonOption) ([]*proto.CloudVpc, error) {
-	vpcCli, err := api.NewVPCClient(opt)
+func (c *VPCManager) ListVpcs(vpcID string, opt *cloudprovider.ListNetworksOption) ([]*proto.CloudVpc, error) {
+	vpcCli, err := api.NewVPCClient(&opt.CommonOption)
 	if err != nil {
 		blog.Errorf("create VPC client when failed: %v", err)
 		return nil, err
@@ -55,11 +56,12 @@ func (c *VPCManager) ListVpcs(vpcID string, opt *cloudprovider.CommonOption) ([]
 	}
 	result := make([]*proto.CloudVpc, 0)
 	for _, v := range vpcs {
-		result = append(result, &proto.CloudVpc{
+		cloudVpc := &proto.CloudVpc{
 			Name:     utils.StringPtrToString(v.VpcName),
 			VpcId:    utils.StringPtrToString(v.VpcId),
 			Ipv4Cidr: utils.StringPtrToString(v.CidrBlock),
 			Ipv6Cidr: utils.StringPtrToString(v.Ipv6CidrBlock),
+			// 除主网段外, 可扩展的网段
 			Cidrs: func() []*proto.AssistantCidr {
 				cidrs := make([]*proto.AssistantCidr, 0)
 
@@ -72,15 +74,33 @@ func (c *VPCManager) ListVpcs(vpcID string, opt *cloudprovider.CommonOption) ([]
 
 				return cidrs
 			}(),
-		})
+		}
+		result = append(result, cloudVpc)
+
+		// get free ipNet list
+		freeIPNets, err := business.GetFreeIPNets(&opt.CommonOption, vpcID)
+		if err != nil {
+			blog.Errorf("vpc GetFreeIPNets failed: %v", err)
+			continue
+		}
+		var ipCnt uint32
+		for i := range freeIPNets {
+			ipNum, err := cidrtree.GetIPNum(freeIPNets[i])
+			if err != nil {
+				blog.Errorf("vpc GetIPNum failed: %v", err)
+				continue
+			}
+			ipCnt += ipNum
+		}
+		cloudVpc.AllocateIpNum = ipCnt
 	}
 	return result, nil
 }
 
 // ListSubnets list vpc subnets
-func (c *VPCManager) ListSubnets(vpcID, zone string, opt *cloudprovider.CommonOption) ([]*proto.Subnet, error) {
+func (c *VPCManager) ListSubnets(vpcID, zone string, opt *cloudprovider.ListNetworksOption) ([]*proto.Subnet, error) {
 	blog.Infof("ListSubnets input: vpcID/%s", vpcID)
-	vpcCli, err := api.NewVPCClient(opt)
+	vpcCli, err := api.NewVPCClient(&opt.CommonOption)
 	if err != nil {
 		blog.Errorf("create VPC client when failed: %v", err)
 		return nil, err
@@ -112,8 +132,8 @@ func (c *VPCManager) ListSubnets(vpcID, zone string, opt *cloudprovider.CommonOp
 }
 
 // ListSecurityGroups list security groups
-func (c *VPCManager) ListSecurityGroups(opt *cloudprovider.CommonOption) ([]*proto.SecurityGroup, error) {
-	vpcCli, err := api.NewVPCClient(opt)
+func (c *VPCManager) ListSecurityGroups(opt *cloudprovider.ListNetworksOption) ([]*proto.SecurityGroup, error) {
+	vpcCli, err := api.NewVPCClient(&opt.CommonOption)
 	if err != nil {
 		blog.Errorf("create VPC client when failed: %v", err)
 		return nil, err
@@ -139,6 +159,10 @@ func (c *VPCManager) ListSecurityGroups(opt *cloudprovider.CommonOption) ([]*pro
 
 // GetCloudNetworkAccountType 查询用户网络类型
 func (c *VPCManager) GetCloudNetworkAccountType(opt *cloudprovider.CommonOption) (*proto.CloudAccountType, error) {
+	if opt.Region == "" {
+		opt.Region = defaultRegion
+	}
+
 	vpcCli, err := api.NewVPCClient(opt)
 	if err != nil {
 		blog.Errorf("create VPC client failed: %v", err)

@@ -17,9 +17,9 @@ import (
 	"errors"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 	"google.golang.org/protobuf/types/known/structpb"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 	datamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
 )
 
@@ -29,7 +29,7 @@ type ModelOperationData struct {
 	Tables map[string]*Public
 }
 
-// NewModelUserOperationDataList new bcs user operation data model
+// NewModelOperationData new bcs user operation data model
 func NewModelOperationData(db drivers.DB, bkbaseConf *types.BkbaseConfig) *ModelOperationData {
 	return &ModelOperationData{}
 }

@@ -343,5 +343,13 @@ type SharedClusterConf struct {
 
 // MultiClusterConf 多集群相关配置
 type MultiClusterConf struct {
-	EnabledQueryFromStorageKinds []string `yaml:"enabledQueryFromStorageKinds" usage:"支持从 storage 中查询的资源 Kind"`
+	EnabledQueryFromStorageKinds []string             `yaml:"enabledQueryFromStorageKinds"`
+	EnabledCountKinds            []string             `yaml:"enabledCountKinds"`
+	BlacklistForAPIServerQuery   []ProjectClusterConf `yaml:"blacklistForAPIServerQuery"`
+}
+
+// ProjectClusterConf 项目集群配置
+type ProjectClusterConf struct {
+	ProjectCode  string `yaml:"projectCode"`
+	ClusterIDReg string `yaml:"clusterIDReg"`
 }

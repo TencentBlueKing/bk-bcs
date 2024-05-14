@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package portbindingcontroller
@@ -17,14 +16,14 @@ import (
 	"context"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/metrics"
-	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
 // checkPortBindingCreate check if related portbinding create successfully
@@ -66,6 +65,7 @@ func checkPortBindingCreate(cli client.Client, namespace, name string) {
 // checkPortBindingDelete check if related portbinding delete successfully
 func checkPortBindingDelete(cli client.Client, namespace, name string) {
 	blog.Infof("starts to check portbinding %s/%s clean", namespace, name)
+	metrics.CleanPortAllocateMetric(name, namespace)
 	timeout := time.After(time.Minute)
 	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()

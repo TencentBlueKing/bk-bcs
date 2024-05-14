@@ -8,22 +8,25 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package fileoperator xxx
 package fileoperator
 
 import (
+	"archive/tar"
+	"compress/gzip"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/mholt/archiver/v3"
 	"gopkg.in/yaml.v3"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	v1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/api/v1"
 )
 
@@ -72,6 +75,39 @@ func (f *FileOperator) Compress(objList ...interface{}) (string, error) {
 	return outputPath, nil
 }
 
+// Decompress xxx
+func (f *FileOperator) Decompress(path, outputDir string) error {
+	// 打开已下载的 tar.gz 文件
+	file, err := os.Open(path)
+	if err != nil {
+		return fmt.Errorf("open compress file failed, err: %s", err.Error())
+	}
+	defer file.Close()
+
+	// 解压缩文件
+	gzipReader, err := gzip.NewReader(file)
+	if err != nil {
+		return fmt.Errorf("create gzip reader failed, err: %s", err.Error())
+	}
+	defer gzipReader.Close() // nolint
+
+	tarReader := tar.NewReader(gzipReader)
+
+	// 从 tar.gz 中读取文件并将其写入指定目录
+	for {
+		end, inErr := f.exportFileFromTar(tarReader, outputDir)
+		if inErr != nil {
+			return inErr
+		}
+
+		if end {
+			break
+		}
+
+	}
+	return nil
+}
+
 func (f *FileOperator) createDirectoriesAndFile(obj interface{}, basePath string) error {
 	subPath := f.getNameAndSubPath(obj)
 	dest := filepath.Join(basePath, subPath)
@@ -79,13 +115,13 @@ func (f *FileOperator) createDirectoriesAndFile(obj interface{}, basePath string
 		blog.Errorf("mkdir failed, err: %s", err.Error())
 		return err
 	}
-	switch obj.(type) {
+	switch v := obj.(type) {
 	case *v1.NoticeGroup:
-		ng := obj.(*v1.NoticeGroup)
-		for _, group := range ng.Spec.Groups {
+		for _, group := range v.Spec.Groups {
 			yamlData, err := yaml.Marshal(group)
 			if err != nil {
-				blog.Errorf("transfer yaml failed, notice group: %s/%s, err: %s", ng.Namespace, ng.Name, err.Error())
+				blog.Errorf("transfer yaml failed, notice group: %s/%s, err: %s", v.Namespace, v.Name,
+					err.Error())
 				return err
 			}
 
@@ -98,11 +134,10 @@ func (f *FileOperator) createDirectoriesAndFile(obj interface{}, basePath string
 		}
 		return nil
 	case *v1.MonitorRule:
-		mr := obj.(*v1.MonitorRule)
-		for _, rule := range mr.Spec.Rules {
+		for _, rule := range v.Spec.Rules {
 			yamlData, err := yaml.Marshal(rule)
 			if err != nil {
-				blog.Errorf("transfer yaml failed, monitor rule: %s/%s, err: %s", mr.GetNamespace(), mr.GetName(),
+				blog.Errorf("transfer yaml failed, monitor rule: %s/%s, err: %s", v.GetNamespace(), v.GetName(),
 					err.Error())
 				return err
 			}
@@ -116,12 +151,11 @@ func (f *FileOperator) createDirectoriesAndFile(obj interface{}, basePath string
 		}
 		return nil
 	case *v1.Panel:
-		panel := obj.(*v1.Panel)
-		for _, board := range panel.Spec.DashBoard {
+		for _, board := range v.Spec.DashBoard {
 			var data []byte
 			var err error
 
-			ns := panel.Namespace
+			ns := v.Namespace
 			if board.ConfigMapNs != "" {
 				ns = board.ConfigMapNs
 			}
@@ -131,13 +165,13 @@ func (f *FileOperator) createDirectoriesAndFile(obj interface{}, basePath string
 				return err
 			}
 
-			if err = os.MkdirAll(filepath.Join(dest, panel.Spec.Scenario), 0700); err != nil {
+			if err = os.MkdirAll(filepath.Join(dest, v.Spec.Scenario), 0700); err != nil {
 				blog.Errorf("mkdir failed, err: %s", err.Error())
 				return err
 			}
 
 			fileName := board.Board + ".json"
-			filePath := filepath.Join(dest, panel.Spec.Scenario, fileName)
+			filePath := filepath.Join(dest, v.Spec.Scenario, fileName)
 
 			if err = ioutil.WriteFile(filePath, data, 0644); err != nil {
 				blog.Errorf("write file to path: %s failed, board %+v, err: %s", filePath, board, err.Error())
@@ -150,8 +184,8 @@ func (f *FileOperator) createDirectoriesAndFile(obj interface{}, basePath string
 }
 
 func (f *FileOperator) compressFolder(basePath, output string) error {
-	tar := archiver.NewTarGz()
-	tar.OverwriteExisting = true
+	tarFile := archiver.NewTarGz()
+	tarFile.OverwriteExisting = true
 
 	items, err := ioutil.ReadDir(basePath)
 	if err != nil {
@@ -164,7 +198,7 @@ func (f *FileOperator) compressFolder(basePath, output string) error {
 		pathsToArchive = append(pathsToArchive, itemPath)
 	}
 
-	return tar.Archive(pathsToArchive, output)
+	return tarFile.Archive(pathsToArchive, output)
 }
 
 func (f *FileOperator) validateType(i interface{}) error {
@@ -197,4 +231,44 @@ func (f *FileOperator) getNameAndSubPath(i interface{}) string {
 	}
 
 	return ""
+}
+
+// return true if end
+func (f *FileOperator) exportFileFromTar(tarReader *tar.Reader, outputDir string) (bool, error) {
+	header, err := tarReader.Next()
+	if err == io.EOF {
+		return true, nil
+	}
+	if err != nil {
+		return false, fmt.Errorf("read tar file failed, err: %s", err.Error())
+	}
+
+	target := filepath.Join(outputDir, header.Name)
+	switch header.Typeflag {
+	case tar.TypeDir:
+		if err := os.MkdirAll(target, os.FileMode(header.Mode)); err != nil {
+			return false, fmt.Errorf("create directory failed, err: %s", err.Error())
+		}
+	case tar.TypeReg:
+		if err := os.MkdirAll(filepath.Dir(target), 0755); err != nil {
+			return false, fmt.Errorf("create directory failed, err: %s", err.Error())
+		}
+
+		outFile, err := os.Create(target)
+		if err != nil {
+			return false, fmt.Errorf("create output file failed, err: %s", err.Error())
+		}
+		defer outFile.Close()
+
+		if _, err := io.Copy(outFile, tarReader); err != nil {
+			return false, fmt.Errorf("write output file failed, err: %s", err.Error())
+		}
+
+		if err := outFile.Chmod(os.FileMode(header.Mode)); err != nil {
+			return false, fmt.Errorf("change file mode failed, err: %s", err.Error())
+		}
+	default:
+		return false, fmt.Errorf("unknown file type: %v", header.Typeflag)
+	}
+	return false, nil
 }

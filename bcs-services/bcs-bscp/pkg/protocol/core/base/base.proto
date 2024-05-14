@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package pbbase;
 
-option go_package = "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base;pbbase";
+option go_package = "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base;pbbase";
 
 // Revision source resource reference: pkg/dal/table/table.go
 message Revision {
@@ -51,4 +51,9 @@ message Versioning {
 message InvalidArgument {
   string field = 1;
   string message = 2;
+}
+
+message ErrDetails {
+  uint32 PrimaryError = 1;
+  uint32 SecondaryError = 2;
 }

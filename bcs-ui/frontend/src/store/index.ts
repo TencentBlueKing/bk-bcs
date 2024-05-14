@@ -28,11 +28,13 @@ import cookie from 'cookie';
 import Vue from 'vue';
 import Vuex from 'vuex';
 
+import cloudMetadata from './cloud-metadata';
+
 import http from '@/api';
 import { getProject } from '@/api/modules/project';
 import { json2Query } from '@/common/util';
 import VuexStorage from '@/common/vuex-storage';
-import { IProject } from '@/composables/use-app';
+import { ICluster, IProject } from '@/composables/use-app';
 import app from '@/store/modules/app';
 import cluster from '@/store/modules/cluster';
 import clustermanager from '@/store/modules/clustermanager';
@@ -66,8 +68,8 @@ if (['zh-CN', 'zh-cn', 'cn', 'zhCN', 'zhcn'].indexOf(lang) > -1) {
 const store = new Vuex.Store<{
   featureFlags: Record<string, boolean>
   curProject: IProject | Record<string, any>
-  curCluster: any
-  curSideMenu: IMenu | Record<string, any>
+  curCluster: ICluster
+  curNav: IMenu | Record<string, any>
   curNamespace: string
   user: {
     username: string
@@ -75,8 +77,18 @@ const store = new Vuex.Store<{
   openSideMenu: boolean
   isEn: boolean
   crdInstanceList: any[]
-  cluster: typeof cluster.state
+  dashboardViewID: string
+  dashboardViewList: Array<IViewData>
+  tmpViewData: IViewData | undefined // 非编辑态时临时视图数据
+  editViewData: IViewData | undefined // 编辑态时视图数据
+  viewNsList: string[] // 集群视图命名空间缓存
   globalPageSize: number
+  hideSharedCluster: boolean
+  isViewEditable: boolean // 视图编辑态
+  isViewConfigShow: boolean // 视图配置面板是否展开
+  // 模块
+  cluster: typeof cluster.state
+  cloudMetadata: typeof cloudMetadata.state
 }>({
   // todo 废弃模块
   modules: {
@@ -99,18 +111,38 @@ const store = new Vuex.Store<{
     log,
     clustermanager,
     token,
+    cloudMetadata,
   },
   plugins: [
     VuexStorage({
       key: '__bcs_vuex_stroage__',
-      paths: ['curProject.projectID', 'curProject.projectCode', 'curProject.businessID', 'curCluster.clusterID', 'openSideMenu', 'curNamespace', 'clusterViewType', 'globalPageSize'],
+      paths: [
+        'curProject.projectID',
+        'curProject.projectCode',
+        'curProject.businessID',
+        'curCluster.clusterID',
+        'openSideMenu',
+        'curNamespace',
+        'globalPageSize',
+        'dashboardViewID',
+        'hideSharedCluster',
+      ],
       mutationEffect: [
         {
           type: 'cluster/forceUpdateClusterList',
           effect: (state, $store) => {
-            const isExit = state.cluster.clusterList.some(item => item.clusterID === state.curCluster?.clusterID);
-            if (state.curCluster?.clusterID && !isExit) {
+            const exist = state.cluster.clusterList.some(item => item.clusterID === state.curCluster?.clusterID);
+            if (state.curCluster?.clusterID && !exist) {
               $store.commit('updateCurCluster');
+            }
+          },
+        },
+        {
+          type: 'updateDashboardViewList',
+          effect: (state, $store) => {
+            const exist = state.dashboardViewList.find(item => item.id === state.dashboardViewID);
+            if (!exist) {
+              $store.commit('updateDashboardViewID', undefined);
             }
           },
         },
@@ -122,13 +154,21 @@ const store = new Vuex.Store<{
     featureFlags: {},
     curProject: {},
     curCluster: {},
-    curSideMenu: {},
+    curNav: {},
     curNamespace: '',
     user: {},
     openSideMenu: true, // 菜单是否折叠
     isEn: lang === 'en-US', // todo 废弃
     crdInstanceList: [], // todo 放入对应的module中
+    dashboardViewID: '', // 默认视图ID
+    dashboardViewList: [], // 视图列表
+    tmpViewData: {},
+    editViewData: {},
+    viewNsList: [],
     globalPageSize: 10,
+    hideSharedCluster: true,
+    isViewEditable: false,
+    isViewConfigShow: false,
   } as any,
   // 公共 getters
   getters: {
@@ -195,14 +235,39 @@ const store = new Vuex.Store<{
     updateCrdInstanceList(state, data) {
       state.crdInstanceList = data;
     },
-    updateCurSideMenu(state, data) {
-      state.curSideMenu = data;
+    // 更新当前一级导航信息
+    updateCurNav(state, data) {
+      state.curNav = data;
     },
     updateFeatureFlags(state, data) {
       state.featureFlags = data;
     },
+    updateDashboardViewID(state, ID) {
+      state.dashboardViewID = ID;
+    },
+    updateDashboardViewList(state, data) {
+      state.dashboardViewList = data || [];
+    },
     updatePageSize(state, size = 10) {
       state.globalPageSize = size;
+    },
+    updateHideClusterStatus(state, data) {
+      state.hideSharedCluster = data;
+    },
+    updateTmpViewData(state, data) {
+      state.tmpViewData = data;
+    },
+    updateEditViewData(state, data) {
+      state.editViewData = data;
+    },
+    updateViewEditable(state, data) {
+      state.isViewEditable = data;
+    },
+    updateViewConfigStatus(state, data) {
+      state.isViewConfigShow = !!data;
+    },
+    updateViewNsList(state, data = []) {
+      state.viewNsList = data;
     },
   },
   actions: {

@@ -14,10 +14,14 @@ export interface IConfigVersion {
   spec: {
     name: string;
     memo: string;
+    deprecated: boolean;
+    publish_num: number;
   };
   status: {
     publish_status: string;
     released_groups: IReleasedGroup[];
+    fully_released: boolean;
+    fully_release?: boolean;
   };
 }
 
@@ -55,6 +59,7 @@ export interface IConfigItem {
     update_at: string;
   };
   file_state: string;
+  is_conflict: boolean;
 }
 
 // 配置文件详情（包含签名信息）
@@ -77,13 +82,16 @@ export interface IConfigEditParams {
   user?: string;
   user_group?: string;
   privilege?: string;
+  fileAP?: string;
+  revision_name?: string;
 }
 
 // kv配置文件编辑表单参数
 export interface IConfigKvEditParams {
-  key: string,
-  kv_type: string,
-  value: string,
+  key: string;
+  kv_type: string;
+  value: string;
+  memo: string;
 }
 
 // 文件配置概览内容
@@ -120,10 +128,12 @@ export interface IReleasedGroup {
   mode: string;
   name: string;
   new_selector: {
-    labels_and: IGroupRuleItem[];
+    labels_and?: IGroupRuleItem[];
+    labels_or?: IGroupRuleItem[];
   };
   old_selector: {
-    labels_and: IGroupRuleItem[];
+    labels_and?: IGroupRuleItem[];
+    labels_or?: IGroupRuleItem[];
   };
   uid: string;
 }
@@ -168,6 +178,7 @@ export interface IBoundTemplateDetail {
   byte_size: string;
   creator: string;
   create_at: string;
+  is_conflict: boolean;
 }
 
 // 配置文件对比选中项
@@ -202,12 +213,17 @@ export interface IConfigKvItem {
   key: string;
   kv_type: string;
   value: string;
+  memo: string;
 }
 
 // 单个kv配置详情
 export interface IConfigKvType {
   id: number;
   spec: IConfigKvItem;
+  content_spec: {
+    signature: string;
+    byte_size: string;
+  };
   kv_state: string;
   attachment: {
     biz_id: number;

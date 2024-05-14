@@ -26,6 +26,7 @@ import (
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/azure/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 )
 
@@ -78,7 +79,7 @@ func CreateCloudNodeGroupTask(taskID string, stepName string) error {
 		return retErr
 	}
 
-	// 设置节点密码、购买系统盘、数据盘
+	// 设置节点密码、购买系统盘、数据盘等
 	if err = setVmSets(ctx, dependInfo); err != nil {
 		blog.Errorf("CreateCloudNodeGroupTask[%s]: call setVmSets[%s] api in task %s step %s failed, %s",
 			taskID, nodeGroupID, taskID, stepName, err.Error())
@@ -87,7 +88,7 @@ func CreateCloudNodeGroupTask(taskID string, stepName string) error {
 		return retErr
 	}
 
-	// update nodeGorup cloudNodeGroupID
+	// update nodeGroup cloudNodeGroupID
 	if err = updateCloudNodeGroupIDInNodeGroup(nodeGroupID, dependInfo.NodeGroup); err != nil {
 		blog.Errorf("CreateCloudNodeGroupTask[%s]: updateCloudNodeGroupIDInNodeGroup[%s] in task %s step %s failed, %s",
 			taskID, nodeGroupID, taskID, stepName, err.Error())
@@ -102,7 +103,6 @@ func CreateCloudNodeGroupTask(taskID string, stepName string) error {
 	if state.Task.CommonParams == nil { // update response information to task common params
 		state.Task.CommonParams = make(map[string]string)
 	}
-	state.Task.CommonParams["CloudNodeGroupID"] = dependInfo.NodeGroup.CloudNodeGroupID
 
 	if err = state.UpdateStepSucc(start, stepName); err != nil { // update step
 		return errors.Wrapf(err, "CreateCloudNodeGroupTask[%s] task %s %s update to storage fatal",
@@ -194,7 +194,9 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 func createAgentPool(rootCtx context.Context, info *cloudprovider.CloudDependBasicInfo) error {
 	group := info.NodeGroup
 	cluster := info.Cluster
+
 	taskID := cloudprovider.GetTaskIDFromContext(rootCtx)
+
 	// new Azure client
 	client, err := api.NewAksServiceImplWithCommonOption(info.CmOption)
 	if err != nil {
@@ -213,7 +215,9 @@ func createAgentPool(rootCtx context.Context, info *cloudprovider.CloudDependBas
 	if err = client.NodeGroupToAgentPool(group, pool); err != nil {
 		return errors.Wrapf(err, "createAgentPool[%s]: call NodeGroupToAgentPool failed", taskID)
 	}
-	if _, err = client.CreatePoolAndReturn(ctx, pool, cluster.SystemID, group.CloudNodeGroupID); err != nil {
+	_, err = client.CreatePoolAndReturn(ctx, pool, cloudprovider.GetClusterResourceGroup(info.Cluster),
+		cluster.SystemID, group.CloudNodeGroupID)
+	if err != nil {
 		return errors.Wrapf(err, "createAgentPool[%s]: call CreatePoolAndReturn[%s][%s] falied", taskID,
 			cluster.ClusterID, group.CloudNodeGroupID)
 	}
@@ -249,13 +253,15 @@ func setVmSets(rootCtx context.Context, info *cloudprovider.CloudDependBasicInfo
 		return errors.Wrapf(err, "call NewAgentPoolClientWithOpt[%s] falied", taskID)
 	}
 
-	nodeGroupResource, ok := info.Cluster.ExtraInfo[api.NodeResourceGroup]
+	nodeGroupResource, ok := info.Cluster.ExtraInfo[common.NodeResourceGroup]
 	if !ok {
 		ctx, cancel := context.WithTimeout(rootCtx, 30*time.Second)
 		defer cancel()
 
 		var cloudCluster *armcontainerservice.ManagedCluster
-		cloudCluster, err = client.GetCluster(ctx, info)
+
+		clsResourceGroup := cloudprovider.GetClusterResourceGroup(info.Cluster)
+		cloudCluster, err = client.GetCluster(ctx, info, clsResourceGroup)
 		if err != nil {
 			return errors.Wrapf(err, "createAgentPool[%s]: call GetCluster falied", taskID)
 		}
@@ -270,19 +276,33 @@ func setVmSets(rootCtx context.Context, info *cloudprovider.CloudDependBasicInfo
 			cluster.ClusterID, group.CloudNodeGroupID)
 	}
 
+	group.AutoScaling.AutoScalingName = api.RegexpSetNodeGroupResourcesName(set)
+	// 设置虚拟规模集网络
+	err = api.SetVmSetNetWork(ctx, client, group, set)
+	if err != nil {
+		return errors.Wrapf(err, "createAgentPool[%s]: call SetVmSetNetWork[%s][%s] falied", taskID,
+			cluster.ClusterID, group.CloudNodeGroupID)
+	}
 	// 设置虚拟规模密码
-	if len(lc.InitLoginUsername) != 0 && len(lc.InitLoginPassword) != 0 {
-		api.SetVmSetPasswd(group, set)
-	}
-	// 买系统盘
-	if lc.SystemDisk != nil {
-		api.BuySystemDisk(group, set)
-	}
+	api.SetVmSetPasswd(group, set)
+	// 设置虚拟规模SSH免密登录公钥
+	api.SetVmSetSSHPublicKey(group, set)
+
+	// 已经创建了系统盘, 无需再购买
+	// if lc.SystemDisk != nil {
+	//	 api.BuySystemDisk(group, set)
+	// }
+
 	// 买数据盘
 	if len(lc.DataDisks) != 0 {
 		api.BuyDataDisk(group, set)
 	}
+	// 用户数据
+	api.SetUserData(group, set)
 	api.SetImageReferenceNull(set)
+
+	// 设置自定义脚本会导致VM加入集群失败!!!
+	// api.SetVmSetCustomScript(group, set)
 
 	ctx, cancel = context.WithTimeout(rootCtx, 5*time.Minute)
 	defer cancel()
@@ -343,7 +363,8 @@ func checkNodeGroup(rootCtx context.Context, info *cloudprovider.CloudDependBasi
 	ctx, cancel := context.WithTimeout(rootCtx, 30*time.Second)
 	defer cancel()
 	err = loop.LoopDoFunc(ctx, func() error {
-		pool, err = client.GetPoolAndReturn(ctx, cluster.SystemID, group.CloudNodeGroupID)
+		pool, err = client.GetPoolAndReturn(ctx, cloudprovider.GetClusterResourceGroup(info.Cluster),
+			cluster.SystemID, group.CloudNodeGroupID)
 		if err != nil {
 			blog.Errorf("checkNodeGroup[%s] poll GetAgentPool[%s][%s] failed: %v", taskID, cluster.SystemID,
 				group.CloudNodeGroupID, err)
@@ -391,9 +412,9 @@ func cloudDataToNodeGroup(rootCtx context.Context, pool *armcontainerservice.Age
 	}
 
 	// 尝试获取nodeGroupResource
-	nodeGroupResource, ok := info.Cluster.ExtraInfo[api.NodeResourceGroup]
+	nodeGroupResource, ok := info.Cluster.ExtraInfo[common.NodeResourceGroup]
 	if !ok {
-		cloudCluster, err := client.GetCluster(ctx, info)
+		cloudCluster, err := client.GetCluster(ctx, info, nodeGroupResource)
 		if err != nil {
 			return errors.Wrapf(err, "checkNodeGroup[%s]: call GetCluster falied", taskID)
 		}
@@ -411,23 +432,10 @@ func cloudDataToNodeGroup(rootCtx context.Context, pool *armcontainerservice.Age
 	_ = client.SetToNodeGroup(set, group)
 	_ = client.AgentPoolToNodeGroup(pool, group)
 	syncSku(rootCtx, client, group)
-	syncSecurityGroups(rootCtx, client, group)
 	setModuleInfo(group, cluster.BusinessID)
 	group.ClusterID = cluster.ClusterID
 	// 镜像信息/dockerGraphPath节点运行时/runtime(运行时版本信息，RunTimeInfo)
 	return nil
-}
-
-func syncSecurityGroups(ctx context.Context, client api.AksService, group *proto.NodeGroup) {
-	virtualNetworks, err := client.GetVirtualNetworks(ctx, group.AutoScaling.AutoScalingName, group.AutoScaling.VpcID)
-	if err != nil {
-		return
-	}
-	securityGroups := api.ParseSecurityGroupsInVpc(virtualNetworks)
-	if len(securityGroups) == 0 {
-		return
-	}
-	group.LaunchTemplate.SecurityGroupIDs = securityGroups
 }
 
 func syncSku(rootCtx context.Context, client api.AksService, group *proto.NodeGroup) {

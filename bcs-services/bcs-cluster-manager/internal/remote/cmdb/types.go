@@ -49,8 +49,9 @@ const (
 
 const (
 	// host field info
-	fieldCloudID     = "bk_cloud_id"
-	fieldHostIP      = "bk_host_innerip"
+	fieldCloudID = "bk_cloud_id"
+	// FieldHostIP field host ip
+	FieldHostIP      = "bk_host_innerip"
 	fieldHostIPv6    = "bk_host_innerip_v6"
 	fieldHostOutIP   = "bk_host_outerip"
 	fieldHostOutIPV6 = "bk_host_outerip_v6"
@@ -58,7 +59,8 @@ const (
 	fieldHostName    = "bk_host_name" // 主机名称
 	fieldOsType      = "bk_os_type"   // 操作系统类型
 	fieldOsName      = "bk_os_name"   // 操作系统名称
-	fieldAssetId     = "bk_asset_id"  // 固资号ID
+	// FieldAssetId 固资号ID
+	FieldAssetId = "bk_asset_id"
 
 	fieldDeviceType  = "bk_svr_device_cls_name"
 	fieldIDCCityName = "idc_city_name"
@@ -89,12 +91,12 @@ const (
 )
 
 var (
-	fieldHostDetailInfo = []string{fieldCloudID, fieldHostIP, fieldHostIPv6, fieldHostOutIP, fieldHostOutIPV6,
+	fieldHostDetailInfo = []string{fieldCloudID, FieldHostIP, fieldHostIPv6, fieldHostOutIP, fieldHostOutIPV6,
 		fieldHostID, fieldDeviceType, fieldIDCCityName, fieldIDCCityID, fieldDeviceClass, fieldHostCPU, fieldCpuModule,
 		fieldHostMem, fieldHostDisk, fieldOperator, fieldBakOperator, fieldRack, fieldIDCName, fieldSubZoneID,
-		fieldIspName, fieldAgentId, fieldAssetId}
+		fieldIspName, fieldAgentId, FieldAssetId}
 
-	fieldHostIPSelectorInfo = []string{fieldHostIP, fieldHostIPv6, fieldCloudID, fieldHostName, fieldOsType,
+	fieldHostIPSelectorInfo = []string{FieldHostIP, fieldHostIPv6, fieldCloudID, fieldHostName, fieldOsType,
 		fieldOsName, fieldHostID, fieldOperator, fieldBakOperator, fieldAgentId}
 )
 
@@ -241,14 +243,14 @@ type ListHostsWithoutBizRequest struct {
 	Fields             []string            `json:"fields"`
 }
 
-func buildFilterConditionByInnerIP(ips []string) *HostPropertyFilter {
+func buildFilterConditionByStrValues(field string, values []string) *HostPropertyFilter {
 	return &HostPropertyFilter{
 		Condition: and.String(),
 		Rules: []Rule{
 			{
-				Field:    fieldHostIP,
+				Field:    field,
 				Operator: "in",
-				Value:    ips,
+				Value:    values,
 			},
 		},
 	}
@@ -304,14 +306,23 @@ type HostDetailData struct {
 
 const (
 	keyBizID          = "BsiId"
+	keySvrIP          = "SvrIp"
 	methodBusiness    = "Business"
 	methodServer      = "Server"
 	methodBusinessRaw = "BusinessRaw"
 )
 
 var (
-	fieldBizInfo = []string{"BsiId", "BsipId", "BsiProductName", "BsiProductId", "BsiName", "BsiL1", "BsiL2"}
+	fieldBizInfo    = []string{"BsiId", "BsipId", "BsiProductName", "BsiProductId", "BsiName", "BsiL1", "BsiL2"}
+	fieldServerInfo = []string{"SvrOperator", "SvrBakOperator", "SvrIp", "SvrAssetId"}
 )
+
+// PagingInfo page info
+type PagingInfo struct {
+	StartIndex int `json:"start_index"`
+	PageSize   int `json:"page_size"`
+	TotalRows  int `json:"return_total_rows"`
+}
 
 // QueryBusinessInfoReq query business request
 type QueryBusinessInfoReq struct {
@@ -346,6 +357,36 @@ type Business struct {
 	// 一级/二级业务ID
 	BsiL1 int `json:"BsiL1"`
 	BsiL2 int `json:"BsiL2"`
+}
+
+// GetAssetIdsByIpsReq query server request
+type GetAssetIdsByIpsReq struct {
+	Method    string                 `json:"method"`
+	ReqColumn []string               `json:"req_column"`
+	KeyValues map[string]interface{} `json:"key_values"`
+	PageInfo  PagingInfo             `json:"paging_info"`
+}
+
+// GetAssetIdsByIpsResp query server resp
+type GetAssetIdsByIpsResp struct {
+	Code      string     `json:"code"`
+	Message   string     `json:"message"`
+	Result    bool       `json:"result"`
+	RequestID string     `json:"request_id"`
+	Data      ServerInfo `json:"data"`
+}
+
+// ServerInfo server resp
+type ServerInfo struct {
+	Data []Server `json:"data"`
+}
+
+// Server server info
+type Server struct {
+	ServerAssetId string `json:"SvrAssetId"`
+	ServerIp      string `json:"SvrIp"`
+	SvrOperator   string `json:"SvrOperator"`
+	BakOperator   string `json:"SvrBakOperator"`
 }
 
 // BizInfo business id info
@@ -542,4 +583,27 @@ type SearchCloudAreaInfo struct {
 	SupplierAccount string `json:"bk_supplier_account"`
 	CreateTime      string `json:"create_time"`
 	LastTime        string `json:"last_time"`
+}
+
+// AddHostFromCmpyReq add host from cmpy
+type AddHostFromCmpyReq struct {
+	SvrIds   []string `json:"svr_ids,omitempty"`
+	AssetIds []string `json:"asset_ids,omitempty"`
+	InnerIps []string `json:"inner_ips,omitempty"`
+}
+
+// AddHostFromCmpyResp resp
+type AddHostFromCmpyResp struct {
+	BaseResponse
+}
+
+// SyncHostInfoFromCmpyReq sync host info from cmpy
+type SyncHostInfoFromCmpyReq struct {
+	BkHostIds []int64 `json:"bk_host_ids"`
+	BkCloudId int     `json:"bk_cloud_id"`
+}
+
+// SyncHostInfoFromCmpyResp resp
+type SyncHostInfoFromCmpyResp struct {
+	BaseResponse
 }

@@ -2,9 +2,89 @@
     "language": "en",
     "messages": [
         {
+            "id": "请先输入上传路径",
+            "message": "请先输入上传路径",
+            "translation": "Please enter the upload path first"
+        },
+        {
+            "id": "目标路径不存在",
+            "message": "目标路径不存在",
+            "translation": "Destination path does not exist"
+        },
+        {
+            "id": "解析上传文件失败",
+            "message": "解析上传文件失败",
+            "translation": "Failed to parse uploaded file"
+        },
+        {
+            "id": "获取pod信息失败",
+            "message": "获取pod信息失败",
+            "translation": "Failed to get pod information"
+        },
+        {
+            "id": "执行上传命令失败",
+            "message": "执行上传命令失败",
+            "translation": "Failed to execute upload command"
+        },
+        {
+            "id": "文件上传失败",
+            "message": "文件上传失败",
+            "translation": "File upload failed"
+        },
+        {
+            "id": "文件上传成功",
+            "message": "文件上传成功",
+            "translation": "File upload successful"
+        },
+        {
+            "id": "复制文件流失败",
+            "message": "复制文件流失败",
+            "translation": "Failed to copy file stream"
+        },
+        {
+            "id": "目标文件不存在",
+            "message": "目标文件不存在",
+            "translation": "Target file does not exist"
+        },
+        {
+            "id": "暂不支持文件夹下载",
+            "message": "暂不支持文件夹下载",
+            "translation": "Download directory is not supported"
+        },
+        {
+            "id": "文件不能超过{FileSizeLimits}MB",
+            "message": "文件不能超过{FileSizeLimits}MB",
+            "translation": "Files cannot exceed {FileSizeLimits}MB",
+            "placeholders": [
+                {
+                    "id": "FileSizeLimits",
+                    "string": "%[1]d",
+                    "type": "int",
+                    "underlyingType": "int",
+                    "argNum": 1,
+                    "expr": "FileSizeLimits"
+                }
+            ]
+        },
+        {
             "id": "项目不正确",
             "message": "项目不正确",
             "translation": "Project_id Incorrect"
+        },
+        {
+            "id": "{Err}",
+            "message": "{Err}",
+            "translation": "{Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
         },
         {
             "id": "获取集群成功",
@@ -32,9 +112,14 @@
             "translation": "Get session successful"
         },
         {
+            "id": "session_id不合法或已经过期",
+            "message": "session_id不合法或已经过期",
+            "translation": "session_id is incorrect or has expired"
+        },
+        {
             "id": "请求参数错误: {Err}",
             "message": "请求参数错误: {Err}",
-            "translation": "",
+            "translation": "Request Params Error: {Err}",
             "placeholders": [
                 {
                     "id": "Err",
@@ -45,6 +130,146 @@
                     "expr": "err"
                 }
             ]
+        },
+        {
+            "id": "请求参数错误, command not valid: {Err}",
+            "message": "请求参数错误, command not valid: {Err}",
+            "translation": "Request Params Error, command not valid: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "服务请求失败: {Err}",
+            "message": "服务请求失败: {Err}",
+            "translation": "Service request failed: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "服务请求成功",
+            "message": "服务请求成功",
+            "translation": "Service request successful"
+        },
+        {
+            "id": "用户没有设置命令延时",
+            "message": "用户没有设置命令延时",
+            "translation": "User did not set command delay",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "参数不合法",
+            "message": "参数不合法",
+            "translation": "Invalid parameter"
+        },
+        {
+            "id": "session不合法",
+            "message": "session不合法",
+            "translation": "Invalid session"
+        },
+        {
+            "id": "初始化session失败",
+            "message": "初始化session失败",
+            "translation": "Init session failed"
+        },
+        {
+            "id": "BCS Console 服务端连接断开，请重新登录",
+            "message": "BCS Console 服务端连接断开，请重新登录",
+            "translation": "The BCS Console server is disconnected, please login again"
+        },
+        {
+            "id": "支持常用Bash快捷键; Windows下Ctrl-W为关闭窗口快捷键, 请使用Alt-W代替; 使用Alt-Num切换Tab",
+            "message": "支持常用Bash快捷键; Windows下Ctrl-W为关闭窗口快捷键, 请使用Alt-W代替; 使用Alt-Num切换Tab",
+            "translation": "Support common Bash shortcuts; Ctrl-W in Windows is to close the window shortcut, please use Alt-W instead; use Alt-Num to switch Tab"
+        },
+        {
+            "id": "连接已断开",
+            "message": "连接已断开",
+            "translation": "The connection is disconnected"
+        },
+        {
+            "id": "支持常用Bash快捷键; Windows下Ctrl-W为关闭窗口快捷键, 请使用Alt-W代替",
+            "message": "支持常用Bash快捷键; Windows下Ctrl-W为关闭窗口快捷键, 请使用Alt-W代替",
+            "translation": "Support common Bash shortcuts; Ctrl-W under Windows is the shortcut to close, please use Alt-W instead"
+        },
+        {
+            "id": "BCS Console 已经{Minutes}分钟无操作",
+            "message": "BCS Console 已经{Minutes}分钟无操作",
+            "translation": "BCS Console has no operation for {Minutes} minutes",
+            "placeholders": [
+                {
+                    "id": "Minutes",
+                    "string": "%[1]d",
+                    "type": "int64",
+                    "underlyingType": "int64",
+                    "argNum": 1,
+                    "expr": "int64(idleTime.Minutes())"
+                }
+            ]
+        },
+        {
+            "id": "BCS Console 使用已经超过{1440}小时，请重新登录",
+            "message": "BCS Console 使用已经超过{1440}小时，请重新登录",
+            "translation": "BCS console has been used for more than {1440} hours. Please login again",
+            "placeholders": [
+                {
+                    "id": "1440",
+                    "string": "%[1]d",
+                    "type": "int",
+                    "underlyingType": "int",
+                    "argNum": 1,
+                    "expr": "1440"
+                }
+            ]
+        },
+        {
+            "id": "zh",
+            "message": "zh",
+            "translation": "en"
+        },
+        {
+            "id": "下载",
+            "message": "下载",
+            "translation": "Download"
+        },
+        {
+            "id": "project_id is required",
+            "message": "project_id is required",
+            "translation": "project_id is required"
+        },
+        {
+            "id": "项目或者集群Id不正确",
+            "message": "项目或者集群Id不正确",
+            "translation": "ProjectId or ClusterId Incorrect"
+        },
+        {
+            "id": "没有权限",
+            "message": "没有权限",
+            "translation": "No permission"
         }
     ]
 }

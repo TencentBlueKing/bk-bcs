@@ -1,31 +1,26 @@
 /*
- * Tencent is pleased to support the open source community by making Blueking Container Service available.,
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
  * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 
-// Package clustercheck
+// Package clustercheck xxx
 package clustercheck
 
 import (
 	"context"
 	"fmt"
-	"k8s.io/client-go/kubernetes"
 	"os"
 	"runtime/debug"
 	"strings"
 	"sync"
 	"time"
-
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/k8s"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metric_manager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin_manager"
 
 	"github.com/prometheus/client_golang/prometheus"
 	v1 "k8s.io/api/core/v1"
@@ -34,9 +29,18 @@ import (
 	"k8s.io/apimachinery/pkg/util/json"
 	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/restmapper"
 	"k8s.io/klog"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/k8s"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metric_manager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin_manager"
+)
+
+const (
+	configError = "配置失败"
 )
 
 // Plugin xxx
@@ -44,14 +48,18 @@ type Plugin struct {
 	stopChan       chan int
 	opt            *Options
 	checkLock      sync.Mutex
-	testYamlString string
+	testYamlString string // nolint unused
 }
 
 var (
+	// NewGaugeVec creates a new GaugeVec based on the provided GaugeOpts and
+	// partitioned by the given label names.
 	clusterAvailability = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "cluster_availability",
 		Help: "cluster_availability, 1 means OK",
 	}, []string{"target", "target_biz", "status"})
+	// NewGaugeVec creates a new GaugeVec based on the provided GaugeOpts and
+	// partitioned by the given label names.
 	clusterCheckDuration = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "cluster_check_duration_seconds",
 		Help: "cluster_check_duration_seconds, 1 means OK",
@@ -96,11 +104,11 @@ func (p *Plugin) Setup(configFilePath string) error {
 		objectMap := unstructuredObj.Object
 		updateNestedMap(objectMap, []string{"spec", "template", "metadata", "labels", "bcs-cluster-reporter"},
 			"bcs-cluster-reporter")
-		//updateNestedMap(objectMap, []string{"spec", "selector", "matchLabels", "bcs-cluster-reporter"},
-		//	"bcs-cluster-reporter")
-		//updateNestedMap(objectMap, []string{"spec", "selector", "matchLabels", "bcs-cluster-reporter"},
-		//	"bcs-cluster-reporter")
-		//klog.Info(objectMap)
+		// updateNestedMap(objectMap, []string{"spec", "selector", "matchLabels", "bcs-cluster-reporter"},
+		//      "bcs-cluster-reporter")
+		// updateNestedMap(objectMap, []string{"spec", "selector", "matchLabels", "bcs-cluster-reporter"},
+		//      "bcs-cluster-reporter")
+		// klog.Info(objectMap)
 		unstructuredObj.SetUnstructuredContent(objectMap)
 	default:
 		klog.Fatalf("workload %s type is %s, not supported, please use job, deployment, replicaset",
@@ -151,6 +159,7 @@ func (p *Plugin) Name() string {
 func int64Ptr(i int64) *int64 { return &i }
 
 // Check xxx
+// nolint funlen
 func (p *Plugin) Check() {
 	start := time.Now()
 	p.checkLock.Lock()
@@ -167,11 +176,6 @@ func (p *Plugin) Check() {
 	// 根据internal来调整超时时间的长短
 	interval := p.opt.Interval
 
-	namespace := unstructuredObj.GetNamespace()
-	if namespace == "" {
-		namespace = "default"
-	}
-
 	wg := sync.WaitGroup{}
 	clusterChecktGaugeVecSetList := make([]*metric_manager.GaugeVecSet, 0, 0)
 	clusterCheckDurationGaugeVecSetList := make([]*metric_manager.GaugeVecSet, 0, 0)
@@ -186,6 +190,7 @@ func (p *Plugin) Check() {
 			defer func() {
 				if r := recover(); r != nil {
 					klog.Errorf("%s clustercheck failed: %s, stack: %v\n", clusterId, r, string(debug.Stack()))
+					// GetClientsetByConfig cluster k8s client
 					clientSet1, _ := k8s.GetClientsetByConfig(config)
 					var responseContentType string
 					body, _ := clientSet1.RESTClient().Get().
@@ -232,21 +237,21 @@ func (p *Plugin) Check() {
 						Help: "cluster_check_duration_seconds",
 					}, []string{"target", "target_biz", "step"}))
 
-				for index, _ := range clusterAvailabilityMap[clusterId] {
+				for index := range clusterAvailabilityMap[clusterId] {
 					metric_manager.MM.RegisterSeperatedMetric(clusterId, clusterAvailabilityMap[clusterId][index])
 				}
 			}
 			clusterAvailabilityMapLock.Unlock()
 
 			metric_manager.SetMetric(clusterAvailabilityMap[clusterId][0], []*metric_manager.GaugeVecSet{
-				&metric_manager.GaugeVecSet{Labels: []string{clusterId, clusterbiz, status}, Value: float64(1)},
+				{Labels: []string{clusterId, clusterbiz, status}, Value: float64(1)},
 			})
 			metric_manager.SetMetric(clusterAvailabilityMap[clusterId][1], []*metric_manager.GaugeVecSet{
-				&metric_manager.GaugeVecSet{
+				{
 					Labels: []string{clusterId, clusterbiz, "create_pod"}, Value: float64(workloadToPodCost) / 1000000000},
-				&metric_manager.GaugeVecSet{
+				{
 					Labels: []string{clusterId, clusterbiz, "schedule_pod"}, Value: float64(workloadToScheduleCost) / 1000000000},
-				&metric_manager.GaugeVecSet{
+				{
 					Labels: []string{clusterId, clusterbiz, "start_pod"}, Value: float64(worloadToRunningCost) / 1000000000},
 			})
 
@@ -262,7 +267,7 @@ func (p *Plugin) Check() {
 	metric_manager.SetMetric(clusterCheckDuration, clusterCheckDurationGaugeVecSetList)
 
 	// 去掉已经不存在的集群的指标
-	for clusterId, _ := range clusterAvailabilityMap {
+	for clusterId := range clusterAvailabilityMap {
 		deleted := true
 		for _, cluster := range plugin_manager.Pm.GetConfig().ClusterConfigs {
 			if clusterId == cluster.ClusterID {
@@ -276,13 +281,16 @@ func (p *Plugin) Check() {
 	}
 }
 
+// test ClusterByCreateUnstructuredObj
+// nolint funlen
 func testClusterByCreateUnstructuredObj(unstructuredObj *unstructured.Unstructured, config *rest.Config, status *string,
 	interval int, clusterID string) (
 	workloadToScheduleCost, workloadToPodCost, worloadToRunningCost time.Duration, err error) {
 	workloadToScheduleCost = time.Duration(0)
 	workloadToPodCost = time.Duration(0)
 	worloadToRunningCost = time.Duration(0)
-	ctx, _ := context.WithTimeout(context.Background(), time.Duration(interval/6)*time.Second)
+	ctx, cancelFunc := context.WithTimeout(context.Background(), time.Duration(interval/6)*time.Second)
+	defer cancelFunc()
 	namespace := unstructuredObj.GetNamespace()
 	if namespace == "" {
 		namespace = "default"
@@ -290,13 +298,13 @@ func testClusterByCreateUnstructuredObj(unstructuredObj *unstructured.Unstructur
 
 	clientSet, err := k8s.GetClientsetByConfig(config)
 	if err != nil {
-		*status = "配置失败"
+		*status = configError
 		err = fmt.Errorf("GetClientsetByConfig failed: %s", err.Error())
 		return
 	}
 
 	if clientSet == nil {
-		*status = "配置失败"
+		*status = configError
 		err = fmt.Errorf("Get clientSet failed %s", err.Error())
 		return
 	}
@@ -328,30 +336,33 @@ func testClusterByCreateUnstructuredObj(unstructuredObj *unstructured.Unstructur
 		return
 	}
 
+	// Returns copy of current discovery client that will only
+	// receive the legacy discovery format, or pointer to current
+	// discovery client if it does not support legacy-only discovery.
 	discoveryInterface := clientSet.Discovery().WithLegacy()
 	if discoveryInterface == nil {
-		*status = "配置失败"
+		*status = configError
 		err = fmt.Errorf("Get discoveryInterface failed %s", err.Error())
 		return
 	}
 	// discoveryInterface.ServerGroupsAndResources()
 	groupResource, err := restmapper.GetAPIGroupResources(discoveryInterface)
 	if err != nil {
-		*status = "配置失败"
+		*status = configError
 		err = fmt.Errorf("GetAPIGroupResources failed %s", err.Error())
 	}
 	mapper := restmapper.NewDiscoveryRESTMapper(groupResource)
 	mapping, err := mapper.RESTMapping(clusterGVK.GroupKind(), clusterGVK.Version)
 	if err != nil {
-		*status = "配置失败"
+		*status = configError
 		err = fmt.Errorf("RESTMapping failed %s", err.Error())
 		return
 	}
 
 	dynamicConfig, err := dynamic.NewForConfig(config)
 	if err != nil {
-		*status = "配置失败"
-		err = fmt.Errorf("%s Create dynamicConfig %s", err.Error())
+		*status = configError
+		err = fmt.Errorf("create dynamicConfig %s", err.Error())
 		return
 	}
 	clusterUnstructuredObj.SetName("bcs-blackbox-job-" + time.Now().Format("150405"))
@@ -409,9 +420,11 @@ func testClusterByCreateUnstructuredObj(unstructuredObj *unstructured.Unstructur
 	*status, workloadToScheduleCost, workloadToPodCost, worloadToRunningCost, err =
 		getWatchStatus(clientSet, clusterUnstructuredObj, dri, namespace, interval, clusterID, context.Background())
 
-	return
+	return // nolint
 }
 
+// get Watch Status
+// nolint
 func getWatchStatus(clientSet *kubernetes.Clientset, clusterUnstructuredObj *unstructured.Unstructured,
 	dri dynamic.ResourceInterface, namespace string, interval int, clusterID string, ctx context.Context) (status string,
 	workloadToScheduleCost, workloadToPodCost, worloadToRunningCost time.Duration, err error) {
@@ -518,7 +531,9 @@ func getWatchStatus(clientSet *kubernetes.Clientset, clusterUnstructuredObj *uns
 	}
 }
 
-func getPodLifeCycleTimePoint(pod *v1.Pod, createStartTime time.Time) (workloadToScheduleCost, worloadToRunningCost time.Duration) {
+// get Pod Life Cycle Time Point
+func getPodLifeCycleTimePoint(
+	pod *v1.Pod, createStartTime time.Time) (workloadToScheduleCost, worloadToRunningCost time.Duration) {
 	workloadToScheduleCost = 0
 	worloadToRunningCost = 0
 	for _, condition := range pod.Status.Conditions {
@@ -542,12 +557,13 @@ func getPodLifeCycleTimePoint(pod *v1.Pod, createStartTime time.Time) (workloadT
 		if worloadToRunningCost == 0 {
 			worloadToRunningCost = time.Since(createStartTime)
 		}
-		return
+		return workloadToScheduleCost, worloadToRunningCost
 	}
 
-	return
+	return workloadToScheduleCost, worloadToRunningCost
 }
 
+// update Nested Map
 func updateNestedMap(obj map[string]interface{}, keyPath []string, newValue interface{}) {
 	if len(keyPath) == 1 {
 		obj[keyPath[0]] = newValue

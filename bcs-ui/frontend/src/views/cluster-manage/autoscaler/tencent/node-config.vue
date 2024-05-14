@@ -25,6 +25,62 @@
           :desc="$t('cluster.ca.nodePool.create.image.desc')">
           <bcs-input disabled :value="clusterOS"></bcs-input>
         </bk-form-item>
+        <!-- 计费模式 -->
+        <bk-form-item
+          :label="$t('tke.label.chargeType.text')"
+          :desc="{
+            allowHTML: true,
+            content: '#chargeDesc',
+          }"
+          property="launchTemplate.instanceChargeType"
+          error-display-type="normal"
+          required>
+          <bk-radio-group
+            class="inline-flex items-center h-[32px]"
+            v-model="nodePoolConfig.launchTemplate.instanceChargeType"
+            :disabled="isEdit"
+            @change="handleInstanceChargeTypeChange">
+            <bk-radio value="PREPAID" :disabled="isEdit">
+              {{ $t('tke.label.chargeType.prepaid') }}
+            </bk-radio>
+            <bk-radio value="POSTPAID_BY_HOUR" :disabled="isEdit">
+              {{ $t('tke.label.chargeType.postpaid_by_hour') }}
+            </bk-radio>
+            <bk-link
+              theme="primary"
+              class="ml-[30px]"
+              href="https://cloud.tencent.com/document/product/213/2180"
+              target="_blank">
+              <i class="bcs-icon bcs-icon-fenxiang mr-[2px]"></i>
+              {{ $t('tke.button.chargeTypeDiff') }}
+            </bk-link>
+          </bk-radio-group>
+          <p
+            class="text-[#979BA5] leading-4 mt-[4px] text-[12px]"
+            v-if="nodePoolConfig.launchTemplate.instanceChargeType === 'PREPAID'">
+            {{ $t('tke.tips.prepaidOfCA') }}
+          </p>
+          <div id="chargeDesc">
+            <div>{{ $t('tke.label.chargeType.prepaidDesc', [$t('tke.label.chargeType.prepaid')]) }}</div>
+            <div>{{ $t('tke.label.chargeType.postpaid_by_hour_desc', [$t('tke.label.chargeType.postpaid_by_hour')]) }}</div>
+          </div>
+        </bk-form-item>
+        <template v-if="nodePoolConfig.launchTemplate.instanceChargeType === 'PREPAID' && nodePoolConfig.launchTemplate.charge">
+          <bk-form-item :label="$t('tke.label.period')">
+            <bcs-select :disabled="isEdit" :clearable="false" searchable v-model="nodePoolConfig.launchTemplate.charge.period">
+              <bcs-option v-for="item in periodList" :key="item.id" :id="item.id" :name="item.name"></bcs-option>
+            </bcs-select>
+          </bk-form-item>
+          <bk-form-item :label="$t('tke.label.autoRenewal.text')">
+            <bcs-checkbox
+              true-value="NOTIFY_AND_AUTO_RENEW"
+              false-value="NOTIFY_AND_MANUAL_RENEW"
+              v-model="nodePoolConfig.launchTemplate.charge.renewFlag">
+              {{ $t('tke.label.autoRenewal.desc') }}
+            </bcs-checkbox>
+          </bk-form-item>
+        </template>
+        <!-- 可用区 -->
         <bk-form-item
           :label="$t('cluster.ca.nodePool.create.az.title')"
           :desc="$t('cluster.ca.nodePool.create.az.desc')"
@@ -59,6 +115,7 @@
             </bcs-select>
           </div>
         </bk-form-item>
+        <!-- 机型 -->
         <bk-form-item :label="$t('cluster.ca.nodePool.create.instanceTypeConfig.title')">
           <div class="mb15" style="display: flex;">
             <div class="prefix-select">
@@ -107,8 +164,17 @@
             :row-class-name="instanceRowClass"
             @page-change="pageChange"
             @page-limit-change="pageSizeChange"
-            @row-click="handleCheckInstanceType">
-            <bcs-table-column :label="$t('generic.ipSelector.label.serverModel')" prop="typeName" show-overflow-tooltip>
+            @row-click="handleCheckInstanceType"
+            @filter-change="handleFilterChange"
+            @sort-change="handleSortChange">
+            <bcs-table-column
+              :label="$t('generic.ipSelector.label.serverModel')"
+              :filters="nodeTypeFilters"
+              :key="nodeTypeFilters.length"
+              column-key="typeName"
+              filter-multiple
+              prop="typeName"
+              show-overflow-tooltip>
               <template #default="{ row }">
                 <span v-bk-tooltips="{ disabled: row.status !== 'SOLD_OUT', content: $t('cluster.ca.nodePool.create.instanceTypeConfig.status.soldOut') }">
                   <bcs-radio
@@ -119,18 +185,27 @@
                 </span>
               </template>
             </bcs-table-column>
-            <bcs-table-column :label="$t('generic.label.specifications')" min-width="120" show-overflow-tooltip prop="nodeType"></bcs-table-column>
-            <bcs-table-column label="CPU" prop="cpu" width="80" align="right">
+            <bcs-table-column
+              :label="$t('generic.label.specifications')"
+              min-width="120"
+              show-overflow-tooltip
+              prop="nodeType">
+            </bcs-table-column>
+            <bcs-table-column label="CPU" prop="cpu" width="80" align="right" sortable>
               <template #default="{ row }">
                 <span>{{ `${row.cpu}${$t('units.suffix.cores')}` }}</span>
               </template>
             </bcs-table-column>
-            <bcs-table-column :label="$t('generic.label.mem')" prop="memory" width="80" align="right">
+            <bcs-table-column :label="$t('generic.label.mem')" prop="memory" width="80" align="right" sortable>
               <template #default="{ row }">
                 <span>{{ row.memory }}G</span>
               </template>
             </bcs-table-column>
-            <bcs-table-column :label="$t('cluster.ca.nodePool.create.instanceTypeConfig.label.configurationFee.text')" min-width="120" prop="unitPrice">
+            <bcs-table-column
+              :label="$t('cluster.ca.nodePool.create.instanceTypeConfig.label.configurationFee.text')"
+              min-width="120"
+              prop="unitPrice"
+              sortable>
               <template #default="{ row }">
                 {{ $t('cluster.ca.nodePool.create.instanceTypeConfig.label.configurationFee.unit', { price: row.unitPrice }) }}
               </template>
@@ -142,7 +217,7 @@
             </bcs-table-column>
           </bcs-table>
           <p class="text-[12px] text-[#ea3636]" v-if="!nodePoolConfig.launchTemplate.instanceType">{{ $t('generic.validate.required') }}</p>
-          <div class="mt25" style="display:flex;align-items:center;">
+          <div class="mt25 flex items-center">
             <div class="prefix-select">
               <span :class="['prefix', { disabled: isEdit }]">{{$t('cluster.ca.nodePool.create.instanceTypeConfig.disk.system')}}</span>
               <bcs-select
@@ -158,15 +233,18 @@
                 </bcs-option>
               </bcs-select>
             </div>
-            <bcs-select
+            <bk-input
               class="w-[88px] bg-[#fff] ml10"
+              type="number"
               :disabled="isEdit"
-              :clearable="false"
+              :min="50"
+              :max="1000"
               v-model="nodePoolConfig.launchTemplate.systemDisk.diskSize">
-              <bcs-option id="50" name="50"></bcs-option>
-              <bcs-option id="100" name="100"></bcs-option>
-            </bcs-select>
+            </bk-input>
             <span :class="['company', { disabled: isEdit }]">GB</span>
+            <p class="error-tips bcs-ellipsis ml-[6px] flex-1" v-if="nodePoolConfig.launchTemplate.systemDisk.diskSize % 10 !== 0">
+              {{$t('cluster.ca.nodePool.create.instanceTypeConfig.validate.systemDisk')}}
+            </p>
           </div>
           <div class="mt20">
             <bk-checkbox
@@ -431,6 +509,13 @@
               :key="securityGroup.securityGroupID"
               :id="securityGroup.securityGroupID"
               :name="securityGroup.securityGroupName">
+              <bcs-checkbox
+                :value="nodePoolConfig.launchTemplate.securityGroupIDs.includes(securityGroup.securityGroupID)">
+                <div class="flex items-center text-[12px]">
+                  <span>{{ securityGroup.securityGroupName }}</span>
+                  <span class="text-[#C4C6CC]">({{ securityGroup.securityGroupID }})</span>
+                </div>
+              </bcs-checkbox>
             </bcs-option>
           </bcs-select>
         </bk-form-item>
@@ -453,7 +538,7 @@
                 </bk-checkbox>
               </template>
             </bcs-table-column>
-            <bcs-table-column :label="$t('cluster.ca.nodePool.create.subnet.label.subnetName')" prop="subnetName"></bcs-table-column>
+            <bcs-table-column :label="$t('cluster.ca.nodePool.create.subnet.label.subnetName')" prop="subnetName" show-overflow-tooltip></bcs-table-column>
             <bcs-table-column :label="$t('cluster.ca.nodePool.create.az.title')" prop="zoneName" show-overflow-tooltip></bcs-table-column>
             <bcs-table-column :label="$t('cluster.ca.nodePool.create.subnet.label.remainIp')" prop="availableIPAddressCount" align="right"></bcs-table-column>
             <bcs-table-column :label="$t('cluster.ca.nodePool.create.subnet.label.unUsedReason.text')" show-overflow-tooltip>
@@ -465,7 +550,7 @@
           </bcs-table>
         </bk-form-item>
         <bk-form-item :label="$t('dashboard.workload.container.dataDir')">
-          <bcs-input :disabled="isEdit" v-model="nodePoolConfig.nodeTemplate.dockerGraphPath"></bcs-input>
+          <bcs-input disabled v-model="nodePoolConfig.nodeTemplate.dockerGraphPath"></bcs-input>
         </bk-form-item>
         <bk-form-item :label="$t('cluster.ca.nodePool.create.containerRuntime.title')">
           <bk-radio-group v-model="clusterAdvanceSettings.containerRuntime">
@@ -582,6 +667,8 @@ export default defineComponent({
         // 默认值
         isSecurityService: defaultValues.value.launchTemplate?.isSecurityService || true,
         isMonitorService: defaultValues.value.launchTemplate?.isMonitorService || true,
+        instanceChargeType: defaultValues.value.launchTemplate?.instanceChargeType || 'POSTPAID_BY_HOUR', // 计费模式
+        charge: defaultValues.value.launchTemplate?.charge,
       },
       nodeTemplate: {
         dataDisks: defaultValues.value.nodeTemplate?.dataDisks || [],
@@ -599,6 +686,13 @@ export default defineComponent({
     const nodePoolConfigRules = ref({
       // 镜像ID校验
       'launchTemplate.imageInfo.imageID': [
+        {
+          required: true,
+          message: $i18n.t('generic.validate.required'),
+          trigger: 'blur',
+        },
+      ],
+      'launchTemplate.instanceChargeType': [
         {
           required: true,
           message: $i18n.t('generic.validate.required'),
@@ -680,6 +774,27 @@ export default defineComponent({
       ],
     });
 
+    // 计费模式
+    const handleInstanceChargeTypeChange = (value) => {
+      if (value === 'PREPAID') {
+        nodePoolConfig.value.launchTemplate.charge = {
+          period: 1,
+          renewFlag: 'NOTIFY_AND_AUTO_RENEW',
+        };
+      } else if (value === 'POSTPAID_BY_HOUR') {
+        nodePoolConfig.value.launchTemplate.charge = null;
+      }
+    };
+    const periodList = ref([
+      ...[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map(month => ({
+        id: month,
+        name: $i18n.t('units.time.nMonths', [month]),
+      })),
+      ...[1, 2, 3].map(year => ({
+        id: year * 12,
+        name: $i18n.t('units.time.nYears', [year]),
+      })),
+    ]);
     // 可用区
     const showZoneList = ref(false);
     const zoneList = ref<any[]>([]);
@@ -724,6 +839,11 @@ export default defineComponent({
     };
 
     // 机型
+    const filters = ref<Record<string, string[]>>({});
+    const sortData = ref({
+      prop: '',
+      order: '',
+    });
     const instanceTypesLoading = ref(false);
     const instanceData = ref<any[]>([]);
     const instanceTypesList = computed(() => {
@@ -834,12 +954,52 @@ export default defineComponent({
       handleSetDefaultInstance();
       instanceTypesLoading.value = false;
     };
+    const filterInstanceList = computed(() => instanceTypesList.value
+      .sort((a, b) => {
+        // 排序
+        if (sortData.value.prop === 'cpu') {
+          return sortData.value.order === 'ascending' ? a.cpu - b.cpu : b.cpu - a.cpu;
+        }
+        if (sortData.value.prop === 'memory') {
+          return sortData.value.order === 'ascending' ? a.memory - b.memory : b.memory - a.memory;
+        }
+        if (sortData.value.prop === 'unitPrice') {
+          return sortData.value.order === 'ascending' ? a.unitPrice - b.unitPrice : b.unitPrice - a.unitPrice;
+        }
+        return 0;
+      }));
+    const nodeTypeFilters = computed(() => filterInstanceList.value
+      .reduce<Array<{text: string, value: string}>>((pre, item) => {
+      const exist = pre.find(data => data.value === item.typeName);
+      if (!exist) {
+        pre.push({
+          text: item.typeName,
+          value: item.typeName,
+        });
+      }
+      return pre;
+    }, []));
+
+    const filterTableData = computed(() => filterInstanceList.value.filter(item => Object.keys(filters.value)
+      .every(key => !filters.value[key]?.length || filters.value[key]?.includes(item[key]))));
+
     const {
       pagination,
       curPageData: instanceList,
       pageChange,
       pageSizeChange,
-    } = usePage(instanceTypesList);
+    } = usePage(filterTableData);
+
+    const handleFilterChange = (data) => {
+      pageChange(1);
+      filters.value = data;
+    };
+    const handleSortChange = ({ prop, order  }) => {
+      sortData.value = {
+        prop,
+        order,
+      };
+    };
 
     // 数据盘
     const showDataDisks = ref(!!nodePoolConfig.value.nodeTemplate.dataDisks.length);
@@ -949,8 +1109,17 @@ export default defineComponent({
     }>>([]);
     const filterSubnetsList = computed(() => {
       const { zones } = nodePoolConfig.value.autoScaling;
-      if (!zones.length) return subnetsList.value;
-      return subnetsList.value.filter(item => zones.includes(item.zone));
+      return subnetsList.value
+        .filter(item => !zones.length || zones.includes(item.zone))
+        .sort((pre, current) => {
+          const isPreDisabled = curInstanceItem.value.zones?.includes(pre.zone);
+          const isCurrentDisabled = curInstanceItem.value.zones?.includes(current.zone);
+          if (isPreDisabled && !isCurrentDisabled) return -1;
+
+          if (!isPreDisabled && isCurrentDisabled) return 1;
+
+          return 0;
+        });
     });
     const subnetsRowClass = ({ row }) => {
       if (curInstanceItem.value.zones?.includes(row.zone)) {
@@ -1004,34 +1173,35 @@ export default defineComponent({
       return nodePoolConfig.value;
     };
     const validate = async () => {
-      const basicFormValidate = await basicFormRef.value?.validate().catch(() => false);;
-      if (!basicFormValidate && nodeConfigRef.value) {
-        nodeConfigRef.value.scrollTop = 0;
-        return false;
-      }
-      // 校验机型
-      if (!nodePoolConfig.value.launchTemplate.instanceType) {
-        nodeConfigRef.value.scrollTop = 20;
-        return false;
-      }
+      const basicFormValidate = await basicFormRef.value?.validate().catch(() => false);
       const result = await formRef.value?.validate().catch(() => false);
-      if (!result && nodeConfigRef.value) {
-        if (isSpecifiedZoneList.value && !nodePoolConfig.value.autoScaling?.zones?.length) {
-          nodeConfigRef.value.scrollTop = 0;
-        } else {
-          nodeConfigRef.value.scrollTop = nodeConfigRef.value.offsetHeight;
-        }
-      }
       // eslint-disable-next-line max-len
       const validateDataDiskSize = nodePoolConfig.value.nodeTemplate.dataDisks.every(item => item.diskSize % 10 === 0);
       const mountTargetList = nodePoolConfig.value.nodeTemplate.dataDisks.map(item => item.mountTarget);
       const validateDataDiskMountTarget = new Set(mountTargetList).size === mountTargetList.length;
-      if (!basicFormValidate || !result || !validateDataDiskSize || !validateDataDiskMountTarget) return false;
+      const validateSystemDisk = nodePoolConfig.value.launchTemplate.systemDisk.diskSize % 10 === 0;
+      if (!basicFormValidate
+        || !nodePoolConfig.value.launchTemplate.instanceType
+        || !result
+        || !validateDataDiskSize
+        || !validateDataDiskMountTarget
+        || !validateSystemDisk) return false;
 
       return true;
     };
     const handleNext = async () => {
-      if (!await validate()) return;
+      const result = await validate();
+      if (!result) {
+        // 自动滚动到第一个错误的位置
+        const errDom = document.getElementsByClassName('form-error-tip');
+        const bcsErrDom = document.getElementsByClassName('error-tips');
+        const firstErrDom = errDom[0] || bcsErrDom[0];
+        firstErrDom?.scrollIntoView({
+          block: 'center',
+          behavior: 'smooth',
+        });
+        return;
+      }
 
       ctx.emit('next', getNodePoolData());
     };
@@ -1144,6 +1314,11 @@ export default defineComponent({
       getBandwidthList,
       handleChargeTypeChange,
       createBandWidth,
+      nodeTypeFilters,
+      handleFilterChange,
+      handleSortChange,
+      periodList,
+      handleInstanceChargeTypeChange,
     };
   },
 });

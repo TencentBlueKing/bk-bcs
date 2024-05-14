@@ -15,18 +15,22 @@ package qcloud
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
 	"strconv"
 	"strings"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 )
 
 var (
 	cloudName = "qcloud-public"
+)
+
+const (
+	defaultRegion = "ap-nanjing"
 )
 
 // qcloud-public taskName
@@ -86,6 +90,7 @@ var (
 	}
 
 	// create cluster task
+	// nolint
 	createClusterShieldAlarmStep = cloudprovider.StepInfo{
 		StepMethod: fmt.Sprintf("%s-CreateClusterShieldAlarmTask", cloudName),
 		StepName:   "屏蔽机器告警",
@@ -126,6 +131,7 @@ var (
 	}
 
 	// add node to cluster
+	// nolint
 	addNodesShieldAlarmStep = cloudprovider.StepInfo{
 		StepMethod: fmt.Sprintf("%s-AddNodesShieldAlarmTask", cloudName),
 		StepName:   "屏蔽机器告警",
@@ -450,8 +456,9 @@ func (ic *ImportClusterTaskOption) BuildRegisterKubeConfigStep(task *proto.Task)
 
 // DeleteClusterTaskOption 删除集群
 type DeleteClusterTaskOption struct {
-	Cluster    *proto.Cluster
-	DeleteMode string
+	Cluster           *proto.Cluster
+	DeleteMode        string
+	LastClusterStatus string
 }
 
 // BuildDeleteTKEClusterStep 删除集群
@@ -460,6 +467,7 @@ func (dc *DeleteClusterTaskOption) BuildDeleteTKEClusterStep(task *proto.Task) {
 	deleteStep.Params[cloudprovider.ClusterIDKey.String()] = dc.Cluster.ClusterID
 	deleteStep.Params[cloudprovider.CloudIDKey.String()] = dc.Cluster.Provider
 	deleteStep.Params[cloudprovider.DeleteModeKey.String()] = dc.DeleteMode
+	deleteStep.Params[cloudprovider.LastClusterStatus.String()] = dc.LastClusterStatus
 
 	task.Steps[deleteTKEClusterStep.StepMethod] = deleteStep
 	task.StepSequence = append(task.StepSequence, deleteTKEClusterStep.StepMethod)
@@ -631,6 +639,10 @@ type RemoveNodesFromClusterTaskOption struct {
 	DeleteMode string
 	NodeIPs    []string
 	NodeIDs    []string
+	// 保留节点转移至待回收模块
+	retainNodes []string
+	// 删除节点回收cmdb主机
+	terminateNodes []string
 }
 
 // BuildCordonNodesStep 设置节点不可调度状态
@@ -658,6 +670,19 @@ func (rn *RemoveNodesFromClusterTaskOption) BuildRemoveNodesFromClusterStep(task
 	task.StepSequence = append(task.StepSequence, removeNodesFromClusterStep.StepMethod)
 }
 
+// BuildCheckClusterCleanNodsStep 检测集群清理节点池节点
+func (rn *RemoveNodesFromClusterTaskOption) BuildCheckClusterCleanNodsStep(task *proto.Task) {
+	checkStep := cloudprovider.InitTaskStep(checkClusterCleanNodsStep)
+
+	checkStep.Params[cloudprovider.ClusterIDKey.String()] = rn.Cluster.ClusterID
+	checkStep.Params[cloudprovider.CloudIDKey.String()] = rn.Cluster.Provider
+	checkStep.Params[cloudprovider.NodeIPsKey.String()] = strings.Join(rn.NodeIPs, ",")
+	checkStep.Params[cloudprovider.NodeIDsKey.String()] = strings.Join(rn.NodeIDs, ",")
+
+	task.Steps[checkClusterCleanNodsStep.StepMethod] = checkStep
+	task.StepSequence = append(task.StepSequence, checkClusterCleanNodsStep.StepMethod)
+}
+
 // BuildUpdateRemoveNodeDBInfoStep 清理节点数据
 func (rn *RemoveNodesFromClusterTaskOption) BuildUpdateRemoveNodeDBInfoStep(task *proto.Task) {
 	updateDBStep := cloudprovider.InitTaskStep(updateRemoveNodeDBInfoStep)
@@ -665,6 +690,14 @@ func (rn *RemoveNodesFromClusterTaskOption) BuildUpdateRemoveNodeDBInfoStep(task
 	updateDBStep.Params[cloudprovider.CloudIDKey.String()] = rn.Cluster.Provider
 	updateDBStep.Params[cloudprovider.NodeIPsKey.String()] = strings.Join(rn.NodeIPs, ",")
 	updateDBStep.Params[cloudprovider.NodeIDsKey.String()] = strings.Join(rn.NodeIDs, ",")
+	updateDBStep.Params[cloudprovider.BKBizIDKey.String()] = rn.Cluster.GetBusinessID()
+
+	if len(rn.terminateNodes) > 0 {
+		updateDBStep.Params[cloudprovider.TerminateChargeNodes.String()] = strings.Join(rn.terminateNodes, ",")
+	}
+	if len(rn.retainNodes) > 0 {
+		updateDBStep.Params[cloudprovider.RetainChargeNodes.String()] = strings.Join(rn.retainNodes, ",")
+	}
 
 	task.Steps[updateRemoveNodeDBInfoStep.StepMethod] = updateDBStep
 	task.StepSequence = append(task.StepSequence, updateRemoveNodeDBInfoStep.StepMethod)
@@ -801,9 +834,10 @@ func (dn *DeleteNodeGroupTaskOption) BuildDeleteNodeGroupStep(task *proto.Task) 
 
 // UpdateDesiredNodesTaskOption 扩容节点组节点
 type UpdateDesiredNodesTaskOption struct {
-	Group    *proto.NodeGroup
-	Desired  uint32
-	Operator string
+	Group        *proto.NodeGroup
+	Desired      uint32
+	Operator     string
+	NodeSchedule bool
 }
 
 // BuildApplyInstanceMachinesStep 申请节点实例
@@ -815,6 +849,7 @@ func (ud *UpdateDesiredNodesTaskOption) BuildApplyInstanceMachinesStep(task *pro
 	applyInstanceStep.Params[cloudprovider.CloudIDKey.String()] = ud.Group.Provider
 	applyInstanceStep.Params[cloudprovider.ScalingNodesNumKey.String()] = strconv.Itoa(int(ud.Desired))
 	applyInstanceStep.Params[cloudprovider.OperatorKey.String()] = ud.Operator
+	applyInstanceStep.Params[cloudprovider.NodeSchedule.String()] = strconv.FormatBool(ud.NodeSchedule)
 
 	task.Steps[applyInstanceMachinesStep.StepMethod] = applyInstanceStep
 	task.StepSequence = append(task.StepSequence, applyInstanceMachinesStep.StepMethod)

@@ -31,7 +31,7 @@ func NewPerm(projectID, clusterID string) *Perm {
 			Cli:           perm.NewIAMClient(),
 			ResType:       perm.ResTypeNS,
 			PermCtx:       &PermCtx{},
-			ResReq:        NewResRequest(projectID, clusterID),
+			ResReq:        NewResRequest(projectID, clusterID, ""),
 			ParentResPerm: &cluster.NewPerm(projectID).IAMPerm,
 		},
 	}
@@ -83,13 +83,13 @@ type ScopedPerm struct {
 }
 
 // NewScopedPerm xxx
-func NewScopedPerm(projectID, clusterID string) *ScopedPerm {
+func NewScopedPerm(projectID, clusterID, res string) *ScopedPerm {
 	return &ScopedPerm{
 		perm: perm.IAMPerm{
 			Cli:           perm.NewIAMClient(),
 			ResType:       perm.ResTypeNS,
 			PermCtx:       &PermCtx{},
-			ResReq:        NewResRequest(projectID, clusterID),
+			ResReq:        NewResRequest(projectID, clusterID, res),
 			ParentResPerm: &cluster.NewPerm(projectID).IAMPerm,
 		},
 	}

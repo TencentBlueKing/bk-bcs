@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package apiclient
@@ -18,17 +17,18 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
-	"github.com/pkg/errors"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/common"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/option"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/utils"
 )
 
@@ -41,27 +41,46 @@ const (
 	taskStateFailure = "FAILURE"
 )
 
-const (
-	envNameBKMFullAuthToken = "BKM_FULL_AUTH_TOKEN"
-	envNameBKMAPIDomain     = "BKM_API_DOMAIN"
-)
-
 // IMonitorApiClient translate monitor crd to yaml file
 type IMonitorApiClient interface {
 	UploadConfig(bizID, bizToken, configPath, app string, overwrite bool) error
+	DownloadConfig(bizID, bizToken string) error
 }
 
-// UploadConfigResp response of upload config
-type UploadConfigResp struct {
-	Result  bool                 `json:"result,omitempty"`
-	Code    int                  `json:"code,omitempty"`
-	Message string               `json:"message,omitempty"`
-	Data    UploadConfigTaskData `json:"data,omitempty"`
+// AsyncTaskResp response of upload config
+type AsyncTaskResp struct {
+	Result  bool     `json:"result,omitempty"`
+	Code    int      `json:"code,omitempty"`
+	Message string   `json:"message,omitempty"`
+	Data    TaskData `json:"data,omitempty"`
 }
 
-// UploadConfigTaskData data struct of UploadConfigResp
-type UploadConfigTaskData struct {
+// TaskData result for async task
+type TaskData struct {
 	TaskID string `json:"task_id,omitempty"`
+}
+
+// PollDownloadConfigTaskStatusResp response of PollDownloadTaskStatus
+type PollDownloadConfigTaskStatusResp struct {
+	Result  bool                             `json:"result,omitempty"`
+	Code    int                              `json:"code,omitempty"`
+	Message string                           `json:"message,omitempty"`
+	Data    PollDownloadConfigTaskStatusData `json:"data,omitempty"`
+}
+
+// PollDownloadConfigTaskStatusData data struct of PollDownloadConfigTaskStatusResp
+type PollDownloadConfigTaskStatusData struct {
+	IsCompleted bool                   `json:"is_completed,omitempty"`
+	Message     string                 `json:"message,omitempty"`
+	State       string                 `json:"state,omitempty"`
+	TaskID      string                 `json:"task_id,omitempty"`
+	Traceback   string                 `json:"traceback,omitempty"`
+	Data        DownloadConfigTaskData `json:"data,omitempty"`
+}
+
+// DownloadConfigTaskData data struct of DownloadConfigResp
+type DownloadConfigTaskData struct {
+	DownloadUrl string `json:"download_url"`
 }
 
 // PollTaskStatusResp response of PollTaskStatus
@@ -94,13 +113,21 @@ type PollTaskResultData struct {
 type BkmApiClient struct {
 	MonitorURL    string
 	FullAuthToken string
+	httpCli       http.Client
+
+	SubPath string
+	Opts    *option.ControllerOption
 }
 
 // NewBkmApiClient return new bkm apli client
-func NewBkmApiClient() *BkmApiClient {
+func NewBkmApiClient(subPath string, opts *option.ControllerOption) *BkmApiClient {
 	return &BkmApiClient{
-		FullAuthToken: os.Getenv(envNameBKMFullAuthToken),
-		MonitorURL:    os.Getenv(envNameBKMAPIDomain),
+		httpCli:       http.Client{},
+		FullAuthToken: os.Getenv(common.EnvNameBKMFullAuthToken),
+		MonitorURL:    os.Getenv(common.EnvNameBKMAPIDomain),
+		Opts:          opts,
+
+		SubPath: subPath,
 	}
 }
 
@@ -118,68 +145,133 @@ func (b *BkmApiClient) UploadConfig(bizID, bizToken, configPath, app string, ove
 	request, err := os.Open(configPath)
 	if err != nil {
 		mf(StatusErr)
-		blog.Errorf("open tar file'%s' failed, err: %s", configPath, err.Error())
-		return err
+		return fmt.Errorf("open tar file'%s' failed, err: %s", configPath, err.Error())
 	}
 	defer request.Close()
 
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
-	part, err := writer.CreateFormFile("file", filepath.Base(configPath))
+	part, _ := writer.CreateFormFile("file", filepath.Base(configPath))
 	_, _ = io.Copy(part, request)
 
 	_ = writer.WriteField(fieldBkBizID, bizID)
 	_ = writer.WriteField(fieldApp, app)
 	_ = writer.WriteField(fieldOverwrite, strconv.FormatBool(overwrite))
-	writer.Close()
+	writer.Close() // nolint not checked
 
 	url := fmt.Sprintf("%s/rest/v2/as_code/import_config_file/", b.MonitorURL)
-	req, err := http.NewRequest("POST", url, body)
+	req, _ := http.NewRequest("POST", url, body)
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", bizToken))
 	req.Header.Add("Content-Type", writer.FormDataContentType())
 	req.Header.Add("X-Async-Task", "True")
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err := b.httpCli.Do(req)
 	if err != nil {
 		mf(StatusErr)
-		blog.Errorf("do post request failed, req: %v, err: %s", req, err.Error())
-		return err
+		return fmt.Errorf("do post request failed, req: %v, err: %s", req, err.Error())
 	}
 	defer resp.Body.Close()
 
 	// Read the response
-	uploadConfigResp := &UploadConfigResp{}
+	uploadConfigResp := &AsyncTaskResp{}
 
-	respBody, err := ioutil.ReadAll(resp.Body)
+	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		mf(StatusErr)
-		blog.Errorf("read UploadConfig from resp failed, err: %s", err.Error())
-		return err
+		return fmt.Errorf("read UploadConfig from resp failed, err: %s", err.Error())
 	}
 	err = json.Unmarshal(respBody, uploadConfigResp)
 	if err != nil {
 		mf(StatusErr)
-		blog.Errorf("json marshal failed, raw value: %s, err: %s", string(respBody), err.Error())
-		return err
+		return fmt.Errorf("json marshal failed, raw value: %s, err: %s", string(respBody), err.Error())
 	}
 
-	return b.pollTaskStatus(bizToken, bizID, uploadConfigResp.Data.TaskID, mf)
+	return b.pollTaskStatus(bizToken, bizID, uploadConfigResp.Data.TaskID, b.doPollUploadTaskStatus, mf)
 }
 
-// TaskData task response
-type TaskData struct {
-	State       string `json:"state,omitempty"`
-	Message     string `json:"message,omitempty"`
-	IsCompleted bool   `json:"is_completed,omitempty"`
+// DownloadConfig download biz related bkm config to ../config_{biz_id}.tar.gz
+func (b *BkmApiClient) DownloadConfig(bizID, bizToken string) error {
+	if b.FullAuthToken != "" {
+		bizToken = b.FullAuthToken
+	}
+
+	blog.Infof("download config req[bizID: %s]", bizID)
+	startTime := time.Now()
+	mf := func(ret string) {
+		ReportAPIRequestMetric(HandlerBKM, "DownloadConfig", ret, startTime)
+	}
+
+	url := fmt.Sprintf("%s/rest/v2/as_code/export_config_file/", b.MonitorURL)
+	reqParams := map[string]interface{}{
+		"bk_biz_id":              bizID,
+		"dashboard_for_external": false,
+	}
+	bts, _ := json.Marshal(reqParams)
+	req, err := http.NewRequest("POST", url, bytes.NewReader(bts))
+	if err != nil {
+		mf(StatusErr)
+		return fmt.Errorf("http new request failed: %s", err.Error())
+	}
+	defer req.Body.Close()
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", bizToken))
+	req.Header.Set("X-Async-Task", "True")
+	req.Header.Set("Content-Type", "application/json;charset=UTF-8")
+
+	resp, err := b.httpCli.Do(req)
+	if err != nil {
+		mf(StatusErr)
+		return fmt.Errorf("http post failed: %s", err.Error())
+	}
+	defer resp.Body.Close()
+
+	var downloadConfigResp AsyncTaskResp
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		mf(StatusErr)
+		return fmt.Errorf("read resp failed")
+	}
+	err = json.Unmarshal(respBody, &downloadConfigResp)
+	if err != nil {
+		mf(StatusErr)
+		return fmt.Errorf("json marshal failed, raw value: %s, err: %s", string(respBody), err.Error())
+	}
+	if downloadConfigResp.Code != http.StatusOK || !downloadConfigResp.Result {
+		mf(StatusErr)
+		return fmt.Errorf("error status, resp: %s", string(respBody))
+	}
+	// print(string(respBody))
+	err = b.pollTaskStatus(bizToken, bizID, downloadConfigResp.Data.TaskID, b.doPollDownloadTaskStatus, mf)
+	if err != nil {
+		mf(StatusErr)
+		return fmt.Errorf("epollTaskStatus failed, bizID[%s], taskID[%s], err: %s", bizID,
+			downloadConfigResp.Data.TaskID, err.Error())
+	}
+
+	return nil
 }
 
-func (b *BkmApiClient) pollTaskStatus(token, bizID, taskID string, metricFunc func(string)) error {
+func (b *BkmApiClient) pollTaskStatus(token, bizID, taskID string,
+	handleFunc func(string, *http.Response) (bool, error), metricFunc func(string)) error {
 	blog.Infof("start poll task '%s/%s' status", bizID, taskID)
 
 	startTime := time.Now()
 	for {
-		success, err := b.doPollTaskStatus(token, bizID, taskID)
+		url := fmt.Sprintf("%s/rest/v2/commons/query_async_task_result/?bk_biz_id=%s&task_id=%s", b.MonitorURL, bizID,
+			taskID)
+		client := &http.Client{}
+		req, err := http.NewRequest("GET", url, nil)
+		if err != nil {
+			return fmt.Errorf("failed to create GET request: %s", err.Error())
+		}
+
+		req.Header.Add("Authorization", "Bearer "+token)
+
+		resp, err := client.Do(req)
+		if err != nil {
+			return fmt.Errorf("failed to send GET request: %s", err.Error())
+		}
+
+		success, err := handleFunc(bizID, resp)
 		if err != nil {
 			metricFunc(StatusErr)
 			return err
@@ -202,66 +294,98 @@ func (b *BkmApiClient) pollTaskStatus(token, bizID, taskID string, metricFunc fu
 }
 
 // return true if task success
-func (b *BkmApiClient) doPollTaskStatus(token, bizID, taskID string) (bool, error) {
-	url := fmt.Sprintf("%s/rest/v2/commons/query_async_task_result/?bk_biz_id=%s&task_id=%s", b.MonitorURL, bizID,
-		taskID)
-	client := &http.Client{}
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		blog.Errorf("failed to create GET request: %s", err.Error())
-		return false, err
-	}
-
-	req.Header.Add("Authorization", "Bearer "+token)
-
-	resp, err := client.Do(req)
-	if err != nil {
-		blog.Errorf("failed to send GET request: %s", err.Error())
-		return false, err
-	}
+func (b *BkmApiClient) doPollUploadTaskStatus(bizID string, resp *http.Response) (bool, error) {
 	defer resp.Body.Close()
 
+	bodyBytes, _ := io.ReadAll(resp.Body)
+	bodyString := string(bodyBytes)
 	if resp.StatusCode != http.StatusOK {
-		bodyBytes, _ := ioutil.ReadAll(resp.Body)
-		bodyString := string(bodyBytes)
-		blog.Errorf("get err status code: %d, message: %s", resp.StatusCode, bodyString)
-		return false, errors.Errorf("get err status code: %d, message: %s", resp.StatusCode, bodyString)
+		return false, fmt.Errorf("get err status code: %d, message: %s", resp.StatusCode, bodyString)
 	}
 
 	var pollTaskStatusResp PollTaskStatusResp
-	if err = json.NewDecoder(resp.Body).Decode(&pollTaskStatusResp); err != nil {
-		blog.Errorf("decode JSON response failed: %s", err.Error())
-		return false, err
+	if err := json.Unmarshal(bodyBytes, &pollTaskStatusResp); err != nil {
+		return false, fmt.Errorf("decode JSON response failed: %s", err.Error())
 	}
 
-	blog.V(4).Infof("query task'%s' resp: %+v", taskID, pollTaskStatusResp)
+	blog.V(4).Infof("query task resp: %+v", pollTaskStatusResp)
 
 	if !pollTaskStatusResp.Result {
-		blog.Errorf("unknown result, resp: %+v", pollTaskStatusResp)
 		return false, fmt.Errorf("unknown result, resp: %+v", pollTaskStatusResp)
 	}
 
 	pollTaskStatusData := pollTaskStatusResp.Data
 	if pollTaskStatusData.State == taskStateSuccess {
 		if pollTaskStatusData.Data.Result {
-			blog.Infof("task '%s' success", taskID)
 			return true, nil
 		}
-		blog.Warnf("task '%s' failed, message: %s, err: %s", taskID, pollTaskStatusData.Data.Message,
-			utils.ToJsonString(pollTaskStatusData.Data.Errors))
-		return false, fmt.Errorf("task '%s' failed, message: %s, err: %s", taskID, pollTaskStatusData.Data.Message,
+		return false, fmt.Errorf("task failed, message: %s, err: %s", pollTaskStatusData.Data.Message,
 			utils.ToJsonString(pollTaskStatusData.Data.Errors))
 	} else if pollTaskStatusData.State == taskStateFailure {
-		blog.Errorf("task '%s' failed, message: %s", taskID, pollTaskStatusData.Message)
-		return false, fmt.Errorf("task '%s' failed, message: %s", taskID, pollTaskStatusData.Message)
+		return false, fmt.Errorf("task failed, message: %s", pollTaskStatusData.Message)
 	} else if pollTaskStatusResp.Data.IsCompleted {
-		blog.Errorf("task '%s' unknown state, resp: %v", taskID, pollTaskStatusData)
-		return false, fmt.Errorf("task '%s' unknown state, message: %v", taskID, pollTaskStatusData)
+		return false, fmt.Errorf("task unknown state, message: %v", pollTaskStatusData)
 	}
 
 	// Log data state and message
-	blog.Infof("waiting task'%s' finish, state %s,message %s", taskID, pollTaskStatusData.State,
+	blog.Infof("waiting task finish, state %s,message %s", pollTaskStatusData.State,
 		pollTaskStatusData.Message)
 
 	return false, nil
+}
+
+func (b *BkmApiClient) doPollDownloadTaskStatus(bizID string, resp *http.Response) (bool, error) {
+	defer resp.Body.Close()
+
+	bodyBytes, _ := io.ReadAll(resp.Body)
+	bodyString := string(bodyBytes)
+	if resp.StatusCode != http.StatusOK {
+		return false, fmt.Errorf("get err status code: %d, message: %s", resp.StatusCode, bodyString)
+	}
+
+	var pollTaskStatusResp PollDownloadConfigTaskStatusResp
+	if err := json.Unmarshal(bodyBytes, &pollTaskStatusResp); err != nil {
+		return false, fmt.Errorf("decode JSON response failed: %s", err.Error())
+	}
+
+	if !pollTaskStatusResp.Result {
+		return false, fmt.Errorf("unknown result, resp: %+v", pollTaskStatusResp)
+	}
+
+	pollTaskStatusData := pollTaskStatusResp.Data
+	if pollTaskStatusData.State != taskStateSuccess {
+		if pollTaskStatusData.State == taskStateFailure {
+			return false, fmt.Errorf("task failed, message: %s", pollTaskStatusData.Message)
+		} else if pollTaskStatusResp.Data.IsCompleted {
+			return false, fmt.Errorf("task unknown state, message: %v", pollTaskStatusData)
+		}
+		// blog.Infof("waiting task finish, state %s,message %s", pollTaskStatusData.State,
+		// 	pollTaskStatusData.Message)
+		return false, nil
+	}
+
+	downloadURL := strings.Replace(pollTaskStatusData.Data.DownloadUrl, "https", "http", 1)
+	downloadResp, err := b.httpCli.Get(downloadURL)
+	if err != nil {
+		return false, fmt.Errorf("http get download file failed, err: %s", err.Error())
+	}
+	defer downloadResp.Body.Close()
+
+	if err = os.MkdirAll(filepath.Join(b.Opts.BKMDownloadConfigPath, b.SubPath), 0755); err != nil {
+		return false, fmt.Errorf("mkdir failed, err: %s", err.Error())
+	}
+	// 创建一个文件用于保存
+	out, err := os.Create(utils.GenBkmConfigTarPath(b.Opts.BKMDownloadConfigPath, b.SubPath, bizID))
+	if err != nil {
+		return false, fmt.Errorf("create download file failed, err: %s", err.Error())
+	}
+	defer out.Close()
+
+	// 然后将响应流和文件流对接起来
+	_, err = io.Copy(out, downloadResp.Body)
+	if err != nil {
+		return false, fmt.Errorf("copy download file failed, err: %s", err.Error())
+	}
+
+	return true, nil
 }

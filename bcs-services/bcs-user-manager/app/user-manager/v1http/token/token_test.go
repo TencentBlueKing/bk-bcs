@@ -256,7 +256,7 @@ func TestGetToken(t *testing.T) {
 
 		tt.mockTokenStore.AssertExpectations(t)
 		expiredAt := now.Add(time.Hour)
-		status := TokenStatusActive
+		status := utils.TokenStatusActive
 		data := []TokenResp{{
 			Token:     "token",
 			Status:    &status,
@@ -278,7 +278,7 @@ func TestGetToken(t *testing.T) {
 
 		tt.mockTokenStore.AssertExpectations(t)
 		expiredAt := time.Unix(1, 1)
-		status := TokenStatusExpired
+		status := utils.TokenStatusExpired
 		data := []TokenResp{{
 			Token:     "token",
 			Status:    &status,
@@ -300,7 +300,7 @@ func TestGetToken(t *testing.T) {
 		tt.tokenHandler.GetToken(tt.request, tt.response)
 
 		tt.mockTokenStore.AssertExpectations(t)
-		status := TokenStatusActive
+		status := utils.TokenStatusActive
 		data := []TokenResp{{
 			Token:  "token",
 			Status: &status,

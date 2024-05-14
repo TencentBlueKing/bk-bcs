@@ -18,10 +18,10 @@ import (
 
 	"gorm.io/gorm"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 )
 
 // Commit supplies all the commit related operations.
@@ -36,6 +36,12 @@ type Commit interface {
 	BatchListLatestCommits(kit *kit.Kit, bizID, appID uint32, ids []uint32) ([]*table.Commit, error)
 	// GetLatestCommit get config item's latest commit.
 	GetLatestCommit(kit *kit.Kit, bizID, appID, configItemID uint32) (*table.Commit, error)
+	// ListAppLatestCommits list app config items' latest commit.
+	ListAppLatestCommits(kit *kit.Kit, bizID, appID uint32) ([]*table.Commit, error)
+	// BatchDeleteWithTx batch delete commit data instance with transaction.
+	BatchDeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, commitIDs []uint32) error
+	// ListCommitsByGtID get list data by greater than ID.
+	ListCommitsByGtID(kit *kit.Kit, commitID, bizID, appID, configItemID uint32) ([]*table.Commit, error)
 }
 
 var _ Commit = new(commitDao)
@@ -44,6 +50,30 @@ type commitDao struct {
 	genQ     *gen.Query
 	idGen    IDGenInterface
 	auditDao AuditDao
+}
+
+// ListCommitsByGtID get list data by greater than ID.
+func (dao *commitDao) ListCommitsByGtID(kit *kit.Kit, commitID, bizID, appID, configItemID uint32) (
+	[]*table.Commit, error) {
+
+	m := dao.genQ.Commit
+
+	return dao.genQ.Commit.WithContext(kit.Ctx).
+		Where(m.ID.Gt(commitID), m.BizID.Eq(bizID), m.AppID.Eq(appID),
+			m.ConfigItemID.Eq(configItemID)).Find()
+}
+
+// BatchDeleteWithTx batch delete commit data instance with transaction.
+func (dao *commitDao) BatchDeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, commitIDs []uint32) error {
+
+	m := tx.Query.Commit
+	q := tx.Query.Commit.WithContext(kit.Ctx)
+
+	_, err := q.Where(m.ID.In(commitIDs...)).Delete()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // Create one commit instance.
@@ -150,6 +180,15 @@ func (dao *commitDao) BatchListLatestCommits(kit *kit.Kit, bizID, appID uint32, 
 	q := dao.genQ.Commit.WithContext(kit.Ctx)
 	subQuery := q.Select(m.ID.Max().As("commit_id")).Where(
 		m.BizID.Eq(bizID), m.AppID.Eq(appID), m.ConfigItemID.In(ids...)).Group(m.ConfigItemID)
+	return q.Where(m.BizID.Eq(bizID), m.AppID.Eq(appID), q.Columns(m.ID).In(subQuery)).Find()
+}
+
+// ListAppLatestCommits list app config items' latest commit.
+func (dao *commitDao) ListAppLatestCommits(kit *kit.Kit, bizID, appID uint32) ([]*table.Commit, error) {
+	m := dao.genQ.Commit
+	q := dao.genQ.Commit.WithContext(kit.Ctx)
+	subQuery := q.Select(m.ID.Max().As("commit_id")).Where(
+		m.BizID.Eq(bizID), m.AppID.Eq(appID)).Group(m.ConfigItemID)
 	return q.Where(m.BizID.Eq(bizID), m.AppID.Eq(appID), q.Columns(m.ID).In(subQuery)).Find()
 }
 

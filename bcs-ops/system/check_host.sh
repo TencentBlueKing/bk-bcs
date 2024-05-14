@@ -20,6 +20,7 @@ PROGRAM="$(basename "$0")"
 SELF_DIR=$(dirname "$(readlink -f "$0")")
 ROOT_DIR="${SELF_DIR}/.."
 KERNEL_VERSION="3.10.0"
+KERNEL_VERSION_IPv6="4.19.1"
 LIMIT_VALUE="204800"
 RPM_LIST="zip unzip curl lsof wget expect lsof socat procps-ng conntrack-tools \
 openssl-devel readline-devel libcurl-devel libxml2-devel glibc-devel \
@@ -65,12 +66,20 @@ version() {
 
 # 检查主机内核 check_kernel
 check_kernel() {
-  local currfmt
+  local currfmt kenerl_version
   currfmt=$(uname -r | cut -d '-' -f1)
-  if _version_ge "$currfmt" $KERNEL_VERSION; then
-    utils::log "OK" "$1 : 当前配置($currfmt).内核版本大于或等于$KERNEL_VERSION"
+  if [[ -n ${K8S_IPv6_STATUS} ]] && [[ ${K8S_IPv6_STATUS,,} != "disable" ]]; then
+    kenerl_version=$KERNEL_VERSION_IPv6
   else
-    utils::log "FATAL" "$1 : 当前配置($currfmt).内核版本小于$KERNEL_VERSION"
+    kenerl_version=$KERNEL_VERSION
+  fi
+
+  if _version_ge "$currfmt" "$kenerl_version"; then
+    utils::log "OK" "$1 : 当前配置($currfmt).内核版本大于或等于$kenerl_version"
+  else
+    utils::log "FATAL" "$1 : 当前配置($currfmt).内核版本小于$kenerl_version.\
+k8s ipv4 内核版本要求不低于 $KERNEL_VERSION, \
+k8s ipv6 内核版本要求不低于 $KERNEL_VERSION_IPv6"
   fi
 }
 
@@ -177,11 +186,13 @@ check_tools() {
     | tr ' ' '\n' \
     | sort \
     | uniq -u)
-  read -ra diff_array <<<"$diff"
-  if [[ -z "${BCS_OFFLINE:-}" ]]; then
-    utils::log "WARN" "$1 : 目前主机未安装(${diff_array[*]})."
-  else
-    utils::log "ERROR" "$1 : 目前主机未安装(${diff_array[*]})."
+  read -r -d '' -a diff_array <<<"$diff"
+  if ((${#diff_array[@]} > 0)); then
+    if [[ -z "${BCS_OFFLINE:-}" ]]; then
+      utils::log "WARN" "$1 : 目前主机未安装(${diff_array[*]})."
+    else
+      utils::log "ERROR" "$1 : 目前主机未安装(${diff_array[*]})."
+    fi
   fi
 }
 
@@ -221,7 +232,7 @@ if [ "$rerun" == "" ]; then
   exit 1
 else
   for index in "${!CHECK_LIST[@]}"; do
-    index2=$((index+1))
+    index2=$((index + 1))
     utils::log "INFO" "├──[STEP ${index2}/${#CHECK_LIST[@]}] => \
 [${CHECK_LIST[$index]}] - [$(date +'%H:%M:%S')]"
     ${CHECK_LIST[$index]} "${CHECK_LIST[$index]}"

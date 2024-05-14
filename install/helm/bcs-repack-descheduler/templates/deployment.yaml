@@ -1,0 +1,104 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "bcs-repack-descheduler.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "bcs-repack-descheduler.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "bcs-repack-descheduler.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "bcs-repack-descheduler.labels" . | nindent 8 }}
+	{{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: bcs-repack-descheduler-sa 
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.registry }}{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["/data/bcs/bcs-repack-descheduler/container-start.sh"]
+          args:
+          - -f
+          - /data/bcs/bcs-repack-descheduler/bcs-repack-descheduler.json
+          env:
+          - name: BCS_CONFIG_TYPE
+            value: "{{ .Values.env.BK_BCS_CONFIG_TYPE}}"
+          - name: log_dir
+            value: "/data/bcs/logs"
+          - name: debug
+            value: "true" 
+          - name: alsologtostderr
+            value: "true" 
+          - name: verbosity
+            value: "{{ .Values.env.BK_BCS_verbosity }}"
+          - name: localIP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP
+          - name: httpPort
+            value: "{{ .Values.env.BK_BCS_httpPort }}"
+          - name: metricPort
+            value: "{{ .Values.env.BK_BCS_metricPort }}"
+          - name: extenderPort
+            value: "{{ .Values.env.BK_BCS_extenderPort }}"
+          - name: webhookCertDir
+            value: "/data/bcs/certs"
+          - name: webhookCertName
+            value: "tls.crt"
+          - name: webhookKeyName
+            value: "tls.key"
+          - name: maxEvictionNodes
+            value: "{{ .Values.env.BK_BCS_maxEvictionNodes }}"
+          - name: maxEvictionParallel
+            value: "{{ .Values.env.BK_BCS_maxEvictionParallel }}"
+          - name: bkDataUrl
+            value: "{{ .Values.env.BK_BCS_bkDataUrl }}"
+          - name: bkDataAppCode
+            value: "{{ .Values.env.BK_BCS_bkDataAppCode }}"
+          - name: bkDataAppSecret
+            value: "{{ .Values.env.BK_BCS_bkDataAppSecret }}"
+          - name: bkDataToken
+            value: "{{ .Values.env.BK_BCS_bkDataToken }}"
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          {{- with .Values.volumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.volumes }}
+      volumes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

@@ -35,6 +35,17 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
+const (
+	// BCSNodeGroupTaintKey xxx
+	BCSNodeGroupTaintKey = "bcs-cluster-manager"
+	// BCSNodeGroupTaintValue xxx
+	BCSNodeGroupTaintValue = "noSchedule"
+	// BCSNodeGroupGkeTaintEffect xxx
+	BCSNodeGroupGkeTaintEffect = "NO_EXECUTE"
+	// BCSNodeGroupAzureTaintEffect xxx
+	BCSNodeGroupAzureTaintEffect = "NoExecute"
+)
+
 // SyncClusterInfoToPassCC sync clusterInfo to pass-cc
 func SyncClusterInfoToPassCC(taskID string, cluster *proto.Cluster) {
 	err := passcc.GetCCClient().CreatePassCCCluster(cluster)

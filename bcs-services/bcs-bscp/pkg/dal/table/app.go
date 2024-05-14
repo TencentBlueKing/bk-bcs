@@ -17,7 +17,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
 )
 
 // App defines an application's detail information
@@ -131,40 +131,9 @@ type AppSpec struct {
 	// ConfigType defines which type is this configuration, different type has the
 	// different ways to be consumed.
 	ConfigType ConfigType `json:"config_type" gorm:"column:config_type"`
-	// Mode defines what mode of this app works at.
-	// Mode can not be updated once it is created.
-	Mode     AppMode  `json:"mode" gorm:"column:mode"`
-	Memo     string   `json:"memo" gorm:"column:memo"`
-	Reload   *Reload  `json:"reload" gorm:"embedded"`
-	Alias    string   `json:"alias" gorm:"alias"`
-	DataType DataType `json:"data_type" gorm:"data_type"`
-}
-
-const (
-	// Normal means this is a normal app, and configuration
-	// items can be consumed directly.
-	Normal AppMode = "normal"
-
-	// Namespace means that this app runs in the namespace
-	// mode, which means user must consume app's configuration
-	// item with namespace information.
-	Namespace AppMode = "namespace"
-)
-
-// AppMode is the mode of an app works at, different mode has the
-// different way or restricts to consume this strategy's configurations.
-type AppMode string
-
-// Validate strategy set type.
-func (s AppMode) Validate() error {
-	switch s {
-	case Normal:
-	case Namespace:
-	default:
-		return fmt.Errorf("unsupported app working mode: %s", s)
-	}
-
-	return nil
+	Memo       string     `json:"memo" gorm:"column:memo"`
+	Alias      string     `json:"alias" gorm:"alias"`
+	DataType   DataType   `json:"data_type" gorm:"data_type"`
 }
 
 // ValidateCreate validate spec when created.
@@ -185,30 +154,17 @@ func (as *AppSpec) ValidateCreate() error {
 		return err
 	}
 
-	if err := as.Mode.Validate(); err != nil {
-		return err
-	}
-
 	if err := validator.ValidateMemo(as.Memo, false); err != nil {
 		return err
 	}
 
 	switch as.ConfigType {
 	case File:
-		if err := as.Reload.ValidateCreate(); err != nil {
-			return err
-		}
 	case KV:
-		if err := as.Reload.IsEmpty(); err != nil {
-			return err
-		}
 		if err := as.DataType.ValidateApp(); err != nil {
 			return err
 		}
 	case Table:
-		if err := as.Reload.IsEmpty(); err != nil {
-			return err
-		}
 	default:
 		return fmt.Errorf("unknown config type: %s", as.ConfigType)
 	}
@@ -230,147 +186,19 @@ func (as *AppSpec) ValidateUpdate(configType ConfigType) error {
 		return errors.New("app's type can not be updated")
 	}
 
-	if len(as.Mode) > 0 {
-		return errors.New("app's mode can not be updated")
-	}
-
 	if err := validator.ValidateMemo(as.Memo, false); err != nil {
 		return err
 	}
 
 	switch configType {
 	case File:
-		if as.Reload != nil {
-			if err := as.Reload.ValidateUpdate(); err != nil {
-				return nil
-			}
-		}
 	case KV:
-		if as.Reload != nil {
-			if err := as.Reload.IsEmpty(); err != nil {
-				return nil
-			}
-		}
 		if err := as.DataType.ValidateApp(); err != nil {
 			return err
 		}
 	case Table:
-		if as.Reload != nil {
-			if err := as.Reload.IsEmpty(); err != nil {
-				return nil
-			}
-		}
 	default:
 		return fmt.Errorf("unknown config type: %s", as.ConfigType)
-	}
-
-	return nil
-}
-
-// Reload is a collection of app reload specifics defined with user. only is used when this app is file config type.
-// Reload is used to control how bscp sidecar notifies applications to go to reload config files.
-type Reload struct {
-	ReloadType     AppReloadType   `json:"reload_type" gorm:"column:reload_type"`
-	FileReloadSpec *FileReloadSpec `json:"file_reload_spec" gorm:"embedded"`
-}
-
-// IsEmpty reload.
-func (r *Reload) IsEmpty() error {
-	if r == nil {
-		return nil
-	}
-
-	if len(r.ReloadType) != 0 {
-		return errors.New("reload type is not nil")
-	}
-
-	if r.FileReloadSpec != nil {
-		if err := r.FileReloadSpec.IsEmpty(); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// ValidateCreate reload spec when create.
-func (r *Reload) ValidateCreate() error {
-	if r == nil {
-		return errors.New("reload spec is required")
-	}
-
-	if len(r.ReloadType) == 0 {
-		return errors.New("reload type is required")
-	}
-
-	if err := r.ReloadType.Validate(); err != nil {
-		return err
-	}
-
-	switch r.ReloadType {
-	case ReloadWithFile:
-		if err := r.FileReloadSpec.Validate(); err != nil {
-			return err
-		}
-
-	default:
-		return fmt.Errorf("unknown app reload type: %s", r.ReloadType)
-	}
-
-	return nil
-}
-
-// ValidateUpdate reload spec when update.
-func (r *Reload) ValidateUpdate() error {
-	if r == nil {
-		return errors.New("reload spec is required")
-	}
-
-	if len(r.ReloadType) != 0 {
-		if err := r.ReloadType.Validate(); err != nil {
-			return err
-		}
-
-		switch r.ReloadType {
-		case ReloadWithFile:
-			if err := r.FileReloadSpec.Validate(); err != nil {
-				return err
-			}
-
-		default:
-			return fmt.Errorf("unknown app reload type: %s", r.ReloadType)
-		}
-	}
-
-	return nil
-}
-
-// FileReloadSpec is a collection of file reload spec's specifics defined with user.
-type FileReloadSpec struct {
-	ReloadFilePath string `json:"reload_file_path" gorm:"column:reload_file_path"`
-}
-
-// IsEmpty file reload spec.
-func (f *FileReloadSpec) IsEmpty() error {
-	if f == nil {
-		return nil
-	}
-
-	if len(f.ReloadFilePath) != 0 {
-		return errors.New("reload file path is not nil")
-	}
-
-	return nil
-}
-
-// Validate file reload spec.
-func (f *FileReloadSpec) Validate() error {
-	if f == nil {
-		return errors.New("file reload spec is required")
-	}
-
-	if err := validator.ValidateReloadFilePath(f.ReloadFilePath); err != nil {
-		return err
 	}
 
 	return nil

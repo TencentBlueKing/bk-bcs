@@ -15,16 +15,19 @@ package qcloud
 import (
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/i18n"
 	"github.com/avast/retry-go"
 	tke "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tke/v20180525"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/business"
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cidrmanager"
@@ -286,7 +289,7 @@ func getCloudCluster(cloudID string, opt *cloudprovider.CommonOption) (*tke.Clus
 
 // checkIfWhiteImageOsNames check cluster osName if it is white image osName
 func checkIfWhiteImageOsNames(opt *cloudprovider.ClusterGroupOption) bool {
-	if opt == nil || opt.Cluster == nil || opt.Group == nil {
+	if opt == nil || opt.Cluster == nil {
 		blog.Errorf("checkIfWhiteImageOsNames failed: %v", "option empty")
 		return false
 	}
@@ -305,7 +308,7 @@ func checkIfWhiteImageOsNames(opt *cloudprovider.ClusterGroupOption) bool {
 
 	// NOCC:ineffassign/assign(误报)
 	osName := ""
-	if opt.Group.NodeTemplate != nil && opt.Group.NodeTemplate.NodeOS != "" {
+	if opt.Group != nil && opt.Group.NodeTemplate != nil && opt.Group.NodeTemplate.NodeOS != "" {
 		osName = opt.Group.NodeTemplate.NodeOS
 		blog.Infof("checkIfWhiteImageOsNames[%s] osName[%s]", opt.Cluster.ClusterID, osName)
 		return utils.StringInSlice(osName, utils.WhiteImageOsName)
@@ -340,6 +343,7 @@ func updateClusterInfo(cloudID string, opt *cloudprovider.GetClusterOption) (*pr
 	if opt.Cluster.ClusterAdvanceSettings != nil {
 		opt.Cluster.ClusterAdvanceSettings.ContainerRuntime = *cls.ContainerRuntime
 		opt.Cluster.ClusterAdvanceSettings.RuntimeVersion = *cls.RuntimeVersion
+		opt.Cluster.ClusterAdvanceSettings.NetworkType = getTkeClusterNetworkType(cls)
 	}
 	if opt.Cluster.ClusterBasicSettings != nil {
 		opt.Cluster.ClusterBasicSettings.Version = *cls.ClusterVersion
@@ -664,6 +668,40 @@ func (c *Cluster) ListProjects(opt *cloudprovider.CommonOption) ([]*proto.CloudP
 	return projects, nil
 }
 
+// AppendCloudNodeInfo append cloud node detailed info
+func (c *Cluster) AppendCloudNodeInfo(ctx context.Context,
+	nodes []*proto.ClusterNode, opt *cloudprovider.CommonOption) error {
+
+	zoneIdMap, zoneMap, err := business.GetZoneInfoByRegion(opt)
+	if err != nil {
+		blog.Errorf("AppendCloudNodeInfo GetZoneInfoByRegion failed: %v", err)
+		return err
+	}
+	// 获取语言
+	lang := i18n.LanguageFromCtx(ctx)
+	// get node zoneName
+	for i := range nodes {
+		zone, ok := zoneIdMap[nodes[i].ZoneName]
+		if ok {
+			nodes[i].ZoneName = zone.GetZoneName()
+			if lang != utils.ZH {
+				nodes[i].ZoneName = zone.GetZone()
+			}
+			continue
+		}
+		zone, ok = zoneMap[nodes[i].ZoneID]
+		if ok {
+			nodes[i].ZoneName = zone.GetZoneName()
+			if lang != utils.ZH {
+				nodes[i].ZoneName = zone.GetZone()
+			}
+			continue
+		}
+	}
+
+	return nil
+}
+
 // AddSubnetsToCluster add subnets to cluster
 func (c *Cluster) AddSubnetsToCluster(ctx context.Context, subnet *proto.SubnetSource,
 	opt *cloudprovider.AddSubnetsToClusterOption) error {
@@ -716,6 +754,17 @@ func (c *Cluster) CheckClusterEndpointStatus(clusterID string, isExtranet bool,
 	}
 
 	return true, nil
+}
+
+// CheckIfGetNodesFromCluster check cluster if can get nodes from k8s
+func (c *Cluster) CheckIfGetNodesFromCluster(ctx context.Context, cluster *proto.Cluster,
+	nodes []*proto.ClusterNode) bool {
+	if cluster.ManageType == icommon.ClusterManageTypeManaged && !utils.ExistRunningNodes(nodes) {
+		blog.Infof("CheckIfGetNodesFromCluster[%s] successful", cluster.ClusterID)
+		return false
+	}
+
+	return true
 }
 
 func getClusterCidrAvailableIPNum(cls *proto.Cluster) (uint32, error) {
@@ -821,6 +870,25 @@ func autoScaleClusterCidr(cls *proto.Cluster, needIPNum uint32) ([]string, error
 	}
 
 	return cidrList, nil
+}
+
+func getTkeClusterNetworkType(cluster *tke.Cluster) string {
+	property := *cluster.Property
+
+	propertyInfo := make(map[string]interface{})
+	err := json.Unmarshal([]byte(property), &propertyInfo)
+	if err != nil {
+		return ""
+	}
+	nType, ok := propertyInfo["NetworkType"]
+	if ok {
+		v, ok1 := nType.(string)
+		if ok1 {
+			return v
+		}
+	}
+
+	return ""
 }
 
 func getSurplusCidrList(mulList []string, step uint32) []uint32 {

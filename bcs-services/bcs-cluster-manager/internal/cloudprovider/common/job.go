@@ -37,8 +37,12 @@ var (
 )
 
 const (
+	// PreInitJob xxx
+	PreInitJob = "preInitJob"
+	// PostInitJob xxx
+	PostInitJob = "postInitJob"
 	// PreInitStepJob xxx
-	PreInitStepJob = "缩容节点清理"
+	PreInitStepJob = "前置初始化作业"
 	// PostInitStepJob xxx
 	PostInitStepJob = "后置初始化作业"
 )
@@ -54,6 +58,7 @@ type JobExecParas struct {
 	StepName string
 	// AllowSkipJobTask 任务失败时候是否允许跳过
 	AllowSkipJobTask bool
+	Translate        string
 }
 
 // BuildJobExecuteScriptStep build job execute script step
@@ -62,7 +67,9 @@ func BuildJobExecuteScriptStep(task *proto.Task, paras JobExecParas) {
 		jobExecuteScriptStep.StepName = paras.StepName
 	}
 	jobScriptStep := cloudprovider.InitTaskStep(jobExecuteScriptStep,
-		cloudprovider.WithStepSkipFailed(paras.AllowSkipJobTask))
+		cloudprovider.WithStepSkipFailed(paras.AllowSkipJobTask),
+		cloudprovider.WithStepTranslate(paras.Translate),
+	)
 
 	if len(paras.NodeIps) == 0 {
 		paras.NodeIps = template.NodeIPList
@@ -116,6 +123,8 @@ func renderScript(ctx context.Context, clusterID, content, nodeIPs, operator str
 
 // JobExecuteScriptTask execute job script
 func JobExecuteScriptTask(taskID string, stepName string) error {
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start execute job script")
 	start := time.Now()
 	// get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
@@ -144,11 +153,13 @@ func JobExecuteScriptTask(taskID string, stepName string) error {
 	}
 
 	// inject taskID
-	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
+	ctx := cloudprovider.WithTaskIDAndStepNameForContext(context.Background(), taskID, stepName)
 
 	// render script && base64 encode
 	jobParas, err := renderScript(ctx, clusterID, content, nodeIPs, operator)
 	if err != nil {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
+			fmt.Sprintf("render script failed [%s]", err))
 		blog.Errorf("JobExecuteScriptTask[%s] renderScript failed: %v", taskID, err)
 		if step.GetSkipOnFailed() {
 			_ = state.SkipFailure(start, stepName, err)
@@ -160,8 +171,13 @@ func JobExecuteScriptTask(taskID string, stepName string) error {
 	blog.Infof("JobExecuteScriptTask[%s] renderScript successful[%s:%v:%s]", taskID,
 		jobParas.BizID, jobParas.NodeIPs, jobParas.Script)
 
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"render script successful")
+
 	url, err := ExecuteScriptByJob(ctx, stepName, jobParas.BizID, jobParas.Script, jobParas.NodeIPs)
 	if err != nil {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
+			fmt.Sprintf("execute script failed [%s]", err))
 		blog.Errorf("JobExecuteScriptTask[%s] ExecuteScriptByJob failed: %v", taskID, err)
 		state.TaskUrl = url
 		if step.GetSkipOnFailed() {
@@ -171,6 +187,9 @@ func JobExecuteScriptTask(taskID string, stepName string) error {
 		_ = state.UpdateStepFailure(start, stepName, err)
 		return err
 	}
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"execute job script successful")
 
 	// update step
 	state.TaskUrl = url
@@ -232,6 +251,9 @@ func ExecuteScriptByJob(ctx context.Context, stepName, bizID, content string, ip
 		case job.Executing, job.UnExecuted:
 			blog.Infof("task[%s] ExecuteScriptByJob  GetJobStatus[%s:%v] job status[%v]",
 				taskID, bizID, jobID, status)
+
+			cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+				fmt.Sprintf("job status [%v]", status))
 			return nil
 		case job.ExecuteSuccess:
 			return loop.EndLoop

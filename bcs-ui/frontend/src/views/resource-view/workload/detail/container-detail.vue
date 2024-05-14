@@ -1,5 +1,5 @@
 <template>
-  <div class="workload-detail bcs-content-wrapper">
+  <div class="workload-detail">
     <div class="workload-detail-info" v-bkloading="{ isLoading }">
       <div class="workload-info-basic">
         <div class="basic-left">
@@ -32,6 +32,42 @@
         <div class="info-item">
           <span class="label">{{ $t('cluster.create.label.networkMode.text') }}</span>
           <span class="value">{{ detail && detail.networkMode }}</span>
+        </div>
+      </div>
+      <div class="workload-main-info">
+        <div class="info-item">
+          <span class="label">{{ $t('container.label.startedAt') }}</span>
+          <span class="value" v-bk-overflow-tips>{{ detail ? timeFormat(detail.startedAt) : '--' }}</span>
+        </div>
+        <div class="info-item">
+          <span class="label">{{ $t('container.label.restartCnt') }}</span>
+          <span class="value" v-bk-overflow-tips>{{ detail ? detail.restartCnt : '--' }}</span>
+        </div>
+        <div class="info-item">
+          <span class="label">{{ $t('container.label.lastState') }}</span>
+          <span class="value">
+            <bk-popover :disabled="!lastState.status">
+              <span :class="{ 'bcs-border-tips inline-flex': lastState.status }">{{ lastState.status || '--' }}</span>
+              <template #content>
+                <div>
+                  <span>{{ $t('container.label.reason') }}:</span>
+                  {{ lastState.reason || '--' }}
+                </div>
+                <div>
+                  <span>{{ $t('container.label.exitCode') }}:</span>
+                  {{ lastState.exitCode || '--' }}
+                </div>
+                <div>
+                  <span>{{ $t('container.label.startedAt') }}:</span>
+                  {{ lastState.startedAt || '--' }}
+                </div>
+                <div>
+                  <span>{{ $t('container.label.finishedAt') }}:</span>
+                  {{ lastState.finishedAt || '--' }}
+                </div>
+              </template>
+            </bk-popover>
+          </span>
         </div>
       </div>
     </div>
@@ -144,6 +180,7 @@
 import { bkOverflowTips } from 'bk-magic-vue';
 import { computed, defineComponent, onMounted, ref, toRefs } from 'vue';
 
+import { timeFormat } from '@/common/util';
 import Metric from '@/components/metric.vue';
 import $store from '@/store';
 
@@ -174,11 +211,11 @@ export default defineComponent({
       required: true,
     },
     // 容器ID
-    id: {
-      type: String,
-      default: '',
-      required: true,
-    },
+    // id: {
+    //   type: String,
+    //   default: '',
+    //   required: true,
+    // },
     clusterId: {
       type: String,
       default: '',
@@ -204,6 +241,15 @@ export default defineComponent({
       $clusterId: clusterId.value,
     }));
 
+    // 最后一次重启状态
+    const lastState = computed(() => {
+      const lastStatus = Object.keys(detail.value?.lastState || {})?.[0] || '';
+      const state = detail.value?.lastState?.[lastStatus] || {};
+      return {
+        ...state,
+        status: lastStatus,
+      };
+    });
     // 端口映射
     const ports = computed(() => detail.value?.ports || []);
     // 命令
@@ -261,6 +307,8 @@ export default defineComponent({
       volumes,
       labels,
       envs,
+      lastState,
+      timeFormat,
       handleGetDetail,
       handleGetContainerEnv,
     };

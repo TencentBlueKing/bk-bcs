@@ -29,6 +29,9 @@ const (
 
 	// ClusterTypeFederationShared 共享联邦集群
 	ClusterTypeFederationShared = "FederationShared"
+
+	// ClusterStatusRunning 集群运行状态
+	ClusterStatusRunning = "RUNNING"
 )
 
 // SharedClusterTypes 非独占的集群类型（包含普通共享集群，共享联邦集群）
@@ -37,10 +40,11 @@ var SharedClusterTypes = []string{ClusterTypeShared, ClusterTypeFederationShared
 // SharedClusterEnabledNativeKinds 共享集群支持的 k8s 原生资源
 var SharedClusterEnabledNativeKinds = []string{
 	resCsts.NS, resCsts.CJ, resCsts.Deploy, resCsts.Job, resCsts.Po, resCsts.STS, resCsts.HPA,
-	resCsts.EP, resCsts.Ing, resCsts.SVC, resCsts.CM, resCsts.Secret, resCsts.PVC, resCsts.SA, resCsts.CRD,
+	resCsts.EP, resCsts.Ing, resCsts.SVC, resCsts.CM, resCsts.Secret, resCsts.PVC, resCsts.SA,
 }
 
-// SharedClusterBypassNativeKinds 共享集群鉴权忽略的原生资源
-var SharedClusterBypassNativeKinds = []string{
+// SharedClusterBypassClusterScopedKinds 共享集群鉴权忽略的原生资源
+var SharedClusterBypassClusterScopedKinds = []string{
 	resCsts.SC,
+	resCsts.CRD,
 }

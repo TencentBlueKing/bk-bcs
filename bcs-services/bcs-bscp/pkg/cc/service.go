@@ -54,6 +54,8 @@ const (
 	AuthServerName Name = "auth-server"
 	// VaultServerName is the vault server's service name
 	VaultServerName Name = "vault-server"
+	// VaultSidecarName is the vault sidecar's service name
+	VaultSidecarName Name = "vault-sidecar"
 	// UIName is the ui service name
 	UIName Name = "ui"
 )
@@ -68,11 +70,13 @@ type Setting interface {
 
 // ApiServerSetting defines api server used setting options.
 type ApiServerSetting struct {
-	Network      Network                           `yaml:"network"`
-	Service      Service                           `yaml:"service"`
-	Log          LogOption                         `yaml:"log"`
-	Repo         Repository                        `yaml:"repository"`
-	FeatureFlags map[FeatureFlag]FeatureFlagOption `yaml:"featureFlags"`
+	Network      Network      `yaml:"network"`
+	Service      Service      `yaml:"service"`
+	Log          LogOption    `yaml:"log"`
+	Repo         Repository   `yaml:"repository"`
+	BKNotice     BKNotice     `yaml:"bkNotice"`
+	Esb          Esb          `yaml:"esb"`
+	FeatureFlags FeatureFlags `yaml:"featureFlags"`
 }
 
 // trySetFlagBindIP try set flag bind ip.
@@ -336,6 +340,9 @@ type FeedServerSetting struct {
 	Log     LogOption `yaml:"log"`
 
 	Repository   Repository          `yaml:"repository"`
+	Esb          Esb                 `yaml:"esb"`
+	BCS          BCS                 `yaml:"bcs"`
+	GSE          GSE                 `yaml:"gse"`
 	FSLocalCache FSLocalCache        `yaml:"fsLocalCache"`
 	Downstream   Downstream          `yaml:"downstream"`
 	MRLimiter    MatchReleaseLimiter `yaml:"matchReleaseLimiter"`
@@ -358,6 +365,7 @@ func (s *FeedServerSetting) trySetDefault() {
 	s.Log.trySetDefault()
 	s.FSLocalCache.trySetDefault()
 	s.Downstream.trySetDefault()
+	s.GSE.getFromEnv()
 	s.MRLimiter.trySetDefault()
 }
 
@@ -385,6 +393,14 @@ func (s FeedServerSetting) Validate() error {
 	}
 
 	if err := s.MRLimiter.validate(); err != nil {
+		return err
+	}
+
+	if err := s.Esb.validate(); err != nil {
+		return err
+	}
+
+	if err := s.GSE.validate(); err != nil {
 		return err
 	}
 
@@ -430,6 +446,46 @@ func (s VaultServerSetting) Validate() error {
 	}
 
 	if err := s.Sharding.validate(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// VaultSidecarSetting defines vault sidecar used setting options.
+type VaultSidecarSetting struct {
+	Network Network   `yaml:"network"`
+	Service Service   `yaml:"service"`
+	Log     LogOption `yaml:"log"`
+	Vault   Vault     `yaml:"vault"`
+}
+
+// trySetFlagBindIP try set flag bind ip.
+func (s *VaultSidecarSetting) trySetFlagBindIP(ip net.IP) error {
+	return s.Network.trySetFlagBindIP(ip)
+}
+
+// trySetFlagPort set http and grpc port
+func (s *VaultSidecarSetting) trySetFlagPort(port, grpcPort int) error {
+	return s.Network.trySetFlagPort(port, grpcPort)
+}
+
+// trySetDefault set the VaultSidecarSetting default value if user not configured.
+func (s *VaultSidecarSetting) trySetDefault() {
+	s.Network.trySetDefault()
+	s.Service.trySetDefault()
+	s.Log.trySetDefault()
+	s.Vault.getConfigFromEnv()
+}
+
+// Validate VaultSidecarSetting option.
+func (s VaultSidecarSetting) Validate() error {
+
+	if err := s.Network.validate(); err != nil {
+		return err
+	}
+
+	if err := s.Service.validate(); err != nil {
 		return err
 	}
 

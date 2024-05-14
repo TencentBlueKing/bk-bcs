@@ -90,6 +90,9 @@
           <bk-form-item :label="$t('cluster.ca.nodePool.label.system')">
             {{clusterOS || '--'}}
           </bk-form-item>
+          <bk-form-item :label="$t('tke.label.chargeType.text')">
+            {{ chargeTypeMap[nodePoolData.launchTemplate.instanceChargeType] || '--' }}
+          </bk-form-item>
           <bk-form-item :label="$t('cluster.ca.nodePool.create.containerRuntime.title')">
             {{`${clusterData.clusterAdvanceSettings
               ? `${clusterData.clusterAdvanceSettings.containerRuntime} ${clusterData.clusterAdvanceSettings.runtimeVersion}`
@@ -332,6 +335,10 @@ export default defineComponent({
       CLOUD_SSD: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.ssd'),
       CLOUD_HSSD: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.hssd'),
     };
+    const chargeTypeMap = {
+      PREPAID: $i18n.t('tke.label.chargeType.prepaid'),
+      POSTPAID_BY_HOUR: $i18n.t('tke.label.chargeType.postpaid_by_hour'),
+    };
     const navList = computed(() => [
       {
         title: clusterList.value.find(item => item.clusterID === props.clusterId)?.clusterName,
@@ -406,9 +413,8 @@ export default defineComponent({
 
     // 安全组信息
     const securityGroupsList = ref<any[]>([]);
-    const securityGroupNames = computed(() => securityGroupsList.value
-      .filter(item => nodePoolData.value.launchTemplate.securityGroupIDs.includes(item.securityGroupID))
-      .map(item => item.securityGroupName));
+    const securityGroupNames = computed(() => nodePoolData.value.launchTemplate?.securityGroupIDs
+      ?.map(id => securityGroupsList.value.find(item => item.securityGroupID === id)?.securityGroupName) || []);
 
     const securityGroupLoading = ref(false);
     const handleGetCloudSecurityGroups = async () => {
@@ -491,6 +497,7 @@ export default defineComponent({
       zoneLoading,
       cloudAreaLoading,
       cloudAreaName,
+      chargeTypeMap,
     };
   },
 });

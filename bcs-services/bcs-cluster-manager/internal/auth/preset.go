@@ -49,6 +49,7 @@ var NoAuthMethod = []string{
 	"ClusterManager.RetryTask",
 	"ClusterManager.GetTask",
 	"ClusterManager.ListTask",
+	"ClusterManager.SkipTask",
 
 	// cluster autoscaling
 	"ClusterManager.GetAutoScalingOption",
@@ -80,12 +81,15 @@ var NoAuthMethod = []string{
 	"ClusterManager.ListCloudSecurityGroups",
 	"ClusterManager.ListCloudInstanceTypes",
 	"ClusterManager.ListCloudOsImage",
+	"ClusterManager.ListCloudRuntimeInfo",
 	"ClusterManager.ListCloudInstances",
 	"ClusterManager.ListKeypairs",
 	"ClusterManager.ListCloudProjects",
 	"ClusterManager.ListCloudVpcs",
+	"ClusterManager.GetResourceGroups",
 
 	"ClusterManager.ListOperationLogs",
+	"ClusterManager.ListTaskStepLogs",
 	"ClusterManager.ListResourceSchema",
 	"ClusterManager.GetResourceSchema",
 
@@ -127,6 +131,7 @@ var ActionPermissions = map[string]string{
 	"ClusterManager.DeleteVirtualCluster":      cluster.CanDeleteClusterOperation,
 	"ClusterManager.UpdateVirtualClusterQuota": cluster.CanManageClusterOperation,
 	"ClusterManager.AddSubnetToCluster":        cluster.CanManageClusterOperation,
+	"ClusterManager.UpdateClusterModule":       cluster.CanManageClusterOperation,
 
 	// node
 	"ClusterManager.AddNodesToCluster":           cluster.CanManageClusterOperation,
@@ -176,6 +181,8 @@ var ActionPermissions = map[string]string{
 	"ClusterManager.EnableNodeGroupAutoScale":       cluster.CanManageClusterOperation,
 	"ClusterManager.DisableNodeGroupAutoScale":      cluster.CanManageClusterOperation,
 	"ClusterManager.GetExternalNodeScriptByGroupID": cluster.CanManageClusterOperation,
+	"ClusterManager.TransNodeGroupToNodeTemplate":   cluster.CanManageClusterOperation,
+	"ClusterManager.CleanDbHistoryData":             "",
 
 	// cloud template
 	"ClusterManager.CreateCloud": "",
@@ -240,8 +247,10 @@ var ActionPermissions = map[string]string{
 	"ClusterManager.ListCloudSecurityGroups": "",
 	"ClusterManager.ListCloudInstanceTypes":  "",
 	"ClusterManager.ListCloudOsImage":        "",
+	"ClusterManager.ListCloudRuntimeInfo":    "",
 	"ClusterManager.ListCloudInstances":      "",
 	"ClusterManager.ListOperationLogs":       "",
+	"ClusterManager.ListTaskStepLogs":        "",
 	"ClusterManager.ListResourceSchema":      "",
 	"ClusterManager.GetResourceSchema":       "",
 	"ClusterManager.QueryPermByActionID":     "",

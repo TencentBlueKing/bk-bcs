@@ -1,16 +1,16 @@
 /*
- * Tencent is pleased to support the open source community by making Blueking Container Service available.,
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
  * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 
-// Package netcheck
+// Package netcheck xxx
 package netcheck
 
 import (
@@ -22,10 +22,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/k8s"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metric_manager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin_manager"
-
 	"github.com/prometheus/client_golang/prometheus"
 	"golang.org/x/net/icmp"
 	"golang.org/x/net/ipv4"
@@ -35,6 +31,10 @@ import (
 	"k8s.io/apimachinery/pkg/util/json"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/klog"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/k8s"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metric_manager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin_manager"
 )
 
 // Plugin  xxx
@@ -53,22 +53,30 @@ type Plugin struct {
 }
 
 var (
+	// NewGaugeVec creates a new GaugeVec based on the provided GaugeOpts and
+	// partitioned by the given label names.
 	podNetAvailability = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "pod_net_availability",
 		Help: "pod_net_availability, 1 means OK",
 	}, []string{"target", "target_biz", "status"})
 
+	// NewHistogramVec creates a new HistogramVec based on the provided HistogramOpts and
+	// partitioned by the given label names.
 	podNetLatency = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Name:    "pod_net_latency",
 		Help:    "pod_net_latency",
 		Buckets: []float64{0.001, 0.01, 0.1, 0.2, 0.4, 0.8, 1.6, 3.2},
 	}, []string{"target", "target_biz"})
 
+	// NewGaugeVec creates a new GaugeVec based on the provided GaugeOpts and
+	// partitioned by the given label names.
 	svcNetAvailability = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "svc_net_availability",
 		Help: "svc_net_availability, 1 means OK",
 	}, []string{"target", "target_biz", "status"})
 
+	// NewHistogramVec creates a new HistogramVec based on the provided HistogramOpts and
+	// partitioned by the given label names.
 	svcNetLatency = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Name:    "svc_net_latency",
 		Help:    "pod_net_latency",
@@ -196,7 +204,7 @@ func (p *Plugin) Check() {
 		metric_manager.SetCommonDurationMetric([]string{"netcheck", "", "", ""}, start)
 	}()
 
-	netChecktGaugeVecSetList := make([]*metric_manager.GaugeVecSet, 0, 0)
+	netChecktGaugeVecSetList := make([]*metric_manager.GaugeVecSet, 0)
 
 	status := "error"
 	defer func() {

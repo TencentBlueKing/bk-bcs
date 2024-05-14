@@ -328,9 +328,10 @@
           </bk-form-item>
           <bk-form-item :label="$t('cluster.create.label.initNodeTemplate')">
             <TemplateSelector
+              class="max-w-[500px]"
               v-model="nodesConfig.nodeTemplateID"
               :disabled="manageType === 'INDEPENDENT_CLUSTER' && skipAddNodes"
-              is-tke-cluster />
+              provider="tencentCloud" />
           </bk-form-item>
         </bk-form>
       </bcs-tab-panel>
@@ -584,6 +585,7 @@ export default defineComponent({
         cloudID: basicInfo.value.provider,
         region: networkConfig.value.region,
         networkType: networkConfig.value.networkType,
+        businessID: curProject.value.businessID,
       });
       vpcList.value = data.filter(item => item.available === 'true');
       vpcLoading.value = false;

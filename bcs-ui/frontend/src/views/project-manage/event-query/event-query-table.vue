@@ -71,8 +71,12 @@
       <bcs-table-column
         :label="$t('projects.eventQuery.content')"
         prop="describe"
-        min-width="100"
-        show-overflow-tooltip>
+        min-width="100">
+        <template #default="{ row }">
+          <div class="overflow-auto leading-normal tracking-wide py-[8px]">
+            {{ row.describe || '--' }}
+          </div>
+        </template>
       </bcs-table-column>
       <template #empty>
         <BcsEmptyTableStatus :type="searchEmpty ? 'search-empty' : 'empty'" @clear="handleClearSearchData" />
@@ -90,7 +94,7 @@ import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
 import NamespaceSelect from '@/components/namespace-selector/namespace-select.vue';
 import { useCluster } from '@/composables/use-app';
 import $i18n from '@/i18n/i18n-setup';
-import { useSelectItemsNamespace } from '@/views/resource-view/namespace/use-namespace';
+import { useSelectItemsNamespace } from '@/views/cluster-manage/namespace/use-namespace';
 
 export default defineComponent({
   name: 'EventQuery',
@@ -105,6 +109,7 @@ export default defineComponent({
     clusterId: {
       type: String,
       default: '',
+      required: true,
     },
     // 命名空间
     namespace: {
@@ -152,7 +157,7 @@ export default defineComponent({
       nsRequired,
     } = toRefs(props);
 
-    const { curClusterId, clusterList } = useCluster();
+    const { clusterList } = useCluster();
     const { namespaceList, namespaceLoading, getNamespaceData } = useSelectItemsNamespace();
     const shortcuts = ref([
       {
@@ -372,7 +377,7 @@ export default defineComponent({
       limit: 10,
     });
     const handleGetEventList = async () => {
-      const clusterId = params.value.clusterId || curClusterId.value;
+      const { clusterId } = params.value;
       if (!clusterId) return;
 
       const cluster = clusterList.value.find(item => item.clusterID === clusterId);
@@ -443,7 +448,7 @@ export default defineComponent({
 
     onMounted(async () => {
       eventLoading.value = true;
-      await getNamespaceData({ clusterId: params.value.clusterId || curClusterId.value }, nsRequired.value);
+      await getNamespaceData({ clusterId: params.value.clusterId }, nsRequired.value);
       await handleGetEventList();
       eventLoading.value = false;
     });

@@ -110,19 +110,26 @@
       <template #footer>
         <div>
           <bk-button
+            :loading="validating"
+            theme="primary"
+            @click="handleValidate">
+            {{ $t('generic.button.validate') }}
+          </bk-button>
+          <bk-button
             theme="primary"
             :loading="createLoading"
+            :disabled="!isValidate"
             @click="handleCreateAccount">
             {{ $t('generic.button.confirm') }}
           </bk-button>
-          <bk-button @click="() => showDialog = false">{{ $t('generic.button.cancel') }}</bk-button>
+          <bk-button @click="showDialog = false">{{ $t('generic.button.cancel') }}</bk-button>
         </div>
       </template>
     </bcs-dialog>
   </div>
 </template>
 <script lang="ts">
-import { computed, defineComponent, onMounted, ref } from 'vue';
+import { computed, defineComponent, onMounted, ref, watch } from 'vue';
 
 import $bkMessage from '@/common/bkmagic';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
@@ -130,9 +137,11 @@ import usePage from '@/composables/use-page';
 import useTableSearch from '@/composables/use-search';
 import $i18n from '@/i18n/i18n-setup';
 import $store from '@/store';
+import useCloud from '@/views/cluster-manage/use-cloud';
 
 export default defineComponent({
   setup() {
+    const cloudID = 'tencentCloud';
     const curProject = computed(() => $store.state.curProject);
     const user = computed(() => $store.state.user);
 
@@ -151,6 +160,22 @@ export default defineComponent({
       enable: true,
       creator: user.value.username,
       projectID: curProject.value.project_id,
+    });
+    watch(showDialog, () => {
+      if (!showDialog.value) {
+        // 重置数据
+        account.value = {
+          accountName: '',
+          desc: '',
+          account: {
+            secretID: '',
+            secretKey: '',
+          },
+          enable: true,
+          creator: user.value.username,
+          projectID: curProject.value.project_id,
+        };
+      }
     });
     const formRules = ref({
       accountName: [
@@ -204,7 +229,7 @@ export default defineComponent({
     const handleGetCloud = async () => {
       loading.value = true;
       const res = await $store.dispatch('clustermanager/cloudAccounts', {
-        $cloudId: 'tencentCloud',
+        $cloudId: cloudID,
         projectID: curProject.value.project_id,
         operator: user.value.username,
       });
@@ -222,7 +247,7 @@ export default defineComponent({
         confirmFn: async () => {
           loading.value = true;
           const result = await $store.dispatch('clustermanager/deleteCloudAccounts', {
-            $cloudId: 'tencentCloud',
+            $cloudId: cloudID,
             $accountID: row.account.accountID,
           });
           if (result) {
@@ -236,13 +261,33 @@ export default defineComponent({
         },
       });
     };
+    // 校验云凭证
+    const { validateCloudAccounts } = useCloud();
+    const isValidate = ref(false);
+    const validating = ref(false);
+    watch(() => account.value.account, () => {
+      isValidate.value = false;
+    }, { deep: true });
+    const handleValidate = async () => {
+      const valid = await formRef.value?.validate().catch(() => false);
+      if (!valid) return;
+
+      validating.value = true;
+      const errMsg = await validateCloudAccounts({
+        $cloudId: cloudID,
+        account: account.value.account,
+      });
+      isValidate.value = !errMsg;
+      validating.value = false;
+    };
+    // 创建云凭证
     const handleCreateAccount = async () => {
       const valid = await formRef.value?.validate();
       if (!valid) return;
 
       createLoading.value = true;
       const result = await $store.dispatch('clustermanager/createCloudAccounts', {
-        $cloudId: 'tencentCloud',
+        $cloudId: cloudID,
         ...account.value,
       });
       createLoading.value = false;
@@ -262,6 +307,8 @@ export default defineComponent({
       handleGetCloud();
     });
     return {
+      validating,
+      isValidate,
       curProject,
       user,
       webAnnotations,
@@ -280,6 +327,7 @@ export default defineComponent({
       handleCreateAccount,
       handleDeleteAccount,
       handleShowCreateDialog,
+      handleValidate,
     };
   },
 });

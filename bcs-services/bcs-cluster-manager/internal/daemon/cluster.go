@@ -32,6 +32,7 @@ func (d *Daemon) reportClusterGroupNodeNum(error chan<- error) {
 	if err != nil {
 		blog.Errorf("reportClusterGroupNodeNum ListNodeGroup failed: %v", err)
 		error <- err
+		return
 	}
 
 	concurency := utils.NewRoutinePool(10)

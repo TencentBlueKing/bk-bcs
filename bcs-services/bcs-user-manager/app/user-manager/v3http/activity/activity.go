@@ -143,7 +143,7 @@ func PushActivities(request *restful.Request, response *restful.Response) {
 	activities := make([]*models.Activity, 0)
 	for _, v := range form.Activities {
 		var project *component.Project
-		project, err = component.GetProject(request.Request.Context(), v.ProjectCode)
+		project, err = component.GetProjectWithCache(request.Request.Context(), v.ProjectCode)
 		if err != nil {
 			blog.Errorf("get project failed, err %s", err.Error())
 			continue

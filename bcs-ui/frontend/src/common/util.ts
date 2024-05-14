@@ -717,6 +717,13 @@ export function countIPsInCIDR(cidr) {
   const totalIPs = Math.pow(2, hostBits);
   return totalIPs;
 }
+export const getCidrIpNum = (cidr) => {
+  const mask = Number(String(cidr).split('/')[1] || 0);
+  if (mask <= 0) {
+    return 0;
+  }
+  return Math.pow(2, 32 - mask);
+};
 
 const cidrToRange = (cidr: string): [string, string] => {
   const [ip, subnet] = cidr.split('/');

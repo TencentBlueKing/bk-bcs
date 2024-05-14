@@ -16,7 +16,7 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/enumor"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/enumor"
 )
 
 // ContentColumns defines 's columns
@@ -109,6 +109,9 @@ type ContentSpec struct {
 	// ByteSize is the size of this content in byte.
 	// can not be updated
 	ByteSize uint64 `db:"byte_size" json:"byte_size" gorm:"column:byte_size"`
+	// Md5 is the md5 value of a configuration file's content.
+	// it can not be updated.
+	Md5 string `db:"md5" json:"md5" gorm:"column:md5"`
 }
 
 // ReleasedContentSpec is a collection of a released content specifics.
@@ -126,6 +129,9 @@ type ReleasedContentSpec struct {
 	// OriginByteSize is the size of this content in byte before render.
 	// can not be updated
 	OriginByteSize uint64 `db:"origin_byte_size" json:"origin_byte_size" gorm:"column:origin_byte_size"`
+	// Md5 is the md5 value of a configuration file's content after render.
+	// it can not be updated.
+	Md5 string `db:"md5" json:"md5" gorm:"column:md5"`
 }
 
 // Validate content's spec

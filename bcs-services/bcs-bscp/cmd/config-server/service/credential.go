@@ -15,15 +15,15 @@ package service
 import (
 	"context"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
-	pbcs "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/config-server"
-	pbcredential "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/credential"
-	pbds "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbcs "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/config-server"
+	pbcredential "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/credential"
+	pbds "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
 // CreateCredentials create a credential
@@ -99,6 +99,7 @@ func (s *Service) ListCredentials(ctx context.Context,
 		SearchKey: req.SearchKey,
 		Start:     req.Start,
 		Limit:     req.Limit,
+		TopIds:    req.TopIds,
 	}
 
 	rp, err := s.client.DS.ListCredentials(grpcKit.RpcCtx(), r)
@@ -187,5 +188,71 @@ func (s *Service) UpdateCredential(ctx context.Context,
 		return nil, err
 	}
 
+	return resp, nil
+}
+
+// CheckCredentialName Check if the credential name exists
+func (s *Service) CheckCredentialName(ctx context.Context, req *pbcs.CheckCredentialNameReq) (
+	*pbcs.CheckCredentialNameResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.Credential, Action: meta.View}, BizID: req.BizId},
+	}
+
+	err := s.authorizer.Authorize(grpcKit, res...)
+	if err != nil {
+		return nil, err
+	}
+
+	credential, err := s.client.DS.CheckCredentialName(grpcKit.Ctx, &pbds.CheckCredentialNameReq{
+		BizId:          req.BizId,
+		CredentialName: req.CredentialName,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &pbcs.CheckCredentialNameResp{Exist: credential.Exist}, nil
+}
+
+// CredentialScopePreview 关联规则预览配置项
+func (s *Service) CredentialScopePreview(ctx context.Context, req *pbcs.CredentialScopePreviewReq) (
+	*pbcs.CredentialScopePreviewResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	resp := new(pbcs.CredentialScopePreviewResp)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.Credential, Action: meta.View}, BizID: req.BizId},
+	}
+	err := s.authorizer.Authorize(grpcKit, res...)
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := s.client.DS.CredentialScopePreview(grpcKit.RpcCtx(), &pbds.CredentialScopePreviewReq{
+		BizId:       req.BizId,
+		AppName:     req.AppName,
+		Scope:       req.Scope,
+		Limit:       req.Limit,
+		Start:       req.Start,
+		SearchValue: req.SearchValue,
+	})
+	if err != nil {
+		return resp, err
+	}
+
+	items := make([]*pbcs.CredentialScopePreviewResp_Detail, 0)
+	for _, v := range data.Details {
+		items = append(items, &pbcs.CredentialScopePreviewResp_Detail{
+			Name: v.GetName(),
+			Path: v.GetPath(),
+		})
+	}
+	resp.Details = items
+	resp.Count = data.Count
 	return resp, nil
 }

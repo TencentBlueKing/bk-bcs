@@ -1,9 +1,6 @@
-FROM centos:8
+FROM alpine
 
-#for command envsubst
-RUN sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
-RUN sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
-RUN yum install -y gettext
+RUN apk --update --no-cache add ca-certificates bash vim curl gettext libc6-compat tzdata
 
 RUN mkdir -p /data/bcs/logs/bcs /data/bcs/cert
 RUN mkdir -p /data/bcs/bcs-user-manager

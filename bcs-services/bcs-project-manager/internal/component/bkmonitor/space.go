@@ -87,7 +87,7 @@ func CreateSpace(project *project.Project) error {
 	}
 	// 请求API
 	proxy := ""
-	body, err := component.Request(*req, timeout, proxy, getAuthHeader())
+	body, err := component.Request(*req, timeout, proxy, component.GetAuthHeader())
 	if err != nil {
 		logging.Error("request create bkmonitor space for project %s failed, %s", project.ProjectID, err.Error())
 		return errorx.NewRequestBkMonitorErr(err.Error())
@@ -119,7 +119,7 @@ func ListSpaces() ([]*Space, error) {
 		req.QueryData.Set("page_size", strconv.Itoa(pageSize))
 		// 请求API
 		proxy := ""
-		body, err := component.Request(*req, timeout, proxy, getAuthHeader())
+		body, err := component.Request(*req, timeout, proxy, component.GetAuthHeader())
 		if err != nil {
 			logging.Error("request list bkmonitor bcs spaces failed, %s", err.Error())
 			return nil, errorx.NewRequestBkMonitorErr(err.Error())
@@ -146,12 +146,4 @@ func ListSpaces() ([]*Space, error) {
 	}
 
 	return spaces, nil
-}
-
-func getAuthHeader() map[string]string {
-	return map[string]string{
-		"Content-Type": "application/json",
-		"X-Bkapi-Authorization": fmt.Sprintf(`{"bk_app_code": "%s", "bk_app_secret": "%s"}`,
-			config.GlobalConf.App.Code, config.GlobalConf.App.Secret),
-	}
 }

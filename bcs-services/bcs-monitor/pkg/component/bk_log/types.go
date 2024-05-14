@@ -42,12 +42,13 @@ type LogRuleContainer struct {
 	Conditions    *Conditions   `json:"conditions,omitempty"`
 	LabelSelector LabelSelector `json:"label_selector,omitempty"`
 	Container     Container     `json:"container,omitempty"`
+	Multiline     *Multiline    `json:"multiline,omitempty"`
 }
 
 // LabelSelector label selector
 type LabelSelector struct {
-	MatchLabels      []Label      `json:"match_labels,omitempty"`
-	MatchExpressions []Expression `json:"match_expressions,omitempty"`
+	MatchLabels      []Label `json:"match_labels,omitempty"`
+	MatchExpressions []Label `json:"match_expressions,omitempty"`
 }
 
 // Container container config
@@ -57,16 +58,55 @@ type Container struct {
 	ContainerName string `json:"container_name"`
 }
 
-// Label label
-type Label struct {
-	Key   string `json:"key"`
-	Value string `json:"value"`
+// MergeInLabels merge labels
+// matchExpressions 合并到 matchLabels
+func MergeInLabels(matchLabels, matchExpressions []Label) []Label {
+	matchLabels = FilterLabels(matchLabels)
+	matchExpressions = FilterLabels(matchExpressions)
+	matchLabels = append(matchLabels, matchExpressions...)
+	return matchLabels
 }
 
-// Expression expression
-type Expression struct {
+// MergeOutLabels merge labels
+// matchLabels 分开非 = 的表达式到 matchExpressions
+func MergeOutLabels(matchLabels, matchExpressions []Label) ([]Label, []Label) {
+	matchLabels = FilterLabels(matchLabels)
+	matchExpressions = FilterLabels(matchExpressions)
+	newLabels := make([]Label, 0)
+	for _, v := range matchLabels {
+		if v.Operator != "=" {
+			matchExpressions = append(matchExpressions, v)
+			continue
+		}
+		newLabels = append(newLabels, v)
+	}
+	return newLabels, matchExpressions
+}
+
+// FilterLabels filter labels
+func FilterLabels(labels []Label) []Label {
+	newLabels := make([]Label, 0)
+	for _, v := range labels {
+		switch v.Operator {
+		case "", "=":
+			newLabels = append(newLabels, Label{Key: v.Key, Operator: "=", Value: v.Value})
+		case "In":
+			newLabels = append(newLabels, Label{Key: v.Key, Operator: "In", Value: v.Value})
+		case "NotIn":
+			newLabels = append(newLabels, Label{Key: v.Key, Operator: "NotIn", Value: v.Value})
+		case "Exists":
+			newLabels = append(newLabels, Label{Key: v.Key, Operator: "Exists", Value: v.Value})
+		case "DoesNotExist":
+			newLabels = append(newLabels, Label{Key: v.Key, Operator: "DoesNotExist", Value: v.Value})
+		}
+	}
+	return newLabels
+}
+
+// Label label
+type Label struct {
 	Key      string `json:"key"`
-	Operator string `json:"operator"`
+	Operator string `json:"operator,omitempty"`
 	Value    string `json:"value"`
 }
 
@@ -94,6 +134,13 @@ func (s SeparatorFilters) IntFieldIndex() int {
 		return 1
 	}
 	return int(i)
+}
+
+// Multiline multi line
+type Multiline struct {
+	MultilinePattern  string      `json:"multiline_pattern"`
+	MultilineMaxLines json.Number `json:"multiline_max_lines"`
+	MultilineTimeout  json.Number `json:"multiline_timeout"`
 }
 
 // DataInfo data info
@@ -143,6 +190,8 @@ type ListBCSCollectorRespData struct {
 	STDIndexSetID         int               `json:"std_index_set_id"`
 	RuleFileIndexSetID    int               `json:"rule_file_index_set_id"`
 	RuleSTDIndexSetID     int               `json:"rule_std_index_set_id"`
+	IsSTDDeleted          bool              `json:"is_std_deleted"`
+	IsFileDeleted         bool              `json:"is_file_deleted"`
 	Creator               string            `json:"created_by"`
 	Updator               string            `json:"updated_by"`
 	CreatedAt             time.Time         `json:"created_at"`
@@ -166,20 +215,36 @@ func (resp *ListBCSCollectorRespData) ToLogRule() LogRule {
 		conf := resp.ContainerConfig[0]
 		namespaces := make([]string, 0)
 		paths := make([]string, 0)
+		var multiline *Multiline
 		if conf.Namespaces != nil {
 			namespaces = conf.Namespaces
 		}
 		if conf.Params.Paths != nil {
 			paths = conf.Params.Paths
 		}
+		if conf.Params.MultilinePattern != "" {
+			multiline = &Multiline{MultilinePattern: conf.Params.MultilinePattern,
+				MultilineMaxLines: conf.Params.MultilineMaxLines, MultilineTimeout: conf.Params.MultilineTimeout}
+		}
+		if conf.Params.Conditions != nil {
+			if conf.Params.Conditions.MatchType == "" {
+				conf.Params.Conditions.MatchType = "include"
+			}
+			if conf.Params.Conditions.Type == "" {
+				conf.Params.Conditions.Type = "match"
+			}
+		}
+		labelSelector := LabelSelector{}
+		labelSelector.MatchLabels = MergeInLabels(conf.LabelSelector.MatchLabels, conf.LabelSelector.MatchExpressions)
 		rule.LogRuleContainer = LogRuleContainer{
 			Namespaces:    namespaces,
 			Paths:         paths,
 			DataEncoding:  conf.DataEncoding,
 			EnableStdout:  conf.EnableStdout,
 			Conditions:    conf.Params.Conditions,
-			LabelSelector: conf.LabelSelector,
+			LabelSelector: labelSelector,
 			Container:     conf.Container,
+			Multiline:     multiline,
 		}
 		// append data info
 		rule.DataInfo = DataInfo{
@@ -235,6 +300,7 @@ type ContainerConfig struct {
 type Params struct {
 	Paths      []string    `json:"paths"`
 	Conditions *Conditions `json:"conditions"`
+	Multiline
 }
 
 // StdoutConf stdout config
@@ -338,4 +404,28 @@ type QueryLogResp struct {
 			Total int `json:"total"`
 		} `json:"hits"`
 	} `json:"data"`
+}
+
+// GetStorageClustersResp xxx
+type GetStorageClustersResp struct {
+	BaseResp
+	Data []GetStorageClustersRespData `json:"data"`
+}
+
+// GetStorageClustersRespData xxx
+type GetStorageClustersRespData struct {
+	StorageClusterID   int     `json:"storage_cluster_id"`
+	StorageClusterName string  `json:"storage_cluster_name"`
+	StorageVersion     string  `json:"storage_version"`
+	StorageUsage       int     `json:"storage_usage"`
+	StorageTotal       float64 `json:"storage_total"`
+	IsPlatform         bool    `json:"is_platform"`
+	IsSelected         bool    `json:"is_selected"`
+	Description        string  `json:"description"`
+}
+
+// GetBcsCollectorStorageResp xxx
+type GetBcsCollectorStorageResp struct {
+	BaseResp
+	Data json.Number `json:"data"`
 }

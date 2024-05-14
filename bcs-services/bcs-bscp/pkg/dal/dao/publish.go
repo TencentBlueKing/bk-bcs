@@ -19,13 +19,13 @@ import (
 
 	"gorm.io/gorm"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/selector"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/selector"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // Publish defines all the publish operation related operations.
@@ -139,7 +139,6 @@ func genStrategy(kit *kit.Kit, opt *types.PublishOption, stgID uint32, groups []
 			Scope: &table.Scope{
 				Groups: groups,
 			},
-			Mode: table.Normal,
 			Memo: opt.Memo,
 		},
 		State: &table.StrategyState{
@@ -216,7 +215,7 @@ func (dao *pubDao) publish(kit *kit.Kit, tx *gen.QueryTx, opt *types.PublishOpti
 	}
 
 	// add release publish num
-	if err := dao.increaseReleasePublishNum(kit, tx.Query, stg.Spec.ReleaseID); err != nil {
+	if err := dao.updateReleasePublishInfo(kit, tx.Query, opt); err != nil {
 		logs.Errorf("increate release publish num failed, err: %v, rid: %s", err, kit.Rid)
 		return 0, err
 	}
@@ -245,17 +244,27 @@ func (dao *pubDao) publish(kit *kit.Kit, tx *gen.QueryTx, opt *types.PublishOpti
 	return stgID, nil
 }
 
-// increaseReleasePublishNum increase release publish num by 1
-func (dao *pubDao) increaseReleasePublishNum(kit *kit.Kit, tx *gen.Query, releaseID uint32) error {
+// updateReleasePublishInfo update release publish info, include publish num and fully released status.
+func (dao *pubDao) updateReleasePublishInfo(kit *kit.Kit, tx *gen.Query, opt *types.PublishOption) error {
 	m := tx.Release
 	q := tx.Release.WithContext(kit.Ctx)
-	if _, err := q.Where(m.ID.Eq(releaseID)).UpdateSimple(m.PublishNum.Add(1)); err != nil {
-		logs.Errorf("increase release publish num failed, err: %v, rid: %s", err, kit.Rid)
-		return err
+	// if publish all or publish default group, then set fully released to true.
+	if opt.All || opt.Default {
+		if _, err := q.Where(m.ID.Eq(opt.ReleaseID)).UpdateSimple(m.PublishNum.Add(1),
+			m.FullyReleased.Value(true)); err != nil {
+			logs.Errorf("update release publish info failed, err: %v, rid: %s", err, kit.Rid)
+			return err
+		}
+	} else {
+		if _, err := q.Where(m.ID.Eq(opt.ReleaseID)).UpdateSimple(m.PublishNum.Add(1)); err != nil {
+			logs.Errorf("update release publish info failed, err: %v, rid: %s", err, kit.Rid)
+			return err
+		}
 	}
 	return nil
 }
 
+// nolint: funlen
 func (dao *pubDao) upsertReleasedGroups(kit *kit.Kit, tx *gen.Query, opt *types.PublishOption,
 	stg *table.Strategy) error {
 	defaultGroup := &table.Group{
@@ -303,7 +312,27 @@ func (dao *pubDao) upsertReleasedGroups(kit *kit.Kit, tx *gen.Query, opt *types.
 
 	groups := stg.Spec.Scope.Groups
 	if opt.Default {
-		groups = append(groups, defaultGroup)
+		// 1. delete other released groups in this release.
+		m := tx.ReleasedGroup
+		if _, err := m.WithContext(kit.Ctx).
+			Where(m.BizID.Eq(opt.BizID), m.AppID.Eq(opt.AppID), m.ReleaseID.Eq(opt.ReleaseID)).
+			Delete(); err != nil {
+			logs.Errorf("delete other released groups in release failed, err: %v, rid: %s", err, kit.Rid)
+			return err
+		}
+		// 2. delete others groups in other releases.
+		groupIDs := make([]uint32, 0, len(groups))
+		for _, group := range groups {
+			groupIDs = append(groupIDs, group.ID)
+		}
+		if _, err := m.WithContext(kit.Ctx).
+			Where(m.BizID.Eq(opt.BizID), m.AppID.Eq(opt.AppID), m.GroupID.In(groupIDs...)).
+			Delete(); err != nil {
+			logs.Errorf("delete other released groups in other releases failed, err: %v, rid: %s", err, kit.Rid)
+			return err
+		}
+		// 3. only publish default group
+		groups = []*table.Group{defaultGroup}
 	}
 	for _, group := range groups {
 		rg := &table.ReleasedGroup{

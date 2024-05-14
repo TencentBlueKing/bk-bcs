@@ -25,19 +25,15 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
-const (
-	qcloudProvider = "tencentCloud"
-)
-
 func (d *Daemon) reportClusterHealthStatus(error chan<- error) {
-	condCluster := operator.NewLeafCondition(operator.Eq, operator.M{
-		"provider": qcloudProvider,
-		"status":   common.StatusRunning,
+	condCluster := operator.NewLeafCondition(operator.In, operator.M{
+		"status": []string{common.StatusRunning, common.StatusConnectClusterFailed},
 	})
 	clusterList, err := d.model.ListCluster(d.ctx, condCluster, &storeopt.ListOption{All: true})
 	if err != nil {
 		blog.Errorf("reportClusterHealthStatus ListCluster failed: %v", err)
 		error <- err
+		return
 	}
 
 	concurency := utils.NewRoutinePool(10)
@@ -48,21 +44,52 @@ func (d *Daemon) reportClusterHealthStatus(error chan<- error) {
 		go func(cls cmproto.Cluster) {
 			defer concurency.Done()
 
+			newCluster, errLocal := d.model.GetCluster(d.ctx, cls.GetClusterID())
+			if errLocal != nil {
+				blog.Errorf("reportClusterHealthStatus GetCluster failed: %v", errLocal)
+				error <- errLocal
+				return
+			}
+			if !utils.StringInSlice(newCluster.GetStatus(),
+				[]string{common.StatusRunning, common.StatusConnectClusterFailed}) {
+				blog.Errorf("reportClusterHealthStatus[%s] %v", newCluster.ClusterID, newCluster.GetStatus())
+				return
+			}
+
 			k8sOperator := clusterops.NewK8SOperator(options.GetGlobalCMOptions(), d.model)
-			kubeCli, err := k8sOperator.GetClusterClient(cls.ClusterID)
-			if err != nil {
-				error <- err
+			kubeCli, errLocal := k8sOperator.GetClusterClient(cls.ClusterID)
+			if errLocal != nil {
+				error <- errLocal
 				return
 			}
 			_, err = kubeCli.Discovery().ServerVersion()
 			if err != nil {
+				// if options.GetEditionInfo().IsCommunicationEdition() {}
+				_ = d.updateClusterStatus(cls.ClusterID, common.StatusConnectClusterFailed)
 				metrics.ReportCloudClusterHealthStatus(cls.Provider, cls.ClusterID, 0)
 				error <- err
 				return
 			}
+
+			_ = d.updateClusterStatus(cls.ClusterID, common.StatusRunning)
+			// if options.GetEditionInfo().IsCommunicationEdition() {}
 			metrics.ReportCloudClusterHealthStatus(cls.Provider, cls.ClusterID, 1)
 		}(clusterList[i])
 	}
 
 	concurency.Wait()
+}
+
+// nolint
+func (d *Daemon) updateClusterStatus(clusterId, status string) error {
+	cluster, err := d.model.GetCluster(d.ctx, clusterId)
+	if err != nil {
+		return err
+	}
+	if cluster.Status == status {
+		return nil
+	}
+	cluster.Status = status
+
+	return d.model.UpdateCluster(d.ctx, cluster)
 }

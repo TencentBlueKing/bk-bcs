@@ -8,14 +8,38 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package utils xxx
 package utils
 
 import (
 	"strings"
 )
+
+// IsUnauthenticated unauthenticated
+func IsUnauthenticated(err error) bool {
+	if err == nil {
+		return false
+	}
+	return strings.Contains(err.Error(), "Unauthenticated")
+}
+
+// IsClusterAskCredentials cluster not ready
+func IsClusterAskCredentials(err error) bool {
+	if err == nil {
+		return false
+	}
+	return strings.Contains(err.Error(), "the server has asked for the client to provide credentials")
+}
+
+// IsPermissionDenied permission
+func IsPermissionDenied(err error) bool {
+	if err == nil {
+		return false
+	}
+	return strings.Contains(err.Error(), "PermissionDenied")
+}
 
 // IsContextCanceled confirm the error whether context canceled
 func IsContextCanceled(err error) bool {
@@ -23,6 +47,14 @@ func IsContextCanceled(err error) bool {
 		return false
 	}
 	return strings.Contains(err.Error(), "context canceled")
+}
+
+// IsContextDeadlineExceeded context exceeded
+func IsContextDeadlineExceeded(err error) bool {
+	if err == nil {
+		return false
+	}
+	return strings.Contains(err.Error(), "context deadline exceeded")
 }
 
 // IsSecretAlreadyExist defines the secret whether exist

@@ -23,21 +23,22 @@ import (
 	"golang.org/x/sync/semaphore"
 	"golang.org/x/time/rate"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/lcache"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/observer"
-	btyp "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/types"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/repository"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
-	pbci "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/config-item"
-	pbct "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/content"
-	pbhook "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/hook"
-	pbkv "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/kv"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/shutdown"
-	sfs "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/sf-share"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/lcache"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/observer"
+	btyp "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/types"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/repository"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbbase "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
+	pbci "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/config-item"
+	pbct "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/content"
+	pbhook "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/hook"
+	pbkv "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/kv"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/shutdown"
+	sfs "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/sf-share"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // Option defines options to create a scheduler instance.
@@ -330,6 +331,7 @@ func (sch *Scheduler) buildEvent(inst *sfs.InstanceSpec, ciList []*types.Release
 			ContentSpec: &pbct.ContentSpec{
 				Signature: one.CommitSpec.Signature,
 				ByteSize:  one.CommitSpec.ByteSize,
+				Md5:       one.CommitSpec.Md5,
 			},
 			ConfigItemSpec: &pbci.ConfigItemSpec{
 				Name:     cis.Name,
@@ -348,8 +350,18 @@ func (sch *Scheduler) buildEvent(inst *sfs.InstanceSpec, ciList []*types.Release
 				BizId: one.Attachment.BizID,
 				AppId: one.Attachment.AppID,
 			},
+			ConfigItemRevision: &pbbase.Revision{
+				Creator:  one.Revision.Creator,
+				Reviser:  one.Revision.Reviser,
+				CreateAt: one.Revision.CreatedAt.Format(time.RFC3339),
+				UpdateAt: one.Revision.UpdatedAt.Format(time.RFC3339),
+			},
 			RepositoryPath: uriD.Path(one.CommitSpec.Signature),
 		}
+	}
+	var releaseName string
+	if len(ciList) > 0 {
+		releaseName = ciList[0].ReleaseName
 	}
 	var preHook, postHook *pbhook.HookSpec
 	if pre != nil {
@@ -367,10 +379,11 @@ func (sch *Scheduler) buildEvent(inst *sfs.InstanceSpec, ciList []*types.Release
 
 	return &Event{
 		Change: &sfs.ReleaseEventMetaV1{
-			App:       inst.App,
-			AppID:     inst.AppID,
-			ReleaseID: releaseID,
-			CIMetas:   ciMeta,
+			App:         inst.App,
+			AppID:       inst.AppID,
+			ReleaseID:   releaseID,
+			ReleaseName: releaseName,
+			CIMetas:     ciMeta,
 			Repository: &sfs.RepositoryV1{
 				Root: uriD.Root(),
 				Url:  uriD.Url(),
@@ -420,12 +433,20 @@ func (sch *Scheduler) buildEventForRkv(inst *sfs.InstanceSpec, kvList []*types.R
 	kvMeta := make([]*sfs.KvMetaV1, len(kvList))
 	for idx, one := range kvList {
 		kvMeta[idx] = &sfs.KvMetaV1{
-			ID:  one.ID,
-			Key: one.Key,
+			ID:     one.ID,
+			Key:    one.Key,
+			KvType: one.KvType,
+			Revision: &pbbase.Revision{
+				Creator:  one.Revision.Creator,
+				Reviser:  one.Revision.Reviser,
+				CreateAt: one.Revision.CreatedAt.Format(time.RFC3339),
+				UpdateAt: one.Revision.UpdatedAt.Format(time.RFC3339),
+			},
 			KvAttachment: &pbkv.KvAttachment{
 				BizId: one.Attachment.BizID,
 				AppId: one.Attachment.AppID,
 			},
+			ContentSpec: pbct.PbContentSpec(one.ContentSpec),
 		}
 	}
 

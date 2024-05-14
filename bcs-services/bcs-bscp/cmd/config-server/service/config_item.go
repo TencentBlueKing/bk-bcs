@@ -15,17 +15,20 @@ package service
 import (
 	"context"
 	"fmt"
+	"sync"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
-	pbcs "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/config-server"
-	pbcommit "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/commit"
-	pbci "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/config-item"
-	pbcontent "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/content"
-	pbds "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/version"
+	"golang.org/x/sync/errgroup"
+
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/i18n"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbcs "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/config-server"
+	pbcommit "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/commit"
+	pbci "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/config-item"
+	pbcontent "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/content"
+	pbds "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
 )
 
 // CreateConfigItem create config item with option
@@ -43,7 +46,8 @@ func (s *Service) CreateConfigItem(ctx context.Context, req *pbcs.CreateConfigIt
 		return nil, err
 	}
 	// 1. validate if file content uploaded.
-	if err = s.validateContentExist(grpcKit, req.BizId, req.Sign); err != nil {
+	metadata, err := s.client.provider.Metadata(grpcKit, req.Sign)
+	if err != nil {
 		logs.Errorf("validate file content uploaded failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
@@ -67,6 +71,7 @@ func (s *Service) CreateConfigItem(ctx context.Context, req *pbcs.CreateConfigIt
 		},
 		ContentSpec: &pbcontent.ContentSpec{
 			Signature: req.Sign,
+			Md5:       metadata.Md5,
 			ByteSize:  req.ByteSize,
 		},
 	}
@@ -81,24 +86,6 @@ func (s *Service) CreateConfigItem(ctx context.Context, req *pbcs.CreateConfigIt
 	}
 
 	return resp, nil
-}
-
-func (s *Service) validateContentExist(kt *kit.Kit, _ uint32, sign string) error {
-	// build version is debug mode, not need to validate repo node if exist.
-	if version.Debug() {
-		return nil
-	}
-
-	// validate was file content uploaded.
-	_, err := s.client.provider.Metadata(kt, sign)
-	if err == errf.ErrFileContentNotFound {
-		return fmt.Errorf("file content %s not upload", sign)
-	}
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 // BatchUpsertConfigItems batch upsert config items with option
@@ -119,7 +106,8 @@ func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbcs.BatchUps
 	items := make([]*pbds.BatchUpsertConfigItemsReq_ConfigItem, 0, len(req.Items))
 	for _, item := range req.Items {
 		// validate if file content uploaded.
-		if err = s.validateContentExist(grpcKit, req.BizId, item.Sign); err != nil {
+		metadata, err := s.client.provider.Metadata(grpcKit, item.Sign)
+		if err != nil {
 			logs.Errorf("validate file content uploaded failed, err: %v, rid: %s", err, grpcKit.Rid)
 			return nil, err
 		}
@@ -143,6 +131,7 @@ func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbcs.BatchUps
 			ContentSpec: &pbcontent.ContentSpec{
 				Signature: item.Sign,
 				ByteSize:  item.ByteSize,
+				Md5:       metadata.Md5,
 			},
 		})
 	}
@@ -223,6 +212,12 @@ func (s *Service) UpdateConfigItem(ctx context.Context, req *pbcs.UpdateConfigIt
 	}
 
 	// 2.3 if latest content sign not equals request content sign,create content and commit
+	// validate if file content uploaded.
+	metadata, err := s.client.provider.Metadata(grpcKit, req.Sign)
+	if err != nil {
+		logs.Errorf("validate file content uploaded failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
 	ccReq := &pbds.CreateContentReq{
 		Attachment: &pbcontent.ContentAttachment{
 			ConfigItemId: req.Id,
@@ -232,12 +227,8 @@ func (s *Service) UpdateConfigItem(ctx context.Context, req *pbcs.UpdateConfigIt
 		Spec: &pbcontent.ContentSpec{
 			Signature: req.Sign,
 			ByteSize:  req.ByteSize,
+			Md5:       metadata.Md5,
 		},
-	}
-	// validate if file content uploaded.
-	if err = s.validateContentExist(grpcKit, req.BizId, req.Sign); err != nil {
-		logs.Errorf("validate file content uploaded failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
 	}
 	ccResp, err := s.client.DS.CreateContent(grpcKit.RpcCtx(), ccReq)
 	if err != nil {
@@ -293,6 +284,72 @@ func (s *Service) DeleteConfigItem(ctx context.Context, req *pbcs.DeleteConfigIt
 	}
 
 	return resp, nil
+}
+
+// BatchDeleteConfigItems is used to batch delete config items.
+func (s *Service) BatchDeleteConfigItems(ctx context.Context, req *pbcs.BatchDeleteAppResourcesReq) (
+	*pbcs.BatchDeleteResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.Update, ResourceID: req.AppId}, BizID: req.BizId},
+	}
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
+		return nil, err
+	}
+
+	if len(req.GetIds()) == 0 {
+		return nil, errf.Errorf(errf.InvalidArgument, i18n.T(grpcKit, "id is required"))
+	}
+
+	eg, egCtx := errgroup.WithContext(grpcKit.RpcCtx())
+	eg.SetLimit(10)
+
+	successfulIDs := []uint32{}
+	failedIDs := []uint32{}
+	var mux sync.Mutex
+
+	// 使用 data-service 原子接口
+	for _, v := range req.GetIds() {
+		v := v
+		eg.Go(func() error {
+			r := &pbds.DeleteConfigItemReq{
+				Id: v,
+				Attachment: &pbci.ConfigItemAttachment{
+					BizId: req.BizId,
+					AppId: req.AppId,
+				},
+			}
+			if _, err := s.client.DS.DeleteConfigItem(egCtx, r); err != nil {
+				logs.Errorf("delete config item %d failed, err: %v, rid: %s", v, err, grpcKit.Rid)
+
+				// 错误不返回异常，记录错误ID
+				mux.Lock()
+				failedIDs = append(failedIDs, v)
+				mux.Unlock()
+				return nil
+			}
+
+			mux.Lock()
+			successfulIDs = append(successfulIDs, v)
+			mux.Unlock()
+
+			return nil
+		})
+	}
+
+	if err := eg.Wait(); err != nil {
+		logs.Errorf("batch delete config items failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, errf.Errorf(errf.Aborted, i18n.T(grpcKit, "batch delete config items failed"))
+	}
+
+	// 全部失败, 当前API视为失败
+	if len(failedIDs) == len(req.Ids) {
+		return nil, errf.Errorf(errf.Aborted, i18n.T(grpcKit, "batch delete config items failed"))
+	}
+
+	return &pbcs.BatchDeleteResp{SuccessfulIds: successfulIDs, FailedIds: failedIDs}, nil
 }
 
 // GetConfigItem get config item with content
@@ -414,6 +471,7 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbcs.ListConfigItems
 		All:          req.All,
 		Ids:          req.Ids,
 		WithStatus:   req.WithStatus,
+		Status:       req.Status,
 	}
 	rp, err := s.client.DS.ListConfigItems(grpcKit.RpcCtx(), r)
 	if err != nil {
@@ -529,4 +587,58 @@ func (s *Service) ListConfigItemByTuple(ctx context.Context, req *pbcs.ListConfi
 	}
 	resp := &pbcs.ListConfigItemByTupleResp{Details: tuple.GetConfigItems()}
 	return resp, nil
+}
+
+// UnDeleteConfigItem 配置项未命名版本恢复
+func (s *Service) UnDeleteConfigItem(ctx context.Context, req *pbcs.UnDeleteConfigItemReq) (
+	*pbcs.UnDeleteConfigItemResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.Update, ResourceID: req.AppId}, BizID: req.BizId},
+	}
+	err := s.authorizer.Authorize(grpcKit, res...)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = s.client.DS.UnDeleteConfigItem(grpcKit.RpcCtx(), &pbds.UnDeleteConfigItemReq{
+		Id: req.Id,
+		Attachment: &pbci.ConfigItemAttachment{
+			BizId: req.BizId,
+			AppId: req.AppId,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &pbcs.UnDeleteConfigItemResp{}, nil
+}
+
+// UndoConfigItem 撤消配置项
+func (s *Service) UndoConfigItem(ctx context.Context, req *pbcs.UndoConfigItemReq) (*pbcs.UndoConfigItemResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.Update, ResourceID: req.AppId}, BizID: req.BizId},
+	}
+	err := s.authorizer.Authorize(grpcKit, res...)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = s.client.DS.UndoConfigItem(grpcKit.RpcCtx(), &pbds.UndoConfigItemReq{
+		Id: req.Id,
+		Attachment: &pbci.ConfigItemAttachment{
+			BizId: req.BizId,
+			AppId: req.AppId,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &pbcs.UndoConfigItemResp{}, nil
 }

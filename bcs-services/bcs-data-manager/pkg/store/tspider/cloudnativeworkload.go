@@ -17,9 +17,9 @@ import (
 	"fmt"
 
 	sq "github.com/Masterminds/squirrel"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/jmoiron/sqlx"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 	datamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
 )
@@ -70,7 +70,7 @@ func (m *ModelCloudNative) GetCloudNativeWorkloadList(ctx context.Context,
 
 	// query for data
 	workloads := make([]*types.TEGWorkload, 0)
-	if err := m.Public.QueryxToStruct(query, &workloads); err != nil {
+	if err = m.Public.QueryxToStruct(query, &workloads); err != nil {
 		return nil, err
 	}
 	result := make([]*datamanager.TEGWorkload, 0)
@@ -110,7 +110,7 @@ func (m *ModelCloudNative) GetCloudNativeWorkloadList(ctx context.Context,
 func (m *ModelCloudNative) validate(request *datamanager.GetCloudNativeWorkloadListRequest) error {
 	pageSize := request.GetPageSize()
 	if pageSize > 10000 {
-		return fmt.Errorf("The max pageSize currently supported is 10000.")
+		return fmt.Errorf("the max pageSize currently supported is 10000")
 	}
 
 	return nil

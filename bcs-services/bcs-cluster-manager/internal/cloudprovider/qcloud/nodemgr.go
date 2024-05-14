@@ -47,8 +47,8 @@ type NodeManager struct {
 }
 
 // GetZoneList get zoneList
-func (nm *NodeManager) GetZoneList(opt *cloudprovider.CommonOption) ([]*proto.ZoneInfo, error) {
-	client, err := api.GetCVMClient(opt)
+func (nm *NodeManager) GetZoneList(opt *cloudprovider.GetZoneListOption) ([]*proto.ZoneInfo, error) {
+	client, err := api.GetCVMClient(&opt.CommonOption)
 	if err != nil {
 		blog.Errorf("create CVM client when GetZoneList failed: %v", err)
 		return nil, err
@@ -79,28 +79,10 @@ func (nm *NodeManager) GetZoneList(opt *cloudprovider.CommonOption) ([]*proto.Zo
 
 // GetCloudRegions get regionInfo
 func (nm *NodeManager) GetCloudRegions(opt *cloudprovider.CommonOption) ([]*proto.RegionInfo, error) {
-	client, err := api.GetCVMClient(opt)
-	if err != nil {
-		blog.Errorf("create CVM client when GetRegionsInfo failed: %v", err)
-		return nil, err
+	if opt.Region == "" {
+		opt.Region = defaultRegion
 	}
-
-	cloudRegions, err := client.GetCloudRegions()
-	if err != nil {
-		blog.Errorf("GetCloudRegions failed, %s", err.Error())
-		return nil, err
-	}
-
-	regions := make([]*proto.RegionInfo, 0)
-	for i := range cloudRegions {
-		regions = append(regions, &proto.RegionInfo{
-			Region:      *cloudRegions[i].Region,
-			RegionName:  *cloudRegions[i].RegionName,
-			RegionState: *cloudRegions[i].RegionState,
-		})
-	}
-
-	return regions, nil
+	return business.GetCloudRegions(opt)
 }
 
 // GetNodeByIP get specified Node by innerIP address
@@ -117,7 +99,7 @@ func (nm *NodeManager) GetNodeByIP(ip string, opt *cloudprovider.GetNodeOption) 
 		return nil, err
 	}
 
-	zoneInfo, err := business.GetZoneInfoByRegion(opt.Common)
+	_, zoneInfo, err := business.GetZoneInfoByRegion(opt.Common)
 	if err != nil {
 		blog.Errorf("cvm client GetNodeByIP failed: %v", err)
 	}
@@ -431,8 +413,8 @@ func (nm *NodeManager) DescribeKeyPairsByID(keyIDs []string,
 }
 
 // ListKeyPairs describe all ssh keyPairs https://cloud.tencent.com/document/product/213/15699
-func (nm *NodeManager) ListKeyPairs(opt *cloudprovider.CommonOption) ([]*proto.KeyPair, error) {
-	client, err := api.GetCVMClient(opt)
+func (nm *NodeManager) ListKeyPairs(opt *cloudprovider.ListNetworksOption) ([]*proto.KeyPair, error) {
+	client, err := api.GetCVMClient(&opt.CommonOption)
 	if err != nil {
 		blog.Errorf("create CVM client when ListKeyPairs failed: %v", err)
 		return nil, err
@@ -460,6 +442,11 @@ func (nm *NodeManager) ListKeyPairs(opt *cloudprovider.CommonOption) ([]*proto.K
 	return keyPairs, nil
 }
 
+// GetResourceGroups resource groups list
+func (nm *NodeManager) GetResourceGroups(opt *cloudprovider.CommonOption) ([]*proto.ResourceGroupInfo, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
 // ListOsImage list image os
 func (nm *NodeManager) ListOsImage(provider string, opt *cloudprovider.CommonOption) ([]*proto.OsImage, error) {
 	os := make([]*proto.OsImage, 0)
@@ -477,7 +464,7 @@ func (nm *NodeManager) GetExternalNodeByIP(ip string, opt *cloudprovider.GetNode
 	node := &proto.Node{}
 
 	ips := []string{ip}
-	hostData, err := cmdb.GetCmdbClient().QueryHostInfoWithoutBiz(ips, cmdb.Page{
+	hostData, err := cmdb.GetCmdbClient().QueryHostInfoWithoutBiz(cmdb.FieldHostIP, ips, cmdb.Page{
 		Start: 0,
 		Limit: len(ips),
 	})
@@ -500,7 +487,7 @@ func (nm *NodeManager) GetExternalNodeByIP(ip string, opt *cloudprovider.GetNode
 func (nm *NodeManager) ListExternalNodesByIP(ips []string, opt *cloudprovider.ListNodesOption) ([]*proto.Node, error) {
 	var nodes []*proto.Node
 
-	hostDataList, err := cmdb.GetCmdbClient().QueryHostInfoWithoutBiz(ips, cmdb.Page{
+	hostDataList, err := cmdb.GetCmdbClient().QueryHostInfoWithoutBiz(cmdb.FieldHostIP, ips, cmdb.Page{
 		Start: 0,
 		Limit: len(ips),
 	})
@@ -528,4 +515,9 @@ func (nm *NodeManager) ListExternalNodesByIP(ips []string, opt *cloudprovider.Li
 	}
 
 	return nodes, nil
+}
+
+// ListRuntimeInfo get runtime info list
+func (nm *NodeManager) ListRuntimeInfo(opt *cloudprovider.ListRuntimeInfoOption) (map[string][]string, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
 }

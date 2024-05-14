@@ -20,7 +20,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/encryptv2"
+	"github.com/Tencent/bk-bcs/bcs-common/common/encryptv2" // nolint
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"go.mongodb.org/mongo-driver/bson"
@@ -205,7 +205,7 @@ func (m *ModelRepository) GetProjectRepository(ctx context.Context, projectID, n
 
 	if name == common.PublicRepoName {
 		repo := options.GlobalOptions.Repo
-		publicRepoURL := common.GetPublicRepoURL(repo.URL, repo.PublicRepoProject, repo.PublicRepoName)
+		publicRepoURL := common.GetPublicRepoURL(repo.GetRepoBaseURL(), repo.PublicRepoProject, repo.PublicRepoName)
 		return &entity.Repository{
 			ProjectID:   projectID,
 			Name:        name,

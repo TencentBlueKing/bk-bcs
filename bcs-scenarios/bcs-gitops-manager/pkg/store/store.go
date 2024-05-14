@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package store xxx
 package store
 
 import (
@@ -25,7 +26,6 @@ import (
 	settings_util "github.com/argoproj/argo-cd/v2/util/settings"
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
@@ -58,6 +58,7 @@ type Store interface {
 	UpdateProject(ctx context.Context, pro *v1alpha1.AppProject) error
 	GetProject(ctx context.Context, name string) (*v1alpha1.AppProject, error)
 	ListProjects(ctx context.Context) (*v1alpha1.AppProjectList, error)
+	ListProjectsWithoutAuth(ctx context.Context) (*v1alpha1.AppProjectList, error)
 
 	// Cluster interface
 	CreateCluster(ctx context.Context, cluster *v1alpha1.Cluster) error
@@ -72,7 +73,9 @@ type Store interface {
 	GetRepository(ctx context.Context, repo string) (*v1alpha1.Repository, error)
 	ListRepository(ctx context.Context, projNames []string) (*v1alpha1.RepositoryList, error)
 
+	AllApplications() []*v1alpha1.Application
 	GetApplication(ctx context.Context, name string) (*v1alpha1.Application, error)
+	GetApplicationRevisionsMetadata(ctx context.Context, repo, revision []string) ([]*v1alpha1.RevisionMetadata, error)
 	GetApplicationResourceTree(ctx context.Context, name string) (*v1alpha1.ApplicationTree, error)
 	ListApplications(ctx context.Context, query *appclient.ApplicationQuery) (*v1alpha1.ApplicationList, error)
 	DeleteApplicationResource(ctx context.Context, application *v1alpha1.Application,
@@ -82,6 +85,8 @@ type Store interface {
 		application *v1alpha1.Application) ([]*apiclient.ManifestResponse, error)
 	ApplicationNormalizeWhenDiff(app *v1alpha1.Application, target,
 		live *unstructured.Unstructured, hideData bool) error
+	UpdateApplicationSpec(ctx context.Context, spec *appclient.ApplicationUpdateSpecRequest) (
+		*v1alpha1.ApplicationSpec, error)
 
 	GetApplicationSet(ctx context.Context, name string) (*v1alpha1.ApplicationSet, error)
 	ListApplicationSets(ctx context.Context, query *appsetpkg.ApplicationSetListQuery) (
@@ -91,12 +96,22 @@ type Store interface {
 	GetToken(ctx context.Context) string
 }
 
+var (
+	globalStore Store
+)
+
 // NewStore create storage client
 func NewStore(opt *Options) Store {
-	return &argo{
+	globalStore = &argo{
 		option:           opt,
 		cacheApplication: &sync.Map{},
 	}
+	return globalStore
+}
+
+// GlobalStore return the global store
+func GlobalStore() Store {
+	return globalStore
 }
 
 // NewArgoDB create the DB of argocd

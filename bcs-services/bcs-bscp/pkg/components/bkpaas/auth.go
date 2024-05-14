@@ -10,7 +10,6 @@
  * limitations under the License.
  */
 
-// Package bkpaas provides bkpaas auth client.
 package bkpaas
 
 import (
@@ -21,8 +20,8 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/components"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/components"
 )
 
 type userInfo struct {

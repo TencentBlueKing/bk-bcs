@@ -21,7 +21,7 @@ import (
 	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"google.golang.org/api/compute/v1"
+	compute "google.golang.org/api/compute/v1"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
@@ -75,8 +75,8 @@ func (n *NodeManager) GetCloudRegions(opt *cloudprovider.CommonOption) ([]*proto
 }
 
 // GetZoneList get zoneList by region
-func (n *NodeManager) GetZoneList(opt *cloudprovider.CommonOption) ([]*proto.ZoneInfo, error) {
-	client, err := NewComputeServiceClient(opt)
+func (n *NodeManager) GetZoneList(opt *cloudprovider.GetZoneListOption) ([]*proto.ZoneInfo, error) {
+	client, err := NewComputeServiceClient(&opt.CommonOption)
 	if err != nil {
 		return nil, fmt.Errorf("create google client failed, err %s", err.Error())
 	}
@@ -199,7 +199,12 @@ func (n *NodeManager) ListNodesByInstanceID(ids []string, opt *cloudprovider.Lis
 }
 
 // ListKeyPairs keyPairs list
-func (n *NodeManager) ListKeyPairs(opt *cloudprovider.CommonOption) ([]*proto.KeyPair, error) {
+func (n *NodeManager) ListKeyPairs(opt *cloudprovider.ListNetworksOption) ([]*proto.KeyPair, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// GetResourceGroups resource groups list
+func (n *NodeManager) GetResourceGroups(opt *cloudprovider.CommonOption) ([]*proto.ResourceGroupInfo, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
@@ -272,4 +277,9 @@ func InstanceToNode(cli *ComputeServiceClient, ins *compute.Instance) *proto.Nod
 	node.Status = common.StatusRunning
 
 	return node
+}
+
+// ListRuntimeInfo get runtime info list
+func (nm *NodeManager) ListRuntimeInfo(opt *cloudprovider.ListRuntimeInfoOption) (map[string][]string, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
 }

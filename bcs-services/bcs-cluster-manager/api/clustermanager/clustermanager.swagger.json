@@ -1294,6 +1294,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "resourceGroupName",
+            "description": "resourceGroupName. Azure Cloud中集群所属的resource group名称",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -1353,6 +1360,13 @@
           {
             "name": "region",
             "description": "region. 集群所在地域",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "resourceGroupName",
+            "description": "resourceGroupName. AKS集群所属resource group",
             "in": "query",
             "required": false,
             "type": "string"
@@ -1552,6 +1566,13 @@
           {
             "name": "accountID",
             "description": "accountID. 云凭证ID(非必传,兼容社区版和内部版)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "resourceGroupName",
+            "description": "resourceGroupName. Azure中的resource group名称",
             "in": "query",
             "required": false,
             "type": "string"
@@ -1794,6 +1815,86 @@
         ]
       }
     },
+    "/clustermanager/v1/clouds/{cloudID}/resourcegroups": {
+      "get": {
+        "summary": "查询resource groups列表",
+        "description": "查询resource groups列表",
+        "operationId": "ClusterManager_GetResourceGroups",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerGetResourceGroupsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "cloudID",
+            "description": "云信息",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "accountID",
+            "description": "accountID. 云凭证ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/clouds/{cloudID}/runtimeinfo": {
+      "get": {
+        "summary": "查询Node的运行时列表",
+        "description": "根据筛选条件查询Node的运行时列表",
+        "operationId": "ClusterManager_ListCloudRuntimeInfo",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerListCloudRuntimeInfoResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "cloudID",
+            "description": "云信息",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "description": "clusterID. 集群ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/clouds/{cloudID}/securitygroups": {
       "get": {
         "summary": "查询安全组列表",
@@ -1831,6 +1932,13 @@
           {
             "name": "accountID",
             "description": "accountID. 云凭证ID(非必传,兼容社区版和内部版)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "resourceGroupName",
+            "description": "resourceGroupName. Azure中的resource group名称",
             "in": "query",
             "required": false,
             "type": "string"
@@ -1910,6 +2018,13 @@
             "required": false,
             "type": "boolean",
             "format": "boolean"
+          },
+          {
+            "name": "resourceGroupName",
+            "description": "resourceGroupName. Azure Cloud中subnet所属resource group名称",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -2193,6 +2308,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "resourceGroupName",
+            "description": "resourceGroupName. Azure Cloud中Vpc所属的resource group名称",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -2298,6 +2420,20 @@
           {
             "name": "accountID",
             "description": "accountID. 云凭证ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "vpcId",
+            "description": "vpcId. 过滤某个vpc的子网数量. 若为空,则不会返回可用区的子网数量",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "state",
+            "description": "state. 可用区状态(AVAILABLE可用/UNAVAILABLE不可用), 默认返回所有",
             "in": "query",
             "required": false,
             "type": "string"
@@ -2887,7 +3023,7 @@
         "parameters": [
           {
             "name": "clusterID",
-            "description": "集群ID",
+            "description": "集群ID,默认拉去集群对应的业务拓扑。当为无效集群ID时会拉取参数bizID对应的业务拓扑",
             "in": "path",
             "required": true,
             "type": "string"
@@ -3381,6 +3517,47 @@
         ]
       }
     },
+    "/clustermanager/v1/clusters/{clusterID}/module": {
+      "put": {
+        "summary": "更新集群master和node的转移模块信息",
+        "description": "更新集群master和node的转移模块信息, 为了兼容存量配置，会同步更新autoscalingOption的模块信息",
+        "operationId": "ClusterManager_UpdateClusterModule",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerUpdateClusterModuleResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterID",
+            "description": "集群ID信息",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerUpdateClusterModuleRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/clusters/{clusterID}/nodegroups": {
       "get": {
         "summary": "查询集群的NodeGroup列表",
@@ -3469,6 +3646,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "deleteMode",
+            "description": "deleteMode. 删除模式，retain(移除集群节点，但是保留主机)，terminate(只支持按量计费的机器)，默认是RETAIN",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -3510,6 +3694,55 @@
             "schema": {
               "$ref": "#/definitions/clustermanagerAddSubnetToClusterReq"
             }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/dbdatas/{dataType}": {
+      "delete": {
+        "summary": "清理历史任务/操作记录日志记录",
+        "description": "根据时间条件 或者 排序删除历史n条数据",
+        "operationId": "ClusterManager_CleanDbHistoryData",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerCleanDbHistoryDataResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "dataType",
+            "description": "数据类型, 目前仅支持task,operationLog等表数据类型",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "startTime",
+            "description": "startTime. 开始时间戳",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "endTime",
+            "description": "endTime. 结束时间戳",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
           }
         ],
         "tags": [
@@ -4538,6 +4771,39 @@
         ]
       }
     },
+    "/clustermanager/v1/nodegroup/{nodeGroupID}/template": {
+      "post": {
+        "summary": "节点池转换为节点模板",
+        "description": "节点池转换为节点模版详情",
+        "operationId": "ClusterManager_TransNodeGroupToNodeTemplate",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerTransNodeGroupToNodeTemplateResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "nodeGroupID",
+            "description": "nodeGroupID节点池ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/nodegroups/{nodeGroupID}/script": {
       "get": {
         "summary": "获取节点组的第三方节点上架脚本",
@@ -4571,6 +4837,14 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "internal",
+            "description": "internal. 获取内网或外网脚本, 默认外网脚本",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
           }
         ],
         "tags": [
@@ -4723,6 +4997,20 @@
           {
             "name": "ipList",
             "description": "ipList. 通过,隔开ipList过滤任务",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "taskID",
+            "description": "taskID. 默认为空, 过滤任务维度的操作审计",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "taskName",
+            "description": "taskName. 默认为空, 过滤任务名称维度的操作审计",
             "in": "query",
             "required": false,
             "type": "string"
@@ -5024,6 +5312,125 @@
             "schema": {
               "$ref": "#/definitions/clustermanagerUpdateNodeTemplateRequest"
             }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/projects/{projectID}/notifytemplates": {
+      "get": {
+        "summary": "查询项目下的节点模版列表",
+        "description": "根据查询条件过滤节点模板列表，如果某项条件值为空，则忽略此条件。如果所有条件都为空，则默认查询项目下所有节点模版",
+        "operationId": "ClusterManager_ListNotifyTemplate",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerListNotifyTemplateResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "description": "项目ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "notifyTemplateID",
+            "description": "notifyTemplateID. 通知模版ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      },
+      "post": {
+        "summary": "创建通知模版",
+        "description": "创建通知模版(项目维度)",
+        "operationId": "ClusterManager_CreateNotifyTemplate",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerCreateNotifyTemplateResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "description": "通知模板所属的项目ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerCreateNotifyTemplateRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/projects/{projectID}/notifytemplates/{notifyTemplateID}": {
+      "delete": {
+        "summary": "删除通知模板信息",
+        "description": "删除特定通知模版",
+        "operationId": "ClusterManager_DeleteNotifyTemplate",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerDeleteNotifyTemplateResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "description": "所属的项目信息",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "notifyTemplateID",
+            "description": "通知模版ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
           }
         ],
         "tags": [
@@ -5397,6 +5804,103 @@
             "schema": {
               "$ref": "#/definitions/clustermanagerRetryTaskRequest"
             }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/task/{taskID}/skip": {
+      "put": {
+        "summary": "跳过当前失败Task",
+        "description": "针对失败的任务, 进行跳过操作. 跳过操作仅操作当前失败任务且从下一步开始执行, 任务之间有相互依赖不建议跳过",
+        "operationId": "ClusterManager_SkipTask",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerSkipTaskResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "taskID",
+            "description": "任务ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerSkipTaskRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/tasksteplogs": {
+      "get": {
+        "summary": "查询任务步骤日志列表",
+        "description": "查询任务步骤日志列表",
+        "operationId": "ClusterManager_ListTaskStepLogs",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerListTaskStepLogsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "limit",
+            "description": "limit. 每页数量",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "page",
+            "description": "page. 页码",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "taskID",
+            "description": "taskID. 过滤任务维度的操作审计",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "stepName",
+            "description": "stepName. 过滤任务步骤维度的操作审计",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -6338,6 +6842,11 @@
           "format": "boolean",
           "description": "开启自动升级GKE版本功能,如果集群为发布版本,则强制开启",
           "title": "autoUpgrade"
+        },
+        "nodeRole": {
+          "type": "string",
+          "description": "创建eks节点池时指定的iam角色名称",
+          "title": "nodeRole"
         }
       },
       "title": "AutoScalingGroup define auto scaling information"
@@ -6544,6 +7053,28 @@
         "code",
         "message"
       ]
+    },
+    "clustermanagerCleanDbHistoryDataResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        }
+      }
     },
     "clustermanagerCleanNodesInGroupRequest": {
       "type": "object",
@@ -7002,7 +7533,7 @@
           "title": "diskPartition"
         }
       },
-      "title": "CloudDataDisk 云磁盘格式化数据, 对应CVM数据盘。应用于节点模版\n主要用于 CA 自动扩容节点并上架节点时重装系统，多块数据盘 mountTarget 不能重复\n上架已存在节点时, 用户需指定diskPartition参数区分设备"
+      "title": "CloudDataDisk 云磁盘格式化数据, 对应CVM数据盘。应用于节点模版\r\n主要用于 CA 自动扩容节点并上架节点时重装系统，多块数据盘 mountTarget 不能重复\r\n上架已存在节点时, 用户需指定diskPartition参数区分设备"
     },
     "clustermanagerCloudModuleFlag": {
       "type": "object",
@@ -7369,6 +7900,10 @@
           "items": {
             "$ref": "#/definitions/clustermanagerAssistantCidr"
           }
+        },
+        "allocateIpNum": {
+          "type": "integer",
+          "format": "int64"
         }
       }
     },
@@ -7582,6 +8117,17 @@
           "type": "string",
           "description": "集群关联的云账号ID,默认为空。主要功能是获取云账号凭证。私有云场景下统一管理cloud账号，而公有云场景纳管不同云账号凭证",
           "title": "cloudAccountID"
+        },
+        "message": {
+          "type": "string",
+          "description": "集群状态异常时的失败原因展示",
+          "title": "message"
+        },
+        "isMixed": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "标记该集群是否是混部集群",
+          "title": "isMixed"
         }
       },
       "description": "记录集群信息，用于维护集群状态",
@@ -8042,6 +8588,11 @@
           "$ref": "#/definitions/clustermanagerAction",
           "description": "纳管集群时相关的自动化流程定义",
           "title": "importCluster"
+        },
+        "commonMixedAction": {
+          "$ref": "#/definitions/clustermanagerAction",
+          "description": "集群混部自动化流程定义",
+          "title": "commonMixedAction"
         }
       },
       "description": "用于记录集群层面固定、模板信息，帮助集群创建与维护.目前仅支持action(创建集群/删除集群/集群添加节点/集群删除节点)",
@@ -9169,6 +9720,20 @@
           "type": "string",
           "description": "创建集群上架节点时的节点模板",
           "title": "nodeTemplateID"
+        },
+        "nodeGroups": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerNodeGroup"
+          },
+          "description": "创建集群时的节点池信息",
+          "title": "nodeGroups"
+        },
+        "isMixed": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "标记该集群是否是混部集群, 默认是false",
+          "title": "isMixed"
         }
       },
       "description": "创建集群请求，如果集群已经存在，直接报错。更新集群信息请使用Update接口",
@@ -9522,6 +10087,120 @@
       ]
     },
     "clustermanagerCreateNodeTemplateResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/clustermanagerWebAnnotationsV2",
+          "description": "用户所属项目权限",
+          "title": "web_annotations"
+        }
+      }
+    },
+    "clustermanagerCreateNotifyTemplateRequest": {
+      "type": "object",
+      "properties": {
+        "projectID": {
+          "type": "string",
+          "description": "通知模板所属的项目ID",
+          "title": "projectID"
+        },
+        "name": {
+          "type": "string",
+          "description": "通知模板名称",
+          "title": "name"
+        },
+        "desc": {
+          "type": "string",
+          "description": "通知模板描述信息",
+          "title": "desc"
+        },
+        "notifyType": {
+          "type": "string",
+          "description": "通知类型, 目前仅支持bk_monitor_event、bk_monitor_metrics. 未来将支持rtx、email、voice等方式",
+          "title": "notifyType"
+        },
+        "enable": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否开启通知",
+          "title": "enable"
+        },
+        "createCluster": {
+          "$ref": "#/definitions/clustermanagerNotifyData",
+          "description": "创建集群通知",
+          "title": "createCluster"
+        },
+        "deleteCluster": {
+          "$ref": "#/definitions/clustermanagerNotifyData",
+          "description": "删除集群通知",
+          "title": "deleteCluster"
+        },
+        "createNodeGroup": {
+          "$ref": "#/definitions/clustermanagerNotifyData",
+          "description": "节点池新增通知",
+          "title": "createNodeGroup"
+        },
+        "deleteNodeGroup": {
+          "$ref": "#/definitions/clustermanagerNotifyData",
+          "description": "节点池删除通知",
+          "title": "deleteNodeGroup"
+        },
+        "updateNodeGroup": {
+          "$ref": "#/definitions/clustermanagerNotifyData",
+          "description": "节点池更新通知",
+          "title": "updateNodeGroup"
+        },
+        "groupScaleOutNode": {
+          "$ref": "#/definitions/clustermanagerNotifyData",
+          "description": "节点池扩容节点通知",
+          "title": "groupScaleOutNode"
+        },
+        "groupScaleInNode": {
+          "$ref": "#/definitions/clustermanagerNotifyData",
+          "description": "节点池缩容节点通知",
+          "title": "groupScaleOutNode"
+        },
+        "config": {
+          "$ref": "#/definitions/clustermanagerNotifyConfig",
+          "description": "通知系统配置，使用不同的通知方式需要配置不同的config",
+          "title": "config"
+        },
+        "receivers": {
+          "type": "string",
+          "description": "通知接收者,可指定；若无指定, 可使用集群/节点池创建更新者",
+          "title": "receivers"
+        },
+        "creator": {
+          "type": "string"
+        }
+      },
+      "description": "创建通知模板",
+      "title": "CreateNotifyTemplateRequest",
+      "required": [
+        "projectID",
+        "name",
+        "notifyType",
+        "creator"
+      ]
+    },
+    "clustermanagerCreateNotifyTemplateResponse": {
       "type": "object",
       "properties": {
         "code": {
@@ -10291,6 +10970,33 @@
         "code",
         "data"
       ]
+    },
+    "clustermanagerDeleteNotifyTemplateResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/clustermanagerWebAnnotationsV2",
+          "description": "用户所属项目权限",
+          "title": "web_annotations"
+        }
+      }
     },
     "clustermanagerDeleteTaskResponse": {
       "type": "object",
@@ -11361,6 +12067,38 @@
         "message"
       ]
     },
+    "clustermanagerGetResourceGroupsResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerResourceGroupInfo"
+          },
+          "description": "获取到的信息",
+          "title": "data"
+        }
+      },
+      "description": "获取resource groups列表",
+      "title": "GetResourceGroupsResponse"
+    },
     "clustermanagerGetScopeHostCheckRequest": {
       "type": "object",
       "properties": {
@@ -11721,6 +12459,9 @@
         },
         "poolID": {
           "type": "string"
+        },
+        "scriptType": {
+          "type": "string"
         }
       }
     },
@@ -11867,6 +12608,17 @@
           "type": "string",
           "description": "集群kubeConfig文件",
           "title": "kubeConfig"
+        },
+        "inter": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "默认外网方式导入, 为true时候以内网方式导入. 该字段仅对云导入生效",
+          "title": "inter"
+        },
+        "resourceGroup": {
+          "type": "string",
+          "description": "集群所在的资源组(azure云)",
+          "title": "resourceGroup"
         }
       },
       "description": "云provider导入集群模式",
@@ -11988,6 +12740,11 @@
           "type": "string",
           "description": "导入集群关联的cloud凭证信息, 可以为空; 当为空时, 可以通过cloud获取cloud凭证信息",
           "title": "accountID"
+        },
+        "area": {
+          "$ref": "#/definitions/clustermanagerCloudArea",
+          "description": "集群维度的云区域信息(用户不指定, 则使用默认云区域 0)",
+          "title": "area"
         }
       },
       "description": "用户已存在的集群导入BCS进行纳管",
@@ -12114,7 +12871,7 @@
         },
         "instanceChargeType": {
           "type": "string",
-          "description": "机型计费模型，POSTPAID_BY_HOUR按小时后付费，SPOTPAID竞价付费，PREPAID包年包月。如不设置，BCS暂时默认提供包年包月的类型",
+          "description": "机型计费模型，tencentCloud包含POSTPAID_BY_HOUR按小时后付费，SPOTPAID竞价付费，PREPAID包年包月。aws包含ON_DEMAND按需付费,SPOT竞价付费。如不设置，BCS暂时默认提供包年包月的类型",
           "title": "instanceChargeType"
         },
         "systemDisk": {
@@ -12539,6 +13296,11 @@
           "$ref": "#/definitions/clustermanagerKeyInfo",
           "description": "节点私钥信息, 与密码2选一，2者均设置优先密钥",
           "title": "keyPair"
+        },
+        "charge": {
+          "$ref": "#/definitions/clustermanagerInstanceChargePrepaid",
+          "description": "实例的计费模式。当instanceChargeType为包年包月时，设置续费策略",
+          "title": "charge"
         }
       },
       "title": "LaunchConfigure template for scaling node"
@@ -12929,6 +13691,40 @@
       },
       "description": "查询云模板返回",
       "title": "ListCloudResponse",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
+    "clustermanagerListCloudRuntimeInfoResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/clustermanagerRunTimeVersion"
+          }
+        }
+      },
+      "description": "查询运行时信息列表返回",
+      "title": "ListCloudRuntimeInfoResponse",
       "required": [
         "code",
         "message"
@@ -13520,6 +14316,42 @@
         "data"
       ]
     },
+    "clustermanagerListNotifyTemplateResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerNotifyTemplate"
+          },
+          "description": "通知模板列表",
+          "title": "data"
+        }
+      },
+      "description": "查询通知模板返回",
+      "title": "ListNotifyTemplateResponse",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
     "clustermanagerListOperationLogsResponse": {
       "type": "object",
       "properties": {
@@ -13654,6 +14486,52 @@
         "code",
         "message"
       ]
+    },
+    "clustermanagerListTaskStepLogsResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/clustermanagerListTaskStepLogsResponseData",
+          "description": "返回数据",
+          "title": "data"
+        }
+      }
+    },
+    "clustermanagerListTaskStepLogsResponseData": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "format": "int64",
+          "description": "操作日志数量",
+          "title": "count"
+        },
+        "results": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerTaskStepLogDetail"
+          },
+          "description": "返回数据",
+          "title": "results"
+        }
+      }
     },
     "clustermanagerMapStruct": {
       "type": "object",
@@ -14105,6 +14983,11 @@
           "type": "string",
           "description": "上下架节点失败时原因",
           "title": "failedReason"
+        },
+        "chargeType": {
+          "type": "string",
+          "description": "机型计费模型，POSTPAID_BY_HOUR按小时后付费，PREPAID包年包月",
+          "title": "chargeType"
         }
       },
       "description": "记录节点信息，用于维护节点状态，被cluster与nodegroup使用",
@@ -14429,6 +15312,11 @@
           "format": "int64",
           "description": "调度状态，默认值0表示参与调度，1表示不参与调度",
           "title": "unSchedulable"
+        },
+        "nodeName": {
+          "type": "string",
+          "description": "节点名称",
+          "title": "nodeName"
         }
       }
     },
@@ -14860,6 +15748,145 @@
       "description": "节点模版, 主要用于对kubernetes集群节点的通用特性设置",
       "title": "NodeTemplate"
     },
+    "clustermanagerNotifyConfig": {
+      "type": "object",
+      "properties": {
+        "server": {
+          "type": "string",
+          "description": "不同通知系统使用不同的server",
+          "title": "server"
+        },
+        "dataId": {
+          "type": "string",
+          "format": "uint64",
+          "description": "dataId",
+          "title": "dataId"
+        },
+        "accessToken": {
+          "type": "string",
+          "description": "accessToken",
+          "title": "accessToken"
+        }
+      },
+      "title": "NotifyConfig notify config"
+    },
+    "clustermanagerNotifyData": {
+      "type": "object",
+      "properties": {
+        "enable": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "操作是否开启通知",
+          "title": "enable"
+        },
+        "title": {
+          "type": "string",
+          "description": "通知title即事件名称",
+          "title": "title"
+        },
+        "content": {
+          "type": "string",
+          "description": "通知内容模板, 根据用户需求渲染不同内容。若为空，使用默认模版",
+          "title": "content"
+        }
+      },
+      "title": "NotifyData notify body"
+    },
+    "clustermanagerNotifyTemplate": {
+      "type": "object",
+      "properties": {
+        "notifyTemplateID": {
+          "type": "string",
+          "description": "通知模版ID",
+          "title": "notifyTemplateID"
+        },
+        "name": {
+          "type": "string",
+          "description": "通知模版名称",
+          "title": "name"
+        },
+        "projectID": {
+          "type": "string",
+          "description": "通知模版所关联的项目，该项目为蓝鲸的项目",
+          "title": "projectID"
+        },
+        "notifyType": {
+          "type": "string",
+          "description": "通知类型, 目前仅支持bk_monitor_event、bk_monitor_metrics. 未来将支持rtx、email、voice等方式",
+          "title": "notifyType"
+        },
+        "desc": {
+          "type": "string",
+          "description": "通知模板描述信息",
+          "title": "desc"
+        },
+        "enable": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否开启通知",
+          "title": "enable"
+        },
+        "config": {
+          "$ref": "#/definitions/clustermanagerNotifyConfig",
+          "description": "通知系统配置，使用不同的通知方式需要配置不同的config",
+          "title": "config"
+        },
+        "createCluster": {
+          "$ref": "#/definitions/clustermanagerNotifyData",
+          "description": "创建集群通知",
+          "title": "createCluster"
+        },
+        "deleteCluster": {
+          "$ref": "#/definitions/clustermanagerNotifyData",
+          "description": "删除集群通知",
+          "title": "deleteCluster"
+        },
+        "createNodeGroup": {
+          "$ref": "#/definitions/clustermanagerNotifyData",
+          "description": "节点池新增通知",
+          "title": "createNodeGroup"
+        },
+        "deleteNodeGroup": {
+          "$ref": "#/definitions/clustermanagerNotifyData",
+          "description": "节点池删除通知",
+          "title": "deleteNodeGroup"
+        },
+        "updateNodeGroup": {
+          "$ref": "#/definitions/clustermanagerNotifyData",
+          "description": "节点池更新通知",
+          "title": "updateNodeGroup"
+        },
+        "groupScaleOutNode": {
+          "$ref": "#/definitions/clustermanagerNotifyData",
+          "description": "节点池扩容节点通知",
+          "title": "groupScaleOutNode"
+        },
+        "groupScaleInNode": {
+          "$ref": "#/definitions/clustermanagerNotifyData",
+          "description": "节点池缩容节点通知",
+          "title": "groupScaleOutNode"
+        },
+        "receivers": {
+          "type": "string",
+          "description": "通知接收者,可指定；若无指定, 可使用集群/节点池创建更新者",
+          "title": "receivers"
+        },
+        "creator": {
+          "type": "string"
+        },
+        "updater": {
+          "type": "string"
+        },
+        "createTime": {
+          "type": "string"
+        },
+        "updateTime": {
+          "type": "string"
+        }
+      },
+      "description": "通知模版, 主要用于对用户进行通知(集群、节点池等操作)",
+      "title": "NotifyTemplate"
+    },
     "clustermanagerNumberRange": {
       "type": "object",
       "properties": {
@@ -14957,6 +15984,11 @@
           "type": "string",
           "description": "任务状态",
           "title": "status"
+        },
+        "resourceName": {
+          "type": "string",
+          "description": "资源名称",
+          "title": "resourceName"
         }
       }
     },
@@ -15217,6 +16249,28 @@
       "description": "节点组移除节点返回，确认节点移除是否成功",
       "title": "RemoveNodesFromGroupResponse"
     },
+    "clustermanagerResourceGroupInfo": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "resource group名称",
+          "title": "name"
+        },
+        "region": {
+          "type": "string",
+          "description": "地域信息",
+          "title": "region"
+        },
+        "provisioningState": {
+          "type": "string",
+          "description": "resource group状态",
+          "title": "provisioningState"
+        }
+      },
+      "description": "resource group信息",
+      "title": "ResourceGroupInfo"
+    },
     "clustermanagerRetryCreateClusterReq": {
       "type": "object",
       "properties": {
@@ -15340,6 +16394,17 @@
       },
       "title": "RunTimeInfo cluster runTime info"
     },
+    "clustermanagerRunTimeVersion": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "clustermanagerScopeInfo": {
       "type": "object",
       "properties": {
@@ -15372,6 +16437,54 @@
       },
       "description": "安全组信息",
       "title": "SecurityGroup"
+    },
+    "clustermanagerSkipTaskRequest": {
+      "type": "object",
+      "properties": {
+        "taskID": {
+          "type": "string",
+          "description": "任务ID",
+          "title": "taskID"
+        },
+        "updater": {
+          "type": "string",
+          "description": "任务跳过的发起人",
+          "title": "updater"
+        }
+      },
+      "description": "跳过Task请求",
+      "title": "SkipTaskRequest",
+      "required": [
+        "taskID",
+        "updater"
+      ]
+    },
+    "clustermanagerSkipTaskResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/clustermanagerTask",
+          "description": "更新后Task信息",
+          "title": "data"
+        }
+      }
     },
     "clustermanagerStep": {
       "type": "object",
@@ -15447,8 +16560,19 @@
         "skipOnFailed": {
           "type": "boolean",
           "format": "boolean",
-          "description": "失败时跳过",
+          "description": "失败时自动跳过某步骤,由用户设置。当设置失败跳过时，系统自动跳过当前失败步骤，执行后续流程",
           "title": "skipOnFailed"
+        },
+        "translate": {
+          "type": "string",
+          "description": "解决当使用同一taskMethod时,是否转换翻译展示文本",
+          "title": "translate"
+        },
+        "allowSkip": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "标识该步骤失败时候是否允许用户手动跳过。当为true失败时候允许用户手动跳过, 为false失败时用户仅能通过重试解决",
+          "title": "allowSkip"
         }
       },
       "description": "任务执行的动作步骤，用于定义长时间运行的异步动作，例如机器重新初始化，插件安装等。",
@@ -15882,6 +17006,36 @@
       "description": "集群管理，节点管理背后所映射任务信息，主要是关联的自动化步骤（整合云api与蓝鲸标准运维）",
       "title": "Task"
     },
+    "clustermanagerTaskStepLogDetail": {
+      "type": "object",
+      "properties": {
+        "taskID": {
+          "type": "string",
+          "description": "任务ID",
+          "title": "taskID"
+        },
+        "stepName": {
+          "type": "string",
+          "description": "步骤名称",
+          "title": "stepName"
+        },
+        "level": {
+          "type": "string",
+          "description": "日志等级(INFO, WARN, ERROR)",
+          "title": "level"
+        },
+        "message": {
+          "type": "string",
+          "description": "日志信息",
+          "title": "message"
+        },
+        "createTime": {
+          "type": "string",
+          "description": "发生时间",
+          "title": "createTime"
+        }
+      }
+    },
     "clustermanagerTemplateDetailInfo": {
       "type": "object",
       "properties": {
@@ -15970,6 +17124,35 @@
       },
       "description": "autoScale定时扩缩配置",
       "title": "TimeRange"
+    },
+    "clustermanagerTransNodeGroupToNodeTemplateResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "template": {
+          "$ref": "#/definitions/clustermanagerNodeTemplate",
+          "description": "template转换的节点模板详情",
+          "title": "template"
+        }
+      },
+      "description": "节点池转换为节点模板结果",
+      "title": "TransNodeGroupToNodeTemplateResponse"
     },
     "clustermanagerUnCordonNodeRequest": {
       "type": "object",
@@ -16817,6 +18000,65 @@
         "data"
       ]
     },
+    "clustermanagerUpdateClusterModuleRequest": {
+      "type": "object",
+      "properties": {
+        "clusterID": {
+          "type": "string",
+          "description": "集群ID信息",
+          "title": "clusterID"
+        },
+        "module": {
+          "$ref": "#/definitions/clustermanagerClusterModule",
+          "description": "集群转移模块信息",
+          "title": "module"
+        },
+        "operator": {
+          "type": "string",
+          "description": "操作人",
+          "title": "operator"
+        }
+      },
+      "description": "更新集群转移模块信息",
+      "title": "UpdateClusterModuleRequest",
+      "required": [
+        "clusterID",
+        "module"
+      ]
+    },
+    "clustermanagerUpdateClusterModuleResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/clustermanagerClusterModule",
+          "description": "集群配置模块信息",
+          "title": "data"
+        }
+      },
+      "description": "更新集群转移模块信息返回",
+      "title": "UpdateClusterModuleResponse",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
     "clustermanagerUpdateClusterReq": {
       "type": "object",
       "properties": {
@@ -17009,6 +18251,12 @@
           "type": "string",
           "description": "集群关联的云账号ID,默认为空。主要功能是获取云账号凭证。私有云场景下统一管理cloud账号，而公有云场景纳管不同云账号凭证",
           "title": "cloudAccountID"
+        },
+        "isMixed": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "标记该集群是否是混部集群",
+          "title": "isMixed"
         }
       },
       "description": "更新集群信息请求，该接口仅用于信息更新和修正，不会触发任何行为动作。如果需要执行自动化相关流程，请根据需要使用对应的接口",
@@ -17983,7 +19231,7 @@
           }
         }
       },
-      "title": "https://github.com/golang/protobuf/issues/1118\nhttps://pkg.go.dev/google.golang.org/protobuf/types/known/structpb#Struct"
+      "title": "https://github.com/golang/protobuf/issues/1118\r\nhttps://pkg.go.dev/google.golang.org/protobuf/types/known/structpb#Struct"
     },
     "clustermanagerWebAnnotationsV2": {
       "type": "object",
@@ -18038,6 +19286,12 @@
           "type": "string",
           "description": "地域状态",
           "title": "regionState"
+        },
+        "subnetNum": {
+          "type": "integer",
+          "format": "int64",
+          "description": "该可用区可用的子网数量",
+          "title": "subnetNum"
         }
       },
       "description": "可用区信息",
@@ -18095,7 +19349,7 @@
       "properties": {
         "type_url": {
           "type": "string",
-          "description": "A URL/resource name that uniquely identifies the type of the serialized\nprotocol buffer message. This string must contain at least\none \"/\" character. The last segment of the URL's path must represent\nthe fully qualified name of the type (as in\n`path/google.protobuf.Duration`). The name should be in a canonical form\n(e.g., leading \".\" is not accepted).\n\nIn practice, teams usually precompile into the binary all types that they\nexpect it to use in the context of Any. However, for URLs which use the\nscheme `http`, `https`, or no scheme, one can optionally set up a type\nserver that maps type URLs to message definitions as follows:\n\n* If no scheme is provided, `https` is assumed.\n* An HTTP GET on the URL must yield a [google.protobuf.Type][]\n  value in binary format, or produce an error.\n* Applications are allowed to cache lookup results based on the\n  URL, or have them precompiled into a binary to avoid any\n  lookup. Therefore, binary compatibility needs to be preserved\n  on changes to types. (Use versioned type names to manage\n  breaking changes.)\n\nNote: this functionality is not currently available in the official\nprotobuf release, and it is not used for type URLs beginning with\ntype.googleapis.com.\n\nSchemes other than `http`, `https` (or the empty scheme) might be\nused with implementation specific semantics."
+          "description": "A URL/resource name that uniquely identifies the type of the serialized\r\nprotocol buffer message. This string must contain at least\r\none \"/\" character. The last segment of the URL's path must represent\r\nthe fully qualified name of the type (as in\r\n`path/google.protobuf.Duration`). The name should be in a canonical form\r\n(e.g., leading \".\" is not accepted).\r\n\r\nIn practice, teams usually precompile into the binary all types that they\r\nexpect it to use in the context of Any. However, for URLs which use the\r\nscheme `http`, `https`, or no scheme, one can optionally set up a type\r\nserver that maps type URLs to message definitions as follows:\r\n\r\n* If no scheme is provided, `https` is assumed.\r\n* An HTTP GET on the URL must yield a [google.protobuf.Type][]\r\n  value in binary format, or produce an error.\r\n* Applications are allowed to cache lookup results based on the\r\n  URL, or have them precompiled into a binary to avoid any\r\n  lookup. Therefore, binary compatibility needs to be preserved\r\n  on changes to types. (Use versioned type names to manage\r\n  breaking changes.)\r\n\r\nNote: this functionality is not currently available in the official\r\nprotobuf release, and it is not used for type URLs beginning with\r\ntype.googleapis.com.\r\n\r\nSchemes other than `http`, `https` (or the empty scheme) might be\r\nused with implementation specific semantics."
         },
         "value": {
           "type": "string",
@@ -18103,7 +19357,7 @@
           "description": "Must be a valid serialized protocol buffer of the above specified type."
         }
       },
-      "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(\u0026foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n\n Example 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\n Example 4: Pack and unpack a message in Go\n\n     foo := \u0026pb.Foo{...}\n     any, err := ptypes.MarshalAny(foo)\n     ...\n     foo := \u0026pb.Foo{}\n     if err := ptypes.UnmarshalAny(any, foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\n\nJSON\n====\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": \u003cstring\u003e,\n      \"lastName\": \u003cstring\u003e\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }"
+      "title": "`Any` contains an arbitrary serialized protocol buffer message along with a\r\nURL that describes the type of the serialized message.\r\n\r\nProtobuf library provides support to pack/unpack Any values in the form\r\nof utility functions or additional generated methods of the Any type.\r\n\r\nExample 1: Pack and unpack a message in C++.\r\n\r\n    Foo foo = ...;\r\n    Any any;\r\n    any.PackFrom(foo);\r\n    ...\r\n    if (any.UnpackTo(\u0026foo)) {\r\n      ...\r\n    }\r\n\r\nExample 2: Pack and unpack a message in Java.\r\n\r\n    Foo foo = ...;\r\n    Any any = Any.pack(foo);\r\n    ...\r\n    if (any.is(Foo.class)) {\r\n      foo = any.unpack(Foo.class);\r\n    }\r\n\r\n Example 3: Pack and unpack a message in Python.\r\n\r\n    foo = Foo(...)\r\n    any = Any()\r\n    any.Pack(foo)\r\n    ...\r\n    if any.Is(Foo.DESCRIPTOR):\r\n      any.Unpack(foo)\r\n      ...\r\n\r\n Example 4: Pack and unpack a message in Go\r\n\r\n     foo := \u0026pb.Foo{...}\r\n     any, err := ptypes.MarshalAny(foo)\r\n     ...\r\n     foo := \u0026pb.Foo{}\r\n     if err := ptypes.UnmarshalAny(any, foo); err != nil {\r\n       ...\r\n     }\r\n\r\nThe pack methods provided by protobuf library will by default use\r\n'type.googleapis.com/full.type.name' as the type URL and the unpack\r\nmethods only use the fully qualified type name after the last '/'\r\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\r\nname \"y.z\".\r\n\r\n\r\nJSON\r\n====\r\nThe JSON representation of an `Any` value uses the regular\r\nrepresentation of the deserialized, embedded message, with an\r\nadditional field `@type` which contains the type URL. Example:\r\n\r\n    package google.profile;\r\n    message Person {\r\n      string first_name = 1;\r\n      string last_name = 2;\r\n    }\r\n\r\n    {\r\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\r\n      \"firstName\": \u003cstring\u003e,\r\n      \"lastName\": \u003cstring\u003e\r\n    }\r\n\r\nIf the embedded message type is well-known and has a custom JSON\r\nrepresentation, that representation will be embedded adding a field\r\n`value` which holds the custom JSON in addition to the `@type`\r\nfield. Example (for message [google.protobuf.Duration][]):\r\n\r\n    {\r\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\r\n      \"value\": \"1.212s\"\r\n    }"
     },
     "protobufNullValue": {
       "type": "string",
@@ -18111,7 +19365,7 @@
         "NULL_VALUE"
       ],
       "default": "NULL_VALUE",
-      "description": "`NullValue` is a singleton enumeration to represent the null value for the\n`Value` type union.\n\n The JSON representation for `NullValue` is JSON `null`.\n\n - NULL_VALUE: Null value."
+      "description": "`NullValue` is a singleton enumeration to represent the null value for the\r\n`Value` type union.\r\n\r\n The JSON representation for `NullValue` is JSON `null`.\n\n - NULL_VALUE: Null value."
     },
     "runtimeError": {
       "type": "object",

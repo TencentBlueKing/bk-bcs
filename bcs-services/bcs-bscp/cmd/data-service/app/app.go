@@ -21,26 +21,28 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
 	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/hashicorp/vault/api"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/data-service/options"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/data-service/service"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/uuid"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/dao"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/vault"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/metrics"
-	pbds "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/brpc"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/ctl"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/shutdown"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/serviced"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/data-service/options"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/data-service/service"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/data-service/service/crontab"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/uuid"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/dao"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/vault"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/metrics"
+	pbds "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/brpc"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/ctl"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/shutdown"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/serviced"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
 // RunServer run the data service
@@ -133,6 +135,10 @@ func (ds *dataService) prepare(opt *options.Option) error {
 
 	ds.daoSet = set
 
+	// 同步客户端在线状态
+	state := crontab.NewSyncClientOnlineState(ds.daoSet, ds.sd)
+	state.Run()
+
 	// initial Vault set
 	vaultSet, err := vault.NewSet(cc.DataService().Vault)
 	if err != nil {
@@ -219,18 +225,27 @@ func (ds *dataService) listenAndServe() error {
 
 	}()
 
-	addr := net.JoinHostPort(network.BindIP, strconv.Itoa(int(network.RpcPort)))
-	listener, err := net.Listen("tcp", addr)
-	if err != nil {
-		return fmt.Errorf("lisen addr: %s failed, err: %v", addr, err)
+	addr := tools.GetListenAddr(network.BindIP, int(network.RpcPort))
+	ipv6Addr := tools.GetListenAddr(network.BindIPv6, int(network.RpcPort))
+	dualStackListener := listener.NewDualStackListener()
+	if err := dualStackListener.AddListenerWithAddr(addr); err != nil {
+		return err
+	}
+
+	if network.BindIPv6 != "" && network.BindIPv6 != network.BindIP {
+		if err := dualStackListener.AddListenerWithAddr(ipv6Addr); err != nil {
+			return err
+		}
+		logs.Infof("grpc serve dualStackListener with ipv6: %s", ipv6Addr)
 	}
 
 	go func() {
-		if err := serve.Serve(listener); err != nil {
+		if err := serve.Serve(dualStackListener); err != nil {
 			logs.Errorf("serve grpc server failed, err: %v", err)
 			shutdown.SignalShutdownGracefully()
 		}
 	}()
+
 	logs.Infof("listen grpc server at %s now.", addr)
 
 	return nil
@@ -248,7 +263,19 @@ func (ds *dataService) finalizer() {
 // gwListenAndServe listen the http serve and set up the shutdown gracefully job.
 func (ds *dataService) gwListenAndServe() error {
 	network := cc.DataService().Network
-	addr := net.JoinHostPort(network.BindIP, strconv.Itoa(int(network.HttpPort)))
+	addr := tools.GetListenAddr(network.BindIP, int(network.HttpPort))
+	ipv6Addr := tools.GetListenAddr(network.BindIPv6, int(network.HttpPort))
+	dualStackListener := listener.NewDualStackListener()
+	if err := dualStackListener.AddListenerWithAddr(addr); err != nil {
+		return err
+	}
+
+	if network.BindIPv6 != "" && network.BindIPv6 != network.BindIP {
+		if err := dualStackListener.AddListenerWithAddr(ipv6Addr); err != nil {
+			return err
+		}
+		logs.Infof("api serve dualStackListener with ipv6: %s", ipv6Addr)
+	}
 
 	handler, err := ds.service.Handler()
 	if err != nil {
@@ -279,14 +306,14 @@ func (ds *dataService) gwListenAndServe() error {
 		ds.gwServe.TLSConfig = tlsC
 
 		go func() {
-			if err := ds.gwServe.ListenAndServeTLS("", ""); err != nil {
+			if err := ds.gwServe.ServeTLS(dualStackListener, "", ""); err != nil {
 				logs.Errorf("gateway https server listen and serve failed, err: %v", err)
 				shutdown.SignalShutdownGracefully()
 			}
 		}()
 	} else {
 		go func() {
-			if err := ds.gwServe.ListenAndServe(); err != nil {
+			if err := ds.gwServe.Serve(dualStackListener); err != nil {
 				logs.Errorf("gateway http server listen and serve failed, err: %v", err)
 				shutdown.SignalShutdownGracefully()
 			}

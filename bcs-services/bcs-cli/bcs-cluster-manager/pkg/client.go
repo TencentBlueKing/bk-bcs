@@ -18,13 +18,12 @@ import (
 	"crypto/tls"
 	"fmt"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
-
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 )
 
 // Config describe the options Client need

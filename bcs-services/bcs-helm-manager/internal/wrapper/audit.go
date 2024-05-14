@@ -19,7 +19,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/audit"
-	"github.com/micro/go-micro/v2/server"
+	"go-micro.dev/v4/server"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
@@ -33,6 +33,7 @@ func NewAuditWrapper(fn server.HandlerFunc) server.HandlerFunc {
 		startTime := time.Now()
 		err := fn(ctx, req, rsp)
 		endTime := time.Now()
+		// 添加审计
 		go addAudit(ctx, req, rsp, startTime, endTime)
 		return err
 	}
@@ -46,14 +47,16 @@ func (a actionDesc) String() string { // nolint
 	return string(a)
 }
 
+// resource 资源想关信息
 type resource struct {
-	RepoName  string `json:"repoName" yaml:"repoName"`
-	ClusterID string `json:"clusterID" yaml:"clusterID"`
-	Namespace string `json:"namespace" yaml:"namespace"`
-	Name      string `json:"name" yaml:"name"`
-	Version   string `json:"version" yaml:"version"`
-	Chart     string `json:"chart" yaml:"chart"`
-	Revision  uint32 `json:"revision" yaml:"revision"`
+	RepoName    string `json:"repoName" yaml:"repoName"`
+	ClusterID   string `json:"clusterID" yaml:"clusterID"`
+	Namespace   string `json:"namespace" yaml:"namespace"`
+	Name        string `json:"name" yaml:"name"`
+	Version     string `json:"version" yaml:"version"`
+	Chart       string `json:"chart" yaml:"chart"`
+	Revision    uint32 `json:"revision" yaml:"revision"`
+	ProjectCode string `json:"projectCode" yaml:"projectCode"`
 }
 
 // resource to map
@@ -80,9 +83,13 @@ func (r resource) toMap() map[string]any {
 	if r.Revision != 0 {
 		result["Revision"] = r.Revision
 	}
+	if r.ProjectCode != "" {
+		result["ProjectCode"] = r.ProjectCode
+	}
 	return result
 }
 
+// getResourceID get resource id
 func getResourceID(req server.Request) resource {
 	body := req.Body()
 	b, _ := json.Marshal(body)
@@ -92,9 +99,19 @@ func getResourceID(req server.Request) resource {
 	return resourceID
 }
 
+// method audit func
 var auditFuncMap = map[string]func(req server.Request) (audit.Resource, audit.Action){
+	"HelmManager.CreatePersonalRepo": func(req server.Request) (audit.Resource, audit.Action) {
+		res := getResourceID(req)
+		// return the resource to be recorded
+		return audit.Resource{
+			ResourceType: audit.ResourceTypeHelm, ResourceID: res.ProjectCode, ResourceName: res.ProjectCode,
+			ResourceData: res.toMap(),
+		}, audit.Action{ActionID: "create_personal_repo", ActivityType: audit.ActivityTypeCreate}
+	},
 	"HelmManager.GetChartDetailV1": func(req server.Request) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
+		// return the resource to be recorded
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeChart, ResourceID: res.Name, ResourceName: res.Name,
 			ResourceData: res.toMap(),
@@ -102,6 +119,7 @@ var auditFuncMap = map[string]func(req server.Request) (audit.Resource, audit.Ac
 	},
 	"HelmManager.GetVersionDetailV1": func(req server.Request) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
+		// return the resource to be recorded
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeChart, ResourceID: res.Name, ResourceName: res.Name,
 			ResourceData: res.toMap(),
@@ -109,6 +127,7 @@ var auditFuncMap = map[string]func(req server.Request) (audit.Resource, audit.Ac
 	},
 	"HelmManager.DeleteChart": func(req server.Request) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
+		// return the resource to be recorded
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeChart, ResourceID: res.Name, ResourceName: res.Name,
 			ResourceData: res.toMap(),
@@ -116,6 +135,7 @@ var auditFuncMap = map[string]func(req server.Request) (audit.Resource, audit.Ac
 	},
 	"HelmManager.DeleteChartVersion": func(req server.Request) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
+		// return the resource to be recorded
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeChart, ResourceID: res.Name, ResourceName: res.Name,
 			ResourceData: res.toMap(),
@@ -123,6 +143,7 @@ var auditFuncMap = map[string]func(req server.Request) (audit.Resource, audit.Ac
 	},
 	"HelmManager.GetChartRelease": func(req server.Request) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
+		// return the resource to be recorded
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeChart, ResourceID: res.Name, ResourceName: res.Name,
 			ResourceData: res.toMap(),
@@ -130,6 +151,7 @@ var auditFuncMap = map[string]func(req server.Request) (audit.Resource, audit.Ac
 	},
 	"HelmManager.GetReleaseDetailV1": func(req server.Request) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
+		// return the resource to be recorded
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeHelm, ResourceID: res.Name, ResourceName: res.Name,
 			ResourceData: res.toMap(),
@@ -137,6 +159,7 @@ var auditFuncMap = map[string]func(req server.Request) (audit.Resource, audit.Ac
 	},
 	"HelmManager.InstallReleaseV1": func(req server.Request) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
+		// return the resource to be recorded
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeHelm, ResourceID: res.Name, ResourceName: res.Name,
 			ResourceData: res.toMap(),
@@ -144,6 +167,7 @@ var auditFuncMap = map[string]func(req server.Request) (audit.Resource, audit.Ac
 	},
 	"HelmManager.UninstallReleaseV1": func(req server.Request) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
+		// return the resource to be recorded
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeHelm, ResourceID: res.Name, ResourceName: res.Name,
 			ResourceData: res.toMap(),
@@ -151,6 +175,7 @@ var auditFuncMap = map[string]func(req server.Request) (audit.Resource, audit.Ac
 	},
 	"HelmManager.UpgradeReleaseV1": func(req server.Request) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
+		// return the resource to be recorded
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeHelm, ResourceID: res.Name, ResourceName: res.Name,
 			ResourceData: res.toMap(),
@@ -158,6 +183,7 @@ var auditFuncMap = map[string]func(req server.Request) (audit.Resource, audit.Ac
 	},
 	"HelmManager.RollbackReleaseV1": func(req server.Request) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
+		// return the resource to be recorded
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeHelm, ResourceID: res.Name, ResourceName: res.Name,
 			ResourceData: res.toMap(),
@@ -165,6 +191,7 @@ var auditFuncMap = map[string]func(req server.Request) (audit.Resource, audit.Ac
 	},
 	"HelmManager.ReleasePreview": func(req server.Request) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
+		// return the resource to be recorded
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeHelm, ResourceID: res.Name, ResourceName: res.Name,
 			ResourceData: res.toMap(),
@@ -172,6 +199,7 @@ var auditFuncMap = map[string]func(req server.Request) (audit.Resource, audit.Ac
 	},
 	"HelmManager.GetReleaseHistory": func(req server.Request) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
+		// return the resource to be recorded
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeHelm, ResourceID: res.Name, ResourceName: res.Name,
 			ResourceData: res.toMap(),
@@ -179,6 +207,7 @@ var auditFuncMap = map[string]func(req server.Request) (audit.Resource, audit.Ac
 	},
 	"HelmManager.GetReleaseManifest": func(req server.Request) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
+		// return the resource to be recorded
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeHelm, ResourceID: res.Name, ResourceName: res.Name,
 			ResourceData: res.toMap(),
@@ -186,6 +215,7 @@ var auditFuncMap = map[string]func(req server.Request) (audit.Resource, audit.Ac
 	},
 	"HelmManager.GetReleaseStatus": func(req server.Request) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
+		// return the resource to be recorded
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeHelm, ResourceID: res.Name, ResourceName: res.Name,
 			ResourceData: res.toMap(),
@@ -193,6 +223,7 @@ var auditFuncMap = map[string]func(req server.Request) (audit.Resource, audit.Ac
 	},
 	"HelmManager.GetReleasePods": func(req server.Request) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
+		// return the resource to be recorded
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeHelm, ResourceID: res.Name, ResourceName: res.Name,
 			ResourceData: res.toMap(),
@@ -200,6 +231,7 @@ var auditFuncMap = map[string]func(req server.Request) (audit.Resource, audit.Ac
 	},
 	"HelmManager.GetAddonsDetail": func(req server.Request) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
+		// return the resource to be recorded
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeAddons, ResourceID: res.Name, ResourceName: res.Name,
 			ResourceData: res.toMap(),
@@ -207,6 +239,7 @@ var auditFuncMap = map[string]func(req server.Request) (audit.Resource, audit.Ac
 	},
 	"HelmManager.InstallAddons": func(req server.Request) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
+		// return the resource to be recorded
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeAddons, ResourceID: res.Name, ResourceName: res.Name,
 			ResourceData: res.toMap(),
@@ -214,6 +247,7 @@ var auditFuncMap = map[string]func(req server.Request) (audit.Resource, audit.Ac
 	},
 	"HelmManager.UpgradeAddons": func(req server.Request) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
+		// return the resource to be recorded
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeAddons, ResourceID: res.Name, ResourceName: res.Name,
 			ResourceData: res.toMap(),
@@ -221,6 +255,7 @@ var auditFuncMap = map[string]func(req server.Request) (audit.Resource, audit.Ac
 	},
 	"HelmManager.UninstallAddons": func(req server.Request) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
+		// return the resource to be recorded
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeAddons, ResourceID: res.Name, ResourceName: res.Name,
 			ResourceData: res.toMap(),
@@ -228,6 +263,7 @@ var auditFuncMap = map[string]func(req server.Request) (audit.Resource, audit.Ac
 	},
 }
 
+// 添加审计
 func addAudit(ctx context.Context, req server.Request, rsp interface{}, startTime, endTime time.Time) {
 	// get method audit func
 	fn, ok := auditFuncMap[req.Method()]

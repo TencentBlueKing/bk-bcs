@@ -14,7 +14,9 @@
         <bk-button
           theme="primary"
           icon="plus"
-          @click="handleAddTemplate">{{$t('cluster.nodeTemplate.title.create')}}</bk-button>
+          @click="handleAddTemplate">
+          {{$t('cluster.nodeTemplate.title.create')}}
+        </bk-button>
         <bk-input
           class="search-input"
           v-model="searchValue"

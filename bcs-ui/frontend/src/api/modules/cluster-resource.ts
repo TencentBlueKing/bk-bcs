@@ -33,6 +33,7 @@ export const batchReschedulePod = request('put', '/namespaces/$namespace/workloa
 export const pvcMountInfo = request('get', '/namespaces/$namespace/storages/persistent_volume_claims/$pvcID/mount_info');
 export const getNetworksEndpointsFlag = request('get', '/namespaces/$namespaces/networks/endpoints/$name/status');
 export const getReplicasets = request('get', '/namespaces/$namespaceId/workloads/replicasets');// 获取deployment下rs资源
+
 export const restartWorkloads = request('put', '/namespaces/$namespaceId/workloads/$category/$name/restart');// 滚动重启
 export const workloadHistory = request('get', '/namespaces/$namespaceId/workloads/$category/$name/history');// 工作负载历史
 export const rollbackWorkload = request('put', '/namespaces/$namespaceId/workloads/$category/$name/rollout/$revision');// 回滚
@@ -42,3 +43,21 @@ export const restartGameWorkloads = request('put', '/crds/$crd/$category/$name/r
 export const gameWorkloadHistory = request('get', '/crds/$crd/$category/$name/history');// 工作负载历史
 export const rollbackGameWorkload = request('put', '/crds/$crd/$category/$name/rollout/$revision');// 回滚
 export const revisionGameDetail = request('get', '/crds/$crd/$category/$name/revisions/$revision');// 版本详情
+// 视图管理
+const viewRequest = createRequest({
+  domain: window.BCS_API_HOST,
+  prefix: '/bcsapi/v4/clusterresources/v1/projects/$projectCode',
+});
+
+export const viewConfigList = viewRequest('get', '/view_configs');
+export const viewConfigDetail = viewRequest('get', '/view_configs/$id');
+export const createViewConfig = viewRequest('post', '/view_configs');
+export const updateViewConfig = viewRequest('put', '/view_configs/$id');
+export const deleteViewConfig = viewRequest('delete', '/view_configs/$id');
+export const viewConfigRename = viewRequest('put', '/view_configs/$id/rename');
+export const labelSuggest = viewRequest('post', '/label_suggest');
+export const valuesSuggest = viewRequest('post', '/values_suggest');
+export const multiClusterResources = viewRequest('post', '/multi_cluster_resources/$kind');
+export const multiClusterResourcesCRD = viewRequest('post', '/multi_cluster_resources/$crd/custom_objects');
+export const multiClusterCustomResourceDefinition = viewRequest('post', '/multi_cluster_resources/$crd');
+export const multiClusterResourcesCount = viewRequest('post', '/multi_cluster_resources_count');

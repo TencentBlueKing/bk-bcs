@@ -28,6 +28,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	cmcommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/taskserver"
@@ -189,6 +190,9 @@ func (ua *UpdateAction) validateAdditionalInfo() {
 	if ua.req.NodeSettings != nil {
 		ua.cluster.NodeSettings = ua.req.NodeSettings
 	}
+	if ua.req.IsMixed != nil {
+		ua.cluster.IsMixed = ua.req.IsMixed.GetValue()
+	}
 }
 
 // updateCluster update cluster info
@@ -197,13 +201,18 @@ func (ua *UpdateAction) updateCluster() error {
 	ua.validateBaseInfo()
 	// additional info
 	ua.validateAdditionalInfo()
+	// update cluster cloud info
+	err := utils.UpdateClusterCloudInfo(ua.cluster, ua.cloud)
+	if err != nil {
+		return err
+	}
 
 	// trans masterIPs
 	if len(ua.req.Master) > 0 {
 		ua.cluster.Master = make(map[string]*cmproto.Node)
 
 		for _, ip := range ua.req.Master {
-			node, err := ua.transNodeIPToCloudNode(ip)
+			node, err := ua.transNodeIPToCloudNode(ip) // nolint
 			if err != nil {
 				blog.Errorf("updateCluster transNodeIPToCloudNode failed: %v", err)
 				ua.cluster.Master[ip] = &cmproto.Node{
@@ -218,7 +227,7 @@ func (ua *UpdateAction) updateCluster() error {
 	ua.cluster.UpdateTime = time.Now().Format(time.RFC3339)
 
 	// update DB clusterInfo & passcc cluster
-	err := ua.model.UpdateCluster(ua.ctx, ua.cluster)
+	err = ua.model.UpdateCluster(ua.ctx, ua.cluster)
 	if err != nil {
 		return err
 	}
@@ -515,7 +524,23 @@ func (ua *AddNodesAction) addNodesToCluster() error {
 	// default reinstall system when add node to cluster
 	task, err := clusterMgr.AddNodesToCluster(ua.cluster, ua.nodes, &cloudprovider.AddNodesOption{
 		CommonOption: *ua.option,
-		Login:        ua.req.GetLogin(),
+		Login: func() *cmproto.NodeLoginInfo {
+			loginInfo := &cmproto.NodeLoginInfo{
+				InitLoginUsername: ua.req.Login.GetInitLoginUsername(),
+				InitLoginPassword: "",
+				KeyPair:           &cmproto.KeyInfo{},
+			}
+			if len(ua.req.Login.GetInitLoginPassword()) > 0 {
+				loginInfo.InitLoginPassword, _ = encrypt.Encrypt(nil, ua.req.Login.GetInitLoginPassword())
+			}
+			if len(ua.req.Login.GetKeyPair().GetKeySecret()) > 0 {
+				loginInfo.KeyPair.KeySecret, _ = encrypt.Encrypt(nil, ua.req.Login.GetKeyPair().GetKeySecret())
+			}
+			if len(ua.req.Login.GetKeyPair().GetKeyPublic()) > 0 {
+				loginInfo.KeyPair.KeyPublic, _ = encrypt.Encrypt(nil, ua.req.Login.GetKeyPair().GetKeyPublic())
+			}
+			return loginInfo
+		}(),
 		Cloud:        ua.cloud,
 		NodeTemplate: ua.nodeTemplate,
 		NodeGroupID:  ua.req.NodeGroupID,
@@ -591,9 +616,11 @@ func (ua *AddNodesAction) saveNodesToStorage(status string) error {
 
 // checkManagedClusterNodeNum check managed cluster nodes num
 func (ua *AddNodesAction) checkManagedClusterNodeNum() error {
-	if ua.cluster.ManageType != common.ClusterManageTypeManaged {
-		return nil
-	}
+	/*
+		if ua.cluster.ManageType != common.ClusterManageTypeManaged {
+			return nil
+		}
+	*/
 
 	nodeStatus := []string{common.StatusRunning, common.StatusInitialization}
 	nodes, err := GetClusterStatusNodes(ua.model, ua.cluster, nodeStatus)
@@ -908,9 +935,10 @@ func (ua *AddNodesAction) Handle(ctx context.Context, req *cmproto.AddNodesReque
 		TaskID:       ua.task.TaskID,
 		Message:      fmt.Sprintf("集群%s添加节点", ua.cluster.ClusterID),
 		OpUser:       req.Operator,
-		CreateTime:   time.Now().String(),
+		CreateTime:   time.Now().Format(time.RFC3339),
 		ClusterID:    ua.cluster.ClusterID,
 		ProjectID:    ua.cluster.ProjectID,
+		ResourceName: ua.cluster.ClusterName,
 	})
 	if err != nil {
 		blog.Errorf("AddNodesToCluster[%s] CreateOperationLog failed: %v", ua.cluster.ClusterID, err)

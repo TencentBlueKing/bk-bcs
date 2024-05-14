@@ -32,15 +32,15 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
-	microCfg "github.com/micro/go-micro/v2/config"
-	"github.com/micro/go-micro/v2/config/encoder/yaml"
-	"github.com/micro/go-micro/v2/config/reader"
-	microJson "github.com/micro/go-micro/v2/config/reader/json"
-	"github.com/micro/go-micro/v2/config/source/env"
-	microFile "github.com/micro/go-micro/v2/config/source/file"
-	microFlg "github.com/micro/go-micro/v2/config/source/flag"
-	microRgt "github.com/micro/go-micro/v2/registry"
-	microEtcd "github.com/micro/go-micro/v2/registry/etcd"
+	"github.com/go-micro/plugins/v4/config/encoder/yaml"
+	microEtcd "github.com/go-micro/plugins/v4/registry/etcd"
+	microCfg "go-micro.dev/v4/config"
+	"go-micro.dev/v4/config/reader"
+	microJson "go-micro.dev/v4/config/reader/json"
+	"go-micro.dev/v4/config/source/env"
+	microFile "go-micro.dev/v4/config/source/file"
+	microFlg "go-micro.dev/v4/config/source/flag"
+	microRgt "go-micro.dev/v4/registry"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	helmrelease "helm.sh/helm/v3/pkg/release"
@@ -190,7 +190,7 @@ func migrateRepo(model store.HelmManagerModel, mysqlDB *gorm.DB) {
 		}
 
 		// sync public repo
-		if len(common.GetPublicRepoURL(C.Repo.URL, C.Repo.PublicRepoProject, C.Repo.PublicRepoName)) != 0 {
+		if len(common.GetPublicRepoURL(C.Repo.GetRepoBaseURL(), C.Repo.PublicRepoProject, C.Repo.PublicRepoName)) != 0 {
 			createOrUpdatePublicRepo(model, repo.Name)
 		}
 	}
@@ -246,7 +246,7 @@ func createOrUpdatePublicRepo(model store.HelmManagerModel, projectID string) {
 		DisplayName: common.PublicRepoDisplayName,
 		Public:      true,
 		Type:        "HELM",
-		RepoURL:     common.GetPublicRepoURL(C.Repo.URL, C.Repo.PublicRepoProject, C.Repo.PublicRepoName),
+		RepoURL:     common.GetPublicRepoURL(C.Repo.GetRepoBaseURL(), C.Repo.PublicRepoProject, C.Repo.PublicRepoName),
 		CreateBy:    "admin",
 		UpdateBy:    "admin",
 		CreateTime:  now,

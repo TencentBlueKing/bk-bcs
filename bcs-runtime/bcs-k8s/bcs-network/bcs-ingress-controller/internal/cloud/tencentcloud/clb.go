@@ -1,10 +1,10 @@
 /*
- * Tencent is pleased to support the open source community by making Blueking Container Service available.,
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
  * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -21,6 +21,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/eventer"
@@ -28,7 +29,6 @@ import (
 
 	tclb "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/clb/v20180317"
 	tcommon "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
-	k8scorev1 "k8s.io/api/core/v1"
 )
 
 // Clb client to operate clb instance
@@ -70,16 +70,14 @@ func NewClbWithSecretIDKey(id, key string) (*Clb, error) {
 }
 
 // NewClbWithSecret create clb client with k8s secret
-func NewClbWithSecret(secret *k8scorev1.Secret, _ client.Client, _ eventer.WatchEventInterface) (cloud.LoadBalance, error) {
-	secretIDBytes, ok := secret.Data[EnvNameTencentCloudAccessKeyID]
+func NewClbWithSecret(data map[string][]byte, _ client.Client, _ eventer.WatchEventInterface) (cloud.LoadBalance, error) {
+	secretIDBytes, ok := data[EnvNameTencentCloudAccessKeyID]
 	if !ok {
-		return nil, fmt.Errorf("lost %s in secret %s/%s", EnvNameTencentCloudAccessKeyID,
-			secret.Namespace, secret.Name)
+		return nil, fmt.Errorf("lost %s in secret", EnvNameTencentCloudAccessKeyID)
 	}
-	secretKeyBytes, ok := secret.Data[EnvNameTencentCloudAccessKey]
+	secretKeyBytes, ok := data[EnvNameTencentCloudAccessKey]
 	if !ok {
-		return nil, fmt.Errorf("lost %s in secret %s/%s", EnvNameTencentCloudAccessKey,
-			secret.Namespace, secret.Name)
+		return nil, fmt.Errorf("lost %s in secret", EnvNameTencentCloudAccessKey)
 	}
 	sdkWrapper, err := NewSdkWrapperWithSecretIDKey(string(secretIDBytes), string(secretKeyBytes))
 	if err != nil {

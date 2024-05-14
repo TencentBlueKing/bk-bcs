@@ -26,6 +26,10 @@ import (
 	ossync "sync"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/version"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
 	etcdsync "github.com/asim/go-micro/plugins/sync/etcd/v4"
 	grpccli "github.com/go-micro/plugins/v4/client/grpc"
 	"github.com/go-micro/plugins/v4/registry/etcd"
@@ -34,22 +38,17 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"go-micro.dev/v4"
 	"go-micro.dev/v4/registry"
 	"go-micro.dev/v4/sync"
 	"go-micro.dev/v4/util/file"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
-	"go-micro.dev/v4"
-
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/version"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/cmd/manager/options"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/handler"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/internal/component"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/internal/dao"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/analysis"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/controller"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy"
@@ -62,7 +61,7 @@ import (
 )
 
 // NewServer create gitops-manager main server
-func NewServer(opt *Options) *Server {
+func NewServer(opt *options.Options) *Server {
 	cxt, cancel := context.WithCancel(context.Background())
 	return &Server{
 		cxt:    cxt,
@@ -77,7 +76,7 @@ type Server struct {
 	cxt    context.Context
 	cancel context.CancelFunc
 	stops  []utils.StopFunc
-	option *Options
+	option *options.Options
 	// etcdSync for leader election,
 	// only leader can create tunnel in tunnel mode
 	etcdSync         sync.Sync
@@ -91,13 +90,7 @@ type Server struct {
 	// gitops revese proxy, including auth plugin
 	gitops proxy.GitOpsProxy
 	// gitops data storage
-	storage        store.Store
-	secret         secretstore.SecretInterface
-	db             dao.Interface
-	analysisClient analysis.AnalysisInterface
-
-	jwtClient *jwt.JWTClient
-	iamClient iam.PermClient
+	storage store.Store
 }
 
 // Init all subsystems
@@ -108,7 +101,7 @@ func (s *Server) Init() error {
 		Token:   s.option.AuditConfig.Token,
 	})
 	initializer := []func() error{
-		s.initDB, s.initAnalysisClient, s.initSecret, s.initIamJWTClient,
+		s.initDB, s.initIamJWTClient,
 		s.initStorage, s.initController, s.initMicroService, s.initHTTPService,
 		s.initLeaderElection,
 	}
@@ -123,7 +116,7 @@ func (s *Server) Init() error {
 // Run all service, blocking
 func (s *Server) Run() error {
 	runners := []func(){
-		s.startSignalHandler, s.startAnalysis, s.startMicroService,
+		s.startSignalHandler, s.startMicroService,
 		s.startHTTPService, s.startLeaderElection,
 	}
 	for _, run := range runners {
@@ -151,24 +144,14 @@ func (s *Server) stop() {
 }
 
 func (s *Server) initDB() error {
-	db, err := dao.NewDriver(s.option.DBConfig)
+	db, err := dao.NewDriver()
 	if err != nil {
 		return errors.Wrapf(err, "create db failed")
 	}
-	s.db = db
 	if err = db.Init(); err != nil {
 		return errors.Wrapf(err, "init db failed")
 	}
 	blog.Infof("init db success.")
-	return nil
-}
-
-func (s *Server) initAnalysisClient() error {
-	s.analysisClient = analysis.NewAnalysisClient(s.db, s.option.MetricConfig)
-	if err := s.analysisClient.Init(); err != nil {
-		return errors.Wrapf(err, "init analysis client failed")
-	}
-	blog.Infof("init analysis client success.")
 	return nil
 }
 
@@ -196,14 +179,6 @@ func (s *Server) initStorage() error {
 	return nil
 }
 
-func (s *Server) initSecret() error {
-	s.secret = secretstore.NewSecretStore(&secretstore.SecretStoreOptions{
-		Address: s.option.SecretServer.Address,
-		Port:    s.option.SecretServer.Port,
-	})
-	return nil
-}
-
 func (s *Server) initIamJWTClient() error {
 	// 初始化权限平台 Client
 	iamClient, err := iam.NewIamClient(&iam.Options{
@@ -218,7 +193,7 @@ func (s *Server) initIamJWTClient() error {
 	if err != nil {
 		return errors.Wrapf(err, "manager init iam client failed")
 	}
-	s.iamClient = iamClient
+	s.option.IAMClient = iamClient
 
 	// 初始化 JWT Client
 	jwtClient, err := jwt.NewJWTClient(jwt.JWTOptions{
@@ -228,7 +203,7 @@ func (s *Server) initIamJWTClient() error {
 	if err != nil {
 		return errors.Wrapf(err, "manager init jwt client failed")
 	}
-	s.jwtClient = jwtClient
+	s.option.JWTDecoder = jwtClient
 	blog.Infof("init iam/jwt client success")
 	return nil
 }
@@ -253,13 +228,10 @@ func (s *Server) initMicroService() error {
 	)
 	s.microService = svc
 	opt := &handler.Options{
-		Storage:        s.storage,
 		AdminNamespace: s.option.GitOps.AdminNamespace,
 		ClusterControl: s.clusterCtl,
 		ProjectControl: s.projectCtl,
-		JwtClient:      s.jwtClient,
-		IamClient:      s.iamClient,
-		SecretClient:   s.secret,
+		SecretClient:   secretstore.NewSecretStore(s.option.SecretServer),
 	}
 	gitopsHandler := handler.NewGitOpsHandler(opt)
 	if err := gitopsHandler.Init(); err != nil {
@@ -403,27 +375,7 @@ func (s *Server) initGrpcGateway(router *mux.Router) error {
 // gitops porxy must be implemented http.Handler, that we can
 // change to other gitops solution easilly
 func (s *Server) initGitOpsProxy(router *mux.Router) error {
-	opt := &proxy.GitOpsOptions{
-		Service:        s.option.GitOps.Service,
-		RepoServerUrl:  s.option.GitOps.RepoServer,
-		AppSetWebhook:  s.option.GitOps.AppsetControllerWebhook,
-		PublicProjects: s.option.PublicProjects,
-		PathPrefix:     common.GitOpsProxyURL,
-		JWTDecoder:     s.jwtClient,
-		IAMClient:      s.iamClient,
-		Storage:        s.storage,
-		DB:             s.db,
-		SecretOption: &proxy.SecretOption{
-			Address: s.option.SecretServer.Address,
-			Port:    s.option.SecretServer.Port,
-		},
-		TraceOption: &proxy.TraceOption{
-			Endpoint: s.option.TraceConfig.Endpoint,
-			Token:    s.option.TraceConfig.Token,
-		},
-	}
-
-	s.gitops = argocd.NewGitOpsProxy(opt)
+	s.gitops = argocd.NewGitOpsProxy()
 	if err := s.gitops.Init(); err != nil {
 		return err
 	}
@@ -457,34 +409,20 @@ func (s *Server) initAPIDocs(router *mux.Router) error {
 func (s *Server) initController() error {
 	ctx, cancel := context.WithCancel(s.cxt)
 	s.stops = append(s.stops, utils.StopFunc(cancel))
-	// cluster controller
-	opt := &controller.Options{
-		Context:              ctx,
-		Mode:                 s.option.Mode,
-		ClientTLS:            s.option.ClientTLS,
-		Registry:             s.option.Registry.Endpoints,
-		RegistryTLS:          s.option.Registry.TLSConfig,
-		APIGatewayForCluster: s.option.APIGatewayForCluster,
-		APIGateway:           s.option.APIGateway,
-		APIToken:             s.option.APIGatewayToken,
-		Interval:             s.option.ClusterSyncInterval,
-		Storage:              s.storage,
-		Secret:               s.secret,
-	}
-	s.clusterCtl = controller.NewClusterController(opt)
+	s.clusterCtl = controller.NewClusterController(ctx, s.storage)
 	if err := s.clusterCtl.Init(); err != nil {
 		blog.Errorf("manager init cluster controller failure, %s", err.Error())
 		return err // nolint
 	}
-	s.stops = append(s.stops, utils.StopFunc(s.clusterCtl.Stop))
+	s.stops = append(s.stops, s.clusterCtl.Stop)
 	blog.Infof("manager init cluster controller successfully")
 
-	s.projectCtl = controller.NewProjectController(opt)
+	s.projectCtl = controller.NewProjectController()
 	if err := s.projectCtl.Init(); err != nil {
 		blog.Errorf("manager init project controller failure, %s", err.Error())
 		return err
 	}
-	s.stops = append(s.stops, utils.StopFunc(s.projectCtl.Stop))
+	s.stops = append(s.stops, s.projectCtl.Stop)
 	blog.Infof("init controller success")
 	return nil
 }
@@ -517,7 +455,7 @@ func (s *Server) startLeaderElection() {
 		blog.Errorf("manager %s campaign leader role met error, %s", leaderID, err.Error())
 		// maybe network error, server can start elect
 		// again after backoff strategy
-		time.Sleep(time.Second * gracefulPeriod)
+		time.Sleep(time.Second * 3)
 		go s.startLeaderElection()
 		return
 	}
@@ -540,7 +478,7 @@ func (s *Server) startLeaderElection() {
 	// when server lost leader role, stop tunnel and try to elect again
 	select {
 	case <-lost:
-		time.Sleep(time.Second * gracefulPeriod)
+		time.Sleep(time.Second * 3)
 		go s.startLeaderElection()
 		// nothing to stop, recycle resource by defer CancelFunc()
 		return
@@ -576,14 +514,6 @@ func (s *Server) startTunnelClient(cxt context.Context) error {
 	client.Start()
 	blog.Infof("manager start tunnel client successufully")
 	return nil
-}
-
-func (s *Server) startAnalysis() {
-	if err := s.analysisClient.Start(s.cxt); err != nil {
-		blog.Fatalf("start analysis failed: %s", err.Error())
-	}
-	blog.Infof("analysis started")
-	return
 }
 
 func (s *Server) startSignalHandler() {

@@ -9,7 +9,7 @@
       @confirm="handleSwitchMode">
       <FixedButton position="unset" :title="$t('dashboard.workload.editor.actions.switchToYAMLMode')" />
     </bcs-popconfirm>
-    <Header :title="title" />
+    <ContentHeader :title="title" :cluster-id="clusterId" :namespace="isEdit ? namespace : ''" />
     <div class="form-resource-content" ref="editorWrapperRef">
       <BKForm
         v-model="schemaFormData"
@@ -55,7 +55,12 @@
           @click="handleShowDiff">
           {{$t('generic.button.next')}}
         </bk-button>
-        <span v-bk-tooltips.top="{ disabled: !disableUpdate, content: $t('dashboard.workload.editor.tips.contentUnchanged') }" v-else>
+        <span
+          v-bk-tooltips.top="{
+            disabled: !disableUpdate,
+            content: $t('dashboard.workload.editor.tips.contentUnchanged')
+          }"
+          v-else>
           <bk-button
             class="min-w-[88px]"
             theme="primary"
@@ -67,7 +72,11 @@
         </span>
         <bk-button
           class="min-w-[88px] ml15"
-          @click="handleToggleDiff">{{showDiff ? $t('dashboard.workload.editor.continueEditing') : $t('dashboard.workload.editor.showDifference')}}</bk-button>
+          @click="handleToggleDiff">
+          {{showDiff
+            ? $t('dashboard.workload.editor.continueEditing')
+            : $t('dashboard.workload.editor.showDifference')}}
+        </bk-button>
         <bk-button class="min-w-[88px] ml15" @click="handleCancel">{{$t('generic.button.cancel')}}</bk-button>
       </template>
       <template v-else>
@@ -119,11 +128,10 @@ import FixedButton from './fixed-button.vue';
 import '@blueking/bkui-form/dist/bkui-form.css';
 import { CR_API_URL } from '@/api/base';
 import request from '@/api/request';
-import Header from '@/components/layout/Header.vue';
+import ContentHeader from '@/components/layout/Header.vue';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 import fullScreen from '@/directives/full-screen';
 import $router from '@/router';
-import $store from '@/store';
 
 const BKForm = createForm({
   namespace: 'bcs',
@@ -137,7 +145,7 @@ export default {
     BKForm,
     FixedButton,
     CodeEditor,
-    Header,
+    ContentHeader,
   },
   directives: {
     'full-screen': fullScreen,
@@ -269,7 +277,7 @@ export default {
   methods: {
     handleSetHeight() {
       const bounding = this.$refs.editorWrapperRef?.getBoundingClientRect();
-      this.height = bounding ? bounding.height - 80 : 600;
+      this.height = bounding ? bounding.height - 72 : 600;
     },
     handleShowDiff() {
       const valid = this.$refs.bkuiFormRef?.validateForm();
@@ -348,7 +356,7 @@ export default {
         subTitle: this.$t('generic.msg.info.exitEdit.subTitle'),
         defaultInfo: true,
         confirmFn: () => {
-          this.$router.push({ name: this.$store.state.curSideMenu?.route });
+          this.$router.back();
         },
       });
     },
@@ -364,7 +372,7 @@ export default {
           defaultShowExample: true,
         };
       }
-      this.$router.push({
+      this.$router.replace({
         name: 'dashboardResourceUpdate',
         params: {
           ...params,
@@ -435,7 +443,7 @@ export default {
               message: this.$t('generic.msg.success.update'),
             });
             // 跳转回列表页
-            $router.push({ name: $store.state.curSideMenu?.route });
+            $router.back();
           }
         },
       });
@@ -476,7 +484,7 @@ export default {
         });
         this.$store.commit('updateCurNamespace', this.schemaFormData.metadata?.namespace);
         // 跳转回列表页
-        $router.push({ name: $store.state.curSideMenu?.route });
+        $router.back();
       }
     },
     // 表单预览
@@ -499,6 +507,8 @@ export default {
 </script>
 <style lang="postcss" scoped>
 .form-resource {
+    display: flex;
+    flex-direction: column;
     padding-bottom: 0;
     height: 100%;
     /deep/ .bk-form-radio {
@@ -528,10 +538,10 @@ export default {
         margin-left: 0px;
     }
     .form-resource-content {
-        padding: 20px;
-        max-height: calc(100vh - 162px);
-        height: 100%;
+        padding: 8px 24px;
+        margin-bottom: 60px;
         overflow: auto;
+        flex: 1;
     }
     .code-diff {
         width: 100%;

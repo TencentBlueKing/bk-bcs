@@ -19,7 +19,7 @@ import (
 
 	"github.com/gobwas/glob"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
 // Scope defines the credential scope expression.
@@ -39,6 +39,18 @@ func (cs Scope) Validate() error {
 	return nil
 }
 
+// Split 拆分成 app / scope 格式
+func (cs Scope) Split() (app string, scope string, err error) {
+	index := strings.Index(string(cs), "/")
+	if index == -1 {
+		return "", "", fmt.Errorf("invalid credential scope %s", cs)
+	}
+
+	app = string(cs[:index])
+	scope = string(cs[index:])
+	return app, scope, nil
+}
+
 // MatchApp checks if the credential scope matches the app name.
 func (cs Scope) MatchApp(name string) (bool, error) {
 	if err := cs.Validate(); err != nil {
@@ -46,7 +58,11 @@ func (cs Scope) MatchApp(name string) (bool, error) {
 	}
 
 	appPattern := strings.Split(string(cs), "/")[0]
-	return glob.MustCompile(appPattern).Match(name), nil
+	g, err := glob.Compile(appPattern)
+	if err != nil {
+		return false, err
+	}
+	return g.Match(name), nil
 }
 
 // MatchConfigItem checks if the credential scope matches the config item.
@@ -55,5 +71,22 @@ func (cs Scope) MatchConfigItem(path, name string) (bool, error) {
 		return false, err
 	}
 	configItemPattern := strings.SplitN(string(cs), "/", 2)[1]
-	return tools.MatchConfigItem(configItemPattern, path, name), nil
+	ok, err := tools.MatchConfigItem(configItemPattern, path, name)
+	if err != nil {
+		return false, err
+	}
+	return ok, nil
+}
+
+// New 通过 app scope 组装
+func New(app string, scope string) (Scope, error) {
+	if len(app) == 0 {
+		return "", fmt.Errorf("app is required")
+	}
+
+	if len(scope) == 0 {
+		return "", fmt.Errorf("scope is required")
+	}
+
+	return Scope(app + scope), nil
 }

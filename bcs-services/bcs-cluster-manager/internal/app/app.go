@@ -37,6 +37,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	commonutil "github.com/Tencent/bk-bcs/bcs-common/common/util"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/i18n"
@@ -44,14 +45,13 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 	restful "github.com/emicklei/go-restful"
+	"github.com/go-micro/plugins/v4/registry/etcd"
+	microgrpcserver "github.com/go-micro/plugins/v4/server/grpc"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/micro/go-micro/v2/registry"
-	"github.com/micro/go-micro/v2/registry/etcd"
-	microgrpcserver "github.com/micro/go-micro/v2/server/grpc"
-	microsvc "github.com/micro/go-micro/v2/service"
-	microgrpcsvc "github.com/micro/go-micro/v2/service/grpc"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	microsvc "go-micro.dev/v4"
+	"go-micro.dev/v4/registry"
 	"google.golang.org/grpc"
 	grpccred "google.golang.org/grpc/credentials"
 
@@ -70,6 +70,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/alarm/bkmonitor"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/alarm/tmp"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/audit"
 	ssmAuth "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cidrmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
@@ -248,18 +249,12 @@ func (cm *ClusterManager) initModel() error {
 	}
 	cm.mongoOptions = mongoOptions
 
-	mongoDB, err := mongo.NewDB(mongoOptions)
+	modelSet, err := store.NewModelSet(mongoOptions)
 	if err != nil {
-		blog.Errorf("init mongo db failed, err %s", err.Error())
 		return err
 	}
-	if err = mongoDB.Ping(); err != nil {
-		blog.Errorf("ping mongo db failed, err %s", err.Error())
-		return err
-	}
-	blog.Infof("init mongo db successfully")
-	modelSet := store.NewModelSet(mongoDB)
 	cm.model = modelSet
+
 	blog.Infof("init store successfully")
 	return nil
 }
@@ -420,6 +415,7 @@ func (cm *ClusterManager) initAlarmClient() error {
 // init bk-ops client
 func (cm *ClusterManager) initBKOpsClient() error {
 	err := common.SetBKOpsClient(common.Options{
+		EsbServer:  cm.opt.BKOps.EsbServer,
 		Server:     cm.opt.BKOps.Server,
 		AppCode:    cm.opt.BKOps.AppCode,
 		AppSecret:  cm.opt.BKOps.AppSecret,
@@ -791,7 +787,7 @@ func (cm *ClusterManager) initHTTPGateway(router *mux.Router) error {
 	if cm.tlsConfig != nil && cm.clientTLSConfig != nil {
 		grpcDialOpts = append(grpcDialOpts, grpc.WithTransportCredentials(grpccred.NewTLS(cm.clientTLSConfig)))
 	} else {
-		grpcDialOpts = append(grpcDialOpts, grpc.WithInsecure())
+		grpcDialOpts = append(grpcDialOpts, grpc.WithInsecure()) // nolint
 	}
 	grpcDialOpts = append(grpcDialOpts, grpc.WithDefaultCallOptions(
 		grpc.MaxCallRecvMsgSize(utils.MaxBodySize), grpc.MaxCallSendMsgSize(utils.MaxBodySize)))
@@ -927,11 +923,15 @@ func (cm *ClusterManager) initMicro() error { // nolint
 		EnableSkipClient(auth.SkipClient).
 		SetCheckUserPerm(auth.CheckUserPerm)
 
+	// with tls
+	grpcSvr := microgrpcserver.NewServer(microgrpcserver.AuthTLS(cm.tlsConfig))
+
 	// New Service
-	microService := microgrpcsvc.NewService(
+	microService := microsvc.NewService(
+		microsvc.Server(grpcSvr),
+		microsvc.Cmd(commonutil.NewDummyMicroCmd()),
 		microsvc.Name(cmcommon.ClusterManagerServiceDomain),
 		microsvc.Metadata(metadata),
-		microgrpcsvc.WithTLS(cm.tlsConfig),
 		microsvc.Address(net.JoinHostPort(ipv4, port)),
 		microsvc.Registry(cm.microRegistry),
 		microsvc.Version(version.BcsVersion),
@@ -961,12 +961,17 @@ func (cm *ClusterManager) initMicro() error { // nolint
 			cm.disc.Stop()
 			return nil
 		}),
+		microsvc.AfterStop(func() error {
+			audit.GetAuditClient().Close()
+			return nil
+		}),
 		microsvc.WrapHandler(
 			utils.HandleLanguageWrapper,
 			utils.RequestLogWarpper,
 			utils.ResponseWrapper,
 			authWrapper.AuthenticationFunc,
 			authWrapper.AuthorizationFunc,
+			utils.NewAuditWrapper,
 		),
 	)
 	microService.Init()

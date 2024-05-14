@@ -22,8 +22,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	cm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 	discovery "github.com/Tencent/bk-bcs/bcs-common/pkg/module-discovery"
-	"github.com/micro/go-micro/v2/registry"
-	"github.com/micro/go-micro/v2/registry/etcd"
+	"github.com/go-micro/plugins/v4/registry/etcd"
+	"go-micro.dev/v4/registry"
 
 	modulediscovery "github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/discovery"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/register"

@@ -17,7 +17,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
 )
 
 const (
@@ -46,7 +46,7 @@ func (so ServiceOption) Validate() error {
 		return errors.New("service name is empty")
 	}
 
-	if len(so.IP) == 0 || so.IP == "0.0.0.0" {
+	if len(so.IP) == 0 || so.IP == "0.0.0.0" || so.IP == "::" {
 		return errors.New("invalid service ip")
 	}
 

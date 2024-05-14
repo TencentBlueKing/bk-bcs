@@ -34,17 +34,17 @@ import (
 	"github.com/go-chi/render"
 	"github.com/panjf2000/ants/v2"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/repository"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/auth"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	pbcs "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/config-server"
-	pbci "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/config-item"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/rest"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/archive"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/repository"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/auth"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	pbcs "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/config-server"
+	pbci "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/config-item"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/rest"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/archive"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 var bufferPool = sync.Pool{
@@ -114,9 +114,6 @@ func (c *configImport) TemplateConfigFileImport(w http.ResponseWriter, r *http.R
 	exist := make([]*types.TemplateItem, 0)
 	nonExist := make([]*types.TemplateItem, 0)
 	for _, item := range folder {
-		if !strings.HasSuffix(item.Path, "/") {
-			item.Path += "/"
-		}
 		pathName := path.Join(item.Path, item.Name)
 		data, ok := templateItem[pathName]
 		if !ok {
@@ -210,9 +207,6 @@ func (c *configImport) ConfigFileImport(w http.ResponseWriter, r *http.Request) 
 	exist := make([]*types.TemplateItem, 0)
 	nonExist := make([]*types.TemplateItem, 0)
 	for _, item := range folder {
-		if !strings.HasSuffix(item.Path, "/") {
-			item.Path += "/"
-		}
 		pathName := path.Join(item.Path, item.Name)
 		config, ok := configItem[pathName]
 		if !ok {

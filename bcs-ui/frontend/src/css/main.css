@@ -33,15 +33,15 @@
   .bcs-dropdown-item {
       display: block;
       height: 32px;
-      line-height: 33px;
+      line-height: 32px;
       padding: 0 16px;
       color: #63656e;
       font-size: 12px;
       text-decoration: none;
       white-space: nowrap;
       cursor: pointer;
-      &:hover {
-          background-color: #eaf3ff;
+      &:hover:not(.disabled) {
+          background-color: #f5f7fa;
           color: #3a84ff;
       }
       &.disabled {
@@ -129,6 +129,14 @@
     font-size: 12px;
     height: 32px;
   }
+
+  .bcs-rotate {
+    transform: rotate(180deg);
+  }
+}
+
+#app {
+  overflow: hidden;
 }
 
 .bcs-tippy-theme .tippy-content {
@@ -151,4 +159,22 @@
 
 .bk-table .bk-loading {
   transform: translate(-1px, -1px);
+}
+
+.bk-table-filter-panel {
+  .panel-checkbox-group {
+    max-height: 380px;
+    overflow: auto;
+  }
+}
+
+.tippy-arrow {
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.bcs-select-group {
+  .bk-option-group-name {
+    border-bottom: 0px !important;
+  }
 }

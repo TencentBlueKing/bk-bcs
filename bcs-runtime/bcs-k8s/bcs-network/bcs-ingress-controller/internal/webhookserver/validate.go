@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -23,6 +23,7 @@ import (
 	k8stypes "k8s.io/apimachinery/pkg/types"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
@@ -65,6 +66,10 @@ func (s *Server) validatePortPool(newPool *networkextensionv1.PortPool) error {
 }
 
 func (s *Server) checkPortPool(newPool *networkextensionv1.PortPool) error {
+	if newPool.GetAllocatePolicy() != networkextensionv1.PortPoolAllocatePolicyAverage && newPool.GetAllocatePolicy() != networkextensionv1.PortPoolAllocatePolicyDefault {
+		return fmt.Errorf("only support allocate policy in ['default', 'average', ''], " +
+			"empty policy is regarded as default")
+	}
 	// key: lbID-port, value: itemName
 	lbPortMap := make(map[string]string)
 	itemNameMap := make(map[string]struct{})

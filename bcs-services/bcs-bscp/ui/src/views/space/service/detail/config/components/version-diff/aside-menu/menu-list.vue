@@ -19,29 +19,32 @@
   </div>
 </template>
 <script lang="ts" setup>
-import { ref, watch } from 'vue';
+  import { ref, watch } from 'vue';
 
-const props = defineProps<{
+  const props = defineProps<{
     title: string;
-    list: { id: number|string, name: string; type: string }[],
-    value?: string|number;
+    list: { id: number | string; name: string; type: string }[];
+    value?: string | number;
   }>();
 
-const emits = defineEmits(['selected']);
+  const emits = defineEmits(['selected']);
 
-const selected = ref<number|string|undefined>(props.value);
+  const selected = ref<number | string | undefined>(props.value);
 
-const handleSelect = (id: number|string) => {
-  selected.value = id;
-  emits('selected', id);
-};
+  const handleSelect = (id: number | string) => {
+    selected.value = id;
+    emits('selected', id);
+  };
 
-watch(() => props.value, (val) => {
-  selected.value = val;
-}, {
-  immediate: true,
-});
-
+  watch(
+    () => props.value,
+    (val) => {
+      selected.value = val;
+    },
+    {
+      immediate: true,
+    },
+  );
 </script>
 <style lang="scss" scoped>
   .diff-menu-list {

@@ -117,16 +117,8 @@ docs/.me_configs.data
 celerybeat*
 staticfiles
 
-backend/edition-metadata.json
-
-# This gitignore file is always written by editionctl script automatically
-bcs-ui/.gitignore
-bcs-ui/edition-metadata.json
-
 /data/
 
-bcs-ui/backend/settings/ce/dev_*.py
-bcs-ui/support-files/iam/
 .mypy_cache
 .kube/
 .husky
@@ -137,9 +129,12 @@ build.yml
 # bscp 软连接
 bcs-services/bscp.io
 .vscode
+__debug_*
 
 bcs-scenarios/bcs-kourse-rollout/bin/*
 
 # ignore scripts tongsuo tar file
 scripts/8.3.2.tar.gz
 scripts/Tongsuo-8.3.2/
+
+pre-*-bkcodeai

@@ -22,8 +22,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
-	"google.golang.org/api/compute/v1"
-	"google.golang.org/api/container/v1"
+	compute "google.golang.org/api/compute/v1"
+	container "google.golang.org/api/container/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd/api"
 
@@ -38,13 +38,6 @@ import (
 
 const (
 	gceURLPrefix = "https://www.googleapis.com/compute/v1/"
-
-	// BCSNodeGroupTaintKey xxx
-	BCSNodeGroupTaintKey = "bcs-cluster-manager"
-	// BCSNodeGroupTaintValue xxx
-	BCSNodeGroupTaintValue = "noSchedule"
-	// BCSNodeGroupTaintEffect xxx
-	BCSNodeGroupTaintEffect = "NO_EXECUTE"
 )
 
 // GenerateInstanceUrl generates url for instance.
@@ -198,9 +191,9 @@ func MapTaints(cmt []*cmproto.Taint) []*Taint {
 
 	// attention: gke not support addNodes to set unScheduled nodes, thus realize this feature by taint
 	t = append(t, &Taint{
-		Key:    BCSNodeGroupTaintKey,
-		Value:  BCSNodeGroupTaintValue,
-		Effect: BCSNodeGroupTaintEffect})
+		Key:    cutils.BCSNodeGroupTaintKey,
+		Value:  cutils.BCSNodeGroupTaintValue,
+		Effect: cutils.BCSNodeGroupGkeTaintEffect})
 
 	return t
 }

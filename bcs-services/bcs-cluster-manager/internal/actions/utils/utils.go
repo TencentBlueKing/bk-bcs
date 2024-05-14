@@ -15,20 +15,34 @@ package utils
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
+	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
+)
+
+const (
+	// NodeTemplate node template
+	NodeTemplate = "nt"
+	// GroupTemplate node group template
+	GroupTemplate = "ng"
+	// NotifyTemplate notify template
+	NotifyTemplate = "nf"
 )
 
 // CheckClusterConnection check cluster connection when delete cluster or other scenes
 func CheckClusterConnection(operator *clusterops.K8SOperator, clusterID string) bool {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*1)
 	defer cancel()
 
 	err := operator.CheckClusterConnection(ctx, clusterID)
@@ -59,7 +73,49 @@ func GetCloudZones(cls *proto.Cluster, cloud *proto.Cloud) ([]*proto.ZoneInfo, e
 	}
 	cmOption.Region = cls.Region
 
-	return nodeMgr.GetZoneList(cmOption)
+	return nodeMgr.GetZoneList(&cloudprovider.GetZoneListOption{CommonOption: *cmOption})
+}
+
+// CheckIfGetNodesFromCluster check if get k8s nodes from cluster
+func CheckIfGetNodesFromCluster(cls *proto.Cluster, cloud *proto.Cloud, nodes []*proto.ClusterNode) bool {
+	clsMgr, err := cloudprovider.GetClusterMgr(cloud.CloudProvider)
+	if err != nil {
+		blog.Errorf("CheckIfGetNodesFromCluster[%s] failed: %v", cls.ClusterID, err)
+		return false
+	}
+	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
+		Cloud:     cloud,
+		AccountID: cls.CloudAccountID,
+	})
+	if err != nil {
+		blog.Errorf("get credential for cloudprovider %s/%s getCloudInstanceList failed, %s",
+			cloud.CloudID, cloud.CloudProvider, err.Error())
+		return false
+	}
+	cmOption.Region = cls.Region
+
+	return clsMgr.CheckIfGetNodesFromCluster(context.Background(), cls, nodes)
+}
+
+// UpdateClusterCloudInfo update cloud cluster info
+func UpdateClusterCloudInfo(cls *proto.Cluster, cloud *proto.Cloud) error {
+	cloudMgr, err := cloudprovider.GetCloudInfoMgr(cloud.CloudProvider)
+	if err != nil {
+		blog.Errorf("UpdateClusterCloudInfo[%s] failed: %v", cls.ClusterID, err)
+		return err
+	}
+	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
+		Cloud:     cloud,
+		AccountID: cls.CloudAccountID,
+	})
+	if err != nil {
+		blog.Errorf("get credential for cloudprovider %s/%s getCloudInstanceList failed, %s",
+			cloud.CloudID, cloud.CloudProvider, err.Error())
+		return err
+	}
+	cmOption.Region = cls.Region
+
+	return cloudMgr.UpdateClusterCloudInfo(cls)
 }
 
 // GetCloudInstanceList get cloud instances info
@@ -109,11 +165,13 @@ func HandleTaskStepData(ctx context.Context, task *proto.Task) {
 	if task != nil && len(task.Steps) > 0 {
 		for i := range task.Steps {
 
-			task.Steps[i].TaskName = Translate(ctx, task.Steps[i].TaskMethod, task.Steps[i].TaskName)
+			task.Steps[i].TaskName = Translate(ctx, task.Steps[i].TaskMethod,
+				task.Steps[i].TaskName, task.Steps[i].Translate)
 
 			for k := range task.Steps[i].Params {
 				if utils.StringInSlice(k, []string{cloudprovider.BkSopsTaskUrlKey.String(),
-					cloudprovider.ShowSopsUrlKey.String(), cloudprovider.ConnectClusterKey.String()}) {
+					cloudprovider.ShowSopsUrlKey.String(), cloudprovider.ConnectClusterKey.String(),
+					cloudprovider.InstallGseAgentKey.String()}) {
 					continue
 				}
 				delete(task.Steps[i].Params, k)
@@ -129,4 +187,63 @@ func HandleTaskStepData(ctx context.Context, task *proto.Task) {
 			}
 		}
 	}
+}
+
+// GenerateTemplateID generate random templateID
+func GenerateTemplateID(templateType string) string {
+	randomStr := utils.RandomString(8)
+
+	return fmt.Sprintf("BCS-%s-%s", templateType, randomStr)
+}
+
+// IsKubeConfigImportCluster kubeconfig cluster
+func IsKubeConfigImportCluster(cls *proto.Cluster) bool {
+	if cls.GetClusterCategory() == common.Importer && cls.GetImportCategory() == common.KubeConfigImport {
+		return true
+	}
+
+	return false
+}
+
+// IsCloudImportCluster cloud cluster
+func IsCloudImportCluster(cls *proto.Cluster) bool {
+	if cls.GetClusterCategory() == common.Importer && cls.GetImportCategory() == common.CloudImport {
+		return true
+	}
+
+	return false
+}
+
+// CheckClusterNodeNum check managed cluster nodes num
+func CheckClusterNodeNum(model store.ClusterManagerModel, cls *proto.Cluster) (bool, error) {
+	nodeStatus := []string{common.StatusRunning, common.StatusInitialization}
+	nodes, err := GetClusterStatusNodes(model, cls, nodeStatus)
+	if err != nil {
+		blog.Errorf("checkManagedClusterNodeNum[%s] GetClusterStatusNodes failed: %v", cls.ClusterID, err)
+		return false, err
+	}
+
+	blog.Infof("checkManagedClusterNodeNum[%s] GetClusterStatusNodes[%v]", cls.ClusterID, len(nodes))
+
+	if len(nodes) > 0 {
+		return false, nil
+	}
+
+	return true, nil
+}
+
+// GetClusterStatusNodes get cluster status nodes
+func GetClusterStatusNodes(
+	store store.ClusterManagerModel, cls *proto.Cluster, status []string) ([]*proto.Node, error) {
+	clusterCond := operator.NewLeafCondition(operator.Eq, operator.M{"clusterid": cls.ClusterID})
+	statusCond := operator.NewLeafCondition(operator.In, operator.M{"status": status})
+	cond := operator.NewBranchCondition(operator.And, clusterCond, statusCond)
+
+	nodes, err := store.ListNode(context.Background(), cond, &storeopt.ListOption{})
+	if err != nil {
+		blog.Errorf("get Cluster %s all Nodes failed when AddNodesToCluster, %s", cls.ClusterID, err.Error())
+		return nil, err
+	}
+
+	return nodes, nil
 }

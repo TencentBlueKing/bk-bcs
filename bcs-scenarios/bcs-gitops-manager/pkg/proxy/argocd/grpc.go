@@ -21,6 +21,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+	iamnamespace "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/namespace"
 	"github.com/argoproj/argo-cd/v2/pkg/apiclient/application"
 	"github.com/argoproj/argo-cd/v2/pkg/apiclient/applicationset"
 	"github.com/argoproj/argo-cd/v2/pkg/apiclient/cluster"
@@ -32,8 +35,6 @@ import (
 	"google.golang.org/grpc/encoding"
 	"google.golang.org/grpc/encoding/proto"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
@@ -64,10 +65,10 @@ func (plugin *GrpcPlugin) Init() error {
 		"/repository.RepositoryService/ValidateAccess":   plugin.handleRepoAccess,
 		"/repository.RepositoryService/CreateRepository": plugin.handleRepoCreate,
 		"/repository.RepositoryService/DeleteRepository": plugin.handleRepoDelete,
-		//"/repository.RepositoryService/ListRefs":         nil,
-		//"/repository.RepositoryService/ListApps":         nil,
-		//"/repository.RepositoryService/GetAppDetails":    nil,
-		//"/repository.RepositoryService/GetHelmCharts":    nil,
+		// "/repository.RepositoryService/ListRefs":         nil,
+		// "/repository.RepositoryService/ListApps":         nil,
+		// "/repository.RepositoryService/GetAppDetails":    nil,
+		// "/repository.RepositoryService/GetHelmCharts":    nil,
 
 		"/cluster.ClusterService/List": plugin.handleClusterList,
 		"/cluster.SettingsService/Get": plugin.handleClusterSettingGet,
@@ -103,6 +104,8 @@ func (plugin *GrpcPlugin) Init() error {
 		"/applicationset.ApplicationSetService/Get":    plugin.handleAppSetGet,
 		"/applicationset.ApplicationSetService/Create": plugin.handleAppSetCreate,
 		"/applicationset.ApplicationSetService/Delete": plugin.handleAppSetDelete,
+
+		"/version.VersionService/Version": plugin.handleVersion,
 	}
 	plugin.Path("").Handler(plugin.middleware.HttpWrapper(plugin.serve))
 	return nil
@@ -185,7 +188,8 @@ func (plugin *GrpcPlugin) handleProjectGet(r *http.Request) (*http.Request, *mw.
 	}
 	_, statusCode, err := plugin.middleware.CheckProjectPermission(r.Context(), query.Name, iam.ProjectView)
 	if statusCode != http.StatusOK {
-		return r, mw.ReturnGRPCErrorResponse(statusCode, errors.Wrapf(err, "check project '%s' view permission failed", query.Name))
+		return r, mw.ReturnGRPCErrorResponse(statusCode, errors.Wrapf(err,
+			"check project '%s' view permission failed", query.Name))
 	}
 	return r, mw.ReturnArgoReverse()
 }
@@ -275,6 +279,7 @@ func (plugin *GrpcPlugin) handleRepoDelete(r *http.Request) (*http.Request, *mw.
 }
 
 // handleRepoListRefs will list repo refs from argocd
+// nolint unused
 func (plugin *GrpcPlugin) handleRepoListRefs(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	query := &argorepo.RepoQuery{}
 	if err := plugin.readRequestBody(r, query); err != nil {
@@ -292,6 +297,7 @@ func (plugin *GrpcPlugin) handleRepoListRefs(r *http.Request) (*http.Request, *m
 }
 
 // handleRepoListApps will handle repo list apps
+// nolint unused
 func (plugin *GrpcPlugin) handleRepoListApps(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	query := &argorepo.RepoAppsQuery{}
 	if err := plugin.readRequestBody(r, query); err != nil {
@@ -309,6 +315,7 @@ func (plugin *GrpcPlugin) handleRepoListApps(r *http.Request) (*http.Request, *m
 }
 
 // handleRepoGetAppDetails will handle repo get application details
+// nolint unused
 func (plugin *GrpcPlugin) handleRepoGetAppDetails(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	query := &argorepo.RepoAppDetailsQuery{}
 	if err := plugin.readRequestBody(r, query); err != nil {
@@ -326,6 +333,7 @@ func (plugin *GrpcPlugin) handleRepoGetAppDetails(r *http.Request) (*http.Reques
 }
 
 // handleRepoGetHelmCharts will handle repo get helm charts
+// nolint unused
 func (plugin *GrpcPlugin) handleRepoGetHelmCharts(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	query := &argorepo.RepoQuery{}
 	if err := plugin.readRequestBody(r, query); err != nil {
@@ -360,6 +368,7 @@ func (plugin *GrpcPlugin) handleClusterList(r *http.Request) (*http.Request, *mw
 }
 
 // parseClusterName will parse cluster name and check it
+// nolint unused
 func (plugin *GrpcPlugin) parseClusterName(server string) (string, error) {
 	arr := strings.Split(server, "/")
 	clusterID := arr[len(arr)-1]
@@ -377,7 +386,8 @@ func (plugin *GrpcPlugin) handleClusterGet(r *http.Request) (*http.Request, *mw.
 	}
 	statusCode, err := plugin.middleware.CheckClusterPermission(r.Context(), query, iam.ClusterView)
 	if err != nil {
-		return r, mw.ReturnGRPCErrorResponse(statusCode, errors.Wrapf(err, "check application '%s' permission failed", query.Name))
+		return r, mw.ReturnGRPCErrorResponse(statusCode,
+			errors.Wrapf(err, "check application '%s' permission failed", query.Name))
 	}
 	return r, mw.ReturnArgoReverse()
 }
@@ -395,7 +405,7 @@ func (plugin *GrpcPlugin) handleAppSetList(r *http.Request) (*http.Request, *mw.
 		return r, mw.ReturnGRPCErrorResponse(statusCode, errors.Wrapf(err, "list projects failed"))
 	}
 	query := new(applicationset.ApplicationSetListQuery)
-	if err := plugin.readRequestBody(r, query); err != nil {
+	if err = plugin.readRequestBody(r, query); err != nil {
 		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
 	names := make([]string, 0, len(projectList.Items))
@@ -423,10 +433,7 @@ func (plugin *GrpcPlugin) handleAppSetList(r *http.Request) (*http.Request, *mw.
 			errors.Wrapf(err, "list applicationsets by project '%s' from storage failed", names))
 	}
 	result := make([]v1alpha1.ApplicationSet, 0, len(appsetList.Items))
-	for i := range appsetList.Items {
-		item := appsetList.Items[i]
-		result = append(result, item)
-	}
+	result = append(result, appsetList.Items...)
 	appsetList.Items = result
 	return r, mw.ReturnGRPCResponse(appsetList)
 }
@@ -486,7 +493,7 @@ func (plugin *GrpcPlugin) handleAppList(r *http.Request) (*http.Request, *mw.Htt
 		return r, mw.ReturnGRPCErrorResponse(statusCode, errors.Wrapf(err, "list projects failed"))
 	}
 	query := new(application.ApplicationQuery)
-	if err := plugin.readRequestBody(r, query); err != nil {
+	if err = plugin.readRequestBody(r, query); err != nil {
 		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
 	names := make([]string, 0, len(projectList.Items))
@@ -522,7 +529,8 @@ func (plugin *GrpcPlugin) handleAppGet(r *http.Request) (*http.Request, *mw.Http
 	if err := plugin.readRequestBody(r, query); err != nil {
 		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
-	_, statusCode, err := plugin.middleware.CheckApplicationPermission(r.Context(), *query.Name, iam.ProjectView)
+	_, statusCode, err := plugin.middleware.CheckApplicationPermission(r.Context(), *query.Name,
+		iamnamespace.NameSpaceScopedView)
 	if err != nil {
 		return r, mw.ReturnGRPCErrorResponse(statusCode,
 			errors.Wrapf(err, "check application '%s' permission failed", *query.Name))
@@ -556,7 +564,7 @@ func (plugin *GrpcPlugin) handleAppSync(r *http.Request) (*http.Request, *mw.Htt
 	if err := plugin.readRequestBody(r, query); err != nil {
 		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
-	return plugin.handleAppCommon(r, *query.Name, iam.ProjectEdit)
+	return plugin.handleAppCommon(r, *query.Name, iamnamespace.NameSpaceScopedUpdate)
 }
 
 // handleAppDelete will handle application delete
@@ -565,7 +573,7 @@ func (plugin *GrpcPlugin) handleAppDelete(r *http.Request) (*http.Request, *mw.H
 	if err := plugin.readRequestBody(r, appDelete); err != nil {
 		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
-	return plugin.handleAppCommon(r, *appDelete.Name, iam.ProjectEdit)
+	return plugin.handleAppCommon(r, *appDelete.Name, iamnamespace.NameSpaceScopedDelete)
 }
 
 // handleAppWatch will handle application watch
@@ -574,7 +582,7 @@ func (plugin *GrpcPlugin) handleAppWatch(r *http.Request) (*http.Request, *mw.Ht
 	if err := plugin.readRequestBody(r, appWatch); err != nil {
 		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
-	return plugin.handleAppCommon(r, *appWatch.Name, iam.ProjectEdit)
+	return plugin.handleAppCommon(r, *appWatch.Name, iamnamespace.NameSpaceScopedView)
 }
 
 // handleAppUpdate will handle application update
@@ -583,7 +591,7 @@ func (plugin *GrpcPlugin) handleAppUpdate(r *http.Request) (*http.Request, *mw.H
 	if err := plugin.readRequestBody(r, appUpdate); err != nil {
 		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
-	return plugin.handleAppCommon(r, appUpdate.Application.Name, iam.ProjectEdit)
+	return plugin.handleAppCommon(r, appUpdate.Application.Name, iamnamespace.NameSpaceScopedUpdate)
 }
 
 // handleAppUpdateSpec will handle application update spec information
@@ -592,7 +600,7 @@ func (plugin *GrpcPlugin) handleAppUpdateSpec(r *http.Request) (*http.Request, *
 	if err := plugin.readRequestBody(r, appReq); err != nil {
 		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
-	return plugin.handleAppCommon(r, *appReq.Name, iam.ProjectEdit)
+	return plugin.handleAppCommon(r, *appReq.Name, iamnamespace.NameSpaceScopedUpdate)
 }
 
 // handleAppPatch handle application patch
@@ -601,7 +609,7 @@ func (plugin *GrpcPlugin) handleAppPatch(r *http.Request) (*http.Request, *mw.Ht
 	if err := plugin.readRequestBody(r, appReq); err != nil {
 		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
-	return plugin.handleAppCommon(r, *appReq.Name, iam.ProjectEdit)
+	return plugin.handleAppCommon(r, *appReq.Name, iamnamespace.NameSpaceScopedUpdate)
 }
 
 // handleAppListResourceEvents handle application list resource events
@@ -610,7 +618,7 @@ func (plugin *GrpcPlugin) handleAppListResourceEvents(r *http.Request) (*http.Re
 	if err := plugin.readRequestBody(r, appReq); err != nil {
 		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
-	return plugin.handleAppCommon(r, *appReq.Name, iam.ProjectEdit)
+	return plugin.handleAppCommon(r, *appReq.Name, iamnamespace.NameSpaceScopedView)
 }
 
 // handleAppGetApplicationSyncWindows handle application sync windows
@@ -619,7 +627,7 @@ func (plugin *GrpcPlugin) handleAppGetApplicationSyncWindows(r *http.Request) (*
 	if err := plugin.readRequestBody(r, appReq); err != nil {
 		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
-	return plugin.handleAppCommon(r, *appReq.Name, iam.ProjectEdit)
+	return plugin.handleAppCommon(r, *appReq.Name, iamnamespace.NameSpaceScopedUpdate)
 }
 
 // handleAppRevisionMetadata handle application revision metadata
@@ -628,7 +636,7 @@ func (plugin *GrpcPlugin) handleAppRevisionMetadata(r *http.Request) (*http.Requ
 	if err := plugin.readRequestBody(r, appReq); err != nil {
 		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
-	return plugin.handleAppCommon(r, *appReq.Name, iam.ProjectEdit)
+	return plugin.handleAppCommon(r, *appReq.Name, iamnamespace.NameSpaceScopedView)
 }
 
 // handleAppGetManifests handle application get manifests
@@ -637,7 +645,7 @@ func (plugin *GrpcPlugin) handleAppGetManifests(r *http.Request) (*http.Request,
 	if err := plugin.readRequestBody(r, appReq); err != nil {
 		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
-	return plugin.handleAppCommon(r, *appReq.Name, iam.ProjectEdit)
+	return plugin.handleAppCommon(r, *appReq.Name, iamnamespace.NameSpaceScopedView)
 }
 
 // handleAppManagedResources handle application managed resources
@@ -646,7 +654,7 @@ func (plugin *GrpcPlugin) handleAppManagedResources(r *http.Request) (*http.Requ
 	if err := plugin.readRequestBody(r, appReq); err != nil {
 		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
-	return plugin.handleAppCommon(r, *appReq.ApplicationName, iam.ProjectEdit)
+	return plugin.handleAppCommon(r, *appReq.ApplicationName, iamnamespace.NameSpaceScopedView)
 }
 
 // handleAppResourceTree handle application resource tree
@@ -655,7 +663,7 @@ func (plugin *GrpcPlugin) handleAppResourceTree(r *http.Request) (*http.Request,
 	if err := plugin.readRequestBody(r, appReq); err != nil {
 		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
-	return plugin.handleAppCommon(r, *appReq.ApplicationName, iam.ProjectEdit)
+	return plugin.handleAppCommon(r, *appReq.ApplicationName, iamnamespace.NameSpaceScopedView)
 }
 
 // handleAppRollback handle application rollback
@@ -664,7 +672,7 @@ func (plugin *GrpcPlugin) handleAppRollback(r *http.Request) (*http.Request, *mw
 	if err := plugin.readRequestBody(r, appReq); err != nil {
 		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
-	return plugin.handleAppCommon(r, *appReq.Name, iam.ProjectEdit)
+	return plugin.handleAppCommon(r, *appReq.Name, iamnamespace.NameSpaceScopedUpdate)
 }
 
 // handleAppTerminateOperation handle application termination operator
@@ -673,7 +681,7 @@ func (plugin *GrpcPlugin) handleAppTerminateOperation(r *http.Request) (*http.Re
 	if err := plugin.readRequestBody(r, appReq); err != nil {
 		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
-	return plugin.handleAppCommon(r, *appReq.Name, iam.ProjectEdit)
+	return plugin.handleAppCommon(r, *appReq.Name, iamnamespace.NameSpaceScopedUpdate)
 }
 
 // handleAppGetResource handle application get resource
@@ -682,7 +690,7 @@ func (plugin *GrpcPlugin) handleAppGetResource(r *http.Request) (*http.Request, 
 	if err := plugin.readRequestBody(r, appReq); err != nil {
 		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
-	return plugin.handleAppCommon(r, *appReq.Name, iam.ProjectEdit)
+	return plugin.handleAppCommon(r, *appReq.Name, iamnamespace.NameSpaceScopedView)
 }
 
 // handleAppPatchResource handle application patch resource
@@ -691,7 +699,7 @@ func (plugin *GrpcPlugin) handleAppPatchResource(r *http.Request) (*http.Request
 	if err := plugin.readRequestBody(r, appReq); err != nil {
 		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
-	return plugin.handleAppCommon(r, *appReq.Name, iam.ProjectEdit)
+	return plugin.handleAppCommon(r, *appReq.Name, iamnamespace.NameSpaceScopedUpdate)
 }
 
 // handleAppListResourceActions handle application list resource actions
@@ -700,7 +708,7 @@ func (plugin *GrpcPlugin) handleAppListResourceActions(r *http.Request) (*http.R
 	if err := plugin.readRequestBody(r, appReq); err != nil {
 		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
-	return plugin.handleAppCommon(r, *appReq.Name, iam.ProjectEdit)
+	return plugin.handleAppCommon(r, *appReq.Name, iamnamespace.NameSpaceScopedView)
 }
 
 // handleAppRunResourceAction handle application run resource action
@@ -709,7 +717,7 @@ func (plugin *GrpcPlugin) handleAppRunResourceAction(r *http.Request) (*http.Req
 	if err := plugin.readRequestBody(r, appReq); err != nil {
 		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
-	return plugin.handleAppCommon(r, *appReq.Name, iam.ProjectEdit)
+	return plugin.handleAppCommon(r, *appReq.Name, iamnamespace.NameSpaceScopedUpdate)
 }
 
 // handleAppDeleteResource handle application delete resource
@@ -718,7 +726,7 @@ func (plugin *GrpcPlugin) handleAppDeleteResource(r *http.Request) (*http.Reques
 	if err := plugin.readRequestBody(r, appReq); err != nil {
 		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
-	return plugin.handleAppCommon(r, *appReq.Name, iam.ProjectEdit)
+	return plugin.handleAppCommon(r, *appReq.Name, iamnamespace.NameSpaceScopedDelete)
 }
 
 // handleAppPodLogs handle application pod logs
@@ -727,7 +735,7 @@ func (plugin *GrpcPlugin) handleAppPodLogs(r *http.Request) (*http.Request, *mw.
 	if err := plugin.readRequestBody(r, appReq); err != nil {
 		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
-	return plugin.handleAppCommon(r, *appReq.Name, iam.ProjectEdit)
+	return plugin.handleAppCommon(r, *appReq.Name, iamnamespace.NameSpaceScopedUpdate)
 }
 
 // handleAppListLinks handle application list links
@@ -736,7 +744,7 @@ func (plugin *GrpcPlugin) handleAppListLinks(r *http.Request) (*http.Request, *m
 	if err := plugin.readRequestBody(r, appReq); err != nil {
 		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
-	return plugin.handleAppCommon(r, *appReq.Name, iam.ProjectEdit)
+	return plugin.handleAppCommon(r, *appReq.Name, iamnamespace.NameSpaceScopedView)
 }
 
 // handleAppListResourceLinks handle application list resource links
@@ -745,7 +753,7 @@ func (plugin *GrpcPlugin) handleAppListResourceLinks(r *http.Request) (*http.Req
 	if err := plugin.readRequestBody(r, appReq); err != nil {
 		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
-	return plugin.handleAppCommon(r, *appReq.Name, iam.ProjectEdit)
+	return plugin.handleAppCommon(r, *appReq.Name, iamnamespace.NameSpaceScopedView)
 }
 
 // handleAppCommon handle application common handler
@@ -757,5 +765,10 @@ func (plugin *GrpcPlugin) handleAppCommon(r *http.Request, appName string,
 			errors.Wrapf(err, "check application '%s' permission failed", appName))
 	}
 	middleware.SetAuditMessage(r, app, middleware.ApplicationGRPCOperate)
+	return r, mw.ReturnArgoReverse()
+}
+
+// handleAppListResourceLinks handle application list resource links
+func (plugin *GrpcPlugin) handleVersion(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	return r, mw.ReturnArgoReverse()
 }

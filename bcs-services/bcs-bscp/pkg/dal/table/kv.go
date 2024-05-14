@@ -21,23 +21,25 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
 // Kv defines a basic kv
 type Kv struct {
 	// ID is an auto-increased value, which is a unique identity of a kv.
-	ID         uint32        `json:"id" gorm:"primaryKey"`
-	KvState    KvState       `json:"kv_state" gorm:"column:kv_state"`
-	Spec       *KvSpec       `json:"spec" gorm:"embedded"`
-	Attachment *KvAttachment `json:"attachment" gorm:"embedded"`
-	Revision   *Revision     `json:"revision" gorm:"embedded"`
+	ID          uint32        `json:"id" gorm:"primaryKey"`
+	KvState     KvState       `json:"kv_state" gorm:"column:kv_state"`
+	Spec        *KvSpec       `json:"spec" gorm:"embedded"`
+	Attachment  *KvAttachment `json:"attachment" gorm:"embedded"`
+	Revision    *Revision     `json:"revision" gorm:"embedded"`
+	ContentSpec *ContentSpec  `json:"content_spec" gorm:"embedded"`
 }
 
 // KvSpec is kv specific which is defined by user.
 type KvSpec struct {
 	Key     string   `json:"key" gorm:"column:key"`
+	Memo    string   `json:"memo" gorm:"column:memo"`
 	KvType  DataType `json:"kv_type" gorm:"column:kv_type"`
 	Version uint32   `json:"version" gorm:"column:version"`
 }
@@ -265,3 +267,18 @@ const (
 	// KvStateUnchange 不变
 	KvStateUnchange KvState = "UNCHANGE"
 )
+
+// String get string value of KvState
+func (k KvState) String() string {
+	return string(k)
+}
+
+// Validate validate kv state is valid or not.
+func (k KvState) Validate() error {
+	switch k {
+	case KvStateAdd, KvStateDelete, KvStateRevise, KvStateUnchange:
+		return nil
+	default:
+		return errors.New("invalid kv state")
+	}
+}

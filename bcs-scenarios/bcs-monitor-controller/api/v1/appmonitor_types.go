@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package v1
@@ -22,7 +21,7 @@ type Rule struct {
 	Rule        string     `json:"rule" yaml:"rule,omitempty"`
 	Threshold   *Algorithm `json:"threshold,omitempty" yaml:"threshold,omitempty"`
 	NoticeGroup []string   `json:"noticeGroup,omitempty" yaml:"noticeGroup,omitempty"`
-	Trigger     string     `json:"trigger,omitempty" yaml:"trigger,omitempty"` // 触发配置，如 1/5/6表示5个周期内满足1次则告警，连续6个周期内不满足条件则表示恢复
+	Trigger     string     `json:"trigger,omitempty" yaml:"trigger,omitempty"` // nolint 触发配置，如 1/5/6表示5个周期内满足1次则告警，连续6个周期内不满足条件则表示恢复
 }
 
 // NoticeGroupConfig 告警组配置
@@ -71,6 +70,16 @@ type DashBoardEnhance struct {
 	IgnoreChange bool `json:"ignoreChange,omitempty" yaml:"ignoreChange,omitempty"`
 }
 
+// RepoRef 允许用户自定义场景仓库
+type RepoRef struct {
+	URL            string `json:"url" yaml:"url"`
+	TargetRevision string `json:"targetRevision,omitempty" yaml:"targetRevision,omitempty"`
+
+	// no used
+	UserName string `json:"userName,omitempty" yaml:"userName,omitempty"`
+	Password string `json:"password,omitempty" yaml:"password,omitempty"`
+}
+
 // AppMonitorSpec defines the desired state of AppMonitor
 type AppMonitorSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
@@ -82,7 +91,13 @@ type AppMonitorSpec struct {
 	IgnoreChange bool `json:"ignoreChange,omitempty" yaml:"ignoreChange,omitempty"`
 	// 是否覆盖同名配置，默认为false
 	Override bool `json:"override,omitempty" yaml:"override,omitempty"`
+	// 冲突时处理， AUTO_MERGE时，尝试自动合并；LOCAL_FIRST优先采用本地配置
+	// +kubebuilder:default=AUTO_MERGE
+	// +kubebuilder:validation:Enum=AUTO_MERGE;LOCAL_FIRST
+	ConflictHandle string `json:"conflictHandle,omitempty"`
 
+	// if set, import Repo from argo
+	RepoRef            *RepoRef            `json:"repoRef,omitempty" yaml:"repoRef,omitempty"`
 	Labels             map[string]string   `json:"labels,omitempty" yaml:"labels,omitempty"`
 	RuleEnhance        *RuleEnhance        `json:"ruleEnhance,omitempty" yaml:"ruleEnhance,omitempty"`
 	NoticeGroupEnhance *NoticeGroupEnhance `json:"noticeGroupEnhance,omitempty" yaml:"noticeGroupEnhance,omitempty"`

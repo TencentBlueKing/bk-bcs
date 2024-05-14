@@ -75,24 +75,13 @@ type CreateTokenForm struct {
 	Expiration int `json:"expiration" validate:"required"`
 }
 
-// TokenStatus is a enum for token status.
-// nolint
-type TokenStatus uint8
-
-const (
-	// TokenStatusExpired mean that token is expired.
-	TokenStatusExpired TokenStatus = iota
-	// TokenStatusActive mean that token is active.
-	TokenStatusActive
-)
-
 // TokenResp is a response for creating token and other token handler's response data.
 // nolint
 type TokenResp struct {
-	Token     string       `json:"token"`
-	JWT       string       `json:"jwt,omitempty"`
-	Status    *TokenStatus `json:"status,omitempty"`
-	ExpiredAt *time.Time   `json:"expired_at"` // nil means never expired
+	Token     string             `json:"token"`
+	JWT       string             `json:"jwt,omitempty"`
+	Status    *utils.TokenStatus `json:"status,omitempty"`
+	ExpiredAt *time.Time         `json:"expired_at"` // nil means never expired
 }
 
 // UpdateTokenForm is a form for update token.
@@ -243,9 +232,9 @@ func (t *TokenHandler) GetToken(request *restful.Request, response *restful.Resp
 	tokensInDB := t.tokenStore.GetUserTokensByName(username)
 	tokens := make([]TokenResp, 0)
 	for _, v := range tokensInDB {
-		status := TokenStatusActive
+		status := utils.TokenStatusActive
 		if v.HasExpired() {
-			status = TokenStatusExpired
+			status = utils.TokenStatusExpired
 		}
 		expiresAt := &v.ExpiresAt
 		// transfer never expired

@@ -16,12 +16,13 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapiv4/bcsproject"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapiv4/bcsproject"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/cmd/manager/options"
 )
 
 // ProjectControl for bcs project data sync
@@ -32,25 +33,25 @@ type ProjectControl interface {
 }
 
 // NewProjectController create project controller instance
-func NewProjectController(opt *Options) ProjectControl {
+func NewProjectController() ProjectControl {
 	return &project{
-		option: opt,
+		option: options.GlobalOptions(),
 	}
 }
 
 // project for bk-bcs project information
 // syncing to gitops system
 type project struct {
-	option *Options
+	option *options.Options
 	client bcsproject.BCSProjectClient
 	conn   *grpc.ClientConn
 }
 
 // Init controller
 func (control *project) Init() error {
-	//if control.option.Mode == common.ModeService {
+	// if control.option.Mode == common.ModeService {
 	//	return fmt.Errorf("service mode is not implenmented")
-	//}
+	// }
 	// init with raw grpc connection
 	if err := control.initClient(); err != nil {
 		return err
@@ -73,7 +74,8 @@ func (control *project) GetProject(ctx context.Context, projectCode string) (*bc
 	// get information from project-manager
 	req := &bcsproject.GetProjectRequest{ProjectIDOrCode: projectCode}
 	// setting auth info
-	header := metadata.New(map[string]string{"Authorization": fmt.Sprintf("Bearer %s", control.option.APIToken)})
+	header := metadata.New(map[string]string{"Authorization": fmt.Sprintf("Bearer %s",
+		control.option.APIGatewayToken)})
 	outCxt := metadata.NewOutgoingContext(ctx, header)
 	resp, err := control.client.GetProject(outCxt, req)
 	if err != nil {
@@ -93,13 +95,13 @@ func (control *project) GetProject(ctx context.Context, projectCode string) (*bc
 }
 
 func (control *project) initClient() error {
-	//create grpc connection
+	// create grpc connection
 	header := map[string]string{
 		"x-content-type": "application/grpc+proto",
 		"Content-Type":   "application/grpc",
 	}
-	if len(control.option.APIToken) != 0 {
-		header["Authorization"] = fmt.Sprintf("Bearer %s", control.option.APIToken)
+	if len(control.option.APIGatewayToken) != 0 {
+		header["Authorization"] = fmt.Sprintf("Bearer %s", control.option.APIGatewayToken)
 	}
 	md := metadata.New(header)
 	var opts []grpc.DialOption

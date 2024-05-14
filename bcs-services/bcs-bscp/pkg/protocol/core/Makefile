@@ -23,6 +23,9 @@ all:
 	@cd app-template-variable && make
 	@cd kv && make
 	@cd released-kv && make
+	@cd client && make
+	@cd client-event && make
+	@cd client-query && make
 
 clean:
 	@cd base && make clean
@@ -49,4 +52,6 @@ clean:
 	@cd app-template-variable && make clean
 	@cd kv && make clean
 	@cd released-kv && make clean
-
+	@cd client && make clean
+	@cd client-event && make clean
+	@cd client-query && make clean

@@ -25,6 +25,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	autils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/template"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
@@ -50,7 +51,7 @@ func NewCreateAction(model store.ClusterManagerModel) *CreateAction {
 
 func (ca *CreateAction) createNodeTemplate() error {
 	timeStr := time.Now().Format(time.RFC3339)
-	templateID := generateNodeTemplateID()
+	templateID := autils.GenerateTemplateID(autils.NodeTemplate)
 
 	// 扩容节点脚本 trans user to base64 encoding
 	afterScript := ca.req.UserScript
@@ -235,11 +236,4 @@ func actionMustExistParas(actionName string, paras map[string]string) error {
 	}
 
 	return nil
-}
-
-// generate random nodeTemplateID
-func generateNodeTemplateID() string {
-	randomStr := utils.RandomString(8)
-
-	return fmt.Sprintf("BCS-%s-%s", nodeTemplate, randomStr)
 }

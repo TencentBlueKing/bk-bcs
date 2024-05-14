@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package portbindingcontroller
@@ -17,18 +16,17 @@ import (
 	"context"
 	"reflect"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 	"github.com/pkg/errors"
 	k8scorev1 "k8s.io/api/core/v1"
-	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8stypes "k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/generator"
-	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
 // PodPortBindingHandler handle portbinding related to pods
@@ -94,27 +92,29 @@ func (p *PodPortBindingHandler) postPortBindingUpdate(portBinding *networkextens
 }
 
 func (p *PodPortBindingHandler) postPortBindingClean(portBinding *networkextensionv1.PortBinding) error {
-	pod := &k8scorev1.Pod{}
-	if err := p.k8sClient.Get(p.ctx, k8stypes.NamespacedName{Namespace: portBinding.GetNamespace(),
-		Name: portBinding.GetName()}, pod); err != nil {
-		if k8serrors.IsNotFound(err) {
-			blog.Infof("pod '%s/%s' has been deleted, do not clean annotation", portBinding.GetNamespace(),
-				portBinding.GetName())
-			return nil
-		}
-		blog.Warnf("get pod '%s/%s' failed, err %s", portBinding.GetNamespace(), portBinding.GetName(),
-			err.Error())
-		return errors.Wrapf(err, "get pod '%s/%s' failed", portBinding.GetNamespace(), portBinding.GetName())
-	}
-
-	delete(pod.Annotations, constant.AnnotationForPortPoolBindings)
-	delete(pod.Annotations, constant.AnnotationForPortPoolBindingStatus)
-	if err := p.k8sClient.Update(context.TODO(), pod, &client.UpdateOptions{}); err != nil {
-		blog.Warnf("remove annotation from pod %s/%s failed, err %s", portBinding.GetName(),
-			portBinding.GetNamespace(), err.Error())
-		return errors.Wrapf(err, "remove annotation from pod %s/%s failed", portBinding.GetName(),
-			portBinding.GetNamespace())
-	}
+	// 使用statefulset + 端口保留的情况下， 清理注解可能导致误清理新建Pod的注解
+	// 由于Pod只在创建时会分配端口，因此不需要清理注解
+	// pod := &k8scorev1.Pod{}
+	// if err := p.k8sClient.Get(p.ctx, k8stypes.NamespacedName{Namespace: portBinding.GetNamespace(),
+	// 	Name: portBinding.GetName()}, pod); err != nil {
+	// 	if k8serrors.IsNotFound(err) {
+	// 		blog.Infof("pod '%s/%s' has been deleted, do not clean annotation", portBinding.GetNamespace(),
+	// 			portBinding.GetName())
+	// 		return nil
+	// 	}
+	// 	blog.Warnf("get pod '%s/%s' failed, err %s", portBinding.GetNamespace(), portBinding.GetName(),
+	// 		err.Error())
+	// 	return errors.Wrapf(err, "get pod '%s/%s' failed", portBinding.GetNamespace(), portBinding.GetName())
+	// }
+	//
+	// delete(pod.Annotations, constant.AnnotationForPortPoolBindings)
+	// delete(pod.Annotations, constant.AnnotationForPortPoolBindingStatus)
+	// if err := p.k8sClient.Update(context.TODO(), pod, &client.UpdateOptions{}); err != nil {
+	// 	blog.Warnf("remove annotation from pod %s/%s failed, err %s", portBinding.GetName(),
+	// 		portBinding.GetNamespace(), err.Error())
+	// 	return errors.Wrapf(err, "remove annotation from pod %s/%s failed", portBinding.GetName(),
+	// 		portBinding.GetNamespace())
+	// }
 	return nil
 }
 

@@ -72,6 +72,10 @@ const (
 	TaskStatusRunning = "RUNNING"
 	// TaskStatusSuccess task success
 	TaskStatusSuccess = "SUCCESS"
+	// TaskStatusSkip task skip
+	TaskStatusSkip = "SKIP"
+	// TaskStatusPartFailure task part failure
+	TaskStatusPartFailure = "PART_FAILURE"
 	// TaskStatusFailure task failed
 	TaskStatusFailure = "FAILURE"
 	// TaskStatusTimeout task run timeout
@@ -127,6 +131,8 @@ type SyncClusterCloudInfoOption struct {
 	Cloud *proto.Cloud
 	// ImportMode import mode
 	ImportMode *proto.ImportCloudMode
+	// Area cloud area info
+	Area *proto.CloudArea
 	// ClusterVersion for cluster version
 	ClusterVersion string
 }
@@ -171,6 +177,7 @@ type CreateClusterOption struct {
 	Cloud        *proto.Cloud
 	WorkerNodes  []string
 	MasterNodes  []string
+	NodeGroupIDs []string
 	NodeTemplate *proto.NodeTemplate
 }
 
@@ -192,6 +199,13 @@ type ImportClusterOption struct {
 	CloudMode *proto.ImportCloudMode
 	NodeIPs   []string
 	Operator  string
+}
+
+// GetZoneListOption get zone list option
+type GetZoneListOption struct {
+	CommonOption
+	VpcId string
+	State string
 }
 
 // DeleteMode xxx
@@ -222,6 +236,8 @@ type DeleteClusterOption struct {
 	Cloud *proto.Cloud
 	// Cluster used for cloudprovider
 	Cluster *proto.Cluster
+	// LatsClusterStatus last cluster status
+	LatsClusterStatus string
 }
 
 // DeleteVirtualClusterOption delete virtual cluster option
@@ -261,6 +277,7 @@ type GetClusterOption struct {
 // ListClusterOption list cluster option
 type ListClusterOption struct {
 	CommonOption
+	ResourceGroupName string
 }
 
 // CheckClusterCIDROption check cluster CIDR
@@ -355,6 +372,19 @@ type CreateNodeGroupOption struct {
 	OnlyData bool
 }
 
+// ListNetworksOption create list vpcs option
+type ListNetworksOption struct {
+	CommonOption
+	ResourceGroupName string
+}
+
+// ListRuntimeInfoOption list runtime info option
+type ListRuntimeInfoOption struct {
+	CommonOption
+	// Cluster clusterInfo
+	Cluster *proto.Cluster
+}
+
 // ResourcePoolData xxx
 type ResourcePoolData struct {
 	Provider       string
@@ -446,6 +476,8 @@ type UpdateDesiredNodeOption struct {
 	AsOption *proto.ClusterAutoScalingOption
 	Operator string
 	Manual   bool
+	// node scheduler status
+	NodeSchedule bool
 }
 
 // SwitchNodeGroupAutoScalingOption switch nodegroup auto scaling
@@ -481,6 +513,7 @@ type UpdateScalingOption struct {
 // CheckEndpointStatusOption check cluster endpoint status option
 type CheckEndpointStatusOption struct {
 	CommonOption
+	ResourceGroupName string
 }
 
 // AddSubnetsToClusterOption add subnet to cluster option

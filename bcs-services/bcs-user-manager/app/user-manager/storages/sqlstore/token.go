@@ -16,7 +16,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/encryptv2"
+	"github.com/Tencent/bk-bcs/bcs-common/common/encryptv2" // nolint
 	"github.com/jinzhu/gorm"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/constant"
@@ -34,6 +34,12 @@ type TokenStore interface {
 	GetTempTokenByCondition(cond *models.BcsTempToken) *models.BcsTempToken
 	GetAllNotExpiredTokens() []models.BcsUser
 	GetAllTokens() []models.BcsUser
+	GetProjectClients(projectCode string) []models.BcsClientUser
+	GetAllClients() []models.BcsClientUser
+	GetClient(projectCode, name string) *models.BcsClientUser
+	CreateClientToken(token *models.BcsClientUser) error
+	UpdateClientToken(projectCode, name string, updatedClient *models.BcsClient) error
+	DeleteProjectClient(projectCode, name string) error
 }
 
 // NewTokenStore create new token store with db
@@ -203,4 +209,107 @@ func (u *realTokenStore) decryptToken(token string) (string, error) {
 		return token, nil
 	}
 	return u.cryptor.Decrypt(token)
+}
+
+func (u *realTokenStore) GetAllClients() []models.BcsClientUser {
+	var err error
+	var tokens []models.BcsClientUser
+	// nolint goconst
+	u.db.Raw(`SELECT c.project_code, c.name, c.manager, c.authority_user, c.created_by, c.created_at, c.updated_at, `+
+		`u.expires_at, u.user_token FROM bcs_clients AS c JOIN bcs_users AS u on u.name = c.name WHERE u.user_type = ? `+
+		`AND u.deleted_at IS NULL AND c.deleted_at IS NULL`, models.PlainUser).
+		Find(&tokens)
+	for k, v := range tokens {
+		tokens[k].UserToken, err = u.decryptToken(v.UserToken)
+		if err != nil {
+			blog.Errorf("decrypt token failed, err %s", err.Error())
+			continue
+		}
+	}
+	return tokens
+}
+
+func (u *realTokenStore) GetProjectClients(projectCode string) []models.BcsClientUser {
+	var err error
+	var tokens []models.BcsClientUser
+	u.db.Raw(`SELECT c.project_code, c.name, c.manager, c.authority_user, c.created_by, c.created_at, c.updated_at, `+
+		`u.expires_at, u.user_token FROM bcs_clients AS c JOIN bcs_users AS u on u.name = c.name WHERE u.user_type = ? `+
+		`AND u.deleted_at IS NULL AND c.deleted_at IS NULL AND c.project_code = ?`, models.PlainUser, projectCode).
+		Find(&tokens)
+	for k, v := range tokens {
+		tokens[k].UserToken, err = u.decryptToken(v.UserToken)
+		if err != nil {
+			blog.Errorf("decrypt token failed, err %s", err.Error())
+			continue
+		}
+	}
+	return tokens
+}
+
+func (u *realTokenStore) GetClient(projectCode, name string) *models.BcsClientUser {
+	var client models.BcsClientUser
+	u.db.Raw(`SELECT c.project_code, c.name, c.manager, c.authority_user, c.created_by, c.created_at, c.updated_at, `+
+		`u.expires_at, u.user_token FROM bcs_clients AS c JOIN bcs_users AS u on u.name = c.name WHERE u.user_type = ? `+
+		`AND u.deleted_at IS NULL AND c.deleted_at IS NULL AND c.project_code = ? AND c.name = ?`,
+		models.PlainUser, projectCode, name).Scan(&client)
+	return &client
+}
+
+func (u *realTokenStore) CreateClientToken(clientUser *models.BcsClientUser) error {
+	var err error
+	clientUser.UserToken, err = u.encryptToken(clientUser.UserToken)
+	if err != nil {
+		return err
+	}
+
+	token := &models.BcsUser{
+		Name:      clientUser.Name,
+		UserType:  clientUser.UserType,
+		UserToken: clientUser.UserToken,
+		CreatedBy: clientUser.CreatedBy,
+		ExpiresAt: clientUser.ExpiresAt,
+	}
+	client := &models.BcsClient{
+		ProjectCode: clientUser.ProjectCode,
+		Name:        clientUser.Name,
+		Manager:     &clientUser.CreatedBy,
+		CreatedBy:   clientUser.CreatedBy,
+	}
+
+	// 开启事务
+	err = u.db.Transaction(func(tx *gorm.DB) error {
+		// 创建 client token
+		if err = tx.Create(token).Error; err != nil {
+			return err
+		}
+		// 删除已有的 client
+		cond := &models.BcsClient{ProjectCode: clientUser.ProjectCode, Name: clientUser.Name}
+		if err = tx.Where(cond).Delete(&models.BcsClient{}).Error; err != nil {
+			return err
+		}
+		// 创建平台账号
+		if err = tx.Create(client).Error; err != nil {
+			return err
+		}
+		return nil
+	})
+	return err
+}
+
+func (u *realTokenStore) UpdateClientToken(projectCode, name string, updatedClient *models.BcsClient) error {
+	return u.db.Model(models.BcsClient{}).Where("project_code = ? and name = ?", projectCode, name).
+		Updates(*updatedClient).Error
+}
+
+func (u *realTokenStore) DeleteProjectClient(projectCode, name string) error {
+	return u.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Where(&models.BcsUser{Name: name}).Delete(&models.BcsUser{}).Error; err != nil {
+			return err
+		}
+		if err := tx.Where(&models.BcsClient{ProjectCode: projectCode, Name: name}).
+			Delete(&models.BcsClient{}).Error; err != nil {
+			return err
+		}
+		return nil
+	})
 }

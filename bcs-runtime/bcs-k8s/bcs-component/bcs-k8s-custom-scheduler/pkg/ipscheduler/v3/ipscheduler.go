@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // NOCC:tosa/comment_ratio(none)
@@ -19,6 +18,7 @@ package v3
 import (
 	"fmt"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -31,7 +31,6 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	schedulerapi "k8s.io/kubernetes/pkg/scheduler/api"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/config"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/pkg/actions"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/pkg/metrics"
@@ -231,6 +230,7 @@ func HandleIpSchedulerPredicate(extenderArgs schedulerapi.ExtenderArgs) (*schedu
 	return scheduleResult, nil
 }
 
+// get IP Claim
 func getIPClaim(namespace, claimKey string) (*BCSNetIPClaim, error) {
 	claimUnstruct, err := DefaultIpScheduler.ClaimLister.Namespace(namespace).Get(claimKey)
 	if err != nil {
@@ -246,13 +246,17 @@ func getIPClaim(namespace, claimKey string) (*BCSNetIPClaim, error) {
 	return claim, nil
 }
 
+// get IP
 func getIP(ipName string) (*BCSNetIP, error) {
+	// Get retrieves a resource from the indexer with the given name
 	ipUnstruct, err := DefaultIpScheduler.IPLister.Get(ipName)
 	if err != nil {
 		blog.Warnf("get BCSNetIP %s failed, err %s", ipName, err.Error())
 		return nil, fmt.Errorf("get BCSNetIP %s failed, err %s", ipName, err.Error())
 	}
 	ip := &BCSNetIP{}
+	// FromUnstructured converts an object from map[string]interface{} representation into a concrete type.
+	// It uses encoding/json/Unmarshaler if object implements it or reflection if not.
 	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(
 		ipUnstruct.UnstructuredContent(), ip); err != nil {
 		blog.Warnf("failed to convert unstructured ip %s", ipName)
@@ -261,6 +265,7 @@ func getIP(ipName string) (*BCSNetIP, error) {
 	return ip, nil
 }
 
+// get Pool
 func getPool(poolName string) (*BCSNetPool, error) {
 	poolUnstruct, err := DefaultIpScheduler.PoolLister.Get(poolName)
 	if err != nil {
@@ -276,6 +281,7 @@ func getPool(poolName string) (*BCSNetPool, error) {
 	return pool, nil
 }
 
+// get Pool By Hostname
 func getPoolByHostname(hostName string) (*BCSNetPool, error) {
 	node, err := getNode(hostName)
 	if err != nil {
@@ -303,6 +309,7 @@ func getPoolByHostname(hostName string) (*BCSNetPool, error) {
 	return nil, fmt.Errorf("host %s is not in any net pool", hostName)
 }
 
+// get Pod
 func getPod(ns, name string) (*v1.Pod, error) {
 	podUnstruct, err := DefaultIpScheduler.PodLister.Namespace(ns).Get(name)
 	if err != nil {
@@ -318,6 +325,7 @@ func getPod(ns, name string) (*v1.Pod, error) {
 	return pod, nil
 }
 
+// get Node
 func getNode(name string) (*v1.Node, error) {
 	nodeUnstruct, err := DefaultIpScheduler.NodeLister.Get(name)
 	if err != nil {
@@ -388,6 +396,7 @@ func checkNodeInHosts(node v1.Node, hosts []string) error {
 	return fmt.Errorf("no available ip")
 }
 
+// sync Cached Pool By IP
 func syncCachedPoolByIP(ip *BCSNetIP) {
 	poolName, ok := ip.ObjectMeta.Labels[PodLabelKeyForPool]
 	if !ok {
@@ -397,6 +406,7 @@ func syncCachedPoolByIP(ip *BCSNetIP) {
 	syncCachedPoolIPNum(poolName)
 }
 
+// sync Cached Pool IP Num
 func syncCachedPoolIPNum(poolName string) {
 	if DefaultIpScheduler == nil {
 		blog.Warnf("default scheduler is nil, wait for creation")

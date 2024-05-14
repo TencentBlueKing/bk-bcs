@@ -199,7 +199,7 @@ func (m *ResMgr) checkAccess(ctx context.Context, namespace string, manifest map
 		return nil
 	}
 	// SC 允许用户查看，PV 返回空，不报错
-	if slice.StringInSlice(m.Kind, cluster.SharedClusterBypassNativeKinds) {
+	if slice.StringInSlice(m.Kind, cluster.SharedClusterBypassClusterScopedKinds) {
 		return nil
 	}
 	// 不允许的资源类型，直接抛出错误

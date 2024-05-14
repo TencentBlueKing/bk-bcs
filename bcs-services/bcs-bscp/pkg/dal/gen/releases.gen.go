@@ -16,7 +16,7 @@ import (
 
 	"gorm.io/plugin/dbresolver"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
 )
 
 func newRelease(db *gorm.DB, opts ...gen.DOOption) release {
@@ -32,6 +32,7 @@ func newRelease(db *gorm.DB, opts ...gen.DOOption) release {
 	_release.Memo = field.NewString(tableName, "memo")
 	_release.Deprecated = field.NewBool(tableName, "deprecated")
 	_release.PublishNum = field.NewUint32(tableName, "publish_num")
+	_release.FullyReleased = field.NewBool(tableName, "fully_released")
 	_release.BizID = field.NewUint32(tableName, "biz_id")
 	_release.AppID = field.NewUint32(tableName, "app_id")
 	_release.Creator = field.NewString(tableName, "creator")
@@ -45,16 +46,17 @@ func newRelease(db *gorm.DB, opts ...gen.DOOption) release {
 type release struct {
 	releaseDo releaseDo
 
-	ALL        field.Asterisk
-	ID         field.Uint32
-	Name       field.String
-	Memo       field.String
-	Deprecated field.Bool
-	PublishNum field.Uint32
-	BizID      field.Uint32
-	AppID      field.Uint32
-	Creator    field.String
-	CreatedAt  field.Time
+	ALL           field.Asterisk
+	ID            field.Uint32
+	Name          field.String
+	Memo          field.String
+	Deprecated    field.Bool
+	PublishNum    field.Uint32
+	FullyReleased field.Bool
+	BizID         field.Uint32
+	AppID         field.Uint32
+	Creator       field.String
+	CreatedAt     field.Time
 
 	fieldMap map[string]field.Expr
 }
@@ -76,6 +78,7 @@ func (r *release) updateTableName(table string) *release {
 	r.Memo = field.NewString(table, "memo")
 	r.Deprecated = field.NewBool(table, "deprecated")
 	r.PublishNum = field.NewUint32(table, "publish_num")
+	r.FullyReleased = field.NewBool(table, "fully_released")
 	r.BizID = field.NewUint32(table, "biz_id")
 	r.AppID = field.NewUint32(table, "app_id")
 	r.Creator = field.NewString(table, "creator")
@@ -104,12 +107,13 @@ func (r *release) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (r *release) fillFieldMap() {
-	r.fieldMap = make(map[string]field.Expr, 9)
+	r.fieldMap = make(map[string]field.Expr, 10)
 	r.fieldMap["id"] = r.ID
 	r.fieldMap["name"] = r.Name
 	r.fieldMap["memo"] = r.Memo
 	r.fieldMap["deprecated"] = r.Deprecated
 	r.fieldMap["publish_num"] = r.PublishNum
+	r.fieldMap["fully_released"] = r.FullyReleased
 	r.fieldMap["biz_id"] = r.BizID
 	r.fieldMap["app_id"] = r.AppID
 	r.fieldMap["creator"] = r.Creator

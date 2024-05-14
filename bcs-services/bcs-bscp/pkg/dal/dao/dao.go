@@ -23,12 +23,12 @@ import (
 	"gorm.io/plugin/opentelemetry/tracing"
 	"gorm.io/plugin/prometheus"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/orm"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/sharding"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/orm"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/sharding"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 )
 
 // Set defines all the DAO to be operated.
@@ -67,6 +67,9 @@ type Set interface {
 	CredentialScope() CredentialScope
 	Kv() Kv
 	ReleasedKv() ReleasedKv
+	Client() Client
+	ClientEvent() ClientEvent
+	ClientQuery() ClientQuery
 }
 
 // NewDaoSet create the DAO set instance.
@@ -454,6 +457,33 @@ func (s *set) Kv() Kv {
 // ReleasedKv returns the ReleasedKv scope's DAO
 func (s *set) ReleasedKv() ReleasedKv {
 	return &releasedKvDao{
+		idGen:    s.idGen,
+		auditDao: s.auditDao,
+		genQ:     s.genQ,
+	}
+}
+
+// Client returns the Client scope's DAO
+func (s *set) Client() Client {
+	return &clientDao{
+		idGen:    s.idGen,
+		auditDao: s.auditDao,
+		genQ:     s.genQ,
+	}
+}
+
+// ClientEvent returns the ClientEvent scope's DAO
+func (s *set) ClientEvent() ClientEvent {
+	return &clientEventDao{
+		idGen:    s.idGen,
+		auditDao: s.auditDao,
+		genQ:     s.genQ,
+	}
+}
+
+// ClientQuery returns the ClientQuery scope's DAO
+func (s *set) ClientQuery() ClientQuery {
+	return &clientQueryDao{
 		idGen:    s.idGen,
 		auditDao: s.auditDao,
 		genQ:     s.genQ,

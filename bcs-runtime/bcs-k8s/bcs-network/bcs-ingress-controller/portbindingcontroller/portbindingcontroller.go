@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -20,6 +20,8 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 	k8scorev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	k8stypes "k8s.io/apimachinery/pkg/types"
@@ -30,14 +32,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	ingresscommon "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/portpoolcache"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/utils"
 	bcsnetcommon "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/pkg/common"
-	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
 // PortBindingReconciler reconciler for bcs port pool
@@ -69,11 +69,13 @@ func NewPortBindingReconciler(ctx context.Context, cleanInterval time.Duration, 
 
 // Reconcile reconcile port pool
 // portbinding name is same with pod name
+// nolint  funlen
 func (pbr *PortBindingReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	blog.V(3).Infof("PortBinding %+v triggered", req.NamespacedName)
 	portBinding := &networkextensionv1.PortBinding{}
 	isPortBindingFound := true
 	if err := pbr.k8sClient.Get(pbr.ctx, req.NamespacedName, portBinding); err != nil {
+		// nolint
 		if k8serrors.IsNotFound(err) {
 			isPortBindingFound = false
 		} else {
@@ -90,6 +92,7 @@ func (pbr *PortBindingReconciler) Reconcile(req ctrl.Request) (ctrl.Result, erro
 	isNodeFound := true
 	pod := &k8scorev1.Pod{}
 	if err := pbr.k8sClient.Get(pbr.ctx, req.NamespacedName, pod); err != nil {
+		// nolint
 		if k8serrors.IsNotFound(err) {
 			isPodFound = false
 		} else {
@@ -102,6 +105,7 @@ func (pbr *PortBindingReconciler) Reconcile(req ctrl.Request) (ctrl.Result, erro
 	}
 	node := &k8scorev1.Node{}
 	if err := pbr.k8sClient.Get(pbr.ctx, k8stypes.NamespacedName{Name: req.Name}, node); err != nil {
+		// nolint
 		if k8serrors.IsNotFound(err) {
 			isNodeFound = false
 		} else {
@@ -124,7 +128,7 @@ func (pbr *PortBindingReconciler) Reconcile(req ctrl.Request) (ctrl.Result, erro
 		// if entity not found and portbinding found, do clean portbinding
 		blog.V(3).Infof("clean portbinding %v", req.NamespacedName)
 		return pbr.cleanPortBinding(portBinding)
-	} else {
+	} else { // nolint
 		// if both entity and portbinding are not found, just return
 		return ctrl.Result{}, nil
 	}
@@ -179,11 +183,9 @@ func (pbr *PortBindingReconciler) Reconcile(req ctrl.Request) (ctrl.Result, erro
 				AnnotationForPortBindingNotReadyTimestamp]; timeOk && notReadyTimeStr != "" {
 				if notReadyTime, inErr := time.Parse(time.RFC3339Nano, notReadyTimeStr); inErr != nil {
 					blog.Warnf("parse not ready timestamp on node %s failed, err: %s", node.GetName(), inErr.Error())
-				} else {
+				} else if time.Since(notReadyTime) < time.Second*10 {
 					// 距离上次刷新时间未超过10秒
-					if time.Now().Sub(notReadyTime) < time.Second*10 {
-						needPatch = false
-					}
+					needPatch = false
 				}
 			}
 			if needPatch {

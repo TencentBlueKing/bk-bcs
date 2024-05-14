@@ -126,15 +126,6 @@ service ClusterManager {
     };
   }
 
-  rpc GetExternalNodeScriptByGroupID(GetExternalNodeScriptRequest) returns (GetExternalNodeScriptResponse) {
-    option (google.api.http) = {
-      get : "/clustermanager/v1/nodegroups/{nodeGroupID}/script"
-    };
-    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-      description : "获取nodeGroup所属云的第三方节点脚本, 目前仅支持tencentCloud"
-      summary : "获取节点组的第三方节点上架脚本"
-    };
-  }
   rpc ListNodesInCluster(ListNodesInClusterRequest) returns (ListNodesInClusterResponse) {
     option (google.api.http) = {
       get : "/clustermanager/v1/cluster/{clusterID}/node"
@@ -286,6 +277,17 @@ service ClusterManager {
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
       description : "更新node信息，该接口仅用于更新信息，不会触发任何集群管理的自动化动作。"
       summary : "更新node信息"
+    };
+  }
+
+  rpc UpdateClusterModule(UpdateClusterModuleRequest) returns (UpdateClusterModuleResponse) {
+    option (google.api.http) = {
+      put : "/clustermanager/v1/clusters/{clusterID}/module"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "更新集群master和node的转移模块信息, 为了兼容存量配置，会同步更新autoscalingOption的模块信息"
+      summary : "更新集群master和node的转移模块信息"
     };
   }
 
@@ -695,6 +697,26 @@ service ClusterManager {
     };
   }
 
+  rpc GetExternalNodeScriptByGroupID(GetExternalNodeScriptRequest) returns (GetExternalNodeScriptResponse) {
+    option (google.api.http) = {
+      get : "/clustermanager/v1/nodegroups/{nodeGroupID}/script"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "获取nodeGroup所属云的第三方节点脚本, 目前仅支持tencentCloud"
+      summary : "获取节点组的第三方节点上架脚本"
+    };
+  }
+
+  rpc TransNodeGroupToNodeTemplate(TransNodeGroupToNodeTemplateRequest) returns (TransNodeGroupToNodeTemplateResponse) {
+    option (google.api.http) = {
+      post : "/clustermanager/v1/nodegroup/{nodeGroupID}/template"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "节点池转换为节点模版详情"
+      summary : "节点池转换为节点模板"
+    };
+  }
+
   rpc EnableNodeGroupAutoScale(EnableNodeGroupAutoScaleRequest) returns (EnableNodeGroupAutoScaleResponse) {
     option (google.api.http) = {
       post : "/clustermanager/v1/nodegroup/{nodeGroupID}/autoscale/enable"
@@ -735,6 +757,16 @@ service ClusterManager {
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
       description : "针对失败的任务, 进行重试操作. 重试仅限于失败任务且从当前失败step开始执行"
       summary : "重试失败Task"
+    };
+  }
+  rpc SkipTask(SkipTaskRequest) returns (SkipTaskResponse) {
+    option (google.api.http) = {
+      put : "/clustermanager/v1/task/{taskID}/skip"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "针对失败的任务, 进行跳过操作. 跳过操作仅操作当前失败任务且从下一步开始执行, 任务之间有相互依赖不建议跳过"
+      summary : "跳过当前失败Task"
     };
   }
   rpc UpdateTask(UpdateTaskRequest) returns (UpdateTaskResponse) {
@@ -906,6 +938,37 @@ service ClusterManager {
     };
   }
 
+  // NotifyTemplate info management
+  rpc CreateNotifyTemplate(CreateNotifyTemplateRequest) returns (CreateNotifyTemplateResponse) {
+    option (google.api.http) = {
+      post : "/clustermanager/v1/projects/{projectID}/notifytemplates"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "创建通知模版(项目维度)"
+      summary : "创建通知模版"
+    };
+  }
+  rpc DeleteNotifyTemplate(DeleteNotifyTemplateRequest) returns (DeleteNotifyTemplateResponse) {
+    option (google.api.http) = {
+      delete : "/clustermanager/v1/projects/{projectID}/notifytemplates/{notifyTemplateID}"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "删除特定通知模版"
+      summary : "删除通知模板信息"
+    };
+  }
+  rpc ListNotifyTemplate(ListNotifyTemplateRequest) returns (ListNotifyTemplateResponse) {
+    option (google.api.http) = {
+      get : "/clustermanager/v1/projects/{projectID}/notifytemplates"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据查询条件过滤节点模板列表，如果某项条件值为空，则忽略此"
+          "条件。如果所有条件都为空，则默认查询项目下所有节点模版"
+      summary : "查询项目下的节点模版列表"
+    };
+  }
+
   // Cloud Account information management
   rpc CreateCloudAccount(CreateCloudAccountRequest) returns (CreateCloudAccountResponse) {
     option (google.api.http) = {
@@ -978,6 +1041,15 @@ service ClusterManager {
   }
 
   // Cloud Resource management
+  rpc GetResourceGroups(GetResourceGroupsRequest) returns (GetResourceGroupsResponse) {
+    option (google.api.http) = {
+      get : "/clustermanager/v1/clouds/{cloudID}/resourcegroups"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "查询resource groups列表"
+      summary : "查询resource groups列表"
+    };
+  }
   rpc GetCloudRegions(GetCloudRegionsRequest) returns (GetCloudRegionsResponse) {
     option (google.api.http) = {
       get : "/clustermanager/v1/clouds/{cloudID}/regions"
@@ -1113,6 +1185,15 @@ service ClusterManager {
       summary : "查询云共享带宽包"
     };
   }
+  rpc ListCloudRuntimeInfo(ListCloudRuntimeInfoRequest) returns (ListCloudRuntimeInfoResponse) {
+    option (google.api.http) = {
+      get : "/clustermanager/v1/clouds/{cloudID}/runtimeinfo"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据筛选条件查询Node的运行时列表"
+      summary : "查询Node的运行时列表"
+    };
+  }
 
   // Operation logs
   rpc ListOperationLogs(ListOperationLogsRequest) returns (ListOperationLogsResponse) {
@@ -1122,6 +1203,28 @@ service ClusterManager {
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
       description : "查询操作日志列表"
       summary : "查询操作日志列表"
+    };
+  }
+
+  // Task Step logs
+  rpc ListTaskStepLogs(ListTaskStepLogsRequest) returns (ListTaskStepLogsResponse) {
+    option (google.api.http) = {
+      get : "/clustermanager/v1/tasksteplogs"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "查询任务步骤日志列表"
+      summary : "查询任务步骤日志列表"
+    };
+  }
+  
+  // CleanDbHistoryData clean DB history data
+  rpc CleanDbHistoryData(CleanDbHistoryDataRequest) returns (CleanDbHistoryDataResponse) {
+    option (google.api.http) = {
+      delete : "/clustermanager/v1/dbdatas/{dataType}"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据时间条件 或者 排序删除历史n条数据"
+      summary : "清理历史任务/操作记录日志记录"
     };
   }
 
@@ -1499,6 +1602,14 @@ message Cluster {
     title: "cloudAccountID",
     description: "集群关联的云账号ID,默认为空。主要功能是获取云账号凭证。私有云场景下统一管理cloud账号，而公有云场景纳管不同云账号凭证"
   }];
+  string message = 41 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description: "集群状态异常时的失败原因展示"
+  }];
+  bool isMixed = 42[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "isMixed",
+    description: "标记该集群是否是混部集群"
+  }];
 }
 
 message Node {
@@ -1595,6 +1706,10 @@ message Node {
   string failedReason = 22 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "failedReason",
     description: "上下架节点失败时原因"
+  }];
+  string chargeType = 23[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "chargeType",
+    description: "机型计费模型，POSTPAID_BY_HOUR按小时后付费，PREPAID包年包月"
   }];
 }
 
@@ -2013,6 +2128,10 @@ message ClusterMgr {
     title: "importCluster",
     description: "纳管集群时相关的自动化流程定义"
   }];
+  Action commonMixedAction = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "commonMixedAction",
+    description: "集群混部自动化流程定义"
+  }];
 }
 
 message NodeGroupMgr {
@@ -2218,7 +2337,7 @@ message CreateCloudAccountRequest {
   string creator = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "creator",
     description: "cloud账号创建者"
-  }, (validate.rules).string = {min_len : 2, max_len : 1024, pattern : "^[0-9a-zA-Z-]+$"}];
+  }, (validate.rules).string = {min_len : 2, max_len : 1024}];
   string projectID = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "projectID",
     description: "CloudAccount所属的项目信息"
@@ -2279,7 +2398,7 @@ message UpdateCloudAccountRequest {
   string updater = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "updater",
     description: "更新者"
-  },(validate.rules).string = {min_len : 2, max_len : 1024, pattern : "^[0-9a-zA-Z]+$"}];
+  },(validate.rules).string = {min_len : 2, max_len : 1024}];
   Account account = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "account",
     description: "cloud更新云账号信息"
@@ -2648,7 +2767,7 @@ message CreateCloudVPCRequest {
   string creator = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "creator",
     description: "信息创建者"
-  }, (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$"}];
+  }, (validate.rules).string = {min_len : 2, max_len : 100}];
   uint32 reservedIPNum = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "reservedIPNum",
     description: "vpc预留IP数量,默认不预留"
@@ -2714,7 +2833,7 @@ message UpdateCloudVPCRequest {
   string updater = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "updater",
     description: "更新者"
-  },(validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z]+$"}];
+  },(validate.rules).string = {min_len : 2, max_len : 100}];
   google.protobuf.UInt32Value reservedIPNum = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "reservedIPNum",
     description: "更新vpc预留IP数量"
@@ -3311,6 +3430,10 @@ message AutoScalingGroup {
     title: "autoUpgrade",
     description: "开启自动升级GKE版本功能,如果集群为发布版本,则强制开启"
   }];
+  string nodeRole = 16[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "nodeRole",
+    description: "创建eks节点池时指定的iam角色名称"
+  }];
 }
 
 message TimeRange {
@@ -3443,8 +3566,8 @@ message InstanceTemplateConfig {
   }];
   string instanceChargeType = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "instanceChargeType",
-    description: "机型计费模型，POSTPAID_BY_HOUR按小时后付费，SPOTPAID竞价付费，PREPAID包年包月。"
-        "如不设置，BCS暂时默认提供包年包月的类型"
+    description: "机型计费模型，tencentCloud包含POSTPAID_BY_HOUR按小时后付费，SPOTPAID竞价付费，PREPAID包年包月。"
+        "aws包含ON_DEMAND按需付费,SPOT竞价付费。如不设置，BCS暂时默认提供包年包月的类型"
   },(validate.rules).string = {in: ["PREPAID", "POSTPAID_BY_HOUR", "SPOTPAID"]}];
   DataDisk systemDisk = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "systemDisk",
@@ -3598,6 +3721,10 @@ message LaunchConfiguration {
   KeyInfo keyPair = 20 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "keyPair",
     description: "节点私钥信息, 与密码2选一，2者均设置优先密钥"
+  }];
+  InstanceChargePrepaid charge=21[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "charge",
+    description: "实例的计费模式。当instanceChargeType为包年包月时，设置续费策略"
   }];
 }
 
@@ -4092,7 +4219,7 @@ message CreateNodeTemplateRequest {
   string creator = 17[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "creator",
     description: "cloud账号创建者"
-  }, (validate.rules).string = {min_len : 2, max_len : 1024, pattern : "^[0-9a-zA-Z-]+$"}];
+  }, (validate.rules).string = {min_len : 2, max_len : 1024}];
   RunTimeInfo runtime = 18 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "runtime",
     description: "节点池节点运行时可运行时版本信息, 若不指定和集群运行时和版本保持一致"
@@ -4215,7 +4342,7 @@ message UpdateNodeTemplateRequest {
   string updater = 18[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "updater",
     description: "更新者"
-  },(validate.rules).string = {min_len : 2, max_len : 1024, pattern : "^[0-9a-zA-Z]+$"}];
+  },(validate.rules).string = {min_len : 2, max_len : 1024}];
   RunTimeInfo runtime = 19 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "runtime",
     description: "节点池节点运行时可运行时版本信息, 若不指定和集群运行时和版本保持一致"
@@ -4643,7 +4770,15 @@ message Step {
   }];
   bool skipOnFailed = 14[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "skipOnFailed",
-    description: "失败时跳过"
+    description: "失败时自动跳过某步骤,由用户设置。当设置失败跳过时，系统自动跳过当前失败步骤，执行后续流程"
+  }];
+  string translate = 15[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "translate",
+    description: "解决当使用同一taskMethod时,是否转换翻译展示文本"
+  }];
+  bool allowSkip = 16[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "allowSkip",
+    description: "标识该步骤失败时候是否允许用户手动跳过。当为true失败时候允许用户手动跳过, 为false失败时用户仅能通过重试解决"
   }];
 }
 
@@ -4904,6 +5039,14 @@ message CreateClusterReq {
   string nodeTemplateID = 40[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "nodeTemplateID",
     description: "创建集群上架节点时的节点模板"
+  }];
+  repeated NodeGroup nodeGroups = 41[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "nodeGroups",
+    description: "创建集群时的节点池信息"
+  }];
+  bool isMixed = 42[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "isMixed",
+    description: "标记该集群是否是混部集群, 默认是false"
   }];
 }
 
@@ -5233,6 +5376,10 @@ message KubeConfigConnectReq {
       title : "region",
       description : "集群所在地域"
     },(validate.rules).string = {max_len : 100, pattern : "^[0-9a-zA-Z-]+$"}];
+  string resourceGroupName = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "resourceGroupName",
+      description : "AKS集群所属resource group"
+    }];
 }
 
 message KubeConfigResp {
@@ -5289,6 +5436,14 @@ message ImportCloudMode {
   string kubeConfig = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "kubeConfig",
     description: "集群kubeConfig文件"
+  }];
+  bool inter = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "inter",
+    description: "默认外网方式导入, 为true时候以内网方式导入. 该字段仅对云导入生效"
+  }];
+  string resourceGroup = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceGroup",
+    description: "集群所在的资源组(azure云)"
   }];
 }
 
@@ -5425,6 +5580,10 @@ message ImportClusterReq {
     title: "accountID",
     description: "导入集群关联的cloud凭证信息, 可以为空; 当为空时, 可以通过cloud获取cloud凭证信息"
   },(validate.rules).string = {max_len : 1024}];
+  CloudArea area = 23[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "area",
+    description: "集群维度的云区域信息(用户不指定, 则使用默认云区域 0)"
+  }];
 }
 
 message ImportClusterResp {
@@ -5829,6 +5988,10 @@ message UpdateClusterReq {
     title: "cloudAccountID",
     description: "集群关联的云账号ID,默认为空。主要功能是获取云账号凭证。私有云场景下统一管理cloud账号，而公有云场景纳管不同云账号凭证"
   }];
+  google.protobuf.BoolValue isMixed = 38[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "isMixed",
+    description: "标记该集群是否是混部集群"
+  }];
 }
 
 message UpdateClusterResp {
@@ -6211,6 +6374,56 @@ message UpdateNodeResponse {
 message NodeStatus {
   repeated string success = 1;
   repeated string failed = 2;
+}
+
+message UpdateClusterModuleRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "UpdateClusterModuleRequest"
+      description : "更新集群转移模块信息"
+      required : [ "clusterID", "module" ]
+    }
+  };
+  string clusterID = 1 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "clusterID",
+      description : "集群ID信息"
+    }];
+  ClusterModule module = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "module",
+    description: "集群转移模块信息"
+  }];
+  string operator = 3 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "operator",
+      description : "操作人"
+    }, (validate.rules).string = {min_bytes: 1}];
+}
+
+message UpdateClusterModuleResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "UpdateClusterModuleResponse"
+      description : "更新集群转移模块信息返回"
+      required : [ "code", "message" ]
+    }
+  };
+
+  uint32 code = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) ={
+    title : "code", description : "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  bool result = 3 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+  ClusterModule data = 4 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "集群配置模块信息"
+  }];
 }
 
 message RecordNodeInfoRequest {
@@ -7357,7 +7570,7 @@ message CreateCloudRequest {
   string creator = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "creator", 
     description: "信息创建者"
-  }, (validate.rules).string = {min_len : 2, max_len : 20, pattern : "^[0-9a-zA-Z-]+$"}
+  }, (validate.rules).string = {min_len : 2, max_len : 20}
   ];
   string cloudProvider = 12[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "cloudProvider", 
@@ -7459,7 +7672,7 @@ message UpdateCloudRequest {
   string updater = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "updater", 
     description: "更新者"
-  },(validate.rules).string = {min_len : 2, max_len : 1024, pattern : "^[0-9a-zA-Z]+$"}
+  },(validate.rules).string = {min_len : 2, max_len : 1024}
   ];
   string cloudProvider = 12[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "cloudProvider", 
@@ -7713,7 +7926,7 @@ message CreateNodeGroupRequest {
   string creator = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "creator", 
     description: "信息创建者"
-  }, (validate.rules).string = {min_len : 2, max_len : 20, pattern : "^[0-9a-zA-Z-]+$"}
+  }, (validate.rules).string = {min_len : 2, max_len : 20}
   ];
   string provider = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "provider", 
@@ -7756,6 +7969,7 @@ message CreateNodeGroupRequest {
 message GroupExtraInfo {
   string provider = 1;
   string poolID = 2;
+  string scriptType = 3;
 }
 
 message CreateNodeGroupResponse {
@@ -7850,7 +8064,7 @@ message UpdateNodeGroupRequest {
   string updater = 13[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "updater", 
     description: "信息更新者"
-  }, (validate.rules).string = {min_len : 2, max_len : 20, pattern : "^[0-9a-zA-Z-]+$"}
+  }, (validate.rules).string = {min_len : 2, max_len : 20}
   ];
   string provider = 14[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "provider", 
@@ -8161,7 +8375,7 @@ message AddNodesRequest {
   string operator = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "operator",
     description : "操作者"
-  }, (validate.rules).string = {min_len : 2, max_len : 20, pattern : "^[0-9a-zA-Z-]+$"}];
+  }, (validate.rules).string = {min_len : 2, max_len : 20}];
   string nodeTemplateID = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "nodeTemplateID",
     description : "关联的节点模板ID"
@@ -8232,7 +8446,11 @@ message BatchDeleteClusterNodesRequest {
   string operator = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "operator",
     description : "操作者"
-  }, (validate.rules).string = {min_len : 2, max_len : 20, pattern : "^[0-9a-zA-Z-]+$"}];
+  }, (validate.rules).string = {min_len : 2, max_len : 20}];
+  string deleteMode = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "deleteMode",
+    description : "删除模式，retain(移除集群节点，但是保留主机)，terminate(只支持按量计费的机器)，默认是RETAIN"
+  }];
 }
 
 message BatchDeleteClusterNodesResponse {
@@ -8304,7 +8522,7 @@ message DeleteNodesRequest {
   string operator = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "operator",
     description : "操作者"
-  }, (validate.rules).string = {min_len : 2, max_len : 20, pattern : "^[0-9a-zA-Z-]+$"}];
+  }, (validate.rules).string = {min_len : 2, max_len : 20}];
   bool onlyDeleteInfo = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "onlyDeleteInfo",
     description : "默认为false。设置为true时，仅删除cluster-manager所记录的信息，不会触发任何自动化流程."
@@ -8492,8 +8710,7 @@ message CleanNodesInGroupRequest {
   string operator = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "operator", 
     description : "操作者"
-  }, (validate.rules).string = {min_len : 2, max_len : 20, pattern : "^[0-9a-zA-Z-]+$"}
-  ];
+  }, (validate.rules).string = {min_len : 2, max_len : 20}];
 }
 
 message CleanNodesInGroupResponse {
@@ -8553,7 +8770,7 @@ message CleanNodesInGroupV2Request {
   string operator = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "operator",
     description : "操作者"
-  }, (validate.rules).string = {min_len : 2, max_len : 20, pattern : "^[0-9a-zA-Z-]+$"}
+  }, (validate.rules).string = {min_len : 2, max_len : 20}
   ];
 }
 
@@ -8707,6 +8924,10 @@ message NodeGroupNode {
     title: "unSchedulable",
     description: "调度状态，默认值0表示参与调度，1表示不参与调度"
   }];
+  string nodeName = 18[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "nodeName",
+    description: "节点名称"
+  }];
 }
 
 message ListNodesInGroupResponse {
@@ -8791,6 +9012,47 @@ message UpdateGroupMinMaxSizeResponse {
   WebAnnotationsV2 web_annotations = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "web_annotations",
     description : "用户所属集群权限"
+  }];
+}
+
+message TransNodeGroupToNodeTemplateRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "TransNodeGroupToNodeTemplateRequest"
+      description : "节点池转换请求ID"
+      required : [ "nodeGroupID"]
+    }
+  };
+
+  string nodeGroupID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "nodeGroupID",
+    description : "nodeGroupID节点池ID"
+  }, (validate.rules).string = {min_len : 1, max_len : 100, pattern : "^[0-9a-zA-Z-]+$"}];
+}
+
+message TransNodeGroupToNodeTemplateResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "TransNodeGroupToNodeTemplateResponse"
+      description : "节点池转换为节点模板结果"
+    }
+  };
+
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  bool result = 3 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+  NodeTemplate template = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "template",
+    description : "template转换的节点模板详情"
   }];
 }
 
@@ -9114,6 +9376,45 @@ message RetryTaskResponse {
   }];
 }
 
+message SkipTaskRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "SkipTaskRequest"
+      description : "跳过Task请求"
+      required: ["taskID", "updater"]
+    }
+  };
+
+  string taskID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "taskID",
+    description: "任务ID"
+  },(validate.rules).string = {min_len : 2, max_len : 1024, pattern : "^[0-9a-zA-Z-]+$"}];
+  string updater = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "updater",
+    description: "任务跳过的发起人"
+  },(validate.rules).string = {min_len: 2, max_len: 1024}
+  ];
+}
+
+message SkipTaskResponse {
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+  string message = 2[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "result",
+    description : "返回结果"
+  }];
+  Task data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "data",
+    description : "更新后Task信息"
+  }];
+}
+
 message UpdateTaskRequest {
   option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
     json_schema : {
@@ -9131,7 +9432,7 @@ message UpdateTaskRequest {
   string status = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "status", 
     description: "任务状态"
-  },(validate.rules).string = {in: ["INITIALIZING", "RUNNING", "SUCCESS", "FAILED", "TIMEOUT"]}
+  },(validate.rules).string = {in: ["INITIALIZING", "RUNNING", "SUCCESS", "FAILURE", "TIMEOUT"]}
   ];
   string message = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "message", 
@@ -10029,6 +10330,72 @@ message UpdateAutoScalingStatusResponse {
   }];
 }
 
+message ResourceGroupInfo {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ResourceGroupInfo"
+      description : "resource group信息"
+    }
+  };
+
+  string name = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "name",
+    description : "resource group名称"
+  }];
+  string region = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "region",
+    description : "地域信息"
+  }];
+  string provisioningState = 3 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "provisioningState",
+    description : "resource group状态"
+  }];
+}
+
+message GetResourceGroupsRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetResourceGroupsRequest"
+      description : "获取resource groups列表请求"
+    }
+  };
+
+  string cloudID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "cloudID",
+    description : "云信息"
+  },(validate.rules).string = {min_len : 2}];
+  string accountID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "accountID",
+    description : "云凭证ID"
+  }];
+}
+
+message GetResourceGroupsResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetResourceGroupsResponse"
+      description : "获取resource groups列表"
+    }
+  };
+
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  bool result = 3 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+  repeated ResourceGroupInfo data = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "获取到的信息"
+  }];
+}
+
 message RegionInfo {
   option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
     json_schema : {
@@ -10119,6 +10486,10 @@ message ZoneInfo {
     title : "regionState",
     description : "地域状态"
   }];
+  uint32 subnetNum = 5[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "subnetNum",
+    description : "该可用区可用的子网数量"
+  }];
 }
 
 message CloudClusterInfo {
@@ -10187,6 +10558,10 @@ message ListCloudRegionClusterRequest {
     title : "accountID",
     description : "云凭证ID"
   },(validate.rules).string = {min_len : 2}];
+  string resourceGroupName = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceGroupName",
+    description: "Azure Cloud中集群所属的resource group名称"
+  }];
 }
 
 message ListCloudRegionClusterResponse {
@@ -10234,6 +10609,14 @@ message GetCloudRegionZonesRequest {
   string accountID = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "accountID",
     description : "云凭证ID"
+  }];
+  string vpcId = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "vpcId",
+    description : "过滤某个vpc的子网数量. 若为空,则不会返回可用区的子网数量"
+  }];
+  string state = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "state",
+    description : "可用区状态(AVAILABLE可用/UNAVAILABLE不可用), 默认返回所有"
   }];
 }
 
@@ -10303,6 +10686,10 @@ message OperationLog {
     title : "projectID",
     description : "操作关联的项目ID"
   }];
+  string resourceName = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "resourceName",
+    description : "资源名称"
+  }];
 }
 
 message TaskOperationLog {
@@ -10316,6 +10703,37 @@ message TaskOperationLog {
   string projectID = 8;
   string status = 9;
   string taskType = 10;
+  string resourceName = 11;
+}
+
+message TaskStepLog {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "OperationLog"
+      description : "操作日志审计"
+    }
+  };
+
+  string taskID = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "taskID",
+    description : "任务ID记录"
+  }];
+  string stepName = 2 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "stepName",
+    description : "任务步骤名称"
+  }];
+  string level = 3 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "level",
+    description : "日志等级(INFO,ERROR)"
+  }];
+  string message = 4 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "日志信息"
+  }];
+  string createTime = 6 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "创建时间"
+  }];
 }
 
 message ListCloudInstanceTypeRequest {
@@ -10863,6 +11281,56 @@ message ClusterInfo {
   string clusterID=2;
 }
 
+message ListCloudRuntimeInfoRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListCloudRuntimeInfoRequest"
+      description : "查询运行时信息列表"
+    }
+  };
+
+  
+  string clusterID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterID",
+    description: "集群ID"
+  }];
+  string cloudID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "cloudID",
+    description : "云信息"
+  },(validate.rules).string = {min_len : 2}];
+}
+
+message ListCloudRuntimeInfoResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListCloudRuntimeInfoResponse"
+      description : "查询运行时信息列表返回"
+      required : [ "code", "message" ]
+    }
+  };
+
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  bool result = 3 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+  map<string, RunTimeVersion> data = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "获取到的信息"
+  }];
+}
+
+message RunTimeVersion {
+  repeated string version = 1;
+}
+
 message ListCloudProjectsRequest {
   option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
     json_schema : {
@@ -10941,6 +11409,10 @@ message ListCloudVpcsRequest {
     title: "vpcID",
     description: "过滤查询指定vpc的信息"
   }];
+  string resourceGroupName = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceGroupName",
+    description: "Azure Cloud中Vpc所属的resource group名称"
+  }];
 }
 
 message ListCloudVpcsResponse {
@@ -10976,6 +11448,7 @@ message CloudVpc {
   string ipv4Cidr=3;
   string ipv6Cidr=4;
   repeated AssistantCidr cidrs =5;
+  uint32 allocateIpNum=6;
 }
 
 message AssistantCidr {
@@ -11019,6 +11492,10 @@ message ListCloudSubnetsRequest {
   bool injectCluster = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "injectCluster",
     description: "是否注入子网所属集群信息"
+  }];
+  string resourceGroupName = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceGroupName",
+    description: "Azure Cloud中subnet所属resource group名称"
   }];
 }
 
@@ -11176,6 +11653,10 @@ message ListCloudSecurityGroupsRequest {
     title : "accountID",
     description : "云凭证ID(非必传,兼容社区版和内部版)"
   }];
+  string resourceGroupName = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "resourceGroupName",
+    description : "Azure中的resource group名称"
+  }];
 }
 
 message ListCloudSecurityGroupsResponse {
@@ -11224,6 +11705,10 @@ message ListKeyPairsRequest {
   string accountID = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "accountID",
     description : "云凭证ID(非必传,兼容社区版和内部版)"
+  }];
+  string resourceGroupName = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "resourceGroupName",
+    description : "Azure中的resource group名称"
   }];
 }
 
@@ -11287,7 +11772,7 @@ message ListOperationLogsRequest {
   string resourceType = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "resourceType",
     description : "资源类型,可选值: cluster, autoscalingoption, cloud, cloudvpc, nodegroup, task"
-  },(validate.rules).string = {in: ["cluster", "autoscalingoption", "cloud", "cloudvpc", "nodegroup", "task"]}];
+  }];
   string resourceID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "resourceID",
     description: "资源ID"
@@ -11339,6 +11824,41 @@ message ListOperationLogsRequest {
   string ipList = 14 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "ipList",
     description: "通过,隔开ipList过滤任务"
+  }];
+  string taskID = 15 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "taskID",
+    description: "默认为空, 过滤任务维度的操作审计"
+  }];
+  string taskName = 16 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "taskName",
+    description: "默认为空, 过滤任务名称维度的操作审计"
+  }];
+}
+
+message ListTaskStepLogsRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListTaskStepLogsRequest"
+      description : "获取任务步骤日志请求参数"
+      required: ["taskID"]
+    }
+  };
+
+  uint32 limit = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "limit",
+    description: "每页数量"
+  }, (validate.rules).uint32.gt = 0];
+  uint32 page = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "page",
+    description: "页码"
+  }, (validate.rules).uint32.gt = 0];
+  string taskID = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "taskID",
+    description: "过滤任务维度的操作审计"
+  }];
+  string stepName = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "stepName",
+    description: "过滤任务步骤维度的操作审计"
   }];
 }
 
@@ -11408,6 +11928,100 @@ message OperationLogDetail {
   string status = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "status",
     description : "任务状态"
+  }];
+  string resourceName = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "resourceName",
+    description : "资源名称"
+  }];
+}
+
+message CleanDbHistoryDataRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "CleanDbHistoryDataRequest"
+      description : "根据条件清理数据库数据, 支持删除某个时间段的记录, 清理范围不允许超过1年。且不允许清理最近3个月的数据"
+    }
+  };
+
+  string dataType = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "dataType",
+    description: "数据类型, 目前仅支持task,operationLog等表数据类型"
+  }, (validate.rules).string = { in: ["task", "operationlog"]}];
+  uint64 startTime = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "startTime",
+    description: "开始时间戳"
+  }];
+  uint64 endTime = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "endTime",
+    description: "结束时间戳"
+  }];
+}
+
+message CleanDbHistoryDataResponse {
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+  string message = 2[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "result",
+    description : "返回结果"
+  }];
+}
+
+message ListTaskStepLogsResponse {
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+  string message = 2[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "result",
+    description : "返回结果"
+  }];
+  ListTaskStepLogsResponseData data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "data",
+    description : "返回数据"
+  }];
+}
+
+message ListTaskStepLogsResponseData {
+  uint32 count = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "count",
+    description : "操作日志数量"
+  }];
+  repeated TaskStepLogDetail results = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "results",
+    description : "返回数据"
+  }];
+}
+
+message TaskStepLogDetail {
+  string taskID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "taskID",
+    description : "任务ID"
+  }];
+  string stepName = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "stepName",
+    description : "步骤名称"
+  }];
+  string level = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "level",
+    description : "日志等级(INFO, WARN, ERROR)"
+  }];
+  string message = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "日志信息"
+  }];
+  string createTime = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "发生时间"
   }];
 }
 
@@ -11853,9 +12467,8 @@ message ListCCTopologyRequest {
 
   string clusterID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "clusterID",
-    description : "集群ID"
-  }, (validate.rules).string = {min_len : 5, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
-  ];
+    description : "集群ID,默认拉去集群对应的业务拓扑。当为无效集群ID时会拉取参数bizID对应的业务拓扑"
+  }, (validate.rules).string = {min_len : 1, max_len : 100, pattern : "^[0-9a-zA-Z-]+$"}];
   string bizID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "bizID",
     description : "cmdb业务ID(某些场景下需要查询其他业务ID的拓扑), 默认查询的是集群关联业务员拓扑"
@@ -12411,6 +13024,10 @@ message GetExternalNodeScriptRequest {
     title: "operator",
     description: "操作人"
   }];
+  bool internal = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "internal",
+    description: "获取内网或外网脚本, 默认外网脚本"
+  }];
 }
 
 message GetExternalNodeScriptResponse {
@@ -12824,5 +13441,283 @@ message GetScopeHostCheckResponse {
   repeated HostData data = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "data",
     description : "返回结果"
+  }];
+}
+
+// NotifyConfig notify config
+message NotifyConfig {
+  string server=1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "server",
+    description : "不同通知系统使用不同的server"
+  }];
+  uint64 dataId=2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "dataId",
+    description : "dataId"
+  }];
+  string accessToken=3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "accessToken",
+    description : "accessToken"
+  }];
+}
+
+// NotifyData notify body
+message NotifyData {
+  bool enable = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "enable",
+    description : "操作是否开启通知"
+  }];
+  string title=2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "title",
+      description : "通知title即事件名称"
+   }];
+  string content=3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "content",
+    description : "通知内容模板, 根据用户需求渲染不同内容。若为空，使用默认模版"
+  }];
+}
+
+// NotifyTemplate for system notify
+message NotifyTemplate {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "NotifyTemplate"
+      description : "通知模版, 主要用于对用户进行通知(集群、节点池等操作)"
+    }
+  };
+  string notifyTemplateID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "notifyTemplateID",
+    description: "通知模版ID"
+  }];
+  string name = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "name",
+    description: "通知模版名称"
+  }];
+  string projectID = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectID",
+    description: "通知模版所关联的项目，该项目为蓝鲸的项目"
+  }];
+  string notifyType = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "notifyType",
+    description: "通知类型, 目前仅支持bk_monitor_event、bk_monitor_metrics. 未来将支持rtx、email、voice等方式"
+  }];
+  string desc = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "desc",
+    description: "通知模板描述信息"
+  }];
+  bool enable = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "enable",
+    description: "是否开启通知"
+  }];
+  NotifyConfig config = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "config",
+    description: "通知系统配置，使用不同的通知方式需要配置不同的config"
+  }];
+  NotifyData createCluster = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "createCluster",
+    description: "创建集群通知"
+  }];
+  NotifyData deleteCluster = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "deleteCluster",
+    description: "删除集群通知"
+  }];
+  NotifyData createNodeGroup = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "createNodeGroup",
+    description: "节点池新增通知"
+  }];
+  NotifyData deleteNodeGroup = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "deleteNodeGroup",
+    description: "节点池删除通知"
+  }];
+  NotifyData updateNodeGroup = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "updateNodeGroup",
+    description: "节点池更新通知"
+  }];
+  NotifyData groupScaleOutNode = 13 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "groupScaleOutNode",
+    description: "节点池扩容节点通知"
+  }];
+  NotifyData groupScaleInNode = 14 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "groupScaleOutNode",
+    description: "节点池缩容节点通知"
+  }];
+  string receivers = 15 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "receivers",
+    description: "通知接收者,可指定；若无指定, 可使用集群/节点池创建更新者"
+  }];
+  string creator = 16;
+  string updater = 17;
+  string createTime = 18;
+  string updateTime = 19;
+}
+
+message CreateNotifyTemplateRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "CreateNotifyTemplateRequest"
+      description : "创建通知模板"
+      required : [
+        "projectID", "name", "notifyType", "creator"
+      ]
+    }
+  };
+  string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectID",
+    description: "通知模板所属的项目ID"
+  }, (validate.rules).string = {min_len : 1, max_len : 2048, pattern : "^[0-9a-zA-Z-]+$"}];
+  string name = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "name",
+    description: "通知模板名称"
+  }, (validate.rules).string = {min_len : 1}];
+  string desc = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "desc",
+    description: "通知模板描述信息"
+  }];
+  string notifyType = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "notifyType",
+    description: "通知类型, 目前仅支持bk_monitor_event、bk_monitor_metrics. 未来将支持rtx、email、voice等方式"
+  },  (validate.rules).string = {in: ["bk_monitor_event", "bk_monitor_metrics"]}];
+  google.protobuf.BoolValue enable = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "enable",
+    description: "是否开启通知"
+  }];
+  NotifyData createCluster = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "createCluster",
+    description: "创建集群通知"
+  }];
+  NotifyData deleteCluster = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "deleteCluster",
+    description: "删除集群通知"
+  }];
+  NotifyData createNodeGroup = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "createNodeGroup",
+    description: "节点池新增通知"
+  }];
+  NotifyData deleteNodeGroup = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "deleteNodeGroup",
+    description: "节点池删除通知"
+  }];
+  NotifyData updateNodeGroup = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "updateNodeGroup",
+    description: "节点池更新通知"
+  }];
+  NotifyData groupScaleOutNode = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "groupScaleOutNode",
+    description: "节点池扩容节点通知"
+  }];
+  NotifyData groupScaleInNode = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "groupScaleOutNode",
+    description: "节点池缩容节点通知"
+  }];
+  NotifyConfig config = 13[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "config",
+    description: "通知系统配置，使用不同的通知方式需要配置不同的config"
+  }];
+  string receivers = 14 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "receivers",
+    description: "通知接收者,可指定；若无指定, 可使用集群/节点池创建更新者"
+  }];
+  string creator = 15;
+}
+
+message CreateNotifyTemplateResponse {
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+  string message = 2[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "result",
+    description : "返回结果"
+  }];
+  WebAnnotationsV2 web_annotations = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "web_annotations",
+    description : "用户所属项目权限"
+  }];
+}
+
+message DeleteNotifyTemplateRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "DeleteNotifyTemplateRequest"
+      description : "删除通知模版"
+      required: ["projectID", "nodeTemplateID"]
+    }
+  };
+
+  string projectID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectID",
+    description: "所属的项目信息"
+  }];
+  string notifyTemplateID = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "notifyTemplateID",
+    description: "通知模版ID"
+  }];
+}
+
+message DeleteNotifyTemplateResponse {
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+  string message = 2[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "result",
+    description : "返回结果"
+  }];
+  WebAnnotationsV2 web_annotations = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "web_annotations",
+    description : "用户所属项目权限"
+  }];
+}
+
+message ListNotifyTemplateRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListNotifyTemplateRequest"
+      description : "查询通知模板请求，如果填写了目标字段，则组合目标信息查询，如果全为空则为查询全量信息",
+      required: ["projectID"]
+    }
+  };
+
+  string projectID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectID",
+    description: "项目ID"
+  }];
+  string notifyTemplateID = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "notifyTemplateID",
+    description: "通知模版ID"
+  }];
+}
+
+message ListNotifyTemplateResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListNotifyTemplateResponse"
+      description : "查询通知模板返回"
+      required : [ "code", "message" ]
+    }
+  };
+
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  bool result = 3 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+  repeated NotifyTemplate data = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "通知模板列表"
   }];
 }

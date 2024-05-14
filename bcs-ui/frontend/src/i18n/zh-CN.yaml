@@ -2,6 +2,7 @@ bcs:
   title: 容器管理平台 | 腾讯蓝鲸智云
   name: 容器管理平台
   newVersion: '有版本更新, 是否刷新界面'
+  preVersion: 返回旧版
   TKEx:
     title: TKEx-IEG 容器平台
     welcome: 欢迎使用 TKEx-IEG 容器平台
@@ -20,8 +21,7 @@ bcs:
     federation: 联邦集群
     kubeConfig: kubeConfig导入
     cloud: 云凭证导入
-    publicIcon: 共享
-    privateIcon: 专用
+    platform: 平台创建
   msg:
     emptyHostResource: 您在当前业务下没有主机资源，请联系业务运维
     notDevOps: 您不是当前项目绑定业务的运维人员，请联系业务运维人员
@@ -89,13 +89,17 @@ k8s:
     partition: 分区滚动更新
     podManagementPolicy: Pod 管理策略
   containerNetwork: 容器网络分配
+  deploy:
+    readyTips: >-
+      Pod实例Ready需要具备以下两个条件<br/>1. Pod中所有容器都已就绪<br/>2. Readiness Gates中所有状况都为
+      True 值
 nav:
   dashboard: 资源视图
   namespace: 命名空间
   workload: 工作负载
   configuration: 配置
   storage: 存储
-  customResource: 自定义资源
+  tkexCRD: 游戏场景CRD
   cluster: 集群管理
   clusterList: 集群列表
   nodeList: 节点列表
@@ -184,6 +188,7 @@ units:
     'false': 否
   cores: '{0} 核'
 metrics:
+  usage: '使用率 {0}'
   cpuUsage: CPU使用率
   diskUsage: 磁盘使用率
   memUsage: 内存使用率
@@ -272,6 +277,8 @@ generic:
     command: 多个命令用空格分隔，例如/bin/bash &quot;-c&quot
     searchIp: '输入IP搜索, 多个IP用逗号或空格隔开'
   button:
+    resetSearch: 调整筛选条件
+    validate: 校验
     confirm: 确定
     confirm1: 确认
     cancel: 取消
@@ -322,6 +329,9 @@ generic:
     create: 创建
     submit: 提交
     reload: 立即刷新
+    copyAll: 复制全部
+    retry: 重试
+    skip: 跳过
   label:
     key: 键
     value: 值
@@ -371,7 +381,9 @@ generic:
     start: 开始
     stop: 停止
     basicConfig: 基本配置
+    abnormal: 异常
   status:
+    part_failure: 部分失败
     support: 支持
     unSupport: 不支持
     ready: 正常
@@ -406,12 +418,14 @@ generic:
     taskNotEnable: 未启动
     restarting: 重启中
     pending: 处理中
+    skip: 已跳过
   validate:
     name: 仅支持字母，数字和字符(-)，且以字母开头
     repeatKey: 重复键
     required: 必填项
     labelValueEmpty: 标签值不能为空
     labelKey: 仅支持字母，数字和字符(-_./)
+    annotations: 仅支持字母，数字，空格和字符(-_./)
     label: 标签必须由字母数字字符、连字符、下划线或点组成
     required1: taints不能有空字段
     annotationValueEmpty: 注解值不能为空
@@ -419,8 +433,9 @@ generic:
     kindName: 名称只能包含数字、字母、中划线(-)、下划线(_)、点(.)，开头结尾必须是数字或字母
     fileName: 文件名称只能包含数字、字母、中划线(-)、下划线(_)、点(.)，开头结尾必须是数字或字母
     notRootName: 用户名不能为root
-    cidr: CIDR格式不正确
-    cidrConflict: CIDR冲突
+    cidr: CIDR格式错误，请重新输入，如：10.0.0.0/8
+    cidrConflict: 'CIDR与 {cidr} 冲突，请重新输入'
+    fieldRequired: '{0} 必填'
   title:
     createPublicCluster: 新建公有云集群
     curVersion: 当前版本
@@ -508,12 +523,12 @@ cluster:
     emptyCluster: 暂无集群
     emptyClusterGuide: 推荐使用共享集群。如有需要也可添加新的集群
   title:
-    retryCreate: 确认重新创建集群
-    confirmDelete: 确认删除集群
     clusterInfo: 集群信息
     clusterConfig: 集群配置
     operationRecord: 操作记录
     setClusterVar: 设置变量
+    skipTask: 确认跳过当前步骤
+    retryTask: 确认重试任务
   button:
     useSharedCluster: 使用共享集群
     addCluster: 添加集群
@@ -529,13 +544,12 @@ cluster:
       article4: 删除导入集群不会对集群有任何操作
       article5: 删除导入集群后蓝鲸容器管理平台会丧失对该集群的管理能力
       article6: 删除导入集群不会清理集群上的任何资源，删除集群后请视情况手工清理
-      article7: 请确认已清理该集群下的所有应用与节点
       article8: 集群删除后服务器如不再使用请尽快回收，避免产生不必要的成本
   tips:
     highMetricData: 集群指标过载
     createK8SCluster: 新建 K8S 原生集群
-    clusterStatus: '集群状态: {0}'
   labels:
+    hideSharedCluster: 隐藏共享集群
     nameAndId: 集群名称/ID
     name: 集群名称
     status: 集群状态
@@ -563,8 +577,10 @@ cluster:
   status:
     unknown: 未知集群状态
     importFailed: 导入失败
+    connectFailed: 连接失败
   validate:
     exitNodes: 集群下存在节点，无法删除
+    maxNumberOfDeletion: 单次删除最大数量为100
   create:
     title:
       newCluster: 新建集群
@@ -589,7 +605,7 @@ cluster:
       cloudProvider:
         title: 公有云集群
         subTitle: 实现多云集群统一管理，降低业务管理成本
-        desc: 目前支持腾讯云、亚马逊云、谷歌云、微软云四种云服务商集群创建
+        desc: 目前支持腾讯云、亚马逊云、谷歌云、微软云、华为云五种云服务商集群创建
     label:
       system: 操作系统
       containerRuntime: 运行时组件
@@ -665,9 +681,9 @@ cluster:
         maxNodePodNum:
           text: 单节点Pod数量上限
           desc: 单节点Pod数量上限一旦分配后将无法调整，请谨慎评估后再填写
+        article3: 集群可添加节点数（包含Master节点与Node节点）= (IP数量 - Service的数量) / 单节点Pod数量上限
         article1: '容器网络资源有限，请合理分配，当前容器网络配置下，集群最多可以添加 {count} 个节点'
         article2: '当容器网络资源超额使用时，会触发容器网络自动扩容，扩容后集群最多可以添加 {count} 个节点'
-        article3: 集群可添加节点数（包含Master节点与Node节点）= (IP数量 - Service的数量) / 单节点Pod数量上限
       networkMode:
         text: 网络模式
         overlay:
@@ -737,7 +753,7 @@ cluster:
       putAwayConfig: 收起更多设置
       createCloudToken: 新增凭证
       fileImport: 文件导入
-      textKubeConfig: kubeconfig可用性测试
+      textKubeConfig: 可用性测试
   detail:
     title:
       overview: 集群总览
@@ -789,9 +805,9 @@ cluster:
         placeholder: 请选择业务 CMDB topo 模块
     unreadyConfig:
       title: 扩缩容暂停配置
-      path: 'NotReady节点数大于 {0} 个且超过集群总节点数 {1} 时暂停自动扩缩容'
       desc: >-
         自动扩缩容保护机制，如果NotReady节点数量或比例过大，自动扩容上来的节点也有可能会是NotReady状态，导致业务成本增加，当NotReady节点数不符合暂停触发条件时自动恢复自动扩缩容
+      path: 扩缩容暂停配置路径
     autoScalerConfig:
       title: 自动扩容配置
       expander:
@@ -806,7 +822,7 @@ cluster:
         desc: '集群整体内存资源(Request)使用率超过该阈值触发扩容, 无论CPU资源使用率是否达到阈值'
       bufferResourceRatio:
         title: 触发扩容资源阈值 (Pods)
-        desc: '集群整体内存资源Pod数量使用率超过该阈值触发扩容, 无论CPU / 内存资源使用率是否达到阈值'
+        desc: '集群资源Pod数量使用率超过该阈值触发扩容, 无论CPU / 内存资源使用率是否达到阈值'
       maxNodeProvisionTime:
         title: 等待节点提供最长时间
         desc: 如果节点池在设置的时间范围内没有提供可用资源，会导致此次自动扩容失败
@@ -873,6 +889,7 @@ cluster:
         'off': 关闭节点池
         'on': 启用节点池
         edit: 编辑节点池
+        clone: 克隆节点池
         delete:
           text: 删除节点池
           title: '确定删除节点池 {name} '
@@ -904,6 +921,7 @@ cluster:
               unit: '￥{price}元/小时起'
           validate:
             dataDisks: '范围: 50~16380, 步长: 10'
+            systemDisk: '范围: 50~1000, 步长: 10'
             repeatPath: 目录不能重复
             maxDataDisks: 最多4个数据盘
           button:
@@ -922,6 +940,12 @@ cluster:
             hssd: 增强型SSD云硬盘
             balanced: 平衡性磁盘
             standard: 标准磁盘
+            Standard_LRS: 标准 HDD
+            StandardSSD_LRS: 标准 SSD
+            StandardSSD_ZRS: 标准 SSD_ZRS
+            Premium_LRS: 高级 SSD
+            PremiumV2_LRS: 高级 SSD v2
+            Premium_ZRS: 高级 SSD_ZRS
           disk:
             system: 系统盘
             data: 数据盘
@@ -1145,10 +1169,9 @@ cluster:
         meaning: 含义
   nodeList:
     article1: 集群就绪后，您可以创建命名空间、推送项目镜像到仓库，然后通过服务配置模板集部署服务。
-    article2: >-
-      当前集群已添加节点数（含Master） {nodes}，还可添加节点数
-      {realRemainNodesCount}，当容器网络资源超额使用时，会触发容器网络自动扩容，扩容后最多可以添加
-      {maxRemainNodesCount} 个节点。
+    article2: '当前集群已添加节点数（含Master） {nodes}，还可添加节点数 {realRemainNodesCount}。'
+    article3: '当容器网络资源超额使用时，会触发容器网络自动扩容，扩容后最多可以添加 {maxRemainNodesCount} 个节点。'
+    article4: 容器网络网段数量已达到最大限制，如需继续扩容容器网络，请联系容器平台管理员。
     button:
       selectPage: 本页全选
       selectAcrossPage: 跨页全选
@@ -1164,9 +1187,6 @@ cluster:
       cancelSelectAll: 取消选择所有数据
       delete:
         subTitle: '确认是否删除 {ip} 等 {num} 个节点'
-        article1: 当前节点上正在运行的容器会被调度到其它可用节点
-        article2: 清理容器服务系统组件
-        article3: 节点删除后服务器如不再使用请尽快回收，避免产生不必要的成本
     msg:
       labelDesc: 标签有助于整理你的资源
       selectedData: '已选择 {num} 条数据'
@@ -1999,14 +2019,7 @@ plugin:
     DBInfo: DB信息
     confirmDelete: 确定要删除
     input:
-      biz: 请输入业务名称
-      dbAddress: 请输入DB访问地址
-      user: 请输入账号
-      dbName: 请输入DB名称
-      label: 请输入标签
       values: 请填写Values 内容
-    labelIndexRegex: '第{index}组标签的值不符合正则表达式^(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?$'
-    labelRegex: '标签值不符合正则表达式^(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?$'
     content: 内容
     confirmUpgradeTips: Values 内容发生如下变化，请确认后再点击“确定”更新
     confirmUpgrade: 确认更新
@@ -2070,8 +2083,6 @@ plugin:
     filePath: 请输入文件路径
     success: 规则创建成功
     upgraded: 规则更新成功
-    polarisNS: Polaris命名空间
-    polarisSvcName: Polaris服务名
     cluster_ns: 集群/命名空间
     polarisInfo: Polaris信息
     syncStatus: 同步状态
@@ -2084,17 +2095,9 @@ plugin:
     pod: 是否直连Pod
     nodePort: NodePort模式不勾选
     weight: 权重
-    rule: 请输入规则名
-    ruleRegex: 规则名必须小于等于63字符
     ruleCharacterCriteria: '规则名以字母数字字符（[a-z0-9A-Z]）开头和结尾， 带有破折号（-），下划线（_），点（ .）和之间的字母数字'
-    enterPolarisInfoName: 请输入Polaris信息名
     polarisInfoNameCriteria: 'Polaris信息名只允许数字、英文字母、.、-、_, 限制128个字符'
-    selectPolarisNamespace: 请选择Polaris命名空间
-    inputSvcName: 请输入关联Sercice服务名
-    portInt: 请输入关联Sercice的端口(整数类型)
-    portNoNegative: 关联Sercice的端口不能为负数
-    weightInt: 请输入关联Sercice的权重(整数类型)
-    weightNoNegative: 关联Sercice的权重不能为负数
+    ipPortAndWeight: 'IP:端口 权重'
 projects:
   cloudToken:
     add: 新建凭证
@@ -2150,11 +2153,10 @@ dashboard:
     confirmDelete: 确认删除当前资源
     overview: 总览
     confirmSchedule: '确认{action}当前资源下所有Pod'
+  button:
+    createResource: 创建资源
   placeholder:
-    selectCRD: 选择CRD
     search1: 搜索名称
-    search2: 输入名称、创建人搜索
-    search3: 输入名称、创建人、IP搜索
   label:
     formMode: 表单模式
     yamlMode: YAML模式
@@ -2178,7 +2180,6 @@ dashboard:
       emptyNs: 请选择命名空间
       name: 命名空间名称只能包含小写字母、数字以及连字符(-)，连字符（-）后面必须接英文或者数字
       sharedClusterNs: '命名规则：{prefix}自定义名称'
-      sharedQuota: 共享集群需设置MEN、CPU配额，且两者最小值不小于0
       setMinMaxMemCpu: 请设置MEN、CPU配额，且两者最小值不小于0
     status:
       waitingApproval: 待审批
@@ -2311,9 +2312,23 @@ logCollector:
   text: 日志采集
   tips:
     oldRuleHasNewRule: '已生成新规则: <br/> {0}<br/>此规则自动清理期限:<br/>{1}'
+    bizPrivateCluster: 业务独享集群
+    privateData: 敏感数据
+    greaterThan100GB: 大于 100GB
+    exceed14d: 超过 14 天
+    storageCluster:
+      text: '容器日志数据默认使用公共集群；有以下情况的建议使用{0}'
+      p1: '容器日志数据内容包含{0}，数据存储需做物理隔离'
+      p2: '容器日志数据量每天{0}'
+      p3: '容器日志数据存储有效期需{0}'
+    volumeOfClusterIsExcessivelyHigh: 此集群日志量过大，建议及时切换为业务独享集群
+    volumeOfPrivateClusterIsExcessivelyHigh: 此集群存储使用率已超过80%，建议扩容或清理集群存储空间
+    disabledEdit: 禁止修改
+    name: '数据名称关联索引和数据源名称，在采集项后{0}'
   placeholder:
     search: 规则名称/命名空间/更新人
     workloadName: '请输入应用名称, 支持正则表达式'
+    multiLabel: '多个值用英文半角逗号(,)分割'
   validate:
     name: '仅支持英文, 数字和下划线, 且长度5~30字符'
     logPath: 仅支持绝对路径
@@ -2324,6 +2339,7 @@ logCollector:
     notEnable: 当前集群日志采集组件未启用
     notEnable1: 当前集群日志采集组件未启用，请联系集群管理员处理
     installFailed: 当前集群日志采集组件安装失败
+    canNotEditBkLogRule: 从日志平台创建的规则暂不支持编辑
     success:
       create: 创建任务提交成功
       update: 修改任务提交成功
@@ -2336,10 +2352,19 @@ logCollector:
     confirmEnable: '确定启用规则 {0}'
     confirmStop: '确定停用规则 {0}'
     confirmDelete: '确定删除规则 {0}'
+    confirmSwitchStorageCluster: 确定切换 ES 存储集群
     selectRange:
       text: 选择容器范围
       desc: 所有选择范围可相互叠加并作用，如果选择所有命名空间，至少添加一种范围
   label:
+    logType:
+      text: 日志类型
+      line: 行日志文件
+      multiline: 段日志文件
+    beginOfLineRegex: 行首正则
+    multilineMaxLineAndTimeout: '最多匹配 {0} 行, 最大耗时 {1} 秒'
+    displayName: 采集项名称
+    name: 数据名称
     newChartVersion: 最新版本号
     newChartDesc: 最新版本描述
     extraLabels: 附加日志标签
@@ -2380,9 +2405,11 @@ logCollector:
         index: '第 {0} 列'
       none: 不过滤
     addPodLabel: 是否自动添加 Pod 中的 labels
+    esStorages: ES 存储集群
   status:
     pending: 下发中
     failed: 下发失败
+    delete: 已删除
   action:
     enable: 启用
     stop: 停用
@@ -2397,6 +2424,7 @@ logCollector:
     queryFileLog: 查询文件日志
     queryStdLog: 查询标准输出日志
     addPodLabel: 自动添加 Pod 中的 labels
+    goBKLog: 去管理业务独享集群
     addRange:
       text: 添加范围
       label:
@@ -2404,6 +2432,50 @@ logCollector:
         tips: 如果添加多个标签，只会采集Pod上同时存在多个标签的容器日志
       workload: 按工作负载选择
       container: 按容器名选择
+view:
+  labels:
+    creator: 创建人
+    allNs: 全部命名空间
+    clusterAndNs: 集群/命名空间
+    saveAs: 另存为
+    name: 视图名称
+    all: 全部
+    resourceName: 资源名称
+    viewDataRange: 视图数据范围
+    editView: 编辑视图
+    newView: 新建视图
+    custom: 自定义
+  button:
+    addField: 添加条件
+    addQueryField: 添加查询条件
+    query: 查询
+    saveAsView: 另存为视图
+    moreResource: 更多资源
+    addCluster: 添加集群
+    edit: 编辑
+    clone: 克隆
+    delete: 删除
+    reset: 重置条件
+    confirmAndChangeView: 保存并进入新视图
+    clusterView: 集群视图
+    customView: 自定义视图
+    addCustomView: 添加自定义视图
+  tips:
+    selectMultiCluster: 批量选择集群
+    confirmDelete: 确定删除视图
+    sharedClusterDoNotSupportTheKind: 共享集群不支持创建该资源
+    editMode: 视图结果预览
+    invalidate: 部分条件已失效，请重新选择
+  placeholder:
+    searchCluster: 搜索集群名称
+    creator: 请输入创建人
+    resourceName: 请输入资源名称
+    searchView: 搜索视图
+    searchNameOrCreator: 搜索资源名称/创建人
+    searchNameOrCreatorOrIP: 搜索资源名称/创建人/IP
+    searchResourceKind: 搜索资源类型
+  status:
+    saveAs: 另存成功
 manualNode:
   title:
     source:
@@ -2436,6 +2508,8 @@ ca:
     bandwidthPackage: 带宽包
     button:
       createBandWidth: 新建带宽包
+  tips:
+    requiredBandwidthPackage: 带宽包必填
 googleCloud:
   button:
     create: 新建凭证
@@ -2476,6 +2550,7 @@ importGoogleCloud:
     region: 所属区域
     clusterID: 云集群 ID
     desc: 集群描述
+    nodemanArea: 管控区域
   button:
     test: 连通性测试
     import: 导入
@@ -2483,6 +2558,69 @@ importGoogleCloud:
   clusterRegion:
     zones: 可用区级集群
     regions: 区域级集群
+azureCloud:
+  button:
+    create: 新建凭证
+    delete: 删除凭证
+  placeholder:
+    search: 搜索ID/名称/SubscriptionID/tenantID/ClientID/集群
+  tips:
+    nameRegex: 仅支持英文、数字和字符(-)
+    secretRegex: 仅支持英文、数字和字符(-或~)
+  label:
+    loginUser: 登录用户
+    create: 新建凭证
+    cluster: 关联集群
+    clusterType: 集群类型
+    managed: 托管集群
+    aksDesc: Kubernetes 集群的 Master 和 Etcd 会由 AKS 团队集中管理和维护，集群管理员不需要关心集群 Master的管理和维护。
+importAzureCloud:
+  title: 导入公有云集群 - 微软云
+  label:
+    clusterName: 集群名称
+    token: 云凭证
+    resourceGroups: 资源组
+    region: 所属区域
+    clusterID: 云集群 ID
+    nodemanArea: 管控区域
+    desc: 集群描述
+  button:
+    test: 连通性测试
+    import: 导入
+  clusterRegion:
+    zones: 可用区级集群
+    regions: 区域级集群
+    other: 其他
+huaweiCloud:
+  button:
+    create: 新建凭证
+    delete: 删除凭证
+  placeholder:
+    search: 搜索名称/SecretID/集群ID
+  tips:
+    nameRegex: 仅支持英文、数字和字符(-)
+  label:
+    clusterType: 集群类型
+    managed: 托管集群
+    aksDesc: Kubernetes 集群的 Master 和 Etcd 会由 AKS 团队集中管理和维护，集群管理员不需要关心集群 Master的管理和维护。
+    cluster: 关联集群
+    create: 新建凭证
+importHuaweiCloud:
+  title: 导入公有云集群 - 华为云
+  label:
+    clusterName: 集群名称
+    token: 云凭证
+    region: 所属区域
+    clusterID: 云集群 ID
+    nodemanArea: 管控区域
+    desc: 集群描述
+  button:
+    test: 连通性测试
+    import: 导入
+  clusterRegion:
+    zones: 可用区级集群
+    regions: 区域级集群
+    other: 其他
 googleCA:
   tips:
     zone: 目前只支持单可用区
@@ -2494,6 +2632,20 @@ googleCA:
     securityGroup: '节点池使用 VPC 防火墙规则控制节点实例的出/入流量，请前往{0}页面设置'
   button:
     vpcRule: VPC 防火墙规则
+azureCA:
+  tips:
+    zone: 目前只支持单可用区
+    system: >-
+      因为操作系统“包含 Containerd 的 Container-Optimized OS (cos_containerd)
+      （默认）”有诸多限制，蓝鲸组件依赖这些被限制的功能，目前只支持操作系统“包含 Containerd 的 Ubuntu
+      (ubuntu_containerd)”
+    dataDisk: 购买数据盘后添加节点后需要手工格式化与挂载磁盘
+    securityGroup: '节点池使用 VPC 防火墙规则控制节点实例的出/入流量，请前往{0}页面设置'
+  button:
+    vpcRule: VPC 防火墙规则
+  password:
+    set: 设置密码
+    confirm: 确认密码
 regions:
   asia: 亚洲
   australia: 澳洲
@@ -2524,6 +2676,12 @@ publicCloud:
       Azure Kubernetes Service (AKS)
       内置代码到云端管道以及护栏，能够帮助开发人员以最快速的方式开始开发和部署云原生应用。在本地、边缘和多云 Kubernetes
       集群试试统一的管理和治理。提供与 Azure 安全、身份、成本管理和迁移服务的互操作性。
+  huawei:
+    title: 华为云
+    desc: >-
+      Huawei Kubernetes Service
+      (HKS)允许用户在华为云平台上部署、管理和扩展容器化应用程序，无需对底层的计算资源进行复杂配置,
+      能够帮助开发者利用Kubernetes生态系统的强大功能，同时享受华为云提供的安全、可靠和高性能的基础设施。
 updateRecord:
   placeholder:
     search: 搜索 镜像/更新人
@@ -2557,10 +2715,10 @@ tke:
       qGPU: qGPU 共享场景
       privateImage: 自定义镜像说明
   label:
+    retain: 销毁节点
+    ipAndPort: IP端口
+    clusterAvailableNodes: 集群支持添加节点数量
     recommended: 推荐
-    serviceIpNum: Service IP数量
-    podIpNum: Pod IP数量
-    podCidr: Pod 网段
     tencentCloud: 腾讯云
     account: 云凭证
     project:
@@ -2580,9 +2738,9 @@ tke:
         用于蓝鲸容器管理平台连接集群APIServer，根据实际网络情况选择公网访问与内网访问，蓝鲸平台所在网络与被添加集群所在网络内网可连通优先选择内网访问，否则需要选择外网访问，选择不正确会导致添加集群失败
       internet: 公网访问
       intranet: 内网访问
-    port: 端口
     securityGroup:
       text: 安全组
+      defaultSecurityGroupTips: 云梯默认安全组已对自研云网段配置好安全规则，无需用户再额外配置；业务如有特殊安全规则配置可创建自定义安全组，结合云梯默认安全组使用
       desc: >-
         用于控制访问被添加集群APIServer的白名单IP，安全组入站规则必须放通蓝鲸平台所在网络出口IP地址的TCP:443端口，否则会导致添加集群失败
     masterModule:
@@ -2598,8 +2756,8 @@ tke:
     publicKey: 指定公钥
     secretKey: 指定私钥
     nodeModule:
-      text: Node 节点转移模板
-      desc: 将 Node 节点从蓝鲸配置平台的空闲机模块转移至指定的业务模块
+      text: 节点转移模块
+      desc: 将节点从蓝鲸配置平台的空闲机模块转移至指定的业务模块
     region: 地域
     system: 操作系统
     configRec: 配置推荐
@@ -2633,6 +2791,9 @@ tke:
         bandwidth_prepaid: 按带宽计费
       maxBandWidth: 购买宽带
   title:
+    installGseAgentFailed:
+      text: 安装 GSE Agent 失败
+      reason: 安装 GSE Agent 失败，可能是管控区域问题，请重新选择管控区域。
     connectFailure:
       text: 集群创建成功，但连接集群 APIServer 失败
       reason: 连接集群 APIServer 失败，一般是 CLB 安全组配置与网络连通性问题。
@@ -2642,6 +2803,10 @@ tke:
     modifyNodeConfig: 修改配置
     addSubnets: 添加子网
     noAvailableSubnets: 暂无可用子网，请前往腾讯云控制台创建子网，如使用VPC-CNI网络插件，子网可用区需与VPC-CNI网络插件的Pod IP可用区子网保持一致
+    confirmUpdateNodeCMDBModule: 确认修改Worker节点所在CMDB模块
+    confirmUpdateNodeCMDBModuleSubTitle: '确认将所有Worker节点转移至 {0}'
+    confirmUpdateMasterCMDBModule: 确认修改控制面节点所在CMDB模块
+    confirmUpdateMasterCMDBModuleSubTitle: '确认将所有控制面节点转移至 {0}'
   button:
     chargeTypeDiff: 模式对比
     addNodeConfig: 添加配置
@@ -2661,10 +2826,14 @@ tke:
     cmdb: 管理配置平台
     package: 管理带宽包
   validate:
+    cidrMaskLen: '子网掩码长度范围 {0}'
+    minPodIP: Pod IP需要大于 0
+    podIPsNeedLessThanVpcIPs: Pod IP总数要小于私有网络IP数量
     passwordNotSame: 两次输入的密码不一致
     minIpNum: '为保证集群有足够IP, 容器网段不能低于 {0} 个IP'
     supportCidrList: '仅支持 {0} 之间网段'
     minIpNum2: '容器网段不能少于 {0} 个 IP, 请重新输入'
+    formErr: 表单填写有误，请修改
   configRec:
     l100:
       text: 节点数1~100
@@ -2679,6 +2848,14 @@ tke:
       text: 自定义配置
       desc: 修改下方任意配置数据，即切换为自定义配置
   tips:
+    transferNodeCMDBModule: 将所有 Worker 节点服务器转移至指定配置平台（CMDB）模块
+    transferMasterCMDBModule: 将所有控制面节点服务器转移至指定配置平台（CMDB）模块
+    subnetNum: '可用子网数量: {0}'
+    maxNodeNum: '单次添加节点数量不可超过 {0}'
+    nodeNum: '已配置 {0} 个节点'
+    clusterAvailableNodes: 支持添加节点数量 (包含控制面节点) = Pod IP数量 / 单节点Pod数量上限
+    needSameResourceType: 控制面配置步骤必须与添加节点步骤资源提供方式保持一致(腾讯云TKE功能限制)
+    hasSelected: 已选择
     zone: 'VPC-CNI网络插件的Pod IP没有使用此可用区, 请选择其他可用区'
     imageUsedInCluster: 有集群正在使用
     subnetZone: VPC-CNI网络插件的Pod IP绑定在集群节点上，Pod IP可用区必须与集群节点(包含控制面与Node节点)可用区保持一致
@@ -2692,8 +2869,11 @@ tke:
     notSupport: 暂不支持
     supportCidr: '腾讯云支持私有网络范围: '
     ipCannotBeAdjustedWhenCreated: '{0} IP数量一旦分配后将无法调整, 请谨慎评估后填写'
+    ipCannotBeAdjustedWhenCreated2: '{0} 一旦分配后将无法调整, 请谨慎评估后填写'
     podIpCalcFormula: Pod IP数量 = 容器网段数量 - Service IP数量
     vpcCniPodIp: Pod IP从私有网络的主/辅网段自动分配
+    prepaidOfCA: '包年包月计费模式不适用于节点弹性扩缩容场景, 如果您准备手动调整节点池的节点数量，请忽略提示'
+    prepaidOfEnableCA: 包年包月计费模式适合节点长期使用，不适用开启节点弹性扩缩容，如需开启扩缩容，建议计费模式选择按量计费
     staticIpMode:
       p1: 此选项只支持在集群创建时开启，集群创建后无法修改，请谨慎操作。
       p2: '此选项适用于依赖容器固定IP的场景, 对IP无限制的业务不推荐您使用固定IP模式, 详情请参考 {0}'
@@ -2712,3 +2892,11 @@ tkeCa:
       self: 自建资源池
 provider:
   tencentPublicCloud: 腾讯云公有云
+container:
+  label:
+    restartCnt: 重启次数
+    startedAt: 启动时间
+    lastState: 最后一次退出状态
+    finishedAt: 退出时间
+    exitCode: 退出码
+    reason: 原因

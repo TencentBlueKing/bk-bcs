@@ -44,6 +44,13 @@ spec:
                 type: string
               bizToken:
                 type: string
+              conflictHandle:
+                default: AUTO_MERGE
+                description: 冲突时处理， AUTO_MERGE时，尝试自动合并；LOCAL_FIRST优先采用本地配置
+                enum:
+                - AUTO_MERGE
+                - LOCAL_FIRST
+                type: string
               dashBoardEnhance:
                 description: DashBoardEnhance 监控面板增强能力
                 properties:
@@ -192,6 +199,21 @@ spec:
               override:
                 description: 是否覆盖同名配置，默认为false
                 type: boolean
+              repoRef:
+                description: if set, import Repo from argo
+                properties:
+                  password:
+                    type: string
+                  targetRevision:
+                    type: string
+                  url:
+                    type: string
+                  userName:
+                    description: no used
+                    type: string
+                required:
+                - url
+                type: object
               ruleEnhance:
                 description: RuleEnhance 告警规则增强能力
                 properties:

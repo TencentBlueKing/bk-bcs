@@ -14,8 +14,8 @@
 package pbapp
 
 import (
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
-	pbbase "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	pbbase "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
 )
 
 // AppSpec convert pb AppSpec to table AppSpec
@@ -27,9 +27,7 @@ func (m *AppSpec) AppSpec() *table.AppSpec {
 	return &table.AppSpec{
 		Name:       m.Name,
 		ConfigType: table.ConfigType(m.ConfigType),
-		Mode:       table.AppMode(m.Mode),
 		Memo:       m.Memo,
-		Reload:     m.Reload.Reload(),
 		Alias:      m.Alias,
 		DataType:   table.DataType(m.DataType),
 	}
@@ -44,57 +42,9 @@ func PbAppSpec(spec *table.AppSpec) *AppSpec { //nolint:revive
 	return &AppSpec{
 		Name:       spec.Name,
 		ConfigType: string(spec.ConfigType),
-		Mode:       string(spec.Mode),
 		Memo:       spec.Memo,
-		Reload:     PbReload(spec.Reload),
 		Alias:      spec.Alias,
 		DataType:   string(spec.DataType),
-	}
-}
-
-// Reload convert pb Reload to table Reload
-func (r *Reload) Reload() *table.Reload {
-	if r == nil {
-		return nil
-	}
-
-	return &table.Reload{
-		ReloadType:     table.AppReloadType(r.ReloadType),
-		FileReloadSpec: r.FileReloadSpec.FileReloadSpec(),
-	}
-}
-
-// PbReload convert table Reload to pb Reload
-func PbReload(spec *table.Reload) *Reload {
-	if spec == nil {
-		return nil
-	}
-
-	return &Reload{
-		ReloadType:     string(spec.ReloadType),
-		FileReloadSpec: PbFileReloadSpec(spec.FileReloadSpec),
-	}
-}
-
-// FileReloadSpec convert pb FileReloadSpec to table FileReloadSpec
-func (f *FileReloadSpec) FileReloadSpec() *table.FileReloadSpec {
-	if f == nil {
-		return nil
-	}
-
-	return &table.FileReloadSpec{
-		ReloadFilePath: f.ReloadFilePath,
-	}
-}
-
-// PbFileReloadSpec convert table FileReloadSpec to pb FileReloadSpec
-func PbFileReloadSpec(spec *table.FileReloadSpec) *FileReloadSpec {
-	if spec == nil {
-		return nil
-	}
-
-	return &FileReloadSpec{
-		ReloadFilePath: spec.ReloadFilePath,
 	}
 }
 

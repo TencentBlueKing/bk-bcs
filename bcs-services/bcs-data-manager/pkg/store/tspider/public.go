@@ -17,11 +17,12 @@ import (
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/utils"
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/jmoiron/sqlx"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/structpb"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/utils"
 )
 
 // Public public store for tspider db
@@ -62,7 +63,7 @@ func (p *Public) QueryxToStructpb(builder sq.SelectBuilder) ([]*structpb.Struct,
 	return response, nil
 }
 
-// QueryxToStruct query data and return struct
+// QueryxToAny query data and return struct
 func (p *Public) QueryxToAny(builder sq.SelectBuilder) ([]*any.Any, error) {
 	sql, args, err := builder.ToSql()
 	if err != nil {
@@ -101,7 +102,7 @@ func (p *Public) QueryxToAny(builder sq.SelectBuilder) ([]*any.Any, error) {
 	return response, nil
 }
 
-// QueryxToAny query data and return map[string]interface{}
+// QueryxToMap query data and return map[string]interface{}
 func (p *Public) QueryxToMap(builder sq.SelectBuilder) ([]map[string]interface{}, error) {
 	sql, args, err := builder.ToSql()
 	if err != nil {

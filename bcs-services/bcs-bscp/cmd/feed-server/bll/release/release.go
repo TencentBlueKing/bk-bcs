@@ -19,18 +19,19 @@ import (
 
 	"golang.org/x/time/rate"
 
-	clientset "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/client-set"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/eventc"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/lcache"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/types"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/repository"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	pbcommit "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/commit"
-	pbci "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/config-item"
-	pbcontent "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/content"
-	pbhook "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/hook"
-	pbkv "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/kv"
+	clientset "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/client-set"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/eventc"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/lcache"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/types"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/repository"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	pbbase "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
+	pbcommit "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/commit"
+	pbci "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/config-item"
+	pbcontent "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/content"
+	pbhook "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/hook"
+	pbkv "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/kv"
 )
 
 // New initialize the release service instance.
@@ -89,6 +90,9 @@ func (rs *ReleasedService) ListAppLatestReleaseMeta(kt *kit.Kit, opts *types.App
 			Root: uriDec.Root(),
 		},
 	}
+	if len(rci) > 0 {
+		meta.ReleaseName = rci[0].ReleaseName
+	}
 	if pre != nil {
 		meta.PreHook = &pbhook.HookSpec{
 			Type:    pre.Type.String(),
@@ -111,6 +115,7 @@ func (rs *ReleasedService) ListAppLatestReleaseMeta(kt *kit.Kit, opts *types.App
 				Content: &pbcontent.ContentSpec{
 					Signature: one.CommitSpec.Signature,
 					ByteSize:  one.CommitSpec.ByteSize,
+					Md5:       one.CommitSpec.Md5,
 				},
 			},
 			ConfigItemSpec: &pbci.ConfigItemSpec{
@@ -125,8 +130,14 @@ func (rs *ReleasedService) ListAppLatestReleaseMeta(kt *kit.Kit, opts *types.App
 				},
 			},
 			ConfigItemAttachment: &pbci.ConfigItemAttachment{
-				BizId: one.Attachment.AppID,
+				BizId: one.Attachment.BizID,
 				AppId: one.Attachment.AppID,
+			},
+			ConfigItemRevision: &pbbase.Revision{
+				Creator:  one.Revision.Creator,
+				Reviser:  one.Revision.Reviser,
+				CreateAt: one.Revision.CreatedAt.Format(time.RFC3339),
+				UpdateAt: one.Revision.UpdatedAt.Format(time.RFC3339),
 			},
 			RepositorySpec: &types.RepositorySpec{Path: uriDec.Path(one.CommitSpec.Signature)},
 		}
@@ -158,13 +169,20 @@ func (rs *ReleasedService) ListAppLatestReleaseKvMeta(kt *kit.Kit, opts *types.A
 	for idx, one := range rkv {
 
 		kvList[idx] = &types.ReleasedKvMeta{
-			Key: one.Key,
+			Key:    one.Key,
+			KvType: one.KvType,
+			Revision: &pbbase.Revision{
+				Creator:  one.Revision.Creator,
+				Reviser:  one.Revision.Reviser,
+				CreateAt: one.Revision.CreatedAt.Format(time.RFC3339),
+				UpdateAt: one.Revision.UpdatedAt.Format(time.RFC3339),
+			},
 			KvAttachment: &pbkv.KvAttachment{
 				BizId: one.Attachment.BizID,
 				AppId: one.Attachment.AppID,
 			},
+			ContentSpec: pbcontent.PbContentSpec(one.ContentSpec),
 		}
-
 	}
 	meta.Kvs = kvList
 

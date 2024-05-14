@@ -31,6 +31,7 @@ rules:
       - leases
       - configmaps
       - events
+      - secrets
     verbs:
       - create
       - delete
@@ -40,7 +41,19 @@ rules:
       - update
       - watch
       - deletecollection
-
+  - apiGroups:
+      - "coordination.k8s.io"
+    resources:
+      - leases
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+      - deletecollection
 ---
 apiVersion: v1
 kind: ServiceAccount

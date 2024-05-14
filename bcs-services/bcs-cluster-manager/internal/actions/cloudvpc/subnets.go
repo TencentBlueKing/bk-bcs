@@ -123,7 +123,7 @@ func (la *ListSubnetsAction) ListCloudSubnets() error {
 
 	// region zone info
 	zoneMap := make(map[string]string, 0)
-	zoneList, err := nodeMgr.GetZoneList(cmOption)
+	zoneList, err := nodeMgr.GetZoneList(&cloudprovider.GetZoneListOption{CommonOption: *cmOption})
 	if err != nil {
 		return err
 	}
@@ -132,7 +132,10 @@ func (la *ListSubnetsAction) ListCloudSubnets() error {
 	}
 
 	// get subnet list
-	subnets, err := vpcMgr.ListSubnets(la.req.VpcID, la.req.Zone, cmOption)
+	subnets, err := vpcMgr.ListSubnets(la.req.VpcID, la.req.Zone, &cloudprovider.ListNetworksOption{
+		CommonOption:      *cmOption,
+		ResourceGroupName: la.req.ResourceGroupName,
+	})
 	if err != nil {
 		return err
 	}

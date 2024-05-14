@@ -1,4 +1,3 @@
-
 // 空间详情
 export interface ISpaceDetail {
   permission?: boolean;
@@ -25,18 +24,19 @@ export interface ICommonQuery {
   search_value?: string;
   ids?: string;
   with_status?: boolean;
-  kv_type?: string[]
-  order?: string
-  sort?: string
+  kv_type?: string[];
+  order?: string;
+  sort?: string;
+  status?: string[];
 }
 
 // 权限查询参数单个资源条目
 export interface IPermissionQueryResourceItem {
-  biz_id: number|string;
+  biz_id: number | string;
   basic: {
     type: string;
     action: string;
-    resource_id?: number|string;
+    resource_id?: number | string;
   };
 }
 

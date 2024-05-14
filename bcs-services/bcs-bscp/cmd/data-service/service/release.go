@@ -21,19 +21,20 @@ import (
 	pbstruct "github.com/golang/protobuf/ptypes/struct"
 	"gorm.io/gorm"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
-	pbbase "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
-	pbci "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/config-item"
-	pbkv "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/kv"
-	pbrelease "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/release"
-	pbrkv "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/released-kv"
-	pbtv "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/template-variable"
-	pbds "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbbase "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
+	pbci "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/config-item"
+	pbcontent "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/content"
+	pbkv "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/kv"
+	pbrelease "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/release"
+	pbrkv "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/released-kv"
+	pbtv "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/template-variable"
+	pbds "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // CreateRelease create release.
@@ -214,6 +215,7 @@ func (s *Service) doConfigItemOperations(kt *kit.Kit, variables []*pbtv.Template
 	// get rendered content map which is template revision id => rendered content
 	renderedContentMap := make(map[uint32][]byte, len(tmplRevisions))
 	signatureMap := make(map[uint32]string, len(tmplRevisions))
+	md5Map := make(map[uint32]string, len(tmplRevisions))
 	byteSizeMap := make(map[uint32]uint64, len(tmplRevisions))
 	revisionMap := make(map[uint32]*table.TemplateRevision, len(tmplRevisions))
 	// data which need render
@@ -221,6 +223,7 @@ func (s *Service) doConfigItemOperations(kt *kit.Kit, variables []*pbtv.Template
 		revisionMap[r.ID] = r
 		renderedContentMap[r.ID] = s.tmplProc.Render(contents[idx], renderKV)
 		signatureMap[r.ID] = tools.ByteSHA256(renderedContentMap[r.ID])
+		md5Map[r.ID] = tools.ByteMD5(renderedContentMap[r.ID])
 		byteSizeMap[r.ID] = uint64(len(renderedContentMap[r.ID]))
 	}
 	// data which doesn't need render
@@ -230,12 +233,14 @@ func (s *Service) doConfigItemOperations(kt *kit.Kit, variables []*pbtv.Template
 		}
 		revisionMap[r.ID] = r
 		signatureMap[r.ID] = r.Spec.ContentSpec.Signature
+		md5Map[r.ID] = r.Spec.ContentSpec.Md5
 		byteSizeMap[r.ID] = r.Spec.ContentSpec.ByteSize
 	}
 
 	// get rendered content map which is config item id => rendered content
 	ciRenderedContentMap := make(map[uint32][]byte, len(cis))
 	ciSignatureMap := make(map[uint32]string, len(cis))
+	ciMd5Map := make(map[uint32]string, len(cis))
 	ciByteSizeMap := make(map[uint32]uint64, len(cis))
 	ciMap := make(map[uint32]*pbci.ConfigItem, len(cis))
 	// data which need render
@@ -243,6 +248,7 @@ func (s *Service) doConfigItemOperations(kt *kit.Kit, variables []*pbtv.Template
 		ciMap[ci.Id] = ci
 		ciRenderedContentMap[ci.Id] = s.tmplProc.Render(ciContents[idx], renderKV)
 		ciSignatureMap[ci.Id] = tools.ByteSHA256(ciRenderedContentMap[ci.Id])
+		ciMd5Map[ci.Id] = tools.ByteMD5(ciRenderedContentMap[ci.Id])
 		ciByteSizeMap[ci.Id] = uint64(len(ciRenderedContentMap[ci.Id]))
 	}
 	// data which doesn't need render
@@ -251,6 +257,7 @@ func (s *Service) doConfigItemOperations(kt *kit.Kit, variables []*pbtv.Template
 			continue
 		}
 		ciMap[ci.Id] = ci
+		ciMd5Map[ci.Id] = ci.CommitSpec.Content.Md5
 		ciSignatureMap[ci.Id] = ci.CommitSpec.Content.Signature
 		ciByteSizeMap[ci.Id] = ci.CommitSpec.Content.ByteSize
 	}
@@ -267,13 +274,13 @@ func (s *Service) doConfigItemOperations(kt *kit.Kit, variables []*pbtv.Template
 	}
 
 	if e := s.createReleasedRenderedTemplateCIs(kt, tx, releaseID, tmplRevisions, renderedContentMap, byteSizeMap,
-		signatureMap); e != nil {
+		signatureMap, md5Map); e != nil {
 		logs.Errorf("create released rendered template config items failed, err: %v, rid: %s", e, kt.Rid)
 		return e
 	}
 
 	if err = s.createReleasedRenderedCIs(kt, tx, releaseID, cis, ciRenderedContentMap, ciByteSizeMap,
-		ciSignatureMap); err != nil {
+		ciSignatureMap, ciMd5Map); err != nil {
 		if rErr := tx.Rollback(); rErr != nil {
 			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
 		}
@@ -281,7 +288,8 @@ func (s *Service) doConfigItemOperations(kt *kit.Kit, variables []*pbtv.Template
 		return err
 	}
 
-	if e := s.createReleasedAppTemplates(kt, tx, releaseID, renderedContentMap, byteSizeMap, signatureMap); e != nil {
+	if e := s.createReleasedAppTemplates(kt, tx, releaseID, renderedContentMap, byteSizeMap, signatureMap,
+		md5Map); e != nil {
 		logs.Errorf("create released rendered template config items failed, err: %v, rid: %s", e, kt.Rid)
 		return e
 	}
@@ -339,7 +347,7 @@ func (s *Service) getRenderedVars(kt *kit.Kit, allVars []string, inputVarMap map
 // createReleasedRenderedTemplateCIs create released rendered templates config items.
 func (s *Service) createReleasedRenderedTemplateCIs(kt *kit.Kit, tx *gen.QueryTx, releaseID uint32,
 	tmplRevisions []*table.TemplateRevision, renderedContentMap map[uint32][]byte, byteSizeMap map[uint32]uint64,
-	signatureMap map[uint32]string) error {
+	signatureMap map[uint32]string, md5Map map[uint32]string) error {
 	releasedCIs := make([]*table.ReleasedConfigItem, len(tmplRevisions))
 	for idx, r := range tmplRevisions {
 		creator := r.Revision.Creator
@@ -358,6 +366,7 @@ func (s *Service) createReleasedRenderedTemplateCIs(kt *kit.Kit, tx *gen.QueryTx
 				ContentID: 0,
 				Content: &table.ReleasedContentSpec{
 					Signature:       signatureMap[r.ID],
+					Md5:             md5Map[r.ID],
 					ByteSize:        byteSizeMap[r.ID],
 					OriginSignature: r.Spec.ContentSpec.Signature,
 					OriginByteSize:  r.Spec.ContentSpec.ByteSize,
@@ -394,7 +403,8 @@ func (s *Service) createReleasedRenderedTemplateCIs(kt *kit.Kit, tx *gen.QueryTx
 
 // createReleasedRenderedCIs create released rendered config items
 func (s *Service) createReleasedRenderedCIs(kt *kit.Kit, tx *gen.QueryTx, releaseID uint32, cis []*pbci.ConfigItem,
-	ciRenderedContentMap map[uint32][]byte, byteSizeMap map[uint32]uint64, signatureMap map[uint32]string) error {
+	ciRenderedContentMap map[uint32][]byte, byteSizeMap map[uint32]uint64, signatureMap map[uint32]string,
+	md5Map map[uint32]string) error {
 	releasedCIs := make([]*table.ReleasedConfigItem, 0)
 	if len(cis) == 0 {
 		return nil
@@ -435,6 +445,7 @@ func (s *Service) createReleasedRenderedCIs(kt *kit.Kit, tx *gen.QueryTx, releas
 					ByteSize:        byteSizeMap[ci.Id],
 					OriginSignature: ci.CommitSpec.Content.Signature,
 					OriginByteSize:  ci.CommitSpec.Content.ByteSize,
+					Md5:             md5Map[ci.Id],
 				},
 				Memo: commit.Spec.Memo,
 			},
@@ -478,7 +489,8 @@ func (s *Service) createReleasedRenderedCIs(kt *kit.Kit, tx *gen.QueryTx, releas
 
 // createReleasedAppTemplates create released app templates.
 func (s *Service) createReleasedAppTemplates(kt *kit.Kit, tx *gen.QueryTx, releaseID uint32,
-	renderedContentMap map[uint32][]byte, byteSizeMap map[uint32]uint64, signatureMap map[uint32]string) error {
+	renderedContentMap map[uint32][]byte, byteSizeMap map[uint32]uint64, signatureMap map[uint32]string,
+	md5Map map[uint32]string) error {
 	revisionsResp, err := s.ListAppBoundTmplRevisions(kt.Ctx, &pbds.ListAppBoundTmplRevisionsReq{
 		BizId: kt.BizID,
 		AppId: kt.AppID,
@@ -529,6 +541,7 @@ func (s *Service) createReleasedAppTemplates(kt *kit.Kit, tx *gen.QueryTx, relea
 				ByteSize:             byteSizeMap[r.TemplateRevisionId],
 				OriginSignature:      r.Signature,
 				OriginByteSize:       r.ByteSize,
+				Md5:                  md5Map[r.TemplateRevisionId],
 			},
 			Attachment: &table.ReleasedAppTemplateAttachment{
 				BizID: kt.BizID,
@@ -677,10 +690,8 @@ func (s *Service) ListReleases(ctx context.Context, req *pbds.ListReleasesReq) (
 				}
 			}
 		}
-		release.Status = &pbrelease.ReleaseStatus{
-			PublishStatus:  status,
-			ReleasedGroups: releasedGroups,
-		}
+		release.Status.PublishStatus = status
+		release.Status.ReleasedGroups = releasedGroups
 	}
 
 	resp := &pbds.ListReleasesResp{
@@ -701,6 +712,86 @@ func (s *Service) GetReleaseByName(ctx context.Context, req *pbds.GetReleaseByNa
 	}
 
 	return pbrelease.PbRelease(release), nil
+}
+
+// GetRelease get release
+func (s *Service) GetRelease(ctx context.Context, req *pbds.GetReleaseReq) (*pbrelease.Release, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	release, err := s.dao.Release().Get(grpcKit, req.GetBizId(), req.GetAppId(), req.GetReleaseId())
+	if err != nil {
+		logs.Errorf("get release failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, fmt.Errorf("query release %d failed", req.GetReleaseId())
+	}
+
+	return pbrelease.PbRelease(release), nil
+}
+
+// DeprecateRelease deprecate a release
+func (s *Service) DeprecateRelease(ctx context.Context, req *pbds.DeprecateReleaseReq) (*pbbase.EmptyResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	// check if release was published
+	rgs, err := s.dao.ReleasedGroup().ListAllByReleaseID(grpcKit, req.ReleaseId, req.BizId)
+	if err != nil {
+		return nil, err
+	}
+	if len(rgs) > 0 {
+		return nil, fmt.Errorf("release %d was published, can not deprecate", req.ReleaseId)
+	}
+	err = s.dao.Release().UpdateDeprecated(grpcKit, req.BizId, req.AppId, req.ReleaseId, true)
+	return new(pbbase.EmptyResp), err
+}
+
+// UnDeprecateRelease undeprecate a release
+func (s *Service) UnDeprecateRelease(ctx context.Context, req *pbds.UnDeprecateReleaseReq) (*pbbase.EmptyResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	err := s.dao.Release().UpdateDeprecated(grpcKit, req.BizId, req.AppId, req.ReleaseId, false)
+	return new(pbbase.EmptyResp), err
+}
+
+// DeleteRelease delete a release
+func (s *Service) DeleteRelease(ctx context.Context, req *pbds.DeleteReleaseReq) (*pbbase.EmptyResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	release, err := s.dao.Release().Get(grpcKit, req.BizId, req.AppId, req.ReleaseId)
+	if err != nil {
+		return nil, err
+	}
+	if !release.Spec.Deprecated {
+		return nil, fmt.Errorf("release %d can not delete, you should deprecate it first", req.ReleaseId)
+	}
+
+	// get app type
+	app, err := s.dao.App().Get(grpcKit, req.BizId, req.AppId)
+	if err != nil {
+		return nil, err
+	}
+
+	tx := s.dao.GenQuery().Begin()
+
+	if err := s.deleteReleaseRelatedResources(grpcKit, tx, req.BizId, req.AppId, req.ReleaseId, app); err != nil {
+		logs.Errorf("delete release related resources failed, err: %v, rid: %s", err, grpcKit.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
+		}
+		return nil, err
+	}
+
+	if err := s.dao.Release().DeleteWithTx(grpcKit, tx, req.BizId, req.AppId, req.ReleaseId); err != nil {
+		logs.Errorf("delete release failed, err: %v, rid: %s", err, grpcKit.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
+		}
+		return nil, err
+	}
+
+	if err := tx.Commit(); err != nil {
+		logs.Errorf("commit transaction failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+	return new(pbbase.EmptyResp), nil
 }
 
 func (s *Service) queryPublishStatus(gcrs []*table.ReleasedGroup, releaseID uint32) (
@@ -771,7 +862,6 @@ func (s *Service) genCreateKv(kt *kit.Kit, bizID, appID uint32) ([]*pbkv.Kv, err
 		string(table.KvStateAdd),
 		string(table.KvStateRevise),
 		string(table.KvStateUnchange),
-		string(table.KvStateDelete),
 	}
 	details, err := s.dao.Kv().ListAllByAppID(kt, appID, bizID, kvState)
 	if err != nil {
@@ -788,9 +878,10 @@ func (s *Service) genCreateKv(kt *kit.Kit, bizID, appID uint32) ([]*pbkv.Kv, err
 			return nil, err
 		}
 		kvs = append(kvs, &pbkv.Kv{
-			Spec:       pbkv.PbKvSpec(detail.Spec, value),
-			Attachment: pbkv.PbKvAttachment(detail.Attachment),
-			Revision:   pbbase.PbRevision(detail.Revision),
+			Spec:        pbkv.PbKvSpec(detail.Spec, value),
+			Attachment:  pbkv.PbKvAttachment(detail.Attachment),
+			Revision:    pbbase.PbRevision(detail.Revision),
+			ContentSpec: pbcontent.PbContentSpec(detail.ContentSpec),
 		})
 	}
 
@@ -853,5 +944,34 @@ func (s *Service) cleanUpKV(kt *kit.Kit, tx *gen.QueryTx, bizID, appID uint32) e
 		return e
 	}
 
+	return nil
+}
+
+func (s *Service) deleteReleaseRelatedResources(grpcKit *kit.Kit, tx *gen.QueryTx, bizID, appID, releaseID uint32,
+	app *table.App) error {
+	switch app.Spec.ConfigType {
+	case table.File:
+		if err := s.dao.ReleasedAppTemplate().BatchDeleteByReleaseIDWithTx(grpcKit, tx,
+			bizID, appID, releaseID); err != nil {
+			return err
+		}
+		if err := s.dao.ReleasedAppTemplateVariable().BatchDeleteByReleaseIDWithTx(grpcKit, tx,
+			bizID, appID, releaseID); err != nil {
+			return err
+		}
+		if err := s.dao.ReleasedHook().BatchDeleteByReleaseIDWithTx(grpcKit, tx,
+			bizID, appID, releaseID); err != nil {
+			return err
+		}
+		if err := s.dao.ReleasedCI().BatchDeleteByReleaseIDWithTx(grpcKit, tx,
+			bizID, appID, releaseID); err != nil {
+			return err
+		}
+	case table.KV:
+		if err := s.dao.ReleasedKv().BatchDeleteByReleaseIDWithTx(grpcKit, tx,
+			bizID, appID, releaseID); err != nil {
+			return err
+		}
+	}
 	return nil
 }

@@ -25,10 +25,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/service"
+	"github.com/go-micro/plugins/v4/sync/etcd"
 	"github.com/google/uuid"
-	"github.com/micro/go-micro/v2/sync"
-	"github.com/micro/go-micro/v2/sync/etcd"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"go-micro.dev/v4/sync"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/app"
 	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/utils"
@@ -68,7 +68,7 @@ func becomeLeader(cxt context.Context, opt *app.ServerOptions) sync.Leader {
 	)
 	id := uuid.New().String()
 	blog.Infof("Node %s waiting to become a leader...", id)
-	leader, err := synch.Leader(id, sync.LeaderContext(cxt))
+	leader, err := synch.Leader(id)
 	if err != nil {
 		fmt.Printf("create etcd leader election failed: %s, service exit.\n", err.Error())
 		os.Exit(-1)

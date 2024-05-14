@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -19,13 +19,13 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	vpc "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/vpc/v20170312"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cidrtree"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-
-	vpc "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/vpc/v20170312"
 )
 
 // GetVpcCIDRBlocks 获取vpc所属的cidr段
@@ -94,18 +94,21 @@ func GetAllocatedSubnetsByVpc(opt *cloudprovider.CommonOption, vpcId string) ([]
 	return ret, nil
 }
 
-// GetFreeIPNets return free globalrouter subnets
+// GetFreeIPNets return free subnets
 func GetFreeIPNets(opt *cloudprovider.CommonOption, vpcId string) ([]*net.IPNet, error) {
+	// 获取vpc cidr blocks
 	allBlocks, err := GetVpcCIDRBlocks(opt, vpcId, 0)
 	if err != nil {
 		return nil, err
 	}
 
+	// 获取vpc 已使用子网列表
 	allSubnets, err := GetAllocatedSubnetsByVpc(opt, vpcId)
 	if err != nil {
 		return nil, err
 	}
 
+	// 空闲IP列表
 	return cidrtree.GetFreeIPNets(allBlocks, allSubnets), nil
 }
 
@@ -164,7 +167,7 @@ func AllocateClusterVpcCniSubnets(ctx context.Context, clusterId, vpcId string,
 	subnetIDs := make([]string, 0)
 
 	for i := range subnets {
-		mask := 0
+		mask := 0 // nolint
 		if subnets[i].Mask > 0 {
 			mask = int(subnets[i].Mask)
 		} else if subnets[i].IpCnt > 0 {
@@ -209,10 +212,37 @@ func CheckConflictFromVpc(opt *cloudprovider.CommonOption, vpcId, cidr string) (
 
 	conflictCidrs := make([]string, 0)
 	for i := range ipNets {
-		if cidrtree.CidrContains(ipNets[i], c) {
+		if cidrtree.CidrContains(ipNets[i], c) || cidrtree.CidrContains(c, ipNets[i]) {
 			conflictCidrs = append(conflictCidrs, ipNets[i].String())
 		}
 	}
 
 	return conflictCidrs, nil
+}
+
+// GetZoneAvailableSubnetsByVpc 获取vpc下某个地域下每个可用区的可用子网
+func GetZoneAvailableSubnetsByVpc(opt *cloudprovider.CommonOption, vpcId string) (map[string]uint32, error) {
+	vpcCli, err := api.NewVPCClient(opt)
+	if err != nil {
+		return nil, err
+	}
+
+	filter := make([]*api.Filter, 0)
+	filter = append(filter, &api.Filter{Name: "vpc-id", Values: []string{vpcId}})
+	subnets, err := vpcCli.DescribeSubnets(nil, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	var (
+		availableSubnets = make(map[string]uint32, 0)
+	)
+	for i := range subnets {
+		// subnet is available when default subnet available ipNum eq 10
+		if *subnets[i].AvailableIPAddressCount >= 10 {
+			availableSubnets[*subnets[i].Zone]++
+		}
+	}
+
+	return availableSubnets, nil
 }

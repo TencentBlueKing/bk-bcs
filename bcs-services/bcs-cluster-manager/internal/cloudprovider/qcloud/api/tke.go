@@ -198,7 +198,7 @@ func (cli *TkeClient) DeleteTKECluster(clusterID string, deleteMode DeleteMode) 
 
 	// default deleteMode
 	if deleteMode == "" {
-		deleteMode = Terminate
+		deleteMode = Retain
 	}
 
 	// create cluster request
@@ -447,7 +447,7 @@ func (cli *TkeClient) DescribeInstanceCreateProgress(clusterId, instanceId strin
 	}
 
 	if resp == nil || resp.Response == nil {
-		return "", fmt.Errorf("response emtpy")
+		return "", fmt.Errorf("response empty")
 	}
 
 	var (
@@ -1125,6 +1125,9 @@ func (cli *TkeClient) DescribeExternalNodeScript(clusterID string,
 	}
 	if len(config.Name) > 0 {
 		req.Name = common.StringPtr(config.Name)
+	}
+	if config.Internal {
+		req.Internal = common.BoolPtr(true)
 	}
 
 	resp, err := cli.tkeCommon.DescribeExternalNodeScript(req)

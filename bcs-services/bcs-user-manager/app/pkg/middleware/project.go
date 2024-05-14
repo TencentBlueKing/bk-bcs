@@ -30,7 +30,7 @@ func ProjectFilter(request *restful.Request, response *restful.Response, chain *
 		chain.ProcessFilter(request, response)
 		return
 	}
-	project, err := component.GetProject(request.Request.Context(), projectParam)
+	project, err := component.GetProjectWithCache(request.Request.Context(), projectParam)
 	if err != nil {
 		blog.Log(request.Request.Context()).Errorf("get project %s failed, err %s", projectParam, err.Error())
 		utils.ResponseParamsError(response, fmt.Errorf("project %s not found", projectParam))

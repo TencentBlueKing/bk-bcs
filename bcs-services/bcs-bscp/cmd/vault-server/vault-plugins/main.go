@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/vault/api"
 	"github.com/hashicorp/vault/sdk/plugin"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/vault-server/vault-plugins/service"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/vault-server/vault-plugins/service"
 )
 
 func main() {

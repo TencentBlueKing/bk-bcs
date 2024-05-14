@@ -20,19 +20,20 @@ import (
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
-	pbapp "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/app"
-	pbbase "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
-	pbds "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/thirdparty/esb/cmdb"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/version"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/i18n"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbapp "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/app"
+	pbbase "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
+	pbds "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/thirdparty/esb/cmdb"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/version"
 )
 
 // CreateApp create application.
@@ -171,18 +172,18 @@ func (s *Service) DeleteApp(ctx context.Context, req *pbds.DeleteAppReq) (*pbbas
 
 	tx := s.dao.GenQuery().Begin()
 
-	// 1. delete app
-	if err := s.dao.App().DeleteWithTx(grpcKit, tx, app); err != nil {
-		logs.Errorf("delete app failed, err: %v, rid: %s", err, grpcKit.Rid)
+	// 1. delete app related resources
+	if err := s.deleteAppRelatedResources(grpcKit, req, tx); err != nil {
+		logs.Errorf("delete app related resources failed, err: %v, rid: %s", err, grpcKit.Rid)
 		if rErr := tx.Rollback(); rErr != nil {
 			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
 		}
 		return nil, err
 	}
 
-	// 2. delete app related resources
-	if err := s.deleteAppRelatedResources(grpcKit, req, tx); err != nil {
-		logs.Errorf("delete app related resources failed, err: %v, rid: %s", err, grpcKit.Rid)
+	// 2. delete app
+	if err := s.dao.App().DeleteWithTx(grpcKit, tx, app); err != nil {
+		logs.Errorf("delete app failed, err: %v, rid: %s", err, grpcKit.Rid)
 		if rErr := tx.Rollback(); rErr != nil {
 			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
 		}
@@ -240,6 +241,48 @@ func (s *Service) deleteAppRelatedResources(grpcKit *kit.Kit, req *pbds.DeleteAp
 		return err
 	}
 
+	// delete related credential scopes and update credentials
+	if err := s.updateRelatedCredentials(grpcKit, tx, req.Id, req.BizId); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// updateRelatedCredentials delete related credential scopes and update credentials to emit event.
+func (s *Service) updateRelatedCredentials(grpcKit *kit.Kit, tx *gen.QueryTx, appID, bizID uint32) error {
+	app, err := s.dao.App().Get(grpcKit, bizID, appID)
+	if err != nil {
+		logs.Errorf("get app failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return err
+	}
+	matchedScopeIDs := make([]uint32, 0)
+	matchedCredentialIDs := make([]uint32, 0)
+	// delete related credential scopes
+	scopes, err := s.dao.CredentialScope().ListAll(grpcKit, bizID)
+	if err != nil {
+		return err
+	}
+	for _, scope := range scopes {
+		appName, _, _ := scope.Spec.CredentialScope.Split()
+		if appName == app.Spec.Name {
+			matchedScopeIDs = append(matchedScopeIDs, scope.ID)
+			matchedCredentialIDs = append(matchedCredentialIDs, scope.Attachment.CredentialId)
+		}
+	}
+	if e := s.dao.CredentialScope().BatchDeleteWithTx(grpcKit, tx, bizID, matchedScopeIDs); e != nil {
+		logs.Errorf("delete credential scopes failed, err: %v, rid: %s", e, grpcKit.Rid)
+		return e
+	}
+	// update credentials
+	matchedCredentialIDs = tools.RemoveDuplicates(matchedCredentialIDs)
+	for _, credentialID := range matchedCredentialIDs {
+		if e := s.dao.Credential().UpdateRevisionWithTx(grpcKit, tx, bizID, credentialID); e != nil {
+			logs.Errorf("update credential revision failed, err: %v, rid: %s", e, grpcKit.Rid)
+			return e
+		}
+	}
+
 	return nil
 }
 
@@ -264,7 +307,7 @@ func (s *Service) GetAppByID(ctx context.Context, req *pbds.GetAppByIDReq) (*pba
 	if err != nil {
 		logs.Errorf("get app by id failed, err: %v, rid: %s", err, grpcKit.Rid)
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errf.Errorf(grpcKit, errf.AppNotExists, "app %d not found", req.AppId)
+			return nil, errf.Errorf(errf.AppNotExists, i18n.T(grpcKit, "app %d not found", req.AppId))
 		}
 		return nil, errors.Wrapf(err, "query app by id %d", req.GetAppId())
 	}
@@ -298,6 +341,7 @@ func (s *Service) ListAppsRest(ctx context.Context, req *pbds.ListAppsRestReq) (
 	opt := &types.BasePage{
 		Start: req.Start,
 		Limit: limit,
+		All:   req.All,
 	}
 	if err := opt.Validate(types.DefaultPageOption); err != nil {
 		return nil, err

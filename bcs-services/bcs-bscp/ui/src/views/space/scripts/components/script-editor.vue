@@ -6,12 +6,20 @@
           <slot name="header"></slot>
         </div>
         <div class="actions">
+          <span
+            v-bk-tooltips="{
+              content: t('内置变量'),
+              placement: 'top',
+              distance: 20,
+            }"
+            :class="['bk-bscp-icon', 'icon-variable', { 'show-var': isShowVariable }]"
+            @click="emits('update:isShowVariable',!isShowVariable)"></span>
           <ReadFileContent
             v-if="props.uploadIcon"
             v-bk-tooltips="{
-              content: '上传',
+              content: t('上传'),
               placement: 'top',
-              distance: 20
+              distance: 20,
             }"
             class="action-icon"
             @completed="handleFileReadComplete" />
@@ -19,18 +27,18 @@
             v-if="!isOpenFullScreen"
             class="action-icon"
             v-bk-tooltips="{
-              content: '全屏',
+              content: t('全屏'),
               placement: 'top',
-              distance: 20
+              distance: 20,
             }"
             @click="handleOpenFullScreen" />
           <UnfullScreen
             v-else
             class="action-icon"
             v-bk-tooltips="{
-              content: '退出全屏',
+              content: t('退出全屏'),
               placement: 'bottom',
-              distance: 20
+              distance: 20,
             }"
             @click="handleCloseFullScreen" />
         </div>
@@ -43,56 +51,63 @@
           :editable="props.editable"
           :language="props.language"
           @change="emits('update:modelValue', $event)" />
+        <slot name="sufContent" :fullscreen="isOpenFullScreen" :is-show-variable="isShowVariable"></slot>
       </div>
     </div>
   </Teleport>
 </template>
 <script setup lang="ts">
-import { ref } from 'vue';
-import { FilliscreenLine, UnfullScreen } from 'bkui-vue/lib/icon';
-import BkMessage from 'bkui-vue/lib/message';
-import ReadFileContent from '../../service/detail/config/components/read-file-content.vue';
-import CodeEditor from '../../../../components/code-editor/index.vue';
+  import { ref } from 'vue';
+  import { useI18n } from 'vue-i18n';
+  import { FilliscreenLine, UnfullScreen } from 'bkui-vue/lib/icon';
+  import BkMessage from 'bkui-vue/lib/message';
+  import ReadFileContent from '../../service/detail/config/components/read-file-content.vue';
+  import CodeEditor from '../../../../components/code-editor/index.vue';
 
-const props = withDefaults(defineProps<{
-    modelValue: string;
-    language?: string;
-    editable?: boolean;
-    uploadIcon?: boolean;
-  }>(), {
-  editable: true,
-  uploadIcon: true,
-});
+  const { t } = useI18n();
 
-const emits = defineEmits(['update:modelValue']);
+  const props = withDefaults(
+    defineProps<{
+      modelValue: string;
+      isShowVariable?: boolean;
+      language?: string;
+      editable?: boolean;
+      uploadIcon?: boolean;
+    }>(),
+    {
+      editable: true,
+      uploadIcon: true,
+    },
+  );
 
-const isOpenFullScreen = ref(false);
+  const emits = defineEmits(['update:modelValue', 'update:isShowVariable']);
 
-const handleFileReadComplete = (content: string) => {
-  emits('update:modelValue', content);
-};
-// 打开全屏
-const handleOpenFullScreen = () => {
-  isOpenFullScreen.value = true;
-  window.addEventListener('keydown', handleEscClose, { once: true });
-  BkMessage({
-    theme: 'primary',
-    message: '按 Esc 即可退出全屏模式',
-  });
-};
+  const isOpenFullScreen = ref(false);
 
-const handleCloseFullScreen = () => {
-  isOpenFullScreen.value = false;
-  window.removeEventListener('keydown', handleEscClose);
-};
+  const handleFileReadComplete = (content: string) => {
+    emits('update:modelValue', content);
+  };
+  // 打开全屏
+  const handleOpenFullScreen = () => {
+    isOpenFullScreen.value = true;
+    window.addEventListener('keydown', handleEscClose, { once: true });
+    BkMessage({
+      theme: 'primary',
+      message: t('按 Esc 即可退出全屏模式'),
+    });
+  };
 
-// Esc按键事件处理
-const handleEscClose = (event: KeyboardEvent) => {
-  if (event.code === 'Escape') {
+  const handleCloseFullScreen = () => {
     isOpenFullScreen.value = false;
-  }
-};
+    window.removeEventListener('keydown', handleEscClose);
+  };
 
+  // Esc按键事件处理
+  const handleEscClose = (event: KeyboardEvent) => {
+    if (event.code === 'Escape') {
+      isOpenFullScreen.value = false;
+    }
+  };
 </script>
 <style lang="scss" scoped>
   .script-editor {
@@ -117,11 +132,15 @@ const handleEscClose = (event: KeyboardEvent) => {
     .head-title {
       flex: 1;
     }
-    .action-icon {
-      color: #979ba5;
-      cursor: pointer;
-      &:hover {
-        color: #3a84ff;
+    .actions {
+      display: flex;
+      align-items: center;
+      .action-icon {
+        color: #979ba5;
+        cursor: pointer;
+        &:hover {
+          color: #3a84ff;
+        }
       }
     }
   }
@@ -130,5 +149,21 @@ const handleEscClose = (event: KeyboardEvent) => {
   }
   .pre-content {
     height: 100%;
+  }
+  .bk-bscp-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    width: 24px;
+    height: 24px;
+    margin-right: 10px;
+    color: #979ba5;
+    cursor: pointer;
+  }
+  .show-var {
+    background: #000000;
+    border-radius: 2px;
+    color: #bdbfc5;
   }
 </style>

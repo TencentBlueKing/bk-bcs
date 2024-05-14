@@ -13,20 +13,22 @@
 package types
 
 import (
+	"fmt"
+	"path"
+	"strings"
 	"time"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/selector"
+	"github.com/samber/lo"
+
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/selector"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
 // AppCacheMeta defines app's basic meta info
 type AppCacheMeta struct {
 	Name       string           `json:"name"`
 	ConfigType table.ConfigType `json:"cft"`
-	// the current effected strategy set's type under this app.
-	// only one strategy set is effected at one time.
-	Mode   table.AppMode `json:"mod"`
-	Reload *table.Reload `json:"reload"`
 }
 
 // ReleasedGroupCache is the released group info which will be stored in cache.
@@ -56,19 +58,25 @@ type EventMeta struct {
 type ReleaseCICache struct {
 	ID             uint32                      `json:"id"`
 	ReleaseID      uint32                      `json:"reid"`
+	ReleaseName    string                      `json:"release_name"`
 	CommitID       uint32                      `json:"cid"`
 	CommitSpec     *CommitSpecCache            `json:"cspec"`
 	ConfigItemID   uint32                      `json:"config_item_id"`
 	ConfigItemSpec *ConfigItemSpecCache        `json:"ispec"`
 	Attachment     *table.ConfigItemAttachment `json:"am"`
+	Revision       *table.Revision             `json:"revision"`
 }
 
 // ReleaseKvCache is the release kv info which will be stored in cache.
 type ReleaseKvCache struct {
-	ID         uint32              `json:"id"`
-	ReleaseID  uint32              `json:"reid"`
-	Key        string              `json:"key"`
-	Attachment *table.KvAttachment `json:"am"`
+	ID          uint32              `json:"id"`
+	ReleaseID   uint32              `json:"reid"`
+	Key         string              `json:"key"`
+	Memo        string              `json:"memo"`
+	KvType      string              `json:"kv_type"`
+	Revision    *table.Revision     `json:"revision"`
+	Attachment  *table.KvAttachment `json:"am"`
+	ContentSpec *table.ContentSpec  `json:"content_spec"`
 }
 
 // ReleasedHooksCache is the released hooks info which will be stored in cache.
@@ -92,6 +100,7 @@ type CommitSpecCache struct {
 	ContentID uint32 `json:"id"`
 	Signature string `json:"sign"`
 	ByteSize  uint64 `json:"size"`
+	Md5       string `json:"md5"`
 }
 
 // ConfigItemSpecCache cache struct.
@@ -119,24 +128,99 @@ type FilePermissionCache struct {
 
 // CredentialCache cache struct.
 type CredentialCache struct {
-	Enabled bool     `json:"enabled"`
-	Scope   []string `json:"scope"`
+	Enabled      bool     `json:"enabled"`
+	Scope        []string `json:"scope"`
+	scopeMap     map[string][]string
+	isPreprocess bool
+}
+
+// preprocess 预处理数据结构, 格式化为app:scope, 方便鉴权处理
+func (c *CredentialCache) preprocess() {
+	if c.isPreprocess {
+		return
+	}
+
+	c.scopeMap = map[string][]string{}
+	for _, v := range c.Scope {
+		index := strings.Index(v, "/")
+		if index == -1 {
+			panic(fmt.Errorf("invalid scope %s", v))
+		}
+
+		app := v[:index]
+		scope := v[index+1:]
+		_, ok := c.scopeMap[app]
+		if !ok {
+			c.scopeMap[app] = []string{scope}
+		} else {
+			c.scopeMap[app] = append(c.scopeMap[app], scope)
+		}
+	}
+
+	c.isPreprocess = true
+}
+
+// MatchApp 是否匹配 App
+func (c *CredentialCache) MatchApp(app string) bool {
+	c.preprocess()
+
+	_, ok := c.scopeMap[app]
+	return ok
+}
+
+// MatchKv 是否匹配kv
+func (c *CredentialCache) MatchKv(app, key string) bool {
+	scopes, ok := c.scopeMap[app]
+	if !ok {
+		return false
+	}
+
+	for _, v := range scopes {
+		ok, err := path.Match(v, key)
+		if err != nil {
+			return false
+		}
+		if ok {
+			return true
+		}
+	}
+
+	return false
+}
+
+// MatchConfigItem 是否匹配配置文件
+func (c *CredentialCache) MatchConfigItem(app, path, name string) bool {
+	scopes, ok := c.scopeMap[app]
+	if !ok {
+		return false
+	}
+
+	for _, scope := range scopes {
+		ok, _ := tools.MatchConfigItem(scope, path, name)
+		if ok {
+			return true
+		}
+	}
+
+	return false
 }
 
 // ReleaseCICaches convert ReleasedConfigItem to ReleaseCICache.
-func ReleaseCICaches(rs []*table.ReleasedConfigItem) []*ReleaseCICache {
+func ReleaseCICaches(rs []*table.ReleasedConfigItem, releaseName string) []*ReleaseCICache {
 	list := make([]*ReleaseCICache, len(rs))
 
 	for index, one := range rs {
 		list[index] = &ReleaseCICache{
 			ID:           one.ID,
 			ReleaseID:    one.ReleaseID,
+			ReleaseName:  releaseName,
 			CommitID:     one.CommitID,
 			ConfigItemID: one.ConfigItemID,
 			CommitSpec: &CommitSpecCache{
 				ContentID: one.CommitSpec.ContentID,
 				Signature: one.CommitSpec.Content.Signature,
 				ByteSize:  one.CommitSpec.Content.ByteSize,
+				Md5:       one.CommitSpec.Content.Md5,
 			},
 			ConfigItemSpec: &ConfigItemSpecCache{
 				Name:     one.ConfigItemSpec.Name,
@@ -149,10 +233,8 @@ func ReleaseCICaches(rs []*table.ReleasedConfigItem) []*ReleaseCICache {
 					Privilege: one.ConfigItemSpec.Permission.Privilege,
 				},
 			},
-			Attachment: &table.ConfigItemAttachment{
-				BizID: one.Attachment.BizID,
-				AppID: one.Attachment.AppID,
-			},
+			Attachment: one.Attachment,
+			Revision:   one.Revision,
 		}
 	}
 
@@ -161,19 +243,19 @@ func ReleaseCICaches(rs []*table.ReleasedConfigItem) []*ReleaseCICache {
 
 // ReleaseKvCaches convert ReleasedConfigItem to ReleaseKvCache.
 func ReleaseKvCaches(rs []*table.ReleasedKv) []*ReleaseKvCache {
-	list := make([]*ReleaseKvCache, len(rs))
-
-	for index, one := range rs {
-		list[index] = &ReleaseKvCache{
-			ID:        one.ID,
-			ReleaseID: one.ReleaseID,
-			Key:       one.Spec.Key,
-			Attachment: &table.KvAttachment{
-				BizID: one.Attachment.BizID,
-				AppID: one.Attachment.AppID,
-			},
+	// 泛型转换处理
+	list := lo.Map(rs, func(one *table.ReleasedKv, index int) *ReleaseKvCache {
+		return &ReleaseKvCache{
+			ID:          one.ID,
+			ReleaseID:   one.ReleaseID,
+			Key:         one.Spec.Key,
+			Memo:        one.Spec.Memo,
+			KvType:      string(one.Spec.KvType),
+			Revision:    one.Revision,
+			Attachment:  one.Attachment,
+			ContentSpec: one.ContentSpec,
 		}
-	}
+	})
 
 	return list
 }
@@ -185,4 +267,13 @@ type ReleaseKvValueCache struct {
 	Key       string `json:"key"`
 	Value     string `json:"value"`
 	KvType    string `json:"kv_type"`
+}
+
+// AsyncDownloadTaskCache is the async download task info which will be stored in cache.
+type AsyncDownloadTaskCache struct {
+	BizID    uint32 `json:"biz_id"`
+	AppID    uint32 `json:"app_id"`
+	TaskID   string `json:"task_id"`
+	FilePath string `json:"file_path"`
+	FileName string `json:"file_name"`
 }

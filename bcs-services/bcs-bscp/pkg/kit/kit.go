@@ -24,8 +24,8 @@ import (
 	"google.golang.org/grpc/metadata"
 	"k8s.io/klog/v2"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/uuid"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/uuid"
 )
 
 // New initial a kit with rid and context.
@@ -107,6 +107,12 @@ func FromGrpcContext(ctx context.Context) *Kit {
 		} else {
 			kit.AppID = uint32(appID)
 		}
+	}
+
+	// set bizID in feedserver middleware
+	ctxBizID, ok := ctx.Value(constant.BizIDKey).(uint32)
+	if ok && ctxBizID != 0 {
+		kit.BizID = ctxBizID
 	}
 
 	kit.Ctx = context.WithValue(kit.Ctx, constant.RidKey, rid) //nolint

@@ -15,12 +15,12 @@ package service
 import (
 	"context"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
-	pbcs "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/config-server"
-	pbrelease "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/release"
-	pbds "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbcs "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/config-server"
+	pbrelease "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/release"
+	pbds "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
 )
 
 // CreateRelease create a release
@@ -120,4 +120,117 @@ func (s *Service) GetReleaseByName(ctx context.Context, req *pbcs.GetReleaseByNa
 	}
 
 	return rp, nil
+}
+
+// GetRelease get release
+func (s *Service) GetRelease(ctx context.Context, req *pbcs.GetReleaseReq) (*pbrelease.Release, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.View, ResourceID: req.AppId}, BizID: req.BizId},
+	}
+	err := s.authorizer.Authorize(kt, res...)
+	if err != nil {
+		return nil, err
+	}
+
+	r := &pbds.GetReleaseReq{
+		BizId:     req.BizId,
+		AppId:     req.AppId,
+		ReleaseId: req.GetReleaseId(),
+	}
+	rp, err := s.client.DS.GetRelease(kt.RpcCtx(), r)
+	if err != nil {
+		logs.Errorf("get release %d failed, err: %v, rid: %s", req.GetReleaseId(), err, kt.Rid)
+		return nil, err
+	}
+
+	return rp, nil
+}
+
+// DeprecateRelease deprecate a release
+func (s *Service) DeprecateRelease(ctx context.Context, req *pbcs.DeprecateReleaseReq) (
+	*pbcs.DeprecateReleaseResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.Update, ResourceID: req.AppId}, BizID: req.BizId},
+	}
+	err := s.authorizer.Authorize(kt, res...)
+	if err != nil {
+		return nil, err
+	}
+
+	r := &pbds.DeprecateReleaseReq{
+		BizId:     req.BizId,
+		AppId:     req.AppId,
+		ReleaseId: req.ReleaseId,
+	}
+	_, err = s.client.DS.DeprecateRelease(kt.RpcCtx(), r)
+	if err != nil {
+		logs.Errorf("deprecate release %s failed, err: %v, rid: %s", req.ReleaseId, err, kt.Rid)
+		return nil, err
+	}
+
+	resp := &pbcs.DeprecateReleaseResp{}
+	return resp, nil
+}
+
+// UnDeprecateRelease undeprecate a release
+func (s *Service) UnDeprecateRelease(ctx context.Context, req *pbcs.UnDeprecateReleaseReq) (
+	*pbcs.UnDeprecateReleaseResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.Update, ResourceID: req.AppId}, BizID: req.BizId},
+	}
+	err := s.authorizer.Authorize(kt, res...)
+	if err != nil {
+		return nil, err
+	}
+
+	r := &pbds.UnDeprecateReleaseReq{
+		BizId:     req.BizId,
+		AppId:     req.AppId,
+		ReleaseId: req.ReleaseId,
+	}
+	_, err = s.client.DS.UnDeprecateRelease(kt.RpcCtx(), r)
+	if err != nil {
+		logs.Errorf("undeprecate release %s failed, err: %v, rid: %s", req.ReleaseId, err, kt.Rid)
+		return nil, err
+	}
+
+	resp := &pbcs.UnDeprecateReleaseResp{}
+	return resp, nil
+}
+
+// DeleteRelease delete a release
+func (s *Service) DeleteRelease(ctx context.Context, req *pbcs.DeleteReleaseReq) (*pbcs.DeleteReleaseResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.Update, ResourceID: req.AppId}, BizID: req.BizId},
+	}
+	err := s.authorizer.Authorize(kt, res...)
+	if err != nil {
+		return nil, err
+	}
+
+	r := &pbds.DeleteReleaseReq{
+		BizId:     req.BizId,
+		AppId:     req.AppId,
+		ReleaseId: req.ReleaseId,
+	}
+	_, err = s.client.DS.DeleteRelease(kt.RpcCtx(), r)
+	if err != nil {
+		logs.Errorf("delete release %s failed, err: %v, rid: %s", req.ReleaseId, err, kt.Rid)
+		return nil, err
+	}
+
+	resp := &pbcs.DeleteReleaseResp{}
+	return resp, nil
 }

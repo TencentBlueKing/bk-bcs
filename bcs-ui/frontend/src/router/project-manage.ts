@@ -5,7 +5,11 @@ const ProjectInfo = () => import(/* webpackChunkName: 'project' */'@/views/proje
 
 // 云凭证
 const tencentCloud = () => import(/* webpackChunkName: 'project' */'@/views/project-manage/cloudtoken/tencentCloud.vue');
+const tencentPublicCloud = () => import(/* webpackChunkName: 'project' */'@/views/project-manage/cloudtoken/tencentPublicCloud.vue');
 const googleCloud = () => import(/* webpackChunkName: 'project' */'@/views/project-manage/cloudtoken/googleCloud.vue');
+const azureCloud = () => import(/* webpackChunkName: 'project' */'@/views/project-manage/cloudtoken/azureCloud.vue');
+// 华为云
+const huaweiCloud = () => import(/* webpackChunkName: 'project' */'@/views/project-manage/cloudtoken/huaweiCloud.vue');
 
 export default [
   {
@@ -33,11 +37,39 @@ export default [
     },
   },
   {
+    path: 'tencent-public-cloud',
+    name: 'tencentPublicCloud',
+    component: tencentPublicCloud,
+    meta: {
+      title: 'Tencent Cloud',
+      hideBack: true,
+    },
+  },
+  {
     path: 'google-cloud',
     name: 'googleCloud',
     component: googleCloud,
     meta: {
       title: 'Google Cloud',
+      hideBack: true,
+    },
+  },
+  {
+    path: 'azure-cloud',
+    name: 'azureCloud',
+    component: azureCloud,
+    meta: {
+      title: 'Azure Cloud',
+      hideBack: true,
+    },
+  },
+  // 华为云
+  {
+    path: 'huawei-cloud',
+    name: 'huaweiCloud',
+    component: huaweiCloud,
+    meta: {
+      title: 'Huawei Cloud',
       hideBack: true,
     },
   },

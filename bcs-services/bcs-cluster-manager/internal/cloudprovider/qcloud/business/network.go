@@ -18,7 +18,6 @@ import (
 	"net"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-
 	vpc "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/vpc/v20170312"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"

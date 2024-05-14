@@ -17,11 +17,11 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/types"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	ptypes "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/types"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	ptypes "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // GetMatchedRelease get the app instance's matched release id.
@@ -44,20 +44,6 @@ func (rs *ReleasedService) GetMatchedRelease(kt *kit.Kit, meta *types.AppInstanc
 	case table.KV:
 	default:
 		return 0, errf.New(errf.InvalidParameter, "only supports File and KV configuration types.")
-	}
-
-	switch am.Mode {
-	case table.Namespace:
-		if len(meta.Namespace) == 0 {
-			return 0, errf.New(errf.InvalidParameter, "app works at namespace mode, "+
-				"but request namespace is empty")
-		}
-	case table.Normal:
-		if len(meta.Namespace) != 0 {
-			return 0, errf.New(errf.InvalidParameter, "app works at normal mode, but namespace is set")
-		}
-	default:
-		return 0, errf.Newf(errf.InvalidParameter, "unsupported app mode: %s", am.Mode)
 	}
 
 	groups, err := rs.listReleasedGroups(kt, meta)

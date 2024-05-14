@@ -19,7 +19,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/RichardKnop/machinery/v2"
+	machinery "github.com/RichardKnop/machinery/v2"
 	"github.com/RichardKnop/machinery/v2/backends/mongo"
 	"github.com/RichardKnop/machinery/v2/brokers/amqp"
 	"github.com/RichardKnop/machinery/v2/config"
@@ -27,13 +27,12 @@ import (
 	"github.com/RichardKnop/machinery/v2/tasks"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	cmongo "github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
-	driver "go.mongodb.org/mongo-driver/mongo"
-	mopt "go.mongodb.org/mongo-driver/mongo/options"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	localtask "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/util"
 )
 
 var taskSvc *TaskServer
@@ -159,7 +158,7 @@ func (ts *TaskServer) validateOption() error {
 
 // init server
 func (ts *TaskServer) initServer() error {
-	mongoCli, err := NewMongoCli(ts.backendOption)
+	mongoCli, err := util.NewMongoCli(ts.backendOption)
 	if err != nil {
 		return err
 	}
@@ -244,50 +243,4 @@ func (ts *TaskServer) initWorker() error {
 	}()
 
 	return nil
-}
-
-// NewMongoCli create mongoDB client
-func NewMongoCli(opt *cmongo.Options) (*driver.Client, error) {
-	credential := mopt.Credential{
-		AuthMechanism: opt.AuthMechanism,
-		AuthSource:    opt.AuthDatabase,
-		Username:      opt.Username,
-		Password:      opt.Password,
-		PasswordSet:   true,
-	}
-	if len(credential.AuthMechanism) == 0 {
-		credential.AuthMechanism = "SCRAM-SHA-256"
-	}
-	// construct mongo client options
-	mCliOpt := &mopt.ClientOptions{
-		Auth:  &credential,
-		Hosts: opt.Hosts,
-	}
-	if opt.MaxPoolSize != 0 {
-		mCliOpt.MaxPoolSize = &opt.MaxPoolSize
-	}
-	if opt.MinPoolSize != 0 {
-		mCliOpt.MinPoolSize = &opt.MinPoolSize
-	}
-	var timeoutDuration time.Duration
-	if opt.ConnectTimeoutSeconds != 0 {
-		timeoutDuration = time.Duration(opt.ConnectTimeoutSeconds) * time.Second
-	}
-	mCliOpt.ConnectTimeout = &timeoutDuration
-
-	// create mongo client
-	mCli, err := driver.NewClient(mCliOpt)
-	if err != nil {
-		return nil, err
-	}
-	// connect to mongo
-	if err = mCli.Connect(context.TODO()); err != nil {
-		return nil, err
-	}
-
-	if err = mCli.Ping(context.TODO(), nil); err != nil {
-		return nil, err
-	}
-
-	return mCli, nil
 }

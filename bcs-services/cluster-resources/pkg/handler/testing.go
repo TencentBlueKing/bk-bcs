@@ -23,7 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/project"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/component/project"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"

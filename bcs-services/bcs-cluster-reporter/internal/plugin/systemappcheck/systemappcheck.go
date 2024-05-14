@@ -1,10 +1,10 @@
 /*
- * Tencent is pleased to support the open source community by making Blueking Container Service available.,
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
  * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -22,10 +22,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/k8s"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metric_manager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin_manager"
-
 	"github.com/containerd/containerd/pkg/cri/util"
 	"github.com/prometheus/client_golang/prometheus"
 	"gopkg.in/yaml.v2"
@@ -38,6 +34,10 @@ import (
 	"k8s.io/apimachinery/pkg/util/json"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/klog"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/k8s"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metric_manager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin_manager"
 )
 
 // Plugin xxx
@@ -128,6 +128,8 @@ func (p *Plugin) Name() string {
 // informer 改造
 //
 //	内存使用优化
+//
+// nolint funlen
 func (p *Plugin) Check() {
 	start := time.Now()
 	p.checkLock.Lock()
@@ -255,9 +257,10 @@ func (p *Plugin) Check() {
 
 						kind := objMap["kind"].(string)
 						name := objMap["metadata"].(map[interface{}]interface{})["name"].(string)
-						ctx, _ := context.WithTimeout(context.Background(), time.Duration(10)*time.Second)
+						ctx, _ := context.WithTimeout(context.Background(), time.Duration(10)*time.Second) // nolint
 
 						var workload runtime.Object
+						// nolint
 						switch kind {
 						case "Deployment":
 							deploy, err := clientSet.AppsV1().Deployments(namespace).Get(ctx, name, metav1.GetOptions{})
@@ -356,24 +359,23 @@ func (p *Plugin) Check() {
 	goruntime.GC()
 }
 
-// GetStatus
+// GetStatus get status
 func GetStatus(updatedReplicas int, availableReplicas int, replicas int) string {
 	if replicas > 0 && availableReplicas == replicas && updatedReplicas == replicas {
 		return "ready"
-	} else {
-		return "notready"
 	}
-
+	return "notready"
 }
 
 // CheckComponents check specified component status
 func (p *Plugin) CheckComponents(
 	clusterId string, clusterbiz string, clientSet *kubernetes.Clientset, componentList []Component) (
 	[]*metric_manager.GaugeVecSet, error) {
-	imageGaugeVecSetList := make([]*metric_manager.GaugeVecSet, 0, 0)
+	imageGaugeVecSetList := make([]*metric_manager.GaugeVecSet, 0)
 	for _, component := range componentList {
 		var workload runtime.Object
 		var err error
+		// nolint
 		switch component.Resource {
 		case "Deployment", "deployment":
 			workload, err = clientSet.AppsV1().Deployments(component.Namespace).Get(context.Background(), component.Name,
@@ -457,7 +459,6 @@ func GetResourceGaugeVecSet(
 						int(deploy.Status.ReadyReplicas),
 						int(deploy.Status.Replicas))}, Value: 1}
 		}
-		break
 	case "statefulset":
 		sts := &v1.StatefulSet{}
 		err := runtime.DefaultUnstructuredConverter.FromUnstructured(objectMap, sts)
@@ -474,7 +475,6 @@ func GetResourceGaugeVecSet(
 						int(sts.Status.ReadyReplicas),
 						int(sts.Status.Replicas))}, Value: 1}
 		}
-		break
 	case "daemonset":
 		ds := &v1.DaemonSet{}
 		err := runtime.DefaultUnstructuredConverter.FromUnstructured(objectMap, ds)
@@ -491,7 +491,6 @@ func GetResourceGaugeVecSet(
 						int(ds.Status.NumberReady),
 						int(ds.Status.DesiredNumberScheduled))}, Value: 1}
 		}
-		break
 	default:
 		klog.V(6).Infof("%s type is %s", unstr.GetName(), kind)
 	}

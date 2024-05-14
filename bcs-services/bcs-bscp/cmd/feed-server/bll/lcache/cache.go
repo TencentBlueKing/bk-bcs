@@ -15,11 +15,11 @@ package lcache
 import (
 	"fmt"
 
-	clientset "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/client-set"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
+	clientset "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/client-set"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // NewLocalCache initial the cache instance.
@@ -35,6 +35,8 @@ func NewLocalCache(cs *clientset.ClientSet) (*Cache, error) {
 		ReleasedHook:  newReleasedHook(mc, cs),
 		Credential:    newCredential(mc, cs),
 		Auth:          newAuth(mc, cs.Authorizer()),
+		ClientMetric:  newClientMetric(mc, cs),
+		AsyncDownload: newAsyncDownload(mc, cs),
 	}, nil
 }
 
@@ -47,6 +49,8 @@ type Cache struct {
 	Credential    *Credential
 	ReleasedHook  *ReleasedHook
 	Auth          *Auth
+	ClientMetric  *ClientMetric
+	AsyncDownload *AsyncDownload
 }
 
 // Purge is used to clean the resource's cache with events.

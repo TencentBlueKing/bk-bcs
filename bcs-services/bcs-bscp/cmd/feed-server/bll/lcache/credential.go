@@ -20,14 +20,14 @@ import (
 	"github.com/bluele/gcache"
 	prm "github.com/prometheus/client_golang/prometheus"
 
-	clientset "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/client-set"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
-	pbcs "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/cache-service"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/jsoni"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
+	clientset "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/client-set"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbcs "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/cache-service"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/jsoni"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // newCredential credential's local cache instance.
@@ -79,7 +79,8 @@ func (s *Credential) CanMatchCI(kt *kit.Kit, bizID uint32, app string, credentia
 			return false, nil
 		}
 		for _, s := range c.Scope {
-			if tools.MatchAppConfigItem(s, app, path, name) {
+			ok, _ := tools.MatchAppConfigItem(s, app, path, name)
+			if ok {
 				return true, nil
 			}
 		}
@@ -111,12 +112,47 @@ func (s *Credential) CanMatchCI(kt *kit.Kit, bizID uint32, app string, credentia
 		if !c.Enabled {
 			return false, nil
 		}
-		if tools.MatchAppConfigItem(s, app, path, name) {
+		ok, _ := tools.MatchAppConfigItem(s, app, path, name)
+		if ok {
 			return true, nil
 		}
 	}
 
 	return false, nil
+}
+
+// GetCred 获取凭证, 并缓存
+func (s *Credential) GetCred(kt *kit.Kit, bizID uint32, credential string) (*types.CredentialCache, error) {
+	c, hit, err := s.getCredentialFromCache(kt, bizID, credential)
+	if err != nil {
+		return nil, err
+	}
+
+	if hit {
+		s.mc.hitCounter.With(prm.Labels{"resource": "credential", "biz": tools.Itoa(bizID)}).Inc()
+	}
+
+	// get the cache from cache service directly.
+	opt := &pbcs.GetCredentialReq{
+		BizId:      bizID,
+		Credential: credential,
+	}
+	resp, err := s.cs.CS().GetCredential(kt.RpcCtx(), opt)
+	if err != nil {
+		s.mc.errCounter.With(prm.Labels{"resource": "credential", "biz": tools.Itoa(bizID)}).Inc()
+		return nil, err
+	}
+
+	err = jsoni.UnmarshalFromString(resp.JsonRaw, &c)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := s.client.SetWithExpire(fmt.Sprintf("%d-%s", bizID, credential), c, 10*time.Second); err != nil {
+		logs.Errorf("refresh credential %d-%s cache failed, %s", bizID, credential, err.Error())
+	}
+
+	return &c, nil
 }
 
 func (s *Credential) getCredentialFromCache(_ *kit.Kit, bizID uint32, credential string) (

@@ -89,6 +89,8 @@ const (
 	ResourcePoolLabelAction = "resourcePoolLabel"
 	// CheckClusterCleanNodesAction 检测集群销毁节点状态
 	CheckClusterCleanNodesAction = "checkClusterCleanNodes"
+	// RemoveClusterNodesInnerTaintAction remove nodes inner taints
+	RemoveClusterNodesInnerTaintAction = "removeClusterNodesInnerTaint"
 	// LadderResourcePoolLabelAction 标签设置
 	LadderResourcePoolLabelAction = "yunti-ResourcePoolLabelTask"
 )
@@ -97,6 +99,8 @@ var (
 	defaultTaskID = "qwertyuiop123456"
 	// TaskID inject taskID into ctx
 	TaskID = "taskID"
+	// StepNameKey inject stepName into ctx
+	StepNameKey = "stepName"
 )
 
 // GetTaskIDFromContext get taskID from context
@@ -112,6 +116,26 @@ func GetTaskIDFromContext(ctx context.Context) string {
 func WithTaskIDForContext(ctx context.Context, taskID string) context.Context {
 	// NOCC:golint/type(设计如此)
 	return context.WithValue(ctx, TaskID, taskID) // nolint
+}
+
+// GetTaskIDAndStepNameFromContext get taskID and stepName from context
+func GetTaskIDAndStepNameFromContext(ctx context.Context) (taskID, stepName string) {
+	if id, ok := ctx.Value(TaskID).(string); ok {
+		taskID = id
+	}
+
+	if name, ok := ctx.Value(StepNameKey).(string); ok {
+		stepName = name
+	}
+
+	return
+}
+
+// WithTaskIDAndStepNameForContext will return a new context wrapped taskID and stepName flag around the original ctx
+func WithTaskIDAndStepNameForContext(ctx context.Context, taskID, stepName string) context.Context {
+	// NOCC:golint/type(设计如此)
+	ctx = context.WithValue(ctx, TaskID, taskID)         // nolint
+	return context.WithValue(ctx, StepNameKey, stepName) // nolint
 }
 
 // CredentialData dependency data
@@ -271,9 +295,30 @@ func UpdateClusterStatus(clusterID string, status string) (*proto.Cluster, error
 	return cluster, nil
 }
 
+// UpdateNodeGroupStatus set nodegroup status
+func UpdateNodeGroupStatus(nodeGroupID, status string) error {
+	group, err := GetStorageModel().GetNodeGroup(context.Background(), nodeGroupID)
+	if err != nil {
+		return err
+	}
+
+	group.Status = status
+	err = GetStorageModel().UpdateNodeGroup(context.Background(), group)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // GetClusterByID get cluster by clusterID
 func GetClusterByID(clusterID string) (*proto.Cluster, error) {
 	return GetStorageModel().GetCluster(context.Background(), clusterID)
+}
+
+// GetNodeGroupByID get nodeGroup by groupID
+func GetNodeGroupByID(nodeGroupId string) (*proto.NodeGroup, error) {
+	return GetStorageModel().GetNodeGroup(context.Background(), nodeGroupId)
 }
 
 // UpdateCluster set cluster status
@@ -684,6 +729,8 @@ func GetClusterMasterIPList(cluster *proto.Cluster) []string {
 type StepOptions struct {
 	Retry      uint32
 	SkipFailed bool
+	Translate  string
+	AllowSkip  bool
 }
 
 // StepOption xxx
@@ -703,9 +750,28 @@ func WithStepSkipFailed(skip bool) StepOption {
 	}
 }
 
+// WithStepAllowSkip xxx
+func WithStepAllowSkip(allow bool) StepOption {
+	return func(opt *StepOptions) {
+		opt.AllowSkip = allow
+	}
+}
+
+// WithStepTranslate xxx
+func WithStepTranslate(translate string) StepOption {
+	return func(opt *StepOptions) {
+		opt.Translate = translate
+	}
+}
+
 // InitTaskStep init task step
 func InitTaskStep(stepInfo StepInfo, opts ...StepOption) *proto.Step {
-	defaultOptions := &StepOptions{Retry: 0, SkipFailed: false}
+	defaultOptions := &StepOptions{
+		Retry:      0,
+		SkipFailed: false,
+		Translate:  "",
+		AllowSkip:  false,
+	}
 	for _, opt := range opts {
 		opt(defaultOptions)
 	}
@@ -721,6 +787,8 @@ func InitTaskStep(stepInfo StepInfo, opts ...StepOption) *proto.Step {
 		Status:       TaskStatusNotStarted,
 		TaskMethod:   stepInfo.StepMethod,
 		TaskName:     stepInfo.StepName,
+		Translate:    defaultOptions.Translate,
+		AllowSkip:    defaultOptions.AllowSkip,
 	}
 }
 
@@ -795,6 +863,9 @@ func GetScaleOutModuleID(cls *proto.Cluster, asOption *proto.ClusterAutoScalingO
 	if asOption != nil && asOption.Module != nil && asOption.Module.ScaleOutModuleID != "" {
 		return asOption.Module.ScaleOutModuleID
 	}
+	if cls.GetClusterBasicSettings().GetModule().GetWorkerModuleID() != "" {
+		return cls.GetClusterBasicSettings().GetModule().GetWorkerModuleID()
+	}
 
 	return ""
 }
@@ -812,7 +883,8 @@ func GetScaleInModuleID(asOption *proto.ClusterAutoScalingOption, template *prot
 }
 
 // GetBusinessID get business id, default cluster business id
-func GetBusinessID(asOption *proto.ClusterAutoScalingOption, template *proto.NodeTemplate, scale bool) string {
+func GetBusinessID(cls *proto.Cluster, asOption *proto.ClusterAutoScalingOption,
+	template *proto.NodeTemplate, scale bool) string {
 	getBizID := func(scale bool, scaleOut, scaleIn string) string {
 		switch scale {
 		case true:
@@ -831,7 +903,7 @@ func GetBusinessID(asOption *proto.ClusterAutoScalingOption, template *proto.Nod
 		return getBizID(scale, asOption.Module.ScaleOutBizID, asOption.Module.ScaleInBizID)
 	}
 
-	return ""
+	return cls.GetBusinessID()
 }
 
 // GetBKCloudName get bk cloud name by id
@@ -840,7 +912,7 @@ func GetBKCloudName(bkCloudID int) string {
 	if cli == nil {
 		return ""
 	}
-	list, err := cli.CloudList()
+	list, err := cli.CloudList(context.Background())
 	if err != nil {
 		blog.Errorf("get cloud list failed, err %s", err.Error())
 		return ""
@@ -932,7 +1004,7 @@ func UpdateNodeGroupCloudAndModuleInfo(nodeGroupID string, cloudGroupID string,
 
 // ShieldHostAlarm shield host alarm for user
 func ShieldHostAlarm(ctx context.Context, bizID string, ips []string) error {
-	taskID := GetTaskIDFromContext(ctx)
+	taskID, stepName := GetTaskIDAndStepNameFromContext(ctx)
 	if len(ips) == 0 {
 		return fmt.Errorf("ShieldHostAlarm[%s] ips empty", taskID)
 	}
@@ -973,6 +1045,9 @@ func ShieldHostAlarm(ctx context.Context, bizID string, ips []string) error {
 			blog.Errorf("ShieldHostAlarm[%s][%s] ShieldHostAlarmConfig failed: %v", taskID, alarms[i].Name(), err)
 			continue
 		}
+
+		GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+			fmt.Sprintf("[%s] successful", alarms[i].Name()))
 
 		blog.Infof("ShieldHostAlarm[%s][%s] ShieldHostAlarmConfig success", taskID, alarms[i].Name())
 	}
@@ -1161,11 +1236,93 @@ func GetTaintsByNg(group *proto.NodeGroup) []*proto.Taint {
 }
 
 // GetTransModuleInfo get trans moduleID
-func GetTransModuleInfo(asOption *proto.ClusterAutoScalingOption, group *proto.NodeGroup) string {
+func GetTransModuleInfo(cls *proto.Cluster, asOption *proto.ClusterAutoScalingOption, group *proto.NodeGroup) string {
 	if group != nil && group.NodeTemplate != nil && group.NodeTemplate.Module != nil &&
 		len(group.NodeTemplate.Module.ScaleOutModuleID) != 0 {
 		return group.NodeTemplate.Module.ScaleOutModuleID
 	}
 
-	return asOption.GetModule().GetScaleOutModuleID()
+	if asOption != nil && asOption.GetModule() != nil && asOption.GetModule().GetScaleInModuleID() != "" {
+		return asOption.GetModule().GetScaleOutModuleID()
+	}
+
+	return cls.GetClusterBasicSettings().GetModule().GetWorkerModuleID()
+}
+
+// UpdateClusterErrMessage update cluster failed message
+func UpdateClusterErrMessage(clusterId string, message string) error {
+	cluster, errLocal := GetClusterByID(clusterId)
+	if errLocal == nil {
+		// record cluster connect failed reason
+		cluster.Message = message
+		_ = UpdateCluster(cluster)
+
+		return nil
+	}
+
+	return errLocal
+}
+
+// UpdateNodeGroupCloudNodeGroupID set nodegroup cloudNodeGroupID
+func UpdateNodeGroupCloudNodeGroupID(nodeGroupID string, newGroup *proto.NodeGroup) error {
+	group, err := GetStorageModel().GetNodeGroup(context.Background(), nodeGroupID)
+	if err != nil {
+		return err
+	}
+
+	group.CloudNodeGroupID = newGroup.CloudNodeGroupID
+	if group.AutoScaling != nil && group.AutoScaling.VpcID == "" {
+		group.AutoScaling.VpcID = newGroup.AutoScaling.VpcID
+	}
+	if group.LaunchTemplate != nil {
+		group.LaunchTemplate.InstanceChargeType = newGroup.LaunchTemplate.InstanceChargeType
+	}
+	err = GetStorageModel().UpdateNodeGroup(context.Background(), group)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// GetClusterResourceGroup cluster resource group
+func GetClusterResourceGroup(cls *proto.Cluster) string {
+	if cls.GetExtraInfo() == nil {
+		return ""
+	}
+
+	rg, ok := cls.GetExtraInfo()[common.ClusterResourceGroup]
+	if ok {
+		return rg
+	}
+
+	return ""
+}
+
+// GetNodeResourceGroup other resource group
+func GetNodeResourceGroup(cls *proto.Cluster) string {
+	if cls.GetExtraInfo() == nil {
+		return ""
+	}
+
+	rg, ok := cls.GetExtraInfo()[common.NodeResourceGroup]
+	if ok {
+		return rg
+	}
+
+	return ""
+}
+
+// ListProjectNotifyTemplates list project notify templates
+func ListProjectNotifyTemplates(projectId string) ([]proto.NotifyTemplate, error) {
+	condM := make(operator.M)
+	condM["projectid"] = projectId
+
+	cond := operator.NewLeafCondition(operator.Eq, condM)
+	templates, err := GetStorageModel().ListNotifyTemplate(context.Background(), cond, &storeopt.ListOption{})
+	if err != nil {
+		return nil, err
+	}
+
+	return templates, nil
 }

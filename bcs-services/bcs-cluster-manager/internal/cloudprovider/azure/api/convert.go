@@ -58,6 +58,21 @@ func (aks *AksServiceImpl) toPoolPreCheck(group *proto.NodeGroup, pool *armconta
 	if group.NodeTemplate == nil {
 		return cloudprovider.ErrNodeGroupNodeTemplateLost
 	}
+
+	// kubelet配置
+	/*
+		if kubeletConfStr, ok := group.NodeTemplate.ExtraArgs[common.Kubelet]; ok {
+			kubeletConf := &armcontainerservice.KubeletConfig{}
+
+			if kubeletConfStr != "" {
+				err := json.Unmarshal([]byte(kubeletConfStr), kubeletConf)
+				if err != nil {
+					return fmt.Errorf("get nodeGroup[%s] kubelet config failed, %v", group.NodeGroupID, err)
+				}
+			}
+		}
+	*/
+
 	// 机型检查
 	ctx, cancel := context.WithTimeout(context.TODO(), 30*time.Second)
 	defer cancel()

@@ -4,6 +4,7 @@
       <span class="break-all">{{ value || '--' }}</span>
       <span
         class="hover:text-[#3a84ff] cursor-pointer ml-[8px]"
+        v-if="!disableEdit"
         @click="handleEdit">
         <i class="bk-icon icon-edit-line"></i>
       </span>
@@ -26,9 +27,9 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, ref, toRefs, watch } from 'vue';
+import { defineComponent, PropType, ref, toRefs, watch } from 'vue';
 
-import Validate from '@/components/validate.vue';
+import Validate, { IValidate } from '@/components/validate.vue';
 import clickoutside from '@/directives/clickoutside';
 
 export default defineComponent({
@@ -56,8 +57,12 @@ export default defineComponent({
       default: false,
     },
     rules: {
-      type: Array,
+      type: Array as PropType<IValidate[]>,
       default: () => [],
+    },
+    disableEdit: {
+      type: Boolean,
+      default: false,
     },
   },
   setup(props, ctx) {

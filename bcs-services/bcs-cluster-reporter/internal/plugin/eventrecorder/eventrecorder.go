@@ -1,16 +1,16 @@
 /*
- * Tencent is pleased to support the open source community by making Blueking Container Service available.,
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
  * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 
-// Package eventrecorder
+// Package eventrecorder xxx
 package eventrecorder
 
 import (
@@ -21,10 +21,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/k8s"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metric_manager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin_manager"
-
 	"github.com/prometheus/client_golang/prometheus"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -32,6 +28,10 @@ import (
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/klog"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/k8s"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metric_manager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin_manager"
 )
 
 // Plugin xxx
@@ -146,7 +146,7 @@ func (p *Plugin) Check() {
 }
 
 func flatten(data interface{}) []*metric_manager.GaugeVecSet {
-	result := make([]*metric_manager.GaugeVecSet, 0, 0)
+	result := make([]*metric_manager.GaugeVecSet, 0)
 
 	if m, ok := data.(map[string]map[string]*metric_manager.GaugeVecSet); ok {
 		for _, value := range m {
@@ -183,7 +183,7 @@ func recordEvent(eventChecktGaugeVecSetMap map[string]map[string]*metric_manager
 		klog.Fatalf("eventrecorder GetClientsetByConfig failed: %s", err.Error())
 	}
 
-	clientSet.CoreV1().Events(metav1.NamespaceAll).Watch(context.Background(), metav1.ListOptions{})
+	clientSet.CoreV1().Events(metav1.NamespaceAll).Watch(context.Background(), metav1.ListOptions{}) // nolint
 	factory := informers.NewSharedInformerFactoryWithOptions(clientSet, time.Second*60,
 		informers.WithTweakListOptions(func(options *metav1.ListOptions) {
 			options.ResourceVersion = "0"

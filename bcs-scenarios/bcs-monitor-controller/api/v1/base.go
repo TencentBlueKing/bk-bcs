@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package v1
@@ -22,6 +21,19 @@ import (
 // Completed: syncing process is successfully finished
 // Failed: syncing process failed
 type SyncState string
+
+const (
+	// AnnotationKeyOriginal annotation key for original value
+	AnnotationKeyOriginal = "monitorextensions.bkbcs.tencent.com/original"
+
+	// ConflictHandleLocalFirst  if conflict happened, use local config to override remote
+	ConflictHandleLocalFirst = "LOCAL_FIRST"
+	// ConflictHandleRemoteFirst if conflict happened, use remote config to override local
+	ConflictHandleRemoteFirst = "REMOTE_FIRST"
+	// ConflictHandleAutoMerge if conflict happened,
+	// use remote when user changed enable/detect; otherwise use local confict
+	ConflictHandleAutoMerge = "AUTO_MERGE"
+)
 
 const (
 	// SyncStateNeedReSync sync state NeedReSync
@@ -45,6 +57,9 @@ const (
 
 	// LabelKeyForScenarioName label key for scenario name
 	LabelKeyForScenarioName = "monitorcontroller.bkbcs.tencent.com/scenario"
+	// // LabelKeyForScenarioRepo label key for scenario repo
+	// LabelKeyForScenarioRepo = "monitorcontroller.bkbcs.tencent.com/scenario-repo"
+
 	// LabelKeyForBizID label key for biz id
 	LabelKeyForBizID = "monitorcontroller.bkbcs.tencent.com/biz_id"
 	// LabelKeyForAppMonitorName label key for app monitor name

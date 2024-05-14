@@ -22,6 +22,7 @@ import (
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 )
 
@@ -38,14 +39,23 @@ func init() {
 type CloudValidate struct {
 }
 
-// CreateClusterValidate check createCluster operation
+// CreateClusterValidate create cluster validate
 func (c *CloudValidate) CreateClusterValidate(req *proto.CreateClusterReq, opt *cloudprovider.CommonOption) error {
-	return nil
+	return cloudprovider.ErrCloudNotImplemented
 }
 
 // CreateCloudAccountValidate create cloud account validate
 func (c *CloudValidate) CreateCloudAccountValidate(account *proto.Account) error {
-	return cloudprovider.ErrCloudNotImplemented
+	nm := &NodeManager{}
+
+	_, err := nm.GetCloudRegions(&cloudprovider.CommonOption{
+		Account: account,
+	})
+	if err != nil {
+		return fmt.Errorf("%s CreateCloudAccountValidate failed, %v", cloudName, err)
+	}
+
+	return nil
 }
 
 // ImportClusterValidate check importCluster operation
@@ -59,6 +69,7 @@ func (c *CloudValidate) ImportClusterValidate(req *proto.ImportClusterReq, opt *
 		return fmt.Errorf("%s ImportClusterValidate options is empty", cloudName)
 	}
 
+	req.ManageType = common.ClusterManageTypeManaged
 	if len(opt.Account.SubscriptionID) == 0 || len(opt.Account.TenantID) == 0 || len(opt.Account.ClientID) == 0 ||
 		len(opt.Account.ClientSecret) == 0 || len(opt.Region) == 0 {
 		return fmt.Errorf("%s ImportClusterValidate opt lost valid crendential info", cloudName)
@@ -161,11 +172,12 @@ func (c *CloudValidate) ListCloudSubnetsValidate(req *proto.ListCloudSubnetsRequ
 		return fmt.Errorf("%s ListCloudSubnetsValidate request lost valid crendential info", cloudName)
 	}
 
-	if len(req.Region) == 0 {
-		return fmt.Errorf("%s ListCloudSubnetsValidate request lost valid region info", cloudName)
-	}
 	if len(req.VpcID) == 0 {
 		return fmt.Errorf("%s ListCloudSubnetsValidate request lost valid vpcID info", cloudName)
+	}
+
+	if len(req.ResourceGroupName) == 0 {
+		return fmt.Errorf("%s ListCloudSubnetsValidate request lost resourceGroupName info", cloudName)
 	}
 
 	return nil
@@ -174,7 +186,15 @@ func (c *CloudValidate) ListCloudSubnetsValidate(req *proto.ListCloudSubnetsRequ
 // ListCloudVpcsValidate xxx
 func (c *CloudValidate) ListCloudVpcsValidate(req *proto.ListCloudVpcsRequest,
 	account *proto.Account) error {
-	return cloudprovider.ErrCloudNotImplemented
+	if c == nil {
+		return fmt.Errorf("%s ListCloudVpcsValidate request is empty", cloudName)
+	}
+
+	if len(req.ResourceGroupName) == 0 {
+		return fmt.Errorf("%s ListCloudVpcsValidate request lost resourceGroupName info", cloudName)
+	}
+
+	return nil
 }
 
 // ListSecurityGroupsValidate xxx
@@ -190,8 +210,8 @@ func (c *CloudValidate) ListSecurityGroupsValidate(
 		return fmt.Errorf("%s ListSecurityGroupsValidate request lost valid crendential info", cloudName)
 	}
 
-	if len(req.Region) == 0 {
-		return fmt.Errorf("%s ListSecurityGroupsValidate request lost valid region info", cloudName)
+	if len(req.ResourceGroupName) == 0 {
+		return fmt.Errorf("%s ListSecurityGroupsValidate request lost valid resourceGroupName info", cloudName)
 	}
 
 	return nil
@@ -199,8 +219,8 @@ func (c *CloudValidate) ListSecurityGroupsValidate(
 
 // ListKeyPairsValidate list key pairs validate
 func (c *CloudValidate) ListKeyPairsValidate(req *proto.ListKeyPairsRequest, account *proto.Account) error {
-	if len(req.Region) == 0 {
-		return fmt.Errorf("%s ListKeyPairsValidate request lost valid region info", cloudName)
+	if len(req.ResourceGroupName) == 0 {
+		return fmt.Errorf("%s ListKeyPairsValidate request lost valid resourceGroupName info", cloudName)
 	}
 
 	return nil
@@ -264,5 +284,19 @@ func (c *CloudValidate) DeleteNodesFromClusterValidate(
 // CreateNodeGroupValidate xxx
 func (c *CloudValidate) CreateNodeGroupValidate(
 	req *proto.CreateNodeGroupRequest, opt *cloudprovider.CommonOption) error {
-	return cloudprovider.ErrCloudNotImplemented
+	// call cloud interface to check cluster
+	if c == nil || req == nil {
+		return fmt.Errorf("%s ImportClusterValidate request is empty", cloudName)
+	}
+
+	if opt == nil || opt.Account == nil {
+		return fmt.Errorf("%s ImportClusterValidate options is empty", cloudName)
+	}
+
+	if len(opt.Account.SubscriptionID) == 0 || len(opt.Account.TenantID) == 0 || len(opt.Account.ClientID) == 0 ||
+		len(opt.Account.ClientSecret) == 0 || len(opt.Region) == 0 {
+		return fmt.Errorf("%s ImportClusterValidate opt lost valid crendential info", cloudName)
+	}
+
+	return nil
 }

@@ -8,7 +8,9 @@ import {
   clusterDetail,
   createVCluster,
   deleteVCluster,
-  sharedclusters  } from '@/api/modules/cluster-manager';
+  sharedclusters,
+  taskSkip,
+} from '@/api/modules/cluster-manager';
 import $bkMessage from '@/common/bkmagic';
 import { ICluster } from '@/composables/use-app';
 import useInterval from '@/composables/use-interval';
@@ -177,8 +179,8 @@ export function useClusterOperate() {
       latestTask,
     };
   };
-  const retryClusterTask = async (cluster): Promise<boolean> => {
-    const { latestTask } = await getTaskData(cluster.clusterID);
+  const retryClusterTask = async (clusterID: string): Promise<boolean> => {
+    const { latestTask } = await getTaskData(clusterID);
     const result = await $store.dispatch('clustermanager/taskRetry', {
       $taskId: latestTask.taskID,
       updater: user.value.username,
@@ -217,6 +219,7 @@ export function useClusterOperate() {
  * @param ctx
  */
 export function useTask() {
+  const user = computed(() => $store.state.user);
   // 查询任务列表
   const taskList = async (cluster) => {
     const data = await $store.dispatch('clustermanager/taskList', {
@@ -225,8 +228,18 @@ export function useTask() {
     });
     return data;
   };
+  // 跳过任务
+  const skipTask = async (taskID: string) => {
+    const result = await taskSkip({
+      $taskId: taskID,
+      updater: user.value.username,
+    }).then(() => true)
+      .catch(() => false);
+    return result;
+  };
   return {
     taskList,
+    skipTask,
   };
 }
 
@@ -323,7 +336,7 @@ export function getClusterTypeName(clusterData) {
   if (clusterData.clusterType === 'virtual') return 'vCluster'; // 虚拟集群
   if (clusterData.clusterType === 'federation') return $i18n.t('bcs.cluster.federation'); // 联邦集群
 
-  if (clusterData.clusterCategory === 'builder' || clusterData.clusterCategory === '') {
+  if (clusterData.clusterCategory === 'builder' || clusterData.clusterCategory === '' || clusterData.clusterType === 'single') {
     // 托管和独立集群
     return clusterData.manageType === 'INDEPENDENT_CLUSTER' ? $i18n.t('bcs.cluster.selfDeployed') : $i18n.t('bcs.cluster.managed');
   }
@@ -339,5 +352,5 @@ export function getClusterImportCategory(clusterData: ICluster) {
   // 云凭证
   if (clusterData?.importCategory === 'cloud') return $i18n.t('bcs.cluster.cloud');
 
-  return '--';
+  return $i18n.t('bcs.cluster.platform');
 }

@@ -18,7 +18,7 @@ package dao
 import (
 	"strconv"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
 )
 
 // lockKey is an instance of the keyFactory

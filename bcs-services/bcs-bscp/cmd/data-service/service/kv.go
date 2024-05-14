@@ -20,13 +20,14 @@ import (
 
 	"gorm.io/gorm"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
-	pbbase "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
-	pbkv "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/kv"
-	pbds "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbbase "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
+	pbkv "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/kv"
+	pbds "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // CreateKv is used to create key-value data.
@@ -34,6 +35,7 @@ func (s *Service) CreateKv(ctx context.Context, req *pbds.CreateKvReq) (*pbds.Cr
 
 	kt := kit.FromGrpcContext(ctx)
 
+	// GetByKvState get kv by KvState.
 	_, err := s.dao.Kv().GetByKvState(kt, req.Attachment.BizId, req.Attachment.AppId, req.Spec.Key,
 		[]string{string(table.KvStateAdd), string(table.KvStateUnchange), string(table.KvStateRevise)})
 	if err != nil && !errors.Is(gorm.ErrRecordNotFound, err) {
@@ -44,7 +46,7 @@ func (s *Service) CreateKv(ctx context.Context, req *pbds.CreateKvReq) (*pbds.Cr
 		logs.Errorf("get kv (%d) failed, err: %v, rid: %s", req.Spec.Key, err, kt.Rid)
 		return nil, fmt.Errorf("kv same key %s already exists", req.Spec.Key)
 	}
-
+	// get app with id.
 	app, err := s.dao.App().Get(kt, req.Attachment.BizId, req.Attachment.AppId)
 	if err != nil {
 		return nil, fmt.Errorf("get app fail,err : %v", req.Spec.Key)
@@ -60,6 +62,7 @@ func (s *Service) CreateKv(ctx context.Context, req *pbds.CreateKvReq) (*pbds.Cr
 		Value:  req.Spec.Value,
 		KvType: table.DataType(req.Spec.KvType),
 	}
+	// UpsertKv 创建｜更新kv
 	version, err := s.vault.UpsertKv(kt, opt)
 	if err != nil {
 		logs.Errorf("create kv failed, err: %v, rid: %s", err, kt.Rid)
@@ -73,9 +76,15 @@ func (s *Service) CreateKv(ctx context.Context, req *pbds.CreateKvReq) (*pbds.Cr
 			Creator: kt.User,
 			Reviser: kt.User,
 		},
+		ContentSpec: &table.ContentSpec{
+			Signature: tools.SHA256(req.Spec.Value),
+			Md5:       tools.MD5(req.Spec.Value),
+			ByteSize:  uint64(len(req.Spec.Value)),
+		},
 	}
 	kv.Spec.Version = uint32(version)
 	kv.KvState = table.KvStateAdd
+	// Create one kv instance
 	id, err := s.dao.Kv().Create(kt, kv)
 	if err != nil {
 		logs.Errorf("create kv failed, err: %v, rid: %s", err, kt.Rid)
@@ -87,6 +96,7 @@ func (s *Service) CreateKv(ctx context.Context, req *pbds.CreateKvReq) (*pbds.Cr
 
 }
 
+// check KV Type Match
 func checkKVTypeMatch(kvType, appKvType table.DataType) bool {
 	if appKvType == table.KvAny {
 		return true
@@ -99,6 +109,7 @@ func (s *Service) UpdateKv(ctx context.Context, req *pbds.UpdateKvReq) (*pbbase.
 
 	kt := kit.FromGrpcContext(ctx)
 
+	// GetByKvState get kv by KvState.
 	kv, err := s.dao.Kv().GetByKvState(kt, req.Attachment.BizId, req.Attachment.AppId, req.Spec.Key,
 		[]string{string(table.KvStateAdd), string(table.KvStateUnchange), string(table.KvStateRevise)})
 	if err != nil {
@@ -113,6 +124,7 @@ func (s *Service) UpdateKv(ctx context.Context, req *pbds.UpdateKvReq) (*pbbase.
 		Value:  req.Spec.Value,
 		KvType: kv.Spec.KvType,
 	}
+	// UpsertKv 创建｜更新kv
 	version, err := s.vault.UpsertKv(kt, opt)
 	if err != nil {
 		logs.Errorf("update kv failed, err: %v, rid: %s", err, kt.Rid)
@@ -129,6 +141,12 @@ func (s *Service) UpdateKv(ctx context.Context, req *pbds.UpdateKvReq) (*pbbase.
 	}
 
 	kv.Spec.Version = uint32(version)
+	kv.Spec.Memo = req.Spec.Memo
+	kv.ContentSpec = &table.ContentSpec{
+		Signature: tools.SHA256(req.Spec.Value),
+		Md5:       tools.MD5(req.Spec.Value),
+		ByteSize:  uint64(len(req.Spec.Value)),
+	}
 	if e := s.dao.Kv().Update(kt, kv); e != nil {
 		logs.Errorf("update kv failed, err: %v, rid: %s", e, kt.Rid)
 		return nil, err
@@ -141,6 +159,7 @@ func (s *Service) UpdateKv(ctx context.Context, req *pbds.UpdateKvReq) (*pbbase.
 // ListKvs is used to list key-value data.
 func (s *Service) ListKvs(ctx context.Context, req *pbds.ListKvsReq) (*pbds.ListKvsResp, error) {
 
+	// FromGrpcContext used only to obtain Kit through grpc context.
 	kt := kit.FromGrpcContext(ctx)
 
 	if len(req.Sort) == 0 {
@@ -152,6 +171,8 @@ func (s *Service) ListKvs(ctx context.Context, req *pbds.ListKvsReq) (*pbds.List
 		Sort:  req.Sort,
 		Order: types.Order(req.Order),
 	}
+	// StrToUint32Slice the comma separated string goes to uint32 slice
+	topIds, _ := tools.StrToUint32Slice(req.TopIds)
 	opt := &types.ListKvOption{
 		BizID:     req.BizId,
 		AppID:     req.AppId,
@@ -160,6 +181,8 @@ func (s *Service) ListKvs(ctx context.Context, req *pbds.ListKvsReq) (*pbds.List
 		All:       req.All,
 		Page:      page,
 		KvType:    req.KvType,
+		TopIDs:    topIds,
+		Status:    req.Status,
 	}
 	po := &types.PageOption{
 		EnableUnlimitedLimit: true,
@@ -186,6 +209,7 @@ func (s *Service) ListKvs(ctx context.Context, req *pbds.ListKvsReq) (*pbds.List
 
 }
 
+// set Kv Type And Value
 func (s *Service) setKvTypeAndValue(kt *kit.Kit, details []*table.Kv) ([]*pbkv.Kv, error) {
 
 	kvs := make([]*pbkv.Kv, 0)
@@ -231,12 +255,21 @@ func (s *Service) DeleteKv(ctx context.Context, req *pbds.DeleteKvReq) (*pbbase.
 }
 
 // BatchUpsertKvs is used to insert or update key-value data in bulk.
-func (s *Service) BatchUpsertKvs(ctx context.Context, req *pbds.BatchUpsertKvsReq) (*pbbase.EmptyResp, error) {
+func (s *Service) BatchUpsertKvs(ctx context.Context, req *pbds.BatchUpsertKvsReq) (*pbds.BatchUpsertKvsResp, error) {
 
+	// FromGrpcContext used only to obtain Kit through grpc context.
 	kt := kit.FromGrpcContext(ctx)
+
+	app, err := s.dao.App().Get(kt, req.BizId, req.AppId)
+	if err != nil {
+		return nil, fmt.Errorf("get app fail,err : %v", err)
+	}
 
 	var editingKeyArr []string
 	for _, kv := range req.Kvs {
+		if !checkKVTypeMatch(table.DataType(kv.KvSpec.KvType), app.Spec.DataType) {
+			return nil, fmt.Errorf("kv type does not match the data type defined in the application")
+		}
 		editingKeyArr = append(editingKeyArr, kv.KvSpec.Key)
 	}
 	kvStateArr := []string{
@@ -295,8 +328,18 @@ func (s *Service) BatchUpsertKvs(ctx context.Context, req *pbds.BatchUpsertKvsRe
 		logs.Errorf("commit transaction failed, err: %v, rid: %s", e, kt.Rid)
 		return nil, e
 	}
-
-	return new(pbbase.EmptyResp), nil
+	createId := []uint32{}
+	updateId := []uint32{}
+	for _, item := range toCreate {
+		createId = append(createId, item.ID)
+	}
+	for _, item := range toUpdate {
+		updateId = append(updateId, item.ID)
+	}
+	mergedID := append(createId, updateId...) // nolint
+	return &pbds.BatchUpsertKvsResp{
+		Ids: mergedID,
+	}, nil
 }
 
 func (s *Service) getKv(kt *kit.Kit, bizID, appID, version uint32, key string) (table.DataType, string, error) {
@@ -366,16 +409,24 @@ func (s *Service) checkKvs(kt *kit.Kit, req *pbds.BatchUpsertKvsReq, editingKvMa
 				editing.KvState = table.KvStateRevise
 			}
 			toUpdate = append(toUpdate, &table.Kv{
-				ID: editing.ID,
+				ID:      editing.ID,
+				KvState: editing.KvState,
 				Spec: &table.KvSpec{
 					Key:     kv.KvSpec.Key,
 					Version: uint32(version),
+					KvType:  editing.Spec.KvType,
+					Memo:    kv.KvSpec.Memo,
 				},
 				Attachment: &table.KvAttachment{
 					BizID: req.BizId,
 					AppID: req.AppId,
 				},
 				Revision: editing.Revision,
+				ContentSpec: &table.ContentSpec{
+					Signature: tools.SHA256(kv.KvSpec.Value),
+					Md5:       tools.MD5(kv.KvSpec.Value),
+					ByteSize:  uint64(len(kv.KvSpec.Value)),
+				},
 			})
 
 		} else {
@@ -385,6 +436,7 @@ func (s *Service) checkKvs(kt *kit.Kit, req *pbds.BatchUpsertKvsReq, editingKvMa
 					Key:     kv.KvSpec.Key,
 					Version: uint32(version),
 					KvType:  table.DataType(kv.KvSpec.KvType),
+					Memo:    kv.KvSpec.Memo,
 				},
 				Attachment: &table.KvAttachment{
 					BizID: req.BizId,
@@ -395,6 +447,11 @@ func (s *Service) checkKvs(kt *kit.Kit, req *pbds.BatchUpsertKvsReq, editingKvMa
 					Reviser:   kt.User,
 					CreatedAt: now,
 					UpdatedAt: now,
+				},
+				ContentSpec: &table.ContentSpec{
+					Signature: tools.SHA256(kv.KvSpec.Value),
+					Md5:       tools.MD5(kv.KvSpec.Value),
+					ByteSize:  uint64(len(kv.KvSpec.Value)),
 				},
 			})
 
@@ -410,36 +467,44 @@ func (s *Service) UnDeleteKv(ctx context.Context, req *pbds.UnDeleteKvReq) (*pbb
 
 	kt := kit.FromGrpcContext(ctx)
 
-	kvState := []string{
-		string(table.KvStateAdd),
-		string(table.KvStateUnchange),
-		string(table.KvStateRevise),
+	// 只有删除的才能恢复
+	kv, err := s.dao.Kv().GetByKvState(kt, req.GetBizId(), req.GetAppId(), req.GetKey(), []string{
+		string(table.KvStateDelete),
+	})
+	if err != nil {
+		logs.Errorf("get kv (%s) failed, err: %v, rid: %s", req.GetKey(), err, kt.Rid)
+		return nil, err
 	}
-	kv, err := s.dao.Kv().GetByKvState(kt, req.Attachment.BizId, req.Attachment.AppId, req.Spec.Key, kvState)
-	if err != nil && !errors.Is(gorm.ErrRecordNotFound, err) {
-		logs.Errorf("get kv (%d) failed, err: %v, rid: %s", req.Spec.Key, err, kt.Rid)
+
+	// 看该key是否有存在新增
+	addKv, err := s.dao.Kv().GetByKvState(kt, req.GetBizId(), req.GetAppId(), req.GetKey(), []string{
+		string(table.KvStateAdd),
+	})
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		logs.Errorf("get kv (%s) failed, err: %v, rid: %s", req.GetKey(), err, kt.Rid)
 		return nil, err
 	}
 
 	tx := s.dao.GenQuery().Begin()
-	if !errors.Is(gorm.ErrRecordNotFound, err) {
-		if e := s.dao.Kv().DeleteWithTx(kt, tx, kv); e != nil {
+	if addKv != nil && addKv.ID > 0 {
+		if e := s.dao.Kv().DeleteWithTx(kt, tx, addKv); e != nil {
 			if rErr := tx.Rollback(); rErr != nil {
 				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
 			}
-			logs.Errorf("delete kv (%d) failed, err: %v, rid: %s", req.Spec.Key, e, kt.Rid)
+			logs.Errorf("delete kv (%s) failed, err: %v, rid: %s", req.GetKey(), e, kt.Rid)
 		}
 	}
 
-	kvState = []string{
-		string(table.KvStateDelete),
+	toUpdate, err := s.getLatestReleasedKV(kt, req.GetBizId(), req.GetAppId(), kv)
+	if err != nil {
+		return nil, err
 	}
-	if err = s.dao.Kv().UpdateSelectedKVStates(kt, tx, req.Attachment.BizId, req.Attachment.AppId, kvState,
-		table.KvStateUnchange); err != nil {
+
+	if err = s.dao.Kv().UpdateWithTx(kt, tx, toUpdate); err != nil {
 		if rErr := tx.Rollback(); rErr != nil {
 			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
 		}
-		logs.Errorf("undelete kv (%d) failed, err: %v, rid: %s", req.Spec.Key, err, kt.Rid)
+		logs.Errorf("undelete kv (%s) failed, err: %v, rid: %s", req.GetKey(), err, kt.Rid)
 
 	}
 
@@ -450,4 +515,80 @@ func (s *Service) UnDeleteKv(ctx context.Context, req *pbds.UnDeleteKvReq) (*pbb
 
 	return new(pbbase.EmptyResp), nil
 
+}
+
+// UndoKv Undo edited data and return to the latest published version
+func (s *Service) UndoKv(ctx context.Context, req *pbds.UndoKvReq) (*pbbase.EmptyResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	// 只有编辑的才能撤回
+	kvState := []string{
+		string(table.KvStateRevise),
+	}
+	kv, err := s.dao.Kv().GetByKvState(kt, req.GetBizId(), req.GetAppId(), req.GetKey(), kvState)
+	if err != nil {
+		logs.Errorf("get kv (%s) failed, err: %v, rid: %s", req.GetKey(), err, kt.Rid)
+		return nil, err
+	}
+
+	toUpdate, err := s.getLatestReleasedKV(kt, req.GetBizId(), req.GetAppId(), kv)
+	if err != nil {
+		return nil, err
+	}
+
+	if err = s.dao.Kv().Update(kt, toUpdate); err != nil {
+		logs.Errorf("undo kv (%s) failed, err: %v, rid: %s", req.GetKey(), err, kt.Rid)
+		return nil, err
+	}
+
+	return new(pbbase.EmptyResp), nil
+}
+
+func (s *Service) getLatestReleasedKV(kt *kit.Kit, bizID, appID uint32, kv *table.Kv) (*table.Kv, error) {
+
+	// 获取该服务最新发布的 release_id
+	release, err := s.dao.Release().GetReleaseLately(kt, bizID, appID)
+	if err != nil {
+		return nil, err
+	}
+
+	rkv, err := s.dao.ReleasedKv().Get(kt, bizID, appID, release.ID, kv.Spec.Key)
+	if err != nil {
+		return nil, err
+	}
+
+	// 获取最新发布的kv
+	_, kvValue, err := s.getReleasedKv(kt, bizID, appID, rkv.Spec.Version, release.ID, kv.Spec.Key)
+	if err != nil {
+		return nil, err
+	}
+	opt := &types.UpsertKvOption{
+		BizID:  bizID,
+		AppID:  appID,
+		Key:    kv.Spec.Key,
+		Value:  kvValue,
+		KvType: kv.Spec.KvType,
+	}
+	// UpsertKv 创建｜更新kv
+	version, err := s.vault.UpsertKv(kt, opt)
+	if err != nil {
+		logs.Errorf("update kv failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	kv.KvState = table.KvStateUnchange
+
+	kv.Revision = &table.Revision{
+		Reviser:   kt.User,
+		UpdatedAt: time.Now().UTC(),
+	}
+
+	kv.Spec.Version = uint32(version)
+	kv.ContentSpec = &table.ContentSpec{
+		Signature: tools.SHA256(kvValue),
+		Md5:       tools.MD5(kvValue),
+		ByteSize:  uint64(len(kvValue)),
+	}
+
+	return kv, nil
 }

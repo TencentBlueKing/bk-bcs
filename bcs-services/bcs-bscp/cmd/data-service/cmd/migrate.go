@@ -20,9 +20,10 @@ import (
 	"gorm.io/gorm"
 
 	// run the init function to add migrations
-	_ "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/data-service/db-migration/migrations"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/data-service/db-migration/migrator"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	_ "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/data-service/db-migration/migrations"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/data-service/db-migration/migrator"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 )
 
 // cmd for migration
@@ -89,6 +90,8 @@ var migrateUpCmd = &cobra.Command{
 			return
 		}
 
+		logs.InitLogger(cc.DataService().Log.Logs())
+
 		db, err = migrator.NewDB(debug)
 		if err != nil {
 			fmt.Println("Unable to new db migrator, err:", err)
@@ -139,6 +142,8 @@ var migrateDownCmd = &cobra.Command{
 			return
 		}
 
+		logs.InitLogger(cc.DataService().Log.Logs())
+
 		db, err = migrator.NewDB(debug)
 		if err != nil {
 			fmt.Println("Unable to new db migrator, err:", err)
@@ -181,6 +186,8 @@ var migrateStatusCmd = &cobra.Command{
 			fmt.Println("load settings from config files failed, err:", err)
 			return
 		}
+
+		logs.InitLogger(cc.DataService().Log.Logs())
 
 		db, err = migrator.NewDB(debug)
 		if err != nil {

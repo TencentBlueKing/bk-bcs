@@ -13,6 +13,7 @@
           :schema="schema"
           :cluster="curCluster"
           :save-loading="saveLoading"
+          :data="nodePoolData"
           v-if="!isLoading"
           @next="handleNextStep"
           @pre="handlePreStep"
@@ -50,9 +51,13 @@ export default defineComponent({
       default: '',
       required: true,
     },
+    nodeGroupID: {
+      type: String,
+      default: '',
+    },
   },
   setup(props) {
-    const { clusterId } = toRefs(props);
+    const { clusterId, nodeGroupID } = toRefs(props);
     const { clusterList } = useClusterList();
     const curCluster = computed(() => ($store.state as any).cluster.clusterList
       ?.find(item => item.clusterID === clusterId.value) || {});
@@ -113,12 +118,20 @@ export default defineComponent({
     // 获取默认值
     const defaultValues = ref<any>(null);
     const schema = ref({});
-    const handleGetCloudDefaultValues = async () => {
+    const handleGetSchemaData = async () => {
       const data = await $store.dispatch('clustermanager/resourceSchema', {
         $cloudID: curCluster.value.provider,
         $name: 'nodegroup',
       });
       schema.value = data?.schema || {};
+    };
+
+    // 获取详情
+    const handleGetNodeGroupDetail = async () => {
+      const data = await $store.dispatch('clustermanager/nodeGroupDetail', {
+        $nodeGroupID: nodeGroupID.value,
+      });
+      return data;
     };
 
     // 创建节点规格
@@ -152,8 +165,13 @@ export default defineComponent({
 
     onMounted(async () => {
       isLoading.value = true;
-      await handleGetCloudDefaultValues();
-      defaultValues.value = Schema.getSchemaDefaultValue(schema.value);
+      await handleGetSchemaData();
+      if (nodeGroupID.value) {
+        defaultValues.value = await handleGetNodeGroupDetail();
+        defaultValues.value.name = '';
+      } else {
+        defaultValues.value = Schema.getSchemaDefaultValue(schema.value);
+      }
       isLoading.value = false;
     });
     return {
@@ -167,6 +185,7 @@ export default defineComponent({
       curStep,
       curStepItem,
       stepComMap,
+      nodePoolData,
       handleNextStep,
       handlePreStep,
       handleConfirm,

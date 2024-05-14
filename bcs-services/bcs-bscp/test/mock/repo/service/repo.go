@@ -18,9 +18,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/thirdparty/repo"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/thirdparty/repo"
 )
 
 func (s *Service) createRepo(w http.ResponseWriter, r *http.Request) {
@@ -42,5 +42,4 @@ func (s *Service) createRepo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp.WriteResp(w, nil)
-	return
 }

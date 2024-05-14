@@ -22,11 +22,11 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/shutdown"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/test/mock/repo/options"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/test/mock/repo/service"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/shutdown"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/test/mock/repo/options"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/test/mock/repo/service"
 )
 
 type repoMock struct {
@@ -93,7 +93,7 @@ func (rp *repoMock) listenAndServe() error {
 
 	go func() {
 		notifier := shutdown.AddNotifier()
-		select {
+		select { // nolint
 		case <-notifier.Signal:
 			defer notifier.Done()
 
@@ -140,5 +140,4 @@ func (rp *repoMock) listenAndServe() error {
 }
 
 func (rp *repoMock) finalizer() {
-	return
 }

@@ -1,16 +1,16 @@
 /*
- * Tencent is pleased to support the open source community by making Blueking Container Service available.,
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
  * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 
-// Package masterpodcheck
+// Package masterpodcheck xxx
 package masterpodcheck
 
 import (
@@ -26,10 +26,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/k8s"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metric_manager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin_manager"
-
 	"github.com/dlclark/regexp2"
 	"github.com/prometheus/client_golang/prometheus"
 	"gopkg.in/yaml.v2"
@@ -41,9 +37,14 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/remotecommand"
 	"k8s.io/klog"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/k8s"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metric_manager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin_manager"
 )
 
 var (
+	// master Pod Name List
 	masterPodNameList = []string{
 		"kube-apiserver",
 		"kube-controller-manager",
@@ -61,6 +62,8 @@ type Plugin struct {
 }
 
 var (
+	// NewGaugeVec creates a new GaugeVec based on the provided GaugeOpts and
+	// partitioned by the given label names.
 	masterPodCheck = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "master_pod_check",
 		Help: "the result of master pod configuration consistency check operation, 1 means ok",
@@ -80,7 +83,7 @@ type MetricLabel struct {
 
 // ToLabelList xxx
 func (l *MetricLabel) ToLabelList() []string {
-	result := make([]string, 0, 0)
+	result := make([]string, 0)
 	result = append(result, l.Target)
 	result = append(result, l.TargetBiz)
 	result = append(result, l.Status)
@@ -150,6 +153,7 @@ func (p *Plugin) Name() string {
 }
 
 // Check xxx
+// nolint funlen
 func (p *Plugin) Check() {
 	start := time.Now()
 	p.checkLock.Lock()
@@ -177,17 +181,20 @@ func (p *Plugin) Check() {
 				plugin_manager.Pm.Done()
 			}()
 			klog.V(9).Infof("start masterpodcheck for %s", clusterId)
+			// GetClientsetByConfig cluster k8s client
 			clientSet, err := k8s.GetClientsetByConfig(config)
 			if err != nil {
 				klog.Errorf("%s GetClientsetByClusterId failed: %s", clusterId, err.Error())
 				return
 			}
 
+			// GetK8sVersion get cluster k8s version
 			clusterVersion, err := k8s.GetK8sVersion(clientSet)
 			if err != nil {
 				klog.Errorf("%s GetK8sVersion failed: %s", clusterId, err.Error())
 			}
 
+			// GetPods get namespace pods
 			ALLPodList, err := k8s.GetPods(clientSet, "kube-system", v1.ListOptions{}, "")
 			if err != nil {
 				klog.Errorf("%s GetPods failed: %s", clusterId, err.Error())
@@ -246,9 +253,10 @@ func (p *Plugin) Check() {
 	metric_manager.SetMetric(masterPodCheck, masterPodCheckGaugeVecSetList)
 }
 
+// check Master Pod
 func (p *Plugin) checkMasterPod(clientSet *kubernetes.Clientset, podList []corev1.Pod, podName string,
 	nodeLabelSelector string, clusterId string, clusterBiz string, config *rest.Config) []*metric_manager.GaugeVecSet {
-	result := make([]*metric_manager.GaugeVecSet, 0, 0)
+	result := make([]*metric_manager.GaugeVecSet, 0)
 
 	metricLabel := MetricLabel{
 		Target:    clusterId,
@@ -258,7 +266,7 @@ func (p *Plugin) checkMasterPod(clientSet *kubernetes.Clientset, podList []corev
 	var err error
 
 	// 获取本次要检查的master pod列表
-	masterPodList := make([]corev1.Pod, 0, 0)
+	masterPodList := make([]corev1.Pod, 0)
 	for _, pod := range podList {
 		if strings.Contains(pod.Name, podName) {
 			masterPodList = append(masterPodList, pod)
@@ -327,11 +335,13 @@ func (p *Plugin) checkMasterPod(clientSet *kubernetes.Clientset, podList []corev
 	return result
 }
 
+// check Pod Num
 func (p *Plugin) checkPodNum(clientSet *kubernetes.Clientset, nodeLabelSelector string, masterPodList []corev1.Pod,
 	podName string) string {
 	masterPodNum := len(masterPodList)
 
 	// ensure number of master node
+	// nolint
 	if podName != "etcd" {
 		ctx := context.Background()
 		nodeList, err := clientSet.CoreV1().Nodes().List(ctx, v1.ListOptions{
@@ -354,6 +364,7 @@ func (p *Plugin) checkPodNum(clientSet *kubernetes.Clientset, nodeLabelSelector 
 	return "ok"
 }
 
+// check Static Pod Consistency
 func (p *Plugin) checkStaticPodConsistency(podList []corev1.Pod) string {
 	podSpecList := make(map[string]corev1.PodSpec)
 	argsList := make(map[string]map[string][]string)
@@ -375,6 +386,7 @@ func (p *Plugin) checkStaticPodConsistency(podList []corev1.Pod) string {
 	// 对比容器配置以外的spec是否一致
 	var sampleSpec corev1.PodSpec
 	var sampleName string
+	// nolint
 	for podName, spec := range podSpecList {
 		if reflect.DeepEqual(sampleSpec, corev1.PodSpec{}) {
 			sampleSpec = spec
@@ -389,7 +401,7 @@ func (p *Plugin) checkStaticPodConsistency(podList []corev1.Pod) string {
 
 	// 对比容器命令行参数是否一致
 	var samplePodName string
-	for podName, _ := range argsList {
+	for podName := range argsList {
 		if samplePodName == "" {
 			samplePodName = podName
 			break
@@ -404,6 +416,7 @@ func (p *Plugin) checkStaticPodConsistency(podList []corev1.Pod) string {
 			continue
 		}
 
+		// nolint
 		for containerName, args := range containers {
 			if sampleArgs, ok := argsList[samplePodName][containerName]; !ok {
 				klog.Infof("pod %s doesn't have container %s", samplePodName, containerName)
@@ -422,21 +435,22 @@ func (p *Plugin) checkStaticPodConsistency(podList []corev1.Pod) string {
 	return "ok"
 }
 
+// check Arguments
 func checkArguments(argList1 []string, argList2 []string) error {
 	if len(argList1) != len(argList2) {
 		return fmt.Errorf("length not equal")
-	} else {
-		for index, arg1 := range argList1 {
-			arg2 := argList2[index]
-			if arg1 != arg2 {
-				// exclude ip address
-				re, _ := regexp.Compile(
-					"(([1-9]?[0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])")
-				arg1WithoutIp := re.ReplaceAllString(arg1, "")
-				arg2WithoutIp := re.ReplaceAllString(arg2, "")
-				if arg1WithoutIp != arg2WithoutIp {
-					return fmt.Errorf("arg %s not equal", arg1WithoutIp)
-				}
+	}
+	for index, arg1 := range argList1 {
+		arg2 := argList2[index]
+		if arg1 != arg2 {
+			// exclude ip address
+			// nolint
+			re, _ := regexp.Compile(
+				"(([1-9]?[0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])")
+			arg1WithoutIp := re.ReplaceAllString(arg1, "")
+			arg2WithoutIp := re.ReplaceAllString(arg2, "")
+			if arg1WithoutIp != arg2WithoutIp {
+				return fmt.Errorf("arg %s not equal", arg1WithoutIp)
 			}
 		}
 	}
@@ -444,11 +458,12 @@ func checkArguments(argList1 []string, argList2 []string) error {
 	return nil
 }
 
+// check Scheduler Policy
 func (p *Plugin) checkSchedulerPolicy(clientSet *kubernetes.Clientset, restConfig *rest.Config,
 	podList []corev1.Pod) (string, error) {
 	if len(podList) == 0 {
 		klog.Infof("no kube-scheduler pods were found")
-		return "访问集群失败", nil
+		return "访问集群失败", nil // nolint
 	} else if len(podList) == 1 {
 		return "单实例", nil
 	}
@@ -469,6 +484,7 @@ func (p *Plugin) checkSchedulerPolicy(clientSet *kubernetes.Clientset, restConfi
 	return p.checkPodFileConsistency(restConfig, clientSet, podList, "kube-scheduler", filePath)
 }
 
+// check Pod File Consistency
 func (p *Plugin) checkPodFileConsistency(restConfig *rest.Config, clientSet *kubernetes.Clientset, podList []corev1.Pod,
 	containerName string, filePath string) (string, error) {
 	ctx := context.Background()
@@ -489,7 +505,7 @@ func (p *Plugin) checkPodFileConsistency(restConfig *rest.Config, clientSet *kub
 
 		exec, err := remotecommand.NewSPDYExecutor(restConfig, "POST", req.URL())
 		if err != nil {
-			return "访问集群失败", fmt.Errorf("NewSPDYExecutor failed: %s", err.Error())
+			return "访问集群失败", fmt.Errorf("NewSPDYExecutor failed: %s", err.Error()) // nolint
 		}
 
 		var stdout, stderr bytes.Buffer
@@ -507,26 +523,25 @@ func (p *Plugin) checkPodFileConsistency(restConfig *rest.Config, clientSet *kub
 		execMsg := stdout.String()
 		if errMsg != "" {
 			klog.Infof("Exec failed: %s", errMsg)
-			return "访问集群失败", nil
+			return "访问集群失败", nil // nolint
 		} else if execMsg == "" {
 			klog.Infof("%s is blank", filePath)
-			return "访问集群失败", nil
+			return "访问集群失败", nil // nolint
 		}
 
 		if sampleFile == "" {
 			sampleFile = execMsg
 			sampleName = pod.Name
-		} else {
-			if sampleFile != execMsg {
-				klog.Infof("pod %s policy %s doesn't equal pod %s policy %s",
-					sampleName, sampleFile, pod.Name, execMsg)
-				return "配置不一致", nil
-			}
+		} else if sampleFile != execMsg {
+			klog.Infof("pod %s policy %s doesn't equal pod %s policy %s",
+				sampleName, sampleFile, pod.Name, execMsg)
+			return "配置不一致", nil // nolint
 		}
 	}
 	return "ok", nil
 }
 
+// check Pod Config
 func (p *Plugin) checkPodConfig(obj interface{}, path string, regex string) (bool, error) {
 	value := reflect.ValueOf(obj)
 	fields := strings.Split(path, ".")
@@ -534,17 +549,16 @@ func (p *Plugin) checkPodConfig(obj interface{}, path string, regex string) (boo
 		if value.Kind() != reflect.Struct && value.Kind() != reflect.Slice && value.Kind() != reflect.Pointer {
 			return false, fmt.Errorf("invalid field %s in path %s %s", field, path, value)
 		}
-		if value.Kind() == reflect.Slice {
+		if value.Kind() == reflect.Slice { // nolint rewrite if-else to switch statement
 			indexStr := strings.Trim(field, "[]")
 			index, err := strconv.Atoi(indexStr)
 			if err != nil {
 				return false, fmt.Errorf("invalid field %s in path %s %s", field, path, value)
 			}
-			if value.Len() >= index+1 {
-				value = value.Index(index)
-			} else {
+			if !(value.Len() >= index+1) {
 				return true, nil
 			}
+			value = value.Index(index)
 		} else if value.Kind() == reflect.Struct {
 			// 如果当前值是结构体，就按照字段名获取对应属性值
 			fieldValue := value.FieldByName(field)

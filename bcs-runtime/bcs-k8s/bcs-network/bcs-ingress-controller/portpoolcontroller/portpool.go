@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -17,17 +17,16 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/pkg/errors"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
+	"github.com/pkg/errors"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
 	ingresscommon "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/portpoolcache"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/pkg/common"
-	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
-
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // PortPoolHandler handler for port pool
@@ -53,6 +52,7 @@ func newPortPoolHandler(ns, region string,
 
 // ensure port pool
 // the returned bool value indicates whether you need to retry
+// nolint  funlen
 func (pph *PortPoolHandler) ensurePortPool(pool *networkextensionv1.PortPool) (bool, error) {
 	defItemMap := make(map[string]*networkextensionv1.PortPoolItem)
 	for _, poolItem := range pool.Spec.PoolItems {
@@ -127,9 +127,7 @@ func (pph *PortPoolHandler) ensurePortPool(pool *networkextensionv1.PortPool) (b
 			pool.Status.PoolItemStatuses[i] = updateItemStatusMap[ts.GetKey()]
 		}
 	}
-	for _, ts := range newItemStatusList {
-		pool.Status.PoolItemStatuses = append(pool.Status.PoolItemStatuses, ts)
-	}
+	pool.Status.PoolItemStatuses = append(pool.Status.PoolItemStatuses, newItemStatusList...)
 
 	pool.Status.Status = checkPortPoolStatus(pool)
 
@@ -145,7 +143,8 @@ func (pph *PortPoolHandler) ensurePortPool(pool *networkextensionv1.PortPool) (b
 
 	// update related cache
 	poolKey := ingresscommon.GetNamespacedNameKey(pool.GetName(), pool.GetNamespace())
-	pph.ensureCache(poolKey, tmpItemsStatus, successDeletedKeyMap, failedDeletedKeyMap, newItemStatusList, updateItemStatusMap)
+	pph.ensureCache(poolKey, pool.GetAllocatePolicy(), tmpItemsStatus, successDeletedKeyMap, failedDeletedKeyMap,
+		newItemStatusList, updateItemStatusMap)
 
 	if len(failedDeletedKeyMap) != 0 || shouldRetry {
 		return true, nil
@@ -211,7 +210,7 @@ func (pph *PortPoolHandler) deletePortPool(pool *networkextensionv1.PortPool) (b
 		itemKey := itemStatus.GetKey()
 		if _, ok := successDeletedKeyMap[itemKey]; !ok {
 			if _, inOk := failedDeletedKeyMap[itemKey]; inOk {
-				pph.poolCache.SetPortPoolItemStatus(poolKey, itemStatus)
+				pph.poolCache.SetPortPoolItemStatus(poolKey, itemStatus) // nolint
 			}
 		} else {
 			pph.poolCache.DeletePortPoolItem(poolKey, itemKey)
@@ -273,7 +272,8 @@ func (pph *PortPoolHandler) ensurePortBinding(pool *networkextensionv1.PortPool)
 	return nil
 }
 
-func (pph *PortPoolHandler) ensureCache(poolKey string, tmpItemsStatus []*networkextensionv1.PortPoolItemStatus,
+func (pph *PortPoolHandler) ensureCache(poolKey string, allocatePolicy string, tmpItemsStatus []*networkextensionv1.
+	PortPoolItemStatus,
 	successDeletedKeyMap, failedDeletedKeyMap map[string]struct{}, newItemStatusList []*networkextensionv1.
 		PortPoolItemStatus, updateItemStatusMap map[string]*networkextensionv1.PortPoolItemStatus) {
 
@@ -284,7 +284,7 @@ func (pph *PortPoolHandler) ensureCache(poolKey string, tmpItemsStatus []*networ
 		itemKey := itemStatus.GetKey()
 		if _, ok := successDeletedKeyMap[itemKey]; !ok {
 			if _, inOk := failedDeletedKeyMap[itemKey]; inOk {
-				pph.poolCache.SetPortPoolItemStatus(poolKey, itemStatus)
+				pph.poolCache.SetPortPoolItemStatus(poolKey, itemStatus) // nolint
 				blog.Infof("set port pool %s item %s status to %s",
 					poolKey, itemStatus.ItemName, constant.PortPoolItemStatusDeleting)
 			}
@@ -295,7 +295,7 @@ func (pph *PortPoolHandler) ensureCache(poolKey string, tmpItemsStatus []*networ
 	}
 	// add item to pool cache
 	for _, itemStatus := range newItemStatusList {
-		if err := pph.poolCache.AddPortPoolItem(poolKey, itemStatus); err != nil {
+		if err := pph.poolCache.AddPortPoolItem(poolKey, allocatePolicy, itemStatus); err != nil {
 			blog.Warnf("failed to add port pool %s item %v to cache, err %s", poolKey, itemStatus, err.Error())
 		} else {
 			blog.Infof("add port pool %s item %v to cache", poolKey, itemStatus)
@@ -303,7 +303,7 @@ func (pph *PortPoolHandler) ensureCache(poolKey string, tmpItemsStatus []*networ
 	}
 	// update item status
 	for _, itemStatus := range updateItemStatusMap {
-		pph.poolCache.SetPortPoolItemStatus(poolKey, itemStatus)
+		pph.poolCache.SetPortPoolItemStatus(poolKey, itemStatus) // nolint
 		blog.Infof("set port pool %s item %s status to %s", poolKey, itemStatus.ItemName, itemStatus.Status)
 	}
 }

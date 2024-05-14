@@ -13,15 +13,15 @@
 package dao
 
 import (
+	"errors"
 	"fmt"
 
-	"github.com/pkg/errors"
-
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/utils"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // Kv supplies all the kv related operations.
@@ -38,6 +38,8 @@ type Kv interface {
 	Delete(kit *kit.Kit, kv *table.Kv) error
 	// DeleteWithTx delete kv instance with transaction.
 	DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, kv *table.Kv) error
+	// UpdateWithTx update kv instance with transaction.
+	UpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, kv *table.Kv) error
 	// GetByKvState get kv by KvState.
 	GetByKvState(kit *kit.Kit, bizID, appID uint32, key string, kvState []string) (*table.Kv, error)
 	// GetByID get kv by id.
@@ -47,7 +49,7 @@ type Kv interface {
 	// BatchUpdateWithTx batch create content instances with transaction.
 	BatchUpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, kvs []*table.Kv) error
 	// ListAllByAppID list all Kv by appID
-	ListAllByAppID(kit *kit.Kit, appID uint32, bizID uint32, KvState []string) ([]*table.Kv, error)
+	ListAllByAppID(kit *kit.Kit, appID uint32, bizID uint32, kvState []string) ([]*table.Kv, error)
 	// GetCount bizID config count
 	GetCount(kit *kit.Kit, bizID uint32, appId []uint32) ([]*table.ListConfigItemCounts, error)
 	// UpdateSelectedKVStates updates the states of selected kv pairs using a transaction
@@ -63,6 +65,31 @@ type kvDao struct {
 	genQ     *gen.Query
 	idGen    IDGenInterface
 	auditDao AuditDao
+}
+
+// UpdateWithTx update kv instance with transaction.
+func (dao *kvDao) UpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, kv *table.Kv) error {
+	// 参数校验
+	if err := kv.ValidateUpdate(); err != nil {
+		return err
+	}
+
+	// 编辑操作, 获取当前记录做审计
+	m := tx.Kv
+	q := tx.Kv.WithContext(kit.Ctx)
+	oldOne, err := q.Where(m.ID.Eq(kv.ID), m.BizID.Eq(kv.Attachment.BizID), m.AppID.Eq(kv.Attachment.AppID)).Take()
+	if err != nil {
+		return err
+	}
+	ad := dao.auditDao.DecoratorV2(kit, kv.Attachment.BizID).PrepareUpdate(kv, oldOne)
+
+	_, err = q.Where(m.BizID.Eq(kv.Attachment.BizID), m.ID.Eq(kv.ID)).Select(m.Version, m.UpdatedAt,
+		m.Reviser, m.KvState, m.Signature, m.Md5, m.ByteSize).Updates(kv)
+	if err != nil {
+		return err
+	}
+
+	return ad.Do(tx.Query)
 }
 
 func (dao *kvDao) Create(kit *kit.Kit, kv *table.Kv) (uint32, error) {
@@ -121,7 +148,7 @@ func (dao *kvDao) Update(kit *kit.Kit, kv *table.Kv) error {
 	updateTx := func(tx *gen.Query) error {
 		q = tx.Kv.WithContext(kit.Ctx)
 		if _, e := q.Where(m.BizID.Eq(kv.Attachment.BizID), m.ID.Eq(kv.ID)).Select(m.Version, m.UpdatedAt,
-			m.Reviser, m.KvState).Updates(kv); e != nil {
+			m.Reviser, m.KvState, m.Signature, m.Md5, m.ByteSize, m.Memo).Updates(kv); e != nil {
 			return e
 		}
 
@@ -141,21 +168,34 @@ func (dao *kvDao) Update(kit *kit.Kit, kv *table.Kv) error {
 func (dao *kvDao) List(kit *kit.Kit, opt *types.ListKvOption) ([]*table.Kv, int64, error) {
 
 	m := dao.genQ.Kv
+	q := dao.genQ.Kv.WithContext(kit.Ctx)
 
 	orderCol, ok := m.GetFieldByName(opt.Page.Sort)
 	if !ok {
 		return nil, 0, errors.New("user doesn't contains orderColStr")
 	}
-	if opt.Page.Order == types.Descending {
-		orderCol.Desc()
-	}
 
-	q := dao.genQ.Kv.WithContext(kit.Ctx).Where(m.BizID.Eq(opt.BizID), m.AppID.Eq(opt.AppID)).Order(orderCol)
+	orderStr := "CASE WHEN kv_state = 'ADD' THEN 1 WHEN kv_state = 'REVISE' THEN 2 " +
+		"WHEN kv_state = 'DELETE' THEN 3 WHEN kv_state = 'UNCHANGE' THEN 4 END,`key` asc"
+
+	if opt.Page.Order == types.Descending {
+		q = q.Order(orderCol.Desc())
+	} else if len(opt.TopIDs) != 0 {
+		q = q.Order(utils.NewCustomExpr("CASE WHEN id IN (?) THEN 0 ELSE 1 END, "+orderStr, []interface{}{opt.TopIDs}))
+	} else {
+		q = q.Order(utils.NewCustomExpr(orderStr, nil))
+	}
 
 	if opt.SearchKey != "" {
-		searchKey := "%" + opt.SearchKey + "%"
-		q = q.Where(m.Key.Like(searchKey)).Or(m.Creator.Like(searchKey)).Or(m.Reviser.Like(searchKey))
+		searchKey := "(?i)" + opt.SearchKey
+		q = q.Where(q.Where(q.Or(m.Key.Regexp(searchKey)).Or(m.Creator.Regexp(searchKey)).Or(
+			m.Reviser.Regexp(searchKey))))
 	}
+
+	if len(opt.Status) != 0 {
+		q = q.Where(m.KvState.In(opt.Status...))
+	}
+	q = q.Where(m.BizID.Eq(opt.BizID)).Where(m.AppID.Eq(opt.AppID))
 
 	if len(opt.KvType) > 0 {
 		q = q.Where(m.KvType.In(opt.KvType...))

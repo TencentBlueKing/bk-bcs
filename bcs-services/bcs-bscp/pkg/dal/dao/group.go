@@ -15,11 +15,11 @@ package dao
 import (
 	"fmt"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // Group supplies all the group related operations.
@@ -242,12 +242,11 @@ func (dao *groupDao) ListGroupReleasedApps(kit *kit.Kit, opts *types.ListGroupRe
 			Where(g.GroupID.Eq(opts.GroupID), a.BizID.Eq(opts.BizID), r.BizID.Eq(opts.BizID), g.BizID.Eq(opts.BizID)).
 			ScanByPage(&list, int(opts.Start), int(opts.Limit))
 	} else {
-		searcyKey := fmt.Sprintf("%%%s%%", opts.SearchKey)
 		count, err = a.WithContext(kit.Ctx).
 			Select(a.ID.As("app_id"), a.Name.As("app_name"), r.ID.As("release_id"), r.Name.As("release_name"), g.Edited).
 			Join(r, a.ID.EqCol(r.AppID)).Join(g, r.ID.EqCol(g.ReleaseID), a.ID.EqCol(g.AppID)).
 			Where(g.GroupID.Eq(opts.GroupID), a.BizID.Eq(opts.BizID), r.BizID.Eq(opts.BizID), g.BizID.Eq(opts.BizID)).
-			Where(aq.Where(a.Name.Like(searcyKey)).Or(r.Name.Like(searcyKey))).
+			Where(aq.Where(a.Name.Regexp("(?i)"+opts.SearchKey)).Or(r.Name.Regexp("(?i)"+opts.SearchKey))).
 			ScanByPage(&list, int(opts.Start), int(opts.Limit))
 	}
 

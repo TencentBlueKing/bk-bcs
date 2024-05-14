@@ -23,9 +23,9 @@ import (
 
 	etcd3 "go.etcd.io/etcd/client/v3"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/version"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/version"
 )
 
 const (
@@ -37,13 +37,33 @@ const (
 	RedisClusterMode = "cluster"
 )
 
-// FeatureFlag 枚举类型, 常量使用全部大写表示
-type FeatureFlag string
+// FeatureFlags 特性配置
+type FeatureFlags struct {
+	// BizView 业务白名单
+	BizView FeatureBizView `json:"biz_view" yaml:"BIZ_VIEW"`
+	// ResourceLimit 业务资源限制
+	ResourceLimit FeatureResourceLimit `json:"resource_limit" yaml:"RESOURCE_LIMIT"`
+}
 
-const (
-	// BizViewFlag 业务白名单
-	BizViewFlag FeatureFlag = "BIZ_VIEW"
-)
+// FeatureBizView 业务白名单
+type FeatureBizView struct {
+	Default bool `yaml:"default"`
+	// map[bizID]true/false
+	Spec map[string]bool `yaml:"spec"`
+}
+
+// FeatureResourceLimit 业务资源限制
+type FeatureResourceLimit struct {
+	Default ResourceLimit `json:"default" yaml:"default"`
+	// map[bizID]ResourceLimit
+	Spec map[string]ResourceLimit `json:"spec" yaml:"spec"`
+}
+
+// ResourceLimit 资源限制配置项
+type ResourceLimit struct {
+	// 配置文件大小上限，单位 Mb
+	MaxFileSize uint `json:"maxFileSize" yaml:"maxFileSize"`
+}
 
 // Service defines Setting related runtime.
 type Service struct {
@@ -590,8 +610,13 @@ func (log LogOption) Logs() logs.LogConfig {
 
 // Network defines all the network related options
 type Network struct {
-	// BindIP is ip where server working on
+	// BindIP is the advertised IP address for service discovery.
+	// if in ipv4 single stack mode, the BindIP would be ipv4 address.
+	// if in ipv6 single stack mode, the BindIP would be ipv6 address.
 	BindIP string `yaml:"bindIP"`
+	// BindIPv6 is the ipv6 address, which service would listen to.
+	// it would be set only in single ipv6 stack mode or dual stack mode.
+	BindIPv6 string `yaml:"bindIPv6"`
 	// RpcPort is port where server listen to rpc port.
 	RpcPort uint `yaml:"rpcPort"`
 	// HttpPort is port where server listen to http port.
@@ -629,6 +654,9 @@ func (n *Network) trySetFlagPort(port, grpcPort int) error {
 func (n *Network) trySetDefault() {
 	if len(n.BindIP) == 0 {
 		n.BindIP = "127.0.0.1"
+	}
+	if len(n.BindIPv6) == 0 {
+		n.BindIPv6 = tools.GetIPv6AddrFromEnv()
 	}
 }
 
@@ -803,6 +831,11 @@ type FSLocalCache struct {
 	ReleasedHookCacheSize uint `yaml:"releasedHookCacheSize"`
 	// ReleasedHookCacheTTLSec defines how long will this released hooks can be cached in seconds.
 	ReleasedHookCacheTTLSec uint `yaml:"releasedHookCacheTTLSec"`
+
+	// AsyncDownloadCacheSize defines how many async download task can be cached.
+	AsyncDownloadCacheSize uint `yaml:"asyncDownloadCacheSize"`
+	// AsyncDownloadCacheTTLSec defines how long will this async download task can be cached in seconds.
+	AsyncDownloadCacheTTLSec uint `yaml:"asyncDownloadCacheTTLSec"`
 }
 
 // validate if the feed server's local cache runtime is valid or not.
@@ -891,6 +924,14 @@ func (fc *FSLocalCache) trySetDefault() {
 
 	if fc.ReleasedHookCacheTTLSec == 0 {
 		fc.ReleasedHookCacheTTLSec = 120
+	}
+
+	if fc.AsyncDownloadCacheSize == 0 {
+		fc.AsyncDownloadCacheSize = 5000
+	}
+
+	if fc.AsyncDownloadCacheTTLSec == 0 {
+		fc.AsyncDownloadCacheTTLSec = 600
 	}
 }
 
@@ -1011,6 +1052,14 @@ type Vault struct {
 	Address string `yaml:"address"`
 	// Token is used for accessing the Vault server
 	Token string `yaml:"token"`
+	// PluginDir is the directory where the Vault plugin is located
+	PluginDir string `yaml:"pluginDir"`
+	// UnsealKeys is used to unseal vault server
+	UnsealKeys []string `yaml:"unsealKeys"`
+	// SecretShares is the number of key shares to split the master key into
+	SecretShares int `yaml:"secretShares"`
+	// SecretThreshold is the number of key shares required to reconstruct the master key
+	SecretThreshold int `yaml:"secretThreshold"`
 }
 
 // validate Vault options
@@ -1030,6 +1079,74 @@ func (v Vault) validate() error {
 // getConfigFromEnv Read configuration from environment variables
 func (v *Vault) getConfigFromEnv() {
 
-	v.Token = os.Getenv(VaultTokenEnv)
-	v.Address = os.Getenv(VaultAddressEnv)
+	if v.Token == "" {
+		v.Token = os.Getenv(VaultTokenEnv)
+	}
+	if v.Address == "" {
+		v.Address = os.Getenv(VaultAddressEnv)
+	}
+}
+
+// BKNotice defines all the bk notice related runtime.
+type BKNotice struct {
+	Enable bool   `yaml:"enable"`
+	Host   string `yaml:"host"`
+}
+
+// BCS defines all the bcs related runtime.
+type BCS struct {
+	Host  string `yaml:"host"`
+	Token string `yaml:"token"`
+}
+
+// GSE defines all the gse related runtime.-
+type GSE struct {
+	// Enabled is the flag to enable gse p2p download.
+	Enabled bool `yaml:"enabled"`
+	// Host is the gse bk api gateway address.
+	Host string `yaml:"host"`
+	// NodeAgentID is the node's agent id where feed server deployded, it might be different in different instance,
+	// so recommend to get it from the environment variable.
+	NodeAgentID string `yaml:"nodeAgentID"`
+	// ClusterID is the cluster id where feed server deployded.
+	ClusterID string `yaml:"clusterID"`
+	// PodID is the pod's id where feed server deployded, it must be different in different instance,
+	// so must get it from the environment variable.
+	PodID string `yaml:"podID"`
+	// ContainerName is the container's name of the feed server
+	ContainerName string `yaml:"containerName"`
+	// AgentUser is the user exists in the feed server container/node.
+	AgentUser string `yaml:"agentUser"`
+	// SourceDir is the directory where the source file download to and stored.
+	SourceDir string `yaml:"sourceDir"`
+}
+
+func (g *GSE) getFromEnv() {
+	if len(g.NodeAgentID) == 0 {
+		g.NodeAgentID = os.Getenv("BSCP_NODE_AGENT_ID")
+	}
+
+	if len(g.ClusterID) == 0 {
+		g.ClusterID = os.Getenv("BSCP_CLUSTER_ID")
+	}
+
+	if len(g.PodID) == 0 {
+		g.PodID = os.Getenv("POD_ID")
+	}
+
+	if len(g.ContainerName) == 0 {
+		g.ContainerName = os.Getenv("BSCP_CONTAINER_NAME")
+	}
+}
+
+// validate gse runtime
+func (g GSE) validate() error {
+	if !g.Enabled {
+		return nil
+	}
+	if g.NodeAgentID == "" && (g.ClusterID == "" || g.PodID == "" || g.ContainerName == "") {
+		return errors.New("to enable p2p download, either agent id must be set or cluster id, " +
+			"pod id, container name must all be set")
+	}
+	return nil
 }

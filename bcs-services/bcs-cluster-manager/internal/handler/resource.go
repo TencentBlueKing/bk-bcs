@@ -24,6 +24,23 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/metrics"
 )
 
+// GetResourceGroups implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) GetResourceGroups(ctx context.Context,
+	req *cmproto.GetResourceGroupsRequest, resp *cmproto.GetResourceGroupsResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	ga := cloudresource.NewGetResourceGroupsAction(cm.model)
+	ga.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("GetResourceGroups", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: GetResourceGroups, req %v, resp.Code %d, resp.Message %s, resp.Data %v",
+		reqID, req, resp.Code, resp.Message, resp.Data)
+	blog.V(5).Infof("reqID: %s, action: GetResourceGroups, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
 // GetCloudRegions implements interface cmproto.ClusterManagerServer
 func (cm *ClusterManager) GetCloudRegions(ctx context.Context,
 	req *cmproto.GetCloudRegionsRequest, resp *cmproto.GetCloudRegionsResponse) error {
@@ -123,6 +140,23 @@ func (cm *ClusterManager) ListCloudOsImage(ctx context.Context,
 	blog.Infof("reqID: %s, action: ListCloudOsImage, req %v, resp.Code %d, "+
 		"resp.Message %s, resp.Data.Length %v", reqID, req, resp.Code, resp.Message, len(resp.Data))
 	blog.V(5).Infof("reqID: %s, action: ListCloudOsImage, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
+// ListCloudRuntimeInfo implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) ListCloudRuntimeInfo(ctx context.Context,
+	req *cmproto.ListCloudRuntimeInfoRequest, resp *cmproto.ListCloudRuntimeInfoResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	fa := cloudresource.NewListCloudRuntimeInfoAction(cm.model)
+	fa.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("ListCloudRuntimeInfo", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: ListCloudRuntimeInfo, req %v, resp.Code %d, "+
+		"resp.Message %s, resp.Data.Length %v", reqID, req, resp.Code, resp.Message, len(resp.Data))
+	blog.V(5).Infof("reqID: %s, action: ListCloudRuntimeInfo, req %v, resp %v", reqID, req, resp)
 	return nil
 }
 

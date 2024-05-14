@@ -28,15 +28,18 @@ import (
 
 // AksServiceImpl azure服务
 type AksServiceImpl struct {
-	resourcesGroup       string
 	netClient            *armnetwork.InterfacesClient
 	resourceClient       *armcompute.ResourceSKUsClient
 	poolClient           *armcontainerservice.AgentPoolsClient
 	setClient            *armcompute.VirtualMachineScaleSetsClient
 	vmClient             *armcompute.VirtualMachineScaleSetVMsClient
+	vmSizeClient         *armcompute.VirtualMachineSizesClient
+	vmImageClient        *armcompute.VirtualMachineImagesClient
 	vnetClient           *armnetwork.VirtualNetworksClient
+	subnetClient         *armnetwork.SubnetsClient
 	clustersClient       *armcontainerservice.ManagedClustersClient
 	securityGroupsClient *armnetwork.SecurityGroupsClient
+	sshPubKeyClient      *armcompute.SSHPublicKeysClient
 }
 
 // NewAksServiceImplWithCommonOption 从 CommonOption 创建 AksService
@@ -46,12 +49,10 @@ func NewAksServiceImplWithCommonOption(opt *cloudprovider.CommonOption) (AksServ
 	}
 	account := opt.Account
 	if len(account.SubscriptionID) == 0 || len(account.TenantID) == 0 ||
-		len(account.ClientID) == 0 || len(account.ClientSecret) == 0 ||
-		len(account.ResourceGroupName) == 0 {
+		len(account.ClientID) == 0 || len(account.ClientSecret) == 0 {
 		return nil, cloudprovider.ErrCloudCredentialLost
 	}
-	return NewAKsServiceImpl(account.SubscriptionID, account.TenantID, account.ClientID, account.ClientSecret,
-		account.ResourceGroupName)
+	return NewAKsServiceImpl(account.SubscriptionID, account.TenantID, account.ClientID, account.ClientSecret)
 }
 
 // NewAksServiceImplWithAccount 从 Account 创建 AksService
@@ -60,17 +61,16 @@ func NewAksServiceImplWithAccount(account *proto.Account) (AksService, error) {
 		return nil, cloudprovider.ErrCloudCredentialLost
 	}
 	if len(account.SubscriptionID) == 0 || len(account.TenantID) == 0 ||
-		len(account.ClientID) == 0 || len(account.ClientSecret) == 0 ||
-		len(account.ResourceGroupName) == 0 {
+		len(account.ClientID) == 0 || len(account.ClientSecret) == 0 {
 		return nil, cloudprovider.ErrCloudCredentialLost
 	}
 
-	return NewAKsServiceImpl(account.SubscriptionID, account.TenantID, account.ClientID, account.ClientSecret,
-		account.ResourceGroupName)
+	// attention: resourcesGroup may be empty, please
+	return NewAKsServiceImpl(account.SubscriptionID, account.TenantID, account.ClientID, account.ClientSecret)
 }
 
 // NewAKsServiceImpl 创建AksService
-func NewAKsServiceImpl(subscriptionID, tenantID, clientID, clientSecret, resourceGroupName string) (AksService, error) {
+func NewAKsServiceImpl(subscriptionID, tenantID, clientID, clientSecret string) (AksService, error) {
 	if len(subscriptionID) == 0 || len(tenantID) == 0 || len(clientID) == 0 || len(clientSecret) == 0 {
 		return nil, cloudprovider.ErrCloudCredentialLost
 	}
@@ -94,6 +94,14 @@ func NewAKsServiceImpl(subscriptionID, tenantID, clientID, clientSecret, resourc
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to create vmScaleSetVMs client,SubscriptionID:%s", subscriptionID)
 	}
+	vmSizeClient, err := armcompute.NewVirtualMachineSizesClient(subscriptionID, cred, nil)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to create VMSize client,SubscriptionID:%s", subscriptionID)
+	}
+	vmimageClient, err := armcompute.NewVirtualMachineImagesClient(subscriptionID, cred, nil)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to create VMImages client,SubscriptionID:%s", subscriptionID)
+	}
 	netClient, err := armnetwork.NewInterfacesClient(subscriptionID, cred, nil)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to create networkInterfaces client,SubscriptionID:%s", subscriptionID)
@@ -107,22 +115,35 @@ func NewAKsServiceImpl(subscriptionID, tenantID, clientID, clientSecret, resourc
 		return nil, errors.Wrapf(err, "failed to create virtual networks client,SubscriptionID:%s",
 			subscriptionID)
 	}
+	subnetClient, err := armnetwork.NewSubnetsClient(subscriptionID, cred, nil)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to create subnets client,SubscriptionID:%s",
+			subscriptionID)
+	}
 	securityGroupsClient, err := armnetwork.NewSecurityGroupsClient(subscriptionID, cred, nil)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to create security groups client,SubscriptionID:%s",
 			subscriptionID)
 	}
+	sshPubKeyClient, err := armcompute.NewSSHPublicKeysClient(subscriptionID, cred, nil)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to create ssh public keys client,SubscriptionID:%s",
+			subscriptionID)
+	}
 
 	return &AksServiceImpl{
-		resourcesGroup:       resourceGroupName,
 		vmClient:             vmClient,
+		vmSizeClient:         vmSizeClient,
+		vmImageClient:        vmimageClient,
 		setClient:            setClient,
 		netClient:            netClient,
 		poolClient:           poolClient,
 		clustersClient:       clustersClient,
 		resourceClient:       resourceClient,
 		vnetClient:           vnetClient,
+		subnetClient:         subnetClient,
 		securityGroupsClient: securityGroupsClient,
+		sshPubKeyClient:      sshPubKeyClient,
 	}, nil
 }
 
@@ -131,9 +152,8 @@ func NewAKsServiceImpl(subscriptionID, tenantID, clientID, clientSecret, resourc
 // resourceGroupName - 资源组名称(Account.resourceGroupName)
 //
 // resourceName - K8S名称(Cluster.SystemID).
-func (aks *AksServiceImpl) GetCluster(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) (
-	*armcontainerservice.ManagedCluster, error) {
-	resourceGroupName := info.CmOption.Account.ResourceGroupName
+func (aks *AksServiceImpl) GetCluster(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
+	resourceGroupName string) (*armcontainerservice.ManagedCluster, error) {
 	return aks.GetClusterWithName(ctx, resourceGroupName, info.Cluster.SystemID)
 }
 
@@ -200,8 +220,8 @@ func (aks *AksServiceImpl) ListClusterByResourceGroupName(ctx context.Context, l
 // resourceGroupName - 资源组名称(Account.resourceGroupName)
 //
 // resourceName - K8S名称(Cluster.SystemID).
-func (aks *AksServiceImpl) DeleteCluster(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) error {
-	resourceGroupName := info.CmOption.Account.ResourceGroupName
+func (aks *AksServiceImpl) DeleteCluster(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
+	resourceGroupName string) error {
 	return aks.DeleteClusterWithName(ctx, resourceGroupName, info.Cluster.SystemID)
 }
 
@@ -228,9 +248,8 @@ func (aks *AksServiceImpl) DeleteClusterWithName(ctx context.Context, resourceGr
 // resourceGroupName - 资源组名称(Account.resourceGroupName)
 //
 // resourceName - K8S名称(Cluster.SystemID).
-func (aks *AksServiceImpl) GetClusterAdminCredentials(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) (
-	[]*armcontainerservice.CredentialResult, error) {
-	resourceGroupName := info.CmOption.Account.ResourceGroupName
+func (aks *AksServiceImpl) GetClusterAdminCredentials(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
+	resourceGroupName string) ([]*armcontainerservice.CredentialResult, error) {
 	return aks.GetClusterAdminCredentialsWithName(ctx, resourceGroupName, info.Cluster.SystemID)
 }
 
@@ -254,9 +273,8 @@ func (aks *AksServiceImpl) GetClusterAdminCredentialsWithName(
 // resourceGroupName - 资源组名称(Account.resourceGroupName)
 //
 // resourceName - K8S名称(Cluster.SystemID).
-func (aks *AksServiceImpl) GetClusterUserCredentials(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) (
-	[]*armcontainerservice.CredentialResult, error) {
-	resourceGroupName := info.CmOption.Account.ResourceGroupName
+func (aks *AksServiceImpl) GetClusterUserCredentials(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
+	resourceGroupName string) ([]*armcontainerservice.CredentialResult, error) {
 	return aks.GetClusterUserCredentialsWithName(ctx, resourceGroupName, info.Cluster.SystemID)
 }
 
@@ -281,9 +299,8 @@ func (aks *AksServiceImpl) GetClusterUserCredentialsWithName(
 //
 // resourceName - K8S名称(Cluster.SystemID).
 func (aks *AksServiceImpl) GetClusterMonitoringUserCredentials(
-	ctx context.Context, info *cloudprovider.CloudDependBasicInfo) (
+	ctx context.Context, info *cloudprovider.CloudDependBasicInfo, resourceGroupName string) (
 	[]*armcontainerservice.CredentialResult, error) {
-	resourceGroupName := info.CmOption.Account.ResourceGroupName
 	return aks.GetClusterMonitorUserCredWithName(ctx, resourceGroupName, info.Cluster.SystemID)
 }
 
@@ -301,4 +318,69 @@ func (aks *AksServiceImpl) GetClusterMonitorUserCredWithName(
 		return nil, errors.Wrapf(err, "failed to finish the request")
 	}
 	return credentials.Kubeconfigs, nil
+}
+
+// ListVMSize 获取VM机型(ListVMSize)
+//
+// location - 区域名称
+func (aks *AksServiceImpl) ListVMSize(ctx context.Context, location string) ([]*armcompute.VirtualMachineSize, error) {
+	pager := aks.vmSizeClient.NewListPager(location, nil)
+	result := make([]*armcompute.VirtualMachineSize, 0)
+	for pager.More() {
+		next, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to advance page")
+		}
+		result = append(result, next.Value...)
+	}
+
+	return result, nil
+}
+
+// ListOsImage 获取VM操作系统镜像(ListOsImage)
+//
+// location - 区域名称
+//
+// publisher - OS发行商
+//
+// offer - OS提供商.
+func (aks *AksServiceImpl) ListOsImage(ctx context.Context, location, publisher, offer string,
+	options *armcompute.VirtualMachineImagesClientListSKUsOptions) ([]*armcompute.VirtualMachineImageResource, error) {
+	images, err := aks.vmImageClient.ListSKUs(ctx, location, publisher, offer, options)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to finish the request")
+	}
+
+	return images.VirtualMachineImageResourceArray, nil
+}
+
+// ListSSHPublicKeys 获取SSH public keys
+func (aks *AksServiceImpl) ListSSHPublicKeys(ctx context.Context, resourceGroupName string) (
+	[]*armcompute.SSHPublicKeyResource, error) {
+	pager := aks.sshPubKeyClient.NewListByResourceGroupPager(resourceGroupName, nil)
+	result := make([]*armcompute.SSHPublicKeyResource, 0)
+	for pager.More() {
+		next, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to advance page")
+		}
+		result = append(result, next.Value...)
+	}
+
+	return result, nil
+}
+
+// ListSSHPublicKeysAll 获取订阅下所有SSH public keys
+func (aks *AksServiceImpl) ListSSHPublicKeysAll(ctx context.Context) ([]*armcompute.SSHPublicKeyResource, error) {
+	pager := aks.sshPubKeyClient.NewListBySubscriptionPager(nil)
+	result := make([]*armcompute.SSHPublicKeyResource, 0)
+	for pager.More() {
+		next, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to advance page")
+		}
+		result = append(result, next.Value...)
+	}
+
+	return result, nil
 }

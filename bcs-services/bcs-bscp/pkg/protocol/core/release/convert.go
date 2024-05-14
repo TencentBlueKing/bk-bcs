@@ -14,8 +14,8 @@
 package pbrelease
 
 import (
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
-	pbbase "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	pbbase "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
 )
 
 // ReleaseSpec convert pb ReleaseSpec to table ReleaseSpec
@@ -45,6 +45,19 @@ func PbReleaseSpec(spec *table.ReleaseSpec) *ReleaseSpec {
 		Memo:       spec.Memo,
 		Deprecated: spec.Deprecated,
 		PublishNum: spec.PublishNum,
+	}
+}
+
+// PbReleaseStatus convert table ReleaseSpec to pb ReleaseStatus
+//
+//nolint:revive
+func PbReleaseStatus(spec *table.ReleaseSpec) *ReleaseStatus {
+	if spec == nil {
+		return nil
+	}
+
+	return &ReleaseStatus{
+		FullyReleased: spec.FullyReleased,
 	}
 }
 
@@ -97,5 +110,6 @@ func PbRelease(rl *table.Release) *Release {
 		Spec:       PbReleaseSpec(rl.Spec),
 		Attachment: PbReleaseAttachment(rl.Attachment),
 		Revision:   pbbase.PbCreatedRevision(rl.Revision),
+		Status:     PbReleaseStatus(rl.Spec),
 	}
 }

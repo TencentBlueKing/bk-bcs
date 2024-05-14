@@ -16,15 +16,19 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/azure/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 )
 
@@ -144,7 +148,7 @@ func importClusterCredential(ctx context.Context, data *cloudprovider.CloudDepen
 		return err
 	}
 
-	credentials, err := cli.GetClusterAdminCredentials(ctx, data)
+	credentials, err := cli.GetClusterAdminCredentials(ctx, data, cloudprovider.GetClusterResourceGroup(data.Cluster))
 	if err != nil {
 		return err
 	}
@@ -154,7 +158,7 @@ func importClusterCredential(ctx context.Context, data *cloudprovider.CloudDepen
 
 	// save cluster kubeConfig
 	kubeConfig := string(credentials[0].Value)
-	data.Cluster.KubeConfig = kubeConfig
+	data.Cluster.KubeConfig, _ = encrypt.Encrypt(nil, kubeConfig)
 	_ = cloudprovider.UpdateCluster(data.Cluster)
 
 	config, err := types.GetKubeConfigFromYAMLBody(false, types.YamlInput{
@@ -174,7 +178,9 @@ func importClusterCredential(ctx context.Context, data *cloudprovider.CloudDepen
 
 func importClusterInstances(data *cloudprovider.CloudDependBasicInfo) error {
 	// get cluster nodes
-	kubeRet := base64.StdEncoding.EncodeToString([]byte(data.Cluster.KubeConfig))
+	kube, _ := encrypt.Decrypt(nil, data.Cluster.KubeConfig)
+
+	kubeRet := base64.StdEncoding.EncodeToString([]byte(kube))
 	kubeCli, err := clusterops.NewKubeClient(kubeRet)
 	if err != nil {
 		return fmt.Errorf("new kube client failed, %s", err.Error())
@@ -182,6 +188,21 @@ func importClusterInstances(data *cloudprovider.CloudDependBasicInfo) error {
 	nodes, err := kubeCli.CoreV1().Nodes().List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		return fmt.Errorf("list nodes failed, %s", err.Error())
+	}
+
+	// get container runtime info here
+	if len(nodes.Items) > 0 {
+		crv := strings.Split(nodes.Items[0].Status.NodeInfo.ContainerRuntimeVersion, "://")
+		if len(crv) == 2 {
+			data.Cluster.ClusterAdvanceSettings = &proto.ClusterAdvanceSetting{
+				ContainerRuntime: crv[0],
+				RuntimeVersion:   crv[1],
+			}
+			err = cloudprovider.GetStorageModel().UpdateCluster(context.Background(), data.Cluster)
+			if err != nil {
+				blog.Errorf("importClusterInstances update cluster[%s] failed: %v", data.Cluster.ClusterName, err)
+			}
+		}
 	}
 
 	err = importClusterNodesToCM(context.Background(), nodes.Items, data.Cluster.ClusterID)
@@ -195,9 +216,10 @@ func importClusterInstances(data *cloudprovider.CloudDependBasicInfo) error {
 // importNodeResourceGroup 导入nodeResourceGroup
 func importNodeResourceGroup(info *cloudprovider.CloudDependBasicInfo) error {
 	cluster := info.Cluster
-	if cluster.ExtraInfo != nil && len(cluster.ExtraInfo[api.NodeResourceGroup]) > 0 {
+	if cluster.ExtraInfo != nil && len(cluster.ExtraInfo[common.NodeResourceGroup]) > 0 {
 		return nil
 	}
+
 	client, err := api.NewAksServiceImplWithCommonOption(info.CmOption)
 	if err != nil {
 		return errors.Wrapf(err, "create AksService failed")
@@ -206,7 +228,7 @@ func importNodeResourceGroup(info *cloudprovider.CloudDependBasicInfo) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	managedCluster, err := client.GetCluster(ctx, info)
+	managedCluster, err := client.GetCluster(ctx, info, cloudprovider.GetClusterResourceGroup(cluster))
 	if err != nil {
 		return errors.Wrapf(err, "call GetCluster falied")
 	}
@@ -214,7 +236,7 @@ func importNodeResourceGroup(info *cloudprovider.CloudDependBasicInfo) error {
 		cluster.ExtraInfo = make(map[string]string)
 	}
 
-	cluster.ExtraInfo[api.NodeResourceGroup] = *managedCluster.Properties.NodeResourceGroup
+	cluster.ExtraInfo[common.NodeResourceGroup] = *managedCluster.Properties.NodeResourceGroup
 	return nil
 }
 
@@ -226,7 +248,7 @@ func importVpcID(info *cloudprovider.CloudDependBasicInfo) error {
 		return errors.Wrapf(err, "create AksService failed")
 	}
 
-	nodeResourceGroup := cluster.ExtraInfo[api.NodeResourceGroup]
+	nodeResourceGroup := cloudprovider.GetNodeResourceGroup(cluster)
 	blog.Infof("importVpcID nodeResourceGroup:%s", nodeResourceGroup)
 
 	ctx, cancel := context.WithTimeout(context.TODO(), 30*time.Second)
@@ -239,7 +261,7 @@ func importVpcID(info *cloudprovider.CloudDependBasicInfo) error {
 
 	// blog.Infof("importVpcID list:%s", toPrettyJsonString(list))
 	if len(list) > 0 {
-		cluster.VpcID = *list[0].Name
+		cluster.VpcID = *list[0].ID
 	}
 
 	return nil

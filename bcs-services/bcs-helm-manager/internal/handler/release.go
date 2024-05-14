@@ -109,6 +109,14 @@ func (hm *HelmManager) GetReleaseStatus(ctx context.Context,
 	return action.Handle(ctx, req, resp)
 }
 
+// GetReleaseDetailExtend provide the actions to do get release detail extend
+func (hm *HelmManager) GetReleaseDetailExtend(
+	ctx context.Context, req *helmmanager.GetReleaseDetailExtendReq, resp *helmmanager.CommonResp) error {
+	defer recorder(ctx, "GetReleaseDetailExtend", req, resp)()
+	action := actionRelease.NewGetReleaseExtendAction(hm.releaseHandler)
+	return action.Handle(ctx, req, resp)
+}
+
 // GetReleasePods provide the actions to do get release pods
 func (hm *HelmManager) GetReleasePods(ctx context.Context,
 	req *helmmanager.GetReleasePodsReq, resp *helmmanager.CommonListResp) error {

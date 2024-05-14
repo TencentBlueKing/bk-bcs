@@ -15,12 +15,12 @@ package argocd
 import (
 	"net/http"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/analysis"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/analyze"
 	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
 )
 
@@ -28,7 +28,7 @@ import (
 type ProjectPlugin struct {
 	*mux.Router
 	middleware     mw.MiddlewareInterface
-	analysisClient analysis.AnalysisInterface
+	analysisClient analyze.CollectApplication
 }
 
 // Init all project sub path handler

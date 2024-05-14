@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"sort"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/util/rand"
@@ -262,7 +263,7 @@ func UpdateLogRule(c *rest.Context) (interface{}, error) {
 		return nil, errors.Errorf("invalid rule id")
 	}
 
-	err = store.UpdateLogRule(c.Request.Context(), id, req.toEntity(c.Username, c.ProjectCode))
+	err = store.UpdateLogRule(c.Request.Context(), id, req.toEntity(c.Username, c.ProjectCode, rule.Name))
 	if err != nil {
 		return nil, err
 	}
@@ -304,7 +305,8 @@ func DeleteLogRule(c *rest.Context) (interface{}, error) {
 		// 删除 bklog 数据
 		err = bklog.DeleteLogCollectors(c.Request.Context(), lc.RuleID)
 		if err != nil {
-			return nil, err
+			// 有可能日志平台侧已经删除，这时删除会失败，可以忽略报错，继续删除数据库记录
+			blog.Errorf("delete bklog rule error, %s", err.Error())
 		}
 	}
 
@@ -349,10 +351,14 @@ func RetryLogRule(c *rest.Context) (interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
+		matchLabels, matchExpressions := bklog.MergeOutLabels(rule.Rule.LogRuleContainer.LabelSelector.MatchLabels,
+			rule.Rule.LogRuleContainer.LabelSelector.MatchExpressions)
+		rule.Rule.LogRuleContainer.LabelSelector = bklog.LabelSelector{
+			MatchLabels: matchLabels, MatchExpressions: matchExpressions}
 		go createBKLog(&bklog.CreateBCSCollectorReq{
 			SpaceUID:              GetSpaceID(c.ProjectCode),
 			ProjectID:             c.ProjectId,
-			CollectorConfigName:   ruleName,
+			CollectorConfigName:   rule.DisplayName,
 			CollectorConfigNameEN: ruleName,
 			Description:           rule.Description,
 			BCSClusterID:          c.ClusterId,
@@ -469,5 +475,55 @@ func DisableLogRule(c *rest.Context) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+	return nil, nil
+}
+
+// GetStorageClusters 获取 ES 存储集群
+// @Summary 获取 ES 存储集群
+// @Tags    LogCollectors
+// @Produce json
+// @Success 200
+// @Router  /log_collector/storages/cluster_groups [get]
+func GetStorageClusters(c *rest.Context) (interface{}, error) {
+	data, err := bklog.GetStorageClusters(c.Request.Context(), GetSpaceID(c.ProjectCode))
+	if err != nil {
+		return nil, err
+	}
+	selectCluster, err := bklog.GetBcsCollectorStorage(c.Request.Context(), GetSpaceID(c.ProjectCode), c.ClusterId)
+	if err != nil {
+		return nil, err
+	}
+	for i := range data {
+		if data[i].StorageClusterID == selectCluster {
+			data[i].IsSelected = true
+		}
+	}
+
+	return data, nil
+}
+
+// SwitchStorageReq 切换 ES 存储集群请求
+type SwitchStorageReq struct {
+	StorageClusterID int `json:"storage_cluster_id"`
+}
+
+// SwitchStorage 切换 ES 存储集群
+// @Summary 切换 ES 存储集群
+// @Tags    LogCollectors
+// @Produce json
+// @Success 200
+// @Router  /log_collector/storages/switch_storage [post]
+func SwitchStorage(c *rest.Context) (interface{}, error) {
+	req := &SwitchStorageReq{}
+	if err := c.ShouldBindJSON(req); err != nil {
+		klog.Errorf("SwitchStorage bind req json error, %s", err.Error())
+		return nil, err
+	}
+
+	if err := bklog.SwitchStorage(c.Request.Context(),
+		GetSpaceID(c.ProjectCode), c.ClusterId, req.StorageClusterID); err != nil {
+		return nil, err
+	}
+
 	return nil, nil
 }

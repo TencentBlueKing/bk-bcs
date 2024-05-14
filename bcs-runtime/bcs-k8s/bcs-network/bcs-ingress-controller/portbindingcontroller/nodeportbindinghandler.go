@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package portbindingcontroller
@@ -19,6 +18,8 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 	"github.com/pkg/errors"
 	k8scorev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -28,10 +29,8 @@ import (
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/utils"
-	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
 // NodePortBindingCache cache node portbinding info
@@ -130,13 +129,13 @@ func (n *nodePortBindingHandler) postPortBindingUpdate(portBinding *networkexten
 
 	portBindingItemsBytes, err := json.Marshal(portBinding.Spec.PortBindingList)
 	if err != nil {
-		return fmt.Errorf("marshal node %s portbindingLisr failed, err:%w", n.node.GetName(), err)
+		return fmt.Errorf("marshal node %s portbindingLisr failed, err:%s", n.node.GetName(), err.Error())
 	}
 	if err = utils.PatchNodeAnnotation(n.ctx, n.k8sClient, n.node, map[string]interface{}{
 		constant.AnnotationForPortPoolBindingStatus: portBinding.Status.Status,
 		constant.AnnotationForPortPoolBindings:      string(portBindingItemsBytes),
 	}); err != nil {
-		return fmt.Errorf("patch annotataion to node %s failed, err: %w", n.node.GetName(), err)
+		return fmt.Errorf("patch annotataion to node %s failed, err: %s", n.node.GetName(), err.Error())
 	}
 
 	if err = n.updateAllConfigMap(portBinding); err != nil {
@@ -175,6 +174,7 @@ func (n *nodePortBindingHandler) postPortBindingClean(portBinding *networkextens
 	return nil
 }
 
+// nolint unused
 func (n *nodePortBindingHandler) patchNodeAnnotation(node *k8scorev1.Node, status string) error {
 	rawPatch := client.RawPatch(k8stypes.MergePatchType, []byte(
 		"{\"metadata\":{\"annotations\":{\""+constant.AnnotationForPortPoolBindingStatus+
@@ -225,6 +225,7 @@ func (n *nodePortBindingHandler) updateConfigMap(configMapNamespace string) erro
 	configMap := &k8scorev1.ConfigMap{}
 	err := n.k8sClient.Get(n.ctx, k8stypes.NamespacedName{Namespace: configMapNamespace,
 		Name: networkextensionv1.NodePortBindingConfigMapName}, configMap)
+	// nolint
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
 			if cerr := n.createConfigMap(configMapNamespace); cerr != nil {
@@ -240,7 +241,7 @@ func (n *nodePortBindingHandler) updateConfigMap(configMapNamespace string) erro
 	configMap.Data = n.bindCache.GetCache()
 
 	if err := n.k8sClient.Update(n.ctx, configMap); err != nil {
-		err = errors.Wrapf(err, "update node portbinding['%s/%s'] config map failed")
+		err = errors.Wrapf(err, "update node portbinding[''] config map failed")
 		blog.Errorf("%v", err)
 		return err
 	}
@@ -256,7 +257,7 @@ func (n *nodePortBindingHandler) createConfigMap(configMapNamespace string) erro
 	configMap.Data = n.bindCache.GetCache()
 
 	if err := n.k8sClient.Create(n.ctx, configMap); err != nil {
-		err = errors.Wrapf(err, "update node portbinding['%s/%s'] config map failed")
+		err = errors.Wrapf(err, "update node portbinding[''] config map failed")
 		blog.Errorf("%v", err)
 		return err
 	}

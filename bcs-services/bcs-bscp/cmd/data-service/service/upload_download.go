@@ -18,14 +18,14 @@ import (
 	"io"
 	"sync"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
-	pbci "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/config-item"
-	pbds "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/types"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbci "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/config-item"
+	pbds "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // getAllAppCIs get all template and non-template config items for the app which can be rendered
@@ -188,7 +188,7 @@ func (s *Service) getTmplVariables(kt *kit.Kit, tmplRevisions []*table.TemplateR
 			vars, err := s.repo.GetVariables(k, r.Spec.ContentSpec.Signature, false)
 			if err != nil {
 				hitError = fmt.Errorf("get template config variables from repo failed, "+
-					"template id: %d, name: %s, path: %s, error: %v",
+					"template id: %d, name: %s, path: %s, error: %v", // nolint goconst
 					r.Attachment.TemplateID, r.Spec.Name, r.Spec.Path, err)
 				return
 			}
@@ -232,7 +232,7 @@ func (s *Service) getCIVariables(kt *kit.Kit, cis []*pbci.ConfigItem) ([][]strin
 			vars, err := s.repo.GetVariables(k, c.CommitSpec.Content.Signature, false)
 			if err != nil {
 				hitError = fmt.Errorf("get config item variables from repo failed, "+
-					"config item id: %d, name: %s, path: %s, error: %v",
+					"config item id: %d, name: %s, path: %s, error: %v", // nolint goconst
 					c.Id, c.Spec.Name, c.Spec.Path, err)
 				return
 			}

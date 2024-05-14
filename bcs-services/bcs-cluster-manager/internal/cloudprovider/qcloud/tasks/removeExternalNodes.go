@@ -25,6 +25,8 @@ import (
 
 // ReturnIDCNodeToResourcePoolTask clean IDCNodes in group task for background running
 func ReturnIDCNodeToResourcePoolTask(taskID, stepName string) error {
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start clean idc nodes in group")
 	start := time.Now()
 
 	// get task and task current step
@@ -68,6 +70,8 @@ func ReturnIDCNodeToResourcePoolTask(taskID, stepName string) error {
 	// return IDC device to resource-manager
 	orderID, err := destroyIDCDeviceList(ctx, dependInfo, deviceList, operator)
 	if err != nil {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
+			fmt.Sprintf("destroy idc device list failed [%s]", err))
 		blog.Errorf("ReturnIDCNodeToResourcePoolTask[%s] destroyIDCDeviceList[%v] from NodeGroup %s failed: %v",
 			taskID, nodeIPList, nodeGroupID, err.Error())
 		_ = state.UpdateStepFailure(start, stepName, err)
@@ -80,6 +84,9 @@ func ReturnIDCNodeToResourcePoolTask(taskID, stepName string) error {
 	}
 	state.Task.CommonParams[cloudprovider.OrderIDKey.String()] = orderID
 
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"clean idc nodes in group successful")
+
 	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
 		blog.Errorf("task %s %s update to storage fatal", taskID, stepName)
@@ -90,6 +97,8 @@ func ReturnIDCNodeToResourcePoolTask(taskID, stepName string) error {
 
 // RemoveExternalNodesFromClusterTask remove external node from cluster
 func RemoveExternalNodesFromClusterTask(taskID string, stepName string) error {
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start remove external nodes from cluster")
 	start := time.Now()
 	// get task and task current step
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
@@ -127,9 +136,11 @@ func RemoveExternalNodesFromClusterTask(taskID string, stepName string) error {
 	}
 
 	// inject taskID
-	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
+	ctx := cloudprovider.WithTaskIDAndStepNameForContext(context.Background(), taskID, stepName)
 	err = business.RemoveExternalNodesFromCluster(ctx, dependInfo, ipList)
 	if err != nil {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
+			fmt.Sprintf("remove external nodes from cluster failed [%s]", err))
 		blog.Errorf("RemoveExternalNodesFromClusterTask[%s] RemoveExternalNodesFromCluster failed: %v",
 			taskID, err)
 		retErr := fmt.Errorf("RemoveExternalNodesFromCluster err, %s", err.Error())
@@ -139,7 +150,7 @@ func RemoveExternalNodesFromClusterTask(taskID string, stepName string) error {
 	blog.Infof("RemoveExternalNodesFromClusterTask[%s] removeNodes[%v]", taskID, ipList)
 
 	// get add external nodes script from cluster
-	script, err := business.GetClusterExternalNodeScript(ctx, dependInfo)
+	script, err := business.GetClusterExternalNodeScript(ctx, dependInfo, GetExternalNgScriptType(dependInfo.NodeGroup))
 	if err != nil {
 		blog.Errorf("RemoveExternalNodesFromClusterTask[%s]: GetClusterExternalNodeScript for cluster[%s] failed, %s",
 			taskID, clusterID, err.Error())
@@ -152,6 +163,9 @@ func RemoveExternalNodesFromClusterTask(taskID string, stepName string) error {
 		state.Task.CommonParams = make(map[string]string)
 	}
 	state.Task.CommonParams[cloudprovider.DynamicNodeScriptKey.String()] = script
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"remove external nodes from cluster successful")
 
 	// update step
 	if err = state.UpdateStepSucc(start, stepName); err != nil {

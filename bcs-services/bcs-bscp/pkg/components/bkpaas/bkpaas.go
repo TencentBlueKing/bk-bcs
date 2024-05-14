@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package bkpaas provides bkpaas auth client.
 package bkpaas
 
 import (
@@ -17,7 +18,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
 )
 
 const (

@@ -28,11 +28,34 @@ type NodeAdvancedOptions struct {
 
 // instance nodes disk info
 
-// InstanceDisk xxx
-type InstanceDisk struct {
+// InstanceInfo instance info
+type InstanceInfo struct {
 	InstanceID string
 	InstanceIP string
-	DiskCount  int
+}
+
+// GetInstanceIPs get instance ip
+func GetInstanceIPs(ins []InstanceInfo) []string {
+	ips := make([]string, 0)
+	for i := range ins {
+		ips = append(ips, ins[i].InstanceIP)
+	}
+	return ips
+}
+
+// GetInstanceIDs get instance id
+func GetInstanceIDs(ins []InstanceInfo) []string {
+	ids := make([]string, 0)
+	for i := range ins {
+		ids = append(ids, ins[i].InstanceIP)
+	}
+	return ids
+}
+
+// InstanceDisk xxx
+type InstanceDisk struct {
+	InstanceInfo
+	DiskCount int
 }
 
 // GetNodeInstanceDataDiskInfo get node instance dataDisks
@@ -52,9 +75,11 @@ func GetNodeInstanceDataDiskInfo(
 	instances := make(map[string]InstanceDisk, 0)
 	for _, cvm := range instanceList {
 		instances[*cvm.InstanceId] = InstanceDisk{
-			InstanceID: *cvm.InstanceId,
-			InstanceIP: *cvm.PrivateIpAddresses[0],
-			DiskCount:  len(cvm.DataDisks),
+			InstanceInfo: InstanceInfo{
+				InstanceID: *cvm.InstanceId,
+				InstanceIP: *cvm.PrivateIpAddresses[0],
+			},
+			DiskCount: len(cvm.DataDisks),
 		}
 	}
 

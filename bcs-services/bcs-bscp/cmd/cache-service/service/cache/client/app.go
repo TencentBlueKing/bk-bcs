@@ -18,24 +18,33 @@ import (
 
 	prm "github.com/prometheus/client_golang/prometheus"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/cmd/cache-service/service/cache/keys"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/jsoni"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/cache-service/service/cache/keys"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/jsoni"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
 // GetAppID get app's id by app name.
-func (c *client) GetAppID(kt *kit.Kit, bizID uint32, appName string) (uint32, error) {
+func (c *client) GetAppID(kt *kit.Kit, bizID uint32, appName string, refresh bool) (uint32, error) {
 	// try read from cache at first.
-	appID, hit, err := c.getAppIDFromCache(kt, bizID, appName)
-	if err != nil {
-		return 0, err
-	}
-	if hit {
-		c.mc.hitCounter.With(prm.Labels{"rsc": aiRes, "biz": tools.Itoa(bizID)}).Inc()
-		return appID, nil
+	var (
+		appID uint32
+		hit   bool
+		err   error
+	)
+
+	// 强制刷新获取
+	if !refresh {
+		appID, hit, err = c.getAppIDFromCache(kt, bizID, appName)
+		if err != nil {
+			return 0, err
+		}
+		if hit {
+			c.mc.hitCounter.With(prm.Labels{"rsc": aiRes, "biz": tools.Itoa(bizID)}).Inc()
+			return appID, nil
+		}
 	}
 
 	// do not find app in the cache, then try get from db directly.

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package nodecache cache node info
@@ -197,7 +196,7 @@ func (n *NodeCache) loadNodeInfoFromConfigmap() {
 		node := &corev1.Node{}
 		if err := n.k8sClient.Get(context.Background(), k8stypes.NamespacedName{Name: nodeName},
 			node); err != nil {
-			blog.Errorf("get node '%s' failed, err: %s", err.Error())
+			blog.Errorf("get node failed, err: %s", err.Error())
 			continue
 		}
 

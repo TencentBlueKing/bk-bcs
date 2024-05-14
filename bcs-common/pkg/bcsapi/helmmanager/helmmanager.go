@@ -21,8 +21,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
+	blog "k8s.io/klog/v2"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
 )
 
@@ -63,7 +63,7 @@ func NewHelmClient(config *bcsapi.Config) (HelmManagerClient, func()) {
 	var err error
 	maxTries := 3
 	for i := 0; i < maxTries; i++ {
-		selected := r.Intn(1024) % len(config.Hosts) // nolint
+		selected := r.Intn(1024) % len(config.Hosts)
 		addr := config.Hosts[selected]
 		conn, err = grpc.Dial(addr, opts...)
 		if err != nil {

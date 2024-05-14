@@ -8,7 +8,8 @@
           {{ clusterProvider || '--' }}
         </bk-form-item>
         <bk-form-item :label="$t('tke.label.account')" v-if="clusterData.cloudAccountID">
-          {{ clusterData.cloudAccountID }}
+          <LoadingIcon v-if="cloudAccountLoading">{{ $t('generic.status.loading') }}...</LoadingIcon>
+          <span v-else>{{ cloudAccount }}</span>
         </bk-form-item>
         <bk-form-item :label="$t('cluster.labels.clusterId')">
           {{ clusterData.clusterID }}
@@ -19,6 +20,7 @@
             :value="clusterData.clusterName"
             :placeholder="$t('cluster.create.validate.name')"
             class="w-[300px]"
+            :disable-edit="clusterData.status !== 'RUNNING'"
             @save="handleClusterNameChange" />
         </bk-form-item>
         <bk-form-item :label="$t('cluster.labels.clusterType')">
@@ -33,16 +35,52 @@
           {{ clusterData.systemID || '--' }}
         </bk-form-item>
         <bk-form-item :label="$t('cluster.labels.clusterLabel')">
-          <div class="flex h-[32px] items-center" v-if="Object.keys(clusterData.labels || {}).length">
-            <bcs-tag
-              v-for="key, index in Object.keys(clusterData.labels || {})"
-              :key="index"
-              class="bcs-ellipsis"
-              v-bk-overflow-tips>
-              {{ `${key}=${clusterData.labels[key]}` }}
-            </bcs-tag>
+          <div class="flex items-center" v-if="!isEdit">
+            <div class="flex h-[32px] items-center" v-if="Object.keys(clusterData.labels || {}).length">
+              <bcs-tag
+                v-for="key, index in Object.keys(clusterData.labels || {})"
+                :key="index"
+                class="bcs-ellipsis"
+                v-bk-overflow-tips>
+                {{ `${key}=${clusterData.labels[key]}` }}
+              </bcs-tag>
+            </div>
+            <span v-else>--</span>
+            <span
+              class="hover:text-[#3a84ff] cursor-pointer ml-[8px]"
+              v-if="clusterData.status === 'RUNNING'"
+              @click="isEdit = true">
+              <i class="bk-icon icon-edit-line"></i>
+            </span>
           </div>
-          <span v-else>--</span>
+          <template v-else>
+            <KeyValue2
+              :value="clusterData.labels || {}"
+              :key-rules="[
+                {
+                  message: $t('generic.validate.label'),
+                  validator: LABEL_KEY_REGEXP,
+                }
+              ]"
+              :value-rules="[
+                {
+                  message: $t('generic.validate.label'),
+                  validator: LABEL_KEY_REGEXP,
+                }
+              ]"
+              @validate="setValidate"
+              @change="setClusterLabel" />
+            <div class="flex items-center mt-[-10px]">
+              <bk-button
+                class="text-[12px]"
+                text
+                @click="handleModifyLabel">{{ $t('generic.button.save') }}</bk-button>
+              <bk-button
+                class="text-[12px] ml-[8px]"
+                text
+                @click="isEdit = false">{{ $t('generic.button.cancel') }}</bk-button>
+            </div>
+          </template>
         </bk-form-item>
         <bk-form-item :label="$t('cluster.create.label.desc1')">
           <EditFormItem
@@ -51,6 +89,7 @@
             :value="clusterData.description"
             :placeholder="$t('cluster.placeholder.desc')"
             class="w-[300px]"
+            :disable-edit="clusterData.status !== 'RUNNING'"
             @save="handleClusterDescChange" />
         </bk-form-item>
       </DescList>
@@ -87,14 +126,36 @@
       </DescList>
       <DescList :title="$t('cluster.labels.env')">
         <bk-form-item :label="$t('cluster.labels.region')">
-          {{ region }}
+          <span>{{ clusterData.region }}</span>
         </bk-form-item>
         <bk-form-item
-          :label="$t('tke.label.nodemanArea')"
-          v-if="clusterData.clusterBasicSettings && clusterData.clusterBasicSettings.area">
-          {{ clusterData.clusterBasicSettings && clusterData.clusterBasicSettings.area
-            ? clusterData.clusterBasicSettings.area.bkCloudID
-            : '--' }}
+          :label="$t('tke.label.nodemanArea')">
+          <template v-if="isEditModule">
+            <div class="flex items-center">
+              <NodemanArea
+                v-model="newCloudID"
+                class="flex-1"
+                @list-change="handleAreaListChange" />
+              <span
+                class="text-[12px] text-[#3a84ff] ml-[8px] cursor-pointer"
+                text
+                @click="handleSaveNodemanArea">{{ $t('generic.button.save') }}</span>
+              <span
+                class="text-[12px] text-[#3a84ff] ml-[8px] cursor-pointer"
+                text
+                @click="isEditModule = false">{{ $t('generic.button.cancel') }}</span>
+            </div>
+          </template>
+          <template v-else>
+            <span>
+              {{ nodemanArea || '--' }}
+            </span>
+            <span
+              class="hover:text-[#3a84ff] cursor-pointer ml-[8px]"
+              @click="handleEditNodemanArea">
+              <i class="bk-icon icon-edit-line"></i>
+            </span>
+          </template>
         </bk-form-item>
         <bk-form-item :label="$t('cluster.labels.env')">
           {{ CLUSTER_ENV[clusterData.environment] }}
@@ -137,13 +198,16 @@
   </div>
 </template>
 <script lang="ts">
+import { merge } from 'lodash';
 import { computed, defineComponent, onMounted, ref, toRefs } from 'vue';
 
+import NodemanArea from '../add/form/nodeman-area.vue';
+import { INodeManCloud } from '../add/tencent/types';
 import { getClusterImportCategory, getClusterTypeName, useClusterInfo, useClusterList } from '../cluster/use-cluster';
 import EditFormItem from '../components/edit-form-item.vue';
 
 import $bkMessage from '@/common/bkmagic';
-import { CLUSTER_ENV } from '@/common/constant';
+import { CLUSTER_ENV, LABEL_KEY_REGEXP } from '@/common/constant';
 import DescList from '@/components/desc-list.vue';
 import KeyValue from '@/components/key-value.vue';
 import LoadingIcon from '@/components/loading-icon.vue';
@@ -151,11 +215,13 @@ import useSideslider from '@/composables/use-sideslider';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store';
+import KeyValue2 from '@/views/cluster-manage/components/key-value.vue';
+import useCloud from '@/views/cluster-manage/use-cloud';
 import useVariable from '@/views/deploy-manage/variable/use-variable';
 
 export default defineComponent({
   name: 'ClusterInfo',
-  components: { EditFormItem, LoadingIcon, KeyValue, DescList },
+  components: { EditFormItem, LoadingIcon, KeyValue, KeyValue2, DescList, NodemanArea },
   props: {
     clusterId: {
       type: String,
@@ -241,6 +307,7 @@ export default defineComponent({
         getClusterDetail(clusterId.value, true),
       ]);
       isLoading.value = false;
+      return result;
     };
     // 修改集群名称
     const handleClusterNameChange = async (clusterName) => {
@@ -251,33 +318,91 @@ export default defineComponent({
     const handleClusterDescChange = async (description) => {
       handleModifyCluster({ description });
     };
+    // 修改标签
+    const isEdit = ref(false);
+    const labels = ref({});
+    const isLabelValidate = ref(true);
+    const setValidate = (result: boolean) => {
+      isLabelValidate.value = result;
+    };
+    const setClusterLabel = (data = {}) => {
+      labels.value = data;
+    };
+    const handleModifyLabel = async () => {
+      if (!isLabelValidate.value) return;
+
+      if (JSON.stringify(labels) === JSON.stringify(clusterData.value.labels)) {
+        isEdit.value = false;
+        return;
+      }
+      await handleModifyCluster({ labels: labels.value });
+      isEdit.value = false;
+    };
+
     // 集群kubeconfig
     const handleGotoToken = () => {
       const { href } = $router.resolve({ name: 'token' });
       window.open(href);
     };
-    // 地域信息
-    const regionList = ref<any[]>([]);
-    const region = computed(() => regionList.value
-      .find(item => item.region === clusterData.value.region)?.regionName || clusterData.value.region);
-    const getRegionList = async () => {
-      if (!['tencentCloud', 'tencentPublicCloud'].includes(curCluster.value?.provider || '')) return;
-      regionList.value = await $store.dispatch('clustermanager/fetchCloudRegion', {
-        $cloudId: curCluster.value?.provider,
+
+    const {
+      cloudAccountLoading,
+      cloudAccountList,
+      cloudAccounts,
+      nodemanCloudList,
+      handleGetNodeManCloud,
+    } = useCloud();
+
+    const cloudAccount = computed(() => {
+      const data = cloudAccountList.value.find(item => item?.account?.accountID === clusterData.value.cloudAccountID);
+      return data ? `${data.account?.accountName}(${data.account.accountID})` : clusterData.value.cloudAccountID;
+    });
+
+    // 修改云区域
+    const newCloudID = ref<number>();
+    const isEditModule = ref(false);
+    const nodemanArea = computed(() => {
+      const data = nodemanCloudList.value
+        .find(item => item.bk_cloud_id === clusterData.value.clusterBasicSettings?.area?.bkCloudID);
+      return data ? `${data.bk_cloud_name}(${data.bk_cloud_id})` : clusterData.value.clusterBasicSettings?.area?.bkCloudID;
+    });
+    const handleAreaListChange = (data: INodeManCloud[]) => {
+      nodemanCloudList.value = data;
+    };
+    const handleEditNodemanArea = () => {
+      newCloudID.value = clusterData.value?.clusterBasicSettings?.area?.bkCloudID;
+      isEditModule.value = true;
+    };
+    const handleSaveNodemanArea = async () => {
+      if (newCloudID.value === clusterData.value?.clusterBasicSettings?.area) return;
+
+      const result = await handleModifyCluster({
+        clusterBasicSettings: merge(
+          clusterData.value.clusterBasicSettings,
+          {
+            area: {
+              bkCloudID: newCloudID.value,
+            },
+          },
+        ),
       });
+
+      if (result) {
+        isEditModule.value = false;
+      }
     };
 
     onMounted(async () => {
       getClusterVar();
       isLoading.value = true;
-      await Promise.all([
-        getRegionList(),
-        getClusterDetail(clusterId.value, curCluster.value?.clusterType !== 'virtual'),
-      ]);
+      await getClusterDetail(clusterId.value, curCluster.value?.clusterType !== 'virtual');
       isLoading.value = false;
+      cloudAccounts(clusterData.value.provider);
+      handleGetNodeManCloud();
     });
     return {
-      region,
+      cloudAccountLoading,
+      cloudAccount,
       clusterVersion,
       showVariableInfo,
       varLoading,
@@ -298,6 +423,17 @@ export default defineComponent({
       clusterType,
       clusterProvider,
       getClusterImportCategory,
+      LABEL_KEY_REGEXP,
+      isEdit,
+      setValidate,
+      setClusterLabel,
+      handleModifyLabel,
+      isEditModule,
+      nodemanArea,
+      newCloudID,
+      handleSaveNodemanArea,
+      handleEditNodemanArea,
+      handleAreaListChange,
     };
   },
 });

@@ -15,14 +15,19 @@ package vcluster
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/component"
 	cmoptions "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/install"
 )
 
+const (
+	releaseNameLength = 48
+)
+
 // GetVclusterInstaller vcluster installer
-func GetVclusterInstaller(projectID string, namespace string) (install.Installer, error) {
+func GetVclusterInstaller(projectID string, cluster, namespace string) (install.Installer, error) {
 	op := cmoptions.GetGlobalCMOptions()
 
 	return component.GetComponentInstaller(component.InstallOptions{
@@ -30,7 +35,16 @@ func GetVclusterInstaller(projectID string, namespace string) (install.Installer
 		ProjectID:        projectID,
 		ChartName:        op.ComponentDeploy.Vcluster.ChartName,
 		ReleaseNamespace: namespace,
-		ReleaseName:      fmt.Sprintf("%s-%s", op.ComponentDeploy.Vcluster.ReleaseName, namespace),
-		IsPublicRepo:     op.ComponentDeploy.Vcluster.IsPublicRepo,
+		ReleaseName: func() string {
+			defaultName := fmt.Sprintf("%s-%s", op.ComponentDeploy.Vcluster.ReleaseName, namespace)
+			// releaseName length limit for prevent exceeding the character limit
+			if len(defaultName) > releaseNameLength {
+				defaultName = fmt.Sprintf("%s-%s", op.ComponentDeploy.Vcluster.ReleaseName,
+					strings.ToLower(cluster))
+			}
+
+			return defaultName
+		}(),
+		IsPublicRepo: op.ComponentDeploy.Vcluster.IsPublicRepo,
 	})
 }

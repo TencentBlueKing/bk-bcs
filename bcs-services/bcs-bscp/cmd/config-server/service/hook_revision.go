@@ -16,13 +16,12 @@ import (
 	"context"
 	"errors"
 
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
-	pbcs "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/config-server"
-	pbhr "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/hook-revision"
-	pbds "github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
-	"github.com/TencentBlueking/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbcs "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/config-server"
+	pbhr "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/hook-revision"
+	pbds "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
 )
 
 // CreateHookRevision create hook revision with option
@@ -44,7 +43,7 @@ func (s *Service) CreateHookRevision(ctx context.Context,
 			HookId: req.HookId,
 		},
 		Spec: &pbhr.HookRevisionSpec{
-			Name:    tools.GenerateRevisionName(),
+			Name:    req.Name,
 			Content: req.Content,
 			Memo:    req.Memo,
 		},
@@ -264,6 +263,7 @@ func (s *Service) ListHookRevisionReferences(ctx context.Context,
 			ReleaseId:    detail.ReleaseId,
 			ReleaseName:  detail.ReleaseName,
 			Type:         detail.Type,
+			Deprecated:   detail.Deprecated,
 		})
 	}
 

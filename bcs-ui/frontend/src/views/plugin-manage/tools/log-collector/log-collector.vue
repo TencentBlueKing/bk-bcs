@@ -5,7 +5,7 @@
         {{ $t('nav.log') }}
         <ClusterSelect
           size="small"
-          class="small-select"
+          class="small-select !w-[160px] ml-[24px]"
           cluster-type="all"
           v-model="clusterId" />
         <!-- 组件版本和更新 -->
@@ -14,7 +14,7 @@
           theme="danger"
           :visible="showUpdateBtn"
           v-if="!['', 'failed-upgrade', 'failed-install', 'failed'].includes(onsData.status || '')">
-          <span class="flex items-center h-[24px] bg-[#EAEBF0] px-[8px] ml-[8px] text-[12px] rounded-sm">
+          <span class="flex items-center h-[26px] bg-[#EAEBF0] px-[8px] ml-[8px] text-[12px] rounded-sm">
             {{ onsData.currentVersion || '--' }}
             <LoadingIcon
               class="ml-[8px]"
@@ -46,6 +46,32 @@
             </bcs-popover>
           </span>
         </bcs-badge>
+        <!-- ES存储集群 -->
+        <div class="flex items-center" v-if="onsData.status">
+          <bcs-divider class="!mx-[16px]" direction="vertical"></bcs-divider>
+          <span
+            :class="[
+              'flex items-center justify-center h-[26px] rounded-sm',
+              'bg-[#DCDEE5] text-[12px] px-[8px] bcs-border'
+            ]">
+            {{ $t('logCollector.label.esStorages') }}
+          </span>
+          <ESClusterSelect
+            size="small"
+            class="small-select ml-[-1px]"
+            :cluster-id="clusterId"
+            @change="handleESClusterChange" />
+          <i
+            v-if="esCluster && esCluster.storage_usage >= 80"
+            v-bk-tooltips="{
+              disabled: !esCluster || esCluster.storage_usage < 80,
+              content: esCluster && esCluster.is_platform
+                ? $t('logCollector.tips.volumeOfClusterIsExcessivelyHigh')
+                : $t('logCollector.tips.volumeOfPrivateClusterIsExcessivelyHigh')
+            }"
+            class="bcs-icon bcs-icon-exclamation-circle-shape text-[14px] !text-[#FF9C01] ml-[8px]">
+          </i>
+        </div>
       </div>
       <bcs-dialog
         :title="$t('logCollector.label.updateChart')"
@@ -77,13 +103,49 @@
       <bcs-exception type="empty" v-if="!onsData.status && !loading">
         <div>{{ isSharedOrVirtual ? $t('logCollector.msg.notEnable1') : $t('logCollector.msg.notEnable') }}</div>
         <!-- shared 和 virtual集群不支持启用 -->
-        <bcs-button
-          theme="primary"
-          class="w-[88px] mt-[16px]"
-          v-if="!isSharedOrVirtual"
-          @click="confirmUpdate">
-          {{ $t('logCollector.action.enable') }}
-        </bcs-button>
+        <template v-if="!isSharedOrVirtual">
+          <div class="flex items-center mt-[24px]">
+            <span
+              :class="[
+                'flex items-center justify-center h-[32px] rounded-sm',
+                'bg-[#FAFBFD] text-[12px] px-[8px] bcs-border'
+              ]">
+              {{ $t('logCollector.label.esStorages') }}
+            </span>
+            <ESClusterSelect :cluster-id="clusterId" class="flex-1 bg-[#fff] min-w-[400px] ml-[-1px]" />
+          </div>
+          <div class="text-[12px] mt-[16px]">
+            <div class="flex items-center leading-[20px] mb-[8px]">
+              <i class="bk-icon icon-info text-[14px] text-[#979BA5] mr-[8px]"></i>
+              <i18n path="logCollector.tips.storageCluster.text">
+                <span class="font-bold">{{ $t('logCollector.tips.bizPrivateCluster') }}</span>
+              </i18n>
+            </div>
+            <ul class="flex flex-col items-start ml-[40px]">
+              <li class="leading-[20px] list-disc">
+                <i18n path="logCollector.tips.storageCluster.p1">
+                  <span class="font-bold">{{ $t('logCollector.tips.privateData') }}</span>
+                </i18n>
+              </li>
+              <li class="leading-[20px] list-disc">
+                <i18n path="logCollector.tips.storageCluster.p2">
+                  <span class="font-bold">{{ $t('logCollector.tips.greaterThan100GB') }}</span>
+                </i18n>
+              </li>
+              <li class="leading-[20px] list-disc">
+                <i18n path="logCollector.tips.storageCluster.p3">
+                  <span class="font-bold">{{ $t('logCollector.tips.exceed14d') }}</span>
+                </i18n>
+              </li>
+            </ul>
+          </div>
+          <bcs-button
+            theme="primary"
+            class="w-[88px] mt-[16px]"
+            @click="confirmUpdate">
+            {{ $t('logCollector.action.enable') }}
+          </bcs-button>
+        </template>
       </bcs-exception>
       <bcs-exception
         type="empty"
@@ -102,12 +164,12 @@
               <span class="flex-1">
                 {{ $t('logCollector.msg.logCollector') }}
               </span>
-              <bcs-button
+              <span
                 text
-                class="text-[12px]"
+                class="text-[12px] text-[#3a84ff] cursor-pointer"
                 @click="openLink(PROJECT_CONFIG.rule)">
                 {{ $t('generic.button.learnMore') }}
-              </bcs-button>
+              </span>
             </div>
           </template>
         </bcs-alert>
@@ -135,7 +197,7 @@
             @page-change="pageChange"
             @page-limit-change="pageSizeChange"
             v-if="!showEditStatus">
-            <bcs-table-column :label="$t('plugin.tools.ruleName')" prop="name" sortable>
+            <bcs-table-column :label="$t('logCollector.label.name')" prop="name" sortable>
               <template #default="{ row }">
                 <div class="flex">
                   <!-- 是否旧规则 -->
@@ -167,6 +229,11 @@
                 </div>
               </template>
             </bcs-table-column>
+            <bcs-table-column :label="$t('logCollector.label.displayName')" prop="display_name">
+              <template #default="{ row }">
+                {{ row.display_name || '--' }}
+              </template>
+            </bcs-table-column>
             <bcs-table-column :label="$t('k8s.namespace')" show-overflow-tooltip>
               <template #default="{ row }">
                 {{ getNs(row) }}
@@ -193,10 +260,12 @@
                   <span
                     v-bk-tooltips="{
                       content: row.message,
-                      disabled: !row.message || row.status !== 'FAILED',
+                      disabled: !row.message || !['FAILED', 'DELETED'].includes(row.status),
                       theme: 'bcs-tippy'
                     }"
-                    :class="row.message && row.status === 'FAILED' ? 'border-dashed border-0 border-b' : ''">
+                    :class="row.message && ['FAILED', 'DELETED'].includes(row.status)
+                      ? 'border-dashed border-0 border-b'
+                      : ''">
                     {{statusTextMap[row.status] || $t('generic.status.unknown1')}}
                   </span>
                 </StatusIcon>
@@ -244,18 +313,25 @@
                   @click="handleCreateNewRule(row)">
                   {{ $t('logCollector.action.newRule') }}
                 </bcs-button>
+                <!-- row.rule_id === -1 表示从日志平台创建的，不允许编辑 -->
                 <bcs-button
                   text
                   class="text-[12px] mr-[10px]"
-                  :disabled="['PENDING', 'RUNNING'].includes(row.status)"
-                  v-else-if="row.status !== 'TERMINATED'"
+                  :disabled="['PENDING', 'RUNNING'].includes(row.status) || row.rule_id === -1"
+                  v-else-if="row.status !== 'TERMINATED' && row.status !== 'DELETED'"
                   @click="handleEditRule(row)">
-                  {{ $t('generic.button.edit') }}
+                  <span
+                    v-bk-tooltips="{
+                      disabled: row.rule_id !== -1,
+                      content: $t('logCollector.msg.canNotEditBkLogRule')
+                    }">
+                    {{ $t('generic.button.edit') }}
+                  </span>
                 </bcs-button>
 
                 <PopoverSelector
                   :disabled="['PENDING', 'RUNNING'].includes(row.status)"
-                  v-if="row.status !== 'TERMINATED'">
+                  v-if="row.status !== 'TERMINATED' && row.rule_id !== -1">
                   <span :class="['bcs-icon-more-btn', { disabled: ['PENDING', 'RUNNING'].includes(row.status) }]">
                     <i class="bcs-icon bcs-icon-more text-[18px] relative top-[1px]"></i>
                   </span>
@@ -301,7 +377,8 @@ import moment from 'moment';
 import { computed, onBeforeMount, ref, watch } from 'vue';
 
 import EditLogCollector from './edit-log-collector.vue';
-import useLog, { IRuleData } from './use-log';
+import ESClusterSelect from './es-cluster-select.vue';
+import useLog, { IClusterGroup, IRuleData } from './use-log';
 
 import $bkMessage from '@/common/bkmagic';
 import { LOG_COLLECTOR } from '@/common/constant';
@@ -367,6 +444,12 @@ const handleGetOnsData = async () => {
 };
 const { start, stop } = useInterval(handleGetOnsData, 5000);
 
+// es集群
+const esCluster = ref<IClusterGroup>();
+const handleESClusterChange = (data) => {
+  esCluster.value = data;
+};
+
 // 组件更新
 const { labelWidth, initFormLabelWidth } = useFormLabel();
 const formRef = ref();
@@ -404,6 +487,7 @@ const statusColorMap = ref({
   FAILED: 'red',
   SUCCESS: 'green',
   TERMINATED: 'gray',
+  DELETED: 'gray',
 });
 const statusTextMap = ref({
   PENDING: $i18n.t('logCollector.status.pending'),
@@ -411,6 +495,7 @@ const statusTextMap = ref({
   FAILED: $i18n.t('logCollector.status.failed'),
   SUCCESS: $i18n.t('generic.status.ready'),
   TERMINATED: $i18n.t('generic.status.terminated'),
+  DELETED: $i18n.t('logCollector.status.delete'),
 });
 const searchKeys = ref(['name', 'status', 'updator', 'rule.config.namespaces']);
 const { searchValue, tableDataMatchSearch } = useTableSearch(ruleList, searchKeys);
@@ -602,7 +687,11 @@ onBeforeMount(() => {
   background: #EAEBF0 !important;
   border: none !important;
   box-shadow: none !important;
-  width: 160px !important;
-  margin-left: 24px;
+  height: 26px;
+  line-height: 26px;
+  >>> .bk-select-name {
+    height: 26px;
+    line-height: 26px;
+  }
 }
 </style>

@@ -24,12 +24,15 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud-public/business"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
+	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 // CleanNodeGroupNodesTask clean node group nodes task
 func CleanNodeGroupNodesTask(taskID string, stepName string) error {
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start clean nodegroup nodes")
 	start := time.Now()
 	// get task and task current step
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
@@ -75,15 +78,37 @@ func CleanNodeGroupNodesTask(taskID string, stepName string) error {
 	}
 
 	// inject taskID
-	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
-	err = removeAsgInstances(ctx, dependInfo, nodeIDs)
-	if err != nil {
-		blog.Errorf("CleanNodeGroupNodesTask[%s] nodegroup %s removeAsgInstances failed: %v",
-			taskID, nodeGroupID, err)
-		retErr := fmt.Errorf("removeAsgInstances err, %v", err)
-		_ = state.UpdateStepFailure(start, stepName, retErr)
-		return retErr
+	ctx := cloudprovider.WithTaskIDAndStepNameForContext(context.Background(), taskID, stepName)
+
+	// 按量计费节点池 销毁节点; 包年包月节点池 移除节点,需要用户手动回收
+	switch dependInfo.NodeGroup.GetLaunchTemplate().GetInstanceChargeType() {
+	case icommon.PREPAID:
+		deleteResult, errLocal := business.RemoveNodesFromCluster(ctx, dependInfo, cloudprovider.Terminate.String(), nodeIDs)
+		if errLocal != nil {
+			cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
+				fmt.Sprintf("remove nodes from cluster failed [%s]", errLocal))
+			blog.Errorf("CleanNodeGroupNodesTask[%s] RemoveNodesFromCluster failed: %v",
+				taskID, errLocal)
+			retErr := fmt.Errorf("RemoveNodesFromCluster err, %s", errLocal.Error())
+			_ = state.UpdateStepFailure(start, stepName, retErr)
+			return retErr
+		}
+		blog.Infof("CleanNodeGroupNodesTask[%s] deletedInstance[%v]", taskID, deleteResult)
+	default:
+		err = removeAsgInstances(ctx, dependInfo, nodeIDs)
+		if err != nil {
+			cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
+				fmt.Sprintf("remove asg instances failed [%s]", err))
+			blog.Errorf("CleanNodeGroupNodesTask[%s] nodegroup %s removeAsgInstances failed: %v",
+				taskID, nodeGroupID, err)
+			retErr := fmt.Errorf("removeAsgInstances err, %v", err)
+			_ = state.UpdateStepFailure(start, stepName, retErr)
+			return retErr
+		}
 	}
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"clean nodegroup nodes successful")
 
 	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
@@ -151,6 +176,8 @@ func removeAsgInstances(ctx context.Context, info *cloudprovider.CloudDependBasi
 
 // CheckClusterCleanNodsTask check cluster clean nodes task
 func CheckClusterCleanNodsTask(taskID string, stepName string) error {
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start check cluster clean nodes")
 	start := time.Now()
 	// get task and task current step
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
@@ -169,7 +196,7 @@ func CheckClusterCleanNodsTask(taskID string, stepName string) error {
 	nodeIDs := cloudprovider.ParseNodeIpOrIdFromCommonMap(state.Task.CommonParams,
 		cloudprovider.NodeIDsKey.String(), ",")
 
-	if len(clusterID) == 0 || len(nodeGroupID) == 0 || len(cloudID) == 0 || len(nodeIDs) == 0 {
+	if len(clusterID) == 0 || len(cloudID) == 0 || len(nodeIDs) == 0 {
 		blog.Errorf("CheckClusterCleanNodsTask[%s]: check parameter validate failed", taskID)
 		retErr := fmt.Errorf("CheckClusterCleanNodsTask check parameters failed")
 		_ = state.UpdateStepFailure(start, stepName, retErr)
@@ -205,12 +232,16 @@ func CheckClusterCleanNodsTask(taskID string, stepName string) error {
 		blog.Infof("CheckClusterCleanNodsTask[%s] nodeIDs[%v] exist[%v] notExist[%v]",
 			taskID, nodeIDs, exist, notExist)
 
+		cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+			fmt.Sprintf("nodeIDs [%v] exist [%v] notExist [%v]", nodeIDs, exist, notExist))
+
 		if len(exist) == 0 {
 			return loop.EndLoop
 		}
 
 		return nil
 	}, loop.LoopInterval(30*time.Second))
+
 	if err != nil && !errors.Is(err, context.DeadlineExceeded) {
 		blog.Errorf("CheckClusterCleanNodsTask[%s] cluster[%s] failed: %v", taskID, clusterID, err)
 	}
@@ -219,6 +250,9 @@ func CheckClusterCleanNodsTask(taskID string, stepName string) error {
 	if errors.Is(err, context.DeadlineExceeded) {
 		blog.Infof("CheckClusterCleanNodsTask[%s] cluster[%s] timeout failed: %v", taskID, clusterID, err)
 	}
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"check cluster clean nodes successful")
 
 	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {

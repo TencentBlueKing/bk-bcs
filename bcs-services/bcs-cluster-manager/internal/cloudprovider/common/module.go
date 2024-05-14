@@ -20,13 +20,20 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/avast/retry-go"
+	"github.com/kirito41dd/xslice"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/nodeman"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
+)
+
+const (
+	defaultLimit = 10
 )
 
 var (
@@ -65,7 +72,9 @@ func BuildRemoveHostStep(task *proto.Task, bizID string, nodeIPs []string) {
 }
 
 // TransferHostModuleTask transfer host module task
-func TransferHostModuleTask(taskID string, stepName string) error {
+func TransferHostModuleTask(taskID string, stepName string) error { // nolint
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start transfer host module")
 	start := time.Now()
 	// get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
@@ -108,19 +117,24 @@ func TransferHostModuleTask(taskID string, stepName string) error {
 		return nil
 	}
 
-	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
+	ctx := cloudprovider.WithTaskIDAndStepNameForContext(context.Background(), taskID, stepName)
 
 	// check exist master nodes, trans master nodes module if exist
 	if len(masterModuleIDString) != 0 && len(masterIPs) > 0 {
 		masterModuleID, _ := strconv.Atoi(masterModuleIDString)
-		err = transBizNodeModule(ctx, bkBizID, masterModuleID, masterIPs)
+		err = TransBizNodeModule(ctx, bkBizID, masterModuleID, masterIPs)
 		if err != nil {
+			cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
+				fmt.Sprintf("transfer master host module failed [%d]", err))
 			blog.Errorf("TransferHostModule transBizNodeModule master[%v] failed: %v", masterIPs, err)
 		}
+
+		cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+			"transfer master host module successful")
 	}
 
 	// transfer nodes
-	err = transBizNodeModule(ctx, bkBizID, moduleID, func() []string {
+	err = TransBizNodeModule(ctx, bkBizID, moduleID, func() []string {
 		filterNodeIps := make([]string, 0)
 		for i := range nodeIPs {
 			if utils.StringInSlice(nodeIPs[i], masterIPs) {
@@ -133,6 +147,8 @@ func TransferHostModuleTask(taskID string, stepName string) error {
 		return filterNodeIps
 	}())
 	if err != nil {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
+			fmt.Sprintf("transfer host module failed [%s]", err))
 		blog.Errorf("TransferHostModule %s failed, bkBizID %d, hosts %v, err %s",
 			taskID, bkBizID, nodeIPs, err.Error())
 		_ = state.UpdateStepFailure(start, stepName,
@@ -140,6 +156,8 @@ func TransferHostModuleTask(taskID string, stepName string) error {
 		return nil
 	}
 
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"transfer host module successful")
 	blog.Infof("TransferHostModule %s successful", taskID)
 
 	// update step
@@ -148,57 +166,65 @@ func TransferHostModuleTask(taskID string, stepName string) error {
 	return nil
 }
 
-func transBizNodeModule(ctx context.Context, biz, module int, hostIPs []string) error {
+// TransBizNodeModule trans hostIPs to module. if module is zero, thus trans hostIPs to idle module
+func TransBizNodeModule(ctx context.Context, biz, module int, hostIPs []string) error {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
-
-	nodeManClient := nodeman.GetNodeManClient()
-	if nodeManClient == nil {
-		blog.Errorf("transBizNodeModule %s failed, nodeman client is not init", taskID)
-		return nil
-	}
 
 	cmdbClient := cmdb.GetCmdbClient()
 	if cmdbClient == nil {
-		blog.Errorf("transBizNodeModule %s failed, cmdb client is not init", taskID)
+		blog.Errorf("TransBizNodeModule %s failed, cmdb client is not init", taskID)
 		return nil
 	}
 
 	// get host id from host list
 	var hostIDs []int
 
-	ctx, cancel := context.WithTimeout(context.TODO(), 2*time.Minute)
+	// 要从 bkcc 获取 hostID
+	ctx, cancel := context.WithTimeout(context.TODO(), 10*time.Second)
 	defer cancel()
-
-	err := loop.LoopDoFunc(ctx, func() error {
+	err := retry.Do(func() error {
 		var errGet error
-		hostIDs, errGet = nodeManClient.GetHostIDByIPs(biz, hostIPs)
+		/*
+			// hostIPs may be notIn biz cmdb && only operate exist hosts
+			hostIDs, errGet = nodeManClient.GetHostIDByIPs(biz, hostIPs)
+		*/
+
+		hosts, errGet := cmdbClient.FetchAllHostsByBizID(biz, false)
 		if errGet != nil {
-			blog.Errorf("transBizNodeModule %v failed, list nodeman hosts err %s", biz, errGet.Error())
+			blog.Errorf("TransBizNodeModule %v failed, cmdb fetchAllHostsByBizID err %s", biz, errGet.Error())
 			return errGet
 		}
-		if len(hostIDs) == len(hostIPs) {
-			return loop.EndLoop
+		for i := range hosts {
+			if utils.StringInSlice(hosts[i].BKHostInnerIP, hostIPs) {
+				hostIDs = append(hostIDs, int(hosts[i].BKHostID))
+			}
 		}
-		blog.Infof("transBizNodeModule %s can't get all host id, waiting", taskID)
+
+		blog.Infof("TransBizNodeModule %s get hosts id success", taskID)
 		return nil
-	}, loop.LoopInterval(3*time.Second))
+	}, retry.Attempts(3), retry.Context(ctx), retry.DelayType(retry.FixedDelay), retry.Delay(time.Second))
 	if err != nil {
-		blog.Errorf("transBizNodeModule %s get host id failed: %v", taskID, err)
-		return nil
+		blog.Errorf("TransBizNodeModule %s get host id failed: %v", taskID, err)
+		return err
 	}
+
+	blog.Infof("TransBizNodeModule %s hostIPs(%v) %+v hostIds(%v) %+v",
+		taskID, len(hostIPs), hostIPs, len(hostIDs), hostIDs)
 
 	err = cmdbClient.TransferHostToIdleModule(biz, hostIDs)
 	if err != nil {
-		blog.Errorf("transBizNodeModule %s failed, bkBizID %d, hosts %v, err %s",
+		blog.Errorf("TransBizNodeModule %s failed, bkBizID %d, hosts %v, err %s",
 			taskID, biz, hostIDs, err.Error())
-		return nil
+		return err
 	}
 
-	err = cmdbClient.TransferHostModule(biz, hostIDs, []int{module}, false)
-	if err != nil {
-		blog.Errorf("transBizNodeModule %s failed, bkBizID %d, hosts %v, err %s",
-			taskID, biz, hostIDs, err.Error())
-		return nil
+	if module > 0 {
+		err = cmdbClient.TransferHostModule(biz, hostIDs, []int{module}, false)
+		if err != nil {
+			blog.Errorf("TransBizNodeModule %s failed, bkBizID %d, hosts %v, err %s",
+				taskID, biz, hostIDs, err.Error())
+			return err
+		}
 	}
 
 	return nil
@@ -206,25 +232,16 @@ func transBizNodeModule(ctx context.Context, biz, module int, hostIPs []string) 
 
 // RemoveHostFromCMDBTask remove host from cmdb task
 func RemoveHostFromCMDBTask(taskID string, stepName string) error {
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"remove host from cmdb")
 	start := time.Now()
 	// get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
 	if err != nil {
 		return err
 	}
+
 	if step == nil {
-		return nil
-	}
-	nodeManClient := nodeman.GetNodeManClient()
-	if nodeManClient == nil {
-		blog.Errorf("RemoveHostFromCMDBTask %s failed, nodeman client is not init", taskID)
-		_ = state.SkipFailure(start, stepName, fmt.Errorf("nodeman client is not init"))
-		return nil
-	}
-	cmdbClient := cmdb.GetCmdbClient()
-	if cmdbClient == nil {
-		blog.Errorf("RemoveHostFromCMDBTask %s failed, cmdb client is not init", taskID)
-		_ = state.SkipFailure(start, stepName, fmt.Errorf("cmdb client is not init"))
 		return nil
 	}
 
@@ -245,46 +262,409 @@ func RemoveHostFromCMDBTask(taskID string, stepName string) error {
 		return nil
 	}
 
-	// get host id from host list
-	ips := strings.Split(nodeIPs, ",")
-	hostIDs, err := nodeManClient.GetHostIDByIPs(bkBizID, ips)
+	ctx := cloudprovider.WithTaskIDAndStepNameForContext(context.Background(), taskID, stepName)
+	err = RemoveHostFromCmdb(ctx, bkBizID, nodeIPs)
 	if err != nil {
-		blog.Errorf("RemoveHostFromCMDBTask %s failed, list nodeman hosts err %s", taskID, err.Error())
-		_ = state.SkipFailure(start, stepName, fmt.Errorf("list nodeman hosts err %s", err.Error()))
-		return nil
-	}
-
-	if len(hostIDs) == 0 {
-		blog.Warnf("RemoveHostFromCMDBTask %s skip, cause of empty host", taskID)
-		_ = state.UpdateStepSucc(start, stepName)
-		return nil
-	}
-
-	if err := cmdbClient.TransferHostToIdleModule(bkBizID, hostIDs); err != nil {
-		blog.Errorf("RemoveHostFromCMDBTask %s TransferHostToIdleModule failed, bkBizID %d, hosts %v, err %s",
-			taskID, bkBizID, hostIDs, err.Error())
-		_ = state.SkipFailure(start, stepName,
-			fmt.Errorf("TransferHostToIdleModule failed, bkBizID %d, hosts %v, err %s", bkBizID, hostIDs, err.Error()))
-		return nil
-	}
-
-	if err := cmdbClient.TransferHostToResourceModule(bkBizID, hostIDs); err != nil {
-		blog.Errorf("RemoveHostFromCMDBTask %s TransferHostToResourceModule failed, bkBizID %d, hosts %v, err %s",
-			taskID, bkBizID, hostIDs, err.Error())
-		_ = state.SkipFailure(start, stepName,
-			fmt.Errorf("TransferHostToResourceModule failed, bkBizID %d, hosts %v, err %s",
-				bkBizID, hostIDs, err.Error()))
-		return nil
-	}
-
-	if err := cmdbClient.DeleteHost(hostIDs); err != nil {
-		blog.Errorf("RemoveHostFromCMDBTask %s DeleteHost %v failed, %s", taskID, hostIDs, err.Error())
-		_ = state.SkipFailure(start, stepName, fmt.Errorf("DeleteHost %v failed, %s", hostIDs, err.Error()))
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
+			fmt.Sprintf("remove host from cmdb failed [%s]", err))
+		blog.Errorf("RemoveHostFromCmdb[%s] failed: %v", taskID, err)
+		_ = state.SkipFailure(start, stepName, err)
 		return nil
 	}
 	blog.Infof("RemoveHostFromCMDBTask %s successful", taskID)
 
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"remove host from cmdb successful")
+
 	// update step
 	_ = state.UpdateStepSucc(start, stepName)
+	return nil
+}
+
+// RemoveHostFromCmdb remove host from cmdb
+func RemoveHostFromCmdb(ctx context.Context, biz int, nodeIPs string) error {
+	taskID, stepName := cloudprovider.GetTaskIDAndStepNameFromContext(ctx)
+
+	nodeManClient := nodeman.GetNodeManClient()
+	if nodeManClient == nil {
+		blog.Errorf("RemoveHostFromCMDBTask %s failed, nodeman client is not init", taskID)
+		return fmt.Errorf("nodeman client is not init")
+	}
+	cmdbClient := cmdb.GetCmdbClient()
+	if cmdbClient == nil {
+		blog.Errorf("RemoveHostFromCMDBTask %s failed, cmdb client is not init", taskID)
+		return fmt.Errorf("cmdb client is not init")
+	}
+
+	// get host id from host list
+	ips := strings.Split(nodeIPs, ",")
+	hostIDs, err := nodeManClient.GetHostIDByIPs(biz, ips)
+	if err != nil {
+		blog.Errorf("RemoveHostFromCMDBTask %s failed, list nodeman hosts err %s", taskID, err.Error())
+		return fmt.Errorf("list nodeman hosts err %s", err.Error())
+	}
+
+	if len(hostIDs) == 0 {
+		blog.Warnf("RemoveHostFromCMDBTask %s skip, cause of empty host", taskID)
+		return nil
+	}
+
+	if err := cmdbClient.TransferHostToIdleModule(biz, hostIDs); err != nil {
+		blog.Errorf("RemoveHostFromCMDBTask %s TransferHostToIdleModule failed, bkBizID %d, hosts %v, err %s",
+			taskID, biz, hostIDs, err.Error())
+		return fmt.Errorf("TransferHostToIdleModule failed, bkBizID %d, hosts %v, err %s",
+			biz, hostIDs, err.Error())
+	}
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"transfer host to idle module successful")
+
+	if err := cmdbClient.TransferHostToResourceModule(biz, hostIDs); err != nil {
+		blog.Errorf("RemoveHostFromCMDBTask %s TransferHostToResourceModule failed, bkBizID %d, hosts %v, err %s",
+			taskID, biz, hostIDs, err.Error())
+		return fmt.Errorf("TransferHostToResourceModule failed, bkBizID %d, hosts %v, err %s",
+			biz, hostIDs, err.Error())
+	}
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"transfer host to resource module successful")
+
+	if err := cmdbClient.DeleteHost(hostIDs); err != nil {
+		blog.Errorf("RemoveHostFromCMDBTask %s DeleteHost %v failed, %s", taskID, hostIDs, err.Error())
+		return fmt.Errorf("DeleteHost %v failed, %s", hostIDs, err.Error())
+	}
+
+	return nil
+}
+
+// CheckNodeIpsInCMDBTask check nodes exist in cmdb task
+func CheckNodeIpsInCMDBTask(taskID string, stepName string) error {
+	start := time.Now()
+	// get task information and validate
+	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
+	if err != nil {
+		return err
+	}
+	if step == nil {
+		return nil
+	}
+
+	// get nodeIPs
+	nodeIPs := state.Task.CommonParams[cloudprovider.NodeIPsKey.String()]
+	ips := strings.Split(nodeIPs, ",")
+
+	if len(ips) == 0 {
+		blog.Infof("CheckNodeIpsInCMDBTask[%s] nodeIPs empty", taskID)
+		return nil
+	}
+
+	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
+
+	err = CheckIPsInCmdb(ctx, ips)
+	if err != nil {
+		blog.Errorf("CheckNodeIpsInCMDBTask[%s] failed: %v", taskID, err)
+		_ = state.UpdateStepFailure(start, stepName, err)
+		return err
+	}
+	blog.Infof("CheckNodeIpsInCMDBTask %s successful", taskID)
+
+	// update step
+	_ = state.UpdateStepSucc(start, stepName)
+	return nil
+}
+
+// CheckIPsInCmdb check cluster nodeIPs sync to cmdb
+func CheckIPsInCmdb(ctx context.Context, nodeIPs []string) error {
+	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+
+	var err error
+	// check nodeIPs if exist in cmdb
+	ctx, cancel := context.WithTimeout(context.TODO(), 10*time.Minute)
+	defer cancel()
+
+	err = loop.LoopDoFunc(ctx, func() error {
+		cmdbClient := cmdb.GetCmdbClient()
+		if cmdbClient == nil {
+			blog.Errorf("checkIPsInCmdb[%s] failed, cmdb client is not init", taskID)
+			return nil
+		}
+		detailHosts, errLocal := cmdbClient.QueryAllHostInfoWithoutBiz(nodeIPs)
+		if errLocal != nil {
+			blog.Errorf("checkIPsInCmdb[%s] QueryAllHostInfoWithoutBiz failed: %s", taskID, errLocal.Error())
+			return nil
+		}
+
+		blog.Infof("checkIPsInCmdb[%s] QueryAllHostInfoWithoutBiz sourceIps(%v) cmdb(%v)",
+			taskID, len(nodeIPs), len(detailHosts))
+
+		if len(detailHosts) == len(nodeIPs) {
+			return loop.EndLoop
+		}
+		return nil
+	}, loop.LoopInterval(10*time.Second))
+	if err != nil {
+		blog.Errorf("checkIPsInCmdb[%s] failed: %v", taskID, err)
+		return err
+	}
+
+	return nil
+}
+
+// HostInfo host info
+type HostInfo struct {
+	HostId    int64
+	HostIp    string
+	BkCloudId int
+}
+
+// return Host Ids
+func returnHostIds(hosts []HostInfo) []int64 {
+	hostIds := make([]int64, 0)
+
+	for i := range hosts {
+		hostIds = append(hostIds, hosts[i].HostId)
+	}
+	return hostIds
+}
+
+// return Host Ips
+func returnHostIps(hosts []HostInfo) []string {
+	hostIps := make([]string, 0)
+
+	for i := range hosts {
+		hostIps = append(hostIps, hosts[i].HostIp)
+	}
+	return hostIps
+}
+
+// ip In Host Infos
+func ipInHostInfos(ip string, hosts []HostInfo) bool {
+	for i := range hosts {
+		if hosts[i].HostIp == ip {
+			return true
+		}
+	}
+	return false
+}
+
+// SplitHostsChunks split hosts chunk
+func SplitHostsChunks(hostList []HostInfo, limit int) [][]HostInfo {
+	if limit <= 0 || len(hostList) == 0 {
+		return nil
+	}
+	i := xslice.SplitToChunks(hostList, limit)
+	ss, ok := i.([][]HostInfo)
+	if !ok {
+		return nil
+	}
+
+	return ss
+}
+
+// SyncIpsInfoToCmdb sync ips info to cmdb
+func SyncIpsInfoToCmdb(ctx context.Context, dependInfo *cloudprovider.CloudDependBasicInfo, nodeIPs []string) error {
+	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+
+	inCmdb, notInCmdb, err := splitNodeIPsFromCmdb(ctx, nodeIPs)
+	if err != nil {
+		return err
+	}
+
+	resourcePoolType := ""
+	if dependInfo.NodeGroup.GetExtraInfo() != nil {
+		t, ok := dependInfo.NodeGroup.GetExtraInfo()[resource.ResourcePoolType]
+		if ok {
+			resourcePoolType = t
+		}
+	}
+
+	blog.Infof("SyncIpsInfoToCmdb[%s] resourceType[%s]", resourcePoolType)
+
+	switch resourcePoolType {
+	case resource.SelfPool:
+		if len(notInCmdb) > 0 {
+			err = handleInCmdbFromCmpyNodeIps(ctx, notInCmdb)
+			if err != nil {
+				blog.Errorf("SyncIpsInfoToCmdb[%s] handleNotInCmdbNodeIps failed: %v", taskID, err)
+			}
+		}
+	default:
+		if len(notInCmdb) > 0 {
+			err = handleNotInCmdbNodeIps(ctx, notInCmdb)
+			if err != nil {
+				blog.Errorf("SyncIpsInfoToCmdb[%s] handleNotInCmdbNodeIps failed: %v", taskID, err)
+			}
+		}
+	}
+
+	if len(inCmdb) > 0 {
+		err = handleInCmdbNodeIps(ctx, inCmdb)
+		if err != nil {
+			blog.Errorf("task[%s] SyncIpsInfoToCmdb handleInCmdbNodeIps failed: %v", taskID, err)
+		}
+	}
+
+	return nil
+}
+
+// split Node IPs From Cmdb
+func splitNodeIPsFromCmdb(ctx context.Context, nodeIPs []string) ([]HostInfo, []HostInfo, error) {
+	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+
+	var (
+		nodeInCmdb    = make([]HostInfo, 0)
+		nodeNotInCmdb = make([]HostInfo, 0)
+	)
+
+	cmdbClient := cmdb.GetCmdbClient()
+	if cmdbClient == nil {
+		blog.Errorf("checkIPsInCmdb[%s] failed, cmdb client is not init", taskID)
+		return nil, nil, fmt.Errorf("cmdbClient is not init")
+	}
+	detailHosts, errLocal := cmdbClient.QueryAllHostInfoWithoutBiz(nodeIPs)
+	if errLocal != nil {
+		blog.Errorf("checkIPsInCmdb[%s] QueryAllHostInfoWithoutBiz failed: %s", taskID, errLocal.Error())
+		return nil, nil, errLocal
+	}
+
+	// nodeInCmdb nodeIPs
+	for i := range detailHosts {
+		nodeInCmdb = append(nodeInCmdb, HostInfo{
+			HostId:    detailHosts[i].BKHostID,
+			HostIp:    detailHosts[i].BKHostInnerIP,
+			BkCloudId: detailHosts[i].BKHostCloudID,
+		})
+	}
+
+	blog.Infof("task[%s] splitNodeIPsFromCmdb[%v] nodeInCmdb[%v]", taskID, len(nodeInCmdb), nodeInCmdb)
+
+	for _, ip := range nodeIPs {
+		if ipInHostInfos(ip, nodeInCmdb) {
+			continue
+		}
+
+		nodeNotInCmdb = append(nodeNotInCmdb, HostInfo{
+			HostIp: ip,
+		})
+	}
+	blog.Infof("task[%s] splitNodeIPsFromCmdb[%v] nodeNotInCmdb[%v]", taskID, len(nodeNotInCmdb), nodeNotInCmdb)
+
+	return nodeInCmdb, nodeNotInCmdb, nil
+}
+
+// handle In Cmdb From Cmpy Node Ips
+func handleInCmdbFromCmpyNodeIps(ctx context.Context, inCmdbIps []HostInfo) error {
+	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+
+	cmdbClient := cmdb.GetCmdbClient()
+	if cmdbClient == nil {
+		blog.Errorf("handleInCmdbFromCmpyNodeIps[%s] failed, cmdb client is not init", taskID)
+		return fmt.Errorf("cmdbClient is not init")
+	}
+	hostIps := returnHostIps(inCmdbIps)
+
+	blog.Infof("handleInCmdbFromCmpyNodeIps[%s] hostIps[%v]", taskID, hostIps)
+	servers, err := cmdbClient.GetAssetIdsByIps(hostIps)
+	if err != nil {
+		blog.Errorf("handleInCmdbFromCmpyNodeIps[%s] failed: %v", taskID, err)
+		return err
+	}
+	// 固资号
+	assetIds := make([]string, 0)
+	for _, s := range servers {
+		assetIds = append(assetIds, s.ServerAssetId)
+	}
+	blog.Infof("handleInCmdbFromCmpyNodeIps[%s] assetIds[%v]", taskID, assetIds)
+
+	// hostIds
+	hosts, err := cmdbClient.QueryAllHostInfoByAssetIdWithoutBiz(assetIds)
+	if err != nil {
+		blog.Errorf("handleInCmdbFromCmpyNodeIps[%s] failed: %v", taskID, err)
+		return err
+	}
+
+	// 主机ID
+	hostIds := make([]int64, 0)
+	for i := range hosts {
+		hostIds = append(hostIds, hosts[i].BKHostID)
+	}
+	blog.Infof("handleInCmdbFromCmpyNodeIps[%s] hostIds[%v]", taskID, hostIds)
+
+	// 同步公司cmdb信息至bkcc
+	hostIdsChunks := utils.SplitInt64sChunks(hostIds, defaultLimit)
+	for i := range hostIdsChunks {
+		if len(hostIdsChunks[i]) == 0 {
+			continue
+		}
+
+		errLocal := cmdbClient.SyncHostInfoFromCmpy(0, hostIdsChunks[i])
+		if errLocal != nil {
+			blog.Errorf("handleInCmdbFromCmpyNodeIps[%s] [%v] failed: %v", taskID, hostIdsChunks[i], err)
+			continue
+		}
+
+		blog.Infof("handleInCmdbFromCmpyNodeIps[%s] [%v] success", taskID, hostIdsChunks[i])
+	}
+
+	return nil
+}
+
+// handle In Cmdb Node Ips
+func handleInCmdbNodeIps(ctx context.Context, inCmdbIps []HostInfo) error {
+	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+
+	cmdbClient := cmdb.GetCmdbClient()
+	if cmdbClient == nil {
+		blog.Errorf("handleInCmdbNodeIps[%s] failed, cmdb client is not init", taskID)
+		return fmt.Errorf("cmdbClient is not init")
+	}
+
+	hostsChunks := SplitHostsChunks(inCmdbIps, defaultLimit)
+	for i := range hostsChunks {
+		hostIds := returnHostIds(hostsChunks[i])
+		hostIps := returnHostIps(hostsChunks[i])
+		if len(hostIds) == 0 {
+			continue
+		}
+
+		err := cmdbClient.SyncHostInfoFromCmpy(0, hostIds)
+		if err != nil {
+			blog.Errorf("handleInCmdbNodeIps[%s] [%v] failed: %v", taskID, hostIds, err)
+			continue
+		}
+
+		blog.Infof("handleInCmdbNodeIps[%s] [%v] [%v] success", taskID, hostIds, hostIps)
+	}
+
+	return nil
+}
+
+// handle Not In Cmdb Node Ips
+func handleNotInCmdbNodeIps(ctx context.Context, notInCmdbIps []HostInfo) error {
+	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+
+	cmdbClient := cmdb.GetCmdbClient()
+	if cmdbClient == nil {
+		blog.Errorf("handleNotInCmdbNodeIps[%s] failed, cmdb client is not init", taskID)
+		return fmt.Errorf("cmdbClient is not init")
+	}
+
+	hostsChunks := SplitHostsChunks(notInCmdbIps, defaultLimit)
+	for i := range hostsChunks {
+		hostIds := returnHostIds(hostsChunks[i])
+		hostIps := returnHostIps(hostsChunks[i])
+		if len(hostIds) == 0 {
+			continue
+		}
+
+		err := cmdbClient.AddHostFromCmpy(nil, hostIps, nil)
+		if err != nil {
+			blog.Errorf("handleNotInCmdbNodeIps[%s] [%v] failed: %v", taskID, hostIps, err)
+			continue
+		}
+
+		blog.Infof("handleNotInCmdbNodeIps[%s] [%v] success", taskID, hostIps)
+	}
+
 	return nil
 }
