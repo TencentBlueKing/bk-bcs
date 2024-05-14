@@ -73,6 +73,21 @@ func (c *configExport) ConfigFileExport(w http.ResponseWriter, r *http.Request) 
 	releaseIDStr := chi.URLParam(r, "release_id")
 	releaseID, _ := strconv.Atoi(releaseIDStr)
 
+	// 验证非模板配置和模板配置是否存在冲突
+	ci, err := c.cfgClient.ListConfigItems(kt.RpcCtx(), &pbcs.ListConfigItemsReq{
+		BizId: kt.BizID,
+		AppId: kt.AppID,
+		All:   true,
+	})
+	if err != nil {
+		_ = render.Render(w, r, rest.BadRequest(err))
+		return
+	}
+	if ci.ConflictNumber > 0 {
+		_ = render.Render(w, r, rest.BadRequest(errors.New("create release failed there is a file conflict")))
+		return
+	}
+
 	// 获取服务信息
 	app, err := c.cfgClient.GetApp(kt.RpcCtx(), &pbcs.GetAppReq{
 		BizId: kt.BizID,
