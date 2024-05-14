@@ -1180,6 +1180,7 @@ message ListConfigItemsReq {
 message ListConfigItemsResp {
   uint32 count = 1;
   repeated pbci.ConfigItem details = 2;
+  uint32 conflict_number = 3;
 }
 
 message ListReleasedConfigItemsReq {
