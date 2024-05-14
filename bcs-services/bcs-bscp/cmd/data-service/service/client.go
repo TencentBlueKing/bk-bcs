@@ -393,7 +393,7 @@ func (s *Service) ClientLabelStatistics(ctx context.Context, req *pbclient.Clien
 	}
 
 	items, _, err := s.dao.Client().List(grpcKit, req.GetBizId(), req.GetAppId(), req.GetLastHeartbeatTime(),
-		req.GetSearch(), &pbds.ListClientsReq_Order{}, &types.BasePage{All: true})
+		searchLables, &pbds.ListClientsReq_Order{}, &types.BasePage{All: true})
 	if err != nil {
 		return nil, err
 	}
