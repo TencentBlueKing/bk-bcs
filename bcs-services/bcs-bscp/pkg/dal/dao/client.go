@@ -93,13 +93,12 @@ func (dao *clientDao) GetResourceUsage(kit *kit.Kit, bizID uint32, appID uint32,
 			return items, err
 		}
 	}
-	if len(search.GetReleaseChangeStatus()) > 0 {
-		conds = append(conds, q.Where(m.ReleaseChangeStatus.In(search.GetReleaseChangeStatus()...)))
-	}
+
 	if heartbeatTime > 0 {
 		lastHeartbeatTime := time.Now().UTC().Add(time.Duration(-heartbeatTime) * time.Minute)
-		conds = append(conds, m.LastHeartbeatTime.Gte(lastHeartbeatTime))
+		conds = append(conds, q.Where(m.LastHeartbeatTime.Gte(lastHeartbeatTime)))
 	}
+
 	// 过滤最小0值
 	conds = append(conds, m.CpuMinUsage.Neq(0))
 	conds = append(conds, m.MemoryMinUsage.Neq(0))
@@ -142,14 +141,15 @@ func (dao *clientDao) ListClientGroupByFailedReason(kit *kit.Kit, bizID uint32, 
 			return nil, err
 		}
 	}
-	if len(search.GetReleaseChangeStatus()) > 0 {
-		conds = append(conds, q.Where(m.ReleaseChangeStatus.In(search.GetReleaseChangeStatus()...)))
-	} else {
-		conds = append(conds, m.ReleaseChangeStatus.Eq("Failed"))
+
+	// 默认搜索失败
+	if len(search.GetReleaseChangeStatus()) == 0 {
+		conds = append(conds, q.Where(m.ReleaseChangeStatus.Eq(string(table.Failed))))
 	}
+
 	if heartbeatTime > 0 {
 		lastHeartbeatTime := time.Now().UTC().Add(time.Duration(-heartbeatTime) * time.Minute)
-		conds = append(conds, m.LastHeartbeatTime.Gte(lastHeartbeatTime))
+		conds = append(conds, q.Where(m.LastHeartbeatTime.Gte(lastHeartbeatTime)))
 	}
 	var items []types.FailedReasonChart
 	err = q.Select(m.ReleaseChangeFailedReason, m.ID.Count().As("count")).Where(conds...).
@@ -177,15 +177,17 @@ func (dao *clientDao) ListClientGroupByChangeStatus(kit *kit.Kit, bizID uint32, 
 			return nil, err
 		}
 	}
-	if len(search.GetReleaseChangeStatus()) > 0 {
-		conds = append(conds, q.Where(m.ReleaseChangeFailedReason.In(search.GetReleaseChangeStatus()...)))
-	} else {
-		conds = append(conds, m.ReleaseChangeStatus.In("Failed", "Success"))
+
+	// 默认搜索失败和成功
+	if len(search.GetReleaseChangeStatus()) == 0 {
+		conds = append(conds, q.Where(m.ReleaseChangeStatus.In(string(table.Failed), string(table.Success))))
 	}
+
 	if heartbeatTime > 0 {
 		lastHeartbeatTime := time.Now().UTC().Add(time.Duration(-heartbeatTime) * time.Minute)
-		conds = append(conds, m.LastHeartbeatTime.Gte(lastHeartbeatTime))
+		conds = append(conds, q.Where(m.LastHeartbeatTime.Gte(lastHeartbeatTime)))
 	}
+
 	var items []types.ChangeStatusChart
 	err = q.Select(m.ReleaseChangeStatus, m.ID.Count().As("count")).Where(conds...).
 		Group(m.ReleaseChangeStatus).
@@ -203,18 +205,17 @@ func (dao *clientDao) ListClientGroupByCurrentReleaseID(kit *kit.Kit, bizID uint
 	q := dao.genQ.Client.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID), m.AppID.Eq(appID), m.CurrentReleaseID.Neq(0))
 	var err error
 	var conds []rawgen.Condition
+
 	if heartbeatTime > 0 {
 		lastHeartbeatTime := time.Now().UTC().Add(time.Duration(-heartbeatTime) * time.Minute)
-		conds = append(conds, m.LastHeartbeatTime.Gte(lastHeartbeatTime))
+		conds = append(conds, q.Where(m.LastHeartbeatTime.Gte(lastHeartbeatTime)))
 	}
+
 	if search.String() != "" {
 		conds, err = dao.handleSearch(kit, bizID, appID, search)
 		if err != nil {
 			return nil, err
 		}
-	}
-	if len(search.GetReleaseChangeStatus()) > 0 {
-		conds = append(conds, q.Where(m.ReleaseChangeStatus.In(search.GetReleaseChangeStatus()...)))
 	}
 
 	var items []types.ClientConfigVersionChart
@@ -243,13 +244,10 @@ func (dao *clientDao) List(kit *kit.Kit, bizID, appID uint32, heartbeatTime int6
 			return nil, 0, err
 		}
 	}
-	if len(search.GetReleaseChangeStatus()) > 0 {
-		conds = append(conds, q.Where(m.ReleaseChangeStatus.In(search.GetReleaseChangeStatus()...)))
-	}
 
 	if heartbeatTime > 0 {
 		lastHeartbeatTime := time.Now().UTC().Add(time.Duration(-heartbeatTime) * time.Minute)
-		conds = append(conds, m.LastHeartbeatTime.Gte(lastHeartbeatTime))
+		conds = append(conds, q.Where(m.LastHeartbeatTime.Gte(lastHeartbeatTime)))
 	}
 
 	var exprs []field.Expr
@@ -279,13 +277,18 @@ func (dao *clientDao) handleSearch(kit *kit.Kit, bizID, appID uint32, search *pb
 	q := dao.genQ.Client.WithContext(kit.Ctx)
 	rs := dao.genQ.Release
 	ce := dao.genQ.ClientEvent
+
+	// 根据IP搜索
 	if len(search.GetIp()) > 0 {
 		conds = append(conds, q.Where(m.Ip.Like("%"+search.GetIp()+"%")))
 	}
+
+	// 根据客户端uid搜索
 	if len(search.GetUid()) > 0 {
 		conds = append(conds, q.Where(m.UID.Like("%"+search.GetUid()+"%")))
 	}
 
+	// 根据当前版本名称搜索
 	if len(search.GetCurrentReleaseName()) > 0 {
 		var item []struct {
 			ID uint32
@@ -332,7 +335,7 @@ func (dao *clientDao) handleSearch(kit *kit.Kit, bizID, appID uint32, search *pb
 		conds = append(conds, q.Where(m.ID.In(cid...)))
 	}
 
-	// 处理拉取时间
+	// 根据拉取时间搜索
 	if search.GetPullTime() != "" {
 		starTime, err := time.Parse("2006-01-02", search.GetPullTime())
 		if err != nil {
@@ -361,40 +364,50 @@ func (dao *clientDao) handleSearch(kit *kit.Kit, bizID, appID uint32, search *pb
 		conds = append(conds, q.Where(m.ID.In(cid...)))
 	}
 
+	// 根据变更状态搜索
 	if len(search.GetReleaseChangeStatus()) > 0 {
 		conds = append(conds, q.Where(m.ReleaseChangeStatus.In(search.GetReleaseChangeStatus()...)))
 	}
 
+	// 根据标签搜索
+	// 支持多个 key:valul 以及 key
 	if search.GetLabel() != nil && len(search.GetLabel().GetFields()) != 0 {
 		for k, v := range search.GetLabel().GetFields() {
-			// 不空搜索键值对，否则搜索键
 			if v.GetStringValue() != "" {
-				conds = append(conds, rawgen.Cond(datatypes.JSONQuery("labels").Equals(v.AsInterface(), k))...)
-			} else {
-				conds = append(conds, rawgen.Cond(datatypes.JSONQuery("labels").HasKey(k))...)
+				if v.GetStringValue() != "" {
+					conds = append(conds, q.Where(rawgen.Cond(datatypes.JSONQuery("labels").Equals(v.AsInterface(), k))...))
+				} else {
+					conds = append(conds, q.Where(rawgen.Cond(datatypes.JSONQuery("labels").HasKey(k))...))
+				}
 			}
-
 		}
 	}
 
+	// 根据附加标签搜索
 	if search.GetAnnotations() != nil && len(search.GetAnnotations().GetFields()) != 0 {
 		for k, v := range search.GetLabel().GetFields() {
-			conds = append(conds, rawgen.Cond(datatypes.JSONQuery("annotations").Equals(v.AsInterface(), k))...)
+			if v.GetStringValue() != "" {
+				conds = append(conds, q.Where(rawgen.Cond(datatypes.JSONQuery("annotations").Equals(v.AsInterface(), k))...))
+			}
 		}
 	}
 
+	// 根据在线状态搜索
 	if len(search.GetOnlineStatus()) > 0 {
 		conds = append(conds, q.Where(m.OnlineStatus.In(search.GetOnlineStatus()...)))
 	}
 
+	// 根据客户端版本搜索
 	if len(search.GetClientVersion()) > 0 {
 		conds = append(conds, q.Where(m.ClientVersion.Like("%"+search.GetClientVersion()+"%")))
 	}
 
+	// 根据客户端类型搜索
 	if len(search.GetClientType()) > 0 {
 		conds = append(conds, q.Where(m.ClientType.Eq(search.GetClientType())))
 	}
 
+	// 根据失败原因搜索
 	if len(search.GetFailedReason()) > 0 {
 		conds = append(conds, q.Where(m.ReleaseChangeFailedReason.Eq(search.GetFailedReason())))
 	}
