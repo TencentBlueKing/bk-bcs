@@ -1065,6 +1065,7 @@ cluster:
         name: >-
           The name does not exceed 255 characters, only supports Chinese,
           English, numbers, and scratch lines, separators (-) and decimal points
+        nodeQuotaMaxSize: Maximum node quota is {maximum}
       label:
         nameAndID: Node pool name (ID)
         nodeQuota: Node quota
