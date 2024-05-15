@@ -8,12 +8,13 @@
     </template>
     <div class="content-wrap">
       <div class="operate-area">
-        <bk-radio-group v-model="initDateTime">
+        <bk-radio-group v-model="selectedTime" @change="handleSelectTimeChange">
           <bk-radio-button v-for="date in dateMap" :key="date.name" :label="date.value">
             {{ date.name }}
           </bk-radio-button>
         </bk-radio-group>
         <bk-date-picker
+          ref="datePickerRef"
           class="date-picker"
           :model-value="initDateTime"
           type="datetimerange"
@@ -138,42 +139,31 @@
   }>();
   const emits = defineEmits(['close']);
 
-  const createRange = (n: number) => {
-    const end = new Date();
-    const start = new Date();
-    start.setTime(start.getTime() - 3600 * 1000 * 24 * n);
-    start.setHours(0);
-    start.setMinutes(0);
-    start.setSeconds(0);
-    end.setHours(23);
-    end.setMinutes(59);
-    end.setSeconds(59);
-    return [dayjs(start).format('YYYY-MM-DD HH:mm:ss'), dayjs(end).format('YYYY-MM-DD HH:mm:ss')];
-  };
-
   const dateMap = ref([
     {
       name: t('近 {n} 天', { n: 7 }),
-      value: createRange(7),
+      value: 7,
     },
     {
       name: t('近 {n} 天', { n: 15 }),
-      value: createRange(15),
+      value: 15,
     },
     {
       name: t('近 {n} 天', { n: 30 }),
-      value: createRange(30),
+      value: 30,
     },
     {
       name: t('自定义'),
-      value: createRange(1),
+      value: 0,
     },
   ]);
-  const initDateTime = ref(dateMap.value[0].value);
+  const initDateTime = ref<string[]>([]);
+  const selectedTime = ref(7);
   const searchStr = ref('');
   const tableData = ref();
   const loading = ref(false);
   const isSearchEmpty = ref(false);
+  const datePickerRef = ref();
 
   const pagination = ref({
     count: 0,
@@ -185,8 +175,17 @@
     () => props.show,
     (val) => {
       if (val) {
+        initDateTime.value = getTimeRange(7);
+        selectedTime.value = 7;
         loadTableData();
       }
+    },
+  );
+
+  watch(
+    () => initDateTime.value,
+    () => {
+      loadTableData();
     },
   );
 
@@ -205,8 +204,8 @@
       const params = {
         start: pagination.value.limit * (pagination.value.current - 1),
         limit: pagination.value.limit,
-        start_time: initDateTime.value[0],
-        end_time: initDateTime.value[1],
+        start_time: initDateTime.value![0],
+        end_time: initDateTime.value![1],
         search_value,
       };
       const resp = await getClientPullRecord(props.bkBizId, props.appId, props.id, params);
@@ -221,7 +220,7 @@
 
   const handleDateChange = (val: string[]) => {
     initDateTime.value = val;
-    loadTableData();
+    selectedTime.value = 0;
   };
 
   const linkToApp = (versionId: number) => {
@@ -245,6 +244,27 @@
     return `${t('错误类别')}: ${category}
     ${t('错误子类别')}: ${subclasses}
     ${t('错误详情')}: ${failed_detail_reason}`;
+  };
+
+  const getTimeRange = (n: number) => {
+    const end = new Date();
+    const start = new Date();
+    start.setTime(start.getTime() - 3600 * 1000 * 24 * n);
+    start.setHours(0);
+    start.setMinutes(0);
+    start.setSeconds(0);
+    end.setHours(23);
+    end.setMinutes(59);
+    end.setSeconds(59);
+    return [dayjs(start).format('YYYY-MM-DD HH:mm:ss'), dayjs(end).format('YYYY-MM-DD HH:mm:ss')];
+  };
+
+  const handleSelectTimeChange = (val: any) => {
+    if (val) {
+      initDateTime.value = getTimeRange(val);
+    } else {
+      datePickerRef.value.handleFocus();
+    }
   };
 </script>
 
