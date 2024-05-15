@@ -26,7 +26,6 @@ import (
 	"path/filepath"
 	"sort"
 	"strconv"
-	"strings"
 	"sync"
 	"unicode/utf8"
 
@@ -44,6 +43,7 @@ import (
 	pbci "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/config-item"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/rest"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/archive"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
@@ -82,7 +82,38 @@ func (c *configImport) TemplateConfigFileImport(w http.ResponseWriter, r *http.R
 
 	// 删除临时文件夹
 	defer func() { _ = os.RemoveAll(unpackTempDir) }()
-	folder, uploadErr, err := c.scanFolder(kt, unpackTempDir, unpackTempDir)
+
+	newFiles, err := scanFiles(unpackTempDir)
+	if err != nil {
+		_ = render.Render(w, r, rest.BadRequest(err))
+		return
+	}
+
+	// 获取某个空间下的所有配置文件
+	items, err := c.cfgClient.ListTemplates(kt.RpcCtx(), &pbcs.ListTemplatesReq{
+		BizId:           kt.BizID,
+		TemplateSpaceId: uint32(tmplSpaceID),
+		All:             true,
+	})
+	if err != nil {
+		_ = render.Render(w, r, rest.BadRequest(err))
+		return
+	}
+	filesToCompare := []tools.CIUniqueKey{}
+	for _, v := range items.GetDetails() {
+		filesToCompare = append(filesToCompare, tools.CIUniqueKey{
+			Name: v.Spec.Name,
+			Path: v.Spec.Path,
+		})
+	}
+
+	// 检测同级下不能出现同名的文件和文件夹
+	if err = tools.DetectFilePathConflicts(newFiles, filesToCompare); err != nil {
+		_ = render.Render(w, r, rest.BadRequest(err))
+		return
+	}
+
+	folder, uploadErr, err := c.scanFolderAndUploadFiles(kt, unpackTempDir, unpackTempDir)
 	if err != nil {
 		_ = render.Render(w, r, rest.BadRequest(err))
 		return
@@ -116,29 +147,24 @@ func (c *configImport) TemplateConfigFileImport(w http.ResponseWriter, r *http.R
 	for _, item := range folder {
 		pathName := path.Join(item.Path, item.Name)
 		data, ok := templateItem[pathName]
+		newItem := &types.TemplateItem{
+			Name:     item.Name,
+			Path:     item.Path,
+			FileType: item.FileType,
+			Sign:     item.Sign,
+			ByteSize: item.ByteSize,
+		}
 		if !ok {
-			nonExist = append(nonExist, &types.TemplateItem{
-				Name:     item.Name,
-				Path:     item.Path,
-				FileType: item.FileType,
-				FileMode: string(table.Unix),
-				Sign:     item.Sign,
-				ByteSize: item.ByteSize,
-			})
+			newItem.FileMode = string(table.Unix)
+			nonExist = append(nonExist, newItem)
 		} else {
-			exist = append(exist, &types.TemplateItem{
-				Id:        data.GetTemplate().GetId(),
-				Name:      item.Name,
-				Path:      item.Path,
-				FileType:  item.FileType,
-				FileMode:  data.GetTemplateRevision().GetSpec().GetFileMode(),
-				Memo:      data.GetTemplate().GetSpec().GetMemo(),
-				Privilege: data.GetTemplateRevision().GetSpec().GetPermission().GetPrivilege(),
-				User:      data.GetTemplateRevision().GetSpec().GetPermission().GetUser(),
-				UserGroup: data.GetTemplateRevision().GetSpec().GetPermission().GetUserGroup(),
-				Sign:      item.Sign,
-				ByteSize:  item.ByteSize,
-			})
+			newItem.Id = data.GetTemplate().GetId()
+			newItem.FileMode = data.GetTemplateRevision().GetSpec().GetFileMode()
+			newItem.Memo = data.GetTemplate().GetSpec().GetMemo()
+			newItem.Privilege = data.GetTemplateRevision().GetSpec().GetPermission().GetPrivilege()
+			newItem.User = data.GetTemplateRevision().GetSpec().GetPermission().GetUser()
+			newItem.UserGroup = data.GetTemplateRevision().GetSpec().GetPermission().GetUserGroup()
+			exist = append(exist, newItem)
 		}
 	}
 	msg := "上传完成"
@@ -163,6 +189,8 @@ func (c *configImport) ConfigFileImport(w http.ResponseWriter, r *http.Request) 
 		_ = render.Render(w, r, rest.BadRequest(errors.New("validation parameter fail")))
 		return
 	}
+	kt.AppID = uint32(appId)
+
 	// Validation size
 	if r.ContentLength > constant.MaxUploadContentLength {
 		_ = render.Render(w, r, rest.BadRequest(errors.New("request body size exceeds 100MB")))
@@ -174,13 +202,25 @@ func (c *configImport) ConfigFileImport(w http.ResponseWriter, r *http.Request) 
 		_ = render.Render(w, r, rest.BadRequest(err))
 		return
 	}
-	// 删除临时文件夹
 	defer func() { _ = os.RemoveAll(unpackTempDir) }()
-	folder, uploadErr, err := c.scanFolder(kt, unpackTempDir, unpackTempDir)
+
+	fileItems, err := scanFiles(unpackTempDir)
 	if err != nil {
 		_ = render.Render(w, r, rest.BadRequest(err))
 		return
 	}
+
+	if err = c.getAllConfigFileByApp(kt, fileItems); err != nil {
+		_ = render.Render(w, r, rest.BadRequest(err))
+		return
+	}
+
+	folder, uploadErr, err := c.scanFolderAndUploadFiles(kt, unpackTempDir, unpackTempDir)
+	if err != nil {
+		_ = render.Render(w, r, rest.BadRequest(err))
+		return
+	}
+
 	configItems := []*pbcs.ListConfigItemByTupleReq_Item{}
 	for _, item := range folder {
 		configItems = append(configItems, &pbcs.ListConfigItemByTupleReq_Item{
@@ -188,6 +228,7 @@ func (c *configImport) ConfigFileImport(w http.ResponseWriter, r *http.Request) 
 			Path: item.Path,
 		})
 	}
+
 	// 批量验证biz_id、app_id、name、path是否存在
 	tuple, err := c.cfgClient.ListConfigItemByTuple(kt.RpcCtx(), &pbcs.ListConfigItemByTupleReq{
 		BizId: kt.BizID,
@@ -199,39 +240,31 @@ func (c *configImport) ConfigFileImport(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	configItem := map[string]*pbci.ConfigItem{}
-	if len(tuple.GetDetails()) > 0 {
-		for _, item := range tuple.Details {
-			configItem[path.Join(item.GetSpec().GetPath(), item.GetSpec().GetName())] = item
-		}
+	for _, item := range tuple.GetDetails() {
+		configItem[path.Join(item.GetSpec().GetPath(), item.GetSpec().GetName())] = item
 	}
-	exist := make([]*types.TemplateItem, 0)
-	nonExist := make([]*types.TemplateItem, 0)
+	exist, nonExist := []*types.TemplateItem{}, []*types.TemplateItem{}
 	for _, item := range folder {
 		pathName := path.Join(item.Path, item.Name)
 		config, ok := configItem[pathName]
+		newItem := &types.TemplateItem{
+			Name:     item.Name,
+			Path:     item.Path,
+			FileType: item.FileType,
+			Sign:     item.Sign,
+			ByteSize: item.ByteSize,
+		}
 		if !ok {
-			nonExist = append(nonExist, &types.TemplateItem{
-				Name:     item.Name,
-				Path:     item.Path,
-				FileType: item.FileType,
-				FileMode: string(table.Unix),
-				Sign:     item.Sign,
-				ByteSize: item.ByteSize,
-			})
+			newItem.FileMode = string(table.Unix)
+			nonExist = append(nonExist, newItem)
 		} else {
-			exist = append(exist, &types.TemplateItem{
-				Id:        config.GetId(),
-				Name:      item.Name,
-				Path:      item.Path,
-				FileType:  item.FileType,
-				FileMode:  config.GetSpec().GetFileMode(),
-				Memo:      config.GetSpec().GetMemo(),
-				Privilege: config.GetSpec().GetPermission().GetPrivilege(),
-				User:      config.GetSpec().GetPermission().GetUser(),
-				UserGroup: config.GetSpec().GetPermission().GetUserGroup(),
-				Sign:      item.Sign,
-				ByteSize:  item.ByteSize,
-			})
+			newItem.Id = config.GetId()
+			newItem.FileMode = config.GetSpec().GetFileMode()
+			newItem.Memo = config.GetSpec().GetMemo()
+			newItem.Privilege = config.GetSpec().GetPermission().GetPrivilege()
+			newItem.User = config.GetSpec().GetPermission().GetUser()
+			newItem.UserGroup = config.GetSpec().GetPermission().GetUserGroup()
+			exist = append(exist, newItem)
 		}
 	}
 	msg := "上传完成"
@@ -247,10 +280,41 @@ func (c *configImport) ConfigFileImport(w http.ResponseWriter, r *http.Request) 
 	}))
 }
 
-// 扫描文件夹
-// fileDir 文件目录
-// rootDir 根目录
-func (c *configImport) scanFolder(kt *kit.Kit, fileDir, rootDir string) ([]*types.FileInfo, []error, error) {
+// scanFiles 遍历指定的文件夹，并返回包含所有文件的CIUniqueKey切片
+func scanFiles(fileDir string) ([]tools.CIUniqueKey, error) {
+	var files []tools.CIUniqueKey
+	rootDir := fileDir
+	err := filepath.WalkDir(fileDir, func(path string, d os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if !d.IsDir() {
+			fileInfo, err := d.Info()
+			if err != nil {
+				return err
+			}
+			fileDir, err = filepath.Rel(rootDir, path)
+			if err != nil {
+				return err
+			}
+			fileDir = filepath.Dir(fileDir)
+			// 默认根目录
+			if fileDir == "." {
+				fileDir = "/"
+			} else {
+				fileDir = "/" + fileDir
+			}
+			files = append(files, tools.CIUniqueKey{Path: fileDir, Name: fileInfo.Name()})
+		}
+		return nil
+	})
+
+	return files, err
+}
+
+// scanFolderAndUploadFiles 遍历指定的文件夹，并上传文件
+func (c *configImport) scanFolderAndUploadFiles(kt *kit.Kit, fileDir, rootDir string) ([]*types.FileInfo,
+	[]error, error) {
 	var (
 		wg    sync.WaitGroup
 		mu    sync.Mutex
@@ -292,11 +356,10 @@ func (c *configImport) scanFolder(kt *kit.Kit, fileDir, rootDir string) ([]*type
 	return files, errs, nil
 }
 
-// 上传文件
+// uploadFile 上传文件
 func (c *configImport) uploadFile(kt *kit.Kit, filePath, rootDir string) (*types.FileInfo, error) {
 	var (
 		fileType = string(table.Text)
-		fileDir  = ""
 	)
 	fileContent, err := os.Open(filePath)
 	if err != nil {
@@ -320,16 +383,18 @@ func (c *configImport) uploadFile(kt *kit.Kit, filePath, rootDir string) (*types
 		return nil, err
 	}
 
-	fileDir = strings.Replace(filePath, rootDir, "", 1)
-	fileDir = strings.ReplaceAll(fileDir, "\\", "/")
-	lastSlashIndex := strings.LastIndex(fileDir, "/")
-	if lastSlashIndex >= 0 {
-		fileDir = fileDir[:lastSlashIndex]
+	fileDir, err := filepath.Rel(rootDir, filePath)
+	if err != nil {
+		return nil, err
 	}
+	fileDir = filepath.Dir(fileDir)
 	// 默认根目录
-	if len(fileDir) == 0 {
+	if fileDir == "." {
 		fileDir = "/"
+	} else {
+		fileDir = "/" + fileDir
 	}
+
 	// 从池中获取一个缓冲区
 	fileBuffer := bufferPool.Get().(*bytes.Buffer)
 	defer func() {
@@ -391,4 +456,26 @@ func sortByPathName(myStructs []*types.TemplateItem) {
 		// 如果路径相同，则按照名称排序
 		return myStructs[i].Name < myStructs[j].Name
 	})
+}
+
+// getAllConfigFileByApp 获取某个服务下的所有非模板配置文件
+func (c *configImport) getAllConfigFileByApp(kt *kit.Kit, newFiles []tools.CIUniqueKey) error {
+	items, err := c.cfgClient.ListConfigItems(kt.RpcCtx(), &pbcs.ListConfigItemsReq{
+		BizId: kt.BizID,
+		AppId: kt.AppID,
+		All:   true,
+	})
+	if err != nil {
+		return err
+	}
+	filesToCompare := []tools.CIUniqueKey{}
+
+	for _, v := range items.GetDetails() {
+		filesToCompare = append(filesToCompare, tools.CIUniqueKey{
+			Name: v.Spec.Name,
+			Path: v.Spec.Path,
+		})
+	}
+
+	return tools.DetectFilePathConflicts(newFiles, filesToCompare)
 }

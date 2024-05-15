@@ -707,6 +707,7 @@ export default {
   最近查询: 'recent search',
   全部常用查询: 'All common search',
   'UID/IP/标签/当前配置版本/最近一次拉取配置状态/在线状态/客户端组件类型/客户端组件版本': 'UID/IP/Tag/Current configuration version/Last pull configuration status/Online status/Client component type/Client component version',
+  '标签/当前配置版本/最近一次拉取配置状态/在线状态/客户端组件类型/客户端组件版本': 'Tag/Current configuration version/Last pull configuration status/Online status/Client component type/Client component version',
   常用查询添加成功: 'successfully added common search',
   常用查询修改成功: 'successfully modified common search',
   常用查询删除成功: 'successfully deleted common search',
