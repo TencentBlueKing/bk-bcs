@@ -9,7 +9,7 @@
             :class="{ fullscreen: isOpenFullScreen }"
             @mouseenter="isShowOperationBtn = true"
             @mouseleave="isShowOperationBtn = false">
-            <Card :title="t('组件版本分布')" :height="416">
+            <Card :title="t('组件类型 / 版本分布')" :height="416">
               <template #operation>
                 <OperationBtn
                   v-show="isShowOperationBtn"
@@ -18,7 +18,14 @@
                   @toggle-full-screen="isOpenFullScreen = !isOpenFullScreen" />
               </template>
               <template #head-suffix>
-                <TriggerBtn v-model:currentType="currentType" style="margin-left: 16px" />
+                <div class="head-suffix">
+                  <div v-if="currentType === 'column'" class="icon-wrap">
+                    <span
+                      class="action-icon bk-bscp-icon icon-download"
+                      v-bk-tooltips="{ content: $t('可下钻图表') }" />
+                  </div>
+                  <TriggerBtn v-model:currentType="currentType" />
+                </div>
               </template>
               <bk-loading class="loading-wrap" :loading="loading">
                 <component v-if="data?.length" :is="currentComponent" :data="needDataType" />
@@ -59,7 +66,7 @@
   import SectionTitle from '../../components/section-title.vue';
   import OperationBtn from '../../components/operation-btn.vue';
   import Pie from './pie.vue';
-  import Column from './column.vue';
+  import Column from './column/index.vue';
   import Table from './table.vue';
   import { getClientComponentInfoData } from '../../../../../../api/client';
   import {
@@ -133,7 +140,7 @@
   const isShowOperationBtn = ref(false);
 
   const currentComponent = computed(() => componentMap[currentType.value as keyof typeof componentMap]);
-  const needDataType = computed(() => (currentType.value === 'pie' ? sunburstData.value : data.value));
+  const needDataType = computed(() => (currentType.value === 'table' ? data.value : sunburstData.value));
 
   watch(
     () => props.appId,
@@ -287,5 +294,22 @@
     height: 100%;
     justify-content: center;
     transform: translateY(-20px);
+  }
+
+  .head-suffix {
+    margin-left: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    .icon-wrap {
+      font-size: 12px;
+      width: 18px;
+      height: 18px;
+      background: #f0f3ff;
+      border-radius: 2px;
+      text-align: center;
+      line-height: 18px;
+      color: #7594ef;
+    }
   }
 </style>

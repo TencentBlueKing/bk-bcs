@@ -448,7 +448,6 @@
   };
 
   const handleFilter = ({ checked, index }: any) => {
-    console.log(checked, index);
     if (index === 4) {
       // 调整数据类型筛选条件
       typeFilterChecked.value = checked;

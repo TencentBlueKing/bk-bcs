@@ -139,7 +139,6 @@
   };
 
   const handleToggleOpenTable = (id: string | number) => {
-    console.log('1111');
     openedPkgTable.value = openedPkgTable.value === id ? '' : id;
   };
 

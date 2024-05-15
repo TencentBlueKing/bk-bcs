@@ -15,8 +15,8 @@
               @toggle-full-screen="isOpenFullScreen = !isOpenFullScreen" />
           </template>
           <template #head-suffix>
-            <div class="icon-wrap">
-              <span class="action-icon bk-bscp-icon icon-download" />
+            <div v-if="!isShowSpecificReason" class="icon-wrap">
+              <span class="action-icon bk-bscp-icon icon-download" v-bk-tooltips="{ content: $t('可下钻图表') }" />
             </div>
           </template>
           <bk-loading class="loading-wrap" :loading="loading">
