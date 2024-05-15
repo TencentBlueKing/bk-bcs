@@ -46,7 +46,7 @@
         signature = res.content.signature;
       }
       fileName = res.config_item.spec.name;
-      content = await downloadConfigContent(props.bkBizId, props.appId, signature);
+      content = await downloadConfigContent(props.bkBizId, props.appId, signature, true);
     } else {
       let templateSpaceId;
       if (versionData.value.id) {
@@ -60,7 +60,7 @@
         fileName = res.details[0].spec.name;
         templateSpaceId = res.details[0].attachment.template_space_id;
       }
-      content = await downloadTemplateContent(props.bkBizId, templateSpaceId, signature);
+      content = await downloadTemplateContent(props.bkBizId, templateSpaceId, signature, true);
     }
     fileDownload(content, fileName);
 

@@ -20,7 +20,9 @@
       </thead>
       <tbody>
         <template v-for="group in tableGroupsData" :key="group.id" v-if="allConfigCount !== 0">
-          <tr class="config-groups-table-tr group-title-row" v-if="group.configs.length > 0">
+          <tr
+            :class="['config-groups-table-tr', 'group-title-row', group.expand ? 'expand' : '']"
+            v-if="group.configs.length > 0">
             <td :colspan="colsLen" class="config-groups-table-td">
               <div class="configs-group">
                 <div class="name-wrapper" @click="group.expand = !group.expand">
@@ -218,7 +220,7 @@
     :bk-biz-id="props.bkBizId"
     :app-id="props.appId"
     :version-id="versionData.id"
-    @openEdit="handleSwitchToEdit" />
+    @open-edit="handleSwitchToEdit" />
   <VersionDiff v-model:show="isDiffPanelShow" :current-version="versionData" :selected-config="diffConfig" />
   <ReplaceTemplateVersion
     v-model:show="replaceDialogData.open"
@@ -769,7 +771,6 @@
     width: 100%;
     border: 1px solid #dedee5;
     border-collapse: collapse;
-    // table-layout: fixed;
     .config-groups-table-tr {
       th {
         padding: 11px 16px;
@@ -781,10 +782,16 @@
         background: #fafbfd;
         border-bottom: 1px solid #dedee5;
       }
+      &.group-title-row {
+        &.expand {
+          box-shadow: 0 5px 10px -5px rgba(0, 0, 0, 0.12);
+        }
+        &:hover {
+          background: #f5f7fa;
+        }
+      }
     }
-    .group-title-row:hover {
-      background: #f5f7fa;
-    }
+
     .config-groups-table-td {
       padding: 0;
       font-size: 12px;
