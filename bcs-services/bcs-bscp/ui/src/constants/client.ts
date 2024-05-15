@@ -17,10 +17,6 @@ export const CLIENT_SEARCH_DATA = [
     value: 'current_release_name',
   },
   {
-    name: localT('目标配置版本'),
-    value: 'target_release_name',
-  },
-  {
     name: localT('最近一次拉取配置状态'),
     value: 'release_change_status',
     children: [
@@ -53,10 +49,6 @@ export const CLIENT_SEARCH_DATA = [
     ],
   },
   {
-    name: localT('客户端组件版本'),
-    value: 'client_version',
-  },
-  {
     name: localT('客户端组件类型'),
     value: 'client_type',
     children: [
@@ -79,8 +71,8 @@ export const CLIENT_SEARCH_DATA = [
     ],
   },
   {
-    name: localT('配置拉取时间范围'),
-    value: 'pull_time',
+    name: localT('客户端组件版本'),
+    value: 'client_version',
   },
 ];
 
@@ -116,8 +108,18 @@ export const CLIENT_STATISTICS_SEARCH_DATA = [
     ],
   },
   {
-    name: localT('客户端组件版本'),
-    value: 'client_version',
+    name: localT('在线状态'),
+    value: 'online_status',
+    children: [
+      {
+        name: localT('在线'),
+        value: 'online',
+      },
+      {
+        name: localT('离线'),
+        value: 'offline',
+      },
+    ],
   },
   {
     name: localT('客户端组件类型'),
@@ -140,6 +142,10 @@ export const CLIENT_STATISTICS_SEARCH_DATA = [
         value: 'command',
       },
     ],
+  },
+  {
+    name: localT('客户端组件版本'),
+    value: 'client_version',
   },
 ];
 

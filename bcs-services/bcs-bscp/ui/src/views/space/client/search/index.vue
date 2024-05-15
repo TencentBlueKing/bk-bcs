@@ -212,7 +212,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref, watch } from 'vue';
+  import { ref, watch, onMounted } from 'vue';
   import { useRoute, useRouter } from 'vue-router';
   import { Share, InfoLine } from 'bkui-vue/lib/icon';
   import { storeToRefs } from 'pinia';
@@ -306,6 +306,13 @@
     { deep: true },
   );
 
+  onMounted(() => {
+    const checked = localStorage.getItem('client-show-column');
+    if (checked) {
+      selectedShowColumn.value = JSON.parse(checked);
+    }
+  });
+
   const showResourse = (resourse: IResourseType) => {
     return {
       cpuResourse: `${resourse.cpu_usage} ${t('核')}/${resourse.cpu_max_usage} ${t('核')}`,
@@ -328,22 +335,27 @@
       {
         name: 'IP',
         id: 'ip',
+        disabled: true,
       },
       {
         name: t('客户端标签'),
         id: 'label',
+        disabled: true,
       },
       {
         name: t('当前配置版本'),
         id: 'current-version',
+        disabled: true,
       },
       {
         name: t('最近一次拉取配置状态'),
         id: 'pull-status',
+        disabled: true,
       },
       {
         name: t('在线状态'),
         id: 'online-status',
+        disabled: true,
       },
       {
         name: t('首次连接时间'),
@@ -478,6 +490,7 @@
 
   const handleSettingsChange = ({ checked }: any) => {
     selectedShowColumn.value = [...checked];
+    localStorage.setItem('client-show-column', JSON.stringify(checked));
   };
 
   const getErrorDetails = (item: any) => {
@@ -592,9 +605,15 @@
   }
 </style>
 
-<style>
-  .client-settings-custom .field-item {
-    min-width: 150px;
-    width: auto !important;
+<style lang="scss">
+  .client-settings-custom {
+    .setting-body {
+      .setting-body-fields {
+        max-height: inherit !important;
+      }
+    }
+    .field-item {
+      width: 200px !important;
+    }
   }
 </style>

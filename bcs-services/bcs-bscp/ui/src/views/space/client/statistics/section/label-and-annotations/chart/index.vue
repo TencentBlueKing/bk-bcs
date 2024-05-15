@@ -46,6 +46,7 @@
             :data="data"
             :chart-show-type="chartShowType"
             :is-show-sunburst="isShowSunburst"
+            :drill-down-demension="selectedDownDimension"
             @jump="jumpToSearch($event as string)"
             @drill-down="handleDrillDown" />
         </bk-loading>
