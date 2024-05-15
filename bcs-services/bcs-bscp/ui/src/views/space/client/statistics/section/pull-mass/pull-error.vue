@@ -192,16 +192,20 @@
           mapName,
         };
       });
-      Object.entries(res.time_consuming).forEach(([key, value]) => {
-        const item = pullTime.value.find((item) => item.key === key) as IInfoCard;
-        item.value = value as number;
-        if (item.value > 1) {
-          item.unit = 's';
-        } else {
-          item.value = item.value * 1000;
-          item.unit = 'ms';
-        }
-      });
+      if (Object.keys(res.time_consuming).length) {
+        Object.entries(res.time_consuming).forEach(([key, value]) => {
+          const item = pullTime.value.find((item) => item.key === key) as IInfoCard;
+          item.value = value as number;
+          if (item.value > 1) {
+            item.unit = 's';
+          } else {
+            item.value = item.value * 1000;
+            item.unit = 'ms';
+          }
+        });
+      } else {
+        pullTime.value.forEach((item) => (item.value = 0));
+      }
     } catch (error) {
       console.error(error);
     } finally {

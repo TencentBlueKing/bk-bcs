@@ -10,6 +10,7 @@ export interface ISearchCondition {
   key: string;
   value: string;
   content: string;
+  isEdit: boolean;
 }
 
 // 客户端查询条件公共接口
