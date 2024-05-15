@@ -12,16 +12,29 @@
         class="search-wrap"
         :data-placeholder="inputPlacehoder"
         v-bk-tooltips="{ content: inputPlacehoder, disabled: locale === 'zh-cn' || !inputPlacehoder }"
-        @click="isShowPopover = !isShowPopover">
+        @click="handleClickSearch">
         <div class="search-condition-list">
-          <bk-tag
+          <div
             v-for="(condition, index) in searchConditionList"
             :key="condition.key"
             style="margin-right: 6px"
-            closable
-            @close="handleConditionClose(index)">
-            {{ condition.content }}
-          </bk-tag>
+            class="search-condition-item">
+            <bk-tag
+              v-if="!condition.isEdit"
+              closable
+              @close="handleConditionClose(index)"
+              @click="handleConditionClick($event, condition)">
+              {{ condition.content }}
+            </bk-tag>
+            <bk-input
+              v-else
+              v-model="editSearchStr"
+              ref="editInputRef"
+              class="input"
+              placeholder=" "
+              @blur="handleConditionEdit(condition)"
+              @enter="handleConditionEdit(condition)" />
+          </div>
         </div>
         <div class="search-container-input">
           <bk-input
@@ -29,7 +42,6 @@
             ref="inputRef"
             class="input"
             placeholder=" "
-            :readonly="!searchStr"
             @focus="inputFocus = true"
             @blur="handleConfirmConditionItem"
             @enter="handleConfirmConditionItem" />
@@ -184,10 +196,14 @@
   const isShowDeleteCommonlyDialog = ref(false);
   const selectedDeleteCommonlyItem = ref<ICommonlyUsedItem>();
   const isShowAllCommonSearchPopover = ref(false);
+  const editSearchStr = ref('');
+  const editInputRef = ref();
 
   const inputPlacehoder = computed(() => {
     if (searchConditionList.value.length || searchStr.value || inputFocus.value) return '';
-    return t('UID/IP/标签/当前配置版本/目标配置版本/最近一次拉取配置状态/在线状态/客户端组件版本');
+    return isClientSearch.value
+      ? t('UID/IP/标签/当前配置版本/最近一次拉取配置状态/在线状态/客户端组件类型/客户端组件版本')
+      : t('标签/当前配置版本/最近一次拉取配置状态/在线状态/客户端组件类型/客户端组件版本');
   });
 
   const isClientSearch = computed(() => route.name === 'client-search');
@@ -235,17 +251,7 @@
   watch(
     () => isShowPopover.value,
     (val) => {
-      if (val && !searchStr.value) {
-        showChildSelector.value = false;
-        parentSelecte.value = undefined;
-      }
-    },
-  );
-
-  watch(
-    () => isShowPopover.value,
-    (val) => {
-      if (val && !searchStr.value) {
+      if (val && !searchStr.value && !editSearchStr.value) {
         showChildSelector.value = false;
         parentSelecte.value = undefined;
       }
@@ -261,6 +267,7 @@
       content: `${name} : ${entries[0][1]}`,
       value: entries[0][1] as string,
       key: value,
+      isEdit: false,
     });
   });
 
@@ -297,17 +304,23 @@
       key: parentSelecte.value!.value,
       value: childrenSelectoreItem.value,
       content: `${parentSelecte.value?.name} : ${childrenSelectoreItem.name}`,
+      isEdit: false,
     });
     searchStr.value = '';
   };
 
-  // 手动输入确认搜索项
   const handleConfirmConditionItem = () => {
-    const conditionValue = searchStr.value.split(' : ', 2);
+    const conditionValue = parentSelecte.value ? searchStr.value.split(' : ', 2)[1] : searchStr.value;
     inputFocus.value = false;
-    if (!conditionValue[1]) {
+    if (!conditionValue) {
       searchStr.value = '';
       return;
+    }
+    // 添加默认查询条件ip
+    if (!parentSelecte.value?.value) {
+      parentSelecte.value = selectorData.value.find((item) => {
+        return isClientSearch.value ? item.value === 'ip' : item.value === 'current_release_name';
+      })!;
     }
     // 重复的查询项去重
     const index = searchConditionList.value.findIndex(
@@ -316,8 +329,9 @@
     if (index > -1) handleConditionClose(index);
     searchConditionList.value.push({
       key: parentSelecte.value!.value,
-      value: conditionValue[1],
-      content: `${parentSelecte.value?.name} : ${conditionValue[1]}`,
+      value: conditionValue,
+      content: `${parentSelecte.value?.name} : ${conditionValue}`,
+      isEdit: false,
     });
     searchStr.value = '';
   };
@@ -474,6 +488,7 @@
             key,
             value: `${label}=${value}`,
             content,
+            isEdit: false,
           });
           searchName.push(content);
         });
@@ -486,6 +501,7 @@
             key,
             value,
             content,
+            isEdit: false,
           });
           searchName.push(content);
         });
@@ -495,6 +511,7 @@
           key,
           value: query[key],
           content,
+          isEdit: false,
         });
         searchName.push(content);
       }
@@ -511,6 +528,39 @@
   const handleSelectCommonSearch = (item: ICommonlyUsedItem) => {
     searchConditionList.value = cloneDeep(item.search_condition);
     isShowAllCommonSearchPopover.value = false;
+  };
+
+  const handleClickSearch = () => {
+    isShowPopover.value = !isShowPopover.value;
+    nextTick(() => inputRef.value.focus());
+  };
+
+  const handleConditionClick = (e: any, condition: ISearchCondition) => {
+    e.preventDefault();
+    e.stopPropagation();
+    condition.isEdit = true;
+    editSearchStr.value = condition.content;
+    parentSelecte.value = selectorData.value.find((item) => item.value === condition.key);
+    if (parentSelecte.value?.children) {
+      childSelectorData.value = parentSelecte.value.children;
+      showChildSelector.value = true;
+      isShowPopover.value = true;
+    } else {
+      setTimeout(() => {
+        editInputRef.value[0].focus();
+      }, 200);
+      isShowPopover.value = false;
+    }
+  };
+
+  const handleConditionEdit = (condition: ISearchCondition) => {
+    const conditionValue = editSearchStr.value.split(' : ', 2)[1];
+    if (conditionValue) {
+      condition.value = conditionValue;
+      condition.content = `${parentSelecte.value?.name} : ${conditionValue}`;
+      condition.isEdit = false;
+    }
+    condition.isEdit = false;
   };
 </script>
 
@@ -538,18 +588,29 @@
       text-overflow: ellipsis;
     }
     .search-container-input {
-      min-width: 40px;
       .input {
+        min-width: fit-content;
         border: none;
         height: 100%;
         outline: none;
         box-shadow: none;
+        :deep(input) {
+          width: fit-content;
+        }
       }
     }
     .search-condition-list {
       display: flex;
       align-items: center;
       flex-wrap: wrap;
+      .search-condition-item {
+        .input {
+          border: none;
+          height: 100%;
+          outline: none;
+          box-shadow: none;
+        }
+      }
     }
     .set-used {
       position: absolute;
