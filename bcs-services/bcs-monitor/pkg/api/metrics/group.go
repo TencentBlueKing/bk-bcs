@@ -14,6 +14,7 @@ package metrics
 
 import (
 	bcsmonitor "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bcs_monitor"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest"
 )
 
@@ -30,8 +31,8 @@ func handleGroupMetric(c *rest.Context, promql string) (interface{}, error) {
 	}
 
 	params := map[string]interface{}{
-		"clusterId": c.ClusterId,
-		"group":     c.Param("group"),
+		"clusterId": config.G.BKMonitor.ClusterID,
+		"group":     c.Param("nodegroup"),
 		"provider":  PROVIDER,
 	}
 
