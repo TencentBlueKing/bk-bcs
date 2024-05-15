@@ -106,6 +106,7 @@ func NewStore(opt *Options) Store {
 	globalStore = &argo{
 		option:           opt,
 		cacheApplication: &sync.Map{},
+		cacheAppProject:  &sync.Map{},
 	}
 	return globalStore
 }

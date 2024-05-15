@@ -106,8 +106,8 @@ func (s *ArgoStreamSession) forwardStreamToArgo(rw http.ResponseWriter, req *htt
 				lineBytes = afterReserve
 			}
 		}
-		rw.Write(lineBytes)
-		rw.Write([]byte("\n"))
+		// nolint
+		rw.Write([]byte(fmt.Sprintf("data: %s\n\n", string(lineBytes))))
 		rw.(http.Flusher).Flush()
 	}
 	return nil
