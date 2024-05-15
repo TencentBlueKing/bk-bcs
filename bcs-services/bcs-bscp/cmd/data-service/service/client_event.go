@@ -153,17 +153,14 @@ func (s *Service) ListClientEvents(ctx context.Context, req *pbds.ListClientEven
 	var err error
 	var starTime, endTime time.Time
 	if len(req.GetStartTime()) > 0 {
-		starTime, err = time.Parse("2006-01-02", req.GetStartTime())
+		starTime, err = time.ParseInLocation("2006-01-02 15:04:05", req.GetStartTime(), time.UTC)
 		if err != nil {
 			return nil, err
 		}
-		// 设置时分秒为 00:00:00
-		starTime = time.Date(starTime.Year(), starTime.Month(), starTime.Day(), 0, 0, 0, 0, starTime.UTC().Location())
 	}
+
 	if len(req.GetEndTime()) > 0 {
-		endTime, err = time.Parse("2006-01-02", req.GetEndTime())
-		// 设置时分秒为 23:59:59
-		endTime = time.Date(endTime.Year(), endTime.Month(), endTime.Day(), 23, 59, 59, 0, endTime.UTC().Location())
+		endTime, err = time.ParseInLocation("2006-01-02 15:04:05", req.GetEndTime(), time.UTC)
 		if err != nil {
 			return nil, err
 		}
