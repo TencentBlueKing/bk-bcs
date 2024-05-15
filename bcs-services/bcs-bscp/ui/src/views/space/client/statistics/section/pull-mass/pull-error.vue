@@ -14,9 +14,14 @@
               @refresh="refresh"
               @toggle-full-screen="isOpenFullScreen = !isOpenFullScreen" />
           </template>
+          <template #head-suffix>
+            <div class="icon-wrap">
+              <span class="action-icon bk-bscp-icon icon-download" />
+            </div>
+          </template>
           <bk-loading class="loading-wrap" :loading="loading">
             <div v-if="data.length && !isShowSpecificReason" ref="canvasRef" class="canvas-wrap">
-              <Tooltip ref="tooltipRef" @jump="jumpToSearch" />
+              <Tooltip :need-down-icon="true" ref="tooltipRef" @jump="jumpToSearch" />
             </div>
             <div v-else-if="specificReason.length && isShowSpecificReason" class="specific-reason">
               <div class="nav">
@@ -431,5 +436,17 @@
   }
   :deep(.g2-tooltip) {
     visibility: hidden;
+  }
+
+  .icon-wrap {
+    margin-left: 8px;
+    font-size: 12px;
+    width: 18px;
+    height: 18px;
+    background: #f0f3ff;
+    border-radius: 2px;
+    text-align: center;
+    line-height: 18px;
+    color: #7594ef;
   }
 </style>

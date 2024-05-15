@@ -90,20 +90,6 @@ export const CLIENT_STATISTICS_SEARCH_DATA = [
   //   value: 'annotations',
   // },
   {
-    name: localT('在线状态'),
-    value: 'online_status',
-    children: [
-      {
-        name: localT('在线'),
-        value: 'online',
-      },
-      {
-        name: localT('离线'),
-        value: 'offline',
-      },
-    ],
-  },
-  {
     name: localT('最近一次拉取配置状态'),
     value: 'release_change_status',
     children: [
@@ -118,6 +104,20 @@ export const CLIENT_STATISTICS_SEARCH_DATA = [
       {
         name: localT('处理中'),
         value: 'Processing',
+      },
+    ],
+  },
+  {
+    name: localT('在线状态'),
+    value: 'online_status',
+    children: [
+      {
+        name: localT('在线'),
+        value: 'online',
+      },
+      {
+        name: localT('离线'),
+        value: 'offline',
       },
     ],
   },

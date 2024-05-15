@@ -605,9 +605,15 @@
   }
 </style>
 
-<style>
-  .client-settings-custom .field-item {
-    min-width: 150px;
-    width: auto !important;
+<style lang="scss">
+  .client-settings-custom {
+    .setting-body {
+      .setting-body-fields {
+        max-height: inherit !important;
+      }
+    }
+    .field-item {
+      width: 200px !important;
+    }
   }
 </style>
