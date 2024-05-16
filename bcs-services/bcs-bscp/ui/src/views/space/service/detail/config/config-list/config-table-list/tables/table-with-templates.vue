@@ -791,7 +791,7 @@
 </script>
 <style lang="scss" scoped>
   .table-container {
-    height: 100%;
+    max-height: 100%;
     border: 1px solid #dcdee5;
     overflow: auto;
   }
