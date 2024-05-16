@@ -241,9 +241,10 @@ export const updateTemplateContent = (
  * @param biz_id 业务ID
  * @param templateSpaceId 模板空间ID
  * @param signature sha256签名
+ * @param isBlob 是否需要返回二进制流，下载配置文件时需要
  * @returns
  */
-export const downloadTemplateContent = (biz_id: string, templateSpaceId: number, signature: string) =>
+export const downloadTemplateContent = (biz_id: string, templateSpaceId: number, signature: string, isBlob = false) =>
   http
     .get<string, string>(`/biz/${biz_id}/content/download`, {
       headers: {
@@ -253,6 +254,7 @@ export const downloadTemplateContent = (biz_id: string, templateSpaceId: number,
       transitional: {
         forcedJSONParsing: false,
       },
+      ...(isBlob && { responseType: 'blob' }), // 文件为二进制流，需要设置响应类型为blob才能正确解析
     })
     .then((res) => res);
 
