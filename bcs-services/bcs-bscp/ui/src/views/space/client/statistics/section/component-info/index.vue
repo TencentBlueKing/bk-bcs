@@ -130,7 +130,7 @@
   };
   const data = ref<IVersionDistributionItem[]>([]);
   const sunburstData = ref<IVersionDistributionPie>({
-    name: t('组件版本'),
+    name: t('组件类型分布'),
     children: [],
   });
   const loading = ref(false);

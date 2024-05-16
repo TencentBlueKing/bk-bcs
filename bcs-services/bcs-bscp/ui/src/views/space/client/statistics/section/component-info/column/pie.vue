@@ -50,7 +50,6 @@
         container: tooltipRef.value?.getDom(),
         enterable: true,
         customItems: (originalItems: any[]) => {
-          console.log(originalItems);
           jumpQuery.value = { client_type: originalItems[0].data.client_type };
           originalItems[0].marker = false;
           originalItems[0].name = t('客户端数量');
