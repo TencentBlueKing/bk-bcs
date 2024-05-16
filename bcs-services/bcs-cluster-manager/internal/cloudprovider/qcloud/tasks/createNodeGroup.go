@@ -15,10 +15,11 @@ package tasks
 import (
 	"context"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	as "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/as/v20180419"
@@ -36,6 +37,8 @@ import (
 
 // CreateCloudNodeGroupTask create cloud node group task
 func CreateCloudNodeGroupTask(taskID string, stepName string) error {
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start create cloud nodegroup")
 	start := time.Now()
 	// get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
@@ -87,6 +90,8 @@ func CreateCloudNodeGroupTask(taskID string, stepName string) error {
 	// create cloud nodePool
 	npID, err := tkeCli.CreateClusterNodePool(generateCreateNodePoolInput(dependInfo.NodeGroup, dependInfo.Cluster))
 	if err != nil {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
+			fmt.Sprintf("create cluster nodepool failed [%s]", err))
 		blog.Errorf("CreateCloudNodeGroupTask[%s]: call CreateClusterNodePool[%s] api in task %s "+
 			"step %s failed, %s", taskID, nodeGroupID, taskID, stepName, err.Error())
 		retErr := fmt.Errorf("call CreateClusterNodePool[%s] api err, %s", nodeGroupID, err.Error())
@@ -113,6 +118,9 @@ func CreateCloudNodeGroupTask(taskID string, stepName string) error {
 	if state.Task.CommonParams == nil {
 		state.Task.CommonParams = make(map[string]string)
 	}
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"create cloud nodegroup successful")
 
 	state.Task.CommonParams["CloudNodeGroupID"] = npID
 	// update step

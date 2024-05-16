@@ -1206,6 +1206,17 @@ service ClusterManager {
     };
   }
 
+  // Task Step logs
+  rpc ListTaskStepLogs(ListTaskStepLogsRequest) returns (ListTaskStepLogsResponse) {
+    option (google.api.http) = {
+      get : "/clustermanager/v1/tasksteplogs"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "查询任务步骤日志列表"
+      summary : "查询任务步骤日志列表"
+    };
+  }
+
   // CleanDbHistoryData clean DB history data
   rpc CleanDbHistoryData(CleanDbHistoryDataRequest) returns (CleanDbHistoryDataResponse) {
     option (google.api.http) = {
@@ -10695,6 +10706,36 @@ message TaskOperationLog {
   string resourceName = 11;
 }
 
+message TaskStepLog {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "OperationLog"
+      description : "操作日志审计"
+    }
+  };
+
+  string taskID = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "taskID",
+    description : "任务ID记录"
+  }];
+  string stepName = 2 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "stepName",
+    description : "任务步骤名称"
+  }];
+  string level = 3 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "level",
+    description : "日志等级(INFO,ERROR)"
+  }];
+  string message = 4 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "日志信息"
+  }];
+  string createTime = 6 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "创建时间"
+  }];
+}
+
 message ListCloudInstanceTypeRequest {
   option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
     json_schema : {
@@ -11731,7 +11772,7 @@ message ListOperationLogsRequest {
   string resourceType = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "resourceType",
     description : "资源类型,可选值: cluster, autoscalingoption, cloud, cloudvpc, nodegroup, task"
-  },(validate.rules).string = {in: ["cluster", "autoscalingoption", "cloud", "cloudvpc", "nodegroup", "task"]}];
+  }];
   string resourceID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "resourceID",
     description: "资源ID"
@@ -11783,6 +11824,41 @@ message ListOperationLogsRequest {
   string ipList = 14 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "ipList",
     description: "通过,隔开ipList过滤任务"
+  }];
+  string taskID = 15 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "taskID",
+    description: "默认为空, 过滤任务维度的操作审计"
+  }];
+  string taskName = 16 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "taskName",
+    description: "默认为空, 过滤任务名称维度的操作审计"
+  }];
+}
+
+message ListTaskStepLogsRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListTaskStepLogsRequest"
+      description : "获取任务步骤日志请求参数"
+      required: ["taskID"]
+    }
+  };
+
+  uint32 limit = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "limit",
+    description: "每页数量"
+  }, (validate.rules).uint32.gt = 0];
+  uint32 page = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "page",
+    description: "页码"
+  }, (validate.rules).uint32.gt = 0];
+  string taskID = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "taskID",
+    description: "过滤任务维度的操作审计"
+  }];
+  string stepName = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "stepName",
+    description: "过滤任务步骤维度的操作审计"
   }];
 }
 
@@ -11856,6 +11932,59 @@ message OperationLogDetail {
   string resourceName = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "resourceName",
     description : "资源名称"
+  }];
+}
+
+message ListTaskStepLogsResponse {
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+  string message = 2[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "result",
+    description : "返回结果"
+  }];
+  ListTaskStepLogsResponseData data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "data",
+    description : "返回数据"
+  }];
+}
+
+message ListTaskStepLogsResponseData {
+  uint32 count = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "count",
+    description : "操作日志数量"
+  }];
+  repeated TaskStepLogDetail results = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "results",
+    description : "返回数据"
+  }];
+}
+
+message TaskStepLogDetail {
+  string taskID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "taskID",
+    description : "任务ID"
+  }];
+  string stepName = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "stepName",
+    description : "步骤名称"
+  }];
+  string level = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "level",
+    description : "日志等级(INFO, WARN, ERROR)"
+  }];
+  string message = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "日志信息"
+  }];
+  string createTime = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "发生时间"
   }];
 }
 

@@ -42975,6 +42975,115 @@ var _ interface {
 	ErrorName() string
 } = TaskOperationLogValidationError{}
 
+// Validate checks the field values on TaskStepLog with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *TaskStepLog) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on TaskStepLog with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in TaskStepLogMultiError, or
+// nil if none found.
+func (m *TaskStepLog) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *TaskStepLog) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for TaskID
+
+	// no validation rules for StepName
+
+	// no validation rules for Level
+
+	// no validation rules for Message
+
+	// no validation rules for CreateTime
+
+	if len(errors) > 0 {
+		return TaskStepLogMultiError(errors)
+	}
+
+	return nil
+}
+
+// TaskStepLogMultiError is an error wrapping multiple validation errors
+// returned by TaskStepLog.ValidateAll() if the designated constraints aren't met.
+type TaskStepLogMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m TaskStepLogMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m TaskStepLogMultiError) AllErrors() []error { return m }
+
+// TaskStepLogValidationError is the validation error returned by
+// TaskStepLog.Validate if the designated constraints aren't met.
+type TaskStepLogValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e TaskStepLogValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e TaskStepLogValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e TaskStepLogValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e TaskStepLogValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e TaskStepLogValidationError) ErrorName() string { return "TaskStepLogValidationError" }
+
+// Error satisfies the builtin error interface
+func (e TaskStepLogValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sTaskStepLog.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = TaskStepLogValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = TaskStepLogValidationError{}
+
 // Validate checks the field values on ListCloudInstanceTypeRequest with the
 // rules defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
@@ -48101,16 +48210,7 @@ func (m *ListOperationLogsRequest) validate(all bool) error {
 
 	var errors []error
 
-	if _, ok := _ListOperationLogsRequest_ResourceType_InLookup[m.GetResourceType()]; !ok {
-		err := ListOperationLogsRequestValidationError{
-			field:  "ResourceType",
-			reason: "value must be in list [cluster autoscalingoption cloud cloudvpc nodegroup task]",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for ResourceType
 
 	// no validation rules for ResourceID
 
@@ -48173,6 +48273,10 @@ func (m *ListOperationLogsRequest) validate(all bool) error {
 	// no validation rules for V2
 
 	// no validation rules for IpList
+
+	// no validation rules for TaskID
+
+	// no validation rules for TaskName
 
 	if len(errors) > 0 {
 		return ListOperationLogsRequestMultiError(errors)
@@ -48254,14 +48358,133 @@ var _ interface {
 	ErrorName() string
 } = ListOperationLogsRequestValidationError{}
 
-var _ListOperationLogsRequest_ResourceType_InLookup = map[string]struct{}{
-	"cluster":           {},
-	"autoscalingoption": {},
-	"cloud":             {},
-	"cloudvpc":          {},
-	"nodegroup":         {},
-	"task":              {},
+// Validate checks the field values on ListTaskStepLogsRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListTaskStepLogsRequest) Validate() error {
+	return m.validate(false)
 }
+
+// ValidateAll checks the field values on ListTaskStepLogsRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListTaskStepLogsRequestMultiError, or nil if none found.
+func (m *ListTaskStepLogsRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListTaskStepLogsRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if m.GetLimit() <= 0 {
+		err := ListTaskStepLogsRequestValidationError{
+			field:  "Limit",
+			reason: "value must be greater than 0",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if m.GetPage() <= 0 {
+		err := ListTaskStepLogsRequestValidationError{
+			field:  "Page",
+			reason: "value must be greater than 0",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for TaskID
+
+	// no validation rules for StepName
+
+	if len(errors) > 0 {
+		return ListTaskStepLogsRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListTaskStepLogsRequestMultiError is an error wrapping multiple validation
+// errors returned by ListTaskStepLogsRequest.ValidateAll() if the designated
+// constraints aren't met.
+type ListTaskStepLogsRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListTaskStepLogsRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListTaskStepLogsRequestMultiError) AllErrors() []error { return m }
+
+// ListTaskStepLogsRequestValidationError is the validation error returned by
+// ListTaskStepLogsRequest.Validate if the designated constraints aren't met.
+type ListTaskStepLogsRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListTaskStepLogsRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListTaskStepLogsRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListTaskStepLogsRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListTaskStepLogsRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListTaskStepLogsRequestValidationError) ErrorName() string {
+	return "ListTaskStepLogsRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListTaskStepLogsRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListTaskStepLogsRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListTaskStepLogsRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListTaskStepLogsRequestValidationError{}
 
 // Validate checks the field values on ListOperationLogsResponse with the rules
 // defined in the proto definition for this message. If any rules are
@@ -48687,6 +48910,394 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = OperationLogDetailValidationError{}
+
+// Validate checks the field values on ListTaskStepLogsResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListTaskStepLogsResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListTaskStepLogsResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListTaskStepLogsResponseMultiError, or nil if none found.
+func (m *ListTaskStepLogsResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListTaskStepLogsResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ListTaskStepLogsResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ListTaskStepLogsResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ListTaskStepLogsResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return ListTaskStepLogsResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListTaskStepLogsResponseMultiError is an error wrapping multiple validation
+// errors returned by ListTaskStepLogsResponse.ValidateAll() if the designated
+// constraints aren't met.
+type ListTaskStepLogsResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListTaskStepLogsResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListTaskStepLogsResponseMultiError) AllErrors() []error { return m }
+
+// ListTaskStepLogsResponseValidationError is the validation error returned by
+// ListTaskStepLogsResponse.Validate if the designated constraints aren't met.
+type ListTaskStepLogsResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListTaskStepLogsResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListTaskStepLogsResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListTaskStepLogsResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListTaskStepLogsResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListTaskStepLogsResponseValidationError) ErrorName() string {
+	return "ListTaskStepLogsResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListTaskStepLogsResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListTaskStepLogsResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListTaskStepLogsResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListTaskStepLogsResponseValidationError{}
+
+// Validate checks the field values on ListTaskStepLogsResponseData with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListTaskStepLogsResponseData) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListTaskStepLogsResponseData with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListTaskStepLogsResponseDataMultiError, or nil if none found.
+func (m *ListTaskStepLogsResponseData) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListTaskStepLogsResponseData) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Count
+
+	for idx, item := range m.GetResults() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ListTaskStepLogsResponseDataValidationError{
+						field:  fmt.Sprintf("Results[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ListTaskStepLogsResponseDataValidationError{
+						field:  fmt.Sprintf("Results[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ListTaskStepLogsResponseDataValidationError{
+					field:  fmt.Sprintf("Results[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return ListTaskStepLogsResponseDataMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListTaskStepLogsResponseDataMultiError is an error wrapping multiple
+// validation errors returned by ListTaskStepLogsResponseData.ValidateAll() if
+// the designated constraints aren't met.
+type ListTaskStepLogsResponseDataMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListTaskStepLogsResponseDataMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListTaskStepLogsResponseDataMultiError) AllErrors() []error { return m }
+
+// ListTaskStepLogsResponseDataValidationError is the validation error returned
+// by ListTaskStepLogsResponseData.Validate if the designated constraints
+// aren't met.
+type ListTaskStepLogsResponseDataValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListTaskStepLogsResponseDataValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListTaskStepLogsResponseDataValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListTaskStepLogsResponseDataValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListTaskStepLogsResponseDataValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListTaskStepLogsResponseDataValidationError) ErrorName() string {
+	return "ListTaskStepLogsResponseDataValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListTaskStepLogsResponseDataValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListTaskStepLogsResponseData.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListTaskStepLogsResponseDataValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListTaskStepLogsResponseDataValidationError{}
+
+// Validate checks the field values on TaskStepLogDetail with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *TaskStepLogDetail) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on TaskStepLogDetail with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// TaskStepLogDetailMultiError, or nil if none found.
+func (m *TaskStepLogDetail) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *TaskStepLogDetail) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for TaskID
+
+	// no validation rules for StepName
+
+	// no validation rules for Level
+
+	// no validation rules for Message
+
+	// no validation rules for CreateTime
+
+	if len(errors) > 0 {
+		return TaskStepLogDetailMultiError(errors)
+	}
+
+	return nil
+}
+
+// TaskStepLogDetailMultiError is an error wrapping multiple validation errors
+// returned by TaskStepLogDetail.ValidateAll() if the designated constraints
+// aren't met.
+type TaskStepLogDetailMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m TaskStepLogDetailMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m TaskStepLogDetailMultiError) AllErrors() []error { return m }
+
+// TaskStepLogDetailValidationError is the validation error returned by
+// TaskStepLogDetail.Validate if the designated constraints aren't met.
+type TaskStepLogDetailValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e TaskStepLogDetailValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e TaskStepLogDetailValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e TaskStepLogDetailValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e TaskStepLogDetailValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e TaskStepLogDetailValidationError) ErrorName() string {
+	return "TaskStepLogDetailValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e TaskStepLogDetailValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sTaskStepLogDetail.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = TaskStepLogDetailValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = TaskStepLogDetailValidationError{}
 
 // Validate checks the field values on CleanDbHistoryDataRequest with the rules
 // defined in the proto definition for this message. If any rules are
