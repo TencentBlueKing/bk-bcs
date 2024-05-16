@@ -7,6 +7,7 @@
       :arrow="false"
       placement="bottom-start"
       theme="light"
+      :offset="{ alignmentAxis: menuOffset, mainAxis: 6 }"
       @after-show="handleGetSearchList('recent')">
       <div
         class="search-wrap"
@@ -36,7 +37,7 @@
               @enter="handleConditionEdit(condition)" />
           </div>
         </div>
-        <div class="search-container-input">
+        <div class="search-container-input" ref="inputWrapRef">
           <bk-input
             v-model="searchStr"
             ref="inputRef"
@@ -112,8 +113,8 @@
               <bk-overflow-title>{{ item.spec.search_name }}</bk-overflow-title>
             </div>
             <div class="action-icon" v-if="item.spec.creator !== 'system'">
-              <EditLine class="icon edit" @click.stop="handleOpenSetCommonlyDialg(false, item)" />
-              <Error class="icon close" @click.stop="handleOpenDeleteCommonlyDialog(item)" />
+              <span class="bk-bscp-icon icon-edit-line edit" @click.stop="handleOpenSetCommonlyDialg(false, item)" />
+              <span class="bk-bscp-icon icon-close-line close" @click.stop="handleOpenDeleteCommonlyDialog(item)" />
             </div>
           </div>
         </template>
@@ -149,7 +150,6 @@
 <script lang="ts" setup>
   import { nextTick, ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
   import { storeToRefs } from 'pinia';
-  import { EditLine, Error } from 'bkui-vue/lib/icon';
   import { CLIENT_SEARCH_DATA, CLIENT_STATISTICS_SEARCH_DATA, CLIENT_STATUS_MAP } from '../../../../constants/client';
   import { ISelectorItem, ISearchCondition, ICommonlyUsedItem, IClinetCommonQuery } from '../../../../../types/client';
   import {
@@ -198,6 +198,8 @@
   const isShowAllCommonSearchPopover = ref(false);
   const editSearchStr = ref('');
   const editInputRef = ref();
+  const menuOffset = ref(0);
+  const inputWrapRef = ref();
 
   const inputPlacehoder = computed(() => {
     if (searchConditionList.value.length || searchStr.value || inputFocus.value) return '';
@@ -283,6 +285,7 @@
     // 如果有子选择项就展示 没有就用户手动输入
     if (parentSelectorItem?.children) {
       childSelectorData.value = parentSelectorItem.children;
+      menuOffset.value = inputWrapRef.value.offsetLeft;
       showChildSelector.value = true;
     } else {
       isShowPopover.value = false;
@@ -307,6 +310,8 @@
       isEdit: false,
     });
     searchStr.value = '';
+    parentSelecte.value = undefined;
+    menuOffset.value = 0;
   };
 
   const handleConfirmConditionItem = () => {
@@ -326,6 +331,7 @@
     const index = searchConditionList.value.findIndex(
       (item) => item.key === parentSelecte.value?.value && item.key !== 'label',
     );
+    console.log(index);
     if (index > -1) handleConditionClose(index);
     searchConditionList.value.push({
       key: parentSelecte.value!.value,
@@ -334,6 +340,9 @@
       isEdit: false,
     });
     searchStr.value = '';
+    isShowPopover.value = false;
+    inputRef.value.blur();
+    parentSelecte.value = undefined;
   };
 
   // 获取最近搜索记录和常用搜索记录
@@ -561,6 +570,7 @@
       condition.isEdit = false;
     }
     condition.isEdit = false;
+    parentSelecte.value = undefined;
   };
 </script>
 
@@ -578,6 +588,7 @@
     min-height: 32px;
     background: #fff;
     border: 1px solid #c4c6cc;
+    padding-right: 32px;
     &::after {
       position: absolute;
       width: calc(100% - 16px);
@@ -718,14 +729,12 @@
       .action-icon {
         display: flex;
         align-items: center;
-        .icon:hover {
+        font-size: 16px;
+        .bk-bscp-icon:hover {
           color: #3a84ff;
         }
         .edit {
-          margin-right: 17px;
-        }
-        .close {
-          font-size: 14px;
+          margin-right: 12px;
         }
       }
     }

@@ -510,6 +510,9 @@
     padding: 40px 120px 0 40px;
     background-image: linear-gradient(-82deg, #e8f0ff 10%, #f0f5ff 93%);
     box-shadow: 0 2px 4px 0 #1919290d;
+    :deep(.head) {
+      z-index: 10;
+    }
     &::after {
       position: absolute;
       right: 0;
@@ -517,7 +520,18 @@
       content: '';
       width: 80px;
       height: 120px;
-      background-image: url('../../../../assets/client-head.png');
+      background-image: url('../../../../assets/client-head-right.png');
+      z-index: 0;
+    }
+    &::before {
+      position: absolute;
+      left: 0;
+      top: 0px;
+      content: '';
+      width: 200px;
+      height: 120px;
+      background-image: url('../../../../assets/client-head-left.png');
+      z-index: 0;
     }
   }
   .content {
