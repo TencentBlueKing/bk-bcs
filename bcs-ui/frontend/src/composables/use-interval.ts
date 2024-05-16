@@ -1,4 +1,4 @@
-import { getCurrentInstance, onBeforeUnmount, onDeactivated, onUnmounted, Ref, ref } from 'vue';
+import { onBeforeUnmount, onDeactivated, onUnmounted, Ref, ref } from 'vue';
 
 export type Fn = () => void;
 
@@ -59,11 +59,9 @@ export default function useIntervalFn(
     setTimeout(() => timerFn(), immediate ? 0 : interval);
   }
 
-  if (getCurrentInstance()) {
-    onBeforeUnmount(stop);
-    onUnmounted(stop);
-    onDeactivated(stop);
-  }
+  onBeforeUnmount(stop);
+  onUnmounted(stop);
+  onDeactivated(stop);
 
   return {
     isPending,
