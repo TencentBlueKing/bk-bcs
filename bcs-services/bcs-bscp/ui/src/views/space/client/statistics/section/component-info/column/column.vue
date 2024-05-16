@@ -1,47 +1,45 @@
 <template>
   <div ref="canvasRef" class="canvas-wrap">
-    <Tooltip ref="tooltipRef" @jump="jumpToSearch" />
+    <Tooltip :need-down-icon="true" ref="tooltipRef" @jump="emits('jump', jumpQuery)" />
   </div>
 </template>
 
 <script lang="ts" setup>
   import { onMounted, ref, watch } from 'vue';
   import { Column } from '@antv/g2plot';
-  import { useRouter, useRoute } from 'vue-router';
-  import Tooltip from '../../components/tooltip.vue';
+  import { useI18n } from 'vue-i18n';
+  import Tooltip from '../../../components/tooltip.vue';
 
+  const { t } = useI18n();
   const props = defineProps<{
     data: any;
   }>();
+  const emits = defineEmits(['drillDown', 'jump']);
 
   const canvasRef = ref<HTMLElement>();
   const tooltipRef = ref();
-  let columnPlot: Column;
-  const data = ref(props.data || []);
+  let columnPlot: Column | null;
+  const data = ref(props.data.children || []);
   const jumpQuery = ref<{ [key: string]: string }>({});
-  const router = useRouter();
-  const route = useRoute();
-
-  const bizId = ref(String(route.params.spaceId));
-  const appId = ref(Number(route.params.appId));
 
   watch(
     () => props.data,
     () => {
-      data.value = props.data;
-      columnPlot.changeData(data.value);
+      data.value = props.data.children;
+      columnPlot!.changeData(data.value);
     },
+    { deep: true },
   );
 
   onMounted(() => {
-    initChart();
+    initColumnChart();
   });
 
-  const initChart = () => {
+  const initColumnChart = () => {
     columnPlot = new Column(canvasRef.value!, {
-      data: props.data,
-      isStack: true,
-      color: ['#3E96C2', '#61B2C2', '#85CCA8', '#B5E0AB'],
+      data: data.value,
+      padding: [30, 10, 50, 30],
+      color: '#3E96C2',
       xField: 'name',
       yField: 'value',
       yAxis: {
@@ -54,40 +52,45 @@
           },
         },
       },
-      seriesField: 'client_version',
       maxColumnWidth: 80,
+      seriesField: 'name',
       label: {
         // 可手动配置 label 数据标签位置
-        position: 'middle', // 'top', 'bottom', 'middle'
+        position: 'top', // 'top', 'bottom', 'middle'
       },
       legend: {
+        custom: true,
         position: 'bottom',
+        items: [
+          {
+            id: '1',
+            name: t('客户端数量'),
+            value: 'count',
+            marker: {
+              symbol: 'square',
+            },
+          },
+        ],
       },
       tooltip: {
         fields: ['value'],
-        showTitle: true,
-        title: 'name',
+        showTitle: false,
         container: tooltipRef.value?.getDom(),
         enterable: true,
         customItems: (originalItems: any[]) => {
           jumpQuery.value = { client_type: originalItems[0].data.client_type };
           originalItems.forEach((item) => {
-            item.name = item.data.client_version;
+            item.name = item.data.name;
           });
           return originalItems;
         },
       },
     });
-    columnPlot.render();
-  };
-
-  const jumpToSearch = () => {
-    const routeData = router.resolve({
-      name: 'client-search',
-      params: { appId: appId.value, bizId: bizId.value },
-      query: jumpQuery.value,
+    columnPlot.on('plot:click', (e: any) => {
+      if (!e.data?.data.children) return;
+      emits('drillDown', e.data?.data);
     });
-    window.open(routeData.href, '_blank');
+    columnPlot.render();
   };
 </script>
 
@@ -98,6 +101,15 @@
       .g2-tooltip-marker {
         border-radius: initial !important;
       }
+    }
+  }
+  .nav {
+    color: #313238;
+    .group-dimension {
+      cursor: pointer;
+    }
+    .drill-down-data {
+      color: #979ba5;
     }
   }
 </style>
