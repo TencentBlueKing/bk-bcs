@@ -86,7 +86,7 @@
           :resizable="false"
           width="150"
           fixed="right"
-          v-if="isViewEditable">
+          v-if="!isViewEditable">
           <template #default="{ row }">
             <bk-button
               text

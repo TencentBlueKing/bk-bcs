@@ -189,6 +189,7 @@
   </div>
 </template>
 <script lang="ts">
+import { cloneDeep } from 'lodash';
 import { computed, defineComponent, ref, watch } from 'vue';
 
 import NsSelect from '../view-manage/ns-select.vue';
@@ -309,13 +310,21 @@ export default defineComponent({
         ipData.value = '';
       }
       const data = v.reduce((pre, item) => {
-        if (item.id === 'name') {
-          pre[item.id] = item.values[0]?.name;
-        } else if (item.id === 'ip') {
+        let newItem = cloneDeep(item);
+        // 没有选择字段时默认搜索名称
+        if (newItem.values === undefined) {
+          newItem = {
+            id: 'name',
+            values: [item],
+          };
+        }
+        if (newItem.id === 'name') { // 名称API只能给字符串类型
+          pre[newItem.id] = newItem.values?.map(item => item.name)?.join('');
+        } else if (newItem.id === 'ip') {
           // IP单独存储
-          ipData.value = item.values?.map(item => item.name).join(',');
+          ipData.value = newItem.values?.map(item => item.name).join(',');
         } else {
-          pre[item.id] = item.values?.map(item => item.name);
+          pre[newItem.id] = newItem.values?.map(item => item.name);
         }
 
         return pre;

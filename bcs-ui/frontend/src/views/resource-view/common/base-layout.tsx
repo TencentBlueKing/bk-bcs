@@ -676,7 +676,7 @@ export default defineComponent({
               class="flex-1 bg-[#fff] max-w-[460px]"
               clearable
               show-condition={false}
-              show-popover-tag-change={false}
+              show-popover-tag-change
               data={this.searchSelectData}
               values={this.searchSelectValue}
               placeholder={this.$t('view.placeholder.searchNameOrCreator')}

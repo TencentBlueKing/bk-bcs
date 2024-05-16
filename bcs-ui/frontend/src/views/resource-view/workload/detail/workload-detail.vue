@@ -466,6 +466,7 @@ export default defineComponent({
       ...item,
       images: (handleGetExtData(item.metadata?.uid, 'images') || []).join(''),
       podIPv6: handleGetExtData(item.metadata?.uid, 'podIPv6'),
+      podIPv4: handleGetExtData(item.metadata?.uid, 'podIPv4'),
     })));
     // 状态列表
     const podStatusFilters = computed(() => allPodsData.value.reduce((pre, item) => {
@@ -492,8 +493,8 @@ export default defineComponent({
       const status = handleGetExtData(item.metadata.uid, 'status');
       return !filters.value?.status?.length || filters.value.status.includes(status);
     }));
-    // pods过滤
-    const keys = ref(['metadata.name', 'images', 'podIPv6', 'status.hostIP', 'status.podIP', 'spec.nodeName']);
+    // pods过滤 'images', 'podIPv6', 'podIPv4' 这个三个参数在ext里面，在全量数据那里处理过
+    const keys = ref(['metadata.name', 'status.hostIP', 'status.podIP', 'spec.nodeName', 'images', 'podIPv6', 'podIPv4']);
     const { searchValue, tableDataMatchSearch } = useSearch(filterPodsByStatus, keys);
     // pods分页
     const {
