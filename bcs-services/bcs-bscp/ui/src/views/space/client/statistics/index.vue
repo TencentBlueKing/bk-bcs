@@ -39,6 +39,7 @@
 
 <style scoped lang="scss">
   .client-statistics-page {
+    min-height: calc(100vh - 52px);
     padding: 0 24px;
     background: #f5f7fa;
     .header {

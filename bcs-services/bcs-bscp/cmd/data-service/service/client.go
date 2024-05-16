@@ -362,42 +362,167 @@ func (s *Service) ClientLabelStatistics(ctx context.Context, req *pbclient.Clien
 
 	grpcKit := kit.FromGrpcContext(ctx)
 
+	searchLables := req.GetSearch()
+	if len(searchLables.GetLabel().GetFields()) == 0 {
+		searchLables.Label = &structpb.Struct{
+			Fields: make(map[string]*structpb.Value),
+		}
+	}
+	searchLables.GetLabel().Fields[req.GetPrimaryKey()] = &structpb.Value{}
+	fields := req.GetForeignKeys().GetFields()
+
+	labelKvs := []types.PrimaryAndForeign{}
+	labelKeys := []types.PrimaryAndForeign{}
+	if len(fields) == 0 {
+		labelKeys = append(labelKeys, types.PrimaryAndForeign{PrimaryKey: req.GetPrimaryKey()})
+	}
+	for k, v := range fields {
+		searchLables.GetLabel().Fields[k] = v
+		if v.GetStringValue() != "" {
+			labelKvs = append(labelKvs, types.PrimaryAndForeign{
+				PrimaryKey: req.GetPrimaryKey(),
+				ForeignKey: k,
+				ForeignVal: v.GetStringValue(),
+			})
+		} else {
+			labelKeys = append(labelKeys, types.PrimaryAndForeign{
+				PrimaryKey: req.GetPrimaryKey(),
+				ForeignKey: k,
+			})
+		}
+	}
+
 	items, _, err := s.dao.Client().List(grpcKit, req.GetBizId(), req.GetAppId(), req.GetLastHeartbeatTime(),
-		req.GetSearch(), &pbds.ListClientsReq_Order{}, &types.BasePage{All: true})
+		searchLables, &pbds.ListClientsReq_Order{}, &types.BasePage{All: true})
 	if err != nil {
 		return nil, err
 	}
 
-	counts := make(map[string]map[string]int)
-
-	total := make(map[string]int)
+	labels := make([]map[string]string, 0)
 	for _, item := range items {
 		lable := map[string]string{}
 		_ = json.Unmarshal([]byte(item.Spec.Labels), &lable)
-		for key, value := range lable {
-			if counts[key] == nil {
-				counts[key] = make(map[string]int)
-			}
-			counts[key][value]++
-			total[key]++
-		}
+		labels = append(labels, lable)
 	}
 
-	resp := make(map[string]interface{})
-	for key, value := range counts {
-		var items []interface{}
-		for k, v := range value {
-			items = append(items, map[string]interface{}{
-				"key":     key,
-				"value":   k,
-				"count":   v,
-				"percent": float64(v) / float64(total[key]),
-			})
-		}
-		resp[key] = items
+	countByKvs := make(map[types.PrimaryAndForeign]*types.PrimaryAndForeign)
+	if len(labelKvs) == 2 && len(labelKeys) == 0 {
+		countByKvs = dataDrilldown(labelKvs, labels)
+	}
+	if len(labelKeys) > 0 && len(labelKvs) == 0 {
+		countByKvs = dataMultidimensional(labelKeys, labels)
 	}
 
+	var count int
+	for _, v := range countByKvs {
+		count += v.Count
+	}
+
+	var charts []interface{}
+	for _, v := range countByKvs {
+		chart := make(map[string]interface{})
+		chart["count"] = v.Count
+		chart["percent"] = float64(v.Count) / float64(count)
+		chart["primary_key"] = v.PrimaryKey
+		chart["primary_val"] = v.PrimaryVal
+		chart["foreign_key"] = v.ForeignKey
+		chart["foreign_val"] = v.ForeignVal
+		charts = append(charts, chart)
+	}
+
+	resp := map[string]interface{}{
+		req.GetPrimaryKey(): charts,
+	}
 	return structpb.NewStruct(resp)
+}
+
+// 数据下钻
+func dataDrilldown(labelKvs []types.PrimaryAndForeign,
+	labels []map[string]string) map[types.PrimaryAndForeign]*types.PrimaryAndForeign {
+
+	data := make(map[types.PrimaryAndForeign]*types.PrimaryAndForeign)
+	for _, label := range labels {
+		// 主键不为空
+		if label[labelKvs[0].PrimaryKey] == "" {
+			continue
+		}
+		// 副键不为空且值不等于某个数据
+		if label[labelKvs[0].ForeignKey] == "" || label[labelKvs[0].ForeignKey] != labelKvs[0].ForeignVal {
+			continue
+		}
+		if label[labelKvs[1].ForeignKey] == "" || label[labelKvs[1].ForeignKey] != labelKvs[1].ForeignVal {
+			continue
+		}
+
+		key := types.PrimaryAndForeign{
+			PrimaryKey: labelKvs[0].PrimaryKey,
+		}
+		if _, ok := data[key]; !ok {
+			data[key] = &types.PrimaryAndForeign{
+				PrimaryKey: labelKvs[0].PrimaryKey,
+				PrimaryVal: label[labelKvs[0].PrimaryKey],
+				ForeignKey: labelKvs[0].PrimaryKey,
+				ForeignVal: label[labelKvs[0].PrimaryKey],
+				Count:      1,
+			}
+		} else {
+			data[key].Count++
+		}
+	}
+
+	return data
+}
+
+// 数据多维度展示
+func dataMultidimensional(labelKeys []types.PrimaryAndForeign,
+	labels []map[string]string) map[types.PrimaryAndForeign]*types.PrimaryAndForeign {
+
+	data := make(map[types.PrimaryAndForeign]*types.PrimaryAndForeign)
+	for _, label := range labels {
+		for _, v := range labelKeys {
+			if label[v.PrimaryKey] == "" {
+				continue
+			}
+
+			if label[v.ForeignKey] == "" && v.ForeignKey != "" {
+				continue
+			}
+
+			var key types.PrimaryAndForeign
+			var foreignKey, foreignVal string
+			if v.ForeignKey != "" {
+				key = types.PrimaryAndForeign{
+					PrimaryKey: v.PrimaryKey,
+					ForeignKey: v.ForeignKey,
+					PrimaryVal: label[v.PrimaryKey],
+					ForeignVal: label[v.ForeignKey],
+				}
+				foreignKey = v.ForeignKey
+				foreignVal = label[v.ForeignKey]
+			} else {
+				key = types.PrimaryAndForeign{
+					PrimaryKey: v.PrimaryKey,
+					PrimaryVal: label[v.PrimaryKey],
+				}
+				foreignKey = v.PrimaryKey
+				foreignVal = label[v.PrimaryKey]
+			}
+
+			if _, ok := data[key]; !ok {
+				data[key] = &types.PrimaryAndForeign{
+					PrimaryKey: v.PrimaryKey,
+					PrimaryVal: label[v.PrimaryKey],
+					ForeignKey: foreignKey,
+					ForeignVal: foreignVal,
+					Count:      1,
+				}
+			} else {
+				data[key].Count++
+			}
+		}
+	}
+
+	return data
 }
 
 // ClientAnnotationStatistics 客户端附加信息统计

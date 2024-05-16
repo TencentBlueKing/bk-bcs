@@ -8,16 +8,22 @@
     </template>
     <div class="content-wrap">
       <div class="operate-area">
+        <bk-radio-group v-model="selectedTime" @change="handleSelectTimeChange">
+          <bk-radio-button v-for="date in dateMap" :key="date.name" :label="date.value">
+            {{ date.name }}
+          </bk-radio-button>
+        </bk-radio-group>
         <bk-date-picker
+          ref="datePickerRef"
           class="date-picker"
           :model-value="initDateTime"
-          type="daterange"
-          format="yyyy-MM-dd"
+          type="datetimerange"
+          append-to-body
           disable-date
           @change="handleDateChange" />
         <SearchInput
           v-model="searchStr"
-          :width="600"
+          :width="527"
           :placeholder="$t('当前配置版本/目标配置版本/最近一次拉取配置状态')"
           @search="loadTableData" />
       </div>
@@ -43,7 +49,7 @@
                 v-if="row.spec && row.spec.original_release_id"
                 class="config-version"
                 @click="linkToApp(row.spec.original_release_id)">
-                <Share fill="#979BA5" />
+                <Share class="icon" />
                 <span class="text">{{ row.original_release_name }}</span>
               </div>
               <span v-else>--</span>
@@ -55,7 +61,7 @@
                 v-if="row.spec && row.spec.target_release_id"
                 class="config-version"
                 @click="linkToApp(row.spec.target_release_id)">
-                <Share fill="#979BA5" />
+                <Share class="icon" />
                 <span class="text">{{ row.target_release_name }}</span>
               </div>
             </template>
@@ -133,11 +139,31 @@
   }>();
   const emits = defineEmits(['close']);
 
-  const initDateTime = ref([dayjs(new Date()).format('YYYY-MM-DD'), dayjs(new Date()).format('YYYY-MM-DD')]);
+  const dateMap = ref([
+    {
+      name: t('近 {n} 天', { n: 7 }),
+      value: 7,
+    },
+    {
+      name: t('近 {n} 天', { n: 15 }),
+      value: 15,
+    },
+    {
+      name: t('近 {n} 天', { n: 30 }),
+      value: 30,
+    },
+    {
+      name: t('自定义'),
+      value: 0,
+    },
+  ]);
+  const initDateTime = ref<string[]>([]);
+  const selectedTime = ref(7);
   const searchStr = ref('');
   const tableData = ref();
   const loading = ref(false);
   const isSearchEmpty = ref(false);
+  const datePickerRef = ref();
 
   const pagination = ref({
     count: 0,
@@ -149,8 +175,17 @@
     () => props.show,
     (val) => {
       if (val) {
+        initDateTime.value = getTimeRange(7);
+        selectedTime.value = 7;
         loadTableData();
       }
+    },
+  );
+
+  watch(
+    () => initDateTime.value,
+    () => {
+      loadTableData();
     },
   );
 
@@ -169,8 +204,8 @@
       const params = {
         start: pagination.value.limit * (pagination.value.current - 1),
         limit: pagination.value.limit,
-        start_time: initDateTime.value[0],
-        end_time: initDateTime.value[1],
+        start_time: initDateTime.value![0],
+        end_time: initDateTime.value![1],
         search_value,
       };
       const resp = await getClientPullRecord(props.bkBizId, props.appId, props.id, params);
@@ -185,12 +220,16 @@
 
   const handleDateChange = (val: string[]) => {
     initDateTime.value = val;
-    loadTableData();
+    selectedTime.value = 0;
   };
 
   const linkToApp = (versionId: number) => {
     emits('close');
-    router.push({ name: 'service-config', params: { spaceId: props.bkBizId, appId: props.appId, versionId } });
+    const routeData = router.resolve({
+      name: 'service-config',
+      params: { spaceId: props.bkBizId, appId: props.appId, versionId },
+    });
+    window.open(routeData.href, '_blank');
   };
 
   const handleClearSearchStr = () => {
@@ -205,6 +244,27 @@
     return `${t('错误类别')}: ${category}
     ${t('错误子类别')}: ${subclasses}
     ${t('错误详情')}: ${failed_detail_reason}`;
+  };
+
+  const getTimeRange = (n: number) => {
+    const end = new Date();
+    const start = new Date();
+    start.setTime(start.getTime() - 3600 * 1000 * 24 * n);
+    start.setHours(0);
+    start.setMinutes(0);
+    start.setSeconds(0);
+    end.setHours(23);
+    end.setMinutes(59);
+    end.setSeconds(59);
+    return [dayjs(start).format('YYYY-MM-DD HH:mm:ss'), dayjs(end).format('YYYY-MM-DD HH:mm:ss')];
+  };
+
+  const handleSelectTimeChange = (val: any) => {
+    if (val) {
+      initDateTime.value = getTimeRange(val);
+    } else {
+      datePickerRef.value.handleFocus();
+    }
   };
 </script>
 
@@ -236,6 +296,26 @@
       .date-picker {
         width: 300px;
         margin-right: 8px;
+        border-left: none;
+        :deep(.bk-date-picker-editor) {
+          border-radius: 0 2px 2px 0;
+        }
+      }
+      .bk-radio-group {
+        border-radius: 10px 0 0 10px;
+        .bk-radio-button {
+          width: 80px;
+          &:last-child {
+            :deep(.bk-radio-button-label) {
+              border-radius: 0 !important;
+            }
+          }
+          &:last-child:not(.is-checked) {
+            :deep(.bk-radio-button-label) {
+              border-right: none;
+            }
+          }
+        }
       }
     }
   }
@@ -273,6 +353,15 @@
     cursor: pointer;
     .text {
       margin-left: 4px;
+    }
+    .icon {
+      color: #979ba5;
+    }
+    &:hover {
+      color: #3a84ff;
+      .icon {
+        color: #3a84ff;
+      }
     }
   }
 </style>

@@ -102,6 +102,7 @@ func (s *Service) ClientConfigVersionStatistics(ctx context.Context, req *pbclie
 			Annotations:         req.GetSearch().GetAnnotations(),
 			ClientVersion:       req.GetSearch().GetClientVersion(),
 			ClientType:          req.GetSearch().GetClientType(),
+			OnlineStatus:        req.GetSearch().GetOnlineStatus(),
 		},
 		LastHeartbeatTime: req.GetLastHeartbeatTime(),
 	})
@@ -134,6 +135,7 @@ func (s *Service) ClientPullTrendStatistics(ctx context.Context, req *pbclient.C
 			Annotations:         req.GetSearch().GetAnnotations(),
 			ClientVersion:       req.GetSearch().GetClientVersion(),
 			ClientType:          req.GetSearch().GetClientType(),
+			OnlineStatus:        req.GetSearch().GetOnlineStatus(),
 		},
 		LastHeartbeatTime: req.GetLastHeartbeatTime(),
 		PullTime:          req.GetPullTime(),
@@ -168,6 +170,7 @@ func (s *Service) ClientPullStatistics(ctx context.Context, req *pbclient.Client
 			Annotations:         req.GetSearch().GetAnnotations(),
 			ClientVersion:       req.GetSearch().GetClientVersion(),
 			ClientType:          req.GetSearch().GetClientType(),
+			OnlineStatus:        req.GetSearch().GetOnlineStatus(),
 		},
 		LastHeartbeatTime: req.GetLastHeartbeatTime(),
 	})
@@ -200,8 +203,11 @@ func (s *Service) ClientLabelStatistics(ctx context.Context, req *pbclient.Clien
 			Annotations:         req.GetSearch().GetAnnotations(),
 			ClientVersion:       req.GetSearch().GetClientVersion(),
 			ClientType:          req.GetSearch().GetClientType(),
+			OnlineStatus:        req.GetSearch().GetOnlineStatus(),
 		},
 		LastHeartbeatTime: req.GetLastHeartbeatTime(),
+		PrimaryKey:        req.GetPrimaryKey(),
+		ForeignKeys:       req.GetForeignKeys(),
 	})
 }
 
@@ -232,6 +238,7 @@ func (s *Service) ClientAnnotationStatistics(ctx context.Context, req *pbclient.
 			Annotations:         req.GetSearch().GetAnnotations(),
 			ClientVersion:       req.GetSearch().GetClientVersion(),
 			ClientType:          req.GetSearch().GetClientType(),
+			OnlineStatus:        req.GetSearch().GetOnlineStatus(),
 		},
 		LastHeartbeatTime: req.GetLastHeartbeatTime(),
 	})
@@ -264,6 +271,7 @@ func (s *Service) ClientVersionStatistics(ctx context.Context, req *pbclient.Cli
 			Annotations:         req.GetSearch().GetAnnotations(),
 			ClientVersion:       req.GetSearch().GetClientVersion(),
 			ClientType:          req.GetSearch().GetClientType(),
+			OnlineStatus:        req.GetSearch().GetOnlineStatus(),
 		},
 		LastHeartbeatTime: req.GetLastHeartbeatTime(),
 	})
@@ -320,6 +328,7 @@ func (s *Service) ClientSpecificFailedReason(ctx context.Context, req *pbclient.
 			ClientVersion:       req.GetSearch().GetClientVersion(),
 			ClientType:          req.GetSearch().GetClientType(),
 			FailedReason:        req.GetSearch().GetFailedReason(),
+			OnlineStatus:        req.GetSearch().GetOnlineStatus(),
 		},
 		LastHeartbeatTime: req.GetLastHeartbeatTime(),
 	})

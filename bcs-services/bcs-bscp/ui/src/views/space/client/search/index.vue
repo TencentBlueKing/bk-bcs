@@ -25,11 +25,11 @@
           <!-- <bk-table-column type="selection" :min-width="40" :width="40"> </bk-table-column> -->
           <bk-table-column label="UID" fixed="left" :width="254" prop="attachment.uid"></bk-table-column>
           <bk-table-column
-            v-if="settings.checked.includes('ip')"
+            v-if="selectedShowColumn.includes('ip')"
             label="IP"
             :width="120"
             prop="spec.ip"></bk-table-column>
-          <bk-table-column v-if="settings.checked.includes('label')" :label="t('客户端标签')" :min-width="296">
+          <bk-table-column v-if="selectedShowColumn.includes('label')" :label="t('客户端标签')" :min-width="296">
             <template #default="{ row }">
               <div v-if="row.spec && row.labels.length" class="labels">
                 <span v-for="(label, index) in row.labels" :key="index">
@@ -44,7 +44,10 @@
               <span v-else>--</span>
             </template>
           </bk-table-column>
-          <bk-table-column v-if="settings.checked.includes('current-version')" :label="t('当前配置版本')" :width="140">
+          <bk-table-column
+            v-if="selectedShowColumn.includes('current-version')"
+            :label="t('当前配置版本')"
+            :width="140">
             <template #default="{ row }">
               <div
                 v-if="row.spec && row.spec.current_release_id"
@@ -57,7 +60,7 @@
             </template>
           </bk-table-column>
           <bk-table-column
-            v-if="settings.checked.includes('pull-status')"
+            v-if="selectedShowColumn.includes('pull-status')"
             :label="t('最近一次拉取配置状态')"
             :width="178"
             :filter="{
@@ -79,7 +82,7 @@
           </bk-table-column>
           <!-- <bk-table-column label="附加信息" :width="244"></bk-table-column> -->
           <bk-table-column
-            v-if="settings.checked.includes('online-status')"
+            v-if="selectedShowColumn.includes('online-status')"
             :label="t('在线状态')"
             :width="94"
             :filter="{
@@ -95,7 +98,7 @@
             </template>
           </bk-table-column>
           <bk-table-column
-            v-if="settings.checked.includes('first-connect-time')"
+            v-if="selectedShowColumn.includes('first-connect-time')"
             :label="t('首次连接时间')"
             :width="154">
             <template #default="{ row }">
@@ -105,7 +108,7 @@
             </template>
           </bk-table-column>
           <bk-table-column
-            v-if="settings.checked.includes('last-heartbeat-time')"
+            v-if="selectedShowColumn.includes('last-heartbeat-time')"
             :label="t('最后心跳时间')"
             :width="154">
             <template #default="{ row }">
@@ -114,11 +117,10 @@
               </span>
             </template>
           </bk-table-column>
-          <bk-table-column
-            v-if="settings.checked.includes('cpu-resource')"
+          <!-- <bk-table-column
             :label="
               () =>
-                h('div', [
+                h('span', [
                   h('span', t('CPU资源占用')),
                   h('span', { style: 'color: #979BA5; margin-left: 4px' }, t('(当前/最大)')),
                 ])
@@ -129,9 +131,18 @@
                 {{ showResourse(row.spec.resource).cpuResourse }}
               </span>
             </template>
-          </bk-table-column>
+          </bk-table-column> -->
           <bk-table-column
-            v-if="settings.checked.includes('memory-resource')"
+            v-if="selectedShowColumn.includes('cpu-resource')"
+            :label="t('CPU资源占用(当前/最大)')"
+            :width="174">
+            <template #default="{ row }">
+              <span v-if="row.spec">
+                {{ showResourse(row.spec.resource).cpuResourse }}
+              </span>
+            </template>
+          </bk-table-column>
+          <!-- <bk-table-column
             :label="
               () =>
                 h('div', [
@@ -145,14 +156,24 @@
                 {{ showResourse(row.spec.resource).memoryResource }}
               </span>
             </template>
+          </bk-table-column> -->
+          <bk-table-column
+            v-if="selectedShowColumn.includes('memory-resource')"
+            :label="t('内存资源占用(当前/最大)')"
+            :width="170">
+            <template #default="{ row }">
+              <span v-if="row.spec">
+                {{ showResourse(row.spec.resource).memoryResource }}
+              </span>
+            </template>
           </bk-table-column>
           <bk-table-column
-            v-if="settings.checked.includes('client-type')"
+            v-if="selectedShowColumn.includes('client-type')"
             :label="t('客户端组件类型')"
             :width="128"
             prop="spec.client_type"></bk-table-column>
           <bk-table-column
-            v-if="settings.checked.includes('client-version')"
+            v-if="selectedShowColumn.includes('client-version')"
             :label="t('客户端组件版本')"
             :width="128"
             prop="spec.client_version"></bk-table-column>
@@ -191,7 +212,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref, watch, h } from 'vue';
+  import { ref, watch, onMounted } from 'vue';
   import { useRoute, useRouter } from 'vue-router';
   import { Share, InfoLine } from 'bkui-vue/lib/icon';
   import { storeToRefs } from 'pinia';
@@ -285,6 +306,13 @@
     { deep: true },
   );
 
+  onMounted(() => {
+    const checked = localStorage.getItem('client-show-column');
+    if (checked) {
+      selectedShowColumn.value = JSON.parse(checked);
+    }
+  });
+
   const showResourse = (resourse: IResourseType) => {
     return {
       cpuResourse: `${resourse.cpu_usage} ${t('核')}/${resourse.cpu_max_usage} ${t('核')}`,
@@ -307,22 +335,27 @@
       {
         name: 'IP',
         id: 'ip',
+        disabled: true,
       },
       {
         name: t('客户端标签'),
         id: 'label',
+        disabled: true,
       },
       {
         name: t('当前配置版本'),
         id: 'current-version',
+        disabled: true,
       },
       {
         name: t('最近一次拉取配置状态'),
         id: 'pull-status',
+        disabled: true,
       },
       {
         name: t('在线状态'),
         id: 'online-status',
+        disabled: true,
       },
       {
         name: t('首次连接时间'),
@@ -365,6 +398,21 @@
     ],
   });
 
+  const selectedShowColumn = ref([
+    'uid',
+    'ip',
+    'label',
+    'current-version',
+    'pull-status',
+    'online-status',
+    'first-connect-time',
+    'last-heartbeat-time',
+    'cpu-resource',
+    'memory-resource',
+    'client-type',
+    'client-version',
+  ]);
+
   // const tableTips = {
   //   clientTag: '客户端标签与服务分组配合使用实现服务配置灰度发布场景',
   //   information: '主要用于记录客户端非标识性元数据，例如客户端用途等附加信息（标识性元数据使用客户端标签）',
@@ -395,7 +443,11 @@
   };
 
   const linkToApp = (versionId: number) => {
-    router.push({ name: 'service-config', params: { spaceId: bkBizId.value, appId: appId.value, versionId } });
+    const routeData = router.resolve({
+      name: 'service-config',
+      params: { spaceId: bkBizId.value, appId: appId.value, versionId },
+    });
+    window.open(routeData.href, '_blank');
   };
 
   const handleShowPullRecord = (uid: string, id: number) => {
@@ -437,8 +489,8 @@
   };
 
   const handleSettingsChange = ({ checked }: any) => {
-    console.log(settings.value.checked, checked);
-    settings.value.checked = checked;
+    selectedShowColumn.value = [...checked];
+    localStorage.setItem('client-show-column', JSON.stringify(checked));
   };
 
   const getErrorDetails = (item: any) => {
@@ -458,6 +510,9 @@
     padding: 40px 120px 0 40px;
     background-image: linear-gradient(-82deg, #e8f0ff 10%, #f0f5ff 93%);
     box-shadow: 0 2px 4px 0 #1919290d;
+    :deep(.head) {
+      z-index: 10;
+    }
     &::after {
       position: absolute;
       right: 0;
@@ -465,7 +520,18 @@
       content: '';
       width: 80px;
       height: 120px;
-      background-image: url('../../../../assets/client-head.png');
+      background-image: url('../../../../assets/client-head-right.png');
+      z-index: 0;
+    }
+    &::before {
+      position: absolute;
+      left: 0;
+      top: 0px;
+      content: '';
+      width: 200px;
+      height: 120px;
+      background-image: url('../../../../assets/client-head-left.png');
+      z-index: 0;
     }
   }
   .content {
@@ -492,6 +558,9 @@
     }
     &:hover {
       color: #3a84ff;
+      .icon {
+        color: #3a84ff;
+      }
     }
   }
   .release_change_status {
@@ -550,9 +619,15 @@
   }
 </style>
 
-<style>
-  .client-settings-custom .field-item {
-    min-width: 150px;
-    width: auto !important;
+<style lang="scss">
+  .client-settings-custom {
+    .setting-body {
+      .setting-body-fields {
+        max-height: inherit !important;
+      }
+    }
+    .field-item {
+      width: 200px !important;
+    }
   }
 </style>

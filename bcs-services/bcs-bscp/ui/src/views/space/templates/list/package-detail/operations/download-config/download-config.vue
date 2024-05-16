@@ -34,7 +34,7 @@
       pending.value = true;
       const res = await getTemplateVersionsNameByIds(props.spaceId, [props.templateId]);
       const { template_name, latest_signature, latest_revision_name } = res.details[0];
-      const content = await downloadTemplateContent(props.spaceId, props.templateSpaceId, latest_signature);
+      const content = await downloadTemplateContent(props.spaceId, props.templateSpaceId, latest_signature, true);
       fileDownload(content, `${template_name}_${latest_revision_name}`);
     } catch (e) {
       console.error(e);

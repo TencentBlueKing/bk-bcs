@@ -1,68 +1,38 @@
 <template>
   <div ref="canvasRef" class="canvas-wrap">
-    <Tooltip ref="tooltipRef" @jump="emits('jump')" />
+    <Tooltip ref="tooltipRef" @jump="emits('jump', jumpQuery)" />
   </div>
 </template>
 
 <script lang="ts" setup>
-  import { ref, onMounted, watch } from 'vue';
+  import { onMounted, ref } from 'vue';
   import { Pie } from '@antv/g2plot';
-  import Tooltip from '../../components/tooltip.vue';
-  import { IClientConfigVersionItem } from '../../../../../../../types/client';
   import { useI18n } from 'vue-i18n';
-
+  import Tooltip from '../../../components/tooltip.vue';
   const { t } = useI18n();
 
   const props = defineProps<{
-    data: IClientConfigVersionItem[];
-    bkBizId: string;
-    appId: number;
-    isFullScreen: boolean;
+    data: any;
   }>();
 
-  const emits = defineEmits(['update', 'jump']);
+  const emits = defineEmits(['jump']);
 
-  let piePlot: Pie;
   const canvasRef = ref<HTMLElement>();
   const tooltipRef = ref();
-
-  watch(
-    () => props.data,
-    () => {
-      piePlot.changeData(props.data);
-    },
-  );
-
-  watch(
-    () => props.isFullScreen,
-    (val) => {
-      if (val) {
-        piePlot.update({
-          legend: {
-            offsetX: -200,
-          },
-        });
-      } else {
-        piePlot.update({
-          legend: {
-            offsetX: -800,
-          },
-        });
-      }
-    },
-  );
+  let piePlot: Pie | null;
+  const jumpQuery = ref<{ [key: string]: string }>({});
 
   onMounted(() => {
-    initChart();
+    initPieChart();
   });
 
-  const initChart = () => {
+  const initPieChart = () => {
     piePlot = new Pie(canvasRef.value!, {
       data: props.data,
-      angleField: 'count',
-      colorField: 'current_release_name',
+      angleField: 'value',
+      colorField: 'name',
       radius: 1,
-      padding: [20, 800, 20, 50],
+      padding: [40, 40, 40, 40],
       label: {
         type: 'inner',
         offset: '-30%',
@@ -74,19 +44,17 @@
         autoRotate: false,
       },
       tooltip: {
-        fields: ['count', 'percent'],
+        fields: ['value', 'percent'],
         showTitle: true,
-        title: 'current_release_name',
+        title: 'name',
         container: tooltipRef.value?.getDom(),
         enterable: true,
-        showMarkers: false,
-        showContent: true,
         customItems: (originalItems: any[]) => {
-          emits('update', originalItems[0].title);
-          originalItems[0].name = t('客户端数量');
+          jumpQuery.value = { client_type: originalItems[0].data.client_type };
           originalItems[0].marker = false;
+          originalItems[0].name = t('客户端数量');
           originalItems[1].name = t('占比');
-          originalItems[1].value = `${(parseFloat(originalItems[1].value) * 100).toFixed(1)}%`;
+          originalItems[1].value = `${(originalItems[1].data.percent * 100).toFixed(1)}%`;
           return originalItems;
         },
       },
@@ -95,8 +63,8 @@
         layout: 'horizontal',
         position: 'right',
         flipPage: false,
-        offsetX: -800,
         maxWidth: 300,
+        offsetX: -200,
         reversed: true,
       },
     });
@@ -104,11 +72,7 @@
   };
 </script>
 
-<style lang="scss" scoped>
-  .canvas-wrap {
-    position: relative;
-    height: 100%;
-  }
+<style scoped lang="scss">
   :deep(.g2-tooltip) {
     visibility: hidden;
     .g2-tooltip-title {

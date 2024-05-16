@@ -64,7 +64,7 @@
     }
     const { signature, name } = config;
     const getConfigContent = props.isTpl ? downloadTemplateContent : downloadConfigContent;
-    const res = await getConfigContent(bkBizId, props.id, signature);
+    const res = await getConfigContent(bkBizId, props.id, signature, true);
     fileDownload(res, name);
   };
 </script>
