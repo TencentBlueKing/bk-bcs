@@ -821,4 +821,7 @@ export default {
   支持点击数据下钻: 'Support click data drill down',
   下钻维度: 'Drill down dimension',
   组合维度: 'Combinatorial dimension',
+  组件类型分布: 'Component type distribution',
+  可下钻图表: 'Drill-down chart',
+  '组件类型 / 版本分布': 'Component type / Version distribution',
 };
