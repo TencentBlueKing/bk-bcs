@@ -134,3 +134,9 @@
 .icon-bar-chart-stack:before {
   content: '\e124';
 }
+.icon-close-line:before {
+  content: '\e126';
+}
+.icon-edit-line:before {
+  content: '\e125';
+}

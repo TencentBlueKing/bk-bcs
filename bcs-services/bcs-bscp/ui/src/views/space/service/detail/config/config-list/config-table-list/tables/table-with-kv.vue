@@ -133,7 +133,7 @@
     v-model:show="viewPanelShow"
     :config="activeConfig"
     :show-edit-btn="isUnNamedVersion"
-    @openEdit="handleSwitchToEdit" />
+    @open-edit="handleSwitchToEdit" />
   <VersionDiff v-model:show="isDiffPanelShow" :current-version="versionData" :selected-kv-config-id="diffConfig" />
   <DeleteConfirmDialog
     v-model:isShow="isDeleteConfigDialogShow"
