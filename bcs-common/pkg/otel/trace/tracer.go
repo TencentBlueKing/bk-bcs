@@ -29,6 +29,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"k8s.io/klog/v2"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/jaeger"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/zipkin"
 )
@@ -198,4 +199,42 @@ func InitTracingProvider(serviceName string, opt ...Option) (func(context.Contex
 
 	// Shutdown will flush any remaining spans and shut down the exporter.
 	return tracerProvider.Shutdown, nil
+}
+
+// InitTracing init tracing
+func InitTracing(op *conf.TracingConfig, serviceName string) (func(context.Context) error, error) {
+	if !op.Enabled {
+		return nil, nil
+	}
+	opts := []Option{}
+
+	if op.Endpoint != "" {
+		opts = append(opts, OTLPEndpoint(op.Endpoint))
+	}
+	attrs := make([]attribute.KeyValue, 0)
+
+	if op.Token != "" {
+		attrs = append(attrs, attribute.String("bk.data.token", op.Token))
+	}
+
+	if op.ResourceAttrs != nil {
+		attrs = append(attrs, newResource(op.ResourceAttrs)...)
+	}
+
+	opts = append(opts, ResourceAttrs(attrs))
+
+	tracer, err := InitTracingProvider(serviceName, opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	return tracer, nil
+}
+
+func newResource(attrs map[string]string) []attribute.KeyValue {
+	attrValues := make([]attribute.KeyValue, 0)
+	for k, v := range attrs {
+		attrValues = append(attrValues, attribute.String(k, v))
+	}
+	return attrValues
 }
