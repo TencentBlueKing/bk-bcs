@@ -120,7 +120,7 @@
 
   const handleDownload = async (version: ITemplateVersionItem) => {
     const { name, revision_name, content_spec } = version.spec;
-    const content = await downloadTemplateContent(props.spaceId, props.templateSpaceId, content_spec.signature);
+    const content = await downloadTemplateContent(props.spaceId, props.templateSpaceId, content_spec.signature, true);
     fileDownload(content, `${name}_${revision_name}`);
   };
 
