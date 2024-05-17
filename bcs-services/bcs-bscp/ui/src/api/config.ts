@@ -553,3 +553,16 @@ export const unModifyConfigItem = (bizId: string, appId: number, id: number) =>
 export const unDeleteConfigItem = (bizId: string, appId: number, id: number) =>
   http.post(`/config/undelete/config_item/config_item/config_item_id/${id}/app_id/${appId}/biz_id/${bizId}`);
 
+/**
+ * 从历史版本导入配置项
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param other_app_id 导入服务id
+ * @param release_id 版本id
+ * @returns
+ */
+export const importFromHistoryVersion = (
+  bizId: string,
+  appId: number,
+  params: { other_app_id: number; release_id: number },
+) => http.get(`/config/biz/${bizId}/apps/${appId}/config_items/compare_conflicts`, { params });

@@ -12,8 +12,7 @@
       <table class="table" v-show="expand">
         <thead>
           <tr>
-            <th class="th-cell name">{{ t('配置文件名称') }}</th>
-            <th class="th-cell path">{{ t('配置文件路径') }}</th>
+            <th class="th-cell name">{{ t('配置文件绝对路径') }}</th>
             <th class="th-cell type">{{ t('配置文件格式') }}</th>
             <th class="th-cell memo">
               <div class="th-cell-edit">
@@ -175,12 +174,7 @@
           <tr v-for="(item, index) in data" :key="item.name + item.path">
             <td class="not-editable td-cell">
               <bk-overflow-title type="tips">
-                {{ item.name }}
-              </bk-overflow-title>
-            </td>
-            <td class="not-editable td-cell">
-              <bk-overflow-title type="tips">
-                {{ item.path }}
+                {{ item.name + item.path }}
               </bk-overflow-title>
             </td>
             <td class="not-editable td-cell">
