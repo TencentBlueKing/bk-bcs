@@ -17,7 +17,9 @@
         @change="handleAppChange">
         <template #trigger>
           <div class="selector-trigger">
-            <span v-if="localApp.name" class="app-name">{{ localApp?.name }}</span>
+            <bk-overflow-title v-if="localApp.name" class="app-name" type="tips">
+              {{ localApp?.name }}
+            </bk-overflow-title>
             <span v-else class="no-app">{{ $t('暂无服务') }}</span>
             <AngleUpFill class="arrow-icon arrow-fill" />
           </div>
@@ -175,7 +177,10 @@
         }
         .selector-trigger {
           cursor: pointer;
+          display: flex;
+          align-items: center;
           .app-name {
+            max-width: 150px;
             color: #63656e;
           }
           .no-app {

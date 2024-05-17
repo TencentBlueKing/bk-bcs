@@ -310,6 +310,7 @@
     const checked = localStorage.getItem('client-show-column');
     if (checked) {
       selectedShowColumn.value = JSON.parse(checked);
+      settings.value.checked = JSON.parse(checked);
     }
   });
 
@@ -621,6 +622,7 @@
 
 <style lang="scss">
   .client-settings-custom {
+    padding: 0px !important;
     .setting-body {
       .setting-body-fields {
         max-height: inherit !important;
