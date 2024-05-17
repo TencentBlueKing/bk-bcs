@@ -33,7 +33,9 @@
   }
   .content {
     height: calc(100vh - 52px);
+    margin-top: 52px;
     &.show-notice {
+      margin-top: 92px;
       height: calc(100vh - 92px);
     }
   }

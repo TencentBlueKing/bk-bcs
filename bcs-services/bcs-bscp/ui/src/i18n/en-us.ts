@@ -817,11 +817,12 @@ export default {
   平铺: 'Tile',
   三个以上维度不支持堆叠展示效果: 'More than three dimensions do not support the stacking effect',
   堆叠: 'Pile',
-  设置下钻: 'Set trip',
+  设置下钻: 'Drill down settings',
   支持点击数据下钻: 'Support click data drill down',
   下钻维度: 'Drill down dimension',
   组合维度: 'Combinatorial dimension',
   组件类型分布: 'Component type distribution',
   可下钻图表: 'Drill-down chart',
   '组件类型 / 版本分布': 'Component type / Version distribution',
+  下钻: 'Drill down',
 };
