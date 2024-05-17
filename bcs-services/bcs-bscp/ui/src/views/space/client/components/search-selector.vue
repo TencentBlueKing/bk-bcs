@@ -236,6 +236,7 @@
     () => props.appId,
     () => {
       handleGetSearchList('common');
+      searchConditionList.value = [];
     },
   );
 
