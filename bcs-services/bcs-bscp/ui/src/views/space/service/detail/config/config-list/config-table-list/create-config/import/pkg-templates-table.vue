@@ -3,12 +3,6 @@
     <div class="header" @click="handleToggleExpand">
       <RightShape class="arrow-icon" />
       <span v-overflow-title class="name">{{ title }}</span>
-      <ExclamationCircleShape
-        v-if="props.conflictTpls.length > 0"
-        v-bk-tooltips="{
-          content: t('检测到模板冲突，请先删除冲突套餐'),
-        }"
-        class="conflict-icon" />
       <Close v-if="!props.disabled" class="close-icon" @click.stop="handleDeletePkg" />
     </div>
     <table v-if="expand" v-bkloading="{ loading: listLoading }" class="template-table">
@@ -20,10 +14,7 @@
       </thead>
       <tbody>
         <template v-if="configTemplateList.length > 0">
-          <tr
-            v-for="tpl in configTemplateList"
-            :key="tpl.id"
-            :class="{ 'has-conflict': props.conflictTpls.includes(tpl.id) }">
+          <tr v-for="tpl in configTemplateList" :key="tpl.id">
             <td>
               <bk-overflow-title class="cell" type="tips">{{ fileAP(tpl) }}</bk-overflow-title>
             </td>
@@ -64,32 +55,27 @@
 <script lang="ts" setup>
   import { ref, onMounted, computed } from 'vue';
   import { useI18n } from 'vue-i18n';
-  import { RightShape, ExclamationCircleShape, Close } from 'bkui-vue/lib/icon';
+  import { RightShape, Close } from 'bkui-vue/lib/icon';
   import {
     IAllPkgsGroupBySpaceInBiz,
     ITemplateConfigItem,
     ITemplateVersionsName,
-  } from '../../../../../../../../../types/template';
-  import { getTemplatesByPackageId, getTemplateVersionsNameByIds } from '../../../../../../../../api/template';
+  } from '../../../../../../../../../../types/template';
+  import { getTemplatesByPackageId, getTemplateVersionsNameByIds } from '../../../../../../../../../api/template';
 
   interface ITemplateConfigWithVersions extends ITemplateConfigItem {
     versions: { id: number; name: string; memo: string; isLatest: boolean }[];
   }
   const { t } = useI18n();
 
-  const props = withDefaults(
-    defineProps<{
-      bkBizId: string;
-      pkgList: IAllPkgsGroupBySpaceInBiz[];
-      pkgId: number;
-      selectedVersions: { template_id: number; template_revision_id: number; is_latest: boolean }[];
-      disabled?: boolean;
-      conflictTpls?: number[];
-    }>(),
-    {
-      conflictTpls: () => [],
-    },
-  );
+  const props = defineProps<{
+    bkBizId: string;
+    pkgList: IAllPkgsGroupBySpaceInBiz[];
+    pkgId: number;
+    selectedVersions: { template_id: number; template_revision_id: number; is_latest: boolean }[];
+    disabled?: boolean;
+    conflictTpls?: number[];
+  }>();
 
   const emits = defineEmits(['delete', 'expand', 'selectVersion', 'updateVersions']);
 

@@ -24,7 +24,14 @@
           v-if="isFileType"
           v-cursor="{ active: !hasEditServicePerm }"
           :class="['operation-item', { 'bk-text-with-no-perm': !hasEditServicePerm }]"
-          @click="handleBatchUploadSlideOpen">
+          @click="handleBatchImportDialogOpen">
+          {{ t('批量导入') }}
+        </div>
+        <div
+          v-if="isFileType"
+          v-cursor="{ active: !hasEditServicePerm }"
+          :class="['operation-item', { 'bk-text-with-no-perm': !hasEditServicePerm }]"
+          @click="handleBatchImportDialogOpen">
           {{ t('批量上传') }}
         </div>
         <div
@@ -38,7 +45,7 @@
           v-if="!isFileType"
           v-cursor="{ active: !hasEditServicePerm }"
           :class="['operation-item', { 'bk-text-with-no-perm': !hasEditServicePerm }]"
-          @click="handleBatchImportDialogOpen">
+          @click="handleBatchUploadSlideOpen">
           {{ t('批量导入') }}
         </div>
       </div>
@@ -54,11 +61,6 @@
     :bk-biz-id="props.bkBizId"
     :app-id="props.appId"
     @confirm="emits('created')" />
-  <ImportFromTemplate
-    v-model:show="isImportTemplatesDialogOpen"
-    :bk-biz-id="props.bkBizId"
-    :app-id="props.appId"
-    @imported="emits('imported')" />
   <BatchUpload
     v-model:show="isBatchUploadSliderOpen"
     :bk-biz-id="props.bkBizId"
@@ -66,6 +68,11 @@
     @upload="emits('uploaded')" />
   <BatchImportKv
     v-model:show="isBatchUploadDialogOpen"
+    :bk-biz-id="props.bkBizId"
+    :app-id="props.appId"
+    @confirm="emits('created')" />
+  <BatchImport
+    v-model:show="isBatchImportDialogOpen"
     :bk-biz-id="props.bkBizId"
     :app-id="props.appId"
     @confirm="emits('created')" />
@@ -79,9 +86,9 @@
   import useServiceStore from '../../../../../../../../store/service';
   import ManualCreate from './manual-create.vue';
   import ManualCreateKv from './manual-create-kv.vue';
-  import ImportFromTemplate from './import-from-templates.vue';
   import BatchUpload from './batch-upload.vue';
   import BatchImportKv from './batch-import-kv.vue';
+  import BatchImport from './batch-import.vue';
 
   const route = useRoute();
   const { t } = useI18n();
@@ -104,6 +111,7 @@
   const isImportTemplatesDialogOpen = ref(false);
   const isBatchUploadSliderOpen = ref(false);
   const isBatchUploadDialogOpen = ref(false);
+  const isBatchImportDialogOpen = ref(false);
 
   onMounted(() => {
     if (route.query.pkg_id) {
@@ -144,9 +152,8 @@
     if (permCheckLoading.value || !checkPermBeforeOperate('update')) {
       return;
     }
-    isBatchUploadDialogOpen.value = true;
+    isBatchImportDialogOpen.value = true;
   };
-  // const handleImported = () => {};
 </script>
 <style lang="scss" scoped>
   .create-config-btn {

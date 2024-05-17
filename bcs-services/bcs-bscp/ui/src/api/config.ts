@@ -552,3 +552,4 @@ export const unModifyConfigItem = (bizId: string, appId: number, id: number) =>
  */
 export const unDeleteConfigItem = (bizId: string, appId: number, id: number) =>
   http.post(`/config/undelete/config_item/config_item/config_item_id/${id}/app_id/${appId}/biz_id/${bizId}`);
+
