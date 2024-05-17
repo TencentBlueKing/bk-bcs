@@ -20,14 +20,14 @@
             </div>
           </template>
           <bk-loading class="loading-wrap" :loading="loading">
+            <div v-if="isShowSpecificReason" class="nav">
+              <span class="main-reason" @click="refresh">{{ t('主要失败原因') }}</span> /
+              <span class="reason">{{ selectFailedReason.mapName }}</span>
+            </div>
             <div v-if="data.length && !isShowSpecificReason" ref="canvasRef" class="canvas-wrap">
               <Tooltip :need-down-icon="true" ref="tooltipRef" @jump="jumpToSearch" />
             </div>
             <div v-else-if="specificReason.length && isShowSpecificReason" class="specific-reason">
-              <div class="nav">
-                <span class="main-reason" @click="refresh">{{ t('主要失败原因') }}</span> /
-                <span class="reason">{{ selectFailedReason.mapName }}</span>
-              </div>
               <div ref="specificReasonRef" class="canvas-wrap"></div>
             </div>
             <bk-exception
@@ -304,7 +304,9 @@
       if (!selectFailedReason.value.name) return;
       isShowSpecificReason.value = true;
       await loadPullFailedReason();
-      initSpecificReasonChart();
+      if (specificReason.value.length > 0) {
+        initSpecificReasonChart();
+      }
     });
   };
 
@@ -410,23 +412,22 @@
   .specific-reason {
     height: 100%;
     z-index: 9999;
-    .nav {
-      position: absolute;
-      top: 0;
-      font-size: 12px;
-      color: #313238;
-      position: relative;
-      .main-reason {
-        margin-right: 8px;
-        cursor: pointer;
-        &:hover {
-          color: #3a84ff;
-        }
+  }
+  .nav {
+    font-size: 12px;
+    color: #313238;
+    position: relative;
+    z-index: 999;
+    .main-reason {
+      margin-right: 8px;
+      cursor: pointer;
+      &:hover {
+        color: #3a84ff;
       }
-      .reason {
-        color: #979ba5;
-        margin-left: 8px;
-      }
+    }
+    .reason {
+      color: #979ba5;
+      margin-left: 8px;
     }
   }
   :deep(.bk-exception) {

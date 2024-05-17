@@ -39,9 +39,10 @@
 
 <style scoped lang="scss">
   .client-statistics-page {
-    min-height: calc(100vh - 52px);
+    height: 100%;
     padding: 0 24px;
     background: #f5f7fa;
+    overflow: auto;
     .header {
       padding: 24px 0;
     }

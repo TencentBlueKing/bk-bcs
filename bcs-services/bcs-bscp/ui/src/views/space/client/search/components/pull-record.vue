@@ -24,7 +24,7 @@
         <SearchInput
           v-model="searchStr"
           :width="527"
-          :placeholder="$t('当前配置版本/目标配置版本/最近一次拉取配置状态')"
+          :placeholder="$t('源版本/目标配置版本/最近一次拉取配置状态')"
           @search="loadTableData" />
       </div>
       <bk-loading :loading="loading">

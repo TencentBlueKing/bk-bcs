@@ -228,7 +228,6 @@
         title: 'time',
         container: tooltipRef.value?.getDom(),
         enterable: true,
-        offset: 50,
         customItems: (originalItems: any[]) => {
           jumpSearchTime.value = originalItems[0].title.replace(/\//g, '-');
           originalItems.forEach((item) => {

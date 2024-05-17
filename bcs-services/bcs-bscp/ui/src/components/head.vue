@@ -366,7 +366,6 @@
     align-items: center;
     justify-content: space-between;
     padding: 0 20px;
-
     .head-left {
       display: flex;
       align-items: center;
