@@ -47,6 +47,8 @@ const (
 
 	// FinalizerNameBcsIngressController finalizer name of bcs ingress controller
 	FinalizerNameBcsIngressController = "ingresscontroller.bkbcs.tencent.com"
+	// FinalizerNameUptimeCheck finalizer name of uptime check cleaning
+	FinalizerNameUptimeCheck = "uptimecheck.bkbcs.tencent.com"
 	// CloudTencent tencent cloud
 	CloudTencent = "tencentcloud"
 	// CloudAWS aws cloud
@@ -65,6 +67,15 @@ const (
 	EnvNamePodIPs = "POD_IPS"
 	// EnvNameImageTag env name for controller image tag
 	EnvNameImageTag = "IMAGE_TAG"
+
+	// EnvNameBkBCSClusterID env name for bcs_cluster_id
+	EnvNameBkBCSClusterID = "BK_BCS_CLUSTER_ID"
+	// EnvNameBkBizID env name for bk_biz_id
+	EnvNameBkBizID = "BK_BIZ_ID"
+	// EnvNameBkAppCode env name for bk_app_code
+	EnvNameBkAppCode = "BK_APP_CODE"
+	// EnvNameBkAppSecret env name for bk_app_secret
+	EnvNameBkAppSecret = "BK_APP_SECRET"
 
 	// DelimiterForLbID delimiter for lb id
 	DelimiterForLbID = ":"

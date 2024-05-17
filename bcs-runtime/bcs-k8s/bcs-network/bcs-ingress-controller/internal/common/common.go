@@ -155,6 +155,17 @@ func GetPortPoolItemProtocols(itemProtocol string) []string {
 	return protocolList
 }
 
+// StringInSlice return true if string in slcie
+func StringInSlice(s string, list []string) bool {
+	for _, v := range list {
+		if v == s {
+			return true
+		}
+	}
+
+	return false
+}
+
 // InLayer4Protocol return true if protocol in layer4 protocol list
 func InLayer4Protocol(protocol string) bool {
 	upper := strings.ToUpper(protocol)

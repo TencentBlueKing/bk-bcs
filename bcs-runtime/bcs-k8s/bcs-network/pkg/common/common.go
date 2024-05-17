@@ -90,7 +90,20 @@ func MinInt(x, y int) int {
 	return y
 }
 
+// ToJsonString convert to json string
 func ToJsonString(i interface{}) string {
 	b, _ := json.Marshal(i)
 	return string(b)
+}
+
+// JsonConvert convert data from to
+func JsonConvert(from any, to any) error {
+	if from == nil {
+		return nil
+	}
+	b, err := json.Marshal(from)
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(b, to)
 }

@@ -24,6 +24,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
@@ -81,11 +82,11 @@ func (ic *IngressChecker) Run() {
 			if exist && !viewedLB.Has(lbStatus.BuildKeyID()) {
 				viewedLB.Insert(lbStatus.BuildKeyID())
 				info := lbInfo{
-					LoadBalancerID:   lbStatus.LoadbalancerID,
-					Region:           lbStatus.Region,
-					IngressNamespace: ingress.Namespace,
-					ProtocolLayer:    protocolLayer,
-					ExpireTime:       expireTime,
+					LoadBalancerID:  lbStatus.LoadbalancerID,
+					Region:          lbStatus.Region,
+					EntityNamespace: ingress.Namespace,
+					ProtocolLayer:   protocolLayer,
+					ExpireTime:      expireTime,
 				}
 
 				if expireTime < 5 { // 过期时间少于5分钟强制刷新
@@ -97,6 +98,43 @@ func (ic *IngressChecker) Run() {
 			}
 		}
 	}
+
+	portpoolList := &networkextensionv1.PortPoolList{}
+	if err := ic.cli.List(context.TODO(), portpoolList); err != nil {
+		blog.Errorf("list portpool failed, err: %s", err.Error())
+		return
+	}
+	for _, portpool := range portpoolList.Items {
+		for _, itemStatus := range portpool.Status.PoolItemStatuses {
+			for _, lbStatus := range itemStatus.PoolItemLoadBalancers {
+				// 如果当前ingress的lb缓存消失或即将超时，从腾讯云重新拉信息并刷新缓存
+				_, expiration, exist := ic.lbIDCache.GetWithExpiration(lbStatus.BuildKeyID())
+				expireTime := 0
+				if exist {
+					expireTime = int(expiration.Sub(time.Now()).Minutes())
+				}
+				// 只排查缓存中有的LB， 避免频繁查询已被删除的LB
+				if exist && !viewedLB.Has(lbStatus.BuildKeyID()) {
+					viewedLB.Insert(lbStatus.BuildKeyID())
+					info := lbInfo{
+						LoadBalancerID:  lbStatus.LoadbalancerID,
+						Region:          lbStatus.Region,
+						EntityNamespace: portpool.Namespace,
+						ProtocolLayer:   constant.ProtocolLayerTransport, // 端口池仅支持四层协议
+						ExpireTime:      expireTime,
+					}
+
+					if expireTime < 5 { // 过期时间少于5分钟强制刷新
+						renewCnt++
+						ic.renewCache(info)
+					} else if expireTime < 30 { // 从过期时间少于30分钟的缓存中选出部分过期时间最短的刷新
+						heap.Push(lbHeap, info)
+					}
+				}
+			}
+		}
+	}
+
 	for i := 0; i < 15-renewCnt && lbHeap.Len() != 0; i++ {
 		ic.renewCache(heap.Pop(lbHeap).(lbInfo))
 	}
@@ -109,7 +147,7 @@ func (ic *IngressChecker) renewCache(info lbInfo) {
 	var err error
 
 	if ic.lbClient.IsNamespaced() {
-		lbObj, err = ic.lbClient.DescribeLoadBalancerWithNs(info.IngressNamespace, info.Region,
+		lbObj, err = ic.lbClient.DescribeLoadBalancerWithNs(info.EntityNamespace, info.Region,
 			info.LoadBalancerID, "", info.ProtocolLayer)
 	} else {
 		lbObj, err = ic.lbClient.DescribeLoadBalancer(info.Region, info.LoadBalancerID, "",
@@ -119,12 +157,12 @@ func (ic *IngressChecker) renewCache(info lbInfo) {
 	if err != nil {
 		if err == cloud.ErrLoadbalancerNotFound {
 			// 删除对应缓存，避免后续重复尝试刷新
-			blog.Warnf("ingress %s/%s lb '%s' not found", info.IngressNamespace, info.IngressName, info.LoadBalancerID)
+			blog.Warnf("%s/%s lb '%s' not found", info.EntityNamespace, info.EntityName, info.LoadBalancerID)
 			ic.lbIDCache.Delete(info.Region + ":" + info.LoadBalancerID)
 			ic.lbNameCache.Delete(info.Region + ":" + info.LoadBalancerName)
 		} else {
 			blog.Errorf("describe loadbalancer '%s' from cloud failed, ingress: %s/%s, err: %s",
-				info.LoadBalancerID, info.IngressNamespace, info.IngressName, err.Error())
+				info.LoadBalancerID, info.EntityNamespace, info.EntityName, err.Error())
 		}
 		return
 	}
@@ -137,8 +175,8 @@ type lbInfo struct {
 	LoadBalancerID   string
 	LoadBalancerName string
 	Region           string
-	IngressNamespace string
-	IngressName      string
+	EntityNamespace  string
+	EntityName       string
 	ProtocolLayer    string
 
 	ExpireTime int // 过期剩余时间，单位分钟

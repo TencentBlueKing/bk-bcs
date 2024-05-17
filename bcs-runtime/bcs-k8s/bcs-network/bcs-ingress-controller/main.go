@@ -195,9 +195,14 @@ func main() {
 		blog.Errorf("unable to create listener reconciler, err %s", err.Error())
 		os.Exit(1)
 	}
+	listenerByPassReconciler := listenerctrl.NewListenerBypassReconciler(mgr.GetClient(), lbIDCache)
+	if err = listenerByPassReconciler.SetupWithManager(mgr); err != nil {
+		blog.Errorf("unable to create listener-bypass reconciler, err %s", err.Error())
+		os.Exit(1)
+	}
 
 	portPoolReconciler := portpoolctrl.NewPortPoolReconciler(context.Background(), opts, lbClient,
-		mgr.GetClient(), mgr.GetEventRecorderFor("bcs-ingress-controller"), portPoolCache)
+		mgr.GetClient(), mgr.GetEventRecorderFor("bcs-ingress-controller"), portPoolCache, lbIDCache, lbNameCache)
 	if err = portPoolReconciler.SetupWithManager(mgr); err != nil {
 		blog.Errorf("unable to create port pool reconciler, err %s", err.Error())
 		os.Exit(1)
