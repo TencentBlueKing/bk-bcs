@@ -79,7 +79,9 @@
   const boundAppsLoading = ref(false);
 
   const unBoundApps = computed(() => {
-    const res = userApps.value.filter((app) => boundApps.value.findIndex((item) => item.app_id === app.id) === -1);
+    const res = userApps.value.filter(
+      (app) => boundApps.value.findIndex((item) => item.app_id === app.id) === -1 && app.spec.config_type === 'file',
+    );
     return res;
   });
 
