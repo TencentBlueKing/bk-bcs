@@ -903,7 +903,7 @@ func (c *Clb) resolveUpdateListener(lbID, region string, updatedListeners []*net
 						Res:     cloudListenerGroup[index].Status.ListenerID}
 				} else {
 					retMap[group[index].GetName()] = cloud.Result{IsError: true, Err: inErr}
-					blog.Warnf("update 7 layer listener %s failed in batch, err: %+v", group[index].GetName(), inErr)
+					blog.Warnf("update 7 layer listener %s failed in batch, err: %s", group[index].GetName(), inErr.Error())
 				}
 			}
 		}

@@ -519,6 +519,7 @@ func (g *IngressConverter) syncListeners(ingressName, ingressNamespace string,
 	for index, new := range news {
 		blog.V(3).Infof("[generator] update listener %s/%s", new.GetNamespace(), new.GetName())
 		new.ResourceVersion = olds[index].ResourceVersion
+		new.Status.UptimeCheckStatus = olds[index].Status.UptimeCheckStatus
 		err := g.cli.Update(context.TODO(), &new, &client.UpdateOptions{})
 		if err != nil {
 			blog.Errorf("update listener %+v failed, err %s", new, err.Error())

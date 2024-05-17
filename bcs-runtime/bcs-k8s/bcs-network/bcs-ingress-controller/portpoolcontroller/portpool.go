@@ -19,6 +19,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
+	gocache "github.com/patrickmn/go-cache"
 	"github.com/pkg/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -32,22 +33,27 @@ import (
 
 // PortPoolHandler handler for port pool
 type PortPoolHandler struct {
-	namespace string
-	region    string
-	k8sClient client.Client
-	lbClient  cloud.LoadBalance
-	poolCache *portpoolcache.Cache
+	namespace   string
+	region      string
+	k8sClient   client.Client
+	lbClient    cloud.LoadBalance
+	poolCache   *portpoolcache.Cache
+	lbIDCache   *gocache.Cache
+	lbNameCache *gocache.Cache
 }
 
 // newPortPoolHandler create port pool handler
 func newPortPoolHandler(ns, region string,
-	lbClient cloud.LoadBalance, k8sClient client.Client, poolCache *portpoolcache.Cache) *PortPoolHandler {
+	lbClient cloud.LoadBalance, k8sClient client.Client, poolCache *portpoolcache.Cache,
+	lbIDCache *gocache.Cache, lbNameCache *gocache.Cache) *PortPoolHandler {
 	return &PortPoolHandler{
-		namespace: ns,
-		region:    region,
-		k8sClient: k8sClient,
-		lbClient:  lbClient,
-		poolCache: poolCache,
+		namespace:   ns,
+		region:      region,
+		k8sClient:   k8sClient,
+		lbClient:    lbClient,
+		poolCache:   poolCache,
+		lbIDCache:   lbIDCache,
+		lbNameCache: lbNameCache,
 	}
 }
 
@@ -78,7 +84,9 @@ func (pph *PortPoolHandler) ensurePortPool(pool *networkextensionv1.PortPool) (b
 		DefaultRegion: pph.region,
 		LbClient:      pph.lbClient,
 		K8sClient:     pph.k8sClient,
-		ListenerAttr:  pool.Spec.ListenerAttribute}
+		ListenerAttr:  pool.Spec.ListenerAttribute,
+		lbIDCache:     pph.lbIDCache,
+		lbNameCache:   pph.lbNameCache}
 
 	// try to delete
 	successDeletedKeyMap := make(map[string]struct{})
@@ -170,7 +178,9 @@ func (pph *PortPoolHandler) deletePortPool(pool *networkextensionv1.PortPool) (b
 		DefaultRegion: pph.region,
 		LbClient:      pph.lbClient,
 		K8sClient:     pph.k8sClient,
-		ListenerAttr:  pool.Spec.ListenerAttribute}
+		ListenerAttr:  pool.Spec.ListenerAttribute,
+		lbIDCache:     pph.lbIDCache,
+		lbNameCache:   pph.lbNameCache}
 
 	pph.poolCache.Lock()
 	defer pph.poolCache.Unlock()

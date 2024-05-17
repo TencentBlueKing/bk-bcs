@@ -149,6 +149,13 @@ func (rc *RuleConverter) generate7LayerListener(region, lbID string) (*networkex
 		if rc.rule.ListenerAttribute.KeepAliveEnable != 0 {
 			li.Spec.ListenerAttribute.KeepAliveEnable = rc.rule.ListenerAttribute.KeepAliveEnable
 		}
+		if rc.rule.ListenerAttribute.UptimeCheck != nil {
+			li.Spec.ListenerAttribute.UptimeCheck = rc.rule.ListenerAttribute.UptimeCheck
+			if li.IsUptimeCheckEnable() {
+				li.Finalizers = append(li.Finalizers, constant.FinalizerNameUptimeCheck)
+				li.Labels[networkextensionv1.LabelKeyForUptimeCheckListener] = networkextensionv1.LabelValueTrue
+			}
+		}
 	}
 
 	listenerRules, err := rc.generateListenerRule(rc.rule.Routes)
@@ -212,6 +219,10 @@ func (rc *RuleConverter) generate4LayerListener(region, lbID string) (*networkex
 	li.Spec.LoadbalancerID = lbID
 	if rc.rule.ListenerAttribute != nil {
 		li.Spec.ListenerAttribute = rc.rule.ListenerAttribute
+		if li.IsUptimeCheckEnable() {
+			li.Finalizers = append(li.Finalizers, constant.FinalizerNameUptimeCheck)
+			li.Labels[networkextensionv1.LabelKeyForUptimeCheckListener] = networkextensionv1.LabelValueTrue
+		}
 	}
 	if rc.rule.Certificate != nil {
 		li.Spec.Certificate = rc.rule.Certificate

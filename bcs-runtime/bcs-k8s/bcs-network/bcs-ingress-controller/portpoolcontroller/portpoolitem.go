@@ -20,6 +20,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	netextv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
+	gocache "github.com/patrickmn/go-cache"
 	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8slabels "k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/util/retry"
@@ -43,7 +44,9 @@ type PortPoolItemHandler struct {
 	// cloud loadbalance client
 	LbClient cloud.LoadBalance
 	// client for k8s
-	K8sClient client.Client
+	K8sClient   client.Client
+	lbIDCache   *gocache.Cache
+	lbNameCache *gocache.Cache
 }
 
 // do something when new port pool item is added
@@ -176,14 +179,25 @@ func (ppih *PortPoolItemHandler) getCloudListenersByRegionIDs(regionIDs []string
 			tmpRegion = ppih.DefaultRegion
 			tmpID = lbID
 		}
-		if ppih.LbClient.IsNamespaced() {
-			lbObj, err = ppih.LbClient.DescribeLoadBalancerWithNs(ppih.Namespace, tmpRegion, tmpID, "",
-				constant.ProtocolLayerTransport)
+		obj, ok := ppih.lbIDCache.Get(tmpRegion + ":" + tmpID)
+		if ok {
+			if lbObj, ok = obj.(*cloud.LoadBalanceObject); !ok {
+				return nil, fmt.Errorf("get obj from lb id cache is not LoadBalanceObject")
+			}
 		} else {
-			lbObj, err = ppih.LbClient.DescribeLoadBalancer(tmpRegion, tmpID, "", constant.ProtocolLayerTransport)
-		}
-		if err != nil {
-			return nil, fmt.Errorf("describe lb '%s/%s' info failed, err %s", tmpRegion, lbID, err.Error())
+			if ppih.LbClient.IsNamespaced() {
+				lbObj, err = ppih.LbClient.DescribeLoadBalancerWithNs(ppih.Namespace, tmpRegion, tmpID, "",
+					constant.ProtocolLayerTransport)
+			} else {
+				lbObj, err = ppih.LbClient.DescribeLoadBalancer(tmpRegion, tmpID, "", constant.ProtocolLayerTransport)
+			}
+			if err != nil {
+				return nil, fmt.Errorf("describe lb '%s/%s' info failed, err %s", tmpRegion, lbID, err.Error())
+			}
+
+			// if get lb from cloud, renew cache
+			ppih.lbIDCache.SetDefault(lbObj.Region+":"+lbObj.LbID, lbObj)
+			ppih.lbNameCache.SetDefault(lbObj.Region+":"+lbObj.Name, lbObj)
 		}
 
 		retLbs = append(retLbs, &netextv1.IngressLoadBalancer{
@@ -237,8 +251,8 @@ func (ppih *PortPoolItemHandler) getListenerList(set k8slabels.Set) (*netextv1.L
 }
 
 // ensure listeners about this port pool item
-func (ppih *PortPoolItemHandler) ensureListeners(region, lbID, itemName string, startPort, endPort,
-	segment uint32, protocol string) error {
+func (ppih *PortPoolItemHandler) ensureListeners(region, lbID, itemName string, startPort, endPort, segment uint32,
+	protocol string) error {
 	listenerList, err := ppih.getLBListenerList(lbID)
 	if err != nil {
 		return err
@@ -310,6 +324,7 @@ func (ppih *PortPoolItemHandler) generateListener(
 	li.SetName(listenerName)
 	li.SetNamespace(ppih.Namespace)
 	li.SetLabels(map[string]string{
+		netextv1.LabelKeyForUptimeCheckListener:                         netextv1.LabelValueTrue,
 		netextv1.LabelKeyForPortPoolListener:                            netextv1.LabelValueTrue,
 		netextv1.LabelKeyForIsSegmentListener:                           segLabelValue,
 		netextv1.LabelKeyForLoadbalanceID:                               generator.GetLabelLBId(lbID),
@@ -325,5 +340,8 @@ func (ppih *PortPoolItemHandler) generateListener(
 	li.Spec.Protocol = protocol
 	li.Spec.LoadbalancerID = lbID
 	li.Spec.ListenerAttribute = ppih.ListenerAttr
+	if li.IsUptimeCheckEnable() {
+		li.Finalizers = append(li.Finalizers, constant.FinalizerNameUptimeCheck)
+	}
 	return li
 }
