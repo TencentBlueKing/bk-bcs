@@ -180,7 +180,7 @@
 
   // 下钻
   const handleDrillDown = (data: any) => {
-    if (!selectedDownDimension.value || selectedDimension.value.length < 2 || isDrillDown.value) return;
+    if (!selectedDownDimension.value || isDrillDown.value) return;
     loadChartData({
       [data.foreign_key]: data.foreign_val,
       [data.primary_key]: data.primary_val,
