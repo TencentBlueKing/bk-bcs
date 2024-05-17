@@ -33,8 +33,10 @@
         class="space-selector"
         id-key="space_id"
         display-key="space_name"
+        enable-virtual-render
         :model-value="spaceId"
         :popover-options="{ theme: 'light bk-select-popover space-selector-popover' }"
+        :list="optionList"
         :filterable="true"
         :clearable="false"
         :input-search="false"
@@ -52,7 +54,7 @@
             <div class="content">{{ t('新建业务') }}</div>
           </div>
         </template>
-        <bk-option v-for="item in optionList" :key="item.space_id" :value="item.space_id" :label="item.space_name">
+        <template #virtualScrollRender="{ item }">
           <div
             v-cursor="{ active: !item.permission }"
             :class="['biz-option-item', { 'no-perm': !item.permission }]"
@@ -66,7 +68,7 @@
             </div>
             <span class="tag">{{ item.space_type_name }}</span>
           </div>
-        </bk-option>
+        </template>
       </bk-select>
       <bk-popover ext-cls="login-out-popover" trigger="hover" placement="bottom-center" theme="light" :arrow="false">
         <div class="international">
