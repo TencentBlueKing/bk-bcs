@@ -23,6 +23,7 @@ import (
 	"time"
 
 	prm "github.com/prometheus/client_golang/prometheus"
+	"github.com/samber/lo"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -362,14 +363,11 @@ func (s *Service) PullAppFileMeta(ctx context.Context, req *pbfs.PullAppFileMeta
 	}
 	for _, ci := range metas.ConfigItems {
 		if len(match) > 0 {
-			isMatch := false
-			for _, scope := range match {
-				if ok, _ := tools.MatchConfigItem(scope, ci.ConfigItemSpec.Path, ci.ConfigItemSpec.Name); ok {
-					isMatch = true
-					break
-				}
-			}
-			if !isMatch {
+			isMatch := lo.Filter(match, func(scope string, _ int) bool {
+				ok, _ := tools.MatchConfigItem(scope, ci.ConfigItemSpec.Path, ci.ConfigItemSpec.Name)
+				return ok
+			})
+			if len(isMatch) == 0 {
 				continue
 			}
 		}
