@@ -704,6 +704,7 @@
       message: t('移除模板套餐成功'),
     });
     isDeletePkgDialogShow.value = false;
+    getAllConfigList();
   };
 
   // 非模板配置文件diff

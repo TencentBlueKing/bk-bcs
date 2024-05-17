@@ -44,10 +44,7 @@
               <span v-else>--</span>
             </template>
           </bk-table-column>
-          <bk-table-column
-            v-if="selectedShowColumn.includes('current-version')"
-            :label="t('当前配置版本')"
-            :width="140">
+          <bk-table-column v-if="selectedShowColumn.includes('current-version')" :label="t('源版本')" :width="140">
             <template #default="{ row }">
               <div
                 v-if="row.spec && row.spec.current_release_id"
@@ -212,7 +209,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref, watch, onMounted } from 'vue';
+  import { ref, watch, onBeforeMount } from 'vue';
   import { useRoute, useRouter } from 'vue-router';
   import { Share, InfoLine } from 'bkui-vue/lib/icon';
   import { storeToRefs } from 'pinia';
@@ -306,11 +303,14 @@
     { deep: true },
   );
 
-  onMounted(() => {
-    const checked = localStorage.getItem('client-show-column');
-    if (checked) {
-      selectedShowColumn.value = JSON.parse(checked);
-      settings.value.checked = JSON.parse(checked);
+  onBeforeMount(() => {
+    const tableSet = localStorage.getItem('client-show-column');
+    settings.value.size = 'medium';
+    if (tableSet) {
+      const { checked, size } = JSON.parse(tableSet);
+      selectedShowColumn.value = checked;
+      settings.value.checked = checked;
+      settings.value.size = size;
     }
   });
 
@@ -344,7 +344,7 @@
         disabled: true,
       },
       {
-        name: t('当前配置版本'),
+        name: t('源版本'),
         id: 'current-version',
         disabled: true,
       },
@@ -397,6 +397,7 @@
       'client-type',
       'client-version',
     ],
+    size: 'small',
   });
 
   const selectedShowColumn = ref([
@@ -489,9 +490,9 @@
     }
   };
 
-  const handleSettingsChange = ({ checked }: any) => {
+  const handleSettingsChange = ({ checked, size }: any) => {
     selectedShowColumn.value = [...checked];
-    localStorage.setItem('client-show-column', JSON.stringify(checked));
+    localStorage.setItem('client-show-column', JSON.stringify({ checked, size }));
   };
 
   const getErrorDetails = (item: any) => {
@@ -505,6 +506,10 @@
 </script>
 
 <style scoped lang="scss">
+  .client-search-page {
+    height: 100%;
+    overflow: auto;
+  }
   .header {
     position: relative;
     height: 120px;
