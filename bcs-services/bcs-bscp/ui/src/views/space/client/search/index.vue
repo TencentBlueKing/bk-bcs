@@ -506,6 +506,10 @@
 </script>
 
 <style scoped lang="scss">
+  .client-search-page {
+    height: 100%;
+    overflow: auto;
+  }
   .header {
     position: relative;
     height: 120px;

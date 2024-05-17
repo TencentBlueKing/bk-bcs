@@ -1,5 +1,5 @@
 <template>
-  <div :class="['header', { sticky: route.name === 'client-statistics' }]">
+  <div class="header">
     <div class="head-left">
       <div class="title-wrap" @click="router.push({ name: 'service-all', params: { spaceId } })">
         <span class="logo">
@@ -366,13 +366,6 @@
     align-items: center;
     justify-content: space-between;
     padding: 0 20px;
-    z-index: 999;
-    &.sticky {
-      position: sticky;
-      top: 0;
-      left: 0;
-      width: 100%;
-    }
     .head-left {
       display: flex;
       align-items: center;
