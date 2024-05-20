@@ -48,7 +48,7 @@
         <Card v-for="item in resourceData" :key="item.name" :title="item.name" :width="207" :height="128">
           <div class="resource-info">
             <span v-if="item.value">
-              <span class="time">{{ item.key.includes('cpu') ? item.value : Math.round(item.value) }}</span>
+              <span class="time">{{ item.value }}</span>
               <span class="unit">{{ item.unit }}</span>
             </span>
             <span v-else class="empty">{{ t('暂无数据') }}</span>

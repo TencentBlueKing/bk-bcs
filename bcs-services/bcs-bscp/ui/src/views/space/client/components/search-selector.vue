@@ -626,11 +626,11 @@
   };
 
   const handleConditionEdit = (condition: ISearchCondition) => {
+    if (!condition.isEdit) return;
     const conditionValue = editSearchStr.value.split(' : ', 2)[1];
     if (conditionValue) {
       condition.value = conditionValue;
       condition.content = `${parentSelecte.value?.name} : ${conditionValue}`;
-      condition.isEdit = false;
     }
     condition.isEdit = false;
     parentSelecte.value = undefined;
