@@ -200,42 +200,44 @@ func (s *Service) Messaging(ctx context.Context, msg *pbfs.MessagingMeta) (*pbfs
 			return nil, err
 		}
 
-		appID, errApp := s.bll.AppCache().GetAppID(im.Kit, im.Meta.BizID, vc.Application.App)
-		if errApp != nil {
-			logs.Errorf("get app id failed, %s", errApp.Error())
-			return nil, errApp
-		}
-		vc.Application.AppID = appID
-
-		// pull 首次是需要获取app meta, 会出现权限等问题导致失败，
-		// 因此TargetReleaseID会出现0的情况，
-		// 获取TargetReleaseID时出现错误直接忽略
-		if vc.Application.TargetReleaseID == 0 {
-			meta := &types.AppInstanceMeta{
-				BizID:  vc.BasicData.BizID,
-				App:    vc.Application.App,
-				AppID:  appID,
-				Uid:    vc.Application.Uid,
-				Labels: vc.Application.Labels,
+		if vc.BasicData.BizID != 0 {
+			appID, errApp := s.bll.AppCache().GetAppID(im.Kit, im.Meta.BizID, vc.Application.App)
+			if errApp != nil {
+				logs.Errorf("get app id failed, %s", errApp.Error())
+				return nil, errApp
 			}
-			cancel := im.Kit.CtxWithTimeoutMS(1500)
-			defer cancel()
-			metas, _ := s.bll.Release().ListAppLatestReleaseMeta(im.Kit, meta)
-			vc.Application.TargetReleaseID = metas.ReleaseId
-		}
+			vc.Application.AppID = appID
 
-		// 处理 心跳时间和在线状态
-		vc.BasicData.HeartbeatTime = time.Now().Local().UTC()
-		vc.BasicData.OnlineStatus = sfs.Online
-		payload, errE := vc.Encode()
-		if errE != nil {
-			logs.Errorf("version change message encoding failed, %s", errE.Error())
-			return nil, err
-		}
-		s.handleResourceUsageMetrics(vc.BasicData.BizID, vc.Application.App, vc.ResourceUsage)
-		clientMetricData[appID] = &sfs.ClientMetricData{
-			MessagingType: msg.Type,
-			Payload:       payload,
+			// pull 首次是需要获取app meta, 会出现权限等问题导致失败，
+			// 因此TargetReleaseID会出现0的情况，
+			// 获取TargetReleaseID时出现错误直接忽略
+			if vc.Application.TargetReleaseID == 0 {
+				meta := &types.AppInstanceMeta{
+					BizID:  vc.BasicData.BizID,
+					App:    vc.Application.App,
+					AppID:  appID,
+					Uid:    vc.Application.Uid,
+					Labels: vc.Application.Labels,
+				}
+				cancel := im.Kit.CtxWithTimeoutMS(1500)
+				defer cancel()
+				metas, _ := s.bll.Release().ListAppLatestReleaseMeta(im.Kit, meta)
+				vc.Application.TargetReleaseID = metas.ReleaseId
+			}
+
+			// 处理 心跳时间和在线状态
+			vc.BasicData.HeartbeatTime = time.Now().Local().UTC()
+			vc.BasicData.OnlineStatus = sfs.Online
+			payload, errE := vc.Encode()
+			if errE != nil {
+				logs.Errorf("version change message encoding failed, %s", errE.Error())
+				return nil, err
+			}
+			s.handleResourceUsageMetrics(vc.BasicData.BizID, vc.Application.App, vc.ResourceUsage)
+			clientMetricData[appID] = &sfs.ClientMetricData{
+				MessagingType: msg.Type,
+				Payload:       payload,
+			}
 		}
 	case sfs.Heartbeat:
 		hb := new(sfs.HeartbeatPayload)
@@ -244,31 +246,33 @@ func (s *Service) Messaging(ctx context.Context, msg *pbfs.MessagingMeta) (*pbfs
 			return nil, err
 		}
 
-		heartbeatTime := time.Now().UTC()
-		onlineStatus := sfs.Online
-		for _, item := range hb.Applications {
-			if item.CursorID != "" {
-				appID, errApp := s.bll.AppCache().GetAppID(im.Kit, im.Meta.BizID, item.App)
-				if errApp != nil {
-					logs.Errorf("get app id failed, %s", errApp.Error())
-					return nil, errApp
-				}
-				item.AppID = appID
-				s.handleResourceUsageMetrics(hb.BasicData.BizID, item.App, hb.ResourceUsage)
-				hb.BasicData.HeartbeatTime = heartbeatTime
-				hb.BasicData.OnlineStatus = onlineStatus
-				oneData := sfs.HeartbeatItem{
-					BasicData:     hb.BasicData,
-					Application:   item,
-					ResourceUsage: hb.ResourceUsage,
-				}
-				marshal, errHb := oneData.Encode()
-				if errHb != nil {
-					return nil, errHb
-				}
-				clientMetricData[appID] = &sfs.ClientMetricData{
-					MessagingType: msg.Type,
-					Payload:       marshal,
+		if hb.BasicData.BizID != 0 {
+			heartbeatTime := time.Now().UTC()
+			onlineStatus := sfs.Online
+			for _, item := range hb.Applications {
+				if item.CursorID != "" {
+					appID, errApp := s.bll.AppCache().GetAppID(im.Kit, im.Meta.BizID, item.App)
+					if errApp != nil {
+						logs.Errorf("get app id failed, %s", errApp.Error())
+						return nil, errApp
+					}
+					item.AppID = appID
+					s.handleResourceUsageMetrics(hb.BasicData.BizID, item.App, hb.ResourceUsage)
+					hb.BasicData.HeartbeatTime = heartbeatTime
+					hb.BasicData.OnlineStatus = onlineStatus
+					oneData := sfs.HeartbeatItem{
+						BasicData:     hb.BasicData,
+						Application:   item,
+						ResourceUsage: hb.ResourceUsage,
+					}
+					marshal, errHb := oneData.Encode()
+					if errHb != nil {
+						return nil, errHb
+					}
+					clientMetricData[appID] = &sfs.ClientMetricData{
+						MessagingType: msg.Type,
+						Payload:       marshal,
+					}
 				}
 			}
 		}
