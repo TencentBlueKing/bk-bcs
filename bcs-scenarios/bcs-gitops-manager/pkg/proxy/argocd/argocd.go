@@ -151,9 +151,9 @@ func (ops *ArgocdProxy) initArgoPathHandler() error {
 		middleware: middleware,
 	}
 	analysisPlugin := &AnalysisPlugin{
-		Router:         ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/analysis").Subrouter(),
-		middleware:     middleware,
-		store:          store.GlobalStore(),
+		Router:     ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/analysis").Subrouter(),
+		middleware: middleware,
+		store:      store.GlobalStore(),
 	}
 	monitorPlugin := &MonitorPlugin{
 		Router:     ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/monitor").Subrouter(),
@@ -164,11 +164,15 @@ func (ops *ArgocdProxy) initArgoPathHandler() error {
 		middleware:     middleware,
 		terraformStore: terraformstore.NewTerraformStore(),
 	}
+	permissionPlugin := &PermissionPlugin{
+		Router:     ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/permissions").Subrouter(),
+		middleware: middleware,
+	}
 	initializer := []func() error{
 		projectPlugin.Init, clusterPlugin.Init, repositoryPlugin.Init,
 		appPlugin.Init, streamPlugin.Init, webhookPlugin.Init, grpcPlugin.Init,
 		secretPlugin.Init, metricPlugin.Init, appsetPlugin.Init, analysisPlugin.Init,
-		monitorPlugin.Init, terraformPlugin.Init,
+		monitorPlugin.Init, terraformPlugin.Init, permissionPlugin.Init,
 	}
 
 	// access deny URL, keep in mind that there are paths need to proxy

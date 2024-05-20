@@ -20,6 +20,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
+	cm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapiv4/clustermanager"
 	"github.com/pkg/errors"
 
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
@@ -82,43 +83,9 @@ type Options struct {
 	AdminUsersStr        string                     `json:"adminUsers,omitempty"`
 	AdminUsers           []string                   `json:"-"`
 
-	JWTDecoder *jwt.JWTClient `json:"-"`
-	IAMClient  iam.PermClient `json:"-"`
-}
-
-// DefaultOptions for gitops-manager
-func DefaultOptions() *Options {
-	return &Options{
-		LogConfig: conf.LogConfig{
-			LogDir:       "/data/bcs/logs/bcs",
-			Verbosity:    3,
-			AlsoToStdErr: true,
-		},
-		ServerConfig: common.ServerConfig{
-			Address:    "127.0.0.1",
-			Port:       8081,
-			HTTPPort:   8080,
-			MetricPort: 8082,
-			ServerCa:   "/data/bcs/cert/bcs/bcs-ca.crt",
-			ServerCert: "/data/bcs/cert/bcs/bcs-server.crt",
-			ServerKey:  "/data/bcs/cert/bcs/bcs-server.key",
-		},
-		ClientConfig: common.ClientConfig{
-			ClientCa:   "/data/bcs/cert/bcs/bcs-ca.crt",
-			ClientCert: "/data/bcs/cert/bcs/bcs-client.crt",
-			ClientKey:  "/data/bcs/cert/bcs/bcs-client.key",
-		},
-		Registry: &common.Registry{
-			Endpoints: "127.0.0.1",
-			CA:        "/data/bcs/cert/etcd/etcd-ca.pem",
-			Key:       "/data/bcs/cert/etcd/etcd-key.pem",
-			Cert:      "/data/bcs/cert/etcd/etcd.pem",
-		},
-		Mode:          common.ModeTunnel,
-		APIConnectURL: "",
-		GitOps:        &GitOps{},
-		Auth:          &common.AuthConfig{},
-	}
+	JWTDecoder           *jwt.JWTClient          `json:"-"`
+	IAMClient            iam.PermClient          `json:"-"`
+	ClusterManagerClient cm.ClusterManagerClient `json:"-"`
 }
 
 // Complete all unsetting config items

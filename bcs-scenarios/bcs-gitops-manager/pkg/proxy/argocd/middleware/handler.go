@@ -23,6 +23,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+	cm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapiv4/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/namespace"
@@ -37,6 +38,7 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel/attribute"
 	"golang.org/x/exp/slices"
+	"google.golang.org/grpc/metadata"
 
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/cmd/manager/options"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/internal/dao"
@@ -84,6 +86,8 @@ type MiddlewareInterface interface {
 	CheckGetApplicationSet(ctx context.Context, appsetName string) (int, error)
 	ListApplicationSets(ctx context.Context, query *appsetpkg.ApplicationSetListQuery) (
 		*v1alpha1.ApplicationSetList, error)
+
+	CheckClusterScopedPermission(ctx context.Context, user string, cluster string, action iam.ActionID) (int, error)
 }
 
 // handler 定义 http 中间件处理对象
@@ -679,6 +683,50 @@ func (h *handler) ListApplications(ctx context.Context, query *appclient.Applica
 	}
 	apps.Items = result
 	return apps, nil
+}
+
+// CheckClusterScopedPermission check the user with cluster_scoped permission
+func (h *handler) CheckClusterScopedPermission(ctx context.Context, user string,
+	clusterID string, action iam.ActionID) (int, error) {
+	clusterResp, err := h.option.ClusterManagerClient.GetCluster(
+		metadata.NewOutgoingContext(ctx,
+			metadata.New(map[string]string{"Authorization": fmt.Sprintf("Bearer %s", h.option.APIGatewayToken)}),
+		), &cm.GetClusterReq{ClusterID: clusterID})
+	if err != nil {
+		return http.StatusInternalServerError, errors.Wrapf(err, "get cluster '%s' failed", clusterID)
+	}
+	if clusterResp.Code != 0 {
+		return http.StatusBadRequest, errors.Errorf("get cluster '%s' code not 0: %s",
+			clusterID, clusterResp.Message)
+	}
+	projectID := clusterResp.Data.ProjectID
+	permit, err := h.checkBKPermissionWithRetry(ctx, func() (bool, error) {
+		var permit bool
+		switch action {
+		case cluster.ClusterScopedCreate:
+			permit, _, _, err = h.clusterPermission.CanCreateClusterScopedResource(user, projectID, clusterID)
+		case cluster.ClusterScopedView:
+
+			permit, _, _, err = h.clusterPermission.CanViewClusterScopedResource(user, projectID, clusterID)
+		case cluster.ClusterScopedUpdate:
+
+			permit, _, _, err = h.clusterPermission.CanUpdateClusterScopedResource(user, projectID, clusterID)
+		case cluster.ClusterScopedDelete:
+			permit, _, _, err = h.clusterPermission.CanDeleteClusterScopedResource(user, projectID, clusterID)
+		default:
+			permit = false
+			err = errors.Errorf("unknown iam action '%s'", action)
+		}
+		return permit, err
+	})
+	if err != nil {
+		return http.StatusInternalServerError, errors.Wrapf(err, "auth center failed")
+	}
+	if !permit {
+		return http.StatusForbidden, errors.Errorf("cluster '%s' for user '%s' with %s is forbidden",
+			clusterID, user, action)
+	}
+	return http.StatusOK, nil
 }
 
 func (h *handler) isAdminUser(user string) bool {
