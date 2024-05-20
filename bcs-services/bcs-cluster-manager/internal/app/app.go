@@ -80,6 +80,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/job"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/nodeman"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/passcc"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/project"
 	resource "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/resource/tresource"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/user"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
@@ -90,6 +91,7 @@ import (
 	k8stunnel "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tunnelhandler/k8s"
 	mesostunnel "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tunnelhandler/mesos"
 	mesoswebconsole "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tunnelhandler/mesoswebconsole"
+	itypes "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -125,6 +127,9 @@ type ClusterManager struct {
 	// resource discovery
 	resourceDisc *discovery.ModuleDiscovery
 
+	// project discovery
+	projectDisc *discovery.ModuleDiscovery
+
 	// cidr discovery
 	cidrDisc *discovery.ModuleDiscovery
 
@@ -145,6 +150,9 @@ type ClusterManager struct {
 
 	// model store
 	model store.ClusterManagerModel
+
+	// etcd store
+	etcdModel store.EtcdStoreInterface
 
 	// k8s cluster operator
 	k8sops *clusterops.K8SOperator
@@ -201,11 +209,11 @@ func (cm *ClusterManager) initTLSConfig() error {
 }
 
 // init lock
-func (cm *ClusterManager) initLocker() error {
+func (cm *ClusterManager) initEtcdLockerStore() error {
 	etcdEndpoints := utils.SplitAddrString(cm.opt.Etcd.EtcdEndpoints)
-	var opts []lock.Option
-	opts = append(opts, lock.Endpoints(etcdEndpoints...))
-	opts = append(opts, lock.Prefix("clustermanager"))
+	var opts []itypes.Option
+	opts = append(opts, itypes.Endpoints(etcdEndpoints...))
+	opts = append(opts, itypes.Prefix("clustermanager"))
 	var etcdTLS *tls.Config
 	var err error
 	if len(cm.opt.Etcd.EtcdCa) != 0 && len(cm.opt.Etcd.EtcdCert) != 0 && len(cm.opt.Etcd.EtcdKey) != 0 {
@@ -215,7 +223,7 @@ func (cm *ClusterManager) initLocker() error {
 		}
 	}
 	if etcdTLS != nil {
-		opts = append(opts, lock.TLS(etcdTLS))
+		opts = append(opts, itypes.TLS(etcdTLS))
 	}
 
 	// register etcd distributed lock
@@ -225,6 +233,16 @@ func (cm *ClusterManager) initLocker() error {
 		return err
 	}
 	blog.Infof("init locker successfully")
+
+	// init etcd store client
+	etcdClient, err := store.NewModelEtcd(opts...)
+	if err != nil {
+		blog.Errorf("init etcd store client failed: %v", err.Error())
+		return err
+	}
+	blog.Infof("init etcdClient successfully")
+
+	cm.etcdModel = etcdClient
 	cm.locker = locker
 	return nil
 }
@@ -262,6 +280,7 @@ func (cm *ClusterManager) initModel() error {
 // init task server
 func (cm *ClusterManager) initTaskServer() error {
 	cloudprovider.InitStorageModel(cm.model)
+	cloudprovider.InitEtcdModel(cm.etcdModel)
 	// get taskserver and init
 	taskMgr := taskserver.GetTaskServer()
 
@@ -675,6 +694,17 @@ func (cm *ClusterManager) initDiscovery() {
 		}, cm.resourceDisc)
 	}
 
+	// enable discovery project module
+	if cm.opt.ProjectManager.Enable {
+		cm.projectDisc = discovery.NewModuleDiscovery(cm.opt.ProjectManager.Module, cm.microRegistry)
+		blog.Infof("init discovery for project manager successfully")
+
+		project.SetProjectClient(&project.Options{
+			Module:    cm.opt.ProjectManager.Module,
+			TLSConfig: cm.clientTLSConfig,
+		}, cm.projectDisc)
+	}
+
 	// enable discovery cidr module
 	if cm.opt.CidrManager.Enable {
 		cm.cidrDisc = discovery.NewModuleDiscovery(cm.opt.CidrManager.Module, cm.microRegistry)
@@ -946,6 +976,9 @@ func (cm *ClusterManager) initMicro() error { // nolint
 			if cm.resourceDisc != nil {
 				cm.resourceDisc.Start() // nolint
 			}
+			if cm.projectDisc != nil {
+				cm.projectDisc.Start() // nolint
+			}
 			if cm.cidrDisc != nil {
 				cm.cidrDisc.Start() // nolint
 			}
@@ -954,6 +987,9 @@ func (cm *ClusterManager) initMicro() error { // nolint
 		microsvc.BeforeStop(func() error {
 			if cm.resourceDisc != nil {
 				cm.resourceDisc.Stop()
+			}
+			if cm.projectDisc != nil {
+				cm.projectDisc.Stop()
 			}
 			if cm.cidrDisc != nil {
 				cm.cidrDisc.Stop()
@@ -1040,7 +1076,7 @@ func (cm *ClusterManager) Init() error {
 		return err
 	}
 	// init locker
-	if err := cm.initLocker(); err != nil {
+	if err := cm.initEtcdLockerStore(); err != nil {
 		return err
 	}
 	// init registry

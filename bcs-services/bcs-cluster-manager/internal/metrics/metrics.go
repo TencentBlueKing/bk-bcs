@@ -97,6 +97,18 @@ var (
 		Name:      "machinery_task",
 		Help:      "cluster manager machinery task",
 	}, []string{"task_name", "state"})
+
+	reportRegionInsTypeNum = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: BkBcsClusterManager,
+		Name:      "resource_usage",
+		Help:      "cluster manager resource pool usage",
+	}, []string{"region", "zone", "instance_type", "device_pool", "resource_category"})
+
+	reportCaUsageRatio = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: BkBcsClusterManager,
+		Name:      "ca_usage_ratio",
+		Help:      "cluster manager resource ca usage ratio",
+	}, []string{"env"})
 )
 
 func init() {
@@ -111,6 +123,8 @@ func init() {
 	prometheus.MustRegister(reportClusterGroupResourceNum)
 	prometheus.MustRegister(reportClusterGroupMaxResourceNum)
 	prometheus.MustRegister(reportMachineryTaskNum)
+	prometheus.MustRegister(reportRegionInsTypeNum)
+	prometheus.MustRegister(reportCaUsageRatio)
 }
 
 // ReportMasterTaskMetric report lib call metrics
@@ -154,4 +168,14 @@ func ReportCloudClusterHealthStatus(cloud, cluster string, status float64) {
 // ReportMachineryTaskNum report cluster-manager machinery tasks
 func ReportMachineryTaskNum(taskName, state string, num float64) {
 	reportMachineryTaskNum.WithLabelValues(taskName, state).Set(num)
+}
+
+// ReportRegionInsTypeNum report cluster-manager ca resource usage
+func ReportRegionInsTypeNum(region, zone, instancetype, pool, category string, num float64) {
+	reportRegionInsTypeNum.WithLabelValues(region, zone, instancetype, pool, category).Set(num)
+}
+
+// ReportCaUsageRatio report cluster-manager ca usage ratio
+func ReportCaUsageRatio(env string, num float64) {
+	reportCaUsageRatio.WithLabelValues(env).Set(num)
 }

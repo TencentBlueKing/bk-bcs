@@ -294,7 +294,16 @@ func getUserHasPermHosts(bizID int, user string) []string {
 		return nil
 	}
 	for i := range hostList {
-		hostUsers := []string{hostList[i].Operator, hostList[i].BKBakOperator}
+		mainOperators := strings.Split(hostList[i].Operator, ",")
+		bakOperators := strings.Split(hostList[i].BKBakOperator, ",")
+
+		var hostUsers = make([]string, 0)
+		if len(mainOperators) > 0 {
+			hostUsers = append(hostUsers, mainOperators...)
+		}
+		if len(bakOperators) > 0 {
+			hostUsers = append(hostUsers, bakOperators...)
+		}
 		if utils.StringInSlice(user, hostUsers) {
 			hostIPs = append(hostIPs, hostList[i].BKHostInnerIP)
 		}

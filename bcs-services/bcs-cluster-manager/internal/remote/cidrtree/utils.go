@@ -55,7 +55,7 @@ func StringToCidr(cidrstr string) (cidr *Cidr, err error) {
 }
 
 // GetFreeIPNets get cidr block free cidrs
-func GetFreeIPNets(allBlocks, allExistingSubnets []*net.IPNet) []*net.IPNet {
+func GetFreeIPNets(allBlocks, reservedBlocks, allExistingSubnets []*net.IPNet) []*net.IPNet {
 	var allFrees []*net.IPNet
 
 	for _, block := range allBlocks {
@@ -64,7 +64,9 @@ func GetFreeIPNets(allBlocks, allExistingSubnets []*net.IPNet) []*net.IPNet {
 		man := NewCidrManager(block, exsits)
 		// nolint
 		for _, free := range man.GetFrees() {
-			allFrees = append(allFrees, free)
+			if !inReserved(free, reservedBlocks) {
+				allFrees = append(allFrees, free)
+			}
 		}
 	}
 	return allFrees

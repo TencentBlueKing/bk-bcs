@@ -10,32 +10,40 @@
  * limitations under the License.
  */
 
-// Package lock xxx
-package lock
+package types
 
-import (
-	"time"
-)
+import "crypto/tls"
 
-// LockOptions options for lock
-type LockOptions struct { // nolint
-	TTL time.Duration
+// Options options for lock
+type Options struct {
+	// Endpoints lock registry
+	Endpoints []string
+	// TLSConfig config for tls
+	TLSConfig *tls.Config
+	// Prefix lock path
+	Prefix string
 }
 
-// LockOption option function for lock
-type LockOption func(o *LockOptions) // nolint
+// Option function for set option
+type Option func(o *Options)
 
-// LockTTL sets the lock ttl
-func LockTTL(t time.Duration) LockOption { // nolint
-	return func(o *LockOptions) {
-		o.TTL = t
+// Endpoints set endpoints to use
+func Endpoints(endpoints ...string) Option {
+	return func(o *Options) {
+		o.Endpoints = endpoints
 	}
 }
 
-// DistributedLock lock interface
-type DistributedLock interface {
-	// Lock acquires a lock
-	Lock(id string, opts ...LockOption) error
-	// Unlock releases a lock
-	Unlock(id string) error
+// TLS set tls config to use
+func TLS(tlsConfig *tls.Config) Option {
+	return func(o *Options) {
+		o.TLSConfig = tlsConfig
+	}
+}
+
+// Prefix set election path for prefix
+func Prefix(pre string) Option {
+	return func(o *Options) {
+		o.Prefix = pre
+	}
 }
