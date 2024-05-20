@@ -122,6 +122,12 @@ const (
 	statusNotSale = "NOTSALE" // nolint
 )
 
+const (
+	userQuota      = "userQuota"
+	usedQuota      = "usedQuota"
+	availableQuota = "availableQuota"
+)
+
 // PoolLabel xxx
 type PoolLabel string
 

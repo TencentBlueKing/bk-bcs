@@ -83,6 +83,14 @@ func (d *Daemon) InitDaemon(ctx context.Context) {
 		d.reportMachineryTaskNum(errChan)
 	}, 60)
 
+	go d.simpleDaemon(ctx, &wg, func() {
+		d.reportClusterCaUsageRatio(errChan)
+	}, 300)
+
+	go d.simpleDaemon(ctx, &wg, func() {
+		d.reportRegionInsTypeUsage(errChan)
+	}, 300)
+
 	wg.Wait()
 }
 

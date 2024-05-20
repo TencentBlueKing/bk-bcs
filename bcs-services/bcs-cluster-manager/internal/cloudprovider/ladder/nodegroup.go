@@ -357,3 +357,8 @@ func (ng *NodeGroup) SwitchAutoScalingOptionStatus(scalingOption *proto.ClusterA
 	}
 	return task, nil
 }
+
+// CheckResourcePoolQuota check resource pool quota when revise group limit
+func (ng *NodeGroup) CheckResourcePoolQuota(region, instanceType string, groupId string) error {
+	return nil
+}

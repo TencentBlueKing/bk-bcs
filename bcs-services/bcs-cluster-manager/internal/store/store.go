@@ -15,11 +15,14 @@ package store
 
 import (
 	"context"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	client "go.etcd.io/etcd/client/v3"
 	"go.mongodb.org/mongo-driver/bson"
+	"google.golang.org/grpc"
 
 	types "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/account"
@@ -27,6 +30,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/cloudvpc"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/clustercredential"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/etcd"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/machinery"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/moduleflag"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/namespace"
@@ -42,6 +46,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/task"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/tke"
 	stypes "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/types"
+	itypes "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 )
 
 var storeClient ClusterManagerModel
@@ -265,4 +270,55 @@ func NewModelSet(mongoOptions *mongo.Options) (ClusterManagerModel, error) {
 // GetStoreModel get store client
 func GetStoreModel() ClusterManagerModel {
 	return storeClient
+}
+
+var etcdStoreClient EtcdStoreInterface
+
+// GetEtcdModel get etcd client
+func GetEtcdModel() EtcdStoreInterface {
+	return etcdStoreClient
+}
+
+// EtcdStoreInterface for etcd data
+type EtcdStoreInterface interface {
+	Create(ctx context.Context, key string, obj interface{}) error
+	Delete(ctx context.Context, key string) error
+	Get(ctx context.Context, key string, objPtr interface{}) error
+	List(ctx context.Context, key string, listObj interface{}) error
+}
+
+// NewModelEtcd create etcd store
+func NewModelEtcd(opts ...itypes.Option) (EtcdStoreInterface, error) {
+	var etcdOptions itypes.Options
+	for _, o := range opts {
+		o(&etcdOptions)
+	}
+
+	var endpoints []string
+	for _, addr := range etcdOptions.Endpoints {
+		if len(addr) > 0 {
+			endpoints = append(endpoints, addr)
+		}
+	}
+
+	var conf client.Config
+	if etcdOptions.TLSConfig != nil {
+		conf = client.Config{
+			Endpoints: endpoints,
+			TLS:       etcdOptions.TLSConfig,
+		}
+	} else {
+		conf = client.Config{
+			Endpoints: endpoints,
+		}
+	}
+	conf.DialOptions = []grpc.DialOption{grpc.WithBlock()}
+	conf.DialTimeout = 10 * time.Second
+	etcdClient, err := client.New(conf)
+	if err != nil {
+		return nil, err
+	}
+
+	etcdStoreClient = etcd.NewEtcdStore(etcdOptions.Prefix, etcdClient)
+	return etcdStoreClient, nil
 }

@@ -16,8 +16,10 @@ package node
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"go.mongodb.org/mongo-driver/bson"
@@ -109,6 +111,9 @@ func (m *ModelNode) UpdateNode(ctx context.Context, node *types.Node) error {
 	if err := m.ensureTable(ctx); err != nil {
 		return err
 	}
+
+	blog.Infof("ModelNode UpdateNode[%s:%s]", node.NodeID, node.InnerIP)
+
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
 		nodeIDKeyName: node.NodeID,
 		nodeIPKeyName: node.InnerIP,
@@ -125,6 +130,9 @@ func (m *ModelNode) UpdateClusterNodeByNodeID(ctx context.Context, node *types.N
 	if err := m.ensureTable(ctx); err != nil {
 		return err
 	}
+
+	blog.Infof("ModelNode UpdateClusterNodeByNodeID[%s:%s]", node.ClusterID, node.NodeID)
+
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
 		nodeIDKeyName:    node.NodeID,
 		nodeClusterIDKey: node.ClusterID,
@@ -141,6 +149,9 @@ func (m *ModelNode) DeleteNode(ctx context.Context, nodeID string) error {
 	if err := m.ensureTable(ctx); err != nil {
 		return err
 	}
+
+	blog.Infof("ModelNode DeleteNode[%s]", nodeID)
+
 	if len(nodeID) == 0 {
 		return nil
 	}
@@ -160,6 +171,9 @@ func (m *ModelNode) DeleteClusterNode(ctx context.Context, clusterID, nodeID str
 	if err := m.ensureTable(ctx); err != nil {
 		return err
 	}
+
+	blog.Infof("ModelNode DeleteClusterNode[%s:%s]", clusterID, nodeID)
+
 	if len(nodeID) == 0 {
 		return nil
 	}
@@ -180,6 +194,9 @@ func (m *ModelNode) DeleteClusterNodeByName(ctx context.Context, clusterID, node
 	if err := m.ensureTable(ctx); err != nil {
 		return err
 	}
+
+	blog.Infof("ModelNode DeleteClusterNodeByName[%s:%s]", clusterID, nodeName)
+
 	if len(nodeName) == 0 {
 		return nil
 	}
@@ -200,6 +217,9 @@ func (m *ModelNode) DeleteNodesByNodeIDs(ctx context.Context, nodeIDs []string) 
 	if err := m.ensureTable(ctx); err != nil {
 		return err
 	}
+
+	blog.Infof("ModelNode DeleteNodesByNodeIDs[%s]", strings.Join(nodeIDs, ","))
+
 	if len(nodeIDs) == 0 {
 		return nil
 	}
@@ -220,6 +240,9 @@ func (m *ModelNode) DeleteClusterNodesByIPs(ctx context.Context, clusterID strin
 	if err := m.ensureTable(ctx); err != nil {
 		return err
 	}
+
+	blog.Infof("ModelNode DeleteClusterNodesByIPs[%s:%s]", clusterID, strings.Join(ips, ","))
+
 	if len(ips) == 0 || clusterID == "" {
 		return nil
 	}
@@ -240,6 +263,9 @@ func (m *ModelNode) DeleteNodesByIPs(ctx context.Context, ips []string) error {
 	if err := m.ensureTable(ctx); err != nil {
 		return err
 	}
+
+	blog.Infof("ModelNode DeleteNodesByIPs[%s]", strings.Join(ips, ","))
+
 	if len(ips) == 0 {
 		return nil
 	}
@@ -260,6 +286,9 @@ func (m *ModelNode) DeleteNodesByClusterID(ctx context.Context, clusterID string
 	if err := m.ensureTable(ctx); err != nil {
 		return err
 	}
+
+	blog.Infof("ModelNode DeleteNodesByClusterID[%s]", clusterID)
+
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
 		nodeClusterIDKey: clusterID,
 	})
@@ -275,6 +304,9 @@ func (m *ModelNode) DeleteNodeByIP(ctx context.Context, ip string) error {
 	if err := m.ensureTable(ctx); err != nil {
 		return err
 	}
+
+	blog.Infof("ModelNode DeleteNodeByIP[%s]", ip)
+
 	if len(ip) == 0 {
 		return nil
 	}
@@ -294,6 +326,9 @@ func (m *ModelNode) DeleteClusterNodeByIP(ctx context.Context, clusterID, ip str
 	if err := m.ensureTable(ctx); err != nil {
 		return err
 	}
+
+	blog.Infof("ModelNode DeleteClusterNodeByIP[%s:%s]", clusterID, ip)
+
 	if len(ip) == 0 {
 		return nil
 	}

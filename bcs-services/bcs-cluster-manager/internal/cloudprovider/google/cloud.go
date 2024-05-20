@@ -25,7 +25,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/google/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 )
 
 var cloudInfoMgr sync.Once
@@ -87,7 +86,7 @@ func (c *CloudInfoManager) SyncClusterCloudInfo(cls *cmproto.Cluster,
 	if err != nil {
 		return fmt.Errorf("SyncClusterCloudInfo GetClusterKubeConfig failed: %v", err)
 	}
-	cls.KubeConfig, _ = encrypt.Encrypt(nil, kubeConfig)
+	cls.KubeConfig = kubeConfig
 
 	// cluster cloud basic setting
 	clusterBasicSettingByGKE(cls, cluster, opt)

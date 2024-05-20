@@ -16,6 +16,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
 	"strconv"
 	"strings"
 	"time"
@@ -681,7 +682,7 @@ func UpdateNodeStatus(isInstanceIP bool, instance, status string) error {
 	}
 
 	if errors.Is(err, drivers.ErrTableRecordNotFound) {
-		return nil
+		return fmt.Errorf("instance[%s] not found", instance)
 	}
 
 	node.Status = status
@@ -1300,4 +1301,28 @@ func ListProjectNotifyTemplates(projectId string) ([]proto.NotifyTemplate, error
 	}
 
 	return templates, nil
+}
+
+// GetOverlayCidrBlocks get overlayIps from vpc
+func GetOverlayCidrBlocks(cloudId, vpcId string) ([]*net.IPNet, error) {
+	vpc, err := GetStorageModel().GetCloudVPC(context.Background(), cloudId, vpcId)
+	if err != nil {
+		return nil, err
+	}
+
+	cidrs := make([]string, 0)
+	for i := range vpc.GetOverlay().GetCidrs() {
+		if vpc.GetOverlay().GetCidrs()[i].GetBlock() {
+			continue
+		}
+		cidrs = append(cidrs, vpc.GetOverlay().GetCidrs()[i].GetCidr())
+	}
+
+	var blocks []*net.IPNet
+	for _, v := range cidrs {
+		_, ipnet, _ := net.ParseCIDR(v)
+		blocks = append(blocks, ipnet)
+	}
+	return blocks, nil
+
 }

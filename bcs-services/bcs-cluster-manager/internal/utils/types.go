@@ -43,10 +43,14 @@ var (
 )
 
 const (
+	// ServiceCIDR service cidr
+	ServiceCIDR = "ServiceCIDR"
 	// ClusterCIDR cluster cidr
 	ClusterCIDR = "ClusterCIDR"
 	// MultiClusterCIDR cluster multi cidr
 	MultiClusterCIDR = "MultiClusterCIDR"
+	// EnableMultiClusterCIDR enable multi cidrs
+	EnableMultiClusterCIDR = "EnableMultiClusterCIDR"
 )
 
 const (
