@@ -41,6 +41,8 @@ safe_source() {
   return 0
 }
 
+# try init host then check host
+"${ROOT_DIR}"/system/init_host.sh -i all
 "${ROOT_DIR}"/system/check_host.sh -c all
 safe_source "${ROOT_DIR}/functions/utils.sh"
 safe_source "${ROOT_DIR}/functions/k8s.sh"

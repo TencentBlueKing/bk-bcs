@@ -74,7 +74,9 @@ op_multus() {
   ipv6_status=${K8S_IPv6_STATUS:-"Disable"}
   ipv6_status=${ipv6_status,,}
   action=$1
-  if [[ -z ${BK_PUBLIC_REPO} ]]; then
+  if [[ -n ${PRIVATE_DOCKER_REPO} ]]; then
+    multus_image="${PRIVATE_DOCKER_REPO}/multus-cni:${MULTUS_VERSION}"
+  elif [[ -z ${BK_PUBLIC_REPO} ]]; then
     multus_image="ghcr.io/k8snetworkplumbingwg/multus-cni:${MULTUS_VERSION}"
   else
     multus_image="${BK_PUBLIC_REPO}/registry.k8s.io/multus-cni:${MULTUS_VERSION}"
