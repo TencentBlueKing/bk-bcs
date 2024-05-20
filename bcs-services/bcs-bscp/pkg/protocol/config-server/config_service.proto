@@ -25,6 +25,7 @@ import "pkg/protocol/core/template-variable/template_variable.proto";
 import "pkg/protocol/core/kv/kvs.proto";
 import "pkg/protocol/core/released-kv/released_kv.proto";
 import "google/api/annotations.proto";
+import "google/api/visibility.proto";
 import "google/protobuf/struct.proto";
 
 package pbcs;
@@ -32,6 +33,7 @@ package pbcs;
 option go_package = "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/config-server;pbcs";
 
 service Config {
+  option (google.api.api_visibility).restriction = "BKAPIGW";
   rpc CreateApp(CreateAppReq) returns (CreateAppResp) {
     option (google.api.http) = {
       post: "/api/v1/config/create/app/app/biz_id/{biz_id}"
@@ -411,7 +413,8 @@ service Config {
   }
   /* 暂时不对外开发（删除模版后，服务引用的latest版本会回退到上一个老版本）
   rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (DeleteTemplateRevisionResp) {
-      option (google.api.http) = {
+
+option (google.api.http) = {
           delete :
   "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
       };
@@ -703,12 +706,14 @@ service Config {
     };
   }
   rpc GetGroupByName(GetGroupByNameReq) returns (pbgroup.Group) {
+    option (google.api.method_visibility).restriction = "BKAPIGW";
     option (google.api.http) = {
       get: "/api/v1/config/biz/{biz_id}/groups/query/name/{group_name}"
     };
   }
 
   rpc Publish(PublishReq) returns (PublishResp) {
+    option (google.api.method_visibility).restriction = "BKAPIGW";
     option (google.api.http) = {
       post: "/api/v1/config/update/strategy/publish/publish/release_id/{release_id}/app_id/{app_id}/biz_id/{biz_id}"
       body: "*"
