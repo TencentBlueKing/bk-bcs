@@ -14,6 +14,20 @@
         :data-placeholder="inputPlacehoder"
         v-bk-tooltips="{ content: inputPlacehoder, disabled: locale === 'zh-cn' || !inputPlacehoder }"
         @click="handleClickSearch">
+        <bk-date-picker
+          ref="datePickerRef"
+          :model-value="dateTime"
+          type="datetimerange"
+          ext-popover-cls="selector-date-picker"
+          append-to-body
+          disable-date
+          @change="handleDateChange"
+          @open-change="handleDatePickerOpenChange"
+          @pick-success="handleConfirmSelectTime">
+          <template #trigger>
+            <span></span>
+          </template>
+        </bk-date-picker>
         <div class="search-condition-list">
           <div
             v-for="(condition, index) in searchConditionList"
@@ -158,6 +172,7 @@
     updateClientSearchRecord,
     deleteClientSearchRecord,
   } from '../../../../api/client';
+  import { getTimeRange } from '../../../../utils';
   import useClientStore from '../../../../store/client';
   import SetCommonlyDialog from './set-commonly-dialog.vue';
   import CommonlyUsedTag from './commonly-used-tag.vue';
@@ -200,6 +215,8 @@
   const editInputRef = ref();
   const menuOffset = ref(0);
   const inputWrapRef = ref();
+  const dateTime = ref(getTimeRange(1));
+  const datePickerRef = ref();
 
   const inputPlacehoder = computed(() => {
     if (searchConditionList.value.length || searchStr.value || inputFocus.value) return '';
@@ -266,12 +283,21 @@
     const entries = Object.entries(route.query);
     if (entries.length === 0) return;
     const { name, value } = CLIENT_SEARCH_DATA.find((item) => item.value === entries[0][0])!;
-    searchConditionList.value.push({
-      content: `${name} : ${entries[0][1]}`,
-      value: entries[0][1] as string,
-      key: value,
-      isEdit: false,
-    });
+    if (value === 'pull_time') {
+      searchConditionList.value.push({
+        content: `${name} : ${entries[0][1]} 00:00:00 - ${entries[0][1]} 23:59:59`,
+        value: `${entries[0][1]} 00:00:00 - ${entries[0][1]} 23:59:59`,
+        key: value,
+        isEdit: false,
+      });
+    } else {
+      searchConditionList.value.push({
+        content: `${name} : ${entries[0][1]}`,
+        value: entries[0][1] as string,
+        key: value,
+        isEdit: false,
+      });
+    }
   });
 
   onBeforeUnmount(() => {
@@ -284,7 +310,10 @@
   const handleSelectParent = (parentSelectorItem: ISelectorItem) => {
     parentSelecte.value = parentSelectorItem;
     // 如果有子选择项就展示 没有就用户手动输入
-    if (parentSelectorItem?.children) {
+    if (parentSelectorItem.value === 'pull_time') {
+      isShowPopover.value = false;
+      nextTick(() => datePickerRef.value.handleFocus());
+    } else if (parentSelectorItem?.children) {
       childSelectorData.value = parentSelectorItem.children;
       menuOffset.value = inputWrapRef.value.offsetLeft;
       showChildSelector.value = true;
@@ -332,7 +361,6 @@
     const index = searchConditionList.value.findIndex(
       (item) => item.key === parentSelecte.value?.value && item.key !== 'label',
     );
-    console.log(index);
     if (index > -1) handleConditionClose(index);
     searchConditionList.value.push({
       key: parentSelecte.value!.value,
@@ -344,6 +372,22 @@
     isShowPopover.value = false;
     inputRef.value.blur();
     parentSelecte.value = undefined;
+  };
+
+  const handleDateChange = (val: string[]) => {
+    dateTime.value = val;
+  };
+
+  const handleConfirmSelectTime = () => {
+    const index = searchConditionList.value.findIndex((item) => item.key === 'pull_time');
+    if (index > -1) handleConditionClose(index);
+    searchStr.value = '';
+    searchConditionList.value.push({
+      key: parentSelecte.value!.value,
+      value: `${dateTime.value[0]} - ${dateTime.value[1]}`,
+      content: `${parentSelecte.value?.name} : ${dateTime.value[0]} - ${dateTime.value[1]}`,
+      isEdit: false,
+    });
   };
 
   // 获取最近搜索记录和常用搜索记录
@@ -474,6 +518,11 @@
         } else {
           query[item.key] = [item.value];
         }
+      } else if (item.key === 'pull_time') {
+        const startTime = item.value.split(' - ')[0];
+        const endTime = item.value.split(' - ')[1];
+        query.start_pull_time = startTime;
+        query.end_pull_time = endTime;
       } else {
         query[item.key] = item.value.trim();
       }
@@ -515,6 +564,16 @@
           });
           searchName.push(content);
         });
+      } else if (key === 'start_pull_time' || key === 'end_pull_time') {
+        if (searchList.find((item) => item.key === 'pull_time')) return;
+        const content = `${t('配置拉取时间范围')} : ${query.start_pull_time} - ${query.end_pull_time}`;
+        searchList.push({
+          key: 'pull_time',
+          value: `${query.start_pull_time} - ${query.end_pull_time}`,
+          content,
+          isEdit: false,
+        });
+        searchName.push(content);
       } else {
         const content = `${selectorData.value.find((item) => item.value === key)?.name} : ${query[key]}`;
         searchList.push({
@@ -551,7 +610,10 @@
     condition.isEdit = true;
     editSearchStr.value = condition.content;
     parentSelecte.value = selectorData.value.find((item) => item.value === condition.key);
-    if (parentSelecte.value?.children) {
+    if (condition.key === 'pull_time') {
+      nextTick(() => datePickerRef.value.handleFocus());
+      isShowPopover.value = false;
+    } else if (parentSelecte.value?.children) {
       childSelectorData.value = parentSelecte.value.children;
       showChildSelector.value = true;
       isShowPopover.value = true;
@@ -572,6 +634,17 @@
     }
     condition.isEdit = false;
     parentSelecte.value = undefined;
+  };
+
+  const handleDatePickerOpenChange = (open: boolean) => {
+    if (open) {
+      isShowPopover.value = false;
+    } else {
+      const condition = searchConditionList.value.find((item) => item.key === 'pull_time');
+      if (condition) {
+        condition.isEdit = false;
+      }
+    }
   };
 </script>
 
@@ -598,6 +671,9 @@
       overflow: hidden;
       white-space: nowrap;
       text-overflow: ellipsis;
+    }
+    .bk-date-picker {
+      width: 0 !important;
     }
     .search-container-input {
       .input {
@@ -782,5 +858,9 @@
         }
       }
     }
+  }
+  .selector-date-picker {
+    top: 130px !important;
+    left: 723px !important;
   }
 </style>

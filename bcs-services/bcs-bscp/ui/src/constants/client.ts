@@ -74,6 +74,10 @@ export const CLIENT_SEARCH_DATA = [
     name: localT('客户端组件版本'),
     value: 'client_version',
   },
+  {
+    name: localT('配置拉取时间范围'),
+    value: 'pull_time',
+  },
 ];
 
 export const CLIENT_STATISTICS_SEARCH_DATA = [
