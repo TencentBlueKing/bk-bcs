@@ -62,7 +62,6 @@ type cluster struct {
 	ctx         context.Context
 	option      *options.Options
 	storage     store.Store
-	client      cm.ClusterManagerClient
 	secretStore secretstore.SecretInterface
 	conn        *grpc.ClientConn
 }
@@ -124,7 +123,7 @@ func (control *cluster) ForceSync(projectCode, clusterID string) {
 	header := metadata.New(map[string]string{"Authorization": fmt.Sprintf("Bearer %s",
 		control.option.APIGatewayToken)})
 	outCxt := metadata.NewOutgoingContext(context.Background(), header)
-	response, err := control.client.GetCluster(outCxt, &cm.GetClusterReq{ClusterID: clusterID})
+	response, err := control.option.ClusterManagerClient.GetCluster(outCxt, &cm.GetClusterReq{ClusterID: clusterID})
 	if err != nil {
 		blog.Errorf("cluster controller get cluster %s from cluster-manager failure, %s",
 			clusterID, err.Error())
@@ -189,7 +188,7 @@ func (control *cluster) initClient() error {
 			control.option.APIGateway, err.Error())
 		return err
 	}
-	control.client = cm.NewClusterManagerClient(conn)
+	control.option.ClusterManagerClient = cm.NewClusterManagerClient(conn)
 	control.conn = conn
 	blog.Infof("cluster controller init cluster-manager with %s successfully", control.option.APIGateway)
 	return nil
@@ -338,7 +337,7 @@ func (control *cluster) buildClustersByProject(ctx context.Context,
 			"Authorization": fmt.Sprintf("Bearer %s", control.option.APIGatewayToken),
 		}),
 	)
-	clusters, err := control.client.ListCluster(bcsCtx, &cm.ListClusterReq{ProjectID: projectID})
+	clusters, err := control.option.ClusterManagerClient.ListCluster(bcsCtx, &cm.ListClusterReq{ProjectID: projectID})
 	if err != nil {
 		return nil, errors.Wrapf(err, "list clusters failed")
 	}
