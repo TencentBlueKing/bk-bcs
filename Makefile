@@ -75,7 +75,7 @@ bcs-network:ingress-controller
 
 bcs-services:bkcmdb-synchronizer gateway \
 	storage user-manager cluster-manager cluster-reporter tools k8s-watch kube-agent data-manager \
-	helm-manager project-manager nodegroup-manager
+	helm-manager project-manager nodegroup-manager powertrading
 
 bcs-scenarios: kourse gitops
 
@@ -382,3 +382,8 @@ gamestatefulset:
 
 hook-operator:
 	make hook-operator -f bcs-scenarios/kourse/Makefile
+
+powertrading:
+	mkdir -p ${PACKAGEPATH}/bcs-scenarios/bcs-powertrading
+	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-powertrading ${PACKAGEPATH}/bcs-scenarios
+	cd bcs-scenarios/bcs-powertrading/ && go mod tidy && make build && cd -
