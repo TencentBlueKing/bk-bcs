@@ -118,6 +118,7 @@ init_env() {
   REPO_MIRRORS=${REPO_MIRRORS:-"https://mirror.ccs.tencentyun.com"}
   ### other image
   BK_PUBLIC_REPO=${BK_PUBLIC_REPO:-"hub.bktencent.com"}
+  PRIVATE_DOCKER_REPO=${PRIVATE_DOCKER_REPO:-""}
 
   # helm
   BKREPO_URL=${BKREPO_URL:-"https://hub.bktencent.com/chartrepo/blueking"}
@@ -317,6 +318,7 @@ MIRROR_IP="${MIRROR_IP}"
 REPO_MIRRORS="${REPO_MIRRORS}"
 ### registry.k8s.io
 BK_PUBLIC_REPO="${BK_PUBLIC_REPO}"
+PRIVATE_DOCKER_REPO="${PRIVATE_DOCKER_REPO}"
 
 ## helm
 BKREPO_URL="${BKREPO_URL}"

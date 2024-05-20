@@ -43,7 +43,10 @@ version() {
 
 render_cluster() {
   local image_registry config_file=$1
-  if [[ -n ${BK_PUBLIC_REPO:-} ]]; then
+  if [[ -n ${PRIVATE_DOCKER_REPO:-} ]]; then
+      # ToDo: registry.k8s.io replace k8s.gcr.io
+      image_registry=${PRIVATE_DOCKER_REPO}
+  elif [[ -n ${BK_PUBLIC_REPO:-} ]]; then
     # ToDo: registry.k8s.io replace k8s.gcr.io
     image_registry=${BK_PUBLIC_REPO}/registry.k8s.io
   else
