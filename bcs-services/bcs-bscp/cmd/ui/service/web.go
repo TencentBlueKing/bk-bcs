@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"net/http"
 	"path"
+	"path/filepath"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
@@ -28,6 +29,7 @@ import (
 	"k8s.io/klog/v2"
 
 	bscp "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/docs"
 	_ "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/docs" // 文档自动注册到 swagger
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/config"
@@ -135,13 +137,24 @@ func (s *WebServer) newRouter() http.Handler {
 	r.Get("/metrics", metrics.Handler().ServeHTTP)
 
 	if config.G.Web.RoutePrefix != "/" && config.G.Web.RoutePrefix != "" {
-		r.With(s.webAuthentication).Get(config.G.Web.RoutePrefix+"/swagger/*", httpSwagger.Handler(
-			httpSwagger.URL(config.G.Web.RoutePrefix+"/swagger/doc.json"),
-		))
 		r.Mount(config.G.Web.RoutePrefix, http.StripPrefix(config.G.Web.RoutePrefix, s.subRouter()))
 	}
 
-	r.With(s.webAuthentication).Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL("/swagger/doc.json")))
+	r.With(s.webAuthentication).Get(config.G.Web.RoutePrefix+"/swagger/*", func(w http.ResponseWriter, r *http.Request) {
+		ext := filepath.Ext(r.URL.Path)
+		if ext == ".json" {
+			w.Header().Set("Content-Type", "application/json")
+			file, _ := docs.Assets.ReadFile("swagger/api.swagger.json")
+			w.Write(file)
+			return
+		}
+		httpSwagger.Handler(
+			httpSwagger.UIConfig(map[string]string{
+				"showExtensions": "true", // 显示扩展
+			}),
+			httpSwagger.URL("api.swagger.json"),
+		).ServeHTTP(w, r)
+	})
 	r.Mount("/", s.subRouter())
 
 	return r
