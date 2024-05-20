@@ -39,7 +39,7 @@
       </div>
     </div>
     <div v-else-if="importType === 'otherService'">
-      <ImportFormOtherService :bk-biz-id="props.bkBizId" :app-id="props.appId" />
+      <ImportFormOtherService :bk-biz-id="props.bkBizId" :app-id="props.appId" @select-verison="handleSelectVersion" />
     </div>
     <div v-if="importType !== 'configTemplate' && importConfigList.length" class="content">
       <div class="head">
@@ -163,9 +163,9 @@
     }
   };
 
-  const handleSelectVersion = async (id: number) => {
+  const handleSelectVersion = async (appId: number, versionId: number) => {
     try {
-      const params = { other_app_id: props.appId, release_id: id };
+      const params = { other_app_id: appId || props.appId, release_id: versionId || selectVerisonId.value };
       const res = await importFromHistoryVersion(props.bkBizId, props.appId, params);
       existConfigList.value = res.data.exist;
       nonExistConfigList.value = res.data.non_exist;
@@ -198,7 +198,7 @@
     display: flex;
   }
   .label {
-    width: 94px;
+    width: 72px;
     height: 32px;
     line-height: 32px;
     font-size: 12px;
