@@ -202,6 +202,8 @@ func (s *Service) ClientLabelStatistics(ctx context.Context, req *pbclient.Clien
 			ClientType:          req.GetSearch().GetClientType(),
 		},
 		LastHeartbeatTime: req.GetLastHeartbeatTime(),
+		PrimaryKey:        req.GetPrimaryKey(),
+		ForeignKeys:       req.GetForeignKeys(),
 	})
 }
 

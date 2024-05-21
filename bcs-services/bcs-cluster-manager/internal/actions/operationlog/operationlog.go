@@ -61,7 +61,7 @@ func (ua *ListOperationLogsAction) setResp(code uint32, msg string) {
 	ua.resp.Result = (code == common.BcsErrClusterManagerSuccess)
 }
 
-func (ua *ListOperationLogsAction) fetchV2OperationLogs() error {
+func (ua *ListOperationLogsAction) fetchV2OperationLogs() error { // nolint
 	var (
 		conds   = make([]bson.E, 0)
 		condDst = make([]bson.E, 0)
@@ -77,6 +77,12 @@ func (ua *ListOperationLogsAction) fetchV2OperationLogs() error {
 	}
 	if ua.req.ProjectID != "" {
 		conds = append(conds, util.Condition(operator.Eq, "projectid", []string{ua.req.ProjectID}))
+	}
+	if ua.req.TaskID != "" {
+		conds = append(conds, util.Condition(operator.Eq, "taskid", []string{ua.req.TaskID}))
+	}
+	if ua.req.TaskName != "" {
+		conds = append(conds, util.Condition(operator.Eq, "taskname", []string{ua.req.TaskName}))
 	}
 
 	// time range condition

@@ -63,6 +63,8 @@ func BuildRemoveInnerTaintTaskStep(task *proto.Task, group *proto.NodeGroup) {
 // NOCC:tosa/fn_length(忽略)
 // nolint function name should not exceed 35 characters
 func RemoveClusterNodesInnerTaintTask(taskID string, stepName string) error {
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start remove cluster nodes taint")
 	start := time.Now()
 
 	// get task and task current step
@@ -104,11 +106,16 @@ func RemoveClusterNodesInnerTaintTask(taskID string, stepName string) error {
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
 	err = removeClusterNodesTaint(ctx, dependInfo.Cluster.ClusterID, nodeNames)
 	if err != nil {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
+			fmt.Sprintf("remove cluster nodes taint failed [%s]", err))
 		blog.Errorf("RemoveClusterNodesTaintTask[%s]: removeClusterNodesTaint failed: %s", taskID, err.Error())
 		retErr := fmt.Errorf("RemoveClusterNodesTaintTask removeClusterNodesTaint failed")
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"remove cluster nodes taint successful")
 
 	// update step
 	if err = state.UpdateStepSucc(start, stepName); err != nil {
@@ -175,6 +182,8 @@ func BuildNodeTaintsTaskStep(task *proto.Task, clusterID string, nodeIPs []strin
 
 // SetNodeTaintsTask set cluster nodes taints
 func SetNodeTaintsTask(taskID string, stepName string) error {
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start set cluster nodes taints")
 	start := time.Now()
 
 	// get task and task current step
@@ -223,6 +232,9 @@ func SetNodeTaintsTask(taskID string, stepName string) error {
 		Taints:    taints,
 	})
 	blog.Infof("SetNodeTaintsTask[%s] clusterID[%s] IPs[%v] successful", taskID, clusterID, nodeIPs)
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"set cluster nodes taints successful")
 
 	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {

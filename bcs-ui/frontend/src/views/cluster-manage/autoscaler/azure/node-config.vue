@@ -763,20 +763,16 @@ export default defineComponent({
       zoneName: string
       subnetID: string
     }>>([]);
-    const filterSubnetsList = computed(() => {
-      const { zones } = nodePoolConfig.value.autoScaling;
-      return subnetsList.value
-        // .filter(item => !zones.length || zones.includes(item.zone))
-        .sort((pre, current) => {
-          const isPreDisabled = curInstanceItem.value.zones?.includes(pre.zone);
-          const isCurrentDisabled = curInstanceItem.value.zones?.includes(current.zone);
-          if (isPreDisabled && !isCurrentDisabled) return -1;
+    const filterSubnetsList = computed(() => subnetsList.value
+      .sort((pre, current) => {
+        const isPreDisabled = curInstanceItem.value.zones?.includes(pre.zone);
+        const isCurrentDisabled = curInstanceItem.value.zones?.includes(current.zone);
+        if (isPreDisabled && !isCurrentDisabled) return -1;
 
-          if (!isPreDisabled && isCurrentDisabled) return 1;
+        if (!isPreDisabled && isCurrentDisabled) return 1;
 
-          return 0;
-        });
-    });
+        return 0;
+      }));
     const subnetsRowClass = ({ row }) => {
       if (curInstanceItem.value.zones?.includes(row.zone)) {
         // return 'table-row-enable';

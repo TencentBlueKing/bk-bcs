@@ -99,6 +99,8 @@ var (
 	defaultTaskID = "qwertyuiop123456"
 	// TaskID inject taskID into ctx
 	TaskID = "taskID"
+	// StepNameKey inject stepName into ctx
+	StepNameKey = "stepName"
 )
 
 // GetTaskIDFromContext get taskID from context
@@ -114,6 +116,26 @@ func GetTaskIDFromContext(ctx context.Context) string {
 func WithTaskIDForContext(ctx context.Context, taskID string) context.Context {
 	// NOCC:golint/type(设计如此)
 	return context.WithValue(ctx, TaskID, taskID) // nolint
+}
+
+// GetTaskIDAndStepNameFromContext get taskID and stepName from context
+func GetTaskIDAndStepNameFromContext(ctx context.Context) (taskID, stepName string) {
+	if id, ok := ctx.Value(TaskID).(string); ok {
+		taskID = id
+	}
+
+	if name, ok := ctx.Value(StepNameKey).(string); ok {
+		stepName = name
+	}
+
+	return
+}
+
+// WithTaskIDAndStepNameForContext will return a new context wrapped taskID and stepName flag around the original ctx
+func WithTaskIDAndStepNameForContext(ctx context.Context, taskID, stepName string) context.Context {
+	// NOCC:golint/type(设计如此)
+	ctx = context.WithValue(ctx, TaskID, taskID)         // nolint
+	return context.WithValue(ctx, StepNameKey, stepName) // nolint
 }
 
 // CredentialData dependency data
@@ -982,7 +1004,7 @@ func UpdateNodeGroupCloudAndModuleInfo(nodeGroupID string, cloudGroupID string,
 
 // ShieldHostAlarm shield host alarm for user
 func ShieldHostAlarm(ctx context.Context, bizID string, ips []string) error {
-	taskID := GetTaskIDFromContext(ctx)
+	taskID, stepName := GetTaskIDAndStepNameFromContext(ctx)
 	if len(ips) == 0 {
 		return fmt.Errorf("ShieldHostAlarm[%s] ips empty", taskID)
 	}
@@ -1023,6 +1045,9 @@ func ShieldHostAlarm(ctx context.Context, bizID string, ips []string) error {
 			blog.Errorf("ShieldHostAlarm[%s][%s] ShieldHostAlarmConfig failed: %v", taskID, alarms[i].Name(), err)
 			continue
 		}
+
+		GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+			fmt.Sprintf("[%s] successful", alarms[i].Name()))
 
 		blog.Infof("ShieldHostAlarm[%s][%s] ShieldHostAlarmConfig success", taskID, alarms[i].Name())
 	}

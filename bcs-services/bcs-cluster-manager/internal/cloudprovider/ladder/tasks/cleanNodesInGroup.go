@@ -61,7 +61,7 @@ func RemoveNodesFromClusterTask(taskID, stepName string) error {
 	}
 
 	// inject taskID
-	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
+	ctx := cloudprovider.WithTaskIDAndStepNameForContext(context.Background(), taskID, stepName)
 
 	success, err := business.RemoveNodesFromCluster(ctx, dependInfo, nodeIDs, true)
 	if err != nil {
@@ -130,7 +130,7 @@ func ReturnInstanceToResourcePoolTask(taskID, stepName string) error {
 	}
 
 	// inject taskID
-	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
+	ctx := cloudprovider.WithTaskIDAndStepNameForContext(context.Background(), taskID, stepName)
 	cloudprovider.ShieldHostAlarm(ctx, dependInfo.Cluster.BusinessID, nodeIPList) // nolint
 
 	// return device from resource-manager module if ResourceModule true, else retain yunti style
