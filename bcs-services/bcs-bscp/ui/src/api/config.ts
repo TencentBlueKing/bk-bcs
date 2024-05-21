@@ -389,11 +389,15 @@ export const deleteBoundPkg = (bizId: string, appId: number, bindingId: number, 
  * @param fill 导入文件
  * @returns
  */
-export const importNonTemplateConfigFile = (biz_id: string, appId: number, fill: any) =>
+export const importNonTemplateConfigFile = (biz_id: string, appId: number, fill: any, progress: Function) =>
   http
     .post(`/config/biz/${biz_id}/apps/${appId}/config_item/import`, fill, {
       headers: {
         'Content-Type': 'application/zip',
+      },
+      onUploadProgress: (progressEvent: any) => {
+        const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+        progress(percentCompleted);
       },
     })
     .then((res) => res.data);
