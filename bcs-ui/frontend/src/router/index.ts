@@ -28,7 +28,7 @@ import VueRouter from 'vue-router';
 
 import ClusterManage from './cluster-manage';
 import DeployManage from './deployment-manage';
-import PluginManage from './plugin-manage';// todo 有循环依赖
+import PluginManage from './plugin-manage';
 import ProjectManage from './project-manage';
 import ResourceView from './resource-view';// todo 有循环依赖
 
@@ -141,7 +141,7 @@ router.beforeEach(async (to, from, next) => {
     to.params.projectCode = $store.getters.curProjectCode;
   }
   await cancelRequest();
-  const { validateRouteEnable, getCurrentMenuByRoute, getNavByID } = useMenu();
+  const { validateRouteEnable, getNavByRoute } = useMenu();
   const result = await validateRouteEnable(to);
   if (!result) {
     // 未开启菜单项
@@ -156,7 +156,7 @@ router.beforeEach(async (to, from, next) => {
       projectCode: to.params.projectCode,
       to: to.name,
       from: from.name,
-      navID: getCurrentMenuByRoute(to.name)?.root?.id || getNavByID(to.meta?.menuId)?.id,
+      navID: getNavByRoute(to)?.id,
     }, 'router');
     next();
   }

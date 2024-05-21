@@ -448,14 +448,15 @@ export default defineComponent({
     const clusterTypeKey = computed(() => clusterTypeFilterList.value.map(item => item.value).join(','));
     const filterMethod = (value, row, column) => {
       const { property } = column;
-      // 筛选集群类型搜索逻辑
       if (property === 'manageType') {
+        // 筛选集群类型搜索逻辑
         if (value === 'isShared') {
           return row.is_shared;
-        } if (value === 'virtual') {
+        }
+        if (value === 'virtual') {
           return row.clusterType === 'virtual';
         }
-        return row[property] === value && !row.is_shared;
+        return row[property] === value && !row.is_shared && row.clusterType !== 'virtual';
       }
       return row[property] === value;
     };
