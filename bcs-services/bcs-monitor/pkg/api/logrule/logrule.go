@@ -58,14 +58,7 @@ func GetEntrypoints(c *rest.Context) (interface{}, error) {
 		return nil, err
 	}
 
-	// 从数据库获取规则数据
-	store := storage.GlobalStorage
-	stdIndexSetID, fileIndexSetID, err := store.GetIndexSetID(c.Request.Context(), c.ProjectId, c.ClusterId)
-	if err != nil {
-		return nil, err
-	}
-
-	return getContainerQueryLogLinks(req.ContainerIDs, stdIndexSetID, fileIndexSetID, c.ProjectCode), nil
+	return getContainerQueryLogLinks(req.ContainerIDs, c.ProjectCode, c.ClusterId), nil
 }
 
 // ListLogCollectors 获取日志采集规则列表
