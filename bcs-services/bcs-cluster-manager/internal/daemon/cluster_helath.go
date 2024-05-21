@@ -71,7 +71,7 @@ func (d *Daemon) reportClusterHealthStatus(error chan<- error) {
 				error <- err
 				return
 			}
-			
+
 			if options.GetEditionInfo().IsCommunicationEdition() {
 				_ = d.updateClusterStatus(cls.ClusterID, common.StatusRunning)
 			}
