@@ -243,7 +243,7 @@ func main() {
 		ServerKeyFile:  opts.ServerKeyFile,
 	}
 	webhookServer, err := webhookserver.NewHookServer(webhookServerOpts, mgr.GetClient(), lbClient, portPoolCache,
-		eventWatcher, validater, ingressConverter, conflictHandler, opts.NodePortBindingNs,
+		validater, ingressConverter, conflictHandler, opts.NodePortBindingNs,
 		mgr.GetEventRecorderFor("bcs-ingress-controller"))
 	if err != nil {
 		blog.Errorf("create hook server failed, err %s", err.Error())
@@ -268,9 +268,12 @@ func main() {
 	// 定时执行检查
 	checkRunner := check.NewCheckRunner(context.Background())
 	checkRunner.
-		Register(check.NewPortBindChecker(mgr.GetClient(), mgr.GetEventRecorderFor("bcs-ingress-controller"))).
-		Register(check.NewListenerChecker(mgr.GetClient(), listenerHelper)).
-		Register(check.NewIngressChecker(mgr.GetClient(), lbClient, lbIDCache, lbNameCache, opts.LBCacheExpiration)).
+		Register(check.NewPortBindChecker(mgr.GetClient(), mgr.GetEventRecorderFor("bcs-ingress-controller")),
+			check.CheckPerMin).
+		Register(check.NewListenerChecker(mgr.GetClient(), listenerHelper), check.CheckPerMin).
+		Register(check.NewIngressChecker(mgr.GetClient(), lbClient, lbIDCache, lbNameCache, opts.LBCacheExpiration),
+			check.CheckPerMin).
+		Register(check.NewPortLeakChecker(mgr.GetClient(), portPoolCache), check.CheckPer10Min).
 		Start()
 	blog.Infof("starting check runner")
 

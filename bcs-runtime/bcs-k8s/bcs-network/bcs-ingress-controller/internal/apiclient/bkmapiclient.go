@@ -98,7 +98,7 @@ func (b *BkmApiClient) ListUptimeCheckTask(ctx context.Context) (*ListUptimeChec
 	data := make([]*UptimeCheckTask, 0)
 	baseResp, err := b.SendRequest(ctx, http.MethodGet, "/get_uptime_check_task_list", param, &data)
 	if err != nil {
-		return nil, fmt.Errorf("get_uptime_check_task_list failed, req: %s, err: %w", common.ToJsonString(req), err)
+		return nil, fmt.Errorf("get_uptime_check_task_list failed, req: %s, err: %v", common.ToJsonString(req), err)
 	}
 
 	return &ListUptimeCheckResponse{
@@ -122,7 +122,7 @@ func (b *BkmApiClient) ListNode(ctx context.Context) (*ListNodeResponse, error) 
 	data := make([]*Node, 0)
 	baseResp, err := b.SendRequest(ctx, http.MethodGet, "/get_uptime_check_node_list", param, &data)
 	if err != nil {
-		return nil, fmt.Errorf("get_uptime_check_node_list failed, req: %s, err: %w", common.ToJsonString(req), err)
+		return nil, fmt.Errorf("get_uptime_check_node_list failed, req: %s, err: %v", common.ToJsonString(req), err)
 	}
 
 	return &ListNodeResponse{
@@ -149,7 +149,7 @@ func (b *BkmApiClient) CreateUptimeCheckTask(ctx context.Context,
 	data := &UptimeCheckTask{}
 	baseResp, err := b.SendRequest(ctx, http.MethodPost, "/create_uptime_check_task", param, &data)
 	if err != nil {
-		return nil, fmt.Errorf("create_uptime_check_task failed, req: %s, err: %w", common.ToJsonString(req), err)
+		return nil, fmt.Errorf("create_uptime_check_task failed, req: %s, err: %v", common.ToJsonString(req), err)
 	}
 
 	blog.V(3).Infof("create_uptime_check_task success, req: %s, resp[%d]", common.ToJsonString(req), data.ID)
@@ -177,7 +177,7 @@ func (b *BkmApiClient) UpdateUptimeCheckTask(ctx context.Context,
 	data := &UptimeCheckTask{}
 	baseResp, err := b.SendRequest(ctx, http.MethodPost, "/update_uptime_check_task", param, &data)
 	if err != nil {
-		return nil, fmt.Errorf("update_uptime_check_task failed, req: %s, err: %w", common.ToJsonString(req), err)
+		return nil, fmt.Errorf("update_uptime_check_task failed, req: %s, err: %v", common.ToJsonString(req), err)
 	}
 
 	blog.V(3).Infof("update_uptime_check_task success, req: %s, resp[%d]", common.ToJsonString(req), data.ID)
@@ -204,7 +204,7 @@ func (b BkmApiClient) DeployUptimeCheckTask(ctx context.Context, taskID int64) e
 			RequestTimeout: time.Minute,
 		})
 	if err != nil {
-		return fmt.Errorf("deploy_uptime_check_task failed, req: %s, err: %w", common.ToJsonString(req), err)
+		return fmt.Errorf("deploy_uptime_check_task failed, req: %s, err: %v", common.ToJsonString(req), err)
 	}
 
 	return nil
@@ -224,7 +224,7 @@ func (b *BkmApiClient) DeleteUptimeCheckTask(ctx context.Context, taskID int64) 
 
 	_, err := b.SendRequest(ctx, http.MethodPost, "/delete_uptime_check_task", param, &struct{}{})
 	if err != nil {
-		return fmt.Errorf("delete_uptime_check_task failed, req: %s, err: %w", common.ToJsonString(req), err)
+		return fmt.Errorf("delete_uptime_check_task failed, req: %s, err: %v", common.ToJsonString(req), err)
 	}
 	blog.V(3).Infof("delete_uptime_check_task success, req: %s", common.ToJsonString(req))
 

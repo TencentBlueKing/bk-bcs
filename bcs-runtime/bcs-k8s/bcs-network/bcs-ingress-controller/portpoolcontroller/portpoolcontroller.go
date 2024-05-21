@@ -191,8 +191,8 @@ func (ppr *PortPoolReconciler) initPortPoolCache() error {
 	}
 	for _, portBinding := range bindingItemList.Items {
 		for _, bindingItem := range portBinding.Spec.PortBindingList {
-			ppr.poolCache.SetPortBindingUsed(bindingItem.PoolName+"/"+bindingItem.PoolNamespace,
-				bindingItem.GetKey(), bindingItem.Protocol, bindingItem.StartPort, bindingItem.EndPort)
+			ppr.poolCache.SetPortBindingUsed(bindingItem, portBinding.GetPortBindingType(),
+				portBinding.GetNamespace(), portBinding.GetName())
 		}
 	}
 	return nil
