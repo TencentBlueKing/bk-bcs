@@ -60,7 +60,7 @@ export default function useTableData() {
       clusterId,
     );
     data.value = res.data;
-    webAnnotations.value = res.webAnnotations || {};
+    webAnnotations.value = res.webAnnotations || { perms: {} };
     isLoading.value = false;
     return res.data;
   };
@@ -85,7 +85,7 @@ export default function useTableData() {
       namespace,
     });
     data.value = res.data;
-    webAnnotations.value = res.webAnnotations || {};
+    webAnnotations.value = res.webAnnotations || { perms: {} };
     isLoading.value = false;
     return res.data;
   };
@@ -106,7 +106,7 @@ export default function useTableData() {
       },
     }));
     data.value = res.data || defaultManifestData;
-    webAnnotations.value = res.webAnnotations || {};
+    webAnnotations.value = res.webAnnotations || { perms: {} };
     return (res.data || defaultManifestData) as ISubscribeData;
   };
 
@@ -121,7 +121,7 @@ export default function useTableData() {
       },
     }));
     data.value = res.data || defaultManifestData;
-    webAnnotations.value = res.webAnnotations || {};
+    webAnnotations.value = res.webAnnotations || { perms: {} };
     return (res.data || defaultManifestData) as ISubscribeData;
   };
 
@@ -139,7 +139,7 @@ export default function useTableData() {
       },
     }));
     data.value = res.data || defaultManifestData;
-    webAnnotations.value = res.webAnnotations || {};
+    webAnnotations.value = res.webAnnotations || { perms: {} };
     return (res.data || defaultManifestData) as ISubscribeData;
   };
 
