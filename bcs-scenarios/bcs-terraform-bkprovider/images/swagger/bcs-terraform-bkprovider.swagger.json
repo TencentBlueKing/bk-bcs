@@ -134,6 +134,30 @@
         ]
       }
     },
+    "/terraform-bkprovider/v1/get_bk_outer_ip": {
+      "get": {
+        "summary": "获取蓝鲸出口IP",
+        "description": "获取蓝鲸出口IP",
+        "operationId": "BcsTerraformBkProvider_GetBkOuterIP",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsterraformbkproviderGetBkOuterIPResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "tags": [
+          "BcsTerraformBkProvider"
+        ]
+      }
+    },
     "/terraform-bkprovider/v1/get_job_detail": {
       "post": {
         "summary": "获取Job详情",
@@ -202,6 +226,30 @@
         ]
       }
     },
+    "/terraform-bkprovider/v1/list_bk_whitelist": {
+      "get": {
+        "summary": "查询蓝鲸白名单",
+        "description": "查询蓝鲸白名单",
+        "operationId": "BcsTerraformBkProvider_ListBkWhitelist",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsterraformbkproviderListBkWhiteListResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "tags": [
+          "BcsTerraformBkProvider"
+        ]
+      }
+    },
     "/terraform-bkprovider/v1/list_host": {
       "post": {
         "summary": "查询gse agent信息",
@@ -263,6 +311,40 @@
             "required": false,
             "type": "string",
             "format": "int64"
+          }
+        ],
+        "tags": [
+          "BcsTerraformBkProvider"
+        ]
+      }
+    },
+    "/terraform-bkprovider/v1/register_bk_whitelist": {
+      "post": {
+        "summary": "注册出口IP到蓝鲸白名单",
+        "description": "注册出口IP到蓝鲸白名单",
+        "operationId": "BcsTerraformBkProvider_RegisterBkWhitelist",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsterraformbkproviderRegisterBkWhitelistResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/bcsterraformbkproviderRegisterBkWhitelistRequest"
+            }
           }
         ],
         "tags": [
@@ -442,6 +524,32 @@
           "title": "value"
         }
       }
+    },
+    "bcsterraformbkproviderGetBkOuterIPResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "蓝鲸出口IP",
+          "title": "data"
+        }
+      },
+      "description": "蓝鲸出口IP",
+      "title": "GetBkOuterIPResponse"
     },
     "bcsterraformbkproviderGetJobDetailRequest": {
       "type": "object",
@@ -891,6 +999,32 @@
         }
       }
     },
+    "bcsterraformbkproviderListBkWhiteListResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "白名单IP",
+          "title": "data"
+        }
+      },
+      "description": "蓝鲸白名单",
+      "title": "ListBkWhiteListResponse"
+    },
     "bcsterraformbkproviderListHostData": {
       "type": "object",
       "properties": {
@@ -1099,6 +1233,44 @@
           "title": "port"
         }
       }
+    },
+    "bcsterraformbkproviderRegisterBkWhitelistRequest": {
+      "type": "object",
+      "properties": {
+        "ip_list": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "出口IP",
+          "title": "ip_list"
+        },
+        "biz_name": {
+          "type": "string",
+          "description": "业务名称， 用于白名单备注 ",
+          "title": "biz_name"
+        }
+      },
+      "description": "注册出口IP到蓝鲸白名单",
+      "title": "RegisterBkWhitelistRequest"
+    },
+    "bcsterraformbkproviderRegisterBkWhitelistResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        }
+      },
+      "description": "注册出口IP到蓝鲸白名单",
+      "title": "RegisterBkWhitelistResponse"
     },
     "bcsterraformbkproviderStatistics": {
       "type": "object",

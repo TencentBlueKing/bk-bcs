@@ -19,14 +19,17 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	BcsTerraformBkProvider_InstallJob_FullMethodName    = "/bcsterraformbkprovider.BcsTerraformBkProvider/InstallJob"
-	BcsTerraformBkProvider_ListHost_FullMethodName      = "/bcsterraformbkprovider.BcsTerraformBkProvider/ListHost"
-	BcsTerraformBkProvider_ListProxyHost_FullMethodName = "/bcsterraformbkprovider.BcsTerraformBkProvider/ListProxyHost"
-	BcsTerraformBkProvider_CreateCloud_FullMethodName   = "/bcsterraformbkprovider.BcsTerraformBkProvider/CreateCloud"
-	BcsTerraformBkProvider_UpdateCloud_FullMethodName   = "/bcsterraformbkprovider.BcsTerraformBkProvider/UpdateCloud"
-	BcsTerraformBkProvider_ListCloud_FullMethodName     = "/bcsterraformbkprovider.BcsTerraformBkProvider/ListCloud"
-	BcsTerraformBkProvider_DeleteCloud_FullMethodName   = "/bcsterraformbkprovider.BcsTerraformBkProvider/DeleteCloud"
-	BcsTerraformBkProvider_GetJobDetail_FullMethodName  = "/bcsterraformbkprovider.BcsTerraformBkProvider/GetJobDetail"
+	BcsTerraformBkProvider_InstallJob_FullMethodName          = "/bcsterraformbkprovider.BcsTerraformBkProvider/InstallJob"
+	BcsTerraformBkProvider_ListHost_FullMethodName            = "/bcsterraformbkprovider.BcsTerraformBkProvider/ListHost"
+	BcsTerraformBkProvider_ListProxyHost_FullMethodName       = "/bcsterraformbkprovider.BcsTerraformBkProvider/ListProxyHost"
+	BcsTerraformBkProvider_CreateCloud_FullMethodName         = "/bcsterraformbkprovider.BcsTerraformBkProvider/CreateCloud"
+	BcsTerraformBkProvider_UpdateCloud_FullMethodName         = "/bcsterraformbkprovider.BcsTerraformBkProvider/UpdateCloud"
+	BcsTerraformBkProvider_ListCloud_FullMethodName           = "/bcsterraformbkprovider.BcsTerraformBkProvider/ListCloud"
+	BcsTerraformBkProvider_DeleteCloud_FullMethodName         = "/bcsterraformbkprovider.BcsTerraformBkProvider/DeleteCloud"
+	BcsTerraformBkProvider_GetJobDetail_FullMethodName        = "/bcsterraformbkprovider.BcsTerraformBkProvider/GetJobDetail"
+	BcsTerraformBkProvider_RegisterBkWhitelist_FullMethodName = "/bcsterraformbkprovider.BcsTerraformBkProvider/RegisterBkWhitelist"
+	BcsTerraformBkProvider_ListBkWhitelist_FullMethodName     = "/bcsterraformbkprovider.BcsTerraformBkProvider/ListBkWhitelist"
+	BcsTerraformBkProvider_GetBkOuterIP_FullMethodName        = "/bcsterraformbkprovider.BcsTerraformBkProvider/GetBkOuterIP"
 )
 
 // BcsTerraformBkProviderClient is the client API for BcsTerraformBkProvider service.
@@ -41,6 +44,9 @@ type BcsTerraformBkProviderClient interface {
 	ListCloud(ctx context.Context, in *CloudListRequest, opts ...grpc.CallOption) (*CloudListResponse, error)
 	DeleteCloud(ctx context.Context, in *CloudDeleteRequest, opts ...grpc.CallOption) (*CloudDeleteResponse, error)
 	GetJobDetail(ctx context.Context, in *GetJobDetailRequest, opts ...grpc.CallOption) (*GetJobDetailResponse, error)
+	RegisterBkWhitelist(ctx context.Context, in *RegisterBkWhitelistRequest, opts ...grpc.CallOption) (*RegisterBkWhitelistResponse, error)
+	ListBkWhitelist(ctx context.Context, in *ListBkWhiteListRequest, opts ...grpc.CallOption) (*ListBkWhiteListResponse, error)
+	GetBkOuterIP(ctx context.Context, in *GetBkOuterIPRequest, opts ...grpc.CallOption) (*GetBkOuterIPResponse, error)
 }
 
 type bcsTerraformBkProviderClient struct {
@@ -123,6 +129,33 @@ func (c *bcsTerraformBkProviderClient) GetJobDetail(ctx context.Context, in *Get
 	return out, nil
 }
 
+func (c *bcsTerraformBkProviderClient) RegisterBkWhitelist(ctx context.Context, in *RegisterBkWhitelistRequest, opts ...grpc.CallOption) (*RegisterBkWhitelistResponse, error) {
+	out := new(RegisterBkWhitelistResponse)
+	err := c.cc.Invoke(ctx, BcsTerraformBkProvider_RegisterBkWhitelist_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *bcsTerraformBkProviderClient) ListBkWhitelist(ctx context.Context, in *ListBkWhiteListRequest, opts ...grpc.CallOption) (*ListBkWhiteListResponse, error) {
+	out := new(ListBkWhiteListResponse)
+	err := c.cc.Invoke(ctx, BcsTerraformBkProvider_ListBkWhitelist_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *bcsTerraformBkProviderClient) GetBkOuterIP(ctx context.Context, in *GetBkOuterIPRequest, opts ...grpc.CallOption) (*GetBkOuterIPResponse, error) {
+	out := new(GetBkOuterIPResponse)
+	err := c.cc.Invoke(ctx, BcsTerraformBkProvider_GetBkOuterIP_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // BcsTerraformBkProviderServer is the server API for BcsTerraformBkProvider service.
 // All implementations must embed UnimplementedBcsTerraformBkProviderServer
 // for forward compatibility
@@ -135,6 +168,9 @@ type BcsTerraformBkProviderServer interface {
 	ListCloud(context.Context, *CloudListRequest) (*CloudListResponse, error)
 	DeleteCloud(context.Context, *CloudDeleteRequest) (*CloudDeleteResponse, error)
 	GetJobDetail(context.Context, *GetJobDetailRequest) (*GetJobDetailResponse, error)
+	RegisterBkWhitelist(context.Context, *RegisterBkWhitelistRequest) (*RegisterBkWhitelistResponse, error)
+	ListBkWhitelist(context.Context, *ListBkWhiteListRequest) (*ListBkWhiteListResponse, error)
+	GetBkOuterIP(context.Context, *GetBkOuterIPRequest) (*GetBkOuterIPResponse, error)
 	mustEmbedUnimplementedBcsTerraformBkProviderServer()
 }
 
@@ -165,6 +201,15 @@ func (UnimplementedBcsTerraformBkProviderServer) DeleteCloud(context.Context, *C
 }
 func (UnimplementedBcsTerraformBkProviderServer) GetJobDetail(context.Context, *GetJobDetailRequest) (*GetJobDetailResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetJobDetail not implemented")
+}
+func (UnimplementedBcsTerraformBkProviderServer) RegisterBkWhitelist(context.Context, *RegisterBkWhitelistRequest) (*RegisterBkWhitelistResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RegisterBkWhitelist not implemented")
+}
+func (UnimplementedBcsTerraformBkProviderServer) ListBkWhitelist(context.Context, *ListBkWhiteListRequest) (*ListBkWhiteListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListBkWhitelist not implemented")
+}
+func (UnimplementedBcsTerraformBkProviderServer) GetBkOuterIP(context.Context, *GetBkOuterIPRequest) (*GetBkOuterIPResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetBkOuterIP not implemented")
 }
 func (UnimplementedBcsTerraformBkProviderServer) mustEmbedUnimplementedBcsTerraformBkProviderServer() {
 }
@@ -324,6 +369,60 @@ func _BcsTerraformBkProvider_GetJobDetail_Handler(srv interface{}, ctx context.C
 	return interceptor(ctx, in, info, handler)
 }
 
+func _BcsTerraformBkProvider_RegisterBkWhitelist_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RegisterBkWhitelistRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BcsTerraformBkProviderServer).RegisterBkWhitelist(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BcsTerraformBkProvider_RegisterBkWhitelist_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BcsTerraformBkProviderServer).RegisterBkWhitelist(ctx, req.(*RegisterBkWhitelistRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BcsTerraformBkProvider_ListBkWhitelist_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListBkWhiteListRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BcsTerraformBkProviderServer).ListBkWhitelist(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BcsTerraformBkProvider_ListBkWhitelist_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BcsTerraformBkProviderServer).ListBkWhitelist(ctx, req.(*ListBkWhiteListRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BcsTerraformBkProvider_GetBkOuterIP_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetBkOuterIPRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BcsTerraformBkProviderServer).GetBkOuterIP(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BcsTerraformBkProvider_GetBkOuterIP_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BcsTerraformBkProviderServer).GetBkOuterIP(ctx, req.(*GetBkOuterIPRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // BcsTerraformBkProvider_ServiceDesc is the grpc.ServiceDesc for BcsTerraformBkProvider service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -362,6 +461,18 @@ var BcsTerraformBkProvider_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetJobDetail",
 			Handler:    _BcsTerraformBkProvider_GetJobDetail_Handler,
+		},
+		{
+			MethodName: "RegisterBkWhitelist",
+			Handler:    _BcsTerraformBkProvider_RegisterBkWhitelist_Handler,
+		},
+		{
+			MethodName: "ListBkWhitelist",
+			Handler:    _BcsTerraformBkProvider_ListBkWhitelist_Handler,
+		},
+		{
+			MethodName: "GetBkOuterIP",
+			Handler:    _BcsTerraformBkProvider_GetBkOuterIP_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

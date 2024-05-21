@@ -10,11 +10,12 @@
  * limitations under the License.
  */
 
-package server
+package common
 
 import (
 	"crypto/tls"
 	"fmt"
+	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
@@ -27,7 +28,7 @@ type Etcd struct {
 	CA        string `json:"ca"`
 	Key       string `json:"key"`
 	Cert      string `json:"cert"`
-	tlsConfig *tls.Config
+	TlsConfig *tls.Config
 }
 
 // SwaggerConfig option for swagger
@@ -46,7 +47,7 @@ type ServerConfig struct {
 	ServerCert  string      `json:"servercert"`
 	ServerKey   string      `json:"serverkey"`
 	ServerCa    string      `json:"serverca"`
-	serverTLS   *tls.Config // nolint
+	ServerTLS   *tls.Config // nolint
 }
 
 // ClientConfig option for as client
@@ -54,7 +55,7 @@ type ClientConfig struct {
 	ClientCert string      `json:"clientcert"`
 	ClientKey  string      `json:"clientkey"`
 	ClientCa   string      `json:"clientca"`
-	clientTLS  *tls.Config // nolint
+	ClientTLS  *tls.Config // nolint
 }
 
 // AuthConfig config for auth
@@ -69,6 +70,19 @@ type BkSystemConfig struct {
 	BkAppCode   string `json:"bkAppCode"`
 	BkAppSecret string `json:"bkAppSecret"`
 	BkEnv       string `json:"bkEnv"`
+
+	// 蓝鲸网关白名单
+	BkAddressTemplateID string `json:"bkAddressTemplateID"`
+	// 蓝鲸出口IP
+	BkOuterIP string `json:"bkOuterIP"`
+}
+
+// TencentCloudConfig 腾讯云配置
+type TencentCloudConfig struct {
+	VpcDomain string `json:"vpcDomain"`
+	SecretID  string `json:"secretID"`
+	SecretKey string `json:"secretKey"`
+	Region    string `json:"region"`
 }
 
 // Options is the options for server
@@ -76,10 +90,14 @@ type Options struct {
 	conf.LogConfig
 	ServerConfig
 	ClientConfig
-	Registry *Etcd           `json:"registry"`
-	Swagger  *SwaggerConfig  `json:"swagger"`
-	Auth     *AuthConfig     `json:"auth"`
-	BkSystem *BkSystemConfig `json:"bkSystem"`
+	Registry     *Etcd               `json:"registry"`
+	Swagger      *SwaggerConfig      `json:"swagger"`
+	Auth         *AuthConfig         `json:"auth"`
+	BkSystem     *BkSystemConfig     `json:"bkSystem"`
+	TencentCloud *TencentCloudConfig `json:"tencentCloud"`
+
+	AdminUsersStr string   `json:"adminUsers"`
+	AdminUsers    []string `json:"-"`
 }
 
 // DefaultOptions create default options for server
@@ -104,13 +122,15 @@ func DefaultOptions() *Options {
 // Validate all config items
 func (opt *Options) Validate() error {
 
-	if opt.serverTLS == nil {
+	if opt.ServerTLS == nil {
 		return fmt.Errorf("lost server side TLS config")
 	}
-	if opt.Registry.tlsConfig == nil {
+	if opt.Registry.TlsConfig == nil {
 		return fmt.Errorf("lost registry TLS config")
 	}
-
+	if opt.AdminUsersStr != "" {
+		opt.AdminUsers = strings.Split(opt.AdminUsersStr, ",")
+	}
 	return nil
 }
 
@@ -123,7 +143,7 @@ func (opt *Options) Complete() error {
 	if err != nil {
 		return fmt.Errorf("loading etcd registry tls configuration failed, %s", err.Error())
 	}
-	opt.Registry.tlsConfig = etcdConfig
+	opt.Registry.TlsConfig = etcdConfig
 
 	// loading server tls configuration
 	svrConfig, err := ssl.ServerTslConfVerityClient(opt.ServerCa, opt.ServerCert,
@@ -131,7 +151,7 @@ func (opt *Options) Complete() error {
 	if err != nil {
 		return fmt.Errorf("loading server side tls config failed, %s", err.Error())
 	}
-	opt.serverTLS = svrConfig
+	opt.ServerTLS = svrConfig
 
 	// loading client tls configuration
 	cliConfig, err := ssl.ClientTslConfVerity(opt.ClientCa, opt.ClientCert,
@@ -139,7 +159,7 @@ func (opt *Options) Complete() error {
 	if err != nil {
 		return fmt.Errorf("loading client side tls configuration failed, %s", err.Error())
 	}
-	opt.clientTLS = cliConfig
+	opt.ClientTLS = cliConfig
 
 	return nil
 }

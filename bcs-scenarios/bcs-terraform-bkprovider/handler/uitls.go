@@ -35,3 +35,20 @@ func getUserInfo(ctx context.Context) (*middleware.AuthUser, uint32, string) {
 
 	return user, common.CodeSuccess, common.MsgSuccess
 }
+
+// stringInSlice returns true if given string in slice
+func stringInSlice(s string, l []string) bool {
+	for _, objStr := range l {
+		if s == objStr {
+			return true
+		}
+	}
+	return false
+}
+
+func getUint64Value(p *uint64) uint64 {
+	if p == nil {
+		return 0
+	}
+	return *p
+}

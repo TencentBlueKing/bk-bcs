@@ -36,6 +36,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-bkprovider/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-bkprovider/handler"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-bkprovider/pkg/middleware/auth"
 	pb "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-bkprovider/proto"
@@ -49,7 +50,7 @@ const (
 // Server devspace manager server
 type Server struct {
 	// server options
-	opt *Options
+	opt *common.Options
 	// context control for exit
 	svrContext context.Context
 	svrCancel  context.CancelFunc
@@ -62,7 +63,7 @@ type Server struct {
 }
 
 // NewServer create server
-func NewServer(opt *Options) *Server {
+func NewServer(opt *common.Options) *Server {
 	ctx, cancel := context.WithCancel(context.Background())
 	return &Server{
 		opt:        opt,
@@ -166,17 +167,17 @@ func (s *Server) initMicroService() error {
 	hosts := strings.Split(s.opt.Registry.Endpoints, ",")
 	globalRegistry := etcd.NewRegistry(
 		registry.Addrs(hosts...),
-		registry.TLSConfig(s.opt.Registry.tlsConfig),
+		registry.TLSConfig(s.opt.Registry.TlsConfig),
 	)
 	authWrapper := middleware.NewGoMicroAuth(s.JwtAuth.GetJWTClient()).
 		EnableSkipHandler(s.JwtAuth.SkipHandler)
 	// Create service
 	s.microService = micro.NewService(
 		micro.Server(grpcsvr.NewServer(
-			grpcsvr.AuthTLS(s.opt.serverTLS),
+			grpcsvr.AuthTLS(s.opt.ServerTLS),
 		)),
 		micro.Client(grpccli.NewClient(
-			grpccli.AuthTLS(s.opt.clientTLS),
+			grpccli.AuthTLS(s.opt.ClientTLS),
 		)),
 		micro.Name(defaultServiceName),
 		// context for exit control
@@ -195,7 +196,7 @@ func (s *Server) initMicroService() error {
 	// s.microService.Init()
 	// Register handler
 	if err := pb.RegisterBcsTerraformBkProviderHandler(s.microService.Server(),
-		handler.NewBcsApiHandler(s.opt.BkSystem.BkAppCode, s.opt.BkSystem.BkAppSecret, s.opt.BkSystem.BkEnv)); err != nil {
+		handler.NewBcsApiHandler(s.opt)); err != nil {
 		return fmt.Errorf("micro service registry handle failed, %s", err.Error())
 	}
 	blog.Infof("init go-micro service success")
@@ -219,7 +220,7 @@ func (s *Server) initGatewayServer() error {
 			return runtime.DefaultHeaderMatcher(s)
 		}),
 	)
-	opts := []grpc.DialOption{grpc.WithTransportCredentials(credentials.NewTLS(s.opt.clientTLS))}
+	opts := []grpc.DialOption{grpc.WithTransportCredentials(credentials.NewTLS(s.opt.ClientTLS))}
 	err := pb.RegisterBcsTerraformBkProviderGwFromEndpoint(
 		ctx, gMux, fmt.Sprintf("%s:%d", s.opt.Address, s.opt.Port), opts)
 	if err != nil {
@@ -231,7 +232,7 @@ func (s *Server) initGatewayServer() error {
 	s.gatewayServer = http.Server{
 		Addr:      fmt.Sprintf("%s:%d", s.opt.Address, s.opt.HTTPPort),
 		Handler:   mux,
-		TLSConfig: s.opt.serverTLS,
+		TLSConfig: s.opt.ServerTLS,
 	}
 	blog.Infof("init gateway server success")
 	return nil
