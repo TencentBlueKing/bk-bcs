@@ -170,13 +170,13 @@ func (cpi *CachePoolItem) Release(protocol string, startPort, endPort int) {
 }
 
 // SetPortUsed set port used
-func (cpi *CachePoolItem) SetPortUsed(protocol string, startPort, endPort int) {
+func (cpi *CachePoolItem) SetPortUsed(protocol string, startPort, endPort int, refType, refNs, refName string) {
 	list, ok := cpi.PortListMap[protocol]
 	if !ok {
 		blog.Warnf("protocol %s not found when set port used", protocol)
 		return
 	}
-	list.SetPortUsed(startPort, endPort)
+	list.SetPortUsed(startPort, endPort, refType, refNs, refName)
 }
 
 type poolItemStat struct {

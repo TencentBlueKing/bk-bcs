@@ -107,6 +107,18 @@ type PortBinding struct {
 	Status PortBindingStatus `json:"status,omitempty"`
 }
 
+func (pb *PortBinding) GetPortBindingType() string {
+	if pb.Labels == nil {
+		return PortBindingTypePod
+	}
+
+	if pType, ok := pb.Labels[PortBindingTypeLabelKey]; !ok {
+		return PortBindingTypePod
+	} else {
+		return pType
+	}
+}
+
 // +kubebuilder:object:root=true
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 

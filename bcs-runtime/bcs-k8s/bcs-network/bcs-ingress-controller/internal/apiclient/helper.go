@@ -55,7 +55,7 @@ func (m *MonitorHelper) EnsureUptimeCheck(ctx context.Context, listener *network
 		return 0, nil
 	}
 	taskName := genUptimeCheckTaskName(listener, m.bcsClusterID)
-	var cloudTask *UptimeCheckTask = nil
+	var cloudTask *UptimeCheckTask
 
 	taskResp, err := m.apiCli.ListUptimeCheckTask(ctx)
 	if err != nil {
@@ -75,7 +75,7 @@ func (m *MonitorHelper) EnsureUptimeCheck(ctx context.Context, listener *network
 			blog.Info("listener '%s/%s' empty targetGroup, delete uptime check task[%d]... ", listener.GetNamespace(),
 				listener.GetName(), cloudTask.ID)
 			if err = m.apiCli.DeleteUptimeCheckTask(ctx, cloudTask.ID); err != nil {
-				return 0, fmt.Errorf("delete uptime check task'%d' faield ,err: %w", cloudTask.ID, err)
+				return 0, fmt.Errorf("delete uptime check task'%d' faield ,err: %v", cloudTask.ID, err)
 			}
 			return 0, nil
 		}
@@ -87,35 +87,35 @@ func (m *MonitorHelper) EnsureUptimeCheck(ctx context.Context, listener *network
 		if m.compareUptimeCheckTask(cloudTask, createTaskReq) {
 			resp, err1 := m.apiCli.UpdateUptimeCheckTask(ctx, createTaskReq)
 			if err1 != nil {
-				return 0, fmt.Errorf("update uptime check task failed, err: %w", err1)
+				return 0, fmt.Errorf("update uptime check task failed, err: %v", err1)
 			}
 			if err = m.apiCli.DeployUptimeCheckTask(ctx, resp.Data.ID); err != nil {
-				return 0, fmt.Errorf("deploy uptime check task failed, err: %w", err)
+				return 0, fmt.Errorf("deploy uptime check task failed, err: %v", err)
 			}
 		}
 
 		return cloudTask.ID, nil
-	} else {
-		if listener.IsEmptyTargetGroup() {
-			blog.Info("listener '%s/%s' empty targetGroup, skip uptime check task... ", listener.GetNamespace(),
-				listener.GetName())
-			return 0, nil
-		}
-
-		createTaskReq, err := m.transUptimeCheckTask(ctx, listener)
-		if err != nil {
-			return 0, err
-		}
-
-		resp, err1 := m.apiCli.CreateUptimeCheckTask(ctx, createTaskReq)
-		if err1 != nil {
-			return 0, fmt.Errorf("create uptime check task failed, err: %w", err1)
-		}
-		if err = m.apiCli.DeployUptimeCheckTask(ctx, resp.Data.ID); err != nil {
-			return 0, fmt.Errorf("deploy uptime check task failed, err: %w", err)
-		}
-		return resp.Data.ID, nil
 	}
+
+	if listener.IsEmptyTargetGroup() {
+		blog.Info("listener '%s/%s' empty targetGroup, skip uptime check task... ", listener.GetNamespace(),
+			listener.GetName())
+		return 0, nil
+	}
+
+	createTaskReq, err := m.transUptimeCheckTask(ctx, listener)
+	if err != nil {
+		return 0, err
+	}
+
+	resp, err1 := m.apiCli.CreateUptimeCheckTask(ctx, createTaskReq)
+	if err1 != nil {
+		return 0, fmt.Errorf("create uptime check task failed, err: %v", err1)
+	}
+	if err = m.apiCli.DeployUptimeCheckTask(ctx, resp.Data.ID); err != nil {
+		return 0, fmt.Errorf("deploy uptime check task failed, err: %v", err)
+	}
+	return resp.Data.ID, nil
 }
 
 // DeleteUptimeCheckTask delete uptime check task
@@ -132,36 +132,36 @@ func (m *MonitorHelper) transUptimeCheckTask(ctx context.Context, listener *netw
 		return nil, nil
 	}
 
-	config := listener.Spec.ListenerAttribute.UptimeCheck
+	uptimeCheckConfig := listener.Spec.ListenerAttribute.UptimeCheck
 
-	nodeIDList, err := m.getNodeIDList(ctx, config.Nodes)
+	nodeIDList, err := m.getNodeIDList(ctx, uptimeCheckConfig.Nodes)
 	if err != nil {
 		return nil, fmt.Errorf("get node id list for listener '%s/%s' failed, err: %v", listener.GetNamespace(),
 			listener.GetName(), err)
 	}
 
 	req := &CreateOrUpdateUptimeCheckTaskRequest{
-		Protocol:   config.Protocol,
+		Protocol:   uptimeCheckConfig.Protocol,
 		NodeIDList: nodeIDList,
 		Config: Config{
-			// IPList:            config.Target, // set target from lb.IP or dnsName
-			Period:            config.Period,
-			ResponseFormat:    config.ResponseFormat,
-			Response:          config.Response,
-			Timeout:           config.Timeout,
-			Port:              strconv.FormatInt(config.Port, 10), // 对于端口段监听器， 也只拨测首端口
-			Request:           config.Request,
-			RequestFormat:     config.RequestFormat,
+			// IPList:            uptimeCheckConfig.Target, // set target from lb.IP or dnsName
+			Period:            uptimeCheckConfig.Period,
+			ResponseFormat:    uptimeCheckConfig.ResponseFormat,
+			Response:          uptimeCheckConfig.Response,
+			Timeout:           uptimeCheckConfig.Timeout,
+			Port:              strconv.FormatInt(uptimeCheckConfig.Port, 10), // 对于端口段监听器， 也只拨测首端口
+			Request:           uptimeCheckConfig.Request,
+			RequestFormat:     uptimeCheckConfig.RequestFormat,
 			WaitEmptyResponse: true,
 		},
 		Name:        genUptimeCheckTaskName(listener, m.bcsClusterID),
 		GroupIDList: []int64{},
 	}
 
-	if len(config.URLList) != 0 {
-		req.Config.URLList = config.URLList
+	if len(uptimeCheckConfig.URLList) != 0 {
+		req.Config.URLList = uptimeCheckConfig.URLList
 		req.Config.DNSCheckMode = "all"
-		req.Config.TargetIPType = 4 // todo ipv6
+		req.Config.TargetIPType = 4
 	} else {
 		// get target info from listener's lbID
 		var lbObj *cloud.LoadBalanceObject
@@ -183,12 +183,20 @@ func (m *MonitorHelper) transUptimeCheckTask(ctx context.Context, listener *netw
 				req.Config.URLList = []string{fmt.Sprintf("http://%s", lbObj.DNSName)}
 			}
 			req.Config.DNSCheckMode = "all"
-			req.Config.TargetIPType = 4 // todo ipv6
+			req.Config.TargetIPType = 4
 		} else if len(lbObj.IPs) != 0 {
 			req.Config.IPList = lbObj.IPs
 		}
 	}
 
+	m.fillCreateOrUpdateReqDefault(req, listener)
+
+	return req, nil
+}
+
+func (m *MonitorHelper) fillCreateOrUpdateReqDefault(req *CreateOrUpdateUptimeCheckTaskRequest,
+	listener *networkextensionv1.Listener) {
+	uptimeCheckConfig := listener.Spec.ListenerAttribute.UptimeCheck
 	// set default
 	if req.Config.Period == 0 {
 		req.Config.Period = 60
@@ -213,30 +221,30 @@ func (m *MonitorHelper) transUptimeCheckTask(ctx context.Context, listener *netw
 		req.Config.Port = strconv.Itoa(listener.Spec.Port)
 	}
 
-	req.Config.Method = config.Method
+	req.Config.Method = uptimeCheckConfig.Method
 	if req.Config.Method == "" {
 		req.Config.Method = httpMethodGet
 	}
 
-	if config.Authorize != nil {
+	if uptimeCheckConfig.Authorize != nil {
 		req.Config.Authorize = &Authorize{
-			AuthType: config.Authorize.AuthType,
+			AuthType: uptimeCheckConfig.Authorize.AuthType,
 			AuthConfig: &AuthConfig{
-				Token:    config.Authorize.AuthConfig.Token,
-				UserName: config.Authorize.AuthConfig.UserName,
-				PassWord: config.Authorize.AuthConfig.PassWord,
+				Token:    uptimeCheckConfig.Authorize.AuthConfig.Token,
+				UserName: uptimeCheckConfig.Authorize.AuthConfig.UserName,
+				PassWord: uptimeCheckConfig.Authorize.AuthConfig.PassWord,
 			},
-			InsecureSkipVerify: config.Authorize.InsecureSkipVerify,
+			InsecureSkipVerify: uptimeCheckConfig.Authorize.InsecureSkipVerify,
 		}
 	}
-	if config.Body != nil {
+	if uptimeCheckConfig.Body != nil {
 		req.Config.Body = &Body{
-			DataType:    config.Body.DataType,
-			Content:     config.Body.Content,
-			ContentType: config.Body.ContentType,
+			DataType:    uptimeCheckConfig.Body.DataType,
+			Content:     uptimeCheckConfig.Body.Content,
+			ContentType: uptimeCheckConfig.Body.ContentType,
 		}
 
-		for _, param := range config.Body.Params {
+		for _, param := range uptimeCheckConfig.Body.Params {
 			req.Config.Body.Params = append(req.Config.Body.Params, &Params{
 				IsEnabled: param.IsEnabled,
 				Key:       param.Key,
@@ -246,8 +254,8 @@ func (m *MonitorHelper) transUptimeCheckTask(ctx context.Context, listener *netw
 		}
 	}
 
-	if len(config.QueryParams) != 0 {
-		for _, param := range config.QueryParams {
+	if len(uptimeCheckConfig.QueryParams) != 0 {
+		for _, param := range uptimeCheckConfig.QueryParams {
 			req.Config.QueryParams = append(req.Config.QueryParams, &Params{
 				IsEnabled: param.IsEnabled,
 				Key:       param.Key,
@@ -257,8 +265,8 @@ func (m *MonitorHelper) transUptimeCheckTask(ctx context.Context, listener *netw
 		}
 	}
 
-	if len(config.Headers) != 0 {
-		for _, param := range config.Headers {
+	if len(uptimeCheckConfig.Headers) != 0 {
+		for _, param := range uptimeCheckConfig.Headers {
 			req.Config.Headers = append(req.Config.Headers, &Params{
 				IsEnabled: param.IsEnabled,
 				Key:       param.Key,
@@ -268,10 +276,9 @@ func (m *MonitorHelper) transUptimeCheckTask(ctx context.Context, listener *netw
 		}
 	}
 
-	if config.ResponseCode != "" {
-		req.Config.ResponseCode = config.ResponseCode
+	if uptimeCheckConfig.ResponseCode != "" {
+		req.Config.ResponseCode = uptimeCheckConfig.ResponseCode
 	}
-	return req, nil
 }
 
 // getNodeIDList nodes can be node ip or node name
