@@ -406,7 +406,7 @@ func (s *Service) ClientLabelStatistics(ctx context.Context, req *pbclient.Clien
 	}
 
 	countByKvs := make(map[types.PrimaryAndForeign]*types.PrimaryAndForeign)
-	if len(labelKvs) == 2 && len(labelKeys) == 0 {
+	if len(labelKvs) > 0 && len(labelKeys) == 0 {
 		countByKvs = dataDrilldown(labelKvs, labels)
 	}
 	if len(labelKeys) > 0 && len(labelKvs) == 0 {
@@ -450,12 +450,15 @@ func dataDrilldown(labelKvs []types.PrimaryAndForeign,
 		if label[labelKvs[0].ForeignKey] == "" || label[labelKvs[0].ForeignKey] != labelKvs[0].ForeignVal {
 			continue
 		}
-		if label[labelKvs[1].ForeignKey] == "" || label[labelKvs[1].ForeignKey] != labelKvs[1].ForeignVal {
-			continue
+		if len(labelKvs) == 2 {
+			if label[labelKvs[1].ForeignKey] == "" || label[labelKvs[1].ForeignKey] != labelKvs[1].ForeignVal {
+				continue
+			}
 		}
 
 		key := types.PrimaryAndForeign{
 			PrimaryKey: labelKvs[0].PrimaryKey,
+			PrimaryVal: label[labelKvs[0].PrimaryKey],
 		}
 		if _, ok := data[key]; !ok {
 			data[key] = &types.PrimaryAndForeign{
