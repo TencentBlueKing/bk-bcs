@@ -105,17 +105,21 @@ func (as *apiServer) listenAndServe() error {
 
 	network := cc.ApiServer().Network
 	addr := tools.GetListenAddr(network.BindIP, int(network.HttpPort))
-	ipv6Addr := tools.GetListenAddr(network.BindIPv6, int(network.HttpPort))
 	dualStackListener := listener.NewDualStackListener()
 	if e := dualStackListener.AddListenerWithAddr(addr); e != nil {
 		return e
 	}
+	logs.Infof("http server listen address: %s", addr)
 
-	if network.BindIPv6 != "" && network.BindIPv6 != network.BindIP {
-		if e := dualStackListener.AddListenerWithAddr(ipv6Addr); e != nil {
+	for _, ip := range network.BindIPs {
+		if ip == network.BindIP {
+			continue
+		}
+		ipAddr := tools.GetListenAddr(ip, int(network.HttpPort))
+		if e := dualStackListener.AddListenerWithAddr(ipAddr); e != nil {
 			return e
 		}
-		logs.Infof("api serve dualStackListener with ipv6: %s", ipv6Addr)
+		logs.Infof("http server listen address: %s", ipAddr)
 	}
 
 	handler, err := as.service.Handler()
@@ -159,7 +163,6 @@ func (as *apiServer) listenAndServe() error {
 			}
 		}()
 	}
-	logs.Infof("api server listen and serve success. addr=%s", addr)
 
 	return nil
 }
