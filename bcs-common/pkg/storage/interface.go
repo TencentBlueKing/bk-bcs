@@ -14,12 +14,11 @@
 package storage
 
 import (
+	"context"
 	"errors"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/meta"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/watch"
-
-	"golang.org/x/net/context"
 )
 
 var (

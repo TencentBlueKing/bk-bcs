@@ -16,13 +16,12 @@ package msgqueue
 import (
 	"time"
 
-	"github.com/micro/go-micro/v2/broker"
-	"github.com/micro/go-plugins/broker/rabbitmq/v2"
-	"github.com/micro/go-plugins/broker/stan/v2"
+	"github.com/go-micro/plugins/v4/broker/rabbitmq"
+	"github.com/go-micro/plugins/v4/broker/stan"
 	"github.com/pkg/errors"
+	"go-micro.dev/v4/broker"
 )
 
-// rabbitmqBroker xxx
 // rabbitmq broker init: brokerOptions/init/connect
 func rabbitmqBroker(q *QueueOptions) (broker.Broker, error) {
 	var brokerOpts []broker.Option
@@ -42,18 +41,18 @@ func rabbitmqBroker(q *QueueOptions) (broker.Broker, error) {
 	// init rabbitmq broker
 	err := brokerRabbit.Init()
 	if err != nil {
-		return nil, errors.Wrapf(err, "brokerRabbitmq init failed.")
+		return nil, errors.Wrapf(err, "brokerRabbitmq init failed")
 	}
 
 	// create connect
 	if err = brokerRabbit.Connect(); err != nil {
-		return nil, errors.Wrapf(err, "can't connect to rabbit broker.")
+		return nil, errors.Wrapf(err, "can't connect to rabbit broker")
 	}
 
 	return brokerRabbit, nil
 }
 
-// natstreamingBroker broker init: natsreaming options/init/connect
+// natstreaming broker init: natsreaming options/init/connect
 func natstreamingBroker(q *QueueOptions) (broker.Broker, error) {
 	var brokerOpts []broker.Option
 	brokerOpts = append(brokerOpts, stan.ClusterID(q.NatsOptions.ClusterID), broker.Addrs(q.CommonOptions.Address))
@@ -67,12 +66,12 @@ func natstreamingBroker(q *QueueOptions) (broker.Broker, error) {
 	// init natstreaming broker
 	err := brokerNatstreaming.Init()
 	if err != nil {
-		return nil, errors.Wrapf(err, "brokerNatstreaming init failed.")
+		return nil, errors.Wrapf(err, "brokerNatstreaming init failed")
 	}
 
 	// create connect
 	if err = brokerNatstreaming.Connect(); err != nil {
-		return nil, errors.Wrapf(err, "can't connect to natstreaming broker.")
+		return nil, errors.Wrapf(err, "can't connect to natstreaming broker")
 	}
 
 	return brokerNatstreaming, nil
