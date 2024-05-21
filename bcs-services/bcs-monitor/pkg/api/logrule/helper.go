@@ -452,20 +452,8 @@ func getBkLogDeleteMessage(isFileDeleted, isSTDDeleted bool, originMessage strin
 }
 
 // getContainerQueryLogLinks get container query log links
-func getContainerQueryLogLinks(containerIDs []string, stdIndexSetID, fileIndexSetID int,
-	projectCode string) map[string]Entrypoint {
-	defaultEntrypoint := Entrypoint{
-		STDLogURL:  fmt.Sprintf("%s/#/retrieve", config.G.BKLog.Entrypoint),
-		FileLogURL: fmt.Sprintf("%s/#/retrieve", config.G.BKLog.Entrypoint),
-	}
+func getContainerQueryLogLinks(containerIDs []string, projectCode, clusterID string) map[string]Entrypoint {
 	result := make(map[string]Entrypoint, 0)
-	if stdIndexSetID == 0 || fileIndexSetID == 0 {
-		for _, v := range containerIDs {
-			result[v] = defaultEntrypoint
-		}
-		return result
-	}
-
 	type addition struct {
 		Field    string `json:"field"`
 		Operator string `json:"operator"`
@@ -477,11 +465,12 @@ func getContainerQueryLogLinks(containerIDs []string, stdIndexSetID, fileIndexSe
 		addition := []addition{{Field: "__ext.container_id", Operator: "=", Value: id}}
 		additionData, _ := json.Marshal(addition)
 		query := url.Values{}
-		query.Add("spaceUid", GetSpaceID(projectCode))
 		query.Add("addition", string(additionData))
+		query.Add("spaceUid", GetSpaceID(projectCode))
+		query.Add("tags", clusterID)
 		result[v] = Entrypoint{
-			STDLogURL:  fmt.Sprintf("%s/#/retrieve/%d?%s", config.G.BKLog.Entrypoint, stdIndexSetID, query.Encode()),
-			FileLogURL: fmt.Sprintf("%s/#/retrieve/%d?%s", config.G.BKLog.Entrypoint, fileIndexSetID, query.Encode()),
+			STDLogURL:  fmt.Sprintf("%s/#/retrieve/?%s", config.G.BKLog.Entrypoint, query.Encode()),
+			FileLogURL: fmt.Sprintf("%s/#/retrieve/?%s", config.G.BKLog.Entrypoint, query.Encode()),
 		}
 	}
 	return result
