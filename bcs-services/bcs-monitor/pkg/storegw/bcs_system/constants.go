@@ -33,6 +33,8 @@ var AvailableNodeMetrics = []string{
 	"bcs:cluster:diskio:usage",
 	"bcs:cluster:diskio:used",
 	"bcs:cluster:diskio:total",
+	"bcs:cluster:group:node_num",
+	"bcs:cluster:group:max_node_num",
 	"bcs:node:info",
 	"bcs:node:cpu:total",
 	"bcs:node:cpu:used",
