@@ -10,6 +10,7 @@ export interface ISearchCondition {
   key: string;
   value: string;
   content: string;
+  isEdit: boolean;
 }
 
 // 客户端查询条件公共接口
@@ -43,6 +44,8 @@ export interface IClientSearchParams {
   online_status?: string[];
   client_version?: string;
   client_type?: string;
+  start_pull_time?: string;
+  end_pull_time?: string;
 }
 
 export interface IGetClientSearchListQuery {

@@ -296,7 +296,7 @@
   const handleDownloadFile = async () => {
     const { signature, name } = content.value as IFileConfigContentSummary;
     const getContent = props.type === 'template' ? downloadTemplateContent : downloadConfigContent;
-    const res = await getContent(props.bkBizId, props.id, signature);
+    const res = await getContent(props.bkBizId, props.id, signature, true);
     fileDownload(res, name);
   };
 

@@ -14,14 +14,14 @@ export const transFileToObject = (file: File) => {
 };
 
 // 文件下载
-export const fileDownload = (content = '', name = '', isBlob = true) => {
+export const fileDownload = (content: string | Blob = '', name = '', isBlob = true) => {
   let url = '';
   if (isBlob) {
     // 定义MIME类型为二进制流，避免浏览器为文件名称默认添加.txt后缀
     const blob = new Blob([content], { type: 'application/octet-stream' });
     url = window.URL.createObjectURL(blob);
   } else {
-    url = content;
+    url = content as string;
   }
   const eleLink = document.createElement('a');
   eleLink.style.display = 'none';

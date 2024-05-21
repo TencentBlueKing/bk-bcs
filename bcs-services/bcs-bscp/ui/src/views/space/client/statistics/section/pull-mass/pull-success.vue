@@ -145,7 +145,7 @@
       label: {
         type: 'inner',
         offset: '-30%',
-        content: ({ percent }) => `${(percent * 100).toFixed(0)}%`,
+        content: ({ percent }) => `${(percent * 100).toFixed(1)}%`,
         style: {
           fontSize: 14,
           textAlign: 'center',
@@ -153,6 +153,13 @@
         autoRotate: false,
       },
       interactions: [{ type: 'element-highlight' }],
+      state: {
+        active: {
+          style: {
+            stroke: '#ffffff',
+          },
+        },
+      },
       legend: {
         position: 'bottom',
       },

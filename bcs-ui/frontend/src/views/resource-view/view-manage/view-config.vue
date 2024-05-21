@@ -16,8 +16,7 @@
                 :style="collapse ? 'transform: rotate(-90deg);' : 'transform: rotate(0deg);'">
                 <i class="bcs-icon bcs-icon-down-shape"></i>
               </span>
-              <span class="bcs-ellipsis font-bold" v-bk-overflow-tips>{{ curViewName }}</span>
-              <span class="font-bold ml-[2px]" v-if="originViewFilterCount">({{ originViewFilterCount }})</span>
+              <span class="bcs-ellipsis font-bold">{{ $t('view.labels.viewDataRange') }}</span>
               <i
                 class="bcs-icon bcs-icon-alarm-insufficient text-[14px] text-[#FFB848] ml-[8px]"
                 v-if="unknownClusterID"
@@ -360,10 +359,6 @@ const initViewData = {
   clusterNamespaces: [],
 };
 const originViewData = ref<IViewData>(cloneDeep(initViewData));
-const originViewFilterCount = computed(() => {
-  const filterData = originViewData.value?.filter || {};
-  return Object.keys(filterData)?.filter(key => filterData[key]?.length)?.length;
-});
 // 当前视图临时数据
 const parseCurTmpViewData = computed(() => {
   const data = cloneDeep(curTmpViewData.value);

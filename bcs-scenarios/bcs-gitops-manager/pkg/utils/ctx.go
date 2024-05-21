@@ -80,3 +80,16 @@ func IsArgoNotFoundAsPartOf(err error) bool {
 	}
 	return strings.Contains(err.Error(), "not found as part of")
 }
+
+// IsUnexpectedEndOfJSON check the error is unexpected json
+func IsUnexpectedEndOfJSON(err error) bool {
+	if err == nil {
+		return false
+	}
+	return strings.Contains(err.Error(), "unexpected end of JSON input")
+}
+
+// NeedRetry defines which error need retry
+func NeedRetry(err error) bool {
+	return IsContextDeadlineExceeded(err) || IsUnexpectedEndOfJSON(err)
+}

@@ -4,7 +4,7 @@
     <template v-if="showClusterField">
       <div class="h-[20px]">
         {{ $t('view.labels.clusterAndNs') }}
-        <PopoverSelector offset="0, 6">
+        <PopoverSelector offset="12, 6" placement="bottom-start">
           <i
             :class="[
               'bcs-icon bcs-icon-pilianggouxuan',

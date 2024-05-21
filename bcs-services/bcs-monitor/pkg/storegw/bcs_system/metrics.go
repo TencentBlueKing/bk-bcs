@@ -30,6 +30,8 @@ type metricsParams struct {
 	projectID string
 	clusterID string
 	namespace string
+	// group params
+	group string
 	// pod params
 	podName        string
 	podNames       []string
@@ -140,6 +142,16 @@ var metricsMaps = map[string]metricsFn{
 	// GetClusterDiskioTotal
 	"bcs:cluster:diskio:total": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
 		return mp.client.GetClusterDiskioTotal(mp.ctx, mp.projectID, mp.clusterID,
+			mp.startTime, mp.endTime, mp.stepDuration)
+	},
+	// GetClusterGroupNodeNum
+	"bcs:cluster:group:node_num": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
+		return mp.client.GetClusterGroupNodeNum(mp.ctx, mp.projectID, mp.clusterID, mp.group,
+			mp.startTime, mp.endTime, mp.stepDuration)
+	},
+	// GetClusterGroupMaxNodeNum
+	"bcs:cluster:group:max_node_num": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
+		return mp.client.GetClusterGroupMaxNodeNum(mp.ctx, mp.projectID, mp.clusterID, mp.group,
 			mp.startTime, mp.endTime, mp.stepDuration)
 	},
 	// node metrics

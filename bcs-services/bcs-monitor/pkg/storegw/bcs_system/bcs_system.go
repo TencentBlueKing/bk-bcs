@@ -145,6 +145,11 @@ func (s *BCSSystemStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 		return err
 	}
 
+	group, err := clientutil.GetLabelMatchValue("group", r.Matchers)
+	if err != nil {
+		return err
+	}
+
 	podNameList, err := clientutil.GetLabelMatchValues("pod_name", r.Matchers)
 	if err != nil {
 		return err
@@ -177,6 +182,7 @@ func (s *BCSSystemStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 		projectID:      cluster.ProjectID,
 		clusterID:      cluster.ClusterID,
 		namespace:      namespace,
+		group:          group,
 		podName:        podName,
 		podNames:       podNameList,
 		containerNames: containerNameList,
