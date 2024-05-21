@@ -41,25 +41,29 @@
               @click="handleConditionClick($event, condition)">
               {{ condition.content }}
             </bk-tag>
-            <bk-input
+            <input
               v-else
               v-model="editSearchStr"
               ref="editInputRef"
               class="input"
               placeholder=" "
               @blur="handleConditionEdit(condition)"
-              @enter="handleConditionEdit(condition)" />
+              @keydown="handleEnterConditionEdit($event, condition)"
+              @compositionstart="isComposing = true"
+              @compositionend="isComposing = false" />
           </div>
         </div>
         <div class="search-container-input" ref="inputWrapRef">
-          <bk-input
+          <input
             v-model="searchStr"
             ref="inputRef"
             class="input"
             placeholder=" "
             @focus="inputFocus = true"
             @blur="handleConfirmConditionItem"
-            @enter="handleConfirmConditionItem" />
+            @keydown="handleEnterAddConditionItem"
+            @compositionstart="isComposing = true"
+            @compositionend="isComposing = false" />
         </div>
         <div
           v-if="searchConditionList.length && isClientSearch"
@@ -217,6 +221,14 @@
   const inputWrapRef = ref();
   const dateTime = ref(getTimeRange(1));
   const datePickerRef = ref();
+  const isComposing = ref(false); // 是否使用输入法
+
+  watch(
+    () => isComposing.value,
+    () => {
+      console.log(1);
+    },
+  );
 
   const inputPlacehoder = computed(() => {
     if (searchConditionList.value.length || searchStr.value || inputFocus.value) return '';
@@ -245,7 +257,6 @@
       // 搜索框和查询条件都为空时不需要转换查询参数
       if (searchConditionList.value.length === 0 && Object.keys(searchQuery.value.search!).length === 0) return;
       handleSearchConditionChangeQuery();
-      parentSelecte.value = undefined;
     },
     { deep: true },
   );
@@ -352,7 +363,6 @@
       searchStr.value = '';
       return;
     }
-    console.log('hasContent');
     // 添加默认查询条件ip
     if (!parentSelecte.value?.value) {
       parentSelecte.value = selectorData.value.find((item) => {
@@ -373,6 +383,17 @@
     searchStr.value = '';
     isShowPopover.value = false;
     inputRef.value.blur();
+    parentSelecte.value = undefined;
+  };
+
+  const handleEnterAddConditionItem = (e: any) => {
+    if (e.keyCode === 13) {
+      if (isComposing.value) {
+        e.preventDefault();
+      } else {
+        handleConfirmConditionItem();
+      }
+    }
   };
 
   const handleDateChange = (val: string[]) => {
@@ -543,7 +564,7 @@
         const labelValue = query[key];
         Object.keys(labelValue).forEach((label) => {
           const value = labelValue[label] || '';
-          const content = value ? `${t('标签')}:${label}=${labelValue[label]}` : `${t('标签')}:${label}`;
+          const content = value ? `${t('标签')} : ${label}=${labelValue[label]}` : `${t('标签')} : ${label}`;
           searchList.push({
             key,
             value: `${label}=${value}`,
@@ -637,6 +658,16 @@
     parentSelecte.value = undefined;
   };
 
+  const handleEnterConditionEdit = (e: any, condition: ISearchCondition) => {
+    if (e.keyCode === 13) {
+      if (isComposing.value) {
+        e.preventDefault();
+      } else {
+        handleConditionEdit(condition);
+      }
+    }
+  };
+
   const handleDatePickerOpenChange = (open: boolean) => {
     if (open) {
       isShowPopover.value = false;
@@ -683,9 +714,7 @@
         height: 100%;
         outline: none;
         box-shadow: none;
-        :deep(input) {
-          width: fit-content;
-        }
+        color: #63656e;
       }
     }
     .search-condition-list {
