@@ -147,6 +147,5 @@
   }
   .config-list-table {
     height: calc(100% - 64px);
-    overflow: auto;
   }
 </style>
