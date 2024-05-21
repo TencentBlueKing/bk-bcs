@@ -354,13 +354,13 @@ func (req CreateNodePoolRequest) trans2NodePoolTemplate() *model.CreateNodePoolR
 						"NodeInitial", // 新增节点调度策略: 设置为不可调度
 					},
 					ExtendParam: &model.NodeExtendParam{
-						MaxPods:             &req.Spec.Template.MaxPod,
-						PeriodType:          &periodType,
-						PeriodNum:           &periodNum,
-						IsAutoRenew:         &isAutoRenew,
-						IsAutoPay:           &isAutoPay,
-						AlphaCcePreInstall:  &req.Spec.Template.PreScript,
-						AlphaCcePostInstall: &req.Spec.Template.PostScript,
+						MaxPods:            &req.Spec.Template.MaxPod,
+						PeriodType:         &periodType,
+						PeriodNum:          &periodNum,
+						IsAutoRenew:        &isAutoRenew,
+						IsAutoPay:          &isAutoPay,
+						AlphaCcePreInstall: &req.Spec.Template.PreScript,
+						//AlphaCcePostInstall: &req.Spec.Template.PostScript, 后置脚本由蓝鲸的job任务执行
 					},
 					NodeNicSpec: &model.NodeNicSpec{
 						PrimaryNic: &model.NicSpec{SubnetId: &req.Spec.SubnetId},

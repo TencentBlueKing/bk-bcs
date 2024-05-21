@@ -55,12 +55,14 @@ func ApplyInstanceMachinesTask(taskID string, stepName string) error {
 	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
 	desiredNodes := step.Params[cloudprovider.ScalingNodesNumKey.String()]
 	nodeNum, _ := strconv.Atoi(desiredNodes)
+	manual := state.Task.CommonParams[cloudprovider.ManualKey.String()]
 	operator := step.Params[cloudprovider.OperatorKey.String()]
 
 	if len(clusterID) == 0 || len(nodeGroupID) == 0 || len(cloudID) == 0 ||
 		len(desiredNodes) == 0 || len(operator) == 0 {
 		blog.Errorf("ApplyInstanceMachinesTask[%s]: check parameter validate failed", taskID)
 		retErr := fmt.Errorf("ApplyInstanceMachinesTask check parameters failed")
+		_ = cloudprovider.DeleteVirtualNodes(clusterID, nodeGroupID, taskID)
 		_ = cloudprovider.UpdateNodeGroupDesiredSize(nodeGroupID, nodeNum, true)
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
@@ -74,7 +76,11 @@ func ApplyInstanceMachinesTask(taskID string, stepName string) error {
 	if err != nil {
 		blog.Errorf("ApplyInstanceMachinesTask[%s]: GetClusterDependBasicInfo failed: %s", taskID, err.Error())
 		retErr := fmt.Errorf("ApplyInstanceMachinesTask GetClusterDependBasicInfo failed")
-		_ = cloudprovider.UpdateNodeGroupDesiredSize(nodeGroupID, nodeNum, true)
+		if manual == common.True {
+			_ = cloudprovider.UpdateVirtualNodeStatus(clusterID, nodeGroupID, taskID)
+		} else {
+			_ = cloudprovider.UpdateNodeGroupDesiredSize(nodeGroupID, nodeNum, true)
+		}
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
@@ -91,9 +97,27 @@ func ApplyInstanceMachinesTask(taskID string, stepName string) error {
 	}
 
 	// trans success nodes to cm DB and record common paras, not handle error
-	_ = recordClusterInstanceToDB(ctx, state, dependInfo, nodeNum)
+	err = recordClusterInstanceToDB(ctx, state, dependInfo, nodeNum)
+	if err != nil {
+		blog.Errorf("ApplyInstanceMachinesTask[%s]: recordClusterInstanceToDB failed: %s",
+			taskID, err.Error())
+		retErr := fmt.Errorf("ApplyInstanceMachinesTask applyInstanceMachines failed %s", err.Error())
+		if manual == common.True {
+			_ = cloudprovider.UpdateVirtualNodeStatus(clusterID, nodeGroupID, taskID)
+		} else {
+			_ = cloudprovider.UpdateNodeGroupDesiredSize(nodeGroupID, nodeNum, true)
+		}
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
+	}
 
 	blog.Infof("ApplyInstanceMachinesTask[%s]: call updateDesiredNodes successful", taskID)
+
+	// destroy virtual nodes
+	if manual == common.True {
+		blog.Infof("ApplyInstanceMachinesTask[%s] begin DeleteVirtualNodes", taskID)
+		_ = cloudprovider.DeleteVirtualNodes(clusterID, nodeGroupID, taskID)
+	}
 
 	// update step
 	if err = state.UpdateStepSucc(start, stepName); err != nil {
@@ -186,6 +210,8 @@ func recordClusterInstanceToDB(ctx context.Context, state *cloudprovider.TaskSta
 		blog.Errorf("recordClusterInstanceToDB[%s] transInstancesToNode failed: %v", taskID, err)
 	}
 	if len(nodeIPs) > 0 {
+		state.Task.NodeIPList = nodeIPs
+		state.Task.CommonParams[cloudprovider.OriginNodeIPsKey.String()] = strings.Join(nodeIPs, ",")
 		state.Task.CommonParams[cloudprovider.NodeIPsKey.String()] = strings.Join(nodeIPs, ",")
 	}
 
@@ -326,6 +352,9 @@ func CheckClusterNodesStatusTask(taskID string, stepName string) error {
 		return retErr
 	}
 
+	// trans instanceIDs to ipList
+	ipList := cloudprovider.GetInstanceIPsByID(ctx, successInstances)
+
 	// update response information to task common params
 	if state.Task.CommonParams == nil {
 		state.Task.CommonParams = make(map[string]string)
@@ -337,6 +366,13 @@ func CheckClusterNodesStatusTask(taskID string, stepName string) error {
 	}
 	if len(failureInstances) > 0 {
 		state.Task.CommonParams[cloudprovider.FailedClusterNodeIDsKey.String()] = strings.Join(failureInstances, ",")
+	}
+
+	// successInstance ip list
+	if len(ipList) > 0 {
+		state.Task.CommonParams[cloudprovider.DynamicNodeIPListKey.String()] = strings.Join(ipList, ",")
+		state.Task.CommonParams[cloudprovider.NodeIPsKey.String()] = strings.Join(ipList, ",")
+		state.Task.NodeIPList = ipList
 	}
 
 	// update step

@@ -26,6 +26,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/huawei/tasks"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/template"
 )
 
 var taskMgr sync.Once
@@ -58,6 +59,7 @@ func newtask() *Task {
 
 	// clean node in nodeGroup task
 	task.works[cleanNodeGroupNodesStep.StepMethod] = tasks.CleanNodeGroupNodesTask
+	task.works[checkClusterCleanNodsStep.StepMethod] = tasks.CheckClusterCleanNodsTask
 
 	return task
 }
@@ -360,6 +362,8 @@ func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.Node
 	common.BuildCordonNodesTaskStep(task, opt.Cluster.ClusterID, nodeIPs)
 	// step2: cluster delete nodes
 	cleanNodes.BuildCleanNodeGroupNodesStep(task)
+	// step3: check deleting node status
+	cleanNodes.BuildCheckClusterCleanNodsStep(task)
 
 	// set current step
 	if len(task.StepSequence) == 0 {
@@ -507,6 +511,49 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 		common.BuildTransferHostModuleStep(task, opt.Cluster.BusinessID,
 			group.NodeTemplate.Module.ScaleOutModuleID, "")
 	}
+
+	// step4. business define sops task 支持脚本和标准运维流程
+	if group.NodeTemplate != nil && len(group.NodeTemplate.UserScript) > 0 {
+		common.BuildJobExecuteScriptStep(task, common.JobExecParas{
+			ClusterID:        group.ClusterID,
+			Content:          group.NodeTemplate.UserScript,
+			NodeIps:          "",
+			Operator:         opt.Operator,
+			StepName:         common.PostInitStepJob,
+			AllowSkipJobTask: group.NodeTemplate.GetAllowSkipScaleOutWhenFailed(),
+		})
+	}
+
+	if group.NodeTemplate != nil && group.NodeTemplate.ScaleOutExtraAddons != nil {
+		err := template.BuildSopsFactory{
+			StepName: template.UserAfterInit,
+			Cluster:  opt.Cluster,
+			Extra: template.ExtraInfo{
+				InstancePasswd:     passwd,
+				NodeIPList:         "",
+				NodeOperator:       opt.Operator,
+				ShowSopsUrl:        true,
+				ExternalNodeScript: "",
+				NodeGroupID:        group.NodeGroupID,
+			}}.BuildSopsStep(task, group.NodeTemplate.ScaleOutExtraAddons, false)
+		if err != nil {
+			return nil, fmt.Errorf("BuildScalingNodesTask business BuildBkSopsStepAction failed: %v", err)
+		}
+	}
+
+	// set node labels
+	common.BuildNodeLabelsTaskStep(task, opt.Cluster.ClusterID, nil, cloudprovider.GetLabelsByNg(opt.NodeGroup))
+
+	// set node taint
+	common.BuildNodeTaintsTaskStep(task, opt.Cluster.ClusterID, nil, cloudprovider.GetTaintsByNg(opt.NodeGroup))
+
+	// step4: set node annotations
+	common.BuildNodeAnnotationsTaskStep(task, opt.Cluster.ClusterID, nil,
+		cloudprovider.GetAnnotationsByNg(opt.NodeGroup))
+
+	// step5: remove inner nodes taints
+	common.BuildRemoveInnerTaintTaskStep(task, group)
+
 	common.BuildUnCordonNodesTaskStep(task, group.ClusterID, nil)
 
 	// set current step
@@ -518,6 +565,7 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 	// must set job-type
 	task.CommonParams[cloudprovider.ScalingNodesNumKey.String()] = strconv.Itoa(int(desired))
 	task.CommonParams[cloudprovider.JobTypeKey.String()] = cloudprovider.UpdateNodeGroupDesiredNodeJob.String()
+	task.CommonParams[cloudprovider.ManualKey.String()] = strconv.FormatBool(opt.Manual)
 
 	return task, nil
 }

@@ -22,6 +22,8 @@ import (
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/huawei/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/huawei/business"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -80,6 +82,23 @@ func (c *Cluster) DeleteCluster(cls *proto.Cluster, opt *cloudprovider.DeleteClu
 
 // GetCluster get kubenretes cluster detail information according cloudprovider
 func (c *Cluster) GetCluster(cloudID string, opt *cloudprovider.GetClusterOption) (*proto.Cluster, error) {
+	runtimeInfo, err := business.GetRuntimeInfo(opt.Cluster.ClusterID)
+	if err != nil {
+		return nil, err
+	}
+
+	if v, ok := runtimeInfo[common.ContainerdRuntime]; ok {
+		opt.Cluster.ClusterAdvanceSettings.ContainerRuntime = common.ContainerdRuntime
+		if len(v) > 0 {
+			opt.Cluster.ClusterAdvanceSettings.RuntimeVersion = v[0]
+		}
+	} else if v, ok := runtimeInfo[common.DockerContainerRuntime]; ok {
+		opt.Cluster.ClusterAdvanceSettings.ContainerRuntime = common.DockerContainerRuntime
+		if len(v) > 0 {
+			opt.Cluster.ClusterAdvanceSettings.RuntimeVersion = v[0]
+		}
+	}
+
 	return opt.Cluster, nil
 }
 

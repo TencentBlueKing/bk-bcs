@@ -15,11 +15,12 @@ package api
 
 import (
 	"encoding/base64"
+	"fmt"
 	"strconv"
 	"strings"
 
 	"github.com/GehirnInc/crypt"
-	_ "github.com/GehirnInc/crypt/sha512_crypt" // use init func
+	_ "github.com/GehirnInc/crypt/sha256_crypt" // use init func
 	"github.com/huaweicloud/huaweicloud-sdk-go-v3/services/cce/v3/model"
 	v1 "k8s.io/api/core/v1"
 
@@ -28,9 +29,15 @@ import (
 
 // Crypt encryption node password
 func Crypt(password string) (string, error) {
-	str, err := crypt.SHA512.New().Generate([]byte(password), []byte("$6$tM3|cY3+tI4)"))
+	ct := crypt.SHA256.New()
+	str, err := ct.Generate([]byte(password), []byte("$5$tM3c"))
 	if err != nil {
 		return "", err
+	}
+
+	err = ct.Verify(str, []byte(password))
+	if err != nil {
+		return "", fmt.Errorf("verify password failed: %s", err)
 	}
 
 	return base64.RawStdEncoding.EncodeToString([]byte(str)), nil
@@ -40,7 +47,7 @@ func Crypt(password string) (string, error) {
 func GenerateModifyClusterNodePoolInput(group *proto.NodeGroup, clusterID string,
 	oldNodePool *model.NodePool) *model.UpdateNodePoolRequest {
 	// cce nodePool名称以小写字母开头，由小写字母、数字、中划线(-)组成，长度范围1-50位，且不能以中划线(-)结尾
-	name := strings.ToLower(group.Name)
+	name := strings.ToLower(group.NodeGroupID)
 
 	req := &model.UpdateNodePoolRequest{
 		NodepoolId: group.CloudNodeGroupID,
@@ -79,18 +86,7 @@ func GenerateModifyClusterNodePoolInput(group *proto.NodeGroup, clusterID string
 		}
 	}
 
-	if group.Tags != nil {
-		req.Body.Spec.NodeTemplate.K8sTags = group.Tags
-
-		for k, v := range group.Tags {
-			key := k
-			value := v
-			req.Body.Spec.NodeTemplate.UserTags = append(req.Body.Spec.NodeTemplate.UserTags, model.UserTag{
-				Key:   &key,
-				Value: &value,
-			})
-		}
-	}
+	req.Body.Spec.NodeTemplate.K8sTags = group.NodeTemplate.Labels
 
 	if len(req.Body.Spec.NodeTemplate.Taints) == 0 && oldNodePool.Spec.NodeTemplate.Taints != nil {
 		req.Body.Spec.NodeTemplate.Taints = *oldNodePool.Spec.NodeTemplate.Taints
@@ -175,10 +171,7 @@ func GenerateCreateNodePoolRequest(group *proto.NodeGroup,
 	if group.LaunchTemplate.KeyPair != nil && group.LaunchTemplate.KeyPair.KeyID != "" {
 		sshKey = group.LaunchTemplate.KeyPair.KeyID
 	} else if group.LaunchTemplate.InitLoginPassword != "" {
-		password, err = Crypt(group.LaunchTemplate.InitLoginPassword)
-		if err != nil {
-			return nil, err
-		}
+		password = group.LaunchTemplate.InitLoginPassword
 	}
 
 	return &CreateNodePoolRequest{
