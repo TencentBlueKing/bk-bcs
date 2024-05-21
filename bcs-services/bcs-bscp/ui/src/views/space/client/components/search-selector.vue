@@ -223,13 +223,6 @@
   const datePickerRef = ref();
   const isComposing = ref(false); // 是否使用输入法
 
-  watch(
-    () => isComposing.value,
-    () => {
-      console.log(1);
-    },
-  );
-
   const inputPlacehoder = computed(() => {
     if (searchConditionList.value.length || searchStr.value || inputFocus.value) return '';
     return isClientSearch.value
