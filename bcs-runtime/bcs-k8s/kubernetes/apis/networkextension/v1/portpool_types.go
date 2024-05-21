@@ -42,9 +42,10 @@ type PortPoolItem struct {
 	StartPort uint32 `json:"startPort"`
 	// +kubebuilder:validation:Maximum=65535
 	// +kubebuilder:validation:Minimum=1
-	EndPort       uint32 `json:"endPort"`
-	SegmentLength uint32 `json:"segmentLength,omitempty"`
-	External      string `json:"external,omitempty"`
+	EndPort       uint32                      `json:"endPort"`
+	SegmentLength uint32                      `json:"segmentLength,omitempty"`
+	External      string                      `json:"external,omitempty"`
+	Certificate   *IngressListenerCertificate `json:"certificate,omitempty"`
 }
 
 // GetKey get port pool item key
@@ -64,6 +65,14 @@ func (ppi *PortPoolItem) Validate() error {
 		return fmt.Errorf("if endPort is not zero, it should be bigger than startPort")
 	}
 	return nil
+}
+
+// GetSegmentLength return segment length
+func (ppi *PortPoolItem) GetSegmentLength() uint32 {
+	if ppi.SegmentLength == 0 {
+		return 1
+	}
+	return ppi.SegmentLength
 }
 
 // PortPoolSpec defines the desired state of PortPool

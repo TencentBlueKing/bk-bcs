@@ -246,6 +246,17 @@ spec:
                 items:
                   description: PortPoolItem item of port pool
                   properties:
+                    certificate:
+                      description: IngressListenerCertificate certificate configs
+                        for listener
+                      properties:
+                        certCaID:
+                          type: string
+                        certID:
+                          type: string
+                        mode:
+                          type: string
+                      type: object
                     endPort:
                       format: int32
                       maximum: 65535

@@ -110,8 +110,8 @@ func (s *Server) checkPortPool(newPool *networkextensionv1.PortPool) error {
 		}
 
 		// check protocol
-		if isARN && item.Protocol != constant.PortPoolPortProtocolTCP &&
-			item.Protocol != constant.PortPoolPortProtocolUDP {
+		if isARN && item.Protocol != constant.ProtocolTCP &&
+			item.Protocol != constant.ProtocolUDP {
 			return fmt.Errorf("protocol %s of item %s invalid", item.Protocol, item.ItemName)
 		}
 	}

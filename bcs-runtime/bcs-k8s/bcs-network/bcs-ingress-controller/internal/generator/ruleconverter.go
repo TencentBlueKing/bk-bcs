@@ -197,7 +197,7 @@ func (rc *RuleConverter) generate4LayerListener(region, lbID string) (*networkex
 	li := &networkextensionv1.Listener{}
 
 	if rc.isTCPUDPPortReuse {
-		li.SetName(GetListenerNameWithProtocol(lbID, rc.rule.Protocol, rc.rule.Port))
+		li.SetName(common.GetListenerNameWithProtocol(lbID, rc.rule.Protocol, rc.rule.Port, 0))
 	} else {
 		li.SetName(GetListenerName(lbID, rc.rule.Port))
 	}
