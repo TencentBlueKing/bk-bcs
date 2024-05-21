@@ -13,16 +13,24 @@
     "ca": "${bcsEtcdCAFile}"
   },
   "swagger": {
-        "dir": "${bcsSwaggerDir}"
-    },
+    "dir": "${bcsSwaggerDir}"
+  },
   "auth": {
-      "publicKeyFile": "${bcsAuthPublicKeyFile}",
-      "privateKeyFile": "${bcsAuthPrivateKeyFile}"
+    "publicKeyFile": "${bcsAuthPublicKeyFile}",
+    "privateKeyFile": "${bcsAuthPrivateKeyFile}"
   },
   "bkSystem": {
-      "bkAppCode": "${bkAppCode}",
-      "bkAppSecret": "${bkAppSecret}",
-      "bkEnv": "${bkEnv}"
+    "bkAppCode": "${bkAppCode}",
+    "bkAppSecret": "${bkAppSecret}",
+    "bkEnv": "${bkEnv}",
+    "bkAddressTemplateID": "${bkAddressTemplateID}",
+    "bkOuterIP": "${bkOuterIP}"
+  },
+  "tencentCloud": {
+    "vpcDomain": "${tencentCloudVpcDomain}",
+    "secretID": "${tencentCloudSecretID}",
+    "secretKey": "${tencentCloudSecretKey}",
+    "Region": "${tencentCloudRegion}"
   },
   "address": "${localIp}",
   "port": ${bcsPort},
@@ -33,5 +41,6 @@
   "serverkey": "${serverKeyFile}",
   "clientca": "${caFile}",
   "clientcert": "${clientCertFile}",
-  "clientkey": "${clientKeyFile}"
+  "clientkey": "${clientKeyFile}",
+  "adminUsers": "${bcsAdminUsers}"
 }
