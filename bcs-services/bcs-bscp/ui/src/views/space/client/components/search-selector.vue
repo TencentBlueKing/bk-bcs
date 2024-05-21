@@ -245,6 +245,7 @@
       // 搜索框和查询条件都为空时不需要转换查询参数
       if (searchConditionList.value.length === 0 && Object.keys(searchQuery.value.search!).length === 0) return;
       handleSearchConditionChangeQuery();
+      parentSelecte.value = undefined;
     },
     { deep: true },
   );
@@ -351,6 +352,7 @@
       searchStr.value = '';
       return;
     }
+    console.log('hasContent');
     // 添加默认查询条件ip
     if (!parentSelecte.value?.value) {
       parentSelecte.value = selectorData.value.find((item) => {
@@ -371,7 +373,6 @@
     searchStr.value = '';
     isShowPopover.value = false;
     inputRef.value.blur();
-    parentSelecte.value = undefined;
   };
 
   const handleDateChange = (val: string[]) => {
