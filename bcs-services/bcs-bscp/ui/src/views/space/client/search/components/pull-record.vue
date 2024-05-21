@@ -117,15 +117,15 @@
   import { Share, Spinner, InfoLine } from 'bkui-vue/lib/icon';
   import SearchInput from '../../../../../components/search-input.vue';
   import { getClientPullRecord } from '../../../../../api/client';
-  import { datetimeFormat, byteUnitConverse } from '../../../../../utils';
+  import { datetimeFormat, byteUnitConverse, getTimeRange } from '../../../../../utils';
   import {
     CLIENT_STATUS_MAP,
     CLIENT_ERROR_SUBCLASSES_MAP,
     CLIENT_ERROR_CATEGORY_MAP,
   } from '../../../../../constants/client';
-  import dayjs from 'dayjs';
   import TableEmpty from '../../../../../components/table/table-empty.vue';
   import { useI18n } from 'vue-i18n';
+
   const { t } = useI18n();
 
   const router = useRouter();
@@ -246,18 +246,6 @@
     ${t('错误详情')}: ${failed_detail_reason}`;
   };
 
-  const getTimeRange = (n: number) => {
-    const end = new Date();
-    const start = new Date();
-    start.setTime(start.getTime() - 3600 * 1000 * 24 * n);
-    start.setHours(0);
-    start.setMinutes(0);
-    start.setSeconds(0);
-    end.setHours(23);
-    end.setMinutes(59);
-    end.setSeconds(59);
-    return [dayjs(start).format('YYYY-MM-DD HH:mm:ss'), dayjs(end).format('YYYY-MM-DD HH:mm:ss')];
-  };
 
   const handleSelectTimeChange = (val: any) => {
     if (val) {

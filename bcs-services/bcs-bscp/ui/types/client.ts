@@ -44,6 +44,8 @@ export interface IClientSearchParams {
   online_status?: string[];
   client_version?: string;
   client_type?: string;
+  start_pull_time?: string;
+  end_pull_time?: string;
 }
 
 export interface IGetClientSearchListQuery {
