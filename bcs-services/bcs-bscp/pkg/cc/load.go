@@ -108,6 +108,8 @@ func loadFromFile(conf []byte) (Setting, error) {
 		s = new(DataServiceSetting)
 	case FeedServerName:
 		s = new(FeedServerSetting)
+	case FeedProxyName:
+		s = new(FeedProxySetting)
 	case VaultServerName:
 		s = new(VaultServerSetting)
 	case VaultSidecarName:

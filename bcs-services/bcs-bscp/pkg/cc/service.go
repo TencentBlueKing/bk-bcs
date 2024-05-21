@@ -13,6 +13,7 @@
 package cc
 
 import (
+	"errors"
 	"net"
 	"sync"
 )
@@ -50,6 +51,8 @@ const (
 	ConfigServerName Name = "config-server"
 	// FeedServerName is the feed server's service name
 	FeedServerName Name = "feed-server"
+	// FeedProxyName is the feed proxy's service name
+	FeedProxyName Name = "feed-proxy"
 	// AuthServerName is the auth server's service name
 	AuthServerName Name = "auth-server"
 	// VaultServerName is the vault server's service name
@@ -404,6 +407,84 @@ func (s FeedServerSetting) Validate() error {
 		return err
 	}
 
+	return nil
+}
+
+// FeedProxySetting defines feed proxy used setting options.
+type FeedProxySetting struct {
+	Network Network   `yaml:"network"`
+	Service Service   `yaml:"service"`
+	Log     LogOption `yaml:"log"`
+
+	Upstream Upstream `yaml:"upstream"`
+}
+
+// trySetFlagBindIP try set flag bind ip.
+func (s *FeedProxySetting) trySetFlagBindIP(ip net.IP) error {
+	return s.Network.trySetFlagBindIP(ip)
+}
+
+// trySetFlagPort set http and grpc port
+func (s *FeedProxySetting) trySetFlagPort(port, grpcPort int) error {
+	return s.Network.trySetFlagPort(port, grpcPort)
+}
+
+// trySetDefault set the FeedProxySetting default value if user not configured.
+func (s *FeedProxySetting) trySetDefault() {
+	s.Network.trySetDefault()
+	s.Service.trySetDefault()
+	s.Log.trySetDefault()
+	s.Upstream.trySetDefault()
+}
+
+// Validate FeedProxySetting option.
+func (s FeedProxySetting) Validate() error {
+
+	if err := s.Network.validate(); err != nil {
+		return err
+	}
+
+	if err := s.Service.validate(); err != nil {
+		return err
+	}
+
+	if err := s.Upstream.validate(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Upstream defines feed proxy upstream setting.
+type Upstream struct {
+	FeedServerHost string      `yaml:"feedServerHost"`
+	BkRepoHost     string      `yaml:"bkRepoHost"`
+	CosHost        string      `yaml:"cosHost"`
+	StorageType    StorageMode `yaml:"storageType"`
+}
+
+func (u *Upstream) trySetDefault() {
+	if u.StorageType == "" {
+		u.StorageType = BkRepo
+	}
+}
+
+func (u *Upstream) validate() error {
+	if u.FeedServerHost == "" {
+		return errors.New("feedServerHost can not be empty")
+	}
+	switch u.StorageType {
+	case BkRepo:
+		if u.BkRepoHost == "" {
+			return errors.New("bkRepoHost can not be empty")
+		}
+	case S3:
+		if u.CosHost == "" {
+			return errors.New("cosHost can not be empty")
+		}
+	default:
+		return errors.New("invalid storageType")
+	}
 	return nil
 }
 
