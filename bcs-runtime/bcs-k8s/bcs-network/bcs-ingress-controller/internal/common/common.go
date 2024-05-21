@@ -70,6 +70,9 @@ func GetListenerName(lbID string, port int) string {
 
 // GetListenerNameWithProtocol generate listener key with lbid, protocol and port number
 func GetListenerNameWithProtocol(lbID, protocol string, startPort, endPort int) string {
+	// for protocol tcp_ssl, '_' is invalid for name
+	protocol = strings.ReplaceAll(protocol, "_", "")
+
 	if a := tryParseARNFromLbID(lbID); len(a) != 0 {
 		lbID = a
 	}
@@ -147,7 +150,7 @@ func GetIngressProtocolLayer(ingress *networkextensionv1.Ingress) string {
 func GetPortPoolItemProtocols(itemProtocol string) []string {
 	var protocolList []string
 	if len(itemProtocol) == 0 {
-		protocolList = []string{constant.PortPoolPortProtocolTCP, constant.PortPoolPortProtocolUDP}
+		protocolList = []string{constant.ProtocolTCP, constant.ProtocolUDP}
 	} else {
 		protocolList = strings.Split(itemProtocol, constant.PortPoolItemProtocolDelimiter)
 	}

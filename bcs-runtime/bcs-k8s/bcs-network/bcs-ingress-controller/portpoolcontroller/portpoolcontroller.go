@@ -171,7 +171,7 @@ func (ppr *PortPoolReconciler) initPortPoolCache() error {
 						}
 					}
 					if len(protocol) == 0 {
-						itemStatus.Protocol = []string{constant.PortPoolPortProtocolTCP, constant.PortPoolPortProtocolUDP}
+						itemStatus.Protocol = []string{constant.ProtocolTCP, constant.ProtocolUDP}
 					} else {
 						itemStatus.Protocol = protocol
 					}

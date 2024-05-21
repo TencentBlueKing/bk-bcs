@@ -32,6 +32,8 @@ const (
 	ProtocolHTTP = "HTTP"
 	// ProtocolTCPSSL protocol of TCP_SSL
 	ProtocolTCPSSL = "TCP_SSL"
+	// PortPoolPortProtocolTCPUDP protocol of port in pool is tcp&udp
+	PortPoolPortProtocolTCPUDP = "TCP_UDP"
 
 	// LoadBalancerTypeLoadBalancer default type load balancer
 	LoadBalancerTypeLoadBalancer = "loadbalancer"
@@ -169,13 +171,6 @@ const (
 
 	// MaxPortQuantityForEachLoadbalancer max port quantity for each loadbalancer
 	MaxPortQuantityForEachLoadbalancer = 4000
-
-	// PortPoolPortProtocolTCP protocol of port in pool is tcp
-	PortPoolPortProtocolTCP = "TCP"
-	// PortPoolPortProtocolUDP protocol of port in pool is udp
-	PortPoolPortProtocolUDP = "UDP"
-	// PortPoolPortProtocolTCPUDP protocol of port in pool is tcp&udp
-	PortPoolPortProtocolTCPUDP = "TCP_UDP"
 
 	// PortPoolItemProtocolDelimiter separate protocol in portpool item, like "TCP,UDP"
 	PortPoolItemProtocolDelimiter = ","
