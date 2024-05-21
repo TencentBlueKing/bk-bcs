@@ -67,7 +67,8 @@ message ClientQueryCondition {
   string client_version = 9;                  // 客户端组件版本
   string client_type = 10;                    // 客户端组件类型
   string failed_reason = 11;                  // 客户端失败主类原因
-  string pull_time = 12;                      // 拉取时间
+  string start_pull_time = 12;                // 开始拉取时间
+  string end_pull_time = 13;                  // 结束拉取时间
 }
 
 // ClientCommonReq request param

@@ -13,6 +13,7 @@
 package dao
 
 import (
+	"errors"
 	"strings"
 	"time"
 
@@ -307,6 +308,7 @@ func (dao *clientDao) handleSearch(kit *kit.Kit, bizID, appID uint32, search *pb
 
 	// 目标版本查询
 	// 先获取releaseID, 根据 target_release_id = releaseID 获取 client_events 中的 client_id
+	var clientEventConds []rawgen.Condition
 	if len(search.GetTargetReleaseName()) > 0 {
 		var item []struct {
 			ID uint32
@@ -320,39 +322,31 @@ func (dao *clientDao) handleSearch(kit *kit.Kit, bizID, appID uint32, search *pb
 		for _, v := range item {
 			releaseID = append(releaseID, v.ID)
 		}
-		var clientEvent []struct {
-			ClientID uint32
-		}
-		err = ce.WithContext(kit.Ctx).Select(ce.ClientID).Where(ce.TargetReleaseID.In(releaseID...)).
-			Group(ce.ClientID).Scan(&clientEvent)
-		if err != nil {
-			return conds, err
-		}
-		cid := []uint32{}
-		for _, v := range clientEvent {
-			cid = append(cid, v.ClientID)
-		}
-		conds = append(conds, q.Where(m.ID.In(cid...)))
+
+		clientEventConds = append(clientEventConds, q.Where(ce.TargetReleaseID.In(releaseID...)))
 	}
 
-	// 根据拉取时间搜索
-	if search.GetPullTime() != "" {
-		starTime, err := time.Parse("2006-01-02", search.GetPullTime())
+	// 根据客户端时间表中的开始和结束时间搜索
+	if search.GetStartPullTime() != "" {
+		starTime, err := parseTime(search.GetStartPullTime())
 		if err != nil {
 			return nil, err
 		}
-		// 设置时分秒为 00:00:00
-		starTime = time.Date(starTime.Year(), starTime.Month(), starTime.Day(), 0, 0, 0, 0, starTime.UTC().Location())
-		endTime, err := time.Parse("2006-01-02", search.GetPullTime())
-		// 设置时分秒为 23:59:59
-		endTime = time.Date(endTime.Year(), endTime.Month(), endTime.Day(), 23, 59, 59, 0, endTime.UTC().Location())
+		clientEventConds = append(clientEventConds, q.Where(ce.StartTime.Gte(starTime)))
+	}
+	if search.GetEndPullTime() != "" {
+		endTime, err := parseTime(search.GetEndPullTime())
 		if err != nil {
 			return nil, err
 		}
+		clientEventConds = append(clientEventConds, q.Where(ce.EndTime.Lte(endTime)))
+	}
+
+	if len(clientEventConds) > 0 {
 		var clientEvent []struct {
 			ClientID uint32
 		}
-		err = ce.WithContext(kit.Ctx).Select(ce.ClientID).Where(ce.StartTime.Gte(starTime), ce.EndTime.Lte(endTime)).
+		err := ce.WithContext(kit.Ctx).Select(ce.ClientID).Where(clientEventConds...).
 			Group(ce.ClientID).Scan(&clientEvent)
 		if err != nil {
 			return conds, err
@@ -413,6 +407,17 @@ func (dao *clientDao) handleSearch(kit *kit.Kit, bizID, appID uint32, search *pb
 	}
 
 	return conds, nil
+}
+
+func parseTime(timeStr string) (time.Time, error) {
+	if timeStr == "" {
+		return time.Time{}, errors.New("time cannot be empty")
+	}
+	t, err := time.ParseInLocation("2006-01-02 15:04:05", timeStr, time.UTC)
+	if err != nil {
+		return time.Time{}, err
+	}
+	return t, nil
 }
 
 // 处理排序
