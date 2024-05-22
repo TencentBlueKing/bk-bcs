@@ -15,9 +15,10 @@ package aws
 import (
 	"encoding/base64"
 	"fmt"
+	"sync"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
