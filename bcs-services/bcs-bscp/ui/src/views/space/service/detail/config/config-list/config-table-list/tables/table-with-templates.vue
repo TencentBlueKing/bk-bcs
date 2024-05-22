@@ -276,7 +276,7 @@
   </DeleteConfirmDialog>
 </template>
 <script lang="ts" setup>
-  import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+  import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
   import { useI18n } from 'vue-i18n';
   import { storeToRefs } from 'pinia';
   import Message from 'bkui-vue/lib/message';
@@ -477,7 +477,7 @@
     getAllConfigList();
   });
 
-  onUnmounted(() => {
+  onBeforeUnmount(() => {
     tableRef.value.removeEventListener('scroll', handleScroll);
   });
 
@@ -817,7 +817,7 @@
 </script>
 <style lang="scss" scoped>
   .table-container {
-    height: 100%;
+    max-height: 100%;
     border: 1px solid #dcdee5;
     overflow: auto;
   }
