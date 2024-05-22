@@ -151,4 +151,4 @@ export const getClientPullFailedReason = (bizId: string, appId: number, query: a
  */
 
 export const getClientCommonlyUsedNameCheck = (bizId: string, appId: number, name: string) =>
-  http.get(`/config/biz/${bizId}/apps/${appId}/client_querys/${name}`);
+  http.get(`/config/biz/${bizId}/apps/${appId}/client_querys/check_exists`, { params: { name } });
