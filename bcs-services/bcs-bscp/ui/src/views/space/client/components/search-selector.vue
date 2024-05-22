@@ -68,7 +68,9 @@
         <div
           v-if="searchConditionList.length && isClientSearch"
           :class="['set-used', { light: isCommonlyUsedBtnLight }]"
-          v-bk-tooltips="{ content: t('设为常用') }"
+          v-bk-tooltips="{
+            content: highlightCommonlySearchName ? `${t('已收藏为')}: ${highlightCommonlySearchName}` : t('设为常用'),
+          }"
           @click.stop="handleOpenSetCommonlyDialg(true)">
           <span class="bk-bscp-icon icon-star-fill"></span>
         </div>
@@ -139,6 +141,8 @@
       </bk-popover>
     </div>
     <SetCommonlyDialog
+      :bk-biz-id="props.bkBizId"
+      :app-id="props.appId"
       :is-show="isShowSetCommonlyDialog"
       :is-create="isCreateCommonlyUsed"
       :name="selectedCommomlyItem?.spec.search_name"
@@ -176,7 +180,7 @@
     updateClientSearchRecord,
     deleteClientSearchRecord,
   } from '../../../../api/client';
-  import { getTimeRange } from '../../../../utils';
+  import { getTimeRange, datetimeFormat } from '../../../../utils';
   import useClientStore from '../../../../store/client';
   import SetCommonlyDialog from './set-commonly-dialog.vue';
   import CommonlyUsedTag from './commonly-used-tag.vue';
@@ -211,7 +215,6 @@
   const isShowSetCommonlyDialog = ref(false);
   const isCreateCommonlyUsed = ref(true);
   const selectedCommomlyItem = ref<ICommonlyUsedItem>();
-  const isShowSetCommonlyDropdown = ref(false);
   const isShowDeleteCommonlyDialog = ref(false);
   const selectedDeleteCommonlyItem = ref<ICommonlyUsedItem>();
   const isShowAllCommonSearchPopover = ref(false);
@@ -221,6 +224,7 @@
   const inputWrapRef = ref();
   const dateTime = ref(getTimeRange(1));
   const datePickerRef = ref();
+  const highlightCommonlySearchName = ref('');
   const isComposing = ref(false); // 是否使用输入法
 
   const inputPlacehoder = computed(() => {
@@ -235,13 +239,19 @@
   const selectorData = computed(() => (isClientSearch.value ? CLIENT_SEARCH_DATA : CLIENT_STATISTICS_SEARCH_DATA));
 
   const isCommonlyUsedBtnLight = computed(() => {
-    return commonlySearchList.value.some((commonlySearchItem) => {
+    const item = commonlySearchList.value.find((commonlySearchItem) => {
       if (commonlySearchItem.search_condition.length !== searchConditionList.value.length) return false;
       return commonlySearchItem.search_condition.every((commonlySearchConditionList) => {
         const { key, value } = commonlySearchConditionList;
         return searchConditionList.value.findIndex((item) => item.key === key && item.value === value) > -1;
       });
     });
+    if (item) {
+      highlightCommonlySearchName.value = item.spec.search_name;
+      return true;
+    }
+    highlightCommonlySearchName.value = '';
+    return false;
   });
 
   watch(
@@ -490,6 +500,7 @@
   const handleOpenDeleteCommonlyDialog = (item: ICommonlyUsedItem) => {
     selectedDeleteCommonlyItem.value = item;
     isShowDeleteCommonlyDialog.value = true;
+    isShowAllCommonSearchPopover.value = false;
   };
 
   const handleConfirmDeleteCommonlyUsed = async () => {
@@ -515,7 +526,7 @@
       selectedCommomlyItem.value = item;
     }
     isShowSetCommonlyDialog.value = true;
-    isShowSetCommonlyDropdown.value = false;
+    isShowAllCommonSearchPopover.value = false;
   };
 
   // 查询条件转换为查询参数
@@ -536,8 +547,8 @@
       } else if (item.key === 'pull_time') {
         const startTime = item.value.split(' - ')[0];
         const endTime = item.value.split(' - ')[1];
-        query.start_pull_time = startTime;
-        query.end_pull_time = endTime;
+        query.start_pull_time = new Date(`${startTime.replace(' ', 'T')}+08:00`).toISOString();
+        query.end_pull_time = new Date(`${endTime.replace(' ', 'T')}+08:00`).toISOString();
       } else {
         query[item.key] = item.value.trim();
       }
@@ -581,10 +592,12 @@
         });
       } else if (key === 'start_pull_time' || key === 'end_pull_time') {
         if (searchList.find((item) => item.key === 'pull_time')) return;
-        const content = `${t('配置拉取时间范围')} : ${query.start_pull_time} - ${query.end_pull_time}`;
+        const content = `${t('配置拉取时间范围')} : ${datetimeFormat(query.start_pull_time)} - ${datetimeFormat(
+          query.end_pull_time,
+        )}`;
         searchList.push({
           key: 'pull_time',
-          value: `${query.start_pull_time} - ${query.end_pull_time}`,
+          value: `${datetimeFormat(query.start_pull_time)} - ${datetimeFormat(query.end_pull_time)}`,
           content,
           isEdit: false,
         });
@@ -822,14 +835,18 @@
       color: #63656e;
       &:hover {
         background-color: #f5f7fa;
+        .action-icon {
+          display: block;
+        }
       }
       .name {
         max-width: 120px;
       }
       .action-icon {
-        display: flex;
-        align-items: center;
+        display: none;
         font-size: 16px;
+        height: 32px;
+        line-height: 32px;
         .bk-bscp-icon:hover {
           color: #3a84ff;
         }

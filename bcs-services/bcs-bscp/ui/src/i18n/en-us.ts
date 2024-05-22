@@ -735,6 +735,8 @@ export default {
   源版本: 'Source version',
   客户端拉取配置文件次数统计: 'Statistics on the number of times a client pulls a configuration file',
   已拉取配置文件的客户端数量统计: 'Statistics on the number of clients whose configuration files have been pulled',
+  已收藏为: 'Collected',
+  已存在同名常用查询: 'A common search with the same name already exists',
 
   // 客户端统计
   配置版本发布: 'Configuration version release',
