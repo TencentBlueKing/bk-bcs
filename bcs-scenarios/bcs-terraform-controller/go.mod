@@ -1,6 +1,8 @@
 module github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-controller
 
-go 1.20
+go 1.21
+
+toolchain go1.22.2
 
 replace (
 	github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-vaultplugin-server => ../bcs-gitops-vaultplugin-server
