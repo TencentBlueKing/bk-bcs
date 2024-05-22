@@ -26,7 +26,7 @@ import (
 	"google.golang.org/grpc/reflection"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/feed-proxy/options"
-	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/feed-proxy/proxy"
+	grpcproxy "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/feed-proxy/proxy/grpc"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/feed-proxy/service"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/uuid"
@@ -150,8 +150,8 @@ func (fs *feedProxy) listenAndServe() error {
 		cred := credentials.NewTLS(tlsC)
 		opts = append(opts, grpc.Creds(cred))
 	}
-	opts = append(opts, grpc.CustomCodec(proxy.Codec()),
-		grpc.UnknownServiceHandler(proxy.TransparentHandler(proxy.Director)))
+	opts = append(opts, grpc.CustomCodec(grpcproxy.Codec()),
+		grpc.UnknownServiceHandler(grpcproxy.TransparentHandler(grpcproxy.Director)))
 
 	serve := grpc.NewServer(opts...)
 	// Register reflection service on gRPC server.

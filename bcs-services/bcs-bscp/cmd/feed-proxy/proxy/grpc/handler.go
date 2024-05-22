@@ -10,11 +10,14 @@
  * limitations under the License.
  */
 
-package proxy
+package grpc
 
 import (
 	"io"
+	"net"
 	"net/url"
+	"path"
+	"strconv"
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -37,6 +40,7 @@ var (
 
 // Director 简单转发请求到新的网络地址上
 func Director(ctx context.Context, fullMethodName string) (context.Context, *grpc.ClientConn, error) {
+	// TODO: 目前是转发一次请求就建立一条连接，可以考虑建立连接池
 	conn, err := grpc.Dial(cc.FeedProxy().Upstream.FeedServerHost,
 		grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
@@ -90,28 +94,22 @@ func (s *handler) handler(srv interface{}, serverStream grpc.ServerStream) error
 
 	// Special case for GetDownloadURL, we need to replace the host in the response URL.
 	if fullMethodName == pbfs.Upstream_GetDownloadURL_FullMethodName {
-		c2sErrChan := s.forwardClientToServer(clientStream, serverStream)
-		for i := 0; i < 1; i++ {
-			select {
-			case c2sErr := <-c2sErrChan:
-				// This happens when the clientStream has nothing else to offer (io.EOF), returned a gRPC error. In those two
-				// cases we may have received Trailers as part of the call. In case of other errors (stream closed) the trailers
-				// will be nil.
-				serverStream.SetTrailer(clientStream.Trailer())
-				// c2sErr will contain RPC error from client code. If not io.EOF return the RPC error as server stream error.
-				if c2sErr != io.EOF {
-					return c2sErr
-				}
-				return nil
-			}
+		buf := &emptypb.Empty{}
+		if err := serverStream.RecvMsg(buf); err != nil {
+			return err
+		}
+		if err := clientStream.SendMsg(buf); err != nil {
+			return err
 		}
 
 		f := &pbfs.GetDownloadURLResp{}
-		if err := serverStream.RecvMsg(f); err != nil {
+		if err := clientStream.RecvMsg(f); err != nil {
 			return err
 		}
 		// TODO: replace host and add prefix
-		f.Url = replaceHost(f.Url, cc.FeedProxy().Upstream.FeedServerHost)
+		network := cc.FeedProxy().Network
+		targetHost := net.JoinHostPort(network.BindIP, strconv.Itoa(int(network.HttpPort)))
+		f.Url = replaceHost(f.Url, targetHost)
 		if err := serverStream.SendMsg(f); err != nil {
 			return err
 		}
@@ -214,6 +212,8 @@ func replaceHost(inputURL, targetHost string) string {
 
 	// Replace Host
 	parsedURL.Host = targetHost
+	parsedURL.Path = path.Join("/proxy/download", parsedURL.Path)
+	parsedURL.RawPath = path.Join("/proxy/download", parsedURL.RawPath)
 
 	// Building URL back to string format and return
 	return parsedURL.String()

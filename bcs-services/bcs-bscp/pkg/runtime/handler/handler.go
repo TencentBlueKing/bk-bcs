@@ -93,7 +93,7 @@ func RegisterCommonToolHandler() http.Handler {
 }
 
 // ReverseProxyHandler 代理请求
-func ReverseProxyHandler(name, remoteURL string) http.Handler {
+func ReverseProxyHandler(name, prefix, remoteURL string) http.Handler {
 	remote, err := url.Parse(remoteURL)
 	if err != nil {
 		panic(fmt.Errorf("%s '%s' not valid: %s", name, remoteURL, err))
@@ -108,6 +108,10 @@ func ReverseProxyHandler(name, remoteURL string) http.Handler {
 			Rewrite: func(req *httputil.ProxyRequest) {
 				req.SetURL(remote)
 				req.SetXForwarded()
+				if prefix != "" {
+					req.Out.URL.Path = strings.TrimPrefix(req.Out.URL.Path, prefix)
+					req.Out.URL.RawPath = strings.TrimPrefix(req.Out.URL.RawPath, prefix)
+				}
 				klog.InfoS("forward request", "name", name, "url", r.URL)
 			},
 		}

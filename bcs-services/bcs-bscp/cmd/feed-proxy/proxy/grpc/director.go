@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-package proxy
+package grpc
 
 import (
 	"golang.org/x/net/context"

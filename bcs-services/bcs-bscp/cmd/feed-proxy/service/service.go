@@ -25,6 +25,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 
+	httpproxy "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/feed-proxy/proxy/http"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
@@ -121,6 +122,7 @@ func (s *Service) handler() http.Handler {
 	r.Get("/healthz", s.Healthz)
 
 	r.Mount("/", handler.RegisterCommonToolHandler())
+	r.Mount("/proxy/download", httpproxy.ProviderProxyHandler())
 	return r
 }
 
