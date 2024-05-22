@@ -169,6 +169,7 @@ const (
 	Config_CreateClientQuery_FullMethodName                 = "/pbcs.Config/CreateClientQuery"
 	Config_UpdateClientQuery_FullMethodName                 = "/pbcs.Config/UpdateClientQuery"
 	Config_DeleteClientQuery_FullMethodName                 = "/pbcs.Config/DeleteClientQuery"
+	Config_CheckClientQueryName_FullMethodName              = "/pbcs.Config/CheckClientQueryName"
 	Config_ClientConfigVersionStatistics_FullMethodName     = "/pbcs.Config/ClientConfigVersionStatistics"
 	Config_ClientPullTrendStatistics_FullMethodName         = "/pbcs.Config/ClientPullTrendStatistics"
 	Config_ClientPullStatistics_FullMethodName              = "/pbcs.Config/ClientPullStatistics"
@@ -340,6 +341,7 @@ type ConfigClient interface {
 	CreateClientQuery(ctx context.Context, in *CreateClientQueryReq, opts ...grpc.CallOption) (*CreateClientQueryResp, error)
 	UpdateClientQuery(ctx context.Context, in *UpdateClientQueryReq, opts ...grpc.CallOption) (*UpdateClientQueryResp, error)
 	DeleteClientQuery(ctx context.Context, in *DeleteClientQueryReq, opts ...grpc.CallOption) (*DeleteClientQueryResp, error)
+	CheckClientQueryName(ctx context.Context, in *CheckClientQueryNameReq, opts ...grpc.CallOption) (*CheckClientQueryNameResp, error)
 	// client chart related interface
 	ClientConfigVersionStatistics(ctx context.Context, in *client.ClientCommonReq, opts ...grpc.CallOption) (*structpb.Struct, error)
 	ClientPullTrendStatistics(ctx context.Context, in *client.ClientCommonReq, opts ...grpc.CallOption) (*structpb.Struct, error)
@@ -1646,6 +1648,15 @@ func (c *configClient) DeleteClientQuery(ctx context.Context, in *DeleteClientQu
 	return out, nil
 }
 
+func (c *configClient) CheckClientQueryName(ctx context.Context, in *CheckClientQueryNameReq, opts ...grpc.CallOption) (*CheckClientQueryNameResp, error) {
+	out := new(CheckClientQueryNameResp)
+	err := c.cc.Invoke(ctx, Config_CheckClientQueryName_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *configClient) ClientConfigVersionStatistics(ctx context.Context, in *client.ClientCommonReq, opts ...grpc.CallOption) (*structpb.Struct, error) {
 	out := new(structpb.Struct)
 	err := c.cc.Invoke(ctx, Config_ClientConfigVersionStatistics_FullMethodName, in, out, opts...)
@@ -1879,6 +1890,7 @@ type ConfigServer interface {
 	CreateClientQuery(context.Context, *CreateClientQueryReq) (*CreateClientQueryResp, error)
 	UpdateClientQuery(context.Context, *UpdateClientQueryReq) (*UpdateClientQueryResp, error)
 	DeleteClientQuery(context.Context, *DeleteClientQueryReq) (*DeleteClientQueryResp, error)
+	CheckClientQueryName(context.Context, *CheckClientQueryNameReq) (*CheckClientQueryNameResp, error)
 	// client chart related interface
 	ClientConfigVersionStatistics(context.Context, *client.ClientCommonReq) (*structpb.Struct, error)
 	ClientPullTrendStatistics(context.Context, *client.ClientCommonReq) (*structpb.Struct, error)
@@ -2322,6 +2334,9 @@ func (UnimplementedConfigServer) UpdateClientQuery(context.Context, *UpdateClien
 }
 func (UnimplementedConfigServer) DeleteClientQuery(context.Context, *DeleteClientQueryReq) (*DeleteClientQueryResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteClientQuery not implemented")
+}
+func (UnimplementedConfigServer) CheckClientQueryName(context.Context, *CheckClientQueryNameReq) (*CheckClientQueryNameResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CheckClientQueryName not implemented")
 }
 func (UnimplementedConfigServer) ClientConfigVersionStatistics(context.Context, *client.ClientCommonReq) (*structpb.Struct, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ClientConfigVersionStatistics not implemented")
@@ -4933,6 +4948,24 @@ func _Config_DeleteClientQuery_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Config_CheckClientQueryName_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CheckClientQueryNameReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).CheckClientQueryName(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_CheckClientQueryName_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).CheckClientQueryName(ctx, req.(*CheckClientQueryNameReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Config_ClientConfigVersionStatistics_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(client.ClientCommonReq)
 	if err := dec(in); err != nil {
@@ -5655,6 +5688,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteClientQuery",
 			Handler:    _Config_DeleteClientQuery_Handler,
+		},
+		{
+			MethodName: "CheckClientQueryName",
+			Handler:    _Config_CheckClientQueryName_Handler,
 		},
 		{
 			MethodName: "ClientConfigVersionStatistics",

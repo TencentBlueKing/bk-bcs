@@ -236,6 +236,7 @@ service Data {
   rpc CreateClientQuery(CreateClientQueryReq) returns (CreateClientQueryResp) {};
   rpc UpdateClientQuery(UpdateClientQueryReq) returns (pbbase.EmptyResp) {};
   rpc DeleteClientQuery(DeleteClientQueryReq) returns (pbbase.EmptyResp) {};
+  rpc CheckClientQueryName(CheckClientQueryNameReq) returns (CheckClientQueryNameResp) {};
 
   // client metrics chart related interface
   rpc ClientConfigVersionStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {}
@@ -1776,6 +1777,16 @@ message DeleteClientQueryReq {
   uint32 id = 1;
   uint32 biz_id = 2;
   uint32 app_id = 3;
+}
+
+message CheckClientQueryNameReq {
+  string name = 1;
+  uint32 biz_id = 2;
+  uint32 app_id = 3;
+}
+
+message CheckClientQueryNameResp {
+  bool exist = 1;
 }
 
 message ListClientLabelAndAnnotationReq {
