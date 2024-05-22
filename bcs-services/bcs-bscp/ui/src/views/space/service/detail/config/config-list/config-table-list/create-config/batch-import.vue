@@ -33,44 +33,51 @@
           style="width: 374px"
           filterable
           auto-focus
-          @select="handleSelectVersion">
+          @select="handleSelectVersion(appId, $event)">
           <bk-option v-for="item in versionList" :id="item.id" :key="item.id" :name="item.spec.name" />
         </bk-select>
       </div>
     </div>
     <div v-else-if="importType === 'otherService'">
-      <ImportFormOtherService :bk-biz-id="props.bkBizId" :app-id="props.appId" @select-verison="handleSelectVersion" />
+      <ImportFormOtherService :bk-biz-id="props.bkBizId" :app-id="props.appId" @select-version="handleSelectVersion" />
     </div>
     <div v-if="importType !== 'configTemplate' && importConfigList.length" class="content">
-      <div class="head">
-        <bk-checkbox style="margin-left: 24px" v-model="isClearDraft"> {{ $t('导入前清空草稿区') }} </bk-checkbox>
-        <div class="tips">
-          {{ t('共将导入') }} <span style="color: #3a84ff">{{ importConfigList.length }}</span>
-          {{ t('个配置项，其中') }} <span style="color: #ffa519">{{ existConfigList.length }}</span>
-          {{ t('个已存在,导入后将') }}
-          <span style="color: #ffa519">{{ t('覆盖原配置') }}</span>
+      <bk-loading :loading="tableLoading">
+        <div class="head">
+          <bk-checkbox style="margin-left: 24px" v-model="isClearDraft"> {{ $t('导入前清空草稿区') }} </bk-checkbox>
+          <div v-if="!isClearDraft" class="tips">
+            {{ t('共将导入') }} <span style="color: #3a84ff">{{ importConfigList.length }}</span>
+            {{ t('个配置项，其中') }} <span style="color: #ffa519">{{ existConfigList.length }}</span>
+            {{ t('个已存在,导入后将') }}
+            <span style="color: #ffa519">{{ t('覆盖原配置') }}</span>
+          </div>
+          <div v-else class="tips">
+            {{ t('将') }} <span style="color: #ffa519">{{ t('清空') }}</span> {{ t('现有草稿区,并导入') }}
+            <span style="color: #3a84ff">{{ existConfigList.length }}</span>
+            {{ t('个配置项') }}
+          </div>
         </div>
-      </div>
-      <ConfigTable
-        v-if="nonExistConfigList.length"
-        :table-data="nonExistConfigList"
-        :is-exsit-table="false"
-        :expand="expandNonExistTable"
-        @change-expand="expandNonExistTable = !expandNonExistTable"
-        @change="handleTableChange($event, true)" />
-      <ConfigTable
-        :expand="!expandNonExistTable"
-        :table-data="existConfigList"
-        :is-exsit-table="true"
-        v-if="existConfigList.length"
-        @change-expand="expandNonExistTable = !expandNonExistTable"
-        @change="handleTableChange($event, false)" />
+        <ConfigTable
+          v-if="nonExistConfigList.length"
+          :table-data="nonExistConfigList"
+          :is-exsit-table="false"
+          :expand="expandNonExistTable"
+          @change-expand="expandNonExistTable = !expandNonExistTable"
+          @change="handleTableChange($event, true)" />
+        <ConfigTable
+          v-if="existConfigList.length"
+          :expand="!expandNonExistTable"
+          :table-data="existConfigList"
+          :is-exsit-table="true"
+          @change-expand="expandNonExistTable = !expandNonExistTable"
+          @change="handleTableChange($event, false)" />
+      </bk-loading>
     </div>
     <template #footer>
       <bk-button
         theme="primary"
         style="margin-right: 8px"
-        :disabled="!btnDisabled"
+        :disabled="!confirmBtnDisabled"
         :loading="loading"
         @click="handleConfirm">
         {{ t('导入') }}
@@ -83,16 +90,26 @@
 <script lang="ts" setup>
   import { ref, watch, computed, onMounted } from 'vue';
   import { useI18n } from 'vue-i18n';
-  import { getConfigVersionList, importFromHistoryVersion } from '../../../../../../../../api/config';
+  import {
+    getConfigVersionList,
+    importFromHistoryVersion,
+    batchAddConfigList,
+  } from '../../../../../../../../api/config';
   import { IConfigVersion, IConfigImportItem } from '../../../../../../../../../types/config';
+  import { storeToRefs } from 'pinia';
   import createSamplePkg from '../../../../../../../../utils/sample-file-pkg';
   import ImportFromTemplate from './import/import-from-templates.vue';
   import ImportFromLocalFile from './import/import-from-local-file.vue';
   import ImportFormOtherService from './import/import-form-other-service.vue';
   import ConfigTable from '../../../../../../templates/list/package-detail/operations/add-configs/import-configs/config-table.vue';
   import useModalCloseConfirmation from '../../../../../../../../utils/hooks/use-modal-close-confirmation';
+  import useServiceStore from '../../../../../../../../store/service';
+  import { cloneDeep } from 'lodash';
 
   const { t } = useI18n();
+
+  const { batchUploadIds } = storeToRefs(useServiceStore());
+
   const props = defineProps<{
     show: boolean;
     bkBizId: string;
@@ -108,19 +125,22 @@
   const versionListLoading = ref(false);
   const selectVerisonId = ref();
   const versionList = ref<IConfigVersion[]>([]);
+  const tableLoading = ref(false);
+  const initExistConfigList = ref<IConfigImportItem[]>([]);
+  const initNonExistConfigList = ref<IConfigImportItem[]>([]);
   const existConfigList = ref<IConfigImportItem[]>([]);
   const nonExistConfigList = ref<IConfigImportItem[]>([]);
   const isClearDraft = ref(false);
   const expandNonExistTable = ref(true);
 
-  const btnDisabled = computed(() => {
+  const confirmBtnDisabled = computed(() => {
     if (importType.value === 'configTemplate' && importFromTemplateRef.value) {
       return importFromTemplateRef.value.isImportBtnDisabled;
     }
-    return false;
+    return importConfigList.value.length;
   });
 
-  const importConfigList = computed(() => [...existConfigList.value, ...nonExistConfigList.value]);
+  const importConfigList = computed(() => [...initExistConfigList.value, ...initNonExistConfigList.value]);
 
   watch(
     () => props.show,
@@ -133,14 +153,47 @@
     },
   );
 
+  watch(
+    () => importType.value,
+    () => {
+      nonExistConfigList.value = [];
+      existConfigList.value = [];
+      initExistConfigList.value = [];
+      initNonExistConfigList.value = [];
+    },
+  );
+
+  watch(
+    () => isClearDraft.value,
+    (val) => {
+      if (val) {
+        nonExistConfigList.value = [...initNonExistConfigList.value, ...initExistConfigList.value];
+        existConfigList.value = [];
+      } else {
+        existConfigList.value = [...initExistConfigList.value];
+        nonExistConfigList.value = [...initNonExistConfigList.value];
+      }
+    },
+  );
+
   onMounted(async () => {
     downloadHref.value = (await createSamplePkg()) as string;
   });
 
   const handleConfirm = async () => {
     loading.value = true;
-    if (importType.value === 'configTemplate') {
-      await importFromTemplateRef.value.handleImportConfirm();
+    try {
+      if (importType.value === 'configTemplate') {
+        await importFromTemplateRef.value.handleImportConfirm();
+      } else {
+        const res = await batchAddConfigList(props.bkBizId, props.appId, [
+          ...existConfigList.value,
+          ...nonExistConfigList.value,
+        ]);
+        batchUploadIds.value = res.ids;
+      }
+    } catch (error) {
+      console.error(error);
     }
     loading.value = false;
     emits('update:show', false);
@@ -164,14 +217,18 @@
   };
 
   const handleSelectVersion = async (appId: number, versionId: number) => {
+    tableLoading.value = true;
     try {
       const params = { other_app_id: appId || props.appId, release_id: versionId || selectVerisonId.value };
       const res = await importFromHistoryVersion(props.bkBizId, props.appId, params);
       existConfigList.value = res.data.exist;
       nonExistConfigList.value = res.data.non_exist;
-      console.log(res);
+      initExistConfigList.value = cloneDeep(res.data.exist);
+      initNonExistConfigList.value = cloneDeep(res.data.non_exist);
     } catch (e) {
       console.error(e);
+    } finally {
+      tableLoading.value = false;
     }
   };
 

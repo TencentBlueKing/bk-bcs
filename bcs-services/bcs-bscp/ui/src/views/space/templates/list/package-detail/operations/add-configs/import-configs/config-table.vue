@@ -8,7 +8,7 @@
         </div>
       </div>
     </div>
-    <div class="table-container" :style="{ 'max-height': maxTableHeight + 'px' }">
+    <div class="table-container">
       <table class="table" v-show="expand">
         <thead>
           <tr>
@@ -20,12 +20,12 @@
                 <bk-popover
                   ext-cls="popover-wrap"
                   theme="light"
-                  trigger="click"
+                  trigger="manual"
                   placement="bottom"
                   :is-show="batchSet.isShowMemoPop">
                   <edit-line class="edit-line" @click="batchSet.isShowMemoPop = true" />
                   <template #content>
-                    <div class="pop-wrap">
+                    <div class="pop-wrap" v-click-outside="() => (batchSet.isShowMemoPop = false)">
                       <div class="pop-content">
                         <div class="pop-title">{{ t('批量设置配置文件描述') }}</div>
                         <bk-input v-model="batchSet.memo" :placeholder="t('请输入')"></bk-input>
@@ -49,16 +49,16 @@
             </th>
             <th class="th-cell privilege">
               <div class="th-cell-edit">
-                <span>{{ t('文件权限') }}</span>
+                <span class="required">{{ t('文件权限') }}</span>
                 <bk-popover
                   ext-cls="popover-wrap"
                   theme="light"
-                  trigger="click"
+                  trigger="manual"
                   placement="bottom"
                   :is-show="batchSet.isShowPrivilege">
                   <edit-line class="edit-line" @click="batchSet.isShowPrivilege = true" />
                   <template #content>
-                    <div class="pop-wrap privilege-wrap">
+                    <div class="pop-wrap privilege-wrap" v-click-outside="() => (batchSet.isShowPrivilege = false)">
                       <div class="pop-content">
                         <div class="pop-title">{{ t('批量设置文件权限') }}</div>
                         <bk-input
@@ -104,16 +104,16 @@
             </th>
             <th class="th-cell user">
               <div class="th-cell-edit">
-                <span>{{ t('用户') }}</span>
+                <span class="required">{{ t('用户') }}</span>
                 <bk-popover
                   ext-cls="popover-wrap"
                   theme="light"
-                  trigger="click"
+                  trigger="manual"
                   placement="bottom"
                   :is-show="batchSet.isShowUserPop">
                   <edit-line class="edit-line" @click="batchSet.isShowUserPop = true" />
                   <template #content>
-                    <div class="pop-wrap">
+                    <div class="pop-wrap" v-click-outside="() => (batchSet.isShowUserPop = false)">
                       <div class="pop-content">
                         <div class="pop-title">{{ t('批量设置用户') }}</div>
                         <bk-input v-model="batchSet.user" :placeholder="t('请输入')"></bk-input>
@@ -137,16 +137,16 @@
             </th>
             <th class="th-cell user-group">
               <div class="th-cell-edit">
-                <span>{{ t('用户组') }}</span>
+                <span class="required">{{ t('用户组') }}</span>
                 <bk-popover
                   ext-cls="popover-wrap"
                   theme="light"
-                  trigger="click"
+                  trigger="manual"
                   placement="bottom"
                   :is-show="batchSet.isShowUserGroupPop">
                   <edit-line class="edit-line" @click="batchSet.isShowUserGroupPop = true" />
                   <template #content>
-                    <div class="pop-wrap">
+                    <div class="pop-wrap" v-click-outside="() => (batchSet.isShowUserGroupPop = false)">
                       <div class="pop-content">
                         <div class="pop-title">{{ t('批量设置用户组') }}</div>
                         <bk-input v-model="batchSet.user_group" :placeholder="t('请输入')"></bk-input>
@@ -174,7 +174,7 @@
           <tr v-for="(item, index) in data" :key="item.name + item.path">
             <td class="not-editable td-cell">
               <bk-overflow-title type="tips">
-                {{ item.name + item.path }}
+                {{ item.path + item.name }}
               </bk-overflow-title>
             </td>
             <td class="not-editable td-cell">
@@ -237,7 +237,7 @@
   import { useI18n } from 'vue-i18n';
   import { DownShape, EditLine } from 'bkui-vue/lib/icon';
   import { IConfigImportItem } from '../../../../../../../../../types/config';
-  import { cloneDeep } from 'lodash';
+  import { cloneDeep, isEqual } from 'lodash';
   import Message from 'bkui-vue/lib/message';
 
   const { t } = useI18n();
@@ -266,7 +266,6 @@
 
   const data = ref<IConfigImportItem[]>([]);
   const initData = ref<IConfigImportItem[]>([]);
-  const isInitData = ref(true);
 
   const props = withDefaults(
     defineProps<{
@@ -282,22 +281,26 @@
   onMounted(() => {
     data.value = cloneDeep(props.tableData);
     initData.value = cloneDeep(props.tableData);
-    console.log(data.value === initData.value);
   });
+
+  watch(
+    () => props.tableData,
+    () => {
+      data.value = cloneDeep(props.tableData);
+      initData.value = cloneDeep(props.tableData);
+    },
+  );
 
   watch(
     () => data.value,
     () => {
-      if (isInitData.value) {
-        isInitData.value = false;
+      if (isEqual(data.value, initData.value)) {
         return;
       }
       emits('change', data.value);
     },
     { deep: true },
   );
-
-  const maxTableHeight = computed(() => window.innerHeight * 0.6);
 
   // 将权限数字拆分成三个分组配置
   const privilegeGroupsValue = computed(() => (privilege: string) => {
@@ -326,7 +329,7 @@
   const handleSelectPrivilege = (index: number, val: number[], item?: IConfigImportItem) => {
     let groupsValue;
     if (item) {
-      groupsValue = { ...privilegeGroupsValue.value(item!.privilege) };
+      groupsValue = { ...privilegeGroupsValue.value(item.privilege) };
     } else {
       groupsValue = { ...privilegeGroupsValue.value(batchSet.value.privilege) };
     }
@@ -451,7 +454,7 @@
     overflow: auto;
   }
   .table {
-    width: 880px;
+    width: 100%;
     border-collapse: collapse;
     border: 1px solid #dcdee5;
     font-size: 12px;
@@ -474,28 +477,37 @@
           cursor: pointer;
           text-align: right;
         }
+        .required {
+          position: relative;
+          &::before {
+            position: absolute;
+            top: 0;
+            left: -14px;
+            width: 14px;
+            color: #ea3636;
+            text-align: center;
+            content: '*';
+          }
+        }
       }
     }
     .name {
-      width: 136px;
-    }
-    .path {
-      width: 163px;
+      width: 300px;
     }
     .type {
       width: 100px;
     }
     .memo {
-      width: 182px;
+      width: 199px;
     }
     .privilege {
-      width: 100px;
+      width: 102px;
     }
     .user {
-      width: 76px;
+      width: 78px;
     }
     .user-group {
-      width: 88px;
+      width: 91px;
     }
     .not-editable {
       background-color: #f5f7fa;
@@ -524,7 +536,7 @@
     }
     .td-cell-delete {
       border: 1px solid #dcdee5;
-      width: 42px;
+      width: 50px;
       text-align: center;
       .delete-icon {
         cursor: pointer;

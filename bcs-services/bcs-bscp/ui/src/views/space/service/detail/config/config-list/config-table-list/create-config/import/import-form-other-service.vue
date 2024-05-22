@@ -20,7 +20,7 @@
         style="width: 362px"
         filterable
         auto-focus
-        @select="handleSelectVersion">
+        @select="emits('selectVersion', selectAppId, selectVerisonId)">
         <bk-option v-for="item in versionList" :id="item.id" :key="item.id" :name="item.spec.name" />
       </bk-select>
     </div>
@@ -38,6 +38,7 @@
     bkBizId: string;
     appId: number;
   }>();
+  const emits = defineEmits(['selectVersion']);
 
   const serviceListloading = ref(false);
   const selectAppId = ref();
@@ -86,9 +87,6 @@
     getVersionList();
   };
 
-  const handleSelectVersion = () => {
-    console.log(selectAppId.value, selectVerisonId.value);
-  };
 </script>
 
 <style scoped lang="scss">
