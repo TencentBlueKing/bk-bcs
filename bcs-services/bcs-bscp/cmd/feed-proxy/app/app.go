@@ -64,9 +64,10 @@ func Run(opt *options.Option) error {
 }
 
 type feedProxy struct {
-	serve   *grpc.Server
-	sd      serviced.ServiceDiscover
-	service *service.Service
+	serve            *grpc.Server
+	sd               serviced.ServiceDiscover
+	service          *service.Service
+	upstreamDirector *grpcproxy.FeedServerDirector
 }
 
 // prepare do prepare jobs before run feed proxy.
@@ -102,6 +103,12 @@ func (fs *feedProxy) prepare(opt *options.Option) error {
 	}
 
 	fs.sd = sd
+
+	upstreamDirector, err := grpcproxy.NewFeedServerDirector()
+	if err != nil {
+		return fmt.Errorf("new feed server director failed, err: %v", err)
+	}
+	fs.upstreamDirector = upstreamDirector
 
 	// init bscp control tool
 	if err = ctl.LoadCtl(ctl.WithBasics(sd)...); err != nil {
@@ -150,8 +157,7 @@ func (fs *feedProxy) listenAndServe() error {
 		cred := credentials.NewTLS(tlsC)
 		opts = append(opts, grpc.Creds(cred))
 	}
-	opts = append(opts, grpc.CustomCodec(grpcproxy.Codec()),
-		grpc.UnknownServiceHandler(grpcproxy.TransparentHandler(grpcproxy.Director)))
+	opts = append(opts, grpc.UnknownServiceHandler(grpcproxy.TransparentHandler(fs.upstreamDirector)))
 
 	serve := grpc.NewServer(opts...)
 	// Register reflection service on gRPC server.
@@ -204,6 +210,11 @@ func (fs *feedProxy) finalizer() {
 
 	if err := fs.sd.Deregister(); err != nil {
 		logs.Errorf("process service shutdown, but deregister failed, err: %v", err)
+		return
+	}
+
+	if err := fs.upstreamDirector.Terminate(); err != nil {
+		logs.Errorf("process service shutdown, but upstream terminate failed, err: %v", err)
 		return
 	}
 

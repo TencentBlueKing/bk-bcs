@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package grpc NOTES
 package grpc
 
 import (
@@ -22,8 +23,7 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
@@ -38,36 +38,8 @@ var (
 	}
 )
 
-// Director 简单转发请求到新的网络地址上
-func Director(ctx context.Context, fullMethodName string) (context.Context, *grpc.ClientConn, error) {
-	// TODO: 目前是转发一次请求就建立一条连接，可以考虑建立连接池
-	conn, err := grpc.Dial(cc.FeedProxy().Upstream.FeedServerHost,
-		grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		logs.Errorf("failed to dial: %v", err)
-		return nil, nil, err
-	}
-
-	md, _ := metadata.FromIncomingContext(ctx)
-	// Copy the inbound metadata explicitly.
-	outCtx, _ := context.WithCancel(ctx)
-	outCtx = metadata.NewOutgoingContext(outCtx, md.Copy())
-
-	return outCtx, conn, err
-}
-
-// TransparentHandler returns a handler that attempts to proxy all requests that are not registered in the server.
-// The indented use here is as a transparent proxy, where the server doesn't know about the services implemented by the
-// backends. It should be used as a `grpc.UnknownServiceHandler`.
-//
-// This can *only* be used if the `server` also uses grpcproxy.CodecForServer() ServerOption.
-func TransparentHandler(director StreamDirector) grpc.StreamHandler {
-	streamer := &handler{director}
-	return streamer.handler
-}
-
 type handler struct {
-	director StreamDirector
+	director Director
 }
 
 // handler is where the real magic of proxying happens.
@@ -77,40 +49,46 @@ func (s *handler) handler(srv interface{}, serverStream grpc.ServerStream) error
 	// little bit of gRPC internals never hurt anyone
 	fullMethodName, ok := grpc.MethodFromServerStream(serverStream)
 	if !ok {
-		return grpc.Errorf(codes.Internal, "lowLevelServerStream not exists in context")
+		return status.Errorf(codes.Internal, "lowLevelServerStream not exists in context")
 	}
 	// We require that the director's returned context inherits from the serverStream.Context().
-	outgoingCtx, backendConn, err := s.director(serverStream.Context(), fullMethodName)
+	outgoingCtx, backendConn, err := s.director.Director(serverStream.Context(), fullMethodName)
 	if err != nil {
 		return err
 	}
-
 	clientCtx, clientCancel := context.WithCancel(outgoingCtx)
-	// TODO(mwitkow): Add a `forwarded` header to metadata, https://en.wikipedia.org/wiki/X-Forwarded-For.
-	clientStream, err := grpc.NewClientStream(clientCtx, clientStreamDescForProxying, backendConn, fullMethodName)
+	defer func() {
+		clientCancel()
+		if e := backendConn.Close(); e != nil {
+			logs.Errorf("close feedserver backend conn failed: %v", e)
+		}
+	}()
+
+	// TODO: Add a `forwarded` header to metadata, https://en.wikipedia.org/wiki/X-Forwarded-For.
+	clientStream, err := grpc.NewClientStream(clientCtx, clientStreamDescForProxying, backendConn.Value(), fullMethodName)
 	if err != nil {
 		return err
 	}
 
 	// Special case for GetDownloadURL, we need to replace the host in the response URL.
 	if fullMethodName == pbfs.Upstream_GetDownloadURL_FullMethodName {
-		buf := &emptypb.Empty{}
-		if err := serverStream.RecvMsg(buf); err != nil {
+		f := &emptypb.Empty{}
+		if err := serverStream.RecvMsg(f); err != nil {
 			return err
 		}
-		if err := clientStream.SendMsg(buf); err != nil {
+		if err := clientStream.SendMsg(f); err != nil {
 			return err
 		}
 
-		f := &pbfs.GetDownloadURLResp{}
-		if err := clientStream.RecvMsg(f); err != nil {
+		resp := &pbfs.GetDownloadURLResp{}
+		if err := clientStream.RecvMsg(resp); err != nil {
 			return err
 		}
 		// TODO: replace host and add prefix
 		network := cc.FeedProxy().Network
 		targetHost := net.JoinHostPort(network.BindIP, strconv.Itoa(int(network.HttpPort)))
-		f.Url = replaceHost(f.Url, targetHost)
-		if err := serverStream.SendMsg(f); err != nil {
+		resp.Url = replaceHost(resp.Url, targetHost)
+		if err := serverStream.SendMsg(resp); err != nil {
 			return err
 		}
 		return nil
@@ -125,18 +103,15 @@ func (s *handler) handler(srv interface{}, serverStream grpc.ServerStream) error
 	for i := 0; i < 2; i++ {
 		select {
 		case s2cErr := <-s2cErrChan:
-			if s2cErr == io.EOF {
-				// this is the happy case where the sender has encountered io.EOF, and won't be sending anymore./
-				// the clientStream>serverStream may continue pumping though.
-				clientStream.CloseSend()
-				break
-			} else {
-				// however, we may have gotten a receive error (stream disconnected, a read error etc) in which case we need
+			if s2cErr != io.EOF {
+				// we may have gotten a receive error (stream disconnected, a read error etc) in which case we need
 				// to cancel the clientStream to the backend, let all of its goroutines be freed up by the CancelFunc and
 				// exit with an error to the stack
-				clientCancel()
-				return grpc.Errorf(codes.Internal, "failed proxying s2c: %v", s2cErr)
+				return status.Errorf(codes.Internal, "failed proxying s2c: %v", s2cErr)
 			}
+			// this is the happy case where the sender has encountered io.EOF, and won't be sending anymore./
+			// the clientStream>serverStream may continue pumping though.
+			_ = clientStream.CloseSend()
 		case c2sErr := <-c2sErrChan:
 			// This happens when the clientStream has nothing else to offer (io.EOF), returned a gRPC error. In those two
 			// cases we may have received Trailers as part of the call. In case of other errors (stream closed) the trailers
@@ -150,7 +125,7 @@ func (s *handler) handler(srv interface{}, serverStream grpc.ServerStream) error
 		}
 	}
 
-	return grpc.Errorf(codes.Internal, "gRPC proxying should never reach this stage.")
+	return status.Errorf(codes.Internal, "gRPC proxying should never reach this stage.")
 }
 
 func (s *handler) forwardClientToServer(src grpc.ClientStream, dst grpc.ServerStream) chan error {
@@ -211,6 +186,7 @@ func replaceHost(inputURL, targetHost string) string {
 	}
 
 	// Replace Host
+	parsedURL.Scheme = "http"
 	parsedURL.Host = targetHost
 	parsedURL.Path = path.Join("/proxy/download", parsedURL.Path)
 	parsedURL.RawPath = path.Join("/proxy/download", parsedURL.RawPath)

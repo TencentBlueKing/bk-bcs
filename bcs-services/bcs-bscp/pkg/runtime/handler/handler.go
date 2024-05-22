@@ -103,23 +103,16 @@ func ReverseProxyHandler(name, prefix, remoteURL string) http.Handler {
 		panic(fmt.Errorf("%s '%s' scheme not supported", name, remoteURL))
 	}
 
-	fn := func(w http.ResponseWriter, r *http.Request) {
-		proxy := httputil.ReverseProxy{
-			Rewrite: func(req *httputil.ProxyRequest) {
-				req.SetURL(remote)
-				req.SetXForwarded()
-				if prefix != "" {
-					req.Out.URL.Path = strings.TrimPrefix(req.Out.URL.Path, prefix)
-					req.Out.URL.RawPath = strings.TrimPrefix(req.Out.URL.RawPath, prefix)
-				}
-				klog.InfoS("forward request", "name", name, "url", r.URL)
-			},
-		}
-
-		proxy.ServeHTTP(w, r)
+	return &httputil.ReverseProxy{
+		Rewrite: func(req *httputil.ProxyRequest) {
+			req.SetURL(remote)
+			req.SetXForwarded()
+			if prefix != "" {
+				req.Out.URL.Path = strings.TrimPrefix(req.Out.URL.Path, prefix)
+				req.Out.URL.RawPath = strings.TrimPrefix(req.Out.URL.RawPath, prefix)
+			}
+		},
 	}
-
-	return http.HandlerFunc(fn)
 }
 
 // CORS 跨域

@@ -33,6 +33,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.19.0
 	github.com/samber/lo v1.39.0
+	github.com/shimingyah/pool v1.0.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/smartystreets/goconvey v1.8.1
 	github.com/spf13/cobra v1.7.0
@@ -67,15 +68,6 @@ require (
 	gorm.io/plugin/prometheus v0.0.0-20230504115745-1aec2356381b
 	gorm.io/sharding v0.6.0
 	k8s.io/klog/v2 v2.110.1
-)
-
-require (
-	github.com/google/gofuzz v1.2.0 // indirect
-	gopkg.in/inf.v0 v0.9.1 // indirect
-	k8s.io/apimachinery v0.29.3 // indirect
-	k8s.io/utils v0.0.0-20230726121419-3b25d923346b // indirect
-	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
-	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
 )
 
 require (
@@ -125,6 +117,7 @@ require (
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
+	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/gopherjs/gopherjs v1.17.2 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
@@ -210,11 +203,16 @@ require (
 	golang.org/x/net v0.23.0
 	golang.org/x/sys v0.18.0 // indirect
 	golang.org/x/tools v0.16.1 // indirect
+	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gorm.io/hints v1.1.2 // indirect
 	k8s.io/api v0.29.3
+	k8s.io/apimachinery v0.29.3 // indirect
+	k8s.io/utils v0.0.0-20230726121419-3b25d923346b // indirect
 	moul.io/http2curl v1.0.0 // indirect
+	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
+	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
 )

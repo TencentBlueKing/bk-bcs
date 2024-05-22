@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package http NOTES
 package http
 
 import (
@@ -19,6 +20,7 @@ import (
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/handler"
 )
 
+// ProviderProxyHandler returns a http.Handler for proxying download requests to the provider
 func ProviderProxyHandler() http.Handler {
 	upstream := cc.FeedProxy().Upstream
 	var targetHost string
@@ -28,5 +30,6 @@ func ProviderProxyHandler() http.Handler {
 	case cc.S3:
 		targetHost = upstream.CosHost
 	}
+
 	return handler.ReverseProxyHandler("proxy_download", "/proxy/download", targetHost)
 }
