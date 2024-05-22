@@ -95,7 +95,7 @@ export interface IPullSuccessRate {
 
 // 信息展示卡片
 export interface IInfoCard {
-  value: number;
+  value: string;
   name: string;
   key: string;
   unit?: string;

@@ -47,7 +47,7 @@
       <div class="right">
         <Card v-for="item in resourceData" :key="item.name" :title="item.name" :width="207" :height="128">
           <div class="resource-info">
-            <span v-if="item.value">
+            <span v-if="item.value !== '0.00' && item.value !== '0.000'">
               <span class="time">{{ item.value }}</span>
               <span class="unit">{{ item.unit }}</span>
             </span>
@@ -92,32 +92,32 @@
 
   const resourceData = ref<IInfoCard[]>([
     {
-      value: 0,
+      value: '',
       name: t('平均 CPU 资源占用'),
       key: 'cpu_avg_usage',
     },
     {
-      value: 0,
+      value: '',
       name: t('平均内存资源占用'),
       key: 'memory_avg_usage',
     },
     {
-      value: 0,
+      value: '',
       name: t('最大 CPU 资源占用'),
       key: 'cpu_max_usage',
     },
     {
-      value: 0,
+      value: '',
       name: t('最大内存资源占用'),
       key: 'memory_max_usage',
     },
     {
-      value: 0,
+      value: '',
       name: t('最小 CPU 资源占用'),
       key: 'cpu_min_usage',
     },
     {
-      value: 0,
+      value: '',
       name: t('最小内存资源占用'),
       key: 'memory_min_usage',
     },
@@ -200,7 +200,7 @@
       sunburstData.value.children = convertToTree(data.value);
       Object.entries(res.resource_usage).forEach(([key, value]) => {
         const item = resourceData.value.find((item) => item.key === key) as IInfoCard;
-        item!.value = value as number;
+        item!.value = value as string;
         if (!item.key.includes('cpu')) {
           item.unit = 'MB';
         } else {
