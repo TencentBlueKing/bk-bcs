@@ -288,7 +288,7 @@ func (cs *cacheService) gwListenAndServe() error {
 		return err
 	}
 
-	cs.gwServe = &http.Server{Addr: addr, Handler: handler}
+	cs.gwServe = &http.Server{Handler: handler}
 
 	go func() {
 		notifier := shutdown.AddNotifier()

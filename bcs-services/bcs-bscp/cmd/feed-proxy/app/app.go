@@ -183,17 +183,21 @@ func (fs *feedProxy) listenAndServe() error {
 	}()
 
 	addr := tools.GetListenAddr(network.BindIP, int(network.RpcPort))
-	ipv6Addr := tools.GetListenAddr(network.BindIPv6, int(network.RpcPort))
+	addrs := tools.GetListenAddrs(network.BindIPs, int(network.RpcPort))
 	dualStackListener := listener.NewDualStackListener()
 	if err := dualStackListener.AddListenerWithAddr(addr); err != nil {
 		return err
 	}
+	logs.Infof("grpc server listen address: %s", addr)
 
-	if network.BindIPv6 != "" && network.BindIPv6 != network.BindIP {
-		if err := dualStackListener.AddListenerWithAddr(ipv6Addr); err != nil {
+	for _, a := range addrs {
+		if a == addr {
+			continue
+		}
+		if err := dualStackListener.AddListenerWithAddr(a); err != nil {
 			return err
 		}
-		logs.Infof("grpc serve dualStackListener with ipv6: %s", ipv6Addr)
+		logs.Infof("grpc server listen address: %s", a)
 	}
 
 	go func() {
