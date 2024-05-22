@@ -160,7 +160,7 @@
                                     theme="primary"
                                     :class="{ 'bk-text-with-no-perm': !hasEditServicePerm }"
                                     :disabled="!hasEditServicePerm"
-                                    @click="handleUnDelete(config.id)">
+                                    @click="handleUnDelete(config)">
                                     {{ t('恢复') }}
                                   </bk-button>
                                 </template>
@@ -518,7 +518,15 @@
         }
         res = await getReleasedConfigList(props.bkBizId, props.appId, versionData.value.id, params);
       }
-      configList.value = res.details;
+      configList.value = res.details.sort((a: IConfigItem, b: IConfigItem) => {
+        if (a.file_state === 'DELETE' && b.file_state !== 'DELETE') {
+          return 1;
+        }
+        if (a.file_state !== 'DELETE' && b.file_state === 'DELETE') {
+          return -1;
+        }
+        return 0;
+      });
       configsCount.value = res.count;
       configStore.$patch((state) => {
         state.conflictFileCount = res.conflict_number || 0;
@@ -783,13 +791,13 @@
   };
 
   // 配置文件恢复删除
-  const handleUnDelete = async (id: number) => {
+  const handleUnDelete = async (config: IConfigTableItem) => {
     if (permCheckLoading.value || !checkPermBeforeOperate('update')) {
       return;
     }
-    await unDeleteConfigItem(props.bkBizId, props.appId, id);
+    await unDeleteConfigItem(props.bkBizId, props.appId, config.id);
     Message({ theme: 'success', message: t('恢复配置文件成功') });
-    getAllConfigList();
+    config.file_state = 'UNCHANGE';
   };
 
   // 批量删除配置项后刷新配置项列表
