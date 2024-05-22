@@ -1,5 +1,5 @@
 <template>
-  <div class="table-container">
+  <div ref="tableRef" class="table-container">
     <bk-loading :loading="loading" style="height: 100%">
       <table class="config-groups-table" :key="appId">
         <thead>
@@ -20,9 +20,15 @@
           </tr>
         </thead>
         <tbody>
-          <template v-for="group in tableGroupsData" :key="group.id" v-if="allConfigCount !== 0">
+          <template v-for="(group, index) in tableGroupsData" :key="group.id" v-if="allConfigCount !== 0">
             <tr
-              :class="['config-groups-table-tr', 'group-title-row', group.expand ? 'expand' : '']"
+              ref="collapseHeader"
+              :class="[
+                'config-groups-table-tr',
+                'group-title-row',
+                group.expand ? 'expand' : '',
+                { sticky: stickyIndex === index },
+              ]"
               v-if="group.configs.length > 0">
               <td :colspan="colsLen" class="config-groups-table-td">
                 <div class="configs-group">
@@ -270,7 +276,7 @@
   </DeleteConfirmDialog>
 </template>
 <script lang="ts" setup>
-  import { ref, computed, watch, onMounted } from 'vue';
+  import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
   import { useI18n } from 'vue-i18n';
   import { storeToRefs } from 'pinia';
   import Message from 'bkui-vue/lib/message';
@@ -382,6 +388,9 @@
     id: 0,
     version: 0,
   });
+  const stickyIndex = ref(1);
+  const tableRef = ref();
+  const collapseHeader = ref();
 
   // 是否为未命名版本
   const isUnNamedVersion = computed(() => versionData.value.id === 0);
@@ -463,8 +472,13 @@
   );
 
   onMounted(async () => {
+    tableRef.value.addEventListener('scroll', handleScroll);
     await getBindingId();
     getAllConfigList();
+  });
+
+  onBeforeUnmount(() => {
+    tableRef.value.removeEventListener('scroll', handleScroll);
   });
 
   const getBindingId = async () => {
@@ -785,6 +799,17 @@
     getAllConfigList();
   };
 
+  // 监听表格滚动事件
+  const handleScroll = () => {
+    const tableRect = tableRef.value.getBoundingClientRect();
+    collapseHeader.value.forEach((header: Element, index: number) => {
+      const headerRect = header.getBoundingClientRect();
+      if (headerRect.top <= tableRect.top && headerRect.bottom >= tableRect.top) {
+        stickyIndex.value = index;
+      }
+    });
+  };
+
   defineExpose({
     refreshAfterBatchDelete,
     refresh: getAllConfigList,
@@ -804,6 +829,7 @@
       background: none;
     }
     .config-groups-table-tr {
+      background: #ffffff;
       th,
       td {
         position: relative;
@@ -838,6 +864,11 @@
         &:hover {
           background: #f5f7fa;
         }
+      }
+      &.sticky {
+        position: sticky;
+        top: 43px;
+        z-index: 100;
       }
     }
     .config-groups-table-td {
@@ -908,10 +939,6 @@
     .exception-tips {
       margin: 20px 0;
     }
-  }
-  .configs-list-wrapper {
-    max-height: 420px;
-    overflow: auto;
   }
   .config-list-table {
     width: 100%;
