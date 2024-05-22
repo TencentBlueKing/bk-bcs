@@ -141,3 +141,29 @@ func (s *Service) DeleteClientQuery(ctx context.Context, req *pbcs.DeleteClientQ
 
 	return &pbcs.DeleteClientQueryResp{}, nil
 }
+
+// CheckClientQueryName 检查客户端查询名称
+func (s *Service) CheckClientQueryName(ctx context.Context, req *pbcs.CheckClientQueryNameReq) (
+	*pbcs.CheckClientQueryNameResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.View, ResourceID: req.AppId}, BizID: req.BizId},
+	}
+	err := s.authorizer.Authorize(kt, res...)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := s.client.DS.CheckClientQueryName(kt.RpcCtx(), &pbds.CheckClientQueryNameReq{
+		Name:  req.GetName(),
+		BizId: req.GetBizId(),
+		AppId: req.GetAppId(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &pbcs.CheckClientQueryNameResp{Exist: resp.GetExist()}, nil
+}

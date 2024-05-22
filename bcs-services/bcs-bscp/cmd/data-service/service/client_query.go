@@ -188,3 +188,24 @@ func (s *Service) DeleteClientQuery(ctx context.Context, req *pbds.DeleteClientQ
 	}
 	return &pbbase.EmptyResp{}, nil
 }
+
+// CheckClientQueryName 检查客户端查询名称
+func (s *Service) CheckClientQueryName(ctx context.Context, req *pbds.CheckClientQueryNameReq) (
+	*pbds.CheckClientQueryNameResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	if req.GetName() == "" {
+		return nil, errors.New("search name cannot be empty")
+	}
+
+	query, errQ := s.dao.ClientQuery().GetBySearchName(grpcKit, req.GetBizId(), req.GetAppId(),
+		grpcKit.User, req.GetName())
+	if errQ != nil && !errors.Is(errQ, gorm.ErrRecordNotFound) {
+		return nil, errQ
+	}
+	var exist bool
+	if query != nil {
+		exist = true
+	}
+	return &pbds.CheckClientQueryNameResp{Exist: exist}, nil
+}

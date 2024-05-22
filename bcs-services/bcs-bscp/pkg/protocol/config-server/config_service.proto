@@ -854,6 +854,11 @@ option (google.api.http) = {
       delete: "/api/v1/config/biz/{biz_id}/apps/{app_id}/client_querys/{id}"
     };
   };
+  rpc CheckClientQueryName(CheckClientQueryNameReq) returns (CheckClientQueryNameResp) {
+    option (google.api.http) = {
+      get: "/api/v1/config/biz/{biz_id}/apps/{app_id}/client_querys/check_exists"
+    };
+  };
 
   // client chart related interface
   rpc ClientConfigVersionStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {
@@ -2638,6 +2643,16 @@ message DeleteClientQueryReq {
 }
 
 message DeleteClientQueryResp {}
+
+message CheckClientQueryNameReq {
+  string name = 1;
+  uint32 biz_id = 2;
+  uint32 app_id = 3;
+}
+
+message CheckClientQueryNameResp {
+  bool exist = 1;
+}
 
 message ListClientLabelAndAnnotationReq {
   uint32 biz_id = 1;
