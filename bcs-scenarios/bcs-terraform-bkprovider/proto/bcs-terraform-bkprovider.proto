@@ -150,6 +150,10 @@ message ListHostRequest {
     title: "pagesize",
     description: "分页大小，默认为10"
   }];
+  repeated int32 bk_biz_ids = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "bk_biz_ids",
+    description: "蓝鲸业务ID"
+  }];
 }
 
 message HostInfo {

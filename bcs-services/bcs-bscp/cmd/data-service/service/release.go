@@ -215,6 +215,7 @@ func (s *Service) doConfigItemOperations(kt *kit.Kit, variables []*pbtv.Template
 	// get rendered content map which is template revision id => rendered content
 	renderedContentMap := make(map[uint32][]byte, len(tmplRevisions))
 	signatureMap := make(map[uint32]string, len(tmplRevisions))
+	md5Map := make(map[uint32]string, len(tmplRevisions))
 	byteSizeMap := make(map[uint32]uint64, len(tmplRevisions))
 	revisionMap := make(map[uint32]*table.TemplateRevision, len(tmplRevisions))
 	// data which need render
@@ -222,6 +223,7 @@ func (s *Service) doConfigItemOperations(kt *kit.Kit, variables []*pbtv.Template
 		revisionMap[r.ID] = r
 		renderedContentMap[r.ID] = s.tmplProc.Render(contents[idx], renderKV)
 		signatureMap[r.ID] = tools.ByteSHA256(renderedContentMap[r.ID])
+		md5Map[r.ID] = tools.ByteMD5(renderedContentMap[r.ID])
 		byteSizeMap[r.ID] = uint64(len(renderedContentMap[r.ID]))
 	}
 	// data which doesn't need render
@@ -231,12 +233,14 @@ func (s *Service) doConfigItemOperations(kt *kit.Kit, variables []*pbtv.Template
 		}
 		revisionMap[r.ID] = r
 		signatureMap[r.ID] = r.Spec.ContentSpec.Signature
+		md5Map[r.ID] = r.Spec.ContentSpec.Md5
 		byteSizeMap[r.ID] = r.Spec.ContentSpec.ByteSize
 	}
 
 	// get rendered content map which is config item id => rendered content
 	ciRenderedContentMap := make(map[uint32][]byte, len(cis))
 	ciSignatureMap := make(map[uint32]string, len(cis))
+	ciMd5Map := make(map[uint32]string, len(cis))
 	ciByteSizeMap := make(map[uint32]uint64, len(cis))
 	ciMap := make(map[uint32]*pbci.ConfigItem, len(cis))
 	// data which need render
@@ -244,6 +248,7 @@ func (s *Service) doConfigItemOperations(kt *kit.Kit, variables []*pbtv.Template
 		ciMap[ci.Id] = ci
 		ciRenderedContentMap[ci.Id] = s.tmplProc.Render(ciContents[idx], renderKV)
 		ciSignatureMap[ci.Id] = tools.ByteSHA256(ciRenderedContentMap[ci.Id])
+		ciMd5Map[ci.Id] = tools.ByteMD5(ciRenderedContentMap[ci.Id])
 		ciByteSizeMap[ci.Id] = uint64(len(ciRenderedContentMap[ci.Id]))
 	}
 	// data which doesn't need render
@@ -252,6 +257,7 @@ func (s *Service) doConfigItemOperations(kt *kit.Kit, variables []*pbtv.Template
 			continue
 		}
 		ciMap[ci.Id] = ci
+		ciMd5Map[ci.Id] = ci.CommitSpec.Content.Md5
 		ciSignatureMap[ci.Id] = ci.CommitSpec.Content.Signature
 		ciByteSizeMap[ci.Id] = ci.CommitSpec.Content.ByteSize
 	}
@@ -268,13 +274,13 @@ func (s *Service) doConfigItemOperations(kt *kit.Kit, variables []*pbtv.Template
 	}
 
 	if e := s.createReleasedRenderedTemplateCIs(kt, tx, releaseID, tmplRevisions, renderedContentMap, byteSizeMap,
-		signatureMap); e != nil {
+		signatureMap, md5Map); e != nil {
 		logs.Errorf("create released rendered template config items failed, err: %v, rid: %s", e, kt.Rid)
 		return e
 	}
 
 	if err = s.createReleasedRenderedCIs(kt, tx, releaseID, cis, ciRenderedContentMap, ciByteSizeMap,
-		ciSignatureMap); err != nil {
+		ciSignatureMap, ciMd5Map); err != nil {
 		if rErr := tx.Rollback(); rErr != nil {
 			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
 		}
@@ -282,7 +288,8 @@ func (s *Service) doConfigItemOperations(kt *kit.Kit, variables []*pbtv.Template
 		return err
 	}
 
-	if e := s.createReleasedAppTemplates(kt, tx, releaseID, renderedContentMap, byteSizeMap, signatureMap); e != nil {
+	if e := s.createReleasedAppTemplates(kt, tx, releaseID, renderedContentMap, byteSizeMap, signatureMap,
+		md5Map); e != nil {
 		logs.Errorf("create released rendered template config items failed, err: %v, rid: %s", e, kt.Rid)
 		return e
 	}
@@ -340,7 +347,7 @@ func (s *Service) getRenderedVars(kt *kit.Kit, allVars []string, inputVarMap map
 // createReleasedRenderedTemplateCIs create released rendered templates config items.
 func (s *Service) createReleasedRenderedTemplateCIs(kt *kit.Kit, tx *gen.QueryTx, releaseID uint32,
 	tmplRevisions []*table.TemplateRevision, renderedContentMap map[uint32][]byte, byteSizeMap map[uint32]uint64,
-	signatureMap map[uint32]string) error {
+	signatureMap map[uint32]string, md5Map map[uint32]string) error {
 	releasedCIs := make([]*table.ReleasedConfigItem, len(tmplRevisions))
 	for idx, r := range tmplRevisions {
 		creator := r.Revision.Creator
@@ -359,6 +366,7 @@ func (s *Service) createReleasedRenderedTemplateCIs(kt *kit.Kit, tx *gen.QueryTx
 				ContentID: 0,
 				Content: &table.ReleasedContentSpec{
 					Signature:       signatureMap[r.ID],
+					Md5:             md5Map[r.ID],
 					ByteSize:        byteSizeMap[r.ID],
 					OriginSignature: r.Spec.ContentSpec.Signature,
 					OriginByteSize:  r.Spec.ContentSpec.ByteSize,
@@ -395,7 +403,8 @@ func (s *Service) createReleasedRenderedTemplateCIs(kt *kit.Kit, tx *gen.QueryTx
 
 // createReleasedRenderedCIs create released rendered config items
 func (s *Service) createReleasedRenderedCIs(kt *kit.Kit, tx *gen.QueryTx, releaseID uint32, cis []*pbci.ConfigItem,
-	ciRenderedContentMap map[uint32][]byte, byteSizeMap map[uint32]uint64, signatureMap map[uint32]string) error {
+	ciRenderedContentMap map[uint32][]byte, byteSizeMap map[uint32]uint64, signatureMap map[uint32]string,
+	md5Map map[uint32]string) error {
 	releasedCIs := make([]*table.ReleasedConfigItem, 0)
 	if len(cis) == 0 {
 		return nil
@@ -436,6 +445,7 @@ func (s *Service) createReleasedRenderedCIs(kt *kit.Kit, tx *gen.QueryTx, releas
 					ByteSize:        byteSizeMap[ci.Id],
 					OriginSignature: ci.CommitSpec.Content.Signature,
 					OriginByteSize:  ci.CommitSpec.Content.ByteSize,
+					Md5:             md5Map[ci.Id],
 				},
 				Memo: commit.Spec.Memo,
 			},
@@ -479,7 +489,8 @@ func (s *Service) createReleasedRenderedCIs(kt *kit.Kit, tx *gen.QueryTx, releas
 
 // createReleasedAppTemplates create released app templates.
 func (s *Service) createReleasedAppTemplates(kt *kit.Kit, tx *gen.QueryTx, releaseID uint32,
-	renderedContentMap map[uint32][]byte, byteSizeMap map[uint32]uint64, signatureMap map[uint32]string) error {
+	renderedContentMap map[uint32][]byte, byteSizeMap map[uint32]uint64, signatureMap map[uint32]string,
+	md5Map map[uint32]string) error {
 	revisionsResp, err := s.ListAppBoundTmplRevisions(kt.Ctx, &pbds.ListAppBoundTmplRevisionsReq{
 		BizId: kt.BizID,
 		AppId: kt.AppID,
@@ -530,7 +541,7 @@ func (s *Service) createReleasedAppTemplates(kt *kit.Kit, tx *gen.QueryTx, relea
 				ByteSize:             byteSizeMap[r.TemplateRevisionId],
 				OriginSignature:      r.Signature,
 				OriginByteSize:       r.ByteSize,
-				Md5:                  r.Md5,
+				Md5:                  md5Map[r.TemplateRevisionId],
 			},
 			Attachment: &table.ReleasedAppTemplateAttachment{
 				BizID: kt.BizID,

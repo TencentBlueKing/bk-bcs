@@ -13,6 +13,7 @@
 package tools
 
 import (
+	// NOCC:gas/crypto(设计如此)
 	"crypto/md5"
 	"crypto/sha256"
 	"fmt"

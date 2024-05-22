@@ -422,6 +422,9 @@ export default {
     maintainers() {
       return this.$store.state.cluster.maintainers || [];
     },
+    curProject() {
+      return this.$store.state.curProject;
+    },
     projectId() {
       return this.$store.getters.curProjectId;
     },
@@ -616,6 +619,7 @@ export default {
           cloudID: 'tencentCloud',
           region: this.formdata.region,
           networkType: this.formdata.networkKey,
+          businessID: this.curProject?.businessID,
         });
         this.vpcLoading = false;
         const vpcList = data.map(item => ({

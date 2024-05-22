@@ -46,6 +46,8 @@ var (
 )
 
 // BuildRemoveInnerTaintTaskStep 删除预置的污点
+// NOCC:tosa/fn_length(忽略)
+// nolint function name should not exceed 35 characters
 func BuildRemoveInnerTaintTaskStep(task *proto.Task, group *proto.NodeGroup) {
 	removeTaintStep := cloudprovider.InitTaskStep(RemoveClusterNodesInnerTaintStep)
 
@@ -58,6 +60,8 @@ func BuildRemoveInnerTaintTaskStep(task *proto.Task, group *proto.NodeGroup) {
 }
 
 // RemoveClusterNodesInnerTaintTask removes cluster nodes taint
+// NOCC:tosa/fn_length(忽略)
+// nolint function name should not exceed 35 characters
 func RemoveClusterNodesInnerTaintTask(taskID string, stepName string) error {
 	start := time.Now()
 

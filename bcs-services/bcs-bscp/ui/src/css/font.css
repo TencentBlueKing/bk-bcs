@@ -128,3 +128,15 @@
 .icon-bar-chart:before {
   content: '\e11f';
 }
+.icon-bar-chart-thin:before {
+  content: '\e123';
+}
+.icon-bar-chart-stack:before {
+  content: '\e124';
+}
+.icon-close-line:before {
+  content: '\e126';
+}
+.icon-edit-line:before {
+  content: '\e125';
+}

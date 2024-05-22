@@ -80,8 +80,8 @@ func (o *RunOptions) addGPAFlags() {
 	pflag.DurationVar(&o.GeneralPodAutoscalerDownscaleStabilizationWindow.Duration,
 		"general-pod-autoscaler-downscale-stabilization",
 		o.GeneralPodAutoscalerDownscaleStabilizationWindow.Duration,
-		"The period for which autoscaler will look backwards and " + 
-		"not scale down below any recommendation it made during that period.")
+		"The period for which autoscaler will look backwards and "+
+			"not scale down below any recommendation it made during that period.")
 	pflag.DurationVar(
 		&o.GeneralPodAutoscalerDownscaleForbiddenWindow.Duration,
 		"general-pod-autoscaler-downscale-delay",
@@ -89,8 +89,8 @@ func (o *RunOptions) addGPAFlags() {
 		"The period since last downscale, before another downscale can be performed in general pod autoscaler.")
 	pflag.Float64Var(&o.GeneralPodAutoscalerTolerance,
 		"general-pod-autoscaler-tolerance", o.GeneralPodAutoscalerTolerance,
-		"The minimum change (from 1.0) in the desired-to-actual metrics ratio for " + 
-		"the general pod autoscaler to consider scaling.")
+		"The minimum change (from 1.0) in the desired-to-actual metrics ratio for "+
+			"the general pod autoscaler to consider scaling.")
 	pflag.BoolVar(&o.GeneralPodAutoscalerUseRESTClients,
 		"general-pod-autoscaler-use-rest-clients",
 		o.GeneralPodAutoscalerUseRESTClients,

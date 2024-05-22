@@ -59,6 +59,7 @@ export default {
   data() {
     return {
       lastArea: 0,
+      observer: null,
     };
   },
   watch: {
@@ -207,7 +208,12 @@ export default {
           }
           this.lastArea = this.getArea();
         }, 100, { leading: true });
-        addListener(this.$el, this.__resizeHandler);
+        this.observer = new MutationObserver(this.__resizeHandler);
+        this.observer.observe(this.$el, {
+          childList: true, // 观察目标子节点的变化，是否有添加或者删除
+          attributes: true, // 观察属性变动
+          subtree: true, // 观察后代节点，默认为 false
+        });
       }
 
       Object.defineProperties(this, {
@@ -235,8 +241,9 @@ export default {
       this.chart = chart;
     },
     destroy() {
-      if (this.autoResize) {
-        removeListener(this.$el, this.__resizeHandler);
+      if (this.autoResize && this.observer) {
+        this.observer.disconnect();
+        this.observer = null;
       }
       this.dispose();
       this.chart = null;

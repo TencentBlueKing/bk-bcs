@@ -2,6 +2,7 @@
   <div class="head">
     <div class="head-left">
       <span class="title">{{ title }}</span>
+      <div class="line"></div>
       <bk-select
         v-model="localApp.id"
         ref="selectorRef"
@@ -16,7 +17,9 @@
         @change="handleAppChange">
         <template #trigger>
           <div class="selector-trigger">
-            <span v-if="localApp.name" class="app-name">{{ localApp?.name }}</span>
+            <bk-overflow-title v-if="localApp.name" class="app-name" type="tips">
+              {{ localApp?.name }}
+            </bk-overflow-title>
             <span v-else class="no-app">{{ $t('暂无服务') }}</span>
             <AngleUpFill class="arrow-icon arrow-fill" />
           </div>
@@ -76,7 +79,7 @@
   const loading = ref(false);
   const localApp = ref({
     name: '',
-    id: 0,
+    id: Number(route.params.appId),
   });
   const serviceList = ref<IAppItem[]>([]);
   const heartbeatTime = ref(searchQuery.value.last_heartbeat_time);
@@ -94,7 +97,7 @@
         id: service.id!,
       };
       emits('search');
-    } else {
+    } else if (serviceList.value.length) {
       handleAppChange(serviceList.value[0].id!);
     }
   });
@@ -124,6 +127,8 @@
       };
     }
     setLastSelectedClientService(appId);
+    heartbeatTime.value = 60;
+    handleHeartbeatTimeChange(60);
     await router.push({ name: route.name!, params: { spaceId: bizId.value, appId } });
     emits('search');
   };
@@ -143,27 +148,23 @@
 
 <style scoped lang="scss">
   .head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    position: relative;
     font-size: 20px;
     line-height: 28px;
     height: 32px;
     .head-left {
       display: flex;
       align-items: center;
+      .line {
+        width: 1px;
+        height: 24px;
+        background-color: #dcdee5;
+        margin: 0 16px;
+      }
       .title {
         position: relative;
         color: #313238;
         font-weight: 700;
-        &::after {
-          position: absolute;
-          right: -16px;
-          content: '';
-          width: 1px;
-          height: 24px;
-          background: #dcdee5;
-        }
       }
       .service-selector {
         &.popover-show {
@@ -177,9 +178,11 @@
           }
         }
         .selector-trigger {
-          margin-left: 33px;
           cursor: pointer;
+          display: flex;
+          align-items: center;
           .app-name {
+            max-width: 150px;
             color: #63656e;
           }
           .no-app {
@@ -196,6 +199,9 @@
       }
     }
     .head-right {
+      position: absolute;
+      left: 27%;
+      top: 0;
       display: flex;
       align-items: center;
       font-size: 12px;

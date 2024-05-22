@@ -1,7 +1,7 @@
+import $store from '@/store';
 // 资源视图
 const DashboardView = () => import(/* webpackChunkName: 'dashboard' */'@/views/resource-view/dashboard-view.vue');
-const DashboardNamespace = () => import(/* webpackChunkName: 'dashboard' */'@/views/resource-view/namespace/namespace.vue');
-const DashboardNamespaceCreate = () => import(/* webpackChunkName: 'dashboard' */'@/views/resource-view/namespace/create.vue');
+const ResourceView = () => import(/* webpackChunkName: 'dashboard' */'@/views/resource-view/resource-view.vue');
 const DashboardWorkloadDeployments = () => import(/* webpackChunkName: 'dashboard' */'@/views/resource-view/workload/deployments.vue');
 const DashboardWorkloadDaemonSets = () => import(/* webpackChunkName: 'dashboard' */'@/views/resource-view/workload/daemonsets.vue');
 const DashboardWorkloadStatefulSets = () => import(/* webpackChunkName: 'dashboard' */'@/views/resource-view/workload/statefulsets.vue');
@@ -44,35 +44,27 @@ const DashboardHPA = () => import(/* webpackChunkName: 'dashboard' */'@/views/re
 
 const UpdateRecord = () => import(/* webpackChunkName: 'dashboard' */'@/views/resource-view/workload/update-record.vue');
 
-const childRoutes = [
+export default [
   {
-    path: ':clusterId',
+    path: 'clusters/:clusterId?',
     name: 'dashboardHome',
     component: DashboardView,
     redirect: {
-      name: 'dashboardNamespace',
+      name: 'dashboardWorkload',
+      params: {
+        projectCode: $store.getters.curProjectCode,
+      },
     },
     children: [
-      // dashboard 命名空间
-      {
-        path: 'namespaces',
-        name: 'dashboardNamespace',
-        component: DashboardNamespace,
-      },
-      {
-        path: 'namespaces/create',
-        name: 'dashboardNamespaceCreate',
-        component: DashboardNamespaceCreate,
-        meta: {
-          menuId: 'NAMESPACE',
-        },
-      },
       // dashboard workload
       {
         path: 'workloads',
         name: 'dashboardWorkload',
         redirect: {
           name: 'dashboardWorkloadDeployments',
+          params: {
+            projectCode: $store.getters.curProjectCode,
+          },
         },
       },
       // dashboard workload deployments
@@ -120,36 +112,31 @@ const childRoutes = [
       {
         path: 'gamestatefulsets',
         name: 'dashboardGameStatefulSets',
+        props: route => ({ ...route.params, crd: route.query.crd }),
         component: DashboardGameStatefulSets,
       },
       // dashboard gamedeployments
       {
         path: 'gamedeployments',
         name: 'dashboardGameDeployments',
+        props: route => ({ ...route.params, crd: route.query.crd }),
         component: DashboardGameDeployments,
       },
       // dashboard hookTemplates
       {
         path: 'hook-templates',
         name: 'dashboardHookTemplates',
+        props: route => ({ ...route.params, crd: route.query.crd }),
         component: DashboardHookTemplates,
       },
       // dashboard customobjects
       {
         path: 'customobjects',
         name: 'dashboardCustomObjects',
+        props: route => ({ ...route.params, crd: route.query.crd, scope: route.query.scope, kind: route.query.kind }),
         component: DashboardCustomObjects,
-      },
-      // dashboard workload detail
-      {
-        path: 'workloads/:category/namespaces/:namespace/:name',
-        name: 'dashboardWorkloadDetail',
-        props: route => ({ ...route.params, kind: route.query.kind, crd: route.query.crd }),
-        component: DashboardWorkloadDetail,
-        beforeEnter: (to, from, next) => {
-          // 设置当前详情的父级菜单
-          to.meta.menuId = String(to.query.kind).toUpperCase();
-          next();
+        meta: {
+          menuId: 'CLUSTERRESOURCE',
         },
       },
       // network
@@ -238,6 +225,36 @@ const childRoutes = [
         name: 'dashboardRbacServiceAccounts',
         component: DashboardRbacServiceAccounts,
       },
+      // hpa
+      {
+        path: 'hpa',
+        name: 'dashboardHPA',
+        component: DashboardHPA,
+      },
+    ],
+  },
+  {
+    path: 'clusters/:clusterId',
+    component: ResourceView,
+    children: [
+      // dashboard workload detail
+      {
+        path: 'workloads/:category/namespaces/:namespace/:name',
+        name: 'dashboardWorkloadDetail',
+        props: route => ({
+          ...route.params,
+          kind: route.query.kind,
+          crd: route.query.crd,
+          pod: route.query.pod,
+          container: route.query.container,
+        }),
+        component: DashboardWorkloadDetail,
+        beforeEnter: (to, from, next) => {
+          // 设置当前详情的父级菜单
+          to.meta.menuId = String(to.query.kind).toUpperCase();
+          next();
+        },
+      },
       // resource update
       {
         path: 'resource/namespaces/:namespace?/:name?',
@@ -272,14 +289,6 @@ const childRoutes = [
           next();
         },
       },
-      // hpa
-      {
-        path: 'hpa',
-        name: 'dashboardHPA',
-        component: DashboardHPA,
-      },
     ],
   },
 ];
-
-export default childRoutes;

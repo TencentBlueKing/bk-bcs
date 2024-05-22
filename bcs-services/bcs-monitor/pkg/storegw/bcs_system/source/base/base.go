@@ -105,6 +105,10 @@ type MetricHandler interface {
 		step time.Duration) ([]*prompb.TimeSeries, error)
 	GetClusterDiskioTotal(ctx context.Context, projectId, clusterId string, start, end time.Time,
 		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetClusterGroupNodeNum(ctx context.Context, projectId, clusterId, group string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetClusterGroupMaxNodeNum(ctx context.Context, projectId, clusterId, group string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
 	GetNodeInfo(ctx context.Context, projectId, clusterId, nodeName string, t time.Time) (*NodeInfo, error)
 	GetNodeCPUTotal(ctx context.Context, projectId, clusterId, nodeName string, start, end time.Time,
 		step time.Duration) ([]*prompb.TimeSeries, error)
@@ -144,8 +148,12 @@ type MetricHandler interface {
 		step time.Duration) ([]*prompb.TimeSeries, error)
 	GetNodeContainerCount(ctx context.Context, projectId, clusterId, nodeName string, start, end time.Time,
 		step time.Duration) ([]*prompb.TimeSeries, error)
-	GetPodCPUUsage(ctx context.Context, projectId, clusterId, namespace string, podNameList []string, start, end time.Time,
-		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetPodCPUUsage(ctx context.Context, projectId, clusterId, namespace string, podNameList []string, start,
+		end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
+	GetPodCPULimitUsage(ctx context.Context, projectId, clusterId, namespace string, podNameList []string, start,
+		end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
+	GetPodCPURequestUsage(ctx context.Context, projectId, clusterId, namespace string, podNameList []string, start,
+		end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
 	GetPodMemoryUsed(ctx context.Context, projectId, clusterId, namespace string, podNameList []string, start,
 		end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
 	GetPodNetworkReceive(ctx context.Context, projectId, clusterId, namespace string, podNameList []string, start,

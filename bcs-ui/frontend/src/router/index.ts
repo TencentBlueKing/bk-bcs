@@ -28,9 +28,9 @@ import VueRouter from 'vue-router';
 
 import ClusterManage from './cluster-manage';
 import DeployManage from './deployment-manage';
-import PluginManage from './plugin-manage';
+import PluginManage from './plugin-manage';// todo 有循环依赖
 import ProjectManage from './project-manage';
-import ResourceView from './resource-view';
+import ResourceView from './resource-view';// todo 有循环依赖
 
 import cancelRequest from '@/common/cancel-request';
 import $store from '@/store';
@@ -40,7 +40,6 @@ Vue.use(VueRouter);
 
 const Entry = () => import(/* webpackChunkName: 'entry' */'@/views/index.vue');
 const DefaultSideMenu = () => import(/* webpackChunkName: 'entry' */'@/views/app/side-menu.vue');
-const DashboardSideMenu = () => import(/* webpackChunkName: 'entry' */'@/views/resource-view/sidebar.vue');
 const NotFound = () => import(/* webpackChunkName: 'entry' */'@/views/app/404.vue');
 const Forbidden = () => import(/* webpackChunkName: 'entry' */'@/views/app/403.vue');
 const Token = () => import(/* webpackChunkName: 'entry' */'@/views/user-token/token.vue');
@@ -103,11 +102,11 @@ const router = new VueRouter({
     },
     // 资源视图
     {
-      path: `${SITE_URL}/projects/:projectCode/clusters`,
+      path: `${SITE_URL}/projects/:projectCode`,
       name: 'dashboardIndex',
-      components: {
-        default: Entry,
-        sideMenu: DashboardSideMenu,
+      component: Entry,
+      meta: {
+        hideMenu: true,
       },
       children: [
         ...ResourceView,
@@ -126,7 +125,7 @@ const router = new VueRouter({
 VueRouter.prototype.back = () => {
   if (window.history.length <= 2) {
     router.push({
-      name: $store.state.curSideMenu?.route || 'home',
+      name: $store.state.curNav?.route || 'home',
     });
   } else {
     router.go(-1);
@@ -142,12 +141,23 @@ router.beforeEach(async (to, from, next) => {
     to.params.projectCode = $store.getters.curProjectCode;
   }
   await cancelRequest();
-  const { validateRouteEnable } = useMenu();
+  const { validateRouteEnable, getCurrentMenuByRoute, getNavByID } = useMenu();
   const result = await validateRouteEnable(to);
   if (!result) {
     // 未开启菜单项
     next({ name: '404' });
   } else {
+    // 数据上报
+    window.BkTrace?.startReported({
+      module: 'router',
+      operation: 'router',
+      desc: '路由跳转',
+      username: $store.state.user.username,
+      projectCode: to.params.projectCode,
+      to: to.name,
+      from: from.name,
+      navID: getCurrentMenuByRoute(to.name)?.root?.id || getNavByID(to.meta?.menuId)?.id,
+    }, 'router');
     next();
   }
 });

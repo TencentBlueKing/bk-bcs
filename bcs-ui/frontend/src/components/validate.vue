@@ -13,7 +13,7 @@
   </div>
 </template>
 <script lang="ts">
-import { computed, defineComponent, ref, toRefs, watch } from 'vue';
+import { computed, defineComponent, PropType, ref, toRefs, watch } from 'vue';
 
 import $i18n from '@/i18n/i18n-setup';
 
@@ -37,7 +37,7 @@ export default defineComponent({
       default: '',
     },
     rules: {
-      type: Array,
+      type: Array as PropType<IValidate[]>,
       default: () => [],
     },
     trigger: {

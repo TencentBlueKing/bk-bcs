@@ -1,46 +1,60 @@
 <template>
-  <SectionTitle :title="t('客户端组件信息统计')" />
-  <div class="content-wrap">
-    <div class="left">
-      <Teleport :disabled="!isOpenFullScreen" to="body">
-        <div ref="containerRef" :class="{ fullscreen: isOpenFullScreen }">
-          <Card :title="t('组件版本分布')" :height="416">
-            <template #operation>
-              <OperationBtn
-                :is-open-full-screen="isOpenFullScreen"
-                @refresh="loadChartData"
-                @toggle-full-screen="isOpenFullScreen = !isOpenFullScreen" />
-            </template>
-            <template #head-suffix>
-              <TriggerBtn v-model:currentType="currentType" style="margin-left: 16px" />
-            </template>
-            <bk-loading class="loading-wrap" :loading="loading">
-              <component v-if="data?.length" :is="currentComponent" :data="needDataType" />
-              <bk-exception
-                v-else
-                class="exception-wrap-item exception-part"
-                type="empty"
-                scene="part"
-                :description="t('暂无数据')">
-                <template #type>
-                  <span class="bk-bscp-icon icon-bar-chart exception-icon" />
-                </template>
-              </bk-exception>
-            </bk-loading>
-          </Card>
-        </div>
-      </Teleport>
-    </div>
-    <div class="right">
-      <Card v-for="item in resourceData" :key="item.name" :title="item.name" :width="207" :height="128">
-        <div class="resource-info">
-          <span v-if="item.value">
-            <span class="time">{{ item.key.includes('cpu') ? item.value : Math.round(item.value) }}</span>
-            <span class="unit">{{ item.unit }}</span>
-          </span>
-          <span v-else class="empty">{{ t('暂无数据') }}</span>
-        </div>
-      </Card>
+  <div>
+    <SectionTitle :title="t('客户端组件信息统计')" />
+    <div class="content-wrap">
+      <div class="left">
+        <Teleport :disabled="!isOpenFullScreen" to="body">
+          <div
+            ref="containerRef"
+            :class="{ fullscreen: isOpenFullScreen }"
+            @mouseenter="isShowOperationBtn = true"
+            @mouseleave="isShowOperationBtn = false">
+            <Card :title="t('组件类型 / 版本分布')" :height="416">
+              <template #operation>
+                <OperationBtn
+                  v-show="isShowOperationBtn"
+                  :is-open-full-screen="isOpenFullScreen"
+                  @refresh="loadChartData"
+                  @toggle-full-screen="isOpenFullScreen = !isOpenFullScreen" />
+              </template>
+              <template #head-suffix>
+                <div class="head-suffix">
+                  <div v-if="currentType === 'column'" class="icon-wrap">
+                    <span
+                      class="action-icon bk-bscp-icon icon-download"
+                      v-bk-tooltips="{ content: $t('可下钻图表') }" />
+                  </div>
+                  <TriggerBtn v-model:currentType="currentType" />
+                </div>
+              </template>
+              <bk-loading class="loading-wrap" :loading="loading">
+                <component v-if="data?.length" :is="currentComponent" :data="needDataType" />
+                <bk-exception
+                  v-else
+                  class="exception-wrap-item exception-part"
+                  type="empty"
+                  scene="part"
+                  :description="t('暂无数据')">
+                  <template #type>
+                    <span class="bk-bscp-icon icon-bar-chart exception-icon" />
+                  </template>
+                </bk-exception>
+              </bk-loading>
+            </Card>
+          </div>
+        </Teleport>
+      </div>
+      <div class="right">
+        <Card v-for="item in resourceData" :key="item.name" :title="item.name" :width="207" :height="128">
+          <div class="resource-info">
+            <span v-if="item.value">
+              <span class="time">{{ item.value }}</span>
+              <span class="unit">{{ item.unit }}</span>
+            </span>
+            <span v-else class="empty">{{ t('暂无数据') }}</span>
+          </div>
+        </Card>
+      </div>
     </div>
   </div>
 </template>
@@ -52,7 +66,7 @@
   import SectionTitle from '../../components/section-title.vue';
   import OperationBtn from '../../components/operation-btn.vue';
   import Pie from './pie.vue';
-  import Column from './column.vue';
+  import Column from './column/index.vue';
   import Table from './table.vue';
   import { getClientComponentInfoData } from '../../../../../../api/client';
   import {
@@ -108,7 +122,7 @@
       key: 'memory_min_usage',
     },
   ]);
-  const currentType = ref('pie');
+  const currentType = ref('column');
   const componentMap = {
     pie: Pie,
     column: Column,
@@ -116,16 +130,17 @@
   };
   const data = ref<IVersionDistributionItem[]>([]);
   const sunburstData = ref<IVersionDistributionPie>({
-    name: t('组件版本'),
+    name: t('组件类型分布'),
     children: [],
   });
   const loading = ref(false);
   const isOpenFullScreen = ref(false);
   const containerRef = ref();
   const initialWidth = ref(0);
+  const isShowOperationBtn = ref(false);
 
   const currentComponent = computed(() => componentMap[currentType.value as keyof typeof componentMap]);
-  const needDataType = computed(() => (currentType.value === 'pie' ? sunburstData.value : data.value));
+  const needDataType = computed(() => (currentType.value === 'table' ? data.value : sunburstData.value));
 
   watch(
     () => props.appId,
@@ -179,7 +194,7 @@
         }
         return {
           ...item,
-          client_type: name,
+          name,
         };
       });
       sunburstData.value.children = convertToTree(data.value);
@@ -189,12 +204,7 @@
         if (!item.key.includes('cpu')) {
           item.unit = 'MB';
         } else {
-          if (item.value > 1) {
-            item.unit = t('核');
-          } else {
-            item.value = item.value * 1000;
-            item.unit = 'mCPUs';
-          }
+          item.unit = t('核');
         }
       });
     } catch (error) {
@@ -207,16 +217,17 @@
   const convertToTree = (data: IVersionDistributionItem[]) => {
     const tree: IVersionDistributionPieItem[] = [];
     data.forEach((item) => {
-      const { client_type, client_version, value, percent } = item;
-      let typeNode = tree.find((node) => node.name === client_type);
+      const { client_type, client_version, value, percent, name } = item;
+      let typeNode = tree.find((node) => node.name === name);
       if (!typeNode) {
-        typeNode = { name: client_type, children: [], percent: 0, value: 0 };
+        typeNode = { name: name!, children: [], percent: 0, value: 0, client_type };
         tree.push(typeNode);
       }
       const versionNode: IVersionDistributionPieItem = {
         name: client_version,
         percent,
         value,
+        client_type,
       };
       typeNode.children?.push(versionNode);
       typeNode.percent += percent;
@@ -257,6 +268,7 @@
     .right {
       display: flex;
       justify-content: space-between;
+      align-content: space-between;
       flex-wrap: wrap;
       width: 430px;
       .resource-info {
@@ -282,5 +294,22 @@
     height: 100%;
     justify-content: center;
     transform: translateY(-20px);
+  }
+
+  .head-suffix {
+    margin-left: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    .icon-wrap {
+      font-size: 12px;
+      width: 18px;
+      height: 18px;
+      background: #f0f3ff;
+      border-radius: 2px;
+      text-align: center;
+      line-height: 18px;
+      color: #7594ef;
+    }
   }
 </style>

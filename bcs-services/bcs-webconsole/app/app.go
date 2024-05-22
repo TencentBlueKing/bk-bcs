@@ -20,10 +20,7 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"os/signal"
 	"strings"
-	"sync"
-	"syscall"
 	"time"
 
 	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -54,7 +51,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/audit/record"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/audit/replay"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/manager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/perf"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/web"
@@ -132,11 +128,13 @@ func (c *WebConsoleManager) Init() error {
 	microService.Init(
 		micro.Server(mhttp.NewServer(mhttp.Listener(dualStackListener))),
 		micro.AfterStop(func() error {
+			logger.Info("receive interput, gracefully shutdown...")
+
 			// close audit client
 			consoleAudit.GetAuditClient().Close()
-			// 会让 websocket 发送 EndOfTransmission, 不能保证一定发送成功
-			logger.Info("receive interput, gracefully shutdown")
-			<-c.ctx.Done()
+
+			// 会让 websocket 发送 EndOfTransmission
+			api.WaitWebsocketClose(time.Second * 5)
 			return nil
 		}),
 	)
@@ -252,6 +250,7 @@ func (c *WebConsoleManager) initHTTPService() *gin.Engine {
 	router.Group("").StaticFS("/casts", http.Dir(replayPath))
 
 	handlerOpts := &route.Options{
+		StopSignCtx: c.ctx,
 		RoutePrefix: routePrefix,
 		Client:      c.microService.Client(),
 		Router:      router,
@@ -459,19 +458,4 @@ func (c *WebConsoleManager) Run() error {
 		return err
 	}
 	return nil
-}
-
-// RegistryStop registry stop signal
-func (c *WebConsoleManager) RegistryStop(wg *sync.WaitGroup) {
-	// listening OS shutdown singal
-	signalChan := make(chan os.Signal, 1)
-	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
-	go func() {
-		defer wg.Done()
-		<-signalChan
-		manager.EndOfMainProcess <- struct{}{}
-		time.Sleep(time.Second * 1)
-		<-manager.EndOfMainProcess
-		logger.Infof("got os shutdown signal, shutting down bcs-webconsole server gracefully...")
-	}()
 }

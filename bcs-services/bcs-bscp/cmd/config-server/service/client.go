@@ -53,6 +53,9 @@ func (s *Service) ListClients(ctx context.Context, req *pbcs.ListClientsReq) (
 			Annotations:         req.GetSearch().GetAnnotations(),
 			OnlineStatus:        req.GetSearch().GetOnlineStatus(),
 			ClientVersion:       req.GetSearch().GetClientVersion(),
+			StartPullTime:       req.GetSearch().GetStartPullTime(),
+			EndPullTime:         req.GetSearch().GetEndPullTime(),
+			ClientType:          req.GetSearch().GetClientType(),
 		},
 		Order: &pbds.ListClientsReq_Order{
 			Desc: req.GetOrder().GetDesc(),
@@ -66,9 +69,21 @@ func (s *Service) ListClients(ctx context.Context, req *pbcs.ListClientsReq) (
 		return nil, err
 	}
 
+	var details []*pbcs.ListClientsResp_Item
+
+	for _, v := range items.GetDetails() {
+		details = append(details, &pbcs.ListClientsResp_Item{
+			Client:            v.GetClient(),
+			CpuUsageStr:       v.GetCpuUsageStr(),
+			CpuMaxUsageStr:    v.GetCpuMaxUsageStr(),
+			MemoryUsageStr:    v.GetMemoryUsageStr(),
+			MemoryMaxUsageStr: v.GetMemoryMaxUsageStr(),
+		})
+	}
+
 	resp := &pbcs.ListClientsResp{
 		Count:   items.Count,
-		Details: items.Details,
+		Details: details,
 	}
 
 	return resp, nil
@@ -100,6 +115,7 @@ func (s *Service) ClientConfigVersionStatistics(ctx context.Context, req *pbclie
 			Annotations:         req.GetSearch().GetAnnotations(),
 			ClientVersion:       req.GetSearch().GetClientVersion(),
 			ClientType:          req.GetSearch().GetClientType(),
+			OnlineStatus:        req.GetSearch().GetOnlineStatus(),
 		},
 		LastHeartbeatTime: req.GetLastHeartbeatTime(),
 	})
@@ -132,9 +148,11 @@ func (s *Service) ClientPullTrendStatistics(ctx context.Context, req *pbclient.C
 			Annotations:         req.GetSearch().GetAnnotations(),
 			ClientVersion:       req.GetSearch().GetClientVersion(),
 			ClientType:          req.GetSearch().GetClientType(),
+			OnlineStatus:        req.GetSearch().GetOnlineStatus(),
 		},
 		LastHeartbeatTime: req.GetLastHeartbeatTime(),
 		PullTime:          req.GetPullTime(),
+		IsDuplicates:      req.GetIsDuplicates(),
 	})
 }
 
@@ -165,6 +183,7 @@ func (s *Service) ClientPullStatistics(ctx context.Context, req *pbclient.Client
 			Annotations:         req.GetSearch().GetAnnotations(),
 			ClientVersion:       req.GetSearch().GetClientVersion(),
 			ClientType:          req.GetSearch().GetClientType(),
+			OnlineStatus:        req.GetSearch().GetOnlineStatus(),
 		},
 		LastHeartbeatTime: req.GetLastHeartbeatTime(),
 	})
@@ -197,8 +216,11 @@ func (s *Service) ClientLabelStatistics(ctx context.Context, req *pbclient.Clien
 			Annotations:         req.GetSearch().GetAnnotations(),
 			ClientVersion:       req.GetSearch().GetClientVersion(),
 			ClientType:          req.GetSearch().GetClientType(),
+			OnlineStatus:        req.GetSearch().GetOnlineStatus(),
 		},
 		LastHeartbeatTime: req.GetLastHeartbeatTime(),
+		PrimaryKey:        req.GetPrimaryKey(),
+		ForeignKeys:       req.GetForeignKeys(),
 	})
 }
 
@@ -229,6 +251,7 @@ func (s *Service) ClientAnnotationStatistics(ctx context.Context, req *pbclient.
 			Annotations:         req.GetSearch().GetAnnotations(),
 			ClientVersion:       req.GetSearch().GetClientVersion(),
 			ClientType:          req.GetSearch().GetClientType(),
+			OnlineStatus:        req.GetSearch().GetOnlineStatus(),
 		},
 		LastHeartbeatTime: req.GetLastHeartbeatTime(),
 	})
@@ -261,6 +284,7 @@ func (s *Service) ClientVersionStatistics(ctx context.Context, req *pbclient.Cli
 			Annotations:         req.GetSearch().GetAnnotations(),
 			ClientVersion:       req.GetSearch().GetClientVersion(),
 			ClientType:          req.GetSearch().GetClientType(),
+			OnlineStatus:        req.GetSearch().GetOnlineStatus(),
 		},
 		LastHeartbeatTime: req.GetLastHeartbeatTime(),
 	})
@@ -317,6 +341,7 @@ func (s *Service) ClientSpecificFailedReason(ctx context.Context, req *pbclient.
 			ClientVersion:       req.GetSearch().GetClientVersion(),
 			ClientType:          req.GetSearch().GetClientType(),
 			FailedReason:        req.GetSearch().GetFailedReason(),
+			OnlineStatus:        req.GetSearch().GetOnlineStatus(),
 		},
 		LastHeartbeatTime: req.GetLastHeartbeatTime(),
 	})

@@ -10,6 +10,7 @@ export interface ISearchCondition {
   key: string;
   value: string;
   content: string;
+  isEdit: boolean;
 }
 
 // 客户端查询条件公共接口
@@ -28,6 +29,7 @@ export interface IClinetCommonQuery {
   search_value?: string;
   search_type?: string;
   pull_time?: number;
+  is_duplicates?: boolean;
 }
 
 // 客户端查询列表接口查询条件
@@ -42,6 +44,8 @@ export interface IClientSearchParams {
   online_status?: string[];
   client_version?: string;
   client_type?: string;
+  start_pull_time?: string;
+  end_pull_time?: string;
 }
 
 export interface IGetClientSearchListQuery {
@@ -119,9 +123,11 @@ export interface IPullCount {
 // 客户端标签
 export interface IClientLabelItem {
   count: number;
+  foreign_key: string;
+  foreign_val: string;
   percent: number;
-  value: string;
-  key: string;
+  primary_key: string;
+  primary_val: string;
 }
 
 // 组件版本发布(柱状图和表格)
@@ -130,6 +136,7 @@ export interface IVersionDistributionItem {
   client_version: string;
   percent: number;
   value: number;
+  name?: string;
 }
 
 // 组件版本发布(旭日图)
@@ -140,6 +147,7 @@ export interface IVersionDistributionPie {
 
 export interface IVersionDistributionPieItem {
   name: string;
+  client_type: string;
   value: number;
   percent: number;
   children?: IVersionDistributionPieItem[];

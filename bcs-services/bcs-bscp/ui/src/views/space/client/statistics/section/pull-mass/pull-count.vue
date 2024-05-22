@@ -1,9 +1,13 @@
 <template>
   <Teleport :disabled="!isOpenFullScreen" to="body">
-    <div :class="{ fullscreen: isOpenFullScreen }">
-      <Card :title="$t('拉取数量趋势')" :height="360">
+    <div
+      :class="{ fullscreen: isOpenFullScreen }"
+      @mouseenter="isShowOperationBtn = true"
+      @mouseleave="isShowOperationBtn = false">
+      <Card :title="props.title" :height="360" style="margin-bottom: 16px">
         <template #operation>
           <OperationBtn
+            v-show="isShowOperationBtn"
             :is-open-full-screen="isOpenFullScreen"
             @refresh="loadChartData"
             @toggle-full-screen="isOpenFullScreen = !isOpenFullScreen" />
@@ -17,11 +21,7 @@
           <div v-if="!isDataEmpty" ref="canvasRef" class="canvas-wrap">
             <Tooltip ref="tooltipRef" @jump="jumpToSearch" />
           </div>
-          <bk-exception
-            v-else
-            type="empty"
-            scene="part"
-            :description="$t('暂无数据')">
+          <bk-exception v-else type="empty" scene="part" :description="$t('暂无数据')">
             <template #type>
               <span class="bk-bscp-icon icon-bar-chart exception-icon" />
             </template>
@@ -55,6 +55,8 @@
   const props = defineProps<{
     bkBizId: string;
     appId: number;
+    title: string;
+    isDuplicates: boolean;
   }>();
 
   let dualAxes: DualAxes | null;
@@ -81,6 +83,8 @@
   });
   const loading = ref(false);
   const isOpenFullScreen = ref(false);
+  const jumpSearchTime = ref('');
+  const isShowOperationBtn = ref(false);
 
   const isDataEmpty = computed(() => !data.value.time.some((item) => item.count > 0));
 
@@ -88,7 +92,7 @@
     await loadChartData();
     if (!isDataEmpty.value) {
       if (dualAxes) {
-        dualAxes.changeData([data.value.time_and_type, data.value.time]);
+        dualAxes.changeData([data.value.time, data.value.time_and_type]);
       } else {
         initChart();
       }
@@ -99,7 +103,13 @@
     () => searchQuery.value,
     async () => {
       await loadChartData();
-      dualAxes!.changeData([data.value.time_and_type, data.value.time]);
+      if (!isDataEmpty.value) {
+        if (dualAxes) {
+          dualAxes.changeData([data.value.time, data.value.time_and_type]);
+        } else {
+          initChart();
+        }
+      }
     },
     { deep: true },
   );
@@ -126,12 +136,30 @@
       search: searchQuery.value.search,
       pull_time: selectTime.value,
       last_heartbeat_time: searchQuery.value.last_heartbeat_time,
+      is_duplicates: props.isDuplicates,
     };
     try {
       loading.value = true;
       const res = await getClientPullCountData(props.bkBizId, props.appId, params);
       data.value.time = res.time || [];
-      data.value.time_and_type = res.time_and_type || [];
+      data.value.time_and_type =
+        res.time_and_type?.map((item: any) => {
+          switch (item.type) {
+            case 'sidecar':
+              item.type = `SideCar ${t('客户端')}`;
+              break;
+            case 'sdk':
+              item.type = `SDK ${t('客户端')}`;
+              break;
+            case 'agent':
+              item.type = t('主机插件客户端');
+              break;
+            case 'command':
+              item.type = `CLI ${t('客户端')}`;
+              break;
+          }
+          return item;
+        }) || [];
     } catch (error) {
       console.error(error);
     } finally {
@@ -141,12 +169,11 @@
 
   const initChart = () => {
     dualAxes = new DualAxes(canvasRef.value!, {
-      data: [data.value.time_and_type, data.value.time],
+      data: [data.value.time, data.value.time_and_type],
       xField: 'time',
-      yField: ['value', 'count'],
+      yField: ['count', 'value'],
       yAxis: {
         value: {
-          tickCount: 5,
           grid: {
             line: {
               style: {
@@ -161,18 +188,8 @@
           min: 0,
         },
       },
-      scrollbar: {
-        type: 'horizontal',
-      },
       padding: [10, 20, 30, 20],
       geometryOptions: [
-        {
-          geometry: 'column',
-          isGroup: true,
-          seriesField: 'type',
-          columnWidthRatio: 0.3,
-          color: ['#3E96C2', '#61B2C2', '#85CCA8', '#B5E0AB'],
-        },
         {
           geometry: 'line',
           lineStyle: {
@@ -182,10 +199,28 @@
           label: {
             position: 'top',
           },
+          point: {
+            shape: 'circle',
+          },
+        },
+        {
+          geometry: 'column',
+          isGroup: true,
+          seriesField: 'type',
+          columnWidthRatio: 0.3,
+          color: ['#3E96C2', '#61B2C2', '#85CCA8', '#B5E0AB'],
         },
       ],
       legend: {
         position: 'bottom',
+        itemName: {
+          formatter: (text) => {
+            if (text === 'count') {
+              return t('总量');
+            }
+            return text;
+          },
+        },
       },
       tooltip: {
         fields: ['value', 'count'],
@@ -194,24 +229,15 @@
         container: tooltipRef.value?.getDom(),
         enterable: true,
         customItems: (originalItems: any[]) => {
+          jumpSearchTime.value = originalItems[0].title.replace(/\//g, '-');
           originalItems.forEach((item) => {
-            switch (item.data.type) {
-              case 'sidecar':
-                item.name = `SideCar ${t('客户端')}`;
-                break;
-              case 'sdk':
-                item.name = `SDK ${t('客户端')}`;
-                break;
-              case 'agent':
-                item.name = t('主机插件客户端');
-                break;
-              case 'command':
-                item.name = `CLI ${t('客户端')}`;
-                break;
-              default:
-                item.name = t('总量');
+            if (item.name === 'count') {
+              item.name = t('总量');
+            } else {
+              item.name = item.data.type;
             }
           });
+          originalItems.unshift(originalItems.pop());
           return originalItems;
         },
       },
@@ -220,10 +246,12 @@
   };
 
   const jumpToSearch = () => {
-    router.push({
+    const routeData = router.resolve({
       name: 'client-search',
       params: { appId: props.appId, bizId: props.bkBizId },
+      query: { pull_time: jumpSearchTime.value },
     });
+    window.open(routeData.href, '_blank');
   };
 </script>
 
@@ -253,8 +281,22 @@
     }
   }
   :deep(.bk-exception) {
-    height:100%;
+    height: 100%;
     justify-content: center;
     transform: translateY(-20px);
+  }
+  :deep(.g2-tooltip) {
+    visibility: hidden;
+    .g2-tooltip-list-item {
+      .g2-tooltip-marker {
+        border-radius: initial !important;
+      }
+    }
+    .g2-tooltip-list-item:nth-child(1) {
+      .g2-tooltip-marker {
+        height: 2px !important;
+        transform: translatey(-3px);
+      }
+    }
   }
 </style>

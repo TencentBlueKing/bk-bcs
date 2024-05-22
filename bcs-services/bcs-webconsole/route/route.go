@@ -14,6 +14,8 @@
 package route
 
 import (
+	"context"
+
 	"github.com/gin-gonic/gin"
 	"go-micro.dev/v4/client"
 )
@@ -25,6 +27,7 @@ type Registrar interface {
 
 // Options xxx
 type Options struct {
+	StopSignCtx context.Context
 	RoutePrefix string
 	Client      client.Client
 	Router      *gin.Engine

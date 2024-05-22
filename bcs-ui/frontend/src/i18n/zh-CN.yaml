@@ -2,6 +2,7 @@ bcs:
   title: 容器管理平台 | 腾讯蓝鲸智云
   name: 容器管理平台
   newVersion: '有版本更新, 是否刷新界面'
+  preVersion: 返回旧版
   TKEx:
     title: TKEx-IEG 容器平台
     welcome: 欢迎使用 TKEx-IEG 容器平台
@@ -20,8 +21,6 @@ bcs:
     federation: 联邦集群
     kubeConfig: kubeConfig导入
     cloud: 云凭证导入
-    publicIcon: 共享
-    privateIcon: 专用
     platform: 平台创建
   msg:
     emptyHostResource: 您在当前业务下没有主机资源，请联系业务运维
@@ -100,7 +99,7 @@ nav:
   workload: 工作负载
   configuration: 配置
   storage: 存储
-  customResource: 自定义资源
+  tkexCRD: 游戏场景CRD
   cluster: 集群管理
   clusterList: 集群列表
   nodeList: 节点列表
@@ -197,8 +196,14 @@ metrics:
   podUsage: Pod使用率
   cpuRequestUsage:
     text: CPU装箱率
+    clusterDesc: >-
+      集群CPU装箱率 = 集群所有Pod CPU Request之和 /
+      集群所有节点CPU总核数（不包含Master节点），集群CPU装箱率越接近集群CPU使用率，集群CPU资源利用率越高 {0}
   memRequestUsage:
     text: 内存装箱率
+    clusterDesc: >-
+      集群内存装箱率 = 集群所有Pod 内存 Request之和 /
+      集群所有节点内存总大小（不包含Master节点），集群内存装箱率越接近集群内存使用率，集群内存资源利用率越高 {0}
   diskIOUsage: 磁盘IO
   diskIOUsage1: 磁盘IO总量
   diskIOUsage2: 磁盘IO使用率
@@ -247,6 +252,7 @@ generic:
       noMatchData: 无匹配数据
       searchEmpty:
         text: 搜索结果为空
+        subTitle: '可以尝试 调整关键词 或{action}'
     info:
       tips: 提示
       refreshAuth: 当前操作有权限，请刷新界面
@@ -271,6 +277,7 @@ generic:
     command: 多个命令用空格分隔，例如/bin/bash &quot;-c&quot
     searchIp: '输入IP搜索, 多个IP用逗号或空格隔开'
   button:
+    resetSearch: 调整筛选条件
     validate: 校验
     confirm: 确定
     confirm1: 确认
@@ -374,6 +381,7 @@ generic:
     start: 开始
     stop: 停止
     basicConfig: 基本配置
+    abnormal: 异常
   status:
     part_failure: 部分失败
     support: 支持
@@ -540,8 +548,8 @@ cluster:
   tips:
     highMetricData: 集群指标过载
     createK8SCluster: 新建 K8S 原生集群
-    clusterStatus: '集群状态: {0}'
   labels:
+    hideSharedCluster: 隐藏共享集群
     nameAndId: 集群名称/ID
     name: 集群名称
     status: 集群状态
@@ -674,6 +682,8 @@ cluster:
           text: 单节点Pod数量上限
           desc: 单节点Pod数量上限一旦分配后将无法调整，请谨慎评估后再填写
         article3: 集群可添加节点数（包含Master节点与Node节点）= (IP数量 - Service的数量) / 单节点Pod数量上限
+        article1: '容器网络资源有限，请合理分配，当前容器网络配置下，集群最多可以添加 {count} 个节点'
+        article2: '当容器网络资源超额使用时，会触发容器网络自动扩容，扩容后集群最多可以添加 {count} 个节点'
       networkMode:
         text: 网络模式
         overlay:
@@ -930,6 +940,12 @@ cluster:
             hssd: 增强型SSD云硬盘
             balanced: 平衡性磁盘
             standard: 标准磁盘
+            Standard_LRS: 标准 HDD
+            StandardSSD_LRS: 标准 SSD
+            StandardSSD_ZRS: 标准 SSD_ZRS
+            Premium_LRS: 高级 SSD
+            PremiumV2_LRS: 高级 SSD v2
+            Premium_ZRS: 高级 SSD_ZRS
           disk:
             system: 系统盘
             data: 数据盘
@@ -2137,11 +2153,10 @@ dashboard:
     confirmDelete: 确认删除当前资源
     overview: 总览
     confirmSchedule: '确认{action}当前资源下所有Pod'
+  button:
+    createResource: 创建资源
   placeholder:
-    selectCRD: 选择CRD
     search1: 搜索名称
-    search2: 输入名称、创建人搜索
-    search3: 输入名称、创建人、IP搜索
   label:
     formMode: 表单模式
     yamlMode: YAML模式
@@ -2165,7 +2180,6 @@ dashboard:
       emptyNs: 请选择命名空间
       name: 命名空间名称只能包含小写字母、数字以及连字符(-)，连字符（-）后面必须接英文或者数字
       sharedClusterNs: '命名规则：{prefix}自定义名称'
-      sharedQuota: 共享集群需设置MEN、CPU配额，且两者最小值不小于0
       setMinMaxMemCpu: 请设置MEN、CPU配额，且两者最小值不小于0
     status:
       waitingApproval: 待审批
@@ -2418,6 +2432,50 @@ logCollector:
         tips: 如果添加多个标签，只会采集Pod上同时存在多个标签的容器日志
       workload: 按工作负载选择
       container: 按容器名选择
+view:
+  labels:
+    creator: 创建人
+    allNs: 全部命名空间
+    clusterAndNs: 集群/命名空间
+    saveAs: 另存为
+    name: 视图名称
+    all: 全部
+    resourceName: 资源名称
+    viewDataRange: 视图数据范围
+    editView: 编辑视图
+    newView: 新建视图
+    custom: 自定义
+  button:
+    addField: 添加条件
+    addQueryField: 添加查询条件
+    query: 查询
+    saveAsView: 另存为视图
+    moreResource: 更多资源
+    addCluster: 添加集群
+    edit: 编辑
+    clone: 克隆
+    delete: 删除
+    reset: 重置条件
+    confirmAndChangeView: 保存并进入新视图
+    clusterView: 集群视图
+    customView: 自定义视图
+    addCustomView: 添加自定义视图
+  tips:
+    selectMultiCluster: 批量选择集群
+    confirmDelete: 确定删除视图
+    sharedClusterDoNotSupportTheKind: 共享集群不支持创建该资源
+    editMode: 视图结果预览
+    invalidate: 部分条件已失效，请重新选择
+  placeholder:
+    searchCluster: 搜索集群名称
+    creator: 请输入创建人
+    resourceName: 请输入资源名称
+    searchView: 搜索视图
+    searchNameOrCreator: 搜索资源名称/创建人
+    searchNameOrCreatorOrIP: 搜索资源名称/创建人/IP
+    searchResourceKind: 搜索资源类型
+  status:
+    saveAs: 另存成功
 manualNode:
   title:
     source:
@@ -2510,6 +2568,7 @@ azureCloud:
     nameRegex: 仅支持英文、数字和字符(-)
     secretRegex: 仅支持英文、数字和字符(-或~)
   label:
+    loginUser: 登录用户
     create: 新建凭证
     cluster: 关联集群
     clusterType: 集群类型
@@ -2573,6 +2632,20 @@ googleCA:
     securityGroup: '节点池使用 VPC 防火墙规则控制节点实例的出/入流量，请前往{0}页面设置'
   button:
     vpcRule: VPC 防火墙规则
+azureCA:
+  tips:
+    zone: 目前只支持单可用区
+    system: >-
+      因为操作系统“包含 Containerd 的 Container-Optimized OS (cos_containerd)
+      （默认）”有诸多限制，蓝鲸组件依赖这些被限制的功能，目前只支持操作系统“包含 Containerd 的 Ubuntu
+      (ubuntu_containerd)”
+    dataDisk: 购买数据盘后添加节点后需要手工格式化与挂载磁盘
+    securityGroup: '节点池使用 VPC 防火墙规则控制节点实例的出/入流量，请前往{0}页面设置'
+  button:
+    vpcRule: VPC 防火墙规则
+  password:
+    set: 设置密码
+    confirm: 确认密码
 regions:
   asia: 亚洲
   australia: 澳洲

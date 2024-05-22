@@ -50,7 +50,7 @@ func NewClusterController(ctx context.Context, storage store.Store) ClusterContr
 		ctx:         ctx,
 		storage:     storage,
 		option:      options.GlobalOptions(),
-		secretStore: secretstore.NewSecretStore(),
+		secretStore: secretstore.NewSecretStore(options.GlobalOptions().SecretServer),
 	}
 }
 
@@ -298,6 +298,10 @@ func (control *cluster) syncClustersByProject(ctx context.Context, projectID str
 	for _, clsID := range needCreate {
 		cls := clusterMap[clsID]
 		if err = control.saveToStorage(ctx, cls, appPro); err != nil {
+			if utils.IsClusterAskCredentials(err) {
+				blog.Warnf("cluster '%s' save to storage ask credentials", clsID)
+				continue
+			}
 			blog.Errorf("cluster '%s' save to argo storage failed: %s", clsID, err.Error())
 			continue
 		}

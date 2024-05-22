@@ -38,6 +38,15 @@ const GoogleNodePool = () => import(/* webpackChunkName: 'cluster' */'@/views/cl
 const GoogleNodePoolDetail = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/autoscaler/google/node-pool-detail.vue');
 const GoogleEditNodePool = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/autoscaler/google/edit-node-pool.vue');
 
+const NamespaceCreate = () => import(/* webpackChunkName: 'dashboard' */'@/views/cluster-manage/namespace/create.vue');
+// azure ca
+// 新建节点池
+const AzureNodePool = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/autoscaler/azure/node-pool.vue');
+// 扩缩容记录
+const AzureNodePoolDetail = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/autoscaler/azure/node-pool-detail.vue');
+// 编辑配置
+const AzureEditNodePool = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/autoscaler/azure/edit-node-pool.vue');
+
 // 集群管理
 export default [
   {
@@ -46,6 +55,16 @@ export default [
     props: route => ({ ...route.query, ...route.params }),
     component: Cluster,
     meta: {
+      hideMenu: true,
+    },
+  },
+  {
+    path: 'clusters/:clusterId/namespaces/create',
+    name: 'createNamespace',
+    props: true,
+    component: NamespaceCreate,
+    meta: {
+      menuId: 'CLUSTER',
       hideMenu: true,
     },
   },
@@ -172,7 +191,7 @@ export default [
   {
     path: 'clusters/:clusterId/nodes/:nodeName/:category/namespaces/:namespace/:name',
     name: 'nodePodDetail',
-    props: route => ({ ...route.params, kind: route.query.kind, crd: route.query.crd }),
+    props: route => ({ ...route.params, ...route.query }),
     component: PodDetail,
     meta: {
       menuId: 'CLUSTER',
@@ -227,6 +246,7 @@ export default [
       title: window.i18n.t('cluster.nodeList.create.text'),
       menuId: 'CLUSTER',
       hideMenu: true,
+      showClusterName: true,
     },
   },
   {
@@ -251,19 +271,19 @@ export default [
     beforeEnter(to, from, next) {
       const clusterList = $store.state.cluster.clusterList as ICluster[];
       const cluster = clusterList.find(item => item.clusterID === to.params.clusterId);
-      if (cluster?.provider === 'gcpCloud') {
-        next({
-          name: 'googleNodePool',
-          params: {
-            ...to.params,
-          },
-          query: {
-            ...to.query,
-          },
-        });
-      } else {
-        next();
+      let name = '';
+      // 优化,增加azureCA节点新建
+      switch (cluster?.provider) {
+        case 'gcpCloud':
+          name = 'googleNodePool';
+        case 'azureCloud':
+          name = 'azureNodePool';
       }
+      name ? next({
+        name,
+        params: { ...to.params },
+        query: { ...to.query },
+      }) : next();
     },
   },
   {
@@ -278,19 +298,19 @@ export default [
     beforeEnter(to, from, next) {
       const clusterList = $store.state.cluster.clusterList as ICluster[];
       const cluster = clusterList.find(item => item.clusterID === to.params.clusterId);
-      if (cluster?.provider === 'gcpCloud') {
-        next({
-          name: 'googleEditNodePool',
-          params: {
-            ...to.params,
-          },
-          query: {
-            ...to.query,
-          },
-        });
-      } else {
-        next();
+      let name = '';
+      // 优化，增加azureCA节点配置
+      switch (cluster?.provider) {
+        case 'gcpCloud':
+          name = 'googleEditNodePool';
+        case 'azureCloud':
+          name = 'azureEditNodePool';
       }
+      name ? next({
+        name,
+        params: { ...to.params },
+        query: { ...to.query },
+      }) : next();
     },
   },
   {
@@ -305,19 +325,19 @@ export default [
     beforeEnter(to, from, next) {
       const clusterList = $store.state.cluster.clusterList as ICluster[];
       const cluster = clusterList.find(item => item.clusterID === to.params.clusterId);
-      if (cluster?.provider === 'gcpCloud') {
-        next({
-          name: 'googleNodePoolDetail',
-          params: {
-            ...to.params,
-          },
-          query: {
-            ...to.query,
-          },
-        });
-      } else {
-        next();
+      let name = '';
+      // 优化，增加azureCA节点池详情
+      switch (cluster?.provider) {
+        case 'gcpCloud':
+          name = 'googleNodePoolDetail';
+        case 'azureCloud':
+          name = 'azureNodePoolDetail';
       }
+      name ? next({
+        name,
+        params: { ...to.params },
+        query: { ...to.query },
+      }) : next();
     },
   },
   // google ca
@@ -346,6 +366,37 @@ export default [
     name: 'googleNodePoolDetail',
     props: true,
     component: GoogleNodePoolDetail,
+    meta: {
+      menuId: 'CLUSTER',
+      hideMenu: true,
+    },
+  },
+  // azure ca
+  {
+    path: 'cluster/:clusterId/azure/nodepools',
+    name: 'azureNodePool',
+    props: true,
+    component: AzureNodePool,
+    meta: {
+      menuId: 'CLUSTER',
+      hideMenu: true,
+    },
+  },
+  {
+    path: 'cluster/:clusterId/azure/nodepools/:nodeGroupID',
+    name: 'azureEditNodePool',
+    props: true,
+    component: AzureEditNodePool,
+    meta: {
+      menuId: 'CLUSTER',
+      hideMenu: true,
+    },
+  },
+  {
+    path: 'cluster/:clusterId/azure/nodepools/:nodeGroupID/detail',
+    name: 'azureNodePoolDetail',
+    props: true,
+    component: AzureNodePoolDetail,
     meta: {
       menuId: 'CLUSTER',
       hideMenu: true,

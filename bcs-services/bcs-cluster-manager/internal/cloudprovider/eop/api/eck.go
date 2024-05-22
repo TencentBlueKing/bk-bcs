@@ -70,6 +70,7 @@ func (c *CTClient) ListRegions() ([]*Region, error) {
 	eopDate := singerDate.Format("20060102T150405Z")
 	eopDt := singerDate.Format("20060102")
 
+	// lists regions
 	result, body, errs := gorequest.New().
 		Timeout(defaultTimeOut).
 		Get(endingPoint+reqPath).
@@ -86,12 +87,14 @@ func (c *CTClient) ListRegions() ([]*Region, error) {
 		return nil, errs[0]
 	}
 
+	// return failed
 	if result.StatusCode != 200 {
 		errMsg := fmt.Errorf("call ListRegions API error: code[%d], %s",
 			result.StatusCode, string(body))
 		return nil, errMsg
 	}
 
+	// return failed
 	if resp.StatusCode != "ok" {
 		blog.Errorf("ListRegions failed, %s", string(body))
 		return nil, fmt.Errorf("ListRegions failed, %s", string(body))
@@ -115,6 +118,7 @@ func (c *CTClient) GetCluster(clusterID string) (*Cluster, error) {
 	eopDate := singerDate.Format("20060102T150405Z")
 	eopDt := singerDate.Format("20060102")
 
+	// gets ECK cluster
 	result, body, errs := gorequest.New().
 		Timeout(defaultTimeOut).
 		Get(endingPoint+reqPath).
@@ -132,12 +136,14 @@ func (c *CTClient) GetCluster(clusterID string) (*Cluster, error) {
 		return nil, errs[0]
 	}
 
+	// return failed
 	if result.StatusCode != 200 {
 		errMsg := fmt.Errorf("call GetCluster API error: code[%d], %s",
 			result.StatusCode, string(body))
 		return nil, errMsg
 	}
 
+	// return failed
 	if resp.StatusCode != "ok" {
 		blog.Errorf("GetCluster failed, %s", string(body))
 		return nil, fmt.Errorf("GetCluster failed, %s", string(body))
@@ -184,12 +190,14 @@ func (c *CTClient) CreateCluster(req *CreateClusterRequest) (*CreateClusterReObj
 		return nil, errs[0]
 	}
 
+	// return failed
 	if result.StatusCode != 200 {
 		errMsg := fmt.Errorf("call CreateCluster API error: code[%d], %s",
 			result.StatusCode, string(respBody))
 		return nil, errMsg
 	}
 
+	// return failed
 	if resp.StatusCode != "ok" {
 		blog.Errorf("CreateCluster failed, %s", string(respBody))
 		return nil, fmt.Errorf("CreateCluster failed, %s", string(respBody))
@@ -236,12 +244,14 @@ func (c *CTClient) DeleteCluster(req *DeleteClusterReq) (*DeleteClusterReObj, er
 		return nil, errs[0]
 	}
 
+	// return failed
 	if result.StatusCode != 200 {
 		errMsg := fmt.Errorf("call DeleteCluster API error: code[%d], %s",
 			result.StatusCode, string(respBody))
 		return nil, errMsg
 	}
 
+	// return failed
 	if resp.StatusCode != "ok" {
 		blog.Errorf("DeleteCluster failed, %s", string(respBody))
 		return nil, fmt.Errorf("DeleteCluster failed, %s", string(respBody))
@@ -278,12 +288,14 @@ func (c *CTClient) GetKubeConfig(clusterId string) (*GetKubeConfigReObj, error) 
 		return nil, errs[0]
 	}
 
+	// return failed
 	if result.StatusCode != 200 {
 		errMsg := fmt.Errorf("call GetKubeConfig API error: code[%d], %s",
 			result.StatusCode, string(body))
 		return nil, errMsg
 	}
 
+	// return failed
 	if resp.StatusCode != "ok" {
 		blog.Errorf("GetKubeConfig failed, %s", string(body))
 		return nil, fmt.Errorf("GetKubeConfig failed, %s", string(body))
@@ -343,12 +355,14 @@ func (c *CTClient) ListNodes(req *ListNodeReq) ([]*Node, error) {
 		return nil, errs[0]
 	}
 
+	// return failed
 	if result.StatusCode != 200 {
 		errMsg := fmt.Errorf("call ListNodes API error: code[%d], %s",
 			result.StatusCode, string(body))
 		return nil, errMsg
 	}
 
+	// return failed
 	if resp.StatusCode != "ok" {
 		blog.Errorf("ListNodes failed, %s", string(body))
 		return nil, fmt.Errorf("ListNodes failed, %s", string(body))
@@ -396,11 +410,13 @@ func (c *CTClient) GetNodePool(nodePoolId string) (*NodePool, error) {
 		return nil, errMsg
 	}
 
+	// return failed
 	if resp.StatusCode != "ok" {
 		blog.Errorf("GetNodePool failed, %s", string(body))
 		return nil, fmt.Errorf("GetNodePool failed, %s", string(body))
 	}
 
+	// return failed
 	if resp.ReturnObj == nil {
 		blog.Errorf("GetNodePool lost nodepool info in response")
 		return nil, fmt.Errorf("GetNodePool lost nodepool info in response")
@@ -458,12 +474,14 @@ func (c *CTClient) ListNodePool(req *ListNodePoolReq) ([]*NodePoolV2, error) {
 		return nil, errs[0]
 	}
 
+	// return failed
 	if result.StatusCode != 200 {
 		errMsg := fmt.Errorf("call ListNodePool API error: code[%d], %s",
 			result.StatusCode, string(body))
 		return nil, errMsg
 	}
 
+	// return failed
 	if resp.StatusCode != "ok" {
 		blog.Errorf("ListNodePool failed, %s", string(body))
 		return nil, fmt.Errorf("ListNodePool failed, %s", string(body))
@@ -505,12 +523,14 @@ func (c *CTClient) ListVpcs(location string) ([]*Vpc, error) {
 		return nil, errs[0]
 	}
 
+	// return failed
 	if result.StatusCode != 200 {
 		errMsg := fmt.Errorf("call ListVpcs API error: code[%d], %s",
 			result.StatusCode, string(body))
 		return nil, errMsg
 	}
 
+	// return failed
 	if resp.StatusCode != "ok" {
 		blog.Errorf("ListVpcs failed, %s", string(body))
 		return nil, fmt.Errorf("ListVpcs failed, %s", string(body))
@@ -524,6 +544,7 @@ func (c *CTClient) ListVpcs(location string) ([]*Vpc, error) {
 	return resp.ReturnObj.Vpcs, nil
 }
 
+// build Sign Header
 func (c *CTClient) buildSignHeader(requestID, eopDate, eopDt, body, params string) string {
 	headerStr := fmt.Sprintf("ctyun-eop-request-id:%s\neop-date:%s\n", requestID, eopDate)
 	bodyDigest := fmt.Sprintf("%x", sha256.Sum256([]byte(body)))
@@ -540,6 +561,7 @@ func (c *CTClient) buildSignHeader(requestID, eopDate, eopDt, body, params strin
 	return signHeader
 }
 
+// hmac Sha256
 func hmacSha256(message, key string) string {
 	hmac256 := hmac.New(sha256.New, []byte(key))
 	hmac256.Write([]byte(message))

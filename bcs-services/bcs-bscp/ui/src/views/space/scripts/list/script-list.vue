@@ -57,7 +57,7 @@
           @page-limit-change="handlePageLimitChange"
           @page-value-change="handlePageCurrentChange">
           <bk-table-column type="selection" width="60"></bk-table-column>
-          <bk-table-column :label="t('脚本名称')">
+          <bk-table-column :label="t('脚本名称')" :min-width="200">
             <template #default="{ row }">
               <div v-if="row.hook" class="hook-name" @click="handleViewVersionClick(row.hook.id)">
                 {{ row.hook.spec.name }}
@@ -70,10 +70,12 @@
             <template #default="{ row }">
               <div v-if="row.hook" class="script-tags">
                 <div v-if="tagEditHookId !== row.hook.id" class="tags-display">
-                  <div v-if="row.hook.spec.tags?.length > 0" class="tags-list">
-                    <bk-tag v-for="tag in row.hook.spec.tags" :key="tag">{{ tag }}</bk-tag>
-                  </div>
-                  <template v-else>--</template>
+                  <ContentWidthOverflowTips>
+                    <div v-if="row.hook.spec.tags?.length > 0" class="script-tags-list-wrapper">
+                      <div v-for="tag in row.hook.spec.tags" class="tag-item" :key="tag">{{ tag }}</div>
+                    </div>
+                    <template v-else>--</template>
+                  </ContentWidthOverflowTips>
                   <span class="edit-icon" @click="handleOpenTagEdit(row.hook.id)">
                     <EditLine />
                   </span>
@@ -102,7 +104,9 @@
             <template #default="{ row }">
               <div v-if="row.hook" class="script-memo">
                 <div v-if="memoEditHookId !== row.hook.id" class="memo-display">
-                  <span class="memo-text">{{ row.hook.spec.memo || '--' }}</span>
+                  <bk-overflow-title class="memo-text" type="tips">
+                    {{ row.hook.spec.memo || '--' }}
+                  </bk-overflow-title>
                   <span class="edit-icon" @click="handleOpenMemoEdit(row.hook.id)">
                     <EditLine />
                   </span>
@@ -206,6 +210,7 @@
   import TableEmpty from '../../../../components/table/table-empty.vue';
   import DeleteConfirmDialog from '../../../../components/delete-confirm-dialog.vue';
   import LinkToApp from '../../templates/list/components/link-to-app.vue';
+  import ContentWidthOverflowTips from '../../../../components/content-width-overflow-tips/index.vue';
   import { debounce } from 'lodash';
 
   const { spaceId } = storeToRefs(useGlobalStore());
@@ -424,7 +429,7 @@
     }
     Message({
       theme: 'success',
-      message: t('删除版本成功'),
+      message: t('删除脚本成功'),
     });
     isDeleteScriptDialogShow.value = false;
     getScripts();
@@ -580,6 +585,7 @@
     color: #979ba5;
     background: #ffffff;
   }
+  // 脚本标签、描述编辑需要溢出table
   :deep(.bk-table) {
     &.table-with-memo-edit .bk-table-body {
       overflow: visible;
@@ -609,21 +615,16 @@
   }
   .script-tags {
     position: relative;
+    height: 100%;
     .tags-display {
       display: flex;
       align-items: center;
+      height: 100%;
+      overflow: hidden;
       &:hover {
         .edit-icon {
           display: block;
         }
-      }
-      .tags-list {
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        overflow: hidden;
-      }
-      .bk-tag:not(:last-child) {
-        margin-right: 4px;
       }
       .edit-icon {
         display: none;
@@ -689,6 +690,27 @@
   .service-table {
     thead th[colspan] {
       background-color: #f0f1f5 !important;
+    }
+  }
+  .script-tags-list-wrapper {
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    .tag-item {
+      flex-shrink: 0;
+      padding: 0 10px;
+      height: 22px;
+      line-height: 22px;
+      border-radius: 2px;
+      font-size: 12px;
+      background: #f0f1f5;
+      color: #63656e;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      &:not(:last-child) {
+        margin-right: 4px;
+      }
     }
   }
 </style>

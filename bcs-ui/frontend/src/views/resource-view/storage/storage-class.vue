@@ -1,7 +1,7 @@
 <template>
   <BaseLayout
     title="StorageClasses"
-    kind="StorageClass" category="storage_classes" type="storages" :show-name-space="false" :show-create="false">
+    kind="StorageClass" category="storage_classes" type="storages" :show-create="false">
     <template
       #default="{
         curPageData,
@@ -10,7 +10,9 @@
         handlePageSizeChange,
         handleGetExtData,
         handleSortChange,
-        nameValue, handleClearSearchData
+        handleShowViewConfig,
+        clusterNameMap,
+        isClusterMode
       }">
       <bk-table
         :data="curPageData"
@@ -19,6 +21,14 @@
         @page-limit-change="handlePageSizeChange"
         @sort-change="handleSortChange">
         <bk-table-column :label="$t('generic.label.name')" prop="metadata.name" sortable></bk-table-column>
+        <bk-table-column :label="$t('cluster.labels.nameAndId')" v-if="!isClusterMode">
+          <template #default="{ row }">
+            <div class="flex flex-col py-[6px] h-[50px]">
+              <span class="bcs-ellipsis">{{ clusterNameMap[handleGetExtData(row.metadata.uid, 'clusterID')] }}</span>
+              <span class="bcs-ellipsis mt-[6px]">{{ handleGetExtData(row.metadata.uid, 'clusterID') }}</span>
+            </div>
+          </template>
+        </bk-table-column>
         <bk-table-column label="Provisioner">
           <template #default="{ row }">
             <span>{{ row.provisioner || '--' }}</span>
@@ -63,7 +73,10 @@
           </template>
         </bk-table-column>
         <template #empty>
-          <BcsEmptyTableStatus :type="nameValue ? 'search-empty' : 'empty'" @clear="handleClearSearchData" />
+          <BcsEmptyTableStatus
+            :button-text="$t('generic.button.resetSearch')"
+            type="search-empty"
+            @clear="handleShowViewConfig" />
         </template>
       </bk-table>
     </template>

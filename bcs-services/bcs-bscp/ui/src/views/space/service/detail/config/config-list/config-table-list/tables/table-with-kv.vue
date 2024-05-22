@@ -129,7 +129,11 @@
     :app-id="props.appId"
     :editable="true"
     @confirm="getListData" />
-  <ViewConfigKv v-model:show="viewPanelShow" :config="activeConfig" />
+  <ViewConfigKv
+    v-model:show="viewPanelShow"
+    :config="activeConfig"
+    :show-edit-btn="isUnNamedVersion"
+    @open-edit="handleSwitchToEdit" />
   <VersionDiff v-model:show="isDiffPanelShow" :current-version="versionData" :selected-kv-config-id="diffConfig" />
   <DeleteConfirmDialog
     v-model:isShow="isDeleteConfigDialogShow"
@@ -298,7 +302,15 @@
       } else {
         res = await getReleaseKvList(props.bkBizId, props.appId, versionData.value.id, params);
       }
-      configList.value = res.details;
+      configList.value = res.details.sort((a: IConfigKvType, b: IConfigKvType) => {
+        if (a.kv_state === 'DELETE' && b.kv_state !== 'DELETE') {
+          return 1;
+        }
+        if (a.kv_state !== 'DELETE' && b.kv_state === 'DELETE') {
+          return -1;
+        }
+        return 0;
+      });
       configsCount.value = res.count;
       pagination.value.count = res.count;
     } catch (e) {
@@ -375,6 +387,14 @@
     refresh();
   };
 
+  // 由查看态切换为编辑态
+  const handleSwitchToEdit = () => {
+    if (!permCheckLoading.value && checkPermBeforeOperate('update')) {
+      editPanelShow.value = true;
+      viewPanelShow.value = false;
+    }
+  };
+
   // 删除单个配置项
   const handleDeleteConfigConfirm = async () => {
     if (!deleteConfig.value) {
@@ -410,7 +430,7 @@
     }
     await undeleteKv(props.bkBizId, props.appId, config.spec.key);
     Message({ theme: 'success', message: t('恢复配置项成功') });
-    refresh();
+    config.kv_state = 'UNCHANGE';
   };
 
   // 批量删除配置项后刷新配置项列表
@@ -436,7 +456,6 @@
   };
 
   const handleFilter = ({ checked, index }: any) => {
-    console.log(checked, index);
     if (index === 4) {
       // 调整数据类型筛选条件
       typeFilterChecked.value = checked;

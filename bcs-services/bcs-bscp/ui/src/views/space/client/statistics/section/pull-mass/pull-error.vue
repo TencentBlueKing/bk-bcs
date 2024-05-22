@@ -1,23 +1,33 @@
 <template>
   <div class="wrap">
     <Teleport :disabled="!isOpenFullScreen" to="body">
-      <div class="pull-error-wrap" :class="{ fullscreen: isOpenFullScreen }">
+      <div
+        class="pull-error-wrap"
+        :class="{ fullscreen: isOpenFullScreen }"
+        @mouseenter="isShowOperationBtn = true"
+        @mouseleave="isShowOperationBtn = false">
         <Card :title="t('拉取失败原因')" :height="416">
           <template #operation>
             <OperationBtn
+              v-show="isShowOperationBtn"
               :is-open-full-screen="isOpenFullScreen"
               @refresh="refresh"
               @toggle-full-screen="isOpenFullScreen = !isOpenFullScreen" />
           </template>
+          <template #head-suffix>
+            <div v-if="!isShowSpecificReason" class="icon-wrap">
+              <span class="action-icon bk-bscp-icon icon-download" v-bk-tooltips="{ content: $t('可下钻图表') }" />
+            </div>
+          </template>
           <bk-loading class="loading-wrap" :loading="loading">
+            <div v-if="isShowSpecificReason" class="nav">
+              <span class="main-reason" @click="refresh">{{ t('主要失败原因') }}</span> /
+              <span class="reason">{{ selectFailedReason.mapName }}</span>
+            </div>
             <div v-if="data.length && !isShowSpecificReason" ref="canvasRef" class="canvas-wrap">
-              <Tooltip ref="tooltipRef" @jump="jumpToSearch" />
+              <Tooltip :need-down-icon="true" ref="tooltipRef" @jump="jumpToSearch" />
             </div>
             <div v-else-if="specificReason.length && isShowSpecificReason" class="specific-reason">
-              <div class="nav">
-                <span class="main-reason" @click="refresh">{{ t('主要失败原因') }}</span> /
-                <span class="reason">{{ selectFailedReason }}</span>
-              </div>
               <div ref="specificReasonRef" class="canvas-wrap"></div>
             </div>
             <bk-exception
@@ -34,7 +44,7 @@
         </Card>
       </div>
     </Teleport>
-    <div>
+    <div class="time-list">
       <Card v-for="item in pullTime" :key="item.key" :title="item.name" :width="207" :height="128">
         <div class="time-info">
           <span v-if="item.value">
@@ -49,13 +59,14 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref, watch, onMounted, nextTick } from 'vue';
+  import { ref, watch, onMounted } from 'vue';
   import { Column, Pie } from '@antv/g2plot';
   import Card from '../../components/card.vue';
   import Tooltip from '../../components/tooltip.vue';
   import OperationBtn from '../../components/operation-btn.vue';
   import { IPullErrorReason, IInfoCard, IClinetCommonQuery } from '../../../../../../../types/client';
   import { getClientPullStatusData, getClientPullFailedReason } from '../../../../../../api/client';
+  import { CLIENT_ERROR_CATEGORY_MAP, CLIENT_ERROR_SUBCLASSES_MAP } from '../../../../../../constants/client';
   import useClientStore from '../../../../../../store/client';
   import { storeToRefs } from 'pinia';
   import { useRouter } from 'vue-router';
@@ -101,7 +112,11 @@
   const isOpenFullScreen = ref(false);
   const initialWidth = ref(0);
   const isShowSpecificReason = ref(false);
-  const selectFailedReason = ref('');
+  const selectFailedReason = ref({
+    name: '',
+    mapName: '',
+  });
+  const isShowOperationBtn = ref(false);
 
   watch(
     () => props.appId,
@@ -133,8 +148,15 @@
 
   watch(
     () => searchQuery.value,
-    () => {
-      loadChartData();
+    async () => {
+      await loadChartData();
+      if (data.value.length) {
+        if (columnPlot) {
+          columnPlot!.changeData(data.value);
+        } else {
+          initChart();
+        }
+      }
     },
     { deep: true },
   );
@@ -166,17 +188,29 @@
     try {
       loading.value = true;
       const res = await getClientPullStatusData(props.bkBizId, props.appId, params);
-      data.value = res.failed_reason;
-      Object.entries(res.time_consuming).forEach(([key, value]) => {
-        const item = pullTime.value.find((item) => item.key === key) as IInfoCard;
-        item.value = value as number;
-        if (item.value > 1) {
-          item.unit = 's';
-        } else {
-          item.value = item.value * 1000;
-          item.unit = 'ms';
-        }
+      data.value = res.failed_reason?.map((item: IPullErrorReason) => {
+        const mapName = CLIENT_ERROR_CATEGORY_MAP.find(
+          (errorItem) => errorItem.value === item.release_change_failed_reason,
+        )?.name;
+        return {
+          ...item,
+          mapName,
+        };
       });
+      if (Object.keys(res.time_consuming).length) {
+        Object.entries(res.time_consuming).forEach(([key, value]) => {
+          const item = pullTime.value.find((item) => item.key === key) as IInfoCard;
+          item.value = value as number;
+          if (item.value > 1) {
+            item.unit = 's';
+          } else {
+            item.value = item.value * 1000;
+            item.unit = 'ms';
+          }
+        });
+      } else {
+        pullTime.value.forEach((item) => (item.value = 0));
+      }
     } catch (error) {
       console.error(error);
     } finally {
@@ -187,12 +221,20 @@
   const loadPullFailedReason = async () => {
     const params = {
       last_heartbeat_time: searchQuery.value.last_heartbeat_time,
-      search: { failed_reason: selectFailedReason.value },
+      search: { failed_reason: selectFailedReason.value.name },
     };
     try {
       loading.value = true;
       const res = await getClientPullFailedReason(props.bkBizId, props.appId, params);
-      specificReason.value = res.data.failed_reason;
+      specificReason.value = res.data.failed_reason?.map((item: IPullErrorReason) => {
+        const mapName = CLIENT_ERROR_SUBCLASSES_MAP.find(
+          (errorItem) => errorItem.value === item.release_change_failed_reason,
+        )?.name;
+        return {
+          ...item,
+          mapName,
+        };
+      });
     } catch (error) {
       console.error(error);
     } finally {
@@ -203,7 +245,7 @@
   const initChart = () => {
     columnPlot = new Column(canvasRef.value!, {
       data: data.value,
-      xField: 'release_change_failed_reason',
+      xField: 'mapName',
       yField: 'count',
       seriesField: 'count',
       color: '#FFA66B',
@@ -235,7 +277,6 @@
             },
           },
         },
-        top: true,
       },
       label: {
         // 可手动配置 label 数据标签位置
@@ -245,37 +286,37 @@
           fill: '#979BA5',
         },
       },
-      // tooltip: {
-      //   fields: ['value', 'count'],
-      //   showTitle: true,
-      //   title: 'release_change_failed_reason',
-      //   container: tooltipRef.value?.getDom(),
-      //   enterable: true,
-      //   customItems: (originalItems: any[]) => {
-      //     originalItems[0].name = t('客户端数量');
-      //     return originalItems;
-      //   },
-      // },
+      tooltip: {
+        fields: ['value', 'count'],
+        showTitle: false,
+        container: tooltipRef.value?.getDom(),
+        enterable: true,
+        customItems: (originalItems: any[]) => {
+          originalItems[0].name = originalItems[0].data.mapName;
+          return originalItems;
+        },
+      },
     });
     columnPlot!.render();
-    columnPlot.on(
-      'plot:click',
-      async (event: any) => {
-        selectFailedReason.value = event.data?.data.release_change_failed_reason;
-        if (!selectFailedReason.value) return;
-        isShowSpecificReason.value = true;
-        await loadPullFailedReason();
-        nextTick(() => initSpecificReasonChart());
-      },
-    );
+    columnPlot.on('plot:click', async (event: any) => {
+      selectFailedReason.value.name = event.data?.data.release_change_failed_reason;
+      selectFailedReason.value.mapName = event.data?.data.mapName;
+      if (!selectFailedReason.value.name) return;
+      isShowSpecificReason.value = true;
+      await loadPullFailedReason();
+      if (specificReason.value.length > 0) {
+        initSpecificReasonChart();
+      }
+    });
   };
 
   const initSpecificReasonChart = () => {
     piePlot = new Pie(specificReasonRef.value!, {
       data: specificReason.value,
       angleField: 'count',
-      colorField: 'release_change_failed_reason',
+      colorField: 'mapName',
       padding: [20, 400, 60, 10],
+      interactions: [{ type: 'element-highlight' }],
       label: {
         type: 'inner',
         offset: '-30%',
@@ -295,10 +336,11 @@
   };
 
   const jumpToSearch = () => {
-    router.push({
+    const routeData = router.resolve({
       name: 'client-search',
       params: { appId: props.appId, bizId: props.bkBizId },
     });
+    window.open(routeData.href, '_blank');
   };
 
   const refresh = async () => {
@@ -325,6 +367,11 @@
       .loading-wrap {
         height: 100%;
       }
+    }
+    .time-list {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
     }
     .time-info {
       margin-left: 8px;
@@ -365,28 +412,42 @@
   .specific-reason {
     height: 100%;
     z-index: 9999;
-    .nav {
-      position: absolute;
-      top: 0;
-      font-size: 12px;
-      color: #313238;
-      position: relative;
-      .main-reason {
-        margin-right: 8px;
-        cursor: pointer;
-        &:hover {
-          color: #3a84ff;
-        }
+  }
+  .nav {
+    font-size: 12px;
+    color: #313238;
+    position: relative;
+    z-index: 999;
+    .main-reason {
+      margin-right: 8px;
+      cursor: pointer;
+      &:hover {
+        color: #3a84ff;
       }
-      .reason {
-        color: #979ba5;
-        margin-left: 8px;
-      }
+    }
+    .reason {
+      color: #979ba5;
+      margin-left: 8px;
     }
   }
   :deep(.bk-exception) {
     height: 100%;
     justify-content: center;
     transform: translateY(-20px);
+  }
+  :deep(.g2-tooltip) {
+    visibility: hidden;
+  }
+
+  .icon-wrap {
+    margin-left: 8px;
+    font-size: 12px;
+    width: 18px;
+    height: 18px;
+    background: #f0f3ff;
+    border-radius: 2px;
+    text-align: center;
+    line-height: 18px;
+    color: #7594ef;
   }
 </style>

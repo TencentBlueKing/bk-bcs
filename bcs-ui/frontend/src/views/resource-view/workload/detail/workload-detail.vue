@@ -1,5 +1,5 @@
 <template>
-  <div class="workload-detail bcs-content-wrapper" v-bkloading="{ isLoading }">
+  <div class="workload-detail" v-bkloading="{ isLoading }">
     <div class="workload-detail-info">
       <div class="workload-info-basic">
         <div class="basic-left">
@@ -42,6 +42,10 @@
       </div>
       <div class="workload-main-info">
         <div class="info-item">
+          <span class="label">{{ $t('cluster.labels.name') }}</span>
+          <span class="value">{{ clusterNameMap[clusterId] }}</span>
+        </div>
+        <div class="info-item">
           <span class="label">{{ $t('k8s.namespace') }}</span>
           <span class="value">{{ metadata.namespace }}</span>
         </div>
@@ -68,45 +72,45 @@
             {{ updateStrategyMap[updateStrategy.type] || $t('k8s.updateStrategy.rollingUpdate') }}
           </span>
         </div>
-      </div>
-      <div class="workload-main-info" v-if="category === 'deployments'">
-        <div class="info-item">
-          <span class="label">{{ $t('k8s.deployment.maxSurge') }}</span>
-          <span class="value" v-if="$chainable(spec, 'strategy.rollingUpdate.maxSurge')">
-            {{ spec.strategy.rollingUpdate.maxSurge }}
-          </span>
-          <span class="value" v-else>--</span>
-        </div>
-        <div class="info-item">
-          <span class="label">{{ $t('k8s.deployment.maxUnavailable') }}</span>
-          <span class="value" v-if="$chainable(spec, 'strategy.rollingUpdate.maxUnavailable')">
-            {{ spec.strategy.rollingUpdate.maxUnavailable }}
-          </span>
-          <span class="value" v-else>--</span>
-        </div>
-        <div class="info-item">
-          <span class="label">{{ $t('k8s.deployment.minReadySeconds') }}</span>
-          <span class="value" v-if="Number.isInteger(spec.minReadySeconds)">{{ spec.minReadySeconds }}s</span>
-          <span class="value" v-else>--</span>
-        </div>
-        <div class="info-item">
-          <span class="label">{{ $t('k8s.deployment.progressDeadlineSeconds') }}</span>
-          <span class="value" v-if="Number.isInteger(spec.progressDeadlineSeconds)">
-            {{ spec.progressDeadlineSeconds }}s</span>
-          <span class="value" v-else>--</span>
-        </div>
-      </div>
-      <div class="workload-main-info" v-if="category === 'statefulsets'">
-        <div class="info-item">
-          <span class="label">{{ $t('dashboard.workload.pods.podManagementPolicy') }}</span>
-          <span class="value">{{ spec.podManagementPolicy || '--' }}</span>
-        </div>
-        <div class="info-item">
-          <span class="label">{{ $t('k8s.statefulset.partition') }}</span>
-          <span class="value" v-if="Number.isInteger($chainable(spec, 'updateStrategy.rollingUpdate.partition'))">
-            {{ spec.updateStrategy.rollingUpdate.partition }}s</span>
-          <span class="value" v-else>--</span>
-        </div>
+        <template v-if="category === 'deployments'">
+          <div class="info-item">
+            <span class="label">{{ $t('k8s.deployment.maxSurge') }}</span>
+            <span class="value" v-if="$chainable(spec, 'strategy.rollingUpdate.maxSurge')">
+              {{ spec.strategy.rollingUpdate.maxSurge }}
+            </span>
+            <span class="value" v-else>--</span>
+          </div>
+          <div class="info-item">
+            <span class="label">{{ $t('k8s.deployment.maxUnavailable') }}</span>
+            <span class="value" v-if="$chainable(spec, 'strategy.rollingUpdate.maxUnavailable')">
+              {{ spec.strategy.rollingUpdate.maxUnavailable }}
+            </span>
+            <span class="value" v-else>--</span>
+          </div>
+          <div class="info-item">
+            <span class="label">{{ $t('k8s.deployment.minReadySeconds') }}</span>
+            <span class="value" v-if="Number.isInteger(spec.minReadySeconds)">{{ spec.minReadySeconds }}s</span>
+            <span class="value" v-else>--</span>
+          </div>
+          <div class="info-item">
+            <span class="label">{{ $t('k8s.deployment.progressDeadlineSeconds') }}</span>
+            <span class="value" v-if="Number.isInteger(spec.progressDeadlineSeconds)">
+              {{ spec.progressDeadlineSeconds }}s</span>
+            <span class="value" v-else>--</span>
+          </div>
+        </template>
+        <template v-else-if="category === 'statefulsets'">
+          <div class="info-item">
+            <span class="label">{{ $t('dashboard.workload.pods.podManagementPolicy') }}</span>
+            <span class="value">{{ spec.podManagementPolicy || '--' }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">{{ $t('k8s.statefulset.partition') }}</span>
+            <span class="value" v-if="Number.isInteger($chainable(spec, 'updateStrategy.rollingUpdate.partition'))">
+              {{ spec.updateStrategy.rollingUpdate.partition }}s</span>
+            <span class="value" v-else>--</span>
+          </div>
+        </template>
       </div>
     </div>
     <div class="workload-detail-body">
@@ -168,6 +172,7 @@
             @select="handleSelectPod"
             @select-all="handleSelectAllPod"
             @sort-change="handleSortChange"
+            @filter-change="handleFilterChange"
           >
             <!-- <bcs-table-column
               v-if="showBatchDispatch"
@@ -192,7 +197,14 @@
                 </span>
               </template>
             </bcs-table-column>
-            <bcs-table-column label="Status" width="120" show-overflow-tooltip>
+            <bcs-table-column
+              label="Status"
+              width="120"
+              column-key="status"
+              prop="status"
+              :filters="podStatusFilters"
+              filter-multiple
+              show-overflow-tooltip>
               <template #default="{ row }">
                 <StatusIcon :status="handleGetExtData(row.metadata.uid, 'status')"></StatusIcon>
               </template>
@@ -247,7 +259,7 @@
           </bcs-table>
         </bcs-tab-panel>
         <bcs-tab-panel name="event" :label="$t('generic.label.event')">
-          <EventQueryTableVue
+          <EventQueryTable
             class="min-h-[360px]"
             hide-cluster-and-namespace
             :kinds="kind === 'Deployment' ? [kind,'ReplicaSet', 'Pod'] : [kind, 'Pod']"
@@ -255,7 +267,7 @@
             :namespace="namespace"
             :name="kindsNames"
             v-if="!loading">
-          </EventQueryTableVue>
+          </EventQueryTable>
         </bcs-tab-panel>
         <bcs-tab-panel name="label" :label="$t('k8s.label')">
           <bk-table :data="labels">
@@ -333,6 +345,7 @@ import BcsLog from '@/components/bcs-log/log-dialog.vue';
 import Metric from '@/components/metric.vue';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 import StatusIcon from '@/components/status-icon';
+import { useCluster } from '@/composables/use-app';
 import useInterval from '@/composables/use-interval';
 import usePage from '@/composables/use-page';
 import useSearch from '@/composables/use-search';
@@ -340,7 +353,7 @@ import useTableSort from '@/composables/use-table-sort';
 import fullScreen from '@/directives/full-screen';
 import $i18n from '@/i18n/i18n-setup';
 import $store from '@/store';
-import EventQueryTableVue from '@/views/project-manage/event-query/event-query-table.vue';
+import EventQueryTable from '@/views/project-manage/event-query/event-query-table.vue';
 
 export interface IDetail {
   manifest: any;
@@ -354,7 +367,7 @@ export default defineComponent({
     Metric,
     CodeEditor,
     BcsLog,
-    EventQueryTableVue,
+    EventQueryTable,
   },
   directives: {
     bkOverflowTips,
@@ -402,6 +415,7 @@ export default defineComponent({
   },
   setup(props, ctx) {
     const { clusterId } = toRefs(props);
+    const { clusterNameMap } = useCluster();
     const updateStrategyMap = ref({
       RollingUpdate: $i18n.t('k8s.updateStrategy.rollingUpdate'),
       InplaceUpdate: $i18n.t('k8s.updateStrategy.inplaceUpdate'),
@@ -452,14 +466,36 @@ export default defineComponent({
       ...item,
       images: (handleGetExtData(item.metadata?.uid, 'images') || []).join(''),
       podIPv6: handleGetExtData(item.metadata?.uid, 'podIPv6'),
+      podIPv4: handleGetExtData(item.metadata?.uid, 'podIPv4'),
     })));
+    // 状态列表
+    const podStatusFilters = computed(() => allPodsData.value.reduce((pre, item) => {
+      const itemStatus = handleGetExtData(item.metadata.uid, 'status');
+      const exist = pre.find(status => status === itemStatus);
+      if (!exist) {
+        pre.push(itemStatus);
+      }
+      return pre;
+    }, []).map(status => ({
+      text: status,
+      value: status,
+    })));
+    const filters = ref<Record<string, string[]>>({});
+    const handleFilterChange = (data) => {
+      filters.value = data;
+    };
     // 排序
     const { handleSortChange, sortTableData: pods } = useTableSort(allPodsData, item => ({
       createTime: handleGetExtData(item.metadata?.uid, 'createTime'),
     }));
-    // pods过滤
-    const keys = ref(['metadata.name', 'images', 'podIPv6', 'status.hostIP', 'status.podIP', 'spec.nodeName']);
-    const { searchValue, tableDataMatchSearch } = useSearch(pods, keys);
+    // 表头过滤
+    const filterPodsByStatus = computed(() => pods.value.filter((item) => {
+      const status = handleGetExtData(item.metadata.uid, 'status');
+      return !filters.value?.status?.length || filters.value.status.includes(status);
+    }));
+    // pods过滤 'images', 'podIPv6', 'podIPv4' 这个三个参数在ext里面，在全量数据那里处理过
+    const keys = ref(['metadata.name', 'status.hostIP', 'status.podIP', 'spec.nodeName', 'images', 'podIPv6', 'podIPv4']);
+    const { searchValue, tableDataMatchSearch } = useSearch(filterPodsByStatus, keys);
     // pods分页
     const {
       pageChange: podTablePageChang,
@@ -723,7 +759,6 @@ export default defineComponent({
       basicInfoList,
       activePanel,
       params,
-      pods,
       podTableRef,
       selectPods,
       searchValue,
@@ -762,6 +797,9 @@ export default defineComponent({
       handleShowLog,
       handleSortChange,
       getReadinessGates,
+      clusterNameMap,
+      podStatusFilters,
+      handleFilterChange,
     };
   },
 });

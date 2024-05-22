@@ -623,6 +623,7 @@ func (t *Task) BuildUpdateAutoScalingOptionTask(scalingOption *proto.ClusterAuto
 
 // BuildSwitchAutoScalingOptionStatusTask switch auto scaling option status
 // NOCC:CCN_threshold(工具误报:),golint/fnsize(设计如此:)
+// nolint function name should not exceed 35 characters
 func (t *Task) BuildSwitchAutoScalingOptionStatusTask(scalingOption *proto.ClusterAutoScalingOption, enable bool,
 	opt *cloudprovider.CommonOption) (*proto.Task, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented

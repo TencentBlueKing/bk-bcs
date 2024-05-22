@@ -257,6 +257,9 @@ export default defineComponent({
         case 'gcpCloud':
           name = 'googleNodePoolDetail';
           break;
+        case 'azureCloud':
+          name = 'azureNodePoolDetail';
+          break;
         default:
           name = 'nodePoolDetail';
       }

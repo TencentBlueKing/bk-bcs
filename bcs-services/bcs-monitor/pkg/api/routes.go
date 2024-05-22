@@ -177,6 +177,8 @@ func registerMetricsRoutes(engine *gin.RouterGroup) {
 		route.GET("/disk_usage", rest.RestHandlerFunc(metrics.ClusterDiskUsage))
 		route.GET("/diskio_usage", rest.RestHandlerFunc(metrics.ClusterDiskioUsage))
 		route.GET("/pod_usage", rest.RestHandlerFunc(metrics.ClusterPodUsage))
+		route.GET("/nodegroup/:nodegroup/node_num", rest.RestHandlerFunc(metrics.ClusterGroupNodeNum))
+		route.GET("/nodegroup/:nodegroup/max_node_num", rest.RestHandlerFunc(metrics.ClusterGroupMaxNodeNum))
 		route.GET("/nodes/:node/info", rest.RestHandlerFunc(metrics.GetNodeInfo))
 		route.GET("/nodes/:node/overview", rest.RestHandlerFunc(metrics.GetNodeOverview))
 		route.GET("/nodes/:node/cpu_usage", rest.RestHandlerFunc(metrics.GetNodeCPUUsage))
@@ -189,6 +191,8 @@ func registerMetricsRoutes(engine *gin.RouterGroup) {
 		route.GET("/nodes/:node/diskio_usage", rest.RestHandlerFunc(metrics.GetNodeDiskioUsage))
 		route.POST("/namespaces/:namespace/pods/cpu_usage", rest.RestHandlerFunc(
 			metrics.PodCPUUsage)) // 多个Pod场景, 可能有几十，上百Pod场景, 需要使用 Post 传递参数
+		route.POST("/namespaces/:namespace/pods/cpu_limit_usage", rest.RestHandlerFunc(metrics.PodCPULimitUsage))
+		route.POST("/namespaces/:namespace/pods/cpu_request_usage", rest.RestHandlerFunc(metrics.PodCPURequestUsage))
 		route.POST("/namespaces/:namespace/pods/memory_used", rest.RestHandlerFunc(metrics.PodMemoryUsed))
 		route.POST("/namespaces/:namespace/pods/network_receive", rest.RestHandlerFunc(metrics.PodNetworkReceive))
 		route.POST("/namespaces/:namespace/pods/network_transmit", rest.RestHandlerFunc(metrics.PodNetworkTransmit))

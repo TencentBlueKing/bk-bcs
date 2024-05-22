@@ -14,8 +14,9 @@
 package business
 
 import (
-	modelv2 "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/vpc/v2/model"
 	"strings"
+
+	modelv2 "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/vpc/v2/model"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/huawei/api"

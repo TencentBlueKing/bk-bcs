@@ -70,14 +70,14 @@ type TransferFileRespResult struct {
 
 // CreateTransferFileTask create sync transfer file task
 func CreateTransferFileTask(ctx context.Context, sourceAgentID, sourceContainerID, sourceFileDir, sourceUser,
-	filename string, targetAgentID, targetContainerID, targetFileDir, targetFileName, targetUser string) (string, error) {
+	filename string, targetAgentID, targetContainerID, targetFileDir, targetUser string) (string, error) {
 
 	// 1. if sourceContainerID is set, means source is node, else is container
 	// 2. if targetContainerID is set, means target is node, else is container
 
 	url := fmt.Sprintf("%s/api/v2/task/extensions/async_transfer_file", cc.FeedServer().GSE.Host)
 	authHeader := fmt.Sprintf("{\"bk_app_code\": \"%s\", \"bk_app_secret\": \"%s\"}",
-		cc.FeedServer().GSE.AppCode, cc.FeedServer().GSE.AppSecret)
+		cc.FeedServer().Esb.AppCode, cc.FeedServer().Esb.AppSecret)
 	resp, err := components.GetClient().R().
 		SetContext(ctx).
 		SetHeader("X-Bkapi-Authorization", authHeader).
@@ -89,7 +89,7 @@ func CreateTransferFileTask(ctx context.Context, sourceAgentID, sourceContainerI
 			Tasks: []TransferFileTask{
 				{
 					Source: TransferFileSource{
-						FileName: targetFileDir,
+						FileName: filename,
 						StoreDir: sourceFileDir,
 						Agent: TransferFileAgent{
 							User:          sourceUser,
@@ -164,7 +164,7 @@ func TransferFileResult(ctx context.Context, taskID string) (pbfs.AsyncDownloadS
 
 	url := fmt.Sprintf("%s/api/v2/task/extensions/get_transfer_file_result", cc.FeedServer().GSE.Host)
 	authHeader := fmt.Sprintf("{\"bk_app_code\": \"%s\", \"bk_app_secret\": \"%s\"}",
-		cc.FeedServer().GSE.AppCode, cc.FeedServer().GSE.AppSecret)
+		cc.FeedServer().Esb.AppCode, cc.FeedServer().Esb.AppSecret)
 	resp, err := components.GetClient().R().
 		SetContext(ctx).
 		SetHeader("X-Bkapi-Authorization", authHeader).
@@ -185,14 +185,20 @@ func TransferFileResult(ctx context.Context, taskID string) (pbfs.AsyncDownloadS
 	// any task failed, return failed
 	// any task downloading, return downloading
 	// all task success, return success
+	allSuccess := true
 	for _, result := range data.Result {
-		switch result.ErrorCode {
-		case 0:
-		case 115:
-			return pbfs.AsyncDownloadStatus_DOWNLOADING, nil
-		default:
+		if result.ErrorCode != 0 && result.ErrorCode != 115 {
 			return pbfs.AsyncDownloadStatus_FAILED, fmt.Errorf(result.ErrorMsg)
 		}
+		if result.ErrorCode == 115 {
+			allSuccess = false
+		}
 	}
+
+	if !allSuccess {
+		// 如果存在正在下载的任务
+		return pbfs.AsyncDownloadStatus_DOWNLOADING, nil
+	}
+	// 如果没有失败或下载中的任务，则返回成功
 	return pbfs.AsyncDownloadStatus_SUCCESS, nil
 }

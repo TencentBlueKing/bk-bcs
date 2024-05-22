@@ -239,7 +239,7 @@ export default defineComponent({
     const { params } = toRefs(props);
     watch(params, (newValue, oldValue) => {
       if ((newValue && !oldValue)
-                    || (newValue && oldValue && JSON.stringify(newValue) !== JSON.stringify(oldValue))) {
+        || (newValue && oldValue && JSON.stringify(newValue) !== JSON.stringify(oldValue))) {
         handleGetMetricData();
       }
     });

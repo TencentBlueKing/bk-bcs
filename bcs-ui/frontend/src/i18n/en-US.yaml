@@ -27,8 +27,6 @@ bcs:
     share: Shared cluster
     managed: TKE (Managed cluster)
     selfDeployed: Self-deployed cluster
-    publicIcon: S
-    privateIcon: D
     federation: Federation
     kubeConfig: KubeConfig
     cloud: Cloud credential import
@@ -61,6 +59,7 @@ bcs:
         placeholder: Please select the CMDB business you want to bind
         emptyMsg: Please contact the operator of the CMDB business
   newVersion: 'Version updated, would you like to refresh the interface?'
+  preVersion: Return Old Version
 blueking:
   onCall: Contact BK Customer Service
   support: Support
@@ -116,7 +115,6 @@ nav:
   workload: Workload
   configuration: Configuration
   storage: Storage
-  customResource: CRD
   cluster: Clusters
   clusterList: Cluster List
   nodeList: Nodes
@@ -137,6 +135,7 @@ nav:
   monitor: Monitor
   network: Network
   cloudToken: Cloud Token
+  tkexCRD: Kourse
 iam:
   title:
     perms: This operation requires the following permissions
@@ -212,8 +211,18 @@ metrics:
   podUsage: Pod usage
   cpuRequestUsage:
     text: CPU packing rate
+    clusterDesc: >-
+      Cluster CPU box installation rate = sum of all POD CPU REQUEST in the
+      cluster / cluster node CPU total number (excluding MASTER node), the
+      closer the cluster CPU packing rate is closer to the cluster CPU usage
+      rate, the higher the cluster CPU resource utilization rate {0}
   memRequestUsage:
     text: Memory box rate
+    clusterDesc: >-
+      Cluster memory installation box rate = The sum of all POD memory Request /
+      cluster all node memory (excluding Master nodes), the closer the cluster
+      memory box rate is closer to the cluster memory usage rate, the higher the
+      utilization rate of the cluster memory resources {0}
   diskIOUsage: Disk IO
   diskIOUsage1: DiskIO Total
   diskIOUsage2: Disk IO usage rate
@@ -263,6 +272,7 @@ generic:
       noMatchData: No matching data
       searchEmpty:
         text: The search result is empty
+        subTitle: 'You can try adjusting keywords or {action}'
     info:
       tips: Tip
       refreshAuth: 'The current operation is permanent, please refresh the interface'
@@ -287,8 +297,9 @@ generic:
     command: >-
       Multiple commands are separated by spaces, eg: / bin / bash &amp; quote; -
       C &amp; quote; &amp; quote
-    searchIp: Search ip
+    searchIp: 'Enter IP to search, separate multiple IPs with commas or spaces'
   button:
+    resetSearch: Reset search
     validate: Validate
     confirm: Confirm
     confirm1: Confirm
@@ -351,7 +362,7 @@ generic:
     status: Status
     action: Actions
     total: All
-    mem: Mem
+    mem: MEM
     specifications: Specification
     clusterList: Cluster List
     nsList: Namespaces
@@ -393,6 +404,7 @@ generic:
     delete: Delete
     start: Start
     stop: Stop
+    abnormal: Abnormal
   status:
     part_failure: Part failure
     support: Support
@@ -594,7 +606,6 @@ cluster:
   tips:
     highMetricData: Cluster indicator overload
     createK8SCluster: Create K8S native cluster
-    clusterStatus: 'Cluster status: {0}'
   labels:
     nameAndId: Cluster name/ID
     name: Name
@@ -620,6 +631,7 @@ cluster:
     importCategory: Import category
     maxPodNum: Max pod number
     clusterLabel: Label
+    hideSharedCluster: Hide shared cluster
   status:
     unknown: Unknown cluster status
     importFailed: Import failed
@@ -745,6 +757,14 @@ cluster:
           The number of nodes can be added with clusters (including Master nodes
           and node nodes) = (Number of IP -quantity of service) / single node
           POD quantity upper limit.
+        article1: >-
+          The container network resources are limited, please allocate it
+          reasonably. Under the current container network configuration, the
+          cluster can be added at most {count} individual nodes.
+        article2: >-
+          When the container network resources are excessive, the container
+          network will be automatically scale-up. After the capacity is
+          expanded, the cluster can be added at most {count}.
       networkMode:
         text: Network Mode
         overlay:
@@ -769,7 +789,7 @@ cluster:
       quotaAllocation: CPU/MEM
       coefficient: Factor
       cpuQuota: CPU (Cores)
-      memQuota: Mem (GiB)
+      memQuota: MEM (GiB)
       chooseMaster: Select Master
       importType: Import Type
       cloudToken: Cloud Token
@@ -1124,6 +1144,12 @@ cluster:
             hssd: Enhanced SSD cloud hard disk
             balanced: Balanced Disk
             standard: Standard Disk
+            Standard_LRS: Standard HDD
+            StandardSSD_LRS: Standard SSD
+            StandardSSD_ZRS: Standard SSD_ZRS
+            Premium_LRS: Premium SSD
+            PremiumV2_LRS: Premium SSD v2
+            Premium_ZRS: Premium SSD_ZRS
           disk:
             system: System disk
             data: Data disk
@@ -2647,10 +2673,7 @@ dashboard:
     overview: Overview
     confirmSchedule: 'Confirm {action} all Pods under the current resource'
   placeholder:
-    selectCRD: Select CRD
     search1: Search name
-    search2: 'Enter the name, search for the creator'
-    search3: 'Enter name, founder, IP search'
   label:
     formMode: FORM Mode
     yamlMode: YAML Mode
@@ -2677,12 +2700,9 @@ dashboard:
         joint characters (-), and even characters (-) must be connected in
         English or numbers later
       sharedClusterNs: 'Name rule: {prefix}Custom Name'
-      sharedQuota: >-
-        The shared cluster needs to set the MEM and CPU quotas, and the minimum
-        value of the two is not less than 0
       setMinMaxMemCpu: >-
-        Please set up Mem and CPU quotas, and the minimum value of the two is
-        not less than 0
+        Please set CPU and MEM quotas, and the minimum value must be greater
+        than 0.
     status:
       waitingApproval: Pending
       createNamespace: Create naming space
@@ -2790,6 +2810,8 @@ dashboard:
       copy: Copy
   storage:
     usedBy: Mount
+  button:
+    createResource: Create
 apiToken:
   text: API Token
   desc:
@@ -2827,7 +2849,7 @@ apiToken:
     deleteConfirm:
       text: 'This operation cannot be withdrawn, please confirm'
       desc: >-
-        All API interfaces with the API Token and Kubeconfig will not be
+        All API interfaces with the API Token and kubeconfig will not be
         available
   msg:
     emptyDataTips: >-
@@ -2981,6 +3003,7 @@ logCollector:
     queryFileLog: Query file log
     queryStdLog: Query standard output log
     addPodLabel: Automatically add labels in Pod
+    goBKLog: GO BK-Log
     addRange:
       text: Add range
       label:
@@ -2990,7 +3013,50 @@ logCollector:
           labels that exist on the Pod will be collected
       workload: Select by workload
       container: Select by container name
-    goBKLog: GO BK-Log
+view:
+  labels:
+    creator: Creator
+    allNs: All namespaces
+    clusterAndNs: Cluster/Namespace
+    saveAs: Save as
+    name: View name
+    all: All
+    resourceName: Resource name
+    viewDataRange: View data range
+    editView: Edit view
+    newView: New view
+    custom: Custom
+  button:
+    query: Search
+    saveAsView: Save as view
+    moreResource: More
+    addCluster: Add cluster
+    edit: Edit
+    clone: Clone
+    delete: Delete
+    reset: Reset
+    confirmAndChangeView: Confirm and switch
+    addQueryField: Add query field
+    addField: Add field
+    addCustomView: Add
+    clusterView: Cluster view
+    customView: Custom view
+  tips:
+    selectMultiCluster: Select clusters in bulk
+    confirmDelete: Confirm to delete the view
+    sharedClusterDoNotSupportTheKind: Shared clusters do not support the creation of this resource.
+    editMode: Edit mode
+    invalidate: Some conditions are invalid. Please select again
+  placeholder:
+    searchCluster: Search cluster name
+    creator: Search creator
+    resourceName: Please input resource name
+    searchView: Search view name
+    searchNameOrCreator: Search resource name and creator
+    searchNameOrCreatorOrIP: 'Search resource name, creator, IP'
+    searchResourceKind: Search resource kinds
+  status:
+    saveAs: Saved
 manualNode:
   title:
     source:
@@ -3095,6 +3161,7 @@ azureCloud:
     nameRegex: 'Only support English, numbers and characters (-)'
     secretRegex: 'Only support English, numbers and characters (- or ~)'
   label:
+    loginUser: loginUser
     create: Create
     cluster: Associated cluster
     clusterType: Cluster type
@@ -3240,6 +3307,25 @@ googleCA:
       of node instances, please go to the {0} page to set up.
   button:
     vpcRule: VPC Rule
+azureCA:
+  tips:
+    system: >-
+      Because the operating system “Container-Optimized OS (cos_containerd)
+      including Containerd (default)” has many restrictions, BlueKing components
+      depend on these restricted features, currently only the operating system
+      “Ubuntu including Containerd (ubuntu_containerd)” is supported.
+    zone: 'Currently, only a single availability zone is supported.'
+    dataDisk: >-
+      After purchasing a data disk and adding nodes, you need to manually format
+      and mount the disk.
+    securityGroup: >-
+      Node pool uses VPC firewall rules to control the incoming/outgoing traffic
+      of node instances, please go to the {0} page to set up.
+  button:
+    vpcRule: VPC Rule
+  password:
+    set: Set password
+    confirm: Confirm password
 tke:
   label:
     ipAndPort: IP and port

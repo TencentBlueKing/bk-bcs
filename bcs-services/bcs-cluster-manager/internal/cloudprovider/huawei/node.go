@@ -19,10 +19,14 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/huawei/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/huawei/business"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 var nodeMgr sync.Once
@@ -157,9 +161,23 @@ func (nm *NodeManager) ListNodeInstanceType(info cloudprovider.InstanceInfo, opt
 
 	instanceTypes := make([]*proto.InstanceType, 0)
 	for _, v := range *flavors {
+		if v.OsExtraSpecs.Condoperationaz == nil {
+			continue
+		}
+
+		cpu, _ := strconv.Atoi(v.Vcpus)
+		memory := uint32(v.Ram / 1024)
+		if info.Cpu > 0 && cpu != int(info.Cpu) {
+			continue
+		}
+		if info.Memory > 0 && memory != info.Memory {
+			continue
+		}
+
 		var (
-			name string
-			gpu  uint32
+			name   string
+			gpu    uint32
+			status = common.InstanceSoldOut
 		)
 
 		if v.OsExtraSpecs.Ecsperformancetype != nil {
@@ -179,11 +197,6 @@ func (nm *NodeManager) ListNodeInstanceType(info cloudprovider.InstanceInfo, opt
 			}
 		}
 
-		cpu, _ := strconv.Atoi(v.Vcpus)
-		status := ""
-		if v.OsExtraSpecs.Condoperationstatus != nil {
-			status = *v.OsExtraSpecs.Condoperationstatus
-		}
 		if v.OsExtraSpecs.Infogpuname != nil {
 			res := strings.Split(*v.OsExtraSpecs.Infogpuname, "*")
 			if len(res) > 0 {
@@ -191,23 +204,25 @@ func (nm *NodeManager) ListNodeInstanceType(info cloudprovider.InstanceInfo, opt
 				gpu = uint32(i)
 			}
 		}
+
 		zones := make([]string, 0)
-		if v.OsExtraSpecs.Condoperationaz != nil {
-			res := strings.Split(*v.OsExtraSpecs.Condoperationaz, ",")
-			for _, y := range res {
-				zone := strings.Split(y, "(")
-				if len(zone) > 0 {
+		res := strings.Split(*v.OsExtraSpecs.Condoperationaz, ",")
+		for _, y := range res {
+			zone := strings.Split(y, "(")
+			if len(zone) > 0 {
+				if zone[1] == "normal)" || zone[1] == "promotion)" {
+					status = common.InstanceSell
 					zones = append(zones, zone[0])
 				}
-
 			}
 		}
+
 		instanceTypes = append(instanceTypes, &proto.InstanceType{
 			NodeType:   v.Name,
 			TypeName:   name,
 			NodeFamily: *v.OsExtraSpecs.ResourceType,
 			Cpu:        uint32(cpu),
-			Memory:     uint32(v.Ram / 1024),
+			Memory:     memory,
 			Gpu:        gpu,
 			Status:     status,
 			Zones:      zones,
@@ -220,4 +235,35 @@ func (nm *NodeManager) ListNodeInstanceType(info cloudprovider.InstanceInfo, opt
 // ListOsImage get osimage list
 func (nm *NodeManager) ListOsImage(provider string, opt *cloudprovider.CommonOption) ([]*proto.OsImage, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// ListRuntimeInfo get runtime info list
+func (nm *NodeManager) ListRuntimeInfo(opt *cloudprovider.ListRuntimeInfoOption) (map[string][]string, error) {
+	client, err := api.NewCceClient(&opt.CommonOption)
+	if err != nil {
+		return nil, err
+	}
+
+	rsp, err := client.GetCceCluster(opt.Cluster.SystemID)
+	if err != nil {
+		return nil, err
+	}
+
+	if rsp.Spec.Version == nil {
+		return nil, fmt.Errorf("cloud cluster version is nil")
+	}
+
+	blog.Infof("cluster version: %s", *rsp.Spec.Version)
+
+	clusterVer := (*rsp.Spec.Version)[1:]
+	if utils.CompareVersion(clusterVer, "1.25") > 0 && utils.CompareVersion(clusterVer, "1.29") < 0 {
+		return map[string][]string{
+			common.ContainerdRuntime: {},
+		}, nil
+	}
+
+	return map[string][]string{
+		common.ContainerdRuntime:      {},
+		common.DockerContainerRuntime: {},
+	}, nil
 }

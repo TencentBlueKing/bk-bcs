@@ -1185,6 +1185,15 @@ service ClusterManager {
       summary : "查询云共享带宽包"
     };
   }
+  rpc ListCloudRuntimeInfo(ListCloudRuntimeInfoRequest) returns (ListCloudRuntimeInfoResponse) {
+    option (google.api.http) = {
+      get : "/clustermanager/v1/clouds/{cloudID}/runtimeinfo"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据筛选条件查询Node的运行时列表"
+      summary : "查询Node的运行时列表"
+    };
+  }
 
   // Operation logs
   rpc ListOperationLogs(ListOperationLogsRequest) returns (ListOperationLogsResponse) {
@@ -1585,6 +1594,10 @@ message Cluster {
   string message = 41 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "message",
     description: "集群状态异常时的失败原因展示"
+  }];
+  bool isMixed = 42[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "isMixed",
+    description: "标记该集群是否是混部集群"
   }];
 }
 
@@ -2103,6 +2116,10 @@ message ClusterMgr {
   Action importCluster = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "importCluster",
     description: "纳管集群时相关的自动化流程定义"
+  }];
+  Action commonMixedAction = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "commonMixedAction",
+    description: "集群混部自动化流程定义"
   }];
 }
 
@@ -5016,6 +5033,10 @@ message CreateClusterReq {
     title: "nodeGroups",
     description: "创建集群时的节点池信息"
   }];
+  bool isMixed = 42[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "isMixed",
+    description: "标记该集群是否是混部集群, 默认是false"
+  }];
 }
 
 message CreateClusterResp {
@@ -5955,6 +5976,10 @@ message UpdateClusterReq {
   string cloudAccountID = 37[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "cloudAccountID",
     description: "集群关联的云账号ID,默认为空。主要功能是获取云账号凭证。私有云场景下统一管理cloud账号，而公有云场景纳管不同云账号凭证"
+  }];
+  google.protobuf.BoolValue isMixed = 38[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "isMixed",
+    description: "标记该集群是否是混部集群"
   }];
 }
 
@@ -8888,6 +8913,10 @@ message NodeGroupNode {
     title: "unSchedulable",
     description: "调度状态，默认值0表示参与调度，1表示不参与调度"
   }];
+  string nodeName = 18[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "nodeName",
+    description: "节点名称"
+  }];
 }
 
 message ListNodesInGroupResponse {
@@ -11209,6 +11238,56 @@ message OsImage {
 message ClusterInfo {
   string clusterName=1;
   string clusterID=2;
+}
+
+message ListCloudRuntimeInfoRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListCloudRuntimeInfoRequest"
+      description : "查询运行时信息列表"
+    }
+  };
+
+  
+  string clusterID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterID",
+    description: "集群ID"
+  }];
+  string cloudID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "cloudID",
+    description : "云信息"
+  },(validate.rules).string = {min_len : 2}];
+}
+
+message ListCloudRuntimeInfoResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListCloudRuntimeInfoResponse"
+      description : "查询运行时信息列表返回"
+      required : [ "code", "message" ]
+    }
+  };
+
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  bool result = 3 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+  map<string, RunTimeVersion> data = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "获取到的信息"
+  }];
+}
+
+message RunTimeVersion {
+  repeated string version = 1;
 }
 
 message ListCloudProjectsRequest {

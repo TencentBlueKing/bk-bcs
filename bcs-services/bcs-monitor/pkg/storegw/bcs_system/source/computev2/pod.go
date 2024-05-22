@@ -44,10 +44,39 @@ func (m *ComputeV2) handlePodMetric(ctx context.Context, projectID, clusterID, n
 // GetPodCPUUsage POD 使用率
 func (m *ComputeV2) GetPodCPUUsage(ctx context.Context, projectID, clusterID, namespace string, podNameList []string,
 	start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
+	// nolint
 	promql :=
 		`sum by (pod_name) (rate(%<prefix>scontainer_cpu_usage_seconds_total{cluster_id="%<clusterID>s", ` +
 			`namespace="%<namespace>s", pod_name=~"%<podNameList>s", container_name!="", container_name!="POD", ` +
 			`%<provider>s}[2m])) * 100`
+
+	return m.handlePodMetric(ctx, projectID, clusterID, namespace, podNameList, promql, start, end, step)
+}
+
+// GetPodCPULimitUsage POD CPU Limit 使用率
+func (m *ComputeV2) GetPodCPULimitUsage(ctx context.Context, projectID, clusterID, namespace string,
+	podNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
+	promql :=
+		`sum by (pod_name) (rate(%<prefix>scontainer_cpu_usage_seconds_total{cluster_id="%<clusterID>s", ` +
+			`namespace="%<namespace>s", pod_name=~"%<podNameList>s", container_name!="", container_name!="POD", ` +
+			`%<provider>s}[2m])) / ` +
+			`sum by (pod_name) (%<prefix>skube_pod_container_resource_limits_cpu_cores{cluster_id="%<clusterID>s", ` +
+			`job="kube-state-metrics", namespace="%<namespace>s", pod_name=~"%<podNameList>s", container_name!="", ` +
+			`container_name!="POD",  %<provider>s}) * 100`
+
+	return m.handlePodMetric(ctx, projectID, clusterID, namespace, podNameList, promql, start, end, step)
+}
+
+// GetPodCPURequestUsage POD CPU Request 使用率
+func (m *ComputeV2) GetPodCPURequestUsage(ctx context.Context, projectID, clusterID, namespace string,
+	podNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
+	promql :=
+		`sum by (pod_name) (rate(%<prefix>scontainer_cpu_usage_seconds_total{cluster_id="%<clusterID>s", ` +
+			`namespace="%<namespace>s", pod_name=~"%<podNameList>s", container_name!="", container_name!="POD", ` +
+			`%<provider>s}[2m])) / ` +
+			`sum by (pod_name) (%<prefix>skube_pod_container_resource_requests_cpu_cores{cluster_id="%<clusterID>s", ` +
+			`job="kube-state-metrics", namespace="%<namespace>s", pod_name=~"%<podNameList>s", container_name!="", ` +
+			`container_name!="POD",  %<provider>s}) * 100`
 
 	return m.handlePodMetric(ctx, projectID, clusterID, namespace, podNameList, promql, start, end, step)
 }

@@ -40,7 +40,8 @@ type ClientEvent interface {
 	GetMinMaxAvgTime(kit *kit.Kit, bizID, appID uint32, clientID []uint32, releaseChangeStatus []string) (
 		types.MinMaxAvgTimeChart, error)
 	// GetPullTrend 获取拉取趋势
-	GetPullTrend(kit *kit.Kit, bizID uint32, appID uint32, clientID []uint32, pullTime int64) ([]types.PullTrend, error)
+	GetPullTrend(kit *kit.Kit, bizID uint32, appID uint32, clientID []uint32, pullTime int64, isDuplicates bool) (
+		[]types.PullTrend, error)
 	// UpsertHeartbeat 更新插入心跳
 	UpsertHeartbeat(kit *kit.Kit, tx *gen.QueryTx, data []*table.ClientEvent) error
 	// UpsertVersionChange 更新插入版本更改
@@ -56,7 +57,8 @@ type clientEventDao struct {
 }
 
 // GetPullTrend 获取拉取趋势
-func (dao *clientEventDao) GetPullTrend(kit *kit.Kit, bizID uint32, appID uint32, clientID []uint32, pullTime int64) (
+func (dao *clientEventDao) GetPullTrend(kit *kit.Kit, bizID uint32, appID uint32, clientID []uint32, pullTime int64,
+	isDuplicates bool) (
 	[]types.PullTrend, error) {
 
 	m := dao.genQ.ClientEvent
@@ -66,18 +68,20 @@ func (dao *clientEventDao) GetPullTrend(kit *kit.Kit, bizID uint32, appID uint32
 	var conds []rawgen.Condition
 	if pullTime > 0 {
 		startTime := time.Now().AddDate(0, 0, -int(pullTime)).Truncate(24 * time.Hour)
-		conds = append(conds, m.StartTime.Gte(startTime))
+		conds = append(conds, q.Where(m.StartTime.Gte(startTime)))
 	}
 	if len(clientID) > 0 {
-		conds = append(conds, m.ClientID.In(clientID...))
+		conds = append(conds, q.Where(m.ClientID.In(clientID...)))
+	}
+	q = q.Select(m.ClientID, m.StartTime.Date().As("pull_time")).Where(conds...)
+	// 是否去重
+	if isDuplicates {
+		q = q.Group(m.ClientID, field.NewField("", "pull_time"))
 	}
 
 	var items []types.PullTrend
 
-	err := q.Select(m.ClientID, m.StartTime.Date().As("pull_time")).
-		Where(conds...).
-		Group(m.ClientID, field.NewField("", "pull_time")).
-		Scan(&items)
+	err := q.Scan(&items)
 	return items, err
 }
 
@@ -95,10 +99,10 @@ func (dao *clientEventDao) GetMinMaxAvgTime(kit *kit.Kit, bizID uint32, appID ui
 	if len(releaseChangeStatus) > 0 {
 		conds = append(conds, q.Where(m.ReleaseChangeStatus.In(releaseChangeStatus...)))
 	} else {
-		conds = append(conds, m.ReleaseChangeStatus.Eq("Success"))
+		conds = append(conds, q.Where(m.ReleaseChangeStatus.Eq(string(table.Success))))
 	}
 	if len(clientID) > 0 {
-		conds = append(conds, m.ClientID.In(clientID...))
+		conds = append(conds, q.Where(m.ClientID.In(clientID...)))
 	}
 	q = q.Where(conds...)
 	err = q.Select(m.TotalSeconds.Max().As("max"), m.TotalSeconds.Min().As("min"), m.TotalSeconds.Avg().As("avg")).
@@ -132,10 +136,10 @@ func (dao *clientEventDao) List(kit *kit.Kit, bizID, appID, clientID uint32, sta
 
 	zeroTime := time.Time{}
 	if startTime != zeroTime {
-		conds = append(conds, m.StartTime.Gte(startTime))
+		conds = append(conds, q.Where(m.StartTime.Gte(startTime)))
 	}
 	if endTime != zeroTime {
-		conds = append(conds, m.EndTime.Lte(endTime))
+		conds = append(conds, q.Where(m.EndTime.Lte(endTime)))
 	}
 	d := q.Where(conds...).Order(exprs...)
 	if opt.All {

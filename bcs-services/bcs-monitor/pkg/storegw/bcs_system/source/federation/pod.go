@@ -72,6 +72,20 @@ func (m *Federation) GetPodCPUUsage(ctx context.Context, projectID, clusterID, n
 	return m.handlePodMetric(ctx, projectID, clusterID, namespace, podNameList, start, end, step, fn)
 }
 
+// GetPodCPULimitUsage POD CPU Limit 使用率
+func (m *Federation) GetPodCPULimitUsage(ctx context.Context, projectID, clusterID, namespace string,
+	podNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
+	fn := base.MetricHandler.GetPodCPULimitUsage
+	return m.handlePodMetric(ctx, projectID, clusterID, namespace, podNameList, start, end, step, fn)
+}
+
+// GetPodCPURequestUsage POD CPU Request 使用率
+func (m *Federation) GetPodCPURequestUsage(ctx context.Context, projectID, clusterID, namespace string,
+	podNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
+	fn := base.MetricHandler.GetPodCPURequestUsage
+	return m.handlePodMetric(ctx, projectID, clusterID, namespace, podNameList, start, end, step, fn)
+}
+
 // GetPodMemoryUsed 内存使用量
 func (m *Federation) GetPodMemoryUsed(ctx context.Context, projectID, clusterID, namespace string, podNameList []string,
 	start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {

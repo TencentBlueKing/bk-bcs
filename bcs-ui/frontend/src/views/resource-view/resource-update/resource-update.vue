@@ -10,7 +10,7 @@
       @confirm="handleChangeMode">
       <FixedButton position="unset" :title="$t('deploy.variable.toForm')" />
     </bcs-popconfirm>
-    <Header :title="title" />
+    <ContentHeader :title="title" :cluster-id="clusterId" :namespace="isEdit ? namespace : ''" />
     <div :class="['resource-update', { 'full-screen': fullScreen }]">
       <template v-if="!showDiff">
         <div class="code-editor" ref="editorWrapperRef">
@@ -202,7 +202,7 @@ import $bkMessage from '@/common/bkmagic';
 import { copyText } from '@/common/util';
 import BcsMd from '@/components/bcs-md/index.vue';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
-import Header from '@/components/layout/Header.vue';
+import ContentHeader from '@/components/layout/Header.vue';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
@@ -215,7 +215,7 @@ export default defineComponent({
     EditorStatus,
     BcsMd,
     FixedButton,
-    Header,
+    ContentHeader,
   },
   props: {
     // 命名空间（更新的时候需要--crd类型编辑是可能没有，创建的时候为空）
@@ -747,7 +747,7 @@ export default defineComponent({
 <style lang="postcss" scoped>
 .resource-content {
     padding-bottom: 0;
-    height: calc(100vh - 52px);
+    height: 100%;
     .switch-button-pop {
         position: absolute;
         right: 32px;
@@ -770,10 +770,10 @@ export default defineComponent({
     }
     .resource-update {
         width: 100%;
-        height: calc(100% - 120px);
+        height: calc(100% - 112px);
         border-radius: 2px;
         display: flex;
-        padding: 20px 20px 0 20px;
+        padding: 8px 24px 0 24px;
         &.full-screen {
             position: fixed;
             top: 0;
