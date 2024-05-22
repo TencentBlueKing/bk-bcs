@@ -23,6 +23,7 @@ import (
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -188,7 +189,7 @@ func GetClusterKubeConfig(opt *cloudprovider.CommonOption, cluster *eks.Cluster)
 		return "", fmt.Errorf("GetClusterKubeConfig marsh kubeconfig failed, %v", err)
 	}
 
-	return base64.StdEncoding.EncodeToString(configByte), nil
+	return encrypt.Encrypt(nil, string(configByte))
 }
 
 // MapToTaints converts a map of string-string to a slice of Taint
