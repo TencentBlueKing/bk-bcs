@@ -1,6 +1,8 @@
 module github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager
 
-go 1.20
+go 1.21
+
+toolchain go1.22.2
 
 replace (
 	k8s.io/api => k8s.io/api v0.26.1
