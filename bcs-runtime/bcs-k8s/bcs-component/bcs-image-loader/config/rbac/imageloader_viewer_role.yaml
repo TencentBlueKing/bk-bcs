@@ -1,0 +1,27 @@
+# permissions for end users to view imageloaders.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/instance: imageloader-viewer-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: bcs-image-loader
+    app.kubernetes.io/part-of: bcs-image-loader
+    app.kubernetes.io/managed-by: kustomize
+  name: imageloader-viewer-role
+rules:
+- apiGroups:
+  - tkex.tencent.com
+  resources:
+  - imageloaders
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - tkex.tencent.com
+  resources:
+  - imageloaders/status
+  verbs:
+  - get
