@@ -429,7 +429,7 @@
     }
     Message({
       theme: 'success',
-      message: t('删除版本成功'),
+      message: t('删除脚本成功'),
     });
     isDeleteScriptDialogShow.value = false;
     getScripts();

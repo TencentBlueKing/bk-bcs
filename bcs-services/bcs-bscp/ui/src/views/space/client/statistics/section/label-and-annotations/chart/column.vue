@@ -1,6 +1,10 @@
 <template>
   <div ref="canvasRef" class="canvas-wrap">
-    <Tooltip ref="tooltipRef" @jump="emits('jump', labelValue)" />
+    <Tooltip
+      :need-down-icon="!!drillDownDemension"
+      :down="drillDownDemension"
+      ref="tooltipRef"
+      @jump="emits('jump', labelValue)" />
   </div>
 </template>
 
@@ -15,6 +19,7 @@
     bkBizId: string;
     appId: number;
     chartShowType: string;
+    drillDownDemension: string;
   }>();
   const emits = defineEmits(['jump', 'drillDown']);
 

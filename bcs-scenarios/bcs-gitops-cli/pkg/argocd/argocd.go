@@ -264,7 +264,9 @@ func (h *Handler) AppSetGenerate(ctx context.Context, appset *v1alpha1.Applicati
 		if app.Spec.Source != nil {
 			repo = app.Spec.Source.RepoURL
 			revision = app.Spec.Source.TargetRevision
-			valueFile = strings.Join(app.Spec.Source.Helm.ValueFiles, "\n")
+			if app.Spec.Source.Helm != nil {
+				valueFile = strings.Join(app.Spec.Source.Helm.ValueFiles, "\n")
+			}
 		} else {
 			repos := make([]string, 0)
 			revisions := make([]string, 0)
@@ -273,7 +275,9 @@ func (h *Handler) AppSetGenerate(ctx context.Context, appset *v1alpha1.Applicati
 				src := app.Spec.Sources[i]
 				repos = append(repos, src.RepoURL)
 				revisions = append(revisions, src.TargetRevision)
-				values = append(values, src.Helm.ValueFiles...)
+				if src.Helm != nil {
+					values = append(values, src.Helm.ValueFiles...)
+				}
 			}
 			repo = strings.Join(repos, "\n")
 			revision = strings.Join(revisions, "\n")

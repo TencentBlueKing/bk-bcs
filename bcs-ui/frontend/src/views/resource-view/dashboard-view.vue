@@ -141,7 +141,7 @@ watch(
   },
 );
 
-const { clusterList } = useCluster();
+const { clusterList, curClusterId } = useCluster();
 const initRoutePath = () => {
   const pathClusterID = $router.currentRoute?.params?.clusterId;
   let cluster;
@@ -150,8 +150,9 @@ const initRoutePath = () => {
     cluster = clusterList.value.find(item => item.clusterID === pathClusterID);
     updateViewIDStore('');// 删除视图缓存
   } else if (!dashboardViewID.value) {
-    // 没有集群ID, 也没有视图ID, 就默认回显一个集群
-    cluster = clusterList.value.find(item => item.status === 'RUNNING');
+    // 没有集群ID, 也没有视图ID, 就默认回显全局缓存的集群
+    cluster = clusterList.value.find(item => item.clusterID === curClusterId.value)
+      || clusterList.value.find(item => item.status === 'RUNNING');
     $router.replace({
       name: $router.currentRoute?.name,
       params: {

@@ -1,3 +1,4 @@
+import { cloneDeep } from 'lodash';
 import { computed, ref } from 'vue';
 
 import useViewConfig from '../view-manage/use-view-config';
@@ -44,12 +45,19 @@ export default function useSearch() {
   });
   const searchSelectChange = (v: any[] = []) => {
     const data = v.reduce((pre, item) => {
-      if (item.id === 'name') {
-        pre[item.id] = item.values[0]?.name;
-      } else {
-        pre[item.id] = item.values?.map(item => item.name);
+      let newItem = cloneDeep(item);
+      // 没有选择字段时默认搜索名称
+      if (newItem.values === undefined) {
+        newItem = {
+          id: 'name',
+          values: [item],
+        };
       }
-
+      if (newItem.id === 'name') { // 名称API只能给字符串类型
+        pre[newItem.id] = newItem.values?.map(item => item.name)?.join('');
+      } else {
+        pre[newItem.id] = newItem.values?.map(item => item.name);
+      }
       return pre;
     }, {});
     $store.commit('updateTmpViewData', {

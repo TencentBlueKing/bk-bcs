@@ -89,15 +89,25 @@ func RunCmd() error {
 		stop()
 	})
 
-	addrIPv6 := tools.GetIPv6AddrFromEnv()
+	envIP, envIPs := tools.GetIPsFromEnv()
+	exposeIPs := []string{bindAddr}
+	exposeIPs = append(exposeIPs, envIP)
+	exposeIPs = append(exposeIPs, envIPs...)
+	httpAddresses := make([]string, 0, len(exposeIPs))
+	for _, exposeIP := range exposeIPs {
+		if exposeIP == "" {
+			continue
+		}
+		httpAddresses = append(httpAddresses, tools.GetListenAddr(exposeIP, port))
+	}
 	httpAddress := tools.GetListenAddr(bindAddr, port)
-	svr, err := service.NewWebServer(ctx, httpAddress, tools.GetListenAddr(addrIPv6, port))
+	svr, err := service.NewWebServer(ctx, httpAddress, httpAddresses)
 	if err != nil {
 		klog.Errorf("init web server err: %s, exited", err)
 		os.Exit(1) //nolint:gocritic
 	}
 
-	klog.InfoS("listening for requests and metrics", "address", httpAddress)
+	klog.InfoS("listening for requests and metrics", "address", bindAddr)
 
 	g.Add(svr.Run, func(err error) {
 		_ = svr.Close()

@@ -14,6 +14,7 @@ package service
 
 import (
 	"context"
+	"errors"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
@@ -36,6 +37,20 @@ func (s *Service) CreateRelease(ctx context.Context, req *pbcs.CreateReleaseReq)
 	err := s.authorizer.Authorize(grpcKit, res...)
 	if err != nil {
 		return nil, err
+	}
+
+	// 创建版本前验证非模板配置和模板配置是否存在冲突
+	ci, err := s.ListConfigItems(grpcKit.RpcCtx(), &pbcs.ListConfigItemsReq{
+		BizId: req.BizId,
+		AppId: req.AppId,
+		All:   true,
+	})
+	if err != nil {
+		return nil, err
+	}
+	if ci.ConflictNumber > 0 {
+		logs.Errorf("create release failed there is a file conflict, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, errors.New("create release failed there is a file conflict")
 	}
 
 	r := &pbds.CreateReleaseReq{

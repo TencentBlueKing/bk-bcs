@@ -91,6 +91,13 @@
         },
       },
       interactions: [{ type: 'element-highlight' }],
+      state: {
+        active: {
+          style: {
+            stroke: '#ffffff',
+          },
+        },
+      },
       legend: {
         layout: 'horizontal',
         position: 'right',

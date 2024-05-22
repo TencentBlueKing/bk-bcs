@@ -62,3 +62,16 @@ export function getCookie(key: string) {
 export function setCookie(key: string, val: string, domain: string) {
   Cookies.set(key, val, { domain, expires: 1, path: '/' });
 }
+
+export const getTimeRange = (n: number) => {
+  const end = new Date();
+  const start = new Date();
+  start.setTime(start.getTime() - 3600 * 1000 * 24 * n);
+  start.setHours(0);
+  start.setMinutes(0);
+  start.setSeconds(0);
+  end.setHours(23);
+  end.setMinutes(59);
+  end.setSeconds(59);
+  return [dayjs(start).format('YYYY-MM-DD HH:mm:ss'), dayjs(end).format('YYYY-MM-DD HH:mm:ss')];
+};

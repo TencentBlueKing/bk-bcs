@@ -13,7 +13,7 @@
             :is-open-full-screen="isOpenFullScreen"
             :all-label="allLabel"
             :primary-dimension="primaryDimension"
-            @refresh="loadChartData"
+            @refresh="handleRefresh"
             @toggle-full-screen="isOpenFullScreen = !isOpenFullScreen"
             @toggle-show-btn="isOpenPopover = $event"
             @select-dimension="selectedDimension = $event"
@@ -23,7 +23,7 @@
         <template #head-suffix>
           <div class="head-suffix">
             <bk-tag theme="info" type="stroke"> {{ $t('标签') }} </bk-tag>
-            <div class="icon-wrap">
+            <div v-if="selectedDownDimension && currentType === 'column'" class="icon-wrap">
               <span
                 class="action-icon bk-bscp-icon icon-download"
                 v-bk-tooltips="{
@@ -46,6 +46,7 @@
             :data="data"
             :chart-show-type="chartShowType"
             :is-show-sunburst="isShowSunburst"
+            :drill-down-demension="selectedDownDimension"
             @jump="jumpToSearch($event as string)"
             @drill-down="handleDrillDown" />
         </bk-loading>
@@ -98,6 +99,7 @@
   const navDrillDownData = ref('');
   const isDrillDown = ref(false);
   const chartShowType = ref('tile');
+  const drillDownItem = ref<IClientLabelItem>();
 
   const isShowOperationBtn = computed(() => isMouseEnter.value || isOpenPopover.value);
 
@@ -179,8 +181,8 @@
 
   // 下钻
   const handleDrillDown = (data: any) => {
-    console.log(data);
-    if (!selectedDownDimension.value || selectedDimension.value.length < 2 || isDrillDown.value) return;
+    if (!selectedDownDimension.value || isDrillDown.value) return;
+    drillDownItem.value = data;
     loadChartData({
       [data.foreign_key]: data.foreign_val,
       [data.primary_key]: data.primary_val,
@@ -193,6 +195,17 @@
     loadChartData();
     navDrillDownData.value = '';
     isDrillDown.value = false;
+  };
+
+  const handleRefresh = () => {
+    if (isDrillDown.value) {
+      loadChartData({
+        [drillDownItem.value!.foreign_key]: drillDownItem.value!.foreign_val,
+        [drillDownItem.value!.primary_key]: drillDownItem.value!.primary_val,
+      });
+    } else {
+      loadChartData();
+    }
   };
 </script>
 
@@ -215,12 +228,18 @@
   .loading-wrap {
     height: 100%;
     .nav {
+      font-size: 12px;
       color: #313238;
       .group-dimension {
+        margin-right: 8px;
         cursor: pointer;
+        &:hover {
+          color: #3a84ff;
+        }
       }
       .drill-down-data {
         color: #979ba5;
+        margin-left: 8px;
       }
     }
   }
@@ -228,8 +247,8 @@
     margin-left: 8px;
     display: flex;
     align-items: center;
+    gap: 8px;
     .icon-wrap {
-      margin: 0 8px;
       font-size: 12px;
       width: 18px;
       height: 18px;
