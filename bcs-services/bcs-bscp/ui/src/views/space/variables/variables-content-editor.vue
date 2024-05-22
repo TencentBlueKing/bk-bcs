@@ -137,7 +137,7 @@
     let hasSeparatorError = false;
     variablesArray.forEach((item, index) => {
       if (item === '') return;
-      const regex = separator.value === ' ' ? /\s+/ : new RegExp(separator.value);
+      const regex = separator.value === ' ' ? /\s+/ : separator.value;
       const variablesContent = item.split(regex).map((item) => item.trim());
       const key = variablesContent[0];
       const type = variablesContent[1];

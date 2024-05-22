@@ -41,25 +41,29 @@
               @click="handleConditionClick($event, condition)">
               {{ condition.content }}
             </bk-tag>
-            <bk-input
+            <input
               v-else
               v-model="editSearchStr"
               ref="editInputRef"
               class="input"
               placeholder=" "
               @blur="handleConditionEdit(condition)"
-              @enter="handleConditionEdit(condition)" />
+              @keydown="handleEnterConditionEdit($event, condition)"
+              @compositionstart="isComposing = true"
+              @compositionend="isComposing = false" />
           </div>
         </div>
         <div class="search-container-input" ref="inputWrapRef">
-          <bk-input
+          <input
             v-model="searchStr"
             ref="inputRef"
             class="input"
             placeholder=" "
             @focus="inputFocus = true"
             @blur="handleConfirmConditionItem"
-            @enter="handleConfirmConditionItem" />
+            @keydown="handleEnterAddConditionItem"
+            @compositionstart="isComposing = true"
+            @compositionend="isComposing = false" />
         </div>
         <div
           v-if="searchConditionList.length && isClientSearch"
@@ -221,6 +225,7 @@
   const dateTime = ref(getTimeRange(1));
   const datePickerRef = ref();
   const highlightCommonlySearchName = ref('');
+  const isComposing = ref(false); // 是否使用输入法
 
   const inputPlacehoder = computed(() => {
     if (searchConditionList.value.length || searchStr.value || inputFocus.value) return '';
@@ -382,6 +387,16 @@
     isShowPopover.value = false;
     inputRef.value.blur();
     parentSelecte.value = undefined;
+  };
+
+  const handleEnterAddConditionItem = (e: any) => {
+    if (e.keyCode === 13) {
+      if (isComposing.value) {
+        e.preventDefault();
+      } else {
+        handleConfirmConditionItem();
+      }
+    }
   };
 
   const handleDateChange = (val: string[]) => {
@@ -553,7 +568,7 @@
         const labelValue = query[key];
         Object.keys(labelValue).forEach((label) => {
           const value = labelValue[label] || '';
-          const content = value ? `${t('标签')}:${label}=${labelValue[label]}` : `${t('标签')}:${label}`;
+          const content = value ? `${t('标签')} : ${label}=${labelValue[label]}` : `${t('标签')} : ${label}`;
           searchList.push({
             key,
             value: `${label}=${value}`,
@@ -649,6 +664,16 @@
     parentSelecte.value = undefined;
   };
 
+  const handleEnterConditionEdit = (e: any, condition: ISearchCondition) => {
+    if (e.keyCode === 13) {
+      if (isComposing.value) {
+        e.preventDefault();
+      } else {
+        handleConditionEdit(condition);
+      }
+    }
+  };
+
   const handleDatePickerOpenChange = (open: boolean) => {
     if (open) {
       isShowPopover.value = false;
@@ -695,9 +720,7 @@
         height: 100%;
         outline: none;
         box-shadow: none;
-        :deep(input) {
-          width: fit-content;
-        }
+        color: #63656e;
       }
     }
     .search-condition-list {

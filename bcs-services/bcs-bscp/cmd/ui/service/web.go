@@ -44,7 +44,7 @@ type WebServer struct {
 	ctx               context.Context
 	srv               *http.Server
 	addr              string
-	addrIPv6          string
+	addrs             []string
 	embedWebServer    bscp.EmbedWebServer
 	discover          serviced.Discover
 	state             serviced.State
@@ -53,7 +53,7 @@ type WebServer struct {
 }
 
 // NewWebServer :
-func NewWebServer(ctx context.Context, addr string, addrIPv6 string) (*WebServer, error) {
+func NewWebServer(ctx context.Context, addr string, addrs []string) (*WebServer, error) {
 	etcdOpt, err := config.G.EtcdConf()
 	if err != nil {
 		return nil, fmt.Errorf("get etcd config failed, err: %v", err)
@@ -82,7 +82,7 @@ func NewWebServer(ctx context.Context, addr string, addrIPv6 string) (*WebServer
 	s := &WebServer{
 		ctx:               ctx,
 		addr:              addr,
-		addrIPv6:          addrIPv6,
+		addrs:             addrs,
 		discover:          dis,
 		state:             state,
 		embedWebServer:    bscp.NewEmbedWeb(),
@@ -102,12 +102,16 @@ func (s *WebServer) Run() error {
 	if err := dualStackListener.AddListenerWithAddr(s.addr); err != nil {
 		return err
 	}
+	klog.Infof("http server listen address: %s", s.addr)
 
-	if s.addrIPv6 != "" && s.addrIPv6 != s.addr {
-		if err := dualStackListener.AddListenerWithAddr(s.addrIPv6); err != nil {
+	for _, a := range s.addrs {
+		if a == s.addr {
+			continue
+		}
+		if err := dualStackListener.AddListenerWithAddr(a); err != nil {
 			return err
 		}
-		klog.Infof("api serve dualStackListener with ipv6: %s", s.addrIPv6)
+		klog.Infof("http serve listener with addr: %s", a)
 	}
 
 	return s.srv.Serve(dualStackListener)

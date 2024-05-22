@@ -302,7 +302,15 @@
       } else {
         res = await getReleaseKvList(props.bkBizId, props.appId, versionData.value.id, params);
       }
-      configList.value = res.details;
+      configList.value = res.details.sort((a: IConfigKvType, b: IConfigKvType) => {
+        if (a.kv_state === 'DELETE' && b.kv_state !== 'DELETE') {
+          return 1;
+        }
+        if (a.kv_state !== 'DELETE' && b.kv_state === 'DELETE') {
+          return -1;
+        }
+        return 0;
+      });
       configsCount.value = res.count;
       pagination.value.count = res.count;
     } catch (e) {
@@ -422,7 +430,7 @@
     }
     await undeleteKv(props.bkBizId, props.appId, config.spec.key);
     Message({ theme: 'success', message: t('恢复配置项成功') });
-    refresh();
+    config.kv_state = 'UNCHANGE';
   };
 
   // 批量删除配置项后刷新配置项列表

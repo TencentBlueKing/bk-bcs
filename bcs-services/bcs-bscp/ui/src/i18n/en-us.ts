@@ -587,6 +587,7 @@ export default {
   服务配置目录: 'Service configuration directory',
   当前配置版本名称: 'Current configuration version name',
   脚本更新成功: 'Script updated successfully',
+  删除脚本成功: 'Delete script successfully',
 
   // 服务密钥
   '密钥仅用于 SDK/API 拉取配置使用。服务管理/配置管理/分组管理等功能的权限申请，请前往': 'The key is only used for SDK/API pull configurations. To apply for permissions for functions such as service management/configuration management/group management, please go to',

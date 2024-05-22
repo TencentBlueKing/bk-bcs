@@ -137,7 +137,7 @@
             :width="174">
             <template #default="{ row }">
               <span v-if="row.client">
-                {{ showResourse(row.client.spec.resource).cpuResourse }}
+                {{ `${row.cpu_usage_str} ${t('核')}/${row.cpu_max_usage_str} ${t('核')}` }}
               </span>
             </template>
           </bk-table-column>
@@ -162,7 +162,7 @@
             :width="170">
             <template #default="{ row }">
               <span v-if="row.client">
-                {{ showResourse(row.client.spec.resource).memoryResource }}
+                {{ `${row.memory_usage_str}MB/${row.memory_max_usage_str}MB` }}
               </span>
             </template>
           </bk-table-column>
@@ -232,13 +232,6 @@
   import { useI18n } from 'vue-i18n';
 
   const { t } = useI18n();
-
-  interface IResourseType {
-    cpu_usage: number;
-    cpu_max_usage: number;
-    memory_usage: string;
-    memory_max_usage: string;
-  }
 
   const clientStore = useClientStore();
   const { searchQuery } = storeToRefs(clientStore);
@@ -315,13 +308,6 @@
       settings.value.size = size;
     }
   });
-
-  const showResourse = (resourse: IResourseType) => {
-    return {
-      cpuResourse: `${resourse.cpu_usage} ${t('核')}/${resourse.cpu_max_usage} ${t('核')}`,
-      memoryResource: `${resourse.memory_usage}MB/${resourse.memory_max_usage}MB`,
-    };
-  };
 
   const isRowSelectEnable = ({ row, isCheckAll }: any) =>
     isCheckAll || !(row.client.spec && row.client.spec.release_change_status !== 'Failed');
