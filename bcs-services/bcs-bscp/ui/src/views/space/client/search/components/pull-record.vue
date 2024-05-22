@@ -204,8 +204,8 @@
       const params = {
         start: pagination.value.limit * (pagination.value.current - 1),
         limit: pagination.value.limit,
-        start_time: initDateTime.value![0],
-        end_time: initDateTime.value![1],
+        start_time: new Date(`${initDateTime.value![0].replace(' ', 'T')}+08:00`).toISOString(),
+        end_time: new Date(`${initDateTime.value![1].replace(' ', 'T')}+08:00`).toISOString(),
         search_value,
       };
       const resp = await getClientPullRecord(props.bkBizId, props.appId, props.id, params);
@@ -245,7 +245,6 @@
     ${t('错误子类别')}: ${subclasses}
     ${t('错误详情')}: ${failed_detail_reason}`;
   };
-
 
   const handleSelectTimeChange = (val: any) => {
     if (val) {
