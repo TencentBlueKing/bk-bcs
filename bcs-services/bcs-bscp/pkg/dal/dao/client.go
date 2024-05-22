@@ -413,7 +413,7 @@ func parseTime(timeStr string) (time.Time, error) {
 	if timeStr == "" {
 		return time.Time{}, errors.New("time cannot be empty")
 	}
-	t, err := time.ParseInLocation("2006-01-02 15:04:05", timeStr, time.UTC)
+	t, err := time.ParseInLocation(time.RFC3339, timeStr, time.UTC)
 	if err != nil {
 		return time.Time{}, err
 	}

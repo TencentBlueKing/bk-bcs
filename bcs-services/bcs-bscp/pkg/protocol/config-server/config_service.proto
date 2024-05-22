@@ -2562,8 +2562,15 @@ message ListClientsReq {
 }
 
 message ListClientsResp {
+  message Item {
+    pbclient.Client client = 1;
+    string cpu_usage_str = 2;
+    string cpu_max_usage_str = 3;
+    string memory_usage_str = 4;
+    string memory_max_usage_str = 5;
+  }
   uint32 count = 1;
-  repeated pbclient.Client details = 2;
+  repeated Item details = 2;
 }
 
 message ListClientEventsReq {

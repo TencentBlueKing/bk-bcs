@@ -69,9 +69,21 @@ func (s *Service) ListClients(ctx context.Context, req *pbcs.ListClientsReq) (
 		return nil, err
 	}
 
+	var details []*pbcs.ListClientsResp_Item
+
+	for _, v := range items.GetDetails() {
+		details = append(details, &pbcs.ListClientsResp_Item{
+			Client:            v.GetClient(),
+			CpuUsageStr:       v.GetCpuUsageStr(),
+			CpuMaxUsageStr:    v.GetCpuMaxUsageStr(),
+			MemoryUsageStr:    v.GetMemoryUsageStr(),
+			MemoryMaxUsageStr: v.GetMemoryMaxUsageStr(),
+		})
+	}
+
 	resp := &pbcs.ListClientsResp{
 		Count:   items.Count,
-		Details: items.Details,
+		Details: details,
 	}
 
 	return resp, nil
