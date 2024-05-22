@@ -27,7 +27,7 @@ const (
 	ipv6Interface = "IPV6_INTERFACE" // ipv6本地网关地址
 )
 
-// GetIPv6AddrFromEnv 解析ipv6
+// GetIPsFromEnv get podIP and podIPs from env
 func GetIPsFromEnv() (string, []string) {
 	podIP := os.Getenv(podIPEnv)
 	if podIP == "" {
