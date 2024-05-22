@@ -34,6 +34,8 @@ type OpsConf struct {
 	TemplateName string
 }
 
+// createAndStartBksOps
+// bksops task need 2 steps: create, start
 func createAndStartBksOps(ctx context.Context, cli bksops.Client, storageCli storage.Storage, task *storage.MachineTask,
 	constants map[string]string, conf *OpsConf) error {
 	createRsp, err := cli.CreateTask(conf.TemplateId, task.BusinessID,
@@ -56,6 +58,7 @@ func createAndStartBksOps(ctx context.Context, cli bksops.Client, storageCli sto
 }
 
 // CheckJobStatus check job status
+// get jobId from bksops task with specific nodeName, then get detail from log or exit code
 func CheckJobStatus(ctx context.Context, opsCli bksops.Client, jobCli job.Client, storageCli storage.Storage,
 	task *storage.MachineTask, stdOutPut bool, nodeName string, lastStep bool) (bool, bool, error) {
 	blog.Infof("begin to check job status")
@@ -94,6 +97,7 @@ func CheckJobStatus(ctx context.Context, opsCli bksops.Client, jobCli job.Client
 }
 
 // BksopsCheck bksops check task
+// check task status and job status, get details from job
 func BksopsCheck(ctx context.Context, opsCli bksops.Client, jobCli job.Client, storageCli storage.Storage,
 	task *storage.MachineTask, conf *OpsConf) {
 	remainIPs := getRemainIPs(task.IPList, task.Summary[storage.MachineCheckFailure])
@@ -165,6 +169,7 @@ func getDefaultDateRange() []string {
 	return dates
 }
 
+// getRemainIPs remove failure ips from original ipList
 func getRemainIPs(originIPs []string, failureIPs map[string][]string) []string {
 	originIPMap := make(map[string]bool)
 	for _, originIP := range originIPs {
@@ -187,6 +192,7 @@ func getRemainIPs(originIPs []string, failureIPs map[string][]string) []string {
 	return remainIPs
 }
 
+// checkIfContinue if all ips are failed, return false
 func checkIfContinue(originIPs []string, failureIPs map[string][]string) bool {
 	machineNum := len(originIPs)
 	failureNum := 0
@@ -196,6 +202,7 @@ func checkIfContinue(originIPs []string, failureIPs map[string][]string) bool {
 	return failureNum < machineNum
 }
 
+// getJobID get job id from task with specific nodeName
 func getJobID(opsCli bksops.Client, task *storage.MachineTask, nodeName string) (string, error) {
 	var jobId string
 	taskStatus, err := opsCli.GetTaskStatus(task.Detail[task.CurrentStep].BksOpsTaskID, task.BusinessID)
@@ -339,6 +346,7 @@ func getJobResultWithMessage(jobCli job.Client, task *storage.MachineTask, lastS
 	return true, nil
 }
 
+// getJobResult get job Result according to status and exit code
 func getJobResult(task *storage.MachineTask, lastStep bool, jobStatus *job.StatusResponse) bool {
 	task.Summary[storage.MachineCheckFailure][task.CurrentStep] = make([]string, 0)
 	task.Summary[storage.MachineCheckSuccess][task.CurrentStep] = make([]string, 0)

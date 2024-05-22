@@ -146,6 +146,7 @@ func (h *MachineTestHandler) controllerLoops(ctx context.Context) {
 	wg.Wait()
 }
 
+// handleOneTask handle one step in one time
 func (h *MachineTestHandler) handleOneTask(ctx context.Context, task *storage.MachineTask) {
 	switch task.CurrentStep {
 	case storage.BusinessCheck:
@@ -171,6 +172,7 @@ func (h *MachineTestHandler) handleOneTask(ctx context.Context, task *storage.Ma
 	}
 }
 
+// clusterCheck check if node has added to bcs cluster
 func (h *MachineTestHandler) clusterCheck(ctx context.Context, task *storage.MachineTask) {
 	blog.Infof("begin to cluster check task %s", task.TaskID)
 	remainIPs := getRemainIPs(task.IPList, task.Summary[storage.MachineCheckFailure])
@@ -212,6 +214,7 @@ func (h *MachineTestHandler) clusterCheck(ctx context.Context, task *storage.Mac
 	}
 }
 
+// importerCheck check if node has imported to bcs device pool
 func (h *MachineTestHandler) importerCheck(ctx context.Context, task *storage.MachineTask) {
 	blog.Infof("begin to import check task %s", task.TaskID)
 	remainIPs := getRemainIPs(task.IPList, task.Summary[storage.MachineCheckFailure])
@@ -268,6 +271,10 @@ func (h *MachineTestHandler) importerCheck(ctx context.Context, task *storage.Ma
 	}
 }
 
+// memoryCheck check if the memory usage satisfies condition
+// memory usage in past week should satisfy the following condition:
+// 1. maxPercent <=85%
+// 2. totalMemory - maxUsage >= 2
 func (h *MachineTestHandler) memoryCheck(ctx context.Context, task *storage.MachineTask) {
 	blog.Infof("begin to handle task %s", task.TaskID)
 	remainIPs := getRemainIPs(task.IPList, task.Summary[storage.MachineCheckFailure])
@@ -344,6 +351,7 @@ func (h *MachineTestHandler) memoryCheck(ctx context.Context, task *storage.Mach
 	}
 }
 
+// businessCheck check if machine belongs to specific business
 func (h *MachineTestHandler) businessCheck(ctx context.Context, task *storage.MachineTask) {
 	hosts, err := h.CcCli.ListHostByCC(ctx, task.IPList, task.BusinessID)
 	if err != nil {
