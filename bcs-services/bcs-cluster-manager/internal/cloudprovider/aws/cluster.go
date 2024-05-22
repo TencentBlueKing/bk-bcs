@@ -22,7 +22,6 @@ import (
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/aws/api"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 )
 
 func init() {
@@ -113,17 +112,9 @@ func (c *Cluster) ListCluster(opt *cloudprovider.ListClusterOption) ([]*proto.Cl
 
 	cloudClusterList := make([]*proto.CloudClusterInfo, 0)
 	for _, v := range clusters {
-		cluster, err := cli.GetEksCluster(*v)
-		if err != nil {
-			return nil, err
-		}
-
 		cloudClusterList = append(cloudClusterList, &proto.CloudClusterInfo{
-			ClusterID:      *v,
-			ClusterName:    *v,
-			ClusterStatus:  *cluster.Status,
-			ClusterVersion: *cluster.Version,
-			Location:       opt.CommonOption.Region,
+			ClusterID:   *v,
+			ClusterName: *v,
 		})
 	}
 
@@ -175,36 +166,7 @@ func (c *Cluster) ListProjects(opt *cloudprovider.CommonOption) ([]*proto.CloudP
 // CheckClusterEndpointStatus check cluster endpoint status
 func (c *Cluster) CheckClusterEndpointStatus(clusterID string, isExtranet bool,
 	opt *cloudprovider.CheckEndpointStatusOption) (bool, error) {
-	if opt == nil || len(opt.Account.SecretID) == 0 || len(opt.Account.SecretKey) == 0 || len(opt.Region) == 0 {
-		return false, fmt.Errorf("cloud CheckClusterEndpointStatus lost authoration")
-	}
-
-	client, err := api.NewEksClient(&opt.CommonOption)
-	if err != nil {
-		return false, fmt.Errorf("CheckClusterEndpointStatus get eks client failed, %v", err)
-	}
-
-	cluster, err := client.GetEksCluster(clusterID)
-	if err != nil {
-		return false, fmt.Errorf("CheckClusterEndpointStatus get cluster failed, %v", err)
-	}
-
-	kubeConfig, err := api.GetClusterKubeConfig(&opt.CommonOption, cluster)
-	if err != nil {
-		return false, fmt.Errorf("CheckClusterEndpointStatus get kubeConfig failed, %v", err)
-	}
-
-	data, err := encrypt.Decrypt(nil, kubeConfig)
-	if err != nil {
-		return false, fmt.Errorf("decode kube config failed: %v", err)
-	}
-
-	_, err = cloudprovider.GetCRDByKubeConfig(data)
-	if err != nil {
-		return false, fmt.Errorf("CheckClusterEndpointStatus get CRDB failed, %v", err)
-	}
-
-	return true, nil
+	return false, cloudprovider.ErrCloudNotImplemented
 }
 
 // AddSubnetsToCluster add subnets to cluster
