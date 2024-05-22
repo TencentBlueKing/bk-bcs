@@ -39,8 +39,8 @@ import (
 
 // Client interface
 type Client interface {
-	CordonNodes(ctx context.Context, InnerIPs []string, clusterID string, unCordon bool) error
-	DrainNodes(ctx context.Context, InnerIPs []string, clusterID string) error
+	CordonNodes(ctx context.Context, innerIPs []string, clusterID string, unCordon bool) error
+	DrainNodes(ctx context.Context, innerIPs []string, clusterID string) error
 	ListAllNodeGroups(ctx context.Context) ([]*clustermanager.NodeGroup, error)
 	BatchCordonNodeWithoutCluster(ctx context.Context, innerIP []string, unCordon bool) error
 	BatchDrainNodeWithoutCluster(ctx context.Context, innerIP []string) error

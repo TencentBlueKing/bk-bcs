@@ -80,7 +80,8 @@ func (e *BufferStrategyExecutor) IsAbleToScaleDown(strategy *storage.NodeGroupMg
 		return 0, false, fmt.Errorf("get dependent resourcepool %s failed", strategy.ResourcePool)
 	}
 	total := float64(pool.InitNum + pool.IdleNum + pool.ConsumedNum + pool.ReturnedNum)
-	idleNum := pool.IdleNum + pool.InitNum + pool.ReturnedNum
+	availableTotal := float64(pool.IdleNum + pool.ConsumedNum)
+	idleNum := pool.IdleNum
 	if strategy.Strategy.Buffer == nil {
 		strategy.Strategy.Buffer = &storage.BufferStrategy{
 			Low:  0,
@@ -88,9 +89,10 @@ func (e *BufferStrategyExecutor) IsAbleToScaleDown(strategy *storage.NodeGroupMg
 		}
 	}
 	warnBuffer := float64(strategy.Strategy.Buffer.High)
-	reservedNum := int(math.Ceil(total * warnBuffer / 100))
-	blog.Infof("strategy %s, consumerID:%s: total:%d, idleNum:%d, warnBuffer:%d, reservedNum:%d",
-		strategy.Name, pool.ConsumerID, int(total), idleNum, int(warnBuffer), reservedNum)
+	reservedNum := int(math.Ceil(availableTotal * warnBuffer / 100))
+	blog.Infof("strategy %s, consumerID:%s: total:%d, idleNum:%d, warnBuffer:%d, reservedNum:%d, "+
+		"availableTotal:%d",
+		strategy.Name, pool.ConsumerID, int(total), idleNum, int(warnBuffer), reservedNum, int(availableTotal))
 	if idleNum >= reservedNum {
 		// resource is enough, do nothing
 		blog.Infof("device group of consumer %s resource is idle %d >= reserved %d, elasticNodeGroup don't scaleDown",
@@ -144,7 +146,8 @@ func (e *BufferStrategyExecutor) IsAbleToScaleUp(strategy *storage.NodeGroupMgrS
 		return 0, false, 0, fmt.Errorf("get dependent resourcepool %s failed", strategy.ResourcePool)
 	}
 	total := float64(pool.InitNum + pool.IdleNum + pool.ConsumedNum + pool.ReturnedNum)
-	idleNum := pool.IdleNum + pool.InitNum + pool.ReturnedNum
+	availableTotal := float64(pool.IdleNum + pool.ConsumedNum)
+	idleNum := pool.IdleNum
 	if strategy.Strategy.Buffer == nil {
 		strategy.Strategy.Buffer = &storage.BufferStrategy{
 			Low:  0,
@@ -152,10 +155,11 @@ func (e *BufferStrategyExecutor) IsAbleToScaleUp(strategy *storage.NodeGroupMgrS
 		}
 	}
 	warnBuffer := float64(strategy.Strategy.Buffer.High)
-	reservedNum := int(math.Ceil(total * warnBuffer / 100))
-	allowScaleUpNum := int(math.Ceil(total * float64(strategy.Strategy.Buffer.Low) / 100))
-	blog.Infof("strategy %s, consumerID:%s: total:%d, idleNum:%d, warnBuffer:%d, reservedNum:%d",
-		strategy.Name, pool.ConsumerID, int(total), idleNum, int(warnBuffer), reservedNum)
+	reservedNum := int(math.Ceil(availableTotal * warnBuffer / 100))
+	allowScaleUpNum := int(math.Ceil(availableTotal * float64(strategy.Strategy.Buffer.Low) / 100))
+	blog.Infof("strategy %s, consumerID:%s: total:%d, idleNum:%d, warnBuffer:%d, reservedNum:%d,"+
+		" availableTotal:%d",
+		strategy.Name, pool.ConsumerID, int(total), idleNum, int(warnBuffer), reservedNum, int(availableTotal))
 	if idleNum <= reservedNum {
 		// resource is not idle enough
 		blog.Infof("device group of consumer %s idle resource %d <= reserved %d, elasticNodeGroup don't scaleUp",
@@ -258,7 +262,9 @@ func (e *BufferStrategyExecutor) HandleNodeMetadata() {
 // CreateNodeUpdateAction create update action
 func (e *BufferStrategyExecutor) CreateNodeUpdateAction(strategy *storage.NodeGroupMgrStrategy,
 	action *storage.NodeGroupAction) error {
-	if action.Event != storage.ScaleUpState || strategy.Strategy.TimeMode == nil {
+	if action.Event != storage.ScaleUpState || strategy.Strategy.TimeMode == nil ||
+		(!strategy.Strategy.TimeMode.ScaleDownWhenTimeout && strategy.Strategy.TimeMode.ReservedHours == 0 &&
+			len(strategy.Strategy.TimeMode.TimePeriods) == 0) {
 		blog.Infof("[BufferStrategyExecutor] do not need to update node, action event:%s", action.Event)
 		return nil
 	}
@@ -375,9 +381,5 @@ func needToScaleIn(timeMode *storage.BufferTimeMode, scaleDownBeforeDDL int) boo
 		return false
 	}
 	// if timePeriod is empty, it will return true, need to check by scale up action with reserve hours
-	if inScaleOutPeriod {
-		// TODO: add logic
-		return false
-	}
-	return true
+	return !inScaleOutPeriod
 }

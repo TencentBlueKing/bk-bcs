@@ -64,11 +64,13 @@ func (e *HierarchicalStrategyExecutor) IsAbleToScaleUp(strategy *storage.NodeGro
 		return 0, false, 0, fmt.Errorf("get dependent resourcepool %s failed", strategy.ResourcePool)
 	}
 	total := float64(deviceGroup.InitNum + deviceGroup.IdleNum + deviceGroup.ConsumedNum + deviceGroup.ReturnedNum)
-	idleNum := deviceGroup.IdleNum + deviceGroup.InitNum + deviceGroup.ReturnedNum
+	availableTotal := float64(deviceGroup.IdleNum + deviceGroup.ConsumedNum)
+	idleNum := deviceGroup.IdleNum
 	warnBuffer := float64(strategy.Strategy.Buffer.High)
-	reservedNum := int(math.Ceil(total * warnBuffer / 100))
-	blog.Infof("strategy %s, consumer id :%s: total:%d, idleNum:%d, warnBuffer:%d, reservedNum:%d",
-		strategy.Name, consumerID, int(total), idleNum, int(warnBuffer), reservedNum)
+	reservedNum := int(math.Ceil(availableTotal * warnBuffer / 100))
+	blog.Infof("strategy %s, consumer id :%s: total:%d, idleNum:%d, warnBuffer:%d, reservedNum:%d, "+
+		"availableTotal:%d",
+		strategy.Name, consumerID, int(total), idleNum, int(warnBuffer), reservedNum, int(availableTotal))
 	if idleNum <= reservedNum {
 		// resource is not idle enough
 		blog.Infof("the device group of consumer id %s idle resource %d <= reserved %d, elasticNodeGroup don't scaleUp",
