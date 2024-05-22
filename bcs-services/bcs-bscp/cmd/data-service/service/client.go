@@ -16,7 +16,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"math"
 	"sort"
 	"strings"
 	"time"
@@ -201,17 +200,22 @@ func (s *Service) ListClients(ctx context.Context, req *pbds.ListClientsReq) (
 	for _, v := range releases {
 		releaseNames[v.ID] = v.Spec.Name
 	}
+	var details []*pbds.ListClientsResp_Item
 	data := pbclient.PbClients(items)
 	for _, v := range data {
 		v.Spec.CurrentReleaseName = releaseNames[v.Spec.CurrentReleaseId]
-		v.Spec.Resource.CpuUsage = math.Round(v.Spec.Resource.CpuUsage*1000) / 1000
-		v.Spec.Resource.CpuMaxUsage = math.Round(v.Spec.Resource.CpuMaxUsage*1000) / 1000
-		v.Spec.Resource.MemoryUsage /= (1024 * 1024)
-		v.Spec.Resource.MemoryMaxUsage /= (1024 * 1024)
+
+		details = append(details, &pbds.ListClientsResp_Item{
+			Client:            v,
+			CpuUsageStr:       formatCpu(v.Spec.Resource.CpuUsage),
+			CpuMaxUsageStr:    formatCpu(v.Spec.Resource.CpuMaxUsage),
+			MemoryUsageStr:    formatMem(float64(v.Spec.Resource.MemoryMaxUsage)),
+			MemoryMaxUsageStr: formatMem(float64(v.Spec.Resource.MemoryMaxUsage)),
+		})
 	}
 
 	resp := &pbds.ListClientsResp{
-		Details: data,
+		Details: details,
 		Count:   uint32(count),
 	}
 
@@ -746,12 +750,12 @@ func (s *Service) getResourceUsage(kit *kit.Kit, bizID, appID uint32, heartbeatT
 	}
 
 	usage := map[string]interface{}{}
-	usage["cpu_max_usage"] = math.Round(item.CpuMaxUsage*1000) / 1000
-	usage["cpu_min_usage"] = math.Round(item.CpuMinUsage*1000) / 1000
-	usage["cpu_avg_usage"] = math.Round(item.CpuAvgUsage*1000) / 1000
-	usage["memory_max_usage"] = item.MemoryMaxUsage / (1024 * 1024)
-	usage["memory_min_usage"] = item.MemoryMinUsage / (1024 * 1024)
-	usage["memory_avg_usage"] = item.MemoryAvgUsage / (1024 * 1024)
+	usage["cpu_max_usage"] = formatCpu(item.CpuMaxUsage)
+	usage["cpu_min_usage"] = formatCpu(item.CpuMinUsage)
+	usage["cpu_avg_usage"] = formatCpu(item.CpuAvgUsage)
+	usage["memory_max_usage"] = formatMem(item.MemoryMaxUsage)
+	usage["memory_min_usage"] = formatMem(item.MemoryMinUsage)
+	usage["memory_avg_usage"] = formatMem(item.MemoryAvgUsage)
 
 	return usage, nil
 }
@@ -858,4 +862,14 @@ func (s *Service) ClientSpecificFailedReason(ctx context.Context, req *pbclient.
 	resp := make(map[string]interface{})
 	resp["failed_reason"] = charts
 	return structpb.NewStruct(resp)
+}
+
+// 格式化内存数据
+func formatMem(bytes float64) string {
+	return fmt.Sprintf("%.2f", (bytes / 1024 / 1024))
+}
+
+// 格式化cpu数据
+func formatCpu(number float64) string {
+	return fmt.Sprintf("%.3f", number)
 }

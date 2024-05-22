@@ -153,14 +153,14 @@ func (s *Service) ListClientEvents(ctx context.Context, req *pbds.ListClientEven
 	var err error
 	var starTime, endTime time.Time
 	if len(req.GetStartTime()) > 0 {
-		starTime, err = time.ParseInLocation("2006-01-02 15:04:05", req.GetStartTime(), time.UTC)
+		starTime, err = time.ParseInLocation(time.RFC3339, req.GetStartTime(), time.UTC)
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	if len(req.GetEndTime()) > 0 {
-		endTime, err = time.ParseInLocation("2006-01-02 15:04:05", req.GetEndTime(), time.UTC)
+		endTime, err = time.ParseInLocation(time.RFC3339, req.GetEndTime(), time.UTC)
 		if err != nil {
 			return nil, err
 		}
