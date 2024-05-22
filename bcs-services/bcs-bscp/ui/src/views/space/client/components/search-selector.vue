@@ -64,7 +64,9 @@
         <div
           v-if="searchConditionList.length && isClientSearch"
           :class="['set-used', { light: isCommonlyUsedBtnLight }]"
-          v-bk-tooltips="{ content: t('设为常用') }"
+          v-bk-tooltips="{
+            content: highlightCommonlySearchName ? `${t('已收藏为')}: ${highlightCommonlySearchName}` : t('设为常用'),
+          }"
           @click.stop="handleOpenSetCommonlyDialg(true)">
           <span class="bk-bscp-icon icon-star-fill"></span>
         </div>
@@ -217,6 +219,7 @@
   const inputWrapRef = ref();
   const dateTime = ref(getTimeRange(1));
   const datePickerRef = ref();
+  const highlightCommonlySearchName = ref('');
 
   const inputPlacehoder = computed(() => {
     if (searchConditionList.value.length || searchStr.value || inputFocus.value) return '';
@@ -230,13 +233,19 @@
   const selectorData = computed(() => (isClientSearch.value ? CLIENT_SEARCH_DATA : CLIENT_STATISTICS_SEARCH_DATA));
 
   const isCommonlyUsedBtnLight = computed(() => {
-    return commonlySearchList.value.some((commonlySearchItem) => {
+    const item = commonlySearchList.value.find((commonlySearchItem) => {
       if (commonlySearchItem.search_condition.length !== searchConditionList.value.length) return false;
       return commonlySearchItem.search_condition.every((commonlySearchConditionList) => {
         const { key, value } = commonlySearchConditionList;
         return searchConditionList.value.findIndex((item) => item.key === key && item.value === value) > -1;
       });
     });
+    if (item) {
+      highlightCommonlySearchName.value = item.spec.search_name;
+      return true;
+    }
+    highlightCommonlySearchName.value = '';
+    return false;
   });
 
   watch(
