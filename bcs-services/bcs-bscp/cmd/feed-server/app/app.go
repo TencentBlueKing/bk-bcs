@@ -161,7 +161,8 @@ func (fs *feedServer) listenAndServe() error {
 		opts = append(opts, grpc.Creds(cred))
 		// set keepalive params so that feed-proxy could maintain a grpc connection pool
 		opts = append(opts, grpc.KeepaliveEnforcementPolicy(keepalive.EnforcementPolicy{
-			MinTime:             30 * time.Second,
+			// a bit less than 30s of feed-server
+			MinTime:             25 * time.Second,
 			PermitWithoutStream: true,
 		}))
 	}
