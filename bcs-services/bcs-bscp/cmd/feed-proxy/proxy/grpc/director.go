@@ -74,8 +74,7 @@ func NewFeedServerDirector() (*FeedServerDirector, error) {
 				grpc.WithBlock(),
 				grpc.WithTransportCredentials(insecure.NewCredentials()),
 				grpc.WithKeepaliveParams(keepalive.ClientParameters{
-					// a bit less than 30s of feed-server
-					Time:                25 * time.Second,
+					Time:                30 * time.Second,
 					Timeout:             3 * time.Second,
 					PermitWithoutStream: true,
 				}))
