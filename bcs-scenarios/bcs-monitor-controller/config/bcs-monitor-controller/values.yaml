@@ -7,8 +7,7 @@ replicaCount: 1
 image:
   repository: mirrors.tencent.com/porterlin-test/bcs-monitor-controller
   pullPolicy: Always
-  tag: merge-three-way
-
+  tag: v1.30.0-alpha.35
 
 scenarioGitConfig:
   URL: ""

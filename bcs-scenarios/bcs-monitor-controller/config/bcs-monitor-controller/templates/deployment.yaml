@@ -35,8 +35,7 @@ spec:
           - name: api-port
             containerPort: 8088
             protocol: TCP
-          command:
-          - /data/bcs/manager
+          command: ["/data/bcs/bcs-monitor-controller/container-start.sh"]
           args:
           - --v
           - "3"
