@@ -72,7 +72,7 @@
       {
         validator: (value: string) => {
           if (value.length > 0) {
-            return /^[a-zA-Z_]\w*$/.test(value);
+            return /^[a-zA-Z_]\w*$/.test(localPrefix.value + value);
           }
           return true;
         },

@@ -22,7 +22,6 @@
         <tbody>
           <template v-for="(group, index) in tableGroupsData" :key="group.id" v-if="allConfigCount !== 0">
             <tr
-              ref="collapseHeader"
               :class="[
                 'config-groups-table-tr',
                 'group-title-row',
@@ -48,7 +47,7 @@
               </td>
             </tr>
             <template v-if="group.expand && group.configs.length > 0">
-              <tr class="config-groups-table-tr">
+              <tr ref="collapseHeader" class="config-groups-table-tr">
                 <td :colspan="colsLen" class="config-groups-table-td">
                   <div class="configs-list-wrapper">
                     <table class="config-list-table">
@@ -812,7 +811,8 @@
     const tableRect = tableRef.value.getBoundingClientRect();
     collapseHeader.value.forEach((header: Element, index: number) => {
       const headerRect = header.getBoundingClientRect();
-      if (headerRect.top <= tableRect.top && headerRect.bottom >= tableRect.top) {
+      if (headerRect.top - 43 <= tableRect.top && headerRect.bottom >= tableRect.top) {
+        console.log(index);
         stickyIndex.value = index;
       }
     });
