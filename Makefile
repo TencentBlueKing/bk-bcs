@@ -369,6 +369,14 @@ terraform-controller:
 	mkdir -p ${SCENARIOSPACKAGE}/bcs-terraform-controller
 	cd bcs-scenarios/bcs-terraform-controller && make terraform-controller && cd -
 
+terraform-bkprovider:
+	mkdir -p ${SCENARIOSPACKAGE}/bcs-terraform-bkprovider
+	cd bcs-scenarios/bcs-terraform-bkprovider && make build && cd -
+
+monitor-controller:
+	mkdir -p ${SCENARIOSPACKAGE}/bcs-monitor-controller
+	cd bcs-scenarios/bcs-monitor-controller && make manager && cd -
+
 test: test-bcs-runtime
 
 test-bcs-runtime: test-bcs-k8s
