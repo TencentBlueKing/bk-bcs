@@ -20,6 +20,9 @@ import (
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/handler"
 )
 
+// ProxyDownloadPrefix is the prefix for download proxy.
+var ProxyDownloadPrefix = "/proxy/download"
+
 // ProviderProxyHandler returns a http.Handler for proxying download requests to the provider
 func ProviderProxyHandler() http.Handler {
 	upstream := cc.FeedProxy().Upstream
@@ -31,5 +34,5 @@ func ProviderProxyHandler() http.Handler {
 		targetHost = upstream.CosHost
 	}
 
-	return handler.ReverseProxyHandler("proxy_download", "/proxy/download", targetHost)
+	return handler.ReverseProxyHandler("proxy_download", ProxyDownloadPrefix, targetHost)
 }

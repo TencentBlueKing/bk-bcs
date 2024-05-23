@@ -125,7 +125,7 @@ func (s *Service) handler() http.Handler {
 	r.Get("/healthz", s.Healthz)
 
 	r.Mount("/", handler.RegisterCommonToolHandler())
-	r.Mount("/proxy/download", httpproxy.ProviderProxyHandler())
+	r.Mount(httpproxy.ProxyDownloadPrefix, httpproxy.ProviderProxyHandler())
 	return r
 }
 

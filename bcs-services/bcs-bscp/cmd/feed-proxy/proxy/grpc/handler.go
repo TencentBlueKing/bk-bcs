@@ -26,6 +26,7 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 
+	httpproxy "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/feed-proxy/proxy/http"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 	pbfs "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/feed-server"
@@ -84,7 +85,6 @@ func (s *handler) handler(srv interface{}, serverStream grpc.ServerStream) error
 		if err := clientStream.RecvMsg(resp); err != nil {
 			return err
 		}
-		// TODO: replace host and add prefix
 		network := cc.FeedProxy().Network
 		targetHost := net.JoinHostPort(network.BindIP, strconv.Itoa(int(network.HttpPort)))
 		resp.Url = replaceHost(resp.Url, targetHost)
@@ -188,8 +188,8 @@ func replaceHost(inputURL, targetHost string) string {
 	// Replace Host
 	parsedURL.Scheme = "http"
 	parsedURL.Host = targetHost
-	parsedURL.Path = path.Join("/proxy/download", parsedURL.Path)
-	parsedURL.RawPath = path.Join("/proxy/download", parsedURL.RawPath)
+	parsedURL.Path = path.Join(httpproxy.ProxyDownloadPrefix, parsedURL.Path)
+	parsedURL.RawPath = path.Join(httpproxy.ProxyDownloadPrefix, parsedURL.RawPath)
 
 	// Building URL back to string format and return
 	return parsedURL.String()

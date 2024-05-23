@@ -17,12 +17,14 @@ import (
 	"fmt"
 	"net"
 	"strconv"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
 	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/reflection"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/crontab"
@@ -157,7 +159,11 @@ func (fs *feedServer) listenAndServe() error {
 
 		cred := credentials.NewTLS(tlsC)
 		opts = append(opts, grpc.Creds(cred))
-
+		// set keepalive params so that feed-proxy could maintain a grpc connection pool
+		opts = append(opts, grpc.KeepaliveEnforcementPolicy(keepalive.EnforcementPolicy{
+			MinTime:             30 * time.Second,
+			PermitWithoutStream: true,
+		}))
 	}
 
 	serve := grpc.NewServer(opts...)
