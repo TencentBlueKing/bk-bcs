@@ -1,4 +1,4 @@
-SERVER = bk-bscp-proxy
+SERVER = bk-bscp-feedproxy
 ARGS   = -c ./etc/feed_proxy.yaml --public-key ./etc/api_gw_public.key
 
 include ../../scripts/makefile/common.mk
