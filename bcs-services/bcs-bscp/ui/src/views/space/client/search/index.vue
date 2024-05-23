@@ -23,38 +23,35 @@
           @column-filter="handleFilter"
           @setting-change="handleSettingsChange">
           <!-- <bk-table-column type="selection" :min-width="40" :width="40"> </bk-table-column> -->
-          <bk-table-column label="UID" fixed="left" :width="254" prop="attachment.uid"></bk-table-column>
+          <bk-table-column label="UID" fixed="left" :width="254" prop="client.attachment.uid"></bk-table-column>
           <bk-table-column
             v-if="selectedShowColumn.includes('ip')"
             label="IP"
             :width="120"
-            prop="spec.ip"></bk-table-column>
+            prop="client.spec.ip"></bk-table-column>
           <bk-table-column v-if="selectedShowColumn.includes('label')" :label="t('客户端标签')" :min-width="296">
             <template #default="{ row }">
-              <div v-if="row.spec && row.labels.length" class="labels">
-                <span v-for="(label, index) in row.labels" :key="index">
+              <div v-if="row.client && row.client.labels.length" class="labels">
+                <span v-for="(label, index) in row.client.labels" :key="index">
                   <Tag v-if="index < 3">
                     {{ label.key + '=' + label.value }}
                   </Tag>
                 </span>
-                <span v-if="row.labels.length > 3">
-                  <Tag> +{{ row.labels.length - 3 }} </Tag>
+                <span v-if="row.client.labels.length > 3">
+                  <Tag> +{{ row.client.labels.length - 3 }} </Tag>
                 </span>
               </div>
               <span v-else>--</span>
             </template>
           </bk-table-column>
-          <bk-table-column
-            v-if="selectedShowColumn.includes('current-version')"
-            :label="t('当前配置版本')"
-            :width="140">
+          <bk-table-column v-if="selectedShowColumn.includes('current-version')" :label="t('源版本')" :width="140">
             <template #default="{ row }">
               <div
-                v-if="row.spec && row.spec.current_release_id"
+                v-if="row.client && row.client.spec.current_release_id"
                 class="current-version"
-                @click="linkToApp(row.spec.current_release_id)">
+                @click="linkToApp(row.client.spec.current_release_id)">
                 <Share class="icon" />
-                <span class="text">{{ row.spec.current_release_name }}</span>
+                <span class="text">{{ row.client.spec.current_release_name }}</span>
               </div>
               <span v-else>--</span>
             </template>
@@ -69,14 +66,16 @@
               checked: releaseChangeStatusFilterChecked,
             }">
             <template #default="{ row }">
-              <div v-if="row.spec" class="release_change_status">
-                <div :class="['dot', row.spec.release_change_status]"></div>
-                <span>{{ CLIENT_STATUS_MAP[row.spec.release_change_status as keyof typeof CLIENT_STATUS_MAP] }}</span>
+              <div v-if="row.client" class="release_change_status">
+                <div :class="['dot', row.client.spec.release_change_status]"></div>
+                <span>
+                  {{ CLIENT_STATUS_MAP[row.client.spec.release_change_status as keyof typeof CLIENT_STATUS_MAP] }}
+                </span>
                 <InfoLine
-                  v-if="row.spec.release_change_status === 'Failed'"
+                  v-if="row.client.spec.release_change_status === 'Failed'"
                   class="info-icon"
                   fill="#979BA5"
-                  v-bk-tooltips="{ content: getErrorDetails(row.spec) }" />
+                  v-bk-tooltips="{ content: getErrorDetails(row.client.spec) }" />
               </div>
             </template>
           </bk-table-column>
@@ -91,9 +90,9 @@
               checked: onlineStatusFilterChecked,
             }">
             <template #default="{ row }">
-              <div v-if="row.spec" class="online-status">
-                <div :class="['dot', row.spec.online_status]"></div>
-                <span>{{ row.spec.online_status === 'Online' ? t('在线') : t('离线') }}</span>
+              <div v-if="row.client" class="online-status">
+                <div :class="['dot', row.client.spec.online_status]"></div>
+                <span>{{ row.client.spec.online_status === 'Online' ? t('在线') : t('离线') }}</span>
               </div>
             </template>
           </bk-table-column>
@@ -102,8 +101,8 @@
             :label="t('首次连接时间')"
             :width="154">
             <template #default="{ row }">
-              <span v-if="row.spec">
-                {{ datetimeFormat(row.spec.first_connect_time) }}
+              <span v-if="row.client">
+                {{ datetimeFormat(row.client.spec.first_connect_time) }}
               </span>
             </template>
           </bk-table-column>
@@ -112,8 +111,8 @@
             :label="t('最后心跳时间')"
             :width="154">
             <template #default="{ row }">
-              <span v-if="row.spec">
-                {{ datetimeFormat(row.spec.last_heartbeat_time) }}
+              <span v-if="row.client">
+                {{ datetimeFormat(row.client.spec.last_heartbeat_time) }}
               </span>
             </template>
           </bk-table-column>
@@ -127,8 +126,8 @@
             "
             :width="174">
             <template #default="{ row }">
-              <span v-if="row.spec">
-                {{ showResourse(row.spec.resource).cpuResourse }}
+              <span v-if="row.client.spec">
+                {{ showResourse(row.client.spec.resource).cpuResourse }}
               </span>
             </template>
           </bk-table-column> -->
@@ -137,8 +136,8 @@
             :label="t('CPU资源占用(当前/最大)')"
             :width="174">
             <template #default="{ row }">
-              <span v-if="row.spec">
-                {{ showResourse(row.spec.resource).cpuResourse }}
+              <span v-if="row.client">
+                {{ `${row.cpu_usage_str} ${t('核')}/${row.cpu_max_usage_str} ${t('核')}` }}
               </span>
             </template>
           </bk-table-column>
@@ -152,8 +151,8 @@
             "
             :width="170">
             <template #default="{ row }">
-              <span v-if="row.spec">
-                {{ showResourse(row.spec.resource).memoryResource }}
+              <span v-if="row.client.spec">
+                {{ showResourse(row.client.spec.resource).memoryResource }}
               </span>
             </template>
           </bk-table-column> -->
@@ -162,8 +161,8 @@
             :label="t('内存资源占用(当前/最大)')"
             :width="170">
             <template #default="{ row }">
-              <span v-if="row.spec">
-                {{ showResourse(row.spec.resource).memoryResource }}
+              <span v-if="row.client">
+                {{ `${row.memory_usage_str}MB/${row.memory_max_usage_str}MB` }}
               </span>
             </template>
           </bk-table-column>
@@ -171,20 +170,20 @@
             v-if="selectedShowColumn.includes('client-type')"
             :label="t('客户端组件类型')"
             :width="128"
-            prop="spec.client_type"></bk-table-column>
+            prop="client.spec.client_type"></bk-table-column>
           <bk-table-column
             v-if="selectedShowColumn.includes('client-version')"
             :label="t('客户端组件版本')"
             :width="128"
-            prop="spec.client_version"></bk-table-column>
+            prop="client.spec.client_version"></bk-table-column>
           <bk-table-column :label="t('操作')" :width="148" fixed="right">
             <template #default="{ row }">
-              <div v-if="row.spec">
-                <bk-button theme="primary" text @click="handleShowPullRecord(row.attachment.uid, row.id)">
+              <div v-if="row.client">
+                <bk-button theme="primary" text @click="handleShowPullRecord(row.client.attachment.uid, row.client.id)">
                   {{ t('配置拉取记录') }}
                 </bk-button>
                 <!-- <bk-button
-                  v-if="row.spec.release_change_status === 'Failed'"
+                  v-if="row.client.spec.release_change_status === 'Failed'"
                   style="margin-left: 18px"
                   theme="primary"
                   text
@@ -212,7 +211,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref, watch, onMounted } from 'vue';
+  import { ref, watch, onBeforeMount } from 'vue';
   import { useRoute, useRouter } from 'vue-router';
   import { Share, InfoLine } from 'bkui-vue/lib/icon';
   import { storeToRefs } from 'pinia';
@@ -233,13 +232,6 @@
   import { useI18n } from 'vue-i18n';
 
   const { t } = useI18n();
-
-  interface IResourseType {
-    cpu_usage: number;
-    cpu_max_usage: number;
-    memory_usage: string;
-    memory_max_usage: string;
-  }
 
   const clientStore = useClientStore();
   const { searchQuery } = storeToRefs(clientStore);
@@ -306,22 +298,19 @@
     { deep: true },
   );
 
-  onMounted(() => {
-    const checked = localStorage.getItem('client-show-column');
-    if (checked) {
-      selectedShowColumn.value = JSON.parse(checked);
+  onBeforeMount(() => {
+    const tableSet = localStorage.getItem('client-show-column');
+    settings.value.size = 'medium';
+    if (tableSet) {
+      const { checked, size } = JSON.parse(tableSet);
+      selectedShowColumn.value = checked;
+      settings.value.checked = checked;
+      settings.value.size = size;
     }
   });
 
-  const showResourse = (resourse: IResourseType) => {
-    return {
-      cpuResourse: `${resourse.cpu_usage} ${t('核')}/${resourse.cpu_max_usage} ${t('核')}`,
-      memoryResource: `${resourse.memory_usage}MB/${resourse.memory_max_usage}MB`,
-    };
-  };
-
   const isRowSelectEnable = ({ row, isCheckAll }: any) =>
-    isCheckAll || !(row.spec && row.spec.release_change_status !== 'Failed');
+    isCheckAll || !(row.client.spec && row.client.spec.release_change_status !== 'Failed');
 
   const settings = ref({
     trigger: 'click',
@@ -343,7 +332,7 @@
         disabled: true,
       },
       {
-        name: t('当前配置版本'),
+        name: t('源版本'),
         id: 'current-version',
         disabled: true,
       },
@@ -396,6 +385,7 @@
       'client-type',
       'client-version',
     ],
+    size: 'small',
   });
 
   const selectedShowColumn = ref([
@@ -432,7 +422,8 @@
       const res = await getClientQueryList(bkBizId.value, appId.value, params);
       tableData.value = res.data.details;
       tableData.value.forEach((item: any) => {
-        item.labels = Object.entries(JSON.parse(item.spec.labels)).map(([key, value]) => ({ key, value }));
+        const { client } = item;
+        client.labels = Object.entries(JSON.parse(client.spec.labels)).map(([key, value]) => ({ key, value }));
       });
       pagination.value.count = res.data.count;
     } catch (error) {
@@ -488,9 +479,9 @@
     }
   };
 
-  const handleSettingsChange = ({ checked }: any) => {
+  const handleSettingsChange = ({ checked, size }: any) => {
     selectedShowColumn.value = [...checked];
-    localStorage.setItem('client-show-column', JSON.stringify(checked));
+    localStorage.setItem('client-show-column', JSON.stringify({ checked, size }));
   };
 
   const getErrorDetails = (item: any) => {
@@ -504,6 +495,10 @@
 </script>
 
 <style scoped lang="scss">
+  .client-search-page {
+    height: 100%;
+    overflow: auto;
+  }
   .header {
     position: relative;
     height: 120px;
@@ -621,6 +616,7 @@
 
 <style lang="scss">
   .client-settings-custom {
+    padding: 0px !important;
     .setting-body {
       .setting-body-fields {
         max-height: inherit !important;

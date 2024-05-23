@@ -180,17 +180,21 @@ func (ds *configServer) listenAndServe() error {
 	}()
 
 	addr := tools.GetListenAddr(network.BindIP, int(network.RpcPort))
-	ipv6Addr := tools.GetListenAddr(network.BindIPv6, int(network.RpcPort))
+	addrs := tools.GetListenAddrs(network.BindIPs, int(network.RpcPort))
 	dualStackListener := listener.NewDualStackListener()
 	if err := dualStackListener.AddListenerWithAddr(addr); err != nil {
 		return err
 	}
+	logs.Infof("grpc server listen address: %s", addr)
 
-	if network.BindIPv6 != "" && network.BindIPv6 != network.BindIP {
-		if err := dualStackListener.AddListenerWithAddr(ipv6Addr); err != nil {
+	for _, a := range addrs {
+		if a == addr {
+			continue
+		}
+		if err := dualStackListener.AddListenerWithAddr(a); err != nil {
 			return err
 		}
-		logs.Infof("grpc serve dualStackListener with ipv6: %s", ipv6Addr)
+		logs.Infof("grpc server listen address: %s", a)
 	}
 
 	go func() {
@@ -209,17 +213,21 @@ func (ds *configServer) listenAndServe() error {
 func (ds *configServer) gwListenAndServe() error {
 	network := cc.ConfigServer().Network
 	addr := tools.GetListenAddr(network.BindIP, int(network.HttpPort))
-	ipv6Addr := tools.GetListenAddr(network.BindIPv6, int(network.HttpPort))
 	dualStackListener := listener.NewDualStackListener()
-	if err := dualStackListener.AddListenerWithAddr(addr); err != nil {
-		return err
+	if e := dualStackListener.AddListenerWithAddr(addr); e != nil {
+		return e
 	}
+	logs.Infof("http server listen address: %s", addr)
 
-	if network.BindIPv6 != "" && network.BindIPv6 != network.BindIP {
-		if err := dualStackListener.AddListenerWithAddr(ipv6Addr); err != nil {
-			return err
+	for _, ip := range network.BindIPs {
+		if ip == network.BindIP {
+			continue
 		}
-		logs.Infof("api serve dualStackListener with ipv6: %s", ipv6Addr)
+		ipAddr := tools.GetListenAddr(ip, int(network.HttpPort))
+		if e := dualStackListener.AddListenerWithAddr(ipAddr); e != nil {
+			return e
+		}
+		logs.Infof("http server listen address: %s", ipAddr)
 	}
 
 	handler, err := ds.service.Handler()

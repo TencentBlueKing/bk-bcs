@@ -16,32 +16,28 @@ import (
 	"net"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/util"
 )
 
 const (
+	podIPEnv      = "POD_IP"         // 单栈监听环境变量
 	podIPsEnv     = "POD_IPs"        // 双栈监听环境变量
 	ipv6Interface = "IPV6_INTERFACE" // ipv6本地网关地址
 )
 
-// GetIPv6AddrFromEnv 解析ipv6
-func GetIPv6AddrFromEnv() string {
-	podIPs := os.Getenv(podIPsEnv)
-	if podIPs == "" {
-		return ""
+// GetIPsFromEnv get podIP and podIPs from env
+func GetIPsFromEnv() (string, []string) {
+	podIP := os.Getenv(podIPEnv)
+	if podIP == "" {
+		podIP = "127.0.0.1"
 	}
-
-	ipv6 := util.GetIPv6Address(podIPs)
-	if ipv6 == "" {
-		return ""
+	if os.Getenv(podIPsEnv) == "" {
+		return podIP, []string{}
 	}
-
-	// 在实际中，ipv6不能是回环地址
-	if v := net.ParseIP(ipv6); v == nil || v.IsLoopback() {
-		return ""
-	}
-	return ipv6
+	podIPs := strings.Split(os.Getenv(podIPsEnv), ",")
+	return podIP, podIPs
 }
 
 // GetListenAddr for dualstack
@@ -59,4 +55,13 @@ func GetListenAddr(addr string, port int) string {
 	}
 
 	return net.JoinHostPort(addr, strconv.Itoa(port))
+}
+
+// GetListenAddrs for dualstack
+func GetListenAddrs(addrs []string, port int) []string {
+	result := make([]string, 0, len(addrs))
+	for _, addr := range addrs {
+		result = append(result, GetListenAddr(addr, port))
+	}
+	return result
 }

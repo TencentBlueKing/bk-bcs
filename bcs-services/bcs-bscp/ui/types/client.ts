@@ -44,6 +44,8 @@ export interface IClientSearchParams {
   online_status?: string[];
   client_version?: string;
   client_type?: string;
+  start_pull_time?: string;
+  end_pull_time?: string;
 }
 
 export interface IGetClientSearchListQuery {
@@ -93,7 +95,7 @@ export interface IPullSuccessRate {
 
 // 信息展示卡片
 export interface IInfoCard {
-  value: number;
+  value: string;
   name: string;
   key: string;
   unit?: string;

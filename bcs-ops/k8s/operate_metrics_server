@@ -63,7 +63,9 @@ op_metric() {
 
   local image action
   action=$1
-  if [[ -z ${BK_PUBLIC_REPO} ]]; then
+  if [[ -n ${PRIVATE_DOCKER_REPO} ]]; then
+    image="${PRIVATE_DOCKER_REPO}/metrics-server:${METRICS_VER}"
+  elif [[ -z ${BK_PUBLIC_REPO} ]]; then
     image="registry.k8s.io/metrics-server/metrics-server:${METRICS_VER}"
   else
     image="${BK_PUBLIC_REPO}/registry.k8s.io/metrics-server/metrics-server:${METRICS_VER}"

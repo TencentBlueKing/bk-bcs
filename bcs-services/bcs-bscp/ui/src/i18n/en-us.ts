@@ -385,6 +385,7 @@ export default {
   '已生成版本中存在的配置项，可以通过恢复按钮撤销删除，新增且未生成版本的配置项，将无法撤销删除，请谨慎操作。': 'Configuration items that exist in the generated version can be undone by clicking the restore button. Newly added configuration items that have not generated a version cannot be undone. Please proceed with caution.',
   '一旦删除，该操作将无法撤销，服务配置的未命名版本中引用该脚本也将清除，请谨慎操作。': 'Once deleted, this action cannot be undone, and any references to this script in unnamed versions of the service configuration will also be cleared. Please proceed with caution.',
   批量删除配置项成功: 'Batch deletion of configuration items was successful',
+  批量删除配置文件成功: 'Batch deletion of configuration items was successful',
   批量删除变量成功: 'Batch deletion of variable items was successful',
   批量删除脚本成功: 'Batch deletion of script items was successful',
   批量删除分组成功: 'Batch deletion of group items was successful',
@@ -587,6 +588,7 @@ export default {
   服务配置目录: 'Service configuration directory',
   当前配置版本名称: 'Current configuration version name',
   脚本更新成功: 'Script updated successfully',
+  删除脚本成功: 'Delete script successfully',
 
   // 服务密钥
   '密钥仅用于 SDK/API 拉取配置使用。服务管理/配置管理/分组管理等功能的权限申请，请前往': 'The key is only used for SDK/API pull configurations. To apply for permissions for functions such as service management/configuration management/group management, please go to',
@@ -706,8 +708,8 @@ export default {
   查询条件: 'search condition',
   最近查询: 'recent search',
   全部常用查询: 'All common search',
-  'UID/IP/标签/当前配置版本/最近一次拉取配置状态/在线状态/客户端组件类型/客户端组件版本': 'UID/IP/Tag/Current configuration version/Last pull configuration status/Online status/Client component type/Client component version',
-  '标签/当前配置版本/最近一次拉取配置状态/在线状态/客户端组件类型/客户端组件版本': 'Tag/Current configuration version/Last pull configuration status/Online status/Client component type/Client component version',
+  'UID/IP/标签/源版本/最近一次拉取配置状态/在线状态/客户端组件类型/客户端组件版本': 'UID/IP/Tag/Source version/Last pull configuration status/Online status/Client component type/Client component version',
+  '标签/源版本/最近一次拉取配置状态/在线状态/客户端组件类型/客户端组件版本': 'Tag/Source version/Last pull configuration status/Online status/Client component type/Client component version',
   常用查询添加成功: 'successfully added common search',
   常用查询修改成功: 'successfully modified common search',
   常用查询删除成功: 'successfully deleted common search',
@@ -722,7 +724,7 @@ export default {
   客户端组件类型: 'Client component type',
   配置拉取记录: 'Configured pull record',
   离线: 'offline',
-  '当前配置版本/目标配置版本/最近一次拉取配置状态': 'Current configuration version/Target configuration version/Last pull configuration status',
+  '源版本/目标配置版本/最近一次拉取配置状态': 'Source version/Target configuration version/Last pull configuration status',
   开始时间: 'Start time',
   结束时间: 'End time',
   配置拉取方式: 'Configure the pull mode',
@@ -734,6 +736,8 @@ export default {
   源版本: 'Source version',
   客户端拉取配置文件次数统计: 'Statistics on the number of times a client pulls a configuration file',
   已拉取配置文件的客户端数量统计: 'Statistics on the number of clients whose configuration files have been pulled',
+  已收藏为: 'Collected',
+  已存在同名常用查询: 'A common search with the same name already exists',
 
   // 客户端统计
   配置版本发布: 'Configuration version release',
@@ -817,11 +821,12 @@ export default {
   平铺: 'Tile',
   三个以上维度不支持堆叠展示效果: 'More than three dimensions do not support the stacking effect',
   堆叠: 'Pile',
-  设置下钻: 'Set trip',
+  设置下钻: 'Drill down settings',
   支持点击数据下钻: 'Support click data drill down',
   下钻维度: 'Drill down dimension',
   组合维度: 'Combinatorial dimension',
   组件类型分布: 'Component type distribution',
   可下钻图表: 'Drill-down chart',
   '组件类型 / 版本分布': 'Component type / Version distribution',
+  下钻: 'Drill down',
 };

@@ -22,6 +22,7 @@ import (
 	pbcs "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/config-server"
 	pbclient "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/client"
 	pbds "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
 // ListClients list client
@@ -39,6 +40,12 @@ func (s *Service) ListClients(ctx context.Context, req *pbcs.ListClientsReq) (
 		return nil, err
 	}
 
+	for key := range req.GetSearch().GetLabel().GetFields() {
+		if tools.IsNumber(key) {
+			return nil, nil
+		}
+	}
+
 	items, err := s.client.DS.ListClients(kt.RpcCtx(), &pbds.ListClientsReq{
 		BizId:             req.GetBizId(),
 		AppId:             req.GetAppId(),
@@ -53,7 +60,8 @@ func (s *Service) ListClients(ctx context.Context, req *pbcs.ListClientsReq) (
 			Annotations:         req.GetSearch().GetAnnotations(),
 			OnlineStatus:        req.GetSearch().GetOnlineStatus(),
 			ClientVersion:       req.GetSearch().GetClientVersion(),
-			PullTime:            req.GetSearch().GetPullTime(),
+			StartPullTime:       req.GetSearch().GetStartPullTime(),
+			EndPullTime:         req.GetSearch().GetEndPullTime(),
 			ClientType:          req.GetSearch().GetClientType(),
 		},
 		Order: &pbds.ListClientsReq_Order{
@@ -68,9 +76,21 @@ func (s *Service) ListClients(ctx context.Context, req *pbcs.ListClientsReq) (
 		return nil, err
 	}
 
+	var details []*pbcs.ListClientsResp_Item
+
+	for _, v := range items.GetDetails() {
+		details = append(details, &pbcs.ListClientsResp_Item{
+			Client:            v.GetClient(),
+			CpuUsageStr:       v.GetCpuUsageStr(),
+			CpuMaxUsageStr:    v.GetCpuMaxUsageStr(),
+			MemoryUsageStr:    v.GetMemoryUsageStr(),
+			MemoryMaxUsageStr: v.GetMemoryMaxUsageStr(),
+		})
+	}
+
 	resp := &pbcs.ListClientsResp{
 		Count:   items.Count,
-		Details: items.Details,
+		Details: details,
 	}
 
 	return resp, nil

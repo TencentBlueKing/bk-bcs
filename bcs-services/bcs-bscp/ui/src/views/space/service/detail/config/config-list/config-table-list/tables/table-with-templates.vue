@@ -1,5 +1,5 @@
 <template>
-  <div class="table-container">
+  <div ref="tableRef" class="table-container">
     <bk-loading :loading="loading" style="height: 100%">
       <table class="config-groups-table" :key="appId">
         <thead>
@@ -20,9 +20,14 @@
           </tr>
         </thead>
         <tbody>
-          <template v-for="group in tableGroupsData" :key="group.id" v-if="allConfigCount !== 0">
+          <template v-for="(group, index) in tableGroupsData" :key="group.id" v-if="allConfigCount !== 0">
             <tr
-              :class="['config-groups-table-tr', 'group-title-row', group.expand ? 'expand' : '']"
+              :class="[
+                'config-groups-table-tr',
+                'group-title-row',
+                group.expand ? 'expand' : '',
+                { sticky: stickyIndex === index },
+              ]"
               v-if="group.configs.length > 0">
               <td :colspan="colsLen" class="config-groups-table-td">
                 <div class="configs-group">
@@ -42,7 +47,7 @@
               </td>
             </tr>
             <template v-if="group.expand && group.configs.length > 0">
-              <tr class="config-groups-table-tr">
+              <tr ref="collapseHeader" class="config-groups-table-tr">
                 <td :colspan="colsLen" class="config-groups-table-td">
                   <div class="configs-list-wrapper">
                     <table class="config-list-table">
@@ -154,7 +159,7 @@
                                     theme="primary"
                                     :class="{ 'bk-text-with-no-perm': !hasEditServicePerm }"
                                     :disabled="!hasEditServicePerm"
-                                    @click="handleUnDelete(config.id)">
+                                    @click="handleUnDelete(config)">
                                     {{ t('恢复') }}
                                   </bk-button>
                                 </template>
@@ -270,7 +275,7 @@
   </DeleteConfirmDialog>
 </template>
 <script lang="ts" setup>
-  import { ref, computed, watch, onMounted } from 'vue';
+  import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
   import { useI18n } from 'vue-i18n';
   import { storeToRefs } from 'pinia';
   import Message from 'bkui-vue/lib/message';
@@ -382,6 +387,9 @@
     id: 0,
     version: 0,
   });
+  const stickyIndex = ref(1);
+  const tableRef = ref();
+  const collapseHeader = ref();
 
   // 是否为未命名版本
   const isUnNamedVersion = computed(() => versionData.value.id === 0);
@@ -463,8 +471,13 @@
   );
 
   onMounted(async () => {
+    tableRef.value.addEventListener('scroll', handleScroll);
     await getBindingId();
     getAllConfigList();
+  });
+
+  onBeforeUnmount(() => {
+    tableRef.value.removeEventListener('scroll', handleScroll);
   });
 
   const getBindingId = async () => {
@@ -504,7 +517,15 @@
         }
         res = await getReleasedConfigList(props.bkBizId, props.appId, versionData.value.id, params);
       }
-      configList.value = res.details;
+      configList.value = res.details.sort((a: IConfigItem, b: IConfigItem) => {
+        if (a.file_state === 'DELETE' && b.file_state !== 'DELETE') {
+          return 1;
+        }
+        if (a.file_state !== 'DELETE' && b.file_state === 'DELETE') {
+          return -1;
+        }
+        return 0;
+      });
       configsCount.value = res.count;
       configStore.$patch((state) => {
         state.conflictFileCount = res.conflict_number || 0;
@@ -704,6 +725,7 @@
       message: t('移除模板套餐成功'),
     });
     isDeletePkgDialogShow.value = false;
+    getAllConfigList();
   };
 
   // 非模板配置文件diff
@@ -768,13 +790,13 @@
   };
 
   // 配置文件恢复删除
-  const handleUnDelete = async (id: number) => {
+  const handleUnDelete = async (config: IConfigTableItem) => {
     if (permCheckLoading.value || !checkPermBeforeOperate('update')) {
       return;
     }
-    await unDeleteConfigItem(props.bkBizId, props.appId, id);
+    await unDeleteConfigItem(props.bkBizId, props.appId, config.id);
     Message({ theme: 'success', message: t('恢复配置文件成功') });
-    getAllConfigList();
+    config.file_state = 'UNCHANGE';
   };
 
   // 批量删除配置项后刷新配置项列表
@@ -784,6 +806,18 @@
     getAllConfigList();
   };
 
+  // 监听表格滚动事件
+  const handleScroll = () => {
+    const tableRect = tableRef.value.getBoundingClientRect();
+    collapseHeader.value.forEach((header: Element, index: number) => {
+      const headerRect = header.getBoundingClientRect();
+      if (headerRect.top - 43 <= tableRect.top && headerRect.bottom >= tableRect.top) {
+        console.log(index);
+        stickyIndex.value = index;
+      }
+    });
+  };
+
   defineExpose({
     refreshAfterBatchDelete,
     refresh: getAllConfigList,
@@ -791,7 +825,7 @@
 </script>
 <style lang="scss" scoped>
   .table-container {
-    height: 100%;
+    max-height: 100%;
     border: 1px solid #dcdee5;
     overflow: auto;
   }
@@ -803,6 +837,7 @@
       background: none;
     }
     .config-groups-table-tr {
+      background: #ffffff;
       th,
       td {
         position: relative;
@@ -837,6 +872,11 @@
         &:hover {
           background: #f5f7fa;
         }
+      }
+      &.sticky {
+        position: sticky;
+        top: 43px;
+        z-index: 100;
       }
     }
     .config-groups-table-td {
@@ -907,10 +947,6 @@
     .exception-tips {
       margin: 20px 0;
     }
-  }
-  .configs-list-wrapper {
-    max-height: 420px;
-    overflow: auto;
   }
   .config-list-table {
     width: 100%;

@@ -115,6 +115,7 @@ message PullAppFileMetaReq {
   AppMeta app_meta = 3;
   string token = 4;
   string key = 5;
+  repeated string match = 6;
 }
 
 message PullAppFileMetaResp {

@@ -13,7 +13,7 @@
             :is-open-full-screen="isOpenFullScreen"
             :all-label="allLabel"
             :primary-dimension="primaryDimension"
-            @refresh="loadChartData"
+            @refresh="handleRefresh"
             @toggle-full-screen="isOpenFullScreen = !isOpenFullScreen"
             @toggle-show-btn="isOpenPopover = $event"
             @select-dimension="selectedDimension = $event"
@@ -99,6 +99,7 @@
   const navDrillDownData = ref('');
   const isDrillDown = ref(false);
   const chartShowType = ref('tile');
+  const drillDownItem = ref<IClientLabelItem>();
 
   const isShowOperationBtn = computed(() => isMouseEnter.value || isOpenPopover.value);
 
@@ -180,7 +181,8 @@
 
   // 下钻
   const handleDrillDown = (data: any) => {
-    if (!selectedDownDimension.value || selectedDimension.value.length < 2 || isDrillDown.value) return;
+    if (!selectedDownDimension.value || isDrillDown.value) return;
+    drillDownItem.value = data;
     loadChartData({
       [data.foreign_key]: data.foreign_val,
       [data.primary_key]: data.primary_val,
@@ -193,6 +195,17 @@
     loadChartData();
     navDrillDownData.value = '';
     isDrillDown.value = false;
+  };
+
+  const handleRefresh = () => {
+    if (isDrillDown.value) {
+      loadChartData({
+        [drillDownItem.value!.foreign_key]: drillDownItem.value!.foreign_val,
+        [drillDownItem.value!.primary_key]: drillDownItem.value!.primary_val,
+      });
+    } else {
+      loadChartData();
+    }
   };
 </script>
 

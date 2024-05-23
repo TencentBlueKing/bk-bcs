@@ -123,17 +123,21 @@ func runServerCmd() error {
 
 	network := cc.VaultSidecar().Network
 	addr := tools.GetListenAddr(network.BindIP, int(network.HttpPort))
-	ipv6Addr := tools.GetListenAddr(network.BindIPv6, int(network.HttpPort))
+	addrs := tools.GetListenAddrs(network.BindIPs, int(network.HttpPort))
 	dualStackListener := listener.NewDualStackListener()
 	if e := dualStackListener.AddListenerWithAddr(addr); e != nil {
 		return e
 	}
+	klog.Infof("http server listen address: %s", addr)
 
-	if network.BindIPv6 != "" && network.BindIPv6 != network.BindIP {
-		if e := dualStackListener.AddListenerWithAddr(ipv6Addr); e != nil {
-			return e
+	for _, a := range addrs {
+		if a == addr {
+			continue
 		}
-		klog.Infof("api serve dualStackListener with ipv6: %s", ipv6Addr)
+		if err := dualStackListener.AddListenerWithAddr(a); err != nil {
+			return err
+		}
+		klog.Infof("http serve listener with addr: %s", a)
 	}
 
 	klog.InfoS("listening for requests and metrics", "addr", addr)

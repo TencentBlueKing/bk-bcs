@@ -24,7 +24,7 @@
         <SearchInput
           v-model="searchStr"
           :width="527"
-          :placeholder="$t('当前配置版本/目标配置版本/最近一次拉取配置状态')"
+          :placeholder="$t('源版本/目标配置版本/最近一次拉取配置状态')"
           @search="loadTableData" />
       </div>
       <bk-loading :loading="loading">
@@ -117,15 +117,15 @@
   import { Share, Spinner, InfoLine } from 'bkui-vue/lib/icon';
   import SearchInput from '../../../../../components/search-input.vue';
   import { getClientPullRecord } from '../../../../../api/client';
-  import { datetimeFormat, byteUnitConverse } from '../../../../../utils';
+  import { datetimeFormat, byteUnitConverse, getTimeRange } from '../../../../../utils';
   import {
     CLIENT_STATUS_MAP,
     CLIENT_ERROR_SUBCLASSES_MAP,
     CLIENT_ERROR_CATEGORY_MAP,
   } from '../../../../../constants/client';
-  import dayjs from 'dayjs';
   import TableEmpty from '../../../../../components/table/table-empty.vue';
   import { useI18n } from 'vue-i18n';
+
   const { t } = useI18n();
 
   const router = useRouter();
@@ -204,8 +204,8 @@
       const params = {
         start: pagination.value.limit * (pagination.value.current - 1),
         limit: pagination.value.limit,
-        start_time: initDateTime.value![0],
-        end_time: initDateTime.value![1],
+        start_time: new Date(`${initDateTime.value![0].replace(' ', 'T')}+08:00`).toISOString(),
+        end_time: new Date(`${initDateTime.value![1].replace(' ', 'T')}+08:00`).toISOString(),
         search_value,
       };
       const resp = await getClientPullRecord(props.bkBizId, props.appId, props.id, params);
@@ -244,19 +244,6 @@
     return `${t('错误类别')}: ${category}
     ${t('错误子类别')}: ${subclasses}
     ${t('错误详情')}: ${failed_detail_reason}`;
-  };
-
-  const getTimeRange = (n: number) => {
-    const end = new Date();
-    const start = new Date();
-    start.setTime(start.getTime() - 3600 * 1000 * 24 * n);
-    start.setHours(0);
-    start.setMinutes(0);
-    start.setSeconds(0);
-    end.setHours(23);
-    end.setMinutes(59);
-    end.setSeconds(59);
-    return [dayjs(start).format('YYYY-MM-DD HH:mm:ss'), dayjs(end).format('YYYY-MM-DD HH:mm:ss')];
   };
 
   const handleSelectTimeChange = (val: any) => {

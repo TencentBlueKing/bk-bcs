@@ -67,7 +67,10 @@ op_flannel() {
   ipv6_status=${K8S_IPv6_STATUS:-"Disable"}
   ipv6_status=${ipv6_status,,}
   action=$1
-  if [[ -z ${BK_PUBLIC_REPO} ]]; then
+  if [[ -n ${PRIVATE_DOCKER_REPO} ]]; then
+      flannel_image="${PRIVATE_DOCKER_REPO}/flannel:${FLANNEL_VER}"
+      flannelcni_image="${PRIVATE_DOCKER_REPO}/flannel-cni-plugin:${FLANNELCNI_VER}"
+  elif [[ -z ${BK_PUBLIC_REPO} ]]; then
     flannel_image="docker.io/flannel/flannel:${FLANNEL_VER}"
     flannelcni_image="docker.io/flannel/flannel-cni-plugin:${FLANNELCNI_VER}"
   else
