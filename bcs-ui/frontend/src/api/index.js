@@ -27,9 +27,6 @@
 import axios from 'axios';
 import cookie from 'cookie';
 
-// 登录弹窗
-import { showLoginModal } from '@blueking/login-modal';
-
 import { messageError } from '../common/bkmagic';
 import { bus } from '../common/bus';
 
@@ -56,7 +53,6 @@ axiosInstance.interceptors.request.use((config) => {
   if (!window.BCS_CONFIG.disableTracing) {
     config.headers.Traceparent = `00-${random(32, 'abcdef0123456789')}-${random(16, 'abcdef0123456789')}-01`;
   }
-  config.headers['X-Requested-With'] = 'XMLHttpRequest';
   return config;
 }, error => Promise.reject(error));
 
@@ -206,15 +202,12 @@ function handleReject(error, config) {
     if (status === 401) {
       // 登录弹窗
       // eslint-disable-next-line camelcase
-      let loginUrl;
-      const successUrl = `${location.origin}/login_success.html`;
       if (process.env.NODE_ENV === 'development') {
-        loginUrl = `${window.LOGIN_FULL}plain/?size=big&c_url=${encodeURIComponent(successUrl)}`;
+        location.href = `${window.LOGIN_FULL}plain/?size=big&c_url=${location.href}`;
       } else {
-        loginUrl = `${data.data.login_url.simple}?c_url=${encodeURIComponent(successUrl)}`;
+        window.$loginModal.loginUrl = `${data.data.login_url.simple}?c_url=${location.origin}/login_success.html&size=big`;
+        window.$loginModal?.show();
       }
-      // 传入最终的登录地址，弹出登录窗口，更多选项参考 Options
-      showLoginModal({ loginUrl });
 
       return;
     } if (status === 500) {

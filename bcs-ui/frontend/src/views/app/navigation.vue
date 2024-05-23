@@ -308,8 +308,7 @@ export default defineComponent({
     };
     // 注销登录态
     const handleLogout = () => {
-      // 注销登录只注销当前登录态，清除bk_token，不做登录弹窗
-      window.location.href = `${window.LOGIN_FULL}?is_from_logout=1&c_url=${window.location}`;
+      window.location.href = `${window.LOGIN_FULL}?c_url=${window.location}`;
     };
 
     // release信息
