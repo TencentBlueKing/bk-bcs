@@ -30,14 +30,12 @@ import (
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/rest"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/handler"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/shutdown"
-	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/serviced"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
 // Service do all the data service's work
 type Service struct {
 	serve *http.Server
-	state serviced.State
 
 	// name feed proxy instance name.
 	name string
@@ -145,12 +143,6 @@ func (s *Service) Healthz(w http.ResponseWriter, req *http.Request) {
 		logs.Errorf("service healthz check failed, current service is shutting down")
 		w.WriteHeader(http.StatusServiceUnavailable)
 		rest.WriteResp(w, rest.NewBaseResp(errf.UnHealth, "current service is shutting down"))
-		return
-	}
-
-	if err := s.state.Healthz(); err != nil {
-		logs.Errorf("etcd healthz check failed, err: %v", err)
-		rest.WriteResp(w, rest.NewBaseResp(errf.UnHealth, "etcd healthz error, "+err.Error()))
 		return
 	}
 
