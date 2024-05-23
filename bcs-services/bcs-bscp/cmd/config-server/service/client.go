@@ -22,6 +22,7 @@ import (
 	pbcs "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/config-server"
 	pbclient "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/client"
 	pbds "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
 // ListClients list client
@@ -37,6 +38,12 @@ func (s *Service) ListClients(ctx context.Context, req *pbcs.ListClientsReq) (
 	err := s.authorizer.Authorize(kt, res...)
 	if err != nil {
 		return nil, err
+	}
+
+	for key := range req.GetSearch().GetLabel().GetFields() {
+		if tools.IsNumber(key) {
+			return nil, nil
+		}
 	}
 
 	items, err := s.client.DS.ListClients(kt.RpcCtx(), &pbds.ListClientsReq{
