@@ -13,10 +13,13 @@
 package grpc
 
 import (
+	"time"
+
 	"github.com/shimingyah/pool"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/metadata"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
@@ -66,11 +69,19 @@ func NewFeedServerDirector() (*FeedServerDirector, error) {
 	feedHost := cc.FeedProxy().Upstream.FeedServerHost
 	grpcPool, err := pool.New(feedHost, pool.Options{
 		Dial: func(address string) (*grpc.ClientConn, error) {
-			return grpc.Dial(feedHost, grpc.WithTransportCredentials(insecure.NewCredentials()))
+			timeoutCtx, _ := context.WithTimeout(context.Background(), time.Second*5)
+			return grpc.DialContext(timeoutCtx, feedHost,
+				grpc.WithBlock(),
+				grpc.WithTransportCredentials(insecure.NewCredentials()),
+				grpc.WithKeepaliveParams(keepalive.ClientParameters{
+					Time:                30 * time.Second,
+					Timeout:             3 * time.Second,
+					PermitWithoutStream: true,
+				}))
 		},
-		MaxIdle:              64,
-		MaxActive:            128,
-		MaxConcurrentStreams: 128,
+		MaxIdle:              8,
+		MaxActive:            64,
+		MaxConcurrentStreams: 64,
 		Reuse:                true,
 	})
 	if err != nil {

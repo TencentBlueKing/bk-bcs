@@ -413,7 +413,6 @@ func (s FeedServerSetting) Validate() error {
 // FeedProxySetting defines feed proxy used setting options.
 type FeedProxySetting struct {
 	Network Network   `yaml:"network"`
-	Service Service   `yaml:"service"`
 	Log     LogOption `yaml:"log"`
 
 	Upstream Upstream `yaml:"upstream"`
@@ -432,7 +431,6 @@ func (s *FeedProxySetting) trySetFlagPort(port, grpcPort int) error {
 // trySetDefault set the FeedProxySetting default value if user not configured.
 func (s *FeedProxySetting) trySetDefault() {
 	s.Network.trySetDefault()
-	s.Service.trySetDefault()
 	s.Log.trySetDefault()
 	s.Upstream.trySetDefault()
 }
@@ -441,10 +439,6 @@ func (s *FeedProxySetting) trySetDefault() {
 func (s FeedProxySetting) Validate() error {
 
 	if err := s.Network.validate(); err != nil {
-		return err
-	}
-
-	if err := s.Service.validate(); err != nil {
 		return err
 	}
 

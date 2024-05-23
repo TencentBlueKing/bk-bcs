@@ -15,7 +15,6 @@ package service
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -45,17 +44,9 @@ type Service struct {
 }
 
 // NewService create a service instance.
-func NewService(sd serviced.Discover, name string) (*Service, error) {
+func NewService(name string) *Service {
 
-	state, ok := sd.(serviced.State)
-	if !ok {
-		return nil, errors.New("discover convert state failed")
-	}
-
-	return &Service{
-		state: state,
-		name:  name,
-	}, nil
+	return &Service{name: name}
 }
 
 // ListenAndServeRest listen and serve the restful server

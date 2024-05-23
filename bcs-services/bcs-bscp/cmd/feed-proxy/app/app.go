@@ -29,13 +29,12 @@ import (
 	grpcproxy "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/feed-proxy/proxy/grpc"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/feed-proxy/service"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
-	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/uuid"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/metrics"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/brpc"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/ctl"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/ctl/cmd"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/shutdown"
-	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/serviced"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
@@ -54,10 +53,6 @@ func Run(opt *options.Option) error {
 		return err
 	}
 
-	if err := fs.register(); err != nil {
-		return err
-	}
-
 	shutdown.RegisterFirstShutdown(fs.finalizer)
 	shutdown.WaitShutdown(20)
 	return nil
@@ -65,7 +60,6 @@ func Run(opt *options.Option) error {
 
 type feedProxy struct {
 	serve            *grpc.Server
-	sd               serviced.ServiceDiscover
 	service          *service.Service
 	upstreamDirector *grpcproxy.FeedServerDirector
 }
@@ -85,25 +79,6 @@ func (fs *feedProxy) prepare(opt *options.Option) error {
 	metrics.InitMetrics(net.JoinHostPort(cc.FeedProxy().Network.BindIP,
 		strconv.Itoa(int(cc.FeedProxy().Network.RpcPort))))
 
-	etcdOpt, err := cc.FeedProxy().Service.Etcd.ToConfig()
-	if err != nil {
-		return fmt.Errorf("get etcd config failed, err: %v", err)
-	}
-
-	// register data service.
-	svcOpt := serviced.ServiceOption{
-		Name: cc.FeedProxyName,
-		IP:   cc.FeedProxy().Network.BindIP,
-		Port: cc.FeedProxy().Network.RpcPort,
-		Uid:  uuid.UUID(),
-	}
-	sd, err := serviced.NewServiceD(etcdOpt, svcOpt)
-	if err != nil {
-		return fmt.Errorf("new service discovery failed, err: %v", err)
-	}
-
-	fs.sd = sd
-
 	upstreamDirector, err := grpcproxy.NewFeedServerDirector()
 	if err != nil {
 		return fmt.Errorf("new feed server director failed, err: %v", err)
@@ -111,15 +86,11 @@ func (fs *feedProxy) prepare(opt *options.Option) error {
 	fs.upstreamDirector = upstreamDirector
 
 	// init bscp control tool
-	if err = ctl.LoadCtl(ctl.WithBasics(sd)...); err != nil {
+	if err = ctl.LoadCtl(cmd.WithLog()); err != nil {
 		return fmt.Errorf("load control tool failed, err: %v", err)
 	}
 
-	svc, err := service.NewService(fs.sd, opt.Name)
-	if err != nil {
-		return fmt.Errorf("initialize service failed, err: %v", err)
-	}
-	fs.service = svc
+	fs.service = service.NewService(opt.Name)
 
 	return nil
 }
@@ -212,25 +183,10 @@ func (fs *feedProxy) listenAndServe() error {
 
 func (fs *feedProxy) finalizer() {
 
-	if err := fs.sd.Deregister(); err != nil {
-		logs.Errorf("process service shutdown, but deregister failed, err: %v", err)
-		return
-	}
-
 	if err := fs.upstreamDirector.Terminate(); err != nil {
 		logs.Errorf("process service shutdown, but upstream terminate failed, err: %v", err)
 		return
 	}
 
 	logs.Infof("shutting down service, deregister service success.")
-}
-
-// register the grpc serve.
-func (fs *feedProxy) register() error {
-	if err := fs.sd.Register(); err != nil {
-		return fmt.Errorf("register feed proxy failed, err: %v", err)
-	}
-
-	logs.Infof("register feed proxy to etcd success.")
-	return nil
 }
