@@ -385,6 +385,7 @@ export default {
   '已生成版本中存在的配置项，可以通过恢复按钮撤销删除，新增且未生成版本的配置项，将无法撤销删除，请谨慎操作。': 'Configuration items that exist in the generated version can be undone by clicking the restore button. Newly added configuration items that have not generated a version cannot be undone. Please proceed with caution.',
   '一旦删除，该操作将无法撤销，服务配置的未命名版本中引用该脚本也将清除，请谨慎操作。': 'Once deleted, this action cannot be undone, and any references to this script in unnamed versions of the service configuration will also be cleared. Please proceed with caution.',
   批量删除配置项成功: 'Batch deletion of configuration items was successful',
+  批量删除配置文件成功: 'Batch deletion of configuration items was successful',
   批量删除变量成功: 'Batch deletion of variable items was successful',
   批量删除脚本成功: 'Batch deletion of script items was successful',
   批量删除分组成功: 'Batch deletion of group items was successful',
