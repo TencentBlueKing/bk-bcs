@@ -35,6 +35,7 @@ func GetCloudZones(common cloudprovider.CommonOption) ([]modelv2.NovaAvailabilit
 	return client.ListAvailabilityZones()
 }
 
+// GetRuntimeInfo get runtime info
 func GetRuntimeInfo(clusterID string) (map[string][]string, error) {
 	k8sOperator := clusterops.NewK8SOperator(options.GetGlobalCMOptions(), cloudprovider.GetStorageModel())
 	nodes, err := k8sOperator.ListClusterNodes(context.Background(), clusterID)

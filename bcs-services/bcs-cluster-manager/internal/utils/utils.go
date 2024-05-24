@@ -607,8 +607,8 @@ func DistributeMachines(numMachines int, rZones []string) []int {
 
 // generateRandomNumber 生成一个在[min, max)之间的随机整数
 func generateRandomNumber(min int, max int) int {
-	rand.Seed(time.Now().UnixNano())
-	return rand.Intn(max-min) + min
+	rand.Seed(time.Now().UnixNano()) // nolint
+	return rand.Intn(max-min) + min  // nolint
 }
 
 // MergeStringIntMaps 合并两个 map[string]int

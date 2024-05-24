@@ -307,7 +307,7 @@ func (t *Task) BuildCreateNodeGroupTask(group *proto.NodeGroup, opt *cloudprovid
 // BuildCleanNodesInGroupTask clean specified nodes in NodeGroup
 // including remove nodes from NodeGroup, clean data in nodes
 // NOCC:CCN_threshold(工具误报:),golint/fnsize(设计如此:)
-func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.NodeGroup,
+func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.NodeGroup, // nolint
 	opt *cloudprovider.CleanNodesOption) (*proto.Task, error) {
 	// validate request params
 	if nodes == nil {
@@ -484,7 +484,7 @@ func (t *Task) BuildMoveNodesToGroupTask(nodes []*proto.Node, group *proto.NodeG
 
 // BuildUpdateDesiredNodesTask build update desired nodes task
 // NOCC:CCN_threshold(工具误报:),golint/fnsize(设计如此:)
-func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGroup,
+func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGroup, // nolint
 	opt *cloudprovider.UpdateDesiredNodeOption) (*proto.Task, error) {
 	// validate request params
 	if desired == 0 {
