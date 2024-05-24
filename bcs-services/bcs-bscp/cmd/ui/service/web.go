@@ -187,7 +187,7 @@ func (s *WebServer) subRouter() http.Handler {
 	}
 
 	if shouldProxyAPI {
-		r.Mount("/bscp", handler.ReverseProxyHandler("bscp_api", config.G.Web.Host))
+		r.Mount("/bscp", handler.ReverseProxyHandler("bscp_api", "", config.G.Web.Host))
 	}
 
 	r.With(metrics.RequestCollect("no_permission")).Get("/403.html",

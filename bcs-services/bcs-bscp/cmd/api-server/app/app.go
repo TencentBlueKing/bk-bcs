@@ -126,7 +126,7 @@ func (as *apiServer) listenAndServe() error {
 	if err != nil {
 		return err
 	}
-	as.serve = &http.Server{Addr: addr, Handler: handler}
+	as.serve = &http.Server{Handler: handler}
 
 	go func() {
 		notifier := shutdown.AddNotifier()
