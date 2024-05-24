@@ -47,4 +47,7 @@ const (
 
 	// ResourceNameForBCSNetIP is resource name for bcsnetip
 	ResourceNameForBCSNetIP = "netservice.bkbcs.tencent.com/bcsnetip"
+
+	// NodeGatewayAnnotationKey node gateway annotation key
+	NodeGatewayAnnotationKey = "netservicecontroller.bkbcs.tencent.com/gateway"
 )
