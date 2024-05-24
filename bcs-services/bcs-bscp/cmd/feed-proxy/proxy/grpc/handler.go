@@ -19,6 +19,7 @@ import (
 	"net/url"
 	"path"
 	"strconv"
+	"time"
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -46,9 +47,20 @@ type handler struct {
 // handler is where the real magic of proxying happens.
 // It is invoked like any gRPC server stream and uses the gRPC server framing to get and receive bytes from the wire,
 // forwarding it to a ClientStream established against the relevant ClientConn.
-func (s *handler) handler(srv interface{}, serverStream grpc.ServerStream) error {
+func (s *handler) handler(srv interface{}, serverStream grpc.ServerStream) (err error) {
 	// little bit of gRPC internals never hurt anyone
 	fullMethodName, ok := grpc.MethodFromServerStream(serverStream)
+	st := time.Now()
+
+	defer func() {
+		if err != nil {
+			logs.Warnf("grpc proxy method %s to upstream failed, duration: %s, error: %s",
+				fullMethodName, time.Since(st), err.Error())
+			return
+		}
+		logs.Infof("grpc proxy method %s to upstream success, duration: %s", fullMethodName, time.Since(st))
+	}()
+
 	if !ok {
 		return status.Errorf(codes.Internal, "lowLevelServerStream not exists in context")
 	}

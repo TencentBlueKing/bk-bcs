@@ -19,32 +19,6 @@ network:
     # the password to decrypt the certificate.
     password:
 
-# defines service related settings.
-service:
-  # defines etcd related settings
-  etcd:
-    # endpoints is a list of URLs.
-    endpoints:
-      - 127.0.0.1:2379
-    # dialTimeoutMS is the timeout milliseconds for failing to establish a connection.
-    dialTimeoutMS:
-    # username is a user's name for authentication.
-    username:
-    # password is a password for authentication.
-    password:
-    # defines tls related options.
-    tls:
-      # server should be accessed without verifying the TLS certificate.
-      insecureSkipVerify: 
-      # server requires TLS client certificate authentication.
-      certFile:
-      # server requires TLS client certificate authentication.
-      keyFile:
-      # trusted root certificates for server.
-      caFile:
-      # the password to decrypt the certificate.
-      password:
-
 # feed proxy's upstream related settings.
 upstream:
   storageType: BKREPO

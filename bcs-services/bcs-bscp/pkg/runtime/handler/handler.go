@@ -111,6 +111,8 @@ func ReverseProxyHandler(name, prefix, remoteURL string) http.Handler {
 				req.Out.URL.Path = strings.TrimPrefix(req.Out.URL.Path, prefix)
 				req.Out.URL.RawPath = strings.TrimPrefix(req.Out.URL.RawPath, prefix)
 			}
+			klog.InfoS("http proxy request",
+				"name", name, "origionPath", req.In.URL.String(), "targetURL", req.Out.URL.String())
 		},
 	}
 }
