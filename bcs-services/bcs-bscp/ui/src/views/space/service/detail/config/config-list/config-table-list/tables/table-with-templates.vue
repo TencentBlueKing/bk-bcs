@@ -811,8 +811,7 @@
     const tableRect = tableRef.value.getBoundingClientRect();
     collapseHeader.value.forEach((header: Element, index: number) => {
       const headerRect = header.getBoundingClientRect();
-      if (headerRect.top - 43 <= tableRect.top && headerRect.bottom >= tableRect.top) {
-        console.log(index);
+      if (headerRect.top - 82 <= tableRect.top && headerRect.bottom >= tableRect.top) {
         stickyIndex.value = index;
       }
     });
