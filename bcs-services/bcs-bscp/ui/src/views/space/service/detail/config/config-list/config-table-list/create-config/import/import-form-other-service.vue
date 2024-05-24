@@ -1,5 +1,5 @@
 <template>
-  <div class="wrap">
+  <div class="other-service-wrap">
     <div class="select-service">
       <div class="label">{{ $t('选择服务') }}</div>
       <bk-select
@@ -29,10 +29,15 @@
 
 <script lang="ts" setup>
   import { ref, onMounted } from 'vue';
+  import { storeToRefs } from 'pinia';
   import { getAppList } from '../../../../../../../../../api';
   import { getConfigVersionList } from '../../../../../../../../../api/config';
   import { IAppItem } from '../../../../../../../../../../types/app';
   import { IConfigVersion } from '../../../../../../../../../../types/config';
+  import useServiceStore from '../../../../../../../../../store/service';
+
+  const serviceStore = useServiceStore();
+  const { isFileType } = storeToRefs(serviceStore);
 
   const props = defineProps<{
     bkBizId: string;
@@ -59,7 +64,12 @@
         all: true,
       };
       const resp = await getAppList(props.bkBizId, query);
-      serviceList.value = resp.details.filter((app: IAppItem) => app.spec.config_type === 'file');
+      serviceList.value = resp.details.filter((app: IAppItem) => {
+        if (isFileType.value) {
+          return app.spec.config_type === 'file';
+        }
+        return app.spec.config_type === 'kv';
+      });
     } catch (e) {
       console.error(e);
     } finally {
@@ -86,7 +96,6 @@
   const handleSelectApp = () => {
     getVersionList();
   };
-
 </script>
 
 <style scoped lang="scss">

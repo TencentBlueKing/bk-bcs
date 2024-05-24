@@ -3,6 +3,7 @@
     <div :class="['config-content-editor', { fullscreen: isOpenFullScreen }]">
       <div class="editor-title">
         <div class="tips">
+          <div class="title">{{ t('导入数据') }}</div>
           <InfoLine class="info-icon" />
           {{ t('仅支持大小不超过') }}2M
         </div>
@@ -22,6 +23,14 @@
               distance: 20,
             }"
             @click="codeEditorRef.openSearch()" />
+          <i
+            class="bk-bscp-icon icon-separator"
+            v-bk-tooltips="{
+              content: t('示例面板'),
+              placement: 'top',
+              distance: 20,
+            }"
+            @click="emits('update:modelValue', !modelValue)" />
           <FilliscreenLine
             v-if="!isOpenFullScreen"
             v-bk-tooltips="{
@@ -45,19 +54,19 @@
           ref="codeEditorRef"
           v-model="kvsContent"
           :error-line="errorLine"
-          :placeholder="editorPlaceholder"
+          :language="format"
           @enter="separatorShow = true"
           @paste="handlePaste" />
-        <div class="separator" v-show="separatorShow">
+        <div v-if="format === 'text' && separatorShow" class="separator">
           <SeparatorSelect @closed="separatorShow = false" @confirm="handleSelectSeparator" />
         </div>
+        <slot name="sufContent" :fullscreen="isOpenFullScreen"></slot>
       </div>
     </div>
   </Teleport>
 </template>
 <script setup lang="ts">
   import { ref, onBeforeUnmount, watch } from 'vue';
-  import { useRoute } from 'vue-router';
   import { useI18n } from 'vue-i18n';
   import BkMessage from 'bkui-vue/lib/message';
   import { InfoLine, FilliscreenLine, UnfullScreen, Search } from 'bkui-vue/lib/icon';
@@ -72,9 +81,8 @@
   }
 
   const { t } = useI18n();
-  const emits = defineEmits(['trigger']);
+  const emits = defineEmits(['trigger', 'update:modelValue']);
 
-  const route = useRoute();
   const isOpenFullScreen = ref(false);
   const codeEditorRef = ref();
   const separatorShow = ref(false);
@@ -83,14 +91,22 @@
   const separator = ref(' ');
   const shouldValidate = ref(false);
   const errorLine = ref<errorLineItem[]>([]);
-  const editorPlaceholder = ref([t('格式：'), t('key 类型 value 描述'), 'name string nginx', ' port number 8080']);
-  const bkBizId = ref(String(route.params.spaceId));
-  const appId = ref(Number(route.params.appId));
+
+  const props = defineProps<{
+    bkBizId: string;
+    appId: number;
+    modelValue: boolean;
+    format: string;
+  }>();
 
   watch(
     () => kvsContent.value,
     (val) => {
-      handleValidateEditor();
+      if (props.format === 'text') {
+        handleValidateEditor();
+      } else {
+        codeEditorRef.value.validate();
+      }
       if (!val) emits('trigger', false);
     },
   );
@@ -176,7 +192,7 @@
 
   // 导入kv
   const handleImport = async () => {
-    await batchUpsertKv(bkBizId.value, appId.value, kvs.value);
+    await batchUpsertKv(props.bkBizId, props.appId, kvs.value);
   };
 
   const handleSelectSeparator = (selectSeparator: string) => {
@@ -195,7 +211,6 @@
 <style lang="scss" scoped>
   .config-content-editor {
     height: 640px;
-    padding-top: 10px;
     &.fullscreen {
       position: fixed;
       top: 0;
@@ -213,12 +228,19 @@
       color: #979ba5;
       background: #2e2e2e;
       border-radius: 2px 2px 0 0;
+      box-shadow: 0 2px 4px 0 #00000029;
       .tips {
         display: flex;
         align-items: center;
         font-size: 12px;
+        .title {
+          font-size: 14px;
+          color: #c4c6cc;
+          margin-right: 16px;
+        }
         .info-icon {
           margin-right: 4px;
+          font-size: 14px;
         }
       }
       .btns {
@@ -238,11 +260,11 @@
     }
     .editor-content {
       position: relative;
-      height: calc(100% - 130px);
+      height: calc(100% - 40px);
       .separator {
         position: absolute;
-        right: 0;
-        top: 0;
+        right: 10px;
+        top: -13px;
       }
     }
   }

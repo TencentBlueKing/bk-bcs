@@ -216,10 +216,10 @@
     }
   };
 
-  const handleSelectVersion = async (appId: number, versionId: number) => {
+  const handleSelectVersion = async (other_app_id: number, release_id: number) => {
     tableLoading.value = true;
     try {
-      const params = { other_app_id: appId || props.appId, release_id: versionId || selectVerisonId.value };
+      const params = { other_app_id, release_id };
       const res = await importFromHistoryVersion(props.bkBizId, props.appId, params);
       existConfigList.value = res.data.exist;
       nonExistConfigList.value = res.data.non_exist;

@@ -5,8 +5,8 @@
       class="config-uploader"
       :tip="uploadTips"
       theme="button"
-      :size="100"
-      @progress="handleProgress"
+      :size="1000"
+      :multiple="true"
       :custom-request="handleFileUpload">
       <template #trigger>
         <bk-button class="upload-button">
@@ -17,12 +17,12 @@
     </bk-upload>
     <bk-checkbox style="margin-left: 24px" v-model="isDecompression"> {{ $t('压缩包自动解压') }} </bk-checkbox>
   </div>
-  <div class="upload-file-list">
+  <div v-show="isOpenFileList && fileList.length > 0" class="upload-file-list">
     <div :class="['open-btn', { 'is-open': isOpenFileList }]" @click="isOpenFileList = !isOpenFileList">
       <angle-double-up-line class="icon" />
       {{ isOpenFileList ? $t('收起上传列表') : $t('展开上传列表') }}
     </div>
-    <div v-show="isOpenFileList && fileList.length > 0" class="file-list">
+    <div class="file-list">
       <div v-for="fileItem in fileList" :key="fileItem.file.name" class="file-item">
         <div class="file-wrapper">
           <div class="status-icon-area">
@@ -66,7 +66,7 @@
 
   const loading = ref(false);
   const isDecompression = ref(false);
-  const isOpenFileList = ref(false);
+  const isOpenFileList = ref(true);
   const fileList = ref<IUploadFileList[]>([]);
 
   const uploadTips = computed(() => {
@@ -78,10 +78,6 @@
     );
   });
 
-  const handleProgress = (event: any, file: any, fileList: any) => {
-    console.log(event, file, fileList, 'handleProgress');
-  };
-
   const handleFileUpload = async (option: { file: File }) => {
     loading.value = true;
     try {
@@ -90,9 +86,15 @@
         status: 'uploading',
         progress: 0,
       });
-      const res = await importNonTemplateConfigFile(props.bkBizId, props.appId, option.file, (progress: any) => {
-        fileList.value.find((fileItem) => fileItem.file === option.file)!.progress = progress;
-      });
+      const res = await importNonTemplateConfigFile(
+        props.bkBizId,
+        props.appId,
+        option.file,
+        isDecompression.value,
+        (progress: any) => {
+          fileList.value.find((fileItem) => fileItem.file === option.file)!.progress = progress;
+        },
+      );
       console.log(res);
       fileList.value.find((fileItem) => fileItem.file === option.file)!.status = 'success';
       // existConfigList.value = res.exist;

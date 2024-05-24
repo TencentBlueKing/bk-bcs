@@ -3,49 +3,39 @@
     :is-show="props.show"
     :title="t('批量导入')"
     :theme="'primary'"
-    width="960"
+    width="1200"
     height="720"
-    ext-cls="variable-import-dialog"
+    ext-cls="import-kv-dialog"
     :esc-close="false"
     @closed="handleClose">
-    <bk-form>
-      <bk-form-item :label="t('导入方式')">
-        <bk-radio-group v-model="importType">
-          <bk-radio label="text">{{ t('文本导入') }}</bk-radio>
-          <bk-radio label="file">{{ t('文件导入') }}</bk-radio>
-        </bk-radio-group>
-        <div class="tips" v-if="importType === 'text'">{{ t('只支持string、number类型,其他类型请使用文件导入') }}</div>
-      </bk-form-item>
-      <bk-form-item :label="t('配置文件内容')" required>
-        <KvContentEditor v-if="importType === 'text'" ref="editorRef" @trigger="textConfirmBtnPerm = $event" />
-        <bk-upload
-          v-else
-          class="file-uploader"
-          :multiple="false"
-          :before-upload="handleSelectFile"
-          :accept="'.json,.yaml,.yml'">
-          <template #tip>
-            <div class="upload-tips">
-              <span>{{ t('支持 JSON、YAML 等类型文件，后台会自动检测文件类型，配置项格式请参照') }}</span>
-              <a class="sample" :href="downloadHref" download="bscp_kv_demo.zip">{{ t('示例文件包') }}</a>
-            </div>
-          </template>
-        </bk-upload>
-        <div v-if="selectedFile" :class="['file-wrapper', { error: !isFileUploadSuccess }]">
-          <div class="file-left">
-            <Done v-if="isFileUploadSuccess" class="success-icon" />
-            <TextFill class="file-icon" />
-            <div class="name" :title="selectedFile.name">{{ selectedFile.name }}</div>
-          </div>
-          <div v-if="!isFileUploadSuccess" class="file-right">
-            <span class="error-msg">{{ t('解析失败，配置项格式不正确') }}</span>
-            <span class="del-icon" @click="selectedFile = undefined">
-              <Del />
-            </span>
-          </div>
-        </div>
-      </bk-form-item>
-    </bk-form>
+    <div class="import-type-select">
+      <div class="label">{{ t('导入方式') }}</div>
+      <bk-radio-group v-model="importType">
+        <bk-radio-button label="text">{{ t('文本格式导入') }}</bk-radio-button>
+        <bk-radio-button label="historyVersion">{{ t('从历史版本导入') }}</bk-radio-button>
+        <bk-radio-button label="otherService">{{ t('从其他服务导入') }}</bk-radio-button>
+      </bk-radio-group>
+    </div>
+    <div v-if="importType === 'text'">
+      <TextImport :bk-biz-id="bkBizId" :app-id="appId" />
+    </div>
+    <div v-else-if="importType === 'historyVersion'">
+      <div class="wrap">
+        <div class="label">{{ $t('选择版本') }}</div>
+        <bk-select
+          v-model="selectVerisonId"
+          :loading="versionListLoading"
+          style="width: 374px"
+          filterable
+          auto-focus
+          @select="handleSelectVersion(appId, $event)">
+          <bk-option v-for="item in versionList" :id="item.id" :key="item.id" :name="item.spec.name" />
+        </bk-select>
+      </div>
+    </div>
+    <div v-else>
+      <ImportFormOtherService :bk-biz-id="bkBizId" :app-id="appId" @select-version="handleSelectVersion" />
+    </div>
     <template #footer>
       <bk-button theme="primary" style="margin-right: 8px" :disabled="!confirmBtnPerm" @click="handleConfirm">
         {{ t('导入') }}
@@ -58,11 +48,15 @@
 <script lang="ts" setup>
   import { ref, watch, computed, onMounted } from 'vue';
   import { useI18n } from 'vue-i18n';
-  import { Done, TextFill, Del } from 'bkui-vue/lib/icon';
-  import KvContentEditor from '../../../components/kv-import-editor.vue';
-  import { batchImportKvFile } from '../../../../../../../../api/config';
+  import {
+    batchImportKvFile,
+    getConfigVersionList,
+    importKvFromHistoryVersion,
+  } from '../../../../../../../../api/config';
+  import { IConfigVersion } from '../../../../../../../../../types/config';
   import { Message } from 'bkui-vue';
-  import createSamplePkg from '../../../../../../../../utils/sample-file-pkg';
+  import TextImport from './import-kv/text-import.vue';
+  import ImportFormOtherService from './import/import-form-other-service.vue';
 
   const { t } = useI18n();
   const props = defineProps<{
@@ -79,7 +73,11 @@
   const selectedFile = ref<File>();
   const isFileUploadSuccess = ref(true);
   const loading = ref(false);
-  const downloadHref = ref('');
+  const selectVerisonId = ref();
+  const versionListLoading = ref(false);
+  const versionList = ref<IConfigVersion[]>([]);
+  const tableLoading = ref(false);
+
   watch(
     () => props.show,
     () => {
@@ -87,14 +85,47 @@
     },
   );
 
-  onMounted(async () => {
-    downloadHref.value = (await createSamplePkg()) as string;
+  onMounted(() => {
+    getVersionList();
   });
 
   const confirmBtnPerm = computed(() => {
     if (importType.value === 'text') return textConfirmBtnPerm.value;
     return !!selectedFile.value && isFileUploadSuccess.value;
   });
+
+  const getVersionList = async () => {
+    try {
+      versionListLoading.value = true;
+      const params = {
+        start: 0,
+        all: true,
+      };
+      const res = await getConfigVersionList(props.bkBizId, props.appId, params);
+      versionList.value = res.data.details;
+    } catch (e) {
+      console.error(e);
+    } finally {
+      versionListLoading.value = false;
+    }
+  };
+
+  const handleSelectVersion = async (other_app_id: number, release_id: number) => {
+    tableLoading.value = true;
+    try {
+      const params = { other_app_id, release_id };
+      const res = await importKvFromHistoryVersion(props.bkBizId, props.appId, params);
+      console.log(res);
+      // existConfigList.value = res.data.exist;
+      // nonExistConfigList.value = res.data.non_exist;
+      // initExistConfigList.value = cloneDeep(res.data.exist);
+      // initNonExistConfigList.value = cloneDeep(res.data.non_exist);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      tableLoading.value = false;
+    }
+  };
 
   const handleClose = () => {
     selectedFile.value = undefined;
@@ -134,101 +165,45 @@
     emits('update:show', false);
     emits('confirm');
   };
-
-  const handleSelectFile = (file: File) => {
-    // upload组件只做展示 返回false取消默认上传行为
-    selectedFile.value = file;
-    isFileUploadSuccess.value = true;
-    return false;
-  };
 </script>
 
 <style scoped lang="scss">
-    .tips {
-      font-size: 12px;
-      color: #979ba5;
-    }
-    .upload-tips {
-      font-size: 12px;
-      color: #63656e;
-      .sample {
-        margin-left: 2px;
-        color: #3a84ff;
-        cursor: pointer;
-      }
-    }
-  .file-uploader {
-    :deep(.bk-upload-list__item) {
-      display: none;
-    }
-  }
-  .file-wrapper {
+  .import-type-select {
     display: flex;
-    width: 492px;
-    justify-content: space-between;
-    color: #979ba5;
+  }
+  .label {
+    width: 70px;
+    height: 32px;
+    line-height: 32px;
     font-size: 12px;
-    .file-left {
-      display: flex;
-      align-items: center;
-
-      .success-icon {
-        font-size: 20px;
-        color: #2dcb56;
-      }
-      .file-icon {
-        margin: 0 6px 0 0;
-      }
-      .name {
-        max-width: 360px;
-        margin-right: 4px;
-        color: #63656e;
-        white-space: nowrap;
-        text-overflow: ellipsis;
-        overflow: hidden;
-        cursor: pointer;
-      }
-    }
-    .file-right {
-      display: flex;
-      align-items: center;
-      .error-msg {
-        color: #ff5656;
-        margin-right: 10px;
-      }
-      .del-icon {
-        font-size: 13px;
-        color: #63656E;
-        cursor: pointer;
-        vertical-align: middle;
-        &:hover {
-          color: #3a84ff;
-        }
-      }
-      &:hover .del-icon {
-        display: block;
-      }
+    color: #63656e;
+  }
+  .wrap {
+    display: flex;
+    margin-top: 24px;
+  }
+  :deep(.wrap) {
+    display: flex;
+    flex-wrap: wrap;
+    margin-top: 24px;
+    .label {
+      @extend .label;
     }
   }
-  .error {
-    position: relative;
-    background-color: #fff;
-    border-bottom: 2px solid #f0f1f5;
-    &::before {
-      position: absolute;
-      display: block;
-      content: '';
-      width: 156px;
-      height: 2px;
-      bottom: -2px;
-      background-color: #ff5656;
+  :deep(.other-service-wrap) {
+    display: flex;
+    margin-top: 24px;
+    gap: 24px;
+    .label {
+      @extend .label;
     }
   }
 </style>
 
 <style lang="scss">
-  .variable-import-dialog {
+  .import-kv-dialog {
     .bk-modal-content {
+      height: 100% !important;
       overflow: hidden !important;
     }
   }

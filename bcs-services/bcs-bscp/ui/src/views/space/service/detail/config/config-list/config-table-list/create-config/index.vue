@@ -45,7 +45,7 @@
           v-if="!isFileType"
           v-cursor="{ active: !hasEditServicePerm }"
           :class="['operation-item', { 'bk-text-with-no-perm': !hasEditServicePerm }]"
-          @click="handleBatchUploadSlideOpen">
+          @click="handleBatchImportDialogOpen">
           {{ t('批量导入') }}
         </div>
       </div>
@@ -67,7 +67,7 @@
     :app-id="props.appId"
     @upload="emits('uploaded')" />
   <BatchImportKv
-    v-model:show="isBatchUploadDialogOpen"
+    v-model:show="isBatchImportKvDialogOpen"
     :bk-biz-id="props.bkBizId"
     :app-id="props.appId"
     @confirm="emits('created')" />
@@ -110,8 +110,8 @@
   const isManualCreateKvSliderOpen = ref(false);
   const isImportTemplatesDialogOpen = ref(false);
   const isBatchUploadSliderOpen = ref(false);
-  const isBatchUploadDialogOpen = ref(false);
   const isBatchImportDialogOpen = ref(false);
+  const isBatchImportKvDialogOpen = ref(false);
 
   onMounted(() => {
     if (route.query.pkg_id) {
@@ -139,20 +139,16 @@
     isImportTemplatesDialogOpen.value = true;
   };
 
-  const handleBatchUploadSlideOpen = () => {
-    buttonRef.value.hide();
-    if (permCheckLoading.value || !checkPermBeforeOperate('update')) {
-      return;
-    }
-    isBatchUploadSliderOpen.value = true;
-  };
-
   const handleBatchImportDialogOpen = () => {
     buttonRef.value.hide();
     if (permCheckLoading.value || !checkPermBeforeOperate('update')) {
       return;
     }
-    isBatchImportDialogOpen.value = true;
+    if (isFileType.value) {
+      isBatchImportDialogOpen.value = true;
+    } else {
+      isBatchImportKvDialogOpen.value = true;
+    }
   };
 </script>
 <style lang="scss" scoped>

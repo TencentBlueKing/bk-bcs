@@ -389,11 +389,18 @@ export const deleteBoundPkg = (bizId: string, appId: number, bindingId: number, 
  * @param fill 导入文件
  * @returns
  */
-export const importNonTemplateConfigFile = (biz_id: string, appId: number, fill: any, progress: Function) =>
+export const importNonTemplateConfigFile = (
+  biz_id: string,
+  appId: number,
+  fill: any,
+  isDecompression: boolean,
+  progress: Function,
+) =>
   http
-    .post(`/config/biz/${biz_id}/apps/${appId}/config_item/import`, fill, {
+    .post(`/config/biz/${biz_id}/apps/${appId}/config_item/import/${isDecompression}`, fill, {
       headers: {
         'Content-Type': 'application/zip',
+        'X-Bscp-File-Name': fill.name,
       },
       onUploadProgress: (progressEvent: any) => {
         const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
@@ -570,3 +577,17 @@ export const importFromHistoryVersion = (
   appId: number,
   params: { other_app_id: number; release_id: number },
 ) => http.get(`/config/biz/${bizId}/apps/${appId}/config_items/compare_conflicts`, { params });
+
+/**
+ * 从历史版本导入kv配置项
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param other_app_id 导入服务id
+ * @param release_id 版本id
+ * @returns
+ */
+export const importKvFromHistoryVersion = (
+  bizId: string,
+  appId: number,
+  params: { other_app_id: number; release_id: number },
+) => http.get(`/config/biz/${bizId}/apps/${appId}/kvs/compare_conflicts`, { params });
