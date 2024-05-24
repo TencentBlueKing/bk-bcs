@@ -94,7 +94,7 @@
       },
       {
         validator: (value: string) =>
-          /^[\p{Script=Han}\p{L}\p{N}][\p{Script=Han}\p{L}\p{N}_-]*[\p{Script=Han}\p{L}\p{N}]$/u.test(value),
+          /^[\p{Script=Han}\p{L}\p{N}]([\p{Script=Han}\p{L}\p{N}_-]*[\p{Script=Han}\p{L}\p{N}])?$/u.test(value),
         message: t('只允许包含中文、英文、数字、下划线 (_)、连字符 (-)，并且必须以中文、英文、数字开头和结尾'),
       },
     ],
