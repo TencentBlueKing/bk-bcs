@@ -14,6 +14,7 @@ package dao
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -365,13 +366,16 @@ func (dao *clientDao) handleSearch(kit *kit.Kit, bizID, appID uint32, search *pb
 
 	// 根据标签搜索
 	// 支持多个 key:valul 以及 key
+	// key 会存在各种格式：符号、数字、中文等，只要使用双引号包围就可以
 	if search.GetLabel() != nil && len(search.GetLabel().GetFields()) != 0 {
 		for k, v := range search.GetLabel().GetFields() {
 			if k != "" {
 				if v.GetStringValue() != "" {
-					conds = append(conds, q.Where(rawgen.Cond(datatypes.JSONQuery("labels").Equals(v.AsInterface(), k))...))
+					conds = append(conds, q.Where(rawgen.Cond(datatypes.JSONQuery("labels").
+						Equals(v.AsInterface(), fmt.Sprintf(`"%s"`, k)))...))
 				} else {
-					conds = append(conds, q.Where(rawgen.Cond(datatypes.JSONQuery("labels").HasKey(k))...))
+					conds = append(conds, q.Where(rawgen.Cond(datatypes.JSONQuery("labels").
+						HasKey(fmt.Sprintf(`"%s"`, k)))...))
 				}
 			}
 		}
@@ -381,7 +385,8 @@ func (dao *clientDao) handleSearch(kit *kit.Kit, bizID, appID uint32, search *pb
 	if search.GetAnnotations() != nil && len(search.GetAnnotations().GetFields()) != 0 {
 		for k, v := range search.GetLabel().GetFields() {
 			if k != "" {
-				conds = append(conds, q.Where(rawgen.Cond(datatypes.JSONQuery("annotations").Equals(v.AsInterface(), k))...))
+				conds = append(conds, q.Where(rawgen.Cond(datatypes.JSONQuery("annotations").
+					Equals(v.AsInterface(), fmt.Sprintf(`"%s"`, k)))...))
 			}
 		}
 	}
