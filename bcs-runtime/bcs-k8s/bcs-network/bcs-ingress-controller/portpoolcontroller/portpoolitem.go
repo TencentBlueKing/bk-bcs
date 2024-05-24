@@ -273,7 +273,7 @@ func (ppih *PortPoolItemHandler) ensureListeners(region, lbID string, item *nete
 			if !ok {
 				notReady = true
 				if inErr := ppih.K8sClient.Create(context.Background(), ppih.generateListener(
-					region, lbID, tmpStartPort, uint32(tmpEndPort), item,
+					region, lbID, protocol, item.ItemName, tmpStartPort, uint32(tmpEndPort), item.Certificate,
 				), &client.CreateOptions{}); inErr != nil {
 					blog.Warnf("create listener %s failed, err %s", tmpName, inErr.Error())
 				}
@@ -315,33 +315,34 @@ func (ppih *PortPoolItemHandler) ensureListeners(region, lbID string, item *nete
 }
 
 func (ppih *PortPoolItemHandler) generateListener(
-	region, lbID string, startPort, endPort uint32, item *netextv1.PortPoolItem) *netextv1.Listener {
+	region, lbID, protocol, itemName string, startPort, endPort uint32,
+	cert *netextv1.IngressListenerCertificate) *netextv1.Listener {
 	li := &netextv1.Listener{}
 	segLabelValue := netextv1.LabelValueTrue
-	listenerName := common.GetListenerNameWithProtocol(lbID, item.Protocol, int(startPort), int(endPort))
+	listenerName := common.GetListenerNameWithProtocol(lbID, protocol, int(startPort), int(endPort))
 	if endPort == 0 {
 		segLabelValue = netextv1.LabelValueFalse
 	}
 	li.SetName(listenerName)
 	li.SetNamespace(ppih.Namespace)
 	li.SetLabels(map[string]string{
-		netextv1.LabelKeyForUptimeCheckListener:                              netextv1.LabelValueTrue,
-		netextv1.LabelKeyForPortPoolListener:                                 netextv1.LabelValueTrue,
-		netextv1.LabelKeyForIsSegmentListener:                                segLabelValue,
-		netextv1.LabelKeyForLoadbalanceID:                                    generator.GetLabelLBId(lbID),
-		netextv1.LabelKeyForLoadbalanceRegion:                                region,
-		common.GetPortPoolListenerLabelKey(ppih.PortPoolName, item.ItemName): netextv1.LabelValueForPortPoolItemName,
-		netextv1.LabelKeyForOwnerKind:                                        constant.KindPortPool,
-		netextv1.LabelKeyForOwnerName:                                        ppih.PortPoolName,
+		netextv1.LabelKeyForUptimeCheckListener:                         netextv1.LabelValueTrue,
+		netextv1.LabelKeyForPortPoolListener:                            netextv1.LabelValueTrue,
+		netextv1.LabelKeyForIsSegmentListener:                           segLabelValue,
+		netextv1.LabelKeyForLoadbalanceID:                               generator.GetLabelLBId(lbID),
+		netextv1.LabelKeyForLoadbalanceRegion:                           region,
+		common.GetPortPoolListenerLabelKey(ppih.PortPoolName, itemName): netextv1.LabelValueForPortPoolItemName,
+		netextv1.LabelKeyForOwnerKind:                                   constant.KindPortPool,
+		netextv1.LabelKeyForOwnerName:                                   ppih.PortPoolName,
 	})
 	li.Status.PortPool = ppih.PortPoolName
 	li.Finalizers = append(li.Finalizers, constant.FinalizerNameBcsIngressController)
 	li.Spec.Port = int(startPort)
 	li.Spec.EndPort = int(endPort)
-	li.Spec.Protocol = item.Protocol
+	li.Spec.Protocol = protocol
 	li.Spec.LoadbalancerID = lbID
 	li.Spec.ListenerAttribute = ppih.ListenerAttr
-	li.Spec.Certificate = item.Certificate
+	li.Spec.Certificate = cert
 	if li.IsUptimeCheckEnable() {
 		li.Finalizers = append(li.Finalizers, constant.FinalizerNameUptimeCheck)
 	}

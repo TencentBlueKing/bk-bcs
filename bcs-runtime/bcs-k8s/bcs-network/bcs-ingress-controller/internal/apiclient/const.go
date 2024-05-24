@@ -33,5 +33,5 @@ const (
 
 const (
 	apigwApiScheme   = "https"
-	envNameApiGwHost = "API_GW_HOST"
+	envNameApiGwHost = "BK_API_GW_HOST"
 )
