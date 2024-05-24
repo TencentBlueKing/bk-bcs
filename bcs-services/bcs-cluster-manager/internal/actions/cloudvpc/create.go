@@ -56,6 +56,8 @@ func (ca *CreateAction) createCloudVPC() error {
 		Updater:       ca.req.Creator,
 		ReservedIPNum: ca.req.ReservedIPNum,
 		BusinessID:    ca.req.BusinessID,
+		Overlay:       ca.req.GetOverlay(),
+		Underlay:      ca.req.GetUnderlay(),
 		CreatTime:     timeStr,
 		UpdateTime:    timeStr,
 	}

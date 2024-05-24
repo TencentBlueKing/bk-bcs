@@ -186,6 +186,9 @@
             "priKey": "${bcsEncryptNormalPriKey}"
         }
     },
+    "daemon": {
+        "enable": ${bcsDaemonEnable}
+    },
     "tagDepart": "${tagDepart}",
     "prefixVcluster": "${prefixVcluster}",
     "version": "${bcsClusterManagerVersion}",

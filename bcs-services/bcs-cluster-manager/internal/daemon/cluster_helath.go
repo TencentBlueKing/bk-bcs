@@ -13,6 +13,8 @@
 package daemon
 
 import (
+	"context"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 
@@ -145,6 +147,8 @@ func (d *Daemon) reportClusterCaUsageRatio(error chan<- error) {
 		used, total           int
 		debugUsed, debugTotal int
 		prodUsed, prodTotal   int
+
+		enabled, debugEnabled, prodEnabled int
 	)
 
 	for i := range clusterList {
@@ -174,10 +178,11 @@ func (d *Daemon) reportClusterCaUsageRatio(error chan<- error) {
 		})
 		groupList, errLocal := d.model.ListNodeGroup(d.ctx, condGroup, &storeopt.ListOption{All: true})
 		if errLocal != nil {
-			blog.Errorf("reportClusterCaUsageRatio[%s] ListNodeGroup failed: %v", err, clusterList[i].ClusterID)
+			blog.Errorf("reportClusterCaUsageRatio[%s] ListNodeGroup failed: %v", clusterList[i].ClusterID, err)
 			continue
 		}
 
+		// 接入节点池 & 开启弹性伸缩
 		if len(groupList) > 0 {
 			used++
 			switch clusterList[i].Environment {
@@ -187,10 +192,32 @@ func (d *Daemon) reportClusterCaUsageRatio(error chan<- error) {
 				prodUsed++
 			default:
 			}
+
+			asOption, errLocal := d.model.GetAutoScalingOption(context.Background(), clusterList[i].ClusterID)
+			if errLocal != nil {
+				blog.Errorf("reportClusterCaUsageRatio[%s] GetAutoScalingOption failed: %v",
+					clusterList[i].ClusterID, err)
+				continue
+			}
+			if asOption.GetEnableAutoscale() {
+				enabled++
+
+				switch clusterList[i].Environment {
+				case common.Debug:
+					debugEnabled++
+				case common.Prod:
+					prodEnabled++
+				default:
+				}
+			}
 		}
 	}
 
 	metrics.ReportCaUsageRatio(platform, float64(used)/float64(total))
 	metrics.ReportCaUsageRatio(common.Debug, float64(debugUsed)/float64(debugTotal))
 	metrics.ReportCaUsageRatio(common.Prod, float64(prodUsed)/float64(prodTotal))
+
+	metrics.ReportCaEnableRatio(platform, float64(enabled)/float64(used))
+	metrics.ReportCaEnableRatio(common.Debug, float64(debugEnabled)/float64(debugUsed))
+	metrics.ReportCaEnableRatio(common.Prod, float64(prodEnabled)/float64(prodUsed))
 }

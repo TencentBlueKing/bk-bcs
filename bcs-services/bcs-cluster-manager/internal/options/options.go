@@ -278,6 +278,11 @@ type JobConfig struct {
 	JobTaskLink string `json:"jobTaskLink"`
 }
 
+// DaemonConfig for daemon
+type DaemonConfig struct {
+	Enable bool `json:"enable"`
+}
+
 // ClusterManagerOptions options of cluster manager
 type ClusterManagerOptions struct {
 	Etcd               EtcdOption            `json:"etcd"`
@@ -310,6 +315,7 @@ type ClusterManagerOptions struct {
 	TagDepart          string                `json:"tagDepart"`
 	PrefixVcluster     string                `json:"prefixVcluster"`
 	Encrypt            encryptv2.Config      `json:"encrypt"`
+	Daemon             DaemonConfig          `json:"daemon"`
 	ServerConfig
 	ClientConfig
 }

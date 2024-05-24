@@ -642,7 +642,10 @@ func UpdateClusterNodesLabels(ctx context.Context, data NodeLabelsData) error {
 
 		// merge source node labels
 		for k, v := range node.NodeLabels {
-			labels[k] = v
+			_, exist := labels[k]
+			if !exist {
+				labels[k] = v
+			}
 		}
 		err := k8sOperator.UpdateNodeLabels(ctx, data.ClusterID, node.NodeName, labels)
 		if err != nil {
