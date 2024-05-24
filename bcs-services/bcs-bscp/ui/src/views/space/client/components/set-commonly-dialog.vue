@@ -38,12 +38,15 @@
     name: [
       {
         validator: async (value: string) => {
-          try {
-            const res = await getClientCommonlyUsedNameCheck(props.bkBizId, props.appId, value);
-            return !res.data.exist;
-          } catch (error) {
-            console.error(error);
+          if (value.length > 0) {
+            try {
+              const res = await getClientCommonlyUsedNameCheck(props.bkBizId, props.appId, value);
+              return !res.data.exist;
+            } catch (error) {
+              console.error(error);
+            }
           }
+          return true;
         },
         message: t('已存在同名常用查询'),
       },

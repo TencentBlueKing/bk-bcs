@@ -85,6 +85,14 @@
       legend: {
         position: 'bottom',
       },
+      state: {
+        active: {
+          style: {
+            lineWidth: 0, // 通过设置 lineWidth 为 0 来去掉黑边
+            stroke: null, // 确保没有边框颜色
+          },
+        },
+      },
       label: {
         // 可手动配置 label 数据标签位置
         position: 'top', // 'top', 'bottom', 'middle',
