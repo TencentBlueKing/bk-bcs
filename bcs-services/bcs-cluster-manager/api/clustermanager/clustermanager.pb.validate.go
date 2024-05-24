@@ -3979,6 +3979,26 @@ func (m *CreateCloudVPCRequest) Validate() error {
 
 	// no validation rules for BusinessID
 
+	if v, ok := interface{}(m.GetOverlay()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateCloudVPCRequestValidationError{
+				field:  "Overlay",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetUnderlay()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateCloudVPCRequestValidationError{
+				field:  "Underlay",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -4201,6 +4221,26 @@ func (m *UpdateCloudVPCRequest) Validate() error {
 		if err := v.Validate(); err != nil {
 			return UpdateCloudVPCRequestValidationError{
 				field:  "BusinessID",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetOverlay()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateCloudVPCRequestValidationError{
+				field:  "Overlay",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetUnderlay()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateCloudVPCRequestValidationError{
+				field:  "Underlay",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}
@@ -4749,6 +4789,26 @@ func (m *CloudVPCResp) Validate() error {
 
 	// no validation rules for AvailableIPNum
 
+	if v, ok := interface{}(m.GetOverlay()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CloudVPCRespValidationError{
+				field:  "Overlay",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetUnderlay()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CloudVPCRespValidationError{
+				field:  "Underlay",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -4805,6 +4865,90 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = CloudVPCRespValidationError{}
+
+// Validate checks the field values on CidrDetailInfo with the rules defined in
+// the proto definition for this message. If any rules are violated, an error
+// is returned.
+func (m *CidrDetailInfo) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	for idx, item := range m.GetCidrs() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return CidrDetailInfoValidationError{
+					field:  fmt.Sprintf("Cidrs[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	// no validation rules for ReservedIPNum
+
+	// no validation rules for AvailableIPNum
+
+	return nil
+}
+
+// CidrDetailInfoValidationError is the validation error returned by
+// CidrDetailInfo.Validate if the designated constraints aren't met.
+type CidrDetailInfoValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CidrDetailInfoValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CidrDetailInfoValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CidrDetailInfoValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CidrDetailInfoValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CidrDetailInfoValidationError) ErrorName() string { return "CidrDetailInfoValidationError" }
+
+// Error satisfies the builtin error interface
+func (e CidrDetailInfoValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCidrDetailInfo.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CidrDetailInfoValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CidrDetailInfoValidationError{}
 
 // Validate checks the field values on ListCloudRegionsRequest with the rules
 // defined in the proto definition for this message. If any rules are

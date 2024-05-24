@@ -63,6 +63,12 @@ func (ua *UpdateAction) updateCloudVPC(destCloudVPC *cmproto.CloudVPC) error {
 	if ua.req.BusinessID != nil {
 		destCloudVPC.BusinessID = ua.req.GetBusinessID().GetValue()
 	}
+	if ua.req.GetOverlay() != nil {
+		destCloudVPC.Overlay = ua.req.GetOverlay()
+	}
+	if ua.req.GetUnderlay() != nil {
+		destCloudVPC.Underlay = ua.req.GetUnderlay()
+	}
 
 	return ua.model.UpdateCloudVPC(ua.ctx, destCloudVPC)
 }
@@ -74,7 +80,6 @@ func (ua *UpdateAction) validate() error {
 	}
 
 	if ua.req.ReservedIPNum.GetValue() <= 0 {
-
 		ua.req.ReservedIPNum = &wrappers.UInt32Value{Value: 0}
 	}
 

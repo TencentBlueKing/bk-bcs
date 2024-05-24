@@ -7068,6 +7068,25 @@
         }
       }
     },
+    "clustermanagerCidrDetailInfo": {
+      "type": "object",
+      "properties": {
+        "cidrs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerCidrState"
+          }
+        },
+        "reservedIPNum": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "availableIPNum": {
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    },
     "clustermanagerCidrState": {
       "type": "object",
       "properties": {
@@ -7912,6 +7931,16 @@
           "format": "int64",
           "description": "当前vpc可用的IP数量",
           "title": "availableIPNum"
+        },
+        "overlay": {
+          "$ref": "#/definitions/clustermanagerCidrDetailInfo",
+          "description": "overlayIP CIDR配置",
+          "title": "overlay"
+        },
+        "underlay": {
+          "$ref": "#/definitions/clustermanagerCidrDetailInfo",
+          "description": "underlayIP CIDR配置",
+          "title": "underlay"
         }
       },
       "title": "CloudVPCResp for web model"
@@ -9506,6 +9535,16 @@
           "type": "string",
           "description": "业务ID, 作用预留私有的业务vpc",
           "title": "businessID"
+        },
+        "overlay": {
+          "$ref": "#/definitions/clustermanagerCidr",
+          "description": "overlayIP CIDR配置",
+          "title": "overlay"
+        },
+        "underlay": {
+          "$ref": "#/definitions/clustermanagerCidr",
+          "description": "underlayIP CIDR配置",
+          "title": "underlay"
         }
       },
       "description": "创建cloud vpc请求",
@@ -17867,6 +17906,16 @@
           "type": "string",
           "description": "业务ID, 作用预留私有的业务vpc",
           "title": "businessID"
+        },
+        "overlay": {
+          "$ref": "#/definitions/clustermanagerCidr",
+          "description": "overlayIP CIDR配置",
+          "title": "overlay"
+        },
+        "underlay": {
+          "$ref": "#/definitions/clustermanagerCidr",
+          "description": "underlayIP CIDR配置",
+          "title": "underlay"
         }
       },
       "description": "更新云VPC请求",

@@ -160,7 +160,7 @@ func GetGroupCurAndPredictNodes(model store.ClusterManagerModel, groupId string,
 	if group.GetAutoScaling().DesiredSize < group.GetAutoScaling().MaxSize {
 		quota := group.GetAutoScaling().MaxSize - group.GetAutoScaling().DesiredSize
 		zoneNums := AllocateZoneResource(groupId, group.GetRegion(), group.GetLaunchTemplate().GetInstanceType(),
-			resourceZones, group.GetAutoScaling().GetZones(), int(quota))
+			group.GetAutoScaling().GetZones(), resourceZones, int(quota))
 
 		for zone, num := range zoneNums {
 			_, ok := preZoneNodes[zone]

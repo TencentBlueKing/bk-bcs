@@ -2793,6 +2793,14 @@ message CreateCloudVPCRequest {
     title: "businessID",
     description: "业务ID, 作用预留私有的业务vpc"
   }];
+  Cidr overlay = 12[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "overlay",
+    description: "overlayIP CIDR配置"
+  }];
+  Cidr underlay = 13[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "underlay",
+    description: "underlayIP CIDR配置"
+  }];
 }
 
 message CreateCloudVPCResponse {
@@ -2858,6 +2866,14 @@ message UpdateCloudVPCRequest {
   google.protobuf.StringValue businessID = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "businessID",
     description: "业务ID, 作用预留私有的业务vpc"
+  }];
+  Cidr overlay = 12[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "overlay",
+    description: "overlayIP CIDR配置"
+  }];
+  Cidr underlay = 13[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "underlay",
+    description: "underlayIP CIDR配置"
   }];
 }
 
@@ -3019,6 +3035,20 @@ message CloudVPCResp {
     title: "availableIPNum",
     description: "当前vpc可用的IP数量"
   }];
+  CidrDetailInfo overlay = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "overlay",
+    description: "overlayIP CIDR配置"
+  }];
+  CidrDetailInfo underlay = 12[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "underlay",
+    description: "underlayIP CIDR配置"
+  }];
+}
+
+message CidrDetailInfo {
+  repeated CidrState cidrs=1;
+  uint32 reservedIPNum=2;
+  uint32 availableIPNum = 3;
 }
 
 message ListCloudRegionsRequest {
