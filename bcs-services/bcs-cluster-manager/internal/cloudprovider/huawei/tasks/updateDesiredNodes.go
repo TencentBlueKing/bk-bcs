@@ -27,6 +27,7 @@ import (
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/huawei/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/huawei/business"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
@@ -148,7 +149,7 @@ func applyInstanceMachines(ctx context.Context, info *cloudprovider.CloudDependB
 			return nil
 		}
 
-		if *nodePool.Status.CurrentNode == nodeNum && nodePool.Status.Phase.Value() == "" {
+		if nodePool.Status.Phase.Value() == "" {
 			return loop.EndLoop
 		} else if nodePool.Status.Phase.Value() == model.GetNodePoolStatusPhaseEnum().ERROR.Value() ||
 			nodePool.Status.Phase.Value() == model.GetNodePoolStatusPhaseEnum().SOLD_OUT.Value() {
@@ -289,6 +290,8 @@ func transInstancesToNode(ctx context.Context, instances []model.Node, info *clo
 		node.ClusterID = info.NodeGroup.ClusterID
 		node.NodeGroupID = info.NodeGroup.NodeGroupID
 		node.Status = common.StatusInitialization
+		node.ZoneID = v.Spec.Az
+		node.ZoneName = fmt.Sprintf("可用区%d", business.GetZoneNameByZoneId(info.Cluster.Region, node.ZoneID))
 
 		blog.Infof("ApplyInstanceMachinesTask[%s]: call transInstancesToNode successful. node: %#v", node)
 		blog.Infof("ApplyInstanceMachinesTask[%s]: call transInstancesToNode successful. node.server: %#v", *v.Status)
@@ -372,6 +375,7 @@ func CheckClusterNodesStatusTask(taskID string, stepName string) error {
 	if len(ipList) > 0 {
 		state.Task.CommonParams[cloudprovider.DynamicNodeIPListKey.String()] = strings.Join(ipList, ",")
 		state.Task.CommonParams[cloudprovider.NodeIPsKey.String()] = strings.Join(ipList, ",")
+		state.Task.CommonParams[cloudprovider.NodeNamesKey.String()] = strings.Join(ipList, ",")
 		state.Task.NodeIPList = ipList
 	}
 

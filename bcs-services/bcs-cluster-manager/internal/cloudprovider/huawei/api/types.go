@@ -822,6 +822,7 @@ func GetDataVolumeAndStorgeConfig(volumes []*Volume) ([]model.Volume, []model.St
 						Size: "100%",
 						LvmConfig: &model.LvmConfig{
 							LvType: "linear",
+							Path:   &v.MountPath,
 						},
 					},
 				},

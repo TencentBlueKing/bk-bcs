@@ -148,6 +148,7 @@ func GenerateCreateNodePoolRequest(group *proto.NodeGroup,
 		dataVolumes = append(dataVolumes, &Volume{
 			Size:       int32(size),
 			VolumeType: v.DiskType,
+			MountPath:  v.MountTarget,
 		})
 	}
 

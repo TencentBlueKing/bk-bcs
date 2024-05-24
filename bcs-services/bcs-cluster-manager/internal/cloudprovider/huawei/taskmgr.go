@@ -25,6 +25,7 @@ import (
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/huawei/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/huawei/tasks"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/template"
 )
@@ -350,6 +351,10 @@ func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.Node
 	taskName := fmt.Sprintf(cleanNodeGroupNodesTaskTemplate, group.ClusterID, group.Name)
 	task.CommonParams[cloudprovider.TaskNameKey.String()] = taskName
 
+	// instance passwd
+	passwd := group.LaunchTemplate.InitLoginPassword
+	task.CommonParams[cloudprovider.PasswordKey.String()] = passwd
+
 	// setting all steps details
 	cleanNodes := &CleanNodeInGroupTaskOption{
 		Group:    group,
@@ -360,10 +365,44 @@ func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.Node
 
 	// step1: cluster scaleIn to clean cluster nodes
 	common.BuildCordonNodesTaskStep(task, opt.Cluster.ClusterID, nodeIPs)
-	// step2: cluster delete nodes
+
+	// step2. business user define flow
+	if group.NodeTemplate != nil && len(group.NodeTemplate.ScaleInPreScript) > 0 {
+		common.BuildJobExecuteScriptStep(task, common.JobExecParas{
+			ClusterID:        opt.Cluster.ClusterID,
+			Content:          group.NodeTemplate.ScaleInPreScript,
+			NodeIps:          strings.Join(nodeIPs, ","),
+			Operator:         opt.Operator,
+			StepName:         common.PreInitStepJob,
+			AllowSkipJobTask: group.NodeTemplate.AllowSkipScaleInWhenFailed,
+			Translate:        common.PreInitJob,
+		})
+	}
+
+	if group.NodeTemplate != nil && group.NodeTemplate.ScaleInExtraAddons != nil &&
+		len(group.NodeTemplate.ScaleInExtraAddons.PreActions) > 0 {
+		err := template.BuildSopsFactory{
+			StepName: template.UserPreInit,
+			Cluster:  opt.Cluster,
+			Extra: template.ExtraInfo{
+				InstancePasswd:  passwd,
+				NodeIPList:      strings.Join(nodeIPs, ","),
+				NodeOperator:    opt.Operator,
+				ShowSopsUrl:     true,
+				TranslateMethod: template.UserBeforeInit,
+			}}.BuildSopsStep(task, group.NodeTemplate.ScaleInExtraAddons, true)
+		if err != nil {
+			return nil, fmt.Errorf("BuildCleanNodesInGroupTask ScaleInExtraAddons.PreActions "+
+				"BuildBkSopsStepAction failed: %v", err)
+		}
+	}
+
+	// step3: cluster delete nodes
 	cleanNodes.BuildCleanNodeGroupNodesStep(task)
-	// step3: check deleting node status
+	// step4: check deleting node status
 	cleanNodes.BuildCheckClusterCleanNodsStep(task)
+	// step5: remove host from cmdb
+	common.BuildRemoveHostStep(task, opt.Cluster.BusinessID, nodeIPs)
 
 	// set current step
 	if len(task.StepSequence) == 0 {
@@ -506,10 +545,9 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 		Port:       "",
 	})
 	// transfer host module
-	if group.NodeTemplate != nil && group.NodeTemplate.Module != nil &&
-		len(group.NodeTemplate.Module.ScaleOutModuleID) != 0 {
-		common.BuildTransferHostModuleStep(task, opt.Cluster.BusinessID,
-			group.NodeTemplate.Module.ScaleOutModuleID, "")
+	moduleID := cloudprovider.GetTransModuleInfo(opt.Cluster, opt.AsOption, opt.NodeGroup)
+	if moduleID != "" {
+		common.BuildTransferHostModuleStep(task, opt.Cluster.BusinessID, moduleID, "")
 	}
 
 	// step4. business define sops task 支持脚本和标准运维流程
@@ -541,20 +579,12 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 		}
 	}
 
-	// set node labels
-	common.BuildNodeLabelsTaskStep(task, opt.Cluster.ClusterID, nil, cloudprovider.GetLabelsByNg(opt.NodeGroup))
-
-	// set node taint
-	common.BuildNodeTaintsTaskStep(task, opt.Cluster.ClusterID, nil, cloudprovider.GetTaintsByNg(opt.NodeGroup))
-
-	// step4: set node annotations
+	// step5: set node annotations
 	common.BuildNodeAnnotationsTaskStep(task, opt.Cluster.ClusterID, nil,
 		cloudprovider.GetAnnotationsByNg(opt.NodeGroup))
 
-	// step5: remove inner nodes taints
+	// step6: remove inner nodes taints
 	common.BuildRemoveInnerTaintTaskStep(task, group)
-
-	common.BuildUnCordonNodesTaskStep(task, group.ClusterID, nil)
 
 	// set current step
 	if len(task.StepSequence) == 0 {
@@ -566,6 +596,7 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 	task.CommonParams[cloudprovider.ScalingNodesNumKey.String()] = strconv.Itoa(int(desired))
 	task.CommonParams[cloudprovider.JobTypeKey.String()] = cloudprovider.UpdateNodeGroupDesiredNodeJob.String()
 	task.CommonParams[cloudprovider.ManualKey.String()] = strconv.FormatBool(opt.Manual)
+	task.CommonParams[cloudprovider.RemoveTaintsKey.String()] = api.NodePoolCordonTaintKey
 
 	return task, nil
 }
