@@ -639,10 +639,10 @@ func (n *Network) trySetFlagBindIP(ip net.IP) error {
 
 // trySetFlagPort set http and grpc port
 func (n *Network) trySetFlagPort(port, grpcPort int) error {
-	if port > 0 {
+	if n.HttpPort == 0 && port > 0 {
 		n.HttpPort = uint(port)
 	}
-	if grpcPort > 0 {
+	if n.RpcPort == 0 && grpcPort > 0 {
 		n.RpcPort = uint(grpcPort)
 	}
 
@@ -683,7 +683,6 @@ func (n Network) validate() error {
 		if net.ParseIP(ip) == nil {
 			return fmt.Errorf("invalid network bindIPs: %s", ip)
 		}
-
 	}
 
 	if err := n.TLS.validate(); err != nil {

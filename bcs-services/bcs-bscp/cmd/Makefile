@@ -6,10 +6,12 @@ all:
 	@cd auth-server && make
 	@cd cache-service && make
 	@cd vault-server && make
+	@cd feed-proxy && make
 
 feed:
 	@cd feed-server && make
 	@cd cache-service && make
+	@cd feed-proxy && make
 
 server:
 	@cd api-server && make package

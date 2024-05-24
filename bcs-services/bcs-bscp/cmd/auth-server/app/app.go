@@ -246,7 +246,7 @@ func (as *authService) gwListenAndServe() error {
 	if err != nil {
 		return err
 	}
-	as.gwServe = &http.Server{Addr: addr, Handler: handler}
+	as.gwServe = &http.Server{Handler: handler}
 
 	go func() {
 		notifier := shutdown.AddNotifier()

@@ -290,7 +290,7 @@ func (ds *dataService) gwListenAndServe() error {
 		return err
 	}
 
-	ds.gwServe = &http.Server{Addr: addr, Handler: handler}
+	ds.gwServe = &http.Server{Handler: handler}
 
 	go func() {
 		notifier := shutdown.AddNotifier()
