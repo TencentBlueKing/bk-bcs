@@ -17,11 +17,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net"
 	"net/http"
-	"strconv"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 
@@ -93,10 +92,25 @@ func NewService(sd serviced.Discover, name string) (*Service, error) {
 // ListenAndServeRest listen and serve the restful server
 func (s *Service) ListenAndServeRest() error {
 	network := cc.FeedServer().Network
-	server := &http.Server{
-		Addr:    net.JoinHostPort(network.BindIP, strconv.FormatUint(uint64(network.HttpPort), 10)),
-		Handler: s.handler(),
+	addr := tools.GetListenAddr(network.BindIP, int(network.HttpPort))
+	dualStackListener := listener.NewDualStackListener()
+	if e := dualStackListener.AddListenerWithAddr(addr); e != nil {
+		return e
 	}
+	logs.Infof("http server listen address: %s", addr)
+
+	for _, ip := range network.BindIPs {
+		if ip == network.BindIP {
+			continue
+		}
+		ipAddr := tools.GetListenAddr(ip, int(network.HttpPort))
+		if e := dualStackListener.AddListenerWithAddr(ipAddr); e != nil {
+			return e
+		}
+		logs.Infof("http server listen address: %s", ipAddr)
+	}
+
+	server := &http.Server{Handler: s.handler()}
 
 	if network.TLS.Enable() {
 		tls := network.TLS
@@ -108,8 +122,6 @@ func (s *Service) ListenAndServeRest() error {
 
 		server.TLSConfig = tlsC
 	}
-
-	logs.Infof("listen restful server on %s with secure(%v) now.", server.Addr, network.TLS.Enable())
 
 	go func() {
 		notifier := shutdown.AddNotifier()
@@ -129,7 +141,7 @@ func (s *Service) ListenAndServeRest() error {
 	}()
 
 	go func() {
-		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		if err := server.Serve(dualStackListener); err != nil && err != http.ErrServerClosed {
 			logs.Errorf("serve restful server failed, err: %v", err)
 			shutdown.SignalShutdownGracefully()
 		}

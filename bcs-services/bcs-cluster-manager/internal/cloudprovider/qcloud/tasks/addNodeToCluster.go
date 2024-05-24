@@ -320,6 +320,8 @@ func AddNodesToClusterTask(taskID string, stepName string) error { // nolint
 	}
 	idToIPMap := cloudprovider.GetNodeIdToIpMapByNodeIds(idList)
 
+	blog.Infof("AddNodesToClusterTask[%s] GetNodeIdToIpMapByNodeIds %v", taskID, idToIPMap)
+
 	// cluster/cloud/nodeGroup/cloudCredential Info
 	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
 		ClusterID:      clusterID,

@@ -14,11 +14,13 @@ package cluster
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 )
@@ -58,7 +60,7 @@ func (ua *UpdateClusterModuleAction) getCluster() error {
 	return nil
 }
 
-// updateCluster update cluster info
+// updateClusterModuleInfo update cluster node module
 func (ua *UpdateClusterModuleAction) updateClusterModuleInfo() error {
 	if ua.cluster.GetClusterBasicSettings().GetModule() == nil {
 		ua.cluster.GetClusterBasicSettings().Module = &cmproto.ClusterModule{}
@@ -94,6 +96,22 @@ func (ua *UpdateClusterModuleAction) updateClusterModuleInfo() error {
 		updateAutoScalingModule(ua.cluster, option,
 			ua.req.GetModule().GetWorkerModuleID(), ua.req.GetModule().GetWorkerModuleName())
 		_ = ua.model.UpdateAutoScalingOption(ua.ctx, option)
+	}
+
+	// record operation log
+	err = ua.model.CreateOperationLog(ua.ctx, &cmproto.OperationLog{
+		ResourceType: common.Cluster.String(),
+		ResourceID:   ua.req.GetClusterID(),
+		TaskID:       "",
+		Message:      fmt.Sprintf("集群%s更新节点模块[%s]", ua.req.ClusterID, ua.req.GetModule().GetWorkerModuleID()),
+		OpUser:       auth.GetUserFromCtx(ua.ctx),
+		CreateTime:   time.Now().Format(time.RFC3339),
+		ClusterID:    ua.req.ClusterID,
+		ProjectID:    ua.cluster.ProjectID,
+		ResourceName: ua.cluster.ClusterName,
+	})
+	if err != nil {
+		blog.Errorf("updateClusterModuleInfo[%s] CreateOperationLog failed: %v", ua.cluster.ClusterID, err)
 	}
 
 	return nil

@@ -27,6 +27,7 @@ import (
 	"runtime/debug"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
@@ -575,4 +576,55 @@ func CompareVersion(v1, v2 string) int {
 	}
 
 	return 0
+}
+
+// DistributeMachines 平均分配机器到各个区域
+func DistributeMachines(numMachines int, rZones []string) []int {
+	if len(rZones) == 0 {
+		return nil
+	}
+
+	numZones := len(rZones)
+
+	base := numMachines / numZones      // 每个区域基本分配的机器数
+	remainder := numMachines % numZones // 不能均匀分配的余数
+
+	// 创建一个slice来存储每个区域分配到的机器数
+	distributions := make([]int, numZones)
+
+	// 每个区域都分配到基本的机器数
+	for i := range distributions {
+		distributions[i] = base
+	}
+
+	// 将余下的机器随机分散到各个区域
+	for i := 0; i < remainder; i++ {
+		distributions[generateRandomNumber(0, numZones)]++
+	}
+
+	return distributions
+}
+
+// generateRandomNumber 生成一个在[min, max)之间的随机整数
+func generateRandomNumber(min int, max int) int {
+	rand.Seed(time.Now().UnixNano())
+	return rand.Intn(max-min) + min
+}
+
+// MergeStringIntMaps 合并两个 map[string]int
+func MergeStringIntMaps(map1, map2 map[string]int) map[string]int {
+	copyMap1 := make(map[string]int) // 创建一个新的 map
+	for key, value := range map1 {
+		copyMap1[key] = value // 复制元素
+	}
+
+	// 将 map2 的内容合并到 map1
+	for key, value := range map2 {
+		if existingValue, ok := copyMap1[key]; ok { // 键已存在
+			copyMap1[key] = existingValue + value // 累加值
+		} else { // 键不存在
+			copyMap1[key] = value // 添加新键值对
+		}
+	}
+	return copyMap1
 }

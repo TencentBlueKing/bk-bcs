@@ -201,6 +201,19 @@ set_yum_repo() {
         wget -O /etc/yum.repos.d/CentOS-Base.repo $BASE_YUM_LINK
         mv /etc/yum.repos.d/epel.repo /etc/yum.repos.d/epel.repo.$BACKUPTIME
         wget -O /etc/yum.repos.d/epel.repo $BASE_EPEL_LINK
+
+        if [[ -f /etc/tlinux-release ]];then
+          if grep "TencentOS Server 3.[0-9]*" /etc/tlinux-release;then
+            sed -i "s/\$releasever/8/g" /etc/yum.repos.d/epel.repo
+            sed -i "s/\$releasever/8/g" /etc/yum.repos.d/CentOS-Base.repo
+          elif grep "TencentOS Server 2.[0-9]*" /etc/tlinux-release;then
+            sed -i "s/\$releasever/7/g" /etc/yum.repos.d/epel.repo
+            sed -i "s/\$releasever/7/g" /etc/yum.repos.d/CentOS-Base.repo
+          elif grep "Tencent tlinux release 2.[0-9]*" /etc/tlinux-release;then
+            sed -i "s/\$releasever/7/g" /etc/yum.repos.d/epel.repo
+            sed -i "s/\$releasever/7/g" /etc/yum.repos.d/CentOS-Base.repo
+          fi
+        fi
         yum clean all
         yum makecache
 

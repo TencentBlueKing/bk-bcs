@@ -70,7 +70,7 @@ type TransferFileRespResult struct {
 
 // CreateTransferFileTask create sync transfer file task
 func CreateTransferFileTask(ctx context.Context, sourceAgentID, sourceContainerID, sourceFileDir, sourceUser,
-	filename string, targetAgentID, targetContainerID, targetFileDir, targetFileName, targetUser string) (string, error) {
+	filename string, targetAgentID, targetContainerID, targetFileDir, targetUser string) (string, error) {
 
 	// 1. if sourceContainerID is set, means source is node, else is container
 	// 2. if targetContainerID is set, means target is node, else is container
@@ -89,7 +89,7 @@ func CreateTransferFileTask(ctx context.Context, sourceAgentID, sourceContainerI
 			Tasks: []TransferFileTask{
 				{
 					Source: TransferFileSource{
-						FileName: targetFileDir,
+						FileName: filename,
 						StoreDir: sourceFileDir,
 						Agent: TransferFileAgent{
 							User:          sourceUser,
@@ -185,14 +185,20 @@ func TransferFileResult(ctx context.Context, taskID string) (pbfs.AsyncDownloadS
 	// any task failed, return failed
 	// any task downloading, return downloading
 	// all task success, return success
+	allSuccess := true
 	for _, result := range data.Result {
-		switch result.ErrorCode {
-		case 0:
-		case 115:
-			return pbfs.AsyncDownloadStatus_DOWNLOADING, nil
-		default:
+		if result.ErrorCode != 0 && result.ErrorCode != 115 {
 			return pbfs.AsyncDownloadStatus_FAILED, fmt.Errorf(result.ErrorMsg)
 		}
+		if result.ErrorCode == 115 {
+			allSuccess = false
+		}
 	}
+
+	if !allSuccess {
+		// 如果存在正在下载的任务
+		return pbfs.AsyncDownloadStatus_DOWNLOADING, nil
+	}
+	// 如果没有失败或下载中的任务，则返回成功
 	return pbfs.AsyncDownloadStatus_SUCCESS, nil
 }

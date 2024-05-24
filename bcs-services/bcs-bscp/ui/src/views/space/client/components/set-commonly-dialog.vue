@@ -7,7 +7,7 @@
     confirm-text="保存"
     @closed="handleClose"
     @confirm="handleConfirm">
-    <bk-form ref="formRef" :model="formData">
+    <bk-form ref="formRef" :rules="rules" :model="formData">
       <bk-form-item :label="$t('名称')" property="name" label-width="80" required>
         <bk-input v-model="formData.name"></bk-input>
       </bk-form-item>
@@ -17,7 +17,12 @@
 
 <script lang="ts" setup>
   import { ref, watch } from 'vue';
+  import { getClientCommonlyUsedNameCheck } from '../../../../api/client';
+  import { useI18n } from 'vue-i18n';
+  const { t } = useI18n();
   const props = defineProps<{
+    bkBizId: string;
+    appId: number;
     isShow: boolean;
     isCreate: boolean;
     name?: string;
@@ -28,6 +33,22 @@
     name: '',
   });
   const formRef = ref();
+
+  const rules = {
+    name: [
+      {
+        validator: async (value: string) => {
+          try {
+            const res = await getClientCommonlyUsedNameCheck(props.bkBizId, props.appId, value);
+            return !res.data.exist;
+          } catch (error) {
+            console.error(error);
+          }
+        },
+        message: t('已存在同名常用查询'),
+      },
+    ],
+  };
 
   watch(
     () => props.isShow,

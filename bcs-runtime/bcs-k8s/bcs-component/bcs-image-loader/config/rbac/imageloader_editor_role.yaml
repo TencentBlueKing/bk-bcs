@@ -1,0 +1,31 @@
+# permissions for end users to edit imageloaders.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/instance: imageloader-editor-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: bcs-image-loader
+    app.kubernetes.io/part-of: bcs-image-loader
+    app.kubernetes.io/managed-by: kustomize
+  name: imageloader-editor-role
+rules:
+- apiGroups:
+  - tkex.tencent.com
+  resources:
+  - imageloaders
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - tkex.tencent.com
+  resources:
+  - imageloaders/status
+  verbs:
+  - get

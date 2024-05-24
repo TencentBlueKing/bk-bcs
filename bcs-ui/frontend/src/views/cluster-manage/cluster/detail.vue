@@ -60,7 +60,7 @@
           <Network class="p-[20px]" :cluster-id="clusterId" />
         </bcs-tab-panel>
       </template>
-      <!--托管集群-->
+      <!--vcluster-->
       <template v-else-if="curCluster.clusterType === 'virtual'">
         <bcs-tab-panel
           name="overview"
@@ -87,7 +87,7 @@
           <VClusterQuota class="p-[20px]" :cluster-id="clusterId" />
         </bcs-tab-panel>
       </template>
-      <!--独立集群-->
+      <!--其他集群-->
       <template v-else>
         <bcs-tab-panel
           name="overview"

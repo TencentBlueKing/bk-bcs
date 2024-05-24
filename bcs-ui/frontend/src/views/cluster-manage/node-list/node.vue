@@ -783,10 +783,10 @@ export default defineComponent({
       curNodeModule.value = node;
     };
     const handleSaveWorkerModule = async () => {
-      if (curModuleID.value === clusterData.value.clusterBasicSettings?.module?.workerModuleID) {
-        isEditModule.value = false;
-        return;
-      };
+      // if (String(curModuleID.value) === String(clusterData.value.clusterBasicSettings?.module?.workerModuleID)) {
+      //   isEditModule.value = false;
+      //   return;
+      // };
 
       $bkInfo({
         type: 'warning',
@@ -799,7 +799,7 @@ export default defineComponent({
           const result = await setClusterModule({
             $clusterId: props.clusterId,
             module: {
-              workerModuleID: curModuleID.value,
+              workerModuleID: String(curModuleID.value),
             },
             operator: $store.state.user?.username,
           }).then(() => true)

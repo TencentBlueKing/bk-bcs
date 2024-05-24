@@ -21,7 +21,9 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/mitchellh/mapstructure"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-nodegroup-manager/pkg/metric"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-nodegroup-manager/pkg/storage"
 	nodegroupmgr "github.com/Tencent/bk-bcs/bcs-services/bcs-nodegroup-manager/proto"
 )
@@ -44,6 +46,8 @@ func New(storage storage.Storage) *NodegroupManager {
 // scale down: num/ip
 func (e *NodegroupManager) GetClusterAutoscalerReview(ctx context.Context,
 	req *nodegroupmgr.ClusterAutoscalerReview, rsp *nodegroupmgr.ClusterAutoscalerReview) error {
+	var err error
+	startTime := time.Now()
 	blog.Info("Received NodegroupManager.GetClusterAutoscalerReview request. RequestId:%s", req.Request.Uid)
 	reqNodeGroups := req.Request.NodeGroups
 	rsp.Request = req.Request
@@ -51,12 +55,12 @@ func (e *NodegroupManager) GetClusterAutoscalerReview(ctx context.Context,
 	rsp.Response.Uid = req.Request.Uid
 	scaleUpPolicies := make([]*nodegroupmgr.NodeScaleUpPolicy, 0)
 	scaleDownPolicies := make([]*nodegroupmgr.NodeScaleDownPolicy, 0)
-	var err error
 	defer func() {
 		blog.Infof("caReview response: %v", rsp.Response)
 		if err == nil {
 			e.updateNodeGroupStatus(rsp)
 		}
+		metric.ReportAPIRequestMetric("grpc", "GetClusterAutoscalerReview", err, startTime)
 	}()
 	for nodegroupId := range reqNodeGroups {
 		scaleUpPolicy, scaleDownPolicy, err := e.handleNodeGroup(reqNodeGroups[nodegroupId], req.Request.Uid)
@@ -81,6 +85,11 @@ func (e *NodegroupManager) GetClusterAutoscalerReview(ctx context.Context,
 // when overwrite is false, it will return error if strategy exists
 func (e *NodegroupManager) CreateNodePoolMgrStrategy(ctx context.Context,
 	req *nodegroupmgr.CreateNodePoolMgrStrategyReq, rsp *nodegroupmgr.CreateNodePoolMgrStrategyRsp) error {
+	var err error
+	startTime := time.Now()
+	defer func() {
+		metric.ReportAPIRequestMetric("grpc", "CreateNodePoolMgrStrategy", err, startTime)
+	}()
 	if req.Option == nil {
 		errMessage := "CreateOptions cannot be nil"
 		blog.Errorf(errMessage)
@@ -92,7 +101,7 @@ func (e *NodegroupManager) CreateNodePoolMgrStrategy(ctx context.Context,
 	blog.Infof("Received BcsNodegroupManager.CreateNodePoolMgrStrategy request. type:%s, name:%s, operator:%s, "+
 		"overwrite:%s", req.Strategy.Kind, req.Strategy.Name, req.Option.Operator, req.Option.OverWriteIfExist)
 	storageStrategy := transferToStorageStrategy(req.Strategy)
-	err := e.storage.CreateNodeGroupStrategy(storageStrategy,
+	err = e.storage.CreateNodeGroupStrategy(storageStrategy,
 		&storage.CreateOptions{OverWriteIfExist: req.Option.OverWriteIfExist})
 	if err != nil {
 		errMessage := fmt.Sprintf("CreateNodePoolMgrStrategy error:%v", err)
@@ -114,6 +123,11 @@ func (e *NodegroupManager) CreateNodePoolMgrStrategy(ctx context.Context,
 // when CreateIfNotExist is false, it will return error if strategy does not exist
 func (e *NodegroupManager) UpdateNodePoolMgrStrategy(ctx context.Context,
 	req *nodegroupmgr.UpdateNodePoolMgrStrategyReq, rsp *nodegroupmgr.CreateNodePoolMgrStrategyRsp) error {
+	var err error
+	startTime := time.Now()
+	defer func() {
+		metric.ReportAPIRequestMetric("grpc", "UpdateNodePoolMgrStrategy", err, startTime)
+	}()
 	if req.Option == nil {
 		errMessage := "UpdateOptions cannot be nil"
 		blog.Errorf(errMessage)
@@ -125,7 +139,7 @@ func (e *NodegroupManager) UpdateNodePoolMgrStrategy(ctx context.Context,
 	blog.Info("Received BcsNodegroupManager.UpdateNodePoolMgrStrategy request.name:%s, options:%s",
 		req.Strategy.Name, req.Option.String())
 	storageStrategy := transferToStorageStrategy(req.Strategy)
-	_, err := e.storage.UpdateNodeGroupStrategy(storageStrategy, &storage.UpdateOptions{
+	_, err = e.storage.UpdateNodeGroupStrategy(storageStrategy, &storage.UpdateOptions{
 		CreateIfNotExist:        req.Option.CreateIfNotExist,
 		OverwriteZeroOrEmptyStr: req.Option.OverwriteZeroOrEmptyStr,
 	})
@@ -148,6 +162,11 @@ func (e *NodegroupManager) UpdateNodePoolMgrStrategy(ctx context.Context,
 // strategy name cannot be empty
 func (e *NodegroupManager) GetNodePoolMgrStrategy(ctx context.Context,
 	req *nodegroupmgr.GetNodePoolMgrStrategyReq, rsp *nodegroupmgr.GetNodePoolMgrStrategyRsp) error {
+	var err error
+	startTime := time.Now()
+	defer func() {
+		metric.ReportAPIRequestMetric("grpc", "GetNodePoolMgrStrategy", err, startTime)
+	}()
 	blog.Info("Received BcsNodegroupManager.GetNodePoolMgrStrategy request. name:%s", req.Name)
 	strategy, err := e.storage.GetNodeGroupStrategy(req.Name, &storage.GetOptions{})
 	if err != nil {
@@ -173,6 +192,11 @@ func (e *NodegroupManager) GetNodePoolMgrStrategy(ctx context.Context,
 // size: default 10
 func (e *NodegroupManager) ListNodePoolMgrStrategies(ctx context.Context,
 	req *nodegroupmgr.ListNodePoolMgrStrategyReq, rsp *nodegroupmgr.ListNodePoolMgrStrategyRsp) error {
+	var err error
+	startTime := time.Now()
+	defer func() {
+		metric.ReportAPIRequestMetric("grpc", "ListNodePoolMgrStrategies", err, startTime)
+	}()
 	page := int(req.Page)
 	size := int(req.Limit)
 	blog.Info("Received BcsNodegroupManager.GetNodePoolMgrStrategyList request. Page:%d, size:%d",
@@ -207,6 +231,11 @@ func (e *NodegroupManager) ListNodePoolMgrStrategies(ctx context.Context,
 // strategy name cannot be empty
 func (e *NodegroupManager) DeleteNodePoolMgrStrategy(ctx context.Context,
 	req *nodegroupmgr.DeleteNodePoolMgrStrategyReq, rsp *nodegroupmgr.DeleteNodePoolMgrStrategyRsp) error {
+	var err error
+	startTime := time.Now()
+	defer func() {
+		metric.ReportAPIRequestMetric("grpc", "DeleteNodePoolMgrStrategy", err, startTime)
+	}()
 	blog.Infof("Received BcsNodegroupManager.DeleteNodePoolMgrStrategy request. Name: %s, operator:%s",
 		req.Name, req.Operator)
 	strategy, err := e.storage.DeleteNodeGroupStrategy(req.Name, &storage.DeleteOptions{})
@@ -221,6 +250,28 @@ func (e *NodegroupManager) DeleteNodePoolMgrStrategy(ctx context.Context,
 	message := "delete nodeGroupStrategy success"
 	if strategy == nil {
 		message = "nodeGroupStrategy does not exist"
+	}
+	// 联动删除action
+	if strategy != nil {
+		for _, ng := range strategy.ElasticNodeGroups {
+			scaleDownAction, getErr := e.storage.GetNodeGroupAction(ng.NodeGroupID,
+				storage.ScaleDownState, &storage.GetOptions{})
+			if getErr != nil {
+				blog.Errorf("get %s scale down action err:%s", ng.NodeGroupID, getErr.Error())
+			}
+			_, deleteErr := e.storage.DeleteNodeGroupAction(scaleDownAction, &storage.DeleteOptions{})
+			if deleteErr != nil {
+				blog.Errorf("delete %s scale down action err:%s", ng.NodeGroupID, deleteErr.Error())
+			}
+			scaleUpAction, getErr := e.storage.GetNodeGroupAction(ng.NodeGroupID, storage.ScaleUpState, &storage.GetOptions{})
+			if getErr != nil {
+				blog.Errorf("get %s scale up action err:%s", ng.NodeGroupID, getErr.Error())
+			}
+			_, deleteErr = e.storage.DeleteNodeGroupAction(scaleUpAction, &storage.DeleteOptions{})
+			if deleteErr != nil {
+				blog.Errorf("delete %s scale up action err:%s", ng.NodeGroupID, deleteErr.Error())
+			}
+		}
 	}
 	blog.Infof(message)
 	rsp.Code = 0
@@ -240,12 +291,17 @@ func transferToHandlerStrategy(original *storage.NodeGroupMgrStrategy) *nodegrou
 	elasticNodeGroups := make([]*nodegroupmgr.ElasticNodeGroup, 0)
 	if original.ElasticNodeGroups != nil {
 		for _, group := range original.ElasticNodeGroups {
-			elasticNodeGroups = append(elasticNodeGroups, &nodegroupmgr.ElasticNodeGroup{
+			elasticGroup := &nodegroupmgr.ElasticNodeGroup{
 				ClusterId:  group.ClusterID,
 				NodeGroup:  group.NodeGroupID,
 				ConsumerId: group.ConsumerID,
 				Weight:     int32(group.Weight),
-			})
+			}
+			elasticGroup.Limit = &nodegroupmgr.NodegroupLimit{}
+			if err := mapstructure.Decode(group.Limit, elasticGroup.Limit); err != nil {
+				blog.Errorf("Error during decoding limit to storage limit:", err.Error())
+			}
+			elasticNodeGroups = append(elasticNodeGroups, elasticGroup)
 		}
 	}
 	strategy := &nodegroupmgr.Strategy{}
@@ -262,7 +318,18 @@ func transferToHandlerStrategy(original *storage.NodeGroupMgrStrategy) *nodegrou
 			strategy.Buffer = &nodegroupmgr.Buffer{}
 			strategy.Buffer.Low = int32(original.Strategy.Buffer.Low)
 			strategy.Buffer.High = int32(original.Strategy.Buffer.High)
-			strategy.Buffer.ReservedDays = int32(original.Strategy.Buffer.ReservedDays)
+		}
+		if original.Strategy.TimeMode != nil {
+			strategy.TimeMode = &nodegroupmgr.TimeMode{}
+			if err := mapstructure.Decode(original.Strategy.TimeMode, strategy.TimeMode); err != nil {
+				blog.Errorf("Error during decoding timeMode to pbTimeMode:", err.Error())
+			}
+		}
+		if original.Strategy.NodegroupBuffer != nil {
+			strategy.NodegroupBuffer = make(map[string]*nodegroupmgr.BufferParam)
+			if err := mapstructure.Decode(original.Strategy.NodegroupBuffer, &strategy.NodegroupBuffer); err != nil {
+				blog.Errorf("Error during decoding nodegroupBuffer to pbNodegroupBuffer:%s", err.Error())
+			}
 		}
 	}
 	return &nodegroupmgr.NodeGroupStrategy{
@@ -287,12 +354,17 @@ func transferToStorageStrategy(original *nodegroupmgr.NodeGroupStrategy) *storag
 	elasticNodeGroups := make([]*storage.GroupInfo, 0)
 	if original.ElasticNodeGroups != nil {
 		for _, group := range original.ElasticNodeGroups {
-			elasticNodeGroups = append(elasticNodeGroups, &storage.GroupInfo{
+			elasticGroup := &storage.GroupInfo{
 				ClusterID:   group.ClusterId,
 				ConsumerID:  group.ConsumerId,
 				NodeGroupID: group.NodeGroup,
 				Weight:      int(group.Weight),
-			})
+			}
+			elasticGroup.Limit = &storage.NodegroupLimit{}
+			if err := mapstructure.Decode(group.Limit, elasticGroup.Limit); err != nil {
+				blog.Errorf("Error during decoding limit to storage limit:", err.Error())
+			}
+			elasticNodeGroups = append(elasticNodeGroups, elasticGroup)
 		}
 	}
 	strategy := &storage.Strategy{}
@@ -309,7 +381,18 @@ func transferToStorageStrategy(original *nodegroupmgr.NodeGroupStrategy) *storag
 			strategy.Buffer = &storage.BufferStrategy{}
 			strategy.Buffer.Low = int(original.Strategy.Buffer.Low)
 			strategy.Buffer.High = int(original.Strategy.Buffer.High)
-			strategy.Buffer.ReservedDays = int(original.Strategy.Buffer.ReservedDays)
+		}
+		if original.Strategy.TimeMode != nil {
+			strategy.TimeMode = &storage.BufferTimeMode{}
+			if err := mapstructure.Decode(original.Strategy.TimeMode, strategy.TimeMode); err != nil {
+				blog.Errorf("Error during decoding timeMode to storage timeMode:", err.Error())
+			}
+		}
+		if original.Strategy.NodegroupBuffer != nil {
+			strategy.NodegroupBuffer = make(map[string]*storage.NodegroupBuffer)
+			if err := mapstructure.Decode(original.Strategy.NodegroupBuffer, &strategy.NodegroupBuffer); err != nil {
+				blog.Errorf("Error during decoding nodegroupBuffer to storage nodegroupBuffer:%s", err.Error())
+			}
 		}
 	}
 	status := &storage.State{

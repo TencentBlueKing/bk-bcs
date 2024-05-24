@@ -174,6 +174,7 @@ export default defineComponent({
       await handleGetSchemaData();
       detailData.value = await handleGetNodeGroupDetail();
       if (!detailData.value.nodeTemplate?.dataDisks?.length) {
+        // 兼容后端异常数据
         detailData.value.nodeTemplate.dataDisks = detailData.value.launchTemplate.dataDisks.map((item, index) => ({
           diskType: item.diskType,
           diskSize: item.diskSize,

@@ -19,6 +19,12 @@ const (
 	DevicePoolIds = "devicePoolIds"
 	// SelfPool 自建资源池
 	SelfPool = "self"
+	// YunTiPool yunti资源池
+	YunTiPool = "yunti"
+	// CrPool cr资源池
+	CrPool = "cr"
+	// BcsResourcePool bcs pool
+	BcsResourcePool = "bcs_resource_pool"
 )
 
 // NodeType instance type
@@ -227,18 +233,48 @@ var (
 
 // DeviceInfo device detailed info
 type DeviceInfo struct {
-	DeviceID     string
-	Provider     string
-	Labels       map[string]string
-	Annotations  map[string]string
-	Status       string
-	DevicePoolID string
-	Instance     string
-	InnerIP      string
-	InstanceType string
-	Cpu          uint32
-	Mem          uint32
-	Gpu          uint32
-	Vpc          string
+	DeviceID           string
+	Provider           string
+	Labels             map[string]string
+	Annotations        map[string]string
+	Status             string
+	DevicePoolID       string
+	Instance           string
+	InnerIP            string
+	InstanceType       string
+	Cpu                uint32
+	Mem                uint32
+	Gpu                uint32
+	Vpc                string
+	Region             string
+	Zone               string
+	LastConsumerId     string
+	LastRecordId       string
+	LastReturnRecordId string
+}
+
+// DevicePoolInfo 资源池信息
+type DevicePoolInfo struct {
+	PoolId       string
+	PoolName     string
 	Region       string
+	Zone         string // 如果是多个, 通过;隔开
+	InstanceType string
+
+	// 节点池实际使用情况
+	Total     int32
+	Used      int32
+	Available int32
+
+	Status string // 节点池状态
+
+	// 节点池被占用情况
+	GroupUsed  int
+	GroupQuota int
+}
+
+// UsageRatio ratio
+type UsageRatio struct {
+	QuotaRatio *int // 空闲率
+	QuotaCount *int // 空闲资源数
 }

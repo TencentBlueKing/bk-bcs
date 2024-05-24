@@ -150,8 +150,7 @@ type GameDeploymentUpdateStrategy struct {
 	CanaryStrategy *CanaryStrategy                  `json:"canary,omitempty"`
 	// Partition is the desired number of pods in old revisions. It means when partition
 	// is set during pods updating, (replicas - partition) number of pods will be updated.
-	// Default value is 0.
-	// +kubebuilder:default=0
+	// +optional
 	Partition *intstr.IntOrString `json:"partition,omitempty"`
 	// The maximum number of pods that can be unavailable during the update.
 	// Value can be an absolute number (ex: 5) or a percentage of desired pods (ex: 10%).

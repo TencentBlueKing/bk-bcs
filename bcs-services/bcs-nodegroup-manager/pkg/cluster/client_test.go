@@ -62,12 +62,13 @@ func TestClient_ListClusterNodes(t *testing.T) {
 				requester: mocks.NewRequester(t),
 			}
 			tt.on(mockRequester)
-			opts := &ClientOptions{
+			opts := &ClusterClientOptions{
 				Endpoint: "",
 				Token:    "",
 				Sender:   mockRequester.requester,
 			}
-			client := NewClient(opts)
+			cmOpts := &ClusterManagerClientOptions{}
+			client := NewClient(opts, cmOpts)
 			rsp, err := client.ListClusterNodes(tt.clusterID)
 			assert.Equal(t, tt.wantErr, err != nil)
 			assert.Equal(t, tt.want, len(rsp))
@@ -115,12 +116,13 @@ func TestClient_UpdateNodeLabels(t *testing.T) {
 				requester: mocks.NewRequester(t),
 			}
 			tt.on(mockRequester)
-			opts := &ClientOptions{
+			opts := &ClusterClientOptions{
 				Endpoint: "",
 				Token:    "",
 				Sender:   mockRequester.requester,
 			}
-			client := NewClient(opts)
+			cmOpts := &ClusterManagerClientOptions{}
+			client := NewClient(opts, cmOpts)
 			err := client.UpdateNodeMetadata(tt.clusterID, tt.nodeName, tt.label, nil)
 			assert.Equal(t, tt.wantErr, err != nil)
 		})
@@ -171,12 +173,13 @@ func TestClient_ListNodesByLabel(t *testing.T) {
 				requester: mocks.NewRequester(t),
 			}
 			tt.on(mockRequester)
-			opts := &ClientOptions{
+			opts := &ClusterClientOptions{
 				Endpoint: "",
 				Token:    "",
 				Sender:   mockRequester.requester,
 			}
-			client := NewClient(opts)
+			cmOpts := &ClusterManagerClientOptions{}
+			client := NewClient(opts, cmOpts)
 			rsp, err := client.ListNodesByLabel(tt.clusterID, tt.label)
 			assert.Equal(t, tt.wantErr, err != nil)
 			assert.Equal(t, tt.want, len(rsp))

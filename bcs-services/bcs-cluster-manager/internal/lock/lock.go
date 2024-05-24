@@ -14,19 +14,8 @@
 package lock
 
 import (
-	"crypto/tls"
 	"time"
 )
-
-// Options options for lock
-type Options struct {
-	// Endpoints lock registry
-	Endpoints []string
-	// TLSConfig config for tls
-	TLSConfig *tls.Config
-	// Prefix lock path
-	Prefix string
-}
 
 // LockOptions options for lock
 type LockOptions struct { // nolint
@@ -40,30 +29,6 @@ type LockOption func(o *LockOptions) // nolint
 func LockTTL(t time.Duration) LockOption { // nolint
 	return func(o *LockOptions) {
 		o.TTL = t
-	}
-}
-
-// Option function for set option
-type Option func(o *Options)
-
-// Endpoints set endpoints to use
-func Endpoints(endpoints ...string) Option {
-	return func(o *Options) {
-		o.Endpoints = endpoints
-	}
-}
-
-// TLS set tls config to use
-func TLS(tlsConfig *tls.Config) Option {
-	return func(o *Options) {
-		o.TLSConfig = tlsConfig
-	}
-}
-
-// Prefix set election path for prefix
-func Prefix(pre string) Option {
-	return func(o *Options) {
-		o.Prefix = pre
 	}
 }
 

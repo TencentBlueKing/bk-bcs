@@ -8,6 +8,8 @@ bcs-ops 借助 bk-sops 的编排能力，实现原生集群的流程化创建、
 
 ```bash
 ✦ ➜  cd bk-bcs/bcs-ops
+# build_image时需要通过apk命令安装软件，需要能够访问apk源；
+# 如果访问失败，可以尝试将镜像内的apk源替换为腾讯云等国内源，详情见https://mirrors.tencent.com/#/index
 ✦ ➜  make build_image
 # check
 ✦ ➜  docker run --rm --entrypoint /bin/ls bcs-ops-upload:test
@@ -19,8 +21,10 @@ upload.py # 导入脚本
 ### 镜像使用说明
 
 注意[导入事项](#导入事项)
+
 env 文件配置见[envfile 示例](#envfile%20示例)
 
+导入bkrepo前需要提前创建好bucket
 ```bash
 # 上传脚本包至 bkrepo, env 文件见下文
 ✦ ➜  docker run --env-file env bcs-ops-upload:test upload bkrepo
@@ -47,9 +51,11 @@ BKAPI_HOST=bkapi.example.com // 环境的bkapi host
 APP_CODE=bk_sops        // 确认 bk_sops 免登陆验证的 app_code
 APP_SECRET=your_secret // 和上面对应 secret
 
+REPO_DOCKER_HOST=docker.example.com //环境的 docker host
 REPO_HOST=bkrepo.example.com //环境的 bkrepo host
 REPO_PROJECT=blueking        // bkrepo的项目，默认 blueking
 REPO_BUCKET=bcs-ops        // bkrepo的bucket，需要在bkrepo上提前创建公开的bucket
+REPO_DOCKER_BUCKET=docker-local // bkrepo的bucket，需要在bkrepo上提前创建公开的docker bucket
 REPO_PATH=scripts        // bkrepo 的路径
 REPO_USER=xxxx        // bkrepo的用户，联系管理员获取，需要拥有上面 bucket 的权限！
 REPO_PASSWD=xxxx // bkrepo的密码，联系管理员获取
@@ -107,17 +113,53 @@ LOG_LEVEL=DEBUG // 日志等级
 
 ### 公共流程模板使用说明
 
+使用标准运维公共流程前，需要确保以下前置条件
+1. 相关节点已经安装gse agent并纳管到了执行流程的业务下
+2. 如果没有外网环境，将离线包内容推送到bkrepo上后可以使用bkrepo下载安装/镜像文件
+```
+# 上传离线包内容至bkrepo
+# 解压离线包后进入解压目录version-xxxxx下执行 
+# 用户也可以根据自己需求推到其它自建仓库中
+source env
+for i in `ls bin-tools/*`;do
+  curl -u ${REPO_USER}:${REPO_PASSWD} -T ${i} http://${REPO_HOST}/generic/${REPO_PROJECT}/${REPO_BUCKET}/
+done
+
+docker login -u ${REPO_USER} -p ${REPO_PASSWD} ${REPO_DOCKER_HOST}
+for i in `ls images/*.tar`; do 
+  image=$(docker load < $i|awk ' { print $NF } ');
+  target_image=${REPO_DOCKER_HOST}/${REPO_PROJECT}/${REPO_DOCKER_BUCKET}/$(echo ${image}|awk -F'/' ' { print $NF } ')
+  docker tag ${image} ${target_image}
+  docker push ${target_image}
+done
+
+#执行标准运维时参数 bcs-env中配置
+REPO_URL=1
+REPO_URL=your_generic_repo_url
+PRIVATE_DOCKER_REPO=your_docker_repo_url
+INSTALL_METHOD=curl
+```
+
+3. 如果没有bkrepo，则需要进行离线安装，需要填写FILE_SERVER和FILE_PATH参数，提前将离线包放在FILE_SERVER上
+```
+FILE_SERVER=1.2.3.4
+FILE_PATH=~/*.tar.gz
+#执行标准运维时参数 bcs-env中配置
+BCS_OFFLINE=1
+```
+
+
 #### id10.【BCS】bcsops distribute <a id="id10"></a>
+
+功能描述
+
+分发存储在 `bkrepo` 上的脚本包至节点机器 `HOST_IP`
 
 参数
 
 1. `WORKSPACE`: bcs-ops 脚本包工作路径，默认 `/data/bcs-ops` (注意，这个路径与后续所有流程的`WORKSPACE`变量一致！如果需要修改，请统一修改！)
 2. `HOST_IP`: 分发节点
 3. `SCRIPT_URL`: 脚本包下载地址，若是通过[镜像上传](#镜像使用说明)的标准运维流程，则路径自动配置为 bkrepo 的下载路径。如果是手动上传的，则需要自己修改这个路径。(依赖这个流程的模板也要对应的更新)
-
-功能描述
-
-分发存储在 `bkrepo` 上的脚本包至节点机器 `HOST_IP`
 
 #### id11. 【BCS】Setup Kubernetes on Linux <a id="id11"></a>
 

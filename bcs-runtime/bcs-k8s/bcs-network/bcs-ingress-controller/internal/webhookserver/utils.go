@@ -70,7 +70,8 @@ func parsePoolKey(key string) (string, string, error) {
 
 func isProtocolValid(protocol string) bool {
 	switch protocol {
-	case constant.PortPoolPortProtocolTCP, constant.PortPoolPortProtocolUDP, constant.PortPoolPortProtocolTCPUDP:
+	case constant.ProtocolTCP, constant.ProtocolUDP, constant.PortPoolPortProtocolTCPUDP,
+		constant.ProtocolTCPSSL:
 		return true
 	default:
 		return false

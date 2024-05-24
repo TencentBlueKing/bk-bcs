@@ -72,12 +72,12 @@ var (
 		Namespace: BkBcsClusterManager,
 		Name:      "cluster_group_nodeNum",
 		Help:      "census cluster nodeGroup number",
-	}, []string{"cluster", "group", "instance_type"})
+	}, []string{"cluster", "group", "instance_type", "bizId"})
 	reportClusterGroupMaxResourceNum = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: BkBcsClusterManager,
 		Name:      "cluster_group_maxNodeNum",
 		Help:      "census cluster nodeGroup max number",
-	}, []string{"cluster", "group", "instance_type"})
+	}, []string{"cluster", "group", "instance_type", "bizId"})
 
 	reportMasterTaskCount = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Namespace: BkBcsClusterManager,
@@ -97,6 +97,24 @@ var (
 		Name:      "machinery_task",
 		Help:      "cluster manager machinery task",
 	}, []string{"task_name", "state"})
+
+	reportRegionInsTypeNum = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: BkBcsClusterManager,
+		Name:      "resource_usage",
+		Help:      "cluster manager resource pool usage",
+	}, []string{"region", "zone", "instance_type", "device_pool", "resource_category"})
+
+	reportCaUsageRatio = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: BkBcsClusterManager,
+		Name:      "ca_usage_ratio",
+		Help:      "cluster manager resource ca usage ratio",
+	}, []string{"env"})
+
+	reportCaEnableRatio = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: BkBcsClusterManager,
+		Name:      "ca_enable_ratio",
+		Help:      "cluster manager resource ca enable ratio",
+	}, []string{"env"})
 )
 
 func init() {
@@ -111,6 +129,9 @@ func init() {
 	prometheus.MustRegister(reportClusterGroupResourceNum)
 	prometheus.MustRegister(reportClusterGroupMaxResourceNum)
 	prometheus.MustRegister(reportMachineryTaskNum)
+	prometheus.MustRegister(reportRegionInsTypeNum)
+	prometheus.MustRegister(reportCaUsageRatio)
+	prometheus.MustRegister(reportCaEnableRatio)
 }
 
 // ReportMasterTaskMetric report lib call metrics
@@ -132,13 +153,13 @@ func ReportAPIRequestMetric(handler, method, status string, started time.Time) {
 }
 
 // ReportClusterGroupAvailableNodeNum report cluster group available nodeNum
-func ReportClusterGroupAvailableNodeNum(cluster, group, instanceType string, num float64) {
-	reportClusterGroupResourceNum.WithLabelValues(cluster, group, instanceType).Set(num)
+func ReportClusterGroupAvailableNodeNum(cluster, group, instanceType string, bizId string, num float64) {
+	reportClusterGroupResourceNum.WithLabelValues(cluster, group, instanceType, bizId).Set(num)
 }
 
 // ReportClusterGroupMaxNodeNum report cluster group max nodeNum
-func ReportClusterGroupMaxNodeNum(cluster, group, instanceType string, num float64) {
-	reportClusterGroupMaxResourceNum.WithLabelValues(cluster, group, instanceType).Set(num)
+func ReportClusterGroupMaxNodeNum(cluster, group, instanceType string, bizId string, num float64) {
+	reportClusterGroupMaxResourceNum.WithLabelValues(cluster, group, instanceType, bizId).Set(num)
 }
 
 // ReportCloudVpcAvailableIPNum report vpc available ipNum
@@ -154,4 +175,19 @@ func ReportCloudClusterHealthStatus(cloud, cluster string, status float64) {
 // ReportMachineryTaskNum report cluster-manager machinery tasks
 func ReportMachineryTaskNum(taskName, state string, num float64) {
 	reportMachineryTaskNum.WithLabelValues(taskName, state).Set(num)
+}
+
+// ReportRegionInsTypeNum report cluster-manager ca resource usage
+func ReportRegionInsTypeNum(region, zone, instancetype, pool, category string, num float64) {
+	reportRegionInsTypeNum.WithLabelValues(region, zone, instancetype, pool, category).Set(num)
+}
+
+// ReportCaUsageRatio report cluster-manager ca usage ratio
+func ReportCaUsageRatio(env string, num float64) {
+	reportCaUsageRatio.WithLabelValues(env).Set(num)
+}
+
+// ReportCaEnableRatio report cluster-manager ca enable ratio
+func ReportCaEnableRatio(env string, num float64) {
+	reportCaEnableRatio.WithLabelValues(env).Set(num)
 }

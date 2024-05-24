@@ -67,3 +67,10 @@ type PullTrend struct {
 	PullTime time.Time `json:"pull_time"`
 	Count    int       `json:"count"`
 }
+
+// PrimaryAndForeign 定义一组主键和外键的结构体
+type PrimaryAndForeign struct {
+	PrimaryKey, ForeignKey string
+	PrimaryVal, ForeignVal string
+	Count                  int
+}

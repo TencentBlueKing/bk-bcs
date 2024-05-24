@@ -14,6 +14,8 @@
 package tools
 
 import (
+	"fmt"
+	"path"
 	"sort"
 	"strconv"
 	"strings"
@@ -182,4 +184,55 @@ func MergeDoubleStringSlice(input [][]string) []string {
 	sort.Strings(uniqueElements)
 
 	return uniqueElements
+}
+
+// CheckPathConflict Check whether the new path conflicts
+// with the existing set of paths.
+func CheckPathConflict(newPath string, existingPaths []string) bool {
+	// If the new path is a directory,
+	// add a slash at the end for easier comparison
+	if !strings.HasSuffix(newPath, "/") {
+		newPath += "/"
+	}
+
+	for _, path := range existingPaths {
+		// If the existing path is a directory,
+		// add a slash at the end for easier comparison
+		compPath := path
+		if !strings.HasSuffix(path, "/") {
+			compPath += "/"
+		}
+
+		// Check if the new path is the same as the existing path or a sub-path of it
+		if strings.HasPrefix(compPath, newPath) || strings.HasPrefix(newPath, compPath) {
+			return true
+		}
+	}
+	return false
+}
+
+// CIUniqueKey defines struct of unique key of config item.
+type CIUniqueKey struct {
+	Name string `json:"name"`
+	Path string `json:"path"`
+}
+
+// DetectFilePathConflicts 检测文件路径冲突
+// 示例 /a 和 /a 两者路径+名称全等忽略
+// 示例 /a 和 /a/1.txt 两者同级下出现同名的文件夹和文件会视为错误
+func DetectFilePathConflicts(a []CIUniqueKey, b []CIUniqueKey) error {
+	for _, v1 := range a {
+		path1 := path.Join(v1.Path, v1.Name)
+		for _, v2 := range b {
+			path2 := path.Join(v2.Path, v2.Name)
+			if path1 == path2 {
+				continue
+			}
+			if strings.HasPrefix(path1+"/", path2+"/") || strings.HasPrefix(path2+"/", path1+"/") {
+				return fmt.Errorf("%s and %s path file conflict", path2, path1)
+			}
+		}
+	}
+
+	return nil
 }

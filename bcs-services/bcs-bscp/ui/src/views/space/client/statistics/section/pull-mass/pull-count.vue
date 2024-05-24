@@ -1,9 +1,13 @@
 <template>
   <Teleport :disabled="!isOpenFullScreen" to="body">
-    <div :class="{ fullscreen: isOpenFullScreen }">
-      <Card :title="$t('拉取数量趋势')" :height="360" style="margin-bottom: 16px">
+    <div
+      :class="{ fullscreen: isOpenFullScreen }"
+      @mouseenter="isShowOperationBtn = true"
+      @mouseleave="isShowOperationBtn = false">
+      <Card :title="props.title" :height="360" style="margin-bottom: 16px">
         <template #operation>
           <OperationBtn
+            v-show="isShowOperationBtn"
             :is-open-full-screen="isOpenFullScreen"
             @refresh="loadChartData"
             @toggle-full-screen="isOpenFullScreen = !isOpenFullScreen" />
@@ -51,6 +55,8 @@
   const props = defineProps<{
     bkBizId: string;
     appId: number;
+    title: string;
+    isDuplicates: boolean;
   }>();
 
   let dualAxes: DualAxes | null;
@@ -78,6 +84,7 @@
   const loading = ref(false);
   const isOpenFullScreen = ref(false);
   const jumpSearchTime = ref('');
+  const isShowOperationBtn = ref(false);
 
   const isDataEmpty = computed(() => !data.value.time.some((item) => item.count > 0));
 
@@ -129,6 +136,7 @@
       search: searchQuery.value.search,
       pull_time: selectTime.value,
       last_heartbeat_time: searchQuery.value.last_heartbeat_time,
+      is_duplicates: props.isDuplicates,
     };
     try {
       loading.value = true;
@@ -220,7 +228,6 @@
         title: 'time',
         container: tooltipRef.value?.getDom(),
         enterable: true,
-        offset: 50,
         customItems: (originalItems: any[]) => {
           jumpSearchTime.value = originalItems[0].title.replace(/\//g, '-');
           originalItems.forEach((item) => {

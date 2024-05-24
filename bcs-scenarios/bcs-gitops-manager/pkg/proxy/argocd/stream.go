@@ -102,6 +102,11 @@ func (plugin *StreamPlugin) applicationViewsHandler(r *http.Request) (*http.Requ
 	if statusCode != http.StatusOK {
 		return r, mw.ReturnErrorResponse(statusCode, err)
 	}
+	// only return argo stream reverse when fields query not empty
+	fields := r.URL.Query().Get("fields")
+	if fields == "" {
+		return r, mw.ReturnArgoReverse()
+	}
 	return r, mw.ReturnArgoStreamReverse()
 }
 
@@ -198,9 +203,7 @@ func (s *streamPodResources) queryPodResources(rw http.ResponseWriter, req *http
 		}
 	}
 	// nolint
-	_, _ = rw.Write(result)
-	// nolint
-	_, _ = rw.Write([]byte("\n"))
+	_, _ = rw.Write([]byte(fmt.Sprintf("data: %s\n\n", result)))
 	rw.(http.Flusher).Flush()
 	return http.StatusOK, nil
 }

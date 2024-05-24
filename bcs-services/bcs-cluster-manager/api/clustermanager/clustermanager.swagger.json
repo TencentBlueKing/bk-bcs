@@ -5424,6 +5424,69 @@
         ]
       }
     },
+    "/clustermanager/v1/providers/{providerID}/resource_usage": {
+      "get": {
+        "summary": "获取资源使用情况",
+        "description": "获取provider所属地域机型或者资源池使用的业务情况",
+        "operationId": "ClusterManager_GetProviderResourceUsage",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerGetProviderResourceUsageResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "providerID",
+            "description": "资源池provider，目前支持 yunti/self/cr/bcs_resource_pool",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "region",
+            "description": "region. 机型所在的地域",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "instanceType",
+            "description": "instanceType. 机型",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "ratio",
+            "description": "ratio. 空闲率, 资源池空闲率小于等于ratio的资源池",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "available",
+            "description": "available. 空闲个数, 资源池可用的机型数目小于等于available的资源池",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/resourceschema/{cloudID}": {
       "get": {
         "summary": "查询资源模型列表",
@@ -6984,6 +7047,58 @@
         "message"
       ]
     },
+    "clustermanagerCidr": {
+      "type": "object",
+      "properties": {
+        "cidrs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerCidrState"
+          }
+        },
+        "reservedIPNum": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "reservedCidrs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "clustermanagerCidrDetailInfo": {
+      "type": "object",
+      "properties": {
+        "cidrs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerCidrState"
+          }
+        },
+        "reservedIPNum": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "availableIPNum": {
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    },
+    "clustermanagerCidrState": {
+      "type": "object",
+      "properties": {
+        "cidr": {
+          "type": "string"
+        },
+        "block": {
+          "type": "boolean",
+          "format": "boolean"
+        }
+      }
+    },
     "clustermanagerCleanDbHistoryDataResponse": {
       "type": "object",
       "properties": {
@@ -7747,6 +7862,16 @@
           "type": "string",
           "description": "业务ID, 作用预留私有的业务vpc",
           "title": "businessID"
+        },
+        "overlay": {
+          "$ref": "#/definitions/clustermanagerCidr",
+          "description": "overlayIP CIDR配置",
+          "title": "overlay"
+        },
+        "underlay": {
+          "$ref": "#/definitions/clustermanagerCidr",
+          "description": "underlayIP CIDR配置",
+          "title": "underlay"
         }
       },
       "description": "用于记录cloud对应不同区域的vpc信息",
@@ -7806,6 +7931,16 @@
           "format": "int64",
           "description": "当前vpc可用的IP数量",
           "title": "availableIPNum"
+        },
+        "overlay": {
+          "$ref": "#/definitions/clustermanagerCidrDetailInfo",
+          "description": "overlayIP CIDR配置",
+          "title": "overlay"
+        },
+        "underlay": {
+          "$ref": "#/definitions/clustermanagerCidrDetailInfo",
+          "description": "underlayIP CIDR配置",
+          "title": "underlay"
         }
       },
       "title": "CloudVPCResp for web model"
@@ -9400,6 +9535,16 @@
           "type": "string",
           "description": "业务ID, 作用预留私有的业务vpc",
           "title": "businessID"
+        },
+        "overlay": {
+          "$ref": "#/definitions/clustermanagerCidr",
+          "description": "overlayIP CIDR配置",
+          "title": "overlay"
+        },
+        "underlay": {
+          "$ref": "#/definitions/clustermanagerCidr",
+          "description": "underlayIP CIDR配置",
+          "title": "underlay"
         }
       },
       "description": "创建cloud vpc请求",
@@ -11992,6 +12137,39 @@
       },
       "description": "查询节点模板详情返回",
       "title": "GetNodeTemplateResponse",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
+    "clustermanagerGetProviderResourceUsageResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "object",
+          "description": "机型维度的业务使用情况",
+          "title": "data"
+        }
+      },
+      "description": "查询资源池的业务使用情况返回",
+      "title": "GetProviderResourceUsageResponse",
       "required": [
         "code",
         "message"
@@ -17728,6 +17906,16 @@
           "type": "string",
           "description": "业务ID, 作用预留私有的业务vpc",
           "title": "businessID"
+        },
+        "overlay": {
+          "$ref": "#/definitions/clustermanagerCidr",
+          "description": "overlayIP CIDR配置",
+          "title": "overlay"
+        },
+        "underlay": {
+          "$ref": "#/definitions/clustermanagerCidr",
+          "description": "underlayIP CIDR配置",
+          "title": "underlay"
         }
       },
       "description": "更新云VPC请求",

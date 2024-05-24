@@ -19,6 +19,8 @@ import (
 	"sync"
 	"time"
 
+	"k8s.io/client-go/util/retry"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
@@ -388,14 +390,23 @@ func (h *EventHandler) deleteMultiListeners(listeners []*networkextensionv1.List
 			Namespace: li.GetNamespace(),
 			Name:      li.GetName(),
 		}
-		li.Finalizers = common.RemoveString(li.Finalizers, constant.FinalizerNameBcsIngressController)
-		inErr := h.k8sCli.Update(context.Background(), li, &client.UpdateOptions{})
-		if inErr != nil {
+
+		if err = retry.RetryOnConflict(retry.DefaultRetry, func() error {
+			listener := &networkextensionv1.Listener{}
+			if err = h.k8sCli.Get(context.TODO(), obj, listener); err != nil {
+				if k8serrors.IsNotFound(err) {
+					return nil
+				}
+				return err
+			}
+			listener.Finalizers = common.RemoveString(listener.Finalizers, constant.FinalizerNameBcsIngressController)
+			return h.k8sCli.Update(context.Background(), listener)
+		}); err != nil {
 			blog.Warnf("failed to remove finalizer from listener %s/%s, err %s",
-				li.GetNamespace(), li.GetName(), inErr.Error())
+				li.GetNamespace(), li.GetName(), err.Error())
 
 			metrics.ReportHandleListenerMetric(len(listeners), h.isBulkMode,
-				metrics.ListenerMethodDeleteListener, inErr, startTime)
+				metrics.ListenerMethodDeleteListener, err, startTime)
 			h.eventQueue.AddRateLimited(obj)
 			h.eventQueue.Done(obj)
 			continue
@@ -516,9 +527,18 @@ func (h *EventHandler) deleteListener(li *networkextensionv1.Listener) error {
 		}
 	}
 
-	li.Finalizers = common.RemoveString(li.Finalizers, constant.FinalizerNameBcsIngressController)
-	err = h.k8sCli.Update(context.Background(), li, &client.UpdateOptions{})
-	if err != nil {
+	if err = retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		listener := &networkextensionv1.Listener{}
+		if err = h.k8sCli.Get(context.TODO(), k8stypes.NamespacedName{Namespace: li.GetNamespace(), Name: li.GetName()},
+			listener); err != nil {
+			if k8serrors.IsNotFound(err) {
+				return nil
+			}
+			return err
+		}
+		listener.Finalizers = common.RemoveString(listener.Finalizers, constant.FinalizerNameBcsIngressController)
+		return h.k8sCli.Update(context.Background(), listener)
+	}); err != nil {
 		blog.Errorf("failed to remove finalizer from listener %s/%s, err %s",
 			li.GetNamespace(), li.GetName(), err.Error())
 		metrics.ReportHandleListenerMetric(1, h.isBulkMode, metrics.ListenerMethodDeleteListener, err, startTime)

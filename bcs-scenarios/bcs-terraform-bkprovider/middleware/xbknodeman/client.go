@@ -30,9 +30,9 @@ type Client struct {
 }
 
 // NewClient  return new client
-func NewClient(bkBizId int64, env, bkAppCode, bkAppSecret, accessToken, username string) *Client {
+func NewClient(env, bkAppCode, bkAppSecret, accessToken, username string) *Client {
 	return &Client{
-		BaseRequest: NewBaseRequest(bkBizId, bkAppCode, bkAppSecret, accessToken, username),
+		BaseRequest: NewBaseRequest(bkAppCode, bkAppSecret, accessToken, username),
 		Env:         env,
 		Host:        os.Getenv(EnvBkNodeManHost),
 	}

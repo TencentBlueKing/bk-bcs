@@ -54,8 +54,10 @@ func (dao *clientQueryDao) GetBySearchName(kit *kit.Kit, bizID uint32, appID uin
 	searchName string) (*table.ClientQuery, error) {
 	m := dao.genQ.ClientQuery
 
-	return dao.genQ.ClientQuery.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID), m.AppID.Eq(appID)).
-		Where(m.Creator.Eq(creator)).Where(m.SearchName.IsNotNull()).Where(m.SearchName.Eq(searchName)).Take()
+	return dao.genQ.ClientQuery.WithContext(kit.Ctx).Where(m.BizID.In(bizID, 0), m.AppID.In(appID, 0)).
+		Where(m.Creator.In(creator, table.System)).
+		Where(m.SearchName.IsNotNull()).
+		Where(m.SearchName.Eq(searchName)).Take()
 }
 
 // ListBySearchCondition Get by search criteria

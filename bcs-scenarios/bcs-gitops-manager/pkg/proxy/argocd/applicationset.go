@@ -41,7 +41,10 @@ type ApplicationSetPlugin struct {
 // Init will init the path that http need served
 func (plugin *ApplicationSetPlugin) Init() error {
 	// 自定义接口
-	plugin.Path("/generate").Methods(http.MethodPost).Handler(plugin.middleware.HttpWrapper(plugin.Generate))
+	plugin.Path("/generate").Methods(http.MethodPost).
+		Handler(plugin.middleware.HttpWrapper(plugin.Generate))
+	plugin.Path("/{name}/orphan-delete").Methods(http.MethodDelete).
+		Handler(plugin.middleware.HttpWrapper(plugin.OrphanDelete))
 
 	plugin.Path("").Methods(http.MethodGet).Handler(plugin.middleware.HttpWrapper(plugin.List))
 	plugin.Path("").Methods(http.MethodPost).Handler(plugin.middleware.HttpWrapper(plugin.CreateOrUpdate))
@@ -78,6 +81,24 @@ func (plugin *ApplicationSetPlugin) Generate(r *http.Request) (*http.Request, *m
 		RequestID: mw.RequestID(r.Context()),
 		Data:      apps,
 	})
+}
+
+// OrphanDelete delete appset with 'orphan' cascade
+func (plugin *ApplicationSetPlugin) OrphanDelete(r *http.Request) (*http.Request, *mw.HttpResponse) {
+	appsetName := mux.Vars(r)["name"]
+	if appsetName == "" {
+		return r, mw.ReturnErrorResponse(http.StatusBadRequest,
+			fmt.Errorf("request applicationset name cannot be empty"))
+	}
+	appset, statusCode, err := plugin.middleware.CheckDeleteApplicationSet(r.Context(), appsetName)
+	if err != nil {
+		return r, mw.ReturnErrorResponse(statusCode, errors.Wrapf(err, "check delete applicationset failed"))
+	}
+	r = middleware.SetAuditMessage(r, appset, middleware.ApplicationSetDelete)
+	if err = plugin.storage.DeleteApplicationSetOrphan(r.Context(), appsetName); err != nil {
+		return r, mw.ReturnErrorResponse(statusCode, errors.Wrapf(err, "delete applicationset orphan failed"))
+	}
+	return r, mw.ReturnJSONResponse("delete applicationset success")
 }
 
 // CreateOrUpdate create or update application set

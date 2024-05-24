@@ -124,7 +124,7 @@
 <style lang="scss" scoped>
   .config-list-wrapper {
     position: relative;
-    padding: 0 24px;
+    padding: 0 24px 24px 24px;
     height: 100%;
   }
   .operate-area {
@@ -146,7 +146,6 @@
     }
   }
   .config-list-table {
-    max-height: calc(100% - 64px);
-    overflow: auto;
+    height: calc(100% - 64px);
   }
 </style>
