@@ -5,7 +5,7 @@
     :theme="'primary'"
     width="960"
     height="720"
-    ext-cls="variable-import-dialog"
+    ext-cls="import-file-dialog"
     :esc-close="false"
     :before-close="handleBeforeClose"
     @closed="emits('update:show', false)">
@@ -19,7 +19,11 @@
       </bk-radio-group>
     </div>
     <div v-if="importType === 'localFile'">
-      <ImportFromLocalFile :bk-biz-id="props.bkBizId" :app-id="props.appId" />
+      <ImportFromLocalFile
+        :bk-biz-id="props.bkBizId"
+        :app-id="props.appId"
+        @change="handleUploadFile"
+        @delete="handleDeleteFile" />
     </div>
     <div v-else-if="importType === 'configTemplate'">
       <ImportFromTemplate ref="importFromTemplateRef" :bk-biz-id="props.bkBizId" :app-id="props.appId" />
@@ -53,7 +57,7 @@
           </div>
           <div v-else class="tips">
             {{ t('将') }} <span style="color: #ffa519">{{ t('清空') }}</span> {{ t('现有草稿区,并导入') }}
-            <span style="color: #3a84ff">{{ existConfigList.length }}</span>
+            <span style="color: #3a84ff">{{ importConfigList.length }}</span>
             {{ t('个配置项') }}
           </div>
         </div>
@@ -104,7 +108,6 @@
   import ConfigTable from '../../../../../../templates/list/package-detail/operations/add-configs/import-configs/config-table.vue';
   import useModalCloseConfirmation from '../../../../../../../../utils/hooks/use-modal-close-confirmation';
   import useServiceStore from '../../../../../../../../store/service';
-  import { cloneDeep } from 'lodash';
 
   const { t } = useI18n();
 
@@ -126,8 +129,6 @@
   const selectVerisonId = ref();
   const versionList = ref<IConfigVersion[]>([]);
   const tableLoading = ref(false);
-  const initExistConfigList = ref<IConfigImportItem[]>([]);
-  const initNonExistConfigList = ref<IConfigImportItem[]>([]);
   const existConfigList = ref<IConfigImportItem[]>([]);
   const nonExistConfigList = ref<IConfigImportItem[]>([]);
   const isClearDraft = ref(false);
@@ -140,7 +141,7 @@
     return importConfigList.value.length;
   });
 
-  const importConfigList = computed(() => [...initExistConfigList.value, ...initNonExistConfigList.value]);
+  const importConfigList = computed(() => [...nonExistConfigList.value, ...existConfigList.value]);
 
   watch(
     () => props.show,
@@ -158,21 +159,6 @@
     () => {
       nonExistConfigList.value = [];
       existConfigList.value = [];
-      initExistConfigList.value = [];
-      initNonExistConfigList.value = [];
-    },
-  );
-
-  watch(
-    () => isClearDraft.value,
-    (val) => {
-      if (val) {
-        nonExistConfigList.value = [...initNonExistConfigList.value, ...initExistConfigList.value];
-        existConfigList.value = [];
-      } else {
-        existConfigList.value = [...initExistConfigList.value];
-        nonExistConfigList.value = [...initNonExistConfigList.value];
-      }
     },
   );
 
@@ -223,8 +209,9 @@
       const res = await importFromHistoryVersion(props.bkBizId, props.appId, params);
       existConfigList.value = res.data.exist;
       nonExistConfigList.value = res.data.non_exist;
-      initExistConfigList.value = cloneDeep(res.data.exist);
-      initNonExistConfigList.value = cloneDeep(res.data.non_exist);
+      if (nonExistConfigList.value.length === 0) {
+        expandNonExistTable.value = false;
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -248,6 +235,22 @@
     }
     return true;
   };
+
+  // 上传文件获取表格数据
+  const handleUploadFile = (exist: IConfigImportItem[], nonExist: IConfigImportItem[]) => {
+    existConfigList.value = [...existConfigList.value, ...exist];
+    nonExistConfigList.value = [...nonExistConfigList.value, ...nonExist];
+    if (nonExistConfigList.value.length === 0) {
+      expandNonExistTable.value = false;
+    }
+  };
+
+  // 删除文件处理表格数据
+  const handleDeleteFile = (fileName: string) => {
+    console.log(fileName);
+    existConfigList.value = existConfigList.value.filter((item) => item.file_name !== fileName);
+    nonExistConfigList.value = nonExistConfigList.value.filter((item) => item.file_name !== fileName);
+  };
 </script>
 
 <style scoped lang="scss">
@@ -264,6 +267,14 @@
     text-align: right;
   }
   :deep(.wrap) {
+    display: flex;
+    margin-top: 24px;
+    .label {
+      @extend .label;
+    }
+  }
+
+  :deep(.other-service-wrap) {
     display: flex;
     margin-top: 24px;
     .label {
@@ -296,9 +307,10 @@
 </style>
 
 <style lang="scss">
-  .variable-import-dialog {
+  .import-file-dialog {
     .bk-modal-content {
-      overflow: hidden !important;
+      height: calc(100% - 50px) !important;
+      overflow: auto;
     }
   }
 </style>

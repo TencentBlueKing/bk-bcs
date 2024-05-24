@@ -36,6 +36,38 @@
     <div v-else>
       <ImportFormOtherService :bk-biz-id="bkBizId" :app-id="appId" @select-version="handleSelectVersion" />
     </div>
+    <div v-if="importType !== 'text' && importConfigList.length" class="content">
+      <bk-loading :loading="tableLoading">
+        <div class="head">
+          <bk-checkbox style="margin-left: 24px" v-model="isClearDraft"> {{ $t('导入前清空草稿区') }} </bk-checkbox>
+          <div v-if="!isClearDraft" class="tips">
+            {{ t('共将导入') }} <span style="color: #3a84ff">{{ importConfigList.length }}</span>
+            {{ t('个配置项，其中') }} <span style="color: #ffa519">{{ existConfigList.length }}</span>
+            {{ t('个已存在,导入后将') }}
+            <span style="color: #ffa519">{{ t('覆盖原配置') }}</span>
+          </div>
+          <div v-else class="tips">
+            {{ t('将') }} <span style="color: #ffa519">{{ t('清空') }}</span> {{ t('现有草稿区,并导入') }}
+            <span style="color: #3a84ff">{{ existConfigList.length }}</span>
+            {{ t('个配置项') }}
+          </div>
+        </div>
+        <ConfigTable
+          v-if="nonExistConfigList.length"
+          :table-data="nonExistConfigList"
+          :is-exsit-table="false"
+          :expand="expandNonExistTable"
+          @change-expand="expandNonExistTable = !expandNonExistTable"
+          @change="handleTableChange($event, true)" />
+        <ConfigTable
+          v-if="existConfigList.length"
+          :expand="!expandNonExistTable"
+          :table-data="existConfigList"
+          :is-exsit-table="true"
+          @change-expand="expandNonExistTable = !expandNonExistTable"
+          @change="handleTableChange($event, false)" />
+      </bk-loading>
+    </div>
     <template #footer>
       <bk-button theme="primary" style="margin-right: 8px" :disabled="!confirmBtnPerm" @click="handleConfirm">
         {{ t('导入') }}
@@ -53,10 +85,12 @@
     getConfigVersionList,
     importKvFromHistoryVersion,
   } from '../../../../../../../../api/config';
-  import { IConfigVersion } from '../../../../../../../../../types/config';
+  import { IConfigVersion, IConfigKvItem } from '../../../../../../../../../types/config';
   import { Message } from 'bkui-vue';
   import TextImport from './import-kv/text-import.vue';
   import ImportFormOtherService from './import/import-form-other-service.vue';
+  import ConfigTable from './import-kv/kv-config-table.vue';
+  import { cloneDeep } from 'lodash';
 
   const { t } = useI18n();
   const props = defineProps<{
@@ -77,6 +111,13 @@
   const versionListLoading = ref(false);
   const versionList = ref<IConfigVersion[]>([]);
   const tableLoading = ref(false);
+  const initExistConfigList = ref<IConfigKvItem[]>([]);
+  const initNonExistConfigList = ref<IConfigKvItem[]>([]);
+  const existConfigList = ref<IConfigKvItem[]>([]);
+  const nonExistConfigList = ref<IConfigKvItem[]>([]);
+  const isClearDraft = ref(false);
+  const expandNonExistTable = ref(true);
+  const isTableChange = ref(false);
 
   watch(
     () => props.show,
@@ -93,6 +134,8 @@
     if (importType.value === 'text') return textConfirmBtnPerm.value;
     return !!selectedFile.value && isFileUploadSuccess.value;
   });
+
+  const importConfigList = computed(() => [...initExistConfigList.value, ...initNonExistConfigList.value]);
 
   const getVersionList = async () => {
     try {
@@ -115,11 +158,14 @@
     try {
       const params = { other_app_id, release_id };
       const res = await importKvFromHistoryVersion(props.bkBizId, props.appId, params);
-      console.log(res);
-      // existConfigList.value = res.data.exist;
-      // nonExistConfigList.value = res.data.non_exist;
-      // initExistConfigList.value = cloneDeep(res.data.exist);
-      // initNonExistConfigList.value = cloneDeep(res.data.non_exist);
+      existConfigList.value = res.data.exist;
+      nonExistConfigList.value = res.data.non_exist;
+      initExistConfigList.value = cloneDeep(res.data.exist);
+      initNonExistConfigList.value = cloneDeep(res.data.non_exist);
+      if (nonExistConfigList.value.length === 0) {
+        console.log(1);
+        expandNonExistTable.value = false;
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -165,6 +211,15 @@
     emits('update:show', false);
     emits('confirm');
   };
+
+  const handleTableChange = (data: IConfigKvItem[], isNonExistData: boolean) => {
+    if (isNonExistData) {
+      nonExistConfigList.value = data;
+    } else {
+      existConfigList.value = data;
+    }
+    isTableChange.value = true;
+  };
 </script>
 
 <style scoped lang="scss">
@@ -198,12 +253,35 @@
       @extend .label;
     }
   }
+
+  .content {
+    margin-top: 24px;
+    border-top: 1px solid #dcdee5;
+    overflow: auto;
+    max-height: 490px;
+    .head {
+      display: flex;
+      align-items: center;
+      margin: 16px 0;
+      font-size: 12px;
+      color: #63656e;
+      .bk-checkbox {
+        margin-left: 0 !important;
+        font-size: 12px;
+      }
+      .tips {
+        padding-left: 16px;
+        border-left: 1px solid #dcdee5;
+        margin-left: 16px;
+      }
+    }
+  }
 </style>
 
 <style lang="scss">
   .import-kv-dialog {
     .bk-modal-content {
-      height: 100% !important;
+      height: calc(100% - 50px) !important;
       overflow: hidden !important;
     }
   }

@@ -5,7 +5,7 @@
       class="config-uploader"
       :tip="uploadTips"
       theme="button"
-      :size="1000"
+      :size="100000"
       :multiple="true"
       :custom-request="handleFileUpload">
       <template #trigger>
@@ -17,12 +17,12 @@
     </bk-upload>
     <bk-checkbox style="margin-left: 24px" v-model="isDecompression"> {{ $t('压缩包自动解压') }} </bk-checkbox>
   </div>
-  <div v-show="isOpenFileList && fileList.length > 0" class="upload-file-list">
+  <div v-if="fileList.length > 0" class="upload-file-list">
     <div :class="['open-btn', { 'is-open': isOpenFileList }]" @click="isOpenFileList = !isOpenFileList">
       <angle-double-up-line class="icon" />
       {{ isOpenFileList ? $t('收起上传列表') : $t('展开上传列表') }}
     </div>
-    <div class="file-list">
+    <div v-show="isOpenFileList" class="file-list">
       <div v-for="fileItem in fileList" :key="fileItem.file.name" class="file-item">
         <div class="file-wrapper">
           <div class="status-icon-area">
@@ -39,6 +39,7 @@
                 size="small" />
             </div>
           </div>
+          <Del class="del-icon" @click="handleDeleteFile(fileItem.file.name)" />
         </div>
       </div>
     </div>
@@ -47,9 +48,10 @@
 
 <script lang="ts" setup>
   import { ref, computed } from 'vue';
-  import { Upload, AngleDoubleUpLine, Done, TextFill, Error } from 'bkui-vue/lib/icon';
+  import { Upload, AngleDoubleUpLine, Done, TextFill, Error, Del } from 'bkui-vue/lib/icon';
   import { importNonTemplateConfigFile } from '../../../../../../../../../api/config';
   import { useI18n } from 'vue-i18n';
+  import { IConfigImportItem } from '../../../../../../../../../../types/config';
 
   interface IUploadFileList {
     file: File;
@@ -63,6 +65,8 @@
     bkBizId: string;
     appId: number;
   }>();
+
+  const emits = defineEmits(['change', 'delete']);
 
   const loading = ref(false);
   const isDecompression = ref(false);
@@ -81,6 +85,9 @@
   const handleFileUpload = async (option: { file: File }) => {
     loading.value = true;
     try {
+      if (fileList.value.find((fileItem) => fileItem.file.name === option.file.name)) {
+        handleDeleteFile(option.file.name);
+      }
       fileList.value?.push({
         file: option.file,
         status: 'uploading',
@@ -95,23 +102,28 @@
           fileList.value.find((fileItem) => fileItem.file === option.file)!.progress = progress;
         },
       );
-      console.log(res);
       fileList.value.find((fileItem) => fileItem.file === option.file)!.status = 'success';
-      // existConfigList.value = res.exist;
-      // nonExistConfigList.value = res.non_exist;
-      // nonExistConfigList.value.forEach((item: IConfigImportItem) => {
-      //   item.privilege = '644';
-      //   item.user = 'root';
-      //   item.user_group = 'root';
-      // });
-      // if (nonExistConfigList.value.length === 0) expandNonExistTable.value = false;
-      // isTableChange.value = false;
+      res.non_exist.forEach((item: IConfigImportItem) => {
+        item.privilege = '644';
+        item.user = 'root';
+        item.user_group = 'root';
+        item.file_name = option.file.name;
+      });
+      res.exist.forEach((item: IConfigImportItem) => {
+        item.file_name = option.file.name;
+      });
+      emits('change', res.exist, res.non_exist);
     } catch (e) {
       console.error(e);
       fileList.value.find((fileItem) => fileItem.file === option.file)!.status = 'fail';
     } finally {
       loading.value = false;
     }
+  };
+
+  const handleDeleteFile = (fileName: string) => {
+    fileList.value = fileList.value.filter((fileItem) => fileItem.file.name !== fileName);
+    emits('delete', fileName);
   };
 </script>
 
@@ -170,6 +182,9 @@
       height: 32px;
       &:hover {
         background-color: #f0f1f5;
+        .del-icon {
+          display: block !important;
+        }
       }
       .status-icon-area {
         display: flex;
@@ -190,6 +205,14 @@
       .file-icon {
         margin: 0 6px 0 0;
         font-size: 16px;
+      }
+      .del-icon {
+        display: none !important;
+        font-size: 16px;
+        cursor: pointer;
+        &:hover {
+          color: #3a84ff;
+        }
       }
       .file-content {
         position: relative;

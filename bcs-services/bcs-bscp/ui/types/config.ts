@@ -207,6 +207,7 @@ export interface IConfigImportItem {
   user_group: string;
   sign: string;
   id: number;
+  file_name?: string;
 }
 
 // kv类型

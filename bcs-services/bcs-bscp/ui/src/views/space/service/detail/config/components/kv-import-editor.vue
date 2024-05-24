@@ -201,7 +201,9 @@
   };
 
   const handlePaste = () => {
-    if (handleValidateEditor()) separatorShow.value = true;
+    if (props.format === 'text' && handleValidateEditor()) {
+      separatorShow.value = true;
+    }
   };
 
   defineExpose({

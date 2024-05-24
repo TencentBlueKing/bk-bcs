@@ -17,7 +17,7 @@
           <div>{{ $t('文本格式') }}:</div>
           <div>key {{ $t('数据类型') }} value {{ $t('描述') }}</div>
         </div>
-        <div v-else-if="format === 'JSON'">
+        <div v-else-if="format === 'json'">
           <div>JSON {{ $t('格式') }}:</div>
           <div>{{ `{“key”: {“kv_type”: ${$t('数据类型')}, “value”: ${$t('配置项值')} \}\}` }}</div>
         </div>
@@ -38,26 +38,6 @@
             <span class="key">number_key</span>
             <span class="type">number</span>
             <span class="value">100</span>
-          </div>
-          <div class="data">
-            <span class="key">text_key</span>
-            <span class="type">text</span>
-            <span class="value">line1\nline2</span>
-          </div>
-          <div class="data">
-            <span class="key">json_key</span>
-            <span class="type">json</span>
-            <span class="value">{"name": "bk", "age": 18}</span>
-          </div>
-          <div class="data">
-            <span class="key">xml_key</span>
-            <span class="type">xml</span>
-            <span class="value">&lt;xml&gt;\n xml_value\n&lt;/xml&gt;</span>
-          </div>
-          <div class="data">
-            <span class="key">yaml_key</span>
-            <span class="type">yaml</span>
-            <span class="value">def:\n name:bk\n age:18</span>
           </div>
         </div>
         <bk-input v-else v-model="copyContent" type="textarea" :read-only="true" :resize="false" />
@@ -81,20 +61,16 @@
   const copyContent = computed(() => {
     if (props.format === 'text') {
       return `string_key string strign_value
-number_key number 100
-text_key text line1\\nline2
-json_key json {“name”: “bk”, “age”: 18}
-xml_key xml <xml>\\n xml_value\\n</xml>
-yaml_key yaml def:\\n name:bk\\n age:18`;
+number_key number 100`;
     }
     if (props.format === 'json') {
       return `{
     "string_key": {"kv_type": "string", "value": "string_value"},
     "number_key": {"kv_type": "number", "value": 100},
-    "text_key": {"kv_type": "text", "value": "line1\nline2"},
-    "json_key": {"kv_type": "json", "value": "{"name": "bk", "age": 18}"},
-    "xml_key": {"kv_type": "xml", "value": "<xml>\n xml_value\n</xml>"},
-    "yaml_key": {"kv_type": "yaml", "value": "def:\n name:bk\n age:18"}
+    "text_key": {"kv_type": "text", "value": "line1\\nline2"},
+    "json_key": {"kv_type": "json", "value": "{'name': 'bk', 'age': 18}"},
+    "xml_key": {"kv_type": "xml", "value": "<xml>\\n xml_value\\n</xml>"},
+    "yaml_key": {"kv_type": "yaml", "value": "def:\\n name:bk\\n age:18"}
 }`;
     }
     return `string_key:

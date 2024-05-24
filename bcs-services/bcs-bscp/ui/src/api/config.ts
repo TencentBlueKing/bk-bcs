@@ -399,7 +399,6 @@ export const importNonTemplateConfigFile = (
   http
     .post(`/config/biz/${biz_id}/apps/${appId}/config_item/import/${isDecompression}`, fill, {
       headers: {
-        'Content-Type': 'application/zip',
         'X-Bscp-File-Name': fill.name,
       },
       onUploadProgress: (progressEvent: any) => {

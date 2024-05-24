@@ -296,6 +296,7 @@
     if (props.language === 'xml') {
       markers = validateXML(val);
     } else if (props.language === 'yaml') {
+      console.log('yaml');
       markers = validateYAML(val);
     } else if (props.language === 'json') {
       return validateJSON(val);
