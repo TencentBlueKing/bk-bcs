@@ -29,26 +29,28 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
+	"github.com/Tencent/bk-bcs/bcs-common/common/util"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
 	cm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 	restclient "github.com/Tencent/bk-bcs/bcs-common/pkg/esb/client"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/msgqueue"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
-	_ "github.com/go-sql-driver/mysql"
+	"github.com/go-micro/plugins/v4/registry/etcd"
+	microGrpcServer "github.com/go-micro/plugins/v4/server/grpc"
+	_ "github.com/go-sql-driver/mysql" // nolint
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/jmoiron/sqlx"
-	"github.com/micro/go-micro/v2/registry"
-	"github.com/micro/go-micro/v2/registry/etcd"
-	microsvc "github.com/micro/go-micro/v2/service"
-	microgrpcsvc "github.com/micro/go-micro/v2/service/grpc"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/robfig/cron/v3"
 	"github.com/segmentio/kafka-go"
 	"github.com/segmentio/kafka-go/sasl/scram"
+	microsvc "go-micro.dev/v4"
+	"go-micro.dev/v4/registry"
 	"google.golang.org/grpc"
 	grpccred "google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/handler"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/bcsmonitor"
@@ -297,7 +299,7 @@ func (s *Server) initHTTPGateway(router *mux.Router) error {
 	if s.tlsConfig != nil && s.clientTLSConfig != nil {
 		grpcDialOpts = append(grpcDialOpts, grpc.WithTransportCredentials(grpccred.NewTLS(s.clientTLSConfig)))
 	} else {
-		grpcDialOpts = append(grpcDialOpts, grpc.WithInsecure())
+		grpcDialOpts = append(grpcDialOpts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	}
 	err := datamanager.RegisterDataManagerGwFromEndpoint(
 		context.TODO(),
@@ -351,13 +353,18 @@ func (s *Server) initHTTPService() error {
 // initMicro xxx
 // init micro service
 func (s *Server) initMicro() error {
+
+	// with tls
+	grpcSvr := microGrpcServer.NewServer(microGrpcServer.AuthTLS(s.tlsConfig))
+
 	// New Service
-	microService := microgrpcsvc.NewService(
+	microService := microsvc.NewService(
+		microsvc.Server(grpcSvr),
+		microsvc.Cmd(util.NewDummyMicroCmd()),
 		microsvc.Name(types.ServiceDomain),
 		microsvc.Metadata(map[string]string{
 			types.MicroMetaKeyHTTPPort: strconv.Itoa(int(s.opt.HTTPPort)),
 		}),
-		microgrpcsvc.WithTLS(s.tlsConfig),
 		microsvc.Address(s.opt.Address+":"+strconv.Itoa(int(s.opt.Port))),
 		microsvc.Registry(s.microRegistry),
 		microsvc.Version(version.BcsVersion),
