@@ -224,7 +224,7 @@ func (t *TemplateSpaceAction) Update(ctx context.Context, req *clusterRes.Update
 }
 
 // Delete xxx
-func (t *TemplateSpaceAction) Delete(ctx context.Context, id string, isRelateDelete bool) error {
+func (t *TemplateSpaceAction) Delete(ctx context.Context, id string) error {
 	if err := t.checkAccess(ctx); err != nil {
 		return err
 	}
@@ -244,16 +244,13 @@ func (t *TemplateSpaceAction) Delete(ctx context.Context, id string, isRelateDel
 		return errorx.New(errcode.NoPerm, i18n.GetMsg(ctx, "无权限访问"))
 	}
 
-	// 是否需要把文件夹关联的数据也删掉， 顺序 templateversion -> template -> templatespace
-	if isRelateDelete {
-		if err = t.model.DeleteTemplateVersionBySpecial(
-			ctx, templateSpace.ProjectCode, "", templateSpace.Name); err != nil {
-			return err
-		}
-
-		if err = t.model.DeleteTemplateBySpecial(ctx, templateSpace.ProjectCode, templateSpace.Name); err != nil {
-			return err
-		}
+	// 把文件夹关联的数据也删掉， 顺序 templateversion -> template -> templatespace
+	if err = t.model.DeleteTemplateVersionBySpecial(
+		ctx, templateSpace.ProjectCode, "", templateSpace.Name); err != nil {
+		return err
+	}
+	if err = t.model.DeleteTemplateBySpecial(ctx, templateSpace.ProjectCode, templateSpace.Name); err != nil {
+		return err
 	}
 
 	if err := t.model.DeleteTemplateSpace(ctx, id); err != nil {

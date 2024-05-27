@@ -158,3 +158,26 @@ func (c *ProjClient) fetchSharedClusterProjNs(ctx context.Context, projectID, cl
 
 	return ns, nil
 }
+
+// getVariable get
+func (c *ProjClient) getVariable(ctx context.Context, projectCode, clusterID, namespace string) ([]VariableValue,
+	error) {
+	url := fmt.Sprintf("%s/bcsapi/v4/bcsproject/v1/projects/%s/clusters/%s/namespaces/%s/variables/render",
+		config.G.BCSAPIGW.Host, projectCode, clusterID, namespace)
+
+	resp, err := httpclient.GetClient().R().
+		SetContext(ctx).
+		SetHeader("X-Project-Username", "").
+		SetAuthToken(config.G.BCSAPIGW.AuthToken).
+		Get(url)
+
+	if err != nil {
+		return nil, err
+	}
+
+	data := make([]VariableValue, 0)
+	if err := httpclient.UnmarshalBKResult(resp, &data); err != nil {
+		return nil, err
+	}
+	return data, nil
+}

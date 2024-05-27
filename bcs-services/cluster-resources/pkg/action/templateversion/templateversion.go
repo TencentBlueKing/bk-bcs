@@ -15,6 +15,7 @@ package templateversion
 
 import (
 	"context"
+	"sort"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 
@@ -91,9 +92,9 @@ func (t *TemplateVersionAction) Get(ctx context.Context, id string) (map[string]
 	return templateVersion.ToMap(), nil
 }
 
-// List xxx
-func (t *TemplateVersionAction) List(
-	ctx context.Context, templateName, templateSpace string) ([]map[string]interface{}, error) {
+// GetContent xxx
+func (t *TemplateVersionAction) GetContent(ctx context.Context, templateSpace, templateName, version string) (
+	map[string]interface{}, error) {
 	if err := t.checkAccess(ctx); err != nil {
 		return nil, err
 	}
@@ -106,8 +107,9 @@ func (t *TemplateVersionAction) List(
 	// 检测条件
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
 		entity.FieldKeyProjectCode:   p.Code,
-		entity.FieldKeyTemplateName:  templateName,
 		entity.FieldKeyTemplateSpace: templateSpace,
+		entity.FieldKeyTemplateName:  templateName,
+		entity.FieldKeyVersion:       version,
 	})
 
 	templateVersion, err := t.model.ListTemplateVersion(ctx, cond)
@@ -115,8 +117,51 @@ func (t *TemplateVersionAction) List(
 		return nil, err
 	}
 
+	if len(templateVersion) < 1 {
+		return nil, nil
+	}
+
+	return templateVersion[0].ToMap(), nil
+}
+
+// List xxx
+func (t *TemplateVersionAction) List(
+	ctx context.Context, templateID string) ([]map[string]interface{}, error) {
+	if err := t.checkAccess(ctx); err != nil {
+		return nil, err
+	}
+
+	p, err := project.FromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	tmp, err := t.model.GetTemplate(ctx, templateID)
+	if err != nil {
+		return nil, err
+	}
+	if tmp.ProjectCode != p.Code {
+		return nil, errorx.New(errcode.NoPerm, i18n.GetMsg(ctx, "无权限访问"))
+	}
+
+	// 检测条件
+	cond := operator.NewLeafCondition(operator.Eq, operator.M{
+		entity.FieldKeyProjectCode:   p.Code,
+		entity.FieldKeyTemplateName:  tmp.Name,
+		entity.FieldKeyTemplateSpace: tmp.TemplateSpace,
+	})
+
+	templateVersion, err := t.model.ListTemplateVersion(ctx, cond)
+	if err != nil {
+		return nil, err
+	}
+	sort.Sort(entity.VersionsSortByVersion(templateVersion))
+
 	m := make([]map[string]interface{}, 0)
 	for _, value := range templateVersion {
+		if value.Version == tmp.Version {
+			value.Latest = true
+		}
 		m = append(m, value.ToMap())
 	}
 	return m, nil
@@ -133,11 +178,16 @@ func (t *TemplateVersionAction) Create(ctx context.Context, req *clusterRes.Crea
 		return "", err
 	}
 
+	tmp, err := t.model.GetTemplate(ctx, req.GetTemplateID())
+	if err != nil {
+		return "", err
+	}
+
 	// 检测是否重复
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
 		entity.FieldKeyProjectCode:   p.Code,
-		entity.FieldKeyTemplateName:  req.GetTemplateName(),
-		entity.FieldKeyTemplateSpace: req.GetTemplateSpace(),
+		entity.FieldKeyTemplateName:  tmp.Name,
+		entity.FieldKeyTemplateSpace: tmp.TemplateSpace,
 		entity.FieldKeyVersion:       req.GetVersion(),
 	})
 	templateVersions, err := t.model.ListTemplateVersion(ctx, cond)
@@ -169,8 +219,8 @@ func (t *TemplateVersionAction) Create(ctx context.Context, req *clusterRes.Crea
 	templateVersion := &entity.TemplateVersion{
 		ProjectCode:   p.Code,
 		Description:   req.GetDescription(),
-		TemplateName:  req.GetTemplateName(),
-		TemplateSpace: req.GetTemplateSpace(),
+		TemplateName:  tmp.Name,
+		TemplateSpace: tmp.TemplateSpace,
 		Version:       req.GetVersion(),
 		Content:       req.GetContent(),
 		Creator:       userName,
@@ -178,6 +228,16 @@ func (t *TemplateVersionAction) Create(ctx context.Context, req *clusterRes.Crea
 	id, err := t.model.CreateTemplateVersion(ctx, templateVersion)
 	if err != nil {
 		return "", err
+	}
+
+	// update template lastet version
+	if tmp.VersionMode == int(clusterRes.VersionMode_LatestUpdateTime) {
+		updateTemplate := entity.M{
+			"version": req.GetVersion(),
+		}
+		if err = t.model.UpdateTemplate(ctx, req.GetTemplateID(), updateTemplate); err != nil {
+			return "", err
+		}
 	}
 	return id, nil
 }

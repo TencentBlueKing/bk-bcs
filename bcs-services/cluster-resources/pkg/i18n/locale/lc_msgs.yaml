@@ -6,6 +6,8 @@
   en: "Do not have permission to view this project"
 - msgID: 无权限访问
   en: "No access permission"
+- msgID: 环境名称已存在
+  en: "The environment name already exists."
 - msgID: 视图名称重复
   en: "Duplicate view name"
 - msgID: "资源类型 %s 不支持扩缩容"
@@ -14,6 +16,8 @@
   en: "reschedule resource %s is unsupported"
 - msgID: "该请求资源类型 %s 在共享集群中不可用"
   en: "current resource %s unavailable in shared cluster"
+- msgID: 版本已存在
+  en: "Version already exists"
 - msgID: "非 Available 状态，无法绑定"
   en: "Non-Available status, unable to bind"
 - msgID: "仅可使用 NodePort，LoadBalancer 类型的 Service"
@@ -42,6 +46,10 @@
   en: "the deletion protect function has been added to the current instance. If you want to delete it, please modify the instance"
 - msgID: 不受支持的转换器格式：%s
   en: "unsupported transformer form: %s"
+- msgID: 文件夹名称重复
+  en: "Folder name duplicated"
+- msgID: 元数据名称重复
+  en: "Name duplicated"
 - msgID: 清理集群资源缓存时间间隔过短，请稍后再试
   en: "the interval for clearing the cluster resource cache is too short, please try again later"
 - msgID: "获取资源 APIVersion 信息失败：%v"
@@ -488,12 +496,12 @@
   en: ExternalIP
 - msgID: 卷声明类型
   en: ClaimType
+- msgID: 共享集群暂不支持使用已存在的持久卷
+  en: "Use existing persistent volume is unsupported in shared cluster"
 - msgID: 指定存储类以创建持久卷
   en: "Use storage class to create persistent volume"
 - msgID: 使用已存在的持久卷
   en: "Use existing persistent volume"
-- msgID: 共享集群暂不支持使用已存在的持久卷
-  en: "Use existing persistent volume is unsupported in shared cluster"
 - msgID: 持久卷名称
   en: PersistentVolume
 - msgID: "留空将使用默认 StorageClass"
@@ -632,6 +640,8 @@
   en: "metadata.name is required when create %s"
 - msgID: "metadata.name 必须指定且与准备编辑的资源名保持一致"
   en: "metadata.name is required and must as same as resource name to be edited"
+- msgID: "metadata.name 必须指定"
+  en: "metadata.name is required"
 - msgID: "由 Context 获取项目信息失败"
   en: "failed to get project info from context"
 - msgID: "由 Context 获取集群信息失败"
@@ -648,8 +658,8 @@
   en: "namespace is required"
 - msgID: "当前资源类型 %s 不受支持"
   en: "resource kind %s is unsupported"
-- msgID: 预览表单渲染结果失败，请检查您填写的表单配置；错误信息：%w
-  en: "failed to preview the rendering result of the form, please check the form configuration you filled in; error: %w"
+- msgID: 预览表单渲染结果失败，请检查您填写的表单配置；错误信息：%s
+  en: <TODO>
 - msgID: "获取项目 %s 信息失败：%v"
   en: "failed to get project %s info: %v"
 - msgID: "获取集群 %s 信息失败：%v"

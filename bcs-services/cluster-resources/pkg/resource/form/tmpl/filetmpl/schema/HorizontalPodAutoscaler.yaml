@@ -1,0 +1,26 @@
+title: hpa
+type: object
+properties:
+  {{- include "common.metadata" . | indent 2 }}
+  spec:
+    title: {{ i18n "配置信息" .lang }}
+    type: object
+    properties:
+      {{- include "hpa.refObj" . | indent 6 }}
+      {{- include "hpa.resMetric" . | indent 6 }}
+      {{- include "hpa.externalMetric" . | indent 6 }}
+      {{- include "hpa.objMetric" . | indent 6 }}
+      {{- include "hpa.podMetric" . | indent 6 }}
+    ui:group:
+      name: tab
+      props:
+        border: false
+        showTitle: true
+        type: card
+        verifiable: true
+    ui:order:
+      - ref
+      - resource
+      - external
+      - object
+      - pod

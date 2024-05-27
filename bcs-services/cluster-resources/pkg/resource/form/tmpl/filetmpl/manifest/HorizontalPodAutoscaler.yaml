@@ -1,0 +1,20 @@
+apiVersion: {{ .metadata.apiVersion }}
+kind: HorizontalPodAutoscaler
+{{ include "common.metadata" .metadata }}
+spec:
+  {{- include "hpa.refObj" .spec.ref | nindent 2 }}
+  {{- if or .spec.resource .spec.containerRes .spec.external .spec.object .spec.pod }}
+  metrics:
+    {{- if .spec.resource }}
+    {{- include "hpa.resMetric" .spec.resource | indent 4 }}
+    {{- end }}
+    {{- if .spec.external }}
+    {{- include "hpa.externalMetric" .spec.external | indent 4 }}
+    {{- end }}
+    {{- if .spec.object }}
+    {{- include "hpa.objMetric" .spec.object | indent 4 }}
+    {{- end }}
+    {{- if .spec.pod }}
+    {{- include "hpa.podMetric" .spec.pod | indent 4}}
+    {{- end }}
+  {{- end }}
