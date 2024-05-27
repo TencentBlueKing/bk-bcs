@@ -119,8 +119,7 @@ func PruneIng(manifest map[string]interface{}) map[string]interface{} {
 // PruneSVC 裁剪 Services
 func PruneSVC(manifest map[string]interface{}) map[string]interface{} {
 	ret := CommonPrune(manifest)
-	specType, _ := mapx.GetItems(manifest, "spec.type")
-	ret["spec"] = map[string]interface{}{"type": specType}
+	ret["spec"] = manifest["spec"]
 	return ret
 }
 
@@ -187,36 +186,30 @@ func PruneSA(manifest map[string]interface{}) map[string]interface{} {
 
 // PruneHPA 裁剪 HPA
 func PruneHPA(manifest map[string]interface{}) map[string]interface{} {
-	ret := CommonPrune(manifest)
-	return ret
+	return manifest
 }
 
 // PruneGDeploy 裁剪 GameDeployments
 func PruneGDeploy(manifest map[string]interface{}) map[string]interface{} {
-	ret := CommonPrune(manifest)
-	return ret
+	return manifest
 }
 
 // PruneGSTS 裁剪 GameStatefulSets
 func PruneGSTS(manifest map[string]interface{}) map[string]interface{} {
-	ret := CommonPrune(manifest)
-	return ret
+	return manifest
 }
 
 // PruneHookTmpl 裁剪 HookTemplates
 func PruneHookTmpl(manifest map[string]interface{}) map[string]interface{} {
-	ret := CommonPrune(manifest)
-	return ret
+	return manifest
 }
 
 // PruneCObj 裁剪 CustomObjects
 func PruneCObj(manifest map[string]interface{}) map[string]interface{} {
-	ret := CommonPrune(manifest)
-	return ret
+	return manifest
 }
 
 // PruneCRD 裁剪 CRD
 func PruneCRD(manifest map[string]interface{}) map[string]interface{} {
-	ret := CommonPrune(manifest)
-	return ret
+	return manifest
 }

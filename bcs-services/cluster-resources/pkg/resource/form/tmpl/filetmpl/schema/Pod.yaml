@@ -1,0 +1,32 @@
+title: pod
+type: object
+properties:
+  {{- include "common.metadata" . | indent 2 }}
+  spec:
+    title: {{ i18n "配置信息" .lang }}
+    type: object
+    properties:
+      {{- include "workload.nodeSelect" . | indent 6 }}
+      {{- include "workload.affinity" . | indent 6 }}
+      {{- include "workload.toleration" . | indent 6 }}
+      {{- include "workload.networking" . | indent 6 }}
+      {{- include "workload.security" . | indent 6 }}
+      {{- include "workload.readinessGates" . | indent 6 }}
+      {{- include "workload.specOther" . | indent 6 }}
+    ui:group:
+      name: tab
+      props:
+        border: false
+        showTitle: true
+        type: card
+        verifiable: true
+    ui:order:
+      - nodeSelect
+      - affinity
+      - toleration
+      - networking
+      - security
+      - readinessGates
+      - other
+  {{- include "workload.volume" . | indent 2 }}
+  {{- include "container.containerGroup" . | indent 2 }}

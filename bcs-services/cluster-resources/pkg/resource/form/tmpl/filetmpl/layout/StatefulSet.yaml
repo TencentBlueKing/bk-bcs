@@ -1,0 +1,26 @@
+{{ include "common.metadata" . }}
+- - group:
+      - - container:
+            grid-template-columns: "1fr 1fr"
+          group:
+            - [ "cnt", "svcName" ]
+            - [ "updateStrategy",  "podManPolicy" ]
+            - [ "partition" ]
+          prop: replicas
+      - - group:
+            - - group:
+                  # 3 * 2 的自适应列
+                  - [ ".", "." ]
+                  - [ ".", "." ]
+                  - [ ".", "." ]
+                prop: claims
+          prop: volumeClaimTmpl
+      {{- include "workload.affinity" . | nindent 6 }}
+      {{- include "workload.toleration" . | nindent 6 }}
+      {{- include "workload.networking" . | indent 6 }}
+      {{- include "workload.security" . | indent 6 }}
+      {{- include "workload.readinessGates" . | indent 6 }}
+      {{- include "workload.other" . | indent 6 }}
+    prop: spec
+{{- include "container.containerGroup" . }}
+{{- include "workload.volume" . }}
