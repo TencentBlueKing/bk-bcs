@@ -13,12 +13,11 @@
 package zookeeper
 
 import (
+	"context"
 	"fmt"
 	"path"
 	"strings"
 	"time"
-
-	"golang.org/x/net/context"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/zkclient"
