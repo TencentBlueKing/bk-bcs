@@ -140,3 +140,6 @@
 .icon-edit-line:before {
   content: '\e125';
 }
+.icon-terminal:before {
+  content: '\e127';
+}
