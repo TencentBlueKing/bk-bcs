@@ -39,7 +39,7 @@
             </template>
           </bk-upload>
           <i
-            :class="['bk-bscp-icon', 'icon-separator', { isOpen: modelValue }]"
+            :class="['bk-bscp-icon', 'icon-terminal', { isOpen: modelValue }]"
             v-bk-tooltips="{
               content: t('示例面板'),
               placement: 'top',
@@ -89,12 +89,7 @@
   import CodeEditor from '../../../../../../components/code-editor/index.vue';
   import SeparatorSelect from '../../../../variables/separator-select.vue';
   import { IConfigKvItem } from '../../../../../../../types/config';
-  import {
-    importKvFormText,
-    importKvFormJson,
-    importKvFormYaml,
-    batchImportKvFile,
-  } from '../../../../../../api/config';
+  import { importKvFormText, importKvFormJson, importKvFormYaml } from '../../../../../../api/config';
 
   interface errorLineItem {
     lineNumber: number;
@@ -251,18 +246,18 @@
   };
 
   const handleUploadFile = async (option: { file: File }) => {
-    try {
-      const res = await batchImportKvFile(props.bkBizId, props.appId, option.file);
+    const reader = new FileReader();
+    reader.readAsText(option.file);
+    reader.onload = function (e) {
+      const fileContent = e.target?.result as string;
       if (props.format === 'text') {
-        textContent.value = res.data;
+        textContent.value = fileContent;
       } else if (props.format === 'json') {
-        jsonContent.value = res.data;
+        jsonContent.value = fileContent;
       } else {
-        yamlContent.value = res.data;
+        yamlContent.value = fileContent;
       }
-    } catch (error) {
-      console.error(error);
-    }
+    };
   };
 
   const handleContentChange = (val: string) => {
