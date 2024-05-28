@@ -207,6 +207,13 @@ func (b *BcsApiHandler) DeleteCloud(ctx context.Context, request *pb.CloudDelete
 		return nil
 	}
 
+	if request.BkCloudId == 0 {
+		response.Code = common.CodeInternalError
+		response.Message = "bk_cloud_id is required"
+		return nil
+	}
+
+	blog.Infof("[DeleteCloud]bk cloud id : %d, request user: %s", request.BkCloudId, user.GetUsername())
 	nodeManCli := b.newBkNodeManCli(user.GetUsername())
 	resp, err := nodeManCli.DeleteCloud(ctx, &xbknodeman.DeleteCloudRequest{
 		BkCloudID: int64(request.BkCloudId),

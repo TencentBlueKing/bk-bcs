@@ -151,13 +151,14 @@ func (t *Client) CreateCloud(ctx context.Context, request *CreateCloudRequest) (
 	}
 
 	data := CloudID{}
-	var uri string
-	switch t.Env {
-	case EnvSg:
-		uri = "/cloud/create_cloud_area/"
-	default:
-		uri = "/cloud/"
-	}
+	// var uri string
+	// switch t.Env {
+	// case EnvSg:
+	// 	uri = "/cloud/create_cloud_area/"
+	// default:
+	// 	uri = "/cloud/"
+	// }
+	uri := "/cloud/"
 	baseResponse, err := t.SendRequest(ctx, http.MethodPost, uri, param, &data)
 	if err != nil {
 		return nil, err
