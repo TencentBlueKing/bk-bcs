@@ -6026,7 +6026,7 @@ func (m *InstanceChargePrepaid) GetRenewFlag() string {
 	return ""
 }
 
-// LaunchConfigure template for scaling node
+//LaunchConfigure template for scaling node
 type LaunchConfiguration struct {
 	LaunchConfigurationID string                 `protobuf:"bytes,1,opt,name=launchConfigurationID,proto3" json:"launchConfigurationID,omitempty"`
 	LaunchConfigureName   string                 `protobuf:"bytes,2,opt,name=launchConfigureName,proto3" json:"launchConfigureName,omitempty"`
@@ -8856,7 +8856,7 @@ type CreateClusterReq struct {
 	FederationClusterID string            `protobuf:"bytes,12,opt,name=federationClusterID,proto3" json:"federationClusterID,omitempty"`
 	Labels              map[string]string `protobuf:"bytes,13,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 	Creator             string            `protobuf:"bytes,14,opt,name=creator,proto3" json:"creator,omitempty"`
-	// 集群创建的控制信息
+	//集群创建的控制信息
 	OnlyCreateInfo          bool                      `protobuf:"varint,15,opt,name=onlyCreateInfo,proto3" json:"onlyCreateInfo,omitempty"`
 	BcsAddons               map[string]*BKOpsPlugin   `protobuf:"bytes,17,rep,name=bcsAddons,proto3" json:"bcsAddons,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 	ExtraAddons             map[string]*BKOpsPlugin   `protobuf:"bytes,18,rep,name=extraAddons,proto3" json:"extraAddons,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
@@ -35988,7 +35988,7 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type ClusterManagerClient interface {
-	// * cluster management
+	//* cluster management
 	CreateCluster(ctx context.Context, in *CreateClusterReq, opts ...grpc.CallOption) (*CreateClusterResp, error)
 	RetryCreateClusterTask(ctx context.Context, in *RetryCreateClusterReq, opts ...grpc.CallOption) (*RetryCreateClusterResp, error)
 	CheckCloudKubeConfig(ctx context.Context, in *KubeConfigReq, opts ...grpc.CallOption) (*KubeConfigResp, error)
@@ -36009,7 +36009,7 @@ type ClusterManagerClient interface {
 	CreateVirtualCluster(ctx context.Context, in *CreateVirtualClusterReq, opts ...grpc.CallOption) (*CreateVirtualClusterResp, error)
 	DeleteVirtualCluster(ctx context.Context, in *DeleteVirtualClusterReq, opts ...grpc.CallOption) (*DeleteVirtualClusterResp, error)
 	UpdateVirtualClusterQuota(ctx context.Context, in *UpdateVirtualClusterQuotaReq, opts ...grpc.CallOption) (*UpdateVirtualClusterQuotaResp, error)
-	// * node management
+	//* node management
 	GetNode(ctx context.Context, in *GetNodeRequest, opts ...grpc.CallOption) (*GetNodeResponse, error)
 	GetNodeInfo(ctx context.Context, in *GetNodeInfoRequest, opts ...grpc.CallOption) (*GetNodeInfoResponse, error)
 	RecordNodeInfo(ctx context.Context, in *RecordNodeInfoRequest, opts ...grpc.CallOption) (*CommonResp, error)
@@ -36022,28 +36022,28 @@ type ClusterManagerClient interface {
 	UpdateNodeLabels(ctx context.Context, in *UpdateNodeLabelsRequest, opts ...grpc.CallOption) (*UpdateNodeLabelsResponse, error)
 	UpdateNodeAnnotations(ctx context.Context, in *UpdateNodeAnnotationsRequest, opts ...grpc.CallOption) (*UpdateNodeAnnotationsResponse, error)
 	UpdateNodeTaints(ctx context.Context, in *UpdateNodeTaintsRequest, opts ...grpc.CallOption) (*UpdateNodeTaintsResponse, error)
-	// * cluster credential management
+	//* cluster credential management
 	GetClusterCredential(ctx context.Context, in *GetClusterCredentialReq, opts ...grpc.CallOption) (*GetClusterCredentialResp, error)
 	UpdateClusterCredential(ctx context.Context, in *UpdateClusterCredentialReq, opts ...grpc.CallOption) (*UpdateClusterCredentialResp, error)
 	DeleteClusterCredential(ctx context.Context, in *DeleteClusterCredentialReq, opts ...grpc.CallOption) (*DeleteClusterCredentialResp, error)
 	ListClusterCredential(ctx context.Context, in *ListClusterCredentialReq, opts ...grpc.CallOption) (*ListClusterCredentialResp, error)
-	// * federation cluster management
+	//* federation cluster management
 	InitFederationCluster(ctx context.Context, in *InitFederationClusterReq, opts ...grpc.CallOption) (*InitFederationClusterResp, error)
 	AddFederatedCluster(ctx context.Context, in *AddFederatedClusterReq, opts ...grpc.CallOption) (*AddFederatedClusterResp, error)
-	// * Cloud information management *
+	//* Cloud information management *
 	CreateCloud(ctx context.Context, in *CreateCloudRequest, opts ...grpc.CallOption) (*CreateCloudResponse, error)
 	UpdateCloud(ctx context.Context, in *UpdateCloudRequest, opts ...grpc.CallOption) (*UpdateCloudResponse, error)
 	DeleteCloud(ctx context.Context, in *DeleteCloudRequest, opts ...grpc.CallOption) (*DeleteCloudResponse, error)
 	GetCloud(ctx context.Context, in *GetCloudRequest, opts ...grpc.CallOption) (*GetCloudResponse, error)
 	ListCloud(ctx context.Context, in *ListCloudRequest, opts ...grpc.CallOption) (*ListCloudResponse, error)
-	// * Cloud VPC information management *
+	//* Cloud VPC information management *
 	CreateCloudVPC(ctx context.Context, in *CreateCloudVPCRequest, opts ...grpc.CallOption) (*CreateCloudVPCResponse, error)
 	UpdateCloudVPC(ctx context.Context, in *UpdateCloudVPCRequest, opts ...grpc.CallOption) (*UpdateCloudVPCResponse, error)
 	DeleteCloudVPC(ctx context.Context, in *DeleteCloudVPCRequest, opts ...grpc.CallOption) (*DeleteCloudVPCResponse, error)
 	ListCloudVPC(ctx context.Context, in *ListCloudVPCRequest, opts ...grpc.CallOption) (*ListCloudVPCResponse, error)
 	ListCloudRegions(ctx context.Context, in *ListCloudRegionsRequest, opts ...grpc.CallOption) (*ListCloudRegionsResponse, error)
 	GetVPCCidr(ctx context.Context, in *GetVPCCidrRequest, opts ...grpc.CallOption) (*GetVPCCidrResponse, error)
-	// * NodeGroup information management *
+	//* NodeGroup information management *
 	CreateNodeGroup(ctx context.Context, in *CreateNodeGroupRequest, opts ...grpc.CallOption) (*CreateNodeGroupResponse, error)
 	UpdateNodeGroup(ctx context.Context, in *UpdateNodeGroupRequest, opts ...grpc.CallOption) (*UpdateNodeGroupResponse, error)
 	DeleteNodeGroup(ctx context.Context, in *DeleteNodeGroupRequest, opts ...grpc.CallOption) (*DeleteNodeGroupResponse, error)
@@ -36064,7 +36064,7 @@ type ClusterManagerClient interface {
 	EnableNodeGroupAutoScale(ctx context.Context, in *EnableNodeGroupAutoScaleRequest, opts ...grpc.CallOption) (*EnableNodeGroupAutoScaleResponse, error)
 	DisableNodeGroupAutoScale(ctx context.Context, in *DisableNodeGroupAutoScaleRequest, opts ...grpc.CallOption) (*DisableNodeGroupAutoScaleResponse, error)
 	GetProviderResourceUsage(ctx context.Context, in *GetProviderResourceUsageRequest, opts ...grpc.CallOption) (*GetProviderResourceUsageResponse, error)
-	// * Task information management *
+	//* Task information management *
 	CreateTask(ctx context.Context, in *CreateTaskRequest, opts ...grpc.CallOption) (*CreateTaskResponse, error)
 	RetryTask(ctx context.Context, in *RetryTaskRequest, opts ...grpc.CallOption) (*RetryTaskResponse, error)
 	SkipTask(ctx context.Context, in *SkipTaskRequest, opts ...grpc.CallOption) (*SkipTaskResponse, error)
@@ -36072,7 +36072,7 @@ type ClusterManagerClient interface {
 	DeleteTask(ctx context.Context, in *DeleteTaskRequest, opts ...grpc.CallOption) (*DeleteTaskResponse, error)
 	GetTask(ctx context.Context, in *GetTaskRequest, opts ...grpc.CallOption) (*GetTaskResponse, error)
 	ListTask(ctx context.Context, in *ListTaskRequest, opts ...grpc.CallOption) (*ListTaskResponse, error)
-	// * ClusterAutoScalingOption information management *
+	//* ClusterAutoScalingOption information management *
 	CreateAutoScalingOption(ctx context.Context, in *CreateAutoScalingOptionRequest, opts ...grpc.CallOption) (*CreateAutoScalingOptionResponse, error)
 	UpdateAutoScalingOption(ctx context.Context, in *UpdateAutoScalingOptionRequest, opts ...grpc.CallOption) (*UpdateAutoScalingOptionResponse, error)
 	UpdateAsOptionDeviceProvider(ctx context.Context, in *UpdateAsOptionDeviceProviderRequest, opts ...grpc.CallOption) (*UpdateAsOptionDeviceProviderResponse, error)
@@ -37409,7 +37409,7 @@ func (c *clusterManagerClient) Health(ctx context.Context, in *HealthRequest, op
 
 // ClusterManagerServer is the server API for ClusterManager service.
 type ClusterManagerServer interface {
-	// * cluster management
+	//* cluster management
 	CreateCluster(context.Context, *CreateClusterReq) (*CreateClusterResp, error)
 	RetryCreateClusterTask(context.Context, *RetryCreateClusterReq) (*RetryCreateClusterResp, error)
 	CheckCloudKubeConfig(context.Context, *KubeConfigReq) (*KubeConfigResp, error)
@@ -37430,7 +37430,7 @@ type ClusterManagerServer interface {
 	CreateVirtualCluster(context.Context, *CreateVirtualClusterReq) (*CreateVirtualClusterResp, error)
 	DeleteVirtualCluster(context.Context, *DeleteVirtualClusterReq) (*DeleteVirtualClusterResp, error)
 	UpdateVirtualClusterQuota(context.Context, *UpdateVirtualClusterQuotaReq) (*UpdateVirtualClusterQuotaResp, error)
-	// * node management
+	//* node management
 	GetNode(context.Context, *GetNodeRequest) (*GetNodeResponse, error)
 	GetNodeInfo(context.Context, *GetNodeInfoRequest) (*GetNodeInfoResponse, error)
 	RecordNodeInfo(context.Context, *RecordNodeInfoRequest) (*CommonResp, error)
@@ -37443,28 +37443,28 @@ type ClusterManagerServer interface {
 	UpdateNodeLabels(context.Context, *UpdateNodeLabelsRequest) (*UpdateNodeLabelsResponse, error)
 	UpdateNodeAnnotations(context.Context, *UpdateNodeAnnotationsRequest) (*UpdateNodeAnnotationsResponse, error)
 	UpdateNodeTaints(context.Context, *UpdateNodeTaintsRequest) (*UpdateNodeTaintsResponse, error)
-	// * cluster credential management
+	//* cluster credential management
 	GetClusterCredential(context.Context, *GetClusterCredentialReq) (*GetClusterCredentialResp, error)
 	UpdateClusterCredential(context.Context, *UpdateClusterCredentialReq) (*UpdateClusterCredentialResp, error)
 	DeleteClusterCredential(context.Context, *DeleteClusterCredentialReq) (*DeleteClusterCredentialResp, error)
 	ListClusterCredential(context.Context, *ListClusterCredentialReq) (*ListClusterCredentialResp, error)
-	// * federation cluster management
+	//* federation cluster management
 	InitFederationCluster(context.Context, *InitFederationClusterReq) (*InitFederationClusterResp, error)
 	AddFederatedCluster(context.Context, *AddFederatedClusterReq) (*AddFederatedClusterResp, error)
-	// * Cloud information management *
+	//* Cloud information management *
 	CreateCloud(context.Context, *CreateCloudRequest) (*CreateCloudResponse, error)
 	UpdateCloud(context.Context, *UpdateCloudRequest) (*UpdateCloudResponse, error)
 	DeleteCloud(context.Context, *DeleteCloudRequest) (*DeleteCloudResponse, error)
 	GetCloud(context.Context, *GetCloudRequest) (*GetCloudResponse, error)
 	ListCloud(context.Context, *ListCloudRequest) (*ListCloudResponse, error)
-	// * Cloud VPC information management *
+	//* Cloud VPC information management *
 	CreateCloudVPC(context.Context, *CreateCloudVPCRequest) (*CreateCloudVPCResponse, error)
 	UpdateCloudVPC(context.Context, *UpdateCloudVPCRequest) (*UpdateCloudVPCResponse, error)
 	DeleteCloudVPC(context.Context, *DeleteCloudVPCRequest) (*DeleteCloudVPCResponse, error)
 	ListCloudVPC(context.Context, *ListCloudVPCRequest) (*ListCloudVPCResponse, error)
 	ListCloudRegions(context.Context, *ListCloudRegionsRequest) (*ListCloudRegionsResponse, error)
 	GetVPCCidr(context.Context, *GetVPCCidrRequest) (*GetVPCCidrResponse, error)
-	// * NodeGroup information management *
+	//* NodeGroup information management *
 	CreateNodeGroup(context.Context, *CreateNodeGroupRequest) (*CreateNodeGroupResponse, error)
 	UpdateNodeGroup(context.Context, *UpdateNodeGroupRequest) (*UpdateNodeGroupResponse, error)
 	DeleteNodeGroup(context.Context, *DeleteNodeGroupRequest) (*DeleteNodeGroupResponse, error)
@@ -37485,7 +37485,7 @@ type ClusterManagerServer interface {
 	EnableNodeGroupAutoScale(context.Context, *EnableNodeGroupAutoScaleRequest) (*EnableNodeGroupAutoScaleResponse, error)
 	DisableNodeGroupAutoScale(context.Context, *DisableNodeGroupAutoScaleRequest) (*DisableNodeGroupAutoScaleResponse, error)
 	GetProviderResourceUsage(context.Context, *GetProviderResourceUsageRequest) (*GetProviderResourceUsageResponse, error)
-	// * Task information management *
+	//* Task information management *
 	CreateTask(context.Context, *CreateTaskRequest) (*CreateTaskResponse, error)
 	RetryTask(context.Context, *RetryTaskRequest) (*RetryTaskResponse, error)
 	SkipTask(context.Context, *SkipTaskRequest) (*SkipTaskResponse, error)
@@ -37493,7 +37493,7 @@ type ClusterManagerServer interface {
 	DeleteTask(context.Context, *DeleteTaskRequest) (*DeleteTaskResponse, error)
 	GetTask(context.Context, *GetTaskRequest) (*GetTaskResponse, error)
 	ListTask(context.Context, *ListTaskRequest) (*ListTaskResponse, error)
-	// * ClusterAutoScalingOption information management *
+	//* ClusterAutoScalingOption information management *
 	CreateAutoScalingOption(context.Context, *CreateAutoScalingOptionRequest) (*CreateAutoScalingOptionResponse, error)
 	UpdateAutoScalingOption(context.Context, *UpdateAutoScalingOptionRequest) (*UpdateAutoScalingOptionResponse, error)
 	UpdateAsOptionDeviceProvider(context.Context, *UpdateAsOptionDeviceProviderRequest) (*UpdateAsOptionDeviceProviderResponse, error)

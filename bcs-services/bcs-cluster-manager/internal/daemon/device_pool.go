@@ -81,6 +81,7 @@ func (d *Daemon) reportRegionInsTypeUsage(error chan<- error) {
 	concurency.Wait()
 }
 
+// GetRegionDevicePoolDetail get region device pool detail
 func GetRegionDevicePoolDetail(model store.ClusterManagerModel, region string, instanceType string,
 	filterGroupIds []string) ([]*resource.DevicePoolInfo, error) {
 	filterGroups, err := FilterGroupsByRegionInsType(model, region, instanceType)

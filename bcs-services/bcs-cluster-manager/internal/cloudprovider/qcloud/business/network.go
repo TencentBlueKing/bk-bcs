@@ -340,6 +340,9 @@ func DeleteDrSubnet(opt *cloudprovider.CommonOption, subnetId string) error {
 // GetDrSubnetInfo get subnet info
 func GetDrSubnetInfo(opt *cloudprovider.CommonOption, subnetId string) (*cidrtree.Subnet, error) {
 	vpcCli, err := api.NewVPCClient(opt)
+	if err != nil {
+		return nil, err
+	}
 
 	subnets, err := vpcCli.DescribeSubnets([]string{subnetId}, nil)
 	if err != nil {
@@ -367,6 +370,10 @@ func GetDrSubnetInfo(opt *cloudprovider.CommonOption, subnetId string) (*cidrtre
 func ListSubnets(opt *cloudprovider.CommonOption, vpcId string) ([]*cidrtree.Subnet, error) {
 	var subnetInfos []*cidrtree.Subnet
 	vpcCli, err := api.NewVPCClient(opt)
+	if err != nil {
+		return nil, err
+	}
+
 	filter := make([]*api.Filter, 0)
 	filter = append(filter, &api.Filter{Name: "vpc-id", Values: []string{vpcId}})
 	subnets, err := vpcCli.DescribeSubnets(nil, filter)
@@ -518,26 +525,25 @@ func GetCidrsFromCluster(cluster *tke.Cluster) ([]*cidrtree.Cidr, error) {
 	cidrs := make([]*cidrtree.Cidr, 0)
 
 	clusterCidr := *cluster.ClusterNetworkSettings.ClusterCIDR
-
-	if cidr, err := cidrtree.StringToCidr(clusterCidr); err == nil {
-		cidr.Type = utils.ClusterCIDR
-		cidrs = append(cidrs, cidr)
-	} else {
+	clsCidr, err := cidrtree.StringToCidr(clusterCidr)
+	if err != nil {
 		return nil, err
 	}
+
+	clsCidr.Type = utils.ClusterCIDR
+	cidrs = append(cidrs, clsCidr)
 
 	serviceCidr := *cluster.ClusterNetworkSettings.ServiceCIDR
-
-	if cidr, err := cidrtree.StringToCidr(serviceCidr); err == nil {
-		cidr.Type = utils.ServiceCIDR
-		cidrs = append(cidrs, cidr)
-	} else {
+	serCidr, err := cidrtree.StringToCidr(serviceCidr)
+	if err != nil {
 		return nil, err
 	}
+	serCidr.Type = utils.ServiceCIDR
+	cidrs = append(cidrs, serCidr)
 
 	clusterPropertyMap := make(map[string]interface{})
 	// 将Cluster的property信息转换为map格式
-	err := json.Unmarshal([]byte(*cluster.Property), &clusterPropertyMap)
+	err = json.Unmarshal([]byte(*cluster.Property), &clusterPropertyMap)
 	if err != nil {
 		return nil, err
 	}
@@ -547,12 +553,12 @@ func GetCidrsFromCluster(cluster *tke.Cluster) ([]*cidrtree.Cidr, error) {
 		multiClusterCIDR := clusterPropertyMap[utils.MultiClusterCIDR]
 		multiClusterCIDRList := strings.Split(multiClusterCIDR.(string), ",")
 		for _, c := range multiClusterCIDRList {
-			if cidr, err := cidrtree.StringToCidr(c); err == nil {
-				cidr.Type = utils.MultiClusterCIDR
-				cidrs = append(cidrs, cidr)
-			} else {
+			cidr, err := cidrtree.StringToCidr(c)
+			if err != nil {
 				return nil, err
 			}
+			cidr.Type = utils.MultiClusterCIDR
+			cidrs = append(cidrs, cidr)
 		}
 	}
 
@@ -611,7 +617,7 @@ func AddClusterGrCidr(opt *cloudprovider.CommonOption, clusterId string, cidrs [
 	totalCidrNum := cidrNum
 	for _, cidr := range clusterCidrs {
 		if utils.StringInSlice(cidr.Type, []string{utils.ClusterCIDR, utils.MultiClusterCIDR}) {
-			totalCidrNum += 1
+			totalCidrNum++
 		}
 	}
 
@@ -632,7 +638,8 @@ func AddClusterGrCidr(opt *cloudprovider.CommonOption, clusterId string, cidrs [
 }
 
 // GetVpcGrFreeIPNets get vpc cidr free cidrs
-func GetVpcGrFreeIPNets(opt *cloudprovider.CommonOption, cloudId, vpcId string, reservedBlocks []*net.IPNet) ([]*net.IPNet, error) {
+func GetVpcGrFreeIPNets(opt *cloudprovider.CommonOption, cloudId, vpcId string,
+	reservedBlocks []*net.IPNet) ([]*net.IPNet, error) {
 	allBlocks, err := cloudprovider.GetOverlayCidrBlocks(cloudId, vpcId)
 	if err != nil {
 		return nil, err
