@@ -16,12 +16,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"runtime/debug"
 	"strconv"
-	"strings"
-	"time"
 
-	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	k8scorev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -29,8 +25,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/eventer"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/portpoolcache"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/pkg/common"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
@@ -261,82 +257,8 @@ func (s *Server) mutatingPod(pod *k8scorev1.Pod) ([]PatchOperation, error) {
 			blog.Infof("pod '%s/%s' allocate port from cache: %v", pod.GetNamespace(), pod.GetName(), item)
 		}
 	}
-	go s.handleForPodCreateFailed(pod, portItemListArr)
+	// go s.handleForPodCreateFailed(pod, portItemListArr)
 	return retPatches, nil
-}
-
-const (
-	compensationPodCreateFailedDuration = 10
-)
-
-// handleForPodCreateFailed 补偿 GameWorkload 创建 Pod 失败导致缓存中的端口泄漏问题。
-// 当确认创建失败后，将已分配的端口清理掉
-func (s *Server) handleForPodCreateFailed(pod *k8scorev1.Pod, portItemListArr [][]portpoolcache.AllocatedPortItem) {
-	defer func() {
-		if r := recover(); r != nil {
-			blog.Errorf("pod '%s/%s' check failed create failed: %v, occurred a panic: %s\n",
-				pod.GetNamespace(), pod.GetName(), r, string(debug.Stack()))
-		}
-	}()
-
-	var workloadName string
-	for i := range pod.OwnerReferences {
-		kind := pod.OwnerReferences[i].Kind
-		if kind == eventer.KindGameDeployment || kind == eventer.KindGameStatefulSet {
-			workloadName = pod.OwnerReferences[i].Name
-			break
-		}
-	}
-	if workloadName == "" {
-		return
-	}
-	traceID := uuid.New().String()
-	triggered := make(chan struct{})
-	s.eventWatcher.RegisterEventHook(eventer.HookKindPodCreateFailed, traceID, func(event *k8scorev1.Event) {
-		if event.InvolvedObject.Namespace != pod.GetNamespace() || event.InvolvedObject.Name != workloadName {
-			return
-		}
-		// NOTE: 目前通过判断 event.Message 中是否存在 Pod 的名字来判断是否创建失败了
-		if !strings.Contains(event.Message, pod.Name) {
-			return
-		}
-		// NOTE: 如果因为 portBinding 已存在导致的 Pod FailedCreate，则不需要回收
-		if strings.Contains(event.Message, checkPortBindingExistedFailed) {
-			close(triggered)
-			return
-		}
-		blog.Warnf("pod '%s/%s' workload '%s' check pod create failed got create failed event: %s",
-			pod.GetNamespace(), pod.GetName(), workloadName, event.Message)
-
-		tmpPod := new(k8scorev1.Pod)
-		if err := s.k8sClient.Get(context.Background(), k8stypes.NamespacedName{
-			Name:      pod.GetName(),
-			Namespace: pod.GetNamespace(),
-		}, tmpPod); err != nil {
-			// 如果确实发现 Pod 不存在则对分配的端口进行回收
-			if k8serrors.IsNotFound(err) {
-				blog.Warnf("pod '%s/%s' not exist when check failed create, so delete the port it allocated",
-					pod.GetNamespace(), pod.GetName())
-				s.poolCache.Lock()
-				s.cleanAllocatedResource(portItemListArr)
-				s.poolCache.Unlock()
-				close(triggered)
-			} else {
-				blog.Errorf("pod '%s/%s' check failed create query failed: %s",
-					pod.GetNamespace(), pod.GetName(), err.Error())
-			}
-			return
-		}
-		blog.Infof("pod '%s/%s' actually exist, so don't need to delete the port it allocated.",
-			pod.GetNamespace(), pod.GetName())
-	})
-	timeout := time.After(compensationPodCreateFailedDuration * time.Second)
-	select {
-	case <-triggered:
-		s.eventWatcher.UnRegisterEventHook(eventer.HookKindPodCreateFailed, traceID)
-	case <-timeout:
-		s.eventWatcher.UnRegisterEventHook(eventer.HookKindPodCreateFailed, traceID)
-	}
 }
 
 // patch pod by port binding object

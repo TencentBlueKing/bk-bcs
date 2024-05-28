@@ -76,7 +76,7 @@ func (pbh *portBindingHandler) ensurePortBinding(portBinding *networkextensionv1
 			}
 		}
 		targetGroup := pbh.generateTargetGroup(item)
-		itemStatus := pbh.itemHandler.ensureItem(targetGroup, item, curStatus)
+		itemStatus := pbh.itemHandler.ensureItem(portBinding, targetGroup, item, curStatus)
 		newBindingStatusList = append(newBindingStatusList, itemStatus)
 	}
 	portBinding.Status.PortBindingStatusList = newBindingStatusList

@@ -26,6 +26,7 @@ import (
 	"github.com/ghodss/yaml"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	cvm "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cvm/v20170312"
+	vpc "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/vpc/v20170312"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
@@ -1175,10 +1176,10 @@ func getRandomSubnetByVpcID(ctx context.Context, info *cloudprovider.CloudDepend
 	}
 
 	// pick available subnet
-	availableSubnet := make([]*api.Subnet, 0)
+	availableSubnet := make([]*vpc.Subnet, 0)
 	for i := range subnets {
 		match := utils.MatchSubnet(*subnets[i].SubnetName, info.Cluster.Region)
-		if match && *subnets[i].AvailableIPAddressCount > 0 {
+		if match && *subnets[i].AvailableIpAddressCount > 0 {
 			availableSubnet = append(availableSubnet, subnets[i])
 		}
 	}
@@ -1187,7 +1188,7 @@ func getRandomSubnetByVpcID(ctx context.Context, info *cloudprovider.CloudDepend
 	}
 
 	rand.Seed(time.Now().Unix())                                           // nolint
-	return *availableSubnet[rand.Intn(len(availableSubnet))].SubnetID, nil // nolint
+	return *availableSubnet[rand.Intn(len(availableSubnet))].SubnetId, nil // nolint
 }
 
 // openClusterAdminKubeConfig open account cluster admin perm

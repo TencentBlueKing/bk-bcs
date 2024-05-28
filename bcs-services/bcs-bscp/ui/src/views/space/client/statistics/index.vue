@@ -39,8 +39,10 @@
 
 <style scoped lang="scss">
   .client-statistics-page {
+    height: 100%;
     padding: 0 24px;
     background: #f5f7fa;
+    overflow: auto;
     .header {
       padding: 24px 0;
     }

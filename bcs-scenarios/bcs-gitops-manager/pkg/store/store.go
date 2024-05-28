@@ -91,6 +91,7 @@ type Store interface {
 	GetApplicationSet(ctx context.Context, name string) (*v1alpha1.ApplicationSet, error)
 	ListApplicationSets(ctx context.Context, query *appsetpkg.ApplicationSetListQuery) (
 		*v1alpha1.ApplicationSetList, error)
+	DeleteApplicationSetOrphan(ctx context.Context, name string) error
 
 	// authentication token
 	GetToken(ctx context.Context) string
@@ -105,6 +106,7 @@ func NewStore(opt *Options) Store {
 	globalStore = &argo{
 		option:           opt,
 		cacheApplication: &sync.Map{},
+		cacheAppProject:  &sync.Map{},
 	}
 	return globalStore
 }

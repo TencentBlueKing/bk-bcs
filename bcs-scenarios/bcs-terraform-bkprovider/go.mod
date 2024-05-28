@@ -24,6 +24,8 @@ require (
 	github.com/levigross/grequests v0.0.0-20231203190023-9c307ef1f48d
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/pflag v1.0.5
+	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.0.922
+	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/vpc v1.0.922
 	go-micro.dev/v4 v4.8.1
 	google.golang.org/genproto/googleapis/api v0.0.0-20240401170217-c3f982113cda
 	google.golang.org/grpc v1.62.1

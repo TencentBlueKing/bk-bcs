@@ -17,7 +17,9 @@
         @change="handleAppChange">
         <template #trigger>
           <div class="selector-trigger">
-            <span v-if="localApp.name" class="app-name">{{ localApp?.name }}</span>
+            <bk-overflow-title v-if="localApp.name" class="app-name" type="tips">
+              {{ localApp?.name }}
+            </bk-overflow-title>
             <span v-else class="no-app">{{ $t('暂无服务') }}</span>
             <AngleUpFill class="arrow-icon arrow-fill" />
           </div>
@@ -95,7 +97,7 @@
         id: service.id!,
       };
       emits('search');
-    } else {
+    } else if (serviceList.value.length) {
       handleAppChange(serviceList.value[0].id!);
     }
   });
@@ -125,6 +127,8 @@
       };
     }
     setLastSelectedClientService(appId);
+    heartbeatTime.value = 60;
+    handleHeartbeatTimeChange(60);
     await router.push({ name: route.name!, params: { spaceId: bizId.value, appId } });
     emits('search');
   };
@@ -175,7 +179,10 @@
         }
         .selector-trigger {
           cursor: pointer;
+          display: flex;
+          align-items: center;
           .app-name {
+            max-width: 150px;
             color: #63656e;
           }
           .no-app {

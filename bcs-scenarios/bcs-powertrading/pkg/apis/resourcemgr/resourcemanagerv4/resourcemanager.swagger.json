@@ -1,0 +1,5792 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Resource Manager API Doc",
+    "version": "0.1.0"
+  },
+  "schemes": [
+    "http"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/resourcemanager/v1/available": {
+      "get": {
+        "summary": "查询resource-manager服务是否可用",
+        "description": "查询resource-manager服务是否可用",
+        "operationId": "ResourceManager_Available",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerAvailableResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "tags": [
+          "ResourceManager"
+        ]
+      }
+    },
+    "/resourcemanager/v1/device/bill": {
+      "get": {
+        "summary": "list device bill",
+        "description": "list device bill",
+        "operationId": "ResourceManager_ListDeviceBill",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerListDeviceBillResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sort",
+            "description": "sort. 排序顺序",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "desc",
+            "description": "desc. 排序是否为倒序, 仅在sort指定时有效",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "offset",
+            "description": "offset. 偏移量",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "limit",
+            "description": "limit. 长度",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "deviceConsumerID",
+            "description": "deviceConsumerID. 所属的deviceConsumerID",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "deviceID",
+            "description": "deviceID. 所属的deviceID",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "deviceRecordID",
+            "description": "deviceRecordID. 所属的deviceRecordID",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "finished",
+            "description": "finished. 是否完成",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "leftTime",
+            "description": "leftTime. 时间左区间",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "rightTime",
+            "description": "rightTime. 时间右区间",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "ResourceManager"
+        ]
+      }
+    },
+    "/resourcemanager/v1/device/consumer": {
+      "get": {
+        "summary": "查询device consumer",
+        "description": "通过给定deviceConsumerID, 查询device consumer",
+        "operationId": "ResourceManager_ListDeviceConsumer",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerListDeviceConsumerResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sort",
+            "description": "sort. 排序顺序",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "desc",
+            "description": "desc. 排序是否为倒序, 仅在sort指定时有效",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "offset",
+            "description": "offset. 偏移量",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "limit",
+            "description": "limit. 长度",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "name",
+            "description": "name. 消费者名称",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "provider",
+            "description": "provider. 设备提供者",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "clusterID",
+            "description": "clusterID. 消费者所属集群ID",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          }
+        ],
+        "tags": [
+          "ResourceManager"
+        ]
+      },
+      "post": {
+        "summary": "创建device consumer",
+        "description": "创建device consumer, 用于后续的资源消费和归还",
+        "operationId": "ResourceManager_CreateDeviceConsumer",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerCreateDeviceConsumerResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerCreateDeviceConsumerReq"
+            }
+          }
+        ],
+        "tags": [
+          "ResourceManager"
+        ]
+      }
+    },
+    "/resourcemanager/v1/device/consumer/enable": {
+      "post": {
+        "summary": "接入 device-consumer",
+        "description": "接入 device-consumer",
+        "operationId": "ResourceManager_EnableDeviceConsumer",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerEnableDeviceConsumerResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerEnableDeviceConsumerReq"
+            }
+          }
+        ],
+        "tags": [
+          "ResourceManager"
+        ]
+      }
+    },
+    "/resourcemanager/v1/device/consumer/{deviceConsumerID}": {
+      "get": {
+        "summary": "查询device consumer",
+        "description": "通过给定deviceConsumerID, 查询device consumer",
+        "operationId": "ResourceManager_GetDeviceConsumer",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerGetDeviceConsumerResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "deviceConsumerID",
+            "description": "deviceConsumerID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ResourceManager"
+        ]
+      },
+      "delete": {
+        "summary": "删除设备消费者",
+        "description": "删除设备消费者",
+        "operationId": "ResourceManager_DeleteDeviceConsumer",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerDeleteDeviceConsumerResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "deviceConsumerID",
+            "description": "deviceConsumerID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ResourceManager"
+        ]
+      },
+      "put": {
+        "summary": "更新设备消费者",
+        "description": "更新设备消费者, 用于后续的资源消费和归还",
+        "operationId": "ResourceManager_UpdateDeviceConsumer",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerUpdateDeviceConsumerResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "deviceConsumerID",
+            "description": "消费者ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerUpdateDeviceConsumerReq"
+            }
+          }
+        ],
+        "tags": [
+          "ResourceManager"
+        ]
+      }
+    },
+    "/resourcemanager/v1/device/consumer/{deviceConsumerID}/consume": {
+      "post": {
+        "summary": "消费设备",
+        "description": "消费设备",
+        "operationId": "ResourceManager_ConsumeDevice",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerConsumeDeviceResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "deviceConsumerID",
+            "description": "deviceConsumerID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerConsumeDeviceReq"
+            }
+          }
+        ],
+        "tags": [
+          "ResourceManager"
+        ]
+      }
+    },
+    "/resourcemanager/v1/device/consumer/{deviceConsumerID}/return": {
+      "post": {
+        "summary": "归还设备",
+        "description": "归还设备",
+        "operationId": "ResourceManager_ReturnDevice",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerReturnDeviceResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "deviceConsumerID",
+            "description": "deviceConsumerID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerReturnDeviceReq"
+            }
+          }
+        ],
+        "tags": [
+          "ResourceManager"
+        ]
+      }
+    },
+    "/resourcemanager/v1/device/instance": {
+      "get": {
+        "summary": "查询机型列表",
+        "description": "查询机型列表",
+        "operationId": "ResourceManager_ListDeviceInstances",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerListDeviceInstancesResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "description": "projectID. 项目ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "description": "clusterID. 集群ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "region",
+            "description": "region. 地域",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "cpu",
+            "description": "cpu. cpu(核心数)",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "memory",
+            "description": "memory. 内存(G)",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "status",
+            "description": "status. 状态",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "ResourceManager"
+        ]
+      },
+      "post": {
+        "summary": "创建 device instance",
+        "description": "创建 device instance, 用于展示可用机型",
+        "operationId": "ResourceManager_CreateDeviceInstance",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerCreateDeviceInstanceResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerCreateDeviceInstanceReq"
+            }
+          }
+        ],
+        "tags": [
+          "ResourceManager"
+        ]
+      }
+    },
+    "/resourcemanager/v1/device/instance/{deviceInstanceID}": {
+      "delete": {
+        "summary": "创建 device instance",
+        "description": "创建 device instance, 用于展示可用机型",
+        "operationId": "ResourceManager_DeleteDeviceInstance",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerDeleteDeviceInstanceResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "deviceInstanceID",
+            "description": "deviceInstanceID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ResourceManager"
+        ]
+      },
+      "put": {
+        "summary": "创建 device instance",
+        "description": "创建 device instance, 用于展示可用机型",
+        "operationId": "ResourceManager_UpdateDeviceInstance",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerUpdateDeviceInstanceResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "deviceInstanceID",
+            "description": "机型ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerUpdateDeviceInstanceReq"
+            }
+          }
+        ],
+        "tags": [
+          "ResourceManager"
+        ]
+      }
+    },
+    "/resourcemanager/v1/device/pool": {
+      "get": {
+        "summary": "查询设备池",
+        "description": "通过给定devicePoolID, 查询device pool",
+        "operationId": "ResourceManager_ListDevicePool",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerListDevicePoolResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sort",
+            "description": "sort. 排序顺序",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "desc",
+            "description": "desc. 排序是否为倒序, 仅在sort指定时有效",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "offset",
+            "description": "offset. 偏移量",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "limit",
+            "description": "limit. 长度",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "name",
+            "description": "name. 设备池名称",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "provider",
+            "description": "provider. 设备提供者",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "onsale",
+            "description": "onsale. 是否在售",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "region",
+            "description": "region. 地域",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "businessID",
+            "description": "businessID. businessID",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "int64"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "status",
+            "description": "status. 状态",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "int64"
+            },
+            "collectionFormat": "multi"
+          }
+        ],
+        "tags": [
+          "ResourceManager"
+        ]
+      },
+      "post": {
+        "summary": "创建device pool",
+        "description": "创建device pool, 用于资源的组织管理",
+        "operationId": "ResourceManager_CreateDevicePool",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerCreateDevicePoolResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerCreateDevicePoolReq"
+            }
+          }
+        ],
+        "tags": [
+          "ResourceManager"
+        ]
+      }
+    },
+    "/resourcemanager/v1/device/pool/{devicePoolID}": {
+      "get": {
+        "summary": "查询device pool",
+        "description": "通过给定devicePoolID, 查询device pool",
+        "operationId": "ResourceManager_GetDevicePool",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerGetDevicePoolResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "devicePoolID",
+            "description": "devicePoolID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ResourceManager"
+        ]
+      },
+      "delete": {
+        "summary": "删除设备池",
+        "description": "删除设备池",
+        "operationId": "ResourceManager_DeleteDevicePool",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerDeleteDevicePoolResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "devicePoolID",
+            "description": "devicePoolID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ResourceManager"
+        ]
+      },
+      "put": {
+        "summary": "更新设备池",
+        "description": "更新设备池, 用于资源的组织管理",
+        "operationId": "ResourceManager_UpdateDevicePool",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerUpdateDevicePoolResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "devicePoolID",
+            "description": "设备池ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerUpdateDevicePoolReq"
+            }
+          }
+        ],
+        "tags": [
+          "ResourceManager"
+        ]
+      }
+    },
+    "/resourcemanager/v1/device/pool/{devicePoolID}/event": {
+      "get": {
+        "summary": "查询device pool事件",
+        "description": "通过给定devicePoolID, 查询device pool 事件",
+        "operationId": "ResourceManager_GetDevicePoolEvent",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerGetDevicePoolEventResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "devicePoolID",
+            "description": "devicePoolID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "limit",
+            "description": "limit. 长度",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "startTime",
+            "description": "startTime. startTime",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "endTime",
+            "description": "endTime. endTime",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "ResourceManager"
+        ]
+      }
+    },
+    "/resourcemanager/v1/device/pool/{devicePoolID}/import": {
+      "post": {
+        "summary": "导入设备到设备池",
+        "description": "导入设备到设备池",
+        "operationId": "ResourceManager_ImportDeviceToDevicePool",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerImportDeviceToDevicePoolResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "devicePoolID",
+            "description": "要导入的设备池ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerImportDeviceToDevicePoolReq"
+            }
+          }
+        ],
+        "tags": [
+          "ResourceManager"
+        ]
+      }
+    },
+    "/resourcemanager/v1/device/pool/{devicePoolID}/importByBkAssetID": {
+      "post": {
+        "summary": "通过bkAssetID导入设备到设备池",
+        "description": "通过bkAssetID导入设备到设备池",
+        "operationId": "ResourceManager_ImportDeviceToDevicePoolByBkAssetID",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerImportDeviceToDevicePoolResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "devicePoolID",
+            "description": "要导入的设备池ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerImportDeviceToDevicePoolByBkAssetIDReq"
+            }
+          }
+        ],
+        "tags": [
+          "ResourceManager"
+        ]
+      }
+    },
+    "/resourcemanager/v1/device/pool/{devicePoolID}/importByBkAssetIDs": {
+      "post": {
+        "summary": "导入设备到设备池",
+        "description": "导入设备到设备池",
+        "operationId": "ResourceManager_ImportDevicesToDevicePoolByBkAssetIDs",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerImportDevicesToDevicePoolByBkAssetIDsResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "devicePoolID",
+            "description": "要导入的设备池ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerImportDevicesToDevicePoolByBkAssetIDsReq"
+            }
+          }
+        ],
+        "tags": [
+          "ResourceManager"
+        ]
+      }
+    },
+    "/resourcemanager/v1/device/record": {
+      "get": {
+        "summary": "list device record",
+        "description": "list device record",
+        "operationId": "ResourceManager_ListDeviceRecord",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerListDeviceRecordResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sort",
+            "description": "sort. 排序顺序",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "desc",
+            "description": "desc. 排序是否为倒序, 仅在sort指定时有效",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "offset",
+            "description": "offset. 偏移量",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "limit",
+            "description": "limit. 长度",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "pool",
+            "description": "pool. devicePoolID",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "type",
+            "description": "type. deviceRecordType",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "int64"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "status",
+            "description": "status. deviceRecordStatus",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "int64"
+            },
+            "collectionFormat": "multi"
+          }
+        ],
+        "tags": [
+          "ResourceManager"
+        ]
+      },
+      "post": {
+        "summary": "创建device record",
+        "description": "创建device record",
+        "operationId": "ResourceManager_CreateDeviceRecord",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerCreateDeviceRecordResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerCreateDeviceRecordReq"
+            }
+          }
+        ],
+        "tags": [
+          "ResourceManager"
+        ]
+      }
+    },
+    "/resourcemanager/v1/device/record/pool/{poolID}": {
+      "get": {
+        "summary": "查询devicepool中的设备记录(aka订单)列表",
+        "description": "查询devicepool中的设备记录(aka订单)列表",
+        "operationId": "ResourceManager_ListDeviceRecordByDevicePool",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerListDeviceRecordResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "poolID",
+            "description": "poolID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "sort",
+            "description": "sort. 排序顺序",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "desc",
+            "description": "desc. 排序是否为倒序, 仅在sort指定时有效",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "offset",
+            "description": "offset. 偏移量",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "limit",
+            "description": "limit. 长度",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "ResourceManager"
+        ]
+      },
+      "post": {
+        "summary": "新建devicepool中的设备记录(aka订单)",
+        "description": "新建devicepool中的设备记录(aka订单)",
+        "operationId": "ResourceManager_CreateDeviceRecordByDevicePool",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerCreateDeviceRecordByDevicePoolResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "poolID",
+            "description": "poolID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerCreateDeviceRecordByDevicePoolReq"
+            }
+          }
+        ],
+        "tags": [
+          "ResourceManager"
+        ]
+      }
+    },
+    "/resourcemanager/v1/device/record/{deviceRecordID}": {
+      "get": {
+        "summary": "查询device record",
+        "description": "查询device record",
+        "operationId": "ResourceManager_GetDeviceRecord",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerGetDeviceRecordResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "deviceRecordID",
+            "description": "deviceRecordID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ResourceManager"
+        ]
+      },
+      "put": {
+        "summary": "update device record",
+        "description": "update device record",
+        "operationId": "ResourceManager_UpdateDeviceRecord",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerUpdateDeviceRecordResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "deviceRecordID",
+            "description": "deviceRecordID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerUpdateDeviceRecordReq"
+            }
+          }
+        ],
+        "tags": [
+          "ResourceManager"
+        ]
+      }
+    },
+    "/resourcemanager/v1/device/{deviceID}": {
+      "get": {
+        "summary": "查询device",
+        "description": "通过给定deviceID, 查询device信息",
+        "operationId": "ResourceManager_GetDevice",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerGetDeviceResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "deviceID",
+            "description": "设备ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ResourceManager"
+        ]
+      },
+      "put": {
+        "summary": "更新 device",
+        "description": "更新 device",
+        "operationId": "ResourceManager_UpdateDevice",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerUpdateDeviceResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "deviceID",
+            "description": "设备ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerUpdateDeviceReq"
+            }
+          }
+        ],
+        "tags": [
+          "ResourceManager"
+        ]
+      }
+    },
+    "/resourcemanager/v1/devices": {
+      "get": {
+        "summary": "查询 devices 列表",
+        "description": "查询 devices 列表",
+        "operationId": "ResourceManager_ListDevices",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerListDevicesResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sort",
+            "description": "sort. 排序顺序",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "desc",
+            "description": "desc. 排序是否为倒叙，仅在sort字段指定时有效",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "offset",
+            "description": "offset. 偏移量",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "limit",
+            "description": "limit. 长度",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "provider",
+            "description": "provider. 设备提供商",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "pool",
+            "description": "pool. 设备池",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "status",
+            "description": "status. 设备状态",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "int64"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "assetID",
+            "description": "assetID. 设备固资号",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "consumer",
+            "description": "consumer. consumer",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          }
+        ],
+        "tags": [
+          "ResourceManager"
+        ]
+      },
+      "delete": {
+        "summary": "删除 devices 列表",
+        "description": "删除 devices 列表",
+        "operationId": "ResourceManager_DeleteDevices",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerDeleteDevicesResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "deviceIDs",
+            "description": "deviceIDs to be deleted. deviceIDs to be deleted",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          }
+        ],
+        "tags": [
+          "ResourceManager"
+        ]
+      }
+    },
+    "/resourcemanager/v1/obs/bill": {
+      "get": {
+        "summary": "查询obs账单",
+        "description": "查询obs账单",
+        "operationId": "ResourceManager_QueryObsBill",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerQueryObsBillResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "year",
+            "description": "year. 年",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "month",
+            "description": "month. 月",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "leftTime",
+            "description": "leftTime. 时间左区间",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "rightTime",
+            "description": "rightTime. 时间右区间",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          }
+        ],
+        "tags": [
+          "ResourceManager"
+        ]
+      }
+    },
+    "/resourcemanager/v1/obs/cost": {
+      "post": {
+        "summary": "创建obs cost",
+        "description": "创建obs cost",
+        "operationId": "ResourceManager_CreateObsCost",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerCreateObsCostResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerCreateObsCostReq"
+            }
+          }
+        ],
+        "tags": [
+          "ResourceManager"
+        ]
+      }
+    },
+    "/resourcemanager/v1/provider": {
+      "get": {
+        "summary": "查询provider",
+        "description": "查询provider",
+        "operationId": "ResourceManager_ListProvider",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerListProviderResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sort",
+            "description": "sort. 排序顺序",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "desc",
+            "description": "desc. 排序是否为倒序, 仅在sort指定时有效",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "offset",
+            "description": "offset. 偏移量",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "limit",
+            "description": "limit. 长度",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "ResourceManager"
+        ]
+      },
+      "post": {
+        "summary": "创建创建provider",
+        "description": "创建provider, 用于后续的资源管理",
+        "operationId": "ResourceManager_CreateProvider",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerCreateProviderResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerCreateProviderReq"
+            }
+          }
+        ],
+        "tags": [
+          "ResourceManager"
+        ]
+      }
+    },
+    "/resourcemanager/v1/provider/{name}": {
+      "get": {
+        "summary": "查询provider",
+        "description": "通过给定name, 查询provider",
+        "operationId": "ResourceManager_GetProvider",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerGetProviderResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "name",
+            "description": "provider name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ResourceManager"
+        ]
+      },
+      "delete": {
+        "summary": "删除provider",
+        "description": "删除provider",
+        "operationId": "ResourceManager_DeleteProvider",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerDeleteProviderResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "name",
+            "description": "provider name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ResourceManager"
+        ]
+      },
+      "put": {
+        "summary": "更新provider",
+        "description": "更新provider, 用于后续的资源管理",
+        "operationId": "ResourceManager_UpdateProvider",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerUpdateProviderResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "name",
+            "description": "provider name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerUpdateProviderReq"
+            }
+          }
+        ],
+        "tags": [
+          "ResourceManager"
+        ]
+      }
+    },
+    "/resourcemanager/v1/provider/{name}/network": {
+      "get": {
+        "summary": "查询provider的网络信息",
+        "description": "查询provider的网络信息",
+        "operationId": "ResourceManager_QueryProviderNetwork",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerQueryProviderNetworkResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "name",
+            "description": "提供商",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "vpc",
+            "description": "vpc. vpc",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "zone",
+            "description": "zone. 可用区",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "region",
+            "description": "region. 区域",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ResourceManager"
+        ]
+      }
+    },
+    "/resourcemanager/v1/provider/{name}/order": {
+      "get": {
+        "summary": "查询provider的订单信息",
+        "description": "查询provider的订单信息",
+        "operationId": "ResourceManager_QueryProviderOrder",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerQueryProviderOrderResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "name",
+            "description": "提供商",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "orderID",
+            "description": "orderID. 订单号",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "orderType",
+            "description": "orderType. 订单类型",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ResourceManager"
+        ]
+      }
+    },
+    "/resourcemanager/v1/resource_pools": {
+      "get": {
+        "summary": "查询资源池列表(自建)",
+        "description": "查询资源池列表(自建)",
+        "operationId": "ResourceManager_ListResourcePool",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerListResourcePoolResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "name",
+            "description": "name. 资源池名称",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ResourceManager"
+        ]
+      },
+      "post": {
+        "summary": "创建资源池(自建)",
+        "description": "创建资源池(自建)",
+        "operationId": "ResourceManager_CreateResourcePool",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerCreateResourcePoolResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerCreateResourcePoolReq"
+            }
+          }
+        ],
+        "tags": [
+          "ResourceManager"
+        ]
+      }
+    },
+    "/resourcemanager/v1/resource_pools/{poolID}/device_records": {
+      "get": {
+        "summary": "查询资源池(自建)中的设备记录(aka订单)列表",
+        "description": "查询资源池(自建)中的设备记录(aka订单)列表",
+        "operationId": "ResourceManager_ListDeviceRecordByPool",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerListDeviceRecordResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "poolID",
+            "description": "poolID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "sort",
+            "description": "sort. 排序顺序",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "desc",
+            "description": "desc. 排序是否为倒序, 仅在sort指定时有效",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "offset",
+            "description": "offset. 偏移量",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "limit",
+            "description": "limit. 长度",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "ResourceManager"
+        ]
+      },
+      "post": {
+        "summary": "新建资源池(自建)中的设备记录(aka订单)",
+        "description": "新建资源池(自建)中的设备记录(aka订单)",
+        "operationId": "ResourceManager_CreateDeviceRecordByPool",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerCreateDeviceRecordByPoolResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "poolID",
+            "description": "poolID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerCreateDeviceRecordByPoolReq"
+            }
+          }
+        ],
+        "tags": [
+          "ResourceManager"
+        ]
+      }
+    },
+    "/resourcemanager/v1/resource_pools/{poolID}/import": {
+      "post": {
+        "summary": "导入资源到资源池(自建)",
+        "description": "导入资源到资源池(自建)",
+        "operationId": "ResourceManager_ImportResource",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerImportResourceResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "poolID",
+            "description": "poolID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerImportResourceReq"
+            }
+          }
+        ],
+        "tags": [
+          "ResourceManager"
+        ]
+      }
+    },
+    "/resourcemanager/v1/resource_pools/{poolID}/resources": {
+      "get": {
+        "summary": "查询资源池(自建)中的资源列表",
+        "description": "查询资源池(自建)中的资源列表",
+        "operationId": "ResourceManager_ListResource",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/resourcemanagerListResourceResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "poolID",
+            "description": "poolID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "consumable",
+            "description": "consumable. 过滤只能被消费的资源",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "matchConsumerID",
+            "description": "matchConsumerID. 过滤只能被特定Consumer消费的资源",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "matchDeviceRecordID",
+            "description": "matchDeviceRecordID. 过滤只能被特定DeviceRecord消费的资源",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ResourceManager"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "type_url": {
+          "type": "string",
+          "description": "A URL/resource name that uniquely identifies the type of the serialized\nprotocol buffer message. This string must contain at least\none \"/\" character. The last segment of the URL's path must represent\nthe fully qualified name of the type (as in\n`path/google.protobuf.Duration`). The name should be in a canonical form\n(e.g., leading \".\" is not accepted).\n\nIn practice, teams usually precompile into the binary all types that they\nexpect it to use in the context of Any. However, for URLs which use the\nscheme `http`, `https`, or no scheme, one can optionally set up a type\nserver that maps type URLs to message definitions as follows:\n\n* If no scheme is provided, `https` is assumed.\n* An HTTP GET on the URL must yield a [google.protobuf.Type][]\n  value in binary format, or produce an error.\n* Applications are allowed to cache lookup results based on the\n  URL, or have them precompiled into a binary to avoid any\n  lookup. Therefore, binary compatibility needs to be preserved\n  on changes to types. (Use versioned type names to manage\n  breaking changes.)\n\nNote: this functionality is not currently available in the official\nprotobuf release, and it is not used for type URLs beginning with\ntype.googleapis.com.\n\nSchemes other than `http`, `https` (or the empty scheme) might be\nused with implementation specific semantics."
+        },
+        "value": {
+          "type": "string",
+          "format": "byte",
+          "description": "Must be a valid serialized protocol buffer of the above specified type."
+        }
+      },
+      "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(\u0026foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n\n Example 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\n Example 4: Pack and unpack a message in Go\n\n     foo := \u0026pb.Foo{...}\n     any, err := ptypes.MarshalAny(foo)\n     ...\n     foo := \u0026pb.Foo{}\n     if err := ptypes.UnmarshalAny(any, foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\n\nJSON\n====\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": \u003cstring\u003e,\n      \"lastName\": \u003cstring\u003e\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }"
+    },
+    "resourcemanagerAnnotations": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "annotations",
+          "title": "data"
+        }
+      }
+    },
+    "resourcemanagerAvailableResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        }
+      },
+      "description": "查询resource-manager服务是否可用返回",
+      "title": "AvailableResp"
+    },
+    "resourcemanagerConsumeDesire": {
+      "type": "object",
+      "properties": {
+        "instanceType": {
+          "type": "string",
+          "description": "机型信息字符串, 可能为空",
+          "title": "instanceType"
+        },
+        "cpu": {
+          "type": "integer",
+          "format": "int64",
+          "description": "设备CPU信息",
+          "title": "cpu"
+        },
+        "mem": {
+          "type": "integer",
+          "format": "int64",
+          "description": "设备内存信息",
+          "title": "mem"
+        },
+        "gpu": {
+          "type": "integer",
+          "format": "int64",
+          "description": "设备GPU信息",
+          "title": "gpu"
+        },
+        "systemDisk": {
+          "$ref": "#/definitions/resourcemanagerDeviceDisk",
+          "description": "设备系统盘信息",
+          "title": "systemDisk"
+        },
+        "dataDisks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/resourcemanagerDeviceDisk"
+          },
+          "description": "设备数据盘信息",
+          "title": "dataDisks"
+        },
+        "security": {
+          "$ref": "#/definitions/resourcemanagerDeviceSecurity",
+          "description": "设备所属安全信息",
+          "title": "security"
+        },
+        "image": {
+          "$ref": "#/definitions/resourcemanagerDeviceImage",
+          "description": "设备镜像信息",
+          "title": "image"
+        },
+        "vpc": {
+          "type": "string",
+          "description": "设备所属VPC ID",
+          "title": "vpc"
+        },
+        "zone": {
+          "$ref": "#/definitions/resourcemanagerDeviceZone",
+          "description": "设备所属区域信息",
+          "title": "zone"
+        },
+        "businessID": {
+          "type": "string",
+          "format": "int64",
+          "description": "businessID",
+          "title": "businessID"
+        },
+        "assetIDs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "assetIDs",
+          "title": "assetIDs"
+        },
+        "moduleIDs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "int64"
+          },
+          "description": "moduleIDs",
+          "title": "moduleIDs"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "消费信息标签",
+          "title": "labels"
+        }
+      }
+    },
+    "resourcemanagerConsumeDeviceReq": {
+      "type": "object",
+      "properties": {
+        "deviceConsumerID": {
+          "type": "string",
+          "description": "deviceConsumerID",
+          "title": "deviceConsumerID"
+        },
+        "num": {
+          "type": "integer",
+          "format": "int64",
+          "description": "消费的设备数量",
+          "title": "num"
+        },
+        "desire": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/resourcemanagerConsumeDesire"
+          },
+          "description": "对消费设备的要求, 按队列顺序优先级尝试满足",
+          "title": "desire"
+        },
+        "operator": {
+          "type": "string",
+          "description": "操作者",
+          "title": "operator"
+        }
+      },
+      "description": "消费设备的参数",
+      "title": "ConsumeDeviceReq",
+      "required": [
+        "deviceConsumerID",
+        "num",
+        "desire",
+        "operator"
+      ]
+    },
+    "resourcemanagerConsumeDeviceResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/resourcemanagerRecordData",
+          "description": "结果信息",
+          "title": "data"
+        }
+      },
+      "description": "消费设备的返回",
+      "title": "ConsumeDeviceResp"
+    },
+    "resourcemanagerConsumerQuota": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "配额类型",
+          "title": "type"
+        },
+        "devicePoolID": {
+          "type": "string",
+          "description": "资源池ID",
+          "title": "devicePoolID"
+        },
+        "name": {
+          "type": "string",
+          "description": "配额名称",
+          "title": "name"
+        },
+        "quota": {
+          "type": "integer",
+          "format": "int64",
+          "description": "配额量",
+          "title": "quota"
+        }
+      }
+    },
+    "resourcemanagerCreateDeviceConsumerReq": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "消费者名称",
+          "title": "name"
+        },
+        "provider": {
+          "type": "string",
+          "description": "希望的设备提供者",
+          "title": "provider"
+        },
+        "clusterID": {
+          "type": "string",
+          "description": "消费者所属集群ID",
+          "title": "clusterID"
+        },
+        "associatedDevicePool": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "期望关联的设备池ID列表, 若为空则所有设备池均可接受",
+          "title": "associatedDevicePool"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "消费者信息标签",
+          "title": "labels"
+        },
+        "operator": {
+          "type": "string",
+          "description": "操作者",
+          "title": "operator"
+        },
+        "quotas": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/resourcemanagerConsumerQuota"
+          },
+          "description": "资源配额",
+          "title": "quotas"
+        }
+      },
+      "description": "创建消费者请求",
+      "title": "CreateDeviceConsumerReq",
+      "required": [
+        "name",
+        "provider",
+        "clusterID",
+        "operator"
+      ]
+    },
+    "resourcemanagerCreateDeviceConsumerResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/resourcemanagerDeviceConsumer",
+          "description": "创建的device consumer",
+          "title": "data"
+        }
+      },
+      "description": "创建消费者返回",
+      "title": "CreateDeviceConsumerResp"
+    },
+    "resourcemanagerCreateDeviceInstanceReq": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "机型名称",
+          "title": "name"
+        },
+        "instanceType": {
+          "type": "string",
+          "description": "instanceType",
+          "title": "instanceType"
+        },
+        "region": {
+          "type": "string",
+          "description": "地域",
+          "title": "region"
+        },
+        "zone": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "可用区",
+          "title": "zone"
+        },
+        "cpu": {
+          "type": "integer",
+          "format": "int64",
+          "description": "cpu(核心数)",
+          "title": "cpu"
+        },
+        "memory": {
+          "type": "integer",
+          "format": "int64",
+          "description": "内存(G)",
+          "title": "memory"
+        },
+        "provider": {
+          "type": "string",
+          "description": "资源提供方",
+          "title": "provider"
+        },
+        "status": {
+          "type": "integer",
+          "format": "int64",
+          "description": "状态",
+          "title": "status"
+        },
+        "num": {
+          "type": "integer",
+          "format": "int64",
+          "description": "可用资源数量",
+          "title": "num"
+        }
+      },
+      "description": "创建机型",
+      "title": "CreateDeviceInstanceReq"
+    },
+    "resourcemanagerCreateDeviceInstanceResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/resourcemanagerDeviceInstance",
+          "description": "机型信息",
+          "title": "data"
+        }
+      },
+      "description": "创建机型返回",
+      "title": "CreateDeviceInstanceResp"
+    },
+    "resourcemanagerCreateDevicePoolReq": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "消费者名称",
+          "title": "name"
+        },
+        "provider": {
+          "type": "string",
+          "description": "设备提供方, 如自研云, 腾讯云, AWS等",
+          "title": "provider"
+        },
+        "baseConfig": {
+          "$ref": "#/definitions/resourcemanagerConsumeDesire",
+          "description": "设备基础配置信息",
+          "title": "baseConfig"
+        },
+        "allowedDeviceConsumer": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "允许关联的消费者",
+          "title": "allowedDeviceConsumer"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "设备池信息标签",
+          "title": "labels"
+        },
+        "operator": {
+          "type": "string",
+          "description": "操作者",
+          "title": "operator"
+        },
+        "enableAS": {
+          "type": "boolean",
+          "description": "开启autoscaler",
+          "title": "enableAS"
+        },
+        "asOption": {
+          "$ref": "#/definitions/resourcemanagerDevicePoolAutoScalerOption",
+          "description": "autoscaler配置",
+          "title": "asOption"
+        },
+        "reserved": {
+          "type": "boolean",
+          "description": "reserved pool can not be picked without specified",
+          "title": "reserved"
+        },
+        "type": {
+          "type": "string",
+          "description": "资源池类型",
+          "title": "type"
+        },
+        "creator": {
+          "type": "string",
+          "description": "资源池创建者",
+          "title": "creator"
+        },
+        "annotations": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "设备池annotations",
+          "title": "annotations"
+        }
+      },
+      "description": "创建设备池请求",
+      "title": "CreateDevicePoolReq",
+      "required": [
+        "name",
+        "provider",
+        "baseConfig",
+        "operator"
+      ]
+    },
+    "resourcemanagerCreateDevicePoolResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/resourcemanagerDevicePool",
+          "description": "创建的device pool",
+          "title": "data"
+        }
+      },
+      "description": "创建设备池返回",
+      "title": "CreateDevicePoolResp"
+    },
+    "resourcemanagerCreateDeviceRecordByDevicePoolReq": {
+      "type": "object",
+      "properties": {
+        "poolID": {
+          "type": "string",
+          "description": "poolID",
+          "title": "poolID"
+        },
+        "num": {
+          "type": "integer",
+          "format": "int64",
+          "description": "设备数量",
+          "title": "num"
+        },
+        "desire": {
+          "$ref": "#/definitions/resourcemanagerConsumeDesire",
+          "description": "对设备的要求, 按队列顺序优先级尝试满足",
+          "title": "desire"
+        },
+        "drainDelay": {
+          "type": "string",
+          "description": "最大抽离延迟时间, 格式如4h",
+          "title": "drainDelay"
+        }
+      },
+      "description": "创建设备订单返回",
+      "title": "CreateDeviceRecordByDevicePoolReq"
+    },
+    "resourcemanagerCreateDeviceRecordByDevicePoolResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/resourcemanagerDeviceRecord",
+          "description": "设备信息",
+          "title": "data"
+        }
+      },
+      "description": "f",
+      "title": "CreateDeviceRecordByDevicePoolResp"
+    },
+    "resourcemanagerCreateDeviceRecordByPoolReq": {
+      "type": "object",
+      "properties": {
+        "poolID": {
+          "type": "string",
+          "description": "poolID",
+          "title": "poolID"
+        },
+        "num": {
+          "type": "integer",
+          "format": "int64",
+          "description": "设备数量",
+          "title": "num"
+        },
+        "desire": {
+          "$ref": "#/definitions/resourcemanagerConsumeDesire",
+          "description": "对设备的要求, 按队列顺序优先级尝试满足",
+          "title": "desire"
+        },
+        "drainDelay": {
+          "type": "string",
+          "description": "最大抽离延迟时间, 格式如4h",
+          "title": "drainDelay"
+        }
+      },
+      "description": "创建设备订单返回",
+      "title": "CreateDeviceRecordByPoolReq"
+    },
+    "resourcemanagerCreateDeviceRecordByPoolResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/resourcemanagerDeviceRecord",
+          "description": "设备信息",
+          "title": "data"
+        }
+      },
+      "description": "f",
+      "title": "CreateDeviceRecordByPoolResp"
+    },
+    "resourcemanagerCreateDeviceRecordReq": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/resourcemanagerDeviceRecord",
+          "description": "device record",
+          "title": "data"
+        }
+      },
+      "description": "CreateDeviceRecordReq",
+      "title": "CreateDeviceRecordReq"
+    },
+    "resourcemanagerCreateDeviceRecordResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/resourcemanagerDeviceRecord",
+          "description": "device record",
+          "title": "data"
+        }
+      },
+      "description": "创建device record的返回",
+      "title": "CreateDeviceRecordResp"
+    },
+    "resourcemanagerCreateObsCostReq": {
+      "type": "object",
+      "properties": {
+        "specName": {
+          "type": "string",
+          "description": "资源规格",
+          "title": "specName"
+        },
+        "typeName": {
+          "type": "string",
+          "description": "资源类型",
+          "title": "typeName"
+        },
+        "type": {
+          "type": "string",
+          "description": "obs cost类型",
+          "title": "type"
+        },
+        "unit": {
+          "type": "string",
+          "description": "资源单位",
+          "title": "unit"
+        },
+        "unitPrice": {
+          "type": "number",
+          "format": "double",
+          "description": "单位价格",
+          "title": "unitPrice"
+        },
+        "region": {
+          "type": "string",
+          "description": "区域信息",
+          "title": "region"
+        }
+      },
+      "description": "创建obs cost参数",
+      "title": "CreateObsCostReq"
+    },
+    "resourcemanagerCreateObsCostResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/resourcemanagerObsCost",
+          "description": "创建的obs cost",
+          "title": "data"
+        }
+      },
+      "description": "创建obs cost参数",
+      "title": "CreateObsCostResp"
+    },
+    "resourcemanagerCreateProviderReq": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "provider name",
+          "title": "name"
+        },
+        "key": {
+          "type": "string",
+          "description": "provider key",
+          "title": "key"
+        },
+        "secret": {
+          "type": "string",
+          "description": "provider secret",
+          "title": "secret"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "provider labels",
+          "title": "labels"
+        },
+        "operator": {
+          "type": "string",
+          "description": "操作者",
+          "title": "operator"
+        }
+      },
+      "description": "创建provider参数",
+      "title": "CreateProviderReq"
+    },
+    "resourcemanagerCreateProviderResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/resourcemanagerProvider",
+          "description": "创建的provider",
+          "title": "data"
+        }
+      },
+      "description": "创建provider返回",
+      "title": "CreateProviderResp"
+    },
+    "resourcemanagerCreateResourcePoolReq": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "资源池名称",
+          "title": "name"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "资源池信息标签",
+          "title": "labels"
+        },
+        "annotations": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "资源池信息注解",
+          "title": "labels"
+        },
+        "comment": {
+          "type": "string",
+          "description": "注释",
+          "title": "comment"
+        }
+      },
+      "description": "创建资源池请求",
+      "title": "CreateResourcePoolReq",
+      "required": [
+        "name",
+        "annotations",
+        "labels"
+      ]
+    },
+    "resourcemanagerCreateResourcePoolResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/resourcemanagerResourcePool",
+          "description": "资源池pool",
+          "title": "data"
+        }
+      },
+      "description": "创建设备池返回",
+      "title": "CreateDevicePoolResp"
+    },
+    "resourcemanagerDeleteDeviceConsumerResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        }
+      },
+      "description": "删除消费者的返回",
+      "title": "DeleteDeviceConsumerResp"
+    },
+    "resourcemanagerDeleteDeviceInstanceResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        }
+      },
+      "description": "删除机型的返回",
+      "title": "DeleteDeviceInstanceResp"
+    },
+    "resourcemanagerDeleteDevicePoolResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        }
+      },
+      "description": "删除设备池的返回",
+      "title": "DeleteDevicePoolResp"
+    },
+    "resourcemanagerDeleteDevicesResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        }
+      },
+      "description": "删除设备返回",
+      "title": "DeleteDevicesResp"
+    },
+    "resourcemanagerDeleteProviderResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        }
+      },
+      "description": "删除provider返回",
+      "title": "DeleteProviderResp"
+    },
+    "resourcemanagerDevice": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "设备ID",
+          "title": "id"
+        },
+        "provider": {
+          "type": "string",
+          "description": "设备提供方, 如自研云, 腾讯云, AWS等",
+          "title": "provider"
+        },
+        "info": {
+          "$ref": "#/definitions/resourcemanagerDeviceInfo",
+          "description": "设备信息",
+          "title": "info"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "设备信息标签",
+          "title": "labels"
+        },
+        "status": {
+          "type": "string",
+          "description": "设备状态",
+          "title": "status"
+        },
+        "createTime": {
+          "type": "string",
+          "format": "int64",
+          "description": "设备创建时间, utc seconds",
+          "title": "createTime"
+        },
+        "updateTime": {
+          "type": "string",
+          "format": "int64",
+          "description": "设备更新时间, utc seconds",
+          "title": "updateTime"
+        },
+        "lastConsumedTime": {
+          "type": "string",
+          "format": "int64",
+          "description": "上次消费时间, utc seconds",
+          "title": "lastConsumedTime"
+        },
+        "lastReturnedTime": {
+          "type": "string",
+          "format": "int64",
+          "description": "上次归还时间, utc seconds",
+          "title": "lastReturnedTime"
+        },
+        "lastConsumerID": {
+          "type": "string",
+          "description": "上次消费者的ID",
+          "title": "lastConsumerID"
+        },
+        "lastRecordID": {
+          "type": "string",
+          "description": "上次订单的ID",
+          "title": "lastRecordID"
+        },
+        "lastReturnRecordID": {
+          "type": "string",
+          "description": "上次归还订单的ID",
+          "title": "lastReturnRecordID"
+        },
+        "devicePoolID": {
+          "type": "string",
+          "description": "设备池ID",
+          "title": "devicePoolID"
+        },
+        "type": {
+          "type": "string",
+          "description": "资源类型，可以是机器、硬盘等",
+          "title": "type"
+        },
+        "annotations": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "设备annotations",
+          "title": "annotations"
+        }
+      }
+    },
+    "resourcemanagerDeviceBill": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "账单ID",
+          "title": "id"
+        },
+        "deviceID": {
+          "type": "string",
+          "description": "账单对应的设备ID",
+          "title": "deviceID"
+        },
+        "deviceConsumerID": {
+          "type": "string",
+          "description": "消费者ID",
+          "title": "deviceConsumerID"
+        },
+        "consumeRequestTime": {
+          "type": "string",
+          "format": "int64",
+          "description": "消费请求时间",
+          "title": "consumeRequestTime"
+        },
+        "consumeTime": {
+          "type": "string",
+          "format": "int64",
+          "description": "消费时间",
+          "title": "consumeTime"
+        },
+        "returnRequestTime": {
+          "type": "string",
+          "format": "int64",
+          "description": "归还请求时间",
+          "title": "consumeRequestTime"
+        },
+        "returnTime": {
+          "type": "string",
+          "format": "int64",
+          "description": "归还时间",
+          "title": "returnTime"
+        },
+        "finished": {
+          "type": "boolean",
+          "description": "账单是否已经完成",
+          "title": "finished"
+        },
+        "consumerLabels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "consumer labels",
+          "title": "consumerLabels"
+        },
+        "deviceRecordID": {
+          "type": "string",
+          "description": "账单对应的订单ID",
+          "title": "deviceRecordID"
+        },
+        "deviceInfo": {
+          "$ref": "#/definitions/resourcemanagerDeviceInfo",
+          "description": "设备信息",
+          "title": "deviceInfo"
+        },
+        "provider": {
+          "type": "string",
+          "description": "provider",
+          "title": "provider"
+        }
+      }
+    },
+    "resourcemanagerDeviceConsumer": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "消费者ID",
+          "title": "id"
+        },
+        "name": {
+          "type": "string",
+          "description": "消费者名称",
+          "title": "name"
+        },
+        "provider": {
+          "type": "string",
+          "description": "设备提供方, 如自研云, 腾讯云, AWS等",
+          "title": "provider"
+        },
+        "clusterID": {
+          "type": "string",
+          "description": "设备诉求方的集群ID",
+          "title": "clusterID"
+        },
+        "associatedDevicePool": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "期望关联的设备池ID列表, 若为空则所有设备池均可接受",
+          "title": "associatedDevicePool"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "消费者信息标签",
+          "title": "labels"
+        },
+        "createTime": {
+          "type": "string",
+          "format": "int64",
+          "description": "创建时间, utc seconds",
+          "title": "createTime"
+        },
+        "updateTime": {
+          "type": "string",
+          "format": "int64",
+          "description": "更新时间, utc seconds",
+          "title": "updateTime"
+        },
+        "quotas": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/resourcemanagerConsumerQuota"
+          },
+          "description": "资源配额",
+          "title": "quotas"
+        },
+        "usages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/resourcemanagerConsumerQuota"
+          },
+          "description": "配额用量",
+          "title": "usages"
+        }
+      }
+    },
+    "resourcemanagerDeviceDisk": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "设备磁盘类型",
+          "title": "type"
+        },
+        "size": {
+          "type": "string",
+          "description": "设备磁盘大小",
+          "title": "size"
+        }
+      }
+    },
+    "resourcemanagerDeviceImage": {
+      "type": "object",
+      "properties": {
+        "image": {
+          "type": "string",
+          "description": "镜像",
+          "title": "image"
+        },
+        "name": {
+          "type": "string",
+          "description": "镜像名称",
+          "title": "name"
+        }
+      }
+    },
+    "resourcemanagerDeviceInfo": {
+      "type": "object",
+      "properties": {
+        "instance": {
+          "type": "string",
+          "description": "设备实例标记",
+          "title": "instance"
+        },
+        "innerIP": {
+          "type": "string",
+          "description": "设备内网主IP",
+          "title": "innerIP"
+        },
+        "instanceType": {
+          "type": "string",
+          "description": "机型信息字符串, 可能为空",
+          "title": "instanceType"
+        },
+        "cpu": {
+          "type": "integer",
+          "format": "int64",
+          "description": "设备CPU信息",
+          "title": "cpu"
+        },
+        "mem": {
+          "type": "integer",
+          "format": "int64",
+          "description": "设备内存信息",
+          "title": "mem"
+        },
+        "gpu": {
+          "type": "integer",
+          "format": "int64",
+          "description": "设备GPU信息",
+          "title": "gpu"
+        },
+        "zone": {
+          "$ref": "#/definitions/resourcemanagerDeviceZone",
+          "description": "设备可用区信息, 可能为空",
+          "title": "zone"
+        },
+        "security": {
+          "$ref": "#/definitions/resourcemanagerDeviceSecurity",
+          "description": "设备所属安全信息",
+          "title": "security"
+        },
+        "image": {
+          "$ref": "#/definitions/resourcemanagerDeviceImage",
+          "description": "设备镜像信息",
+          "title": "image"
+        },
+        "vpc": {
+          "type": "string",
+          "description": "设备所属VPC ID",
+          "title": "vpc"
+        },
+        "region": {
+          "type": "string",
+          "description": "设备所属区域, 例如广州, 深圳, 加州等",
+          "title": "region"
+        },
+        "password": {
+          "type": "string",
+          "description": "实例初始化密码, 需要进行解密",
+          "title": "password"
+        },
+        "systemDisk": {
+          "$ref": "#/definitions/resourcemanagerDeviceDisk",
+          "description": "设备系统盘信息",
+          "title": "systemDisk"
+        },
+        "dataDisks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/resourcemanagerDeviceDisk"
+          },
+          "description": "设备数据盘信息",
+          "title": "dataDisks"
+        },
+        "assetID": {
+          "type": "string",
+          "description": "assetID",
+          "title": "assetID"
+        },
+        "businessID": {
+          "type": "string",
+          "format": "int64",
+          "description": "businessID",
+          "title": "businessID"
+        },
+        "cloudVendor": {
+          "type": "string",
+          "description": "cloudVendor",
+          "title": "cloudVendor"
+        },
+        "cloudRegion": {
+          "type": "string",
+          "description": "cloudRegion",
+          "title": "cloudRegion"
+        }
+      }
+    },
+    "resourcemanagerDeviceInstance": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "机型ID",
+          "title": "id"
+        },
+        "name": {
+          "type": "string",
+          "description": "机型名称",
+          "title": "name"
+        },
+        "instanceType": {
+          "type": "string",
+          "description": "机型",
+          "title": "instanceType"
+        },
+        "region": {
+          "type": "string",
+          "description": "地域",
+          "title": "region"
+        },
+        "zone": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "可用区",
+          "title": "zone"
+        },
+        "cpu": {
+          "type": "integer",
+          "format": "int64",
+          "description": "CPU(核心数)",
+          "title": "cpu"
+        },
+        "memory": {
+          "type": "integer",
+          "format": "int64",
+          "description": "内存(G)",
+          "title": "memory"
+        },
+        "provider": {
+          "type": "string",
+          "description": "资源提供者",
+          "title": "provider"
+        },
+        "status": {
+          "type": "string",
+          "description": "在售状态",
+          "title": "status"
+        },
+        "num": {
+          "type": "integer",
+          "format": "int64",
+          "description": "资源数量",
+          "title": "num"
+        },
+        "createTime": {
+          "type": "string",
+          "format": "int64",
+          "description": "创建时间, utc seconds",
+          "title": "createTime"
+        },
+        "updateTime": {
+          "type": "string",
+          "format": "int64",
+          "description": "更新时间, utc seconds",
+          "title": "updateTime"
+        }
+      }
+    },
+    "resourcemanagerDevicePool": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "设备池ID",
+          "title": "id"
+        },
+        "name": {
+          "type": "string",
+          "description": "设备池名称",
+          "title": "name"
+        },
+        "provider": {
+          "type": "string",
+          "description": "设备提供方, 如自研云, 腾讯云, AWS等",
+          "title": "provider"
+        },
+        "baseConfig": {
+          "$ref": "#/definitions/resourcemanagerConsumeDesire",
+          "description": "设备基础配置信息",
+          "title": "baseConfig"
+        },
+        "allowedDeviceConsumer": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "允许关联的消费者",
+          "title": "allowedDeviceConsumer"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "设备池信息标签",
+          "title": "labels"
+        },
+        "createTime": {
+          "type": "string",
+          "format": "int64",
+          "description": "创建时间, utc seconds",
+          "title": "createTime"
+        },
+        "updateTime": {
+          "type": "string",
+          "format": "int64",
+          "description": "更新时间, utc seconds",
+          "title": "updateTime"
+        },
+        "enableAS": {
+          "type": "boolean",
+          "description": "开启autoscaler",
+          "title": "enableAS"
+        },
+        "asOption": {
+          "$ref": "#/definitions/resourcemanagerDevicePoolAutoScalerOption",
+          "description": "autoscaler配置",
+          "title": "asOption"
+        },
+        "asStatus": {
+          "type": "string",
+          "description": "autoscaler状态",
+          "title": "asStatus"
+        },
+        "asActionOrder": {
+          "type": "string",
+          "description": "autoscaler action order",
+          "title": "asActionOrder"
+        },
+        "reserved": {
+          "type": "boolean",
+          "description": "reserved pool can not be picked without specified",
+          "title": "reserved"
+        },
+        "type": {
+          "type": "string",
+          "description": "资源池类型，可以是机器池、cmdb模块等",
+          "title": "type"
+        },
+        "operator": {
+          "type": "string",
+          "description": "operator",
+          "title": "operator"
+        },
+        "creator": {
+          "type": "string",
+          "description": "creator",
+          "title": "creator"
+        },
+        "updater": {
+          "type": "string",
+          "description": "updater",
+          "title": "updater"
+        },
+        "status": {
+          "type": "string",
+          "description": "status",
+          "title": "status"
+        },
+        "annotations": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "设备池annotations",
+          "title": "annotations"
+        }
+      }
+    },
+    "resourcemanagerDevicePoolAutoScalerOption": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "autoscaler策略类型",
+          "title": "type"
+        },
+        "settings": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number",
+            "format": "double"
+          },
+          "description": "autoscaler策略配置",
+          "title": "settings"
+        }
+      }
+    },
+    "resourcemanagerDevicePoolEvent": {
+      "type": "object",
+      "properties": {
+        "deviceID": {
+          "type": "string",
+          "description": "设备ID",
+          "title": "deviceID"
+        },
+        "assetID": {
+          "type": "string",
+          "description": "assetID",
+          "title": "assetID"
+        },
+        "consumerID": {
+          "type": "string",
+          "description": "消费者的ID",
+          "title": "consumerID"
+        },
+        "deviceIP": {
+          "type": "string",
+          "description": "deviceIP",
+          "title": "deviceIP"
+        },
+        "eventType": {
+          "type": "string",
+          "description": "事件类型",
+          "title": "eventType"
+        },
+        "eventTime": {
+          "type": "string",
+          "format": "int64",
+          "description": "事件时间",
+          "title": "eventTime"
+        }
+      }
+    },
+    "resourcemanagerDeviceRecord": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "记录ID",
+          "title": "id"
+        },
+        "deviceConsumerID": {
+          "type": "string",
+          "description": "消费者ID",
+          "title": "deviceConsumerID"
+        },
+        "requestTime": {
+          "type": "string",
+          "format": "int64",
+          "description": "请求到达时间, utc seconds",
+          "title": "requestTime"
+        },
+        "finishTime": {
+          "type": "string",
+          "format": "int64",
+          "description": "完成时间, utc seconds",
+          "title": "consumeTime"
+        },
+        "type": {
+          "type": "string",
+          "description": "记录类型",
+          "title": "type"
+        },
+        "status": {
+          "type": "string",
+          "description": "记录状态",
+          "title": "status"
+        },
+        "message": {
+          "type": "string",
+          "description": "状态信息, 如失败原因",
+          "title": "message"
+        },
+        "devices": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "相关设备ID列表",
+          "title": "consumedDevices"
+        },
+        "num": {
+          "type": "integer",
+          "format": "int64",
+          "description": "消费的设备数量",
+          "title": "num"
+        },
+        "desires": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/resourcemanagerConsumeDesire"
+          },
+          "description": "对消费设备的要求, 按队列顺序优先级尝试满足",
+          "title": "desires"
+        },
+        "pools": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "匹配的设备池",
+          "title": "pools"
+        },
+        "selectedPool": {
+          "type": "string",
+          "description": "选择的设备池",
+          "title": "selectedPool"
+        },
+        "createTime": {
+          "type": "string",
+          "format": "int64",
+          "description": "创建时间, utc seconds",
+          "title": "createTime"
+        },
+        "updateTime": {
+          "type": "string",
+          "format": "int64",
+          "description": "更新时间, utc seconds",
+          "title": "updateTime"
+        },
+        "consumerLabels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "consumer labels",
+          "title": "consumerLabels"
+        },
+        "deviceDetails": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/resourcemanagerDevice"
+          },
+          "description": "device details",
+          "title": "deviceDetails"
+        },
+        "extraLabels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "extraLabels labels",
+          "title": "extraLabels"
+        },
+        "snapshotPool": {
+          "type": "string",
+          "description": "关联的设备池快照",
+          "title": "snapshotPool"
+        },
+        "provider": {
+          "type": "string",
+          "description": "provider",
+          "title": "provider"
+        }
+      },
+      "title": "DeviceRecord 记录用户消费或归还设备的流水"
+    },
+    "resourcemanagerDeviceSecurity": {
+      "type": "object",
+      "properties": {
+        "group": {
+          "type": "string",
+          "description": "设备所属安全组",
+          "title": "group"
+        },
+        "groupName": {
+          "type": "string",
+          "description": "设备所属安全组名称",
+          "title": "groupName"
+        },
+        "groupDescription": {
+          "type": "string",
+          "description": "设备所属安全组描述",
+          "title": "groupDescription"
+        }
+      }
+    },
+    "resourcemanagerDeviceZone": {
+      "type": "object",
+      "properties": {
+        "region": {
+          "type": "string",
+          "description": "设备所属地域",
+          "title": "region"
+        },
+        "zone": {
+          "type": "string",
+          "description": "设备所属可用区",
+          "title": "zone"
+        },
+        "subnet": {
+          "type": "string",
+          "description": "设备所属子网",
+          "title": "subnet"
+        }
+      }
+    },
+    "resourcemanagerEnableDeviceConsumerReq": {
+      "type": "object",
+      "properties": {
+        "projectID": {
+          "type": "string",
+          "description": "项目ID",
+          "title": "projectID"
+        },
+        "clusterID": {
+          "type": "string",
+          "description": "集群ID",
+          "title": "clusterID"
+        },
+        "region": {
+          "type": "string",
+          "description": "地域",
+          "title": "region"
+        },
+        "vpc": {
+          "type": "string",
+          "description": "vpc",
+          "title": "vpc"
+        },
+        "deviceInstanceID": {
+          "type": "string",
+          "description": "机型ID",
+          "title": "deviceInstanceID"
+        }
+      },
+      "description": "接入 device-consumer 请求",
+      "title": "EnableDeviceConsumerReq",
+      "required": [
+        "projectID",
+        "clusterID",
+        "region",
+        "vpc",
+        "deviceInstanceID"
+      ]
+    },
+    "resourcemanagerEnableDeviceConsumerResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/resourcemanagerDeviceConsumer",
+          "description": "deviceConsumer",
+          "title": "data"
+        }
+      },
+      "description": "接入 device-consumer 返回",
+      "title": "EnableDeviceConsumerResp"
+    },
+    "resourcemanagerGetDeviceConsumerResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/resourcemanagerDeviceConsumer",
+          "description": "查询到的device consumer",
+          "title": "data"
+        }
+      },
+      "description": "查询消费者返回",
+      "title": "GetDeviceConsumerResp"
+    },
+    "resourcemanagerGetDevicePoolEventResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/resourcemanagerDevicePoolEvent"
+          },
+          "description": "查询到的device pool event",
+          "title": "data"
+        }
+      },
+      "description": "设备池event返回",
+      "title": "GetDevicePoolEventResp"
+    },
+    "resourcemanagerGetDevicePoolResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/resourcemanagerDevicePool",
+          "description": "查询到的device pool",
+          "title": "data"
+        }
+      },
+      "description": "查询设备池返回",
+      "title": "GetDevicePoolResp"
+    },
+    "resourcemanagerGetDeviceRecordResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/resourcemanagerDeviceRecord",
+          "description": "查询到的device record",
+          "title": "data"
+        }
+      },
+      "description": "查询device record的返回",
+      "title": "GetDeviceRecordResp"
+    },
+    "resourcemanagerGetDeviceResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/resourcemanagerDevice",
+          "description": "设备信息",
+          "title": "data"
+        }
+      },
+      "description": "获取设备返回",
+      "title": "GetDeviceResp"
+    },
+    "resourcemanagerGetProviderResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/resourcemanagerProvider",
+          "description": "查询的provider",
+          "title": "data"
+        }
+      },
+      "description": "查询provider返回",
+      "title": "GetProviderResp"
+    },
+    "resourcemanagerImportDeviceToDevicePoolByBkAssetIDReq": {
+      "type": "object",
+      "properties": {
+        "devicePoolID": {
+          "type": "string",
+          "description": "要导入的设备池ID",
+          "title": "devicePoolID"
+        },
+        "bkAssetID": {
+          "type": "string",
+          "description": "要导入的设备的bkAssetID",
+          "title": "bkAssetID"
+        },
+        "operator": {
+          "type": "string",
+          "description": "操作者",
+          "title": "operator"
+        }
+      },
+      "description": "通过bkAssetID将设备导入设备池的参数",
+      "title": "ImportDeviceToDevicePoolByBkAssetIDReq"
+    },
+    "resourcemanagerImportDeviceToDevicePoolReq": {
+      "type": "object",
+      "properties": {
+        "devicePoolID": {
+          "type": "string",
+          "description": "要导入的设备池ID",
+          "title": "id"
+        },
+        "devices": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/resourcemanagerDevice"
+          },
+          "description": "要导入的设备",
+          "title": "id"
+        },
+        "operator": {
+          "type": "string",
+          "description": "操作者",
+          "title": "operator"
+        }
+      },
+      "description": "将设备导入设备池的参数",
+      "title": "ImportDeviceToDevicePoolReq"
+    },
+    "resourcemanagerImportDeviceToDevicePoolResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        }
+      },
+      "description": "将设备导入设备池的返回",
+      "title": "ImportDeviceToDevicePoolResp"
+    },
+    "resourcemanagerImportDevicesData": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "成功的Devices",
+          "title": "success"
+        },
+        "failed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "失败的Devices",
+          "title": "failed"
+        }
+      }
+    },
+    "resourcemanagerImportDevicesToDevicePoolByBkAssetIDsReq": {
+      "type": "object",
+      "properties": {
+        "devicePoolID": {
+          "type": "string",
+          "description": "要导入的设备池ID",
+          "title": "id"
+        },
+        "bkAssetIDs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "要导入的设备固资号",
+          "title": "bkAssetIDs"
+        },
+        "operator": {
+          "type": "string",
+          "description": "操作者",
+          "title": "operator"
+        }
+      },
+      "description": "将设备导入设备池的参数",
+      "title": "ImportDevicesToDevicePoolByBkAssetIDsReq"
+    },
+    "resourcemanagerImportDevicesToDevicePoolByBkAssetIDsResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/resourcemanagerImportDevicesData",
+          "description": "结果信息",
+          "title": "data"
+        }
+      },
+      "description": "导入设备的返回",
+      "title": "ImportDevicesToDevicePoolByBkAssetIDsResp"
+    },
+    "resourcemanagerImportResourceReq": {
+      "type": "object",
+      "properties": {
+        "poolID": {
+          "type": "string",
+          "description": "poolID",
+          "title": "poolID"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/resourcemanagerResource"
+          },
+          "description": "资源列表",
+          "title": "data"
+        },
+        "operator": {
+          "type": "string",
+          "description": "操作者",
+          "title": "operator"
+        }
+      },
+      "description": "导入资源资源池请求",
+      "title": "ImportResourceReq",
+      "required": [
+        "data",
+        "operator"
+      ]
+    },
+    "resourcemanagerImportResourceResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/resourcemanagerResource"
+          },
+          "description": "资源池pool",
+          "title": "data"
+        }
+      },
+      "description": "导入资源返回",
+      "title": "ImportResourceResp"
+    },
+    "resourcemanagerLabels": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "labels",
+          "title": "data"
+        }
+      }
+    },
+    "resourcemanagerListDeviceBillResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/resourcemanagerDeviceBill"
+          },
+          "description": "list到的device bill",
+          "title": "data"
+        }
+      },
+      "description": "list device bill的返回",
+      "title": "ListDeviceBillResp"
+    },
+    "resourcemanagerListDeviceConsumerResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/resourcemanagerDeviceConsumer"
+          },
+          "description": "查询到的device consumer",
+          "title": "data"
+        }
+      },
+      "description": "list消费者返回",
+      "title": "ListDeviceConsumerResp"
+    },
+    "resourcemanagerListDeviceInstancesResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/resourcemanagerDeviceInstance"
+          },
+          "description": "机型信息",
+          "title": "data"
+        }
+      },
+      "description": "查询机型列表返回",
+      "title": "ListDeviceInstancesResp"
+    },
+    "resourcemanagerListDevicePoolResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/resourcemanagerDevicePool"
+          },
+          "description": "查询到的device pool",
+          "title": "data"
+        }
+      },
+      "description": "list设备池返回",
+      "title": "ListDevicePoolResp"
+    },
+    "resourcemanagerListDeviceRecordResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/resourcemanagerDeviceRecord"
+          },
+          "description": "list到的device record",
+          "title": "data"
+        }
+      },
+      "description": "list device record的返回",
+      "title": "ListDeviceRecordResp"
+    },
+    "resourcemanagerListDevicesResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/resourcemanagerDevice"
+          },
+          "description": "设备列表",
+          "title": "data"
+        }
+      },
+      "description": "获取设备列表返回",
+      "title": "ListDeviceResp"
+    },
+    "resourcemanagerListProviderResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/resourcemanagerProvider"
+          },
+          "description": "list的provider",
+          "title": "data"
+        }
+      },
+      "description": "list provider返回",
+      "title": "ListProviderResp"
+    },
+    "resourcemanagerListQuota": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/resourcemanagerConsumerQuota"
+          },
+          "description": "list consumer quota",
+          "title": "data"
+        }
+      }
+    },
+    "resourcemanagerListResourcePoolResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/resourcemanagerResourcePool"
+          },
+          "description": "资源池pool",
+          "title": "data"
+        }
+      },
+      "description": "创建设备池返回",
+      "title": "CreateDevicePoolResp"
+    },
+    "resourcemanagerListResourceResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/resourcemanagerResource"
+          },
+          "description": "资源池pool",
+          "title": "data"
+        }
+      },
+      "description": "创建设备池返回",
+      "title": "CreateDevicePoolResp"
+    },
+    "resourcemanagerListString": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "list string data",
+          "title": "data"
+        }
+      }
+    },
+    "resourcemanagerObsBill": {
+      "type": "object",
+      "properties": {
+        "year": {
+          "type": "integer",
+          "format": "int64",
+          "description": "年",
+          "title": "year"
+        },
+        "month": {
+          "type": "integer",
+          "format": "int64",
+          "description": "月",
+          "title": "month"
+        },
+        "leftTime": {
+          "type": "integer",
+          "format": "int64",
+          "description": "时间左区间",
+          "title": "leftTime"
+        },
+        "rightTime": {
+          "type": "integer",
+          "format": "int64",
+          "description": "时间右区间",
+          "title": "rightTime"
+        },
+        "productionID": {
+          "type": "string",
+          "description": "运营产品ID",
+          "title": "productionID"
+        },
+        "productionName": {
+          "type": "string",
+          "description": "运营产品名称",
+          "title": "productionName"
+        },
+        "resourceType": {
+          "type": "string",
+          "description": "资源类型",
+          "title": "resourceType"
+        },
+        "resourceSpec": {
+          "type": "string",
+          "description": "资源规格",
+          "title": "resourceSpec"
+        },
+        "resourceUnit": {
+          "type": "string",
+          "description": "资源单位",
+          "title": "resourceUnit"
+        },
+        "resourceAmount": {
+          "type": "integer",
+          "format": "int64",
+          "description": "资源数量",
+          "title": "resourceAmount"
+        },
+        "resourceUnitPrice": {
+          "type": "number",
+          "format": "double",
+          "description": "资源单价",
+          "title": "resourceUnitPrice"
+        },
+        "totalPrice": {
+          "type": "number",
+          "format": "double",
+          "description": "结算金额",
+          "title": "totalPrice"
+        },
+        "consumerProductionID": {
+          "type": "string",
+          "description": "分摊扣除运营产品ID",
+          "title": "consumerProductionID"
+        },
+        "consumerProductionName": {
+          "type": "string",
+          "description": "分摊扣除运营产品名称",
+          "title": "consumerProductionName"
+        }
+      }
+    },
+    "resourcemanagerObsCost": {
+      "type": "object",
+      "properties": {
+        "specName": {
+          "type": "string",
+          "description": "资源规格",
+          "title": "specName"
+        },
+        "typeName": {
+          "type": "string",
+          "description": "资源类型",
+          "title": "typeName"
+        },
+        "type": {
+          "type": "string",
+          "description": "obs cost类型",
+          "title": "type"
+        },
+        "unit": {
+          "type": "string",
+          "description": "资源单位",
+          "title": "unit"
+        },
+        "unitPrice": {
+          "type": "number",
+          "format": "double",
+          "description": "单位价格",
+          "title": "unitPrice"
+        },
+        "region": {
+          "type": "string",
+          "description": "区域信息",
+          "title": "region"
+        }
+      }
+    },
+    "resourcemanagerProvider": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "provider name",
+          "title": "name"
+        },
+        "key": {
+          "type": "string",
+          "description": "provider key",
+          "title": "key"
+        },
+        "secret": {
+          "type": "string",
+          "description": "provider secret",
+          "title": "secret"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "provider labels",
+          "title": "labels"
+        },
+        "createTime": {
+          "type": "string",
+          "format": "int64",
+          "description": "创建时间, utc seconds",
+          "title": "createTime"
+        },
+        "updateTime": {
+          "type": "string",
+          "format": "int64",
+          "description": "更新时间, utc seconds",
+          "title": "updateTime"
+        }
+      }
+    },
+    "resourcemanagerProviderNetwork": {
+      "type": "object",
+      "properties": {
+        "subnet": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/resourcemanagerProviderSubnet"
+          },
+          "description": "子网",
+          "title": "subnet"
+        }
+      }
+    },
+    "resourcemanagerProviderOrder": {
+      "type": "object",
+      "properties": {
+        "result": {
+          "type": "boolean",
+          "description": "结果",
+          "title": "result"
+        },
+        "status": {
+          "type": "string",
+          "description": "状态",
+          "title": "status"
+        },
+        "message": {
+          "type": "string",
+          "description": "详细信息",
+          "title": "message"
+        },
+        "devices": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/resourcemanagerDevice"
+          },
+          "description": "设备信息",
+          "title": "devices"
+        }
+      }
+    },
+    "resourcemanagerProviderSubnet": {
+      "type": "object",
+      "properties": {
+        "subnet": {
+          "type": "string",
+          "description": "子网",
+          "title": "subnet"
+        },
+        "name": {
+          "type": "string",
+          "description": "子网名称",
+          "title": "name"
+        },
+        "leftIPNum": {
+          "type": "integer",
+          "format": "int64",
+          "description": "剩下的IP数量",
+          "title": "leftIPNum"
+        }
+      }
+    },
+    "resourcemanagerQueryObsBillResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/resourcemanagerObsBill"
+          },
+          "description": "查询到的账单",
+          "title": "data"
+        }
+      },
+      "description": "查询obs账单返回",
+      "title": "QueryObsBillResp",
+      "required": [
+        "code",
+        "message",
+        "result",
+        "data"
+      ]
+    },
+    "resourcemanagerQueryProviderNetworkResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/resourcemanagerProviderNetwork",
+          "description": "信息内容",
+          "title": "data"
+        }
+      },
+      "description": "查询给定的provider network返回",
+      "title": "QueryProviderNetworkResp"
+    },
+    "resourcemanagerQueryProviderOrderResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/resourcemanagerProviderOrder",
+          "description": "订单内容",
+          "title": "data"
+        }
+      },
+      "description": "查询给定的provider order返回",
+      "title": "QueryProviderOrderResp"
+    },
+    "resourcemanagerRecordData": {
+      "type": "object",
+      "properties": {
+        "ID": {
+          "type": "string",
+          "description": "ID",
+          "title": "ID"
+        }
+      }
+    },
+    "resourcemanagerResource": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "资源ID",
+          "title": "id"
+        },
+        "innerIP": {
+          "type": "string",
+          "description": "内网IP地址",
+          "title": "innerIP"
+        },
+        "innerIPv6": {
+          "type": "string",
+          "description": "内网IPv6地址",
+          "title": "innerIPv6"
+        },
+        "resourceType": {
+          "type": "string",
+          "description": "资源类型: 如CVM, 物理机",
+          "title": "resourceType"
+        },
+        "resourceProvider": {
+          "type": "string",
+          "description": "资源来源: 如云梯等",
+          "title": "resourceProvider"
+        },
+        "poolID": {
+          "type": "string",
+          "description": "poolID",
+          "title": "poolID"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "资源信息标签",
+          "title": "labels"
+        },
+        "annotations": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "资源信息注解",
+          "title": "labels"
+        },
+        "createTime": {
+          "type": "string",
+          "format": "int64",
+          "description": "创建时间, utc seconds",
+          "title": "createTime"
+        },
+        "updateTime": {
+          "type": "string",
+          "format": "int64",
+          "description": "更新时间, utc seconds",
+          "title": "updateTime"
+        },
+        "status": {
+          "$ref": "#/definitions/resourcemanagerResourceStatus",
+          "description": "资源状态",
+          "title": "status"
+        }
+      }
+    },
+    "resourcemanagerResourcePool": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "资源池ID",
+          "title": "id"
+        },
+        "name": {
+          "type": "string",
+          "description": "资源池名称",
+          "title": "name"
+        },
+        "comment": {
+          "type": "string",
+          "description": "备注",
+          "title": "comment"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "资源池信息标签",
+          "title": "labels"
+        },
+        "annotations": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "资源池信息标签",
+          "title": "labels"
+        },
+        "createTime": {
+          "type": "string",
+          "format": "int64",
+          "description": "创建时间, utc seconds",
+          "title": "createTime"
+        },
+        "updateTime": {
+          "type": "string",
+          "format": "int64",
+          "description": "更新时间, utc seconds",
+          "title": "updateTime"
+        }
+      }
+    },
+    "resourcemanagerResourceStatus": {
+      "type": "object",
+      "properties": {
+        "phase": {
+          "type": "string",
+          "description": "状态, 目前包含初始态(INIT), IDLE(空闲，唯一可以被消费的资源), 已经上架(CONSUMED), 已经下架/空闲(RETURNED)",
+          "title": "状态"
+        },
+        "updateTime": {
+          "type": "string",
+          "format": "int64",
+          "description": "更新时间, utc seconds",
+          "title": "updateTime"
+        },
+        "consumeOrderID": {
+          "type": "string",
+          "description": "consumeOrderID",
+          "title": "consumeOrderID"
+        },
+        "devicePoolID": {
+          "type": "string",
+          "description": "devicePoolID",
+          "title": "devicePoolID"
+        },
+        "clusterID": {
+          "type": "string",
+          "description": "clusterID",
+          "title": "clusterID"
+        },
+        "returnOrderID": {
+          "type": "string",
+          "description": "returnOrderID",
+          "title": "returnOrderID"
+        }
+      }
+    },
+    "resourcemanagerReturnDeviceReq": {
+      "type": "object",
+      "properties": {
+        "deviceConsumerID": {
+          "type": "string",
+          "description": "deviceConsumerID",
+          "title": "deviceConsumerID"
+        },
+        "devices": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "要归还的设备",
+          "title": "devices"
+        },
+        "operator": {
+          "type": "string",
+          "description": "操作者",
+          "title": "operator"
+        },
+        "extraSystemID": {
+          "type": "string",
+          "description": "额外指定的systemID, yunti专用",
+          "title": "extraSystemID"
+        }
+      },
+      "description": "归还设备的参数",
+      "title": "ReturnDeviceReq",
+      "required": [
+        "deviceConsumerID",
+        "devices",
+        "operator"
+      ]
+    },
+    "resourcemanagerReturnDeviceResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/resourcemanagerRecordData",
+          "description": "结果信息",
+          "title": "data"
+        }
+      },
+      "description": "归还设备的返回",
+      "title": "ReturnDeviceResp"
+    },
+    "resourcemanagerUpdateDeviceConsumerReq": {
+      "type": "object",
+      "properties": {
+        "deviceConsumerID": {
+          "type": "string",
+          "description": "消费者ID",
+          "title": "deviceConsumerID"
+        },
+        "name": {
+          "type": "string",
+          "description": "消费者名称",
+          "title": "name"
+        },
+        "provider": {
+          "type": "string",
+          "description": "希望的设备提供者",
+          "title": "provider"
+        },
+        "clusterID": {
+          "type": "string",
+          "description": "消费者所属集群ID",
+          "title": "clusterID"
+        },
+        "associatedDevicePool": {
+          "$ref": "#/definitions/resourcemanagerListString",
+          "description": "关联的device pool, 默认为所有",
+          "title": "associatedDevicePool"
+        },
+        "labels": {
+          "$ref": "#/definitions/resourcemanagerLabels",
+          "description": "消费者信息标签",
+          "title": "labels"
+        },
+        "operator": {
+          "type": "string",
+          "description": "操作者",
+          "title": "operator"
+        },
+        "quotas": {
+          "$ref": "#/definitions/resourcemanagerListQuota",
+          "description": "资源配额",
+          "title": "quotas"
+        }
+      },
+      "description": "更新消费者的参数",
+      "title": "UpdateDeviceConsumerReq"
+    },
+    "resourcemanagerUpdateDeviceConsumerResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/resourcemanagerDeviceConsumer",
+          "description": "更新的device consumer",
+          "title": "data"
+        }
+      },
+      "description": "更新消费者的返回",
+      "title": "UpdateDeviceConsumerResp"
+    },
+    "resourcemanagerUpdateDeviceInstanceReq": {
+      "type": "object",
+      "properties": {
+        "deviceInstanceID": {
+          "type": "string",
+          "description": "机型ID",
+          "title": "deviceInstanceID"
+        },
+        "name": {
+          "type": "string",
+          "description": "机型名称",
+          "title": "name"
+        },
+        "instanceType": {
+          "type": "string",
+          "description": "instanceType",
+          "title": "instanceType"
+        },
+        "region": {
+          "type": "string",
+          "description": "地域",
+          "title": "region"
+        },
+        "zone": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "可用区",
+          "title": "zone"
+        },
+        "cpu": {
+          "type": "integer",
+          "format": "int64",
+          "description": "cpu(核心数)",
+          "title": "cpu"
+        },
+        "memory": {
+          "type": "integer",
+          "format": "int64",
+          "description": "内存(G)",
+          "title": "memory"
+        },
+        "provider": {
+          "type": "string",
+          "description": "资源提供方",
+          "title": "provider"
+        },
+        "status": {
+          "type": "integer",
+          "format": "int64",
+          "description": "状态",
+          "title": "status"
+        },
+        "num": {
+          "type": "integer",
+          "format": "int64",
+          "description": "可用资源数量",
+          "title": "num"
+        }
+      },
+      "description": "修改机型",
+      "title": "UpdateDeviceInstanceReq"
+    },
+    "resourcemanagerUpdateDeviceInstanceResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/resourcemanagerDeviceInstance",
+          "description": "机型信息",
+          "title": "data"
+        }
+      },
+      "description": "更新机型返回",
+      "title": "UpdateeviceInstanceResp"
+    },
+    "resourcemanagerUpdateDevicePoolReq": {
+      "type": "object",
+      "properties": {
+        "devicePoolID": {
+          "type": "string",
+          "description": "设备池ID",
+          "title": "devicePoolID"
+        },
+        "name": {
+          "type": "string",
+          "description": "设备池名称",
+          "title": "name"
+        },
+        "provider": {
+          "type": "string",
+          "description": "希望的设备提供者",
+          "title": "provider"
+        },
+        "baseConfig": {
+          "$ref": "#/definitions/resourcemanagerConsumeDesire",
+          "description": "设备基础配置信息",
+          "title": "baseConfig"
+        },
+        "allowedDeviceConsumer": {
+          "$ref": "#/definitions/resourcemanagerListString",
+          "description": "允许关联的消费者",
+          "title": "allowedDeviceConsumer"
+        },
+        "labels": {
+          "$ref": "#/definitions/resourcemanagerLabels",
+          "description": "设备池信息标签",
+          "title": "labels"
+        },
+        "operator": {
+          "type": "string",
+          "description": "操作者",
+          "title": "operator"
+        },
+        "enableAS": {
+          "type": "boolean",
+          "description": "开启autoscaler",
+          "title": "enableAS"
+        },
+        "asOption": {
+          "$ref": "#/definitions/resourcemanagerDevicePoolAutoScalerOption",
+          "description": "autoscaler配置",
+          "title": "asOption"
+        },
+        "reserved": {
+          "type": "boolean",
+          "description": "reserved pool can not be picked without specified",
+          "title": "reserved"
+        },
+        "type": {
+          "type": "string",
+          "description": "资源池类型",
+          "title": "type"
+        },
+        "updater": {
+          "type": "string",
+          "description": "更新者",
+          "title": "updater"
+        },
+        "status": {
+          "type": "string",
+          "format": "int64",
+          "description": "设备池状态",
+          "title": "status"
+        },
+        "annotations": {
+          "$ref": "#/definitions/resourcemanagerAnnotations",
+          "description": "设备池annotations",
+          "title": "annotations"
+        }
+      },
+      "description": "更新消费者的参数",
+      "title": "UpdateDevicePoolReq"
+    },
+    "resourcemanagerUpdateDevicePoolResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/resourcemanagerDevicePool",
+          "description": "更新的device pool",
+          "title": "data"
+        }
+      },
+      "description": "更新消费者的返回",
+      "title": "UpdateDevicePoolResp"
+    },
+    "resourcemanagerUpdateDeviceRecordReq": {
+      "type": "object",
+      "properties": {
+        "deviceRecordID": {
+          "type": "string",
+          "description": "deviceRecordID",
+          "title": "deviceRecordID"
+        },
+        "devices": {
+          "$ref": "#/definitions/resourcemanagerListString",
+          "description": "相关设备ID列表",
+          "title": "devices"
+        }
+      },
+      "description": "UpdateDeviceRecordReq",
+      "title": "UpdateDeviceRecordReq"
+    },
+    "resourcemanagerUpdateDeviceRecordResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/resourcemanagerDeviceRecord",
+          "description": "更新的device record",
+          "title": "data"
+        }
+      },
+      "description": "UpdateDeviceRecordResp",
+      "title": "UpdateDeviceRecordResp"
+    },
+    "resourcemanagerUpdateDeviceReq": {
+      "type": "object",
+      "properties": {
+        "deviceID": {
+          "type": "string",
+          "description": "设备ID",
+          "title": "deviceID"
+        },
+        "provider": {
+          "type": "string",
+          "description": "设备提供商",
+          "title": "provider"
+        },
+        "pool": {
+          "type": "string",
+          "description": "设备池",
+          "title": "pool"
+        },
+        "status": {
+          "type": "string",
+          "format": "int64",
+          "description": "设备状态",
+          "title": "status"
+        },
+        "systemID": {
+          "type": "string",
+          "description": "用于临时指定 yunti 的 recycle systemID",
+          "title": "systemID"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "设备信息标签",
+          "title": "labels"
+        },
+        "info": {
+          "$ref": "#/definitions/resourcemanagerDeviceInfo",
+          "description": "设备信息",
+          "title": "info"
+        },
+        "type": {
+          "type": "string",
+          "description": "资源类型",
+          "title": "type"
+        },
+        "annotations": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "设备annotations",
+          "title": "annotations"
+        }
+      },
+      "description": "更新设备请求",
+      "title": "UpdateDeviceReq"
+    },
+    "resourcemanagerUpdateDeviceResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/resourcemanagerDevice",
+          "description": "设备信息",
+          "title": "data"
+        }
+      },
+      "description": "更新设备返回",
+      "title": "UpdateDeviceResp"
+    },
+    "resourcemanagerUpdateProviderReq": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "provider name",
+          "title": "name"
+        },
+        "key": {
+          "type": "string",
+          "description": "provider key",
+          "title": "key"
+        },
+        "secret": {
+          "type": "string",
+          "description": "provider secret",
+          "title": "secret"
+        },
+        "labels": {
+          "$ref": "#/definitions/resourcemanagerLabels",
+          "description": "provider labels",
+          "title": "labels"
+        },
+        "operator": {
+          "type": "string",
+          "description": "操作者",
+          "title": "operator"
+        }
+      },
+      "description": "更新provider参数",
+      "title": "UpdateProviderReq"
+    },
+    "resourcemanagerUpdateProviderResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/resourcemanagerProvider",
+          "description": "更新的provider",
+          "title": "data"
+        }
+      },
+      "description": "更新provider返回",
+      "title": "UpdateProviderResp"
+    },
+    "runtimeError": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string"
+        },
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    }
+  }
+}

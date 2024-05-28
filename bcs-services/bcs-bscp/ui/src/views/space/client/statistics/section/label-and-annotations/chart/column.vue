@@ -1,23 +1,27 @@
 <template>
   <div ref="canvasRef" class="canvas-wrap">
-    <Tooltip ref="tooltipRef" @jump="emits('jump', labelValue)" />
+    <Tooltip
+      :need-down-icon="!!drillDownDemension"
+      :down="drillDownDemension"
+      ref="tooltipRef"
+      @jump="emits('jump', labelValue)" />
   </div>
 </template>
 
 <script lang="ts" setup>
   import { onMounted, ref, watch } from 'vue';
-  import { Column } from '@antv/g2plot';
+  import { Column, Datum } from '@antv/g2plot';
   import { IClientLabelItem } from '../../../../../../../../types/client';
   import Tooltip from '../../../components/tooltip.vue';
-  import { useI18n } from 'vue-i18n';
-  const { t } = useI18n();
 
   const props = defineProps<{
     data: IClientLabelItem[];
     bkBizId: string;
     appId: number;
+    chartShowType: string;
+    drillDownDemension: string;
   }>();
-  const emits = defineEmits(['jump']);
+  const emits = defineEmits(['jump', 'drillDown']);
 
   const canvasRef = ref<HTMLElement>();
   const tooltipRef = ref();
@@ -31,6 +35,39 @@
     },
   );
 
+  watch(
+    () => props.chartShowType,
+    (val) => {
+      if (val === 'tile') {
+        columnPlot.update({
+          isGroup: true,
+          isStack: false,
+          label: {
+            // 可手动配置 label 数据标签位置
+            position: 'top', // 'top', 'bottom', 'middle',
+            // 配置样式
+            style: {
+              fill: '#979BA5',
+            },
+          },
+        });
+      } else {
+        columnPlot.update({
+          isGroup: false,
+          isStack: true,
+          label: {
+            // 可手动配置 label 数据标签位置
+            position: 'middle', // 'top', 'bottom', 'middle',
+            // 配置样式
+            style: {
+              fill: '#fff',
+            },
+          },
+        });
+      }
+    },
+  );
+
   onMounted(() => {
     initChart();
   });
@@ -38,26 +75,23 @@
   const initChart = () => {
     columnPlot = new Column(canvasRef.value!, {
       data: props.data,
-      xField: 'value',
+      xField: 'primary_val',
       yField: 'count',
       padding: [30, 10, 50, 20],
+      isGroup: true,
       limitInPlot: false,
-      color: '#3E96C2',
-      seriesField: 'count',
+      seriesField: 'foreign_val',
       maxColumnWidth: 40,
       legend: {
-        custom: true,
         position: 'bottom',
-        items: [
-          {
-            id: '1',
-            name: t('客户端数量'),
-            value: 'count',
-            marker: {
-              symbol: 'square',
-            },
+      },
+      state: {
+        active: {
+          style: {
+            lineWidth: 0, // 通过设置 lineWidth 为 0 来去掉黑边
+            stroke: null, // 确保没有边框颜色
           },
-        ],
+        },
       },
       label: {
         // 可手动配置 label 数据标签位置
@@ -68,16 +102,14 @@
         },
       },
       tooltip: {
-        fields: ['count'],
+        fields: ['foreign_val', 'count'],
+        formatter: (datum: Datum) => {
+          return { name: datum.foreign_val, value: datum.count };
+        },
         showTitle: true,
-        title: 'value',
+        title: 'primary_val',
         container: tooltipRef.value?.getDom(),
         enterable: true,
-        customItems: (originalItems: any[]) => {
-          labelValue.value = originalItems[0].title;
-          originalItems[0].name = t('客户端数量');
-          return originalItems;
-        },
       },
       yAxis: {
         grid: {
@@ -90,8 +122,21 @@
         },
       },
     });
+    columnPlot.on('plot:click', (e: any) => {
+      if (!e.data) return;
+      emits('drillDown', e.data.data as IClientLabelItem);
+    });
     columnPlot.render();
   };
 </script>
 
-<style scoped lang="scss"></style>
+<style scoped lang="scss">
+  :deep(.g2-tooltip) {
+    visibility: hidden;
+    .g2-tooltip-list-item {
+      .g2-tooltip-marker {
+        border-radius: initial !important;
+      }
+    }
+  }
+</style>

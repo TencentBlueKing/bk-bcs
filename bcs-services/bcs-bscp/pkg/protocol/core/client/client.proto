@@ -67,7 +67,8 @@ message ClientQueryCondition {
   string client_version = 9;                  // 客户端组件版本
   string client_type = 10;                    // 客户端组件类型
   string failed_reason = 11;                  // 客户端失败主类原因
-  string pull_time = 12;                      // 拉取时间
+  string start_pull_time = 12;                // 开始拉取时间
+  string end_pull_time = 13;                  // 结束拉取时间
 }
 
 // ClientCommonReq request param
@@ -75,7 +76,9 @@ message ClientCommonReq {
   uint32 biz_id = 1;
   uint32 app_id = 2;
   pbclient.ClientQueryCondition search = 3;
-  int64 last_heartbeat_time = 4;  // 心跳时间
-  int64 pull_time = 5;            // 拉取趋势时间
-  bool is_duplicates = 6;         // 拉取趋势是否去重
+  int64 last_heartbeat_time = 4;            // 心跳时间
+  int64 pull_time = 5;                      // 拉取趋势时间
+  bool is_duplicates = 6;                   // 拉取趋势是否去重
+  string primary_key = 7;                   // 区分标签的主维度
+  google.protobuf.Struct foreign_keys = 8;  // 副维度的数据
 }

@@ -24,6 +24,7 @@ import (
 
 const (
 	defaultResourceManagerService = "resourcemanager.bkbcs.tencent.com"
+	defaultClusterManagerService  = "clustermanager.bkbcs.tencent.com"
 	defaultNodeGroupLoop          = 15
 )
 
@@ -77,6 +78,7 @@ func DefaultOptions() *Options {
 	return &Options{
 		ResourceManager: defaultResourceManagerService,
 		ControllerLoop:  defaultNodeGroupLoop,
+		ClusterManager:  defaultClusterManagerService,
 		ServerConfig: ServerConfig{
 			Address:    "127.0.0.1",
 			Port:       8081,
@@ -101,6 +103,7 @@ type Options struct {
 	ServerConfig
 	ClientConfig
 	ResourceManager string         `json:"resourcemanager"`
+	ClusterManager  string         `json:"clusterManager"`
 	ControllerLoop  uint           `json:"controllerloop"`
 	Storage         *Storage       `json:"storage"`
 	Registry        *Etcd          `json:"registry"`

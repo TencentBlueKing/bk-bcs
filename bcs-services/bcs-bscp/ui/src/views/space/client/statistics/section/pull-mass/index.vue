@@ -1,7 +1,8 @@
 <template>
   <div>
     <SectionTitle :title="$t('客户端配置拉取质量')" />
-    <PullCount :bk-biz-id="bkBizId" :app-id="appId" />
+    <PullCount :bk-biz-id="bkBizId" :app-id="appId" :title="$t('客户端拉取配置文件次数统计')" :is-duplicates="false" />
+    <PullCount :bk-biz-id="bkBizId" :app-id="appId" :title="$t('已拉取配置文件的客户端数量统计')" :is-duplicates="true" />
     <section class="pull-wrap">
       <PullSuccess :bk-biz-id="bkBizId" :app-id="appId" />
       <div class="pull-error">
@@ -31,5 +32,4 @@
       flex-grow: 1;
     }
   }
-
 </style>

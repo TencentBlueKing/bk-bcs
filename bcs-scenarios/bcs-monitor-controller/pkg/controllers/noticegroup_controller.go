@@ -45,8 +45,8 @@ type NoticeGroupReconciler struct {
 	MonitorApiCli apiclient.IMonitorApiClient
 }
 
-// +kubebuilder:rbac:groups=monitorextension.bkbcs.tencent.com,
-// resources=noticegroups,verbs=get;list;watch;create;update;patch;delete
+// nolint
+// +kubebuilder:rbac:groups=monitorextension.bkbcs.tencent.com,resources=noticegroups,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=monitorextension.bkbcs.tencent.com,resources=noticegroups/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=monitorextension.bkbcs.tencent.com,resources=noticegroups/finalizers,verbs=update
 

@@ -69,13 +69,14 @@ bcs-k8s: bcs-component bcs-network
 bcs-component:kube-sche apiserver-proxy \
 	webhook-server \
 	general-pod-autoscaler cluster-autoscaler \
-	netservice-controller external-privilege
+	netservice-controller external-privilege \
+	image-loader
 
 bcs-network:ingress-controller
 
 bcs-services:bkcmdb-synchronizer gateway \
 	storage user-manager cluster-manager cluster-reporter tools k8s-watch kube-agent data-manager \
-	helm-manager project-manager nodegroup-manager
+	helm-manager project-manager nodegroup-manager powertrading
 
 bcs-scenarios: kourse gitops
 
@@ -223,6 +224,11 @@ general-pod-autoscaler:pre
 	cp -R ${BCS_CONF_COMPONENT_PATH}/bcs-general-pod-autoscaler ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
 	cd ${BCS_COMPONENT_PATH}/bcs-general-pod-autoscaler && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/bcs-general-pod-autoscaler ./cmd/gpa/main.go
 
+image-loader:pre
+	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
+	cp -R ${BCS_CONF_COMPONENT_PATH}/bcs-image-loader ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
+	cd ${BCS_COMPONENT_PATH}/bcs-image-loader && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-image-loader/bcs-image-loader ./cmd/main.go
+
 cluster-autoscaler:pre
 	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/
 	cp -R ${BCS_CONF_COMPONENT_PATH}/bcs-cluster-autoscaler ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
@@ -363,6 +369,14 @@ terraform-controller:
 	mkdir -p ${SCENARIOSPACKAGE}/bcs-terraform-controller
 	cd bcs-scenarios/bcs-terraform-controller && make terraform-controller && cd -
 
+terraform-bkprovider:
+	mkdir -p ${SCENARIOSPACKAGE}/bcs-terraform-bkprovider
+	cd bcs-scenarios/bcs-terraform-bkprovider && make build && cd -
+
+monitor-controller:
+	mkdir -p ${SCENARIOSPACKAGE}/bcs-monitor-controller
+	cd bcs-scenarios/bcs-monitor-controller && make manager && cd -
+
 test: test-bcs-runtime
 
 test-bcs-runtime: test-bcs-k8s
@@ -382,3 +396,8 @@ gamestatefulset:
 
 hook-operator:
 	make hook-operator -f bcs-scenarios/kourse/Makefile
+
+powertrading:
+	mkdir -p ${PACKAGEPATH}/bcs-scenarios/bcs-powertrading
+	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-powertrading ${PACKAGEPATH}/bcs-scenarios
+	cd bcs-scenarios/bcs-powertrading/ && go mod tidy && make build && cd -

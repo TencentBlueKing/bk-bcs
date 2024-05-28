@@ -61,9 +61,11 @@ func (la *ListCloudVpcsAction) validate() error {
 		return err
 	}
 
-	err = validate.ListCloudVpcsValidate(la.req, la.account.Account)
-	if err != nil {
-		return err
+	if la.account != nil {
+		err = validate.ListCloudVpcsValidate(la.req, la.account.Account)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

@@ -3379,3 +3379,630 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ListValidationError{}
+
+// Validate checks the field values on RegisterBkWhitelistRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *RegisterBkWhitelistRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on RegisterBkWhitelistRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// RegisterBkWhitelistRequestMultiError, or nil if none found.
+func (m *RegisterBkWhitelistRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *RegisterBkWhitelistRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for BizName
+
+	if len(errors) > 0 {
+		return RegisterBkWhitelistRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// RegisterBkWhitelistRequestMultiError is an error wrapping multiple
+// validation errors returned by RegisterBkWhitelistRequest.ValidateAll() if
+// the designated constraints aren't met.
+type RegisterBkWhitelistRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m RegisterBkWhitelistRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m RegisterBkWhitelistRequestMultiError) AllErrors() []error { return m }
+
+// RegisterBkWhitelistRequestValidationError is the validation error returned
+// by RegisterBkWhitelistRequest.Validate if the designated constraints aren't met.
+type RegisterBkWhitelistRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e RegisterBkWhitelistRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e RegisterBkWhitelistRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e RegisterBkWhitelistRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e RegisterBkWhitelistRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e RegisterBkWhitelistRequestValidationError) ErrorName() string {
+	return "RegisterBkWhitelistRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e RegisterBkWhitelistRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sRegisterBkWhitelistRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = RegisterBkWhitelistRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = RegisterBkWhitelistRequestValidationError{}
+
+// Validate checks the field values on RegisterBkWhitelistResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *RegisterBkWhitelistResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on RegisterBkWhitelistResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// RegisterBkWhitelistResponseMultiError, or nil if none found.
+func (m *RegisterBkWhitelistResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *RegisterBkWhitelistResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	if len(errors) > 0 {
+		return RegisterBkWhitelistResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// RegisterBkWhitelistResponseMultiError is an error wrapping multiple
+// validation errors returned by RegisterBkWhitelistResponse.ValidateAll() if
+// the designated constraints aren't met.
+type RegisterBkWhitelistResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m RegisterBkWhitelistResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m RegisterBkWhitelistResponseMultiError) AllErrors() []error { return m }
+
+// RegisterBkWhitelistResponseValidationError is the validation error returned
+// by RegisterBkWhitelistResponse.Validate if the designated constraints
+// aren't met.
+type RegisterBkWhitelistResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e RegisterBkWhitelistResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e RegisterBkWhitelistResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e RegisterBkWhitelistResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e RegisterBkWhitelistResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e RegisterBkWhitelistResponseValidationError) ErrorName() string {
+	return "RegisterBkWhitelistResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e RegisterBkWhitelistResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sRegisterBkWhitelistResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = RegisterBkWhitelistResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = RegisterBkWhitelistResponseValidationError{}
+
+// Validate checks the field values on GetBkOuterIPRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetBkOuterIPRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetBkOuterIPRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetBkOuterIPRequestMultiError, or nil if none found.
+func (m *GetBkOuterIPRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetBkOuterIPRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if len(errors) > 0 {
+		return GetBkOuterIPRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetBkOuterIPRequestMultiError is an error wrapping multiple validation
+// errors returned by GetBkOuterIPRequest.ValidateAll() if the designated
+// constraints aren't met.
+type GetBkOuterIPRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetBkOuterIPRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetBkOuterIPRequestMultiError) AllErrors() []error { return m }
+
+// GetBkOuterIPRequestValidationError is the validation error returned by
+// GetBkOuterIPRequest.Validate if the designated constraints aren't met.
+type GetBkOuterIPRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetBkOuterIPRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetBkOuterIPRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetBkOuterIPRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetBkOuterIPRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetBkOuterIPRequestValidationError) ErrorName() string {
+	return "GetBkOuterIPRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetBkOuterIPRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetBkOuterIPRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetBkOuterIPRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetBkOuterIPRequestValidationError{}
+
+// Validate checks the field values on GetBkOuterIPResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetBkOuterIPResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetBkOuterIPResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetBkOuterIPResponseMultiError, or nil if none found.
+func (m *GetBkOuterIPResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetBkOuterIPResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	if len(errors) > 0 {
+		return GetBkOuterIPResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetBkOuterIPResponseMultiError is an error wrapping multiple validation
+// errors returned by GetBkOuterIPResponse.ValidateAll() if the designated
+// constraints aren't met.
+type GetBkOuterIPResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetBkOuterIPResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetBkOuterIPResponseMultiError) AllErrors() []error { return m }
+
+// GetBkOuterIPResponseValidationError is the validation error returned by
+// GetBkOuterIPResponse.Validate if the designated constraints aren't met.
+type GetBkOuterIPResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetBkOuterIPResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetBkOuterIPResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetBkOuterIPResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetBkOuterIPResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetBkOuterIPResponseValidationError) ErrorName() string {
+	return "GetBkOuterIPResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetBkOuterIPResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetBkOuterIPResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetBkOuterIPResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetBkOuterIPResponseValidationError{}
+
+// Validate checks the field values on ListBkWhiteListRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListBkWhiteListRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListBkWhiteListRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListBkWhiteListRequestMultiError, or nil if none found.
+func (m *ListBkWhiteListRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListBkWhiteListRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if len(errors) > 0 {
+		return ListBkWhiteListRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListBkWhiteListRequestMultiError is an error wrapping multiple validation
+// errors returned by ListBkWhiteListRequest.ValidateAll() if the designated
+// constraints aren't met.
+type ListBkWhiteListRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListBkWhiteListRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListBkWhiteListRequestMultiError) AllErrors() []error { return m }
+
+// ListBkWhiteListRequestValidationError is the validation error returned by
+// ListBkWhiteListRequest.Validate if the designated constraints aren't met.
+type ListBkWhiteListRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListBkWhiteListRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListBkWhiteListRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListBkWhiteListRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListBkWhiteListRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListBkWhiteListRequestValidationError) ErrorName() string {
+	return "ListBkWhiteListRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListBkWhiteListRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListBkWhiteListRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListBkWhiteListRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListBkWhiteListRequestValidationError{}
+
+// Validate checks the field values on ListBkWhiteListResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListBkWhiteListResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListBkWhiteListResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListBkWhiteListResponseMultiError, or nil if none found.
+func (m *ListBkWhiteListResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListBkWhiteListResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	if len(errors) > 0 {
+		return ListBkWhiteListResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListBkWhiteListResponseMultiError is an error wrapping multiple validation
+// errors returned by ListBkWhiteListResponse.ValidateAll() if the designated
+// constraints aren't met.
+type ListBkWhiteListResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListBkWhiteListResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListBkWhiteListResponseMultiError) AllErrors() []error { return m }
+
+// ListBkWhiteListResponseValidationError is the validation error returned by
+// ListBkWhiteListResponse.Validate if the designated constraints aren't met.
+type ListBkWhiteListResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListBkWhiteListResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListBkWhiteListResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListBkWhiteListResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListBkWhiteListResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListBkWhiteListResponseValidationError) ErrorName() string {
+	return "ListBkWhiteListResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListBkWhiteListResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListBkWhiteListResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListBkWhiteListResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListBkWhiteListResponseValidationError{}

@@ -75,17 +75,45 @@ type NetIPResponse struct {
 }
 
 // get allocate response data object from request, BCSNetIP and BCSNetPool
-func getAllocateResponseData(
-	req *NetIPAllocateRequest, bcsip *v1.BCSNetIP, bcspool *v1.BCSNetPool) *NetIPAllocateReponseData {
+func getAllocateResponseData(req *NetIPAllocateRequest, bcsip *v1.BCSNetIP,
+	bcspool *v1.BCSNetPool, gateway string) *NetIPAllocateReponseData {
+	if gateway == "" {
+		gateway = bcspool.Spec.Gateway
+	}
 	return &NetIPAllocateReponseData{
 		Host:         req.Host,
-		ContainerID:  req.Host,
+		ContainerID:  req.ContainerID,
 		IPAddr:       bcsip.Name,
-		PodName:      req.Host,
-		PodNamespace: req.Host,
-		Gateway:      bcspool.Spec.Gateway,
+		PodName:      req.PodName,
+		PodNamespace: req.PodNamespace,
+		Gateway:      gateway,
 		Mask:         bcspool.Spec.Mask,
 	}
+}
+
+// get host gateway from node annotations
+func (c *HttpServerClient) getHostGateway(req *NetIPAllocateRequest) (string, error) {
+	// get node info
+	pod := &coreV1.Pod{}
+	err := c.K8SClient.Get(context.Background(), types.NamespacedName{Name: req.PodName, Namespace: req.PodNamespace},
+		pod)
+	if err != nil {
+		return "", err
+	}
+	if pod.Spec.NodeName == "" {
+		return "", nil
+	}
+	node := &coreV1.Node{}
+	err = c.K8SClient.Get(context.Background(), types.NamespacedName{Name: pod.Spec.NodeName}, node)
+	if err != nil {
+		return "", err
+	}
+
+	// get gateway from node annotations
+	if gateway, ok := node.Annotations[constant.NodeGatewayAnnotationKey]; ok {
+		return gateway, nil
+	}
+	return "", nil
 }
 
 // get common response data
@@ -144,6 +172,13 @@ func (c *HttpServerClient) AllocateIP(request *restful.Request, response *restfu
 		return
 	}
 
+	// get host gateway
+	gateway, aerr := c.getHostGateway(netIPReq)
+	if aerr != nil {
+		response.WriteEntity(responseData(2, aerr.Error(), false, requestID, nil)) // nolint
+		return
+	}
+
 	// match IP by claim or podName and podNamespace
 	if claimName != "" {
 		ipClaim, gerr := c.getClaim(netIPReq.PodNamespace, claimName)
@@ -179,7 +214,7 @@ func (c *HttpServerClient) AllocateIP(request *restful.Request, response *restfu
 				response.WriteEntity(responseData(2, aerr.Error(), false, requestID, nil)) // nolint
 				return
 			}
-			data := getAllocateResponseData(netIPReq, targetIP, bcspool)
+			data := getAllocateResponseData(netIPReq, targetIP, bcspool, gateway)
 			response.WriteEntity(responseData(0, "success", true, requestID, data))
 			return
 		} else if ipClaim.Status.Phase == constant.BCSNetIPClaimBoundedStatus {
@@ -189,7 +224,7 @@ func (c *HttpServerClient) AllocateIP(request *restful.Request, response *restfu
 				response.WriteEntity(responseData(2, aerr.Error(), false, requestID, nil)) // nolint
 				return
 			}
-			data := getAllocateResponseData(netIPReq, bcsNetIP, bcsNetPool)
+			data := getAllocateResponseData(netIPReq, bcsNetIP, bcsNetPool, gateway)
 			message := fmt.Sprintf("allocate IP [%s] from BCSNetIPClaim %s/%s for Host %s success",
 				bcsNetIP.Name, ipClaim.GetNamespace(), ipClaim.GetName(), netIPReq.Host)
 			blog.Infof(message)
@@ -221,7 +256,7 @@ func (c *HttpServerClient) AllocateIP(request *restful.Request, response *restfu
 		response.WriteEntity(responseData(2, err.Error(), false, requestID, nil)) // nolint
 		return
 	}
-	data := getAllocateResponseData(netIPReq, targetIP, bcspool)
+	data := getAllocateResponseData(netIPReq, targetIP, bcspool, gateway)
 	response.WriteEntity(responseData(0, message, true, requestID, data)) // nolint
 }
 

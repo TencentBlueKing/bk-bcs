@@ -68,3 +68,8 @@ docker:
 .PHONY: client
 client:
 	GOOS=linux GOARCH=amd64 go build -o kubectl-bcs-nodegroup-manager cmd/client/client.go
+
+
+.PHONY: cm-proto
+cm-proto:
+	protoc -I./third_party/ --proto_path=./pkg/cluster/proto --validate_out=paths=source_relative,lang=go:./pkg/cluster/proto --grpc-gateway_out=allow_delete_body=true,register_func_suffix=Gw:./pkg/cluster/proto --go-grpc_out=./pkg/cluster/proto  --micro_out=./pkg/cluster/proto --go_out=:./pkg/cluster/proto pkg/cluster/proto/bcs-cluster-manager.proto

@@ -737,6 +737,15 @@ service ClusterManager {
       summary : "关闭节点池节点自动扩缩容"
     };
   }
+  rpc GetProviderResourceUsage(GetProviderResourceUsageRequest) returns (GetProviderResourceUsageResponse) {
+    option (google.api.http) = {
+      get : "/clustermanager/v1/providers/{providerID}/resource_usage"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "获取provider所属地域机型或者资源池使用的业务情况"
+      summary : "获取资源使用情况"
+    };
+  }
 
   //* Task information management *
   rpc CreateTask(CreateTaskRequest) returns (CreateTaskResponse) {
@@ -2708,6 +2717,25 @@ message CloudVPC {
     title: "businessID",
     description: "业务ID, 作用预留私有的业务vpc"
   }];
+  Cidr overlay = 15[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "overlay",
+    description: "overlayIP CIDR配置"
+  }];
+  Cidr underlay = 16[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "underlay",
+    description: "underlayIP CIDR配置"
+  }];
+}
+
+message Cidr {
+  repeated CidrState cidrs=1;
+  uint32 reservedIPNum=2;
+  repeated string reservedCidrs=3;
+}
+
+message CidrState {
+  string cidr=1;
+  bool  block=2;
 }
 
 message CreateCloudVPCRequest {
@@ -2764,6 +2792,14 @@ message CreateCloudVPCRequest {
   string businessID = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "businessID",
     description: "业务ID, 作用预留私有的业务vpc"
+  }];
+  Cidr overlay = 12[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "overlay",
+    description: "overlayIP CIDR配置"
+  }];
+  Cidr underlay = 13[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "underlay",
+    description: "underlayIP CIDR配置"
   }];
 }
 
@@ -2830,6 +2866,14 @@ message UpdateCloudVPCRequest {
   google.protobuf.StringValue businessID = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "businessID",
     description: "业务ID, 作用预留私有的业务vpc"
+  }];
+  Cidr overlay = 12[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "overlay",
+    description: "overlayIP CIDR配置"
+  }];
+  Cidr underlay = 13[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "underlay",
+    description: "underlayIP CIDR配置"
   }];
 }
 
@@ -2991,6 +3035,20 @@ message CloudVPCResp {
     title: "availableIPNum",
     description: "当前vpc可用的IP数量"
   }];
+  CidrDetailInfo overlay = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "overlay",
+    description: "overlayIP CIDR配置"
+  }];
+  CidrDetailInfo underlay = 12[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "underlay",
+    description: "underlayIP CIDR配置"
+  }];
+}
+
+message CidrDetailInfo {
+  repeated CidrState cidrs=1;
+  uint32 reservedIPNum=2;
+  uint32 availableIPNum = 3;
 }
 
 message ListCloudRegionsRequest {
@@ -13591,4 +13649,84 @@ message ListNotifyTemplateResponse {
     title : "data",
     description : "通知模板列表"
   }];
+}
+
+message GetProviderResourceUsageRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetProviderResourceUsageRequest"
+      description : "获取资源池对应机型的使用业务 & 根据不同参数筛选出符合条件的资源池对应的使用业务",
+      required: ["projectID"]
+    }
+  };
+
+  string providerID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "providerID",
+    description: "资源池provider，目前支持 yunti/self/cr/bcs_resource_pool"
+  }];
+  string region = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "region",
+    description: "机型所在的地域"
+  }];
+  string instanceType = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "instanceType",
+    description: "机型"
+  }];
+  google.protobuf.UInt32Value ratio = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "ratio",
+    description: "空闲率, 资源池空闲率小于等于ratio的资源池"
+  }, (validate.rules).uint32 = {gte: 0, lte: 100}];
+  google.protobuf.UInt32Value available = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "available",
+    description: "空闲个数, 资源池可用的机型数目小于等于available的资源池"
+  }];
+}
+
+message GetProviderResourceUsageResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetProviderResourceUsageResponse"
+      description : "查询资源池的业务使用情况返回"
+      required : [ "code", "message" ]
+    }
+  };
+
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  bool result = 3 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+  google.protobuf.Struct data = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "机型维度的业务使用情况"
+  }];
+}
+
+message BusinessInfo {
+  string projectId=1;
+  string projectName=2;
+  string projectCode=3;
+  string projectUsers=4;
+  string bizId=5;
+  string bizName=6;
+  string bizUsers=7;
+  string clusterId=8;
+  string clusterName=9;
+  string clusterRegion=10;
+  string clusterUsers=11;
+  string groupId=12;
+  string groupName=13;
+  string instanceType=14;
+  string zones=15;
+  string consumerId=16;
+  string poolId=17;
+  string groupUsers=18;
+  string url=19;
 }

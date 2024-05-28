@@ -103,7 +103,7 @@ func RunSrv() {
 	addr := net.JoinHostPort(bindAddress, strconv.Itoa(port))
 	addrIPv6 := getIPv6AddrFromEnv(addr)
 
-	sd, err := discovery.NewServiceDiscovery(ctx, appName, version.BcsVersion, addr, "", addrIPv6)
+	sd, err := discovery.NewServiceDiscovery(ctx, config.G.Base.ModuleName, version.BcsVersion, addr, "", addrIPv6)
 	if err != nil {
 		klog.ErrorS(err, "init micro sd failed, exited")
 		stop()

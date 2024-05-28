@@ -218,6 +218,9 @@ main() {
   # function testing
   local test_img_url
   test_img_url=${BK_PUBLIC_REPO:-"docker.io"}/library/hello-world:latest
+  if [ -n "${PRIVATE_DOCKER_REPO}" ];then
+    test_img_url=${PRIVATE_DOCKER_REPO}/hello-world:latest
+  fi
   utils::log "DEBUG" "hello-world: ${test_img_url}"
 
   if ! docker run --rm "${test_img_url}"; then

@@ -20,34 +20,59 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 )
 
+type Interval int
+
+const (
+	CheckPerMin Interval = iota
+	CheckPer10Min
+)
+
 // CheckRunner start check list
 type CheckRunner struct {
-	ctx       context.Context
-	checkList []Checker
+	ctx           context.Context
+	checkPerMin   []Checker
+	checkPer10Min []Checker
 }
 
 // NewCheckRunner return new check runner
 func NewCheckRunner(ctx context.Context) *CheckRunner {
 	return &CheckRunner{
-		ctx:       ctx,
-		checkList: make([]Checker, 0),
+		ctx:           ctx,
+		checkPerMin:   make([]Checker, 0),
+		checkPer10Min: make([]Checker, 0),
 	}
 }
 
 // Register register checker
-func (c *CheckRunner) Register(checker Checker) *CheckRunner {
-	c.checkList = append(c.checkList, checker)
+func (c *CheckRunner) Register(checker Checker, interval Interval) *CheckRunner {
+	switch interval {
+	case CheckPerMin:
+		c.checkPerMin = append(c.checkPerMin, checker)
+	case CheckPer10Min:
+		c.checkPer10Min = append(c.checkPer10Min, checker)
+	default:
+		c.checkPerMin = append(c.checkPerMin, checker)
+	}
 	return c
 }
 
 // Start 定时启动注册的所有checker
 func (c *CheckRunner) Start() {
-	ticker := time.NewTicker(time.Minute)
+	tickerMin := time.NewTicker(time.Minute)
+	tickerMin10 := time.NewTicker(time.Minute * 10)
+	defer func() {
+		tickerMin.Stop()
+		tickerMin10.Stop()
+	}()
 	go func() {
 		for {
 			select {
-			case <-ticker.C:
-				for _, item := range c.checkList {
+			case <-tickerMin.C:
+				for _, item := range c.checkPerMin {
+					go item.Run()
+				}
+			case <-tickerMin10.C:
+				for _, item := range c.checkPer10Min {
 					go item.Run()
 				}
 			case <-c.ctx.Done():

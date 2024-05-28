@@ -105,6 +105,10 @@ type MetricHandler interface {
 		step time.Duration) ([]*prompb.TimeSeries, error)
 	GetClusterDiskioTotal(ctx context.Context, projectId, clusterId string, start, end time.Time,
 		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetClusterGroupNodeNum(ctx context.Context, projectId, clusterId, group string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetClusterGroupMaxNodeNum(ctx context.Context, projectId, clusterId, group string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
 	GetNodeInfo(ctx context.Context, projectId, clusterId, nodeName string, t time.Time) (*NodeInfo, error)
 	GetNodeCPUTotal(ctx context.Context, projectId, clusterId, nodeName string, start, end time.Time,
 		step time.Duration) ([]*prompb.TimeSeries, error)

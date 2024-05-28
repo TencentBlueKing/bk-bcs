@@ -57,8 +57,8 @@ type PanelReconciler struct {
 	Opts    *option.ControllerOption
 }
 
-// +kubebuilder:rbac:groups=monitorextension.bkbcs.tencent.com,
-// resources=panels,verbs=get;list;watch;create;update;patch;delete
+// nolint
+// +kubebuilder:rbac:groups=monitorextension.bkbcs.tencent.com,resources=panels,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=monitorextension.bkbcs.tencent.com,resources=panels/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=monitorextension.bkbcs.tencent.com,resources=panels/finalizers,verbs=update
 

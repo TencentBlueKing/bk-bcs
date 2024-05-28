@@ -16,6 +16,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -42,7 +43,7 @@ func SetResourceClient(opts *Options, disc *discovery.ModuleDiscovery) {
 }
 
 // GetResourceManagerClient get resource client
-func GetResourceManagerClient() resource.ManagerResource {
+func GetResourceManagerClient() *ResManClient {
 	return ResourceClient
 }
 
@@ -564,6 +565,407 @@ func (rm *ResManClient) DeleteResourcePool(ctx context.Context, poolID string) e
 
 	blog.Infof("DeleteResourcePool[%s] successful[%s]", traceID, poolID)
 	return nil
+}
+
+func (rm *ResManClient) listDevices(ctx context.Context, provider string) ([]*Device, error) {
+	if rm == nil {
+		return nil, ErrNotInited
+	}
+
+	traceID := utils.GetTraceIDFromContext(ctx)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
+	defer cancel()
+
+	var (
+		devices []*Device
+		err     error
+	)
+
+	err = retry.Do(func() error {
+		cli, closeCon, errGet := rm.getResourceManagerClient()
+		if errGet != nil {
+			blog.Errorf("listDevices[%s] GetResourceManagerClient failed: %v", traceID, errGet)
+			return errGet
+		}
+		defer func() {
+			if closeCon != nil {
+				closeCon()
+			}
+		}()
+
+		var (
+			// limit for all device
+			limit int64 = 20000
+		)
+
+		req := &ListDevicesReq{
+			Limit:  &limit,
+			Status: []int64{int64(3)},
+		}
+		if len(provider) > 0 {
+			req.Provider = append(req.Provider, provider)
+		}
+
+		// list devices
+		resp, errList := cli.ListDevices(ctx, req)
+		if errList != nil {
+			blog.Errorf("listDevices[%s] ListDevices failed: %v", traceID, errList)
+			return errList
+		}
+		if *resp.Code != 0 || !*resp.Result {
+			blog.Errorf("listDevices[%s] ListDevices failed: %v", traceID, resp.Message)
+			return errors.New(*resp.Message)
+		}
+		devices = resp.Data
+
+		return nil
+	}, retry.Attempts(3), retry.DelayType(retry.FixedDelay), retry.Delay(time.Second*3))
+	if err != nil {
+		blog.Errorf("listDevices[%s] failed: %v", traceID, err)
+		return nil, err
+	}
+
+	blog.Infof("listDevices[%s] successful", traceID)
+
+	return devices, nil
+}
+
+// GetDevicesInfoMap get map devices
+func (rm *ResManClient) GetDevicesInfoMap(ctx context.Context, provider string, isId bool) (
+	map[string]resource.DeviceInfo, error) {
+	if rm == nil {
+		return nil, ErrNotInited
+	}
+	traceID := utils.GetTraceIDFromContext(ctx)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
+	defer cancel()
+
+	devices, err := rm.listDevices(ctx, provider)
+	if err != nil {
+		blog.Errorf("GetDeviceInfoIdMap[%s] listDevices failed: %v", traceID, err)
+		return nil, err
+	}
+
+	devicesInfo := make(map[string]resource.DeviceInfo, 0)
+	for _, device := range devices {
+		if isId {
+			if *device.Id != "" && *device.Info.InnerIP != "" {
+				v, ok := devicesInfo[*device.Id]
+				if !ok {
+					devicesInfo[*device.Id] = resource.DeviceInfo{
+						Provider:           *device.Provider,
+						DeviceID:           *device.Id,
+						InnerIP:            *device.Info.InnerIP,
+						Instance:           *device.Info.Instance,
+						InstanceType:       *device.Info.InstanceType,
+						Cpu:                *device.Info.Cpu,
+						Mem:                *device.Info.Mem,
+						Gpu:                *device.Info.Gpu,
+						Vpc:                *device.Info.Vpc,
+						Region:             *device.Info.Region,
+						Zone:               device.Info.GetZone().GetZone(),
+						LastConsumerId:     *device.LastConsumerID,
+						LastRecordId:       *device.LastRecordID,
+						LastReturnRecordId: *device.LastReturnRecordID,
+						DevicePoolID:       *device.DevicePoolID,
+					}
+
+					continue
+				}
+
+				blog.Errorf("%v 和 %v deviceId 重复", v.DeviceID, *device.Id)
+			}
+		} else {
+			if *device.Id != "" && *device.Info.InnerIP != "" {
+				v, ok := devicesInfo[*device.Info.InnerIP]
+				if !ok {
+					devicesInfo[*device.Info.InnerIP] = resource.DeviceInfo{
+						Provider:           *device.Provider,
+						DeviceID:           *device.Id,
+						InnerIP:            *device.Info.InnerIP,
+						Instance:           *device.Info.Instance,
+						InstanceType:       *device.Info.InstanceType,
+						Cpu:                *device.Info.Cpu,
+						Mem:                *device.Info.Mem,
+						Gpu:                *device.Info.Gpu,
+						Vpc:                *device.Info.Vpc,
+						Region:             *device.Info.Region,
+						Zone:               device.Info.GetZone().GetZone(),
+						LastConsumerId:     *device.LastConsumerID,
+						LastRecordId:       *device.LastRecordID,
+						LastReturnRecordId: *device.LastReturnRecordID,
+						DevicePoolID:       *device.DevicePoolID,
+					}
+
+					continue
+				}
+
+				blog.Errorf("%v 和 %v deviceIp 重复", v.DeviceID, *device.Id)
+			}
+		}
+	}
+
+	return devicesInfo, nil
+}
+
+func (rm *ResManClient) listDevicePools(ctx context.Context, provider, region, instanceType string) ([]*DevicePool, error) {
+	if rm == nil {
+		return nil, ErrNotInited
+	}
+
+	traceID := utils.GetTraceIDFromContext(ctx)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
+	defer cancel()
+
+	var (
+		pools []*DevicePool
+		err   error
+	)
+
+	err = retry.Do(func() error {
+		cli, closeCon, errGet := rm.getResourceManagerClient()
+		if errGet != nil {
+			blog.Errorf("listDevicePools[%s] GetResourceManagerClient failed: %v", traceID, errGet)
+			return errGet
+		}
+		defer func() {
+			if closeCon != nil {
+				closeCon()
+			}
+		}()
+
+		var (
+			// limit for all devicePool
+			limit  int64 = 10000
+			onSale       = true
+		)
+
+		req := &ListDevicePoolReq{
+			Limit:  &limit,
+			Onsale: &onSale,
+		}
+		if len(provider) > 0 {
+			req.Provider = append(req.Provider, provider)
+		}
+		if len(region) > 0 {
+			req.Region = &region
+		}
+
+		// list device pool
+		resp, errList := cli.ListDevicePool(ctx, req)
+		if errList != nil {
+			blog.Errorf("listDevicePools[%s] ListDevicePool failed: %v", traceID, errList)
+			return errList
+		}
+		if *resp.Code != 0 || !*resp.Result {
+			blog.Errorf("listDevicePools[%s] ListDevicePool failed: %v", traceID, resp.Message)
+			return errors.New(*resp.Message)
+		}
+		pools = resp.Data
+
+		return nil
+	}, retry.Attempts(3), retry.DelayType(retry.FixedDelay), retry.Delay(time.Second*3))
+	if err != nil {
+		blog.Errorf("listDevicePools[%s] failed: %v", traceID, err)
+		return nil, err
+	}
+	blog.Infof("listDevicePools[%s] successful", traceID)
+
+	if instanceType == "" {
+		return pools, nil
+	}
+
+	filterPools := make([]*DevicePool, 0)
+	for _, pool := range pools {
+		if pool.GetBaseConfig().GetInstanceType() == instanceType {
+			filterPools = append(filterPools, pool)
+		}
+	}
+
+	return filterPools, nil
+}
+
+// GetRegionInstanceTypesFromPools get region instanceTypes机型 & zones可用区
+func (rm *ResManClient) GetRegionInstanceTypesFromPools(ctx context.Context, provider string) (
+	map[string][]string, error) {
+	if rm == nil {
+		return nil, ErrNotInited
+	}
+
+	pools, err := rm.listDevicePools(ctx, provider, "", "")
+	if err != nil {
+		return nil, err
+	}
+
+	var (
+		regionInsTypes = make(map[string][]string, 0)
+	)
+
+	for i := range pools {
+		region := pools[i].GetBaseConfig().GetZone().GetRegion()
+		insType := pools[i].GetBaseConfig().GetInstanceType()
+
+		v, ok := regionInsTypes[region]
+		if !ok {
+			if regionInsTypes[region] == nil {
+				regionInsTypes[region] = make([]string, 0)
+			}
+			regionInsTypes[region] = append(regionInsTypes[region], insType)
+			continue
+		}
+
+		if !utils.StringInSlice(insType, v) {
+			regionInsTypes[region] = append(regionInsTypes[region], insType)
+		}
+	}
+
+	return regionInsTypes, nil
+}
+
+// ListRegionZonePools 获取可用区维度的资源池信息 & 可用区列表
+func (rm *ResManClient) ListRegionZonePools(ctx context.Context, provider string, region, insType string) (
+	map[string]*resource.DevicePoolInfo, []string, error) {
+	if rm == nil {
+		return nil, nil, ErrNotInited
+	}
+
+	pools, err := rm.listDevicePools(ctx, provider, region, insType)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var (
+		zonePool = make(map[string]*resource.DevicePoolInfo, 0)
+		zones    = make([]string, 0)
+	)
+
+	for _, pool := range pools {
+		var total, used, available int
+		v, ok := pool.GetLabels()[userQuota]
+		if ok {
+			total, _ = utils.StringToInt(v)
+		}
+		v, ok = pool.GetLabels()[usedQuota]
+		if ok {
+			used, _ = utils.StringToInt(v)
+		}
+		v, ok = pool.GetLabels()[availableQuota]
+		if ok {
+			available, _ = utils.StringToInt(v)
+		}
+
+		if len(pool.GetBaseConfig().Zone.GetZone()) == 0 {
+			continue
+		}
+
+		zonePool[pool.GetBaseConfig().Zone.GetZone()] = &resource.DevicePoolInfo{
+			PoolId:       *pool.Id,
+			PoolName:     *pool.Name,
+			Region:       pool.GetBaseConfig().GetZone().GetRegion(),
+			Zone:         pool.GetBaseConfig().GetZone().GetZone(),
+			InstanceType: pool.GetBaseConfig().GetInstanceType(),
+			Total:        int32(total),
+			Used:         int32(used),
+			Available:    int32(available),
+			Status:       pool.GetStatus(),
+		}
+
+		zones = append(zones, pool.GetBaseConfig().Zone.GetZone())
+	}
+
+	sort.Sort(sort.StringSlice(zones))
+
+	return zonePool, zones, nil
+}
+
+// ListAvailableInsufficientPools 获取可用资源不足的节点池
+func (rm *ResManClient) ListAvailableInsufficientPools(ctx context.Context, provider string,
+	region, insType string, ratio resource.UsageRatio) ([]*resource.DevicePoolInfo, error) {
+	if rm == nil {
+		return nil, ErrNotInited
+	}
+
+	pools, err := rm.listDevicePools(ctx, provider, region, insType)
+	if err != nil {
+		return nil, err
+	}
+
+	var (
+		filterPools = make([]*resource.DevicePoolInfo, 0)
+	)
+
+	for _, pool := range pools {
+		var total, available int
+		v, ok := pool.GetLabels()[userQuota]
+		if ok {
+			total, _ = utils.StringToInt(v)
+		}
+		v, ok = pool.GetLabels()[availableQuota]
+		if ok {
+			available, _ = utils.StringToInt(v)
+		}
+
+		if len(pool.GetBaseConfig().Zone.GetZone()) == 0 {
+			continue
+		}
+
+		if ratio.QuotaRatio != nil && ((float64(available)/float64(total))*100 > float64(*ratio.QuotaRatio)) {
+			continue
+		}
+
+		if ratio.QuotaCount != nil && (available > *ratio.QuotaCount) {
+			continue
+		}
+
+		filterPools = append(filterPools, &resource.DevicePoolInfo{
+			PoolId:       *pool.Id,
+			PoolName:     *pool.Name,
+			Region:       pool.GetBaseConfig().GetZone().GetRegion(),
+			Zone:         pool.GetBaseConfig().GetZone().GetZone(),
+			InstanceType: pool.GetBaseConfig().GetInstanceType(),
+			Total:        int32(total),
+			Available:    int32(available),
+			Status:       pool.GetStatus(),
+		})
+	}
+
+	return filterPools, nil
+}
+
+// GetDeviceConsumer get device consumer
+func (rm *ResManClient) GetDeviceConsumer(ctx context.Context, consumerId string) (*DeviceConsumer, error) {
+	if rm == nil {
+		return nil, ErrNotInited
+	}
+	traceID := utils.GetTraceIDFromContext(ctx)
+
+	ctx, cancel := context.WithTimeout(ctx, 60*time.Second)
+	defer cancel()
+
+	cli, closeCon, err := rm.getResourceManagerClient()
+	if err != nil {
+		blog.Errorf("GetDeviceConsumer[%s][%s] GetResourceManagerClient failed: %v", traceID, consumerId, err)
+		return nil, err
+	}
+	defer func() {
+		if closeCon != nil {
+			closeCon()
+		}
+	}()
+
+	// GetDeviceConsumer get consumer info
+	resp, err := cli.GetDeviceConsumer(ctx, &GetDeviceConsumerReq{DeviceConsumerID: &consumerId})
+	if err != nil {
+		blog.Errorf("GetDeviceConsumer[%s][%s] GetDeviceConsumer failed: %v", traceID, consumerId, err)
+		return nil, err
+	}
+	if *resp.Code != 0 || !*resp.Result {
+		blog.Errorf("GetDeviceConsumer[%s][%s] GetDeviceConsumer failed: %v", traceID, consumerId, *resp.Message)
+		return nil, errors.New(*resp.Message)
+	}
+
+	blog.Infof("GetDeviceConsumer[%s][%s] GetDeviceConsumer[%s] success", traceID, consumerId)
+	return resp.GetData(), nil
 }
 
 // GetDeviceInfoByDeviceID get device detailed info by deviceID

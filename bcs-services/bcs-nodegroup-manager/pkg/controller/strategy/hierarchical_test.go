@@ -99,82 +99,9 @@ func TestHierarchical_IsAbleToScaleUp(t *testing.T) {
 				Storage:         mockFields.storage,
 			}
 			executor := NewHierarchicalStrategyExecutor(opts)
-			num, result, err := executor.IsAbleToScaleUp(tt.strategy)
+			num, result, _, err := executor.IsAbleToScaleUp(tt.strategy)
 			assert.Equal(t, tt.wantErr, err != nil)
 			assert.Equal(t, tt.wantNum, num)
-			assert.Equal(t, tt.wantResult, result)
-		})
-	}
-}
-
-func Test_checkIfTaskExecuting(t *testing.T) {
-	tests := []struct {
-		name       string
-		strategy   string
-		wantResult bool
-		wantErr    bool
-		on         func(f *MockFields)
-	}{
-		{
-			name:       "noTask",
-			strategy:   "test",
-			wantResult: false,
-			wantErr:    false,
-			on: func(f *MockFields) {
-				f.storage.On("ListTasksByStrategy", "test", &storage.ListOptions{}).
-					Return([]*storage.ScaleDownTask{}, nil)
-			},
-		},
-		{
-			name:       "willBeExecutedIn5min",
-			strategy:   "test",
-			wantResult: true,
-			wantErr:    false,
-			on: func(f *MockFields) {
-				f.storage.On("ListTasksByStrategy", "test", &storage.ListOptions{}).
-					Return([]*storage.ScaleDownTask{{
-						TaskID:            "task1",
-						TotalNum:          2,
-						NodeGroupStrategy: "test",
-						Deadline:          time.Now().Add(5 * time.Minute),
-						IsDeleted:         false,
-						IsExecuted:        false,
-					}}, nil)
-			},
-		},
-		{
-			name:       "executing",
-			strategy:   "test",
-			wantResult: true,
-			wantErr:    false,
-			on: func(f *MockFields) {
-				f.storage.On("ListTasksByStrategy", "test", &storage.ListOptions{}).
-					Return([]*storage.ScaleDownTask{{
-						TaskID:            "task1",
-						TotalNum:          2,
-						NodeGroupStrategy: "test",
-						Deadline:          time.Now().Add(-1 * time.Minute),
-						IsDeleted:         false,
-						IsExecuted:        true,
-					}}, nil)
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			mockFields := &MockFields{
-				resourceCli:   resourcemock.NewClient(t),
-				storage:       storagemock.NewStorage(t),
-				clusterClient: mocks.NewClient(t),
-			}
-			tt.on(mockFields)
-			opts := &Options{
-				ResourceManager: mockFields.resourceCli,
-				Storage:         mockFields.storage,
-			}
-			executor := NewHierarchicalStrategyExecutor(opts)
-			result, err := executor.checkIfTaskExecuting(tt.strategy)
-			assert.Equal(t, tt.wantErr, err != nil)
 			assert.Equal(t, tt.wantResult, result)
 		})
 	}
@@ -202,7 +129,10 @@ func getTestStrategy() *storage.NodeGroupMgrStrategy {
 			MinScaleUpSize:  2,
 			ScaleDownDelay:  5,
 			MaxIdleDelay:    0,
-			Buffer:          &storage.BufferStrategy{ReservedDays: 3},
+			Buffer: &storage.BufferStrategy{
+				Low:  0,
+				High: 0,
+			},
 		},
 		Status: &storage.State{
 			Status:      storage.InitState,

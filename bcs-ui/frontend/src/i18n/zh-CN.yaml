@@ -873,6 +873,7 @@ cluster:
       text: 节点池
       validate:
         name: 名称不超过255个字符，仅支持中文、英文、数字、下划线，分隔符(-)及小数点
+        nodeQuotaMaxSize: '节点配额上限为{maximum}'
       label:
         nameAndID: 节点池名称 (ID)
         nodeQuota: 节点配额

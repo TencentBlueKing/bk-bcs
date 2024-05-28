@@ -39,6 +39,7 @@ import (
 	"github.com/argoproj/argo-cd/v2/pkg/apiclient/repository"
 	repositorypkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/repository"
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
+	argopkg "github.com/argoproj/argo-cd/v2/pkg/client/clientset/versioned/typed/application/v1alpha1"
 	"github.com/argoproj/argo-cd/v2/reposerver/apiclient"
 	argoutil "github.com/argoproj/argo-cd/v2/util/argo"
 	utilargo "github.com/argoproj/argo-cd/v2/util/argo"
@@ -49,9 +50,11 @@ import (
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/watch"
+	"k8s.io/client-go/rest"
 	"k8s.io/kubernetes/pkg/kubelet/util/sliceutils"
 
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/internal/dao"
@@ -78,15 +81,17 @@ type argo struct {
 	projectClient projectpkg.ProjectServiceClient
 	clusterClient clusterpkg.ClusterServiceClient
 	historyStore  *appHistoryStore
+	argoK8SClient *argopkg.ArgoprojV1alpha1Client
 
 	cacheSynced      atomic.Bool
 	cacheApplication *sync.Map
+	cacheAppProject  *sync.Map
 }
 
 // Init control interface
 func (cd *argo) Init() error {
 	initializer := []func() error{
-		cd.initToken, cd.initBasicClient, cd.initAppHistoryStore,
+		cd.initToken, cd.initBasicClient, cd.initArgoK8SClient, cd.initAppHistoryStore,
 	}
 	if cd.option.Cache {
 		initializer = append(initializer, cd.initCache)
@@ -180,30 +185,44 @@ func (cd *argo) ApplicationNormalizeWhenDiff(app *v1alpha1.Application, target,
 
 // CreateProject interface
 func (cd *argo) CreateProject(ctx context.Context, pro *v1alpha1.AppProject) error {
-	_, err := cd.projectClient.Create(ctx, &project.ProjectCreateRequest{Project: pro})
+	proj, err := cd.projectClient.Create(ctx, &project.ProjectCreateRequest{Project: pro})
 	if err != nil {
 		if !utils.IsContextCanceled(err) {
 			metric.ManagerArgoOperateFailed.WithLabelValues("CreateProject").Inc()
 		}
 		return errors.Wrapf(err, "argocd create project '%s' failed", pro.GetName())
 	}
+	if cd.option.Cache {
+		cd.cacheAppProject.Store(proj.Name, proj)
+	}
 	return nil
 }
 
 // UpdateProject interface
 func (cd *argo) UpdateProject(ctx context.Context, pro *v1alpha1.AppProject) error {
-	_, err := cd.projectClient.Update(ctx, &project.ProjectUpdateRequest{Project: pro})
+	newProj, err := cd.projectClient.Update(ctx, &project.ProjectUpdateRequest{Project: pro})
 	if err != nil {
 		if !utils.IsContextCanceled(err) {
 			metric.ManagerArgoOperateFailed.WithLabelValues("UpdateProject").Inc()
 		}
 		return errors.Wrapf(err, "argocd update project '%s' failed", pro.GetName())
 	}
+	if cd.option.Cache {
+		cd.cacheAppProject.Store(newProj.Name, newProj)
+	}
 	return nil
 }
 
 // GetProject interface
 func (cd *argo) GetProject(ctx context.Context, name string) (*v1alpha1.AppProject, error) {
+	if cd.cacheSynced.Load() {
+		obj, ok := cd.cacheAppProject.Load(name)
+		if ok {
+			proj := obj.(*v1alpha1.AppProject)
+			return proj.DeepCopy(), nil
+		}
+	}
+
 	pro, err := cd.projectClient.Get(ctx, &project.ProjectQuery{Name: name})
 	if err != nil {
 		if utils.IsArgoResourceNotFound(err) {
@@ -214,11 +233,22 @@ func (cd *argo) GetProject(ctx context.Context, name string) (*v1alpha1.AppProje
 		}
 		return nil, errors.Wrapf(err, "argocd get project '%s' failed", name)
 	}
+	cd.cacheAppProject.Store(name, pro)
 	return pro, nil
 }
 
 // ListProjects interface
 func (cd *argo) ListProjects(ctx context.Context) (*v1alpha1.AppProjectList, error) {
+	if cd.cacheSynced.Load() {
+		items := make([]v1alpha1.AppProject, 0)
+		cd.cacheAppProject.Range(func(k, v any) bool {
+			proj := v.(*v1alpha1.AppProject)
+			items = append(items, *proj.DeepCopy())
+			return true
+		})
+		return &v1alpha1.AppProjectList{Items: items}, nil
+	}
+
 	pro, err := cd.projectClient.List(ctx, &project.ProjectQuery{})
 	if err != nil {
 		if !utils.IsContextCanceled(err) {
@@ -802,6 +832,18 @@ func (cd *argo) ListApplicationSets(ctx context.Context, query *appsetpkg.Applic
 	return appsets, nil
 }
 
+// DeleteApplicationSetOrphan delete application-set with orphan
+func (cd *argo) DeleteApplicationSetOrphan(ctx context.Context, name string) error {
+	deleteOption := metav1.DeletePropagationOrphan
+	if err := cd.argoK8SClient.ApplicationSets(cd.option.AdminNamespace).
+		Delete(ctx, name, metav1.DeleteOptions{
+			PropagationPolicy: &deleteOption,
+		}); err != nil {
+		return errors.Wrapf(err, "delete application-set failed")
+	}
+	return nil
+}
+
 func (cd *argo) initAppHistoryStore() error {
 	if !cd.option.CacheHistory {
 		return nil
@@ -857,6 +899,18 @@ func (cd *argo) initToken() error {
 	}
 	blog.Infof("[store] argocd token session init OK, %s", t)
 	cd.token = t
+	return nil
+}
+
+func (cd *argo) initArgoK8SClient() error {
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		return errors.Wrapf(err, "get k8s incluster config failed")
+	}
+	cd.argoK8SClient, err = argopkg.NewForConfig(config)
+	if err != nil {
+		return errors.Wrapf(err, "create argo k8s client failed")
+	}
 	return nil
 }
 
@@ -940,7 +994,17 @@ func (cd *argo) initCache() error {
 			projectApps.(map[string]*v1alpha1.Application)[app.Name] = &app
 		}
 	}
-	blog.Infof("[store] init cache success.")
+	blog.Infof("[store] init cache application success.")
+
+	projList, err := cd.projectClient.List(context.Background(), &projectpkg.ProjectQuery{})
+	if err != nil {
+		return errors.Wrapf(err, "list projec failed when init watch")
+	}
+	for i := range projList.Items {
+		proj := projList.Items[i]
+		cd.cacheAppProject.Store(proj.Name, &proj)
+	}
+	blog.Infof("[store] init cache project success.")
 	cd.cacheSynced.Store(true)
 	return nil
 }

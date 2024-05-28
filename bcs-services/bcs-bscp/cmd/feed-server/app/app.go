@@ -17,12 +17,14 @@ import (
 	"fmt"
 	"net"
 	"strconv"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
 	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/reflection"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/crontab"
@@ -157,7 +159,12 @@ func (fs *feedServer) listenAndServe() error {
 
 		cred := credentials.NewTLS(tlsC)
 		opts = append(opts, grpc.Creds(cred))
-
+		// set keepalive params so that feed-proxy could maintain a grpc connection pool
+		opts = append(opts, grpc.KeepaliveEnforcementPolicy(keepalive.EnforcementPolicy{
+			// a bit less than feed-proxy's grpc keepalive time 30s
+			MinTime:             25 * time.Second,
+			PermitWithoutStream: true,
+		}))
 	}
 
 	serve := grpc.NewServer(opts...)
@@ -185,17 +192,21 @@ func (fs *feedServer) listenAndServe() error {
 	}()
 
 	addr := tools.GetListenAddr(network.BindIP, int(network.RpcPort))
-	ipv6Addr := tools.GetListenAddr(network.BindIPv6, int(network.RpcPort))
+	addrs := tools.GetListenAddrs(network.BindIPs, int(network.RpcPort))
 	dualStackListener := listener.NewDualStackListener()
 	if err := dualStackListener.AddListenerWithAddr(addr); err != nil {
 		return err
 	}
+	logs.Infof("grpc server listen address: %s", addr)
 
-	if network.BindIPv6 != "" && network.BindIPv6 != network.BindIP {
-		if err := dualStackListener.AddListenerWithAddr(ipv6Addr); err != nil {
+	for _, a := range addrs {
+		if a == addr {
+			continue
+		}
+		if err := dualStackListener.AddListenerWithAddr(a); err != nil {
 			return err
 		}
-		logs.Infof("grpc serve dualStackListener with ipv6: %s", ipv6Addr)
+		logs.Infof("grpc server listen address: %s", a)
 	}
 
 	go func() {

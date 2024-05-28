@@ -144,11 +144,12 @@ export const updateConfigContent = (bizId: string, appId: number, data: string |
  * @param bizId 业务ID
  * @param appId 模板空间ID
  * @param signature sha256签名
+ * @param isBlob 是否需要返回二进制流，下载配置文件时需要
  * @returns
  */
-export const downloadConfigContent = (bizId: string, appId: number, signature: string) =>
+export const downloadConfigContent = (bizId: string, appId: number, signature: string, isBlob = false) =>
   http
-    .get<string, string>(`/biz/${bizId}/content/download`, {
+    .get<string, Blob|string>(`/biz/${bizId}/content/download`, {
       headers: {
         'X-Bscp-Template-Space-Id': appId,
         'X-Bkapi-File-Content-Id': signature,
@@ -156,6 +157,7 @@ export const downloadConfigContent = (bizId: string, appId: number, signature: s
       transitional: {
         forcedJSONParsing: false,
       },
+      ...(isBlob && { responseType: 'blob' }), // 文件为二进制流，需要设置响应类型为blob才能正确解析
     })
     .then((res) => res);
 

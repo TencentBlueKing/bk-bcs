@@ -220,13 +220,23 @@
           "low": {
             "format": "int32",
             "type": "number"
+          }
+        },
+        "title": "Buffer",
+        "type": "object"
+      },
+      "BufferParam": {
+        "properties": {
+          "count": {
+            "format": "int32",
+            "type": "number"
           },
-          "reservedDays": {
+          "percent": {
             "format": "int32",
             "type": "number"
           }
         },
-        "title": "Buffer",
+        "title": "BufferParam",
         "type": "object"
       },
       "ClusterAutoscalerReview": {
@@ -310,6 +320,25 @@
                   "consumerId": {
                     "type": "string"
                   },
+                  "limit": {
+                    "properties": {
+                      "clusterLimit": {
+                        "type": "boolean"
+                      },
+                      "clusterLimitNum": {
+                        "format": "int32",
+                        "type": "number"
+                      },
+                      "nodegroupLimit": {
+                        "type": "boolean"
+                      },
+                      "nodegroupLimitNum": {
+                        "format": "int32",
+                        "type": "number"
+                      }
+                    },
+                    "type": "object"
+                  },
                   "nodeGroup": {
                     "type": "string"
                   },
@@ -360,10 +389,6 @@
                       "low": {
                         "format": "int32",
                         "type": "number"
-                      },
-                      "reservedDays": {
-                        "format": "int32",
-                        "type": "number"
                       }
                     },
                     "type": "object"
@@ -375,6 +400,12 @@
                   "minScaleUpSize": {
                     "format": "int32",
                     "type": "number"
+                  },
+                  "nodegroupBuffer": {
+                    "additionalProperties": {
+                      "type": "object"
+                    },
+                    "type": "object"
                   },
                   "reservedTimeRange": {
                     "type": "string"
@@ -394,6 +425,35 @@
                   "scaleUpDelay": {
                     "format": "int32",
                     "type": "number"
+                  },
+                  "timeMode": {
+                    "properties": {
+                      "reservedHours": {
+                        "format": "int32",
+                        "type": "number"
+                      },
+                      "scaleDownWhenTimeout": {
+                        "type": "boolean"
+                      },
+                      "timePeriods": {
+                        "properties": {
+                          "scaleInCron": {
+                            "type": "string"
+                          },
+                          "scaleInTime": {
+                            "type": "string"
+                          },
+                          "scaleOutCron": {
+                            "type": "string"
+                          },
+                          "scaleOutTime": {
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      }
+                    },
+                    "type": "object"
                   },
                   "type": {
                     "type": "string"
@@ -472,6 +532,25 @@
           "consumerId": {
             "type": "string"
           },
+          "limit": {
+            "properties": {
+              "clusterLimit": {
+                "type": "boolean"
+              },
+              "clusterLimitNum": {
+                "format": "int32",
+                "type": "number"
+              },
+              "nodegroupLimit": {
+                "type": "boolean"
+              },
+              "nodegroupLimitNum": {
+                "format": "int32",
+                "type": "number"
+              }
+            },
+            "type": "object"
+          },
           "nodeGroup": {
             "type": "string"
           },
@@ -507,6 +586,25 @@
                   },
                   "consumerId": {
                     "type": "string"
+                  },
+                  "limit": {
+                    "properties": {
+                      "clusterLimit": {
+                        "type": "boolean"
+                      },
+                      "clusterLimitNum": {
+                        "format": "int32",
+                        "type": "number"
+                      },
+                      "nodegroupLimit": {
+                        "type": "boolean"
+                      },
+                      "nodegroupLimitNum": {
+                        "format": "int32",
+                        "type": "number"
+                      }
+                    },
+                    "type": "object"
                   },
                   "nodeGroup": {
                     "type": "string"
@@ -558,10 +656,6 @@
                       "low": {
                         "format": "int32",
                         "type": "number"
-                      },
-                      "reservedDays": {
-                        "format": "int32",
-                        "type": "number"
                       }
                     },
                     "type": "object"
@@ -573,6 +667,12 @@
                   "minScaleUpSize": {
                     "format": "int32",
                     "type": "number"
+                  },
+                  "nodegroupBuffer": {
+                    "additionalProperties": {
+                      "type": "object"
+                    },
+                    "type": "object"
                   },
                   "reservedTimeRange": {
                     "type": "string"
@@ -592,6 +692,35 @@
                   "scaleUpDelay": {
                     "format": "int32",
                     "type": "number"
+                  },
+                  "timeMode": {
+                    "properties": {
+                      "reservedHours": {
+                        "format": "int32",
+                        "type": "number"
+                      },
+                      "scaleDownWhenTimeout": {
+                        "type": "boolean"
+                      },
+                      "timePeriods": {
+                        "properties": {
+                          "scaleInCron": {
+                            "type": "string"
+                          },
+                          "scaleInTime": {
+                            "type": "string"
+                          },
+                          "scaleOutCron": {
+                            "type": "string"
+                          },
+                          "scaleOutTime": {
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      }
+                    },
+                    "type": "object"
                   },
                   "type": {
                     "type": "string"
@@ -639,6 +768,25 @@
                     },
                     "consumerId": {
                       "type": "string"
+                    },
+                    "limit": {
+                      "properties": {
+                        "clusterLimit": {
+                          "type": "boolean"
+                        },
+                        "clusterLimitNum": {
+                          "format": "int32",
+                          "type": "number"
+                        },
+                        "nodegroupLimit": {
+                          "type": "boolean"
+                        },
+                        "nodegroupLimitNum": {
+                          "format": "int32",
+                          "type": "number"
+                        }
+                      },
+                      "type": "object"
                     },
                     "nodeGroup": {
                       "type": "string"
@@ -690,10 +838,6 @@
                         "low": {
                           "format": "int32",
                           "type": "number"
-                        },
-                        "reservedDays": {
-                          "format": "int32",
-                          "type": "number"
                         }
                       },
                       "type": "object"
@@ -705,6 +849,12 @@
                     "minScaleUpSize": {
                       "format": "int32",
                       "type": "number"
+                    },
+                    "nodegroupBuffer": {
+                      "additionalProperties": {
+                        "type": "object"
+                      },
+                      "type": "object"
                     },
                     "reservedTimeRange": {
                       "type": "string"
@@ -724,6 +874,35 @@
                     "scaleUpDelay": {
                       "format": "int32",
                       "type": "number"
+                    },
+                    "timeMode": {
+                      "properties": {
+                        "reservedHours": {
+                          "format": "int32",
+                          "type": "number"
+                        },
+                        "scaleDownWhenTimeout": {
+                          "type": "boolean"
+                        },
+                        "timePeriods": {
+                          "properties": {
+                            "scaleInCron": {
+                              "type": "string"
+                            },
+                            "scaleInTime": {
+                              "type": "string"
+                            },
+                            "scaleOutCron": {
+                              "type": "string"
+                            },
+                            "scaleOutTime": {
+                              "type": "string"
+                            }
+                          },
+                          "type": "object"
+                        }
+                      },
+                      "type": "object"
                     },
                     "type": {
                       "type": "string"
@@ -749,6 +928,10 @@
       },
       "NodeGroup": {
         "properties": {
+          "deletingSize": {
+            "format": "int32",
+            "type": "number"
+          },
           "desiredSize": {
             "format": "int32",
             "type": "number"
@@ -810,6 +993,10 @@
             },
             "type": "object"
           },
+          "priority": {
+            "format": "int32",
+            "type": "number"
+          },
           "upcomingSize": {
             "format": "int32",
             "type": "number"
@@ -827,6 +1014,25 @@
               },
               "consumerId": {
                 "type": "string"
+              },
+              "limit": {
+                "properties": {
+                  "clusterLimit": {
+                    "type": "boolean"
+                  },
+                  "clusterLimitNum": {
+                    "format": "int32",
+                    "type": "number"
+                  },
+                  "nodegroupLimit": {
+                    "type": "boolean"
+                  },
+                  "nodegroupLimitNum": {
+                    "format": "int32",
+                    "type": "number"
+                  }
+                },
+                "type": "object"
               },
               "nodeGroup": {
                 "type": "string"
@@ -878,10 +1084,6 @@
                   "low": {
                     "format": "int32",
                     "type": "number"
-                  },
-                  "reservedDays": {
-                    "format": "int32",
-                    "type": "number"
                   }
                 },
                 "type": "object"
@@ -893,6 +1095,12 @@
               "minScaleUpSize": {
                 "format": "int32",
                 "type": "number"
+              },
+              "nodegroupBuffer": {
+                "additionalProperties": {
+                  "type": "object"
+                },
+                "type": "object"
               },
               "reservedTimeRange": {
                 "type": "string"
@@ -912,6 +1120,35 @@
               "scaleUpDelay": {
                 "format": "int32",
                 "type": "number"
+              },
+              "timeMode": {
+                "properties": {
+                  "reservedHours": {
+                    "format": "int32",
+                    "type": "number"
+                  },
+                  "scaleDownWhenTimeout": {
+                    "type": "boolean"
+                  },
+                  "timePeriods": {
+                    "properties": {
+                      "scaleInCron": {
+                        "type": "string"
+                      },
+                      "scaleInTime": {
+                        "type": "string"
+                      },
+                      "scaleOutCron": {
+                        "type": "string"
+                      },
+                      "scaleOutTime": {
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
+                "type": "object"
               },
               "type": {
                 "type": "string"
@@ -1017,6 +1254,26 @@
         "title": "NodeTemplate",
         "type": "object"
       },
+      "NodegroupLimit": {
+        "properties": {
+          "clusterLimit": {
+            "type": "boolean"
+          },
+          "clusterLimitNum": {
+            "format": "int32",
+            "type": "number"
+          },
+          "nodegroupLimit": {
+            "type": "boolean"
+          },
+          "nodegroupLimitNum": {
+            "format": "int32",
+            "type": "number"
+          }
+        },
+        "title": "NodegroupLimit",
+        "type": "object"
+      },
       "ReservedNodeGroup": {
         "properties": {
           "clusterId": {
@@ -1043,10 +1300,6 @@
               "low": {
                 "format": "int32",
                 "type": "number"
-              },
-              "reservedDays": {
-                "format": "int32",
-                "type": "number"
               }
             },
             "type": "object"
@@ -1058,6 +1311,12 @@
           "minScaleUpSize": {
             "format": "int32",
             "type": "number"
+          },
+          "nodegroupBuffer": {
+            "additionalProperties": {
+              "type": "object"
+            },
+            "type": "object"
           },
           "reservedTimeRange": {
             "type": "string"
@@ -1078,11 +1337,88 @@
             "format": "int32",
             "type": "number"
           },
+          "timeMode": {
+            "properties": {
+              "reservedHours": {
+                "format": "int32",
+                "type": "number"
+              },
+              "scaleDownWhenTimeout": {
+                "type": "boolean"
+              },
+              "timePeriods": {
+                "properties": {
+                  "scaleInCron": {
+                    "type": "string"
+                  },
+                  "scaleInTime": {
+                    "type": "string"
+                  },
+                  "scaleOutCron": {
+                    "type": "string"
+                  },
+                  "scaleOutTime": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            },
+            "type": "object"
+          },
           "type": {
             "type": "string"
           }
         },
         "title": "Strategy",
+        "type": "object"
+      },
+      "TimeMode": {
+        "properties": {
+          "reservedHours": {
+            "format": "int32",
+            "type": "number"
+          },
+          "scaleDownWhenTimeout": {
+            "type": "boolean"
+          },
+          "timePeriods": {
+            "properties": {
+              "scaleInCron": {
+                "type": "string"
+              },
+              "scaleInTime": {
+                "type": "string"
+              },
+              "scaleOutCron": {
+                "type": "string"
+              },
+              "scaleOutTime": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        },
+        "title": "TimeMode",
+        "type": "object"
+      },
+      "TimePeriod": {
+        "properties": {
+          "scaleInCron": {
+            "type": "string"
+          },
+          "scaleInTime": {
+            "type": "string"
+          },
+          "scaleOutCron": {
+            "type": "string"
+          },
+          "scaleOutTime": {
+            "type": "string"
+          }
+        },
+        "title": "TimePeriod",
         "type": "object"
       },
       "UpdateNodePoolMgrStrategyReq": {
@@ -1110,6 +1446,25 @@
                   },
                   "consumerId": {
                     "type": "string"
+                  },
+                  "limit": {
+                    "properties": {
+                      "clusterLimit": {
+                        "type": "boolean"
+                      },
+                      "clusterLimitNum": {
+                        "format": "int32",
+                        "type": "number"
+                      },
+                      "nodegroupLimit": {
+                        "type": "boolean"
+                      },
+                      "nodegroupLimitNum": {
+                        "format": "int32",
+                        "type": "number"
+                      }
+                    },
+                    "type": "object"
                   },
                   "nodeGroup": {
                     "type": "string"
@@ -1161,10 +1516,6 @@
                       "low": {
                         "format": "int32",
                         "type": "number"
-                      },
-                      "reservedDays": {
-                        "format": "int32",
-                        "type": "number"
                       }
                     },
                     "type": "object"
@@ -1176,6 +1527,12 @@
                   "minScaleUpSize": {
                     "format": "int32",
                     "type": "number"
+                  },
+                  "nodegroupBuffer": {
+                    "additionalProperties": {
+                      "type": "object"
+                    },
+                    "type": "object"
                   },
                   "reservedTimeRange": {
                     "type": "string"
@@ -1195,6 +1552,35 @@
                   "scaleUpDelay": {
                     "format": "int32",
                     "type": "number"
+                  },
+                  "timeMode": {
+                    "properties": {
+                      "reservedHours": {
+                        "format": "int32",
+                        "type": "number"
+                      },
+                      "scaleDownWhenTimeout": {
+                        "type": "boolean"
+                      },
+                      "timePeriods": {
+                        "properties": {
+                          "scaleInCron": {
+                            "type": "string"
+                          },
+                          "scaleInTime": {
+                            "type": "string"
+                          },
+                          "scaleOutCron": {
+                            "type": "string"
+                          },
+                          "scaleOutTime": {
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      }
+                    },
+                    "type": "object"
                   },
                   "type": {
                     "type": "string"

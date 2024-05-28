@@ -14,6 +14,7 @@ package portpoolcache
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 )
@@ -23,6 +24,12 @@ type CachePort struct {
 	StartPort int
 	EndPort   int
 	Used      bool
+
+	// if used, set by portBinding
+	RefName      string
+	RefNamespace string
+	RefType      string
+	RefStartTime time.Time
 }
 
 // NewCachePort create cache port
@@ -46,11 +53,27 @@ func (cp *CachePort) IsUsed() bool {
 // SetUsed set port in used status
 func (cp *CachePort) SetUsed() {
 	cp.Used = true
+	cp.RefStartTime = time.Now()
 }
 
 // SetUnused set port in unused status
 func (cp *CachePort) SetUnused() {
 	cp.Used = false
+
+	cp.RefType = ""
+	cp.RefNamespace = ""
+	cp.RefName = ""
+	cp.RefStartTime = time.Time{}
+}
+
+// SetResource set port referenced resource
+func (cp *CachePort) SetResource(refType, refNamespace, refName string) {
+	if cp.RefType == "" && cp.RefNamespace == "" && cp.RefName == "" {
+		cp.RefStartTime = time.Now()
+	}
+	cp.RefType = refType
+	cp.RefNamespace = refNamespace
+	cp.RefName = refName
 }
 
 // IsMatched if startPort and endPort are matched
@@ -185,11 +208,15 @@ func (cpl *CachePortList) Release(startPort, endPort int) {
 }
 
 // SetPortUsed set port used
-func (cpl *CachePortList) SetPortUsed(startPort, endPort int) {
+func (cpl *CachePortList) SetPortUsed(startPort, endPort int, refType, refNamespace, refName string) {
 	for _, port := range cpl.Ports {
-		if port.IsMatched(startPort, endPort) && !port.IsUsed() {
+		if port.IsMatched(startPort, endPort) {
+			if !port.IsUsed() {
+				cpl.AllocatedPortNum++
+			}
+
 			port.SetUsed()
-			cpl.AllocatedPortNum++
+			port.SetResource(refType, refNamespace, refName)
 			return
 		}
 	}

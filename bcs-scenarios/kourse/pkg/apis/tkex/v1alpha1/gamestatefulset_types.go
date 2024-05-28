@@ -147,8 +147,6 @@ const (
 type RollingUpdateStatefulSetStrategy struct {
 	// Partition indicates the ordinal at which the StatefulSet should be
 	// partitioned.
-	// Default value is 0.
-	// +kubebuilder:default=0
 	// +optional
 	Partition *intstr.IntOrString `json:"partition,omitempty" protobuf:"varint,1,opt,name=partition"`
 

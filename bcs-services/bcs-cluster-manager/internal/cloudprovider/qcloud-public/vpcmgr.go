@@ -119,13 +119,13 @@ func (c *VPCManager) ListSubnets(vpcID, zone string, opt *cloudprovider.ListNetw
 	result := make([]*proto.Subnet, 0)
 	for _, v := range subnets {
 		result = append(result, &proto.Subnet{
-			VpcID:                   *v.VpcID,
-			SubnetID:                *v.SubnetID,
+			VpcID:                   *v.VpcId,
+			SubnetID:                *v.SubnetId,
 			SubnetName:              *v.SubnetName,
 			CidrRange:               *v.CidrBlock,
 			Ipv6CidrRange:           *v.Ipv6CidrBlock,
 			Zone:                    *v.Zone,
-			AvailableIPAddressCount: *v.AvailableIPAddressCount,
+			AvailableIPAddressCount: *v.AvailableIpAddressCount,
 		})
 	}
 	return result, nil
