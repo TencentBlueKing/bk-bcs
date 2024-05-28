@@ -47,6 +47,8 @@ const (
 const (
 	// NodePoolIdKey nodePool key
 	NodePoolIdKey = "kubernetes.io/node-pool.id"
+	// NodePoolCordonTaintKey nodePool cordon taint key
+	NodePoolCordonTaintKey = "node.cloudprovider.kubernetes.io/uninitialized"
 )
 
 // CCE node status

@@ -30,7 +30,7 @@ type DaemonInterface interface { // nolint
 }
 
 // DaemonOptions options
-type DaemonOptions struct {
+type DaemonOptions struct { // nolint
 	// EnableDaemon enable
 	EnableDaemon bool
 }

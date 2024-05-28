@@ -81,7 +81,7 @@ func (d *Daemon) reportClusterHealthStatus(error chan<- error) {
 			}
 			_, err = kubeCli.Discovery().ServerVersion()
 			if err != nil {
-				//if options.GetEditionInfo().IsCommunicationEdition() {}
+				// if options.GetEditionInfo().IsCommunicationEdition() {}
 				_ = d.updateClusterStatus(cls.ClusterID, common.StatusConnectClusterFailed)
 
 				metrics.ReportCloudClusterHealthStatus(cls.Provider, cls.ClusterID, 0)
@@ -113,6 +113,7 @@ func (d *Daemon) updateClusterStatus(clusterId, status string) error {
 	return d.model.UpdateCluster(d.ctx, cluster)
 }
 
+// ConnectToCluster connect to cluster
 func ConnectToCluster(model store.ClusterManagerModel, clusterId string) bool {
 	k8sOperator := clusterops.NewK8SOperator(options.GetGlobalCMOptions(), model)
 	kubeCli, errLocal := k8sOperator.GetClusterClient(clusterId)

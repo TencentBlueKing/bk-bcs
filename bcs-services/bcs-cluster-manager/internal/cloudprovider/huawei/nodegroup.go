@@ -248,7 +248,7 @@ func (ng *NodeGroup) UpdateDesiredNodes(desired uint32, group *proto.NodeGroup,
 	}
 
 	return &cloudprovider.ScalingResponse{
-		ScalingUp: desired,
+		ScalingUp: needScaleOutNodes,
 	}, nil
 }
 

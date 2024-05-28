@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package business xxx
 package business
 
 import (
@@ -32,7 +33,7 @@ func TestGetFreeIPNets(t *testing.T) {
 }
 
 func TestAllocateSubnet(t *testing.T) {
-	sub, err := AllocateSubnet(opt, "vpc-xxx", "ap-guangzhou-x", 24, "")
+	sub, err := AllocateSubnet(opt, "vpc-xxx", "ap-guangzhou-x", 24, "", "")
 	if err != nil {
 		t.Fatal(err)
 	}
