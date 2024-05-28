@@ -3,21 +3,30 @@
     :is-show="props.show"
     :title="t('批量导入')"
     :theme="'primary'"
-    width="1200"
+    width="960"
     height="720"
-    ext-cls="import-kv-dialog"
+    ext-cls="import-file-dialog"
     :esc-close="false"
-    @closed="handleClose">
+    :before-close="handleBeforeClose"
+    @closed="emits('update:show', false)">
     <div class="import-type-select">
       <div class="label">{{ t('导入方式') }}</div>
       <bk-radio-group v-model="importType">
-        <bk-radio-button label="text">{{ t('文本格式导入') }}</bk-radio-button>
+        <bk-radio-button label="localFile">{{ t('导入本地文件') }}</bk-radio-button>
+        <bk-radio-button label="configTemplate">{{ t('从配置模板导入') }}</bk-radio-button>
         <bk-radio-button label="historyVersion">{{ t('从历史版本导入') }}</bk-radio-button>
         <bk-radio-button label="otherService">{{ t('从其他服务导入') }}</bk-radio-button>
       </bk-radio-group>
     </div>
-    <div v-if="importType === 'text'">
-      <TextImport :bk-biz-id="bkBizId" :app-id="appId" />
+    <div v-if="importType === 'localFile'">
+      <ImportFromLocalFile
+        :bk-biz-id="props.bkBizId"
+        :app-id="props.appId"
+        @change="handleUploadFile"
+        @delete="handleDeleteFile" />
+    </div>
+    <div v-else-if="importType === 'configTemplate'">
+      <ImportFromTemplate ref="importFromTemplateRef" :bk-biz-id="props.bkBizId" :app-id="props.appId" />
     </div>
     <div v-else-if="importType === 'historyVersion'">
       <div class="wrap">
@@ -33,10 +42,10 @@
         </bk-select>
       </div>
     </div>
-    <div v-else>
-      <ImportFormOtherService :bk-biz-id="bkBizId" :app-id="appId" @select-version="handleSelectVersion" />
+    <div v-else-if="importType === 'otherService'">
+      <ImportFormOtherService :bk-biz-id="props.bkBizId" :app-id="props.appId" @select-version="handleSelectVersion" />
     </div>
-    <div v-if="importType !== 'text' && importConfigList.length" class="content">
+    <div v-if="importType !== 'configTemplate' && importConfigList.length" class="content">
       <bk-loading :loading="tableLoading">
         <div class="head">
           <bk-checkbox style="margin-left: 24px" v-model="isClearDraft"> {{ $t('导入前清空草稿区') }} </bk-checkbox>
@@ -48,7 +57,7 @@
           </div>
           <div v-else class="tips">
             {{ t('将') }} <span style="color: #ffa519">{{ t('清空') }}</span> {{ t('现有草稿区,并导入') }}
-            <span style="color: #3a84ff">{{ existConfigList.length }}</span>
+            <span style="color: #3a84ff">{{ importConfigList.length }}</span>
             {{ t('个配置项') }}
           </div>
         </div>
@@ -69,10 +78,15 @@
       </bk-loading>
     </div>
     <template #footer>
-      <bk-button theme="primary" style="margin-right: 8px" :disabled="!confirmBtnPerm" @click="handleConfirm">
+      <bk-button
+        theme="primary"
+        style="margin-right: 8px"
+        :disabled="!confirmBtnDisabled"
+        :loading="loading"
+        @click="handleConfirm">
         {{ t('导入') }}
       </bk-button>
-      <bk-button @click="handleClose">{{ t('取消') }}</bk-button>
+      <bk-button @click="emits('update:show', false)">{{ t('取消') }}</bk-button>
     </template>
   </bk-dialog>
 </template>
@@ -81,18 +95,25 @@
   import { ref, watch, computed, onMounted } from 'vue';
   import { useI18n } from 'vue-i18n';
   import {
-    batchImportKvFile,
     getConfigVersionList,
-    importKvFromHistoryVersion,
-  } from '../../../../../../../../api/config';
-  import { IConfigVersion, IConfigKvItem } from '../../../../../../../../../types/config';
+    importFromHistoryVersion,
+    batchAddConfigList,
+  } from '../../../../../../../../../api/config';
+  import { IConfigVersion, IConfigImportItem } from '../../../../../../../../../../types/config';
+  import { storeToRefs } from 'pinia';
   import { Message } from 'bkui-vue';
-  import TextImport from './import-kv/text-import.vue';
-  import ImportFormOtherService from './import/import-form-other-service.vue';
-  import ConfigTable from './import-kv/kv-config-table.vue';
-  import { cloneDeep } from 'lodash';
+  import createSamplePkg from '../../../../../../../../../utils/sample-file-pkg';
+  import ImportFromTemplate from './import-from-templates.vue';
+  import ImportFromLocalFile from './import-from-local-file.vue';
+  import ImportFormOtherService from './import-form-other-service.vue';
+  import ConfigTable from '../../../../../../../templates/list/package-detail/operations/add-configs/import-configs/config-table.vue';
+  import useModalCloseConfirmation from '../../../../../../../../../utils/hooks/use-modal-close-confirmation';
+  import useServiceStore from '../../../../../../../../../store/service';
 
   const { t } = useI18n();
+
+  const { batchUploadIds } = storeToRefs(useServiceStore());
+
   const props = defineProps<{
     show: boolean;
     bkBizId: string;
@@ -100,42 +121,77 @@
   }>();
   const emits = defineEmits(['update:show', 'confirm']);
 
-  const editorRef = ref();
-  const isFormChange = ref(false);
-  const importType = ref('text');
-  const textConfirmBtnPerm = ref(false);
-  const selectedFile = ref<File>();
-  const isFileUploadSuccess = ref(true);
+  const isTableChange = ref(false);
+  const importType = ref('localFile');
   const loading = ref(false);
-  const selectVerisonId = ref();
+  const downloadHref = ref('');
+  const importFromTemplateRef = ref();
   const versionListLoading = ref(false);
+  const selectVerisonId = ref();
   const versionList = ref<IConfigVersion[]>([]);
   const tableLoading = ref(false);
-  const initExistConfigList = ref<IConfigKvItem[]>([]);
-  const initNonExistConfigList = ref<IConfigKvItem[]>([]);
-  const existConfigList = ref<IConfigKvItem[]>([]);
-  const nonExistConfigList = ref<IConfigKvItem[]>([]);
+  const existConfigList = ref<IConfigImportItem[]>([]);
+  const nonExistConfigList = ref<IConfigImportItem[]>([]);
   const isClearDraft = ref(false);
   const expandNonExistTable = ref(true);
-  const isTableChange = ref(false);
+
+  const confirmBtnDisabled = computed(() => {
+    if (importType.value === 'configTemplate' && importFromTemplateRef.value) {
+      return importFromTemplateRef.value.isImportBtnDisabled;
+    }
+    return importConfigList.value.length;
+  });
+
+  const importConfigList = computed(() => [...nonExistConfigList.value, ...existConfigList.value]);
 
   watch(
     () => props.show,
     () => {
-      isFormChange.value = false;
+      importType.value = 'localFile';
+      isTableChange.value = false;
+      nonExistConfigList.value = [];
+      existConfigList.value = [];
+      getVersionList();
     },
   );
 
-  onMounted(() => {
-    getVersionList();
+  watch(
+    () => importType.value,
+    () => {
+      nonExistConfigList.value = [];
+      existConfigList.value = [];
+    },
+  );
+
+  onMounted(async () => {
+    downloadHref.value = (await createSamplePkg()) as string;
   });
 
-  const confirmBtnPerm = computed(() => {
-    if (importType.value === 'text') return textConfirmBtnPerm.value;
-    return !!selectedFile.value && isFileUploadSuccess.value;
-  });
-
-  const importConfigList = computed(() => [...initExistConfigList.value, ...initNonExistConfigList.value]);
+  const handleConfirm = async () => {
+    loading.value = true;
+    try {
+      if (importType.value === 'configTemplate') {
+        await importFromTemplateRef.value.handleImportConfirm();
+      } else {
+        const res = await batchAddConfigList(
+          props.bkBizId,
+          props.appId,
+          [...existConfigList.value, ...nonExistConfigList.value],
+          isClearDraft.value,
+        );
+        batchUploadIds.value = res.ids;
+      }
+    } catch (error) {
+      console.error(error);
+    }
+    loading.value = false;
+    Message({
+      theme: 'success',
+      message: t('配置文件导入成功'),
+    });
+    emits('update:show', false);
+    emits('confirm');
+  };
 
   const getVersionList = async () => {
     try {
@@ -157,13 +213,10 @@
     tableLoading.value = true;
     try {
       const params = { other_app_id, release_id };
-      const res = await importKvFromHistoryVersion(props.bkBizId, props.appId, params);
+      const res = await importFromHistoryVersion(props.bkBizId, props.appId, params);
       existConfigList.value = res.data.exist;
       nonExistConfigList.value = res.data.non_exist;
-      initExistConfigList.value = cloneDeep(res.data.exist);
-      initNonExistConfigList.value = cloneDeep(res.data.non_exist);
       if (nonExistConfigList.value.length === 0) {
-        console.log(1);
         expandNonExistTable.value = false;
       }
     } catch (e) {
@@ -173,52 +226,37 @@
     }
   };
 
-  const handleClose = () => {
-    selectedFile.value = undefined;
-    isFileUploadSuccess.value = true;
-    emits('update:show', false);
-  };
-
-  const handleConfirm = async () => {
-    loading.value = true;
-    if (importType.value === 'file') {
-      try {
-        await batchImportKvFile(props.bkBizId, props.appId, selectedFile.value);
-        Message({
-          theme: 'success',
-          message: t('文件导入成功'),
-        });
-      } catch (error) {
-        console.error(error);
-        isFileUploadSuccess.value = false;
-        return;
-      } finally {
-        loading.value = false;
-      }
-    } else {
-      try {
-        await editorRef.value.handleImport();
-        Message({
-          theme: 'success',
-          message: t('文本导入成功'),
-        });
-      } catch (error) {
-        console.error(error);
-      } finally {
-        loading.value = false;
-      }
-    }
-    emits('update:show', false);
-    emits('confirm');
-  };
-
-  const handleTableChange = (data: IConfigKvItem[], isNonExistData: boolean) => {
+  const handleTableChange = (data: IConfigImportItem[], isNonExistData: boolean) => {
     if (isNonExistData) {
       nonExistConfigList.value = data;
     } else {
       existConfigList.value = data;
     }
     isTableChange.value = true;
+  };
+
+  const handleBeforeClose = async () => {
+    if (isTableChange.value) {
+      const result = await useModalCloseConfirmation();
+      return result;
+    }
+    return true;
+  };
+
+  // 上传文件获取表格数据
+  const handleUploadFile = (exist: IConfigImportItem[], nonExist: IConfigImportItem[]) => {
+    existConfigList.value = [...existConfigList.value, ...exist];
+    nonExistConfigList.value = [...nonExistConfigList.value, ...nonExist];
+    if (nonExistConfigList.value.length === 0) {
+      expandNonExistTable.value = false;
+    }
+  };
+
+  // 删除文件处理表格数据
+  const handleDeleteFile = (fileName: string) => {
+    console.log(fileName);
+    existConfigList.value = existConfigList.value.filter((item) => item.file_name !== fileName);
+    nonExistConfigList.value = nonExistConfigList.value.filter((item) => item.file_name !== fileName);
   };
 </script>
 
@@ -227,28 +265,25 @@
     display: flex;
   }
   .label {
-    width: 70px;
+    width: 72px;
     height: 32px;
     line-height: 32px;
     font-size: 12px;
     color: #63656e;
-  }
-  .wrap {
-    display: flex;
-    margin-top: 24px;
+    margin-right: 22px;
+    text-align: right;
   }
   :deep(.wrap) {
     display: flex;
-    flex-wrap: wrap;
     margin-top: 24px;
     .label {
       @extend .label;
     }
   }
+
   :deep(.other-service-wrap) {
     display: flex;
     margin-top: 24px;
-    gap: 24px;
     .label {
       @extend .label;
     }
@@ -279,10 +314,10 @@
 </style>
 
 <style lang="scss">
-  .import-kv-dialog {
+  .import-file-dialog {
     .bk-modal-content {
       height: calc(100% - 50px) !important;
-      overflow: hidden !important;
+      overflow: auto;
     }
   }
 </style>

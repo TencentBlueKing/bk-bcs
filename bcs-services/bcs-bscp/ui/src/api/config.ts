@@ -416,10 +416,11 @@ export const importNonTemplateConfigFile = (
  * @param template_set_ids 模板套餐ID列表
  * @returns
  */
-export const batchAddConfigList = (bizId: string, appId: number, list: any) =>
+export const batchAddConfigList = (bizId: string, appId: number, list: any, replace_all: boolean) =>
   http
     .put(`/config/biz/${bizId}/apps/${appId}/config_items`, {
       items: list,
+      replace_all,
     })
     .then((res) => res.data);
 
@@ -441,16 +442,6 @@ export const createKv = (bizId: string, appId: number, kv: any) =>
  */
 export const getKvList = (bizId: string, appId: number, query: ICommonQuery) =>
   http.get(`/config/biz/${bizId}/apps/${appId}/kvs`, { params: query }).then((res) => res.data);
-
-/**
- * 批量上传｜更新kv
- * @param bizId 业务ID
- * @param appId 应用ID
- * @param kvs 上传kv列表
- * @returns
- */
-export const batchUpsertKv = (bizId: string, appId: number, kvs: any) =>
-  http.put(`/config/biz/${bizId}/apps/${appId}/kvs`, { kvs });
 
 /**
  * 更新kv
@@ -590,3 +581,33 @@ export const importKvFromHistoryVersion = (
   appId: number,
   params: { other_app_id: number; release_id: number },
 ) => http.get(`/config/biz/${bizId}/apps/${appId}/kvs/compare_conflicts`, { params });
+
+/**
+ * 简单文本导入kv配置项
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param kvs 上传kv列表
+ * @returns
+ */
+export const importKvFormText = (bizId: string, appId: number, kvs: any, clear_old_data: boolean) =>
+  http.put(`/config/biz/${bizId}/apps/${appId}/kvs`, { kvs, clear_old_data });
+
+/**
+ * json文本导入kv配置项
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param kvs 上传kv列表
+ * @returns
+ */
+export const importKvFormJson = (bizId: string, appId: number, content: string) =>
+  http.post(`/config/biz/${bizId}/apps/${appId}/kvs/json/import`, { data: content });
+
+/**
+ * yaml文本导入kv配置项
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param kvs 上传kv列表
+ * @returns
+ */
+export const importKvFormYaml = (bizId: string, appId: number, content: string) =>
+  http.post(`/config/biz/${bizId}/apps/${appId}/kvs/yaml/import`, { data: content });

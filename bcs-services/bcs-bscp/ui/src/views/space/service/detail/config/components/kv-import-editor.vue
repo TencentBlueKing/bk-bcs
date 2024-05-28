@@ -9,6 +9,7 @@
         </div>
         <div class="btns">
           <i
+            v-if="format === 'text'"
             class="bk-bscp-icon icon-separator"
             v-bk-tooltips="{
               content: t('分隔符'),
@@ -23,6 +24,21 @@
               distance: 20,
             }"
             @click="codeEditorRef.openSearch()" />
+          <bk-upload
+            v-if="format !== 'text'"
+            :accept="`.${format}`"
+            theme="button"
+            :size="5"
+            :custom-request="handleUploadFile">
+            <template #trigger>
+              <Upload
+                v-bk-tooltips="{
+                  content: t('上传'),
+                  placement: 'top',
+                  distance: 20,
+                }" />
+            </template>
+          </bk-upload>
           <i
             class="bk-bscp-icon icon-separator"
             v-bk-tooltips="{
@@ -52,11 +68,12 @@
       <div class="editor-content">
         <CodeEditor
           ref="codeEditorRef"
-          v-model="kvsContent"
+          :model-value="editorContent"
           :error-line="errorLine"
           :language="format"
           @enter="separatorShow = true"
-          @paste="handlePaste" />
+          @paste="handlePaste"
+          @update:model-value="handleContentChange" />
         <div v-if="format === 'text' && separatorShow" class="separator">
           <SeparatorSelect @closed="separatorShow = false" @confirm="handleSelectSeparator" />
         </div>
@@ -66,14 +83,14 @@
   </Teleport>
 </template>
 <script setup lang="ts">
-  import { ref, onBeforeUnmount, watch } from 'vue';
+  import { ref, onBeforeUnmount, watch, computed } from 'vue';
   import { useI18n } from 'vue-i18n';
   import BkMessage from 'bkui-vue/lib/message';
-  import { InfoLine, FilliscreenLine, UnfullScreen, Search } from 'bkui-vue/lib/icon';
+  import { InfoLine, FilliscreenLine, UnfullScreen, Search, Upload } from 'bkui-vue/lib/icon';
   import CodeEditor from '../../../../../../components/code-editor/index.vue';
   import SeparatorSelect from '../../../../variables/separator-select.vue';
   import { IConfigKvItem } from '../../../../../../../types/config';
-  import { batchUpsertKv } from '../../../../../../api/config';
+  import { importKvFormText, importKvFormJson, importKvFormYaml } from '../../../../../../api/config';
 
   interface errorLineItem {
     lineNumber: number;
@@ -81,16 +98,18 @@
   }
 
   const { t } = useI18n();
-  const emits = defineEmits(['trigger', 'update:modelValue']);
+  const emits = defineEmits(['trigger', 'update:modelValue', 'upload']);
 
   const isOpenFullScreen = ref(false);
   const codeEditorRef = ref();
   const separatorShow = ref(false);
-  const kvsContent = ref('');
+  const textContent = ref('');
   const kvs = ref<IConfigKvItem[]>([]);
   const separator = ref(' ');
   const shouldValidate = ref(false);
   const errorLine = ref<errorLineItem[]>([]);
+  const jsonContent = ref('');
+  const yamlContent = ref('');
 
   const props = defineProps<{
     bkBizId: string;
@@ -99,13 +118,20 @@
     format: string;
   }>();
 
+  const editorContent = computed(() => {
+    if (props.format === 'text') return textContent.value;
+    if (props.format === 'json') return jsonContent.value;
+    return yamlContent.value;
+  });
+
   watch(
-    () => kvsContent.value,
+    () => editorContent.value,
     (val) => {
       if (props.format === 'text') {
         handleValidateEditor();
       } else {
-        codeEditorRef.value.validate();
+        console.log(codeEditorRef.value.validate());
+        emits('trigger', codeEditorRef.value.validate());
       }
       if (!val) emits('trigger', false);
     },
@@ -145,7 +171,7 @@
 
   // 校验编辑器内容 处理上传kv格式
   const handleValidateEditor = () => {
-    const kvArray = kvsContent.value.split('\n').map((item) => item.trim());
+    const kvArray = textContent.value.split('\n').map((item) => item.trim());
     errorLine.value = [];
     kvs.value = [];
     let hasSeparatorError = false;
@@ -186,13 +212,23 @@
         });
       }
     });
-    emits('trigger', kvsContent.value && errorLine.value.length === 0);
+    emits('trigger', textContent.value && errorLine.value.length === 0);
     return hasSeparatorError;
   };
 
   // 导入kv
   const handleImport = async () => {
-    await batchUpsertKv(props.bkBizId, props.appId, kvs.value);
+    try {
+      if (props.format === 'text') {
+        await importKvFormText(props.bkBizId, props.appId, kvs.value, false);
+      } else if (props.format === 'json') {
+        await importKvFormJson(props.bkBizId, props.appId, jsonContent.value);
+      } else {
+        await importKvFormYaml(props.bkBizId, props.appId, yamlContent.value);
+      }
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const handleSelectSeparator = (selectSeparator: string) => {
@@ -206,8 +242,28 @@
     }
   };
 
+  const handleUploadFile = (option: { file: File }) => {
+    emits('upload', option.file);
+  };
+
+  const handleContentChange = (val: string) => {
+    if (props.format === 'text') {
+      textContent.value = val;
+    } else if (props.format === 'json') {
+      jsonContent.value = val;
+    } else {
+      yamlContent.value = val;
+    }
+  };
+
   defineExpose({
     handleImport,
+    handleValidate: () => {
+      if (codeEditorRef.value && props.format === 'text') {
+        return errorLine.value.length;
+      }
+      return codeEditorRef.value.validate();
+    },
   });
 </script>
 <style lang="scss" scoped>
@@ -248,14 +304,23 @@
       .btns {
         display: flex;
         justify-content: space-between;
-        width: 80px;
-        height: 16px;
         align-items: center;
-        & > span,
-        & > i {
+        gap: 16px;
+        color: #979ba5;
+        span,
+        i {
+          font-size: 16px;
           cursor: pointer;
           &:hover {
             color: #3a84ff;
+          }
+        }
+        :deep(.bk-upload) {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          .bk-upload-list {
+            display: none;
           }
         }
       }

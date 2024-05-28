@@ -10,10 +10,13 @@
   </div>
   <div :class="['content-wrapper', { 'show-example': isShowFormateExample }]">
     <KvContentEditor
+      ref="editorRef"
       v-model="isShowFormateExample"
       :bk-biz-id="props.bkBizId"
       :app-id="props.appId"
-      :format="selectFormat">
+      :format="selectFormat"
+      @upload="handleUploadFile"
+      @trigger="hasTextImportError = !$event">
       <template #sufContent>
         <FormatExample v-if="isShowFormateExample" :format="selectFormat" />
       </template>
@@ -36,6 +39,8 @@
 
   const selectFormat = ref('text');
   const isShowFormateExample = ref(true);
+  const editorRef = ref();
+  const hasTextImportError = ref(false);
 
   const tips = computed(() => {
     if (selectFormat.value === 'text') {
@@ -49,6 +54,21 @@
     return t(
       '以 YAML 格式导入键值 (KV) 配置项，配置项名称作为 YAML 对象的 Key，而配置项的数据类型和值分别作为嵌套对象的子键，形成对应键的值',
     );
+  });
+
+  const handleUploadFile = (file: File) => {
+    console.log(file);
+  };
+
+  defineExpose({
+    handleImport: async () => {
+      if (editorRef.value) {
+        await editorRef.value.handleImport();
+      }
+    },
+    hasError: () => {
+      return hasTextImportError.value;
+    },
   });
 </script>
 

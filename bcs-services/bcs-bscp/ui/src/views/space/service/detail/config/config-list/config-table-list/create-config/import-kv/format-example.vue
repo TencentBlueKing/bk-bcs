@@ -58,6 +58,7 @@
     format: string;
   }>();
 
+  /* eslint-disable */
   const copyContent = computed(() => {
     if (props.format === 'text') {
       return `string_key string strign_value
@@ -65,12 +66,30 @@ number_key number 100`;
     }
     if (props.format === 'json') {
       return `{
-    "string_key": {"kv_type": "string", "value": "string_value"},
-    "number_key": {"kv_type": "number", "value": 100},
-    "text_key": {"kv_type": "text", "value": "line1\\nline2"},
-    "json_key": {"kv_type": "json", "value": "{'name': 'bk', 'age': 18}"},
-    "xml_key": {"kv_type": "xml", "value": "<xml>\\n xml_value\\n</xml>"},
-    "yaml_key": {"kv_type": "yaml", "value": "def:\\n name:bk\\n age:18"}
+  "string_demo": {
+    "kv_type": "string",
+    "value": "blueking"
+  },
+  "number_demo": {
+    "kv_type": "number",
+    "value": 12345
+  },
+  "text_demo": {
+    "kv_type": "text",
+    "value": "text"
+  },
+  "json_demo": {
+    "kv_type": "json",
+    "value": "{\\"name\\": \\"John Doe\\", \\"age\\": 30, \\"city\\": \\"New York\\", \\"hobbies\\": [\\"reading\\", \\"travelling\\", \\"sports\\"]}"
+  },
+  "xml_demo": {
+    "kv_type": "xml",
+    "value": "<person>\\n  <name>John Doe</name>\\n  <age>30</age>\\n  <city>New York</city>\\n  <hobbies>\\n    <hobby>reading</hobby>\\n    <hobby>travelling</hobby>\\n    <hobby>sports</hobby>\\n  </hobbies>\\n</person>"
+  },
+  "yaml_demo": {
+    "kv_type": "yaml",
+    "value": "name: John Doe\\nage: 30\\ncity: New York\\nhobbies:\\n  - reading\\n  - travelling\\n  - sports"
+  }
 }`;
     }
     return `string_key:
@@ -88,14 +107,15 @@ json_key:
     kv_type: json
     value: |-
        {
-          “name”: “bk”
-          “age”: 18
+          "name": "bk",
+          "aaa": 18
        }
 xml_key:
     kv_type: xml
     value: |-
-       <xml>\n xml_value\n</xml>`;
+       <xml> xml_value </xml>`;
   });
+  /* eslint-enable */
 
   // 复制
   const handleCopyText = () => {

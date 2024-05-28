@@ -61,17 +61,12 @@
     :bk-biz-id="props.bkBizId"
     :app-id="props.appId"
     @confirm="emits('created')" />
-  <BatchUpload
-    v-model:show="isBatchUploadSliderOpen"
-    :bk-biz-id="props.bkBizId"
-    :app-id="props.appId"
-    @upload="emits('uploaded')" />
   <BatchImportKv
     v-model:show="isBatchImportKvDialogOpen"
     :bk-biz-id="props.bkBizId"
     :app-id="props.appId"
     @confirm="emits('created')" />
-  <BatchImport
+  <BatchImportFile
     v-model:show="isBatchImportDialogOpen"
     :bk-biz-id="props.bkBizId"
     :app-id="props.appId"
@@ -86,9 +81,8 @@
   import useServiceStore from '../../../../../../../../store/service';
   import ManualCreate from './manual-create.vue';
   import ManualCreateKv from './manual-create-kv.vue';
-  import BatchUpload from './batch-upload.vue';
-  import BatchImportKv from './batch-import-kv.vue';
-  import BatchImport from './batch-import.vue';
+  import BatchImportKv from './import-kv/index.vue';
+  import BatchImportFile from './import-file/index.vue';
 
   const route = useRoute();
   const { t } = useI18n();
@@ -109,7 +103,6 @@
   const isManualCreateSliderOpen = ref(false);
   const isManualCreateKvSliderOpen = ref(false);
   const isImportTemplatesDialogOpen = ref(false);
-  const isBatchUploadSliderOpen = ref(false);
   const isBatchImportDialogOpen = ref(false);
   const isBatchImportKvDialogOpen = ref(false);
 
