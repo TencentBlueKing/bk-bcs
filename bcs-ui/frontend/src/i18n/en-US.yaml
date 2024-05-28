@@ -729,6 +729,8 @@ cluster:
         deficiencyIpNumTips: The number of available container network IP is insufficient
         availableIpNum: 'Number of ip available: {0}'
         availableIpNum2: 'Available container network IP {num}'
+        businessSpecificVPC: Business-specific VPC
+        publicVPC: Public VPC
       networkSetting1:
         text: IP resource
         maxNodePodNum: Number of pod ip
