@@ -666,6 +666,8 @@ cluster:
         deficiencyIpNumTips: 可用容器网络IP数量不足
         availableIpNum: '可用IP数量: {0}'
         availableIpNum2: '可用容器网络 IP {num} 个'
+        businessSpecificVPC: 业务专属VPC
+        publicVPC: 公共VPC
       networkSetting1:
         text: IP资源
         maxNodePodNum: Pod IP 数量
