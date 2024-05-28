@@ -28,6 +28,7 @@ type userInfo struct {
 	Username string `json:"username"`
 }
 
+// bkPaaSAuthClient 外部统一登入, 可使用主域名或者ESB查询
 type bkPaaSAuthClient struct {
 	conf *cc.LoginAuthSettings
 }
@@ -77,5 +78,7 @@ func (b *bkPaaSAuthClient) BuildLoginRedirectURL(r *http.Request, webHost string
 
 // BuildLoginURL API未登入访问URL
 func (b *bkPaaSAuthClient) BuildLoginURL(r *http.Request) (string, string) {
-	return buildLoginURL(r, b.conf.Host), buildLoginPlainURL(r, b.conf.Host)
+	loginURL := fmt.Sprintf("%s/login/?c_url=", b.conf.Host)
+	loginPlainURL := fmt.Sprintf("%s/login/plain/?c_url=", b.conf.Host)
+	return loginURL, loginPlainURL
 }
