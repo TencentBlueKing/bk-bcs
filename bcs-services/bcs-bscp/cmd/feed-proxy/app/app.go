@@ -17,34 +17,30 @@ import (
 	"fmt"
 	"net"
 	"strconv"
-	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
 	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
-	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/reflection"
 
-	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/crontab"
-	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/options"
-	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/service"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/feed-proxy/options"
+	grpcproxy "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/feed-proxy/proxy/grpc"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/feed-proxy/service"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
-	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/uuid"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/metrics"
-	pbfs "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/feed-server"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/brpc"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/ctl"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/ctl/cmd"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/shutdown"
-	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/serviced"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
-// Run start the feed server
+// Run start the feed proxy
 func Run(opt *options.Option) error {
-	fs := new(feedServer)
+	fs := new(feedProxy)
 	if err := fs.prepare(opt); err != nil {
 		return err
 	}
@@ -57,76 +53,50 @@ func Run(opt *options.Option) error {
 		return err
 	}
 
-	if err := fs.register(); err != nil {
-		return err
-	}
-
 	shutdown.RegisterFirstShutdown(fs.finalizer)
 	shutdown.WaitShutdown(20)
 	return nil
 }
 
-type feedServer struct {
-	serve   *grpc.Server
-	sd      serviced.ServiceDiscover
-	service *service.Service
-	cleaner *crontab.SourceFileCacheCleaner
+type feedProxy struct {
+	serve            *grpc.Server
+	service          *service.Service
+	upstreamDirector *grpcproxy.FeedServerDirector
 }
 
-// prepare do prepare jobs before run feed server.
-func (fs *feedServer) prepare(opt *options.Option) error {
+// prepare do prepare jobs before run feed proxy.
+func (fs *feedProxy) prepare(opt *options.Option) error {
 	// load settings from config file.
 	if err := cc.LoadSettings(opt.Sys); err != nil {
 		return fmt.Errorf("load settings from config files failed, err: %v", err)
 	}
 
-	logs.InitLogger(cc.FeedServer().Log.Logs())
+	logs.InitLogger(cc.FeedProxy().Log.Logs())
 	logs.Infof("load settings from config file success.")
 	logs.Infof("current service name: %s", opt.Name)
 
 	// init metrics
-	metrics.InitMetrics(net.JoinHostPort(cc.FeedServer().Network.BindIP,
-		strconv.Itoa(int(cc.FeedServer().Network.RpcPort))))
+	metrics.InitMetrics(net.JoinHostPort(cc.FeedProxy().Network.BindIP,
+		strconv.Itoa(int(cc.FeedProxy().Network.RpcPort))))
 
-	etcdOpt, err := cc.FeedServer().Service.Etcd.ToConfig()
+	upstreamDirector, err := grpcproxy.NewFeedServerDirector()
 	if err != nil {
-		return fmt.Errorf("get etcd config failed, err: %v", err)
+		return fmt.Errorf("new feed server director failed, err: %v", err)
 	}
-
-	// register data service.
-	svcOpt := serviced.ServiceOption{
-		Name: cc.FeedServerName,
-		IP:   cc.FeedServer().Network.BindIP,
-		Port: cc.FeedServer().Network.RpcPort,
-		Uid:  uuid.UUID(),
-	}
-	sd, err := serviced.NewServiceD(etcdOpt, svcOpt)
-	if err != nil {
-		return fmt.Errorf("new service discovery failed, err: %v", err)
-	}
-
-	fs.sd = sd
+	fs.upstreamDirector = upstreamDirector
 
 	// init bscp control tool
-	if err = ctl.LoadCtl(ctl.WithBasics(sd)...); err != nil {
+	if err = ctl.LoadCtl(cmd.WithLog()); err != nil {
 		return fmt.Errorf("load control tool failed, err: %v", err)
 	}
 
-	svc, err := service.NewService(fs.sd, opt.Name)
-	if err != nil {
-		return fmt.Errorf("initialize service failed, err: %v", err)
-	}
-	fs.service = svc
-
-	cleaner := crontab.NewSourceFileCacheCleaner()
-	fs.cleaner = cleaner
-	fs.cleaner.Run()
+	fs.service = service.NewService(opt.Name)
 
 	return nil
 }
 
 // listenAndServe listen the grpc serve and set up the shutdown gracefully job.
-func (fs *feedServer) listenAndServe() error {
+func (fs *feedProxy) listenAndServe() error {
 	// generate standard grpc server grpcMetrics.
 	grpcMetrics := grpc_prometheus.NewServerMetrics()
 	grpcMetrics.EnableHandlingTimeHistogram(metrics.GrpcBuckets)
@@ -138,17 +108,15 @@ func (fs *feedServer) listenAndServe() error {
 		grpc.ChainUnaryInterceptor(
 			brpc.LogUnaryServerInterceptor(),
 			grpcMetrics.UnaryServerInterceptor(),
-			service.FeedUnaryAuthInterceptor,
 			grpc_recovery.UnaryServerInterceptor(recoveryOpt),
 		),
 		grpc.ChainStreamInterceptor(
 			grpcMetrics.StreamServerInterceptor(),
-			service.FeedStreamAuthInterceptor,
 			grpc_recovery.StreamServerInterceptor(recoveryOpt),
 		),
 	}
 
-	network := cc.FeedServer().Network
+	network := cc.FeedProxy().Network
 	if network.TLS.Enable() {
 		tls := network.TLS
 		tlsC, err := tools.ClientTLSConfVerify(tls.InsecureSkipVerify, tls.CAFile, tls.CertFile, tls.KeyFile,
@@ -159,16 +127,10 @@ func (fs *feedServer) listenAndServe() error {
 
 		cred := credentials.NewTLS(tlsC)
 		opts = append(opts, grpc.Creds(cred))
-		// set keepalive params so that feed-proxy could maintain a grpc connection pool
-		opts = append(opts, grpc.KeepaliveEnforcementPolicy(keepalive.EnforcementPolicy{
-			// a bit less than feed-proxy's grpc keepalive time 30s
-			MinTime:             25 * time.Second,
-			PermitWithoutStream: true,
-		}))
 	}
+	opts = append(opts, grpc.UnknownServiceHandler(grpcproxy.TransparentHandler(fs.upstreamDirector)))
 
 	serve := grpc.NewServer(opts...)
-	pbfs.RegisterUpstreamServer(serve, fs.service)
 	// Register reflection service on gRPC server.
 	reflection.Register(serve)
 
@@ -183,12 +145,12 @@ func (fs *feedServer) listenAndServe() error {
 	go func() {
 		notifier := shutdown.AddNotifier()
 		<-notifier.Signal
-		logs.Infof("start shutdown feed server grpc server gracefully...")
+		logs.Infof("start shutdown feed proxy grpc server gracefully...")
 
 		fs.serve.GracefulStop()
 		notifier.Done()
 
-		logs.Infof("shutdown feed server grpc server success...")
+		logs.Infof("shutdown feed proxy grpc server success...")
 	}()
 
 	addr := tools.GetListenAddr(network.BindIP, int(network.RpcPort))
@@ -219,24 +181,12 @@ func (fs *feedServer) listenAndServe() error {
 	return nil
 }
 
-func (fs *feedServer) finalizer() {
+func (fs *feedProxy) finalizer() {
 
-	fs.cleaner.Stop()
-
-	if err := fs.sd.Deregister(); err != nil {
-		logs.Errorf("process service shutdown, but deregister failed, err: %v", err)
+	if err := fs.upstreamDirector.Terminate(); err != nil {
+		logs.Errorf("process service shutdown, but upstream terminate failed, err: %v", err)
 		return
 	}
 
 	logs.Infof("shutting down service, deregister service success.")
-}
-
-// register the grpc serve.
-func (fs *feedServer) register() error {
-	if err := fs.sd.Register(); err != nil {
-		return fmt.Errorf("register feed server failed, err: %v", err)
-	}
-
-	logs.Infof("register feed server to etcd success.")
-	return nil
 }

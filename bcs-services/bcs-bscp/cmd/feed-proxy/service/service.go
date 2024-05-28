@@ -15,7 +15,6 @@ package service
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -24,74 +23,33 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 
-	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll"
+	httpproxy "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/feed-proxy/proxy/http"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
-	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/repository"
-	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/auth"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/rest"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/handler"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/shutdown"
-	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/serviced"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
 // Service do all the data service's work
 type Service struct {
-	bll *bll.BLL
-	// authorizer auth related operations.
-	authorizer auth.Authorizer
-	serve      *http.Server
-	state      serviced.State
-	provider   repository.Provider
+	serve *http.Server
 
-	// name feed server instance name.
+	// name feed proxy instance name.
 	name string
-	// dsSetting down stream related setting.
-	dsSetting cc.Downstream
-	mc        *metric
-	fileLock  *fileLockManager
 }
 
 // NewService create a service instance.
-func NewService(sd serviced.Discover, name string) (*Service, error) {
+func NewService(name string) *Service {
 
-	state, ok := sd.(serviced.State)
-	if !ok {
-		return nil, errors.New("discover convert state failed")
-	}
-
-	authorizer, err := auth.NewAuthorizer(sd, cc.FeedServer().Network.TLS)
-	if err != nil {
-		return nil, fmt.Errorf("new authorizer failed, err: %v", err)
-	}
-
-	bl, err := bll.New(sd, authorizer, name)
-	if err != nil {
-		return nil, fmt.Errorf("initialize business logical layer failed, err: %v", err)
-	}
-
-	provider, err := repository.NewProvider(cc.FeedServer().Repository)
-	if err != nil {
-		return nil, fmt.Errorf("new repository provider failed, err: %v", err)
-	}
-
-	return &Service{
-		bll:        bl,
-		authorizer: authorizer,
-		state:      state,
-		name:       name,
-		dsSetting:  cc.FeedServer().Downstream,
-		provider:   provider,
-		fileLock:   newFileLockManager(),
-		mc:         initMetric(name),
-	}, nil
+	return &Service{name: name}
 }
 
 // ListenAndServeRest listen and serve the restful server
 func (s *Service) ListenAndServeRest() error {
-	network := cc.FeedServer().Network
+	network := cc.FeedProxy().Network
 	addr := tools.GetListenAddr(network.BindIP, int(network.HttpPort))
 	dualStackListener := listener.NewDualStackListener()
 	if e := dualStackListener.AddListenerWithAddr(addr); e != nil {
@@ -165,6 +123,7 @@ func (s *Service) handler() http.Handler {
 	r.Get("/healthz", s.Healthz)
 
 	r.Mount("/", handler.RegisterCommonToolHandler())
+	r.Mount(httpproxy.ProxyDownloadPrefix, httpproxy.ProviderProxyHandler())
 	return r
 }
 
@@ -184,12 +143,6 @@ func (s *Service) Healthz(w http.ResponseWriter, req *http.Request) {
 		logs.Errorf("service healthz check failed, current service is shutting down")
 		w.WriteHeader(http.StatusServiceUnavailable)
 		rest.WriteResp(w, rest.NewBaseResp(errf.UnHealth, "current service is shutting down"))
-		return
-	}
-
-	if err := s.state.Healthz(); err != nil {
-		logs.Errorf("etcd healthz check failed, err: %v", err)
-		rest.WriteResp(w, rest.NewBaseResp(errf.UnHealth, "etcd healthz error, "+err.Error()))
 		return
 	}
 

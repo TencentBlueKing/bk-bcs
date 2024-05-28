@@ -130,6 +130,25 @@ func FeedServer() FeedServerSetting {
 	return *s
 }
 
+// FeedProxy return feed proxy Setting.
+func FeedProxy() FeedProxySetting {
+	rt.lock.Lock()
+	defer rt.lock.Unlock()
+
+	if !rt.Ready() {
+		logs.ErrorDepthf(1, "runtime not ready, return empty feed proxy setting")
+		return FeedProxySetting{}
+	}
+
+	s, ok := rt.settings.(*FeedProxySetting)
+	if !ok {
+		logs.ErrorDepthf(1, "current %s service can not get feed proxy setting", ServiceName())
+		return FeedProxySetting{}
+	}
+
+	return *s
+}
+
 // CacheService return cache service Setting.
 func CacheService() CacheServiceSetting {
 	rt.lock.Lock()
