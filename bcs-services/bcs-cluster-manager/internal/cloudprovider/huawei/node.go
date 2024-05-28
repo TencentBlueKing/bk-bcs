@@ -271,20 +271,10 @@ func (nm *NodeManager) ListRuntimeInfo(opt *cloudprovider.ListRuntimeInfoOption)
 	}
 
 	for k, v := range nodeRuntimeInfo {
-		if _, ok := runtimeInfo[k]; ok {
-			for _, y := range v {
-				exit := false
-				for _, b := range runtimeInfo[k] {
-					if y == b {
-						exit = true
-					}
-				}
-				if !exit {
-					runtimeInfo[k] = append(runtimeInfo[k], y)
-				}
+		for _, y := range v {
+			if !utils.SliceContainInString(runtimeInfo[k], y) {
+				runtimeInfo[k] = append(runtimeInfo[k], y)
 			}
-		} else {
-			runtimeInfo[k] = v
 		}
 	}
 

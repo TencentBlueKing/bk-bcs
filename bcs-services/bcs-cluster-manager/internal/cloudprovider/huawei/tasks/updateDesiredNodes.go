@@ -27,7 +27,6 @@ import (
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/huawei/api"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/huawei/business"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
@@ -291,7 +290,6 @@ func transInstancesToNode(ctx context.Context, instances []model.Node, info *clo
 		node.NodeGroupID = info.NodeGroup.NodeGroupID
 		node.Status = common.StatusInitialization
 		node.ZoneID = v.Spec.Az
-		node.ZoneName = fmt.Sprintf("可用区%d", business.GetZoneNameByZoneId(info.Cluster.Region, node.ZoneID))
 
 		blog.Infof("ApplyInstanceMachinesTask[%s]: call transInstancesToNode successful. node: %#v", node)
 		blog.Infof("ApplyInstanceMachinesTask[%s]: call transInstancesToNode successful. node.server: %#v", *v.Status)

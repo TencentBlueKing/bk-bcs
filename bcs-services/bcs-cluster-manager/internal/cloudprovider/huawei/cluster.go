@@ -18,6 +18,7 @@ import (
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/i18n"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
@@ -143,6 +144,17 @@ func (c *Cluster) AddSubnetsToCluster(ctx context.Context, subnet *proto.SubnetS
 // AppendCloudNodeInfo append cloud node detailed info
 func (c *Cluster) AppendCloudNodeInfo(ctx context.Context,
 	nodes []*proto.ClusterNode, opt *cloudprovider.CommonOption) error {
+
+	// 获取语言
+	lang := i18n.LanguageFromCtx(ctx)
+	if lang == utils.ZH {
+		for i, node := range nodes {
+			if node.ZoneID != "" {
+				nodes[i].ZoneName = fmt.Sprintf("可用区%d", business.GetZoneNameByZoneId(opt.Region, node.ZoneID))
+			}
+		}
+	}
+
 	return nil
 }
 

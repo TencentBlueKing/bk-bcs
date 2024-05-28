@@ -138,17 +138,8 @@ func removeClusterNodesTaint(ctx context.Context, clusterID string, nodeNames, r
 
 		newTaints := make([]corev1.Taint, 0)
 		for _, taint := range node.Spec.Taints {
-			exit := false
-			for _, rt := range removeTaints {
-				if taint.Key == rt {
-					exit = true
-					break
-				}
-			}
-			if !exit {
-				if taint.Key != cutils.BCSNodeGroupTaintKey {
-					newTaints = append(newTaints, taint)
-				}
+			if !utils.SliceContainInString(removeTaints, taint.Key) && taint.Key != cutils.BCSNodeGroupTaintKey {
+				newTaints = append(newTaints, taint)
 			}
 		}
 		node.Spec.Taints = newTaints
