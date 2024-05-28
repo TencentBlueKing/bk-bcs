@@ -146,12 +146,14 @@
 
   watch(
     () => props.show,
-    () => {
-      importType.value = 'localFile';
-      isTableChange.value = false;
-      nonExistConfigList.value = [];
-      existConfigList.value = [];
-      getVersionList();
+    (val) => {
+      if (val) {
+        importType.value = 'localFile';
+        isTableChange.value = false;
+        nonExistConfigList.value = [];
+        existConfigList.value = [];
+        getVersionList();
+      }
     },
   );
 

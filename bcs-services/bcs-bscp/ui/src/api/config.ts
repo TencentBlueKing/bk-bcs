@@ -589,8 +589,8 @@ export const importKvFromHistoryVersion = (
  * @param kvs 上传kv列表
  * @returns
  */
-export const importKvFormText = (bizId: string, appId: number, kvs: any, clear_old_data: boolean) =>
-  http.put(`/config/biz/${bizId}/apps/${appId}/kvs`, { kvs, clear_old_data });
+export const importKvFormText = (bizId: string, appId: number, kvs: any, replace_all: boolean) =>
+  http.put(`/config/biz/${bizId}/apps/${appId}/kvs`, { kvs, replace_all });
 
 /**
  * json文本导入kv配置项

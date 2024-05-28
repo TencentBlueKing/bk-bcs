@@ -48,7 +48,7 @@
           </div>
           <div v-else class="tips">
             {{ t('将') }} <span style="color: #ffa519">{{ t('清空') }}</span> {{ t('现有草稿区,并导入') }}
-            <span style="color: #3a84ff">{{ existConfigList.length }}</span>
+            <span style="color: #3a84ff">{{ importConfigList.length }}</span>
             {{ t('个配置项') }}
           </div>
         </div>
@@ -106,9 +106,6 @@
 
   const isFormChange = ref(false);
   const importType = ref('text');
-  // const textConfirmBtnPerm = ref(false);
-  const selectedFile = ref<File>();
-  const isFileUploadSuccess = ref(true);
   const loading = ref(false);
   const selectVerisonId = ref();
   const versionListLoading = ref(false);
@@ -118,13 +115,18 @@
   const nonExistConfigList = ref<IConfigKvItem[]>([]);
   const isClearDraft = ref(false);
   const expandNonExistTable = ref(true);
-  const isTableChange = ref(false);
   const textImport = ref();
 
   watch(
     () => props.show,
-    () => {
-      isFormChange.value = false;
+    (val) => {
+      if (val) {
+        importType.value = 'text';
+        isFormChange.value = false;
+        nonExistConfigList.value = [];
+        existConfigList.value = [];
+        getVersionList();
+      }
     },
   );
 
@@ -133,6 +135,7 @@
     () => {
       nonExistConfigList.value = [];
       existConfigList.value = [];
+      selectVerisonId.value = undefined;
     },
   );
 
@@ -181,8 +184,6 @@
   };
 
   const handleClose = () => {
-    selectedFile.value = undefined;
-    isFileUploadSuccess.value = true;
     emits('update:show', false);
   };
 
@@ -213,7 +214,7 @@
     } else {
       existConfigList.value = data;
     }
-    isTableChange.value = true;
+    isFormChange.value = true;
   };
 </script>
 

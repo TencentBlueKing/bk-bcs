@@ -15,8 +15,7 @@
       :bk-biz-id="props.bkBizId"
       :app-id="props.appId"
       :format="selectFormat"
-      @upload="handleUploadFile"
-      @trigger="hasTextImportError = !$event">
+      @has-error="hasTextImportError = $event">
       <template #sufContent>
         <FormatExample v-if="isShowFormateExample" :format="selectFormat" />
       </template>
@@ -55,10 +54,6 @@
       '以 YAML 格式导入键值 (KV) 配置项，配置项名称作为 YAML 对象的 Key，而配置项的数据类型和值分别作为嵌套对象的子键，形成对应键的值',
     );
   });
-
-  const handleUploadFile = (file: File) => {
-    console.log(file);
-  };
 
   defineExpose({
     handleImport: async () => {

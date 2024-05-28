@@ -96,7 +96,7 @@
       // 切换缩进空格数
       editor.getModel()!.updateOptions({ tabSize: tabSize.value });
       // 校验编辑器内容
-      if (localVal.value) validate();
+      if (localVal.value) validate(localVal.value);
     },
   );
 
@@ -156,7 +156,7 @@
 
     editor.onDidChangeModelContent(() => {
       localVal.value = editor.getValue();
-      validate();
+      validate(localVal.value);
       emit('update:modelValue', localVal.value);
       emit('change', localVal.value);
     });
@@ -291,14 +291,15 @@
   };
 
   // 校验xml、yaml、json数据类型
-  const validate = () => {
+  const validate = (val: string) => {
+    console.log(props.language, 'd');
     let markers: any[] = [];
     if (props.language === 'xml') {
-      markers = validateXML(localVal.value);
+      markers = validateXML(val);
     } else if (props.language === 'yaml') {
-      markers = validateYAML(localVal.value);
+      markers = validateYAML(val);
     } else if (props.language === 'json') {
-      return validateJSON(localVal.value);
+      return validateJSON(val);
     } else {
       return;
     }

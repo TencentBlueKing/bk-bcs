@@ -10,7 +10,7 @@
         <div class="btns">
           <i
             v-if="format === 'text'"
-            class="bk-bscp-icon icon-separator"
+            :class="['bk-bscp-icon', 'icon-separator', { isOpen: separatorShow }]"
             v-bk-tooltips="{
               content: t('分隔符'),
               placement: 'top',
@@ -25,8 +25,7 @@
             }"
             @click="codeEditorRef.openSearch()" />
           <bk-upload
-            v-if="format !== 'text'"
-            :accept="`.${format}`"
+            :accept="format === 'text' ? '.txt' : `.${format}`"
             theme="button"
             :size="5"
             :custom-request="handleUploadFile">
@@ -40,7 +39,7 @@
             </template>
           </bk-upload>
           <i
-            class="bk-bscp-icon icon-separator"
+            :class="['bk-bscp-icon', 'icon-separator', { isOpen: modelValue }]"
             v-bk-tooltips="{
               content: t('示例面板'),
               placement: 'top',
@@ -83,14 +82,19 @@
   </Teleport>
 </template>
 <script setup lang="ts">
-  import { ref, onBeforeUnmount, watch, computed } from 'vue';
+  import { ref, onBeforeUnmount, watch, computed, nextTick } from 'vue';
   import { useI18n } from 'vue-i18n';
   import BkMessage from 'bkui-vue/lib/message';
   import { InfoLine, FilliscreenLine, UnfullScreen, Search, Upload } from 'bkui-vue/lib/icon';
   import CodeEditor from '../../../../../../components/code-editor/index.vue';
   import SeparatorSelect from '../../../../variables/separator-select.vue';
   import { IConfigKvItem } from '../../../../../../../types/config';
-  import { importKvFormText, importKvFormJson, importKvFormYaml } from '../../../../../../api/config';
+  import {
+    importKvFormText,
+    importKvFormJson,
+    importKvFormYaml,
+    batchImportKvFile,
+  } from '../../../../../../api/config';
 
   interface errorLineItem {
     lineNumber: number;
@@ -98,7 +102,7 @@
   }
 
   const { t } = useI18n();
-  const emits = defineEmits(['trigger', 'update:modelValue', 'upload']);
+  const emits = defineEmits(['hasError', 'update:modelValue']);
 
   const isOpenFullScreen = ref(false);
   const codeEditorRef = ref();
@@ -127,14 +131,18 @@
   watch(
     () => editorContent.value,
     (val) => {
+      if (!val) {
+        emits('hasError', true);
+        return;
+      }
       if (props.format === 'text') {
         handleValidateEditor();
       } else {
-        console.log(codeEditorRef.value.validate());
-        emits('trigger', codeEditorRef.value.validate());
+        console.log(codeEditorRef.value.validate(val), 'c', props.format, val);
+        nextTick(() => emits('hasError', !codeEditorRef.value.validate(val)));
       }
-      if (!val) emits('trigger', false);
     },
+    { immediate: true },
   );
 
   watch(
@@ -212,7 +220,7 @@
         });
       }
     });
-    emits('trigger', textContent.value && errorLine.value.length === 0);
+    emits('hasError', textContent.value && errorLine.value.length === 0);
     return hasSeparatorError;
   };
 
@@ -242,8 +250,19 @@
     }
   };
 
-  const handleUploadFile = (option: { file: File }) => {
-    emits('upload', option.file);
+  const handleUploadFile = async (option: { file: File }) => {
+    try {
+      const res = await batchImportKvFile(props.bkBizId, props.appId, option.file);
+      if (props.format === 'text') {
+        textContent.value = res.data;
+      } else if (props.format === 'json') {
+        jsonContent.value = res.data;
+      } else {
+        yamlContent.value = res.data;
+      }
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const handleContentChange = (val: string) => {
@@ -262,7 +281,7 @@
       if (codeEditorRef.value && props.format === 'text') {
         return errorLine.value.length;
       }
-      return codeEditorRef.value.validate();
+      return codeEditorRef.value.validate(codeEditorRef.value);
     },
   });
 </script>
@@ -305,14 +324,23 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        gap: 16px;
-        color: #979ba5;
+        gap: 8px;
         span,
         i {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 24px;
+          height: 24px;
+          border-radius: 2px;
           font-size: 16px;
+          color: #979ba5;
           cursor: pointer;
           &:hover {
             color: #3a84ff;
+          }
+          &.isOpen {
+            background: #181818;
           }
         }
         :deep(.bk-upload) {
