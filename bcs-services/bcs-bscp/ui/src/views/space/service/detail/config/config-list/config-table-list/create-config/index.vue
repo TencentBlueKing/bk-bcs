@@ -21,28 +21,6 @@
           {{ t('手动新增') }}
         </div>
         <div
-          v-if="isFileType"
-          v-cursor="{ active: !hasEditServicePerm }"
-          :class="['operation-item', { 'bk-text-with-no-perm': !hasEditServicePerm }]"
-          @click="handleBatchImportDialogOpen">
-          {{ t('批量导入') }}
-        </div>
-        <div
-          v-if="isFileType"
-          v-cursor="{ active: !hasEditServicePerm }"
-          :class="['operation-item', { 'bk-text-with-no-perm': !hasEditServicePerm }]"
-          @click="handleBatchImportDialogOpen">
-          {{ t('批量上传') }}
-        </div>
-        <div
-          v-if="isFileType"
-          v-cursor="{ active: !hasEditServicePerm }"
-          :class="['operation-item', { 'bk-text-with-no-perm': !hasEditServicePerm }]"
-          @click="handleImportTemplateDialogOpen">
-          {{ t('从配置模板导入') }}
-        </div>
-        <div
-          v-if="!isFileType"
           v-cursor="{ active: !hasEditServicePerm }"
           :class="['operation-item', { 'bk-text-with-no-perm': !hasEditServicePerm }]"
           @click="handleBatchImportDialogOpen">
@@ -124,13 +102,6 @@
     }
   };
 
-  const handleImportTemplateDialogOpen = () => {
-    buttonRef.value.hide();
-    if (permCheckLoading.value || !checkPermBeforeOperate('update')) {
-      return;
-    }
-    isImportTemplatesDialogOpen.value = true;
-  };
 
   const handleBatchImportDialogOpen = () => {
     buttonRef.value.hide();
