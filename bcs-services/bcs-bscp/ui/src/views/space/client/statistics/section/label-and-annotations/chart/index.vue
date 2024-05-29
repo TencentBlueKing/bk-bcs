@@ -190,7 +190,7 @@
     if (data.foreign_val === data.primary_val) {
       navDrillDownData.value = `${data.primary_val}`;
     } else {
-      navDrillDownData.value = `${data.foreign_val}, ${data.primary_val}`;
+      navDrillDownData.value = `${data.primary_val}, ${data.foreign_val}`;
     }
     isDrillDown.value = true;
   };
