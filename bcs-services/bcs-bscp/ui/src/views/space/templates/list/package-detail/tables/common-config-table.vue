@@ -24,12 +24,11 @@
         :row-class="getRowCls"
         :remote-pagination="true"
         :pagination="pagination"
-        :is-selected-fn="isSelectedFn"
         @page-limit-change="handlePageLimitChange"
         @page-value-change="refreshList($event, true)"
         @selection-change="handleSelectionChange"
         @select-all="handleSelectAll">
-        <bk-table-column type="selection" :min-width="40" :width="40" class="aaaa"></bk-table-column>
+        <bk-table-column type="selection" :min-width="40" :width="40"></bk-table-column>
         <bk-table-column :label="t('配置文件绝对路径')">
           <template #default="{ row }">
             <div v-if="row.spec" v-overflow-title class="config-name" @click="goToViewVersionManage(row.id)">
@@ -314,8 +313,6 @@
     }
   };
 
-  const isSelectedFn = ({ row }: { row: ITemplateConfigItem }) =>
-    props.selectedConfigs.findIndex((item) => item.id === row.id) > -1;
 
   // 添加至套餐
   const handleOpenAddToPkgsDialog = (config: ITemplateConfigItem) => {

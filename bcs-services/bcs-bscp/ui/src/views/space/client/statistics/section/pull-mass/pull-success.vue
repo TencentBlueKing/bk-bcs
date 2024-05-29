@@ -217,7 +217,6 @@
   }
 
   :deep(.g2-tooltip) {
-    visibility: hidden;
     .g2-tooltip-title {
       padding-left: 16px;
       font-size: 14px;

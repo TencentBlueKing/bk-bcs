@@ -21,7 +21,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref } from 'vue';
+  import { ref, onMounted } from 'vue';
 
   defineProps<{
     needDownIcon?: boolean;
@@ -30,6 +30,12 @@
   const emits = defineEmits(['jump']);
 
   const tooltipRef = ref();
+
+  onMounted(() => {
+    tooltipRef.value.addEventListener('mouseleave', () => {
+      tooltipRef.value.style.visibility = 'hidden';
+    });
+  });
 
   const getDom = () => {
     return tooltipRef.value;
@@ -41,6 +47,7 @@
 
 <style lang="scss">
   .g2-tooltip {
+    visibility: hidden;
     position: absolute;
     min-width: 160px;
     .g2-tooltip-bottom {
