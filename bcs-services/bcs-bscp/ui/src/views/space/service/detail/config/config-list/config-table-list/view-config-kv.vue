@@ -40,7 +40,9 @@
       </bk-tab>
     </div>
     <section class="action-btns">
-      <bk-button theme="primary" @click="emits('openEdit')">{{ t('编辑') }}</bk-button>
+      <bk-button v-if="config.kv_state !== 'DELETE'" theme="primary" @click="emits('openEdit')">{{
+        t('编辑')
+      }}</bk-button>
       <bk-button @click="close">{{ t('关闭') }}</bk-button>
     </section>
   </bk-sideslider>

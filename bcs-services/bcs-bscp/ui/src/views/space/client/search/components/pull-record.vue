@@ -39,7 +39,7 @@
           <bk-table-column :label="$t('结束时间')" width="154">
             <template #default="{ row }">
               <span v-if="row.spec">
-                {{ datetimeFormat(row.spec.end_time) }}
+                {{ row.spec.release_change_status === 'Skip' ? '--' : datetimeFormat(row.spec.end_time) }}
               </span>
             </template>
           </bk-table-column>
