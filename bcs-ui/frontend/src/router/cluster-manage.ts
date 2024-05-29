@@ -276,8 +276,10 @@ export default [
       switch (cluster?.provider) {
         case 'gcpCloud':
           name = 'googleNodePool';
+          break;
         case 'azureCloud':
           name = 'azureNodePool';
+          break;
       }
       name ? next({
         name,
@@ -303,8 +305,10 @@ export default [
       switch (cluster?.provider) {
         case 'gcpCloud':
           name = 'googleEditNodePool';
+          break;
         case 'azureCloud':
           name = 'azureEditNodePool';
+          break;
       }
       name ? next({
         name,
@@ -330,8 +334,10 @@ export default [
       switch (cluster?.provider) {
         case 'gcpCloud':
           name = 'googleNodePoolDetail';
+          break;
         case 'azureCloud':
           name = 'azureNodePoolDetail';
+          break;
       }
       name ? next({
         name,

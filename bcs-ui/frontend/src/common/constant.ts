@@ -261,3 +261,5 @@ export const diskEnum = [
     name: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.hssd'),
   },
 ];
+
+export const VUEX_STROAGE_KEY = '__bcs_vuex_stroage__';

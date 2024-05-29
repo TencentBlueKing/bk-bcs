@@ -1813,7 +1813,7 @@ export default defineComponent({
         });
         logStatus = latestTask?.status;
         logSideDialogConf.value.taskData = taskData || [];
-        logSideDialogConf.value.taskID = latestTask.taskID;
+        logSideDialogConf.value.taskID = latestTask?.taskID || '';
       }
       if (['RUNNING', 'INITIALZING'].includes(logStatus)) {
         logIntervalStart();
