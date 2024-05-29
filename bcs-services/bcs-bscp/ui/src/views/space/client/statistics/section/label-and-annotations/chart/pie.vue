@@ -1,6 +1,10 @@
 <template>
   <div ref="canvasRef" class="canvas-wrap">
-    <Tooltip ref="tooltipRef" @jump="emits('jump', labelValue)" />
+    <Tooltip
+      ref="tooltipRef"
+      :need-down-icon="!!drillDownDemension && !isShowSunburst"
+      :down="drillDownDemension"
+      @jump="emits('jump', labelValue)" />
   </div>
 </template>
 
@@ -30,6 +34,7 @@
     bkBizId: string;
     appId: number;
     isShowSunburst: boolean;
+    drillDownDemension: string;
   }>();
 
   const emits = defineEmits(['jump', 'drillDown']);
@@ -199,7 +204,6 @@
 
 <style lang="scss" scoped>
   :deep(.g2-tooltip) {
-    visibility: hidden;
     .g2-tooltip-title {
       padding-left: 16px;
       font-size: 14px;

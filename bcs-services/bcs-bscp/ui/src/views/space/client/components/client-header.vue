@@ -147,15 +147,11 @@
 
 <style scoped lang="scss">
   .head {
-    position: relative;
     display: flex;
     font-size: 20px;
     line-height: 28px;
     min-height: 32px;
     .head-left {
-      position: absolute;
-      left: 0;
-      top: 0;
       height: 32px;
       display: flex;
       align-items: center;
@@ -209,7 +205,7 @@
       }
     }
     .head-right {
-      margin-left: 27%;
+      margin-left: calc(27% - 393px);
       display: flex;
       font-size: 12px;
       .selector-tips {
