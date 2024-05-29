@@ -36,7 +36,7 @@ import { bus } from '../common/bus';
 import CachedPromise from './cached-promise';
 import RequestQueue from './request-queue';
 
-import { VUEX_STROAGE_KEY } from '@/common/constant';
+// import { VUEX_STROAGE_KEY } from '@/common/constant';
 import { random } from '@/common/util';
 
 // axios 实例
@@ -210,7 +210,7 @@ function handleReject(error, config) {
       // 登录弹窗
       // eslint-disable-next-line camelcase
       let loginUrl;
-      const successUrl = `${location.origin}/login_success.html`;
+      const successUrl = `${location.origin}${window.BK_STATIC_URL}/login_success.html`;
       if (process.env.NODE_ENV === 'development') {
         loginUrl = `${window.LOGIN_FULL}plain/?size=big&c_url=${encodeURIComponent(successUrl)}`;
       } else {
