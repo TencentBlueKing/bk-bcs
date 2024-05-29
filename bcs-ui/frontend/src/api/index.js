@@ -36,6 +36,7 @@ import { bus } from '../common/bus';
 import CachedPromise from './cached-promise';
 import RequestQueue from './request-queue';
 
+import { VUEX_STROAGE_KEY } from '@/common/constant';
 import { random } from '@/common/util';
 
 // axios 实例
@@ -49,6 +50,8 @@ const axiosInstance = axios.create({
  * request interceptor
  */
 axiosInstance.interceptors.request.use((config) => {
+  // const storage = JSON.parse(localStorage.getItem(VUEX_STROAGE_KEY) || '{}');
+  // config.headers['X-BCS-Project-Code'] = storage?.curProject?.projectCode;
   const CSRFToken = cookie.parse(document.cookie).bcs_csrftoken;
   if (CSRFToken) {
     config.headers['X-CSRFToken'] = CSRFToken;
@@ -56,7 +59,7 @@ axiosInstance.interceptors.request.use((config) => {
   if (!window.BCS_CONFIG.disableTracing) {
     config.headers.Traceparent = `00-${random(32, 'abcdef0123456789')}-${random(16, 'abcdef0123456789')}-01`;
   }
-  config.headers['X-Requested-With'] = 'XMLHttpRequest';
+  // config.headers['X-Requested-With'] = 'XMLHttpRequest';
   return config;
 }, error => Promise.reject(error));
 

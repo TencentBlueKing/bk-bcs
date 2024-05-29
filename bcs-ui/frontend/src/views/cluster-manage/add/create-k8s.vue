@@ -786,6 +786,11 @@ const validateNodes = async () => {
   return await ($refs.nodesRef as any)?.validate().catch(() => false);
 };
 
+// 环境变更后重新校验master节点数量
+watch(() => basicInfo.value.environment, () => {
+  validateMaster();
+});
+
 onMounted(() => {
   handleGetTemplateList();
   handleGetRegionList();

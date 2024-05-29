@@ -32,6 +32,7 @@ import cloudMetadata from './cloud-metadata';
 
 import http from '@/api';
 import { getProject } from '@/api/modules/project';
+import { VUEX_STROAGE_KEY } from '@/common/constant';
 import { json2Query } from '@/common/util';
 import VuexStorage from '@/common/vuex-storage';
 import { ICluster, IProject } from '@/composables/use-app';
@@ -115,7 +116,7 @@ const store = new Vuex.Store<{
   },
   plugins: [
     VuexStorage({
-      key: '__bcs_vuex_stroage__',
+      key: VUEX_STROAGE_KEY,
       paths: [
         'curProject.projectID',
         'curProject.projectCode',

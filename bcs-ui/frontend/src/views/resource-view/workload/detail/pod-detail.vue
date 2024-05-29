@@ -78,7 +78,8 @@
           metric="cpu_usage"
           :params="params"
           category="pods"
-          colors="#30d878">
+          colors="#30d878"
+          unit="percent-number">
         </Metric>
         <Metric
           :title="$t('metrics.memUsage1')"

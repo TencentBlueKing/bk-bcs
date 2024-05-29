@@ -111,12 +111,20 @@ export default defineComponent({
     // 初始化数据
     const handleInitProjectList = async () => {
       params.value.offset = 0;
-      const { data, web_annotations } = await getProjectList({
+      const res = await getProjectList({
         ...params.value,
         searchKey: searchKey.value,
-      });
-      projectList.value = data?.results || [];
-      perms.value = web_annotations.perms;
+      }).catch(() => ({
+        data: {
+          results: [],
+          total: 0,
+        },
+        web_annotations: {
+          perms: {},
+        },
+      }));
+      projectList.value = res?.data?.results || [];
+      perms.value = res?.web_annotations?.perms || {};
     };
 
     // 滚动加载
