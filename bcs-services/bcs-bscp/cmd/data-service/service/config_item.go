@@ -210,6 +210,7 @@ func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbds.BatchUps
 		}
 		return nil, e
 	}
+
 	if req.ReplaceAll {
 		// if replace all,delete config items not in batch upsert request.
 		if e := s.doBatchDeleteConfigItems(grpcKit, tx, toDelete, req.BizId, req.AppId); e != nil {
