@@ -82,9 +82,6 @@
         </div>
     </body>
     <script>
-        // 新版登录弹窗不再需要
-        // document.domain = '{{ SESSION_COOKIE_DOMAIN }}'
-
         // 成功登录后关闭弹窗
         // opener方法由 @blueking/login-modal 包注入的，父窗口的引用
         window.opener && window.opener.location.reload()
