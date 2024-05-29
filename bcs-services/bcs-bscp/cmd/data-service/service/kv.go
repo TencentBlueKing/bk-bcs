@@ -255,7 +255,10 @@ func (s *Service) DeleteKv(ctx context.Context, req *pbds.DeleteKvReq) (*pbbase.
 }
 
 // BatchUpsertKvs is used to insert or update key-value data in bulk.
-func (s *Service) BatchUpsertKvs(ctx context.Context, req *pbds.BatchUpsertKvsReq) (*pbds.BatchUpsertKvsResp, error) {
+// 1.键存在则更新，但保证是类型一致
+// 2.键不存在则新增
+// replace_all为true时，清空表中的数据，但保证前面两条逻辑
+func (s *Service) BatchUpsertKvs(ctx context.Context, req *pbds.BatchUpsertKvsReq) (*pbds.BatchUpsertKvsResp, error) { // nolint
 
 	// FromGrpcContext used only to obtain Kit through grpc context.
 	kt := kit.FromGrpcContext(ctx)
@@ -306,6 +309,44 @@ func (s *Service) BatchUpsertKvs(ctx context.Context, req *pbds.BatchUpsertKvsRe
 
 	tx := s.dao.GenQuery().Begin()
 
+	// 清空草稿区
+	// 区分真删除和假删除
+	if req.ReplaceAll {
+		reallyDelete := []uint32{}
+		fakeDelete := make([]*table.Kv, 0)
+		kvs, lErr := s.dao.Kv().ListAllByAppID(kt, req.GetAppId(), req.GetBizId(), []string{table.KvStateAdd.String(),
+			table.KvStateDelete.String(), table.KvStateRevise.String(), table.KvStateUnchange.String()})
+		if lErr != nil {
+			return nil, lErr
+		}
+
+		for _, v := range kvs {
+			if newKvMap[v.Spec.Key] == nil {
+				if v.KvState == table.KvStateAdd {
+					reallyDelete = append(reallyDelete, v.ID)
+				} else {
+					v.Revision.Reviser = kt.User
+					v.Revision.UpdatedAt = time.Now().UTC()
+					fakeDelete = append(fakeDelete, v)
+				}
+			}
+		}
+
+		if err = s.dao.Kv().BatchDeleteWithTx(kt, tx, req.GetBizId(), req.GetAppId(), reallyDelete); err != nil {
+			if rErr := tx.Rollback(); rErr != nil {
+				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+			}
+			return nil, err
+		}
+
+		if err = s.dao.Kv().BatchUpdateWithTx(kt, tx, fakeDelete); err != nil {
+			if rErr := tx.Rollback(); rErr != nil {
+				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+			}
+			return nil, err
+		}
+	}
+
 	if len(toCreate) > 0 {
 		if err = s.dao.Kv().BatchCreateWithTx(kt, tx, toCreate); err != nil {
 			if rErr := tx.Rollback(); rErr != nil {
@@ -315,7 +356,7 @@ func (s *Service) BatchUpsertKvs(ctx context.Context, req *pbds.BatchUpsertKvsRe
 		}
 	}
 
-	if len(toUpdate) > 0 && req.ReplaceAll {
+	if len(toUpdate) > 0 {
 		if err = s.dao.Kv().BatchUpdateWithTx(kt, tx, toUpdate); err != nil {
 			if rErr := tx.Rollback(); rErr != nil {
 				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
