@@ -501,7 +501,7 @@
   }
   .header {
     position: relative;
-    height: 120px;
+    min-height: 120px;
     padding: 40px 120px 0 40px;
     background-image: linear-gradient(-82deg, #e8f0ff 10%, #f0f5ff 93%);
     box-shadow: 0 2px 4px 0 #1919290d;

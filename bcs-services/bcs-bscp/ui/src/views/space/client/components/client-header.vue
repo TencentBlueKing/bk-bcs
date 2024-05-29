@@ -1,5 +1,5 @@
 <template>
-  <div class="head">
+  <div ref="headWrapRef" class="head">
     <div class="head-left">
       <span class="title">{{ title }}</span>
       <div class="line"></div>
@@ -87,8 +87,10 @@
   const selectorRef = ref();
 
   const bizId = ref(String(route.params.spaceId));
+  const headWrapRef = ref();
 
   onMounted(async () => {
+    console.log(headWrapRef.value.offsetWidth * 0.27);
     await loadServiceList();
     const service = serviceList.value.find((service) => service.id === Number(route.params.appId));
     if (service) {
@@ -149,10 +151,15 @@
 <style scoped lang="scss">
   .head {
     position: relative;
+    display: flex;
     font-size: 20px;
     line-height: 28px;
-    height: 32px;
+    min-height: 32px;
     .head-left {
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 32px;
       display: flex;
       align-items: center;
       .line {
@@ -199,11 +206,8 @@
       }
     }
     .head-right {
-      position: absolute;
-      left: 27%;
-      top: 0;
+      margin-left: 27%;
       display: flex;
-      align-items: center;
       font-size: 12px;
       .selector-tips {
         min-width: 88px;

@@ -52,18 +52,18 @@
               @compositionstart="isComposing = true"
               @compositionend="isComposing = false" />
           </div>
-        </div>
-        <div class="search-container-input" ref="inputWrapRef">
-          <input
-            v-model="searchStr"
-            ref="inputRef"
-            class="input"
-            placeholder=" "
-            @focus="inputFocus = true"
-            @blur="handleConfirmConditionItem"
-            @keydown="handleEnterAddConditionItem"
-            @compositionstart="isComposing = true"
-            @compositionend="isComposing = false" />
+          <div v-if="isShowSearchInput" class="search-container-input" ref="inputWrapRef">
+            <input
+              v-model="searchStr"
+              ref="inputRef"
+              class="input"
+              placeholder=" "
+              @focus="inputFocus = true"
+              @blur="handleConfirmConditionItem"
+              @keydown="handleEnterAddConditionItem"
+              @compositionstart="isComposing = true"
+              @compositionend="isComposing = false" />
+          </div>
         </div>
         <div
           v-if="searchConditionList.length && isClientSearch"
@@ -226,6 +226,7 @@
   const datePickerRef = ref();
   const highlightCommonlySearchName = ref('');
   const isComposing = ref(false); // 是否使用输入法
+  const isShowSearchInput = ref(false);
 
   const inputPlacehoder = computed(() => {
     if (searchConditionList.value.length || searchStr.value || inputFocus.value) return '';
@@ -333,6 +334,7 @@
       menuOffset.value = inputWrapRef.value.offsetLeft;
       showChildSelector.value = true;
     } else {
+      isShowSearchInput.value = true;
       isShowPopover.value = false;
       nextTick(() => inputRef.value.focus());
     }
@@ -362,6 +364,7 @@
   const handleConfirmConditionItem = () => {
     const conditionValue = parentSelecte.value ? searchStr.value.split(' : ', 2)[1] : searchStr.value;
     inputFocus.value = false;
+    isShowSearchInput.value = false;
     if (!conditionValue) {
       searchStr.value = '';
       return;
@@ -629,6 +632,7 @@
 
   const handleClickSearch = () => {
     isShowPopover.value = !isShowPopover.value;
+    isShowSearchInput.value = true;
     nextTick(() => inputRef.value.focus());
   };
 
@@ -794,11 +798,10 @@
     }
   }
   .commonly-wrap {
-    position: absolute;
     height: 26px;
     display: flex;
     align-items: center;
-    margin-top: 6px;
+    margin: 6px 0;
   }
   .action-item {
     width: 58px;
