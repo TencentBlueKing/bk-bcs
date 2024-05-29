@@ -14,6 +14,12 @@ package repo
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/pkg/errors"
 
 	monitorextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/api/v1"
 )
@@ -42,4 +48,35 @@ func GenRepoKeyFromAppMonitor(appMonitor *monitorextensionv1.AppMonitor) string 
 	}
 
 	return genRepoKey(repoRef.URL, repoRef.TargetRevision)
+}
+
+func strInSlice(slice []string, item string) bool {
+	for _, s := range slice {
+		if s == item {
+			return true
+		}
+	}
+	return false
+}
+
+func getTopDir(path string) (string, error) {
+	dir := filepath.Dir(path)
+	topDir := strings.Split(dir, string(filepath.Separator))
+	if len(topDir) == 0 {
+		return "", errors.Errorf("unknown error, update file: %s, has not related scenario", path)
+	}
+	return topDir[0], nil
+}
+
+func readFileContent(path string) string {
+	_, err := os.Stat(path)
+	if err != nil {
+		return ""
+	}
+	content, err := os.ReadFile(path)
+	if err != nil {
+		blog.Errorf("read file[%s] failed, err: %s", path, err.Error())
+		return ""
+	}
+	return string(content)
 }

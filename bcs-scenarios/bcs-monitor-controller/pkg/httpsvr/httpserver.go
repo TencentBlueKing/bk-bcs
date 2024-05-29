@@ -29,15 +29,19 @@ import (
 
 	monitorextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/api/v1"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/common"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/repo"
 )
 
 // HttpServerClient http server client
 type HttpServerClient struct {
-	Mgr manager.Manager
+	Mgr         manager.Manager
+	RepoManager *repo.Manager
 }
 
 // InitRouters init router
 func InitRouters(ws *restful.WebService, httpServerClient *HttpServerClient) {
+	ws.Route(ws.GET("/api/v1/monitor/{biz_id}/list_scenario").To(httpServerClient.ListScenarios))
+
 	ws.Route(ws.GET("/api/v1/monitor/{biz_id}").To(httpServerClient.ListAppMonitors))
 	ws.Route(ws.POST("/api/v1/monitor/{biz_id}/{scenario}").To(httpServerClient.CreateOrUpdateAppMonitor))
 	ws.Route(ws.DELETE("/api/v1/monitor/{biz_id}/{scenario}").To(httpServerClient.DeleteAppMonitor))
@@ -219,6 +223,22 @@ func (h *HttpServerClient) DeleteAppMonitor(request *restful.Request, response *
 		return
 	}
 	_, _ = response.Write(CreateResponseData(nil, "success", struct{}{}))
+}
+
+// ListScenarios return scenario list of repo
+func (h *HttpServerClient) ListScenarios(request *restful.Request, response *restful.Response) {
+	repoKey := request.QueryParameter("repo")
+	if repoKey == "" {
+		repoKey = repo.RepoKeyDefault
+	}
+
+	repository, ok := h.RepoManager.GetRepo(repoKey)
+	if !ok {
+		_, _ = response.Write(CreateResponseData(fmt.Errorf("unknown repo: %s", repoKey), "", nil))
+		return
+	}
+
+	_, _ = response.Write(CreateResponseData(nil, "success", repository.GetScenarioInfos()))
 }
 
 // do Create Or Update App Monitor

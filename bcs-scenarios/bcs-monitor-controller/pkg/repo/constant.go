@@ -12,33 +12,6 @@
 
 package repo
 
-import (
-	"errors"
+var (
+	filterScenarios = []string{"test", ".git"}
 )
-
-const (
-	// EnvNameGitRepoURL env name for default git URL
-	EnvNameGitRepoURL = "GIT_URL"
-	// EnvNameGitUserName env name for default git username
-	EnvNameGitUserName = "GIT_USERNAME"
-	// EnvNameGitSecret env name for default git secret
-	EnvNameGitSecret = "GIT_SECRET"
-
-	// RepoKeyDefault default key
-	RepoKeyDefault = "DEFAULT"
-)
-
-var errStop = errors.New("stop")
-
-// Repo repo interface
-type Repo interface {
-	Pull() error
-	Clone() error
-	Reload() ([]string, error)
-
-	GetURL() string
-	GetDirectory() string
-	GetRepoKey() string
-
-	GetScenarioInfos() []*ScenarioInfo
-}
