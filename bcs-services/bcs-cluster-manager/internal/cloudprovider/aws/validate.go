@@ -18,6 +18,8 @@ import (
 	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/ec2"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
@@ -27,6 +29,10 @@ import (
 )
 
 var validateMgr sync.Once
+
+const (
+	defaultRegion = "ap-southeast-1"
+)
 
 func init() {
 	validateMgr.Do(func() {
@@ -263,7 +269,30 @@ func (c *CloudValidate) DeleteNodesFromClusterValidate(req *proto.DeleteNodesReq
 
 // CreateCloudAccountValidate create cloud account validate
 func (c *CloudValidate) CreateCloudAccountValidate(account *proto.Account) error {
-	return cloudprovider.ErrCloudNotImplemented
+	// call cloud interface to check accout
+	if c == nil || account == nil {
+		return fmt.Errorf("%s CreateCloudAccountValidate request is empty", cloudName)
+	}
+
+	if len(account.SecretID) == 0 || len(account.SecretKey) == 0 {
+		return fmt.Errorf("%s CreateCloudAccountValidate request lost valid crendential info", cloudName)
+	}
+
+	client, err := api.GetEc2Client(&cloudprovider.CommonOption{Account: account, Region: defaultRegion})
+	if err != nil {
+		return err
+	}
+
+	input := &ec2.DescribeRegionsInput{
+		AllRegions: aws.Bool(true),
+	}
+
+	_, err = client.DescribeRegions(input)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // ListCloudVpcsValidate list cloudAccount validate
