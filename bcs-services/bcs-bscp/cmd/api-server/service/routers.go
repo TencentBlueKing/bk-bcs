@@ -155,7 +155,7 @@ func (p *proxy) routers() http.Handler {
 	})
 
 	// 导入配置压缩包
-	r.Route("/api/v1/config/biz/{biz_id}/apps/{app_id}/config_item/import", func(r chi.Router) {
+	r.Route("/api/v1/config/biz/{biz_id}/apps/{app_id}/config_item/import/{unzip}", func(r chi.Router) {
 		r.Use(p.authorizer.UnifiedAuthentication)
 		r.Use(p.authorizer.BizVerified)
 		r.Use(p.HttpServerHandledTotal("", "ConfigFileImport"))
@@ -173,13 +173,6 @@ func (p *proxy) routers() http.Handler {
 	// 获取通知中心通知列表
 	r.Route("/api/v1/announcements", func(r chi.Router) {
 		r.Get("/", p.bkNotice.GetCurrentAnnouncements)
-	})
-
-	// 导入kv
-	r.Route("/api/v1/biz/{biz_id}/apps/{app_id}/kvs/import", func(r chi.Router) {
-		r.Use(p.authorizer.UnifiedAuthentication)
-		r.Use(p.authorizer.BizVerified)
-		r.Post("/", p.kvService.Import)
 	})
 
 	// 导出版本kv
