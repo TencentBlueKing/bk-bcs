@@ -207,6 +207,9 @@
         start_time: new Date(`${initDateTime.value![0].replace(' ', 'T')}+08:00`).toISOString(),
         end_time: new Date(`${initDateTime.value![1].replace(' ', 'T')}+08:00`).toISOString(),
         search_value,
+        order: {
+          desc: 'start_time',
+        },
       };
       const resp = await getClientPullRecord(props.bkBizId, props.appId, props.id, params);
       pagination.value.count = resp.data.count;

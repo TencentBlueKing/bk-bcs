@@ -231,7 +231,7 @@
   const inputPlacehoder = computed(() => {
     if (searchConditionList.value.length || searchStr.value || inputFocus.value) return '';
     return isClientSearch.value
-      ? t('UID/IP/标签/源版本/最近一次拉取配置状态/在线状态/客户端组件类型/客户端组件版本')
+      ? t('UID/IP/标签/源版本/最近一次拉取配置状态/在线状态/客户端组件类型/客户端组件版本/配置拉取时间范围')
       : t('标签/源版本/最近一次拉取配置状态/在线状态/客户端组件类型/客户端组件版本');
   });
 

@@ -210,11 +210,11 @@ export const CLIENT_HEARTBEAT_LIST = [
 // 错误大类映射
 export const CLIENT_ERROR_CATEGORY_MAP = [
   {
-    name: localT('执行前置脚本失败'),
+    name: localT('前置脚本失败'),
     value: 'PreHookFailed',
   },
   {
-    name: localT('执行后置脚本失败'),
+    name: localT('后置脚本失败'),
     value: 'PostHookFailed',
   },
   {
@@ -226,7 +226,7 @@ export const CLIENT_ERROR_CATEGORY_MAP = [
     value: 'SkipFailed',
   },
   {
-    name: localT('Token过期'),
+    name: localT('Token错误'),
     value: 'TokenFailed',
   },
   {
