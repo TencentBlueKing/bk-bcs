@@ -117,7 +117,7 @@ export default defineComponent({
     const schema = ref({});
     const handleGetSchemaData = async () => {
       const data = await $store.dispatch('clustermanager/resourceSchema', {
-        $cloudID: 'selfProvisionCloud',
+        $cloudID: curCluster.value.provider,
         $name: 'nodegroup',
       });
       schema.value = data?.schema || {};
