@@ -1,57 +1,42 @@
 <template>
-  <h4 class="title">{{ t('从配置模板导入') }}</h4>
-  <div class="search-wrap">
-    <SearchInput v-model="searchStr" :placeholder="t('搜索模板套餐')" @search="handleSearch" />
-    <bk-button style="margin-left: 8px" @click="router.push({ name: 'templates-list' })">
-      {{ t('管理模板') }}
-    </bk-button>
-  </div>
-  <div class="packages-tree">
-    <bk-tree
-      v-if="pkgTreeData.length"
-      ref="treeRef"
-      label="name"
-      node-key="nodeId"
-      :expand-all="searchStr !== ''"
-      :data="pkgTreeData"
-      :show-node-type-icon="false">
-      <template #node="node">
-        <div class="node-item-wrapper">
-          <bk-checkbox
-            size="small"
-            :model-value="node.checked"
-            :disabled="node.disabled"
-            :indeterminate="node.indeterminate"
-            @change="handleNodeCheckChange(node, $event)" />
-          <div
-            class="node-name-text"
-            v-bk-tooltips="{
-              content: checkboxTooltips(node.checked),
-              disabled: !node.disabled,
-            }">
-            {{ node.name }}
-          </div>
-          <span v-if="node.children" class="num">({{ node.children.length }})</span>
+  <bk-tree
+    v-if="pkgTreeData.length"
+    ref="treeRef"
+    label="name"
+    node-key="nodeId"
+    :data="pkgTreeData"
+    :show-node-type-icon="false">
+    <template #node="node">
+      <div class="node-item-wrapper">
+        <bk-checkbox
+          size="small"
+          :model-value="node.checked"
+          :disabled="node.disabled"
+          :indeterminate="node.indeterminate"
+          @change="handleNodeCheckChange(node, $event)" />
+        <div
+          class="node-name-text"
+          v-bk-tooltips="{
+            content: checkboxTooltips(node.checked),
+            disabled: !node.disabled,
+          }">
+          {{ node.name }}
         </div>
-      </template>
-    </bk-tree>
-    <TableEmpty v-else :is-search-empty="isSearchEmpty" @clear="clearSearchStr"></TableEmpty>
-  </div>
+        <span v-if="node.children" class="num">({{ node.children.length }})</span>
+      </div>
+    </template>
+  </bk-tree>
 </template>
 <script lang="ts" setup>
-  import { ref, computed } from 'vue';
+  import { computed } from 'vue';
   import { useI18n } from 'vue-i18n';
-  import { useRouter } from 'vue-router';
-  import { ITemplateBoundByAppData } from '../../../../../../../../../types/config';
-  import { IAllPkgsGroupBySpaceInBiz, IPkgTreeItem } from '../../../../../../../../../types/template';
-  import SearchInput from '../../../../../../../../components/search-input.vue';
-  import TableEmpty from '../../../../../../../../components/table/table-empty.vue';
+  import { ITemplateBoundByAppData } from '../../../../../../../../../../types/config';
+  import { IAllPkgsGroupBySpaceInBiz, IPkgTreeItem } from '../../../../../../../../../../types/template';
   interface ISpaceTreeItem extends IPkgTreeItem {
     isOpen: boolean;
     children: IPkgTreeItem[];
   }
 
-  const router = useRouter();
   const { t } = useI18n();
   const props = defineProps<{
     bkBizId: string;
@@ -62,29 +47,13 @@
 
   const emits = defineEmits(['change']);
 
-  const searchStr = ref('');
-  const isSearchEmpty = ref(false);
   const checkboxTooltips = (isImport: boolean) => {
     return isImport
       ? t('导入配置模板套餐时无法移除已有配置模板套餐')
       : t('该套餐中没有可用配置文件，无法被导入到服务配置中');
   };
   const pkgTreeData = computed(() => {
-    let list: IAllPkgsGroupBySpaceInBiz[] = [];
-    if (searchStr.value) {
-      props.pkgList.forEach((item) => {
-        const pkgs = item.template_sets.filter((pkg) => {
-          const isMatched = pkg.template_set_name.toLocaleLowerCase().includes(searchStr.value.toLocaleLowerCase());
-          return isMatched;
-        });
-        if (pkgs.length > 0) {
-          list.push({ ...item, template_sets: pkgs });
-        }
-      });
-    } else {
-      list = props.pkgList;
-    }
-    return list.map((item) => {
+    return props.pkgList.map((item) => {
       const { template_space_id, template_space_name, template_sets } = item;
       const nodeId = `space_${template_space_id}`;
       let checked = false;
@@ -124,6 +93,7 @@
           checked: isPkgNodeChecked(pkg.template_set_id),
           disabled: isPkgImported(pkg.template_set_id) || isEmpty,
           indeterminate: false,
+          parentName: template_space_name,
         };
         if (isEmpty) {
           emptyTplPkgNodes.push(node);
@@ -136,10 +106,6 @@
     });
   });
 
-  const handleSearch = () => {
-    isSearchEmpty.value = searchStr.value !== '';
-  };
-
   const handleNodeCheckChange = (node: ISpaceTreeItem, val: boolean) => {
     const list = props.value.slice();
     if (node.children) {
@@ -151,6 +117,7 @@
             list.push({
               template_set_id: pkg.id,
               template_revisions: [],
+              template_set_name: `${node.name} / ${pkg.name}`,
             });
           }
         });
@@ -171,6 +138,7 @@
           list.push({
             template_set_id: node.id,
             template_revisions: [],
+            template_set_name: `${node.parentName}-${node.name}`,
           });
         }
       } else {
@@ -186,26 +154,14 @@
   const isPkgImported = (id: number) => props.imported.some((pkg) => pkg.template_set_id === id);
 
   const isPkgNodeChecked = (id: number) => isPkgImported(id) || props.value.some((pkg) => pkg.template_set_id === id);
-
-  const clearSearchStr = () => {
-    isSearchEmpty.value = false;
-    searchStr.value = '';
-  };
 </script>
 <style lang="scss" scoped>
-  .title {
-    margin: 0 0 25px;
-    padding: 0 24px;
-    line-height: 22px;
-    font-size: 14px;
-    font-weight: 400;
-    color: #313238;
-  }
-  .search-wrap {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 24px;
+  .manage-templates {
+    width: 420px;
+    height: 40px;
+    background: #fafbfd;
+    border: 1px solid #dcdee5;
+    border-radius: 0 0 2px 2px;
   }
 
   .packages-tree {

@@ -84,7 +84,7 @@
       display: flex;
       margin: 12px 0 20px;
       .item {
-        width: 52px;
+        width: 48px;
         height: 26px;
         border: 1px solid #8e8e8e;
         color: #e0e0e0;
