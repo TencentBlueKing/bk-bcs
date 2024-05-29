@@ -919,6 +919,7 @@ cluster:
           label:
             purchaseDataDisk: 购买数据盘
             mountPath: 格式化并挂载于
+            huaweiMountPath: 挂载路径
             configurationFee:
               text: 配置费用
               unit: '￥{price}元/小时起'
@@ -949,6 +950,11 @@ cluster:
             Premium_LRS: 高级 SSD
             PremiumV2_LRS: 高级 SSD v2
             Premium_ZRS: 高级 SSD_ZRS
+            SATA: 普通IO云硬盘
+            SAS: 高IO云硬盘
+            SSD: 超高IO云硬盘
+            GPSSD: 通用性SSD云硬盘
+            ESSD: 极速IO云硬盘
           disk:
             system: 系统盘
             data: 数据盘
@@ -2605,7 +2611,7 @@ huaweiCloud:
   label:
     clusterType: 集群类型
     managed: 托管集群
-    aksDesc: Kubernetes 集群的 Master 和 Etcd 会由 AKS 团队集中管理和维护，集群管理员不需要关心集群 Master的管理和维护。
+    aksDesc: Kubernetes 集群的 Master 和 Etcd 会由 Huawei 团队集中管理和维护，集群管理员不需要关心集群 Master的管理和维护。
     cluster: 关联集群
     create: 新建凭证
 importHuaweiCloud:
