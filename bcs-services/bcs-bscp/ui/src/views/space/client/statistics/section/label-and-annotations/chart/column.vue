@@ -4,7 +4,7 @@
       :need-down-icon="!!drillDownDemension"
       :down="drillDownDemension"
       ref="tooltipRef"
-      @jump="emits('jump', labelValue)" />
+      @jump="emits('jump', foreignVal)" />
   </div>
 </template>
 
@@ -25,7 +25,7 @@
 
   const canvasRef = ref<HTMLElement>();
   const tooltipRef = ref();
-  const labelValue = ref('');
+  const foreignVal = ref('');
   let columnPlot: Column;
 
   watch(
@@ -77,7 +77,7 @@
       data: props.data,
       xField: 'primary_val',
       yField: 'count',
-      padding: [30, 10, 50, 20],
+      padding: [30, 10, 50, 30],
       isGroup: true,
       limitInPlot: false,
       seriesField: 'foreign_val',
@@ -104,6 +104,7 @@
       tooltip: {
         fields: ['foreign_val', 'count'],
         formatter: (datum: Datum) => {
+          foreignVal.value = datum.foreign_val;
           return { name: datum.foreign_val, value: datum.count };
         },
         showTitle: true,
@@ -132,7 +133,6 @@
 
 <style scoped lang="scss">
   :deep(.g2-tooltip) {
-    visibility: hidden;
     .g2-tooltip-list-item {
       .g2-tooltip-marker {
         border-radius: initial !important;

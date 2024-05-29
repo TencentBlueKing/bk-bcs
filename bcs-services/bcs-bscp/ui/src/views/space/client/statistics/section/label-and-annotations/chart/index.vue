@@ -23,7 +23,7 @@
         <template #head-suffix>
           <div class="head-suffix">
             <bk-tag theme="info" type="stroke"> {{ $t('标签') }} </bk-tag>
-            <div v-if="selectedDownDimension && currentType === 'column'" class="icon-wrap">
+            <div v-if="selectedDownDimension" class="icon-wrap">
               <span
                 class="action-icon bk-bscp-icon icon-download"
                 v-bk-tooltips="{
@@ -34,8 +34,8 @@
           </div>
         </template>
         <bk-loading class="loading-wrap" :loading="loading">
-          <div v-if="isDrillDown && currentType === 'column'" class="nav">
-            <span class="group-dimension" @click="handleCancelDrillDown">{{ $t('组合维度') }}</span> /
+          <div v-if="isDrillDown" class="nav">
+            <span class="group-dimension" @click="handleCancelDrillDown">{{ primaryDimension }}</span> /
             <span class="drill-down-data">{{ navDrillDownData }}</span>
           </div>
           <component
@@ -187,7 +187,11 @@
       [data.foreign_key]: data.foreign_val,
       [data.primary_key]: data.primary_val,
     });
-    navDrillDownData.value = `${data.foreign_val}, ${data.primary_val}`;
+    if (data.foreign_val === data.primary_val) {
+      navDrillDownData.value = `${data.primary_val}`;
+    } else {
+      navDrillDownData.value = `${data.primary_val}, ${data.foreign_val}`;
+    }
     isDrillDown.value = true;
   };
 

@@ -39,7 +39,7 @@
           <bk-table-column :label="$t('结束时间')" width="154">
             <template #default="{ row }">
               <span v-if="row.spec">
-                {{ datetimeFormat(row.spec.end_time) }}
+                {{ row.spec.release_change_status === 'Skip' ? '--' : datetimeFormat(row.spec.end_time) }}
               </span>
             </template>
           </bk-table-column>
@@ -207,6 +207,9 @@
         start_time: new Date(`${initDateTime.value![0].replace(' ', 'T')}+08:00`).toISOString(),
         end_time: new Date(`${initDateTime.value![1].replace(' ', 'T')}+08:00`).toISOString(),
         search_value,
+        order: {
+          desc: 'start_time',
+        },
       };
       const resp = await getClientPullRecord(props.bkBizId, props.appId, props.id, params);
       pagination.value.count = resp.data.count;

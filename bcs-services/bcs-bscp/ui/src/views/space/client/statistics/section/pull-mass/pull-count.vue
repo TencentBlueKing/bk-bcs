@@ -286,7 +286,6 @@
     transform: translateY(-20px);
   }
   :deep(.g2-tooltip) {
-    visibility: hidden;
     .g2-tooltip-list-item {
       .g2-tooltip-marker {
         border-radius: initial !important;
