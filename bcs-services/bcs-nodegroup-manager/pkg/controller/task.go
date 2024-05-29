@@ -122,9 +122,9 @@ func (c *taskController) handleNormalTask() {
 	blog.Infof("len of scaleDownTaskList: %d", len(scaleDownTaskList))
 	blog.Infof("scaleDownTaskList: %v", scaleDownTaskList)
 	// 确认没有返回的task是否terminated，如果是，更新状态
-	tasks, err := c.opt.Storage.ListTasks(&storage.ListOptions{})
-	if err != nil {
-		blog.Errorf("[taskController] list task error:%s", err.Error())
+	tasks, listErr := c.opt.Storage.ListTasks(&storage.ListOptions{})
+	if listErr != nil {
+		blog.Errorf("[taskController] list task error:%s", listErr.Error())
 		return
 	}
 	terminatedTasks := c.getTerminatedTasks(tasks, scaleDownTaskList)
@@ -241,8 +241,8 @@ func (c *taskController) handleOneNormalTask(task *storage.ScaleDownTask) {
 				nodeList[ip].Labels[storage.NodeDrainTaskLabel], labels[storage.NodeDrainTaskLabel])
 			blog.Infof("[taskController] update node %s labels", ip)
 			if err = c.opt.ClusterClient.UpdateNodeMetadata(group.ClusterID, ip, labels, annotations); err != nil {
-				blog.Errorf("[taskController] UpdateNodeLabels error. task id: %s, clusterID:%s, nodeIP:%s, labels:%s, error:%s",
-					task.TaskID, group.ClusterID, ip, labels, err.Error())
+				blog.Errorf("[taskController] UpdateNodeLabels error. task id: %s, clusterID:%s, nodeIP:%s, "+
+					"labels:%s, error:%s", task.TaskID, group.ClusterID, ip, labels, err.Error())
 				break
 			}
 		}
@@ -612,8 +612,9 @@ func (c *taskController) removeNotReadyNodes(scaleDownDetail *storage.ScaleDownD
 				annotations := map[string]interface{}{
 					storage.NodeDeadlineLabel: nil,
 				}
-				if err := c.opt.ClusterClient.UpdateNodeMetadata(scaleDownDetail.ClusterID, ip, labels, annotations); err != nil {
-					blog.Errorf("[taskController] UpdateNodeLabels error. ip:%s, labels:%s, error:%s", ip, nil, err.Error())
+				if updateErr := c.opt.ClusterClient.UpdateNodeMetadata(scaleDownDetail.ClusterID, ip, labels,
+					annotations); updateErr != nil {
+					blog.Errorf("[taskController] UpdateNodeLabels error. ip:%s, error:%s", ip, updateErr.Error())
 				}
 			}
 		}

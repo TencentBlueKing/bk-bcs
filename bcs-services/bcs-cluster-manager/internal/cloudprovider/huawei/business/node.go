@@ -14,10 +14,15 @@
 package business
 
 import (
+	"context"
+	"strings"
+
 	modelv2 "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/ecs/v2/model"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/huawei/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 )
 
 // GetCloudZones get cloud zones
@@ -28,4 +33,27 @@ func GetCloudZones(common cloudprovider.CommonOption) ([]modelv2.NovaAvailabilit
 	}
 
 	return client.ListAvailabilityZones()
+}
+
+// GetRuntimeInfo get runtime info
+func GetRuntimeInfo(clusterID string) (map[string][]string, error) {
+	k8sOperator := clusterops.NewK8SOperator(options.GetGlobalCMOptions(), cloudprovider.GetStorageModel())
+	nodes, err := k8sOperator.ListClusterNodes(context.Background(), clusterID)
+	if err != nil {
+		return nil, err
+	}
+
+	runtimeInfo := make(map[string][]string)
+	for _, node := range nodes {
+		runtime := strings.Split(node.Status.NodeInfo.ContainerRuntimeVersion, "://")
+		if len(runtime) > 1 {
+			runtimeVersion := strings.Split(runtime[1], "-")
+			if len(runtimeVersion) > 1 {
+				runtimeInfo[runtime[0]] = append(runtimeInfo[runtime[0]], runtimeVersion[0])
+			}
+
+		}
+	}
+
+	return runtimeInfo, err
 }

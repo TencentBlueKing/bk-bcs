@@ -154,6 +154,7 @@ func (s *Server) run(fs ...func(errChan chan error)) chan error {
 	return errChan
 }
 
+// initPProf init pprof
 func (s *Server) initPProf(mux *http.ServeMux) {
 	if !s.op.Debug {
 		blog.Infof("pprof is disabled")
@@ -167,11 +168,13 @@ func (s *Server) initPProf(mux *http.ServeMux) {
 	mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
 }
 
+// initMetric init metric
 func (s *Server) initMetric(mux *http.ServeMux) {
 	blog.Infof("init metric handler")
 	mux.Handle("/metrics", promhttp.Handler())
 }
 
+// init metric server and pprof
 func (s *Server) initMetricServer() {
 	metricMux := http.NewServeMux()
 	s.initPProf(metricMux)
@@ -193,6 +196,7 @@ func (s *Server) initMetricServer() {
 	blog.Infof("init metricServer success")
 }
 
+// initRpcServer init micro server
 func (s *Server) initRpcServer() error {
 	etcdRegistry := etcd.NewRegistry(
 		registry.Addrs(strings.Split(s.op.Registry.Endpoints, ",")...),
@@ -224,6 +228,7 @@ func (s *Server) initRpcServer() error {
 	return nil
 }
 
+// initHTTPServer init http server
 func (s *Server) initHTTPServer() error {
 	ctx, _ := context.WithCancel(s.internalCtx) // nolint
 	// register grpc server information
@@ -245,6 +250,7 @@ func (s *Server) initHTTPServer() error {
 	return nil
 }
 
+// initStorage init db
 func (s *Server) initStorage() error {
 	// convert to mongo options
 	storageOption := &mongo.Options{
@@ -266,6 +272,7 @@ func (s *Server) initStorage() error {
 	return nil
 }
 
+// runMetricServer run metric server
 func (s *Server) runMetricServer(errChan chan error) {
 	defer s.internalWg.Done()
 	errs := make(chan error, len(s.metricListeners))
@@ -283,6 +290,7 @@ func (s *Server) runMetricServer(errChan chan error) {
 	}
 }
 
+// runHttpServer run http server
 func (s *Server) runHttpServer(errChan chan error) {
 	var err error
 	defer func() {
@@ -302,6 +310,7 @@ func (s *Server) runHttpServer(errChan chan error) {
 	}
 }
 
+// runRpcServer run rpc server
 func (s *Server) runRpcServer(errChan chan error) {
 	var err error
 	defer func() {
@@ -323,6 +332,7 @@ func (s *Server) runRpcServer(errChan chan error) {
 	}
 }
 
+// runTaskController run controller
 func (s *Server) runTaskController(errChan chan error) {
 	var err error
 	defer func() {
@@ -342,6 +352,7 @@ func (s *Server) runTaskController(errChan chan error) {
 	s.taskController.Run(s.internalCtx)
 }
 
+// runDataController run controller
 func (s *Server) runDataController(errChan chan error) {
 	var err error
 	defer func() {
@@ -361,6 +372,7 @@ func (s *Server) runDataController(errChan chan error) {
 	s.dataController.Run(s.internalCtx)
 }
 
+// initClient init client
 func (s *Server) initClient() error {
 	cmOpts := &clustermgr.ClientOptions{
 		Name:         s.op.ClusterManager,
@@ -408,11 +420,13 @@ func (s *Server) initClient() error {
 	return nil
 }
 
+// initDataService init service
 func (s *Server) initDataService() {
 	dataService := data.NewDataService(s.cmCli, s.rmCli)
 	s.dataService = dataService
 }
 
+// initCrCli init cr client
 func (s *Server) initCrCli() error {
 	requester := requester2.NewRequester()
 	cli := cr.New(&apis.ClientOptions{
@@ -429,6 +443,7 @@ func (s *Server) initCrCli() error {
 	return nil
 }
 
+// initCCCli init bkcc client
 func (s *Server) initCCCli() error {
 	requester := requester2.NewRequester()
 	cli := bkcc.New(&apis.ClientOptions{
@@ -445,6 +460,7 @@ func (s *Server) initCCCli() error {
 	return nil
 }
 
+// initBkSopsCli init bksops client
 func (s *Server) initBkSopsCli() error {
 	requester := requester2.NewRequester()
 	cli := bksops.New(&apis.ClientOptions{
@@ -461,6 +477,7 @@ func (s *Server) initBkSopsCli() error {
 	return nil
 }
 
+// initJobCli init job client
 func (s *Server) initJobCli() error {
 	requester := requester2.NewRequester()
 	cli := job.New(&apis.ClientOptions{
@@ -477,6 +494,7 @@ func (s *Server) initJobCli() error {
 	return nil
 }
 
+// initTaskController init controller
 func (s *Server) initTaskController() error {
 	taskController := supply.NewTaskController(&scenes.Options{
 		Interval:       10,
@@ -493,6 +511,7 @@ func (s *Server) initTaskController() error {
 	return taskController.Init()
 }
 
+// initDataController init controller
 func (s *Server) initDataController() error {
 	dataController := data.NewDataController(&scenes.Options{
 		Interval:       s.op.DataControllerInterval,

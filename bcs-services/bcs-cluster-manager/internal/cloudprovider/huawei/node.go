@@ -255,15 +255,28 @@ func (nm *NodeManager) ListRuntimeInfo(opt *cloudprovider.ListRuntimeInfoOption)
 
 	blog.Infof("cluster version: %s", *rsp.Spec.Version)
 
+	runtimeInfo := make(map[string][]string)
+
 	clusterVer := (*rsp.Spec.Version)[1:]
 	if utils.CompareVersion(clusterVer, "1.25") > 0 && utils.CompareVersion(clusterVer, "1.29") < 0 {
-		return map[string][]string{
-			common.ContainerdRuntime: {},
-		}, nil
+		runtimeInfo[common.ContainerdRuntime] = []string{}
+	} else {
+		runtimeInfo[common.ContainerdRuntime] = []string{}
+		runtimeInfo[common.DockerContainerRuntime] = []string{}
 	}
 
-	return map[string][]string{
-		common.ContainerdRuntime:      {},
-		common.DockerContainerRuntime: {},
-	}, nil
+	nodeRuntimeInfo, err := business.GetRuntimeInfo(opt.Cluster.ClusterID)
+	if err != nil {
+		return nil, err
+	}
+
+	for k, v := range nodeRuntimeInfo {
+		for _, y := range v {
+			if !utils.SliceContainInString(runtimeInfo[k], y) {
+				runtimeInfo[k] = append(runtimeInfo[k], y)
+			}
+		}
+	}
+
+	return runtimeInfo, nil
 }

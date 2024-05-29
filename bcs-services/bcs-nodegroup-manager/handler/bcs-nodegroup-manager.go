@@ -252,6 +252,7 @@ func (e *NodegroupManager) DeleteNodePoolMgrStrategy(ctx context.Context,
 		message = "nodeGroupStrategy does not exist"
 	}
 	// 联动删除action
+	// 一个nodegroup不存在同一类型的多个action
 	if strategy != nil {
 		for _, ng := range strategy.ElasticNodeGroups {
 			scaleDownAction, getErr := e.storage.GetNodeGroupAction(ng.NodeGroupID,
@@ -259,17 +260,21 @@ func (e *NodegroupManager) DeleteNodePoolMgrStrategy(ctx context.Context,
 			if getErr != nil {
 				blog.Errorf("get %s scale down action err:%s", ng.NodeGroupID, getErr.Error())
 			}
-			_, deleteErr := e.storage.DeleteNodeGroupAction(scaleDownAction, &storage.DeleteOptions{})
-			if deleteErr != nil {
-				blog.Errorf("delete %s scale down action err:%s", ng.NodeGroupID, deleteErr.Error())
+			if scaleDownAction != nil {
+				_, deleteErr := e.storage.DeleteNodeGroupAction(scaleDownAction, &storage.DeleteOptions{})
+				if deleteErr != nil {
+					blog.Errorf("delete %s scale down action err:%s", ng.NodeGroupID, deleteErr.Error())
+				}
 			}
 			scaleUpAction, getErr := e.storage.GetNodeGroupAction(ng.NodeGroupID, storage.ScaleUpState, &storage.GetOptions{})
 			if getErr != nil {
 				blog.Errorf("get %s scale up action err:%s", ng.NodeGroupID, getErr.Error())
 			}
-			_, deleteErr = e.storage.DeleteNodeGroupAction(scaleUpAction, &storage.DeleteOptions{})
-			if deleteErr != nil {
-				blog.Errorf("delete %s scale up action err:%s", ng.NodeGroupID, deleteErr.Error())
+			if scaleUpAction != nil {
+				_, deleteErr := e.storage.DeleteNodeGroupAction(scaleUpAction, &storage.DeleteOptions{})
+				if deleteErr != nil {
+					blog.Errorf("delete %s scale up action err:%s", ng.NodeGroupID, deleteErr.Error())
+				}
 			}
 		}
 	}
@@ -299,7 +304,7 @@ func transferToHandlerStrategy(original *storage.NodeGroupMgrStrategy) *nodegrou
 			}
 			elasticGroup.Limit = &nodegroupmgr.NodegroupLimit{}
 			if err := mapstructure.Decode(group.Limit, elasticGroup.Limit); err != nil {
-				blog.Errorf("Error during decoding limit to storage limit:", err.Error())
+				blog.Errorf("Error during decoding limit to storage limit: %s", err.Error())
 			}
 			elasticNodeGroups = append(elasticNodeGroups, elasticGroup)
 		}
@@ -322,7 +327,7 @@ func transferToHandlerStrategy(original *storage.NodeGroupMgrStrategy) *nodegrou
 		if original.Strategy.TimeMode != nil {
 			strategy.TimeMode = &nodegroupmgr.TimeMode{}
 			if err := mapstructure.Decode(original.Strategy.TimeMode, strategy.TimeMode); err != nil {
-				blog.Errorf("Error during decoding timeMode to pbTimeMode:", err.Error())
+				blog.Errorf("Error during decoding timeMode to pbTimeMode: %s", err.Error())
 			}
 		}
 		if original.Strategy.NodegroupBuffer != nil {
@@ -362,7 +367,7 @@ func transferToStorageStrategy(original *nodegroupmgr.NodeGroupStrategy) *storag
 			}
 			elasticGroup.Limit = &storage.NodegroupLimit{}
 			if err := mapstructure.Decode(group.Limit, elasticGroup.Limit); err != nil {
-				blog.Errorf("Error during decoding limit to storage limit:", err.Error())
+				blog.Errorf("Error during decoding limit to storage limit: %s", err.Error())
 			}
 			elasticNodeGroups = append(elasticNodeGroups, elasticGroup)
 		}
@@ -385,7 +390,7 @@ func transferToStorageStrategy(original *nodegroupmgr.NodeGroupStrategy) *storag
 		if original.Strategy.TimeMode != nil {
 			strategy.TimeMode = &storage.BufferTimeMode{}
 			if err := mapstructure.Decode(original.Strategy.TimeMode, strategy.TimeMode); err != nil {
-				blog.Errorf("Error during decoding timeMode to storage timeMode:", err.Error())
+				blog.Errorf("Error during decoding timeMode to storage timeMode: %s", err.Error())
 			}
 		}
 		if original.Strategy.NodegroupBuffer != nil {
@@ -532,7 +537,7 @@ func (e *NodegroupManager) updateNodeGroupStatus(response *nodegroupmgr.ClusterA
 			Process:     process,
 			UpdatedTime: time.Now(),
 		}
-		_, err := e.storage.UpdateNodeGroupAction(action, &storage.UpdateOptions{})
+		err := e.updateActionIfChange(action)
 		if err != nil {
 			blog.Errorf("update nodegroup[%s] scale up action error:%v", scaleUp.NodeGroupID, err)
 		}
@@ -557,7 +562,7 @@ func (e *NodegroupManager) updateNodeGroupStatus(response *nodegroupmgr.ClusterA
 				Process:     process,
 				UpdatedTime: time.Now(),
 			}
-			_, err := e.storage.UpdateNodeGroupAction(action, &storage.UpdateOptions{})
+			err := e.updateActionIfChange(action)
 			if err != nil {
 				blog.Errorf("update nodegroup[%s] scale down action error:%v", scaleDown.NodeGroupID, err)
 			}
@@ -585,4 +590,22 @@ func calculateProcess(current, desired int) int {
 		return current * 100 / desired
 	}
 	return 100 - (current-desired)*100/desired
+}
+
+// updateActionIfChange only update when action is changed
+func (e *NodegroupManager) updateActionIfChange(action *storage.NodeGroupAction) error {
+	originAction, err := e.storage.GetNodeGroupAction(action.NodeGroupID, action.Event, &storage.GetOptions{})
+	if err != nil {
+		return fmt.Errorf("get action failed")
+	}
+	if originAction == nil {
+		return fmt.Errorf("get action nil, nodegroup:%s, event:%s", action.NodeGroupID, action.Event)
+	}
+	if originAction.Process != action.Process {
+		_, err = e.storage.UpdateNodeGroupAction(action, &storage.UpdateOptions{})
+		if err != nil {
+			return fmt.Errorf("update action failed:%s", err.Error())
+		}
+	}
+	return nil
 }

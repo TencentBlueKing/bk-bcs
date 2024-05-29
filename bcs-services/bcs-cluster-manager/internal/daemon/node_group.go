@@ -54,7 +54,7 @@ func GetNodeGroups(model store.ClusterManagerModel) ([]cmproto.NodeGroup,
 					normalSelf = append(normalSelf, group)
 					continue
 				case resource.CrPool:
-					crSelf = append(crSelf, group)
+					crSelf = append(crSelf, group) // nolint
 					continue
 				case resource.BcsResourcePool:
 					continue
@@ -106,6 +106,7 @@ func FilterGroupsByRegionInsType(model store.ClusterManagerModel, region,
 	return filterGroups, nil
 }
 
+// GetNodeGroupAndNodes get node group and nodes
 func GetNodeGroupAndNodes(model store.ClusterManagerModel,
 	groupId string) (*cmproto.NodeGroup, []*cmproto.Node, error) {
 	group, err := model.GetNodeGroup(context.Background(), groupId)

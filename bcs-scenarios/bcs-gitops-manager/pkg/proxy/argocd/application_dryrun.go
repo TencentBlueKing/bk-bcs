@@ -311,15 +311,8 @@ func (plugin *AppPlugin) manifestDryRun(ctx context.Context, app *v1alpha1.Appli
 		// there will create resource with dry-run if resource not exist
 		if k8serrors.IsNotFound(err) {
 			isExisted = false
-			if _, err = dynamicClient.Resource(schema.GroupVersionResource{Group: "", Version: "v1",
-				Resource: "namespaces"}).Get(ctx, localNamespace, metav1.GetOptions{}); err != nil {
-				// return local if namespace not exist, no need dry-run it
-				if k8serrors.IsNotFound(err) {
-					updatedObj = local.DeepCopy()
-				} else {
-					dryRunError = errors.Wrapf(err, "get namespace '%s' failed", localNamespace)
-				}
-			} else {
+			if !resource.Namespaced {
+				// dry-run object when resource not namespaced
 				updatedObj, err = dynamicClient.Resource(localGVR).Namespace(localNamespace).
 					Create(ctx, local,
 						metav1.CreateOptions{
@@ -329,6 +322,28 @@ func (plugin *AppPlugin) manifestDryRun(ctx context.Context, app *v1alpha1.Appli
 				if err != nil {
 					dryRunError = errors.Wrapf(err, "dry-run not exist resource '%s' with gvr '%v' "+
 						"and namespace '%s' failed", local.GetName(), localGVR, localNamespace)
+				}
+			} else {
+				if _, err = dynamicClient.Resource(schema.GroupVersionResource{Group: "", Version: "v1",
+					Resource: "namespaces"}).Get(ctx, localNamespace, metav1.GetOptions{}); err != nil {
+					// return local if namespace not exist, no need dry-run it
+					if k8serrors.IsNotFound(err) {
+						updatedObj = local.DeepCopy()
+					} else {
+						dryRunError = errors.Wrapf(err, "get namespace '%s' failed", localNamespace)
+					}
+				} else {
+					// dry-run object with exist namespace
+					updatedObj, err = dynamicClient.Resource(localGVR).Namespace(localNamespace).
+						Create(ctx, local,
+							metav1.CreateOptions{
+								DryRun:       []string{metav1.DryRunAll},
+								FieldManager: "kubectl-client-side-apply",
+							})
+					if err != nil {
+						dryRunError = errors.Wrapf(err, "dry-run not exist resource '%s' with gvr '%v' "+
+							"and namespace '%s' failed", local.GetName(), localGVR, localNamespace)
+					}
 				}
 			}
 		} else {
