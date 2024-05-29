@@ -32,7 +32,7 @@
     isShowSunburst: boolean;
   }>();
 
-  const emits = defineEmits(['jump']);
+  const emits = defineEmits(['jump', 'drillDown']);
 
   let piePlot: Pie | null;
   let sunburstPlot: Sunburst | null;
@@ -117,6 +117,10 @@
         maxWidth: 300,
         reversed: true,
       },
+    });
+    piePlot.on('plot:click', (e: any) => {
+      if (!e.data) return;
+      emits('drillDown', e.data.data as IClientLabelItem);
     });
     piePlot.render();
   };
