@@ -146,6 +146,7 @@ export interface ITemplateBoundByAppData {
     template_revision_id: number;
     is_latest: boolean;
   }[];
+  template_set_name?: string;
 }
 
 // 服务绑定下的模板配置文件按照套餐分组数据
@@ -206,6 +207,7 @@ export interface IConfigImportItem {
   user_group: string;
   sign: string;
   id: number;
+  file_name?: string;
 }
 
 // kv类型
