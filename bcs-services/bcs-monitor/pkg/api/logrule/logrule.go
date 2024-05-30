@@ -25,7 +25,6 @@ import (
 	"k8s.io/klog/v2"
 
 	bklog "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bk_log"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/k8sclient"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storage"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storage/entity"
@@ -75,8 +74,7 @@ func GetEntrypoints(c *rest.Context) (interface{}, error) {
 // @Success 200 {array} GetLogRuleResp
 // @Router  /log_collector/rules [get]
 func ListLogCollectors(c *rest.Context) (interface{}, error) {
-	// 从数据库获取规则数据
-	store := storage.GlobalStorage
+
 	listInDB, err := getClusterLogRules(context.Background(), c.ProjectId, c.ClusterId)
 	if err != nil {
 		return nil, err
@@ -110,28 +108,6 @@ func ListLogCollectors(c *rest.Context) (interface{}, error) {
 		result = append(result, lrr)
 	}
 
-	// 从 bcslogconfigs 获取数据
-	bcsLogConfigs, err := k8sclient.ListBcsLogConfig(c.Request.Context(), c.ClusterId)
-	if err != nil {
-		return nil, err
-	}
-
-	// 添加 bcslogconfigs 至列表
-	if len(bcsLogConfigs) > 0 {
-		// get old default data id
-		logIndex, err := store.GetOldIndexSetID(c.Request.Context(), c.ProjectId)
-		if err != nil {
-			return nil, err
-		}
-		for i := range bcsLogConfigs {
-			bcsLogID := toBcsLogConfigID(bcsLogConfigs[i].Namespace, bcsLogConfigs[i].Name)
-			newRuleID := getFromRuleIDFromLogRules(bcsLogID, listInDB)
-			lrr := &GetLogRuleResp{}
-			lrr.loadFromBcsLogConfig(&bcsLogConfigs[i], logIndex, newRuleID)
-			result = append(result, lrr)
-		}
-	}
-
 	sort.Sort(GetLogRuleRespSortByName(result))
 	return result, nil
 }
@@ -145,27 +121,6 @@ func ListLogCollectors(c *rest.Context) (interface{}, error) {
 func GetLogRule(c *rest.Context) (interface{}, error) {
 	id := c.Param("id")
 	store := storage.GlobalStorage
-
-	// check bcslogconfig
-	if isBcsLogConfigID(id) {
-		ns, name := getBcsLogConfigNamespaces(id)
-		blc, err := k8sclient.GetBcsLogConfig(c.Request.Context(), c.ClusterId, ns, name)
-		if err != nil {
-			return nil, err
-		}
-		logIndex, err := store.GetOldIndexSetID(c.Request.Context(), c.ProjectId)
-		if err != nil {
-			klog.Warningf("not found %s index set id", c.ProjectId)
-		}
-		listInDB, err := getClusterLogRules(c.Request.Context(), c.ProjectId, c.ClusterId)
-		if err != nil {
-			return nil, err
-		}
-		newRuleID := getFromRuleIDFromLogRules(id, listInDB)
-		result := &GetLogRuleResp{}
-		result.loadFromBcsLogConfig(blc, logIndex, newRuleID)
-		return result, nil
-	}
 
 	// 从 bk-log 获取规则数据
 	lcs, err := bklog.ListLogCollectors(c.Request.Context(), c.ClusterId, GetSpaceID(c.ProjectCode))
@@ -281,14 +236,6 @@ func UpdateLogRule(c *rest.Context) (interface{}, error) {
 // @Router  /log_collector/rules/:id [delete]
 func DeleteLogRule(c *rest.Context) (interface{}, error) {
 	id := c.Param("id")
-	if isBcsLogConfigID(id) {
-		ns, name := getBcsLogConfigNamespaces(id)
-		err := k8sclient.DeleteBcsLogConfig(c.Request.Context(), c.ClusterId, ns, name)
-		if err != nil {
-			return nil, err
-		}
-		return nil, nil
-	}
 
 	// 从数据库获取规则数据
 	store := storage.GlobalStorage
