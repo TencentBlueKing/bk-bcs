@@ -226,9 +226,9 @@
   };
   const getRoute = (navId: string) => {
     if (navId === 'client-statistics' || navId === 'client-search') {
-      const lastSelectedClientService = localStorage.getItem('lastSelectedClientService');
-      if (lastSelectedClientService) {
-        const detail = JSON.parse(lastSelectedClientService);
+      const lastAccessedServiceDetail = localStorage.getItem('lastAccessedServiceDetail');
+      if (lastAccessedServiceDetail) {
+        const detail = JSON.parse(lastAccessedServiceDetail);
         if (detail.spaceId === spaceId.value) {
           return { name: navId, params: { spaceId: detail.spaceId, appId: detail.appId } };
         }

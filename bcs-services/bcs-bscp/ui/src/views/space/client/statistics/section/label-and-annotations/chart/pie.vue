@@ -4,7 +4,7 @@
       ref="tooltipRef"
       :need-down-icon="!!drillDownDemension && !isShowSunburst"
       :down="drillDownDemension"
-      @jump="emits('jump', labelValue)" />
+      @jump="emits('jump', { label: jumpLabels, drillDownVal: drillDownVal })" />
   </div>
 </template>
 
@@ -43,8 +43,9 @@
   let sunburstPlot: Sunburst | null;
   const canvasRef = ref<HTMLElement>();
   const tooltipRef = ref();
-  const labelValue = ref('');
+  const drillDownVal = ref('');
   const sunburstData = ref<ISunburstDataType>();
+  const jumpLabels = ref<{ [key: string]: string }>();
 
   watch(
     () => props.data,
@@ -93,18 +94,24 @@
         autoRotate: false,
       },
       tooltip: {
-        fields: ['count', 'percent'],
+        fields: ['count', 'percent', 'primary_key', 'primary_val', 'foreign_key', 'foreign_val'],
+        customItems: (originalItems: any[]) => {
+          const datum = originalItems[0].data as IClientLabelItem;
+          if (datum.foreign_val === datum.primary_key) {
+            jumpLabels.value = { [datum.primary_key]: datum.primary_val };
+          } else {
+            jumpLabels.value = { [datum.primary_key]: datum.primary_val, [datum.foreign_key]: datum.foreign_val };
+          }
+          drillDownVal.value = originalItems[0].title;
+          originalItems[0].name = t('客户端数量');
+          originalItems[1].name = t('占比');
+          originalItems[1].value = `${(originalItems[1].value * 100).toFixed(1)}%`;
+          return originalItems.slice(0, 2);
+        },
         showTitle: true,
         title: 'primary_val',
         container: tooltipRef.value?.getDom(),
         enterable: true,
-        customItems: (originalItems: any[]) => {
-          labelValue.value = originalItems[0].title;
-          originalItems[0].name = t('客户端数量');
-          originalItems[1].name = t('占比');
-          originalItems[1].value = `${(originalItems[1].value * 100).toFixed(1)}%`;
-          return originalItems;
-        },
       },
       interactions: [{ type: 'element-highlight' }],
       state: {
@@ -158,7 +165,6 @@
         fields: ['value', 'name'],
         showTitle: true,
         title: 'name',
-        container: tooltipRef.value?.getDom(),
         enterable: true,
         customItems: (originalItems: any[]) => {
           originalItems[0].marker = false;

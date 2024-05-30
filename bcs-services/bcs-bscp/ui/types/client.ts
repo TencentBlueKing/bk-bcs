@@ -128,6 +128,7 @@ export interface IClientLabelItem {
   percent: number;
   primary_key: string;
   primary_val: string;
+  x_field: string; // 平铺柱状图渲染参数
 }
 
 // 组件版本发布(柱状图和表格)

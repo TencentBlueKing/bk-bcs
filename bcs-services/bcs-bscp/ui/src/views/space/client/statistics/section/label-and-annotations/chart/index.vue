@@ -47,7 +47,7 @@
             :chart-show-type="chartShowType"
             :is-show-sunburst="isShowSunburst"
             :drill-down-demension="selectedDownDimension"
-            @jump="jumpToSearch($event as string)"
+            @jump="jumpToSearch($event as any)"
             @drill-down="handleDrillDown" />
         </bk-loading>
       </Card>
@@ -100,6 +100,7 @@
   const isDrillDown = ref(false);
   const chartShowType = ref('tile');
   const drillDownItem = ref<IClientLabelItem>();
+  const jumpLabels = ref<{ [key: string]: string }>();
 
   const isShowOperationBtn = computed(() => isMouseEnter.value || isOpenPopover.value);
 
@@ -163,6 +164,15 @@
       } else {
         data.value = res[props.primaryDimension];
       }
+      if (selectedDimension.value.length > 1) {
+        data.value.forEach((item: IClientLabelItem) => {
+          item.x_field = `${item.primary_val}, ${item.foreign_val}`;
+        });
+      } else {
+        data.value.forEach((item: IClientLabelItem) => {
+          item.x_field = item.primary_val;
+        });
+      }
     } catch (error) {
       console.error(error);
     } finally {
@@ -170,11 +180,23 @@
     }
   };
 
-  const jumpToSearch = (value: string) => {
+  const jumpToSearch = ({ drillDownVal, label }: { label: any; drillDownVal: string }) => {
+    let labels: any;
+    // 判断是否是下钻
+    if (isDrillDown.value) {
+      labels = {
+        ...jumpLabels.value,
+        [selectedDownDimension.value]: drillDownVal,
+      };
+    } else {
+      labels = label;
+    }
     const routeData = router.resolve({
       name: 'client-search',
       params: { appId: props.appId, bizId: props.bkBizId },
-      query: { label: value ? `${props.primaryDimension}=${value}` : props.primaryDimension },
+      query: {
+        label: JSON.stringify(labels),
+      },
     });
     window.open(routeData.href, '_blank');
   };
@@ -183,10 +205,11 @@
   const handleDrillDown = (data: any) => {
     if (!selectedDownDimension.value || isDrillDown.value) return;
     drillDownItem.value = data;
-    loadChartData({
+    jumpLabels.value = {
       [data.foreign_key]: data.foreign_val,
       [data.primary_key]: data.primary_val,
-    });
+    };
+    loadChartData(jumpLabels.value);
     if (data.foreign_val === data.primary_val) {
       navDrillDownData.value = `${data.primary_val}`;
     } else {

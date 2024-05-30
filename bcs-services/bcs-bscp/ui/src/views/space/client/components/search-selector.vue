@@ -306,6 +306,16 @@
         key: value,
         isEdit: false,
       });
+    } else if (value === 'label') {
+      const labels = JSON.parse(entries[0][1] as string);
+      Object.keys(labels).forEach((key) => {
+        searchConditionList.value.push({
+          content: `${key} : ${labels[key]}`,
+          value: labels[key],
+          key,
+          isEdit: false,
+        });
+      });
     } else {
       searchConditionList.value.push({
         content: `${name} : ${entries[0][1]}`,

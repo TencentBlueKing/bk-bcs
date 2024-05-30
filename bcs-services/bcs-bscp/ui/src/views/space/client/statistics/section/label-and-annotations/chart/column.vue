@@ -4,7 +4,7 @@
       :need-down-icon="!!drillDownDemension"
       :down="drillDownDemension"
       ref="tooltipRef"
-      @jump="emits('jump', foreignVal)" />
+      @jump="emits('jump', { label: jumpLabels, drillDownVal: drillDownVal })" />
   </div>
 </template>
 
@@ -13,6 +13,8 @@
   import { Column, Datum } from '@antv/g2plot';
   import { IClientLabelItem } from '../../../../../../../../types/client';
   import Tooltip from '../../../components/tooltip.vue';
+  import { useI18n } from 'vue-i18n';
+  const { t } = useI18n();
 
   const props = defineProps<{
     data: IClientLabelItem[];
@@ -25,7 +27,8 @@
 
   const canvasRef = ref<HTMLElement>();
   const tooltipRef = ref();
-  const foreignVal = ref('');
+  const drillDownVal = ref('');
+  const jumpLabels = ref<{ [key: string]: string }>();
   let columnPlot: Column;
 
   watch(
@@ -40,8 +43,9 @@
     (val) => {
       if (val === 'tile') {
         columnPlot.update({
-          isGroup: true,
           isStack: false,
+          xField: 'x_field',
+          color: ['#3E96C2'],
           label: {
             // 可手动配置 label 数据标签位置
             position: 'top', // 'top', 'bottom', 'middle',
@@ -50,17 +54,44 @@
               fill: '#979BA5',
             },
           },
+          tooltip: {
+            formatter: (datum: Datum) => {
+              if (datum.foreign_val === datum.primary_key) {
+                jumpLabels.value = { [datum.primary_key]: datum.primary_val };
+              } else {
+                jumpLabels.value = { [datum.primary_key]: datum.primary_val, [datum.foreign_key]: datum.foreign_val };
+              }
+              drillDownVal.value = datum.foreign_val;
+              return { name: t('客户端数量'), value: datum.count };
+            },
+          },
         });
       } else {
         columnPlot.update({
-          isGroup: false,
           isStack: true,
+          xField: 'primary_val',
+          color: ['#3E96C2', '#61B2C2', '#85CCA8'],
           label: {
             // 可手动配置 label 数据标签位置
             position: 'middle', // 'top', 'bottom', 'middle',
             // 配置样式
             style: {
               fill: '#fff',
+            },
+          },
+          legend: {
+            custom: false,
+            position: 'bottom',
+          },
+          tooltip: {
+            formatter: (datum: Datum) => {
+              if (datum.foreign_val === datum.primary_key) {
+                jumpLabels.value = { [datum.primary_key]: datum.primary_val };
+              } else {
+                jumpLabels.value = { [datum.primary_key]: datum.primary_val, [datum.foreign_key]: datum.foreign_val };
+              }
+              drillDownVal.value = datum.foreign_val;
+              return { name: datum.foreign_val, value: datum.count };
             },
           },
         });
@@ -75,15 +106,26 @@
   const initChart = () => {
     columnPlot = new Column(canvasRef.value!, {
       data: props.data,
-      xField: 'primary_val',
+      xField: 'x_field',
       yField: 'count',
+      seriesField: 'x_field',
+      color: ['#3E96C2'],
       padding: [30, 10, 50, 30],
-      isGroup: true,
       limitInPlot: false,
-      seriesField: 'foreign_val',
       maxColumnWidth: 40,
       legend: {
+        custom: true,
         position: 'bottom',
+        items: [
+          {
+            id: '1',
+            name: t('客户端数量'),
+            value: 'count',
+            marker: {
+              symbol: 'square',
+            },
+          },
+        ],
       },
       state: {
         active: {
@@ -102,10 +144,15 @@
         },
       },
       tooltip: {
-        fields: ['foreign_val', 'count'],
+        fields: ['foreign_val', 'count', 'foreign_key', 'primary_key', 'primary_val'],
         formatter: (datum: Datum) => {
-          foreignVal.value = datum.foreign_val;
-          return { name: datum.foreign_val, value: datum.count };
+          if (datum.foreign_val === datum.primary_key) {
+            jumpLabels.value = { [datum.primary_key]: datum.primary_val };
+          } else {
+            jumpLabels.value = { [datum.primary_key]: datum.primary_val, [datum.foreign_key]: datum.foreign_val };
+          }
+          drillDownVal.value = datum.foreign_val;
+          return { name: t('客户端数量'), value: datum.count };
         },
         showTitle: true,
         title: 'primary_val',
