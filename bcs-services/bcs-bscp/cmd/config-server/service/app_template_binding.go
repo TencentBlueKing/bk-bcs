@@ -285,6 +285,15 @@ func (s *Service) ListAppBoundTmplRevisions(ctx context.Context, req *pbcs.ListA
 		}
 	}
 
+	// 所有空间和套餐之前的冲突检测
+	for _, tmplSet := range tmplSetInfo {
+		revisions := tmplSetMap[tmplSet.TemplateSetId]
+		for _, revision := range revisions {
+			existingPaths = append(existingPaths, path.Join(revision.Path, revision.Name))
+		}
+	}
+	_, conflictPaths := checkExistingPathConflict(existingPaths)
+
 	details := make([]*pbatb.AppBoundTmplRevisionGroupBySet, 0)
 	for _, tmplSet := range tmplSetInfo {
 		group := &pbatb.AppBoundTmplRevisionGroupBySet{
@@ -304,7 +313,7 @@ func (s *Service) ListAppBoundTmplRevisions(ctx context.Context, req *pbcs.ListA
 		for _, r := range revisions {
 			var isConflict bool
 			if r.FileState != constant.FileStateDelete {
-				isConflict = tools.CheckPathConflict(path.Join(r.Path, r.Name), existingPaths)
+				isConflict = conflictPaths[path.Join(r.Path, r.Name)]
 			}
 			group.TemplateRevisions = append(group.TemplateRevisions,
 				&pbatb.AppBoundTmplRevisionGroupBySetTemplateRevisionDetail{
