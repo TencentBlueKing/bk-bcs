@@ -88,6 +88,10 @@
   const bizId = ref(String(route.params.spaceId));
 
   onMounted(async () => {
+    if (Object.keys(route.query).find((key) => key === 'heartTime')) {
+      heartbeatTime.value = Number(route.query.heartTime) || searchQuery.value.last_heartbeat_time;
+      handleHeartbeatTimeChange(heartbeatTime.value);
+    }
     await loadServiceList();
     const service = serviceList.value.find((service) => service.id === Number(route.params.appId));
     if (service) {

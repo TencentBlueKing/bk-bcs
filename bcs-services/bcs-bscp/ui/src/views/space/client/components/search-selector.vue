@@ -231,8 +231,8 @@
   const inputPlacehoder = computed(() => {
     if (searchConditionList.value.length || searchStr.value || inputFocus.value) return '';
     return isClientSearch.value
-      ? t('UID/IP/标签/源版本/最近一次拉取配置状态/在线状态/客户端组件类型/客户端组件版本/配置拉取时间范围/错误类别')
-      : t('标签/源版本/最近一次拉取配置状态/在线状态/客户端组件类型/客户端组件版本');
+      ? t('UID/IP/标签/当前配置版本/最近一次拉取配置状态/在线状态/客户端组件类型/客户端组件版本/配置拉取时间范围/错误类别')
+      : t('标签/当前配置版本/最近一次拉取配置状态/在线状态/客户端组件类型/客户端组件版本');
   });
 
   const isClientSearch = computed(() => route.name === 'client-search');
@@ -299,6 +299,7 @@
     const entries = Object.entries(route.query);
     if (entries.length === 0) return;
     const { name, value, children } = CLIENT_SEARCH_DATA.find((item) => item.value === entries[0][0])!;
+
     if (value === 'pull_time') {
       searchConditionList.value.push({
         content: `${name} : ${entries[0][1]} 00:00:00 - ${entries[0][1]} 23:59:59`,

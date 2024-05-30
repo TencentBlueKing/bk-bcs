@@ -164,7 +164,7 @@
       } else {
         data.value = res[props.primaryDimension];
       }
-      if (selectedDimension.value.length > 1) {
+      if (selectedDimension.value.length > 1 && !isDrillDown.value) {
         data.value.forEach((item: IClientLabelItem) => {
           item.x_field = `${item.primary_val}, ${item.foreign_val}`;
         });
@@ -196,6 +196,7 @@
       params: { appId: props.appId, bizId: props.bkBizId },
       query: {
         label: JSON.stringify(labels),
+        heartTime: searchQuery.value.last_heartbeat_time,
       },
     });
     window.open(routeData.href, '_blank');

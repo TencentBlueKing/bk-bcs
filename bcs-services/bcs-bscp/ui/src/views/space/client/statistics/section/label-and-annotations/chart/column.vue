@@ -10,7 +10,7 @@
 
 <script lang="ts" setup>
   import { onMounted, ref, watch } from 'vue';
-  import { Column, Datum } from '@antv/g2plot';
+  import { Column } from '@antv/g2plot';
   import { IClientLabelItem } from '../../../../../../../../types/client';
   import Tooltip from '../../../components/tooltip.vue';
   import { useI18n } from 'vue-i18n';
@@ -55,14 +55,18 @@
             },
           },
           tooltip: {
-            formatter: (datum: Datum) => {
+            customItems: (originalItems: any[]) => {
+              const datum = originalItems[0].data as IClientLabelItem;
               if (datum.foreign_val === datum.primary_key) {
                 jumpLabels.value = { [datum.primary_key]: datum.primary_val };
               } else {
                 jumpLabels.value = { [datum.primary_key]: datum.primary_val, [datum.foreign_key]: datum.foreign_val };
               }
-              drillDownVal.value = datum.foreign_val;
-              return { name: t('客户端数量'), value: datum.count };
+              drillDownVal.value = originalItems[0].title;
+              originalItems[0].name = t('客户端数量');
+              originalItems[1].name = t('占比');
+              originalItems[1].value = `${(originalItems[1].value * 100).toFixed(1)}%`;
+              return originalItems.slice(0, 2);
             },
           },
         });
@@ -84,14 +88,29 @@
             position: 'bottom',
           },
           tooltip: {
-            formatter: (datum: Datum) => {
+            customItems: (originalItems: any[]) => {
+              console.log(originalItems);
+              const datum = originalItems[0].data as IClientLabelItem;
               if (datum.foreign_val === datum.primary_key) {
                 jumpLabels.value = { [datum.primary_key]: datum.primary_val };
               } else {
                 jumpLabels.value = { [datum.primary_key]: datum.primary_val, [datum.foreign_key]: datum.foreign_val };
               }
-              drillDownVal.value = datum.foreign_val;
-              return { name: datum.foreign_val, value: datum.count };
+              drillDownVal.value = originalItems[0].title;
+              let total = 0;
+              const showItem = originalItems.filter((item) => item.name === 'foreign_val');
+              showItem.forEach((item) => {
+                item.name = item.value;
+                item.value = item.data.count;
+                total += item.data.count;
+              });
+              showItem.push({
+                name: t('总和'),
+                value: `${total}`,
+                marker: true,
+                color: '#C4C6CC',
+              });
+              return showItem;
             },
           },
         });
@@ -144,15 +163,17 @@
         },
       },
       tooltip: {
-        fields: ['foreign_val', 'count', 'foreign_key', 'primary_key', 'primary_val'],
-        formatter: (datum: Datum) => {
+        fields: ['count', 'percent', 'primary_key', 'primary_val', 'foreign_key', 'foreign_val'],
+        customItems: (originalItems: any[]) => {
+          const datum = originalItems[0].data as IClientLabelItem;
           if (datum.foreign_val === datum.primary_key) {
             jumpLabels.value = { [datum.primary_key]: datum.primary_val };
           } else {
             jumpLabels.value = { [datum.primary_key]: datum.primary_val, [datum.foreign_key]: datum.foreign_val };
           }
-          drillDownVal.value = datum.foreign_val;
-          return { name: t('客户端数量'), value: datum.count };
+          drillDownVal.value = originalItems[0].title;
+          originalItems[0].name = t('客户端数量');
+          return originalItems.slice(0, 1);
         },
         showTitle: true,
         title: 'primary_val',
