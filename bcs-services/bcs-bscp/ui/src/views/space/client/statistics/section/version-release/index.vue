@@ -116,7 +116,7 @@
     const routeData = router.resolve({
       name: 'client-search',
       params: { appId: props.appId, bizId: props.bkBizId },
-      query: { current_release_name: jumpVersionName.value },
+      query: { current_release_name: jumpVersionName.value, heartTime: searchQuery.value.last_heartbeat_time },
     });
     window.open(routeData.href, '_blank');
   };

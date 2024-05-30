@@ -11,6 +11,11 @@
   import { IVersionDistributionPie } from '../../../../../../../types/client';
   import { useRouter, useRoute } from 'vue-router';
   import { useI18n } from 'vue-i18n';
+  import { storeToRefs } from 'pinia';
+  import useClientStore from '../../../../../../store/client';
+  const clientStore = useClientStore();
+
+  const { searchQuery } = storeToRefs(clientStore);
 
   const { t } = useI18n();
 
@@ -93,7 +98,7 @@
     const routeData = router.resolve({
       name: 'client-search',
       params: { appId: appId.value, bizId: bizId.value },
-      query: jumpQuery.value,
+      query: { ...jumpQuery.value, heartTime: searchQuery.value.last_heartbeat_time },
     });
     window.open(routeData.href, '_blank');
   };

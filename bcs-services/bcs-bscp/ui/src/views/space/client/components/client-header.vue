@@ -88,6 +88,10 @@
   const bizId = ref(String(route.params.spaceId));
 
   onMounted(async () => {
+    if (Object.keys(route.query).find((key) => key === 'heartTime')) {
+      heartbeatTime.value = Number(route.query.heartTime) || searchQuery.value.last_heartbeat_time;
+      handleHeartbeatTimeChange(heartbeatTime.value);
+    }
     await loadServiceList();
     const service = serviceList.value.find((service) => service.id === Number(route.params.appId));
     if (service) {
@@ -125,7 +129,7 @@
         id: service.id!,
       };
     }
-    setLastSelectedClientService(appId);
+    setLastAccessedService(appId);
     heartbeatTime.value = 60;
     handleHeartbeatTimeChange(60);
     await router.push({ name: route.name!, params: { spaceId: bizId.value, appId } });
@@ -140,8 +144,8 @@
     emits('search');
   };
 
-  const setLastSelectedClientService = (appId: number) => {
-    localStorage.setItem('lastSelectedClientService', JSON.stringify({ spaceId: bizId.value, appId }));
+  const setLastAccessedService = (appId: number) => {
+    localStorage.setItem('lastAccessedServiceDetail', JSON.stringify({ spaceId: bizId.value, appId }));
   };
 </script>
 
@@ -177,26 +181,24 @@
           }
         }
         .selector-trigger {
-          padding: 0 10px 0 10px;
           width: 260px;
           height: 32px;
           cursor: pointer;
           display: flex;
           align-items: center;
-          justify-content: space-between;
           border-radius: 2px;
           transition: all 0.3s;
-          background: #f0f1f5;
-          font-size: 14px;
+          font-size: 20px;
           .app-name {
             max-width: 220px;
-            color: #313238;
+            color: #63656e;
           }
           .no-app {
             font-size: 16px;
             color: #c4c6cc;
           }
           .arrow-icon {
+            font-size: 16px;
             margin-left: 13.5px;
             color: #979ba5;
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);

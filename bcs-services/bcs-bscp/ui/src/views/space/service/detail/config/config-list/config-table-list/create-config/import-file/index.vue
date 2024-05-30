@@ -37,6 +37,7 @@
           style="width: 374px"
           filterable
           auto-focus
+          :clearable="false"
           @select="handleSelectVersion(appId, $event)">
           <bk-option v-for="item in versionList" :id="item.id" :key="item.id" :name="item.spec.name" />
         </bk-select>
@@ -183,14 +184,14 @@
         );
         batchUploadIds.value = res.ids;
       }
+      Message({
+        theme: 'success',
+        message: t('配置文件导入成功'),
+      });
     } catch (error) {
       console.error(error);
     }
     loading.value = false;
-    Message({
-      theme: 'success',
-      message: t('配置文件导入成功'),
-    });
     emits('update:show', false);
     emits('confirm');
   };
