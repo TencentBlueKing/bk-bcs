@@ -76,6 +76,11 @@ func (c *cluster) List(ctx context.Context, option release.ListOption) (int, []*
 	return c.list(ctx, option)
 }
 
+// ListV2 List release
+func (c *cluster) ListV2(ctx context.Context, option release.ListOption) (int, []*release.Release, error) {
+	return c.listV2(ctx, option)
+}
+
 // Install release
 func (c *cluster) Install(ctx context.Context, conf release.HelmInstallConfig) (*release.HelmInstallResult, error) {
 	return c.install(ctx, conf)

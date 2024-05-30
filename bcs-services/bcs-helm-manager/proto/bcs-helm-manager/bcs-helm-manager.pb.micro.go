@@ -146,6 +146,12 @@ func NewHelmManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		&api.Endpoint{
+			Name:    "HelmManager.ListReleaseV2",
+			Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/v2/releases"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
 			Name:    "HelmManager.GetReleaseDetailV1",
 			Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}"},
 			Method:  []string{"GET"},
@@ -249,6 +255,8 @@ type HelmManagerService interface {
 	GetChartRelease(ctx context.Context, in *GetChartReleaseReq, opts ...client.CallOption) (*GetChartReleaseResp, error)
 	//* release service
 	ListReleaseV1(ctx context.Context, in *ListReleaseV1Req, opts ...client.CallOption) (*ListReleaseV1Resp, error)
+	//* release service v2
+	ListReleaseV2(ctx context.Context, in *ListReleaseV1Req, opts ...client.CallOption) (*ListReleaseV1Resp, error)
 	GetReleaseDetailV1(ctx context.Context, in *GetReleaseDetailV1Req, opts ...client.CallOption) (*GetReleaseDetailV1Resp, error)
 	InstallReleaseV1(ctx context.Context, in *InstallReleaseV1Req, opts ...client.CallOption) (*InstallReleaseV1Resp, error)
 	UninstallReleaseV1(ctx context.Context, in *UninstallReleaseV1Req, opts ...client.CallOption) (*UninstallReleaseV1Resp, error)
@@ -435,6 +443,16 @@ func (c *helmManagerService) ListReleaseV1(ctx context.Context, in *ListReleaseV
 	return out, nil
 }
 
+func (c *helmManagerService) ListReleaseV2(ctx context.Context, in *ListReleaseV1Req, opts ...client.CallOption) (*ListReleaseV1Resp, error) {
+	req := c.c.NewRequest(c.name, "HelmManager.ListReleaseV2", in)
+	out := new(ListReleaseV1Resp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *helmManagerService) GetReleaseDetailV1(ctx context.Context, in *GetReleaseDetailV1Req, opts ...client.CallOption) (*GetReleaseDetailV1Resp, error) {
 	req := c.c.NewRequest(c.name, "HelmManager.GetReleaseDetailV1", in)
 	out := new(GetReleaseDetailV1Resp)
@@ -578,6 +596,8 @@ type HelmManagerHandler interface {
 	GetChartRelease(context.Context, *GetChartReleaseReq, *GetChartReleaseResp) error
 	//* release service
 	ListReleaseV1(context.Context, *ListReleaseV1Req, *ListReleaseV1Resp) error
+	//* release service v2
+	ListReleaseV2(context.Context, *ListReleaseV1Req, *ListReleaseV1Resp) error
 	GetReleaseDetailV1(context.Context, *GetReleaseDetailV1Req, *GetReleaseDetailV1Resp) error
 	InstallReleaseV1(context.Context, *InstallReleaseV1Req, *InstallReleaseV1Resp) error
 	UninstallReleaseV1(context.Context, *UninstallReleaseV1Req, *UninstallReleaseV1Resp) error
@@ -610,6 +630,7 @@ func RegisterHelmManagerHandler(s server.Server, hdlr HelmManagerHandler, opts .
 		DownloadChart(ctx context.Context, in *DownloadChartReq, out *httpbody.HttpBody) error
 		GetChartRelease(ctx context.Context, in *GetChartReleaseReq, out *GetChartReleaseResp) error
 		ListReleaseV1(ctx context.Context, in *ListReleaseV1Req, out *ListReleaseV1Resp) error
+		ListReleaseV2(ctx context.Context, in *ListReleaseV1Req, out *ListReleaseV1Resp) error
 		GetReleaseDetailV1(ctx context.Context, in *GetReleaseDetailV1Req, out *GetReleaseDetailV1Resp) error
 		InstallReleaseV1(ctx context.Context, in *InstallReleaseV1Req, out *InstallReleaseV1Resp) error
 		UninstallReleaseV1(ctx context.Context, in *UninstallReleaseV1Req, out *UninstallReleaseV1Resp) error
@@ -727,6 +748,12 @@ func RegisterHelmManagerHandler(s server.Server, hdlr HelmManagerHandler, opts .
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "HelmManager.ListReleaseV1",
 		Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/releases"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "HelmManager.ListReleaseV2",
+		Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/v2/releases"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
@@ -877,6 +904,10 @@ func (h *helmManagerHandler) GetChartRelease(ctx context.Context, in *GetChartRe
 
 func (h *helmManagerHandler) ListReleaseV1(ctx context.Context, in *ListReleaseV1Req, out *ListReleaseV1Resp) error {
 	return h.HelmManagerHandler.ListReleaseV1(ctx, in, out)
+}
+
+func (h *helmManagerHandler) ListReleaseV2(ctx context.Context, in *ListReleaseV1Req, out *ListReleaseV1Resp) error {
+	return h.HelmManagerHandler.ListReleaseV2(ctx, in, out)
 }
 
 func (h *helmManagerHandler) GetReleaseDetailV1(ctx context.Context, in *GetReleaseDetailV1Req, out *GetReleaseDetailV1Resp) error {
