@@ -102,8 +102,7 @@ func (dao *clientDao) GetResourceUsage(kit *kit.Kit, bizID uint32, appID uint32,
 	}
 
 	// 过滤最小0值
-	conds = append(conds, m.CpuMinUsage.Neq(0))
-	conds = append(conds, m.MemoryMinUsage.Neq(0))
+	conds = append(conds, q.Where(m.CpuMinUsage.Neq(0), m.MemoryMinUsage.Neq(0)))
 	err = q.Select(m.CpuMaxUsage.Max().As("cpu_max_usage"), m.MemoryMaxUsage.Max().As("memory_max_usage"),
 		m.CpuMinUsage.Min().As("cpu_min_usage"), m.CpuAvgUsage.Avg().As("cpu_avg_usage"),
 		m.MemoryMinUsage.Min().As("memory_min_usage"), m.MemoryAvgUsage.Avg().As("memory_avg_usage")).

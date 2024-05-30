@@ -422,8 +422,9 @@ func (s *Service) ClientLabelStatistics(ctx context.Context, req *pbclient.Clien
 		count += v.Count
 	}
 
+	sortedValues := sortPrimaryAndForeignMap(countByKvs)
 	var charts []interface{}
-	for _, v := range countByKvs {
+	for _, v := range sortedValues {
 		chart := make(map[string]interface{})
 		chart["count"] = v.Count
 		chart["percent"] = float64(v.Count) / float64(count)
@@ -438,6 +439,27 @@ func (s *Service) ClientLabelStatistics(ctx context.Context, req *pbclient.Clien
 		req.GetPrimaryKey(): charts,
 	}
 	return structpb.NewStruct(resp)
+}
+
+// 排序函数
+func sortPrimaryAndForeignMap(m map[types.PrimaryAndForeign]*types.PrimaryAndForeign) []*types.PrimaryAndForeign {
+	// 提取 map 的值
+	values := make([]*types.PrimaryAndForeign, 0, len(m))
+	for _, v := range m {
+		values = append(values, v)
+	}
+
+	// 使用 sort.Slice 进行排序
+	sort.Slice(values, func(i, j int) bool {
+		if values[i].Count != values[j].Count {
+			// 按照 Count 值降序排序
+			return values[i].Count > values[j].Count
+		}
+		// 按照 PrimaryVal ASCII 值升序排序
+		return values[i].PrimaryVal < values[j].PrimaryVal
+	})
+
+	return values
 }
 
 // 数据下钻
