@@ -30,6 +30,7 @@ type bkLoginResult struct {
 	Code int    `json:"ret"`
 }
 
+// bkLoginAuthClient 蓝鲸内部统一登入
 type bkLoginAuthClient struct {
 	conf *cc.LoginAuthSettings
 }
@@ -91,5 +92,7 @@ func (b *bkLoginAuthClient) BuildLoginRedirectURL(r *http.Request, webHost strin
 
 // BuildLoginURL API未登入访问URL
 func (b *bkLoginAuthClient) BuildLoginURL(r *http.Request) (string, string) {
-	return buildLoginURL(r, b.conf.Host), buildLoginPlainURL(r, b.conf.Host)
+	loginURL := fmt.Sprintf("%s/?c_url=", b.conf.Host)
+	loginPlainURL := fmt.Sprintf("%s/plain/?c_url=", b.conf.Host)
+	return loginURL, loginPlainURL
 }
