@@ -198,26 +198,21 @@
   };
 
   const handleImportConfirm = async () => {
-    try {
-      if (bindingId.value) {
-        await updateTemplateConfigPkgs(props.bkBizId, props.appId, bindingId.value, {
-          bindings: selectedPkgs.value.concat(importedPkgs.value),
-        });
-      } else {
-        await importTemplateConfigPkgs(props.bkBizId, props.appId, { bindings: selectedPkgs.value });
-      }
-      close();
-    } catch (e) {
-      console.log(e);
+    if (bindingId.value) {
+      await updateTemplateConfigPkgs(props.bkBizId, props.appId, bindingId.value, {
+        bindings: selectedPkgs.value.concat(importedPkgs.value),
+      });
+    } else {
+      await importTemplateConfigPkgs(props.bkBizId, props.appId, { bindings: selectedPkgs.value });
     }
+    close();
   };
 
-  // const close = () => {
-  //   if (route.query.pkg_id) {
-  //     router.replace({ name: 'service-config', params: route.params });
-  //   }
-  //   emits('update:show', false);
-  // };
+  const close = () => {
+    if (route.query.pkg_id) {
+      router.replace({ name: 'service-config', params: route.params });
+    }
+  };
 
   const handleLinkToTemplates = () => {
     setTimeout(() => {

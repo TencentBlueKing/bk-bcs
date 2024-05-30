@@ -184,14 +184,14 @@
         );
         batchUploadIds.value = res.ids;
       }
+      Message({
+        theme: 'success',
+        message: t('配置文件导入成功'),
+      });
     } catch (error) {
       console.error(error);
     }
     loading.value = false;
-    Message({
-      theme: 'success',
-      message: t('配置文件导入成功'),
-    });
     emits('update:show', false);
     emits('confirm');
   };
