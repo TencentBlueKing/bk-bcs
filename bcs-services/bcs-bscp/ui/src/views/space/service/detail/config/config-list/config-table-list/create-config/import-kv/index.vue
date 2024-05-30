@@ -28,6 +28,7 @@
           style="width: 374px"
           filterable
           auto-focus
+          :clearable="false"
           @select="handleSelectVersion(appId, $event)">
           <bk-option v-for="item in versionList" :id="item.id" :key="item.id" :name="item.spec.name" />
         </bk-select>
@@ -194,13 +195,13 @@
         await textImport.value.handleImport();
       } else {
         await importKvFormText(props.bkBizId, props.appId, importConfigList.value, isClearDraft.value);
+        Message({
+          theme: 'success',
+          message: t('配置项导入成功'),
+        });
       }
       emits('update:show', false);
       emits('confirm');
-      Message({
-        theme: 'success',
-        message: t('配置项导入成功'),
-      });
     } catch (error) {
       console.error(error);
     } finally {
