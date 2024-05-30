@@ -6,6 +6,7 @@
       custom-content
       multiple-mode="tag"
       multiple
+      :search-placeholder="$t('请输入空间/套餐名称')"
       :popover-options="{ theme: 'light bk-select-popover pkg-selector-popover' }"
       @tag-remove="handleDeletePkg"
       @clear="selectedPkgs = []">
@@ -69,16 +70,12 @@
   import { ref, onMounted, computed } from 'vue';
   import { useRoute, useRouter } from 'vue-router';
   import { Share } from 'bkui-vue/lib/icon';
-  import { Message } from 'bkui-vue';
   import { ITemplateBoundByAppData } from '../../../../../../../../../../types/config';
   import { IAllPkgsGroupBySpaceInBiz } from '../../../../../../../../../../types/template';
   import { importTemplateConfigPkgs, updateTemplateConfigPkgs } from '../../../../../../../../../api/config';
   import { getAllPackagesGroupBySpace, getAppPkgBindingRelations } from '../../../../../../../../../api/template';
   import PkgTree from './pkg-tree.vue';
   import PkgTemplatesTable from './pkg-templates-table.vue';
-  import { useI18n } from 'vue-i18n';
-
-  const { t } = useI18n();
 
   const route = useRoute();
   const router = useRouter();
@@ -201,30 +198,21 @@
   };
 
   const handleImportConfirm = async () => {
-    try {
-      if (bindingId.value) {
-        await updateTemplateConfigPkgs(props.bkBizId, props.appId, bindingId.value, {
-          bindings: selectedPkgs.value.concat(importedPkgs.value),
-        });
-      } else {
-        await importTemplateConfigPkgs(props.bkBizId, props.appId, { bindings: selectedPkgs.value });
-      }
-      close();
-      Message({
-        theme: 'success',
-        message: t('配置文件导入成功'),
+    if (bindingId.value) {
+      await updateTemplateConfigPkgs(props.bkBizId, props.appId, bindingId.value, {
+        bindings: selectedPkgs.value.concat(importedPkgs.value),
       });
-    } catch (e) {
-      console.log(e);
+    } else {
+      await importTemplateConfigPkgs(props.bkBizId, props.appId, { bindings: selectedPkgs.value });
     }
+    close();
   };
 
-  // const close = () => {
-  //   if (route.query.pkg_id) {
-  //     router.replace({ name: 'service-config', params: route.params });
-  //   }
-  //   emits('update:show', false);
-  // };
+  const close = () => {
+    if (route.query.pkg_id) {
+      router.replace({ name: 'service-config', params: route.params });
+    }
+  };
 
   const handleLinkToTemplates = () => {
     setTimeout(() => {

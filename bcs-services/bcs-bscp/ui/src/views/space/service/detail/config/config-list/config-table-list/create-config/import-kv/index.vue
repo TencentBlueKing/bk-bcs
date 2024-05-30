@@ -28,6 +28,7 @@
           style="width: 374px"
           filterable
           auto-focus
+          :clearable="false"
           @select="handleSelectVersion(appId, $event)">
           <bk-option v-for="item in versionList" :id="item.id" :key="item.id" :name="item.spec.name" />
         </bk-select>
@@ -195,8 +196,6 @@
       } else {
         await importKvFormText(props.bkBizId, props.appId, importConfigList.value, isClearDraft.value);
       }
-      emits('update:show', false);
-      emits('confirm');
       Message({
         theme: 'success',
         message: t('配置项导入成功'),
@@ -206,6 +205,8 @@
     } finally {
       loading.value = false;
     }
+    emits('update:show', false);
+    emits('confirm');
   };
 
   const handleTableChange = (data: IConfigKvItem[], isNonExistData: boolean) => {

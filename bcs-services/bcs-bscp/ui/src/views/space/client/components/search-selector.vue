@@ -231,8 +231,8 @@
   const inputPlacehoder = computed(() => {
     if (searchConditionList.value.length || searchStr.value || inputFocus.value) return '';
     return isClientSearch.value
-      ? t('UID/IP/标签/源版本/最近一次拉取配置状态/在线状态/客户端组件类型/客户端组件版本/配置拉取时间范围')
-      : t('标签/源版本/最近一次拉取配置状态/在线状态/客户端组件类型/客户端组件版本');
+      ? t('UID/IP/标签/当前配置版本/最近一次拉取配置状态/在线状态/客户端组件类型/客户端组件版本/配置拉取时间范围/错误类别')
+      : t('标签/当前配置版本/最近一次拉取配置状态/在线状态/客户端组件类型/客户端组件版本');
   });
 
   const isClientSearch = computed(() => route.name === 'client-search');
@@ -298,7 +298,8 @@
     handleGetSearchList('common');
     const entries = Object.entries(route.query);
     if (entries.length === 0) return;
-    const { name, value } = CLIENT_SEARCH_DATA.find((item) => item.value === entries[0][0])!;
+    const { name, value, children } = CLIENT_SEARCH_DATA.find((item) => item.value === entries[0][0])!;
+
     if (value === 'pull_time') {
       searchConditionList.value.push({
         content: `${name} : ${entries[0][1]} 00:00:00 - ${entries[0][1]} 23:59:59`,
@@ -306,9 +307,23 @@
         key: value,
         isEdit: false,
       });
+    } else if (value === 'label') {
+      const labels = JSON.parse(entries[0][1] as string);
+      Object.keys(labels).forEach((key) => {
+        searchConditionList.value.push({
+          content: `标签: ${key}=${labels[key]}`,
+          value: `${key}=${labels[key]}`,
+          key: value,
+          isEdit: false,
+        });
+      });
     } else {
+      let content = `${entries[0][1]}`;
+      if (children) {
+        content = children.find((item) => item.value === entries[0][1])!.name;
+      }
       searchConditionList.value.push({
-        content: `${name} : ${entries[0][1]}`,
+        content: `${name} : ${content}`,
         value: entries[0][1] as string,
         key: value,
         isEdit: false,
@@ -324,6 +339,7 @@
 
   // 选择父选择器
   const handleSelectParent = (parentSelectorItem: ISelectorItem) => {
+    isShowSearchInput.value = true;
     parentSelecte.value = parentSelectorItem;
     // 如果有子选择项就展示 没有就用户手动输入
     if (parentSelectorItem.value === 'pull_time') {
@@ -331,10 +347,9 @@
       nextTick(() => datePickerRef.value.handleFocus());
     } else if (parentSelectorItem?.children) {
       childSelectorData.value = parentSelectorItem.children;
-      menuOffset.value = inputWrapRef.value.offsetLeft;
+      nextTick(() => (menuOffset.value = inputWrapRef.value.offsetLeft));
       showChildSelector.value = true;
     } else {
-      isShowSearchInput.value = true;
       isShowPopover.value = false;
       nextTick(() => inputRef.value.focus());
     }
