@@ -194,18 +194,21 @@
       color: #63656e;
     }
     .service-config {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      margin: 12px 8px 16px;
+      padding: 0 8px;
       font-size: 12px;
       background: #f5f7fa;
       border-radius: 2px;
       color: #979ba5;
       line-height: 28px;
-      margin: 12px 8px;
-      padding-left: 8px;
-      display: flex;
-      align-items: end;
-      margin-bottom: 16px;
+      .config-info {
+        flex-shrink: 0;
+      }
       .time-info {
-        padding-left: 16px;
+        flex-shrink: 0;
       }
       .bk-bscp-icon {
         font-size: 14px;
