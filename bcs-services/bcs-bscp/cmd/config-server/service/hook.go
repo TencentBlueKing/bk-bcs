@@ -15,7 +15,13 @@ package service
 import (
 	"context"
 	"errors"
+	"sync"
 
+	"golang.org/x/sync/errgroup"
+
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/i18n"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
@@ -28,11 +34,14 @@ import (
 // CreateHook create a hook
 func (s *Service) CreateHook(ctx context.Context, req *pbcs.CreateHookReq) (*pbcs.CreateHookResp, error) {
 
+	// FromGrpcContext used only to obtain Kit through grpc context.
 	grpcKit := kit.FromGrpcContext(ctx)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 	}
+	// Authorize authorize if user has permission to the resources.
+	// If user is unauthorized, assign apply url and resources into error.
 	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
@@ -44,12 +53,13 @@ func (s *Service) CreateHook(ctx context.Context, req *pbcs.CreateHookReq) (*pbc
 		Spec: &pbhook.HookSpec{
 			Name:         req.Name,
 			Type:         req.Type,
-			Tag:          req.Tag,
+			Tags:         req.Tags,
 			RevisionName: req.RevisionName,
 			Memo:         req.Memo,
 			Content:      req.Content,
 		},
 	}
+	// create a hook
 	rp, err := s.client.DS.CreateHook(grpcKit.RpcCtx(), r)
 	if err != nil {
 		logs.Errorf("create hook failed, err: %v, rid: %s", err, grpcKit.Rid)
@@ -64,6 +74,7 @@ func (s *Service) CreateHook(ctx context.Context, req *pbcs.CreateHookReq) (*pbc
 
 // DeleteHook delete a hook
 func (s *Service) DeleteHook(ctx context.Context, req *pbcs.DeleteHookReq) (*pbcs.DeleteHookResp, error) {
+	// FromGrpcContext used only to obtain Kit through grpc context.
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.DeleteHookResp)
 
@@ -87,9 +98,107 @@ func (s *Service) DeleteHook(ctx context.Context, req *pbcs.DeleteHookReq) (*pbc
 	return resp, nil
 }
 
+// BatchDeleteHook batch delete hook
+func (s *Service) BatchDeleteHook(ctx context.Context, req *pbcs.BatchDeleteHookReq) (*pbcs.BatchDeleteResp,
+	error) {
+	// FromGrpcContext used only to obtain Kit through grpc context.
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+	}
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
+		return nil, err
+	}
+
+	idsLen := len(req.Ids)
+	if idsLen == 0 || idsLen > constant.ArrayInputLenLimit {
+		return nil, errf.Errorf(errf.InvalidArgument, i18n.T(grpcKit,
+			"the length of hook ids is %d, it must be within the range of [1,%d]",
+			idsLen, constant.ArrayInputLenLimit))
+	}
+
+	eg, egCtx := errgroup.WithContext(grpcKit.RpcCtx())
+	eg.SetLimit(10)
+
+	var successfulIDs, failedIDs []uint32
+	var mux sync.Mutex
+
+	// 使用 data-service 原子接口
+	for _, v := range req.Ids {
+		v := v
+		eg.Go(func() error {
+			r := &pbds.DeleteHookReq{
+				BizId:  req.BizId,
+				HookId: v,
+				Force:  req.Force,
+			}
+			if _, err := s.client.DS.DeleteHook(egCtx, r); err != nil {
+				logs.Errorf("delete hook failed, err: %v, rid: %s", err, grpcKit.Rid)
+
+				// 错误不返回异常，记录错误ID
+				mux.Lock()
+				failedIDs = append(failedIDs, v)
+				mux.Unlock()
+				return nil
+			}
+
+			mux.Lock()
+			successfulIDs = append(successfulIDs, v)
+			mux.Unlock()
+
+			return nil
+		})
+	}
+
+	if err := eg.Wait(); err != nil {
+		logs.Errorf("batch delete failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, errf.Errorf(errf.Aborted, i18n.T(grpcKit, "batch delete failed"))
+	}
+
+	// 全部失败, 当前API视为失败
+	if len(failedIDs) == len(req.Ids) {
+		return nil, errf.Errorf(errf.Aborted, i18n.T(grpcKit, "batch delete failed"))
+	}
+
+	return &pbcs.BatchDeleteResp{SuccessfulIds: successfulIDs, FailedIds: failedIDs}, nil
+}
+
+// UpdateHook update a hook
+func (s *Service) UpdateHook(ctx context.Context, req *pbcs.UpdateHookReq) (*pbcs.UpdateHookResp, error) {
+	// FromGrpcContext used only to obtain Kit through grpc context.
+	grpcKit := kit.FromGrpcContext(ctx)
+	resp := new(pbcs.UpdateHookResp)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+	}
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
+		return nil, err
+	}
+
+	r := &pbds.UpdateHookReq{
+		Id: req.HookId,
+		Attachment: &pbhook.HookAttachment{
+			BizId: req.BizId,
+		},
+		Spec: &pbhook.HookSpec{
+			Tags: req.Tags,
+			Memo: req.Memo,
+		},
+	}
+	if _, err := s.client.DS.UpdateHook(grpcKit.RpcCtx(), r); err != nil {
+		logs.Errorf("update hook failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	return resp, nil
+}
+
 // ListHooks list hooks with filter
 func (s *Service) ListHooks(ctx context.Context, req *pbcs.ListHooksReq) (*pbcs.ListHooksResp, error) {
 
+	// FromGrpcContext used only to obtain Kit through grpc context.
 	grpcKit := kit.FromGrpcContext(ctx)
 
 	res := []*meta.ResourceAttribute{
@@ -143,6 +252,7 @@ func (s *Service) ListHooks(ctx context.Context, req *pbcs.ListHooksReq) (*pbcs.
 // ListHookTags list tag
 func (s *Service) ListHookTags(ctx context.Context, req *pbcs.ListHookTagsReq) (*pbcs.ListHookTagsResp, error) {
 
+	// FromGrpcContext used only to obtain Kit through grpc context.
 	grpcKit := kit.FromGrpcContext(ctx)
 
 	res := []*meta.ResourceAttribute{
@@ -169,6 +279,7 @@ func (s *Service) ListHookTags(ctx context.Context, req *pbcs.ListHookTagsReq) (
 // GetHook get a hook
 func (s *Service) GetHook(ctx context.Context, req *pbcs.GetHookReq) (*pbcs.GetHookResp, error) {
 
+	// FromGrpcContext used only to obtain Kit through grpc context.
 	grpcKit := kit.FromGrpcContext(ctx)
 
 	res := []*meta.ResourceAttribute{
@@ -194,7 +305,7 @@ func (s *Service) GetHook(ctx context.Context, req *pbcs.GetHookReq) (*pbcs.GetH
 		Spec: &pbcs.GetHookInfoSpec{
 			Name:     hook.Spec.Name,
 			Type:     hook.Spec.Type,
-			Tag:      hook.Spec.Tag,
+			Tags:     hook.Spec.Tags,
 			Memo:     hook.Spec.Memo,
 			Releases: &pbcs.GetHookInfoSpec_Releases{NotReleaseId: hook.Spec.Releases.NotReleaseId},
 		},
@@ -214,6 +325,7 @@ func (s *Service) GetHook(ctx context.Context, req *pbcs.GetHookReq) (*pbcs.GetH
 func (s *Service) ListHookReferences(ctx context.Context,
 	req *pbcs.ListHookReferencesReq) (*pbcs.ListHookReferencesResp, error) {
 
+	// FromGrpcContext used only to obtain Kit through grpc context.
 	grpcKit := kit.FromGrpcContext(ctx)
 
 	res := []*meta.ResourceAttribute{
@@ -263,6 +375,7 @@ func (s *Service) ListHookReferences(ctx context.Context,
 // GetReleaseHook get release's pre hook and post hook
 func (s *Service) GetReleaseHook(ctx context.Context, req *pbcs.GetReleaseHookReq) (*pbcs.GetReleaseHookResp, error) {
 
+	// FromGrpcContext used only to obtain Kit through grpc context.
 	grpcKit := kit.FromGrpcContext(ctx)
 
 	res := []*meta.ResourceAttribute{

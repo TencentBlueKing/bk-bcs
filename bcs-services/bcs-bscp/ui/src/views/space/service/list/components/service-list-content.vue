@@ -77,14 +77,14 @@
       :draggable="false"
       :quick-close="false">
       <div class="dialog-content">
-        <div class="dialog-title">确认删除服务？</div>
+        <div class="dialog-title">{{ t('确认删除服务？') }}</div>
         <div class="dialog-input">
           <div class="dialog-info">
-            <div>删除的服务<span>无法找回</span>,请谨慎操作！</div>
-            <div>同时会删除服务密钥对服务的关联规则</div>
+            <div>{{ t('删除的服务') }}<span>{{ t('无法找回') }}</span>{{t(',请谨慎操作!')}}</div>
+            <div>{{ t('同时会删除服务密钥对服务的关联规则')}} </div>
           </div>
           <div class="tips">
-            请输入服务名 <span>{{ deleteService!.spec.name }}</span> 以确认删除
+            {{ t('请输入服务名') }} <span>{{ deleteService!.spec.name }}</span> {{ t('以确认删除') }}
           </div>
           <bk-input v-model="dialogInputStr" :placeholder="t('请输入')" />
         </div>
@@ -96,9 +96,9 @@
             style="margin-right: 20px"
             :disabled="dialogInputStr !== deleteService!.spec.name"
             @click="handleDeleteConfirm">
-            删除
+            {{ t('删除') }}
           </bk-button>
-          <bk-button @click="isShowDeleteDialog = false">取消</bk-button>
+          <bk-button @click="isShowDeleteDialog = false">{{ t('取消') }}</bk-button>
         </div>
       </template>
     </bk-dialog>
@@ -145,16 +145,8 @@
     space_id: '',
     spec: {
       name: '',
-      deploy_type: '',
       config_type: '',
-      mode: '',
       memo: '',
-      reload: {
-        file_reload_spec: {
-          reload_file_path: '',
-        },
-        reload_type: '',
-      },
       alias: '',
       data_type: '',
     },

@@ -43,10 +43,14 @@ var (
 )
 
 const (
+	// ServiceCIDR service cidr
+	ServiceCIDR = "ServiceCIDR"
 	// ClusterCIDR cluster cidr
 	ClusterCIDR = "ClusterCIDR"
 	// MultiClusterCIDR cluster multi cidr
 	MultiClusterCIDR = "MultiClusterCIDR"
+	// EnableMultiClusterCIDR enable multi cidrs
+	EnableMultiClusterCIDR = "EnableMultiClusterCIDR"
 )
 
 const (
@@ -64,6 +68,11 @@ const (
 	AgentIDLabelKey = "bkcmdb.tencent.com/bk-agent-id"
 	// CloudAreaLabelKey for host id
 	CloudAreaLabelKey = "bkcmdb.tencent.com/cloud-area-id"
+
+	// MixedNodeLabelKey mixed node label key
+	MixedNodeLabelKey = "node.info.kubernetes.io/cpu-type"
+	// MixedNodeLabelValue mixed node label value
+	MixedNodeLabelValue = "cvm_low"
 
 	// PrefixKubernetesIo for special label
 	PrefixKubernetesIo = "node.info.kubernetes.io"

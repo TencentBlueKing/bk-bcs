@@ -13,6 +13,8 @@ message ClientEvent {
   ClientEventAttachment attachment = 3;
   google.protobuf.Timestamp heartbeat_time = 4;
   string message_type = 5;
+  string original_release_name = 6;
+  string target_release_name = 7;
 }
 
 // ClientEventSpec source resource reference: pkg/dal/table/client-event.go
@@ -29,6 +31,7 @@ message ClientEventSpec {
   string release_change_status = 10;
   string release_change_failed_reason = 11;
   string failed_detail_reason = 12;
+  string specific_failed_reason = 13;
 }
 
 // ClientEventAttachment source resource reference: pkg/dal/table/client-event.go

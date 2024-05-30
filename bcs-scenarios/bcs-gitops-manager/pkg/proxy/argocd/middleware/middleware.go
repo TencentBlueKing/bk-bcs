@@ -20,11 +20,13 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
 	traceconst "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/tracing"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/cmd/manager/options"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/metric"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/session"
@@ -35,12 +37,15 @@ import (
 type HttpHandler func(r *http.Request) (*http.Request, *HttpResponse)
 
 type httpWrapper struct {
-	handler        HttpHandler
-	handlerName    string
-	option         *proxy.GitOpsOptions
-	argoSession    *session.ArgoSession
-	secretSession  *session.SecretSession
-	monitorSession *session.MonitorSession
+	handler           HttpHandler
+	handlerName       string
+	option            *options.Options
+	argoSession       *session.ArgoSession
+	argoStreamSession *session.ArgoStreamSession
+	secretSession     *session.SecretSession
+	terraformSession  *session.TerraformSession
+	analysisSession   *session.AnalysisSession
+	monitorSession    *session.MonitorSession
 }
 
 // HttpResponse 定义了返回信息，根据返回信息 httpWrapper 做对应处理
@@ -67,7 +72,8 @@ func User(ctx context.Context) *proxy.UserInfo {
 	return ctx.Value(ctxKeyUser).(*proxy.UserInfo)
 }
 
-func (p *httpWrapper) setContext(rw http.ResponseWriter, r *http.Request) (context.Context, string) {
+// SetContext set the user-info and trace info
+func SetContext(rw http.ResponseWriter, r *http.Request, jwtDecoder *jwt.JWTClient) (context.Context, string) {
 	// 获取 RequestID 信息，并重新存入上下文
 	var requestID string
 	requestIDHeader := r.Context().Value(traceconst.RequestIDHeaderKey)
@@ -76,12 +82,14 @@ func (p *httpWrapper) setContext(rw http.ResponseWriter, r *http.Request) (conte
 	} else {
 		requestID = uuid.New().String()
 	}
-	ctx := context.WithValue(r.Context(), traceconst.RequestIDHeaderKey, requestID) // nolint staticcheck
+	// nolint
+	ctx := context.WithValue(r.Context(), traceconst.RequestIDHeaderKey, requestID)
+	// nolint
 	ctx = tracing.ContextWithRequestID(ctx, requestID)
 	rw.Header().Set(traceconst.RequestIDHeaderKey, requestID)
 
 	// 统一获取 User 信息，并存入上下文
-	user, err := proxy.GetJWTInfo(r, p.option.JWTDecoder)
+	user, err := proxy.GetJWTInfo(r, jwtDecoder)
 	if err != nil || user == nil {
 		http.Error(rw, errors.Wrapf(err, "get user info failed").Error(), http.StatusUnauthorized)
 		return nil, requestID
@@ -100,29 +108,11 @@ func (p *httpWrapper) setContext(rw http.ResponseWriter, r *http.Request) (conte
 // ServeHTTP 接收请求的入口，根据返回的 type 类型做不同的操作
 func (p *httpWrapper) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	start := time.Now()
-	ctx, requestID := p.setContext(rw, r)
+	ctx, requestID := SetContext(rw, r, p.option.JWTDecoder)
 	if ctx == nil {
 		return
 	}
 	r = r.WithContext(ctx)
-	defer func() {
-		cost := time.Since(start)
-		blog.Infof("RequestID[%s] handle request '%s' cost time: %v", requestID, r.URL.Path, cost)
-
-		// 对于包含 stream/webhook 的请求过滤
-		if !strings.Contains(r.URL.Path, "/api/v1/stream") &&
-			!strings.Contains(r.URL.Path, "/api/webhook") &&
-			!strings.Contains(r.URL.Path, "/clean") {
-			if strings.Contains(r.URL.Path, "Service/") {
-				metric.ManagerGRPCRequestTotal.WithLabelValues().Inc()
-				metric.ManagerGRPCRequestDuration.WithLabelValues().Observe(cost.Seconds())
-			} else {
-				metric.ManagerHTTPRequestTotal.WithLabelValues().Inc()
-				metric.ManagerHTTPRequestDuration.WithLabelValues().Observe(cost.Seconds())
-			}
-		}
-	}()
-
 	req, resp := p.handler(r)
 	if resp == nil {
 		blog.Warnf("RequestID[%s] response should not be nil", requestID)
@@ -130,6 +120,30 @@ func (p *httpWrapper) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 			respType: reverseArgo,
 		}
 	}
+	defer func() {
+		cost := time.Since(start)
+		blog.Infof("RequestID[%s] handle request '%s' cost time: %v", requestID, r.URL.Path, cost)
+		// ignore metric proxy
+		if strings.Contains(r.URL.Path, "/api/metric") ||
+			strings.Contains(r.URL.Path, "/api/v1/analysis") {
+			return
+		}
+
+		if strings.Contains(r.URL.Path, "Service/") {
+			metric.ManagerGRPCRequestTotal.WithLabelValues().Inc()
+		} else {
+			metric.ManagerHTTPRequestTotal.WithLabelValues().Inc()
+		}
+		// 对于包含 stream/webhook 的请求过滤，不需要统计请求时间
+		if !strings.Contains(r.URL.Path, "/api/v1/stream") && !strings.Contains(r.URL.Path, "/api/webhook") &&
+			!strings.Contains(r.URL.Path, "/clean") && !strings.Contains(r.URL.Path, "Watch") {
+			if strings.Contains(r.URL.Path, "Service/") {
+				metric.ManagerGRPCRequestDuration.WithLabelValues().Observe(float64(cost.Milliseconds()))
+			} else {
+				metric.ManagerHTTPRequestDuration.WithLabelValues().Observe(float64(cost.Milliseconds()))
+			}
+		}
+	}()
 	if resp.statusCode >= 500 {
 		if !utils.IsContextCanceled(resp.err) {
 			metric.ManagerReturnErrorNum.WithLabelValues().Inc()
@@ -138,12 +152,20 @@ func (p *httpWrapper) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	switch resp.respType {
 	case reverseArgo:
 		p.argoSession.ServeHTTP(rw, req)
+	case reverseArgoStream:
+		p.argoStreamSession.ServeHTTP(rw, req)
 	case reverseSecret:
 		p.secretSession.ServeHTTP(rw, req)
+	case reverseTerraform:
+		p.terraformSession.ServeHTTP(rw, req)
+	case reverseAnalysis:
+		p.analysisSession.ServeHTTP(rw, req)
 	case reverseMonitor:
 		p.monitorSession.ServeHTTP(rw, req)
 	case returnError:
-		blog.Errorf("RequestID[%s] handler return code '%d': %s", requestID, resp.statusCode, resp.err.Error())
+		if resp.statusCode >= 500 {
+			blog.Errorf("RequestID[%s] handler return code '%d': %s", requestID, resp.statusCode, resp.err.Error())
+		}
 		http.Error(rw, resp.err.Error(), resp.statusCode)
 	case returnGrpcError:
 		blog.Warnf("RequestID[%s] handler grpc request return code '%d': %s",
@@ -178,12 +200,37 @@ const (
 	directResponse
 	// jsonResponse 返回 JSON 信息给客户端
 	jsonResponse
+	reverseArgoStream
+	// reverseTerraform 请求反向代理给 terraform 服务
+	reverseTerraform
+	reverseAnalysis
 )
+
+// ReturnArgoStreamReverse will reverse stream to argocd
+func ReturnArgoStreamReverse() *HttpResponse {
+	return &HttpResponse{
+		respType: reverseArgoStream,
+	}
+}
+
+// ReturnTerraformReverse will reverse to terraform controller
+func ReturnTerraformReverse() *HttpResponse {
+	return &HttpResponse{
+		respType: reverseTerraform,
+	}
+}
 
 // ReturnArgoReverse will reverse to argocd
 func ReturnArgoReverse() *HttpResponse {
 	return &HttpResponse{
 		respType: reverseArgo,
+	}
+}
+
+// ReturnAnalysisReverse will reverse to analysis server
+func ReturnAnalysisReverse() *HttpResponse {
+	return &HttpResponse{
+		respType: reverseAnalysis,
 	}
 }
 

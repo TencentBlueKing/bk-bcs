@@ -21,12 +21,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-// ReserveField will reserve some fields from object
-func ReserveField(obj interface{}, path []string) ([]byte, error) {
-	bs, err := json.Marshal(obj)
-	if err != nil {
-		return nil, errors.Wrapf(err, "marshal object failed")
-	}
+// ReserveFieldBytes reserve with bytes
+func ReserveFieldBytes(bs []byte, path []string) ([]byte, error) {
 	c, err := parsed(bs)
 	if err != nil {
 		return nil, errors.Wrapf(err, "jsonq parsed bytes failed")
@@ -36,6 +32,15 @@ func ReserveField(obj interface{}, path []string) ([]byte, error) {
 		return nil, errors.Wrapf(err, "jsonq reserve path failed")
 	}
 	return bs, nil
+}
+
+// ReserveField will reserve some fields from object
+func ReserveField(obj interface{}, path []string) ([]byte, error) {
+	bs, err := json.Marshal(obj)
+	if err != nil {
+		return nil, errors.Wrapf(err, "marshal object failed")
+	}
+	return ReserveFieldBytes(bs, path)
 }
 
 // container defines the jsonq traverse instance

@@ -8,8 +8,6 @@ interface IUserInfo {
 }
 
 export default defineStore('user', () => {
-  const loginUrl = ref('');
-  const showLoginModal = ref(false);
   const userInfo = ref<IUserInfo>({
     avatar_url: '',
     username: '',
@@ -20,5 +18,5 @@ export default defineStore('user', () => {
       userInfo.value = res.data as IUserInfo;
     });
 
-  return { loginUrl, showLoginModal, userInfo, getUserInfo };
+  return { userInfo, getUserInfo };
 });

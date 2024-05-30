@@ -38,6 +38,7 @@ import {
   cloudOsImage,
   cloudRegion,
   cloudRegionByAccount,
+  cloudResourceGroupByAccount,
   cloudSecurityGroups,
   cloudSubnets,
   cloudVpc,
@@ -193,6 +194,10 @@ export default {
       const result = await deleteCloudAccounts(params).then(() => true)
         .catch(() => false);
       return result;
+    },
+    async cloudResourceGroupByAccount(ctx, params) {
+      const data = await cloudResourceGroupByAccount(params).catch(() => []);
+      return data;
     },
     async cloudRegionByAccount(ctx, params) {
       const data = await cloudRegionByAccount(params).catch(() => []);

@@ -29,7 +29,10 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
 
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/cmd/manager/options"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store/secretstore"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/utils"
 )
 
@@ -42,9 +45,12 @@ type ClusterControl interface {
 }
 
 // NewClusterController create project controller instance
-func NewClusterController(opt *Options) ClusterControl {
+func NewClusterController(ctx context.Context, storage store.Store) ClusterControl {
 	return &cluster{
-		option: opt,
+		ctx:         ctx,
+		storage:     storage,
+		option:      options.GlobalOptions(),
+		secretStore: secretstore.NewSecretStore(options.GlobalOptions().SecretServer),
 	}
 }
 
@@ -53,9 +59,11 @@ func NewClusterController(opt *Options) ClusterControl {
 type cluster struct {
 	sync.Mutex
 
-	option *Options
-	client cm.ClusterManagerClient
-	conn   *grpc.ClientConn
+	ctx         context.Context
+	option      *options.Options
+	storage     store.Store
+	secretStore secretstore.SecretInterface
+	conn        *grpc.ClientConn
 }
 
 // Init controller
@@ -90,7 +98,7 @@ func (control *cluster) SingleStart(ctx context.Context) {
 	if err := control.innerLoop(ctx); err != nil {
 		blog.Errorf("inner loop first failed: %s", err.Error())
 	}
-	tick := time.NewTicker(time.Second * time.Duration(control.option.Interval))
+	tick := time.NewTicker(time.Second * time.Duration(control.option.ClusterSyncInterval))
 	defer tick.Stop()
 	for {
 		select {
@@ -112,9 +120,10 @@ func (control *cluster) ForceSync(projectCode, clusterID string) {
 	defer control.Unlock()
 
 	// reading data from cluster-manager
-	header := metadata.New(map[string]string{"Authorization": fmt.Sprintf("Bearer %s", control.option.APIToken)})
+	header := metadata.New(map[string]string{"Authorization": fmt.Sprintf("Bearer %s",
+		control.option.APIGatewayToken)})
 	outCxt := metadata.NewOutgoingContext(context.Background(), header)
-	response, err := control.client.GetCluster(outCxt, &cm.GetClusterReq{ClusterID: clusterID})
+	response, err := control.option.ClusterManagerClient.GetCluster(outCxt, &cm.GetClusterReq{ClusterID: clusterID})
 	if err != nil {
 		blog.Errorf("cluster controller get cluster %s from cluster-manager failure, %s",
 			clusterID, err.Error())
@@ -133,7 +142,7 @@ func (control *cluster) ForceSync(projectCode, clusterID string) {
 	}
 
 	cls := response.Data
-	argoCluster, err := control.option.Storage.GetCluster(context.Background(), &clusterclient.ClusterQuery{
+	argoCluster, err := control.storage.GetCluster(context.Background(), &clusterclient.ClusterQuery{
 		Name: cls.ClusterID,
 	})
 	if err != nil {
@@ -147,7 +156,7 @@ func (control *cluster) ForceSync(projectCode, clusterID string) {
 		return
 	}
 
-	appPro, err := control.option.Storage.GetProject(context.Background(), projectCode)
+	appPro, err := control.storage.GetProject(context.Background(), projectCode)
 	if err != nil {
 		blog.Errorf("cluster controller get project %s for cluster %s from storage failure, %s",
 			projectCode, clusterID, err.Error())
@@ -166,8 +175,8 @@ func (control *cluster) initClient() error {
 		"x-content-type": "application/grpc+proto",
 		"Content-Type":   "application/grpc",
 	}
-	if len(control.option.APIToken) != 0 {
-		header["Authorization"] = fmt.Sprintf("Bearer %s", control.option.APIToken)
+	if len(control.option.APIGatewayToken) != 0 {
+		header["Authorization"] = fmt.Sprintf("Bearer %s", control.option.APIGatewayToken)
 	}
 	md := metadata.New(header)
 	var opts []grpc.DialOption
@@ -179,7 +188,7 @@ func (control *cluster) initClient() error {
 			control.option.APIGateway, err.Error())
 		return err
 	}
-	control.client = cm.NewClusterManagerClient(conn)
+	control.option.ClusterManagerClient = cm.NewClusterManagerClient(conn)
 	control.conn = conn
 	blog.Infof("cluster controller init cluster-manager with %s successfully", control.option.APIGateway)
 	return nil
@@ -187,7 +196,7 @@ func (control *cluster) initClient() error {
 
 func (control *cluster) innerLoop(ctx context.Context) error {
 	// list all project in local storage
-	appProjects, err := control.option.Storage.ListProjects(ctx)
+	appProjects, err := control.storage.ListProjects(ctx)
 	if err != nil {
 		return errors.Wrapf(err, "innerLoop get all projects fro gitops storage failed")
 	}
@@ -211,7 +220,7 @@ func (control *cluster) innerLoop(ctx context.Context) error {
 		blog.Infof("sync clusters for project [%s]%s complete, next...", appPro.Name, proID)
 
 		// sync secret init
-		if err = control.option.Secret.InitProjectSecret(ctx, appPro.Name); err != nil {
+		if err = control.secretStore.InitProjectSecret(ctx, appPro.Name); err != nil {
 			if utils.IsSecretAlreadyExist(err) {
 				continue
 			}
@@ -222,7 +231,7 @@ func (control *cluster) innerLoop(ctx context.Context) error {
 
 		// sync secret info to pro annotations
 		// secretVal := vaultcommon.GetVaultSecForProAnno(appPro.Name)
-		secretVal, err := control.option.Secret.GetProjectSecret(ctx, appPro.Name)
+		secretVal, err := control.secretStore.GetProjectSecret(ctx, appPro.Name)
 		if err != nil {
 			blog.Errorf("[getErr]sync secret info to pro annotations [%s]%s failed: %s", appPro.Name, proID, err.Error())
 			continue
@@ -230,12 +239,12 @@ func (control *cluster) innerLoop(ctx context.Context) error {
 		actualVal, ok := appPro.Annotations[common.SecretKey]
 		if !ok {
 			appPro.Annotations[common.SecretKey] = secretVal
-			if err := control.option.Storage.UpdateProject(ctx, appPro); err != nil {
-				blog.Errorf("[existErr]sync secret info to pro annotations [%s]%s failed: %s", appPro.Name, proID, err.Error())
+			if err := control.storage.UpdateProject(ctx, appPro); err != nil {
+				blog.Errorf("[existErr] sync secret info to pro annotations [%s]%s failed: %s", appPro.Name, proID, err.Error())
 			}
 		} else if secretVal != actualVal {
 			appPro.Annotations[common.SecretKey] = secretVal
-			if err := control.option.Storage.UpdateProject(ctx, appPro); err != nil {
+			if err := control.storage.UpdateProject(ctx, appPro); err != nil {
 				blog.Errorf("[valErr]sync secret info to pro annotations [%s]%s failed: %s", appPro.Name, proID, err.Error())
 			}
 		}
@@ -246,7 +255,7 @@ func (control *cluster) innerLoop(ctx context.Context) error {
 
 // SyncProject sync all clusters by project code
 func (control *cluster) SyncProject(ctx context.Context, projectCode string) error {
-	argoProject, err := control.option.Storage.GetProject(ctx, projectCode)
+	argoProject, err := control.storage.GetProject(ctx, projectCode)
 	if err != nil {
 		return errors.Wrapf(err, "get project '%s' failed", projectCode)
 	}
@@ -288,13 +297,17 @@ func (control *cluster) syncClustersByProject(ctx context.Context, projectID str
 	for _, clsID := range needCreate {
 		cls := clusterMap[clsID]
 		if err = control.saveToStorage(ctx, cls, appPro); err != nil {
+			if utils.IsClusterAskCredentials(err) {
+				blog.Warnf("cluster '%s' save to storage ask credentials", clsID)
+				continue
+			}
 			blog.Errorf("cluster '%s' save to argo storage failed: %s", clsID, err.Error())
 			continue
 		}
 		blog.Infof("save cluster '%s' to argo storage success", clsID)
 	}
 	for _, clsID := range needDelete {
-		if err = control.option.Storage.DeleteCluster(ctx, clsID); err != nil {
+		if err = control.storage.DeleteCluster(ctx, clsID); err != nil {
 			blog.Errorf("delete cluster '%s' from argo storage failed: %s", clsID, err.Error())
 			continue
 		}
@@ -305,7 +318,7 @@ func (control *cluster) syncClustersByProject(ctx context.Context, projectID str
 
 func (control *cluster) buildArgoClusters(ctx context.Context,
 	projectID string) (map[string]*v1alpha1.Cluster, error) {
-	argoClusters, err := control.option.Storage.ListClustersByProject(ctx, projectID)
+	argoClusters, err := control.storage.ListClustersByProject(ctx, projectID)
 	if err != nil {
 		return nil, errors.Wrapf(err, "list clusters by project '%s' failed", projectID)
 	}
@@ -321,10 +334,10 @@ func (control *cluster) buildClustersByProject(ctx context.Context,
 	projectID string) (map[string]*clustermanager.Cluster, error) {
 	bcsCtx := metadata.NewOutgoingContext(ctx,
 		metadata.New(map[string]string{
-			"Authorization": fmt.Sprintf("Bearer %s", control.option.APIToken),
+			"Authorization": fmt.Sprintf("Bearer %s", control.option.APIGatewayToken),
 		}),
 	)
-	clusters, err := control.client.ListCluster(bcsCtx, &cm.ListClusterReq{ProjectID: projectID})
+	clusters, err := control.option.ClusterManagerClient.ListCluster(bcsCtx, &cm.ListClusterReq{ProjectID: projectID})
 	if err != nil {
 		return nil, errors.Wrapf(err, "list clusters failed")
 	}
@@ -382,7 +395,7 @@ func (control *cluster) updateToStorage(ctx context.Context, cls *cm.Cluster,
 		return nil
 	}
 	// the cluster will be updated if cluster alias name is changed
-	if err := control.option.Storage.UpdateCluster(ctx, argoCluster); err != nil {
+	if err := control.storage.UpdateCluster(ctx, argoCluster); err != nil {
 		return errors.Wrapf(err, "update cluster '%s' from gitops storage failed", cls.ClusterID)
 	}
 	return nil
@@ -400,9 +413,9 @@ func (control *cluster) saveToStorage(ctx context.Context, cls *cm.Cluster, proj
 		Server:  fmt.Sprintf("https://%s/clusters/%s/", control.option.APIGatewayForCluster, cls.ClusterID),
 		Project: project.Name,
 		Config: v1alpha1.ClusterConfig{
-			BearerToken: control.option.APIToken,
+			BearerToken: control.option.APIGatewayToken,
 		},
 		Annotations: clusterAnnotation,
 	}
-	return control.option.Storage.CreateCluster(ctx, appCluster)
+	return control.storage.CreateCluster(ctx, appCluster)
 }

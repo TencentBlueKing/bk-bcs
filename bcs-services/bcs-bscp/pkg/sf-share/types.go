@@ -69,10 +69,6 @@ const (
 	Heartbeat MessagingType = 2
 	// VersionChangeMessage the version change event was reported. Procedure
 	VersionChangeMessage MessagingType = 3
-	// PullStatus the current pull status is reported
-	PullStatus MessagingType = 4
-	// ClientInfo report basic information about the client when the client first connects to the client
-	ClientInfo MessagingType = 5
 )
 
 // Validate the messaging type is valid or not.
@@ -81,8 +77,6 @@ func (sm MessagingType) Validate() error {
 	case SidecarOffline:
 	case Heartbeat:
 	case VersionChangeMessage:
-	case PullStatus:
-	case ClientInfo:
 	default:
 		return fmt.Errorf("unknown %d sidecar message type", sm)
 	}
@@ -99,10 +93,6 @@ func (sm MessagingType) String() string {
 		return "Heartbeat"
 	case VersionChangeMessage:
 		return "VersionChange"
-	case PullStatus:
-		return "PullStatus"
-	case ClientInfo:
-		return "ClientInfo"
 	default:
 		return "Unknown"
 	}
@@ -161,12 +151,13 @@ type SideAppMeta struct {
 	// CursorID 事件ID
 	CursorID string `json:"cursorID"`
 	// ReleaseChangeStatus 变更状态
-	ReleaseChangeStatus Status       `json:"releaseChangeStatus"`
-	FailedReason        FailedReason `json:"failedReason"`
-	FailedDetailReason  string       `json:"failedDetailReason"`
-	StartTime           time.Time    `json:"startTime"`
-	EndTime             time.Time    `json:"endTime"`
-	TotalSeconds        float64      `json:"totalSeconds"`
+	ReleaseChangeStatus  Status               `json:"releaseChangeStatus"`
+	FailedReason         FailedReason         `json:"failedReason"`
+	SpecificFailedReason SpecificFailedReason `json:"specificFailedReason"`
+	FailedDetailReason   string               `json:"failedDetailReason"`
+	StartTime            time.Time            `json:"startTime"`
+	EndTime              time.Time            `json:"endTime"`
+	TotalSeconds         float64              `json:"totalSeconds"`
 }
 
 // Validate the sidecar's app meta is valid or not.
@@ -434,22 +425,10 @@ type SidecarHandshakePayload struct {
 type SidecarRuntimeOption struct {
 	// BounceIntervalHour sidecar connect bounce interval, if reach this bounce interval, sidecar will
 	// reconnect stream server instance.
-	BounceIntervalHour uint                          `json:"bounceInterval"`
-	RepositoryTLS      *TLSBytes                     `json:"repositoryTLS"`
-	Repository         *RepositoryV1                 `json:"repository"`
-	AppReloads         map[ /*appID*/ uint32]*Reload `json:"reload"`
-}
-
-// Reload defines the sidecar's notify app to reload config file options delivered from the
-// upstream server with handshake.
-type Reload struct {
-	ReloadType     table.AppReloadType `json:"reload_type"`
-	FileReloadSpec *FileReloadSpec     `json:"file_reload_spec"`
-}
-
-// FileReloadSpec defines sidecar file reload need info.
-type FileReloadSpec struct {
-	ReloadFilePath string `json:"reload_file_path"`
+	BounceIntervalHour  uint          `json:"bounceInterval"`
+	RepositoryTLS       *TLSBytes     `json:"repositoryTLS"`
+	Repository          *RepositoryV1 `json:"repository"`
+	EnableAsyncDownload bool          `json:"enableAsyncDownload"`
 }
 
 // ServiceInfo defines the sidecar's need info from the upstream server with handshake.
@@ -568,10 +547,8 @@ func (bd BasicData) Validate() error {
 
 // ResourceUsage Resource utilization rate
 type ResourceUsage struct {
-	CpuMaxUsage    float64 `json:"cpuMaxUsage"`
-	CpuUsage       float64 `json:"cpuUsage"`
-	MemoryUsage    uint64  `json:"memoryUsage"`
-	MemoryMaxUsage uint64  `json:"memoryMaxUsage"`
+	MemoryUsage, MemoryMaxUsage, MemoryMinUsage, MemoryAvgUsage uint64
+	CpuUsage, CpuMaxUsage, CpuMinUsage, CpuAvgUsage             float64
 }
 
 // VersionChangePayload defines sdk version change to send payload to feed server.
@@ -636,9 +613,9 @@ func (cm OnlineStatus) Validate() error {
 func (cm OnlineStatus) String() string {
 	switch cm {
 	case Online:
-		return "online"
+		return "Online"
 	case Offline:
-		return "offline"
+		return "Offline"
 	default:
 		return ""
 	}
@@ -682,54 +659,6 @@ func (rs Status) String() string {
 	}
 }
 
-// FailedReason define the failure cause structure
-type FailedReason uint32
-
-const (
-	// PreHookFailed pre hook failed
-	PreHookFailed FailedReason = 1
-	// PostHookFailed post hook failed
-	PostHookFailed FailedReason = 2
-	// DownloadFailed download failed
-	DownloadFailed FailedReason = 3
-	// SkipFailed skip failed
-	SkipFailed FailedReason = 4
-	// ClearOldFilesFailed Clear old files failed
-	ClearOldFilesFailed FailedReason = 5
-	// UpdateMetadataFailed Update Metadata failed
-	UpdateMetadataFailed FailedReason = 6
-)
-
-// Validate the failed reason is valid or not.
-func (fr FailedReason) Validate() error {
-	switch fr {
-	case PreHookFailed:
-	case PostHookFailed:
-	case DownloadFailed:
-	case SkipFailed:
-	default:
-		return fmt.Errorf("unknown %d sidecar failed reason", fr)
-	}
-
-	return nil
-}
-
-// String return the corresponding string type
-func (fr FailedReason) String() string {
-	switch fr {
-	case PreHookFailed:
-		return "PreHookFailed"
-	case PostHookFailed:
-		return "PostHookFailed"
-	case DownloadFailed:
-		return "DownloadFailed"
-	case SkipFailed:
-		return "SkipFailed"
-	default:
-		return ""
-	}
-}
-
 // ClientMode define the client mode structure
 type ClientMode uint32
 
@@ -766,18 +695,9 @@ func (cm ClientMode) String() string {
 
 // ClientMetricData feed-server 和 cache-service 通信的结构体
 type ClientMetricData struct {
-	AppID         uint32
 	MessagingType uint32
 	Payload       []byte
 }
-
-// // ClientInfoItem 单个客户端连接信息
-// type ClientInfoItem struct {
-// 	// BasicData 基础信息：例如客户端唯一标识、bizID、客户端模式
-// 	BasicData BasicData `json:"basic_data"`
-// 	// Applications app相关信息：例如 appName、appID、currentReleaseID等
-// 	Application SideAppMeta `json:"application"`
-// }
 
 // HeartbeatItem 单个服务心跳数据
 type HeartbeatItem struct {
@@ -786,6 +706,28 @@ type HeartbeatItem struct {
 	Application SideAppMeta `json:"application"`
 	// ResourceUsage 资源相关信息：例如 cpu、内存等
 	ResourceUsage ResourceUsage `json:"resourceUsage"`
+}
+
+// Decode the HeartbeatItem to bytes.
+func (h *HeartbeatItem) Decode(data []byte) error {
+	if len(data) == 0 {
+		return errors.New("Heartbeat is nil, can not be decoded")
+	}
+
+	err := jsoni.Unmarshal(data, h)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// Encode the HeartbeatItem to bytes.
+func (h *HeartbeatItem) Encode() ([]byte, error) {
+	if h == nil {
+		return nil, errors.New("HeartbeatItem is nil, can not be encoded")
+	}
+
+	return jsoni.Marshal(h)
 }
 
 // ClientType client type (agent、sidecar、sdk、command).

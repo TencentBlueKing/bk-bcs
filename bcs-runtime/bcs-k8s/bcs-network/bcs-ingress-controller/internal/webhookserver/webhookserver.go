@@ -30,6 +30,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/ipv6server"
+
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/conflicthandler"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/generator"
@@ -37,7 +38,6 @@ import (
 	v1 "k8s.io/api/admission/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/eventer"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/portpoolcache"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
@@ -69,7 +69,6 @@ type Server struct {
 	// k8s client
 	k8sClient        client.Client
 	lbClient         cloud.LoadBalance
-	eventWatcher     eventer.WatchEventInterface
 	poolCache        *portpoolcache.Cache
 	podName          string
 	podNamespace     string
@@ -84,7 +83,7 @@ type Server struct {
 
 // NewHookServer create new hook server object
 func NewHookServer(opt *ServerOption, k8sClient client.Client, lbClient cloud.LoadBalance, poolCache *portpoolcache.Cache,
-	eventWatcher eventer.WatchEventInterface, validater cloud.Validater, converter *generator.IngressConverter,
+	validater cloud.Validater, converter *generator.IngressConverter,
 	conflictHandler *conflicthandler.ConflictHandler, nodePortBindingNs string,
 	eventer record.EventRecorder) (*Server, error) {
 	pair, err := tls.LoadX509KeyPair(opt.ServerCertFile, opt.ServerKeyFile)
@@ -98,7 +97,6 @@ func NewHookServer(opt *ServerOption, k8sClient client.Client, lbClient cloud.Lo
 			&tls.Config{Certificates: []tls.Certificate{pair}}, nil),
 		k8sClient:         k8sClient,
 		lbClient:          lbClient,
-		eventWatcher:      eventWatcher,
 		poolCache:         poolCache,
 		podName:           os.Getenv(constant.EnvIngressPodName),
 		podNamespace:      os.Getenv(constant.EnvIngressPodNamespace),
@@ -371,6 +369,10 @@ func (s *Server) mutatingWebhook(ar v1.AdmissionReview) (response *v1.AdmissionR
 	}
 	if len(pod.Name) == 0 {
 		pod.Name = req.Name
+	}
+	// 创建时Pod可能没有名字
+	if len(pod.Name) == 0 {
+		pod.Name = pod.GenerateName
 	}
 	_, ok := pod.Annotations[constant.AnnotationForPortPool]
 	if !ok {

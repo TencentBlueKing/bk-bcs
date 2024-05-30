@@ -1,103 +1,88 @@
 <template>
-  <div class="roll-back-preview">
+  <div class="preview-panel">
     <h3 class="title">
       {{ t('上线预览') }}
-      <span class="tips">{{ t('上线后，以下分组将从以下各版本更新至当前版本') }}</span>
+      <span class="tips">
+        {{ t('上线后，相关分组的') }}
+        <span class="bold">{{ t('实例') }}</span>
+        {{ t('将从以下各版本更新至当前版本') }}
+      </span>
     </h3>
-    <div class="version-list-wrapper">
-      <bk-exception v-if="previewData.length === 0" scene="part" type="empty">
-        <div class="empty-tips">
-          {{ t('暂无预览') }}
-          <p>{{ t('请先从左侧选择待上线的分组范围') }}</p>
-        </div>
-      </bk-exception>
-      <template v-else>
-        <preview-version-group
-          v-for="previewGroup in previewData"
-          :key="previewGroup.id"
-          :group-list="props.groupList"
-          :preview-group="previewGroup"
-          :allow-preview-delete="props.releaseType === 'select'"
-          :released-groups="props.releasedGroups"
-          @diff="emits('diff', $event)"
-          @delete="handleDelete">
-        </preview-version-group>
-      </template>
-    </div>
+    <bk-exception v-if="previewData.length === 0" scene="part" type="empty">
+      <div class="empty-tips">
+        {{ isDefaultGroupReleasedOnCrtVersion ? t('全部实例已上线') : t('暂无预览') }}
+        <p>
+          {{
+            isDefaultGroupReleasedOnCrtVersion
+              ? t('除以下分组之外的所有实例已上线当前版本')
+              : t('请先从左侧选择待上线的分组范围')
+          }}
+        </p>
+      </div>
+    </bk-exception>
+    <template v-else>
+      <preview-section-item
+        v-for="previewGroup in previewData"
+        section-type="diff"
+        :key="previewGroup.id"
+        :preview-group="previewGroup"
+        :release-type="props.releaseType"
+        :released-groups="props.releasedGroups"
+        :value="props.value"
+        @diff="emits('diff', $event)"
+        @change="emits('change', $event)">
+      </preview-section-item>
+    </template>
+    <template v-if="excludeData.length > 0">
+      <div class="split-line"></div>
+      <h3 class="title">
+        {{ t('已排除分组实例') }}
+        <span class="tips">
+          {{ t('本次上线版本对以下分组实例') }}<span class="bold">{{ t('不会产生影响') }}</span>
+        </span>
+      </h3>
+      <preview-section-item
+        v-for="group in excludeData"
+        section-type="exclude"
+        :key="group.id"
+        :preview-group="group"
+        :release-type="props.releaseType"
+        :released-groups="props.releasedGroups"
+        :value="props.value"
+        @diff="emits('diff', $event)"
+        @change="emits('change', $event)">
+      </preview-section-item>
+    </template>
   </div>
 </template>
 <script setup lang="ts">
-  import { ref, watch } from 'vue';
+  import { ref, computed, watch } from 'vue';
   import { useI18n } from 'vue-i18n';
   import { IGroupToPublish, IGroupPreviewItem } from '../../../../../../../../types/group';
-  import { IConfigVersion } from '../../../../../../../../types/config';
   import { storeToRefs } from 'pinia';
   import useConfigStore from '../../../../../../../store/config';
-  import PreviewVersionGroup from './preview-version-group.vue';
+  import { aggregatePreviewData, aggregateExcludedData } from '../../hooks/aggregate-groups';
+  import PreviewSectionItem from './preview-section-item.vue';
 
   const versionStore = useConfigStore();
   const { versionData } = storeToRefs(versionStore);
   const { t } = useI18n();
 
-  // 将分组按照版本聚合
-  const aggregateGroup = (groups: IGroupToPublish[]) => {
-    const list: IGroupPreviewItem[] = [];
-    // 变更版本
-    const modifiedVersionGroups: IGroupPreviewItem[] = [];
-    // 首次上线
-    const initialReleaseGroup: IGroupPreviewItem = { id: 0, name: t('首次上线'), type: 'plain', children: [] };
-    // 需要被展示的分组
-    const groupsToBePreviewed: IGroupToPublish[] = groups.filter((group) => {
-      const { id, release_id } = group;
-      // 过滤掉当前版本已上线分组
-      if (release_id === versionData.value.id) {
-        return false;
-      }
+  const defaultGroup = computed(() => {
+    return props.groupList.find((group) => group.id === 0);
+  });
 
-      return id === 0 || release_id > 0 || props.releaseType === 'select';
-    });
-    /**
-     * 1.全部实例上线
-     * 只展示已上线的分组，如果默认分组已上线或已经上线过其他版本，放到【变更版本】分组中，否则放到【首次上线】分组中
-     * 2.选择分组实例上线
-     * 新添加的分组状态取决于默认分组是否已上线或已经上线过其他版本，逻辑同上
-     * 3.排除分组实例上线
-     * 默认不勾选分组，至少勾选一个分组才能提交
-     */
-    groupsToBePreviewed.forEach((group) => {
-      const { release_id, release_name } = group;
-      if (props.isDefaultGroupReleased || release_id > 0) {
-        const defaultGroup = props.groupList.find((group) => group.id === 0);
-        const id = release_id === 0 ? (defaultGroup as IGroupToPublish).release_id : release_id;
-        const version = modifiedVersionGroups.find((item) => item.id === id);
-        if (version) {
-          version.children.push(group);
-        } else {
-          const name = release_id === 0 ? (defaultGroup as IGroupToPublish).release_name : release_name;
-          modifiedVersionGroups.push({ id, name, type: 'modify', children: [group] });
-        }
-      } else {
-        initialReleaseGroup.children.push(group);
-      }
-    });
-
-    list.push(...modifiedVersionGroups);
-    if (initialReleaseGroup.children.length > 0) {
-      list.push(initialReleaseGroup);
-    }
-    return list;
-  };
+  // 全部实例分组是否已上线在当前版本
+  const isDefaultGroupReleasedOnCrtVersion = computed(() => {
+    return defaultGroup.value && defaultGroup.value.release_id === versionData.value.id;
+  });
 
   const props = withDefaults(
     defineProps<{
-      groupListLoading: boolean;
       groupList: IGroupToPublish[];
-      versionListLoading: boolean;
-      versionList: IConfigVersion[];
       releaseType: string;
-      isDefaultGroupReleased: boolean;
-      releasedGroups?: number[];
-      value: IGroupToPublish[];
+      releasedGroups?: number[]; // 已上线版本的分组
+      value: IGroupToPublish[]; // 当前选中的分组
     }>(),
     {
       releasedGroups: () => [],
@@ -107,28 +92,26 @@
   const emits = defineEmits(['diff', 'change']);
 
   const previewData = ref<IGroupPreviewItem[]>([]);
+  const excludeData = ref<IGroupPreviewItem[]>([]);
 
   watch(
     () => props.value,
-    (val) => {
-      previewData.value = aggregateGroup(val);
+    () => {
+      previewData.value = aggregatePreviewData(
+        props.value,
+        props.groupList,
+        props.releasedGroups,
+        props.releaseType,
+        versionData.value.id,
+      );
+      excludeData.value = aggregateExcludedData(props.value, props.groupList, props.releaseType, versionData.value.id);
     },
     { immediate: true },
   );
-
-  const handleDelete = (id: number) => {
-    emits(
-      'change',
-      props.value.filter((group) => group.id !== id),
-    );
-  };
 </script>
 <style lang="scss" scoped>
-  .roll-back-preview {
+  .preview-panel {
     height: 100%;
-  }
-  .version-list-wrapper {
-    height: calc(100% - 36px);
     overflow: auto;
   }
   .title {
@@ -139,11 +122,15 @@
     font-weight: 700;
     color: #63656e;
     .tips {
+      display: inline-flex;
       margin-left: 16px;
       line-height: 20px;
       color: #979ba5;
       font-size: 12px;
       font-weight: 400;
+      .bold {
+        font-weight: 700;
+      }
     }
   }
   .empty-tips {
@@ -154,5 +141,10 @@
       color: #979ba5;
       font-size: 12px;
     }
+  }
+  .split-line {
+    margin: 32px 24px 8px;
+    height: 1px;
+    background: #dcdee5;
   }
 </style>

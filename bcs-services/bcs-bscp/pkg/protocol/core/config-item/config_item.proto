@@ -16,6 +16,7 @@ message ConfigItem {
   pbcommit.CommitSpec commit_spec = 5;
   ConfigItemAttachment attachment = 6;
   pbbase.Revision revision = 7;
+  bool is_conflict = 8;
 }
 
 // ConfigItemSpec source resource reference: pkg/dal/table/config_item.go

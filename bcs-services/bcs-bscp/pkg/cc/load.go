@@ -108,8 +108,12 @@ func loadFromFile(conf []byte) (Setting, error) {
 		s = new(DataServiceSetting)
 	case FeedServerName:
 		s = new(FeedServerSetting)
+	case FeedProxyName:
+		s = new(FeedProxySetting)
 	case VaultServerName:
 		s = new(VaultServerSetting)
+	case VaultSidecarName:
+		s = new(VaultSidecarSetting)
 	default:
 		return nil, fmt.Errorf("unknown %s service name", ServiceName())
 	}
@@ -125,7 +129,7 @@ func loadFromFile(conf []byte) (Setting, error) {
 func initGlobalConf(filenames []string) error {
 	v := viper.New()
 	for _, f := range filenames {
-		fmt.Println(f)
+		fmt.Println("read config from: ", f)
 		v.SetConfigType("yaml")
 		v.SetConfigFile(f)
 		if err := v.MergeInConfig(); err != nil {

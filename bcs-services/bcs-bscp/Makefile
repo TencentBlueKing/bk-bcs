@@ -43,7 +43,7 @@ init:
 	go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.31.0
 	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.3.0
 	go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@v2.18.1
-	go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@v2.18.1
+	go install github.com/ifooth/grpc-gateway/v2/protoc-gen-openapiv2@v2.20.0-r2
 	@echo Download gotext
 	go install golang.org/x/text/cmd/gotext@v0.14.0
 
@@ -80,6 +80,32 @@ pb:
 	@echo -e "\e[34;1mMake Protocol...\033[0m"
 	@cd pkg/protocol && make clean && make
 	@echo -e "\e[34;1mMake Protocol Done\n\033[0m"
+
+docs: api_docs bkapigw_docs
+
+api_docs:
+	@mkdir -p ${PREFIX}/docs/swagger
+	@protoc --proto_path=. --proto_path=pkg/thirdparty/protobuf/ \
+	--openapiv2_out docs/swagger \
+	--openapiv2_opt allow_merge=true \
+	--openapiv2_opt preserve_rpc_order=true \
+	--openapiv2_opt merge_file_name=api \
+	--openapiv2_opt output_format=json \
+	--openapiv2_opt include_without_visibility=true \
+	--openapiv2_opt visibility_restriction_selectors=BKAPIGW \
+	--openapiv2_opt use_go_templates=true pkg/protocol/config-server/*.proto
+
+bkapigw_docs:
+	@mkdir -p ${PREFIX}/docs/swagger
+	@protoc --proto_path=. --proto_path=pkg/thirdparty/protobuf/ \
+	--openapiv2_out docs/swagger \
+	--openapiv2_opt allow_merge=true \
+	--openapiv2_opt preserve_rpc_order=true \
+	--openapiv2_opt merge_file_name=bkapigw \
+	--openapiv2_opt output_format=json \
+	--openapiv2_opt include_without_visibility=false \
+	--openapiv2_opt visibility_restriction_selectors=BKAPIGW \
+	--openapiv2_opt use_go_templates=true pkg/protocol/config-server/*.proto
 
 .PHONY: gen
 gen:
@@ -146,9 +172,13 @@ openapi:
 build_bscp:
 	@cd ${PRO_DIR}/cmd && make all
 
+.PHONY: build_feed
+build_feed:
+	@cd ${PRO_DIR}/cmd && make feed
+
 .PHONY: build_frontend
 build_frontend:
-	cd ui; npm install; npm run build
+	cd ui; npm install --legacy-peer-deps; npm run build
 
 .PHONY: build_ui
 build_ui:

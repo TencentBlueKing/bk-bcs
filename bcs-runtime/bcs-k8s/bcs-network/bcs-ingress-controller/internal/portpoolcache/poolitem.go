@@ -16,6 +16,7 @@ import (
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
@@ -29,6 +30,37 @@ type CachePoolItem struct {
 	ItemStatus *networkextensionv1.PortPoolItemStatus
 	// key: protocol, value: port list
 	PortListMap map[string]*CachePortList
+}
+
+// GetAllocatablePortNum return allocatable port num for protocol, if protocol is "", return all protocol's port
+func (cpi *CachePoolItem) GetAllocatablePortNum(protocol string) int {
+	if protocol != "" {
+		list, ok := cpi.PortListMap[protocol]
+		if !ok {
+			return 0
+		}
+		return list.AvailablePortNum - list.AllocatedPortNum
+	}
+
+	availablePortNum := 0
+	// protocol == "", 需要选取所有协议
+	protocol = cpi.ProtocolList[0]
+	list := cpi.PortListMap[protocol]
+	for _, port := range list.Ports {
+		allFree := true
+		for index := 1; index < len(cpi.ProtocolList); index++ {
+			tmpProtocol := cpi.ProtocolList[index]
+			if !cpi.PortListMap[tmpProtocol].IsPortFree(port.StartPort, port.EndPort) {
+				allFree = false
+				break
+			}
+		}
+
+		if allFree {
+			availablePortNum++
+		}
+	}
+	return availablePortNum
 }
 
 // NewCachePoolItem create pool item object
@@ -138,11 +170,44 @@ func (cpi *CachePoolItem) Release(protocol string, startPort, endPort int) {
 }
 
 // SetPortUsed set port used
-func (cpi *CachePoolItem) SetPortUsed(protocol string, startPort, endPort int) {
+func (cpi *CachePoolItem) SetPortUsed(protocol string, startPort, endPort int, refType, refNs, refName string) {
 	list, ok := cpi.PortListMap[protocol]
 	if !ok {
 		blog.Warnf("protocol %s not found when set port used", protocol)
 		return
 	}
-	list.SetPortUsed(startPort, endPort)
+	list.SetPortUsed(startPort, endPort, refType, refNs, refName)
+}
+
+type poolItemStat struct {
+	PoolItem         *CachePoolItem
+	AvailablePortNum int
+}
+
+type maxHeap []poolItemStat
+
+// Len return heap length
+func (h maxHeap) Len() int { return len(h) }
+
+// Less max-heap, choose the item with most available port
+func (h maxHeap) Less(i, j int) bool { return h[i].AvailablePortNum > h[j].AvailablePortNum }
+
+// Swap two item
+func (h maxHeap) Swap(i, j int) { h[i], h[j] = h[j], h[i] }
+
+// Push item to heap
+func (h *maxHeap) Push(x interface{}) {
+	*h = append(*h, x.(poolItemStat))
+}
+
+// Pop item with most available port  from heap
+func (h *maxHeap) Pop() interface{} {
+	old := *h
+	n := len(old)
+	if n <= 0 {
+		return nil
+	}
+	x := old[n-1]
+	*h = old[0 : n-1]
+	return x
 }

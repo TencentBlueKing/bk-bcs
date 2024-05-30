@@ -21,6 +21,7 @@ import (
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/i18n"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 	pbbase "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
@@ -40,7 +41,8 @@ func (s *Service) CreateTemplateVariable(ctx context.Context, req *pbds.CreateTe
 		return nil, errf.ErrDBOpsFailedF(kt).WithCause(err)
 	}
 	if err == nil {
-		return nil, errf.Errorf(kt, errf.AlreadyExists, "same template variable name %s already exists", req.Spec.Name)
+		return nil, errf.Errorf(errf.AlreadyExists,
+			i18n.T(kt, "same template variable name %s already exists", req.Spec.Name))
 	}
 
 	templateVariable := &table.TemplateVariable{

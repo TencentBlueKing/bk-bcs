@@ -1,6 +1,11 @@
 <template>
   <div class="scripts-menu">
-    <MenuList :title="t('前/后置脚本')" :value="selected" :list="scriptDetailList" @selected="selectScript" />
+    <MenuList
+      v-if="!loading"
+      :title="t('前/后置脚本')"
+      :value="selected"
+      :list="scriptDetailList"
+      @selected="selectScript" />
   </div>
 </template>
 <script lang="ts" setup>
@@ -55,12 +60,12 @@
     },
   ]);
   const selected = ref();
+  const loading = ref(true);
 
   watch(
     () => props.baseVersionId,
-    async (val) => {
-      await getScriptDetail(val, 'base');
-      updateDiff();
+    () => {
+      initData();
       if (typeof selected.value === 'string') {
         selectScript(selected.value);
       }
@@ -86,7 +91,21 @@
       await getScriptDetail(props.baseVersionId, 'base');
       updateDiff();
     }
+    initData(true);
   });
+
+  const initData = async (needGetCrt = false) => {
+    loading.value = true;
+    if (needGetCrt) {
+      await getScriptDetail(props.currentVersionId, 'current');
+    }
+    // 选择基准版本后才计算变更状态
+    if (props.baseVersionId) {
+      await getScriptDetail(props.baseVersionId, 'base');
+      updateDiff();
+    }
+    loading.value = false;
+  };
 
   const getScriptDetail = async (id: number, type: 'current' | 'base') => {
     const scriptSetting = await getConfigScript(bkBizId.value, appData.value.id as number, id);

@@ -27,12 +27,16 @@
 import axios from 'axios';
 import cookie from 'cookie';
 
+// 登录弹窗
+import { showLoginModal } from '@blueking/login-modal';
+
 import { messageError } from '../common/bkmagic';
 import { bus } from '../common/bus';
 
 import CachedPromise from './cached-promise';
 import RequestQueue from './request-queue';
 
+// import { VUEX_STROAGE_KEY } from '@/common/constant';
 import { random } from '@/common/util';
 
 // axios 实例
@@ -46,6 +50,8 @@ const axiosInstance = axios.create({
  * request interceptor
  */
 axiosInstance.interceptors.request.use((config) => {
+  // const storage = JSON.parse(localStorage.getItem(VUEX_STROAGE_KEY) || '{}');
+  // config.headers['X-BCS-Project-Code'] = storage?.curProject?.projectCode;
   const CSRFToken = cookie.parse(document.cookie).bcs_csrftoken;
   if (CSRFToken) {
     config.headers['X-CSRFToken'] = CSRFToken;
@@ -53,6 +59,7 @@ axiosInstance.interceptors.request.use((config) => {
   if (!window.BCS_CONFIG.disableTracing) {
     config.headers.Traceparent = `00-${random(32, 'abcdef0123456789')}-${random(16, 'abcdef0123456789')}-01`;
   }
+  // config.headers['X-Requested-With'] = 'XMLHttpRequest';
   return config;
 }, error => Promise.reject(error));
 
@@ -202,12 +209,15 @@ function handleReject(error, config) {
     if (status === 401) {
       // 登录弹窗
       // eslint-disable-next-line camelcase
+      let loginUrl;
+      const successUrl = `${location.origin}${window.BK_STATIC_URL}/login_success.html`;
       if (process.env.NODE_ENV === 'development') {
-        location.href = `${window.LOGIN_FULL}plain/?size=big&c_url=${location.href}`;
+        loginUrl = `${window.LOGIN_FULL}plain/?size=big&c_url=${encodeURIComponent(successUrl)}`;
       } else {
-        window.$loginModal.loginUrl = `${data.data.login_url.simple}?c_url=${location.origin}/login_success.html&size=big`;
-        window.$loginModal?.show();
+        loginUrl = `${data.data.login_url.simple}?c_url=${encodeURIComponent(successUrl)}`;
       }
+      // 传入最终的登录地址，弹出登录窗口，更多选项参考 Options
+      showLoginModal({ loginUrl });
 
       return;
     } if (status === 500) {
@@ -234,9 +244,10 @@ function handleReject(error, config) {
         assistant: window.BCS_CONFIG?.contact,
         type: 'key-value',
         details: {
-          traceparent: error.response?.config?.headers?.Traceparent,
+          traceparent: error.response?.config?.headers?.Traceparent || '--',
           requestId: error.response?.headers?.['x-request-id'] || data?.requestID || data?.request_id || '--',
-          message: data.message,
+          message: data.message || '--',
+          URL: error.response?.config?.url || '--',
         },
       });
     }

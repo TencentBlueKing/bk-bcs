@@ -83,7 +83,7 @@ const (
 	DefaultTmplSetMemo = "当前空间下的所有模版"
 
 	// DefaultLanguage is default language
-	DefaultLanguage = "zh"
+	DefaultLanguage = "zh-cn"
 )
 
 // Note:
@@ -134,4 +134,6 @@ const (
 	MaxUploadContentLength = 100 * 1024 * 1024
 	// MaxConcurrentUpload 限制上传文件并发数
 	MaxConcurrentUpload = 10
+	// UploadBatchSize 上传时分批检测文件路冲突
+	UploadBatchSize = 50
 )

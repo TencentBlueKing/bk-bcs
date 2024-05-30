@@ -1,4 +1,4 @@
-FROM golang:1.20 AS builder
+FROM golang:1.20.4 AS builder
 
 COPY ./ /app
 WORKDIR /app
@@ -13,4 +13,4 @@ RUN mkdir /app
 COPY --from=builder /app/build/${BINARY} /app/${BINARY}
 RUN chmod 755 /app/${BINARY}
 
-CMD ["/app/gomicro-discovery-operator"]
+ENTRYPOINT ["/app/gomicro-discovery-operator"]

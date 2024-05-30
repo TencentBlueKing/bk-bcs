@@ -1525,16 +1525,7 @@ func (sd *ScaleDown) deleteNode(node *apiv1.Node, pods []*apiv1.Pod, daemonSetPo
 			Err: errors.ToAutoscalerError(errors.ApiCallError, err)}
 	}
 
-	var podsToDrain []*apiv1.Pod
 	var err error
-	if sd.evictLatest {
-		podsToDrain, err = getLatestPodsToDrain(sd, node)
-		if err != nil {
-			return status.NodeDeleteResult{ResultType: status.NodeDeleteErrorFailedToEvictPods, Err: err}
-		}
-	} else {
-		podsToDrain = pods
-	}
 
 	sd.nodeDeletionTracker.StartDeletion(nodeGroup.Id())
 	defer sd.nodeDeletionTracker.EndDeletion(nodeGroup.Id())
@@ -1553,6 +1544,16 @@ func (sd *ScaleDown) deleteNode(node *apiv1.Node, pods []*apiv1.Pod, daemonSetPo
 			}
 		}
 	}()
+
+	var podsToDrain []*apiv1.Pod
+	if sd.evictLatest {
+		podsToDrain, err = getLatestPodsToDrain(sd, node)
+		if err != nil {
+			return status.NodeDeleteResult{ResultType: status.NodeDeleteErrorFailedToEvictPods, Err: err}
+		}
+	} else {
+		podsToDrain = pods
+	}
 
 	sd.context.Recorder.Eventf(node, apiv1.EventTypeNormal, "ScaleDown",
 		"marked the node as toBeDeleted/unschedulable")

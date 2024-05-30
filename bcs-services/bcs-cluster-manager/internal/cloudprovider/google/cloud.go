@@ -16,7 +16,6 @@ package google
 import (
 	"context"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"strings"
 	"sync"
 
@@ -87,10 +86,10 @@ func (c *CloudInfoManager) SyncClusterCloudInfo(cls *cmproto.Cluster,
 	if err != nil {
 		return fmt.Errorf("SyncClusterCloudInfo GetClusterKubeConfig failed: %v", err)
 	}
-	cls.KubeConfig, _ = encrypt.Encrypt(nil, kubeConfig)
+	cls.KubeConfig = kubeConfig
 
 	// cluster cloud basic setting
-	clusterBasicSettingByGKE(cls, cluster)
+	clusterBasicSettingByGKE(cls, cluster, opt)
 	// cluster cloud network setting
 	clusterNetworkSettingByGKE(cls, cluster)
 	// cluster cloud advanced setting
@@ -122,10 +121,12 @@ func getCloudCluster(opt *cloudprovider.SyncClusterCloudInfoOption, clusterName 
 	return cluster, nil
 }
 
-func clusterBasicSettingByGKE(cls *cmproto.Cluster, cluster *container.Cluster) {
+func clusterBasicSettingByGKE(cls *cmproto.Cluster, cluster *container.Cluster,
+	opt *cloudprovider.SyncClusterCloudInfoOption) {
 	cls.ClusterBasicSettings = &cmproto.ClusterBasicSetting{
 		Version:     cluster.CurrentMasterVersion,
 		VersionName: cluster.CurrentMasterVersion,
+		Area:        opt.Area,
 	}
 	if cluster.NodeConfig != nil {
 		cls.ClusterBasicSettings.OS = cluster.NodeConfig.ImageType

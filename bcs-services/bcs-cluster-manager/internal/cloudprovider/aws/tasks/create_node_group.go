@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -21,17 +21,17 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/aws/api"
-	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/eks"
 	"github.com/aws/aws-sdk-go/service/iam"
+
+	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/aws/api"
+	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 )
 
 const (
@@ -56,6 +56,8 @@ func CreateCloudNodeGroupTask(taskID string, stepName string) error {
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
 	nodeGroupID := step.Params[cloudprovider.NodeGroupIDKey.String()]
 	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
+	// GetClusterDependBasicInfo get cluster/cloud/nodeGroup depend info, nodeGroup may be nil.
+	// only get metadata, try not to change it
 	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
 		ClusterID:   clusterID,
 		CloudID:     cloudID,
@@ -64,6 +66,7 @@ func CreateCloudNodeGroupTask(taskID string, stepName string) error {
 	if err != nil {
 		blog.Errorf("CreateCloudNodeGroupTask[%s]: GetClusterDependBasicInfo failed: %s", taskID, err.Error())
 		retErr := fmt.Errorf("CreateCloudNodeGroupTask GetClusterDependBasicInfo failed")
+		// UpdateStepFailure update step failure
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
@@ -77,6 +80,7 @@ func CreateCloudNodeGroupTask(taskID string, stepName string) error {
 		blog.Errorf("CreateCloudNodeGroupTask[%s]: get aws clientSet for nodegroup[%s] in task %s step %s failed, %s",
 			taskID, nodeGroupID, taskID, stepName, err.Error())
 		retErr := fmt.Errorf("get aws client set err, %s", err.Error())
+		// UpdateStepFailure update step failure
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return err
 	}
@@ -86,6 +90,7 @@ func CreateCloudNodeGroupTask(taskID string, stepName string) error {
 		group.AutoScaling.VpcID = cluster.VpcID
 	}
 
+	// CreateNodegroup creates a eks node group
 	ng, err := client.CreateNodegroup(generateCreateNodegroupInput(group, cluster, client))
 	if err != nil {
 		blog.Errorf("CreateCloudNodeGroupTask[%s]: call CreateClusterNodePool[%s] api in task %s step %s failed, %s",
@@ -104,6 +109,7 @@ func CreateCloudNodeGroupTask(taskID string, stepName string) error {
 			taskID, nodeGroupID, taskID, stepName, err.Error())
 		retErr := fmt.Errorf("call CreateCloudNodeGroupTask updateNodeGroupCloudNodeGroupID[%s] api err, %s", nodeGroupID,
 			err.Error())
+		// UpdateStepFailure update step failure
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
@@ -124,6 +130,7 @@ func CreateCloudNodeGroupTask(taskID string, stepName string) error {
 	return nil
 }
 
+// generate create node group input
 func generateCreateNodegroupInput(group *proto.NodeGroup, cluster *proto.Cluster,
 	cli *api.AWSClientSet) *api.CreateNodegroupInput {
 	if group.AutoScaling == nil || group.LaunchTemplate == nil || group.LaunchTemplate.SystemDisk == nil {
@@ -172,6 +179,7 @@ func generateCreateNodegroupInput(group *proto.NodeGroup, cluster *proto.Cluster
 	return nodeGroup
 }
 
+// create launch template
 func createLaunchTemplate(clusterName string, cli *api.EC2Client) (*api.LaunchTemplate, error) {
 	// Create first version of the launch template as default version. It will not be used for any node group.
 	lt, err := cli.DescribeLaunchTemplates(&ec2.DescribeLaunchTemplatesInput{
@@ -195,9 +203,10 @@ func createLaunchTemplate(clusterName string, cli *api.EC2Client) (*api.LaunchTe
 					},
 				},
 			}
-			output, err := cli.CreateLaunchTemplate(launchTemplateCreateInput)
-			if err != nil {
-				return nil, err
+			// CreateLaunchTemplate creates a LaunchTemplate
+			output, creErr := cli.CreateLaunchTemplate(launchTemplateCreateInput)
+			if creErr != nil {
+				return nil, creErr
 			}
 			return &api.LaunchTemplate{
 				LaunchTemplateName:  output.LaunchTemplateName,
@@ -215,6 +224,7 @@ func createLaunchTemplate(clusterName string, cli *api.EC2Client) (*api.LaunchTe
 	}, nil
 }
 
+// create New Launch Template Version
 func createNewLaunchTemplateVersion(ltID string, input *api.CreateNodegroupInput, group *proto.NodeGroup,
 	cli *api.EC2Client) (*api.LaunchTemplateSpecification, error) {
 	ltData, err := buildLaunchTemplateData(input, group, cli)
@@ -240,6 +250,7 @@ func createNewLaunchTemplateVersion(ltID string, input *api.CreateNodegroupInput
 	}, nil
 }
 
+// build Launch Template Data
 func buildLaunchTemplateData(input *api.CreateNodegroupInput, group *proto.NodeGroup, cli *api.EC2Client) (
 	*ec2.RequestLaunchTemplateData, error) {
 	var imageID *string
@@ -304,6 +315,7 @@ func buildLaunchTemplateData(input *api.CreateNodegroupInput, group *proto.NodeG
 	return launchTemplateData, nil
 }
 
+// get Image Root Device Name
 func getImageRootDeviceName(imageID []*string, cli *api.EC2Client) (*string, error) {
 	describeOutput, err := cli.DescribeImages(&ec2.DescribeImagesInput{ImageIds: imageID})
 	if err != nil {
@@ -313,7 +325,7 @@ func getImageRootDeviceName(imageID []*string, cli *api.EC2Client) (*string, err
 }
 
 // CheckCloudNodeGroupStatusTask check cloud node group status task
-func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
+func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error { // nolint
 	start := time.Now()
 	// get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
@@ -359,10 +371,10 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 	defer cancel()
 	var asgName, ltName, ltVersion *string
 	err = loop.LoopDoFunc(ctx, func() error {
-		ng, err := client.DescribeNodegroup(&group.CloudNodeGroupID, &cluster.SystemID)
-		if err != nil {
+		ng, desErr := client.DescribeNodegroup(&group.CloudNodeGroupID, &cluster.SystemID)
+		if desErr != nil {
 			blog.Errorf("taskID[%s] DescribeClusterNodePoolDetail[%s/%s] failed: %v", taskID, cluster.SystemID,
-				group.CloudNodeGroupID, err)
+				group.CloudNodeGroupID, desErr)
 			return nil
 		}
 		if ng == nil {
@@ -426,6 +438,7 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 	return nil
 }
 
+// get Asg And Ltv
 func getAsgAndLtv(client *api.AWSClientSet, asgName, ltName, ltVersion *string) ([]*autoscaling.Group,
 	[]*ec2.LaunchTemplateVersion, error) {
 	// get asg info
@@ -444,12 +457,14 @@ func getAsgAndLtv(client *api.AWSClientSet, asgName, ltName, ltVersion *string) 
 	return asgInfo, ltvInfo, nil
 }
 
+// generate Node Group From Asg And Ltv
 func generateNodeGroupFromAsgAndLtv(group *proto.NodeGroup, asg *autoscaling.Group,
 	ltv *ec2.LaunchTemplateVersion) *proto.NodeGroup {
 	group = generateNodeGroupFromAsg(group, asg)
 	return generateNodeGroupFromLtv(group, ltv)
 }
 
+// generate Node Group From Asg
 func generateNodeGroupFromAsg(group *proto.NodeGroup, asg *autoscaling.Group) *proto.NodeGroup {
 	if asg.AutoScalingGroupName != nil {
 		group.AutoScaling.AutoScalingName = *asg.AutoScalingGroupName
@@ -475,6 +490,7 @@ func generateNodeGroupFromAsg(group *proto.NodeGroup, asg *autoscaling.Group) *p
 	return group
 }
 
+// generate Node Group From Ltv
 func generateNodeGroupFromLtv(group *proto.NodeGroup, ltv *ec2.LaunchTemplateVersion) *proto.NodeGroup {
 	if ltv.LaunchTemplateId != nil {
 		group.LaunchTemplate.LaunchConfigurationID = *ltv.LaunchTemplateId

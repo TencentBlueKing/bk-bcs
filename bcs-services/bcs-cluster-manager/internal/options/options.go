@@ -89,6 +89,7 @@ type BrokerConfig struct {
 
 // BKOpsConfig for call bkops job
 type BKOpsConfig struct {
+	EsbServer   string `json:"esbServer"`
 	Server      string `json:"server"`
 	AppCode     string `json:"appCode"`
 	AppSecret   string `json:"appSecret"`
@@ -120,6 +121,12 @@ type NodeManConfig struct {
 
 // ResourceManagerConfig init resource_module
 type ResourceManagerConfig struct {
+	Enable bool   `json:"enable"`
+	Module string `json:"module"`
+}
+
+// ProjectManagerConfig init project_module
+type ProjectManagerConfig struct {
 	Enable bool   `json:"enable"`
 	Module string `json:"module"`
 }
@@ -234,6 +241,7 @@ type ComponentDeploy struct {
 	BCSAPIGateway string         `json:"bcsApiGateway"`
 	Token         string         `json:"token"`
 	DeployService string         `json:"deployService"`
+	BcsClusterUrl string         `json:"bcsClusterUrl"`
 }
 
 // AuthConfig config for auth
@@ -270,6 +278,11 @@ type JobConfig struct {
 	JobTaskLink string `json:"jobTaskLink"`
 }
 
+// DaemonConfig for daemon
+type DaemonConfig struct {
+	Enable bool `json:"enable"`
+}
+
 // ClusterManagerOptions options of cluster manager
 type ClusterManagerOptions struct {
 	Etcd               EtcdOption            `json:"etcd"`
@@ -282,6 +295,7 @@ type ClusterManagerOptions struct {
 	Cmdb               CmdbConfig            `json:"cmdb"`
 	NodeMan            NodeManConfig         `json:"nodeman"`
 	ResourceManager    ResourceManagerConfig `json:"resource"`
+	ProjectManager     ProjectManagerConfig  `json:"project"`
 	CidrManager        CidrManagerConfig     `json:"cidr"`
 	CloudTemplatePath  string                `json:"cloudTemplatePath"`
 	Access             AccessConfig          `json:"access"`
@@ -301,6 +315,7 @@ type ClusterManagerOptions struct {
 	TagDepart          string                `json:"tagDepart"`
 	PrefixVcluster     string                `json:"prefixVcluster"`
 	Encrypt            encryptv2.Config      `json:"encrypt"`
+	Daemon             DaemonConfig          `json:"daemon"`
 	ServerConfig
 	ClientConfig
 }

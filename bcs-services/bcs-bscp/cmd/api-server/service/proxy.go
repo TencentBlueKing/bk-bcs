@@ -45,6 +45,7 @@ type proxy struct {
 	configImportService *configImport
 	configExportService *configExport
 	kvService           *kvService
+	varService          *variableService
 }
 
 // newProxy create new mux proxy.
@@ -95,6 +96,7 @@ func newProxy(dis serviced.Discover) (*proxy, error) {
 	}
 
 	kv := newKvService(authorizer, cfgClient)
+	variable := newVariableService(cfgClient)
 
 	p := &proxy{
 		cfgSvrMux:           cfgSvrMux,
@@ -107,6 +109,7 @@ func newProxy(dis serviced.Discover) (*proxy, error) {
 		authSvrMux:          authSvrMux,
 		cfgClient:           cfgClient,
 		kvService:           kv,
+		varService:          variable,
 	}
 
 	p.initBizsOfTmplSpaces()

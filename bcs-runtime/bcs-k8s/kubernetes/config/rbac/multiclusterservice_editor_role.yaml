@@ -1,0 +1,24 @@
+# permissions for end users to edit multiclusterservices.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: multiclusterservice-editor-role
+rules:
+- apiGroups:
+  - federation.bkbcs.tencent.com
+  resources:
+  - multiclusterservices
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - federation.bkbcs.tencent.com
+  resources:
+  - multiclusterservices/status
+  verbs:
+  - get

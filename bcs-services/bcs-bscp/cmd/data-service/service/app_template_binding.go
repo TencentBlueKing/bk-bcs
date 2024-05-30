@@ -731,10 +731,6 @@ func (s *Service) genFinalATB(kt *kit.Kit, atb *table.AppTemplateBinding) error 
 		return err
 	}
 
-	if e := s.validateATBUniqueKey(kt, tmplRevisions); e != nil {
-		return e
-	}
-
 	if e := s.fillATBTmplSpace(kt, atb, tmplRevisions); e != nil {
 		return e
 	}

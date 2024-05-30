@@ -19,22 +19,26 @@ import (
 	"net/http"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
 	bcsapi "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapiv4"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/cmd/manager/options"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/internal/dao"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/analysis"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/analyze"
 	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/session"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store/terraformstore"
 )
 
 // NewGitOpsProxy create proxy instance
-func NewGitOpsProxy(opt *proxy.GitOpsOptions) proxy.GitOpsProxy {
+func NewGitOpsProxy() proxy.GitOpsProxy {
 	return &ArgocdProxy{
-		option: opt,
+		option: options.GlobalOptions(),
 		Router: mux.NewRouter(),
 	}
 }
@@ -45,7 +49,11 @@ func NewGitOpsProxy(opt *proxy.GitOpsOptions) proxy.GitOpsProxy {
 type ArgocdProxy struct {
 	*mux.Router // for http handler implementation
 
-	option *proxy.GitOpsOptions
+	option *options.Options
+	// JWTClient for authentication
+	JWTDecoder *jwt.JWTClient
+	// IAMClient is basic client
+	IAMClient iam.PermClient
 }
 
 // Init gitops essential session
@@ -76,18 +84,22 @@ func (ops *ArgocdProxy) Stop() {
 // initArgoPathHandler
 // nolint
 func (ops *ArgocdProxy) initArgoPathHandler() error {
-	argoSession := session.NewArgoSession(ops.option)
-	secretSession := session.NewSecretSession(ops.option.SecretOption)
-	monitorSession := session.NewMonitorSession(nil)
-	middleware := mw.NewMiddlewareHandler(ops.option, argoSession, secretSession, monitorSession)
+	middleware := mw.NewMiddlewareHandler()
 	if err := middleware.Init(); err != nil {
 		return errors.Wrapf(err, "middleware init failed")
 	}
+	bcsStorage := bcsapi.NewStorage(&bcsapi.Config{
+		Hosts:     []string{ops.option.APIGatewayForCluster},
+		AuthToken: ops.option.APIGatewayToken,
+		// just a fake tls config
+		TLSConfig: &tls.Config{},
+		Gateway:   true,
+	})
 
 	projectPlugin := &ProjectPlugin{
 		Router:         ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/projects").Subrouter(),
 		middleware:     middleware,
-		analysisClient: analysis.GetAnalysisClient(),
+		analysisClient: analyze.NewCollectApplication(),
 	}
 	clusterPlugin := &ClusterPlugin{
 		Router:     ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/clusters").Subrouter(),
@@ -100,21 +112,15 @@ func (ops *ArgocdProxy) initArgoPathHandler() error {
 		middleware: middleware,
 	}
 	appPlugin := &AppPlugin{
-		storage:        ops.option.Storage,
-		db:             dao.GlobalDB(),
-		Router:         ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/applications").Subrouter(),
-		middleware:     middleware,
-		analysisClient: analysis.GetAnalysisClient(),
-		bcsStorage: bcsapi.NewStorage(&bcsapi.Config{
-			Hosts:     []string{ops.option.BCSStorageAPIUrl},
-			AuthToken: ops.option.BCSStorageAPIToken,
-			// just a fake tls config
-			TLSConfig: &tls.Config{},
-			Gateway:   true,
-		}),
+		storage:    store.GlobalStore(),
+		db:         dao.GlobalDB(),
+		Router:     ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/applications").Subrouter(),
+		middleware: middleware,
+		appCollect: analyze.NewCollectApplication(),
+		bcsStorage: bcsStorage,
 	}
 	appsetPlugin := &ApplicationSetPlugin{
-		storage:    ops.option.Storage,
+		storage:    store.GlobalStore(),
 		Router:     ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/applicationsets").Subrouter(),
 		middleware: middleware,
 	}
@@ -126,11 +132,13 @@ func (ops *ArgocdProxy) initArgoPathHandler() error {
 		Router:     ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/stream/applications").Subrouter(),
 		appHandler: appPlugin,
 		middleware: middleware,
+		storage:    store.GlobalStore(),
+		bcsStorage: bcsStorage,
 	}
 	webhookPlugin := &WebhookPlugin{
 		Router:        ops.PathPrefix(common.GitOpsProxyURL + "/api/webhook").Subrouter(),
 		middleware:    middleware,
-		appsetWebhook: ops.option.AppSetWebhook,
+		appsetWebhook: ops.option.GitOps.AppsetControllerWebhook,
 	}
 	// grpc access handler
 	grpcPlugin := &GrpcPlugin{
@@ -143,20 +151,28 @@ func (ops *ArgocdProxy) initArgoPathHandler() error {
 		middleware: middleware,
 	}
 	analysisPlugin := &AnalysisPlugin{
-		Router:         ops.PathPrefix(common.GitOpsProxyURL + "/api/analysis").Subrouter(),
-		storage:        ops.option.Storage,
-		middleware:     middleware,
-		analysisClient: analysis.GetAnalysisClient(),
+		Router:     ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/analysis").Subrouter(),
+		middleware: middleware,
+		store:      store.GlobalStore(),
 	}
 	monitorPlugin := &MonitorPlugin{
 		Router:     ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/monitor").Subrouter(),
+		middleware: middleware,
+	}
+	terraformPlugin := &TerraformPlugin{
+		Router:         ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/terraforms").Subrouter(),
+		middleware:     middleware,
+		terraformStore: terraformstore.NewTerraformStore(),
+	}
+	permissionPlugin := &PermissionPlugin{
+		Router:     ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/permissions").Subrouter(),
 		middleware: middleware,
 	}
 	initializer := []func() error{
 		projectPlugin.Init, clusterPlugin.Init, repositoryPlugin.Init,
 		appPlugin.Init, streamPlugin.Init, webhookPlugin.Init, grpcPlugin.Init,
 		secretPlugin.Init, metricPlugin.Init, appsetPlugin.Init, analysisPlugin.Init,
-		monitorPlugin.Init,
+		monitorPlugin.Init, terraformPlugin.Init, permissionPlugin.Init,
 	}
 
 	// access deny URL, keep in mind that there are paths need to proxy

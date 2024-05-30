@@ -32,6 +32,7 @@ import (
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
+	autils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	provider "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
@@ -160,7 +161,7 @@ func selectVclusterHostCluster(model store.ClusterManagerModel, filter VClusterH
 // getAllMasterIPs get cluster masterIPs
 func getAllMasterIPs(model store.ClusterManagerModel) map[string]clusterInfo {
 	clusterStatus := []string{common.StatusInitialization, common.StatusRunning,
-		common.StatusDeleting, common.StatusDeleteClusterFailed}
+		common.StatusDeleting, common.StatusDeleteClusterFailed, common.StatusCreateClusterFailed}
 	condStatus := operator.NewLeafCondition(operator.In, operator.M{"status": clusterStatus})
 
 	clusterList, err := model.ListCluster(context.Background(), condStatus, &storeopt.ListOption{All: true})
@@ -293,7 +294,16 @@ func getUserHasPermHosts(bizID int, user string) []string {
 		return nil
 	}
 	for i := range hostList {
-		hostUsers := []string{hostList[i].Operator, hostList[i].BKBakOperator}
+		mainOperators := strings.Split(hostList[i].Operator, ",")
+		bakOperators := strings.Split(hostList[i].BKBakOperator, ",")
+
+		var hostUsers = make([]string, 0)
+		if len(mainOperators) > 0 {
+			hostUsers = append(hostUsers, mainOperators...)
+		}
+		if len(bakOperators) > 0 {
+			hostUsers = append(hostUsers, bakOperators...)
+		}
 		if utils.StringInSlice(user, hostUsers) {
 			hostIPs = append(hostIPs, hostList[i].BKHostInnerIP)
 		}
@@ -523,7 +533,7 @@ func filterNodesRole(k8sNodes []*corev1.Node, master bool) []*corev1.Node {
 // 1. 集群中不存在的节点，并且在cluster manager中状态处于初始化中、初始化失败、移除中、移除失败状态时，需要展示cluster manager中数据
 // 2. 集群中存在的节点，则以集群中为准，注意状态的转换
 // 3. 适配双栈, 通过nodeName 作为唯一值, 当前数据库nodeName 可能为空, 因此需要适配转换
-func mergeClusterNodes(clusterID string, cmNodes []*proto.ClusterNode, k8sNodes []*corev1.Node) []*proto.ClusterNode { // nolint
+func mergeClusterNodes(cluster *proto.Cluster, cmNodes []*proto.ClusterNode, k8sNodes []*corev1.Node) []*proto.ClusterNode { // nolint
 	// cnNodes exist in k8s cluster and get nodeName
 	GetCmNodeNames(cmNodes, k8sNodes)
 
@@ -583,6 +593,9 @@ func mergeClusterNodes(clusterID string, cmNodes []*proto.ClusterNode, k8sNodes 
 				NodeGroupName: n.NodeGroupName,
 				Annotations:   node.Annotations,
 				ZoneName: func() string {
+					if autils.IsKubeConfigImportCluster(cluster) {
+						return ""
+					}
 					if n.ZoneName != "" {
 						return n.ZoneName
 					}
@@ -598,7 +611,7 @@ func mergeClusterNodes(clusterID string, cmNodes []*proto.ClusterNode, k8sNodes 
 			nodes2 = append(nodes2, &proto.ClusterNode{
 				InnerIP:   ipv4,
 				Status:    transNodeStatus("", node),
-				ClusterID: clusterID,
+				ClusterID: cluster.ClusterID,
 				NodeName:  node.Name,
 				Labels:    node.Labels,
 				Taints:    actions.K8sTaintToTaint(node.Spec.Taints),
@@ -611,6 +624,10 @@ func mergeClusterNodes(clusterID string, cmNodes []*proto.ClusterNode, k8sNodes 
 				InnerIPv6:   ipv6,
 				Annotations: node.Annotations,
 				ZoneName: func() string {
+					if autils.IsKubeConfigImportCluster(cluster) {
+						return ""
+					}
+
 					zoneName, ok := node.Labels[utils.ZoneTopologyFlag]
 					if ok {
 						return zoneName
@@ -618,6 +635,9 @@ func mergeClusterNodes(clusterID string, cmNodes []*proto.ClusterNode, k8sNodes 
 					return ""
 				}(),
 				ZoneID: func() string {
+					if autils.IsKubeConfigImportCluster(cluster) {
+						return ""
+					}
 					zoneName, ok := node.Labels[utils.ZoneTopologyFlag]
 					if ok {
 						return zoneName

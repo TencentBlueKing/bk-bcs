@@ -9,11 +9,14 @@
     @shown="setEditorHeight">
     <bk-loading :loading="detailLoading" class="config-loading-container">
       <bk-tab v-model:active="activeTab" type="card-grid" ext-cls="view-config-tab">
-        <bk-tab-panel name="content" label="配置项信息">
+        <bk-tab-panel name="content" :label="t('配置文件信息')">
           <bk-form label-width="100" form-type="vertical">
-            <bk-form-item label="配置项名称">{{ configDetail.name }}</bk-form-item>
-            <bk-form-item label="配置项路径">{{ configDetail.path }}</bk-form-item>
-            <bk-form-item label="配置项内容">
+            <bk-form-item :label="t('配置文件名称')">{{ configDetail.name }}</bk-form-item>
+            <bk-form-item :label="t('配置文件路径')">{{ configDetail.path }}</bk-form-item>
+            <bk-form-item :label="t('配置文件描述')">
+              <div class="memo">{{ configDetail.memo || configDetail.revision_memo || '--' }}</div>
+            </bk-form-item>
+            <bk-form-item :label="t('配置文件内容')">
               <div v-if="configDetail.file_type === 'binary'" class="binary-file-card" @click="handleDownloadFile">
                 <div class="basic-info">
                   <TextFill class="file-icon" />
@@ -34,7 +37,7 @@
             </bk-form-item>
           </bk-form>
         </bk-tab-panel>
-        <bk-tab-panel name="meta" label="元数据">
+        <bk-tab-panel name="meta" :label="t('元数据')">
           <ConfigContentEditor
             language="json"
             :content="JSON.stringify(configDetail, null, 2)"
@@ -44,6 +47,9 @@
       </bk-tab>
     </bk-loading>
     <section class="action-btns">
+      <bk-button v-if="props.versionId === 0 && props.type === 'config'" theme="primary" @click="emits('openEdit')">{{
+        t('编辑')
+      }}</bk-button>
       <bk-button @click="close">{{ t('关闭') }}</bk-button>
     </section>
   </bk-sideslider>
@@ -105,7 +111,7 @@
     show: Boolean;
   }>();
 
-  const emits = defineEmits(['update:show']);
+  const emits = defineEmits(['update:show', 'openEdit']);
 
   const detailLoading = ref(true);
   const activeTab = ref('content');
@@ -290,14 +296,14 @@
   const handleDownloadFile = async () => {
     const { signature, name } = content.value as IFileConfigContentSummary;
     const getContent = props.type === 'template' ? downloadTemplateContent : downloadConfigContent;
-    const res = await getContent(props.bkBizId, props.id, signature);
+    const res = await getContent(props.bkBizId, props.id, signature, true);
     fileDownload(res, name);
   };
 
   const setEditorHeight = () => {
     nextTick(() => {
       const el = sideSliderRef.value.$el.querySelector('.config-loading-container');
-      editorHeight.value = el.offsetHeight > 510 ? el.offsetHeight - 310 : 300;
+      editorHeight.value = el.offsetHeight > 510 ? el.offsetHeight - 400 : 300;
     });
   };
 
@@ -308,20 +314,22 @@
 <style lang="scss" scoped>
   .config-loading-container {
     height: calc(100vh - 101px);
-    overflow: auto;
     .config-form-wrapper {
       padding: 20px 40px;
       height: 100%;
     }
   }
   .view-config-tab {
+    height: 100%;
     :deep(.bk-tab-header) {
       padding: 8px 24px 0;
       background: #eaebf0;
     }
     :deep(.bk-tab-content) {
       padding: 24px 40px;
+      height: calc(100% - 48px);
       box-shadow: none;
+      overflow: auto;
     }
     :deep(.bk-form-label) {
       color: #979ba5;
@@ -330,6 +338,11 @@
     :deep(.bk-form-content) {
       color: #313238;
       font-size: 12px;
+    }
+    .memo {
+      line-height: 20px;
+      white-space: pre-wrap;
+      word-break: break-word;
     }
   }
   .binary-file-card {

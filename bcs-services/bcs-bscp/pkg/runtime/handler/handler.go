@@ -93,7 +93,7 @@ func RegisterCommonToolHandler() http.Handler {
 }
 
 // ReverseProxyHandler 代理请求
-func ReverseProxyHandler(name, remoteURL string) http.Handler {
+func ReverseProxyHandler(name, prefix, remoteURL string) http.Handler {
 	remote, err := url.Parse(remoteURL)
 	if err != nil {
 		panic(fmt.Errorf("%s '%s' not valid: %s", name, remoteURL, err))
@@ -103,19 +103,18 @@ func ReverseProxyHandler(name, remoteURL string) http.Handler {
 		panic(fmt.Errorf("%s '%s' scheme not supported", name, remoteURL))
 	}
 
-	fn := func(w http.ResponseWriter, r *http.Request) {
-		proxy := httputil.ReverseProxy{
-			Rewrite: func(req *httputil.ProxyRequest) {
-				req.SetURL(remote)
-				req.SetXForwarded()
-				klog.InfoS("forward request", "name", name, "url", r.URL)
-			},
-		}
-
-		proxy.ServeHTTP(w, r)
+	return &httputil.ReverseProxy{
+		Rewrite: func(req *httputil.ProxyRequest) {
+			req.SetURL(remote)
+			req.SetXForwarded()
+			if prefix != "" {
+				req.Out.URL.Path = strings.TrimPrefix(req.Out.URL.Path, prefix)
+				req.Out.URL.RawPath = strings.TrimPrefix(req.Out.URL.RawPath, prefix)
+			}
+			klog.InfoS("http proxy request",
+				"name", name, "origionPath", req.In.URL.String(), "targetURL", req.Out.URL.String())
+		},
 	}
-
-	return http.HandlerFunc(fn)
 }
 
 // CORS 跨域
@@ -138,6 +137,7 @@ func CORS(next http.Handler) http.Handler {
 			"X-Bkapi-File-Content-Overwrite",
 			"X-Bscp-App-Id",
 			"X-Bscp-Template-Space-Id",
+			"X-Bscp-File-Name",
 		}
 		w.Header().Set("Access-Control-Allow-Headers", strings.Join(allowHeaders, ","))
 

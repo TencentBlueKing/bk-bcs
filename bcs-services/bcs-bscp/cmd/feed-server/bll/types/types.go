@@ -128,3 +128,12 @@ type ReleasedKvMeta struct {
 	KvAttachment *pbkv.KvAttachment     `json:"kv_attachment,omitempty"`
 	ContentSpec  *pbcontent.ContentSpec `json:"content_spec,omitempty"`
 }
+
+// AsyncDownloadTask defines async download task.
+type AsyncDownloadTask struct {
+	BizID    uint32 `json:"biz_id"`
+	AppID    uint32 `json:"app_id"`
+	TaskID   string `json:"task_id"`
+	FilePath string `json:"file_path"`
+	FileName string `json:"file_name"`
+}

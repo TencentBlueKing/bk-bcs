@@ -48,9 +48,20 @@ func (s *Service) CreateConfigItem(ctx context.Context, req *pbds.CreateConfigIt
 		req.ConfigItemAttachment.AppId, req.ConfigItemSpec.Name, req.ConfigItemSpec.Path); err != nil {
 		return nil, err
 	}
+
+	// get all configuration files under this service
+	items, err := s.dao.ConfigItem().ListAllByAppID(grpcKit,
+		req.ConfigItemAttachment.AppId, req.ConfigItemAttachment.BizId)
+	if err != nil {
+		return nil, err
+	}
+	existingPaths := []string{}
+	for _, v := range items {
+		existingPaths = append(existingPaths, path.Join(v.Spec.Path, v.Spec.Name))
+	}
+
 	// validate in table config_items
-	if _, err := s.dao.ConfigItem().GetByUniqueKey(grpcKit, req.ConfigItemAttachment.BizId,
-		req.ConfigItemAttachment.AppId, req.ConfigItemSpec.Name, req.ConfigItemSpec.Path); err == nil {
+	if tools.CheckPathConflict(path.Join(req.ConfigItemSpec.Path, req.ConfigItemSpec.Name), existingPaths) {
 		return nil, fmt.Errorf("config item's same name %s and path %s already exists",
 			req.ConfigItemSpec.Name, req.ConfigItemSpec.Path)
 	}
@@ -142,14 +153,33 @@ func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbds.BatchUps
 		logs.Errorf("list editing config items failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
+
+	file1 := make([]tools.CIUniqueKey, 0)
+	file2 := make([]tools.CIUniqueKey, 0)
+
 	editingCIMap := make(map[string]*table.ConfigItem)
 	newCIMap := make(map[string]*pbds.BatchUpsertConfigItemsReq_ConfigItem)
 	for _, ci := range cis {
 		editingCIMap[path.Join(ci.Spec.Path, ci.Spec.Name)] = ci
+		file1 = append(file1, tools.CIUniqueKey{
+			Name: ci.Spec.Name,
+			Path: ci.Spec.Path,
+		})
 	}
 	for _, item := range req.Items {
 		newCIMap[path.Join(item.ConfigItemSpec.Path, item.ConfigItemSpec.Name)] = item
+		file2 = append(file2, tools.CIUniqueKey{
+			Name: item.GetConfigItemSpec().GetName(),
+			Path: item.GetConfigItemSpec().GetPath(),
+		})
 	}
+
+	// 检测文件冲突
+	// /a 和 /a/1.txt 这类的冲突
+	if err = tools.DetectFilePathConflicts(file2, file1); err != nil {
+		return nil, err
+	}
+
 	// 2. check if config item is already exists in editing config items list.
 	toCreate, toUpdateSpec, toUpdateContent, toDelete, err := s.checkConfigItems(grpcKit, req, editingCIMap, newCIMap)
 	if err != nil {
@@ -180,6 +210,7 @@ func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbds.BatchUps
 		}
 		return nil, e
 	}
+
 	if req.ReplaceAll {
 		// if replace all,delete config items not in batch upsert request.
 		if e := s.doBatchDeleteConfigItems(grpcKit, tx, toDelete, req.BizId, req.AppId); e != nil {
@@ -757,6 +788,29 @@ func (s *Service) UnDeleteConfigItem(ctx context.Context, req *pbds.UnDeleteConf
 	releaseCi, err := s.dao.ReleasedCI().Get(grpcKit, req.Attachment.BizId,
 		release.Attachment.AppID, release.ID, req.GetId())
 	if err != nil {
+		return nil, err
+	}
+
+	// 检测文件冲突
+	// /a 和 /a/1.txt这类的冲突
+	file1 := []tools.CIUniqueKey{{
+		Name: releaseCi.ConfigItemSpec.Name,
+		Path: releaseCi.ConfigItemSpec.Path,
+	}}
+
+	configs, err := s.dao.ConfigItem().ListAllByAppID(grpcKit, req.Attachment.AppId, req.Attachment.BizId)
+	if err != nil {
+		return nil, err
+	}
+	file2 := []tools.CIUniqueKey{}
+	for _, v := range configs {
+		file2 = append(file2, tools.CIUniqueKey{
+			Name: v.Spec.Name,
+			Path: v.Spec.Path,
+		})
+	}
+
+	if err = tools.DetectFilePathConflicts(file1, file2); err != nil {
 		return nil, err
 	}
 

@@ -1,0 +1,61 @@
+apiVersion: tkex.tencent.com/v1alpha1
+kind: ImageLoader
+metadata:
+  labels:
+    app.kubernetes.io/name: imageloader
+    app.kubernetes.io/instance: imageloader-sample
+    app.kubernetes.io/part-of: bcs-image-loader
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: bcs-image-loader
+  name: imageloader-sample
+spec:
+  images:
+  - mirrors.tencent.com/ieg/game-demo:0.1
+  # imagePullSecrets:
+  # - name: test-secret
+  imagePullPolicy: Always
+  podSelector:
+    matchLabels:
+      app: test-set
+  jobTimeout: 500
+  backoffLimit: 3
+
+# ---
+# apiVersion: tkex.tencent.com/v1alpha1
+# kind: ImageLoader
+# metadata:
+#   labels:
+#     app.kubernetes.io/name: imageloader
+#     app.kubernetes.io/instance: imageloader-sample
+#     app.kubernetes.io/part-of: bcs-image-loader
+#     app.kubernetes.io/managed-by: kustomize
+#     app.kubernetes.io/created-by: bcs-image-loader
+#   name: imageloader-sample-1
+# spec:
+#   images:
+#   - mirrors.tencent.com/ieg/game-demo:0.1
+#   nodeSelector:
+#     matchLabels:
+#       kubernetes.io/arch: amd64
+#   jobTimeout: 500
+#   backoffLimit: 3
+
+# ---
+# apiVersion: tkex.tencent.com/v1alpha1
+# kind: ImageLoader
+# metadata:
+#   labels:
+#     app.kubernetes.io/name: imageloader
+#     app.kubernetes.io/instance: imageloader-sample
+#     app.kubernetes.io/part-of: bcs-image-loader
+#     app.kubernetes.io/managed-by: kustomize
+#     app.kubernetes.io/created-by: bcs-image-loader
+#   name: imageloader-sample-2
+# spec:
+#   images:
+#   - mirrors.tencent.com/ieg/game-demo:0.1
+#   nodeSelector:
+#     names:
+#     - vm-238-124-tencentos
+#   jobTimeout: 500
+#   backoffLimit: 3

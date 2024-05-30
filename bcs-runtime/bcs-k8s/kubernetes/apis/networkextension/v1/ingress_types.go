@@ -49,6 +49,11 @@ const (
 
 	// AnnotationKeyForWarnings annotation key for ingress warnings
 	AnnotationKeyForWarnings = "warnings"
+
+	// ServiceKindNativeService native service
+	ServiceKindNativeService = "service"
+	// ServiceKindMultiClusterService MultiClusterService
+	ServiceKindMultiClusterService = "multiclusterservice"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -75,6 +80,8 @@ func (is *IngressSubset) GetWeight() int {
 
 // ServiceRoute service info
 type ServiceRoute struct {
+	// default service
+	ServiceKind      string `json:"serviceKind,omitempty"`
 	ServiceName      string `json:"serviceName"`
 	ServiceNamespace string `json:"serviceNamespace,omitempty"`
 	ServicePort      int    `json:"servicePort"`
@@ -92,6 +99,14 @@ func (sr *ServiceRoute) GetWeight() int {
 		return DefaultWeight
 	}
 	return sr.Weight.Value
+}
+
+// GetServiceKind return serviceKind, if not specified, return ServiceKindNativeService
+func (sr *ServiceRoute) GetServiceKind() string {
+	if sr.ServiceKind == "" {
+		return ServiceKindNativeService
+	}
+	return sr.ServiceKind
 }
 
 // Layer7Route 7 layer route config
@@ -139,6 +154,7 @@ type IngressListenerAttribute struct {
 	// https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_ModifyTargetGroupAttributes.html
 	AWSAttributes []AWSAttribute       `json:"awsAttributes,omitempty"`
 	HealthCheck   *ListenerHealthCheck `json:"healthCheck,omitempty"`
+	UptimeCheck   *UptimeCheckConfig   `json:"uptimeCheck,omitempty"`
 	// 声明7层监听器中，rule的优先级(目前只在aws中使用)
 	Priority int `json:"priority,omitempty"`
 }

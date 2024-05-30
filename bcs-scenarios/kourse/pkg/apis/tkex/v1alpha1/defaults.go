@@ -65,11 +65,6 @@ func setDefaultsRollingUpdate(obj *GameStatefulSet) {
 		obj.Spec.UpdateStrategy.RollingUpdate = &rollingUpdate
 	}
 
-	if obj.Spec.UpdateStrategy.RollingUpdate.Partition == nil {
-		partition := intstr.FromInt(0)
-		obj.Spec.UpdateStrategy.RollingUpdate.Partition = &partition
-	}
-
 	if obj.Spec.UpdateStrategy.RollingUpdate.MaxUnavailable == nil {
 		maxUnavailable := intstr.FromString("25%")
 		obj.Spec.UpdateStrategy.RollingUpdate.MaxUnavailable = &maxUnavailable
@@ -96,11 +91,6 @@ func SetDefaults_GameDeployment(obj *GameDeployment) {
 
 	if obj.Spec.UpdateStrategy.Type == "" {
 		obj.Spec.UpdateStrategy.Type = RollingGameDeploymentUpdateStrategyType
-	}
-
-	if obj.Spec.UpdateStrategy.Partition == nil {
-		partition := intstr.FromInt(0)
-		obj.Spec.UpdateStrategy.Partition = &partition
 	}
 
 	if obj.Spec.UpdateStrategy.MaxUnavailable == nil {

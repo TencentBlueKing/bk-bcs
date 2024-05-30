@@ -50,11 +50,18 @@ type PanelSpec struct {
 	DashBoard []DashBoardConfig `json:"dashBoard,omitempty" yaml:"dashBoard"`
 }
 
+// DashBoardStatus 面板内容
+type DashBoardStatus struct {
+	Board string `json:"board,omitempty"`
+	ID    string `json:"id,omitempty"`
+}
+
 // PanelStatus defines the observed state of Panel
 type PanelStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-	SyncStatus SyncStatus `json:"syncStatus,omitempty"`
+	SyncStatus SyncStatus        `json:"syncStatus,omitempty"`
+	DashBoards []DashBoardStatus `json:"dashBoards,omitempty"`
 }
 
 // +kubebuilder:object:root=true

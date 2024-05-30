@@ -54,11 +54,11 @@ type AksService interface {
 type ClusterService interface {
 	// GetCluster 查询集群
 	//
-	// resourceGroupName - 资源组名称(Account.resourceGroupName)
+	// resourceGroupName - 资源组名称
 	//
 	// resourceName - K8S名称(Cluster.SystemID).
-	GetCluster(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) (*armcontainerservice.ManagedCluster,
-		error)
+	GetCluster(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
+		resourceGroupName string) (*armcontainerservice.ManagedCluster, error)
 
 	// GetClusterWithName 查询集群
 	//
@@ -81,10 +81,10 @@ type ClusterService interface {
 
 	// DeleteCluster 删除集群
 	//
-	// resourceGroupName - 资源组名称(Account.resourceGroupName)
+	// resourceGroupName - 资源组名称
 	//
 	// resourceName - K8S名称(Cluster.SystemID).
-	DeleteCluster(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) error
+	DeleteCluster(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, resourceGroupName string) error
 
 	// DeleteClusterWithName 删除集群
 	//
@@ -98,7 +98,7 @@ type ClusterService interface {
 	// resourceGroupName - 资源组名称(Account.resourceGroupName)
 	//
 	// resourceName - K8S名称(Cluster.SystemID).
-	GetClusterAdminCredentials(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) (
+	GetClusterAdminCredentials(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, resourceGroupName string) (
 		[]*armcontainerservice.CredentialResult, error)
 
 	// GetClusterAdminCredentialsWithName 获取集群管理凭证
@@ -114,7 +114,7 @@ type ClusterService interface {
 	// resourceGroupName - 资源组名称(Account.resourceGroupName)
 	//
 	// resourceName - K8S名称(Cluster.SystemID).
-	GetClusterUserCredentials(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) (
+	GetClusterUserCredentials(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, resourceGroupName string) (
 		[]*armcontainerservice.CredentialResult, error)
 
 	// GetClusterUserCredentialsWithName 获取集群用户凭证
@@ -127,11 +127,11 @@ type ClusterService interface {
 
 	// GetClusterMonitoringUserCredentials 获取集群监控凭证
 	//
-	// resourceGroupName - 资源组名称(Account.resourceGroupName)
+	// resourceGroupName - 资源组名称
 	//
 	// resourceName - K8S名称(Cluster.SystemID).
-	GetClusterMonitoringUserCredentials(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) (
-		[]*armcontainerservice.CredentialResult, error)
+	GetClusterMonitoringUserCredentials(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
+		resourceGroupName string) ([]*armcontainerservice.CredentialResult, error)
 	// GetClusterMonitorUserCredWithName 获取集群监控凭证(GetClusterMonitoringUserCredentialsWithName)
 	//
 	// resourceGroupName - 资源组名称(Account.resourceGroupName)
@@ -145,15 +145,16 @@ type ClusterService interface {
 // NOCC:golint/interfacecomment(检查工具规则误报)
 type AgentPoolService interface {
 	// CreatePool 创建节点池.
-	CreatePool(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) (*proto.NodeGroup, error)
+	CreatePool(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
+		resourceGroupName string) (*proto.NodeGroup, error)
 
 	// CreatePoolWithName 从名称创建节点池.
 	//
 	// pool - 代理节点池.
 	//
 	// resourceName - K8S名称(Cluster.SystemID).
-	CreatePoolWithName(ctx context.Context, pool *armcontainerservice.AgentPool, resourceName, poolName string,
-		group *proto.NodeGroup) (*proto.NodeGroup, error)
+	CreatePoolWithName(ctx context.Context, pool *armcontainerservice.AgentPool, resourceGroupName string,
+		resourceName, poolName string, group *proto.NodeGroup) (*proto.NodeGroup, error)
 
 	// CreatePoolAndReturn 从名称创建节点池.
 	// pool - 代理节点池.
@@ -161,21 +162,22 @@ type AgentPoolService interface {
 	// resourceName - K8S名称(Cluster.SystemID).
 	//
 	// poolName - 节点池名称(NodeGroup.CloudNodeGroupID).
-	CreatePoolAndReturn(ctx context.Context, pool *armcontainerservice.AgentPool, resourceName, poolName string) (
-		*armcontainerservice.AgentPool, error)
+	CreatePoolAndReturn(ctx context.Context, pool *armcontainerservice.AgentPool, resourceGroupName string,
+		resourceName, poolName string) (*armcontainerservice.AgentPool, error)
 
 	// DeletePool 删除节点池.
-	DeletePool(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) error
+	DeletePool(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, resourceGroupName string) error
 
 	// DeletePoolWithName 从名称删除节点池.
 	//
 	// resourceName - K8S名称(Cluster.SystemID).
 	//
 	// poolName - 节点池名称(NodeGroup.CloudNodeGroupID).
-	DeletePoolWithName(ctx context.Context, resourceName, poolName string) error
+	DeletePoolWithName(ctx context.Context, resourceGroupName string, resourceName, poolName string) error
 
 	// UpdatePool 修改节点池(全量修改).
-	UpdatePool(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) (*proto.NodeGroup, error)
+	UpdatePool(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
+		resourceGroupName string) (*proto.NodeGroup, error)
 
 	// UpdatePoolAndReturn 从名称修改节点池.
 	//
@@ -184,38 +186,43 @@ type AgentPoolService interface {
 	// resourceName - K8S名称(Cluster.SystemID).
 	//
 	// poolName - 节点池名称(NodeGroup.CloudNodeGroupID).
-	UpdatePoolAndReturn(ctx context.Context, pool *armcontainerservice.AgentPool, resourceName, poolName string) (
-		*armcontainerservice.AgentPool, error)
+	UpdatePoolAndReturn(ctx context.Context, pool *armcontainerservice.AgentPool, resourceGroupName,
+		resourceName, poolName string) (*armcontainerservice.AgentPool, error)
 
 	// GetPool 获取节点池.
-	GetPool(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) (*proto.NodeGroup, error)
+	GetPool(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
+		resourceGroupName string) (*proto.NodeGroup, error)
 
 	// GetPoolWithName 从名称获取节点池.
 	//
 	// resourceName - K8S名称(Cluster.SystemID).
 	//
 	// poolName - 节点池名称(NodeGroup.CloudNodeGroupID).
-	GetPoolWithName(ctx context.Context, resourceName, poolName string, group *proto.NodeGroup) (*proto.NodeGroup, error)
+	GetPoolWithName(ctx context.Context, resourceGroupName, resourceName,
+		poolName string, group *proto.NodeGroup) (*proto.NodeGroup, error)
 
 	// GetPoolAndReturn 从名称获取节点池.
 	//
 	// resourceName - K8S名称(Cluster.SystemID).
 	//
 	// poolName - 节点池名称(NodeGroup.CloudNodeGroupID).
-	GetPoolAndReturn(ctx context.Context, resourceName, poolName string) (*armcontainerservice.AgentPool, error)
+	GetPoolAndReturn(ctx context.Context, resourceGroupName,
+		resourceName, poolName string) (*armcontainerservice.AgentPool, error)
 
 	// ListPool 获取节点池列表.
-	ListPool(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) ([]*proto.NodeGroup, error)
+	ListPool(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
+		resourceGroupName string) ([]*proto.NodeGroup, error)
 
 	// ListPoolWithName 从名称获取节点池列表.
 	//
 	// resourceName - K8S名称(Cluster.SystemID).
-	ListPoolWithName(ctx context.Context, resourceName string) ([]*proto.NodeGroup, error)
+	ListPoolWithName(ctx context.Context, resourceGroupName string, resourceName string) ([]*proto.NodeGroup, error)
 
 	// ListPoolAndReturn 从名称获取节点池列表.
 	//
 	// resourceName - K8S名称(Cluster.SystemID).
-	ListPoolAndReturn(ctx context.Context, resourceName string) ([]*armcontainerservice.AgentPool, error)
+	ListPoolAndReturn(ctx context.Context, resourceGroupName string,
+		resourceName string) ([]*armcontainerservice.AgentPool, error)
 }
 
 // VirtualMachineScaleSetService 虚拟机规模集(Virtual Machine Scale Set)
@@ -393,6 +400,9 @@ type NetworkInterfaceService interface {
 	// networkInterfaceName - 网卡名称
 	GetVmInterfaceAndReturn(ctx context.Context, nodeResourceGroup, setName, instanceID, networkInterfaceName string) (
 		*armnetwork.Interface, error)
+
+	// ListNetworkNicAll 获取全量网络接口
+	ListNetworkNicAll(ctx context.Context) ([]*armnetwork.Interface, error)
 
 	// GetVirtualNetworks 查询虚拟网络
 	//

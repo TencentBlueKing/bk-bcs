@@ -37,6 +37,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	commonutil "github.com/Tencent/bk-bcs/bcs-common/common/util"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/i18n"
@@ -44,14 +45,13 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 	restful "github.com/emicklei/go-restful"
+	"github.com/go-micro/plugins/v4/registry/etcd"
+	microgrpcserver "github.com/go-micro/plugins/v4/server/grpc"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/micro/go-micro/v2/registry"
-	"github.com/micro/go-micro/v2/registry/etcd"
-	microgrpcserver "github.com/micro/go-micro/v2/server/grpc"
-	microsvc "github.com/micro/go-micro/v2/service"
-	microgrpcsvc "github.com/micro/go-micro/v2/service/grpc"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	microsvc "go-micro.dev/v4"
+	"go-micro.dev/v4/registry"
 	"google.golang.org/grpc"
 	grpccred "google.golang.org/grpc/credentials"
 
@@ -80,6 +80,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/job"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/nodeman"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/passcc"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/project"
 	resource "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/resource/tresource"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/user"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
@@ -90,6 +91,7 @@ import (
 	k8stunnel "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tunnelhandler/k8s"
 	mesostunnel "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tunnelhandler/mesos"
 	mesoswebconsole "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tunnelhandler/mesoswebconsole"
+	itypes "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -125,6 +127,9 @@ type ClusterManager struct {
 	// resource discovery
 	resourceDisc *discovery.ModuleDiscovery
 
+	// project discovery
+	projectDisc *discovery.ModuleDiscovery
+
 	// cidr discovery
 	cidrDisc *discovery.ModuleDiscovery
 
@@ -145,6 +150,9 @@ type ClusterManager struct {
 
 	// model store
 	model store.ClusterManagerModel
+
+	// etcd store
+	etcdModel store.EtcdStoreInterface
 
 	// k8s cluster operator
 	k8sops *clusterops.K8SOperator
@@ -201,11 +209,11 @@ func (cm *ClusterManager) initTLSConfig() error {
 }
 
 // init lock
-func (cm *ClusterManager) initLocker() error {
+func (cm *ClusterManager) initEtcdLockerStore() error {
 	etcdEndpoints := utils.SplitAddrString(cm.opt.Etcd.EtcdEndpoints)
-	var opts []lock.Option
-	opts = append(opts, lock.Endpoints(etcdEndpoints...))
-	opts = append(opts, lock.Prefix("clustermanager"))
+	var opts []itypes.Option
+	opts = append(opts, itypes.Endpoints(etcdEndpoints...))
+	opts = append(opts, itypes.Prefix("clustermanager"))
 	var etcdTLS *tls.Config
 	var err error
 	if len(cm.opt.Etcd.EtcdCa) != 0 && len(cm.opt.Etcd.EtcdCert) != 0 && len(cm.opt.Etcd.EtcdKey) != 0 {
@@ -215,7 +223,7 @@ func (cm *ClusterManager) initLocker() error {
 		}
 	}
 	if etcdTLS != nil {
-		opts = append(opts, lock.TLS(etcdTLS))
+		opts = append(opts, itypes.TLS(etcdTLS))
 	}
 
 	// register etcd distributed lock
@@ -225,6 +233,16 @@ func (cm *ClusterManager) initLocker() error {
 		return err
 	}
 	blog.Infof("init locker successfully")
+
+	// init etcd store client
+	etcdClient, err := store.NewModelEtcd(opts...)
+	if err != nil {
+		blog.Errorf("init etcd store client failed: %v", err.Error())
+		return err
+	}
+	blog.Infof("init etcdClient successfully")
+
+	cm.etcdModel = etcdClient
 	cm.locker = locker
 	return nil
 }
@@ -262,6 +280,7 @@ func (cm *ClusterManager) initModel() error {
 // init task server
 func (cm *ClusterManager) initTaskServer() error {
 	cloudprovider.InitStorageModel(cm.model)
+	cloudprovider.InitEtcdModel(cm.etcdModel)
 	// get taskserver and init
 	taskMgr := taskserver.GetTaskServer()
 
@@ -415,6 +434,7 @@ func (cm *ClusterManager) initAlarmClient() error {
 // init bk-ops client
 func (cm *ClusterManager) initBKOpsClient() error {
 	err := common.SetBKOpsClient(common.Options{
+		EsbServer:  cm.opt.BKOps.EsbServer,
 		Server:     cm.opt.BKOps.Server,
 		AppCode:    cm.opt.BKOps.AppCode,
 		AppSecret:  cm.opt.BKOps.AppSecret,
@@ -630,7 +650,7 @@ func (cm *ClusterManager) initK8SOperator() {
 
 // init daemon
 func (cm *ClusterManager) initDaemon() {
-	cm.daemon = daemon.NewDaemon(0, cm.model)
+	cm.daemon = daemon.NewDaemon(0, cm.model, daemon.DaemonOptions{EnableDaemon: cm.opt.Daemon.Enable})
 }
 
 // initRegistry etcd registry
@@ -672,6 +692,17 @@ func (cm *ClusterManager) initDiscovery() {
 			Module:    cm.opt.ResourceManager.Module,
 			TLSConfig: cm.clientTLSConfig,
 		}, cm.resourceDisc)
+	}
+
+	// enable discovery project module
+	if cm.opt.ProjectManager.Enable {
+		cm.projectDisc = discovery.NewModuleDiscovery(cm.opt.ProjectManager.Module, cm.microRegistry)
+		blog.Infof("init discovery for project manager successfully")
+
+		project.SetProjectClient(&project.Options{
+			Module:    cm.opt.ProjectManager.Module,
+			TLSConfig: cm.clientTLSConfig,
+		}, cm.projectDisc)
 	}
 
 	// enable discovery cidr module
@@ -786,7 +817,7 @@ func (cm *ClusterManager) initHTTPGateway(router *mux.Router) error {
 	if cm.tlsConfig != nil && cm.clientTLSConfig != nil {
 		grpcDialOpts = append(grpcDialOpts, grpc.WithTransportCredentials(grpccred.NewTLS(cm.clientTLSConfig)))
 	} else {
-		grpcDialOpts = append(grpcDialOpts, grpc.WithInsecure())
+		grpcDialOpts = append(grpcDialOpts, grpc.WithInsecure()) // nolint
 	}
 	grpcDialOpts = append(grpcDialOpts, grpc.WithDefaultCallOptions(
 		grpc.MaxCallRecvMsgSize(utils.MaxBodySize), grpc.MaxCallSendMsgSize(utils.MaxBodySize)))
@@ -922,11 +953,15 @@ func (cm *ClusterManager) initMicro() error { // nolint
 		EnableSkipClient(auth.SkipClient).
 		SetCheckUserPerm(auth.CheckUserPerm)
 
+	// with tls
+	grpcSvr := microgrpcserver.NewServer(microgrpcserver.AuthTLS(cm.tlsConfig))
+
 	// New Service
-	microService := microgrpcsvc.NewService(
+	microService := microsvc.NewService(
+		microsvc.Server(grpcSvr),
+		microsvc.Cmd(commonutil.NewDummyMicroCmd()),
 		microsvc.Name(cmcommon.ClusterManagerServiceDomain),
 		microsvc.Metadata(metadata),
-		microgrpcsvc.WithTLS(cm.tlsConfig),
 		microsvc.Address(net.JoinHostPort(ipv4, port)),
 		microsvc.Registry(cm.microRegistry),
 		microsvc.Version(version.BcsVersion),
@@ -941,6 +976,9 @@ func (cm *ClusterManager) initMicro() error { // nolint
 			if cm.resourceDisc != nil {
 				cm.resourceDisc.Start() // nolint
 			}
+			if cm.projectDisc != nil {
+				cm.projectDisc.Start() // nolint
+			}
 			if cm.cidrDisc != nil {
 				cm.cidrDisc.Start() // nolint
 			}
@@ -949,6 +987,9 @@ func (cm *ClusterManager) initMicro() error { // nolint
 		microsvc.BeforeStop(func() error {
 			if cm.resourceDisc != nil {
 				cm.resourceDisc.Stop()
+			}
+			if cm.projectDisc != nil {
+				cm.projectDisc.Stop()
 			}
 			if cm.cidrDisc != nil {
 				cm.cidrDisc.Stop()
@@ -1035,7 +1076,7 @@ func (cm *ClusterManager) Init() error {
 		return err
 	}
 	// init locker
-	if err := cm.initLocker(); err != nil {
+	if err := cm.initEtcdLockerStore(); err != nil {
 		return err
 	}
 	// init registry

@@ -301,14 +301,24 @@ func importClusterCredential(ctx context.Context, data *cloudprovider.CloudDepen
 }
 
 func importClusterInstances(data *cloudprovider.CloudDependBasicInfo) error {
-	masterIPs, nodeIPs, err := getClusterInstancesByClusterID(data)
+	masterInfos, nodeInfos, err := getClusterInstancesByClusterID(data)
 	if err != nil {
 		return err
 	}
 
+	var (
+		masterNodes        = make(map[string]*proto.Node)
+		masterIPs, nodeIPs = make([]string, 0), make([]string, 0)
+	)
+	for i := range masterInfos {
+		masterIPs = append(masterIPs, masterInfos[i].InstanceIP)
+	}
+	for i := range nodeInfos {
+		nodeIPs = append(nodeIPs, nodeInfos[i].InstanceIP)
+	}
+
 	// import cluster
 	if data.Cluster.ManageType == icommon.ClusterManageTypeIndependent {
-		masterNodes := make(map[string]*proto.Node)
 		nodes, errTrans := transInstanceIPToNodes(masterIPs, &cloudprovider.ListNodesOption{
 			Common:       data.CmOption,
 			ClusterVPCID: data.Cluster.VpcID,
@@ -335,7 +345,17 @@ func importClusterInstances(data *cloudprovider.CloudDependBasicInfo) error {
 	return nil
 }
 
-func getClusterInstancesByClusterID(data *cloudprovider.CloudDependBasicInfo) ([]string, []string, error) {
+// InstanceInfo instance info
+type InstanceInfo struct {
+	// InstanceIP ip
+	InstanceIP string
+	// InstanceId id
+	InstanceId string
+	// InstanceStatus status
+	InstanceStatus string
+}
+
+func getClusterInstancesByClusterID(data *cloudprovider.CloudDependBasicInfo) ([]InstanceInfo, []InstanceInfo, error) {
 	tkeCli, err := api.NewTkeClient(data.CmOption)
 	if err != nil {
 		return nil, nil, err
@@ -347,14 +367,22 @@ func getClusterInstancesByClusterID(data *cloudprovider.CloudDependBasicInfo) ([
 	}
 
 	var (
-		masterIPs, nodeIPs = make([]string, 0), make([]string, 0)
+		masterIPs, nodeIPs = make([]InstanceInfo, 0), make([]InstanceInfo, 0)
 	)
 	for _, ins := range instancesList {
 		switch ins.InstanceRole {
 		case api.MASTER_ETCD.String():
-			masterIPs = append(masterIPs, ins.InstanceIP)
+			masterIPs = append(masterIPs, InstanceInfo{
+				InstanceIP:     ins.InstanceIP,
+				InstanceId:     ins.InstanceID,
+				InstanceStatus: ins.InstanceState,
+			})
 		case api.WORKER.String():
-			nodeIPs = append(nodeIPs, ins.InstanceIP)
+			nodeIPs = append(nodeIPs, InstanceInfo{
+				InstanceIP:     ins.InstanceIP,
+				InstanceId:     ins.InstanceID,
+				InstanceStatus: ins.InstanceState,
+			})
 		default:
 			continue
 		}

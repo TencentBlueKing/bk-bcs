@@ -118,6 +118,7 @@ func Run() error {
 					OnStoppedLeading: func() {
 						klog.Infof("leader lost: %s", id)
 						cancel()
+						// nolint the cancel function is not used on all paths (possible context leak)
 						ctx, cancel = context.WithCancel(context.Background())
 						// NOCC:vet/vet(忽略)
 					},

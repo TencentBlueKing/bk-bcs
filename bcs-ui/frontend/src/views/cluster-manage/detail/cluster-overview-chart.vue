@@ -1,16 +1,14 @@
 <template>
   <ECharts
     class="!w-[100%]"
-    ref="chartRef"
     :options="options"
-    :auto-resize="false"
-    v-bkloading="{ isLoading: loading }">
+    v-bkloading="{ isLoading: loading }"
+    ref="chartRef">
   </ECharts>
 </template>
 <script lang="ts">
-import { throttle } from 'lodash';
 import moment from 'moment';
-import { defineComponent, onBeforeUnmount, onMounted, PropType, ref, toRefs } from 'vue';
+import { defineComponent, onMounted, PropType, ref, toRefs } from 'vue';
 
 import 'echarts/lib/chart/line';
 import 'echarts/lib/component/tooltip';
@@ -36,6 +34,7 @@ export default defineComponent({
   },
   setup(props) {
     const { metrics, colors, clusterId } = toRefs(props);
+    const chartRef = ref();
     const metricMap = {
       cpu_usage: $i18n.t('metrics.cpuUsage'),
       disk_usage: $i18n.t('metrics.diskUsage'),
@@ -175,32 +174,17 @@ export default defineComponent({
         },
         data: item.result?.[0]?.values || [[new Date(), 0]],
       }));
+      chartRef.value?.setOption(options.value);
       loading.value = false;
     };
-    const chartRef = ref<any>(null);
-    const resizeHandler = () => {
-      chartRef.value?.resize();
-    };
-    const throttleResize = throttle(resizeHandler, 100);
 
-    const resizeObserver = new ResizeObserver(() => {
-      window.requestAnimationFrame(() => {
-        throttleResize();
-      });
-    });
     onMounted(() => {
       handleGetChartData();
-      window.addEventListener('resize', resizeHandler);
-      resizeObserver.observe(chartRef.value.$el);
-    });
-    onBeforeUnmount(() => {
-      window.removeEventListener('resize', resizeHandler);
-      resizeObserver.disconnect();
     });
     return {
-      chartRef,
       loading,
       options,
+      chartRef,
     };
   },
 });

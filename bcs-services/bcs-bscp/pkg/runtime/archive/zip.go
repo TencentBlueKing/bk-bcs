@@ -14,7 +14,6 @@ package archive
 
 import (
 	"archive/zip"
-	"bytes"
 	"fmt"
 	"io"
 	"os"
@@ -22,47 +21,67 @@ import (
 	"time"
 )
 
-// ZipHandler zip xxx
-type ZipHandler struct {
+// ZipArchive 实现了 Archive 接口，用于处理 zip 文件
+type ZipArchive struct {
+	destPath string
 }
 
-// NewZipHandler xxx
-func NewZipHandler() *ZipHandler {
-	return &ZipHandler{}
+// NewZipArchive xxx
+func NewZipArchive(destPath string) ZipArchive {
+	return ZipArchive{
+		destPath: destPath,
+	}
 }
 
-// UnZip unpacks a ZIP stream. When given a os.File reader it will get its size without
-// reading the entire zip file in memory.
-func (z *ZipHandler) UnZip(r io.Reader, destPath string) error {
-	var (
-		zr        *zip.Reader
-		readerErr error
-	)
-	if f, ok := r.(*os.File); ok {
-		fstat, err := f.Stat()
-		if err != nil {
-			return err
-		}
-		zr, readerErr = zip.NewReader(f, fstat.Size())
-	} else {
-		var fileBuffer bytes.Buffer
-		_, err := io.Copy(&fileBuffer, r)
-		if err != nil {
-			return err
-		}
-		memReader := bytes.NewReader(fileBuffer.Bytes())
-		zr, readerErr = zip.NewReader(memReader, memReader.Size())
+// UnZipPack decompresses the zip package and receives the parameter io.Reader
+func (z ZipArchive) UnZipPack(reader io.Reader) error {
+	// 将请求体内容写入临时文件
+	tempZipFile, err := os.CreateTemp("", "upload-*.zip")
+	if err != nil {
+		return err
+	}
+	// 函数结束后删除临时文件
+	defer func() {
+		_ = os.Remove(tempZipFile.Name())
+	}()
+
+	if _, err = io.Copy(tempZipFile, reader); err != nil {
+		return err
 	}
 
-	if readerErr != nil {
-		return readerErr
+	if err = tempZipFile.Close(); err != nil {
+		return err
 	}
-	return z.unpackZip(zr, destPath)
+
+	// 打开临时文件以进行解压缩
+	zipFile, err := os.Open(tempZipFile.Name())
+	if err != nil {
+		return err
+	}
+	defer zipFile.Close()
+
+	return z.Unzip(zipFile)
 }
 
-func (z *ZipHandler) unpackZip(zr *zip.Reader, destPath string) error {
+// Unzip decompresses the zip package and receives the parameter os.File
+func (z ZipArchive) Unzip(zipFile *os.File) error {
+	// 获取临时文件的信息
+	fileInfo, err := zipFile.Stat()
+	if err != nil {
+		return err
+	}
+	// 创建zip读取器
+	zr, err := zip.NewReader(zipFile, fileInfo.Size())
+	if err != nil {
+		return err
+	}
+
+	return z.unpackZip(zr)
+}
+
+func (z ZipArchive) unpackZip(zr *zip.Reader) error {
 	for _, f := range zr.File {
-		err := z.unzipFile(f, destPath)
+		err := z.unzipFile(f)
 		if err != nil {
 			return err
 		}
@@ -70,9 +89,9 @@ func (z *ZipHandler) unpackZip(zr *zip.Reader, destPath string) error {
 	return nil
 }
 
-func (z *ZipHandler) unzipFile(f *zip.File, destPath string) error {
+func (z ZipArchive) unzipFile(f *zip.File) error {
 	if f.FileInfo().IsDir() {
-		if err := os.MkdirAll(filepath.Join(destPath, f.Name), f.Mode().Perm()); err != nil {
+		if err := os.MkdirAll(filepath.Join(z.destPath, f.Name), f.Mode().Perm()); err != nil {
 			return err
 		}
 		return nil
@@ -87,9 +106,9 @@ func (z *ZipHandler) unzipFile(f *zip.File, destPath string) error {
 	}()
 
 	filePath := sanitize(f.Name)
-	destPath = filepath.Join(destPath, filePath)
+	z.destPath = filepath.Join(z.destPath, filePath)
 
-	fileDir := filepath.Dir(destPath)
+	fileDir := filepath.Dir(z.destPath)
 	_, err = os.Lstat(fileDir)
 	if err != nil {
 		if err = os.MkdirAll(fileDir, 0o700); err != nil {
@@ -97,7 +116,7 @@ func (z *ZipHandler) unzipFile(f *zip.File, destPath string) error {
 		}
 	}
 
-	file, err := os.Create(destPath)
+	file, err := os.Create(z.destPath)
 	if err != nil {
 		return err
 	}

@@ -8,14 +8,24 @@
         <span class="head-title"> {{ t('服务配置中心') }} </span>
       </div>
       <div class="head-routes">
-        <router-link
-          v-for="nav in navList"
-          :class="['nav-item', { actived: isNavActived(nav.module) }]"
-          :key="nav.id"
-          :to="{ name: nav.id, params: { spaceId: spaceId || 0 } }"
-          @click="handleNavClick(nav.id)">
-          {{ nav.name }}
-        </router-link>
+        <div v-for="nav in navList" :key="nav.id" :class="['nav-item', { actived: isFirstNavActived(nav.module) }]">
+          <div v-if="nav.children">
+            <div :class="['firstNav-item', { actived: isFirstNavActived(nav.module) }]">{{ nav.name }}</div>
+            <div class="secondNav-list">
+              <div
+                v-for="secondNav in nav.children"
+                :key="secondNav.id"
+                :class="['secondNav-item', { actived: isSecondNavActived(secondNav.module) }]">
+                <router-link :to="getRoute(secondNav.id)">
+                  {{ secondNav.name }}
+                </router-link>
+              </div>
+            </div>
+          </div>
+          <router-link v-else :to="{ name: nav.id, params: { spaceId: spaceId || 0 } }" @click="handleNavClick(nav.id)">
+            {{ nav.name }}
+          </router-link>
+        </div>
       </div>
     </div>
     <div class="head-right">
@@ -23,8 +33,10 @@
         class="space-selector"
         id-key="space_id"
         display-key="space_name"
+        enable-virtual-render
         :model-value="spaceId"
         :popover-options="{ theme: 'light bk-select-popover space-selector-popover' }"
+        :list="optionList"
         :filterable="true"
         :clearable="false"
         :input-search="false"
@@ -42,7 +54,7 @@
             <div class="content">{{ t('新建业务') }}</div>
           </div>
         </template>
-        <bk-option v-for="item in optionList" :key="item.space_id" :value="item.space_id" :label="item.space_name">
+        <template #virtualScrollRender="{ item }">
           <div
             v-cursor="{ active: !item.permission }"
             :class="['biz-option-item', { 'no-perm': !item.permission }]"
@@ -56,17 +68,17 @@
             </div>
             <span class="tag">{{ item.space_type_name }}</span>
           </div>
-        </bk-option>
+        </template>
       </bk-select>
       <bk-popover ext-cls="login-out-popover" trigger="hover" placement="bottom-center" theme="light" :arrow="false">
         <div class="international">
-          <span :class="['bk-bscp-icon', locale === 'zh-CN' ? 'icon-lang-cn' : 'icon-lang-en']"></span>
+          <span :class="['bk-bscp-icon', locale === 'zh-cn' ? 'icon-lang-cn' : 'icon-lang-en']"></span>
         </div>
         <template #content>
-          <div class="international-item" @click="switchLanguage('en-US')">
+          <div class="international-item" @click="switchLanguage('en')">
             <span class="bk-bscp-icon icon-lang-en"></span> English
           </div>
-          <div class="international-item" @click="switchLanguage('zh-CN')">
+          <div class="international-item" @click="switchLanguage('zh-cn')">
             <span class="bk-bscp-icon icon-lang-cn"></span> 中文
           </div>
         </template>
@@ -112,11 +124,12 @@
   import useUserStore from '../store/user';
   import useTemplateStore from '../store/template';
   import { ISpaceDetail } from '../../types/index';
-  import { loginOut, getSpaceFeatureFlag } from '../api/index';
+  import { loginOut } from '../api/index';
   import type { IVersionLogItem } from '../../types/version-log';
   import VersionLog from './version-log.vue';
   import features from './features-dialog.vue';
   import MarkdownIt from 'markdown-it';
+  import { setCookie } from '../utils';
 
   const route = useRoute();
   const router = useRouter();
@@ -140,10 +153,27 @@
   const navList = computed(() => [
     { id: 'service-all', module: 'service', name: t('服务管理') },
     { id: 'groups-management', module: 'groups', name: t('分组管理') },
-    { id: 'variables-management', module: 'variables', name: t('全局变量') },
-    { id: 'templates-list', module: 'templates', name: t('配置模板') },
     { id: 'script-list', module: 'scripts', name: t('脚本管理') },
-    { id: 'credentials-management', module: 'credentials', name: t('服务密钥') },
+    {
+      id: 'templates-and-variables',
+      module: 'templates-and-variables',
+      name: t('模板与变量'),
+      children: [
+        { id: 'templates-list', module: 'templates', name: t('模板管理') },
+        { id: 'variables-management', module: 'variables', name: t('变量管理') },
+      ],
+    },
+
+    {
+      id: 'client-manage',
+      module: 'client',
+      name: t('客户端管理'),
+      children: [
+        { id: 'client-statistics', module: 'client-statistics', name: t('客户端统计') },
+        { id: 'client-search', module: 'client-search', name: t('客户端查询') },
+        { id: 'credentials-management', module: 'credentials', name: t('客户端密钥') },
+      ],
+    },
   ]);
 
   const optionList = ref<ISpaceDetail[]>([]);
@@ -166,8 +196,21 @@
     },
   );
 
-  const isNavActived = (name: string) =>
-    spaceFeatureFlags.value.BIZ_VIEW && !showPermApplyPage.value && route.meta.navModule === name;
+  const isFirstNavActived = (name: string) => {
+    const nav = navList.value.find((item) => item.module === name);
+    if (nav!.children) {
+      return (
+        spaceFeatureFlags.value.BIZ_VIEW &&
+        !showPermApplyPage.value &&
+        nav!.children.find((item) => item.module === route.meta.navModule)
+      );
+    }
+    return spaceFeatureFlags.value.BIZ_VIEW && !showPermApplyPage.value && route.meta.navModule === name;
+  };
+
+  const isSecondNavActived = (secondNavName: string) => {
+    return spaceFeatureFlags.value.BIZ_VIEW && !showPermApplyPage.value && route.meta.navModule === secondNavName;
+  };
 
   const handleNavClick = (navId: String) => {
     if (navId === 'service-all') {
@@ -180,6 +223,19 @@
         }
       }
     }
+  };
+  const getRoute = (navId: string) => {
+    if (navId === 'client-statistics' || navId === 'client-search') {
+      const lastSelectedClientService = localStorage.getItem('lastSelectedClientService');
+      if (lastSelectedClientService) {
+        const detail = JSON.parse(lastSelectedClientService);
+        if (detail.spaceId === spaceId.value) {
+          return { name: navId, params: { spaceId: detail.spaceId, appId: detail.appId } };
+        }
+      }
+      return { name: navId, params: { spaceId: spaceId.value || 0, appId: 0 } };
+    }
+    return { name: navId, params: { spaceId: spaceId.value || 0 } };
   };
 
   const handleSpaceSearch = (searchStr: string) => {
@@ -196,25 +252,22 @@
   const handleSelectSpace = async (id: string) => {
     const space = spaceList.value.find((item: ISpaceDetail) => item.space_id === id);
     if (space) {
-      const res = await getSpaceFeatureFlag(id);
-      if (res.BIZ_VIEW) {
-        if (!space.permission) {
-          permissionQuery.value = {
-            resources: [
-              {
-                biz_id: id,
-                basic: {
-                  type: 'biz',
-                  action: 'find_business_resource',
-                  resource_id: id,
-                },
+      if (!space.permission) {
+        permissionQuery.value = {
+          resources: [
+            {
+              biz_id: id,
+              basic: {
+                type: 'biz',
+                action: 'find_business_resource',
+                resource_id: id,
               },
-            ],
-          };
+            },
+          ],
+        };
 
-          showApplyPermDialog.value = true;
-          return;
-        }
+        showApplyPermDialog.value = true;
+        return;
       }
       templateStore.$patch((state) => {
         state.templateSpaceList = [];
@@ -300,8 +353,9 @@
 
   // 切换语言
   const switchLanguage = (language: string) => {
+    const domain = window.location.hostname.replace(/^[^.]+(.*)$/, '$1');
+    setCookie('blueking_language', language, domain);
     locale.value = language;
-    localStorage.setItem('language', language);
     location.reload();
   };
 </script>
@@ -314,7 +368,6 @@
     align-items: center;
     justify-content: space-between;
     padding: 0 20px;
-
     .head-left {
       display: flex;
       align-items: center;
@@ -324,14 +377,72 @@
         height: 30px;
       }
       .head-routes {
-        padding-left: 112px;
+        display: flex;
+        padding-left: 90px;
         font-size: 14px;
         .nav-item {
-          margin-left: 32px;
-          color: #96a2b9;
+          position: relative;
+          display: flex;
+          align-items: center;
+          height: 52px;
+          padding: 0 16px;
           font-size: 14px;
+          color: #96a2b9;
+          a {
+            color: #96a2b9;
+          }
+          &:hover {
+            color: #c2cee5;
+            a {
+              color: #c2cee5;
+            }
+            .secondNav-list {
+              display: block;
+            }
+          }
           &.actived {
             color: #ffffff;
+            a {
+              color: #ffffff;
+            }
+          }
+          .firstNav-item {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            cursor: default;
+          }
+          .secondNav-list {
+            display: none;
+            position: absolute;
+            top: 52px;
+            left: 0;
+            z-index: 1000;
+            background: #182132;
+            border-radius: 0 0 2px 2px;
+            padding: 4px 1px;
+            .secondNav-item {
+              min-width: 102px;
+              height: 40px;
+              line-height: 40px;
+              padding: 0 16px;
+              font-size: 14px;
+              a {
+                color: #96a2b9;
+              }
+              &:hover {
+                color: #c2cee5;
+                a {
+                  color: #c2cee5;
+                }
+              }
+              &.actived {
+                background: #2f3746;
+                a {
+                  color: #fff;
+                }
+              }
+            }
           }
         }
       }

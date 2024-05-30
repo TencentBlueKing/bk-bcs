@@ -227,15 +227,20 @@ func (hpi *HostPortInjector) injectToPod(pod *corev1.Pod) ([]types.PatchOperatio
 	containerPortsIndexList := make([][]int, len(pod.Spec.Containers))
 	containerPortList := make([]int32, 0)
 	needInjectCount := 0
-	for _, portStr := range portStrs {
-		for containerIndex, container := range pod.Spec.Containers {
-			for portIndex, containerPort := range container.Ports {
+
+	for containerIndex, container := range pod.Spec.Containers {
+		for portIndex, containerPort := range container.Ports {
+			for _, portStr := range portStrs {
+				// 根据声明的port名字或者端口号去匹配容器端口
+				// 1. 先按名字匹配
+				// 2. 再按端口号匹配
 				if portStr == containerPort.Name {
 					containerPortsIndexList[containerIndex] = append(containerPortsIndexList[containerIndex], portIndex)
 					containerPortList = append(containerPortList, containerPort.ContainerPort)
 					needInjectCount++
 					break
 				}
+				// 如果不能转成数字，则跳过，说明用户声明的是端口名字，名字不匹配。
 				portNumber, err := strconv.Atoi(portStr)
 				if err != nil {
 					continue

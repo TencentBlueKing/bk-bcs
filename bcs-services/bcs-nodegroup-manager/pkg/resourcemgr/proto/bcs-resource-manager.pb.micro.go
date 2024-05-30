@@ -101,6 +101,12 @@ func NewResourceManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "ResourceManager.GetDevicePoolEvent",
+			Path:    []string{"/resourcemanager/v1/device/pool/{devicePoolID}/event"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "ResourceManager.ListDevicePool",
 			Path:    []string{"/resourcemanager/v1/device/pool"},
 			Method:  []string{"GET"},
@@ -128,6 +134,20 @@ func NewResourceManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "ResourceManager.ImportDevicesToDevicePoolByBkAssetIDs",
+			Path:    []string{"/resourcemanager/v1/device/pool/{devicePoolID}/importByBkAssetIDs"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		{
+			Name:    "ResourceManager.ImportDeviceToDevicePoolByBkAssetID",
+			Path:    []string{"/resourcemanager/v1/device/pool/{devicePoolID}/importByBkAssetID"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		{
 			Name:    "ResourceManager.ListDeviceBill",
 			Path:    []string{"/resourcemanager/v1/device/bill"},
 			Method:  []string{"GET"},
@@ -140,9 +160,23 @@ func NewResourceManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "ResourceManager.CreateDeviceRecord",
+			Path:    []string{"/resourcemanager/v1/device/record"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		{
 			Name:    "ResourceManager.ListDeviceRecord",
 			Path:    []string{"/resourcemanager/v1/device/record"},
 			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "ResourceManager.UpdateDeviceRecord",
+			Path:    []string{"/resourcemanager/v1/device/record/{deviceRecordID}"},
+			Method:  []string{"PUT"},
+			Body:    "*",
 			Handler: "rpc",
 		},
 		{
@@ -243,6 +277,53 @@ func NewResourceManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "ResourceManager.ListDeviceRecordByDevicePool",
+			Path:    []string{"/resourcemanager/v1/device/record/pool/{poolID}"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "ResourceManager.CreateDeviceRecordByDevicePool",
+			Path:    []string{"/resourcemanager/v1/device/record/pool/{poolID}"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		{
+			Name:    "ResourceManager.CreateDeviceInstance",
+			Path:    []string{"/resourcemanager/v1/device/instance"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		{
+			Name:    "ResourceManager.UpdateDeviceInstance",
+			Path:    []string{"/resourcemanager/v1/device/instance/{deviceInstanceID}"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		{
+			Name:    "ResourceManager.DeleteDeviceInstance",
+			Path:    []string{"/resourcemanager/v1/device/instance/{deviceInstanceID}"},
+			Method:  []string{"DELETE"},
+			Body:    "",
+			Handler: "rpc",
+		},
+		{
+			Name:    "ResourceManager.ListDeviceInstances",
+			Path:    []string{"/resourcemanager/v1/device/instance"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "ResourceManager.EnableDeviceConsumer",
+			Path:    []string{"/resourcemanager/v1/device/consumer/enable"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		{
 			Name:    "ResourceManager.GetDevice",
 			Path:    []string{"/resourcemanager/v1/device/{deviceID}"},
 			Method:  []string{"GET"},
@@ -258,6 +339,13 @@ func NewResourceManagerEndpoints() []*api.Endpoint {
 			Name:    "ResourceManager.UpdateDevice",
 			Path:    []string{"/resourcemanager/v1/device/{deviceID}"},
 			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		{
+			Name:    "ResourceManager.DeleteDevices",
+			Path:    []string{"/resourcemanager/v1/devices"},
+			Method:  []string{"DELETE"},
 			Body:    "*",
 			Handler: "rpc",
 		},
@@ -281,15 +369,20 @@ type ResourceManagerService interface {
 	//* device pool
 	CreateDevicePool(ctx context.Context, in *CreateDevicePoolReq, opts ...client.CallOption) (*CreateDevicePoolResp, error)
 	GetDevicePool(ctx context.Context, in *GetDevicePoolReq, opts ...client.CallOption) (*GetDevicePoolResp, error)
+	GetDevicePoolEvent(ctx context.Context, in *GetDevicePoolEventReq, opts ...client.CallOption) (*GetDevicePoolEventResp, error)
 	ListDevicePool(ctx context.Context, in *ListDevicePoolReq, opts ...client.CallOption) (*ListDevicePoolResp, error)
 	UpdateDevicePool(ctx context.Context, in *UpdateDevicePoolReq, opts ...client.CallOption) (*UpdateDevicePoolResp, error)
 	DeleteDevicePool(ctx context.Context, in *DeleteDevicePoolReq, opts ...client.CallOption) (*DeleteDevicePoolResp, error)
 	ImportDeviceToDevicePool(ctx context.Context, in *ImportDeviceToDevicePoolReq, opts ...client.CallOption) (*ImportDeviceToDevicePoolResp, error)
+	ImportDevicesToDevicePoolByBkAssetIDs(ctx context.Context, in *ImportDevicesToDevicePoolByBkAssetIDsReq, opts ...client.CallOption) (*ImportDevicesToDevicePoolByBkAssetIDsResp, error)
+	ImportDeviceToDevicePoolByBkAssetID(ctx context.Context, in *ImportDeviceToDevicePoolByBkAssetIDReq, opts ...client.CallOption) (*ImportDeviceToDevicePoolResp, error)
 	// device bill
 	ListDeviceBill(ctx context.Context, in *ListDeviceBillReq, opts ...client.CallOption) (*ListDeviceBillResp, error)
 	// device record
 	GetDeviceRecord(ctx context.Context, in *GetDeviceRecordReq, opts ...client.CallOption) (*GetDeviceRecordResp, error)
+	CreateDeviceRecord(ctx context.Context, in *CreateDeviceRecordReq, opts ...client.CallOption) (*CreateDeviceRecordResp, error)
 	ListDeviceRecord(ctx context.Context, in *ListDeviceRecordReq, opts ...client.CallOption) (*ListDeviceRecordResp, error)
+	UpdateDeviceRecord(ctx context.Context, in *UpdateDeviceRecordReq, opts ...client.CallOption) (*UpdateDeviceRecordResp, error)
 	// provider
 	CreateProvider(ctx context.Context, in *CreateProviderReq, opts ...client.CallOption) (*CreateProviderResp, error)
 	GetProvider(ctx context.Context, in *GetProviderReq, opts ...client.CallOption) (*GetProviderResp, error)
@@ -308,10 +401,27 @@ type ResourceManagerService interface {
 	ListResource(ctx context.Context, in *ListResourceReq, opts ...client.CallOption) (*ListResourceResp, error)
 	ListDeviceRecordByPool(ctx context.Context, in *ListDeviceRecordByPoolReq, opts ...client.CallOption) (*ListDeviceRecordResp, error)
 	CreateDeviceRecordByPool(ctx context.Context, in *CreateDeviceRecordByPoolReq, opts ...client.CallOption) (*CreateDeviceRecordByPoolResp, error)
+	ListDeviceRecordByDevicePool(ctx context.Context, in *ListDeviceRecordByDevicePoolReq, opts ...client.CallOption) (*ListDeviceRecordResp, error)
+	CreateDeviceRecordByDevicePool(ctx context.Context, in *CreateDeviceRecordByDevicePoolReq, opts ...client.CallOption) (*CreateDeviceRecordByDevicePoolResp, error)
+	// rpc ReturnDeviceByDeviceRecord(ListDeviceRecordByPoolReq) returns (ListDeviceRecordResp) {
+	//     option (google.api.http) = {
+	//         put : "/resourcemanager/v1/resource_pools/{poolID}/device_records/{deviceRecordID}/return"
+	//     };
+	//     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+	//         description : "返回资源池(自建)中的设备记录(aka订单)中的设备"
+	//         summary : "返回资源池(自建)中的设备记录(aka订单)中的设备"
+	//     };
+	// }
+	CreateDeviceInstance(ctx context.Context, in *CreateDeviceInstanceReq, opts ...client.CallOption) (*CreateDeviceInstanceResp, error)
+	UpdateDeviceInstance(ctx context.Context, in *UpdateDeviceInstanceReq, opts ...client.CallOption) (*UpdateDeviceInstanceResp, error)
+	DeleteDeviceInstance(ctx context.Context, in *DeleteDeviceInstanceReq, opts ...client.CallOption) (*DeleteDeviceInstanceResp, error)
+	ListDeviceInstances(ctx context.Context, in *ListDeviceInstancesReq, opts ...client.CallOption) (*ListDeviceInstancesResp, error)
+	EnableDeviceConsumer(ctx context.Context, in *EnableDeviceConsumerReq, opts ...client.CallOption) (*EnableDeviceConsumerResp, error)
 	//* device
 	GetDevice(ctx context.Context, in *GetDeviceReq, opts ...client.CallOption) (*GetDeviceResp, error)
 	ListDevices(ctx context.Context, in *ListDevicesReq, opts ...client.CallOption) (*ListDevicesResp, error)
 	UpdateDevice(ctx context.Context, in *UpdateDeviceReq, opts ...client.CallOption) (*UpdateDeviceResp, error)
+	DeleteDevices(ctx context.Context, in *DeleteDevicesReq, opts ...client.CallOption) (*DeleteDevicesResp, error)
 }
 
 type resourceManagerService struct {
@@ -426,6 +536,16 @@ func (c *resourceManagerService) GetDevicePool(ctx context.Context, in *GetDevic
 	return out, nil
 }
 
+func (c *resourceManagerService) GetDevicePoolEvent(ctx context.Context, in *GetDevicePoolEventReq, opts ...client.CallOption) (*GetDevicePoolEventResp, error) {
+	req := c.c.NewRequest(c.name, "ResourceManager.GetDevicePoolEvent", in)
+	out := new(GetDevicePoolEventResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *resourceManagerService) ListDevicePool(ctx context.Context, in *ListDevicePoolReq, opts ...client.CallOption) (*ListDevicePoolResp, error) {
 	req := c.c.NewRequest(c.name, "ResourceManager.ListDevicePool", in)
 	out := new(ListDevicePoolResp)
@@ -466,6 +586,26 @@ func (c *resourceManagerService) ImportDeviceToDevicePool(ctx context.Context, i
 	return out, nil
 }
 
+func (c *resourceManagerService) ImportDevicesToDevicePoolByBkAssetIDs(ctx context.Context, in *ImportDevicesToDevicePoolByBkAssetIDsReq, opts ...client.CallOption) (*ImportDevicesToDevicePoolByBkAssetIDsResp, error) {
+	req := c.c.NewRequest(c.name, "ResourceManager.ImportDevicesToDevicePoolByBkAssetIDs", in)
+	out := new(ImportDevicesToDevicePoolByBkAssetIDsResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *resourceManagerService) ImportDeviceToDevicePoolByBkAssetID(ctx context.Context, in *ImportDeviceToDevicePoolByBkAssetIDReq, opts ...client.CallOption) (*ImportDeviceToDevicePoolResp, error) {
+	req := c.c.NewRequest(c.name, "ResourceManager.ImportDeviceToDevicePoolByBkAssetID", in)
+	out := new(ImportDeviceToDevicePoolResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *resourceManagerService) ListDeviceBill(ctx context.Context, in *ListDeviceBillReq, opts ...client.CallOption) (*ListDeviceBillResp, error) {
 	req := c.c.NewRequest(c.name, "ResourceManager.ListDeviceBill", in)
 	out := new(ListDeviceBillResp)
@@ -486,9 +626,29 @@ func (c *resourceManagerService) GetDeviceRecord(ctx context.Context, in *GetDev
 	return out, nil
 }
 
+func (c *resourceManagerService) CreateDeviceRecord(ctx context.Context, in *CreateDeviceRecordReq, opts ...client.CallOption) (*CreateDeviceRecordResp, error) {
+	req := c.c.NewRequest(c.name, "ResourceManager.CreateDeviceRecord", in)
+	out := new(CreateDeviceRecordResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *resourceManagerService) ListDeviceRecord(ctx context.Context, in *ListDeviceRecordReq, opts ...client.CallOption) (*ListDeviceRecordResp, error) {
 	req := c.c.NewRequest(c.name, "ResourceManager.ListDeviceRecord", in)
 	out := new(ListDeviceRecordResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *resourceManagerService) UpdateDeviceRecord(ctx context.Context, in *UpdateDeviceRecordReq, opts ...client.CallOption) (*UpdateDeviceRecordResp, error) {
+	req := c.c.NewRequest(c.name, "ResourceManager.UpdateDeviceRecord", in)
+	out := new(UpdateDeviceRecordResp)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -646,6 +806,76 @@ func (c *resourceManagerService) CreateDeviceRecordByPool(ctx context.Context, i
 	return out, nil
 }
 
+func (c *resourceManagerService) ListDeviceRecordByDevicePool(ctx context.Context, in *ListDeviceRecordByDevicePoolReq, opts ...client.CallOption) (*ListDeviceRecordResp, error) {
+	req := c.c.NewRequest(c.name, "ResourceManager.ListDeviceRecordByDevicePool", in)
+	out := new(ListDeviceRecordResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *resourceManagerService) CreateDeviceRecordByDevicePool(ctx context.Context, in *CreateDeviceRecordByDevicePoolReq, opts ...client.CallOption) (*CreateDeviceRecordByDevicePoolResp, error) {
+	req := c.c.NewRequest(c.name, "ResourceManager.CreateDeviceRecordByDevicePool", in)
+	out := new(CreateDeviceRecordByDevicePoolResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *resourceManagerService) CreateDeviceInstance(ctx context.Context, in *CreateDeviceInstanceReq, opts ...client.CallOption) (*CreateDeviceInstanceResp, error) {
+	req := c.c.NewRequest(c.name, "ResourceManager.CreateDeviceInstance", in)
+	out := new(CreateDeviceInstanceResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *resourceManagerService) UpdateDeviceInstance(ctx context.Context, in *UpdateDeviceInstanceReq, opts ...client.CallOption) (*UpdateDeviceInstanceResp, error) {
+	req := c.c.NewRequest(c.name, "ResourceManager.UpdateDeviceInstance", in)
+	out := new(UpdateDeviceInstanceResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *resourceManagerService) DeleteDeviceInstance(ctx context.Context, in *DeleteDeviceInstanceReq, opts ...client.CallOption) (*DeleteDeviceInstanceResp, error) {
+	req := c.c.NewRequest(c.name, "ResourceManager.DeleteDeviceInstance", in)
+	out := new(DeleteDeviceInstanceResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *resourceManagerService) ListDeviceInstances(ctx context.Context, in *ListDeviceInstancesReq, opts ...client.CallOption) (*ListDeviceInstancesResp, error) {
+	req := c.c.NewRequest(c.name, "ResourceManager.ListDeviceInstances", in)
+	out := new(ListDeviceInstancesResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *resourceManagerService) EnableDeviceConsumer(ctx context.Context, in *EnableDeviceConsumerReq, opts ...client.CallOption) (*EnableDeviceConsumerResp, error) {
+	req := c.c.NewRequest(c.name, "ResourceManager.EnableDeviceConsumer", in)
+	out := new(EnableDeviceConsumerResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *resourceManagerService) GetDevice(ctx context.Context, in *GetDeviceReq, opts ...client.CallOption) (*GetDeviceResp, error) {
 	req := c.c.NewRequest(c.name, "ResourceManager.GetDevice", in)
 	out := new(GetDeviceResp)
@@ -676,6 +906,16 @@ func (c *resourceManagerService) UpdateDevice(ctx context.Context, in *UpdateDev
 	return out, nil
 }
 
+func (c *resourceManagerService) DeleteDevices(ctx context.Context, in *DeleteDevicesReq, opts ...client.CallOption) (*DeleteDevicesResp, error) {
+	req := c.c.NewRequest(c.name, "ResourceManager.DeleteDevices", in)
+	out := new(DeleteDevicesResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for ResourceManager service
 
 type ResourceManagerHandler interface {
@@ -693,15 +933,20 @@ type ResourceManagerHandler interface {
 	//* device pool
 	CreateDevicePool(context.Context, *CreateDevicePoolReq, *CreateDevicePoolResp) error
 	GetDevicePool(context.Context, *GetDevicePoolReq, *GetDevicePoolResp) error
+	GetDevicePoolEvent(context.Context, *GetDevicePoolEventReq, *GetDevicePoolEventResp) error
 	ListDevicePool(context.Context, *ListDevicePoolReq, *ListDevicePoolResp) error
 	UpdateDevicePool(context.Context, *UpdateDevicePoolReq, *UpdateDevicePoolResp) error
 	DeleteDevicePool(context.Context, *DeleteDevicePoolReq, *DeleteDevicePoolResp) error
 	ImportDeviceToDevicePool(context.Context, *ImportDeviceToDevicePoolReq, *ImportDeviceToDevicePoolResp) error
+	ImportDevicesToDevicePoolByBkAssetIDs(context.Context, *ImportDevicesToDevicePoolByBkAssetIDsReq, *ImportDevicesToDevicePoolByBkAssetIDsResp) error
+	ImportDeviceToDevicePoolByBkAssetID(context.Context, *ImportDeviceToDevicePoolByBkAssetIDReq, *ImportDeviceToDevicePoolResp) error
 	// device bill
 	ListDeviceBill(context.Context, *ListDeviceBillReq, *ListDeviceBillResp) error
 	// device record
 	GetDeviceRecord(context.Context, *GetDeviceRecordReq, *GetDeviceRecordResp) error
+	CreateDeviceRecord(context.Context, *CreateDeviceRecordReq, *CreateDeviceRecordResp) error
 	ListDeviceRecord(context.Context, *ListDeviceRecordReq, *ListDeviceRecordResp) error
+	UpdateDeviceRecord(context.Context, *UpdateDeviceRecordReq, *UpdateDeviceRecordResp) error
 	// provider
 	CreateProvider(context.Context, *CreateProviderReq, *CreateProviderResp) error
 	GetProvider(context.Context, *GetProviderReq, *GetProviderResp) error
@@ -720,10 +965,27 @@ type ResourceManagerHandler interface {
 	ListResource(context.Context, *ListResourceReq, *ListResourceResp) error
 	ListDeviceRecordByPool(context.Context, *ListDeviceRecordByPoolReq, *ListDeviceRecordResp) error
 	CreateDeviceRecordByPool(context.Context, *CreateDeviceRecordByPoolReq, *CreateDeviceRecordByPoolResp) error
+	ListDeviceRecordByDevicePool(context.Context, *ListDeviceRecordByDevicePoolReq, *ListDeviceRecordResp) error
+	CreateDeviceRecordByDevicePool(context.Context, *CreateDeviceRecordByDevicePoolReq, *CreateDeviceRecordByDevicePoolResp) error
+	// rpc ReturnDeviceByDeviceRecord(ListDeviceRecordByPoolReq) returns (ListDeviceRecordResp) {
+	//     option (google.api.http) = {
+	//         put : "/resourcemanager/v1/resource_pools/{poolID}/device_records/{deviceRecordID}/return"
+	//     };
+	//     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+	//         description : "返回资源池(自建)中的设备记录(aka订单)中的设备"
+	//         summary : "返回资源池(自建)中的设备记录(aka订单)中的设备"
+	//     };
+	// }
+	CreateDeviceInstance(context.Context, *CreateDeviceInstanceReq, *CreateDeviceInstanceResp) error
+	UpdateDeviceInstance(context.Context, *UpdateDeviceInstanceReq, *UpdateDeviceInstanceResp) error
+	DeleteDeviceInstance(context.Context, *DeleteDeviceInstanceReq, *DeleteDeviceInstanceResp) error
+	ListDeviceInstances(context.Context, *ListDeviceInstancesReq, *ListDeviceInstancesResp) error
+	EnableDeviceConsumer(context.Context, *EnableDeviceConsumerReq, *EnableDeviceConsumerResp) error
 	//* device
 	GetDevice(context.Context, *GetDeviceReq, *GetDeviceResp) error
 	ListDevices(context.Context, *ListDevicesReq, *ListDevicesResp) error
 	UpdateDevice(context.Context, *UpdateDeviceReq, *UpdateDeviceResp) error
+	DeleteDevices(context.Context, *DeleteDevicesReq, *DeleteDevicesResp) error
 }
 
 func RegisterResourceManagerHandler(s server.Server, hdlr ResourceManagerHandler, opts ...server.HandlerOption) error {
@@ -738,13 +1000,18 @@ func RegisterResourceManagerHandler(s server.Server, hdlr ResourceManagerHandler
 		ReturnDevice(ctx context.Context, in *ReturnDeviceReq, out *ReturnDeviceResp) error
 		CreateDevicePool(ctx context.Context, in *CreateDevicePoolReq, out *CreateDevicePoolResp) error
 		GetDevicePool(ctx context.Context, in *GetDevicePoolReq, out *GetDevicePoolResp) error
+		GetDevicePoolEvent(ctx context.Context, in *GetDevicePoolEventReq, out *GetDevicePoolEventResp) error
 		ListDevicePool(ctx context.Context, in *ListDevicePoolReq, out *ListDevicePoolResp) error
 		UpdateDevicePool(ctx context.Context, in *UpdateDevicePoolReq, out *UpdateDevicePoolResp) error
 		DeleteDevicePool(ctx context.Context, in *DeleteDevicePoolReq, out *DeleteDevicePoolResp) error
 		ImportDeviceToDevicePool(ctx context.Context, in *ImportDeviceToDevicePoolReq, out *ImportDeviceToDevicePoolResp) error
+		ImportDevicesToDevicePoolByBkAssetIDs(ctx context.Context, in *ImportDevicesToDevicePoolByBkAssetIDsReq, out *ImportDevicesToDevicePoolByBkAssetIDsResp) error
+		ImportDeviceToDevicePoolByBkAssetID(ctx context.Context, in *ImportDeviceToDevicePoolByBkAssetIDReq, out *ImportDeviceToDevicePoolResp) error
 		ListDeviceBill(ctx context.Context, in *ListDeviceBillReq, out *ListDeviceBillResp) error
 		GetDeviceRecord(ctx context.Context, in *GetDeviceRecordReq, out *GetDeviceRecordResp) error
+		CreateDeviceRecord(ctx context.Context, in *CreateDeviceRecordReq, out *CreateDeviceRecordResp) error
 		ListDeviceRecord(ctx context.Context, in *ListDeviceRecordReq, out *ListDeviceRecordResp) error
+		UpdateDeviceRecord(ctx context.Context, in *UpdateDeviceRecordReq, out *UpdateDeviceRecordResp) error
 		CreateProvider(ctx context.Context, in *CreateProviderReq, out *CreateProviderResp) error
 		GetProvider(ctx context.Context, in *GetProviderReq, out *GetProviderResp) error
 		ListProvider(ctx context.Context, in *ListProviderReq, out *ListProviderResp) error
@@ -760,9 +1027,17 @@ func RegisterResourceManagerHandler(s server.Server, hdlr ResourceManagerHandler
 		ListResource(ctx context.Context, in *ListResourceReq, out *ListResourceResp) error
 		ListDeviceRecordByPool(ctx context.Context, in *ListDeviceRecordByPoolReq, out *ListDeviceRecordResp) error
 		CreateDeviceRecordByPool(ctx context.Context, in *CreateDeviceRecordByPoolReq, out *CreateDeviceRecordByPoolResp) error
+		ListDeviceRecordByDevicePool(ctx context.Context, in *ListDeviceRecordByDevicePoolReq, out *ListDeviceRecordResp) error
+		CreateDeviceRecordByDevicePool(ctx context.Context, in *CreateDeviceRecordByDevicePoolReq, out *CreateDeviceRecordByDevicePoolResp) error
+		CreateDeviceInstance(ctx context.Context, in *CreateDeviceInstanceReq, out *CreateDeviceInstanceResp) error
+		UpdateDeviceInstance(ctx context.Context, in *UpdateDeviceInstanceReq, out *UpdateDeviceInstanceResp) error
+		DeleteDeviceInstance(ctx context.Context, in *DeleteDeviceInstanceReq, out *DeleteDeviceInstanceResp) error
+		ListDeviceInstances(ctx context.Context, in *ListDeviceInstancesReq, out *ListDeviceInstancesResp) error
+		EnableDeviceConsumer(ctx context.Context, in *EnableDeviceConsumerReq, out *EnableDeviceConsumerResp) error
 		GetDevice(ctx context.Context, in *GetDeviceReq, out *GetDeviceResp) error
 		ListDevices(ctx context.Context, in *ListDevicesReq, out *ListDevicesResp) error
 		UpdateDevice(ctx context.Context, in *UpdateDeviceReq, out *UpdateDeviceResp) error
+		DeleteDevices(ctx context.Context, in *DeleteDevicesReq, out *DeleteDevicesResp) error
 	}
 	type ResourceManager struct {
 		resourceManager
@@ -835,6 +1110,12 @@ func RegisterResourceManagerHandler(s server.Server, hdlr ResourceManagerHandler
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ResourceManager.GetDevicePoolEvent",
+		Path:    []string{"/resourcemanager/v1/device/pool/{devicePoolID}/event"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ResourceManager.ListDevicePool",
 		Path:    []string{"/resourcemanager/v1/device/pool"},
 		Method:  []string{"GET"},
@@ -862,6 +1143,20 @@ func RegisterResourceManagerHandler(s server.Server, hdlr ResourceManagerHandler
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ResourceManager.ImportDevicesToDevicePoolByBkAssetIDs",
+		Path:    []string{"/resourcemanager/v1/device/pool/{devicePoolID}/importByBkAssetIDs"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ResourceManager.ImportDeviceToDevicePoolByBkAssetID",
+		Path:    []string{"/resourcemanager/v1/device/pool/{devicePoolID}/importByBkAssetID"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ResourceManager.ListDeviceBill",
 		Path:    []string{"/resourcemanager/v1/device/bill"},
 		Method:  []string{"GET"},
@@ -874,9 +1169,23 @@ func RegisterResourceManagerHandler(s server.Server, hdlr ResourceManagerHandler
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ResourceManager.CreateDeviceRecord",
+		Path:    []string{"/resourcemanager/v1/device/record"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ResourceManager.ListDeviceRecord",
 		Path:    []string{"/resourcemanager/v1/device/record"},
 		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ResourceManager.UpdateDeviceRecord",
+		Path:    []string{"/resourcemanager/v1/device/record/{deviceRecordID}"},
+		Method:  []string{"PUT"},
+		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -977,6 +1286,53 @@ func RegisterResourceManagerHandler(s server.Server, hdlr ResourceManagerHandler
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ResourceManager.ListDeviceRecordByDevicePool",
+		Path:    []string{"/resourcemanager/v1/device/record/pool/{poolID}"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ResourceManager.CreateDeviceRecordByDevicePool",
+		Path:    []string{"/resourcemanager/v1/device/record/pool/{poolID}"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ResourceManager.CreateDeviceInstance",
+		Path:    []string{"/resourcemanager/v1/device/instance"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ResourceManager.UpdateDeviceInstance",
+		Path:    []string{"/resourcemanager/v1/device/instance/{deviceInstanceID}"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ResourceManager.DeleteDeviceInstance",
+		Path:    []string{"/resourcemanager/v1/device/instance/{deviceInstanceID}"},
+		Method:  []string{"DELETE"},
+		Body:    "",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ResourceManager.ListDeviceInstances",
+		Path:    []string{"/resourcemanager/v1/device/instance"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ResourceManager.EnableDeviceConsumer",
+		Path:    []string{"/resourcemanager/v1/device/consumer/enable"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ResourceManager.GetDevice",
 		Path:    []string{"/resourcemanager/v1/device/{deviceID}"},
 		Method:  []string{"GET"},
@@ -992,6 +1348,13 @@ func RegisterResourceManagerHandler(s server.Server, hdlr ResourceManagerHandler
 		Name:    "ResourceManager.UpdateDevice",
 		Path:    []string{"/resourcemanager/v1/device/{deviceID}"},
 		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ResourceManager.DeleteDevices",
+		Path:    []string{"/resourcemanager/v1/devices"},
+		Method:  []string{"DELETE"},
 		Body:    "*",
 		Handler: "rpc",
 	}))
@@ -1042,6 +1405,10 @@ func (h *resourceManagerHandler) GetDevicePool(ctx context.Context, in *GetDevic
 	return h.ResourceManagerHandler.GetDevicePool(ctx, in, out)
 }
 
+func (h *resourceManagerHandler) GetDevicePoolEvent(ctx context.Context, in *GetDevicePoolEventReq, out *GetDevicePoolEventResp) error {
+	return h.ResourceManagerHandler.GetDevicePoolEvent(ctx, in, out)
+}
+
 func (h *resourceManagerHandler) ListDevicePool(ctx context.Context, in *ListDevicePoolReq, out *ListDevicePoolResp) error {
 	return h.ResourceManagerHandler.ListDevicePool(ctx, in, out)
 }
@@ -1058,6 +1425,14 @@ func (h *resourceManagerHandler) ImportDeviceToDevicePool(ctx context.Context, i
 	return h.ResourceManagerHandler.ImportDeviceToDevicePool(ctx, in, out)
 }
 
+func (h *resourceManagerHandler) ImportDevicesToDevicePoolByBkAssetIDs(ctx context.Context, in *ImportDevicesToDevicePoolByBkAssetIDsReq, out *ImportDevicesToDevicePoolByBkAssetIDsResp) error {
+	return h.ResourceManagerHandler.ImportDevicesToDevicePoolByBkAssetIDs(ctx, in, out)
+}
+
+func (h *resourceManagerHandler) ImportDeviceToDevicePoolByBkAssetID(ctx context.Context, in *ImportDeviceToDevicePoolByBkAssetIDReq, out *ImportDeviceToDevicePoolResp) error {
+	return h.ResourceManagerHandler.ImportDeviceToDevicePoolByBkAssetID(ctx, in, out)
+}
+
 func (h *resourceManagerHandler) ListDeviceBill(ctx context.Context, in *ListDeviceBillReq, out *ListDeviceBillResp) error {
 	return h.ResourceManagerHandler.ListDeviceBill(ctx, in, out)
 }
@@ -1066,8 +1441,16 @@ func (h *resourceManagerHandler) GetDeviceRecord(ctx context.Context, in *GetDev
 	return h.ResourceManagerHandler.GetDeviceRecord(ctx, in, out)
 }
 
+func (h *resourceManagerHandler) CreateDeviceRecord(ctx context.Context, in *CreateDeviceRecordReq, out *CreateDeviceRecordResp) error {
+	return h.ResourceManagerHandler.CreateDeviceRecord(ctx, in, out)
+}
+
 func (h *resourceManagerHandler) ListDeviceRecord(ctx context.Context, in *ListDeviceRecordReq, out *ListDeviceRecordResp) error {
 	return h.ResourceManagerHandler.ListDeviceRecord(ctx, in, out)
+}
+
+func (h *resourceManagerHandler) UpdateDeviceRecord(ctx context.Context, in *UpdateDeviceRecordReq, out *UpdateDeviceRecordResp) error {
+	return h.ResourceManagerHandler.UpdateDeviceRecord(ctx, in, out)
 }
 
 func (h *resourceManagerHandler) CreateProvider(ctx context.Context, in *CreateProviderReq, out *CreateProviderResp) error {
@@ -1130,6 +1513,34 @@ func (h *resourceManagerHandler) CreateDeviceRecordByPool(ctx context.Context, i
 	return h.ResourceManagerHandler.CreateDeviceRecordByPool(ctx, in, out)
 }
 
+func (h *resourceManagerHandler) ListDeviceRecordByDevicePool(ctx context.Context, in *ListDeviceRecordByDevicePoolReq, out *ListDeviceRecordResp) error {
+	return h.ResourceManagerHandler.ListDeviceRecordByDevicePool(ctx, in, out)
+}
+
+func (h *resourceManagerHandler) CreateDeviceRecordByDevicePool(ctx context.Context, in *CreateDeviceRecordByDevicePoolReq, out *CreateDeviceRecordByDevicePoolResp) error {
+	return h.ResourceManagerHandler.CreateDeviceRecordByDevicePool(ctx, in, out)
+}
+
+func (h *resourceManagerHandler) CreateDeviceInstance(ctx context.Context, in *CreateDeviceInstanceReq, out *CreateDeviceInstanceResp) error {
+	return h.ResourceManagerHandler.CreateDeviceInstance(ctx, in, out)
+}
+
+func (h *resourceManagerHandler) UpdateDeviceInstance(ctx context.Context, in *UpdateDeviceInstanceReq, out *UpdateDeviceInstanceResp) error {
+	return h.ResourceManagerHandler.UpdateDeviceInstance(ctx, in, out)
+}
+
+func (h *resourceManagerHandler) DeleteDeviceInstance(ctx context.Context, in *DeleteDeviceInstanceReq, out *DeleteDeviceInstanceResp) error {
+	return h.ResourceManagerHandler.DeleteDeviceInstance(ctx, in, out)
+}
+
+func (h *resourceManagerHandler) ListDeviceInstances(ctx context.Context, in *ListDeviceInstancesReq, out *ListDeviceInstancesResp) error {
+	return h.ResourceManagerHandler.ListDeviceInstances(ctx, in, out)
+}
+
+func (h *resourceManagerHandler) EnableDeviceConsumer(ctx context.Context, in *EnableDeviceConsumerReq, out *EnableDeviceConsumerResp) error {
+	return h.ResourceManagerHandler.EnableDeviceConsumer(ctx, in, out)
+}
+
 func (h *resourceManagerHandler) GetDevice(ctx context.Context, in *GetDeviceReq, out *GetDeviceResp) error {
 	return h.ResourceManagerHandler.GetDevice(ctx, in, out)
 }
@@ -1140,4 +1551,8 @@ func (h *resourceManagerHandler) ListDevices(ctx context.Context, in *ListDevice
 
 func (h *resourceManagerHandler) UpdateDevice(ctx context.Context, in *UpdateDeviceReq, out *UpdateDeviceResp) error {
 	return h.ResourceManagerHandler.UpdateDevice(ctx, in, out)
+}
+
+func (h *resourceManagerHandler) DeleteDevices(ctx context.Context, in *DeleteDevicesReq, out *DeleteDevicesResp) error {
+	return h.ResourceManagerHandler.DeleteDevices(ctx, in, out)
 }

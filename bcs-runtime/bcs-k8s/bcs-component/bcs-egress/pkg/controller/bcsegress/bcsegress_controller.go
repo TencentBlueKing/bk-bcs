@@ -102,7 +102,7 @@ type ReconcileBCSEgress struct {
 // and what is in the BCSEgress.Spec
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
-// nolint 
+// nolint
 func (r *ReconcileBCSEgress) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	klog.Infof(">BCSEgress %s reconcile", request.String())
 	// Fetch the BCSEgress instance

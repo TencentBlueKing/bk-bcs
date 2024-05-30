@@ -21,6 +21,8 @@ service Upstream {
   rpc PullKvMeta(PullKvMetaReq) returns (PullKvMetaResp) {}
   rpc GetKvValue(GetKvValueReq) returns (GetKvValueResp) {}
   rpc ListApps(ListAppsReq) returns (ListAppsResp) {}
+  rpc AsyncDownload(AsyncDownloadReq) returns (AsyncDownloadResp) {}
+  rpc AsyncDownloadStatus(AsyncDownloadStatusReq) returns (AsyncDownloadStatusResp) {}
 }
 
 // SidecarSpec defines a sidecar's specifics.
@@ -113,6 +115,7 @@ message PullAppFileMetaReq {
   AppMeta app_meta = 3;
   string token = 4;
   string key = 5;
+  repeated string match = 6;
 }
 
 message PullAppFileMetaResp {
@@ -181,4 +184,34 @@ message GetKvValueReq {
 message GetKvValueResp {
   string kv_type = 1;
   string value = 2;
+}
+
+message AsyncDownloadReq {
+  uint32 biz_id = 1;
+  string bk_agent_id = 2;
+  string cluster_id = 3;
+  string pod_id = 4;
+  string container_name = 5;
+  FileMeta file_meta = 6;
+  // file_dir is the client/agent directory where the file will be downloaded to.
+  string file_dir = 7;
+}
+
+message AsyncDownloadResp {
+  string task_id = 1;
+}
+
+message AsyncDownloadStatusReq {
+  uint32 biz_id = 1;
+  string task_id = 2;
+}
+
+message AsyncDownloadStatusResp {
+  AsyncDownloadStatus status = 1;
+}
+
+enum AsyncDownloadStatus {
+  SUCCESS = 0;
+  DOWNLOADING = 1;
+  FAILED = 2;
 }

@@ -13,10 +13,12 @@
 package api
 
 import (
-	"context"
 	"net/http"
+	"sync"
+	"sync/atomic"
 	"time"
 
+	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
@@ -36,6 +38,11 @@ var upgrader = websocket.Upgrader{
 	EnableCompression: true,
 	CheckOrigin:       func(r *http.Request) bool { return true },
 }
+
+var (
+	stopWg    = &sync.WaitGroup{}
+	stopCount = atomic.Int64{}
+)
 
 // wsQuery websocket 支持的参数
 type wsQuery struct {
@@ -74,9 +81,7 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) { // nolint
 	defer ws.Close() // nolint
 
 	// 已经建立 WebSocket 连接, 下面所有的错误返回, 需要使用 GracefulCloseWebSocket 返回
-	ctx, stop := context.WithCancel(c.Request.Context())
-	defer stop()
-
+	eg, ctx := errgroup.WithContext(c.Request.Context())
 	connected := false
 
 	query := &wsQuery{}
@@ -110,10 +115,7 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) { // nolint
 		consoleMgr.AddMgrFunc(podCleanUpMgr.Heartbeat)
 	}
 
-	eg, ctx := errgroup.WithContext(ctx)
 	eg.Go(func() error {
-		defer stop()
-
 		// 定时检查任务
 		// 命令行审计
 		// terminal recorder
@@ -121,17 +123,27 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) { // nolint
 	})
 
 	eg.Go(func() error {
-		defer stop()
-
 		// 定时发送心跳等, 保持连接的活跃
 		return remoteStreamConn.Run(c)
 	})
 
 	eg.Go(func() error {
-		defer stop()
-
 		// 关闭需要主动发送 Ctrl-D 命令
-		return remoteStreamConn.WaitStreamDone(podCtx)
+		return remoteStreamConn.WaitStreamDone(c, podCtx)
+	})
+
+	stopWg.Add(1)
+	stopCount.Add(1)
+	defer stopWg.Done()
+	defer stopCount.Add(-1)
+
+	eg.Go(func() error {
+		select {
+		case <-ctx.Done():
+			return nil
+		case <-s.opts.StopSignCtx.Done():
+			return errors.New(i18n.T(c, "BCS Console 服务端连接断开，请重新登录"))
+		}
 	})
 
 	// 封装一个独立函数, 统计耗时
@@ -158,4 +170,25 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) { // nolint
 
 	// 正常退出, 如使用 Exit 命令主动退出返回提示
 	manager.GracefulCloseWebSocket(ctx, ws, connected, errors.New(i18n.T(c, "BCS Console 服务端连接断开，请重新登录")))
+}
+
+// WaitWebsocketClose wait all conn close
+func WaitWebsocketClose(timeout time.Duration) {
+	st := time.Now()
+	count := stopCount.Load()
+
+	c := make(chan struct{})
+	go func() {
+		defer close(c)
+		stopWg.Wait()
+	}()
+
+	select {
+	case <-c:
+		logger.Infof("all websocket connections closed, count=%d, duration=%s", count, time.Since(st))
+		return // completed normally
+	case <-time.After(timeout):
+		logger.Warnf("websocket connections close timeout, just ignore, count=%d, duration=%s", count, time.Since(st))
+		return // timed out
+	}
 }

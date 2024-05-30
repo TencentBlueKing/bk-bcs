@@ -83,6 +83,7 @@
         <bk-table
           :data="curPodsData"
           :pagination="pagination"
+          :max-height="840"
           v-bkloading="{ isLoading: podLoading }"
           @page-change="pageChange"
           @page-limit-change="pageSizeChange"
@@ -253,8 +254,8 @@ import useTableSort from '@/composables/use-table-sort';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router/index';
 import $store from '@/store';
+import { useSelectItemsNamespace } from '@/views/cluster-manage/namespace/use-namespace';
 import EventQueryTable from '@/views/project-manage/event-query/event-query-table.vue';
-import { useSelectItemsNamespace } from '@/views/resource-view/namespace/use-namespace';
 
 export default defineComponent({
   name: 'NodeOverview',

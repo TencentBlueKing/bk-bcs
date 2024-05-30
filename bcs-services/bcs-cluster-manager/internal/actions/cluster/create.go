@@ -151,6 +151,7 @@ func (ca *CreateAction) constructCluster(cloud *cmproto.Cloud) (*cmproto.Cluster
 		CreateTime:              createTime,
 		UpdateTime:              createTime,
 		Status:                  common.StatusInitialization,
+		IsMixed:                 ca.req.IsMixed,
 	}
 
 	// set cloud default values
@@ -382,7 +383,7 @@ func (ca *CreateAction) createNodegroup(cls *cmproto.Cluster) error {
 	timeStr := time.Now().Format(time.RFC3339)
 	if ca.req.NodeGroups != nil {
 		for _, ng := range ca.req.NodeGroups {
-			ng.NodeGroupID = autils.GenerateNodeGroupID()
+			ng.NodeGroupID = autils.GenerateTemplateID(autils.GroupTemplate)
 			ng.Region = cls.Region
 			ng.ClusterID = cls.ClusterID
 			ng.ProjectID = cls.ProjectID
@@ -425,7 +426,7 @@ func (ca *CreateAction) createNodegroup(cls *cmproto.Cluster) error {
 					ca.setResp(common.BcsErrClusterManagerDatabaseRecordDuplicateKey, err.Error())
 					return err
 				}
-				//other db operation error
+				// other db operation error
 				ca.resp.Data = cls
 				ca.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 				return err
@@ -437,7 +438,8 @@ func (ca *CreateAction) createNodegroup(cls *cmproto.Cluster) error {
 }
 
 // Handle create cluster request
-func (ca *CreateAction) Handle(ctx context.Context, req *cmproto.CreateClusterReq, resp *cmproto.CreateClusterResp) {
+func (ca *CreateAction) Handle(ctx context.Context, req *cmproto.CreateClusterReq, // nolint
+	resp *cmproto.CreateClusterResp) {
 	if req == nil || resp == nil {
 		blog.Errorf("create cluster failed, req or resp is empty")
 		return

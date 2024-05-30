@@ -1,12 +1,13 @@
 import { createI18n } from 'vue-i18n';
+import { getCookie } from '../utils';
 import zhCn from './zh-cn';
 import enUs from './en-us';
 const i18n = createI18n({
-  locale: localStorage.getItem('language') || 'zh-CN',
+  locale: getCookie('blueking_language') || 'zh-cn',
   legacy: false,
   messages: {
-    'zh-CN': zhCn,
-    'en-US': enUs,
+    'zh-cn': zhCn,
+    en: enUs,
   },
 });
 

@@ -259,10 +259,9 @@ func (ng *NodeGroup) updateNormalNodePool(
 		}
 	*/
 	// update bkCloudName
-	if group.Area == nil {
-		group.Area = &proto.CloudArea{}
+	if group.Area != nil {
+		group.Area.BkCloudName = cloudprovider.GetBKCloudName(int(group.Area.BkCloudID))
 	}
-	group.Area.BkCloudName = cloudprovider.GetBKCloudName(int(group.Area.BkCloudID))
 
 	// module info
 	if group.NodeTemplate != nil && group.NodeTemplate.Module != nil &&
@@ -904,4 +903,9 @@ func (ng *NodeGroup) GetExternalNodeScript(group *proto.NodeGroup, internal bool
 
 	blog.Infof("GetExternalNodeScript[%s] successful", group.NodeGroupID)
 	return script, nil
+}
+
+// CheckResourcePoolQuota check resource pool quota when revise group limit
+func (ng *NodeGroup) CheckResourcePoolQuota(region, instanceType string, groupId string) error {
+	return nil
 }

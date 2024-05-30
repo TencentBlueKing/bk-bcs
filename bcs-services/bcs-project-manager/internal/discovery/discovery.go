@@ -20,7 +20,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/micro/go-micro/v2/registry"
+	"go-micro.dev/v4/registry"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 )

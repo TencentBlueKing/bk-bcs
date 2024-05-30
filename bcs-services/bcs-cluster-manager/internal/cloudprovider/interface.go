@@ -32,6 +32,7 @@ var (
 	taskMgrs          map[string]TaskManager
 	vpcMgrs           map[string]VPCManager
 	storage           store.ClusterManagerModel
+	etcdStorage       store.EtcdStoreInterface
 )
 
 func init() {
@@ -57,6 +58,18 @@ func InitStorageModel(model store.ClusterManagerModel) {
 // GetStorageModel for cluster manager storage tools
 func GetStorageModel() store.ClusterManagerModel {
 	return storage
+}
+
+// InitEtcdModel for cluster manager etcd storage
+func InitEtcdModel(model store.EtcdStoreInterface) {
+	lock.Lock()
+	defer lock.Unlock()
+	etcdStorage = model
+}
+
+// GetEtcdModel for cluster manager etcd storage
+func GetEtcdModel() store.EtcdStoreInterface {
+	return etcdStorage
 }
 
 // InitTaskManager for cluster manager initialization
@@ -234,6 +247,8 @@ type NodeManager interface {
 	ListKeyPairs(opt *ListNetworksOption) ([]*proto.KeyPair, error)
 	// GetResourceGroups resource groups list
 	GetResourceGroups(opt *CommonOption) ([]*proto.ResourceGroupInfo, error)
+	// ListRuntimeInfo get runtime info list
+	ListRuntimeInfo(opt *ListRuntimeInfoOption) (map[string][]string, error)
 }
 
 // CloudValidateManager validate interface for check cloud resourceInfo
@@ -330,6 +345,8 @@ type NodeGroupManager interface {
 	GetNodesInGroupV2(group *proto.NodeGroup, opt *CommonOption) ([]*proto.NodeGroupNode, error)
 	// MoveNodesToGroup add cluster nodes to NodeGroup
 	MoveNodesToGroup(nodes []*proto.Node, group *proto.NodeGroup, opt *MoveNodesOption) (*proto.Task, error)
+	// CheckResourcePoolQuota need to check resource pool quota when revise group quota
+	CheckResourcePoolQuota(region, instanceType string, groupId string) error
 
 	// RemoveNodesFromGroup remove nodes from NodeGroup, nodes are still in cluster
 	RemoveNodesFromGroup(nodes []*proto.Node, group *proto.NodeGroup, opt *RemoveNodesOption) error

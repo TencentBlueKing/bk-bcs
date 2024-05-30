@@ -47,7 +47,7 @@ func (e *BcsGitopsHandler) checkStartupProjectPermission(ctx context.Context, pr
 	if err != nil {
 		return errors.Wrapf(err, "get userinfo failed")
 	}
-	permit, _, _, err := e.projectPermission.CanEditProject(user.GetUser(), projectID)
+	permit, _, _, err := e.projectPermission.CanViewProject(user.GetUser(), projectID)
 	if err != nil {
 		return errors.Wrapf(err, "check user '%s' can edit project '%s' failed", user.GetUser(), projectID)
 	}

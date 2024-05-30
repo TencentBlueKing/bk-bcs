@@ -18,7 +18,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/TencentBlueKing/bkmonitor-kits/logger"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
 
@@ -41,11 +41,11 @@ func (m *multiCredConf) LoadWithLimit(name string, v *viper.Viper) error {
 	}
 
 	if err := config.G.ReadCredViper(name, v); err != nil {
-		logger.Errorf("reload credential error, %s", err)
+		blog.Errorf("reload credential error, %s", err)
 		return err
 	}
 
-	logger.Infof("reload credential conf from %s, len=%d", name, len(config.G.Credentials[name]))
+	blog.Infof("reload credential conf from %s, len=%d", name, len(config.G.Credentials[name]))
 	m.lastWatchTime[name] = time.Now()
 	return nil
 }
@@ -88,7 +88,7 @@ func MultiCredWatch(filePaths []string) error {
 		if err := config.G.ReadCredViper(filePath, conf); err != nil {
 			return err
 		}
-		logger.Infof("load credential conf from %s, len=%d", filePath, len(config.G.Credentials[filePath]))
+		blog.Infof("load credential conf from %s, len=%d", filePath, len(config.G.Credentials[filePath]))
 
 		confs.confMap[filePath] = conf
 	}

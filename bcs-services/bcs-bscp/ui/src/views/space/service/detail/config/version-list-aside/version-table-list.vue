@@ -46,8 +46,7 @@
                   placement="bottom-start"
                   :bk-biz-id="props.bkBizId"
                   :app-id="props.appId"
-                  :groups="row.status.released_groups"
-                  :is-default-group="isVersionInDefaultGroup(row.status.released_groups)">
+                  :groups="row.status.released_groups">
                   <div>{{ getGroupNames(row) }}</div>
                 </ReleasedGroupViewer>
               </template>
@@ -138,7 +137,7 @@
   } from '../../../../../../api/config';
   import { datetimeFormat } from '../../../../../../utils/index';
   import { VERSION_STATUS_MAP, GET_UNNAMED_VERSION_DATA } from '../../../../../../constants/config';
-  import { IConfigVersion, IConfigVersionQueryParams, IReleasedGroup } from '../../../../../../../types/config';
+  import { IConfigVersion, IConfigVersionQueryParams } from '../../../../../../../types/config';
   import ServiceSelector from '../../components/service-selector.vue';
   import SearchInput from '../../../../../../components/search-input.vue';
   import VersionDiff from '../../config/components/version-diff/index.vue';
@@ -233,8 +232,6 @@
     }
     return '--';
   };
-
-  const isVersionInDefaultGroup = (groups: IReleasedGroup[]) => groups.findIndex((item) => item.id === 0) > -1;
 
   const handleTabChange = (tab: string) => {
     currentTab.value = tab;

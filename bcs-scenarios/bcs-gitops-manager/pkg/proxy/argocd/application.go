@@ -31,7 +31,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/internal/dao"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/analysis"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/analyze"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
 	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/resources"
@@ -42,11 +42,11 @@ import (
 // AppPlugin for internal project authorization
 type AppPlugin struct {
 	*mux.Router
-	db             dao.Interface
-	storage        store.Store
-	middleware     mw.MiddlewareInterface
-	analysisClient analysis.AnalysisInterface
-	bcsStorage     bcsapi.Storage
+	db         dao.Interface
+	storage    store.Store
+	middleware mw.MiddlewareInterface
+	bcsStorage bcsapi.Storage
+	appCollect analyze.CollectApplication
 }
 
 // all argocd application URL:
@@ -335,7 +335,7 @@ func (plugin *AppPlugin) applicationCollect(r *http.Request) (*http.Request, *mw
 	if statusCode != http.StatusOK {
 		return r, mw.ReturnErrorResponse(statusCode, err)
 	}
-	if err = plugin.analysisClient.ApplicationCollect(argoApp.Spec.Project, appName); err != nil {
+	if err = plugin.appCollect.ApplicationCollect(argoApp.Spec.Project, appName); err != nil {
 		return r, mw.ReturnErrorResponse(http.StatusInternalServerError, err)
 	}
 	return r, mw.ReturnJSONResponse("success")
@@ -352,7 +352,7 @@ func (plugin *AppPlugin) applicationCancelCollect(r *http.Request) (*http.Reques
 	if statusCode != http.StatusOK {
 		return r, mw.ReturnErrorResponse(statusCode, err)
 	}
-	if err = plugin.analysisClient.ApplicationCancelCollect(argoApp.Spec.Project, appName); err != nil {
+	if err = plugin.appCollect.ApplicationCancelCollect(argoApp.Spec.Project, appName); err != nil {
 		return r, mw.ReturnErrorResponse(http.StatusInternalServerError, err)
 	}
 	return r, mw.ReturnJSONResponse("success")
@@ -420,14 +420,40 @@ func (plugin *AppPlugin) customRevisionsMetadata(r *http.Request) (*http.Request
 				fmt.Errorf("query parameter 'revisions' has empty value"))
 		}
 	}
+
 	repos := make([]string, 0)
-	if argoApp.Spec.HasMultipleSources() {
-		if len(argoApp.Spec.Sources) != len(revisions) {
-			return r, mw.ReturnErrorResponse(http.StatusBadRequest, fmt.Errorf("application has multiple(%d) "+
-				"sources, not same as query param 'revisions'", len(argoApp.Spec.Sources)))
-		}
+	if argoApp.Spec.HasMultipleSources() && len(argoApp.Spec.Sources) == len(revisions) {
 		for _, source := range argoApp.Spec.Sources {
 			repos = append(repos, source.RepoURL)
+		}
+	} else if argoApp.Spec.HasMultipleSources() && len(argoApp.Spec.Sources) != len(revisions) {
+		// 兼容应用从 SingleSource 与 MultipleSource 互相转换的情况
+		found := false
+		for i := range argoApp.Status.History {
+			history := argoApp.Status.History[i]
+			if len(revisions) == 1 && history.Revision == revisions[0] {
+				repos = append(repos, history.Source.RepoURL)
+				found = true
+				break
+			}
+			if len(revisions) > 1 && len(revisions) == len(history.Revisions) {
+				for j := range revisions {
+					if revisions[j] != history.Revisions[j] {
+						break
+					}
+					if j == len(revisions)-1 {
+						repos = append(repos, history.Source.RepoURL)
+						found = true
+					}
+				}
+				if found {
+					break
+				}
+			}
+		}
+		if !found {
+			return r, mw.ReturnErrorResponse(http.StatusBadRequest, fmt.Errorf("application has multiple(%d) "+
+				"sources, not same as query param 'revisions'", len(argoApp.Spec.Sources)))
 		}
 	} else {
 		if len(revisions) != 1 {

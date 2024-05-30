@@ -81,7 +81,7 @@ func (ca *CreateAction) getRelativeResource() error {
 func (ca *CreateAction) constructNodeGroup() *cmproto.NodeGroup {
 	timeStr := time.Now().Format(time.RFC3339)
 	group := &cmproto.NodeGroup{
-		NodeGroupID:     autils.GenerateNodeGroupID(),
+		NodeGroupID:     autils.GenerateTemplateID(autils.GroupTemplate),
 		Name:            ca.req.Name,
 		ClusterID:       ca.req.ClusterID,
 		Region:          ca.req.Region,

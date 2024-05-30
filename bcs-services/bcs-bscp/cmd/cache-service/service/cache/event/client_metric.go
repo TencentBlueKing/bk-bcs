@@ -144,22 +144,19 @@ func (cm *ClientMetric) getClientMetricList(kt *kit.Kit, key string, listLen int
 
 // 处理 client metric 数据
 // client 表是按照 业务+服务+客户端 维度：数据做聚合
-// 多条心跳把每条每一列中的最大值取出来，组合成一条
-// 多条变更数据只需要最后一条
-// client event 表是按照 业务+服务+事件ID 维度：数据做聚合
-func (cm *ClientMetric) handleClientMetricData(kt *kit.Kit, payload []string) error { // nolint
+// client event 表是按照 业务+服务+客户端+客户端模式+事件ID 维度：数据做聚合
+func (cm *ClientMetric) handleClientMetricData(kt *kit.Kit, payload []string) error {
 	vc := new(sfs.VersionChangePayload)
 	hb := new(sfs.HeartbeatItem)
-	clientData := make([]*pbclient.Client, 0)
-	clientEventData := make([]*pbce.ClientEvent, 0)
 
-	vcClientEvent := map[string]*pbce.ClientEvent{}
-	hbClientEvent := map[string]*pbce.ClientEvent{}
+	clientData := []*pbclient.Client{}
+	clientEventData := []*pbce.ClientEvent{}
 
 	hbClient := map[string]*pbclient.Client{}
-	vcClient := map[string]*pbclient.Client{}
+	hbClientEvent := map[string]*pbce.ClientEvent{}
 
-	maxResourceUsageValues := make(map[string]*pbclient.ClientResource)
+	vcClient := map[string]*pbclient.Client{}
+	vcClientEvent := map[string]*pbce.ClientEvent{}
 
 	clientMetricData := sfs.ClientMetricData{}
 	for _, v := range payload {
@@ -167,88 +164,65 @@ func (cm *ClientMetric) handleClientMetricData(kt *kit.Kit, payload []string) er
 		if err != nil {
 			return err
 		}
+
 		switch sfs.MessagingType(clientMetricData.MessagingType) {
 		case sfs.Heartbeat:
-			err = jsoni.Unmarshal(clientMetricData.Payload, hb)
-			if err != nil {
+			if err := hb.Decode(clientMetricData.Payload); err != nil {
 				return err
 			}
 
-			hb.Application.AppID = clientMetricData.AppID
 			clientMetric, errHb := hb.PbClientMetric()
 			if errHb != nil {
 				return errHb
 			}
-			if clientMetric == nil {
-				continue
-			}
-			key := fmt.Sprintf("%d-%d-%s", clientMetric.Attachment.BizId,
-				clientMetric.Attachment.AppId, clientMetric.Attachment.Uid)
-			// 如果 key 已存在，比较并更新最大值
-			if existing, ok := maxResourceUsageValues[key]; ok {
-				if clientMetric.Spec.Resource.CpuMaxUsage > existing.CpuMaxUsage {
-					existing.CpuMaxUsage = clientMetric.Spec.Resource.CpuMaxUsage
-				}
-				if clientMetric.Spec.Resource.CpuUsage > existing.CpuUsage {
-					existing.CpuUsage = clientMetric.Spec.Resource.CpuUsage
-				}
-				if clientMetric.Spec.Resource.MemoryMaxUsage > existing.MemoryMaxUsage {
-					existing.MemoryMaxUsage = clientMetric.Spec.Resource.MemoryMaxUsage
-				}
-				if clientMetric.Spec.Resource.MemoryUsage > existing.MemoryUsage {
-					existing.MemoryUsage = clientMetric.Spec.Resource.MemoryUsage
-				}
-				maxResourceUsageValues[key] = existing
-			} else {
-				maxResourceUsageValues[key] = &pbclient.ClientResource{
-					CpuMaxUsage:    clientMetric.Spec.Resource.CpuMaxUsage,
-					CpuUsage:       clientMetric.Spec.Resource.CpuUsage,
-					MemoryUsage:    clientMetric.Spec.Resource.MemoryUsage,
-					MemoryMaxUsage: clientMetric.Spec.Resource.MemoryMaxUsage,
-				}
-			}
-			clientMetric.Spec.Resource = maxResourceUsageValues[key]
-			hbClient[key] = clientMetric
-			// 处理clientEvent数据
 			clientEventMetric, ceErr := hb.PbClientEventMetric()
 			if ceErr != nil {
 				return ceErr
 			}
-			hbClientEvent = lastClientEventData(clientEventMetric, hbClientEvent)
+
+			// 数据从上游过来是有顺序的，根据唯一键拿最后一条
+			hbClient = getMaxResourceUsage(clientMetric, hbClient, fmt.Sprintf("%d-%d-%s", hb.BasicData.BizID,
+				hb.Application.AppID, hb.Application.Uid))
+			hbClientEvent[fmt.Sprintf("%d-%d-%s-%s-%s", hb.BasicData.BizID,
+				hb.Application.AppID, hb.Application.Uid, hb.BasicData.ClientMode, hb.Application.CursorID)] = clientEventMetric
 		case sfs.VersionChangeMessage:
-			err = vc.Decode(clientMetricData.Payload)
-			if err != nil {
+			if err := vc.Decode(clientMetricData.Payload); err != nil {
 				return err
 			}
-			vc.Application.AppID = clientMetricData.AppID
+
 			clientMetric, errCeVc := vc.PbClientMetric()
 			if errCeVc != nil {
 				return errCeVc
 			}
-			vcClient = lastClientData(clientMetric, vcClient)
+
 			clientEventMetric, errVc := vc.PbClientEventMetric()
 			if errVc != nil {
 				return errVc
 			}
-			vcClientEvent = lastClientEventData(clientEventMetric, vcClientEvent)
+
+			// 数据从上游过来是有顺序的，根据唯一键拿最后一条
+			vcClient[fmt.Sprintf("%d-%d-%s", vc.BasicData.BizID,
+				vc.Application.AppID, vc.Application.Uid)] = clientMetric
+			vcClientEvent[fmt.Sprintf("%d-%d-%s-%s-%s", vc.BasicData.BizID,
+				vc.Application.AppID, vc.Application.Uid, vc.BasicData.ClientMode, vc.Application.CursorID)] = clientEventMetric
 		}
 	}
 
+	for _, v := range hbClient {
+		clientData = append(clientData, v)
+	}
 	for _, v := range vcClient {
 		clientData = append(clientData, v)
 	}
-	for _, v := range hbClient {
-		clientData = append(clientData, v)
+
+	for _, v := range hbClientEvent {
+		clientEventData = append(clientEventData, v)
 	}
 	for _, v := range vcClientEvent {
 		clientEventData = append(clientEventData, v)
 	}
-	for _, v := range hbClientEvent {
-		clientEventData = append(clientEventData, v)
-	}
 
-	err := cm.op.BatchUpsertClientMetrics(kt, clientData, clientEventData)
-	if err != nil {
+	if err := cm.op.BatchUpsertClientMetrics(kt, clientData, clientEventData); err != nil {
 		logs.Errorf("batch upsert client metrics failed, rid: %s, err: %s", kt.Rid, err.Error())
 		return err
 	}
@@ -286,36 +260,45 @@ func filterKeysByRegex(keys []string, pattern string) ([]string, error) {
 	return matchingKeys, nil
 }
 
-// 过滤出最后一条数据
-func lastClientData(clientMetric *pbclient.Client, clientMap map[string]*pbclient.Client) map[string]*pbclient.Client {
+// 获取最大资源使用量
+// 只有cpu和内存资源拿最大，部分数据拿最后一条
+func getMaxResourceUsage(clientMetric *pbclient.Client, clientMap map[string]*pbclient.Client,
+	key string) map[string]*pbclient.Client {
+
 	if clientMetric == nil {
-		return nil
+		return clientMap
 	}
-	key := fmt.Sprintf("%d-%d-%s", clientMetric.Attachment.BizId,
-		clientMetric.Attachment.AppId, clientMetric.Attachment.Uid)
-	if p, ok := clientMap[key]; ok {
-		if p.Spec.LastHeartbeatTime.AsTime().After(clientMetric.Spec.LastHeartbeatTime.AsTime()) {
-			clientMap[key] = p
+
+	// 如果 key 已存在，比较并更新最大值
+	if existing, ok := clientMap[key]; ok {
+		if clientMetric.Spec.Resource.CpuMaxUsage > existing.Spec.Resource.CpuMaxUsage {
+			existing.Spec.Resource.CpuMaxUsage = clientMetric.Spec.Resource.CpuMaxUsage
 		}
+		if clientMetric.Spec.Resource.CpuMinUsage > existing.Spec.Resource.CpuMinUsage {
+			existing.Spec.Resource.CpuMinUsage = clientMetric.Spec.Resource.CpuMinUsage
+		}
+		if clientMetric.Spec.Resource.CpuAvgUsage > existing.Spec.Resource.CpuAvgUsage {
+			existing.Spec.Resource.CpuAvgUsage = clientMetric.Spec.Resource.CpuAvgUsage
+		}
+		if clientMetric.Spec.Resource.CpuUsage > existing.Spec.Resource.CpuUsage {
+			existing.Spec.Resource.CpuUsage = clientMetric.Spec.Resource.CpuUsage
+		}
+		if clientMetric.Spec.Resource.MemoryMaxUsage > existing.Spec.Resource.MemoryMaxUsage {
+			existing.Spec.Resource.MemoryMaxUsage = clientMetric.Spec.Resource.MemoryMaxUsage
+		}
+		if clientMetric.Spec.Resource.MemoryAvgUsage > existing.Spec.Resource.MemoryAvgUsage {
+			existing.Spec.Resource.MemoryAvgUsage = clientMetric.Spec.Resource.MemoryAvgUsage
+		}
+		if clientMetric.Spec.Resource.MemoryMinUsage > existing.Spec.Resource.MemoryMinUsage {
+			existing.Spec.Resource.MemoryMinUsage = clientMetric.Spec.Resource.MemoryMinUsage
+		}
+		if clientMetric.Spec.Resource.MemoryUsage > existing.Spec.Resource.MemoryUsage {
+			existing.Spec.Resource.MemoryUsage = clientMetric.Spec.Resource.MemoryUsage
+		}
+		clientMap[key] = existing
 	} else {
 		clientMap[key] = clientMetric
 	}
-	return clientMap
-}
 
-func lastClientEventData(clientEventMetric *pbce.ClientEvent,
-	clientEventMap map[string]*pbce.ClientEvent) map[string]*pbce.ClientEvent {
-	if clientEventMetric == nil {
-		return nil
-	}
-	key := fmt.Sprintf("%d-%d-%s", clientEventMetric.Attachment.BizId,
-		clientEventMetric.Attachment.AppId, clientEventMetric.Attachment.CursorId)
-	if p, ok := clientEventMap[key]; ok {
-		if p.HeartbeatTime.AsTime().After(clientEventMetric.HeartbeatTime.AsTime()) {
-			clientEventMap[key] = p
-		}
-	} else {
-		clientEventMap[key] = clientEventMetric
-	}
-	return clientEventMap
+	return clientMap
 }

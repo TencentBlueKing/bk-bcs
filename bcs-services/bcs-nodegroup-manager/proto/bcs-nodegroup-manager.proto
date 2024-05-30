@@ -191,6 +191,20 @@ message NodeGroup {
       description : "NodeIPs are the IP of nodes which belongs to the node group"
     }
   ];
+
+  int32 priority = 8[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "priority",
+      description : "Priority is the priority of node group."
+    }
+  ];
+
+  int32 deletingSize = 9[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "deletingSize",
+      description : "DeletingSize is the number of nodes in the node group that are in the process of deletion"
+    }
+  ];
 }
 
 message NodeTemplate {
@@ -618,6 +632,39 @@ message ElasticNodeGroup {
       description : "权重"
     }
   ];
+  NodegroupLimit limit = 5[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "limit",
+      description : "限制"
+    }
+  ];
+}
+
+message NodegroupLimit {
+  bool nodegroupLimit = 1[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "nodegroupLimit",
+      description : "nodegroup限制开关"
+    }
+  ];
+  int32 nodegroupLimitNum = 2[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "nodegroupLimitNum",
+      description : "nodegroup限制数量"
+    }
+  ];
+  bool clusterLimit = 3[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "clusterLimit",
+      description : "cluster 限制开关"
+    }
+  ];
+  int32 clusterLimitNum = 4[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "clusterLimitNum",
+      description : "cluster限制数量"
+    }
+  ];
 }
 
 message Strategy {
@@ -675,6 +722,18 @@ message Strategy {
       description : "在ddl多少分钟之前执行策略，用于分级资源池"
     }
   ];
+  map<string, BufferParam> nodegroupBuffer = 10[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "nodegroupBuffer",
+      description : "各nodegroup buffer限制"
+    }
+  ];
+  TimeMode timeMode = 11[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "timeMode",
+      description : "时间模式，扩缩容周期"
+    }
+  ];
 }
 
 message Buffer {
@@ -690,10 +749,66 @@ message Buffer {
       description : "定义resource pool中空闲资源的最高水位"
     }
   ];
-  int32 reservedDays =3[
+}
+
+message TimeMode {
+  bool scaleDownWhenTimeout = 1[
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-      title : "reservedDays",
-      description : "定义资源池保留天数"
+      title : "scaleDownWhenTimeout",
+      description : "到期是否缩容"
+    }
+  ];
+  repeated TimePeriod timePeriods = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "timePeriods",
+      description : "扩缩容周期"
+    }
+  ];
+  int32 reservedHours = 3 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "reservedHours",
+      description : "保留时长"
+    }
+  ];
+}
+
+message TimePeriod {
+  string scaleOutCron = 1[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "scaleOutCron",
+      description : "扩容周期"
+    }
+  ];
+  string scaleInCron = 2[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "scaleInCron",
+      description : "缩容周期"
+    }
+  ];
+  string scaleOutTime = 3[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "scaleOutTime",
+      description : "扩容时间"
+    }
+  ];
+  string scaleInTime = 4[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "scaleInTime",
+      description : "缩容时间"
+    }
+  ];
+}
+
+message BufferParam {
+  int32 percent = 1[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "percent",
+      description : "百分比"
+    }];
+  int32 count = 2[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "count",
+      description : "数量"
     }
   ];
 }

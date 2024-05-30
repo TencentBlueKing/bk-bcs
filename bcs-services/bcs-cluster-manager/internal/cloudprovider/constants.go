@@ -251,6 +251,8 @@ var (
 	LabelsKey ParamKey = "labels"
 	// TaintsKey xxx
 	TaintsKey ParamKey = "taints"
+	// RemoveTaintsKey xxx
+	RemoveTaintsKey ParamKey = "RemoveTaints"
 	// AnnotationsKey xxx
 	AnnotationsKey ParamKey = "annotations"
 	// ResourceQuotaKey xxx

@@ -15,6 +15,7 @@ package common
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -40,19 +41,20 @@ func RegisterCommonActions() map[string]interface{} {
 		cloudprovider.JobFastExecuteScriptAction: JobExecuteScriptTask,
 		cloudprovider.EnsureAutoScalerAction:     EnsureAutoScalerTask,
 
-		cloudprovider.InstallVclusterAction:         InstallVclusterTask,
-		cloudprovider.DeleteVclusterAction:          UnInstallVclusterTask,
-		cloudprovider.CreateNamespaceAction:         CreateNamespaceTask,
-		cloudprovider.DeleteNamespaceAction:         DeleteNamespaceTask,
-		cloudprovider.SetNodeLabelsAction:           SetNodeLabelsTask,
-		cloudprovider.SetNodeTaintsAction:           SetNodeTaintsTask,
-		cloudprovider.SetNodeAnnotationsAction:      SetNodeAnnotationsTask,
-		cloudprovider.CheckKubeAgentStatusAction:    CheckKubeAgentStatusTask,
-		cloudprovider.CreateResourceQuotaAction:     CreateResourceQuotaTask,
-		cloudprovider.DeleteResourceQuotaAction:     DeleteResourceQuotaTask,
-		cloudprovider.ResourcePoolLabelAction:       SetResourcePoolDeviceLabels,
-		cloudprovider.LadderResourcePoolLabelAction: EmptyAction,
-		cloudprovider.CheckClusterCleanNodesAction:  CheckClusterCleanNodsTask,
+		cloudprovider.InstallVclusterAction:              InstallVclusterTask,
+		cloudprovider.DeleteVclusterAction:               UnInstallVclusterTask,
+		cloudprovider.CreateNamespaceAction:              CreateNamespaceTask,
+		cloudprovider.DeleteNamespaceAction:              DeleteNamespaceTask,
+		cloudprovider.SetNodeLabelsAction:                SetNodeLabelsTask,
+		cloudprovider.SetNodeTaintsAction:                SetNodeTaintsTask,
+		cloudprovider.SetNodeAnnotationsAction:           SetNodeAnnotationsTask,
+		cloudprovider.CheckKubeAgentStatusAction:         CheckKubeAgentStatusTask,
+		cloudprovider.CreateResourceQuotaAction:          CreateResourceQuotaTask,
+		cloudprovider.DeleteResourceQuotaAction:          DeleteResourceQuotaTask,
+		cloudprovider.ResourcePoolLabelAction:            SetResourcePoolDeviceLabels,
+		cloudprovider.LadderResourcePoolLabelAction:      EmptyAction,
+		cloudprovider.CheckClusterCleanNodesAction:       CheckClusterCleanNodsTask,
+		cloudprovider.RemoveClusterNodesInnerTaintAction: RemoveClusterNodesInnerTaintTask,
 	}
 }
 
@@ -123,7 +125,7 @@ func RunBKsopsJob(taskID string, stepName string) error {
 	// inject taskID
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
 
-	timeOutCtx, cancel := context.WithTimeout(ctx, time.Minute*120)
+	timeOutCtx, cancel := context.WithTimeout(ctx, time.Minute*60)
 	defer cancel()
 
 	taskUrl, err := execBkSopsTask(timeOutCtx, createBkSopsTaskParas{
@@ -205,7 +207,7 @@ func execBkSopsTask(ctx context.Context, paras createBkSopsTaskParas) (string, e
 	}
 
 	err = loop.LoopDoFunc(ctx, func() error {
-		data, errGet := BKOpsClient.GetTaskStatus("", getTaskStatusReq, &StartTaskRequest{})
+		data, errGet := BKOpsClient.GetTaskStatus(getTaskStatusReq, &StartTaskRequest{})
 		if errGet != nil {
 			blog.Errorf("RunBKsopsJob[%s] execBkSopsTask GetTaskStatus failed: %v", taskID, errGet)
 			return nil
@@ -230,6 +232,13 @@ func execBkSopsTask(ctx context.Context, paras createBkSopsTaskParas) (string, e
 	}, loop.LoopInterval(10*time.Second))
 	if err != nil {
 		blog.Errorf("RunBKsopsJob[%s] execBkSopsTask failed: %v", taskID, err)
+		if errors.Is(err, context.DeadlineExceeded) {
+			errLocal := BKOpsClient.OperateBkOpsTask(getTaskStatusReq, &OperateTaskRequest{Action: Revoke.String()})
+			if errLocal != nil {
+				blog.Errorf("RunBKsopsJob[%s] OperateBkOpsTask[%s:%s] failed: %v", taskID,
+					getTaskStatusReq.BkBizID, getTaskStatusReq.TaskID, errLocal)
+			}
+		}
 		return taskResp.TaskURL, err
 	}
 
@@ -278,7 +287,7 @@ func createBkSopsTask(ctx context.Context, paras createBkSopsTaskParas) (*ResDat
 	)
 
 	err = retry.Do(func() error {
-		resp, err = BKOpsClient.CreateBkOpsTask(paras.url, pathParas, createTaskReq)
+		resp, err = BKOpsClient.CreateBkOpsTask(pathParas, createTaskReq)
 		if err != nil {
 			return err
 		}
@@ -305,7 +314,7 @@ func startBkSopsTask(ctx context.Context, paras startBkSopsTaskParas) error {
 	}
 
 	var err = retry.Do(func() error {
-		_, errStart := BKOpsClient.StartBkOpsTask("", startTaskReq, &StartTaskRequest{})
+		_, errStart := BKOpsClient.StartBkOpsTask(startTaskReq, &StartTaskRequest{})
 		if errStart != nil {
 			return errStart
 		}

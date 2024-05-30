@@ -45,9 +45,9 @@ func (h BKMonitorHandler) handleBKMonitorClusterMetric(c *rest.Context, promql s
 		return promclient.ResultData{}, err
 	}
 
-	_, nodeNameMatch, err := GetMasterNodeMatch(c.Request.Context(), c.ClusterId)
-	if err != nil {
-		return promclient.ResultData{}, err
+	_, nodeNameMatch, ok := GetMasterNodeMatchIgnoreErr(c.Request.Context(), c.ClusterId)
+	if !ok {
+		return promclient.ResultData{}, nil
 	}
 
 	nodeFormat := ""
@@ -77,9 +77,9 @@ func (h BKMonitorHandler) handleBKMonitorClusterMetric(c *rest.Context, promql s
 // GetClusterOverview 获取集群概览
 // nolint
 func (h BKMonitorHandler) GetClusterOverview(c *rest.Context) (ClusterOverviewMetric, error) {
-	_, nodeNameMatch, err := GetMasterNodeMatch(c.Request.Context(), c.ClusterId)
-	if err != nil {
-		return ClusterOverviewMetric{}, err
+	_, nodeNameMatch, ok := GetMasterNodeMatchIgnoreErr(c.Request.Context(), c.ClusterId)
+	if !ok {
+		return ClusterOverviewMetric{}, nil
 	}
 
 	nodeFormat := ""
@@ -103,8 +103,8 @@ func (h BKMonitorHandler) GetClusterOverview(c *rest.Context) (ClusterOverviewMe
 		"disk_used": `(sum(avg_over_time(bkmonitor:node_filesystem_size_bytes{bcs_cluster_id="%<clusterID>s", fstype=~"%<fstype>s", mountpoint=~"%<mountpoint>s"}[2m])) ` +
 			`- sum(avg_over_time(bkmonitor:node_filesystem_free_bytes{bcs_cluster_id="%<clusterID>s", fstype=~"%<fstype>s", mountpoint=~"%<mountpoint>s"}[2m])))`,
 		"disk_total":   `sum(avg_over_time(bkmonitor:node_filesystem_size_bytes{bcs_cluster_id="%<clusterID>s", fstype=~"%<fstype>s", mountpoint=~"%<mountpoint>s"}[2m]))`,
-		"diskio_used":  `sum(max by(bk_instance) (rate(bkmonitor:node_disk_io_time_seconds_total{bcs_cluster_id="%<clusterID>s"}[2m])))`,
-		"diskio_total": `count(max by(bk_instance) (rate(bkmonitor:node_disk_io_time_seconds_total{bcs_cluster_id="%<clusterID>s"}[2m])))`,
+		"diskio_used":  `sum(max by(instance) (rate(bkmonitor:node_disk_io_time_seconds_total{bcs_cluster_id="%<clusterID>s"}[2m])))`,
+		"diskio_total": `count(max by(instance) (rate(bkmonitor:node_disk_io_time_seconds_total{bcs_cluster_id="%<clusterID>s"}[2m])))`,
 		"pod_used":     `sum(avg_over_time(bkmonitor:kubelet_running_pods{bcs_cluster_id="%<clusterID>s", node!=""%<node>s}[2m]))`,
 		"pod_total":    `sum(avg_over_time(bkmonitor:kube_node_status_capacity_pods{bcs_cluster_id="%<clusterID>s", node!=""%<node>s}[2m]))`,
 	}
@@ -201,8 +201,8 @@ func (h BKMonitorHandler) ClusterDiskUsage(c *rest.Context) (promclient.ResultDa
 // ClusterDiskioUsage implements Handler.
 // nolint
 func (h BKMonitorHandler) ClusterDiskioUsage(c *rest.Context) (promclient.ResultData, error) {
-	promql := `sum(max by(bk_instance) (rate(bkmonitor:node_disk_io_time_seconds_total{bcs_cluster_id="%<clusterID>s"}[2m]))) / ` +
-		`count(max by(bk_instance) (rate(bkmonitor:node_disk_io_time_seconds_total{bcs_cluster_id="%<clusterID>s"}[2m])))`
+	promql := `sum(max by(instance) (rate(bkmonitor:node_disk_io_time_seconds_total{bcs_cluster_id="%<clusterID>s"}[2m]))) / ` +
+		`count(max by(instance) (rate(bkmonitor:node_disk_io_time_seconds_total{bcs_cluster_id="%<clusterID>s"}[2m])))`
 
 	return h.handleBKMonitorClusterMetric(c, promql)
 }

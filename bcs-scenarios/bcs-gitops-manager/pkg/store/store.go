@@ -58,6 +58,7 @@ type Store interface {
 	UpdateProject(ctx context.Context, pro *v1alpha1.AppProject) error
 	GetProject(ctx context.Context, name string) (*v1alpha1.AppProject, error)
 	ListProjects(ctx context.Context) (*v1alpha1.AppProjectList, error)
+	ListProjectsWithoutAuth(ctx context.Context) (*v1alpha1.AppProjectList, error)
 
 	// Cluster interface
 	CreateCluster(ctx context.Context, cluster *v1alpha1.Cluster) error
@@ -72,6 +73,7 @@ type Store interface {
 	GetRepository(ctx context.Context, repo string) (*v1alpha1.Repository, error)
 	ListRepository(ctx context.Context, projNames []string) (*v1alpha1.RepositoryList, error)
 
+	AllApplications() []*v1alpha1.Application
 	GetApplication(ctx context.Context, name string) (*v1alpha1.Application, error)
 	GetApplicationRevisionsMetadata(ctx context.Context, repo, revision []string) ([]*v1alpha1.RevisionMetadata, error)
 	GetApplicationResourceTree(ctx context.Context, name string) (*v1alpha1.ApplicationTree, error)
@@ -89,17 +91,29 @@ type Store interface {
 	GetApplicationSet(ctx context.Context, name string) (*v1alpha1.ApplicationSet, error)
 	ListApplicationSets(ctx context.Context, query *appsetpkg.ApplicationSetListQuery) (
 		*v1alpha1.ApplicationSetList, error)
+	DeleteApplicationSetOrphan(ctx context.Context, name string) error
 
 	// authentication token
 	GetToken(ctx context.Context) string
 }
 
+var (
+	globalStore Store
+)
+
 // NewStore create storage client
 func NewStore(opt *Options) Store {
-	return &argo{
+	globalStore = &argo{
 		option:           opt,
 		cacheApplication: &sync.Map{},
+		cacheAppProject:  &sync.Map{},
 	}
+	return globalStore
+}
+
+// GlobalStore return the global store
+func GlobalStore() Store {
+	return globalStore
 }
 
 // NewArgoDB create the DB of argocd

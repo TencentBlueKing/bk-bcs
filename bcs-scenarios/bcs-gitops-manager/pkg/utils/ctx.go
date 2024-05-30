@@ -17,6 +17,22 @@ import (
 	"strings"
 )
 
+// IsUnauthenticated unauthenticated
+func IsUnauthenticated(err error) bool {
+	if err == nil {
+		return false
+	}
+	return strings.Contains(err.Error(), "Unauthenticated")
+}
+
+// IsClusterAskCredentials cluster not ready
+func IsClusterAskCredentials(err error) bool {
+	if err == nil {
+		return false
+	}
+	return strings.Contains(err.Error(), "the server has asked for the client to provide credentials")
+}
+
 // IsPermissionDenied permission
 func IsPermissionDenied(err error) bool {
 	if err == nil {
@@ -31,6 +47,14 @@ func IsContextCanceled(err error) bool {
 		return false
 	}
 	return strings.Contains(err.Error(), "context canceled")
+}
+
+// IsContextDeadlineExceeded context exceeded
+func IsContextDeadlineExceeded(err error) bool {
+	if err == nil {
+		return false
+	}
+	return strings.Contains(err.Error(), "context deadline exceeded")
 }
 
 // IsSecretAlreadyExist defines the secret whether exist
@@ -55,4 +79,17 @@ func IsArgoNotFoundAsPartOf(err error) bool {
 		return false
 	}
 	return strings.Contains(err.Error(), "not found as part of")
+}
+
+// IsUnexpectedEndOfJSON check the error is unexpected json
+func IsUnexpectedEndOfJSON(err error) bool {
+	if err == nil {
+		return false
+	}
+	return strings.Contains(err.Error(), "unexpected end of JSON input")
+}
+
+// NeedRetry defines which error need retry
+func NeedRetry(err error) bool {
+	return IsContextDeadlineExceeded(err) || IsUnexpectedEndOfJSON(err)
 }

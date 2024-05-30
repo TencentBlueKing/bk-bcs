@@ -39,6 +39,13 @@ const (
 	// ServiceNameShort used for bcs-client header
 	ServiceNameShort = "bcs-gitops-manager"
 
+	// HeaderBKUserName defines the user_name of bk
+	HeaderBKUserName = "bkUserName"
+	// HeaderAdminClientUser defines the admin client user of bk
+	HeaderAdminClientUser = "admin"
+	// HeaderAdminGitOpsUser defines the platform user
+	HeaderAdminGitOpsUser = "bcs-gitops-manager"
+
 	// ProjectAliaName the alia name for project
 	ProjectAliaName = "bkbcs.tencent.com/projectAliaName"
 	// ProjectIDKey ID key indexer
@@ -61,5 +68,14 @@ const (
 
 	// SecretKey defines the secretManager k8s secret namespace:name
 	// NOCC:gas/crypto(工具误报)
+	// NOCC:hardcode-password(工具误报)
 	SecretKey = "bkbcs.tencent.com/secretManager" // nolint
 )
+
+// IsAdminUser check user whether admin
+func IsAdminUser(user string) bool {
+	if user != HeaderAdminClientUser && user != HeaderAdminGitOpsUser {
+		return false
+	}
+	return true
+}

@@ -1,0 +1,52 @@
+{
+  "log_dir": "${log_dir}",
+  "v": ${bcsPowertradingVerbosity},
+  "alsologtostderr": true,
+  "log_max_size": 500,
+  "log_max_num": 10,
+  "logtostderr": false,
+  "stderrthreshold": "2",
+  "storage":{
+    "endpoints":"${bcsPowertradingMongo}",
+    "database":"${bcsPowertradingMongoDB}",
+    "username":"${bcsPowertradingMongoUser}",
+    "password":"${bcsPowertradingMongoPassword}"
+  },
+  "registry": {
+    "endpoints": "${bcsEtcdHost}",
+    "cert": "${bcsEtcdCertFile}",
+    "key": "${bcsEtcdKeyFile}",
+    "ca": "${bcsEtcdCAFile}"
+  },
+  "gateway": {
+      "endpoint": "${bcsGatewayEndpoint}",
+      "token": "${bcsGatewayToken}"
+  },
+  "address": "${localIp}",
+  "port": ${bcsPowertradingPort},
+  "httpport": ${bcsPowertradingHTTPPort},
+  "metricport": ${bcsPowertradingMetricPort},
+  "serverca": "${caFile}",
+  "servercert": "${serverCertFile}",
+  "serverkey": "${serverKeyFile}",
+  "clientca": "${caFile}",
+  "clientcert": "${clientCertFile}",
+  "clientkey": "${clientKeyFile}",
+  "debug": ${bcsPowertradingDebug},
+  "resourcemanager": "${bcsPowertradingResourceService}",
+  "concurrency": ${bcsPowertradingConcurrency},
+  "dataControllerInterval": ${dataControllerInterval},
+  "clustermanager": "${bcsPowertradingClusterService}",
+  "appConfig": {
+    "appCode": "${bcsPowertradingAppCode}",
+    "appSecret": "${bcsPowertradingAppSecret}",
+    "userName": "${bcsPowertradingUserName}",
+    "accessToken": "${accessToken}"
+  },
+  "endPoints": {
+    "bkJob": "${bkJob}",
+    "bksops": "${bksops}",
+    "bkcc": "${bkcc}",
+    "bkcr": "${bkcr}"
+  }
+}

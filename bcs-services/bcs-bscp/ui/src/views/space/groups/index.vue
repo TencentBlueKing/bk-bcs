@@ -5,10 +5,13 @@
   </bk-alert>
   <section class="groups-management-page">
     <div class="operate-area">
-      <bk-button theme="primary" @click="openCreateGroupDialog">
-        <Plus class="button-icon" />
-        {{ t('新增分组') }}
-      </bk-button>
+      <div class="btns">
+        <bk-button theme="primary" @click="openCreateGroupDialog">
+          <Plus class="button-icon" />
+          {{ t('新增分组') }}
+        </bk-button>
+        <BatchDeleteBtn :bk-biz-id="spaceId" :selected-ids="selectedIds" @deleted="refreshAfterBatchDelete" />
+      </div>
       <div class="filter-actions">
         <bk-checkbox
           v-model="isCategorizedView"
@@ -35,7 +38,15 @@
     </div>
     <div class="group-table-wrapper">
       <bk-loading style="min-height: 300px" :loading="listLoading">
-        <bk-table class="group-table" :border="['outer']" :data="tableData">
+        <bk-table
+          class="group-table"
+          :border="['outer']"
+          :data="tableData"
+          :checked="checkedGroups"
+          :is-row-select-enable="isRowSelectEnable"
+          @selection-change="handleSelectionChange"
+          @select-all="handleSelectAll">
+          <bk-table-column type="selection" width="60"></bk-table-column>
           <bk-table-column :label="t('分组名称')" :width="210" show-overflow-tooltip>
             <template #default="{ row }">
               <div v-if="isCategorizedView" class="categorized-view-name">
@@ -147,17 +158,18 @@
   import { useI18n } from 'vue-i18n';
   import { storeToRefs } from 'pinia';
   import { Plus, Search, DownShape } from 'bkui-vue/lib/icon';
+  import Message from 'bkui-vue/lib/message';
+  import { debounce } from 'lodash';
   import useGlobalStore from '../../../store/global';
   import { getSpaceGroupList, deleteGroup } from '../../../api/group';
   import { IGroupItem, IGroupCategory, IGroupCategoryItem } from '../../../../types/group';
   import CreateGroup from './create-group.vue';
   import EditGroup from './edit-group.vue';
+  import BatchDeleteBtn from './batch-delete-btn.vue';
   import RuleTag from './components/rule-tag.vue';
   import ServicesToPublished from './services-to-published.vue';
   import tableEmpty from '../../../components/table/table-empty.vue';
   import DeleteConfirmDialog from '../../../components/delete-confirm-dialog.vue';
-  import { debounce } from 'lodash';
-  import Message from 'bkui-vue/lib/message';
 
   const { spaceId } = storeToRefs(useGlobalStore());
   const { t, locale } = useI18n();
@@ -172,6 +184,7 @@
   const changeViewPending = ref(false);
   const isDeleteGroupDialogShow = ref(false);
   const deleteGroupItem = ref<IGroupItem>();
+  const selectedIds = ref<number[]>([]);
   const pagination = ref({
     current: 1,
     count: 0,
@@ -191,11 +204,16 @@
   });
   const isPublishedSliderShow = ref(false);
   const isSearchEmpty = ref(false);
+
   const headInfo = computed(() =>
     t(
       '分组由 1 个或多个标签选择器组成，服务配置版本选择分组上线结合客户端配置的标签用于灰度发布、A/B Test等运营场景，详情参考文档：',
     ),
   );
+
+  const checkedGroups = computed(() => {
+    return groupList.value.filter((item) => selectedIds.value.includes(item.id));
+  });
 
   watch(
     () => spaceId.value,
@@ -266,6 +284,33 @@
     return categoryList;
   };
 
+  // 表格行是否可以选中
+  const isRowSelectEnable = ({ row, isCheckAll }: { row: IGroupItem; isCheckAll: boolean }) => {
+    return isCheckAll || row.released_apps_num < 1;
+  };
+
+  // 表格行选择事件
+  const handleSelectionChange = ({ checked, row }: { checked: boolean; row: IGroupItem }) => {
+    const index = selectedIds.value.findIndex((id) => id === row.id);
+    if (checked) {
+      if (index === -1) {
+        selectedIds.value.push(row.id);
+      }
+    } else {
+      selectedIds.value.splice(index, 1);
+    }
+  };
+
+  // 全选
+  const handleSelectAll = ({ checked }: { checked: boolean }) => {
+    if (checked) {
+      const list = isCategorizedView.value ? groupList.value : tableData.value;
+      selectedIds.value = (list as IGroupItem[]).filter((item) => item.released_apps_num === 0).map((item) => item.id);
+    } else {
+      selectedIds.value = [];
+    }
+  };
+
   // 分类视图下的table数据
   const getCategorizedTableData = () => {
     const list: IGroupCategoryItem[] = [];
@@ -298,6 +343,7 @@
   const handleChangeView = () => {
     changeViewPending.value = true;
     pagination.value.current = 1;
+    selectedIds.value = [];
     refreshTableData();
     nextTick(() => {
       changeViewPending.value = false;
@@ -402,6 +448,20 @@
     handleSearch();
   };
 
+  // 批量删除后刷新表格数据
+  const refreshAfterBatchDelete = () => {
+    if (
+      !isCategorizedView.value &&
+      selectedIds.value.length === tableData.value.length &&
+      pagination.value.current > 1
+    ) {
+      pagination.value.current = pagination.value.current - 1;
+    }
+
+    selectedIds.value = [];
+    loadGroupList();
+  };
+
   // @ts-ignore
   // eslint-disable-next-line
   const goGroupDoc = () => window.open(BSCP_CONFIG.group_doc);
@@ -412,7 +472,7 @@
     cursor: pointer;
   }
   .groups-management-page {
-    height: 100%;
+    height: calc(100% - 33px);
     padding: 24px;
     background: #f5f7fa;
     overflow: hidden;
@@ -422,6 +482,13 @@
     align-items: center;
     justify-content: space-between;
     margin-bottom: 16px;
+    .btns {
+      display: flex;
+      align-items: center;
+      :deep(.bk-button:not(:first-child)) {
+        margin-left: 8px;
+      }
+    }
     .button-icon {
       font-size: 18px;
     }

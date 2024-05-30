@@ -114,7 +114,7 @@
   );
 
   const handleSearch = () => {
-    searchStr.value ? (isSearchEmpty.value = true) : (isSearchEmpty.value = false);
+    isSearchEmpty.value = searchStr.value !== '';
     if (searchStr.value) {
       const list: IPackageTableGroup[] = [];
       packageGroups.value.forEach((pkg) => {
@@ -139,7 +139,6 @@
   };
 
   const handleToggleOpenTable = (id: string | number) => {
-    console.log('1111');
     openedPkgTable.value = openedPkgTable.value === id ? '' : id;
   };
 

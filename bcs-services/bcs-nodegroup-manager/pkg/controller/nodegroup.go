@@ -15,11 +15,13 @@ package controller
 import (
 	"context"
 	"fmt"
+	"runtime/debug"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-nodegroup-manager/pkg/controller/strategy"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-nodegroup-manager/pkg/metric"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-nodegroup-manager/pkg/storage"
 )
 
@@ -58,9 +60,14 @@ func (c *control) Init(opts ...Option) error {
 		blog.Errorf("[nodegroupController] Controller lost storage interface in Init Stage")
 		return fmt.Errorf("controller lost storage instance")
 	}
+	if c.opt.ClusterClient == nil {
+		blog.Errorf("[nodegroupController] Controller lost cluster client in Init Stage")
+		return fmt.Errorf("controller lost cluster client")
+	}
 	strategyFactoryOpts := &strategy.Options{
 		ResourceManager: c.opt.ResourceManager,
 		Storage:         c.opt.Storage,
+		ClusterClient:   c.opt.ClusterClient,
 	}
 	c.opt.StrategyExecutorFactory = strategy.NewFactory(strategyFactoryOpts)
 	c.opt.StrategyExecutorFactory.Init()
@@ -93,18 +100,33 @@ func (c *control) controllerLoops() {
 	// protection for main logic loop
 	defer func() {
 		if r := recover(); r != nil {
-			blog.Errorf("[nodegroupController] panic in NodeGroup Controller, info: %v", r)
+			blog.Errorf("[nodegroupController] panic in NodeGroup Controller, info: %v, stack:%s", r,
+				string(debug.Stack()))
 		}
 	}()
+	strategies := make([]*storage.NodeGroupMgrStrategy, 0)
 	// list all strategies from storage
-	strategies, err := c.opt.Storage.ListNodeGroupStrategies(&storage.ListOptions{})
+	bufferStrategies, err := c.opt.Storage.ListNodeGroupStrategiesByType(storage.BufferStrategyType,
+		&storage.ListOptions{})
 	if err != nil {
-		blog.Errorf("[nodegroupController] controller check all nodegroup manage strategies failed, %s",
+		blog.Errorf("[nodegroupController] controller check all buffer nodegroup manage strategies failed, %s",
 			err.Error())
 		return
 	}
-	blog.Infof("[nodegroupController] controller got %d NodeGroupMgrStrategy", len(strategies))
-
+	blog.Infof("[nodegroupController] controller got %d buffer type NodeGroupMgrStrategy", len(bufferStrategies))
+	strategies = append(strategies, bufferStrategies...)
+	metric.ReportStrategyNumMetric(storage.BufferStrategyType, len(bufferStrategies))
+	hierarchicalStrategies, err := c.opt.Storage.ListNodeGroupStrategiesByType(storage.HierarchicalStrategyType,
+		&storage.ListOptions{})
+	if err != nil {
+		blog.Errorf("[nodegroupController] controller check all hierarchical nodegroup manage strategies failed, %s",
+			err.Error())
+		return
+	}
+	blog.Infof("[nodegroupController] controller got %d hierarchical type NodeGroupMgrStrategy",
+		len(hierarchicalStrategies))
+	strategies = append(strategies, hierarchicalStrategies...)
+	metric.ReportStrategyNumMetric(storage.HierarchicalStrategyType, len(hierarchicalStrategies))
 	for _, strategy := range strategies {
 		c.handleStrategy(strategy)
 		blog.Infof("[nodegroupController] strategy %s for ResourcePool %s has been processed completely",
@@ -127,18 +149,26 @@ func (c *control) handleStrategy(strategy *storage.NodeGroupMgrStrategy) {
 		// when handling strategy.
 		// Controller try the best effort to log failure information when
 		// database(storage) is going down.
-		if strategy.Status == nil {
-			strategy.Status = &storage.State{}
+		// 在更新前再获取一次最新的，避免部分参数更新被覆盖
+		dbStrategy, err := c.opt.Storage.GetNodeGroupStrategy(strategy.Name, &storage.GetOptions{
+			ErrIfNotExist:  true,
+			GetSoftDeleted: false,
+		})
+		if err != nil {
+			blog.Errorf("get strategy %s failed:%s", strategy.Name, err.Error())
+			return
 		}
-		strategy.Status.UpdatedTime = time.Now()
-		strategy.Status.Message = msg
-		strategy.Status.LastStatus = strategy.Status.Status
-		strategy.Status.Status = status
+		if dbStrategy.Status == nil {
+			dbStrategy.Status = &storage.State{}
+		}
+		dbStrategy.Status.UpdatedTime = time.Now()
+		dbStrategy.Status.Message = msg
+		dbStrategy.Status.LastStatus = strategy.Status.Status
+		dbStrategy.Status.Status = status
 		if globalErr != nil {
-			strategy.Status.Error = globalErr.Error()
+			dbStrategy.Status.Error = globalErr.Error()
 		}
-
-		if _, err := c.opt.Storage.UpdateNodeGroupStrategy(strategy, &storage.UpdateOptions{}); err != nil {
+		if _, err := c.opt.Storage.UpdateNodeGroupStrategy(dbStrategy, &storage.UpdateOptions{}); err != nil {
 			blog.Errorf("[nodegroupController] controller update strategy %s failed, %s. status %s, message %s",
 				strategy.Name, err.Error(), status, msg)
 		}
@@ -209,7 +239,7 @@ func (c *control) handleStrategy(strategy *storage.NodeGroupMgrStrategy) {
 		return
 	}
 	// check if controller need to ScaleUp elasticNodeGroup for ResourcePool is idle
-	scaleUpNum, isUp, err := strategyExecutor.IsAbleToScaleUp(strategy)
+	scaleUpNum, isUp, totalDevice, err := strategyExecutor.IsAbleToScaleUp(strategy)
 	if err != nil {
 		status = storage.ErrState
 		msg = err.Error()
@@ -220,7 +250,7 @@ func (c *control) handleStrategy(strategy *storage.NodeGroupMgrStrategy) {
 	if isUp {
 		status = storage.ScaleUpState
 		if len(allActions) == 0 {
-			if err := c.handleElasticNodeGroupScaleUp(strategy, scaleUpNum); err != nil {
+			if err := c.handleElasticNodeGroupScaleUp(strategy, scaleUpNum, totalDevice); err != nil {
 				blog.Errorf("[nodegroupController] Controller scaleUp %d nodes from resourcePool %s failed: %s, "+
 					"wait next tick(best effort to storage)", scaleUpNum, strategy.ResourcePool, err.Error())
 				globalErr = err
@@ -258,6 +288,9 @@ func (c *control) handleStrategy(strategy *storage.NodeGroupMgrStrategy) {
 			blog.Infof("[nodegroupController] Nodegroup %s Action %s is terminated when resource pool is stable,",
 				action.NodeGroupID, action.Event)
 			clean = true
+			if err := strategyExecutor.CreateNodeUpdateAction(strategy, action); err != nil {
+				return
+			}
 		}
 		if action.Event == storage.ScaleDownState && action.IsTimeout(strategy.Strategy.ScaleDownDelay) {
 			blog.Infof("[nodegroupController] Nodegroup %s Action %s is timeout when resource pool is stable,",
@@ -270,8 +303,11 @@ func (c *control) handleStrategy(strategy *storage.NodeGroupMgrStrategy) {
 			clean = true
 		}
 		if clean {
+			metric.ReportActionHandleLatencyMetric(strategy.Name, action.Event, storage.ActionTimeoutState,
+				action.ClusterID, action.NodeGroupID, action.CreatedTime)
 			if _, err := c.opt.Storage.DeleteNodeGroupAction(action, &storage.DeleteOptions{}); err != nil {
-				blog.Errorf("[nodegroupController] controller clean NodeGroupAction %s-%s met storage failure, %s. wait next tick",
+				blog.Errorf("[nodegroupController] controller clean NodeGroupAction %s-%s met storage failure, "+
+					"%s. wait next tick",
 					action.NodeGroupID, action.Event, err.Error())
 			} else {
 				blog.Infof("[nodegroupController] Controller clean NodeGroupAction %s-%s successfully",
@@ -279,6 +315,7 @@ func (c *control) handleStrategy(strategy *storage.NodeGroupMgrStrategy) {
 			}
 		}
 	}
+	strategyExecutor.HandleNodeMetadata()
 }
 
 // tracingScaleDownAction track exist nodegroup scaledown action
@@ -300,6 +337,9 @@ func (c *control) tracingScaleDownAction(strategy *storage.NodeGroupMgrStrategy,
 			blog.V(5).Infof("nodegroup %s action %s %d nodes is under tracing when try to "+
 				"scaleDown elasticNodeGroup %d nodes",
 				action.NodeGroupID, action.Event, action.DeltaNum, scaleDownNum)
+		} else {
+			metric.ReportActionHandleLatencyMetric(strategy.Name, action.Event, storage.ActionTerminatedState, action.ClusterID,
+				action.NodeGroupID, action.CreatedTime)
 		}
 	}
 	nodeGroups, err := c.listElasticNodeGroups(strategy.ElasticNodeGroups)
@@ -320,7 +360,7 @@ func (c *control) tracingScaleDownAction(strategy *storage.NodeGroupMgrStrategy,
 		}
 		return nil
 	}
-	// tracked actions can not satisfy scaledown resources,
+	// tracked actions can not satisfy scale down resources,
 	// rebalance resources allocation
 	scaleMore := scaleDownNum - releaseNum
 	blog.Infof("[nodegroupController] ElasticNodeGroups only release %d nodes, resourcePool still need %d nodes, "+
@@ -373,6 +413,7 @@ func (c *control) tracingScaleDownAction(strategy *storage.NodeGroupMgrStrategy,
 				nodegroup.NodeGroupID, err.Error())
 			return fmt.Errorf("force create %s NodeGroupAction to storage failure", nodegroup.NodeGroupID)
 		}
+		metric.ReportActionNumMetric(strategy.Name, action.ClusterID, action.NodeGroupID, action.Event)
 		// record NodeGroupEvent for manually tracing
 		event := generateNodeGroupEvent(nodegroup, original, storage.ScaleDownState,
 			reason, fmt.Sprintf("try to scaledown %d more nodes", allo.partition))
@@ -431,11 +472,12 @@ func (c *control) tracingScaleUpAction(strategy *storage.NodeGroupMgrStrategy,
 	scaleMore := scaleUpNum - upComing
 	blog.Infof("[nodegroupController] upComing %d nodes, resourcePool can release %d nodes, "+
 		"try to reallocation", upComing, scaleUpNum)
-	scaleUpBalancer := newSimpleBalancer(strategy.ElasticNodeGroups)
+	scaleUpBalancer := newLimitBalancer(nodeGroups, strategy.Strategy.NodegroupBuffer, strategy.ElasticNodeGroups,
+		scaleMore, c.opt.ClusterClient)
 	allocations := scaleUpBalancer.distribute(scaleMore)
 	for _, allo := range allocations {
 		nodegroup := nodeGroups[allo.NodeGroupID]
-		original := nodegroup.DesiredSize
+		original := nodegroup.CmDesiredSize
 		// !pay more attention, controller consider NodeGroup.MaxSize
 		// !is closed to resourcePool max size
 		nodegroup.DesiredSize = original + allo.partition
@@ -452,6 +494,14 @@ func (c *control) tracingScaleUpAction(strategy *storage.NodeGroupMgrStrategy,
 			blog.Errorf("[nodegroupController] controller update nodegroup %s/%s scaleUp state into storage failure, %s",
 				nodegroup.ClusterID, nodegroup.NodeGroupID, err.Error())
 			return err
+		}
+		if nodegroup.DesiredSize > nodegroup.MaxSize {
+			updateErr := c.opt.ClusterClient.UpdateNodegroupMax(nodegroup.ClusterID, nodegroup.NodeGroupID, nodegroup.DesiredSize)
+			if updateErr != nil {
+				blog.Errorf("[nodegroupController] update nodegroup %s max size to %d error:%s",
+					nodegroup.NodeGroupID, nodegroup.DesiredSize, updateErr.Error())
+				return err
+			}
 		}
 		// record NodeGroupAction for tracing
 		action, found := trackedActions[nodegroup.NodeGroupID]
@@ -477,7 +527,7 @@ func (c *control) tracingScaleUpAction(strategy *storage.NodeGroupMgrStrategy,
 				nodegroup.NodeGroupID, err.Error())
 			return fmt.Errorf("create %s NodeGroupAction to storage failure", nodegroup.NodeGroupID)
 		}
-
+		metric.ReportActionNumMetric(strategy.Name, action.ClusterID, action.NodeGroupID, action.Event)
 		// record NodeGroupEvent for manually tracing
 		event := generateNodeGroupEvent(nodegroup, original, storage.ScaleUpState,
 			reason, fmt.Sprintf("try to scaleup %d more nodes", allo.partition))
@@ -543,13 +593,15 @@ func (c *control) listElasticNodeGroups(elasticGroups []*storage.GroupInfo) (map
 }
 
 // handleElasticNodeGroupScaleUp check
-func (c *control) handleElasticNodeGroupScaleUp(strategy *storage.NodeGroupMgrStrategy, scaleUpNum int) error {
+func (c *control) handleElasticNodeGroupScaleUp(strategy *storage.NodeGroupMgrStrategy, scaleUpNum int,
+	totalDevice int) error {
 	nodegroups, err := c.listElasticNodeGroups(strategy.ElasticNodeGroups)
 	if err != nil {
 		return err
 	}
 	// simply balance scaleUp number for each nodegroup
-	distribution := newSimpleBalancer(strategy.ElasticNodeGroups)
+	distribution := newLimitBalancer(nodegroups, strategy.Strategy.NodegroupBuffer, strategy.ElasticNodeGroups,
+		totalDevice, c.opt.ClusterClient)
 	nodegrps := distribution.distribute(scaleUpNum)
 	// update each nodegroup desiredNum and necessary info to storage
 	// for coming webhook requests. all nodegroup actions must be log in storage
@@ -579,6 +631,7 @@ func (c *control) handleElasticNodeGroupScaleUp(strategy *storage.NodeGroupMgrSt
 				nodegroup.NodeGroupID, err.Error())
 			return fmt.Errorf("create %s NodeGroupAction to storage failure", nodegroup.NodeGroupID)
 		}
+		metric.ReportActionNumMetric(strategy.Name, action.ClusterID, action.NodeGroupID, action.Event)
 		// record NodeGroupEvent for manually tracing
 		event := generateNodeGroupEvent(nodegroup, original, storage.ScaleUpState,
 			"ScaleUp decision making", fmt.Sprintf("try to scaleup %d nodes", ng.partition))
@@ -639,6 +692,7 @@ func (c *control) handleElasticNodeGroupScaleDown(
 				nodegroup.NodeGroupID, err.Error(), action)
 			return fmt.Errorf("create %s NodeGroupAction to storage failure", nodegroup.NodeGroupID)
 		}
+		metric.ReportActionNumMetric(strategy.Name, action.ClusterID, action.NodeGroupID, action.Event)
 		// record NodeGroupEvent for manually tracing
 		event := generateNodeGroupEvent(nodegroup, original, storage.ScaleDownState,
 			"ScaleDown decision making", fmt.Sprintf("try to scaledown %d nodes", ng.partition))
@@ -711,8 +765,7 @@ func upComingElasticResources(actions map[string]*storage.NodeGroupAction,
 					action.NodeGroupID, action.Event, action.UpdatedTime.Format(time.RFC3339))
 				continue
 			}
-			// realNodes := len(nodeGroup.NodeIPs)
-			realNodes := nodeGroup.CmDesiredSize
+			realNodes := len(nodeGroup.NodeIPs)
 			if nodeGroup.DesiredSize <= realNodes {
 				blog.Errorf("[nodegroupController] Nodegroup %s DesiredSize %d <= RealNodes %d, lastStatus maybe ScaleDown, "+
 					"no upcoming resources.", nodeGroup.NodeGroupID, nodeGroup.DesiredSize, realNodes)

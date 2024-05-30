@@ -23,6 +23,12 @@ import (
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+const (
+	// PortPoolAllocatePolicyAverage 每次从分配量最少的Item分配
+	PortPoolAllocatePolicyAverage = "average"
+	// PortPoolAllocatePolicyDefault 从以一个可用item开始分配
+	PortPoolAllocatePolicyDefault = "default"
+)
 
 // PortPoolItem item of port pool
 type PortPoolItem struct {
@@ -36,9 +42,10 @@ type PortPoolItem struct {
 	StartPort uint32 `json:"startPort"`
 	// +kubebuilder:validation:Maximum=65535
 	// +kubebuilder:validation:Minimum=1
-	EndPort       uint32 `json:"endPort"`
-	SegmentLength uint32 `json:"segmentLength,omitempty"`
-	External      string `json:"external,omitempty"`
+	EndPort       uint32                      `json:"endPort"`
+	SegmentLength uint32                      `json:"segmentLength,omitempty"`
+	External      string                      `json:"external,omitempty"`
+	Certificate   *IngressListenerCertificate `json:"certificate,omitempty"`
 }
 
 // GetKey get port pool item key
@@ -60,11 +67,19 @@ func (ppi *PortPoolItem) Validate() error {
 	return nil
 }
 
+// GetSegmentLength return segment length
+func (ppi *PortPoolItem) GetSegmentLength() uint32 {
+	if ppi.SegmentLength == 0 {
+		return 1
+	}
+	return ppi.SegmentLength
+}
+
 // PortPoolSpec defines the desired state of PortPool
 type PortPoolSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-
+	AllocatePolicy    string                    `json:"allocatePolicy,omitempty"`
 	PoolItems         []*PortPoolItem           `json:"poolItems"`
 	ListenerAttribute *IngressListenerAttribute `json:"listenerAttribute,omitempty"`
 }
@@ -132,4 +147,18 @@ type PortPoolList struct {
 
 func init() {
 	SchemeBuilder.Register(&PortPool{}, &PortPoolList{})
+}
+
+// GetAllocatePolicy return allocate policy
+func (p *PortPool) GetAllocatePolicy() string {
+	if p.Spec.AllocatePolicy == "" {
+		return PortPoolAllocatePolicyDefault
+	}
+
+	switch strings.ToLower(p.Spec.AllocatePolicy) {
+	case PortPoolAllocatePolicyAverage:
+		return PortPoolAllocatePolicyAverage
+	default:
+		return PortPoolAllocatePolicyDefault
+	}
 }

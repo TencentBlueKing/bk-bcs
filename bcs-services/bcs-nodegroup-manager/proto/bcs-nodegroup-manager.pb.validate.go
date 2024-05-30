@@ -575,6 +575,10 @@ func (m *NodeGroup) validate(all bool) error {
 		}
 	}
 
+	// no validation rules for Priority
+
+	// no validation rules for DeletingSize
+
 	if len(errors) > 0 {
 		return NodeGroupMultiError(errors)
 	}
@@ -2590,6 +2594,35 @@ func (m *ElasticNodeGroup) validate(all bool) error {
 
 	// no validation rules for Weight
 
+	if all {
+		switch v := interface{}(m.GetLimit()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ElasticNodeGroupValidationError{
+					field:  "Limit",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ElasticNodeGroupValidationError{
+					field:  "Limit",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetLimit()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ElasticNodeGroupValidationError{
+				field:  "Limit",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
 	if len(errors) > 0 {
 		return ElasticNodeGroupMultiError(errors)
 	}
@@ -2667,6 +2700,113 @@ var _ interface {
 	ErrorName() string
 } = ElasticNodeGroupValidationError{}
 
+// Validate checks the field values on NodegroupLimit with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *NodegroupLimit) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on NodegroupLimit with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in NodegroupLimitMultiError,
+// or nil if none found.
+func (m *NodegroupLimit) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *NodegroupLimit) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for NodegroupLimit
+
+	// no validation rules for NodegroupLimitNum
+
+	// no validation rules for ClusterLimit
+
+	// no validation rules for ClusterLimitNum
+
+	if len(errors) > 0 {
+		return NodegroupLimitMultiError(errors)
+	}
+	return nil
+}
+
+// NodegroupLimitMultiError is an error wrapping multiple validation errors
+// returned by NodegroupLimit.ValidateAll() if the designated constraints
+// aren't met.
+type NodegroupLimitMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m NodegroupLimitMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m NodegroupLimitMultiError) AllErrors() []error { return m }
+
+// NodegroupLimitValidationError is the validation error returned by
+// NodegroupLimit.Validate if the designated constraints aren't met.
+type NodegroupLimitValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e NodegroupLimitValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e NodegroupLimitValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e NodegroupLimitValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e NodegroupLimitValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e NodegroupLimitValidationError) ErrorName() string { return "NodegroupLimitValidationError" }
+
+// Error satisfies the builtin error interface
+func (e NodegroupLimitValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sNodegroupLimit.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = NodegroupLimitValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = NodegroupLimitValidationError{}
+
 // Validate checks the field values on Strategy with the rules defined in the
 // proto definition for this message. If any rules are violated, the first
 // error encountered is returned, or nil if there are no violations.
@@ -2733,6 +2873,81 @@ func (m *Strategy) validate(all bool) error {
 	}
 
 	// no validation rules for ScaleDownBeforeDDL
+
+	{
+		sorted_keys := make([]string, len(m.GetNodegroupBuffer()))
+		i := 0
+		for key := range m.GetNodegroupBuffer() {
+			sorted_keys[i] = key
+			i++
+		}
+		sort.Slice(sorted_keys, func(i, j int) bool { return sorted_keys[i] < sorted_keys[j] })
+		for _, key := range sorted_keys {
+			val := m.GetNodegroupBuffer()[key]
+			_ = val
+
+			// no validation rules for NodegroupBuffer[key]
+
+			if all {
+				switch v := interface{}(val).(type) {
+				case interface{ ValidateAll() error }:
+					if err := v.ValidateAll(); err != nil {
+						errors = append(errors, StrategyValidationError{
+							field:  fmt.Sprintf("NodegroupBuffer[%v]", key),
+							reason: "embedded message failed validation",
+							cause:  err,
+						})
+					}
+				case interface{ Validate() error }:
+					if err := v.Validate(); err != nil {
+						errors = append(errors, StrategyValidationError{
+							field:  fmt.Sprintf("NodegroupBuffer[%v]", key),
+							reason: "embedded message failed validation",
+							cause:  err,
+						})
+					}
+				}
+			} else if v, ok := interface{}(val).(interface{ Validate() error }); ok {
+				if err := v.Validate(); err != nil {
+					return StrategyValidationError{
+						field:  fmt.Sprintf("NodegroupBuffer[%v]", key),
+						reason: "embedded message failed validation",
+						cause:  err,
+					}
+				}
+			}
+
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetTimeMode()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, StrategyValidationError{
+					field:  "TimeMode",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, StrategyValidationError{
+					field:  "TimeMode",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetTimeMode()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return StrategyValidationError{
+				field:  "TimeMode",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
 
 	if len(errors) > 0 {
 		return StrategyMultiError(errors)
@@ -2835,8 +3050,6 @@ func (m *Buffer) validate(all bool) error {
 
 	// no validation rules for High
 
-	// no validation rules for ReservedDays
-
 	if len(errors) > 0 {
 		return BufferMultiError(errors)
 	}
@@ -2912,6 +3125,350 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = BufferValidationError{}
+
+// Validate checks the field values on TimeMode with the rules defined in the
+// proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *TimeMode) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on TimeMode with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in TimeModeMultiError, or nil
+// if none found.
+func (m *TimeMode) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *TimeMode) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ScaleDownWhenTimeout
+
+	for idx, item := range m.GetTimePeriods() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, TimeModeValidationError{
+						field:  fmt.Sprintf("TimePeriods[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, TimeModeValidationError{
+						field:  fmt.Sprintf("TimePeriods[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return TimeModeValidationError{
+					field:  fmt.Sprintf("TimePeriods[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	// no validation rules for ReservedHours
+
+	if len(errors) > 0 {
+		return TimeModeMultiError(errors)
+	}
+	return nil
+}
+
+// TimeModeMultiError is an error wrapping multiple validation errors returned
+// by TimeMode.ValidateAll() if the designated constraints aren't met.
+type TimeModeMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m TimeModeMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m TimeModeMultiError) AllErrors() []error { return m }
+
+// TimeModeValidationError is the validation error returned by
+// TimeMode.Validate if the designated constraints aren't met.
+type TimeModeValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e TimeModeValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e TimeModeValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e TimeModeValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e TimeModeValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e TimeModeValidationError) ErrorName() string { return "TimeModeValidationError" }
+
+// Error satisfies the builtin error interface
+func (e TimeModeValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sTimeMode.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = TimeModeValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = TimeModeValidationError{}
+
+// Validate checks the field values on TimePeriod with the rules defined in the
+// proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *TimePeriod) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on TimePeriod with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in TimePeriodMultiError, or
+// nil if none found.
+func (m *TimePeriod) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *TimePeriod) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ScaleOutCron
+
+	// no validation rules for ScaleInCron
+
+	// no validation rules for ScaleOutTime
+
+	// no validation rules for ScaleInTime
+
+	if len(errors) > 0 {
+		return TimePeriodMultiError(errors)
+	}
+	return nil
+}
+
+// TimePeriodMultiError is an error wrapping multiple validation errors
+// returned by TimePeriod.ValidateAll() if the designated constraints aren't met.
+type TimePeriodMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m TimePeriodMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m TimePeriodMultiError) AllErrors() []error { return m }
+
+// TimePeriodValidationError is the validation error returned by
+// TimePeriod.Validate if the designated constraints aren't met.
+type TimePeriodValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e TimePeriodValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e TimePeriodValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e TimePeriodValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e TimePeriodValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e TimePeriodValidationError) ErrorName() string { return "TimePeriodValidationError" }
+
+// Error satisfies the builtin error interface
+func (e TimePeriodValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sTimePeriod.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = TimePeriodValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = TimePeriodValidationError{}
+
+// Validate checks the field values on BufferParam with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *BufferParam) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on BufferParam with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in BufferParamMultiError, or
+// nil if none found.
+func (m *BufferParam) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *BufferParam) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Percent
+
+	// no validation rules for Count
+
+	if len(errors) > 0 {
+		return BufferParamMultiError(errors)
+	}
+	return nil
+}
+
+// BufferParamMultiError is an error wrapping multiple validation errors
+// returned by BufferParam.ValidateAll() if the designated constraints aren't met.
+type BufferParamMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m BufferParamMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m BufferParamMultiError) AllErrors() []error { return m }
+
+// BufferParamValidationError is the validation error returned by
+// BufferParam.Validate if the designated constraints aren't met.
+type BufferParamValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e BufferParamValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e BufferParamValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e BufferParamValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e BufferParamValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e BufferParamValidationError) ErrorName() string { return "BufferParamValidationError" }
+
+// Error satisfies the builtin error interface
+func (e BufferParamValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sBufferParam.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = BufferParamValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = BufferParamValidationError{}
 
 // Validate checks the field values on CreateOptions with the rules defined in
 // the proto definition for this message. If any rules are violated, the first

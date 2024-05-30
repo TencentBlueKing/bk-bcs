@@ -18,10 +18,10 @@ import (
 	"sync"
 	"time"
 
-	k8scorev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/eventer"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
@@ -55,12 +55,11 @@ func NewGclb(k8sClient client.Client, eventWatcher eventer.WatchEventInterface) 
 }
 
 // NewGclbWithSecret create gclb client with k8s secret
-func NewGclbWithSecret(secret *k8scorev1.Secret, k8sClient client.Client, eventWatcher eventer.WatchEventInterface) (cloud.LoadBalance,
+func NewGclbWithSecret(data map[string][]byte, k8sClient client.Client, eventWatcher eventer.WatchEventInterface) (cloud.LoadBalance,
 	error) {
-	credentials, ok := secret.Data[EnvNameGCPCredentials]
+	credentials, ok := data[EnvNameGCPCredentials]
 	if !ok {
-		return nil, fmt.Errorf("lost %s in secret %s/%s", EnvNameGCPCredentials,
-			secret.Namespace, secret.Name)
+		return nil, fmt.Errorf("lost %s in secret", EnvNameGCPCredentials)
 	}
 	sdkWrapper, err := NewSdkWrapperWithSecretIDKey(credentials)
 	if err != nil {

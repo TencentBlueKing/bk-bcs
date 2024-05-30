@@ -14,6 +14,8 @@
 package pbce
 
 import (
+	"google.golang.org/protobuf/types/known/timestamppb"
+
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
 )
 
@@ -26,16 +28,40 @@ func (c *ClientEventSpec) ClientEventSpec() *table.ClientEventSpec {
 	return &table.ClientEventSpec{
 		OriginalReleaseID:         c.OriginalReleaseId,
 		TargetReleaseID:           c.TargetReleaseId,
-		StartTime:                 c.StartTime.AsTime(),
-		EndTime:                   c.EndTime.AsTime(),
+		StartTime:                 c.StartTime.AsTime().UTC(),
+		EndTime:                   c.EndTime.AsTime().UTC(),
 		TotalSeconds:              c.TotalSeconds,
 		TotalFileSize:             c.TotalFileSize,
 		DownloadFileSize:          c.DownloadFileSize,
 		TotalFileNum:              c.TotalFileNum,
 		DownloadFileNum:           c.DownloadFileNum,
 		ReleaseChangeStatus:       table.Status(c.ReleaseChangeStatus),
-		ReleaseChangeFailedReason: table.FailedReason(c.ReleaseChangeFailedReason),
+		ReleaseChangeFailedReason: c.ReleaseChangeFailedReason,
 		FailedDetailReason:        c.FailedDetailReason,
+		SpecificFailedReason:      c.SpecificFailedReason,
+	}
+}
+
+// PbClientEventSpec convert table ClientEventSpec to pb ClientEventSpec
+func PbClientEventSpec(spec *table.ClientEventSpec) *ClientEventSpec { //nolint:revive
+	if spec == nil {
+		return nil
+	}
+
+	return &ClientEventSpec{
+		OriginalReleaseId:         spec.OriginalReleaseID,
+		TargetReleaseId:           spec.TargetReleaseID,
+		StartTime:                 timestamppb.New(spec.StartTime.UTC()),
+		EndTime:                   timestamppb.New(spec.EndTime.UTC()),
+		TotalSeconds:              spec.TotalSeconds,
+		TotalFileSize:             spec.TotalFileSize,
+		DownloadFileSize:          spec.DownloadFileSize,
+		TotalFileNum:              spec.TotalFileNum,
+		DownloadFileNum:           spec.DownloadFileNum,
+		ReleaseChangeStatus:       string(spec.ReleaseChangeStatus),
+		ReleaseChangeFailedReason: spec.ReleaseChangeFailedReason,
+		SpecificFailedReason:      spec.SpecificFailedReason,
+		FailedDetailReason:        spec.FailedDetailReason,
 	}
 }
 
@@ -53,4 +79,44 @@ func (c *ClientEventAttachment) ClientEventAttachment() *table.ClientEventAttach
 		AppID:      c.AppId,
 		ClientMode: table.ClientMode(c.ClientMode),
 	}
+}
+
+// PbClientEventAttachment convert table PbClientEventAttachment to pb PbClientEventAttachment
+func PbClientEventAttachment(attachment *table.ClientEventAttachment) *ClientEventAttachment { // nolint
+	if attachment == nil {
+		return nil
+	}
+	return &ClientEventAttachment{
+		ClientId:   attachment.ClientID,
+		CursorId:   attachment.CursorID,
+		Uid:        attachment.UID,
+		BizId:      attachment.BizID,
+		AppId:      attachment.AppID,
+		ClientMode: string(attachment.ClientMode),
+	}
+}
+
+// PbClientEvent convert table ClientEvent to pb ClientEvent
+func PbClientEvent(c *table.ClientEvent) *ClientEvent {
+	if c == nil {
+		return nil
+	}
+
+	return &ClientEvent{
+		Id:         c.ID,
+		Spec:       PbClientEventSpec(c.Spec),
+		Attachment: PbClientEventAttachment(c.Attachment),
+	}
+}
+
+// PbClientEvents convert table ClientEvent to pb ClientEvent
+func PbClientEvents(c []*table.ClientEvent) []*ClientEvent {
+	if c == nil {
+		return make([]*ClientEvent, 0)
+	}
+	result := make([]*ClientEvent, 0)
+	for _, v := range c {
+		result = append(result, PbClientEvent(v))
+	}
+	return result
 }

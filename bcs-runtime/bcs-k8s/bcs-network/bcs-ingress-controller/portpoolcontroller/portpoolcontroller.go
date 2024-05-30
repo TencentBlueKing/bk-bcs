@@ -21,11 +21,13 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
+	gocache "github.com/patrickmn/go-cache"
 	k8scorev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
@@ -46,6 +48,8 @@ type PortPoolReconciler struct {
 	eventer     record.EventRecorder
 	lbClient    cloud.LoadBalance
 	poolCache   *portpoolcache.Cache
+	lbIDCache   *gocache.Cache
+	lbNameCache *gocache.Cache
 	isCacheSync bool
 }
 
@@ -56,14 +60,16 @@ func NewPortPoolReconciler(
 	lbClient cloud.LoadBalance,
 	k8sClient client.Client,
 	eventer record.EventRecorder,
-	poolCache *portpoolcache.Cache) *PortPoolReconciler {
+	poolCache *portpoolcache.Cache, lbIDCache *gocache.Cache, lbNameCache *gocache.Cache) *PortPoolReconciler {
 	return &PortPoolReconciler{
-		ctx:       ctx,
-		opts:      opts,
-		lbClient:  lbClient,
-		k8sClient: k8sClient,
-		eventer:   eventer,
-		poolCache: poolCache,
+		ctx:         ctx,
+		opts:        opts,
+		lbClient:    lbClient,
+		k8sClient:   k8sClient,
+		eventer:     eventer,
+		poolCache:   poolCache,
+		lbIDCache:   lbIDCache,
+		lbNameCache: lbNameCache,
 	}
 }
 
@@ -88,7 +94,7 @@ func (ppr *PortPoolReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 	}
 
 	handler := newPortPoolHandler(req.NamespacedName.Namespace, ppr.opts.Region,
-		ppr.lbClient, ppr.k8sClient, ppr.poolCache)
+		ppr.lbClient, ppr.k8sClient, ppr.poolCache, ppr.lbIDCache, ppr.lbNameCache)
 	if portPool.DeletionTimestamp != nil {
 		retry, err := handler.deletePortPool(portPool)
 		if err != nil {
@@ -165,12 +171,12 @@ func (ppr *PortPoolReconciler) initPortPoolCache() error {
 						}
 					}
 					if len(protocol) == 0 {
-						itemStatus.Protocol = []string{constant.PortPoolPortProtocolTCP, constant.PortPoolPortProtocolUDP}
+						itemStatus.Protocol = []string{constant.ProtocolTCP, constant.ProtocolUDP}
 					} else {
 						itemStatus.Protocol = protocol
 					}
 				}
-				if err := ppr.poolCache.AddPortPoolItem(poolKey, itemStatus); err != nil {
+				if err := ppr.poolCache.AddPortPoolItem(poolKey, pool.GetAllocatePolicy(), itemStatus); err != nil {
 					blog.Warnf("failed to add port pool %s item %v to cache, err %s",
 						poolKey, itemStatus, err.Error())
 				} else {
@@ -185,8 +191,8 @@ func (ppr *PortPoolReconciler) initPortPoolCache() error {
 	}
 	for _, portBinding := range bindingItemList.Items {
 		for _, bindingItem := range portBinding.Spec.PortBindingList {
-			ppr.poolCache.SetPortBindingUsed(bindingItem.PoolName+"/"+bindingItem.PoolNamespace,
-				bindingItem.GetKey(), bindingItem.Protocol, bindingItem.StartPort, bindingItem.EndPort)
+			ppr.poolCache.SetPortBindingUsed(bindingItem, portBinding.GetPortBindingType(),
+				portBinding.GetNamespace(), portBinding.GetName())
 		}
 	}
 	return nil
@@ -197,6 +203,7 @@ func (ppr *PortPoolReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&networkextensionv1.PortPool{}).
 		WithEventFilter(getPortPoolPredicate()).
+		WithOptions(controller.Options{MaxConcurrentReconciles: 20}).
 		Complete(ppr)
 }
 

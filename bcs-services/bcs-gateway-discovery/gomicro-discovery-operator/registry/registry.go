@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package registry defines structures and operations related to service registration and discovery.
 package registry
 
 import (
@@ -59,6 +60,7 @@ func (r *MicroRegistry) Watch(
 	conf := &ServiceConfig{}
 	by, _ := json.Marshal(svcConfig)
 	err := json.Unmarshal(by, conf)
+	// NOCC:vetshadow/shadow(设计如此)
 	logger := logger.With(zap.String("method", "watch")).With(zap.String("service", svcName))
 	if err != nil {
 		logger.Error("Marshal service config to ServiceConfig failed", zap.Any("error", err))
@@ -131,6 +133,7 @@ func (r *MicroRegistry) List(
 ) (*gatewayv1beta1.BkGatewayEndpointsSpec, error) {
 	conf := &ServiceConfig{}
 	by, _ := json.Marshal(svcConfig)
+	// NOCC:vetshadow/shadow(设计如此)
 	err := json.Unmarshal(by, conf)
 	logger := logger.With(zap.String("method", "list")).With(zap.String("service", svcName))
 	if err != nil {

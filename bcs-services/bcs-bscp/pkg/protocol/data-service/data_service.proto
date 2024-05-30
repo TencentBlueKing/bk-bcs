@@ -6,6 +6,7 @@ import "pkg/protocol/core/base/base.proto";
 import "pkg/protocol/core/config-item/config_item.proto";
 import "pkg/protocol/core/client/client.proto";
 import "pkg/protocol/core/client-event/client_event.proto";
+import "pkg/protocol/core/client-query/client_query.proto";
 import "pkg/protocol/core/commit/commit.proto";
 import "pkg/protocol/core/content/content.proto";
 import "pkg/protocol/core/credential/credential.proto";
@@ -87,6 +88,7 @@ service Data {
   rpc CreateHook(CreateHookReq) returns (CreateResp) {}
   rpc ListHooks(ListHooksReq) returns (ListHooksResp) {}
   rpc DeleteHook(DeleteHookReq) returns (pbbase.EmptyResp) {}
+  rpc UpdateHook(UpdateHookReq) returns (pbbase.EmptyResp) {}
   rpc ListHookTags(ListHookTagReq) returns (ListHookTagResp) {}
   rpc ListHookReferences(ListHookReferencesReq) returns (ListHookReferencesResp) {}
   rpc GetHook(GetHookReq) returns (GetHookResp) {}
@@ -221,10 +223,34 @@ service Data {
   rpc DeleteKv(DeleteKvReq) returns (pbbase.EmptyResp) {};
   rpc BatchUpsertKvs(BatchUpsertKvsReq) returns (BatchUpsertKvsResp) {};
   rpc UnDeleteKv(UnDeleteKvReq) returns (pbbase.EmptyResp) {};
+  rpc UndoKv(UndoKvReq) returns (pbbase.EmptyResp) {};
+
+  // client related interface
+  rpc ListClients(ListClientsReq) returns (ListClientsResp) {};
+
+  // client event related interface
+  rpc ListClientEvents(ListClientEventsReq) returns (ListClientEventsResp) {};
+
+  // client query related interface
+  rpc ListClientQuerys(ListClientQuerysReq) returns (ListClientQuerysResp) {};
+  rpc CreateClientQuery(CreateClientQueryReq) returns (CreateClientQueryResp) {};
+  rpc UpdateClientQuery(UpdateClientQueryReq) returns (pbbase.EmptyResp) {};
+  rpc DeleteClientQuery(DeleteClientQueryReq) returns (pbbase.EmptyResp) {};
+  rpc CheckClientQueryName(CheckClientQueryNameReq) returns (CheckClientQueryNameResp) {};
+
+  // client metrics chart related interface
+  rpc ClientConfigVersionStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {}
+  rpc ClientPullTrendStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {}
+  rpc ClientPullStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {}
+  rpc ClientLabelStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {}
+  rpc ClientAnnotationStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {}
+  rpc ClientVersionStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {}
+  rpc ListClientLabelAndAnnotation(ListClientLabelAndAnnotationReq) returns (google.protobuf.Struct) {}
+  rpc ClientSpecificFailedReason(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {}
 
   // used iam pull resource callback.
-  rpc ListInstances(ListInstancesReq) returns (ListInstancesResp) {}
-  rpc FetchInstanceInfo(FetchInstanceInfoReq) returns (FetchInstanceInfoResp) {}
+  rpc ListInstances(ListInstancesReq) returns (ListInstancesResp) {};
+  rpc FetchInstanceInfo(FetchInstanceInfoReq) returns (FetchInstanceInfoResp) {};
 
   // Ping verifies if the grpc connection is still alive.
   rpc Ping(PingMsg) returns (PingMsg) {
@@ -258,6 +284,7 @@ message CredentialScopePreviewReq {
 message CredentialScopePreviewResp {
   message Detail {
     string name = 1;
+    string path = 2;
   }
   uint32 count = 1;
   repeated Detail details = 2;
@@ -635,7 +662,7 @@ message GetHookResp {
 message GetHookInfoSpec {
   string name = 1;
   string type = 3;
-  string tag = 4;
+  repeated string tags = 4;
   string memo = 5;
   uint32 publish_num = 7;
   message Releases {
@@ -697,6 +724,12 @@ message DeleteHookReq {
   uint32 biz_id = 1;
   uint32 hook_id = 2;
   bool force = 3;
+}
+
+message UpdateHookReq {
+  uint32 id = 1;
+  pbhook.HookAttachment attachment = 2;
+  pbhook.HookSpec spec = 3;
 }
 
 message CreateHookRevisionReq {
@@ -1639,9 +1672,15 @@ message BatchUpsertKvsResp {
 }
 
 message UnDeleteKvReq {
-  uint32 id = 1;
-  pbkv.KvSpec spec = 2;
-  pbkv.KvAttachment attachment = 3;
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  string key = 3;
+}
+
+message UndoKvReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  string key = 3;
 }
 
 message BatchUpsertClientMetricsReq {
@@ -1650,3 +1689,108 @@ message BatchUpsertClientMetricsReq {
 }
 
 message BatchUpsertClientMetricsResp {}
+
+message ListClientsReq {
+  message Order {
+    string desc = 1;
+    string asc = 2;
+  }
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  bool all = 3;
+  uint32 start = 4;
+  uint32 limit = 5;
+  Order order = 6;
+  int64 last_heartbeat_time = 7;
+  pbclient.ClientQueryCondition search = 8;
+}
+
+message ListClientsResp {
+  message Item {
+    pbclient.Client client = 1;
+    string cpu_usage_str = 2;
+    string cpu_max_usage_str = 3;
+    string memory_usage_str = 4;
+    string memory_max_usage_str = 5;
+  }
+  uint32 count = 1;
+  repeated Item details = 2;
+}
+
+message ListClientEventsReq {
+  message Order {
+    string desc = 1;
+    string asc = 2;
+  }
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  uint32 client_id = 3;
+  bool all = 4;
+  uint32 start = 5;
+  uint32 limit = 6;
+  Order order = 7;
+  string search_value = 8;
+  string start_time = 9;
+  string end_time = 10;
+}
+
+message ListClientEventsResp {
+  uint32 count = 1;
+  repeated pbce.ClientEvent details = 2;
+}
+
+message ListClientQuerysReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  string search_type = 3;  // 搜索类型：recent、common
+  uint32 start = 4;
+  uint32 limit = 5;
+  bool all = 6;
+}
+
+message ListClientQuerysResp {
+  uint32 count = 1;
+  repeated pbcq.ClientQuery details = 2;
+}
+
+message CreateClientQueryReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  string search_type = 3;
+  string search_name = 4;
+  google.protobuf.Struct search_condition = 5;
+}
+
+message CreateClientQueryResp {
+  uint32 id = 1;
+}
+
+message UpdateClientQueryReq {
+  uint32 id = 1;
+  uint32 biz_id = 2;
+  uint32 app_id = 3;
+  string search_name = 4;
+  google.protobuf.Struct search_condition = 5;
+}
+
+message DeleteClientQueryReq {
+  uint32 id = 1;
+  uint32 biz_id = 2;
+  uint32 app_id = 3;
+}
+
+message CheckClientQueryNameReq {
+  string name = 1;
+  uint32 biz_id = 2;
+  uint32 app_id = 3;
+}
+
+message CheckClientQueryNameResp {
+  bool exist = 1;
+}
+
+message ListClientLabelAndAnnotationReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  int64 last_heartbeat_time = 3;
+}

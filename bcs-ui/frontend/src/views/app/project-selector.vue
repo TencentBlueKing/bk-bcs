@@ -111,12 +111,20 @@ export default defineComponent({
     // 初始化数据
     const handleInitProjectList = async () => {
       params.value.offset = 0;
-      const { data, web_annotations } = await getProjectList({
+      const res = await getProjectList({
         ...params.value,
         searchKey: searchKey.value,
-      });
-      projectList.value = data?.results || [];
-      perms.value = web_annotations.perms;
+      }).catch(() => ({
+        data: {
+          results: [],
+          total: 0,
+        },
+        web_annotations: {
+          perms: {},
+        },
+      }));
+      projectList.value = res?.data?.results || [];
+      perms.value = res?.web_annotations?.perms || {};
     };
 
     // 滚动加载
@@ -174,7 +182,7 @@ export default defineComponent({
       // $store.commit('updateCurProject', project);
       // 特殊界面切换项目时跳转到首页
       const name = ['403', '404'].includes(currentRoute.name || '')
-        ? 'dashboardIndex' : $store.state.curSideMenu?.route;
+        ? 'dashboardIndex' : $store.state.curNav?.route;
       const { href } = $router.resolve({
         name: name || 'dashboardIndex',
         params: {

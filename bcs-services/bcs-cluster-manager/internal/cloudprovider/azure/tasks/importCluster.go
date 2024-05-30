@@ -27,6 +27,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/azure/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 )
@@ -147,7 +148,7 @@ func importClusterCredential(ctx context.Context, data *cloudprovider.CloudDepen
 		return err
 	}
 
-	credentials, err := cli.GetClusterAdminCredentials(ctx, data)
+	credentials, err := cli.GetClusterAdminCredentials(ctx, data, cloudprovider.GetClusterResourceGroup(data.Cluster))
 	if err != nil {
 		return err
 	}
@@ -215,9 +216,10 @@ func importClusterInstances(data *cloudprovider.CloudDependBasicInfo) error {
 // importNodeResourceGroup 导入nodeResourceGroup
 func importNodeResourceGroup(info *cloudprovider.CloudDependBasicInfo) error {
 	cluster := info.Cluster
-	if cluster.ExtraInfo != nil && len(cluster.ExtraInfo[api.NodeResourceGroup]) > 0 {
+	if cluster.ExtraInfo != nil && len(cluster.ExtraInfo[common.NodeResourceGroup]) > 0 {
 		return nil
 	}
+
 	client, err := api.NewAksServiceImplWithCommonOption(info.CmOption)
 	if err != nil {
 		return errors.Wrapf(err, "create AksService failed")
@@ -226,7 +228,7 @@ func importNodeResourceGroup(info *cloudprovider.CloudDependBasicInfo) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	managedCluster, err := client.GetCluster(ctx, info)
+	managedCluster, err := client.GetCluster(ctx, info, cloudprovider.GetClusterResourceGroup(cluster))
 	if err != nil {
 		return errors.Wrapf(err, "call GetCluster falied")
 	}
@@ -234,7 +236,7 @@ func importNodeResourceGroup(info *cloudprovider.CloudDependBasicInfo) error {
 		cluster.ExtraInfo = make(map[string]string)
 	}
 
-	cluster.ExtraInfo[api.NodeResourceGroup] = *managedCluster.Properties.NodeResourceGroup
+	cluster.ExtraInfo[common.NodeResourceGroup] = *managedCluster.Properties.NodeResourceGroup
 	return nil
 }
 
@@ -246,7 +248,7 @@ func importVpcID(info *cloudprovider.CloudDependBasicInfo) error {
 		return errors.Wrapf(err, "create AksService failed")
 	}
 
-	nodeResourceGroup := cluster.ExtraInfo[api.NodeResourceGroup]
+	nodeResourceGroup := cloudprovider.GetNodeResourceGroup(cluster)
 	blog.Infof("importVpcID nodeResourceGroup:%s", nodeResourceGroup)
 
 	ctx, cancel := context.WithTimeout(context.TODO(), 30*time.Second)
@@ -259,7 +261,7 @@ func importVpcID(info *cloudprovider.CloudDependBasicInfo) error {
 
 	// blog.Infof("importVpcID list:%s", toPrettyJsonString(list))
 	if len(list) > 0 {
-		cluster.VpcID = *list[0].Name
+		cluster.VpcID = *list[0].ID
 	}
 
 	return nil

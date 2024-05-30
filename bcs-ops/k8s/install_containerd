@@ -44,6 +44,8 @@ _yum_containerd() {
         sed -i "s/\$releasever/8/g" "$ROOT_DIR/docker-ce.repo"
       elif grep "TencentOS Server 2.[0-9]*" /etc/tlinux-release;then
         sed -i "s/\$releasever/7/g" "$ROOT_DIR/docker-ce.repo"
+      elif grep "Tencent tlinux release 2.[0-9]*" /etc/tlinux-release;then
+        sed -i "s/\$releasever/7/g" "$ROOT_DIR/docker-ce.repo"
       fi
     fi
   else
@@ -237,6 +239,9 @@ main() {
   # function testing
   local test_img_url
   test_img_url=${BK_PUBLIC_REPO:-"docker.io"}/library/hello-world:latest
+  if [ -n "${PRIVATE_DOCKER_REPO}" ];then
+    test_img_url=${PRIVATE_DOCKER_REPO}/hello-world:latest
+  fi
   utils::log "DEBUG" "hello-world: ${test_img_url}"
 
   if ! ctr -n k8s.io i list|grep ${test_img_url};then

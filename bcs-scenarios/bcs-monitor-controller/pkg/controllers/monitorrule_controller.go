@@ -52,11 +52,12 @@ type MonitorRuleReconciler struct {
 	MonitorApiCli apiclient.IMonitorApiClient
 	MonitorRender *render.MonitorRender
 
-	Opts *option.ControllerOption
+	Opts    *option.ControllerOption
+	SubPath string
 }
 
-// +kubebuilder:rbac:groups=monitorextension.bkbcs.tencent.com,resources=monitorrules,
-// verbs=get;list;watch;create;update;patch;delete
+// nolint
+// +kubebuilder:rbac:groups=monitorextension.bkbcs.tencent.com,resources=monitorrules,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=monitorextension.bkbcs.tencent.com,resources=monitorrules/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=monitorextension.bkbcs.tencent.com,resources=monitorrules/finalizers,verbs=update
 
@@ -117,15 +118,16 @@ func (r *MonitorRuleReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 			return ctrl.Result{}, err
 		}
 
-		if err := r.FileOp.Decompress(utils.GenBkmConfigTarPath(r.Opts.BKMDownloadConfigPath, monitorRule.Spec.BizID),
-			utils.GenBkmConfigPath(r.Opts.BKMDownloadConfigPath, monitorRule.Spec.BizID)); err != nil {
+		if err := r.FileOp.Decompress(utils.GenBkmConfigTarPath(r.Opts.BKMDownloadConfigPath,
+			r.SubPath, monitorRule.Spec.BizID),
+			utils.GenBkmConfigPath(r.Opts.BKMDownloadConfigPath, r.SubPath, monitorRule.Spec.BizID)); err != nil {
 			blog.Errorf("decompress bkm config for bizID[%s] failed, err: %s", monitorRule.Spec.BizID, err.Error())
 			return ctrl.Result{}, err
 		}
-		defer os.RemoveAll(utils.GenBkmConfigPath(r.Opts.BKMDownloadConfigPath, monitorRule.Spec.BizID))
-		defer os.RemoveAll(utils.GenBkmConfigTarPath(r.Opts.BKMDownloadConfigPath, monitorRule.Spec.BizID))
+		defer os.RemoveAll(utils.GenBkmConfigPath(r.Opts.BKMDownloadConfigPath, r.SubPath, monitorRule.Spec.BizID))
+		defer os.RemoveAll(utils.GenBkmConfigTarPath(r.Opts.BKMDownloadConfigPath, r.SubPath, monitorRule.Spec.BizID))
 
-		currentRule, err := r.MonitorRender.LoadRule(filepath.Join(r.Opts.BKMDownloadConfigPath,
+		currentRule, err := r.MonitorRender.LoadRule(filepath.Join(r.Opts.BKMDownloadConfigPath, r.SubPath,
 			monitorRule.Spec.BizID, "configs/rule"), func(fileName string) bool {
 			fileRuleName := strings.Split(fileName, ".")
 			// todo bkm支持文件名中多个 '.'   后续如果告警规则中有'.'需要修改
@@ -146,7 +148,6 @@ func (r *MonitorRuleReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 
 		blog.Infof("load rule: %s", utils.ToJsonString(currentRule))
 		if currentRule != nil {
-			// todo remove
 			blog.Infof("currentRules: %s, monitorRule: %s", utils.ToJsonString(currentRule), utils.ToJsonString(monitorRule))
 			mergeRules := patch.ThreeWayMergeMonitorRule(originalRules, currentRule.Spec.Rules, monitorRule.Spec.Rules)
 
@@ -309,7 +310,7 @@ func (r *MonitorRuleReconciler) processDelete(monitorRule *monitorextensionv1.Mo
 func (r *MonitorRuleReconciler) patchAnnotation(monitorRule *monitorextensionv1.MonitorRule) error {
 	ruleBts, err := json.Marshal(monitorRule.Spec.Rules)
 	if err != nil {
-		return fmt.Errorf("marshal rules[%v] failed, errors: %w", monitorRule.Spec.Rules, err)
+		return fmt.Errorf("marshal rules[%v] failed, errors: %s", monitorRule.Spec.Rules, err.Error())
 	}
 	err = retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		patchStruct := map[string]interface{}{

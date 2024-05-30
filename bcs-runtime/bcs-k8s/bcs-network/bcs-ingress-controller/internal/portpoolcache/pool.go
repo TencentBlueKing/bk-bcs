@@ -14,21 +14,26 @@
 package portpoolcache
 
 import (
+	"container/heap"
 	"fmt"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
 // CachePool pool of ports
 type CachePool struct {
-	PoolKey  string
-	ItemList []*CachePoolItem
+	PoolKey        string
+	ItemList       []*CachePoolItem
+	AllocatePolicy string
 }
 
 // NewCachePool create cache pool
-func NewCachePool(key string) *CachePool {
+func NewCachePool(key string, allocatePolicy string) *CachePool {
 	return &CachePool{
-		PoolKey: key,
+		PoolKey:        key,
+		AllocatePolicy: allocatePolicy,
 	}
 }
 
@@ -100,7 +105,26 @@ func (cp *CachePool) SetItemStatus(itemStatus *networkextensionv1.PortPoolItemSt
 // AllocatePortBinding allocate port by protocol
 func (cp *CachePool) AllocatePortBinding(protocol, itemName string) (
 	*networkextensionv1.PortPoolItemStatus, AllocatedPortItem, error) {
-	for _, item := range cp.ItemList {
+	var itemList []*CachePoolItem
+	blog.Infof("allocate policy: %s", cp.AllocatePolicy)
+	switch cp.AllocatePolicy {
+	case networkextensionv1.PortPoolAllocatePolicyAverage:
+		itemHeap := &maxHeap{}
+		heap.Init(itemHeap)
+		for _, item := range cp.ItemList {
+			heap.Push(itemHeap, poolItemStat{
+				PoolItem:         item,
+				AvailablePortNum: item.GetAllocatablePortNum(protocol),
+			})
+		}
+		for itemHeap.Len() != 0 {
+			itemList = append(itemList, heap.Pop(itemHeap).(poolItemStat).PoolItem)
+		}
+	default:
+		itemList = cp.ItemList
+	}
+
+	for _, item := range itemList {
 		if itemName != "" && item.ItemStatus.ItemName != itemName {
 			continue
 		}
@@ -123,7 +147,25 @@ func (cp *CachePool) AllocatePortBinding(protocol, itemName string) (
 // only allocate port from the specified item
 func (cp *CachePool) AllocateAllProtocolPortBinding(itemName string) (
 	*networkextensionv1.PortPoolItemStatus, map[string]AllocatedPortItem, error) {
-	for _, item := range cp.ItemList {
+	var itemList []*CachePoolItem
+	switch cp.AllocatePolicy {
+	case networkextensionv1.PortPoolAllocatePolicyAverage:
+		itemHeap := &maxHeap{}
+		heap.Init(itemHeap)
+		for _, item := range cp.ItemList {
+			heap.Push(itemHeap, poolItemStat{
+				PoolItem:         item,
+				AvailablePortNum: item.GetAllocatablePortNum(""), // empty protocol means allocate all protocols
+			})
+		}
+		for itemHeap.Len() != 0 {
+			itemList = append(itemList, heap.Pop(itemHeap).(poolItemStat).PoolItem)
+		}
+	default:
+		itemList = cp.ItemList
+	}
+
+	for _, item := range itemList {
 		if itemName != "" && item.ItemStatus.ItemName != itemName {
 			continue
 		}
@@ -157,10 +199,11 @@ func (cp *CachePool) ReleasePortBinding(poolItemKey, protocol string, startPort,
 }
 
 // SetPortBindingUsed occupy port item
-func (cp *CachePool) SetPortBindingUsed(poolItemKey, protocol string, startPort, endPort int) {
+func (cp *CachePool) SetPortBindingUsed(poolItemKey, protocol string, startPort, endPort int, refType, refNs,
+	refName string) {
 	for _, item := range cp.ItemList {
 		if item.GetKey() == poolItemKey {
-			item.SetPortUsed(protocol, startPort, endPort)
+			item.SetPortUsed(protocol, startPort, endPort, refType, refNs, refName)
 		}
 	}
 }

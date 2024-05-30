@@ -111,13 +111,13 @@ func TestScaleUp_listNodeGroupError(t *testing.T) {
 	// 2. get empty NodeGroup
 	store.On("GetNodeGroup", nodeGroups[0].NodeGroupID, &storage.GetOptions{}).
 		Return(nil, fmt.Errorf("database connection lost"))
-	err := ctl.handleElasticNodeGroupScaleUp(strategy, scaleUpNum)
+	err := ctl.handleElasticNodeGroupScaleUp(strategy, scaleUpNum, 100)
 	assertion.NotNil(err, "GetNodeGroup met any failure must return error")
 	store.AssertExpectations(t)
 
 	store.ExpectedCalls = nil
 	store.On("GetNodeGroup", nodeGroups[0].NodeGroupID, &storage.GetOptions{}).Return(nil, nil)
-	err = ctl.handleElasticNodeGroupScaleUp(strategy, scaleUpNum)
+	err = ctl.handleElasticNodeGroupScaleUp(strategy, scaleUpNum, 100)
 	assertion.NotNil(err, "empty nodegroup response must error")
 	store.AssertExpectations(t)
 }
@@ -140,7 +140,7 @@ func TestScaleUp_updateNodeGroupErr(t *testing.T) {
 		nodeGroups[0], &storage.UpdateOptions{}).
 		Return(nodeGroups[0], fmt.Errorf("data storage failure"))
 
-	err := ctl.handleElasticNodeGroupScaleUp(strategy, scaleUpNum)
+	err := ctl.handleElasticNodeGroupScaleUp(strategy, scaleUpNum, 100)
 	assertion.NotNil(err, "UpdateNodeGroup met any failure must stop testcase")
 	store.AssertExpectations(t)
 }
@@ -185,7 +185,7 @@ func TestScaleUp_createActionErr(t *testing.T) {
 		&storage.CreateOptions{},
 	).Return(fmt.Errorf("database connection lost"))
 
-	err := ctl.handleElasticNodeGroupScaleUp(strategy, scaleUpNum)
+	err := ctl.handleElasticNodeGroupScaleUp(strategy, scaleUpNum, 100)
 	assertion.NotNil(err, "CreateNodeGroupAction met any failure must stop testcase")
 	store.AssertExpectations(t)
 }
@@ -250,7 +250,7 @@ func TestScaleUp_createEvent(t *testing.T) {
 		&storage.CreateOptions{},
 	).Return(nil)
 
-	err := ctl.handleElasticNodeGroupScaleUp(strategy, scaleUpNum)
+	err := ctl.handleElasticNodeGroupScaleUp(strategy, scaleUpNum, 100)
 	assertion.Nil(err, "CreateNodeGroupEvent met any failure are acceptable")
 	store.AssertExpectations(t)
 }
@@ -298,7 +298,7 @@ func TestScaleDown_updateNodeGroupErr(t *testing.T) {
 	store.On("UpdateNodeGroup", nodeGroups[0], &storage.UpdateOptions{}).
 		Return(nodeGroups[0], fmt.Errorf("data storage failure"))
 
-	err := ctl.handleElasticNodeGroupScaleUp(strategy, scaleDownNum)
+	err := ctl.handleElasticNodeGroupScaleUp(strategy, scaleDownNum, 100)
 	assertion.NotNil(err, "UpdateNodeGroup met any failure must stop testcase")
 	store.AssertExpectations(t)
 }

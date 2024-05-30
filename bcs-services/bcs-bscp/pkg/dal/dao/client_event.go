@@ -13,22 +13,39 @@
 package dao
 
 import (
+	"strings"
+	"time"
+
+	rawgen "gorm.io/gen"
 	"gorm.io/gen/field"
+	"gorm.io/gorm/clause"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
-	sfs "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/sf-share"
+	pbds "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
 // ClientEvent supplies all the client event related operations.
 type ClientEvent interface {
 	// BatchCreateWithTx batch create client event instances with transaction.
 	BatchCreateWithTx(kit *kit.Kit, tx *gen.QueryTx, data []*table.ClientEvent) error
-	// BatchUpdateSelectFieldTx Update selected field
-	BatchUpdateSelectFieldTx(kit *kit.Kit, tx *gen.QueryTx, messageType sfs.MessagingType, data []*table.ClientEvent) error
 	// ListClientByTuple Query the client list according to multiple fields in
 	ListClientByTuple(kit *kit.Kit, data [][]interface{}) ([]*table.ClientEvent, error)
+	// List list client event details
+	List(kit *kit.Kit, bizID, appID, clientID uint32, startTime, endTime time.Time, searchValue string,
+		order *pbds.ListClientEventsReq_Order, opt *types.BasePage) ([]*table.ClientEvent, int64, error)
+	// GetMinMaxAvgTime 获取最小最大平均时间
+	GetMinMaxAvgTime(kit *kit.Kit, bizID, appID uint32, clientID []uint32, releaseChangeStatus []string) (
+		types.MinMaxAvgTimeChart, error)
+	// GetPullTrend 获取拉取趋势
+	GetPullTrend(kit *kit.Kit, bizID uint32, appID uint32, clientID []uint32, pullTime int64, isDuplicates bool) (
+		[]types.PullTrend, error)
+	// UpsertHeartbeat 更新插入心跳
+	UpsertHeartbeat(kit *kit.Kit, tx *gen.QueryTx, data []*table.ClientEvent) error
+	// UpsertVersionChange 更新插入版本更改
+	UpsertVersionChange(kit *kit.Kit, tx *gen.QueryTx, data []*table.ClientEvent) error
 }
 
 var _ ClientEvent = new(clientEventDao)
@@ -39,7 +56,163 @@ type clientEventDao struct {
 	auditDao AuditDao
 }
 
-// ListClientByTuple implements ClientEvent.
+// GetPullTrend 获取拉取趋势
+func (dao *clientEventDao) GetPullTrend(kit *kit.Kit, bizID uint32, appID uint32, clientID []uint32, pullTime int64,
+	isDuplicates bool) (
+	[]types.PullTrend, error) {
+
+	m := dao.genQ.ClientEvent
+	q := dao.genQ.ClientEvent.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID),
+		m.AppID.Eq(appID))
+
+	var conds []rawgen.Condition
+	if pullTime > 0 {
+		startTime := time.Now().AddDate(0, 0, -int(pullTime)).Truncate(24 * time.Hour)
+		conds = append(conds, q.Where(m.StartTime.Gte(startTime)))
+	}
+	if len(clientID) > 0 {
+		conds = append(conds, q.Where(m.ClientID.In(clientID...)))
+	}
+	q = q.Select(m.ClientID, m.StartTime.Date().As("pull_time")).Where(conds...)
+	// 是否去重
+	if isDuplicates {
+		q = q.Group(m.ClientID, field.NewField("", "pull_time"))
+	}
+
+	var items []types.PullTrend
+
+	err := q.Scan(&items)
+	return items, err
+}
+
+// GetMinMaxAvgTime 获取最小最大平均时间
+func (dao *clientEventDao) GetMinMaxAvgTime(kit *kit.Kit, bizID uint32, appID uint32, clientID []uint32,
+	releaseChangeStatus []string) (types.MinMaxAvgTimeChart, error) {
+
+	m := dao.genQ.ClientEvent
+	q := dao.genQ.ClientEvent.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID),
+		m.AppID.Eq(appID)).Where(m.OriginalReleaseID.NeqCol(m.TargetReleaseID))
+
+	var err error
+	var items types.MinMaxAvgTimeChart
+	var conds []rawgen.Condition
+	if len(releaseChangeStatus) > 0 {
+		conds = append(conds, q.Where(m.ReleaseChangeStatus.In(releaseChangeStatus...)))
+	} else {
+		conds = append(conds, q.Where(m.ReleaseChangeStatus.Eq(string(table.Success))))
+	}
+	if len(clientID) > 0 {
+		conds = append(conds, q.Where(m.ClientID.In(clientID...)))
+	}
+	q = q.Where(conds...)
+	err = q.Select(m.TotalSeconds.Max().As("max"), m.TotalSeconds.Min().As("min"), m.TotalSeconds.Avg().As("avg")).
+		Group(m.ReleaseChangeFailedReason).
+		Scan(&items)
+
+	return items, err
+}
+
+// List list client event details
+func (dao *clientEventDao) List(kit *kit.Kit, bizID, appID, clientID uint32, startTime, endTime time.Time,
+	searchValue string, order *pbds.ListClientEventsReq_Order, opt *types.BasePage) (
+	[]*table.ClientEvent, int64, error) {
+
+	m := dao.genQ.ClientEvent
+	q := dao.genQ.ClientEvent.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID), m.AppID.Eq(appID),
+		m.ClientID.Eq(clientID)).Where(m.OriginalReleaseID.NeqCol(m.TargetReleaseID))
+	var err error
+	var conds []rawgen.Condition
+	if len(searchValue) > 0 {
+		conds, err = dao.handleSearch(kit, bizID, appID, searchValue)
+		if err != nil {
+			return nil, 0, err
+		}
+	}
+
+	var exprs []field.Expr
+	if order != nil {
+		exprs = dao.handleOrder(order)
+	}
+
+	zeroTime := time.Time{}
+	if startTime != zeroTime {
+		conds = append(conds, q.Where(m.StartTime.Gte(startTime)))
+	}
+	if endTime != zeroTime {
+		conds = append(conds, q.Where(m.EndTime.Lte(endTime)))
+	}
+	d := q.Where(conds...).Order(exprs...)
+	if opt.All {
+		result, err := d.Find()
+		if err != nil {
+			return nil, 0, err
+		}
+		return result, int64(len(result)), err
+	}
+	return d.FindByPage(opt.Offset(), opt.LimitInt())
+}
+
+// 处理搜索
+func (dao *clientEventDao) handleSearch(kit *kit.Kit, bizID, appID uint32, search string) ([]rawgen.Condition, error) { // nolint
+	var conds []rawgen.Condition
+
+	m := dao.genQ.ClientEvent
+	q := dao.genQ.ClientEvent.WithContext(kit.Ctx)
+	rs := dao.genQ.Release
+
+	status := field.NewString(m.TableName(), "release_change_status")
+
+	var item []struct {
+		ID uint32
+	}
+
+	err := rs.WithContext(kit.Ctx).Select(rs.ID).Where(rs.BizID.Eq(bizID), rs.AppID.Eq(appID),
+		rs.Name.Like("%"+search+"%")).Scan(&item)
+	if err != nil {
+		return conds, err
+	}
+	if len(item) > 0 {
+		releaseID := []uint32{}
+		for _, v := range item {
+			releaseID = append(releaseID, v.ID)
+		}
+		conds = append(conds, q.Or(m.OriginalReleaseID.In(releaseID...)).
+			Or(m.TargetReleaseID.In(releaseID...)).Or(status.Eq(search)))
+	} else {
+		conds = append(conds, q.Or(status.Eq(search)))
+	}
+
+	return conds, nil
+}
+
+// 处理排序
+func (dao *clientEventDao) handleOrder(order *pbds.ListClientEventsReq_Order) []field.Expr {
+	var exprs []field.Expr
+	m := dao.genQ.ClientEvent
+
+	if len(order.GetDesc()) > 0 {
+		desc := strings.Split(order.GetDesc(), ",")
+		for _, v := range desc {
+			orderCol, ok := m.GetFieldByName(v)
+			if ok {
+				exprs = append(exprs, orderCol.Desc())
+			}
+		}
+	}
+	if len(order.GetAsc()) > 0 {
+		asc := strings.Split(order.GetAsc(), ",")
+		for _, v := range asc {
+			orderCol, ok := m.GetFieldByName(v)
+			if ok {
+				exprs = append(exprs, orderCol)
+			}
+		}
+	}
+
+	return exprs
+}
+
+// ListClientByTuple Query the client list according to multiple fields in
 func (dao *clientEventDao) ListClientByTuple(kit *kit.Kit, data [][]interface{}) ([]*table.ClientEvent, error) {
 	m := dao.genQ.ClientEvent
 	return dao.genQ.ClientEvent.WithContext(kit.Ctx).
@@ -47,26 +220,6 @@ func (dao *clientEventDao) ListClientByTuple(kit *kit.Kit, data [][]interface{})
 		Where(m.WithContext(kit.Ctx).Columns(m.BizID, m.AppID, m.UID, m.CursorID).
 			In(field.Values(data))).
 		Find()
-}
-
-// BatchUpdateSelectFieldTx implements ClientEvent.
-// 版本变更时所有所有数据都可以更新
-// 心跳主要更新下载数和下载文件大小、变更状态
-func (dao *clientEventDao) BatchUpdateSelectFieldTx(kit *kit.Kit, tx *gen.QueryTx, messageType sfs.MessagingType,
-	data []*table.ClientEvent) error {
-	m := dao.genQ.ClientEvent
-	q := tx.ClientEvent.WithContext(kit.Ctx)
-
-	// 根据类型更新字段
-	switch messageType {
-	case sfs.VersionChangeMessage:
-		q = q.Omit()
-	case sfs.Heartbeat:
-		q = q.Omit(m.ClientMode, m.TotalFileNum, m.TotalFileSize, m.TotalSeconds, m.OriginalReleaseID,
-			m.TargetReleaseID, m.StartTime, m.EndTime, m.FailedDetailReason, m.ReleaseChangeFailedReason)
-	}
-
-	return q.Save(data...)
 }
 
 // BatchCreateWithTx batch create client event instances with transaction.
@@ -85,8 +238,41 @@ func (dao *clientEventDao) BatchCreateWithTx(kit *kit.Kit, tx *gen.QueryTx, data
 		}
 		item.ID = ids[i]
 	}
-	if err := tx.ClientEvent.WithContext(kit.Ctx).Save(data...); err != nil {
-		return err
-	}
-	return nil
+
+	return tx.ClientEvent.WithContext(kit.Ctx).CreateInBatches(data, 500)
+}
+
+// UpsertHeartbeat 更新插入心跳
+func (dao *clientEventDao) UpsertHeartbeat(kit *kit.Kit, tx *gen.QueryTx, data []*table.ClientEvent) error {
+
+	q := tx.ClientEvent.WithContext(kit.Ctx)
+	return q.Clauses(clause.OnConflict{
+		Columns: []clause.Column{
+			{Name: "biz_id"},
+			{Name: "app_id"},
+			{Name: "uid"},
+			{Name: "cursor_id"}},
+		DoUpdates: clause.AssignmentColumns([]string{
+			"download_file_size", "download_file_num", "release_change_status",
+		}),
+	}).CreateInBatches(data, 500)
+}
+
+// UpsertVersionChange 更新插入版本更改
+func (dao *clientEventDao) UpsertVersionChange(kit *kit.Kit, tx *gen.QueryTx, data []*table.ClientEvent) error {
+
+	q := tx.ClientEvent.WithContext(kit.Ctx)
+	return q.Clauses(clause.OnConflict{
+		Columns: []clause.Column{
+			{Name: "biz_id"},
+			{Name: "app_id"},
+			{Name: "uid"},
+			{Name: "cursor_id"}},
+		DoUpdates: clause.AssignmentColumns([]string{
+			"client_mode", "original_release_id", "target_release_id", "start_time", "end_time",
+			"release_change_status", "release_change_failed_reason", "failed_detail_reason",
+			"download_file_size", "download_file_num", "total_seconds", "total_file_size",
+			"total_file_num", "download_file_num", "specific_failed_reason",
+		}),
+	}).CreateInBatches(data, 500)
 }

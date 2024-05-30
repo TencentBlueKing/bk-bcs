@@ -22,8 +22,8 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/cmd/manager/options"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/internal/dao/mysqlrate"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 )
 
 type driver struct {
@@ -41,7 +41,8 @@ func GlobalDB() Interface {
 }
 
 // NewDriver creates the MySQL instance
-func NewDriver(dbCfg *common.DBConfig) (Interface, error) {
+func NewDriver() (Interface, error) {
+	dbCfg := options.GlobalOptions().DBConfig
 	connArgs := fmt.Sprintf("%s:%s@(%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 		dbCfg.Username, dbCfg.Password, dbCfg.Addr, dbCfg.Database)
 	var err error
@@ -82,9 +83,6 @@ func (d *driver) autoCreateTable() error {
 	if err := d.createTable(tableResourcePreference, &ResourcePreference{}); err != nil {
 		return errors.Wrapf(err, "create table '%s' failed", tableResourcePreference)
 	}
-	if err := d.createTable(tableSyncInfo, &SyncInfo{}); err != nil {
-		return errors.Wrapf(err, "create table '%s' failed", tableSyncInfo)
-	}
 	if err := d.createTable(tableHistoryManifest, &ApplicationHistoryManifest{}); err != nil {
 		return errors.Wrapf(err, "create table '%s' failed", tableHistoryManifest)
 	}
@@ -104,23 +102,89 @@ func (d *driver) createTable(tableName string, obj interface{}) error {
 	return nil
 }
 
-// ListActivityUser return the activity users for project
-func (d *driver) ListActivityUser(project string) ([]ActivityUser, error) {
-	rows, err := d.rateClient.Table(tableActivityUser).Where("project = ?", project).Rows()
+// SaveResourcePreference save resource preference
+func (d *driver) SaveResourcePreference(prefer *ResourcePreference) error {
+	return d.db.Table(tableResourcePreference).Save(prefer).Error
+}
+
+// DeleteResourcePreference delete the resource preference
+func (d *driver) DeleteResourcePreference(project, resourceType, name string) error {
+	return d.db.Table(tableResourcePreference).Where("project = ?", project).
+		Where("resourceType = ?", resourceType).
+		Where("name = ?", name).Delete(&ResourcePreference{}).Error
+}
+
+// ListResourcePreferences list all the resource preferences for project
+func (d *driver) ListResourcePreferences(project, resourceType string) ([]ResourcePreference, error) {
+	rows, err := d.db.Table(tableResourcePreference).Where("project = ?", project).
+		Where("resourceType = ?", resourceType).Rows()
 	if err != nil {
-		return nil, errors.Wrapf(err, "query activity users failed")
+		return nil, errors.Wrapf(err, "query resource preferences failed")
 	}
 	defer rows.Close() // nolint
 
-	result := make([]ActivityUser, 0)
+	result := make([]ResourcePreference, 0)
 	for rows.Next() {
-		activityUser := new(ActivityUser)
-		if err = d.db.ScanRows(rows, activityUser); err != nil {
-			return nil, errors.Wrapf(err, "scan activity user rows failed")
+		prefer := new(ResourcePreference)
+		if err = d.db.ScanRows(rows, prefer); err != nil {
+			return nil, errors.Wrapf(err, "scan preference rows failed")
 		}
-		result = append(result, *activityUser)
+		result = append(result, *prefer)
 	}
 	return result, nil
+}
+
+// SaveApplicationHistoryManifest create application history manifest object
+func (d *driver) SaveApplicationHistoryManifest(hm *ApplicationHistoryManifest) error {
+	return d.db.Table(tableHistoryManifest).Save(hm).Error
+}
+
+// GetApplicationHistoryManifest get application history manifest
+func (d *driver) GetApplicationHistoryManifest(appName, appUID string,
+	historyID int64) (*ApplicationHistoryManifest, error) {
+	rows, err := d.rateClient.Table(tableHistoryManifest).Where("name = ?", appName).
+		Where("applicationUID = ?", appUID).
+		Where("historyID = ?", historyID).Rows()
+	if err != nil {
+		return nil, errors.Wrapf(err, "get application history manifest failed")
+	}
+	defer rows.Close() // nolint
+
+	result := make([]ApplicationHistoryManifest, 0)
+	for rows.Next() {
+		appHM := new(ApplicationHistoryManifest)
+		if err = d.db.ScanRows(rows, appHM); err != nil {
+			return nil, errors.Wrapf(err, "scan syncinfo rows failed")
+		}
+		result = append(result, *appHM)
+	}
+	if len(result) == 0 {
+		return nil, nil
+	}
+	return &result[0], nil
+}
+
+// CheckAppHistoryManifestExist check manifest whether exist
+func (d *driver) CheckAppHistoryManifestExist(appName, appUID string, historyID int64) (bool, error) {
+	rows, err := d.rateClient.Table(tableHistoryManifest).Select("id").
+		Where("name = ?", appName).
+		Where("applicationUID = ?", appUID).
+		Where("historyID = ?", historyID).Rows()
+	if err != nil {
+		return false, errors.Wrapf(err, "get application history manifest failed")
+	}
+	defer rows.Close() // nolint
+
+	for rows.Next() {
+		return true, nil
+	}
+	return false, nil
+}
+
+// ActivityUserItem defines the activity user
+type ActivityUserItem struct {
+	Project string
+	User    string
 }
 
 // SaveActivityUser save the activity user
@@ -162,126 +226,28 @@ func (d *driver) UpdateActivityUser(user *ActivityUser) error {
 	return nil
 }
 
-// ListSyncInfosForProject list the sync infos for project
-func (d *driver) ListSyncInfosForProject(project string) ([]SyncInfo, error) {
-	rows, err := d.rateClient.Table(tableSyncInfo).Where("project = ?", project).Rows()
+func (d *driver) UpdateActivityUserWithName(item *ActivityUserItem) {
+	activityUser, err := d.GetActivityUser(item.Project, item.User)
 	if err != nil {
-		return nil, errors.Wrapf(err, "query resource preferences failed")
+		blog.Errorf("[analysis] get activity user '%s/%s' failed: %s", item.Project, item.User, err.Error())
+		return
 	}
-	defer rows.Close() // nolint
-
-	result := make([]SyncInfo, 0)
-	for rows.Next() {
-		syncInfo := new(SyncInfo)
-		if err = d.db.ScanRows(rows, syncInfo); err != nil {
-			return nil, errors.Wrapf(err, "scan syncinfo rows failed")
+	if activityUser == nil {
+		activityUser = &ActivityUser{
+			Project:          item.Project,
+			UserName:         item.User,
+			OperateNum:       1,
+			LastActivityTime: time.Now(),
 		}
-		result = append(result, *syncInfo)
-	}
-	return result, nil
-}
-
-// GetSyncInfo get the sync info for project
-func (d *driver) GetSyncInfo(project, cluster, app, phase string) (*SyncInfo, error) {
-	rows, err := d.rateClient.Table(tableSyncInfo).Where("project = ?", project).
-		Where("cluster = ?", cluster).
-		Where("application = ?", app).
-		Where("phase = ?", phase).Rows()
-	if err != nil {
-		return nil, errors.Wrapf(err, "get syncinfo failed")
-	}
-	defer rows.Close() // nolint
-
-	result := make([]SyncInfo, 0)
-	for rows.Next() {
-		syncInfo := new(SyncInfo)
-		if err = d.db.ScanRows(rows, syncInfo); err != nil {
-			return nil, errors.Wrapf(err, "scan syncinfo rows failed")
+		if err = d.SaveActivityUser(activityUser); err != nil {
+			blog.Errorf("[analysis] save activity user failed: %s", err.Error())
+			return
 		}
-		result = append(result, *syncInfo)
+		return
 	}
-	if len(result) == 0 {
-		return nil, nil
+	activityUser.OperateNum++
+	if err = d.UpdateActivityUser(activityUser); err != nil {
+		blog.Errorf("[analysis] update activity user failed: %s", err.Error())
+		return
 	}
-	return &result[0], nil
-}
-
-// SaveSyncInfo save the sync info
-func (d *driver) SaveSyncInfo(info *SyncInfo) error {
-	info.UpdateTime = time.Now()
-	return d.rateClient.Table(tableSyncInfo).Save(info).Error
-}
-
-// UpdateSyncInfo update the sync info
-func (d *driver) UpdateSyncInfo(info *SyncInfo) error {
-	if err := d.rateClient.Table(tableSyncInfo).Where("id = ?", info.ID).UpdateColumns(map[string]interface{}{
-		"syncTotal":    info.SyncTotal,
-		"previousSync": info.PreviousSync,
-		"updateTime":   time.Now(),
-	}).Error; err != nil {
-		return errors.Wrapf(err, "update sync_info failed")
-	}
-	return nil
-}
-
-// SaveResourcePreference save resource preference
-func (d *driver) SaveResourcePreference(prefer *ResourcePreference) error {
-	return d.db.Table(tableResourcePreference).Save(prefer).Error
-}
-
-// DeleteResourcePreference delete the resource preference
-func (d *driver) DeleteResourcePreference(project, resourceType, name string) error {
-	return d.db.Table(tableResourcePreference).Where("project = ?", project).
-		Where("resourceType = ?", resourceType).
-		Where("name = ?", name).Delete(&ResourcePreference{}).Error
-}
-
-// ListResourcePreferences list all the resource preferences for project
-func (d *driver) ListResourcePreferences(project, resourceType string) ([]ResourcePreference, error) {
-	rows, err := d.db.Table(tableResourcePreference).Where("project = ?", project).
-		Where("resourceType = ?", resourceType).Rows()
-	if err != nil {
-		return nil, errors.Wrapf(err, "query resource preferences failed")
-	}
-	defer rows.Close() // nolint
-
-	result := make([]ResourcePreference, 0)
-	for rows.Next() {
-		prefer := new(ResourcePreference)
-		if err = d.db.ScanRows(rows, prefer); err != nil {
-			return nil, errors.Wrapf(err, "scan preference rows failed")
-		}
-		result = append(result, *prefer)
-	}
-	return result, nil
-}
-
-// CreateApplicationHistoryManifest create application history manifest object
-func (d *driver) CreateApplicationHistoryManifest(hm *ApplicationHistoryManifest) error {
-	return d.db.Table(tableHistoryManifest).Save(hm).Error
-}
-
-// GetApplicationHistoryManifest get application history manifest
-func (d *driver) GetApplicationHistoryManifest(appName, appUID string,
-	historyID int64) (*ApplicationHistoryManifest, error) {
-	rows, err := d.rateClient.Table(tableHistoryManifest).Where("name = ?", appName).
-		Where("applicationUID = ?", appUID).
-		Where("historyID = ?", historyID).Rows()
-	if err != nil {
-		return nil, errors.Wrapf(err, "get application history manifest failed")
-	}
-	defer rows.Close() // nolint
-
-	result := make([]ApplicationHistoryManifest, 0)
-	for rows.Next() {
-		appHM := new(ApplicationHistoryManifest)
-		if err = d.db.ScanRows(rows, appHM); err != nil {
-			return nil, errors.Wrapf(err, "scan syncinfo rows failed")
-		}
-		result = append(result, *appHM)
-	}
-	if len(result) == 0 {
-		return nil, nil
-	}
-	return &result[0], nil
 }

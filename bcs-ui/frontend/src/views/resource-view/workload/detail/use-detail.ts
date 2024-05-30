@@ -73,9 +73,7 @@ export default function useDetail(options: IDetailOptions) {
   const additionalColumns = ref<any>([]);
   // 界面权限
   const pagePerms = computed(() => ({
-    create: webAnnotations.value?.perms?.page?.create_btn || {},
-    delete: webAnnotations.value?.perms?.page?.delete_btn || {},
-    update: webAnnotations.value?.perms?.page?.update_btn || {},
+    deleteBtn: webAnnotations.value?.perms?.page?.deleteBtn || {},
   }));
 
   const handleTabChange = (item) => {
@@ -94,7 +92,7 @@ export default function useDetail(options: IDetailOptions) {
       $clusterId: clusterId,
     });
     detail.value = res.data;
-    webAnnotations.value = res.webAnnotations;
+    webAnnotations.value = res.webAnnotations || { perms: {} };
     isLoading.value = false;
     return detail.value;
   };
@@ -110,7 +108,7 @@ export default function useDetail(options: IDetailOptions) {
       $clusterId: clusterId,
     });
     detail.value = res.data;
-    webAnnotations.value = res.webAnnotations;
+    webAnnotations.value = res.webAnnotations || { perms: {} };
     additionalColumns.value = res.webAnnotations?.additionalColumns;
     isLoading.value = false;
     return detail.value;

@@ -44,10 +44,11 @@
         <CodeEditor
           ref="codeEditorRef"
           v-model="variables"
-          @enter="separatorShow = true"
-          @validate="handleValidateEditor"
           :error-line="errorLine"
-          :placeholder="editorPlaceholder" />
+          :placeholder="editorPlaceholder"
+          @paste="handlePaste"
+          @enter="separatorShow = true"
+          @validate="handleValidateEditor" />
         <div class="separator" v-show="separatorShow">
           <SeparatorSelect @closed="separatorShow = false" @confirm="handleSelectSeparator" />
         </div>
@@ -131,11 +132,13 @@
 
   // 校验编辑器内容
   const handleValidateEditor = () => {
-    const variablesArray = variables.value.split('\n');
+    const variablesArray = variables.value.split('\n').map((item) => item.trim());
     errorLine.value = [];
+    let hasSeparatorError = false;
     variablesArray.forEach((item, index) => {
       if (item === '') return;
-      const variablesContent = item.split(separator.value);
+      const regex = separator.value === ' ' ? /\s+/ : separator.value;
+      const variablesContent = item.split(regex).map((item) => item.trim());
       const key = variablesContent[0];
       const type = variablesContent[1];
       const value = variablesContent[2];
@@ -144,6 +147,7 @@
           errorInfo: t('请检查是否已正确使用分隔符'),
           lineNumber: index + 1,
         });
+        hasSeparatorError = true;
       } else if (!key.startsWith('bk_bscp_') && !key.startsWith('BK_BSCP_')) {
         errorLine.value.push({
           errorInfo: t('变量必须以bk_bscp_或BK_BSCP_开头'),
@@ -162,6 +166,7 @@
       }
     });
     emits('trigger', variables.value && errorLine.value.length === 0);
+    return hasSeparatorError;
   };
   // 导入变量
   const handleImport = async () => {
@@ -183,6 +188,11 @@
     separator.value = selectSeparator;
     handleValidateEditor();
   };
+
+  const handlePaste = () => {
+    if (handleValidateEditor()) separatorShow.value = true;
+  };
+
   defineExpose({
     handleImport,
   });

@@ -10,6 +10,16 @@ export const createScript = (biz_id: string, params: IScriptEditingForm) =>
   http.post(`/config/biz/${biz_id}/hooks`, params).then((res) => res.data);
 
 /**
+ * 更新脚本
+ * @param biz_id 空间ID
+ * @param hook_id 脚本ID
+ * @param params 编辑参数
+ * @returns
+ */
+export const updateScript = (biz_id: string, hook_id: number, params: { memo: string; tags: string[] }) =>
+  http.put(`/config/biz/${biz_id}/hooks/${hook_id}`, params).then((res) => res.data);
+
+/**
  * 获取脚本列表
  * @param biz_id 空间ID
  * @param params 查询参数
@@ -46,6 +56,15 @@ export const getScriptVersionDetail = (biz_id: string, id: number, release_id: n
  */
 export const deleteScript = (biz_id: string, id: number) =>
   http.delete(`/config/biz/${biz_id}/hooks/${id}`, { params: { force: true } }).then((res) => res.data);
+
+/**
+ * 批量删除脚本
+ * @param biz_id 空间ID
+ * @param ids 脚本ID列表
+ * @returns
+ */
+export const batchDeleteScript = (biz_id: string, ids: number[]) =>
+  http.post(`/config/biz/${biz_id}/hooks/batch_delete`, { force: true, ids }).then((res) => res.data);
 
 /**
  * 获取脚本标签列表

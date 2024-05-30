@@ -329,7 +329,6 @@ func (b *bcsgdWorkload) generateJobByDiff(
 		PodAntiAffinity: &corev1.PodAntiAffinity{
 			RequiredDuringSchedulingIgnoredDuringExecution: []corev1.PodAffinityTerm{
 				{
-					Namespaces: []string{gd.Namespace},
 					LabelSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{
 							jobNameLabel: job.Name,

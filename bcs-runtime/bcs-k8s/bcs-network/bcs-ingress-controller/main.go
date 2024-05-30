@@ -25,6 +25,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/ipv6server"
 	clbv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated/apis/clb/v1"
+	federationv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/federation/v1"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 	gocache "github.com/patrickmn/go-cache"
 	"github.com/pkg/errors"
@@ -77,6 +78,7 @@ var (
 func init() {
 	_ = clientgoscheme.AddToScheme(scheme)
 	_ = networkextensionv1.AddToScheme(scheme)
+	_ = federationv1.AddToScheme(scheme)
 	_ = clbv1.AddToScheme(scheme)
 }
 
@@ -168,15 +170,16 @@ func main() {
 	// ingressCache 缓存ingress相关的service/workload信息，避免量大时影响ingress调谐时间
 	ingressCache := ingresscache.NewDefaultCache()
 	if err = (&ingressctrl.IngressReconciler{
-		Ctx:              context.Background(),
-		Client:           mgr.GetClient(),
-		Log:              ctrl.Log.WithName("controllers").WithName("Ingress"),
-		Option:           opts,
-		IngressEventer:   mgr.GetEventRecorderFor("bcs-ingress-controller"),
-		EpsFIlter:        ingressctrl.NewEndpointsFilter(mgr.GetClient(), ingressCache),
-		PodFilter:        ingressctrl.NewPodFilter(mgr.GetClient(), ingressCache),
-		IngressConverter: ingressConverter,
-		Cache:            ingressCache,
+		Ctx:                             context.Background(),
+		Client:                          mgr.GetClient(),
+		Log:                             ctrl.Log.WithName("controllers").WithName("Ingress"),
+		Option:                          opts,
+		IngressEventer:                  mgr.GetEventRecorderFor("bcs-ingress-controller"),
+		EpsFIlter:                       ingressctrl.NewEndpointsFilter(mgr.GetClient(), ingressCache),
+		PodFilter:                       ingressctrl.NewPodFilter(mgr.GetClient(), ingressCache),
+		MultiClusterEndpointSliceFilter: ingressctrl.NewMultiClusterEpsFilter(mgr.GetClient(), ingressCache),
+		IngressConverter:                ingressConverter,
+		Cache:                           ingressCache,
 	}).SetupWithManager(mgr); err != nil {
 		blog.Errorf("unable to create ingress reconciler, err %s", err.Error())
 		os.Exit(1)
@@ -192,9 +195,14 @@ func main() {
 		blog.Errorf("unable to create listener reconciler, err %s", err.Error())
 		os.Exit(1)
 	}
+	listenerByPassReconciler := listenerctrl.NewListenerBypassReconciler(mgr.GetClient(), lbIDCache)
+	if err = listenerByPassReconciler.SetupWithManager(mgr); err != nil {
+		blog.Errorf("unable to create listener-bypass reconciler, err %s", err.Error())
+		os.Exit(1)
+	}
 
 	portPoolReconciler := portpoolctrl.NewPortPoolReconciler(context.Background(), opts, lbClient,
-		mgr.GetClient(), mgr.GetEventRecorderFor("bcs-ingress-controller"), portPoolCache)
+		mgr.GetClient(), mgr.GetEventRecorderFor("bcs-ingress-controller"), portPoolCache, lbIDCache, lbNameCache)
 	if err = portPoolReconciler.SetupWithManager(mgr); err != nil {
 		blog.Errorf("unable to create port pool reconciler, err %s", err.Error())
 		os.Exit(1)
@@ -235,7 +243,7 @@ func main() {
 		ServerKeyFile:  opts.ServerKeyFile,
 	}
 	webhookServer, err := webhookserver.NewHookServer(webhookServerOpts, mgr.GetClient(), lbClient, portPoolCache,
-		eventWatcher, validater, ingressConverter, conflictHandler, opts.NodePortBindingNs,
+		validater, ingressConverter, conflictHandler, opts.NodePortBindingNs,
 		mgr.GetEventRecorderFor("bcs-ingress-controller"))
 	if err != nil {
 		blog.Errorf("create hook server failed, err %s", err.Error())
@@ -260,9 +268,12 @@ func main() {
 	// 定时执行检查
 	checkRunner := check.NewCheckRunner(context.Background())
 	checkRunner.
-		Register(check.NewPortBindChecker(mgr.GetClient(), mgr.GetEventRecorderFor("bcs-ingress-controller"))).
-		Register(check.NewListenerChecker(mgr.GetClient(), listenerHelper)).
-		Register(check.NewIngressChecker(mgr.GetClient(), lbClient, lbIDCache, lbNameCache, opts.LBCacheExpiration)).
+		Register(check.NewPortBindChecker(mgr.GetClient(), mgr.GetEventRecorderFor("bcs-ingress-controller")),
+			check.CheckPerMin).
+		Register(check.NewListenerChecker(mgr.GetClient(), listenerHelper), check.CheckPerMin).
+		Register(check.NewIngressChecker(mgr.GetClient(), lbClient, lbIDCache, lbNameCache, opts.LBCacheExpiration),
+			check.CheckPerMin).
+		Register(check.NewPortLeakChecker(mgr.GetClient(), portPoolCache), check.CheckPer10Min).
 		Start()
 	blog.Infof("starting check runner")
 

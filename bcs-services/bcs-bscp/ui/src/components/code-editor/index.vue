@@ -62,7 +62,7 @@
     },
   );
 
-  const emit = defineEmits(['update:modelValue', 'change', 'enter']);
+  const emit = defineEmits(['update:modelValue', 'change', 'enter', 'paste']);
 
   const codeEditorRef = ref();
   let editor: monaco.editor.IStandaloneCodeEditor;
@@ -141,6 +141,9 @@
         readOnly: !props.editable,
         scrollBeyondLastLine: false,
         tabSize: tabSize.value,
+        unicodeHighlight: {
+          ambiguousCharacters: false,
+        },
       });
     }
     if (props.lfEol) {
@@ -164,6 +167,11 @@
         // 取消监听键盘事件
         listener.dispose();
       }
+    });
+    // 监听第一次粘贴事件
+    const pasteListener = editor.onDidPaste(() => {
+      emit('paste');
+      pasteListener.dispose();
     });
     // 自动换行
     editor.updateOptions({ wordWrap: 'on' });
@@ -284,6 +292,7 @@
 
   // 校验xml、yaml、json数据类型
   const validate = (val: string) => {
+    console.log(props.language, 'd');
     let markers: any[] = [];
     if (props.language === 'xml') {
       markers = validateXML(val);
@@ -329,10 +338,9 @@
 </script>
 <style lang="scss" scoped>
   .code-editor-wrapper {
-    height: calc(100% - 10px);
+    height: 100%;
     :deep(.monaco-editor) {
       width: 100%;
-      padding-top: 10px;
       .template-variable-item {
         color: #1768ef;
         border: 1px solid #1768ef;
@@ -341,10 +349,9 @@
     }
   }
   .placeholderBox {
-    height: calc(100% - 10px);
+    height: 100%;
     background-color: #1e1e1e;
     box-sizing: content-box;
-    padding-top: 10px;
     .placeholderLine {
       display: flex;
       height: 19px;

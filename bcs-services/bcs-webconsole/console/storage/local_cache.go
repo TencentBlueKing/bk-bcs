@@ -19,6 +19,7 @@ import (
 )
 
 // SlotCache : slot cache with generics
+// NOCC:vet/vet(设计如此)
 type SlotCache[T any] struct {
 	Slot              *cache.Cache[T]
 	DefaultExpiration time.Duration

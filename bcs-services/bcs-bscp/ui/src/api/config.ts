@@ -1,5 +1,10 @@
 import http from '../request';
-import { IConfigEditParams, IConfigVersionQueryParams, ITemplateBoundByAppData } from '../../types/config';
+import {
+  IConfigEditParams,
+  IConfigVersionQueryParams,
+  ITemplateBoundByAppData,
+  IConfigVersion,
+} from '../../types/config';
 import { IVariableEditParams } from '../../types/variable';
 import { ICommonQuery } from '../../types/index';
 
@@ -64,7 +69,7 @@ export const updateServiceConfigItem = (id: number, app_id: number, biz_id: stri
   http.put(`/config/update/config_item/config_item/config_item_id/${id}/app_id/${app_id}/biz_id/${biz_id}`, params);
 
 /**
- * 删除配置
+ * 删除非模板配置
  * @param id 配置ID
  * @param bizId 业务ID
  * @param appId 应用ID
@@ -72,6 +77,16 @@ export const updateServiceConfigItem = (id: number, app_id: number, biz_id: stri
  */
 export const deleteServiceConfigItem = (id: number, bizId: string, appId: number) =>
   http.delete(`/config/delete/config_item/config_item/config_item_id/${id}/app_id/${appId}/biz_id/${bizId}`, {});
+
+/**
+ * 批量删除非模板配置
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param ids 配置项ID列表
+ * @returns
+ */
+export const batchDeleteServiceConfigs = (bizId: string, appId: number, ids: number[]) =>
+  http.post(`/config/biz/${bizId}/apps/${appId}/config_items/batch_delete`, { ids });
 
 /**
  * 获取未命名版本配置文件详情
@@ -129,11 +144,12 @@ export const updateConfigContent = (bizId: string, appId: number, data: string |
  * @param bizId 业务ID
  * @param appId 模板空间ID
  * @param signature sha256签名
+ * @param isBlob 是否需要返回二进制流，下载配置文件时需要
  * @returns
  */
-export const downloadConfigContent = (bizId: string, appId: number, signature: string) =>
+export const downloadConfigContent = (bizId: string, appId: number, signature: string, isBlob = false) =>
   http
-    .get<string, string>(`/biz/${bizId}/content/download`, {
+    .get<string, Blob|string>(`/biz/${bizId}/content/download`, {
       headers: {
         'X-Bscp-Template-Space-Id': appId,
         'X-Bkapi-File-Content-Id': signature,
@@ -141,6 +157,7 @@ export const downloadConfigContent = (bizId: string, appId: number, signature: s
       transitional: {
         forcedJSONParsing: false,
       },
+      ...(isBlob && { responseType: 'blob' }), // 文件为二进制流，需要设置响应类型为blob才能正确解析
     })
     .then((res) => res);
 
@@ -197,7 +214,15 @@ export const deleteVersion = (bizId: string, appId: number, releaseId: number) =
  * @returns
  */
 export const getConfigVersionList = (bizId: string, appId: number, params: IConfigVersionQueryParams) =>
-  http.get(`config/biz/${bizId}/apps/${appId}/releases`, { params });
+  http.get(`config/biz/${bizId}/apps/${appId}/releases`, { params }).then((res) => {
+    res.data.details.forEach((item: IConfigVersion) => {
+      const defaultGroup = item.status.released_groups.find((group) => group.id === 0);
+      if (defaultGroup) {
+        defaultGroup.name = '全部实例';
+      }
+    });
+    return res;
+  });
 
 /**
  * 发布版本
@@ -366,11 +391,21 @@ export const deleteBoundPkg = (bizId: string, appId: number, bindingId: number, 
  * @param fill 导入文件
  * @returns
  */
-export const importNonTemplateConfigFile = (biz_id: string, appId: number, fill: any) =>
+export const importNonTemplateConfigFile = (
+  biz_id: string,
+  appId: number,
+  fill: any,
+  isDecompression: boolean,
+  progress: Function,
+) =>
   http
-    .post(`/config/biz/${biz_id}/apps/${appId}/config_item/import`, fill, {
+    .post(`/config/biz/${biz_id}/apps/${appId}/config_item/import/${isDecompression}`, fill, {
       headers: {
-        'Content-Type': 'application/zip',
+        'X-Bscp-File-Name': fill.name,
+      },
+      onUploadProgress: (progressEvent: any) => {
+        const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+        progress(percentCompleted);
       },
     })
     .then((res) => res.data);
@@ -383,10 +418,11 @@ export const importNonTemplateConfigFile = (biz_id: string, appId: number, fill:
  * @param template_set_ids 模板套餐ID列表
  * @returns
  */
-export const batchAddConfigList = (bizId: string, appId: number, list: any) =>
+export const batchAddConfigList = (bizId: string, appId: number, list: any, replace_all: boolean) =>
   http
     .put(`/config/biz/${bizId}/apps/${appId}/config_items`, {
       items: list,
+      replace_all,
     })
     .then((res) => res.data);
 
@@ -410,16 +446,6 @@ export const getKvList = (bizId: string, appId: number, query: ICommonQuery) =>
   http.get(`/config/biz/${bizId}/apps/${appId}/kvs`, { params: query }).then((res) => res.data);
 
 /**
- * 批量上传｜更新kv
- * @param bizId 业务ID
- * @param appId 应用ID
- * @param kvs 上传kv列表
- * @returns
- */
-export const batchUpsertKv = (bizId: string, appId: number, kvs: any) =>
-  http.put(`/config/biz/${bizId}/apps/${appId}/kvs`, { kvs });
-
-/**
  * 更新kv
  * @param bizId 业务ID
  * @param appId 应用ID
@@ -427,8 +453,8 @@ export const batchUpsertKv = (bizId: string, appId: number, kvs: any) =>
  * @param value 配置值
  * @returns
  */
-export const updateKv = (bizId: string, appId: number, key: string, value: string) =>
-  http.put(`/config/biz/${bizId}/apps/${appId}/kvs/${key}`, { value });
+export const updateKv = (bizId: string, appId: number, key: string, value: string, memo: string) =>
+  http.put(`/config/biz/${bizId}/apps/${appId}/kvs/${key}`, { value, memo });
 
 /**
  * 删除kv
@@ -439,6 +465,15 @@ export const updateKv = (bizId: string, appId: number, key: string, value: strin
  */
 export const deleteKv = (bizId: string, appId: number, configId: number) =>
   http.delete(`/config/biz/${bizId}/apps/${appId}/kvs/${configId}`);
+
+/**
+ * 批量删除kv
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param ids 配置项ID列表
+ */
+export const batchDeleteKv = (bizId: string, appId: number, ids: number[]) =>
+  http.post(`config/biz/${bizId}/apps/${appId}/kvs/batch_delete`, { ids });
 
 /**
  * 获取已发布kv
@@ -470,6 +505,16 @@ export const getReleaseKvList = (bizId: string, appId: number, releaseId: number
  */
 export const undeleteKv = (bizId: string, appId: number, key: string) =>
   http.post(`/config/biz/${bizId}/apps/${appId}/kvs/${key}/undelete`);
+
+/**
+ * 恢复修改kv
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param kv 配置键值类型
+ * @returns
+ */
+export const unModifyKv = (bizId: string, appId: number, key: string) =>
+  http.post(`/config/biz/${bizId}/apps/${appId}/kvs/${key}/undo`);
 
 /**
  * 批量导入kv配置文件
@@ -510,3 +555,61 @@ export const unModifyConfigItem = (bizId: string, appId: number, id: number) =>
  */
 export const unDeleteConfigItem = (bizId: string, appId: number, id: number) =>
   http.post(`/config/undelete/config_item/config_item/config_item_id/${id}/app_id/${appId}/biz_id/${bizId}`);
+
+/**
+ * 从历史版本导入配置项
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param other_app_id 导入服务id
+ * @param release_id 版本id
+ * @returns
+ */
+export const importFromHistoryVersion = (
+  bizId: string,
+  appId: number,
+  params: { other_app_id: number; release_id: number },
+) => http.get(`/config/biz/${bizId}/apps/${appId}/config_items/compare_conflicts`, { params });
+
+/**
+ * 从历史版本导入kv配置项
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param other_app_id 导入服务id
+ * @param release_id 版本id
+ * @returns
+ */
+export const importKvFromHistoryVersion = (
+  bizId: string,
+  appId: number,
+  params: { other_app_id: number; release_id: number },
+) => http.get(`/config/biz/${bizId}/apps/${appId}/kvs/compare_conflicts`, { params });
+
+/**
+ * 简单文本导入kv配置项
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param kvs 上传kv列表
+ * @returns
+ */
+export const importKvFormText = (bizId: string, appId: number, kvs: any, replace_all: boolean) =>
+  http.put(`/config/biz/${bizId}/apps/${appId}/kvs`, { kvs, replace_all });
+
+/**
+ * json文本导入kv配置项
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param kvs 上传kv列表
+ * @returns
+ */
+export const importKvFormJson = (bizId: string, appId: number, content: string) =>
+  http.post(`/config/biz/${bizId}/apps/${appId}/kvs/json/import`, { data: content });
+
+/**
+ * yaml文本导入kv配置项
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param kvs 上传kv列表
+ * @returns
+ */
+export const importKvFormYaml = (bizId: string, appId: number, content: string) =>
+  http.post(`/config/biz/${bizId}/apps/${appId}/kvs/yaml/import`, { data: content });

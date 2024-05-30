@@ -4,12 +4,15 @@
     @click="openLink">
     <i class="bcs-icon bcs-icon-fenxiang mr-[4px] !text-[12px]"></i>
     {{ linkText }}
-    <bcs-divider direction="vertical" class="absolute right-[30px]"></bcs-divider>
-    <span
-      class="absolute right-0 h-[32px] w-[40px] flex items-center justify-center"
-      @click.stop="refresh">
-      <i class="bcs-icon bcs-icon-reset !text-[12px] text-[#979BA5]"></i>
-    </span>
+    <template v-if="showRefresh">
+      <bcs-divider direction="vertical" class="absolute right-[30px]"></bcs-divider>
+      <span
+        class="absolute right-0 h-[32px] w-[40px] flex items-center justify-center"
+        v-bk-tooltips="$t('generic.button.refresh')"
+        @click.stop="refresh">
+        <i class="bcs-icon bcs-icon-reset !text-[12px] text-[#979BA5]"></i>
+      </span>
+    </template>
   </div>
 </template>
 <script setup lang="ts">
@@ -19,6 +22,10 @@ const props = defineProps({
   },
   link: {
     type: String,
+  },
+  showRefresh: {
+    type: Boolean,
+    default: true,
   },
 });
 

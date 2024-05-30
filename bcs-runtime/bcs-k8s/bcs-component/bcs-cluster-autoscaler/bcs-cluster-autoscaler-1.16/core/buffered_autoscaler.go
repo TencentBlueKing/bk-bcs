@@ -61,8 +61,11 @@ type BufferedAutoscaler struct {
 	processors              *ca_processors.AutoscalingProcessors
 	processorCallbacks      *bufferedAutoscalerProcessorCallbacks
 	initialized             bool
+	// last time that remove unregistered nodes
+	lastRemoveUnregisteredTime time.Time
+	scaleDownDelayAfterRemove  time.Duration
 	// Caches nodeInfo computed for previously seen nodes
-	nodeInfoCache       map[string]*schedulernodeinfo.NodeInfo
+	nodeInfoCache       map[string]cacheItem
 	ignoredTaints       taintKeySet
 	CPURatio            float64
 	MemRatio            float64
@@ -160,22 +163,24 @@ func NewBufferedAutoscaler(
 	initialScaleTime := time.Now().Add(-time.Hour)
 
 	return &BufferedAutoscaler{
-		Context:                 autoscalingContext,
-		startTime:               time.Now(),
-		lastScaleUpTime:         initialScaleTime,
-		lastScaleDownDeleteTime: initialScaleTime,
-		lastScaleDownFailTime:   initialScaleTime,
-		scaleDown:               scaleDown,
-		processors:              processors,
-		processorCallbacks:      processorCallbacks,
-		clusterStateRegistry:    clusterStateRegistry,
-		nodeInfoCache:           make(map[string]*schedulernodeinfo.NodeInfo),
-		ignoredTaints:           ignoredTaints,
-		CPURatio:                opts.BufferedCPURatio,
-		MemRatio:                opts.BufferedMemRatio,
-		ratio:                   opts.BufferedResourceRatio,
-		webhook:                 webhook,
-		maxBulkScaleUpCount:     opts.MaxBulkScaleUpCount,
+		Context:                    autoscalingContext,
+		startTime:                  time.Now(),
+		lastScaleUpTime:            initialScaleTime,
+		lastScaleDownDeleteTime:    initialScaleTime,
+		lastScaleDownFailTime:      initialScaleTime,
+		lastRemoveUnregisteredTime: initialScaleTime,
+		scaleDownDelayAfterRemove:  opts.ScaleDownDelayAfterRemove,
+		scaleDown:                  scaleDown,
+		processors:                 processors,
+		processorCallbacks:         processorCallbacks,
+		clusterStateRegistry:       clusterStateRegistry,
+		nodeInfoCache:              make(map[string]cacheItem),
+		ignoredTaints:              ignoredTaints,
+		CPURatio:                   opts.BufferedCPURatio,
+		MemRatio:                   opts.BufferedMemRatio,
+		ratio:                      opts.BufferedResourceRatio,
+		webhook:                    webhook,
+		maxBulkScaleUpCount:        opts.MaxBulkScaleUpCount,
 	}
 }
 
@@ -228,6 +233,9 @@ func (b *BufferedAutoscaler) RunOnce(currentTime time.Time) errors.AutoscalerErr
 		daemonsets, contexts.PredicateChecker, b.ignoredTaints)
 	if autoscalerError != nil {
 		return autoscalerError.AddPrefix("failed to build node infos for node groups: ")
+	}
+	for ng, node := range nodeInfosForGroups {
+		klog.Infof("ng: %s, labels: %v", ng, node.Node().Labels)
 	}
 
 	typedErr = b.updateClusterState(allNodes, nodeInfosForGroups, currentTime)
@@ -357,7 +365,7 @@ func (b *BufferedAutoscaler) checkClusterState(autoscalingContext *context.Autos
 	// Check if there are any nodes that failed to register in Kubernetes
 	// master.
 	unregisteredNodes := b.clusterStateRegistry.GetUnregisteredNodes()
-	if len(unregisteredNodes) > 0 {
+	if len(unregisteredNodes) > 0 && b.lastRemoveUnregisteredTime.Add(b.scaleDownDelayAfterRemove).Before(currentTime) {
 		klog.V(1).Infof("%d unregistered nodes present", len(unregisteredNodes))
 		removedAny, err := removeOldUnregisteredNodes(unregisteredNodes, autoscalingContext,
 			currentTime, autoscalingContext.LogRecorder)
@@ -366,6 +374,7 @@ func (b *BufferedAutoscaler) checkClusterState(autoscalingContext *context.Autos
 			klog.Warningf("Failed to remove unregistered nodes: %v", err)
 		}
 		if removedAny {
+			b.lastRemoveUnregisteredTime = currentTime
 			klog.V(0).Infof("Some unregistered nodes were removed, skipping iteration")
 			return nil
 		}

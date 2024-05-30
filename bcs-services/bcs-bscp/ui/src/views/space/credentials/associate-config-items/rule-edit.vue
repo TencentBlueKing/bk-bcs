@@ -2,12 +2,6 @@
   <div class="rule-edit">
     <div class="head">
       <p class="title">{{ t('配置关联规则') }}</p>
-      <bk-popover placement="bottom" theme="light" trigger="click" ext-cls="view-rule-wrap">
-        <span class="view-rule">{{ t('查看规则示例') }}</span>
-        <template #content>
-          <ViewRuleExample />
-        </template>
-      </bk-popover>
     </div>
     <div class="rules-edit-area">
       <div v-for="(rule, index) in localRules" class="rule-list" :key="index">
@@ -19,6 +13,7 @@
             :input-search="false"
             :disabled="rule.type === 'del'"
             :placeholder="t('请选择服务')"
+            :search-placeholder="$t('请输入')"
             @change="handleSelectApp(index)">
             <bk-option v-for="app in appList" :id="app" :key="app.id" :name="app.spec.name" />
           </bk-select>
@@ -28,8 +23,7 @@
             class="rule-input"
             :placeholder="inputPlaceholder(rule)"
             :disabled="rule.type === 'del'"
-            @input="handleInput(index)"
-            @blur="handleRuleContentChange(index)">
+            @input="handleRuleContentChange(index)">
             <template #suffix>
               <div
                 v-if="rule.type"
@@ -54,6 +48,11 @@
               <i style="margin-left: 10px" class="bk-bscp-icon icon-add" @click="handleAddRule(index)"></i>
             </template>
           </div>
+          <div
+            :class="['preview', { 'preview-mode': previewRule?.index === index }, { 'need-preview': rule.needPreview }]"
+            @click="handlePreviewRule(rule, index)">
+            <span>{{ t('预览') }}</span><Arrows-Right class="arrow-icon" />
+          </div>
         </div>
         <div class="error-info" v-if="!rule.isRight || !rule.isSelectService">
           <span v-if="!rule.isSelectService">{{ t('请选择服务') }}</span>
@@ -67,17 +66,18 @@
 <script setup lang="ts">
   import { ref, watch, computed } from 'vue';
   import { useI18n } from 'vue-i18n';
-  import { ICredentialRule, IRuleEditing, IRuleUpdateParams } from '../../../../../types/credential';
+  import { ICredentialRule, IRuleEditing, IRuleUpdateParams, IPreviewRule } from '../../../../../types/credential';
   import { IAppItem } from '../../../../../types/app';
-  import ViewRuleExample from './view-rule-example.vue';
+  import { ArrowsRight } from 'bkui-vue/lib/icon';
 
   const { t } = useI18n();
   const props = defineProps<{
     rules: ICredentialRule[];
     appList: IAppItem[];
+    previewRule: IPreviewRule | null;
   }>();
 
-  const emits = defineEmits(['change', 'formChange']);
+  const emits = defineEmits(['change', 'formChange', 'update:previewRule', 'trigger-save-btn-disabled']);
 
   const RULE_TYPE_MAP: { [key: string]: string } = {
     new: t('新增'),
@@ -93,8 +93,9 @@
     return t('请输入配置项名称');
   });
 
+  const needPreview = computed(() => localRules.value.some((rule) => rule.needPreview));
+
   const transformRulesToEditing = (rules: ICredentialRule[]) => {
-    console.log(props.appList);
     const rulesEditing: IRuleEditing[] = [];
     rules.forEach((item) => {
       const {
@@ -106,11 +107,12 @@
         id,
         type: '',
         content: scope.slice(1),
-        original: scope,
+        original: scope.slice(1),
         isRight: true,
         app: selectApp || null,
         originalApp: app,
         isSelectService: true,
+        needPreview: false,
       });
     });
     return rulesEditing;
@@ -130,6 +132,7 @@
             app: null,
             originalApp: '',
             isSelectService: true,
+            needPreview: false,
           },
         ];
       } else {
@@ -137,6 +140,13 @@
       }
     },
     { immediate: true },
+  );
+
+  watch(
+    () => needPreview.value,
+    () => {
+      emits('trigger-save-btn-disabled', needPreview.value);
+    },
   );
 
   const handleAddRule = (index: number) => {
@@ -149,6 +159,7 @@
       app: null,
       originalApp: '',
       isSelectService: true,
+      needPreview: false,
     });
   };
 
@@ -173,7 +184,6 @@
     // 文件型 需要忽略前导/进行校验
     if (rule.app?.spec.config_type === 'file') {
       const validateContent = rule.content[0] === '/' ? rule.content.slice(1) : rule.content;
-      console.log(validateContent);
       if (!validateContent.length) {
         return false;
       }
@@ -184,20 +194,13 @@
     return !!rule.content.length;
   };
 
-  // 产品逻辑：没有检测到输入错误时：鼠标失焦后检测；如果检测到错误时：输入框只要有内容变化就要检测
-  const handleInput = (index: number) => {
-    const rule = localRules.value[index];
-    if (!rule.isRight) {
-      rule.isRight = validateRule(rule);
-    }
-    emits('formChange');
-  };
-
   const handleSelectApp = (index: number) => {
     const rule = localRules.value[index];
     localRules.value[index].isSelectService = !!localRules.value[index].app;
     if (rule.id) {
-      rule.type = rule.content === rule.original && rule.app?.spec.name === rule.originalApp ? '' : 'modify';
+      const isRuleChange = rule.content !== rule.original || rule.app?.spec.name !== rule.originalApp;
+      rule.type = isRuleChange ? 'modify' : '';
+      rule.needPreview = isRuleChange;
     }
     updateRuleParams();
   };
@@ -206,9 +209,12 @@
     const rule = localRules.value[index];
     localRules.value[index].isRight = validateRule(rule);
     if (rule.id) {
-      rule.type = rule.content === rule.original && rule.app?.spec.name === rule.originalApp ? '' : 'modify';
+      const isRuleChange = rule.content !== rule.original || rule.app?.spec.name !== rule.originalApp;
+      rule.type = isRuleChange ? 'modify' : '';
+      rule.needPreview = isRuleChange;
     }
     updateRuleParams();
+    emits('formChange');
   };
 
   const updateRuleParams = () => {
@@ -245,17 +251,34 @@
     return localRules.value.some((item) => !item.isRight || !item.isSelectService);
   };
 
+  const handlePreviewRule = (rule: IRuleEditing, index: number) => {
+    // 规则为新增或修改 先进行校验
+    if (rule.type) {
+      rule.isSelectService = !!rule.app;
+      rule.isRight = validateRule(rule);
+    }
+    let previewRule: IPreviewRule | null;
+    // 规则错误取消预览
+    if (!rule.isRight || !rule.isSelectService) {
+      previewRule = null;
+    } else {
+      previewRule = {
+        id: rule.id,
+        appName: rule.app!.spec.name,
+        scopeContent: `/${rule.content}`,
+        index,
+      };
+      rule.needPreview = false;
+    }
+    emits('update:previewRule', previewRule);
+  };
+
   defineExpose({ handleRuleValidate });
 </script>
 <style lang="scss" scoped>
   .head {
     display: flex;
     justify-content: space-between;
-    .view-rule {
-      font-size: 12px;
-      color: #3a84ff;
-      cursor: pointer;
-    }
   }
   .title {
     position: relative;
@@ -278,14 +301,13 @@
   .rule-item {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     .service-select {
-      width: 120px;
+      width: 180px;
       margin-right: 8px;
     }
     .rule-input {
       position: relative;
-      width: 174px;
+      width: 248px;
       .status-tag {
         position: absolute;
         top: 4px;
@@ -309,15 +331,44 @@
       }
     }
     .action-btns {
-      width: 38px;
       color: #979ba5;
       font-size: 14px;
       text-align: right;
+      padding: 0 17px 0 9px;
       > i {
         cursor: pointer;
         &:hover {
           color: #3a84ff;
         }
+      }
+    }
+    .preview {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: space-evenly;
+      width: 52px;
+      height: 24px;
+      background: #f0f1f5;
+      border-radius: 2px;
+      color: #979ba5;
+      font-size: 12px;
+      .arrow-icon {
+        font-size: 16px;
+      }
+      &.preview-mode {
+        background: #e1ecff;
+        color: #3a84ff;
+      }
+      &.need-preview::after {
+        position: absolute;
+        content: '';
+        width: 6px;
+        height: 6px;
+        background: #ff9c01;
+        border-radius: 50%;
+        right: -3px;
+        top: -3px;
       }
     }
   }
@@ -342,7 +393,7 @@
     line-height: 16px;
     .rule-error {
       position: absolute;
-      left: 145px;
+      left: 200px;
     }
   }
   .preview-btn {

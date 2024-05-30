@@ -106,6 +106,8 @@ var (
 	// scaleDownDelayAfterFailure How long after scale down failure that scale down evaluation resumes
 	scaleDownDelayAfterFailure = flag.Duration("scale-down-delay-after-failure", 3*time.Minute,
 		"How long after scale down failure that scale down evaluation resumes")
+	scaleDownDelayAfterRemove = flag.Duration("scale-down-delay-after-remove", 3*time.Minute,
+		"How long after remove unregistered nodes that remove nodes resumes")
 	// scaleDownUnneededTime How long a node should be unneeded before it is eligible for scale down
 	scaleDownUnneededTime = flag.Duration("scale-down-unneeded-time", 10*time.Minute,
 		"How long a node should be unneeded before it is eligible for scale down")
@@ -361,17 +363,18 @@ func createAutoscalingOptions() scalingconfig.Options {
 			DaemonSetEvictionForOccupiedNodes:  *daemonSetEvictionForOccupiedNodes,
 			UserAgent:                          *userAgent,
 		},
-		MaxBulkScaleUpCount:      *maxBulkScaleUpCount,
-		BufferedCPURatio:         *bufferedCPURatio,
-		BufferedMemRatio:         *bufferedMemRatio,
-		BufferedResourceRatio:    *bufferedResourceRatio,
-		WebhookMode:              *webhookMode,
-		WebhookModeConfig:        *webhookModeConfig,
-		WebhookModeToken:         *webhookModeToken,
-		MaxNodeStartScheduleTime: *maxNodeStartScheduleTime,
-		MaxNodeStartupTime:       *maxNodeStartupTime,
-		ScanInterval:             *scanInterval,
-		EvictLatest:              *evictLatest,
+		MaxBulkScaleUpCount:       *maxBulkScaleUpCount,
+		BufferedCPURatio:          *bufferedCPURatio,
+		BufferedMemRatio:          *bufferedMemRatio,
+		BufferedResourceRatio:     *bufferedResourceRatio,
+		WebhookMode:               *webhookMode,
+		WebhookModeConfig:         *webhookModeConfig,
+		WebhookModeToken:          *webhookModeToken,
+		MaxNodeStartScheduleTime:  *maxNodeStartScheduleTime,
+		MaxNodeStartupTime:        *maxNodeStartupTime,
+		ScanInterval:              *scanInterval,
+		EvictLatest:               *evictLatest,
+		ScaleDownDelayAfterRemove: *scaleDownDelayAfterRemove,
 	}
 }
 

@@ -35,6 +35,7 @@ type ResourceNode struct {
 	RType     string
 	RInstance string
 	Rp        PathBuildIAM
+	Attr      map[string]interface{}
 }
 
 // BuildResourceNode build iam resourceNode
@@ -44,6 +45,10 @@ func (rn ResourceNode) BuildResourceNode() iam.ResourceNode {
 
 	if bkPath != "" {
 		attr[string(BkIAMPath)] = bkPath
+	}
+
+	for k, v := range rn.Attr {
+		attr[k] = v
 	}
 
 	resourceNode := iam.NewResourceNode(rn.System, rn.RType, rn.RInstance, attr)

@@ -35,7 +35,7 @@ func calcNamespaceID(clusterID, namespace string) string {
 
 // FetchBatchNSScopedResMultiActPerm 获取对多个命名空间域资源的 CURD 权限信息
 func FetchBatchNSScopedResMultiActPerm(
-	username, projectID, clusterID string, namespaces []string,
+	username, projectID, clusterID string, namespaces []string, res string,
 ) (map[string]map[string]bool, error) {
 	// 命名空间域资源 CURD 操作
 	actionIDs := []string{NamespaceScopedView, NamespaceScopedCreate, NamespaceScopedUpdate, NamespaceScopedDelete}
@@ -53,7 +53,7 @@ func FetchBatchNSScopedResMultiActPerm(
 		Cli:           perm.NewIAMClient(),
 		ResType:       perm.ResTypeNS,
 		PermCtx:       &PermCtx{},
-		ResReq:        NewResRequest(projectID, clusterID),
+		ResReq:        NewResRequest(projectID, clusterID, res),
 		ParentResPerm: &cluster.NewPerm(projectID).IAMPerm,
 	}
 	ret, err := iamPermCli.BatchResMultiActionAllowed(username, actionIDs, resIDs)

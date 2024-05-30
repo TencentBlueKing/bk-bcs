@@ -109,7 +109,8 @@ func (dao *configItemDao) UpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, ci *table.
 
 	updateTx := func(tx *gen.Query) error {
 		q = tx.ConfigItem.WithContext(kit.Ctx)
-		if _, err = q.Omit(m.ID, m.BizID, m.AppID).
+		if _, err = q.Select(m.Name, m.Path, m.FileType, m.FileMode, m.Memo, m.User, m.UserGroup,
+			m.Privilege, m.Reviser, m.UpdatedAt).
 			Where(m.ID.Eq(ci.ID), m.BizID.Eq(ci.Attachment.BizID)).Updates(ci); err != nil {
 			return err
 		}

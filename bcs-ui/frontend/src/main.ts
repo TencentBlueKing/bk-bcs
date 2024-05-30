@@ -26,8 +26,11 @@
 import VeeValidate from 'vee-validate';
 import Vue from 'vue';
 
+import BkTrace from '@blueking/bk-trace';
+
 import '@/common/bkmagic';
 import '@/fonts/svg-icon/iconcool';
+import '@/views/app/performance';
 import App from '@/App.vue';
 import { bus } from '@/common/bus';
 import { chainable } from '@/common/util';
@@ -44,6 +47,28 @@ import router from '@/router';
 import store from '@/store';
 import BcsErrorPlugin from '@/views/app/bcs-error';
 import k8sIngress from '@/views/deploy-manage/templateset/ingress/k8s-ingress.vue';
+
+window.BkTrace = new BkTrace({
+  url: '/bcsapi/v4/ui/report',
+  struct: {
+    module: '',
+    operation: '',
+    desc: '',
+    username: '',
+    projectCode: '',
+    to: '',
+    from: '',
+    error: {},
+    performance: {},
+    navID: () => {
+      let menu = store.state.curNav;
+      while (menu?.parent) {
+        menu = menu?.parent;
+      }
+      return menu?.id || '';
+    },
+  },
+});
 
 Vue.config.devtools = process.env.NODE_ENV === 'development';
 Vue.prototype.$chainable = chainable;

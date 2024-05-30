@@ -7,6 +7,9 @@ import "pkg/protocol/core/config-item/config_item.proto";
 import "pkg/protocol/core/content/content.proto";
 import "pkg/protocol/core/group/group.proto";
 import "pkg/protocol/core/credential/credential.proto";
+import "pkg/protocol/core/client/client.proto";
+import "pkg/protocol/core/client-event/client_event.proto";
+import "pkg/protocol/core/client-query/client_query.proto";
 import "pkg/protocol/core/credential-scope/credential-scope.proto";
 import "pkg/protocol/core/hook/hook.proto";
 import "pkg/protocol/core/hook-revision/hook_revision.proto";
@@ -22,6 +25,7 @@ import "pkg/protocol/core/template-variable/template_variable.proto";
 import "pkg/protocol/core/kv/kvs.proto";
 import "pkg/protocol/core/released-kv/released_kv.proto";
 import "google/api/annotations.proto";
+import "google/api/visibility.proto";
 import "google/protobuf/struct.proto";
 
 package pbcs;
@@ -29,6 +33,7 @@ package pbcs;
 option go_package = "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/config-server;pbcs";
 
 service Config {
+  option (google.api.api_visibility).restriction = "BKAPIGW";
   rpc CreateApp(CreateAppReq) returns (CreateAppResp) {
     option (google.api.http) = {
       post: "/api/v1/config/create/app/app/biz_id/{biz_id}"
@@ -91,6 +96,12 @@ service Config {
   rpc DeleteConfigItem(DeleteConfigItemReq) returns (DeleteConfigItemResp) {
     option (google.api.http) = {
       delete: "/api/v1/config/delete/config_item/config_item/config_item_id/{id}/app_id/{app_id}/biz_id/{biz_id}"
+    };
+  }
+  rpc BatchDeleteConfigItems(BatchDeleteAppResourcesReq) returns (BatchDeleteResp) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/config_items/batch_delete"
+      body: "*"
     };
   }
   rpc UnDeleteConfigItem(UnDeleteConfigItemReq) returns (UnDeleteConfigItemResp) {
@@ -201,6 +212,18 @@ service Config {
   rpc DeleteHook(DeleteHookReq) returns (DeleteHookResp) {
     option (google.api.http) = {
       delete: "/api/v1/config/biz/{biz_id}/hooks/{hook_id}"
+    };
+  }
+  rpc BatchDeleteHook(BatchDeleteHookReq) returns (BatchDeleteResp) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/hooks/batch_delete"
+      body: "*"
+    };
+  }
+  rpc UpdateHook(UpdateHookReq) returns (UpdateHookResp) {
+    option (google.api.http) = {
+      put: "/api/v1/config/biz/{biz_id}/hooks/{hook_id}"
+      body: "*"
     };
   }
   rpc ListHooks(ListHooksReq) returns (ListHooksResp) {
@@ -390,7 +413,8 @@ service Config {
   }
   /* 暂时不对外开发（删除模版后，服务引用的latest版本会回退到上一个老版本）
   rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (DeleteTemplateRevisionResp) {
-      option (google.api.http) = {
+
+option (google.api.http) = {
           delete :
   "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
       };
@@ -587,6 +611,12 @@ service Config {
       delete: "/api/v1/config/biz/{biz_id}/template_variables/{template_variable_id}"
     };
   }
+  rpc BatchDeleteTemplateVariable(BatchDeleteBizResourcesReq) returns (BatchDeleteResp) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/template_variables/batch_delete"
+      body: "*"
+    };
+  }
   rpc UpdateTemplateVariable(UpdateTemplateVariableReq) returns (UpdateTemplateVariableResp) {
     option (google.api.http) = {
       put: "/api/v1/config/biz/{biz_id}/template_variables/{template_variable_id}"
@@ -648,6 +678,12 @@ service Config {
       delete: "/api/v1/config/biz/{biz_id}/groups/{group_id}"
     };
   }
+  rpc BatchDeleteGroups(BatchDeleteBizResourcesReq) returns (BatchDeleteResp) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/groups/batch_delete"
+      body: "*"
+    };
+  }
   rpc UpdateGroup(UpdateGroupReq) returns (UpdateGroupResp) {
     option (google.api.http) = {
       put: "/api/v1/config/biz/{biz_id}/groups/{group_id}"
@@ -670,12 +706,14 @@ service Config {
     };
   }
   rpc GetGroupByName(GetGroupByNameReq) returns (pbgroup.Group) {
+    option (google.api.method_visibility).restriction = "BKAPIGW";
     option (google.api.http) = {
       get: "/api/v1/config/biz/{biz_id}/groups/query/name/{group_name}"
     };
   }
 
   rpc Publish(PublishReq) returns (PublishResp) {
+    option (google.api.method_visibility).restriction = "BKAPIGW";
     option (google.api.http) = {
       post: "/api/v1/config/update/strategy/publish/publish/release_id/{release_id}/app_id/{app_id}/biz_id/{biz_id}"
       body: "*"
@@ -756,6 +794,12 @@ service Config {
       delete: "/api/v1/config/biz/{biz_id}/apps/{app_id}/kvs/{id}"
     };
   };
+  rpc BatchDeleteKv(BatchDeleteAppResourcesReq) returns (BatchDeleteResp) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/kvs/batch_delete"
+      body: "*"
+    };
+  };
   rpc BatchUpsertKvs(BatchUpsertKvsReq) returns (BatchUpsertKvsResp) {
     option (google.api.http) = {
       put: "/api/v1/config/biz/{biz_id}/apps/{app_id}/kvs"
@@ -767,6 +811,122 @@ service Config {
       post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/kvs/{key}/undelete"
     };
   };
+  rpc UndoKv(UndoKvReq) returns (UndoKvResp) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/kvs/{key}/undo"
+    };
+  };
+  rpc ImportKvs(ImportKvsReq) returns (ImportKvsResp) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/kvs/{format}/import"
+      body: "*"
+    };
+  };
+
+  rpc ListClients(ListClientsReq) returns (ListClientsResp) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/clients"
+      body: "*"
+    };
+  };
+
+  rpc ListClientEvents(ListClientEventsReq) returns (ListClientEventsResp) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/client_events/{client_id}"
+      body: "*"
+    };
+  };
+
+  // client query related interface
+  rpc ListClientQuerys(ListClientQuerysReq) returns (ListClientQuerysResp) {
+    option (google.api.http) = {
+      get: "/api/v1/config/biz/{biz_id}/apps/{app_id}/client_querys"
+    };
+  };
+  rpc CreateClientQuery(CreateClientQueryReq) returns (CreateClientQueryResp) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/client_querys"
+      body: "*"
+    };
+  };
+  rpc UpdateClientQuery(UpdateClientQueryReq) returns (UpdateClientQueryResp) {
+    option (google.api.http) = {
+      put: "/api/v1/config/biz/{biz_id}/apps/{app_id}/client_querys/{id}"
+      body: "*"
+    };
+  };
+  rpc DeleteClientQuery(DeleteClientQueryReq) returns (DeleteClientQueryResp) {
+    option (google.api.http) = {
+      delete: "/api/v1/config/biz/{biz_id}/apps/{app_id}/client_querys/{id}"
+    };
+  };
+  rpc CheckClientQueryName(CheckClientQueryNameReq) returns (CheckClientQueryNameResp) {
+    option (google.api.http) = {
+      get: "/api/v1/config/biz/{biz_id}/apps/{app_id}/client_querys/check_exists"
+    };
+  };
+
+  // client chart related interface
+  rpc ClientConfigVersionStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/clients/config_version_statistics"
+      body: "*"
+    };
+  };
+  rpc ClientPullTrendStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/clients/pull_trend_statistics"
+      body: "*"
+    };
+  };
+  rpc ClientPullStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/clients/pull_statistics"
+      body: "*"
+    };
+  };
+  rpc ClientLabelStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/clients/label_statistics"
+      body: "*"
+    };
+  };
+  rpc ClientAnnotationStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/clients/annotation_statistics"
+      body: "*"
+    };
+  };
+  rpc ClientVersionStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/clients/version_statistics"
+      body: "*"
+    };
+  };
+  rpc ListClientLabelAndAnnotation(ListClientLabelAndAnnotationReq) returns (google.protobuf.Struct) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/clients/labels_and_annotations"
+      body: "*"
+    };
+  };
+  rpc ClientSpecificFailedReason(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/clients/specific_failed_reason"
+      body: "*"
+    };
+  }
+
+  // config item compare conflicts related interface
+  rpc CompareConfigItemConflicts(CompareConfigItemConflictsReq) returns (CompareConfigItemConflictsResp) {
+    option (google.api.http) = {
+      get: "/api/v1/config/biz/{biz_id}/apps/{app_id}/config_items/compare_conflicts"
+    };
+  }
+  rpc CompareKvConflicts(CompareKvConflictsReq) returns (CompareKvConflictsResp) {
+    option (google.api.http) = {
+      get: "/api/v1/config/biz/{biz_id}/apps/{app_id}/kvs/compare_conflicts"
+    };
+  }
 }
 
 message UpdateCredentialScopeReq {
@@ -791,6 +951,7 @@ message CredentialScopePreviewReq {
 message CredentialScopePreviewResp {
   message Detail {
     string name = 1;
+    string path = 2;
   }
   uint32 count = 1;
   repeated Detail details = 2;
@@ -867,12 +1028,9 @@ message CreateAppReq {
   uint32 biz_id = 1;
   string name = 2;
   string config_type = 3;  // config_type is enum type, source resource reference: pkg/dal/table/app.go
-  string mode = 4;         // deploy_type is enum type, source resource reference: pkg/dal/table/app.go
-  string memo = 5;
-  string reload_type = 6;
-  string reload_file_path = 7;
-  string alias = 8;
-  string data_type = 9;  // data_type is enum type, source resource reference: pkg/dal/table/app.go
+  string memo = 4;
+  string alias = 5;
+  string data_type = 6;  // data_type is enum type, source resource reference: pkg/dal/table/app.go
 }
 
 message CreateAppResp {
@@ -884,10 +1042,8 @@ message UpdateAppReq {
   uint32 biz_id = 2;
   string name = 3;
   string memo = 4;
-  string reload_type = 5;
-  string reload_file_path = 6;
-  string alias = 7;
-  string data_type = 8;
+  string alias = 5;
+  string data_type = 6;
 }
 
 message DeleteAppReq {
@@ -1052,6 +1208,7 @@ message ListConfigItemsReq {
 message ListConfigItemsResp {
   uint32 count = 1;
   repeated pbci.ConfigItem details = 2;
+  uint32 conflict_number = 3;
 }
 
 message ListReleasedConfigItemsReq {
@@ -1199,7 +1356,7 @@ message CreateHookReq {
   uint32 biz_id = 1;
   string name = 2;
   string type = 3;
-  string tag = 4;
+  repeated string tags = 4;
   string memo = 5;
   string content = 6;
   string revision_name = 7;
@@ -1216,6 +1373,21 @@ message DeleteHookReq {
 }
 
 message DeleteHookResp {}
+
+message BatchDeleteHookReq {
+  uint32 biz_id = 1;
+  repeated uint32 ids = 2;
+  bool force = 3;
+}
+
+message UpdateHookReq {
+  uint32 biz_id = 1;
+  uint32 hook_id = 2;
+  repeated string tags = 3;
+  string memo = 4;
+}
+
+message UpdateHookResp {}
 
 message ListHooksReq {
   uint32 biz_id = 1;
@@ -1311,7 +1483,7 @@ message GetHookResp {
 message GetHookInfoSpec {
   string name = 1;
   string type = 3;
-  string tag = 4;
+  repeated string tags = 4;
   string memo = 5;
   message Releases {
     uint32 not_release_id = 1;
@@ -1468,7 +1640,7 @@ message CreateTemplateReq {
   string name = 3;
   string path = 4;
   string memo = 5;
-  // string          revision_name     = 6;
+  string revision_name = 6;
   string revision_memo = 7;
   string file_type = 8;  // file_type is enum type
   string file_mode = 9;  // file_mode is enum type
@@ -2299,6 +2471,7 @@ message CreateKvReq {
   string key = 3;
   string kv_type = 4;
   string value = 5;
+  string memo = 6;
 }
 
 message CreateKvResp {
@@ -2309,6 +2482,7 @@ message UpdateKvReq {
   uint32 biz_id = 1;
   uint32 app_id = 2;
   string key = 4;
+  string memo = 5;
   string value = 6;
 }
 
@@ -2346,11 +2520,28 @@ message DeleteKvReq {
 
 message DeleteKvResp {}
 
+message BatchDeleteBizResourcesReq {
+  uint32 biz_id = 1;
+  repeated uint32 ids = 2;
+}
+
+message BatchDeleteAppResourcesReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  repeated uint32 ids = 3;
+}
+
+message BatchDeleteResp {
+  repeated uint32 successful_ids = 1;
+  repeated uint32 failed_ids = 2;
+}
+
 message BatchUpsertKvsReq {
   message Kv {
     string key = 1;
     string kv_type = 2;
     string value = 3;
+    string memo = 4;
   }
   uint32 biz_id = 1;
   uint32 app_id = 2;
@@ -2369,3 +2560,172 @@ message UnDeleteKvReq {
 }
 
 message UnDeleteKvResp {}
+
+message UndoKvReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  string key = 3;
+}
+
+message UndoKvResp {}
+
+message ImportKvsReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  string format = 3;
+  string data = 4;
+}
+
+message ImportKvsResp {}
+
+message ListClientsReq {
+  message Order {
+    string desc = 1;
+    string asc = 2;
+  }
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  bool all = 3;
+  uint32 start = 4;
+  uint32 limit = 5;
+  Order order = 6;
+  int64 last_heartbeat_time = 7;
+  pbclient.ClientQueryCondition search = 8;
+}
+
+message ListClientsResp {
+  message Item {
+    pbclient.Client client = 1;
+    string cpu_usage_str = 2;
+    string cpu_max_usage_str = 3;
+    string memory_usage_str = 4;
+    string memory_max_usage_str = 5;
+  }
+  uint32 count = 1;
+  repeated Item details = 2;
+}
+
+message ListClientEventsReq {
+  message Order {
+    string desc = 1;
+    string asc = 2;
+  }
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  uint32 client_id = 3;
+  bool all = 4;
+  uint32 start = 5;
+  uint32 limit = 6;
+  Order order = 7;
+  string search_value = 8;
+  string start_time = 9;
+  string end_time = 10;
+}
+
+message ListClientEventsResp {
+  uint32 count = 1;
+  repeated pbce.ClientEvent details = 2;
+}
+
+message ListClientQuerysReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  string search_type = 3;  // 搜索类型：recent、common
+  uint32 start = 4;
+  uint32 limit = 5;
+  bool all = 6;
+}
+
+message ListClientQuerysResp {
+  uint32 count = 1;
+  repeated pbcq.ClientQuery details = 2;
+}
+
+message CreateClientQueryReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  string search_type = 3;
+  string search_name = 4;
+  google.protobuf.Struct search_condition = 5;
+}
+
+message CreateClientQueryResp {
+  uint32 id = 1;
+}
+
+message UpdateClientQueryReq {
+  uint32 id = 1;
+  uint32 biz_id = 2;
+  uint32 app_id = 3;
+  string search_name = 4;
+  google.protobuf.Struct search_condition = 5;
+}
+
+message UpdateClientQueryResp {}
+
+message DeleteClientQueryReq {
+  uint32 id = 1;
+  uint32 biz_id = 2;
+  uint32 app_id = 3;
+}
+
+message DeleteClientQueryResp {}
+
+message CheckClientQueryNameReq {
+  string name = 1;
+  uint32 biz_id = 2;
+  uint32 app_id = 3;
+}
+
+message CheckClientQueryNameResp {
+  bool exist = 1;
+}
+
+message ListClientLabelAndAnnotationReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  int64 last_heartbeat_time = 3;
+}
+
+message CompareConfigItemConflictsReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  uint32 release_id = 3;
+  uint32 other_app_id = 4;
+}
+
+message CompareConfigItemConflictsResp {
+  message ConfigItem {
+    string name = 1;
+    string path = 2;
+    string file_type = 3;  // file_type is enum type, source resource reference: pkg/dal/table/config_item.go
+    string file_mode = 4;  // file_mode is enum type, source resource reference: pkg/dal/table/config_item.go
+    string memo = 5;
+    string user = 6;
+    string user_group = 7;
+    string privilege = 8;
+    string sign = 9;
+    uint64 byte_size = 10;
+    uint32 id = 11;
+  }
+  repeated ConfigItem exist = 1;
+  repeated ConfigItem non_exist = 2;
+}
+
+message CompareKvConflictsReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  uint32 release_id = 3;
+  uint32 other_app_id = 4;
+}
+
+message CompareKvConflictsResp {
+  message Kv {
+    string key = 1;
+    string kv_type = 2;
+    string value = 3;
+    string memo = 4;
+  }
+  repeated Kv exist = 1;
+  repeated Kv non_exist = 2;
+}

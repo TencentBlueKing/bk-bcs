@@ -418,7 +418,7 @@ func TestInjectPod(t *testing.T) {
 			HasErr: false,
 		},
 		{
-			Message: "multiple ports with init containers",
+			Message: "multiple ports of names",
 			Pod: &corev1.Pod{
 				ObjectMeta: k8smetav1.ObjectMeta{
 					Name:      "testname",
@@ -428,19 +428,15 @@ func TestInjectPod(t *testing.T) {
 					},
 					Annotations: map[string]string{
 						pluginAnnotationKey:      pluginAnnotationValue,
-						pluginPortsAnnotationKey: "8080,http",
+						pluginPortsAnnotationKey: "grpc,http",
 					},
 				},
 				Spec: corev1.PodSpec{
-					InitContainers: []corev1.Container{
-						{
-							Image: "test-image",
-						},
-					},
 					Containers: []corev1.Container{
 						{
 							Ports: []corev1.ContainerPort{
 								{
+									Name:          "grpc",
 									ContainerPort: 8080,
 								},
 							},
@@ -482,55 +478,17 @@ func TestInjectPod(t *testing.T) {
 					},
 					Annotations: map[string]string{
 						pluginAnnotationKey:                    pluginAnnotationValue,
-						pluginPortsAnnotationKey:               "8080,http",
+						pluginPortsAnnotationKey:               "grpc,http",
 						annotationsRandHostportPrefix + "8080": "31000",
 						annotationsRandHostportPrefix + "8081": "31001",
 					},
 				},
 				Spec: corev1.PodSpec{
-					InitContainers: []corev1.Container{
-						{
-							Image: "test-image",
-							Env: []corev1.EnvVar{
-								{
-									Name:  envRandHostportPrefix + "8080",
-									Value: "31000",
-								},
-								{
-									Name:  envRandHostportPrefix + "8081",
-									Value: "31001",
-								},
-								{
-									Name: envRandHostportHostIP,
-									ValueFrom: &corev1.EnvVarSource{
-										FieldRef: &corev1.ObjectFieldSelector{
-											FieldPath: "status.hostIP",
-										},
-									},
-								},
-								{
-									Name: envRandHostportPodName,
-									ValueFrom: &corev1.EnvVarSource{
-										FieldRef: &corev1.ObjectFieldSelector{
-											FieldPath: "metadata.name",
-										},
-									},
-								},
-								{
-									Name: envRandHostportPodNamespace,
-									ValueFrom: &corev1.EnvVarSource{
-										FieldRef: &corev1.ObjectFieldSelector{
-											FieldPath: "metadata.namespace",
-										},
-									},
-								},
-							},
-						},
-					},
 					Containers: []corev1.Container{
 						{
 							Ports: []corev1.ContainerPort{
 								{
+									Name:          "grpc",
 									ContainerPort: 8080,
 									HostPort:      31000,
 								},
@@ -585,6 +543,225 @@ func TestInjectPod(t *testing.T) {
 								},
 								{
 									Name:  envRandHostportPrefix + "8081",
+									Value: "31001",
+								},
+								{
+									Name: envRandHostportHostIP,
+									ValueFrom: &corev1.EnvVarSource{
+										FieldRef: &corev1.ObjectFieldSelector{
+											FieldPath: "status.hostIP",
+										},
+									},
+								},
+								{
+									Name: envRandHostportPodName,
+									ValueFrom: &corev1.EnvVarSource{
+										FieldRef: &corev1.ObjectFieldSelector{
+											FieldPath: "metadata.name",
+										},
+									},
+								},
+								{
+									Name: envRandHostportPodNamespace,
+									ValueFrom: &corev1.EnvVarSource{
+										FieldRef: &corev1.ObjectFieldSelector{
+											FieldPath: "metadata.namespace",
+										},
+									},
+								},
+							},
+						},
+					},
+					Affinity: &corev1.Affinity{
+						PodAntiAffinity: &corev1.PodAntiAffinity{
+							RequiredDuringSchedulingIgnoredDuringExecution: []corev1.PodAffinityTerm{
+								{
+									LabelSelector: k8smetav1.SetAsLabelSelector(labels.Set(map[string]string{
+										"31000" + podHostportLabelSuffix: "31000",
+									})),
+									TopologyKey: "kubernetes.io/hostname",
+								},
+								{
+									LabelSelector: k8smetav1.SetAsLabelSelector(labels.Set(map[string]string{
+										"31001" + podHostportLabelSuffix: "31001",
+									})),
+									TopologyKey: "kubernetes.io/hostname",
+								},
+							},
+						},
+					},
+				},
+			},
+			HasErr: false,
+		},
+		{
+			Message: "multiple ports with init containers",
+			Pod: &corev1.Pod{
+				ObjectMeta: k8smetav1.ObjectMeta{
+					Name:      "testname",
+					Namespace: "testns",
+					Labels: map[string]string{
+						"app": "testname",
+					},
+					Annotations: map[string]string{
+						pluginAnnotationKey:      pluginAnnotationValue,
+						pluginPortsAnnotationKey: "8080,http",
+					},
+				},
+				Spec: corev1.PodSpec{
+					InitContainers: []corev1.Container{
+						{
+							Image: "test-image",
+						},
+					},
+					Containers: []corev1.Container{
+						{
+							Ports: []corev1.ContainerPort{
+								{
+									Name:          "http",
+									ContainerPort: 8081,
+								},
+							},
+						},
+						{
+							Ports: []corev1.ContainerPort{
+								{
+									ContainerPort: 8080,
+								},
+							},
+						},
+					},
+				},
+			},
+			PortsList: []*PortEntry{
+				{
+					Port:     31000,
+					Quantity: 0,
+				},
+				{
+					Port:     31001,
+					Quantity: 3,
+				},
+				{
+					Port:     31002,
+					Quantity: 4,
+				},
+			},
+			InjectedPod: &corev1.Pod{
+				ObjectMeta: k8smetav1.ObjectMeta{
+					Name:      "testname",
+					Namespace: "testns",
+					Labels: map[string]string{
+						"app":                            "testname",
+						podHostportLabelFlagKey:          podHostportLabelFlagValue,
+						"31000" + podHostportLabelSuffix: "31000",
+						"31001" + podHostportLabelSuffix: "31001",
+					},
+					Annotations: map[string]string{
+						pluginAnnotationKey:                    pluginAnnotationValue,
+						pluginPortsAnnotationKey:               "8080,http",
+						annotationsRandHostportPrefix + "8081": "31000",
+						annotationsRandHostportPrefix + "8080": "31001",
+					},
+				},
+				Spec: corev1.PodSpec{
+					InitContainers: []corev1.Container{
+						{
+							Image: "test-image",
+							Env: []corev1.EnvVar{
+								{
+									Name:  envRandHostportPrefix + "8081",
+									Value: "31000",
+								},
+								{
+									Name:  envRandHostportPrefix + "8080",
+									Value: "31001",
+								},
+								{
+									Name: envRandHostportHostIP,
+									ValueFrom: &corev1.EnvVarSource{
+										FieldRef: &corev1.ObjectFieldSelector{
+											FieldPath: "status.hostIP",
+										},
+									},
+								},
+								{
+									Name: envRandHostportPodName,
+									ValueFrom: &corev1.EnvVarSource{
+										FieldRef: &corev1.ObjectFieldSelector{
+											FieldPath: "metadata.name",
+										},
+									},
+								},
+								{
+									Name: envRandHostportPodNamespace,
+									ValueFrom: &corev1.EnvVarSource{
+										FieldRef: &corev1.ObjectFieldSelector{
+											FieldPath: "metadata.namespace",
+										},
+									},
+								},
+							},
+						},
+					},
+					Containers: []corev1.Container{
+						{
+							Ports: []corev1.ContainerPort{
+								{
+									Name:          "http",
+									ContainerPort: 8081,
+									HostPort:      31000,
+								},
+							},
+							Env: []corev1.EnvVar{
+								{
+									Name:  envRandHostportPrefix + "8081",
+									Value: "31000",
+								},
+								{
+									Name:  envRandHostportPrefix + "8080",
+									Value: "31001",
+								},
+								{
+									Name: envRandHostportHostIP,
+									ValueFrom: &corev1.EnvVarSource{
+										FieldRef: &corev1.ObjectFieldSelector{
+											FieldPath: "status.hostIP",
+										},
+									},
+								},
+								{
+									Name: envRandHostportPodName,
+									ValueFrom: &corev1.EnvVarSource{
+										FieldRef: &corev1.ObjectFieldSelector{
+											FieldPath: "metadata.name",
+										},
+									},
+								},
+								{
+									Name: envRandHostportPodNamespace,
+									ValueFrom: &corev1.EnvVarSource{
+										FieldRef: &corev1.ObjectFieldSelector{
+											FieldPath: "metadata.namespace",
+										},
+									},
+								},
+							},
+						},
+						{
+							Ports: []corev1.ContainerPort{
+								{
+									ContainerPort: 8080,
+									HostPort:      31001,
+								},
+							},
+							Env: []corev1.EnvVar{
+								{
+									Name:  envRandHostportPrefix + "8081",
+									Value: "31000",
+								},
+								{
+									Name:  envRandHostportPrefix + "8080",
 									Value: "31001",
 								},
 								{

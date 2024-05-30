@@ -16,63 +16,62 @@ package msgqueue
 import (
 	"time"
 
-	"github.com/micro/go-micro/v2/broker"
-	rabbitmqv2 "github.com/micro/go-plugins/broker/rabbitmq/v2"
-	stanv2 "github.com/micro/go-plugins/broker/stan/v2"
+	"github.com/go-micro/plugins/v4/broker/rabbitmq"
+	"github.com/go-micro/plugins/v4/broker/stan"
 	"github.com/pkg/errors"
+	"go-micro.dev/v4/broker"
 )
 
-// rabbitmqBroker xxx
 // rabbitmq broker init: brokerOptions/init/connect
 func rabbitmqBroker(q *QueueOptions) (broker.Broker, error) {
 	var brokerOpts []broker.Option
-	brokerOpts = append(brokerOpts, broker.Addrs(q.CommonOptions.Address), rabbitmqv2.ExchangeName(q.Exchange.Name),
-		rabbitmqv2.PrefetchCount(q.Exchange.PrefetchCount))
+	brokerOpts = append(brokerOpts, broker.Addrs(q.CommonOptions.Address), rabbitmq.ExchangeName(q.Exchange.Name),
+		rabbitmq.PrefetchCount(q.Exchange.PrefetchCount))
 	// exchange durable feature
 	if q.Exchange.Durable {
-		brokerOpts = append(brokerOpts, rabbitmqv2.DurableExchange())
+		brokerOpts = append(brokerOpts, rabbitmq.DurableExchange())
 	}
 	// prefetchGlobal feature
 	if q.Exchange.PrefetchGlobal {
-		brokerOpts = append(brokerOpts, rabbitmqv2.PrefetchGlobal())
+		brokerOpts = append(brokerOpts, rabbitmq.PrefetchGlobal())
 	}
 
-	brokerRabbit := rabbitmqv2.NewBroker(brokerOpts...)
+	brokerRabbit := rabbitmq.NewBroker(brokerOpts...)
 
 	// init rabbitmq broker
 	err := brokerRabbit.Init()
 	if err != nil {
-		return nil, errors.Wrapf(err, "brokerRabbitmq init failed.")
+		return nil, errors.Wrapf(err, "brokerRabbitmq init failed")
 	}
 
 	// create connect
 	if err = brokerRabbit.Connect(); err != nil {
-		return nil, errors.Wrapf(err, "can't connect to rabbit broker.")
+		return nil, errors.Wrapf(err, "can't connect to rabbit broker")
 	}
 
 	return brokerRabbit, nil
 }
 
-// natstreamingBroker broker init: natsreaming options/init/connect
+// natstreaming broker init: natsreaming options/init/connect
 func natstreamingBroker(q *QueueOptions) (broker.Broker, error) {
 	var brokerOpts []broker.Option
-	brokerOpts = append(brokerOpts, stanv2.ClusterID(q.NatsOptions.ClusterID), broker.Addrs(q.CommonOptions.Address))
+	brokerOpts = append(brokerOpts, stan.ClusterID(q.NatsOptions.ClusterID), broker.Addrs(q.CommonOptions.Address))
 	// exchange durable feature
 	if q.NatsOptions.ConnectRetry {
-		brokerOpts = append(brokerOpts, stanv2.ConnectTimeout(time.Minute*5), stanv2.ConnectRetry(true))
+		brokerOpts = append(brokerOpts, stan.ConnectTimeout(time.Minute*5), stan.ConnectRetry(true))
 	}
 
-	brokerNatstreaming := stanv2.NewBroker(brokerOpts...)
+	brokerNatstreaming := stan.NewBroker(brokerOpts...)
 
 	// init natstreaming broker
 	err := brokerNatstreaming.Init()
 	if err != nil {
-		return nil, errors.Wrapf(err, "brokerNatstreaming init failed.")
+		return nil, errors.Wrapf(err, "brokerNatstreaming init failed")
 	}
 
 	// create connect
 	if err = brokerNatstreaming.Connect(); err != nil {
-		return nil, errors.Wrapf(err, "can't connect to natstreaming broker.")
+		return nil, errors.Wrapf(err, "can't connect to natstreaming broker")
 	}
 
 	return brokerNatstreaming, nil

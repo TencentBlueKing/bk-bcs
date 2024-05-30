@@ -17,7 +17,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"strconv"
 	"strings"
 	"sync"
@@ -30,6 +29,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
 	putils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
@@ -121,7 +121,7 @@ func (c *CloudInfoManager) SyncClusterCloudInfo(cls *cmproto.Cluster,
 	cls.ManageType = *tkeCluster.ClusterType
 
 	// cluster cloud basic setting
-	clusterBasicSettingByQCloud(cls, tkeCluster)
+	clusterBasicSettingByQCloud(cls, tkeCluster, opt)
 	// cluster cloud node setting
 	_ = clusterCloudDefaultNodeSetting(cls, false)
 	// cluster cloud advanced setting
@@ -272,13 +272,15 @@ func clusterAdvancedSettingByQCloud(cls *cmproto.Cluster, cluster *tke.Cluster) 
 	}
 }
 
-func clusterBasicSettingByQCloud(cls *cmproto.Cluster, cluster *tke.Cluster) {
+func clusterBasicSettingByQCloud(cls *cmproto.Cluster, cluster *tke.Cluster,
+	opt *cloudprovider.SyncClusterCloudInfoOption) {
 	cls.ClusterBasicSettings = &cmproto.ClusterBasicSetting{
 		OS:                        *cluster.ClusterOs,
 		Version:                   *cluster.ClusterVersion,
 		VersionName:               *cluster.ClusterVersion,
 		ClusterLevel:              *cluster.ClusterLevel,
 		IsAutoUpgradeClusterLevel: *cluster.AutoUpgradeClusterLevel,
+		Area:                      opt.Area,
 	}
 }
 

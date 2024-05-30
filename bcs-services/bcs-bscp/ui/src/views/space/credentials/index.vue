@@ -24,6 +24,7 @@
             class="search-group-input"
             :placeholder="t('密钥名称/说明/关联规则/更新人')"
             :clearable="true"
+            v-bk-tooltips="{ content: t('密钥名称/说明/关联规则/更新人'), disabled: locale === 'zh-cn' || searchStr }"
             @clear="refreshListWithLoading()"
             @input="handleSearchInputChange">
             <template #suffix>
@@ -76,7 +77,7 @@
               </div>
             </template>
           </bk-table-column>
-          <bk-table-column :label="t('密钥')" width="340">
+          <bk-table-column :label="t('密钥')" width="320">
             <template #default="{ row, index }">
               <span v-if="index === 0 && isCreateCredential" style="color: #c4c6cc">{{ t('待确认') }}</span>
               <div v-if="row.spec" class="credential-text">
@@ -117,7 +118,7 @@
               </div>
             </template>
           </bk-table-column>
-          <bk-table-column :label="t('关联规则')" width="140">
+          <bk-table-column :label="t('关联规则')" width="240">
             <template #default="{ row }">
               <div v-if="row.credential_scopes && row.credential_scopes.length" class="rule-cell">
                 <span v-for="rule in row.showRules" :key="rule.id" class="rule">
@@ -129,7 +130,7 @@
                   v-if="row.credential_scopes.length > 3"
                   class="toggle-button"
                   @click="toggleRulesExpanded(row.id)">
-                  {{ row.isExpandedRules ? '收起' : '展开' }}
+                  {{ row.isExpandedRules ? t('收起') : t('展开') }}
                 </span>
               </div>
               <span v-else>--</span>
@@ -380,7 +381,7 @@
     if (createPending.value) {
       return;
     }
-    searchStr.value ? (isSearchEmpty.value = true) : (isSearchEmpty.value = false);
+    isSearchEmpty.value = searchStr.value !== '';
     listLoading.value = true;
     pagination.value.current = current;
     await loadCredentialList();
@@ -520,6 +521,7 @@
         subTitle: t('禁用密钥后，使用此密钥的应用将无法正常使用 SDK/API 拉取配置'),
         'ext-cls': 'info-box-style',
         confirmText: t('禁用'),
+        cancelText: t('取消'),
         onConfirm: async () => {
           const params = {
             id: credential.id,

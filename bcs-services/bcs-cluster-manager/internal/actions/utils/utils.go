@@ -20,15 +20,24 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
+	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 const (
-	nodeTemplate = "nt"
+	// NodeTemplate node template
+	NodeTemplate = "nt"
+	// GroupTemplate node group template
+	GroupTemplate = "ng"
+	// NotifyTemplate notify template
+	NotifyTemplate = "nf"
 )
 
 // CheckClusterConnection check cluster connection when delete cluster or other scenes
@@ -180,15 +189,61 @@ func HandleTaskStepData(ctx context.Context, task *proto.Task) {
 	}
 }
 
-// GenerateNodeTemplateID generate random nodeTemplateID
-func GenerateNodeTemplateID() string {
+// GenerateTemplateID generate random templateID
+func GenerateTemplateID(templateType string) string {
 	randomStr := utils.RandomString(8)
 
-	return fmt.Sprintf("BCS-%s-%s", nodeTemplate, randomStr)
+	return fmt.Sprintf("BCS-%s-%s", templateType, randomStr)
 }
 
-// GenerateNodeGroupID build nodegroup id
-func GenerateNodeGroupID() string {
-	str := utils.RandomString(8)
-	return fmt.Sprintf("BCS-ng-%s", str)
+// IsKubeConfigImportCluster kubeconfig cluster
+func IsKubeConfigImportCluster(cls *proto.Cluster) bool {
+	if cls.GetClusterCategory() == common.Importer && cls.GetImportCategory() == common.KubeConfigImport {
+		return true
+	}
+
+	return false
+}
+
+// IsCloudImportCluster cloud cluster
+func IsCloudImportCluster(cls *proto.Cluster) bool {
+	if cls.GetClusterCategory() == common.Importer && cls.GetImportCategory() == common.CloudImport {
+		return true
+	}
+
+	return false
+}
+
+// CheckClusterNodeNum check managed cluster nodes num
+func CheckClusterNodeNum(model store.ClusterManagerModel, cls *proto.Cluster) (bool, error) {
+	nodeStatus := []string{common.StatusRunning, common.StatusInitialization}
+	nodes, err := GetClusterStatusNodes(model, cls, nodeStatus)
+	if err != nil {
+		blog.Errorf("checkManagedClusterNodeNum[%s] GetClusterStatusNodes failed: %v", cls.ClusterID, err)
+		return false, err
+	}
+
+	blog.Infof("checkManagedClusterNodeNum[%s] GetClusterStatusNodes[%v]", cls.ClusterID, len(nodes))
+
+	if len(nodes) > 0 {
+		return false, nil
+	}
+
+	return true, nil
+}
+
+// GetClusterStatusNodes get cluster status nodes
+func GetClusterStatusNodes(
+	store store.ClusterManagerModel, cls *proto.Cluster, status []string) ([]*proto.Node, error) {
+	clusterCond := operator.NewLeafCondition(operator.Eq, operator.M{"clusterid": cls.ClusterID})
+	statusCond := operator.NewLeafCondition(operator.In, operator.M{"status": status})
+	cond := operator.NewBranchCondition(operator.And, clusterCond, statusCond)
+
+	nodes, err := store.ListNode(context.Background(), cond, &storeopt.ListOption{})
+	if err != nil {
+		blog.Errorf("get Cluster %s all Nodes failed when AddNodesToCluster, %s", cls.ClusterID, err.Error())
+		return nil, err
+	}
+
+	return nodes, nil
 }

@@ -16,6 +16,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"path"
 	"sort"
 	"strings"
 	"time"
@@ -39,14 +40,24 @@ import (
 func (s *Service) CreateTemplate(ctx context.Context, req *pbds.CreateTemplateReq) (*pbds.CreateResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
-	// GetByUniqueKey get template by unique key.
-	if _, err := s.dao.Template().GetByUniqueKey(kt, req.Attachment.BizId, req.Attachment.TemplateSpaceId,
-		req.Spec.Name, req.Spec.Path); err == nil {
+	// Get all configuration files under a certain package of the service
+	items, _, err := s.dao.Template().List(kt, req.Attachment.BizId, req.Attachment.TemplateSpaceId,
+		nil, &types.BasePage{All: true}, nil)
+	if err != nil {
+		return nil, err
+	}
+	existingPaths := []string{}
+	for _, v := range items {
+		existingPaths = append(existingPaths, path.Join(v.Spec.Path, v.Spec.Name))
+	}
+
+	if tools.CheckPathConflict(path.Join(req.Spec.Path, req.Spec.Name), existingPaths) {
 		return nil, fmt.Errorf("config item's same name %s and path %s already exists", req.Spec.Name, req.Spec.Path)
 	}
+
 	if len(req.TemplateSetIds) > 0 {
 		// ValidateTmplSetsExist validate if template sets exists
-		if err := s.dao.Validator().ValidateTmplSetsExist(kt, req.TemplateSetIds); err != nil {
+		if err = s.dao.Validator().ValidateTmplSetsExist(kt, req.TemplateSetIds); err != nil {
 			return nil, err
 		}
 	}
@@ -74,7 +85,10 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbds.CreateTemplateRe
 
 	// 2. create template revision
 	spec := req.TrSpec.TemplateRevisionSpec()
-	spec.RevisionName = tools.GenerateRevisionName()
+	// if no revision name is specified, generate it by system
+	if spec.RevisionName == "" {
+		spec.RevisionName = tools.GenerateRevisionName()
+	}
 	templateRevision := &table.TemplateRevision{
 		Spec: spec,
 		Attachment: &table.TemplateRevisionAttachment{

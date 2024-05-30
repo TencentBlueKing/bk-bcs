@@ -15,7 +15,7 @@
           :selected-kv-config-id="selectedKV"
           :is-publish="props.showPublishBtn"
           @selected="handleSelectDiffItem" />
-        <div :class="['diff-content-area', { light: diffDetailData.contentType === 'file' }]">
+        <div class="diff-content-area">
           <diff :diff="diffDetailData" :id="appId" :selected-kv-config-id="selectedKV" :loading="false">
             <template #leftHead>
               <slot name="baseHead">
@@ -42,7 +42,7 @@
             <template #rightHead>
               <slot name="currentHead">
                 <div class="diff-panel-head">
-                  <div class="version-tag">{{ t('当前版本') }}</div>
+                  <div class="version-tag">{{ showPublishBtn ? t('待上线版本') : t('当前版本') }}</div>
                   <div class="version-name">{{ props.currentVersion.spec.name }}</div>
                 </div>
               </slot>
@@ -74,6 +74,20 @@
   import AsideMenu from './aside-menu/index.vue';
   import Diff from '../../../../../../../components/diff/index.vue';
 
+  const getDefaultDiffData = (): IDiffDetail => ({
+    // 差异详情数据
+    id: 0,
+    contentType: 'text',
+    current: {
+      language: '',
+      content: '',
+    },
+    base: {
+      language: '',
+      content: '',
+    },
+  });
+
   const { t } = useI18n();
   const props = defineProps<{
     show: boolean;
@@ -95,19 +109,7 @@
   const versionListLoading = ref(false);
   const selectedBaseVersion = ref(); // 基准版本ID
   const selectedKV = ref(props.selectedKvConfigId);
-  const diffDetailData = ref<IDiffDetail>({
-    // 差异详情数据
-    id: 0,
-    contentType: 'text',
-    current: {
-      language: '',
-      content: '',
-    },
-    base: {
-      language: '',
-      content: '',
-    },
-  });
+  const diffDetailData = ref<IDiffDetail>(getDefaultDiffData());
 
   const loading = computed(() => versionListLoading.value);
 
@@ -174,8 +176,14 @@
   const handleClose = () => {
     selectedBaseVersion.value = undefined;
     versionList.value = [];
+    selectedKV.value = 0;
+    diffDetailData.value = getDefaultDiffData();
     emits('update:show', false);
   };
+
+  defineExpose({
+    handleSelectVersion,
+  });
 </script>
 <style lang="scss" scoped>
   .loading-wrapper {
@@ -228,23 +236,6 @@
   .diff-content-area {
     width: calc(100% - 264px);
     height: 100%;
-    &:not(.light) {
-      .diff-panel-head {
-        background: #313238;
-        :deep(.bk-select) {
-          .bk-input {
-            border-color: #63656e;
-          }
-          .bk-input--text {
-            color: #b6b6b6;
-            background: #313238;
-          }
-        }
-      }
-      :deep(.right-panel) {
-        border-color: #1d1d1d;
-      }
-    }
   }
   .diff-panel-head {
     display: flex;

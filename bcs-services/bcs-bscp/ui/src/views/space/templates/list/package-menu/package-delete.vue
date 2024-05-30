@@ -109,7 +109,7 @@
     emits('update:show', false);
   };
 </script>
-<style lang="postcss" scoped>
+<style lang="scss" scoped>
   .tips {
     margin: 0 0 16px;
     font-size: 14px;

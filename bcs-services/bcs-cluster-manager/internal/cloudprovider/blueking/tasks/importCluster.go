@@ -137,7 +137,7 @@ func importClusterInstances(data *cloudprovider.CloudDependBasicInfo) error {
 		masterNodes[node.InnerIP] = node
 	}
 	data.Cluster.Master = masterNodes
-	data.Cluster.Status = icommon.StatusRunning
+	// data.Cluster.Status = icommon.StatusRunning
 
 	err = importClusterNodesToCM(context.Background(), nodeIPs, &cloudprovider.ListNodesOption{
 		Common:       data.CmOption,

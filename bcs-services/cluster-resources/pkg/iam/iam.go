@@ -31,11 +31,11 @@ func NewNSPerm(projectID, clusterID string) perm.Perm {
 }
 
 // NewNSScopedPerm xxx
-func NewNSScopedPerm(projectID, clusterID string) perm.Perm {
+func NewNSScopedPerm(projectID, clusterID, res string) perm.Perm {
 	if runtime.RunMode == runmode.Dev || runtime.RunMode == runmode.UnitTest {
 		return &MockPerm{}
 	}
-	return nsAuth.NewScopedPerm(projectID, clusterID)
+	return nsAuth.NewScopedPerm(projectID, clusterID, res)
 }
 
 // NewProjectPerm xxx

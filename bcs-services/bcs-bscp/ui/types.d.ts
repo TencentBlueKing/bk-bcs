@@ -14,3 +14,6 @@ declare module '*.svg' {
   export default content;
 }
 declare module 'js-yaml';
+
+declare module 'bkui-vue/dist/locale/zh-cn.esm';
+declare module 'bkui-vue/dist/locale/en.esm';

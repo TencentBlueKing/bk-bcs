@@ -16,6 +16,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
 	"strconv"
 	"strings"
 	"time"
@@ -89,6 +90,8 @@ const (
 	ResourcePoolLabelAction = "resourcePoolLabel"
 	// CheckClusterCleanNodesAction 检测集群销毁节点状态
 	CheckClusterCleanNodesAction = "checkClusterCleanNodes"
+	// RemoveClusterNodesInnerTaintAction remove nodes inner taints
+	RemoveClusterNodesInnerTaintAction = "removeClusterNodesInnerTaint"
 	// LadderResourcePoolLabelAction 标签设置
 	LadderResourcePoolLabelAction = "yunti-ResourcePoolLabelTask"
 )
@@ -290,6 +293,11 @@ func UpdateNodeGroupStatus(nodeGroupID, status string) error {
 // GetClusterByID get cluster by clusterID
 func GetClusterByID(clusterID string) (*proto.Cluster, error) {
 	return GetStorageModel().GetCluster(context.Background(), clusterID)
+}
+
+// GetNodeGroupByID get nodeGroup by groupID
+func GetNodeGroupByID(nodeGroupId string) (*proto.NodeGroup, error) {
+	return GetStorageModel().GetNodeGroup(context.Background(), nodeGroupId)
 }
 
 // UpdateCluster set cluster status
@@ -674,7 +682,7 @@ func UpdateNodeStatus(isInstanceIP bool, instance, status string) error {
 	}
 
 	if errors.Is(err, drivers.ErrTableRecordNotFound) {
-		return nil
+		return fmt.Errorf("instance[%s] not found", instance)
 	}
 
 	node.Status = status
@@ -1251,4 +1259,70 @@ func UpdateNodeGroupCloudNodeGroupID(nodeGroupID string, newGroup *proto.NodeGro
 	}
 
 	return nil
+}
+
+// GetClusterResourceGroup cluster resource group
+func GetClusterResourceGroup(cls *proto.Cluster) string {
+	if cls.GetExtraInfo() == nil {
+		return ""
+	}
+
+	rg, ok := cls.GetExtraInfo()[common.ClusterResourceGroup]
+	if ok {
+		return rg
+	}
+
+	return ""
+}
+
+// GetNodeResourceGroup other resource group
+func GetNodeResourceGroup(cls *proto.Cluster) string {
+	if cls.GetExtraInfo() == nil {
+		return ""
+	}
+
+	rg, ok := cls.GetExtraInfo()[common.NodeResourceGroup]
+	if ok {
+		return rg
+	}
+
+	return ""
+}
+
+// ListProjectNotifyTemplates list project notify templates
+func ListProjectNotifyTemplates(projectId string) ([]proto.NotifyTemplate, error) {
+	condM := make(operator.M)
+	condM["projectid"] = projectId
+
+	cond := operator.NewLeafCondition(operator.Eq, condM)
+	templates, err := GetStorageModel().ListNotifyTemplate(context.Background(), cond, &storeopt.ListOption{})
+	if err != nil {
+		return nil, err
+	}
+
+	return templates, nil
+}
+
+// GetOverlayCidrBlocks get overlayIps from vpc
+func GetOverlayCidrBlocks(cloudId, vpcId string) ([]*net.IPNet, error) {
+	vpc, err := GetStorageModel().GetCloudVPC(context.Background(), cloudId, vpcId)
+	if err != nil {
+		return nil, err
+	}
+
+	cidrs := make([]string, 0)
+	for i := range vpc.GetOverlay().GetCidrs() {
+		if vpc.GetOverlay().GetCidrs()[i].GetBlock() {
+			continue
+		}
+		cidrs = append(cidrs, vpc.GetOverlay().GetCidrs()[i].GetCidr())
+	}
+
+	var blocks []*net.IPNet
+	for _, v := range cidrs {
+		_, ipnet, _ := net.ParseCIDR(v)
+		blocks = append(blocks, ipnet)
+	}
+	return blocks, nil
+
 }

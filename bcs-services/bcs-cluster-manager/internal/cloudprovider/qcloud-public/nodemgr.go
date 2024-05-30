@@ -102,6 +102,10 @@ func (nm *NodeManager) GetZoneList(opt *cloudprovider.GetZoneListOption) ([]*pro
 
 // GetCloudRegions get regionInfo
 func (nm *NodeManager) GetCloudRegions(opt *cloudprovider.CommonOption) ([]*proto.RegionInfo, error) {
+	if opt.Region == "" {
+		opt.Region = defaultRegion
+	}
+
 	return business.GetCloudRegions(opt)
 }
 
@@ -421,7 +425,7 @@ func (nm *NodeManager) GetExternalNodeByIP(ip string, opt *cloudprovider.GetNode
 	node := &proto.Node{}
 
 	ips := []string{ip}
-	hostData, err := cmdb.GetCmdbClient().QueryHostInfoWithoutBiz(ips, cmdb.Page{
+	hostData, err := cmdb.GetCmdbClient().QueryHostInfoWithoutBiz(cmdb.FieldHostIP, ips, cmdb.Page{
 		Start: 0,
 		Limit: len(ips),
 	})
@@ -444,7 +448,7 @@ func (nm *NodeManager) GetExternalNodeByIP(ip string, opt *cloudprovider.GetNode
 func (nm *NodeManager) ListExternalNodesByIP(ips []string, opt *cloudprovider.ListNodesOption) ([]*proto.Node, error) {
 	var nodes []*proto.Node
 
-	hostDataList, err := cmdb.GetCmdbClient().QueryHostInfoWithoutBiz(ips, cmdb.Page{
+	hostDataList, err := cmdb.GetCmdbClient().QueryHostInfoWithoutBiz(cmdb.FieldHostIP, ips, cmdb.Page{
 		Start: 0,
 		Limit: len(ips),
 	})
@@ -472,4 +476,9 @@ func (nm *NodeManager) ListExternalNodesByIP(ips []string, opt *cloudprovider.Li
 	}
 
 	return nodes, nil
+}
+
+// ListRuntimeInfo get runtime info list
+func (nm *NodeManager) ListRuntimeInfo(opt *cloudprovider.ListRuntimeInfoOption) (map[string][]string, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
 }

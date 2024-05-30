@@ -94,7 +94,7 @@ import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
 import NamespaceSelect from '@/components/namespace-selector/namespace-select.vue';
 import { useCluster } from '@/composables/use-app';
 import $i18n from '@/i18n/i18n-setup';
-import { useSelectItemsNamespace } from '@/views/resource-view/namespace/use-namespace';
+import { useSelectItemsNamespace } from '@/views/cluster-manage/namespace/use-namespace';
 
 export default defineComponent({
   name: 'EventQuery',
@@ -109,6 +109,7 @@ export default defineComponent({
     clusterId: {
       type: String,
       default: '',
+      required: true,
     },
     // 命名空间
     namespace: {
@@ -119,6 +120,11 @@ export default defineComponent({
     name: {
       type: [String, Array],
       default: '',
+    },
+    // 资源名称变更时是否重置页码
+    resetPageWhenNameChange: {
+      type: Boolean,
+      default: true,
     },
     // 事件级别
     level: {
@@ -156,7 +162,7 @@ export default defineComponent({
       nsRequired,
     } = toRefs(props);
 
-    const { curClusterId, clusterList } = useCluster();
+    const { clusterList } = useCluster();
     const { namespaceList, namespaceLoading, getNamespaceData } = useSelectItemsNamespace();
     const shortcuts = ref([
       {
@@ -334,9 +340,11 @@ export default defineComponent({
 
     // 获取事件信息
     const handleInitEventData = () => {
-      events.value = [];
-      pagination.value.current = 1;
-      handleGetEventList();
+      if (props.resetPageWhenNameChange) {
+        events.value = [];
+        pagination.value.current = 1;
+      }
+      handleGetEventList(props.resetPageWhenNameChange);
     };
 
     watch(name, (newValue, oldValue) => {
@@ -375,13 +383,13 @@ export default defineComponent({
       count: 0,
       limit: 10,
     });
-    const handleGetEventList = async () => {
-      const clusterId = params.value.clusterId || curClusterId.value;
+    const handleGetEventList = async (loading = true) => {
+      const { clusterId } = params.value;
       if (!clusterId) return;
 
       const cluster = clusterList.value.find(item => item.clusterID === clusterId);
       if (cluster?.is_shared && !params.value.namespace) return; // 共享集群没有命名空间时，不请求
-      eventLoading.value = true;
+      eventLoading.value = loading;
       const [start, end] = params.value.date;
       const { data = [], total = 0 } = await storageEvents({
         offset: (pagination.value.current - 1) * pagination.value.limit,
@@ -447,7 +455,7 @@ export default defineComponent({
 
     onMounted(async () => {
       eventLoading.value = true;
-      await getNamespaceData({ clusterId: params.value.clusterId || curClusterId.value }, nsRequired.value);
+      await getNamespaceData({ clusterId: params.value.clusterId }, nsRequired.value);
       await handleGetEventList();
       eventLoading.value = false;
     });

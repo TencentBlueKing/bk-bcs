@@ -49,7 +49,7 @@ func (c *Cache) Add(ingress *networkextensionv1.Ingress) {
 				if ns == "" {
 					ns = ingress.GetNamespace()
 				}
-				svcKey := buildServiceKey(ns, route.ServiceName)
+				svcKey := buildServiceKey(route.GetServiceKind(), ns, route.ServiceName)
 				c.serviceCache.add(svcKey, ingressKey)
 			}
 		}
@@ -60,7 +60,7 @@ func (c *Cache) Add(ingress *networkextensionv1.Ingress) {
 					if ns == "" {
 						ns = ingress.GetNamespace()
 					}
-					svcKey := buildServiceKey(ns, route.ServiceName)
+					svcKey := buildServiceKey(route.GetServiceKind(), ns, route.ServiceName)
 					c.serviceCache.add(svcKey, ingressKey)
 				}
 			}
@@ -82,7 +82,7 @@ func (c *Cache) Remove(ingress *networkextensionv1.Ingress) {
 				if ns == "" {
 					ns = ingress.GetNamespace()
 				}
-				svcKey := buildServiceKey(ns, route.ServiceName)
+				svcKey := buildServiceKey(route.GetServiceKind(), ns, route.ServiceName)
 				c.serviceCache.remove(svcKey, ingressKey)
 			}
 		}
@@ -93,7 +93,7 @@ func (c *Cache) Remove(ingress *networkextensionv1.Ingress) {
 					if ns == "" {
 						ns = ingress.GetNamespace()
 					}
-					svcKey := buildServiceKey(ns, route.ServiceName)
+					svcKey := buildServiceKey(route.GetServiceKind(), ns, route.ServiceName)
 					c.serviceCache.remove(svcKey, ingressKey)
 				}
 			}
@@ -107,8 +107,8 @@ func (c *Cache) Remove(ingress *networkextensionv1.Ingress) {
 }
 
 // GetRelatedIngressOfService 获取service相关的ingress信息
-func (c *Cache) GetRelatedIngressOfService(serviceNamespace, serviceName string) []IngressMeta {
-	serviceKey := buildServiceKey(serviceNamespace, serviceName)
+func (c *Cache) GetRelatedIngressOfService(serviceKind, serviceNamespace, serviceName string) []IngressMeta {
+	serviceKey := buildServiceKey(serviceKind, serviceNamespace, serviceName)
 	return c.serviceCache.getRelatedIngress(serviceKey)
 }
 

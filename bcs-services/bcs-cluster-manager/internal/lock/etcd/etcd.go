@@ -19,15 +19,16 @@ import (
 	"path"
 	gosync "sync"
 
-	client "github.com/coreos/etcd/clientv3"
-	cc "github.com/coreos/etcd/clientv3/concurrency"
+	client "go.etcd.io/etcd/client/v3"
+	cc "go.etcd.io/etcd/client/v3/concurrency"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/lock"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 )
 
 // Client for election
 type Client struct {
-	options lock.Options
+	options types.Options
 	path    string
 	client  *client.Client
 
@@ -41,8 +42,8 @@ type etcdLock struct {
 }
 
 // New create etcd locker
-func New(opts ...lock.Option) (*Client, error) {
-	var options lock.Options
+func New(opts ...types.Option) (*Client, error) {
+	var options types.Options
 	for _, o := range opts {
 		o(&options)
 	}
@@ -85,7 +86,7 @@ func New(opts ...lock.Option) (*Client, error) {
 }
 
 // Init init etcd lock
-func (c *Client) Init(opts ...lock.Option) error {
+func (c *Client) Init(opts ...types.Option) error {
 	for _, o := range opts {
 		o(&c.options)
 	}

@@ -30,7 +30,17 @@
             :key="index"
             ref="navItemRefs"
             @click="handleChangeMenu(item)">
-            {{ item.title }}
+            <a
+              :class="[
+                'text-[#96a2b9] hover:text-[#d3d9e4]',
+                {
+                  'text-[#d3d9e4]': activeNav.id === item.id,
+                }
+              ]"
+              :href="resolveMenuLink(item)"
+              @click.prevent>
+              {{ item.title }}
+            </a>
           </li>
         </ol>
         <!-- 折叠的菜单 -->
@@ -50,7 +60,24 @@
             </ul>
           </template>
         </PopoverSelector>
-        <!-- 项目选载 -->
+        <!-- 返回旧版 -->
+        <span
+          :class="[
+            'flex items-center h-[32px] px-[12px] cursor-pointer',
+            'text-[#96A2B9] text-[12px] mr-[24px] hover:bg-[linear-gradient(270deg,#253047,#263247)] rounded-sm'
+          ]"
+          v-if="showPreVersionBtn"
+          v-bk-trace.click="{
+            module: 'app',
+            operation: 'backToLegacy',
+            desc: '返回旧版',
+            username: $store.state.user.username,
+            projectCode: $store.getters.curProjectCode,
+          }"
+          @click="backToPreVersion">
+          {{ $t('bcs.preVersion') }}
+        </span>
+        <!-- 项目切换 -->
         <ProjectSelector class="ml-auto w-[240px] mr-[18px]"></ProjectSelector>
         <!-- 语言切换 -->
         <PopoverSelector class="mr-[8px]" ref="langRef">
@@ -126,7 +153,6 @@ import PopoverSelector from '../../components/popover-selector.vue';
 import useMenu, { IMenu } from './use-menu';
 
 import { releaseNote, switchLanguage } from '@/api/modules/project';
-import { setCookie } from '@/common/util';
 import BcsMd from '@/components/bcs-md/index.vue';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
@@ -166,14 +192,15 @@ export default defineComponent({
     const activeNav = computed(() => findCurrentNav(menus.value) || {});
     // 当前路由
     const route = computed(() => toRef(reactive($router), 'currentRoute').value);
-    // 是否线上左侧菜单
+    const hideMenu = computed(() => !!route.value.meta?.hideMenu || !!route.value.matched?.[0]?.meta?.hideMenu);
+    // 是否显示左侧菜单
     const needMenu = computed(() => {
       const { projectCode } = route.value.params;
       return !!projectCode
         && route.value.fullPath.indexOf(projectCode) > -1 // 1.跟项目无关界面
         && (!!curProject.value.kind && !!curProject.value.businessID && curProject.value.businessID !== '0')// 2. 当前项目未开启容器服务
-        && !['404', 'token'].includes(route.value.name)// 404 和 token特殊界面
-        && !route.value.meta?.hideMenu;
+        && !['404', 'token'].includes(route.value.name || '')// 404 和 token特殊界面
+        && !hideMenu.value;
     });
 
     // 导航自适应
@@ -198,22 +225,38 @@ export default defineComponent({
 
     // 当前导航
     const findCurrentNav = (menus: IMenu[]) => menus.find((item) => {
+      if (item.route === route.value.name || item.id === route.value.meta?.menuId) return true;
+
       if (item.children?.length) return findCurrentNav(item.children);
 
-      return item.route === route.value.name || item.id === route.value.meta?.menuId;
+      return false;
     });
 
+    // 菜单link
+    const resolveMenuLink = (item: IMenu) => {
+      const name = item.route || item.children?.[0]?.route || '404';
+      const { href } = $router.resolve({
+        name,
+        params: {
+          projectCode: $store.getters.curProjectCode,
+          clusterId: $store.getters.curClusterId,
+        },
+      });
+      return href;
+    };
     // 切换菜单
     const handleChangeMenu = (item: IMenu) => {
       const name = item.route || item.children?.[0]?.route || '404';
       if (route.value.name === name) return;
 
-      $store.commit('updateCurSideMenu', item);
+      // 更新当前一级导航信息
+      $store.commit('updateCurNav', item);
       $router.push({
         name,
         params: {
           projectCode: $store.getters.curProjectCode,
-          // clusterId: $store.getters.curClusterId,
+          // 资源视图集群视图时切换路由不能丢失集群ID，其余菜单默认不给
+          clusterId: item.id === 'CLUSTERRESOURCE' ? $router.currentRoute?.params?.clusterId : '',
         },
       }).catch(err => console.warn(err));
     };
@@ -225,14 +268,19 @@ export default defineComponent({
     };
     // 首页
     const handleGoHome = () => {
-      $router.push({ name: 'home' });
+      if ($router.currentRoute?.name === 'dashboardWorkloadDeployments') return;
+      $router.push({
+        name: 'dashboardWorkloadDeployments',
+        params: {
+          clusterId: $router.currentRoute?.params?.clusterId,
+        },
+      });
     };
 
     // 切换语言
     const langRef = ref();
     const handleChangeLang = async (item) => {
       // $i18n.locale = item.id;// 后面 $router.go(0) 会重新加载界面，这里会导致一瞬间被切换了，然后界面再刷新
-      setCookie('blueking_language', item.locale);
       langRef.value?.hide();
       await switchLanguage({
         lang: item.locale,
@@ -260,7 +308,8 @@ export default defineComponent({
     };
     // 注销登录态
     const handleLogout = () => {
-      window.location.href = `${window.LOGIN_FULL}?c_url=${window.location}`;
+      // 注销登录只注销当前登录态，清除bk_token，不做登录弹窗
+      window.location.href = `${window.LOGIN_FULL}?is_from_logout=1&c_url=${encodeURIComponent(window.location.href)}`;
     };
 
     // release信息
@@ -269,9 +318,19 @@ export default defineComponent({
       feature: { content: '' },
     });
 
+    // 返回旧版
+    const showPreVersionBtn = ref(!!window.BCS_CONFIG.backToLegacyButtonUrl);
+    const backToPreVersion = () => {
+      window.open(window.BCS_CONFIG.backToLegacyButtonUrl);
+    };
+
     onMounted(async () => {
       navRef.value && resizeObserver.observe(navRef.value);
       releaseData.value = await releaseNote().catch(() => ({ changelog: [], feature: {} }));
+    });
+
+    onBeforeUnmount(() => {
+      navRef.value && resizeObserver.unobserve(navRef.value);
     });
 
     onBeforeUnmount(() => {
@@ -295,6 +354,7 @@ export default defineComponent({
       showSystemLog,
       showFeatures,
       user,
+      showPreVersionBtn,
       handleGoHome,
       handleChangeLang,
       handleGotoHelp,
@@ -304,6 +364,8 @@ export default defineComponent({
       handleLogout,
       handleToggleClickNav,
       handleChangeMenu,
+      resolveMenuLink,
+      backToPreVersion,
     };
   },
 });

@@ -16,15 +16,18 @@ package app
 import (
 	"fmt"
 	"net"
-	"net/http"
 	"strconv"
+	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
 	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/reflection"
 
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/crontab"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/options"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/service"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
@@ -65,9 +68,9 @@ func Run(opt *options.Option) error {
 
 type feedServer struct {
 	serve   *grpc.Server
-	gwServe *http.Server //nolint:unused
 	sd      serviced.ServiceDiscover
 	service *service.Service
+	cleaner *crontab.SourceFileCacheCleaner
 }
 
 // prepare do prepare jobs before run feed server.
@@ -115,6 +118,10 @@ func (fs *feedServer) prepare(opt *options.Option) error {
 	}
 	fs.service = svc
 
+	cleaner := crontab.NewSourceFileCacheCleaner()
+	fs.cleaner = cleaner
+	fs.cleaner.Run()
+
 	return nil
 }
 
@@ -152,7 +159,12 @@ func (fs *feedServer) listenAndServe() error {
 
 		cred := credentials.NewTLS(tlsC)
 		opts = append(opts, grpc.Creds(cred))
-
+		// set keepalive params so that feed-proxy could maintain a grpc connection pool
+		opts = append(opts, grpc.KeepaliveEnforcementPolicy(keepalive.EnforcementPolicy{
+			// a bit less than feed-proxy's grpc keepalive time 30s
+			MinTime:             25 * time.Second,
+			PermitWithoutStream: true,
+		}))
 	}
 
 	serve := grpc.NewServer(opts...)
@@ -179,15 +191,26 @@ func (fs *feedServer) listenAndServe() error {
 		logs.Infof("shutdown feed server grpc server success...")
 	}()
 
-	addr := net.JoinHostPort(network.BindIP, strconv.Itoa(int(network.RpcPort)))
-	listener, err := net.Listen("tcp", addr)
-	if err != nil {
-		return fmt.Errorf("lisen addr: %s failed, err: %v", addr, err)
+	addr := tools.GetListenAddr(network.BindIP, int(network.RpcPort))
+	addrs := tools.GetListenAddrs(network.BindIPs, int(network.RpcPort))
+	dualStackListener := listener.NewDualStackListener()
+	if err := dualStackListener.AddListenerWithAddr(addr); err != nil {
+		return err
+	}
+	logs.Infof("grpc server listen address: %s", addr)
+
+	for _, a := range addrs {
+		if a == addr {
+			continue
+		}
+		if err := dualStackListener.AddListenerWithAddr(a); err != nil {
+			return err
+		}
+		logs.Infof("grpc server listen address: %s", a)
 	}
 
-	logs.Infof("listen grpc server at %s now.", addr)
 	go func() {
-		if err := serve.Serve(listener); err != nil {
+		if err := serve.Serve(dualStackListener); err != nil {
 			logs.Errorf("serve grpc server failed, err: %v", err)
 			shutdown.SignalShutdownGracefully()
 		}
@@ -197,6 +220,9 @@ func (fs *feedServer) listenAndServe() error {
 }
 
 func (fs *feedServer) finalizer() {
+
+	fs.cleaner.Stop()
+
 	if err := fs.sd.Deregister(); err != nil {
 		logs.Errorf("process service shutdown, but deregister failed, err: %v", err)
 		return
