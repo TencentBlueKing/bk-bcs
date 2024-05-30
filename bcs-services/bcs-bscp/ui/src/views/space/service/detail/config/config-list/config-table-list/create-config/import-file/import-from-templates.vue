@@ -6,6 +6,7 @@
       custom-content
       multiple-mode="tag"
       multiple
+      :remote-method="handleSearchPkg"
       :search-placeholder="$t('请输入空间/套餐名称')"
       :popover-options="{ theme: 'light bk-select-popover pkg-selector-popover' }"
       @tag-remove="handleDeletePkg"
@@ -27,6 +28,7 @@
         :pkg-list="pkgList"
         :imported="importedPkgs"
         :value="selectedPkgs"
+        :search-str="searchPkgStr"
         @change="handlePkgsChange" />
       <template #extension>
         <div class="link-btn" @click="handleLinkToTemplates">
@@ -91,6 +93,7 @@
   const importedPkgsLoading = ref(false);
   const importedPkgs = ref<ITemplateBoundByAppData[]>([]);
   const selectedPkgs = ref<ITemplateBoundByAppData[]>([]);
+  const searchPkgStr = ref('');
   const allImportPkgs = computed(() => [...importedPkgs.value, ...selectedPkgs.value]);
   // const pending = ref(false);
 
@@ -153,6 +156,10 @@
       importedPkgs.value = [];
     }
     importedPkgsLoading.value = false;
+  };
+
+  const handleSearchPkg = (val: string) => {
+    searchPkgStr.value = val;
   };
 
   const handlePkgsChange = (pkgs: ITemplateBoundByAppData[]) => {
