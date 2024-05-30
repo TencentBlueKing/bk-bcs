@@ -42,3 +42,9 @@ type TemplatesImportResp struct {
 	NonExist []*TemplateItem `json:"non_exist"`
 	Msg      string          `json:"msg"`
 }
+
+// UploadTask 上传任务结构体
+type UploadTask struct {
+	File FileInfo
+	Err  error
+}

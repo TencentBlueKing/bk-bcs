@@ -84,7 +84,6 @@
   const serviceList = ref<IAppItem[]>([]);
   const heartbeatTime = ref(searchQuery.value.last_heartbeat_time);
   const heartbeatTimeList = ref(CLIENT_HEARTBEAT_LIST);
-  const selectorRef = ref();
 
   const bizId = ref(String(route.params.spaceId));
 
@@ -148,11 +147,12 @@
 
 <style scoped lang="scss">
   .head {
-    position: relative;
+    display: flex;
     font-size: 20px;
     line-height: 28px;
-    height: 32px;
+    min-height: 32px;
     .head-left {
+      height: 32px;
       display: flex;
       align-items: center;
       .line {
@@ -164,7 +164,6 @@
       .title {
         position: relative;
         color: #313238;
-        font-weight: 700;
       }
       .service-selector {
         &.popover-show {
@@ -178,12 +177,20 @@
           }
         }
         .selector-trigger {
+          padding: 0 10px 0 10px;
+          width: 260px;
+          height: 32px;
           cursor: pointer;
           display: flex;
           align-items: center;
+          justify-content: space-between;
+          border-radius: 2px;
+          transition: all 0.3s;
+          background: #f0f1f5;
+          font-size: 14px;
           .app-name {
-            max-width: 150px;
-            color: #63656e;
+            max-width: 220px;
+            color: #313238;
           }
           .no-app {
             font-size: 16px;
@@ -191,7 +198,6 @@
           }
           .arrow-icon {
             margin-left: 13.5px;
-            font-size: 14px;
             color: #979ba5;
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
           }
@@ -199,11 +205,8 @@
       }
     }
     .head-right {
-      position: absolute;
-      left: 27%;
-      top: 0;
+      margin-left: calc(27% - 393px);
       display: flex;
-      align-items: center;
       font-size: 12px;
       .selector-tips {
         min-width: 88px;

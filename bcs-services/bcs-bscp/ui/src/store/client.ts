@@ -9,7 +9,7 @@ export default defineStore('client', () => {
     last_heartbeat_time: number;
     search: IClientSearchParams;
   }>({
-    last_heartbeat_time: 60,
+    last_heartbeat_time: 1,
     search: {},
   });
 

@@ -137,6 +137,7 @@ func CORS(next http.Handler) http.Handler {
 			"X-Bkapi-File-Content-Overwrite",
 			"X-Bscp-App-Id",
 			"X-Bscp-Template-Space-Id",
+			"X-Bscp-File-Name",
 		}
 		w.Header().Set("Access-Control-Allow-Headers", strings.Join(allowHeaders, ","))
 

@@ -48,7 +48,7 @@
       <Card v-for="item in pullTime" :key="item.key" :title="item.name" :width="207" :height="128">
         <div class="time-info">
           <span v-if="item.value">
-            <span class="time">{{ Math.round(item.value) }}</span>
+            <span class="time">{{ Math.round(item.value as number) }}</span>
             <span class="unit">{{ item.unit }}</span>
           </span>
           <span v-else class="empty">{{ t('暂无数据') }}</span>
@@ -434,9 +434,6 @@
     height: 100%;
     justify-content: center;
     transform: translateY(-20px);
-  }
-  :deep(.g2-tooltip) {
-    visibility: hidden;
   }
 
   .icon-wrap {

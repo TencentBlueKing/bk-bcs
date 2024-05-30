@@ -73,103 +73,110 @@ func (c *configImport) TemplateConfigFileImport(w http.ResponseWriter, r *http.R
 		_ = render.Render(w, r, rest.BadRequest(errors.New("request body size exceeds 100MB")))
 		return
 	}
-	// Unzip file
-	unpackTempDir, err := archive.Unpack(r.Body)
+	// Ensure r.Body is closed after reading
+	defer r.Body.Close()
+	buffer := make([]byte, 512)
+	// 读取前512字节以检测文件类型
+	n, errR := r.Body.Read(buffer[:512])
+	if errR != nil && errR != io.EOF {
+		_ = render.Render(w, r, rest.BadRequest(errR))
+		return
+	}
+
+	// 组合上一次读取
+	combinedReader := io.MultiReader(bytes.NewReader(buffer[:n]), r.Body)
+
+	identifyFileType := archive.IdentifyFileType(buffer[:n])
+
+	tempDir, err := archive.Unpack(combinedReader, identifyFileType)
+	if err != nil {
+		_ = render.Render(w, r, rest.BadRequest(err))
+		return
+	}
+	defer func() { _ = os.RemoveAll(tempDir) }()
+
+	// 先扫描一遍文件夹，获取路径和名称，
+	fileItems, err := getFilePathsAndNames(tempDir)
 	if err != nil {
 		_ = render.Render(w, r, rest.BadRequest(err))
 		return
 	}
 
-	// 删除临时文件夹
-	defer func() { _ = os.RemoveAll(unpackTempDir) }()
-
-	newFiles, err := scanFiles(unpackTempDir)
+	folder, err := c.processAndUploadDirectoryFiles(kt, tempDir, len(fileItems))
 	if err != nil {
 		_ = render.Render(w, r, rest.BadRequest(err))
 		return
 	}
 
-	// 获取某个空间下的所有配置文件
-	items, err := c.cfgClient.ListTemplates(kt.RpcCtx(), &pbcs.ListTemplatesReq{
-		BizId:           kt.BizID,
-		TemplateSpaceId: uint32(tmplSpaceID),
-		All:             true,
-	})
-	if err != nil {
-		_ = render.Render(w, r, rest.BadRequest(err))
-		return
-	}
-	filesToCompare := []tools.CIUniqueKey{}
-	for _, v := range items.GetDetails() {
-		filesToCompare = append(filesToCompare, tools.CIUniqueKey{
-			Name: v.Spec.Name,
-			Path: v.Spec.Path,
-		})
-	}
-
-	// 检测同级下不能出现同名的文件和文件夹
-	if err = tools.DetectFilePathConflicts(newFiles, filesToCompare); err != nil {
-		_ = render.Render(w, r, rest.BadRequest(err))
-		return
-	}
-
-	folder, uploadErr, err := c.scanFolderAndUploadFiles(kt, unpackTempDir, unpackTempDir)
-	if err != nil {
-		_ = render.Render(w, r, rest.BadRequest(err))
-		return
-	}
 	templateItems := []*pbcs.ListTemplateByTupleReq_Item{}
+	uploadErrCount := 0
 	for _, item := range folder {
+		if item.Err != nil {
+			uploadErrCount++
+		}
 		templateItems = append(templateItems, &pbcs.ListTemplateByTupleReq_Item{
-			Name: item.Name,
-			Path: item.Path,
+			Name: item.File.Name,
+			Path: item.File.Path,
 		})
 	}
-	// 批量验证biz_id、template_space_id、name、path是否存在
-	tuple, err := c.cfgClient.ListTemplateByTuple(kt.RpcCtx(), &pbcs.ListTemplateByTupleReq{
-		BizId:           kt.BizID,
-		TemplateSpaceId: uint32(tmplSpaceID),
-		Items:           templateItems,
-	})
-	if err != nil {
-		_ = render.Render(w, r, rest.BadRequest(err))
-		return
-	}
+
+	// 压缩包里面文件过多会导致sql占位符不够
+	// 需要分批处理
+	batchSize := constant.UploadBatchSize
 	templateItem := map[string]*pbcs.ListTemplateByTupleResp_Item{}
-	if len(tuple.Items) > 0 {
-		for _, item := range tuple.Items {
-			templateItem[path.Join(item.GetTemplateRevision().GetSpec().Path,
-				item.GetTemplateRevision().GetSpec().GetName())] = item
+	for i := 0; i < len(templateItems); i += batchSize {
+		end := i + batchSize
+		if end > len(templateItems) {
+			end = len(templateItems)
+		}
+		batch := templateItems[i:end]
+		// 批量验证biz_id、template_space_id、name、path是否存在
+		tuple, err := c.cfgClient.ListTemplateByTuple(kt.RpcCtx(), &pbcs.ListTemplateByTupleReq{
+			BizId:           kt.BizID,
+			TemplateSpaceId: uint32(tmplSpaceID),
+			Items:           batch,
+		})
+		if err != nil {
+			_ = render.Render(w, r, rest.BadRequest(err))
+			return
+		}
+		if len(tuple.Items) > 0 {
+			for _, item := range tuple.Items {
+				templateItem[path.Join(item.GetTemplateRevision().GetSpec().Path,
+					item.GetTemplateRevision().GetSpec().GetName())] = item
+			}
 		}
 	}
+
 	exist := make([]*types.TemplateItem, 0)
 	nonExist := make([]*types.TemplateItem, 0)
 	for _, item := range folder {
-		pathName := path.Join(item.Path, item.Name)
+		pathName := path.Join(item.File.Path, item.File.Name)
 		data, ok := templateItem[pathName]
 		newItem := &types.TemplateItem{
-			Name:     item.Name,
-			Path:     item.Path,
-			FileType: item.FileType,
-			Sign:     item.Sign,
-			ByteSize: item.ByteSize,
+			Name:     item.File.Name,
+			Path:     item.File.Path,
+			FileType: item.File.FileType,
+			Sign:     item.File.Sign,
+			ByteSize: item.File.ByteSize,
 		}
 		if !ok {
 			newItem.FileMode = string(table.Unix)
 			nonExist = append(nonExist, newItem)
 		} else {
-			newItem.Id = data.GetTemplate().GetId()
-			newItem.FileMode = data.GetTemplateRevision().GetSpec().GetFileMode()
-			newItem.Memo = data.GetTemplate().GetSpec().GetMemo()
-			newItem.Privilege = data.GetTemplateRevision().GetSpec().GetPermission().GetPrivilege()
-			newItem.User = data.GetTemplateRevision().GetSpec().GetPermission().GetUser()
-			newItem.UserGroup = data.GetTemplateRevision().GetSpec().GetPermission().GetUserGroup()
-			exist = append(exist, newItem)
+			exist = append(exist, &types.TemplateItem{
+				Id:        data.GetTemplate().GetId(),
+				FileMode:  data.GetTemplateRevision().GetSpec().GetFileMode(),
+				Memo:      data.GetTemplate().GetSpec().GetMemo(),
+				Privilege: data.GetTemplateRevision().GetSpec().GetPermission().GetPrivilege(),
+				User:      data.GetTemplateRevision().GetSpec().GetPermission().GetUser(),
+				UserGroup: data.GetTemplateRevision().GetSpec().GetPermission().GetUserGroup(),
+			})
 		}
 	}
 	msg := "上传完成"
-	if len(uploadErr) > 0 {
-		msg = fmt.Sprintf("上传完成，失败 %d 个", len(uploadErr))
+	if uploadErrCount > 0 {
+		msg = fmt.Sprintf("上传完成，失败 %d 个", uploadErrCount)
 	}
 	sortByPathName(exist)
 	sortByPathName(nonExist)
@@ -183,6 +190,12 @@ func (c *configImport) TemplateConfigFileImport(w http.ResponseWriter, r *http.R
 // ConfigFileImport Import config file
 func (c *configImport) ConfigFileImport(w http.ResponseWriter, r *http.Request) { // nolint
 	kt := kit.MustGetKit(r.Context())
+	// Ensure r.Body is closed after reading
+	defer r.Body.Close()
+
+	unzipStr := chi.URLParam(r, "unzip")
+	unzip, _ := strconv.ParseBool(unzipStr)
+
 	appIdStr := chi.URLParam(r, "app_id")
 	appId, _ := strconv.Atoi(appIdStr)
 	if appId == 0 {
@@ -191,68 +204,130 @@ func (c *configImport) ConfigFileImport(w http.ResponseWriter, r *http.Request) 
 	}
 	kt.AppID = uint32(appId)
 
+	fileName := r.Header.Get("X-Bscp-File-Name")
+	if fileName == "" {
+		_ = render.Render(w, r, rest.BadRequest(errors.New("file name cannot be empty")))
+		return
+	}
+
 	// Validation size
 	if r.ContentLength > constant.MaxUploadContentLength {
 		_ = render.Render(w, r, rest.BadRequest(errors.New("request body size exceeds 100MB")))
 		return
 	}
-	// Unzip file
-	unpackTempDir, err := archive.Unpack(r.Body)
+
+	buffer := make([]byte, 512)
+	// 读取前512字节以检测文件类型
+	n, errR := r.Body.Read(buffer[:512])
+	if errR != nil && errR != io.EOF {
+		_ = render.Render(w, r, rest.BadRequest(errR))
+		return
+	}
+
+	// 组合上一次读取
+	combinedReader := io.MultiReader(bytes.NewReader(buffer[:n]), r.Body)
+
+	var (
+		tempDir string
+		err     error
+	)
+
+	// 默认当文件处理
+	identifyFileType := archive.Unknown
+	// 自动解压
+	if unzip {
+		identifyFileType = archive.IdentifyFileType(buffer[:n])
+	}
+
+	if identifyFileType != archive.Unknown {
+		tempDir, err = archive.Unpack(combinedReader, identifyFileType)
+		if err != nil {
+			_ = render.Render(w, r, rest.BadRequest(err))
+			return
+		}
+	} else {
+		tempDir, err = os.MkdirTemp("", "configItem-")
+		if err != nil {
+			_ = render.Render(w, r, rest.BadRequest(err))
+			return
+		}
+
+		if err = saveFile(combinedReader, tempDir, fileName); err != nil {
+			_ = render.Render(w, r, rest.BadRequest(err))
+			return
+		}
+	}
+
+	defer func() { _ = os.RemoveAll(tempDir) }()
+
+	// 先扫描一遍文件夹，获取路径和名称，
+	fileItems, err := getFilePathsAndNames(tempDir)
 	if err != nil {
 		_ = render.Render(w, r, rest.BadRequest(err))
 		return
 	}
-	defer func() { _ = os.RemoveAll(unpackTempDir) }()
 
-	fileItems, err := scanFiles(unpackTempDir)
-	if err != nil {
-		_ = render.Render(w, r, rest.BadRequest(err))
-		return
-	}
-
+	// 存在冲突直接抛出错误，无需再上传到存储桶中
+	// 检测某服务下非模板配置冲突
 	if err = c.getAllConfigFileByApp(kt, fileItems); err != nil {
 		_ = render.Render(w, r, rest.BadRequest(err))
 		return
 	}
 
-	folder, uploadErr, err := c.scanFolderAndUploadFiles(kt, unpackTempDir, unpackTempDir)
+	folder, err := c.processAndUploadDirectoryFiles(kt, tempDir, len(fileItems))
 	if err != nil {
 		_ = render.Render(w, r, rest.BadRequest(err))
 		return
 	}
 
 	configItems := []*pbcs.ListConfigItemByTupleReq_Item{}
+	uploadErrCount := 0
 	for _, item := range folder {
+		if item.Err != nil {
+			uploadErrCount++
+		}
 		configItems = append(configItems, &pbcs.ListConfigItemByTupleReq_Item{
-			Name: item.Name,
-			Path: item.Path,
+			Name: item.File.Name,
+			Path: item.File.Path,
 		})
 	}
 
-	// 批量验证biz_id、app_id、name、path是否存在
-	tuple, err := c.cfgClient.ListConfigItemByTuple(kt.RpcCtx(), &pbcs.ListConfigItemByTupleReq{
-		BizId: kt.BizID,
-		AppId: uint32(appId),
-		Items: configItems,
-	})
-	if err != nil {
-		_ = render.Render(w, r, rest.BadRequest(err))
-		return
-	}
+	// 压缩包里面文件过多会导致sql占位符不够
+	// 需要分批处理
+	batchSize := constant.UploadBatchSize
 	configItem := map[string]*pbci.ConfigItem{}
-	for _, item := range tuple.GetDetails() {
-		configItem[path.Join(item.GetSpec().GetPath(), item.GetSpec().GetName())] = item
+	for i := 0; i < len(configItems); i += batchSize {
+		end := i + batchSize
+		if end > len(configItems) {
+			end = len(configItems)
+		}
+		batch := configItems[i:end]
+		// 批量验证biz_id、app_id、name、path是否存在
+		tuple, err := c.cfgClient.ListConfigItemByTuple(kt.RpcCtx(), &pbcs.ListConfigItemByTupleReq{
+			BizId: kt.BizID,
+			AppId: kt.AppID,
+			Items: batch,
+		})
+		if err != nil {
+			_ = render.Render(w, r, rest.BadRequest(err))
+			return
+		}
+		for _, item := range tuple.GetDetails() {
+			configItem[path.Join(item.GetSpec().GetPath(), item.GetSpec().GetName())] = item
+		}
 	}
-	exist, nonExist := []*types.TemplateItem{}, []*types.TemplateItem{}
+
+	exist := make([]*types.TemplateItem, 0)
+	nonExist := make([]*types.TemplateItem, 0)
 	for _, item := range folder {
-		pathName := path.Join(item.Path, item.Name)
+		pathName := path.Join(item.File.Path, item.File.Name)
 		config, ok := configItem[pathName]
 		newItem := &types.TemplateItem{
-			Name:     item.Name,
-			Path:     item.Path,
-			FileType: item.FileType,
-			Sign:     item.Sign,
-			ByteSize: item.ByteSize,
+			Name:     item.File.Name,
+			Path:     item.File.Path,
+			FileType: item.File.FileType,
+			Sign:     item.File.Sign,
+			ByteSize: item.File.ByteSize,
 		}
 		if !ok {
 			newItem.FileMode = string(table.Unix)
@@ -267,9 +342,10 @@ func (c *configImport) ConfigFileImport(w http.ResponseWriter, r *http.Request) 
 			exist = append(exist, newItem)
 		}
 	}
+
 	msg := "上传完成"
-	if len(uploadErr) > 0 {
-		msg = fmt.Sprintf("上传完成，失败 %d 个", len(uploadErr))
+	if uploadErrCount > 0 {
+		msg = fmt.Sprintf("上传完成，失败 %d 个", uploadErrCount)
 	}
 	sortByPathName(exist)
 	sortByPathName(nonExist)
@@ -280,10 +356,13 @@ func (c *configImport) ConfigFileImport(w http.ResponseWriter, r *http.Request) 
 	}))
 }
 
-// scanFiles 遍历指定的文件夹，并返回包含所有文件的CIUniqueKey切片
-func scanFiles(fileDir string) ([]tools.CIUniqueKey, error) {
-	var files []tools.CIUniqueKey
+// getFilePathsAndNames Retrieve all files in the specified directory and
+// return the path and name of the file
+func getFilePathsAndNames(fileDir string) ([]tools.CIUniqueKey, error) {
+
 	rootDir := fileDir
+	files := make([]tools.CIUniqueKey, 0)
+
 	err := filepath.WalkDir(fileDir, func(path string, d os.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -293,142 +372,191 @@ func scanFiles(fileDir string) ([]tools.CIUniqueKey, error) {
 			if err != nil {
 				return err
 			}
-			fileDir, err = filepath.Rel(rootDir, path)
+
+			fileDir, err := handlerFilePath(rootDir, path)
 			if err != nil {
 				return err
 			}
-			fileDir = filepath.Dir(fileDir)
-			// 默认根目录
-			if fileDir == "." {
-				fileDir = "/"
-			} else {
-				fileDir = "/" + fileDir
-			}
+
 			files = append(files, tools.CIUniqueKey{Path: fileDir, Name: fileInfo.Name()})
 		}
 		return nil
 	})
-
 	return files, err
 }
 
-// scanFolderAndUploadFiles 遍历指定的文件夹，并上传文件
-func (c *configImport) scanFolderAndUploadFiles(kt *kit.Kit, fileDir, rootDir string) ([]*types.FileInfo,
-	[]error, error) {
-	var (
-		wg    sync.WaitGroup
-		mu    sync.Mutex
-		files []*types.FileInfo
-		errs  []error
-	)
+// 处理目录中的文件，包括检测文件类型、计算 SHA-256 哈希值以及上传文件
+func (c *configImport) processAndUploadDirectoryFiles(kt *kit.Kit, fileDir string, numFiles int) (
+	[]types.UploadTask, error) {
 
-	// 启用协程池
+	rootDir := fileDir
+	results := make([]types.UploadTask, 0, numFiles)
+
+	// 创建一个并发池
 	pool, err := ants.NewPool(constant.MaxConcurrentUpload)
 	if err != nil {
-		return nil, nil, fmt.Errorf("generates an instance of ants pool fail %s", err)
+		return nil, fmt.Errorf("generates an instance of ants pool fail %s", err)
 	}
-	defer ants.Release()
+	defer pool.Release()
 
-	err = filepath.WalkDir(fileDir, func(path string, d fs.DirEntry, err error) error {
-		if !d.IsDir() {
+	var (
+		mu sync.Mutex
+		wg sync.WaitGroup
+	)
+
+	err = filepath.WalkDir(fileDir, func(path string, file os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if !file.IsDir() {
 			wg.Add(1)
 			upload := func() {
-				defer wg.Done()
-				file, uploadErr := c.uploadFile(kt, path, rootDir)
-				if uploadErr != nil {
-					mu.Lock()
-					errs = append(errs, uploadErr)
+				defer func() {
+					wg.Done()
 					mu.Unlock()
-				} else {
-					mu.Lock()
-					files = append(files, file)
-					mu.Unlock()
-				}
+				}()
+				result, err := c.fileScannerHasherUploader(kt, path, rootDir, file)
+				mu.Lock()
+				results = append(results, types.UploadTask{
+					File: result,
+					Err:  err,
+				})
 			}
-			_ = pool.Submit(upload)
+			// 提交上传任务到并发池中执行
+			if submitErr := pool.Submit(upload); submitErr != nil {
+				return submitErr
+			}
 		}
 		return nil
 	})
-	if err != nil {
-		return nil, nil, err
-	}
 	wg.Wait()
-	return files, errs, nil
+
+	return results, err
 }
 
-// uploadFile 上传文件
-func (c *configImport) uploadFile(kt *kit.Kit, filePath, rootDir string) (*types.FileInfo, error) {
-	var (
-		fileType = string(table.Text)
-	)
-	fileContent, err := os.Open(filePath)
+// 扫描文件夹中的文件、计算 SHA-256 哈希值、检测文件类型并上传文件
+func (c *configImport) fileScannerHasherUploader(kt *kit.Kit, path, rootDir string, file fs.DirEntry) (
+	types.FileInfo, error) {
+
+	resp := types.FileInfo{}
+
+	fileInfo, err := file.Info()
 	if err != nil {
-		return nil, fmt.Errorf("open file fail %s: %v", filePath, err)
+		return resp, err
 	}
-	defer func(fileContent *os.File) {
-		_ = fileContent.Close()
-	}(fileContent)
 
-	// 计算文件的SHA-256散列值
-	hash := sha256.New()
-	if _, err = io.Copy(hash, fileContent); err != nil {
-		return nil, err
-	}
-	hashInBytes := hash.Sum(nil)
-	hashString := hex.EncodeToString(hashInBytes)
-
-	// 处理路径、名称、文件类型
-	fileInfo, err := fileContent.Stat()
+	fileContent, err := os.Open(path)
 	if err != nil {
-		return nil, err
+		return resp, fmt.Errorf("open file fail filepath: %s; err: %s", path, err.Error())
 	}
 
-	fileDir, err := filepath.Rel(rootDir, filePath)
+	filePath, err := handlerFilePath(rootDir, path)
 	if err != nil {
-		return nil, err
-	}
-	fileDir = filepath.Dir(fileDir)
-	// 默认根目录
-	if fileDir == "." {
-		fileDir = "/"
-	} else {
-		fileDir = "/" + fileDir
+		return resp, fmt.Errorf("handler file path fail filepath: %s; err: %s", path, err.Error())
 	}
 
-	// 从池中获取一个缓冲区
-	fileBuffer := bufferPool.Get().(*bytes.Buffer)
-	defer func() {
-		// 清空缓冲区内容 以备复用
-		fileBuffer.Reset()
-		// 将缓冲区放回池中
-		bufferPool.Put(fileBuffer)
-	}()
+	hashString, err := calculateSHA256(fileContent)
+	if err != nil {
+		return resp, fmt.Errorf("calculate SHA256 fail filename: %s; err: %s", fileInfo.Name(), err.Error())
+	}
 
+	fileType := ""
 	// Check if the file size is greater than 5MB (5 * 1024 * 1024 bytes)
 	if fileInfo.Size() > constant.MaxUploadTextFileSize {
 		fileType = string(table.Binary)
 	} else {
-		// 重置文件读取位置
+		// 从池中获取一个缓冲区
+		fileBuffer := bufferPool.Get().(*bytes.Buffer)
+		defer func() {
+			// 清空缓冲区内容 以备复用
+			fileBuffer.Reset()
+			// 将缓冲区放回池中
+			bufferPool.Put(fileBuffer)
+		}()
 		_, _ = fileContent.Seek(0, 0)
 		_, _ = io.Copy(fileBuffer, fileContent)
-		if !utf8.Valid(fileBuffer.Bytes()) {
-			fileType = string(table.Binary)
-		}
+		fileType = detectFileType(fileBuffer.Bytes())
+	}
+	_, _ = fileContent.Seek(0, 0)
+	result, err := c.provider.Upload(kt, hashString, fileContent)
+	if err != nil {
+		return resp, fmt.Errorf("fiel upload fail filename: %s; err: %s", fileInfo.Name(), err.Error())
 	}
 
-	// 重置文件读取位置
-	_, _ = fileContent.Seek(0, 0)
-	upload, err := c.provider.Upload(kt, hashString, fileContent)
+	resp.Name = fileInfo.Name()
+	resp.ByteSize = uint64(result.ByteSize)
+	resp.Sign = result.Sha256
+	resp.FileType = fileType
+	resp.Path = filePath
+
+	return resp, nil
+}
+
+// 使用 filepath.Rel 函数计算给定文件路径 path 相对于根目录 rootDir 的相对路径
+func handlerFilePath(rootDir, path string) (string, error) {
+	// 计算文件相对于根目录的相对路径
+	fileDir, err := filepath.Rel(rootDir, path)
 	if err != nil {
-		return nil, fmt.Errorf("file upload fail %s: %v", filePath, err)
+		return "", err
 	}
-	return &types.FileInfo{
-		Name:     fileInfo.Name(),
-		Path:     fileDir,
-		FileType: fileType,
-		Sign:     upload.Sha256,
-		ByteSize: uint64(upload.ByteSize),
-	}, nil
+	// 获取相对路径的目录部分
+	fileDir = filepath.Dir(fileDir)
+	// 如果目录部分为"."，将其设置为根目录"/"
+	if fileDir == "." {
+		fileDir = "/"
+	} else {
+		// 否则在目录前加上"/"
+		fileDir = "/" + fileDir
+	}
+	return fileDir, nil
+}
+
+// 计算文件的SHA-256散列值
+func calculateSHA256(reader io.Reader) (string, error) {
+
+	hash := sha256.New()
+	if _, err := io.Copy(hash, reader); err != nil {
+		return "", err
+	}
+
+	return hex.EncodeToString(hash.Sum(nil)), nil
+}
+
+// 检测文件类型
+func detectFileType(buf []byte) string {
+	fileType := string(table.Text)
+	// 通过前512字节判断
+	filetype := http.DetectContentType(buf)
+	if isTextType(filetype) {
+		return fileType
+	}
+
+	// 通过是否能被utf8编码
+	if !utf8.Valid(buf) {
+		fileType = string(table.Binary)
+	}
+
+	return fileType
+}
+
+// 判断内容类型是否为文本类型
+func isTextType(contentType string) bool {
+	textTypes := []string{
+		"text/plain",
+		"text/html",
+		"text/css",
+		"text/javascript",
+		"application/json",
+		"application/xml",
+		"application/xhtml+xml",
+	}
+
+	for _, t := range textTypes {
+		if contentType == t {
+			return true
+		}
+	}
+	return false
 }
 
 func newConfigImportService(settings cc.Repository, authorizer auth.Authorizer,
@@ -478,4 +606,20 @@ func (c *configImport) getAllConfigFileByApp(kt *kit.Kit, newFiles []tools.CIUni
 	}
 
 	return tools.DetectFilePathConflicts(newFiles, filesToCompare)
+}
+
+// 临时保存文件
+func saveFile(reader io.Reader, tempDir, fileName string) error {
+	// 创建文件
+	file, err := os.Create(tempDir + "/" + fileName)
+	if err != nil {
+		return fmt.Errorf("failed to create temp file: %s", err.Error())
+	}
+	defer file.Close()
+
+	if _, err = io.Copy(file, reader); err != nil {
+		return err
+	}
+
+	return nil
 }

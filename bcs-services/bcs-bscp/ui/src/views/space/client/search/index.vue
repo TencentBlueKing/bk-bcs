@@ -44,7 +44,7 @@
               <span v-else>--</span>
             </template>
           </bk-table-column>
-          <bk-table-column v-if="selectedShowColumn.includes('current-version')" :label="t('源版本')" :width="140">
+          <bk-table-column v-if="selectedShowColumn.includes('current-version')" :label="t('当前配置版本')" :width="140">
             <template #default="{ row }">
               <div
                 v-if="row.client && row.client.spec.current_release_id"
@@ -501,7 +501,7 @@
   }
   .header {
     position: relative;
-    height: 120px;
+    min-height: 120px;
     padding: 40px 120px 0 40px;
     background-image: linear-gradient(-82deg, #e8f0ff 10%, #f0f5ff 93%);
     box-shadow: 0 2px 4px 0 #1919290d;

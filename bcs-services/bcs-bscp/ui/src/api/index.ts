@@ -112,5 +112,5 @@ export const getNotice = () => http.get('/announcements').then((resp) => resp.da
  */
 export const loginOut = () =>
   http.get('/logout').then((resp) => {
-    window.location.href = resp.data.login_url + window.location.href;
+    window.location.href = `${resp.data.login_url}${encodeURIComponent(window.location.href)}&is_from_logout=1`;
   });
