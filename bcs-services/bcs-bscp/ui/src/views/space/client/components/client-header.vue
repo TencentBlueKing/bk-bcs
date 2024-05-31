@@ -130,8 +130,8 @@
       };
     }
     setLastAccessedService(appId);
-    heartbeatTime.value = 60;
-    handleHeartbeatTimeChange(60);
+    heartbeatTime.value = 1;
+    handleHeartbeatTimeChange(1);
     await router.push({ name: route.name!, params: { spaceId: bizId.value, appId } });
     emits('search');
   };

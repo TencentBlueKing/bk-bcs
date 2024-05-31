@@ -2,7 +2,7 @@
   <div ref="canvasRef" class="canvas-wrap">
     <Tooltip
       ref="tooltipRef"
-      :need-down-icon="!!drillDownDemension && !isShowSunburst"
+      :need-down-icon="!!drillDownDemension && !isShowSunburst && !isDrillDown"
       :down="drillDownDemension"
       @jump="emits('jump', { label: jumpLabels, drillDownVal: drillDownVal })" />
   </div>
@@ -35,6 +35,7 @@
     appId: number;
     isShowSunburst: boolean;
     drillDownDemension: string;
+    isDrillDown: boolean;
   }>();
 
   const emits = defineEmits(['jump', 'drillDown']);
