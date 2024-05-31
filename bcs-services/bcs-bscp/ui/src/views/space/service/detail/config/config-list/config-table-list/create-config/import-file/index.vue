@@ -44,7 +44,11 @@
       </div>
     </div>
     <div v-else-if="importType === 'otherService'">
-      <ImportFormOtherService :bk-biz-id="props.bkBizId" :app-id="props.appId" @select-version="handleSelectVersion" />
+      <ImportFormOtherService
+        :bk-biz-id="props.bkBizId"
+        :app-id="props.appId"
+        @select-version="handleSelectVersion"
+        @clear="handleClearTable" />
     </div>
     <div v-if="importType !== 'configTemplate' && importConfigList.length" class="content">
       <bk-loading :loading="tableLoading">
@@ -257,9 +261,13 @@
 
   // 删除文件处理表格数据
   const handleDeleteFile = (fileName: string) => {
-    console.log(fileName);
     existConfigList.value = existConfigList.value.filter((item) => item.file_name !== fileName);
     nonExistConfigList.value = nonExistConfigList.value.filter((item) => item.file_name !== fileName);
+  };
+
+  const handleClearTable = () => {
+    existConfigList.value = [];
+    nonExistConfigList.value = [];
   };
 </script>
 
