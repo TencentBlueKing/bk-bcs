@@ -35,7 +35,11 @@
       </div>
     </div>
     <div v-else>
-      <ImportFormOtherService :bk-biz-id="bkBizId" :app-id="appId" @select-version="handleSelectVersion" />
+      <ImportFormOtherService
+        :bk-biz-id="bkBizId"
+        :app-id="appId"
+        @select-version="handleSelectVersion"
+        @clear="handleClearTable" />
     </div>
     <div v-if="importType !== 'text' && importConfigList.length" class="content">
       <bk-loading :loading="tableLoading">
@@ -216,6 +220,11 @@
       existConfigList.value = data;
     }
     isFormChange.value = true;
+  };
+
+  const handleClearTable = () => {
+    nonExistConfigList.value = [];
+    existConfigList.value = [];
   };
 </script>
 

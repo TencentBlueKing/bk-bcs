@@ -39,6 +39,7 @@
             <span class="drill-down-data">{{ navDrillDownData }}</span>
           </div>
           <component
+            v-if="data.length"
             :bk-biz-id="bkBizId"
             :app-id="appId"
             :is="currentComponent"
@@ -47,8 +48,19 @@
             :chart-show-type="chartShowType"
             :is-show-sunburst="isShowSunburst"
             :drill-down-demension="selectedDownDimension"
+            :is-drill-down="isDrillDown"
             @jump="jumpToSearch($event as any)"
             @drill-down="handleDrillDown" />
+          <bk-exception
+            v-else
+            class="exception-wrap-item exception-part"
+            type="empty"
+            scene="part"
+            :description="$t('暂无数据')">
+            <template #type>
+              <span class="bk-bscp-icon icon-bar-chart exception-icon" />
+            </template>
+          </bk-exception>
         </bk-loading>
       </Card>
     </div>
@@ -256,6 +268,8 @@
   .loading-wrap {
     height: 100%;
     .nav {
+      position: relative;
+      z-index: 999;
       font-size: 12px;
       color: #313238;
       .group-dimension {
@@ -269,6 +283,10 @@
         color: #979ba5;
         margin-left: 8px;
       }
+    }
+    :deep(.bk-exception) {
+      justify-content: center;
+      transform: translateY(-20px);
     }
   }
   .head-suffix {

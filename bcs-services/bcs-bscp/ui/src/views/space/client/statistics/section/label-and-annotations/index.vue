@@ -114,11 +114,19 @@
       const res = await getClientLabelsAndAnnotations(props.bkBizId, props.appId, {
         last_heartbeat_time: searchQuery.value.last_heartbeat_time,
       });
+      res.data.annotations.sort(sortByLowerCase);
+      res.data.labels.sort(sortByLowerCase);
       addChartData.value = res.data;
       selectedLabel.value = addChartData.value?.labels.slice(0, 2) || addChartData.value?.labels.slice(0, 1) || [];
     } catch (e) {
       console.error(e);
     }
+  };
+
+  const sortByLowerCase = (a: string, b: string) => {
+    const str1 = a.toLowerCase();
+    const str2 = b.toLowerCase();
+    return str1.localeCompare(str2);
   };
 </script>
 

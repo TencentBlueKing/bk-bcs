@@ -466,7 +466,7 @@ export default {
   创建: 'Create',
   创建变量成功: 'Variable created successfully',
   变量名称不能为空: 'Variable name cannot be empty',
-  '仅允许使用中文、英文、数字、下划线，且不能以数字开头': 'Only Chinese, English, numbers, and underscores are allowed, and cannot start with a number.',
+  '仅允许使用英文、数字、下划线': 'Only  English, numbers, and underscores are allowed',
   '无效默认值，类型为number值不为数字': 'Invalid default value, type number value is not a number',
   编辑变量: 'Edit variables',
   编辑变量成功: 'Edit variable successfully',
