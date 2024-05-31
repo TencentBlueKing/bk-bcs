@@ -43,6 +43,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/i18n"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/constants"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/micro"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 	restful "github.com/emicklei/go-restful"
 	"github.com/go-micro/plugins/v4/registry/etcd"
@@ -769,6 +771,8 @@ func CustomMatcher(key string) (string, bool) {
 		return middleware.CustomUsernameHeaderKey, true
 	case middleware.InnerClientHeaderKey:
 		return middleware.InnerClientHeaderKey, true
+	case constants.Traceparent:
+		return constants.GrpcTraceparent, true
 	default:
 		return runtime.DefaultHeaderMatcher(key)
 	}
@@ -972,6 +976,7 @@ func (cm *ClusterManager) initMicro() error { // nolint
 			authWrapper.AuthenticationFunc,
 			authWrapper.AuthorizationFunc,
 			utils.NewAuditWrapper,
+			micro.NewTracingWrapper(),
 		),
 	)
 	microService.Init()

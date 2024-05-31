@@ -14,6 +14,7 @@
 package runtimex
 
 import (
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 
@@ -27,6 +28,8 @@ func CustomHeaderMatcher(key string) (string, bool) {
 		return headerkey.RequestIDKey, true
 	case headerkey.UsernameKey:
 		return headerkey.UsernameKey, true
+	case constants.Traceparent:
+		return constants.GrpcTraceparent, true
 	case middleware.InnerClientHeaderKey:
 		return middleware.InnerClientHeaderKey, true
 	case middleware.CustomUsernameHeaderKey:

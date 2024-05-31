@@ -14,6 +14,7 @@
 package options
 
 import (
+	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-common/common/encryptv2" // nolint
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
@@ -301,6 +302,7 @@ type ClusterManagerOptions struct {
 	ResourceSchemaPath string                `json:"resourceSchemaPath"`
 	TagDepart          string                `json:"tagDepart"`
 	PrefixVcluster     string                `json:"prefixVcluster"`
+	TracingConfig      conf.TracingConfig    `json:"tracingConfig"`
 	Encrypt            encryptv2.Config      `json:"encrypt"`
 	ServerConfig
 	ClientConfig
