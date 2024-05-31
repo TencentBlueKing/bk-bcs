@@ -450,6 +450,7 @@ export default {
   上线服务: 'Online service',
   '服务名称/服务版本': 'Service name/Service version',
   服务版本: 'Service version',
+  '未在配置文件中检测到变量，请确保配置文件中包含变量后再尝试设置变量': 'Variable not detected in the configuration file. Please ensure the configuration file includes the variable before attempting to set it.',
 
   // 全局变量
   配置模板与变量: 'Configure templates and variables',
