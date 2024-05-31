@@ -137,30 +137,26 @@ func (s *Service) handleBatchCreateClients(kt *kit.Kit, clients []*pbclient.Clie
 	toUpdate = make(map[string][]*table.Client)
 	for _, item := range clients {
 		key := fmt.Sprintf("%d-%d-%s", item.Attachment.BizId, item.Attachment.AppId, item.Attachment.Uid)
+		client := &table.Client{
+			Attachment: item.GetAttachment().ClientAttachment(),
+			Spec:       item.GetSpec().ClientSpec(),
+		}
 		v, ok := oldData[key]
 		if !ok {
 			if !existingKeys[key] {
-				toCreate = append(toCreate, &table.Client{
-					Attachment: item.GetAttachment().ClientAttachment(),
-					Spec:       item.GetSpec().ClientSpec(),
-				})
+				toCreate = append(toCreate, client)
 				existingKeys[key] = true
 			} else {
-				toUpdate[item.MessageType] = append(toUpdate[item.MessageType], &table.Client{
-					Attachment: item.GetAttachment().ClientAttachment(),
-					Spec:       item.GetSpec().ClientSpec(),
-				})
+				toUpdate[item.MessageType] = append(toUpdate[item.MessageType], client)
 			}
 		} else {
 			item.Spec.FirstConnectTime = timestamppb.New(v.Spec.FirstConnectTime)
 			if item.Spec.ReleaseChangeStatus != sfs.Success.String() {
 				item.Spec.CurrentReleaseId = v.Spec.CurrentReleaseID
 			}
-			toUpdate[item.MessageType] = append(toUpdate[item.MessageType], &table.Client{
-				ID:         v.ID,
-				Attachment: item.GetAttachment().ClientAttachment(),
-				Spec:       item.Spec.ClientSpec(),
-			})
+			client.ID = v.ID
+			client.Spec = item.Spec.ClientSpec()
+			toUpdate[item.MessageType] = append(toUpdate[item.MessageType], client)
 		}
 	}
 
