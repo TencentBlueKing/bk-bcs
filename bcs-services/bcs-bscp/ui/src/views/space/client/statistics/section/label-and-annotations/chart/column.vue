@@ -1,7 +1,7 @@
 <template>
   <div ref="canvasRef" class="canvas-wrap">
     <Tooltip
-      :need-down-icon="!!drillDownDemension"
+      :need-down-icon="!!drillDownDemension && !isDrillDown"
       :down="drillDownDemension"
       ref="tooltipRef"
       @jump="emits('jump', { label: jumpLabels, drillDownVal: drillDownVal })" />
@@ -22,6 +22,7 @@
     appId: number;
     chartShowType: string;
     drillDownDemension: string;
+    isDrillDown: boolean;
   }>();
   const emits = defineEmits(['jump', 'drillDown']);
 

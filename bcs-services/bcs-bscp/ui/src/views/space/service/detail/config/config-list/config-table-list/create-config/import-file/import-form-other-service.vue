@@ -45,11 +45,11 @@
     bkBizId: string;
     appId: number;
   }>();
-  const emits = defineEmits(['selectVersion']);
+  const emits = defineEmits(['selectVersion', 'clear']);
 
   const serviceListloading = ref(false);
   const selectAppId = ref();
-  const selectVerisonId = ref('');
+  const selectVerisonId = ref();
   const serviceList = ref<IAppItem[]>([]);
   const versionList = ref<IConfigVersion[]>([]);
   const versionListLoading = ref(false);
@@ -97,6 +97,8 @@
 
   const handleSelectApp = () => {
     getVersionList();
+    selectVerisonId.value = undefined;
+    emits('clear');
   };
 </script>
 
