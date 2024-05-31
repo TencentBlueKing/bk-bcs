@@ -43,6 +43,7 @@ type Handler interface {
 type Cluster interface {
 	Get(ctx context.Context, option GetOption) (*Release, error)
 	List(ctx context.Context, option ListOption) (int, []*Release, error)
+	ListV2(ctx context.Context, option ListOption) (int, []*Release, error)
 	Install(ctx context.Context, conf HelmInstallConfig) (*HelmInstallResult, error)
 	Uninstall(ctx context.Context, conf HelmUninstallConfig) (*HelmUninstallResult, error)
 	Upgrade(ctx context.Context, conf HelmUpgradeConfig) (*HelmUpgradeResult, error)
