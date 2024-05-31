@@ -172,7 +172,12 @@
 <script lang="ts" setup>
   import { nextTick, ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
   import { storeToRefs } from 'pinia';
-  import { CLIENT_SEARCH_DATA, CLIENT_STATISTICS_SEARCH_DATA, CLIENT_STATUS_MAP } from '../../../../constants/client';
+  import {
+    CLIENT_SEARCH_DATA,
+    CLIENT_STATISTICS_SEARCH_DATA,
+    CLIENT_STATUS_MAP,
+    CLIENT_ERROR_CATEGORY_MAP,
+  } from '../../../../constants/client';
   import { ISelectorItem, ISearchCondition, ICommonlyUsedItem, IClinetCommonQuery } from '../../../../../types/client';
   import {
     getClientSearchRecord,
@@ -616,6 +621,16 @@
         searchList.push({
           key: 'pull_time',
           value: `${datetimeFormat(query.start_pull_time)} - ${datetimeFormat(query.end_pull_time)}`,
+          content,
+          isEdit: false,
+        });
+        searchName.push(content);
+      } else if (key === 'failed_reason') {
+        const errorItem = CLIENT_ERROR_CATEGORY_MAP.find((item) => item.value === query[key]);
+        const content = `${selectorData.value.find((item) => item.value === key)?.name} : ${errorItem?.name}`;
+        searchList.push({
+          key,
+          value: query[key],
           content,
           isEdit: false,
         });

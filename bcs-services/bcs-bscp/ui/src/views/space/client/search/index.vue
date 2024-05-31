@@ -37,14 +37,24 @@
                     {{ label.key + '=' + label.value }}
                   </Tag>
                 </span>
-                <span v-if="row.client.labels.length > 3">
-                  <Tag> +{{ row.client.labels.length - 3 }} </Tag>
-                </span>
+                <div v-if="row.client.labels.length > 3">
+                  <bk-popover theme="light" placement="top-center">
+                    <Tag> +{{ row.client.labels.length - 3 }} </Tag>
+                    <template #content>
+                      <Tag v-for="(label, index) in row.client.labels.slice(3)" :key="index">
+                        {{ label.key + '=' + label.value }}
+                      </Tag>
+                    </template>
+                  </bk-popover>
+                </div>
               </div>
               <span v-else>--</span>
             </template>
           </bk-table-column>
-          <bk-table-column v-if="selectedShowColumn.includes('current-version')" :label="t('当前配置版本')" :width="140">
+          <bk-table-column
+            v-if="selectedShowColumn.includes('current-version')"
+            :label="t('当前配置版本')"
+            :width="140">
             <template #default="{ row }">
               <div
                 v-if="row.client && row.client.spec.current_release_id"
