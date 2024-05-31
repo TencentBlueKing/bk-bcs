@@ -535,7 +535,7 @@ func (dao *clientDao) UpsertHeartbeat(kit *kit.Kit, tx *gen.QueryTx, data []*tab
 		Columns: []clause.Column{{Name: "biz_id"}, {Name: "app_id"}, {Name: "uid"}},
 		DoUpdates: clause.AssignmentColumns([]string{
 			"online_status", "last_heartbeat_time", "client_version", "ip", "annotations",
-			"release_change_status",
+			"release_change_status", "labels",
 			"cpu_usage", "cpu_max_usage", "cpu_min_usage", "cpu_avg_usage",
 			"memory_usage", "memory_max_usage", "memory_min_usage", "memory_avg_usage",
 		}),
