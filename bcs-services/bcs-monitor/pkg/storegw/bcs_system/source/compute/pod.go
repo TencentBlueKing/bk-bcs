@@ -43,6 +43,7 @@ func (m *Compute) handlePodMetric(ctx context.Context, projectID, clusterID, nam
 // GetPodCPUUsage POD 使用率
 func (m *Compute) GetPodCPUUsage(ctx context.Context, projectID, clusterID, namespace string, podNameList []string,
 	start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
+	// nolint goconst
 	promql :=
 		`sum by (pod_name) (rate(container_cpu_usage_seconds_total_value{cluster_id="%<clusterID>s", ` +
 			`namespace="%<namespace>s", pod_name=~"%<podNameList>s", container_name!="", container_name!="POD", ` +

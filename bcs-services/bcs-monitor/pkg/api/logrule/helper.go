@@ -20,7 +20,6 @@ import (
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
-	logv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubebkbcs/apis/bkbcs/v1"
 	"k8s.io/klog/v2"
 
 	bklog "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bk_log"
@@ -212,23 +211,6 @@ func isBcsLogConfigID(id string) bool {
 	return strings.Contains(id, bcsLogConfigSeparator)
 }
 
-// The toBcsLogConfigID function takes in two strings 'namespace' and 'name'
-// and returns the concatenation of the two strings with a colon in between
-// as a single string. This is used as the unique identifier for a logging configuration
-// in the BCS.
-func toBcsLogConfigID(namespace, name string) string {
-	return fmt.Sprintf("%s%s%s", namespace, bcsLogConfigSeparator, name)
-}
-
-// getBcsLogConfigNamespaces takes in a string 'id' and splits it into two strings
-func getBcsLogConfigNamespaces(id string) (string, string) {
-	s := strings.Split(id, bcsLogConfigSeparator)
-	if len(s) < 2 {
-		return "", ""
-	}
-	return s[0], s[1]
-}
-
 // isBKLogID check if id is bklog id
 func isBKLogID(id string) bool {
 	return strings.HasPrefix(id, bkLogPrefix)
@@ -242,86 +224,6 @@ func toBKLogID(name string) string {
 // getBKLogName get bklog name
 func getBKLogName(id string) string {
 	return strings.TrimPrefix(id, bkLogPrefix)
-}
-
-// 转换 bcslogconfig 到通用规则
-func (resp *GetLogRuleResp) loadFromBcsLogConfig(logConfig *logv1.BcsLogConfig, logIndexID *entity.LogIndex,
-	newRuleID string) {
-	id := toBcsLogConfigID(logConfig.Namespace, logConfig.Name)
-	resp.ID = id
-	resp.DisplayName = logConfig.Name
-	resp.Name = logConfig.Name
-	resp.CreatedAt = utils.JSONTime(logConfig.CreationTimestamp)
-	resp.UpdatedAt = utils.JSONTime(logConfig.CreationTimestamp)
-	resp.Creator = "Client"
-	resp.Updator = "Client"
-	resp.Old = true
-	resp.NewRuleID = newRuleID
-	resp.Status = bklog.SuccessStatus
-	resp.Config.LogRuleContainer.Namespaces = make([]string, 0)
-	if logIndexID != nil {
-		resp.FileIndexSetID = logIndexID.FileIndexSetID
-		resp.STDIndexSetID = logIndexID.STDIndexSetID
-		resp.RuleFileIndexSetID = logIndexID.FileIndexSetID
-		resp.RuleSTDIndexSetID = logIndexID.STDIndexSetID
-		resp.Entrypoint = Entrypoint{
-			STDLogURL:  fmt.Sprintf("%s/#/retrieve/%d", config.G.BKLog.Entrypoint, logIndexID.STDIndexSetID),
-			FileLogURL: fmt.Sprintf("%s/#/retrieve/%d", config.G.BKLog.Entrypoint, logIndexID.FileIndexSetID),
-		}
-	}
-	resp.Config = bklog.LogRule{
-		AddPodLabel: logConfig.Spec.PodLabels,
-		ExtraLabels: make([]bklog.Label, 0),
-		LogRuleContainer: bklog.LogRuleContainer{
-			Namespaces:   make([]string, 0),
-			DataEncoding: bklog.DefaultEncoding,
-			EnableStdout: logConfig.Spec.Stdout,
-			Conditions:   &bklog.Conditions{Type: "match", MatchType: "include"},
-			LabelSelector: bklog.LabelSelector{
-				MatchLabels:      make([]bklog.Label, 0),
-				MatchExpressions: make([]bklog.Label, 0),
-			},
-			Container: bklog.Container{
-				WorkloadType: logConfig.Spec.WorkloadType,
-				WorkloadName: logConfig.Spec.WorkloadName,
-			},
-		},
-	}
-	resp.Config.LogRuleContainer.Paths = append(resp.Config.LogRuleContainer.Paths, logConfig.Spec.LogPaths...)
-	for tagk, tagv := range logConfig.Spec.LogTags {
-		resp.Config.ExtraLabels = append(resp.Config.ExtraLabels, bklog.Label{Key: tagk, Value: tagv})
-	}
-	for tagk, tagv := range logConfig.Spec.Selector.MatchLabels {
-		resp.Config.LogRuleContainer.LabelSelector.MatchLabels = append(resp.Config.ExtraLabels, // nolint
-			bklog.Label{Key: tagk, Operator: "=", Value: tagv})
-	}
-	if logConfig.Spec.WorkloadNamespace != "" {
-		resp.Config.LogRuleContainer.Namespaces = []string{logConfig.Spec.WorkloadNamespace}
-	}
-	if len(logConfig.Spec.Selector.MatchExpressions) != 0 {
-		for _, v := range logConfig.Spec.Selector.MatchExpressions {
-			value := ""
-			if len(v.Values) > 0 {
-				value = v.Values[0]
-			}
-			resp.Config.LogRuleContainer.LabelSelector.MatchExpressions = append(
-				resp.Config.LogRuleContainer.LabelSelector.MatchExpressions,
-				bklog.Label{Key: v.Key, Value: value, Operator: v.Operator})
-		}
-	}
-	if len(logConfig.Spec.ContainerConfs) > 0 {
-		names := []string{}
-		for _, v := range logConfig.Spec.ContainerConfs {
-			names = append(names, v.ContainerName)
-			resp.Config.LogRuleContainer.Paths = append(resp.Config.LogRuleContainer.Paths, v.LogPaths...)
-			resp.Config.LogRuleContainer.EnableStdout = v.Stdout
-			for tagk, tagv := range v.LogTags {
-				resp.Config.ExtraLabels = append(resp.Config.ExtraLabels, bklog.Label{
-					Key: tagk, Operator: "=", Value: tagv})
-			}
-		}
-		resp.Config.LogRuleContainer.Container.ContainerName = strings.Join(names, ",")
-	}
 }
 
 // 转换 entity.LogRule 到通用规则
@@ -566,16 +468,6 @@ func updateBKLog(ruleID string, bkRuleID int, req *bklog.UpdateBCSCollectorReq) 
 	if err != nil {
 		klog.Errorf("UpdateLogRule error, %s", err.Error())
 	}
-}
-
-// getFromRuleIDFromLogRules get from rule id from log rules
-func getFromRuleIDFromLogRules(id string, rules []*entity.LogRule) string {
-	for _, v := range rules {
-		if v.FromRule == id {
-			return v.ID.Hex()
-		}
-	}
-	return ""
 }
 
 // getClusterLogRules get cluster log rules
