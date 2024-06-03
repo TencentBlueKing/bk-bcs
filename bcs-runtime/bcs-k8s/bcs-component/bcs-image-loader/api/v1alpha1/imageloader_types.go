@@ -68,6 +68,10 @@ type ImageLoaderNodeSelector struct {
 
 // ImageLoaderStatus defines the observed state of ImageLoader
 type ImageLoaderStatus struct {
+	// ObservedGeneration is the most recent generation observed for this ImageLoader. It corresponds to the
+	// ImageLoader's generation, which is updated on mutation by the API Server.
+	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
+
 	// Represents time when the job was acknowledged by the job controller.
 	// It is not guaranteed to be set in happens-before order across separate operations.
 	// It is represented in RFC3339 form and is in UTC.
