@@ -28,6 +28,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	traceconst "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/constants"
+	argocommon "github.com/argoproj/argo-cd/v2/common"
 	api "github.com/argoproj/argo-cd/v2/pkg/apiclient"
 	appclient "github.com/argoproj/argo-cd/v2/pkg/apiclient/application"
 	applicationpkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/application"
@@ -50,9 +51,11 @@ import (
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
+	apierr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/rest"
 	"k8s.io/kubernetes/pkg/kubelet/util/sliceutils"
@@ -85,6 +88,7 @@ type argo struct {
 
 	cacheSynced      atomic.Bool
 	cacheApplication *sync.Map
+	cacheAppSet      *sync.Map
 	cacheAppProject  *sync.Map
 }
 
@@ -104,6 +108,9 @@ func (cd *argo) Init() error {
 	if cd.option.Cache {
 		if err := cd.handleApplicationWatch(); err != nil {
 			return errors.Wrapf(err, "handle application watch failed")
+		}
+		if err := cd.handleAppSetWatch(); err != nil {
+			return errors.Wrapf(err, "handle applicationset watch failed")
 		}
 	}
 	return nil
@@ -832,6 +839,44 @@ func (cd *argo) ListApplicationSets(ctx context.Context, query *appsetpkg.Applic
 	return appsets, nil
 }
 
+// AllApplicationSets return app the applicationsets
+func (cd *argo) AllApplicationSets() []*v1alpha1.ApplicationSet {
+	result := make([]*v1alpha1.ApplicationSet, 0)
+	cd.cacheAppSet.Range(func(key, value any) bool {
+		appSet := value.(*v1alpha1.ApplicationSet)
+		result = append(result, appSet.DeepCopy())
+		return true
+	})
+	return result
+}
+
+// RefreshApplicationSet refresh appset trigger it to generate applications
+func (cd *argo) RefreshApplicationSet(namespace, name string) error {
+	metadata := map[string]interface{}{
+		"metadata": map[string]interface{}{
+			"annotations": map[string]string{
+				argocommon.AnnotationApplicationSetRefresh: "true",
+			},
+		},
+	}
+	patch, err := json.Marshal(metadata)
+	if err != nil {
+		return errors.Wrapf(err, "error marshaling metadata")
+	}
+	for attempt := 0; attempt < 5; attempt++ {
+		_, err = cd.argoK8SClient.ApplicationSets(namespace).Patch(context.Background(), name,
+			types.MergePatchType, patch, metav1.PatchOptions{})
+		if err == nil {
+			return nil
+		}
+		if !apierr.IsConflict(err) {
+			return errors.Wrapf(err, "error patching annotations for appset %s/%s", namespace, name)
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+	return errors.Wrapf(err, "error paching annotation for appset %s/%s with conflict", namespace, name)
+}
+
 // DeleteApplicationSetOrphan delete application-set with orphan
 func (cd *argo) DeleteApplicationSetOrphan(ctx context.Context, name string) error {
 	deleteOption := metav1.DeletePropagationOrphan
@@ -996,6 +1041,16 @@ func (cd *argo) initCache() error {
 	}
 	blog.Infof("[store] init cache application success.")
 
+	appsetList, err := cd.appsetClient.List(context.Background(), &appsetpkg.ApplicationSetListQuery{})
+	if err != nil {
+		return errors.Wrapf(err, "list applicationsets failed when init watch")
+	}
+	for i := range appsetList.Items {
+		appSet := appsetList.Items[i]
+		cd.cacheAppSet.Store(appSet.Name, &appSet)
+	}
+	blog.Infof("[store] init cache appset success")
+
 	projList, err := cd.projectClient.List(context.Background(), &projectpkg.ProjectQuery{})
 	if err != nil {
 		return errors.Wrapf(err, "list projec failed when init watch")
@@ -1056,6 +1111,56 @@ func (cd *argo) handleApplicationWatch() error {
 				}
 			case watch.Deleted:
 				cd.deleteApplication(&application)
+			}
+		}
+	}()
+	return nil
+}
+
+// handleAppSetWatch create the appset watch client to watch appset changes
+// and store the changed appset into cache
+func (cd *argo) handleAppSetWatch() error {
+	watchClient, err := cd.argoK8SClient.ApplicationSets(cd.option.AdminNamespace).
+		Watch(context.Background(), metav1.ListOptions{})
+	if err != nil {
+		return errors.Wrapf(err, "create applicationset watch client failed")
+	}
+	go func() {
+		defer watchClient.Stop()
+
+		for {
+			for e := range watchClient.ResultChan() {
+				eventAppSet, ok := e.Object.(*v1alpha1.ApplicationSet)
+				if !ok {
+					blog.Errorf("[store] appset event object convert type failed")
+					continue
+				}
+				if e.Type != watch.Modified {
+					blog.Infof("[store] appset watch received: %s/%s", string(e.Type), eventAppSet.Name)
+				}
+				switch e.Type {
+				case watch.Added, watch.Modified:
+					cd.cacheAppSet.Store(eventAppSet.Name, eventAppSet)
+				case watch.Deleted:
+					cd.cacheAppSet.Delete(eventAppSet.Name)
+				}
+			}
+
+			// reconnect appset watch if channel is closed
+			blog.Errorf("[store] appset watch chan is closed")
+			for {
+				if watchClient != nil {
+					watchClient.Stop()
+				}
+				time.Sleep(5 * time.Second)
+				watchClient, err = cd.argoK8SClient.ApplicationSets(cd.option.AdminNamespace).
+					Watch(context.Background(), metav1.ListOptions{})
+				if err != nil {
+					blog.Error("[store] appset watch re-connect failed: %s", err.Error())
+					continue
+				}
+				blog.Infof("[store] appset watch re-connect success")
+				break
 			}
 		}
 	}()

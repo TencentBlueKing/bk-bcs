@@ -79,3 +79,12 @@ func StringsContainsOr(s string, fields ...string) bool {
 	}
 	return false
 }
+
+// CheckGitRepoSimilar check the git repo similar
+func CheckGitRepoSimilar(original, compare string) bool {
+	t1 := strings.Split(original, "/")
+	t2 := strings.Split(compare, "/")
+	originalRepo := t1[len(t1)-1]
+	compareRepo := t2[len(t2)-1]
+	return strings.TrimSuffix(originalRepo, ".git") == strings.TrimSuffix(compareRepo, ".git")
+}
