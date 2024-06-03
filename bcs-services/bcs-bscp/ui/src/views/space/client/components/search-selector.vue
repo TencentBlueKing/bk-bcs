@@ -177,6 +177,7 @@
     CLIENT_STATISTICS_SEARCH_DATA,
     CLIENT_STATUS_MAP,
     CLIENT_ERROR_CATEGORY_MAP,
+    CLIENT_COMPONENT_TYPES_MAP,
   } from '../../../../constants/client';
   import { ISelectorItem, ISearchCondition, ICommonlyUsedItem, IClinetCommonQuery } from '../../../../../types/client';
   import {
@@ -633,6 +634,16 @@
       } else if (key === 'failed_reason') {
         const errorItem = CLIENT_ERROR_CATEGORY_MAP.find((item) => item.value === query[key]);
         const content = `${selectorData.value.find((item) => item.value === key)?.name} : ${errorItem?.name}`;
+        searchList.push({
+          key,
+          value: query[key],
+          content,
+          isEdit: false,
+        });
+        searchName.push(content);
+      } else if (key === 'client_type') {
+        const clientType = CLIENT_COMPONENT_TYPES_MAP.find((item) => item.value === query[key]);
+        const content = `${selectorData.value.find((item) => item.value === key)?.name} : ${clientType?.name}`;
         searchList.push({
           key,
           value: query[key],
