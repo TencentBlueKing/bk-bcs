@@ -124,6 +124,8 @@ func (er EventResource) Validate() error {
 	case Publish:
 	case Application:
 	case CredentialEvent:
+	case RetryApp:
+	case RetryInstance:
 	default:
 		return fmt.Errorf("unsupported event resource: %s", er)
 	}
@@ -144,6 +146,10 @@ const (
 	Application EventResource = "application"
 	// CredentialEvent means this is an event which represent a credential resource.
 	CredentialEvent EventResource = "credential"
+	// RetryInstance means this is an event which represent to retry release change callback for a specific instance.
+	RetryInstance EventResource = "retryInstance"
+	// RetryApp means this is an event which represent to retry release change callback for all instances in app.
+	RetryApp EventResource = "retryApp"
 )
 
 // EventSpec defines the specifics of event

@@ -227,6 +227,7 @@ service Data {
 
   // client related interface
   rpc ListClients(ListClientsReq) returns (ListClientsResp) {};
+  rpc RetryClients(RetryClientsReq) returns (pbbase.EmptyResp) {};
 
   // client event related interface
   rpc ListClientEvents(ListClientEventsReq) returns (ListClientEventsResp) {};
@@ -1703,6 +1704,13 @@ message ListClientsReq {
   Order order = 6;
   int64 last_heartbeat_time = 7;
   pbclient.ClientQueryCondition search = 8;
+}
+
+message RetryClientsReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  repeated uint32 client_ids = 3;
+  bool all = 4;
 }
 
 message ListClientsResp {

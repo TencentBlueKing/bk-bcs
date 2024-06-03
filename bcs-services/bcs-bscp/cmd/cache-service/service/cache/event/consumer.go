@@ -98,6 +98,7 @@ func (c *consumer) consumeInsertEvent(kt *kit.Kit, events []*table.Event) error 
 			publishEvent = append(publishEvent, event)
 		case table.Application:
 			insertAppEvent = append(insertAppEvent, event)
+		case table.RetryApp, table.RetryInstance:
 		default:
 			logs.Errorf("unsupported insert event resource: %s, id: %s, rid: %s", event.Spec.Resource, event.ID, kt.Rid)
 			continue

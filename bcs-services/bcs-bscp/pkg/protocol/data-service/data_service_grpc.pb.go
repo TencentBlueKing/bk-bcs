@@ -171,6 +171,7 @@ const (
 	Data_UnDeleteKv_FullMethodName                        = "/pbds.Data/UnDeleteKv"
 	Data_UndoKv_FullMethodName                            = "/pbds.Data/UndoKv"
 	Data_ListClients_FullMethodName                       = "/pbds.Data/ListClients"
+	Data_RetryClients_FullMethodName                      = "/pbds.Data/RetryClients"
 	Data_ListClientEvents_FullMethodName                  = "/pbds.Data/ListClientEvents"
 	Data_ListClientQuerys_FullMethodName                  = "/pbds.Data/ListClientQuerys"
 	Data_CreateClientQuery_FullMethodName                 = "/pbds.Data/CreateClientQuery"
@@ -360,6 +361,7 @@ type DataClient interface {
 	UndoKv(ctx context.Context, in *UndoKvReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	// client related interface
 	ListClients(ctx context.Context, in *ListClientsReq, opts ...grpc.CallOption) (*ListClientsResp, error)
+	RetryClients(ctx context.Context, in *RetryClientsReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	// client event related interface
 	ListClientEvents(ctx context.Context, in *ListClientEventsReq, opts ...grpc.CallOption) (*ListClientEventsResp, error)
 	// client query related interface
@@ -1654,6 +1656,15 @@ func (c *dataClient) ListClients(ctx context.Context, in *ListClientsReq, opts .
 	return out, nil
 }
 
+func (c *dataClient) RetryClients(ctx context.Context, in *RetryClientsReq, opts ...grpc.CallOption) (*base.EmptyResp, error) {
+	out := new(base.EmptyResp)
+	err := c.cc.Invoke(ctx, Data_RetryClients_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *dataClient) ListClientEvents(ctx context.Context, in *ListClientEventsReq, opts ...grpc.CallOption) (*ListClientEventsResp, error) {
 	out := new(ListClientEventsResp)
 	err := c.cc.Invoke(ctx, Data_ListClientEvents_FullMethodName, in, out, opts...)
@@ -1985,6 +1996,7 @@ type DataServer interface {
 	UndoKv(context.Context, *UndoKvReq) (*base.EmptyResp, error)
 	// client related interface
 	ListClients(context.Context, *ListClientsReq) (*ListClientsResp, error)
+	RetryClients(context.Context, *RetryClientsReq) (*base.EmptyResp, error)
 	// client event related interface
 	ListClientEvents(context.Context, *ListClientEventsReq) (*ListClientEventsResp, error)
 	// client query related interface
@@ -2434,6 +2446,9 @@ func (UnimplementedDataServer) UndoKv(context.Context, *UndoKvReq) (*base.EmptyR
 }
 func (UnimplementedDataServer) ListClients(context.Context, *ListClientsReq) (*ListClientsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListClients not implemented")
+}
+func (UnimplementedDataServer) RetryClients(context.Context, *RetryClientsReq) (*base.EmptyResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RetryClients not implemented")
 }
 func (UnimplementedDataServer) ListClientEvents(context.Context, *ListClientEventsReq) (*ListClientEventsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListClientEvents not implemented")
@@ -5021,6 +5036,24 @@ func _Data_ListClients_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Data_RetryClients_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RetryClientsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).RetryClients(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_RetryClients_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).RetryClients(ctx, req.(*RetryClientsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Data_ListClientEvents_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListClientEventsReq)
 	if err := dec(in); err != nil {
@@ -5911,6 +5944,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListClients",
 			Handler:    _Data_ListClients_Handler,
+		},
+		{
+			MethodName: "RetryClients",
+			Handler:    _Data_RetryClients_Handler,
 		},
 		{
 			MethodName: "ListClientEvents",
