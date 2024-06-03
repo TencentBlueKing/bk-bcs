@@ -422,6 +422,8 @@ export default {
   示例面板: 'Sample panel',
   配置项导入成功: 'Configuration items are imported successfully',
   '请输入空间/套餐名称': 'Please enter space/package name',
+  '确认恢复该配置文件?': 'Confirm to recover the configuration file?',
+  '配置文件恢复后，将覆盖新添加的配置文件': 'After the configuration file is restored, the newly added configuration file',
 
   // 分组管理
   新增分组: 'New group',
