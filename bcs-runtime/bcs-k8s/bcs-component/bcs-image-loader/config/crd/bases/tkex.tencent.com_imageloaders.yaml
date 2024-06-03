@@ -198,6 +198,12 @@ spec:
                       type: string
                   type: object
                 type: array
+              observedGeneration:
+                description: ObservedGeneration is the most recent generation observed
+                  for this ImageLoader. It corresponds to the ImageLoader's generation,
+                  which is updated on mutation by the API Server.
+                format: int64
+                type: integer
               revision:
                 description: Revision is the revision of the imageloader
                 type: string
