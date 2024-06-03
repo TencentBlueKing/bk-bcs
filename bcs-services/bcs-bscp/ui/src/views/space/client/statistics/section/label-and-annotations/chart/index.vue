@@ -13,11 +13,13 @@
             :is-open-full-screen="isOpenFullScreen"
             :all-label="allLabel"
             :primary-dimension="primaryDimension"
+            :select-dimension="selectDimension"
+            :drill-dimension="drillDimension"
             @refresh="handleRefresh"
             @toggle-full-screen="isOpenFullScreen = !isOpenFullScreen"
             @toggle-show-btn="isOpenPopover = $event"
             @select-dimension="selectedDimension = $event"
-            @select-down-dimension="selectedDownDimension = $event"
+            @select-down-dimension="handleSelectDownDimension"
             @toggle-chart-show-type="chartShowType = $event" />
         </template>
         <template #head-suffix>
@@ -91,7 +93,11 @@
     appId: number;
     primaryDimension: string;
     allLabel: string[];
+    selectDimension: string[];
+    drillDimension: string;
   }>();
+
+  const emits = defineEmits(['select']);
 
   const currentType = ref('column');
   const componentMap = {
@@ -106,8 +112,8 @@
   const isOpenPopover = ref(false);
   const loading = ref(false);
   const data = ref<IClientLabelItem[]>([]);
-  const selectedDimension = ref<string[]>([props.primaryDimension]);
-  const selectedDownDimension = ref('');
+  const selectedDimension = ref<string[]>(props.selectDimension || []);
+  const selectedDownDimension = ref(props.drillDimension || '');
   const navDrillDownData = ref('');
   const isDrillDown = ref(false);
   const chartShowType = ref('tile');
@@ -138,6 +144,7 @@
       selectedDownDimension.value = '';
       isDrillDown.value = false;
       loadChartData();
+      handleSelecteDimension();
     },
   );
 
@@ -246,6 +253,19 @@
     } else {
       loadChartData();
     }
+  };
+
+  const handleSelectDownDimension = (dimension: string) => {
+    selectedDownDimension.value = dimension;
+    handleSelecteDimension();
+  };
+
+  const handleSelecteDimension = () => {
+    emits('select', {
+      primaryDimension: props.primaryDimension,
+      minorDimension: selectedDimension.value,
+      drillDownDimension: selectedDownDimension.value,
+    });
   };
 </script>
 
