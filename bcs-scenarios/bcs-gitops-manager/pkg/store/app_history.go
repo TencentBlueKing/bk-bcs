@@ -52,7 +52,7 @@ func (s *appHistoryStore) handle(ch chan *v1alpha1.Application) {
 			if utils.IsClusterAskCredentials(err) {
 				continue
 			}
-			blog.Errorf("[HistoryStore] handle application history store failed: %s", err.Error())
+			blog.Warnf("[HistoryStore] handle application history store failed: %s", err.Error())
 		}
 	}
 }

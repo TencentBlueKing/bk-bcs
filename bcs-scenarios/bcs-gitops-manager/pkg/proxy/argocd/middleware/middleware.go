@@ -164,7 +164,11 @@ func (p *httpWrapper) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		p.monitorSession.ServeHTTP(rw, req)
 	case returnError:
 		if resp.statusCode >= 500 {
-			blog.Errorf("RequestID[%s] handler return code '%d': %s", requestID, resp.statusCode, resp.err.Error())
+			if utils.IsContextCanceled(resp.err) {
+				blog.Warnf("RequestID[%s] handler return code '%d': %s", requestID, resp.statusCode, resp.err.Error())
+			} else {
+				blog.Errorf("RequestID[%s] handler return code '%d': %s", requestID, resp.statusCode, resp.err.Error())
+			}
 		}
 		http.Error(rw, resp.err.Error(), resp.statusCode)
 	case returnGrpcError:

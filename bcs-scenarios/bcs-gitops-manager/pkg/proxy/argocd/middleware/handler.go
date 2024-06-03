@@ -423,21 +423,12 @@ func (h *handler) CheckApplicationPermission(ctx context.Context, appName string
 		return nil, http.StatusNotFound, errors.Errorf("application '%s' not found", appName)
 	}
 	// 检查是否具备 ProjectView 权限
-	projectID := common.GetBCSProjectID(app.Annotations)
-	if projectID != "" {
-		// CheckProjectPermissionByID 检查登录态用户对于项目的权限
-		statusCode, err := h.CheckProjectPermissionByID(ctx, app.Spec.Project, projectID, iam.ProjectView) // nolint
-		if err != nil {
-			return nil, statusCode, errors.Wrapf(err, "check project '%s' permission failed", projectID)
-		}
-		return app, http.StatusOK, nil
-	}
 	argoProject, statusCode, err := h.CheckProjectPermission(ctx, app.Spec.Project, iam.ProjectView)
 	if err != nil {
 		return nil, statusCode, errors.Wrapf(err, "check project '%s' permission failed", app.Spec.Project)
 	}
 	// GetBCSProjectID get projectID from annotations
-	projectID = common.GetBCSProjectID(argoProject.Annotations)
+	projectID := common.GetBCSProjectID(argoProject.Annotations)
 
 	// 获取集群信息
 	argoCluster, err := h.store.GetCluster(ctx, &argocluster.ClusterQuery{
