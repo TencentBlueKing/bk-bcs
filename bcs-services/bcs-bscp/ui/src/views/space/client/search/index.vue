@@ -421,6 +421,7 @@
   // };
 
   const loadList = async () => {
+    // if (appId.value === 0) return;
     const params: IClinetCommonQuery = {
       start: pagination.value.limit * (pagination.value.current - 1),
       limit: pagination.value.limit,
