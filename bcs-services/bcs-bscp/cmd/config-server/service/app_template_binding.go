@@ -48,10 +48,7 @@ func (s *Service) CreateAppTemplateBinding(ctx context.Context, req *pbcs.Create
 	if len(repeatedTmplSetIDs) > 0 {
 		return nil, fmt.Errorf("repeated template set ids: %v, id must be unique", repeatedTmplSetIDs)
 	}
-	repeatedTmplRevisionIDs := tools.SliceRepeatedElements(templateIDs)
-	if len(repeatedTmplRevisionIDs) > 0 {
-		return nil, fmt.Errorf("repeated template ids: %v, id must be unique", repeatedTmplRevisionIDs)
-	}
+
 	if len(templateIDs) > 500 {
 		return nil, fmt.Errorf("the length of template ids is %d, it must be within the range of [1,500]",
 			len(templateIDs))
