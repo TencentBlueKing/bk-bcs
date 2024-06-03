@@ -128,6 +128,26 @@ export const CLIENT_ERROR_SUBCLASSES_MAP = [
   },
 ];
 
+// 客户端组件类型映射
+export const CLIENT_COMPONENT_TYPES_MAP = [
+  {
+    name: `SideCar ${localT('客户端')}`,
+    value: 'sidecar',
+  },
+  {
+    name: `SDK ${localT('客户端')}`,
+    value: 'sdk',
+  },
+  {
+    name: localT('主机插件客户端'),
+    value: 'agent',
+  },
+  {
+    name: `CLI ${localT('客户端')}`,
+    value: 'command',
+  },
+];
+
 export const CLIENT_SEARCH_DATA = [
   {
     name: 'UID',
@@ -180,24 +200,7 @@ export const CLIENT_SEARCH_DATA = [
   {
     name: localT('客户端组件类型'),
     value: 'client_type',
-    children: [
-      {
-        name: `SideCar ${localT('客户端')}`,
-        value: 'sidecar',
-      },
-      {
-        name: `SDK ${localT('客户端')}`,
-        value: 'sdk',
-      },
-      {
-        name: localT('主机插件客户端'),
-        value: 'agent',
-      },
-      {
-        name: `CLI ${localT('客户端')}`,
-        value: 'command',
-      },
-    ],
+    children: CLIENT_COMPONENT_TYPES_MAP,
   },
   {
     name: localT('客户端组件版本'),
