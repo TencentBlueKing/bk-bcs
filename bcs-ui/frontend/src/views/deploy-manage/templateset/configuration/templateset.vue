@@ -1,50 +1,53 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <!-- eslint-disable max-len -->
 <template>
-  <div class="biz-content">
-    <Header hide-back :title="$t('nav.templateSet')" />
-    <div class="biz-content-wrapper" style="margin: 0; padding: 0;" v-bkloading="{ isLoading: isLoading, opacity: 0.1 }">
+  <BcsContent hide-back :title="$t('nav.templateSet')">
+    <div v-bkloading="{ isLoading: isLoading, opacity: 0.1 }">
       <template v-if="!isLoading">
-        <div class="biz-panel-header" style="padding: 20px;">
-          <div class="left">
-            <bk-dropdown-menu
-              :key="projectKind"
-              ref="dropdown"
-              v-authority="{
-                actionId: 'templateset_create',
-                permCtx: {
-                  resource_type: 'project',
-                  project_id: projectId
-                }
-              }"
-              trigger="click">
-              <bk-button type="primary" icon-right="icon-angle-down" slot="dropdown-trigger">
-                <span class="text-[14px]"> {{$t('deploy.templateset.addTemplateSet')}}</span>
-              </bk-button>
-              <ul class="bk-dropdown-list" slot="dropdown-content">
-                <li>
-                  <a href="javascript:;" @click.stop.prevent="addTemplate('k8sTemplatesetDeployment')">{{$t('dashboard.label.formMode')}}</a>
-                </li>
-                <li>
-                  <a href="javascript:;" @click="addTemplate('K8sYamlTemplateset')">{{$t('dashboard.label.yamlMode')}}</a>
-                </li>
-              </ul>
-            </bk-dropdown-menu>
-          </div>
-          <div class="right">
-            <p class="biz-tpl-desc" v-if="templatesetCount">{{$t('deploy.templateset.total')}} <strong>{{templatesetCount}}</strong> {{$t('units.suffix.units')}}</p>
-            <div class="biz-search-input" style="width: 300px;">
-              <bkbcs-input
-                right-icon="bk-icon icon-search"
-                clearable
-                :placeholder="$t('generic.placeholder.search')"
-                v-model="searchKeyword"
-                @enter="search"
-                @clear="clearSearch">
-              </bkbcs-input>
+        <Row class="mb-[16px]">
+          <template #left>
+            <div class="left">
+              <bk-dropdown-menu
+                :key="projectKind"
+                ref="dropdown"
+                v-authority="{
+                  actionId: 'templateset_create',
+                  permCtx: {
+                    resource_type: 'project',
+                    project_id: projectId
+                  }
+                }"
+                trigger="click">
+                <bk-button type="primary" icon-right="icon-angle-down" slot="dropdown-trigger">
+                  <span class="text-[14px]"> {{$t('deploy.templateset.addTemplateSet')}}</span>
+                </bk-button>
+                <ul class="bk-dropdown-list" slot="dropdown-content">
+                  <li>
+                    <a href="javascript:;" @click.stop.prevent="addTemplate('k8sTemplatesetDeployment')">{{$t('dashboard.label.formMode')}}</a>
+                  </li>
+                  <li>
+                    <a href="javascript:;" @click="addTemplate('K8sYamlTemplateset')">{{$t('dashboard.label.yamlMode')}}</a>
+                  </li>
+                </ul>
+              </bk-dropdown-menu>
             </div>
-          </div>
-        </div>
+          </template>
+          <template #right>
+            <div class="right">
+              <p class="biz-tpl-desc" v-if="templatesetCount">{{$t('deploy.templateset.total')}} <strong>{{templatesetCount}}</strong> {{$t('units.suffix.units')}}</p>
+              <div class="biz-search-input" style="width: 300px;">
+                <bkbcs-input
+                  right-icon="bk-icon icon-search"
+                  clearable
+                  :placeholder="$t('generic.placeholder.search')"
+                  v-model="searchKeyword"
+                  @enter="search"
+                  @clear="clearSearch">
+                </bkbcs-input>
+              </div>
+            </div>
+          </template>
+        </Row>
         <svg style="display: none;">
           <title>{{$t('deploy.templateset.icon')}}</title>
           <symbol id="biz-set-icon" viewBox="0 0 32 32">
@@ -417,16 +420,17 @@
         </div>
       </div>
     </bk-dialog>
-  </div>
+  </BcsContent>
 </template>
 
 <script>
 import { catchErrorHandler } from '@/common/util';
-import Header from '@/components/layout/Header.vue';
+import BcsContent from '@/components/layout/Content.vue';
+import Row from '@/components/layout/Row.vue';
 import PopoverSelector from '@/components/popover-selector.vue';
 
 export default {
-  components: { Header, PopoverSelector },
+  components: { BcsContent, Row, PopoverSelector },
   data() {
     return {
       fileImportIndex: 0,

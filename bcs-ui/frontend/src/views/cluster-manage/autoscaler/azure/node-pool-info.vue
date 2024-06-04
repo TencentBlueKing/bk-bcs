@@ -1,8 +1,8 @@
 <template>
-  <div class="node-pool-wrapper">
+  <div class="h-full">
     <bcs-resize-layout
       placement="right"
-      :class="collapse ? '' : 'node-pool'"
+      :class="[collapse ? '' : 'node-pool', showFooter ? 'h-[calc(100%-60px)]':'h-full']"
       collapsible
       :initial-divide="400"
       :border="false"
@@ -306,9 +306,6 @@ export default defineComponent({
 });
 </script>
 <style lang="postcss" scoped>
-.node-pool-wrapper {
-  height: calc(100vh - 104px);
-}
 >>> .bk-resize-layout>.bk-resize-layout-aside:after {
   content: unset;
 }
@@ -322,13 +319,10 @@ export default defineComponent({
   height: 100%;
   overflow: auto;
   background: #fff;
-  >>> .content-wrapper {
-    max-height: calc(100vh - 224px);
-  }
 }
 .main {
-  max-height: calc(100vh - 164px);
   overflow: auto;
   padding: 24px;
+  height: 100%;
 }
 </style>

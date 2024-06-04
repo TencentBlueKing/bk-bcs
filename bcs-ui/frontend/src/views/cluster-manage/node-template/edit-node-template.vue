@@ -837,7 +837,7 @@ export default defineComponent({
     .node-template-aside {
         border: 1px solid #dcdee5;
         border-left: none;
-        height: 100%;
+        height: calc(100% - 60px);
         overflow: auto;
         background: #fff;
     }
@@ -958,7 +958,7 @@ export default defineComponent({
     }
 }
 >>> .template-resize {
-    height: auto;
+    height: 100%;
     .bk-resize-layout-aside:after {
         width: 0;
     }
@@ -966,7 +966,7 @@ export default defineComponent({
         margin: 0 24px;
     }
     .bk-resize-layout-main {
-        height: calc(100vh - 200px);
+        height: calc(100% - 60px);
         overflow: auto;
     }
     &.bk-resize-layout-collapsed {

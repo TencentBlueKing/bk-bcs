@@ -17,7 +17,7 @@ import useTableData from './use-table-data';
 import { restartGameWorkloads, restartWorkloads } from '@/api/modules/cluster-resource';
 import $bkMessage from '@/common/bkmagic';
 import { bus } from '@/common/bus';
-import Header from '@/components/layout/Header.vue';
+import ContentHeader from '@/components/layout/Header.vue';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 import { useCluster } from '@/composables/use-app';
 import useInterval from '@/composables/use-interval';
@@ -690,9 +690,9 @@ export default defineComponent({
     };
 
     return (
-      <div class="flex flex-col relative h-full overflow-hidden"
+      <div class="flex flex-col relative h-full"
         v-bkloading={{ isLoading: this.isLoading, opacity: 1, color: '#f5f7fa' }}>
-        <Header
+        <ContentHeader
           class="flex-[0_0_auto] !h-[66px] !border-b-0 !shadow-none !bg-inherit"
           {
             ...{
@@ -717,7 +717,7 @@ export default defineComponent({
               ) : null
             }
           </div>
-        </Header>
+        </ContentHeader>
         <div class="dashboard-content flex-1 px-[24px] pb-[16px] overflow-auto">
           {
               this.$scopedSlots.default?.({

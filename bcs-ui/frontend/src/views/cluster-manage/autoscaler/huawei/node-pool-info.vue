@@ -1,8 +1,8 @@
 <template>
-  <div class="node-pool-wrapper">
+  <div class="h-full">
     <bcs-resize-layout
       placement="right"
-      :class="collapse ? '' : 'node-pool'"
+      :class="[collapse ? '' : 'node-pool', showFooter ? 'h-[calc(100%-60px)]':'h-full']"
       collapsible
       :initial-divide="400"
       :border="false"
@@ -157,7 +157,6 @@
 import { defineComponent, onMounted, ref, toRefs } from 'vue';
 
 import BkSops from '../bk-sops.vue';
-import KubeletParams from '../kubelet-params.vue';
 
 import BasicPoolInfo from './basic-pool-info.vue';
 
@@ -168,7 +167,7 @@ import ActionDoc from '@/views/cluster-manage/components/action-doc.vue';
 
 export default defineComponent({
   name: 'NodePoolInfo',
-  components: { FormGroup, BasicPoolInfo, KubeletParams, BkSops, ActionDoc },
+  components: { FormGroup, BasicPoolInfo, BkSops, ActionDoc },
   props: {
     schema: {
       type: Object,
@@ -330,9 +329,6 @@ export default defineComponent({
 });
 </script>
 <style lang="postcss" scoped>
-.node-pool-wrapper {
-  height: calc(100vh - 104px);
-}
 >>> .bk-resize-layout>.bk-resize-layout-aside:after {
   content: unset;
 }
@@ -346,13 +342,10 @@ export default defineComponent({
   height: 100%;
   overflow: auto;
   background: #fff;
-  >>> .content-wrapper {
-    max-height: calc(100vh - 224px);
-  }
 }
 .main {
-  max-height: calc(100vh - 164px);
   overflow: auto;
   padding: 24px;
+  height: 100%;
 }
 </style>

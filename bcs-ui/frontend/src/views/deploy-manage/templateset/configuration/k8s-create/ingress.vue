@@ -1,14 +1,16 @@
 <!-- eslint-disable max-len -->
 <template>
-  <div class="biz-content">
-    <biz-header
-      ref="commonHeader"
-      @exception="exceptionHandler"
-      @saveIngressSuccess="saveIngressSuccess"
-      @switchVersion="initResource"
-      @exmportToYaml="exportToYaml">
-    </biz-header>
-    <div class="biz-content-wrapper biz-confignation-wrapper" v-bkloading="{ isLoading: isTemplateSaving }">
+  <BcsContent>
+    <template #header>
+      <biz-header
+        ref="commonHeader"
+        @exception="exceptionHandler"
+        @saveIngressSuccess="saveIngressSuccess"
+        @switchVersion="initResource"
+        @exmportToYaml="exportToYaml">
+      </biz-header>
+    </template>
+    <div class="biz-confignation-wrapper" v-bkloading="{ isLoading: isTemplateSaving }">
       <div class="biz-tab-box" v-show="!isDataLoading" style="overflow:hidden;">
         <biz-tabs @tab-change="tabResource" ref="commonTab"></biz-tabs>
         <bk-dialog
@@ -93,7 +95,7 @@
         </div>
       </div>
     </div>
-  </div>
+  </BcsContent>
 </template>
 
 <script>
@@ -106,6 +108,7 @@
 import header from './header.vue';
 import tabs from './tabs.vue';
 
+import BcsContent from '@/components/layout/Content.vue';
 import ingressParams from '@/json/k8s-ingress.json';
 
 export default {
@@ -113,6 +116,7 @@ export default {
   components: {
     'biz-header': header,
     'biz-tabs': tabs,
+    BcsContent,
   },
   data() {
     return {
