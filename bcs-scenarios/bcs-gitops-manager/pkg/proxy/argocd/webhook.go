@@ -13,14 +13,17 @@
 package argocd
 
 import (
-	"context"
 	"net/http"
-	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 	"github.com/gorilla/mux"
+	"gopkg.in/go-playground/webhooks.v5/github"
+	"gopkg.in/go-playground/webhooks.v5/gitlab"
 
 	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/utils"
 )
 
 // WebhookPlugin defines the webhook plugin
@@ -28,6 +31,10 @@ type WebhookPlugin struct {
 	*mux.Router
 	middleware    mw.MiddlewareInterface
 	appsetWebhook string
+	storage       store.Store
+
+	github *github.Webhook
+	gitlab *gitlab.Webhook
 }
 
 // Init initialize webhook plugin
@@ -42,24 +49,70 @@ func (plugin *WebhookPlugin) Init() error {
 func (plugin *WebhookPlugin) executeWebhook(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	user := mw.User(r.Context())
 	requestID := mw.RequestID(r.Context())
+	reqCopy, err := utils.DeepCopyHttpRequest(r, plugin.appsetWebhook)
+	if err != nil {
+		blog.Errorf("RequestID[%s] copy webhook request failed: %s", mw.RequestID(r.Context()), err.Error())
+	} else {
+		go plugin.forwardToApplicationSet(reqCopy, requestID)
+	}
 	blog.Infof("RequestID[%s], user %s request webhook", requestID, user.GetUser())
 	return r, mw.ReturnArgoReverse()
 }
 
-// nolint  unused
+// forwardToApplicationSet this will check the webhook repoURL whether matched appset's git generator
+// it'll refresh appset if matched.
 func (plugin *WebhookPlugin) forwardToApplicationSet(r *http.Request, requestID string) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-	defer cancel()
-	r = r.WithContext(ctx)
-	resp, err := http.DefaultClient.Do(r)
-	if err != nil {
-		blog.Errorf("RequestID[%s] webhook forward to appset controller failed: %s", requestID, err.Error())
+	var payloadIf interface{}
+	var err error
+	switch {
+	case r.Header.Get("X-GitHub-Event") != "":
+		payloadIf, err = plugin.github.Parse(r, github.PushEvent, github.PingEvent)
+		if err != nil {
+			blog.Errorf("RequestID[%s] github event parse failed: %s", requestID, err.Error())
+			return
+		}
+	case r.Header.Get("X-Gitlab-Event") != "":
+		payloadIf, err = plugin.gitlab.Parse(r, gitlab.PushEvents, gitlab.TagEvents, gitlab.SystemHookEvents)
+		if err != nil {
+			blog.Errorf("RequestID[%s] gitlab event parse failed: %s", requestID, err.Error())
+			return
+		}
+	default:
+		blog.Errorf("RequestID[%s] ignore unknown event", requestID)
 		return
 	}
-	if resp.StatusCode != http.StatusOK {
-		blog.Errorf("RequestID[%s] webhook forward to appset controller resp code %d",
-			requestID, resp.StatusCode)
+	var repoURL string
+	switch payload := payloadIf.(type) {
+	case github.PushPayload:
+		repoURL = payload.Repository.HTMLURL
+	case gitlab.PushEventPayload:
+		repoURL = payload.Project.WebURL
+	default:
+		blog.Errorf("RequestID[%s] ignore unknown webhook payload type", requestID)
 		return
 	}
-	blog.Infof("RequestID[%s] webhook forward to appset controller success", requestID)
+	blog.Infof("RequestID[%s] repo url: %s", requestID, repoURL)
+
+	appSets := plugin.storage.AllApplicationSets()
+	refreshAppSets := make([]*v1alpha1.ApplicationSet, 0)
+	for _, k8sAppSet := range appSets {
+		for i := range k8sAppSet.Spec.Generators {
+			gitGenerator := k8sAppSet.Spec.Generators[i].Git
+			if gitGenerator == nil {
+				continue
+			}
+			if utils.CheckGitRepoSimilar(gitGenerator.RepoURL, repoURL) {
+				refreshAppSets = append(refreshAppSets, k8sAppSet)
+				break
+			}
+		}
+	}
+	for _, k8sAppSet := range refreshAppSets {
+		if err = plugin.storage.RefreshApplicationSet(k8sAppSet.Namespace, k8sAppSet.Name); err != nil {
+			blog.Errorf("RequestID[%s] refresh appset '%s' failed with webhook: %s",
+				requestID, k8sAppSet.Name, err.Error())
+		} else {
+			blog.Infof("RequestID[%s] refresh appset '%s' success", requestID, k8sAppSet.Name)
+		}
+	}
 }

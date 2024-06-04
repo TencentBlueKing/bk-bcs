@@ -1,0 +1,8 @@
+{{ include "common.metadata" . }}
+- - group:
+      - [ "type", "accessModes" ]
+      - [ "scName", "storageSize" ]
+      - [ "localPath", ".", "." ]
+      - [ "hostPath", "hostPathType", "." ]
+      - [ "nfsPath", "nfsServer", "nfsReadOnly" ]
+    prop: spec

@@ -1,0 +1,75 @@
+title: endpoints
+type: object
+properties:
+  {{- include "common.metadata" . | indent 2 }}
+  spec:
+    title: {{ i18n "配置信息" .lang }}
+    type: object
+    properties:
+      subsets:
+        title: SubSets
+        type: array
+        minItems: 1
+        items:
+          type: object
+          properties:
+            addresses:
+              title: Address
+              type: array
+              minItems: 1
+              items:
+                type: string
+                ui:rules:
+                  - required
+                  - maxLength128
+              ui:component:
+                name: bfArray
+            ports:
+              title: Ports
+              type: array
+              minItems: 1
+              items:
+                type: object
+                properties:
+                  name:
+                    title: {{ i18n "名称" .lang }}
+                    type: string
+                    ui:rules:
+                      - required
+                      - maxLength64
+                  port:
+                    title: {{ i18n "端口" .lang }}
+                    type: integer
+                    ui:component:
+                      props:
+                        min: 1
+                        max: 65535
+                    ui:rules:
+                      - validator: "{{`{{`}} $self.value {{`}}`}}"
+                        message: {{ i18n "值不能为空" .lang }}
+                  protocol:
+                    title: {{ i18n "协议" .lang }}
+                    type: string
+                    default: TCP
+                    ui:component:
+                      name: select
+                      props:
+                        clearable: false
+                        datasource:
+                          - label: TCP
+                            value: TCP
+                          - label: UDP
+                            value: UDP
+              ui:component:
+                name: bfArray
+          ui:group:
+            props:
+              type: normal
+            style:
+              background: '#F5F7FA'
+    ui:group:
+      props:
+        verifiable: true
+        border: false
+        showTitle: true
+        type: card

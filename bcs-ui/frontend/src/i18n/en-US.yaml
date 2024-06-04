@@ -1120,6 +1120,7 @@ cluster:
           label:
             purchaseDataDisk: Purchase data disk
             mountPath: Format and mount it on
+            huaweiMountPath: Mounted path
             configurationFee:
               text: Configuration fee
               unit: '￥ {price} yuan/hour'
@@ -1153,6 +1154,11 @@ cluster:
             Premium_LRS: Premium SSD
             PremiumV2_LRS: Premium SSD v2
             Premium_ZRS: Premium SSD_ZRS
+            SATA: Standard I/O Cloud Disk
+            SAS: High I/O Cloud Disk
+            GPSSD: Ultra-High I/O Cloud Disk
+            SSD: General-Purpose SSD Cloud Disk
+            ESSD: Extreme I/O Cloud Disk
           disk:
             system: System disk
             data: Data disk
@@ -3205,7 +3211,7 @@ huaweiCloud:
     managed: managed cluster
     aksDesc: >-
       The Master and Etcd of the Kubernetes cluster will be centrally managed
-      and maintained by the AKS team, and cluster administrators do not need to
+      and maintained by the Huawei team, and cluster administrators do not need to
       concern themselves with the management and maintenance of the cluster
       Master.
     cluster: ''

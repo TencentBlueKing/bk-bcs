@@ -47,6 +47,14 @@ const AzureNodePoolDetail = () => import(/* webpackChunkName: 'cluster' */'@/vie
 // 编辑配置
 const AzureEditNodePool = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/autoscaler/azure/edit-node-pool.vue');
 
+// huawei ca
+// 新建节点池
+const HuaweiNodePool = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/autoscaler/huawei/node-pool.vue');
+// 扩缩容记录
+const HuaweiNodePoolDetail = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/autoscaler/huawei/node-pool-detail.vue');
+// 编辑配置
+const HuaweiEditNodePool = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/autoscaler/huawei/edit-node-pool.vue');
+
 // 集群管理
 export default [
   {
@@ -272,13 +280,16 @@ export default [
       const clusterList = $store.state.cluster.clusterList as ICluster[];
       const cluster = clusterList.find(item => item.clusterID === to.params.clusterId);
       let name = '';
-      // 优化,增加azureCA节点新建
+      // 优化,增加azureCA,huawei节点新建
       switch (cluster?.provider) {
         case 'gcpCloud':
           name = 'googleNodePool';
           break;
         case 'azureCloud':
           name = 'azureNodePool';
+          break;
+        case 'huaweiCloud':
+          name = 'huaweiNodePool';
           break;
       }
       name ? next({
@@ -301,13 +312,16 @@ export default [
       const clusterList = $store.state.cluster.clusterList as ICluster[];
       const cluster = clusterList.find(item => item.clusterID === to.params.clusterId);
       let name = '';
-      // 优化，增加azureCA节点配置
+      // 优化，增加azureCA,huaweiCA节点配置
       switch (cluster?.provider) {
         case 'gcpCloud':
           name = 'googleEditNodePool';
           break;
         case 'azureCloud':
           name = 'azureEditNodePool';
+          break;
+        case 'huaweiCloud':
+          name = 'huaweiEditNodePool';
           break;
       }
       name ? next({
@@ -330,13 +344,16 @@ export default [
       const clusterList = $store.state.cluster.clusterList as ICluster[];
       const cluster = clusterList.find(item => item.clusterID === to.params.clusterId);
       let name = '';
-      // 优化，增加azureCA节点池详情
+      // 优化，增加azureCA,huaweiCA节点池详情
       switch (cluster?.provider) {
         case 'gcpCloud':
           name = 'googleNodePoolDetail';
           break;
         case 'azureCloud':
           name = 'azureNodePoolDetail';
+          break;
+        case 'huaweiCloud':
+          name = 'huaweiNodePoolDetail';
           break;
       }
       name ? next({
@@ -403,6 +420,37 @@ export default [
     name: 'azureNodePoolDetail',
     props: true,
     component: AzureNodePoolDetail,
+    meta: {
+      menuId: 'CLUSTER',
+      hideMenu: true,
+    },
+  },
+  // huawei ca
+  {
+    path: 'cluster/:clusterId/huawei/nodepools',
+    name: 'huaweiNodePool',
+    props: true,
+    component: HuaweiNodePool,
+    meta: {
+      menuId: 'CLUSTER',
+      hideMenu: true,
+    },
+  },
+  {
+    path: 'cluster/:clusterId/huawei/nodepools/:nodeGroupID',
+    name: 'huaweiEditNodePool',
+    props: true,
+    component: HuaweiEditNodePool,
+    meta: {
+      menuId: 'CLUSTER',
+      hideMenu: true,
+    },
+  },
+  {
+    path: 'cluster/:clusterId/huawei/nodepools/:nodeGroupID/detail',
+    name: 'huaweiNodePoolDetail',
+    props: true,
+    component: HuaweiNodePoolDetail,
     meta: {
       menuId: 'CLUSTER',
       hideMenu: true,

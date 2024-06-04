@@ -1,0 +1,29 @@
+{{ include "common.metadata" . }}
+- - group:
+      - [ "type", "." ]
+    prop: controller
+- - group:
+      - - group:
+            - - group:
+                  - [ "domain", "." ]
+                  - - group:
+                        - [ "type", "path", "targetSVC", "port", "." ]
+                      container:
+                        grid-template-columns: "1fr 1fr 1fr 1fr auto"
+                      prop: paths
+                prop: rules
+          prop: ruleConf
+      - - group:
+            - [ "clbUseType", ".", "." ]
+          prop: network
+      - - group:
+            - [ "targetSVC", "port" ]
+          prop: defaultBackend
+      - - group:
+            - [ "autoRewriteHttp", "." ]
+            - - group:
+                  - [ "secretName", "." ]
+                  - [ "hosts", "." ]
+                prop: tls
+          prop: cert
+    prop: spec

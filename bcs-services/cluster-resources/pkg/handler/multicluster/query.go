@@ -178,11 +178,11 @@ func listNamespaceResources(ctx context.Context, clusterID string, namespaces []
 	}
 	// 如果命名空间为空，则查询所有命名空间，如果命名空间数量大于 5，则查全部命名空间并最后筛选命名空间，这样能减少并发请求
 	filterNamespace := namespaces
-	if len(namespaces) == 0 || len(namespaces) >= 5 {
+	if len(namespaces) == 0 {
 		filterNamespace = []string{""}
 	}
 	errGroups := errgroup.Group{}
-	errGroups.SetLimit(20)
+	errGroups.SetLimit(5)
 	result := []*storage.Resource{}
 	mux := sync.Mutex{}
 	// 根据命名空间列表，并发查询资源

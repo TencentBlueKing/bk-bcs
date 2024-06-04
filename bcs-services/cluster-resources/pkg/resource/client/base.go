@@ -18,6 +18,7 @@ import (
 	"strings"
 
 	"github.com/adevjoe/opentelemetry-go-contrib/instrumentation/k8s.io/client-go/transport"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -64,8 +65,23 @@ func (c *ResClient) List(
 	if err := c.permValidate(ctx, action.List, namespace); err != nil {
 		return nil, err
 	}
-	ret, err := c.cli.Resource(c.res).Namespace(namespace).List(ctx, opts)
-	return ret, c.handleErr(ctx, err)
+	var object map[string]interface{}
+	result := make([]unstructured.Unstructured, 0)
+	opts.Limit = int64(defaultLimit)
+	opts.Continue = ""
+	for {
+		ret, err := c.cli.Resource(c.res).Namespace(namespace).List(ctx, opts)
+		if err != nil {
+			return nil, c.handleErr(ctx, err)
+		}
+		object = ret.Object
+		result = append(result, ret.Items...)
+		if ret.GetContinue() == "" {
+			break
+		}
+		opts.Continue = ret.GetContinue()
+	}
+	return &unstructured.UnstructuredList{Object: object, Items: result}, c.handleErr(ctx, nil)
 }
 
 // ListWithoutPerm 获取资源列表，不做权限校验
@@ -148,6 +164,29 @@ func (c *ResClient) Update(
 	}
 	ret, err := c.cli.Resource(c.res).Namespace(namespace).Update(
 		ctx, &unstructured.Unstructured{Object: manifest}, opts)
+	return ret, c.handleErr(ctx, err)
+}
+
+// ApplyWithoutPerm 创建或更新资源，不做权限校验
+func (c *ResClient) ApplyWithoutPerm(
+	ctx context.Context, manifest map[string]interface{}, opts metav1.CreateOptions,
+) (*unstructured.Unstructured, error) {
+	name := mapx.GetStr(manifest, "metadata.name")
+	namespace := mapx.GetStr(manifest, "metadata.namespace")
+	if name == "" {
+		return nil, errorx.New(errcode.ValidateErr, i18n.GetMsg(ctx, "metadata.name 必须指定"))
+	}
+	_, err := c.cli.Resource(c.res).Namespace(namespace).Get(ctx, name, metav1.GetOptions{})
+	if err != nil && errors.IsNotFound(err) {
+		if !errors.IsNotFound(err) {
+			return nil, c.handleErr(ctx, err)
+		}
+		ret, errr := c.cli.Resource(c.res).Namespace(namespace).Create(
+			ctx, &unstructured.Unstructured{Object: manifest}, opts)
+		return ret, c.handleErr(ctx, errr)
+	}
+	ret, err := c.cli.Resource(c.res).Namespace(namespace).Update(
+		ctx, &unstructured.Unstructured{Object: manifest}, metav1.UpdateOptions{})
 	return ret, c.handleErr(ctx, err)
 }
 

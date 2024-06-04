@@ -259,7 +259,7 @@
     :title="t('确认删除该配置文件？')"
     @confirm="handleDeleteConfigConfirm">
     <div style="margin-bottom: 8px">
-      {{ t('配置文件') }}：<span style="color: #313238">{{ deleteConfig?.name }}</span>
+      {{ t('配置文件') }}：<span style="color: #313238">{{ fileAP(deleteConfig!) }}</span>
     </div>
     <div>{{ deleteConfigTips }}</div>
   </DeleteConfirmDialog>
@@ -272,6 +272,16 @@
       {{ t('配置模板套餐') }}: <span style="color: #313238">{{ deleteTemplatePkgName }}</span>
     </div>
     <div>{{ t('移除后本服务配置将不再引用该配置模板套餐，以后需要时可以重新从配置模板导入') }}</div>
+  </DeleteConfirmDialog>
+  <DeleteConfirmDialog
+    v-model:isShow="isRecoverConfigDialogShow"
+    :title="t('确认恢复该配置文件?')"
+    :confirm-text="t('恢复')"
+    @confirm="handleRecoverConfigConfirm">
+    <div style="margin-bottom: 8px">
+      {{ t('配置文件') }}：<span style="color: #313238">{{ fileAP(recoverConfig!) }}</span>
+    </div>
+    <div>{{ t(`配置文件恢复后，将覆盖新添加的配置文件`) + fileAP(recoverConfig!) }}</div>
   </DeleteConfirmDialog>
 </template>
 <script lang="ts" setup>
@@ -365,6 +375,9 @@
   const isSearchEmpty = ref(false);
   const isDeleteConfigDialogShow = ref(false);
   const deleteConfig = ref<IConfigTableItem>();
+  const recoverConfig = ref<IConfigTableItem>();
+  const isRecoverConfigDialogShow = ref(false);
+  const oldConfigIndex = ref(-1);
   const isDeletePkgDialogShow = ref(false);
   const deleteTemplatePkgName = ref('');
   const deleteTemplatePkgId = ref(0);
@@ -412,13 +425,13 @@
   });
 
   // 配置文件绝对路径
-  const fileAP = computed(() => (config: IConfigTableItem) => {
+  const fileAP = (config: IConfigTableItem) => {
     const { path, name } = config;
     if (path.endsWith('/')) {
       return `${path}${name}`;
     }
     return `${path}/${name}`;
-  });
+  };
 
   // 状态过滤列表
   const statusFilterList = computed(() => {
@@ -794,9 +807,27 @@
     if (permCheckLoading.value || !checkPermBeforeOperate('update')) {
       return;
     }
-    await unDeleteConfigItem(props.bkBizId, props.appId, config.id);
+    recoverConfig.value = config;
+    const configs = tableGroupsData.value.find((group) => group.id === 0)?.configs;
+    oldConfigIndex.value = configs!.findIndex(
+      (item) => fileAP(item) === fileAP(config) && item.file_state !== 'DELETE',
+    );
+    if (oldConfigIndex.value === -1) {
+      handleRecoverConfigConfirm();
+    } else {
+      isRecoverConfigDialogShow.value = true;
+    }
+  };
+
+  const handleRecoverConfigConfirm = async () => {
+    await unDeleteConfigItem(props.bkBizId, props.appId, recoverConfig.value!.id);
+    isRecoverConfigDialogShow.value = false;
     Message({ theme: 'success', message: t('恢复配置文件成功') });
-    config.file_state = 'UNCHANGE';
+    recoverConfig.value!.file_state = 'UNCHANGE';
+    if (oldConfigIndex.value !== -1) {
+      const configs = tableGroupsData.value.find((group) => group.id === 0)?.configs;
+      configs!.splice(oldConfigIndex.value, 1);
+    }
   };
 
   // 批量删除配置项后刷新配置项列表

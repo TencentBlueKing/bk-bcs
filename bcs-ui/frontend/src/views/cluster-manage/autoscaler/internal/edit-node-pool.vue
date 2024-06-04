@@ -153,7 +153,6 @@ export default defineComponent({
         region: curCluster.value.region,
         updater: user.value.username,
       };
-      console.log(data, detailData.value, nodeConfigData, nodePoolData);
       const result = await $store.dispatch('clustermanager/updateNodeGroup', data);
       saveLoading.value = false;
       if (result) {

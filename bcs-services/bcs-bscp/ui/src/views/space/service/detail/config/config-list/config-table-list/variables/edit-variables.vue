@@ -1,6 +1,10 @@
 <template>
   <bk-button
     v-cursor="{ active: !hasEditServicePerm }"
+    v-bk-tooltips="{
+      disabled: !hasEditServicePerm || variableList.length > 0,
+      content: t('未在配置文件中检测到变量，请确保配置文件中包含变量后再尝试设置变量'),
+    }"
     :class="{ 'bk-button-with-no-perm': !hasEditServicePerm }"
     @click="handleOpenSlider"
     :disabled="variableList.length === 0">

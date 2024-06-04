@@ -23,7 +23,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api/logrule"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bcs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/discovery"
@@ -67,7 +66,6 @@ func runAPIServer(ctx context.Context, g *run.Group, opt *option) error {
 	g.Add(sd.Run, func(error) {})
 
 	bcs.CacheListClusters()
-	logrule.AutoCleanLogRule()
 
 	return nil
 }

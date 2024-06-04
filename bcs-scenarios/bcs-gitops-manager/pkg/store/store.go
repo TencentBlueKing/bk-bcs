@@ -88,6 +88,8 @@ type Store interface {
 	UpdateApplicationSpec(ctx context.Context, spec *appclient.ApplicationUpdateSpecRequest) (
 		*v1alpha1.ApplicationSpec, error)
 
+	AllApplicationSets() []*v1alpha1.ApplicationSet
+	RefreshApplicationSet(namespace, name string) error
 	GetApplicationSet(ctx context.Context, name string) (*v1alpha1.ApplicationSet, error)
 	ListApplicationSets(ctx context.Context, query *appsetpkg.ApplicationSetListQuery) (
 		*v1alpha1.ApplicationSetList, error)
@@ -106,6 +108,7 @@ func NewStore(opt *Options) Store {
 	globalStore = &argo{
 		option:           opt,
 		cacheApplication: &sync.Map{},
+		cacheAppSet:      &sync.Map{},
 		cacheAppProject:  &sync.Map{},
 	}
 	return globalStore

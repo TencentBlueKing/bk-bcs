@@ -96,7 +96,7 @@
             </bk-loading>
           </div>
         </div>
-        <div v-else class="children-menu-wrap" v-click-outside="() => (isShowPopover = false)">
+        <div v-else class="children-menu-wrap" v-click-outside="handleChildSelectorClickOutside">
           <div v-for="item in childSelectorData" :key="item.value" class="search-item" @click="handleSelectChild(item)">
             {{ item.name }}
           </div>
@@ -172,7 +172,13 @@
 <script lang="ts" setup>
   import { nextTick, ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
   import { storeToRefs } from 'pinia';
-  import { CLIENT_SEARCH_DATA, CLIENT_STATISTICS_SEARCH_DATA, CLIENT_STATUS_MAP } from '../../../../constants/client';
+  import {
+    CLIENT_SEARCH_DATA,
+    CLIENT_STATISTICS_SEARCH_DATA,
+    CLIENT_STATUS_MAP,
+    CLIENT_ERROR_CATEGORY_MAP,
+    CLIENT_COMPONENT_TYPES_MAP,
+  } from '../../../../constants/client';
   import { ISelectorItem, ISearchCondition, ICommonlyUsedItem, IClinetCommonQuery } from '../../../../../types/client';
   import {
     getClientSearchRecord,
@@ -220,6 +226,7 @@
   const isShowAllCommonSearchPopover = ref(false);
   const editSearchStr = ref('');
   const editInputRef = ref();
+  const editConditionItem = ref<ISearchCondition>();
   const menuOffset = ref(0);
   const inputWrapRef = ref();
   const dateTime = ref(getTimeRange(1));
@@ -230,9 +237,12 @@
 
   const inputPlacehoder = computed(() => {
     if (searchConditionList.value.length || searchStr.value || inputFocus.value) return '';
-    return isClientSearch.value
-      ? t('UID/IP/标签/源版本/最近一次拉取配置状态/在线状态/客户端组件类型/客户端组件版本/配置拉取时间范围')
-      : t('标签/源版本/最近一次拉取配置状态/在线状态/客户端组件类型/客户端组件版本');
+    if (isClientSearch.value) {
+      return t(
+        'UID/IP/标签/当前配置版本/最近一次拉取配置状态/在线状态/客户端组件类型/客户端组件版本/配置拉取时间范围/错误类别',
+      );
+    }
+    return t('标签/当前配置版本/最近一次拉取配置状态/在线状态/客户端组件类型/客户端组件版本');
   });
 
   const isClientSearch = computed(() => route.name === 'client-search');
@@ -298,7 +308,8 @@
     handleGetSearchList('common');
     const entries = Object.entries(route.query);
     if (entries.length === 0) return;
-    const { name, value } = CLIENT_SEARCH_DATA.find((item) => item.value === entries[0][0])!;
+    const { name, value, children } = CLIENT_SEARCH_DATA.find((item) => item.value === entries[0][0])!;
+
     if (value === 'pull_time') {
       searchConditionList.value.push({
         content: `${name} : ${entries[0][1]} 00:00:00 - ${entries[0][1]} 23:59:59`,
@@ -306,9 +317,23 @@
         key: value,
         isEdit: false,
       });
+    } else if (value === 'label') {
+      const labels = JSON.parse(entries[0][1] as string);
+      Object.keys(labels).forEach((key) => {
+        searchConditionList.value.push({
+          content: `标签: ${key}=${labels[key]}`,
+          value: `${key}=${labels[key]}`,
+          key: value,
+          isEdit: false,
+        });
+      });
     } else {
+      let content = `${entries[0][1]}`;
+      if (children) {
+        content = children.find((item) => item.value === entries[0][1])!.name;
+      }
       searchConditionList.value.push({
-        content: `${name} : ${entries[0][1]}`,
+        content: `${name} : ${content}`,
         value: entries[0][1] as string,
         key: value,
         isEdit: false,
@@ -324,6 +349,7 @@
 
   // 选择父选择器
   const handleSelectParent = (parentSelectorItem: ISelectorItem) => {
+    isShowSearchInput.value = true;
     parentSelecte.value = parentSelectorItem;
     // 如果有子选择项就展示 没有就用户手动输入
     if (parentSelectorItem.value === 'pull_time') {
@@ -331,10 +357,9 @@
       nextTick(() => datePickerRef.value.handleFocus());
     } else if (parentSelectorItem?.children) {
       childSelectorData.value = parentSelectorItem.children;
-      menuOffset.value = inputWrapRef.value.offsetLeft;
+      nextTick(() => (menuOffset.value = inputWrapRef.value.offsetLeft));
       showChildSelector.value = true;
     } else {
-      isShowSearchInput.value = true;
       isShowPopover.value = false;
       nextTick(() => inputRef.value.focus());
     }
@@ -451,6 +476,7 @@
   // 删除查询条件
   const handleConditionClose = (index: number) => {
     searchConditionList.value.splice(index, 1);
+    showChildSelector.value = false;
   };
 
   // 添加最近查询
@@ -605,6 +631,26 @@
           isEdit: false,
         });
         searchName.push(content);
+      } else if (key === 'failed_reason') {
+        const errorItem = CLIENT_ERROR_CATEGORY_MAP.find((item) => item.value === query[key]);
+        const content = `${selectorData.value.find((item) => item.value === key)?.name} : ${errorItem?.name}`;
+        searchList.push({
+          key,
+          value: query[key],
+          content,
+          isEdit: false,
+        });
+        searchName.push(content);
+      } else if (key === 'client_type') {
+        const clientType = CLIENT_COMPONENT_TYPES_MAP.find((item) => item.value === query[key]);
+        const content = `${selectorData.value.find((item) => item.value === key)?.name} : ${clientType?.name}`;
+        searchList.push({
+          key,
+          value: query[key],
+          content,
+          isEdit: false,
+        });
+        searchName.push(content);
       } else {
         const content = `${selectorData.value.find((item) => item.value === key)?.name} : ${query[key]}`;
         searchList.push({
@@ -639,6 +685,7 @@
   const handleConditionClick = (e: any, condition: ISearchCondition) => {
     e.preventDefault();
     e.stopPropagation();
+    editConditionItem.value = condition;
     condition.isEdit = true;
     editSearchStr.value = condition.content;
     parentSelecte.value = selectorData.value.find((item) => item.value === condition.key);
@@ -687,6 +734,19 @@
         condition.isEdit = false;
       }
     }
+  };
+
+  const handleChildSelectorClickOutside = () => {
+    if (editSearchStr.value) {
+      // 编辑态 取消编辑
+      editConditionItem.value!.isEdit = false;
+      editSearchStr.value = '';
+    } else if (searchStr.value) {
+      // 新增态 状态复原
+      searchStr.value = '';
+    }
+    isShowPopover.value = false;
+    showChildSelector.value = false;
   };
 </script>
 

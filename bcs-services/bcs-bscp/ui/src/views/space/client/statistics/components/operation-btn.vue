@@ -77,6 +77,8 @@
     allLabel?: string[];
     primaryDimension?: string;
     needDown?: boolean;
+    selectDimension?: string[];
+    drillDimension?: string;
   }>();
 
   const emits = defineEmits([
@@ -89,14 +91,21 @@
   ]);
 
   const chartShowType = ref('tile');
-  const minorDimension = ref([`${props.primaryDimension}`]);
-  const downDimension = ref('');
+  const minorDimension = ref(props.selectDimension || []);
+  const downDimension = ref(props.drillDimension || '');
   const downDimensionSelectRef = ref();
 
   watch(
     () => chartShowType.value,
     (val) => {
       emits('toggleChartShowType', val);
+    },
+  );
+
+  watch(
+    () => props.selectDimension,
+    () => {
+      minorDimension.value = props.selectDimension || [];
     },
   );
 

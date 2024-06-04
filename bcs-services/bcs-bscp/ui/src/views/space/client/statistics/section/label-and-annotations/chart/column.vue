@@ -1,18 +1,20 @@
 <template>
   <div ref="canvasRef" class="canvas-wrap">
     <Tooltip
-      :need-down-icon="!!drillDownDemension"
+      :need-down-icon="!!drillDownDemension && !isDrillDown"
       :down="drillDownDemension"
       ref="tooltipRef"
-      @jump="emits('jump', foreignVal)" />
+      @jump="emits('jump', { label: jumpLabels, drillDownVal: drillDownVal })" />
   </div>
 </template>
 
 <script lang="ts" setup>
   import { onMounted, ref, watch } from 'vue';
-  import { Column, Datum } from '@antv/g2plot';
+  import { Column } from '@antv/g2plot';
   import { IClientLabelItem } from '../../../../../../../../types/client';
   import Tooltip from '../../../components/tooltip.vue';
+  import { useI18n } from 'vue-i18n';
+  const { t } = useI18n();
 
   const props = defineProps<{
     data: IClientLabelItem[];
@@ -20,12 +22,14 @@
     appId: number;
     chartShowType: string;
     drillDownDemension: string;
+    isDrillDown: boolean;
   }>();
   const emits = defineEmits(['jump', 'drillDown']);
 
   const canvasRef = ref<HTMLElement>();
   const tooltipRef = ref();
-  const foreignVal = ref('');
+  const drillDownVal = ref('');
+  const jumpLabels = ref<{ [key: string]: string }>();
   let columnPlot: Column;
 
   watch(
@@ -40,8 +44,9 @@
     (val) => {
       if (val === 'tile') {
         columnPlot.update({
-          isGroup: true,
           isStack: false,
+          xField: 'x_field',
+          color: ['#3E96C2'],
           label: {
             // 可手动配置 label 数据标签位置
             position: 'top', // 'top', 'bottom', 'middle',
@@ -50,17 +55,63 @@
               fill: '#979BA5',
             },
           },
+          tooltip: {
+            customItems: (originalItems: any[]) => {
+              const datum = originalItems[0].data as IClientLabelItem;
+              if (datum.foreign_val === datum.primary_key) {
+                jumpLabels.value = { [datum.primary_key]: datum.primary_val };
+              } else {
+                jumpLabels.value = { [datum.primary_key]: datum.primary_val, [datum.foreign_key]: datum.foreign_val };
+              }
+              drillDownVal.value = originalItems[0].title;
+              originalItems[0].name = t('客户端数量');
+              originalItems[1].name = t('占比');
+              originalItems[1].value = `${(originalItems[1].value * 100).toFixed(1)}%`;
+              return originalItems.slice(0, 2);
+            },
+          },
         });
       } else {
         columnPlot.update({
-          isGroup: false,
           isStack: true,
+          xField: 'primary_val',
+          color: ['#3E96C2', '#61B2C2', '#85CCA8'],
           label: {
             // 可手动配置 label 数据标签位置
             position: 'middle', // 'top', 'bottom', 'middle',
             // 配置样式
             style: {
               fill: '#fff',
+            },
+          },
+          legend: {
+            custom: false,
+            position: 'bottom',
+          },
+          tooltip: {
+            customItems: (originalItems: any[]) => {
+              console.log(originalItems);
+              const datum = originalItems[0].data as IClientLabelItem;
+              if (datum.foreign_val === datum.primary_key) {
+                jumpLabels.value = { [datum.primary_key]: datum.primary_val };
+              } else {
+                jumpLabels.value = { [datum.primary_key]: datum.primary_val, [datum.foreign_key]: datum.foreign_val };
+              }
+              drillDownVal.value = originalItems[0].title;
+              let total = 0;
+              const showItem = originalItems.filter((item) => item.name === 'foreign_val');
+              showItem.forEach((item) => {
+                item.name = item.value;
+                item.value = item.data.count;
+                total += item.data.count;
+              });
+              showItem.push({
+                name: t('总和'),
+                value: `${total}`,
+                marker: true,
+                color: '#C4C6CC',
+              });
+              return showItem;
             },
           },
         });
@@ -75,15 +126,26 @@
   const initChart = () => {
     columnPlot = new Column(canvasRef.value!, {
       data: props.data,
-      xField: 'primary_val',
+      xField: 'x_field',
       yField: 'count',
+      seriesField: 'x_field',
+      color: ['#3E96C2'],
       padding: [30, 10, 50, 30],
-      isGroup: true,
       limitInPlot: false,
-      seriesField: 'foreign_val',
       maxColumnWidth: 40,
       legend: {
+        custom: true,
         position: 'bottom',
+        items: [
+          {
+            id: '1',
+            name: t('客户端数量'),
+            value: 'count',
+            marker: {
+              symbol: 'square',
+            },
+          },
+        ],
       },
       state: {
         active: {
@@ -102,10 +164,17 @@
         },
       },
       tooltip: {
-        fields: ['foreign_val', 'count'],
-        formatter: (datum: Datum) => {
-          foreignVal.value = datum.foreign_val;
-          return { name: datum.foreign_val, value: datum.count };
+        fields: ['count', 'percent', 'primary_key', 'primary_val', 'foreign_key', 'foreign_val'],
+        customItems: (originalItems: any[]) => {
+          const datum = originalItems[0].data as IClientLabelItem;
+          if (datum.foreign_val === datum.primary_key) {
+            jumpLabels.value = { [datum.primary_key]: datum.primary_val };
+          } else {
+            jumpLabels.value = { [datum.primary_key]: datum.primary_val, [datum.foreign_key]: datum.foreign_val };
+          }
+          drillDownVal.value = originalItems[0].title;
+          originalItems[0].name = t('客户端数量');
+          return originalItems.slice(0, 1);
         },
         showTitle: true,
         title: 'primary_val',

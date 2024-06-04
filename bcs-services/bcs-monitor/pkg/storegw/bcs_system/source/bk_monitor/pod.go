@@ -45,6 +45,7 @@ func (m *BKMonitor) handlePodMetric(ctx context.Context, projectID, clusterID, n
 // GetPodCPUUsage Pod CPU 使用率
 func (m *BKMonitor) GetPodCPUUsage(ctx context.Context, projectID, clusterID, namespace string, podNameList []string,
 	start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
+	// nolint goconst
 	promql :=
 		`sum by (pod_name) (rate(container_cpu_usage_seconds_total{cluster_id="%<clusterID>s", ` +
 			`namespace="%<namespace>s", pod_name=~"%<podNameList>s", container_name!="", container_name!="POD", ` +
