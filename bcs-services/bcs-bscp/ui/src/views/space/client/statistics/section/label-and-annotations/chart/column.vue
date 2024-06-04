@@ -42,85 +42,13 @@
   watch(
     () => props.chartShowType,
     (val) => {
-      if (val === 'tile') {
-        columnPlot.update({
-          isStack: false,
-          xField: 'x_field',
-          color: ['#3E96C2'],
-          label: {
-            // 可手动配置 label 数据标签位置
-            position: 'top', // 'top', 'bottom', 'middle',
-            // 配置样式
-            style: {
-              fill: '#979BA5',
-            },
-          },
-          tooltip: {
-            customItems: (originalItems: any[]) => {
-              const datum = originalItems[0].data as IClientLabelItem;
-              if (datum.foreign_val === datum.primary_key) {
-                jumpLabels.value = { [datum.primary_key]: datum.primary_val };
-              } else {
-                jumpLabels.value = { [datum.primary_key]: datum.primary_val, [datum.foreign_key]: datum.foreign_val };
-              }
-              drillDownVal.value = originalItems[0].title;
-              originalItems[0].name = t('客户端数量');
-              originalItems[1].name = t('占比');
-              originalItems[1].value = `${(originalItems[1].value * 100).toFixed(1)}%`;
-              return originalItems.slice(0, 2);
-            },
-          },
-        });
-      } else {
-        columnPlot.update({
-          isStack: true,
-          xField: 'primary_val',
-          color: ['#3E96C2', '#61B2C2', '#85CCA8'],
-          label: {
-            // 可手动配置 label 数据标签位置
-            position: 'middle', // 'top', 'bottom', 'middle',
-            // 配置样式
-            style: {
-              fill: '#fff',
-            },
-          },
-          legend: {
-            custom: false,
-            position: 'bottom',
-          },
-          tooltip: {
-            customItems: (originalItems: any[]) => {
-              console.log(originalItems);
-              const datum = originalItems[0].data as IClientLabelItem;
-              if (datum.foreign_val === datum.primary_key) {
-                jumpLabels.value = { [datum.primary_key]: datum.primary_val };
-              } else {
-                jumpLabels.value = { [datum.primary_key]: datum.primary_val, [datum.foreign_key]: datum.foreign_val };
-              }
-              drillDownVal.value = originalItems[0].title;
-              let total = 0;
-              const showItem = originalItems.filter((item) => item.name === 'foreign_val');
-              showItem.forEach((item) => {
-                item.name = item.value;
-                item.value = item.data.count;
-                total += item.data.count;
-              });
-              showItem.push({
-                name: t('总和'),
-                value: `${total}`,
-                marker: true,
-                color: '#C4C6CC',
-              });
-              return showItem;
-            },
-          },
-        });
-      }
+      updateChart(val);
     },
   );
 
   onMounted(() => {
     initChart();
+    updateChart(props.chartShowType);
   });
 
   const initChart = () => {
@@ -197,6 +125,100 @@
       emits('drillDown', e.data.data as IClientLabelItem);
     });
     columnPlot.render();
+  };
+
+  const updateChart = (val: string) => {
+    if (val === 'tile') {
+      columnPlot.update({
+        isStack: false,
+        xField: 'x_field',
+        color: ['#3E96C2'],
+        label: {
+          // 可手动配置 label 数据标签位置
+          position: 'top', // 'top', 'bottom', 'middle',
+          // 配置样式
+          style: {
+            fill: '#979BA5',
+          },
+        },
+        legend: {
+          custom: true,
+          position: 'bottom',
+          items: [
+            {
+              id: '1',
+              name: t('客户端数量'),
+              value: 'count',
+              marker: {
+                symbol: 'square',
+              },
+            },
+          ],
+        },
+        tooltip: {
+          title: 'x_field',
+          customItems: (originalItems: any[]) => {
+            const datum = originalItems[0].data as IClientLabelItem;
+            if (datum.foreign_val === datum.primary_key) {
+              jumpLabels.value = { [datum.primary_key]: datum.primary_val };
+            } else {
+              jumpLabels.value = { [datum.primary_key]: datum.primary_val, [datum.foreign_key]: datum.foreign_val };
+            }
+            drillDownVal.value = originalItems[0].title;
+            originalItems[0].name = t('客户端数量');
+            originalItems[1].name = t('占比');
+            originalItems[1].value = `${(originalItems[1].value * 100).toFixed(1)}%`;
+            return originalItems.slice(0, 2);
+          },
+        },
+      });
+    } else {
+      columnPlot.update({
+        isStack: true,
+        xField: 'primary_val',
+        color: ['#3E96C2', '#61B2C2', '#85CCA8'],
+        label: {
+          // 可手动配置 label 数据标签位置
+          position: 'middle', // 'top', 'bottom', 'middle',
+          // 配置样式
+          style: {
+            fill: '#fff',
+          },
+        },
+        legend: {
+          custom: false,
+          position: 'bottom',
+          items: undefined,
+        },
+        tooltip: {
+          title: 'primary_val',
+          customItems: (originalItems: any[]) => {
+            console.log(originalItems);
+            const datum = originalItems[0].data as IClientLabelItem;
+            if (datum.foreign_val === datum.primary_key) {
+              jumpLabels.value = { [datum.primary_key]: datum.primary_val };
+            } else {
+              jumpLabels.value = { [datum.primary_key]: datum.primary_val, [datum.foreign_key]: datum.foreign_val };
+            }
+            drillDownVal.value = originalItems[0].title;
+            let total = 0;
+            const showItem = originalItems.filter((item) => item.name === 'foreign_val');
+            showItem.forEach((item) => {
+              item.name = item.value;
+              item.value = item.data.count;
+              total += item.data.count;
+            });
+            showItem.push({
+              name: t('总和'),
+              value: `${total}`,
+              marker: true,
+              color: '#C4C6CC',
+            });
+            return showItem;
+          },
+        },
+      });
+    }
   };
 </script>
 

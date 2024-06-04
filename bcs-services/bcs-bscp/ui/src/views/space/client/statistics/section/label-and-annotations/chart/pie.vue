@@ -25,6 +25,10 @@
     value: number;
     percent: number;
     children?: ISunburstChildrenType[];
+    primary_val?: string;
+    primary_key?: string;
+    foreign_key?: string;
+    foreign_val?: string;
   }
 
   const { t } = useI18n();
@@ -167,7 +171,15 @@
         showTitle: true,
         title: 'name',
         enterable: true,
+        container: tooltipRef.value?.getDom(),
         customItems: (originalItems: any[]) => {
+          const datum = originalItems[0].data.data as IClientLabelItem;
+          if (datum.foreign_val) {
+            jumpLabels.value = { [datum.primary_key]: datum.primary_val, [datum.foreign_key]: datum.foreign_val };
+          } else {
+            jumpLabels.value = { [datum.primary_key]: datum.primary_val };
+          }
+          drillDownVal.value = originalItems[0].title;
           originalItems[0].marker = false;
           originalItems[0].name = t('客户端数量');
           originalItems[1].name = t('占比');
@@ -186,16 +198,20 @@
     const tree: ISunburstChildrenType[] = [];
     let sunburstTitle = '';
     data.forEach((item) => {
-      const { primary_val, primary_key, foreign_val, percent, count } = item;
+      const { primary_val, primary_key, foreign_val, percent, count, foreign_key } = item;
       let typeNode = tree.find((node) => node.name === primary_val);
       if (!typeNode) {
-        typeNode = { name: primary_val!, children: [], percent: 0, value: 0 };
+        typeNode = { name: primary_val!, children: [], percent: 0, value: 0, primary_key, primary_val };
         tree.push(typeNode);
       }
       const versionNode: ISunburstChildrenType = {
         name: foreign_val,
         percent,
         value: count,
+        primary_val,
+        primary_key,
+        foreign_key,
+        foreign_val,
       };
       typeNode.children?.push(versionNode);
       typeNode.value += count;

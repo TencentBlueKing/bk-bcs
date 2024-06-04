@@ -823,7 +823,24 @@
     await unDeleteConfigItem(props.bkBizId, props.appId, recoverConfig.value!.id);
     isRecoverConfigDialogShow.value = false;
     Message({ theme: 'success', message: t('恢复配置文件成功') });
-    recoverConfig.value!.file_state = 'UNCHANGE';
+
+    // 获取冲突的模板套裁数据 直接覆盖
+    await getBoundTemplateList();
+    tableGroupsData.value = transListToTableData();
+    tableGroupsData.value
+      .find((group) => group.id === 0)!
+      .configs.find((config) => config.id === recoverConfig.value!.id)!.file_state = 'UNCHANGE';
+
+    // 获取冲突的非模板配置数据
+    await getCommonConfigList();
+    const conflictFileIds = configList.value.filter((config) => config.is_conflict).map((config) => config.id);
+    tableGroupsData.value
+      .find((group) => group.id === 0)
+      ?.configs.forEach((config) => {
+        if (conflictFileIds.includes(config.id)) {
+          config.is_conflict = true;
+        }
+      });
     if (oldConfigIndex.value !== -1) {
       const configs = tableGroupsData.value.find((group) => group.id === 0)?.configs;
       configs!.splice(oldConfigIndex.value, 1);
