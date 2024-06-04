@@ -22,7 +22,7 @@
       <template #error>请输入路径地址，替换下方示例代码后，再尝试复制示例</template>
     </bk-form-item>
   </bk-form>
-  <!-- 添加标签测试一下gpg提交 -->
+  <!-- 添加标签 -->
   <AddLabel />
 </template>
 
