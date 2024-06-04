@@ -45,11 +45,11 @@ import NodeConfig from './node-config.vue';
 import NodePoolInfo from './node-pool-info.vue';
 
 import { mergeDeep } from '@/common/util';
+import BcsContent from '@/components/layout/Content.vue';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router/index';
 import $store from '@/store/index';
 import { useClusterList } from '@/views/cluster-manage/cluster/use-cluster';
-import BcsContent from '@/views/cluster-manage/components/bcs-content.vue';
 import HeaderNav from '@/views/cluster-manage/components/header-nav.vue';
 
 export default defineComponent({

@@ -547,7 +547,7 @@ export default defineComponent({
       const validate = await formRef.value?.validate().catch(() => false);
       if (!validate) {
         // 聚集到顶部
-        contentRef.value.handleScollTop();
+        contentRef.value.handleScrollTop();
         return false;
       }
       const isArgsValidate = await keyValueRef.value?.validateAll();

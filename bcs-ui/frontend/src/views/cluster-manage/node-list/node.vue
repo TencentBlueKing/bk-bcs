@@ -198,6 +198,7 @@
         ref="tableRef"
         :key="tableKey"
         :pagination="pagination"
+        :row-key="(row) => row.nodeName"
         @filter-change="handleFilterChange"
         @page-change="pageChange"
         @page-limit-change="pageSizeChange">

@@ -1,6 +1,5 @@
-<div class="biz-content">
-    <Header :title="`${category}${$t('deploy.templateset.templateset')}: ${tmplAppName}${$t('deploy.templateset.tempalte')}`"></Header>
-    <div class="biz-content-wrapper">
+<BcsContent :title="`${category}${$t('deploy.templateset.templateset')}: ${tmplAppName}${$t('deploy.templateset.tempalte')}`">
+    <div>
         <div class="biz-configuration-instantiation-wrapper" v-bkloading="{isLoading: createInstanceLoading, extCls: 'content-loading'}">
             <div class="biz-configuration-instantiation-header">
                 <div class="left">
@@ -328,4 +327,4 @@
         v-if="editorConfig.fullScreen">
         <i class="bcs-icon bcs-icon-close"></i>
     </div>
-</div>
+</BcsContent>

@@ -1,5 +1,5 @@
 <template>
-  <div class="biz-content">
+  <BcsContent :padding="0">
     <div
       class="px-[24px] py-[16px] h-full overflow-x-hidden"
       v-bkloading="{ isLoading, color: '#fafbfd' }"
@@ -154,7 +154,7 @@
         @confirm="handleRetryTask"
         @cancel="showInstallGseAgent = false" />
     </bcs-dialog>
-  </div>
+  </BcsContent>
 </template>
 
 <script lang="ts">
@@ -173,7 +173,7 @@ import { useClusterList, useClusterOperate, useClusterOverview, useTask, useVClu
 import $bkMessage from '@/common/bkmagic';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import ConfirmDialog from '@/components/comfirm-dialog.vue';
-// import Header from '@/components/layout/Header.vue';
+import BcsContent from '@/components/layout/Content.vue';
 import { ICluster, useAppData, useCluster, useProject } from '@/composables/use-app';
 import useSearch from '@/composables/use-search';
 import $i18n from '@/i18n/i18n-setup';
@@ -191,12 +191,12 @@ export default defineComponent({
     ProjectConfig,
     ConfirmDialog,
     TaskList,
-    // Header,
     ClusterGuide,
     ListMode,
     ClusterDetail,
     SetConnectInfo,
     SetAgentArea,
+    BcsContent,
   },
   props: {
     clusterId: {

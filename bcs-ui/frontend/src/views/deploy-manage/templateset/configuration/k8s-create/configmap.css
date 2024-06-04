@@ -1,9 +1,5 @@
 @import '@/css/variable.css';
 
-.biz-content-wrapper {
-    padding: 20px;
-}
-
 .biz-configuration-create-configmap-title {
     display: inline-block;
     height: 60px;
