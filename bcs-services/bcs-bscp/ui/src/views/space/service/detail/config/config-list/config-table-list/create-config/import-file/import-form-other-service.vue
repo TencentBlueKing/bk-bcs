@@ -8,6 +8,7 @@
         style="width: 362px"
         filterable
         auto-focus
+        :clearable="false"
         @select="handleSelectApp">
         <bk-option v-for="item in serviceList" :id="item.id" :key="item.id" :name="item.spec.name" />
       </bk-select>
@@ -20,6 +21,7 @@
         style="width: 362px"
         filterable
         auto-focus
+        :clearable="false"
         @select="emits('selectVersion', selectAppId, selectVerisonId)">
         <bk-option v-for="item in versionList" :id="item.id" :key="item.id" :name="item.spec.name" />
       </bk-select>
@@ -43,11 +45,11 @@
     bkBizId: string;
     appId: number;
   }>();
-  const emits = defineEmits(['selectVersion']);
+  const emits = defineEmits(['selectVersion', 'clear']);
 
   const serviceListloading = ref(false);
   const selectAppId = ref();
-  const selectVerisonId = ref('');
+  const selectVerisonId = ref();
   const serviceList = ref<IAppItem[]>([]);
   const versionList = ref<IConfigVersion[]>([]);
   const versionListLoading = ref(false);
@@ -66,9 +68,9 @@
       const resp = await getAppList(props.bkBizId, query);
       serviceList.value = resp.details.filter((app: IAppItem) => {
         if (isFileType.value) {
-          return app.spec.config_type === 'file';
+          return app.spec.config_type === 'file' && app.id !== props.appId;
         }
-        return app.spec.config_type === 'kv';
+        return app.spec.config_type === 'kv' && app.id !== props.appId;
       });
     } catch (e) {
       console.error(e);
@@ -95,6 +97,8 @@
 
   const handleSelectApp = () => {
     getVersionList();
+    selectVerisonId.value = undefined;
+    emits('clear');
   };
 </script>
 

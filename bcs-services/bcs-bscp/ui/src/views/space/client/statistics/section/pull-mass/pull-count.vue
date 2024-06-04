@@ -249,7 +249,7 @@
     const routeData = router.resolve({
       name: 'client-search',
       params: { appId: props.appId, bizId: props.bkBizId },
-      query: { pull_time: jumpSearchTime.value },
+      query: { pull_time: jumpSearchTime.value, heartTime: searchQuery.value.last_heartbeat_time },
     });
     window.open(routeData.href, '_blank');
   };

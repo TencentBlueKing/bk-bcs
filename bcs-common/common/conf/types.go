@@ -125,6 +125,14 @@ type CustomCertConfig struct {
 	ClientKeyPwd   string `json:"custom_client_key_password" value:"" usage:"specific the custom client tls key file pwd" mapstructure:"custom_client_key_password"`                                                                          // nolint
 }
 
+// TracingConfig tracing config
+type TracingConfig struct {
+	Enabled       bool              `json:"enabled" usage:"enable trace" mapstructure:"enabled" yaml:"enabled"`
+	Endpoint      string            `json:"endpoint" usage:"Collector service endpoint" mapstructure:"endpoint" yaml:"endpoint"` // nolint
+	Token         string            `json:"token" usage:"token for collector service" mapstructure:"token" yaml:"token"`
+	ResourceAttrs map[string]string `json:"resource_attrs" usage:"attributes of traced service" mapstructure:"resource_attrs" yaml:"resource_attrs"` // nolint
+}
+
 // Parse parse all config item
 func Parse(config interface{}) {
 	// load config to flag

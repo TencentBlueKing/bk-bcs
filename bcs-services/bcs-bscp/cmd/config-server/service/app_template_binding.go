@@ -48,10 +48,7 @@ func (s *Service) CreateAppTemplateBinding(ctx context.Context, req *pbcs.Create
 	if len(repeatedTmplSetIDs) > 0 {
 		return nil, fmt.Errorf("repeated template set ids: %v, id must be unique", repeatedTmplSetIDs)
 	}
-	repeatedTmplRevisionIDs := tools.SliceRepeatedElements(templateIDs)
-	if len(repeatedTmplRevisionIDs) > 0 {
-		return nil, fmt.Errorf("repeated template ids: %v, id must be unique", repeatedTmplRevisionIDs)
-	}
+
 	if len(templateIDs) > 500 {
 		return nil, fmt.Errorf("the length of template ids is %d, it must be within the range of [1,500]",
 			len(templateIDs))
@@ -135,10 +132,7 @@ func (s *Service) UpdateAppTemplateBinding(ctx context.Context, req *pbcs.Update
 	if len(repeatedTmplSetIDs) > 0 {
 		return nil, fmt.Errorf("repeated template set ids: %v, id must be unique", repeatedTmplSetIDs)
 	}
-	repeatedTmplRevisionIDs := tools.SliceRepeatedElements(templateIDs)
-	if len(repeatedTmplRevisionIDs) > 0 {
-		return nil, fmt.Errorf("repeated template ids: %v, id must be unique", repeatedTmplRevisionIDs)
-	}
+
 	if len(templateIDs) > 500 {
 		return nil, fmt.Errorf("the length of template ids is %d, it must be within the range of [1,500]",
 			len(templateIDs))
@@ -285,6 +279,15 @@ func (s *Service) ListAppBoundTmplRevisions(ctx context.Context, req *pbcs.ListA
 		}
 	}
 
+	// 所有套餐之间的冲突检测
+	for _, tmplSet := range tmplSetInfo {
+		revisions := tmplSetMap[tmplSet.TemplateSetId]
+		for _, revision := range revisions {
+			existingPaths = append(existingPaths, path.Join(revision.Path, revision.Name))
+		}
+	}
+	_, conflictPaths := checkExistingPathConflict(existingPaths)
+
 	details := make([]*pbatb.AppBoundTmplRevisionGroupBySet, 0)
 	for _, tmplSet := range tmplSetInfo {
 		group := &pbatb.AppBoundTmplRevisionGroupBySet{
@@ -304,7 +307,7 @@ func (s *Service) ListAppBoundTmplRevisions(ctx context.Context, req *pbcs.ListA
 		for _, r := range revisions {
 			var isConflict bool
 			if r.FileState != constant.FileStateDelete {
-				isConflict = tools.CheckPathConflict(path.Join(r.Path, r.Name), existingPaths)
+				isConflict = conflictPaths[path.Join(r.Path, r.Name)]
 			}
 			group.TemplateRevisions = append(group.TemplateRevisions,
 				&pbatb.AppBoundTmplRevisionGroupBySetTemplateRevisionDetail{

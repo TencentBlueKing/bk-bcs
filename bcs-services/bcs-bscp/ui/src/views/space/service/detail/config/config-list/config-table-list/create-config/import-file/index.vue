@@ -37,13 +37,18 @@
           style="width: 374px"
           filterable
           auto-focus
+          :clearable="false"
           @select="handleSelectVersion(appId, $event)">
           <bk-option v-for="item in versionList" :id="item.id" :key="item.id" :name="item.spec.name" />
         </bk-select>
       </div>
     </div>
     <div v-else-if="importType === 'otherService'">
-      <ImportFormOtherService :bk-biz-id="props.bkBizId" :app-id="props.appId" @select-version="handleSelectVersion" />
+      <ImportFormOtherService
+        :bk-biz-id="props.bkBizId"
+        :app-id="props.appId"
+        @select-version="handleSelectVersion"
+        @clear="handleClearTable" />
     </div>
     <div v-if="importType !== 'configTemplate' && importConfigList.length" class="content">
       <bk-loading :loading="tableLoading">
@@ -183,14 +188,14 @@
         );
         batchUploadIds.value = res.ids;
       }
+      Message({
+        theme: 'success',
+        message: t('配置文件导入成功'),
+      });
     } catch (error) {
       console.error(error);
     }
     loading.value = false;
-    Message({
-      theme: 'success',
-      message: t('配置文件导入成功'),
-    });
     emits('update:show', false);
     emits('confirm');
   };
@@ -256,9 +261,13 @@
 
   // 删除文件处理表格数据
   const handleDeleteFile = (fileName: string) => {
-    console.log(fileName);
     existConfigList.value = existConfigList.value.filter((item) => item.file_name !== fileName);
     nonExistConfigList.value = nonExistConfigList.value.filter((item) => item.file_name !== fileName);
+  };
+
+  const handleClearTable = () => {
+    existConfigList.value = [];
+    nonExistConfigList.value = [];
   };
 </script>
 
