@@ -172,6 +172,7 @@
         { id: 'client-statistics', module: 'client-statistics', name: t('客户端统计') },
         { id: 'client-search', module: 'client-search', name: t('客户端查询') },
         { id: 'credentials-management', module: 'credentials', name: t('客户端密钥') },
+        { id: 'configuration-example', module: 'example', name: t('配置示例') },
       ],
     },
   ]);
@@ -225,7 +226,7 @@
     }
   };
   const getRoute = (navId: string) => {
-    if (navId === 'client-statistics' || navId === 'client-search') {
+    if (navId === 'client-statistics' || navId === 'client-search' || navId === 'configuration-example') {
       const lastSelectedClientService = localStorage.getItem('lastSelectedClientService');
       if (lastSelectedClientService) {
         const detail = JSON.parse(lastSelectedClientService);

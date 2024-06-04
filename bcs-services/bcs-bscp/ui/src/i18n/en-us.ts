@@ -86,6 +86,7 @@ export default {
   客户端统计: 'Client statistics',
   客户端查询: 'Client query',
   客户端密钥: 'Client key',
+  配置示例: 'CFG example',
 
   // 配置管理
   版本名称: 'Version Name',
@@ -673,6 +674,20 @@ export default {
   请输入文件路径: 'Please enter file path',
   请输入配置项名称: 'Please enter the configuration item name',
   密钥名称已存在: 'The credentials name already exists',
+
+  // 配置示例
+  'Sidecar 容器客户端用于容器化应用程序拉取文件型配置场景。': 'The Sidecar container client is used in the pull-file configuration scenario of containerized applications',
+  Sidecar容器: 'Sidecar container',
+  节点管理插件: 'Node management plugin',
+  '节点管理插件客户端用于非容器化应用程序 (传统主机) 拉取文件型配置场景。': 'The node management plug-in client is used in the non-containerized application (traditional host) pull-file configuration scenario',
+  '命令行工具通常用于在脚本 (如 Bash、Python 等) 中手动拉取应用程序配置，同时支持文件型和键值型配置的获取。': 'Command line tools are commonly used to manually pull application configuration in scripts (such as Bash, Python, etc.), and support both file - and key-value configuration acquisition',
+  '请先选择客户端密钥，替换下方示例代码后，再尝试复制示例': 'Please select the client key and replace the sample code below before trying to copy the sample',
+  '请输入路径地址，替换下方示例代码后，再尝试复制示例': 'Please enter the path address, replace the sample code below, and then try to copy the sample',
+  临时目录: 'tempContents',
+  请输入临时目录: 'Please enter a temporary contents',
+  '搜索名称/密钥/说明': 'name/key/description',
+  密钥管理: 'KeysManagement',
+  暂无密钥: 'empty',
 
   // 公共组件
   页面不存在: 'Page does not exist',
