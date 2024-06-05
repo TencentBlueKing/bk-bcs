@@ -83,6 +83,9 @@ type ObjectDownloader interface {
 type BaseProvider interface {
 	ObjectDownloader
 	Upload(kt *kit.Kit, sign string, body io.Reader) (*ObjectMetadata, error)
+	InitBlockUpload(kt *kit.Kit, sign string) (string, error)
+	BlockUpload(kt *kit.Kit, sign string, uploadID string, blockNum uint32, body io.Reader) error
+	CompleteBlockUpload(kt *kit.Kit, sign string, uploadID string) (*ObjectMetadata, error)
 	Download(kt *kit.Kit, sign string) (io.ReadCloser, int64, error)
 	Metadata(kt *kit.Kit, sign string) (*ObjectMetadata, error)
 }
@@ -101,6 +104,31 @@ func GetFileSign(r *http.Request) (string, error) {
 	}
 
 	return sign, nil
+}
+
+// GetBlockNum get block upload block num
+func GetBlockNum(r *http.Request) (uint32, error) {
+	blockNumStr := r.Header.Get(constant.BlockNumHeaderKey)
+	if blockNumStr == "" {
+		return 0, errors.New("not valid X-Bkapi-Block-Num in header")
+	}
+
+	blockNum, err := strconv.Atoi(blockNumStr)
+	if err != nil || blockNum == 0 {
+		return 0, errors.New("not valid X-Bkapi-Block-Num in header")
+	}
+
+	return uint32(blockNum), nil
+}
+
+// GetBlockUploadID get block upload id
+func GetBlockUploadID(r *http.Request) (string, error) {
+	blockUploadID := r.Header.Get(constant.BlockUploadID)
+	if blockUploadID == "" {
+		return "", errors.New("not valid X-Bkapi-Block-Num in header")
+	}
+
+	return blockUploadID, nil
 }
 
 // GetContentLevelID get content level id, including app id and template space id
