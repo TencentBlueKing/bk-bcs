@@ -41,28 +41,34 @@
               @click="handleConditionClick($event, condition)">
               {{ condition.content }}
             </bk-tag>
-            <input
-              v-else
-              v-model="editSearchStr"
-              ref="editInputRef"
-              class="input"
-              placeholder=" "
-              @blur="handleConditionEdit(condition)"
-              @keydown="handleEnterConditionEdit($event, condition)"
-              @compositionstart="isComposing = true"
-              @compositionend="isComposing = false" />
+            <div v-else class="search-container-input">
+              <span>{{ editSearchStr }}</span>
+              <input
+                v-model="editSearchStr"
+                ref="editInputRef"
+                class="input"
+                placeholder=" "
+                @blur="handleConditionEdit(condition)"
+                @keydown="handleEnterConditionEdit($event, condition)"
+                @compositionstart="isComposing = true"
+                @compositionend="isComposing = false"
+                @click="handleClickInput($event)" />
+            </div>
           </div>
           <div v-if="isShowSearchInput" class="search-container-input" ref="inputWrapRef">
+            <span>{{ searchStr }}</span>
             <input
               v-model="searchStr"
               ref="inputRef"
               class="input"
               placeholder=" "
+              :contenteditable="true"
               @focus="inputFocus = true"
-              @blur="handleConfirmConditionItem"
               @keydown="handleEnterAddConditionItem"
+              @blur="handleConfirmConditionItem"
               @compositionstart="isComposing = true"
-              @compositionend="isComposing = false" />
+              @compositionend="isComposing = false"
+              @click="handleClickInput($event)" />
           </div>
         </div>
         <div
@@ -690,6 +696,11 @@
     nextTick(() => inputRef.value.focus());
   };
 
+  const handleClickInput = (e: any) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
   const handleConditionClick = (e: any, condition: ISearchCondition) => {
     e.preventDefault();
     e.stopPropagation();
@@ -786,8 +797,20 @@
       width: 0 !important;
     }
     .search-container-input {
+      position: relative;
+      span {
+        display: inline-block;
+        height: 100%;
+        font-size: 12px;
+        visibility: hidden;
+        padding: 0 10px;
+      }
       .input {
-        min-width: fit-content;
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 99;
+        width: 100%;
         border: none;
         height: 100%;
         outline: none;
