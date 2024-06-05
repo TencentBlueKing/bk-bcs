@@ -162,6 +162,7 @@
   import { debounce } from 'lodash';
   import useGlobalStore from '../../../store/global';
   import { getSpaceGroupList, deleteGroup } from '../../../api/group';
+  import useTablePagination from '../../../utils/hooks/use-table-pagination';
   import { IGroupItem, IGroupCategory, IGroupCategoryItem } from '../../../../types/group';
   import CreateGroup from './create-group.vue';
   import EditGroup from './edit-group.vue';
@@ -173,6 +174,7 @@
 
   const { spaceId } = storeToRefs(useGlobalStore());
   const { t, locale } = useI18n();
+  const { pagination, updatePagination } = useTablePagination('groupList');
 
   const listLoading = ref(false);
   const groupList = ref<IGroupItem[]>([]);
@@ -185,11 +187,6 @@
   const isDeleteGroupDialogShow = ref(false);
   const deleteGroupItem = ref<IGroupItem>();
   const selectedIds = ref<number[]>([]);
-  const pagination = ref({
-    current: 1,
-    count: 0,
-    limit: 10,
-  });
   const isCreateGroupShow = ref(false);
   const isEditGroupShow = ref(false);
   const editingGroup = ref<IGroupItem>({
@@ -426,8 +423,7 @@
   };
 
   const handlePageLimitChange = (val: number) => {
-    pagination.value.current = 1;
-    pagination.value.limit = val;
+    updatePagination('limit', val);
     refreshTableData();
   };
 

@@ -237,6 +237,7 @@
   } from '../../../../constants/client';
   import { IClinetCommonQuery } from '../../../../../types/client';
   import useClientStore from '../../../../store/client';
+  import useTablePagination from '../../../../utils/hooks/use-table-pagination';
   import TableEmpty from '../../../../components/table/table-empty.vue';
   import Exception from '../components/exception.vue';
   import { useI18n } from 'vue-i18n';
@@ -248,6 +249,9 @@
 
   const route = useRoute();
   const router = useRouter();
+
+  const { pagination, updatePagination } = useTablePagination('clientSearch');
+
   const bkBizId = ref(String(route.params.spaceId));
   const appId = ref(Number(route.params.appId));
   const viewPullRecordClientId = ref(0);
@@ -257,11 +261,7 @@
   const isSearchEmpty = ref(false);
   const isShowPullRecordSlider = ref(false);
   const tableData = ref();
-  const pagination = ref({
-    count: 0,
-    current: 1,
-    limit: 10,
-  });
+
   const releaseChangeStatusFilterList = [
     {
       text: t('成功'),
@@ -436,7 +436,7 @@
         const { client } = item;
         client.labels = Object.entries(JSON.parse(client.spec.labels)).map(([key, value]) => ({ key, value }));
       });
-      pagination.value.count = res.data.count;
+      updatePagination('count', res.data.count);
     } catch (error) {
       console.error(error);
     } finally {
@@ -472,7 +472,7 @@
 
   // 更改每页条数
   const handlePageLimitChange = (val: number) => {
-    pagination.value.limit = val;
+    updatePagination('limit', val);
     loadList();
   };
 

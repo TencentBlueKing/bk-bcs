@@ -39,12 +39,14 @@
   import useGlobalStore from '../../../store/global';
   import { IGroupBindService } from '../../../../types/group';
   import { getGroupReleasedApps } from '../../../api/group';
+  import useTablePagination from '../../../utils/hooks/use-table-pagination';
   import { ICommonQuery } from '../../../../types/index';
   import SearchInput from '../../../components/search-input.vue';
   import tableEmpty from '../../../components/table/table-empty.vue';
 
   const router = useRouter();
   const { t } = useI18n();
+  const { pagination, updatePagination } = useTablePagination('serviceToPublish');
 
   const { spaceId } = storeToRefs(useGlobalStore());
 
@@ -60,11 +62,6 @@
   const list = ref<IGroupBindService[]>([]);
   const isSearchEmpty = ref(false);
   const searchStr = ref('');
-  const pagination = ref({
-    count: 0,
-    limit: 10,
-    current: 1,
-  });
 
   watch(
     () => props.show,
@@ -113,7 +110,7 @@
   };
 
   const handlePageLimitChange = (val: number) => {
-    pagination.value.limit = val;
+    updatePagination('limit', val);
     loadServicesList();
   };
 

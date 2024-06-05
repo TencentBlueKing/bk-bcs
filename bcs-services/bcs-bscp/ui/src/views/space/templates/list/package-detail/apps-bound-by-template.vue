@@ -37,11 +37,14 @@
   import { getUnNamedVersionAppsBoundByTemplate } from '../../../../../api/template';
   import { ICommonQuery } from '../../../../../../types/index';
   import { IAppBoundByTemplateDetailItem } from '../../../../../../types/template';
+  import useTablePagination from '../../../../../utils/hooks/use-table-pagination';
   import SearchInput from '../../../../../components/search-input.vue';
   import tableEmpty from '../../../../../components/table/table-empty.vue';
 
   const router = useRouter();
   const { t } = useI18n();
+
+  const { pagination, updatePagination } = useTablePagination('appBoundByTemplate');
 
   const props = defineProps<{
     show: boolean;
@@ -56,11 +59,6 @@
   const appList = ref<IAppBoundByTemplateDetailItem[]>([]);
   const searchStr = ref('');
   const loading = ref(false);
-  const pagination = ref({
-    current: 1,
-    limit: 10,
-    count: 0,
-  });
   const isSearchEmpty = ref(false);
 
   watch(
@@ -108,8 +106,7 @@
   };
 
   const handlePageLimitChange = (val: number) => {
-    pagination.value.current = 1;
-    pagination.value.limit = val;
+    updatePagination('limit', val);
     getList();
   };
 
