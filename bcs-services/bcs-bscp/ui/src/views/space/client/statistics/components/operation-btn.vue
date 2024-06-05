@@ -51,6 +51,7 @@
           class="action-icon bk-bscp-icon icon-download"
           v-bk-tooltips="{ content: t('设置下钻') }" />
       </template>
+      <bk-option :id="''">{{ $t('无') }}</bk-option>
       <bk-option
         v-for="item in allLabel"
         :id="item"
