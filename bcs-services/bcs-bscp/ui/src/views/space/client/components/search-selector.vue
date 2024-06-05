@@ -308,37 +308,40 @@
     handleGetSearchList('common');
     const entries = Object.entries(route.query);
     if (entries.length === 0) return;
-    const { name, value, children } = CLIENT_SEARCH_DATA.find((item) => item.value === entries[0][0])!;
-
-    if (value === 'pull_time') {
-      searchConditionList.value.push({
-        content: `${name} : ${entries[0][1]} 00:00:00 - ${entries[0][1]} 23:59:59`,
-        value: `${entries[0][1]} 00:00:00 - ${entries[0][1]} 23:59:59`,
-        key: value,
-        isEdit: false,
-      });
-    } else if (value === 'label') {
-      const labels = JSON.parse(entries[0][1] as string);
-      Object.keys(labels).forEach((key) => {
+    entries.forEach((entry) => {
+      const [searchKey, searchValue] = entry;
+      if (searchKey === 'heartTime') return;
+      const { name, value, children } = CLIENT_SEARCH_DATA.find((item) => item.value === searchKey)!;
+      if (value === 'pull_time') {
         searchConditionList.value.push({
-          content: `标签: ${key}=${labels[key]}`,
-          value: `${key}=${labels[key]}`,
+          content: `${name} : ${searchValue} 00:00:00 - ${searchValue} 23:59:59`,
+          value: `${searchValue} 00:00:00 - ${searchValue} 23:59:59`,
           key: value,
           isEdit: false,
         });
-      });
-    } else {
-      let content = `${entries[0][1]}`;
-      if (children) {
-        content = children.find((item) => item.value === entries[0][1])!.name;
+      } else if (value === 'label') {
+        const labels = JSON.parse(searchValue as string);
+        Object.keys(labels).forEach((key) => {
+          searchConditionList.value.push({
+            content: `标签: ${key}=${labels[key]}`,
+            value: `${key}=${labels[key]}`,
+            key: value,
+            isEdit: false,
+          });
+        });
+      } else {
+        let content = `${searchValue}`;
+        if (children) {
+          content = children.find((item) => item.value === searchValue)!.name;
+        }
+        searchConditionList.value.push({
+          content: `${name} : ${content}`,
+          value: searchValue as string,
+          key: value,
+          isEdit: false,
+        });
       }
-      searchConditionList.value.push({
-        content: `${name} : ${content}`,
-        value: entries[0][1] as string,
-        key: value,
-        isEdit: false,
-      });
-    }
+    });
   });
 
   onBeforeUnmount(() => {
