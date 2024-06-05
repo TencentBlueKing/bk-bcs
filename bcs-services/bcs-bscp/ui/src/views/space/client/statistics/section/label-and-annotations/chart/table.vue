@@ -26,7 +26,7 @@
     () => props.data,
     () => {
       primaryKey.value = props.data[0].primary_key;
-      foreignKeyList.value = props.data.map((item) => item.foreign_key);
+      foreignKeyList.value = props.data.map((item) => item.foreign_key).filter((item) => item !== primaryKey.value);
       tableData.value = props.data;
     },
     { immediate: true },

@@ -150,6 +150,13 @@
     },
   );
 
+  watch(
+    () => searchQuery.value.last_heartbeat_time,
+    () => {
+      loadChartData();
+    },
+  );
+
   const loadChartData = async (drillDownData?: any) => {
     const allDimension: { [key: string]: string } = {};
     selectedDimension.value.forEach((item: string) => {
