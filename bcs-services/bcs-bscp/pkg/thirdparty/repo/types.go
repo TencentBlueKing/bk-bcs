@@ -49,6 +49,10 @@ const (
 	HeaderKeySHA256 = "X-BKREPO-SHA256"
 	// HeaderKeyOverwrite is repo upload overwrite flag header key.
 	HeaderKeyOverwrite = "X-BKREPO-OVERWRITE"
+	// HeaderKeyUploadID is repo block upload id header key.
+	HeaderKeyUploadID = "X-BKREPO-UPLOAD-ID"
+	// HeaderKeySequence is repo block upload block num header key.
+	HeaderKeySequence = "X-BKREPO-SEQUENCE"
 )
 
 // error code.
@@ -99,6 +103,13 @@ func (s *repoDiscovery) GetServers() ([]string, error) {
 	return append(s.servers[num-1:], s.servers[:num-1]...), nil
 }
 
+// BkRepoBaseResp bk repo base response struct
+type BkRepoBaseResp struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+	TraceID string `json:"traceId"`
+}
+
 // CreateRepoReq is repo create repo request struct.
 type CreateRepoReq struct {
 	// ProjectID is bscp project name in repo.
@@ -130,15 +141,26 @@ type UploadFileReq struct {
 // UploadResp upload response
 // Docs https://github.com/TencentBlueKing/bk-repo/blob/master/docs/apidoc/generic/simple.md
 type UploadResp struct {
-	Code    int         `json:"code"`
-	Message string      `json:"message"`
-	Data    *UploadData `json:"data"`
+	BkRepoBaseResp
+	Data *UploadData `json:"data"`
 }
 
 // UploadData upload data
 type UploadData struct {
 	Size   int64  `json:"size"` // bkrepo always return 0
 	Sha256 string `json:"sha256"`
+}
+
+// InitBlockUploadResp is repo init block upload response struct
+type InitBlockUploadResp struct {
+	BkRepoBaseResp
+	Data *InitBlockUploadData `json:"data"`
+}
+
+// InitBlockUploadData is repo init block upload response data struct
+type InitBlockUploadData struct {
+	UploadID      string `json:"uploadId"`
+	ExpireSeconds int    `json:"expireSeconds"`
 }
 
 // DownloadFileReq is repo download file request struct
@@ -175,14 +197,9 @@ type GenerateTempDownloadURLReq struct {
 
 // GenerateTempDownloadURLResp is repo generate temp download url response struct.
 type GenerateTempDownloadURLResp struct {
-	// Code is response code.
-	Code int `json:"code"`
-	// Message is response message.
-	Message string `json:"message"`
+	BkRepoBaseResp
 	// Data is response data.
 	Data []GenerateTempDownloadURLData `json:"data"`
-	// TraceID is trace id.
-	TraceID string `json:"traceId"`
 }
 
 // GenerateTempDownloadURLData is repo generate temp download url response data struct.
@@ -272,6 +289,39 @@ func GenNodePath(opt *NodeOption) (string, error) {
 	}
 
 	return fmt.Sprintf("/generic/%s/%s%s", opt.Project, repoName, fullPath), nil
+}
+
+// GenBlockNodePath generate node block upload path.
+// repo path format: /generic/block/{project}/{repoName}/{fullPath}
+// normal path format: /generic/block/{project}/bscp-{version}-{biz_id}/file/{file sha256}
+func GenBlockNodePath(opt *NodeOption) (string, error) {
+	if opt == nil {
+		return "", errors.New("option is nil")
+	}
+
+	if len(opt.Project) == 0 {
+		return "", errors.New("project should > 0")
+	}
+
+	if opt.BizID == 0 {
+		return "", errors.New("biz_id should > 0")
+	}
+
+	if len(opt.Sign) != 64 {
+		return "", errors.New("file sha256 is not standard format")
+	}
+
+	repoName, err := GenRepoName(opt.BizID)
+	if err != nil {
+		return "", err
+	}
+
+	fullPath, err := GenNodeFullPath(opt.Sign)
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("/generic/block/%s/%s%s", opt.Project, repoName, fullPath), nil
 }
 
 // NodeMeta node metadata info.
