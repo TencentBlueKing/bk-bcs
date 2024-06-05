@@ -15,6 +15,7 @@ package dao
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -280,21 +281,46 @@ func (dao *clientDao) handleSearch(kit *kit.Kit, bizID, appID uint32, search *pb
 
 	// 根据IP搜索
 	if len(search.GetIp()) > 0 {
-		conds = append(conds, q.Where(m.Ip.Like("%"+search.GetIp()+"%")))
+		ips := replaceWithPipe(search.GetIp())
+		for i, v := range ips {
+			if i == 0 {
+				q = q.Where(m.Ip.Like("%" + v + "%"))
+			} else {
+				q = q.Or(m.Ip.Like("%" + v + "%"))
+			}
+		}
+		conds = append(conds, q)
 	}
 
 	// 根据客户端uid搜索
 	if len(search.GetUid()) > 0 {
-		conds = append(conds, q.Where(m.UID.Like("%"+search.GetUid()+"%")))
+		uids := replaceWithPipe(search.GetUid())
+		for i, v := range uids {
+			if i == 0 {
+				q = q.Where(m.UID.Like("%" + v + "%"))
+			} else {
+				q = q.Or(m.UID.Like("%" + v + "%"))
+			}
+		}
+		conds = append(conds, q)
 	}
 
 	// 根据当前版本名称搜索
 	if len(search.GetCurrentReleaseName()) > 0 {
+		rns := replaceWithPipe(search.GetCurrentReleaseName())
+		rq := rs.WithContext(kit.Ctx).Select(rs.ID).Where(rs.BizID.Eq(bizID), rs.AppID.Eq(appID))
+		for i, v := range rns {
+			if i == 0 {
+				rq = rq.Where(rs.Name.Like("%" + v + "%"))
+			} else {
+				rq = rq.Or(rs.Name.Like("%" + v + "%"))
+			}
+		}
+
 		var item []struct {
 			ID uint32
 		}
-		err := rs.WithContext(kit.Ctx).Select(rs.ID).Where(rs.BizID.Eq(bizID), rs.AppID.Eq(appID),
-			rs.Name.Like("%"+search.GetCurrentReleaseName()+"%")).Scan(&item)
+		err := rq.Where(rq).Scan(&item)
 		if err != nil {
 			return conds, err
 		}
@@ -368,13 +394,52 @@ func (dao *clientDao) handleSearch(kit *kit.Kit, bizID, appID uint32, search *pb
 	if search.GetLabel() != nil && len(search.GetLabel().GetFields()) != 0 {
 		for k, v := range search.GetLabel().GetFields() {
 			if k != "" {
-				if v.GetStringValue() != "" {
-					conds = append(conds, q.Where(rawgen.Cond(datatypes.JSONQuery("labels").
-						Equals(v.AsInterface(), fmt.Sprintf(`"%s"`, k)))...))
-				} else {
-					conds = append(conds, q.Where(rawgen.Cond(datatypes.JSONQuery("labels").
-						HasKey(fmt.Sprintf(`"%s"`, k)))...))
+				ks := replaceWithPipe(k)
+				vs := replaceWithPipe(v.GetStringValue())
+
+				// "label":{"app":"test|test2"}
+				// JSON_EXTRACT(`labels`,'$."app"') = 'test' OR JSON_EXTRACT(`labels`,'$."app"') = 'test2'
+				if len(ks) == 1 && v.GetStringValue() != "" {
+					for i, v := range vs {
+						if i == 0 {
+							q = q.Where(rawgen.Cond(datatypes.JSONQuery("labels").Equals(v, fmt.Sprintf(`"%s"`, k)))...)
+						} else {
+							q = q.Or(rawgen.Cond(datatypes.JSONQuery("labels").Equals(v, fmt.Sprintf(`"%s"`, k)))...)
+						}
+					}
 				}
+
+				// label":{"app|env":""}
+				// JSON_EXTRACT(`labels`,'$."app"') IS NOT NULL OR JSON_EXTRACT(`labels`,'$."env"') IS NOT NULL
+				if len(ks) >= 1 && v.GetStringValue() == "" {
+					for i, v := range ks {
+						if i == 0 {
+							q = q.Where(rawgen.Cond(datatypes.JSONQuery("labels").HasKey(fmt.Sprintf(`"%s"`, v)))...)
+						} else {
+							q = q.Or(rawgen.Cond(datatypes.JSONQuery("labels").HasKey(fmt.Sprintf(`"%s"`, v)))...)
+						}
+					}
+				}
+
+				// "label":{"app|env":"test|test2"}
+				// JSON_EXTRACT(`labels`,'$."app"') = 'test' OR JSON_EXTRACT(`labels`,'$."env"') = 'test2'
+				// "label":{"app|env":"test"}
+				// JSON_EXTRACT(`labels`,'$."app"') = 'test' OR JSON_EXTRACT(`labels`,'$."env"') IS NOT NULL
+				// "label":{"app|env":"test|test1|test2"}  直接忽略test2
+				if len(ks) >= 1 && v.GetStringValue() != "" {
+					for i, k := range ks {
+						if i == 0 {
+							q = q.Where(rawgen.Cond(datatypes.JSONQuery("labels").Equals(vs[i], fmt.Sprintf(`"%s"`, k)))...)
+						} else {
+							if i < len(vs) && vs[i] != "" {
+								q = q.Or(rawgen.Cond(datatypes.JSONQuery("labels").Equals(vs[i], fmt.Sprintf(`"%s"`, k)))...)
+							} else {
+								q = q.Or(rawgen.Cond(datatypes.JSONQuery("labels").HasKey(fmt.Sprintf(`"%s"`, k)))...)
+							}
+						}
+					}
+				}
+				conds = append(conds, q)
 			}
 		}
 	}
@@ -396,7 +461,15 @@ func (dao *clientDao) handleSearch(kit *kit.Kit, bizID, appID uint32, search *pb
 
 	// 根据客户端版本搜索
 	if len(search.GetClientVersion()) > 0 {
-		conds = append(conds, q.Where(m.ClientVersion.Like("%"+search.GetClientVersion()+"%")))
+		cvs := replaceWithPipe(search.GetClientVersion())
+		for i, v := range cvs {
+			if i == 0 {
+				q = q.Where(m.ClientVersion.Like("%" + v + "%"))
+			} else {
+				q = q.Or(m.ClientVersion.Like("%" + v + "%"))
+			}
+		}
+		conds = append(conds, q)
 	}
 
 	// 根据客户端类型搜索
@@ -410,6 +483,21 @@ func (dao *clientDao) handleSearch(kit *kit.Kit, bizID, appID uint32, search *pb
 	}
 
 	return conds, nil
+}
+
+// 定义一个正则表达式，匹配换行、半角逗号、空字符（空格、\t等）、分号
+func replaceWithPipe(input string) []string {
+	re := regexp.MustCompile(`[\s,;]+`)
+	// 使用正则表达式替换匹配到的部分为竖线
+	result := re.ReplaceAllString(input, "|")
+	// 去掉结果字符串开头和结尾的竖线
+	result = strings.Trim(result, "|")
+	if result == "" {
+		return []string{}
+	}
+	// 使用 strings.Split 函数按竖线分隔字符串
+	parts := strings.Split(result, "|")
+	return parts
 }
 
 func parseTime(timeStr string) (time.Time, error) {
