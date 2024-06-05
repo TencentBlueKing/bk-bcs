@@ -863,4 +863,5 @@ export default {
   可下钻图表: 'Drill-down chart',
   '组件类型 / 版本分布': 'Component type / Version distribution',
   下钻: 'Drill down',
+  总和: 'Total',
 };

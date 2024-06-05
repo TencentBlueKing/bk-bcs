@@ -24,6 +24,8 @@ import (
 	bcsapi "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapiv4"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
+	githubpkg "gopkg.in/go-playground/webhooks.v5/github"
+	gitlabpkg "gopkg.in/go-playground/webhooks.v5/gitlab"
 
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/cmd/manager/options"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/internal/dao"
@@ -135,10 +137,15 @@ func (ops *ArgocdProxy) initArgoPathHandler() error {
 		storage:    store.GlobalStore(),
 		bcsStorage: bcsStorage,
 	}
+	github, _ := githubpkg.New()
+	gitlab, _ := gitlabpkg.New()
 	webhookPlugin := &WebhookPlugin{
 		Router:        ops.PathPrefix(common.GitOpsProxyURL + "/api/webhook").Subrouter(),
 		middleware:    middleware,
 		appsetWebhook: ops.option.GitOps.AppsetControllerWebhook,
+		github:        github,
+		gitlab:        gitlab,
+		storage:       store.GlobalStore(),
 	}
 	// grpc access handler
 	grpcPlugin := &GrpcPlugin{

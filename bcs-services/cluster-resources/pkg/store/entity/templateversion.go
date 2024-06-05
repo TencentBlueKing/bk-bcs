@@ -27,6 +27,7 @@ type TemplateVersion struct {
 	Content       string             `json:"content" bson:"content"`
 	Creator       string             `json:"creator" bson:"creator"`
 	CreateAt      int64              `json:"createAt" bson:"createAt"`
+	Latest        bool               `json:"latest" bson:"-"` // 是否是最新版本，不存储在数据库
 }
 
 // ToMap trans TemplateVersion to map
@@ -44,6 +45,7 @@ func (t *TemplateVersion) ToMap() map[string]interface{} {
 	m["content"] = t.Content
 	m["creator"] = t.Creator
 	m["createAt"] = t.CreateAt
+	m["latest"] = t.Latest
 	return m
 }
 
@@ -53,3 +55,17 @@ type TemplateID struct {
 	TemplateName    string `json:"templateName"`
 	TemplateVersion string `json:"templateVersion"`
 }
+
+// VersionsSortByVersion sort template version by version
+type VersionsSortByVersion []*TemplateVersion
+
+// Len xxx
+func (r VersionsSortByVersion) Len() int { return len(r) }
+
+// Less xxx
+func (r VersionsSortByVersion) Less(i, j int) bool {
+	return r[i].Version > r[j].Version
+}
+
+// Swap xxx
+func (r VersionsSortByVersion) Swap(i, j int) { r[i], r[j] = r[j], r[i] }

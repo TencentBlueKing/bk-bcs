@@ -65,9 +65,11 @@ func GetBool(obj map[string]interface{}, paths interface{}) bool {
 
 // GetInt64 获取 int64 类型快捷方法，默认值为 int64(0)
 func GetInt64(obj map[string]interface{}, paths interface{}) int64 {
-	i, ok := Get(obj, paths, int64(0)).(int64)
-	if ok {
+	if i, ok := Get(obj, paths, int64(0)).(int64); ok {
 		return i
+	}
+	if i, ok := Get(obj, paths, int(0)).(int); ok {
+		return int64(i)
 	}
 	return int64(Get(obj, paths, float64(0)).(float64))
 }

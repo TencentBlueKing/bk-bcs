@@ -98,7 +98,7 @@ export default function useTableData() {
   const getMultiClusterResources = async (params: MultiClusterResourcesType & {
     $kind: string
   }) => {
-    const res = await multiClusterResources(params, { needRes: true }).catch(() => ({
+    const res = await multiClusterResources(params, { needRes: true, cancelPrevious: true }).catch(() => ({
       data: {
         manifest: {},
         manifestExt: {},
@@ -113,7 +113,7 @@ export default function useTableData() {
   const getMultiClusterResourcesCRD = async (params: MultiClusterResourcesType & {
     $crd: string
   }) => {
-    const res = await multiClusterResourcesCRD(params, { needRes: true }).catch(() => ({
+    const res = await multiClusterResourcesCRD(params, { needRes: true, cancelPrevious: true }).catch(() => ({
       data: {
         manifest: {},
         manifestExt: {},

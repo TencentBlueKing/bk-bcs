@@ -40,3 +40,27 @@ func TestFormDataRenderPreview(t *testing.T) {
 	err := hdlr.FormDataRenderPreview(ctx, &req, &resp)
 	assert.Nil(t, err)
 }
+
+func TestFormToYAML(t *testing.T) {
+	hdlr := New()
+	ctx := context.WithValue(context.TODO(), ctxkey.UsernameKey, envs.AnonymousUsername)
+
+	manifest, _ := example.LoadDemoManifest(ctx, "workload/simple_deployment", "", "", resCsts.Deploy)
+	// 类型强制转换，确保解析器正确解析
+	res.ConvertInt2Int64(manifest)
+	formData, _ := pbstruct.Map2pbStruct(workload.ParseDeploy(manifest))
+	resources := []*clusterRes.FormData{{Kind: resCsts.Deploy, FormData: formData}}
+	req, resp := clusterRes.FormToYAMLReq{Resources: resources}, clusterRes.CommonResp{}
+	err := hdlr.FormToYAML(ctx, &req, &resp)
+	assert.Nil(t, err)
+}
+
+func TestYAMLToForm(t *testing.T) {
+	hdlr := New()
+	ctx := context.WithValue(context.TODO(), ctxkey.UsernameKey, envs.AnonymousUsername)
+
+	manifest, _ := example.LoadDemoManifestString(ctx, "workload/simple_deployment", "", "", resCsts.Deploy)
+	req, resp := clusterRes.YAMLToFormReq{Yaml: manifest}, clusterRes.CommonResp{}
+	err := hdlr.YAMLToForm(ctx, &req, &resp)
+	assert.Nil(t, err)
+}

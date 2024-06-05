@@ -124,3 +124,19 @@ func LoadDemoManifest(
 	}
 	return manifest, err
 }
+
+// LoadDemoManifestString 加载指定资源类型的 Demo 配置信息（字符串）
+func LoadDemoManifestString(
+	ctx context.Context, path, clusterID, namespace, kind string,
+) (string, error) {
+	filepath := fmt.Sprintf("%s/%s.yaml", ResDemoManifestDIR, path)
+	if strings.Contains(filepath, "..") {
+		return "", nil
+	}
+
+	content, err := os.ReadFile(filepath)
+	if err != nil {
+		return "", err
+	}
+	return string(content), nil
+}

@@ -126,7 +126,7 @@
         if (chartSelectDimensions.value?.findIndex((item) => item.primaryDimension === label) === -1) {
           chartSelectDimensions.value?.push({
             primaryDimension: label,
-            minorDimension: [],
+            minorDimension: [label],
             drillDownDimension: '',
           });
         }

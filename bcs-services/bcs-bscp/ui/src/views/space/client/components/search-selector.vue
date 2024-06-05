@@ -680,6 +680,11 @@
   };
 
   const handleClickSearch = () => {
+    // 处理有条件处于编辑状时 点击查询框 编辑态条件未保存
+    if (editSearchStr.value) {
+      handleChildSelectorClickOutside();
+      return;
+    }
     isShowPopover.value = !isShowPopover.value;
     isShowSearchInput.value = true;
     nextTick(() => inputRef.value.focus());
