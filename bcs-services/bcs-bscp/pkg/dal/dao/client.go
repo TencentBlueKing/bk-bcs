@@ -119,7 +119,6 @@ func (dao *clientDao) ListClientByIDs(kit *kit.Kit, bizID uint32, appID uint32, 
 	m := dao.genQ.Client
 
 	result, err := dao.genQ.Client.WithContext(kit.Ctx).
-		Select(m.ID, m.BizID, m.AppID, m.ClientType).
 		Where(m.BizID.Eq(bizID), m.AppID.Eq(appID), m.ID.In(ids...)).
 		Find()
 

@@ -166,6 +166,7 @@ const (
 	Config_ImportKvs_FullMethodName                         = "/pbcs.Config/ImportKvs"
 	Config_ListClients_FullMethodName                       = "/pbcs.Config/ListClients"
 	Config_ListClientEvents_FullMethodName                  = "/pbcs.Config/ListClientEvents"
+	Config_RetryClients_FullMethodName                      = "/pbcs.Config/RetryClients"
 	Config_ListClientQuerys_FullMethodName                  = "/pbcs.Config/ListClientQuerys"
 	Config_CreateClientQuery_FullMethodName                 = "/pbcs.Config/CreateClientQuery"
 	Config_UpdateClientQuery_FullMethodName                 = "/pbcs.Config/UpdateClientQuery"
@@ -260,13 +261,14 @@ type ConfigClient interface {
 	CreateTemplateRevision(ctx context.Context, in *CreateTemplateRevisionReq, opts ...grpc.CallOption) (*CreateTemplateRevisionResp, error)
 	ListTemplateRevisions(ctx context.Context, in *ListTemplateRevisionsReq, opts ...grpc.CallOption) (*ListTemplateRevisionsResp, error)
 	// 暂时不对外开发（删除模版后，服务引用的latest版本会回退到上一个老版本）
-	//rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (DeleteTemplateRevisionResp) {
+	// rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns
+	// (DeleteTemplateRevisionResp) {
 	//
-	//option (google.api.http) = {
-	//delete :
-	//"/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
-	//};
-	//}
+	// option (google.api.http) = {
+	// delete :
+	// "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
+	// };
+	// }
 	ListTemplateRevisionsByIDs(ctx context.Context, in *ListTemplateRevisionsByIDsReq, opts ...grpc.CallOption) (*ListTemplateRevisionsByIDsResp, error)
 	ListTmplRevisionNamesByTmplIDs(ctx context.Context, in *ListTmplRevisionNamesByTmplIDsReq, opts ...grpc.CallOption) (*ListTmplRevisionNamesByTmplIDsResp, error)
 	CreateTemplateSet(ctx context.Context, in *CreateTemplateSetReq, opts ...grpc.CallOption) (*CreateTemplateSetResp, error)
@@ -340,6 +342,7 @@ type ConfigClient interface {
 	ImportKvs(ctx context.Context, in *ImportKvsReq, opts ...grpc.CallOption) (*ImportKvsResp, error)
 	ListClients(ctx context.Context, in *ListClientsReq, opts ...grpc.CallOption) (*ListClientsResp, error)
 	ListClientEvents(ctx context.Context, in *ListClientEventsReq, opts ...grpc.CallOption) (*ListClientEventsResp, error)
+	RetryClients(ctx context.Context, in *RetryClientsReq, opts ...grpc.CallOption) (*RetryClientsResp, error)
 	// client query related interface
 	ListClientQuerys(ctx context.Context, in *ListClientQuerysReq, opts ...grpc.CallOption) (*ListClientQuerysResp, error)
 	CreateClientQuery(ctx context.Context, in *CreateClientQueryReq, opts ...grpc.CallOption) (*CreateClientQueryResp, error)
@@ -1628,6 +1631,15 @@ func (c *configClient) ListClientEvents(ctx context.Context, in *ListClientEvent
 	return out, nil
 }
 
+func (c *configClient) RetryClients(ctx context.Context, in *RetryClientsReq, opts ...grpc.CallOption) (*RetryClientsResp, error) {
+	out := new(RetryClientsResp)
+	err := c.cc.Invoke(ctx, Config_RetryClients_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *configClient) ListClientQuerys(ctx context.Context, in *ListClientQuerysReq, opts ...grpc.CallOption) (*ListClientQuerysResp, error) {
 	out := new(ListClientQuerysResp)
 	err := c.cc.Invoke(ctx, Config_ListClientQuerys_FullMethodName, in, out, opts...)
@@ -1840,13 +1852,14 @@ type ConfigServer interface {
 	CreateTemplateRevision(context.Context, *CreateTemplateRevisionReq) (*CreateTemplateRevisionResp, error)
 	ListTemplateRevisions(context.Context, *ListTemplateRevisionsReq) (*ListTemplateRevisionsResp, error)
 	// 暂时不对外开发（删除模版后，服务引用的latest版本会回退到上一个老版本）
-	//rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (DeleteTemplateRevisionResp) {
+	// rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns
+	// (DeleteTemplateRevisionResp) {
 	//
-	//option (google.api.http) = {
-	//delete :
-	//"/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
-	//};
-	//}
+	// option (google.api.http) = {
+	// delete :
+	// "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
+	// };
+	// }
 	ListTemplateRevisionsByIDs(context.Context, *ListTemplateRevisionsByIDsReq) (*ListTemplateRevisionsByIDsResp, error)
 	ListTmplRevisionNamesByTmplIDs(context.Context, *ListTmplRevisionNamesByTmplIDsReq) (*ListTmplRevisionNamesByTmplIDsResp, error)
 	CreateTemplateSet(context.Context, *CreateTemplateSetReq) (*CreateTemplateSetResp, error)
@@ -1920,6 +1933,7 @@ type ConfigServer interface {
 	ImportKvs(context.Context, *ImportKvsReq) (*ImportKvsResp, error)
 	ListClients(context.Context, *ListClientsReq) (*ListClientsResp, error)
 	ListClientEvents(context.Context, *ListClientEventsReq) (*ListClientEventsResp, error)
+	RetryClients(context.Context, *RetryClientsReq) (*RetryClientsResp, error)
 	// client query related interface
 	ListClientQuerys(context.Context, *ListClientQuerysReq) (*ListClientQuerysResp, error)
 	CreateClientQuery(context.Context, *CreateClientQueryReq) (*CreateClientQueryResp, error)
@@ -2363,6 +2377,9 @@ func (UnimplementedConfigServer) ListClients(context.Context, *ListClientsReq) (
 }
 func (UnimplementedConfigServer) ListClientEvents(context.Context, *ListClientEventsReq) (*ListClientEventsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListClientEvents not implemented")
+}
+func (UnimplementedConfigServer) RetryClients(context.Context, *RetryClientsReq) (*RetryClientsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RetryClients not implemented")
 }
 func (UnimplementedConfigServer) ListClientQuerys(context.Context, *ListClientQuerysReq) (*ListClientQuerysResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListClientQuerys not implemented")
@@ -4941,6 +4958,24 @@ func _Config_ListClientEvents_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Config_RetryClients_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RetryClientsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).RetryClients(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_RetryClients_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).RetryClients(ctx, req.(*RetryClientsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Config_ListClientQuerys_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListClientQuerysReq)
 	if err := dec(in); err != nil {
@@ -5777,6 +5812,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListClientEvents",
 			Handler:    _Config_ListClientEvents_Handler,
+		},
+		{
+			MethodName: "RetryClients",
+			Handler:    _Config_RetryClients_Handler,
 		},
 		{
 			MethodName: "ListClientQuerys",
