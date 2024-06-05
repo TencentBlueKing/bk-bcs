@@ -160,8 +160,6 @@ func (dao *clientEventDao) handleSearch(kit *kit.Kit, bizID, appID uint32, searc
 	q := dao.genQ.ClientEvent.WithContext(kit.Ctx)
 	rs := dao.genQ.Release
 
-	status := field.NewString(m.TableName(), "release_change_status")
-
 	var item []struct {
 		ID uint32
 	}
@@ -177,9 +175,9 @@ func (dao *clientEventDao) handleSearch(kit *kit.Kit, bizID, appID uint32, searc
 			releaseID = append(releaseID, v.ID)
 		}
 		conds = append(conds, q.Or(m.OriginalReleaseID.In(releaseID...)).
-			Or(m.TargetReleaseID.In(releaseID...)).Or(status.Eq(search)))
+			Or(m.TargetReleaseID.In(releaseID...)).Or(m.ReleaseChangeStatus.Eq(search)))
 	} else {
-		conds = append(conds, q.Or(status.Eq(search)))
+		conds = append(conds, q.Or(m.ReleaseChangeStatus.Eq(search)))
 	}
 
 	return conds, nil
