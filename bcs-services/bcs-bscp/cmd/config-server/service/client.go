@@ -14,6 +14,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 
 	"google.golang.org/protobuf/types/known/structpb"
 
@@ -346,4 +347,37 @@ func (s *Service) ClientSpecificFailedReason(ctx context.Context, req *pbclient.
 		},
 		LastHeartbeatTime: req.GetLastHeartbeatTime(),
 	})
+}
+
+// RetryClients 重试客户端执行版本变更回调
+func (s *Service) RetryClients(ctx context.Context, req *pbcs.RetryClientsReq) (*pbcs.RetryClientsResp, error) {
+
+	kt := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.Publish, ResourceID: req.AppId}, BizID: req.BizId},
+	}
+
+	if err := s.authorizer.Authorize(kt, res...); err != nil {
+		return nil, err
+	}
+
+	if !req.All && len(req.ClientIds) == 0 {
+		return nil, fmt.Errorf("client ids is empty")
+	}
+
+	_, err := s.client.DS.RetryClients(kt.RpcCtx(), &pbds.RetryClientsReq{
+		BizId:     req.BizId,
+		AppId:     req.AppId,
+		All:       req.All,
+		ClientIds: req.ClientIds,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &pbcs.RetryClientsResp{}, nil
+
 }

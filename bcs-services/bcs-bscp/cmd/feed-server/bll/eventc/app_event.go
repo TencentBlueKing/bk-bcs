@@ -153,7 +153,7 @@ func (ae *appEvent) eventHandler(events []*types.EventMeta) {
 		kt := kit.New()
 		switch one.Spec.Resource {
 		case table.Publish:
-			logs.Infof("start do biz: %d, app: %d publish broadcast to all sidecars, event id: %d, rid: %s", ae.bizID,
+			logs.Infof("start do biz: %d, app: %d publish broadcast to all instances, event id: %d, rid: %s", ae.bizID,
 				ae.appID, one.ID, kt.Rid)
 
 			// app level publish operation, all the sidecar instance should be notified.
@@ -165,6 +165,20 @@ func (ae *appEvent) eventHandler(events []*types.EventMeta) {
 
 			// app delete, all the sidecar instance should be notified.
 			ae.handleAppEvent(kt, one)
+
+		case table.RetryInstance:
+			logs.Infof("start handle biz: %d, app: %d retry callback to instances %s, event id: %d, rid: %s",
+				ae.bizID, ae.appID, one.Spec.ResourceUid, one.ID, kt.Rid)
+
+			ae.notifyWithInstance(kt, one.ID, one.Spec.ResourceUid)
+
+		case table.RetryApp:
+			logs.Infof("start do biz: %d, app: %d retry broadcast to all failed instances, event id: %d, rid: %s", ae.bizID,
+				ae.appID, one.ID, kt.Rid)
+
+			// app level publish operation, all the sidecar instance should be notified,
+			// but only failed instances would retry release change callback
+			ae.notifyWithApp(kt, one.ID)
 
 		default:
 			logs.V(2).Infof("received unused event for scheduler, skip, detail: %s, rid: %s", formatEvent(one), kt.Rid)
