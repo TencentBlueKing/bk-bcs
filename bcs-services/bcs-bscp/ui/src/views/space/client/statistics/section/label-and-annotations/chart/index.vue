@@ -15,12 +15,13 @@
             :primary-dimension="primaryDimension"
             :select-dimension="selectDimension"
             :drill-dimension="drillDimension"
+            :is-stack="isStack"
             @refresh="handleRefresh"
             @toggle-full-screen="isOpenFullScreen = !isOpenFullScreen"
             @toggle-show-btn="isOpenPopover = $event"
             @select-dimension="selectedDimension = $event"
             @select-down-dimension="handleSelectDownDimension"
-            @toggle-chart-show-type="chartShowType = $event" />
+            @toggle-chart-show-type="handleToggleChartShowType" />
         </template>
         <template #head-suffix>
           <div class="head-suffix">
@@ -95,6 +96,7 @@
     allLabel: string[];
     selectDimension: string[];
     drillDimension: string;
+    isStack: boolean;
   }>();
 
   const emits = defineEmits(['select']);
@@ -116,7 +118,7 @@
   const selectedDownDimension = ref(props.drillDimension || '');
   const navDrillDownData = ref('');
   const isDrillDown = ref(false);
-  const chartShowType = ref('tile');
+  const chartShowType = ref(props.isStack ? 'pile' : 'tile');
   const drillDownItem = ref<IClientLabelItem>();
   const jumpLabels = ref<{ [key: string]: string }>();
 
@@ -260,11 +262,17 @@
     handleSelecteDimension();
   };
 
+  const handleToggleChartShowType = (type: string) => {
+    chartShowType.value = type;
+    handleSelecteDimension();
+  };
+
   const handleSelecteDimension = () => {
     emits('select', {
       primaryDimension: props.primaryDimension,
       minorDimension: selectedDimension.value,
       drillDownDimension: selectedDownDimension.value,
+      isStack: chartShowType.value === 'pile',
     });
   };
 </script>

@@ -79,6 +79,7 @@
     needDown?: boolean;
     selectDimension?: string[];
     drillDimension?: string;
+    isStack?: boolean;
   }>();
 
   const emits = defineEmits([
@@ -90,7 +91,7 @@
     'selectDownDimension',
   ]);
 
-  const chartShowType = ref('tile');
+  const chartShowType = ref(props.isStack ? 'pile' : 'tile');
   const minorDimension = ref(props.selectDimension || []);
   const downDimension = ref(props.drillDimension || '');
   const downDimensionSelectRef = ref();

@@ -149,6 +149,7 @@
       columnPlot.update({
         isStack: false,
         xField: 'x_field',
+        seriesField: 'x_field',
         color: ['#3E96C2'],
         label: {
           // 可手动配置 label 数据标签位置
@@ -192,6 +193,7 @@
       });
     } else {
       columnPlot.update({
+        seriesField: 'foreign_val',
         isStack: true,
         xField: 'primary_val',
         color: ['#3E96C2', '#61B2C2', '#85CCA8'],
@@ -284,13 +286,13 @@
         margin-right: 8px;
       }
     }
-    .pie {
+    .pile {
       &:last-child {
         .tooltip-right {
           margin-right: 20px;
-        }
-        .icon {
-          display: none !important;
+          .icon {
+            display: none !important;
+          }
         }
       }
     }
