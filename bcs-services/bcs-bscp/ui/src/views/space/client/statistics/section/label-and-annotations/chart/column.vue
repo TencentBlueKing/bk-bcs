@@ -4,7 +4,25 @@
       :need-down-icon="!!drillDownDemension && !isDrillDown"
       :down="drillDownDemension"
       ref="tooltipRef"
-      @jump="emits('jump', { label: jumpLabels, drillDownVal: drillDownVal })" />
+      :is-custom="true"
+      @jump="emits('jump', { label: jumpLabels, drillDownVal: drillDownVal })">
+      <div class="tooltips-list">
+        <div
+          v-for="item in customTooltip"
+          :key="item.x"
+          :class="['tooltips-item', { pile: props.chartShowType === 'pile' && !isDrillDown }]"
+          @click="handleClickTooltipsItem(item)">
+          <div class="tooltip-left">
+            <div class="marker" :style="{ background: item.color }"></div>
+            <div class="name">{{ item.name }}</div>
+          </div>
+          <div class="tooltip-right">
+            <div class="value">{{ item.value }}</div>
+            <Share v-if="props.chartShowType === 'pile' && !isDrillDown" class="icon" />
+          </div>
+        </div>
+      </div>
+    </Tooltip>
   </div>
 </template>
 
@@ -13,6 +31,7 @@
   import { Column } from '@antv/g2plot';
   import { IClientLabelItem } from '../../../../../../../../types/client';
   import Tooltip from '../../../components/tooltip.vue';
+  import { Share } from 'bkui-vue/lib/icon';
   import { useI18n } from 'vue-i18n';
   const { t } = useI18n();
 
@@ -31,6 +50,7 @@
   const drillDownVal = ref('');
   const jumpLabels = ref<{ [key: string]: string }>();
   let columnPlot: Column;
+  const customTooltip = ref();
 
   watch(
     () => props.data,
@@ -39,12 +59,9 @@
     },
   );
 
-  watch(
-    () => props.chartShowType,
-    (val) => {
-      updateChart(val);
-    },
-  );
+  watch([() => props.chartShowType, () => props.isDrillDown], () => {
+    updateChart(props.chartShowType);
+  });
 
   onMounted(() => {
     initChart();
@@ -102,7 +119,7 @@
           }
           drillDownVal.value = originalItems[0].title;
           originalItems[0].name = t('客户端数量');
-          return originalItems.slice(0, 1);
+          return originalItems.slice(0, 2);
         },
         showTitle: true,
         title: 'primary_val',
@@ -128,7 +145,7 @@
   };
 
   const updateChart = (val: string) => {
-    if (val === 'tile') {
+    if (val === 'tile' || props.isDrillDown) {
       columnPlot.update({
         isStack: false,
         xField: 'x_field',
@@ -168,6 +185,7 @@
             originalItems[0].name = t('客户端数量');
             originalItems[1].name = t('占比');
             originalItems[1].value = `${(originalItems[1].value * 100).toFixed(1)}%`;
+            customTooltip.value = originalItems.slice(0, 2);
             return originalItems.slice(0, 2);
           },
         },
@@ -193,13 +211,8 @@
         tooltip: {
           title: 'primary_val',
           customItems: (originalItems: any[]) => {
-            console.log(originalItems);
             const datum = originalItems[0].data as IClientLabelItem;
-            if (datum.foreign_val === datum.primary_key) {
-              jumpLabels.value = { [datum.primary_key]: datum.primary_val };
-            } else {
-              jumpLabels.value = { [datum.primary_key]: datum.primary_val, [datum.foreign_key]: datum.foreign_val };
-            }
+            jumpLabels.value = { [datum.primary_key]: datum.primary_val };
             drillDownVal.value = originalItems[0].title;
             let total = 0;
             const showItem = originalItems.filter((item) => item.name === 'foreign_val');
@@ -214,11 +227,22 @@
               marker: true,
               color: '#C4C6CC',
             });
+            customTooltip.value = showItem;
             return showItem;
           },
         },
       });
     }
+  };
+
+  const handleClickTooltipsItem = (item: any) => {
+    emits('jump', {
+      label: {
+        [item.data.primary_key]: item.data.primary_val,
+        [item.data.foreign_key]: item.data.foreign_val,
+      },
+      drillDownVal: drillDownVal.value,
+    });
   };
 </script>
 
@@ -227,6 +251,47 @@
     .g2-tooltip-list-item {
       .g2-tooltip-marker {
         border-radius: initial !important;
+      }
+    }
+  }
+  .tooltips-list {
+    margin-bottom: 12px;
+    .tooltips-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 27px;
+      cursor: pointer;
+      &:hover {
+        background: #f5f7fa;
+      }
+      .tooltip-left {
+        display: flex;
+        align-items: center;
+      }
+      .tooltip-right {
+        @extend .tooltip-left;
+        margin-left: 20px;
+        .icon {
+          color: #3a84ff;
+          margin-left: 8px;
+          font-size: 12px;
+        }
+      }
+      .marker {
+        width: 8px;
+        height: 8px;
+        margin-right: 8px;
+      }
+    }
+    .pie {
+      &:last-child {
+        .tooltip-right {
+          margin-right: 20px;
+        }
+        .icon {
+          display: none !important;
+        }
       }
     }
   }
