@@ -53,8 +53,8 @@ func (s *repoService) UploadFile(w http.ResponseWriter, r *http.Request) {
 	render.Render(w, r, rest.OKRender(metadata))
 }
 
-// InitBlockUploadFile init block upload to repo provider
-func (s *repoService) InitBlockUploadFile(w http.ResponseWriter, r *http.Request) {
+// InitMultipartUploadFile init multipart upload to repo provider
+func (s *repoService) InitMultipartUploadFile(w http.ResponseWriter, r *http.Request) {
 	kt := kit.MustGetKit(r.Context())
 
 	sign, err := repository.GetFileSign(r)
@@ -63,7 +63,7 @@ func (s *repoService) InitBlockUploadFile(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	uploadID, err := s.provider.InitBlockUpload(kt, sign)
+	uploadID, err := s.provider.InitMultipartUpload(kt, sign)
 	if err != nil {
 		render.Render(w, r, rest.BadRequest(err))
 		return
@@ -72,8 +72,8 @@ func (s *repoService) InitBlockUploadFile(w http.ResponseWriter, r *http.Request
 	render.Render(w, r, rest.OKRender(uploadID))
 }
 
-// BlockUploadFile block upload to repo provider
-func (s *repoService) BlockUploadFile(w http.ResponseWriter, r *http.Request) {
+// MultipartUploadFile multipart upload to repo provider
+func (s *repoService) MultipartUploadFile(w http.ResponseWriter, r *http.Request) {
 	kt := kit.MustGetKit(r.Context())
 
 	sign, err := repository.GetFileSign(r)
@@ -82,19 +82,19 @@ func (s *repoService) BlockUploadFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	uploadID, err := repository.GetBlockUploadID(r)
+	uploadID, err := repository.GetMultipartUploadID(r)
 	if err != nil {
 		render.Render(w, r, rest.BadRequest(err))
 		return
 	}
 
-	blockNum, err := repository.GetBlockNum(r)
+	partNum, err := repository.GetPartNum(r)
 	if err != nil {
 		render.Render(w, r, rest.BadRequest(err))
 		return
 	}
 
-	if err := s.provider.BlockUpload(kt, sign, uploadID, blockNum, r.Body); err != nil {
+	if err := s.provider.MultipartUpload(kt, sign, uploadID, partNum, r.Body); err != nil {
 		render.Render(w, r, rest.BadRequest(err))
 		return
 	}
@@ -102,8 +102,8 @@ func (s *repoService) BlockUploadFile(w http.ResponseWriter, r *http.Request) {
 	render.Render(w, r, rest.OKRender(nil))
 }
 
-// CompleteBlockUploadFile complete block upload to repo provider
-func (s *repoService) CompleteBlockUploadFile(w http.ResponseWriter, r *http.Request) {
+// CompleteMultipartUploadFile complete multipart upload to repo provider
+func (s *repoService) CompleteMultipartUploadFile(w http.ResponseWriter, r *http.Request) {
 	kt := kit.MustGetKit(r.Context())
 
 	sign, err := repository.GetFileSign(r)
@@ -112,13 +112,13 @@ func (s *repoService) CompleteBlockUploadFile(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	uploadID, err := repository.GetBlockUploadID(r)
+	uploadID, err := repository.GetMultipartUploadID(r)
 	if err != nil {
 		render.Render(w, r, rest.BadRequest(err))
 		return
 	}
 
-	metadata, err := s.provider.CompleteBlockUpload(kt, sign, uploadID)
+	metadata, err := s.provider.CompleteMultipartUpload(kt, sign, uploadID)
 	if err != nil {
 		render.Render(w, r, rest.BadRequest(err))
 		return
