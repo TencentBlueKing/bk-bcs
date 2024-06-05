@@ -53,6 +53,80 @@ func (s *repoService) UploadFile(w http.ResponseWriter, r *http.Request) {
 	render.Render(w, r, rest.OKRender(metadata))
 }
 
+// InitBlockUploadFile init block upload to repo provider
+func (s *repoService) InitBlockUploadFile(w http.ResponseWriter, r *http.Request) {
+	kt := kit.MustGetKit(r.Context())
+
+	sign, err := repository.GetFileSign(r)
+	if err != nil {
+		render.Render(w, r, rest.BadRequest(err))
+		return
+	}
+
+	uploadID, err := s.provider.InitBlockUpload(kt, sign)
+	if err != nil {
+		render.Render(w, r, rest.BadRequest(err))
+		return
+	}
+
+	render.Render(w, r, rest.OKRender(uploadID))
+}
+
+// BlockUploadFile block upload to repo provider
+func (s *repoService) BlockUploadFile(w http.ResponseWriter, r *http.Request) {
+	kt := kit.MustGetKit(r.Context())
+
+	sign, err := repository.GetFileSign(r)
+	if err != nil {
+		render.Render(w, r, rest.BadRequest(err))
+		return
+	}
+
+	uploadID, err := repository.GetBlockUploadID(r)
+	if err != nil {
+		render.Render(w, r, rest.BadRequest(err))
+		return
+	}
+
+	blockNum, err := repository.GetBlockNum(r)
+	if err != nil {
+		render.Render(w, r, rest.BadRequest(err))
+		return
+	}
+
+	if err := s.provider.BlockUpload(kt, sign, uploadID, blockNum, r.Body); err != nil {
+		render.Render(w, r, rest.BadRequest(err))
+		return
+	}
+
+	render.Render(w, r, rest.OKRender(nil))
+}
+
+// CompleteBlockUploadFile complete block upload to repo provider
+func (s *repoService) CompleteBlockUploadFile(w http.ResponseWriter, r *http.Request) {
+	kt := kit.MustGetKit(r.Context())
+
+	sign, err := repository.GetFileSign(r)
+	if err != nil {
+		render.Render(w, r, rest.BadRequest(err))
+		return
+	}
+
+	uploadID, err := repository.GetBlockUploadID(r)
+	if err != nil {
+		render.Render(w, r, rest.BadRequest(err))
+		return
+	}
+
+	metadata, err := s.provider.CompleteBlockUpload(kt, sign, uploadID)
+	if err != nil {
+		render.Render(w, r, rest.BadRequest(err))
+		return
+	}
+
+	render.Render(w, r, rest.OKRender(metadata))
+}
+
 // DownloadFile download file from provider repo
 func (s *repoService) DownloadFile(w http.ResponseWriter, r *http.Request) {
 	kt := kit.MustGetKit(r.Context())
