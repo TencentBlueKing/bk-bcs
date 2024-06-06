@@ -33,10 +33,13 @@ import (
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/metrics"
 	pbas "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/auth-server"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/rest"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/gwparser"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/serviced"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/space"
+	esbcli "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/thirdparty/esb/client"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
@@ -93,28 +96,52 @@ func NewAuthorizer(sd serviced.Discover, tls cc.TLSConfig) (Authorizer, error) {
 	}
 
 	authClient := pbas.NewAuthClient(asConn)
-	resp, err := authClient.GetAuthLoginConf(context.Background(), &pbas.GetAuthLoginConfReq{})
+	resp, err := authClient.GetAuthConf(context.Background(), &pbas.GetAuthConfReq{})
 	if err != nil {
-		return nil, errors.Wrap(err, "get authlogin conf")
+		return nil, errors.Wrap(err, "get auth conf")
 	}
 
 	conf := &cc.LoginAuthSettings{
-		Host:      resp.Host,
-		InnerHost: resp.InnerHost,
-		Provider:  resp.Provider,
+		Host:      resp.LoginAuth.Host,
+		InnerHost: resp.LoginAuth.InnerHost,
+		Provider:  resp.LoginAuth.Provider,
 	}
 	authLoginClient := bkpaas.NewAuthLoginClient(conf)
 	klog.InfoS("init authlogin client done", "host", conf.Host, "inner_host", conf.InnerHost, "provider", conf.Provider)
+
+	// init space manager
+	esbSetting := &cc.Esb{
+		Endpoints: resp.Esb.Endpoints,
+		AppCode:   resp.Esb.AppCode,
+		AppSecret: resp.Esb.AppSecret,
+		User:      resp.Esb.User,
+		TLS: cc.TLSConfig{
+			InsecureSkipVerify: resp.Esb.Tls.InsecureSkipVerify,
+			CertFile:           resp.Esb.Tls.CertFile,
+			KeyFile:            resp.Esb.Tls.KeyFile,
+			CAFile:             resp.Esb.Tls.CaFile,
+			Password:           resp.Esb.Tls.Password,
+		},
+	}
+	esbCli, err := esbcli.NewClient(esbSetting, metrics.Register())
+	if err != nil {
+		return nil, fmt.Errorf("new esb cleint failed, err: %v", err)
+	}
+	spaceMgr, err := space.NewSpaceMgr(context.Background(), esbCli)
+	if err != nil {
+		return nil, fmt.Errorf("init space manager failed, err: %v", err)
+	}
 
 	authz := &authorizer{
 		authClient:      authClient,
 		authLoginClient: authLoginClient,
 		gwParser:        nil,
+		spaceMgr:        spaceMgr,
 	}
 
 	// 如果有公钥，初始化配置
-	if resp.GwPubkey != "" {
-		gwParser, err := gwparser.NewJWTParser(resp.GwPubkey)
+	if resp.LoginAuth.GwPubkey != "" {
+		gwParser, err := gwparser.NewJWTParser(resp.LoginAuth.GwPubkey)
 		if err != nil {
 			return nil, errors.Wrap(err, "init gw parser")
 		}
@@ -131,6 +158,7 @@ type authorizer struct {
 	authClient      pbas.AuthClient
 	authLoginClient bkpaas.AuthLoginClient
 	gwParser        gwparser.Parser
+	spaceMgr        *space.Manager
 }
 
 // AuthorizeDecision if user has permission to the resources, returns auth status per resource and for all.

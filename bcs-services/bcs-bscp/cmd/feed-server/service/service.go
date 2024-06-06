@@ -30,10 +30,13 @@ import (
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/repository"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/auth"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/metrics"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/rest"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/handler"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/shutdown"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/serviced"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/space"
+	esbcli "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/thirdparty/esb/client"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
@@ -52,6 +55,7 @@ type Service struct {
 	dsSetting cc.Downstream
 	mc        *metric
 	fileLock  *fileLockManager
+	spaceMgr  *space.Manager
 }
 
 // NewService create a service instance.
@@ -77,6 +81,17 @@ func NewService(sd serviced.Discover, name string) (*Service, error) {
 		return nil, fmt.Errorf("new repository provider failed, err: %v", err)
 	}
 
+	// init space manager
+	esbSetting := cc.FeedServer().Esb
+	esbCli, err := esbcli.NewClient(&esbSetting, metrics.Register())
+	if err != nil {
+		return nil, fmt.Errorf("new esb cleint failed, err: %v", err)
+	}
+	spaceMgr, err := space.NewSpaceMgr(context.Background(), esbCli)
+	if err != nil {
+		return nil, fmt.Errorf("init space manager failed, err: %v", err)
+	}
+
 	return &Service{
 		bll:        bl,
 		authorizer: authorizer,
@@ -86,6 +101,7 @@ func NewService(sd serviced.Discover, name string) (*Service, error) {
 		provider:   provider,
 		fileLock:   newFileLockManager(),
 		mc:         initMetric(name),
+		spaceMgr:   spaceMgr,
 	}, nil
 }
 

@@ -59,7 +59,12 @@ func (s *Service) Handshake(ctx context.Context, hm *pbfs.HandshakeMessage) (*pb
 	}
 
 	if err = hm.Validate(); err != nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid handshake message "+err.Error())
+		return nil, status.Error(codes.InvalidArgument, "invalid handshake message, "+err.Error())
+	}
+
+	if !s.spaceMgr.HasCMDBSpace(strconv.Itoa(int(hm.Spec.BizId))) {
+		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid handshake message, "+
+			"biz id %d does not exist", hm.Spec.BizId))
 	}
 
 	// check if the sidecar's version can be accepted.
