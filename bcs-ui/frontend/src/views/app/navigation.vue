@@ -146,13 +146,15 @@
   </div>
 </template>
 <script lang="ts">
+import jsonp from 'jsonp';
 import { computed, defineComponent, onBeforeUnmount, onMounted, reactive, ref, toRef } from 'vue';
 
 import PopoverSelector from '../../components/popover-selector.vue';
 
 import useMenu, { IMenu } from './use-menu';
 
-import { releaseNote, switchLanguage } from '@/api/modules/project';
+import { releaseNote } from '@/api/modules/project';
+import { setCookie } from '@/common/util';
 import BcsMd from '@/components/bcs-md/index.vue';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
@@ -180,8 +182,8 @@ export default defineComponent({
       {
         icon: 'bk-icon icon-chinese',
         name: '中文',
-        id: 'zh-CN',
-        locale: 'zh-CN', // cookie标识
+        id: 'zh-CN', // bcs 前端语言标识
+        locale: 'zh-cn', // cookie标识
       },
     ]);
     const curLang = computed(() => langs.value.find(item => item.id === $i18n.locale) || { id: 'zh-CN', icon: 'bk-icon icon-chinese' });
@@ -282,10 +284,16 @@ export default defineComponent({
     const handleChangeLang = async (item) => {
       // $i18n.locale = item.id;// 后面 $router.go(0) 会重新加载界面，这里会导致一瞬间被切换了，然后界面再刷新
       langRef.value?.hide();
-      await switchLanguage({
-        lang: item.locale,
-      });
-      await $router.go(0);
+      // 修改cookie
+      setCookie('blueking_language', item.locale, window.BK_DOMAIN);
+      // 修改用户管理语言
+      jsonp(
+        `${window.BK_USER_HOST}/api/c/compapi/v2/usermanage/fe_update_user_language/?language=${item.locale}`,
+        { param: 'callback' },
+        () => {
+          $router.go(0);
+        },
+      );
     };
     // 帮助文档
     const handleGotoHelp  = () => {

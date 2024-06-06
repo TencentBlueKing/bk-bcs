@@ -23,6 +23,7 @@ interface Window {
   readonly BK_STATIC_URL: string
   readonly BCS_NAMESPACE_PREFIX: string
   readonly BK_LOG_HOST: string
+  readonly BK_DOMAIN: string
 }
 
 declare const BK_BCS_WELCOME: string;
