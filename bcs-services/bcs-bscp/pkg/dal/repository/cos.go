@@ -149,18 +149,18 @@ func (c *cosClient) Metadata(kt *kit.Kit, sign string) (*ObjectMetadata, error) 
 	return metadata, nil
 }
 
-func (c *cosClient) InitBlockUpload(kt *kit.Kit, sign string) (string, error) {
-	// TODO: InitBlockUpload not implemented in cos
+func (c *cosClient) InitMultipartUpload(kt *kit.Kit, sign string) (string, error) {
+	// TODO: InitMultipartUpload not implemented in cos
 	return "", fmt.Errorf("not implemented")
 }
 
-func (c *cosClient) BlockUpload(kt *kit.Kit, sign string, uploadID string, blockNum uint32, body io.Reader) error {
-	// TODO: BlockUpload not implemented in cos
+func (c *cosClient) MultipartUpload(kt *kit.Kit, sign string, uploadID string, partNum uint32, body io.Reader) error {
+	// TODO: MultipartUpload not implemented in cos
 	return fmt.Errorf("not implemented")
 }
 
-func (c *cosClient) CompleteBlockUpload(kt *kit.Kit, sign string, uploadID string) (*ObjectMetadata, error) {
-	// TODO: CompleteBlockUpload not implemented in cos
+func (c *cosClient) CompleteMultipartUpload(kt *kit.Kit, sign string, uploadID string) (*ObjectMetadata, error) {
+	// TODO: CompleteMultipartUpload not implemented in cos
 	return nil, fmt.Errorf("not implemented")
 }
 

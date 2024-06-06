@@ -240,8 +240,8 @@ func (c *bkrepoClient) Metadata(kt *kit.Kit, sign string) (*ObjectMetadata, erro
 	return metadata, nil
 }
 
-// InitBlockUpload init block upload file
-func (c *bkrepoClient) InitBlockUpload(kt *kit.Kit, sign string) (string, error) {
+// InitMultipartUpload init multipart upload file
+func (c *bkrepoClient) InitMultipartUpload(kt *kit.Kit, sign string) (string, error) {
 
 	if err := c.ensureRepo(kt); err != nil {
 		return "", errors.Wrap(err, "ensure repo failed")
@@ -271,27 +271,28 @@ func (c *bkrepoClient) InitBlockUpload(kt *kit.Kit, sign string) (string, error)
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		return "", errors.Errorf("init block upload status %d != 200", resp.StatusCode)
+		return "", errors.Errorf("init multipart upload status %d != 200", resp.StatusCode)
 	}
 
-	bkrepoResp := new(repo.InitBlockUploadResp)
+	bkrepoResp := new(repo.InitMultipartUploadResp)
 	if err := json.NewDecoder(resp.Body).Decode(bkrepoResp); err != nil {
-		return "", errors.Wrap(err, "init block upload response")
+		return "", errors.Wrap(err, "init multipart upload response")
 	}
 
 	if bkrepoResp.Code != 0 {
-		return "", errors.Errorf("init block upload code %d != 0", bkrepoResp.Code)
+		return "", errors.Errorf("init multipart upload code %d != 0", bkrepoResp.Code)
 	}
 
 	if bkrepoResp.Data == nil {
-		return "", errors.New("init block upload response data is nil")
+		return "", errors.New("init multipart upload response data is nil")
 	}
 
 	return bkrepoResp.Data.UploadID, nil
 }
 
-// BlockUpload upload one block of the file
-func (c *bkrepoClient) BlockUpload(kt *kit.Kit, sign string, uploadID string, blockNum uint32, body io.Reader) error {
+// MultipartUpload upload one part of the file
+func (c *bkrepoClient) MultipartUpload(kt *kit.Kit, sign string, uploadID string, partNum uint32,
+	body io.Reader) error {
 
 	node, err := repo.GenNodePath(&repo.NodeOption{Project: c.project, BizID: kt.BizID, Sign: sign})
 	if err != nil {
@@ -307,7 +308,7 @@ func (c *bkrepoClient) BlockUpload(kt *kit.Kit, sign string, uploadID string, bl
 	req.Header.Set("Content-Type", "application/octet-stream")
 	req.Header.Set(constant.RidKey, kt.Rid)
 	req.Header.Set(repo.HeaderKeyUploadID, uploadID)
-	req.Header.Set(repo.HeaderKeySequence, strconv.Itoa(int(blockNum)))
+	req.Header.Set(repo.HeaderKeySequence, strconv.Itoa(int(partNum)))
 
 	resp, err := c.client.Do(req)
 	if err != nil {
@@ -316,23 +317,23 @@ func (c *bkrepoClient) BlockUpload(kt *kit.Kit, sign string, uploadID string, bl
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		return errors.Errorf("block upload status %d != 200", resp.StatusCode)
+		return errors.Errorf("multipart upload status %d != 200", resp.StatusCode)
 	}
 
 	bkrepoResp := new(repo.BkRepoBaseResp)
 	if err := json.NewDecoder(resp.Body).Decode(bkrepoResp); err != nil {
-		return errors.Wrap(err, "block upload response")
+		return errors.Wrap(err, "multipart upload response")
 	}
 
 	if bkrepoResp.Code != 0 {
-		return errors.Errorf("block upload code %d != 0", bkrepoResp.Code)
+		return errors.Errorf("multipart upload code %d != 0", bkrepoResp.Code)
 	}
 
 	return nil
 }
 
-// CompleteBlockUpload complete block upload and return metadata
-func (c *bkrepoClient) CompleteBlockUpload(kt *kit.Kit, sign string, uploadID string) (*ObjectMetadata, error) {
+// CompleteMultipartUpload complete multipart upload and return metadata
+func (c *bkrepoClient) CompleteMultipartUpload(kt *kit.Kit, sign string, uploadID string) (*ObjectMetadata, error) {
 
 	node, err := repo.GenBlockNodePath(&repo.NodeOption{Project: c.project, BizID: kt.BizID, Sign: sign})
 	if err != nil {
@@ -355,16 +356,16 @@ func (c *bkrepoClient) CompleteBlockUpload(kt *kit.Kit, sign string, uploadID st
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		return nil, errors.Errorf("complete block upload status %d != 200", resp.StatusCode)
+		return nil, errors.Errorf("complete multipart upload status %d != 200", resp.StatusCode)
 	}
 
 	uploadResp := new(repo.UploadResp)
 	if err := json.NewDecoder(resp.Body).Decode(uploadResp); err != nil {
-		return nil, errors.Wrap(err, "complete block upload response")
+		return nil, errors.Wrap(err, "complete multipart upload response")
 	}
 
 	if uploadResp.Code != 0 {
-		return nil, errors.Errorf("complete block upload code %d != 0", uploadResp.Code)
+		return nil, errors.Errorf("complete multipart upload code %d != 0", uploadResp.Code)
 	}
 
 	return c.Metadata(kt, sign)
