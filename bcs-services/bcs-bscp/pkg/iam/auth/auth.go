@@ -17,6 +17,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
@@ -64,6 +65,8 @@ type Authorizer interface {
 	ContentVerified(next http.Handler) http.Handler
 	// LogOut handler will build login url, client should make redirect
 	LogOut(r *http.Request) *rest.UnauthorizedData
+	// HasBiz 业务是否存在
+	HasBiz(bizID uint32) bool
 }
 
 // NewAuthorizer create an authorizer for iam authorize related operation.
@@ -253,4 +256,9 @@ func (a authorizer) GrantResourceCreatorAction(kt *kit.Kit, opts *client.GrantRe
 func (a authorizer) LogOut(r *http.Request) *rest.UnauthorizedData {
 	loginURL, loginPlainURL := a.authLoginClient.BuildLoginURL(r)
 	return &rest.UnauthorizedData{LoginURL: loginURL, LoginPlainURL: loginPlainURL}
+}
+
+// HasBiz 业务是否存在
+func (a authorizer) HasBiz(bizID uint32) bool {
+	return a.spaceMgr.HasCMDBSpace(strconv.Itoa(int(bizID)))
 }

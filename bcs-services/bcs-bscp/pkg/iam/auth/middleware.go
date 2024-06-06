@@ -297,8 +297,8 @@ func (a authorizer) BizVerified(next http.Handler) http.Handler {
 		}
 		kt.BizID = uint32(bizID)
 
-		if !a.spaceMgr.HasCMDBSpace(bizIDStr) {
-			err := fmt.Errorf("biz id %s does not exist", bizIDStr)
+		if !a.HasBiz(uint32(bizID)) {
+			err := fmt.Errorf("biz id %d does not exist", bizID)
 			render.Render(w, r, rest.BadRequest(err))
 			return
 		}
