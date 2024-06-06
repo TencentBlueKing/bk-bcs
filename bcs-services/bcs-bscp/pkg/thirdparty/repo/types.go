@@ -49,9 +49,9 @@ const (
 	HeaderKeySHA256 = "X-BKREPO-SHA256"
 	// HeaderKeyOverwrite is repo upload overwrite flag header key.
 	HeaderKeyOverwrite = "X-BKREPO-OVERWRITE"
-	// HeaderKeyUploadID is repo block upload id header key.
+	// HeaderKeyUploadID is repo multipart upload id header key.
 	HeaderKeyUploadID = "X-BKREPO-UPLOAD-ID"
-	// HeaderKeySequence is repo block upload block num header key.
+	// HeaderKeySequence is repo multipart upload part num header key.
 	HeaderKeySequence = "X-BKREPO-SEQUENCE"
 )
 
@@ -151,14 +151,14 @@ type UploadData struct {
 	Sha256 string `json:"sha256"`
 }
 
-// InitBlockUploadResp is repo init block upload response struct
-type InitBlockUploadResp struct {
+// InitMultipartUploadResp is repo init multipart upload response struct
+type InitMultipartUploadResp struct {
 	BkRepoBaseResp
-	Data *InitBlockUploadData `json:"data"`
+	Data *InitMultipartUploadData `json:"data"`
 }
 
-// InitBlockUploadData is repo init block upload response data struct
-type InitBlockUploadData struct {
+// InitMultipartUploadData is repo init multipart upload response data struct
+type InitMultipartUploadData struct {
 	UploadID      string `json:"uploadId"`
 	ExpireSeconds int    `json:"expireSeconds"`
 }
@@ -291,7 +291,7 @@ func GenNodePath(opt *NodeOption) (string, error) {
 	return fmt.Sprintf("/generic/%s/%s%s", opt.Project, repoName, fullPath), nil
 }
 
-// GenBlockNodePath generate node block upload path.
+// GenBlockNodePath generate node multipart upload path.
 // repo path format: /generic/block/{project}/{repoName}/{fullPath}
 // normal path format: /generic/block/{project}/bscp-{version}-{biz_id}/file/{file sha256}
 func GenBlockNodePath(opt *NodeOption) (string, error) {
