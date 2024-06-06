@@ -152,3 +152,13 @@ export const getClientPullFailedReason = (bizId: string, appId: number, query: a
 
 export const getClientCommonlyUsedNameCheck = (bizId: string, appId: number, name: string) =>
   http.get(`/config/biz/${bizId}/apps/${appId}/client_querys/check_exists`, { params: { name } });
+
+/**
+ *
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param ids 客户端ID
+ * @returns
+ */
+export const retryClients = (bizId: string, appId: number, ids: number[]) =>
+  http.post(`/config/biz/${bizId}/apps/${appId}/clients/retry`, { client_ids: ids, all: false });

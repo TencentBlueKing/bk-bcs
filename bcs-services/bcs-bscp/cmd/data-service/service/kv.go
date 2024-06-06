@@ -327,6 +327,7 @@ func (s *Service) BatchUpsertKvs(ctx context.Context, req *pbds.BatchUpsertKvsRe
 				} else {
 					v.Revision.Reviser = kt.User
 					v.Revision.UpdatedAt = time.Now().UTC()
+					v.KvState = table.KvStateDelete
 					fakeDelete = append(fakeDelete, v)
 				}
 			}

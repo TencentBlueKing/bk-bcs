@@ -144,6 +144,16 @@
     </div>
     <div>{{ deleteConfigTips }}</div>
   </DeleteConfirmDialog>
+  <DeleteConfirmDialog
+    v-model:isShow="isRecoverConfigDialogShow"
+    :title="t('确认恢复该配置项?')"
+    :confirm-text="t('恢复')"
+    @confirm="handleRecoverConfigConfirm">
+    <div style="margin-bottom: 8px">
+      {{ t('配置项') }}：<span style="color: #313238">{{ recoverConfig?.spec.key }}</span>
+    </div>
+    <div>{{ t(`配置项恢复后，将覆盖新添加的配置项`) + recoverConfig?.spec.key }}</div>
+  </DeleteConfirmDialog>
 </template>
 <script lang="ts" setup>
   import { ref, watch, onMounted, computed } from 'vue';
@@ -198,6 +208,8 @@
   const typeFilterChecked = ref<string[]>([]);
   const statusFilterChecked = ref<string[]>([]);
   const updateSortType = ref('null');
+  const recoverConfig = ref<IConfigKvType>();
+  const isRecoverConfigDialogShow = ref(false);
 
   const typeFilterList = computed(() =>
     CONFIG_KV_TYPE.map((item) => ({
@@ -426,9 +438,24 @@
     if (permCheckLoading.value || !checkPermBeforeOperate('update')) {
       return;
     }
-    await undeleteKv(props.bkBizId, props.appId, config.spec.key);
+    recoverConfig.value = config;
+    const index = configList.value.findIndex((item) => item.spec.key === config.spec.key);
+    if (index === -1) {
+      handleRecoverConfigConfirm();
+    } else {
+      isRecoverConfigDialogShow.value = true;
+    }
+  };
+
+  const handleRecoverConfigConfirm = async () => {
+    await undeleteKv(props.bkBizId, props.appId, recoverConfig.value!.spec.key);
     Message({ theme: 'success', message: t('恢复配置项成功') });
-    config.kv_state = 'UNCHANGE';
+    const index = configList.value.findIndex(
+      (item) => item.spec.key === recoverConfig.value?.spec.key && item.id !== recoverConfig.value?.id,
+    );
+    configList.value.splice(index, 1);
+    recoverConfig.value!.kv_state = 'UNCHANGE';
+    isRecoverConfigDialogShow.value = false;
   };
 
   // 批量删除配置项后刷新配置项列表

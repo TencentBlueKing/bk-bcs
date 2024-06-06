@@ -4,25 +4,33 @@
       <ClientHeader :title="t('客户端查询')" @search="loadList" />
     </div>
     <div v-if="appId" class="content">
-      <!-- @todo 重试功能待接口支持 -->
-      <!-- <bk-button style="margin-bottom: 16px" :disabled="!selectedClient.length">批量重试</bk-button> -->
+      <BatchRetryBtn :bk-biz-id="bkBizId" :app-id="appId" :selections="selectedClient" @retried="handleRetryConfirm" />
       <bk-loading style="min-height: 100px" :loading="listLoading">
         <bk-table
+          ref="tableRef"
           :data="tableData"
           :border="['outer', 'row']"
           class="client-search-table"
           :remote-pagination="true"
           :pagination="pagination"
           :key="appId"
-          :checked="selectedClient"
+          :checked="selectedClient.map((item) => item.id)"
           :is-row-select-enable="isRowSelectEnable"
           :settings="settings"
           show-overflow-tooltip
           @page-limit-change="handlePageLimitChange"
           @page-value-change="loadList"
           @column-filter="handleFilter"
-          @setting-change="handleSettingsChange">
-          <!-- <bk-table-column type="selection" :min-width="40" :width="40"> </bk-table-column> -->
+          @setting-change="handleSettingsChange"
+          @selection-change="handleSelectRow"
+          @select-all="handleSelectAll">
+          <template v-if="selectedClient.length" #prepend>
+            <div class="row-selection-display">
+              {{ t('当前已选择 {n} 个客户端，', { n: selectedClient.length }) }}
+              <bk-button text theme="primary" @click="handleClearSelection">{{ t('清除选择') }}</bk-button>
+            </div>
+          </template>
+          <bk-table-column type="selection" fixed="left" :min-width="48" :width="48"> </bk-table-column>
           <bk-table-column label="UID" fixed="left" :width="254" prop="client.attachment.uid"></bk-table-column>
           <bk-table-column
             v-if="selectedShowColumn.includes('ip')"
@@ -186,20 +194,18 @@
             :label="t('客户端组件版本')"
             :width="128"
             prop="client.spec.client_version"></bk-table-column>
-          <bk-table-column :label="t('操作')" :width="148" fixed="right">
+          <bk-table-column :label="t('操作')" :width="160" fixed="right">
             <template #default="{ row }">
               <div v-if="row.client">
                 <bk-button theme="primary" text @click="handleShowPullRecord(row.client.attachment.uid, row.client.id)">
                   {{ t('配置拉取记录') }}
                 </bk-button>
-                <!-- <bk-button
+                <RetryBtn
                   v-if="row.client.spec.release_change_status === 'Failed'"
-                  style="margin-left: 18px"
-                  theme="primary"
-                  text
-                  @click="console.log(row)">
-                  重试
-                </bk-button> -->
+                  :bk-biz-id="bkBizId"
+                  :app-id="appId"
+                  :client="row.client"
+                  @retried="handleRetryConfirm" />
               </div>
             </template>
           </bk-table-column>
@@ -240,6 +246,8 @@
   import useTablePagination from '../../../../utils/hooks/use-table-pagination';
   import TableEmpty from '../../../../components/table/table-empty.vue';
   import Exception from '../components/exception.vue';
+  import BatchRetryBtn from './components/batch-retry-btn.vue';
+  import RetryBtn from './components/retry-btn.vue';
   import { useI18n } from 'vue-i18n';
 
   const { t } = useI18n();
@@ -257,10 +265,11 @@
   const viewPullRecordClientId = ref(0);
   const viewPullRecordClientUid = ref('');
   const listLoading = ref(false);
-  const selectedClient = ref([]);
+  const selectedClient = ref<{ id: number; uid: string; release_name: string }[]>([]);
   const isSearchEmpty = ref(false);
   const isShowPullRecordSlider = ref(false);
   const tableData = ref();
+  const tableRef = ref();
 
   const releaseChangeStatusFilterList = [
     {
@@ -495,6 +504,48 @@
     localStorage.setItem('client-show-column', JSON.stringify({ checked, size }));
   };
 
+  // 选择单行
+  const handleSelectRow = ({ row, checked }: { row: any; checked: boolean }) => {
+    const index = selectedClient.value.findIndex((item) => item.id === row.client.id);
+    if (checked) {
+      if (index === -1) {
+        selectedClient.value.push({
+          id: row.client.id,
+          uid: row.client.attachment.uid,
+          release_name: row.client.spec.current_release_name,
+        });
+      }
+    } else {
+      if (index > -1) {
+        selectedClient.value.splice(index, 1);
+      }
+    }
+  };
+
+  // 全选/取消
+  const handleSelectAll = ({ checked }: { checked: boolean }) => {
+    if (checked) {
+      tableData.value.forEach((item: any) => {
+        if (item.client.spec.release_change_status !== 'Failed') return;
+        if (!selectedClient.value.find((selected) => selected.id === item.client.id)) {
+          selectedClient.value.push({
+            id: item.client.id,
+            uid: item.client.attachment.uid,
+            release_name: item.client.spec.current_release_name,
+          });
+        }
+      });
+    } else {
+      selectedClient.value = [];
+    }
+  };
+
+  // 清空选择
+  const handleClearSelection = () => {
+    selectedClient.value = [];
+    tableRef.value.clearSelection();
+  };
+
   const getErrorDetails = (item: any) => {
     const { release_change_failed_reason, specific_failed_reason, failed_detail_reason } = item;
     const category = CLIENT_ERROR_CATEGORY_MAP.find((item) => item.value === release_change_failed_reason)?.name;
@@ -502,6 +553,17 @@
     return `${t('错误类别')}: ${category}
     ${t('错误子类别')}: ${subclasses}
     ${t('错误详情')}: ${failed_detail_reason}`;
+  };
+
+  // 重试成功
+  const handleRetryConfirm = (ids: number[]) => {
+    ids.forEach((id) => {
+      const index = selectedClient.value.findIndex((item) => item.id === id);
+      if (index > -1) {
+        selectedClient.value.splice(index, 1);
+      }
+    });
+    loadList();
   };
 </script>
 
@@ -540,6 +602,13 @@
       z-index: 0;
     }
   }
+  .row-selection-display {
+    line-height: 32px;
+    background: #dcdee5;
+    text-align: center;
+    font-size: 12px;
+    color: #63656e;
+  }
   .content {
     padding: 24px;
   }
@@ -549,6 +618,7 @@
     flex-wrap: wrap;
     span {
       margin-right: 4px;
+      line-height: 28px;
     }
   }
 
@@ -613,13 +683,6 @@
       &.Offline {
         background: #979ba5;
         border: 3px solid #eeeef0;
-      }
-    }
-  }
-  .client-search-table {
-    :deep(.bk-table-body) {
-      table tbody tr td .cell {
-        display: flex !important;
       }
     }
   }
