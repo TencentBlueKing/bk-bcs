@@ -772,6 +772,8 @@ export default {
   已拉取配置文件的客户端数量统计: 'Statistics on the number of clients whose configuration files have been pulled',
   已收藏为: 'Collected',
   已存在同名常用查询: 'A common search with the same name already exists',
+  '查询多个实例请使用竖线（"|"）分隔': 'To query multiple instances, separate them using a vertical bar ("|")',
+  '查询同一标签多个值时使用逗号（","）分隔，查询不同标签时使用竖线（"|"）分隔': 'Multiple values within the same tag are separated by commas (","), while different tags are separated by vertical bars ("|")',
 
   // 客户端统计
   配置版本发布: 'Configuration version release',

@@ -439,7 +439,7 @@
       return;
     }
     recoverConfig.value = config;
-    const index = configList.value.findIndex((item) => item.spec.key === config.spec.key);
+    const index = configList.value.findIndex((item) => item.spec.key === config.spec.key && item.kv_state !== 'DELETE');
     if (index === -1) {
       handleRecoverConfigConfirm();
     } else {
@@ -451,9 +451,11 @@
     await undeleteKv(props.bkBizId, props.appId, recoverConfig.value!.spec.key);
     Message({ theme: 'success', message: t('恢复配置项成功') });
     const index = configList.value.findIndex(
-      (item) => item.spec.key === recoverConfig.value?.spec.key && item.id !== recoverConfig.value?.id,
+      (item) => item.spec.key === recoverConfig.value?.spec.key && item.kv_state !== 'DELETE',
     );
-    configList.value.splice(index, 1);
+    if (index !== -1) {
+      configList.value.splice(index, 1);
+    }
     recoverConfig.value!.kv_state = 'UNCHANGE';
     isRecoverConfigDialogShow.value = false;
   };
