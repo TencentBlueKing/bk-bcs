@@ -259,9 +259,9 @@
   const searchInputPlaceholder = computed(() => {
     if (parentSelecte.value?.children || searchStr.value.split(' : ', 2)[1]) return '';
     if (parentSelecte.value?.value !== 'label') {
-      return '查询多个实例请使用竖线（"|"）分隔';
+      return t('查询多个实例请使用竖线（"|"）分隔');
     }
-    return '查询同一标签多个值时使用逗号（","）分隔，查询不同标签时使用竖线（"|"）分隔';
+    return t('查询同一标签多个值时使用逗号（","）分隔，查询不同标签时使用竖线（"|"）分隔');
   });
 
   const isCommonlyUsedBtnLight = computed(() => {
