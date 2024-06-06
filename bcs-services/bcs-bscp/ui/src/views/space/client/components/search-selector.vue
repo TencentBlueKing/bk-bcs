@@ -42,7 +42,7 @@
               {{ condition.content }}
             </bk-tag>
             <div v-else class="search-container-input">
-              <span>{{ editSearchStr }}</span>
+              <span class="hidden-text">{{ editSearchStr }}</span>
               <input
                 v-model="editSearchStr"
                 ref="editInputRef"
@@ -56,7 +56,7 @@
             </div>
           </div>
           <div v-if="isShowSearchInput" class="search-container-input" ref="inputWrapRef">
-            <span>{{ searchStr }}</span>
+            <span class="hidden-text">{{ searchStr }}</span>
             <input
               v-model="searchStr"
               ref="inputRef"
@@ -69,6 +69,7 @@
               @compositionstart="isComposing = true"
               @compositionend="isComposing = false"
               @click="handleClickInput($event)" />
+            <span class="placeholder"> {{ searchInputPlaceholder }}</span>
           </div>
         </div>
         <div
@@ -255,6 +256,15 @@
 
   const selectorData = computed(() => (isClientSearch.value ? CLIENT_SEARCH_DATA : CLIENT_STATISTICS_SEARCH_DATA));
 
+  const searchInputPlaceholder = computed(() => {
+    if (parentSelecte.value?.children) return '';
+    if (searchStr.value.split(' : ', 2)[1]) return '';
+    if (parentSelecte.value?.value !== 'label') {
+      return t('查询多个实例请使用竖线（"|"）分隔');
+    }
+    return t('查询同一标签多个值时使用逗号（","）分隔，查询不同标签时使用竖线（"|"）分隔');
+  });
+
   const isCommonlyUsedBtnLight = computed(() => {
     const item = commonlySearchList.value.find((commonlySearchItem) => {
       if (commonlySearchItem.search_condition.length !== searchConditionList.value.length) return false;
@@ -396,12 +406,18 @@
   };
 
   const handleConfirmConditionItem = () => {
-    const conditionValue = parentSelecte.value ? searchStr.value.split(' : ', 2)[1] : searchStr.value;
+    let conditionValue = parentSelecte.value ? searchStr.value.split(' : ', 2)[1] : searchStr.value;
     inputFocus.value = false;
     isShowSearchInput.value = false;
     if (!conditionValue) {
       searchStr.value = '';
       return;
+    }
+    if (parentSelecte.value?.value === 'label') {
+      conditionValue = conditionValue.replace(/[\n;]+/g, '|').replace(/\s+/g, '');
+    } else {
+      console.log(conditionValue);
+      conditionValue = conditionValue.replace(/[\n,;]+/g, '|').replace(/\s+/g, '');
     }
     // 添加默认查询条件ip
     if (!parentSelecte.value?.value) {
@@ -573,8 +589,19 @@
     const label: { [key: string]: any } = {};
     searchConditionList.value.forEach((item) => {
       if (item.key === 'label') {
-        const labelValue = item.value.split('=', 2);
-        label[labelValue[0]] = labelValue[1] || '';
+        const allLabel = item.value.split('|');
+        const allKey: string[] = [];
+        const allValue: string[] = [];
+        allLabel.forEach((label) => {
+          const [key, value] = label.split('=', 2);
+          allKey.push(key);
+          if (value) {
+            value.split(',').forEach((item) => {
+              allValue.push(item);
+            });
+          }
+        });
+        label[allKey.join('|')] = allValue.join('|') || '';
         query[item.key] = label;
       } else if (item.key === 'online_status' || item.key === 'release_change_status') {
         if (query[item.key]) {
@@ -725,7 +752,12 @@
 
   const handleConditionEdit = (condition: ISearchCondition) => {
     if (!condition.isEdit) return;
-    const conditionValue = editSearchStr.value.split(' : ', 2)[1];
+    let conditionValue = editSearchStr.value.split(' : ', 2)[1];
+    if (condition.key === 'label') {
+      conditionValue = conditionValue.replace(/[\\n;]+/g, '|').replace(/\s+/g, '');
+    } else {
+      conditionValue = conditionValue.replace(/[\\n,;]+/g, '|').replace(/\s+/g, '');
+    }
     if (conditionValue) {
       condition.value = conditionValue;
       condition.content = `${parentSelecte.value?.name} : ${conditionValue}`;
@@ -798,7 +830,7 @@
     }
     .search-container-input {
       position: relative;
-      span {
+      .hidden-text {
         display: inline-block;
         height: 100%;
         font-size: 12px;
@@ -816,6 +848,14 @@
         outline: none;
         box-shadow: none;
         color: #63656e;
+      }
+      .placeholder {
+        position: absolute;
+        left: calc(100% - 16px);
+        top: 0;
+        z-index: 999;
+        width: 600px;
+        color: #c4c6cc;
       }
     }
     .search-condition-list {
