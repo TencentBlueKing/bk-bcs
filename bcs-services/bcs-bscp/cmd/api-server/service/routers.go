@@ -134,13 +134,13 @@ func (p *proxy) routers() http.Handler {
 			r.Put("/", p.repo.UploadFile)
 		})
 		// 分块内容上传API
-		r.Route("/block/upload", func(r chi.Router) {
+		r.Route("/multipart", func(r chi.Router) {
 			// 初始化分块上传
-			r.With(p.HttpServerHandledTotal("", "InitBlockUpload")).Post("/init", p.repo.InitBlockUploadFile)
+			r.With(p.HttpServerHandledTotal("", "InitMultipartUpload")).Post("/init", p.repo.InitMultipartUploadFile)
 			// 分块上传
-			r.With(p.HttpServerHandledTotal("", "BlockUpload")).Put("/upload", p.repo.BlockUploadFile)
+			r.With(p.HttpServerHandledTotal("", "MultipartUpload")).Put("/upload", p.repo.MultipartUploadFile)
 			// 完成分块上传
-			r.With(p.HttpServerHandledTotal("", "CompleteBlockUpload")).Post("/complete", p.repo.CompleteBlockUploadFile)
+			r.With(p.HttpServerHandledTotal("", "CompleteMultipartUpload")).Post("/complete", p.repo.CompleteMultipartUploadFile)
 		})
 		// 内容下载API
 		r.Route("/download", func(r chi.Router) {
