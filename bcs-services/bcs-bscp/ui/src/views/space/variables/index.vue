@@ -88,9 +88,10 @@
   import { Plus, Copy } from 'bkui-vue/lib/icon';
   import BkMessage from 'bkui-vue/lib/message';
   import useGlobalStore from '../../../store/global';
-  import { ICommonQuery, IPagination } from '../../../../types/index';
+  import { ICommonQuery } from '../../../../types/index';
   import { IVariableEditParams, IVariableItem } from '../../../../types/variable';
   import { getVariableList, deleteVariable } from '../../../api/variable';
+  import useTablePagination from '../../../utils/hooks/use-table-pagination';
   import { copyToClipBoard } from '../../../utils/index';
   import { fileDownload } from '../../../utils/file';
   import VariableCreate from './variable-create.vue';
@@ -103,16 +104,12 @@
 
   const { spaceId } = storeToRefs(useGlobalStore());
   const { t } = useI18n();
+  const { pagination, updatePagination } = useTablePagination('variableList');
 
   const loading = ref(false);
   const list = ref<IVariableItem[]>([]);
   const searchStr = ref('');
   const selectedIds = ref<number[]>([]);
-  const pagination = ref<IPagination>({
-    current: 1,
-    count: 0,
-    limit: 10,
-  });
   const isCreateSliderShow = ref(false);
   const isImportVariableShow = ref(false);
   const isDeleteVariableDialogShow = ref(false);
@@ -225,7 +222,7 @@
   };
 
   const handlePageLimitChange = (val: number) => {
-    pagination.value.limit = val;
+    updatePagination('limit', val);
     refreshList();
   };
 

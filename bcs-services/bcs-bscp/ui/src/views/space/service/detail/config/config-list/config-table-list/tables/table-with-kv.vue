@@ -165,6 +165,7 @@
   import { ICommonQuery } from '../../../../../../../../../types/index';
   import { IConfigKvItem, IConfigKvType } from '../../../../../../../../../types/config';
   import { getKvList, deleteKv, getReleaseKvList, undeleteKv, unModifyKv } from '../../../../../../../../api/config';
+  import useTablePagination from '../../../../../../../../utils/hooks/use-table-pagination';
   import { datetimeFormat } from '../../../../../../../../utils/index';
   import { getDefaultKvItem } from '../../../../../../../../utils/config';
   import { CONFIG_KV_TYPE } from '../../../../../../../../constants/config';
@@ -182,6 +183,7 @@
   const { checkPermBeforeOperate } = serviceStore;
   const { permCheckLoading, hasEditServicePerm } = storeToRefs(serviceStore);
   const { t } = useI18n();
+  const { pagination, updatePagination } = useTablePagination('tableWithKv');
 
   const props = defineProps<{
     bkBizId: string;
@@ -208,11 +210,7 @@
   const updateSortType = ref('null');
   const recoverConfig = ref<IConfigKvType>();
   const isRecoverConfigDialogShow = ref(false);
-  const pagination = ref({
-    current: 1,
-    count: 0,
-    limit: 10,
-  });
+
   const typeFilterList = computed(() =>
     CONFIG_KV_TYPE.map((item) => ({
       value: item.id,
@@ -473,7 +471,7 @@
 
   // page-limit
   const handlePageLimitChange = (limit: number) => {
-    pagination.value.limit = limit;
+    updatePagination('limit', limit);
     refresh();
   };
 
