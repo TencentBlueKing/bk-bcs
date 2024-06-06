@@ -33,7 +33,7 @@ import (
 )
 
 // ApplyInstanceMachinesTask update desired nodes task
-func ApplyInstanceMachinesTask(taskID string, stepName string) error {
+func ApplyInstanceMachinesTask(taskID string, stepName string) error { // nolint
 	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
 		"start update desired nodes")
 	start := time.Now()

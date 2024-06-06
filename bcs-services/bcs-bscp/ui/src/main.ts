@@ -10,6 +10,9 @@ import i18n from './i18n/index';
 import cursor from './components/permission/cursor';
 import './components/permission/cursor.css';
 import auth from './common/auth';
+import zhCn from 'bkui-vue/dist/locale/zh-cn.esm';
+import en from 'bkui-vue/dist/locale/en.esm';
+import { getCookie } from './utils';
 
 auth().then(() => {
   const app = createApp(App);
@@ -35,7 +38,14 @@ auth().then(() => {
     },
   });
 
-  app.use(pinia).use(i18n).use(router).use(bkui).mount('#app');
+  app
+    .use(pinia)
+    .use(i18n)
+    .use(router)
+    .use(bkui, {
+      locale: getCookie('blueking_language') === 'zh-cn' ? zhCn : en,
+    })
+    .mount('#app');
 });
 
 // 监听登录成功页通过postMessage发送的消息，刷新当前页面

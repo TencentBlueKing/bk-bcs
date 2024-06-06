@@ -35,7 +35,7 @@ import (
 )
 
 // CreateCloudNodeGroupTask create cloud node group task
-func CreateCloudNodeGroupTask(taskID string, stepName string) error {
+func CreateCloudNodeGroupTask(taskID string, stepName string) error { // nolint
 	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
 		"start create cloud nodegroup")
 	start := time.Now()

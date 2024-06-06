@@ -44,10 +44,7 @@
               <span v-else>--</span>
             </template>
           </bk-table-column>
-          <bk-table-column
-            v-if="selectedShowColumn.includes('current-version')"
-            :label="t('当前配置版本')"
-            :width="140">
+          <bk-table-column v-if="selectedShowColumn.includes('current-version')" :label="t('源版本')" :width="140">
             <template #default="{ row }">
               <div
                 v-if="row.spec && row.spec.current_release_id"
@@ -212,7 +209,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref, watch } from 'vue';
+  import { ref, watch, onBeforeMount } from 'vue';
   import { useRoute, useRouter } from 'vue-router';
   import { Share, InfoLine } from 'bkui-vue/lib/icon';
   import { storeToRefs } from 'pinia';
@@ -306,6 +303,17 @@
     { deep: true },
   );
 
+  onBeforeMount(() => {
+    const tableSet = localStorage.getItem('client-show-column');
+    settings.value.size = 'medium';
+    if (tableSet) {
+      const { checked, size } = JSON.parse(tableSet);
+      selectedShowColumn.value = checked;
+      settings.value.checked = checked;
+      settings.value.size = size;
+    }
+  });
+
   const showResourse = (resourse: IResourseType) => {
     return {
       cpuResourse: `${resourse.cpu_usage} ${t('核')}/${resourse.cpu_max_usage} ${t('核')}`,
@@ -328,22 +336,27 @@
       {
         name: 'IP',
         id: 'ip',
+        disabled: true,
       },
       {
         name: t('客户端标签'),
         id: 'label',
+        disabled: true,
       },
       {
-        name: t('当前配置版本'),
+        name: t('源版本'),
         id: 'current-version',
+        disabled: true,
       },
       {
         name: t('最近一次拉取配置状态'),
         id: 'pull-status',
+        disabled: true,
       },
       {
         name: t('在线状态'),
         id: 'online-status',
+        disabled: true,
       },
       {
         name: t('首次连接时间'),
@@ -384,6 +397,7 @@
       'client-type',
       'client-version',
     ],
+    size: 'small',
   });
 
   const selectedShowColumn = ref([
@@ -476,8 +490,9 @@
     }
   };
 
-  const handleSettingsChange = ({ checked }: any) => {
+  const handleSettingsChange = ({ checked, size }: any) => {
     selectedShowColumn.value = [...checked];
+    localStorage.setItem('client-show-column', JSON.stringify({ checked, size }));
   };
 
   const getErrorDetails = (item: any) => {
@@ -491,12 +506,19 @@
 </script>
 
 <style scoped lang="scss">
+  .client-search-page {
+    height: 100%;
+    overflow: auto;
+  }
   .header {
     position: relative;
     height: 120px;
     padding: 40px 120px 0 40px;
     background-image: linear-gradient(-82deg, #e8f0ff 10%, #f0f5ff 93%);
     box-shadow: 0 2px 4px 0 #1919290d;
+    :deep(.head) {
+      z-index: 10;
+    }
     &::after {
       position: absolute;
       right: 0;
@@ -504,7 +526,18 @@
       content: '';
       width: 80px;
       height: 120px;
-      background-image: url('../../../../assets/client-head.png');
+      background-image: url('../../../../assets/client-head-right.png');
+      z-index: 0;
+    }
+    &::before {
+      position: absolute;
+      left: 0;
+      top: 0px;
+      content: '';
+      width: 200px;
+      height: 120px;
+      background-image: url('../../../../assets/client-head-left.png');
+      z-index: 0;
     }
   }
   .content {
@@ -592,9 +625,16 @@
   }
 </style>
 
-<style>
-  .client-settings-custom .field-item {
-    min-width: 150px;
-    width: auto !important;
+<style lang="scss">
+  .client-settings-custom {
+    padding: 0px !important;
+    .setting-body {
+      .setting-body-fields {
+        max-height: inherit !important;
+      }
+    }
+    .field-item {
+      width: 200px !important;
+    }
   }
 </style>

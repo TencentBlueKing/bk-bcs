@@ -262,7 +262,7 @@
   // 下载已上传文件
   const handleDownloadFile = async () => {
     const { signature, name } = fileContent.value as IFileConfigContentSummary;
-    const res = await downloadTemplateContent(props.spaceId, props.templateSpaceId, signature);
+    const res = await downloadTemplateContent(props.spaceId, props.templateSpaceId, signature, true);
     fileDownload(String(res), name);
   };
 

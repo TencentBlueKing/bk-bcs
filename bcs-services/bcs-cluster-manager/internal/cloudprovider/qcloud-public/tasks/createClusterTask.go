@@ -1002,7 +1002,7 @@ func CheckTkeClusterStatusTask(taskID string, stepName string) error {
 }
 
 // CheckCreateClusterNodeStatusTask check cluster node status
-func CheckCreateClusterNodeStatusTask(taskID string, stepName string) error {
+func CheckCreateClusterNodeStatusTask(taskID string, stepName string) error { // nolint
 	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
 		"start check create cluster node status")
 	start := time.Now()

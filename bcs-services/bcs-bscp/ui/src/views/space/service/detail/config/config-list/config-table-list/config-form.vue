@@ -373,7 +373,7 @@
   const handleDownloadFile = async () => {
     const { signature, name } = fileContent.value as IFileConfigContentSummary;
     const getContent = props.isTpl ? downloadTemplateContent : downloadConfigContent;
-    const res = await getContent(props.bkBizId, props.id, signature);
+    const res = await getContent(props.bkBizId, props.id, signature, true);
     fileDownload(res, name);
   };
 

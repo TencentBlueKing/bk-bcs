@@ -72,7 +72,7 @@ func BuildRemoveHostStep(task *proto.Task, bizID string, nodeIPs []string) {
 }
 
 // TransferHostModuleTask transfer host module task
-func TransferHostModuleTask(taskID string, stepName string) error {
+func TransferHostModuleTask(taskID string, stepName string) error { // nolint
 	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
 		"start transfer host module")
 	start := time.Now()

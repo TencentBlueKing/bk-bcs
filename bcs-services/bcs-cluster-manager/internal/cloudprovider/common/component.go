@@ -635,7 +635,7 @@ func EnsureAutoScalerTask(taskID string, stepName string) error {
 	return nil
 }
 
-func ensureAutoScalerWithInstaller(ctx context.Context, nodeGroups []proto.NodeGroup,
+func ensureAutoScalerWithInstaller(ctx context.Context, nodeGroups []proto.NodeGroup, // nolint
 	as *proto.ClusterAutoScalingOption) error {
 	taskID, stepName := cloudprovider.GetTaskIDAndStepNameFromContext(ctx)
 

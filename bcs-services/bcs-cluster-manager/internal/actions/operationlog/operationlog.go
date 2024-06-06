@@ -61,7 +61,7 @@ func (ua *ListOperationLogsAction) setResp(code uint32, msg string) {
 	ua.resp.Result = (code == common.BcsErrClusterManagerSuccess)
 }
 
-func (ua *ListOperationLogsAction) fetchV2OperationLogs() error {
+func (ua *ListOperationLogsAction) fetchV2OperationLogs() error { // nolint
 	var (
 		conds   = make([]bson.E, 0)
 		condDst = make([]bson.E, 0)

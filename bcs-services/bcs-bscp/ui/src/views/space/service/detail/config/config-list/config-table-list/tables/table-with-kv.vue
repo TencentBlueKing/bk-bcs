@@ -133,7 +133,7 @@
     v-model:show="viewPanelShow"
     :config="activeConfig"
     :show-edit-btn="isUnNamedVersion"
-    @openEdit="handleSwitchToEdit" />
+    @open-edit="handleSwitchToEdit" />
   <VersionDiff v-model:show="isDiffPanelShow" :current-version="versionData" :selected-kv-config-id="diffConfig" />
   <DeleteConfirmDialog
     v-model:isShow="isDeleteConfigDialogShow"
@@ -448,7 +448,6 @@
   };
 
   const handleFilter = ({ checked, index }: any) => {
-    console.log(checked, index);
     if (index === 4) {
       // 调整数据类型筛选条件
       typeFilterChecked.value = checked;

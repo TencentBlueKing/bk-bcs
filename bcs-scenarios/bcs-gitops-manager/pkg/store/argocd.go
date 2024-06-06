@@ -39,6 +39,7 @@ import (
 	"github.com/argoproj/argo-cd/v2/pkg/apiclient/repository"
 	repositorypkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/repository"
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
+	argopkg "github.com/argoproj/argo-cd/v2/pkg/client/clientset/versioned/typed/application/v1alpha1"
 	"github.com/argoproj/argo-cd/v2/reposerver/apiclient"
 	argoutil "github.com/argoproj/argo-cd/v2/util/argo"
 	utilargo "github.com/argoproj/argo-cd/v2/util/argo"
@@ -49,9 +50,11 @@ import (
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/watch"
+	"k8s.io/client-go/rest"
 	"k8s.io/kubernetes/pkg/kubelet/util/sliceutils"
 
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/internal/dao"
@@ -78,6 +81,7 @@ type argo struct {
 	projectClient projectpkg.ProjectServiceClient
 	clusterClient clusterpkg.ClusterServiceClient
 	historyStore  *appHistoryStore
+	argoK8SClient *argopkg.ArgoprojV1alpha1Client
 
 	cacheSynced      atomic.Bool
 	cacheApplication *sync.Map
@@ -86,7 +90,7 @@ type argo struct {
 // Init control interface
 func (cd *argo) Init() error {
 	initializer := []func() error{
-		cd.initToken, cd.initBasicClient, cd.initAppHistoryStore,
+		cd.initToken, cd.initBasicClient, cd.initArgoK8SClient, cd.initAppHistoryStore,
 	}
 	if cd.option.Cache {
 		initializer = append(initializer, cd.initCache)
@@ -802,6 +806,18 @@ func (cd *argo) ListApplicationSets(ctx context.Context, query *appsetpkg.Applic
 	return appsets, nil
 }
 
+// DeleteApplicationSetOrphan delete application-set with orphan
+func (cd *argo) DeleteApplicationSetOrphan(ctx context.Context, name string) error {
+	deleteOption := metav1.DeletePropagationOrphan
+	if err := cd.argoK8SClient.ApplicationSets(cd.option.AdminNamespace).
+		Delete(ctx, name, metav1.DeleteOptions{
+			PropagationPolicy: &deleteOption,
+		}); err != nil {
+		return errors.Wrapf(err, "delete application-set failed")
+	}
+	return nil
+}
+
 func (cd *argo) initAppHistoryStore() error {
 	if !cd.option.CacheHistory {
 		return nil
@@ -857,6 +873,18 @@ func (cd *argo) initToken() error {
 	}
 	blog.Infof("[store] argocd token session init OK, %s", t)
 	cd.token = t
+	return nil
+}
+
+func (cd *argo) initArgoK8SClient() error {
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		return errors.Wrapf(err, "get k8s incluster config failed")
+	}
+	cd.argoK8SClient, err = argopkg.NewForConfig(config)
+	if err != nil {
+		return errors.Wrapf(err, "create argo k8s client failed")
+	}
 	return nil
 }
 

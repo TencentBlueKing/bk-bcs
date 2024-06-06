@@ -432,7 +432,7 @@ func AddNodesToClusterTask(taskID string, stepName string) error { // nolint
 }
 
 // CheckAddNodesStatusTask check add node status
-func CheckAddNodesStatusTask(taskID string, stepName string) error {
+func CheckAddNodesStatusTask(taskID string, stepName string) error { // nolint
 	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
 		"start check add nodes status")
 	start := time.Now()
