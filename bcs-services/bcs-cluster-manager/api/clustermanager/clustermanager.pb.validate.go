@@ -48623,6 +48623,641 @@ var _ interface {
 	ErrorName() string
 } = ListOperationLogsResponseValidationError{}
 
+// Validate checks the field values on TaskRecordsRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *TaskRecordsRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on TaskRecordsRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// TaskRecordsRequestMultiError, or nil if none found.
+func (m *TaskRecordsRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *TaskRecordsRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for TaskID
+
+	if len(errors) > 0 {
+		return TaskRecordsRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// TaskRecordsRequestMultiError is an error wrapping multiple validation errors
+// returned by TaskRecordsRequest.ValidateAll() if the designated constraints
+// aren't met.
+type TaskRecordsRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m TaskRecordsRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m TaskRecordsRequestMultiError) AllErrors() []error { return m }
+
+// TaskRecordsRequestValidationError is the validation error returned by
+// TaskRecordsRequest.Validate if the designated constraints aren't met.
+type TaskRecordsRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e TaskRecordsRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e TaskRecordsRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e TaskRecordsRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e TaskRecordsRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e TaskRecordsRequestValidationError) ErrorName() string {
+	return "TaskRecordsRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e TaskRecordsRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sTaskRecordsRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = TaskRecordsRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = TaskRecordsRequestValidationError{}
+
+// Validate checks the field values on TaskRecordsResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *TaskRecordsResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on TaskRecordsResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// TaskRecordsResponseMultiError, or nil if none found.
+func (m *TaskRecordsResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *TaskRecordsResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, TaskRecordsResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, TaskRecordsResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return TaskRecordsResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return TaskRecordsResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// TaskRecordsResponseMultiError is an error wrapping multiple validation
+// errors returned by TaskRecordsResponse.ValidateAll() if the designated
+// constraints aren't met.
+type TaskRecordsResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m TaskRecordsResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m TaskRecordsResponseMultiError) AllErrors() []error { return m }
+
+// TaskRecordsResponseValidationError is the validation error returned by
+// TaskRecordsResponse.Validate if the designated constraints aren't met.
+type TaskRecordsResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e TaskRecordsResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e TaskRecordsResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e TaskRecordsResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e TaskRecordsResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e TaskRecordsResponseValidationError) ErrorName() string {
+	return "TaskRecordsResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e TaskRecordsResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sTaskRecordsResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = TaskRecordsResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = TaskRecordsResponseValidationError{}
+
+// Validate checks the field values on TaskRecordsResponseData with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *TaskRecordsResponseData) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on TaskRecordsResponseData with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// TaskRecordsResponseDataMultiError, or nil if none found.
+func (m *TaskRecordsResponseData) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *TaskRecordsResponseData) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Status
+
+	for idx, item := range m.GetStep() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, TaskRecordsResponseDataValidationError{
+						field:  fmt.Sprintf("Step[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, TaskRecordsResponseDataValidationError{
+						field:  fmt.Sprintf("Step[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return TaskRecordsResponseDataValidationError{
+					field:  fmt.Sprintf("Step[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return TaskRecordsResponseDataMultiError(errors)
+	}
+
+	return nil
+}
+
+// TaskRecordsResponseDataMultiError is an error wrapping multiple validation
+// errors returned by TaskRecordsResponseData.ValidateAll() if the designated
+// constraints aren't met.
+type TaskRecordsResponseDataMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m TaskRecordsResponseDataMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m TaskRecordsResponseDataMultiError) AllErrors() []error { return m }
+
+// TaskRecordsResponseDataValidationError is the validation error returned by
+// TaskRecordsResponseData.Validate if the designated constraints aren't met.
+type TaskRecordsResponseDataValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e TaskRecordsResponseDataValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e TaskRecordsResponseDataValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e TaskRecordsResponseDataValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e TaskRecordsResponseDataValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e TaskRecordsResponseDataValidationError) ErrorName() string {
+	return "TaskRecordsResponseDataValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e TaskRecordsResponseDataValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sTaskRecordsResponseData.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = TaskRecordsResponseDataValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = TaskRecordsResponseDataValidationError{}
+
+// Validate checks the field values on TaskRecordStep with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *TaskRecordStep) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on TaskRecordStep with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in TaskRecordStepMultiError,
+// or nil if none found.
+func (m *TaskRecordStep) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *TaskRecordStep) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Id
+
+	// no validation rules for Name
+
+	// no validation rules for Status
+
+	// no validation rules for StartTime
+
+	// no validation rules for EndTime
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, TaskRecordStepValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, TaskRecordStepValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return TaskRecordStepValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return TaskRecordStepMultiError(errors)
+	}
+
+	return nil
+}
+
+// TaskRecordStepMultiError is an error wrapping multiple validation errors
+// returned by TaskRecordStep.ValidateAll() if the designated constraints
+// aren't met.
+type TaskRecordStepMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m TaskRecordStepMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m TaskRecordStepMultiError) AllErrors() []error { return m }
+
+// TaskRecordStepValidationError is the validation error returned by
+// TaskRecordStep.Validate if the designated constraints aren't met.
+type TaskRecordStepValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e TaskRecordStepValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e TaskRecordStepValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e TaskRecordStepValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e TaskRecordStepValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e TaskRecordStepValidationError) ErrorName() string { return "TaskRecordStepValidationError" }
+
+// Error satisfies the builtin error interface
+func (e TaskRecordStepValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sTaskRecordStep.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = TaskRecordStepValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = TaskRecordStepValidationError{}
+
+// Validate checks the field values on TaskRecordStepData with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *TaskRecordStepData) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on TaskRecordStepData with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// TaskRecordStepDataMultiError, or nil if none found.
+func (m *TaskRecordStepData) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *TaskRecordStepData) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Log
+
+	// no validation rules for Timestamp
+
+	// no validation rules for Level
+
+	// no validation rules for GroupStart
+
+	// no validation rules for GroupEnd
+
+	if len(errors) > 0 {
+		return TaskRecordStepDataMultiError(errors)
+	}
+
+	return nil
+}
+
+// TaskRecordStepDataMultiError is an error wrapping multiple validation errors
+// returned by TaskRecordStepData.ValidateAll() if the designated constraints
+// aren't met.
+type TaskRecordStepDataMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m TaskRecordStepDataMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m TaskRecordStepDataMultiError) AllErrors() []error { return m }
+
+// TaskRecordStepDataValidationError is the validation error returned by
+// TaskRecordStepData.Validate if the designated constraints aren't met.
+type TaskRecordStepDataValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e TaskRecordStepDataValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e TaskRecordStepDataValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e TaskRecordStepDataValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e TaskRecordStepDataValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e TaskRecordStepDataValidationError) ErrorName() string {
+	return "TaskRecordStepDataValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e TaskRecordStepDataValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sTaskRecordStepData.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = TaskRecordStepDataValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = TaskRecordStepDataValidationError{}
+
 // Validate checks the field values on ListOperationLogsResponseData with the
 // rules defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.

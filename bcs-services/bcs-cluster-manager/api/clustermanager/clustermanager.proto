@@ -1217,6 +1217,17 @@ service ClusterManager {
     };
   }
 
+   // Task records
+   rpc TaskRecords(TaskRecordsRequest) returns (TaskRecordsResponse) {
+    option (google.api.http) = {
+      get : "/clustermanager/v1/taskrecords"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "查询任务记录列表"
+      summary : "查询任务记录列表"
+    };
+  }
+
   // CleanDbHistoryData clean DB history data
   rpc CleanDbHistoryData(CleanDbHistoryDataRequest) returns (CleanDbHistoryDataResponse) {
     option (google.api.http) = {
@@ -11878,6 +11889,100 @@ message ListOperationLogsResponse {
   ListOperationLogsResponseData data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "data",
     description : "返回数据"
+  }];
+}
+
+message TaskRecordsRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListTaskRecordsRequest"
+      description : "获取任务记录请求参数"
+    }
+  };
+  
+  string taskID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "taskID",
+    description: "默认为空, 过滤任务维度的操作审计"
+  }];
+}
+
+message TaskRecordsResponse {
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+  string message = 2[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "result",
+    description : "返回结果"
+  }];
+  TaskRecordsResponseData data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "data",
+    description : "返回数据"
+  }];
+}
+
+message TaskRecordsResponseData {
+  string status = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "status",
+    description : "任务日志状态(waiting, loading, success, halfSuccess, failed, terminate)"
+  }];
+  repeated TaskRecordStep step = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "step",
+    description : "任务日志状态(waiting, loading, success, halfSuccess, failed, terminate)"
+  }];
+}
+
+message TaskRecordStep {
+  string id = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "id",
+    description : "任务ID(唯一标识)"
+  }];
+  string name = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "name",
+    description : "任务名称"
+  }];
+  string status = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "status",
+    description : "任务步骤状态(同上)"
+  }];
+  int64 startTime = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "startTime",
+    description : "任务开始时间戳"
+  }];
+  int64 endTime = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "endTime",
+    description : "任务结束时间戳"
+  }];
+  repeated TaskRecordStepData data = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "endTime",
+    description : "任务结束时间戳"
+  }];
+}
+
+message TaskRecordStepData {
+  string log = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "log",
+    description : "当前行内容"
+  }];
+  int64 timestamp = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "timestamp",
+    description : "时间戳"
+  }];
+  string level = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "level",
+    description : "日志等级(INFO, WARN, ERROR)"
+  }];
+  bool groupStart = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "groupStart",
+    description : "是否是分组的开始"
+  }];
+  bool groupEnd = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "groupEnd",
+    description : "是否是分组的结束"
   }];
 }
 

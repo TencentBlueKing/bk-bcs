@@ -90,6 +90,7 @@ var NoAuthMethod = []string{
 
 	"ClusterManager.ListOperationLogs",
 	"ClusterManager.ListTaskStepLogs",
+	"ClusterManager.TaskRecords",
 	"ClusterManager.ListResourceSchema",
 	"ClusterManager.GetResourceSchema",
 
@@ -251,6 +252,7 @@ var ActionPermissions = map[string]string{
 	"ClusterManager.ListCloudInstances":      "",
 	"ClusterManager.ListOperationLogs":       "",
 	"ClusterManager.ListTaskStepLogs":        "",
+	"ClusterManager.TaskRecords":             "",
 	"ClusterManager.ListResourceSchema":      "",
 	"ClusterManager.GetResourceSchema":       "",
 	"ClusterManager.QueryPermByActionID":     "",

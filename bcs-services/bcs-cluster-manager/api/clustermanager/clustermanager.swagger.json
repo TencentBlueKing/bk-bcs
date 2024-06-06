@@ -5852,6 +5852,39 @@
         ]
       }
     },
+    "/clustermanager/v1/taskrecords": {
+      "get": {
+        "summary": "查询任务记录列表",
+        "description": "查询任务记录列表",
+        "operationId": "ClusterManager_TaskRecords",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerTaskRecordsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "taskID",
+            "description": "taskID. 默认为空, 过滤任务维度的操作审计",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/tasksteplogs": {
       "get": {
         "summary": "查询任务步骤日志列表",
@@ -17005,6 +17038,124 @@
       },
       "description": "集群管理，节点管理背后所映射任务信息，主要是关联的自动化步骤（整合云api与蓝鲸标准运维）",
       "title": "Task"
+    },
+    "clustermanagerTaskRecordStep": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "任务ID(唯一标识)",
+          "title": "id"
+        },
+        "name": {
+          "type": "string",
+          "description": "任务名称",
+          "title": "name"
+        },
+        "status": {
+          "type": "string",
+          "description": "任务步骤状态(同上)",
+          "title": "status"
+        },
+        "startTime": {
+          "type": "string",
+          "format": "int64",
+          "description": "任务开始时间戳",
+          "title": "startTime"
+        },
+        "endTime": {
+          "type": "string",
+          "format": "int64",
+          "description": "任务结束时间戳",
+          "title": "endTime"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerTaskRecordStepData"
+          },
+          "description": "任务结束时间戳",
+          "title": "endTime"
+        }
+      }
+    },
+    "clustermanagerTaskRecordStepData": {
+      "type": "object",
+      "properties": {
+        "log": {
+          "type": "string",
+          "description": "当前行内容",
+          "title": "log"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "int64",
+          "description": "时间戳",
+          "title": "timestamp"
+        },
+        "level": {
+          "type": "string",
+          "description": "日志等级(INFO, WARN, ERROR)",
+          "title": "level"
+        },
+        "groupStart": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否是分组的开始",
+          "title": "groupStart"
+        },
+        "groupEnd": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否是分组的结束",
+          "title": "groupEnd"
+        }
+      }
+    },
+    "clustermanagerTaskRecordsResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/clustermanagerTaskRecordsResponseData",
+          "description": "返回数据",
+          "title": "data"
+        }
+      }
+    },
+    "clustermanagerTaskRecordsResponseData": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "description": "任务日志状态(waiting, loading, success, halfSuccess, failed, terminate)",
+          "title": "status"
+        },
+        "step": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerTaskRecordStep"
+          },
+          "description": "任务日志状态(waiting, loading, success, halfSuccess, failed, terminate)",
+          "title": "step"
+        }
+      }
     },
     "clustermanagerTaskStepLogDetail": {
       "type": "object",
