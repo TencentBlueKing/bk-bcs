@@ -257,8 +257,7 @@
   const selectorData = computed(() => (isClientSearch.value ? CLIENT_SEARCH_DATA : CLIENT_STATISTICS_SEARCH_DATA));
 
   const searchInputPlaceholder = computed(() => {
-    if (parentSelecte.value?.children) return '';
-    if (searchStr.value.split(' : ', 2)[1]) return '';
+    if (parentSelecte.value?.children || searchStr.value.split(' : ', 2)[1]) return '';
     if (parentSelecte.value?.value !== 'label') {
       return t('查询多个实例请使用竖线（"|"）分隔');
     }
@@ -416,7 +415,6 @@
     if (parentSelecte.value?.value === 'label') {
       conditionValue = conditionValue.replace(/;+/g, '|').replace(/\s+/g, '');
     } else {
-      console.log(conditionValue);
       conditionValue = conditionValue.replace(/[,;]+/g, '|').replace(/\s+/g, '');
     }
     // 添加默认查询条件ip
