@@ -28,6 +28,8 @@
         :bound-by-apps-count-loading="boundByAppsCountLoading"
         :bound-by-apps-count-list="boundByAppsCountList"
         :pagination="pagination"
+        @page-value-change="pagination.current = $event"
+        @page-limit-change="handlePageLimitChange"
         @deleted="handleVersionDeleted"
         @select="handleOpenDetailTable($event, 'view')" />
       <VersionDetailTable
@@ -70,8 +72,9 @@
   import { ArrowsLeft, Plus } from 'bkui-vue/lib/icon';
   import useGlobalStore from '../../../../store/global';
   import useTemplateStore from '../../../../store/template';
+  import useTablePagination from '../../../../utils/hooks/use-table-pagination';
   import { ITemplateConfigItem, ITemplateVersionItem } from '../../../../../types/template';
-  import { IPagination, ICommonQuery } from '../../../../../types/index';
+  import { ICommonQuery } from '../../../../../types/index';
   import {
     getTemplatesDetailByIds,
     getTemplateVersionList,
@@ -82,6 +85,8 @@
   import VersionDetailTable from './version-detail/version-detail-table.vue';
 
   const { t } = useI18n();
+  const { pagination, updatePagination } = useTablePagination('templateVersionManage');
+
   const getRouteId = (id: string) => {
     if (id && typeof Number(id) === 'number') {
       return Number(id);
@@ -111,11 +116,6 @@
     open: false,
     type: 'create',
     id: 0,
-  });
-  const pagination = ref<IPagination>({
-    count: 0,
-    current: 1,
-    limit: 10,
   });
 
   const templateSpaceId = computed(() => getRouteId(route.params.templateSpaceId as string));
@@ -236,6 +236,11 @@
     pagination.value.current = 1;
     await getVersionList();
     handleVersionMenuSelect(id);
+  };
+
+  const handlePageLimitChange = (val: number) => {
+    updatePagination('limit', val);
+    refreshList();
   };
 
   const refreshList = (current = 1) => {

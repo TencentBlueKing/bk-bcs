@@ -50,6 +50,7 @@
           :drill-dimension="selectDimension.drillDownDimension"
           :bk-biz-id="bkBizId"
           :app-id="appId"
+          :is-stack="selectDimension.isStack"
           @select="handleSelectDimension" />
       </div>
       <Card v-else :height="368">
@@ -91,6 +92,7 @@
       primaryDimension: string;
       minorDimension: string[];
       drillDownDimension: string;
+      isStack: boolean;
     }[]
   >([]);
 
@@ -126,8 +128,9 @@
         if (chartSelectDimensions.value?.findIndex((item) => item.primaryDimension === label) === -1) {
           chartSelectDimensions.value?.push({
             primaryDimension: label,
-            minorDimension: [],
+            minorDimension: [label],
             drillDownDimension: '',
+            isStack: false,
           });
         }
       });
@@ -182,10 +185,10 @@
     return str1.localeCompare(str2);
   };
 
-  const handleSelectDimension = ({ primaryDimension, minorDimension, drillDownDimension }: any) => {
+  const handleSelectDimension = ({ primaryDimension, minorDimension, drillDownDimension, isStack }: any) => {
     const selectedItem = chartSelectDimensions.value!.find((item) => item.primaryDimension === primaryDimension);
     if (selectedItem) {
-      Object.assign(selectedItem, { primaryDimension, minorDimension, drillDownDimension });
+      Object.assign(selectedItem, { primaryDimension, minorDimension, drillDownDimension, isStack });
     }
   };
 
@@ -211,6 +214,7 @@
           addChartData.value.labels.includes(dimension),
         ),
         drillDownDimension: addChartData.value.labels.includes(item.drillDownDimension) ? item.drillDownDimension : '',
+        isStack: item.isStack,
       };
     });
   };

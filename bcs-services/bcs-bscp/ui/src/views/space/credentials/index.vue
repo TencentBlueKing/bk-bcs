@@ -248,6 +248,7 @@
   import { useI18n } from 'vue-i18n';
   import { storeToRefs } from 'pinia';
   import useGlobalStore from '../../../store/global';
+  import useTablePagination from '../../../utils/hooks/use-table-pagination';
   import { Plus, Search, Eye, Unvisible, Copy, EditLine, Warn } from 'bkui-vue/lib/icon';
   import BkMessage from 'bkui-vue/lib/message';
   import { InfoBox } from 'bkui-vue';
@@ -267,6 +268,7 @@
 
   const { spaceId, permissionQuery, showApplyPermDialog } = storeToRefs(useGlobalStore());
   const { t, locale } = useI18n();
+  const { pagination, updatePagination } = useTablePagination('credentialList');
 
   const permCheckLoading = ref(false);
   const hasManagePerm = ref(false);
@@ -285,11 +287,6 @@
   const isAssociateSliderShow = ref(false);
   const currentCredential = ref(0);
   const isSearchEmpty = ref(false);
-  const pagination = ref({
-    current: 1,
-    count: 0,
-    limit: 10,
-  });
   const tableData = ref<any>([]);
   const isShowDeleteDialog = ref(false);
   const dialogInputStr = ref('');
@@ -601,7 +598,7 @@
 
   // 更改每页条数
   const handlePageLimitChange = (val: number) => {
-    pagination.value.limit = val;
+    updatePagination('limit', val);
     refreshListWithLoading();
   };
 

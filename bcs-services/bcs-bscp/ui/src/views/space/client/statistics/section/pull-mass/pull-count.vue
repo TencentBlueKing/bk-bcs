@@ -19,7 +19,24 @@
         </template>
         <bk-loading class="loading-wrap" :loading="loading">
           <div v-if="!isDataEmpty" ref="canvasRef" class="canvas-wrap">
-            <Tooltip ref="tooltipRef" @jump="jumpToSearch" />
+            <Tooltip ref="tooltipRef" :is-custom="true" @jump="jumpToSearch">
+              <div class="tooltips-list">
+                <div
+                  v-for="item in customTooltip"
+                  :key="item.x"
+                  class="tooltips-item"
+                  @click="handleClickTooltipsItem(item)">
+                  <div class="tooltip-left">
+                    <div class="marker" :style="{ background: item.color }"></div>
+                    <div class="name">{{ item.name }}</div>
+                  </div>
+                  <div class="tooltip-right">
+                    <div class="value">{{ item.value }}</div>
+                    <Share class="icon" />
+                  </div>
+                </div>
+              </div>
+            </Tooltip>
           </div>
           <bk-exception v-else type="empty" scene="part" :description="$t('暂无数据')">
             <template #type>
@@ -44,6 +61,7 @@
   import { storeToRefs } from 'pinia';
   import { useRouter } from 'vue-router';
   import { useI18n } from 'vue-i18n';
+  import { Share } from 'bkui-vue/lib/icon';
 
   const { t } = useI18n();
 
@@ -85,6 +103,7 @@
   const isOpenFullScreen = ref(false);
   const jumpSearchTime = ref('');
   const isShowOperationBtn = ref(false);
+  const customTooltip = ref();
 
   const isDataEmpty = computed(() => !data.value.time.some((item) => item.count > 0));
 
@@ -146,16 +165,16 @@
         res.time_and_type?.map((item: any) => {
           switch (item.type) {
             case 'sidecar':
-              item.type = `SideCar ${t('客户端')}`;
+              item.name = `SideCar ${t('客户端')}`;
               break;
             case 'sdk':
-              item.type = `SDK ${t('客户端')}`;
+              item.name = `SDK ${t('客户端')}`;
               break;
             case 'agent':
-              item.type = t('主机插件客户端');
+              item.name = t('主机插件客户端');
               break;
             case 'command':
-              item.type = `CLI ${t('客户端')}`;
+              item.name = `CLI ${t('客户端')}`;
               break;
           }
           return item;
@@ -182,13 +201,22 @@
               },
             },
           },
+          tickCount: 5,
+          min: 0,
         },
         count: {
+          grid: {
+            line: {
+              style: {
+                stroke: '#979BA5',
+                lineDash: [4, 5],
+              },
+            },
+          },
           tickCount: 5,
           min: 0,
         },
       },
-      padding: [10, 20, 30, 20],
       geometryOptions: [
         {
           geometry: 'line',
@@ -234,10 +262,11 @@
             if (item.name === 'count') {
               item.name = t('总量');
             } else {
-              item.name = item.data.type;
+              item.name = item.data.name;
             }
           });
           originalItems.unshift(originalItems.pop());
+          customTooltip.value = originalItems;
           return originalItems;
         },
       },
@@ -250,6 +279,20 @@
       name: 'client-search',
       params: { appId: props.appId, bizId: props.bkBizId },
       query: { pull_time: jumpSearchTime.value, heartTime: searchQuery.value.last_heartbeat_time },
+    });
+    window.open(routeData.href, '_blank');
+  };
+
+  const handleClickTooltipsItem = (item: any) => {
+    if (item.name === '总量') return;
+    const routeData = router.resolve({
+      name: 'client-search',
+      params: { appId: props.appId, bizId: props.bkBizId },
+      query: {
+        pull_time: jumpSearchTime.value,
+        heartTime: searchQuery.value.last_heartbeat_time,
+        client_type: item.data.type,
+      },
     });
     window.open(routeData.href, '_blank');
   };
@@ -295,6 +338,48 @@
       .g2-tooltip-marker {
         height: 2px !important;
         transform: translatey(-3px);
+      }
+    }
+  }
+  .tooltips-list {
+    margin-bottom: 12px;
+    .tooltips-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 27px;
+      cursor: pointer;
+      &:nth-child(1) {
+        .marker {
+          height: 2px !important;
+        }
+        .tooltip-right {
+          margin-right: 20px;
+        }
+        .icon {
+          display: none !important;
+        }
+      }
+      &:hover {
+        background: #f5f7fa;
+      }
+      .tooltip-left {
+        display: flex;
+        align-items: center;
+      }
+      .tooltip-right {
+        @extend .tooltip-left;
+        margin-left: 20px;
+        .icon {
+          color: #3a84ff;
+          margin-left: 8px;
+          font-size: 12px;
+        }
+      }
+      .marker {
+        width: 8px;
+        height: 8px;
+        margin-right: 8px;
       }
     }
   }

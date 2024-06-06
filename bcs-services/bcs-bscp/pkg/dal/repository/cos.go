@@ -149,6 +149,21 @@ func (c *cosClient) Metadata(kt *kit.Kit, sign string) (*ObjectMetadata, error) 
 	return metadata, nil
 }
 
+func (c *cosClient) InitMultipartUpload(kt *kit.Kit, sign string) (string, error) {
+	// TODO: InitMultipartUpload not implemented in cos
+	return "", fmt.Errorf("not implemented")
+}
+
+func (c *cosClient) MultipartUpload(kt *kit.Kit, sign string, uploadID string, partNum uint32, body io.Reader) error {
+	// TODO: MultipartUpload not implemented in cos
+	return fmt.Errorf("not implemented")
+}
+
+func (c *cosClient) CompleteMultipartUpload(kt *kit.Kit, sign string, uploadID string) (*ObjectMetadata, error) {
+	// TODO: CompleteMultipartUpload not implemented in cos
+	return nil, fmt.Errorf("not implemented")
+}
+
 // URIDecorator ..
 func (c *cosClient) URIDecorator(bizID uint32) DecoratorInter {
 	return newUriDecoratorInter(bizID)

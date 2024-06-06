@@ -772,6 +772,8 @@ export default {
   已拉取配置文件的客户端数量统计: 'Statistics on the number of clients whose configuration files have been pulled',
   已收藏为: 'Collected',
   已存在同名常用查询: 'A common search with the same name already exists',
+  '查询多个实例请使用竖线（"|"）分隔': 'To query multiple instances, separate them using a vertical bar ("|")',
+  '查询同一标签多个值时使用逗号（","）分隔，查询不同标签时使用竖线（"|"）分隔': 'Multiple values within the same tag are separated by commas (","), while different tags are separated by vertical bars ("|")',
 
   // 客户端统计
   配置版本发布: 'Configuration version release',
@@ -815,6 +817,13 @@ export default {
   暂无服务: 'No service',
   前往创建: 'Go to create',
   命令行工具: 'Command line tool',
+  重试: 'Retry',
+  批量重试: 'Batch Retry',
+  '当前已选择 {n} 个客户端，': 'Currently, {n} clients have been selected. ',
+  清除选择: 'clear selection',
+  '确定批量重试拉取客户端配置?': 'Confirm to retry pulling client configurations in batches',
+  '确定重试拉取客户端配置?': 'Confirm to retry pulling the client configuration',
+  重试成功: 'Retry success',
   '确认删除该常用查询?': 'Confirm to delete the common query?',
   配置拉取时间范围: 'Set the pull time range',
   前置脚本失败: 'PreHookFailed',
@@ -863,4 +872,5 @@ export default {
   可下钻图表: 'Drill-down chart',
   '组件类型 / 版本分布': 'Component type / Version distribution',
   下钻: 'Drill down',
+  总和: 'Total',
 };

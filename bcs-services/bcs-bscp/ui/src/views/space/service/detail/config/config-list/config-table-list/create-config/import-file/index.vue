@@ -75,10 +75,10 @@
           @change="handleTableChange($event, true)" />
         <ConfigTable
           v-if="existConfigList.length"
-          :expand="!expandNonExistTable"
+          :expand="expandExistTable"
           :table-data="existConfigList"
           :is-exsit-table="true"
-          @change-expand="expandNonExistTable = !expandNonExistTable"
+          @change-expand="expandExistTable = !expandExistTable"
           @change="handleTableChange($event, false)" />
       </bk-loading>
     </div>
@@ -139,6 +139,7 @@
   const nonExistConfigList = ref<IConfigImportItem[]>([]);
   const isClearDraft = ref(false);
   const expandNonExistTable = ref(true);
+  const expandExistTable = ref(true);
 
   const confirmBtnDisabled = computed(() => {
     if (importType.value === 'configTemplate' && importFromTemplateRef.value) {
@@ -223,9 +224,6 @@
       const res = await importFromHistoryVersion(props.bkBizId, props.appId, params);
       existConfigList.value = res.data.exist;
       nonExistConfigList.value = res.data.non_exist;
-      if (nonExistConfigList.value.length === 0) {
-        expandNonExistTable.value = false;
-      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -254,9 +252,6 @@
   const handleUploadFile = (exist: IConfigImportItem[], nonExist: IConfigImportItem[]) => {
     existConfigList.value = [...existConfigList.value, ...exist];
     nonExistConfigList.value = [...nonExistConfigList.value, ...nonExist];
-    if (nonExistConfigList.value.length === 0) {
-      expandNonExistTable.value = false;
-    }
   };
 
   // 删除文件处理表格数据

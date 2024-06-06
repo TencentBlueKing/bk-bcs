@@ -66,10 +66,10 @@
           @change="handleTableChange($event, true)" />
         <ConfigTable
           v-if="existConfigList.length"
-          :expand="!expandNonExistTable"
+          :expand="expandExistTable"
           :table-data="existConfigList"
           :is-exsit-table="true"
-          @change-expand="expandNonExistTable = !expandNonExistTable"
+          @change-expand="expandExistTable = !expandExistTable"
           @change="handleTableChange($event, false)" />
       </bk-loading>
     </div>
@@ -120,6 +120,7 @@
   const nonExistConfigList = ref<IConfigKvItem[]>([]);
   const isClearDraft = ref(false);
   const expandNonExistTable = ref(true);
+  const expandExistTable = ref(true);
   const textImport = ref();
 
   watch(
@@ -178,9 +179,6 @@
       const res = await importKvFromHistoryVersion(props.bkBizId, props.appId, params);
       existConfigList.value = res.data.exist;
       nonExistConfigList.value = res.data.non_exist;
-      if (nonExistConfigList.value.length === 0) {
-        expandNonExistTable.value = false;
-      }
     } catch (e) {
       console.error(e);
     } finally {
