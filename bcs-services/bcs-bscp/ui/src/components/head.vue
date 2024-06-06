@@ -215,14 +215,11 @@
   };
 
   const handleNavClick = (navId: String) => {
-    console.log(navId);
     if (navId === 'service-all' || navId === 'client-statistics' || navId === 'client-search') {
       const lastAccessedServiceDetail = localStorage.getItem('lastAccessedServiceDetail');
       if (lastAccessedServiceDetail) {
-        console.log(1);
         const detail = JSON.parse(lastAccessedServiceDetail);
         if (detail.spaceId === spaceId.value) {
-          console.log(2);
           router.push({
             name: navId === 'service-all' ? 'service-config' : (navId as RouteRecordName),
             params: { spaceId: detail.spaceId, appId: detail.appId },
@@ -412,7 +409,7 @@
             position: absolute;
             top: 52px;
             left: 0;
-            z-index: 1000;
+            z-index: 9999;
             background: #182132;
             border-radius: 0 0 2px 2px;
             padding: 4px 1px;
