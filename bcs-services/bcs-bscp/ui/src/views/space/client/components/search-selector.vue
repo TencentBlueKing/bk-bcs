@@ -414,10 +414,10 @@
       return;
     }
     if (parentSelecte.value?.value === 'label') {
-      conditionValue = conditionValue.replace(/[\n;]+/g, '|').replace(/\s+/g, '');
+      conditionValue = conditionValue.replace(/;+/g, '|').replace(/\s+/g, '');
     } else {
       console.log(conditionValue);
-      conditionValue = conditionValue.replace(/[\n,;]+/g, '|').replace(/\s+/g, '');
+      conditionValue = conditionValue.replace(/[,;]+/g, '|').replace(/\s+/g, '');
     }
     // 添加默认查询条件ip
     if (!parentSelecte.value?.value) {
@@ -754,9 +754,9 @@
     if (!condition.isEdit) return;
     let conditionValue = editSearchStr.value.split(' : ', 2)[1];
     if (condition.key === 'label') {
-      conditionValue = conditionValue.replace(/[\\n;]+/g, '|').replace(/\s+/g, '');
+      conditionValue = conditionValue.replace(/;+/g, '|').replace(/\s+/g, '');
     } else {
-      conditionValue = conditionValue.replace(/[\\n,;]+/g, '|').replace(/\s+/g, '');
+      conditionValue = conditionValue.replace(/[,;]+/g, '|').replace(/\s+/g, '');
     }
     if (conditionValue) {
       condition.value = conditionValue;
