@@ -103,6 +103,78 @@ paths:
         authConfig:
           userVerifiedRequired: false
         disabledStages: []
+  /api/v1/biz/{biz_id}/content/multipart/init:
+    post:
+      operationId: init_multipart_upload
+      description: 初始化文件分段上传
+      tags:
+      - 配置项元数据管理
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/biz/{biz_id}/content/multipart/init
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages: []
+  /api/v1/biz/{biz_id}/content/multipart/upload:
+    put:
+      operationId: multipart_upload
+      description: 文件分段上传
+      tags:
+      - 配置项元数据管理
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: put
+          path: /api/v1/biz/{biz_id}/content/multipart/upload
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages: []
+  /api/v1/biz/{biz_id}/content/multipart/complete:
+    post:
+      operationId: complete_multipart_upload
+      description: 完成文件分段上传
+      tags:
+      - 配置项元数据管理
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/biz/{biz_id}/content/multipart/complete
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages: []
   /api/v1/config/create/app/app/biz_id/{biz_id}:
     post:
       operationId: create_app
