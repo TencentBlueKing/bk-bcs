@@ -159,7 +159,7 @@ func GetClusterKubeConfig(opt *cloudprovider.CommonOption, cluster *eks.Cluster)
 			{
 				Name: *cluster.Name,
 				Cluster: types.ClusterInfo{
-					Server:                   "https://" + *cluster.Endpoint,
+					Server:                   *cluster.Endpoint,
 					CertificateAuthorityData: cert,
 				},
 			},

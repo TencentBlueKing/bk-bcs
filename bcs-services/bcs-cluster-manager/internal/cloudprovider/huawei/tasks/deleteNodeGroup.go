@@ -15,6 +15,7 @@ package tasks
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -74,13 +75,34 @@ func DeleteCloudNodeGroupTask(taskID string, stepName string) error {
 		return err
 	}
 
-	err = cceCli.DeleteNodePool(cluster.SystemID, group.CloudNodeGroupID)
-	if err != nil {
-		blog.Errorf("DeleteCloudNodeGroupTask[%s]: call huawei DeleteNodePool[%s] api in task %s step %s failed, %s",
-			taskID, nodeGroupID, taskID, stepName, err.Error())
-		retErr := fmt.Errorf("call huawei DeleteNodePool[%s] api err, %s", nodeGroupID, err.Error())
-		_ = state.UpdateStepFailure(start, stepName, retErr)
-		return retErr
+	found := true
+	if group.CloudNodeGroupID != "" {
+		_, err = cceCli.GetClusterNodePool(cluster.SystemID, group.CloudNodeGroupID)
+		if err != nil {
+			if !strings.Contains(err.Error(), "Resource not found") {
+				blog.Errorf("DeleteCloudNodeGroupTask[%s]: call DescribeClusterNodePoolDetail[%s] "+
+					"api in task %s step %s failed, %s",
+					taskID, nodeGroupID, taskID, stepName, err.Error())
+				retErr := fmt.Errorf("call DescribeClusterNodePoolDetail[%s] api err, %s", nodeGroupID,
+					err.Error())
+				_ = state.UpdateStepFailure(start, stepName, retErr)
+				return retErr
+			}
+			blog.Warnf("DeleteCloudNodeGroupTask[%s]: nodegroup[%s/%s] in task %s step %s not found, skip delete",
+				taskID, nodeGroupID, dependInfo.NodeGroup.CloudNodeGroupID, stepName, stepName)
+			found = false
+		}
+	}
+
+	if found && dependInfo.NodeGroup.CloudNodeGroupID != "" {
+		err = cceCli.DeleteNodePool(cluster.SystemID, group.CloudNodeGroupID)
+		if err != nil {
+			blog.Errorf("DeleteCloudNodeGroupTask[%s]: DeleteNodePool[%s] api in task %s step %s failed, %s",
+				taskID, nodeGroupID, taskID, stepName, err.Error())
+			retErr := fmt.Errorf("call huawei DeleteNodePool[%s] api err, %s", nodeGroupID, err.Error())
+			_ = state.UpdateStepFailure(start, stepName, retErr)
+			return retErr
+		}
 	}
 
 	blog.Infof("DeleteCloudNodeGroupTask[%s]: call DeleteClusterNodePool successful", taskID)

@@ -297,7 +297,19 @@ func (c *CloudValidate) CreateCloudAccountValidate(account *proto.Account) error
 
 // ListCloudVpcsValidate list cloudAccount validate
 func (c *CloudValidate) ListCloudVpcsValidate(req *proto.ListCloudVpcsRequest, account *proto.Account) error {
-	return cloudprovider.ErrCloudNotImplemented
+	if c == nil || account == nil {
+		return fmt.Errorf("%s ListCloudVpcsValidate request is empty", cloudName)
+	}
+
+	if len(account.SecretID) == 0 || len(account.SecretKey) == 0 {
+		return fmt.Errorf("%s ListCloudVpcsValidate request lost valid crendential info", cloudName)
+	}
+
+	if len(req.Region) == 0 {
+		return fmt.Errorf("%s ListCloudVpcsValidate request lost valid region info", cloudName)
+	}
+
+	return nil
 }
 
 // ListKeyPairsValidate list keyPairs validate
