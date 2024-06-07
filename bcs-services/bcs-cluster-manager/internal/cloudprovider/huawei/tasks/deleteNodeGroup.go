@@ -25,7 +25,7 @@ import (
 )
 
 // DeleteCloudNodeGroupTask delete cloud node group task
-func DeleteCloudNodeGroupTask(taskID string, stepName string) error {
+func DeleteCloudNodeGroupTask(taskID string, stepName string) error { // nolint
 	start := time.Now()
 	// get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
