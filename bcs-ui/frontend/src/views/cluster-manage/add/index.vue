@@ -188,7 +188,7 @@ export default defineComponent({
             title: $i18n.t('publicCloud.amazon.title'),
             desc: $i18n.t('publicCloud.amazon.desc'),
             type: 'amazonCloud',
-            disabled: true,
+            disabled: _INTERNAL_.value,
           },
           {
             icon: googleLogo,
@@ -295,6 +295,11 @@ export default defineComponent({
         case 'huaweiCloud':
           $router.push({
             name: 'importHuaweiCluster',
+          });
+          break;
+        case 'amazonCloud':
+          $router.push({
+            name: 'importAwsCluster',
           });
           break;
       }
