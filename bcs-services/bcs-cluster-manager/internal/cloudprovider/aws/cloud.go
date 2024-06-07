@@ -21,6 +21,7 @@ import (
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/aws/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 var cloudInfoMgr sync.Once
@@ -95,13 +96,13 @@ func clusterBasicSettingByEks(cls *cmproto.Cluster, cluster *eks.Cluster) {
 
 func clusterNetworkSettingByEks(cls *cmproto.Cluster, cluster *eks.Cluster) {
 	if cluster.KubernetesNetworkConfig.ServiceIpv4Cidr != nil {
+		maxServiceNum, _ := utils.ConvertCIDRToStep(*cluster.KubernetesNetworkConfig.ServiceIpv4Cidr)
 		cls.NetworkSettings = &cmproto.NetworkSetting{
-			ClusterIPv4CIDR: *cluster.KubernetesNetworkConfig.ServiceIpv4Cidr,
 			ServiceIPv4CIDR: *cluster.KubernetesNetworkConfig.ServiceIpv4Cidr,
+			MaxServiceNum:   maxServiceNum,
 		}
 	} else if cluster.KubernetesNetworkConfig.ServiceIpv6Cidr != nil {
 		cls.NetworkSettings = &cmproto.NetworkSetting{
-			ClusterIPv4CIDR: *cluster.KubernetesNetworkConfig.ServiceIpv6Cidr,
 			ServiceIPv4CIDR: *cluster.KubernetesNetworkConfig.ServiceIpv6Cidr,
 		}
 	}
