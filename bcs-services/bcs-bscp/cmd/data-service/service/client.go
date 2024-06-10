@@ -26,6 +26,7 @@ import (
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbbase "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
 	pbclient "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/client"
 	pbds "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
 	sfs "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/sf-share"
@@ -890,4 +891,68 @@ func formatMem(bytes float64) string {
 // 格式化cpu数据
 func formatCpu(number float64) string {
 	return fmt.Sprintf("%.3f", number)
+}
+
+// RetryClients 重试客户端执行版本变更回调
+func (s *Service) RetryClients(ctx context.Context, req *pbds.RetryClientsReq) (*pbbase.EmptyResp, error) {
+	kit := kit.FromGrpcContext(ctx)
+
+	if !req.All && len(req.ClientIds) == 0 {
+		return nil, fmt.Errorf("client ids is empty")
+	}
+
+	tx := s.dao.GenQuery().Begin()
+
+	if req.All {
+		event := types.Event{
+			Spec: &table.EventSpec{
+				Resource:   table.RetryApp,
+				ResourceID: req.AppId,
+				OpType:     table.InsertOp,
+			},
+			Attachment: &table.EventAttachment{BizID: req.BizId, AppID: req.AppId},
+			Revision:   &table.CreatedRevision{Creator: kit.User},
+		}
+		if err := s.dao.Event().Eventf(kit).FireWithTx(tx, event); err != nil {
+			return nil, err
+		}
+		if err := tx.Commit(); err != nil {
+			logs.Errorf("commit retry clients transaction failed, err: %v, rid: %s", err, kit.Rid)
+			return nil, err
+		}
+		return &pbbase.EmptyResp{}, nil
+	}
+
+	events := make([]types.Event, 0, len(req.ClientIds))
+	clientUIDMap := make(map[uint32]string)
+	clients, err := s.dao.Client().ListClientByIDs(kit, req.BizId, req.AppId, req.ClientIds)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, client := range clients {
+		clientUIDMap[client.ID] = client.Attachment.UID
+	}
+	for _, id := range req.ClientIds {
+		events = append(events, types.Event{
+			Spec: &table.EventSpec{
+				Resource:    table.RetryInstance,
+				ResourceID:  id,
+				ResourceUid: clientUIDMap[id],
+				OpType:      table.InsertOp,
+			},
+			Attachment: &table.EventAttachment{BizID: req.BizId, AppID: req.AppId},
+			Revision:   &table.CreatedRevision{Creator: kit.User},
+		})
+	}
+
+	if err := s.dao.Event().Eventf(kit).FireWithTx(tx, events...); err != nil {
+		return nil, err
+	}
+	if err := tx.Commit(); err != nil {
+		logs.Errorf("commit retry clients transaction failed, err: %v, rid: %s", err, kit.Rid)
+		return nil, err
+	}
+
+	return &pbbase.EmptyResp{}, nil
 }

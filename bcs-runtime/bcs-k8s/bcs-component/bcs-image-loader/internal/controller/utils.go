@@ -58,16 +58,14 @@ func getJobName(loader *tkexv1alpha1.ImageLoader, index int) string {
 	return fmt.Sprintf("%s-%d", loader.Name, index)
 }
 
-func newJob(loader *tkexv1alpha1.ImageLoader, index int) *batchv1.Job {
+func newJob(loader *tkexv1alpha1.ImageLoader) *batchv1.Job {
 	job := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: loader.Namespace,
-			Name:      getJobName(loader, index),
 			Labels: map[string]string{
 				ImageLoaderNameKey: loader.Name,
-				LoaderJobNameKey:   getJobName(loader, index),
 			},
-			Annotations: map[string]string{},
+			Annotations: loader.Annotations,
 			OwnerReferences: []metav1.OwnerReference{
 				{
 					APIVersion: tkexv1alpha1.GroupVersion.String(),
@@ -83,17 +81,14 @@ func newJob(loader *tkexv1alpha1.ImageLoader, index int) *batchv1.Job {
 			ActiveDeadlineSeconds: &loader.Spec.JobTimeout,
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{
-						LoaderJobNameKey: getJobName(loader, index),
-					},
+					Labels:      map[string]string{},
+					Annotations: loader.Annotations,
 				},
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
 						{
 							Name:            "image-loader",
-							Image:           loader.Spec.Images[index],
 							ImagePullPolicy: loader.Spec.ImagePullPolicy,
-							Command:         []string{"echo", "pull " + loader.Spec.Images[index]},
 						},
 					},
 					ImagePullSecrets: loader.Spec.ImagePullSecrets,
@@ -102,6 +97,9 @@ func newJob(loader *tkexv1alpha1.ImageLoader, index int) *batchv1.Job {
 			},
 			// the job will be delete by reconciler, no need to set ttl
 		},
+	}
+	for k, v := range loader.Labels {
+		job.Labels[k] = v
 	}
 	return job
 }
@@ -144,7 +142,8 @@ func (r *ImageLoaderReconciler) handlePodSelector(ctx context.Context, loader *t
 		return fmt.Errorf("failed to list pods: %v", err)
 	}
 	if len(podList.Items) == 0 {
-		return fmt.Errorf("pod not found for podSelector %v", loader.Spec.PodSelector)
+		logger.Info("pod not found for podSelector", "podSelector", loader.Spec.PodSelector)
+		return nil
 	}
 	nodes := make(map[string]struct{})
 	for _, pod := range podList.Items {
@@ -217,7 +216,8 @@ func (r *ImageLoaderReconciler) handleNodeSelector(ctx context.Context, loader *
 		}
 	}
 	if len(nodes) == 0 {
-		return fmt.Errorf("node not found for nodeSelector %v", loader.Spec.NodeSelector)
+		logger.Info("node not found for nodeSelector", "nodeSelector", loader.Spec.NodeSelector)
+		return nil
 	}
 
 	unqieNodes := make([]string, len(nodes))
@@ -253,9 +253,23 @@ func (r *ImageLoaderReconciler) handleAllNode(ctx context.Context, loader *tkexv
 	if err != nil {
 		return fmt.Errorf("failed to list nodes: %v", err)
 	}
+	if len(nodeList.Items) == 0 {
+		logger.Info("no node found")
+		return nil
+	}
 	job.Spec.Parallelism = pointer.Int32(int32(len(nodeList.Items)))
 	job.Spec.Completions = pointer.Int32(int32(len(nodeList.Items)))
 	return nil
+}
+
+func modifyJob(job *batchv1.Job, loader *tkexv1alpha1.ImageLoader, index int) {
+	job.Name = getJobName(loader, index)
+	job.Annotations[LoaderJobNameKey] = job.Name
+	job.Spec.Template.Labels[LoaderJobNameKey] = job.Name
+	job.Spec.Template.Spec.Containers[0].Image = loader.Spec.Images[index]
+	job.Spec.Template.Spec.Containers[0].Command = []string{
+		"echo", "pull " + loader.Spec.Images[index],
+	}
 }
 
 // convertMatchExpressions covert nodeName to matchExpressions

@@ -113,96 +113,6 @@ func (c *bkrepoClient) ensureRepo(kt *kit.Kit) error {
 	return nil
 }
 
-// getNodeMetadata If the node already exists, appID or tmplSpaceID will be added to the metadata of the current node.
-// If not exist, will create new metadata with this bizID and related appID, tmplSpaceID.
-func getNodeMetadata(kt *kit.Kit, cli *repo.Client, opt *repo.NodeOption) (string, error) {
-	metadata, err := cli.QueryMetadata(kt.Ctx, opt)
-	if err != nil {
-		return "", err
-	}
-
-	if len(metadata) == 0 {
-		meta := repo.NodeMeta{
-			BizID:       opt.BizID,
-			AppID:       []uint32{},
-			TmplSpaceID: []uint32{},
-		}
-		if kt.AppID != 0 {
-			meta.AppID = append(meta.AppID, kt.AppID)
-		}
-		if kt.TmplSpaceID != 0 {
-			meta.TmplSpaceID = append(meta.TmplSpaceID, kt.TmplSpaceID)
-		}
-
-		return meta.String()
-	}
-
-	// validate already node metadata.
-	bizID, exist := metadata["biz_id"]
-	if !exist {
-		return "", errors.New("node metadata not has biz id")
-	}
-
-	if bizID != strconv.Itoa(int(opt.BizID)) {
-		return "", fmt.Errorf("node metadata %s biz id is different from the request %d biz id", bizID, opt.BizID)
-	}
-
-	appIDs := make([]uint32, 0)
-	appIDStr := metadata["app_id"]
-	if appIDStr != "" {
-		if err = json.Unmarshal([]byte(appIDStr), &appIDs); err != nil {
-			return "", fmt.Errorf("unmarshal node metadata app ids failed, err: %v", err)
-		}
-	}
-
-	tmplSpaceIDs := make([]uint32, 0)
-	tmplSpaceIDStr := metadata["template_space_id"]
-	if tmplSpaceIDStr != "" {
-		if err = json.Unmarshal([]byte(tmplSpaceIDStr), &tmplSpaceIDs); err != nil {
-			return "", fmt.Errorf("unmarshal node metadata template space ids failed, err: %v", err)
-		}
-
-	}
-
-	meta := repo.NodeMeta{
-		BizID:       opt.BizID,
-		AppID:       appIDs,
-		TmplSpaceID: tmplSpaceIDs,
-	}
-
-	if kt.AppID != 0 {
-		// judge whether current app already uploaded to this node.
-		var isExist bool
-		for _, id := range meta.AppID {
-			if id == kt.AppID {
-				isExist = true
-				break
-			}
-		}
-
-		if !isExist {
-			meta.AppID = append(meta.AppID, kt.AppID)
-		}
-	}
-
-	if kt.TmplSpaceID != 0 {
-		// judge whether current template space already uploaded to this node.
-		var isExist bool
-		for _, id := range meta.TmplSpaceID {
-			if id == kt.TmplSpaceID {
-				isExist = true
-				break
-			}
-		}
-
-		if !isExist {
-			meta.TmplSpaceID = append(meta.TmplSpaceID, kt.TmplSpaceID)
-		}
-	}
-
-	return meta.String()
-}
-
 // Upload file to bkrepo
 func (c *bkrepoClient) Upload(kt *kit.Kit, sign string, body io.Reader) (*ObjectMetadata, error) {
 	if err := c.ensureRepo(kt); err != nil {
@@ -210,10 +120,6 @@ func (c *bkrepoClient) Upload(kt *kit.Kit, sign string, body io.Reader) (*Object
 	}
 
 	opt := &repo.NodeOption{Project: c.project, BizID: kt.BizID, Sign: sign}
-	nodeMeta, err := getNodeMetadata(kt, c.cli, opt)
-	if err != nil {
-		return nil, errors.Wrap(err, "get node metadata")
-	}
 
 	node, err := repo.GenNodePath(opt)
 	if err != nil {
@@ -228,7 +134,6 @@ func (c *bkrepoClient) Upload(kt *kit.Kit, sign string, body io.Reader) (*Object
 
 	req.Header.Set("Content-Type", "application/octet-stream")
 	req.Header.Set(constant.RidKey, kt.Rid)
-	req.Header.Set(repo.HeaderKeyMETA, nodeMeta)
 	req.Header.Set(repo.HeaderKeyOverwrite, "true")
 
 	resp, err := c.client.Do(req)
@@ -333,6 +238,137 @@ func (c *bkrepoClient) Metadata(kt *kit.Kit, sign string) (*ObjectMetadata, erro
 	}
 
 	return metadata, nil
+}
+
+// InitMultipartUpload init multipart upload file
+func (c *bkrepoClient) InitMultipartUpload(kt *kit.Kit, sign string) (string, error) {
+
+	if err := c.ensureRepo(kt); err != nil {
+		return "", errors.Wrap(err, "ensure repo failed")
+	}
+
+	opt := &repo.NodeOption{Project: c.project, BizID: kt.BizID, Sign: sign}
+
+	node, err := repo.GenBlockNodePath(opt)
+	if err != nil {
+		return "", err
+	}
+
+	rawURL := fmt.Sprintf("%s%s", c.host, node)
+	req, err := http.NewRequestWithContext(kt.Ctx, http.MethodPost, rawURL, nil)
+	if err != nil {
+		return "", err
+	}
+
+	req.Header.Set("Content-Type", "application/octet-stream")
+	req.Header.Set(constant.RidKey, kt.Rid)
+	req.Header.Set(repo.HeaderKeyOverwrite, "true")
+
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return "", errors.Errorf("init multipart upload status %d != 200", resp.StatusCode)
+	}
+
+	bkrepoResp := new(repo.InitMultipartUploadResp)
+	if err := json.NewDecoder(resp.Body).Decode(bkrepoResp); err != nil {
+		return "", errors.Wrap(err, "init multipart upload response")
+	}
+
+	if bkrepoResp.Code != 0 {
+		return "", errors.Errorf("init multipart upload code %d != 0", bkrepoResp.Code)
+	}
+
+	if bkrepoResp.Data == nil {
+		return "", errors.New("init multipart upload response data is nil")
+	}
+
+	return bkrepoResp.Data.UploadID, nil
+}
+
+// MultipartUpload upload one part of the file
+func (c *bkrepoClient) MultipartUpload(kt *kit.Kit, sign string, uploadID string, partNum uint32,
+	body io.Reader) error {
+
+	node, err := repo.GenNodePath(&repo.NodeOption{Project: c.project, BizID: kt.BizID, Sign: sign})
+	if err != nil {
+		return err
+	}
+
+	rawURL := fmt.Sprintf("%s%s", c.host, node)
+	req, err := http.NewRequestWithContext(kt.Ctx, http.MethodPut, rawURL, body)
+	if err != nil {
+		return err
+	}
+
+	req.Header.Set("Content-Type", "application/octet-stream")
+	req.Header.Set(constant.RidKey, kt.Rid)
+	req.Header.Set(repo.HeaderKeyUploadID, uploadID)
+	req.Header.Set(repo.HeaderKeySequence, strconv.Itoa(int(partNum)))
+
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return errors.Errorf("multipart upload status %d != 200", resp.StatusCode)
+	}
+
+	bkrepoResp := new(repo.BkRepoBaseResp)
+	if err := json.NewDecoder(resp.Body).Decode(bkrepoResp); err != nil {
+		return errors.Wrap(err, "multipart upload response")
+	}
+
+	if bkrepoResp.Code != 0 {
+		return errors.Errorf("multipart upload code %d != 0", bkrepoResp.Code)
+	}
+
+	return nil
+}
+
+// CompleteMultipartUpload complete multipart upload and return metadata
+func (c *bkrepoClient) CompleteMultipartUpload(kt *kit.Kit, sign string, uploadID string) (*ObjectMetadata, error) {
+
+	node, err := repo.GenBlockNodePath(&repo.NodeOption{Project: c.project, BizID: kt.BizID, Sign: sign})
+	if err != nil {
+		return nil, err
+	}
+
+	rawURL := fmt.Sprintf("%s%s", c.host, node)
+	req, err := http.NewRequestWithContext(kt.Ctx, http.MethodPut, rawURL, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set(constant.RidKey, kt.Rid)
+	req.Header.Set(repo.HeaderKeyUploadID, uploadID)
+
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return nil, errors.Errorf("complete multipart upload status %d != 200", resp.StatusCode)
+	}
+
+	uploadResp := new(repo.UploadResp)
+	if err := json.NewDecoder(resp.Body).Decode(uploadResp); err != nil {
+		return nil, errors.Wrap(err, "complete multipart upload response")
+	}
+
+	if uploadResp.Code != 0 {
+		return nil, errors.Errorf("complete multipart upload code %d != 0", uploadResp.Code)
+	}
+
+	return c.Metadata(kt, sign)
 }
 
 // URIDecorator ..

@@ -56,6 +56,10 @@ const (
 
 	// ContentIDHeaderKey is common content sha256 id.
 	ContentIDHeaderKey = "X-Bkapi-File-Content-Id"
+	// PartNumHeaderKey is multipart upload part num key.
+	PartNumHeaderKey = "X-Bscp-Part-Num"
+	// MultipartUploadID is multipart upload id key.
+	UploadIDHeaderKey = "X-Bscp-Upload-Id"
 	// AppIDHeaderKey is app id.
 	AppIDHeaderKey = "X-Bscp-App-Id"
 	// TmplSpaceIDHeaderKey is template space id.

@@ -41,28 +41,35 @@
               @click="handleConditionClick($event, condition)">
               {{ condition.content }}
             </bk-tag>
-            <input
-              v-else
-              v-model="editSearchStr"
-              ref="editInputRef"
-              class="input"
-              placeholder=" "
-              @blur="handleConditionEdit(condition)"
-              @keydown="handleEnterConditionEdit($event, condition)"
-              @compositionstart="isComposing = true"
-              @compositionend="isComposing = false" />
+            <div v-else class="search-container-input">
+              <span class="hidden-text">{{ editSearchStr }}</span>
+              <input
+                v-model="editSearchStr"
+                ref="editInputRef"
+                class="input"
+                placeholder=" "
+                @blur="handleConditionEdit(condition)"
+                @keydown="handleEnterConditionEdit($event, condition)"
+                @compositionstart="isComposing = true"
+                @compositionend="isComposing = false"
+                @click="handleClickInput($event)" />
+            </div>
           </div>
           <div v-if="isShowSearchInput" class="search-container-input" ref="inputWrapRef">
+            <span class="hidden-text">{{ searchStr }}</span>
             <input
               v-model="searchStr"
               ref="inputRef"
               class="input"
               placeholder=" "
+              :contenteditable="true"
               @focus="inputFocus = true"
-              @blur="handleConfirmConditionItem"
               @keydown="handleEnterAddConditionItem"
+              @blur="handleConfirmConditionItem"
               @compositionstart="isComposing = true"
-              @compositionend="isComposing = false" />
+              @compositionend="isComposing = false"
+              @click="handleClickInput($event)" />
+            <span class="placeholder"> {{ searchInputPlaceholder }}</span>
           </div>
         </div>
         <div
@@ -249,6 +256,14 @@
 
   const selectorData = computed(() => (isClientSearch.value ? CLIENT_SEARCH_DATA : CLIENT_STATISTICS_SEARCH_DATA));
 
+  const searchInputPlaceholder = computed(() => {
+    if (parentSelecte.value?.children || searchStr.value.split(' : ', 2)[1]) return '';
+    if (parentSelecte.value?.value !== 'label') {
+      return t('查询多个实例请使用竖线（"|"）分隔');
+    }
+    return t('查询同一标签多个值时使用逗号（","）分隔，查询不同标签时使用竖线（"|"）分隔');
+  });
+
   const isCommonlyUsedBtnLight = computed(() => {
     const item = commonlySearchList.value.find((commonlySearchItem) => {
       if (commonlySearchItem.search_condition.length !== searchConditionList.value.length) return false;
@@ -308,37 +323,40 @@
     handleGetSearchList('common');
     const entries = Object.entries(route.query);
     if (entries.length === 0) return;
-    const { name, value, children } = CLIENT_SEARCH_DATA.find((item) => item.value === entries[0][0])!;
-
-    if (value === 'pull_time') {
-      searchConditionList.value.push({
-        content: `${name} : ${entries[0][1]} 00:00:00 - ${entries[0][1]} 23:59:59`,
-        value: `${entries[0][1]} 00:00:00 - ${entries[0][1]} 23:59:59`,
-        key: value,
-        isEdit: false,
-      });
-    } else if (value === 'label') {
-      const labels = JSON.parse(entries[0][1] as string);
-      Object.keys(labels).forEach((key) => {
+    entries.forEach((entry) => {
+      const [searchKey, searchValue] = entry;
+      if (searchKey === 'heartTime') return;
+      const { name, value, children } = CLIENT_SEARCH_DATA.find((item) => item.value === searchKey)!;
+      if (value === 'pull_time') {
         searchConditionList.value.push({
-          content: `标签: ${key}=${labels[key]}`,
-          value: `${key}=${labels[key]}`,
+          content: `${name} : ${searchValue} 00:00:00 - ${searchValue} 23:59:59`,
+          value: `${searchValue} 00:00:00 - ${searchValue} 23:59:59`,
           key: value,
           isEdit: false,
         });
-      });
-    } else {
-      let content = `${entries[0][1]}`;
-      if (children) {
-        content = children.find((item) => item.value === entries[0][1])!.name;
+      } else if (value === 'label') {
+        const labels = JSON.parse(searchValue as string);
+        Object.keys(labels).forEach((key) => {
+          searchConditionList.value.push({
+            content: `标签: ${key}=${labels[key]}`,
+            value: `${key}=${labels[key]}`,
+            key: value,
+            isEdit: false,
+          });
+        });
+      } else {
+        let content = `${searchValue}`;
+        if (children) {
+          content = children.find((item) => item.value === searchValue)!.name;
+        }
+        searchConditionList.value.push({
+          content: `${name} : ${content}`,
+          value: searchValue as string,
+          key: value,
+          isEdit: false,
+        });
       }
-      searchConditionList.value.push({
-        content: `${name} : ${content}`,
-        value: entries[0][1] as string,
-        key: value,
-        isEdit: false,
-      });
-    }
+    });
   });
 
   onBeforeUnmount(() => {
@@ -387,12 +405,17 @@
   };
 
   const handleConfirmConditionItem = () => {
-    const conditionValue = parentSelecte.value ? searchStr.value.split(' : ', 2)[1] : searchStr.value;
+    let conditionValue = parentSelecte.value ? searchStr.value.split(' : ', 2)[1] : searchStr.value;
     inputFocus.value = false;
     isShowSearchInput.value = false;
     if (!conditionValue) {
       searchStr.value = '';
       return;
+    }
+    if (parentSelecte.value?.value === 'label') {
+      conditionValue = conditionValue.replace(/;+/g, '|').replace(/\s+/g, '');
+    } else {
+      conditionValue = conditionValue.replace(/[,;]+/g, '|').replace(/\s+/g, '');
     }
     // 添加默认查询条件ip
     if (!parentSelecte.value?.value) {
@@ -564,8 +587,19 @@
     const label: { [key: string]: any } = {};
     searchConditionList.value.forEach((item) => {
       if (item.key === 'label') {
-        const labelValue = item.value.split('=', 2);
-        label[labelValue[0]] = labelValue[1] || '';
+        const allLabel = item.value.split('|');
+        const allKey: string[] = [];
+        const allValue: string[] = [];
+        allLabel.forEach((label) => {
+          const [key, value] = label.split('=', 2);
+          allKey.push(key);
+          if (value) {
+            value.split(',').forEach((item) => {
+              allValue.push(item);
+            });
+          }
+        });
+        label[allKey.join('|')] = allValue.join('|') || '';
         query[item.key] = label;
       } else if (item.key === 'online_status' || item.key === 'release_change_status') {
         if (query[item.key]) {
@@ -687,6 +721,11 @@
     nextTick(() => inputRef.value.focus());
   };
 
+  const handleClickInput = (e: any) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
   const handleConditionClick = (e: any, condition: ISearchCondition) => {
     e.preventDefault();
     e.stopPropagation();
@@ -711,7 +750,12 @@
 
   const handleConditionEdit = (condition: ISearchCondition) => {
     if (!condition.isEdit) return;
-    const conditionValue = editSearchStr.value.split(' : ', 2)[1];
+    let conditionValue = editSearchStr.value.split(' : ', 2)[1];
+    if (condition.key === 'label') {
+      conditionValue = conditionValue.replace(/;+/g, '|').replace(/\s+/g, '');
+    } else {
+      conditionValue = conditionValue.replace(/[,;]+/g, '|').replace(/\s+/g, '');
+    }
     if (conditionValue) {
       condition.value = conditionValue;
       condition.content = `${parentSelecte.value?.name} : ${conditionValue}`;
@@ -783,13 +827,33 @@
       width: 0 !important;
     }
     .search-container-input {
+      position: relative;
+      .hidden-text {
+        display: inline-block;
+        height: 100%;
+        font-size: 12px;
+        visibility: hidden;
+        padding: 0 10px;
+      }
       .input {
-        min-width: fit-content;
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 99;
+        width: 100%;
         border: none;
         height: 100%;
         outline: none;
         box-shadow: none;
         color: #63656e;
+      }
+      .placeholder {
+        position: absolute;
+        left: calc(100% - 16px);
+        top: 0;
+        z-index: 999;
+        width: 600px;
+        color: #c4c6cc;
       }
     }
     .search-condition-list {
