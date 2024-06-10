@@ -25,6 +25,12 @@
     lineNumber: number;
     errorInfo: string;
   }
+  interface setClassNameRange {
+    rowStart: number;
+    columnStart: number;
+    rowEnd: number;
+    columnEnd: number;
+  }
 
   self.MonacoEnvironment = {
     getWorker(_, label) {
@@ -53,6 +59,16 @@
       language?: string;
       errorLine?: errorLineItem[];
       placeholder?: string[];
+      lineNumbers?: 'on' | 'off' | 'relative' | 'interval';
+      minimap?: boolean;
+      verticalScrollbarSize?: number;
+      horizonScrollbarSize?: number;
+      renderLineHighlight?: 'none' | 'gutter' | 'line' | 'all' | undefined;
+      renderIndentGuides?: boolean;
+      customClassName?: {
+        className: string;
+        rangeArr: setClassNameRange[];
+      };
     }>(),
     {
       variables: () => [],
@@ -144,7 +160,18 @@
         unicodeHighlight: {
           ambiguousCharacters: false,
         },
+        lineNumbers: props.lineNumbers,
+        minimap: {
+          enabled: props.minimap,
+        },
+        scrollbar: {
+          verticalScrollbarSize: props.verticalScrollbarSize,
+          horizontalScrollbarSize: props.horizonScrollbarSize,
+        },
+        renderLineHighlight: props.renderLineHighlight,
+        renderIndentGuides: props.renderIndentGuides,
       });
+      setCustomClassName(props.customClassName!.className, props.customClassName!.rangeArr);
     }
     if (props.lfEol) {
       const model = editor.getModel() as monaco.editor.ITextModel;
@@ -288,6 +315,33 @@
   const handlePlaceholderClick = () => {
     isShowPlaceholder.value = false;
     nextTick(() => editor.focus());
+  };
+
+  // 指定行与列添加className
+  const setCustomClassName = (className: string, RangeArr: setClassNameRange[]) => {
+    if (className) {
+      const decorators: any[] = [];
+      RangeArr.forEach((item) => {
+        console.log(item, '-');
+        // decorators.push({
+        //   range: new monaco.Range(item.rowStart, item.columnStart, item.rowEnd, item.columnEnd),
+        //   options: {
+        //     isWholeLine: false,
+        //     className,
+        //   },
+        // });
+      });
+      const range = new monaco.Range(1, 1, 10, 1);
+      decorators.push({
+        range,
+        options: {
+          className: 'abca1',
+        },
+      });
+      editor.getModel()?.deltaDecorations([], decorators);
+      // console.log(editor, '++++');
+      // model!.deltaDecorations([], decorators);
+    }
   };
 
   // 校验xml、yaml、json数据类型

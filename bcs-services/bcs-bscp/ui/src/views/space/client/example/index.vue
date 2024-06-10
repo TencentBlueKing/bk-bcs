@@ -2,14 +2,11 @@
   <section class="configuration-example-page">
     <div class="example-aside">
       <!-- 选择服务 -->
-      <Selector class="sel-service" @change-service="changeService" />
+      <service-selector class="sel-service" @change-service="changeService" />
       <!-- 示例列表 -->
       <div class="type-wrap">
-        <bk-menu v-if="serviceType === 'file'" :active-key="fileTypeArr[0].val" @update:active-key="changeTypeItem">
-          <bk-menu-item :need-icon="false" v-for="item in fileTypeArr" :key="item.val"> {{ item.name }} </bk-menu-item>
-        </bk-menu>
-        <bk-menu v-if="serviceType === 'kv'" :active-key="kvTypeArr[0].val" @update:active-key="changeTypeItem">
-          <bk-menu-item :need-icon="false" v-for="item in kvTypeArr" :key="item.val"> {{ item.name }} </bk-menu-item>
+        <bk-menu :active-key="renderComponent" @update:active-key="changeTypeItem">
+          <bk-menu-item :need-icon="false" v-for="item in navList" :key="item.val"> {{ item.name }} </bk-menu-item>
         </bk-menu>
       </div>
     </div>
@@ -21,45 +18,48 @@
         </div>
       </bk-alert>
       <div class="content-wrap">
-        <component :is="currentTemplate" />
+        <component :is="currentTemplate" :kv-name="renderComponent" />
       </div>
     </div>
   </section>
 </template>
 
 <script lang="ts" setup>
-  import { computed, watch, ref } from 'vue';
-  import Selector from './components/service-selector.vue';
-  import BkMenu from 'bkui-vue/lib/menu';
+  import { computed, ref, provide } from 'vue';
+  import ServiceSelector from './components/service-selector.vue';
   import { useI18n } from 'vue-i18n';
   import ContainerExample from './components/content/container-example.vue';
   import NodeManaExample from './components/content/node-mana-example.vue';
   import CmdExample from './components/content/cmd-example.vue';
   import KvExample from './components/content/kv-example.vue';
+  import Exception from '../components/exception.vue';
   const { t } = useI18n();
-  const fileTypeArr = ref([
+  const fileTypeArr = [
     { name: t('Sidecar容器'), val: 'sidecar' },
     { name: t('节点管理插件'), val: 'node' },
     { name: t('命令行工具'), val: 'file-cmd' },
-  ]);
-  const kvTypeArr = ref([
+  ];
+  const kvTypeArr = [
     { name: 'Python SDK', val: 'python' },
     { name: 'Go SDK', val: 'go' },
     { name: 'Java SDK', val: 'java' },
     { name: 'C++ SDK', val: 'c++' },
     { name: t('命令行工具'), val: 'kv-cmd' },
-  ]);
+  ];
+  const navList = computed(() => (serviceType.value === 'file' ? fileTypeArr : kvTypeArr));
   const renderComponent = ref(''); // 渲染的示例组件
+  const serviceName = ref(''); // 示例预览模板中用到
   const serviceType = ref(''); // 配置类型：file/kv
   const topTip = ref('');
+  provide('serviceName', serviceName); // 示例预览组件用
   // 服务切换
-  const changeService = (data: string) => {
-    serviceType.value = data;
-    // console.log('切换服务', data);
+  const changeService = (getServiceType: string, getServiceName: string) => {
+    serviceType.value = getServiceType;
+    serviceName.value = getServiceName;
+    changeTypeItem(navList.value[0].val);
   };
   // 服务的子类型切换
   const changeTypeItem = (data: string) => {
-    // console.log('切换item', data);
     renderComponent.value = data;
   };
   // 展示的示例组件与顶部提示语
@@ -80,19 +80,21 @@
         default:
           return '';
       }
-    } else {
+    } else if (serviceType?.value && serviceType?.value === 'kv') {
       // 键值类型模板都一样
       return KvExample;
     }
+    // 无数据模板
+    return Exception;
   });
   // 服务类型变化后，重新选择渲染的示例模板
-  watch(serviceType, (newV) => {
-    if (newV === 'file') {
-      changeTypeItem(fileTypeArr.value[0].val);
-    } else {
-      changeTypeItem(kvTypeArr.value[0].val);
-    }
-  });
+  // watch(serviceType, (newV) => {
+  //   if (newV === 'file') {
+  //     changeTypeItem(fileTypeArr.value[0].val);
+  //   } else {
+  //     changeTypeItem(kvTypeArr.value[0].val);
+  //   }
+  // });
 </script>
 
 <style scoped lang="scss">
@@ -116,8 +118,11 @@
     background-color: #fff;
   }
   .example-main {
+    display: flex;
+    flex-direction: column;
     flex: 1;
     height: 100%;
+    overflow: hidden;
   }
   .alert-tips {
     display: flex;
@@ -160,8 +165,10 @@
   .content-wrap {
     margin: 24px;
     padding: 24px;
-    min-height: 600px;
     box-shadow: 0 2px 4px 0 #1919290d;
+    overflow: auto;
     background-color: #fff;
+    flex: 1;
+    min-height: 1px;
   }
 </style>

@@ -2,17 +2,18 @@
   <!-- 标签 -->
   <div class="add-label-wrap">
     <span class="label-span">标签</span>
-    <bk-popover
-      content="与分组结合使用，实现服务实例的灰度发布场景，支持多个标签；若不需要灰度发布功能，此参数可不配置"
-      placement="top-center">
-      <info width="14" height="14" class="icon-info" />
-    </bk-popover>
+    <info
+      class="icon-info"
+      v-bk-tooltips="{
+        content: '与分组结合使用，实现服务实例的灰度发布场景，支持多个标签；若不需要灰度发布功能，此参数可不配置',
+        placement: 'top',
+      }" />
     <div class="add-label-button" @click="addItem">
-      <plus width="12" height="12" class="add-label-plus" />
+      <plus class="add-label-plus" />
       添加
     </div>
   </div>
-  <div class="label-content">
+  <div class="label-content" v-show="labelArr.length">
     <div class="label-item" v-for="(item, index) in labelArr" :key="index">
       <bk-input :id="'key' + index" v-model="item.key" />
       <span class="label-item-icon">=</span>
@@ -22,34 +23,35 @@
   </div>
 </template>
 <script lang="ts" setup>
-  import { ref, watch } from 'vue';
+  import { onMounted, ref, watch } from 'vue';
   import { Info, Plus } from 'bkui-vue/lib/icon';
-  // import BkForm, { BkFormItem } from 'bkui-vue/lib/form';
-  // import BkInput from 'bkui-vue/lib/input';
-  import { debounce } from 'lodash';
   const emits = defineEmits(['send-label']);
   const labelArr = ref<{ key: string; value: string }[]>([]);
+  onMounted(() => {
+    sendVal();
+  });
   // 添加项目
   const addItem = () => {
-    const itemObj = {
+    labelArr.value.push({
       key: '',
       value: '',
-    };
-    labelArr.value.push(itemObj);
+    });
   };
   // 删除点击项
   const deleteItem = (index: number) => {
     labelArr.value.splice(index, 1);
   };
   // 数据传递
-  const sendVal = debounce(
-    () => {
-      emits('send-label', labelArr);
-      console.log(labelArr, '123123+++');
-    },
-    500,
-    { leading: true },
-  );
+  const sendVal = () => {
+    // 处理数据格式用于展示
+    const newArr = labelArr.value.map((item) => {
+      if (item.key || item.value) {
+        return `${item.key}:${item.value}`;
+      }
+    });
+    const filterArr = newArr.filter((item) => item !== undefined);
+    emits('send-label', filterArr);
+  };
   // 数据变化后需要传递出去
   watch(labelArr.value, sendVal);
 </script>

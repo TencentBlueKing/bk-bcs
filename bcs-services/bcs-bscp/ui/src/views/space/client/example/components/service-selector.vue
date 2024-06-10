@@ -13,7 +13,7 @@
     @change="handleAppChange">
     <template #trigger>
       <div class="selector-trigger">
-        <bk-overflow-title v-if="localApp.name" class="app-name" type="tips">
+        <bk-overflow-title v-if="localApp?.name" class="app-name" type="tips">
           {{ localApp?.name }}
         </bk-overflow-title>
         <span v-else class="no-app">{{ $t('暂无服务') }}</span>
@@ -36,13 +36,6 @@
 </template>
 
 <script lang="ts" setup>
-  // const props = defineProps<{
-  //   bkBizId: string;
-  //   appId: number;
-  //   show: boolean;
-  //   id: number;
-  //   uid: string;
-  // }>();
   import { ref, onMounted } from 'vue';
   import { useRoute, useRouter } from 'vue-router';
   import { IAppItem } from '../../../../../../types/app';
@@ -71,7 +64,7 @@
         id: service.id!,
         serviceType: service.spec.config_type!,
       };
-      emits('change-service', localApp.value.serviceType);
+      emits('change-service', localApp.value.serviceType, localApp.value.name);
     } else if (serviceList.value.length) {
       handleAppChange(serviceList.value[0].id!);
     }
@@ -103,12 +96,12 @@
         serviceType: service.spec.config_type!,
       };
     }
-    setLastSelectedClientService(appId);
+    setLastAccessedServiceDetail(appId);
     await router.push({ name: route.name!, params: { spaceId: bizId.value, appId } });
-    emits('change-service', localApp.value.serviceType);
+    emits('change-service', localApp.value.serviceType, localApp.value.name);
   };
-  const setLastSelectedClientService = (appId: number) => {
-    localStorage.setItem('lastSelectedClientService', JSON.stringify({ spaceId: bizId.value, appId }));
+  const setLastAccessedServiceDetail = (appId: number) => {
+    localStorage.setItem('lastAccessedServiceDetail', JSON.stringify({ spaceId: bizId.value, appId }));
   };
 </script>
 

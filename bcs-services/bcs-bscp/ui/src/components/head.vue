@@ -174,6 +174,7 @@
         { id: 'client-statistics', module: 'client-statistics', name: t('客户端统计') },
         { id: 'client-search', module: 'client-search', name: t('客户端查询') },
         { id: 'credentials-management', module: 'credentials', name: t('客户端密钥') },
+        { id: 'configuration-example', module: 'example', name: t('配置示例') },
       ],
     },
   ]);
@@ -216,7 +217,12 @@
 
   const handleNavClick = (navId: String) => {
     console.log(navId);
-    if (navId === 'service-all' || navId === 'client-statistics' || navId === 'client-search') {
+    if (
+      navId === 'service-all' ||
+      navId === 'client-statistics' ||
+      navId === 'client-search' ||
+      navId === 'configuration-example'
+    ) {
       const lastAccessedServiceDetail = localStorage.getItem('lastAccessedServiceDetail');
       if (lastAccessedServiceDetail) {
         console.log(1);
