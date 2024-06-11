@@ -388,57 +388,33 @@ func (dao *clientDao) handleSearch(kit *kit.Kit, bizID, appID uint32, search *pb
 		conds = append(conds, q.Where(m.ReleaseChangeStatus.In(search.GetReleaseChangeStatus()...)))
 	}
 
-	// 根据标签搜索
-	// 支持多个 key:valul 以及 key
+	// 根据标签搜索，多实例搜索
+	// key:valul
+	// key|key2
+	// key:val1,val2...
+	// key:val1,val2|key2:val1...
+	// key:val1,val2|key2
 	// key 会存在各种格式：符号、数字、中文等，只要使用双引号包围就可以
-	if search.GetLabel() != nil && len(search.GetLabel().GetFields()) != 0 {
-		for k, v := range search.GetLabel().GetFields() {
-			if k != "" {
-				ks := replaceWithPipe(k)
-				vs := replaceWithPipe(v.GetStringValue())
-
-				// "label":{"app":"test|test2"}
-				// JSON_EXTRACT(`labels`,'$."app"') = 'test' OR JSON_EXTRACT(`labels`,'$."app"') = 'test2'
-				if len(ks) == 1 && v.GetStringValue() != "" {
-					for i, v := range vs {
-						if i == 0 {
-							q = q.Where(rawgen.Cond(datatypes.JSONQuery("labels").Equals(v, fmt.Sprintf(`"%s"`, k)))...)
-						} else {
-							q = q.Or(rawgen.Cond(datatypes.JSONQuery("labels").Equals(v, fmt.Sprintf(`"%s"`, k)))...)
-						}
+	if search.GetLabel() != nil && len(search.GetLabel()) != 0 {
+		fmt.Println(search.GetLabel())
+		labels := parseLabels(search.GetLabel())
+		for _, label := range labels {
+			isFirst := true
+			for key, value := range label {
+				for _, v := range value {
+					if isFirst {
+						q = q.Where(rawgen.Cond(datatypes.JSONQuery("labels").Equals(v, fmt.Sprintf(`"%s"`, key)))...)
+						isFirst = false
+					} else {
+						q = q.Or(rawgen.Cond(datatypes.JSONQuery("labels").Equals(v, fmt.Sprintf(`"%s"`, key)))...)
 					}
 				}
-
-				// label":{"app|env":""}
-				// JSON_EXTRACT(`labels`,'$."app"') IS NOT NULL OR JSON_EXTRACT(`labels`,'$."env"') IS NOT NULL
-				if len(ks) >= 1 && v.GetStringValue() == "" {
-					for i, v := range ks {
-						if i == 0 {
-							q = q.Where(rawgen.Cond(datatypes.JSONQuery("labels").HasKey(fmt.Sprintf(`"%s"`, v)))...)
-						} else {
-							q = q.Or(rawgen.Cond(datatypes.JSONQuery("labels").HasKey(fmt.Sprintf(`"%s"`, v)))...)
-						}
-					}
+				if len(value) == 0 && isFirst {
+					q = q.Where(rawgen.Cond(datatypes.JSONQuery("labels").HasKey(fmt.Sprintf(`"%s"`, key)))...)
+				} else if len(value) == 0 {
+					q = q.Or(rawgen.Cond(datatypes.JSONQuery("labels").HasKey(fmt.Sprintf(`"%s"`, key)))...)
 				}
 
-				// "label":{"app|env":"test|test2"}
-				// JSON_EXTRACT(`labels`,'$."app"') = 'test' OR JSON_EXTRACT(`labels`,'$."env"') = 'test2'
-				// "label":{"app|env":"test"}
-				// JSON_EXTRACT(`labels`,'$."app"') = 'test' OR JSON_EXTRACT(`labels`,'$."env"') IS NOT NULL
-				// "label":{"app|env":"test|test1|test2"}  直接忽略test2
-				if len(ks) >= 1 && v.GetStringValue() != "" {
-					for i, k := range ks {
-						if i == 0 {
-							q = q.Where(rawgen.Cond(datatypes.JSONQuery("labels").Equals(vs[i], fmt.Sprintf(`"%s"`, k)))...)
-						} else {
-							if i < len(vs) && vs[i] != "" {
-								q = q.Or(rawgen.Cond(datatypes.JSONQuery("labels").Equals(vs[i], fmt.Sprintf(`"%s"`, k)))...)
-							} else {
-								q = q.Or(rawgen.Cond(datatypes.JSONQuery("labels").HasKey(fmt.Sprintf(`"%s"`, k)))...)
-							}
-						}
-					}
-				}
 				conds = append(conds, q)
 			}
 		}
@@ -446,7 +422,7 @@ func (dao *clientDao) handleSearch(kit *kit.Kit, bizID, appID uint32, search *pb
 
 	// 根据附加标签搜索
 	if search.GetAnnotations() != nil && len(search.GetAnnotations().GetFields()) != 0 {
-		for k, v := range search.GetLabel().GetFields() {
+		for k, v := range search.GetAnnotations().GetFields() {
 			if k != "" {
 				conds = append(conds, q.Where(rawgen.Cond(datatypes.JSONQuery("annotations").
 					Equals(v.AsInterface(), fmt.Sprintf(`"%s"`, k)))...))
@@ -498,6 +474,30 @@ func replaceWithPipe(input string) []string {
 	// 使用 strings.Split 函数按竖线分隔字符串
 	parts := strings.Split(result, "|")
 	return parts
+}
+
+// parseLabels 解析输入数组并生成标签映射
+func parseLabels(arr []string) []map[string][]string {
+	labels := []map[string][]string{}
+
+	for _, item := range arr {
+		parts := strings.Split(item, "|")
+		labelMap := make(map[string][]string)
+
+		for _, part := range parts {
+			keyValue := strings.Split(part, "=")
+			if len(keyValue) > 1 {
+				values := strings.Split(keyValue[1], ",")
+				labelMap[keyValue[0]] = values
+			} else {
+				labelMap[keyValue[0]] = []string{}
+			}
+		}
+
+		labels = append(labels, labelMap)
+	}
+
+	return labels
 }
 
 func parseTime(timeStr string) (time.Time, error) {

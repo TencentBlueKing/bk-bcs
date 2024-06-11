@@ -58,7 +58,7 @@ message ClientResource {
 message ClientQueryCondition {
   string uid = 1;
   string ip = 2;
-  google.protobuf.Struct label = 3;           // 标签
+  repeated string label = 3;                  // 标签
   string current_release_name = 4;            // 当前版本
   string target_release_name = 5;             // 目标版本
   repeated string release_change_status = 6;  // 最近一次拉取状态：Success、Failed、Processing、Skip
