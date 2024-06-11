@@ -60,7 +60,7 @@ func (c *CloudInfoManager) SyncClusterCloudInfo(cls *cmproto.Cluster,
 		return err
 	}
 
-	cluster, err := client.GetEksCluster(cls.ClusterName)
+	cluster, err := client.GetEksCluster(opt.ImportMode.CloudID)
 	if err != nil {
 		return err
 	}
