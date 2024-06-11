@@ -363,13 +363,6 @@ func (s *Service) ClientLabelStatistics(ctx context.Context, req *pbclient.Clien
 
 	grpcKit := kit.FromGrpcContext(ctx)
 
-	searchLables := req.GetSearch()
-	if len(searchLables.GetLabel().GetFields()) == 0 {
-		searchLables.Label = &structpb.Struct{
-			Fields: make(map[string]*structpb.Value),
-		}
-	}
-	searchLables.GetLabel().Fields[req.GetPrimaryKey()] = &structpb.Value{}
 	fields := req.GetForeignKeys().GetFields()
 
 	labelKvs := []types.PrimaryAndForeign{}
@@ -377,20 +370,27 @@ func (s *Service) ClientLabelStatistics(ctx context.Context, req *pbclient.Clien
 	if len(fields) == 0 {
 		labelKeys = append(labelKeys, types.PrimaryAndForeign{PrimaryKey: req.GetPrimaryKey()})
 	}
+
+	searchLables := req.GetSearch()
+	searchLables.Label = append(searchLables.Label, req.GetPrimaryKey())
+	// 组合搜索条件
 	for k, v := range fields {
-		searchLables.GetLabel().Fields[k] = v
+		label := []string{}
 		if v.GetStringValue() != "" {
+			label = append(label, fmt.Sprintf("%s=%s", k, v.GetStringValue()))
 			labelKvs = append(labelKvs, types.PrimaryAndForeign{
 				PrimaryKey: req.GetPrimaryKey(),
 				ForeignKey: k,
 				ForeignVal: v.GetStringValue(),
 			})
 		} else {
+			label = append(label, k)
 			labelKeys = append(labelKeys, types.PrimaryAndForeign{
 				PrimaryKey: req.GetPrimaryKey(),
 				ForeignKey: k,
 			})
 		}
+		searchLables.Label = append(searchLables.Label, label...)
 	}
 
 	items, _, err := s.dao.Client().List(grpcKit, req.GetBizId(), req.GetAppId(), req.GetLastHeartbeatTime(),

@@ -61,7 +61,7 @@
             v-cursor="{ active: !item.permission }"
             :class="['biz-option-item', { 'no-perm': !item.permission }]"
             v-bk-tooltips="{
-              content: `项目名称: ${item.space_name}\n业务ID: ${item.space_id}`,
+              content: `${t('业务名')}: ${item.space_name}\n${t('业务')}ID: ${item.space_id}`,
               placement: 'left',
             }">
             <div class="name-wrapper">

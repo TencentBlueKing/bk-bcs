@@ -36,7 +36,7 @@ export interface IClinetCommonQuery {
 export interface IClientSearchParams {
   uid?: string;
   ip?: string;
-  label?: { [key: string]: string };
+  label?: string[];
   current_release_name?: string;
   target_release_name?: string;
   release_change_status?: string[];

@@ -87,6 +87,8 @@ export default {
   客户端查询: 'Client query',
   客户端密钥: 'Client key',
   配置示例: 'CFG example',
+  业务名: 'Business Name',
+  业务: 'Business',
 
   // 配置管理
   版本名称: 'Version Name',
