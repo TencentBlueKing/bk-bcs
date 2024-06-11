@@ -56,6 +56,7 @@ type IndexConfig struct {
 	EnableBKNotice bool   // 是否启用蓝鲸通知中心
 	Helper         string
 	ProxyAPI       bool
+	FeedAddr       string
 }
 
 // EmbedWebServer 前端 web server
@@ -166,6 +167,7 @@ func (e *EmbedWeb) RenderIndexHandler(conf *IndexConfig) http.Handler {
 			"SITE_URL":         conf.SiteURL,
 			"ENABLE_BK_NOTICE": strconv.FormatBool(conf.EnableBKNotice),
 			"HELPER":           conf.Helper,
+			"FEED_ADDR":        conf.FeedAddr,
 		}
 
 		// 本地开发模式 / 代理请求
