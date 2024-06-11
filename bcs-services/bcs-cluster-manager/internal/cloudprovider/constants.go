@@ -69,6 +69,8 @@ var (
 	ApplyInstanceMachinesTask TaskType = "ApplyInstanceMachinesTask"
 	// ApplyExternalNodeMachinesTask apply external node subTask
 	ApplyExternalNodeMachinesTask TaskType = "ApplyExternalNodeMachinesTask"
+	// CheckExternalNodesEmptyTask check external node empty
+	CheckExternalNodesEmptyTask TaskType = "CheckExternalNodesEmptyTask"
 
 	// CleanNodeGroupNodes task
 	CleanNodeGroupNodes TaskType = "CleanNodeGroupNodes"

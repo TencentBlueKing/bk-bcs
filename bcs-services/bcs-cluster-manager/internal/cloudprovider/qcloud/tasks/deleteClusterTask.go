@@ -19,6 +19,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
+	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/business"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
@@ -184,6 +185,9 @@ func CleanClusterDBInfoTask(taskID string, stepName string) error {
 	}
 	blog.Infof("CleanClusterDBInfoTask[%s]: delete cluster[%s] in DB successful", taskID, clusterID)
 
+	// delete cidrs from etcd cache
+	_ = handleClusterCacheGrCidrs(taskID, cluster)
+
 	utils.SyncDeletePassCCCluster(taskID, cluster)
 	_ = utils.DeleteClusterCredentialInfo(cluster.ClusterID)
 
@@ -196,5 +200,36 @@ func CleanClusterDBInfoTask(taskID string, stepName string) error {
 		blog.Errorf("CleanClusterDBInfoTask[%s]: task %s %s update to storage fatal", taskID, taskID, stepName)
 		return err
 	}
+	return nil
+}
+
+func handleClusterCacheGrCidrs(taskId string, cls *cmproto.Cluster) error {
+	cidrs := make([]string, 0)
+	if cls.GetNetworkSettings().GetClusterIPv4CIDR() != "" {
+		cidrs = append(cidrs, cls.GetNetworkSettings().GetClusterIPv4CIDR())
+	}
+
+	if len(cls.GetNetworkSettings().GetMultiClusterCIDR()) > 0 {
+		cidrs = append(cidrs, cls.GetNetworkSettings().GetMultiClusterCIDR()...)
+	}
+
+	for i := range cidrs {
+		err := business.GetCidrFromCache(icommon.ClusterOverlayNetwork, cls.GetVpcID(), cidrs[i])
+		if err != nil {
+			blog.Errorf("handleClusterCacheGrCidrs[%s] GetCidrFromCache vpc[%s:%s] failed: %v",
+				taskId, cls.GetVpcID(), cidrs[i], err)
+			continue
+		}
+		err = business.DeleteCidrFromCache(icommon.ClusterOverlayNetwork, cls.GetVpcID(), cidrs[i])
+		if err != nil {
+			blog.Errorf("handleClusterCacheGrCidrs[%s] DeleteCidrFromCache vpc[%s:%s] failed: %v",
+				taskId, cls.GetVpcID(), cidrs[i], err)
+			continue
+		}
+
+		blog.Errorf("handleClusterCacheGrCidrs[%s] DeleteCidrFromCache vpc[%s:%s] successful",
+			taskId, cls.GetVpcID(), cidrs[i])
+	}
+
 	return nil
 }

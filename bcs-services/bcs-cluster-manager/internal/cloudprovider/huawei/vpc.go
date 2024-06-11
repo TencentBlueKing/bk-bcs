@@ -15,6 +15,7 @@ package huawei
 
 import (
 	"fmt"
+	"net"
 	"sync"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
@@ -174,4 +175,26 @@ func (vm *VPCManager) ListBandwidthPacks(opt *cloudprovider.CommonOption) ([]*pr
 func (vm *VPCManager) CheckConflictInVpcCidr(vpcID string, cidr string,
 	opt *cloudprovider.CommonOption) ([]string, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// AllocateOverlayCidr allocate overlay cidr
+func (c *VPCManager) AllocateOverlayCidr(vpcId string, cluster *proto.Cluster, cidrLens []uint32,
+	reservedBlocks []*net.IPNet, opt *cloudprovider.CommonOption) ([]string, error) {
+	return nil, nil
+}
+
+// AddClusterOverlayCidr add cidr to cluster
+func (c *VPCManager) AddClusterOverlayCidr(clusterId string, cidrs []string, opt *cloudprovider.CommonOption) error {
+	return nil
+}
+
+// GetVpcIpSurplus get vpc ipSurplus
+func (c *VPCManager) GetVpcIpSurplus(
+	vpcId string, ipType string, reservedBlocks []*net.IPNet, opt *cloudprovider.CommonOption) (uint32, error) {
+	return 0, nil
+}
+
+// GetOverlayClusterIPSurplus get cluster overlay ipSurplus
+func (c *VPCManager) GetOverlayClusterIPSurplus(clusterId string, opt *cloudprovider.CommonOption) (uint32, error) {
+	return 0, nil
 }

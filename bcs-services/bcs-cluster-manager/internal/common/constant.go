@@ -354,6 +354,11 @@ const (
 	// StatusNodeNotReady node not ready
 	StatusNodeNotReady = "NOTREADY"
 
+	// NodeChildStatus node child status
+	NodeChildStatus = "child_status"
+	// StatusCheckNodeFailed check node status failure
+	StatusCheckNodeFailed = "CHECK-FAILURE"
+
 	// StatusDeleteNodeGroupFailed xxx
 	StatusDeleteNodeGroupFailed = "DELETE-FAILURE"
 	// StatusCreateNodeGroupCreating xxx

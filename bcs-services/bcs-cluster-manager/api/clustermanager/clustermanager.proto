@@ -2130,6 +2130,10 @@ message ClusterMgr {
     title: "commonMixedAction",
     description: "集群混部自动化流程定义"
   }];
+  Action checkExternalNodeEmptyAction = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "checkExternalNodeEmptyAction",
+    description: "集群第三方节点空闲检查"
+  }];
 }
 
 message NodeGroupMgr {
@@ -3042,6 +3046,10 @@ message CloudVPCResp {
   CidrDetailInfo underlay = 12[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "underlay",
     description: "underlayIP CIDR配置"
+  }];
+  string businessID = 13[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "businessID",
+    description: "业务ID, 作用预留私有的业务vpc"
   }];
 }
 

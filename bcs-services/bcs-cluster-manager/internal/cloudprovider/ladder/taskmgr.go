@@ -350,6 +350,7 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 				InstancePasswd: passwd,
 				NodeIPList:     "",
 				NodeOperator:   opt.Operator,
+				GroupCreator:   group.Creator,
 				ModuleID: cloudprovider.GetScaleOutModuleID(opt.Cluster, opt.AsOption, group.NodeTemplate,
 					true),
 				BusinessID: cloudprovider.GetBusinessID(opt.Cluster, opt.AsOption, group.NodeTemplate, true),
