@@ -10,7 +10,7 @@
             :class="['tab-wrap', { 'is-active': activeTab === index }]"
             v-for="(item, index) in tabArr"
             :key="item.name"
-            @click="handleTab(item.value, index)">
+            @click="handleTab(index)">
             {{ item.name }}
           </div>
         </div>
@@ -22,46 +22,44 @@
           </div>
         </bk-alert>
       </div>
-      <code-preview class="preview-component" :code-val="replaceVal" />
+      <code-preview class="preview-component" :code-val="replaceVal" ref="codePreviewRef" />
     </div>
   </section>
 </template>
 
 <script lang="ts" setup>
-  import { ref, provide, computed } from 'vue';
+  import { ref, provide, computed, onMounted, watch } from 'vue';
   import { copyToClipBoard } from '../../../../../../utils/index';
   import { CloseLine } from 'bkui-vue/lib/icon';
   import BkMessage from 'bkui-vue/lib/message';
   import FormOption from '../form-option.vue';
-  import CodePreview from '../code-preview.vue';
+  import codePreview from '../code-preview.vue';
   import { useI18n } from 'vue-i18n';
   import { useRoute } from 'vue-router';
-  import pythonGet from '/src/assets/exampleData/kv-python-get.yaml?raw';
-  import pythonWatch from '/src/assets/exampleData/kv-python-watch.yaml?raw';
   const props = defineProps<{
     kvName: string;
   }>();
+  const codePreviewRef = ref();
   const { t } = useI18n();
   const route = useRoute();
   const fileOptionRef = ref();
   const bkBizId = ref(String(route.params.spaceId));
-  const codeVal = ref(pythonGet);
+  const codeVal = ref('');
   const formError = ref<number>();
   provide('formError', formError);
   const tabArr = [
     {
       name: 'Get方法',
-      value: 'get',
       topTip: 'Get 方法：用于一次性拉取最新的配置信息，适用于需要获取并更新配置的场景。',
     },
     {
       name: 'Watch方法',
-      value: 'watch',
       topTip:
         'Watch 方法：通过建立长连接，实时监听配置版本的变更，当新版本的配置发布时，将自动调用回调方法处理新的配置信息，适用于需要实时响应配置变更的场景。',
     },
   ];
-  const activeTab = ref(0);
+  const activeTab = ref(0); // 激活tab索引
+  // 代码预览上方提示
   const topTip = computed(() => {
     return tabArr[activeTab.value].topTip;
   });
@@ -77,11 +75,14 @@
   };
   // 修改后的预览数据
   const replaceVal = computed(() => {
-    const labelArr = optionData.value.labelArr.length ? JSON.stringify(optionData.value.labelArr.join(', ')) : [];
+    const labelArr = optionData.value.labelArr.length ? JSON.stringify(optionData.value.labelArr.join(', ')) : '';
     let updateString = codeVal.value.replace('动态替换bkBizId', bkBizId.value);
     updateString = updateString.replaceAll('动态替换labels', labelArr);
     updateString = updateString.replaceAll('动态替换clientKey', optionData.value.privacyCredential);
     return updateString;
+  });
+  onMounted(() => {
+    handleTab();
   });
   // 复制示例
   const copyExample = async () => {
@@ -102,12 +103,51 @@
     }
   };
   // 切换tab
-  const handleTab = (val: string, index: number) => {
+  const handleTab = async (index = 0) => {
+    // scrollTo.value = new Date().getTime(); // 通知code-preview，滚动条到最顶
+    codePreviewRef.value.scrollTo();
     activeTab.value = index;
-    codeVal.value = val === 'get' ? pythonGet : pythonWatch;
-    console.log(props.kvName);
-    console.log(codeVal);
+    const newKvData = await changeKvData(props.kvName, index);
+    codeVal.value = newKvData.default;
   };
+  // 键值型数据模板切换
+  /**
+   *
+   * @param kvName 数据模板名称
+   * @param methods 方法，0: get，1: watch
+   */
+  const changeKvData = (kvName = 'python', methods = 0) => {
+    switch (kvName) {
+      case 'python':
+        return !methods
+          ? import('/src/assets/exampleData/kv-python-get.yaml?raw')
+          : import('/src/assets/exampleData/kv-python-watch.yaml?raw');
+      case 'go':
+        return !methods
+          ? import('/src/assets/exampleData/kv-go-get.yaml?raw')
+          : import('/src/assets/exampleData/kv-go-watch.yaml?raw');
+      case 'java':
+        return !methods
+          ? import('/src/assets/exampleData/kv-python-get.yaml?raw')
+          : import('/src/assets/exampleData/kv-python-watch.yaml?raw');
+      case 'c++':
+        return !methods
+          ? import('/src/assets/exampleData/kv-python-get.yaml?raw')
+          : import('/src/assets/exampleData/kv-python-watch.yaml?raw');
+      case 'kv-cmd':
+        return !methods
+          ? import('/src/assets/exampleData/kv-python-get.yaml?raw')
+          : import('/src/assets/exampleData/kv-python-watch.yaml?raw');
+      default:
+        return '';
+    }
+  };
+  watch(
+    () => props.kvName,
+    () => {
+      handleTab();
+    },
+  );
 </script>
 
 <style scoped lang="scss">

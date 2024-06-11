@@ -88,7 +88,7 @@
   };
   // 修改后的预览数据
   const replaceVal = computed(() => {
-    const labelArr = optionData.value.labelArr.length ? JSON.stringify(optionData.value.labelArr.join(', ')) : [];
+    const labelArr = optionData.value.labelArr.length ? JSON.stringify(optionData.value.labelArr.join(', ')) : '';
     let updateString = codeVal.replace('动态替换bkBizId', bkBizId.value);
     updateString = updateString.replaceAll('动态替换labels', labelArr);
     updateString = updateString.replaceAll('动态替换clientKey', optionData.value.privacyCredential);

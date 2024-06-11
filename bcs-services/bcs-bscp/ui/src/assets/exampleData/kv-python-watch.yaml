@@ -26,7 +26,7 @@ SERVER_ADDRS = ["example.com:9090"]
 
 # 客户端密钥，请赋值为与此服务配置关联过的实际客户端密钥
 TOKEN = "动态替换clientKey"
-
+动态替换labels
 
 
 def watch_app():

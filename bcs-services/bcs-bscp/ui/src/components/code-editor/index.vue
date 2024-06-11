@@ -171,7 +171,7 @@
         renderLineHighlight: props.renderLineHighlight,
         renderIndentGuides: props.renderIndentGuides,
       });
-      setCustomClassName(props.customClassName!.className, props.customClassName!.rangeArr);
+      // setCustomClassName(props.customClassName!.className, props.customClassName!.rangeArr);
     }
     if (props.lfEol) {
       const model = editor.getModel() as monaco.editor.ITextModel;
@@ -318,31 +318,31 @@
   };
 
   // 指定行与列添加className
-  const setCustomClassName = (className: string, RangeArr: setClassNameRange[]) => {
-    if (className) {
-      const decorators: any[] = [];
-      RangeArr.forEach((item) => {
-        console.log(item, '-');
-        // decorators.push({
-        //   range: new monaco.Range(item.rowStart, item.columnStart, item.rowEnd, item.columnEnd),
-        //   options: {
-        //     isWholeLine: false,
-        //     className,
-        //   },
-        // });
-      });
-      const range = new monaco.Range(1, 1, 10, 1);
-      decorators.push({
-        range,
-        options: {
-          className: 'abca1',
-        },
-      });
-      editor.getModel()?.deltaDecorations([], decorators);
-      // console.log(editor, '++++');
-      // model!.deltaDecorations([], decorators);
-    }
-  };
+  // const setCustomClassName = (className: string, RangeArr: setClassNameRange[]) => {
+  //   if (className) {
+  //     const decorators: any[] = [];
+  //     RangeArr.forEach((item) => {
+  //       console.log(item, '-');
+  //       // decorators.push({
+  //       //   range: new monaco.Range(item.rowStart, item.columnStart, item.rowEnd, item.columnEnd),
+  //       //   options: {
+  //       //     isWholeLine: false,
+  //       //     className,
+  //       //   },
+  //       // });
+  //     });
+  //     const range = new monaco.Range(5, 1, 5, 99);
+  //     decorators.push({
+  //       range,
+  //       options: {
+  //         className: 'abca1',
+  //       },
+  //     });
+  //     editor.getModel()?.deltaDecorations([], decorators);
+  //     // console.log(editor, '++++');
+  //     // model!.deltaDecorations([], decorators);
+  //   }
+  // };
 
   // 校验xml、yaml、json数据类型
   const validate = (val: string) => {
@@ -372,6 +372,11 @@
   //     editorHoverProvider.dispose()
   //   }
   // })
+
+  // 返回滚动条顶部
+  const scrollToTop = () => {
+    editor.revealLineNearTop(0);
+  };
   const destroy = () => {
     if (editor) {
       editor.dispose();
@@ -388,6 +393,7 @@
     destroy,
     openSearch,
     validate,
+    scrollToTop,
   });
 </script>
 <style lang="scss" scoped>

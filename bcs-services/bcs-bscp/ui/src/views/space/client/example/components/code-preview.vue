@@ -1,6 +1,7 @@
 <template>
   <div>
     <CodeEditor
+      ref="codeEditorRef"
       v-model="codeStrVal"
       :language="'yaml'"
       :editable="false"
@@ -13,8 +14,9 @@
   </div>
 </template>
 <script lang="ts" setup>
-  import { onMounted, ref, watch } from 'vue';
+  import { onMounted, onBeforeUnmount, ref, watch } from 'vue';
   import CodeEditor from '../../../../../components/code-editor/index.vue';
+  const codeEditorRef = ref();
   const props = defineProps<{
     codeVal: string;
   }>();
@@ -41,6 +43,12 @@
       },
     ],
   };
+  const scrollTo = () => {
+    codeEditorRef.value.scrollToTop();
+  };
+  defineExpose({
+    scrollTo,
+  });
   watch(
     () => {
       return props.codeVal;
@@ -49,6 +57,9 @@
       codeStrVal.value = newV;
     },
   );
+  onBeforeUnmount(() => {
+    codeEditorRef.value.destroy();
+  });
 </script>
 
 <style scoped lang="scss">
@@ -57,6 +68,7 @@
   }
   :deep(.monaco-editor) {
     background-color: unset;
+    // 取消默认背景色
     &.monaco-editor-background {
       background-color: unset;
     }
@@ -89,6 +101,11 @@
     .mtk1,
     .mtk7 {
       color: #63656e;
+    }
+    // 取消链接下划线
+    .detected-link,
+    .detected-link-active {
+      text-decoration: none;
     }
   }
 </style>

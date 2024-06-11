@@ -17,7 +17,6 @@
   import CodePreview from '../code-preview.vue';
   import { useI18n } from 'vue-i18n';
   import { useRoute } from 'vue-router';
-  // import yamlString from '/src/assets/exampleData/example.yaml?raw';
   import yamlString from '/src/assets/exampleData/file-container.yaml?raw';
   const { t } = useI18n();
   const route = useRoute();
@@ -39,8 +38,9 @@
   };
   // 修改后的预览数据
   const replaceVal = computed(() => {
-    const labelArr = optionData.value.labelArr.length ? JSON.stringify(optionData.value.labelArr.join(', ')) : [];
+    const labelArr = optionData.value.labelArr.length ? JSON.stringify(optionData.value.labelArr.join(', ')) : '';
     let updateString = codeVal.replace('动态替换bkBizId', bkBizId.value);
+    updateString = updateString.replace('动态替换FEED_ADDR', (window as any).FEED_ADDR);
     updateString = updateString.replace('动态替换serviceName', serviceName!.value);
     updateString = updateString.replaceAll('动态替换labels', labelArr);
     updateString = updateString.replaceAll('动态替换clientKey', optionData.value.privacyCredential);

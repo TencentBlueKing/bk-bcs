@@ -25,7 +25,7 @@ SERVER_ADDRS = ["example.com:9090"]
 
 # 客户端密钥，请填写与此服务配置关联过的实际客户端密钥
 TOKEN = "动态替换clientKey"
-
+动态替换labels
 
 def main():
     with BscpClient(SERVER_ADDRS, TOKEN, BIZ_ID) as client:

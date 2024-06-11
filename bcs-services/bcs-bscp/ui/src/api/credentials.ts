@@ -14,7 +14,9 @@ export const createCredential = (biz_id: string, params: { memo: string }) =>
  * @param biz_id 空间ID
  * @returns
  */
-export const getCredentialList = (biz_id: string, query: { limit: number; start: number; searchKey?: string }) =>
+export const getCredentialList = (biz_id: string, query: {
+  limit?: number; start: number; searchKey?: string; all?: boolean
+}) =>
   http.get(`/config/biz_id/${biz_id}/credentials`, { params: query }).then((res) => res.data);
 
 /**

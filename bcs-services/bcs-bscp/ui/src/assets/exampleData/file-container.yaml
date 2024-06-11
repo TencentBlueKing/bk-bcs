@@ -27,7 +27,7 @@ spec:
               value: 动态替换serviceName
             # 服务订阅地址，从当前环境自动获取，无需修改
             - name: feed_addrs
-              value: feed.bscp.woa.com:9510
+              value: 动态替换FEED_ADDR
             # 客户端密钥，请将 value 赋值为与此服务配置关联过的实际客户端密钥
             - name: token
               value: '动态替换clientKey'
@@ -73,4 +73,4 @@ spec:
               name: bscp-temp-dir
       volumes:
         - name: bscp-temp-dir
-          emptyDir: {}
+          emptyDir: '{}'
