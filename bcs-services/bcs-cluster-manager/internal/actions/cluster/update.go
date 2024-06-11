@@ -508,6 +508,7 @@ func (ua *AddNodesAction) addNodesToCluster() error {
 
 	// check cloud CIDR && autoScale cluster cidr
 	available, err := clusterMgr.CheckClusterCidrAvailable(ua.cluster, &cloudprovider.CheckClusterCIDROption{
+		CommonOption:    *ua.option,
 		IncomingNodeCnt: uint64(len(ua.nodes)),
 		ExternalNode:    ua.req.IsExternalNode,
 	})
@@ -869,7 +870,7 @@ func (ua *AddNodesAction) setResp(code uint32, msg string) {
 // Handle handles update cluster request
 func (ua *AddNodesAction) Handle(ctx context.Context, req *cmproto.AddNodesRequest, resp *cmproto.AddNodesResponse) {
 	if req == nil || resp == nil {
-		blog.Errorf("update cluster failed, req or resp is empty")
+		blog.Errorf("add cluster nodes failed, req or resp is empty")
 		return
 	}
 	ua.ctx = ctx

@@ -70,6 +70,7 @@ func CreateECKClusterTask(taskID string, stepName string) error {
 		return retErr
 	}
 
+	// split node groups
 	nodeGroups := make([]*proto.NodeGroup, 0)
 	for _, ngID := range strings.Split(nodeGroupIDs, ",") {
 		nodeGroup, errGet := actions.GetNodeGroupByGroupID(cloudprovider.GetStorageModel(), ngID)
@@ -118,6 +119,7 @@ func createECKCluster(ctx context.Context, info *cloudprovider.CloudDependBasicI
 	var err error
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
+	// init eck client
 	eckCli, err := api.NewCTClient(info.CmOption)
 	if err != nil {
 		blog.Errorf("createECKCluster[%s]: get ECK client for cluster[%s] failed, %s",
@@ -174,6 +176,7 @@ func generateCreateECKReq(info *cloudprovider.CloudDependBasicInfo, vpcId, subne
 	compnents = append(compnents, &api.Component{Name: "prometheus"}, &api.Component{Name: "node-local-dns"})
 	blog.Infof("----------- generateCreateECKReq k8s version is %s", info.Cluster.ClusterBasicSettings.Version)
 
+	// build create cluster request
 	req := &api.CreateClusterRequest{
 		Components: compnents,
 		ContainerRuntime: &api.ContainerRuntime{
@@ -256,6 +259,8 @@ func generateLabels(cls *proto.Cluster) []*api.Label {
 func generateWorkerNodes(cls *proto.Cluster, vpcId, subnetId uint32, groups []*proto.NodeGroup) (
 	*api.WorkerNode, error) {
 	workerNodes := make([]*api.WorkerNode, 0)
+
+	// build worker nodes
 	for _, ng := range groups {
 		if ng.AutoScaling == nil {
 			return nil, fmt.Errorf("empty AutoScaling for cluster %s NodeGroup %s", cls.ClusterID, ng.Name)
@@ -329,6 +334,7 @@ func generateMasterNodes(cls *proto.Cluster, vpcId, subnetId uint32) (*api.Maste
 		return nil, fmt.Errorf("empty InitLoginPassword for cluster %s", cls.ClusterID)
 	}
 
+	// build system disks
 	if cls.Template[0].SystemDisk == nil {
 		return nil, fmt.Errorf("empty system disk for cluster %s", cls.ClusterID)
 	}
@@ -338,12 +344,14 @@ func generateMasterNodes(cls *proto.Cluster, vpcId, subnetId uint32) (*api.Maste
 			cls.Template[0].SystemDisk.DiskSize, cls.ClusterID)
 	}
 
+	// parse passwd
 	passwd, err := encrypt.Decrypt(nil, cls.Template[0].InitLoginPassword)
 	if err != nil {
 		return nil, fmt.Errorf("generateWorkerNodes for cluster %s decrypt password failed, %v",
 			cls.ClusterID, err)
 	}
 
+	// data disks
 	dataDisks := make([]*api.Disk, 0)
 	for _, d := range cls.Template[0].DataDisks {
 		size, err := strconv.Atoi(d.DiskSize)
@@ -358,6 +366,7 @@ func generateMasterNodes(cls *proto.Cluster, vpcId, subnetId uint32) (*api.Maste
 		})
 	}
 
+	// build master nodes
 	masterNode := &api.MasterNode{
 		DataDisks:     dataDisks,
 		ImageName:     cls.ClusterBasicSettings.OS,
@@ -425,6 +434,7 @@ func CheckECKClusterStatusTask(taskID string, stepName string) error {
 	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
 	systemID := state.Task.CommonParams[cloudprovider.CloudSystemID.String()]
 
+	// get depend basic info
 	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
 		ClusterID: clusterID,
 		CloudID:   cloudID,
@@ -503,6 +513,7 @@ func checkClusterStatus(ctx context.Context, info *cloudprovider.CloudDependBasi
 		return err
 	}
 
+	// failed status
 	if failed {
 		blog.Errorf("checkClusterStatus[%s] GeteckCluster[%s] failed: abnormal", taskID, info.Cluster.ClusterID)
 		retErr := fmt.Errorf("cluster[%s] status abnormal", info.Cluster.ClusterID)
@@ -535,6 +546,7 @@ func CheckECKNodesGroupStatusTask(taskID string, stepName string) error {
 		cloudprovider.NodeGroupIDKey.String(), ",")
 	systemID := state.Task.CommonParams[cloudprovider.CloudSystemID.String()]
 
+	// get depend basic info
 	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
 		ClusterID: clusterID,
 		CloudID:   cloudID,
@@ -597,6 +609,7 @@ func checkNodesGroupStatus(ctx context.Context, info *cloudprovider.CloudDependB
 
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
+	// get node groups
 	nodeGroups := make([]*proto.NodeGroup, 0)
 	for _, ngID := range nodeGroupIDs {
 		nodeGroup, err := actions.GetNodeGroupByGroupID(cloudprovider.GetStorageModel(), ngID)
@@ -617,7 +630,7 @@ func checkNodesGroupStatus(ctx context.Context, info *cloudprovider.CloudDependB
 	defer cancel()
 
 	running, failure := make([]string, 0), make([]string, 0)
-	// loop cluster status
+	// loop cluster groups status
 	err = loop.LoopDoFunc(ctx, func() error {
 		index := 0
 		for _, ng := range nodeGroups {

@@ -13,6 +13,10 @@
 package qcloud
 
 import (
+	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cidrtree"
+	"net"
 	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -20,6 +24,7 @@ import (
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/business"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -194,4 +199,38 @@ func (c *VPCManager) ListBandwidthPacks(opt *cloudprovider.CommonOption) ([]*pro
 func (c *VPCManager) CheckConflictInVpcCidr(vpcID string, cidr string,
 	opt *cloudprovider.CommonOption) ([]string, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// AllocateOverlayCidr allocate overlay cidr
+func (c *VPCManager) AllocateOverlayCidr(vpcId string, cluster *proto.Cluster, cidrLens []uint32,
+	reservedBlocks []*net.IPNet, opt *cloudprovider.CommonOption) ([]string, error) {
+	return business.AllocateGlobalRouterCidr(opt, vpcId, nil, cidrLens, nil)
+}
+
+// AddClusterOverlayCidr add cidr to cluster
+func (c *VPCManager) AddClusterOverlayCidr(clusterId string, cidrs []string, opt *cloudprovider.CommonOption) error {
+	return business.AddClusterGrCidr(opt, clusterId, cidrs)
+}
+
+// GetVpcIpSurplus get vpc ipSurplus
+func (c *VPCManager) GetVpcIpSurplus(
+	vpcId string, ipType string, reservedBlocks []*net.IPNet, opt *cloudprovider.CommonOption) (uint32, error) {
+	cloud, _ := cloudprovider.GetCloudByProvider(cloudName)
+	switch ipType {
+	case common.ClusterOverlayNetwork:
+		return business.GetGrVPCIPSurplus(opt, cloud.CloudID, vpcId, nil)
+	case common.ClusterUnderlayNetwork:
+		frees, err := business.GetFreeIPNets(opt, vpcId)
+		if err != nil {
+			return 0, err
+		}
+		return cidrtree.GetIPNetsNum(frees)
+	}
+
+	return 0, fmt.Errorf("not supported ipType[%s]", ipType)
+}
+
+// GetOverlayClusterIPSurplus get cluster overlay ipSurplus
+func (c *VPCManager) GetOverlayClusterIPSurplus(clusterId string, opt *cloudprovider.CommonOption) (uint32, error) {
+	return business.GetClusterGrIPSurplus(opt, "", clusterId)
 }

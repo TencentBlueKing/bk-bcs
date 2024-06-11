@@ -13,16 +13,46 @@
 package daemon
 
 import (
-	"fmt"
-
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/metrics"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cidrmanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
+
+func getAvailableIPNumByVpc(model store.ClusterManagerModel, ipType string, vpc cmproto.CloudVPC) (uint32, error) {
+	cloud, err := actions.GetCloudByCloudID(model, vpc.CloudID)
+	if err != nil {
+		blog.Errorf("getAvailableIPNumByVpc[%s:%s] failed: %v", vpc.Region, vpc.VpcID, err)
+		return 0, err
+	}
+	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
+		Cloud: cloud,
+	})
+	if err != nil {
+		blog.Errorf("get credential for cloudprovider %s/%s when getAvailableIPNumByVpc[%s:%s] failed, %s",
+			cloud.CloudID, cloud.CloudProvider, vpc.Region, vpc.VpcID, err.Error(),
+		)
+		return 0, err
+	}
+	cmOption.Region = vpc.Region
+
+	vpcMgr, err := cloudprovider.GetVPCMgr(cloud.CloudProvider)
+	if err != nil {
+		blog.Errorf("get cloudprovider[%s] vpcManager[%s:%s] for getAvailableIPNumByVpc failed, %s",
+			cloud.CloudProvider, vpc.Region, vpc.VpcID, err.Error(),
+		)
+		return 0, err
+	}
+
+	return vpcMgr.GetVpcIpSurplus(vpc.VpcID, ipType, nil, cmOption)
+}
 
 func (d *Daemon) reportVpcAvailableIPCount(error chan<- error) {
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{"available": "true"})
@@ -32,18 +62,6 @@ func (d *Daemon) reportVpcAvailableIPCount(error chan<- error) {
 		return
 	}
 
-	cidrCli, conClose, err := cidrmanager.GetCidrClient().GetCidrManagerClient()
-	if err != nil || cidrCli == nil {
-		errMsg := fmt.Errorf("GetCidrManagerClient failed: %v", err)
-		error <- errMsg
-		return
-	}
-	defer func() {
-		if conClose != nil {
-			conClose()
-		}
-	}()
-
 	concurency := utils.NewRoutinePool(5)
 	defer concurency.Close()
 
@@ -51,20 +69,14 @@ func (d *Daemon) reportVpcAvailableIPCount(error chan<- error) {
 		concurency.Add(1)
 		go func(vpc cmproto.CloudVPC) {
 			defer concurency.Done()
-			resp, errGet := cidrCli.GetVPCIPSurplus(d.ctx, &cidrmanager.GetVPCIPSurplusRequest{
-				Region:   vpc.Region,
-				CidrType: utils.GlobalRouter.String(),
-				VpcID:    vpc.VpcID,
-			})
+
+			overlayCnt, errGet := getAvailableIPNumByVpc(d.model, common.ClusterOverlayNetwork, vpc)
 			if errGet != nil {
 				error <- errGet
 				return
 			}
-			if resp.Code != 0 {
-				error <- fmt.Errorf("GetVPCIPSurplus failed: %v", resp.Message)
-				return
-			}
-			metrics.ReportCloudVpcAvailableIPNum(vpc.CloudID, vpc.VpcID, float64(resp.Data.IPSurplus))
+
+			metrics.ReportCloudVpcAvailableIPNum(vpc.CloudID, vpc.VpcID, float64(overlayCnt))
 		}(cloudVPCs[i])
 	}
 

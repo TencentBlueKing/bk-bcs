@@ -628,3 +628,13 @@ func MergeStringIntMaps(map1, map2 map[string]int) map[string]int {
 	}
 	return copyMap1
 }
+
+// BuildAllocateVpcCidrLockKey generate vpc cidr lock
+func BuildAllocateVpcCidrLockKey(cloud, region, vpcId string) string {
+	return fmt.Sprintf("/bcs-services/bcs-cluster-manager/%s/%s/%s", cloud, region, vpcId)
+}
+
+// BuildClusterLockKey generate cluster lock
+func BuildClusterLockKey(clusterId string) string {
+	return fmt.Sprintf("/bcs-services/bcs-cluster-manager/%s", clusterId)
+}
