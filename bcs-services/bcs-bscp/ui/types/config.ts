@@ -179,6 +179,7 @@ export interface IBoundTemplateDetail {
   byte_size: string;
   creator: string;
   create_at: string;
+  update_at: string;
   is_conflict: boolean;
 }
 
