@@ -269,111 +269,70 @@ func (dao *clientDao) List(kit *kit.Kit, bizID, appID uint32, heartbeatTime int6
 	return d.FindByPage(opt.Offset(), opt.LimitInt())
 }
 
-// 处理搜索
-func (dao *clientDao) handleSearch(kit *kit.Kit, bizID, appID uint32, search *pbclient.ClientQueryCondition) ( // nolint
-	[]rawgen.Condition, error) {
-
-	var conds []rawgen.Condition
-	m := dao.genQ.Client
-	q := dao.genQ.Client.WithContext(kit.Ctx)
-	rs := dao.genQ.Release
-	ce := dao.genQ.ClientEvent
-
-	// 根据IP搜索
-	if len(search.GetIp()) > 0 {
-		ips := replaceWithPipe(search.GetIp())
+// handle IP search
+func (dao *clientDao) handleIPSearch(q gen.IClientDo, ip string) []rawgen.Condition {
+	conds := make([]rawgen.Condition, 0)
+	if ip != "" {
+		ips := replaceWithPipe(ip)
 		for i, v := range ips {
 			if i == 0 {
-				q = q.Where(m.Ip.Like("%" + v + "%"))
+				q = q.Where(dao.genQ.Client.Ip.Like("%" + v + "%"))
 			} else {
-				q = q.Or(m.Ip.Like("%" + v + "%"))
+				q = q.Or(dao.genQ.Client.Ip.Like("%" + v + "%"))
 			}
 		}
 		conds = append(conds, q)
 	}
 
-	// 根据客户端uid搜索
-	if len(search.GetUid()) > 0 {
-		uids := replaceWithPipe(search.GetUid())
+	return conds
+}
+
+// handle UID search
+func (dao *clientDao) handleUIDSearch(q gen.IClientDo, uid string) []rawgen.Condition {
+	conds := make([]rawgen.Condition, 0)
+	if uid != "" {
+		uids := replaceWithPipe(uid)
 		for i, v := range uids {
 			if i == 0 {
-				q = q.Where(m.UID.Like("%" + v + "%"))
+				q = q.Where(dao.genQ.Client.UID.Like("%" + v + "%"))
 			} else {
-				q = q.Or(m.UID.Like("%" + v + "%"))
+				q = q.Or(dao.genQ.Client.UID.Like("%" + v + "%"))
 			}
 		}
 		conds = append(conds, q)
 	}
 
-	// 根据当前版本名称搜索
-	if len(search.GetCurrentReleaseName()) > 0 {
-		rns := replaceWithPipe(search.GetCurrentReleaseName())
-		rq := rs.WithContext(kit.Ctx).Select(rs.ID).Where(rs.BizID.Eq(bizID), rs.AppID.Eq(appID))
-		for i, v := range rns {
-			if i == 0 {
-				rq = rq.Where(rs.Name.Like("%" + v + "%"))
-			} else {
-				rq = rq.Or(rs.Name.Like("%" + v + "%"))
-			}
-		}
+	return conds
+}
 
-		var item []struct {
-			ID uint32
-		}
-		err := rq.Where(rq).Scan(&item)
+// handle Target Release Name search
+func (dao *clientDao) handleTargetReleaseSearch(kit *kit.Kit, bizID, appID uint32, q gen.IClientDo,
+	targetReleaseName string) ([]rawgen.Condition, error) {
+	m := dao.genQ.Client
+	rs := dao.genQ.Release
+	ce := dao.genQ.ClientEvent
+	conds := make([]rawgen.Condition, 0)
+
+	if targetReleaseName != "" {
+		var items []struct{ ID uint32 }
+		err := rs.WithContext(kit.Ctx).
+			Select(rs.ID).
+			Where(rs.BizID.Eq(bizID), rs.AppID.Eq(appID), rs.Name.Like("%"+targetReleaseName+"%")).
+			Scan(&items)
 		if err != nil {
 			return conds, err
 		}
-		releaseID := []uint32{}
-		for _, v := range item {
-			releaseID = append(releaseID, v.ID)
-		}
-		conds = append(conds, q.Where(m.CurrentReleaseID.In(releaseID...)))
-	}
 
-	// 目标版本查询
-	// 先获取releaseID, 根据 target_release_id = releaseID 获取 client_events 中的 client_id
-	var clientEventConds []rawgen.Condition
-	if len(search.GetTargetReleaseName()) > 0 {
-		var item []struct {
-			ID uint32
+		var clientEventConds []rawgen.Condition
+		releaseIDs := make([]uint32, len(items))
+		for i, v := range items {
+			releaseIDs[i] = v.ID
 		}
-		err := rs.WithContext(kit.Ctx).Select(rs.ID).Where(rs.BizID.Eq(bizID), rs.AppID.Eq(appID),
-			rs.Name.Like("%"+search.GetTargetReleaseName()+"%")).Scan(&item)
-		if err != nil {
-			return conds, err
-		}
-		releaseID := []uint32{}
-		for _, v := range item {
-			releaseID = append(releaseID, v.ID)
-		}
+		clientEventConds = append(clientEventConds, q.Where(ce.TargetReleaseID.In(releaseIDs...)))
 
-		clientEventConds = append(clientEventConds, q.Where(ce.TargetReleaseID.In(releaseID...)))
-	}
-
-	// 根据客户端时间表中的开始和结束时间搜索
-	if search.GetStartPullTime() != "" {
-		starTime, err := parseTime(search.GetStartPullTime())
-		if err != nil {
-			return nil, err
-		}
-		clientEventConds = append(clientEventConds, q.Where(ce.StartTime.Gte(starTime)))
-	}
-	if search.GetEndPullTime() != "" {
-		endTime, err := parseTime(search.GetEndPullTime())
-		if err != nil {
-			return nil, err
-		}
-		clientEventConds = append(clientEventConds, q.Where(ce.EndTime.Lte(endTime)))
-	}
-
-	if len(clientEventConds) > 0 {
-		var clientEvent []struct {
-			ClientID uint32
-		}
-		err := ce.WithContext(kit.Ctx).Select(ce.ClientID).Where(clientEventConds...).
-			Group(ce.ClientID).Scan(&clientEvent)
-		if err != nil {
+		var clientEvent []struct{ ClientID uint32 }
+		if err = ce.WithContext(kit.Ctx).Select(ce.ClientID).Where(clientEventConds...).
+			Group(ce.ClientID).Scan(&clientEvent); err != nil {
 			return conds, err
 		}
 		cid := []uint32{}
@@ -383,24 +342,89 @@ func (dao *clientDao) handleSearch(kit *kit.Kit, bizID, appID uint32, search *pb
 		conds = append(conds, q.Where(m.ID.In(cid...)))
 	}
 
-	// 根据变更状态搜索
-	if len(search.GetReleaseChangeStatus()) > 0 {
-		conds = append(conds, q.Where(m.ReleaseChangeStatus.In(search.GetReleaseChangeStatus()...)))
+	return conds, nil
+}
+
+// handle Current Release Name search
+func (dao *clientDao) handleCurrentReleaseSearch(kit *kit.Kit, bizID, appID uint32, q gen.IClientDo,
+	currentReleaseName string) ([]rawgen.Condition, error) {
+	conds := make([]rawgen.Condition, 0)
+	if currentReleaseName != "" {
+		rns := replaceWithPipe(currentReleaseName)
+		rq := dao.genQ.Release.WithContext(kit.Ctx).Select(dao.genQ.Release.ID).Where(
+			dao.genQ.Release.BizID.Eq(bizID), dao.genQ.Release.AppID.Eq(appID))
+		for i, v := range rns {
+			if i == 0 {
+				rq = rq.Where(dao.genQ.Release.Name.Like("%" + v + "%"))
+			} else {
+				rq = rq.Or(dao.genQ.Release.Name.Like("%" + v + "%"))
+			}
+		}
+		var items []struct{ ID uint32 }
+		if err := rq.Scan(&items); err != nil {
+			return conds, err
+		}
+		releaseIDs := make([]uint32, len(items))
+		for i, v := range items {
+			releaseIDs[i] = v.ID
+		}
+		conds = append(conds, q.Where(dao.genQ.Client.CurrentReleaseID.In(releaseIDs...)))
 	}
 
-	// 根据标签搜索，多实例搜索
-	// key:valul
-	// key|key2
-	// key:val1,val2...
-	// key:val1,val2|key2:val1...
-	// key:val1,val2|key2
-	// key 会存在各种格式：符号、数字、中文等，只要使用双引号包围就可以
+	return conds, nil
+}
+
+// handle Client Event time search
+func (dao *clientDao) handleClientEventTimeSearch(kit *kit.Kit, q gen.IClientDo,
+	search *pbclient.ClientQueryCondition) ([]rawgen.Condition, error) {
+	m := dao.genQ.Client
+	ce := dao.genQ.ClientEvent
+
+	conds := make([]rawgen.Condition, 0)
+	var clientEventConds []rawgen.Condition
+	if search.GetStartPullTime() != "" {
+		startTime, err := parseTime(search.GetStartPullTime())
+		if err != nil {
+			return conds, err
+		}
+		clientEventConds = append(clientEventConds, q.Where(ce.StartTime.Gte(startTime)))
+	}
+
+	if search.GetEndPullTime() != "" {
+		endTime, err := parseTime(search.GetEndPullTime())
+		if err != nil {
+			return conds, err
+		}
+		clientEventConds = append(clientEventConds, q.Where(ce.EndTime.Lte(endTime)))
+	}
+
+	if len(clientEventConds) == 0 {
+		return conds, nil
+	}
+
+	var clientEvent []struct{ ClientID uint32 }
+	if err := ce.WithContext(kit.Ctx).Select(ce.ClientID).Where(clientEventConds...).
+		Group(ce.ClientID).Scan(&clientEvent); err != nil {
+		return conds, err
+	}
+	cid := []uint32{}
+	for _, v := range clientEvent {
+		cid = append(cid, v.ClientID)
+	}
+	conds = append(conds, q.Where(m.ID.In(cid...)))
+
+	return conds, nil
+}
+
+// handle Label search
+func (dao *clientDao) handleLabelSearch(q gen.IClientDo, search *pbclient.ClientQueryCondition) []rawgen.Condition {
+	conds := make([]rawgen.Condition, 0)
+
 	if search.GetLabel() != nil && len(search.GetLabel()) != 0 {
-		fmt.Println(search.GetLabel())
 		labels := parseLabels(search.GetLabel())
 		for _, label := range labels {
-			isFirst := true
 			for key, value := range label {
+				isFirst := true
 				for _, v := range value {
 					if isFirst {
 						q = q.Where(rawgen.Cond(datatypes.JSONQuery("labels").Equals(v, fmt.Sprintf(`"%s"`, key)))...)
@@ -409,18 +433,68 @@ func (dao *clientDao) handleSearch(kit *kit.Kit, bizID, appID uint32, search *pb
 						q = q.Or(rawgen.Cond(datatypes.JSONQuery("labels").Equals(v, fmt.Sprintf(`"%s"`, key)))...)
 					}
 				}
-				if len(value) == 0 && isFirst {
-					q = q.Where(rawgen.Cond(datatypes.JSONQuery("labels").HasKey(fmt.Sprintf(`"%s"`, key)))...)
-				} else if len(value) == 0 {
-					q = q.Or(rawgen.Cond(datatypes.JSONQuery("labels").HasKey(fmt.Sprintf(`"%s"`, key)))...)
+				if len(value) == 0 {
+					if isFirst {
+						q = q.Where(rawgen.Cond(datatypes.JSONQuery("labels").HasKey(fmt.Sprintf(`"%s"`, key)))...)
+					} else {
+						q = q.Or(rawgen.Cond(datatypes.JSONQuery("labels").HasKey(fmt.Sprintf(`"%s"`, key)))...)
+					}
 				}
-
 				conds = append(conds, q)
 			}
 		}
 	}
 
-	// 根据附加标签搜索
+	return conds
+}
+
+// handle search
+func (dao *clientDao) handleSearch(kit *kit.Kit, bizID, appID uint32, search *pbclient.ClientQueryCondition) (
+	[]rawgen.Condition, error) {
+
+	var conds []rawgen.Condition
+	m := dao.genQ.Client
+	q := dao.genQ.Client.WithContext(kit.Ctx)
+
+	// IP search
+	ipConds := dao.handleIPSearch(q, search.GetIp())
+	conds = append(conds, ipConds...)
+
+	// UID search
+	uidConds := dao.handleUIDSearch(q, search.GetUid())
+	conds = append(conds, uidConds...)
+
+	// Current Release Name search
+	currentReleaseConds, err := dao.handleCurrentReleaseSearch(kit, bizID, appID, q, search.GetCurrentReleaseName())
+	if err != nil {
+		return conds, err
+	}
+	conds = append(conds, currentReleaseConds...)
+
+	// Target Release Name search
+	targetReleaseConds, err := dao.handleTargetReleaseSearch(kit, bizID, appID, q, search.GetTargetReleaseName())
+	if err != nil {
+		return conds, err
+	}
+	conds = append(conds, targetReleaseConds...)
+
+	// Client Event time search
+	clientEventTimeConds, err := dao.handleClientEventTimeSearch(kit, q, search)
+	if err != nil {
+		return conds, err
+	}
+	conds = append(conds, clientEventTimeConds...)
+
+	// Change status search
+	if len(search.GetReleaseChangeStatus()) > 0 {
+		conds = append(conds, q.Where(m.ReleaseChangeStatus.In(search.GetReleaseChangeStatus()...)))
+	}
+
+	// Label search
+	labelConds := dao.handleLabelSearch(q, search)
+	conds = append(conds, labelConds...)
+
+	// Annotations search
 	if search.GetAnnotations() != nil && len(search.GetAnnotations().GetFields()) != 0 {
 		for k, v := range search.GetAnnotations().GetFields() {
 			if k != "" {
@@ -430,12 +504,12 @@ func (dao *clientDao) handleSearch(kit *kit.Kit, bizID, appID uint32, search *pb
 		}
 	}
 
-	// 根据在线状态搜索
+	// Online status search
 	if len(search.GetOnlineStatus()) > 0 {
 		conds = append(conds, q.Where(m.OnlineStatus.In(search.GetOnlineStatus()...)))
 	}
 
-	// 根据客户端版本搜索
+	// Client version search
 	if len(search.GetClientVersion()) > 0 {
 		cvs := replaceWithPipe(search.GetClientVersion())
 		for i, v := range cvs {
@@ -448,12 +522,12 @@ func (dao *clientDao) handleSearch(kit *kit.Kit, bizID, appID uint32, search *pb
 		conds = append(conds, q)
 	}
 
-	// 根据客户端类型搜索
+	// Client type search
 	if len(search.GetClientType()) > 0 {
 		conds = append(conds, q.Where(m.ClientType.Eq(search.GetClientType())))
 	}
 
-	// 根据失败原因搜索
+	// Release change failed reason search
 	if len(search.GetFailedReason()) > 0 {
 		conds = append(conds, q.Where(m.ReleaseChangeFailedReason.Eq(search.GetFailedReason())))
 	}
