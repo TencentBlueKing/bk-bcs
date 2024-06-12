@@ -50,6 +50,7 @@
                   ref="editInputRef"
                   class="input"
                   placeholder=" "
+                  :readonly="parentSelecte && !!parentSelecte?.children"
                   @blur="handleConditionEdit(condition)"
                   @keydown="handleEnterConditionEdit($event, condition)"
                   @compositionstart="isComposing = true"
@@ -70,6 +71,7 @@
                 class="input"
                 placeholder=" "
                 :contenteditable="true"
+                :readonly="!!parentSelecte?.children"
                 @focus="inputFocus = true"
                 @keydown="handleEnterAddConditionItem"
                 @blur="handleConfirmConditionItem"
@@ -208,7 +210,7 @@
   import CommonlyUsedTag from './commonly-used-tag.vue';
   import { Message } from 'bkui-vue';
   import { cloneDeep } from 'lodash';
-  import { useRoute } from 'vue-router';
+  import { useRoute, useRouter } from 'vue-router';
   import { useI18n } from 'vue-i18n';
 
   const { t, locale } = useI18n();
@@ -217,6 +219,7 @@
   const { searchQuery } = storeToRefs(clientStore);
 
   const route = useRoute();
+  const router = useRouter();
 
   const props = defineProps<{
     bkBizId: string;
@@ -321,8 +324,24 @@
     (val) => {
       if (Object.keys(val!).length === 0) {
         searchConditionList.value = [];
+        router.replace({
+          query: {
+            heartTime: searchQuery.value.last_heartbeat_time,
+          },
+        });
       } else {
+        const query: any = {
+          ...val,
+          label: JSON.stringify(val.label),
+          heartTime: searchQuery.value.last_heartbeat_time,
+        };
+        query.pull_time = `${dateTime.value[0]} - ${dateTime.value[1]}`;
+        delete query.start_pull_time;
+        delete query.end_pull_time;
         handleAddRecentSearch();
+        router.replace({
+          query,
+        });
       }
     },
   );
@@ -342,23 +361,24 @@
     const entries = Object.entries(route.query);
     if (entries.length === 0) return;
     entries.forEach((entry) => {
-      const [searchKey, searchValue] = entry;
+      const [searchKey, searchValue]: [string, any] = entry;
       if (searchKey === 'heartTime') return;
       const { name, value, children } = CLIENT_SEARCH_DATA.find((item) => item.value === searchKey)!;
       if (value === 'pull_time') {
+        dateTime.value = searchValue.split(' - ');
         searchConditionList.value.push({
-          content: `${name} : ${searchValue} 00:00:00 - ${searchValue} 23:59:59`,
-          value: `${searchValue} 00:00:00 - ${searchValue} 23:59:59`,
+          content: `${name} : ${searchValue}`,
+          value: searchValue as string,
           key: value,
           isEdit: false,
         });
       } else if (value === 'label') {
         const labels = JSON.parse(searchValue as string);
-        Object.keys(labels).forEach((key) => {
+        labels.forEach((value: string) => {
           searchConditionList.value.push({
-            content: `标签: ${key}=${labels[key]}`,
-            value: `${key}=${labels[key]}`,
-            key: value,
+            content: `${t('标签')}: ${value}`,
+            value,
+            key: 'label',
             isEdit: false,
           });
         });
@@ -489,6 +509,7 @@
       isEdit: false,
     });
     isShowSearchInput.value = false;
+    parentSelecte.value = undefined;
   };
 
   // 获取最近搜索记录和常用搜索记录
@@ -723,11 +744,14 @@
   };
 
   const handleClickSearch = () => {
+    console.log(1);
     // 处理有条件处于编辑状时 点击查询框 编辑态条件未保存
-    if (editConditionItem.value) {
+    // 新增态 处理枚举型点击搜索框取消枚举
+    if (editConditionItem.value || isShowSearchInput.value) {
       handleChildSelectorClickOutside();
       return;
     }
+
     isShowPopover.value = !isShowPopover.value;
     isShowSearchInput.value = true;
     nextTick(() => inputRef.value.focus());
@@ -736,6 +760,9 @@
   const handleClickInput = (e: any) => {
     e.preventDefault();
     e.stopPropagation();
+    if (showChildSelector.value) {
+      handleChildSelectorClickOutside();
+    }
   };
 
   const handleConditionClick = (e: any, condition: ISearchCondition) => {
@@ -807,16 +834,20 @@
   };
 
   const handleChildSelectorClickOutside = () => {
-    if (editSearchStr.value) {
+    console.log('click outside');
+    if (editConditionItem.value) {
       // 编辑态 取消编辑
       editConditionItem.value!.isEdit = false;
+      editConditionItem.value = undefined;
       editSearchStr.value = '';
-    } else if (searchStr.value) {
+    } else {
       // 新增态 状态复原
       searchStr.value = '';
+      isShowSearchInput.value = false;
     }
     isShowPopover.value = false;
     showChildSelector.value = false;
+    parentSelecte.value = undefined;
   };
 
   const handlePasteInput = (e: any) => {

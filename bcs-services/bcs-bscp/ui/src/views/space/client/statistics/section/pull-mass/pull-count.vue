@@ -278,7 +278,10 @@
     const routeData = router.resolve({
       name: 'client-search',
       params: { appId: props.appId, bizId: props.bkBizId },
-      query: { pull_time: jumpSearchTime.value, heartTime: searchQuery.value.last_heartbeat_time },
+      query: {
+        pull_time: `${jumpSearchTime.value} 00:00:00 - ${jumpSearchTime.value} 23:59:59`,
+        heartTime: searchQuery.value.last_heartbeat_time,
+      },
     });
     window.open(routeData.href, '_blank');
   };
