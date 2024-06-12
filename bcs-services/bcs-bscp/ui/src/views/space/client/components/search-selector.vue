@@ -57,8 +57,8 @@
                   @compositionend="isComposing = false"
                   @click="handleClickInput($event)"
                   @paste="handlePasteInput" />
-                <span class="placeholder"> {{ searchInputPlaceholder }}</span>
               </span>
+              <span class="placeholder"> {{ searchInputPlaceholder }}</span>
             </div>
           </div>
           <div v-if="isShowSearchInput" class="search-container-input" ref="inputWrapRef">
@@ -79,8 +79,8 @@
                 @compositionend="isComposing = false"
                 @click="handleClickInput($event)"
                 @paste="handlePasteInput" />
-              <span class="placeholder"> {{ searchInputPlaceholder }}</span>
             </span>
+            <span class="placeholder"> {{ searchInputPlaceholder }}</span>
           </div>
         </div>
         <div
@@ -899,7 +899,7 @@
           height: 100%;
           font-size: 12px;
           visibility: hidden;
-          padding: 0 10px;
+          padding: 0 4px;
         }
         .input {
           position: absolute;
@@ -913,13 +913,10 @@
           box-shadow: none;
           color: #63656e;
         }
-        .placeholder {
-          position: absolute;
-          left: calc(100% - 12px);
-          z-index: 999;
-          width: 600px;
-          color: #c4c6cc;
-        }
+      }
+      .placeholder {
+        width: 600px;
+        color: #c4c6cc;
       }
     }
     .search-condition-list {

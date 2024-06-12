@@ -30,7 +30,6 @@ export interface IClinetCommonQuery {
   search_type?: string;
   pull_time?: number;
   is_duplicates?: boolean;
-  client_ids?: number[];
 }
 
 // 客户端查询列表接口查询条件
@@ -48,6 +47,7 @@ export interface IClientSearchParams {
   start_pull_time?: string;
   end_pull_time?: string;
   failed_reason?: string;
+  client_ids?: number[];
 }
 
 export interface IGetClientSearchListQuery {
