@@ -616,6 +616,8 @@
   .labels {
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
+    min-height: 100%;
     span {
       margin-right: 4px;
       line-height: 28px;

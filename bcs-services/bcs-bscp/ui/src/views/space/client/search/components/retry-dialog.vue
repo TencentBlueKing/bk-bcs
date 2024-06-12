@@ -31,7 +31,9 @@
           <div class="value">{{ props.selections[0].uid }}</div>
         </div>
         <div class="client-info-item">
-          <div class="label">{{ t('当前配置版本') }}：</div>
+          <div class="label">{{ t('源版本') }}：</div>
+          <div class="value">{{ props.selections[0].release_name || '--' }}</div>
+          <div class="label">{{ t('目标版本') }}：</div>
           <div class="value">{{ props.selections[0].release_name || '--' }}</div>
         </div>
       </div>
