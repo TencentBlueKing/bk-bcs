@@ -330,13 +330,17 @@
           },
         });
       } else {
+        const query: any = {
+          ...val,
+          label: JSON.stringify(val.label),
+          heartTime: searchQuery.value.last_heartbeat_time,
+        };
+        query.pull_time = `${dateTime.value[0]} - ${dateTime.value[1]}`;
+        delete query.start_pull_time;
+        delete query.end_pull_time;
         handleAddRecentSearch();
         router.replace({
-          query: {
-            ...val,
-            label: JSON.stringify(val.label),
-            heartTime: searchQuery.value.last_heartbeat_time,
-          },
+          query,
         });
       }
     },
@@ -357,13 +361,14 @@
     const entries = Object.entries(route.query);
     if (entries.length === 0) return;
     entries.forEach((entry) => {
-      const [searchKey, searchValue] = entry;
+      const [searchKey, searchValue]: [string, any] = entry;
       if (searchKey === 'heartTime') return;
       const { name, value, children } = CLIENT_SEARCH_DATA.find((item) => item.value === searchKey)!;
       if (value === 'pull_time') {
+        dateTime.value = searchValue.split(' - ');
         searchConditionList.value.push({
-          content: `${name} : ${searchValue} 00:00:00 - ${searchValue} 23:59:59`,
-          value: `${searchValue} 00:00:00 - ${searchValue} 23:59:59`,
+          content: `${name} : ${searchValue}`,
+          value: searchValue as string,
           key: value,
           isEdit: false,
         });
@@ -504,6 +509,7 @@
       isEdit: false,
     });
     isShowSearchInput.value = false;
+    parentSelecte.value = undefined;
   };
 
   // 获取最近搜索记录和常用搜索记录
