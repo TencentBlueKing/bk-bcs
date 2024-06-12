@@ -50,6 +50,7 @@
                   ref="editInputRef"
                   class="input"
                   placeholder=" "
+                  :readonly="parentSelecte && !!parentSelecte?.children"
                   @blur="handleConditionEdit(condition)"
                   @keydown="handleEnterConditionEdit($event, condition)"
                   @compositionstart="isComposing = true"
@@ -70,6 +71,7 @@
                 class="input"
                 placeholder=" "
                 :contenteditable="true"
+                :readonly="!!parentSelecte?.children"
                 @focus="inputFocus = true"
                 @keydown="handleEnterAddConditionItem"
                 @blur="handleConfirmConditionItem"
@@ -732,11 +734,14 @@
   };
 
   const handleClickSearch = () => {
+    console.log(1);
     // 处理有条件处于编辑状时 点击查询框 编辑态条件未保存
-    if (editConditionItem.value) {
+    // 新增态 处理枚举型点击搜索框取消枚举
+    if (editConditionItem.value || isShowSearchInput.value) {
       handleChildSelectorClickOutside();
       return;
     }
+
     isShowPopover.value = !isShowPopover.value;
     isShowSearchInput.value = true;
     nextTick(() => inputRef.value.focus());
@@ -745,6 +750,9 @@
   const handleClickInput = (e: any) => {
     e.preventDefault();
     e.stopPropagation();
+    if (showChildSelector.value) {
+      handleChildSelectorClickOutside();
+    }
   };
 
   const handleConditionClick = (e: any, condition: ISearchCondition) => {
@@ -816,16 +824,20 @@
   };
 
   const handleChildSelectorClickOutside = () => {
-    if (editSearchStr.value) {
+    console.log('click outside');
+    if (editConditionItem.value) {
       // 编辑态 取消编辑
       editConditionItem.value!.isEdit = false;
+      editConditionItem.value = undefined;
       editSearchStr.value = '';
-    } else if (searchStr.value) {
+    } else {
       // 新增态 状态复原
       searchStr.value = '';
+      isShowSearchInput.value = false;
     }
     isShowPopover.value = false;
     showChildSelector.value = false;
+    parentSelecte.value = undefined;
   };
 
   const handlePasteInput = (e: any) => {
