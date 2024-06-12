@@ -13,6 +13,8 @@
 package v1
 
 import (
+	"fmt"
+
 	"gopkg.in/yaml.v3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -188,6 +190,32 @@ type MonitorRuleDetail struct {
 	Query          *Query   `json:"query,omitempty" yaml:"query,omitempty" patchStrategy:"replace"`
 }
 
+// WhereAdd 追加告警策略匹配规则
+func (m *MonitorRuleDetail) WhereAdd(addQuery string) {
+	if addQuery != "" {
+		for _, query := range m.Query.QueryConfigs {
+			if query.Where == "" {
+				query.Where = addQuery
+			} else {
+				query.Where = fmt.Sprintf("%s and %s", query.Where, addQuery)
+			}
+		}
+	}
+}
+
+// WhereOr 追加告警策略匹配规则
+func (m *MonitorRuleDetail) WhereOr(addQuery string) {
+	if addQuery != "" {
+		for _, query := range m.Query.QueryConfigs {
+			if query.Where == "" {
+				query.Where = addQuery
+			} else {
+				query.Where = fmt.Sprintf("%s or %s", query.Where, addQuery)
+			}
+		}
+	}
+}
+
 // IsEnabled return true if ptr is null
 func (m *MonitorRuleDetail) IsEnabled() bool {
 	if m.Enabled == nil {
@@ -199,8 +227,6 @@ func (m *MonitorRuleDetail) IsEnabled() bool {
 
 // MonitorRuleSpec defines the desired state of MonitorRule
 type MonitorRuleSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
 	BizID    string `json:"bizID" yaml:"-"`
 	BizToken string `json:"bizToken,omitempty" yaml:"-"`
 	// if true, controller will ignore resource's change
@@ -218,9 +244,6 @@ type MonitorRuleSpec struct {
 
 // MonitorRuleStatus defines the observed state of MonitorRule
 type MonitorRuleStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
 	SyncStatus SyncStatus `json:"syncStatus,omitempty"`
 }
 
