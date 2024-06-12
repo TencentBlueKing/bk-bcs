@@ -207,7 +207,10 @@ const (
 	reverseArgoStream
 	// reverseTerraform 请求反向代理给 terraform 服务
 	reverseTerraform
+	// reverseAnalysis proxy to analysis
 	reverseAnalysis
+	// reverseWorkflow proxy to workflow
+	reverseWorkflow
 )
 
 // ReturnArgoStreamReverse will reverse stream to argocd
@@ -221,6 +224,13 @@ func ReturnArgoStreamReverse() *HttpResponse {
 func ReturnTerraformReverse() *HttpResponse {
 	return &HttpResponse{
 		respType: reverseTerraform,
+	}
+}
+
+// ReturnWorkflowReverse reverse to workflow controller
+func ReturnWorkflowReverse() *HttpResponse {
+	return &HttpResponse{
+		respType: reverseWorkflow,
 	}
 }
 

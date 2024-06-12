@@ -104,11 +104,11 @@ func (plugin *TerraformPlugin) applyHandler(r *http.Request) (*http.Request, *mw
 	return r, mw.ReturnTerraformReverse()
 }
 
-// listHandler list the terraforms
+// listHandler list the terraform
 func (plugin *TerraformPlugin) listHandler(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	projectList, statusCode, err := plugin.middleware.ListProjects(r.Context())
 	if statusCode != http.StatusOK {
-		return r, mw.ReturnGRPCErrorResponse(statusCode, errors.Wrapf(err, "list projects failed"))
+		return r, mw.ReturnErrorResponse(statusCode, errors.Wrapf(err, "list projects failed"))
 	}
 	allProjects := make(map[string]struct{})
 	for i := range projectList.Items {
@@ -135,7 +135,7 @@ func (plugin *TerraformPlugin) listHandler(r *http.Request) (*http.Request, *mw.
 	}
 	values := r.URL.Query()
 	values.Set("projects", queryProjects[0])
-	for i := 1; i < len(queryProjects); i++ {
+	for i := 0; i < len(queryProjects); i++ {
 		values.Add("projects", queryProjects[i])
 	}
 	r.URL.RawQuery = values.Encode()
@@ -230,7 +230,7 @@ func (plugin *TerraformPlugin) getDiffHandler(r *http.Request) (*http.Request, *
 	return r, mw.ReturnJSONResponse(data.Result)
 }
 
-// getApplyHandler get the terraform's apply
+// getApplyHandler get the terraform' apply
 func (plugin *TerraformPlugin) getApplyHandler(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	name := mux.Vars(r)["name"]
 	data, err := plugin.terraformStore.GetApply(r.Context(), name)
