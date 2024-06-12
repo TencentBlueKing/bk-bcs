@@ -14,6 +14,8 @@
 package render
 
 import (
+	// NOCC:gas/crypto(误报 未使用于密钥)
+	"crypto/md5"
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -71,16 +73,20 @@ func (r *MonitorRender) Render(appMonitor *monitorextensionv1.AppMonitor) (*Resu
 	}
 	blog.Infof("load scenario'%s' success", appMonitor.Spec.Scenario)
 
-	r.renderMonitorRule(appMonitor, rawResult)
-	r.renderNoticeGroup(appMonitor, rawResult)
-	r.renderPanel(appMonitor, rawResult)
-	r.renderConfigMap(appMonitor, rawResult)
+	renderedResult := &Result{
+		MonitorRule: r.renderMonitorRule(appMonitor, rawResult),
+		NoticeGroup: r.renderNoticeGroup(appMonitor, rawResult),
+		Panel:       r.renderPanel(appMonitor, rawResult),
+		ConfigMaps:  r.renderConfigMap(appMonitor, rawResult),
+	}
 
 	blog.Infof("transfer scenario'%s' result success", appMonitor.Spec.Scenario)
-	return rawResult, nil
+	return renderedResult, nil
 }
 
-func (r *MonitorRender) renderMonitorRule(appMonitor *monitorextensionv1.AppMonitor, rawResult *Result) {
+// nolint
+func (r *MonitorRender) renderMonitorRule(appMonitor *monitorextensionv1.AppMonitor,
+	rawResult *Result) []*monitorextensionv1.MonitorRule {
 	bizID := appMonitor.Spec.BizId
 	bizToken := appMonitor.Spec.BizToken
 	scenario := appMonitor.Spec.Scenario
@@ -88,6 +94,8 @@ func (r *MonitorRender) renderMonitorRule(appMonitor *monitorextensionv1.AppMoni
 	ignoreChange := appMonitor.Spec.IgnoreChange
 	override := appMonitor.Spec.Override
 	conflictHandle := appMonitor.Spec.ConflictHandle
+	rawMrs := make([]*monitorextensionv1.MonitorRule, 0)
+	renderedMrs := make([]*monitorextensionv1.MonitorRule, 0)
 	// render monitor rule
 	for _, mr := range rawResult.MonitorRule {
 		mr.SetNamespace(namespace)
@@ -123,22 +131,10 @@ func (r *MonitorRender) renderMonitorRule(appMonitor *monitorextensionv1.AppMoni
 					rawRule.Detect.Trigger = ruleEnhance.Trigger
 				}
 				if ruleEnhance.WhereAdd != "" {
-					for _, query := range rawRule.Query.QueryConfigs {
-						if query.Where == "" {
-							query.Where = ruleEnhance.WhereAdd
-						} else {
-							query.Where = fmt.Sprintf("%s and %s", query.Where, ruleEnhance.WhereAdd)
-						}
-					}
+					rawRule.WhereAdd(ruleEnhance.WhereAdd)
 				}
 				if ruleEnhance.WhereOr != "" {
-					for _, query := range rawRule.Query.QueryConfigs {
-						if query.Where == "" {
-							query.Where = ruleEnhance.WhereAdd
-						} else {
-							query.Where = fmt.Sprintf("%s or %s", query.Where, ruleEnhance.WhereAdd)
-						}
-					}
+					rawRule.WhereOr(ruleEnhance.WhereOr)
 				}
 
 				// 单独指定的Rule优先级更高
@@ -156,14 +152,51 @@ func (r *MonitorRender) renderMonitorRule(appMonitor *monitorextensionv1.AppMoni
 					if len(rule.NoticeGroup) != 0 {
 						rawRule.Notice.UserGroups = rule.NoticeGroup
 					}
+					if rule.WhereAdd != "" {
+						rawRule.WhereAdd(rule.WhereAdd)
+					}
+					if rule.WhereOr != "" {
+						rawRule.WhereOr(rule.WhereOr)
+					}
 				}
 			}
+
 		}
 
+		rawMrs = append(rawMrs, mr)
+		renderedMrs = append(renderedMrs, mr)
 	}
+
+	if appMonitor.Spec.RuleEnhance != nil {
+		for _, cpConfig := range appMonitor.Spec.RuleEnhance.CopyRules {
+			for _, mr := range rawMrs {
+				cpMr := mr.DeepCopy()
+
+				// NOCC:gas/crypto(误报 未使用于密钥)
+				// nolint
+				cpMr.SetName(fmt.Sprintf("cp-%x%s", md5.Sum([]byte(cpConfig.NamePrefix+cpConfig.NameSuffix)),
+					mr.GetName()))
+				for _, rule := range cpMr.Spec.Rules {
+					rule.Name = fmt.Sprintf("%s%s%s", cpConfig.NamePrefix, cpConfig.NameSuffix, rule.Name)
+					rule.WhereAdd(cpConfig.WhereAdd)
+					rule.WhereOr(cpConfig.WhereOr)
+
+					if len(cpConfig.NoticeGroupReplace) != 0 {
+						rule.Notice.UserGroups = cpConfig.NoticeGroupReplace
+					}
+					if len(cpConfig.NoticeGroupAppend) != 0 {
+						rule.Notice.UserGroups = mergeStringList(rule.Notice.UserGroups, cpConfig.NoticeGroupAppend)
+					}
+				}
+				renderedMrs = append(renderedMrs, cpMr)
+			}
+		}
+	}
+	return renderedMrs
 }
 
-func (r *MonitorRender) renderNoticeGroup(appMonitor *monitorextensionv1.AppMonitor, rawResult *Result) {
+func (r *MonitorRender) renderNoticeGroup(appMonitor *monitorextensionv1.AppMonitor,
+	rawResult *Result) []*monitorextensionv1.NoticeGroup {
 	bizID := appMonitor.Spec.BizId
 	bizToken := appMonitor.Spec.BizToken
 	scenario := appMonitor.Spec.Scenario
@@ -200,9 +233,12 @@ func (r *MonitorRender) renderNoticeGroup(appMonitor *monitorextensionv1.AppMoni
 		}
 		ng.Status.SyncStatus.State = monitorextensionv1.SyncStateNeedReSync
 	}
+
+	return rawResult.NoticeGroup
 }
 
-func (r *MonitorRender) renderPanel(appMonitor *monitorextensionv1.AppMonitor, rawResult *Result) {
+func (r *MonitorRender) renderPanel(appMonitor *monitorextensionv1.AppMonitor,
+	rawResult *Result) []*monitorextensionv1.Panel {
 	bizID := appMonitor.Spec.BizId
 	bizToken := appMonitor.Spec.BizToken
 	scenario := appMonitor.Spec.Scenario
@@ -247,9 +283,10 @@ func (r *MonitorRender) renderPanel(appMonitor *monitorextensionv1.AppMonitor, r
 			}
 		}
 	}
+	return rawResult.Panel
 }
 
-func (r *MonitorRender) renderConfigMap(appMonitor *monitorextensionv1.AppMonitor, rawResult *Result) {
+func (r *MonitorRender) renderConfigMap(appMonitor *monitorextensionv1.AppMonitor, rawResult *Result) []*v1.ConfigMap {
 	for _, cm := range rawResult.ConfigMaps {
 		cm.SetNamespace(appMonitor.GetNamespace())
 		cm.SetLabels(map[string]string{
@@ -258,6 +295,7 @@ func (r *MonitorRender) renderConfigMap(appMonitor *monitorextensionv1.AppMonito
 			monitorextensionv1.LabelKeyForResourceType: monitorextensionv1.LabelValueResourceTypeConfigMap,
 		})
 	}
+	return rawResult.ConfigMaps
 }
 
 // mergeStringList merge string and remove duplicates

@@ -22,6 +22,8 @@ type Rule struct {
 	Threshold   *Algorithm `json:"threshold,omitempty" yaml:"threshold,omitempty"`
 	NoticeGroup []string   `json:"noticeGroup,omitempty" yaml:"noticeGroup,omitempty"`
 	Trigger     string     `json:"trigger,omitempty" yaml:"trigger,omitempty"` // nolint 触发配置，如 1/5/6表示5个周期内满足1次则告警，连续6个周期内不满足条件则表示恢复
+	WhereAdd    string     `json:"whereAdd,omitempty" yaml:"whereAdd,omitempty"`
+	WhereOr     string     `json:"whereOr,omitempty" yaml:"whereOr,omitempty"`
 }
 
 // NoticeGroupConfig 告警组配置
@@ -43,9 +45,21 @@ type DashBoard struct {
 	Board string `json:"board,omitempty" yaml:"board,omitempty"`
 }
 
+// CopyRules 根据基础配置额外生成一份告警规则, 允许根据不同告警策略设定不同告警组
+type CopyRules struct {
+	NamePrefix string `json:"namePrefix,omitempty" yaml:"namePrefix,omitempty"`
+	NameSuffix string `json:"nameSuffix,omitempty" yaml:"nameSuffix,omitempty"`
+
+	NoticeGroupAppend  []string `json:"noticeGroupAppend,omitempty" yaml:"noticeGroupAppend,omitempty"`
+	NoticeGroupReplace []string `json:"noticeGroupReplace,omitempty" yaml:"noticeGroupReplace,omitempty"`
+	WhereAdd           string   `json:"whereAdd,omitempty" yaml:"whereAdd,omitempty"`
+	WhereOr            string   `json:"whereOr,omitempty" yaml:"whereOr,omitempty"`
+}
+
 // RuleEnhance 告警规则增强能力
 type RuleEnhance struct {
-	Rules []Rule `json:"rules,omitempty" yaml:"rules,omitempty"`
+	Rules     []Rule      `json:"rules,omitempty" yaml:"rules,omitempty"`
+	CopyRules []CopyRules `json:"copyRules,omitempty" yaml:"copyRules,omitempty"`
 
 	NoticeGroupAppend  []string `json:"noticeGroupAppend,omitempty" yaml:"noticeGroupAppend,omitempty"`
 	NoticeGroupReplace []string `json:"noticeGroupReplace,omitempty" yaml:"noticeGroupReplace,omitempty"`
@@ -82,8 +96,7 @@ type RepoRef struct {
 
 // AppMonitorSpec defines the desired state of AppMonitor
 type AppMonitorSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// 监控场景名称
 	Scenario string `json:"scenario" yaml:"scenario,omitempty"`
 	BizId    string `json:"bizID" yaml:"bizId,omitempty"`
 	BizToken string `json:"bizToken,omitempty" yaml:"bizToken,omitempty"`

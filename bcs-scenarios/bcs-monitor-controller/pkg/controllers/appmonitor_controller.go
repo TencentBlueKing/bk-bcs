@@ -503,7 +503,7 @@ func (r *AppMonitorReconciler) ensureConfigmap(appMonitor *monitorextensionv1.Ap
 	resMap := make(map[string]*v1.ConfigMap)
 	for _, existResource := range existResources.Items {
 		existMap[existResource.GetName()] = false
-		resMap[existResource.GetName()] = &existResource
+		resMap[existResource.GetName()] = existResource.DeepCopy()
 	}
 
 	for _, configMap := range result.ConfigMaps {
@@ -560,7 +560,7 @@ func (r *AppMonitorReconciler) ensureMonitorRule(appMonitor *monitorextensionv1.
 	needRetry := false
 	for _, existResource := range existResources.Items {
 		existMap[existResource.GetName()] = false
-		resMap[existResource.GetName()] = &existResource
+		resMap[existResource.GetName()] = existResource.DeepCopy()
 	}
 
 	for _, res := range result.MonitorRule {
@@ -632,7 +632,7 @@ func (r *AppMonitorReconciler) ensurePanel(appMonitor *monitorextensionv1.AppMon
 	needRetry := false
 	for _, existResource := range existResources.Items {
 		existMap[existResource.GetName()] = false
-		resMap[existResource.GetName()] = &existResource
+		resMap[existResource.GetName()] = existResource.DeepCopy()
 	}
 
 	for _, res := range result.Panel {
@@ -705,7 +705,7 @@ func (r *AppMonitorReconciler) ensureNoticeGroup(appMonitor *monitorextensionv1.
 	needRetry := false
 	for _, existResource := range existResources.Items {
 		existMap[existResource.GetName()] = false
-		resMap[existResource.GetName()] = &existResource
+		resMap[existResource.GetName()] = existResource.DeepCopy()
 	}
 
 	for _, res := range result.NoticeGroup {
