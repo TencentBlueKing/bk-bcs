@@ -27,6 +27,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-cli/cmd/argocd"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-cli/cmd/secret"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-cli/cmd/terraform"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-cli/cmd/workflow"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-cli/options"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-cli/pkg/version"
 )
@@ -73,6 +74,7 @@ func NewRootCommand() *cobra.Command {
 
 	rootCmd.AddCommand(versionCmd)
 	rootCmd.AddCommand(terraform.NewTerraformCmd())
+	rootCmd.AddCommand(workflow.NewWorkflowCmd())
 	rootCmd.AddCommand(secret.NewSecretCmd())
 	argoCmd := argocd.NewArgoCmd()
 	argoCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
