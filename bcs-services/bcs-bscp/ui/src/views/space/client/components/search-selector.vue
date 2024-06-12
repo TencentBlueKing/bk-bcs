@@ -208,7 +208,7 @@
   import CommonlyUsedTag from './commonly-used-tag.vue';
   import { Message } from 'bkui-vue';
   import { cloneDeep } from 'lodash';
-  import { useRoute } from 'vue-router';
+  import { useRoute, useRouter } from 'vue-router';
   import { useI18n } from 'vue-i18n';
 
   const { t, locale } = useI18n();
@@ -217,6 +217,7 @@
   const { searchQuery } = storeToRefs(clientStore);
 
   const route = useRoute();
+  const router = useRouter();
 
   const props = defineProps<{
     bkBizId: string;
@@ -319,10 +320,18 @@
   watch(
     () => searchQuery.value.search,
     (val) => {
+      console.log(JSON.stringify(val.label));
       if (Object.keys(val!).length === 0) {
         searchConditionList.value = [];
       } else {
         handleAddRecentSearch();
+        router.replace({
+          query: {
+            ...val,
+            label: JSON.stringify(val.label),
+            heartTime: searchQuery.value.last_heartbeat_time,
+          },
+        });
       }
     },
   );
@@ -354,11 +363,11 @@
         });
       } else if (value === 'label') {
         const labels = JSON.parse(searchValue as string);
-        Object.keys(labels).forEach((key) => {
+        labels.forEach((value: string) => {
           searchConditionList.value.push({
-            content: `标签: ${key}=${labels[key]}`,
-            value: `${key}=${labels[key]}`,
-            key: value,
+            content: `${t('标签')}: ${value}`,
+            value,
+            key: 'label',
             isEdit: false,
           });
         });
