@@ -610,6 +610,12 @@ func (c *configImport) getAllConfigFileByApp(kt *kit.Kit, newFiles []tools.CIUni
 
 // 临时保存文件
 func saveFile(reader io.Reader, tempDir, fileName string) error {
+	if filepath.Clean(tempDir) != tempDir {
+		return fmt.Errorf("invalid temp dir: %s", tempDir)
+	}
+	if filepath.Clean(fileName) != fileName {
+		return fmt.Errorf("invalid file name: %s", fileName)
+	}
 	// 创建文件
 	file, err := os.Create(tempDir + "/" + fileName)
 	if err != nil {
