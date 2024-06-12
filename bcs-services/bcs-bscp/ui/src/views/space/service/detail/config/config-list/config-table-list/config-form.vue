@@ -194,8 +194,13 @@
   const rules = {
     fileAP: [
       {
-        validator: (val: string) =>
-          /^\/([\u4e00-\u9fa5A-Za-z0-9_\-#%,@^+=[\]{}]+[\u4e00-\u9fa5A-Za-z0-9_\-#%,.@^+=[\]{}]*\/?)*[^/]$/.test(val),
+        /**
+         * 1. 路径为绝对路径
+         * 2. 不能以/结尾
+         * 3. 不能连续多个/
+         * 4. 不能包含空字符
+         */
+        validator: (val: string) => /^\/(?:[^/\s]+\/)*[^/\s]+$/.test(val),
         message: t('无效的路径,路径不符合Unix文件路径格式规范'),
         trigger: 'change',
       },
