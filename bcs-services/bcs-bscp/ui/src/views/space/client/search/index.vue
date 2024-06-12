@@ -229,7 +229,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref, watch, onBeforeMount } from 'vue';
+  import { ref, watch, onBeforeMount, onBeforeUnmount } from 'vue';
   import { useRoute, useRouter } from 'vue-router';
   import { Share, InfoLine } from 'bkui-vue/lib/icon';
   import { storeToRefs } from 'pinia';
@@ -306,6 +306,7 @@
     },
   ];
   const onlineStatusFilterChecked = ref<string[]>([]);
+  const pollTimer = ref(0);
 
   watch(
     () => route.params.appId,
@@ -326,6 +327,27 @@
     { deep: true },
   );
 
+  watch(
+    () => tableData.value,
+    () => {
+      if (pollTimer.value) {
+        clearTimeout(pollTimer.value);
+      }
+      const pollClientIds = tableData.value
+        .filter(
+          (item: any) =>
+            item.client.spec.release_change_status === 'Processing' && item.client.spec.online_status === 'Online',
+        )
+        .map((item: any) => item.client.id);
+      if (pollClientIds.length > 0) {
+        pollTimer.value = setInterval(() => {
+          pollClientStatus(pollClientIds);
+        }, 3000);
+      }
+    },
+    { deep: true },
+  );
+
   onBeforeMount(() => {
     const tableSet = localStorage.getItem('client-show-column');
     settings.value.size = 'medium';
@@ -334,6 +356,12 @@
       selectedShowColumn.value = checked;
       settings.value.checked = checked;
       settings.value.size = size;
+    }
+  });
+
+  onBeforeUnmount(() => {
+    if (pollTimer.value) {
+      clearTimeout(pollTimer.value);
     }
   });
 
@@ -453,7 +481,6 @@
         const { client } = item;
         client.labels = Object.entries(JSON.parse(client.spec.labels)).map(([key, value]) => ({ key, value }));
       });
-      updatePagination('count', res.data.count);
     } catch (error) {
       console.error(error);
     } finally {
@@ -574,6 +601,29 @@
       }
     });
     loadList();
+  };
+
+  // 当有客户端状态处于处理中时 开启轮询
+  const pollClientStatus = async (ids: number[]) => {
+    const params: IClinetCommonQuery = {
+      limit: ids.length,
+      search: {
+        client_ids: ids,
+      },
+    };
+    try {
+      const res = await getClientQueryList(bkBizId.value, appId.value, params);
+      res.data.details.forEach((item: any) => {
+        if (item.client.spec.release_change_status !== 'Processing') {
+          const pollClient = tableData.value.find((tableItem: any) => tableItem.client.id === item.client.id);
+          pollClient.client.spec.release_change_status = item.client.spec.release_change_status;
+          pollClient.client.spec.resource = item.client.spec.resource;
+          pollClient.client.spec.last_heartbeat_time = item.client.spec.last_heartbeat_time;
+        }
+      });
+    } catch (error) {
+      console.error(error);
+    }
   };
 </script>
 

@@ -292,7 +292,7 @@
       name: 'client-search',
       params: { appId: props.appId, bizId: props.bkBizId },
       query: {
-        pull_time: jumpSearchTime.value,
+        pull_time: `${jumpSearchTime.value} 00:00:00 - ${jumpSearchTime.value} 23:59:59`,
         heartTime: searchQuery.value.last_heartbeat_time,
         client_type: item.data.type,
       },
