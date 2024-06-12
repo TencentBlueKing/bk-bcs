@@ -322,9 +322,13 @@
   watch(
     () => searchQuery.value.search,
     (val) => {
-      console.log(JSON.stringify(val.label));
       if (Object.keys(val!).length === 0) {
         searchConditionList.value = [];
+        router.replace({
+          query: {
+            heartTime: searchQuery.value.last_heartbeat_time,
+          },
+        });
       } else {
         handleAddRecentSearch();
         router.replace({

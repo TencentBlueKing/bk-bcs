@@ -23,18 +23,23 @@
         max-height="300"
         show-overflow-tooltip>
         <bk-table-column label="UID" field="uid" width="260" />
-        <bk-table-column :label="t('当前配置版本')" field="release_name" />
+        <bk-table-column :label="t('源版本')" field="current_release_name" />
+        <bk-table-column :label="t('目标版本')" field="target_release_name" />
       </bk-table>
       <div v-else class="client-info">
         <div class="client-info-item">
           <div class="label">UID：</div>
           <div class="value">{{ props.selections[0].uid }}</div>
         </div>
-        <div class="client-info-item">
-          <div class="label">{{ t('源版本') }}：</div>
-          <div class="value">{{ props.selections[0].release_name || '--' }}</div>
-          <div class="label">{{ t('目标版本') }}：</div>
-          <div class="value">{{ props.selections[0].release_name || '--' }}</div>
+        <div class="release-version-info">
+          <div class="client-info-item">
+            <div class="label">{{ t('源版本') }}：</div>
+            <div class="value">{{ props.selections[0].current_release_name || '--' }}</div>
+          </div>
+          <div class="client-info-item">
+            <div class="label">{{ t('目标版本') }}：</div>
+            <div class="value">{{ props.selections[0].target_release_name || '--' }}</div>
+          </div>
         </div>
       </div>
     </div>
@@ -54,7 +59,7 @@
     appId: number;
     isShow: boolean;
     isBatch: boolean;
-    selections: { id: number; uid: string; release_name: string }[];
+    selections: { id: number; uid: string; current_release_name: string; target_release_name: string }[];
   }>();
 
   const emits = defineEmits(['close', 'retried']);
@@ -125,6 +130,12 @@
       .value {
         color: #313238;
         word-break: break-all;
+      }
+    }
+    .release-version-info {
+      display: flex;
+      .client-info-item {
+        width: 50%;
       }
     }
   }

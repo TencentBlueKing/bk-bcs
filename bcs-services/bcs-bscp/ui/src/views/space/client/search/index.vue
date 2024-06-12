@@ -201,7 +201,9 @@
                   {{ t('配置拉取记录') }}
                 </bk-button>
                 <RetryBtn
-                  v-if="row.client.spec.release_change_status === 'Failed'"
+                  v-if="
+                    row.client.spec.release_change_status === 'Failed' && row.client.spec.online_status === 'Online'
+                  "
                   :bk-biz-id="bkBizId"
                   :app-id="appId"
                   :client="row.client"
@@ -265,7 +267,14 @@
   const viewPullRecordClientId = ref(0);
   const viewPullRecordClientUid = ref('');
   const listLoading = ref(false);
-  const selectedClient = ref<{ id: number; uid: string; release_name: string }[]>([]);
+  const selectedClient = ref<
+    {
+      id: number;
+      uid: string;
+      current_release_name: string;
+      target_release_name: string;
+    }[]
+  >([]);
   const isSearchEmpty = ref(false);
   const isShowPullRecordSlider = ref(false);
   const tableData = ref();
@@ -430,7 +439,6 @@
   // };
 
   const loadList = async () => {
-    // if (appId.value === 0) return;
     const params: IClinetCommonQuery = {
       start: pagination.value.limit * (pagination.value.current - 1),
       limit: pagination.value.limit,
@@ -512,7 +520,8 @@
         selectedClient.value.push({
           id: row.client.id,
           uid: row.client.attachment.uid,
-          release_name: row.client.spec.current_release_name,
+          current_release_name: row.client.spec.current_release_name,
+          target_release_name: row.client.spec.target_release_name,
         });
       }
     } else {
@@ -531,7 +540,8 @@
           selectedClient.value.push({
             id: item.client.id,
             uid: item.client.attachment.uid,
-            release_name: item.client.spec.current_release_name,
+            current_release_name: item.client.spec.current_release_name,
+            target_release_name: item.client.spec.target_release_name,
           });
         }
       });
