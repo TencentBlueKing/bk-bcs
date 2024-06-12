@@ -20,6 +20,7 @@
     id: number;
     spec: {
       current_release_name: string;
+      target_release_name: string;
     };
     attachment: {
       uid: string;
@@ -43,7 +44,8 @@
       {
         id: props.client.id,
         uid: props.client.attachment.uid,
-        release_name: props.client.spec.current_release_name,
+        current_release_name: props.client.spec.current_release_name,
+        target_release_name: props.client.spec.target_release_name,
       },
     ];
   });

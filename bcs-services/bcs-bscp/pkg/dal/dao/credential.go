@@ -43,7 +43,7 @@ type Credential interface {
 	Create(kit *kit.Kit, credential *table.Credential) (uint32, error)
 	// List get credentials
 	List(kit *kit.Kit, bizID uint32, searchKey string, opt *types.BasePage,
-		topIds []uint32) ([]*table.Credential, int64, error)
+		topIds []uint32, encCredential string, enable *bool) ([]*table.Credential, int64, error)
 	// DeleteWithTx delete credential with transaction
 	DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, id uint32) error
 	// Update update credential
@@ -192,7 +192,7 @@ func (dao *credentialDao) Create(kit *kit.Kit, g *table.Credential) (uint32, err
 
 // List get credentials
 func (dao *credentialDao) List(kit *kit.Kit, bizID uint32, searchKey string, opt *types.BasePage,
-	topIds []uint32) ([]*table.Credential, int64, error) {
+	topIds []uint32, encCredential string, enable *bool) ([]*table.Credential, int64, error) {
 	m := dao.genQ.Credential
 	q := dao.genQ.Credential.WithContext(kit.Ctx)
 	cs := dao.genQ.CredentialScope
@@ -215,11 +215,12 @@ func (dao *credentialDao) List(kit *kit.Kit, bizID uint32, searchKey string, opt
 				credentialID = append(credentialID, v.CredentialID)
 			}
 			conds = append(conds, q.Where(m.Memo.Regexp(searchVal)).Or(m.Reviser.Regexp(searchVal)).
-				Or(m.Name.Regexp(searchVal)).Or(m.ID.In(credentialID...)))
+				Or(m.Name.Regexp(searchVal)).Or(m.ID.In(credentialID...)).Or(m.EncCredential.Eq(encCredential)))
 		} else {
 			conds = append(conds, q.Where(m.Memo.Regexp(searchVal)).Or(m.Reviser.Regexp(searchVal)).
-				Or(m.Name.Regexp(searchVal)))
+				Or(m.Name.Regexp(searchVal)).Or(m.EncCredential.Eq(encCredential)))
 		}
+
 	}
 
 	if len(topIds) != 0 {
@@ -228,14 +229,20 @@ func (dao *credentialDao) List(kit *kit.Kit, bizID uint32, searchKey string, opt
 		q = q.Order(m.Name)
 	}
 
-	result, count, err := q.Where(m.BizID.Eq(bizID)).
-		Where(conds...).
-		FindByPage(opt.Offset(), opt.LimitInt())
-	if err != nil {
-		return nil, 0, err
+	if enable != nil {
+		q = q.Where(m.Enable.Is(*enable))
 	}
 
-	return result, count, nil
+	q = q.Where(m.BizID.Eq(bizID)).Where(conds...)
+	if opt.All {
+		result, err := q.Find()
+		if err != nil {
+			return nil, 0, err
+		}
+		return result, int64(len(result)), err
+	}
+
+	return q.FindByPage(opt.Offset(), opt.LimitInt())
 }
 
 // Delete delete credential

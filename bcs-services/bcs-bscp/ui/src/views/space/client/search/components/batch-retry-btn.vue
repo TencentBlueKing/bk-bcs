@@ -19,7 +19,7 @@
   const props = defineProps<{
     bkBizId: string;
     appId: number;
-    selections: { id: number; uid: string; release_name: string }[];
+    selections: { id: number; uid: string; current_release_name: string; target_release_name: string }[];
   }>();
 
   const emits = defineEmits(['retried']);

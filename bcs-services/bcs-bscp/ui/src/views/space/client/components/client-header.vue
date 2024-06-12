@@ -55,7 +55,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref, onMounted } from 'vue';
+  import { ref, onMounted, watch } from 'vue';
   import { useRoute, useRouter } from 'vue-router';
   import { AngleUpFill, Search } from 'bkui-vue/lib/icon';
   import { getAppList } from '../../../../api';
@@ -86,6 +86,18 @@
   const heartbeatTimeList = ref(CLIENT_HEARTBEAT_LIST);
 
   const bizId = ref(String(route.params.spaceId));
+
+  watch(
+    () => heartbeatTime.value,
+    (val) => {
+      router.replace({
+        query: {
+          ...route.query,
+          heartTime: val,
+        },
+      });
+    },
+  );
 
   onMounted(async () => {
     if (Object.keys(route.query).find((key) => key === 'heartTime')) {

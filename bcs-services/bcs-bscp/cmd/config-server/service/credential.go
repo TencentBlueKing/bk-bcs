@@ -94,12 +94,17 @@ func (s *Service) ListCredentials(ctx context.Context,
 		return nil, err
 	}
 
+	// 为了搜索密钥 把搜索条件加密
+	encCredential, _ := tools.EncryptCredential(req.SearchKey, cc.ConfigServer().Credential.MasterKey, tools.AES)
 	r := &pbds.ListCredentialReq{
-		BizId:     bizID,
-		SearchKey: req.SearchKey,
-		Start:     req.Start,
-		Limit:     req.Limit,
-		TopIds:    req.TopIds,
+		BizId:         bizID,
+		SearchKey:     req.SearchKey,
+		Start:         req.Start,
+		Limit:         req.Limit,
+		TopIds:        req.TopIds,
+		All:           req.All,
+		EncCredential: encCredential,
+		Enable:        req.Enable,
 	}
 
 	rp, err := s.client.DS.ListCredentials(grpcKit.RpcCtx(), r)

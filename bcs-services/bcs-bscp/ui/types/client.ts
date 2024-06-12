@@ -30,13 +30,14 @@ export interface IClinetCommonQuery {
   search_type?: string;
   pull_time?: number;
   is_duplicates?: boolean;
+  client_ids?: number[];
 }
 
 // 客户端查询列表接口查询条件
 export interface IClientSearchParams {
   uid?: string;
   ip?: string;
-  label?: { [key: string]: string };
+  label?: string[];
   current_release_name?: string;
   target_release_name?: string;
   release_change_status?: string[];

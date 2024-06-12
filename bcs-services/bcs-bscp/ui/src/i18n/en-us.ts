@@ -462,7 +462,7 @@ export default {
   导入变量: 'Import variables',
   请输入变量名称: 'Please enter variable name',
   默认值: 'Default value',
-  描述: 'description',
+  描述: 'Description',
   '确认删除该全局变量？': 'Are you sure to delete this global variable?',
   '一旦删除，该操作将无法撤销，服务配置文件中不可再引用该全局变量，请谨慎操作': 'Once deleted, the operation cannot be undone, and the global variable can no longer be referenced in the service configuration file. Please operate with caution.',
   '定义全局变量后可供业务下所有的服务配置文件引用，使用go template语法引用，例如,变量使用详情请参考：': 'After defining global variables, they can be referenced by all service configuration files under the business. Use go template syntax for reference, such as {var}. For details on variable usage, please refer to:',
@@ -480,6 +480,7 @@ export default {
   '示例：': 'Example:',
   '变量名 变量类型 变量值 变量描述（可选）': 'Variable name Variable type Variable value Variable Description (optional)',
   ' bk_bscp_nginx_port number 8080 nginx端口': ' bk_bscp_nginx_port number 8080 nginx port',
+  导出变量: 'Export variables',
 
   // 配置模板
   '配置模板用于统一业务下服务间配置文件复用，可以在创建服务配置时引用配置模板。': 'Configuration templates are used to reuse configuration files between services under unified services, and can be referenced when creating service configurations.',
