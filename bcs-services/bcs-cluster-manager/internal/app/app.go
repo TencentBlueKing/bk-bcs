@@ -72,7 +72,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/alarm/tmp"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/audit"
 	ssmAuth "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/auth"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cidrmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/gse"
@@ -281,6 +280,7 @@ func (cm *ClusterManager) initModel() error {
 func (cm *ClusterManager) initTaskServer() error {
 	cloudprovider.InitStorageModel(cm.model)
 	cloudprovider.InitEtcdModel(cm.etcdModel)
+	cloudprovider.InitDistributeLock(cm.locker)
 	// get taskserver and init
 	taskMgr := taskserver.GetTaskServer()
 
@@ -703,23 +703,6 @@ func (cm *ClusterManager) initDiscovery() {
 			Module:    cm.opt.ProjectManager.Module,
 			TLSConfig: cm.clientTLSConfig,
 		}, cm.projectDisc)
-	}
-
-	// enable discovery cidr module
-	if cm.opt.CidrManager.Enable {
-		cm.cidrDisc = discovery.NewModuleDiscovery(cm.opt.CidrManager.Module, cm.microRegistry)
-		blog.Infof("init discovery for cidr manager successfully")
-
-		cidrmanager.SetCidrClient(&cidrmanager.Options{
-			Enable: cm.opt.CidrManager.Enable,
-			Module: cm.opt.CidrManager.Module,
-			TLSConfig: func() *tls.Config {
-				if cm.opt.CidrManager.TLS {
-					return cm.clientTLSConfig
-				}
-				return nil
-			}(),
-		}, cm.cidrDisc)
 	}
 }
 

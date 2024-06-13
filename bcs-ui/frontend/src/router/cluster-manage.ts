@@ -12,7 +12,7 @@ const CreateTencentCloudCluster = () => import(/* webpackChunkName: 'cluster' */
 const CreateVCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/add/vcluster/add-vcluster.vue');
 // ee版本创建集群流程
 const CreateK8SCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/add/create-k8s.vue');
-// const CreateCluster = () => import('@/views/cluster-manage/add/create-cluster.vue');
+
 // import模式
 const ImportCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/add/import-cluster.vue');
 const ImportGoogleCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/add/google-cloud.vue');

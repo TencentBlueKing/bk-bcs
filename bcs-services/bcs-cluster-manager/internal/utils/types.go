@@ -40,6 +40,8 @@ var (
 	GlobalRouter NetworkType = "globalrouter"
 	// DirectRouter for directrouter
 	DirectRouter NetworkType = "directrouter"
+	// MultiClusterCIDRCnt cluster multi cidr
+	MultiClusterCIDRCnt = 7
 )
 
 const (

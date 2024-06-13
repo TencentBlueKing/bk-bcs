@@ -1,9 +1,9 @@
 <template>
-  <LayoutContent hide-back :title="$tc('deploy.variable.env')">
+  <BcsContent hide-back :title="$tc('deploy.variable.env')">
     <template #header-right>
       <bcs-button text @click="showSideslider = true">{{$t('deploy.variable.import')}}</bcs-button>
     </template>
-    <LayoutRow class="mb15">
+    <Row class="mb15">
       <template #left>
         <bcs-button icon="plus" theme="primary" @click="handleAddVariable">{{$t('deploy.variable.add')}}</bcs-button>
         <bcs-button class="ml10" :loading="fileLoading">
@@ -28,7 +28,7 @@
           v-model="searchKey">
         </bcs-input>
       </template>
-    </LayoutRow>
+    </Row>
     <bcs-table
       v-bkloading="{ isLoading }"
       :data="variableList"
@@ -176,7 +176,7 @@
       :before-close="handleBeforeClose"
       quick-close>
       <template #header>
-        <LayoutRow>
+        <Row>
           <template #left>{{currentRow && currentRow.name}}</template>
           <template #right>
             <bcs-button text class="switch-mode-btn" @click="mode = mode === 'form' ? 'json' : 'form'">
@@ -184,7 +184,7 @@
               {{mode === 'form' ? $t('deploy.variable.toYAML') : $t('deploy.variable.toForm')}}
             </bcs-button>
           </template>
-        </LayoutRow>
+        </Row>
       </template>
       <template #content>
         <div class="slider-wrapper p20" v-bkloading="{ isLoading: setSliderLoading }">
@@ -217,7 +217,7 @@
         </div>
       </template>
     </bcs-sideslider>
-  </LayoutContent>
+  </BcsContent>
 </template>
 <script lang="ts">
 import BkForm from 'bk-magic-vue/lib/form';
@@ -229,8 +229,8 @@ import exampleData from './variable.json';
 
 import $bkMessage from '@/common/bkmagic';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
-import LayoutContent from '@/components/layout/Content.vue';
-import LayoutRow from '@/components/layout/Row.vue';
+import BcsContent from '@/components/layout/Content.vue';
+import Row from '@/components/layout/Row.vue';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 import useDebouncedRef from '@/composables/use-debounce';
 import useSideslider from '@/composables/use-sideslider';
@@ -239,8 +239,8 @@ import $i18n from '@/i18n/i18n-setup';
 export default defineComponent({
   name: 'VariableManager',
   components: {
-    LayoutContent,
-    LayoutRow,
+    BcsContent,
+    Row,
     BkForm,
     BkFormItem,
     CodeEditor,

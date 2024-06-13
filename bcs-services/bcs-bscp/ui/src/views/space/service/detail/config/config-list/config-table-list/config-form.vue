@@ -192,10 +192,35 @@
   const uploadPending = ref(false);
   const formRef = ref();
   const rules = {
+    // 配置文件绝对路径校验规则，path+filename
     fileAP: [
       {
-        validator: (val: string) =>
-          /^\/([\u4e00-\u9fa5A-Za-z0-9_\-#%,@^+=[\]{}]+[\u4e00-\u9fa5A-Za-z0-9_\-#%,.@^+=[\]{}]*\/?)*[^/]$/.test(val),
+        validator: (val: string) => {
+          // 必须为绝对路径, 且不能以/结尾
+          if (!val.startsWith('/') || val.endsWith('/')) {
+            return false;
+          }
+
+          const parts = val.split('/').slice(1);
+          const fileName = parts.pop() as string;
+
+          // 文件名称校验
+          if (fileName.startsWith('.') || !/^[\u4e00-\u9fa5A-Za-z0-9.\-_#%,:?!@$^+=\\[\]{}]+$/.test(fileName)) {
+            return false;
+          }
+
+          let isValid = true;
+          // 文件路径校验
+          parts.some((part) => {
+            if (part.startsWith('.') || !/^[\u4e00-\u9fa5A-Za-z0-9.\-_#%,@^+=\\[\]{}]+$/.test(part)) {
+              isValid = false;
+              return true;
+            }
+            return false;
+          });
+
+          return isValid;
+        },
         message: t('无效的路径,路径不符合Unix文件路径格式规范'),
         trigger: 'change',
       },

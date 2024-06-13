@@ -30,6 +30,8 @@ import (
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/lock"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cidrtree"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
@@ -37,6 +39,10 @@ import (
 const (
 	// GrMaxClusterCidrNum globalRouter 模式下支持的最多cidr段
 	GrMaxClusterCidrNum = 10
+)
+
+var (
+	defaultOverlayCidrs = []string{"9.165.0.0/16", "9.166.0.0/16", "11.166.0.0/16", "11.157.0.0/16"}
 )
 
 func selectZoneAvailableSubnet(vpcId string, zoneIpCnt map[string]int,
@@ -123,7 +129,11 @@ func GetVpcCIDRBlocks(opt *cloudprovider.CommonOption, vpcId string, assistantTy
 		return nil, fmt.Errorf("GetVpcCIDRBlocks DescribeVpcs[%s] empty", vpcId)
 	}
 
-	cidrs := []string{*vpcSet[0].CidrBlock}
+	cidrs := make([]string, 0)
+	if assistantType < 0 || assistantType == 0 {
+		cidrs = append(cidrs, *vpcSet[0].CidrBlock)
+	}
+
 	for _, v := range vpcSet[0].AssistantCidrSet {
 		// 获取所有辅助cidr, 不区分是 普通辅助cidr/容器辅助cidr
 		if assistantType < 0 && v.AssistantType != nil && v.CidrBlock != nil {
@@ -421,7 +431,7 @@ func AllocateGlobalRouterCidr(opt *cloudprovider.CommonOption, vpcId string, clu
 	}
 
 	// get overlay cidrs
-	cidrBlocks, err := cloudprovider.GetOverlayCidrBlocks(cluster.Provider, vpcId)
+	cidrBlocks, err := getOverlayCidrBlocks(cluster.Provider, vpcId)
 	if err != nil {
 		return nil, err
 	}
@@ -459,6 +469,7 @@ func AllocateGlobalRouterCidr(opt *cloudprovider.CommonOption, vpcId string, clu
 
 	for i := 0; i < cidrNum; i++ {
 		for k, cidrBlock := range cidrBlocks {
+
 			man := cidrtree.NewCidrManager(cidrBlock, allocatedCidrBlocks)
 			ipnet, errLocal := man.Allocate(int(cidrLens[i]))
 			if errLocal == nil {
@@ -473,16 +484,115 @@ func AllocateGlobalRouterCidr(opt *cloudprovider.CommonOption, vpcId string, clu
 			} else {
 				return nil, errLocal
 			}
+
 		}
 	}
 
 	return allocatableCidrBlock, nil
 }
 
+// AllocateGrCidrSubnet allocate gr cidr subnet
+func AllocateGrCidrSubnet(ctx context.Context, opt *cloudprovider.CommonOption, cloudId, vpcId string,
+	mask int, reservedBlocks []*net.IPNet) (*cidrtree.Subnet, error) {
+	taskId := cloudprovider.GetTaskIDFromContext(ctx)
+
+	frees, err := GetVpcGrFreeIPNets(opt, cloudId, vpcId, reservedBlocks)
+	if err != nil {
+		return nil, err
+	}
+	blog.Infof("AllocateGrSubnet[%s] free %v", taskId, frees)
+
+	sub, err := cidrtree.AllocateFromFrees(mask, frees)
+	if err != nil {
+		return nil, err
+	}
+
+	ret := &cidrtree.Subnet{
+		ID:    sub.String(),
+		IPNet: sub,
+		VpcID: vpcId,
+	}
+	err = AddCidrToCache(common.ClusterOverlayNetwork, ret)
+	if err != nil {
+		blog.Errorf("AllocateGrSubnet[%s] addGrCidrToCache failed: %v", taskId, err)
+	}
+
+	return ret, err
+}
+
+// AddClusterGrCidr add gr cidrs to the cluster
+func AddClusterGrCidr(opt *cloudprovider.CommonOption, clusterId string, cidrs []string) error {
+	cidrNum := len(cidrs)
+	if cidrNum == 0 {
+		return errors.New("cidrNum must be greater than 0")
+	}
+
+	clusterCidrs, err := GetClusterGrCidrs(opt, clusterId)
+	if err != nil {
+		return err
+	}
+
+	totalCidrNum := cidrNum
+	for _, cidr := range clusterCidrs {
+		if utils.StringInSlice(cidr.Type, []string{utils.ClusterCIDR, utils.MultiClusterCIDR}) {
+			totalCidrNum++
+		}
+	}
+
+	if totalCidrNum > GrMaxClusterCidrNum {
+		return fmt.Errorf("total cidr number must be less than or equal to %d", GrMaxClusterCidrNum)
+	}
+
+	// 调用tke接口添加集群的cidr
+	tkeCli, err := api.NewTkeClient(opt)
+	if err != nil {
+		return err
+	}
+	err = tkeCli.AddClusterCIDR(clusterId, cidrs, true)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// AddGrCidrsToCluster add globalrouter cidrs to cluster
+func AddGrCidrsToCluster(opt *cloudprovider.CommonOption, vpcId string, cluster *proto.Cluster,
+	cidrLens []uint32, reservedBlocks []*net.IPNet) ([]string, error) {
+
+	_ = cloudprovider.GetDistributeLock().Lock(utils.BuildAllocateVpcCidrLockKey(
+		cluster.Provider, cluster.Region, cluster.VpcID), []lock.LockOption{lock.LockTTL(time.Second * 5)}...)
+	defer cloudprovider.GetDistributeLock().Unlock(utils.BuildAllocateVpcCidrLockKey( // nolint
+		cluster.Provider, cluster.Region, cluster.VpcID))
+
+	cidrs, err := AllocateGlobalRouterCidr(opt, vpcId, cluster, cidrLens, reservedBlocks)
+	if err != nil {
+		blog.Errorf("AddGrCidrsToCluster[%s:%s] allocateGlobalRouterCidr failed: %v",
+			cluster.ClusterID, vpcId, err)
+		return nil, err
+	}
+	blog.Infof("AddGrCidrsToCluster[%s:%s] allocateGlobalRouterCidr success[%s]", cluster.ClusterID,
+		vpcId, cidrs)
+
+	_ = cloudprovider.GetDistributeLock().Lock(utils.BuildClusterLockKey(
+		cluster.ClusterID), []lock.LockOption{lock.LockTTL(time.Second * 5)}...)
+	defer cloudprovider.GetDistributeLock().Unlock(utils.BuildClusterLockKey(cluster.ClusterID)) // nolint
+
+	err = AddClusterGrCidr(opt, cluster.GetSystemID(), cidrs)
+	if err != nil {
+		blog.Errorf("AddGrCidrsToCluster[%s:%s] addClusterGrCidr failed: %v",
+			cluster.ClusterID, vpcId, err)
+		return nil, err
+	}
+	blog.Infof("AddGrCidrsToCluster[%s:%s] addClusterGrCidr success[%s]", cluster.ClusterID,
+		vpcId, cidrs)
+
+	return cidrs, nil
+}
+
 // GetGrVPCIPSurplus returns free ip num
 func GetGrVPCIPSurplus(opt *cloudprovider.CommonOption, cloudId, vpcId string,
 	reservedBlocks []*net.IPNet) (uint32, error) {
-	allBlocks, err := cloudprovider.GetOverlayCidrBlocks(cloudId, vpcId)
+	allBlocks, err := getOverlayCidrBlocks(cloudId, vpcId)
 	if err != nil {
 		return 0, err
 	}
@@ -497,17 +607,7 @@ func GetGrVPCIPSurplus(opt *cloudprovider.CommonOption, cloudId, vpcId string,
 
 	frees := cidrtree.GetFreeIPNets(allBlocks, nil, allSubnets)
 
-	ipSurplus := uint32(0)
-	for _, free := range frees {
-		// 计算出当前ip下，可以有多少个子网
-		freeIPNum, err := cidrtree.GetIPNum(free)
-		if err != nil {
-			return 0, err
-		}
-		ipSurplus += freeIPNum
-	}
-
-	return ipSurplus, nil
+	return cidrtree.GetIPNetsNum(frees)
 }
 
 // GetClusterGrCidrs return all cidr info of the cluster by clusterId
@@ -566,14 +666,27 @@ func GetCidrsFromCluster(cluster *tke.Cluster) ([]*cidrtree.Cidr, error) {
 }
 
 // GetClusterGrIPSurplus return current available ip number for pod
-func GetClusterGrIPSurplus(opt *cloudprovider.CommonOption, clusterId string) (uint32, error) {
+func GetClusterGrIPSurplus(opt *cloudprovider.CommonOption, clusterId, tkeId string) (uint32, error) {
 	ipSurplus := uint32(0)
-	cluster, err := GetTkeCluster(opt, clusterId)
+	cluster, err := GetTkeCluster(opt, tkeId)
 	if err != nil {
 		return 0, err
 	}
 
-	nodeNum := (uint32)(*cluster.ClusterNodeNum + *cluster.ClusterMaterNodeNum)
+	clusterNodeNum := *cluster.ClusterNodeNum
+	if len(clusterId) > 0 {
+		nodes, errLocal := cloudprovider.ListClusterNodes(clusterId)
+		if errLocal != nil {
+			blog.Errorf("GetClusterGrIPSurplus[%s] ListNodesInClusterNodePool failed: %v", clusterId, err)
+		} else {
+			blog.Infof("GetClusterGrIPSurplus[%s] ListNodesInClusterNodePool nodeNum[%v]", clusterId, len(nodes))
+
+			clusterNodeNum = uint64(len(nodes))
+		}
+	}
+
+	nodeNum := (uint32)(clusterNodeNum + *cluster.ClusterMaterNodeNum)
+
 	maxNodePodNum := (uint32)(*cluster.ClusterNetworkSettings.MaxNodePodNum)
 	maxClusterServiceNum := (uint32)(*cluster.ClusterNetworkSettings.MaxClusterServiceNum)
 
@@ -602,45 +715,10 @@ func GetClusterGrIPSurplus(opt *cloudprovider.CommonOption, clusterId string) (u
 	return ipSurplus, nil
 }
 
-// AddClusterGrCidr add gr cidrs to the cluster
-func AddClusterGrCidr(opt *cloudprovider.CommonOption, clusterId string, cidrs []string) error {
-	cidrNum := len(cidrs)
-	if cidrNum == 0 {
-		return errors.New("cidrNum must be greater than 0")
-	}
-
-	clusterCidrs, err := GetClusterGrCidrs(opt, clusterId)
-	if err != nil {
-		return err
-	}
-
-	totalCidrNum := cidrNum
-	for _, cidr := range clusterCidrs {
-		if utils.StringInSlice(cidr.Type, []string{utils.ClusterCIDR, utils.MultiClusterCIDR}) {
-			totalCidrNum++
-		}
-	}
-
-	if totalCidrNum > GrMaxClusterCidrNum {
-		return fmt.Errorf("total cidr number must be less than or equal to %d", GrMaxClusterCidrNum)
-	}
-
-	// 调用tke接口添加集群的cidr
-	tkeCli, err := api.NewTkeClient(opt)
-	if err != nil {
-		return err
-	}
-	err = tkeCli.AddClusterCIDR(clusterId, cidrs, true)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 // GetVpcGrFreeIPNets get vpc cidr free cidrs
 func GetVpcGrFreeIPNets(opt *cloudprovider.CommonOption, cloudId, vpcId string,
 	reservedBlocks []*net.IPNet) ([]*net.IPNet, error) {
-	allBlocks, err := cloudprovider.GetOverlayCidrBlocks(cloudId, vpcId)
+	allBlocks, err := getOverlayCidrBlocks(cloudId, vpcId)
 	if err != nil {
 		return nil, err
 	}
@@ -650,11 +728,12 @@ func GetVpcGrFreeIPNets(opt *cloudprovider.CommonOption, cloudId, vpcId string,
 		return nil, err
 	}
 
-	// 缓存gr cidr
-	cacheSubnets, err := getGrInCacheByVpc(vpcId)
+	// 缓存gr cidr 中间状态资源
+	cacheSubnets, err := ListCidrInCacheByVpc(common.ClusterOverlayNetwork, vpcId)
 	if err != nil {
 		return nil, err
 	}
+	blog.Infof("GetVpcGrFreeIPNets ListCidrInCacheByVpc success: %v", cacheSubnets)
 
 	// 已使用cidr 和 缓存cidr 去重
 	subnetMap := make(map[string]*net.IPNet)
@@ -674,10 +753,10 @@ func GetVpcGrFreeIPNets(opt *cloudprovider.CommonOption, cloudId, vpcId string,
 	return cidrtree.GetFreeIPNets(allBlocks, reservedBlocks, allSubnets), nil
 }
 
-// getGrInCacheByVpc get cache gr cidr
-func getGrInCacheByVpc(vpcId string) ([]*net.IPNet, error) {
+// ListCidrInCacheByVpc get cache cidr
+func ListCidrInCacheByVpc(netType, vpcId string) ([]*net.IPNet, error) {
 	var subs []string
-	err := cloudprovider.GetEtcdModel().List(context.TODO(), vpcId, &subs)
+	err := cloudprovider.GetEtcdModel().List(context.TODO(), fmt.Sprintf("%s/%s", netType, vpcId), &subs)
 	if err != nil {
 		return nil, err
 	}
@@ -693,36 +772,48 @@ func getGrInCacheByVpc(vpcId string) ([]*net.IPNet, error) {
 	return subnets, nil
 }
 
-// addGrCidrToCache add cidr to etcd cache
-func addGrCidrToCache(sub *cidrtree.Subnet) error {
-	key := path.Join(sub.VpcID, sub.ID)
+// AddCidrToCache add cidr to etcd cache
+func AddCidrToCache(netType string, sub *cidrtree.Subnet) error {
+	key := path.Join(netType, sub.VpcID, sub.ID)
 	return cloudprovider.GetEtcdModel().Create(context.TODO(), key, sub.ID)
 }
 
-// AllocateGrCidrSubnet allocate gr cidr subnet
-func AllocateGrCidrSubnet(opt *cloudprovider.CommonOption, cloudId, vpcId string,
-	mask int, reservedBlocks []*net.IPNet) (*cidrtree.Subnet, error) {
+// DeleteCidrFromCache delete cidr from etcd cache
+func DeleteCidrFromCache(netType string, vpc string, cidr string) error {
+	key := path.Join(netType, vpc, cidr)
+	return cloudprovider.GetEtcdModel().Delete(context.TODO(), key)
+}
 
-	frees, err := GetVpcGrFreeIPNets(opt, cloudId, vpcId, reservedBlocks)
+// GetCidrFromCache get cidr from etcd cache
+func GetCidrFromCache(netType string, vpc string, cidr string) error {
+	var sub string
+	key := path.Join(netType, vpc, cidr)
+	return cloudprovider.GetEtcdModel().Get(context.TODO(), key, &sub)
+}
+
+// getOverlayCidrBlocks get overlayIps from vpc
+func getOverlayCidrBlocks(cloudId, vpcId string) ([]*net.IPNet, error) {
+	vpcInfo, err := cloudprovider.GetStorageModel().GetCloudVPC(context.Background(), cloudId, vpcId)
 	if err != nil {
 		return nil, err
 	}
-	blog.Infof("AllocateGrSubnet free %v", frees)
 
-	sub, err := cidrtree.AllocateFromFrees(mask, frees)
-	if err != nil {
-		return nil, err
+	cidrs := make([]string, 0)
+	for i := range vpcInfo.GetOverlay().GetCidrs() {
+		if vpcInfo.GetOverlay().GetCidrs()[i].GetBlock() {
+			continue
+		}
+		cidrs = append(cidrs, vpcInfo.GetOverlay().GetCidrs()[i].GetCidr())
 	}
 
-	ret := &cidrtree.Subnet{
-		ID:    sub.String(),
-		IPNet: sub,
-		VpcID: vpcId,
-	}
-	err = addGrCidrToCache(ret)
-	if err != nil {
-		blog.Errorf("AllocateGrSubnet addGrCidrToCache failed: %v", err)
+	if len(cidrs) == 0 {
+		cidrs = append(cidrs, defaultOverlayCidrs...)
 	}
 
-	return ret, err
+	var blocks []*net.IPNet
+	for _, v := range cidrs {
+		_, ipnet, _ := net.ParseCIDR(v)
+		blocks = append(blocks, ipnet)
+	}
+	return blocks, nil
 }

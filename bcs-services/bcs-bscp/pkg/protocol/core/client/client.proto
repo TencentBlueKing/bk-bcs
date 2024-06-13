@@ -33,6 +33,7 @@ message ClientSpec {
   string client_type = 14;
   string current_release_name = 15;
   string specific_failed_reason = 16;
+  string target_release_name = 17;
 }
 
 // ClientAttachment source resource reference: pkg/dal/table/client.go
@@ -69,6 +70,7 @@ message ClientQueryCondition {
   string failed_reason = 11;                  // 客户端失败主类原因
   string start_pull_time = 12;                // 开始拉取时间
   string end_pull_time = 13;                  // 结束拉取时间
+  repeated uint32 client_ids = 14;            // client id
 }
 
 // ClientCommonReq request param

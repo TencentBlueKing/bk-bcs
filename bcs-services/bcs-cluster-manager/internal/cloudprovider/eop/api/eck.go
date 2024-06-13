@@ -48,10 +48,12 @@ func NewCTClient(opt *cloudprovider.CommonOption) (*CTClient, error) {
 	if opt.Account == nil {
 		return nil, fmt.Errorf("create NewCTClient failed, empty Credential")
 	}
+	// check account secret
 	if opt.Account.SecretID == "" || opt.Account.SecretKey == "" {
 		return nil, fmt.Errorf("create NewCTClient failed, empty AK or SK")
 	}
 
+	// ctc client
 	return &CTClient{
 		credential{
 			ak: opt.Account.SecretID,
@@ -113,6 +115,7 @@ func (c *CTClient) GetCluster(clusterID string) (*Cluster, error) {
 	params := fmt.Sprintf("clusterId=%s", clusterID)
 	resp := &GetClusterResponse{}
 
+	// request
 	requestID, _ := uuid.NewUUID()
 	singerDate := time.Now()
 	eopDate := singerDate.Format("20060102T150405Z")
@@ -162,6 +165,7 @@ func (c *CTClient) CreateCluster(req *CreateClusterRequest) (*CreateClusterReObj
 	reqPath := "/v2/cluster/create"
 	resp := &CreateClusterResponse{}
 
+	// request
 	requestID, _ := uuid.NewUUID()
 	signDate := time.Now()
 	eopDate := signDate.Format("20060102T150405Z")
@@ -216,6 +220,7 @@ func (c *CTClient) DeleteCluster(req *DeleteClusterReq) (*DeleteClusterReObj, er
 	reqPath := "/v2/cluster/delete"
 	resp := &DeleteClusterResponse{}
 
+	// request
 	requestID, _ := uuid.NewUUID()
 	signDate := time.Now()
 	eopDate := signDate.Format("20060102T150405Z")
@@ -266,6 +271,7 @@ func (c *CTClient) GetKubeConfig(clusterId string) (*GetKubeConfigReObj, error) 
 	params := fmt.Sprintf("clusterId=%s", clusterId)
 	resp := &GetKubeConfigResponse{}
 
+	// request
 	requestID, _ := uuid.NewUUID()
 	singerDate := time.Now()
 	eopDate := singerDate.Format("20060102T150405Z")
@@ -317,6 +323,7 @@ func (c *CTClient) ListNodes(req *ListNodeReq) ([]*Node, error) {
 		return nil, fmt.Errorf("ListNodes empty clusterId")
 	}
 
+	// contract params
 	params := fmt.Sprintf("clusterId=%s", req.ClusterID)
 	if req.NodeNames != "" {
 		params = fmt.Sprintf("%s&nodeNames=%s", params, req.NodeNames)
@@ -333,6 +340,7 @@ func (c *CTClient) ListNodes(req *ListNodeReq) ([]*Node, error) {
 
 	resp := &ListNodeResponse{}
 
+	// request
 	requestID, _ := uuid.NewUUID()
 	singerDate := time.Now()
 	eopDate := singerDate.Format("20060102T150405Z")
@@ -382,6 +390,7 @@ func (c *CTClient) GetNodePool(nodePoolId string) (*NodePool, error) {
 	params := fmt.Sprintf("nodePoolId=%s", nodePoolId)
 	resp := &GetNodePoolResponse{}
 
+	// request
 	requestID, _ := uuid.NewUUID()
 	singerDate := time.Now()
 	eopDate := singerDate.Format("20060102T150405Z")
@@ -433,6 +442,7 @@ func (c *CTClient) ListNodePool(req *ListNodePoolReq) ([]*NodePoolV2, error) {
 		return nil, fmt.Errorf("ListNodePool empty clusterId")
 	}
 
+	// params
 	params := fmt.Sprintf("clusterId=%s", req.ClusterID)
 	if req.EnableAutoScaling != "" {
 		params = fmt.Sprintf("%s&enableAutoScaling=%s", params, req.EnableAutoScaling)
@@ -452,6 +462,7 @@ func (c *CTClient) ListNodePool(req *ListNodePoolReq) ([]*NodePoolV2, error) {
 
 	resp := &ListNodePoolResponse{}
 
+	// request
 	requestID, _ := uuid.NewUUID()
 	singerDate := time.Now()
 	eopDate := singerDate.Format("20060102T150405Z")
@@ -501,6 +512,7 @@ func (c *CTClient) ListVpcs(location string) ([]*Vpc, error) {
 	params := fmt.Sprintf("nodeCode=%s", location)
 	resp := &ListVpcResponse{}
 
+	// request
 	requestID, _ := uuid.NewUUID()
 	singerDate := time.Now()
 	eopDate := singerDate.Format("20060102T150405Z")

@@ -58,6 +58,7 @@ func (s *Service) ListClients(ctx context.Context, req *pbcs.ListClientsReq) (
 			EndPullTime:         req.GetSearch().GetEndPullTime(),
 			ClientType:          req.GetSearch().GetClientType(),
 			FailedReason:        req.GetSearch().GetFailedReason(),
+			ClientIds:           req.GetSearch().GetClientIds(),
 		},
 		Order: &pbds.ListClientsReq_Order{
 			Desc: req.GetOrder().GetDesc(),

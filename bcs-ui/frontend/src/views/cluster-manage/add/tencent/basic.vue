@@ -187,10 +187,11 @@
               value="containerd"
               :disabled="!runtimeModuleParamsMap['containerd']"
             >
-              <span v-bk-tooltips="{
-                content: $t('tke.tips.notSupportInCurrentClusterVersion'),
-                disabled: runtimeModuleParamsMap['containerd']
-              }">
+              <span
+                v-bk-tooltips="{
+                  content: $t('tke.tips.notSupportInCurrentClusterVersion'),
+                  disabled: runtimeModuleParamsMap['containerd']
+                }">
                 containerd
               </span>
             </bk-radio>
@@ -198,10 +199,11 @@
               value="docker"
               :disabled="!runtimeModuleParamsMap['docker']"
             >
-              <span v-bk-tooltips="{
-                content: $t('tke.tips.notSupportInCurrentClusterVersion'),
-                disabled: runtimeModuleParamsMap['docker']
-              }">
+              <span
+                v-bk-tooltips="{
+                  content: $t('tke.tips.notSupportInCurrentClusterVersion'),
+                  disabled: runtimeModuleParamsMap['docker']
+                }">
                 docker
               </span>
             </bk-radio>

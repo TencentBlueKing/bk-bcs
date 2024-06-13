@@ -1,6 +1,6 @@
 <!-- eslint-disable max-len -->
 <template>
-  <Header :style="{ marginBottom: (isNewTemplate) ? '0px' : '55px' }">
+  <ContentHeader :style="{ marginBottom: (isNewTemplate) ? '0px' : '55px' }">
     <i class="bcs-icon bcs-icon-arrows-left" @click="beforeLeave"></i>
     <div class="biz-templateset-title">
       <span>{{$t('deploy.templateset.returnToTemplateSet')}}</span>
@@ -376,7 +376,7 @@
         </bk-table>
       </div>
     </bk-sideslider>
-  </Header>
+  </ContentHeader>
 </template>
 
 <script>
@@ -393,11 +393,11 @@ import yamljs from 'js-yaml';
 import shlex from 'shlex';
 
 import { isObject } from '@/common/util';
-import Header from '@/components/layout/Header.vue';
+import ContentHeader from '@/components/layout/Header.vue';
 
 export default {
   name: 'HeaderIndex',
-  components: { Header },
+  components: { ContentHeader },
   data() {
     return {
       isFromNewTemplate: false,

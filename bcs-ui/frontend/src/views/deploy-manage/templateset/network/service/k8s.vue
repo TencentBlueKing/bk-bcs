@@ -1,12 +1,11 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <!-- eslint-disable max-len -->
 <template>
-  <div class="biz-content">
-    <Header hide-back title="Service" :desc="$t('deploy.templateset.createFromTemplateOrHelmService')" />
-    <div class="biz-content-wrapper" style="padding: 0;" v-bkloading="{ isLoading: isInitLoading }">
+  <BcsContent hide-back title="Service" :desc="$t('deploy.templateset.createFromTemplateOrHelmService')">
+    <div v-bkloading="{ isLoading: isInitLoading }">
 
-      <div class="biz-panel-header">
-        <div class="left">
+      <Row class="mb-[16px]">
+        <div class="left" slot="left">
           <bk-button @click.stop.prevent="removeServices" v-if="curPageData.length">
             <span>{{$t('generic.button.batchDelete')}}</span>
           </bk-button>
@@ -14,7 +13,7 @@
             <span>.</span>
           </bk-button>
         </div>
-        <div class="right">
+        <div class="right" slot="right">
           <ClusterSelectComb
             :placeholder="$t('generic.placeholder.search')"
             :search.sync="searchKeyword"
@@ -23,7 +22,7 @@
             @search-change="searchService"
             @refresh="refresh" />
         </div>
-      </div>
+      </Row>
 
       <div class="biz-service">
         <div class="biz-table-wrapper" style="border: none;">
@@ -603,7 +602,7 @@
         </div>
       </bk-dialog>
     </div>
-  </div>
+  </BcsContent>
 </template>
 
 <script>
@@ -611,11 +610,12 @@ import mixin from './mixin';
 
 import { catchErrorHandler, formatDate } from '@/common/util';
 import ClusterSelectComb from '@/components/cluster-selector/cluster-select-comb.vue';
-import Header from '@/components/layout/Header.vue';
+import BcsContent from '@/components/layout/Content.vue';
+import Row from '@/components/layout/Row.vue';
 import useFormLabel from '@/composables/use-form-label';
 
 export default {
-  components: { Header, ClusterSelectComb },
+  components: { BcsContent, Row, ClusterSelectComb },
   mixins: [mixin],
   data() {
     return {
@@ -1506,8 +1506,7 @@ export default {
 
     rowSelectable(row) {
       return row.can_delete
-                    && this.webAnnotations.perms[row.iam_ns_id]
-                    && this.webAnnotations.perms[row.iam_ns_id].namespace_scoped_delete;
+                    && this.webAnnotations.perms[row.iam_ns_id]?.namespace_scoped_delete;
     },
     handleClearSearchData() {
       this.searchKeyword = '';

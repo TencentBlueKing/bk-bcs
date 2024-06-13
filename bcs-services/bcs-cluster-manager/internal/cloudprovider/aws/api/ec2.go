@@ -58,7 +58,7 @@ func (c *EC2Client) DescribeAvailabilityZones(input *ec2.DescribeAvailabilityZon
 // CreateLaunchTemplate creates a LaunchTemplate
 func (c *EC2Client) CreateLaunchTemplate(input *CreateLaunchTemplateInput) (*ec2.LaunchTemplate, error) {
 	blog.Infof("CreateLaunchTemplate input: %", utils.ToJSONString(input))
-	awsInput := generateAwsCreateLaunchTemplateInput(input)
+	awsInput := buildLaunchTemplateData(input)
 	output, err := c.ec2Client.CreateLaunchTemplate(awsInput)
 	if err != nil {
 		blog.Errorf("CreateLaunchTemplate failed: %v", err)

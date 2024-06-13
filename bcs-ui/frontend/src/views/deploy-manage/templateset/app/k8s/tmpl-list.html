@@ -1,7 +1,6 @@
-<div class="biz-content">
-    <Header hide-back :title="$t('deploy.templateset.appList')"></Header>
-    <div class="biz-content-wrapper biz-app-loading" style="padding: 0;">
-        <div class="biz-panel-header biz-app-query" style="padding: 27px 20px 15px 20px;">
+<BcsContent hide-back :title="$t('deploy.templateset.appList')">
+    <div class="biz-app-loading">
+        <div class="biz-app-query flex items-center">
             <div class="left" v-if="$INTERNAL">
                 <bk-dropdown-menu :align="'center'" ref="toggleDropdown">
                     <a href="javascript:void(0);" slot="dropdown-trigger" class="dropdown-trigger-btn bk-text-button bg-[#fff]">
@@ -30,7 +29,7 @@
                     </ClusterSelect>
                 </div>
             </div>
-            <div class="right">
+            <div class="right flex-1">
                 <div class="biz-search-input">
                     <bk-searcher
                         ref="bkSearcher"
@@ -60,7 +59,7 @@
         <div v-bkloading="{isLoading: showLoading, color: '#f5f7fa'}" :class="tmplMusterList.length || namespaceList.length ? '' : 'biz-app-list-wrapper min-h-[200px]'">
             <!-------------------------------- 模板集视图 -------------------------------->
             <template v-if="viewMode === 'template'">
-                <p class="biz-tip ml20 mb20">
+                <p class="biz-tip mt-[16px] mb20">
                     <i class="bcs-icon bcs-icon-alarm-insufficient vm"></i>
                     <span class="vm">{{$t('deploy.templateset.appDetail')}}</span>
                 </p>
@@ -618,7 +617,7 @@
 
             <!-------------------------------- 命名空间视图 -------------------------------->
             <template v-else>
-                <p class="biz-tip ml20 mb20">
+                <p class="biz-tip mt-[16px] mb20">
                     <i class="bcs-icon bcs-icon-alarm-insufficient vm"></i>
                     <span class="vm">{{$t('deploy.templateset.appInfo')}}</span>
                 </p>
@@ -1617,4 +1616,4 @@
         v-if="editorConfig.fullScreen || compareEditorConfig.fullScreen">
         <i class="bcs-icon bcs-icon-close"></i>
     </div>
-</div>
+</BcsContent>

@@ -1,13 +1,13 @@
 <!-- eslint-disable max-len -->
 <template>
-  <div class="create-k8s-cluster">
-    <Header :title="$t('cluster.button.addCluster')" :desc="$t('cluster.tips.createK8SCluster')" />
-    <div class="pt-[8px] bg-[#f0f1f5]">
+  <BcsContent :padding="0" :title="$t('cluster.button.addCluster')" :desc="$t('cluster.tips.createK8SCluster')">
+    <div class="h-full pt-[8px] bg-[#f0f1f5]">
       <bcs-tab
         :label-height="42"
         :validate-active="false"
         :active.sync="activeTabName"
-        type="card-tab">
+        type="card-tab"
+        class="h-full">
         <!-- 基本信息 -->
         <bcs-tab-panel :name="steps[0].name">
           <template #label>
@@ -339,7 +339,7 @@
           </bk-form>
         </bcs-tab-panel>
       </bcs-tab>
-      <div class="flex items-center h-[48px] bg-[#FAFBFD] px-[24px] absolute bottom-0 w-full bcs-border-top" ref="footerRef">
+      <div class="flex items-center h-[48px] bg-[#FAFBFD] px-[24px] absolute bottom-0 w-full bcs-border-top">
         <bk-button v-if="activeTabName !== steps[0].name" @click="preStep">{{ $t('generic.button.pre') }}</bk-button>
         <bk-button
           theme="primary"
@@ -352,7 +352,7 @@
         <bk-button class="ml10" @click="handleCancel">{{ $t('generic.button.cancel') }}</bk-button>
       </div>
     </div>
-  </div>
+  </BcsContent>
 </template>
 <script lang="ts" setup>
 import { merge } from 'lodash';
@@ -371,21 +371,11 @@ import { LABEL_KEY_REGEXP } from '@/common/constant';
 import { validateCIDR } from '@/common/util';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import DescList from '@/components/desc-list.vue';
-import Header from '@/components/layout/Header.vue';
+import BcsContent from '@/components/layout/Content.vue';
 import { useProject } from '@/composables/use-app';
-import useCalcHeight from '@/composables/use-calc-height';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store';
-
-// 设置内容高度
-const footerRef = ref();
-useCalcHeight({
-  prop: 'height',
-  offset: 8, // 顶部波边距
-  el: '.create-k8s-cluster .bk-tab-section',
-  calc: ['#bcs-notice-com', '.content-header', '.create-k8s-cluster .bk-tab-header', '.bk-navigation-header', footerRef],
-});
 
 const $cloudId = 'bluekingCloud';
 const steps = ref([
@@ -802,6 +792,7 @@ onMounted(() => {
 }
 >>> .bk-tab-section {
   overflow: auto;
+  height: calc(100% - 80px);
 }
 
 >>> .k8s-form .bk-form-content {

@@ -11,13 +11,14 @@
       <template #left>{{ title }}</template>
       <template #right><slot name="title-right"></slot></template>
     </Row>
-    <div :class="[
-      'mt-[16px]',
-      {
-        'text-[12px]': size === 'small',
-        'text-[14px]': size === 'middle'
-      }
-    ]">
+    <div
+      :class="[
+        'mt-[16px]',
+        {
+          'text-[12px]': size === 'small',
+          'text-[14px]': size === 'middle'
+        }
+      ]">
       <slot></slot>
     </div>
   </div>

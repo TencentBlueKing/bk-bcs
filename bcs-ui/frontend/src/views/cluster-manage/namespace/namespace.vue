@@ -1,6 +1,6 @@
 <template>
   <div v-bkloading="{ isLoading: namespaceLoading }">
-    <LayoutRow class="mb15">
+    <Row class="mb15">
       <template #left>
         <!-- 权限详情接口目前暂不支持多个actionID -->
         <bcs-button
@@ -29,7 +29,7 @@
           v-model="searchValue">
         </bcs-input>
       </template>
-    </LayoutRow>
+    </Row>
     <bcs-table
       :data="curPageData"
       :pagination="pagination"
@@ -454,7 +454,7 @@ import { KEY_REGEXP, VALUE_REGEXP } from '@/common/constant';
 import { timeZoneTransForm } from '@/common/util';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import KeyValue from '@/components/key-value.vue';
-import LayoutRow from '@/components/layout/Row.vue';
+import Row from '@/components/layout/Row.vue';
 import { useCluster, useProject } from '@/composables/use-app';
 import useInterval from '@/composables/use-interval';
 import useSideslider from '@/composables/use-sideslider';
@@ -464,7 +464,7 @@ import $router from '@/router';
 export default defineComponent({
   name: 'NamespaceList',
   components: {
-    LayoutRow,
+    Row,
     Detail,
     KeyValue,
     StatusIcon,

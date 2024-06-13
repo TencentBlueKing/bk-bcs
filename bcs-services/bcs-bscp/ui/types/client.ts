@@ -47,6 +47,7 @@ export interface IClientSearchParams {
   start_pull_time?: string;
   end_pull_time?: string;
   failed_reason?: string;
+  client_ids?: number[];
 }
 
 export interface IGetClientSearchListQuery {

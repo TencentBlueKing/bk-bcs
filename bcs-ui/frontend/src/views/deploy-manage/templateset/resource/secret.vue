@@ -1,17 +1,16 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <!-- eslint-disable max-len -->
 <template>
-  <div class="biz-content">
-    <Header hide-back title="Secrets" :desc="$t('deploy.templateset.createFromTemplateOrHelmSecret')" />
-    <div class="biz-content-wrapper p0" v-bkloading="{ isLoading: isInitLoading }">
+  <BcsContent hide-back title="Secrets" :desc="$t('deploy.templateset.createFromTemplateOrHelmSecret')">
+    <div v-bkloading="{ isLoading: isInitLoading }">
 
-      <div class="biz-panel-header">
-        <div class="left">
+      <Row class="mb-[16px]">
+        <div class="left" slot="left">
           <bk-button @click.stop.prevent="removeSecrets" v-if="curPageData.length">
             <span>{{$t('generic.button.batchDelete')}}</span>
           </bk-button>
         </div>
-        <div class="right">
+        <div class="right" slot="right">
           <ClusterSelectComb
             :placeholder="$t('deploy.templateset.searchNameOrNamespaceEnter')"
             :search.sync="searchKeyword"
@@ -20,7 +19,7 @@
             @search-change="searchSecret"
             @refresh="refresh" />
         </div>
-      </div>
+      </Row>
 
       <div class="biz-resource biz-table-wrapper">
         <bk-table
@@ -276,16 +275,17 @@
         </template>
       </bk-dialog>
     </div>
-  </div>
+  </BcsContent>
 </template>
 
 <script>
 import { catchErrorHandler, formatDate } from '@/common/util';
 import ClusterSelectComb from '@/components/cluster-selector/cluster-select-comb.vue';
-import Header from '@/components/layout/Header.vue';
+import BcsContent from '@/components/layout/Content.vue';
+import Row from '@/components/layout/Row.vue';
 
 export default {
-  components: { Header, ClusterSelectComb },
+  components: { BcsContent, Row, ClusterSelectComb },
   data() {
     return {
       formatDate,
@@ -945,8 +945,7 @@ export default {
 
     rowSelectable(row) {
       return row.can_delete
-                    && this.webAnnotations.perms[row.iam_ns_id]
-                    && this.webAnnotations.perms[row.iam_ns_id].namespace_scoped_delete;
+                    && this.webAnnotations.perms[row.iam_ns_id]?.namespace_scoped_delete;
     },
     handleClearSearchData() {
       this.searchKeyword = '';

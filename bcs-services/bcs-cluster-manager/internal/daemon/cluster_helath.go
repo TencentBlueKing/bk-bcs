@@ -105,6 +105,11 @@ func (d *Daemon) updateClusterStatus(clusterId, status string) error {
 	if err != nil {
 		return err
 	}
+
+	if cluster.Status == common.StatusDeleted {
+		return nil
+	}
+
 	if cluster.Status == status {
 		return nil
 	}
