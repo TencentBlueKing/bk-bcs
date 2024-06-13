@@ -532,7 +532,7 @@ func (c *Cluster) DeleteNodesFromCluster(cls *proto.Cluster, nodes []*proto.Node
 	return task, nil
 }
 
-func skipGlobalRouterCIDR(cls *proto.Cluster) bool {
+func skipGlobalRouterCIDR(cls *proto.Cluster) bool { // nolint
 	if cls.ExtraInfo != nil {
 		v, ok := cls.ExtraInfo[api.GlobalRouteCIDRCheck]
 		if ok && v == "true" {
