@@ -481,6 +481,7 @@
         const { client } = item;
         client.labels = Object.entries(JSON.parse(client.spec.labels)).map(([key, value]) => ({ key, value }));
       });
+      pagination.value.count = res.data.count;
     } catch (error) {
       console.error(error);
     } finally {
