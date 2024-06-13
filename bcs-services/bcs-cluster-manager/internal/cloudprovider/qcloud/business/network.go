@@ -559,9 +559,9 @@ func AddClusterGrCidr(opt *cloudprovider.CommonOption, clusterId string, cidrs [
 func AddGrCidrsToCluster(opt *cloudprovider.CommonOption, vpcId string, cluster *proto.Cluster,
 	cidrLens []uint32, reservedBlocks []*net.IPNet) ([]string, error) {
 
-	cloudprovider.GetDistributeLock().Lock(utils.BuildAllocateVpcCidrLockKey(
+	_ = cloudprovider.GetDistributeLock().Lock(utils.BuildAllocateVpcCidrLockKey(
 		cluster.Provider, cluster.Region, cluster.VpcID), []lock.LockOption{lock.LockTTL(time.Second * 5)}...)
-	defer cloudprovider.GetDistributeLock().Unlock(utils.BuildAllocateVpcCidrLockKey(
+	defer cloudprovider.GetDistributeLock().Unlock(utils.BuildAllocateVpcCidrLockKey( // nolint
 		cluster.Provider, cluster.Region, cluster.VpcID))
 
 	cidrs, err := AllocateGlobalRouterCidr(opt, vpcId, cluster, cidrLens, reservedBlocks)
@@ -573,9 +573,9 @@ func AddGrCidrsToCluster(opt *cloudprovider.CommonOption, vpcId string, cluster 
 	blog.Infof("AddGrCidrsToCluster[%s:%s] allocateGlobalRouterCidr success[%s]", cluster.ClusterID,
 		vpcId, cidrs)
 
-	cloudprovider.GetDistributeLock().Lock(utils.BuildClusterLockKey(
+	_ = cloudprovider.GetDistributeLock().Lock(utils.BuildClusterLockKey(
 		cluster.ClusterID), []lock.LockOption{lock.LockTTL(time.Second * 5)}...)
-	defer cloudprovider.GetDistributeLock().Unlock(utils.BuildClusterLockKey(cluster.ClusterID))
+	defer cloudprovider.GetDistributeLock().Unlock(utils.BuildClusterLockKey(cluster.ClusterID)) // nolint
 
 	err = AddClusterGrCidr(opt, cluster.GetSystemID(), cidrs)
 	if err != nil {
