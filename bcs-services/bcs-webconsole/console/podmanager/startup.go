@@ -211,10 +211,13 @@ func (m *StartupManager) getExternalKubeConfig(targetClusterId, username string)
 		return nil, err
 	}
 
+	// 获取kubeconfig server
+	server := m.getServer(targetClusterId)
+
 	authInfo := &clusterAuth{
 		Token: tokenObj.Token,
 		Cluster: clientcmdv1.Cluster{
-			Server:                fmt.Sprintf("%s/clusters/%s", config.G.BCS.Host, targetClusterId),
+			Server:                server,
 			InsecureSkipTLSVerify: config.G.BCS.InsecureSkipVerify,
 		},
 	}
@@ -397,4 +400,32 @@ func GetKubectldVersion(clusterId string) (string, error) {
 
 	v, err := config.G.WebConsole.MatchTag(info)
 	return v, err
+}
+
+// ProjectIdContext projectId context
+type ProjectIdContext string
+
+// ProjectIdContextKey projectId context key
+const ProjectIdContextKey ProjectIdContext = "projectIdContext"
+
+// 获取kubeconfig server
+func (m *StartupManager) getServer(clusterId string) string {
+	server := fmt.Sprintf("%s/clusters/%s", config.G.BCS.Host, clusterId)
+	projectId, ok := m.ctx.Value(ProjectIdContextKey).(string)
+	// 取不出来及空的情况下返回默认地址
+	if !ok || projectId == "" {
+		return server
+	}
+
+	cluster, err := bcs.GetCluster(m.ctx, projectId, clusterId)
+	if err != nil {
+		// 报错情况下返回默认的
+		return server
+	}
+
+	// 如果是共享集群则加上/projects/%s
+	if cluster.IsShared {
+		return fmt.Sprintf("%s/projects/%s/clusters/%s", config.G.BCS.Host, projectId, clusterId)
+	}
+	return server
 }
