@@ -467,7 +467,7 @@ func (dao *clientDao) handleLabelSearch(q gen.IClientDo, search *pbclient.Client
 					isFirst = true
 				}
 
-				conds = append(conds, q)
+				conds = append(conds, q.Where(q))
 			}
 		}
 	}
