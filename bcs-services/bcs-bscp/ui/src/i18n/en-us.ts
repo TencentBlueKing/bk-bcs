@@ -86,6 +86,8 @@ export default {
   客户端统计: 'Client statistics',
   客户端查询: 'Client query',
   客户端密钥: 'Client key',
+  业务名: 'Business Name',
+  业务: 'Business',
 
   // 配置管理
   版本名称: 'Version Name',
@@ -460,7 +462,7 @@ export default {
   导入变量: 'Import variables',
   请输入变量名称: 'Please enter variable name',
   默认值: 'Default value',
-  描述: 'description',
+  描述: 'Description',
   '确认删除该全局变量？': 'Are you sure to delete this global variable?',
   '一旦删除，该操作将无法撤销，服务配置文件中不可再引用该全局变量，请谨慎操作': 'Once deleted, the operation cannot be undone, and the global variable can no longer be referenced in the service configuration file. Please operate with caution.',
   '定义全局变量后可供业务下所有的服务配置文件引用，使用go template语法引用，例如,变量使用详情请参考：': 'After defining global variables, they can be referenced by all service configuration files under the business. Use go template syntax for reference, such as {var}. For details on variable usage, please refer to:',
@@ -478,6 +480,7 @@ export default {
   '示例：': 'Example:',
   '变量名 变量类型 变量值 变量描述（可选）': 'Variable name Variable type Variable value Variable Description (optional)',
   ' bk_bscp_nginx_port number 8080 nginx端口': ' bk_bscp_nginx_port number 8080 nginx port',
+  导出变量: 'Export variables',
 
   // 配置模板
   '配置模板用于统一业务下服务间配置文件复用，可以在创建服务配置时引用配置模板。': 'Configuration templates are used to reuse configuration files between services under unified services, and can be referenced when creating service configurations.',
@@ -628,7 +631,7 @@ export default {
   '密钥仅用于 SDK/API 拉取配置使用。服务管理/配置管理/分组管理等功能的权限申请，请前往': 'The key is only used for SDK/API pull configurations. To apply for permissions for functions such as service management/configuration management/group management, please go to',
   蓝鲸权限中心: 'Blue Whale Authority Center',
   新建密钥: 'New Credentials',
-  '密钥名称/说明/关联规则/更新人': 'Key name/ Description/ Association rules/ Updater',
+  '密钥名称/密钥/说明/关联规则/更新人': 'Key name/ Key/ Description/ Association rules/ Updater',
   密钥名称: 'Key name',
   密钥名称支持中英文: 'Key name supports Chinese and English',
   密钥: 'Credentials',

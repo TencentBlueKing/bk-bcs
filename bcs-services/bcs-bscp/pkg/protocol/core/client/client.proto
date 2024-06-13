@@ -33,6 +33,7 @@ message ClientSpec {
   string client_type = 14;
   string current_release_name = 15;
   string specific_failed_reason = 16;
+  string target_release_name = 17;
 }
 
 // ClientAttachment source resource reference: pkg/dal/table/client.go
@@ -58,7 +59,7 @@ message ClientResource {
 message ClientQueryCondition {
   string uid = 1;
   string ip = 2;
-  google.protobuf.Struct label = 3;           // 标签
+  repeated string label = 3;                  // 标签
   string current_release_name = 4;            // 当前版本
   string target_release_name = 5;             // 目标版本
   repeated string release_change_status = 6;  // 最近一次拉取状态：Success、Failed、Processing、Skip
@@ -69,6 +70,7 @@ message ClientQueryCondition {
   string failed_reason = 11;                  // 客户端失败主类原因
   string start_pull_time = 12;                // 开始拉取时间
   string end_pull_time = 13;                  // 结束拉取时间
+  repeated uint32 client_ids = 14;            // client id
 }
 
 // ClientCommonReq request param

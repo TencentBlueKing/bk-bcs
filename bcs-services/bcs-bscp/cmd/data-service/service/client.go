@@ -183,9 +183,19 @@ func (s *Service) ListClients(ctx context.Context, req *pbds.ListClientsReq) (
 	}
 
 	// 获取发布版本信息
+	seen := make(map[uint32]bool)
 	releaseIDs := []uint32{}
+	addID := func(id uint32) {
+		if id != 0 {
+			if _, exists := seen[id]; !exists {
+				seen[id] = true
+				releaseIDs = append(releaseIDs, id)
+			}
+		}
+	}
 	for _, v := range items {
-		releaseIDs = append(releaseIDs, v.Spec.CurrentReleaseID)
+		addID(v.Spec.CurrentReleaseID)
+		addID(v.Spec.TargetReleaseID)
 	}
 
 	releases, err := s.dao.Release().ListAllByIDs(grpcKit, releaseIDs, req.BizId)
@@ -201,7 +211,7 @@ func (s *Service) ListClients(ctx context.Context, req *pbds.ListClientsReq) (
 	data := pbclient.PbClients(items)
 	for _, v := range data {
 		v.Spec.CurrentReleaseName = releaseNames[v.Spec.CurrentReleaseId]
-
+		v.Spec.TargetReleaseName = releaseNames[v.Spec.TargetReleaseId]
 		details = append(details, &pbds.ListClientsResp_Item{
 			Client:            v,
 			CpuUsageStr:       formatCpu(v.Spec.Resource.CpuUsage),
@@ -363,13 +373,6 @@ func (s *Service) ClientLabelStatistics(ctx context.Context, req *pbclient.Clien
 
 	grpcKit := kit.FromGrpcContext(ctx)
 
-	searchLables := req.GetSearch()
-	if len(searchLables.GetLabel().GetFields()) == 0 {
-		searchLables.Label = &structpb.Struct{
-			Fields: make(map[string]*structpb.Value),
-		}
-	}
-	searchLables.GetLabel().Fields[req.GetPrimaryKey()] = &structpb.Value{}
 	fields := req.GetForeignKeys().GetFields()
 
 	labelKvs := []types.PrimaryAndForeign{}
@@ -377,20 +380,27 @@ func (s *Service) ClientLabelStatistics(ctx context.Context, req *pbclient.Clien
 	if len(fields) == 0 {
 		labelKeys = append(labelKeys, types.PrimaryAndForeign{PrimaryKey: req.GetPrimaryKey()})
 	}
+
+	searchLables := req.GetSearch()
+	searchLables.Label = append(searchLables.Label, req.GetPrimaryKey())
+	// 组合搜索条件
 	for k, v := range fields {
-		searchLables.GetLabel().Fields[k] = v
+		label := []string{}
 		if v.GetStringValue() != "" {
+			label = append(label, fmt.Sprintf("%s=%s", k, v.GetStringValue()))
 			labelKvs = append(labelKvs, types.PrimaryAndForeign{
 				PrimaryKey: req.GetPrimaryKey(),
 				ForeignKey: k,
 				ForeignVal: v.GetStringValue(),
 			})
 		} else {
+			label = append(label, k)
 			labelKeys = append(labelKeys, types.PrimaryAndForeign{
 				PrimaryKey: req.GetPrimaryKey(),
 				ForeignKey: k,
 			})
 		}
+		searchLables.Label = append(searchLables.Label, label...)
 	}
 
 	items, _, err := s.dao.Client().List(grpcKit, req.GetBizId(), req.GetAppId(), req.GetLastHeartbeatTime(),
@@ -913,6 +923,9 @@ func (s *Service) RetryClients(ctx context.Context, req *pbds.RetryClientsReq) (
 			Attachment: &table.EventAttachment{BizID: req.BizId, AppID: req.AppId},
 			Revision:   &table.CreatedRevision{Creator: kit.User},
 		}
+		if err := s.dao.Client().UpdateRetriedClientsStatusWithTx(kit, tx, []uint32{}, req.All); err != nil {
+			return nil, err
+		}
 		if err := s.dao.Event().Eventf(kit).FireWithTx(tx, event); err != nil {
 			return nil, err
 		}
@@ -945,7 +958,9 @@ func (s *Service) RetryClients(ctx context.Context, req *pbds.RetryClientsReq) (
 			Revision:   &table.CreatedRevision{Creator: kit.User},
 		})
 	}
-
+	if err := s.dao.Client().UpdateRetriedClientsStatusWithTx(kit, tx, req.ClientIds, req.All); err != nil {
+		return nil, err
+	}
 	if err := s.dao.Event().Eventf(kit).FireWithTx(tx, events...); err != nil {
 		return nil, err
 	}

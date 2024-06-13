@@ -324,6 +324,9 @@ message ListCredentialReq {
   uint32 start = 3;
   uint32 limit = 4;
   string top_ids = 5;
+  bool all = 6;
+  string enc_credential = 7;
+  optional bool enable = 8;
 }
 
 message ListCredentialResp {
