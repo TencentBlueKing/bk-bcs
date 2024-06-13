@@ -20,6 +20,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	autils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
@@ -82,12 +83,12 @@ func (ua *TaskRecordsAction) fetchTaskRecords() error {
 		}
 	}
 
-	return ua.appendTaskRecords(ua.req.TaskID)
+	return ua.appendTaskRecords(task)
 }
 
-func (ua *TaskRecordsAction) appendTaskRecords(taskID string) error {
+func (ua *TaskRecordsAction) appendTaskRecords(task *cmproto.Task) error {
 	// resource condition
-	cond := operator.M{"taskid": taskID}
+	cond := operator.M{"taskid": task.TaskID}
 	resourceCond := operator.NewLeafCondition(operator.Eq, cond)
 	conds := []*operator.Condition{resourceCond}
 	logsCond := operator.NewBranchCondition(operator.And, conds...)
@@ -109,6 +110,13 @@ func (ua *TaskRecordsAction) appendTaskRecords(taskID string) error {
 					Level:     y.Level,
 				})
 			}
+		}
+	}
+
+	for k, v := range ua.resp.Data.Step {
+		if step, ok := task.Steps[v.Name]; ok {
+			ua.resp.Data.Step[k].Name = autils.Translate(ua.ctx,
+				step.TaskMethod, step.TaskName, step.Translate)
 		}
 	}
 
