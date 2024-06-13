@@ -135,6 +135,8 @@ func (t *Task) BuildImportClusterTask(cls *proto.Cluster, opt *cloudprovider.Imp
 	importCluster.BuildRegisterKubeConfigStep(task)
 	// step2: import cluster nodes step
 	importCluster.BuildImportClusterNodesStep(task)
+	// step3: install cluster watch component
+	common.BuildWatchComponentTaskStep(task, cls, "")
 
 	// set current step
 	if len(task.StepSequence) == 0 {

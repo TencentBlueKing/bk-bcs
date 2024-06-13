@@ -838,7 +838,7 @@ func (t *Task) BuildRemoveNodesFromClusterTask(cls *proto.Cluster, nodes []*prot
 
 	// step1: removeNodesFromTKECluster remove nodes
 	removeNodesTask.BuildRemoveNodesFromClusterStep(task)
-	removeNodesTask.BuildCheckClusterCleanNodsStep(task)
+	removeNodesTask.BuildCheckClusterCleanNodesStep(task)
 	// step2: update node DB info
 	removeNodesTask.BuildUpdateRemoveNodeDBInfoStep(task)
 
@@ -1043,7 +1043,7 @@ func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.Node
 	// step1: cluster scaleIn to clean cluster nodes
 	if !isExternal {
 		cleanNodeGroupNodes.BuildCleanNodeGroupNodesStep(task)
-		cleanNodeGroupNodes.BuildCheckClusterCleanNodsStep(task)
+		cleanNodeGroupNodes.BuildCheckClusterCleanNodesStep(task)
 		common.BuildRemoveHostStep(task, opt.Cluster.BusinessID, nodeIPs)
 	} else {
 		cleanNodeGroupNodes.BuildRemoveExternalNodesStep(task)

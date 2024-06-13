@@ -178,23 +178,23 @@ func (vm *VPCManager) CheckConflictInVpcCidr(vpcID string, cidr string,
 }
 
 // AllocateOverlayCidr allocate overlay cidr
-func (c *VPCManager) AllocateOverlayCidr(vpcId string, cluster *proto.Cluster, cidrLens []uint32,
+func (vm *VPCManager) AllocateOverlayCidr(vpcId string, cluster *proto.Cluster, cidrLens []uint32,
 	reservedBlocks []*net.IPNet, opt *cloudprovider.CommonOption) ([]string, error) {
 	return nil, nil
 }
 
 // AddClusterOverlayCidr add cidr to cluster
-func (c *VPCManager) AddClusterOverlayCidr(clusterId string, cidrs []string, opt *cloudprovider.CommonOption) error {
+func (vm *VPCManager) AddClusterOverlayCidr(clusterId string, cidrs []string, opt *cloudprovider.CommonOption) error {
 	return nil
 }
 
 // GetVpcIpSurplus get vpc ipSurplus
-func (c *VPCManager) GetVpcIpSurplus(
+func (vm *VPCManager) GetVpcIpSurplus(
 	vpcId string, ipType string, reservedBlocks []*net.IPNet, opt *cloudprovider.CommonOption) (uint32, error) {
 	return 0, nil
 }
 
 // GetOverlayClusterIPSurplus get cluster overlay ipSurplus
-func (c *VPCManager) GetOverlayClusterIPSurplus(clusterId string, opt *cloudprovider.CommonOption) (uint32, error) {
+func (vm *VPCManager) GetOverlayClusterIPSurplus(clusterId string, opt *cloudprovider.CommonOption) (uint32, error) {
 	return 0, nil
 }

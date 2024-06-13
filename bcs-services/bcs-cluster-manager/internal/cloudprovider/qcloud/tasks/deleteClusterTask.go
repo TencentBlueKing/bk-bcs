@@ -203,7 +203,7 @@ func CleanClusterDBInfoTask(taskID string, stepName string) error {
 	return nil
 }
 
-func handleClusterCacheGrCidrs(taskId string, cls *cmproto.Cluster) error {
+func handleClusterCacheGrCidrs(taskId string, cls *cmproto.Cluster) error { // nolint
 	cidrs := make([]string, 0)
 	if cls.GetNetworkSettings().GetClusterIPv4CIDR() != "" {
 		cidrs = append(cidrs, cls.GetNetworkSettings().GetClusterIPv4CIDR())

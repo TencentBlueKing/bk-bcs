@@ -38,7 +38,7 @@ var secretTmpl = `global:
     {{- range .KeysB64 }}
       - {{ . }}
     {{- end }}
-    rootToken: {{ .RootToken }}`
+    token: {{ .RootToken }}`
 
 func initCmd() *cobra.Command {
 	cmd := &cobra.Command{

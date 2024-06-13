@@ -85,7 +85,8 @@
             }">
             <template #default="{ row }">
               <div v-if="row.client" class="release_change_status">
-                <div :class="['dot', row.client.spec.release_change_status]"></div>
+                <Spinner v-if="row.client.spec.release_change_status === 'Processing'" class="spinner-icon" />
+                <div v-else :class="['dot', row.client.spec.release_change_status]"></div>
                 <span>
                   {{ CLIENT_STATUS_MAP[row.client.spec.release_change_status as keyof typeof CLIENT_STATUS_MAP] }}
                 </span>
@@ -231,7 +232,7 @@
 <script lang="ts" setup>
   import { ref, watch, onBeforeMount, onBeforeUnmount } from 'vue';
   import { useRoute, useRouter } from 'vue-router';
-  import { Share, InfoLine } from 'bkui-vue/lib/icon';
+  import { Share, InfoLine, Spinner } from 'bkui-vue/lib/icon';
   import { storeToRefs } from 'pinia';
   import { Tag } from 'bkui-vue';
   import { getClientQueryList } from '../../../../api/client';
@@ -322,6 +323,7 @@
     () => searchQuery.value.search,
     (val) => {
       isSearchEmpty.value = Object.keys(val!).length !== 0;
+      pagination.value.current = 1;
       loadList();
     },
     { deep: true },
@@ -366,7 +368,11 @@
   });
 
   const isRowSelectEnable = ({ row, isCheckAll }: any) =>
-    isCheckAll || !(row.client.spec && row.client.spec.release_change_status !== 'Failed');
+    isCheckAll ||
+    !(
+      row.client.spec &&
+      (row.client.spec.release_change_status !== 'Failed' || row.client.spec.online_status !== 'Online')
+    );
 
   const settings = ref({
     trigger: 'click',
@@ -466,6 +472,32 @@
   //     '客户端每 15 秒会向服务端发送一次心跳数据，如果服务端连续3个周期没有接收到客户端心跳数据，视客户端为离线状态',
   // };
 
+  const sortTableData = (tableData: any) => {
+    // 定义状态顺序
+    const statusOrder = {
+      Processing: 0, // 拉取中
+      Failed: 1, // 失败
+      Success: 2, // 成功
+    };
+
+    // 根据状态顺序排序表格数据
+    tableData.sort((a: any, b: any) => {
+      const statusA = a.client.spec.release_change_status;
+      const statusB = b.client.spec.release_change_status;
+
+      if (statusOrder[statusA as keyof typeof statusOrder] < statusOrder[statusB as keyof typeof statusOrder]) {
+        return -1;
+      }
+      if (statusOrder[statusA as keyof typeof statusOrder] > statusOrder[statusB as keyof typeof statusOrder]) {
+        return 1;
+      }
+      // 如果状态相同，则保持原顺序
+      return 0;
+    });
+
+    return tableData;
+  };
+
   const loadList = async () => {
     const params: IClinetCommonQuery = {
       start: pagination.value.limit * (pagination.value.current - 1),
@@ -476,11 +508,12 @@
     try {
       listLoading.value = true;
       const res = await getClientQueryList(bkBizId.value, appId.value, params);
-      tableData.value = res.data.details;
+      tableData.value = sortTableData(res.data.details);
       tableData.value.forEach((item: any) => {
         const { client } = item;
         client.labels = Object.entries(JSON.parse(client.spec.labels)).map(([key, value]) => ({ key, value }));
       });
+      pagination.value.count = res.data.count;
     } catch (error) {
       console.error(error);
     } finally {
@@ -521,7 +554,7 @@
   };
 
   const handleFilter = ({ checked, index }: any) => {
-    if (index === 4) {
+    if (index === 5) {
       // 调整最近一次拉取配置筛选条件
       clientStore.$patch((state) => {
         state.searchQuery.search.release_change_status = [...checked];
@@ -562,7 +595,7 @@
   const handleSelectAll = ({ checked }: { checked: boolean }) => {
     if (checked) {
       tableData.value.forEach((item: any) => {
-        if (item.client.spec.release_change_status !== 'Failed') return;
+        if (item.client.spec.release_change_status !== 'Failed' && item.spec.online_status !== 'Online') return;
         if (!selectedClient.value.find((selected) => selected.id === item.client.id)) {
           selectedClient.value.push({
             id: item.client.id,
@@ -598,13 +631,17 @@
       const index = selectedClient.value.findIndex((item) => item.id === id);
       if (index > -1) {
         selectedClient.value.splice(index, 1);
+        tableRef.value.toggleRowSelection(
+          tableData.value.find((item: any) => item.client.id === id),
+          false,
+        );
       }
     });
-    loadList();
+    pollClientStatus(ids, true);
   };
 
   // 当有客户端状态处于处理中时 开启轮询
-  const pollClientStatus = async (ids: number[]) => {
+  const pollClientStatus = async (ids: number[], isRetry = false) => {
     const params: IClinetCommonQuery = {
       limit: ids.length,
       search: {
@@ -614,7 +651,7 @@
     try {
       const res = await getClientQueryList(bkBizId.value, appId.value, params);
       res.data.details.forEach((item: any) => {
-        if (item.client.spec.release_change_status !== 'Processing') {
+        if (isRetry || item.client.spec.release_change_status !== 'Processing') {
           const pollClient = tableData.value.find((tableItem: any) => tableItem.client.id === item.client.id);
           pollClient.client.spec.release_change_status = item.client.spec.release_change_status;
           pollClient.client.spec.resource = item.client.spec.resource;
@@ -705,11 +742,12 @@
     display: flex;
     align-items: center;
     .spinner-icon {
-      font-size: 12px;
-      margin-right: 10px;
+      font-size: 14px;
+      margin: 0 7px 0 1px;
+      color: #3a84ff;
     }
     .dot {
-      margin-right: 10px;
+      margin: 0 10px 0 4px;
       width: 8px;
       height: 8px;
       background: #f0f1f5;

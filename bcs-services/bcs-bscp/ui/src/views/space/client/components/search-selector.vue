@@ -335,9 +335,11 @@
           label: JSON.stringify(val.label),
           heartTime: searchQuery.value.last_heartbeat_time,
         };
-        query.pull_time = `${dateTime.value[0]} - ${dateTime.value[1]}`;
-        delete query.start_pull_time;
-        delete query.end_pull_time;
+        if (query.start_pull_time) {
+          query.pull_time = `${dateTime.value[0]} - ${dateTime.value[1]}`;
+          delete query.start_pull_time;
+          delete query.end_pull_time;
+        }
         handleAddRecentSearch();
         router.replace({
           query,

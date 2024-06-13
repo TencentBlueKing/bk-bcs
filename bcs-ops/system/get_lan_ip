@@ -73,17 +73,18 @@ _on_cloud() {
 }
 
 _on_baremetal() {
-  if ! ip route show | grep -q "default via"; then
-    error "fail to obtain LAN_IP, default route missing"  >&2
-    exit 2
-  fi
-  LAN_IP=$(ip -4 -o route get 10/8 | sed -n 's/.*src \([0-9.]\+\).*/\1/p')
-  if [[ -n $LAN_IP ]]; then
-    echo "$LAN_IP"
+  if ip route show | grep -q "default via"; then
+    LAN_IP=$(ip -4 -o route get 10/8 | sed -n 's/.*src \([0-9.]\+\).*/\1/p')
+      if [[ -n $LAN_IP ]]; then
+        echo "$LAN_IP"
+        return 0
+      fi
+      error "fail to obtain LAN_IP"  >&2
+      exit 1
+  else
+    LAN_IP=$(hostname -I |awk ' { print $1 } ')
     return 0
   fi
-  error "fail to obtain LAN_IP"  >&2
-  exit 1
 }
 
 _on_baremetal_v6() {

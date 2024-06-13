@@ -768,7 +768,7 @@ func (t *Task) BuildRemoveNodesFromClusterTask(cls *proto.Cluster, nodes []*prot
 	// step2: removeNodesFromTKECluster remove nodes
 	removeNodesTask.BuildRemoveNodesFromClusterStep(task)
 	// step3: check deleting node status
-	removeNodesTask.BuildCheckClusterCleanNodsStep(task)
+	removeNodesTask.BuildCheckClusterCleanNodesStep(task)
 	// step4: update node DB info
 	removeNodesTask.BuildUpdateRemoveNodeDBInfoStep(task)
 	// step5: remove nodes from cmdb
@@ -946,7 +946,7 @@ func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.Node
 	// step2: delete cluster group nodes
 	cleanNodeGroupNodes.BuildCleanNodeGroupNodesStep(task)
 	// step3: check deleting node status
-	cleanNodeGroupNodes.BuildCheckClusterCleanNodsStep(task)
+	cleanNodeGroupNodes.BuildCheckClusterCleanNodesStep(task)
 	// step4: remove nodes from cmdb
 	common.BuildRemoveHostStep(task, opt.Cluster.BusinessID, nodeIPs)
 
