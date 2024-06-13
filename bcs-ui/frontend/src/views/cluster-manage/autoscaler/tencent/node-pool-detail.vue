@@ -255,6 +255,7 @@ import UserAction from '../user-action.vue';
 
 import { nodemanCloudList } from '@/api/base';
 import { cloudsZones } from '@/api/modules/cluster-manager';
+import BcsContent from '@/components/layout/Content.vue';
 import LoadingIcon from '@/components/loading-icon.vue';
 import StatusIcon from '@/components/status-icon';
 import useChainingRef from '@/composables/use-chaining';
@@ -263,7 +264,6 @@ import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store/index';
 import { useClusterInfo, useClusterList } from '@/views/cluster-manage/cluster/use-cluster';
-import BcsContent from '@/views/cluster-manage/components/bcs-content.vue';
 import HeaderNav from '@/views/cluster-manage/components/header-nav.vue';
 
 export default defineComponent({

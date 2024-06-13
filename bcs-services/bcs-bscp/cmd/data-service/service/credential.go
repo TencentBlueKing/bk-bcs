@@ -69,15 +69,16 @@ func (s *Service) CreateCredential(ctx context.Context, req *pbds.CreateCredenti
 func (s *Service) ListCredentials(ctx context.Context, req *pbds.ListCredentialReq) (*pbds.ListCredentialResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
-	opt := &types.BasePage{Start: req.Start, Limit: uint(req.Limit)}
+	opt := &types.BasePage{Start: req.Start, Limit: uint(req.Limit), All: req.All}
 	if err := opt.Validate(types.DefaultPageOption); err != nil {
 		return nil, err
 	}
 
 	// StrToUint32Slice the comma separated string goes to uint32 slice
 	topIds, _ := tools.StrToUint32Slice(req.TopIds)
-	details, count, err := s.dao.Credential().List(kt, req.BizId, req.SearchKey, opt, topIds)
 
+	details, count, err := s.dao.Credential().List(kt, req.BizId, req.SearchKey, opt, topIds,
+		req.EncCredential, req.Enable)
 	if err != nil {
 		logs.Errorf("list credential failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err

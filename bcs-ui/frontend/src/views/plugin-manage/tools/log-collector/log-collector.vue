@@ -1,6 +1,6 @@
 <template>
-  <div v-bkloading="{ isLoading: loading }">
-    <Header>
+  <div class="flex flex-col h-full" v-bkloading="{ isLoading: loading }">
+    <ContentHeader>
       <div class="flex items-center">
         {{ $t('nav.log') }}
         <ClusterSelect
@@ -98,8 +98,8 @@
           </bk-form-item>
         </bk-form>
       </bcs-dialog>
-    </Header>
-    <div class="pb-[16px] max-h-[calc(100vh-104px)] overflow-auto" :key="clusterId">
+    </ContentHeader>
+    <div class="flex-1 pb-[16px] overflow-auto" :key="clusterId">
       <bcs-exception type="empty" v-if="!onsData.status && !loading">
         <div>{{ isSharedOrVirtual ? $t('logCollector.msg.notEnable1') : $t('logCollector.msg.notEnable') }}</div>
         <!-- shared 和 virtual集群不支持启用 -->
@@ -384,7 +384,7 @@ import $bkMessage from '@/common/bkmagic';
 import { LOG_COLLECTOR } from '@/common/constant';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
-import Header from '@/components/layout/Header.vue';
+import ContentHeader from '@/components/layout/Header.vue';
 import Row from '@/components/layout/Row.vue';
 import LoadingIcon from '@/components/loading-icon.vue';
 import PopoverSelector from '@/components/popover-selector.vue';
@@ -400,7 +400,7 @@ import $router from '@/router';
 const { curClusterId, clusterList } = useCluster();
 
 const clusterId = ref(curClusterId.value);
-const curCluster = computed(() => clusterList.value?.find(item => item.clusterID === clusterId.value) || {});
+const curCluster = computed(() => clusterList.value?.find(item => item.clusterID === clusterId.value));
 const isSharedOrVirtual = computed(() => curCluster.value?.is_shared || curCluster.value?.clusterType === 'virtual');
 // 显示编辑态
 const showEditStatus = ref(false);

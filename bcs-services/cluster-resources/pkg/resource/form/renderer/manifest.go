@@ -34,27 +34,31 @@ import (
 
 // ManifestRenderer 渲染并加载资源配置模板
 type ManifestRenderer struct {
-	ctx        context.Context
-	formData   map[string]interface{}
-	clusterID  string
-	kind       string
-	action     string
-	apiVersion string
-	tmpl       *template.Template
-	manifest   map[string]interface{}
+	ctx            context.Context
+	formData       map[string]interface{}
+	clusterID      string
+	kind           string
+	action         string
+	apiVersion     string
+	tmpl           *template.Template
+	manifest       map[string]interface{}
+	manifestString string
+	isTemplateFile bool
 }
 
 // NewManifestRenderer xxx
 func NewManifestRenderer(
-	ctx context.Context, formData map[string]interface{}, clusterID, kind, action string,
-) *ManifestRenderer {
+	ctx context.Context, formData map[string]interface{}, clusterID, apiVersion, kind, action string,
+	isTemplateFile bool) *ManifestRenderer {
 	return &ManifestRenderer{
-		ctx:       ctx,
-		formData:  formData,
-		clusterID: clusterID,
-		kind:      kind,
-		action:    action,
-		manifest:  map[string]interface{}{},
+		ctx:            ctx,
+		formData:       formData,
+		clusterID:      clusterID,
+		apiVersion:     apiVersion,
+		kind:           kind,
+		action:         action,
+		manifest:       map[string]interface{}{},
+		isTemplateFile: isTemplateFile,
 	}
 }
 
@@ -83,17 +87,44 @@ func (r *ManifestRenderer) Render() (map[string]interface{}, error) {
 	return r.manifest, nil
 }
 
+// RenderString 渲染表单数据，返回 Manifest 字符串
+func (r *ManifestRenderer) RenderString() (string, error) {
+	for _, f := range []func() error{
+		// 1. 获取资源对应版本
+		r.setVersionAndKind,
+		// 2. 校验表单数据
+		r.validate,
+		// 3. 添加 EditMode 注解标识
+		r.setEditMode,
+		// 4. 在注解中添加用户信息
+		r.setUserInfo,
+		// 5. 数据清洗，去除表单默认值等
+		r.cleanFormData,
+		// 6. 加载模板并初始化
+		r.initTemplate,
+		// 7. 渲染模板并转换格式
+		r.render2String,
+	} {
+		if err := f(); err != nil {
+			return "", err
+		}
+	}
+	return r.manifestString, nil
+}
+
 // setVersionAndKind 获取资源对应 APIVersion && Kind 并更新 Renderer 配置
 func (r *ManifestRenderer) setVersionAndKind() (err error) {
 	// 以 FormData 中的 ApiVersion 为准，若为空，则自动填充 preferred version
-	r.apiVersion = mapx.GetStr(r.formData, "metadata.apiVersion")
-	if r.apiVersion == "" {
+	if v := mapx.GetStr(r.formData, "metadata.apiVersion"); v != "" {
+		r.apiVersion = v
+	}
+	if r.apiVersion == "" && r.clusterID != "" {
 		if r.apiVersion, err = res.GetResPreferredVersion(r.ctx, r.clusterID, r.kind); err != nil {
 			return err
 		}
-		if err = mapx.SetItems(r.formData, "metadata.apiVersion", r.apiVersion); err != nil {
-			return err
-		}
+	}
+	if err = mapx.SetItems(r.formData, "metadata.apiVersion", r.apiVersion); err != nil {
+		return err
 	}
 	// 预设资源 Kind
 	if err = mapx.SetItems(r.formData, "metadata.kind", r.kind); err != nil {
@@ -161,7 +192,11 @@ func (r *ManifestRenderer) cleanFormData() error {
 
 // initTemplate 加载模板并初始化
 func (r *ManifestRenderer) initTemplate() (err error) {
-	r.tmpl, err = initTemplate(envs.FormTmplFileBaseDir+"/manifest/", "*")
+	manifestDir := "/manifest/"
+	if r.isTemplateFile {
+		manifestDir = "/filetmpl/manifest/"
+	}
+	r.tmpl, err = initTemplate(envs.FormTmplFileBaseDir+manifestDir, "*")
 	return err
 }
 
@@ -175,9 +210,21 @@ func (r *ManifestRenderer) render2Map() error {
 		return errorx.New(errcode.General, i18n.GetMsg(r.ctx, "渲染模板失败：%v"), err)
 	}
 
-	log.Info(
-		r.ctx, "render manifest template <cluster %s, kind: %s, namespace: %s, name: %s>",
-		r.clusterID, r.kind, mapx.GetStr(r.formData, "metadata.namespace"), mapx.GetStr(r.formData, "metadata.name"),
-	)
+	log.Info(r.ctx, "render manifest template <kind: %s, name: %s>", r.kind, mapx.GetStr(r.formData, "metadata.name"))
 	return yaml.Unmarshal(buf.Bytes(), r.manifest)
+}
+
+// render2String 渲染模板并转换成 String 格式
+func (r *ManifestRenderer) render2String() error {
+	// 渲染，转换并写入数据（模板名称格式：{r.kind}.yaml）
+	var buf bytes.Buffer
+	err := r.tmpl.ExecuteTemplate(&buf, r.kind+".yaml", r.formData)
+	if err != nil {
+		log.Warn(r.ctx, "failed to render template：%v", err)
+		return errorx.New(errcode.General, i18n.GetMsg(r.ctx, "渲染模板失败：%v"), err)
+	}
+
+	log.Info(r.ctx, "render manifest template <kind: %s, name: %s>", r.kind, mapx.GetStr(r.formData, "metadata.name"))
+	r.manifestString = buf.String()
+	return nil
 }

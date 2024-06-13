@@ -180,6 +180,7 @@ export interface IPkgTreeItem {
   checked?: boolean;
   disabled?: boolean;
   indeterminate?: boolean;
+  parentName?: string;
 }
 
 // 模板下多个版本名称

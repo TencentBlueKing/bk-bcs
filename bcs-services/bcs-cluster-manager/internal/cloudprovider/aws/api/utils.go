@@ -272,7 +272,7 @@ func CreateTagSpecs(instanceTags map[string]*string) []*ec2.LaunchTemplateTagSpe
 	}
 }
 
-func generateAwsCreateLaunchTemplateInput(input *CreateLaunchTemplateInput) *ec2.CreateLaunchTemplateInput {
+func buildLaunchTemplateData(input *CreateLaunchTemplateInput) *ec2.CreateLaunchTemplateInput {
 	awsInput := &ec2.CreateLaunchTemplateInput{
 		LaunchTemplateName: input.LaunchTemplateName,
 		TagSpecifications:  generateAwsTagSpecs(input.TagSpecifications),

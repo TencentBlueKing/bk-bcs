@@ -1,0 +1,76 @@
+title: storageClass
+type: object
+properties:
+  {{- include "common.metadata" . | indent 2 }}
+  spec:
+    title: {{ i18n "配置信息" .lang }}
+    type: object
+    properties:
+      setAsDefault:
+        title: {{ i18n "设置为默认类" .lang }}
+        type: boolean
+      provisioner:
+        title: Provisioner
+        type: string
+      volumeBindingMode:
+        title: VolumeBindingMode
+        type: string
+        ui:component:
+          name: select
+          props:
+            clearable: false
+            searchable: true
+            datasource:
+              - label: Immediate
+                value: Immediate
+              - label: WaitForFirstConsumer
+                value: WaitForFirstConsumer
+      reclaimPolicy:
+        title: ReclaimPolicy
+        type: string
+        ui:component:
+          name: select
+          props:
+            clearable: true
+            searchable: true
+            datasource:
+              - label: Delete
+                value: Delete
+              - label: Retain
+                value: Retain
+      params:
+        title: Parameters
+        type: array
+        description: {{ i18n "<a href='https://kubernetes.io/zh-cn/docs/concepts/storage/storage-classes/#parameters' style='color:#1E90FF;' target='view_frame'>参数配置参考文档</a>" .lang }}
+        items:
+          type: object
+          properties:
+            key:
+              title: {{ i18n "键" .lang }}
+              type: string
+              ui:rules:
+                - required
+                - maxLength128
+            value:
+              title: {{ i18n "值" .lang }}
+              type: string
+              ui:rules:
+                - maxLength128
+        ui:component:
+          name: bfArray
+      mountOpts:
+          title: MountOptions
+          type: array
+          items:
+            type: string
+            ui:rules:
+              - maxLength250
+          ui:component:
+            name: bfArray
+    ui:group:
+      props:
+        border: false
+        showTitle: true
+        type: card
+        verifiable: true
+        hideEmptyRow: true

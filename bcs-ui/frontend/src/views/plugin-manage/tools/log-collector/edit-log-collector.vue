@@ -2,7 +2,7 @@
   <!-- root dom loading有点问题 -->
   <div>
     <div
-      class="flex border border-[#DCDEE5] border-solid bg-[#fff] h-[calc(100vh-224px)]"
+      class="flex border border-[#DCDEE5] border-solid bg-[#fff]"
       v-bkloading="{ isLoading: loading }">
       <div class="w-[280px] log-border-r relative">
         <Row class="log-border-b px-[16px] h-[42px] text-[12px] bg-[#FAFBFD]">
@@ -27,12 +27,7 @@
           <span>{{ fromOldRule ? $t('logCollector.action.newRule') : $t('plugin.tools.create') }}</span>
         </div>
         <!-- 规则列表 -->
-        <div
-          :class="[
-            'overflow-auto',
-            (fromOldRule || !activeID) ? 'h-[calc(100vh-310px)]' : 'h-[calc(100vh-268px)]'
-          ]"
-          ref="listRef">
+        <div class="overflow-auto" ref="listRef">
           <div
             v-for="row in data"
             :key="row.id"
@@ -151,12 +146,7 @@
           type="warning"
           :title="$t('logCollector.msg.oldRuleToNewRule', [date])"
           v-if="fromOldRule" />
-        <div
-          :class="[
-            'py-[16px] pr-[16px] overflow-auto',
-            fromOldRule ? 'max-h-[calc(100vh-300px)]' : 'max-h-[calc(100vh-266px)]'
-          ]"
-          ref="formWrapperRef">
+        <div class="py-[16px] pr-[16px] overflow-auto" ref="formWrapperRef">
           <LogConllectorDetail :data="logData" v-if="!editable && activeID" />
           <LogForm
             :cluster-id="clusterId"

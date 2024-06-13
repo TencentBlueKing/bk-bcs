@@ -4,11 +4,12 @@
 import State from '../k8s-state';
 import mixinBaseList from '../mixins/mixin-base-list';
 
-import Header from '@/components/layout/Header.vue';
+import BcsContent from '@/components/layout/Content.vue';
+import Row from '@/components/layout/Row.vue';
 
 export default {
   name: 'K8SDaemonset',
-  components: { Header },
+  components: { BcsContent, Row },
   mixins: [mixinBaseList],
   data() {
     return {

@@ -73,9 +73,7 @@ export default function useDetail(options: IDetailOptions) {
   const additionalColumns = ref<any>([]);
   // 界面权限
   const pagePerms = computed(() => ({
-    create: webAnnotations.value?.perms?.page?.create_btn || {},
-    delete: webAnnotations.value?.perms?.page?.delete_btn || {},
-    update: webAnnotations.value?.perms?.page?.update_btn || {},
+    deleteBtn: webAnnotations.value?.perms?.page?.deleteBtn || {},
   }));
 
   const handleTabChange = (item) => {

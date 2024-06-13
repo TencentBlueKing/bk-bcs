@@ -292,6 +292,7 @@
 
   // 校验xml、yaml、json数据类型
   const validate = (val: string) => {
+    console.log(props.language, 'd');
     let markers: any[] = [];
     if (props.language === 'xml') {
       markers = validateXML(val);

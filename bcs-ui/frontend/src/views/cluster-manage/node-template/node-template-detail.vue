@@ -1,5 +1,5 @@
 <template>
-  <div class="detail p30" v-bkloading="{ isLoading: loading }">
+  <div class="detail px-[30px] py-[24px]" v-bkloading="{ isLoading: loading }">
     <div class="detail-title">
       {{ $t('generic.title.basicInfo') }}
     </div>

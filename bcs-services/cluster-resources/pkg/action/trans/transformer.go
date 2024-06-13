@@ -104,5 +104,5 @@ type FormDataTransformer struct {
 // ToManifest 转换成 Manifest
 func (t *FormDataTransformer) ToManifest() (map[string]interface{}, error) {
 	// ManifestRenderer Render 会标识 EditMode == form
-	return renderer.NewManifestRenderer(t.ctx, t.formData, t.clusterID, t.kind, t.action).Render()
+	return renderer.NewManifestRenderer(t.ctx, t.formData, t.clusterID, "", t.kind, t.action, false).Render()
 }

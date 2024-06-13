@@ -53,7 +53,11 @@ func GetVpcCIDRBlocks(opt *cloudprovider.CommonOption, vpcId string, assistantTy
 		return nil, fmt.Errorf("GetVpcCIDRBlocks DescribeVpcs[%s] empty", vpcId)
 	}
 
-	cidrs := []string{*vpcSet[0].CidrBlock}
+	cidrs := make([]string, 0)
+	if assistantType < 0 || assistantType == 0 {
+		cidrs = append(cidrs, *vpcSet[0].CidrBlock)
+	}
+
 	for _, v := range vpcSet[0].AssistantCidrSet {
 		// 获取所有辅助cidr, 不区分是 普通辅助cidr/容器辅助cidr
 		if assistantType < 0 && v.AssistantType != nil && v.CidrBlock != nil {

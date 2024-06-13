@@ -1,0 +1,36 @@
+{{ include "common.metadata" . }}
+- - group:
+      - - container:
+            grid-template-columns: "1fr 70px 1fr 70px"
+          group:
+            - [ "cnt", "." ]
+            - [ "updateStrategy" ]
+            - [ "maxSurge", "msUnit", "maxUnavailable", "muaUnit" ]
+            - [ "minReadySecs", "partition" ]
+            - [ "gracePeriodSecs", "." ]
+          prop: replicas
+      - - group:
+            - - group:
+                  - [ "enabled", "tmplName" ]
+                  - [ "args" ]
+                prop: preDeleteHook
+            - - group:
+                  - [ "enabled", "tmplName" ]
+                  - [ "args" ]
+                prop: preInplaceHook
+            - - group:
+                  - [ "enabled", "tmplName" ]
+                  - [ "args" ]
+                prop: postInplaceHook
+          prop: gracefulManage
+      - - group:
+            - [ "policy", "." ]
+          prop: deletionProtect
+      {{- include "workload.affinity" . | nindent 6 }}
+      {{- include "workload.toleration" . | nindent 6 }}
+      {{- include "workload.networking" . | indent 6 }}
+      {{- include "workload.security" . | indent 6 }}
+      {{- include "workload.other" . | indent 6 }}
+    prop: spec
+{{- include "container.containerGroup" . }}
+{{- include "workload.volume" . }}

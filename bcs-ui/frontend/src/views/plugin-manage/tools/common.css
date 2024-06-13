@@ -2,10 +2,6 @@
 @import '@/css/mixins/clearfix.css';
 @import '@/css/mixins/ellipsis.css';
 
-.biz-content-wrapper {
-    padding: 20px;
-}
-
 .biz-crd-title {
     display: inline-block;
     height: 60px;

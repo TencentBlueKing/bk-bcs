@@ -332,7 +332,7 @@ func (ca *CheckNodeAction) getNodeResultByNodeIP(nodeIP string, masterMapIPs map
 	nodeResult.ClusterID = node.ClusterID
 
 	// only handle not ca nodes
-	if len(node.ClusterID) != 0 && node.NodeGroupID == "" {
+	if len(node.ClusterID) != 0 && node.NodeGroupID == "" && node.Status == common.StatusRunning {
 		cluster, err := ca.model.GetCluster(ca.ctx, node.ClusterID)
 		if err == nil {
 			nodeResult.ClusterName = cluster.GetClusterName()
@@ -340,6 +340,9 @@ func (ca *CheckNodeAction) getNodeResultByNodeIP(nodeIP string, masterMapIPs map
 
 		// check node exist in cluster
 		if cluster.Status == common.StatusDeleted || !ca.checkNodeIPInCluster(node.ClusterID, node.InnerIP) {
+			blog.Infof("checkNodeIPInCluster[%s:%s:%s] ip not in cluster", node.ClusterID,
+				node.InnerIP, node.NodeID)
+
 			err = ca.model.DeleteClusterNodeByIP(ca.ctx, node.ClusterID, nodeIP)
 			if err != nil {
 				blog.Errorf("CheckNodeAction[%s] getNodeResultByNodeIP failed: %v", nodeIP, err)

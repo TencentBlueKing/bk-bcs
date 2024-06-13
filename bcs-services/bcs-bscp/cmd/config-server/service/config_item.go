@@ -31,6 +31,7 @@ import (
 	pbcommit "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/commit"
 	pbci "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/config-item"
 	pbcontent "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/content"
+	pbrci "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/released-ci"
 	pbds "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
 )
 
@@ -499,7 +500,6 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbcs.ListConfigItems
 			existingPaths = append(existingPaths, path.Join(v.Spec.Path, v.Spec.Name))
 		}
 	}
-
 	for _, v := range trc.GetDetails() {
 		if v.FileState != constant.FileStateDelete {
 			existingPaths = append(existingPaths, path.Join(v.Path, v.Name))
@@ -507,7 +507,6 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbcs.ListConfigItems
 	}
 
 	conflictNums, conflictPaths := checkExistingPathConflict(existingPaths)
-
 	for _, v := range rp.GetDetails() {
 		if v.FileState != constant.FileStateDelete {
 			v.IsConflict = conflictPaths[path.Join(v.Spec.Path, v.Spec.Name)]
@@ -681,30 +680,102 @@ func (s *Service) UndoConfigItem(ctx context.Context, req *pbcs.UndoConfigItemRe
 
 // checkExistingPathConflict Check existing path collections for conflicts.
 func checkExistingPathConflict(existing []string) (uint32, map[string]bool) {
-	var conflictNums uint32
 	conflictPaths := make(map[string]bool, len(existing))
-	count := len(existing) - 1
+	var conflictNums uint32
+	conflictMap := make(map[string]bool, 0)
+	// 遍历每一个路径
+	for i := 0; i < len(existing); i++ {
+		// 检查当前路径与后续路径之间是否存在冲突
+		for j := i + 1; j < len(existing); j++ {
+			if strings.HasPrefix(existing[j]+"/", existing[i]+"/") || strings.HasPrefix(existing[i]+"/", existing[j]+"/") {
+				// 相等也算冲突
+				if len(existing[j]) == len(existing[i]) {
+					conflictNums++
+				} else if len(existing[j]) < len(existing[i]) {
+					conflictMap[existing[j]] = true
+				} else {
+					conflictMap[existing[i]] = true
+				}
 
-	for k1 := 0; k1 <= count; k1++ {
-		conflict := false
-		for k2 := k1 + 1; k2 <= count; k2++ {
-			if len(existing[k1]) > len(existing[k2]) {
-				existing[k1], existing[k2] = existing[k2], existing[k1]
+				conflictPaths[existing[i]] = true
+				conflictPaths[existing[j]] = true
 			}
-			if strings.HasPrefix(existing[k2]+"/", existing[k1]+"/") {
-				conflictPaths[existing[k2]] = true
-				conflict = true
-				existing[k2], existing[count] = existing[count], existing[k2]
-				k2--
-				count--
-			}
-		}
-
-		if conflict {
-			conflictPaths[existing[k1]] = true
-			conflictNums++
 		}
 	}
 
-	return conflictNums, conflictPaths
+	return uint32(len(conflictMap)) + conflictNums, conflictPaths
+}
+
+// CompareConfigItemConflicts compare config item version conflicts
+func (s *Service) CompareConfigItemConflicts(ctx context.Context, req *pbcs.CompareConfigItemConflictsReq) (
+	*pbcs.CompareConfigItemConflictsResp, error) {
+
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.Update, ResourceID: req.AppId}, BizID: req.BizId},
+	}
+	err := s.authorizer.Authorize(grpcKit, res...)
+	if err != nil {
+		return nil, err
+	}
+
+	// 获取该服务未发布的版本
+	ci, err := s.client.DS.ListConfigItems(grpcKit.RpcCtx(), &pbds.ListConfigItemsReq{
+		BizId:      grpcKit.BizID,
+		AppId:      req.AppId,
+		All:        true,
+		WithStatus: true,
+		Status:     []string{constant.FileStateAdd, constant.FileStateRevise, constant.FileStateUnchange},
+	})
+	if err != nil {
+		logs.Errorf("list config items failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	// 从服务获取发布的版本
+	rci, err := s.client.DS.ListReleasedConfigItems(grpcKit.RpcCtx(), &pbds.ListReleasedConfigItemsReq{
+		BizId:     req.BizId,
+		AppId:     req.OtherAppId,
+		ReleaseId: req.ReleaseId,
+		All:       true,
+	})
+	if err != nil {
+		logs.Errorf("list released config items failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	conflicts := make(map[string]bool)
+	for _, v := range ci.GetDetails() {
+		conflicts[path.Join(v.Spec.Path, v.Spec.Name)] = true
+	}
+
+	newConfigItem := func(v *pbrci.ReleasedConfigItem) *pbcs.CompareConfigItemConflictsResp_ConfigItem {
+		return &pbcs.CompareConfigItemConflictsResp_ConfigItem{
+			Id:        v.Id,
+			Name:      v.Spec.Name,
+			Path:      v.Spec.Path,
+			FileType:  v.Spec.FileType,
+			FileMode:  v.Spec.FileMode,
+			Memo:      v.Spec.Memo,
+			User:      v.Spec.Permission.User,
+			UserGroup: v.Spec.Permission.UserGroup,
+			Privilege: v.Spec.Permission.Privilege,
+			Sign:      v.CommitSpec.Content.Signature,
+			ByteSize:  v.CommitSpec.Content.ByteSize,
+		}
+	}
+
+	exist := make([]*pbcs.CompareConfigItemConflictsResp_ConfigItem, 0)
+	nonExist := make([]*pbcs.CompareConfigItemConflictsResp_ConfigItem, 0)
+	for _, v := range rci.GetDetails() {
+		if conflicts[path.Join(v.Spec.Path, v.Spec.Name)] {
+			exist = append(exist, newConfigItem(v))
+		} else {
+			nonExist = append(nonExist, newConfigItem(v))
+		}
+	}
+
+	return &pbcs.CompareConfigItemConflictsResp{Exist: exist, NonExist: nonExist}, nil
 }

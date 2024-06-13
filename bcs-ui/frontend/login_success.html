@@ -82,16 +82,9 @@
         </div>
     </body>
     <script>
-        document.domain = '{{ SESSION_COOKIE_DOMAIN }}'
-
-        document.addEventListener('DOMContentLoaded', function () {
-            parent.postMessage('closeLoginModal')
-            // var is_ajax = window.location.href.match(/is\_ajax\=(\d+)/)
-            // if (is_ajax && is_ajax[1]) {
-            //     parent.bus.$emit('close-login-modal')
-            // } else {
-            //     console.warn('#TODO  实现页面跳转')
-            // }
-        })
+        // 成功登录后关闭弹窗
+        // opener方法由 @blueking/login-modal 包注入的，父窗口的引用
+        window.opener && window.opener.location.reload()
+        window.close()
     </script>
 </html>

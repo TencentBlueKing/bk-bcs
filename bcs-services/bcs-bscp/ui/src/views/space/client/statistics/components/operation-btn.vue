@@ -51,6 +51,7 @@
           class="action-icon bk-bscp-icon icon-download"
           v-bk-tooltips="{ content: t('设置下钻') }" />
       </template>
+      <bk-option :id="''">{{ $t('无') }}</bk-option>
       <bk-option
         v-for="item in allLabel"
         :id="item"
@@ -77,6 +78,9 @@
     allLabel?: string[];
     primaryDimension?: string;
     needDown?: boolean;
+    selectDimension?: string[];
+    drillDimension?: string;
+    isStack?: boolean;
   }>();
 
   const emits = defineEmits([
@@ -88,15 +92,22 @@
     'selectDownDimension',
   ]);
 
-  const chartShowType = ref('tile');
-  const minorDimension = ref([`${props.primaryDimension}`]);
-  const downDimension = ref('');
+  const chartShowType = ref(props.isStack ? 'pile' : 'tile');
+  const minorDimension = ref(props.selectDimension || []);
+  const downDimension = ref(props.drillDimension || '');
   const downDimensionSelectRef = ref();
 
   watch(
     () => chartShowType.value,
     (val) => {
       emits('toggleChartShowType', val);
+    },
+  );
+
+  watch(
+    () => props.selectDimension,
+    () => {
+      minorDimension.value = props.selectDimension || [];
     },
   );
 

@@ -107,6 +107,7 @@ func newtask() *Task {
 	task.works[checkClusterNodesStatusStep.StepMethod] = tasks.CheckClusterNodesStatusTask
 
 	task.works[applyExternalNodeMachinesStep.StepMethod] = tasks.ApplyExternalNodeMachinesTask
+	task.works[checkExternalNodesEmptyStep.StepMethod] = tasks.CheckExternalNodesEmptyTask
 	// move nodes to nodeGroup task
 
 	return task
@@ -931,7 +932,9 @@ func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.Node
 	}
 
 	var (
-		nodeIPs, nodeIDs, deviceIDs = make([]string, 0), make([]string, 0), make([]string, 0)
+		// externalSystemIps for external node ips
+		nodeIPs            = make([]string, 0)
+		nodeIDs, deviceIDs = make([]string, 0), make([]string, 0)
 	)
 	for _, node := range nodes {
 		nodeIPs = append(nodeIPs, node.InnerIP)
@@ -1205,6 +1208,8 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 	// setting all steps details
 	updateDesiredNodesTask := &UpdateDesiredNodesTaskOption{
 		Group:    group,
+		Cluster:  opt.Cluster,
+		Cloud:    opt.Cloud,
 		Desired:  desired,
 		Operator: opt.Operator,
 	}
@@ -1212,7 +1217,9 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 	if isExternal {
 		// step1. call resource interface to apply externalNodes
 		updateDesiredNodesTask.BuildApplyExternalNodeMachinesStep(task)
-		// step2. get external nodes script
+		// step2. check external nodes empty
+		updateDesiredNodesTask.BuildCheckExternalNodesEmptyStep(task)
+		// step3. get external nodes script
 		updateDesiredNodesTask.BuildGetExternalNodeScriptStep(task)
 	} else {
 		// step1. call qcloud interface to set desired nodes

@@ -1,0 +1,6 @@
+{{ include "common.metadata" . }}
+- - group:
+      - [ "claimType", "accessModes" ]
+      - [ ".", "." ]
+      - [ ".", "." ]
+    prop: spec

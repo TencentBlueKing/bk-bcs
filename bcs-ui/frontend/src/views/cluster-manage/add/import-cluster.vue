@@ -1,5 +1,5 @@
 <template>
-  <section class="create-import-cluster bcs-content-wrapper !overflow-auto">
+  <section class="create-import-cluster !overflow-auto">
     <BkForm
       :label-width="labelWidth"
       :model="importClusterInfo"

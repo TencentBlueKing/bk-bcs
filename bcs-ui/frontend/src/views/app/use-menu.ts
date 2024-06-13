@@ -252,12 +252,6 @@ export default function useMenu() {
           route: 'clusterMain',
           id: 'CLUSTER',
         },
-        // {
-        //   title: $i18n.t('nav.nodeList'),
-        //   icon: 'bcs-icon-jd-node',
-        //   route: 'nodeMain',
-        //   id: 'NODE',
-        // },
         {
           title: $i18n.t('nav.nodeTemplate'),
           icon: 'bcs-icon-mobanpeizhi',

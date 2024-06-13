@@ -74,17 +74,21 @@ export default function useContentHeight(config: IConfig | IConfig[]) {
     });
   };
 
+  // 重新计算高度
+  const init = () => {
+    const configList = parseToArr(config);
+    configList.forEach(item => setContentHeight(item));
+  };
+
   onMounted(() => {
     const observer = new MutationObserver(throttle(() => {
-      const configList = parseToArr(config);
-      configList.forEach(item => setContentHeight(item));
+      init();
     }, 300, {
       leading: false,
       trailing: true,
     }));
 
     observer.observe(document.body, {
-      subtree: true, // 性能问题
       childList: true,
       attributes: true,
     });
@@ -97,5 +101,6 @@ export default function useContentHeight(config: IConfig | IConfig[]) {
 
   return {
     style,
+    init,
   };
 }

@@ -56,8 +56,9 @@ func (dc *DBMClient) DoPri(op *common.Option, env *common.DBPrivEnv) error {
 		AccessDB:       env.DbName,
 		SourceIPs:      op.PrivilegeIP,
 		TargetInstance: env.TargetDb,
-		Operator:       dc.Operator,
-		Type:           env.CallType,
+		// 暂时不生效，后续等dbm完善接口再修改为实际用户
+		Operator: "",
+		Type:     env.CallType,
 	}
 
 	_, _, errs := gorequest.New().

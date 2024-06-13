@@ -31,10 +31,12 @@ import (
 
 // Manager 管理所有Repo， 通过轮训定时拉取最新资源。 当发生更新时， 通过patch注解的方式通知appMonitor进入reconcile流程
 type Manager struct {
+	// 定时pull所有仓库， 判断场景是否更新
 	ScenarioRefreshFrequency time.Duration
-	RepoRefreshFrequency     time.Duration
-	Cli                      client.Client
-	argoDB                   db.ArgoDB
+	// 根据集群内AppMonitor刷新Repo缓存 (如某个Repo已经不被任何AppMonitor引用，则从缓存中删除)
+	RepoRefreshFrequency time.Duration
+	Cli                  client.Client
+	argoDB               db.ArgoDB
 
 	repoStore map[string]Repo
 	repoMutex sync.RWMutex

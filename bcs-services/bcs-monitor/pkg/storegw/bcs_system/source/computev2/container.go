@@ -64,6 +64,7 @@ func (m *ComputeV2) GetContainerCPUUsage(ctx context.Context, projectID, cluster
 // GetContainerMemoryUsed 容器内存使用率
 func (m *ComputeV2) GetContainerMemoryUsed(ctx context.Context, projectID, clusterID, namespace, podname string,
 	containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
+	// nolint goconst
 	promql :=
 		`max by(container_name) (%<prefix>sscontainer_memory_working_set_bytes{cluster_id="%<clusterID>s", ` +
 			`namespace="%<namespace>s", pod_name="%<podname>s", container_name=~"%<containerName>s", %<provider>s})`

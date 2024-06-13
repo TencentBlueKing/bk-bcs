@@ -1,13 +1,17 @@
 <!-- eslint-disable max-len -->
 <template>
-  <div class="add-tke-cluster">
-    <Header :title="$t('cluster.button.addCluster')" :desc="$t('generic.title.createPublicCluster')" ref="contentHeaderRef" />
-    <div class="pt-[8px] bg-[#f0f1f5]">
+  <BcsContent
+    :padding="0"
+    class="add-tke-cluster"
+    :title="$t('cluster.button.addCluster')"
+    :desc="$t('generic.title.createPublicCluster')">
+    <div class="h-full pt-[8px] bg-[#f0f1f5]">
       <bcs-tab
         :label-height="42"
         :validate-active="false"
         :active.sync="activeTabName"
-        type="card-tab">
+        type="card-tab"
+        class="h-full">
         <!-- 基本信息 -->
         <bcs-tab-panel :name="steps[0].name">
           <template #label>
@@ -95,7 +99,7 @@
         </bcs-tab-panel>
       </bcs-tab>
     </div>
-  </div>
+  </BcsContent>
 </template>
 <script lang="ts" setup>
 import { merge } from 'lodash';
@@ -112,22 +116,13 @@ import { ClusterDataInjectKey, DeepPartial, IClusterData, IInstanceItem  } from 
 import { createCluster } from '@/api/modules/cluster-manager';
 import $bkMessage from '@/common/bkmagic';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
-import Header from '@/components/layout/Header.vue';
+import BcsContent from '@/components/layout/Content.vue';
 import { useProject } from '@/composables/use-app';
-import useCalcHeight from '@/composables/use-calc-height';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store';
 
-// 设置tab内容高度
-const contentHeaderRef = ref();
-useCalcHeight({
-  el: '.add-tke-cluster .bk-tab-section',
-  offset: 48 + 8, // 48: footer高度，8: 内边距
-  calc: ['#bcs-notice-com', '.bk-navigation-header', contentHeaderRef, '.add-tke-cluster .bk-tab-header'],
-});
-
-const cloudID = 'tencentPublicCloud';
+const cloudID: CloudID = 'tencentPublicCloud';
 
 const steps = ref([
   { name: 'basicInfo', disabled: false, isErr: false },
@@ -271,6 +266,7 @@ const handleCreateCluster = async () => {
 }
 >>> .bk-tab-section {
   overflow: auto;
+  height: calc(100% - 80px);
 }
 
 >>> .k8s-form .bk-form-content {

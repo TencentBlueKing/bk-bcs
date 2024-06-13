@@ -15,7 +15,7 @@ package model
 
 // Metadata k8s 资源基础信息
 type Metadata struct {
-	APIVersion  string       `structs:"apiVersion"`
+	APIVersion  string       `structs:"apiVersion,omitempty"`
 	Kind        string       `structs:"kind"`
 	Name        string       `structs:"name"`
 	Namespace   string       `structs:"namespace"`

@@ -680,13 +680,6 @@ cluster:
       clusterVersion: Version
       desc: Description
       desc1: Cluster Desc
-      params:
-        text: Additional parameter
-        dockerPath: Docker data directory
-        dockerVersion: Docker version
-        kubeletPath: Kubelet data directory
-        k8sServiceCIDR: Cluster service network segment
-        k8sPodCIDR: Cluster POD network segment
       region: Region
       initNodeTemplate: Node initialization template
       Kubernetes:
@@ -729,6 +722,8 @@ cluster:
         deficiencyIpNumTips: The number of available container network IP is insufficient
         availableIpNum: 'Number of ip available: {0}'
         availableIpNum2: 'Available container network IP {num}'
+        businessSpecificVPC: Business-specific VPC
+        publicVPC: Public VPC
       networkSetting1:
         text: IP resource
         maxNodePodNum: Number of pod ip
@@ -790,7 +785,6 @@ cluster:
       coefficient: Factor
       cpuQuota: CPU (Cores)
       memQuota: MEM (GiB)
-      chooseMaster: Select Master
       importType: Import Type
       cloudToken: Cloud Token
       kubeConfig: Cluster KubeConfig
@@ -842,7 +836,6 @@ cluster:
       name: 'Please enter the cluster name, no more than 64 characters'
       masterNum35: Only 3 or 5 hosts are supported
       masterNum135: 'Only 1, 3, or 5 hosts are supported'
-      masterNum2: Only support the strange server
       quota: 'Minimum CPU quota of 40 cores, minimum memory quota of 40 GiB'
       regionDiff: >-
         The node area needs to be consistent with the cluster area, node area:
@@ -856,10 +849,7 @@ cluster:
       addHost: Add server
       confirmCreateCluster:
         text: Confirm the creation cluster
-        text2: Confirm
         doc:
-          title: Please confirm the following configuration
-          article0: BCS will install the container service related components
           article1: >-
             After the cluster is created, a single node allows the creation of
             {num} a pod (3 IPs internally).
@@ -876,8 +866,6 @@ cluster:
       confirmCreate: Determine the creation
       cancel: Cancel
       remove: Delete
-      expandConfig: Expand more settings
-      putAwayConfig: Put more settings
       createCloudToken: New voucher
       fileImport: File Import
       textKubeConfig: Usability testing
@@ -1065,7 +1053,7 @@ cluster:
         name: >-
           The name does not exceed 255 characters, only supports Chinese,
           English, numbers, and scratch lines, separators (-) and decimal points
-        nodeQuotaMaxSize: Maximum node quota is {maximum}
+        nodeQuotaMaxSize: 'Maximum node quota is {maximum}'
       label:
         nameAndID: Node pool name (ID)
         nodeQuota: Node quota
@@ -1118,6 +1106,7 @@ cluster:
           label:
             purchaseDataDisk: Purchase data disk
             mountPath: Format and mount it on
+            huaweiMountPath: Mounted path
             configurationFee:
               text: Configuration fee
               unit: '￥ {price} yuan/hour'
@@ -1151,6 +1140,11 @@ cluster:
             Premium_LRS: Premium SSD
             PremiumV2_LRS: Premium SSD v2
             Premium_ZRS: Premium SSD_ZRS
+            SATA: Standard I/O Cloud Disk
+            SAS: High I/O Cloud Disk
+            GPSSD: Ultra-High I/O Cloud Disk
+            SSD: General-Purpose SSD Cloud Disk
+            ESSD: Extreme I/O Cloud Disk
           disk:
             system: System disk
             data: Data disk
@@ -1627,18 +1621,8 @@ deploy:
   image:
     publicImage: Public image
     marketImage: Market image
-    counts: downloads
     lastUpdatedBy: Last updated by
     LastUpdatedAt: Last updated at
-    path: Repo relative address
-    repo: Address
-    dev: Dev Repo
-    prod: Prod Repo
-    nomoreTag: No more TAGs
-    search: Input mirror name search
-    sources: Source：
-    detail: Details
-    projectImage: Private Image
   templateset:
     restartPolicy: Restart strategy
     killPolicy: Kill Policy
@@ -1673,13 +1657,6 @@ deploy:
     unselectedGameDeployments: Not select gamedeployments
     oneNS: The batch delete feature only supports the selection of a single namespace
     unselectedGameStatefulSets: Not select gamestatefulsets
-    hostname: 'Host name:'
-    hostIP: 'Host IP:'
-    containerIP：: 'Container IP:'
-    containerID：: 'Container ID:'
-    image: 'Mirror:'
-    network: 'Network mode:'
-    noportmapping: The network mode of this application does not require port mapping
     templateset: Template
     tempalte: Instantiate
     createdBy: 'founder:'
@@ -2321,21 +2298,6 @@ deploy:
     virtualHostName: Hostname
     sameHostnameMultiplePathsHint: 'Tip: The same virtual hostname can have multiple paths'
     pathGroupMissingService: '{name} paths：Associate Service【{serviceName}】is not exist, please re-bind'
-    officialIngressNginx: K8S officially maintained ingress-nginx
-    newLoadBalancer: Create
-    searchClusterName: Enter Cluster to Search
-    chartNameAndVersion: Chart name and version
-    nodeIP: Node IP
-    selectVersion: Select Version
-    selectChartVersion: 'Select the version corresponding to chart:blueking-nginx-ingress'
-    valuesContent: Values
-    editLoadBalancer: Edit
-    confirmDeleteLoadBalancer: Sure to delete this LoadBalance
-    enterHttpPort: Please enter http port
-    enterHttpsPort: Please enter http ports
-    addNode: Please add a node
-    selectNodeIP: Please Select Node IP
-    enterValuesContent: Please Enter Values
     createFromTemplateOrHelmService: Please create a Service through a TemplateSet or Helm
     belongingClusterNamespace: Cluster/Namespace
     belongingCluster: 'Cluster: '
@@ -2442,7 +2404,6 @@ plugin:
     title: Metrics
     action:
       add: Go to add
-      upgrade: upgrade
       create: Create Metric
     label:
       service: Select Service
@@ -2457,41 +2418,14 @@ plugin:
     tips:
       noLabel: The current service does not set labels
       needLabel: At least one Label
-      promtheus: Metric in supporting Prometheus format
-    search: 'Enter the name, press Enter to search'
-    lastTime: Last request time
-    last: forward
-    reqTime: Request time consumption
-    errorMsg: Error message
-    metricsNotFound: No indicator information
-    metrics: Index query
-    upgradeTips: >-
-      It takes about 1 to 2 minutes to upgrade, please do not submit repeatedly;
-      the Prometheus service will be restarted during the upgrade process, and
-      the data is not lost
-    hours: hours
-    mins: Divide
-    noData1: >-
-      No data (new Metric takes 1 to 2 minutes to take effect, please refresh),
-      judge by calculating the creation time and current time
-    noData2: No data (please check whether the service is related to Endpoints)
-    notEdited: System indicators cannot be modified
-    notDeleted: System indicators cannot be deleted
-    unselected: I haven't chosen Metric
-    deleted: Metric deleted successfully
-    systemNS: The current page is all system name space
     serviceNotFound: The service object does not exist
-    _serviceNotFound: The service object does not exist
     edit: 'Edit {name}'
     multidelete: 'Are you sure you want to delete {name} and other {count} metrics?'
-    multidelete1: 'Are you sure you want to delete the selected {len} metrics?'
     delete: 'Are you sure you want to delete metric {Name}?'
-    _delete: Are you sure you want to delete metric?
   tools:
     standardLog: Standard Log
     title: Cluster Tools
     appName: Application
-    _appName: App name
     toolName: Addon
     intro: Introduction
     _intro: Introduction：
@@ -2534,59 +2468,13 @@ plugin:
     confirmUninstall: Confirm Uninstall
     restart: Reopen
     enable: 'Enable cluster tools: '
-    bklogconfig: Log collection rules
     create: Create
     appType: App Type
     all: All
-    logSRC: Log source
-    matchLables: Match labels
-    matchPattern: Match expression
-    log: Log information
-    allNS: No selection means all namespaces
-    container: Specified container
-    allContainers: All containers
-    label: Specify label
-    enabled: Collect
-    stdoutTips: 'If unchecked, the standard output of this container will not be collected'
-    stdoutDataid: Data ID (stdout Log)
-    custom: Custom
-    dataIdDesc: >-
-      The collection ID corresponds to the data ID of the data platform. If the
-      platform is unchecked, the default data ID will be assigned for log
-      cleaning and warehousing. If there are special cleaning and calculation
-      requirements, users can fill in their own data ID
-    path: File
-    delimiter: To separate by ;
-    fileDataid: Data ID (Log file)
-    inputName: Please enter the application name to support regular matching
-    collectionPath: Collection path
     containerName: Container
     clickToAdd: Click to add
-    labels: Match labels
-    expressions: Matching expression (Expressions)
-    podLabels: Whether to add labels in pod automatically
-    pack: Whether to package and report
-    logDesc: >-
-      If the printing speed of a single log file exceeds 10 per second, you can
-      consider enabling the log packaging and reporting function to save
-      bandwidth and reduce the resource usage of the log collection component to
-      a certain extent
     ruleName: Rule name
     _ruleName: Rule name
-    dsInfo: Log source information
-    dsType: Log source type
-    dataID: Collection ID
-    default: default
-    editRule: Edit rule
-    selectAppType: Please select the application type
-    appNameError: Application name illegal
-    enterContainerName: Please enter the container name
-    stdinDataID: Please enter the standard collection ID
-    fileDataID: Please enter the file collection ID
-    emptyTips: Matching labels and matching expressions cannot be empty at the same time
-    filePath: Please enter the file path
-    success: Rule created successfully
-    upgraded: Rule updated successfully
     cluster_ns: Clusters/Namespaces
     polarisInfo: Polaris info
     syncStatus: Synchronous state
@@ -3203,8 +3091,8 @@ huaweiCloud:
     managed: managed cluster
     aksDesc: >-
       The Master and Etcd of the Kubernetes cluster will be centrally managed
-      and maintained by the AKS team, and cluster administrators do not need to
-      concern themselves with the management and maintenance of the cluster
+      and maintained by the Huawei team, and cluster administrators do not need
+      to concern themselves with the management and maintenance of the cluster
       Master.
     cluster: ''
 importHuaweiCloud:
@@ -3319,11 +3207,6 @@ azureCA:
     dataDisk: >-
       After purchasing a data disk and adding nodes, you need to manually format
       and mount the disk.
-    securityGroup: >-
-      Node pool uses VPC firewall rules to control the incoming/outgoing traffic
-      of node instances, please go to the {0} page to set up.
-  button:
-    vpcRule: VPC Rule
   password:
     set: Set password
     confirm: Confirm password

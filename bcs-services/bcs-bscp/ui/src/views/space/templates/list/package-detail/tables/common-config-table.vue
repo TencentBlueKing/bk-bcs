@@ -24,12 +24,11 @@
         :row-class="getRowCls"
         :remote-pagination="true"
         :pagination="pagination"
-        :is-selected-fn="isSelectedFn"
         @page-limit-change="handlePageLimitChange"
         @page-value-change="refreshList($event, true)"
         @selection-change="handleSelectionChange"
         @select-all="handleSelectAll">
-        <bk-table-column type="selection" :min-width="40" :width="40" class="aaaa"></bk-table-column>
+        <bk-table-column type="selection" :min-width="40" :width="40"></bk-table-column>
         <bk-table-column :label="t('配置文件绝对路径')">
           <template #default="{ row }">
             <div v-if="row.spec" v-overflow-title class="config-name" @click="goToViewVersionManage(row.id)">
@@ -149,6 +148,7 @@
   import useGlobalStore from '../../../../../../store/global';
   import useTemplateStore from '../../../../../../store/template';
   import { ICommonQuery } from '../../../../../../../types/index';
+  import useTablePagination from '../../../../../../utils/hooks/use-table-pagination';
   import {
     ITemplateConfigItem,
     ITemplateCitedCountDetailItem,
@@ -170,6 +170,7 @@
   const templateStore = useTemplateStore();
   const { currentTemplateSpace, versionListPageShouldOpenEdit, versionListPageShouldOpenView, batchUploadIds } =
     storeToRefs(templateStore);
+  const { pagination, updatePagination } = useTablePagination('commonConfigTable');
 
   const props = defineProps<{
     currentPkg: number | string;
@@ -189,11 +190,6 @@
   const boundByAppsCountLoading = ref(false);
   const boundByAppsCountList = ref<ITemplateCitedCountDetailItem[]>([]);
   const searchStr = ref('');
-  const pagination = ref({
-    current: 1,
-    count: 0,
-    limit: 10,
-  });
   const isAddToPkgsDialogShow = ref(false); // 显示添加至套餐弹窗
   const isMoveOutFromPkgsDialogShow = ref(false); // 显示从套餐移除弹窗
   const isDeleteConfigDialogShow = ref(false); // 显示删除配置弹窗
@@ -314,9 +310,6 @@
     }
   };
 
-  const isSelectedFn = ({ row }: { row: ITemplateConfigItem }) =>
-    props.selectedConfigs.findIndex((item) => item.id === row.id) > -1;
-
   // 添加至套餐
   const handleOpenAddToPkgsDialog = (config: ITemplateConfigItem) => {
     isAddToPkgsDialogShow.value = true;
@@ -398,7 +391,7 @@
   };
 
   const handlePageLimitChange = (val: number) => {
-    pagination.value.limit = val;
+    updatePagination('limit', val);
     refreshList(1, true);
   };
 

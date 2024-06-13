@@ -10,8 +10,9 @@
     <div class="g2-tooltip-title"></div>
     <slot name="title" />
 
+    <slot v-if="isCustom" />
     <!-- 列表容器，会自己填充 -->
-    <ul class="g2-tooltip-list"></ul>
+    <ul v-else class="g2-tooltip-list"></ul>
     <!-- 自定义尾部-->
     <li class="g2-tooltip-bottom" @click="emits('jump')">
       <span class="bk-bscp-icon icon-help-fill"></span>
@@ -21,15 +22,22 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref } from 'vue';
+  import { ref, onMounted } from 'vue';
 
   defineProps<{
     needDownIcon?: boolean;
     down?: string;
+    isCustom?: boolean;
   }>();
   const emits = defineEmits(['jump']);
 
   const tooltipRef = ref();
+
+  onMounted(() => {
+    tooltipRef.value.addEventListener('mouseleave', () => {
+      tooltipRef.value.style.visibility = 'hidden';
+    });
+  });
 
   const getDom = () => {
     return tooltipRef.value;
@@ -41,6 +49,7 @@
 
 <style lang="scss">
   .g2-tooltip {
+    visibility: hidden;
     position: absolute;
     min-width: 160px;
     .g2-tooltip-bottom {

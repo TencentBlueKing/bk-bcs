@@ -29,11 +29,6 @@ const ChartList = () => import(/* webpackChunkName: 'deploy' */'@/views/deploy-m
 const ChartRelease = () => import(/* webpackChunkName: 'deploy' */'@/views/deploy-manage/helm/release-chart.vue');
 const ReleaseList = () => import(/* webpackChunkName: 'deploy' */'@/views/deploy-manage/helm/release-list.vue');
 
-const Depot = () => import(/* webpackChunkName: 'deploy' */'@/views/deploy-manage/image/index.vue');
-const ImageDetail = () => import(/* webpackChunkName: 'deploy' */'@/views/deploy-manage/image/image-detail.vue');
-const ImageLibrary = () => import(/* webpackChunkName: 'deploy' */'@/views/deploy-manage/image/image-library.vue');
-const ProjectImage = () => import(/* webpackChunkName: 'deploy' */'@/views/deploy-manage/image/project-image.vue');
-
 const Variable = () => import(/* webpackChunkName: 'deploy' */'@/views/deploy-manage/variable/variable.vue');
 
 // 首页
@@ -118,42 +113,6 @@ const childRoutes = [
     meta: {
       menuId: 'RELEASELIST',
     },
-  },
-  // 仓库
-  {
-    path: 'images',
-    name: 'depotMain',
-    component: Depot,
-    redirect: {
-      name: 'projectImage',
-    },
-    children: [
-      {
-        path: 'public',
-        component: ImageLibrary,
-        name: 'imageLibrary',
-        meta: {
-          menuId: 'IMAGE',
-        },
-      },
-      {
-        path: 'project',
-        name: 'projectImage',
-        component: ProjectImage,
-        meta: {
-          menuId: 'IMAGE',
-        },
-      },
-      {
-        path: ':imageRepo/detail',
-        component: ImageDetail,
-        name: 'imageDetail',
-        props: true,
-        meta: {
-          menuId: 'IMAGE',
-        },
-      },
-    ],
   },
   // 变量管理
   {

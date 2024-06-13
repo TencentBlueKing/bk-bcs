@@ -48,6 +48,8 @@ type Kv interface {
 	BatchCreateWithTx(kit *kit.Kit, tx *gen.QueryTx, kvs []*table.Kv) error
 	// BatchUpdateWithTx batch create content instances with transaction.
 	BatchUpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, kvs []*table.Kv) error
+	// BatchDeleteWithTx batch delete content instances with transaction.
+	BatchDeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, appID uint32, ids []uint32) error
 	// ListAllByAppID list all Kv by appID
 	ListAllByAppID(kit *kit.Kit, appID uint32, bizID uint32, kvState []string) ([]*table.Kv, error)
 	// GetCount bizID config count
@@ -65,6 +67,14 @@ type kvDao struct {
 	genQ     *gen.Query
 	idGen    IDGenInterface
 	auditDao AuditDao
+}
+
+// BatchDeleteWithTx batch delete content instances with transaction.
+func (dao *kvDao) BatchDeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID uint32,
+	appID uint32, ids []uint32) error {
+	m := dao.genQ.Kv
+	_, err := dao.genQ.Kv.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID), m.AppID.Eq(appID), m.ID.In(ids...)).Delete()
+	return err
 }
 
 // UpdateWithTx update kv instance with transaction.

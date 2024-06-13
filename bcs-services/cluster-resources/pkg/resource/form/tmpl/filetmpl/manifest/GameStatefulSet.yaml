@@ -1,0 +1,8 @@
+apiVersion: {{ .metadata.apiVersion }}
+kind: GameStatefulSet
+{{ include "custom.gWorkloadMetadata" . }}
+spec:
+  serviceName: {{ .spec.replicas.svcName }}
+  podManagementPolicy: {{ .spec.replicas.podManPolicy }}
+  {{- include "custom.gworkloadCommonSpec" . | nindent 2 }}
+  {{- include "workload.podTemplate" . | nindent 2 }}

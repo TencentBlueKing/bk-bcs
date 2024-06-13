@@ -627,13 +627,6 @@ cluster:
       clusterVersion: 集群版本
       desc: 描述
       desc1: 集群描述
-      params:
-        text: 附加参数
-        dockerPath: Docker数据目录
-        dockerVersion: Docker版本
-        kubeletPath: kubelet数据目录
-        k8sServiceCIDR: 集群Service网段
-        k8sPodCIDR: 集群Pod网段
       region: 所属区域
       initNodeTemplate: 节点初始化模板
       Kubernetes:
@@ -666,6 +659,8 @@ cluster:
         deficiencyIpNumTips: 可用容器网络IP数量不足
         availableIpNum: '可用IP数量: {0}'
         availableIpNum2: '可用容器网络 IP {num} 个'
+        businessSpecificVPC: 业务专属VPC
+        publicVPC: 公共VPC
       networkSetting1:
         text: IP资源
         maxNodePodNum: Pod IP 数量
@@ -703,7 +698,6 @@ cluster:
       coefficient: 系数
       cpuQuota: CPU配额(核)
       memQuota: 内存配额(GiB)
-      chooseMaster: 选择Master
       importType: 导入方式
       cloudToken: 云凭证
       kubeConfig: 集群kubeconfig
@@ -729,7 +723,6 @@ cluster:
       name: 请输入集群名称，不超过64个字符
       masterNum35: 仅支持3台或5台主机
       masterNum135: 仅支持1台、3台或5台主机
-      masterNum2: 仅支持奇数个服务器
       quota: CPU配额最少40核，内存配额最少40GiB
       regionDiff: '节点地域需要与集群地域保持一致，节点地域：{region1}，集群地域：{region2}'
       vpcDiff: '节点VPC需要与集群VPC保存一致，节点VPC：{vpc1}，集群VPC：{vpc2}'
@@ -739,18 +732,13 @@ cluster:
       addHost: 添加服务器
       confirmCreateCluster:
         text: 确认创建集群
-        text2: 确定，创建集群
         doc:
-          title: 请确认以下配置
-          article0: 服务器将安装容器服务相关组件
           article1: '该集群创建后单个节点最大允许创建 {num} 个pod（TKE内部需占用3个IP），创建后不允许调整，请慎重确认'
           article2: 为了保证集群环境标准化，创建集群会格式化数据盘/dev/vdb，盘内数据将被清除，请确认该数据盘内没有放置业务数据
           article3: '为了保证集群环境标准化，此操作会对 {ip} 等 {num} 个IP进行操作系统重装初始化和安装容器服务相关组件等操作'
       confirmCreate: 确定创建
       cancel: 我再想想
       remove: 移除
-      expandConfig: 展开更多设置
-      putAwayConfig: 收起更多设置
       createCloudToken: 新增凭证
       fileImport: 文件导入
       textKubeConfig: 可用性测试
@@ -917,6 +905,7 @@ cluster:
           label:
             purchaseDataDisk: 购买数据盘
             mountPath: 格式化并挂载于
+            huaweiMountPath: 挂载路径
             configurationFee:
               text: 配置费用
               unit: '￥{price}元/小时起'
@@ -947,6 +936,11 @@ cluster:
             Premium_LRS: 高级 SSD
             PremiumV2_LRS: 高级 SSD v2
             Premium_ZRS: 高级 SSD_ZRS
+            SATA: 普通IO云硬盘
+            SAS: 高IO云硬盘
+            SSD: 超高IO云硬盘
+            GPSSD: 通用性SSD云硬盘
+            ESSD: 极速IO云硬盘
           disk:
             system: 系统盘
             data: 数据盘
@@ -1323,18 +1317,8 @@ deploy:
   image:
     publicImage: 公共镜像
     marketImage: 市场镜像
-    counts: 次下载
     lastUpdatedBy: 最近更新人
     LastUpdatedAt: 最近更新时间
-    path: 仓库相对地址
-    repo: 地址
-    dev: 研发仓库
-    prod: 生产仓库
-    nomoreTag: 没有更多TAG
-    search: 输入镜像名搜索
-    sources: 来源：
-    detail: 详情
-    projectImage: 项目镜像
   templateset:
     restartPolicy: 重启策略
     killPolicy: Kill策略
@@ -1364,13 +1348,6 @@ deploy:
     unselectedGameDeployments: 还未选择GameDeployments
     oneNS: 批量删除功能只支持选中单个命名空间
     unselectedGameStatefulSets: 还未选择GameStatefulSets
-    hostname: 主机名称：
-    hostIP: 主机IP：
-    containerIP：: 容器IP：
-    containerID：: 容器ID：
-    image: 镜像：
-    network: 网络模式：
-    noportmapping: 该应用的网络模式无需端口映射
     templateset: 模板
     tempalte: 实例化
     createdBy: 创建人：
@@ -1851,21 +1828,6 @@ deploy:
     virtualHostName: 虚拟主机名
     sameHostnameMultiplePathsHint: 提示：同一个虚拟主机名可以有多个路径
     pathGroupMissingService: '{name}中路径组：关联的Service【{serviceName}】不存在，请重新绑定'
-    officialIngressNginx: K8S官方维护的ingress-nginx
-    newLoadBalancer: 新建LoadBalancer
-    searchClusterName: 输入集群名称搜索
-    chartNameAndVersion: Chart名称及版本
-    nodeIP: 节点IP
-    selectVersion: 选择版本
-    selectChartVersion: '选择chart:blueking-nginx-ingress对应的版本'
-    valuesContent: Values内容
-    editLoadBalancer: 编辑LoadBalancer
-    confirmDeleteLoadBalancer: 确定要删除LoadBalancer
-    enterHttpPort: 请输入http端口
-    enterHttpsPort: 请输入https端口
-    addNode: 请添加节点
-    selectNodeIP: 请选择节点IP
-    enterValuesContent: 请填写Values内容
     createFromTemplateOrHelmService: 请通过模板集或Helm创建Service
     belongingClusterNamespace: 所属集群/命名空间
     belongingCluster: '所属集群: '
@@ -1956,7 +1918,6 @@ plugin:
     title: Metric管理
     action:
       add: 前往添加
-      upgrade: 升级
       create: 新建Metric
     label:
       service: 选择Service
@@ -1971,36 +1932,14 @@ plugin:
     tips:
       noLabel: 当前Service没有设置Labels
       needLabel: 至少关联一个Label
-      promtheus: 支持 Prometheus 格式的 Metric
-    search: 输入名称，按Enter搜索
-    lastTime: 最后请求时间
-    last: 前
-    reqTime: 请求耗时
-    errorMsg: 错误信息
-    metricsNotFound: 无指标信息
-    metrics: 指标查询
-    upgradeTips: 升级大约需要 1~2 分钟，请勿重复提交；升级过程中 Prometheus 服务将会重启，数据无损失
-    hours: 小时
-    mins: 分
-    noData1: 无数据（新建 Metric 需要1~2分钟生效，请刷新），通过计算创建时间和当前时间判断
-    noData2: 无数据（请检查 Service 是否有关联的 Endpoints)
-    notEdited: 系统指标无法修改
-    notDeleted: 系统指标无法删除
-    unselected: 还未选择Metric
-    deleted: 删除Metric成功
-    systemNS: 当前页全是系统命名空间
     serviceNotFound: Service对象不存在
-    _serviceNotFound: service对象不存在
     edit: '编辑 {name}'
     multidelete: '确定删除 {name} 等 {count} 个Metric'
-    multidelete1: '确定删除所选的{len}个Metric？'
     delete: '确定删除Metric {name}'
-    _delete: 确定要删除Metric
   tools:
     standardLog: 标准日志
     title: 组件库
     appName: 应用名称
-    _appName: 应用名
     toolName: 组件名称
     intro: 简介
     _intro: 简介：
@@ -2037,53 +1976,13 @@ plugin:
     confirmUninstall: 确定卸载
     restart: 重新启用
     enable: 启用组件：
-    bklogconfig: 日志采集规则
     create: 新建规则
     appType: 应用类型
     all: 所有
-    logSRC: 日志源
-    matchLables: 匹配标签
-    matchPattern: 匹配表达式
-    log: 日志信息
-    allNS: 不选择表示所有命名空间
-    container: 指定容器
-    allContainers: 所有容器
-    label: 指定标签
-    enabled: 是否采集
-    stdoutTips: 如果不勾选，将不采集此容器的标准输出
-    stdoutDataid: 标准采集ID
-    custom: 是否自定义
-    dataIdDesc: >-
-      采集id对应数据平台的data id，不勾选平台将分配默认的data
-      id进行日志的清洗和入库。如果有特别的清洗和计算要求，用户可以填写自己的data id
-    path: 文件路径
-    delimiter: 多个以;分隔
-    fileDataid: 文件采集ID
-    inputName: 请输入应用名称，支持正则匹配
-    collectionPath: 采集路径
     containerName: 容器名
     clickToAdd: 点击增加
-    labels: 匹配标签(labels)
-    expressions: 匹配表达式(expressions)
-    podLabels: 是否自动添加Pod中的labels
-    pack: 是否打包上报
-    logDesc: 若单日志文件打印速度超过10条/秒，可以考虑开启日志打包上报功能以节约带宽并在一定程度上降低日志采集组件的资源占用
     ruleName: 规则名称
     _ruleName: 规则名
-    dsInfo: 日志源信息
-    dsType: 日志源类型
-    dataID: 采集ID
-    default: 默认
-    editRule: 编辑规则
-    selectAppType: 请选择应用类型
-    appNameError: 应用名称不合法
-    enterContainerName: 请输入容器名
-    stdinDataID: 请输入标准采集ID
-    fileDataID: 请输入文件采集ID
-    emptyTips: 匹配标签和匹配表达式不能同时为空
-    filePath: 请输入文件路径
-    success: 规则创建成功
-    upgraded: 规则更新成功
     cluster_ns: 集群/命名空间
     polarisInfo: Polaris信息
     syncStatus: 同步状态
@@ -2603,7 +2502,9 @@ huaweiCloud:
   label:
     clusterType: 集群类型
     managed: 托管集群
-    aksDesc: Kubernetes 集群的 Master 和 Etcd 会由 AKS 团队集中管理和维护，集群管理员不需要关心集群 Master的管理和维护。
+    aksDesc: >-
+      Kubernetes 集群的 Master 和 Etcd 会由 Huawei 团队集中管理和维护，集群管理员不需要关心集群
+      Master的管理和维护。
     cluster: 关联集群
     create: 新建凭证
 importHuaweiCloud:
@@ -2641,9 +2542,6 @@ azureCA:
       （默认）”有诸多限制，蓝鲸组件依赖这些被限制的功能，目前只支持操作系统“包含 Containerd 的 Ubuntu
       (ubuntu_containerd)”
     dataDisk: 购买数据盘后添加节点后需要手工格式化与挂载磁盘
-    securityGroup: '节点池使用 VPC 防火墙规则控制节点实例的出/入流量，请前往{0}页面设置'
-  button:
-    vpcRule: VPC 防火墙规则
   password:
     set: 设置密码
     confirm: 确认密码

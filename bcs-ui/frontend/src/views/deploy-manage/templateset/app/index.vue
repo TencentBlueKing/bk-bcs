@@ -22,10 +22,6 @@ const deploymentsInstanceDetail = () => import(
   /* webpackChunkName: 'app-instance' */'@/views/resource-view/workload/detail/old-index.vue');
 const deploymentsInstanceDetail2 = () => import(
   /* webpackChunkName: 'app-instance' */'@/views/resource-view/workload/detail/old-index.vue');
-const deploymentsContainerDetail = () => import(
-  /* webpackChunkName: 'app-container' */'./k8s/deployments-container');
-const deploymentsContainerDetail2 = () => import(
-  /* webpackChunkName: 'app-container' */'./k8s/deployments-container2');
 const deploymentsInstantiation = () => import(
   /* webpackChunkName: 'app-instantiation' */'./k8s/deployments-instantiation');
 const daemonset = () => import(
@@ -34,10 +30,6 @@ const daemonsetInstanceDetail = () => import(
   /* webpackChunkName: 'app-instance' */'@/views/resource-view/workload/detail/old-index.vue');
 const daemonsetInstanceDetail2 = () => import(
   /* webpackChunkName: 'app-instance' */'@/views/resource-view/workload/detail/old-index.vue');
-const daemonsetContainerDetail = () => import(
-  /* webpackChunkName: 'app-container' */'./k8s/daemonset-container');
-const daemonsetContainerDetail2 = () => import(
-  /* webpackChunkName: 'app-container' */'./k8s/daemonset-container2');
 const daemonsetInstantiation = () => import(
   /* webpackChunkName: 'app-instantiation' */'./k8s/daemonset-instantiation');
 
@@ -47,10 +39,6 @@ const jobInstanceDetail = () => import(
   /* webpackChunkName: 'app-instance' */'@/views/resource-view/workload/detail/old-index.vue');
 const jobInstanceDetail2 = () => import(
   /* webpackChunkName: 'app-instance' */'@/views/resource-view/workload/detail/old-index.vue');
-const jobContainerDetail = () => import(
-  /* webpackChunkName: 'app-container' */'./k8s/job-container');
-const jobContainerDetail2 = () => import(
-  /* webpackChunkName: 'app-container' */'./k8s/job-container2');
 const jobInstantiation = () => import(
   /* webpackChunkName: 'app-instantiation' */'./k8s/job-instantiation');
 
@@ -60,10 +48,6 @@ const statefulsetInstanceDetail = () => import(
   /* webpackChunkName: 'app-instance' */'@/views/resource-view/workload/detail/old-index.vue');
 const statefulsetInstanceDetail2 = () => import(
   /* webpackChunkName: 'app-instance' */'@/views/resource-view/workload/detail/old-index.vue');
-const statefulsetContainerDetail = () => import(
-  /* webpackChunkName: 'app-container' */'./k8s/statefulset-container');
-const statefulsetContainerDetail2 = () => import(
-  /* webpackChunkName: 'app-container' */'./k8s/statefulset-container2');
 const statefulsetInstantiation = () => import(
   /* webpackChunkName: 'app-instantiation' */'./k8s/statefulset-instantiation');
 const gamestatefulset = () => import(
@@ -84,29 +68,21 @@ export default {
     deployments,
     deploymentsInstanceDetail,
     deploymentsInstanceDetail2,
-    deploymentsContainerDetail,
-    deploymentsContainerDetail2,
     deploymentsInstantiation,
 
     daemonset,
     daemonsetInstanceDetail,
     daemonsetInstanceDetail2,
-    daemonsetContainerDetail,
-    daemonsetContainerDetail2,
     daemonsetInstantiation,
 
     job,
     jobInstanceDetail,
     jobInstanceDetail2,
-    jobContainerDetail,
-    jobContainerDetail2,
     jobInstantiation,
 
     statefulset,
     statefulsetInstanceDetail,
     statefulsetInstanceDetail2,
-    statefulsetContainerDetail,
-    statefulsetContainerDetail2,
     statefulsetInstantiation,
 
     gamestatefulset,
@@ -121,26 +97,18 @@ export default {
         'deployments',
         'deploymentsInstanceDetail',
         'deploymentsInstanceDetail2',
-        'deploymentsContainerDetail',
-        'deploymentsContainerDetail2',
         'deploymentsInstantiation',
         'daemonset',
         'daemonsetInstanceDetail',
         'daemonsetInstanceDetail2',
-        'daemonsetContainerDetail',
-        'daemonsetContainerDetail2',
         'daemonsetInstantiation',
         'job',
         'jobInstanceDetail',
         'jobInstanceDetail2',
-        'jobContainerDetail',
-        'jobContainerDetail2',
         'jobInstantiation',
         'statefulset',
         'statefulsetInstanceDetail',
         'statefulsetInstanceDetail2',
-        'statefulsetContainerDetail',
-        'statefulsetContainerDetail2',
         'statefulsetInstantiation',
 
         'gamestatefulset',

@@ -1,5 +1,5 @@
 <template>
-  <div class="flex items-center justify-center py-[24px]">
+  <div class="flex items-start justify-center py-[24px] overflow-auto">
     <div class="shadow bg-[#fff] px-[24px] py-[16px] pb-[32px] min-w-[800px]">
       <div class="text-[14px] font-bold mb-[24px]">{{ $t('importGoogleCloud.title') }}</div>
       <bk-form class="max-w-[640px]" :model="formData" :rules="formRules" ref="formRef">
