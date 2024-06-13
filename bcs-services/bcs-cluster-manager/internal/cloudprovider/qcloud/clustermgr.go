@@ -766,7 +766,8 @@ func getClusterCidrAvailableIPNum(clusterId, tkeId string, option *cloudprovider
 }
 
 // TKE cluster exist master clusterCIDR and multiCIDRList, multiCIDRList add length 9 CIDRs at most.
-// when scale tke cluster CIDRs at present, BCS use [step, ..., step, xxx, xxx] 7 step rules, xxx need to manually assign
+// when scale tke cluster CIDRs at present,
+// BCS use [step, ..., step, xxx, xxx] 7 step rules, xxx need to manually assign
 func autoScaleClusterCidr(option cloudprovider.CommonOption, cls *proto.Cluster, needIPNum uint32) ([]string, error) {
 	// not allow when assign full multiCIDR
 	if len(cls.NetworkSettings.MultiClusterCIDR) >= utils.MultiClusterCIDRCnt {

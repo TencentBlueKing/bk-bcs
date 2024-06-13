@@ -57,7 +57,7 @@ func NewCreateAction(model store.ClusterManagerModel, locker lock.DistributedLoc
 	}
 }
 
-func (ca *CreateAction) applyClusterCIDR(cls *cmproto.Cluster) error {
+func (ca *CreateAction) applyClusterCIDR(cls *cmproto.Cluster) error { // nolint
 	if len(cls.NetworkSettings.ClusterIPv4CIDR) > 0 ||
 		len(cls.NetworkSettings.ClusterIPv6CIDR) > 0 || len(cls.NetworkSettings.ServiceIPv4CIDR) > 0 {
 		return nil

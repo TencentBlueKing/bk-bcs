@@ -191,8 +191,8 @@ func (cn *CleanNodeInGroupTaskOption) BuildCleanNodeGroupNodesStep(task *proto.T
 	task.StepSequence = append(task.StepSequence, cleanNodeGroupNodesStep.StepMethod)
 }
 
-// BuildCheckClusterCleanNodsStep 检测集群清理节点池节点
-func (cn *CleanNodeInGroupTaskOption) BuildCheckClusterCleanNodsStep(task *proto.Task) {
+// BuildCheckClusterCleanNodesStep 检测集群清理节点池节点
+func (cn *CleanNodeInGroupTaskOption) BuildCheckClusterCleanNodesStep(task *proto.Task) {
 	checkStep := cloudprovider.InitTaskStep(checkClusterCleanNodsStep)
 
 	checkStep.Params[cloudprovider.ClusterIDKey.String()] = cn.Group.ClusterID
