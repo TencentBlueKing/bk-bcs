@@ -85,7 +85,8 @@
             }">
             <template #default="{ row }">
               <div v-if="row.client" class="release_change_status">
-                <div :class="['dot', row.client.spec.release_change_status]"></div>
+                <Spinner v-if="row.client.spec.release_change_status === 'Processing'"  class="spinner-icon"/>
+                <div v-else :class="['dot', row.client.spec.release_change_status]"></div>
                 <span>
                   {{ CLIENT_STATUS_MAP[row.client.spec.release_change_status as keyof typeof CLIENT_STATUS_MAP] }}
                 </span>
@@ -231,7 +232,7 @@
 <script lang="ts" setup>
   import { ref, watch, onBeforeMount, onBeforeUnmount } from 'vue';
   import { useRoute, useRouter } from 'vue-router';
-  import { Share, InfoLine } from 'bkui-vue/lib/icon';
+  import { Share, InfoLine, Spinner } from 'bkui-vue/lib/icon';
   import { storeToRefs } from 'pinia';
   import { Tag } from 'bkui-vue';
   import { getClientQueryList } from '../../../../api/client';
@@ -706,11 +707,12 @@
     display: flex;
     align-items: center;
     .spinner-icon {
-      font-size: 12px;
-      margin-right: 10px;
+      font-size: 14px;
+      margin: 0 7px 0 1px;
+      color: #3a84ff
     }
     .dot {
-      margin-right: 10px;
+      margin: 0 10px 0 4px;
       width: 8px;
       height: 8px;
       background: #f0f1f5;
