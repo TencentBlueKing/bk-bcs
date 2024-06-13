@@ -54,15 +54,19 @@
   import { copyToClipBoard } from '../../../../../../utils/index';
   import BkMessage from 'bkui-vue/lib/message';
   import { useI18n } from 'vue-i18n';
+
   const { t } = useI18n();
   const route = useRoute();
-  const serviceName = inject<Ref<string>>('serviceName');
-  const feedAddr = ref('feedAddr');
-  const bizId = ref(String(route.params.spaceId));
+
   const linkUrl = {
     nodeMana: 'www.baidu.com',
     clientNode: 'https://bk.tencent.com/docs/markdown/ZH/BSCP/1.29/UserGuide/Function/client_configuration.md',
   };
+
+  const bizId = ref(String(route.params.spaceId));
+  const feedAddr = ref((window as any).FEED_ADDR);
+  const serviceName = inject<Ref<string>>('serviceName');
+
   const linkTo = (url: string) => {
     window.open(url, '__blank');
   };

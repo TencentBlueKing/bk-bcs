@@ -158,6 +158,6 @@ export interface IVersionDistributionPieItem {
 export interface IExampleFormData {
   clientKey: string;
   privacyCredential: string;
-  tempContents?: string;
+  tempDir?: string;
   labelArr: string[];
 }

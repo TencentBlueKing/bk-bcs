@@ -217,12 +217,7 @@
 
   const handleNavClick = (navId: String) => {
     console.log(navId);
-    if (
-      navId === 'service-all' ||
-      navId === 'client-statistics' ||
-      navId === 'client-search' ||
-      navId === 'configuration-example'
-    ) {
+    if (['service-all', 'client-statistics', 'client-search', 'configuration-example'].includes(navId)) {
       const lastAccessedServiceDetail = localStorage.getItem('lastAccessedServiceDetail');
       if (lastAccessedServiceDetail) {
         const detail = JSON.parse(lastAccessedServiceDetail);

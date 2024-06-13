@@ -42,10 +42,13 @@
   import { getAppList } from '../../../../../api';
   import { AngleUpFill } from 'bkui-vue/lib/icon';
   import { useI18n } from 'vue-i18n';
-  const { locale } = useI18n();
+
   const emits = defineEmits(['change-service']);
+
+  const { locale } = useI18n();
   const route = useRoute();
   const router = useRouter();
+
   const loading = ref(false);
   const localApp = ref({
     name: '',

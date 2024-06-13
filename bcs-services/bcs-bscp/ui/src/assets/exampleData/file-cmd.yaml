@@ -1,13 +1,13 @@
 # 业务 ID，从当前环境自动获取，无需修改
-biz: 动态替换bkBizId
+biz: {{ .Bk_Bscp_VariableBkBizId }}
 
 # 服务订阅地址，从当前环境自动获取，无需修改
-feed_addr: feed.bscp.woa.com:9510
+feed_addr: {{ .Bk_Bscp_VariableFEED_ADDR }}
 
 # 客户端密钥，请填写与此服务配置关联过的实际客户端密钥
-token:  '动态替换clientKey'
+token: {{ .Bk_Bscp_VariableClientKey }}
 
   # 实例标签，实例标签通常用于按标签进行灰度发布，支持多个标签，请填写实际实例标签键值；如果不需要按标签灰度发布，可不填写此环境变量
-labels: '{动态替换labels}'
+labels: {{ .Bk_Bscp_VariableLeabels }}
 # 临时目录，在拉取配置文件时，用于存储配置文件的目录，默认为：/data/bscp，可根据实际情况调整
-temp_dir: '动态替换目录路径'
+temp_dir: {{ .Bk_Bscp_VariableTempDir }}'

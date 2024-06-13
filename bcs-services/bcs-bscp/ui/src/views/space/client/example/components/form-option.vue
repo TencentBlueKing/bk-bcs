@@ -13,7 +13,7 @@
       </template>
       <KeySelect @current-key="setCredential" />
     </bk-form-item>
-    <bk-form-item v-if="props.contentsShow" property="tempContents" :required="props.contentsShow">
+    <bk-form-item v-if="props.contentsShow" property="tempDir" :required="props.contentsShow">
       <template #label>
         {{ $t('临时目录') }}
         <info
@@ -23,7 +23,7 @@
             placement: 'top',
           }" />
       </template>
-      <bk-input v-model="formData.tempContents" :placeholder="$t('请输入')" clearable />
+      <bk-input v-model="formData.tempDir" :placeholder="$t('请输入')" clearable />
     </bk-form-item>
   </bk-form>
   <!-- 添加标签1 -->
@@ -41,24 +41,16 @@
   import { Info } from 'bkui-vue/lib/icon';
   import AddLabel from './add-label.vue';
   import { IExampleFormData } from '../../../../../../types/client';
-  const emits = defineEmits(['option-data']);
+
   const props = defineProps({
     contentsShow: {
       type: Boolean,
       default: true,
     },
   });
-  const formRef = ref('');
-  defineExpose({
-    formRef,
-  });
 
-  const formData = ref<IExampleFormData>({
-    clientKey: '', // 客户端密钥
-    privacyCredential: '', // 脱敏的密钥
-    tempContents: '/data/bscp', // 临时目录
-    labelArr: [], // 添加的标签
-  });
+  const emits = defineEmits(['option-data']);
+
   const rules = {
     clientKey: [
       {
@@ -68,7 +60,7 @@
         trigger: 'change',
       },
     ],
-    tempContents: [
+    tempDir: [
       {
         required: props.contentsShow,
         message: '请输入路径地址，替换下方示例代码后，再尝试复制示例',
@@ -77,6 +69,19 @@
       },
     ],
   };
+
+  const formRef = ref('');
+  const formData = ref<IExampleFormData>({
+    clientKey: '', // 客户端密钥
+    privacyCredential: '', // 脱敏的密钥
+    tempDir: '/data/bscp', // 临时目录
+    labelArr: [], // 添加的标签
+  });
+
+  watch(formData.value, () => {
+    sendAll();
+  });
+
   const setCredential = (key: string, privacyKey: string) => {
     formData.value.clientKey = key;
     formData.value.privacyCredential = privacyKey;
@@ -84,11 +89,14 @@
   const sendAll = () => {
     if (!props.contentsShow) {
       // 不显示临时目录的菜单，删除对应值
-      delete formData.value.tempContents;
+      delete formData.value.tempDir;
     }
     emits('option-data', formData.value);
   };
-  watch(formData.value, sendAll);
+
+  defineExpose({
+    formRef,
+  });
 </script>
 
 <style scoped lang="scss">

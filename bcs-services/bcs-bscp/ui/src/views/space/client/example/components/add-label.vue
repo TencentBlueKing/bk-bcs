@@ -25,11 +25,20 @@
 <script lang="ts" setup>
   import { onMounted, ref, watch } from 'vue';
   import { Info, Plus } from 'bkui-vue/lib/icon';
+
   const emits = defineEmits(['send-label']);
+
   const labelArr = ref<{ key: string; value: string }[]>([]);
+
+  // 数据变化后需要传递出去
+  watch(labelArr.value, () => {
+    sendVal();
+  });
+
   onMounted(() => {
     sendVal();
   });
+
   // 添加项目
   const addItem = () => {
     labelArr.value.push({
@@ -46,14 +55,12 @@
     // 处理数据格式用于展示
     const newArr = labelArr.value.map((item) => {
       if (item.key || item.value) {
-        return `${item.key}:${item.value}`;
+        return `"${item.key}":"${item.value}"`;
       }
     });
     const filterArr = newArr.filter((item) => item !== undefined);
     emits('send-label', filterArr);
   };
-  // 数据变化后需要传递出去
-  watch(labelArr.value, sendVal);
 </script>
 
 <style scoped lang="scss">

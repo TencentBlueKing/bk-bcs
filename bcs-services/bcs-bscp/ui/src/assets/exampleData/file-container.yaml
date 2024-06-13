@@ -21,25 +21,25 @@ spec:
           env:
             # 业务 ID，从当前环境自动获取，无需修改
             - name: biz
-              value: 动态替换bkBizId
+              value: {{ .Bk_Bscp_VariableBkBizId }}
             # 服务名称，从当前环境自动获取，无需修改
             - name: app
-              value: 动态替换serviceName
+              value: {{ .Bk_Bscp_VariableServiceName }}
             # 服务订阅地址，从当前环境自动获取，无需修改
             - name: feed_addrs
-              value: 动态替换FEED_ADDR
+              value: {{ .Bk_Bscp_VariableFEED_ADDR }}
             # 客户端密钥，请将 value 赋值为与此服务配置关联过的实际客户端密钥
             - name: token
-              value: '动态替换clientKey'
+              value: {{ .Bk_Bscp_VariableClientKey }}
             # 实例标签，实例标签通常用于按标签进行灰度发布，支持多个标签，如：'{"app": "nginx", "area": "shanghai"}'，请填写实际实例标签 value；如果不需要按标签灰度发布，可不填写此环境变量
             - name: labels
-              value: '{动态替换labels}'
+              value: {{ .Bk_Bscp_VariableLeabels }}
             # 配置文件临时目录，文件将下发到 {temp_dir}/files 目录下
             - name: temp_dir
-              value: '动态替换目录路径'
+              value: {{ .Bk_Bscp_VariableTempDir }}
           # 需要同时挂载文件临时目录到 Init 容器，sidecar 容器，业务容器
           volumeMounts:
-            - mountPath: '动态替换目录路径'
+            - mountPath: {{ .Bk_Bscp_VariableTempDir }}
               name: bscp-temp-dir
       containers:
         # 以 Nginx 容器为例的业务容器，正式使用时需将其替换为实际业务程序容器
@@ -49,7 +49,7 @@ spec:
             - containerPort: 80
           # 需要同时挂载文件临时目录到 Init 容器，sidecar 容器，业务容器
           volumeMounts:
-            - mountPath: '动态替换目录路径'
+            - mountPath: {{ .Bk_Bscp_VariableTempDir }}
               name: bscp-temp-dir
         # BSCP Sidecar 容器负责监控配置文件版本变动，并将更新的配置文件下载到指定临时目录，业务可以通过后置脚本或其他流程实现新配置文件的生效
         - name: bscp-sidecar
@@ -61,15 +61,15 @@ spec:
             - name: app
               value: demo_app
             - name: feed_addrs
-              value: feed.bscp.woa.com:9510
+              value: {{ .Bk_Bscp_VariableFEED_ADDR }}
             - name: token
-              value: '动态替换clientKey'
+              value: {{ .Bk_Bscp_VariableClientKey }}
             - name: labels
-              value: '{动态替换labels}'
+              value: {{ .Bk_Bscp_VariableLeabels }}
             - name: temp_dir
-              value: '动态替换目录路径'
+              value: {{ .Bk_Bscp_VariableTempDir }}
           volumeMounts:
-            - mountPath: '动态替换目录路径'
+            - mountPath: {{ .Bk_Bscp_VariableTempDir }}
               name: bscp-temp-dir
       volumes:
         - name: bscp-temp-dir

@@ -25,12 +25,6 @@
     lineNumber: number;
     errorInfo: string;
   }
-  interface setClassNameRange {
-    rowStart: number;
-    columnStart: number;
-    rowEnd: number;
-    columnEnd: number;
-  }
 
   self.MonacoEnvironment = {
     getWorker(_, label) {
@@ -65,10 +59,6 @@
       horizonScrollbarSize?: number;
       renderLineHighlight?: 'none' | 'gutter' | 'line' | 'all' | undefined;
       renderIndentGuides?: boolean;
-      customClassName?: {
-        className: string;
-        rangeArr: setClassNameRange[];
-      };
     }>(),
     {
       variables: () => [],
@@ -171,7 +161,6 @@
         renderLineHighlight: props.renderLineHighlight,
         renderIndentGuides: props.renderIndentGuides,
       });
-      // setCustomClassName(props.customClassName!.className, props.customClassName!.rangeArr);
     }
     if (props.lfEol) {
       const model = editor.getModel() as monaco.editor.ITextModel;
@@ -316,33 +305,6 @@
     isShowPlaceholder.value = false;
     nextTick(() => editor.focus());
   };
-
-  // 指定行与列添加className
-  // const setCustomClassName = (className: string, RangeArr: setClassNameRange[]) => {
-  //   if (className) {
-  //     const decorators: any[] = [];
-  //     RangeArr.forEach((item) => {
-  //       console.log(item, '-');
-  //       // decorators.push({
-  //       //   range: new monaco.Range(item.rowStart, item.columnStart, item.rowEnd, item.columnEnd),
-  //       //   options: {
-  //       //     isWholeLine: false,
-  //       //     className,
-  //       //   },
-  //       // });
-  //     });
-  //     const range = new monaco.Range(5, 1, 5, 99);
-  //     decorators.push({
-  //       range,
-  //       options: {
-  //         className: 'abca1',
-  //       },
-  //     });
-  //     editor.getModel()?.deltaDecorations([], decorators);
-  //     // console.log(editor, '++++');
-  //     // model!.deltaDecorations([], decorators);
-  //   }
-  // };
 
   // 校验xml、yaml、json数据类型
   const validate = (val: string) => {

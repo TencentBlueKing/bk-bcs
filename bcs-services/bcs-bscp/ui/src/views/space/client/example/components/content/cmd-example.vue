@@ -12,7 +12,11 @@
           </p>
           <template v-else>
             <bk-button @click="copyExample" theme="primary" class="copy-btn">复制示例</bk-button>
-            <code-preview class="preview-component" :code-val="replaceVal" />
+            <code-preview
+              class="preview-component"
+              :code-val="replaceVal"
+              :variables="variables"
+              @change="(val) => (copyReplaceVal = val)" />
           </template>
           <template v-if="item.tips">
             <p class="guide-text guide-text--margin">{{ item.tips.title }}</p>
@@ -29,7 +33,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed, provide, ref } from 'vue';
+  import { computed, provide, ref, onMounted, watch } from 'vue';
   import { copyToClipBoard } from '../../../../../../utils/index';
   import BkMessage from 'bkui-vue/lib/message';
   import FormOption from '../form-option.vue';
@@ -38,13 +42,11 @@
   import { useI18n } from 'vue-i18n';
   import { useRoute } from 'vue-router';
   import yamlString from '/src/assets/exampleData/file-cmd.yaml?raw';
+
+  const props = defineProps<{ contentScrollTop: Function }>();
+
   const { t } = useI18n();
   const route = useRoute();
-  const fileOptionRef = ref();
-  const bkBizId = ref(String(route.params.spaceId));
-  const codeVal = yamlString;
-  const formError = ref<number>();
-  provide('formError', formError);
   const guideText = [
     {
       title: '下载二进制命令行',
@@ -76,32 +78,78 @@
       value: './bscp get file /etc/nginx/nginx.conf  -a alkaid-test-file -c ./bscp.yaml  -d /root/config',
     },
   ];
+
+  const fileOptionRef = ref();
+  const bkBizId = ref(String(route.params.spaceId));
+  const replaceVal = ref('');
+  const copyReplaceVal = ref(''); // 渲染的值，用于复制未脱敏密钥的yaml数据
+  const formError = ref<number>();
+  provide('formError', formError);
   // fileOption组件传递过来的数据汇总
   const optionData = ref({
     clientKey: '',
     privacyCredential: '',
     labelArr: [],
-    tempContents: '',
+    tempDir: '',
   });
+
+  const variables = computed(() => {
+    replaceVal.value = '';
+    return [
+      {
+        name: 'Bk_Bscp_VariableLeabels',
+        type: '',
+        default_val: `'{${optionData.value.labelArr}}'`,
+        memo: '',
+      },
+      {
+        name: 'Bk_Bscp_VariableClientKey',
+        type: '',
+        default_val: `'${optionData.value.privacyCredential}'`,
+        memo: '',
+      },
+      {
+        name: 'Bk_Bscp_VariableTempDir',
+        type: '',
+        default_val: `'${optionData.value.tempDir}'`,
+        memo: '',
+      },
+    ];
+  });
+
+  watch(
+    () => replaceVal.value,
+    () => {
+      // 初始化值，variables对应配置生效
+      let updateString = yamlString;
+      updateString = updateString.replace('{{ .Bk_Bscp_VariableBkBizId }}', bkBizId.value);
+      replaceVal.value = updateString.replace('{{ .Bk_Bscp_VariableFEED_ADDR }}', (window as any).FEED_ADDR);
+    },
+  );
+
+  onMounted(() => {
+    replaceVal.value = yamlString;
+  });
+
+  // 监听传来的数据
   const getOptionData = (data: any) => {
     optionData.value = data;
+    optionData.value = computed(() => {
+      // 标签展示方式加工
+      const labelArr = data.labelArr.length ? data.labelArr.join(', ') : '';
+      return {
+        ...data,
+        labelArr,
+      };
+    }).value;
   };
-  // 修改后的预览数据
-  const replaceVal = computed(() => {
-    const labelArr = optionData.value.labelArr.length ? JSON.stringify(optionData.value.labelArr.join(', ')) : '';
-    let updateString = codeVal.replace('动态替换bkBizId', bkBizId.value);
-    updateString = updateString.replaceAll('动态替换labels', labelArr);
-    updateString = updateString.replaceAll('动态替换clientKey', optionData.value.privacyCredential);
-    updateString = updateString.replaceAll('动态替换目录路径', optionData.value.tempContents);
-    return updateString;
-  });
   // 复制示例
   const copyExample = async () => {
     try {
       await fileOptionRef.value.formRef.validate();
       // 复制示例使用未脱敏的密钥
       const reg = /'(.{1}|.{3})\*{3}(.{1}|.{3})'/g;
-      const copyVal = replaceVal.value.replaceAll(reg, `'${optionData.value.clientKey}'`);
+      const copyVal = copyReplaceVal.value.replaceAll(reg, `'${optionData.value.clientKey}'`);
       copyToClipBoard(copyVal);
       BkMessage({
         theme: 'success',
@@ -110,6 +158,8 @@
     } catch (error) {
       // 通知密钥选择组件校验状态
       formError.value = new Date().getTime();
+      props.contentScrollTop();
+
       console.log(error);
     }
   };

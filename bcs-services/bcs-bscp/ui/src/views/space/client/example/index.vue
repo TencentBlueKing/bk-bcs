@@ -18,7 +18,7 @@
         </div>
       </bk-alert>
       <div class="content-wrap">
-        <component :is="currentTemplate" :kv-name="renderComponent" />
+        <component :is="currentTemplate" :kv-name="renderComponent" :content-scroll-top="contentScrollTop" />
       </div>
     </div>
   </section>
@@ -33,6 +33,7 @@
   import CmdExample from './components/content/cmd-example.vue';
   import KvExample from './components/content/kv-example.vue';
   import Exception from '../components/exception.vue';
+
   const { t } = useI18n();
   const fileTypeArr = [
     { name: t('Sidecar容器'), val: 'sidecar' },
@@ -46,22 +47,14 @@
     { name: 'C++ SDK', val: 'c++' },
     { name: t('命令行工具'), val: 'kv-cmd' },
   ];
-  const navList = computed(() => (serviceType.value === 'file' ? fileTypeArr : kvTypeArr));
+
   const renderComponent = ref(''); // 渲染的示例组件
   const serviceName = ref(''); // 示例预览模板中用到
   const serviceType = ref(''); // 配置类型：file/kv
   const topTip = ref('');
   provide('serviceName', serviceName); // 示例预览组件用
-  // 服务切换
-  const changeService = (getServiceType: string, getServiceName: string) => {
-    serviceType.value = getServiceType;
-    serviceName.value = getServiceName;
-    changeTypeItem(navList.value[0].val);
-  };
-  // 服务的子类型切换
-  const changeTypeItem = (data: string) => {
-    renderComponent.value = data;
-  };
+
+  const navList = computed(() => (serviceType.value === 'file' ? fileTypeArr : kvTypeArr));
   // 展示的示例组件与顶部提示语
   const currentTemplate = computed(() => {
     if (serviceType.value && serviceType.value === 'file') {
@@ -87,14 +80,24 @@
     // 无数据模板
     return Exception;
   });
-  // 服务类型变化后，重新选择渲染的示例模板
-  // watch(serviceType, (newV) => {
-  //   if (newV === 'file') {
-  //     changeTypeItem(fileTypeArr.value[0].val);
-  //   } else {
-  //     changeTypeItem(kvTypeArr.value[0].val);
-  //   }
-  // });
+
+  // 服务切换
+  const changeService = (getServiceType: string, getServiceName: string) => {
+    serviceType.value = getServiceType;
+    serviceName.value = getServiceName;
+    changeTypeItem(navList.value[0].val);
+  };
+  // 服务的子类型切换
+  const changeTypeItem = (data: string) => {
+    renderComponent.value = data;
+  };
+  // 返回顶部
+  const contentScrollTop = () => {
+    const scrollDom = document.querySelector('.content-wrap');
+    if (scrollDom!.scrollTop > 64) {
+      scrollDom!.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 </script>
 
 <style scoped lang="scss">

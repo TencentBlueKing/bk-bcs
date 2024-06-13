@@ -19,14 +19,14 @@ import logging
 from bk_bscp.client import BscpClient, WatchedApp
 
 # 业务ID，从当前环境自动获取，无需修改
-BIZ_ID = 动态替换bkBizId
+BIZ_ID = {{ .Bk_Bscp_VariableBkBizId }}
 
 # 服务订阅地址，从当前环境自动获取，无需修改
-SERVER_ADDRS = ["example.com:9090"]
+SERVER_ADDRS = {{ .Bk_Bscp_VariableFEED_ADDR }}
 
 # 客户端密钥，请赋值为与此服务配置关联过的实际客户端密钥
-TOKEN = "动态替换clientKey"
-动态替换labels
+TOKEN = {{ .Bk_Bscp_VariableClientKey }}
+{{ .Bk_Bscp_VariableLeabels }}
 
 
 def watch_app():

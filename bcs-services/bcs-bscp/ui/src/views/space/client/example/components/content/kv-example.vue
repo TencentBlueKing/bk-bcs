@@ -22,7 +22,12 @@
           </div>
         </bk-alert>
       </div>
-      <code-preview class="preview-component" :code-val="replaceVal" ref="codePreviewRef" />
+      <code-preview
+        class="preview-component"
+        ref="codePreviewRef"
+        :code-val="replaceVal"
+        :variables="variables"
+        @change="(val) => (copyReplaceVal = val)" />
     </div>
   </section>
 </template>
@@ -36,17 +41,13 @@
   import codePreview from '../code-preview.vue';
   import { useI18n } from 'vue-i18n';
   import { useRoute } from 'vue-router';
+
   const props = defineProps<{
     kvName: string;
   }>();
-  const codePreviewRef = ref();
+
   const { t } = useI18n();
   const route = useRoute();
-  const fileOptionRef = ref();
-  const bkBizId = ref(String(route.params.spaceId));
-  const codeVal = ref('');
-  const formError = ref<number>();
-  provide('formError', formError);
   const tabArr = [
     {
       name: 'Get方法',
@@ -58,11 +59,14 @@
         'Watch 方法：通过建立长连接，实时监听配置版本的变更，当新版本的配置发布时，将自动调用回调方法处理新的配置信息，适用于需要实时响应配置变更的场景。',
     },
   ];
+
+  const codePreviewRef = ref();
+  const fileOptionRef = ref();
+  const bkBizId = ref(String(route.params.spaceId));
+  const codeVal = ref(''); // 存储yaml字符原始值
+  const replaceVal = ref(''); // 替换后的值
+  const copyReplaceVal = ref(''); // 渲染的值，用于复制未脱敏密钥的yaml数据
   const activeTab = ref(0); // 激活tab索引
-  // 代码预览上方提示
-  const topTip = computed(() => {
-    return tabArr[activeTab.value].topTip;
-  });
   const topTipShow = ref(true);
   // fileOption组件传递过来的数据汇总
   const optionData = ref({
@@ -70,27 +74,75 @@
     privacyCredential: '',
     labelArr: [],
   });
-  const getOptionData = (data: any) => {
-    optionData.value = data;
-  };
-  // 修改后的预览数据
-  const replaceVal = computed(() => {
-    const labelArr = optionData.value.labelArr.length ? JSON.stringify(optionData.value.labelArr.join(', ')) : '';
-    let updateString = codeVal.value.replace('动态替换bkBizId', bkBizId.value);
-    updateString = updateString.replaceAll('动态替换labels', labelArr);
-    updateString = updateString.replaceAll('动态替换clientKey', optionData.value.privacyCredential);
-    return updateString;
+  const formError = ref<number>();
+  provide('formError', formError);
+
+  // 代码预览上方提示框
+  const topTip = computed(() => {
+    return tabArr[activeTab.value].topTip;
   });
+  const variables = computed(() => {
+    replaceVal.value = '';
+    return [
+      {
+        name: 'Bk_Bscp_VariableLeabels',
+        type: '',
+        default_val: `{${optionData.value.labelArr}}`,
+        memo: '',
+      },
+      {
+        name: 'Bk_Bscp_VariableClientKey',
+        type: '',
+        default_val: `"${optionData.value.privacyCredential}"`,
+        memo: '',
+      },
+    ];
+  });
+
+  watch(
+    () => props.kvName,
+    () => {
+      // optionData.value = {
+      //   clientKey: '',
+      //   privacyCredential: '',
+      //   labelArr: [],
+      // };
+      fileOptionRef.value.formRef.clearValidate();
+      handleTab();
+    },
+  );
+  watch(
+    () => replaceVal.value,
+    () => {
+      // 初始化值，variables对应配置生效
+      // replaceVal.value = codeVal.value;
+      replaceVal.value = codeVal.value.replace('{{ .Bk_Bscp_VariableBkBizId }}', bkBizId.value);
+    },
+  );
+
   onMounted(() => {
     handleTab();
   });
+
+  const getOptionData = (data: any) => {
+    // 开始执行数据替换
+    optionData.value = computed(() => {
+      // 标签展示方式加工
+      const labelArr = data.labelArr.length ? data.labelArr.join(', ') : '';
+      return {
+        ...data,
+        labelArr,
+      };
+    }).value;
+  };
+
   // 复制示例
   const copyExample = async () => {
     try {
       await fileOptionRef.value.formRef.validate();
       // 复制示例使用未脱敏的密钥
       const reg = /"(.{1}|.{3})\*{3}(.{1}|.{3})"/g;
-      const copyVal = replaceVal.value.replaceAll(reg, `"${optionData.value.clientKey}"`);
+      const copyVal = copyReplaceVal.value.replaceAll(reg, `"${optionData.value.clientKey}"`);
       copyToClipBoard(copyVal);
       BkMessage({
         theme: 'success',
@@ -104,11 +156,11 @@
   };
   // 切换tab
   const handleTab = async (index = 0) => {
-    // scrollTo.value = new Date().getTime(); // 通知code-preview，滚动条到最顶
     codePreviewRef.value.scrollTo();
     activeTab.value = index;
     const newKvData = await changeKvData(props.kvName, index);
     codeVal.value = newKvData.default;
+    replaceVal.value = newKvData.value;
   };
   // 键值型数据模板切换
   /**
@@ -128,26 +180,20 @@
           : import('/src/assets/exampleData/kv-go-watch.yaml?raw');
       case 'java':
         return !methods
-          ? import('/src/assets/exampleData/kv-python-get.yaml?raw')
-          : import('/src/assets/exampleData/kv-python-watch.yaml?raw');
+          ? import('/src/assets/exampleData/kv-java-get.yaml?raw')
+          : import('/src/assets/exampleData/kv-java-watch.yaml?raw');
       case 'c++':
         return !methods
-          ? import('/src/assets/exampleData/kv-python-get.yaml?raw')
-          : import('/src/assets/exampleData/kv-python-watch.yaml?raw');
+          ? import('/src/assets/exampleData/kv-c++-get.yaml?raw')
+          : import('/src/assets/exampleData/kv-c++-watch.yaml?raw');
       case 'kv-cmd':
         return !methods
-          ? import('/src/assets/exampleData/kv-python-get.yaml?raw')
-          : import('/src/assets/exampleData/kv-python-watch.yaml?raw');
+          ? import('/src/assets/exampleData/kv-cmd-get.yaml?raw')
+          : import('/src/assets/exampleData/kv-cmd-watch.yaml?raw');
       default:
         return '';
     }
   };
-  watch(
-    () => props.kvName,
-    () => {
-      handleTab();
-    },
-  );
 </script>
 
 <style scoped lang="scss">

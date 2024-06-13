@@ -2,7 +2,7 @@
   <div>
     <CodeEditor
       ref="codeEditorRef"
-      v-model="codeStrVal"
+      :model-value="props.codeVal"
       :language="'yaml'"
       :editable="false"
       line-numbers="off"
@@ -10,55 +10,34 @@
       :vertical-scrollbar-size="0"
       :horizon-scrollbar-size="0"
       render-line-highlight="none"
-      :custom-class-name="testObj" />
+      :variables="props.variables"
+      @update:model-value="emits('change', $event)" />
   </div>
 </template>
 <script lang="ts" setup>
-  import { onMounted, onBeforeUnmount, ref, watch } from 'vue';
+  import { onBeforeUnmount, ref } from 'vue';
   import CodeEditor from '../../../../../components/code-editor/index.vue';
-  const codeEditorRef = ref();
+  import { IVariableEditParams } from '../../../../../../types/variable';
+
   const props = defineProps<{
     codeVal: string;
+    variables?: IVariableEditParams[];
   }>();
-  const codeStrVal = ref('');
-  onMounted(() => {
-    codeStrVal.value = props.codeVal;
+
+  const emits = defineEmits(['change']);
+
+  const codeEditorRef = ref();
+
+  onBeforeUnmount(() => {
+    codeEditorRef.value.destroy();
   });
 
-  // 装饰器测试数据
-  const testObj = {
-    className: 'abca1',
-    rangeArr: [
-      {
-        rowStart: 1,
-        columnStart: 1,
-        rowEnd: 10,
-        columnEnd: 20,
-      },
-      {
-        rowStart: 11,
-        columnStart: 1,
-        rowEnd: 20,
-        columnEnd: 20,
-      },
-    ],
-  };
   const scrollTo = () => {
     codeEditorRef.value.scrollToTop();
   };
+
   defineExpose({
     scrollTo,
-  });
-  watch(
-    () => {
-      return props.codeVal;
-    },
-    (newV: string) => {
-      codeStrVal.value = newV;
-    },
-  );
-  onBeforeUnmount(() => {
-    codeEditorRef.value.destroy();
   });
 </script>
 
@@ -106,6 +85,13 @@
     .detected-link,
     .detected-link-active {
       text-decoration: none;
+    }
+    // 高亮代码部分背景色
+    .view-line .template-variable-item {
+      color: #63656e;
+      border: none;
+      background-color: #ffd695;
+      font-weight: 700;
     }
   }
 </style>

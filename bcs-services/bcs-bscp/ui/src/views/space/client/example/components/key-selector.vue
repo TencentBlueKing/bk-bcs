@@ -57,17 +57,19 @@
   import { getCredentialList } from '../../../../../api/credentials';
   import { AngleUpFill, RightTurnLine } from 'bkui-vue/lib/icon';
   import { debounce } from 'lodash';
-  // import { useI18n } from 'vue-i18n';
-  // const { locale } = useI18n();
+
   // 继承接口，用于将脱敏与否的密钥都传递出去，用于复制示例
   type newICredentialItem = ICredentialItem & {
     spec: {
       privacyCredential: string;
     };
   };
+
   const emits = defineEmits(['current-key']);
+
   const route = useRoute();
   const router = useRouter();
+
   const formError = inject<any>('formError');
   const isError = ref(false);
   const loading = ref(true);
@@ -78,6 +80,7 @@
   });
   const bizId = ref(String(route.params.spaceId));
   const credentialList = ref<newICredentialItem[]>([]);
+
   watch(
     () => formError.value,
     () => {
@@ -87,6 +90,11 @@
       }
     },
   );
+
+  onMounted(() => {
+    loadCredentialList();
+  });
+
   // 获取密钥列表
   const loadCredentialList = async () => {
     loading.value = true;
@@ -133,9 +141,6 @@
     });
   };
   const flushData = debounce(loadCredentialList, 300);
-  onMounted(() => {
-    loadCredentialList();
-  });
 </script>
 
 <style scoped lang="scss">
