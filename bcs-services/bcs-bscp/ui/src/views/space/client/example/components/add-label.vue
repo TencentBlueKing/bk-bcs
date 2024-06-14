@@ -1,23 +1,23 @@
 <template>
   <!-- 标签 -->
   <div class="add-label-wrap">
-    <span class="label-span">标签</span>
+    <span class="label-span">{{ $t('标签') }}</span>
     <info
       class="icon-info"
       v-bk-tooltips="{
-        content: '与分组结合使用，实现服务实例的灰度发布场景，支持多个标签；若不需要灰度发布功能，此参数可不配置',
+        content: $t('与分组结合使用，实现服务实例的灰度发布场景，支持多个标签；若不需要灰度发布功能，此参数可不配置'),
         placement: 'top',
       }" />
     <div class="add-label-button" @click="addItem">
       <plus class="add-label-plus" />
-      添加
+      {{ $t('添加') }}
     </div>
   </div>
   <div class="label-content" v-show="labelArr.length">
     <div class="label-item" v-for="(item, index) in labelArr" :key="index">
-      <bk-input :id="'key' + index" v-model="item.key" />
+      <bk-input :id="'key' + index" v-model.trim="item.key" />
       <span class="label-item-icon">=</span>
-      <bk-input :id="'val' + index" v-model="item.value" />
+      <bk-input :id="'val' + index" v-model.trim="item.value" />
       <div class="label-item-minus" @click="deleteItem(index)"></div>
     </div>
   </div>

@@ -1,22 +1,22 @@
 <template>
-  <div class="cmd-tool-wrap">
-    <form-option @option-data="getOptionData" ref="fileOptionRef" />
+  <section class="cmd-tool-wrap">
+    <form-option @option-data="getOptionData" ref="fileOptionRef" :directory-show="props.kvName !== 'kv-cmd'" />
     <div class="preview-container">
-      <p class="headline">配置指引与示例预览</p>
+      <p class="headline">{{ $t('配置指引与示例预览') }}</p>
       <div class="guide-wrap">
-        <div class="guide-content" v-for="(item, index) in guideText" :key="item.title">
+        <div class="guide-content" v-for="(item, index) in cmdContent" :key="item.title">
           <p class="guide-text">{{ `${index + 1}. ${item.title}` }}</p>
           <p class="guide-text guide-text--copy" v-if="item.value" @click="copyText(item.value)">
             {{ item.value }}
             <copy-shape class="icon-copy" />
           </p>
           <template v-else>
-            <bk-button @click="copyExample" theme="primary" class="copy-btn">复制示例</bk-button>
+            <bk-button @click="copyExample" theme="primary" class="copy-btn">{{ $t('复制示例') }}</bk-button>
             <code-preview
-              class="preview-component"
+              :class="['preview-component', { 'preview-component--kvcmd': props.kvName === 'kv-cmd' }]"
               :code-val="replaceVal"
               :variables="variables"
-              @change="(val) => (copyReplaceVal = val)" />
+              @change="(val: string) => (copyReplaceVal = val)" />
           </template>
           <template v-if="item.tips">
             <p class="guide-text guide-text--margin">{{ item.tips.title }}</p>
@@ -29,11 +29,11 @@
         </div>
       </div>
     </div>
-  </div>
+  </section>
 </template>
 
 <script lang="ts" setup>
-  import { computed, provide, ref, onMounted, watch } from 'vue';
+  import { computed, provide, ref, onMounted, watch, inject, Ref } from 'vue';
   import { copyToClipBoard } from '../../../../../../utils/index';
   import BkMessage from 'bkui-vue/lib/message';
   import FormOption from '../form-option.vue';
@@ -41,46 +41,85 @@
   import { CopyShape } from 'bkui-vue/lib/icon';
   import { useI18n } from 'vue-i18n';
   import { useRoute } from 'vue-router';
-  import yamlString from '/src/assets/exampleData/file-cmd.yaml?raw';
 
-  const props = defineProps<{ contentScrollTop: Function }>();
+  const props = defineProps<{ contentScrollTop: Function; kvName: string }>();
 
   const { t } = useI18n();
   const route = useRoute();
-  const guideText = [
+  const serviceName = inject<Ref<string>>('serviceName');
+  const fileText = [
     {
-      title: '下载二进制命令行',
+      title: t('下载二进制命令行'),
       value: 'go install github.com/TencentBlueKing/bscp-go/cmd/bscp@latest',
       tips: {
-        title: '如果没有安装 GO，可以通过浏览器手动下载，建议下载最新版本',
-        value: '下载地址：',
+        title: t('如果没有安装 GO，可以通过浏览器手动下载，建议下载最新版本'),
+        value: t('下载地址：'),
         url: 'https://github.com/TencentBlueKing/bscp-go/releases/',
       },
     },
     {
-      title: '创建命令配置文件，配置文件为 YAML 格式',
+      title: t('创建命令配置文件，配置文件为 YAML 格式'),
       value: '',
     },
     {
-      title: '获取业务下的服务列表',
+      title: t('获取业务下的服务列表'),
       value: './bscp get app -c ./bscp.yaml',
     },
     {
-      title: '拉取服务下所有配置文件',
-      value: './bscp pull -a alkaid-test-file -c ./bscp.yaml',
+      title: t('拉取服务下所有配置文件'),
+      value: `./bscp pull -a ${serviceName!.value} -c ./bscp.yaml`,
     },
     {
-      title: '获取服务下所有配置文件列表',
-      value: './bscp get file -a alkaid-test-file -c ./bscp.yaml',
+      title: t('获取服务下所有配置文件列表'),
+      value: `./bscp get file -a ${serviceName!.value} -c ./bscp.yaml'`,
     },
     {
-      title: '下载指定配置文件到指定目录，例如指定文件为 /etc/nginx/nginx.conf，下载文件到 /root/config 目录',
-      value: './bscp get file /etc/nginx/nginx.conf  -a alkaid-test-file -c ./bscp.yaml  -d /root/config',
+      title: t('下载指定配置文件到指定目录，例如指定文件为 /etc/nginx/nginx.conf，下载文件到 /root/config 目录'),
+      value: `./bscp get file /etc/nginx/nginx.conf  -a ${serviceName!.value} -c ./bscp.yaml  -d /root/config`,
+    },
+  ];
+
+  const kvText = [
+    {
+      title: t('下载二进制命令行'),
+      value: 'go install github.com/TencentBlueKing/bscp-go/cmd/bscp@latest',
+      tips: {
+        title: t('如果没有安装 GO，可以通过浏览器手动下载，建议下载最新版本'),
+        value: t('下载地址：'),
+        url: 'https://github.com/TencentBlueKing/bscp-go/releases/',
+      },
+    },
+    {
+      title: t('创建命令配置文件，配置文件为 YAML 格式'),
+      value: '',
+    },
+    {
+      title: t('获取业务下的服务列表'),
+      value: './bscp get app -c ./bscp.yaml',
+    },
+    {
+      title: t('获取指定服务下所有配置项列表'),
+      value: `./bscp get kv -a ${serviceName!.value} -c ./bscp.yaml`,
+    },
+    {
+      title: t('获取指定服务下指定配置项列表，多个配置这'),
+      value: `./bscp get kv -a ${serviceName!.value} key1 key2 -c ./bscp.yaml`,
+    },
+    {
+      title: t('获取指定服务下指定配置项值，只支持单个配置项值获取'),
+      value: ` ./bscp get kv -a ${serviceName!.value} key1  -c ./bscp.yaml -o value`,
+    },
+    {
+      title: t(
+        '获取指定服务下指定配置项元数据，支持多个配置项元数据获取，没有指定配置项，获取服务下所有配置项的元数据',
+      ),
+      value: `./bscp get kv -a ${serviceName!.value} key1 key2  -c ./bscp.yaml -o json`,
     },
   ];
 
   const fileOptionRef = ref();
   const bkBizId = ref(String(route.params.spaceId));
+  const codeVal = ref(''); // 存储yaml字符原始值
   const replaceVal = ref('');
   const copyReplaceVal = ref(''); // 渲染的值，用于复制未脱敏密钥的yaml数据
   const formError = ref<number>();
@@ -93,13 +132,16 @@
     tempDir: '',
   });
 
+  const cmdContent = computed(() => {
+    return props.kvName === 'file-cmd' ? fileText : kvText;
+  });
   const variables = computed(() => {
     replaceVal.value = '';
     return [
       {
         name: 'Bk_Bscp_VariableLeabels',
         type: '',
-        default_val: `'{${optionData.value.labelArr}}'`,
+        default_val: `{${optionData.value.labelArr}}`,
         memo: '',
       },
       {
@@ -116,19 +158,20 @@
       },
     ];
   });
-
   watch(
     () => replaceVal.value,
     () => {
       // 初始化值，variables对应配置生效
-      let updateString = yamlString;
-      updateString = updateString.replace('{{ .Bk_Bscp_VariableBkBizId }}', bkBizId.value);
-      replaceVal.value = updateString.replace('{{ .Bk_Bscp_VariableFEED_ADDR }}', (window as any).FEED_ADDR);
+      let updateString = codeVal.value.replace('{{ .Bk_Bscp_VariableBkBizId }}', bkBizId.value);
+      updateString = updateString.replace('{{ .Bk_Bscp_VariableFEED_ADDR }}', (window as any).FEED_ADDR);
+      replaceVal.value = updateString;
     },
   );
 
-  onMounted(() => {
-    replaceVal.value = yamlString;
+  onMounted(async () => {
+    const newKvData = await changeKvData(props.kvName);
+    codeVal.value = newKvData.default;
+    replaceVal.value = newKvData.value;
   });
 
   // 监听传来的数据
@@ -159,7 +202,6 @@
       // 通知密钥选择组件校验状态
       formError.value = new Date().getTime();
       props.contentScrollTop();
-
       console.log(error);
     }
   };
@@ -173,6 +215,16 @@
   // 跳转链接
   const linkUrl = (url: string) => {
     window.open(url, '__blank');
+  };
+  // 命令行file与kv的数据模板切换
+  /**
+   *
+   * @param serviceType 数据模板名称
+   */
+  const changeKvData = (serviceType = 'file-cmd') => {
+    return serviceType === 'file-cmd'
+      ? import('/src/assets/exampleData/file-cmd.yaml?raw')
+      : import('/src/assets/exampleData/kv-cmd.yaml?raw');
   };
 </script>
 
@@ -240,5 +292,8 @@
     height: 292px;
     padding: 16px 0 0;
     background-color: #f5f7fa;
+    &--kvcmd {
+      height: 247px;
+    }
   }
 </style>

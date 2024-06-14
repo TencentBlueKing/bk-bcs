@@ -1,12 +1,11 @@
 <template>
   <section class="kv-example-template">
-    <form-option @option-data="getOptionData" ref="fileOptionRef" :contents-show="false" />
+    <form-option @option-data="getOptionData" ref="fileOptionRef" :directory-show="false" />
     <div class="preview-container">
       <div class="kv-handle-content">
-        <span class="preview-label">示例预览</span>
+        <span class="preview-label">{{ $t('示例预览') }}</span>
         <div class="changeMethod">
           <div
-            class="tab-wrap"
             :class="['tab-wrap', { 'is-active': activeTab === index }]"
             v-for="(item, index) in tabArr"
             :key="item.name"
@@ -14,7 +13,7 @@
             {{ item.name }}
           </div>
         </div>
-        <bk-button @click="copyExample" theme="primary" class="copy-btn">复制示例</bk-button>
+        <bk-button @click="copyExample" theme="primary" class="copy-btn">{{ $t('复制示例') }}</bk-button>
         <bk-alert class="alert-tips-wrap" v-show="topTipShow" theme="info">
           <div class="alert-tips">
             <p>{{ topTip }}</p>
@@ -27,13 +26,13 @@
         ref="codePreviewRef"
         :code-val="replaceVal"
         :variables="variables"
-        @change="(val) => (copyReplaceVal = val)" />
+        @change="(val: string) => (copyReplaceVal = val)" />
     </div>
   </section>
 </template>
 
 <script lang="ts" setup>
-  import { ref, provide, computed, onMounted, watch } from 'vue';
+  import { ref, provide, computed, onMounted, watch, Ref, inject } from 'vue';
   import { copyToClipBoard } from '../../../../../../utils/index';
   import { CloseLine } from 'bkui-vue/lib/icon';
   import BkMessage from 'bkui-vue/lib/message';
@@ -50,13 +49,14 @@
   const route = useRoute();
   const tabArr = [
     {
-      name: 'Get方法',
-      topTip: 'Get 方法：用于一次性拉取最新的配置信息，适用于需要获取并更新配置的场景。',
+      name: 'Pull',
+      topTip: t('Pull：用于一次性拉取最新的配置信息，适用于需要获取并更新配置的场景。'),
     },
     {
-      name: 'Watch方法',
-      topTip:
-        'Watch 方法：通过建立长连接，实时监听配置版本的变更，当新版本的配置发布时，将自动调用回调方法处理新的配置信息，适用于需要实时响应配置变更的场景。',
+      name: 'Watch',
+      topTip: t(
+        'Watch：通过建立长连接，实时监听配置版本的变更，当新版本的配置发布时，将自动调用回调方法处理新的配置信息，适用于需要实时响应配置变更的场景。',
+      ),
     },
   ];
 
@@ -73,7 +73,9 @@
     clientKey: '',
     privacyCredential: '',
     labelArr: [],
+    labelArrType: '', // 展示格式
   });
+  const serviceName = inject<Ref<string>>('serviceName');
   const formError = ref<number>();
   provide('formError', formError);
 
@@ -81,13 +83,21 @@
   const topTip = computed(() => {
     return tabArr[activeTab.value].topTip;
   });
+  const labelArrShowType = computed(() => {
+    switch (props.kvName) {
+      case 'java':
+        return optionData.value.labelArrType;
+      default:
+        return `{${optionData.value.labelArrType}}`;
+    }
+  });
   const variables = computed(() => {
     replaceVal.value = '';
     return [
       {
         name: 'Bk_Bscp_VariableLeabels',
         type: '',
-        default_val: `{${optionData.value.labelArr}}`,
+        default_val: labelArrShowType.value,
         memo: '',
       },
       {
@@ -101,14 +111,13 @@
 
   watch(
     () => props.kvName,
-    () => {
-      // optionData.value = {
-      //   clientKey: '',
-      //   privacyCredential: '',
-      //   labelArr: [],
-      // };
-      fileOptionRef.value.formRef.clearValidate();
-      handleTab();
+    (newV) => {
+      if (newV !== 'kv-cmd') {
+        handleTab();
+        if (['java', 'c++'].includes(newV)) {
+          getOptionData(optionData.value);
+        }
+      }
     },
   );
   watch(
@@ -116,7 +125,10 @@
     () => {
       // 初始化值，variables对应配置生效
       // replaceVal.value = codeVal.value;
-      replaceVal.value = codeVal.value.replace('{{ .Bk_Bscp_VariableBkBizId }}', bkBizId.value);
+      let updateString = codeVal.value.replace('{{ .Bk_Bscp_VariableBkBizId }}', bkBizId.value);
+      updateString = updateString.replace('{{ .Bk_Bscp_VariableServiceName }}', serviceName!.value);
+      updateString = updateString.replaceAll('{{ .Bk_Bscp_VariableFEED_ADDR }}', (window as any).FEED_ADDR);
+      replaceVal.value = updateString;
     },
   );
 
@@ -127,12 +139,29 @@
   const getOptionData = (data: any) => {
     // 开始执行数据替换
     optionData.value = computed(() => {
-      // 标签展示方式加工
-      const labelArr = data.labelArr.length ? data.labelArr.join(', ') : '';
-      return {
-        ...data,
-        labelArr,
-      };
+      // labels展示方式加工
+      let labelArrType = '';
+      switch (props.kvName) {
+        case 'java':
+          if (data.labelArr.length) {
+            labelArrType = data.labelArr
+              .map((item: string) => {
+                const [key, value] = item.split(':');
+                return `labels.put(${key}, ${value});`;
+              })
+              .join('');
+          }
+          return {
+            ...data,
+            labelArrType,
+          };
+        default:
+          labelArrType = data.labelArr.length ? data.labelArr.join(', ') : '';
+          return {
+            ...data,
+            labelArrType,
+          };
+      }
     }).value;
   };
 
@@ -166,7 +195,7 @@
   /**
    *
    * @param kvName 数据模板名称
-   * @param methods 方法，0: get，1: watch
+   * @param methods 方法，0: pull，1: watch
    */
   const changeKvData = (kvName = 'python', methods = 0) => {
     switch (kvName) {
@@ -213,6 +242,7 @@
       min-width: 72px;
       line-height: 24px;
       font-size: 12px;
+      text-align: center;
       color: #63656e;
       cursor: pointer;
       transition: 0.3s;

@@ -57,7 +57,7 @@
   const navList = computed(() => (serviceType.value === 'file' ? fileTypeArr : kvTypeArr));
   // 展示的示例组件与顶部提示语
   const currentTemplate = computed(() => {
-    if (serviceType.value && serviceType.value === 'file') {
+    if (serviceType.value) {
       switch (renderComponent.value) {
         case 'sidecar':
           topTip.value = t('Sidecar 容器客户端用于容器化应用程序拉取文件型配置场景。');
@@ -70,12 +70,15 @@
             '命令行工具通常用于在脚本 (如 Bash、Python 等) 中手动拉取应用程序配置，同时支持文件型和键值型配置的获取。',
           );
           return CmdExample;
+        case 'kv-cmd':
+          topTip.value = t(
+            '命令行工具通常用于在脚本 (如 Bash、Python 等) 中手动拉取应用程序配置，同时支持文件型和键值型配置的获取。',
+          );
+          return CmdExample;
         default:
-          return '';
+          // 键值类型模板都一样
+          return KvExample;
       }
-    } else if (serviceType?.value && serviceType?.value === 'kv') {
-      // 键值类型模板都一样
-      return KvExample;
     }
     // 无数据模板
     return Exception;

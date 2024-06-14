@@ -1,5 +1,5 @@
 <template>
-  <div class="headline">示例参数</div>
+  <div class="headline">{{ $t('示例参数') }}</div>
   <bk-form class="form-example-wrap" :model="formData" :rules="rules" form-type="vertical" ref="formRef">
     <bk-form-item property="clientKey" required>
       <template #label>
@@ -7,19 +7,19 @@
         <info
           class="icon-info"
           v-bk-tooltips="{
-            content: '用于客户端拉取配置时身份验证',
+            content: $t('用于客户端拉取配置时身份验证'),
             placement: 'top',
           }" />
       </template>
       <KeySelect @current-key="setCredential" />
     </bk-form-item>
-    <bk-form-item v-if="props.contentsShow" property="tempDir" :required="props.contentsShow">
+    <bk-form-item v-if="props.directoryShow" property="tempDir" :required="props.directoryShow">
       <template #label>
         {{ $t('临时目录') }}
         <info
           class="icon-info"
           v-bk-tooltips="{
-            content: '用于客户端拉取文件型配置后的临时存储目录',
+            content: $t('用于客户端拉取文件型配置后的临时存储目录'),
             placement: 'top',
           }" />
       </template>
@@ -41,9 +41,10 @@
   import { Info } from 'bkui-vue/lib/icon';
   import AddLabel from './add-label.vue';
   import { IExampleFormData } from '../../../../../../types/client';
+  import { useI18n } from 'vue-i18n';
 
   const props = defineProps({
-    contentsShow: {
+    directoryShow: {
       type: Boolean,
       default: true,
     },
@@ -51,19 +52,20 @@
 
   const emits = defineEmits(['option-data']);
 
+  const { t } = useI18n();
   const rules = {
     clientKey: [
       {
         required: true,
-        message: '请先选择客户端密钥，替换下方示例代码后，再尝试复制示例',
+        message: t('请先选择客户端密钥，替换下方示例代码后，再尝试复制示例'),
         validator: (value: string) => value.length,
         trigger: 'change',
       },
     ],
     tempDir: [
       {
-        required: props.contentsShow,
-        message: '请输入路径地址，替换下方示例代码后，再尝试复制示例',
+        required: props.directoryShow,
+        message: t('请输入路径地址，替换下方示例代码后，再尝试复制示例'),
         validator: (value: string) => value.length,
         trigger: 'change',
       },
@@ -87,7 +89,7 @@
     formData.value.privacyCredential = privacyKey;
   };
   const sendAll = () => {
-    if (!props.contentsShow) {
+    if (!props.directoryShow) {
       // 不显示临时目录的菜单，删除对应值
       delete formData.value.tempDir;
     }

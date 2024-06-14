@@ -1,16 +1,16 @@
 <template>
-  <div class="example-wrap">
+  <section class="example-wrap">
     <form-option @option-data="getOptionData" ref="fileOptionRef" />
     <div class="preview-container">
-      <span class="preview-label">示例预览</span>
-      <bk-button @click="copyExample" theme="primary" class="copy-btn">复制示例</bk-button>
+      <span class="preview-label">{{ $t('示例预览') }}</span>
+      <bk-button @click="copyExample" theme="primary" class="copy-btn">{{ $t('复制示例') }}</bk-button>
       <code-preview
         class="preview-component"
         :code-val="replaceVal"
         :variables="variables"
-        @change="(val) => (copyReplaceVal = val)" />
+        @change="(val: string) => (copyReplaceVal = val)" />
     </div>
-  </div>
+  </section>
 </template>
 
 <script lang="ts" setup>
@@ -37,9 +37,9 @@
   const bkBizId = ref(String(route.params.spaceId));
   const replaceVal = ref('');
   const copyReplaceVal = ref(''); // 渲染的值，用于复制未脱敏密钥的yaml数据
+  const serviceName = inject<Ref<string>>('serviceName');
   const formError = ref<number>();
   provide('formError', formError);
-  const serviceName = inject<Ref<string>>('serviceName');
 
   const variables = computed(() => {
     replaceVal.value = '';
