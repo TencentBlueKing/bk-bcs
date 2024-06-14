@@ -329,7 +329,6 @@ import LoadingIcon from '@/components/loading-icon.vue';
 import PopoverSelector from '@/components/popover-selector.vue';
 import StatusIcon from '@/components/status-icon';
 import { ICluster, useProject } from '@/composables/use-app';
-import useCalcHeight from '@/composables/use-calc-height';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store';
@@ -373,15 +372,6 @@ export default defineComponent({
     },
   },
   setup(props, ctx) {
-    // 设置表格内容高度
-    useCalcHeight([
-      {
-        el: '.bk-table-body-wrapper',
-        offset: 124, // padding + 表头 + 顶部操作栏
-        calc: ['#bcs-notice-com', '.bk-navigation-header'],
-      },
-    ]);
-
     const { curProject } = useProject();
     const { clusterExtraInfo, clusterList, highlightClusterId } = toRefs(props);
     const sortClusterList = computed(() => clusterList.value.sort((cur) => {
@@ -448,14 +438,15 @@ export default defineComponent({
     const clusterTypeKey = computed(() => clusterTypeFilterList.value.map(item => item.value).join(','));
     const filterMethod = (value, row, column) => {
       const { property } = column;
-      // 筛选集群类型搜索逻辑
       if (property === 'manageType') {
+        // 筛选集群类型搜索逻辑
         if (value === 'isShared') {
           return row.is_shared;
-        } if (value === 'virtual') {
+        }
+        if (value === 'virtual') {
           return row.clusterType === 'virtual';
         }
-        return row[property] === value && !row.is_shared;
+        return row[property] === value && !row.is_shared && row.clusterType !== 'virtual';
       }
       return row[property] === value;
     };

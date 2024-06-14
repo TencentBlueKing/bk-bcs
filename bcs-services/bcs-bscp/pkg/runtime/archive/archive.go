@@ -14,10 +14,8 @@
 package archive
 
 import (
-	"bufio"
 	"bytes"
-	"compress/gzip"
-	"fmt"
+	"errors"
 	"io"
 	"os"
 	"path/filepath"
@@ -26,76 +24,78 @@ import (
 )
 
 var (
-	magicZIP = []byte{0x50, 0x4b, 0x03, 0x04} // ZIP文件的魔法数字
-	magicGZ  = []byte{0x1f, 0x8b}             // GZIP文件的魔法数字
-	magicTAR = []byte{0x75, 0x73, 0x74, 0x61} // TAR文件的魔法数字
+	// GZIP files start with 1F 8B
+	gzipMagic = []byte{0x1F, 0x8B}
+	// ZIP files start with 50 4B 03 04 or 50 4B 05 06 or 50 4B 07 08
+	zipMagic = []byte{0x50, 0x4B}
+	// Check if the buffer contains a valid tar header
+	ustarMagic  = []byte("ustar\x00")
+	gnuTarMagic = []byte("ustar  \x00")
 )
 
-func magicNumber(reader *bufio.Reader, offset int) (string, error) {
-	headerBytes, err := reader.Peek(offset + 6)
+// ArchiveType 文件类型
+type ArchiveType string // nolint
+
+const (
+	// GZIP gzip
+	GZIP ArchiveType = "GZIP"
+	// ZIP zip
+	ZIP ArchiveType = "ZIP"
+	// TAR tar
+	TAR ArchiveType = "TAR"
+	// Unknown unknown
+	Unknown ArchiveType = "Unknown"
+)
+
+// Unpack 解压zip、gzip、tar
+func Unpack(reader io.Reader, archiveType ArchiveType) (string, error) {
+
+	tempDir, err := os.MkdirTemp("", "configItem-")
 	if err != nil {
 		return "", err
 	}
-
-	magic := headerBytes[offset : offset+6]
-
-	if bytes.Equal(magicTAR, magic[0:5]) {
-		return "tar", nil
-	}
-
-	if bytes.Equal(magicZIP, magic[0:4]) {
-		return "zip", nil
-	}
-
-	if bytes.Equal(magicGZ, magic[0:2]) {
-		return "gzip", nil
-	}
-
-	return "", nil
-}
-
-// Unpack unpacks a compressed stream. Magic numbers are used to determine what
-// decompressor and/or unarchiver to use.
-func Unpack(reader io.Reader) (string, error) {
-	r := bufio.NewReader(reader)
-
-	var (
-		gzr *gzip.Reader
-		err error
-	)
-	// Reads magic number from the stream so we can better determine how to proceed
-	fType, err := magicNumber(r, 0)
-	if err != nil {
-		return "", err
-	}
-
-	// Create a temporary folder
-	tmpDir, err := generateTempDir()
-	if err != nil {
-		return "", err
-	}
-	switch fType {
-	case "zip":
-		return tmpDir, NewZipHandler().UnZip(r, tmpDir)
-	case "gzip":
-		gzr, err = gzip.NewReader(r)
-		if err != nil {
+	switch archiveType {
+	case ZIP:
+		if err := NewZipArchive(tempDir).UnZipPack(reader); err != nil {
 			return "", err
 		}
-		defer func() {
-			_ = gzr.Close()
-		}()
-		return tmpDir, NewTgzHandler().UnTar(gzr, tmpDir)
-	case "tar":
-		return tmpDir, NewTgzHandler().UnTar(gzr, tmpDir)
+	case GZIP:
+		if err := NewTgzArchive(tempDir).UnTgzPack(reader); err != nil {
+			return "", err
+		}
+	case TAR:
+		if err := NewTgzArchive(tempDir).UnTar(reader); err != nil {
+			return "", err
+		}
+	default:
+		return "", errors.New("file type detection failed")
 	}
 
-	return "", fmt.Errorf("this package is not supported")
+	return tempDir, nil
 }
 
-// Generate temporary directory
-func generateTempDir() (string, error) {
-	return os.MkdirTemp("", "template-config-*")
+// IdentifyFileType 检测文件类型：zip、zip、tar
+func IdentifyFileType(buf []byte) ArchiveType {
+	if isGzip(buf) {
+		return GZIP
+	} else if isZip(buf) {
+		return ZIP
+	} else if isTar(buf) {
+		return TAR
+	}
+	return Unknown
+}
+
+func isGzip(buf []byte) bool {
+	return len(buf) >= len(gzipMagic) && bytes.HasPrefix(buf, gzipMagic)
+}
+
+func isZip(buf []byte) bool {
+	return len(buf) >= len(zipMagic) && bytes.HasPrefix(buf, zipMagic)
+}
+
+func isTar(buf []byte) bool {
+	return bytes.Equal(buf[257:263], ustarMagic) || bytes.Equal(buf[257:265], gnuTarMagic)
 }
 
 // Sanitizes name to avoid overwriting sensitive system files when unarchiving

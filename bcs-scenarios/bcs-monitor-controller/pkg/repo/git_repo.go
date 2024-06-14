@@ -15,8 +15,8 @@ package repo
 import (
 	"encoding/base64"
 	"fmt"
+	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -24,9 +24,14 @@ import (
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
-	"github.com/pkg/errors"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
+
+// ScenarioInfo info of monitor scenario
+type ScenarioInfo struct {
+	Name       string
+	Readme     string
+	OptionInfo string
+}
 
 // gitRepo clone git repo and pull in certain freq
 type gitRepo struct {
@@ -42,7 +47,8 @@ type gitRepo struct {
 	// In case of Git, this can be commit, tag, or branch. If omitted, will equal to HEAD.
 	TargetRevision string `json:"targetRevision,omitempty"`
 
-	cli  client.Client // nolint unused
+	ScenarioInfos []*ScenarioInfo
+
 	auth *http.BasicAuth
 }
 
@@ -122,7 +128,9 @@ func (gr *gitRepo) Reload() ([]string, error) {
 		return nil, fmt.Errorf("pull git repo[%s] failed! err: %s", gr.URL,
 			err.Error())
 	}
-
+	if err := gr.refreshScenarioInfos(); err != nil {
+		return nil, fmt.Errorf("refresh scenario info for repo[%s] failed, err: %s", gr.Key, err.Error())
+	}
 	changeDirs, err := gr.getChangedDirs()
 	if err != nil {
 		// DOTO send event
@@ -209,6 +217,40 @@ func (gr *gitRepo) getChangedDirs() ([]string, error) {
 	return dirs, nil
 }
 
+func (gr *gitRepo) refreshScenarioInfos() error {
+	f, err := os.Open(gr.Directory)
+	if err != nil {
+		return fmt.Errorf("os.Open repo[%s] dir[%s] failed", gr.Key, gr.Directory)
+	}
+	files, err := f.Readdir(-1)
+	if err != nil {
+		return fmt.Errorf("read repo[%s] dir[%s] failed", gr.Key, gr.Directory)
+	}
+
+	scenarioList := make([]*ScenarioInfo, 0)
+	for _, file := range files {
+		if strInSlice(filterScenarios, file.Name()) {
+			// 筛掉测试场景
+			continue
+		}
+		// 所有场景以目录形式存在
+		if file.IsDir() {
+			scenarioList = append(scenarioList, &ScenarioInfo{
+				Name:       file.Name(),
+				Readme:     readFileContent(filepath.Join(gr.Directory, file.Name(), "README.md")),
+				OptionInfo: readFileContent(filepath.Join(gr.Directory, file.Name(), "option.yaml")),
+			})
+		}
+	}
+	gr.ScenarioInfos = scenarioList
+	return nil
+}
+
+// GetScenarioInfos return scenario info of related repo
+func (gr *gitRepo) GetScenarioInfos() []*ScenarioInfo {
+	return gr.ScenarioInfos
+}
+
 func compareCommitAndParent(commit *object.Commit) ([]string, error) {
 	parents := commit.Parents()
 	parent, err := parents.Next()
@@ -246,7 +288,7 @@ func compareCommitAndParent(commit *object.Commit) ([]string, error) {
 			if inErr != nil {
 				return inErr
 			}
-			if !contains(changedDirs, dir) {
+			if !strInSlice(changedDirs, dir) {
 				changedDirs = append(changedDirs, dir)
 			}
 		} else if file.Hash != parentFile.Hash {
@@ -254,7 +296,7 @@ func compareCommitAndParent(commit *object.Commit) ([]string, error) {
 			if inErr != nil {
 				return inErr
 			}
-			if !contains(changedDirs, dir) {
+			if !strInSlice(changedDirs, dir) {
 				changedDirs = append(changedDirs, dir)
 			}
 		}
@@ -265,22 +307,4 @@ func compareCommitAndParent(commit *object.Commit) ([]string, error) {
 	}
 
 	return changedDirs, nil
-}
-
-func contains(slice []string, item string) bool {
-	for _, s := range slice {
-		if s == item {
-			return true
-		}
-	}
-	return false
-}
-
-func getTopDir(path string) (string, error) {
-	dir := filepath.Dir(path)
-	topDir := strings.Split(dir, string(filepath.Separator))
-	if len(topDir) == 0 {
-		return "", errors.Errorf("unknown error, update file: %s, has not related scenario", path)
-	}
-	return topDir[0], nil
 }

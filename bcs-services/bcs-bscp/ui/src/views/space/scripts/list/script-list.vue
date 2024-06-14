@@ -137,8 +137,8 @@
               <span v-if="row.hook">{{ datetimeFormat(row.hook.revision.update_at) }}</span>
             </template>
           </bk-table-column>
-          <bk-table-column :label="t('操作')">
-            <template #default="{ row }" width="180">
+          <bk-table-column :label="t('操作')" width="180">
+            <template #default="{ row }">
               <div class="action-btns">
                 <bk-button text theme="primary" @click="handleEditClick(row)">{{ t('编辑') }}</bk-button>
                 <bk-button
@@ -203,6 +203,7 @@
     getScriptCiteList,
   } from '../../../../api/script';
   import { IScriptItem, IScriptTagItem, IScriptListQuery } from '../../../../../types/script';
+  import useTablePagination from '../../../../utils/hooks/use-table-pagination';
   import { datetimeFormat } from '../../../../utils/index';
   import BatchDeleteBtn from './batch-delete-btn.vue';
   import CreateScript from './create-script.vue';
@@ -217,6 +218,8 @@
   const { versionListPageShouldOpenEdit, versionListPageShouldOpenView } = storeToRefs(useScriptStore());
   const router = useRouter();
   const { t, locale } = useI18n();
+
+  const { pagination, updatePagination } = useTablePagination('scriptCited');
 
   interface IAppItem {
     app_id: number;
@@ -251,11 +254,6 @@
     return scriptsData.value.filter((item) => selectedIds.value.includes(item.hook.id));
   });
 
-  const pagination = ref({
-    current: 1,
-    count: 0,
-    limit: 10,
-  });
   const isSearchEmpty = ref(false);
   watch(
     () => spaceId.value,
@@ -429,7 +427,7 @@
     }
     Message({
       theme: 'success',
-      message: t('删除版本成功'),
+      message: t('删除脚本成功'),
     });
     isDeleteScriptDialogShow.value = false;
     getScripts();
@@ -466,7 +464,7 @@
   };
 
   const handlePageLimitChange = (val: number) => {
-    pagination.value.limit = val;
+    updatePagination('limit', val);
     refreshList();
   };
 

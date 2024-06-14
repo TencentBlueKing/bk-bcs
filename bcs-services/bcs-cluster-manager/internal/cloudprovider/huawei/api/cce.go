@@ -546,7 +546,7 @@ func (cli *CceClient) UpdateNodePoolDesiredNodes(clusterId, nodePoolId string, d
 					Taints:  taints,
 					K8sTags: k8sTags,
 				},
-				InitialNodeCount: desiredSize,
+				InitialNodeCount: desiredSize + *nodePool.Spec.InitialNodeCount,
 				Autoscaling:      autoscalingConfig,
 			},
 		},

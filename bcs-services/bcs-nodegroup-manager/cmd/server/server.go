@@ -19,6 +19,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -32,6 +33,7 @@ import (
 	grpcsvr "github.com/asim/go-micro/plugins/server/grpc/v4"
 	etcdsync "github.com/asim/go-micro/plugins/sync/etcd/v4"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go-micro.dev/v4"
 	"go-micro.dev/v4/registry"
 	"go-micro.dev/v4/sync"
@@ -87,13 +89,15 @@ type Server struct {
 	// taskController for task management
 	taskController  controller.Controller
 	nodeGroupCancel context.CancelFunc
+	// extraServer for metric/pprof
+	extraServer http.Server
 }
 
 // Init essential elements for running
 func (s *Server) Init() error {
 	initializer := []func() error{
 		s.initStorage, s.initResourceMgr, s.initClusterCli,
-		s.initMicroService, s.initGatewayServer, s.initLeaderElection,
+		s.initMicroService, s.initGatewayServer, s.initExtraServers, s.initLeaderElection,
 	}
 
 	for _, initFunc := range initializer {
@@ -358,11 +362,43 @@ func (s *Server) initClusterCli() error {
 	if err != nil {
 		return fmt.Errorf("init clusterCli failed, encrypt token error:%s", err.Error())
 	}
-	opts := &cluster.ClientOptions{
+	clusterOpts := &cluster.ClusterClientOptions{
 		Endpoint: s.opt.Gateway.Endpoint,
 		Token:    string(realAuthToken),
 		Sender:   requester.NewRequester(),
 	}
-	s.clusterCli = cluster.NewClient(opts)
+	clusterManagerOpts := &cluster.ClusterManagerClientOptions{
+		Name:         s.opt.ClusterManager,
+		Etcd:         strings.Split(s.opt.Registry.Endpoints, ","),
+		EtcdConfig:   s.opt.Registry.tlsConfig,
+		ClientConfig: s.opt.clientTLS,
+	}
+	s.clusterCli = cluster.NewClient(clusterOpts, clusterManagerOpts)
 	return nil
+}
+
+func (s *Server) initExtraServers() error {
+	extraMux := http.NewServeMux()
+	s.initMetric(extraMux)
+	extraServerEndpoint := s.opt.Address + ":" + strconv.Itoa(int(s.opt.MetricPort))
+	s.extraServer = http.Server{
+		Addr:    extraServerEndpoint,
+		Handler: extraMux,
+	}
+
+	go func() {
+		var err error
+		blog.Infof("start extra modules [pprof, metric] server %s", extraServerEndpoint)
+		err = s.extraServer.ListenAndServe()
+		if err != nil {
+			blog.Errorf("extra modules server listen failed, err %s", err.Error())
+			s.svrCancel()
+		}
+	}()
+	return nil
+}
+
+func (s *Server) initMetric(mux *http.ServeMux) {
+	blog.Infof("init metric handler")
+	mux.Handle("/metrics", promhttp.Handler())
 }

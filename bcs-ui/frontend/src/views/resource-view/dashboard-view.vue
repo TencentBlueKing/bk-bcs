@@ -1,5 +1,5 @@
 <template>
-  <div class="bcs-dashboard-view h-full flex overflow-hidden" :style="style">
+  <div class="bcs-dashboard-view h-full flex">
     <div class="bcs-border-right cursor-default bg-[#fff] h-full">
       <!-- 视图切换 -->
       <ViewSelector
@@ -8,7 +8,7 @@
         @toggle-view-config="showViewConfig = !showViewConfig"
         @create-new-view="handleCreateView"
         @edit-view="handleEditView" />
-      <div class="flex items-start h-[calc(100%-66px)]">
+      <div class="flex items-start h-[calc(100%-66px)] overflow-auto">
         <!-- 视图配置 -->
         <ViewConfig
           v-if="showViewConfig"
@@ -56,18 +56,10 @@ import ViewSelector from './view-manage/view-selector.vue';
 
 import { bus } from '@/common/bus';
 import { useCluster } from '@/composables/use-app';
-import useCalcHeight from '@/composables/use-calc-height';
 import $router from '@/router';
 import $store from '@/store';
 
 const openSideMenu = computed(() => $store.state.openSideMenu);
-
-// 计算content高度
-const { style } = useCalcHeight({
-  prop: 'height',
-  offset: 52, // 导航
-  calc: ['#bcs-notice-com'],
-});
 
 const showViewConfig = ref(false);
 
@@ -141,7 +133,7 @@ watch(
   },
 );
 
-const { clusterList } = useCluster();
+const { clusterList, curClusterId } = useCluster();
 const initRoutePath = () => {
   const pathClusterID = $router.currentRoute?.params?.clusterId;
   let cluster;
@@ -150,8 +142,9 @@ const initRoutePath = () => {
     cluster = clusterList.value.find(item => item.clusterID === pathClusterID);
     updateViewIDStore('');// 删除视图缓存
   } else if (!dashboardViewID.value) {
-    // 没有集群ID, 也没有视图ID, 就默认回显一个集群
-    cluster = clusterList.value.find(item => item.status === 'RUNNING');
+    // 没有集群ID, 也没有视图ID, 就默认回显全局缓存的集群
+    cluster = clusterList.value.find(item => item.clusterID === curClusterId.value)
+      || clusterList.value.find(item => item.status === 'RUNNING');
     $router.replace({
       name: $router.currentRoute?.name,
       params: {

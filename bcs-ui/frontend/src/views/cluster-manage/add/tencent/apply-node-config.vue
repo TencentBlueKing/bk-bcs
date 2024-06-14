@@ -221,10 +221,6 @@ const props = defineProps({
     type: String,
     default: '',
   },
-  cloudID: {
-    type: String,
-    default: '',
-  },
   accountId: {
     type: String,
     default: '',
@@ -259,7 +255,7 @@ const emits = defineEmits(['cancel', 'confirm']);
 
 const clusterData = inject(ClusterDataInjectKey);
 const enabledZoneList = computed(() => {
-  if (!clusterData || !clusterData.value) return [];
+  if (!clusterData?.value) return [];
 
   return clusterData.value?.clusterAdvanceSettings?.networkType === 'VPC-CNI'
     ? clusterData.value?.networkSettings?.subnetSource?.new?.map(item => item.zone) || []

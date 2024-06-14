@@ -20,5 +20,6 @@ module.exports = {
             ],
         }],
         'vue/space-infix-ops': "off",
+        "vue/multi-word-component-names": "off"
     }
 };

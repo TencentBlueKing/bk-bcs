@@ -16,7 +16,6 @@
         int
         v-model="nodePoolInfo.autoScaling.maxSize"
         :min="getSchemaByProp('autoScaling.maxSize').minimum"
-        :max="getSchemaByProp('autoScaling.maxSize').maximum"
         type="number">
       </bk-input>
     </bk-form-item>
@@ -159,7 +158,26 @@ export default defineComponent({
       // bkCloudID: defaultValues.value.bkCloudID || 0,
     });
 
+    const getSchemaByProp = props => Schema.getSchemaByProp(schema.value, props);
+
     const nodePoolInfoRules = ref({
+      // 节点配额校验, 超过配额上限后提示，数字输入框有输入和点击按钮加减来更改值，所以用blur和change触发
+      maxSize: [
+        {
+          message: $i18n.t('cluster.ca.nodePool.validate.nodeQuotaMaxSize', {
+            maximum: getSchemaByProp('autoScaling.maxSize').maximum,
+          }),
+          trigger: 'change',
+          validator: () => getSchemaByProp('autoScaling.maxSize').maximum >= nodePoolInfo.value.autoScaling.maxSize,
+        },
+        {
+          message: $i18n.t('cluster.ca.nodePool.validate.nodeQuotaMaxSize', {
+            maximum: getSchemaByProp('autoScaling.maxSize').maximum,
+          }),
+          trigger: 'blur',
+          validator: () => getSchemaByProp('autoScaling.maxSize').maximum >= nodePoolInfo.value.autoScaling.maxSize,
+        },
+      ],
       labels: [
         {
           message: $i18n.t('generic.validate.labelValueEmpty'),
@@ -241,8 +259,6 @@ export default defineComponent({
         effect: 'PreferNoSchedule',
       });
     };
-
-    const getSchemaByProp = props => Schema.getSchemaByProp(schema.value, props);
 
 
     return {

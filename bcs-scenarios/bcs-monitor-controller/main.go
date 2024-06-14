@@ -167,7 +167,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	err = initHttpServer(opts, mgr)
+	err = initHttpServer(opts, mgr, repoManager)
 	if err != nil {
 		blog.Errorf("init http server failed: %v", err.Error())
 		os.Exit(1)
@@ -180,14 +180,15 @@ func main() {
 }
 
 // initHttpServer init ingress controller http server
-func initHttpServer(op *option.ControllerOption, mgr manager.Manager) error {
+func initHttpServer(op *option.ControllerOption, mgr manager.Manager, repoManage *repo.Manager) error {
 	server := httpserver.NewHttpServer(op.HttpServerPort, op.Address, "")
 
 	// server.SetInsecureServer(op.Conf.InsecureAddress, op.Conf.InsecurePort)
 	server.SetInsecureServer(op.Address, op.HttpServerPort)
 	ws := server.NewWebService("", nil)
 	httpServerClient := &httpsvr.HttpServerClient{
-		Mgr: mgr,
+		Mgr:         mgr,
+		RepoManager: repoManage,
 	}
 	httpsvr.InitRouters(ws, httpServerClient)
 

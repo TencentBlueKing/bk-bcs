@@ -30,6 +30,7 @@ import BkTrace from '@blueking/bk-trace';
 
 import '@/common/bkmagic';
 import '@/fonts/svg-icon/iconcool';
+import '@/views/app/performance';
 import App from '@/App.vue';
 import { bus } from '@/common/bus';
 import { chainable } from '@/common/util';
@@ -58,6 +59,7 @@ window.BkTrace = new BkTrace({
     to: '',
     from: '',
     error: {},
+    performance: {},
     navID: () => {
       let menu = store.state.curNav;
       while (menu?.parent) {

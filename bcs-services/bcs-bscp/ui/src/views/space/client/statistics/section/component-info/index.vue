@@ -4,16 +4,28 @@
     <div class="content-wrap">
       <div class="left">
         <Teleport :disabled="!isOpenFullScreen" to="body">
-          <div ref="containerRef" :class="{ fullscreen: isOpenFullScreen }">
-            <Card :title="t('组件版本分布')" :height="416">
+          <div
+            ref="containerRef"
+            :class="{ fullscreen: isOpenFullScreen }"
+            @mouseenter="isShowOperationBtn = true"
+            @mouseleave="isShowOperationBtn = false">
+            <Card :title="t('组件类型 / 版本分布')" :height="416">
               <template #operation>
                 <OperationBtn
+                  v-show="isShowOperationBtn"
                   :is-open-full-screen="isOpenFullScreen"
                   @refresh="loadChartData"
                   @toggle-full-screen="isOpenFullScreen = !isOpenFullScreen" />
               </template>
               <template #head-suffix>
-                <TriggerBtn v-model:currentType="currentType" style="margin-left: 16px" />
+                <div class="head-suffix">
+                  <div v-if="currentType === 'column'" class="icon-wrap">
+                    <span
+                      class="action-icon bk-bscp-icon icon-download"
+                      v-bk-tooltips="{ content: $t('可下钻图表') }" />
+                  </div>
+                  <TriggerBtn v-model:currentType="currentType" />
+                </div>
               </template>
               <bk-loading class="loading-wrap" :loading="loading">
                 <component v-if="data?.length" :is="currentComponent" :data="needDataType" />
@@ -35,8 +47,8 @@
       <div class="right">
         <Card v-for="item in resourceData" :key="item.name" :title="item.name" :width="207" :height="128">
           <div class="resource-info">
-            <span v-if="item.value">
-              <span class="time">{{ item.key.includes('cpu') ? item.value : Math.round(item.value) }}</span>
+            <span v-if="item.value !== '0.00' && item.value !== '0.000'">
+              <span class="time">{{ item.value }}</span>
               <span class="unit">{{ item.unit }}</span>
             </span>
             <span v-else class="empty">{{ t('暂无数据') }}</span>
@@ -54,7 +66,7 @@
   import SectionTitle from '../../components/section-title.vue';
   import OperationBtn from '../../components/operation-btn.vue';
   import Pie from './pie.vue';
-  import Column from './column.vue';
+  import Column from './column/index.vue';
   import Table from './table.vue';
   import { getClientComponentInfoData } from '../../../../../../api/client';
   import {
@@ -80,37 +92,37 @@
 
   const resourceData = ref<IInfoCard[]>([
     {
-      value: 0,
+      value: '',
       name: t('平均 CPU 资源占用'),
       key: 'cpu_avg_usage',
     },
     {
-      value: 0,
+      value: '',
       name: t('平均内存资源占用'),
       key: 'memory_avg_usage',
     },
     {
-      value: 0,
+      value: '',
       name: t('最大 CPU 资源占用'),
       key: 'cpu_max_usage',
     },
     {
-      value: 0,
+      value: '',
       name: t('最大内存资源占用'),
       key: 'memory_max_usage',
     },
     {
-      value: 0,
+      value: '',
       name: t('最小 CPU 资源占用'),
       key: 'cpu_min_usage',
     },
     {
-      value: 0,
+      value: '',
       name: t('最小内存资源占用'),
       key: 'memory_min_usage',
     },
   ]);
-  const currentType = ref('pie');
+  const currentType = ref('column');
   const componentMap = {
     pie: Pie,
     column: Column,
@@ -118,16 +130,17 @@
   };
   const data = ref<IVersionDistributionItem[]>([]);
   const sunburstData = ref<IVersionDistributionPie>({
-    name: t('组件版本'),
+    name: t('组件类型分布'),
     children: [],
   });
   const loading = ref(false);
   const isOpenFullScreen = ref(false);
   const containerRef = ref();
   const initialWidth = ref(0);
+  const isShowOperationBtn = ref(false);
 
   const currentComponent = computed(() => componentMap[currentType.value as keyof typeof componentMap]);
-  const needDataType = computed(() => (currentType.value === 'pie' ? sunburstData.value : data.value));
+  const needDataType = computed(() => (currentType.value === 'table' ? data.value : sunburstData.value));
 
   watch(
     () => props.appId,
@@ -187,7 +200,7 @@
       sunburstData.value.children = convertToTree(data.value);
       Object.entries(res.resource_usage).forEach(([key, value]) => {
         const item = resourceData.value.find((item) => item.key === key) as IInfoCard;
-        item!.value = value as number;
+        item!.value = value as string;
         if (!item.key.includes('cpu')) {
           item.unit = 'MB';
         } else {
@@ -281,5 +294,22 @@
     height: 100%;
     justify-content: center;
     transform: translateY(-20px);
+  }
+
+  .head-suffix {
+    margin-left: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    .icon-wrap {
+      font-size: 12px;
+      width: 18px;
+      height: 18px;
+      background: #f0f3ff;
+      border-radius: 2px;
+      text-align: center;
+      line-height: 18px;
+      color: #7594ef;
+    }
   }
 </style>

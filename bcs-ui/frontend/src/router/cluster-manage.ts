@@ -12,7 +12,7 @@ const CreateTencentCloudCluster = () => import(/* webpackChunkName: 'cluster' */
 const CreateVCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/add/vcluster/add-vcluster.vue');
 // ee版本创建集群流程
 const CreateK8SCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/add/create-k8s.vue');
-// const CreateCluster = () => import('@/views/cluster-manage/add/create-cluster.vue');
+
 // import模式
 const ImportCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/add/import-cluster.vue');
 const ImportGoogleCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/add/google-cloud.vue');
@@ -39,6 +39,21 @@ const GoogleNodePoolDetail = () => import(/* webpackChunkName: 'cluster' */'@/vi
 const GoogleEditNodePool = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/autoscaler/google/edit-node-pool.vue');
 
 const NamespaceCreate = () => import(/* webpackChunkName: 'dashboard' */'@/views/cluster-manage/namespace/create.vue');
+// azure ca
+// 新建节点池
+const AzureNodePool = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/autoscaler/azure/node-pool.vue');
+// 扩缩容记录
+const AzureNodePoolDetail = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/autoscaler/azure/node-pool-detail.vue');
+// 编辑配置
+const AzureEditNodePool = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/autoscaler/azure/edit-node-pool.vue');
+
+// huawei ca
+// 新建节点池
+const HuaweiNodePool = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/autoscaler/huawei/node-pool.vue');
+// 扩缩容记录
+const HuaweiNodePoolDetail = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/autoscaler/huawei/node-pool-detail.vue');
+// 编辑配置
+const HuaweiEditNodePool = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/autoscaler/huawei/edit-node-pool.vue');
 
 // 集群管理
 export default [
@@ -264,19 +279,24 @@ export default [
     beforeEnter(to, from, next) {
       const clusterList = $store.state.cluster.clusterList as ICluster[];
       const cluster = clusterList.find(item => item.clusterID === to.params.clusterId);
-      if (cluster?.provider === 'gcpCloud') {
-        next({
-          name: 'googleNodePool',
-          params: {
-            ...to.params,
-          },
-          query: {
-            ...to.query,
-          },
-        });
-      } else {
-        next();
+      let name = '';
+      // 优化,增加azureCA,huawei节点新建
+      switch (cluster?.provider) {
+        case 'gcpCloud':
+          name = 'googleNodePool';
+          break;
+        case 'azureCloud':
+          name = 'azureNodePool';
+          break;
+        case 'huaweiCloud':
+          name = 'huaweiNodePool';
+          break;
       }
+      name ? next({
+        name,
+        params: { ...to.params },
+        query: { ...to.query },
+      }) : next();
     },
   },
   {
@@ -291,19 +311,24 @@ export default [
     beforeEnter(to, from, next) {
       const clusterList = $store.state.cluster.clusterList as ICluster[];
       const cluster = clusterList.find(item => item.clusterID === to.params.clusterId);
-      if (cluster?.provider === 'gcpCloud') {
-        next({
-          name: 'googleEditNodePool',
-          params: {
-            ...to.params,
-          },
-          query: {
-            ...to.query,
-          },
-        });
-      } else {
-        next();
+      let name = '';
+      // 优化，增加azureCA,huaweiCA节点配置
+      switch (cluster?.provider) {
+        case 'gcpCloud':
+          name = 'googleEditNodePool';
+          break;
+        case 'azureCloud':
+          name = 'azureEditNodePool';
+          break;
+        case 'huaweiCloud':
+          name = 'huaweiEditNodePool';
+          break;
       }
+      name ? next({
+        name,
+        params: { ...to.params },
+        query: { ...to.query },
+      }) : next();
     },
   },
   {
@@ -318,19 +343,24 @@ export default [
     beforeEnter(to, from, next) {
       const clusterList = $store.state.cluster.clusterList as ICluster[];
       const cluster = clusterList.find(item => item.clusterID === to.params.clusterId);
-      if (cluster?.provider === 'gcpCloud') {
-        next({
-          name: 'googleNodePoolDetail',
-          params: {
-            ...to.params,
-          },
-          query: {
-            ...to.query,
-          },
-        });
-      } else {
-        next();
+      let name = '';
+      // 优化，增加azureCA,huaweiCA节点池详情
+      switch (cluster?.provider) {
+        case 'gcpCloud':
+          name = 'googleNodePoolDetail';
+          break;
+        case 'azureCloud':
+          name = 'azureNodePoolDetail';
+          break;
+        case 'huaweiCloud':
+          name = 'huaweiNodePoolDetail';
+          break;
       }
+      name ? next({
+        name,
+        params: { ...to.params },
+        query: { ...to.query },
+      }) : next();
     },
   },
   // google ca
@@ -359,6 +389,68 @@ export default [
     name: 'googleNodePoolDetail',
     props: true,
     component: GoogleNodePoolDetail,
+    meta: {
+      menuId: 'CLUSTER',
+      hideMenu: true,
+    },
+  },
+  // azure ca
+  {
+    path: 'cluster/:clusterId/azure/nodepools',
+    name: 'azureNodePool',
+    props: true,
+    component: AzureNodePool,
+    meta: {
+      menuId: 'CLUSTER',
+      hideMenu: true,
+    },
+  },
+  {
+    path: 'cluster/:clusterId/azure/nodepools/:nodeGroupID',
+    name: 'azureEditNodePool',
+    props: true,
+    component: AzureEditNodePool,
+    meta: {
+      menuId: 'CLUSTER',
+      hideMenu: true,
+    },
+  },
+  {
+    path: 'cluster/:clusterId/azure/nodepools/:nodeGroupID/detail',
+    name: 'azureNodePoolDetail',
+    props: true,
+    component: AzureNodePoolDetail,
+    meta: {
+      menuId: 'CLUSTER',
+      hideMenu: true,
+    },
+  },
+  // huawei ca
+  {
+    path: 'cluster/:clusterId/huawei/nodepools',
+    name: 'huaweiNodePool',
+    props: true,
+    component: HuaweiNodePool,
+    meta: {
+      menuId: 'CLUSTER',
+      hideMenu: true,
+    },
+  },
+  {
+    path: 'cluster/:clusterId/huawei/nodepools/:nodeGroupID',
+    name: 'huaweiEditNodePool',
+    props: true,
+    component: HuaweiEditNodePool,
+    meta: {
+      menuId: 'CLUSTER',
+      hideMenu: true,
+    },
+  },
+  {
+    path: 'cluster/:clusterId/huawei/nodepools/:nodeGroupID/detail',
+    name: 'huaweiNodePoolDetail',
+    props: true,
+    component: HuaweiNodePoolDetail,
     meta: {
       menuId: 'CLUSTER',
       hideMenu: true,

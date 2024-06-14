@@ -59,7 +59,7 @@ service Auth {
   rpc QuerySpace(QuerySpaceReq) returns (QuerySpaceResp) {}
 
   // auth login conf
-  rpc GetAuthLoginConf(GetAuthLoginConfReq) returns (GetAuthLoginConfResp) {}
+  rpc GetAuthConf(GetAuthConfReq) returns (GetAuthConfResp) {}
 
   rpc GrantResourceCreatorAction(GrantResourceCreatorActionReq) returns (pbbase.EmptyResp) {}
 }
@@ -70,13 +70,35 @@ message InitAuthCenterReq {
 
 message InitAuthCenterResp {}
 
-message GetAuthLoginConfReq {}
+message GetAuthConfReq {}
 
-message GetAuthLoginConfResp {
+message GetAuthConfResp {
+  LoginAuth login_auth = 1;
+  ESB esb = 2;
+}
+
+message LoginAuth {
   string host = 1;
   string inner_host = 2;
   string provider = 3;
   string gw_pubkey = 4;
+  bool use_esb = 5;
+}
+
+message ESB {
+  repeated string endpoints = 1;
+  string app_code = 2;
+  string app_secret = 3;
+  string user = 4;
+  TLS tls = 5;
+}
+
+message TLS {
+  bool insecure_skip_verify = 1;
+  string cert_file = 2;
+  string key_file = 3;
+  string ca_file = 4;
+  string password = 5;
 }
 
 message PullResourceReq {

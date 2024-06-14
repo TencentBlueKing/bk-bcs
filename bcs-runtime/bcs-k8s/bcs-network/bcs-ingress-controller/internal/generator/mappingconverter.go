@@ -308,6 +308,10 @@ func (slc *segmentListenerConverter) generateListener(start, end, rsStart int) (
 	li.Spec.Protocol = slc.protocol
 	li.Spec.LoadbalancerID = slc.lbID
 	li.Spec.ListenerAttribute = slc.listenerAttr
+	if li.IsUptimeCheckEnable() {
+		li.Finalizers = append(li.Finalizers, constant.FinalizerNameUptimeCheck)
+		li.Labels[networkextensionv1.LabelKeyForUptimeCheckListener] = networkextensionv1.LabelValueTrue
+	}
 
 	if slc.certs == nil && len(slc.routes) == 0 {
 		li.Spec.TargetGroup = slc.generateListenerTargetGroup(rsStart)

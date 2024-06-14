@@ -19,7 +19,6 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/pkg/common"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
@@ -124,7 +123,6 @@ func (cp *CachePool) AllocatePortBinding(protocol, itemName string) (
 	default:
 		itemList = cp.ItemList
 	}
-	blog.Infof("get itemlist: %s", common.ToJsonString(itemList))
 
 	for _, item := range itemList {
 		if itemName != "" && item.ItemStatus.ItemName != itemName {
@@ -167,8 +165,6 @@ func (cp *CachePool) AllocateAllProtocolPortBinding(itemName string) (
 		itemList = cp.ItemList
 	}
 
-	// to do remove
-	blog.Infof("get itemlist: %s", common.ToJsonString(itemList))
 	for _, item := range itemList {
 		if itemName != "" && item.ItemStatus.ItemName != itemName {
 			continue
@@ -203,10 +199,11 @@ func (cp *CachePool) ReleasePortBinding(poolItemKey, protocol string, startPort,
 }
 
 // SetPortBindingUsed occupy port item
-func (cp *CachePool) SetPortBindingUsed(poolItemKey, protocol string, startPort, endPort int) {
+func (cp *CachePool) SetPortBindingUsed(poolItemKey, protocol string, startPort, endPort int, refType, refNs,
+	refName string) {
 	for _, item := range cp.ItemList {
 		if item.GetKey() == poolItemKey {
-			item.SetPortUsed(protocol, startPort, endPort)
+			item.SetPortUsed(protocol, startPort, endPort, refType, refNs, refName)
 		}
 	}
 }

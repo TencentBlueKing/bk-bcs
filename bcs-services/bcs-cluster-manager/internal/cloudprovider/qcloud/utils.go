@@ -17,9 +17,12 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/template"
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
@@ -224,10 +227,16 @@ var (
 		StepMethod: fmt.Sprintf("%s-%s", cloudName, cloudprovider.ApplyExternalNodeMachinesTask),
 		StepName:   "申请IDC节点任务",
 	}
+
 	checkClusterNodesStatusStep = cloudprovider.StepInfo{
 		StepMethod: fmt.Sprintf("%s-CheckClusterNodesStatusTask", cloudName),
 		StepName:   "检测节点状态",
 	}
+	checkExternalNodesEmptyStep = cloudprovider.StepInfo{
+		StepMethod: fmt.Sprintf("%s-%s", cloudName, cloudprovider.CheckExternalNodesEmptyTask),
+		StepName:   "节点空闲检查",
+	}
+
 	updateDesiredNodesDBInfoStep = cloudprovider.StepInfo{ // nolint
 		StepMethod: fmt.Sprintf("%s-UpdateDesiredNodesDBInfoTask", cloudName),
 		StepName:   "清理节点数据",
@@ -728,8 +737,8 @@ func (rn *RemoveNodesFromClusterTaskOption) BuildRemoveNodesFromClusterStep(task
 	task.StepSequence = append(task.StepSequence, removeNodesFromClusterStep.StepMethod)
 }
 
-// BuildCheckClusterCleanNodsStep 检测集群清理节点池节点
-func (rn *RemoveNodesFromClusterTaskOption) BuildCheckClusterCleanNodsStep(task *proto.Task) {
+// BuildCheckClusterCleanNodesStep 检测集群清理节点池节点
+func (rn *RemoveNodesFromClusterTaskOption) BuildCheckClusterCleanNodesStep(task *proto.Task) {
 	checkStep := cloudprovider.InitTaskStep(checkClusterCleanNodsStep)
 
 	checkStep.Params[cloudprovider.ClusterIDKey.String()] = rn.Cluster.ClusterID
@@ -806,8 +815,8 @@ func (cn *CleanNodeInGroupTaskOption) BuildCleanNodeGroupNodesStep(task *proto.T
 	task.StepSequence = append(task.StepSequence, cleanNodeGroupNodesStep.StepMethod)
 }
 
-// BuildCheckClusterCleanNodsStep 检测集群清理节点池节点
-func (cn *CleanNodeInGroupTaskOption) BuildCheckClusterCleanNodsStep(task *proto.Task) {
+// BuildCheckClusterCleanNodesStep 检测集群清理节点池节点
+func (cn *CleanNodeInGroupTaskOption) BuildCheckClusterCleanNodesStep(task *proto.Task) {
 	checkStep := cloudprovider.InitTaskStep(checkClusterCleanNodsStep)
 
 	checkStep.Params[cloudprovider.ClusterIDKey.String()] = cn.Group.ClusterID
@@ -884,7 +893,9 @@ func (dn *DeleteNodeGroupTaskOption) BuildDeleteNodeGroupStep(task *proto.Task) 
 
 // UpdateDesiredNodesTaskOption 扩容节点组节点
 type UpdateDesiredNodesTaskOption struct {
+	Cluster  *proto.Cluster
 	Group    *proto.NodeGroup
+	Cloud    *proto.Cloud
 	Desired  uint32
 	Operator string
 }
@@ -915,6 +926,35 @@ func (ud *UpdateDesiredNodesTaskOption) BuildApplyExternalNodeMachinesStep(task 
 
 	task.Steps[applyExternalNodeMachinesStep.StepMethod] = applyExternalNodeStep
 	task.StepSequence = append(task.StepSequence, applyExternalNodeMachinesStep.StepMethod)
+}
+
+// BuildCheckExternalNodesEmptyStep 第三方节点空闲检查
+func (ud *UpdateDesiredNodesTaskOption) BuildCheckExternalNodesEmptyStep(task *proto.Task) {
+	plugin := template.GetPluginByAction(ud.Cloud.GetClusterManagement().GetCheckExternalNodeEmptyAction(),
+		cloudprovider.CheckExternalNodesEmptyTask.String())
+	if plugin == nil {
+		blog.Infof("UpdateDesiredNodesTaskOption BuildCheckExternalNodesEmptyStep plugin is null")
+		return
+	}
+
+	extra := template.ExtraInfo{
+		NodeIPList:      "",
+		BusinessID:      ud.Cluster.GetBusinessID(),
+		GroupColocation: ud.Group.GetNodeTemplate().GetSkipSystemInit(),
+	}
+	checkExternalNodeStep, err := template.GenerateBKopsStep(checkExternalNodesEmptyStep.StepMethod,
+		checkExternalNodesEmptyStep.StepName, checkExternalNodesEmptyStep.StepMethod, ud.Cluster, plugin, extra)
+	if err != nil {
+		blog.Errorf("UpdateDesiredNodesTaskOption BuildCheckExternalNodesEmptyStep failed: %v", err)
+		return
+	}
+
+	checkExternalNodeStep.Params[cloudprovider.ClusterIDKey.String()] = ud.Group.ClusterID
+	checkExternalNodeStep.Params[cloudprovider.NodeGroupIDKey.String()] = ud.Group.NodeGroupID
+	checkExternalNodeStep.Params[cloudprovider.CloudIDKey.String()] = ud.Group.Provider
+
+	task.Steps[checkExternalNodesEmptyStep.StepMethod] = checkExternalNodeStep
+	task.StepSequence = append(task.StepSequence, checkExternalNodesEmptyStep.StepMethod)
 }
 
 // BuildGetExternalNodeScriptStep 获取上架第三方节点脚本

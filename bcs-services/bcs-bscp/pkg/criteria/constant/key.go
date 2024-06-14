@@ -56,6 +56,10 @@ const (
 
 	// ContentIDHeaderKey is common content sha256 id.
 	ContentIDHeaderKey = "X-Bkapi-File-Content-Id"
+	// PartNumHeaderKey is multipart upload part num key.
+	PartNumHeaderKey = "X-Bscp-Part-Num"
+	// MultipartUploadID is multipart upload id key.
+	UploadIDHeaderKey = "X-Bscp-Upload-Id"
 	// AppIDHeaderKey is app id.
 	AppIDHeaderKey = "X-Bscp-App-Id"
 	// TmplSpaceIDHeaderKey is template space id.
@@ -134,4 +138,6 @@ const (
 	MaxUploadContentLength = 100 * 1024 * 1024
 	// MaxConcurrentUpload 限制上传文件并发数
 	MaxConcurrentUpload = 10
+	// UploadBatchSize 上传时分批检测文件路冲突
+	UploadBatchSize = 50
 )

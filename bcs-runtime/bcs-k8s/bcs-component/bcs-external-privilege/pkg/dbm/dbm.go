@@ -56,11 +56,13 @@ func (dc *DBMClient) DoPri(op *common.Option, env *common.DBPrivEnv) error {
 		AccessDB:       env.DbName,
 		SourceIPs:      op.PrivilegeIP,
 		TargetInstance: env.TargetDb,
-		Operator:       dc.Operator,
-		Type:           env.CallType,
+		// 暂时不生效，后续等dbm完善接口再修改为实际用户
+		Operator: "",
+		Type:     env.CallType,
 	}
 
 	_, _, errs := gorequest.New().
+		SetLogger(newLogger()).
 		Timeout(defaultTimeOut).
 		Post(reqURL).
 		Set("Content-Type", "application/json").
@@ -102,6 +104,7 @@ func (dc *DBMClient) CheckFinalStatus() error {
 		dc.AppCode, dc.AppSecret, dc.Operator)
 
 	_, _, errs := gorequest.New().
+		SetLogger(newLogger()).
 		Timeout(defaultTimeOut).
 		Get(reqURL).
 		Set("Content-Type", "application/json").
@@ -121,8 +124,7 @@ func (dc *DBMClient) CheckFinalStatus() error {
 
 	switch respData.Status.Status {
 	case taskStatusRunning, taskStatusPending:
-		blog.Infof("task[%d] is %s, %s", taskid, respData.Status.Status, respData.Status.Msg)
-		return nil
+		return fmt.Errorf("task[%d] is %s, %s", taskid, respData.Status.Status, respData.Status.Msg)
 	case taskStatusSucceeded:
 		blog.Infof("task[%d] is %s, %s", taskid, respData.Status.Status, respData.Status.Msg)
 		return nil

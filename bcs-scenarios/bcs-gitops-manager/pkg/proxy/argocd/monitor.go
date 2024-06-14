@@ -30,6 +30,7 @@ type MonitorPlugin struct {
 }
 
 // GET:		/api/v1/monitor/{biz_id}, 查询bizID下对应的所有AppMonitor信息
+// GET:		/api/v1/monitor/{biz_id}/list_scenario, 查询bizID下能安装的场景信息
 // DELETE:	/api/v1/monitor/{biz_id}/{scenario}, 删除bizID下安装的对应场景监控
 // POST:	/api/v1/monitor/{biz_id}/{scenario}, 创建/更新bizID下安装的对应场景监控
 
@@ -37,6 +38,8 @@ type MonitorPlugin struct {
 // project plugin is a subRouter, all path registered is relative
 func (plugin *MonitorPlugin) Init() error {
 	plugin.Path("/{biz_id}").Methods(http.MethodGet).Handler(plugin.middleware.HttpWrapper(plugin.monitorViewHandler))
+	plugin.Path("/{biz_id}/list_scenario").Methods(http.MethodGet).Handler(plugin.middleware.HttpWrapper(plugin.
+		monitorViewHandler))
 	plugin.Path("/{biz_id}/{scenario}").Methods(http.MethodPost, http.MethodDelete).Handler(plugin.middleware.
 		HttpWrapper(plugin.monitorOperateHandler))
 	blog.Infof("monitor plugin init successfully")

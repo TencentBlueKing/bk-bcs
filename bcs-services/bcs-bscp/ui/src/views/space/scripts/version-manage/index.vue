@@ -136,6 +136,7 @@
   import dayjs from 'dayjs';
   import useGlobalStore from '../../../../store/global';
   import useScriptStore from '../../../../store/script';
+  import useTablePagination from '../../../../utils/hooks/use-table-pagination';
   import { IScriptVersion, IScriptVersionListItem, IScriptVersionForm } from '../../../../../types/script';
   import {
     getScriptDetail,
@@ -157,6 +158,7 @@
   const router = useRouter();
   const route = useRoute();
   const { t } = useI18n();
+  const { pagination, updatePagination } = useTablePagination('scriptVersionManage');
 
   const scriptId = ref(Number(route.params.scriptId));
   const initLoading = ref(false);
@@ -189,11 +191,6 @@
     },
   });
   const searchStr = ref('');
-  const pagination = ref({
-    current: 1,
-    count: 0,
-    limit: 10,
-  });
 
   onMounted(async () => {
     initLoading.value = true;
@@ -385,7 +382,7 @@
   };
 
   const handlePageLimitChange = (val: number) => {
-    pagination.value.limit = val;
+    updatePagination('limit', val);
     refreshList();
   };
 

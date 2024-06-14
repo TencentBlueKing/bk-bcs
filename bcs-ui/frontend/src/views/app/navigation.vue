@@ -153,7 +153,6 @@ import PopoverSelector from '../../components/popover-selector.vue';
 import useMenu, { IMenu } from './use-menu';
 
 import { releaseNote, switchLanguage } from '@/api/modules/project';
-import { setCookie } from '@/common/util';
 import BcsMd from '@/components/bcs-md/index.vue';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
@@ -256,7 +255,8 @@ export default defineComponent({
         name,
         params: {
           projectCode: $store.getters.curProjectCode,
-          clusterId: $router.currentRoute?.params?.clusterId,
+          // 资源视图集群视图时切换路由不能丢失集群ID，其余菜单默认不给
+          clusterId: item.id === 'CLUSTERRESOURCE' ? $router.currentRoute?.params?.clusterId : '',
         },
       }).catch(err => console.warn(err));
     };
@@ -281,7 +281,6 @@ export default defineComponent({
     const langRef = ref();
     const handleChangeLang = async (item) => {
       // $i18n.locale = item.id;// 后面 $router.go(0) 会重新加载界面，这里会导致一瞬间被切换了，然后界面再刷新
-      setCookie('blueking_language', item.locale);
       langRef.value?.hide();
       await switchLanguage({
         lang: item.locale,
@@ -309,7 +308,8 @@ export default defineComponent({
     };
     // 注销登录态
     const handleLogout = () => {
-      window.location.href = `${window.LOGIN_FULL}?c_url=${window.location}`;
+      // 注销登录只注销当前登录态，清除bk_token，不做登录弹窗
+      window.location.href = `${window.LOGIN_FULL}?is_from_logout=1&c_url=${encodeURIComponent(window.location.href)}`;
     };
 
     // release信息

@@ -309,3 +309,8 @@ func (ng *NodeGroup) DeleteExternalNodeFromCluster(group *proto.NodeGroup, nodes
 func (ng *NodeGroup) GetExternalNodeScript(group *proto.NodeGroup, internal bool) (string, error) {
 	return "", cloudprovider.ErrCloudNotImplemented
 }
+
+// CheckResourcePoolQuota check resource pool quota when revise group limit
+func (ng *NodeGroup) CheckResourcePoolQuota(region, instanceType string, groupId string) error {
+	return nil
+}

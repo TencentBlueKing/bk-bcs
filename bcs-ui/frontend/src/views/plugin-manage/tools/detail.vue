@@ -1,8 +1,7 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
-  <div class="biz-content">
-    <Header :title="curApp.name" />
-    <div class="biz-content-wrapper">
+  <BcsContent :title="curApp.name">
+    <div>
       <div>
         <div class="biz-crd-header">
           <div class="left">
@@ -154,20 +153,20 @@
         </div>
       </div>
     </bk-dialog>
-  </div>
+  </BcsContent>
 </template>
 
 <script>
 import { addonsDetail, updateOns } from '@/api/modules/helm';
 import { catchErrorHandler } from '@/common/util';
-import Header from '@/components/layout/Header.vue';
+import BcsContent from '@/components/layout/Content.vue';
 import MonacoEditor from '@/components/monaco-editor/editor.vue';
 import useHelm from '@/views/deploy-manage/helm/use-helm';
 
 export default {
   components: {
     MonacoEditor,
-    Header,
+    BcsContent,
   },
   data() {
     return {

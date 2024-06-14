@@ -34,4 +34,16 @@ const (
 	RequestIDHeaderKey = "X-Request-Id"
 	// GRPCStatusCodeKey grpc响应码
 	GRPCStatusCodeKey = attribute.Key("rpc.grpc.status_code")
+	// GrpcTraceparent grpc 上游TraceID
+	GrpcTraceparent = "traceparent"
+)
+
+// service name
+const (
+	// BCSClusterManager bcs-cluster-manager service name
+	BCSClusterManager = "bcs-cluster-manager"
+	// BCSHelmManager bcs-helm-manager service name
+	BCSHelmManager = "bcs-helm-manager"
+	// BCSProjectManager bcs-project-manager service name
+	BCSProjectManager = "bcs-project-manager"
 )

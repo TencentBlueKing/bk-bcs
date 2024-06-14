@@ -21,7 +21,7 @@
       </div>
     </bcs-alert>
     <!-- 修改节点转移模块 -->
-    <template v-if="['tencentCloud', 'tencentPublicCloud', 'gcpCloud', 'azureCloud'].includes(curSelectedCluster.provider || '')">
+    <template v-if="['tencentCloud', 'tencentPublicCloud', 'gcpCloud', 'azureCloud', 'huaweiCloud'].includes(curSelectedCluster.provider || '')">
       <div class="flex items-center text-[12px]">
         <div class="text-[#979BA5] bcs-border-tips" v-bk-tooltips="$t('tke.tips.transferNodeCMDBModule')">
           {{ $t('tke.label.nodeModule.text') }}
@@ -85,7 +85,7 @@
                   cluster_id: localClusterId
                 }
               }"
-              :disabled="isKubeConfigImportCluster || ['azureCloud', 'huaweiCloud'].includes(curSelectedCluster.provider || '')"
+              :disabled="isKubeConfigImportCluster"
               @click="handleAddNode">
               {{$t('cluster.nodeList.create.text')}}
             </bcs-button>
@@ -198,6 +198,7 @@
         ref="tableRef"
         :key="tableKey"
         :pagination="pagination"
+        :row-key="(row) => row.nodeName"
         @filter-change="handleFilterChange"
         @page-change="pageChange"
         @page-limit-change="pageSizeChange">
@@ -783,10 +784,10 @@ export default defineComponent({
       curNodeModule.value = node;
     };
     const handleSaveWorkerModule = async () => {
-      if (curModuleID.value === clusterData.value.clusterBasicSettings?.module?.workerModuleID) {
-        isEditModule.value = false;
-        return;
-      };
+      // if (String(curModuleID.value) === String(clusterData.value.clusterBasicSettings?.module?.workerModuleID)) {
+      //   isEditModule.value = false;
+      //   return;
+      // };
 
       $bkInfo({
         type: 'warning',
@@ -799,7 +800,7 @@ export default defineComponent({
           const result = await setClusterModule({
             $clusterId: props.clusterId,
             module: {
-              workerModuleID: curModuleID.value,
+              workerModuleID: String(curModuleID.value),
             },
             operator: $store.state.user?.username,
           }).then(() => true)
@@ -1813,7 +1814,7 @@ export default defineComponent({
         });
         logStatus = latestTask?.status;
         logSideDialogConf.value.taskData = taskData || [];
-        logSideDialogConf.value.taskID = latestTask.taskID;
+        logSideDialogConf.value.taskID = latestTask?.taskID || '';
       }
       if (['RUNNING', 'INITIALZING'].includes(logStatus)) {
         logIntervalStart();

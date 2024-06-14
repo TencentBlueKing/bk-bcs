@@ -14,12 +14,23 @@
 package cluster
 
 import (
+	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/asim/go-micro/plugins/client/grpc/v4"
+	"github.com/asim/go-micro/plugins/registry/etcd/v4"
+	"go-micro.dev/v4/client"
+	"go-micro.dev/v4/metadata"
+	"go-micro.dev/v4/registry"
 	v1 "k8s.io/api/core/v1"
 
+	impl "github.com/Tencent/bk-bcs/bcs-services/bcs-nodegroup-manager/pkg/cluster/proto"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-nodegroup-manager/pkg/cluster/requester"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-nodegroup-manager/pkg/metric"
 )
 
 const (
@@ -34,38 +45,71 @@ type Client interface {
 	ListClusterNodes(clusterID string) ([]*Node, error)
 	UpdateNodeMetadata(clusterID, nodeName string, labels, annotations map[string]interface{}) error
 	ListNodesByLabel(clusterID string, labels map[string]interface{}) (map[string]*Node, error)
+	UpdateNodegroupMax(clusterID, nodegroupID string, max int) error
+	GetNodeDetail(ip string) (*impl.Node, error)
 }
 
-// ClientOptions option for api-gateway client
-type ClientOptions struct {
+// nolint
+// ClusterClientOptions option for api-gateway client
+type ClusterClientOptions struct {
 	Endpoint string
 	Token    string
 	Sender   requester.Requester
 }
 
+// nolint
+// ClusterManagerClientOptions for cluster manager client
+type ClusterManagerClientOptions struct {
+	// Name for resource-manager registry
+	Name string
+	// Etcd endpoints information
+	Etcd []string
+	// EtcdConfig tls config for etcd
+	EtcdConfig *tls.Config
+	// ClientConfig tls config
+	ClientConfig *tls.Config
+	cmClient     impl.ClusterManagerService
+}
+
 // apiGateway bcs apiGateway client
 type apiGateway struct {
-	opt           *ClientOptions
-	defaultHeader map[string]string
+	clusterClient        *ClusterClientOptions
+	clusterManagerClient *ClusterManagerClientOptions
+	defaultHeader        map[string]string
 }
 
 // NewClient new bcs apiGateway client
-func NewClient(opts *ClientOptions) Client {
+func NewClient(clusterOpt *ClusterClientOptions, cmClientOpt *ClusterManagerClientOptions) Client {
 	header := make(map[string]string)
-	header["Authorization"] = fmt.Sprintf("Bearer %s", opts.Token)
-	if opts.Sender == nil {
-		opts.Sender = requester.NewRequester()
+	header["Authorization"] = fmt.Sprintf("Bearer %s", clusterOpt.Token)
+	header["X-Bcs-Client"] = "bcs-nodegroup-manager"
+	if clusterOpt.Sender == nil {
+		clusterOpt.Sender = requester.NewRequester()
 	}
+	c := grpc.NewClient(
+		client.Registry(etcd.NewRegistry(
+			registry.Addrs(cmClientOpt.Etcd...),
+			registry.TLSConfig(cmClientOpt.EtcdConfig)),
+		),
+		grpc.AuthTLS(cmClientOpt.ClientConfig),
+	)
+	cmClientOpt.cmClient = impl.NewClusterManagerService(cmClientOpt.Name, c)
 	return &apiGateway{
-		opt:           opts,
-		defaultHeader: header,
+		clusterClient:        clusterOpt,
+		clusterManagerClient: cmClientOpt,
+		defaultHeader:        header,
 	}
 }
 
 // ListClusterNodes list nodes by clusterID
 func (c *apiGateway) ListClusterNodes(clusterID string) ([]*Node, error) {
-	url := fmt.Sprintf("%s%s", c.opt.Endpoint, fmt.Sprintf(ListK8SNodePath, clusterID))
-	rawResponse, err := c.opt.Sender.DoGetRequest(url, c.defaultHeader)
+	var err error
+	startTime := time.Now()
+	defer func() {
+		metric.ReportClusterClientRequestMetric(clusterID, "http", "ListClusterNodes", err, startTime)
+	}()
+	url := fmt.Sprintf("%s%s", c.clusterClient.Endpoint, fmt.Sprintf(ListK8SNodePath, clusterID))
+	rawResponse, err := c.clusterClient.Sender.DoGetRequest(url, c.defaultHeader)
 	if err != nil {
 		return nil, fmt.Errorf("DoGetRequest error: %s", err.Error())
 	}
@@ -90,10 +134,11 @@ func (c *apiGateway) ListClusterNodes(clusterID string) ([]*Node, error) {
 			}
 		}
 		node := &Node{
-			Name:   k8sNode.Name,
-			IP:     nodeIP,
-			Status: status,
-			Labels: k8sNode.ObjectMeta.Labels,
+			Name:        k8sNode.Name,
+			IP:          nodeIP,
+			Status:      status,
+			Labels:      k8sNode.ObjectMeta.Labels,
+			Annotations: k8sNode.ObjectMeta.Annotations,
 		}
 		nodeList = append(nodeList, node)
 	}
@@ -102,11 +147,17 @@ func (c *apiGateway) ListClusterNodes(clusterID string) ([]*Node, error) {
 
 // ListNodesByLabel list nodes by clusterID and label
 func (c *apiGateway) ListNodesByLabel(clusterID string, labels map[string]interface{}) (map[string]*Node, error) {
-	url := fmt.Sprintf("%s%s", c.opt.Endpoint, fmt.Sprintf(ListK8SNodePath, clusterID))
+	var err error
+	startTime := time.Now()
+	defer func() {
+		metric.ReportClusterClientRequestMetric(clusterID, "http", "ListNodesByLabel", err, startTime)
+	}()
+	url := fmt.Sprintf("%s%s", c.clusterClient.Endpoint, fmt.Sprintf(ListK8SNodePath, clusterID))
 	for key, value := range labels {
 		url = fmt.Sprintf("%s,%s=%s", url, key, value)
 	}
-	rawResponse, err := c.opt.Sender.DoGetRequest(url, c.defaultHeader)
+	blog.Infof("ListNodesByLabel url: %s", url)
+	rawResponse, err := c.clusterClient.Sender.DoGetRequest(url, c.defaultHeader)
 	if err != nil {
 		return nil, fmt.Errorf("DoGetRequest error: %s", err.Error())
 	}
@@ -131,21 +182,34 @@ func (c *apiGateway) ListNodesByLabel(clusterID string, labels map[string]interf
 			}
 		}
 		node := &Node{
-			Name:   k8sNode.Name,
-			IP:     nodeIP,
-			Status: status,
-			Labels: k8sNode.ObjectMeta.Labels,
+			Name:        k8sNode.Name,
+			IP:          nodeIP,
+			Status:      status,
+			Labels:      k8sNode.Labels,
+			Annotations: k8sNode.Annotations,
 		}
 		nodeList[k8sNode.Name] = node
 	}
+	blog.Infof("filter nodes:%v", nodeList)
 	return nodeList, nil
 }
 
 // UpdateNodeMetadata update node labels and annotations by clusterID and nodeName
 func (c *apiGateway) UpdateNodeMetadata(clusterID, nodeName string, labels map[string]interface{},
 	annotations map[string]interface{}) error {
-	url := fmt.Sprintf("%s%s", c.opt.Endpoint, fmt.Sprintf(UpdateK8SNodePath, clusterID, nodeName))
-	metaDataMap := map[string]interface{}{"labels": labels, "annotations": annotations}
+	var err error
+	startTime := time.Now()
+	defer func() {
+		metric.ReportClusterClientRequestMetric(clusterID, "http", "UpdateNodeMetadata", err, startTime)
+	}()
+	url := fmt.Sprintf("%s%s", c.clusterClient.Endpoint, fmt.Sprintf(UpdateK8SNodePath, clusterID, nodeName))
+	metaDataMap := make(map[string]interface{})
+	if labels != nil {
+		metaDataMap["labels"] = labels
+	}
+	if annotations != nil {
+		metaDataMap["annotations"] = annotations
+	}
 	metaData := map[string]interface{}{"metadata": metaDataMap}
 	metaDataStr, err := json.Marshal(metaData)
 	if err != nil {
@@ -154,11 +218,28 @@ func (c *apiGateway) UpdateNodeMetadata(clusterID, nodeName string, labels map[s
 	cloneHeader := CloneMap(c.defaultHeader)
 	cloneHeader["Content-Type"] = "application/merge-patch+json"
 	cloneHeader["Accept"] = "application/json"
-	_, err = c.opt.Sender.DoPatchRequest(url, cloneHeader, metaDataStr)
+	_, err = c.clusterClient.Sender.DoPatchRequest(url, cloneHeader, metaDataStr)
 	if err != nil {
 		return fmt.Errorf("DoPatchRequest error: %s", err.Error())
 	}
 	return nil
+}
+
+// GetNodeDetail get node detail from cluster manager
+func (c *apiGateway) GetNodeDetail(ip string) (*impl.Node, error) {
+	ctx := metadata.NewContext(context.Background(), metadata.Metadata{
+		"X-Bcs-Client":   "bcs-nodegroup-manager",
+		"X-Bcs-Username": "bcs-nodegroup-manager",
+	})
+	nodeInfoRsp, err := c.clusterManagerClient.cmClient.GetNode(ctx, &impl.GetNodeRequest{InnerIP: ip})
+	if err != nil {
+		return nil, fmt.Errorf("get node info %s from cluster manager error: %s", ip, err.Error())
+	}
+	if !nodeInfoRsp.Result || len(nodeInfoRsp.Data) == 0 {
+		return nil, fmt.Errorf("get node info %s failed. result:%t, message:%s, length of data: %d",
+			ip, nodeInfoRsp.Result, nodeInfoRsp.Message, len(nodeInfoRsp.Data))
+	}
+	return nodeInfoRsp.Data[0], nil
 }
 
 // CloneMap clone map
@@ -168,4 +249,31 @@ func CloneMap(initial map[string]string) map[string]string {
 		cloneMap[key] = initial[key]
 	}
 	return cloneMap
+}
+
+// UpdateNodegroupMax update nodegroup max size
+func (c *apiGateway) UpdateNodegroupMax(clusterID, nodegroupID string, max int) error {
+	md := c.defaultHeader
+	reqCtx := metadata.NewContext(context.Background(), md)
+	nodegroupInfo, err := c.clusterManagerClient.cmClient.GetNodeGroup(reqCtx,
+		&impl.GetNodeGroupRequest{NodeGroupID: nodegroupID})
+	if err != nil {
+		return fmt.Errorf("get nodegroup %s from cluster manager error%s", nodegroupInfo, err.Error())
+	}
+	updateReq := &impl.UpdateNodeGroupRequest{
+		ClusterID:      clusterID,
+		AutoScaling:    nodegroupInfo.Data.AutoScaling,
+		OnlyUpdateInfo: true,
+		Updater:        "bcs-nodegroup-manager",
+	}
+	updateReq.AutoScaling.MaxSize = uint32(max)
+	rsp, err := c.clusterManagerClient.cmClient.UpdateNodeGroup(reqCtx, updateReq)
+	if err != nil {
+		return fmt.Errorf("update nodegroup %s autoscaling error:%s", nodegroupID, err.Error())
+	}
+	if !rsp.Result {
+		return fmt.Errorf("nodegroup %s autoscaling failed. result:%t, message:%s",
+			nodegroupID, rsp.Result, rsp.Message)
+	}
+	return nil
 }

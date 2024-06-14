@@ -248,7 +248,7 @@ func (ng *NodeGroup) UpdateDesiredNodes(desired uint32, group *proto.NodeGroup,
 	}
 
 	return &cloudprovider.ScalingResponse{
-		ScalingUp: desired,
+		ScalingUp: needScaleOutNodes,
 	}, nil
 }
 
@@ -371,4 +371,9 @@ func (ng *NodeGroup) DeleteExternalNodeFromCluster(group *proto.NodeGroup, nodes
 // GetExternalNodeScript get nodegroup external node script
 func (ng *NodeGroup) GetExternalNodeScript(group *proto.NodeGroup, internal bool) (string, error) {
 	return "", cloudprovider.ErrCloudNotImplemented
+}
+
+// CheckResourcePoolQuota check resource pool quota when revise group limit
+func (ng *NodeGroup) CheckResourcePoolQuota(region, instanceType string, groupId string) error {
+	return nil
 }

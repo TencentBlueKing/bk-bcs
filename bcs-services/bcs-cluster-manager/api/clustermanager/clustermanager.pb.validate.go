@@ -225,6 +225,8 @@ func (m *Cluster) Validate() error {
 
 	// no validation rules for Message
 
+	// no validation rules for IsMixed
+
 	return nil
 }
 
@@ -1752,6 +1754,26 @@ func (m *ClusterMgr) Validate() error {
 		if err := v.Validate(); err != nil {
 			return ClusterMgrValidationError{
 				field:  "ImportCluster",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetCommonMixedAction()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ClusterMgrValidationError{
+				field:  "CommonMixedAction",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetCheckExternalNodeEmptyAction()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ClusterMgrValidationError{
+				field:  "CheckExternalNodeEmptyAction",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}
@@ -3648,6 +3670,26 @@ func (m *CloudVPC) Validate() error {
 
 	// no validation rules for BusinessID
 
+	if v, ok := interface{}(m.GetOverlay()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CloudVPCValidationError{
+				field:  "Overlay",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetUnderlay()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CloudVPCValidationError{
+				field:  "Underlay",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -3704,6 +3746,155 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = CloudVPCValidationError{}
+
+// Validate checks the field values on Cidr with the rules defined in the proto
+// definition for this message. If any rules are violated, an error is returned.
+func (m *Cidr) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	for idx, item := range m.GetCidrs() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return CidrValidationError{
+					field:  fmt.Sprintf("Cidrs[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	// no validation rules for ReservedIPNum
+
+	return nil
+}
+
+// CidrValidationError is the validation error returned by Cidr.Validate if the
+// designated constraints aren't met.
+type CidrValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CidrValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CidrValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CidrValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CidrValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CidrValidationError) ErrorName() string { return "CidrValidationError" }
+
+// Error satisfies the builtin error interface
+func (e CidrValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCidr.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CidrValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CidrValidationError{}
+
+// Validate checks the field values on CidrState with the rules defined in the
+// proto definition for this message. If any rules are violated, an error is returned.
+func (m *CidrState) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Cidr
+
+	// no validation rules for Block
+
+	return nil
+}
+
+// CidrStateValidationError is the validation error returned by
+// CidrState.Validate if the designated constraints aren't met.
+type CidrStateValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CidrStateValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CidrStateValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CidrStateValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CidrStateValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CidrStateValidationError) ErrorName() string { return "CidrStateValidationError" }
+
+// Error satisfies the builtin error interface
+func (e CidrStateValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCidrState.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CidrStateValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CidrStateValidationError{}
 
 // Validate checks the field values on CreateCloudVPCRequest with the rules
 // defined in the proto definition for this message. If any rules are
@@ -3797,6 +3988,26 @@ func (m *CreateCloudVPCRequest) Validate() error {
 	// no validation rules for ReservedIPNum
 
 	// no validation rules for BusinessID
+
+	if v, ok := interface{}(m.GetOverlay()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateCloudVPCRequestValidationError{
+				field:  "Overlay",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetUnderlay()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateCloudVPCRequestValidationError{
+				field:  "Underlay",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
 
 	return nil
 }
@@ -4020,6 +4231,26 @@ func (m *UpdateCloudVPCRequest) Validate() error {
 		if err := v.Validate(); err != nil {
 			return UpdateCloudVPCRequestValidationError{
 				field:  "BusinessID",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetOverlay()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateCloudVPCRequestValidationError{
+				field:  "Overlay",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetUnderlay()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateCloudVPCRequestValidationError{
+				field:  "Underlay",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}
@@ -4568,6 +4799,28 @@ func (m *CloudVPCResp) Validate() error {
 
 	// no validation rules for AvailableIPNum
 
+	if v, ok := interface{}(m.GetOverlay()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CloudVPCRespValidationError{
+				field:  "Overlay",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetUnderlay()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CloudVPCRespValidationError{
+				field:  "Underlay",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for BusinessID
+
 	return nil
 }
 
@@ -4624,6 +4877,90 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = CloudVPCRespValidationError{}
+
+// Validate checks the field values on CidrDetailInfo with the rules defined in
+// the proto definition for this message. If any rules are violated, an error
+// is returned.
+func (m *CidrDetailInfo) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	for idx, item := range m.GetCidrs() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return CidrDetailInfoValidationError{
+					field:  fmt.Sprintf("Cidrs[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	// no validation rules for ReservedIPNum
+
+	// no validation rules for AvailableIPNum
+
+	return nil
+}
+
+// CidrDetailInfoValidationError is the validation error returned by
+// CidrDetailInfo.Validate if the designated constraints aren't met.
+type CidrDetailInfoValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CidrDetailInfoValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CidrDetailInfoValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CidrDetailInfoValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CidrDetailInfoValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CidrDetailInfoValidationError) ErrorName() string { return "CidrDetailInfoValidationError" }
+
+// Error satisfies the builtin error interface
+func (e CidrDetailInfoValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCidrDetailInfo.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CidrDetailInfoValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CidrDetailInfoValidationError{}
 
 // Validate checks the field values on ListCloudRegionsRequest with the rules
 // defined in the proto definition for this message. If any rules are
@@ -9201,6 +9538,8 @@ func (m *CreateClusterReq) Validate() error {
 
 	}
 
+	// no validation rules for IsMixed
+
 	return nil
 }
 
@@ -11612,6 +11951,16 @@ func (m *UpdateClusterReq) Validate() error {
 	// no validation rules for ImportCategory
 
 	// no validation rules for CloudAccountID
+
+	if v, ok := interface{}(m.GetIsMixed()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateClusterReqValidationError{
+				field:  "IsMixed",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
 
 	return nil
 }
@@ -20570,6 +20919,8 @@ func (m *NodeGroupNode) Validate() error {
 
 	// no validation rules for UnSchedulable
 
+	// no validation rules for NodeName
+
 	return nil
 }
 
@@ -27778,6 +28129,239 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ClusterInfoValidationError{}
+
+// Validate checks the field values on ListCloudRuntimeInfoRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ListCloudRuntimeInfoRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for ClusterID
+
+	if utf8.RuneCountInString(m.GetCloudID()) < 2 {
+		return ListCloudRuntimeInfoRequestValidationError{
+			field:  "CloudID",
+			reason: "value length must be at least 2 runes",
+		}
+	}
+
+	return nil
+}
+
+// ListCloudRuntimeInfoRequestValidationError is the validation error returned
+// by ListCloudRuntimeInfoRequest.Validate if the designated constraints
+// aren't met.
+type ListCloudRuntimeInfoRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListCloudRuntimeInfoRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListCloudRuntimeInfoRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListCloudRuntimeInfoRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListCloudRuntimeInfoRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListCloudRuntimeInfoRequestValidationError) ErrorName() string {
+	return "ListCloudRuntimeInfoRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListCloudRuntimeInfoRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListCloudRuntimeInfoRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListCloudRuntimeInfoRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListCloudRuntimeInfoRequestValidationError{}
+
+// Validate checks the field values on ListCloudRuntimeInfoResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ListCloudRuntimeInfoResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	for key, val := range m.GetData() {
+		_ = val
+
+		// no validation rules for Data[key]
+
+		if v, ok := interface{}(val).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ListCloudRuntimeInfoResponseValidationError{
+					field:  fmt.Sprintf("Data[%v]", key),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// ListCloudRuntimeInfoResponseValidationError is the validation error returned
+// by ListCloudRuntimeInfoResponse.Validate if the designated constraints
+// aren't met.
+type ListCloudRuntimeInfoResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListCloudRuntimeInfoResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListCloudRuntimeInfoResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListCloudRuntimeInfoResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListCloudRuntimeInfoResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListCloudRuntimeInfoResponseValidationError) ErrorName() string {
+	return "ListCloudRuntimeInfoResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListCloudRuntimeInfoResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListCloudRuntimeInfoResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListCloudRuntimeInfoResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListCloudRuntimeInfoResponseValidationError{}
+
+// Validate checks the field values on RunTimeVersion with the rules defined in
+// the proto definition for this message. If any rules are violated, an error
+// is returned.
+func (m *RunTimeVersion) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	return nil
+}
+
+// RunTimeVersionValidationError is the validation error returned by
+// RunTimeVersion.Validate if the designated constraints aren't met.
+type RunTimeVersionValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e RunTimeVersionValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e RunTimeVersionValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e RunTimeVersionValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e RunTimeVersionValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e RunTimeVersionValidationError) ErrorName() string { return "RunTimeVersionValidationError" }
+
+// Error satisfies the builtin error interface
+func (e RunTimeVersionValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sRunTimeVersion.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = RunTimeVersionValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = RunTimeVersionValidationError{}
 
 // Validate checks the field values on ListCloudProjectsRequest with the rules
 // defined in the proto definition for this message. If any rules are
@@ -36900,3 +37484,285 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ListNotifyTemplateResponseValidationError{}
+
+// Validate checks the field values on GetProviderResourceUsageRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *GetProviderResourceUsageRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for ProviderID
+
+	// no validation rules for Region
+
+	// no validation rules for InstanceType
+
+	if wrapper := m.GetRatio(); wrapper != nil {
+
+		if val := wrapper.GetValue(); val < 0 || val > 100 {
+			return GetProviderResourceUsageRequestValidationError{
+				field:  "Ratio",
+				reason: "value must be inside range [0, 100]",
+			}
+		}
+
+	}
+
+	if v, ok := interface{}(m.GetAvailable()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GetProviderResourceUsageRequestValidationError{
+				field:  "Available",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// GetProviderResourceUsageRequestValidationError is the validation error
+// returned by GetProviderResourceUsageRequest.Validate if the designated
+// constraints aren't met.
+type GetProviderResourceUsageRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetProviderResourceUsageRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetProviderResourceUsageRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetProviderResourceUsageRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetProviderResourceUsageRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetProviderResourceUsageRequestValidationError) ErrorName() string {
+	return "GetProviderResourceUsageRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetProviderResourceUsageRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetProviderResourceUsageRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetProviderResourceUsageRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetProviderResourceUsageRequestValidationError{}
+
+// Validate checks the field values on GetProviderResourceUsageResponse with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, an error is returned.
+func (m *GetProviderResourceUsageResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GetProviderResourceUsageResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// GetProviderResourceUsageResponseValidationError is the validation error
+// returned by GetProviderResourceUsageResponse.Validate if the designated
+// constraints aren't met.
+type GetProviderResourceUsageResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetProviderResourceUsageResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetProviderResourceUsageResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetProviderResourceUsageResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetProviderResourceUsageResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetProviderResourceUsageResponseValidationError) ErrorName() string {
+	return "GetProviderResourceUsageResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetProviderResourceUsageResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetProviderResourceUsageResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetProviderResourceUsageResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetProviderResourceUsageResponseValidationError{}
+
+// Validate checks the field values on BusinessInfo with the rules defined in
+// the proto definition for this message. If any rules are violated, an error
+// is returned.
+func (m *BusinessInfo) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for ProjectId
+
+	// no validation rules for ProjectName
+
+	// no validation rules for ProjectCode
+
+	// no validation rules for ProjectUsers
+
+	// no validation rules for BizId
+
+	// no validation rules for BizName
+
+	// no validation rules for BizUsers
+
+	// no validation rules for ClusterId
+
+	// no validation rules for ClusterName
+
+	// no validation rules for ClusterRegion
+
+	// no validation rules for ClusterUsers
+
+	// no validation rules for GroupId
+
+	// no validation rules for GroupName
+
+	// no validation rules for InstanceType
+
+	// no validation rules for Zones
+
+	// no validation rules for ConsumerId
+
+	// no validation rules for PoolId
+
+	// no validation rules for GroupUsers
+
+	// no validation rules for Url
+
+	return nil
+}
+
+// BusinessInfoValidationError is the validation error returned by
+// BusinessInfo.Validate if the designated constraints aren't met.
+type BusinessInfoValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e BusinessInfoValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e BusinessInfoValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e BusinessInfoValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e BusinessInfoValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e BusinessInfoValidationError) ErrorName() string { return "BusinessInfoValidationError" }
+
+// Error satisfies the builtin error interface
+func (e BusinessInfoValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sBusinessInfo.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = BusinessInfoValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = BusinessInfoValidationError{}

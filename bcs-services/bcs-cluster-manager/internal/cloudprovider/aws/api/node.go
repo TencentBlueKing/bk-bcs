@@ -269,3 +269,8 @@ func (nm *NodeManager) ListOsImage(provider string, opt *cloudprovider.CommonOpt
 func (nm *NodeManager) GetResourceGroups(opt *cloudprovider.CommonOption) ([]*proto.ResourceGroupInfo, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
+
+// ListRuntimeInfo get runtime info list
+func (nm *NodeManager) ListRuntimeInfo(opt *cloudprovider.ListRuntimeInfoOption) (map[string][]string, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}

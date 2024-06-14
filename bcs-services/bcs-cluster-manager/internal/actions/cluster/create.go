@@ -27,11 +27,9 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/lock"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cidrmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/taskserver"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 const (
@@ -59,56 +57,13 @@ func NewCreateAction(model store.ClusterManagerModel, locker lock.DistributedLoc
 	}
 }
 
-func (ca *CreateAction) applyClusterCIDR(cls *cmproto.Cluster) error {
+func (ca *CreateAction) applyClusterCIDR(cls *cmproto.Cluster) error { // nolint
 	if len(cls.NetworkSettings.ClusterIPv4CIDR) > 0 ||
 		len(cls.NetworkSettings.ClusterIPv6CIDR) > 0 || len(cls.NetworkSettings.ServiceIPv4CIDR) > 0 {
 		return nil
 	}
 
-	// auto update set cluster cidr
-	cidr, err := applyClusterCIDR(cls)
-	if err != nil {
-		return err
-	}
-	cls.NetworkSettings.ClusterIPv4CIDR = cidr
-
 	return nil
-}
-
-func applyClusterCIDR(cls *cmproto.Cluster) (string, error) {
-	cidrCli, conClose, err := cidrmanager.GetCidrClient().GetCidrManagerClient()
-	if err != nil {
-		return "", fmt.Errorf("获取组件cidr-manager客户端失败: %v", err)
-	}
-	defer func() {
-		if conClose != nil {
-			conClose()
-		}
-	}()
-
-	timeOutCtx, cancel := context.WithTimeout(context.Background(), time.Second*60)
-	defer cancel()
-
-	req := &cidrmanager.GetAllocatableCidrRequest{
-		Region:   cls.Region,
-		CidrType: utils.GlobalRouter.String(),
-		VpcID:    cls.VpcID,
-		CidrLen:  utils.CalMaskLen(float64(cls.NetworkSettings.CidrStep)),
-	}
-	resp, err := cidrCli.GetAllocatableCidr(timeOutCtx, req)
-	if err != nil {
-		return "", fmt.Errorf("地域[%s]vpc[%s]获取cidr资源失败: %s", cls.Region, cls.VpcID, err)
-	}
-	if resp.Code != 0 {
-		return "", fmt.Errorf("地域[%s]vpc[%s]获取cidr资源失败: %s", cls.Region, cls.VpcID, resp.Message)
-	}
-
-	if resp.Data.Cidr == "" {
-		return "", fmt.Errorf("vpc[%s] GlobalRouter cidr资源不足", cls.VpcID)
-	}
-
-	blog.Infof("createCluster[%s] apply cidr[%s] successful", cls.ClusterID, resp.Data.Cidr)
-	return resp.Data.Cidr, nil
 }
 
 func (ca *CreateAction) constructCluster(cloud *cmproto.Cloud) (*cmproto.Cluster, error) {
@@ -151,6 +106,7 @@ func (ca *CreateAction) constructCluster(cloud *cmproto.Cloud) (*cmproto.Cluster
 		CreateTime:              createTime,
 		UpdateTime:              createTime,
 		Status:                  common.StatusInitialization,
+		IsMixed:                 ca.req.IsMixed,
 	}
 
 	// set cloud default values

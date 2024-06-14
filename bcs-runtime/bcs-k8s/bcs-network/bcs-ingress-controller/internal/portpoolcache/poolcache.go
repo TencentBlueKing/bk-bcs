@@ -19,6 +19,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
+	ingresscommon "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/pkg/common"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
@@ -142,10 +143,21 @@ func (c *Cache) ReleasePortBinding(poolKey, poolItemKey, protocol string, startP
 }
 
 // SetPortBindingUsed set certain port status to used
-func (c *Cache) SetPortBindingUsed(poolKey, poolItemKey, protocol string, startPort, endPort int) {
+func (c *Cache) SetPortBindingUsed(item *networkextensionv1.PortBindingItem, resourceType,
+	resourceNamespace, resourceName string) {
+	if item == nil {
+		return
+	}
+	poolKey := ingresscommon.GetNamespacedNameKey(item.PoolName, item.PoolNamespace)
 	pool, ok := c.portPoolMap[poolKey]
 	if !ok {
 		return
 	}
-	pool.SetPortBindingUsed(poolItemKey, protocol, startPort, endPort)
+	pool.SetPortBindingUsed(item.GetKey(), item.Protocol, item.StartPort, item.EndPort, resourceType, resourceNamespace,
+		resourceName)
+}
+
+// GetPortPoolMap return portPool map
+func (c *Cache) GetPortPoolMap() map[string]*CachePool {
+	return c.portPoolMap
 }

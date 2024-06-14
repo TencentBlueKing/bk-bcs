@@ -33,6 +33,10 @@ const (
 	LabelKeyForIsSegmentListener = "segmentlistener.bkbcs.tencent.com"
 	// LabelKeyForPortPoolListener label key for if it is listener for port pool
 	LabelKeyForPortPoolListener = "portpool.bkbcs.tencent.com"
+	// LabelKeyForUptimeCheckListener label key for if it is listener that enable uptime check
+	LabelKeyForUptimeCheckListener = "uptime_check.bkbcs.tencent.com"
+	// LabelKeyForSourceNamespace label key for namespace where original resources located
+	LabelKeyForSourceNamespace = "source_namespace.bkbcs.tencent.com"
 	// LabelValueTrue label value for true
 	LabelValueTrue = "true"
 	// LabelValueFalse label value for false
@@ -163,16 +167,24 @@ type ListenerHealthStatus struct {
 	RulesHealth []ListenerRuleHealthStatus `json:"rules,omitempty"`
 }
 
+// UptimeCheckTaskStatus uptime check task status
+type UptimeCheckTaskStatus struct {
+	ID     int64  `json:"id"`
+	Status string `json:"status"`
+	Msg    string `json:"msg"`
+}
+
 // ListenerStatus defines the observed state of Listener
 type ListenerStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-	ListenerID   string                `json:"listenerID,omitempty"`
-	Status       string                `json:"status,omitempty"`
-	HealthStatus *ListenerHealthStatus `json:"healthStatus,omitempty"`
-	Msg          string                `json:"msg,omitempty"`
-	PortPool     string                `json:"portpool,omitempty"`
-	Ingress      string                `json:"ingress,omitempty"`
+	ListenerID        string                 `json:"listenerID,omitempty"`
+	Status            string                 `json:"status,omitempty"`
+	HealthStatus      *ListenerHealthStatus  `json:"healthStatus,omitempty"`
+	UptimeCheckStatus *UptimeCheckTaskStatus `json:"uptimeCheckStatus,omitempty"`
+	Msg               string                 `json:"msg,omitempty"`
+	PortPool          string                 `json:"portpool,omitempty"`
+	Ingress           string                 `json:"ingress,omitempty"`
 }
 
 // +genclient
@@ -193,6 +205,59 @@ type Listener struct {
 
 	Spec   ListenerSpec   `json:"spec,omitempty"`
 	Status ListenerStatus `json:"status,omitempty"`
+}
+
+// IsUptimeCheckEnable return true if uptime check enabled
+func (l *Listener) IsUptimeCheckEnable() bool {
+	if l.Spec.ListenerAttribute == nil || l.Spec.ListenerAttribute.UptimeCheck == nil || l.Spec.ListenerAttribute.
+		UptimeCheck.Enabled == false {
+		return false
+	}
+	return true
+}
+
+// GetUptimeCheckTaskStatus get uptime check task status
+func (l *Listener) GetUptimeCheckTaskStatus() *UptimeCheckTaskStatus {
+	if l.Status.UptimeCheckStatus == nil {
+		return &UptimeCheckTaskStatus{}
+	}
+
+	return l.Status.UptimeCheckStatus
+}
+
+// GetListenerSourceNamespace 返回listener对应实例所在的命名空间，如果没有指定则使用listener的命名空间
+func (l *Listener) GetListenerSourceNamespace() string {
+	if l.Labels != nil {
+		ns, exist := l.Labels[LabelKeyForSourceNamespace]
+		if exist {
+			return ns
+		}
+	}
+	return l.Namespace
+}
+
+// IsEmptyTargetGroup return true if listener's target group is empty
+func (l *Listener) IsEmptyTargetGroup() bool {
+	if l.Spec.TargetGroup != nil && len(l.Spec.TargetGroup.Backends) != 0 {
+		return false
+	}
+	for _, rule := range l.Spec.Rules {
+		if rule.TargetGroup != nil && len(rule.TargetGroup.Backends) != 0 {
+			return false
+		}
+	}
+	return true
+}
+
+func (l *Listener) GetRegion() string {
+	if l.GetLabels() == nil {
+		return ""
+	}
+	region, ok := l.GetLabels()[LabelKeyForLoadbalanceRegion]
+	if !ok {
+		return ""
+	}
+	return region
 }
 
 // ToJSONString convert listener to json string

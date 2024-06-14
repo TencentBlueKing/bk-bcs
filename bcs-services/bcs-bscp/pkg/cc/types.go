@@ -614,9 +614,8 @@ type Network struct {
 	// if in ipv4 single stack mode, the BindIP would be ipv4 address.
 	// if in ipv6 single stack mode, the BindIP would be ipv6 address.
 	BindIP string `yaml:"bindIP"`
-	// BindIPv6 is the ipv6 address, which service would listen to.
-	// it would be set only in single ipv6 stack mode or dual stack mode.
-	BindIPv6 string `yaml:"bindIPv6"`
+	// BindIPs is the advertised IP address for service expose.
+	BindIPs []string `yaml:"bindIPs"`
 	// RpcPort is port where server listen to rpc port.
 	RpcPort uint `yaml:"rpcPort"`
 	// HttpPort is port where server listen to http port.
@@ -640,10 +639,10 @@ func (n *Network) trySetFlagBindIP(ip net.IP) error {
 
 // trySetFlagPort set http and grpc port
 func (n *Network) trySetFlagPort(port, grpcPort int) error {
-	if port > 0 {
+	if n.HttpPort == 0 && port > 0 {
 		n.HttpPort = uint(port)
 	}
-	if grpcPort > 0 {
+	if n.RpcPort == 0 && grpcPort > 0 {
 		n.RpcPort = uint(grpcPort)
 	}
 
@@ -652,11 +651,20 @@ func (n *Network) trySetFlagPort(port, grpcPort int) error {
 
 // trySetDefault set the network's default value if user not configured.
 func (n *Network) trySetDefault() {
+	ip, ips := tools.GetIPsFromEnv()
 	if len(n.BindIP) == 0 {
-		n.BindIP = "127.0.0.1"
+		if ip != "" {
+			n.BindIP = ip
+		} else {
+			n.BindIP = "127.0.0.1"
+		}
 	}
-	if len(n.BindIPv6) == 0 {
-		n.BindIPv6 = tools.GetIPv6AddrFromEnv()
+	if len(n.BindIPs) == 0 {
+		if len(ips) > 0 {
+			n.BindIPs = ips
+		} else {
+			n.BindIPs = []string{n.BindIP}
+		}
 	}
 }
 
@@ -667,8 +675,14 @@ func (n Network) validate() error {
 		return errors.New("network bindIP is not set")
 	}
 
-	if ip := net.ParseIP(n.BindIP); ip == nil {
-		return errors.New("invalid network bindIP")
+	if net.ParseIP(n.BindIP) == nil {
+		return fmt.Errorf("invalid network bindIP: %s", n.BindIP)
+	}
+
+	for _, ip := range n.BindIPs {
+		if net.ParseIP(ip) == nil {
+			return fmt.Errorf("invalid network bindIPs: %s", ip)
+		}
 	}
 
 	if err := n.TLS.validate(); err != nil {

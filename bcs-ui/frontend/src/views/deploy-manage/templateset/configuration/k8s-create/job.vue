@@ -1,115 +1,116 @@
 <!-- eslint-disable max-len -->
 <template>
-  <div class="biz-content">
-    <biz-header
-      ref="commonHeader"
-      @exception="exceptionHandler"
-      @saveJobSuccess="saveJobSuccess"
-      @switchVersion="initResource"
-      @exmportToYaml="exportToYaml">
-    </biz-header>
-    <template>
-      <div class="biz-content-wrapper biz-confignation-wrapper" v-bkloading="{ isLoading: isTemplateSaving }">
-        <div class="biz-tab-box" v-show="!isDataLoading">
-          <biz-tabs @tab-change="tabResource" ref="commonTab"></biz-tabs>
-          <div class="biz-tab-content" v-bkloading="{ isLoading: isTabChanging }">
-            <bk-alert type="info" class="mb20">
-              <div slot="title">
-                {{$t('deploy.templateset.jobDescription')}}，
-                <a class="bk-text-button" :href="PROJECT_CONFIG.k8sJob" target="_blank">{{$t('plugin.tools.docs')}}</a>
-              </div>
-            </bk-alert>
-            <template v-if="!jobs.length">
-              <div class="biz-guide-box mt0">
-                <bk-button icon="plus" type="primary" @click.stop.prevent="addLocalApplication">
-                  <span style="margin-left: 0;">{{$t('generic.button.add')}}Job</span>
-                </bk-button>
-              </div>
-            </template>
-            <template v-else>
-              <div class="biz-configuration-topbar">
-                <div class="biz-list-operation">
-                  <div class="item" v-for="(application, index) in jobs" :key="application.id">
-                    <bk-button :class="['bk-button', { 'bk-primary': curApplication.id === application.id }]" @click.stop="setCurApplication(application, index)">
-                      {{(application && application.config.metadata.name) || $t('deploy.templateset.unnamed')}}
-                      <span class="biz-update-dot" v-show="application.isEdited"></span>
-                    </bk-button>
-                    <span class="bcs-icon bcs-icon-close" @click.stop="removeApplication(application, index)"></span>
-                  </div>
-
-                  <bcs-popover ref="applicationTooltip" :content="$t('deploy.templateset.addJob')" placement="top">
-                    <bk-button class="bk-button bk-default is-outline is-icon" @click.stop="addLocalApplication">
-                      <i class="bcs-icon bcs-icon-plus"></i>
-                    </bk-button>
-                  </bcs-popover>
+  <BcsContent>
+    <template #header>
+      <biz-header
+        ref="commonHeader"
+        @exception="exceptionHandler"
+        @saveJobSuccess="saveJobSuccess"
+        @switchVersion="initResource"
+        @exmportToYaml="exportToYaml">
+      </biz-header>
+    </template>
+    <div class="biz-confignation-wrapper" v-bkloading="{ isLoading: isTemplateSaving }">
+      <div class="biz-tab-box" v-show="!isDataLoading">
+        <biz-tabs @tab-change="tabResource" ref="commonTab"></biz-tabs>
+        <div class="biz-tab-content" v-bkloading="{ isLoading: isTabChanging }">
+          <bk-alert type="info" class="mb20">
+            <div slot="title">
+              {{$t('deploy.templateset.jobDescription')}}，
+              <a class="bk-text-button" :href="PROJECT_CONFIG.k8sJob" target="_blank">{{$t('plugin.tools.docs')}}</a>
+            </div>
+          </bk-alert>
+          <template v-if="!jobs.length">
+            <div class="biz-guide-box mt0">
+              <bk-button icon="plus" type="primary" @click.stop.prevent="addLocalApplication">
+                <span style="margin-left: 0;">{{$t('generic.button.add')}}Job</span>
+              </bk-button>
+            </div>
+          </template>
+          <template v-else>
+            <div class="biz-configuration-topbar">
+              <div class="biz-list-operation">
+                <div class="item" v-for="(application, index) in jobs" :key="application.id">
+                  <bk-button :class="['bk-button', { 'bk-primary': curApplication.id === application.id }]" @click.stop="setCurApplication(application, index)">
+                    {{(application && application.config.metadata.name) || $t('deploy.templateset.unnamed')}}
+                    <span class="biz-update-dot" v-show="application.isEdited"></span>
+                  </bk-button>
+                  <span class="bcs-icon bcs-icon-close" @click.stop="removeApplication(application, index)"></span>
                 </div>
+
+                <bcs-popover ref="applicationTooltip" :content="$t('deploy.templateset.addJob')" placement="top">
+                  <bk-button class="bk-button bk-default is-outline is-icon" @click.stop="addLocalApplication">
+                    <i class="bcs-icon bcs-icon-plus"></i>
+                  </bk-button>
+                </bcs-popover>
               </div>
-              <div class="biz-configuration-content" style="position: relative;">
-                <!-- part1 start -->
-                <div class="bk-form biz-configuration-form">
-                  <a href="javascript:void(0);" class="bk-text-button from-json-btn" @click.stop.prevent="showJsonPanel">{{$t('deploy.templateset.importYAML')}}</a>
+            </div>
+            <div class="biz-configuration-content" style="position: relative;">
+              <!-- part1 start -->
+              <div class="bk-form biz-configuration-form">
+                <a href="javascript:void(0);" class="bk-text-button from-json-btn" @click.stop.prevent="showJsonPanel">{{$t('deploy.templateset.importYAML')}}</a>
 
-                  <bk-sideslider
-                    :is-show.sync="toJsonDialogConf.isShow"
-                    :title="toJsonDialogConf.title"
-                    :width="toJsonDialogConf.width"
-                    :quick-close="false"
-                    class="biz-app-container-tojson-sideslider"
-                    @hidden="closeToJson">
-                    <div slot="content" style="position: relative;">
-                      <div class="biz-log-box" :style="{ height: `${winHeight - 60}px` }" v-bkloading="{ isLoading: toJsonDialogConf.loading }">
-                        <bk-button class="bk-button bk-primary save-json-btn" @click.stop.prevent="saveApplicationJson">{{$t('generic.button.import')}}</bk-button>
-                        <bk-button class="bk-button bk-default hide-json-btn" @click.stop.prevent="hideApplicationJson">{{$t('generic.button.cancel')}}</bk-button>
-                        <ace
-                          :value="editorConfig.value"
-                          :width="editorConfig.width"
-                          :height="editorConfig.height"
-                          :lang="editorConfig.lang"
-                          :read-only="editorConfig.readOnly"
-                          :full-screen="editorConfig.fullScreen"
-                          @init="editorInitAfter">
-                        </ace>
-                      </div>
+                <bk-sideslider
+                  :is-show.sync="toJsonDialogConf.isShow"
+                  :title="toJsonDialogConf.title"
+                  :width="toJsonDialogConf.width"
+                  :quick-close="false"
+                  class="biz-app-container-tojson-sideslider"
+                  @hidden="closeToJson">
+                  <div slot="content" style="position: relative;">
+                    <div class="biz-log-box" :style="{ height: `${winHeight - 60}px` }" v-bkloading="{ isLoading: toJsonDialogConf.loading }">
+                      <bk-button class="bk-button bk-primary save-json-btn" @click.stop.prevent="saveApplicationJson">{{$t('generic.button.import')}}</bk-button>
+                      <bk-button class="bk-button bk-default hide-json-btn" @click.stop.prevent="hideApplicationJson">{{$t('generic.button.cancel')}}</bk-button>
+                      <ace
+                        :value="editorConfig.value"
+                        :width="editorConfig.width"
+                        :height="editorConfig.height"
+                        :lang="editorConfig.lang"
+                        :read-only="editorConfig.readOnly"
+                        :full-screen="editorConfig.fullScreen"
+                        @init="editorInitAfter">
+                      </ace>
                     </div>
-                  </bk-sideslider>
+                  </div>
+                </bk-sideslider>
 
+                <div class="bk-form-item">
                   <div class="bk-form-item">
-                    <div class="bk-form-item">
-                      <div class="bk-form-content" style="margin-left: 0;">
-                        <div class="bk-form-inline-item is-required">
-                          <label class="bk-label" style="width: 140px;">{{$t('plugin.tools.appName')}}：</label>
-                          <div class="bk-form-content" style="margin-left: 140px;">
-                            <div class="bk-form-input-group">
-                              <input type="text" :class="['bk-form-input',{ 'is-danger': errors.has('applicationName') }]" :placeholder="$t('deploy.templateset.enterCharacterLimit64')" style="width: 310px;" v-model="curApplication.config.metadata.name" maxlength="64" name="applicationName" v-validate="{ required: true, regex: /^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$/ }">
-                            </div>
+                    <div class="bk-form-content" style="margin-left: 0;">
+                      <div class="bk-form-inline-item is-required">
+                        <label class="bk-label" style="width: 140px;">{{$t('plugin.tools.appName')}}：</label>
+                        <div class="bk-form-content" style="margin-left: 140px;">
+                          <div class="bk-form-input-group">
+                            <input type="text" :class="['bk-form-input',{ 'is-danger': errors.has('applicationName') }]" :placeholder="$t('deploy.templateset.enterCharacterLimit64')" style="width: 310px;" v-model="curApplication.config.metadata.name" maxlength="64" name="applicationName" v-validate="{ required: true, regex: /^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$/ }">
                           </div>
                         </div>
-                        <div class="bk-form-tip is-danger" style="margin-left: 140px;" v-if="errors.has('applicationName')">
-                          <p class="bk-tip-text">{{$t('deploy.templateset.nameIsRequired')}}</p>
-                        </div>
+                      </div>
+                      <div class="bk-form-tip is-danger" style="margin-left: 140px;" v-if="errors.has('applicationName')">
+                        <p class="bk-tip-text">{{$t('deploy.templateset.nameIsRequired')}}</p>
                       </div>
                     </div>
                   </div>
+                </div>
 
-                  <div class="bk-form-item">
-                    <label class="bk-label" style="width: 140px;">{{$t('deploy.templateset.importanceLevel')}}：</label>
-                    <div class="bk-form-content" style="margin-left: 140px;">
-                      <bk-radio-group v-model="curApplication.config.monitorLevel">
-                        <bk-radio class="mr20" :value="'important'">{{$t('deploy.templateset.important')}}</bk-radio>
-                        <bk-radio class="mr20" :value="'general'">{{$t('deploy.templateset.general')}}</bk-radio>
-                        <bk-radio :value="'unimportant'">{{$t('deploy.templateset.notImportant')}}</bk-radio>
-                      </bk-radio-group>
-                    </div>
+                <div class="bk-form-item">
+                  <label class="bk-label" style="width: 140px;">{{$t('deploy.templateset.importanceLevel')}}：</label>
+                  <div class="bk-form-content" style="margin-left: 140px;">
+                    <bk-radio-group v-model="curApplication.config.monitorLevel">
+                      <bk-radio class="mr20" :value="'important'">{{$t('deploy.templateset.important')}}</bk-radio>
+                      <bk-radio class="mr20" :value="'general'">{{$t('deploy.templateset.general')}}</bk-radio>
+                      <bk-radio :value="'unimportant'">{{$t('deploy.templateset.notImportant')}}</bk-radio>
+                    </bk-radio-group>
                   </div>
+                </div>
 
-                  <div class="bk-form-item">
-                    <label class="bk-label" style="width: 140px;">{{$t('cluster.create.label.desc')}}：</label>
-                    <div class="bk-form-content" style="margin-left: 140px;">
-                      <textarea class="bk-form-textarea" :placeholder="$t('deploy.templateset.enterCharacterLimit256')" v-model="curApplication.desc" maxlength="256"></textarea>
-                    </div>
+                <div class="bk-form-item">
+                  <label class="bk-label" style="width: 140px;">{{$t('cluster.create.label.desc')}}：</label>
+                  <div class="bk-form-content" style="margin-left: 140px;">
+                    <textarea class="bk-form-textarea" :placeholder="$t('deploy.templateset.enterCharacterLimit256')" v-model="curApplication.desc" maxlength="256"></textarea>
                   </div>
+                </div>
 
-                  <!-- <div class="bk-form-item">
+                <!-- <div class="bk-form-item">
                                         <label class="bk-label" style="width: 140px;">标签：</label>
                                         <div class="bk-form-content" style="margin-left: 140px;">
                                             <bk-keyer
@@ -125,78 +126,78 @@
                                         </div>
                                     </div> -->
 
-                  <div class="bk-form-item">
-                    <div class="bk-form-content" style="margin-left: 140px;">
-                      <button :class="['bk-text-button f12 mb10 pl0', { 'rotate': isMorePanelShow }]" @click.stop.prevent="toggleMore">
-                        {{$t('deploy.templateset.moreSettings')}}<i class="bcs-icon bcs-icon-angle-double-down ml5"></i>
-                      </button>
+                <div class="bk-form-item">
+                  <div class="bk-form-content" style="margin-left: 140px;">
+                    <button :class="['bk-text-button f12 mb10 pl0', { 'rotate': isMorePanelShow }]" @click.stop.prevent="toggleMore">
+                      {{$t('deploy.templateset.moreSettings')}}<i class="bcs-icon bcs-icon-angle-double-down ml5"></i>
+                    </button>
 
-                      <button :class="['bk-text-button f12 mb10 pl0', { 'rotate': isPodPanelShow }]" @click.stop.prevent="togglePod">
-                        {{$t('deploy.templateset.podTemplateSettings')}}<i class="bcs-icon bcs-icon-angle-double-down ml5"></i>
-                      </button>
-                    </div>
-                    <bk-tab :type="'fill'" :active-name="'tab1'" :size="'small'" v-show="isMorePanelShow" style="margin-left: 140px;">
-                      <bk-tab-panel name="tab1" :title="$t('deploy.templateset.podRunSettings')">
-                        <div class="bk-form m20">
+                    <button :class="['bk-text-button f12 mb10 pl0', { 'rotate': isPodPanelShow }]" @click.stop.prevent="togglePod">
+                      {{$t('deploy.templateset.podTemplateSettings')}}<i class="bcs-icon bcs-icon-angle-double-down ml5"></i>
+                    </button>
+                  </div>
+                  <bk-tab :type="'fill'" :active-name="'tab1'" :size="'small'" v-show="isMorePanelShow" style="margin-left: 140px;">
+                    <bk-tab-panel name="tab1" :title="$t('deploy.templateset.podRunSettings')">
+                      <div class="bk-form m20">
 
-                          <div class="bk-form-item">
-                            <label class="bk-label" style="width: 210px;">completions：</label>
-                            <div class="bk-form-content" style="margin-left: 210px;">
-                              <bkbcs-input
-                                type="number"
-                                :placeholder="$t('generic.placeholder.input')"
-                                style="width: 215px;"
-                                :min="0"
-                                :value.sync="curApplication.config.spec.completions"
-                                :list="varList">
-                              </bkbcs-input>
-                            </div>
-                          </div>
-
-                          <div class="bk-form-item">
-                            <label class="bk-label" style="width: 210px;">parallelism：</label>
-                            <div class="bk-form-content" style="margin-left: 210px;">
-                              <bkbcs-input
-                                type="number"
-                                :placeholder="$t('generic.placeholder.input')"
-                                style="width: 215px;"
-                                :min="0"
-                                :value.sync="curApplication.config.spec.parallelism"
-                                :list="varList">
-                              </bkbcs-input>
-                            </div>
-                          </div>
-
-                          <div class="bk-form-item">
-                            <label class="bk-label" style="width: 210px;">backoffLimit：</label>
-                            <div class="bk-form-content" style="margin-left: 210px;">
-                              <bkbcs-input
-                                type="number"
-                                :placeholder="$t('generic.placeholder.input')"
-                                style="width: 215px;"
-                                :min="0"
-                                :value.sync="curApplication.config.spec.backoffLimit"
-                                :list="varList">
-                              </bkbcs-input>
-                            </div>
-                          </div>
-
-                          <div class="bk-form-item">
-                            <label class="bk-label" style="width: 210px;">activeDeadlineSeconds：</label>
-                            <div class="bk-form-content" style="margin-left: 210px;">
-                              <bkbcs-input
-                                type="number"
-                                :placeholder="$t('generic.placeholder.input')"
-                                style="width: 215px;"
-                                :min="0"
-                                :value.sync="curApplication.config.spec.activeDeadlineSeconds"
-                                :list="varList">
-                              </bkbcs-input>
-                            </div>
+                        <div class="bk-form-item">
+                          <label class="bk-label" style="width: 210px;">completions：</label>
+                          <div class="bk-form-content" style="margin-left: 210px;">
+                            <bkbcs-input
+                              type="number"
+                              :placeholder="$t('generic.placeholder.input')"
+                              style="width: 215px;"
+                              :min="0"
+                              :value.sync="curApplication.config.spec.completions"
+                              :list="varList">
+                            </bkbcs-input>
                           </div>
                         </div>
-                      </bk-tab-panel>
-                      <!-- <bk-tab-panel name="tab2" :title="$t('deploy.templateset.metricInfo')">
+
+                        <div class="bk-form-item">
+                          <label class="bk-label" style="width: 210px;">parallelism：</label>
+                          <div class="bk-form-content" style="margin-left: 210px;">
+                            <bkbcs-input
+                              type="number"
+                              :placeholder="$t('generic.placeholder.input')"
+                              style="width: 215px;"
+                              :min="0"
+                              :value.sync="curApplication.config.spec.parallelism"
+                              :list="varList">
+                            </bkbcs-input>
+                          </div>
+                        </div>
+
+                        <div class="bk-form-item">
+                          <label class="bk-label" style="width: 210px;">backoffLimit：</label>
+                          <div class="bk-form-content" style="margin-left: 210px;">
+                            <bkbcs-input
+                              type="number"
+                              :placeholder="$t('generic.placeholder.input')"
+                              style="width: 215px;"
+                              :min="0"
+                              :value.sync="curApplication.config.spec.backoffLimit"
+                              :list="varList">
+                            </bkbcs-input>
+                          </div>
+                        </div>
+
+                        <div class="bk-form-item">
+                          <label class="bk-label" style="width: 210px;">activeDeadlineSeconds：</label>
+                          <div class="bk-form-content" style="margin-left: 210px;">
+                            <bkbcs-input
+                              type="number"
+                              :placeholder="$t('generic.placeholder.input')"
+                              style="width: 215px;"
+                              :min="0"
+                              :value.sync="curApplication.config.spec.activeDeadlineSeconds"
+                              :list="varList">
+                            </bkbcs-input>
+                          </div>
+                        </div>
+                      </div>
+                    </bk-tab-panel>
+                    <!-- <bk-tab-panel name="tab2" :title="$t('deploy.templateset.metricInfo')">
                                                 <div class="bk-form m20">
                                                     <div class="bk-form-item">
                                                         <div class="bk-form-content" style="margin-left: 0;">
@@ -228,351 +229,351 @@
                                                     </transition>
                                                 </div>
                                             </bk-tab-panel> -->
-                    </bk-tab>
+                  </bk-tab>
 
-                    <bk-tab :type="'fill'" :active-name="'tab2'" :size="'small'" v-show="isPodPanelShow" style="margin-left: 140px;">
-                      <bk-tab-panel name="tab2" :title="$t('k8s.annotation')">
-                        <div class="bk-form m20">
-                          <bk-keyer :key-list.sync="curRemarkList" :var-list="varList" ref="remarkKeyer" @change="updateApplicationRemark"></bk-keyer>
+                  <bk-tab :type="'fill'" :active-name="'tab2'" :size="'small'" v-show="isPodPanelShow" style="margin-left: 140px;">
+                    <bk-tab-panel name="tab2" :title="$t('k8s.annotation')">
+                      <div class="bk-form m20">
+                        <bk-keyer :key-list.sync="curRemarkList" :var-list="varList" ref="remarkKeyer" @change="updateApplicationRemark"></bk-keyer>
+                      </div>
+                    </bk-tab-panel>
+                    <bk-tab-panel name="tab3" :title="$t('deploy.templateset.restartStrategy')">
+                      <div class="bk-form m20">
+                        <div class="bk-form-item">
+                          <label class="bk-label" style="width: 140px;">{{$t('deploy.templateset.restartPolicy')}}：</label>
+                          <div class="bk-form-content" style="margin-left: 140px;">
+                            <bk-radio-group v-model="curApplication.config.spec.template.spec.restartPolicy">
+                              <bk-radio :value="policy" v-for="(policy, index) in restartPolicy" :key="index">
+                                {{policy}}
+                              </bk-radio>
+                            </bk-radio-group>
+                          </div>
                         </div>
-                      </bk-tab-panel>
-                      <bk-tab-panel name="tab3" :title="$t('deploy.templateset.restartStrategy')">
-                        <div class="bk-form m20">
-                          <div class="bk-form-item">
-                            <label class="bk-label" style="width: 140px;">{{$t('deploy.templateset.restartPolicy')}}：</label>
-                            <div class="bk-form-content" style="margin-left: 140px;">
-                              <bk-radio-group v-model="curApplication.config.spec.template.spec.restartPolicy">
-                                <bk-radio :value="policy" v-for="(policy, index) in restartPolicy" :key="index">
-                                  {{policy}}
-                                </bk-radio>
-                              </bk-radio-group>
+                      </div>
+                    </bk-tab-panel>
+                    <bk-tab-panel name="tab4" :title="$t('deploy.templateset.killPolicy')">
+                      <div class="bk-form m20">
+                        <div class="bk-form-item">
+                          <label class="bk-label" style="width: 140px;">{{$t('deploy.templateset.terminationGracePeriod')}}：</label>
+                          <div class="bk-form-content" style="margin-left: 140px;">
+                            <div class="bk-form-input-group">
+                              <bkbcs-input
+                                type="number"
+                                :placeholder="$t('generic.placeholder.input')"
+                                style="width: 80px;"
+                                :min="0"
+                                :value.sync="curApplication.config.spec.template.spec.terminationGracePeriodSeconds"
+                                :list="varList">
+                              </bkbcs-input>
+                              <span class="input-group-addon">
+                                {{$t('units.suffix.seconds')}}
+                              </span>
                             </div>
                           </div>
                         </div>
-                      </bk-tab-panel>
-                      <bk-tab-panel name="tab4" :title="$t('deploy.templateset.killPolicy')">
-                        <div class="bk-form m20">
-                          <div class="bk-form-item">
-                            <label class="bk-label" style="width: 140px;">{{$t('deploy.templateset.terminationGracePeriod')}}：</label>
-                            <div class="bk-form-content" style="margin-left: 140px;">
-                              <div class="bk-form-input-group">
+                      </div>
+                    </bk-tab-panel>
+
+                    <bk-tab-panel name="tab5" :title="$t('deploy.templateset.schedulingConstraints')">
+                      <div class="bk-form m20">
+                        <p class="title mb5">NodeSelector</p>
+                        <bk-keyer :key-list.sync="curConstraintLabelList" :var-list="varList" ref="nodeSelectorKeyer" @change="updateNodeSelectorList"></bk-keyer>
+                        <div class="mb5 mt10">
+                          <span class="title">{{$t('deploy.templateset.affinityConstraints')}}</span>
+                          <bk-checkbox class="ml10" name="image-get" v-model="curApplication.config.webCache.isUserConstraint">{{$t('logCollector.action.enable')}}</bk-checkbox>
+                        </div>
+
+                        <div style="height: 300px;" v-if="curApplication.config.webCache.isUserConstraint">
+                          <ace
+                            :value="curApplication.config.webCache.affinityYaml"
+                            :width="yamlEditorConfig.width"
+                            :height="yamlEditorConfig.height"
+                            :lang="yamlEditorConfig.lang"
+                            :read-only="yamlEditorConfig.readOnly"
+                            :full-screen="yamlEditorConfig.fullScreen"
+                            @init="yamlEditorInitAfter"
+                            @input="yamlEditorInput"
+                            @blur="yamlEditorBlur">
+                          </ace>
+                        </div>
+
+                      </div>
+                    </bk-tab-panel>
+
+                    <bk-tab-panel name="tab6" :title="$t('k8s.networking')">
+                      <div class="bk-form m20">
+                        <div class="bk-form-item">
+                          <label class="bk-label" style="width: 140px;">{{$t('deploy.templateset.networkPolicy')}}：</label>
+                          <div class="bk-form-content" style="margin-left: 140px;">
+                            <bk-selector
+                              style="width: 300px;"
+                              :placeholder="$t('generic.placeholder.select')"
+                              :setting-key="'id'"
+                              :display-key="'name'"
+                              :selected.sync="curApplication.config.spec.template.spec.hostNetwork"
+                              :list="netStrategyList"
+                              @item-selected="changeDNSPolicy">
+                            </bk-selector>
+                          </div>
+                        </div>
+                        <div class="bk-form-item">
+                          <label class="bk-label" style="width: 140px;">{{$t('deploy.templateset.dnsPolicy')}}：</label>
+                          <div class="bk-form-content" style="margin-left: 140px;">
+                            <bk-selector
+                              style="width: 300px;"
+                              :placeholder="$t('generic.placeholder.select')"
+                              :setting-key="'id'"
+                              :display-key="'name'"
+                              :selected.sync="curApplication.config.spec.template.spec.dnsPolicy"
+                              :list="dnsStrategyList">
+                            </bk-selector>
+                          </div>
+                        </div>
+                      </div>
+                    </bk-tab-panel>
+
+                    <bk-tab-panel name="ta7" :title="$t('deploy.templateset.volume')">
+                      <div class="bk-form m20">
+                        <table class="biz-simple-table" v-if="curApplication.config.webCache.volumes.length">
+                          <thead>
+                            <tr>
+                              <th style="width: 200px;">{{$t('generic.label.kind')}}</th>
+                              <th style="width: 220px;">{{$t('deploy.templateset.mountName')}}</th>
+                              <th>{{$t('deploy.templateset.mountSource')}}</th>
+                              <th style="width: 100px;"></th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr v-for="(volume, index) in curApplication.config.webCache.volumes" :key="index">
+                              <td>
+                                <bk-selector
+                                  :placeholder="$t('generic.label.kind')"
+                                  :setting-key="'id'"
+                                  :selected.sync="volume.type"
+                                  :list="volumeTypeList">
+                                </bk-selector>
+                              </td>
+                              <td>
                                 <bkbcs-input
-                                  type="number"
+                                  type="text"
                                   :placeholder="$t('generic.placeholder.input')"
-                                  style="width: 80px;"
-                                  :min="0"
-                                  :value.sync="curApplication.config.spec.template.spec.terminationGracePeriodSeconds"
+                                  :value.sync="volume.name"
                                   :list="varList">
                                 </bkbcs-input>
-                                <span class="input-group-addon">
-                                  {{$t('units.suffix.seconds')}}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </bk-tab-panel>
-
-                      <bk-tab-panel name="tab5" :title="$t('deploy.templateset.schedulingConstraints')">
-                        <div class="bk-form m20">
-                          <p class="title mb5">NodeSelector</p>
-                          <bk-keyer :key-list.sync="curConstraintLabelList" :var-list="varList" ref="nodeSelectorKeyer" @change="updateNodeSelectorList"></bk-keyer>
-                          <div class="mb5 mt10">
-                            <span class="title">{{$t('deploy.templateset.affinityConstraints')}}</span>
-                            <bk-checkbox class="ml10" name="image-get" v-model="curApplication.config.webCache.isUserConstraint">{{$t('logCollector.action.enable')}}</bk-checkbox>
-                          </div>
-
-                          <div style="height: 300px;" v-if="curApplication.config.webCache.isUserConstraint">
-                            <ace
-                              :value="curApplication.config.webCache.affinityYaml"
-                              :width="yamlEditorConfig.width"
-                              :height="yamlEditorConfig.height"
-                              :lang="yamlEditorConfig.lang"
-                              :read-only="yamlEditorConfig.readOnly"
-                              :full-screen="yamlEditorConfig.fullScreen"
-                              @init="yamlEditorInitAfter"
-                              @input="yamlEditorInput"
-                              @blur="yamlEditorBlur">
-                            </ace>
-                          </div>
-
-                        </div>
-                      </bk-tab-panel>
-
-                      <bk-tab-panel name="tab6" :title="$t('k8s.networking')">
-                        <div class="bk-form m20">
-                          <div class="bk-form-item">
-                            <label class="bk-label" style="width: 140px;">{{$t('deploy.templateset.networkPolicy')}}：</label>
-                            <div class="bk-form-content" style="margin-left: 140px;">
-                              <bk-selector
-                                style="width: 300px;"
-                                :placeholder="$t('generic.placeholder.select')"
-                                :setting-key="'id'"
-                                :display-key="'name'"
-                                :selected.sync="curApplication.config.spec.template.spec.hostNetwork"
-                                :list="netStrategyList"
-                                @item-selected="changeDNSPolicy">
-                              </bk-selector>
-                            </div>
-                          </div>
-                          <div class="bk-form-item">
-                            <label class="bk-label" style="width: 140px;">{{$t('deploy.templateset.dnsPolicy')}}：</label>
-                            <div class="bk-form-content" style="margin-left: 140px;">
-                              <bk-selector
-                                style="width: 300px;"
-                                :placeholder="$t('generic.placeholder.select')"
-                                :setting-key="'id'"
-                                :display-key="'name'"
-                                :selected.sync="curApplication.config.spec.template.spec.dnsPolicy"
-                                :list="dnsStrategyList">
-                              </bk-selector>
-                            </div>
-                          </div>
-                        </div>
-                      </bk-tab-panel>
-
-                      <bk-tab-panel name="ta7" :title="$t('deploy.templateset.volume')">
-                        <div class="bk-form m20">
-                          <table class="biz-simple-table" v-if="curApplication.config.webCache.volumes.length">
-                            <thead>
-                              <tr>
-                                <th style="width: 200px;">{{$t('generic.label.kind')}}</th>
-                                <th style="width: 220px;">{{$t('deploy.templateset.mountName')}}</th>
-                                <th>{{$t('deploy.templateset.mountSource')}}</th>
-                                <th style="width: 100px;"></th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              <tr v-for="(volume, index) in curApplication.config.webCache.volumes" :key="index">
-                                <td>
-                                  <bk-selector
-                                    :placeholder="$t('generic.label.kind')"
-                                    :setting-key="'id'"
-                                    :selected.sync="volume.type"
-                                    :list="volumeTypeList">
-                                  </bk-selector>
-                                </td>
-                                <td>
-                                  <bkbcs-input
-                                    type="text"
-                                    :placeholder="$t('generic.placeholder.input')"
-                                    :value.sync="volume.name"
-                                    :list="varList">
-                                  </bkbcs-input>
-                                </td>
-                                <td>
-                                  <template v-if="volume.type === 'emptyDir'">
-                                    <bkbcs-input value="{}" :disabled="true" />
-                                  </template>
-                                  <template v-if="volume.type === 'emptyDir(Memory)'">
-                                    <div class="source-flex-box">
-                                      <bkbcs-input value="Memory" :disabled="true" style="width: 75px;" />
-                                      <div class="bk-form-input-group">
-                                        <bkbcs-input
-                                          type="number"
-                                          placeholder="sizeLimit"
-                                          :min="0"
-                                          :value.sync="volume.source"
-                                          :list="varList"
-                                        >
-                                        </bkbcs-input>
-                                        <span class="input-group-addon">
-                                          Gi
-                                        </span>
-                                      </div>
+                              </td>
+                              <td>
+                                <template v-if="volume.type === 'emptyDir'">
+                                  <bkbcs-input value="{}" :disabled="true" />
+                                </template>
+                                <template v-if="volume.type === 'emptyDir(Memory)'">
+                                  <div class="source-flex-box">
+                                    <bkbcs-input value="Memory" :disabled="true" style="width: 75px;" />
+                                    <div class="bk-form-input-group">
+                                      <bkbcs-input
+                                        type="number"
+                                        placeholder="sizeLimit"
+                                        :min="0"
+                                        :value.sync="volume.source"
+                                        :list="varList"
+                                      >
+                                      </bkbcs-input>
+                                      <span class="input-group-addon">
+                                        Gi
+                                      </span>
                                     </div>
-                                  </template>
-                                  <template v-else-if="volume.type === 'persistentVolumeClaim'">
-                                    <bk-selector
-                                      placeholder="PVC List"
-                                      :setting-key="'id'"
-                                      :searchable="true"
-                                      :selected.sync="volume.source"
-                                      :list="[]">
-                                    </bk-selector>
-                                  </template>
-                                  <template v-else-if="volume.type === 'hostPath'">
-                                    <bkbcs-input v-model="volume.source" :placeholder="$t('generic.placeholder.input')" />
-                                  </template>
-                                  <template v-else-if="volume.type === 'configMap'">
-                                    <bk-selector
-                                      placeholder="Configmap List"
-                                      :setting-key="'id'"
-                                      :display-key="'name'"
-                                      :searchable="true"
-                                      :selected.sync="volume.source"
-                                      :list="volumeConfigmapAllList">
-                                    </bk-selector>
-                                  </template>
-                                  <template v-else-if="volume.type === 'secret'">
-                                    <bk-selector
-                                      placeholder="Secret List"
-                                      :setting-key="'name'"
-                                      :display-key="'name'"
-                                      :searchable="true"
-                                      :selected.sync="volume.source"
-                                      :list="volumeSecretList">
-                                    </bk-selector>
-                                  </template>
-                                </td>
-                                <td>
-                                  <div class="action-box">
-                                    <bk-button class="action-btn ml5" @click.stop.prevent="addVolumn()">
-                                      <i class="bcs-icon bcs-icon-plus"></i>
-                                    </bk-button>
-                                    <bk-button class="action-btn" @click.stop.prevent="removeVolumn(volume, index)">
-                                      <i class="bcs-icon bcs-icon-minus"></i>
-                                    </bk-button>
                                   </div>
-                                </td>
-                              </tr>
-                            </tbody>
-                          </table>
-                          <div class="tc p40" v-else>
-                            <bk-button type="primary" @click="addVolumn">
-                              <i class="bcs-icon bcs-icon-plus f12" style="top: -2px;"></i>
-                              {{$t('deploy.templateset.addVolume')}}
-                            </bk-button>
-                          </div>
-                        </div>
-                      </bk-tab-panel>
-
-                      <bk-tab-panel name="tab8" :title="$t('logCollector.text')">
-                        <div class="bk-form p20">
-                          <div class="biz-expand-panel">
-                            <div class="panel">
-                              <div class="header">
-                                <span class="topic">{{$t('plugin.tools.standardLog')}}</span>
-                              </div>
-                              <div class="bk-form-item content">
-                                <ul>
-                                  <li>
-                                    <bk-checkbox name="type" :value="true" :disabled="true">{{$t('deploy.templateset.standardOutput')}}</bk-checkbox>
-                                  </li>
-                                </ul>
-                              </div>
-                            </div>
-                            <div class="panel mt0">
-                              <div class="header" style="border-top: 1px solid #dfe0e5;">
-                                <div class="topic">
-                                  {{$t('logCollector.label.extraLabels')}}
-                                  <bcs-popover :content="$t('deploy.templateset.additionalLogTags')" placement="top">
-                                    <span class="bk-badge">
-                                      <i class="bcs-icon bcs-icon-question-circle"></i>
-                                    </span>
-                                  </bcs-popover>
+                                </template>
+                                <template v-else-if="volume.type === 'persistentVolumeClaim'">
+                                  <bk-selector
+                                    placeholder="PVC List"
+                                    :setting-key="'id'"
+                                    :searchable="true"
+                                    :selected.sync="volume.source"
+                                    :list="[]">
+                                  </bk-selector>
+                                </template>
+                                <template v-else-if="volume.type === 'hostPath'">
+                                  <bkbcs-input v-model="volume.source" :placeholder="$t('generic.placeholder.input')" />
+                                </template>
+                                <template v-else-if="volume.type === 'configMap'">
+                                  <bk-selector
+                                    placeholder="Configmap List"
+                                    :setting-key="'id'"
+                                    :display-key="'name'"
+                                    :searchable="true"
+                                    :selected.sync="volume.source"
+                                    :list="volumeConfigmapAllList">
+                                  </bk-selector>
+                                </template>
+                                <template v-else-if="volume.type === 'secret'">
+                                  <bk-selector
+                                    placeholder="Secret List"
+                                    :setting-key="'name'"
+                                    :display-key="'name'"
+                                    :searchable="true"
+                                    :selected.sync="volume.source"
+                                    :list="volumeSecretList">
+                                  </bk-selector>
+                                </template>
+                              </td>
+                              <td>
+                                <div class="action-box">
+                                  <bk-button class="action-btn ml5" @click.stop.prevent="addVolumn()">
+                                    <i class="bcs-icon bcs-icon-plus"></i>
+                                  </bk-button>
+                                  <bk-button class="action-btn" @click.stop.prevent="removeVolumn(volume, index)">
+                                    <i class="bcs-icon bcs-icon-minus"></i>
+                                  </bk-button>
                                 </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                        <div class="tc p40" v-else>
+                          <bk-button type="primary" @click="addVolumn">
+                            <i class="bcs-icon bcs-icon-plus f12" style="top: -2px;"></i>
+                            {{$t('deploy.templateset.addVolume')}}
+                          </bk-button>
+                        </div>
+                      </div>
+                    </bk-tab-panel>
+
+                    <bk-tab-panel name="tab8" :title="$t('logCollector.text')">
+                      <div class="bk-form p20">
+                        <div class="biz-expand-panel">
+                          <div class="panel">
+                            <div class="header">
+                              <span class="topic">{{$t('plugin.tools.standardLog')}}</span>
+                            </div>
+                            <div class="bk-form-item content">
+                              <ul>
+                                <li>
+                                  <bk-checkbox name="type" :value="true" :disabled="true">{{$t('deploy.templateset.standardOutput')}}</bk-checkbox>
+                                </li>
+                              </ul>
+                            </div>
+                          </div>
+                          <div class="panel mt0">
+                            <div class="header" style="border-top: 1px solid #dfe0e5;">
+                              <div class="topic">
+                                {{$t('logCollector.label.extraLabels')}}
+                                <bcs-popover :content="$t('deploy.templateset.additionalLogTags')" placement="top">
+                                  <span class="bk-badge">
+                                    <i class="bcs-icon bcs-icon-question-circle"></i>
+                                  </span>
+                                </bcs-popover>
                               </div>
-                              <div class="bk-form-item content">
-                                <bk-keyer
-                                  :key-list.sync="curLogLabelList"
-                                  :var-list="varList"
-                                  @change="updateApplicationLogLabel">
-                                </bk-keyer>
-                              </div>
+                            </div>
+                            <div class="bk-form-item content">
+                              <bk-keyer
+                                :key-list.sync="curLogLabelList"
+                                :var-list="varList"
+                                @change="updateApplicationLogLabel">
+                              </bk-keyer>
                             </div>
                           </div>
                         </div>
-                      </bk-tab-panel>
+                      </div>
+                    </bk-tab-panel>
 
-                      <bk-tab-panel name="tab9" :title="$t('deploy.templateset.imageCredential')">
-                        <div class="bk-form m20">
-                          <bk-keyer
-                            :data-key="'name'"
-                            :key-list.sync="curImageSecretList"
-                            :var-list="varList"
-                            :key-input-width="170"
-                            :value-input-width="450"
-                            :tip="$t('deploy.templateset.imagePullSecretsNote')"
-                            @change="updateApplicationImageSecrets">
-                          </bk-keyer>
-                        </div>
-                      </bk-tab-panel>
+                    <bk-tab-panel name="tab9" :title="$t('deploy.templateset.imageCredential')">
+                      <div class="bk-form m20">
+                        <bk-keyer
+                          :data-key="'name'"
+                          :key-list.sync="curImageSecretList"
+                          :var-list="varList"
+                          :key-input-width="170"
+                          :value-input-width="450"
+                          :tip="$t('deploy.templateset.imagePullSecretsNote')"
+                          @change="updateApplicationImageSecrets">
+                        </bk-keyer>
+                      </div>
+                    </bk-tab-panel>
 
-                      <bk-tab-panel name="tab10" :title="$t('deploy.templateset.serviceAccount')">
-                        <div class="bk-form m20">
-                          <div class="biz-equal-inputer">
-                            <div class="inputer-content">
-                              <bkbcs-input
-                                type="text"
-                                style="width: 170px;"
-                                value="serviceAccountName"
-                                :disabled="true">
-                              </bkbcs-input>
-                              <span class="operator">=</span>
-                              <bkbcs-input
-                                type="text"
-                                style="width: 450px;"
-                                :placeholder="$t('generic.label.value')"
-                                :value.sync="curApplication.config.spec.template.spec.serviceAccountName">
-                              </bkbcs-input>
-                            </div>
-                            <p class="biz-tip mt5">{{$t('deploy.templateset.createPodServiceAccountReminder')}}</p>
+                    <bk-tab-panel name="tab10" :title="$t('deploy.templateset.serviceAccount')">
+                      <div class="bk-form m20">
+                        <div class="biz-equal-inputer">
+                          <div class="inputer-content">
+                            <bkbcs-input
+                              type="text"
+                              style="width: 170px;"
+                              value="serviceAccountName"
+                              :disabled="true">
+                            </bkbcs-input>
+                            <span class="operator">=</span>
+                            <bkbcs-input
+                              type="text"
+                              style="width: 450px;"
+                              :placeholder="$t('generic.label.value')"
+                              :value.sync="curApplication.config.spec.template.spec.serviceAccountName">
+                            </bkbcs-input>
                           </div>
-                        </div>
-                      </bk-tab-panel>
-                    </bk-tab>
-                  </div>
-                </div>
-                <!-- part1 end -->
-
-                <!-- part2 start -->
-                <div class="biz-part-header">
-                  <div class="bk-button-group">
-                    <div class="item" v-for="(container, index) in curApplication.config.spec.template.spec.allContainers" :key="index">
-                      <bk-button :class="['bk-button bk-default is-outline', { 'is-selected': curContainerIndex === index }]" @click.stop="setCurContainer(container, index)">
-                        {{container.name || $t('deploy.templateset.unnamed')}}
-                      </bk-button>
-                      <span class="bcs-icon bcs-icon-close-circle" @click.stop="removeContainer(index)" v-if="curApplication.config.spec.template.spec.allContainers.length > 1"></span>
-                    </div>
-                    <bcs-popover ref="containerTooltip" :content="$t('deploy.templateset.addContainer')" placement="top">
-                      <bk-button type="button" class="bk-button bk-default is-outline is-icon" @click.stop.prevent="addLocalContainer">
-                        <i class="bcs-icon bcs-icon-plus"></i>
-                      </bk-button>
-                    </bcs-popover>
-                  </div>
-                </div>
-
-                <div class="bk-form biz-configuration-form pb15">
-                  <div class="biz-span">
-                    <span class="title">{{$t('generic.title.basicInfo')}}</span>
-                  </div>
-                  <div class="bk-form-item is-required">
-                    <div class="bk-form-content" style="margin-left: 0">
-                      <div class="bk-form-inline-item is-required">
-                        <label class="bk-label" style="width: 140px;">{{$t('dashboard.workload.container.name')}}：</label>
-                        <div class="bk-form-content" style="margin-left: 140px;">
-                          <input type="text" :class="['bk-form-input', { 'is-danger': errors.has('containerName') }]" :placeholder="$t('deploy.templateset.enterCharacterLimit64')" style="width: 310px;" v-model="curContainer.name" maxlength="64" name="containerName" v-validate="{ required: true, regex: /^[a-z]{1}[a-z0-9-]{0,63}$/ }">
+                          <p class="biz-tip mt5">{{$t('deploy.templateset.createPodServiceAccountReminder')}}</p>
                         </div>
                       </div>
+                    </bk-tab-panel>
+                  </bk-tab>
+                </div>
+              </div>
+              <!-- part1 end -->
 
-                      <div class="bk-form-inline-item">
-                        <label class="bk-label" style="width: 140px;">{{$t('generic.label.kind')}}：</label>
-                        <div class="bk-form-content" style="margin-left: 140px;">
-                          <bk-radio-group v-model="curContainer.webCache.containerType">
-                            <bk-radio :value="'container'">
-                              Container
-                              <i class="bcs-icon bcs-icon-question-circle ml5" v-bk-tooltips="$t('deploy.templateset.appContainer')"></i>
-                            </bk-radio>
-                            <bk-radio :value="'initContainer'">
-                              InitContainer
-                              <i class="bcs-icon bcs-icon-question-circle ml5" v-bk-tooltips="$t('deploy.templateset.preAppContainer')"></i>
-                            </bk-radio>
-                          </bk-radio-group>
-                        </div>
+              <!-- part2 start -->
+              <div class="biz-part-header">
+                <div class="bk-button-group">
+                  <div class="item" v-for="(container, index) in curApplication.config.spec.template.spec.allContainers" :key="index">
+                    <bk-button :class="['bk-button bk-default is-outline', { 'is-selected': curContainerIndex === index }]" @click.stop="setCurContainer(container, index)">
+                      {{container.name || $t('deploy.templateset.unnamed')}}
+                    </bk-button>
+                    <span class="bcs-icon bcs-icon-close-circle" @click.stop="removeContainer(index)" v-if="curApplication.config.spec.template.spec.allContainers.length > 1"></span>
+                  </div>
+                  <bcs-popover ref="containerTooltip" :content="$t('deploy.templateset.addContainer')" placement="top">
+                    <bk-button type="button" class="bk-button bk-default is-outline is-icon" @click.stop.prevent="addLocalContainer">
+                      <i class="bcs-icon bcs-icon-plus"></i>
+                    </bk-button>
+                  </bcs-popover>
+                </div>
+              </div>
+
+              <div class="bk-form biz-configuration-form pb15">
+                <div class="biz-span">
+                  <span class="title">{{$t('generic.title.basicInfo')}}</span>
+                </div>
+                <div class="bk-form-item is-required">
+                  <div class="bk-form-content" style="margin-left: 0">
+                    <div class="bk-form-inline-item is-required">
+                      <label class="bk-label" style="width: 140px;">{{$t('dashboard.workload.container.name')}}：</label>
+                      <div class="bk-form-content" style="margin-left: 140px;">
+                        <input type="text" :class="['bk-form-input', { 'is-danger': errors.has('containerName') }]" :placeholder="$t('deploy.templateset.enterCharacterLimit64')" style="width: 310px;" v-model="curContainer.name" maxlength="64" name="containerName" v-validate="{ required: true, regex: /^[a-z]{1}[a-z0-9-]{0,63}$/ }">
+                      </div>
+                    </div>
+
+                    <div class="bk-form-inline-item">
+                      <label class="bk-label" style="width: 140px;">{{$t('generic.label.kind')}}：</label>
+                      <div class="bk-form-content" style="margin-left: 140px;">
+                        <bk-radio-group v-model="curContainer.webCache.containerType">
+                          <bk-radio :value="'container'">
+                            Container
+                            <i class="bcs-icon bcs-icon-question-circle ml5" v-bk-tooltips="$t('deploy.templateset.appContainer')"></i>
+                          </bk-radio>
+                          <bk-radio :value="'initContainer'">
+                            InitContainer
+                            <i class="bcs-icon bcs-icon-question-circle ml5" v-bk-tooltips="$t('deploy.templateset.preAppContainer')"></i>
+                          </bk-radio>
+                        </bk-radio-group>
                       </div>
                     </div>
                   </div>
-                  <div class="bk-form-item">
-                    <label class="bk-label" style="width: 140px;">{{$t('cluster.create.label.desc')}}：</label>
-                    <div class="bk-form-content" style="margin-left: 140px;">
-                      <textarea name="" id="" cols="30" rows="10" class="bk-form-textarea" :placeholder="$t('deploy.templateset.enterCharacterLimit256')" v-model="curContainer.webCache.desc" maxlength="256"></textarea>
-                    </div>
+                </div>
+                <div class="bk-form-item">
+                  <label class="bk-label" style="width: 140px;">{{$t('cluster.create.label.desc')}}：</label>
+                  <div class="bk-form-content" style="margin-left: 140px;">
+                    <textarea name="" id="" cols="30" rows="10" class="bk-form-textarea" :placeholder="$t('deploy.templateset.enterCharacterLimit256')" v-model="curContainer.webCache.desc" maxlength="256"></textarea>
                   </div>
-                  <div class="bk-form-item is-required">
-                    <label class="bk-label" style="width: 140px;">{{$t('deploy.templateset.imageAndVersion')}}：</label>
-                    <div class="bk-form-content" style="margin-left: 140px;">
-                      <!-- <div class="mb10">
+                </div>
+                <div class="bk-form-item is-required">
+                  <label class="bk-label" style="width: 140px;">{{$t('deploy.templateset.imageAndVersion')}}：</label>
+                  <div class="bk-form-content" style="margin-left: 140px;">
+                    <!-- <div class="mb10">
                         <span @click="handleChangeImageMode">
                           <bk-switcher
                             :selected="curContainer.webCache.isImageCustomed"
@@ -583,911 +584,910 @@
                         <span class="vm">{{$t('deploy.templateset.useCustomImage')}}</span>
                         <span class="biz-tip vm">({{$t('deploy.templateset.enableDirectImageInput')}})</span>
                       </div> -->
-                      <template>
-                        <bkbcs-input
-                          type="text"
-                          style="width: 325px;"
-                          :placeholder="$t('k8s.image')"
-                          :value.sync="curContainer.webCache.imageName"
-                          @change="handleImageCustom">
-                        </bkbcs-input>
-                        <bkbcs-input
-                          type="text"
-                          style="width: 250px;"
-                          :placeholder="$t('deploy.templateset.versionNumber')"
-                          class="ml5"
-                          :value.sync="curContainer.imageVersion"
-                          @change="handleImageCustom">
-                        </bkbcs-input>
-                      </template>
-                      <bk-checkbox
-                        class="ml10"
-                        name="image-get"
-                        :true-value="'Always'"
-                        :false-value="'IfNotPresent'"
-                        v-model="curContainer.imagePullPolicy">
-                        {{$t('deploy.templateset.alwaysPullImageBeforeCreating')}}
-                      </bk-checkbox>
-                      <!-- <p class="biz-tip mt5" v-if="!isLoadingImageList && !imageList.length">{{$t('deploy.templateset.imageNotFoundError')}}
+                    <template>
+                      <bkbcs-input
+                        type="text"
+                        style="width: 325px;"
+                        :placeholder="$t('k8s.image')"
+                        :value.sync="curContainer.webCache.imageName"
+                        @change="handleImageCustom">
+                      </bkbcs-input>
+                      <bkbcs-input
+                        type="text"
+                        style="width: 250px;"
+                        :placeholder="$t('deploy.templateset.versionNumber')"
+                        class="ml5"
+                        :value.sync="curContainer.imageVersion"
+                        @change="handleImageCustom">
+                      </bkbcs-input>
+                    </template>
+                    <bk-checkbox
+                      class="ml10"
+                      name="image-get"
+                      :true-value="'Always'"
+                      :false-value="'IfNotPresent'"
+                      v-model="curContainer.imagePullPolicy">
+                      {{$t('deploy.templateset.alwaysPullImageBeforeCreating')}}
+                    </bk-checkbox>
+                    <!-- <p class="biz-tip mt5" v-if="!isLoadingImageList && !imageList.length">{{$t('deploy.templateset.imageNotFoundError')}}
                         <router-link class="bk-text-button" :to="{ name: 'projectImage', params: { projectCode, projectId } }">{{$t('deploy.templateset.goCreate')}}</router-link>
                       </p> -->
-                    </div>
                   </div>
+                </div>
 
-                  <div class="biz-span">
-                    <span class="title">{{$t('dashboard.network.portmapping')}}</span>
+                <div class="biz-span">
+                  <span class="title">{{$t('dashboard.network.portmapping')}}</span>
+                </div>
+
+                <div class="bk-form-item">
+                  <div class="bk-form-content" style="margin-left: 140px;">
+                    <table class="biz-simple-table">
+                      <thead>
+                        <tr>
+                          <th style="width: 330px;">{{$t('generic.label.name')}}</th>
+                          <th style="width: 135px;">{{$t('deploy.templateset.containerPort')}}</th>
+                          <th></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr v-for="(port, index) in curContainer.ports" :key="index">
+                          <td>
+                            <bkbcs-input
+                              type="text"
+                              :placeholder="$t('generic.label.name')"
+                              style="width: 325px;"
+                              maxlength="255"
+                              :value.sync="port.name"
+                              :list="varList"
+                            >
+                            </bkbcs-input>
+                          </td>
+                          <td>
+                            <bkbcs-input
+                              type="number"
+                              placeholder="1-65535"
+                              style="width: 135px;"
+                              :value.sync="port.containerPort"
+                              :min="1"
+                              :max="65535"
+                              :list="varList"
+                            >
+                            </bkbcs-input>
+                          </td>
+                          <td>
+                            <bk-button class="action-btn ml5" @click.stop.prevent="addPort">
+                              <i class="bcs-icon bcs-icon-plus"></i>
+                            </bk-button>
+                            <bk-button class="action-btn" v-if="curContainer.ports.length > 1" @click.stop.prevent="removePort(port, index)">
+                              <i class="bcs-icon bcs-icon-minus"></i>
+                            </bk-button>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                    <p class="biz-tip">{{$t('deploy.templateset.exposeServiceTargetPort')}}</p>
                   </div>
+                </div>
 
-                  <div class="bk-form-item">
-                    <div class="bk-form-content" style="margin-left: 140px;">
-                      <table class="biz-simple-table">
-                        <thead>
-                          <tr>
-                            <th style="width: 330px;">{{$t('generic.label.name')}}</th>
-                            <th style="width: 135px;">{{$t('deploy.templateset.containerPort')}}</th>
-                            <th></th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr v-for="(port, index) in curContainer.ports" :key="index">
-                            <td>
-                              <bkbcs-input
-                                type="text"
-                                :placeholder="$t('generic.label.name')"
-                                style="width: 325px;"
-                                maxlength="255"
-                                :value.sync="port.name"
-                                :list="varList"
-                              >
-                              </bkbcs-input>
-                            </td>
-                            <td>
+                <div class="biz-span">
+                  <div class="title">
+                    <button :class="['bk-text-button', { 'rotate': isPartBShow }]" @click.stop.prevent="togglePartB">
+                      {{$t('deploy.templateset.moreSettings')}}<i class="bcs-icon bcs-icon-angle-double-down f12 ml5 mb10 fb"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <div style="margin-left: 140px;" v-show="isPartBShow">
+                  <bk-tab :type="'fill'" :active-name="'tab1'" :size="'small'">
+                    <bk-tab-panel name="tab1" :title="$t('dashboard.workload.container.command')">
+                      <div class="bk-form m20">
+                        <div class="bk-form-item">
+                          <label class="bk-label" style="width: 130px;">{{$t('deploy.templateset.startupCommand')}}：</label>
+                          <div class="bk-form-content" style="margin-left: 130px;">
+                            <bkbcs-input
+                              type="text"
+                              :placeholder="$t('deploy.templateset.exampleBash')"
+                              :value.sync="curContainer.command"
+                              :list="varList"
+                            >
+                            </bkbcs-input>
+                          </div>
+                        </div>
+                        <div class="bk-form-item">
+                          <label class="bk-label" style="width: 130px;">{{$t('deploy.templateset.commandParams')}}：</label>
+                          <div class="bk-form-content" style="margin-left: 130px;">
+                            <bkbcs-input
+                              type="text"
+                              :placeholder="$t('generic.placeholder.command')"
+                              :value.sync="curContainer.args"
+                              :list="varList"
+                            >
+                            </bkbcs-input>
+                          </div>
+                        </div>
+                        <div class="bk-form-item">
+                          <label class="bk-label" style="width: 130px;">{{$t('deploy.templateset.workingDirectory')}}：</label>
+                          <div class="bk-form-content" style="margin-left: 130px;">
+                            <bkbcs-input
+                              type="text"
+                              :placeholder="$t('deploy.templateset.examplePathParam', { path: '/mywork' })"
+                              :value.sync="curContainer.workingDir"
+                              :list="varList"
+                            >
+                            </bkbcs-input>
+                          </div>
+                        </div>
+                      </div>
+                    </bk-tab-panel>
+
+                    <bk-tab-panel name="tab2" :title="$t('k8s.volume')">
+                      <div class="bk-form m20">
+                        <template v-if="curMountVolumes.length">
+                          <template v-if="curContainer.volumeMounts.length">
+                            <p class="biz-tip mb10">
+                              {{$t('deploy.templateset.msg.mountVolumes')}}</p>
+                            <table class="biz-simple-table">
+                              <thead>
+                                <tr>
+                                  <th style="width: 200px;">{{$t('deploy.templateset.volume')}}</th>
+                                  <th style="width: 300px;">{{$t('dashboard.workload.container.dataDir')}}</th>
+                                  <th style="width: 200px;">{{$t('deploy.templateset.subDirectory')}}</th>
+                                  <th style="width: 70px;"></th>
+                                  <th></th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <tr v-for="(volumeItem, index) in curContainer.volumeMounts" :key="index">
+                                  <td>
+                                    <bk-selector
+                                      :placeholder="$t('generic.placeholder.select')"
+                                      :setting-key="'name'"
+                                      :display-key="'name'"
+                                      :allow-clear="true"
+                                      :selected.sync="volumeItem.name"
+                                      :list="curMountVolumes"
+                                      @item-selected="selectVolumeType(volumeItem)">
+                                    </bk-selector>
+                                  </td>
+                                  <td>
+                                    <bkbcs-input
+                                      type="text"
+                                      placeholder="MountPath"
+                                      maxlength="512"
+                                      :value.sync="volumeItem.mountPath"
+                                      :list="varList"
+                                    >
+                                    </bkbcs-input>
+                                  </td>
+                                  <td>
+                                    <bkbcs-input
+                                      type="text"
+                                      placeholder="SubPath"
+                                      maxlength="200"
+                                      :value.sync="volumeItem.subPath"
+                                      :list="varList">
+                                    </bkbcs-input>
+                                  </td>
+                                  <td>
+                                    <div class="biz-input-wrapper">
+                                      <bk-checkbox v-model="volumeItem.readOnly">{{$t('deploy.templateset.readOnly')}}</bk-checkbox>
+                                    </div>
+                                  </td>
+                                  <div class="action-box">
+                                    <bk-button class="action-btn ml5" @click.stop.prevent="addMountVolumn()">
+                                      <i class="bcs-icon bcs-icon-plus"></i>
+                                    </bk-button>
+                                    <bk-button class="action-btn" @click.stop.prevent="removeMountVolumn(volumeItem, index)">
+                                      <i class="bcs-icon bcs-icon-minus"></i>
+                                    </bk-button>
+                                  </div>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </template>
+                          <div class="tc p40" v-else>
+                            <bk-button type="primary" @click="addMountVolumn">
+                              <i class="bcs-icon bcs-icon-plus f12" style="top: -2px;"></i>
+                              {{$t('deploy.templateset.addMountVolume')}}
+                            </bk-button>
+                          </div>
+                        </template>
+                        <div v-else class="tc p30">
+                          {{$t('deploy.templateset.msg.mountVolumes')}}
+                        </div>
+                      </div>
+                    </bk-tab-panel>
+
+                    <bk-tab-panel name="tab3" :title="$t('dashboard.workload.container.env')">
+                      <div class="bk-form m20">
+                        <table class="biz-simple-table" style="width: 690px;">
+                          <thead>
+                            <tr>
+                              <th style="width: 160px;">{{$t('generic.label.kind')}}</th>
+                              <th style="width: 220px;">{{$t('deploy.templateset.variableKey')}}</th>
+                              <th style="width: 220px;">{{$t('deploy.templateset.variableValue')}}</th>
+                              <th></th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr v-for="(env, index) in curContainer.webCache.env_list" :key="index">
+                              <td>
+                                <bk-selector
+                                  :placeholder="$t('generic.label.kind')"
+                                  :setting-key="'id'"
+                                  :selected.sync="env.type"
+                                  :list="mountTypeList">
+                                </bk-selector>
+                              </td>
+                              <td v-if="['valueFrom', 'custom', 'configmapKey', 'secretKey'].includes(env.type)">
+                                <bkbcs-input
+                                  type="text"
+                                  :placeholder="$t('generic.placeholder.input')"
+                                  :value.sync="env.key"
+                                  :list="varList"
+                                >
+                                </bkbcs-input>
+                              </td>
+                              <td :colspan="['valueFrom', 'custom', 'configmapKey', 'secretKey'].includes(env.type) ? 1 : 2">
+                                <template v-if="['valueFrom', 'custom'].includes(env.type)">
+                                  <bkbcs-input
+                                    type="text"
+                                    :placeholder="$t('deploy.templateset.examplePathParam', { path: '/metadata/name' })"
+                                    :value.sync="env.value"
+                                    :list="varList"
+                                  >
+                                  </bkbcs-input>
+                                </template>
+                                <template v-else-if="['configmapKey'].includes(env.type)">
+                                  <bk-selector
+                                    :placeholder="$t('generic.placeholder.select')"
+                                    :setting-key="'id'"
+                                    :selected.sync="env.value"
+                                    :list="configmapKeyList"
+                                    @item-selected="updateEnvItem(...arguments, env)">
+                                  </bk-selector>
+                                </template>
+                                <template v-else-if="['secretKey'].includes(env.type)">
+                                  <bk-selector
+                                    :placeholder="$t('generic.placeholder.select')"
+                                    :setting-key="'id'"
+                                    :selected.sync="env.value"
+                                    :list="secretKeyList"
+                                    @item-selected="updateEnvItem(...arguments, env)">
+                                  </bk-selector>
+                                </template>
+                                <template v-else-if="['configmapFile'].includes(env.type)">
+                                  <bk-selector
+                                    :placeholder="$t('deploy.templateset.configMapList')"
+                                    :setting-key="'name'"
+                                    :selected.sync="env.value"
+                                    :list="volumeConfigmapList">
+                                  </bk-selector>
+                                </template>
+                                <template v-else-if="['secretFile'].includes(env.type)">
+                                  <bk-selector
+                                    :placeholder="$t('deploy.templateset.secretList')"
+                                    :setting-key="'name'"
+                                    :selected.sync="env.value"
+                                    :list="volumeSecretList">
+                                  </bk-selector>
+                                </template>
+                              </td>
+                              <td>
+                                <div class="action-box">
+                                  <bk-button class="action-btn ml5" @click.stop.prevent="addEnv()">
+                                    <i class="bcs-icon bcs-icon-plus"></i>
+                                  </bk-button>
+                                  <bk-button class="action-btn" @click.stop.prevent="removeEnv(env, index)" v-show="curContainer.webCache.env_list.length > 1">
+                                    <i class="bcs-icon bcs-icon-minus"></i>
+                                  </bk-button>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </bk-tab-panel>
+
+                    <bk-tab-panel name="tab4" :title="$t('dashboard.workload.container.limits')">
+                      <div class="bk-form m20">
+                        <div class="bk-form-item">
+                          <label class="bk-label" style="width: 140px;">{{$t('deploy.templateset.privileged')}}：</label>
+                          <div class="bk-form-content" style="margin-left: 140px;">
+                            <bk-checkbox v-model="curContainer.securityContext.privileged">{{$t('deploy.templateset.fullAccessHostResources')}}</bk-checkbox>
+                          </div>
+                        </div>
+                        <div class="bk-form-item">
+                          <label class="bk-label" style="width: 140px;">CPU：</label>
+                          <div class="bk-form-content" style="margin-left: 140px;">
+                            <div class="bk-form-input-group mr5">
+                              <span class="input-group-addon is-left">
+                                requests
+                              </span>
                               <bkbcs-input
                                 type="number"
-                                placeholder="1-65535"
-                                style="width: 135px;"
-                                :value.sync="port.containerPort"
-                                :min="1"
-                                :max="65535"
+                                style="width: 100px;"
+                                :min="0"
+                                :max="curContainer.resources.limits.cpu ? curContainer.resources.limits.cpu : Number.MAX_VALUE"
+                                :placeholder="$t('generic.placeholder.input')"
+                                :value.sync="curContainer.resources.requests.cpu"
                                 :list="varList"
                               >
                               </bkbcs-input>
-                            </td>
-                            <td>
-                              <bk-button class="action-btn ml5" @click.stop.prevent="addPort">
-                                <i class="bcs-icon bcs-icon-plus"></i>
-                              </bk-button>
-                              <bk-button class="action-btn" v-if="curContainer.ports.length > 1" @click.stop.prevent="removePort(port, index)">
-                                <i class="bcs-icon bcs-icon-minus"></i>
-                              </bk-button>
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                      <p class="biz-tip">{{$t('deploy.templateset.exposeServiceTargetPort')}}</p>
-                    </div>
-                  </div>
-
-                  <div class="biz-span">
-                    <div class="title">
-                      <button :class="['bk-text-button', { 'rotate': isPartBShow }]" @click.stop.prevent="togglePartB">
-                        {{$t('deploy.templateset.moreSettings')}}<i class="bcs-icon bcs-icon-angle-double-down f12 ml5 mb10 fb"></i>
-                      </button>
-                    </div>
-                  </div>
-
-                  <div style="margin-left: 140px;" v-show="isPartBShow">
-                    <bk-tab :type="'fill'" :active-name="'tab1'" :size="'small'">
-                      <bk-tab-panel name="tab1" :title="$t('dashboard.workload.container.command')">
-                        <div class="bk-form m20">
-                          <div class="bk-form-item">
-                            <label class="bk-label" style="width: 130px;">{{$t('deploy.templateset.startupCommand')}}：</label>
-                            <div class="bk-form-content" style="margin-left: 130px;">
-                              <bkbcs-input
-                                type="text"
-                                :placeholder="$t('deploy.templateset.exampleBash')"
-                                :value.sync="curContainer.command"
-                                :list="varList"
-                              >
-                              </bkbcs-input>
+                              <span class="input-group-addon">
+                                m
+                              </span>
                             </div>
-                          </div>
-                          <div class="bk-form-item">
-                            <label class="bk-label" style="width: 130px;">{{$t('deploy.templateset.commandParams')}}：</label>
-                            <div class="bk-form-content" style="margin-left: 130px;">
+                            <bcs-popover :content="$t('deploy.templateset.cpuRequests')" placement="top">
+                              <span class="bk-badge">
+                                <i class="bcs-icon bcs-icon-question-circle"></i>
+                              </span>
+                            </bcs-popover>
+
+                            <div class="bk-form-input-group ml20 mr5">
+                              <span class="input-group-addon is-left">
+                                limits
+                              </span>
                               <bkbcs-input
-                                type="text"
-                                :placeholder="$t('generic.placeholder.command')"
-                                :value.sync="curContainer.args"
-                                :list="varList"
-                              >
+                                type="number"
+                                style="width: 100px;"
+                                :min="0"
+                                :placeholder="$t('generic.placeholder.input')"
+                                :value.sync="curContainer.resources.limits.cpu"
+                                :list="varList">
                               </bkbcs-input>
+                              <span class="input-group-addon">
+                                m
+                              </span>
                             </div>
+                            <bcs-popover :content="$t('deploy.templateset.cpuLimits')" placement="top">
+                              <span class="bk-badge">
+                                <i class="bcs-icon bcs-icon-question-circle"></i>
+                              </span>
+                            </bcs-popover>
                           </div>
-                          <div class="bk-form-item">
-                            <label class="bk-label" style="width: 130px;">{{$t('deploy.templateset.workingDirectory')}}：</label>
-                            <div class="bk-form-content" style="margin-left: 130px;">
+                        </div>
+                        <div class="bk-form-item">
+                          <label class="bk-label" style="width: 140px;">{{$t('generic.label.mem')}}：</label>
+                          <div class="bk-form-content" style="margin-left: 140px;">
+                            <div class="bk-form-input-group mr5">
+                              <span class="input-group-addon is-left">
+                                requests
+                              </span>
                               <bkbcs-input
-                                type="text"
-                                :placeholder="$t('deploy.templateset.examplePathParam', { path: '/mywork' })"
-                                :value.sync="curContainer.workingDir"
+                                type="number"
+                                style="width: 100px;"
+                                :min="0"
+                                :max="curContainer.resources.limits.memory ? curContainer.resources.limits.memory : Number.MAX_VALUE"
+                                :placeholder="$t('generic.placeholder.input')"
+                                :value.sync="curContainer.resources.requests.memory"
                                 :list="varList"
                               >
                               </bkbcs-input>
+                              <span class="input-group-addon">
+                                Mi
+                              </span>
+                            </div>
+                            <bcs-popover :content="$t('deploy.templateset.memoryRequests')" placement="top">
+                              <span class="bk-badge">
+                                <i class="bcs-icon bcs-icon-question-circle"></i>
+                              </span>
+                            </bcs-popover>
+
+                            <div class="bk-form-input-group ml20 mr5">
+                              <span class="input-group-addon is-left">
+                                limits
+                              </span>
+                              <bkbcs-input
+                                type="number"
+                                style="width: 100px;"
+                                :min="0"
+                                :placeholder="$t('generic.placeholder.input')"
+                                :value.sync="curContainer.resources.limits.memory"
+                                :list="varList">
+                              </bkbcs-input>
+                              <span class="input-group-addon">
+                                Mi
+                              </span>
+                            </div>
+                            <bcs-popover :content="$t('deploy.templateset.memoryLimits')" placement="top">
+                              <span class="bk-badge">
+                                <i class="bcs-icon bcs-icon-question-circle"></i>
+                              </span>
+                            </bcs-popover>
+                          </div>
+                        </div>
+                      </div>
+                    </bk-tab-panel>
+
+                    <bk-tab-panel name="tab5" :title="$t('deploy.templateset.healthCheck')">
+                      <div class="bk-form m20">
+                        <div class="bk-form-item">
+                          <label class="bk-label" style="width: 120px;">{{$t('generic.label.kind')}}：</label>
+                          <div class="bk-form-content" style="margin-left: 120px">
+                            <div class="bk-dropdown-box" style="width: 250px;">
+                              <bk-selector
+                                :placeholder="$t('generic.placeholder.select')"
+                                :setting-key="'id'"
+                                :display-key="'name'"
+                                :selected.sync="curContainer.webCache.livenessProbeType"
+                                :list="healthCheckTypes">
+                              </bk-selector>
                             </div>
                           </div>
                         </div>
-                      </bk-tab-panel>
 
-                      <bk-tab-panel name="tab2" :title="$t('k8s.volume')">
-                        <div class="bk-form m20">
-                          <template v-if="curMountVolumes.length">
-                            <template v-if="curContainer.volumeMounts.length">
-                              <p class="biz-tip mb10">
-                                {{$t('deploy.templateset.msg.mountVolumes')}}</p>
-                              <table class="biz-simple-table">
-                                <thead>
-                                  <tr>
-                                    <th style="width: 200px;">{{$t('deploy.templateset.volume')}}</th>
-                                    <th style="width: 300px;">{{$t('dashboard.workload.container.dataDir')}}</th>
-                                    <th style="width: 200px;">{{$t('deploy.templateset.subDirectory')}}</th>
-                                    <th style="width: 70px;"></th>
-                                    <th></th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  <tr v-for="(volumeItem, index) in curContainer.volumeMounts" :key="index">
-                                    <td>
-                                      <bk-selector
-                                        :placeholder="$t('generic.placeholder.select')"
-                                        :setting-key="'name'"
-                                        :display-key="'name'"
-                                        :allow-clear="true"
-                                        :selected.sync="volumeItem.name"
-                                        :list="curMountVolumes"
-                                        @item-selected="selectVolumeType(volumeItem)">
-                                      </bk-selector>
-                                    </td>
-                                    <td>
+                        <div class="bk-form-item" v-show="curContainer.webCache.livenessProbeType && curContainer.webCache.livenessProbeType !== 'EXEC'">
+                          <label class="bk-label" style="width: 120px;">{{$t('deploy.templateset.portName')}}：</label>
+                          <div class="bk-form-content" style="margin-left: 120px;">
+                            <div class="bk-dropdown-box" style="width: 250px;">
+                              <bk-selector
+                                :placeholder="$t('generic.placeholder.select')"
+                                :setting-key="'name'"
+                                :display-key="'name'"
+                                :selected="livenessProbePortName"
+                                :list="portList"
+                                @item-selected="livenessProbePortNameSelect">
+                              </bk-selector>
+                            </div>
+                            <bcs-popover placement="right">
+                              <i class="bcs-icon bcs-icon-question-circle ml5" style="vertical-align: middle; cursor: pointer;"></i>
+                              <div slot="content">
+                                {{$t('deploy.templateset.associatePortMappingSettings')}}
+                              </div>
+                            </bcs-popover>
+                            <p class="biz-guard-tip bk-default mt5" v-if="!portList.length">{{$t('deploy.templateset.completePortMapping')}}</p>
+                          </div>
+                        </div>
+
+                        <div class="bk-form-item" v-show="curContainer.webCache.livenessProbeType && (curContainer.webCache.livenessProbeType === 'HTTP')">
+                          <div class="bk-form-content" style="margin-left: 0">
+                            <div class="bk-form-inline-item">
+                              <label class="bk-label" style="width: 120px;">{{$t('deploy.templateset.requestPath')}}：</label>
+                              <div class="bk-form-content" style="margin-left: 120px;">
+                                <bkbcs-input
+                                  type="text"
+                                  style="width: 521px;"
+                                  :placeholder="$t('deploy.templateset.examplePathParam', { path: '/healthcheck' })"
+                                  :value.sync="curContainer.livenessProbe.httpGet.path"
+                                  :list="varList"
+                                >
+                                </bkbcs-input>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="bk-form-item" v-show="curContainer.webCache.livenessProbeType && curContainer.webCache.livenessProbeType === 'EXEC'">
+                          <div class="bk-form-content" style="margin-left: 0">
+                            <div class="bk-form-inline-item">
+                              <label class="bk-label" style="width: 120px;">{{$t('deploy.templateset.checkCommand')}}：</label>
+                              <div class="bk-form-content" style="margin-left: 120px;">
+                                <bkbcs-input
+                                  type="text"
+                                  style="width: 521px;"
+                                  :placeholder="$t('deploy.templateset.exampleCheckCommandWithSpace')"
+                                  :value.sync="curContainer.livenessProbe.exec.command"
+                                  :list="varList"
+                                >
+                                </bkbcs-input>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="bk-form-item" v-show="curContainer.webCache.livenessProbeType && curContainer.webCache.livenessProbeType === 'HTTP'">
+                          <div class="bk-form-content" style="margin-left: 0">
+                            <div class="bk-form-inline-item">
+                              <label class="bk-label" style="width: 120px;">{{$t('deploy.templateset.setHeader')}}：</label>
+                              <div class="bk-form-content" style="margin-left: 120px;">
+                                <bk-keyer ref="livenessProbeHeaderKeyer" :key-list.sync="livenessProbeHeaders" :var-list="varList" @change="updateLivenessHeader"></bk-keyer>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <template>
+                          <bk-button :class="['bk-text-button mt10 f12 mb10', { 'rotate': isPartCShow }]" style="margin-left: 114px;" @click.stop.prevent="togglePartC">
+                            {{$t('deploy.templateset.advancedSettings')}}<i class="bcs-icon bcs-icon-angle-double-down ml5"></i>
+                          </bk-button>
+                          <div v-show="isPartCShow">
+                            <div class="bk-form-item">
+                              <div class="bk-form-content" style="margin-left: 0">
+                                <div class="bk-form-inline-item">
+                                  <label class="bk-label" style="width: 120px;">{{$t('deploy.templateset.initialTimeout')}}：</label>
+                                  <div class="bk-form-content" style="margin-left: 120px;">
+                                    <div class="bk-form-input-group">
                                       <bkbcs-input
-                                        type="text"
-                                        placeholder="MountPath"
-                                        maxlength="512"
-                                        :value.sync="volumeItem.mountPath"
+                                        type="number"
+                                        style="width: 70px;"
+                                        :placeholder="$t('generic.placeholder.input')"
+                                        :min="1"
+                                        :value.sync="curContainer.livenessProbe.initialDelaySeconds"
                                         :list="varList"
                                       >
                                       </bkbcs-input>
-                                    </td>
-                                    <td>
+                                      <span class="input-group-addon">
+                                        {{$t('units.suffix.seconds')}}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div class="bk-form-inline-item">
+                                  <label class="bk-label" style="width: 130px;">{{$t('deploy.templateset.checkInterval')}}：</label>
+                                  <div class="bk-form-content" style="margin-left: 130px;">
+                                    <div class="bk-form-input-group">
                                       <bkbcs-input
-                                        type="text"
-                                        placeholder="SubPath"
-                                        maxlength="200"
-                                        :value.sync="volumeItem.subPath"
-                                        :list="varList">
+                                        type="number"
+                                        style="width: 70px;"
+                                        :placeholder="$t('generic.placeholder.input')"
+                                        :min="1"
+                                        :value.sync="curContainer.livenessProbe.periodSeconds"
+                                        :list="varList"
+                                      >
                                       </bkbcs-input>
-                                    </td>
-                                    <td>
-                                      <div class="biz-input-wrapper">
-                                        <bk-checkbox v-model="volumeItem.readOnly">{{$t('deploy.templateset.readOnly')}}</bk-checkbox>
-                                      </div>
-                                    </td>
-                                    <div class="action-box">
-                                      <bk-button class="action-btn ml5" @click.stop.prevent="addMountVolumn()">
-                                        <i class="bcs-icon bcs-icon-plus"></i>
-                                      </bk-button>
-                                      <bk-button class="action-btn" @click.stop.prevent="removeMountVolumn(volumeItem, index)">
-                                        <i class="bcs-icon bcs-icon-minus"></i>
-                                      </bk-button>
+                                      <span class="input-group-addon">
+                                        {{$t('units.suffix.seconds')}}
+                                      </span>
                                     </div>
-                                  </tr>
-                                </tbody>
-                              </table>
-                            </template>
-                            <div class="tc p40" v-else>
-                              <bk-button type="primary" @click="addMountVolumn">
-                                <i class="bcs-icon bcs-icon-plus f12" style="top: -2px;"></i>
-                                {{$t('deploy.templateset.addMountVolume')}}
-                              </bk-button>
-                            </div>
-                          </template>
-                          <div v-else class="tc p30">
-                            {{$t('deploy.templateset.msg.mountVolumes')}}
-                          </div>
-                        </div>
-                      </bk-tab-panel>
-
-                      <bk-tab-panel name="tab3" :title="$t('dashboard.workload.container.env')">
-                        <div class="bk-form m20">
-                          <table class="biz-simple-table" style="width: 690px;">
-                            <thead>
-                              <tr>
-                                <th style="width: 160px;">{{$t('generic.label.kind')}}</th>
-                                <th style="width: 220px;">{{$t('deploy.templateset.variableKey')}}</th>
-                                <th style="width: 220px;">{{$t('deploy.templateset.variableValue')}}</th>
-                                <th></th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              <tr v-for="(env, index) in curContainer.webCache.env_list" :key="index">
-                                <td>
-                                  <bk-selector
-                                    :placeholder="$t('generic.label.kind')"
-                                    :setting-key="'id'"
-                                    :selected.sync="env.type"
-                                    :list="mountTypeList">
-                                  </bk-selector>
-                                </td>
-                                <td v-if="['valueFrom', 'custom', 'configmapKey', 'secretKey'].includes(env.type)">
-                                  <bkbcs-input
-                                    type="text"
-                                    :placeholder="$t('generic.placeholder.input')"
-                                    :value.sync="env.key"
-                                    :list="varList"
-                                  >
-                                  </bkbcs-input>
-                                </td>
-                                <td :colspan="['valueFrom', 'custom', 'configmapKey', 'secretKey'].includes(env.type) ? 1 : 2">
-                                  <template v-if="['valueFrom', 'custom'].includes(env.type)">
-                                    <bkbcs-input
-                                      type="text"
-                                      :placeholder="$t('deploy.templateset.examplePathParam', { path: '/metadata/name' })"
-                                      :value.sync="env.value"
-                                      :list="varList"
-                                    >
-                                    </bkbcs-input>
-                                  </template>
-                                  <template v-else-if="['configmapKey'].includes(env.type)">
-                                    <bk-selector
-                                      :placeholder="$t('generic.placeholder.select')"
-                                      :setting-key="'id'"
-                                      :selected.sync="env.value"
-                                      :list="configmapKeyList"
-                                      @item-selected="updateEnvItem(...arguments, env)">
-                                    </bk-selector>
-                                  </template>
-                                  <template v-else-if="['secretKey'].includes(env.type)">
-                                    <bk-selector
-                                      :placeholder="$t('generic.placeholder.select')"
-                                      :setting-key="'id'"
-                                      :selected.sync="env.value"
-                                      :list="secretKeyList"
-                                      @item-selected="updateEnvItem(...arguments, env)">
-                                    </bk-selector>
-                                  </template>
-                                  <template v-else-if="['configmapFile'].includes(env.type)">
-                                    <bk-selector
-                                      :placeholder="$t('deploy.templateset.configMapList')"
-                                      :setting-key="'name'"
-                                      :selected.sync="env.value"
-                                      :list="volumeConfigmapList">
-                                    </bk-selector>
-                                  </template>
-                                  <template v-else-if="['secretFile'].includes(env.type)">
-                                    <bk-selector
-                                      :placeholder="$t('deploy.templateset.secretList')"
-                                      :setting-key="'name'"
-                                      :selected.sync="env.value"
-                                      :list="volumeSecretList">
-                                    </bk-selector>
-                                  </template>
-                                </td>
-                                <td>
-                                  <div class="action-box">
-                                    <bk-button class="action-btn ml5" @click.stop.prevent="addEnv()">
-                                      <i class="bcs-icon bcs-icon-plus"></i>
-                                    </bk-button>
-                                    <bk-button class="action-btn" @click.stop.prevent="removeEnv(env, index)" v-show="curContainer.webCache.env_list.length > 1">
-                                      <i class="bcs-icon bcs-icon-minus"></i>
-                                    </bk-button>
                                   </div>
-                                </td>
-                              </tr>
-                            </tbody>
-                          </table>
-                        </div>
-                      </bk-tab-panel>
+                                </div>
+                                <div class="bk-form-inline-item">
+                                  <label class="bk-label" style="width: 130px;">{{$t('deploy.templateset.checkTimeout')}}：</label>
+                                  <div class="bk-form-content" style="margin-left: 130px;">
+                                    <div class="bk-form-input-group">
+                                      <bkbcs-input
+                                        type="number"
+                                        style="width: 70px;"
+                                        :placeholder="$t('generic.placeholder.input')"
+                                        :min="1"
+                                        :value.sync="curContainer.livenessProbe.timeoutSeconds"
+                                        :list="varList"
+                                      >
+                                      </bkbcs-input>
+                                      <span class="input-group-addon">
+                                        {{$t('units.suffix.seconds')}}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
 
-                      <bk-tab-panel name="tab4" :title="$t('dashboard.workload.container.limits')">
-                        <div class="bk-form m20">
-                          <div class="bk-form-item">
-                            <label class="bk-label" style="width: 140px;">{{$t('deploy.templateset.privileged')}}：</label>
-                            <div class="bk-form-content" style="margin-left: 140px;">
-                              <bk-checkbox v-model="curContainer.securityContext.privileged">{{$t('deploy.templateset.fullAccessHostResources')}}</bk-checkbox>
+                            <div class="bk-form-item">
+                              <div class="bk-form-content" style="margin-left: 0">
+                                <div class="bk-form-inline-item">
+                                  <label class="bk-label" style="width: 120px;">{{$t('deploy.templateset.unhealthyThreshold')}}：</label>
+                                  <div class="bk-form-content" style="margin-left: 120px;">
+                                    <div class="bk-form-input-group">
+                                      <bkbcs-input
+                                        type="number"
+                                        style="width: 70px;"
+                                        :min="1"
+                                        :placeholder="$t('generic.placeholder.input')"
+                                        :value.sync="curContainer.livenessProbe.failureThreshold"
+                                        :list="varList"
+                                      >
+                                      </bkbcs-input>
+                                      <span class="input-group-addon">
+                                        {{$t('deploy.templateset.failureTimes')}}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div class="bk-form-inline-item">
+                                  <label class="bk-label" style="width: 130px;">{{$t('deploy.templateset.healthyThreshold')}}：</label>
+                                  <div class="bk-form-content" style="margin-left: 130px;">
+                                    <div class="bk-form-input-group">
+                                      <bkbcs-input
+                                        type="number"
+                                        style="width: 70px;"
+                                        :min="1"
+                                        :placeholder="$t('generic.placeholder.input')"
+                                        :value.sync="curContainer.livenessProbe.successThreshold"
+                                        :list="varList"
+                                      >
+                                      </bkbcs-input>
+                                      <span class="input-group-addon">
+                                        {{$t('deploy.templateset.successTimes')}}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+
+                              </div>
                             </div>
                           </div>
-                          <div class="bk-form-item">
-                            <label class="bk-label" style="width: 140px;">CPU：</label>
-                            <div class="bk-form-content" style="margin-left: 140px;">
-                              <div class="bk-form-input-group mr5">
-                                <span class="input-group-addon is-left">
-                                  requests
-                                </span>
+                        </template>
+
+                      </div>
+                    </bk-tab-panel>
+
+                    <bk-tab-panel name="tab5-1" :title="$t('deploy.templateset.readinessCheck')">
+                      <div class="bk-form m20">
+                        <div class="bk-form-item">
+                          <label class="bk-label" style="width: 120px;">{{$t('generic.label.kind')}}：</label>
+                          <div class="bk-form-content" style="margin-left: 120px">
+                            <div class="bk-dropdown-box" style="width: 250px;">
+                              <bk-selector
+                                :placeholder="$t('generic.placeholder.select')"
+                                :setting-key="'id'"
+                                :display-key="'name'"
+                                :selected.sync="curContainer.webCache.readinessProbeType"
+                                :list="healthCheckTypes">
+                              </bk-selector>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="bk-form-item" v-show="curContainer.webCache.readinessProbeType && curContainer.webCache.readinessProbeType !== 'EXEC'">
+                          <label class="bk-label" style="width: 120px;">{{$t('deploy.templateset.portName')}}：</label>
+                          <div class="bk-form-content" style="margin-left: 120px;">
+                            <div class="bk-dropdown-box" style="width: 250px;">
+                              <bk-selector
+                                :placeholder="$t('generic.placeholder.select')"
+                                :setting-key="'name'"
+                                :display-key="'name'"
+                                :selected="readinessProbePortName"
+                                :list="portList"
+                                @item-selected="readinessProbePortNameSelect">
+                              </bk-selector>
+                            </div>
+                            <bcs-popover placement="right">
+                              <i class="bcs-icon bcs-icon-question-circle ml5" style="vertical-align: middle; cursor: pointer;"></i>
+                              <div slot="content">
+                                {{$t('deploy.templateset.associatePortMappingSettings')}}
+                              </div>
+                            </bcs-popover>
+                            <p class="biz-guard-tip bk-default mt5" v-if="!portList.length">{{$t('deploy.templateset.completePortMapping')}}</p>
+                          </div>
+                        </div>
+
+                        <div class="bk-form-item" v-show="curContainer.webCache.readinessProbeType && (curContainer.webCache.readinessProbeType === 'HTTP')">
+                          <div class="bk-form-content" style="margin-left: 0">
+                            <div class="bk-form-inline-item">
+                              <label class="bk-label" style="width: 120px;">{{$t('deploy.templateset.requestPath')}}：</label>
+                              <div class="bk-form-content" style="margin-left: 120px;">
                                 <bkbcs-input
-                                  type="number"
-                                  style="width: 100px;"
-                                  :min="0"
-                                  :max="curContainer.resources.limits.cpu ? curContainer.resources.limits.cpu : Number.MAX_VALUE"
-                                  :placeholder="$t('generic.placeholder.input')"
-                                  :value.sync="curContainer.resources.requests.cpu"
+                                  type="text"
+                                  style="width: 521px;"
+                                  :placeholder="$t('deploy.templateset.examplePathParam', { path: '/healthcheck' })"
+                                  :value.sync="curContainer.readinessProbe.httpGet.path"
                                   :list="varList"
                                 >
                                 </bkbcs-input>
-                                <span class="input-group-addon">
-                                  m
-                                </span>
                               </div>
-                              <bcs-popover :content="$t('deploy.templateset.cpuRequests')" placement="top">
-                                <span class="bk-badge">
-                                  <i class="bcs-icon bcs-icon-question-circle"></i>
-                                </span>
-                              </bcs-popover>
-
-                              <div class="bk-form-input-group ml20 mr5">
-                                <span class="input-group-addon is-left">
-                                  limits
-                                </span>
-                                <bkbcs-input
-                                  type="number"
-                                  style="width: 100px;"
-                                  :min="0"
-                                  :placeholder="$t('generic.placeholder.input')"
-                                  :value.sync="curContainer.resources.limits.cpu"
-                                  :list="varList">
-                                </bkbcs-input>
-                                <span class="input-group-addon">
-                                  m
-                                </span>
-                              </div>
-                              <bcs-popover :content="$t('deploy.templateset.cpuLimits')" placement="top">
-                                <span class="bk-badge">
-                                  <i class="bcs-icon bcs-icon-question-circle"></i>
-                                </span>
-                              </bcs-popover>
                             </div>
                           </div>
-                          <div class="bk-form-item">
-                            <label class="bk-label" style="width: 140px;">{{$t('generic.label.mem')}}：</label>
-                            <div class="bk-form-content" style="margin-left: 140px;">
-                              <div class="bk-form-input-group mr5">
-                                <span class="input-group-addon is-left">
-                                  requests
-                                </span>
+                        </div>
+
+                        <div class="bk-form-item" v-show="curContainer.webCache.readinessProbeType && curContainer.webCache.readinessProbeType === 'EXEC'">
+                          <div class="bk-form-content" style="margin-left: 0">
+                            <div class="bk-form-inline-item">
+                              <label class="bk-label" style="width: 120px;">{{$t('deploy.templateset.checkCommand')}}：</label>
+                              <div class="bk-form-content" style="margin-left: 120px;">
                                 <bkbcs-input
-                                  type="number"
-                                  style="width: 100px;"
-                                  :min="0"
-                                  :max="curContainer.resources.limits.memory ? curContainer.resources.limits.memory : Number.MAX_VALUE"
-                                  :placeholder="$t('generic.placeholder.input')"
-                                  :value.sync="curContainer.resources.requests.memory"
+                                  type="text"
+                                  style="width: 521px;"
+                                  :placeholder="$t('deploy.templateset.examplePathParam', { path: '/tmp/check.sh' })"
+                                  :value.sync="curContainer.readinessProbe.exec.command"
                                   :list="varList"
                                 >
                                 </bkbcs-input>
-                                <span class="input-group-addon">
-                                  Mi
-                                </span>
-                              </div>
-                              <bcs-popover :content="$t('deploy.templateset.memoryRequests')" placement="top">
-                                <span class="bk-badge">
-                                  <i class="bcs-icon bcs-icon-question-circle"></i>
-                                </span>
-                              </bcs-popover>
-
-                              <div class="bk-form-input-group ml20 mr5">
-                                <span class="input-group-addon is-left">
-                                  limits
-                                </span>
-                                <bkbcs-input
-                                  type="number"
-                                  style="width: 100px;"
-                                  :min="0"
-                                  :placeholder="$t('generic.placeholder.input')"
-                                  :value.sync="curContainer.resources.limits.memory"
-                                  :list="varList">
-                                </bkbcs-input>
-                                <span class="input-group-addon">
-                                  Mi
-                                </span>
-                              </div>
-                              <bcs-popover :content="$t('deploy.templateset.memoryLimits')" placement="top">
-                                <span class="bk-badge">
-                                  <i class="bcs-icon bcs-icon-question-circle"></i>
-                                </span>
-                              </bcs-popover>
-                            </div>
-                          </div>
-                        </div>
-                      </bk-tab-panel>
-
-                      <bk-tab-panel name="tab5" :title="$t('deploy.templateset.healthCheck')">
-                        <div class="bk-form m20">
-                          <div class="bk-form-item">
-                            <label class="bk-label" style="width: 120px;">{{$t('generic.label.kind')}}：</label>
-                            <div class="bk-form-content" style="margin-left: 120px">
-                              <div class="bk-dropdown-box" style="width: 250px;">
-                                <bk-selector
-                                  :placeholder="$t('generic.placeholder.select')"
-                                  :setting-key="'id'"
-                                  :display-key="'name'"
-                                  :selected.sync="curContainer.webCache.livenessProbeType"
-                                  :list="healthCheckTypes">
-                                </bk-selector>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div class="bk-form-item" v-show="curContainer.webCache.livenessProbeType && curContainer.webCache.livenessProbeType !== 'EXEC'">
-                            <label class="bk-label" style="width: 120px;">{{$t('deploy.templateset.portName')}}：</label>
-                            <div class="bk-form-content" style="margin-left: 120px;">
-                              <div class="bk-dropdown-box" style="width: 250px;">
-                                <bk-selector
-                                  :placeholder="$t('generic.placeholder.select')"
-                                  :setting-key="'name'"
-                                  :display-key="'name'"
-                                  :selected="livenessProbePortName"
-                                  :list="portList"
-                                  @item-selected="livenessProbePortNameSelect">
-                                </bk-selector>
-                              </div>
-                              <bcs-popover placement="right">
-                                <i class="bcs-icon bcs-icon-question-circle ml5" style="vertical-align: middle; cursor: pointer;"></i>
-                                <div slot="content">
-                                  {{$t('deploy.templateset.associatePortMappingSettings')}}
-                                </div>
-                              </bcs-popover>
-                              <p class="biz-guard-tip bk-default mt5" v-if="!portList.length">{{$t('deploy.templateset.completePortMapping')}}</p>
-                            </div>
-                          </div>
-
-                          <div class="bk-form-item" v-show="curContainer.webCache.livenessProbeType && (curContainer.webCache.livenessProbeType === 'HTTP')">
-                            <div class="bk-form-content" style="margin-left: 0">
-                              <div class="bk-form-inline-item">
-                                <label class="bk-label" style="width: 120px;">{{$t('deploy.templateset.requestPath')}}：</label>
-                                <div class="bk-form-content" style="margin-left: 120px;">
-                                  <bkbcs-input
-                                    type="text"
-                                    style="width: 521px;"
-                                    :placeholder="$t('deploy.templateset.examplePathParam', { path: '/healthcheck' })"
-                                    :value.sync="curContainer.livenessProbe.httpGet.path"
-                                    :list="varList"
-                                  >
-                                  </bkbcs-input>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div class="bk-form-item" v-show="curContainer.webCache.livenessProbeType && curContainer.webCache.livenessProbeType === 'EXEC'">
-                            <div class="bk-form-content" style="margin-left: 0">
-                              <div class="bk-form-inline-item">
-                                <label class="bk-label" style="width: 120px;">{{$t('deploy.templateset.checkCommand')}}：</label>
-                                <div class="bk-form-content" style="margin-left: 120px;">
-                                  <bkbcs-input
-                                    type="text"
-                                    style="width: 521px;"
-                                    :placeholder="$t('deploy.templateset.exampleCheckCommandWithSpace')"
-                                    :value.sync="curContainer.livenessProbe.exec.command"
-                                    :list="varList"
-                                  >
-                                  </bkbcs-input>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div class="bk-form-item" v-show="curContainer.webCache.livenessProbeType && curContainer.webCache.livenessProbeType === 'HTTP'">
-                            <div class="bk-form-content" style="margin-left: 0">
-                              <div class="bk-form-inline-item">
-                                <label class="bk-label" style="width: 120px;">{{$t('deploy.templateset.setHeader')}}：</label>
-                                <div class="bk-form-content" style="margin-left: 120px;">
-                                  <bk-keyer ref="livenessProbeHeaderKeyer" :key-list.sync="livenessProbeHeaders" :var-list="varList" @change="updateLivenessHeader"></bk-keyer>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-
-                          <template>
-                            <bk-button :class="['bk-text-button mt10 f12 mb10', { 'rotate': isPartCShow }]" style="margin-left: 114px;" @click.stop.prevent="togglePartC">
-                              {{$t('deploy.templateset.advancedSettings')}}<i class="bcs-icon bcs-icon-angle-double-down ml5"></i>
-                            </bk-button>
-                            <div v-show="isPartCShow">
-                              <div class="bk-form-item">
-                                <div class="bk-form-content" style="margin-left: 0">
-                                  <div class="bk-form-inline-item">
-                                    <label class="bk-label" style="width: 120px;">{{$t('deploy.templateset.initialTimeout')}}：</label>
-                                    <div class="bk-form-content" style="margin-left: 120px;">
-                                      <div class="bk-form-input-group">
-                                        <bkbcs-input
-                                          type="number"
-                                          style="width: 70px;"
-                                          :placeholder="$t('generic.placeholder.input')"
-                                          :min="1"
-                                          :value.sync="curContainer.livenessProbe.initialDelaySeconds"
-                                          :list="varList"
-                                        >
-                                        </bkbcs-input>
-                                        <span class="input-group-addon">
-                                          {{$t('units.suffix.seconds')}}
-                                        </span>
-                                      </div>
-                                    </div>
-                                  </div>
-
-                                  <div class="bk-form-inline-item">
-                                    <label class="bk-label" style="width: 130px;">{{$t('deploy.templateset.checkInterval')}}：</label>
-                                    <div class="bk-form-content" style="margin-left: 130px;">
-                                      <div class="bk-form-input-group">
-                                        <bkbcs-input
-                                          type="number"
-                                          style="width: 70px;"
-                                          :placeholder="$t('generic.placeholder.input')"
-                                          :min="1"
-                                          :value.sync="curContainer.livenessProbe.periodSeconds"
-                                          :list="varList"
-                                        >
-                                        </bkbcs-input>
-                                        <span class="input-group-addon">
-                                          {{$t('units.suffix.seconds')}}
-                                        </span>
-                                      </div>
-                                    </div>
-                                  </div>
-                                  <div class="bk-form-inline-item">
-                                    <label class="bk-label" style="width: 130px;">{{$t('deploy.templateset.checkTimeout')}}：</label>
-                                    <div class="bk-form-content" style="margin-left: 130px;">
-                                      <div class="bk-form-input-group">
-                                        <bkbcs-input
-                                          type="number"
-                                          style="width: 70px;"
-                                          :placeholder="$t('generic.placeholder.input')"
-                                          :min="1"
-                                          :value.sync="curContainer.livenessProbe.timeoutSeconds"
-                                          :list="varList"
-                                        >
-                                        </bkbcs-input>
-                                        <span class="input-group-addon">
-                                          {{$t('units.suffix.seconds')}}
-                                        </span>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-
-                              <div class="bk-form-item">
-                                <div class="bk-form-content" style="margin-left: 0">
-                                  <div class="bk-form-inline-item">
-                                    <label class="bk-label" style="width: 120px;">{{$t('deploy.templateset.unhealthyThreshold')}}：</label>
-                                    <div class="bk-form-content" style="margin-left: 120px;">
-                                      <div class="bk-form-input-group">
-                                        <bkbcs-input
-                                          type="number"
-                                          style="width: 70px;"
-                                          :min="1"
-                                          :placeholder="$t('generic.placeholder.input')"
-                                          :value.sync="curContainer.livenessProbe.failureThreshold"
-                                          :list="varList"
-                                        >
-                                        </bkbcs-input>
-                                        <span class="input-group-addon">
-                                          {{$t('deploy.templateset.failureTimes')}}
-                                        </span>
-                                      </div>
-                                    </div>
-                                  </div>
-
-                                  <div class="bk-form-inline-item">
-                                    <label class="bk-label" style="width: 130px;">{{$t('deploy.templateset.healthyThreshold')}}：</label>
-                                    <div class="bk-form-content" style="margin-left: 130px;">
-                                      <div class="bk-form-input-group">
-                                        <bkbcs-input
-                                          type="number"
-                                          style="width: 70px;"
-                                          :min="1"
-                                          :placeholder="$t('generic.placeholder.input')"
-                                          :value.sync="curContainer.livenessProbe.successThreshold"
-                                          :list="varList"
-                                        >
-                                        </bkbcs-input>
-                                        <span class="input-group-addon">
-                                          {{$t('deploy.templateset.successTimes')}}
-                                        </span>
-                                      </div>
-                                    </div>
-                                  </div>
-
-                                </div>
-                              </div>
-                            </div>
-                          </template>
-
-                        </div>
-                      </bk-tab-panel>
-
-                      <bk-tab-panel name="tab5-1" :title="$t('deploy.templateset.readinessCheck')">
-                        <div class="bk-form m20">
-                          <div class="bk-form-item">
-                            <label class="bk-label" style="width: 120px;">{{$t('generic.label.kind')}}：</label>
-                            <div class="bk-form-content" style="margin-left: 120px">
-                              <div class="bk-dropdown-box" style="width: 250px;">
-                                <bk-selector
-                                  :placeholder="$t('generic.placeholder.select')"
-                                  :setting-key="'id'"
-                                  :display-key="'name'"
-                                  :selected.sync="curContainer.webCache.readinessProbeType"
-                                  :list="healthCheckTypes">
-                                </bk-selector>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div class="bk-form-item" v-show="curContainer.webCache.readinessProbeType && curContainer.webCache.readinessProbeType !== 'EXEC'">
-                            <label class="bk-label" style="width: 120px;">{{$t('deploy.templateset.portName')}}：</label>
-                            <div class="bk-form-content" style="margin-left: 120px;">
-                              <div class="bk-dropdown-box" style="width: 250px;">
-                                <bk-selector
-                                  :placeholder="$t('generic.placeholder.select')"
-                                  :setting-key="'name'"
-                                  :display-key="'name'"
-                                  :selected="readinessProbePortName"
-                                  :list="portList"
-                                  @item-selected="readinessProbePortNameSelect">
-                                </bk-selector>
-                              </div>
-                              <bcs-popover placement="right">
-                                <i class="bcs-icon bcs-icon-question-circle ml5" style="vertical-align: middle; cursor: pointer;"></i>
-                                <div slot="content">
-                                  {{$t('deploy.templateset.associatePortMappingSettings')}}
-                                </div>
-                              </bcs-popover>
-                              <p class="biz-guard-tip bk-default mt5" v-if="!portList.length">{{$t('deploy.templateset.completePortMapping')}}</p>
-                            </div>
-                          </div>
-
-                          <div class="bk-form-item" v-show="curContainer.webCache.readinessProbeType && (curContainer.webCache.readinessProbeType === 'HTTP')">
-                            <div class="bk-form-content" style="margin-left: 0">
-                              <div class="bk-form-inline-item">
-                                <label class="bk-label" style="width: 120px;">{{$t('deploy.templateset.requestPath')}}：</label>
-                                <div class="bk-form-content" style="margin-left: 120px;">
-                                  <bkbcs-input
-                                    type="text"
-                                    style="width: 521px;"
-                                    :placeholder="$t('deploy.templateset.examplePathParam', { path: '/healthcheck' })"
-                                    :value.sync="curContainer.readinessProbe.httpGet.path"
-                                    :list="varList"
-                                  >
-                                  </bkbcs-input>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div class="bk-form-item" v-show="curContainer.webCache.readinessProbeType && curContainer.webCache.readinessProbeType === 'EXEC'">
-                            <div class="bk-form-content" style="margin-left: 0">
-                              <div class="bk-form-inline-item">
-                                <label class="bk-label" style="width: 120px;">{{$t('deploy.templateset.checkCommand')}}：</label>
-                                <div class="bk-form-content" style="margin-left: 120px;">
-                                  <bkbcs-input
-                                    type="text"
-                                    style="width: 521px;"
-                                    :placeholder="$t('deploy.templateset.examplePathParam', { path: '/tmp/check.sh' })"
-                                    :value.sync="curContainer.readinessProbe.exec.command"
-                                    :list="varList"
-                                  >
-                                  </bkbcs-input>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div class="bk-form-item" v-show="curContainer.webCache.readinessProbeType && curContainer.webCache.readinessProbeType === 'HTTP'">
-                            <div class="bk-form-content" style="margin-left: 0">
-                              <div class="bk-form-inline-item">
-                                <label class="bk-label" style="width: 120px;">{{$t('deploy.templateset.setHeader')}}：</label>
-                                <div class="bk-form-content" style="margin-left: 120px;">
-                                  <bk-keyer ref="readinessProbeHeaderKeyer" :key-list.sync="readinessProbeHeaders" :var-list="varList" @change="updateReadinessHeader"></bk-keyer>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-
-                          <template>
-                            <bk-button :class="['bk-text-button mt10 f12 mb10', { 'rotate': isPartCShow }]" style="margin-left: 114px;" @click.stop.prevent="togglePartC">
-                              {{$t('deploy.templateset.advancedSettings')}}<i class="bcs-icon bcs-icon-angle-double-down ml5"></i>
-                            </bk-button>
-                            <div v-show="isPartCShow">
-                              <div class="bk-form-item">
-                                <div class="bk-form-content" style="margin-left: 0">
-                                  <div class="bk-form-inline-item">
-                                    <label class="bk-label" style="width: 120px;">{{$t('deploy.templateset.initialTimeout')}}：</label>
-                                    <div class="bk-form-content" style="margin-left: 120px;">
-                                      <div class="bk-form-input-group">
-                                        <bkbcs-input
-                                          type="number"
-                                          style="width: 70px;"
-                                          :placeholder="$t('generic.placeholder.input')"
-                                          :min="1"
-                                          :value.sync="curContainer.readinessProbe.initialDelaySeconds"
-                                          :list="varList"
-                                        >
-                                        </bkbcs-input>
-                                        <span class="input-group-addon">
-                                          {{$t('units.suffix.seconds')}}
-                                        </span>
-                                      </div>
-                                    </div>
-                                  </div>
-
-                                  <div class="bk-form-inline-item">
-                                    <label class="bk-label" style="width: 130px;">{{$t('deploy.templateset.checkInterval')}}：</label>
-                                    <div class="bk-form-content" style="margin-left: 130px;">
-                                      <div class="bk-form-input-group">
-                                        <bkbcs-input
-                                          type="number"
-                                          style="width: 70px;"
-                                          :placeholder="$t('generic.placeholder.input')"
-                                          :min="1"
-                                          :value.sync="curContainer.readinessProbe.periodSeconds"
-                                          :list="varList"
-                                        >
-                                        </bkbcs-input>
-                                        <span class="input-group-addon">
-                                          {{$t('units.suffix.seconds')}}
-                                        </span>
-                                      </div>
-                                    </div>
-                                  </div>
-                                  <div class="bk-form-inline-item">
-                                    <label class="bk-label" style="width: 130px;">{{$t('deploy.templateset.checkTimeout')}}：</label>
-                                    <div class="bk-form-content" style="margin-left: 130px;">
-                                      <div class="bk-form-input-group">
-                                        <bkbcs-input
-                                          type="number"
-                                          style="width: 70px;"
-                                          :placeholder="$t('generic.placeholder.input')"
-                                          :min="1"
-                                          :value.sync="curContainer.readinessProbe.timeoutSeconds"
-                                          :list="varList"
-                                        >
-                                        </bkbcs-input>
-                                        <span class="input-group-addon">
-                                          {{$t('units.suffix.seconds')}}
-                                        </span>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-
-                              <div class="bk-form-item">
-                                <div class="bk-form-content" style="margin-left: 0">
-                                  <div class="bk-form-inline-item">
-                                    <label class="bk-label" style="width: 120px;">{{$t('deploy.templateset.unhealthyThreshold')}}：</label>
-                                    <div class="bk-form-content" style="margin-left: 120px;">
-                                      <div class="bk-form-input-group">
-                                        <bkbcs-input
-                                          type="number"
-                                          style="width: 70px;"
-                                          :placeholder="$t('generic.placeholder.input')"
-                                          :min="1"
-                                          :value.sync="curContainer.readinessProbe.failureThreshold"
-                                          :list="varList"
-                                        >
-                                        </bkbcs-input>
-                                        <span class="input-group-addon">
-                                          {{$t('deploy.templateset.failureTimes')}}
-                                        </span>
-                                      </div>
-                                    </div>
-                                  </div>
-
-                                  <div class="bk-form-inline-item">
-                                    <label class="bk-label" style="width: 130px;">{{$t('deploy.templateset.healthyThreshold')}}：</label>
-                                    <div class="bk-form-content" style="margin-left: 130px;">
-                                      <div class="bk-form-input-group">
-                                        <bkbcs-input
-                                          type="number"
-                                          style="width: 70px;"
-                                          :placeholder="$t('generic.placeholder.input')"
-                                          :min="1"
-                                          :value.sync="curContainer.readinessProbe.successThreshold"
-                                          :list="varList"
-                                        >
-                                        </bkbcs-input>
-                                        <span class="input-group-addon">
-                                          {{$t('deploy.templateset.successTimes')}}
-                                        </span>
-                                      </div>
-                                    </div>
-                                  </div>
-
-                                </div>
-                              </div>
-                            </div>
-                          </template>
-
-                        </div>
-                      </bk-tab-panel>
-
-                      <bk-tab-panel name="tab6" :title="$t('deploy.templateset.nonStandardLogCollection')">
-                        <div class="bk-form m20">
-                          <div class="bk-form-item">
-                            <div class="bk-form-content" style="margin-left: 20px">
-                              <div class="bk-keyer">
-                                <div class="biz-keys-list mb10">
-                                  <div class="biz-key-item" v-for="(logItem, index) in curContainer.webCache.logListCache" :key="index">
-                                    <bkbcs-input
-                                      type="text"
-                                      style="width: 360px;"
-                                      :placeholder="$t('deploy.templateset.enterCustomLogPath')"
-                                      maxlength="30"
-                                      :value.sync="logItem.value"
-                                      :list="varList"
-                                    >
-                                    </bkbcs-input>
-
-                                    <bk-button class="action-btn ml5" @click.stop.prevent="addLog">
-                                      <i class="bcs-icon bcs-icon-plus"></i>
-                                    </bk-button>
-                                    <bk-button class="action-btn" v-if="curContainer.webCache.logListCache.length > 1" @click.stop.prevent="removeLog(logItem, index)">
-                                      <i class="bcs-icon bcs-icon-minus"></i>
-                                    </bk-button>
-                                  </div>
-                                </div>
                               </div>
                             </div>
                           </div>
                         </div>
-                      </bk-tab-panel>
 
-                      <bk-tab-panel name="tab7" :title="$t('deploy.templateset.lifecycle')">
-                        <div class="bk-form m20">
-                          <div class="bk-form-item">
-                            <div class="bk-form-content" style="margin-left: 20px">
-                              <div class="bk-form-item">
-                                <label class="bk-label" style="width: 108px;">{{$t('deploy.templateset.preStop')}}：</label>
-                                <div class="bk-form-content" style="margin-left: 108px;">
+                        <div class="bk-form-item" v-show="curContainer.webCache.readinessProbeType && curContainer.webCache.readinessProbeType === 'HTTP'">
+                          <div class="bk-form-content" style="margin-left: 0">
+                            <div class="bk-form-inline-item">
+                              <label class="bk-label" style="width: 120px;">{{$t('deploy.templateset.setHeader')}}：</label>
+                              <div class="bk-form-content" style="margin-left: 120px;">
+                                <bk-keyer ref="readinessProbeHeaderKeyer" :key-list.sync="readinessProbeHeaders" :var-list="varList" @change="updateReadinessHeader"></bk-keyer>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <template>
+                          <bk-button :class="['bk-text-button mt10 f12 mb10', { 'rotate': isPartCShow }]" style="margin-left: 114px;" @click.stop.prevent="togglePartC">
+                            {{$t('deploy.templateset.advancedSettings')}}<i class="bcs-icon bcs-icon-angle-double-down ml5"></i>
+                          </bk-button>
+                          <div v-show="isPartCShow">
+                            <div class="bk-form-item">
+                              <div class="bk-form-content" style="margin-left: 0">
+                                <div class="bk-form-inline-item">
+                                  <label class="bk-label" style="width: 120px;">{{$t('deploy.templateset.initialTimeout')}}：</label>
+                                  <div class="bk-form-content" style="margin-left: 120px;">
+                                    <div class="bk-form-input-group">
+                                      <bkbcs-input
+                                        type="number"
+                                        style="width: 70px;"
+                                        :placeholder="$t('generic.placeholder.input')"
+                                        :min="1"
+                                        :value.sync="curContainer.readinessProbe.initialDelaySeconds"
+                                        :list="varList"
+                                      >
+                                      </bkbcs-input>
+                                      <span class="input-group-addon">
+                                        {{$t('units.suffix.seconds')}}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div class="bk-form-inline-item">
+                                  <label class="bk-label" style="width: 130px;">{{$t('deploy.templateset.checkInterval')}}：</label>
+                                  <div class="bk-form-content" style="margin-left: 130px;">
+                                    <div class="bk-form-input-group">
+                                      <bkbcs-input
+                                        type="number"
+                                        style="width: 70px;"
+                                        :placeholder="$t('generic.placeholder.input')"
+                                        :min="1"
+                                        :value.sync="curContainer.readinessProbe.periodSeconds"
+                                        :list="varList"
+                                      >
+                                      </bkbcs-input>
+                                      <span class="input-group-addon">
+                                        {{$t('units.suffix.seconds')}}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div class="bk-form-inline-item">
+                                  <label class="bk-label" style="width: 130px;">{{$t('deploy.templateset.checkTimeout')}}：</label>
+                                  <div class="bk-form-content" style="margin-left: 130px;">
+                                    <div class="bk-form-input-group">
+                                      <bkbcs-input
+                                        type="number"
+                                        style="width: 70px;"
+                                        :placeholder="$t('generic.placeholder.input')"
+                                        :min="1"
+                                        :value.sync="curContainer.readinessProbe.timeoutSeconds"
+                                        :list="varList"
+                                      >
+                                      </bkbcs-input>
+                                      <span class="input-group-addon">
+                                        {{$t('units.suffix.seconds')}}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div class="bk-form-item">
+                              <div class="bk-form-content" style="margin-left: 0">
+                                <div class="bk-form-inline-item">
+                                  <label class="bk-label" style="width: 120px;">{{$t('deploy.templateset.unhealthyThreshold')}}：</label>
+                                  <div class="bk-form-content" style="margin-left: 120px;">
+                                    <div class="bk-form-input-group">
+                                      <bkbcs-input
+                                        type="number"
+                                        style="width: 70px;"
+                                        :placeholder="$t('generic.placeholder.input')"
+                                        :min="1"
+                                        :value.sync="curContainer.readinessProbe.failureThreshold"
+                                        :list="varList"
+                                      >
+                                      </bkbcs-input>
+                                      <span class="input-group-addon">
+                                        {{$t('deploy.templateset.failureTimes')}}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div class="bk-form-inline-item">
+                                  <label class="bk-label" style="width: 130px;">{{$t('deploy.templateset.healthyThreshold')}}：</label>
+                                  <div class="bk-form-content" style="margin-left: 130px;">
+                                    <div class="bk-form-input-group">
+                                      <bkbcs-input
+                                        type="number"
+                                        style="width: 70px;"
+                                        :placeholder="$t('generic.placeholder.input')"
+                                        :min="1"
+                                        :value.sync="curContainer.readinessProbe.successThreshold"
+                                        :list="varList"
+                                      >
+                                      </bkbcs-input>
+                                      <span class="input-group-addon">
+                                        {{$t('deploy.templateset.successTimes')}}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+
+                              </div>
+                            </div>
+                          </div>
+                        </template>
+
+                      </div>
+                    </bk-tab-panel>
+
+                    <bk-tab-panel name="tab6" :title="$t('deploy.templateset.nonStandardLogCollection')">
+                      <div class="bk-form m20">
+                        <div class="bk-form-item">
+                          <div class="bk-form-content" style="margin-left: 20px">
+                            <div class="bk-keyer">
+                              <div class="biz-keys-list mb10">
+                                <div class="biz-key-item" v-for="(logItem, index) in curContainer.webCache.logListCache" :key="index">
                                   <bkbcs-input
                                     type="text"
-                                    :placeholder="$t('generic.placeholder.command')"
+                                    style="width: 360px;"
+                                    :placeholder="$t('deploy.templateset.enterCustomLogPath')"
                                     maxlength="30"
-                                    :value.sync="curContainer.lifecycle.preStop.exec.command"
+                                    :value.sync="logItem.value"
                                     :list="varList"
                                   >
                                   </bkbcs-input>
+
+                                  <bk-button class="action-btn ml5" @click.stop.prevent="addLog">
+                                    <i class="bcs-icon bcs-icon-plus"></i>
+                                  </bk-button>
+                                  <bk-button class="action-btn" v-if="curContainer.webCache.logListCache.length > 1" @click.stop.prevent="removeLog(logItem, index)">
+                                    <i class="bcs-icon bcs-icon-minus"></i>
+                                  </bk-button>
                                 </div>
                               </div>
-                              <div class="bk-form-item">
-                                <label class="bk-label" style="width: 108px;">{{$t('deploy.templateset.postStart')}}：</label>
-                                <div class="bk-form-content" style="margin-left: 108px;">
-                                  <bkbcs-input
-                                    type="text"
-                                    :placeholder="$t('generic.placeholder.command')"
-                                    :value.sync="curContainer.lifecycle.postStart.exec.command"
-                                    :list="varList"
-                                  >
-                                  </bkbcs-input>
-                                  <!-- <bcs-popover content="多个命令用空格分隔" placement="top">
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </bk-tab-panel>
+
+                    <bk-tab-panel name="tab7" :title="$t('deploy.templateset.lifecycle')">
+                      <div class="bk-form m20">
+                        <div class="bk-form-item">
+                          <div class="bk-form-content" style="margin-left: 20px">
+                            <div class="bk-form-item">
+                              <label class="bk-label" style="width: 108px;">{{$t('deploy.templateset.preStop')}}：</label>
+                              <div class="bk-form-content" style="margin-left: 108px;">
+                                <bkbcs-input
+                                  type="text"
+                                  :placeholder="$t('generic.placeholder.command')"
+                                  maxlength="30"
+                                  :value.sync="curContainer.lifecycle.preStop.exec.command"
+                                  :list="varList"
+                                >
+                                </bkbcs-input>
+                              </div>
+                            </div>
+                            <div class="bk-form-item">
+                              <label class="bk-label" style="width: 108px;">{{$t('deploy.templateset.postStart')}}：</label>
+                              <div class="bk-form-content" style="margin-left: 108px;">
+                                <bkbcs-input
+                                  type="text"
+                                  :placeholder="$t('generic.placeholder.command')"
+                                  :value.sync="curContainer.lifecycle.postStart.exec.command"
+                                  :list="varList"
+                                >
+                                </bkbcs-input>
+                                <!-- <bcs-popover content="多个命令用空格分隔" placement="top">
                                                                         <span class="bk-badge ml5">
                                                                             <i class="bcs-icon bcs-icon-question-circle"></i>
                                                                         </span>
                                                                     </bcs-popover> -->
-                                </div>
                               </div>
                             </div>
                           </div>
                         </div>
-                      </bk-tab-panel>
-                    </bk-tab>
-                  </div>
+                      </div>
+                    </bk-tab-panel>
+                  </bk-tab>
                 </div>
               </div>
-            </template>
-          </div>
+            </div>
+          </template>
         </div>
       </div>
-    </template>
-  </div>
+    </div>
+  </BcsContent>
 </template>
 
 <script>
@@ -1506,6 +1506,7 @@ import tabs from './tabs.vue';
 
 import ace from '@/components/ace-editor';
 import bkKeyer from '@/components/keyer';
+import BcsContent from '@/components/layout/Content.vue';
 import containerParams from '@/json/k8s-container.json';
 import applicationParams from '@/json/k8s-job.json';
 import k8sBase from '@/mixins/configuration/k8s-base';
@@ -1518,6 +1519,7 @@ export default {
     'bk-keyer': bkKeyer,
     'biz-header': header,
     'biz-tabs': tabs,
+    BcsContent,
   },
   mixins: [mixinBase, k8sBase],
   data() {

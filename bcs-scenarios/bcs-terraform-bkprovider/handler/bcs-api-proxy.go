@@ -15,28 +15,51 @@ package handler
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	tcommon "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
+	tvpc "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/vpc/v20170312"
 
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-bkprovider/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-bkprovider/middleware/xbknodeman"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-bkprovider/middleware/xtencentcloud"
 	pb "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-bkprovider/proto"
 )
 
 // BcsApiHandler api handler
 type BcsApiHandler struct {
+	adminUsers []string
+
 	bkAppCode   string
 	bkAppSecret string
 	bkEnv       string
+
+	bkOuterIP        string
+	bkAddrTemplateID string
+
+	tVpcCli *xtencentcloud.VpcClient
 }
 
 // NewBcsApiHandler return new instance
-func NewBcsApiHandler(bkAppCode, bkAppSecret, bkEnv string) *BcsApiHandler {
-	return &BcsApiHandler{
-		bkAppCode:   bkAppCode,
-		bkAppSecret: bkAppSecret,
-		bkEnv:       bkEnv,
+func NewBcsApiHandler(opt *common.Options) *BcsApiHandler {
+	h := &BcsApiHandler{
+		adminUsers: opt.AdminUsers,
+
+		bkAppCode:        opt.BkSystem.BkAppCode,
+		bkAppSecret:      opt.BkSystem.BkAppSecret,
+		bkEnv:            opt.BkSystem.BkEnv,
+		bkAddrTemplateID: opt.BkSystem.BkAddressTemplateID,
+		bkOuterIP:        opt.BkSystem.BkOuterIP,
 	}
+
+	tVpcCli, err := xtencentcloud.NewClient(opt.TencentCloud.VpcDomain, opt.TencentCloud.SecretID,
+		opt.TencentCloud.SecretKey, opt.TencentCloud.Region)
+	if err != nil {
+		panic(err)
+	}
+	h.tVpcCli = tVpcCli
+	return h
 }
 
 // InstallJob create job
@@ -71,6 +94,7 @@ func (b *BcsApiHandler) InstallJob(ctx context.Context, request *pb.InstallJobRe
 	installReq.JobType = request.JobType
 	resp, err := nodeManCli.InstallJob(ctx, installReq)
 	if err != nil {
+		blog.Errorf("install job failed,req:%s, err: %s", common.JsonMarshal(request), err.Error())
 		response.Code = common.CodeInternalError
 		response.Message = err.Error()
 		return nil
@@ -100,6 +124,7 @@ func (b *BcsApiHandler) CreateCloud(ctx context.Context, request *pb.CloudCreate
 		ApID:        int64(request.ApId),
 	})
 	if err != nil {
+		blog.Errorf("CreateCloud failed,req:%s, err: %s", common.JsonMarshal(request), err.Error())
 		response.Code = common.CodeInternalError
 		response.Message = err.Error()
 		return nil
@@ -129,6 +154,7 @@ func (b *BcsApiHandler) UpdateCloud(ctx context.Context, request *pb.CloudUpdate
 		ApID:        int64(request.ApId),
 	})
 	if err != nil {
+		blog.Errorf("UpdateCloud failed,req:%s, err: %s", common.JsonMarshal(request), err.Error())
 		response.Code = common.CodeInternalError
 		response.Message = err.Error()
 		return nil
@@ -152,6 +178,7 @@ func (b *BcsApiHandler) ListCloud(ctx context.Context, request *pb.CloudListRequ
 	nodeManCli := b.newBkNodeManCli(user.GetUsername())
 	resp, err := nodeManCli.ListCloud(ctx, &xbknodeman.ListCloudRequest{})
 	if err != nil {
+		blog.Errorf("ListCloud failed,req:%s, err: %s", common.JsonMarshal(request), err.Error())
 		response.Code = common.CodeInternalError
 		response.Message = err.Error()
 		return nil
@@ -180,11 +207,19 @@ func (b *BcsApiHandler) DeleteCloud(ctx context.Context, request *pb.CloudDelete
 		return nil
 	}
 
+	if request.BkCloudId == 0 {
+		response.Code = common.CodeInternalError
+		response.Message = "bk_cloud_id is required"
+		return nil
+	}
+
+	blog.Infof("[DeleteCloud]bk cloud id : %d, request user: %s", request.BkCloudId, user.GetUsername())
 	nodeManCli := b.newBkNodeManCli(user.GetUsername())
 	resp, err := nodeManCli.DeleteCloud(ctx, &xbknodeman.DeleteCloudRequest{
 		BkCloudID: int64(request.BkCloudId),
 	})
 	if err != nil {
+		blog.Errorf("DeleteCloud failed,req:%s, err: %s", common.JsonMarshal(request), err.Error())
 		response.Code = common.CodeInternalError
 		response.Message = err.Error()
 		return nil
@@ -217,9 +252,13 @@ func (b *BcsApiHandler) ListHost(ctx context.Context, request *pb.ListHostReques
 			Value: cond.Value,
 		})
 	}
+	for _, bkBizID := range request.BkBizIds {
+		listReq.BkBizId = append(listReq.BkBizId, int64(bkBizID))
+	}
 
 	resp, err := nodeManCli.ListHosts(ctx, listReq)
 	if err != nil {
+		blog.Errorf("ListHosts failed,req:%s, err: %s", common.JsonMarshal(request), err.Error())
 		response.Code = common.CodeInternalError
 		response.Message = err.Error()
 		return nil
@@ -253,6 +292,7 @@ func (b *BcsApiHandler) ListProxyHost(ctx context.Context, request *pb.ListProxy
 
 	resp, err := nodeManCli.GetProxyHost(ctx, listReq)
 	if err != nil {
+		blog.Errorf("GetProxyHost failed,req:%s, err: %s", common.JsonMarshal(request), err.Error())
 		response.Code = common.CodeInternalError
 		response.Message = err.Error()
 		return nil
@@ -279,7 +319,6 @@ func (b *BcsApiHandler) GetJobDetail(ctx context.Context, request *pb.GetJobDeta
 		return nil
 	}
 
-	blog.Errorf("req: %s", common.JsonMarshal(request))
 	nodeManCli := b.newBkNodeManCli(user.GetUsername())
 	jobDetailReq := &xbknodeman.GetJobDetailRequest{
 		JobID:    request.JobId,
@@ -295,6 +334,7 @@ func (b *BcsApiHandler) GetJobDetail(ctx context.Context, request *pb.GetJobDeta
 	}
 	jobDetail, err := nodeManCli.GetJobDetails(ctx, jobDetailReq)
 	if err != nil {
+		blog.Errorf("GetJobDetails failed,req:%s, err: %s", common.JsonMarshal(request), err.Error())
 		response.Code = common.CodeInternalError
 		response.Message = err.Error()
 		return nil
@@ -311,6 +351,109 @@ func (b *BcsApiHandler) GetJobDetail(ctx context.Context, request *pb.GetJobDeta
 	return nil
 }
 
+// RegisterBkWhitelist register whitelist
+func (b *BcsApiHandler) RegisterBkWhitelist(ctx context.Context, request *pb.RegisterBkWhitelistRequest, response *pb.RegisterBkWhitelistResponse) error {
+	user, code, msg := getUserInfo(ctx)
+	if code != common.CodeSuccess {
+		response.Code = code
+		response.Message = msg
+		return nil
+	}
+	blog.Infof("registerBkWhiteList, user: %s, biz: %s, ip_list: %s", user.GetUsername(), request.GetBizName(),
+		common.ToJsonString(request.GetIpList()))
+	resp, err := b.tVpcCli.DescribeAddressTemplate(b.bkAddrTemplateID)
+	if err != nil {
+		blog.Errorf("DescribeAddressTemplate failed,req:%s, err: %s", common.JsonMarshal(request), err.Error())
+		response.Code = common.CodeInternalError
+		response.Message = err.Error()
+		return nil
+	}
+
+	if getUint64Value(resp.Response.TotalCount) == 0 {
+		blog.Errorf("get addr template failed,template_id:%s", b.bkAddrTemplateID)
+		response.Code = common.CodeInternalError
+		response.Message = fmt.Sprintf("internal error, invali whitelist")
+		return nil
+	}
+
+	existedAddr := make(map[string]interface{})
+	bkAddrTemplate := resp.Response.AddressTemplateSet[0]
+	for _, addr := range bkAddrTemplate.AddressSet {
+		existedAddr[*addr] = struct{}{}
+	}
+
+	toAddAddr := make([]*tvpc.MemberInfo, 0)
+	for _, addr := range request.GetIpList() {
+		// 不变更已存在ip
+		if _, ok := existedAddr[addr]; !ok {
+			toAddAddr = append(toAddAddr, &tvpc.MemberInfo{
+				Member:      tcommon.StringPtr(addr),
+				Description: tcommon.StringPtr(fmt.Sprintf("operator: %s, biz: %s", user.Username, request.GetBizName())),
+			})
+		}
+	}
+
+	if err = b.tVpcCli.AddTemplateMember(b.bkAddrTemplateID, toAddAddr); err != nil {
+		blog.Errorf("AddTemplateMember failed,req:%s, err: %s", common.JsonMarshal(request), err.Error())
+		response.Code = common.CodeInternalError
+		response.Message = fmt.Sprintf("add whitelist failed, err: %s", err.Error())
+		return nil
+	}
+
+	response.Code = common.CodeSuccess
+	response.Message = common.MsgSuccess
+	return nil
+}
+
+// GetBkOuterIP return bk outer ip
+func (b *BcsApiHandler) GetBkOuterIP(ctx context.Context, request *pb.GetBkOuterIPRequest, response *pb.GetBkOuterIPResponse) error {
+	response.Code = common.CodeSuccess
+	response.Message = common.MsgSuccess
+	response.Data = []string{b.bkOuterIP}
+	return nil
+}
+
+// ListBkWhitelist 获取蓝鲸网关白名单(仅测试用)
+func (b *BcsApiHandler) ListBkWhitelist(ctx context.Context, request *pb.ListBkWhiteListRequest, response *pb.ListBkWhiteListResponse) error {
+	user, code, msg := getUserInfo(ctx)
+	if code != common.CodeSuccess {
+		response.Code = code
+		response.Message = msg
+		return nil
+	}
+
+	if !stringInSlice(user.GetUsername(), b.adminUsers) {
+		response.Code = common.CodeInternalError
+		response.Message = fmt.Sprintf("invalid user")
+		return nil
+	}
+
+	resp, err := b.tVpcCli.DescribeAddressTemplate(b.bkAddrTemplateID)
+	if err != nil {
+		blog.Errorf("DescribeAddressTemplate failed,req:%s, err: %s", b.bkAddrTemplateID, err.Error())
+		response.Code = common.CodeInternalError
+		response.Message = err.Error()
+		return nil
+	}
+
+	if getUint64Value(resp.Response.TotalCount) == 0 {
+		blog.Errorf("get addr template failed,template_id:%s", b.bkAddrTemplateID)
+		response.Code = common.CodeInternalError
+		response.Message = fmt.Sprintf("internal error, invali whitelist")
+		return nil
+	}
+
+	whiteIpList := make([]string, 0)
+	for _, addr := range resp.Response.AddressTemplateSet[0].AddressSet {
+		whiteIpList = append(whiteIpList, *addr)
+	}
+
+	response.Code = common.CodeSuccess
+	response.Message = common.MsgSuccess
+	response.Data = whiteIpList
+	return nil
+}
+
 func (b *BcsApiHandler) newBkNodeManCli(userName string) *xbknodeman.Client {
-	return xbknodeman.NewClient(0, b.bkEnv, b.bkAppCode, b.bkAppSecret, "", userName)
+	return xbknodeman.NewClient(b.bkEnv, b.bkAppCode, b.bkAppSecret, "", userName)
 }

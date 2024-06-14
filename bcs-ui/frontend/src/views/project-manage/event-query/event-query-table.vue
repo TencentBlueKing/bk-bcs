@@ -121,6 +121,11 @@ export default defineComponent({
       type: [String, Array],
       default: '',
     },
+    // 资源名称变更时是否重置页码
+    resetPageWhenNameChange: {
+      type: Boolean,
+      default: true,
+    },
     // 事件级别
     level: {
       type: String,
@@ -335,9 +340,11 @@ export default defineComponent({
 
     // 获取事件信息
     const handleInitEventData = () => {
-      events.value = [];
-      pagination.value.current = 1;
-      handleGetEventList();
+      if (props.resetPageWhenNameChange) {
+        events.value = [];
+        pagination.value.current = 1;
+      }
+      handleGetEventList(props.resetPageWhenNameChange);
     };
 
     watch(name, (newValue, oldValue) => {
@@ -376,13 +383,13 @@ export default defineComponent({
       count: 0,
       limit: 10,
     });
-    const handleGetEventList = async () => {
+    const handleGetEventList = async (loading = true) => {
       const { clusterId } = params.value;
       if (!clusterId) return;
 
       const cluster = clusterList.value.find(item => item.clusterID === clusterId);
       if (cluster?.is_shared && !params.value.namespace) return; // 共享集群没有命名空间时，不请求
-      eventLoading.value = true;
+      eventLoading.value = loading;
       const [start, end] = params.value.date;
       const { data = [], total = 0 } = await storageEvents({
         offset: (pagination.value.current - 1) * pagination.value.limit,

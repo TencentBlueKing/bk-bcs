@@ -1,0 +1,173 @@
+title: persistentVolume
+type: object
+properties:
+  {{- include "common.metadata" . | indent 2 }}
+  spec:
+    title: {{ i18n "配置信息" .lang }}
+    type: object
+    required:
+      - accessModes
+      - scName
+      - storageSize
+      - localPath
+      - hostPath
+      - nfsPath
+      - nfsServer
+    properties:
+      type:
+        title: {{ i18n "类型" .lang }}
+        type: string
+        default: local
+        ui:component:
+          name: select
+          props:
+            datasource:
+              - label: LocalVolume
+                value: local
+              - label: HostPath
+                value: hostPath
+              - label: NFS
+                value: nfs
+        ui:reactions:
+          - target: spec.localPath
+            if: "{{`{{`}} $self.value === 'local' {{`}}`}}"
+            then:
+              state:
+                visible: true
+            else:
+              state:
+                visible: false
+          - target: spec.hostPath
+            if: "{{`{{`}} $self.value === 'hostPath' {{`}}`}}"
+            then:
+              state:
+                visible: true
+            else:
+              state:
+                visible: false
+          - target: spec.hostPathType
+            if: "{{`{{`}} $self.value === 'hostPath' {{`}}`}}"
+            then:
+              state:
+                visible: true
+            else:
+              state:
+                visible: false
+          - target: spec.nfsPath
+            if: "{{`{{`}} $self.value === 'nfs' {{`}}`}}"
+            then:
+              state:
+                visible: true
+            else:
+              state:
+                visible: false
+          - target: spec.nfsServer
+            if: "{{`{{`}} $self.value === 'nfs' {{`}}`}}"
+            then:
+              state:
+                visible: true
+            else:
+              state:
+                visible: false
+          - target: spec.nfsReadOnly
+            if: "{{`{{`}} $self.value === 'nfs' {{`}}`}}"
+            then:
+              state:
+                visible: true
+            else:
+              state:
+                visible: false
+      accessModes:
+        title: {{ i18n "访问模式" .lang }}
+        type: array
+        items:
+          type: string
+        ui:component:
+          name: select
+          props:
+            clearable: true
+            searchable: true
+            datasource:
+              - label: ReadWriteOnce
+                value: ReadWriteOnce
+              - label: ReadOnlyMany
+                value: ReadOnlyMany
+              - label: ReadWriteMany
+                value: ReadWriteMany
+        ui:rules:
+          - validator: "{{`{{`}} $self.value.length > 0 {{`}}`}}"
+            message: {{ i18n "至少选择一个 AccessMode" .lang }}
+      scName:
+        title: {{ i18n "存储类名称" .lang }}
+        type: string
+        ui:component:
+          name: select
+          props:
+            clearable: false
+      storageSize:
+        title: {{ i18n "容量" .lang }}
+        type: integer
+        default: 10
+        ui:component:
+          name: bfInput
+          props:
+            min: 1
+            max: 4096
+            unit: Gi
+      localPath:
+        title: Path
+        type: string
+        ui:rules:
+          - validator: "{{`{{`}} $self.getValue('spec.type') !== 'local' || $self.value {{`}}`}}"
+            message: {{ i18n "值不能为空" .lang }}
+      hostPath:
+        title: Path
+        type: string
+        ui:rules:
+          - validator: "{{`{{`}} $self.getValue('spec.type') !== 'hostPath' || $self.value {{`}}`}}"
+            message: {{ i18n "值不能为空" .lang }}
+      hostPathType:
+        title: {{ i18n "类型" .lang }}
+        type: string
+        default: DirectoryOrCreate
+        ui:component:
+          name: select
+          props:
+            clearable: false
+            datasource:
+              - label: DirectoryOrCreate
+                value: DirectoryOrCreate
+              - label: Directory
+                value: Directory
+              - label: FileOrCreate
+                value: FileOrCreate
+              - label: File
+                value: File
+              - label: Socket
+                value: Socket
+              - label: CharDevice
+                value: CharDevice
+              - label: BlockDevice
+                value: BlockDevice
+      nfsPath:
+        title: Path
+        type: string
+        ui:rules:
+          - validator: "{{`{{`}} $self.getValue('spec.type') !== 'nfs' || $self.value {{`}}`}}"
+            message: {{ i18n "值不能为空" .lang }}
+      nfsServer:
+        title: Server
+        type: string
+        ui:rules:
+          - validator: "{{`{{`}} $self.getValue('spec.type') !== 'nfs' || $self.value {{`}}`}}"
+            message: {{ i18n "值不能为空" .lang }}
+      nfsReadOnly:
+        title: {{ i18n "只读" .lang }}
+        type: boolean
+    ui:group:
+      props:
+        border: false
+        showTitle: true
+        type: card
+        verifiable: true
+        hideEmptyRow: true

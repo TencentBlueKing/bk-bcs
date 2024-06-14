@@ -83,6 +83,7 @@
         <bk-table
           :data="curPodsData"
           :pagination="pagination"
+          :max-height="840"
           v-bkloading="{ isLoading: podLoading }"
           @page-change="pageChange"
           @page-limit-change="pageSizeChange"

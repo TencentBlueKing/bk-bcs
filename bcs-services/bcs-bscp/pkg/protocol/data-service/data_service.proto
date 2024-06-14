@@ -227,6 +227,7 @@ service Data {
 
   // client related interface
   rpc ListClients(ListClientsReq) returns (ListClientsResp) {};
+  rpc RetryClients(RetryClientsReq) returns (pbbase.EmptyResp) {};
 
   // client event related interface
   rpc ListClientEvents(ListClientEventsReq) returns (ListClientEventsResp) {};
@@ -236,6 +237,7 @@ service Data {
   rpc CreateClientQuery(CreateClientQueryReq) returns (CreateClientQueryResp) {};
   rpc UpdateClientQuery(UpdateClientQueryReq) returns (pbbase.EmptyResp) {};
   rpc DeleteClientQuery(DeleteClientQueryReq) returns (pbbase.EmptyResp) {};
+  rpc CheckClientQueryName(CheckClientQueryNameReq) returns (CheckClientQueryNameResp) {};
 
   // client metrics chart related interface
   rpc ClientConfigVersionStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {}
@@ -322,6 +324,9 @@ message ListCredentialReq {
   uint32 start = 3;
   uint32 limit = 4;
   string top_ids = 5;
+  bool all = 6;
+  string enc_credential = 7;
+  optional bool enable = 8;
 }
 
 message ListCredentialResp {
@@ -1704,9 +1709,23 @@ message ListClientsReq {
   pbclient.ClientQueryCondition search = 8;
 }
 
+message RetryClientsReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  repeated uint32 client_ids = 3;
+  bool all = 4;
+}
+
 message ListClientsResp {
+  message Item {
+    pbclient.Client client = 1;
+    string cpu_usage_str = 2;
+    string cpu_max_usage_str = 3;
+    string memory_usage_str = 4;
+    string memory_max_usage_str = 5;
+  }
   uint32 count = 1;
-  repeated pbclient.Client details = 2;
+  repeated Item details = 2;
 }
 
 message ListClientEventsReq {
@@ -1769,6 +1788,16 @@ message DeleteClientQueryReq {
   uint32 id = 1;
   uint32 biz_id = 2;
   uint32 app_id = 3;
+}
+
+message CheckClientQueryNameReq {
+  string name = 1;
+  uint32 biz_id = 2;
+  uint32 app_id = 3;
+}
+
+message CheckClientQueryNameResp {
+  bool exist = 1;
 }
 
 message ListClientLabelAndAnnotationReq {

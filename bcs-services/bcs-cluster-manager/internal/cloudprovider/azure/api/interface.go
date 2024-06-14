@@ -401,6 +401,9 @@ type NetworkInterfaceService interface {
 	GetVmInterfaceAndReturn(ctx context.Context, nodeResourceGroup, setName, instanceID, networkInterfaceName string) (
 		*armnetwork.Interface, error)
 
+	// ListNetworkNicAll 获取全量网络接口
+	ListNetworkNicAll(ctx context.Context) ([]*armnetwork.Interface, error)
+
 	// GetVirtualNetworks 查询虚拟网络
 	//
 	// nodeResourceGroup - 基础结构资源组(AutoScalingGroup.autoScalingName/Cluster.ExtraInfo["nodeResourceGroup"]).

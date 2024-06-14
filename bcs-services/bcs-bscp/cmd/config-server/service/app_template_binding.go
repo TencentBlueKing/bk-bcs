@@ -48,10 +48,7 @@ func (s *Service) CreateAppTemplateBinding(ctx context.Context, req *pbcs.Create
 	if len(repeatedTmplSetIDs) > 0 {
 		return nil, fmt.Errorf("repeated template set ids: %v, id must be unique", repeatedTmplSetIDs)
 	}
-	repeatedTmplRevisionIDs := tools.SliceRepeatedElements(templateIDs)
-	if len(repeatedTmplRevisionIDs) > 0 {
-		return nil, fmt.Errorf("repeated template ids: %v, id must be unique", repeatedTmplRevisionIDs)
-	}
+
 	if len(templateIDs) > 500 {
 		return nil, fmt.Errorf("the length of template ids is %d, it must be within the range of [1,500]",
 			len(templateIDs))
@@ -135,10 +132,7 @@ func (s *Service) UpdateAppTemplateBinding(ctx context.Context, req *pbcs.Update
 	if len(repeatedTmplSetIDs) > 0 {
 		return nil, fmt.Errorf("repeated template set ids: %v, id must be unique", repeatedTmplSetIDs)
 	}
-	repeatedTmplRevisionIDs := tools.SliceRepeatedElements(templateIDs)
-	if len(repeatedTmplRevisionIDs) > 0 {
-		return nil, fmt.Errorf("repeated template ids: %v, id must be unique", repeatedTmplRevisionIDs)
-	}
+
 	if len(templateIDs) > 500 {
 		return nil, fmt.Errorf("the length of template ids is %d, it must be within the range of [1,500]",
 			len(templateIDs))
@@ -227,7 +221,7 @@ func parseBindings(bindings []*pbatb.TemplateBinding) (templateSetIDs, templateI
 }
 
 // ListAppBoundTmplRevisions list app bound template revisions
-func (s *Service) ListAppBoundTmplRevisions(ctx context.Context, req *pbcs.ListAppBoundTmplRevisionsReq) (
+func (s *Service) ListAppBoundTmplRevisions(ctx context.Context, req *pbcs.ListAppBoundTmplRevisionsReq) ( // nolint
 	*pbcs.ListAppBoundTmplRevisionsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 
@@ -267,6 +261,33 @@ func (s *Service) ListAppBoundTmplRevisions(ctx context.Context, req *pbcs.ListA
 		tmplSetMap[d.TemplateSetId] = append(tmplSetMap[d.TemplateSetId], d)
 	}
 
+	// 对比非模板配置, 检测是否存在冲突
+	ci, err := s.client.DS.ListConfigItems(grpcKit.RpcCtx(), &pbds.ListConfigItemsReq{
+		BizId: req.BizId,
+		AppId: req.AppId,
+		All:   true,
+	})
+	if err != nil {
+		logs.Errorf("list config items failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	existingPaths := []string{}
+	for _, v := range ci.GetDetails() {
+		if v.FileState != constant.FileStateDelete {
+			existingPaths = append(existingPaths, path.Join(v.Spec.Path, v.Spec.Name))
+		}
+	}
+
+	// 所有套餐之间的冲突检测
+	for _, tmplSet := range tmplSetInfo {
+		revisions := tmplSetMap[tmplSet.TemplateSetId]
+		for _, revision := range revisions {
+			existingPaths = append(existingPaths, path.Join(revision.Path, revision.Name))
+		}
+	}
+	_, conflictPaths := checkExistingPathConflict(existingPaths)
+
 	details := make([]*pbatb.AppBoundTmplRevisionGroupBySet, 0)
 	for _, tmplSet := range tmplSetInfo {
 		group := &pbatb.AppBoundTmplRevisionGroupBySet{
@@ -284,6 +305,10 @@ func (s *Service) ListAppBoundTmplRevisions(ctx context.Context, req *pbcs.ListA
 			return iPath < jPath
 		})
 		for _, r := range revisions {
+			var isConflict bool
+			if r.FileState != constant.FileStateDelete {
+				isConflict = conflictPaths[path.Join(r.Path, r.Name)]
+			}
 			group.TemplateRevisions = append(group.TemplateRevisions,
 				&pbatb.AppBoundTmplRevisionGroupBySetTemplateRevisionDetail{
 					TemplateId:           r.TemplateId,
@@ -304,6 +329,7 @@ func (s *Service) ListAppBoundTmplRevisions(ctx context.Context, req *pbcs.ListA
 					CreateAt:             r.CreateAt,
 					FileState:            r.FileState,
 					Md5:                  r.Md5,
+					IsConflict:           isConflict,
 				})
 		}
 		if req.WithStatus {

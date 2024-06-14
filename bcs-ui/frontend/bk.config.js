@@ -2,7 +2,7 @@ const webpack = require('webpack')
 const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin')
 const figlet = require('figlet')
 const CompressionPlugin = require("compression-webpack-plugin");
-
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 const args = process.argv.slice(2);
 
 module.exports = {
@@ -65,7 +65,12 @@ module.exports = {
           }
         }
       },
-      // plugins: [new MonacoWebpackPlugin()]
+      plugins: [
+        new HtmlWebpackPlugin({
+            filename: 'login_success.html',
+            template: 'login_success.html',
+        }),
+      ]
     };
   },
   chainWebpack(config) {

@@ -2,10 +2,14 @@
   <div>
     <SectionTitle :title="$t('配置版本发布')" />
     <Teleport :disabled="!isOpenFullScreen" to="body">
-      <div :class="{ fullscreen: isOpenFullScreen }">
+      <div
+        :class="{ fullscreen: isOpenFullScreen }"
+        @mouseenter="isShowOperationBtn = true"
+        @mouseleave="isShowOperationBtn = false">
         <Card :title="$t('客户端配置版本')" :height="344">
           <template #operation>
             <OperationBtn
+              v-show="isShowOperationBtn"
               :is-open-full-screen="isOpenFullScreen"
               @refresh="loadChartData"
               @toggle-full-screen="isOpenFullScreen = !isOpenFullScreen" />
@@ -20,6 +24,7 @@
               :app-id="appId"
               :is="currentComponent"
               :data="data"
+              :is-full-screen="isOpenFullScreen"
               @update="jumpVersionName = $event as string"
               @jump="jumpToSearch" />
             <bk-exception v-else type="empty" scene="part" :description="$t('暂无数据')">
@@ -70,6 +75,7 @@
   const loading = ref(false);
   const jumpVersionName = ref('');
   const isOpenFullScreen = ref(false);
+  const isShowOperationBtn = ref(false);
 
   onMounted(() => {
     loadChartData();
@@ -110,7 +116,7 @@
     const routeData = router.resolve({
       name: 'client-search',
       params: { appId: props.appId, bizId: props.bkBizId },
-      query: { current_release_name: jumpVersionName.value },
+      query: { current_release_name: jumpVersionName.value, heartTime: searchQuery.value.last_heartbeat_time },
     });
     window.open(routeData.href, '_blank');
   };

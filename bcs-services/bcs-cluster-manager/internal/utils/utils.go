@@ -27,6 +27,7 @@ import (
 	"runtime/debug"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
@@ -506,7 +507,7 @@ func K8sTaintToTaint(taint []corev1.Taint) []*proto.Taint {
 	return taints
 }
 
-// AllocateMachinesToAZs alocate num machines ro num zones
+// AllocateMachinesToAZs allocate num machines ro num zones
 func AllocateMachinesToAZs(numMachines, numAZs int) [][]int {
 	if numAZs <= 0 {
 		return nil
@@ -556,4 +557,84 @@ func FilterEmptyString(strList []string) []string {
 	}
 
 	return filterStrings
+}
+
+// CompareVersion 比较两个版本号字符串
+func CompareVersion(v1, v2 string) int {
+	parts1 := strings.Split(v1, ".")
+	parts2 := strings.Split(v2, ".")
+
+	for i := 0; i < len(parts1) || i < len(parts2); i++ {
+		num1, _ := strconv.Atoi(parts1[i])
+		num2, _ := strconv.Atoi(parts2[i])
+
+		if num1 < num2 {
+			return -1
+		} else if num1 > num2 {
+			return 1
+		}
+	}
+
+	return 0
+}
+
+// DistributeMachines 平均分配机器到各个区域
+func DistributeMachines(numMachines int, rZones []string) []int {
+	if len(rZones) == 0 {
+		return nil
+	}
+
+	numZones := len(rZones)
+
+	base := numMachines / numZones      // 每个区域基本分配的机器数
+	remainder := numMachines % numZones // 不能均匀分配的余数
+
+	// 创建一个slice来存储每个区域分配到的机器数
+	distributions := make([]int, numZones)
+
+	// 每个区域都分配到基本的机器数
+	for i := range distributions {
+		distributions[i] = base
+	}
+
+	// 将余下的机器随机分散到各个区域
+	for i := 0; i < remainder; i++ {
+		distributions[generateRandomNumber(0, numZones)]++
+	}
+
+	return distributions
+}
+
+// generateRandomNumber 生成一个在[min, max)之间的随机整数
+func generateRandomNumber(min int, max int) int {
+	rand.Seed(time.Now().UnixNano()) // nolint
+	return rand.Intn(max-min) + min  // nolint
+}
+
+// MergeStringIntMaps 合并两个 map[string]int
+func MergeStringIntMaps(map1, map2 map[string]int) map[string]int {
+	copyMap1 := make(map[string]int) // 创建一个新的 map
+	for key, value := range map1 {
+		copyMap1[key] = value // 复制元素
+	}
+
+	// 将 map2 的内容合并到 map1
+	for key, value := range map2 {
+		if existingValue, ok := copyMap1[key]; ok { // 键已存在
+			copyMap1[key] = existingValue + value // 累加值
+		} else { // 键不存在
+			copyMap1[key] = value // 添加新键值对
+		}
+	}
+	return copyMap1
+}
+
+// BuildAllocateVpcCidrLockKey generate vpc cidr lock
+func BuildAllocateVpcCidrLockKey(cloud, region, vpcId string) string {
+	return fmt.Sprintf("/bcs-services/bcs-cluster-manager/%s/%s/%s", cloud, region, vpcId)
+}
+
+// BuildClusterLockKey generate cluster lock
+func BuildClusterLockKey(clusterId string) string {
+	return fmt.Sprintf("/bcs-services/bcs-cluster-manager/%s", clusterId)
 }

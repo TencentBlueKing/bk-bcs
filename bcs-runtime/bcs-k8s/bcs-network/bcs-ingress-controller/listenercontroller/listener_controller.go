@@ -29,6 +29,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/option"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/worker"
@@ -122,6 +124,13 @@ func (lc *ListenerReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			Requeue:      true,
 			RequeueAfter: 5 * time.Second,
 		}, nil
+	}
+
+	if listener.DeletionTimestamp != nil {
+		// 已经移除了finalizer不必在进行reconcile
+		if !common.StringInSlice(constant.FinalizerNameBcsIngressController, listener.Finalizers) {
+			return ctrl.Result{}, nil
+		}
 	}
 
 	ehandler, err := lc.getListenerEventHandler(listener)

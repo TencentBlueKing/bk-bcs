@@ -18,8 +18,11 @@ import (
 )
 
 const (
+	// CodeSuccess code success
 	CodeSuccess = 0
-	MsgSuccess  = "success"
+	// MsgSuccess msg success
+	MsgSuccess = "success"
 
+	// CodeInternalError code error
 	CodeInternalError = bcscommon.AdditionErrorCode + 10
 )

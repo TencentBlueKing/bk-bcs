@@ -146,9 +146,6 @@ func (cm *ClientMetric) getClientMetricList(kt *kit.Kit, key string, listLen int
 // client 表是按照 业务+服务+客户端 维度：数据做聚合
 // client event 表是按照 业务+服务+客户端+客户端模式+事件ID 维度：数据做聚合
 func (cm *ClientMetric) handleClientMetricData(kt *kit.Kit, payload []string) error {
-	vc := new(sfs.VersionChangePayload)
-	hb := new(sfs.HeartbeatItem)
-
 	clientData := []*pbclient.Client{}
 	clientEventData := []*pbce.ClientEvent{}
 
@@ -167,6 +164,7 @@ func (cm *ClientMetric) handleClientMetricData(kt *kit.Kit, payload []string) er
 
 		switch sfs.MessagingType(clientMetricData.MessagingType) {
 		case sfs.Heartbeat:
+			hb := new(sfs.HeartbeatItem)
 			if err := hb.Decode(clientMetricData.Payload); err != nil {
 				return err
 			}
@@ -186,6 +184,7 @@ func (cm *ClientMetric) handleClientMetricData(kt *kit.Kit, payload []string) er
 			hbClientEvent[fmt.Sprintf("%d-%d-%s-%s-%s", hb.BasicData.BizID,
 				hb.Application.AppID, hb.Application.Uid, hb.BasicData.ClientMode, hb.Application.CursorID)] = clientEventMetric
 		case sfs.VersionChangeMessage:
+			vc := new(sfs.VersionChangePayload)
 			if err := vc.Decode(clientMetricData.Payload); err != nil {
 				return err
 			}

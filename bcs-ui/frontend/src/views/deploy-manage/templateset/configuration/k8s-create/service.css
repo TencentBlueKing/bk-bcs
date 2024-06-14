@@ -1,10 +1,6 @@
 @import '@/css/variable.css';
 @import '@/css/mixins/clearfix.css';
 
-.biz-content-wrapper {
-    padding: 20px;
-}
-
 .biz-guide-box {
     box-shadow: none;
     padding: 130px 40px;

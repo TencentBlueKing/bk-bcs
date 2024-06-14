@@ -68,10 +68,10 @@ func (dao *clientEventDao) GetPullTrend(kit *kit.Kit, bizID uint32, appID uint32
 	var conds []rawgen.Condition
 	if pullTime > 0 {
 		startTime := time.Now().AddDate(0, 0, -int(pullTime)).Truncate(24 * time.Hour)
-		conds = append(conds, m.StartTime.Gte(startTime))
+		conds = append(conds, q.Where(m.StartTime.Gte(startTime)))
 	}
 	if len(clientID) > 0 {
-		conds = append(conds, m.ClientID.In(clientID...))
+		conds = append(conds, q.Where(m.ClientID.In(clientID...)))
 	}
 	q = q.Select(m.ClientID, m.StartTime.Date().As("pull_time")).Where(conds...)
 	// 是否去重
@@ -99,10 +99,10 @@ func (dao *clientEventDao) GetMinMaxAvgTime(kit *kit.Kit, bizID uint32, appID ui
 	if len(releaseChangeStatus) > 0 {
 		conds = append(conds, q.Where(m.ReleaseChangeStatus.In(releaseChangeStatus...)))
 	} else {
-		conds = append(conds, m.ReleaseChangeStatus.Eq("Success"))
+		conds = append(conds, q.Where(m.ReleaseChangeStatus.Eq(string(table.Success))))
 	}
 	if len(clientID) > 0 {
-		conds = append(conds, m.ClientID.In(clientID...))
+		conds = append(conds, q.Where(m.ClientID.In(clientID...)))
 	}
 	q = q.Where(conds...)
 	err = q.Select(m.TotalSeconds.Max().As("max"), m.TotalSeconds.Min().As("min"), m.TotalSeconds.Avg().As("avg")).
@@ -136,10 +136,10 @@ func (dao *clientEventDao) List(kit *kit.Kit, bizID, appID, clientID uint32, sta
 
 	zeroTime := time.Time{}
 	if startTime != zeroTime {
-		conds = append(conds, m.StartTime.Gte(startTime))
+		conds = append(conds, q.Where(m.StartTime.Gte(startTime)))
 	}
 	if endTime != zeroTime {
-		conds = append(conds, m.EndTime.Lte(endTime))
+		conds = append(conds, q.Where(m.EndTime.Lte(endTime)))
 	}
 	d := q.Where(conds...).Order(exprs...)
 	if opt.All {
@@ -160,8 +160,6 @@ func (dao *clientEventDao) handleSearch(kit *kit.Kit, bizID, appID uint32, searc
 	q := dao.genQ.ClientEvent.WithContext(kit.Ctx)
 	rs := dao.genQ.Release
 
-	status := field.NewString(m.TableName(), "release_change_status")
-
 	var item []struct {
 		ID uint32
 	}
@@ -177,9 +175,9 @@ func (dao *clientEventDao) handleSearch(kit *kit.Kit, bizID, appID uint32, searc
 			releaseID = append(releaseID, v.ID)
 		}
 		conds = append(conds, q.Or(m.OriginalReleaseID.In(releaseID...)).
-			Or(m.TargetReleaseID.In(releaseID...)).Or(status.Eq(search)))
+			Or(m.TargetReleaseID.In(releaseID...)).Or(m.ReleaseChangeStatus.Eq(search)))
 	} else {
-		conds = append(conds, q.Or(status.Eq(search)))
+		conds = append(conds, q.Or(m.ReleaseChangeStatus.Eq(search)))
 	}
 
 	return conds, nil

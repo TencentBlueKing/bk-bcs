@@ -69,6 +69,8 @@ var (
 	ApplyInstanceMachinesTask TaskType = "ApplyInstanceMachinesTask"
 	// ApplyExternalNodeMachinesTask apply external node subTask
 	ApplyExternalNodeMachinesTask TaskType = "ApplyExternalNodeMachinesTask"
+	// CheckExternalNodesEmptyTask check external node empty
+	CheckExternalNodesEmptyTask TaskType = "CheckExternalNodesEmptyTask"
 
 	// CleanNodeGroupNodes task
 	CleanNodeGroupNodes TaskType = "CleanNodeGroupNodes"
@@ -251,6 +253,8 @@ var (
 	LabelsKey ParamKey = "labels"
 	// TaintsKey xxx
 	TaintsKey ParamKey = "taints"
+	// RemoveTaintsKey xxx
+	RemoveTaintsKey ParamKey = "RemoveTaints"
 	// AnnotationsKey xxx
 	AnnotationsKey ParamKey = "annotations"
 	// ResourceQuotaKey xxx

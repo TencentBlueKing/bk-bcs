@@ -445,6 +445,12 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "ClusterManager.GetProviderResourceUsage",
+			Path:    []string{"/clustermanager/v1/providers/{providerID}/resource_usage"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "ClusterManager.CreateTask",
 			Path:    []string{"/clustermanager/v1/task"},
 			Method:  []string{"POST"},
@@ -721,6 +727,12 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "ClusterManager.ListCloudRuntimeInfo",
+			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/runtimeinfo"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "ClusterManager.ListOperationLogs",
 			Path:    []string{"/clustermanager/v1/operationlogs"},
 			Method:  []string{"GET"},
@@ -933,6 +945,7 @@ type ClusterManagerService interface {
 	TransNodeGroupToNodeTemplate(ctx context.Context, in *TransNodeGroupToNodeTemplateRequest, opts ...client.CallOption) (*TransNodeGroupToNodeTemplateResponse, error)
 	EnableNodeGroupAutoScale(ctx context.Context, in *EnableNodeGroupAutoScaleRequest, opts ...client.CallOption) (*EnableNodeGroupAutoScaleResponse, error)
 	DisableNodeGroupAutoScale(ctx context.Context, in *DisableNodeGroupAutoScaleRequest, opts ...client.CallOption) (*DisableNodeGroupAutoScaleResponse, error)
+	GetProviderResourceUsage(ctx context.Context, in *GetProviderResourceUsageRequest, opts ...client.CallOption) (*GetProviderResourceUsageResponse, error)
 	// * Task information management *
 	CreateTask(ctx context.Context, in *CreateTaskRequest, opts ...client.CallOption) (*CreateTaskResponse, error)
 	RetryTask(ctx context.Context, in *RetryTaskRequest, opts ...client.CallOption) (*RetryTaskResponse, error)
@@ -985,6 +998,7 @@ type ClusterManagerService interface {
 	ListCloudInstances(ctx context.Context, in *ListCloudInstancesRequest, opts ...client.CallOption) (*ListCloudInstancesResponse, error)
 	GetCloudAccountType(ctx context.Context, in *GetCloudAccountTypeRequest, opts ...client.CallOption) (*GetCloudAccountTypeResponse, error)
 	GetCloudBandwidthPackages(ctx context.Context, in *GetCloudBandwidthPackagesRequest, opts ...client.CallOption) (*GetCloudBandwidthPackagesResponse, error)
+	ListCloudRuntimeInfo(ctx context.Context, in *ListCloudRuntimeInfoRequest, opts ...client.CallOption) (*ListCloudRuntimeInfoResponse, error)
 	// Operation logs
 	ListOperationLogs(ctx context.Context, in *ListOperationLogsRequest, opts ...client.CallOption) (*ListOperationLogsResponse, error)
 	// CleanDbHistoryData clean DB history data
@@ -1717,6 +1731,16 @@ func (c *clusterManagerService) DisableNodeGroupAutoScale(ctx context.Context, i
 	return out, nil
 }
 
+func (c *clusterManagerService) GetProviderResourceUsage(ctx context.Context, in *GetProviderResourceUsageRequest, opts ...client.CallOption) (*GetProviderResourceUsageResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.GetProviderResourceUsage", in)
+	out := new(GetProviderResourceUsageResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *clusterManagerService) CreateTask(ctx context.Context, in *CreateTaskRequest, opts ...client.CallOption) (*CreateTaskResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.CreateTask", in)
 	out := new(CreateTaskResponse)
@@ -2177,6 +2201,16 @@ func (c *clusterManagerService) GetCloudBandwidthPackages(ctx context.Context, i
 	return out, nil
 }
 
+func (c *clusterManagerService) ListCloudRuntimeInfo(ctx context.Context, in *ListCloudRuntimeInfoRequest, opts ...client.CallOption) (*ListCloudRuntimeInfoResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.ListCloudRuntimeInfo", in)
+	out := new(ListCloudRuntimeInfoResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *clusterManagerService) ListOperationLogs(ctx context.Context, in *ListOperationLogsRequest, opts ...client.CallOption) (*ListOperationLogsResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.ListOperationLogs", in)
 	out := new(ListOperationLogsResponse)
@@ -2475,6 +2509,7 @@ type ClusterManagerHandler interface {
 	TransNodeGroupToNodeTemplate(context.Context, *TransNodeGroupToNodeTemplateRequest, *TransNodeGroupToNodeTemplateResponse) error
 	EnableNodeGroupAutoScale(context.Context, *EnableNodeGroupAutoScaleRequest, *EnableNodeGroupAutoScaleResponse) error
 	DisableNodeGroupAutoScale(context.Context, *DisableNodeGroupAutoScaleRequest, *DisableNodeGroupAutoScaleResponse) error
+	GetProviderResourceUsage(context.Context, *GetProviderResourceUsageRequest, *GetProviderResourceUsageResponse) error
 	// * Task information management *
 	CreateTask(context.Context, *CreateTaskRequest, *CreateTaskResponse) error
 	RetryTask(context.Context, *RetryTaskRequest, *RetryTaskResponse) error
@@ -2527,6 +2562,7 @@ type ClusterManagerHandler interface {
 	ListCloudInstances(context.Context, *ListCloudInstancesRequest, *ListCloudInstancesResponse) error
 	GetCloudAccountType(context.Context, *GetCloudAccountTypeRequest, *GetCloudAccountTypeResponse) error
 	GetCloudBandwidthPackages(context.Context, *GetCloudBandwidthPackagesRequest, *GetCloudBandwidthPackagesResponse) error
+	ListCloudRuntimeInfo(context.Context, *ListCloudRuntimeInfoRequest, *ListCloudRuntimeInfoResponse) error
 	// Operation logs
 	ListOperationLogs(context.Context, *ListOperationLogsRequest, *ListOperationLogsResponse) error
 	// CleanDbHistoryData clean DB history data
@@ -2637,6 +2673,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		TransNodeGroupToNodeTemplate(ctx context.Context, in *TransNodeGroupToNodeTemplateRequest, out *TransNodeGroupToNodeTemplateResponse) error
 		EnableNodeGroupAutoScale(ctx context.Context, in *EnableNodeGroupAutoScaleRequest, out *EnableNodeGroupAutoScaleResponse) error
 		DisableNodeGroupAutoScale(ctx context.Context, in *DisableNodeGroupAutoScaleRequest, out *DisableNodeGroupAutoScaleResponse) error
+		GetProviderResourceUsage(ctx context.Context, in *GetProviderResourceUsageRequest, out *GetProviderResourceUsageResponse) error
 		CreateTask(ctx context.Context, in *CreateTaskRequest, out *CreateTaskResponse) error
 		RetryTask(ctx context.Context, in *RetryTaskRequest, out *RetryTaskResponse) error
 		SkipTask(ctx context.Context, in *SkipTaskRequest, out *SkipTaskResponse) error
@@ -2683,6 +2720,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		ListCloudInstances(ctx context.Context, in *ListCloudInstancesRequest, out *ListCloudInstancesResponse) error
 		GetCloudAccountType(ctx context.Context, in *GetCloudAccountTypeRequest, out *GetCloudAccountTypeResponse) error
 		GetCloudBandwidthPackages(ctx context.Context, in *GetCloudBandwidthPackagesRequest, out *GetCloudBandwidthPackagesResponse) error
+		ListCloudRuntimeInfo(ctx context.Context, in *ListCloudRuntimeInfoRequest, out *ListCloudRuntimeInfoResponse) error
 		ListOperationLogs(ctx context.Context, in *ListOperationLogsRequest, out *ListOperationLogsResponse) error
 		CleanDbHistoryData(ctx context.Context, in *CleanDbHistoryDataRequest, out *CleanDbHistoryDataResponse) error
 		ListResourceSchema(ctx context.Context, in *ListResourceSchemaRequest, out *CommonListResp) error
@@ -3119,6 +3157,12 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.GetProviderResourceUsage",
+		Path:    []string{"/clustermanager/v1/providers/{providerID}/resource_usage"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.CreateTask",
 		Path:    []string{"/clustermanager/v1/task"},
 		Method:  []string{"POST"},
@@ -3391,6 +3435,12 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.GetCloudBandwidthPackages",
 		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/bwps"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.ListCloudRuntimeInfo",
+		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/runtimeinfo"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
@@ -3805,6 +3855,10 @@ func (h *clusterManagerHandler) DisableNodeGroupAutoScale(ctx context.Context, i
 	return h.ClusterManagerHandler.DisableNodeGroupAutoScale(ctx, in, out)
 }
 
+func (h *clusterManagerHandler) GetProviderResourceUsage(ctx context.Context, in *GetProviderResourceUsageRequest, out *GetProviderResourceUsageResponse) error {
+	return h.ClusterManagerHandler.GetProviderResourceUsage(ctx, in, out)
+}
+
 func (h *clusterManagerHandler) CreateTask(ctx context.Context, in *CreateTaskRequest, out *CreateTaskResponse) error {
 	return h.ClusterManagerHandler.CreateTask(ctx, in, out)
 }
@@ -3987,6 +4041,10 @@ func (h *clusterManagerHandler) GetCloudAccountType(ctx context.Context, in *Get
 
 func (h *clusterManagerHandler) GetCloudBandwidthPackages(ctx context.Context, in *GetCloudBandwidthPackagesRequest, out *GetCloudBandwidthPackagesResponse) error {
 	return h.ClusterManagerHandler.GetCloudBandwidthPackages(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) ListCloudRuntimeInfo(ctx context.Context, in *ListCloudRuntimeInfoRequest, out *ListCloudRuntimeInfoResponse) error {
+	return h.ClusterManagerHandler.ListCloudRuntimeInfo(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) ListOperationLogs(ctx context.Context, in *ListOperationLogsRequest, out *ListOperationLogsResponse) error {

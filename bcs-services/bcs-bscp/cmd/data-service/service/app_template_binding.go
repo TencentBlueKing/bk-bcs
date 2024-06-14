@@ -631,44 +631,6 @@ func (s *Service) getPBSForCascade(kt *kit.Kit, tx *gen.QueryTx, bindings []*tab
 	return pbs, nil
 }
 
-// validateTmplForATB validate template to avoid same templates are bound to one app
-func (s *Service) validateTmplForATB(kt *kit.Kit, tmplIDs []uint32) error {
-	if len(tmplIDs) == 0 {
-		return nil
-	}
-
-	if repeated := tools.SliceRepeatedElements(tmplIDs); len(repeated) > 0 {
-		// get template details
-		tmpls, err := s.dao.Template().ListByIDs(kt, repeated)
-		if err != nil {
-			logs.Errorf("list template by ids failed, err: %v, rid: %s", err, kt.Rid)
-			return err
-		}
-		type tmplT struct {
-			ID   uint32 `json:"id"`
-			Name string `json:"name"`
-			Path string `json:"path"`
-		}
-		details := make([]tmplT, len(tmpls))
-		for idx, t := range tmpls {
-			details[idx] = tmplT{
-				ID:   t.ID,
-				Name: t.Spec.Name,
-				Path: t.Spec.Path,
-			}
-		}
-		detailsJs, err := json.Marshal(details)
-		if err != nil {
-			logs.Errorf("marshal template details failed, err: %v, rid: %s", err, kt.Rid)
-			return err
-		}
-		return fmt.Errorf("same template id in %v can't be bound to the same app, template details: %s",
-			repeated, detailsJs)
-	}
-
-	return nil
-}
-
 // validateTmplForATBWithTx validate template with transaction to avoid same templates are bound to one app
 func (s *Service) validateTmplForATBWithTx(kt *kit.Kit, tx *gen.QueryTx, tmplIDs []uint32) error {
 	if len(tmplIDs) == 0 {
@@ -719,20 +681,12 @@ func (s *Service) genFinalATB(kt *kit.Kit, atb *table.AppTemplateBinding) error 
 		return err
 	}
 
-	if err := s.validateTmplForATB(kt, pbs.TemplateIDs); err != nil {
-		return err
-	}
-
 	if err := s.dao.Validator().ValidateTmplRevisionsExist(kt, pbs.TemplateRevisionIDs); err != nil {
 		return err
 	}
 	tmplRevisions, err := s.dao.TemplateRevision().ListByIDs(kt, pbs.TemplateRevisionIDs)
 	if err != nil {
 		return err
-	}
-
-	if e := s.validateATBUniqueKey(kt, tmplRevisions); e != nil {
-		return e
 	}
 
 	if e := s.fillATBTmplSpace(kt, atb, tmplRevisions); e != nil {

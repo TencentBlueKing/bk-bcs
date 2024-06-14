@@ -16,6 +16,7 @@ package template
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -23,6 +24,7 @@ import (
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -38,6 +40,10 @@ const (
 	UserAfterInit = "用户后置初始化"
 	// UserPreInit bksops user pre init
 	UserPreInit = "缩容节点清理"
+	// NodeMixedInit mixed init
+	NodeMixedInit = "nodeMixedInit"
+	// NodeMixedInitCh mixed init ch
+	NodeMixedInitCh = "混部集群节点初始化"
 )
 
 // using task commonName inject dynamic parameters when processing
@@ -63,6 +69,8 @@ type ExtraInfo struct {
 	NodeGroupID        string
 	ShowSopsUrl        bool
 	TranslateMethod    string
+	GroupCreator       string
+	GroupColocation    bool
 }
 
 // BuildSopsFactory xxx
@@ -115,7 +123,7 @@ func (sopStep *BkSopsStepAction) BuildBkSopsStepAction(task *proto.Task, cluster
 			}
 
 			stepName := cloudprovider.BKSOPTask + "-" + utils.RandomString(8)
-			step, err := GenerateBKopsStep(taskName, stepName, cluster, plugin, info)
+			step, err := GenerateBKopsStep("", taskName, stepName, cluster, plugin, info)
 			if err != nil {
 				return fmt.Errorf("BuildBkSopsStepAction step failed: %v", err)
 			}
@@ -127,13 +135,27 @@ func (sopStep *BkSopsStepAction) BuildBkSopsStepAction(task *proto.Task, cluster
 	return nil
 }
 
+// GetPluginByAction get plugin by actionName
+func GetPluginByAction(action *proto.Action, actionName string) *proto.BKOpsPlugin {
+	if action != nil {
+		plugin, ok := action.Plugins[actionName]
+		if ok {
+			return plugin
+		}
+	}
+	return nil
+}
+
 // GenerateBKopsStep generate common bk-sops step
-func GenerateBKopsStep(taskName, stepName string, cls *proto.Cluster, plugin *proto.BKOpsPlugin,
+func GenerateBKopsStep(taskMethod, taskName, stepName string, cls *proto.Cluster, plugin *proto.BKOpsPlugin,
 	info ExtraInfo) (*proto.Step, error) {
 	now := time.Now().Format(time.RFC3339)
 
 	if taskName == "" {
 		taskName = SystemInit
+	}
+	if taskMethod == "" {
+		taskMethod = cloudprovider.BKSOPTask
 	}
 
 	step := &proto.Step{
@@ -144,7 +166,7 @@ func GenerateBKopsStep(taskName, stepName string, cls *proto.Cluster, plugin *pr
 		Start:  now,
 		Status: cloudprovider.TaskStatusNotStarted,
 		// method name is registered name to taskServer
-		TaskMethod:   cloudprovider.BKSOPTask,
+		TaskMethod:   taskMethod,
 		TaskName:     taskName,
 		SkipOnFailed: plugin.AllowSkipWhenFailed,
 		Translate:    info.TranslateMethod,
@@ -208,6 +230,18 @@ func getTemplateParameterByName(name string, cluster *proto.Cluster, extra Extra
 	switch name {
 	case clusterID:
 		return cluster.GetClusterID(), nil
+	case clusterBizOperator:
+		biz, _ := strconv.Atoi(cluster.GetBusinessID())
+		maintainers := cloudprovider.GetBizMaintainers(biz)
+		if len(maintainers) > 0 {
+			return maintainers, nil
+		}
+		return strings.Join([]string{cluster.GetCreator(), extra.GroupCreator}, ","), nil
+	case clusterGroupColocation:
+		if extra.GroupColocation {
+			return common.True, nil
+		}
+		return common.False, nil
 	case clusterMasterIPs:
 		return getClusterMasterIPs(cluster), nil
 	case clusterRegion:

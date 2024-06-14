@@ -171,11 +171,13 @@ const (
 	Data_UnDeleteKv_FullMethodName                        = "/pbds.Data/UnDeleteKv"
 	Data_UndoKv_FullMethodName                            = "/pbds.Data/UndoKv"
 	Data_ListClients_FullMethodName                       = "/pbds.Data/ListClients"
+	Data_RetryClients_FullMethodName                      = "/pbds.Data/RetryClients"
 	Data_ListClientEvents_FullMethodName                  = "/pbds.Data/ListClientEvents"
 	Data_ListClientQuerys_FullMethodName                  = "/pbds.Data/ListClientQuerys"
 	Data_CreateClientQuery_FullMethodName                 = "/pbds.Data/CreateClientQuery"
 	Data_UpdateClientQuery_FullMethodName                 = "/pbds.Data/UpdateClientQuery"
 	Data_DeleteClientQuery_FullMethodName                 = "/pbds.Data/DeleteClientQuery"
+	Data_CheckClientQueryName_FullMethodName              = "/pbds.Data/CheckClientQueryName"
 	Data_ClientConfigVersionStatistics_FullMethodName     = "/pbds.Data/ClientConfigVersionStatistics"
 	Data_ClientPullTrendStatistics_FullMethodName         = "/pbds.Data/ClientPullTrendStatistics"
 	Data_ClientPullStatistics_FullMethodName              = "/pbds.Data/ClientPullStatistics"
@@ -359,6 +361,7 @@ type DataClient interface {
 	UndoKv(ctx context.Context, in *UndoKvReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	// client related interface
 	ListClients(ctx context.Context, in *ListClientsReq, opts ...grpc.CallOption) (*ListClientsResp, error)
+	RetryClients(ctx context.Context, in *RetryClientsReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	// client event related interface
 	ListClientEvents(ctx context.Context, in *ListClientEventsReq, opts ...grpc.CallOption) (*ListClientEventsResp, error)
 	// client query related interface
@@ -366,6 +369,7 @@ type DataClient interface {
 	CreateClientQuery(ctx context.Context, in *CreateClientQueryReq, opts ...grpc.CallOption) (*CreateClientQueryResp, error)
 	UpdateClientQuery(ctx context.Context, in *UpdateClientQueryReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	DeleteClientQuery(ctx context.Context, in *DeleteClientQueryReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
+	CheckClientQueryName(ctx context.Context, in *CheckClientQueryNameReq, opts ...grpc.CallOption) (*CheckClientQueryNameResp, error)
 	// client metrics chart related interface
 	ClientConfigVersionStatistics(ctx context.Context, in *client.ClientCommonReq, opts ...grpc.CallOption) (*structpb.Struct, error)
 	ClientPullTrendStatistics(ctx context.Context, in *client.ClientCommonReq, opts ...grpc.CallOption) (*structpb.Struct, error)
@@ -1652,6 +1656,15 @@ func (c *dataClient) ListClients(ctx context.Context, in *ListClientsReq, opts .
 	return out, nil
 }
 
+func (c *dataClient) RetryClients(ctx context.Context, in *RetryClientsReq, opts ...grpc.CallOption) (*base.EmptyResp, error) {
+	out := new(base.EmptyResp)
+	err := c.cc.Invoke(ctx, Data_RetryClients_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *dataClient) ListClientEvents(ctx context.Context, in *ListClientEventsReq, opts ...grpc.CallOption) (*ListClientEventsResp, error) {
 	out := new(ListClientEventsResp)
 	err := c.cc.Invoke(ctx, Data_ListClientEvents_FullMethodName, in, out, opts...)
@@ -1691,6 +1704,15 @@ func (c *dataClient) UpdateClientQuery(ctx context.Context, in *UpdateClientQuer
 func (c *dataClient) DeleteClientQuery(ctx context.Context, in *DeleteClientQueryReq, opts ...grpc.CallOption) (*base.EmptyResp, error) {
 	out := new(base.EmptyResp)
 	err := c.cc.Invoke(ctx, Data_DeleteClientQuery_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) CheckClientQueryName(ctx context.Context, in *CheckClientQueryNameReq, opts ...grpc.CallOption) (*CheckClientQueryNameResp, error) {
+	out := new(CheckClientQueryNameResp)
+	err := c.cc.Invoke(ctx, Data_CheckClientQueryName_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1974,6 +1996,7 @@ type DataServer interface {
 	UndoKv(context.Context, *UndoKvReq) (*base.EmptyResp, error)
 	// client related interface
 	ListClients(context.Context, *ListClientsReq) (*ListClientsResp, error)
+	RetryClients(context.Context, *RetryClientsReq) (*base.EmptyResp, error)
 	// client event related interface
 	ListClientEvents(context.Context, *ListClientEventsReq) (*ListClientEventsResp, error)
 	// client query related interface
@@ -1981,6 +2004,7 @@ type DataServer interface {
 	CreateClientQuery(context.Context, *CreateClientQueryReq) (*CreateClientQueryResp, error)
 	UpdateClientQuery(context.Context, *UpdateClientQueryReq) (*base.EmptyResp, error)
 	DeleteClientQuery(context.Context, *DeleteClientQueryReq) (*base.EmptyResp, error)
+	CheckClientQueryName(context.Context, *CheckClientQueryNameReq) (*CheckClientQueryNameResp, error)
 	// client metrics chart related interface
 	ClientConfigVersionStatistics(context.Context, *client.ClientCommonReq) (*structpb.Struct, error)
 	ClientPullTrendStatistics(context.Context, *client.ClientCommonReq) (*structpb.Struct, error)
@@ -2423,6 +2447,9 @@ func (UnimplementedDataServer) UndoKv(context.Context, *UndoKvReq) (*base.EmptyR
 func (UnimplementedDataServer) ListClients(context.Context, *ListClientsReq) (*ListClientsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListClients not implemented")
 }
+func (UnimplementedDataServer) RetryClients(context.Context, *RetryClientsReq) (*base.EmptyResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RetryClients not implemented")
+}
 func (UnimplementedDataServer) ListClientEvents(context.Context, *ListClientEventsReq) (*ListClientEventsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListClientEvents not implemented")
 }
@@ -2437,6 +2464,9 @@ func (UnimplementedDataServer) UpdateClientQuery(context.Context, *UpdateClientQ
 }
 func (UnimplementedDataServer) DeleteClientQuery(context.Context, *DeleteClientQueryReq) (*base.EmptyResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteClientQuery not implemented")
+}
+func (UnimplementedDataServer) CheckClientQueryName(context.Context, *CheckClientQueryNameReq) (*CheckClientQueryNameResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CheckClientQueryName not implemented")
 }
 func (UnimplementedDataServer) ClientConfigVersionStatistics(context.Context, *client.ClientCommonReq) (*structpb.Struct, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ClientConfigVersionStatistics not implemented")
@@ -5006,6 +5036,24 @@ func _Data_ListClients_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Data_RetryClients_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RetryClientsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).RetryClients(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_RetryClients_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).RetryClients(ctx, req.(*RetryClientsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Data_ListClientEvents_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListClientEventsReq)
 	if err := dec(in); err != nil {
@@ -5092,6 +5140,24 @@ func _Data_DeleteClientQuery_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DataServer).DeleteClientQuery(ctx, req.(*DeleteClientQueryReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_CheckClientQueryName_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CheckClientQueryNameReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).CheckClientQueryName(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_CheckClientQueryName_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).CheckClientQueryName(ctx, req.(*CheckClientQueryNameReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -5880,6 +5946,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Data_ListClients_Handler,
 		},
 		{
+			MethodName: "RetryClients",
+			Handler:    _Data_RetryClients_Handler,
+		},
+		{
 			MethodName: "ListClientEvents",
 			Handler:    _Data_ListClientEvents_Handler,
 		},
@@ -5898,6 +5968,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteClientQuery",
 			Handler:    _Data_DeleteClientQuery_Handler,
+		},
+		{
+			MethodName: "CheckClientQueryName",
+			Handler:    _Data_CheckClientQueryName_Handler,
 		},
 		{
 			MethodName: "ClientConfigVersionStatistics",

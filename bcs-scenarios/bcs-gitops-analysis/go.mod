@@ -85,7 +85,7 @@ require (
 	gorm.io/gorm v1.25.5
 	k8s.io/api v0.28.3 // indirect
 	k8s.io/apimachinery v0.28.3 // indirect
-	k8s.io/client-go v0.28.3
+	k8s.io/client-go v11.0.1-0.20190816222228-6d55c1b1f1ca+incompatible
 	k8s.io/kube-openapi v0.0.0-20230905202853-d090da108d2f // indirect
 	k8s.io/kubernetes v1.24.2 // indirect
 )

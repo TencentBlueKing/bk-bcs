@@ -17,6 +17,7 @@
     data: IClientConfigVersionItem[];
     bkBizId: string;
     appId: number;
+    isFullScreen: boolean;
   }>();
 
   const emits = defineEmits(['update', 'jump']);
@@ -29,6 +30,25 @@
     () => props.data,
     () => {
       piePlot.changeData(props.data);
+    },
+  );
+
+  watch(
+    () => props.isFullScreen,
+    (val) => {
+      if (val) {
+        piePlot.update({
+          legend: {
+            offsetX: -200,
+          },
+        });
+      } else {
+        piePlot.update({
+          legend: {
+            offsetX: -800,
+          },
+        });
+      }
     },
   );
 
@@ -62,7 +82,6 @@
         showMarkers: false,
         showContent: true,
         customItems: (originalItems: any[]) => {
-          console.log(originalItems);
           emits('update', originalItems[0].title);
           originalItems[0].name = t('客户端数量');
           originalItems[0].marker = false;
@@ -72,11 +91,20 @@
         },
       },
       interactions: [{ type: 'element-highlight' }],
+      state: {
+        active: {
+          style: {
+            stroke: '#ffffff',
+          },
+        },
+      },
       legend: {
         layout: 'horizontal',
         position: 'right',
         flipPage: false,
-        offsetX: -600,
+        offsetX: -800,
+        maxWidth: 300,
+        reversed: true,
       },
     });
     piePlot.render();
@@ -89,7 +117,6 @@
     height: 100%;
   }
   :deep(.g2-tooltip) {
-    visibility: hidden;
     .g2-tooltip-title {
       padding-left: 16px;
       font-size: 14px;

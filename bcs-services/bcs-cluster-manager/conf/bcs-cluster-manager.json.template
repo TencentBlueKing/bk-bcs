@@ -51,6 +51,10 @@
         "enable": ${bcsResourceManagerEnable},
         "module": "${bcsResourceManagerModule}"
     },
+    "project": {
+        "enable": ${bcsProjectManagerEnable},
+        "module": "${bcsProjectManagerModule}"
+    },
     "cidr": {
         "enable": ${bcsCidrManagerEnable},
         "module": "${bcsCidrManagerModule}",
@@ -125,7 +129,8 @@
         "registry": "${bcsImageRegistry}",
         "bcsApiGateway": "${bcsCAApiGateway}",
         "token": "${bcsCAToken}",
-        "deployService": "${deployService}"
+        "deployService": "${deployService}",
+        "bcsClusterUrl": "${bcsClusterUrl}"
     },
     "user": {
         "enable": ${bcsUserEnable},
@@ -180,6 +185,9 @@
             "compileKey": "${bcsEncryptNormalCompileKey}",
             "priKey": "${bcsEncryptNormalPriKey}"
         }
+    },
+    "daemon": {
+        "enable": ${bcsDaemonEnable}
     },
     "tagDepart": "${tagDepart}",
     "prefixVcluster": "${prefixVcluster}",

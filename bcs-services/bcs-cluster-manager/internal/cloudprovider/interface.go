@@ -14,9 +14,11 @@ package cloudprovider
 
 import (
 	"context"
+	"net"
 	"sync"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	ilock "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/lock"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 )
 
@@ -32,6 +34,8 @@ var (
 	taskMgrs          map[string]TaskManager
 	vpcMgrs           map[string]VPCManager
 	storage           store.ClusterManagerModel
+	etcdStorage       store.EtcdStoreInterface
+	distributeLock    ilock.DistributedLock
 )
 
 func init() {
@@ -57,6 +61,30 @@ func InitStorageModel(model store.ClusterManagerModel) {
 // GetStorageModel for cluster manager storage tools
 func GetStorageModel() store.ClusterManagerModel {
 	return storage
+}
+
+// InitEtcdModel for cluster manager etcd storage
+func InitEtcdModel(model store.EtcdStoreInterface) {
+	lock.Lock()
+	defer lock.Unlock()
+	etcdStorage = model
+}
+
+// GetEtcdModel for cluster manager etcd storage
+func GetEtcdModel() store.EtcdStoreInterface {
+	return etcdStorage
+}
+
+// InitDistributeLock for cluster manager distribute lock
+func InitDistributeLock(dLock ilock.DistributedLock) {
+	lock.Lock()
+	defer lock.Unlock()
+	distributeLock = dLock
+}
+
+// GetDistributeLock for cluster manager distribute lock
+func GetDistributeLock() ilock.DistributedLock {
+	return distributeLock
 }
 
 // InitTaskManager for cluster manager initialization
@@ -234,6 +262,8 @@ type NodeManager interface {
 	ListKeyPairs(opt *ListNetworksOption) ([]*proto.KeyPair, error)
 	// GetResourceGroups resource groups list
 	GetResourceGroups(opt *CommonOption) ([]*proto.ResourceGroupInfo, error)
+	// ListRuntimeInfo get runtime info list
+	ListRuntimeInfo(opt *ListRuntimeInfoOption) (map[string][]string, error)
 }
 
 // CloudValidateManager validate interface for check cloud resourceInfo
@@ -330,6 +360,8 @@ type NodeGroupManager interface {
 	GetNodesInGroupV2(group *proto.NodeGroup, opt *CommonOption) ([]*proto.NodeGroupNode, error)
 	// MoveNodesToGroup add cluster nodes to NodeGroup
 	MoveNodesToGroup(nodes []*proto.Node, group *proto.NodeGroup, opt *MoveNodesOption) (*proto.Task, error)
+	// CheckResourcePoolQuota need to check resource pool quota when revise group quota
+	CheckResourcePoolQuota(region, instanceType string, groupId string) error
 
 	// RemoveNodesFromGroup remove nodes from NodeGroup, nodes are still in cluster
 	RemoveNodesFromGroup(nodes []*proto.Node, group *proto.NodeGroup, opt *RemoveNodesOption) error
@@ -384,6 +416,15 @@ type VPCManager interface {
 	ListBandwidthPacks(opt *CommonOption) ([]*proto.BandwidthPackageInfo, error)
 	// CheckConflictInVpcCidr check cidr if conflict with vpc cidrs
 	CheckConflictInVpcCidr(vpcID string, cidr string, opt *CommonOption) ([]string, error)
+	// AllocateOverlayCidr allocate overlay cidr
+	AllocateOverlayCidr(vpcId string, cluster *proto.Cluster, cidrLens []uint32,
+		reservedBlocks []*net.IPNet, opt *CommonOption) ([]string, error)
+	// AddClusterOverlayCidr add overlay cidr to cluster
+	AddClusterOverlayCidr(clusterId string, cidrs []string, opt *CommonOption) error
+	// GetVpcIpSurplus get VPC ip surplus
+	GetVpcIpSurplus(vpcId string, ipType string, reservedBlocks []*net.IPNet, opt *CommonOption) (uint32, error)
+	// GetOverlayClusterIPSurplus get cluster ip surplus
+	GetOverlayClusterIPSurplus(clusterId string, opt *CommonOption) (uint32, error)
 }
 
 // InstanceConfig get machine cpu/mem/disk config

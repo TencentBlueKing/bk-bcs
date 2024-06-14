@@ -4174,6 +4174,24 @@ func NewResourceEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "Resource.FormToYAML",
+			Path:    []string{"/clusterresources/v1/projects/{projectCode}/form_to_yaml"},
+			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "Resource.YAMLToForm",
+			Path:    []string{"/clusterresources/v1/projects/{projectCode}/yaml_to_form"},
+			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "Resource.GetMultiResFormSchema",
+			Path:    []string{"/clusterresources/v1/projects/{projectCode}/form_schema"},
+			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "Resource.GetResFormSchema",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/form_schema"},
 			Method:  []string{"GET"},
@@ -4205,6 +4223,12 @@ type ResourceService interface {
 	InvalidateDiscoveryCache(ctx context.Context, in *InvalidateDiscoveryCacheReq, opts ...client.CallOption) (*CommonResp, error)
 	// 表单化数据渲染预览
 	FormDataRenderPreview(ctx context.Context, in *FormRenderPreviewReq, opts ...client.CallOption) (*CommonResp, error)
+	// 表单化数据转换为 YAML
+	FormToYAML(ctx context.Context, in *FormToYAMLReq, opts ...client.CallOption) (*CommonResp, error)
+	// YAML 转换为表单化数据
+	YAMLToForm(ctx context.Context, in *YAMLToFormReq, opts ...client.CallOption) (*CommonResp, error)
+	// 获取指定资源表单 Schema，不带集群信息
+	GetMultiResFormSchema(ctx context.Context, in *GetMultiResFormSchemaReq, opts ...client.CallOption) (*CommonListResp, error)
 	// 获取指定资源表单 Schema
 	GetResFormSchema(ctx context.Context, in *GetResFormSchemaReq, opts ...client.CallOption) (*CommonResp, error)
 	GetFormSupportedAPIVersions(ctx context.Context, in *GetFormSupportedApiVersionsReq, opts ...client.CallOption) (*CommonResp, error)
@@ -4308,6 +4332,36 @@ func (c *resourceService) FormDataRenderPreview(ctx context.Context, in *FormRen
 	return out, nil
 }
 
+func (c *resourceService) FormToYAML(ctx context.Context, in *FormToYAMLReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Resource.FormToYAML", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *resourceService) YAMLToForm(ctx context.Context, in *YAMLToFormReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Resource.YAMLToForm", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *resourceService) GetMultiResFormSchema(ctx context.Context, in *GetMultiResFormSchemaReq, opts ...client.CallOption) (*CommonListResp, error) {
+	req := c.c.NewRequest(c.name, "Resource.GetMultiResFormSchema", in)
+	out := new(CommonListResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *resourceService) GetResFormSchema(ctx context.Context, in *GetResFormSchemaReq, opts ...client.CallOption) (*CommonResp, error) {
 	req := c.c.NewRequest(c.name, "Resource.GetResFormSchema", in)
 	out := new(CommonResp)
@@ -4349,6 +4403,12 @@ type ResourceHandler interface {
 	InvalidateDiscoveryCache(context.Context, *InvalidateDiscoveryCacheReq, *CommonResp) error
 	// 表单化数据渲染预览
 	FormDataRenderPreview(context.Context, *FormRenderPreviewReq, *CommonResp) error
+	// 表单化数据转换为 YAML
+	FormToYAML(context.Context, *FormToYAMLReq, *CommonResp) error
+	// YAML 转换为表单化数据
+	YAMLToForm(context.Context, *YAMLToFormReq, *CommonResp) error
+	// 获取指定资源表单 Schema，不带集群信息
+	GetMultiResFormSchema(context.Context, *GetMultiResFormSchemaReq, *CommonListResp) error
 	// 获取指定资源表单 Schema
 	GetResFormSchema(context.Context, *GetResFormSchemaReq, *CommonResp) error
 	GetFormSupportedAPIVersions(context.Context, *GetFormSupportedApiVersionsReq, *CommonResp) error
@@ -4362,6 +4422,9 @@ func RegisterResourceHandler(s server.Server, hdlr ResourceHandler, opts ...serv
 		Subscribe(ctx context.Context, stream server.Stream) error
 		InvalidateDiscoveryCache(ctx context.Context, in *InvalidateDiscoveryCacheReq, out *CommonResp) error
 		FormDataRenderPreview(ctx context.Context, in *FormRenderPreviewReq, out *CommonResp) error
+		FormToYAML(ctx context.Context, in *FormToYAMLReq, out *CommonResp) error
+		YAMLToForm(ctx context.Context, in *YAMLToFormReq, out *CommonResp) error
+		GetMultiResFormSchema(ctx context.Context, in *GetMultiResFormSchemaReq, out *CommonListResp) error
 		GetResFormSchema(ctx context.Context, in *GetResFormSchemaReq, out *CommonResp) error
 		GetFormSupportedAPIVersions(ctx context.Context, in *GetFormSupportedApiVersionsReq, out *CommonResp) error
 		GetResSelectItems(ctx context.Context, in *GetResSelectItemsReq, out *CommonResp) error
@@ -4392,6 +4455,24 @@ func RegisterResourceHandler(s server.Server, hdlr ResourceHandler, opts ...serv
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Resource.FormDataRenderPreview",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/render_manifest_preview"},
+		Method:  []string{"POST"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Resource.FormToYAML",
+		Path:    []string{"/clusterresources/v1/projects/{projectCode}/form_to_yaml"},
+		Method:  []string{"POST"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Resource.YAMLToForm",
+		Path:    []string{"/clusterresources/v1/projects/{projectCode}/yaml_to_form"},
+		Method:  []string{"POST"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Resource.GetMultiResFormSchema",
+		Path:    []string{"/clusterresources/v1/projects/{projectCode}/form_schema"},
 		Method:  []string{"POST"},
 		Handler: "rpc",
 	}))
@@ -4470,6 +4551,18 @@ func (h *resourceHandler) InvalidateDiscoveryCache(ctx context.Context, in *Inva
 
 func (h *resourceHandler) FormDataRenderPreview(ctx context.Context, in *FormRenderPreviewReq, out *CommonResp) error {
 	return h.ResourceHandler.FormDataRenderPreview(ctx, in, out)
+}
+
+func (h *resourceHandler) FormToYAML(ctx context.Context, in *FormToYAMLReq, out *CommonResp) error {
+	return h.ResourceHandler.FormToYAML(ctx, in, out)
+}
+
+func (h *resourceHandler) YAMLToForm(ctx context.Context, in *YAMLToFormReq, out *CommonResp) error {
+	return h.ResourceHandler.YAMLToForm(ctx, in, out)
+}
+
+func (h *resourceHandler) GetMultiResFormSchema(ctx context.Context, in *GetMultiResFormSchemaReq, out *CommonListResp) error {
+	return h.ResourceHandler.GetMultiResFormSchema(ctx, in, out)
 }
 
 func (h *resourceHandler) GetResFormSchema(ctx context.Context, in *GetResFormSchemaReq, out *CommonResp) error {
@@ -4848,13 +4941,13 @@ func NewTemplateSetEndpoints() []*api.Endpoint {
 		},
 		{
 			Name:    "TemplateSet.ListTemplateMetadata",
-			Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/metadatas"},
+			Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/{templateSpaceID}/metadatas"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
 		{
 			Name:    "TemplateSet.CreateTemplateMetadata",
-			Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/metadatas"},
+			Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/{templateSpaceID}/metadatas"},
 			Method:  []string{"POST"},
 			Handler: "rpc",
 		},
@@ -4877,14 +4970,20 @@ func NewTemplateSetEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "TemplateSet.GetTemplateContent",
+			Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/detail"},
+			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "TemplateSet.ListTemplateVersion",
-			Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/versions"},
+			Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/{templateID}/versions"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
 		{
 			Name:    "TemplateSet.CreateTemplateVersion",
-			Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/versions"},
+			Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/{templateID}/versions"},
 			Method:  []string{"POST"},
 			Handler: "rpc",
 		},
@@ -4897,6 +4996,24 @@ func NewTemplateSetEndpoints() []*api.Endpoint {
 		{
 			Name:    "TemplateSet.CreateTemplateSet",
 			Path:    []string{"/clusterresources/v1/projects/{projectCode}/templatesets"},
+			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "TemplateSet.ListTemplateFileVariables",
+			Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/variables"},
+			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "TemplateSet.PreviewTemplateFile",
+			Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/preview"},
+			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "TemplateSet.DeployTemplateFile",
+			Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/deploy"},
 			Method:  []string{"POST"},
 			Handler: "rpc",
 		},
@@ -4964,6 +5081,8 @@ type TemplateSetService interface {
 	DeleteTemplateMetadata(ctx context.Context, in *DeleteTemplateMetadataReq, opts ...client.CallOption) (*CommonResp, error)
 	// 获取模板文件版本详情
 	GetTemplateVersion(ctx context.Context, in *GetTemplateVersionReq, opts ...client.CallOption) (*CommonResp, error)
+	// 获取模板文件详情
+	GetTemplateContent(ctx context.Context, in *GetTemplateContentReq, opts ...client.CallOption) (*CommonResp, error)
 	// 获取模板文件版本列表
 	ListTemplateVersion(ctx context.Context, in *ListTemplateVersionReq, opts ...client.CallOption) (*CommonListResp, error)
 	// 创建模板文件版本
@@ -4972,6 +5091,12 @@ type TemplateSetService interface {
 	DeleteTemplateVersion(ctx context.Context, in *DeleteTemplateVersionReq, opts ...client.CallOption) (*CommonResp, error)
 	// 创建模板集
 	CreateTemplateSet(ctx context.Context, in *CreateTemplateSetReq, opts ...client.CallOption) (*CommonResp, error)
+	// 获取模板文件变量列表
+	ListTemplateFileVariables(ctx context.Context, in *ListTemplateFileVariablesReq, opts ...client.CallOption) (*CommonResp, error)
+	// 预览部署模板文件
+	PreviewTemplateFile(ctx context.Context, in *DeployTemplateFileReq, opts ...client.CallOption) (*CommonResp, error)
+	// 部署模板文件
+	DeployTemplateFile(ctx context.Context, in *DeployTemplateFileReq, opts ...client.CallOption) (*CommonResp, error)
 	// 获取环境管理详情
 	GetEnvManage(ctx context.Context, in *GetEnvManageReq, opts ...client.CallOption) (*CommonResp, error)
 	// 获取环境管理列表
@@ -5108,6 +5233,16 @@ func (c *templateSetService) GetTemplateVersion(ctx context.Context, in *GetTemp
 	return out, nil
 }
 
+func (c *templateSetService) GetTemplateContent(ctx context.Context, in *GetTemplateContentReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "TemplateSet.GetTemplateContent", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *templateSetService) ListTemplateVersion(ctx context.Context, in *ListTemplateVersionReq, opts ...client.CallOption) (*CommonListResp, error) {
 	req := c.c.NewRequest(c.name, "TemplateSet.ListTemplateVersion", in)
 	out := new(CommonListResp)
@@ -5140,6 +5275,36 @@ func (c *templateSetService) DeleteTemplateVersion(ctx context.Context, in *Dele
 
 func (c *templateSetService) CreateTemplateSet(ctx context.Context, in *CreateTemplateSetReq, opts ...client.CallOption) (*CommonResp, error) {
 	req := c.c.NewRequest(c.name, "TemplateSet.CreateTemplateSet", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *templateSetService) ListTemplateFileVariables(ctx context.Context, in *ListTemplateFileVariablesReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "TemplateSet.ListTemplateFileVariables", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *templateSetService) PreviewTemplateFile(ctx context.Context, in *DeployTemplateFileReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "TemplateSet.PreviewTemplateFile", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *templateSetService) DeployTemplateFile(ctx context.Context, in *DeployTemplateFileReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "TemplateSet.DeployTemplateFile", in)
 	out := new(CommonResp)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
@@ -5233,6 +5398,8 @@ type TemplateSetHandler interface {
 	DeleteTemplateMetadata(context.Context, *DeleteTemplateMetadataReq, *CommonResp) error
 	// 获取模板文件版本详情
 	GetTemplateVersion(context.Context, *GetTemplateVersionReq, *CommonResp) error
+	// 获取模板文件详情
+	GetTemplateContent(context.Context, *GetTemplateContentReq, *CommonResp) error
 	// 获取模板文件版本列表
 	ListTemplateVersion(context.Context, *ListTemplateVersionReq, *CommonListResp) error
 	// 创建模板文件版本
@@ -5241,6 +5408,12 @@ type TemplateSetHandler interface {
 	DeleteTemplateVersion(context.Context, *DeleteTemplateVersionReq, *CommonResp) error
 	// 创建模板集
 	CreateTemplateSet(context.Context, *CreateTemplateSetReq, *CommonResp) error
+	// 获取模板文件变量列表
+	ListTemplateFileVariables(context.Context, *ListTemplateFileVariablesReq, *CommonResp) error
+	// 预览部署模板文件
+	PreviewTemplateFile(context.Context, *DeployTemplateFileReq, *CommonResp) error
+	// 部署模板文件
+	DeployTemplateFile(context.Context, *DeployTemplateFileReq, *CommonResp) error
 	// 获取环境管理详情
 	GetEnvManage(context.Context, *GetEnvManageReq, *CommonResp) error
 	// 获取环境管理列表
@@ -5268,10 +5441,14 @@ func RegisterTemplateSetHandler(s server.Server, hdlr TemplateSetHandler, opts .
 		UpdateTemplateMetadata(ctx context.Context, in *UpdateTemplateMetadataReq, out *CommonResp) error
 		DeleteTemplateMetadata(ctx context.Context, in *DeleteTemplateMetadataReq, out *CommonResp) error
 		GetTemplateVersion(ctx context.Context, in *GetTemplateVersionReq, out *CommonResp) error
+		GetTemplateContent(ctx context.Context, in *GetTemplateContentReq, out *CommonResp) error
 		ListTemplateVersion(ctx context.Context, in *ListTemplateVersionReq, out *CommonListResp) error
 		CreateTemplateVersion(ctx context.Context, in *CreateTemplateVersionReq, out *CommonResp) error
 		DeleteTemplateVersion(ctx context.Context, in *DeleteTemplateVersionReq, out *CommonResp) error
 		CreateTemplateSet(ctx context.Context, in *CreateTemplateSetReq, out *CommonResp) error
+		ListTemplateFileVariables(ctx context.Context, in *ListTemplateFileVariablesReq, out *CommonResp) error
+		PreviewTemplateFile(ctx context.Context, in *DeployTemplateFileReq, out *CommonResp) error
+		DeployTemplateFile(ctx context.Context, in *DeployTemplateFileReq, out *CommonResp) error
 		GetEnvManage(ctx context.Context, in *GetEnvManageReq, out *CommonResp) error
 		ListEnvManages(ctx context.Context, in *ListEnvManagesReq, out *CommonListResp) error
 		CreateEnvManage(ctx context.Context, in *CreateEnvManageReq, out *CommonResp) error
@@ -5321,13 +5498,13 @@ func RegisterTemplateSetHandler(s server.Server, hdlr TemplateSetHandler, opts .
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "TemplateSet.ListTemplateMetadata",
-		Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/metadatas"},
+		Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/{templateSpaceID}/metadatas"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "TemplateSet.CreateTemplateMetadata",
-		Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/metadatas"},
+		Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/{templateSpaceID}/metadatas"},
 		Method:  []string{"POST"},
 		Handler: "rpc",
 	}))
@@ -5350,14 +5527,20 @@ func RegisterTemplateSetHandler(s server.Server, hdlr TemplateSetHandler, opts .
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "TemplateSet.GetTemplateContent",
+		Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/detail"},
+		Method:  []string{"POST"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "TemplateSet.ListTemplateVersion",
-		Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/versions"},
+		Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/{templateID}/versions"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "TemplateSet.CreateTemplateVersion",
-		Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/versions"},
+		Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/{templateID}/versions"},
 		Method:  []string{"POST"},
 		Handler: "rpc",
 	}))
@@ -5370,6 +5553,24 @@ func RegisterTemplateSetHandler(s server.Server, hdlr TemplateSetHandler, opts .
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "TemplateSet.CreateTemplateSet",
 		Path:    []string{"/clusterresources/v1/projects/{projectCode}/templatesets"},
+		Method:  []string{"POST"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "TemplateSet.ListTemplateFileVariables",
+		Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/variables"},
+		Method:  []string{"POST"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "TemplateSet.PreviewTemplateFile",
+		Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/preview"},
+		Method:  []string{"POST"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "TemplateSet.DeployTemplateFile",
+		Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/deploy"},
 		Method:  []string{"POST"},
 		Handler: "rpc",
 	}))
@@ -5460,6 +5661,10 @@ func (h *templateSetHandler) GetTemplateVersion(ctx context.Context, in *GetTemp
 	return h.TemplateSetHandler.GetTemplateVersion(ctx, in, out)
 }
 
+func (h *templateSetHandler) GetTemplateContent(ctx context.Context, in *GetTemplateContentReq, out *CommonResp) error {
+	return h.TemplateSetHandler.GetTemplateContent(ctx, in, out)
+}
+
 func (h *templateSetHandler) ListTemplateVersion(ctx context.Context, in *ListTemplateVersionReq, out *CommonListResp) error {
 	return h.TemplateSetHandler.ListTemplateVersion(ctx, in, out)
 }
@@ -5474,6 +5679,18 @@ func (h *templateSetHandler) DeleteTemplateVersion(ctx context.Context, in *Dele
 
 func (h *templateSetHandler) CreateTemplateSet(ctx context.Context, in *CreateTemplateSetReq, out *CommonResp) error {
 	return h.TemplateSetHandler.CreateTemplateSet(ctx, in, out)
+}
+
+func (h *templateSetHandler) ListTemplateFileVariables(ctx context.Context, in *ListTemplateFileVariablesReq, out *CommonResp) error {
+	return h.TemplateSetHandler.ListTemplateFileVariables(ctx, in, out)
+}
+
+func (h *templateSetHandler) PreviewTemplateFile(ctx context.Context, in *DeployTemplateFileReq, out *CommonResp) error {
+	return h.TemplateSetHandler.PreviewTemplateFile(ctx, in, out)
+}
+
+func (h *templateSetHandler) DeployTemplateFile(ctx context.Context, in *DeployTemplateFileReq, out *CommonResp) error {
+	return h.TemplateSetHandler.DeployTemplateFile(ctx, in, out)
 }
 
 func (h *templateSetHandler) GetEnvManage(ctx context.Context, in *GetEnvManageReq, out *CommonResp) error {

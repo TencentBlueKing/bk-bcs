@@ -37,11 +37,19 @@
   import { computed, ref, watch } from 'vue';
   import { IPreviewRule } from '../../../../../types/credential';
   import { getCredentialPreview } from '../../../../api/credentials';
+  import useTablePagination from '../../../../utils/hooks/use-table-pagination';
   import SearchInput from '../../../../components/search-input.vue';
   import TableEmpty from '../../../../components/table/table-empty.vue';
   import { useI18n } from 'vue-i18n';
 
   const { t } = useI18n();
+
+  const { pagination } = useTablePagination('clientPullRecord', {
+    small: true,
+    showTotalCount: false,
+    showLimit: false,
+    align: 'center',
+  });
 
   const props = defineProps<{
     rule: IPreviewRule | null;
@@ -78,15 +86,6 @@
 
   const searchStr = ref('');
   const tableData = ref();
-  const pagination = ref({
-    count: 0,
-    current: 1,
-    limit: 10,
-    small: true,
-    showTotalCount: false,
-    showLimit: false,
-    align: 'center',
-  });
 
   const loadCredentialRulePreviewList = async () => {
     listLoading.value = true;

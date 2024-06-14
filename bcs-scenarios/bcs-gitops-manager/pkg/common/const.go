@@ -68,6 +68,7 @@ const (
 
 	// SecretKey defines the secretManager k8s secret namespace:name
 	// NOCC:gas/crypto(工具误报)
+	// NOCC:hardcode-password(工具误报)
 	SecretKey = "bkbcs.tencent.com/secretManager" // nolint
 )
 

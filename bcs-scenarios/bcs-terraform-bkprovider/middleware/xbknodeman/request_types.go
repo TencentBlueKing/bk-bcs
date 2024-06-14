@@ -57,6 +57,7 @@ type ListHostRequest struct {
 	Page       int64       `json:"page,omitempty"`
 	PageSize   int64       `json:"page_size,omitempty"`
 	Conditions []Condition `json:"conditions,omitempty"`
+	BkBizId    []int64     `json:"bk_biz_id,omitempty"`
 }
 
 // Condition  搜索条件

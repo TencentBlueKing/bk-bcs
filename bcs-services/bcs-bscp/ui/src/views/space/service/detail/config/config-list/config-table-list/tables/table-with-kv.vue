@@ -129,7 +129,11 @@
     :app-id="props.appId"
     :editable="true"
     @confirm="getListData" />
-  <ViewConfigKv v-model:show="viewPanelShow" :config="activeConfig" />
+  <ViewConfigKv
+    v-model:show="viewPanelShow"
+    :config="activeConfig"
+    :show-edit-btn="isUnNamedVersion"
+    @open-edit="handleSwitchToEdit" />
   <VersionDiff v-model:show="isDiffPanelShow" :current-version="versionData" :selected-kv-config-id="diffConfig" />
   <DeleteConfirmDialog
     v-model:isShow="isDeleteConfigDialogShow"
@@ -139,6 +143,16 @@
       {{ t('配置项') }}：<span style="color: #313238">{{ deleteConfig?.spec.key }}</span>
     </div>
     <div>{{ deleteConfigTips }}</div>
+  </DeleteConfirmDialog>
+  <DeleteConfirmDialog
+    v-model:isShow="isRecoverConfigDialogShow"
+    :title="t('确认恢复该配置项?')"
+    :confirm-text="t('恢复')"
+    @confirm="handleRecoverConfigConfirm">
+    <div style="margin-bottom: 8px">
+      {{ t('配置项') }}：<span style="color: #313238">{{ recoverConfig?.spec.key }}</span>
+    </div>
+    <div>{{ t(`配置项恢复后，将覆盖新添加的配置项`) + recoverConfig?.spec.key }}</div>
   </DeleteConfirmDialog>
 </template>
 <script lang="ts" setup>
@@ -151,6 +165,7 @@
   import { ICommonQuery } from '../../../../../../../../../types/index';
   import { IConfigKvItem, IConfigKvType } from '../../../../../../../../../types/config';
   import { getKvList, deleteKv, getReleaseKvList, undeleteKv, unModifyKv } from '../../../../../../../../api/config';
+  import useTablePagination from '../../../../../../../../utils/hooks/use-table-pagination';
   import { datetimeFormat } from '../../../../../../../../utils/index';
   import { getDefaultKvItem } from '../../../../../../../../utils/config';
   import { CONFIG_KV_TYPE } from '../../../../../../../../constants/config';
@@ -168,6 +183,7 @@
   const { checkPermBeforeOperate } = serviceStore;
   const { permCheckLoading, hasEditServicePerm } = storeToRefs(serviceStore);
   const { t } = useI18n();
+  const { pagination, updatePagination } = useTablePagination('tableWithKv');
 
   const props = defineProps<{
     bkBizId: string;
@@ -192,11 +208,9 @@
   const typeFilterChecked = ref<string[]>([]);
   const statusFilterChecked = ref<string[]>([]);
   const updateSortType = ref('null');
-  const pagination = ref({
-    current: 1,
-    count: 0,
-    limit: 10,
-  });
+  const recoverConfig = ref<IConfigKvType>();
+  const isRecoverConfigDialogShow = ref(false);
+
   const typeFilterList = computed(() =>
     CONFIG_KV_TYPE.map((item) => ({
       value: item.id,
@@ -298,7 +312,15 @@
       } else {
         res = await getReleaseKvList(props.bkBizId, props.appId, versionData.value.id, params);
       }
-      configList.value = res.details;
+      configList.value = res.details.sort((a: IConfigKvType, b: IConfigKvType) => {
+        if (a.kv_state === 'DELETE' && b.kv_state !== 'DELETE') {
+          return 1;
+        }
+        if (a.kv_state !== 'DELETE' && b.kv_state === 'DELETE') {
+          return -1;
+        }
+        return 0;
+      });
       configsCount.value = res.count;
       pagination.value.count = res.count;
     } catch (e) {
@@ -375,6 +397,14 @@
     refresh();
   };
 
+  // 由查看态切换为编辑态
+  const handleSwitchToEdit = () => {
+    if (!permCheckLoading.value && checkPermBeforeOperate('update')) {
+      editPanelShow.value = true;
+      viewPanelShow.value = false;
+    }
+  };
+
   // 删除单个配置项
   const handleDeleteConfigConfirm = async () => {
     if (!deleteConfig.value) {
@@ -408,9 +438,26 @@
     if (permCheckLoading.value || !checkPermBeforeOperate('update')) {
       return;
     }
-    await undeleteKv(props.bkBizId, props.appId, config.spec.key);
+    recoverConfig.value = config;
+    const index = configList.value.findIndex((item) => item.spec.key === config.spec.key && item.kv_state !== 'DELETE');
+    if (index === -1) {
+      handleRecoverConfigConfirm();
+    } else {
+      isRecoverConfigDialogShow.value = true;
+    }
+  };
+
+  const handleRecoverConfigConfirm = async () => {
+    await undeleteKv(props.bkBizId, props.appId, recoverConfig.value!.spec.key);
     Message({ theme: 'success', message: t('恢复配置项成功') });
-    refresh();
+    const index = configList.value.findIndex(
+      (item) => item.spec.key === recoverConfig.value?.spec.key && item.kv_state !== 'DELETE',
+    );
+    if (index !== -1) {
+      configList.value.splice(index, 1);
+    }
+    recoverConfig.value!.kv_state = 'UNCHANGE';
+    isRecoverConfigDialogShow.value = false;
   };
 
   // 批量删除配置项后刷新配置项列表
@@ -426,7 +473,7 @@
 
   // page-limit
   const handlePageLimitChange = (limit: number) => {
-    pagination.value.limit = limit;
+    updatePagination('limit', limit);
     refresh();
   };
 
@@ -436,7 +483,6 @@
   };
 
   const handleFilter = ({ checked, index }: any) => {
-    console.log(checked, index);
     if (index === 4) {
       // 调整数据类型筛选条件
       typeFilterChecked.value = checked;

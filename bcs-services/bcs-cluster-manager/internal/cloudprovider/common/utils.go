@@ -595,6 +595,11 @@ func UpdateClusterNodesLabels(ctx context.Context, data NodeLabelsData) error {
 	}
 	blog.Infof("updateClusterNodesLabels[%s] ListClusterNodesByIPsOrNames successful[%v]", taskID, nodeNames)
 
+	cls, err := cloudprovider.GetStorageModel().GetCluster(ctx, data.ClusterID)
+	if err != nil {
+		blog.Errorf("updateClusterNodesLabels[%s] GetCluster[%s] failed: %v", taskID, data.ClusterID, err)
+	}
+
 	hostsMap, hostIDs, err := GetCmdbNodeDetailInfo(data.NodeIPs)
 	if err != nil {
 		blog.Errorf("updateClusterNodesLabels[%s] GetCmdbNodeDetailInfo failed: %v", taskID, err)
@@ -625,6 +630,11 @@ func UpdateClusterNodesLabels(ctx context.Context, data NodeLabelsData) error {
 			}
 		}
 
+		// mixed labels if cluster is mixed cluster
+		if cls != nil && cls.GetIsMixed() {
+			labels[utils.MixedNodeLabelKey] = utils.MixedNodeLabelValue
+		}
+
 		if len(labels) == 0 {
 			blog.Infof("updateClusterNodesLabels[%s] node[%s] labels empty", taskID, node.NodeIP)
 			continue
@@ -632,7 +642,10 @@ func UpdateClusterNodesLabels(ctx context.Context, data NodeLabelsData) error {
 
 		// merge source node labels
 		for k, v := range node.NodeLabels {
-			labels[k] = v
+			_, exist := labels[k]
+			if !exist {
+				labels[k] = v
+			}
 		}
 		err := k8sOperator.UpdateNodeLabels(ctx, data.ClusterID, node.NodeName, labels)
 		if err != nil {

@@ -1855,6 +1855,46 @@
         ]
       }
     },
+    "/clustermanager/v1/clouds/{cloudID}/runtimeinfo": {
+      "get": {
+        "summary": "查询Node的运行时列表",
+        "description": "根据筛选条件查询Node的运行时列表",
+        "operationId": "ClusterManager_ListCloudRuntimeInfo",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerListCloudRuntimeInfoResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "cloudID",
+            "description": "云信息",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "description": "clusterID. 集群ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/clouds/{cloudID}/securitygroups": {
       "get": {
         "summary": "查询安全组列表",
@@ -5384,6 +5424,69 @@
         ]
       }
     },
+    "/clustermanager/v1/providers/{providerID}/resource_usage": {
+      "get": {
+        "summary": "获取资源使用情况",
+        "description": "获取provider所属地域机型或者资源池使用的业务情况",
+        "operationId": "ClusterManager_GetProviderResourceUsage",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerGetProviderResourceUsageResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "providerID",
+            "description": "资源池provider，目前支持 yunti/self/cr/bcs_resource_pool",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "region",
+            "description": "region. 机型所在的地域",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "instanceType",
+            "description": "instanceType. 机型",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "ratio",
+            "description": "ratio. 空闲率, 资源池空闲率小于等于ratio的资源池",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "available",
+            "description": "available. 空闲个数, 资源池可用的机型数目小于等于available的资源池",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/resourceschema/{cloudID}": {
       "get": {
         "summary": "查询资源模型列表",
@@ -6944,6 +7047,58 @@
         "message"
       ]
     },
+    "clustermanagerCidr": {
+      "type": "object",
+      "properties": {
+        "cidrs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerCidrState"
+          }
+        },
+        "reservedIPNum": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "reservedCidrs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "clustermanagerCidrDetailInfo": {
+      "type": "object",
+      "properties": {
+        "cidrs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerCidrState"
+          }
+        },
+        "reservedIPNum": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "availableIPNum": {
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    },
+    "clustermanagerCidrState": {
+      "type": "object",
+      "properties": {
+        "cidr": {
+          "type": "string"
+        },
+        "block": {
+          "type": "boolean",
+          "format": "boolean"
+        }
+      }
+    },
     "clustermanagerCleanDbHistoryDataResponse": {
       "type": "object",
       "properties": {
@@ -7707,6 +7862,16 @@
           "type": "string",
           "description": "业务ID, 作用预留私有的业务vpc",
           "title": "businessID"
+        },
+        "overlay": {
+          "$ref": "#/definitions/clustermanagerCidr",
+          "description": "overlayIP CIDR配置",
+          "title": "overlay"
+        },
+        "underlay": {
+          "$ref": "#/definitions/clustermanagerCidr",
+          "description": "underlayIP CIDR配置",
+          "title": "underlay"
         }
       },
       "description": "用于记录cloud对应不同区域的vpc信息",
@@ -7766,6 +7931,21 @@
           "format": "int64",
           "description": "当前vpc可用的IP数量",
           "title": "availableIPNum"
+        },
+        "overlay": {
+          "$ref": "#/definitions/clustermanagerCidrDetailInfo",
+          "description": "overlayIP CIDR配置",
+          "title": "overlay"
+        },
+        "underlay": {
+          "$ref": "#/definitions/clustermanagerCidrDetailInfo",
+          "description": "underlayIP CIDR配置",
+          "title": "underlay"
+        },
+        "businessID": {
+          "type": "string",
+          "description": "业务ID, 作用预留私有的业务vpc",
+          "title": "businessID"
         }
       },
       "title": "CloudVPCResp for web model"
@@ -8012,6 +8192,12 @@
           "type": "string",
           "description": "集群状态异常时的失败原因展示",
           "title": "message"
+        },
+        "isMixed": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "标记该集群是否是混部集群",
+          "title": "isMixed"
         }
       },
       "description": "记录集群信息，用于维护集群状态",
@@ -8472,6 +8658,16 @@
           "$ref": "#/definitions/clustermanagerAction",
           "description": "纳管集群时相关的自动化流程定义",
           "title": "importCluster"
+        },
+        "commonMixedAction": {
+          "$ref": "#/definitions/clustermanagerAction",
+          "description": "集群混部自动化流程定义",
+          "title": "commonMixedAction"
+        },
+        "checkExternalNodeEmptyAction": {
+          "$ref": "#/definitions/clustermanagerAction",
+          "description": "集群第三方节点空闲检查",
+          "title": "checkExternalNodeEmptyAction"
         }
       },
       "description": "用于记录集群层面固定、模板信息，帮助集群创建与维护.目前仅支持action(创建集群/删除集群/集群添加节点/集群删除节点)",
@@ -9349,6 +9545,16 @@
           "type": "string",
           "description": "业务ID, 作用预留私有的业务vpc",
           "title": "businessID"
+        },
+        "overlay": {
+          "$ref": "#/definitions/clustermanagerCidr",
+          "description": "overlayIP CIDR配置",
+          "title": "overlay"
+        },
+        "underlay": {
+          "$ref": "#/definitions/clustermanagerCidr",
+          "description": "underlayIP CIDR配置",
+          "title": "underlay"
         }
       },
       "description": "创建cloud vpc请求",
@@ -9607,6 +9813,12 @@
           },
           "description": "创建集群时的节点池信息",
           "title": "nodeGroups"
+        },
+        "isMixed": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "标记该集群是否是混部集群, 默认是false",
+          "title": "isMixed"
         }
       },
       "description": "创建集群请求，如果集群已经存在，直接报错。更新集群信息请使用Update接口",
@@ -11940,6 +12152,39 @@
         "message"
       ]
     },
+    "clustermanagerGetProviderResourceUsageResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "object",
+          "description": "机型维度的业务使用情况",
+          "title": "data"
+        }
+      },
+      "description": "查询资源池的业务使用情况返回",
+      "title": "GetProviderResourceUsageResponse",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
     "clustermanagerGetResourceGroupsResponse": {
       "type": "object",
       "properties": {
@@ -13569,6 +13814,40 @@
         "message"
       ]
     },
+    "clustermanagerListCloudRuntimeInfoResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/clustermanagerRunTimeVersion"
+          }
+        }
+      },
+      "description": "查询运行时信息列表返回",
+      "title": "ListCloudRuntimeInfoResponse",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
     "clustermanagerListCloudSecurityGroupsResponse": {
       "type": "object",
       "properties": {
@@ -15105,6 +15384,11 @@
           "format": "int64",
           "description": "调度状态，默认值0表示参与调度，1表示不参与调度",
           "title": "unSchedulable"
+        },
+        "nodeName": {
+          "type": "string",
+          "description": "节点名称",
+          "title": "nodeName"
         }
       }
     },
@@ -16181,6 +16465,17 @@
         }
       },
       "title": "RunTimeInfo cluster runTime info"
+    },
+    "clustermanagerRunTimeVersion": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
     },
     "clustermanagerScopeInfo": {
       "type": "object",
@@ -17621,6 +17916,16 @@
           "type": "string",
           "description": "业务ID, 作用预留私有的业务vpc",
           "title": "businessID"
+        },
+        "overlay": {
+          "$ref": "#/definitions/clustermanagerCidr",
+          "description": "overlayIP CIDR配置",
+          "title": "overlay"
+        },
+        "underlay": {
+          "$ref": "#/definitions/clustermanagerCidr",
+          "description": "underlayIP CIDR配置",
+          "title": "underlay"
         }
       },
       "description": "更新云VPC请求",
@@ -17998,6 +18303,12 @@
           "type": "string",
           "description": "集群关联的云账号ID,默认为空。主要功能是获取云账号凭证。私有云场景下统一管理cloud账号，而公有云场景纳管不同云账号凭证",
           "title": "cloudAccountID"
+        },
+        "isMixed": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "标记该集群是否是混部集群",
+          "title": "isMixed"
         }
       },
       "description": "更新集群信息请求，该接口仅用于信息更新和修正，不会触发任何行为动作。如果需要执行自动化相关流程，请根据需要使用对应的接口",

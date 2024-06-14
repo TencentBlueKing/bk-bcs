@@ -14,7 +14,7 @@
     </span>
     <div class="absolute left-[-24px] h-full w-[24px] bg-[#f5f7fa]"></div>
     <div class="resize-line" ref="resizeRef" @mousedown="onMousedownEvent"></div>
-    <div class="h-[56px] flex items-center px-[24px] pt-[16px] pb-[8px] text-[12px]" ref="detailHeaderRef">
+    <div class="h-[56px] flex items-center px-[24px] pt-[16px] pb-[8px] text-[12px]">
       <span class="font-bold text-[14px] leading-[22px]">{{ curCluster.clusterName || '--' }}</span>
       <span class="ml-[14px] text-[#979BA5] leading-[22px] select-all">{{ curCluster.clusterID }}</span>
       <bcs-divider direction="vertical"></bcs-divider>
@@ -60,7 +60,7 @@
           <Network class="p-[20px]" :cluster-id="clusterId" />
         </bcs-tab-panel>
       </template>
-      <!--托管集群-->
+      <!--vcluster-->
       <template v-else-if="curCluster.clusterType === 'virtual'">
         <bcs-tab-panel
           name="overview"
@@ -87,7 +87,7 @@
           <VClusterQuota class="p-[20px]" :cluster-id="clusterId" />
         </bcs-tab-panel>
       </template>
-      <!--独立集群-->
+      <!--其他集群-->
       <template v-else>
         <bcs-tab-panel
           name="overview"
@@ -154,7 +154,6 @@ import Node from '../node-list/node.vue';
 
 import StatusIcon from '@/components/status-icon';
 import { ICluster, useCluster } from '@/composables/use-app';
-import useCalcHeight from '@/composables/use-calc-height';
 import $router from '@/router';
 import Info from '@/views/cluster-manage/detail/basic-info.vue';
 import Master from '@/views/cluster-manage/detail/master.vue';
@@ -184,14 +183,6 @@ const props = defineProps({
 });
 
 const emits = defineEmits(['width-change']);
-
-// 设置content高度
-const detailHeaderRef = ref();
-useCalcHeight({
-  prop: 'height',
-  el: '.cluster-detail-tab .bk-tab-content',
-  calc: ['#bcs-notice-com', '.bk-navigation-header', detailHeaderRef, '.cluster-detail-tab .bk-tab-header'],
-});
 
 watch(() => props.active, () => {
   activeTabName.value = props.active;
@@ -425,13 +416,13 @@ defineExpose({
 }
 
 >>> .cluster-detail-tab {
+  height: calc(100% - 56px);
   .bk-tab-header {
     padding-left: 24px;
   }
   .bk-tab-section {
     padding: 0;
-  }
-  .bk-tab-content {
+    height: calc(100% - 42px);
     overflow-y: auto;
     overflow-x: hidden;
   }

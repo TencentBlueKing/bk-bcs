@@ -33,7 +33,7 @@ func main() {
 	blog.InitLogs(conf.LogConfig{ToStdErr: true, Verbosity: 3})
 
 	var wg sync.WaitGroup
-	var success = false
+	var success = true
 	for _, v := range option.DBPrivEnvList {
 		wg.Add(1)
 		go func(env common.DBPrivEnv) {
@@ -43,6 +43,7 @@ func main() {
 			client, err := pkg.InitClient(option, &env)
 			if err != nil {
 				blog.Errorf("failed to init client for external system, %v", err)
+				success = false
 				return
 			}
 
@@ -58,6 +59,7 @@ func main() {
 			if doPriRetry >= failRetryLimit {
 				blog.Errorf("error calling the privilege api with db: %s, dbname: %s, max retry times reached",
 					env.TargetDb, env.DbName)
+				success = false
 				return
 			}
 
@@ -74,10 +76,10 @@ func main() {
 			if checkRetry >= failRetryLimit {
 				blog.Errorf("check operation status failed with db: %s, dbname: %s, max retry times reached",
 					env.TargetDb, env.DbName)
+				success = false
 				return
 			}
 
-			success = true
 			blog.Infof("granting privilege to db: %s, dbname: %s succeeded", env.TargetDb, env.DbName)
 		}(v)
 	}

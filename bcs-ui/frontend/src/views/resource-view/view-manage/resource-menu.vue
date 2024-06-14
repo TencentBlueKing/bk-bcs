@@ -359,7 +359,7 @@ const handleGetCustomResourceDefinition = async () => {
 
   isLoading.value = true;
   const data = await getMultiClusterCustomResourceDefinition({
-    ...curViewData.value,
+    clusterNamespaces: curViewData.value.clusterNamespaces,
     $crd: 'CustomResourceDefinition',
     offset: 0,
     limit: 1000,

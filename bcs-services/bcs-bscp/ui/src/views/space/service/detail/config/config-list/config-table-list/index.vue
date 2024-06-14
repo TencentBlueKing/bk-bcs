@@ -1,6 +1,6 @@
 <template>
   <bk-alert
-    v-if="conflictFileCount > 0"
+    v-if="isFileType && conflictFileCount > 0"
     theme="warning"
     :title="
       t('模板套餐导入完成，存在 {n} 个冲突配置项，请修改配置项信息或删除对应模板套餐，否则无法生成版本。', {
@@ -124,7 +124,7 @@
 <style lang="scss" scoped>
   .config-list-wrapper {
     position: relative;
-    padding: 0 24px;
+    padding: 0 24px 24px 24px;
     height: 100%;
   }
   .operate-area {
@@ -146,7 +146,6 @@
     }
   }
   .config-list-table {
-    max-height: calc(100% - 64px);
-    overflow: auto;
+    height: calc(100% - 64px);
   }
 </style>

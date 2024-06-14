@@ -13,6 +13,7 @@
 package qcloud
 
 import (
+	"net"
 	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -119,13 +120,13 @@ func (c *VPCManager) ListSubnets(vpcID, zone string, opt *cloudprovider.ListNetw
 	result := make([]*proto.Subnet, 0)
 	for _, v := range subnets {
 		result = append(result, &proto.Subnet{
-			VpcID:                   *v.VpcID,
-			SubnetID:                *v.SubnetID,
+			VpcID:                   *v.VpcId,
+			SubnetID:                *v.SubnetId,
 			SubnetName:              *v.SubnetName,
 			CidrRange:               *v.CidrBlock,
 			Ipv6CidrRange:           *v.Ipv6CidrBlock,
 			Zone:                    *v.Zone,
-			AvailableIPAddressCount: *v.AvailableIPAddressCount,
+			AvailableIPAddressCount: *v.AvailableIpAddressCount,
 		})
 	}
 	return result, nil
@@ -215,4 +216,26 @@ func (c *VPCManager) ListBandwidthPacks(opt *cloudprovider.CommonOption) ([]*pro
 func (c *VPCManager) CheckConflictInVpcCidr(vpcID string, cidr string,
 	opt *cloudprovider.CommonOption) ([]string, error) {
 	return business.CheckConflictFromVpc(opt, vpcID, cidr)
+}
+
+// AllocateOverlayCidr allocate overlay cidr
+func (c *VPCManager) AllocateOverlayCidr(vpcId string, cluster *proto.Cluster, cidrLens []uint32,
+	reservedBlocks []*net.IPNet, opt *cloudprovider.CommonOption) ([]string, error) {
+	return nil, nil
+}
+
+// AddClusterOverlayCidr add cidr to cluster
+func (c *VPCManager) AddClusterOverlayCidr(clusterId string, cidrs []string, opt *cloudprovider.CommonOption) error {
+	return nil
+}
+
+// GetVpcIpSurplus get vpc ipSurplus
+func (c *VPCManager) GetVpcIpSurplus(
+	vpcId string, ipType string, reservedBlocks []*net.IPNet, opt *cloudprovider.CommonOption) (uint32, error) {
+	return 0, nil
+}
+
+// GetOverlayClusterIPSurplus get cluster overlay ipSurplus
+func (c *VPCManager) GetOverlayClusterIPSurplus(clusterId string, opt *cloudprovider.CommonOption) (uint32, error) {
+	return 0, nil
 }

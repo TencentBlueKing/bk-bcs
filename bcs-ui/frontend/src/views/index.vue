@@ -1,5 +1,5 @@
 <template>
-  <div class="biz-container app-container flex-col" v-bkloading="{ isLoading: loading }">
+  <div class="flex flex-col h-full overflow-hidden" v-bkloading="{ isLoading: loading }">
     <!-- 集群列表和项目信息加载完后再渲染视图 -->
     <template v-if="!loading">
       <template v-if="curProject.kind && curProject.businessID && (curProject.businessID !== '0')">
@@ -10,7 +10,7 @@
           :cluster-id="routeMeta.showClusterName ? $route.params.clusterId : ''"
           v-if="routeMeta.title" />
         <!-- key为了解决旧版模板集刷新问题, 资源视图视图管理切换集群后不能刷新界面(不能用path作为Key) -->
-        <RouterView :key="isDashboard ? 'dashboard' : $route.path" />
+        <RouterView class="flex-1" :key="isDashboard ? 'dashboard' : $route.path" />
         <!-- 终端 -->
         <Terminal />
       </template>

@@ -30,7 +30,7 @@ const (
 	Auth_AuthorizeBatch_FullMethodName             = "/pbas.Auth/AuthorizeBatch"
 	Auth_GetPermissionToApply_FullMethodName       = "/pbas.Auth/GetPermissionToApply"
 	Auth_QuerySpace_FullMethodName                 = "/pbas.Auth/QuerySpace"
-	Auth_GetAuthLoginConf_FullMethodName           = "/pbas.Auth/GetAuthLoginConf"
+	Auth_GetAuthConf_FullMethodName                = "/pbas.Auth/GetAuthConf"
 	Auth_GrantResourceCreatorAction_FullMethodName = "/pbas.Auth/GrantResourceCreatorAction"
 )
 
@@ -55,7 +55,7 @@ type AuthClient interface {
 	GetPermissionToApply(ctx context.Context, in *GetPermissionToApplyReq, opts ...grpc.CallOption) (*GetPermissionToApplyResp, error)
 	QuerySpace(ctx context.Context, in *QuerySpaceReq, opts ...grpc.CallOption) (*QuerySpaceResp, error)
 	// auth login conf
-	GetAuthLoginConf(ctx context.Context, in *GetAuthLoginConfReq, opts ...grpc.CallOption) (*GetAuthLoginConfResp, error)
+	GetAuthConf(ctx context.Context, in *GetAuthConfReq, opts ...grpc.CallOption) (*GetAuthConfResp, error)
 	GrantResourceCreatorAction(ctx context.Context, in *GrantResourceCreatorActionReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 }
 
@@ -148,9 +148,9 @@ func (c *authClient) QuerySpace(ctx context.Context, in *QuerySpaceReq, opts ...
 	return out, nil
 }
 
-func (c *authClient) GetAuthLoginConf(ctx context.Context, in *GetAuthLoginConfReq, opts ...grpc.CallOption) (*GetAuthLoginConfResp, error) {
-	out := new(GetAuthLoginConfResp)
-	err := c.cc.Invoke(ctx, Auth_GetAuthLoginConf_FullMethodName, in, out, opts...)
+func (c *authClient) GetAuthConf(ctx context.Context, in *GetAuthConfReq, opts ...grpc.CallOption) (*GetAuthConfResp, error) {
+	out := new(GetAuthConfResp)
+	err := c.cc.Invoke(ctx, Auth_GetAuthConf_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -187,7 +187,7 @@ type AuthServer interface {
 	GetPermissionToApply(context.Context, *GetPermissionToApplyReq) (*GetPermissionToApplyResp, error)
 	QuerySpace(context.Context, *QuerySpaceReq) (*QuerySpaceResp, error)
 	// auth login conf
-	GetAuthLoginConf(context.Context, *GetAuthLoginConfReq) (*GetAuthLoginConfResp, error)
+	GetAuthConf(context.Context, *GetAuthConfReq) (*GetAuthConfResp, error)
 	GrantResourceCreatorAction(context.Context, *GrantResourceCreatorActionReq) (*base.EmptyResp, error)
 }
 
@@ -222,8 +222,8 @@ func (UnimplementedAuthServer) GetPermissionToApply(context.Context, *GetPermiss
 func (UnimplementedAuthServer) QuerySpace(context.Context, *QuerySpaceReq) (*QuerySpaceResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method QuerySpace not implemented")
 }
-func (UnimplementedAuthServer) GetAuthLoginConf(context.Context, *GetAuthLoginConfReq) (*GetAuthLoginConfResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetAuthLoginConf not implemented")
+func (UnimplementedAuthServer) GetAuthConf(context.Context, *GetAuthConfReq) (*GetAuthConfResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAuthConf not implemented")
 }
 func (UnimplementedAuthServer) GrantResourceCreatorAction(context.Context, *GrantResourceCreatorActionReq) (*base.EmptyResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GrantResourceCreatorAction not implemented")
@@ -402,20 +402,20 @@ func _Auth_QuerySpace_Handler(srv interface{}, ctx context.Context, dec func(int
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Auth_GetAuthLoginConf_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetAuthLoginConfReq)
+func _Auth_GetAuthConf_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetAuthConfReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AuthServer).GetAuthLoginConf(ctx, in)
+		return srv.(AuthServer).GetAuthConf(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Auth_GetAuthLoginConf_FullMethodName,
+		FullMethod: Auth_GetAuthConf_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthServer).GetAuthLoginConf(ctx, req.(*GetAuthLoginConfReq))
+		return srv.(AuthServer).GetAuthConf(ctx, req.(*GetAuthConfReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -482,8 +482,8 @@ var Auth_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Auth_QuerySpace_Handler,
 		},
 		{
-			MethodName: "GetAuthLoginConf",
-			Handler:    _Auth_GetAuthLoginConf_Handler,
+			MethodName: "GetAuthConf",
+			Handler:    _Auth_GetAuthConf_Handler,
 		},
 		{
 			MethodName: "GrantResourceCreatorAction",

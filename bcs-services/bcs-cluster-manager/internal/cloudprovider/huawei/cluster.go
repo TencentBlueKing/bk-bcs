@@ -18,10 +18,13 @@ import (
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/i18n"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/huawei/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/huawei/business"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -111,6 +114,23 @@ func (c *Cluster) DeleteCluster(cls *proto.Cluster, opt *cloudprovider.DeleteClu
 
 // GetCluster get kubenretes cluster detail information according cloudprovider
 func (c *Cluster) GetCluster(cloudID string, opt *cloudprovider.GetClusterOption) (*proto.Cluster, error) {
+	runtimeInfo, err := business.GetRuntimeInfo(opt.Cluster.ClusterID)
+	if err != nil {
+		return nil, err
+	}
+
+	if v, ok := runtimeInfo[common.ContainerdRuntime]; ok {
+		opt.Cluster.ClusterAdvanceSettings.ContainerRuntime = common.ContainerdRuntime
+		if len(v) > 0 {
+			opt.Cluster.ClusterAdvanceSettings.RuntimeVersion = v[0]
+		}
+	} else if v, ok := runtimeInfo[common.DockerContainerRuntime]; ok {
+		opt.Cluster.ClusterAdvanceSettings.ContainerRuntime = common.DockerContainerRuntime
+		if len(v) > 0 {
+			opt.Cluster.ClusterAdvanceSettings.RuntimeVersion = v[0]
+		}
+	}
+
 	return opt.Cluster, nil
 }
 
@@ -155,6 +175,17 @@ func (c *Cluster) AddSubnetsToCluster(ctx context.Context, subnet *proto.SubnetS
 // AppendCloudNodeInfo append cloud node detailed info
 func (c *Cluster) AppendCloudNodeInfo(ctx context.Context,
 	nodes []*proto.ClusterNode, opt *cloudprovider.CommonOption) error {
+
+	// 获取语言
+	lang := i18n.LanguageFromCtx(ctx)
+	if lang == utils.ZH {
+		for i, node := range nodes {
+			if node.ZoneID != "" {
+				nodes[i].ZoneName = fmt.Sprintf("可用区%d", business.GetZoneNameByZoneId(opt.Region, node.ZoneID))
+			}
+		}
+	}
+
 	return nil
 }
 

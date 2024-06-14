@@ -24,6 +24,8 @@ import (
 	bcsapi "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapiv4"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
+	githubpkg "gopkg.in/go-playground/webhooks.v5/github"
+	gitlabpkg "gopkg.in/go-playground/webhooks.v5/gitlab"
 
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/cmd/manager/options"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/internal/dao"
@@ -135,10 +137,15 @@ func (ops *ArgocdProxy) initArgoPathHandler() error {
 		storage:    store.GlobalStore(),
 		bcsStorage: bcsStorage,
 	}
+	github, _ := githubpkg.New()
+	gitlab, _ := gitlabpkg.New()
 	webhookPlugin := &WebhookPlugin{
 		Router:        ops.PathPrefix(common.GitOpsProxyURL + "/api/webhook").Subrouter(),
 		middleware:    middleware,
 		appsetWebhook: ops.option.GitOps.AppsetControllerWebhook,
+		github:        github,
+		gitlab:        gitlab,
+		storage:       store.GlobalStore(),
 	}
 	// grpc access handler
 	grpcPlugin := &GrpcPlugin{
@@ -151,9 +158,9 @@ func (ops *ArgocdProxy) initArgoPathHandler() error {
 		middleware: middleware,
 	}
 	analysisPlugin := &AnalysisPlugin{
-		Router:         ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/analysis").Subrouter(),
-		middleware:     middleware,
-		store:          store.GlobalStore(),
+		Router:     ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/analysis").Subrouter(),
+		middleware: middleware,
+		store:      store.GlobalStore(),
 	}
 	monitorPlugin := &MonitorPlugin{
 		Router:     ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/monitor").Subrouter(),
@@ -164,11 +171,15 @@ func (ops *ArgocdProxy) initArgoPathHandler() error {
 		middleware:     middleware,
 		terraformStore: terraformstore.NewTerraformStore(),
 	}
+	permissionPlugin := &PermissionPlugin{
+		Router:     ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/permissions").Subrouter(),
+		middleware: middleware,
+	}
 	initializer := []func() error{
 		projectPlugin.Init, clusterPlugin.Init, repositoryPlugin.Init,
 		appPlugin.Init, streamPlugin.Init, webhookPlugin.Init, grpcPlugin.Init,
 		secretPlugin.Init, metricPlugin.Init, appsetPlugin.Init, analysisPlugin.Init,
-		monitorPlugin.Init, terraformPlugin.Init,
+		monitorPlugin.Init, terraformPlugin.Init, permissionPlugin.Init,
 	}
 
 	// access deny URL, keep in mind that there are paths need to proxy

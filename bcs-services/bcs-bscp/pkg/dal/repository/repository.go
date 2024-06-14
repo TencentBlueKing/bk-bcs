@@ -83,6 +83,9 @@ type ObjectDownloader interface {
 type BaseProvider interface {
 	ObjectDownloader
 	Upload(kt *kit.Kit, sign string, body io.Reader) (*ObjectMetadata, error)
+	InitMultipartUpload(kt *kit.Kit, sign string) (string, error)
+	MultipartUpload(kt *kit.Kit, sign string, uploadID string, partNum uint32, body io.Reader) error
+	CompleteMultipartUpload(kt *kit.Kit, sign string, uploadID string) (*ObjectMetadata, error)
 	Download(kt *kit.Kit, sign string) (io.ReadCloser, int64, error)
 	Metadata(kt *kit.Kit, sign string) (*ObjectMetadata, error)
 }
@@ -101,6 +104,31 @@ func GetFileSign(r *http.Request) (string, error) {
 	}
 
 	return sign, nil
+}
+
+// GetPartNum get multipart upload part num
+func GetPartNum(r *http.Request) (uint32, error) {
+	partNumStr := r.Header.Get(constant.PartNumHeaderKey)
+	if partNumStr == "" {
+		return 0, errors.New("not valid X-Bscp-Part-Num in header")
+	}
+
+	partNum, err := strconv.Atoi(partNumStr)
+	if err != nil || partNum == 0 {
+		return 0, errors.New("not valid X-Bscp-Part-Num in header")
+	}
+
+	return uint32(partNum), nil
+}
+
+// GetMultipartUploadID get multipart upload id
+func GetMultipartUploadID(r *http.Request) (string, error) {
+	multipartUploadID := r.Header.Get(constant.UploadIDHeaderKey)
+	if multipartUploadID == "" {
+		return "", errors.New("not valid X-Bscp-Upload-Id in header")
+	}
+
+	return multipartUploadID, nil
 }
 
 // GetContentLevelID get content level id, including app id and template space id

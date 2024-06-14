@@ -29,9 +29,6 @@
   const calcPopover = () => {
     const contentEl = containerRef.value.firstElementChild;
 
-    if (contentEl) {
-      console.log(contentEl.scrollWidth, containerRef.value.clientWidth);
-    }
     if (contentEl && contentEl.scrollWidth > containerRef.value.clientWidth) {
       disabled.value = false;
     } else {

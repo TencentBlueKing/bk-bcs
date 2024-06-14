@@ -26,6 +26,7 @@ import (
 	"github.com/ghodss/yaml"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	cvm "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cvm/v20170312"
+	vpc "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/vpc/v20170312"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
@@ -34,6 +35,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/template"
 	providerutils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/lock"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
@@ -44,7 +46,8 @@ import (
 // as far as possible to keep every operation unit simple
 
 // generateClusterCIDRInfo cidr info
-func generateClusterCIDRInfo(cluster *proto.Cluster) *api.ClusterCIDRSettings {
+func generateClusterCIDRInfo(ctx context.Context, cluster *proto.Cluster,
+	opt *cloudprovider.CommonOption) (*api.ClusterCIDRSettings, error) {
 	cidrInfo := &api.ClusterCIDRSettings{
 		ClusterCIDR:          cluster.NetworkSettings.ClusterIPv4CIDR,
 		MaxNodePodNum:        uint64(cluster.NetworkSettings.MaxNodePodNum),
@@ -52,7 +55,28 @@ func generateClusterCIDRInfo(cluster *proto.Cluster) *api.ClusterCIDRSettings {
 		ServiceCIDR:          cluster.NetworkSettings.ServiceIPv4CIDR,
 	}
 
-	return cidrInfo
+	// cluster.NetworkSettings.ClusterIPv4CIDR is empty, auto allocate cidr when create cluster
+	if cluster.NetworkSettings.ClusterIPv4CIDR == "" {
+
+		cloudprovider.GetDistributeLock().Lock(utils.BuildAllocateVpcCidrLockKey(
+			cluster.Provider, cluster.Region, cluster.VpcID), []lock.LockOption{lock.LockTTL(time.Second * 5)}...)
+		defer cloudprovider.GetDistributeLock().Unlock(utils.BuildAllocateVpcCidrLockKey(
+			cluster.Provider, cluster.Region, cluster.VpcID))
+
+		mask := utils.CalMaskLen(float64(cluster.NetworkSettings.CidrStep))
+		subnet, err := business.AllocateGrCidrSubnet(ctx, opt, cluster.GetProvider(),
+			cluster.VpcID, int(mask), nil)
+		if err != nil {
+			return nil, err
+		}
+		cidrInfo.ClusterCIDR = subnet.ID
+		cluster.NetworkSettings.ClusterIPv4CIDR = subnet.ID
+
+		// update cluster cidr info
+		_ = cloudprovider.UpdateCluster(cluster)
+	}
+
+	return cidrInfo, nil
 }
 
 // generateTags tags info
@@ -550,12 +574,17 @@ func createTkeCluster(ctx context.Context, info *cloudprovider.CloudDependBasicI
 		}
 	}
 
+	clusterCidr, err := generateClusterCIDRInfo(ctx, info.Cluster, info.CmOption)
+	if err != nil {
+		return nil, err
+	}
+
 	// cluster create request
 	req := &api.CreateClusterRequest{
 		AddNodeMode:     info.Cluster.AutoGenerateMasterNodes,
 		Region:          info.Cluster.Region,
 		ClusterType:     info.Cluster.ManageType,
-		ClusterCIDR:     generateClusterCIDRInfo(info.Cluster),
+		ClusterCIDR:     clusterCidr,
 		ClusterBasic:    generateClusterBasicInfo(info.Cluster, imageID, operator),
 		ClusterAdvanced: generateClusterAdvancedInfo(info.Cluster),
 		InstanceAdvanced: business.GenerateClsAdvancedInsSettingFromNT(info, template.RenderVars{
@@ -1175,10 +1204,10 @@ func getRandomSubnetByVpcID(ctx context.Context, info *cloudprovider.CloudDepend
 	}
 
 	// pick available subnet
-	availableSubnet := make([]*api.Subnet, 0)
+	availableSubnet := make([]*vpc.Subnet, 0)
 	for i := range subnets {
 		match := utils.MatchSubnet(*subnets[i].SubnetName, info.Cluster.Region)
-		if match && *subnets[i].AvailableIPAddressCount > 0 {
+		if match && *subnets[i].AvailableIpAddressCount > 0 {
 			availableSubnet = append(availableSubnet, subnets[i])
 		}
 	}
@@ -1187,7 +1216,7 @@ func getRandomSubnetByVpcID(ctx context.Context, info *cloudprovider.CloudDepend
 	}
 
 	rand.Seed(time.Now().Unix())                                           // nolint
-	return *availableSubnet[rand.Intn(len(availableSubnet))].SubnetID, nil // nolint
+	return *availableSubnet[rand.Intn(len(availableSubnet))].SubnetId, nil // nolint
 }
 
 // openClusterAdminKubeConfig open account cluster admin perm

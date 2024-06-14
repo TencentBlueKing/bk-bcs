@@ -1,169 +1,171 @@
 <template>
-  <div class="biz-content">
-    <biz-header
-      ref="commonHeader"
-      @exception="exceptionHandler"
-      @saveConfigmapSuccess="saveConfigmapSuccess"
-      @switchVersion="initResource"
-      @exmportToYaml="exportToYaml">
-    </biz-header>
-    <template>
-      <div class="biz-content-wrapper biz-confignation-wrapper" v-bkloading="{ isLoading: isTemplateSaving }">
-        <div class="biz-tab-box" v-show="!isDataLoading">
-          <biz-tabs @tab-change="tabResource" ref="commonTab"></biz-tabs>
-          <div class="biz-tab-content" v-bkloading="{ isLoading: isTabChanging }">
-            <bk-alert type="info" class="mb20">
-              <div slot="title">
-                {{$t('deploy.templateset.configMapExplanation')}}，
-                <a class="bk-text-button" :href="PROJECT_CONFIG.k8sConfigmap" target="_blank">{{$t('plugin.tools.docs')}}</a>
-              </div>
-            </bk-alert>
-            <template v-if="!configmaps.length">
-              <div class="biz-guide-box mt0">
-                <bk-button icon="plus" type="primary" @click.stop.prevent="addLocalConfigmap">
-                  <span style="margin-left: 0;">{{$t('generic.button.add')}}ConfigMap</span>
-                </bk-button>
-              </div>
-            </template>
-            <template v-else>
-              <div class="biz-configuration-topbar">
-                <div class="biz-list-operation">
-                  <div class="item" v-for="(configmap, index) in configmaps" :key="configmap.id">
-                    <bk-button
-                      :class="['bk-button', { 'bk-primary': curConfigmap.id === configmap.id }]"
-                      @click.stop="setCurConfigmap(configmap, index)">
-                      {{(configmap && configmap.config.metadata.name) || $t('deploy.templateset.unnamed')}}
-                      <span class="biz-update-dot" v-show="configmap.isEdited"></span>
-                    </bk-button>
-                    <span class="bcs-icon bcs-icon-close" @click.stop="removeConfigmap(configmap, index)"></span>
-                  </div>
-
-                  <bcs-popover ref="configmapTooltip" :content="$t('deploy.templateset.addConfigMap')" placement="top">
-                    <bk-button class="bk-button bk-default is-outline is-icon" @click.stop="addLocalConfigmap">
-                      <i class="bcs-icon bcs-icon-plus"></i>
-                    </bk-button>
-                  </bcs-popover>
+  <BcsContent>
+    <template #header>
+      <biz-header
+        ref="commonHeader"
+        @exception="exceptionHandler"
+        @saveConfigmapSuccess="saveConfigmapSuccess"
+        @switchVersion="initResource"
+        @exmportToYaml="exportToYaml">
+      </biz-header>
+    </template>
+    <div class="biz-confignation-wrapper" v-bkloading="{ isLoading: isTemplateSaving }">
+      <div class="biz-tab-box" v-show="!isDataLoading">
+        <biz-tabs @tab-change="tabResource" ref="commonTab"></biz-tabs>
+        <div class="biz-tab-content" v-bkloading="{ isLoading: isTabChanging }">
+          <bk-alert type="info" class="mb20">
+            <div slot="title">
+              {{$t('deploy.templateset.configMapExplanation')}}，
+              <a
+                class="bk-text-button"
+                :href="PROJECT_CONFIG.k8sConfigmap" target="_blank">{{$t('plugin.tools.docs')}}</a>
+            </div>
+          </bk-alert>
+          <template v-if="!configmaps.length">
+            <div class="biz-guide-box mt0">
+              <bk-button icon="plus" type="primary" @click.stop.prevent="addLocalConfigmap">
+                <span style="margin-left: 0;">{{$t('generic.button.add')}}ConfigMap</span>
+              </bk-button>
+            </div>
+          </template>
+          <template v-else>
+            <div class="biz-configuration-topbar">
+              <div class="biz-list-operation">
+                <div class="item" v-for="(configmap, index) in configmaps" :key="configmap.id">
+                  <bk-button
+                    :class="['bk-button', { 'bk-primary': curConfigmap.id === configmap.id }]"
+                    @click.stop="setCurConfigmap(configmap, index)">
+                    {{(configmap && configmap.config.metadata.name) || $t('deploy.templateset.unnamed')}}
+                    <span class="biz-update-dot" v-show="configmap.isEdited"></span>
+                  </bk-button>
+                  <span class="bcs-icon bcs-icon-close" @click.stop="removeConfigmap(configmap, index)"></span>
                 </div>
+
+                <bcs-popover ref="configmapTooltip" :content="$t('deploy.templateset.addConfigMap')" placement="top">
+                  <bk-button class="bk-button bk-default is-outline is-icon" @click.stop="addLocalConfigmap">
+                    <i class="bcs-icon bcs-icon-plus"></i>
+                  </bk-button>
+                </bcs-popover>
               </div>
+            </div>
 
-              <div class="biz-configuration-content" style="position: relative; margin-bottom: 105px;">
-                <div class="bk-form biz-configuration-form">
-                  <a
-                    href="javascript:void(0);" class="bk-text-button from-json-btn"
-                    @click.stop.prevent="showJsonPanel">{{$t('deploy.templateset.importYAML')}}</a>
+            <div class="biz-configuration-content" style="position: relative; margin-bottom: 105px;">
+              <div class="bk-form biz-configuration-form">
+                <a
+                  href="javascript:void(0);" class="bk-text-button from-json-btn"
+                  @click.stop.prevent="showJsonPanel">{{$t('deploy.templateset.importYAML')}}</a>
 
-                  <bk-sideslider
-                    :is-show.sync="toJsonDialogConf.isShow"
-                    :title="toJsonDialogConf.title"
-                    :width="toJsonDialogConf.width"
-                    class="biz-app-container-tojson-sideslider"
-                    :quick-close="false"
-                    @hidden="closeToJson">
-                    <div slot="content" style="position: relative;">
-                      <div
-                        class="biz-log-box"
-                        :style="{ height: `${winHeight - 60}px` }"
-                        v-bkloading="{ isLoading: toJsonDialogConf.loading }">
-                        <bk-button
-                          class="bk-button bk-primary save-json-btn"
-                          @click.stop.prevent="saveApplicationJson">{{$t('generic.button.import')}}</bk-button>
-                        <bk-button
-                          class="bk-button bk-default hide-json-btn"
-                          @click.stop.prevent="hideApplicationJson">{{$t('generic.button.cancel')}}</bk-button>
-                        <ace
-                          :value="editorConfig.value"
-                          :width="editorConfig.width"
-                          :height="editorConfig.height"
-                          :lang="editorConfig.lang"
-                          :read-only="editorConfig.readOnly"
-                          :full-screen="editorConfig.fullScreen"
-                          @init="editorInitAfter">
-                        </ace>
-                      </div>
+                <bk-sideslider
+                  :is-show.sync="toJsonDialogConf.isShow"
+                  :title="toJsonDialogConf.title"
+                  :width="toJsonDialogConf.width"
+                  class="biz-app-container-tojson-sideslider"
+                  :quick-close="false"
+                  @hidden="closeToJson">
+                  <div slot="content" style="position: relative;">
+                    <div
+                      class="biz-log-box"
+                      :style="{ height: `${winHeight - 60}px` }"
+                      v-bkloading="{ isLoading: toJsonDialogConf.loading }">
+                      <bk-button
+                        class="bk-button bk-primary save-json-btn"
+                        @click.stop.prevent="saveApplicationJson">{{$t('generic.button.import')}}</bk-button>
+                      <bk-button
+                        class="bk-button bk-default hide-json-btn"
+                        @click.stop.prevent="hideApplicationJson">{{$t('generic.button.cancel')}}</bk-button>
+                      <ace
+                        :value="editorConfig.value"
+                        :width="editorConfig.width"
+                        :height="editorConfig.height"
+                        :lang="editorConfig.lang"
+                        :read-only="editorConfig.readOnly"
+                        :full-screen="editorConfig.fullScreen"
+                        @init="editorInitAfter">
+                      </ace>
                     </div>
-                  </bk-sideslider>
+                  </div>
+                </bk-sideslider>
 
+                <div class="bk-form-item is-required">
+                  <label class="bk-label" style="width: 105px;">{{$t('generic.label.name')}}：</label>
+                  <div class="bk-form-content" style="margin-left: 105px;">
+                    <input
+                      type="text"
+                      :class="['bk-form-input',{ 'is-danger': errors.has('configmapName') }]"
+                      :placeholder="$t('deploy.templateset.enterCharacterLimit')"
+                      style="width: 310px;"
+                      maxlength="64"
+                      v-model="curConfigmap.config.metadata.name"
+                      name="configmapName"
+                      v-validate="{
+                        required: true,
+                        regex: /^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$/
+                      }">
+                    <div class="bk-form-tip" v-if="errors.has('configmapName')">
+                      <p class="bk-tip-text">{{$t('deploy.templateset.nameIsRequired')}}</p>
+                    </div>
+                  </div>
+                </div>
+                <template>
                   <div class="bk-form-item is-required">
-                    <label class="bk-label" style="width: 105px;">{{$t('generic.label.name')}}：</label>
+                    <label class="bk-label" style="width: 105px;">{{$t('generic.label.key')}}：</label>
                     <div class="bk-form-content" style="margin-left: 105px;">
-                      <input
-                        type="text"
-                        :class="['bk-form-input',{ 'is-danger': errors.has('configmapName') }]"
-                        :placeholder="$t('deploy.templateset.enterCharacterLimit')"
-                        style="width: 310px;"
-                        maxlength="64"
-                        v-model="curConfigmap.config.metadata.name"
-                        name="configmapName"
-                        v-validate="{
-                          required: true,
-                          regex: /^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$/
-                        }">
-                      <div class="bk-form-tip" v-if="errors.has('configmapName')">
-                        <p class="bk-tip-text">{{$t('deploy.templateset.nameIsRequired')}}</p>
+                      <div class="biz-list-operation">
+                        <div class="item" v-for="(data, index) in curConfigmap.configmapKeyList" :key="index">
+                          <bk-button
+                            :class="['bk-button', { 'bk-primary': curKeyIndex === index }]"
+                            @click.stop.prevent="setCurKey(data, index)"
+                            v-if="!data.isEdit">
+                            {{data.key || $t('deploy.templateset.unnamed')}}
+                          </bk-button>
+                          <bkbcs-input
+                            type="text"
+                            placeholder=""
+                            v-else
+                            style="width: 150px;"
+                            :auto-focus="true"
+                            :value.sync="data.key"
+                            :list="varList"
+                            @blur="setKey(data, index)">
+                          </bkbcs-input>
+                          <span
+                            class="bcs-icon bcs-icon-edit" v-show="!data.isEdit"
+                            @click.stop.prevent="editKey(data, index)"></span>
+                          <span
+                            class="bcs-icon bcs-icon-close" v-show="!data.isEdit"
+                            @click.stop.prevent="removeKey(data, index)"></span>
+                        </div>
+                        <bcs-popover ref="keyTooltip" :content="$t('deploy.templateset.addKey')" placement="top">
+                          <bk-button class="bk-button bk-default is-outline is-icon" @click.stop.prevent="addKey">
+                            <i class="bcs-icon bcs-icon-plus"></i>
+                          </bk-button>
+                        </bcs-popover>
                       </div>
                     </div>
                   </div>
-                  <template>
-                    <div class="bk-form-item is-required">
-                      <label class="bk-label" style="width: 105px;">{{$t('generic.label.key')}}：</label>
+                  <template v-if="curKeyParams">
+                    <div class="bk-form-item">
+                      <label class="bk-label" style="width: 105px;">{{$t('generic.label.value')}}：</label>
                       <div class="bk-form-content" style="margin-left: 105px;">
-                        <div class="biz-list-operation">
-                          <div class="item" v-for="(data, index) in curConfigmap.configmapKeyList" :key="index">
-                            <bk-button
-                              :class="['bk-button', { 'bk-primary': curKeyIndex === index }]"
-                              @click.stop.prevent="setCurKey(data, index)"
-                              v-if="!data.isEdit">
-                              {{data.key || $t('deploy.templateset.unnamed')}}
-                            </bk-button>
-                            <bkbcs-input
-                              type="text"
-                              placeholder=""
-                              v-else
-                              style="width: 150px;"
-                              :auto-focus="true"
-                              :value.sync="data.key"
-                              :list="varList"
-                              @blur="setKey(data, index)">
-                            </bkbcs-input>
-                            <span
-                              class="bcs-icon bcs-icon-edit" v-show="!data.isEdit"
-                              @click.stop.prevent="editKey(data, index)"></span>
-                            <span
-                              class="bcs-icon bcs-icon-close" v-show="!data.isEdit"
-                              @click.stop.prevent="removeKey(data, index)"></span>
-                          </div>
-                          <bcs-popover ref="keyTooltip" :content="$t('deploy.templateset.addKey')" placement="top">
-                            <bk-button class="bk-button bk-default is-outline is-icon" @click.stop.prevent="addKey">
-                              <i class="bcs-icon bcs-icon-plus"></i>
-                            </bk-button>
-                          </bcs-popover>
-                        </div>
+                        <bk-input
+                          type="textarea"
+                          class="biz-resize-textarea"
+                          ext-style="height: 300px;"
+                          :rows="15"
+                          v-model="curKeyParams.content"
+                          :placeholder="$t('deploy.templateset.enterKeyName') + curKeyParams.key + $t('deploy.templateset.keyContent')">
+                        </bk-input>
                       </div>
                     </div>
-                    <template v-if="curKeyParams">
-                      <div class="bk-form-item">
-                        <label class="bk-label" style="width: 105px;">{{$t('generic.label.value')}}：</label>
-                        <div class="bk-form-content" style="margin-left: 105px;">
-                          <bk-input
-                            type="textarea"
-                            class="biz-resize-textarea"
-                            ext-style="height: 300px;"
-                            :rows="15"
-                            v-model="curKeyParams.content"
-                            :placeholder="$t('deploy.templateset.enterKeyName') + curKeyParams.key + $t('deploy.templateset.keyContent')">
-                          </bk-input>
-                        </div>
-                      </div>
-                    </template>
                   </template>
-                </div>
+                </template>
               </div>
-            </template>
-          </div>
+            </div>
+          </template>
         </div>
       </div>
-    </template>
-  </div>
+    </div>
+  </BcsContent>
 </template>
 
 <script>
@@ -175,6 +177,7 @@ import tabs from './tabs.vue';
 
 import { catchErrorHandler } from '@/common/util';
 import ace from '@/components/ace-editor';
+import BcsContent from '@/components/layout/Content.vue';
 import configmapParams from '@/json/k8s-configmap.json';
 import k8sBase from '@/mixins/configuration/k8s-base';
 import mixinBase from '@/mixins/configuration/mixin-base';
@@ -185,6 +188,7 @@ export default {
     'biz-header': header,
     'biz-tabs': tabs,
     ace,
+    BcsContent,
   },
   mixins: [mixinBase, k8sBase],
   data() {
