@@ -423,9 +423,9 @@ func (m *StartupManager) getServer(clusterId string) string {
 		return server
 	}
 
-	// 如果是共享集群则加上/projects/%s
-	if cluster.IsShared {
-		return fmt.Sprintf("%s/projects/%s/clusters/%s", config.G.BCS.Host, projectId, clusterId)
+	// 共享集群的项目Id和当前项目会不一致，如果是共享集群则加上/projects/%s
+	if cluster.IsShared && cluster.ProjectId != projectId {
+		return fmt.Sprintf("%s/projects/%s/clusters/%s", config.G.BCS.Host, cluster.ProjectId, clusterId)
 	}
 	return server
 }
