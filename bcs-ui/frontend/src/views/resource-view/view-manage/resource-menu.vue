@@ -60,11 +60,11 @@
                 :class="[
                   'flex items-center justify-center',
                   'px-[8px] h-[16px] bg-[#F0F1F5] rounded-sm',
-                  resourceCountMap[menu.meta.kind] > 0 ? 'text-[#979BA5]' : 'text-[#C4C6CC]',
+                  countMap[menu.meta.kind] > 0 ? 'text-[#979BA5]' : 'text-[#C4C6CC]',
                   activeMenu.id === menu.id ? '!bg-[#A3C5FD] !text-[#fff]' : ''
                 ]"
-                v-if="menu.meta && menu.meta.kind && (menu.meta.kind in resourceCountMap)">
-                {{ resourceCountMap[menu.meta.kind] || 0 }}
+                v-if="menu.meta && menu.meta.kind && (menu.meta.kind in countMap)">
+                {{ countMap[menu.meta.kind] || 0 }}
               </span>
             </a>
             <template #child>
@@ -86,11 +86,11 @@
                     :class="[
                       'flex items-center justify-center',
                       'px-[8px] h-[16px] bg-[#F0F1F5] rounded-sm',
-                      resourceCountMap[child.meta.kind] > 0 ? 'text-[#979BA5]' : 'text-[#C4C6CC]',
+                      countMap[child.meta.kind] > 0 ? 'text-[#979BA5]' : 'text-[#C4C6CC]',
                       activeMenu.id === child.id ? '!bg-[#A3C5FD] !text-[#fff]' : ''
                     ]"
-                    v-if="child.meta && child.meta.kind && (child.meta.kind in resourceCountMap)">
-                    {{ resourceCountMap[child.meta.kind] || 0 }}
+                    v-if="child.meta && child.meta.kind && (child.meta.kind in countMap)">
+                    {{ countMap[child.meta.kind] || 0 }}
                   </span>
                 </a>
               </bcs-navigation-menu-item>
@@ -353,7 +353,6 @@ const toggleMoreResource = () => {
   showMoreResource.value = !showMoreResource.value;
 };
 const tkexCRDList = ['GameDeployment', 'GameStatefulSet', 'HookTemplate'];
-const crdCounts = ref(0);
 const handleGetCustomResourceDefinition = async () => {
   if (!curViewData.value) return;
 
@@ -365,7 +364,6 @@ const handleGetCustomResourceDefinition = async () => {
     limit: 1000,
   });
   isLoading.value = false;
-  crdCounts.value = data.total;
   crdData.value = Object.keys(data?.manifestExt || {}).reduce((pre, key) => {
     const item = data?.manifestExt?.[key] || {};
     if (tkexCRDList.includes(item.kind)) return pre;// tkex自定义资源有单独UI展示
@@ -380,10 +378,6 @@ const handleGetCustomResourceDefinition = async () => {
 };
 // 资源统计
 const countMap = ref<Record<string, number>>({});
-const resourceCountMap = computed<Record<string, number>>(() => ({
-  ...countMap.value,
-  CustomResourceDefinition: crdCounts.value,
-}));
 const handleGetMultiClusterResourcesCount = async () => {
   countMap.value = {};// 重置数据
   if (!curViewData.value) return;

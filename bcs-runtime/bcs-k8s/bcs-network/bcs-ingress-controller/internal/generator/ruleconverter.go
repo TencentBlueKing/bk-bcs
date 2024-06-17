@@ -389,10 +389,17 @@ func (rc *RuleConverter) generateMcsBackendList(svcRoute *networkextensionv1.Ser
 	for _, mEps := range matchedMultiClusterEpsList {
 		for _, ep := range mEps.Spec.Endpoints {
 			for _, port := range ep.Ports {
-				if (*port.Name == svcPort.TargetPort.String() || int(*port.Port) == svcPort.TargetPort.IntValue()) && *port.Protocol == svcPort.
-					Protocol {
+				if (*port.Name == svcPort.TargetPort.String() || int(*port.Port) == svcPort.TargetPort.IntValue()) && *port.Protocol == svcPort.Protocol {
 					// 这里默认都是直通模式
 					if svcRoute.HostPort {
+						if port.HostPort == nil {
+							blog.Warnf("hostPort is true, but not found related definition in port [%s]",
+								*port.Name)
+							rc.eventer.Eventf(rc.ingress, k8scorev1.EventTypeWarning, constant.EventIngressBindFailed,
+								fmt.Sprintf("hostPort is true, but not found related definition in port [%s]",
+									*port.Name))
+							continue
+						}
 						retBackends = append(retBackends, networkextensionv1.ListenerBackend{
 							IP:     ep.NodeAddresses[0],
 							Port:   int(*port.HostPort),
