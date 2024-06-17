@@ -37,8 +37,8 @@ import (
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel/attribute"
-	"golang.org/x/exp/slices"
 	"google.golang.org/grpc/metadata"
+	"k8s.io/utils/strings/slices"
 
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/cmd/manager/options"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/internal/dao"
@@ -382,7 +382,6 @@ func (h *handler) CheckRepositoryPermission(ctx context.Context, repoName string
 	if repo == nil {
 		return nil, http.StatusNotFound, errors.Errorf("repository '%s' not found", repoName)
 	}
-	// nolint
 	if slices.Contains(h.option.PublicProjects, repo.Project) {
 		return repo, http.StatusOK, nil
 	}
@@ -400,8 +399,7 @@ func (h *handler) checkRepositoryBelongProject(ctx context.Context, repoUrl, pro
 		return false, fmt.Errorf("repo '%s' not found", repoUrl)
 	}
 	// passthrough if repository's project equal to public projects
-	// nolint
-	if slices.Contains[[]string](h.option.PublicProjects, repo.Project) {
+	if slices.Contains(h.option.PublicProjects, repo.Project) {
 		return true, nil
 	}
 
@@ -581,7 +579,7 @@ func (h *handler) ListClusters(ctx context.Context, projectNames []string) (
 	controlledClusters := make(map[string]v1alpha1.Cluster)
 	for _, cls := range clusterList.Items {
 		// nolint
-		if !slices.Contains[[]string](projectNames, cls.Project) {
+		if !slices.Contains(projectNames, cls.Project) {
 			continue
 		}
 		controlProjectID := common.GetBCSProjectID(cls.Annotations)
@@ -721,8 +719,7 @@ func (h *handler) CheckClusterScopedPermission(ctx context.Context, user string,
 }
 
 func (h *handler) isAdminUser(user string) bool {
-	// nolint
-	return slices.Contains[[]string](h.option.AdminUsers, user)
+	return slices.Contains(h.option.AdminUsers, user)
 }
 
 func (h *handler) checkBKPermissionWithRetry(ctx context.Context, f func() (bool, error)) (bool, error) {

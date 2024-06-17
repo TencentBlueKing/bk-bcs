@@ -62,8 +62,13 @@ func (m *MonitorHelper) EnsureUptimeCheck(ctx context.Context, listener *network
 		return 0, err
 	}
 	for _, task := range taskResp.Data {
+		if listener.GetUptimeCheckTaskStatus().ID != 0 && task.ID == listener.GetUptimeCheckTaskStatus().ID {
+			cloudTask = task
+			break
+		}
 		if task.Name == taskName {
 			cloudTask = task
+			break
 		}
 	}
 	// 1. 有task， 但目前targetGroup为空 -> 需要删除对应拨测任务
@@ -80,17 +85,17 @@ func (m *MonitorHelper) EnsureUptimeCheck(ctx context.Context, listener *network
 			return 0, nil
 		}
 
-		createTaskReq, err := m.transUptimeCheckTask(ctx, listener)
-		if err != nil {
-			return 0, err
+		createTaskReq, err1 := m.transUptimeCheckTask(ctx, listener)
+		if err1 != nil {
+			return 0, err1
 		}
 		if m.compareUptimeCheckTask(cloudTask, createTaskReq) {
-			resp, err1 := m.apiCli.UpdateUptimeCheckTask(ctx, createTaskReq)
-			if err1 != nil {
-				return 0, fmt.Errorf("update uptime check task failed, err: %v", err1)
+			resp, err2 := m.apiCli.UpdateUptimeCheckTask(ctx, createTaskReq)
+			if err2 != nil {
+				return 0, fmt.Errorf("update uptime check task failed, err: %v", err2)
 			}
-			if err = m.apiCli.DeployUptimeCheckTask(ctx, resp.Data.ID); err != nil {
-				return 0, fmt.Errorf("deploy uptime check task failed, err: %v", err)
+			if err2 = m.apiCli.DeployUptimeCheckTask(ctx, resp.Data.ID); err1 != nil {
+				return 0, fmt.Errorf("deploy uptime check task failed, err: %v", err2)
 			}
 		}
 

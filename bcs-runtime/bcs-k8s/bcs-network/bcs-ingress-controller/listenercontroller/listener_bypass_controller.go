@@ -156,7 +156,7 @@ func (lc *ListenerBypassReconciler) updateListenerStatus(namespacedName k8stypes
 			Msg:    msg,
 		}
 		if err := lc.Client.Update(context.TODO(), li, &client.UpdateOptions{}); err != nil {
-			blog.Errorf("update failed, err: %s", err.Error())
+			blog.Errorf("update uptime_check status failed, err: %s", err.Error())
 			return err
 		}
 		return nil
