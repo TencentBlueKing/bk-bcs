@@ -472,43 +472,20 @@
   //     '客户端每 15 秒会向服务端发送一次心跳数据，如果服务端连续3个周期没有接收到客户端心跳数据，视客户端为离线状态',
   // };
 
-  const sortTableData = (tableData: any) => {
-    // 定义状态顺序
-    const statusOrder = {
-      Processing: 0, // 拉取中
-      Failed: 1, // 失败
-      Success: 2, // 成功
-    };
-
-    // 根据状态顺序排序表格数据
-    tableData.sort((a: any, b: any) => {
-      const statusA = a.client.spec.release_change_status;
-      const statusB = b.client.spec.release_change_status;
-
-      if (statusOrder[statusA as keyof typeof statusOrder] < statusOrder[statusB as keyof typeof statusOrder]) {
-        return -1;
-      }
-      if (statusOrder[statusA as keyof typeof statusOrder] > statusOrder[statusB as keyof typeof statusOrder]) {
-        return 1;
-      }
-      // 如果状态相同，则保持原顺序
-      return 0;
-    });
-
-    return tableData;
-  };
-
   const loadList = async () => {
     const params: IClinetCommonQuery = {
       start: pagination.value.limit * (pagination.value.current - 1),
       limit: pagination.value.limit,
       last_heartbeat_time: searchQuery.value.last_heartbeat_time,
       search: searchQuery.value.search,
+      order: {
+        desc: 'online_status',
+      },
     };
     try {
       listLoading.value = true;
       const res = await getClientQueryList(bkBizId.value, appId.value, params);
-      tableData.value = sortTableData(res.data.details);
+      tableData.value = res.data.details;
       tableData.value.forEach((item: any) => {
         const { client } = item;
         client.labels = Object.entries(JSON.parse(client.spec.labels)).map(([key, value]) => ({ key, value }));
