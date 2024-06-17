@@ -86,7 +86,7 @@ export default {
   客户端统计: 'Client statistics',
   客户端查询: 'Client query',
   客户端密钥: 'Client key',
-  配置示例: 'CFG example',
+  配置示例: 'Configuration example',
   业务名: 'Business Name',
   业务: 'Business',
 
@@ -730,6 +730,8 @@ export default {
   '获取指定服务下指定配置项列表，多个配置这': 'Gets a list of specified configuration items under the specified service, multiple configurations for this',
   '获取指定服务下指定配置项值，只支持单个配置项值获取': 'Obtain the value of a specified configuration item of a specified service. You can obtain only a single configuration item',
   '获取指定服务下指定配置项元数据，支持多个配置项元数据获取，没有指定配置项，获取服务下所有配置项的元数据': 'Obtain the metadata of the specified configuration item of the specified service. You can obtain the metadata of multiple configuration items. Obtain the metadata of all configuration items of the service if no configuration item is specified',
+  '暂无可用密钥，可前往密钥管理新建/启用密钥，或将已有密钥关联至此服务': 'No available keys found. You can go to key management to create/enable a key or associate an existing key with this service',
+  '搜索结果为空，可前往密钥管理新建/启用密钥，或将已有密钥关联至此服务': 'Search result is empty. You can go to key management to create/enable a key or associate an existing key with this service',
 
   // 公共组件
   页面不存在: 'Page does not exist',

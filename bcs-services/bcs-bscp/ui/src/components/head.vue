@@ -421,6 +421,7 @@
               line-height: 40px;
               padding: 0 16px;
               font-size: 14px;
+              white-space: nowrap;
               a {
                 color: #96a2b9;
               }

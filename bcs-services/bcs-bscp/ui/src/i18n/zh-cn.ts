@@ -703,7 +703,7 @@ export default {
   示例预览: '示例预览',
   复制示例: '复制示例',
   '与分组结合使用，实现服务实例的灰度发布场景，支持多个标签；若不需要灰度发布功能，此参数可不配置': 'It can be used in combination with grouping to realize grayscale publishing scenario of service instances and support multiple labels. If the gray scale publishing function is not required, this parameter can not be configured',
-  用于客户端拉取配置时身份验证: 'Used for authentication when the client pulls the configuration',
+  用于客户端拉取配置时身份验证: '用于客户端拉取配置时身份验证',
   // Get方法: 'Get方法',
   // Watch方法: 'Watch方法',
   'Pull：用于一次性拉取最新的配置信息，适用于需要获取并更新配置的场景。': 'Get 方法：用于一次性拉取最新的配置信息，适用于需要获取并更新配置的场景。',
@@ -735,6 +735,8 @@ export default {
   '获取指定服务下指定配置项列表，多个配置这': '获取指定服务下指定配置项列表，多个配置这',
   '获取指定服务下指定配置项值，只支持单个配置项值获取': '获取指定服务下指定配置项值，只支持单个配置项值获取',
   '获取指定服务下指定配置项元数据，支持多个配置项元数据获取，没有指定配置项，获取服务下所有配置项的元数据': '获取指定服务下指定配置项元数据，支持多个配置项元数据获取，没有指定配置项，获取服务下所有配置项的元数据',
+  '暂无可用密钥，可前往密钥管理新建/启用密钥，或将已有密钥关联至此服务': '暂无可用密钥，可前往密钥管理新建/启用密钥，或将已有密钥关联至此服务',
+  '搜索结果为空，可前往密钥管理新建/启用密钥，或将已有密钥关联至此服务': '搜索结果为空，可前往密钥管理新建/启用密钥，或将已有密钥关联至此服务',
 
   // 公共组件
   页面不存在: '页面不存在',

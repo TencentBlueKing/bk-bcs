@@ -11,8 +11,8 @@
     :clearable="false"
     :loading="loading"
     :search-placeholder="$t('搜索名称/密钥/说明')"
-    :no-data-text="'暂无可用密钥，可前往密钥管理新建/启用密钥，或将已有密钥关联至此服务'"
-    :no-match-text="'搜索结果为空，可前往密钥管理新建/启用密钥，或将已有密钥关联至此服务'"
+    :no-data-text="$t('暂无可用密钥，可前往密钥管理新建/启用密钥，或将已有密钥关联至此服务')"
+    :no-match-text="$t('搜索结果为空，可前往密钥管理新建/启用密钥，或将已有密钥关联至此服务')"
     @change="handleSelectChange">
     <template #trigger>
       <div class="selector-trigger">
