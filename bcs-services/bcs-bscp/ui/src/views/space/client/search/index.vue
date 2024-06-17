@@ -480,7 +480,6 @@
       search: searchQuery.value.search,
       order: {
         desc: 'online_status',
-        asc: 'release_change_status',
       },
     };
     try {
