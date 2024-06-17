@@ -10,6 +10,7 @@
       :vertical-scrollbar-size="0"
       :horizon-scrollbar-size="0"
       render-line-highlight="none"
+      :render-indent-guides="false"
       :variables="props.variables"
       @update:model-value="emits('change', $event)" />
   </div>
@@ -42,9 +43,6 @@
 </script>
 
 <style scoped lang="scss">
-  .abca1 {
-    color: red;
-  }
   :deep(.monaco-editor) {
     background-color: unset;
     // 取消默认背景色

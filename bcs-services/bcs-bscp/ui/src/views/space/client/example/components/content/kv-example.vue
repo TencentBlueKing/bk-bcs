@@ -1,10 +1,10 @@
 <template>
   <section class="kv-example-template">
-    <form-option @option-data="getOptionData" ref="fileOptionRef" :directory-show="false" />
+    <form-option ref="fileOptionRef" :directory-show="false" @update-option-data="getOptionData" />
     <div class="preview-container">
       <div class="kv-handle-content">
         <span class="preview-label">{{ $t('示例预览') }}</span>
-        <div class="changeMethod">
+        <div class="change-method">
           <div
             :class="['tab-wrap', { 'is-active': activeTab === index }]"
             v-for="(item, index) in tabArr"
@@ -13,7 +13,7 @@
             {{ item.name }}
           </div>
         </div>
-        <bk-button @click="copyExample" theme="primary" class="copy-btn">{{ $t('复制示例') }}</bk-button>
+        <bk-button theme="primary" class="copy-btn" @click="copyExample">{{ $t('复制示例') }}</bk-button>
         <bk-alert class="alert-tips-wrap" v-show="topTipShow" theme="info">
           <div class="alert-tips">
             <p>{{ topTip }}</p>
@@ -32,9 +32,10 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref, provide, computed, onMounted, watch, Ref, inject } from 'vue';
+  import { ref, provide, computed, onMounted, watch, Ref, inject, nextTick } from 'vue';
   import { copyToClipBoard } from '../../../../../../utils/index';
   import { CloseLine } from 'bkui-vue/lib/icon';
+  import { IVariableEditParams } from '../../../../../../../types/variable';
   import BkMessage from 'bkui-vue/lib/message';
   import FormOption from '../form-option.vue';
   import codePreview from '../code-preview.vue';
@@ -66,6 +67,7 @@
   const codeVal = ref(''); // 存储yaml字符原始值
   const replaceVal = ref(''); // 替换后的值
   const copyReplaceVal = ref(''); // 渲染的值，用于复制未脱敏密钥的yaml数据
+  const variables = ref<IVariableEditParams[]>();
   const activeTab = ref(0); // 激活tab索引
   const topTipShow = ref(true);
   // fileOption组件传递过来的数据汇总
@@ -91,23 +93,6 @@
         return `{${optionData.value.labelArrType}}`;
     }
   });
-  const variables = computed(() => {
-    replaceVal.value = '';
-    return [
-      {
-        name: 'Bk_Bscp_VariableLeabels',
-        type: '',
-        default_val: labelArrShowType.value,
-        memo: '',
-      },
-      {
-        name: 'Bk_Bscp_VariableClientKey',
-        type: '',
-        default_val: `"${optionData.value.privacyCredential}"`,
-        memo: '',
-      },
-    ];
-  });
 
   watch(
     () => props.kvName,
@@ -120,49 +105,65 @@
       }
     },
   );
-  watch(
-    () => replaceVal.value,
-    () => {
-      // 初始化值，variables对应配置生效
-      // replaceVal.value = codeVal.value;
-      let updateString = codeVal.value.replace('{{ .Bk_Bscp_VariableBkBizId }}', bkBizId.value);
-      updateString = updateString.replace('{{ .Bk_Bscp_VariableServiceName }}', serviceName!.value);
-      updateString = updateString.replaceAll('{{ .Bk_Bscp_VariableFEED_ADDR }}', (window as any).FEED_ADDR);
-      replaceVal.value = updateString;
-    },
-  );
 
   onMounted(() => {
     handleTab();
   });
 
   const getOptionData = (data: any) => {
-    // 开始执行数据替换
-    optionData.value = computed(() => {
-      // labels展示方式加工
-      let labelArrType = '';
-      switch (props.kvName) {
-        case 'java':
-          if (data.labelArr.length) {
-            labelArrType = data.labelArr
-              .map((item: string) => {
-                const [key, value] = item.split(':');
-                return `labels.put(${key}, ${value});`;
-              })
-              .join('');
-          }
-          return {
-            ...data,
-            labelArrType,
-          };
-        default:
-          labelArrType = data.labelArr.length ? data.labelArr.join(', ') : '';
-          return {
-            ...data,
-            labelArrType,
-          };
-      }
-    }).value;
+    // labels展示方式加工，并替换数据
+    let labelArrType = '';
+    switch (props.kvName) {
+      case 'java':
+        if (data.labelArr.length) {
+          labelArrType = data.labelArr
+            .map((item: string) => {
+              const [key, value] = item.split(':');
+              return `labels.put(${key}, ${value});`;
+            })
+            .join('');
+        }
+        optionData.value = {
+          ...data,
+          labelArrType,
+        };
+        break;
+      default:
+        labelArrType = data.labelArr.length ? data.labelArr.join(', ') : '';
+        optionData.value = {
+          ...data,
+          labelArrType,
+        };
+        break;
+    }
+    updateVariables(); // 表单数据更新，配置需要同时更新
+    replaceVal.value = codeVal.value; // 数据重置
+    nextTick(() => {
+      // 等待monaco渲染完成(高亮)再改固定值
+      updateReplaceVal();
+    });
+  };
+  const updateReplaceVal = () => {
+    let updateString = replaceVal.value;
+    updateString = updateString.replace('{{ .Bk_Bscp_Variable_BkBizId }}', bkBizId.value);
+    updateString = updateString.replace('{{ .Bk_Bscp_Variable_ServiceName }}', serviceName!.value);
+    replaceVal.value = updateString.replaceAll('{{ .Bk_Bscp_Variable_FEED_ADDR }}', (window as any).FEED_ADDR);
+  };
+  const updateVariables = () => {
+    variables.value = [
+      {
+        name: 'Bk_Bscp_Variable_Leabels',
+        type: '',
+        default_val: labelArrShowType.value,
+        memo: '',
+      },
+      {
+        name: 'Bk_Bscp_Variable_ClientKey',
+        type: '',
+        default_val: `"${optionData.value.privacyCredential}"`,
+        memo: '',
+      },
+    ];
   };
 
   // 复制示例
@@ -189,7 +190,8 @@
     activeTab.value = index;
     const newKvData = await changeKvData(props.kvName, index);
     codeVal.value = newKvData.default;
-    replaceVal.value = newKvData.value;
+    replaceVal.value = newKvData.default;
+    updateReplaceVal();
   };
   // 键值型数据模板切换
   /**
@@ -230,7 +232,7 @@
     display: flex;
     flex-direction: column;
     height: 100%;
-    .changeMethod {
+    .change-method {
       margin: 0 16px;
       padding: 4px;
       display: inline-flex;

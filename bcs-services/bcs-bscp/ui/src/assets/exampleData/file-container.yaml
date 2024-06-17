@@ -21,19 +21,19 @@ spec:
           env:
             # 业务 ID，从当前环境自动获取，无需修改
             - name: biz
-              value: {{ .Bk_Bscp_VariableBkBizId }}
+              value: {{ .Bk_Bscp_Variable_BkBizId }}
             # 服务名称，从当前环境自动获取，无需修改
             - name: app
-              value: {{ .Bk_Bscp_VariableServiceName }}
+              value: {{ .Bk_Bscp_Variable_ServiceName }}
             # 服务订阅地址，从当前环境自动获取，无需修改
             - name: feed_addrs
-              value: {{ .Bk_Bscp_VariableFEED_ADDR }}
+              value: {{ .Bk_Bscp_Variable_FEED_ADDR }}
             # 客户端密钥，请将 value 赋值为与此服务配置关联过的实际客户端密钥
             - name: token
-              value: {{ .Bk_Bscp_VariableClientKey }}
+              value: {{ .Bk_Bscp_Variable_ClientKey }}
             # 实例标签，实例标签通常用于按标签进行灰度发布，支持多个标签，如：'{"app": "nginx", "area": "shanghai"}'，请填写实际实例标签 value；如果不需要按标签灰度发布，可不填写此环境变量
             - name: labels
-              value: {{ .Bk_Bscp_VariableLeabels }}
+              value: {{ .Bk_Bscp_Variable_Leabels }}
             # 配置文件临时目录，文件将下发到 {temp_dir}/files 目录下
             - name: temp_dir
               value: {{ .Bk_Bscp_VariableTempDir }}
@@ -61,11 +61,11 @@ spec:
             - name: app
               value: demo_app
             - name: feed_addrs
-              value: {{ .Bk_Bscp_VariableFEED_ADDR }}
+              value: {{ .Bk_Bscp_Variable_FEED_ADDR }}
             - name: token
-              value: {{ .Bk_Bscp_VariableClientKey }}
+              value: {{ .Bk_Bscp_Variable_ClientKey }}
             - name: labels
-              value: {{ .Bk_Bscp_VariableLeabels }}
+              value: {{ .Bk_Bscp_Variable_Leabels }}
             - name: temp_dir
               value: {{ .Bk_Bscp_VariableTempDir }}
           volumeMounts:

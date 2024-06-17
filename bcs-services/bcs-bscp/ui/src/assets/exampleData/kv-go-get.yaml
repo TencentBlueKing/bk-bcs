@@ -22,13 +22,13 @@ func main() {
 	// http.Handle("/metrics", promhttp.Handler())
 
 	// 初始化配置信息
-	var feedAddr string = "{{ .Bk_Bscp_VariableFEED_ADDR }}"
-	var biz uint32 = {{ .Bk_Bscp_VariableBkBizId }}
-	var token string = {{ .Bk_Bscp_VariableClientKey }}
-	var app string = "{{ .Bk_Bscp_VariableServiceName }}"
+	var feedAddr string = "{{ .Bk_Bscp_Variable_FEED_ADDR }}"
+	var biz uint32 = {{ .Bk_Bscp_Variable_BkBizId }}
+	var token string = {{ .Bk_Bscp_Variable_ClientKey }}
+	var app string = "{{ .Bk_Bscp_Variable_ServiceName }}"
 
 	labels := map[string]string{
-		{{ .Bk_Bscp_VariableLeabels }}
+		{{ .Bk_Bscp_Variable_Leabels }}
 	}
 
 	bscp, err := client.New(

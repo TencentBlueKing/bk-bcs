@@ -65,6 +65,12 @@
       editable: true,
       lfEol: true,
       language: '',
+      lineNumbers: 'on',
+      minimap: true,
+      verticalScrollbarSize: 10,
+      horizonScrollbarSize: 10,
+      renderLineHighlight: 'all',
+      renderIndentGuides: true,
     },
   );
 
@@ -88,6 +94,7 @@
       if (val !== localVal.value) {
         editor.setValue(val);
         editorHoverProvider = useEditorVariableReplace(editor, props.variables);
+        console.log('数据变化, ++++++++');
       }
     },
   );
@@ -118,6 +125,7 @@
     (val) => {
       if (Array.isArray(val) && val.length > 0) {
         editorHoverProvider = useEditorVariableReplace(editor, val);
+        console.log('配置变化, -------');
       }
     },
   );

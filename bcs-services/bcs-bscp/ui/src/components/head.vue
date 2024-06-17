@@ -216,7 +216,6 @@
   };
 
   const handleNavClick = (navId: String) => {
-    console.log(navId);
     if (['service-all', 'client-statistics', 'client-search', 'configuration-example'].includes(navId)) {
       const lastAccessedServiceDetail = localStorage.getItem('lastAccessedServiceDetail');
       if (lastAccessedServiceDetail) {

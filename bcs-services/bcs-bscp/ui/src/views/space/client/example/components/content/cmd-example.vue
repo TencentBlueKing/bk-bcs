@@ -1,6 +1,6 @@
 <template>
   <section class="cmd-tool-wrap">
-    <form-option @option-data="getOptionData" ref="fileOptionRef" :directory-show="props.kvName !== 'kv-cmd'" />
+    <form-option ref="fileOptionRef" :directory-show="props.kvName !== 'kv-cmd'" @update-option-data="getOptionData" />
     <div class="preview-container">
       <p class="headline">{{ $t('配置指引与示例预览') }}</p>
       <div class="guide-wrap">
@@ -11,7 +11,7 @@
             <copy-shape class="icon-copy" />
           </p>
           <template v-else>
-            <bk-button @click="copyExample" theme="primary" class="copy-btn">{{ $t('复制示例') }}</bk-button>
+            <bk-button theme="primary" class="copy-btn" @click="copyExample">{{ $t('复制示例') }}</bk-button>
             <code-preview
               :class="['preview-component', { 'preview-component--kvcmd': props.kvName === 'kv-cmd' }]"
               :code-val="replaceVal"
@@ -33,8 +33,9 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed, provide, ref, onMounted, watch, inject, Ref } from 'vue';
+  import { computed, provide, ref, onMounted, inject, Ref, nextTick } from 'vue';
   import { copyToClipBoard } from '../../../../../../utils/index';
+  import { IVariableEditParams } from '../../../../../../../types/variable';
   import BkMessage from 'bkui-vue/lib/message';
   import FormOption from '../form-option.vue';
   import CodePreview from '../code-preview.vue';
@@ -122,6 +123,7 @@
   const codeVal = ref(''); // 存储yaml字符原始值
   const replaceVal = ref('');
   const copyReplaceVal = ref(''); // 渲染的值，用于复制未脱敏密钥的yaml数据
+  const variables = ref<IVariableEditParams[]>();
   const formError = ref<number>();
   provide('formError', formError);
   // fileOption组件传递过来的数据汇总
@@ -135,17 +137,44 @@
   const cmdContent = computed(() => {
     return props.kvName === 'file-cmd' ? fileText : kvText;
   });
-  const variables = computed(() => {
-    replaceVal.value = '';
-    return [
+
+  onMounted(async () => {
+    const newKvData = await changeKvData(props.kvName);
+    codeVal.value = newKvData.default;
+    replaceVal.value = newKvData.default;
+    updateReplaceVal();
+  });
+
+  // 监听传来的数据
+  const getOptionData = (data: any) => {
+    const labelArr = data.labelArr.length ? data.labelArr.join(', ') : '';
+    optionData.value = {
+      ...data,
+      labelArr,
+    };
+    updateVariables(); // 表单数据更新，配置需要同时更新
+    replaceVal.value = codeVal.value; // 数据重置
+    nextTick(() => {
+      // 等待monaco渲染完成(高亮)再改固定值
+      updateReplaceVal();
+    });
+  };
+  const updateReplaceVal = () => {
+    let updateString = replaceVal.value;
+    updateString = updateString.replace('{{ .Bk_Bscp_Variable_BkBizId }}', bkBizId.value);
+    updateString = updateString.replace('{{ .Bk_Bscp_Variable_ServiceName }}', serviceName!.value);
+    replaceVal.value = updateString.replaceAll('{{ .Bk_Bscp_Variable_FEED_ADDR }}', (window as any).FEED_ADDR);
+  };
+  const updateVariables = () => {
+    variables.value = [
       {
-        name: 'Bk_Bscp_VariableLeabels',
+        name: 'Bk_Bscp_Variable_Leabels',
         type: '',
         default_val: `{${optionData.value.labelArr}}`,
         memo: '',
       },
       {
-        name: 'Bk_Bscp_VariableClientKey',
+        name: 'Bk_Bscp_Variable_ClientKey',
         type: '',
         default_val: `'${optionData.value.privacyCredential}'`,
         memo: '',
@@ -157,34 +186,6 @@
         memo: '',
       },
     ];
-  });
-  watch(
-    () => replaceVal.value,
-    () => {
-      // 初始化值，variables对应配置生效
-      let updateString = codeVal.value.replace('{{ .Bk_Bscp_VariableBkBizId }}', bkBizId.value);
-      updateString = updateString.replace('{{ .Bk_Bscp_VariableFEED_ADDR }}', (window as any).FEED_ADDR);
-      replaceVal.value = updateString;
-    },
-  );
-
-  onMounted(async () => {
-    const newKvData = await changeKvData(props.kvName);
-    codeVal.value = newKvData.default;
-    replaceVal.value = newKvData.value;
-  });
-
-  // 监听传来的数据
-  const getOptionData = (data: any) => {
-    optionData.value = data;
-    optionData.value = computed(() => {
-      // 标签展示方式加工
-      const labelArr = data.labelArr.length ? data.labelArr.join(', ') : '';
-      return {
-        ...data,
-        labelArr,
-      };
-    }).value;
   };
   // 复制示例
   const copyExample = async () => {

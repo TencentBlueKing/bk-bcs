@@ -2,7 +2,6 @@
   <bk-select
     v-model="currentValue.key"
     ref="selectorRef"
-    class="key-selector"
     :class="['key-selector', { 'select-error': isError }]"
     :popover-options="{ theme: 'light bk-select-popover' }"
     :popover-min-width="360"
@@ -38,12 +37,12 @@
     </bk-option>
     <template #extension>
       <div class="selector-extensition">
-        <div class="content" @click="router.push({ name: 'credentials-management' })">
+        <div class="content" @click="linkTo">
           <i class="bk-bscp-icon icon-app-store app-icon"></i>
           {{ $t('密钥管理') }}
         </div>
         <div class="flush-data">
-          <right-turn-line @click="flushData" class="flush-data-icon" />
+          <right-turn-line class="flush-data-icon" @click="flushData" />
         </div>
       </div>
     </template>
@@ -51,7 +50,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref, onMounted, inject, watch } from 'vue';
+  import { ref, Ref, onMounted, inject, watch } from 'vue';
   import { useRoute, useRouter } from 'vue-router';
   import { ICredentialItem } from '../../../../../../types/credential';
   import { getCredentialList } from '../../../../../api/credentials';
@@ -70,7 +69,7 @@
   const route = useRoute();
   const router = useRouter();
 
-  const formError = inject<any>('formError');
+  const formError = inject<Ref<string>>('formError');
   const isError = ref(false);
   const loading = ref(true);
   const currentValue = ref({
@@ -82,7 +81,7 @@
   const credentialList = ref<newICredentialItem[]>([]);
 
   watch(
-    () => formError.value,
+    () => formError!.value,
     () => {
       // 表单校验失败检查密钥是否为空
       if (!currentValue.value.privacyCredential) {
@@ -140,13 +139,17 @@
       return newItem;
     });
   };
+  const linkTo = () => {
+    const routeData = router.resolve({ name: 'credentials-management' });
+    window.open(routeData.href, '__blank');
+  };
   const flushData = debounce(loadCredentialList, 300);
 </script>
 
 <style scoped lang="scss">
   .key-selector {
     &.select-error .selector-trigger {
-      border-color: red;
+      border-color: #ea3636;
     }
     &.popover-show .selector-trigger {
       border-color: #3a84ff;

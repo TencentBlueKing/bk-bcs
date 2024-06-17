@@ -14,7 +14,7 @@
     <template #trigger>
       <div class="selector-trigger">
         <bk-overflow-title v-if="localApp?.name" class="app-name" type="tips">
-          {{ localApp?.name }}
+          {{ localApp.name }}
         </bk-overflow-title>
         <span v-else class="no-app">{{ $t('暂无服务') }}</span>
         <AngleUpFill class="arrow-icon arrow-fill" />

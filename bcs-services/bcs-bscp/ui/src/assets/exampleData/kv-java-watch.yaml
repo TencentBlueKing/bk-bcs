@@ -22,14 +22,13 @@ public class Main {
 
     public static void main(String[] args) {
 
-        String feedAddr = "{{ .Bk_Bscp_VariableFEED_ADDR }}";
-        Integer biz = {{ .Bk_Bscp_VariableBkBizId }};
-        String token = {{ .Bk_Bscp_VariableClientKey }};
-        String app = {{ .Bk_Bscp_VariableServiceName }};
+        String feedAddr = "{{ .Bk_Bscp_Variable_FEED_ADDR }}";
+        Integer biz = {{ .Bk_Bscp_Variable_BkBizId }};
+        String token = {{ .Bk_Bscp_Variable_ClientKey }};
+        String app = {{ .Bk_Bscp_Variable_ServiceName }};
 
         Map<String, String> labels = new HashMap<>();
-        labels.put("key1", "value1");
-        labels.put("key2", "value2");
+        {{ .Bk_Bscp_Variable_Leabels }}
 
         try {
             Client bscp = new Client(

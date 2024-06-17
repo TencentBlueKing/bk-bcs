@@ -50,7 +50,7 @@
     },
   });
 
-  const emits = defineEmits(['option-data']);
+  const emits = defineEmits(['update-option-data']);
 
   const { t } = useI18n();
   const rules = {
@@ -93,7 +93,7 @@
       // 不显示临时目录的菜单，删除对应值
       delete formData.value.tempDir;
     }
-    emits('option-data', formData.value);
+    emits('update-option-data', formData.value);
   };
 
   defineExpose({
