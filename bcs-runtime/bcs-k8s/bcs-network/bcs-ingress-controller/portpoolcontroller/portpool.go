@@ -138,7 +138,7 @@ func (pph *PortPoolHandler) ensurePortPool(pool *networkextensionv1.PortPool) (b
 	}
 	pool.Status.PoolItemStatuses = append(pool.Status.PoolItemStatuses, newItemStatusList...)
 
-	pool.Status.Status = checkPortPoolStatus(pool)
+	pool.Status.Status = getPortPoolStatus(pool)
 
 	err := pph.k8sClient.Status().Update(context.Background(), pool, &client.UpdateOptions{})
 	if err != nil {

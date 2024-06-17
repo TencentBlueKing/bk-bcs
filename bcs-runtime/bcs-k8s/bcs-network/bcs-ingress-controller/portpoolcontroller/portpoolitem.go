@@ -24,6 +24,7 @@ import (
 	gocache "github.com/patrickmn/go-cache"
 	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8slabels "k8s.io/apimachinery/pkg/labels"
+	k8stypes "k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/util/retry"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -292,9 +293,24 @@ func (ppih *PortPoolItemHandler) ensureListeners(region, lbID string, item *nete
 						blog.Warnf("update listener %s failed, err %s", tmpName, inErr.Error())
 					}
 				}
-				if !reflect.DeepEqual(listener.Spec.Certificate, item.Certificate) {
-					listener.Spec.Certificate = item.Certificate
-					if err = ppih.K8sClient.Update(context.Background(), listener); err != nil {
+				if !reflect.DeepEqual(listener.Spec.Certificate, item.Certificate) || !reflect.DeepEqual(listener.
+					Spec.ListenerAttribute, ppih.ListenerAttr) {
+					if err = retry.RetryOnConflict(retry.DefaultBackoff, func() error {
+						li := &netextv1.Listener{}
+						if inErr := ppih.K8sClient.Get(context.Background(), k8stypes.NamespacedName{
+							Namespace: listener.GetNamespace(),
+							Name:      listener.GetName(),
+						}, li); inErr != nil {
+							return inErr
+						}
+
+						li.Spec.Certificate = item.Certificate
+						li.Spec.ListenerAttribute = ppih.ListenerAttr
+						if inErr := ppih.K8sClient.Update(context.Background(), li); inErr != nil {
+							return inErr
+						}
+						return nil
+					}); err != nil {
 						blog.Errorf("update listener %s failed, err %s", tmpName, err.Error())
 						notReady = true
 					}
