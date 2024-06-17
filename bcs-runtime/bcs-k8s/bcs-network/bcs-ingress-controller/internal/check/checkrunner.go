@@ -58,13 +58,13 @@ func (c *CheckRunner) Register(checker Checker, interval Interval) *CheckRunner 
 
 // Start 定时启动注册的所有checker
 func (c *CheckRunner) Start() {
-	tickerMin := time.NewTicker(time.Minute)
-	tickerMin10 := time.NewTicker(time.Minute * 10)
-	defer func() {
-		tickerMin.Stop()
-		tickerMin10.Stop()
-	}()
 	go func() {
+		tickerMin := time.NewTicker(time.Minute)
+		tickerMin10 := time.NewTicker(time.Minute * 10)
+		defer func() {
+			tickerMin.Stop()
+			tickerMin10.Stop()
+		}()
 		for {
 			select {
 			case <-tickerMin.C:

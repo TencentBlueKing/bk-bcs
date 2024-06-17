@@ -62,8 +62,13 @@ func (m *MonitorHelper) EnsureUptimeCheck(ctx context.Context, listener *network
 		return 0, err
 	}
 	for _, task := range taskResp.Data {
+		if listener.GetUptimeCheckTaskStatus().ID != 0 && task.ID == listener.GetUptimeCheckTaskStatus().ID {
+			cloudTask = task
+			break
+		}
 		if task.Name == taskName {
 			cloudTask = task
+			break
 		}
 	}
 	// 1. 有task， 但目前targetGroup为空 -> 需要删除对应拨测任务
