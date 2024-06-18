@@ -113,6 +113,22 @@ const (
 
 	// UpdaterAnnoKey 更新者，为保持与 bcs-ui 中的一致，还是使用 updator（typo）
 	UpdaterAnnoKey = "io.tencent.paas.updator"
+
+	// TemplateSourceType  template 创建来源
+	TemplateSourceType = "template"
+	// HelmSourceType helm 创建来源key
+	HelmSourceType = "app.kubernetes.io/managed-by"
+)
+
+const (
+	// TemplateSourceTypeValue 模板创建来源类型值
+	TemplateSourceTypeValue = "template"
+	// TemplateCreateSource 创建来源: Template
+	TemplateCreateSource = "Template"
+	// HelmCreateSource 创建来源: Helm
+	HelmCreateSource = "Helm"
+	// ClientCreateSource 创建来源: Client
+	ClientCreateSource = "Client"
 )
 
 const (
