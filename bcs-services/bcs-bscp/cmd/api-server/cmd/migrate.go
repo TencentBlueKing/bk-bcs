@@ -15,11 +15,14 @@ package cmd
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/spf13/cobra"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/apigw"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/version"
 )
 
 var migrateCmd = &cobra.Command{
@@ -42,7 +45,11 @@ var migrateInitApigatewayCmd = &cobra.Command{
 
 		logs.InitLogger(cc.ApiServer().Log.Logs())
 
-		fmt.Println("Need to be implemented")
+		if err := apigw.ReleaseSwagger(cc.ApiServer(), "zh",
+			fmt.Sprintf("%s+%s", version.GITTAG, time.Now().Format("20060102150405"))); err != nil {
+			fmt.Println(err)
+			return
+		}
 	},
 }
 

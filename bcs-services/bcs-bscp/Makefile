@@ -1,3 +1,10 @@
+# init the build information
+ifdef HASTAG
+	GITTAG=${HASTAG}
+else
+	GITTAG=$(shell git describe --always)
+endif
+
 # version
 PRO_DIR   = $(shell pwd)
 BUILDTIME = $(shell date +%Y-%m-%dT%T%z)
@@ -17,6 +24,7 @@ ifeq ("$(VERSION)", "")
 	export OUTPUT_DIR = ${PRO_DIR}/build/bk-bscp
 	export LDVersionFLAG = "-X github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/version.BUILDTIME=${BUILDTIME} \
     	-X github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/version.GITHASH=${GITHASH} \
+    	-X github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/version.GITTAG=${GITTAG} \
 		-X github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/version.DEBUG=${DEBUG}"
 else
 	export OUTPUT_DIR = ${PRO_DIR}/build/bk-bscp-${VERSION}
