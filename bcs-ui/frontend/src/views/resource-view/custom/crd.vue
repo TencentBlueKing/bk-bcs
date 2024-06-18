@@ -1,7 +1,7 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
   <div class="flex flex-col h-full">
-    <Header class="flex-[0_0_auto] !h-[66px] !border-b-0 !shadow-none !bg-inherit">
+    <ContentHeader class="flex-[0_0_auto] !h-[66px] !border-b-0 !shadow-none !bg-inherit">
       <span class="text-[16px] text-[#313238] font-bold">CRD</span>
       <template #right>
         <bcs-search-select
@@ -17,7 +17,7 @@
           @clear="searchSelectChange()"
           v-if="!isViewEditable" />
       </template>
-    </Header>
+    </ContentHeader>
     <div
       class="dashboard-content flex-1 px-[24px] py-[16px] pt-0 overflow-auto"
       v-bkloading="{ isLoading, opacity: 1, color: '#f5f7fa' }">
@@ -108,7 +108,7 @@ import useTableData from '../common/use-table-data';
 import useViewConfig from '../view-manage/use-view-config';
 
 import { bus } from '@/common/bus';
-import Header from '@/components/layout/Header.vue';
+import ContentHeader from '@/components/layout/Header.vue';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 import { useCluster } from '@/composables/use-app';
 import useInterval from '@/composables/use-interval';

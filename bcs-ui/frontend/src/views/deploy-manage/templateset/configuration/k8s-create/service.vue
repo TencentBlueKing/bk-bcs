@@ -1,298 +1,298 @@
 <!-- eslint-disable max-len -->
 <template>
-  <div class="biz-content">
-    <biz-header
-      ref="commonHeader"
-      @exception="exceptionHandler"
-      @saveServiceSuccess="saveServiceSuccess"
-      @switchVersion="initResource"
-      @exmportToYaml="exportToYaml">
-    </biz-header>
-    <template>
-      <div class="biz-content-wrapper biz-confignation-wrapper" v-bkloading="{ isLoading: isTemplateSaving }">
-        <div class="biz-tab-box" v-show="!isDataLoading">
-          <biz-tabs @tab-change="tabResource" ref="commonTab"></biz-tabs>
-          <div class="biz-tab-content" v-bkloading="{ isLoading: isTabChanging }">
-            <bk-alert type="info" class="mb20">
-              <div slot="title">
-                {{$t('deploy.templateset.serviceDescription')}}，
-                <a class="bk-text-button" :href="PROJECT_CONFIG.k8sService" target="_blank">{{$t('plugin.tools.docs')}}</a>
-              </div>
-            </bk-alert>
-            <template v-if="!services.length">
-              <div class="biz-guide-box mt0">
-                <bk-button icon="plus" type="primary" @click.stop.prevent="addLocalService">
-                  <span style="margin-left: 0;">{{$t('generic.button.add')}}Service</span>
-                </bk-button>
-              </div>
-            </template>
+  <BcsContent>
+    <template #header>
+      <biz-header
+        ref="commonHeader"
+        @exception="exceptionHandler"
+        @saveServiceSuccess="saveServiceSuccess"
+        @switchVersion="initResource"
+        @exmportToYaml="exportToYaml">
+      </biz-header>
+    </template>
+    <div class="biz-confignation-wrapper" v-bkloading="{ isLoading: isTemplateSaving }">
+      <div class="biz-tab-box" v-show="!isDataLoading">
+        <biz-tabs @tab-change="tabResource" ref="commonTab"></biz-tabs>
+        <div class="biz-tab-content" v-bkloading="{ isLoading: isTabChanging }">
+          <bk-alert type="info" class="mb20">
+            <div slot="title">
+              {{$t('deploy.templateset.serviceDescription')}}，
+              <a class="bk-text-button" :href="PROJECT_CONFIG.k8sService" target="_blank">{{$t('plugin.tools.docs')}}</a>
+            </div>
+          </bk-alert>
+          <template v-if="!services.length">
+            <div class="biz-guide-box mt0">
+              <bk-button icon="plus" type="primary" @click.stop.prevent="addLocalService">
+                <span style="margin-left: 0;">{{$t('generic.button.add')}}Service</span>
+              </bk-button>
+            </div>
+          </template>
 
-            <template v-else>
-              <div class="biz-configuration-topbar">
-                <div class="biz-list-operation">
-                  <div class="item" v-for="(service, index) in services" :key="index">
-                    <bk-button :class="['bk-button', { 'bk-primary': curService.id === service.id }]" @click.stop="setCurService(service, index)">
-                      {{(service && service.config.metadata.name) || $t('deploy.templateset.unnamed')}}
-                      <span class="biz-update-dot" v-show="service.isEdited"></span>
-                    </bk-button>
-                    <span class="bcs-icon bcs-icon-close" @click.stop="removeService(service, index)"></span>
-                  </div>
-
-                  <bcs-popover ref="serviceTooltip" :content="$t('deploy.templateset.addService')" placement="top">
-                    <bk-button class="bk-button bk-default is-outline is-icon" @click.stop="addLocalService">
-                      <i class="bcs-icon bcs-icon-plus"></i>
-                    </bk-button>
-                  </bcs-popover>
+          <template v-else>
+            <div class="biz-configuration-topbar">
+              <div class="biz-list-operation">
+                <div class="item" v-for="(service, index) in services" :key="index">
+                  <bk-button :class="['bk-button', { 'bk-primary': curService.id === service.id }]" @click.stop="setCurService(service, index)">
+                    {{(service && service.config.metadata.name) || $t('deploy.templateset.unnamed')}}
+                    <span class="biz-update-dot" v-show="service.isEdited"></span>
+                  </bk-button>
+                  <span class="bcs-icon bcs-icon-close" @click.stop="removeService(service, index)"></span>
                 </div>
+
+                <bcs-popover ref="serviceTooltip" :content="$t('deploy.templateset.addService')" placement="top">
+                  <bk-button class="bk-button bk-default is-outline is-icon" @click.stop="addLocalService">
+                    <i class="bcs-icon bcs-icon-plus"></i>
+                  </bk-button>
+                </bcs-popover>
               </div>
+            </div>
 
-              <div class="biz-configuration-content" style="position: relative; margin-bottom: 105px;">
-                <div class="bk-form biz-configuration-form">
-                  <a href="javascript:void(0);" class="bk-text-button from-json-btn" @click.stop.prevent="showJsonPanel">{{$t('deploy.templateset.importYAML')}}</a>
+            <div class="biz-configuration-content" style="position: relative; margin-bottom: 105px;">
+              <div class="bk-form biz-configuration-form">
+                <a href="javascript:void(0);" class="bk-text-button from-json-btn" @click.stop.prevent="showJsonPanel">{{$t('deploy.templateset.importYAML')}}</a>
 
-                  <bk-sideslider
-                    :is-show.sync="toJsonDialogConf.isShow"
-                    :title="toJsonDialogConf.title"
-                    :width="toJsonDialogConf.width"
-                    class="biz-app-container-tojson-sideslider"
-                    :quick-close="false"
-                    @hidden="closeToJson">
-                    <div slot="content" style="position: relative;">
-                      <div class="biz-log-box" :style="{ height: `${winHeight - 60}px` }" v-bkloading="{ isLoading: toJsonDialogConf.loading }">
-                        <bk-button class="bk-button bk-primary save-json-btn" @click.stop.prevent="saveApplicationJson">{{$t('generic.button.import')}}</bk-button>
-                        <bk-button class="bk-button bk-default hide-json-btn" @click.stop.prevent="hideApplicationJson">{{$t('generic.button.cancel')}}</bk-button>
-                        <ace
-                          :value="editorConfig.value"
-                          :width="editorConfig.width"
-                          :height="editorConfig.height"
-                          :lang="editorConfig.lang"
-                          :read-only="editorConfig.readOnly"
-                          :full-screen="editorConfig.fullScreen"
-                          @init="editorInitAfter">
-                        </ace>
-                      </div>
+                <bk-sideslider
+                  :is-show.sync="toJsonDialogConf.isShow"
+                  :title="toJsonDialogConf.title"
+                  :width="toJsonDialogConf.width"
+                  class="biz-app-container-tojson-sideslider"
+                  :quick-close="false"
+                  @hidden="closeToJson">
+                  <div slot="content" style="position: relative;">
+                    <div class="biz-log-box" :style="{ height: `${winHeight - 60}px` }" v-bkloading="{ isLoading: toJsonDialogConf.loading }">
+                      <bk-button class="bk-button bk-primary save-json-btn" @click.stop.prevent="saveApplicationJson">{{$t('generic.button.import')}}</bk-button>
+                      <bk-button class="bk-button bk-default hide-json-btn" @click.stop.prevent="hideApplicationJson">{{$t('generic.button.cancel')}}</bk-button>
+                      <ace
+                        :value="editorConfig.value"
+                        :width="editorConfig.width"
+                        :height="editorConfig.height"
+                        :lang="editorConfig.lang"
+                        :read-only="editorConfig.readOnly"
+                        :full-screen="editorConfig.fullScreen"
+                        @init="editorInitAfter">
+                      </ace>
                     </div>
-                  </bk-sideslider>
+                  </div>
+                </bk-sideslider>
 
-                  <div class="bk-form-item is-required">
-                    <label class="bk-label" style="width: 140px;">{{$t('generic.label.name')}}：</label>
-                    <div class="bk-form-content" style="margin-left: 140px;">
-                      <bkbcs-input
-                        type="text"
-                        :placeholder="$t('deploy.templateset.enterCharacterLimit')"
-                        style="width: 310px;"
-                        maxlength="64"
-                        :value.sync="curService.config.metadata.name"
-                        :list="varList"
-                      >
-                      </bkbcs-input>
-                      <div class="bk-form-tip" v-if="errors.has('serviceName')">
-                        <p class="bk-tip-text">{{$t('deploy.templateset.nameIsRequired')}}</p>
-                      </div>
+                <div class="bk-form-item is-required">
+                  <label class="bk-label" style="width: 140px;">{{$t('generic.label.name')}}：</label>
+                  <div class="bk-form-content" style="margin-left: 140px;">
+                    <bkbcs-input
+                      type="text"
+                      :placeholder="$t('deploy.templateset.enterCharacterLimit')"
+                      style="width: 310px;"
+                      maxlength="64"
+                      :value.sync="curService.config.metadata.name"
+                      :list="varList"
+                    >
+                    </bkbcs-input>
+                    <div class="bk-form-tip" v-if="errors.has('serviceName')">
+                      <p class="bk-tip-text">{{$t('deploy.templateset.nameIsRequired')}}</p>
                     </div>
                   </div>
-                  <div class="bk-form-item is-required">
-                    <label class="bk-label" style="width: 140px;">{{$t('deploy.templateset.associateApplication')}}：</label>
-                    <div class="bk-form-content" style="margin-left: 140px;">
-                      <div class="bk-dropdown-box" style="width: 310px;" @click="reloadApplications">
-                        <bk-selector
-                          :placeholder="$t('deploy.templateset.selectAssociatedApplication')"
-                          :setting-key="'deploy_tag'"
-                          :multi-select="true"
-                          :display-key="'deploy_name'"
-                          :selected.sync="curService.deploy_tag_list"
-                          :list="applicationList"
-                          :prevent-init-trigger="'true'"
-                          :is-loading="isLoadingApps"
-                          @item-selected="selectApps">
-                        </bk-selector>
-                      </div>
-                      <span class="biz-tip ml10" v-if="!isDataLoading && !applicationList.length">{{$t('deploy.templateset.configureResourceFirst')}}</span>
+                </div>
+                <div class="bk-form-item is-required">
+                  <label class="bk-label" style="width: 140px;">{{$t('deploy.templateset.associateApplication')}}：</label>
+                  <div class="bk-form-content" style="margin-left: 140px;">
+                    <div class="bk-dropdown-box" style="width: 310px;" @click="reloadApplications">
+                      <bk-selector
+                        :placeholder="$t('deploy.templateset.selectAssociatedApplication')"
+                        :setting-key="'deploy_tag'"
+                        :multi-select="true"
+                        :display-key="'deploy_name'"
+                        :selected.sync="curService.deploy_tag_list"
+                        :list="applicationList"
+                        :prevent-init-trigger="'true'"
+                        :is-loading="isLoadingApps"
+                        @item-selected="selectApps">
+                      </bk-selector>
+                    </div>
+                    <span class="biz-tip ml10" v-if="!isDataLoading && !applicationList.length">{{$t('deploy.templateset.configureResourceFirst')}}</span>
+                  </div>
+                </div>
+                <div class="bk-form-item is-required">
+                  <label class="bk-label" style="width: 140px;">{{$t('deploy.templateset.associateLabel')}}：</label>
+                  <div class="bk-form-content key-tip-wrapper" style="margin-left: 140px;">
+                    <template v-if="appLabels.length && !isLabelsLoading">
+                      <ul class="key-list">
+                        <li v-for="(label,index) in appLabels" @click="selectLabel(label)" :key="index">
+                          <span class="key">
+                            <bk-checkbox name="linkapp" :value="label.isSelected"></bk-checkbox>
+                          </span>
+                          <span class="value">{{label.key}}:{{label.value}}</span>
+                        </li>
+                      </ul>
+                      <p class="biz-tip mt5 mb15">{{$t('deploy.templateset.trafficWarning')}}</p>
+                    </template>
+                    <div v-else-if="!isLabelsLoading" class="biz-tip biz-danger" style="margin-top: 7px;">
+                      {{existLinkApp.length ? $t('deploy.templateset.noCommonLabel') : $t('deploy.templateset.associateApplicationFirst')}}
                     </div>
                   </div>
-                  <div class="bk-form-item is-required">
-                    <label class="bk-label" style="width: 140px;">{{$t('deploy.templateset.associateLabel')}}：</label>
-                    <div class="bk-form-content key-tip-wrapper" style="margin-left: 140px;">
-                      <template v-if="appLabels.length && !isLabelsLoading">
-                        <ul class="key-list">
-                          <li v-for="(label,index) in appLabels" @click="selectLabel(label)" :key="index">
-                            <span class="key">
-                              <bk-checkbox name="linkapp" :value="label.isSelected"></bk-checkbox>
-                            </span>
-                            <span class="value">{{label.key}}:{{label.value}}</span>
-                          </li>
-                        </ul>
-                        <p class="biz-tip mt5 mb15">{{$t('deploy.templateset.trafficWarning')}}</p>
-                      </template>
-                      <div v-else-if="!isLabelsLoading" class="biz-tip biz-danger" style="margin-top: 7px;">
-                        {{existLinkApp.length ? $t('deploy.templateset.noCommonLabel') : $t('deploy.templateset.associateApplicationFirst')}}
-                      </div>
+                </div>
+                <div class="bk-form-item">
+                  <label class="bk-label" style="width: 140px;">{{$t('deploy.templateset.serviceType')}}：</label>
+                  <div class="bk-form-content" style="margin-left: 140px;">
+                    <div class="bk-dropdown-box" style="width: 310px;">
+                      <bk-selector
+                        :placeholder="$t('generic.placeholder.select')"
+                        :setting-key="'id'"
+                        :display-key="'name'"
+                        :selected.sync="curService.config.spec.type"
+                        :list="serviceTypeList"
+                        @item-selected="selectServiceType">
+                      </bk-selector>
                     </div>
                   </div>
-                  <div class="bk-form-item">
-                    <label class="bk-label" style="width: 140px;">{{$t('deploy.templateset.serviceType')}}：</label>
-                    <div class="bk-form-content" style="margin-left: 140px;">
-                      <div class="bk-dropdown-box" style="width: 310px;">
-                        <bk-selector
-                          :placeholder="$t('generic.placeholder.select')"
-                          :setting-key="'id'"
-                          :display-key="'name'"
-                          :selected.sync="curService.config.spec.type"
-                          :list="serviceTypeList"
-                          @item-selected="selectServiceType">
-                        </bk-selector>
-                      </div>
-                    </div>
+                </div>
+                <div class="bk-form-item" v-show="curService.config.spec.type !== 'NodePort'">
+                  <label class="bk-label" style="width: 140px;">ClusterIP：</label>
+                  <div class="bk-form-content" style="margin-left: 140px;">
+                    <bkbcs-input :placeholder="$t('deploy.templateset.enterClusterIP')" style="width: 310px;" v-model="curService.config.spec.clusterIP" />
+                    <!-- <p class="biz-tip mt5">{{$t('deploy.templateset.noFillOrNone')}}</p> -->
                   </div>
-                  <div class="bk-form-item" v-show="curService.config.spec.type !== 'NodePort'">
-                    <label class="bk-label" style="width: 140px;">ClusterIP：</label>
-                    <div class="bk-form-content" style="margin-left: 140px;">
-                      <bkbcs-input :placeholder="$t('deploy.templateset.enterClusterIP')" style="width: 310px;" v-model="curService.config.spec.clusterIP" />
-                      <!-- <p class="biz-tip mt5">{{$t('deploy.templateset.noFillOrNone')}}</p> -->
-                    </div>
-                  </div>
-                  <div class="bk-form-item">
-                    <label class="bk-label" style="width: 140px;">{{$t('dashboard.network.portmapping')}}：</label>
-                    <div class="bk-form-content" style="margin-left: 140px;">
-                      <div class="biz-keys-list mb10">
-                        <template v-if="curService.deploy_tag_list.length">
-                          <template v-if="appPortList.length && curService.config.spec.ports.length">
-                            <table class="biz-simple-table">
-                              <thead>
-                                <tr>
-                                  <th style="width: 100px;">{{$t('deploy.templateset.portName')}}</th>
-                                  <th style="width: 100px;">{{$t('deploy.helm.port')}}</th>
-                                  <th style="width: 120px;">{{$t('deploy.templateset.protocol')}}</th>
-                                  <th style="width: 120px;">{{$t('deploy.templateset.targetPort')}}</th>
-                                  <th style="width: 100px;" v-if="curService.config.spec.type === 'NodePort' || curService.config.spec.type === 'LoadBalancer'">NodePort</th>
-                                  <th></th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                <tr v-for="(port, index) in curService.config.spec.ports" :key="index">
-                                  <td>
-                                    <bkbcs-input
-                                      type="text"
-                                      :placeholder="$t('generic.placeholder.input')"
-                                      style="width: 100px;"
-                                      :value.sync="port.name"
-                                      :list="varList"
-                                    >
-                                    </bkbcs-input>
-                                  </td>
-                                  <td>
-                                    <bkbcs-input
-                                      type="number"
-                                      :placeholder="$t('generic.placeholder.input')"
-                                      style="width: 100px;"
-                                      :min="1"
-                                      :max="65535"
-                                      :value.sync="port.port"
-                                      :list="varList"
-                                    >
-                                    </bkbcs-input>
-                                  </td>
-                                  <td>
-                                    <bk-selector
-                                      :placeholder="$t('deploy.templateset.protocol')"
-                                      :setting-key="'id'"
-                                      :allow-clear="true"
-                                      :selected.sync="port.protocol"
-                                      :list="protocolList">
-                                    </bk-selector>
-                                  </td>
-                                  <td>
-                                    <bk-selector
-                                      :placeholder="$t('generic.placeholder.select')"
-                                      :setting-key="'id'"
-                                      :display-key="'name'"
-                                      :selected.sync="port.id"
-                                      :allow-clear="true"
-                                      :filter-list="curServicePortList"
-                                      :is-link="true"
-                                      :init-prevent-trigger="true"
-                                      :list="appPortList"
-                                      @clear="clearPort(port)"
-                                      @item-selected="selectPort(port)">
-                                    </bk-selector>
-                                  </td>
-                                  <td v-if="curService.config.spec.type === 'NodePort' || curService.config.spec.type === 'LoadBalancer'">
-                                    <bkbcs-input
-                                      type="number"
-                                      :placeholder="$t('generic.placeholder.input')"
-                                      style="width: 76px;"
-                                      :min="0"
-                                      :max="32767"
-                                      :disabled="curService.config.spec.type !== 'NodePort' && curService.config.spec.type !== 'LoadBalancer'"
-                                      :value.sync="port.nodePort"
-                                      :list="varList"
-                                    >
-                                    </bkbcs-input>
-                                    <bcs-popover placement="top">
-                                      <i class="bcs-icon bcs-icon-question-circle" style="vertical-align: middle; cursor: pointer;"></i>
-                                      <div slot="content">
-                                        {{$t('deploy.templateset.enterNodePortValue')}}
-                                      </div>
-                                    </bcs-popover>
-                                  </td>
-                                  <td>
-                                    <bk-button class="action-btn ml5" @click.stop.prevent="addPort" v-show="curService.config.spec.ports.length < appPortList.length">
-                                      <i class="bcs-icon bcs-icon-plus"></i>
-                                    </bk-button>
-                                    <bk-button class="action-btn" @click.stop.prevent="removePort(port, index)" v-show="curService.config.spec.ports.length > 1">
-                                      <i class="bcs-icon bcs-icon-minus"></i>
-                                    </bk-button>
-                                  </td>
-                                </tr>
-                              </tbody>
-                            </table>
-                          </template>
-                          <template v-else>
-                            <p class="mt5 biz-tip biz-danger">{{$t('deploy.templateset.fillAssociatedContainerPort')}}</p>
-                          </template>
+                </div>
+                <div class="bk-form-item">
+                  <label class="bk-label" style="width: 140px;">{{$t('dashboard.network.portmapping')}}：</label>
+                  <div class="bk-form-content" style="margin-left: 140px;">
+                    <div class="biz-keys-list mb10">
+                      <template v-if="curService.deploy_tag_list.length">
+                        <template v-if="appPortList.length && curService.config.spec.ports.length">
+                          <table class="biz-simple-table">
+                            <thead>
+                              <tr>
+                                <th style="width: 100px;">{{$t('deploy.templateset.portName')}}</th>
+                                <th style="width: 100px;">{{$t('deploy.helm.port')}}</th>
+                                <th style="width: 120px;">{{$t('deploy.templateset.protocol')}}</th>
+                                <th style="width: 120px;">{{$t('deploy.templateset.targetPort')}}</th>
+                                <th style="width: 100px;" v-if="curService.config.spec.type === 'NodePort' || curService.config.spec.type === 'LoadBalancer'">NodePort</th>
+                                <th></th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr v-for="(port, index) in curService.config.spec.ports" :key="index">
+                                <td>
+                                  <bkbcs-input
+                                    type="text"
+                                    :placeholder="$t('generic.placeholder.input')"
+                                    style="width: 100px;"
+                                    :value.sync="port.name"
+                                    :list="varList"
+                                  >
+                                  </bkbcs-input>
+                                </td>
+                                <td>
+                                  <bkbcs-input
+                                    type="number"
+                                    :placeholder="$t('generic.placeholder.input')"
+                                    style="width: 100px;"
+                                    :min="1"
+                                    :max="65535"
+                                    :value.sync="port.port"
+                                    :list="varList"
+                                  >
+                                  </bkbcs-input>
+                                </td>
+                                <td>
+                                  <bk-selector
+                                    :placeholder="$t('deploy.templateset.protocol')"
+                                    :setting-key="'id'"
+                                    :allow-clear="true"
+                                    :selected.sync="port.protocol"
+                                    :list="protocolList">
+                                  </bk-selector>
+                                </td>
+                                <td>
+                                  <bk-selector
+                                    :placeholder="$t('generic.placeholder.select')"
+                                    :setting-key="'id'"
+                                    :display-key="'name'"
+                                    :selected.sync="port.id"
+                                    :allow-clear="true"
+                                    :filter-list="curServicePortList"
+                                    :is-link="true"
+                                    :init-prevent-trigger="true"
+                                    :list="appPortList"
+                                    @clear="clearPort(port)"
+                                    @item-selected="selectPort(port)">
+                                  </bk-selector>
+                                </td>
+                                <td v-if="curService.config.spec.type === 'NodePort' || curService.config.spec.type === 'LoadBalancer'">
+                                  <bkbcs-input
+                                    type="number"
+                                    :placeholder="$t('generic.placeholder.input')"
+                                    style="width: 76px;"
+                                    :min="0"
+                                    :max="32767"
+                                    :disabled="curService.config.spec.type !== 'NodePort' && curService.config.spec.type !== 'LoadBalancer'"
+                                    :value.sync="port.nodePort"
+                                    :list="varList"
+                                  >
+                                  </bkbcs-input>
+                                  <bcs-popover placement="top">
+                                    <i class="bcs-icon bcs-icon-question-circle" style="vertical-align: middle; cursor: pointer;"></i>
+                                    <div slot="content">
+                                      {{$t('deploy.templateset.enterNodePortValue')}}
+                                    </div>
+                                  </bcs-popover>
+                                </td>
+                                <td>
+                                  <bk-button class="action-btn ml5" @click.stop.prevent="addPort" v-show="curService.config.spec.ports.length < appPortList.length">
+                                    <i class="bcs-icon bcs-icon-plus"></i>
+                                  </bk-button>
+                                  <bk-button class="action-btn" @click.stop.prevent="removePort(port, index)" v-show="curService.config.spec.ports.length > 1">
+                                    <i class="bcs-icon bcs-icon-minus"></i>
+                                  </bk-button>
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
                         </template>
                         <template v-else>
-                          <p class="mt5 biz-tip biz-danger">{{$t('deploy.templateset.associateApplicationFirst')}}</p>
+                          <p class="mt5 biz-tip biz-danger">{{$t('deploy.templateset.fillAssociatedContainerPort')}}</p>
                         </template>
-                        <p class="biz-tip">
-                          {{$t('deploy.templateset.clusterIPNoneSkipPortMapping')}}
-                          <a href="javascript:void(0);" class="bk-text-button" @click="showPortExampleDialg">{{$t('deploy.templateset.viewExample')}}</a>
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="bk-form-item">
-                    <label class="bk-label" style="width: 140px;">{{$t('generic.label.labelManage')}}：</label>
-                    <div class="bk-form-content" style="margin-left: 140px;">
-                      <bk-keyer :key-list.sync="curLabelList" ref="labelKeyer" @change="updateLabelList" :var-list="varList"></bk-keyer>
-                    </div>
-                  </div>
-                  <div class="bk-form-item">
-                    <label class="bk-label" style="width: 140px;">{{$t('deploy.templateset.annotationManagement')}}：</label>
-                    <div class="bk-form-content" style="margin-left: 140px;">
-                      <bk-keyer :key-list.sync="curRemarkList" :var-list="varList" ref="remarkKeyer" @change="updateApplicationRemark"></bk-keyer>
+                      </template>
+                      <template v-else>
+                        <p class="mt5 biz-tip biz-danger">{{$t('deploy.templateset.associateApplicationFirst')}}</p>
+                      </template>
+                      <p class="biz-tip">
+                        {{$t('deploy.templateset.clusterIPNoneSkipPortMapping')}}
+                        <a href="javascript:void(0);" class="bk-text-button" @click="showPortExampleDialg">{{$t('deploy.templateset.viewExample')}}</a>
+                      </p>
                     </div>
                   </div>
                 </div>
+                <div class="bk-form-item">
+                  <label class="bk-label" style="width: 140px;">{{$t('generic.label.labelManage')}}：</label>
+                  <div class="bk-form-content" style="margin-left: 140px;">
+                    <bk-keyer :key-list.sync="curLabelList" ref="labelKeyer" @change="updateLabelList" :var-list="varList"></bk-keyer>
+                  </div>
+                </div>
+                <div class="bk-form-item">
+                  <label class="bk-label" style="width: 140px;">{{$t('deploy.templateset.annotationManagement')}}：</label>
+                  <div class="bk-form-content" style="margin-left: 140px;">
+                    <bk-keyer :key-list.sync="curRemarkList" :var-list="varList" ref="remarkKeyer" @change="updateApplicationRemark"></bk-keyer>
+                  </div>
+                </div>
               </div>
-            </template>
-          </div>
+            </div>
+          </template>
         </div>
       </div>
-      <bk-dialog
-        :is-show.sync="exampleDialogConf.isShow"
-        :width="exampleDialogConf.width"
-        :title="exampleDialogConf.title"
-        :close-icon="exampleDialogConf.closeIcon"
-        :has-footer="false"
-        :ext-cls="'biz-example-dialog'"
-        @cancel="exampleDialogConf.isShow = false">
-        <template slot="content">
-          <img src="@/images/service-example.png" style="width: 100%;">
-        </template>
-      </bk-dialog>
-    </template>
-  </div>
+    </div>
+    <bk-dialog
+      :is-show.sync="exampleDialogConf.isShow"
+      :width="exampleDialogConf.width"
+      :title="exampleDialogConf.title"
+      :close-icon="exampleDialogConf.closeIcon"
+      :has-footer="false"
+      :ext-cls="'biz-example-dialog'"
+      @cancel="exampleDialogConf.isShow = false">
+      <template slot="content">
+        <img src="@/images/service-example.png" style="width: 100%;">
+      </template>
+    </bk-dialog>
+  </BcsContent>
 </template>
 
 <script>
@@ -311,6 +311,7 @@ import tabs from './tabs.vue';
 
 import ace from '@/components/ace-editor';
 import bkKeyer from '@/components/keyer';
+import BcsContent from '@/components/layout/Content.vue';
 import serviceParams from '@/json/k8s-service.json';
 import k8sBase from '@/mixins/configuration/k8s-base';
 import mixinBase from '@/mixins/configuration/mixin-base';
@@ -322,6 +323,7 @@ export default {
     'biz-header': header,
     'biz-tabs': tabs,
     ace,
+    BcsContent,
   },
   mixins: [mixinBase, k8sBase],
   data() {

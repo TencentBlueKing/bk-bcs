@@ -41,28 +41,46 @@
               @click="handleConditionClick($event, condition)">
               {{ condition.content }}
             </bk-tag>
-            <input
-              v-else
-              v-model="editSearchStr"
-              ref="editInputRef"
-              class="input"
-              placeholder=" "
-              @blur="handleConditionEdit(condition)"
-              @keydown="handleEnterConditionEdit($event, condition)"
-              @compositionstart="isComposing = true"
-              @compositionend="isComposing = false" />
+            <div v-else class="search-container-input">
+              <span class="key">{{ parentSelecte?.name ? `${parentSelecte.name} : ` : '' }}</span>
+              <span class="value">
+                <span class="hidden-text">{{ editSearchStr }}</span>
+                <input
+                  v-model="editSearchStr"
+                  ref="editInputRef"
+                  class="input"
+                  placeholder=" "
+                  :readonly="parentSelecte && !!parentSelecte?.children"
+                  @blur="handleConditionEdit(condition)"
+                  @keydown="handleEnterConditionEdit($event, condition)"
+                  @compositionstart="isComposing = true"
+                  @compositionend="isComposing = false"
+                  @click="handleClickInput($event)"
+                  @paste="handlePasteInput" />
+              </span>
+              <span class="placeholder"> {{ searchInputPlaceholder }}</span>
+            </div>
           </div>
           <div v-if="isShowSearchInput" class="search-container-input" ref="inputWrapRef">
-            <input
-              v-model="searchStr"
-              ref="inputRef"
-              class="input"
-              placeholder=" "
-              @focus="inputFocus = true"
-              @blur="handleConfirmConditionItem"
-              @keydown="handleEnterAddConditionItem"
-              @compositionstart="isComposing = true"
-              @compositionend="isComposing = false" />
+            <span class="key">{{ parentSelecte?.name ? `${parentSelecte.name} : ` : '' }}</span>
+            <span class="value">
+              <span class="hidden-text">{{ searchStr }}</span>
+              <input
+                v-model="searchStr"
+                ref="inputRef"
+                class="input"
+                placeholder=" "
+                :contenteditable="true"
+                :readonly="!!parentSelecte?.children"
+                @focus="inputFocus = true"
+                @keydown="handleEnterAddConditionItem"
+                @blur="handleConfirmConditionItem"
+                @compositionstart="isComposing = true"
+                @compositionend="isComposing = false"
+                @click="handleClickInput($event)"
+                @paste="handlePasteInput" />
+            </span>
+            <span class="placeholder"> {{ searchInputPlaceholder }}</span>
           </div>
         </div>
         <div
@@ -96,7 +114,7 @@
             </bk-loading>
           </div>
         </div>
-        <div v-else class="children-menu-wrap" v-click-outside="() => (isShowPopover = false)">
+        <div v-else class="children-menu-wrap" v-click-outside="handleChildSelectorClickOutside">
           <div v-for="item in childSelectorData" :key="item.value" class="search-item" @click="handleSelectChild(item)">
             {{ item.name }}
           </div>
@@ -172,7 +190,13 @@
 <script lang="ts" setup>
   import { nextTick, ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
   import { storeToRefs } from 'pinia';
-  import { CLIENT_SEARCH_DATA, CLIENT_STATISTICS_SEARCH_DATA, CLIENT_STATUS_MAP } from '../../../../constants/client';
+  import {
+    CLIENT_SEARCH_DATA,
+    CLIENT_STATISTICS_SEARCH_DATA,
+    CLIENT_STATUS_MAP,
+    CLIENT_ERROR_CATEGORY_MAP,
+    CLIENT_COMPONENT_TYPES_MAP,
+  } from '../../../../constants/client';
   import { ISelectorItem, ISearchCondition, ICommonlyUsedItem, IClinetCommonQuery } from '../../../../../types/client';
   import {
     getClientSearchRecord,
@@ -186,7 +210,7 @@
   import CommonlyUsedTag from './commonly-used-tag.vue';
   import { Message } from 'bkui-vue';
   import { cloneDeep } from 'lodash';
-  import { useRoute } from 'vue-router';
+  import { useRoute, useRouter } from 'vue-router';
   import { useI18n } from 'vue-i18n';
 
   const { t, locale } = useI18n();
@@ -195,6 +219,7 @@
   const { searchQuery } = storeToRefs(clientStore);
 
   const route = useRoute();
+  const router = useRouter();
 
   const props = defineProps<{
     bkBizId: string;
@@ -220,6 +245,7 @@
   const isShowAllCommonSearchPopover = ref(false);
   const editSearchStr = ref('');
   const editInputRef = ref();
+  const editConditionItem = ref<ISearchCondition>();
   const menuOffset = ref(0);
   const inputWrapRef = ref();
   const dateTime = ref(getTimeRange(1));
@@ -229,15 +255,35 @@
   const isShowSearchInput = ref(false);
 
   const inputPlacehoder = computed(() => {
-    if (searchConditionList.value.length || searchStr.value || inputFocus.value) return '';
-    return isClientSearch.value
-      ? t('UID/IP/标签/源版本/最近一次拉取配置状态/在线状态/客户端组件类型/客户端组件版本/配置拉取时间范围')
-      : t('标签/源版本/最近一次拉取配置状态/在线状态/客户端组件类型/客户端组件版本');
+    if (searchConditionList.value.length || parentSelecte.value || inputFocus.value) return '';
+    if (isClientSearch.value) {
+      return t(
+        'UID/IP/标签/当前配置版本/最近一次拉取配置状态/在线状态/客户端组件类型/客户端组件版本/配置拉取时间范围/错误类别',
+      );
+    }
+    return t('标签/当前配置版本/最近一次拉取配置状态/在线状态/客户端组件类型/客户端组件版本');
   });
 
   const isClientSearch = computed(() => route.name === 'client-search');
 
   const selectorData = computed(() => (isClientSearch.value ? CLIENT_SEARCH_DATA : CLIENT_STATISTICS_SEARCH_DATA));
+
+  const searchInputPlaceholder = computed(() => {
+    if (
+      !parentSelecte.value ||
+      parentSelecte.value?.children ||
+      searchStr.value ||
+      parentSelecte.value?.value === 'pull_time' ||
+      (editConditionItem.value && editSearchStr.value)
+    ) {
+      return '';
+    }
+
+    if (parentSelecte.value?.value !== 'label') {
+      return t('查询多个实例请使用竖线（"|"）分隔');
+    }
+    return t('查询同一标签多个值时使用逗号（","）分隔，查询不同标签时使用竖线（"|"）分隔');
+  });
 
   const isCommonlyUsedBtnLight = computed(() => {
     const item = commonlySearchList.value.find((commonlySearchItem) => {
@@ -278,8 +324,26 @@
     (val) => {
       if (Object.keys(val!).length === 0) {
         searchConditionList.value = [];
+        router.replace({
+          query: {
+            heartTime: searchQuery.value.last_heartbeat_time,
+          },
+        });
       } else {
+        const query: any = {
+          ...val,
+          label: JSON.stringify(val.label),
+          heartTime: searchQuery.value.last_heartbeat_time,
+        };
+        if (query.start_pull_time) {
+          query.pull_time = `${dateTime.value[0]} - ${dateTime.value[1]}`;
+          delete query.start_pull_time;
+          delete query.end_pull_time;
+        }
         handleAddRecentSearch();
+        router.replace({
+          query,
+        });
       }
     },
   );
@@ -298,22 +362,41 @@
     handleGetSearchList('common');
     const entries = Object.entries(route.query);
     if (entries.length === 0) return;
-    const { name, value } = CLIENT_SEARCH_DATA.find((item) => item.value === entries[0][0])!;
-    if (value === 'pull_time') {
-      searchConditionList.value.push({
-        content: `${name} : ${entries[0][1]} 00:00:00 - ${entries[0][1]} 23:59:59`,
-        value: `${entries[0][1]} 00:00:00 - ${entries[0][1]} 23:59:59`,
-        key: value,
-        isEdit: false,
-      });
-    } else {
-      searchConditionList.value.push({
-        content: `${name} : ${entries[0][1]}`,
-        value: entries[0][1] as string,
-        key: value,
-        isEdit: false,
-      });
-    }
+    entries.forEach((entry) => {
+      const [searchKey, searchValue]: [string, any] = entry;
+      if (searchKey === 'heartTime') return;
+      const { name, value, children } = CLIENT_SEARCH_DATA.find((item) => item.value === searchKey)!;
+      if (value === 'pull_time') {
+        dateTime.value = searchValue.split(' - ');
+        searchConditionList.value.push({
+          content: `${name} : ${searchValue}`,
+          value: searchValue as string,
+          key: value,
+          isEdit: false,
+        });
+      } else if (value === 'label') {
+        const labels = JSON.parse(searchValue as string);
+        labels.forEach((value: string) => {
+          searchConditionList.value.push({
+            content: `${t('标签')}: ${value}`,
+            value,
+            key: 'label',
+            isEdit: false,
+          });
+        });
+      } else {
+        let content = `${searchValue}`;
+        if (children) {
+          content = children.find((item) => item.value === searchValue)!.name;
+        }
+        searchConditionList.value.push({
+          content: `${name} : ${content}`,
+          value: searchValue as string,
+          key: value,
+          isEdit: false,
+        });
+      }
+    });
   });
 
   onBeforeUnmount(() => {
@@ -324,6 +407,7 @@
 
   // 选择父选择器
   const handleSelectParent = (parentSelectorItem: ISelectorItem) => {
+    isShowSearchInput.value = true;
     parentSelecte.value = parentSelectorItem;
     // 如果有子选择项就展示 没有就用户手动输入
     if (parentSelectorItem.value === 'pull_time') {
@@ -331,14 +415,12 @@
       nextTick(() => datePickerRef.value.handleFocus());
     } else if (parentSelectorItem?.children) {
       childSelectorData.value = parentSelectorItem.children;
-      menuOffset.value = inputWrapRef.value.offsetLeft;
+      nextTick(() => (menuOffset.value = inputWrapRef.value.offsetLeft));
       showChildSelector.value = true;
     } else {
-      isShowSearchInput.value = true;
       isShowPopover.value = false;
       nextTick(() => inputRef.value.focus());
     }
-    searchStr.value = `${parentSelectorItem?.name} : `;
   };
 
   // 选择子选择器
@@ -359,15 +441,21 @@
     searchStr.value = '';
     parentSelecte.value = undefined;
     menuOffset.value = 0;
+    isShowSearchInput.value = false;
+    editConditionItem.value = undefined;
   };
 
   const handleConfirmConditionItem = () => {
-    const conditionValue = parentSelecte.value ? searchStr.value.split(' : ', 2)[1] : searchStr.value;
     inputFocus.value = false;
     isShowSearchInput.value = false;
-    if (!conditionValue) {
-      searchStr.value = '';
+    if (!searchStr.value) {
+      parentSelecte.value = undefined;
       return;
+    }
+    if (parentSelecte.value?.value === 'label') {
+      searchStr.value = searchStr.value.replace(/;+/g, '|').replace(/\s+/g, '');
+    } else {
+      searchStr.value = searchStr.value.replace(/[,;]+/g, '|').replace(/\s+/g, '');
     }
     // 添加默认查询条件ip
     if (!parentSelecte.value?.value) {
@@ -382,8 +470,8 @@
     if (index > -1) handleConditionClose(index);
     searchConditionList.value.push({
       key: parentSelecte.value!.value,
-      value: conditionValue,
-      content: `${parentSelecte.value?.name} : ${conditionValue}`,
+      value: searchStr.value,
+      content: `${parentSelecte.value?.name} : ${searchStr.value}`,
       isEdit: false,
     });
     searchStr.value = '';
@@ -398,6 +486,12 @@
         e.preventDefault();
       } else {
         handleConfirmConditionItem();
+      }
+    }
+    if (e.keyCode === 8) {
+      if (searchStr.value === '') {
+        parentSelecte.value = undefined;
+        isShowSearchInput.value = false;
       }
     }
   };
@@ -416,6 +510,8 @@
       content: `${parentSelecte.value?.name} : ${dateTime.value[0]} - ${dateTime.value[1]}`,
       isEdit: false,
     });
+    isShowSearchInput.value = false;
+    parentSelecte.value = undefined;
   };
 
   // 获取最近搜索记录和常用搜索记录
@@ -451,6 +547,7 @@
   // 删除查询条件
   const handleConditionClose = (index: number) => {
     searchConditionList.value.splice(index, 1);
+    showChildSelector.value = false;
   };
 
   // 添加最近查询
@@ -535,12 +632,10 @@
   // 查询条件转换为查询参数
   const handleSearchConditionChangeQuery = () => {
     const query: { [key: string]: any } = {};
-    const label: { [key: string]: any } = {};
+    const label: string[] = [];
     searchConditionList.value.forEach((item) => {
       if (item.key === 'label') {
-        const labelValue = item.value.split('=', 2);
-        label[labelValue[0]] = labelValue[1] || '';
-        query[item.key] = label;
+        label.push(item.value);
       } else if (item.key === 'online_status' || item.key === 'release_change_status') {
         if (query[item.key]) {
           query[item.key].push(item.value);
@@ -556,6 +651,9 @@
         query[item.key] = item.value.trim();
       }
     });
+    if (label.length) {
+      query.label = label;
+    }
     clientStore.$patch((state) => {
       state.searchQuery.search = query;
     });
@@ -569,17 +667,14 @@
     Object.keys(query).forEach((key) => {
       if (key === 'label') {
         const labelValue = query[key];
-        Object.keys(labelValue).forEach((label) => {
-          const value = labelValue[label] || '';
-          const content = value ? `${t('标签')} : ${label}=${labelValue[label]}` : `${t('标签')} : ${label}`;
-          searchList.push({
-            key,
-            value: `${label}=${value}`,
-            content,
-            isEdit: false,
-          });
-          searchName.push(content);
+        const content = `${t('标签')} : ${labelValue}`;
+        searchList.push({
+          key,
+          value: `${labelValue}`,
+          content,
+          isEdit: false,
         });
+        searchName.push(content);
       } else if (key === 'online_status' || key === 'release_change_status') {
         query[key].forEach((value: string) => {
           const content = `${selectorData.value.find((item) => item.value === key)?.name} : ${
@@ -601,6 +696,26 @@
         searchList.push({
           key: 'pull_time',
           value: `${datetimeFormat(query.start_pull_time)} - ${datetimeFormat(query.end_pull_time)}`,
+          content,
+          isEdit: false,
+        });
+        searchName.push(content);
+      } else if (key === 'failed_reason') {
+        const errorItem = CLIENT_ERROR_CATEGORY_MAP.find((item) => item.value === query[key]);
+        const content = `${selectorData.value.find((item) => item.value === key)?.name} : ${errorItem?.name}`;
+        searchList.push({
+          key,
+          value: query[key],
+          content,
+          isEdit: false,
+        });
+        searchName.push(content);
+      } else if (key === 'client_type') {
+        const clientType = CLIENT_COMPONENT_TYPES_MAP.find((item) => item.value === query[key]);
+        const content = `${selectorData.value.find((item) => item.value === key)?.name} : ${clientType?.name}`;
+        searchList.push({
+          key,
+          value: query[key],
           content,
           isEdit: false,
         });
@@ -631,16 +746,33 @@
   };
 
   const handleClickSearch = () => {
+    console.log(1);
+    // 处理有条件处于编辑状时 点击查询框 编辑态条件未保存
+    // 新增态 处理枚举型点击搜索框取消枚举
+    if (editConditionItem.value || isShowSearchInput.value) {
+      handleChildSelectorClickOutside();
+      return;
+    }
+
     isShowPopover.value = !isShowPopover.value;
     isShowSearchInput.value = true;
     nextTick(() => inputRef.value.focus());
   };
 
+  const handleClickInput = (e: any) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (showChildSelector.value) {
+      handleChildSelectorClickOutside();
+    }
+  };
+
   const handleConditionClick = (e: any, condition: ISearchCondition) => {
     e.preventDefault();
     e.stopPropagation();
+    editConditionItem.value = condition;
     condition.isEdit = true;
-    editSearchStr.value = condition.content;
+    editSearchStr.value = condition.content.split(' : ')[1];
     parentSelecte.value = selectorData.value.find((item) => item.value === condition.key);
     if (condition.key === 'pull_time') {
       nextTick(() => datePickerRef.value.handleFocus());
@@ -652,6 +784,7 @@
     } else {
       setTimeout(() => {
         editInputRef.value[0].focus();
+        editInputRef.value[0].select();
       }, 200);
       isShowPopover.value = false;
     }
@@ -659,13 +792,18 @@
 
   const handleConditionEdit = (condition: ISearchCondition) => {
     if (!condition.isEdit) return;
-    const conditionValue = editSearchStr.value.split(' : ', 2)[1];
-    if (conditionValue) {
-      condition.value = conditionValue;
-      condition.content = `${parentSelecte.value?.name} : ${conditionValue}`;
+    if (condition.key === 'label') {
+      editSearchStr.value = editSearchStr.value.replace(/;+/g, '|').replace(/\s+/g, '');
+    } else {
+      editSearchStr.value = editSearchStr.value.replace(/[,;]+/g, '|').replace(/\s+/g, '');
+    }
+    if (editSearchStr.value) {
+      condition.value = editSearchStr.value;
+      condition.content = `${parentSelecte.value?.name} : ${editSearchStr.value}`;
     }
     condition.isEdit = false;
     parentSelecte.value = undefined;
+    editConditionItem.value = undefined;
   };
 
   const handleEnterConditionEdit = (e: any, condition: ISearchCondition) => {
@@ -674,6 +812,14 @@
         e.preventDefault();
       } else {
         handleConditionEdit(condition);
+      }
+    }
+    if (e.keyCode === 8) {
+      if (editSearchStr.value === '') {
+        parentSelecte.value = undefined;
+        const index = searchConditionList.value.findIndex((item) => item.content === condition.content);
+        searchConditionList.value.splice(index, 1);
+        editConditionItem.value = undefined;
       }
     }
   };
@@ -686,6 +832,36 @@
       if (condition) {
         condition.isEdit = false;
       }
+    }
+  };
+
+  const handleChildSelectorClickOutside = () => {
+    console.log('click outside');
+    if (editConditionItem.value) {
+      // 编辑态 取消编辑
+      editConditionItem.value!.isEdit = false;
+      editConditionItem.value = undefined;
+      editSearchStr.value = '';
+    } else {
+      // 新增态 状态复原
+      searchStr.value = '';
+      isShowSearchInput.value = false;
+    }
+    isShowPopover.value = false;
+    showChildSelector.value = false;
+    parentSelecte.value = undefined;
+  };
+
+  const handlePasteInput = (e: any) => {
+    e.preventDefault();
+    const pasteData = e.clipboardData.getData('text').replace(/(\r\n|\n)/g, '|');
+    // 获取光标位置
+    const start = e.target.selectionStart;
+    const end = e.target.selectionEnd;
+    if (editConditionItem.value) {
+      editSearchStr.value = editSearchStr.value.slice(0, start) + pasteData + editSearchStr.value.slice(end);
+    } else {
+      searchStr.value += searchStr.value.slice(0, start) + pasteData + searchStr.value.slice(end);
     }
   };
 </script>
@@ -718,13 +894,31 @@
       width: 0 !important;
     }
     .search-container-input {
-      .input {
-        min-width: fit-content;
-        border: none;
-        height: 100%;
-        outline: none;
-        box-shadow: none;
-        color: #63656e;
+      .value {
+        position: relative;
+        .hidden-text {
+          display: inline-block;
+          height: 100%;
+          font-size: 12px;
+          visibility: hidden;
+          padding: 0 4px;
+        }
+        .input {
+          position: absolute;
+          top: 0;
+          left: 0;
+          z-index: 99;
+          width: 100%;
+          border: none;
+          height: 100%;
+          outline: none;
+          box-shadow: none;
+          color: #63656e;
+        }
+      }
+      .placeholder {
+        width: 600px;
+        color: #c4c6cc;
       }
     }
     .search-condition-list {

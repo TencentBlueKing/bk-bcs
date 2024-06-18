@@ -36,7 +36,7 @@ import { bus } from '../common/bus';
 import CachedPromise from './cached-promise';
 import RequestQueue from './request-queue';
 
-// import { VUEX_STROAGE_KEY } from '@/common/constant';
+import { VUEX_STROAGE_KEY } from '@/common/constant';
 import { random } from '@/common/util';
 
 // axios 实例
@@ -50,8 +50,8 @@ const axiosInstance = axios.create({
  * request interceptor
  */
 axiosInstance.interceptors.request.use((config) => {
-  // const storage = JSON.parse(localStorage.getItem(VUEX_STROAGE_KEY) || '{}');
-  // config.headers['X-BCS-Project-Code'] = storage?.curProject?.projectCode;
+  const storage = JSON.parse(localStorage.getItem(VUEX_STROAGE_KEY) || '{}');
+  config.headers['X-BCS-Project-Code'] = storage?.curProject?.projectCode;
   const CSRFToken = cookie.parse(document.cookie).bcs_csrftoken;
   if (CSRFToken) {
     config.headers['X-CSRFToken'] = CSRFToken;
@@ -59,7 +59,7 @@ axiosInstance.interceptors.request.use((config) => {
   if (!window.BCS_CONFIG.disableTracing) {
     config.headers.Traceparent = `00-${random(32, 'abcdef0123456789')}-${random(16, 'abcdef0123456789')}-01`;
   }
-  // config.headers['X-Requested-With'] = 'XMLHttpRequest';
+  config.headers['X-Requested-With'] = 'XMLHttpRequest';
   return config;
 }, error => Promise.reject(error));
 
@@ -208,14 +208,8 @@ function handleReject(error, config) {
     let message = error?.message || data?.message;
     if (status === 401) {
       // 登录弹窗
-      // eslint-disable-next-line camelcase
-      let loginUrl;
       const successUrl = `${location.origin}${window.BK_STATIC_URL}/login_success.html`;
-      if (process.env.NODE_ENV === 'development') {
-        loginUrl = `${window.LOGIN_FULL}plain/?size=big&c_url=${encodeURIComponent(successUrl)}`;
-      } else {
-        loginUrl = `${data.data.login_url.simple}?c_url=${encodeURIComponent(successUrl)}`;
-      }
+      const loginUrl = `${window.LOGIN_FULL}plain/?size=big&c_url=${encodeURIComponent(successUrl)}`;
       // 传入最终的登录地址，弹出登录窗口，更多选项参考 Options
       showLoginModal({ loginUrl });
 

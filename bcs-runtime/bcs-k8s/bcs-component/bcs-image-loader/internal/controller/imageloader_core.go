@@ -66,7 +66,26 @@ func (r *ImageLoaderReconciler) reconcileImageLoader(ctx context.Context,
 	}
 
 	// 2. create jobs if need
-	err = r.createJobsIfNeed(ctx, imageLoader)
+	baseJob := newJob(imageLoader)
+	if imageLoader.Spec.PodSelector != nil {
+		err = r.handlePodSelector(ctx, imageLoader, baseJob)
+	} else if imageLoader.Spec.NodeSelector != nil {
+		err = r.handleNodeSelector(ctx, imageLoader, baseJob)
+	} else {
+		err = r.handleAllNode(ctx, imageLoader, baseJob)
+	}
+	if err != nil {
+		return newStatus, nil, err
+	}
+	if baseJob.Spec.Completions == nil || *baseJob.Spec.Completions == 0 {
+		newStatus.ObservedGeneration = imageLoader.Generation
+		newStatus.Completed = newStatus.Desired
+		logger.Info("no node need to preload image")
+		r.Recorder.Eventf(imageLoader, corev1.EventTypeWarning, "Complete", "no node need to preload image")
+		return newStatus, nil, nil
+	}
+
+	err = r.createJobsIfNeed(ctx, imageLoader, baseJob)
 	if err != nil {
 		return newStatus, nil, err
 	}
@@ -111,13 +130,13 @@ func (r *ImageLoaderReconciler) cleanJobs(ctx context.Context,
 }
 
 func (r *ImageLoaderReconciler) createJobsIfNeed(ctx context.Context,
-	loader *tkexv1alpha1.ImageLoader) error {
+	loader *tkexv1alpha1.ImageLoader, baseJob *batchv1.Job) error {
 	for i := range loader.Spec.Images {
 		job := &batchv1.Job{}
 		err := r.Get(ctx, types.NamespacedName{Namespace: loader.Namespace,
 			Name: getJobName(loader, i)}, job)
 		if err != nil && errors.IsNotFound(err) {
-			err = r.createJob(ctx, loader, i)
+			err = r.createJob(ctx, loader, baseJob, i)
 			if err != nil {
 				return err
 			}
@@ -130,22 +149,11 @@ func (r *ImageLoaderReconciler) createJobsIfNeed(ctx context.Context,
 }
 
 func (r *ImageLoaderReconciler) createJob(ctx context.Context, loader *tkexv1alpha1.ImageLoader,
-	index int) error {
-	job := newJob(loader, index)
+	baseJob *batchv1.Job, index int) error {
+	job := baseJob.DeepCopy()
+	modifyJob(job, loader, index)
 
-	var err error
-	if loader.Spec.PodSelector != nil {
-		err = r.handlePodSelector(ctx, loader, job)
-	} else if loader.Spec.NodeSelector != nil {
-		err = r.handleNodeSelector(ctx, loader, job)
-	} else {
-		err = r.handleAllNode(ctx, loader, job)
-	}
-	if err != nil {
-		return err
-	}
-
-	err = r.Client.Create(ctx, job)
+	err := r.Client.Create(ctx, job)
 	if err != nil {
 		logger.Error(err, "failed to create job", "job", fmt.Sprintf("%s/%s", job.Namespace, job.Name))
 		return err
@@ -156,6 +164,7 @@ func (r *ImageLoaderReconciler) createJob(ctx context.Context, loader *tkexv1alp
 
 func (r *ImageLoaderReconciler) resetStatus(loader *tkexv1alpha1.ImageLoader,
 	newStatus *tkexv1alpha1.ImageLoaderStatus) {
+	newStatus.ObservedGeneration = loader.Generation
 	newStatus.Desired = int32(len(loader.Spec.Images))
 	newStatus.Active = 0
 	newStatus.Active = 0

@@ -500,7 +500,6 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbcs.ListConfigItems
 			existingPaths = append(existingPaths, path.Join(v.Spec.Path, v.Spec.Name))
 		}
 	}
-
 	for _, v := range trc.GetDetails() {
 		if v.FileState != constant.FileStateDelete {
 			existingPaths = append(existingPaths, path.Join(v.Path, v.Name))
@@ -508,7 +507,6 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbcs.ListConfigItems
 	}
 
 	conflictNums, conflictPaths := checkExistingPathConflict(existingPaths)
-
 	for _, v := range rp.GetDetails() {
 		if v.FileState != constant.FileStateDelete {
 			v.IsConflict = conflictPaths[path.Join(v.Spec.Path, v.Spec.Name)]
@@ -682,32 +680,30 @@ func (s *Service) UndoConfigItem(ctx context.Context, req *pbcs.UndoConfigItemRe
 
 // checkExistingPathConflict Check existing path collections for conflicts.
 func checkExistingPathConflict(existing []string) (uint32, map[string]bool) {
-	var conflictNums uint32
 	conflictPaths := make(map[string]bool, len(existing))
-	count := len(existing) - 1
+	var conflictNums uint32
+	conflictMap := make(map[string]bool, 0)
+	// 遍历每一个路径
+	for i := 0; i < len(existing); i++ {
+		// 检查当前路径与后续路径之间是否存在冲突
+		for j := i + 1; j < len(existing); j++ {
+			if strings.HasPrefix(existing[j]+"/", existing[i]+"/") || strings.HasPrefix(existing[i]+"/", existing[j]+"/") {
+				// 相等也算冲突
+				if len(existing[j]) == len(existing[i]) {
+					conflictNums++
+				} else if len(existing[j]) < len(existing[i]) {
+					conflictMap[existing[j]] = true
+				} else {
+					conflictMap[existing[i]] = true
+				}
 
-	for k1 := 0; k1 <= count; k1++ {
-		conflict := false
-		for k2 := k1 + 1; k2 <= count; k2++ {
-			if len(existing[k1]) > len(existing[k2]) {
-				existing[k1], existing[k2] = existing[k2], existing[k1]
+				conflictPaths[existing[i]] = true
+				conflictPaths[existing[j]] = true
 			}
-			if strings.HasPrefix(existing[k2]+"/", existing[k1]+"/") {
-				conflictPaths[existing[k2]] = true
-				conflict = true
-				existing[k2], existing[count] = existing[count], existing[k2]
-				k2--
-				count--
-			}
-		}
-
-		if conflict {
-			conflictPaths[existing[k1]] = true
-			conflictNums++
 		}
 	}
 
-	return conflictNums, conflictPaths
+	return uint32(len(conflictMap)) + conflictNums, conflictPaths
 }
 
 // CompareConfigItemConflicts compare config item version conflicts

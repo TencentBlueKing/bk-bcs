@@ -26,6 +26,7 @@ import (
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	pcommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/business"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/resource"
@@ -251,6 +252,7 @@ func recordClusterExternalNodeToDB(
 		// Job Result parameter
 		task.NodeIPList = opt.InstanceIPs
 		task.CommonParams[cloudprovider.NodeIPsKey.String()] = strings.Join(opt.InstanceIPs, ",")
+		task.CommonParams[cloudprovider.DynamicNodeIPListKey.String()] = strings.Join(opt.InstanceIPs, ",")
 		task.CommonParams[cloudprovider.NodeIDsKey.String()] = strings.Join(opt.InstanceIDs, ",")
 	}
 
@@ -291,6 +293,145 @@ func destroyIDCDeviceList(ctx context.Context, info *cloudprovider.CloudDependBa
 
 	blog.Infof("destroyIDCDeviceList[%s] call DestroyInstances successfully, orders %v.", resp.OrderID)
 	return resp.OrderID, nil
+}
+
+// CheckExternalNodesEmptyTask check external node empty
+func CheckExternalNodesEmptyTask(taskID string, stepName string) error { // nolint
+	start := time.Now()
+
+	// get task and task current step
+	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
+	if err != nil {
+		return err
+	}
+	// previous step successful when retry task
+	if step == nil {
+		blog.Infof("CheckExternalNodesEmptyTask[%s]: current step[%s] successful and skip", taskID, stepName)
+		return nil
+	}
+	blog.Infof("CheckExternalNodesEmptyTask[%s] task %s run current step %s, system: %s, old state: %s, params %v",
+		taskID, taskID, stepName, step.System, step.Status, step.Params)
+
+	// inject taskID
+	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
+
+	// extract valid parameter
+	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
+	nodeGroupID := step.Params[cloudprovider.NodeGroupIDKey.String()]
+	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
+	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
+		ClusterID:   clusterID,
+		CloudID:     cloudID,
+		NodeGroupID: nodeGroupID,
+	})
+	if err != nil {
+		blog.Errorf("CheckExternalNodesEmptyTask[%s] GetClusterDependBasicInfo failed, %s", taskID, err.Error())
+		retErr := fmt.Errorf("getClusterDependBasicInfo failed, %s", err.Error())
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
+	}
+
+	ipList := cloudprovider.ParseNodeIpOrIdFromCommonMap(
+		state.Task.CommonParams, cloudprovider.NodeIPsKey.String(), ",")
+	deviceIdList := cloudprovider.ParseNodeIpOrIdFromCommonMap(
+		state.Task.CommonParams, cloudprovider.DeviceIDsKey.String(), ",")
+
+	if len(ipList) == 0 || len(deviceIdList) == 0 {
+		blog.Errorf("CheckExternalNodesEmptyTask[%s] split NodeIPsKey failed: %v", taskID, err)
+		retErr := fmt.Errorf("split NodeIPsKey failed: %v", err.Error())
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return err
+	}
+
+	// parse step params
+	bizID := step.Params[cloudprovider.BkSopsBizIDKey.String()]
+	templateID := step.Params[cloudprovider.BkSopsTemplateIDKey.String()]
+	operator := step.Params[cloudprovider.BkSopsTemplateUserKey.String()]
+	templateSource := step.Params[cloudprovider.BkSopsTemplateSourceKey.String()]
+	constants := step.Params[cloudprovider.BkSopsConstantsKey.String()]
+	taskName := state.Task.CommonParams[cloudprovider.TaskNameKey.String()]
+
+	if bizID == "" || operator == "" || templateID == "" || taskName == "" || constants == "" {
+		errMsg := fmt.Sprintf("CheckExternalNodesEmptyTask[%s] validateParameter failed", taskID)
+		blog.Errorf(errMsg)
+		retErr := fmt.Errorf("CheckExternalNodesEmptyTask err, %s", errMsg)
+		_ = returnExternalNodes(ctx, dependInfo, ipList, deviceIdList)
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
+	}
+
+	// render constants dynamic value parameter
+	consMap, err := pcommon.RenderDynamicParaToConstants(state.Task, constants)
+	if err != nil {
+		errMsg := fmt.Sprintf("CheckExternalNodesEmptyTask[%s] unmarshal constants failed[%v]", taskID, err)
+		blog.Errorf(errMsg)
+		retErr := fmt.Errorf("CheckExternalNodesEmptyTask err, %s", errMsg)
+		_ = returnExternalNodes(ctx, dependInfo, ipList, deviceIdList)
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
+	}
+
+	timeOutCtx, cancel := context.WithTimeout(ctx, time.Minute*10)
+	defer cancel()
+
+	taskUrl, err := pcommon.ExecBkSopsTask(timeOutCtx, pcommon.CreateBkSopsTaskParas{
+		BizID:          bizID,
+		TemplateID:     templateID,
+		Operator:       operator,
+		TemplateSource: templateSource,
+		TaskName:       taskName,
+		Constants:      consMap,
+		StepName:       stepName,
+	})
+	if err != nil {
+		state.TaskUrl = taskUrl
+		_ = returnExternalNodes(ctx, dependInfo, ipList, deviceIdList)
+		_ = state.UpdateStepFailure(start, stepName, err)
+		return err
+	}
+
+	state.TaskUrl = taskUrl
+	_ = state.UpdateStepSucc(start, stepName)
+	return nil
+}
+
+func returnExternalNodes(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
+	ips, deviceIds []string) error { // nolint
+	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+
+	if info == nil || len(ips) == 0 || len(deviceIds) == 0 {
+		blog.Infof("returnExternalNodes[%s] info null or ips/deviceIds empty", taskID)
+		return nil
+	}
+
+	// delete db data record
+	for _, ip := range ips {
+		err := cloudprovider.GetStorageModel().DeleteClusterNodeByIP(context.Background(), info.Cluster.ClusterID, ip)
+		if err != nil {
+			blog.Errorf("returnExternalNodes[%s] DeleteClusterNodeByIP[%s] failed: %v", taskID,
+				ip, err)
+		} else {
+			blog.Infof("returnExternalNodes[%s] DeleteClusterNodeByIP success[%+v]", taskID, ip)
+		}
+	}
+
+	// destroy device to resource manager
+	orderID, err := destroyIDCDeviceList(ctx, info, deviceIds, common.ClusterManager)
+	if err != nil {
+		blog.Errorf("returnExternalNodes[%s] destroyIDCDeviceList failed: %v", taskID, err)
+	} else {
+		blog.Infof("returnExternalNodes[%s] successful[%v] orderID[%v]", taskID, deviceIds, orderID)
+	}
+
+	// rollback nodeGroup desired size
+	err = cloudprovider.UpdateNodeGroupDesiredSize(info.NodeGroup.NodeGroupID, len(ips), true)
+	if err != nil {
+		blog.Errorf("returnExternalNodes[%s] UpdateNodeGroupDesiredSize failed: %v", taskID, err)
+	} else {
+		blog.Infof("returnExternalNodes[%s] UpdateNodeGroupDesiredSize success[%v]", taskID, len(ips))
+	}
+
+	return nil
 }
 
 // GetExternalNodeScriptTask get cluster external node script

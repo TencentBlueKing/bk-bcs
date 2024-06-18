@@ -1,0 +1,24 @@
+title: service
+type: object
+properties:
+  {{- include "common.metadata" . | indent 2 }}
+  spec:
+    title: {{ i18n "配置信息" .lang }}
+    type: object
+    properties:
+      {{- include "network.svcSelector" . | indent 6 }}
+      {{- include "network.svcPort" . | indent 6 }}
+      {{- include "network.sessionAffinity" . | indent 6 }}
+      {{- include "network.svcIPConf" . | indent 6 }}
+    ui:group:
+      name: tab
+      props:
+        border: false
+        showTitle: true
+        type: card
+        verifiable: true
+    ui:order:
+      - selector
+      - portConf
+      - sessionAffinity
+      - ip

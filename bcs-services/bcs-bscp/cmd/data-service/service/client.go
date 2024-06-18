@@ -26,6 +26,7 @@ import (
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbbase "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
 	pbclient "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/client"
 	pbds "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
 	sfs "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/sf-share"
@@ -137,30 +138,26 @@ func (s *Service) handleBatchCreateClients(kt *kit.Kit, clients []*pbclient.Clie
 	toUpdate = make(map[string][]*table.Client)
 	for _, item := range clients {
 		key := fmt.Sprintf("%d-%d-%s", item.Attachment.BizId, item.Attachment.AppId, item.Attachment.Uid)
+		client := &table.Client{
+			Attachment: item.GetAttachment().ClientAttachment(),
+			Spec:       item.GetSpec().ClientSpec(),
+		}
 		v, ok := oldData[key]
 		if !ok {
 			if !existingKeys[key] {
-				toCreate = append(toCreate, &table.Client{
-					Attachment: item.GetAttachment().ClientAttachment(),
-					Spec:       item.GetSpec().ClientSpec(),
-				})
+				toCreate = append(toCreate, client)
 				existingKeys[key] = true
 			} else {
-				toUpdate[item.MessageType] = append(toUpdate[item.MessageType], &table.Client{
-					Attachment: item.GetAttachment().ClientAttachment(),
-					Spec:       item.GetSpec().ClientSpec(),
-				})
+				toUpdate[item.MessageType] = append(toUpdate[item.MessageType], client)
 			}
 		} else {
 			item.Spec.FirstConnectTime = timestamppb.New(v.Spec.FirstConnectTime)
 			if item.Spec.ReleaseChangeStatus != sfs.Success.String() {
 				item.Spec.CurrentReleaseId = v.Spec.CurrentReleaseID
 			}
-			toUpdate[item.MessageType] = append(toUpdate[item.MessageType], &table.Client{
-				ID:         v.ID,
-				Attachment: item.GetAttachment().ClientAttachment(),
-				Spec:       item.Spec.ClientSpec(),
-			})
+			client.ID = v.ID
+			client.Spec = item.Spec.ClientSpec()
+			toUpdate[item.MessageType] = append(toUpdate[item.MessageType], client)
 		}
 	}
 
@@ -186,9 +183,19 @@ func (s *Service) ListClients(ctx context.Context, req *pbds.ListClientsReq) (
 	}
 
 	// 获取发布版本信息
+	seen := make(map[uint32]bool)
 	releaseIDs := []uint32{}
+	addID := func(id uint32) {
+		if id != 0 {
+			if _, exists := seen[id]; !exists {
+				seen[id] = true
+				releaseIDs = append(releaseIDs, id)
+			}
+		}
+	}
 	for _, v := range items {
-		releaseIDs = append(releaseIDs, v.Spec.CurrentReleaseID)
+		addID(v.Spec.CurrentReleaseID)
+		addID(v.Spec.TargetReleaseID)
 	}
 
 	releases, err := s.dao.Release().ListAllByIDs(grpcKit, releaseIDs, req.BizId)
@@ -204,7 +211,7 @@ func (s *Service) ListClients(ctx context.Context, req *pbds.ListClientsReq) (
 	data := pbclient.PbClients(items)
 	for _, v := range data {
 		v.Spec.CurrentReleaseName = releaseNames[v.Spec.CurrentReleaseId]
-
+		v.Spec.TargetReleaseName = releaseNames[v.Spec.TargetReleaseId]
 		details = append(details, &pbds.ListClientsResp_Item{
 			Client:            v,
 			CpuUsageStr:       formatCpu(v.Spec.Resource.CpuUsage),
@@ -366,13 +373,6 @@ func (s *Service) ClientLabelStatistics(ctx context.Context, req *pbclient.Clien
 
 	grpcKit := kit.FromGrpcContext(ctx)
 
-	searchLables := req.GetSearch()
-	if len(searchLables.GetLabel().GetFields()) == 0 {
-		searchLables.Label = &structpb.Struct{
-			Fields: make(map[string]*structpb.Value),
-		}
-	}
-	searchLables.GetLabel().Fields[req.GetPrimaryKey()] = &structpb.Value{}
 	fields := req.GetForeignKeys().GetFields()
 
 	labelKvs := []types.PrimaryAndForeign{}
@@ -380,20 +380,27 @@ func (s *Service) ClientLabelStatistics(ctx context.Context, req *pbclient.Clien
 	if len(fields) == 0 {
 		labelKeys = append(labelKeys, types.PrimaryAndForeign{PrimaryKey: req.GetPrimaryKey()})
 	}
+
+	searchLables := req.GetSearch()
+	searchLables.Label = append(searchLables.Label, req.GetPrimaryKey())
+	// 组合搜索条件
 	for k, v := range fields {
-		searchLables.GetLabel().Fields[k] = v
+		label := []string{}
 		if v.GetStringValue() != "" {
+			label = append(label, fmt.Sprintf("%s=%s", k, v.GetStringValue()))
 			labelKvs = append(labelKvs, types.PrimaryAndForeign{
 				PrimaryKey: req.GetPrimaryKey(),
 				ForeignKey: k,
 				ForeignVal: v.GetStringValue(),
 			})
 		} else {
+			label = append(label, k)
 			labelKeys = append(labelKeys, types.PrimaryAndForeign{
 				PrimaryKey: req.GetPrimaryKey(),
 				ForeignKey: k,
 			})
 		}
+		searchLables.Label = append(searchLables.Label, label...)
 	}
 
 	items, _, err := s.dao.Client().List(grpcKit, req.GetBizId(), req.GetAppId(), req.GetLastHeartbeatTime(),
@@ -894,4 +901,73 @@ func formatMem(bytes float64) string {
 // 格式化cpu数据
 func formatCpu(number float64) string {
 	return fmt.Sprintf("%.3f", number)
+}
+
+// RetryClients 重试客户端执行版本变更回调
+func (s *Service) RetryClients(ctx context.Context, req *pbds.RetryClientsReq) (*pbbase.EmptyResp, error) {
+	kit := kit.FromGrpcContext(ctx)
+
+	if !req.All && len(req.ClientIds) == 0 {
+		return nil, fmt.Errorf("client ids is empty")
+	}
+
+	tx := s.dao.GenQuery().Begin()
+
+	if req.All {
+		event := types.Event{
+			Spec: &table.EventSpec{
+				Resource:   table.RetryApp,
+				ResourceID: req.AppId,
+				OpType:     table.InsertOp,
+			},
+			Attachment: &table.EventAttachment{BizID: req.BizId, AppID: req.AppId},
+			Revision:   &table.CreatedRevision{Creator: kit.User},
+		}
+		if err := s.dao.Client().UpdateRetriedClientsStatusWithTx(kit, tx, []uint32{}, req.All); err != nil {
+			return nil, err
+		}
+		if err := s.dao.Event().Eventf(kit).FireWithTx(tx, event); err != nil {
+			return nil, err
+		}
+		if err := tx.Commit(); err != nil {
+			logs.Errorf("commit retry clients transaction failed, err: %v, rid: %s", err, kit.Rid)
+			return nil, err
+		}
+		return &pbbase.EmptyResp{}, nil
+	}
+
+	events := make([]types.Event, 0, len(req.ClientIds))
+	clientUIDMap := make(map[uint32]string)
+	clients, err := s.dao.Client().ListClientByIDs(kit, req.BizId, req.AppId, req.ClientIds)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, client := range clients {
+		clientUIDMap[client.ID] = client.Attachment.UID
+	}
+	for _, id := range req.ClientIds {
+		events = append(events, types.Event{
+			Spec: &table.EventSpec{
+				Resource:    table.RetryInstance,
+				ResourceID:  id,
+				ResourceUid: clientUIDMap[id],
+				OpType:      table.InsertOp,
+			},
+			Attachment: &table.EventAttachment{BizID: req.BizId, AppID: req.AppId},
+			Revision:   &table.CreatedRevision{Creator: kit.User},
+		})
+	}
+	if err := s.dao.Client().UpdateRetriedClientsStatusWithTx(kit, tx, req.ClientIds, req.All); err != nil {
+		return nil, err
+	}
+	if err := s.dao.Event().Eventf(kit).FireWithTx(tx, events...); err != nil {
+		return nil, err
+	}
+	if err := tx.Commit(); err != nil {
+		logs.Errorf("commit retry clients transaction failed, err: %v, rid: %s", err, kit.Rid)
+		return nil, err
+	}
+
+	return &pbbase.EmptyResp{}, nil
 }

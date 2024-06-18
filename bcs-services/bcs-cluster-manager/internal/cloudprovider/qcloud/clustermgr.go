@@ -29,8 +29,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/business"
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cidrmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -511,17 +509,13 @@ func (c *Cluster) CheckClusterCidrAvailable(cls *proto.Cluster,
 		return true, nil
 	}
 
-	if options.GetEditionInfo().IsCommunicationEdition() || options.GetEditionInfo().IsEnterpriseEdition() {
-		return true, nil
-	}
-
 	// skip clusterCidr autoScale about some scene
 	if skipGlobalRouterCIDR(cls) {
 		blog.Infof("CheckClusterCidrAvailable skipGlobalRouterCIDR successful")
 		return true, nil
 	}
 
-	ipNum, err := getClusterCidrAvailableIPNum(cls)
+	ipNum, err := getClusterCidrAvailableIPNum(cls.ClusterID, cls.SystemID, &opt.CommonOption)
 	if err != nil {
 		return false, err
 	}
@@ -533,7 +527,7 @@ func (c *Cluster) CheckClusterCidrAvailable(cls *proto.Cluster,
 		return true, nil
 	}
 
-	cidrList, err := autoScaleClusterCidr(cls, sumIPNum-ipNum)
+	cidrList, err := autoScaleClusterCidr(opt.CommonOption, cls, sumIPNum-ipNum)
 	if err != nil {
 		return false, err
 	}
@@ -767,69 +761,28 @@ func (c *Cluster) CheckIfGetNodesFromCluster(ctx context.Context, cluster *proto
 	return true
 }
 
-func getClusterCidrAvailableIPNum(cls *proto.Cluster) (uint32, error) {
-	cidrCli, conClose, err := cidrmanager.GetCidrClient().GetCidrManagerClient()
-	if err != nil {
-		return 0, err
-	}
-	defer func() {
-		if conClose != nil {
-			conClose()
-		}
-	}()
-
-	// get cluster container available IPNum
-	req := &cidrmanager.GetClusterIPSurplusRequest{
-		Region:    cls.Region,
-		CidrType:  utils.GlobalRouter.String(),
-		ClusterID: cls.SystemID,
-	}
-	resp, err := cidrCli.GetClusterIPSurplus(context.Background(), req)
-	if err != nil {
-		return 0, err
-	}
-	if resp.Code != 0 {
-		return 0, fmt.Errorf(resp.Message)
-	}
-
-	return resp.Data.IPSurplus, nil
+func getClusterCidrAvailableIPNum(clusterId, tkeId string, option *cloudprovider.CommonOption) (uint32, error) {
+	return business.GetClusterGrIPSurplus(option, clusterId, tkeId)
 }
 
-// TKE cluster exist master clusterCIDR and multiCIDRList, multiCIDRList add length 4 CIDRs at most.
-// when scale tke cluster CIDRs at present, BCS use [step, step, 2 * step, xxx] rules, xxx need to manually assign
-func autoScaleClusterCidr(cls *proto.Cluster, needIPNum uint32) ([]string, error) {
-	cidrCli, conClose, err := cidrmanager.GetCidrClient().GetCidrManagerClient()
-	if err != nil {
-		return nil, err
-	}
-	defer func() {
-		if conClose != nil {
-			conClose()
-		}
-	}()
-
+// TKE cluster exist master clusterCIDR and multiCIDRList, multiCIDRList add length 9 CIDRs at most.
+// when scale tke cluster CIDRs at present,
+// BCS use [step, ..., step, xxx, xxx] 7 step rules, xxx need to manually assign
+func autoScaleClusterCidr(option cloudprovider.CommonOption, cls *proto.Cluster, needIPNum uint32) ([]string, error) {
 	// not allow when assign full multiCIDR
-	if len(cls.NetworkSettings.MultiClusterCIDR) >= 3 {
-		return nil, fmt.Errorf("cluster[%s] scaleNodes exceed max cdir number", cls.ClusterID)
+	if len(cls.NetworkSettings.MultiClusterCIDR) >= utils.MultiClusterCIDRCnt {
+		return nil, fmt.Errorf("cluster[%s] scaleNodes exceed max cdir number[%v]", cls.ClusterID,
+			utils.MultiClusterCIDRCnt)
 	}
 
-	// auto scale cidr resource when addNodes
-	// previous clusters may be not set cidrStep
-	defaultCidrStep := cls.NetworkSettings.CidrStep
-	if defaultCidrStep <= 0 {
-		defaultCidrStep = func() uint32 {
-			if cls.Environment == "prod" {
-				return 4096
-			}
-
-			return 2048
-		}()
-	}
+	// auto scale cidr resource when addNodes previous clusters may be not set cidrStep
+	defaultCidrStep := getClusterCidrStep(cls)
 
 	// surPlusIPNum if enough
 	surPlusIPNum := getSurplusCidrNum(cls.NetworkSettings.MultiClusterCIDR, defaultCidrStep)
 	blog.Infof("cluster[%s] cloud[%s] CheckClusterCidrAvailable surPlusIPCount[%v] needIPCount[%v]",
 		cls.ClusterID, cloudName, surPlusIPNum, needIPNum)
+
 	if surPlusIPNum < needIPNum {
 		return nil, fmt.Errorf("cluster[%s] scaleNodes exceed max cdir number", cls.ClusterID)
 	}
@@ -839,10 +792,10 @@ func autoScaleClusterCidr(cls *proto.Cluster, needIPNum uint32) ([]string, error
 		maskIPNum = make([]uint32, 0)
 		sumIPSum  uint32
 	)
-
 	for _, segNum := range getSurplusCidrList(cls.NetworkSettings.MultiClusterCIDR, defaultCidrStep) {
 		sumIPSum += segNum
 		maskIPNum = append(maskIPNum, utils.CalMaskLen(float64(segNum)))
+
 		if sumIPSum >= needIPNum {
 			break
 		}
@@ -850,26 +803,23 @@ func autoScaleClusterCidr(cls *proto.Cluster, needIPNum uint32) ([]string, error
 	blog.Infof("cluster[%s] cloud[%s] CheckClusterCidrAvailable maskIPNum[%v]",
 		cls.ClusterID, cloudName, maskIPNum)
 
-	addResp, err := cidrCli.AddClusterCidr(context.Background(), &cidrmanager.AddClusterCidrRequest{
-		Region:    cls.Region,
-		CidrType:  utils.GlobalRouter.String(),
-		ClusterID: cls.SystemID,
-		CidrLens:  maskIPNum,
-	})
-	if err != nil {
-		return nil, err
-	}
-	if addResp.Code != 0 {
-		return nil, fmt.Errorf(addResp.Message)
-	}
-	cidrList := make([]string, 0)
-	for _, cidr := range addResp.Data.Cidrs {
-		if cidr.Type == utils.MultiClusterCIDR {
-			cidrList = append(cidrList, cidr.Ipnet)
-		}
+	return business.AddGrCidrsToCluster(&option, cls.GetVpcID(), cls, maskIPNum, nil)
+}
+
+func getClusterCidrStep(cls *proto.Cluster) uint32 {
+	defaultCidrStep := cls.NetworkSettings.CidrStep
+
+	if defaultCidrStep <= 0 {
+		defaultCidrStep = func() uint32 {
+			if cls.Environment == icommon.Prod {
+				return 4096
+			}
+
+			return 2048
+		}()
 	}
 
-	return cidrList, nil
+	return defaultCidrStep
 }
 
 func getTkeClusterNetworkType(cluster *tke.Cluster) string {
@@ -892,17 +842,17 @@ func getTkeClusterNetworkType(cluster *tke.Cluster) string {
 }
 
 func getSurplusCidrList(mulList []string, step uint32) []uint32 {
-	defaultCIDRList := []uint32{step, step, 2 * step}
-	return defaultCIDRList[len(mulList):]
+	cidrList := make([]uint32, 0)
+
+	for i := len(mulList); i < utils.MultiClusterCIDRCnt; i++ {
+		cidrList = append(cidrList, step)
+	}
+
+	return cidrList
 }
 
 func getSurplusCidrNum(mulList []string, step uint32) uint32 {
-	defaultCIDRList := []uint32{step, step, 2 * step}
+	surplusCidrCnt := utils.MultiClusterCIDRCnt - len(mulList)
 
-	var ipSum uint32
-	for _, cidrIPNum := range defaultCIDRList[len(mulList):] {
-		ipSum += cidrIPNum
-	}
-
-	return ipSum
+	return step * uint32(surplusCidrCnt)
 }

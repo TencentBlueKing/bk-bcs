@@ -3,8 +3,8 @@
     <template #header>
       <HeaderNav :list="navList"></HeaderNav>
     </template>
-    <div v-bkloading="{ isLoading }">
-      <bcs-tab class="node-pool-tab mb-[42px]">
+    <div class="h-[calc(100%-60px)]" v-bkloading="{ isLoading }">
+      <bcs-tab class="node-pool-tab h-full">
         <bcs-tab-panel :label="$t('cluster.ca.nodePool.title.nodeConfig')" name="config">
           <NodeConfig
             :default-values="detailData"
@@ -45,11 +45,11 @@ import NodeConfig from './node-config.vue';
 import NodePoolInfo from './node-pool-info.vue';
 
 import { mergeDeep } from '@/common/util';
+import BcsContent from '@/components/layout/Content.vue';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router/index';
 import $store from '@/store/index';
 import { useClusterList } from '@/views/cluster-manage/cluster/use-cluster';
-import BcsContent from '@/views/cluster-manage/components/bcs-content.vue';
 import HeaderNav from '@/views/cluster-manage/components/header-nav.vue';
 
 export default defineComponent({
@@ -153,7 +153,6 @@ export default defineComponent({
         region: curCluster.value.region,
         updater: user.value.username,
       };
-      console.log(data, detailData.value, nodeConfigData, nodePoolData);
       const result = await $store.dispatch('clustermanager/updateNodeGroup', data);
       saveLoading.value = false;
       if (result) {
@@ -200,23 +199,15 @@ export default defineComponent({
 });
 </script>
 <style lang="postcss" scoped>
->>> .node-pool-wrapper {
-  height: calc(100vh - 250px);
-  .bk-resize-layout-main .main {
-    max-height: calc(100vh - 260px);
-  }
-  .aside .content-wrapper {
-    max-height: calc(100vh - 312px);
-  }
-}
-
->>> .node-config-wrapper {
-  max-height: calc(100vh - 252px);
-}
 
 >>> .node-pool-tab {
   .bk-tab-section {
     padding: 0;
+    height: calc(100% - 42px);
+    overflow: auto;
+    .bk-tab-content {
+      height: 100%;
+    }
   }
   .node-config {
     margin-bottom: 0;

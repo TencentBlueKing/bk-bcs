@@ -252,14 +252,30 @@ func (s *Service) InitAuthCenter(ctx context.Context, req *pbas.InitAuthCenterRe
 	return s.initial.InitAuthCenter(ctx, req)
 }
 
-// GetAuthLoginConf get auth login conf
-func (s *Service) GetAuthLoginConf(_ context.Context,
-	_ *pbas.GetAuthLoginConfReq) (*pbas.GetAuthLoginConfResp, error) {
-	resp := &pbas.GetAuthLoginConfResp{
-		Host:      cc.AuthServer().LoginAuth.Host,
-		InnerHost: cc.AuthServer().LoginAuth.InnerHost,
-		Provider:  cc.AuthServer().LoginAuth.Provider,
-		GwPubkey:  cc.AuthServer().LoginAuth.GWPubKey,
+// GetAuthConf get auth login conf
+func (s *Service) GetAuthConf(_ context.Context,
+	_ *pbas.GetAuthConfReq) (*pbas.GetAuthConfResp, error) {
+	resp := &pbas.GetAuthConfResp{
+		LoginAuth: &pbas.LoginAuth{
+			Host:      cc.AuthServer().LoginAuth.Host,
+			InnerHost: cc.AuthServer().LoginAuth.InnerHost,
+			Provider:  cc.AuthServer().LoginAuth.Provider,
+			GwPubkey:  cc.AuthServer().LoginAuth.GWPubKey,
+			UseEsb:    false,
+		},
+		Esb: &pbas.ESB{
+			Endpoints: cc.AuthServer().Esb.Endpoints,
+			AppCode:   cc.AuthServer().Esb.AppCode,
+			AppSecret: cc.AuthServer().Esb.AppSecret,
+			User:      cc.AuthServer().Esb.User,
+			Tls: &pbas.TLS{
+				InsecureSkipVerify: cc.AuthServer().Esb.TLS.InsecureSkipVerify,
+				CertFile:           cc.AuthServer().Esb.TLS.CertFile,
+				KeyFile:            cc.AuthServer().Esb.TLS.KeyFile,
+				CaFile:             cc.AuthServer().Esb.TLS.CAFile,
+				Password:           cc.AuthServer().Esb.TLS.Password,
+			},
+		},
 	}
 	return resp, nil
 }

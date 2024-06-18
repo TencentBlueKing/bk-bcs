@@ -92,7 +92,7 @@ func (h *Handler) UpdateTemplateSpace(
 func (h *Handler) DeleteTemplateSpace(
 	ctx context.Context, in *clusterRes.DeleteTemplateSpaceReq, out *clusterRes.CommonResp) error {
 	action := templatespace.NewTemplateSpaceAction(h.model)
-	err := action.Delete(ctx, in.GetId(), in.IsRelateDelete)
+	err := action.Delete(ctx, in.GetId())
 	if err != nil {
 		return err
 	}
@@ -117,7 +117,7 @@ func (h *Handler) GetTemplateMetadata(
 func (h *Handler) ListTemplateMetadata(
 	ctx context.Context, in *clusterRes.ListTemplateMetadataReq, out *clusterRes.CommonListResp) error {
 	action := template.NewTemplateAction(h.model)
-	data, err := action.List(ctx, in.GetTemplateSpace())
+	data, err := action.List(ctx, in.GetTemplateSpaceID())
 	if err != nil {
 		return err
 	}
@@ -156,7 +156,7 @@ func (h *Handler) UpdateTemplateMetadata(
 func (h *Handler) DeleteTemplateMetadata(
 	ctx context.Context, in *clusterRes.DeleteTemplateMetadataReq, out *clusterRes.CommonResp) error {
 	action := template.NewTemplateAction(h.model)
-	err := action.Delete(ctx, in.GetId(), in.GetIsRelateDelete())
+	err := action.Delete(ctx, in.GetId())
 	if err != nil {
 		return err
 	}
@@ -177,11 +177,25 @@ func (h *Handler) GetTemplateVersion(
 	return nil
 }
 
+// GetTemplateContent 获取模板文件详情
+func (h *Handler) GetTemplateContent(
+	ctx context.Context, in *clusterRes.GetTemplateContentReq, out *clusterRes.CommonResp) error {
+	action := templateversion.NewTemplateVersionAction(h.model)
+	data, err := action.GetContent(ctx, in.GetTemplateSpace(), in.GetTemplateName(), in.GetVersion())
+	if err != nil {
+		return err
+	}
+	if out.Data, err = pbstruct.Map2pbStruct(data); err != nil {
+		return err
+	}
+	return nil
+}
+
 // ListTemplateVersion 获取模板文件版本列表
 func (h *Handler) ListTemplateVersion(
 	ctx context.Context, in *clusterRes.ListTemplateVersionReq, out *clusterRes.CommonListResp) error {
 	action := templateversion.NewTemplateVersionAction(h.model)
-	data, err := action.List(ctx, in.GetTemplateName(), in.GetTemplateSpace())
+	data, err := action.List(ctx, in.GetTemplateID())
 	if err != nil {
 		return err
 	}
@@ -222,6 +236,48 @@ func (h *Handler) CreateTemplateSet(
 	action := template.NewTemplateAction(h.model)
 	err := action.CreateTemplateSet(ctx, req)
 	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// ListTemplateFileVariables xxx
+func (h *Handler) ListTemplateFileVariables(
+	ctx context.Context, req *clusterRes.ListTemplateFileVariablesReq, resp *clusterRes.CommonResp) error {
+	action := template.NewTemplateAction(h.model)
+	m, err := action.ListTemplateFileVariables(ctx, req)
+	if err != nil {
+		return err
+	}
+	if resp.Data, err = pbstruct.Map2pbStruct(m); err != nil {
+		return err
+	}
+	return nil
+}
+
+// PreviewTemplateFile xxx
+func (h *Handler) PreviewTemplateFile(
+	ctx context.Context, req *clusterRes.DeployTemplateFileReq, resp *clusterRes.CommonResp) error {
+	action := template.NewTemplateAction(h.model)
+	m, err := action.PreviewTemplateFile(ctx, req)
+	if err != nil {
+		return err
+	}
+	if resp.Data, err = pbstruct.Map2pbStruct(m); err != nil {
+		return err
+	}
+	return nil
+}
+
+// DeployTemplateFile xxx
+func (h *Handler) DeployTemplateFile(
+	ctx context.Context, req *clusterRes.DeployTemplateFileReq, resp *clusterRes.CommonResp) error {
+	action := template.NewTemplateAction(h.model)
+	m, err := action.DeployTemplateFile(ctx, req)
+	if err != nil {
+		return err
+	}
+	if resp.Data, err = pbstruct.Map2pbStruct(m); err != nil {
 		return err
 	}
 	return nil

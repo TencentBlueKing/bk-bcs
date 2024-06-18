@@ -1,14 +1,16 @@
 <template>
-  <div class="detail">
+  <div class="flex flex-col flex-1 h-full">
     <DetailTopNav
       :list="titles"
       :cluster-id="clusterId"
       :active="componentId"
+      class="flex-[0_0_auto]"
       @change="handleNavChange">
     </DetailTopNav>
     <component
       :is="componentId"
       v-bind="componentProps"
+      class="flex-1 overflow-auto pb-[16px]"
       @pod-detail="handleGotoPodDetail"
       @container-detail="handleGotoContainerDetail">
     </component>
@@ -191,8 +193,3 @@ export default defineComponent({
   },
 });
 </script>
-<style scoped>
-.detail {
-    flex: 1;
-}
-</style>

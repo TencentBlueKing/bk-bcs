@@ -1,6 +1,6 @@
 <template>
-  <LayoutContent :title="$tc('dashboard.ns.create.title')" :cluster-id="clusterId">
-    <div class="p-[20px] h-full overflow-auto">
+  <BcsContent :title="$tc('dashboard.ns.create.title')" :cluster-id="clusterId">
+    <div class="p-[20px] overflow-auto">
       <div class="border border-solid border-[#dcdee5] p-[20px] bg-[#ffffff]">
         <bk-form
           ref="namespaceForm"
@@ -142,7 +142,7 @@
         :disabled="isLoading"
         @click="handleCancel">{{ $t('generic.button.cancel') }}</bcs-button>
     </div>
-  </LayoutContent>
+  </BcsContent>
 </template>
 
 <script lang='ts'>
@@ -153,7 +153,7 @@ import { useNamespace } from './use-namespace';
 import $bkMessage from '@/common/bkmagic';
 import { KEY_REGEXP } from '@/common/constant';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
-import LayoutContent from '@/components/layout/Content.vue';
+import BcsContent from '@/components/layout/Content.vue';
 import { useCluster, useProject } from '@/composables/use-app';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
@@ -161,7 +161,7 @@ import $router from '@/router';
 export default defineComponent({
   name: 'CreateNamespace',
   components: {
-    LayoutContent,
+    BcsContent,
   },
   props: {
     clusterId: {

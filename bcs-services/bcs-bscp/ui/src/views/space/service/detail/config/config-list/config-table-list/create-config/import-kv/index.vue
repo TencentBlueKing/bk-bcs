@@ -28,13 +28,18 @@
           style="width: 374px"
           filterable
           auto-focus
+          :clearable="false"
           @select="handleSelectVersion(appId, $event)">
           <bk-option v-for="item in versionList" :id="item.id" :key="item.id" :name="item.spec.name" />
         </bk-select>
       </div>
     </div>
     <div v-else>
-      <ImportFormOtherService :bk-biz-id="bkBizId" :app-id="appId" @select-version="handleSelectVersion" />
+      <ImportFormOtherService
+        :bk-biz-id="bkBizId"
+        :app-id="appId"
+        @select-version="handleSelectVersion"
+        @clear="handleClearTable" />
     </div>
     <div v-if="importType !== 'text' && importConfigList.length" class="content">
       <bk-loading :loading="tableLoading">
@@ -61,10 +66,10 @@
           @change="handleTableChange($event, true)" />
         <ConfigTable
           v-if="existConfigList.length"
-          :expand="!expandNonExistTable"
+          :expand="expandExistTable"
           :table-data="existConfigList"
           :is-exsit-table="true"
-          @change-expand="expandNonExistTable = !expandNonExistTable"
+          @change-expand="expandExistTable = !expandExistTable"
           @change="handleTableChange($event, false)" />
       </bk-loading>
     </div>
@@ -115,6 +120,7 @@
   const nonExistConfigList = ref<IConfigKvItem[]>([]);
   const isClearDraft = ref(false);
   const expandNonExistTable = ref(true);
+  const expandExistTable = ref(true);
   const textImport = ref();
 
   watch(
@@ -173,9 +179,6 @@
       const res = await importKvFromHistoryVersion(props.bkBizId, props.appId, params);
       existConfigList.value = res.data.exist;
       nonExistConfigList.value = res.data.non_exist;
-      if (nonExistConfigList.value.length === 0) {
-        expandNonExistTable.value = false;
-      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -195,8 +198,6 @@
       } else {
         await importKvFormText(props.bkBizId, props.appId, importConfigList.value, isClearDraft.value);
       }
-      emits('update:show', false);
-      emits('confirm');
       Message({
         theme: 'success',
         message: t('配置项导入成功'),
@@ -206,6 +207,8 @@
     } finally {
       loading.value = false;
     }
+    emits('update:show', false);
+    emits('confirm');
   };
 
   const handleTableChange = (data: IConfigKvItem[], isNonExistData: boolean) => {
@@ -215,6 +218,11 @@
       existConfigList.value = data;
     }
     isFormChange.value = true;
+  };
+
+  const handleClearTable = () => {
+    nonExistConfigList.value = [];
+    existConfigList.value = [];
   };
 </script>
 

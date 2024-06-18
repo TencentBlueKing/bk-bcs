@@ -221,16 +221,12 @@
 
   // 导入kv
   const handleImport = async () => {
-    try {
-      if (props.format === 'text') {
-        await importKvFormText(props.bkBizId, props.appId, kvs.value, false);
-      } else if (props.format === 'json') {
-        await importKvFormJson(props.bkBizId, props.appId, jsonContent.value);
-      } else {
-        await importKvFormYaml(props.bkBizId, props.appId, yamlContent.value);
-      }
-    } catch (error) {
-      console.error(error);
+    if (props.format === 'text') {
+      await importKvFormText(props.bkBizId, props.appId, kvs.value, false);
+    } else if (props.format === 'json') {
+      await importKvFormJson(props.bkBizId, props.appId, jsonContent.value);
+    } else {
+      await importKvFormYaml(props.bkBizId, props.appId, yamlContent.value);
     }
   };
 

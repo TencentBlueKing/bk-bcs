@@ -928,6 +928,17 @@ func (ua *UpdateDesiredNodeAction) updateNodeGroupDesiredSize(desiredNode uint32
 // checkCloudClusterResource check cloud cluster resource
 func (ua *UpdateDesiredNodeAction) checkCloudClusterResource(scaleNodesNum uint32) error {
 	// check cluster common resource
+	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
+		Cloud:     ua.clusterCloud,
+		AccountID: ua.cluster.CloudAccountID,
+	})
+	if err != nil {
+		blog.Errorf("get credential from cloud %s when checkCloudClusterResource %d in NodeGroup %s failed, %s",
+			ua.group.Provider, ua.req.DesiredNode, ua.group.NodeGroupID, err.Error(),
+		)
+		return err
+	}
+	cmOption.Region = ua.cluster.Region
 
 	// get cloudprovider cluster implementation
 	clusterMgr, err := cloudprovider.GetClusterMgr(ua.clusterCloud.CloudProvider)
@@ -940,6 +951,7 @@ func (ua *UpdateDesiredNodeAction) checkCloudClusterResource(scaleNodesNum uint3
 
 	// check cloud CIDR && autoScale cluster cidr
 	available, err := clusterMgr.CheckClusterCidrAvailable(ua.cluster, &cloudprovider.CheckClusterCIDROption{
+		CommonOption:    *cmOption,
 		IncomingNodeCnt: uint64(scaleNodesNum),
 		ExternalNode: func() bool {
 			return ua.group.GetNodeGroupType() == common.External.String()

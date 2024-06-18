@@ -67,6 +67,11 @@ const (
 	CRD = "CustomResourceDefinition"
 	// CObj ...
 	CObj = "CustomObject"
+
+	// ClusterRole ...
+	ClusterRole = "ClusterRole"
+	// ClusterRoleBinding ...
+	ClusterRoleBinding = "ClusterRoleBinding"
 )
 
 // BCS 提供自定义类型
@@ -114,8 +119,9 @@ const (
 	// UpdaterAnnoKey 更新者，为保持与 bcs-ui 中的一致，还是使用 updator（typo）
 	UpdaterAnnoKey = "io.tencent.paas.updator"
 
-	// TemplateSourceType  template 创建来源
-	TemplateSourceType = "template"
+	// TemplateSourceType 模板来源
+	TemplateSourceType = "io.tencent.paas.source_type"
+
 	// HelmSourceType helm 创建来源key
 	HelmSourceType = "app.kubernetes.io/managed-by"
 )

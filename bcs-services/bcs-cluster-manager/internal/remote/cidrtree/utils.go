@@ -114,3 +114,17 @@ func GetIPNum(ipnet *net.IPNet) (ipnum uint32, err error) {
 	ipnum = uint32(math.Pow(2, float64(totalSize-prefixSize)))
 	return ipnum, nil
 }
+
+// GetIPNetsNum get ip nets num
+func GetIPNetsNum(frees []*net.IPNet) (uint32, error) {
+	ipSurplus := uint32(0)
+	for _, free := range frees {
+		freeIPNum, errLocal := GetIPNum(free)
+		if errLocal != nil {
+			return 0, errLocal
+		}
+		ipSurplus += freeIPNum
+	}
+
+	return ipSurplus, nil
+}

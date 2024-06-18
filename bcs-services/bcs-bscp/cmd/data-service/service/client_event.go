@@ -117,28 +117,24 @@ func (s *Service) handleCreateClientEvents(kt *kit.Kit, clientEvents []*pbce.Cli
 			item.Spec.EndTime = nil
 		}
 		fullKey := fmt.Sprintf("%d-%d-%s", item.Attachment.BizId, item.Attachment.AppId, item.Attachment.Uid)
-		if clientID[fullKey] > 0 {
-			item.Attachment.ClientId = clientID[fullKey]
-			if !ok {
-				if !existingKeys[keyWithoutCursor] {
-					toCreate = append(toCreate, &table.ClientEvent{
-						Attachment: item.Attachment.ClientEventAttachment(),
-						Spec:       item.Spec.ClientEventSpec(),
-					})
-					existingKeys[keyWithoutCursor] = true
-				} else {
-					toUpdate[item.MessageType] = append(toUpdate[item.MessageType], &table.ClientEvent{
-						Attachment: item.Attachment.ClientEventAttachment(),
-						Spec:       item.Spec.ClientEventSpec(),
-					})
-				}
+		if clientID[fullKey] <= 0 {
+			continue
+		}
+		item.Attachment.ClientId = clientID[fullKey]
+		clientEvent := &table.ClientEvent{
+			Attachment: item.Attachment.ClientEventAttachment(),
+			Spec:       item.Spec.ClientEventSpec(),
+		}
+		if !ok {
+			if !existingKeys[keyWithoutCursor] {
+				toCreate = append(toCreate, clientEvent)
+				existingKeys[keyWithoutCursor] = true
 			} else {
-				toUpdate[item.MessageType] = append(toUpdate[item.MessageType], &table.ClientEvent{
-					ID:         v,
-					Attachment: item.Attachment.ClientEventAttachment(),
-					Spec:       item.Spec.ClientEventSpec(),
-				})
+				toUpdate[item.MessageType] = append(toUpdate[item.MessageType], clientEvent)
 			}
+		} else {
+			clientEvent.ID = v
+			toUpdate[item.MessageType] = append(toUpdate[item.MessageType], clientEvent)
 		}
 	}
 

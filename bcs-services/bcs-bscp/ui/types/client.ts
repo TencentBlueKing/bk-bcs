@@ -36,7 +36,7 @@ export interface IClinetCommonQuery {
 export interface IClientSearchParams {
   uid?: string;
   ip?: string;
-  label?: { [key: string]: string };
+  label?: string[];
   current_release_name?: string;
   target_release_name?: string;
   release_change_status?: string[];
@@ -46,6 +46,8 @@ export interface IClientSearchParams {
   client_type?: string;
   start_pull_time?: string;
   end_pull_time?: string;
+  failed_reason?: string;
+  client_ids?: number[];
 }
 
 export interface IGetClientSearchListQuery {
@@ -128,6 +130,7 @@ export interface IClientLabelItem {
   percent: number;
   primary_key: string;
   primary_val: string;
+  x_field: string; // 平铺柱状图渲染参数
 }
 
 // 组件版本发布(柱状图和表格)

@@ -138,6 +138,7 @@
   import { datetimeFormat } from '../../../../../../utils/index';
   import { VERSION_STATUS_MAP, GET_UNNAMED_VERSION_DATA } from '../../../../../../constants/config';
   import { IConfigVersion, IConfigVersionQueryParams } from '../../../../../../../types/config';
+  import useTablePagination from '../../../../../../utils/hooks/use-table-pagination';
   import ServiceSelector from '../../components/service-selector.vue';
   import SearchInput from '../../../../../../components/search-input.vue';
   import VersionDiff from '../../config/components/version-diff/index.vue';
@@ -150,6 +151,7 @@
 
   const router = useRouter();
   const { t } = useI18n();
+  const { pagination, updatePagination } = useTablePagination('serviceVersionTableList');
 
   const props = defineProps<{
     bkBizId: string;
@@ -164,11 +166,6 @@
   const searchStr = ref('');
   const showDiffPanel = ref(false);
   const diffVersion = ref();
-  const pagination = ref({
-    current: 1,
-    count: 0,
-    limit: 10,
-  });
   const isSearchEmpty = ref(false);
   const operateConfirmDialog = ref({
     open: false,
@@ -335,7 +332,7 @@
   };
 
   const handlePageLimitChange = (limit: number) => {
-    pagination.value.limit = limit;
+    updatePagination('limit', limit);
     refreshVersionList();
   };
 

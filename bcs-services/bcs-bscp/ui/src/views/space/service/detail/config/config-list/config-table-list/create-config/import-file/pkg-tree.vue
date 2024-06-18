@@ -5,6 +5,7 @@
     label="name"
     node-key="nodeId"
     :data="pkgTreeData"
+    :search="{ value: props.searchStr }"
     :show-node-type-icon="false">
     <template #node="node">
       <div class="node-item-wrapper">
@@ -43,6 +44,7 @@
     pkgList: IAllPkgsGroupBySpaceInBiz[];
     imported: ITemplateBoundByAppData[]; // 编辑状态下已经选中的套餐，该列表下数据不可取消
     value: ITemplateBoundByAppData[]; // 当前选中的套餐信息
+    searchStr: string;
   }>();
 
   const emits = defineEmits(['change']);
