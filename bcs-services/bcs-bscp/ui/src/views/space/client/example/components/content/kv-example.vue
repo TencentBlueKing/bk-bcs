@@ -203,24 +203,20 @@
     switch (kvName) {
       case 'python':
         return !methods
-          ? import('/src/assets/exampleData/kv-python-get.yaml?raw')
+          ? import('/src/assets/exampleData/kv-python-pull.yaml?raw')
           : import('/src/assets/exampleData/kv-python-watch.yaml?raw');
       case 'go':
         return !methods
-          ? import('/src/assets/exampleData/kv-go-get.yaml?raw')
+          ? import('/src/assets/exampleData/kv-go-pull.yaml?raw')
           : import('/src/assets/exampleData/kv-go-watch.yaml?raw');
       case 'java':
         return !methods
-          ? import('/src/assets/exampleData/kv-java-get.yaml?raw')
+          ? import('/src/assets/exampleData/kv-java-pull.yaml?raw')
           : import('/src/assets/exampleData/kv-java-watch.yaml?raw');
       case 'c++':
         return !methods
-          ? import('/src/assets/exampleData/kv-c++-get.yaml?raw')
+          ? import('/src/assets/exampleData/kv-c++-pull.yaml?raw')
           : import('/src/assets/exampleData/kv-c++-watch.yaml?raw');
-      case 'kv-cmd':
-        return !methods
-          ? import('/src/assets/exampleData/kv-cmd-get.yaml?raw')
-          : import('/src/assets/exampleData/kv-cmd-watch.yaml?raw');
       default:
         return '';
     }

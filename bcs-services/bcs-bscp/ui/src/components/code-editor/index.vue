@@ -94,7 +94,6 @@
       if (val !== localVal.value) {
         editor.setValue(val);
         editorHoverProvider = useEditorVariableReplace(editor, props.variables);
-        console.log('数据变化, ++++++++');
       }
     },
   );
@@ -125,7 +124,6 @@
     (val) => {
       if (Array.isArray(val) && val.length > 0) {
         editorHoverProvider = useEditorVariableReplace(editor, val);
-        console.log('配置变化, -------');
       }
     },
   );
@@ -316,7 +314,6 @@
 
   // 校验xml、yaml、json数据类型
   const validate = (val: string) => {
-    console.log(props.language, 'd');
     let markers: any[] = [];
     if (props.language === 'xml') {
       markers = validateXML(val);
