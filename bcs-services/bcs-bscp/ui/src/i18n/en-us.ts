@@ -426,6 +426,10 @@ export default {
   '请输入空间/套餐名称': 'Please enter space/package name',
   '确认恢复该配置文件?': 'Confirm to recover the configuration file?',
   '配置文件恢复后，将覆盖新添加的配置文件': 'After the configuration file is restored, the newly added configuration file',
+  批量操作: 'Batch operation',
+  批量修改权限: 'Batch edit permission',
+  配置文件权限批量修改成功: 'Succeeded in batch modifying configuration file permissions.',
+  保持不变: 'Remain unchanged',
 
   // 分组管理
   新增分组: 'New group',

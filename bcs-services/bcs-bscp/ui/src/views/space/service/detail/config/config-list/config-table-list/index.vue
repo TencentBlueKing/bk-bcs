@@ -29,12 +29,13 @@
           :app-id="props.appId"
           :version-id="versionData.id"
           :version-name="versionData.spec.name" />
-        <BatchDeleteKv
+        <BatchOperationBtn
           v-if="versionData.status.publish_status === 'editing'"
           :bk-biz-id="props.bkBizId"
           :app-id="props.appId"
           :selected-ids="selectedIds"
           :is-file-type="isFileType"
+          :selected-items="selectedItems"
           @deleted="handleBatchDeleted" />
       </div>
       <SearchInput
@@ -52,7 +53,8 @@
         :search-str="searchStr"
         @clear-str="clearStr"
         @delete-config="refreshVariable"
-        @update-selected-ids="selectedIds = $event" />
+        @update-selected-ids="selectedIds = $event"
+        @update-selected-items="selectedItems = $event" />
       <TableWithKv
         v-else
         ref="tableRef"
@@ -77,7 +79,7 @@
   import TableWithTemplates from './tables/table-with-templates.vue';
   import TableWithKv from './tables/table-with-kv.vue';
   import ConfigExport from './config-export.vue';
-  import BatchDeleteKv from './batch-delete-btn.vue';
+  import BatchOperationBtn from './batch-operation-btn.vue';
 
   const configStore = useConfigStore();
   const serviceStore = useServiceStore();
@@ -94,6 +96,7 @@
   const searchStr = ref('');
   const editVariablesRef = ref();
   const selectedIds = ref<number[]>([]);
+  const selectedItems = ref<any[]>([]);
 
   const refreshConfigList = (isBatchUpload = false) => {
     if (isFileType.value) {
@@ -114,7 +117,7 @@
 
   // 批量删除配置项回调
   const handleBatchDeleted = () => {
-    tableRef.value.refreshAfterBatchDelete();
+    tableRef.value.refreshAfterBatchSet();
   };
 
   defineExpose({
