@@ -180,6 +180,7 @@ func (e *EmbedWeb) IndexHandler() http.Handler {
 			"BK_USER_HOST":            config.G.FrontendConf.Host.BKUserHost,
 			"BK_LOG_HOST":             config.G.FrontendConf.Host.BKLogHost,
 			"LOGIN_FULL":              config.G.FrontendConf.Host.LoginFullURL,
+			"BK_DOMAIN":               config.G.Base.Domain,
 			"BCS_API_HOST":            config.G.BCS.Host,
 			"BCS_DEBUG_API_HOST":      config.G.BCSDebugAPIHost(),
 			"BCS_NAMESPACE_PREFIX":    config.G.BCS.NamespacePrefix,
