@@ -32,6 +32,7 @@ import (
 	pbci "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/config-item"
 	pbcontent "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/content"
 	pbrci "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/released-ci"
+	pbtv "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/template-variable"
 	pbds "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
 )
 
@@ -107,6 +108,7 @@ func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbcs.BatchUps
 	if err != nil {
 		return nil, err
 	}
+
 	items := make([]*pbds.BatchUpsertConfigItemsReq_ConfigItem, 0, len(req.Items))
 	for _, item := range req.Items {
 		// validate if file content uploaded.
@@ -115,6 +117,16 @@ func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbcs.BatchUps
 			logs.Errorf("validate file content uploaded failed, err: %v, rid: %s", err, grpcKit.Rid)
 			return nil, err
 		}
+		vars := make([]*pbtv.TemplateVariableSpec, 0, len(item.Variables))
+		for _, v := range item.GetVariables() {
+			vars = append(vars, &pbtv.TemplateVariableSpec{
+				Name:       v.Name,
+				Type:       v.Type,
+				DefaultVal: v.DefaultVal,
+				Memo:       v.Memo,
+			})
+		}
+
 		items = append(items, &pbds.BatchUpsertConfigItemsReq_ConfigItem{
 			ConfigItemAttachment: &pbci.ConfigItemAttachment{
 				BizId: req.BizId,
@@ -137,8 +149,10 @@ func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbcs.BatchUps
 				ByteSize:  item.ByteSize,
 				Md5:       metadata.Md5,
 			},
+			Variables: vars,
 		})
 	}
+
 	buReq := &pbds.BatchUpsertConfigItemsReq{
 		BizId:      req.BizId,
 		AppId:      req.AppId,
@@ -707,17 +721,16 @@ func checkExistingPathConflict(existing []string) (uint32, map[string]bool) {
 }
 
 // CompareConfigItemConflicts compare config item version conflicts
-func (s *Service) CompareConfigItemConflicts(ctx context.Context, req *pbcs.CompareConfigItemConflictsReq) (
+func (s *Service) CompareConfigItemConflicts(ctx context.Context, req *pbcs.CompareConfigItemConflictsReq) ( // nolint
 	*pbcs.CompareConfigItemConflictsResp, error) {
-
 	grpcKit := kit.FromGrpcContext(ctx)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 		{Basic: meta.Basic{Type: meta.App, Action: meta.Update, ResourceID: req.AppId}, BizID: req.BizId},
 	}
-	err := s.authorizer.Authorize(grpcKit, res...)
-	if err != nil {
+
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
 
@@ -751,6 +764,49 @@ func (s *Service) CompareConfigItemConflicts(ctx context.Context, req *pbcs.Comp
 		conflicts[path.Join(v.Spec.Path, v.Spec.Name)] = true
 	}
 
+	// 获取已生成版本的引用变量
+	resf, err := s.client.DS.GetReleasedAppTmplVariableRefs(grpcKit.RpcCtx(), &pbds.GetReleasedAppTmplVariableRefsReq{
+		BizId:     req.BizId,
+		AppId:     req.OtherAppId,
+		ReleaseId: req.ReleaseId,
+	})
+	if err != nil {
+		return nil, err
+	}
+	resfMap := make(map[string][]string, 0)
+	for _, v := range resf.GetDetails() {
+		for _, ref := range v.GetReferences() {
+			filePath := path.Join(ref.Path, ref.Name)
+			resfMap[filePath] = append(resfMap[filePath], v.GetVariableName())
+		}
+	}
+
+	// 获取已生成版本的变量值、描述等
+	vars, err := s.client.DS.ListReleasedAppTmplVariables(grpcKit.RpcCtx(), &pbds.ListReleasedAppTmplVariablesReq{
+		BizId:     req.BizId,
+		AppId:     req.OtherAppId,
+		ReleaseId: req.ReleaseId,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	varsMap := make(map[string][]*pbcs.CompareConfigItemConflictsResp_Variable, 0)
+	for _, v := range vars.GetDetails() {
+		for key, name := range resfMap {
+			for _, n := range name {
+				if v.Name == n {
+					varsMap[key] = append(varsMap[key], &pbcs.CompareConfigItemConflictsResp_Variable{
+						Name:       n,
+						Type:       v.Type,
+						DefaultVal: v.DefaultVal,
+						Memo:       v.Memo,
+					})
+				}
+			}
+		}
+	}
+
 	newConfigItem := func(v *pbrci.ReleasedConfigItem) *pbcs.CompareConfigItemConflictsResp_ConfigItem {
 		return &pbcs.CompareConfigItemConflictsResp_ConfigItem{
 			Id:        v.Id,
@@ -762,8 +818,9 @@ func (s *Service) CompareConfigItemConflicts(ctx context.Context, req *pbcs.Comp
 			User:      v.Spec.Permission.User,
 			UserGroup: v.Spec.Permission.UserGroup,
 			Privilege: v.Spec.Permission.Privilege,
-			Sign:      v.CommitSpec.Content.Signature,
-			ByteSize:  v.CommitSpec.Content.ByteSize,
+			Sign:      v.CommitSpec.Content.OriginSignature,
+			ByteSize:  v.CommitSpec.Content.OriginByteSize,
+			Variables: varsMap[path.Join(v.Spec.Path, v.Spec.Name)],
 		}
 	}
 
