@@ -90,6 +90,11 @@ const props = defineProps({
     type: Array,
     default: () => [],
   },
+  // 支持选不同的vpc，默认不支持
+  validateVpc: {
+    type: Boolean,
+    default: false,
+  }
 });
 
 const selectorKey = ref('');
@@ -198,7 +203,7 @@ const disableHostMethod = (row: IHostData) => {
   } else if (!!props.cloudId && !!props.region && props.validateVpcAndRegion) {
     if (cacheNodeListCloudDataMap[row.ip]?.region !== props.region) {
       tips = $i18n.t('generic.ipSelector.tips.ipRegionNotMatched', [getRegionName(props.region)]);
-    } else if (cacheNodeListCloudDataMap[row.ip]?.vpc !== props.vpc?.vpcID) {
+    } else if (cacheNodeListCloudDataMap[row.ip]?.vpc !== props.vpc?.vpcID && !props.validateVpc) { // 增加支持选不同的vpc
       tips = $i18n.t('generic.ipSelector.tips.ipVpcNotMatched', [cacheNodeListCloudDataMap[row.ip]?.vpc, props.vpc?.vpcID]);
     } else if (!!props.availableZoneList?.length
       && !props.availableZoneList.includes(cacheNodeListCloudDataMap[row.ip]?.zone)) {
