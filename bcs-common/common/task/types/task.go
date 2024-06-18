@@ -21,61 +21,64 @@ import (
 	"github.com/google/uuid"
 )
 
-// Task task definition
-type Task struct {
-	// index for task, client should set this field
-	Index    string `json:"index" bson:"index"`
-	TaskID   string `json:"taskId" bson:"taskId"`
-	TaskType string `json:"taskType" bson:"taskType"`
-	TaskName string `json:"taskName" bson:"taskName"`
-	// steps and params
-	CurrentStep      string            `json:"currentStep" bson:"currentStep"`
-	StepSequence     []string          `json:"stepSequence" bson:"stepSequence"`
-	Steps            map[string]*Step  `json:"steps" bson:"steps"`
-	CallBackFuncName string            `json:"callBackFuncName" bson:"callBackFuncName"`
-	CommonParams     map[string]string `json:"commonParams" bson:"commonParams"`
-	ExtraJson        string            `json:"extraJson" bson:"extraJson"`
-
-	Status              string `json:"status" bson:"status"`
-	Message             string `json:"message" bson:"message"`
-	ForceTerminate      bool   `json:"forceTerminate" bson:"forceTerminate"`
-	Start               string `json:"start" bson:"start"`
-	End                 string `json:"end" bson:"end"`
-	ExecutionTime       uint32 `json:"executionTime" bson:"executionTime"`
-	MaxExecutionSeconds uint32 `json:"maxExecutionSeconds" bson:"maxExecutionSeconds"`
-	Creator             string `json:"creator" bson:"creator"`
-	LastUpdate          string `json:"lastUpdate" bson:"lastUpdate"`
-	Updater             string `json:"updater" bson:"updater"`
+// TaskOptions xxx
+type TaskOptions struct {
+	CallBackFuncName    string
+	MaxExecutionSeconds uint32
 }
 
-// TaskOptions task options definition
-type TaskOptions struct {
-	TaskIndex        string
-	TaskType         string
-	TaskName         string
-	Creator          string
-	CallBackFuncName string
+// TaskOption xxx
+type TaskOption func(opt *TaskOptions)
+
+// WithTaskCallBackFunc xxx
+func WithTaskCallBackFunc(callBackName string) TaskOption {
+	return func(opt *TaskOptions) {
+		opt.CallBackFuncName = callBackName
+	}
+}
+
+// WithTaskMaxExecutionSeconds xxx
+func WithTaskMaxExecutionSeconds(timeout uint32) TaskOption {
+	return func(opt *TaskOptions) {
+		opt.MaxExecutionSeconds = timeout
+	}
+}
+
+// TaskInfo task basic info definition
+type TaskInfo struct {
+	// TaskIndex for resource index
+	TaskIndex string
+	TaskType  string
+	TaskName  string
+	Creator   string
 }
 
 // NewTask create new task by default
-func NewTask(o *TaskOptions) *Task {
+func NewTask(o *TaskInfo, opts ...TaskOption) *Task {
+	defaultOptions := &TaskOptions{CallBackFuncName: "", MaxExecutionSeconds: 0}
+	for _, opt := range opts {
+		opt(defaultOptions)
+	}
+
 	nowTime := time.Now().Format(TaskTimeFormat)
 	return &Task{
-		Index:            o.TaskIndex,
-		TaskID:           uuid.NewString(),
-		TaskType:         o.TaskType,
-		TaskName:         o.TaskName,
-		Status:           TaskStatusInit,
-		ForceTerminate:   false,
-		Start:            nowTime,
-		Steps:            make(map[string]*Step, 0),
-		StepSequence:     make([]string, 0),
-		Creator:          o.Creator,
-		Updater:          o.Creator,
-		LastUpdate:       nowTime,
-		CommonParams:     make(map[string]string, 0),
-		ExtraJson:        DefaultJsonExtrasContent,
-		CallBackFuncName: o.CallBackFuncName,
+		TaskIndex:           o.TaskIndex,
+		TaskID:              uuid.NewString(),
+		TaskType:            o.TaskType,
+		TaskName:            o.TaskName,
+		Status:              TaskStatusInit,
+		ForceTerminate:      false,
+		Start:               nowTime,
+		Steps:               make(map[string]*Step, 0),
+		StepSequence:        make([]string, 0),
+		Creator:             o.Creator,
+		Updater:             o.Creator,
+		LastUpdate:          nowTime,
+		CommonParams:        make(map[string]string, 0),
+		ExtraJson:           DefaultJsonExtrasContent,
+		CallBackFuncName:    defaultOptions.CallBackFuncName,
+		Message:             DefaultTaskMessage,
+		MaxExecutionSeconds: defaultOptions.MaxExecutionSeconds,
 	}
 }
 
@@ -86,7 +89,7 @@ func (t *Task) GetTaskID() string {
 
 // GetIndex get task id
 func (t *Task) GetIndex() string {
-	return t.Index
+	return t.TaskIndex
 }
 
 // GetTaskType get task type
@@ -116,8 +119,8 @@ func (t *Task) AddStep(step *Step) *Task {
 	if t.StepSequence == nil {
 		t.StepSequence = make([]string, 0)
 	}
-	t.StepSequence = append(t.StepSequence, step.GetStepName())
-	t.Steps[step.GetStepName()] = step
+	t.StepSequence = append(t.StepSequence, step.GetName())
+	t.Steps[step.GetName()] = step
 	return t
 }
 
@@ -183,7 +186,7 @@ func (t *Task) SetStatus(status string) *Task {
 }
 
 // GetMessage set message
-func (t *Task) GetMessage(msg string) string {
+func (t *Task) GetMessage() string {
 	return t.Message
 }
 
@@ -228,18 +231,18 @@ func (t *Task) SetEndTime(time time.Time) *Task {
 
 // GetExecutionTime get execution time
 func (t *Task) GetExecutionTime() time.Duration {
-	return time.Duration(time.Duration(t.ExecutionTime) * time.Millisecond)
+	return time.Duration(t.ExecutionTime)
 }
 
 // SetExecutionTime set execution time
 func (t *Task) SetExecutionTime(start time.Time, end time.Time) *Task {
-	t.ExecutionTime = uint32(end.Sub(start).Milliseconds())
+	t.ExecutionTime = uint32(end.Sub(start).Seconds())
 	return t
 }
 
 // GetMaxExecutionSeconds get max execution seconds
 func (t *Task) GetMaxExecutionSeconds() time.Duration {
-	return time.Duration(time.Duration(t.MaxExecutionSeconds) * time.Second)
+	return time.Duration(t.MaxExecutionSeconds) * time.Second
 }
 
 // SetMaxExecutionSeconds set max execution seconds

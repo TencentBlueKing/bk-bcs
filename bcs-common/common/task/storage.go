@@ -13,14 +13,68 @@
 // Package task is a package for task management
 package task
 
-import store "github.com/Tencent/bk-bcs/bcs-common/common/task/store"
+import (
+	"context"
+	"time"
+
+	driver "go.mongodb.org/mongo-driver/mongo"
+	mopt "go.mongodb.org/mongo-driver/mongo/options"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/task/store"
+	bcsmongo "github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
+)
 
 var (
 	// globalStorage used for state and task manager
 	globalStorage store.TaskManagerModel
 )
 
-// GetStorageModel for cluster manager storage tools
-func getGlobalStorage() store.TaskManagerModel {
+// GetGlobalStorage for cluster manager storage tools
+func GetGlobalStorage() store.TaskManagerModel {
 	return globalStorage
+}
+
+func newMongoCli(opt *bcsmongo.Options) (*driver.Client, error) {
+	credential := mopt.Credential{
+		AuthMechanism: opt.AuthMechanism,
+		AuthSource:    opt.AuthDatabase,
+		Username:      opt.Username,
+		Password:      opt.Password,
+		PasswordSet:   true,
+	}
+	if len(credential.AuthMechanism) == 0 {
+		credential.AuthMechanism = "SCRAM-SHA-256"
+	}
+	// construct mongo client options
+	mCliOpt := &mopt.ClientOptions{
+		Auth:  &credential,
+		Hosts: opt.Hosts,
+	}
+	if opt.MaxPoolSize != 0 {
+		mCliOpt.MaxPoolSize = &opt.MaxPoolSize
+	}
+	if opt.MinPoolSize != 0 {
+		mCliOpt.MinPoolSize = &opt.MinPoolSize
+	}
+	var timeoutDuration time.Duration
+	if opt.ConnectTimeoutSeconds != 0 {
+		timeoutDuration = time.Duration(opt.ConnectTimeoutSeconds) * time.Second
+	}
+	mCliOpt.ConnectTimeout = &timeoutDuration
+
+	// create mongo client
+	mCli, err := driver.NewClient(mCliOpt) // nolint
+	if err != nil {
+		return nil, err
+	}
+	// connect to mongo
+	if err = mCli.Connect(context.TODO()); err != nil { // nolint
+		return nil, err
+	}
+
+	if err = mCli.Ping(context.TODO(), nil); err != nil {
+		return nil, err
+	}
+
+	return mCli, nil
 }

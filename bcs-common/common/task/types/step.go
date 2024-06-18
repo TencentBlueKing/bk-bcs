@@ -18,58 +18,78 @@ import (
 	"time"
 )
 
-// Step step definition
-type Step struct {
-	Name         string            `json:"name" bson:"name"`
-	TaskName     string            `json:"taskname" bson:"taskname"`
-	Params       map[string]string `json:"params" bson:"params"`
-	Extras       string            `json:"extras" bson:"extras"`
-	Status       string            `json:"status" bson:"status"`
-	Message      string            `json:"message" bson:"message"`
-	SkipOnFailed bool              `json:"skipOnFailed" bson:"skipOnFailed"`
-	RetryCount   uint32            `json:"retryCount" bson:"retryCount"`
+// StepOptions xxx
+type StepOptions struct {
+	Retry               uint32
+	SkipFailed          bool
+	MaxExecutionSeconds uint32
+}
 
-	Start               string `json:"start" bson:"start"`
-	End                 string `json:"end" bson:"end"`
-	ExecutionTime       uint32 `json:"executionTime" bson:"executionTime"`
-	MaxExecutionSeconds uint32 `json:"maxExecutionSeconds" bson:"maxExecutionSeconds"`
-	LastUpdate          string `json:"lastUpdate" bson:"lastUpdate"`
+// StepOption xxx
+type StepOption func(opt *StepOptions)
+
+// WithStepRetry xxx
+func WithStepRetry(retry uint32) StepOption {
+	return func(opt *StepOptions) {
+		opt.Retry = retry
+	}
+}
+
+// WithStepSkipFailed xxx
+func WithStepSkipFailed(skip bool) StepOption {
+	return func(opt *StepOptions) {
+		opt.SkipFailed = skip
+	}
+}
+
+// WithMaxExecutionSeconds xxx
+func WithMaxExecutionSeconds(execSecs uint32) StepOption {
+	return func(opt *StepOptions) {
+		opt.MaxExecutionSeconds = execSecs
+	}
 }
 
 // NewStep return a new step by default params
-func NewStep(stepName string, taskName string) *Step {
+func NewStep(name string, alias string, opts ...StepOption) *Step {
+	defaultOptions := &StepOptions{Retry: 0}
+	for _, opt := range opts {
+		opt(defaultOptions)
+	}
+
+	nowStr := time.Now().Format(TaskTimeFormat)
 	return &Step{
-		Name:                stepName,
-		TaskName:            taskName,
+		Name:                name,
+		Alias:               alias,
 		Params:              map[string]string{},
 		Extras:              DefaultJsonExtrasContent,
 		Status:              TaskStatusNotStarted,
 		Message:             "",
-		SkipOnFailed:        false,
-		RetryCount:          0,
-		MaxExecutionSeconds: DefaultMaxExecuteTimeSeconds,
+		SkipOnFailed:        defaultOptions.SkipFailed,
+		RetryCount:          defaultOptions.Retry,
+		Start:               nowStr,
+		MaxExecutionSeconds: defaultOptions.MaxExecutionSeconds,
 	}
 }
 
-// GetStepName return step name
-func (s *Step) GetStepName() string {
+// GetName return task name
+func (s *Step) GetName() string {
 	return s.Name
 }
 
-// SetStepName set step name
-func (s *Step) SetStepName(name string) *Step {
+// SetName set task method
+func (s *Step) SetName(name string) *Step {
 	s.Name = name
 	return s
 }
 
-// GetTaskName return task name
-func (s *Step) GetTaskName() string {
-	return s.TaskName
+// GetAlias return task alias
+func (s *Step) GetAlias() string {
+	return s.Alias
 }
 
-// SetTaskName set task name
-func (s *Step) SetTaskName(taskName string) *Step {
-	s.TaskName = taskName
+// SetAlias set task alias
+func (s *Step) SetAlias(alias string) *Step {
+	s.Alias = alias
 	return s
 }
 
@@ -204,7 +224,7 @@ func (s *Step) SetEndTime(t time.Time) *Step {
 
 // GetExecutionTime set execution time
 func (s *Step) GetExecutionTime() time.Duration {
-	return time.Duration(time.Duration(s.ExecutionTime) * time.Millisecond)
+	return time.Duration(s.ExecutionTime)
 }
 
 // SetExecutionTime set execution time
@@ -215,7 +235,7 @@ func (s *Step) SetExecutionTime(start time.Time, end time.Time) *Step {
 
 // GetMaxExecutionSeconds get max execution seconds
 func (s *Step) GetMaxExecutionSeconds() time.Duration {
-	return time.Duration(time.Duration(s.MaxExecutionSeconds) * time.Second)
+	return time.Duration(s.MaxExecutionSeconds) * time.Second
 }
 
 // SetMaxExecutionSeconds set max execution seconds
