@@ -184,6 +184,8 @@ func (s *WebServer) subRouter() http.Handler {
 		CMDBHost:       config.G.Frontend.Host.BKCMDBHost,
 		EnableBKNotice: config.G.Frontend.EnableBKNotice,
 		Helper:         config.G.Frontend.Helper,
+		FeedAddr:       config.G.Base.FeedAddr,
+		NodeManHost:    config.G.Frontend.Host.BKNODEMANHOST,
 	}
 
 	if shouldProxyAPI {
