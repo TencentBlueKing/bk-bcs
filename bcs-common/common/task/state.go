@@ -18,8 +18,46 @@ import (
 	"fmt"
 	"time"
 
-	types "github.com/Tencent/bk-bcs/bcs-common/common/task/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
 )
+
+// getTaskStateAndCurrentStep get task state and current step
+func getTaskStateAndCurrentStep(taskId, stepName string,
+	callBackFuncs map[string]CallbackInterface) (*State, *types.Step, error) {
+	task, err := GetGlobalStorage().GetTask(context.Background(), taskId)
+	if err != nil {
+		return nil, nil, fmt.Errorf("get task %s information failed, %s", taskId, err.Error())
+	}
+
+	if task.CommonParams == nil {
+		task.CommonParams = make(map[string]string, 0)
+	}
+
+	state := NewState(task, stepName)
+	if state.isTaskTerminated() {
+		return nil, nil, fmt.Errorf("task %s is terminated, step %s skip", taskId, stepName)
+	}
+	step, err := state.isReadyToStep(stepName)
+	if err != nil {
+		return nil, nil, fmt.Errorf("task %s step %s is not ready, %s", taskId, stepName, err.Error())
+	}
+
+	if step == nil {
+		// step successful and skip
+		blog.Infof("task %s step %s already execute successful", taskId, stepName)
+		return state, nil, nil
+	}
+
+	// inject call back func
+	if state.task.GetCallback() != "" && len(callBackFuncs) > 0 {
+		if callback, ok := callBackFuncs[state.task.GetCallback()]; ok {
+			state.callBack = callback.Callback
+		}
+	}
+
+	return state, step, nil
+}
 
 // State is a struct for task state
 type State struct {
@@ -81,7 +119,7 @@ func (s *State) isReadyToStep(stepName string) (*types.Step, error) {
 			SetLastUpdate(nowTime)
 
 		// update Task in storage
-		if err := getGlobalStorage().UpdateTask(context.Background(), s.task); err != nil {
+		if err := GetGlobalStorage().UpdateTask(context.Background(), s.task); err != nil {
 			return nil, err
 		}
 		return curStep, nil
@@ -109,7 +147,7 @@ func (s *State) isReadyToStep(stepName string) (*types.Step, error) {
 				SetLastUpdate(nowTime)
 
 			// update Task in storage
-			if err := getGlobalStorage().UpdateTask(context.Background(), s.task); err != nil {
+			if err := GetGlobalStorage().UpdateTask(context.Background(), s.task); err != nil {
 				return nil, fmt.Errorf("update task %s step %s status error", s.task.GetTaskID(), stepName)
 			}
 			return step, nil
@@ -165,7 +203,7 @@ func (s *State) updateStepSuccess(start time.Time, stepName string) error {
 	}
 
 	// update Task in storage
-	if err := getGlobalStorage().UpdateTask(context.Background(), s.task); err != nil {
+	if err := GetGlobalStorage().UpdateTask(context.Background(), s.task); err != nil {
 		return fmt.Errorf("update task %s status error", s.task.GetTaskID())
 	}
 
@@ -173,10 +211,10 @@ func (s *State) updateStepSuccess(start time.Time, stepName string) error {
 }
 
 // updateStepFailure update step status to failure
-func (s *State) updateStepFailure(start time.Time, stepName string, stepErr error) error {
-	step, ok := s.task.GetStep(stepName)
+func (s *State) updateStepFailure(start time.Time, name string, stepErr error, taskTimeOut bool) error {
+	step, ok := s.task.GetStep(name)
 	if !ok {
-		return fmt.Errorf("step %s is not exist", stepName)
+		return fmt.Errorf("step %s is not exist", name)
 	}
 	endTime := time.Now()
 
@@ -188,14 +226,14 @@ func (s *State) updateStepFailure(start time.Time, stepName string, stepErr erro
 		SetLastUpdate(endTime)
 
 	// if step SkipOnFailed, update task status to running
-	if step.GetSkipOnFailed() {
+	if !taskTimeOut && step.GetSkipOnFailed() {
 		// skip, set task running or success
 		s.task.SetStatus(types.TaskStatusRunning).
 			SetMessage(fmt.Sprintf("step %s running failed", step.Name)).
 			SetLastUpdate(endTime)
 
 		// last step failed and skipOnFailed is true, update task status to success
-		if s.isLastStep(stepName) {
+		if s.isLastStep(name) {
 			// last step
 			taskStartTime, err := s.task.GetStartTime()
 			if err != nil {
@@ -213,12 +251,16 @@ func (s *State) updateStepFailure(start time.Time, stepName string, stepErr erro
 			}
 		}
 	} else {
-		// not skip, set task faile
+		// not skip, set task failed
 		s.task.SetStatus(types.TaskStatusFailure).
 			SetMessage(fmt.Sprintf("step %s running failed", step.Name)).
 			SetLastUpdate(endTime).
 			SetEndTime(endTime).
 			SetExecutionTime(start, endTime)
+
+		if taskTimeOut {
+			s.task.SetStatus(types.TaskStatusTimeout).SetMessage("task timeout")
+		}
 
 		// callback
 		if s.callBack != nil {
@@ -227,7 +269,7 @@ func (s *State) updateStepFailure(start time.Time, stepName string, stepErr erro
 	}
 
 	// update Task in storage
-	if err := getGlobalStorage().UpdateTask(context.Background(), s.task); err != nil {
+	if err := GetGlobalStorage().UpdateTask(context.Background(), s.task); err != nil {
 		return fmt.Errorf("update task %s status error", s.task.GetTaskID())
 	}
 
