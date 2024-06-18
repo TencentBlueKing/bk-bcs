@@ -2,7 +2,7 @@
   <section class="node-mana-container">
     <div class="top-tip">
       {{ $t('节点管理插件客户端需要在') }}
-      <span class="em" @click="linkTo(linkUrl.nodeMana)">{{ $t('节点管理平台') }}<share /></span>
+      <span class="em" @click="linkTo(linkUrl.nodeManaUrl)">{{ $t('节点管理平台') }}<share /></span>
       {{ $t('部署“bkbscp (bscp服务配置分发和热更新)”插件，部署详情请参考产品白皮书：') }}
       <span class="em" @click="linkTo(linkUrl.clientNode)">
         {{ $t('《客户端配置》-“节点管理插件客户端拉取配置”章节') }}<share />
@@ -62,7 +62,7 @@
   const route = useRoute();
 
   const linkUrl = {
-    nodeMana: '',
+    nodeManaUrl: (window as any).BK_NODE_HOST,
     clientNode: 'https://bk.tencent.com/docs/markdown/ZH/BSCP/1.29/UserGuide/Function/client_configuration.md',
   };
 
