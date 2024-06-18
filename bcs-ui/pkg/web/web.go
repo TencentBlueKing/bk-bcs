@@ -132,7 +132,6 @@ func (w *WebServer) newRouter() http.Handler {
 func (w *WebServer) subRouter() http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.Tracing)
-	r.Use(middleware.DefaultLanguage)
 
 	r.Get("/favicon.ico", w.embedWebServer.FaviconHandler)
 
@@ -143,7 +142,6 @@ func (w *WebServer) subRouter() http.Handler {
 
 	// 静态资源
 	r.Get("/web/*", w.embedWebServer.StaticFileHandler("/web").ServeHTTP)
-	r.With(metrics.RequestCollect("SwitchLanguageHandler")).Put("/switch_language", w.CookieSwitchLanguage)
 	r.With(metrics.RequestCollect("ReleaseNoteHandler")).Get("/release_note", w.ReleaseNoteHandler)
 	r.With(metrics.RequestCollect("ReportHandler")).Post("/report", ReportHandler)
 
