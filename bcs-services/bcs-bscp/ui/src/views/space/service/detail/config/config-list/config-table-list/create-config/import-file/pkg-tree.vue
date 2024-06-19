@@ -112,7 +112,8 @@
     const list = props.value.slice();
     if (node.children) {
       // 空间节点
-      const pkgNodes = node.children;
+      const searchText = props.searchStr.toLowerCase();
+      const pkgNodes = node.children.filter((item) => item.name.toLowerCase().includes(searchText));
       if (val) {
         pkgNodes.forEach((pkg) => {
           if (!pkg.disabled && !isPkgNodeChecked(pkg.id)) {
