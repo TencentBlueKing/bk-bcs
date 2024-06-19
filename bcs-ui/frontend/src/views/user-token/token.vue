@@ -478,6 +478,7 @@ export default defineComponent({
 <style lang="postcss" scoped>
 .user-token {
     padding: 16px 84px;
+    overflow: auto;
 }
 .info-item {
     line-height: 20px;
