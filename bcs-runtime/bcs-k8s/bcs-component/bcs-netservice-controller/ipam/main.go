@@ -26,6 +26,7 @@ import (
 	"github.com/containernetworking/cni/pkg/types"
 	"github.com/containernetworking/cni/pkg/types/current"
 	"github.com/containernetworking/cni/pkg/version"
+	"github.com/jackpal/gateway"
 
 	ipamtypes "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-netservice-controller/ipam/types"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-netservice-controller/pkg/client"
@@ -111,11 +112,18 @@ func cmdAdd(args *skel.CmdArgs) error {
 		return err
 	}
 
+	// get host default gateway
+	gw, gwerr := gateway.DiscoverGateway()
+	if gwerr != nil {
+		return gwerr
+	}
+
 	req := &client.AllocateReq{
 		ContainerID:  args.ContainerID,
 		PodName:      string(k8sConf.K8S_POD_NAME),
 		PodNamespace: string(k8sConf.K8S_POD_NAMESPACE),
 		Host:         ipamConf.Host,
+		HostGateway:  gw.String(),
 	}
 	resp, getErr := nsClient.Allocate(req)
 	if getErr != nil {
