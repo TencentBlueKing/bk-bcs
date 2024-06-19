@@ -52,9 +52,9 @@
   import { useRoute } from 'vue-router';
   import Message from 'bkui-vue/lib/message';
   import { ITemplateConfigItem } from '../../../../../../../../types/template';
+  import { batchEditTemplatePermission } from '../../../../../../../api/template';
   import AddToDialog from '../add-to-pkgs/add-to-dialog.vue';
   import EditPermissionDialg from '../edit-permission/edit-permission-dialog.vue';
-  import { batchEditTemplatePermission } from '../../../../../../../api/template';
   import BatchMoveOutFromPkgDialog from '../move-out-from-pkg/batch-move-out-from-pkg-dialog.vue';
   import MoveOutFromPkgsDialog from '../move-out-from-pkg/move-out-from-pkgs-dialog.vue';
   import DeleteConfigDialog from '../delete-configs/delete-config-dialog.vue';

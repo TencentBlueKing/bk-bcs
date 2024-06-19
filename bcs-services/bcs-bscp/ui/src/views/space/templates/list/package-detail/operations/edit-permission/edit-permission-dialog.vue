@@ -45,7 +45,7 @@
                       class="group-checkboxs"
                       :model-value="privilegeGroupsValue[index]"
                       @change="handleSelectPrivilege(index, $event)">
-                      <bk-checkbox size="small" :label="4" :disabled="true">
+                      <bk-checkbox size="small" :label="4">
                         {{ t('读') }}
                       </bk-checkbox>
                       <bk-checkbox size="small" :label="2">{{ t('写') }}</bk-checkbox>
@@ -129,7 +129,7 @@
   // 权限输入框失焦后，校验输入是否合法，如不合法回退到上次输入
   const handlePrivilegeInputBlur = () => {
     const val = String(privilegeInputVal.value);
-    if (/^[0-7]{3}$/.test(val)) {
+    if (/^[0-7]{3}$/.test(val) || val === '') {
       localVal.value.privilege = val;
       showPrivilegeErrorTips.value = false;
     } else {
@@ -142,7 +142,7 @@
   const handleSelectPrivilege = (index: number, val: number[]) => {
     const groupsValue = { ...privilegeGroupsValue.value };
     groupsValue[index] = val;
-    const digits: number[] = [];
+    const digits = [];
     for (let i = 0; i < 3; i++) {
       let sum = 0;
       if (groupsValue[i].length > 0) {
@@ -150,7 +150,12 @@
       }
       digits.push(sum);
     }
-    const newVal = digits.join('');
+
+    // 选择其他权限 自动选择own的读取权限
+    if (digits[0] < 4 && digits.some((item) => item > 0)) {
+      digits[0] += 4;
+    }
+    const newVal = digits.every((item) => item === 0) ? '' : digits.join('');
     privilegeInputVal.value = newVal;
     localVal.value.privilege = newVal;
   };
