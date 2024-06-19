@@ -72,7 +72,7 @@
   import ConfirmDialog from './confirm-dialog.vue';
   import SelectGroup from './select-group/index.vue';
   import VersionDiff from '../../config/components/version-diff/index.vue';
-  import { useRoute, useRouter } from 'vue-router';
+  import { useRouter } from 'vue-router';
   import { getConfigVersionList } from '../../../../../../api/config';
   import { IConfigVersion } from '../../../../../../../types/config';
 
@@ -92,10 +92,7 @@
 
   const emit = defineEmits(['confirm']);
 
-  const route = useRoute();
   const router = useRouter();
-  const bkBizId = String(route.params.spaceId);
-  const appId = Number(route.params.appId);
   const versionList = ref<IConfigVersion[]>([]);
   const isSelectGroupPanelOpen = ref(false);
   const isDiffSliderShow = ref(false);
@@ -139,7 +136,7 @@
   // 获取所有对比基准版本
   const getVersionList = async () => {
     try {
-      const res = await getConfigVersionList(bkBizId, appId, { start: 0, all: true });
+      const res = await getConfigVersionList(props.bkBizId, props.appId, { start: 0, all: true });
       versionList.value = res.data.details.filter((item: IConfigVersion) => {
         const { id, status } = item;
         return id !== versionData.value.id && status.publish_status === 'partial_released';
