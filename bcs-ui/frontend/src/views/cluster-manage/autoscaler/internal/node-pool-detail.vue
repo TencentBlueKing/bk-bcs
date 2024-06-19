@@ -373,6 +373,9 @@ export default defineComponent({
           clusterId: props.clusterId,
           nodeGroupID: props.nodeGroupID,
         },
+        query: {
+          provider: nodePoolData.value?.extraInfo?.resourcePoolType || 'yunti',
+        },
       });
     };
 
