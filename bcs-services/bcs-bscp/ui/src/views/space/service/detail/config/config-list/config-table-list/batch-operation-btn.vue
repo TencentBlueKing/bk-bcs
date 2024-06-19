@@ -145,10 +145,10 @@
   const isBatchEditPermDialogShow = ref(false);
   const isPopoverOpen = ref(false);
   const buttonRef = ref();
-  const privilegeInputVal = ref('644');
+  const privilegeInputVal = ref('');
   const showPrivilegeErrorTips = ref(false);
   const localVal = ref({
-    privilege: '644',
+    privilege: '',
     user: '',
     user_group: '',
   });
@@ -170,11 +170,11 @@
     (val) => {
       if (val) {
         localVal.value = {
-          privilege: '644',
+          privilege: '',
           user: '',
           user_group: '',
         };
-        privilegeInputVal.value = '644';
+        privilegeInputVal.value = '';
       }
     },
   );
