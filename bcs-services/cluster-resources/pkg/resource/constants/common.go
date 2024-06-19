@@ -121,6 +121,20 @@ const (
 
 	// TemplateSourceType 模板来源
 	TemplateSourceType = "io.tencent.paas.source_type"
+
+	// HelmSourceType helm 创建来源key
+	HelmSourceType = "app.kubernetes.io/managed-by"
+)
+
+const (
+	// TemplateSourceTypeValue 模板创建来源类型值
+	TemplateSourceTypeValue = "template"
+	// TemplateCreateSource 创建来源: Template
+	TemplateCreateSource = "Template"
+	// HelmCreateSource 创建来源: Helm
+	HelmCreateSource = "Helm"
+	// ClientCreateSource 创建来源: Client
+	ClientCreateSource = "Client"
 )
 
 const (
