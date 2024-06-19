@@ -60,7 +60,6 @@ export default defineConfig(({ command, mode }) => {
     build: {
       outDir: 'dist',
       assetsDir: 'static',
-      target: 'es2015',
       commonjsOptions: {
         transformMixedEsModules: true,
       },
