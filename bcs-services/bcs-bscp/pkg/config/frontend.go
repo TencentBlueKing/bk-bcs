@@ -15,9 +15,10 @@ package config
 
 // HostConf host conf
 type HostConf struct {
-	BKIAMHost  string `yaml:"bk_iam_host"`  // 权限中心
-	BKCMDBHost string `yaml:"bk_cmdb_host"` // 配置平台
-	BSCPAPIURL string `yaml:"bscp_api_url"` // bscp api地址
+	BKIAMHost     string `yaml:"bk_iam_host"`     // 权限中心
+	BKCMDBHost    string `yaml:"bk_cmdb_host"`    // 配置平台
+	BSCPAPIURL    string `yaml:"bscp_api_url"`    // bscp api地址
+	BKNODEMANHOST string `yaml:"bk_nodeman_host"` // 节点管理地址
 }
 
 // FrontendConf docs and host conf
