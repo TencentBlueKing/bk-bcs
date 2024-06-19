@@ -154,28 +154,19 @@ func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbds.BatchUps
 		return nil, err
 	}
 
-	file1 := make([]tools.CIUniqueKey, 0)
-	file2 := make([]tools.CIUniqueKey, 0)
-
+	file1, file2 := make([]tools.CIUniqueKey, 0), make([]tools.CIUniqueKey, 0)
 	editingCIMap := make(map[string]*table.ConfigItem)
 	newCIMap := make(map[string]*pbds.BatchUpsertConfigItemsReq_ConfigItem)
 	for _, ci := range cis {
 		editingCIMap[path.Join(ci.Spec.Path, ci.Spec.Name)] = ci
-		file1 = append(file1, tools.CIUniqueKey{
-			Name: ci.Spec.Name,
-			Path: ci.Spec.Path,
-		})
+		file1 = append(file1, tools.CIUniqueKey{Name: ci.Spec.Name, Path: ci.Spec.Path})
 	}
 	for _, item := range req.Items {
 		newCIMap[path.Join(item.ConfigItemSpec.Path, item.ConfigItemSpec.Name)] = item
 		file2 = append(file2, tools.CIUniqueKey{
-			Name: item.GetConfigItemSpec().GetName(),
-			Path: item.GetConfigItemSpec().GetPath(),
+			Name: item.GetConfigItemSpec().GetName(), Path: item.GetConfigItemSpec().GetPath(),
 		})
 	}
-
-	// 检测文件冲突
-	// /a 和 /a/1.txt 这类的冲突
 	if err = tools.DetectFilePathConflicts(file2, file1); err != nil {
 		return nil, err
 	}
@@ -210,7 +201,16 @@ func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbds.BatchUps
 		}
 		return nil, e
 	}
-
+	vars, err := s.checkConfigItemVars(grpcKit, req, req.ReplaceAll)
+	if err != nil {
+		return nil, err
+	}
+	if err = s.dao.AppTemplateVariable().UpsertWithTx(grpcKit, tx, vars); err != nil {
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
+		}
+		return nil, err
+	}
 	if req.ReplaceAll {
 		// if replace all,delete config items not in batch upsert request.
 		if e := s.doBatchDeleteConfigItems(grpcKit, tx, toDelete, req.BizId, req.AppId); e != nil {
@@ -235,6 +235,79 @@ func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbds.BatchUps
 	// 返回创建和更新的ID
 	mergedID := append(createId, updateId...) // nolint
 	return &pbds.BatchUpsertConfigItemsResp{Ids: mergedID}, nil
+}
+
+// 检测变量
+func (s *Service) checkConfigItemVars(kt *kit.Kit, req *pbds.BatchUpsertConfigItemsReq, replaceAll bool) (
+	*table.AppTemplateVariable, error) {
+	res := new(table.AppTemplateVariable)
+	newVars := make(map[string]*table.TemplateVariableSpec, 0)
+	for _, v := range req.GetItems() {
+		for _, vars := range v.GetVariables() {
+			newVars[vars.Name] = &table.TemplateVariableSpec{
+				Name:       vars.Name,
+				Type:       table.VariableType(vars.Type),
+				DefaultVal: vars.DefaultVal,
+				Memo:       vars.Memo,
+			}
+		}
+	}
+
+	variableMap := make([]*table.TemplateVariableSpec, 0)
+
+	for _, item := range newVars {
+		variableMap = append(variableMap, item)
+	}
+
+	// 获取原有的变量
+	variable, err := s.dao.AppTemplateVariable().Get(kt, req.BizId, req.AppId)
+	if err != nil {
+		return nil, err
+	}
+
+	res.Attachment = &table.AppTemplateVariableAttachment{
+		BizID: req.BizId,
+		AppID: req.AppId,
+	}
+	if variable != nil {
+		res.ID = variable.ID
+		res.Revision = &table.Revision{
+			Reviser:   kt.User,
+			UpdatedAt: time.Now().UTC(),
+		}
+	} else {
+		res.Revision = &table.Revision{
+			Reviser:   kt.User,
+			Creator:   kt.User,
+			CreatedAt: time.Now().UTC(),
+		}
+	}
+
+	if replaceAll || variable == nil {
+		res.Spec = &table.AppTemplateVariableSpec{
+			Variables: variableMap,
+		}
+		return res, nil
+	}
+
+	// 覆盖值等信息
+	resultMap := make(map[string]*table.TemplateVariableSpec, 0)
+	for _, v := range variable.Spec.Variables {
+		resultMap[v.Name] = v
+	}
+	for _, v := range newVars {
+		resultMap[v.Name] = v
+	}
+
+	for _, item := range resultMap {
+		variableMap = append(variableMap, item)
+	}
+
+	res.Spec = &table.AppTemplateVariableSpec{
+		Variables: variableMap,
+	}
+
+	return res, nil
 }
 
 func (s *Service) checkConfigItems(kt *kit.Kit, req *pbds.BatchUpsertConfigItemsReq,

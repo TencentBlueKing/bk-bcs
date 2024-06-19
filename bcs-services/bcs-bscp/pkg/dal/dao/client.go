@@ -26,6 +26,7 @@ import (
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/utils"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	pbclient "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/client"
 	pbds "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
@@ -279,11 +280,11 @@ func (dao *clientDao) List(kit *kit.Kit, bizID, appID uint32, heartbeatTime int6
 	var exprs []field.Expr
 	if order.String() != "" {
 		exprs = dao.handleOrder(order)
-	} else {
-		exprs = append(exprs, m.ID.Desc())
 	}
 
-	d := q.Where(conds...).Order(exprs...)
+	orderStr := fmt.Sprintf("CASE WHEN release_change_status = '%s' THEN 1 WHEN release_change_status = '%s' THEN 2 "+
+		"WHEN release_change_status = '%s' THEN 3 END,`id` desc", table.Processing, table.Failed, table.Success)
+	d := q.Where(conds...).Order(exprs...).Order(utils.NewCustomExpr(orderStr, nil))
 	if opt.All {
 		result, err := d.Find()
 		if err != nil {

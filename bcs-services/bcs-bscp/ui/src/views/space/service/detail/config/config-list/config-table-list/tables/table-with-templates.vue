@@ -56,7 +56,7 @@
                           <td v-if="isUnNamedVersion" class="selection">
                             <bk-checkbox
                               :disabled="group.id > 0 || config.file_state === 'DELETE'"
-                              :model-value="selectedIds.includes(config.id)"
+                              :model-value="selectedConfigItems.some((item) => item.id === config.id)"
                               @change="handleRowSelectionChange($event, config.id)" />
                           </td>
                           <td class="name">
@@ -357,7 +357,7 @@
     searchStr: string;
   }>();
 
-  const emits = defineEmits(['clearStr', 'deleteConfig', 'updateSelectedIds']);
+  const emits = defineEmits(['clearStr', 'deleteConfig', 'updateSelectedIds', 'updateSelectedItems']);
 
   const loading = ref(false);
   const commonConfigListLoading = ref(false);
@@ -370,7 +370,6 @@
   const tableGroupsData = ref<IConfigsGroupData[]>([]);
   const editPanelShow = ref(false);
   const activeConfig = ref(0);
-  const selectedIds = ref<number[]>([]);
   const isDiffPanelShow = ref(false);
   const isSearchEmpty = ref(false);
   const isDeleteConfigDialogShow = ref(false);
@@ -403,6 +402,7 @@
   const stickyIndex = ref(1);
   const tableRef = ref();
   const collapseHeader = ref();
+  const selectedConfigItems = ref<IConfigItem[]>([]);
 
   // 是否为未命名版本
   const isUnNamedVersion = computed(() => versionData.value.id === 0);
@@ -412,7 +412,7 @@
 
   // 全选checkbox选中状态
   const isIndeterminate = computed(() => {
-    return selectedIds.value.length > 0 && selectedIds.value.length <= configsCount.value;
+    return selectedConfigItems.value.length > 0 && selectedConfigItems.value.length <= configsCount.value;
   });
 
   const deleteConfigTips = computed(() => {
@@ -460,7 +460,7 @@
     async () => {
       await getBindingId();
       getAllConfigList();
-      selectedIds.value = [];
+      selectedConfigItems.value = [];
       emits('updateSelectedIds', []);
     },
   );
@@ -654,22 +654,30 @@
   // 全选
   const handleSelectAll = (val: boolean) => {
     if (val) {
-      selectedIds.value = configList.value.filter((item) => item.file_state !== 'DELETE').map((item) => item.id);
+      selectedConfigItems.value = configList.value.filter((item) => item.file_state !== 'DELETE');
     } else {
-      selectedIds.value = [];
+      selectedConfigItems.value = [];
     }
-    emits('updateSelectedIds', selectedIds.value);
+    emits(
+      'updateSelectedIds',
+      selectedConfigItems.value.map((item) => item.id),
+    );
+    emits('updateSelectedItems', selectedConfigItems.value);
   };
 
   // 非模板配置选择/取消选择
   const handleRowSelectionChange = (val: boolean, id: number) => {
-    const index = selectedIds.value.findIndex((i) => i === id);
+    const index = selectedConfigItems.value.findIndex((item) => item.id === id);
     if (val) {
-      index === -1 && selectedIds.value.push(id);
+      index === -1 && selectedConfigItems.value.push(configList.value.find((item) => item.id === id)!);
     } else {
-      index > -1 && selectedIds.value.splice(index, 1);
+      index > -1 && selectedConfigItems.value.splice(index, 1);
     }
-    emits('updateSelectedIds', selectedIds.value);
+    emits(
+      'updateSelectedIds',
+      selectedConfigItems.value.map((item) => item.id),
+    );
+    emits('updateSelectedItems', selectedConfigItems.value);
   };
 
   const handleEditOpen = (config: IConfigTableItem) => {
@@ -847,10 +855,11 @@
     }
   };
 
-  // 批量删除配置项后刷新配置项列表
-  const refreshAfterBatchDelete = () => {
-    selectedIds.value = [];
+  // 批量操作配置项后刷新配置项列表
+  const refreshAfterBatchSet = () => {
+    selectedConfigItems.value = [];
     emits('updateSelectedIds', []);
+    emits('updateSelectedItems', []);
     getAllConfigList();
   };
 
@@ -866,7 +875,7 @@
   };
 
   defineExpose({
-    refreshAfterBatchDelete,
+    refreshAfterBatchSet,
     refresh: getAllConfigList,
   });
 </script>

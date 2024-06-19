@@ -439,6 +439,7 @@ message BatchUpsertConfigItemsReq {
     pbci.ConfigItemAttachment config_item_attachment = 1;
     pbci.ConfigItemSpec config_item_spec = 2;
     pbcontent.ContentSpec content_spec = 3;
+    repeated pbtv.TemplateVariableSpec variables = 4;
   }
   uint32 biz_id = 1;
   uint32 app_id = 2;
