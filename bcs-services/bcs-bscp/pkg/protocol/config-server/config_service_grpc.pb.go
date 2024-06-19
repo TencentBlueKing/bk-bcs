@@ -85,6 +85,7 @@ const (
 	Config_UpdateTemplate_FullMethodName                    = "/pbcs.Config/UpdateTemplate"
 	Config_ListTemplates_FullMethodName                     = "/pbcs.Config/ListTemplates"
 	Config_BatchUpsertTemplates_FullMethodName              = "/pbcs.Config/BatchUpsertTemplates"
+	Config_BatchUpdateTemplatePermissions_FullMethodName    = "/pbcs.Config/BatchUpdateTemplatePermissions"
 	Config_AddTmplsToTmplSets_FullMethodName                = "/pbcs.Config/AddTmplsToTmplSets"
 	Config_DeleteTmplsFromTmplSets_FullMethodName           = "/pbcs.Config/DeleteTmplsFromTmplSets"
 	Config_ListTemplatesByIDs_FullMethodName                = "/pbcs.Config/ListTemplatesByIDs"
@@ -252,6 +253,7 @@ type ConfigClient interface {
 	UpdateTemplate(ctx context.Context, in *UpdateTemplateReq, opts ...grpc.CallOption) (*UpdateTemplateResp, error)
 	ListTemplates(ctx context.Context, in *ListTemplatesReq, opts ...grpc.CallOption) (*ListTemplatesResp, error)
 	BatchUpsertTemplates(ctx context.Context, in *BatchUpsertTemplatesReq, opts ...grpc.CallOption) (*BatchUpsertTemplatesResp, error)
+	BatchUpdateTemplatePermissions(ctx context.Context, in *BatchUpdateTemplatePermissionsReq, opts ...grpc.CallOption) (*BatchUpdateTemplatePermissionsResp, error)
 	AddTmplsToTmplSets(ctx context.Context, in *AddTmplsToTmplSetsReq, opts ...grpc.CallOption) (*AddTmplsToTmplSetsResp, error)
 	DeleteTmplsFromTmplSets(ctx context.Context, in *DeleteTmplsFromTmplSetsReq, opts ...grpc.CallOption) (*DeleteTmplsFromTmplSetsResp, error)
 	ListTemplatesByIDs(ctx context.Context, in *ListTemplatesByIDsReq, opts ...grpc.CallOption) (*ListTemplatesByIDsResp, error)
@@ -896,6 +898,15 @@ func (c *configClient) ListTemplates(ctx context.Context, in *ListTemplatesReq, 
 func (c *configClient) BatchUpsertTemplates(ctx context.Context, in *BatchUpsertTemplatesReq, opts ...grpc.CallOption) (*BatchUpsertTemplatesResp, error) {
 	out := new(BatchUpsertTemplatesResp)
 	err := c.cc.Invoke(ctx, Config_BatchUpsertTemplates_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) BatchUpdateTemplatePermissions(ctx context.Context, in *BatchUpdateTemplatePermissionsReq, opts ...grpc.CallOption) (*BatchUpdateTemplatePermissionsResp, error) {
+	out := new(BatchUpdateTemplatePermissionsResp)
+	err := c.cc.Invoke(ctx, Config_BatchUpdateTemplatePermissions_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1843,6 +1854,7 @@ type ConfigServer interface {
 	UpdateTemplate(context.Context, *UpdateTemplateReq) (*UpdateTemplateResp, error)
 	ListTemplates(context.Context, *ListTemplatesReq) (*ListTemplatesResp, error)
 	BatchUpsertTemplates(context.Context, *BatchUpsertTemplatesReq) (*BatchUpsertTemplatesResp, error)
+	BatchUpdateTemplatePermissions(context.Context, *BatchUpdateTemplatePermissionsReq) (*BatchUpdateTemplatePermissionsResp, error)
 	AddTmplsToTmplSets(context.Context, *AddTmplsToTmplSetsReq) (*AddTmplsToTmplSetsResp, error)
 	DeleteTmplsFromTmplSets(context.Context, *DeleteTmplsFromTmplSetsReq) (*DeleteTmplsFromTmplSetsResp, error)
 	ListTemplatesByIDs(context.Context, *ListTemplatesByIDsReq) (*ListTemplatesByIDsResp, error)
@@ -2134,6 +2146,9 @@ func (UnimplementedConfigServer) ListTemplates(context.Context, *ListTemplatesRe
 }
 func (UnimplementedConfigServer) BatchUpsertTemplates(context.Context, *BatchUpsertTemplatesReq) (*BatchUpsertTemplatesResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BatchUpsertTemplates not implemented")
+}
+func (UnimplementedConfigServer) BatchUpdateTemplatePermissions(context.Context, *BatchUpdateTemplatePermissionsReq) (*BatchUpdateTemplatePermissionsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BatchUpdateTemplatePermissions not implemented")
 }
 func (UnimplementedConfigServer) AddTmplsToTmplSets(context.Context, *AddTmplsToTmplSetsReq) (*AddTmplsToTmplSetsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddTmplsToTmplSets not implemented")
@@ -3496,6 +3511,24 @@ func _Config_BatchUpsertTemplates_Handler(srv interface{}, ctx context.Context, 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ConfigServer).BatchUpsertTemplates(ctx, req.(*BatchUpsertTemplatesReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_BatchUpdateTemplatePermissions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BatchUpdateTemplatePermissionsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).BatchUpdateTemplatePermissions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_BatchUpdateTemplatePermissions_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).BatchUpdateTemplatePermissions(ctx, req.(*BatchUpdateTemplatePermissionsReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -5488,6 +5521,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "BatchUpsertTemplates",
 			Handler:    _Config_BatchUpsertTemplates_Handler,
+		},
+		{
+			MethodName: "BatchUpdateTemplatePermissions",
+			Handler:    _Config_BatchUpdateTemplatePermissions_Handler,
 		},
 		{
 			MethodName: "AddTmplsToTmplSets",
