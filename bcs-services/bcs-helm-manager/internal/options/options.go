@@ -13,7 +13,11 @@
 // Package options xxx
 package options
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+)
 
 // EtcdOption option for etcd
 type EtcdOption struct {
@@ -158,18 +162,19 @@ type EncryptSecret struct {
 
 // HelmManagerOptions options of helm manager
 type HelmManagerOptions struct {
-	Etcd        EtcdOption    `json:"etcd" yaml:"etcd"`
-	BcsLog      LogConfig     `json:"log" yaml:"log"`
-	Swagger     SwaggerConfig `json:"swagger" yaml:"swagger"`
-	Mongo       MongoConfig   `json:"mongo" yaml:"mongo"`
-	Repo        RepoConfig    `json:"repo" yaml:"repo"`
-	Release     ReleaseConfig `json:"release" yaml:"release"`
-	IAM         IAMConfig     `json:"iam" yaml:"iam"`
-	JWT         JWTConfig     `json:"jwt" yaml:"jwt"`
-	Credentials []Credential  `json:"credentials" yaml:"credentials"`
-	Encrypt     Encrypt       `json:"encrypt" yaml:"encrypt"`
-	Debug       bool          `json:"debug" yaml:"debug"`
-	TLS         TLS           `json:"tls" yaml:"tls"`
+	Etcd          EtcdOption         `json:"etcd" yaml:"etcd"`
+	BcsLog        LogConfig          `json:"log" yaml:"log"`
+	Swagger       SwaggerConfig      `json:"swagger" yaml:"swagger"`
+	Mongo         MongoConfig        `json:"mongo" yaml:"mongo"`
+	Repo          RepoConfig         `json:"repo" yaml:"repo"`
+	Release       ReleaseConfig      `json:"release" yaml:"release"`
+	IAM           IAMConfig          `json:"iam" yaml:"iam"`
+	JWT           JWTConfig          `json:"jwt" yaml:"jwt"`
+	Credentials   []Credential       `json:"credentials" yaml:"credentials"`
+	Encrypt       Encrypt            `json:"encrypt" yaml:"encrypt"`
+	Debug         bool               `json:"debug" yaml:"debug"`
+	TLS           TLS                `json:"tls" yaml:"tls"`
+	TracingConfig conf.TracingConfig `json:"tracingConfig" yaml:"tracingConfig"`
 	ServerConfig
 }
 
