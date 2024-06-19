@@ -13,9 +13,13 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"os"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/constants"
 	"github.com/spf13/cobra"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
@@ -46,6 +50,19 @@ func start(cmd *cobra.Command, args []string) {
 	defer logger.Sync()
 
 	logging.Info("config file path: %s", configPath)
+
+	// 初始化 Tracer
+	shutdown, errorInitTracing := trace.InitTracing(&config.TracingConfig, constants.BCSProjectManager)
+	if errorInitTracing != nil {
+		blog.Info(errorInitTracing.Error())
+	}
+	if shutdown != nil {
+		defer func() {
+			if err := shutdown(context.Background()); err != nil {
+				blog.Infof("failed to shutdown TracerProvider: %s", err.Error())
+			}
+		}()
+	}
 
 	// 启动服务
 	projectSvc := newProjectSvc(config)
