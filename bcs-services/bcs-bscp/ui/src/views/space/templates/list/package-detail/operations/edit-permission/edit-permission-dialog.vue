@@ -24,6 +24,7 @@
               v-model="privilegeInputVal"
               type="number"
               :placeholder="t('保持不变')"
+              :disabled="loading"
               @blur="handlePrivilegeInputBlur" />
             <template #content>
               <div>{{ t('只能输入三位 0~7 数字') }}</div>
@@ -45,11 +46,11 @@
                       class="group-checkboxs"
                       :model-value="privilegeGroupsValue[index]"
                       @change="handleSelectPrivilege(index, $event)">
-                      <bk-checkbox size="small" :label="4">
+                      <bk-checkbox size="small" :label="4" :disabled="loading">
                         {{ t('读') }}
                       </bk-checkbox>
-                      <bk-checkbox size="small" :label="2">{{ t('写') }}</bk-checkbox>
-                      <bk-checkbox size="small" :label="1">{{ t('执行') }}</bk-checkbox>
+                      <bk-checkbox size="small" :label="2" :disabled="loading">{{ t('写') }}</bk-checkbox>
+                      <bk-checkbox size="small" :label="1" :disabled="loading">{{ t('执行') }}</bk-checkbox>
                     </bk-checkbox-group>
                   </div>
                 </div>
@@ -59,12 +60,18 @@
         </div>
       </bk-form-item>
       <bk-form-item :label="t('用户')">
-        <bk-input v-model="localVal.user" :placeholder="t('保持不变')"></bk-input>
+        <bk-input v-model="localVal.user" :disabled="loading" :placeholder="t('保持不变')"></bk-input>
       </bk-form-item>
       <bk-form-item :label="t('用户组')">
-        <bk-input v-model="localVal.user_group" :placeholder="t('保持不变')"></bk-input>
+        <bk-input v-model="localVal.user_group" :disabled="loading" :placeholder="t('保持不变')"></bk-input>
       </bk-form-item>
     </bk-form>
+    <template #footer>
+      <bk-button theme="primary" style="margin-right: 8px" :loading="loading" @click="emits('confirm', localVal)">
+        {{ t('确定') }}
+      </bk-button>
+      <bk-button @click="emits('update:show', false)">{{ t('取消') }}</bk-button>
+    </template>
   </bk-dialog>
 </template>
 
@@ -72,11 +79,14 @@
   import { ref, computed, watch } from 'vue';
   import { useI18n } from 'vue-i18n';
 
+
   const { t } = useI18n();
+
 
   const props = defineProps<{
     show: boolean;
     configsLength: number;
+    loading: boolean;
   }>();
 
   const emits = defineEmits(['update:show', 'confirm']);
@@ -126,6 +136,7 @@
     return data;
   });
 
+
   // 权限输入框失焦后，校验输入是否合法，如不合法回退到上次输入
   const handlePrivilegeInputBlur = () => {
     const val = String(privilegeInputVal.value);
@@ -142,7 +153,7 @@
   const handleSelectPrivilege = (index: number, val: number[]) => {
     const groupsValue = { ...privilegeGroupsValue.value };
     groupsValue[index] = val;
-    const digits = [];
+    const digits: number[] = [];
     for (let i = 0; i < 3; i++) {
       let sum = 0;
       if (groupsValue[i].length > 0) {
