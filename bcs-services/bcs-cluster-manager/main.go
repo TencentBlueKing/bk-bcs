@@ -72,6 +72,7 @@ func main() { // nolint
 	flag.String("mongo_password", "", "mongo passsword for cluster manager")
 	flag.Uint("mongo_maxpoolsize", 0, "mongo client connection pool max size, 0 means not set")
 	flag.Uint("mongo_minpoolsize", 0, "mongo client connection pool min size, 0 means not set")
+
 	// broker config
 	flag.String("broker_address", "127.0.0.1:5672", "broker server for background taskserver")
 	flag.String("broker_username", "", "broker username for background taskserver")

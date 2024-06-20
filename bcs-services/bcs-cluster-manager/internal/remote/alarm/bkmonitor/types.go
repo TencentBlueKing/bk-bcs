@@ -68,7 +68,7 @@ func buildBizHostAlarmConfig(hosts *alarm.ShieldHost) (*ShieldHostAlarmRequest, 
 		Category:  string(scope),
 		BkBizID:   bizID,
 		BeginTime: time.Now().Format("2006-01-02 15:04:00"),
-		EndTime:   time.Now().Add(time.Minute * 15).Format("2006-01-02 15:04:00"),
+		EndTime:   time.Now().Add(time.Minute * 30).Format("2006-01-02 15:04:00"),
 		DimensionConfig: DimensionConfig{
 			ScopeType: "ip",
 			Target:    ipInfos,

@@ -55,6 +55,8 @@ func RegisterCommonActions() map[string]interface{} {
 		cloudprovider.LadderResourcePoolLabelAction:      EmptyAction,
 		cloudprovider.CheckClusterCleanNodesAction:       CheckClusterCleanNodsTask,
 		cloudprovider.RemoveClusterNodesInnerTaintAction: RemoveClusterNodesInnerTaintTask,
+		cloudprovider.AddNodesShieldAlarmAction:          AddNodesShieldAlarmTask,
+		cloudprovider.CheckNodeIpsInCmdbAction:           CheckNodeIpsInCMDBTask,
 	}
 }
 

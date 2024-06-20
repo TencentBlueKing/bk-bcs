@@ -222,59 +222,6 @@ func handleAddNodesData(ctx context.Context, clusterId string, nodes *business.I
 	return successNodeIds, failedNodeIds
 }
 
-// AddNodesShieldAlarmTask shield nodes alarm
-func AddNodesShieldAlarmTask(taskID string, stepName string) error {
-	start := time.Now()
-
-	// get task and task current step
-	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
-	if err != nil {
-		return err
-	}
-	// previous step successful when retry task
-	if step == nil {
-		blog.Infof("AddNodesShieldAlarmTask[%s]: current step[%s] successful and skip", taskID, stepName)
-		return nil
-	}
-	blog.Infof("AddNodesShieldAlarmTask[%s] task %s run current step %s, system: %s, old state: %s, params %v",
-		taskID, taskID, stepName, step.System, step.Status, step.Params)
-
-	// extract valid info
-	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
-
-	ipList := cloudprovider.ParseNodeIpOrIdFromCommonMap(state.Task.GetCommonParams(),
-		cloudprovider.NodeIPsKey.String(), ",")
-	if len(ipList) == 0 {
-		blog.Errorf("AddNodesShieldAlarmTask[%s]: get cluster IPList/clusterID empty", taskID)
-		retErr := fmt.Errorf("AddNodesShieldAlarmTask: get cluster IPList/clusterID empty")
-		_ = state.UpdateStepFailure(start, stepName, retErr)
-		return retErr
-	}
-
-	cluster, err := cloudprovider.GetStorageModel().GetCluster(context.Background(), clusterID)
-	if err != nil {
-		blog.Errorf("AddNodesShieldAlarmTask[%s]: get cluster for %s failed", taskID, clusterID)
-		retErr := fmt.Errorf("get cluster information failed, %s", err.Error())
-		_ = state.UpdateStepFailure(start, stepName, retErr)
-		return retErr
-	}
-
-	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
-	err = cloudprovider.ShieldHostAlarm(ctx, cluster.BusinessID, ipList)
-	if err != nil {
-		blog.Errorf("AddNodesShieldAlarmTask[%s] ShieldHostAlarmConfig failed: %v", taskID, err)
-	} else {
-		blog.Infof("AddNodesShieldAlarmTask[%s] ShieldHostAlarmConfig success", taskID)
-	}
-
-	// update step
-	if err := state.UpdateStepSucc(start, stepName); err != nil {
-		blog.Errorf("AddNodesShieldAlarmTask[%s] task %s %s update to storage fatal", taskID, taskID, stepName)
-		return err
-	}
-	return nil
-}
-
 // AddNodesToClusterTask add node to cluster
 func AddNodesToClusterTask(taskID string, stepName string) error { // nolint
 	start := time.Now()
