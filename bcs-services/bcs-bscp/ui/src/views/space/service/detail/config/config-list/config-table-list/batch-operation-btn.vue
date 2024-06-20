@@ -42,6 +42,7 @@
   </DeleteConfirmDialog>
   <EditPermissionDialog
     v-model:show="isBatchEditPermDialogShow"
+    :loading="editLoading"
     :configs-length="props.selectedIds.length"
     @confirm="handleConfimEditPermission" />
 </template>
@@ -77,6 +78,7 @@
   const isBatchEditPermDialogShow = ref(false);
   const isPopoverOpen = ref(false);
   const buttonRef = ref();
+  const editLoading = ref(false);
 
   const handleBatchDeleteConfirm = async () => {
     batchDeletePending.value = true;
@@ -105,21 +107,21 @@
   };
 
   const handleConfimEditPermission = async (permission: IPermissionType) => {
-    const { privilege, user, user_group } = permission;
-    const editConfigList = props.selectedItems.map((item) => {
-      const { id, spec, commit_spec } = item;
-      return {
-        id,
-        ...spec,
-        privilege: privilege || spec.permission.privilege,
-        user: user || spec.permission.user,
-        user_group: user_group || spec.permission.user_group,
-        byte_size: commit_spec.content.byte_size,
-        sign: commit_spec.content.signature,
-      };
-    });
-
     try {
+      editLoading.value = true;
+      const { privilege, user, user_group } = permission;
+      const editConfigList = props.selectedItems.map((item) => {
+        const { id, spec, commit_spec } = item;
+        return {
+          id,
+          ...spec,
+          privilege: privilege || spec.permission.privilege,
+          user: user || spec.permission.user,
+          user_group: user_group || spec.permission.user_group,
+          byte_size: commit_spec.content.byte_size,
+          sign: commit_spec.content.signature,
+        };
+      });
       await batchAddConfigList(props.bkBizId, props.appId, editConfigList, false);
       Message({
         theme: 'success',
@@ -128,6 +130,8 @@
       isBatchEditPermDialogShow.value = false;
     } catch (error) {
       console.error(error);
+    } finally {
+      editLoading.value = false;
     }
     emits('deleted');
   };
