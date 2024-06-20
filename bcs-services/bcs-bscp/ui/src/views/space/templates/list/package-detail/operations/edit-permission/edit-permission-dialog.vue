@@ -68,7 +68,7 @@
     </bk-form>
     <template #footer>
       <bk-button theme="primary" style="margin-right: 8px" :loading="loading" @click="emits('confirm', localVal)">
-        {{ t('确定') }}
+        {{ t('保存') }}
       </bk-button>
       <bk-button @click="emits('update:show', false)">{{ t('取消') }}</bk-button>
     </template>
