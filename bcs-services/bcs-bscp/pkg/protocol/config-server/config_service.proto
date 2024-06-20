@@ -392,6 +392,12 @@ service Config {
       body: "*"
     };
   }
+  rpc BatchUpdateTemplatePermissions(BatchUpdateTemplatePermissionsReq) returns (BatchUpdateTemplatePermissionsResp) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/templates/batch_update_templates_permissions"
+      body: "*"
+    };
+  }
   rpc AddTmplsToTmplSets(AddTmplsToTmplSetsReq) returns (AddTmplsToTmplSetsResp) {
     option (google.api.http) = {
       post: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/"
@@ -1824,6 +1830,18 @@ message BatchUpsertTemplatesReq {
 }
 
 message BatchUpsertTemplatesResp {
+  repeated uint32 ids = 1;
+}
+
+message BatchUpdateTemplatePermissionsReq {
+  uint32 biz_id = 1;
+  repeated uint32 template_ids = 2;
+  string user = 3;
+  string user_group = 4;
+  string privilege = 5;
+}
+
+message BatchUpdateTemplatePermissionsResp {
   repeated uint32 ids = 1;
 }
 
