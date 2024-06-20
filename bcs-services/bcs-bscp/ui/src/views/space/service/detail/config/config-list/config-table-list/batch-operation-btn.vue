@@ -40,95 +40,27 @@
       }}
     </div>
   </DeleteConfirmDialog>
-  <bk-dialog
-    :is-show="isBatchEditPermDialogShow"
-    :title="$t('批量修改权限')"
-    :theme="'primary'"
-    quick-close
-    ext-cls="batch-edit-perm-dialog"
-    :width="640"
-    @confirm="handleConfirm"
-    @closed="isBatchEditPermDialogShow = false">
-    <div class="selected-tag">
-      {{ `${t('已选')} ` }} <span class="count">{{ props.selectedIds.length }}</span> {{ `${t('个配置项')}` }}
-    </div>
-    <bk-form form-type="vertical" class="user-settings">
-      <bk-form-item :label="t('文件权限')">
-        <div class="perm-input">
-          <bk-popover
-            ext-cls="privilege-tips-wrap"
-            theme="light"
-            trigger="manual"
-            placement="top"
-            :is-show="showPrivilegeErrorTips">
-            <bk-input
-              v-model="privilegeInputVal"
-              type="number"
-              :placeholder="t('保持不变')"
-              @blur="handlePrivilegeInputBlur" />
-            <template #content>
-              <div>{{ t('只能输入三位 0~7 数字') }}</div>
-              <div class="privilege-tips-btn-area">
-                <bk-button text theme="primary" @click="showPrivilegeErrorTips = false">{{ t('我知道了') }}</bk-button>
-              </div>
-            </template>
-          </bk-popover>
-          <bk-popover ext-cls="privilege-select-popover" theme="light" trigger="click" placement="bottom">
-            <div class="perm-panel-trigger">
-              <i class="bk-bscp-icon icon-configuration-line"></i>
-            </div>
-            <template #content>
-              <div class="privilege-select-panel">
-                <div v-for="(item, index) in PRIVILEGE_GROUPS" class="group-item" :key="index" :label="item">
-                  <div class="header">{{ item }}</div>
-                  <div class="checkbox-area">
-                    <bk-checkbox-group
-                      class="group-checkboxs"
-                      :model-value="privilegeGroupsValue[index]"
-                      @change="handleSelectPrivilege(index, $event)">
-                      <bk-checkbox size="small" :label="4">
-                        {{ t('读') }}
-                      </bk-checkbox>
-                      <bk-checkbox size="small" :label="2">{{ t('写') }}</bk-checkbox>
-                      <bk-checkbox size="small" :label="1">{{ t('执行') }}</bk-checkbox>
-                    </bk-checkbox-group>
-                  </div>
-                </div>
-              </div>
-            </template>
-          </bk-popover>
-        </div>
-      </bk-form-item>
-      <bk-form-item :label="t('用户')">
-        <bk-input v-model="localVal.user" :placeholder="t('保持不变')"></bk-input>
-      </bk-form-item>
-      <bk-form-item :label="t('用户组')">
-        <bk-input v-model="localVal.user_group" :placeholder="t('保持不变')"></bk-input>
-      </bk-form-item>
-    </bk-form>
-  </bk-dialog>
+  <EditPermissionDialog
+    v-model:show="isBatchEditPermDialogShow"
+    :configs-length="props.selectedIds.length"
+    @confirm="handleConfimEditPermission" />
 </template>
 <script lang="ts" setup>
-  import { ref, computed, watch } from 'vue';
+  import { ref } from 'vue';
   import { AngleDown } from 'bkui-vue/lib/icon';
   import { useI18n } from 'vue-i18n';
   import Message from 'bkui-vue/lib/message';
   import { batchDeleteServiceConfigs, batchDeleteKv, batchAddConfigList } from '../../../../../../../api/config';
   import DeleteConfirmDialog from '../../../../../../../components/delete-confirm-dialog.vue';
+  import EditPermissionDialog from '../../../../../templates/list/package-detail/operations/edit-permission/edit-permission-dialog.vue';
   import { IConfigItem } from '../../../../../../../../types/config';
   const { t } = useI18n();
 
-  const PRIVILEGE_GROUPS = [t('属主（own）'), t('属组（group）'), t('其他人（other）')];
-  const PRIVILEGE_VALUE_MAP = {
-    0: [],
-    1: [1],
-    2: [2],
-    3: [1, 2],
-    4: [4],
-    5: [1, 4],
-    6: [2, 4],
-    7: [1, 2, 4],
-  };
+  interface IPermissionType {
+    privilege: string;
+    user: string;
+    user_group: string;
+  }
 
   const props = defineProps<{
     bkBizId: string;
@@ -145,39 +77,6 @@
   const isBatchEditPermDialogShow = ref(false);
   const isPopoverOpen = ref(false);
   const buttonRef = ref();
-  const privilegeInputVal = ref('');
-  const showPrivilegeErrorTips = ref(false);
-  const localVal = ref({
-    privilege: '',
-    user: '',
-    user_group: '',
-  });
-
-  // 将权限数字拆分成三个分组配置
-  const privilegeGroupsValue = computed(() => {
-    const data: { [index: string]: number[] } = { 0: [], 1: [], 2: [] };
-    if (typeof localVal.value.privilege === 'string' && localVal.value.privilege.length > 0) {
-      const valArr = localVal.value.privilege.split('').map((i) => parseInt(i, 10));
-      valArr.forEach((item, index) => {
-        data[index as keyof typeof data] = PRIVILEGE_VALUE_MAP[item as keyof typeof PRIVILEGE_VALUE_MAP];
-      });
-    }
-    return data;
-  });
-
-  watch(
-    () => isBatchEditPermDialogShow.value,
-    (val) => {
-      if (val) {
-        localVal.value = {
-          privilege: '',
-          user: '',
-          user_group: '',
-        };
-        privilegeInputVal.value = '';
-      }
-    },
-  );
 
   const handleBatchDeleteConfirm = async () => {
     batchDeletePending.value = true;
@@ -205,49 +104,16 @@
     isBatchDeleteDialogShow.value = true;
   };
 
-  // 权限输入框失焦后，校验输入是否合法，如不合法回退到上次输入
-  const handlePrivilegeInputBlur = () => {
-    const val = String(privilegeInputVal.value);
-    if (/^[0-7]{3}$/.test(val) || val === '') {
-      localVal.value.privilege = val;
-      showPrivilegeErrorTips.value = false;
-    } else {
-      privilegeInputVal.value = String(localVal.value.privilege);
-      showPrivilegeErrorTips.value = true;
-    }
-  };
-
-  // 选择文件权限
-  const handleSelectPrivilege = (index: number, val: number[]) => {
-    const groupsValue = { ...privilegeGroupsValue.value };
-    groupsValue[index] = val;
-    const digits = [];
-    for (let i = 0; i < 3; i++) {
-      let sum = 0;
-      if (groupsValue[i].length > 0) {
-        sum = groupsValue[i].reduce((acc, crt) => acc + crt, 0);
-      }
-      digits.push(sum);
-    }
-
-    // 选择其他权限 自动选择own的读取权限
-    if (digits[0] < 4 && digits.some((item) => item > 0)) {
-      digits[0] += 4;
-    }
-    const newVal = digits.every((item) => item === 0) ? '' : digits.join('');
-    privilegeInputVal.value = newVal;
-    localVal.value.privilege = newVal;
-  };
-
-  const handleConfirm = async () => {
+  const handleConfimEditPermission = async (permission: IPermissionType) => {
+    const { privilege, user, user_group } = permission;
     const editConfigList = props.selectedItems.map((item) => {
       const { id, spec, commit_spec } = item;
       return {
         id,
         ...spec,
-        privilege: localVal.value.privilege || spec.permission.privilege,
-        user: localVal.value.user || spec.permission.user,
-        user_group: localVal.value.user_group || spec.permission.user_group,
+        privilege: privilege || spec.permission.privilege,
+        user: user || spec.permission.user,
+        user_group: user_group || spec.permission.user_group,
         byte_size: commit_spec.content.byte_size,
         sign: commit_spec.content.signature,
       };

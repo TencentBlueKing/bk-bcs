@@ -9,8 +9,14 @@
     :get-config-list="getConfigList">
     <template #tableOperations>
       <AddConfigs :show-add-existing-config-option="true" @refresh="refreshConfigList" />
-      <BatchAddTo :configs="selectedConfigs" @refresh="refreshConfigList" />
-      <BatchMoveOutFromPkg :configs="selectedConfigs" :current-pkg="currentPkg as number" @moved-out="handleMovedOut" />
+      <BatchOperationButton
+        :space-id="spaceId"
+        :configs="selectedConfigs"
+        :current-template-space="currentTemplateSpace"
+        pkg-type="pkg"
+        :current-pkg="(currentPkg as number)"
+        @refresh="refreshConfigList"
+        @moved-out="handleMovedOut" />
     </template>
   </CommonConfigTable>
 </template>
@@ -24,8 +30,7 @@
   import { getTemplatesByPackageId } from '../../../../../../api/template';
   import CommonConfigTable from './common-config-table.vue';
   import AddConfigs from '../operations/add-configs/add-button.vue';
-  import BatchAddTo from '../operations/add-to-pkgs/add-to-button.vue';
-  import BatchMoveOutFromPkg from '../operations/move-out-from-pkg/batch-move-out-button.vue';
+  import BatchOperationButton from '../operations/batch-operations/batch-operation-btn.vue';
 
   const { spaceId } = storeToRefs(useGlobalStore());
   const templateStore = useTemplateStore();
