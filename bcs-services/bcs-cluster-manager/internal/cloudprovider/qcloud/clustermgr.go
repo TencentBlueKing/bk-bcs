@@ -329,6 +329,43 @@ func checkIfWhiteImageOsNames(opt *cloudprovider.ClusterGroupOption) bool {
 	return utils.StringInSlice(osName, utils.WhiteImageOsName)
 }
 
+func clusterSupportNodeNum(tkeCls *tke.Cluster, cluster *proto.Cluster) (uint32, uint32, uint32) {
+	var (
+		ipNum          uint32 = 0
+		clusterCidrNum uint32
+	)
+	cidrs, err := business.GetCidrsFromCluster(tkeCls)
+	if err != nil {
+		blog.Errorf("clusterSupportNodeNum failed: %v", err)
+		return 0, 0, 0
+	}
+	for i := range cidrs {
+		if utils.StringInSlice(cidrs[i].Type, []string{utils.ClusterCIDR, utils.MultiClusterCIDR}) {
+			clusterCidrNum++
+			num, _ := cidrs[i].GetIPNum()
+			ipNum += num
+		}
+	}
+
+	// 已经存在的节点数量
+	clusterNodeNum := *tkeCls.ClusterNodeNum
+	if *tkeCls.ClusterType == icommon.ClusterManageTypeIndependent {
+		clusterNodeNum += *tkeCls.ClusterMaterNodeNum
+	}
+
+	// 集群可添加节点数
+	maxClusterNodeNum := float64(uint64(ipNum)-*tkeCls.ClusterNetworkSettings.MaxClusterServiceNum) /
+		float64(*tkeCls.ClusterNetworkSettings.MaxNodePodNum)
+
+	// 剩余可支持的节点数量
+	step := getClusterCidrStep(cluster)
+
+	surplusNodeNum := float64((business.GrBcsMaxClusterCidrNum-clusterCidrNum)*step) /
+		float64(*tkeCls.ClusterNetworkSettings.MaxNodePodNum)
+
+	return uint32(clusterNodeNum), uint32(maxClusterNodeNum) - uint32(clusterNodeNum), uint32(surplusNodeNum)
+}
+
 func updateClusterInfo(cloudID string, opt *cloudprovider.GetClusterOption) (*proto.Cluster, error) {
 	cls, err := getCloudCluster(cloudID, &opt.CommonOption)
 	if err != nil {
@@ -367,6 +404,12 @@ func updateClusterInfo(cloudID string, opt *cloudprovider.GetClusterOption) (*pr
 		opt.Cluster.ClusterBasicSettings.OS = *cls.ClusterOs
 		opt.Cluster.ExtraInfo[icommon.ImageProvider] = icommon.PublicImageProvider
 	}
+
+	// 计算集群可支持节点容量
+	currentNodeNum, supNodeNum, maxNodeNum := clusterSupportNodeNum(cls, opt.Cluster)
+	opt.Cluster.ExtraInfo[icommon.ClusterCurNodeNum] = fmt.Sprintf("%v", currentNodeNum)
+	opt.Cluster.ExtraInfo[icommon.ClusterSupNodeNum] = fmt.Sprintf("%v", supNodeNum)
+	opt.Cluster.ExtraInfo[icommon.ClusterMaxNodeNum] = fmt.Sprintf("%v", maxNodeNum)
 
 	return opt.Cluster, nil
 }

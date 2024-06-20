@@ -53,7 +53,6 @@ func newtask() *Task {
 	task.works[applyCVMFromResourcePoolStep.StepMethod] = tasks.ApplyCVMFromResourcePoolTask
 	task.works[addNodesToClusterStep.StepMethod] = tasks.AddNodesToClusterTask
 	task.works[checkClusterNodeStatusStep.StepMethod] = tasks.CheckClusterNodeStatusTask
-	task.works[checkClusterNodesInCMDBStep.StepMethod] = tasks.CheckClusterNodesInCMDBTask
 	task.works[syncClusterNodesToCMDBStep.StepMethod] = tasks.SyncClusterNodesToCMDBTask
 	// task.works[resourcePoolLabelStep.StepMethod] = tasks.SetResourcePoolDeviceLabels
 
@@ -220,6 +219,8 @@ func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.Node
 
 	// step0: cluster cordon nodes
 	cleanTask.BuildCordonNodesStep(task)
+	// step1: shield nodes alarm
+	common.BuildShieldAlertTaskStep(task, opt.Cluster.GetClusterID())
 
 	// 业务自定义流程: 缩容前置流程支持 标准运维任务和执行业务job脚本
 	if group.NodeTemplate != nil && len(group.NodeTemplate.ScaleInPreScript) > 0 {
@@ -265,9 +266,9 @@ func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.Node
 		}
 	}
 
-	// step1: cluster scale-in to clean nodes
+	// step2: cluster scale-in to clean nodes
 	cleanTask.BuildRemoveNodesStep(task)
-	// step2: cluster return nodes
+	// step3: cluster return nodes
 	cleanTask.BuildReturnNodesStep(task)
 
 	if len(task.StepSequence) > 0 {
@@ -333,13 +334,14 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 	}
 	// step1: apply Instance from resourcePool
 	updateDesiredNodes.BuildApplyInstanceStep(task)
-	// step2: add Nodes to cluster
-	updateDesiredNodes.BuildAddNodesToClusterStep(task)
-	// step3: check nodes status
-	updateDesiredNodes.BuildCheckClusterNodeStatusStep(task)
-	// step4: check nodes if sync to cmdb
-	// updateDesiredNodes.BuildCheckClusterNodesInCMDBStep(task)
+	// step2: check nodes if sync to cmdb
 	updateDesiredNodes.BuildSyncClusterNodesToCMDBStep(task)
+	// step3: shied nodes alert
+	common.BuildShieldAlertTaskStep(task, opt.Cluster.GetClusterID())
+	// step4: add Nodes to cluster
+	updateDesiredNodes.BuildAddNodesToClusterStep(task)
+	// step5: check nodes status
+	updateDesiredNodes.BuildCheckClusterNodeStatusStep(task)
 	// platform define sops task
 	if opt.Cloud != nil && opt.Cloud.NodeGroupManagement != nil &&
 		opt.Cloud.NodeGroupManagement.UpdateDesiredNodes != nil {

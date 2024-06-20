@@ -140,10 +140,6 @@ var (
 		StepMethod: fmt.Sprintf("%s-CheckInstanceStateTask", cloudName),
 		StepName:   "节点转vpc状态检测",
 	}
-	addNodesShieldAlarmStep = cloudprovider.StepInfo{
-		StepMethod: fmt.Sprintf("%s-AddNodesShieldAlarmTask", cloudName),
-		StepName:   "屏蔽机器告警",
-	}
 	addNodesToClusterStep = cloudprovider.StepInfo{
 		StepMethod: fmt.Sprintf("%s-AddNodesToClusterTask", cloudName),
 		StepName:   "集群上架节点",
@@ -630,13 +626,13 @@ func (ac *AddNodesToClusterTaskOption) BuildCheckInstanceStateStep(task *proto.T
 	task.StepSequence = append(task.StepSequence, checkInstanceStateStep.StepMethod)
 }
 
-// BuildShieldAlertStep 屏蔽上架节点告警
-func (ac *AddNodesToClusterTaskOption) BuildShieldAlertStep(task *proto.Task) {
-	shieldStep := cloudprovider.InitTaskStep(addNodesShieldAlarmStep)
-	shieldStep.Params[cloudprovider.ClusterIDKey.String()] = ac.Cluster.ClusterID
+// BuildCheckNodeIpsInCmdbStep 节点转移vpc时检测信息同步
+func (ac *AddNodesToClusterTaskOption) BuildCheckNodeIpsInCmdbStep(task *proto.Task) {
+	if len(ac.DiffVpcNodeIds) == 0 {
+		return
+	}
 
-	task.Steps[addNodesShieldAlarmStep.StepMethod] = shieldStep
-	task.StepSequence = append(task.StepSequence, addNodesShieldAlarmStep.StepMethod)
+	common.BuildCheckNodeIpsInCmdbStep(task, ac.Cluster)
 }
 
 // BuildAddNodesToClusterStep 上架集群节点

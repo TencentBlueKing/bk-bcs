@@ -408,6 +408,8 @@ func updateClusterInfo(cloudID string, opt *cloudprovider.GetClusterOption) (*pr
 		opt.Cluster.ExtraInfo[icommon.ImageProvider] = icommon.PublicImageProvider
 	}
 
+	//
+
 	return opt.Cluster, nil
 }
 

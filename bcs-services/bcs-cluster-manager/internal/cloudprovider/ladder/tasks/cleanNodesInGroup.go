@@ -113,7 +113,6 @@ func ReturnInstanceToResourcePoolTask(taskID, stepName string) error {
 
 	nodeIDList := cloudprovider.ParseNodeIpOrIdFromCommonMap(step.Params, cloudprovider.NodeIDsKey.String(), ",")
 	deviceList := cloudprovider.ParseNodeIpOrIdFromCommonMap(step.Params, cloudprovider.DeviceIDsKey.String(), ",")
-	nodeIPList := cloudprovider.ParseNodeIpOrIdFromCommonMap(step.Params, cloudprovider.NodeIPsKey.String(), ",")
 
 	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
 		ClusterID:   clusterID,
@@ -131,7 +130,6 @@ func ReturnInstanceToResourcePoolTask(taskID, stepName string) error {
 
 	// inject taskID
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
-	cloudprovider.ShieldHostAlarm(ctx, dependInfo.Cluster.BusinessID, nodeIPList) // nolint
 
 	// return device from resource-manager module if ResourceModule true, else retain yunti style
 	orderID, err := destroyDeviceList(ctx, dependInfo, deviceList, operator)

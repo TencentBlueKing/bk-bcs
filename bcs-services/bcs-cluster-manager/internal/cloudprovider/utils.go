@@ -56,6 +56,8 @@ const (
 	WatchTask = "watchjob"
 	// RemoveHostFromCmdbAction remove host action
 	RemoveHostFromCmdbAction = "removeHostFromCmdb"
+	// CheckNodeIpsInCmdbAction check node if in cmdb
+	CheckNodeIpsInCmdbAction = "checkNodeIpsInCmdb"
 	// InstallGseAgentAction install gseAgent action
 	InstallGseAgentAction = "installGseAgent"
 	// TransferHostModuleAction transfer module action
@@ -94,6 +96,8 @@ const (
 	RemoveClusterNodesInnerTaintAction = "removeClusterNodesInnerTaint"
 	// LadderResourcePoolLabelAction 标签设置
 	LadderResourcePoolLabelAction = "yunti-ResourcePoolLabelTask"
+	// AddNodesShieldAlarmAction 屏蔽机器告警
+	AddNodesShieldAlarmAction = "addNodesShieldAlarm"
 )
 
 var (
@@ -1075,9 +1079,10 @@ func ShieldHostAlarm(ctx context.Context, bizID string, ips []string) error {
 			CloudID: uint64(hostData[i].BkCloudID),
 		})
 	}
-
 	blog.Infof("ShieldHostAlarm[%s] bizID[%s] hostInfo[%+v]", taskID, bizID, hosts)
+
 	var alarms = []alarm.AlarmInterface{tmp.GetBKAlarmClient(), bkmonitor.GetBkMonitorClient()}
+
 	for i := range alarms {
 		err = alarms[i].ShieldHostAlarmConfig(maintainers[0], &alarm.ShieldHost{
 			BizID:    bizID,
