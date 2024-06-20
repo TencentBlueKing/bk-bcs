@@ -54,6 +54,8 @@ type TemplateRevision interface {
 	BatchCreateWithTx(kit *kit.Kit, tx *gen.QueryTx, revisions []*table.TemplateRevision) error
 	// ListLatestRevisionsGroupByTemplateIds Lists the latest version groups by template ids
 	ListLatestRevisionsGroupByTemplateIds(kit *kit.Kit, templateIDs []uint32) ([]*table.TemplateRevision, error)
+	// BatchCreate batch create template revisions.
+	BatchCreate(kit *kit.Kit, revisions []*table.TemplateRevision) error
 }
 
 var _ TemplateRevision = new(templateRevisionDao)
@@ -62,6 +64,25 @@ type templateRevisionDao struct {
 	genQ     *gen.Query
 	idGen    IDGenInterface
 	auditDao AuditDao
+}
+
+// BatchCreate batch create template revisions.
+func (dao *templateRevisionDao) BatchCreate(kit *kit.Kit, revisions []*table.TemplateRevision) error {
+	if len(revisions) == 0 {
+		return nil
+	}
+	ids, err := dao.idGen.Batch(kit, table.TemplateRevisionsTable, len(revisions))
+	if err != nil {
+		return err
+	}
+	for i, item := range revisions {
+		if err := item.ValidateCreate(); err != nil {
+			return err
+		}
+		item.ID = ids[i]
+	}
+
+	return dao.genQ.TemplateRevision.WithContext(kit.Ctx).CreateInBatches(revisions, 200)
 }
 
 // Create one template revision instance.
@@ -289,21 +310,15 @@ func (dao *templateRevisionDao) BatchCreateWithTx(kit *kit.Kit, tx *gen.QueryTx,
 }
 
 // ListLatestRevisionsGroupByTemplateIds Lists the latest version groups by template ids
-// nolint
 func (dao *templateRevisionDao) ListLatestRevisionsGroupByTemplateIds(kit *kit.Kit,
 	templateIDs []uint32) ([]*table.TemplateRevision, error) {
 	m := dao.genQ.TemplateRevision
 	// 根据templateIDs获取一列最大 templateRevisionIDs
 	// 再通过最大 templateRevisionIDs 获取 templateRevision 数据
-	var templateRevisionIDs []struct {
-		Id uint32
-	}
-	err := m.WithContext(kit.Ctx).
-		Select(m.ID.Max().As("id")).
-		Where(m.TemplateID.In(templateIDs...)).
+	var templateRevisionIDs []struct{ Id uint32 }
+	if err := m.WithContext(kit.Ctx).Select(m.ID.Max().As("id")).Where(m.TemplateID.In(templateIDs...)).
 		Group(m.TemplateID).
-		Scan(&templateRevisionIDs)
-	if err != nil {
+		Scan(&templateRevisionIDs); err != nil {
 		return nil, err
 	}
 	ids := []uint32{}
