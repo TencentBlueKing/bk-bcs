@@ -487,7 +487,7 @@ export default {
   导出变量: 'Export variables',
 
   // 配置模板
-  '配置模板用于统一业务下服务间配置文件复用，可以在创建服务配置时引用配置模板。': 'Configuration templates are used to reuse configuration files between services under unified services, and can be referenced when creating service configurations.',
+  '配置模板用于同一业务下服务间配置文件复用，可以在创建服务配置时引用配置模板。': 'Configuration templates are used to reuse configuration files between services under same services, and can be referenced when creating service configurations.',
   搜索空间: 'Search Space',
   创建空间: 'New Space',
   '确认删除该配置模板空间？': 'Are you sure to delete this configuration template space?',
@@ -578,6 +578,7 @@ export default {
   以下套餐及服务未命名版本中引用的此配置文件也将更新: 'This configuration file referenced in the unnamed versions of the following packages and services will also be updated',
   引用此模板的服务: 'Services that reference this template',
   删除模板文件: 'Delete',
+  批量移出套餐: 'Move out of package in batches',
 
   // 脚本管理
   全部脚本: 'All scripts',
