@@ -3137,7 +3137,6 @@ importAmazonCloud:
     token: Cloud Credentials
     region: Region
     clusterID: Cluster ID
-    nodemanArea: Nodeman Area
     desc: Description
   button:
     test: Test

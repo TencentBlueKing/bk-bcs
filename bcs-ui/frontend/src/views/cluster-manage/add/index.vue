@@ -188,7 +188,7 @@ export default defineComponent({
             title: $i18n.t('publicCloud.amazon.title'),
             desc: $i18n.t('publicCloud.amazon.desc'),
             type: 'amazonCloud',
-            disabled: _INTERNAL_.value,
+            disabled: _INTERNAL_.value || !flagsMap.value.AZURECLOUD,
           },
           {
             icon: googleLogo,
