@@ -70,6 +70,7 @@
           :cluster-nodes-map="clusterNodesMap"
           :active-cluster-id="activeClusterID"
           :highlight-cluster-id="highlightClusterId"
+          class="h-[calc(100%-48px)]"
           @overview="goOverview"
           @detail="goClusterDetail"
           @node="goNodeInfo"
