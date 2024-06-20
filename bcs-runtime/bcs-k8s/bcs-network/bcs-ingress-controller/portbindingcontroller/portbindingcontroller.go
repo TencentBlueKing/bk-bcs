@@ -159,19 +159,19 @@ func (pbr *PortBindingReconciler) Reconcile(req ctrl.Request) (ctrl.Result, erro
 			return pbr.createPortBinding(portBindingType, pod.GetNamespace(), pod.GetName(), pod.GetAnnotations())
 		}
 
+		// pod状态成为Failed后，需要删除对应PortBinding， 避免端口持续被占用无法释放
+		if pod.Status.Phase == k8scorev1.PodFailed {
+			blog.Infof("pod '%s/%s' is failed, reason: %s, msg: %s, so clean portbinding", pod.GetNamespace(),
+				pod.GetName(), pod.Status.Reason, pod.Status.Message)
+			return pbr.cleanPortBinding(portBinding)
+		}
+
 		if len(pod.Status.PodIP) == 0 {
 			blog.V(5).Infof("pod %s/%s has not pod ip, requeue it", pod.GetName(), pod.GetNamespace())
 			return ctrl.Result{
 				Requeue:      true,
 				RequeueAfter: 300 * time.Millisecond,
 			}, nil
-		}
-
-		// pod状态成为Failed后，需要删除对应PortBinding， 避免端口持续被占用无法释放
-		if pod.Status.Phase == k8scorev1.PodFailed {
-			blog.Infof("pod '%s/%s' is failed, reason: %s, msg: %s, so clean portbinding", pod.GetNamespace(),
-				pod.GetName(), pod.Status.Reason, pod.Status.Message)
-			return pbr.cleanPortBinding(portBinding)
 		}
 
 		pbhandler = newPodPortBindingHandler(pbr.ctx, pbr.k8sClient, pbr.eventer, pod)
@@ -454,7 +454,7 @@ func (pbr *PortBindingReconciler) isNodeValid(node *k8scorev1.Node) bool {
 				blog.Errorf("patch node %s annotation failed, err: %s", node.GetName(), err.Error())
 			}
 		}
-		return true
+		return false
 	}
-	return false
+	return true
 }
