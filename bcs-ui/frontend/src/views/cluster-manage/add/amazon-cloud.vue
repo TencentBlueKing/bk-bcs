@@ -1,5 +1,5 @@
 <template>
-  <div class="flex items-center justify-center py-[24px]">
+  <div class="flex items-start justify-center py-[24px] overflow-auto">
     <div class="shadow bg-[#fff] px-[24px] py-[16px] pb-[32px] min-w-[800px]">
       <div class="text-[14px] font-bold mb-[24px]">{{ $t('importAmazonCloud.title') }}</div>
       <bk-form class="max-w-[640px]" :model="formData" :rules="formRules" ref="formRef">
@@ -106,6 +106,7 @@
               theme="primary"
               :loading="testing"
               :outline="isValidate"
+              :disabled="!formData.accountID || !currentCluster"
               @click="testClusterImport">
               {{ $t('importAmazonCloud.button.test') }}
             </bk-button>
@@ -226,10 +227,10 @@ watch(() => formData.value.accountID, () => {
   getRegionList();
 });
 // 区域列表
-const regionList = ref<Array<IGroup<{
+const regionList = ref<Array<{
   region: string
   regionName: string
-}>>>([]);
+}>>([]);
 // 区域下拉加载loading
 const regionLoading = ref(false);
 // 获取区域列表

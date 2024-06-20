@@ -2545,7 +2545,6 @@ importAmazonCloud:
     token: 云凭证
     region: 所属区域
     clusterID: 云集群 ID
-    nodemanArea: 管控区域
     desc: 集群描述
   button:
     test: 连通性测试
