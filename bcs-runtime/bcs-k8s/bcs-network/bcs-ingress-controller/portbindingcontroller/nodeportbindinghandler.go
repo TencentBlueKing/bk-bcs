@@ -149,6 +149,10 @@ func (n *nodePortBindingHandler) postPortBindingUpdate(portBinding *networkexten
 
 // postPortBindingClean do after portbinding need clean
 func (n *nodePortBindingHandler) postPortBindingClean(portBinding *networkextensionv1.PortBinding) error {
+	// 优先清理configmap中的端口
+	if err := n.updateAllConfigMap(portBinding); err != nil {
+		return err
+	}
 	node := &k8scorev1.Node{}
 	if err := n.k8sClient.Get(n.ctx, k8stypes.NamespacedName{Name: portBinding.GetName()}, node); err != nil {
 		if k8serrors.IsNotFound(err) {
@@ -165,10 +169,6 @@ func (n *nodePortBindingHandler) postPortBindingClean(portBinding *networkextens
 	if err := n.k8sClient.Update(context.TODO(), node, &client.UpdateOptions{}); err != nil {
 		blog.Warnf("remove annotation from node %s failed, err %s", portBinding.GetName(), err.Error())
 		return errors.Wrapf(err, "remove annotation from node %s failed", portBinding.GetName())
-	}
-
-	if err := n.updateAllConfigMap(portBinding); err != nil {
-		return err
 	}
 
 	return nil
