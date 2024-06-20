@@ -542,3 +542,36 @@ func (s *Service) BatchUpsertTemplates(ctx context.Context, req *pbcs.BatchUpser
 	resp := &pbcs.BatchUpsertTemplatesResp{Ids: data.Ids}
 	return resp, nil
 }
+
+// BatchUpdateTemplatePermissions 批量更新模板权限
+func (s *Service) BatchUpdateTemplatePermissions(ctx context.Context, req *pbcs.BatchUpdateTemplatePermissionsReq) (
+	*pbcs.BatchUpdateTemplatePermissionsResp, error) {
+
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+	}
+
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
+		return nil, err
+	}
+
+	if req.User == "" && req.UserGroup == "" && req.Privilege == "" {
+		return nil, nil
+	}
+
+	resp, err := s.client.DS.BatchUpdateTemplatePermissions(grpcKit.RpcCtx(), &pbds.BatchUpdateTemplatePermissionsReq{
+		BizId:       req.BizId,
+		TemplateIds: req.TemplateIds,
+		User:        req.User,
+		UserGroup:   req.UserGroup,
+		Privilege:   req.Privilege,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &pbcs.BatchUpdateTemplatePermissionsResp{Ids: resp.Ids}, nil
+}

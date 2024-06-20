@@ -13,6 +13,7 @@
 package runtimex
 
 import (
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 
@@ -32,6 +33,8 @@ func CustomHeaderMatcher(key string) (string, bool) {
 		return contextx.ContentDispositionValue, true
 	case contextx.ContentDispositionCapKey:
 		return contextx.ContentDispositionValue, true
+	case constants.Traceparent:
+		return constants.GrpcTraceparent, true
 	default:
 		return runtime.DefaultHeaderMatcher(key)
 	}

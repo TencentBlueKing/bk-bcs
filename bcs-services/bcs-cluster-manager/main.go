@@ -14,11 +14,14 @@
 package main
 
 import (
+	"context"
 	"flag"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	bcsconf "github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-common/common/util"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/constants"
 	mconfig "go-micro.dev/v4/config"
 	mfile "go-micro.dev/v4/config/source/file"
 	mflag "go-micro.dev/v4/config/source/flag"
@@ -118,6 +121,19 @@ func main() { // nolint
 		VModule:         opt.BcsLog.VModule,
 		TraceLocation:   opt.BcsLog.TraceLocation,
 	})
+
+	// 初始化 Tracer
+	shutdown, errorInitTracing := trace.InitTracing(&opt.TracingConfig, constants.BCSClusterManager)
+	if errorInitTracing != nil {
+		blog.Info(errorInitTracing.Error())
+	}
+	if shutdown != nil {
+		defer func() {
+			if err := shutdown(context.Background()); err != nil {
+				blog.Infof("failed to shutdown TracerProvider: %s", err.Error())
+			}
+		}()
+	}
 
 	// init serverConfig Ipv6Address
 	opt.ServerConfig.Ipv6Address = util.InitIPv6Address(opt.ServerConfig.Ipv6Address)
