@@ -408,6 +408,11 @@ export default function useMenu() {
               id: 'HUAWEICLOUD',
               route: 'huaweiCloud',
             },
+            {
+              title: 'Aws Cloud',
+              id: 'AMAZONCLOUD',
+              route: 'amazonCloud',
+            },
           ],
         },
         {

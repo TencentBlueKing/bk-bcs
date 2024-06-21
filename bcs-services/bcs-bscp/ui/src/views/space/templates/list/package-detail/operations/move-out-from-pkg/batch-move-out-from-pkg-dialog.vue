@@ -45,7 +45,7 @@
   import LinkToApp from '../../../components/link-to-app.vue';
 
   const { spaceId } = storeToRefs(useGlobalStore());
-  const { packageList, currentTemplateSpace, currentPkg } = storeToRefs(useTemplateStore());
+  const { packageList, currentTemplateSpace } = storeToRefs(useTemplateStore());
   const { t } = useI18n();
 
   const props = defineProps<{
@@ -100,13 +100,13 @@
   };
 
   const handleConfirm = async () => {
-    const pkg = packageList.value.find((item) => item.id === currentPkg.value);
+    const pkg = packageList.value.find((item) => item.id === props.currentPkg);
     if (!pkg) return;
 
     try {
       pending.value = true;
       const ids = props.value.map((item) => item.id);
-      await moveOutTemplateFromPackage(spaceId.value, currentTemplateSpace.value, ids, [currentPkg.value as number]);
+      await moveOutTemplateFromPackage(spaceId.value, currentTemplateSpace.value, ids, [props.currentPkg as number]);
       emits('movedOut');
       close();
       Message({

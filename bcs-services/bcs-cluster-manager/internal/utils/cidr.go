@@ -218,3 +218,27 @@ func Compare(a, b net.IP) int {
 func CalMaskLen(step float64) uint32 {
 	return uint32(32 - math.Ceil(math.Log2(step)))
 }
+
+// NextPowerOfTwo 返回不小于 num 的最小的 2 的次幂
+func NextPowerOfTwo(num uint32) uint32 {
+	// 如果 num 是 0，返回 1
+	if num == 0 {
+		return 1
+	}
+
+	// 如果 num 已经是 2 的次幂，直接返回 num
+	if (num & (num - 1)) == 0 {
+		return num
+	}
+
+	// 按位操作求出 num 的下一次幂
+	num--
+	num |= num >> 1
+	num |= num >> 2
+	num |= num >> 4
+	num |= num >> 8
+	num |= num >> 16
+	num++
+
+	return num
+}

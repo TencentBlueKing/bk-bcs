@@ -519,6 +519,7 @@ func ModifyInstancesVpcAttribute(ctx context.Context, vpcId string, ids []string
 		return fmt.Errorf("ModifyInstancesVpcAttribute[%s] vpcId/instanceIds empty", taskId)
 	}
 
+	// 转移vpc的节点按照可用区分类
 	zoneNodes, err := sortInstancesByZone(ids, opt)
 	if err != nil {
 		blog.Errorf("ModifyInstancesVpcAttribute[%s] sortInstancesByZone[%s][%v] failed: %v",
@@ -527,11 +528,12 @@ func ModifyInstancesVpcAttribute(ctx context.Context, vpcId string, ids []string
 	}
 	blog.Infof("ModifyInstancesVpcAttribute[%s] selectZoneAvailableSubnet[%+v]", taskId, zoneNodes)
 
-	// check zone available subnets
+	// 计算每个可用区需要的IP个数
 	zoneSubnetNum := make(map[string]int, 0)
 	for zone := range zoneNodes {
 		zoneSubnetNum[zone] = len(zoneNodes[zone])
 	}
+	// 选取可用的subnet && 子网资源不足时主动分配指定数量子网
 	zoneSubnets, err := selectZoneAvailableSubnet(vpcId, zoneSubnetNum, opt)
 	if err != nil {
 		blog.Errorf("ModifyInstancesVpcAttribute[%s] selectZoneAvailableSubnet failed: %v", taskId, err)

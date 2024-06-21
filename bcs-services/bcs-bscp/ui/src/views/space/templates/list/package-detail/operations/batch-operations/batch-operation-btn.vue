@@ -30,6 +30,7 @@
   <AddToDialog v-model:show="isAddToDialogShow" :value="props.configs" @added="emits('refresh')" />
   <EditPermissionDialg
     v-model:show="isEditPermissionShow"
+    :loading="editLoading"
     :configs-length="props.configs.length"
     @confirm="handleConfirmEditPermission" />
   <BatchMoveOutFromPkgDialog
@@ -86,6 +87,7 @@
   const isAddToDialogShow = ref(false);
   const isBatchMoveDialogShow = ref(false);
   const isSingleMoveDialogShow = ref(false);
+  const editLoading = ref(false);
 
   const handleOpenAddToDialog = () => {
     buttonRef.value.hide();
@@ -112,14 +114,15 @@
   };
 
   const handleConfirmEditPermission = async (permission: IPermissionType) => {
-    const { privilege, user, user_group } = permission;
-    const query = {
-      privilege,
-      user,
-      user_group,
-      template_ids: props.configs.map((item) => item.id),
-    };
     try {
+      editLoading.value = true;
+      const { privilege, user, user_group } = permission;
+      const query = {
+        privilege,
+        user,
+        user_group,
+        template_ids: props.configs.map((item) => item.id),
+      };
       await batchEditTemplatePermission(bkBizId.value, query);
       Message({
         theme: 'success',
@@ -129,9 +132,10 @@
       emits('refresh');
     } catch (error) {
       console.error(error);
+    } finally {
+      editLoading.value = false;
     }
   };
-
 </script>
 
 <style lang="scss" scoped>

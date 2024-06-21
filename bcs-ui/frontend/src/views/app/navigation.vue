@@ -289,7 +289,7 @@ export default defineComponent({
       // 修改用户管理语言
       jsonp(
         `${window.BK_USER_HOST}/api/c/compapi/v2/usermanage/fe_update_user_language/?language=${item.locale}`,
-        { param: 'callback' },
+        { param: 'callback', timeout: 100 },
         () => {
           $router.go(0);
         },

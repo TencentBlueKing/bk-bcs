@@ -159,6 +159,7 @@ export function useAppData() {
   const defaultFlags = {
     CLOUDTOKEN: false,
     PROJECT_LIST: false,
+    AZURECLOUD: true,
   };
   async function getFeatureFlags(params: { projectCode: string }) {
     const data = await featureFlagsApi(params).catch(() => ({}));
