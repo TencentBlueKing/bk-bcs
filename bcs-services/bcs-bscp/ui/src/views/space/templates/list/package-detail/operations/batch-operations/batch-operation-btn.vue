@@ -31,7 +31,7 @@
   <EditPermissionDialg
     v-model:show="isEditPermissionShow"
     :configs-length="props.configs.length"
-    @confirm="handleConfimEditPermission" />
+    @confirm="handleConfirmEditPermission" />
   <BatchMoveOutFromPkgDialog
     v-model:show="isBatchMoveDialogShow"
     :current-pkg="props.currentPkg as number"
@@ -111,7 +111,7 @@
     }
   };
 
-  const handleConfimEditPermission = async (permission: IPermissionType) => {
+  const handleConfirmEditPermission = async (permission: IPermissionType) => {
     const { privilege, user, user_group } = permission;
     const query = {
       privilege,

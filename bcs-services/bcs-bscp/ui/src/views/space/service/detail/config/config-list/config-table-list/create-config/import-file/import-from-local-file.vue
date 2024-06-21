@@ -1,9 +1,14 @@
 <template>
   <div class="wrap">
     <div class="label">{{ $t('上传配置项') }}</div>
+    <div>
+      <bk-checkbox v-model="isDecompression"> {{ $t('压缩包自动解压') }} </bk-checkbox>
+      <div class="tips">{{ uploadTips }}</div>
+    </div>
+  </div>
+  <div class="upload-file-list">
     <bk-upload
       class="config-uploader"
-      :tip="uploadTips"
       theme="button"
       :size="100000"
       :multiple="true"
@@ -15,31 +20,30 @@
         </bk-button>
       </template>
     </bk-upload>
-    <bk-checkbox style="margin-left: 24px" v-model="isDecompression"> {{ $t('压缩包自动解压') }} </bk-checkbox>
-  </div>
-  <div v-if="fileList.length > 0" class="upload-file-list">
-    <div :class="['open-btn', { 'is-open': isOpenFileList }]" @click="isOpenFileList = !isOpenFileList">
-      <angle-double-up-line class="icon" />
-      {{ isOpenFileList ? $t('收起上传列表') : $t('展开上传列表') }}
-    </div>
-    <div v-show="isOpenFileList" class="file-list">
-      <div v-for="fileItem in fileList" :key="fileItem.file.name" class="file-item">
-        <div class="file-wrapper">
-          <div class="status-icon-area">
-            <Done v-if="fileItem.status === 'success'" class="success-icon" />
-            <Error v-if="fileItem.status === 'fail'" class="error-icon" />
-          </div>
-          <TextFill class="file-icon" />
-          <div class="file-content">
-            <div class="name">{{ fileItem.file.name }}</div>
-            <div v-if="fileItem.status !== 'success'" class="progress">
-              <bk-progress
-                :percent="fileItem.progress"
-                :theme="fileItem.status === 'fail' ? 'danger' : 'primary'"
-                size="small" />
+    <div v-if="fileList.length > 0">
+      <div :class="['open-btn', { 'is-open': isOpenFileList }]" @click="isOpenFileList = !isOpenFileList">
+        <angle-double-up-line class="icon" />
+        {{ isOpenFileList ? $t('收起上传列表') : $t('展开上传列表') }}
+      </div>
+      <div v-show="isOpenFileList" class="file-list">
+        <div v-for="fileItem in fileList" :key="fileItem.file.name" class="file-item">
+          <div class="file-wrapper">
+            <div class="status-icon-area">
+              <Done v-if="fileItem.status === 'success'" class="success-icon" />
+              <Error v-if="fileItem.status === 'fail'" class="error-icon" />
             </div>
+            <TextFill class="file-icon" />
+            <div class="file-content">
+              <div class="name">{{ fileItem.file.name }}</div>
+              <div v-if="fileItem.status !== 'success'" class="progress">
+                <bk-progress
+                  :percent="fileItem.progress"
+                  :theme="fileItem.status === 'fail' ? 'danger' : 'primary'"
+                  size="small" />
+              </div>
+            </div>
+            <Del class="del-icon" @click="handleDeleteFile(fileItem.file.name)" />
           </div>
-          <Del class="del-icon" @click="handleDeleteFile(fileItem.file.name)" />
         </div>
       </div>
     </div>
@@ -66,10 +70,10 @@
     appId: number;
   }>();
 
-  const emits = defineEmits(['change', 'delete']);
+  const emits = defineEmits(['change', 'delete', 'uploading']);
 
   const loading = ref(false);
-  const isDecompression = ref(false);
+  const isDecompression = ref(true);
   const isOpenFileList = ref(true);
   const fileList = ref<IUploadFileList[]>([]);
 
@@ -83,7 +87,9 @@
   });
 
   const handleFileUpload = async (option: { file: File }) => {
+    console.log(option.file.name);
     loading.value = true;
+    emits('uploading', true);
     try {
       if (fileList.value.find((fileItem) => fileItem.file.name === option.file.name)) {
         handleDeleteFile(option.file.name);
@@ -118,6 +124,7 @@
       fileList.value.find((fileItem) => fileItem.file === option.file)!.status = 'fail';
     } finally {
       loading.value = false;
+      emits('uploading', false);
     }
   };
 
@@ -129,27 +136,20 @@
 
 <style scoped lang="scss">
   .tips {
-    margin-left: 100px;
+    color: #979ba5;
+    height: 20px;
+    font-size: 12px;
+    line-height: 20px;
+    margin-bottom: 8px;
   }
   :deep(.config-uploader) {
-    position: relative;
-    .bk-upload__tip {
-      margin-left: 0;
-      position: absolute;
-      bottom: -28px;
-      left: 0;
-      width: 700px;
-      height: 20px;
-      font-size: 12px;
-      color: #979ba5;
-    }
     .bk-upload-list {
       display: none;
     }
   }
   .upload-file-list {
-    margin: 40px 0 0 94px;
-    padding: 8px 12px;
+    margin-left: 94px;
+    padding: 12px;
     width: 520px;
     background: #f5f7fa;
     border-radius: 2px;
@@ -160,6 +160,7 @@
       font-size: 12px;
       color: #3a84ff;
       cursor: pointer;
+      margin-top: 8px;
       .icon {
         transform: rotate(180deg);
         transition: all 0.3s ease-in-out;
