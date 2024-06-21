@@ -32,7 +32,7 @@
     v-model:show="isEditPermissionShow"
     :loading="editLoading"
     :configs-length="props.configs.length"
-    @confirm="handleConfimEditPermission" />
+    @confirm="handleConfirmEditPermission" />
   <BatchMoveOutFromPkgDialog
     v-model:show="isBatchMoveDialogShow"
     :current-pkg="props.currentPkg as number"
@@ -113,7 +113,7 @@
     }
   };
 
-  const handleConfimEditPermission = async (permission: IPermissionType) => {
+  const handleConfirmEditPermission = async (permission: IPermissionType) => {
     try {
       editLoading.value = true;
       const { privilege, user, user_group } = permission;
@@ -129,7 +129,9 @@
         message: t('配置文件权限批量修改成功'),
       });
       isEditPermissionShow.value = false;
-      emits('refresh');
+      setTimeout(() => {
+        emits('refresh');
+      }, 300);
     } catch (error) {
       console.error(error);
     } finally {

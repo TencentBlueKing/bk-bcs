@@ -23,7 +23,8 @@
         :bk-biz-id="props.bkBizId"
         :app-id="props.appId"
         @change="handleUploadFile"
-        @delete="handleDeleteFile" />
+        @delete="handleDeleteFile"
+        @uploading="uploadFileLoading = $event" />
     </div>
     <div v-else-if="importType === 'configTemplate'">
       <ImportFromTemplate ref="importFromTemplateRef" :bk-biz-id="props.bkBizId" :app-id="props.appId" />
@@ -140,10 +141,14 @@
   const isClearDraft = ref(false);
   const expandNonExistTable = ref(true);
   const expandExistTable = ref(true);
+  const uploadFileLoading = ref(false);
 
   const confirmBtnDisabled = computed(() => {
     if (importType.value === 'configTemplate' && importFromTemplateRef.value) {
       return importFromTemplateRef.value.isImportBtnDisabled;
+    }
+    if (importType.value === 'localFile') {
+      return !uploadFileLoading.value;
     }
     return importConfigList.value.length;
   });
@@ -298,8 +303,6 @@
   .content {
     margin-top: 24px;
     border-top: 1px solid #dcdee5;
-    overflow: auto;
-    max-height: 490px;
     .head {
       display: flex;
       align-items: center;
