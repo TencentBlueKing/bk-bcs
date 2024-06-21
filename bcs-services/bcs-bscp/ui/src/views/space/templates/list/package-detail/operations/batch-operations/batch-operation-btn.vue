@@ -129,7 +129,9 @@
         message: t('配置文件权限批量修改成功'),
       });
       isEditPermissionShow.value = false;
-      emits('refresh');
+      setTimeout(() => {
+        emits('refresh');
+      }, 300);
     } catch (error) {
       console.error(error);
     } finally {
