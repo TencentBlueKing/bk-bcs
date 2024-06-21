@@ -50,6 +50,11 @@ type UsageQuery struct {
 	EndAt   string `json:"end_at" form:"end_at"`
 }
 
+// Nodes 列表
+type Nodes struct {
+	Node []string `json:"node"`
+}
+
 // parseTime 兼容前端多个格式
 func parseTime(rawTime string) (time.Time, error) {
 	// 和前端约定, 只支持这种带时区的格式
@@ -202,6 +207,77 @@ func GetNodeOverview(c *rest.Context) (interface{}, error) {
 	}
 
 	return overview, nil
+}
+
+// ListNodeOverviews 查询节点列表概览
+// @Summary 查询节点列表概览
+// @Tags    Metrics
+// @Success 200 {string} string
+// @Router  /nodes/overviews [post]
+func ListNodeOverviews(c *rest.Context) (interface{}, error) {
+
+	nodes := Nodes{}
+	if err := c.ShouldBindJSON(&nodes); err != nil {
+		return nil, err
+	}
+
+	nodeOveriewMetrics := make(map[string]*NodeOveriewMetric, len(nodes.Node))
+	for _, node := range nodes.Node {
+
+		params := map[string]interface{}{
+			"clusterId": c.ClusterId,
+			"node":      node,
+			"provider":  PROVIDER,
+		}
+
+		promqlMap := map[string]string{
+			"container_count":      `bcs:node:container_count{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
+			"pod_total":            `bcs:node:pod_total{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
+			"pod_count":            `bcs:node:pod_count{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
+			"cpu_used":             `bcs:node:cpu:used{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
+			"cpu_request":          `bcs:node:cpu:request{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
+			"cpu_total":            `bcs:node:cpu:total{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
+			"cpu_usage":            `bcs:node:cpu:usage{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
+			"cpu_request_usage":    `bcs:node:cpu_request:usage{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
+			"memory_used":          `bcs:node:memory:used{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
+			"memory_request":       `bcs:node:memory:request{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
+			"memory_total":         `bcs:node:memory:total{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
+			"memory_usage":         `bcs:node:memory:usage{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
+			"memory_request_usage": `bcs:node:memory_request:usage{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
+			"disk_usage":           `bcs:node:disk:usage{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
+			"disk_used":            `bcs:node:disk:used{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
+			"disk_total":           `bcs:node:disk:total{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
+			"diskio_usage":         `bcs:node:diskio:usage{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
+		}
+
+		result, err := bcsmonitor.QueryMultiValues(c.Request.Context(), c.ProjectId, promqlMap, params,
+			utils.GetNowQueryTime())
+		if err != nil {
+			return nil, err
+		}
+
+		overview := &NodeOveriewMetric{
+			ContainerCount:     result["container_count"],
+			PodTotal:           result["pod_total"],
+			PodCount:           result["pod_count"],
+			CPUUsed:            result["cpu_used"],
+			CPURequest:         result["cpu_request"],
+			CPUTotal:           result["cpu_total"],
+			CPUUsage:           result["cpu_usage"],
+			CPURequestUsage:    result["cpu_request_usage"],
+			DiskUsed:           result["disk_used"],
+			DiskTotal:          result["disk_total"],
+			DiskUsage:          result["disk_usage"],
+			DiskioUsage:        result["diskio_usage"],
+			MemoryUsed:         result["memory_used"],
+			MemoryRequest:      result["memory_request"],
+			MemoryTotal:        result["memory_total"],
+			MemoryUsage:        result["memory_usage"],
+			MemoryRequestUsage: result["memory_request_usage"],
+		}
+		nodeOveriewMetrics[node] = overview
+	}
+	return nodeOveriewMetrics, nil
 }
 
 // GetNodeCPUUsage 查询 CPU 使用率
