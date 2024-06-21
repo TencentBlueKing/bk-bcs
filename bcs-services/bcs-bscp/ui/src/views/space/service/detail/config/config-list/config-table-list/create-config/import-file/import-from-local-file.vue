@@ -51,7 +51,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref, computed } from 'vue';
+  import { ref, computed, watch } from 'vue';
   import { Upload, AngleDoubleUpLine, Done, TextFill, Error, Del } from 'bkui-vue/lib/icon';
   import { importNonTemplateConfigFile } from '../../../../../../../../../api/config';
   import { useI18n } from 'vue-i18n';
@@ -86,10 +86,20 @@
     );
   });
 
+  watch(
+    () => fileList.value,
+    () => {
+      if (fileList.value.some((fileItem) => fileItem.status === 'uploading')) {
+        emits('uploading', true);
+      } else {
+        emits('uploading', false);
+      }
+    },
+    { deep: true },
+  );
+
   const handleFileUpload = async (option: { file: File }) => {
-    console.log(option.file.name);
     loading.value = true;
-    emits('uploading', true);
     try {
       if (fileList.value.find((fileItem) => fileItem.file.name === option.file.name)) {
         handleDeleteFile(option.file.name);
@@ -124,7 +134,6 @@
       fileList.value.find((fileItem) => fileItem.file === option.file)!.status = 'fail';
     } finally {
       loading.value = false;
-      emits('uploading', false);
     }
   };
 
