@@ -95,7 +95,6 @@
   const selectedPkgs = ref<ITemplateBoundByAppData[]>([]);
   const searchPkgStr = ref('');
   const allImportPkgs = computed(() => [...importedPkgs.value, ...selectedPkgs.value]);
-  // const pending = ref(false);
 
   const isImportBtnDisabled = computed(() => {
     return pkgListLoading.value || importedPkgs.value.length + selectedPkgs.value.length === 0;

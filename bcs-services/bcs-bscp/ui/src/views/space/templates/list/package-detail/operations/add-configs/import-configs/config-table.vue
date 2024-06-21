@@ -189,7 +189,6 @@
               <div class="perm-input">
                 <bk-input
                   v-model="item.privilege"
-                  type="number"
                   :placeholder="t('请输入')"
                   @blur="handlePrivilegeInputBlur(item)" />
                 <bk-popover ext-cls="privilege-select-popover" theme="light" trigger="click" placement="bottom">
@@ -449,9 +448,6 @@
         }
       }
     }
-  }
-  .table-container {
-    overflow: auto;
   }
   .table {
     width: 100%;
