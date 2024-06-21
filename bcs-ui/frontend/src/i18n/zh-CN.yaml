@@ -2523,6 +2523,36 @@ importHuaweiCloud:
     zones: 可用区级集群
     regions: 区域级集群
     other: 其他
+amazonCloud:
+  button:
+    create: 新建凭证
+    delete: 删除凭证
+  placeholder:
+    search: 搜索名称/SecretID/集群ID
+  tips:
+    nameRegex: 仅支持英文、数字和字符(-)
+    secretKeyRegex: 仅支持英文、数字和字符(-或/)
+  label:
+    clusterType: 集群类型
+    managed: 托管集群
+    aksDesc: Kubernetes 集群的 Master 和 Etcd 会由 AWS 团队集中管理和维护，集群管理员不需要关心集群 Master的管理和维护。
+    cluster: 关联集群
+    create: 新建凭证
+importAmazonCloud:
+  title: 导入公有云集群 - aws云
+  label:
+    clusterName: 集群名称
+    token: 云凭证
+    region: 所属区域
+    clusterID: 云集群 ID
+    desc: 集群描述
+  button:
+    test: 连通性测试
+    import: 导入
+  clusterRegion:
+    zones: 可用区级集群
+    regions: 区域级集群
+    other: 其他
 googleCA:
   tips:
     zone: 目前只支持单可用区

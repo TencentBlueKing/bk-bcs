@@ -126,6 +126,7 @@ service Data {
   rpc ListTmplsOfTmplSet(ListTmplsOfTmplSetReq) returns (ListTmplsOfTmplSetResp) {}
   rpc ListTemplateByTuple(ListTemplateByTupleReq) returns (ListTemplateByTupleReqResp) {}
   rpc BatchUpsertTemplates(BatchUpsertTemplatesReq) returns (BatchUpsertTemplatesReqResp) {}
+  rpc BatchUpdateTemplatePermissions(BatchUpdateTemplatePermissionsReq) returns (BatchUpdateTemplatePermissionsResp) {}
 
   // template release related interface.
   rpc CreateTemplateRevision(CreateTemplateRevisionReq) returns (CreateResp) {}
@@ -439,6 +440,7 @@ message BatchUpsertConfigItemsReq {
     pbci.ConfigItemAttachment config_item_attachment = 1;
     pbci.ConfigItemSpec config_item_spec = 2;
     pbcontent.ContentSpec content_spec = 3;
+    repeated pbtv.TemplateVariableSpec variables = 4;
   }
   uint32 biz_id = 1;
   uint32 app_id = 2;
@@ -1004,6 +1006,18 @@ message BatchUpsertTemplatesReq {
 }
 
 message BatchUpsertTemplatesReqResp {
+  repeated uint32 ids = 1;
+}
+
+message BatchUpdateTemplatePermissionsReq {
+  uint32 biz_id = 1;
+  repeated uint32 template_ids = 2;
+  string user = 3;
+  string user_group = 4;
+  string privilege = 5;
+}
+
+message BatchUpdateTemplatePermissionsResp {
   repeated uint32 ids = 1;
 }
 

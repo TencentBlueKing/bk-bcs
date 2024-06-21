@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"net"
 	"path"
+	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -39,76 +41,150 @@ import (
 const (
 	// GrMaxClusterCidrNum globalRouter 模式下支持的最多cidr段
 	GrMaxClusterCidrNum = 10
+	// GrBcsMaxClusterCidrNum globalRouter 模式下平台最多支持cidr段
+	GrBcsMaxClusterCidrNum = 8
 )
 
 var (
-	defaultOverlayCidrs = []string{"9.165.0.0/16", "9.166.0.0/16", "11.166.0.0/16", "11.157.0.0/16"}
+	defaultOverlayCidrs        = []string{"9.165.0.0/16", "9.166.0.0/16", "11.166.0.0/16", "11.157.0.0/16"}
+	defaultSubnetStep   uint32 = 256
 )
 
-func selectZoneAvailableSubnet(vpcId string, zoneIpCnt map[string]int,
-	opt *cloudprovider.CommonOption) (map[string]string, error) {
-	client, err := api.NewVPCClient(opt)
+// GetAvailableSubnets get match pattern subnet
+func GetAvailableSubnets(vpcId string, clusterId string,
+	opt *cloudprovider.CommonOption) (map[string][]*cidrtree.Subnet, error) {
+	cloudSubnets, err := ListSubnets(opt, vpcId)
 	if err != nil {
-		blog.Errorf("create vpc client failed, %s", err.Error())
+		blog.Errorf("GetAvailableSubnets[%s] DescribeSubnets failed: %v", vpcId, err)
 		return nil, err
 	}
 
-	filter := make([]*api.Filter, 0)
-	filter = append(filter, &api.Filter{Name: "vpc-id", Values: []string{vpcId}})
-	cloudSubnets, err := client.DescribeSubnets(nil, filter)
-	if err != nil {
-		blog.Errorf("checkVpcAvailableSubnetCnt[%s] DescribeSubnets failed: %v", vpcId, err)
-		return nil, err
+	pattern := opt.Region
+	if clusterId != "" {
+		pattern = opt.Region + "-" + clusterId
 	}
 
 	// pick available subnet
-	availableSubnet := make([]*vpc.Subnet, 0)
+	availableSubnet := make([]*cidrtree.Subnet, 0)
 	for i := range cloudSubnets {
-		match := utils.MatchSubnet(*cloudSubnets[i].SubnetName, opt.Region)
-		if match && *cloudSubnets[i].AvailableIpAddressCount > 0 {
+		match := utils.MatchPatternSubnet(cloudSubnets[i].Name, pattern)
+		if match {
 			availableSubnet = append(availableSubnet, cloudSubnets[i])
 		}
 	}
 
-	zoneSubnetMap := make(map[string][]subnetIpNum, 0)
+	zoneSubnetMap := make(map[string][]*cidrtree.Subnet, 0)
 	for i := range availableSubnet {
-		if zoneSubnetMap[*availableSubnet[i].Zone] == nil {
-			zoneSubnetMap[*availableSubnet[i].Zone] = make([]subnetIpNum, 0)
+		if zoneSubnetMap[availableSubnet[i].Zone] == nil {
+			zoneSubnetMap[availableSubnet[i].Zone] = make([]*cidrtree.Subnet, 0)
 		}
 
-		zoneSubnetMap[*availableSubnet[i].Zone] = append(zoneSubnetMap[*availableSubnet[i].Zone], subnetIpNum{
-			subnetId: *availableSubnet[i].SubnetId,
-			cnt:      *availableSubnet[i].AvailableIpAddressCount,
-		})
+		zoneSubnetMap[availableSubnet[i].Zone] = append(zoneSubnetMap[availableSubnet[i].Zone], availableSubnet[i])
+	}
+
+	return zoneSubnetMap, nil
+}
+
+func getSubnetName(region, zone, clusterId string, index int) string {
+	if clusterId == "" {
+		return fmt.Sprintf("%s-%v", zone, index)
+	}
+
+	zoneSlice := strings.Split(zone, "-")
+
+	return fmt.Sprintf("%s-%s-%v-%v", region, clusterId, zoneSlice[len(zoneSlice)-1], index)
+}
+
+func getVpcNextSubnetName(vpcId, zone, clusterId string, opt *cloudprovider.CommonOption) (string, error) {
+	zoneSubnets, err := GetAvailableSubnets(vpcId, clusterId, opt)
+	if err != nil {
+		blog.Errorf("getVpcNextSubnetName GetAvailableSubnets failed: %v", err)
+		return "", err
+	}
+
+	subnets, exist := zoneSubnets[zone]
+	if !exist {
+		return getSubnetName(opt.Region, zone, clusterId, 0), nil
+	}
+
+	subnetNames := make([]string, 0)
+	for i := range subnets {
+		subnetNames = append(subnetNames, subnets[i].Name)
+	}
+	sort.Strings(subnetNames)
+
+	name := subnetNames[len(subnetNames)-1]
+	splitNames := strings.Split(name, "-")
+
+	index, _ := strconv.ParseUint(splitNames[len(splitNames)-1], 10, 32)
+
+	return getSubnetName(opt.Region, zone, clusterId, int(index+1)), nil
+}
+
+func selectZoneAvailableSubnet(vpcId string, zoneIpCnt map[string]int,
+	opt *cloudprovider.CommonOption) (map[string]string, error) {
+
+	zoneSubnetMap, err := GetAvailableSubnets(vpcId, "", opt)
+	if err != nil {
+		blog.Errorf("selectZoneAvailableSubnet failed: %v", err)
+		return nil, err
 	}
 
 	var (
 		selectedZoneSubnet = make(map[string]string, 0)
-		errorslocal        = utils.NewMultiError()
+		errorsLocal        = utils.NewMultiError()
 	)
 
 	for zone, num := range zoneIpCnt {
 		subnets, ok := zoneSubnetMap[zone]
 		if !ok {
-			errorslocal.Append(fmt.Errorf("zone[%s] noe exist subnets", zone))
+			errorsLocal.Append(fmt.Errorf("zone[%s] noe exist subnets", zone))
 			continue
 		}
 
 		exist := false
 		for i := range subnets {
-			if subnets[i].cnt >= uint64(num) {
+			if subnets[i].AvaliableIP >= uint64(num) {
 				exist = true
-				selectedZoneSubnet[zone] = subnets[i].subnetId
+				selectedZoneSubnet[zone] = subnets[i].ID
 				break
 			}
 		}
 		if !exist {
-			errorslocal.Append(fmt.Errorf("zone[%s] not exist num[%v] subnets", zone, num))
+			errorsLocal.Append(fmt.Errorf("zone[%s] not exist num[%v] subnets", zone, num))
 		}
 	}
+	if errorsLocal.HasErrors() {
+		blog.Infof("selectZoneAvailableSubnet err: %v", errorsLocal.Error())
+	}
 
-	if errorslocal.HasErrors() {
-		return nil, errorslocal
+	// allocate subnet if zone not exist subnet
+	for zone, num := range zoneIpCnt {
+		_, exist := selectedZoneSubnet[zone]
+		if exist {
+			continue
+		}
+
+		blog.Infof("selectZoneAvailableSubnet vpc[%s] zone[%s] begin to allocate subnet", vpcId, zone)
+		subnetName, errLocal := getVpcNextSubnetName(vpcId, zone, "", opt)
+		if err != nil {
+			return nil, err
+		}
+
+		// default allocate 256 ips
+		mask := defaultSubnetStep
+		if uint32(num) > mask {
+			mask = utils.NextPowerOfTwo(uint32(num))
+		}
+
+		sub, errLocal := AllocateSubnet(opt, vpcId, zone, int(utils.CalMaskLen(float64(mask))), "", subnetName)
+		if errLocal != nil {
+			return nil, errLocal
+		}
+
+		blog.Infof("selectZoneAvailableSubnet vpc[%s] zone[%s] allocate subnet[%s] successful",
+			vpcId, zone, sub.ID)
+		selectedZoneSubnet[zone] = sub.ID
 	}
 
 	return selectedZoneSubnet, nil
@@ -517,7 +593,7 @@ func AllocateGrCidrSubnet(ctx context.Context, opt *cloudprovider.CommonOption, 
 		blog.Errorf("AllocateGrSubnet[%s] addGrCidrToCache failed: %v", taskId, err)
 	}
 
-	return ret, err
+	return ret, nil
 }
 
 // AddClusterGrCidr add gr cidrs to the cluster
@@ -560,7 +636,7 @@ func AddGrCidrsToCluster(opt *cloudprovider.CommonOption, vpcId string, cluster 
 	cidrLens []uint32, reservedBlocks []*net.IPNet) ([]string, error) {
 
 	_ = cloudprovider.GetDistributeLock().Lock(utils.BuildAllocateVpcCidrLockKey(
-		cluster.Provider, cluster.Region, cluster.VpcID), []lock.LockOption{lock.LockTTL(time.Second * 5)}...)
+		cluster.Provider, cluster.Region, cluster.VpcID), []lock.LockOption{lock.LockTTL(time.Second * 10)}...)
 	defer cloudprovider.GetDistributeLock().Unlock(utils.BuildAllocateVpcCidrLockKey( // nolint
 		cluster.Provider, cluster.Region, cluster.VpcID))
 
@@ -572,10 +648,6 @@ func AddGrCidrsToCluster(opt *cloudprovider.CommonOption, vpcId string, cluster 
 	}
 	blog.Infof("AddGrCidrsToCluster[%s:%s] allocateGlobalRouterCidr success[%s]", cluster.ClusterID,
 		vpcId, cidrs)
-
-	_ = cloudprovider.GetDistributeLock().Lock(utils.BuildClusterLockKey(
-		cluster.ClusterID), []lock.LockOption{lock.LockTTL(time.Second * 5)}...)
-	defer cloudprovider.GetDistributeLock().Unlock(utils.BuildClusterLockKey(cluster.ClusterID)) // nolint
 
 	err = AddClusterGrCidr(opt, cluster.GetSystemID(), cidrs)
 	if err != nil {

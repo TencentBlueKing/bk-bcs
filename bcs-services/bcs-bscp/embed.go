@@ -57,6 +57,7 @@ type IndexConfig struct {
 	Helper         string
 	ProxyAPI       bool
 	FeedAddr       string
+	NodeManHost    string
 }
 
 // EmbedWebServer 前端 web server
@@ -168,6 +169,7 @@ func (e *EmbedWeb) RenderIndexHandler(conf *IndexConfig) http.Handler {
 			"ENABLE_BK_NOTICE": strconv.FormatBool(conf.EnableBKNotice),
 			"HELPER":           conf.Helper,
 			"FEED_ADDR":        conf.FeedAddr,
+			"BK_NODE_HOST":     conf.NodeManHost,
 		}
 
 		// 本地开发模式 / 代理请求

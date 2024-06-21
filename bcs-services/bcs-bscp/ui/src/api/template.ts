@@ -617,3 +617,13 @@ export const importTemplateBatchAdd = (biz_id: string, template_space_id: number
       items: configData,
     })
     .then((res) => res.data);
+
+/**
+ * 批量修改模板权限
+ * @param biz_id 业务ID
+ * @param template_space_id 空间id
+ * @param configData 配置列表
+ * @returns
+ */
+export const batchEditTemplatePermission = (biz_id: string, query: any) =>
+  http.post(`/config/biz/${biz_id}/templates/batch_update_templates_permissions`, query);

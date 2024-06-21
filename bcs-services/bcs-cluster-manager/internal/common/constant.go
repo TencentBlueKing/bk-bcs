@@ -195,6 +195,13 @@ const (
 	// RegionName regionName
 	RegionName = "regionName"
 
+	// ClusterCurNodeNum cluster current node num
+	ClusterCurNodeNum = "clusterCurNodeNum"
+	// ClusterSupNodeNum support node num
+	ClusterSupNodeNum = "clusterSupNodeNum"
+	// ClusterMaxNodeNum max node num
+	ClusterMaxNodeNum = "clusterMaxNodeNum"
+
 	// ShowSharedCluster flag show shared cluster
 	ShowSharedCluster = "showSharedCluster"
 	// VClusterNetworkKey xxx

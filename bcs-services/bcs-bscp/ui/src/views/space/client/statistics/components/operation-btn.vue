@@ -172,7 +172,7 @@
   }
 </style>
 
-<style>
+<style lang="scss">
   .add-dimensionality-popover {
     .bk-select-search-wrapper {
       width: 220px;

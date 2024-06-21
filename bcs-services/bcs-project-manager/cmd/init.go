@@ -31,6 +31,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/common/util"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/i18n"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/micro"
 	microEtcd "github.com/go-micro/plugins/v4/registry/etcd"
 	serverGrpc "github.com/go-micro/plugins/v4/server/grpc"
 	"github.com/gorilla/mux"
@@ -334,6 +335,7 @@ func (p *ProjectService) initMicro() error {
 			wrapper.NewAuthLogWrapper,
 			authWrapper.AuthorizationFunc,
 			wrapper.NewAuditWrapper,
+			micro.NewTracingWrapper(),
 		),
 	)
 	svc.Init()

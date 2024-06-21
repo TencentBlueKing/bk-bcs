@@ -427,6 +427,10 @@ export default {
   '请输入空间/套餐名称': 'Please enter space/package name',
   '确认恢复该配置文件?': 'Confirm to recover the configuration file?',
   '配置文件恢复后，将覆盖新添加的配置文件': 'After the configuration file is restored, the newly added configuration file',
+  批量操作: 'Batch operation',
+  批量修改权限: 'Batch edit permission',
+  配置文件权限批量修改成功: 'Succeeded in batch modifying configuration file permissions.',
+  保持不变: 'Remain unchanged',
 
   // 分组管理
   新增分组: 'New group',
@@ -484,7 +488,7 @@ export default {
   导出变量: 'Export variables',
 
   // 配置模板
-  '配置模板用于统一业务下服务间配置文件复用，可以在创建服务配置时引用配置模板。': 'Configuration templates are used to reuse configuration files between services under unified services, and can be referenced when creating service configurations.',
+  '配置模板用于同一业务下服务间配置文件复用，可以在创建服务配置时引用配置模板。': 'Configuration templates are used to reuse configuration files between services under same services, and can be referenced when creating service configurations.',
   搜索空间: 'Search Space',
   创建空间: 'New Space',
   '确认删除该配置模板空间？': 'Are you sure to delete this configuration template space?',
@@ -575,6 +579,7 @@ export default {
   以下套餐及服务未命名版本中引用的此配置文件也将更新: 'This configuration file referenced in the unnamed versions of the following packages and services will also be updated',
   引用此模板的服务: 'Services that reference this template',
   删除模板文件: 'Delete',
+  批量移出套餐: 'Move out of package in batches',
 
   // 脚本管理
   全部脚本: 'All scripts',

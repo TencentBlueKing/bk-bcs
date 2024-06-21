@@ -16,6 +16,7 @@ export const K8S_ANNOTATIONS_KEY = '^(?:(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA
 // 凭证 正则
 export const NAME_REGEX = '^[0-9a-zA-Z-]+$';
 export const SECRET_REGEX = '^[0-9a-zA-Z-~]+$';
+export const SECRETKEY_REGEX = '^[0-9a-zA-Z/-]+$';
 
 // 集群环境
 export const CLUSTER_ENV = {

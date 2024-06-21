@@ -649,7 +649,7 @@ export default defineComponent({
       if (!ipNumber || !serviceNumber) return [];
 
       const minExponential = Math.log2(32);
-      const maxExponential = Math.log2(Math.min(ipNumber - serviceNumber, 128));
+      const maxExponential = Math.log2(Math.min(ipNumber - serviceNumber, 256));
       return getIpNumRange(minExponential, maxExponential);
     });
     // 集群最大节点数

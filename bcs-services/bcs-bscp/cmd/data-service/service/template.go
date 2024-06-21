@@ -21,8 +21,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/i18n"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 	pbbase "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
@@ -952,4 +954,51 @@ func (s *Service) validateBatchUpsertTemplates(grpcKit *kit.Kit, updateId []uint
 		}
 	}
 	return oldTemplateData, nil
+}
+
+// BatchUpdateTemplatePermissions 批量更新模板权限
+func (s *Service) BatchUpdateTemplatePermissions(ctx context.Context, req *pbds.BatchUpdateTemplatePermissionsReq) (
+	*pbds.BatchUpdateTemplatePermissionsResp, error) {
+
+	kt := kit.FromGrpcContext(ctx)
+
+	// 获取最新的模板配置
+	tmps, err := s.dao.TemplateRevision().ListLatestRevisionsGroupByTemplateIds(kt, req.GetTemplateIds())
+	if err != nil {
+		return nil, errf.Errorf(errf.DBOpFailed,
+			i18n.T(kt, fmt.Sprintf("lists the latest version by template ids failed, err: %s", err.Error())))
+	}
+
+	toCreate := make([]*table.TemplateRevision, 0)
+	for _, v := range tmps {
+		v.Spec.RevisionName = tools.GenerateRevisionName()
+		if req.User != "" {
+			v.Spec.Permission.User = req.User
+		}
+		if req.UserGroup != "" {
+			v.Spec.Permission.UserGroup = req.UserGroup
+		}
+		if req.Privilege != "" {
+			v.Spec.Permission.Privilege = req.Privilege
+		}
+		v.Revision = &table.CreatedRevision{
+			Creator:   kt.User,
+			CreatedAt: time.Now().UTC(),
+		}
+		toCreate = append(toCreate, &table.TemplateRevision{
+			Spec:       v.Spec,
+			Attachment: v.Attachment,
+			Revision:   v.Revision,
+		})
+	}
+	if err := s.dao.TemplateRevision().BatchCreate(kt, toCreate); err != nil {
+		return nil, errf.Errorf(errf.DBOpFailed,
+			i18n.T(kt, fmt.Sprintf("batch update of template permissions failed, err: %s", err.Error())))
+	}
+
+	ids := []uint32{}
+	for _, v := range toCreate {
+		ids = append(ids, v.ID)
+	}
+	return &pbds.BatchUpdateTemplatePermissionsResp{Ids: ids}, nil
 }
