@@ -430,6 +430,12 @@ export default {
   批量修改权限: 'Batch edit permission',
   配置文件权限批量修改成功: 'Succeeded in batch modifying configuration file permissions.',
   保持不变: 'Remain unchanged',
+  配置模板空间: 'Configuring template space',
+  个模板套餐: 'template package',
+  其中: 'In',
+  '个模板套餐已存在，导入后将': 'template package already exists, import will',
+  已存在配置模板套餐: 'Configuration template package exists',
+  新建配置模板套餐: 'New configuration template package',
 
   // 分组管理
   新增分组: 'New group',
