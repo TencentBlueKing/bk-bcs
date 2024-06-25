@@ -1199,12 +1199,6 @@ message CreateConfigItemReq {
 }
 
 message BatchUpsertConfigItemsReq {
-  message Variable {
-    string name = 1;
-    string type = 2;
-    string default_val = 3;
-    string memo = 4;
-  }
   message ConfigItem {
     string name = 1;
     string path = 2;
@@ -1218,12 +1212,17 @@ message BatchUpsertConfigItemsReq {
     string privilege = 8;
     string sign = 9;
     uint64 byte_size = 10;
-    repeated Variable variables = 11;
   }
   uint32 biz_id = 1;
   uint32 app_id = 2;
   repeated ConfigItem items = 3;
   bool replace_all = 4;
+  repeated pbtv.TemplateVariableSpec variables = 5;  // 非配置模板和模板配置变量
+  message TemplateBinding {
+    uint32 template_space_id = 1;
+    pbatb.TemplateBinding template_binding = 2;
+  }
+  repeated TemplateBinding bindings = 6;  // 绑定的套餐
 }
 
 message BatchUpsertConfigItemsResp {
@@ -2828,30 +2827,33 @@ message CompareConfigItemConflictsReq {
 }
 
 message CompareConfigItemConflictsResp {
-  message Variable {
-    string name = 1;
-    string type = 2;
-    string default_val = 3;
-    string memo = 4;
+  message NonTemplateConfig {
+    uint32 id = 1;
+    pbci.ConfigItemSpec config_item_spec = 2;
+    repeated pbtv.TemplateVariableSpec variables = 3;
+    bool is_exist = 4;
+    string signature = 5;
+    uint64 byte_size = 6;
   }
-  message ConfigItem {
-    string name = 1;
-    string path = 2;
-    string file_type = 3;  // file_type is enum type, source resource reference:
-                           // pkg/dal/table/config_item.go
-    string file_mode = 4;  // file_mode is enum type, source resource reference:
-                           // pkg/dal/table/config_item.go
-    string memo = 5;
-    string user = 6;
-    string user_group = 7;
-    string privilege = 8;
-    string sign = 9;
-    uint64 byte_size = 10;
-    uint32 id = 11;
-    repeated Variable variables = 12;
+  message TemplateConfig {
+    message TemplateRevisionDetail {
+      uint32 template_id = 1;
+      string name = 2;
+      string path = 3;
+      uint32 template_revision_id = 4;
+      bool is_latest = 5;
+      string template_revision_name = 6;
+      repeated pbtv.TemplateVariableSpec variables = 7;
+    }
+    uint32 template_space_id = 1;
+    string template_space_name = 2;
+    uint32 template_set_id = 3;
+    string template_set_name = 4;
+    bool is_exist = 5;
+    repeated TemplateRevisionDetail template_revisions = 6;
   }
-  repeated ConfigItem exist = 1;
-  repeated ConfigItem non_exist = 2;
+  repeated NonTemplateConfig non_template_configs = 2;
+  repeated TemplateConfig template_configs = 1;
 }
 
 message CompareKvConflictsReq {
