@@ -206,8 +206,14 @@ export interface IConfigImportItem {
   privilege: string;
   user: string;
   user_group: string;
-  sign: string;
+  signature: string;
   id: number;
+  variables: {
+    default_val: string;
+    memo: string;
+    name: string;
+    type: string;
+  }[];
   file_name?: string;
 }
 

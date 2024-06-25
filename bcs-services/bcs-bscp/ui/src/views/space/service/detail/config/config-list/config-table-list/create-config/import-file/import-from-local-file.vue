@@ -56,6 +56,7 @@
   import { importNonTemplateConfigFile } from '../../../../../../../../../api/config';
   import { useI18n } from 'vue-i18n';
   import { IConfigImportItem } from '../../../../../../../../../../types/config';
+  import { importTemplateFile } from '../../../../../../../../../api/template';
 
   interface IUploadFileList {
     file: File;
@@ -66,11 +67,14 @@
   const { t } = useI18n();
 
   const props = defineProps<{
-    bkBizId: string;
-    appId: number;
+    isTemplate: boolean; // 是否是配置模板导入
+    bkBizId?: string;
+    appId?: number;
+    spaceId?: string;
+    currentTemplateSpace?: number;
   }>();
 
-  const emits = defineEmits(['change', 'delete', 'uploading']);
+  const emits = defineEmits(['change', 'delete', 'uploading', 'decompressing']);
 
   const loading = ref(false);
   const isDecompression = ref(true);
@@ -94,6 +98,11 @@
       } else {
         emits('uploading', false);
       }
+      if (fileList.value.some((fileItem) => fileItem.status === 'decompressing')) {
+        emits('decompressing', true);
+      } else {
+        emits('decompressing', false);
+      }
     },
     { deep: true },
   );
@@ -109,15 +118,32 @@
         status: 'uploading',
         progress: 0,
       });
-      const res = await importNonTemplateConfigFile(
-        props.bkBizId,
-        props.appId,
-        option.file,
-        isDecompression.value,
-        (progress: any) => {
-          fileList.value.find((fileItem) => fileItem.file === option.file)!.progress = progress;
-        },
-      );
+      let res;
+      if (props.isTemplate) {
+        res = await importTemplateFile(
+          props.spaceId!,
+          props.currentTemplateSpace!,
+          option.file,
+          isDecompression.value,
+          (progress: number) => {
+            const fileItem = fileList.value.find((fileItem) => fileItem.file === option.file);
+            if (progress === 100) fileItem!.status = 'decompressing';
+            fileList.value.find((fileItem) => fileItem.file === option.file)!.progress = progress;
+          },
+        );
+      } else {
+        res = await importNonTemplateConfigFile(
+          props.bkBizId!,
+          props.appId!,
+          option.file,
+          isDecompression.value,
+          (progress: number) => {
+            const fileItem = fileList.value.find((fileItem) => fileItem.file === option.file);
+            if (progress === 100) fileItem!.status = 'decompressing';
+            fileItem!.progress = progress;
+          },
+        );
+      }
       fileList.value.find((fileItem) => fileItem.file === option.file)!.status = 'success';
       res.non_exist.forEach((item: IConfigImportItem) => {
         item.privilege = '644';

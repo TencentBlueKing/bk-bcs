@@ -3,13 +3,12 @@
     :is-show="isShow"
     :title="title"
     :theme="'primary'"
-    :loading="pending"
     quick-close
     ext-cls="delete-confirm-dialog"
     @closed="handleClose">
     <slot></slot>
     <template #footer>
-      <bk-button theme="primary" @click="emits('confirm')" style="margin-right: 8px">
+      <bk-button theme="primary" @click="emits('confirm')" :loading="pending" style="margin-right: 8px">
         {{ confirmText || t('删除') }}
       </bk-button>
       <bk-button @click="handleClose">{{ t('取消') }}</bk-button>

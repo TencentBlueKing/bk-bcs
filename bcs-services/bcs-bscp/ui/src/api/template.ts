@@ -595,13 +595,27 @@ export const getTemplateVersionsNameByIds = (biz_id: string, template_ids: numbe
  * @param fill 导入文件
  * @returns
  */
-export const importTemplateFile = (biz_id: string, template_space_id: number, fill: any) =>
+export const importTemplateFile = (
+  biz_id: string,
+  template_space_id: number,
+  file: any,
+  isDecompression: boolean,
+  progress: Function,
+) =>
   http
-    .post(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates/import`, fill, {
-      headers: {
-        'Content-Type': 'application/zip',
+    .post(
+      `/config/biz/${biz_id}/template_spaces/${template_space_id}/templates/import/${encodeURIComponent(file.name)}`,
+      file,
+      {
+        headers: {
+          'X-Bscp-Unzip': isDecompression,
+        },
+        onUploadProgress: (progressEvent: any) => {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          progress(percentCompleted);
+        },
       },
-    })
+    )
     .then((res) => res.data);
 
 /**
