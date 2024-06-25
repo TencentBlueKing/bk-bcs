@@ -436,6 +436,8 @@ export default {
   '个模板套餐已存在，导入后将': 'template package already exists, import will',
   已存在配置模板套餐: 'Configuration template package exists',
   新建配置模板套餐: 'New configuration template package',
+  '压缩包正在解压，请稍后': 'The compressed package is being decompressed, please wait',
+  '确认恢复该配置项?': 'Confirm to restore the configuration item?',
 
   // 分组管理
   新增分组: 'New group',
@@ -585,6 +587,7 @@ export default {
   引用此模板的服务: 'Services that reference this template',
   删除模板文件: 'Delete',
   批量移出套餐: 'Move out of package in batches',
+  从其他空间导入: 'Import from another space',
 
   // 脚本管理
   全部脚本: 'All scripts',

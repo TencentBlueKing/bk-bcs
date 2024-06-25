@@ -32,7 +32,8 @@
     v-model:show="isEditPermissionShow"
     :loading="editLoading"
     :configs-length="props.configs.length"
-    @confirm="handleConfirmEditPermission" />
+    :configs="props.configs"
+    @confirm="handleConfirmEditPermission($event)" />
   <BatchMoveOutFromPkgDialog
     v-model:show="isBatchMoveDialogShow"
     :current-pkg="props.currentPkg as number"
@@ -113,8 +114,15 @@
     }
   };
 
-  const handleConfirmEditPermission = async (permission: IPermissionType) => {
+  const handleConfirmEditPermission = async ({
+    permission,
+    appIds,
+  }: {
+    permission: IPermissionType;
+    appIds: number[];
+  }) => {
     try {
+      console.log(appIds);
       editLoading.value = true;
       const { privilege, user, user_group } = permission;
       const query = {
@@ -122,6 +130,7 @@
         user,
         user_group,
         template_ids: props.configs.map((item) => item.id),
+        app_ids: appIds,
       };
       await batchEditTemplatePermission(bkBizId.value, query);
       Message({

@@ -22,6 +22,7 @@
       <ImportFromLocalFile
         :bk-biz-id="props.bkBizId"
         :app-id="props.appId"
+        :is-template="false"
         @change="handleUploadFile"
         @delete="handleDeleteFile"
         @uploading="uploadFileLoading = $event"
@@ -172,9 +173,13 @@
       return importFromTemplateRef.value.isImportBtnDisabled;
     }
     if (importType.value === 'localFile') {
-      return !uploadFileLoading.value && !decompressing.value;
+      return (
+        !uploadFileLoading.value &&
+        !decompressing.value &&
+        importConfigList.value.length + importTemplateConfigList.value.length > 0
+      );
     }
-    return importConfigList.value.length;
+    return importConfigList.value.length + importTemplateConfigList.value.length > 0;
   });
 
   const importConfigList = computed(() => [...nonExistConfigList.value, ...existConfigList.value]);
@@ -223,20 +228,23 @@
         const allConfigList: any[] = [];
         const allTemplateConfigList: any[] = [];
         importTemplateConfigList.value.forEach((templateConfig) => {
-          const { template_set_id, template_revisions } = templateConfig;
+          const { template_set_id, template_revisions, template_space_id } = templateConfig;
           template_revisions.forEach((revision) => {
             allVariables = [...allVariables, ...revision.variables];
           });
           allTemplateConfigList.push({
-            template_set_id,
-            template_revisions: template_revisions.map((revision) => {
-              const { template_id, template_revision_id, is_latest } = revision;
-              return {
-                template_id,
-                template_revision_id,
-                is_latest,
-              };
-            }),
+            template_space_id,
+            template_binding: {
+              template_set_id,
+              template_revisions: template_revisions.map((revision) => {
+                const { template_id, template_revision_id, is_latest } = revision;
+                return {
+                  template_id,
+                  template_revision_id,
+                  is_latest,
+                };
+              }),
+            },
           });
         });
         importConfigList.value.forEach((config) => {

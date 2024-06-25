@@ -1,7 +1,7 @@
 <template>
   <bk-dialog
     :is-show="props.show"
-    :title="t('批量导入')"
+    :title="t('批量上传配置文件')"
     :theme="'primary'"
     width="960"
     height="720"
@@ -13,49 +13,65 @@
       <div class="label">{{ t('导入方式') }}</div>
       <bk-radio-group v-model="importType">
         <bk-radio-button label="localFile">{{ t('导入本地文件') }}</bk-radio-button>
-        <bk-radio-button label="otherSpace">{{ t('从其他空间导入') }}</bk-radio-button>
+        <bk-radio-button label="otherSpace" :disabled="true">{{ t('从其他空间导入') }}</bk-radio-button>
       </bk-radio-group>
     </div>
     <div v-if="importType === 'localFile'">
       <ImportFromLocalFile
         :space-id="spaceId"
         :current-template-space="currentTemplateSpace"
+        :is-template="true"
         @change="handleUploadFile"
         @delete="handleDeleteFile"
-        @uploading="uploadFileLoading = $event" />
+        @uploading="uploadFileLoading = $event"
+        @decompressing="decompressing = $event" />
     </div>
-    <div v-if="importConfigList.length" class="content">
-      <div class="head">
-        <bk-checkbox style="margin-left: 24px" v-model="isClearDraft"> {{ $t('导入前清空草稿区') }} </bk-checkbox>
-        <div v-if="!isClearDraft" class="tips">
-          {{ t('共将导入') }} <span style="color: #3a84ff">{{ importConfigList.length }}</span>
-          {{ t('个配置项，其中') }} <span style="color: #ffa519">{{ existConfigList.length }}</span>
-          {{ t('个已存在,导入后将') }}
-          <span style="color: #ffa519">{{ t('覆盖原配置') }}</span>
+    <bk-loading
+      :loading="decompressing"
+      :title="t('压缩包正在解压，请稍后')"
+      class="config-table-loading"
+      mode="spin"
+      theme="primary"
+      size="small"
+      :opacity="0.7">
+      <div v-if="importConfigList.length" class="content">
+        <div class="head">
+          <bk-checkbox style="margin-left: 24px" v-model="isClearDraft"> {{ $t('导入前清空草稿区') }} </bk-checkbox>
+          <div v-if="!isClearDraft" class="tips">
+            {{ t('共将导入') }} <span style="color: #3a84ff">{{ importConfigList.length }}</span>
+            {{ t('个配置项，其中') }} <span style="color: #ffa519">{{ existConfigList.length }}</span>
+            {{ t('个已存在,导入后将') }}
+            <span style="color: #ffa519">{{ t('覆盖原配置') }}</span>
+          </div>
+          <div v-else class="tips">
+            {{ t('将') }} <span style="color: #ffa519">{{ t('清空') }}</span> {{ t('现有草稿区,并导入') }}
+            <span style="color: #3a84ff">{{ importConfigList.length }}</span>
+            {{ t('个配置项') }}
+          </div>
         </div>
-        <div v-else class="tips">
-          {{ t('将') }} <span style="color: #ffa519">{{ t('清空') }}</span> {{ t('现有草稿区,并导入') }}
-          <span style="color: #3a84ff">{{ importConfigList.length }}</span>
-          {{ t('个配置项') }}
-        </div>
+        <ConfigTable
+          v-if="nonExistConfigList.length"
+          :table-data="nonExistConfigList"
+          :is-exsit-table="false"
+          :expand="expandNonExistTable"
+          @change-expand="expandNonExistTable = !expandNonExistTable"
+          @change="handleTableChange($event, true)" />
+        <ConfigTable
+          v-if="existConfigList.length"
+          :expand="expandExistTable"
+          :table-data="existConfigList"
+          :is-exsit-table="true"
+          @change-expand="expandExistTable = !expandExistTable"
+          @change="handleTableChange($event, false)" />
       </div>
-      <ConfigTable
-        v-if="nonExistConfigList.length"
-        :table-data="nonExistConfigList"
-        :is-exsit-table="false"
-        :expand="expandNonExistTable"
-        @change-expand="expandNonExistTable = !expandNonExistTable"
-        @change="handleTableChange($event, true)" />
-      <ConfigTable
-        v-if="existConfigList.length"
-        :expand="expandExistTable"
-        :table-data="existConfigList"
-        :is-exsit-table="true"
-        @change-expand="expandExistTable = !expandExistTable"
-        @change="handleTableChange($event, false)" />
-    </div>
+    </bk-loading>
+
     <template #footer>
-      <bk-button theme="primary" style="margin-right: 8px" :loading="loading" @click="isSelectPkgDialogShow = true">
+      <bk-button
+        theme="primary"
+        style="margin-right: 8px"
+        :disabled="!confirmBtnDisabled"
+        @click="isSelectPkgDialogShow = true">
         {{ t('导入') }}
       </bk-button>
       <bk-button @click="emits('update:show', false)">{{ t('取消') }}</bk-button>
@@ -75,7 +91,7 @@
   import ConfigTable from './config-table.vue';
   import SelectPackage from './select-package.vue';
   import Message from 'bkui-vue/lib/message';
-  import ImportFromLocalFile from './import-from-local-file.vue';
+  import ImportFromLocalFile from '../../../../../../service/detail/config/config-list/config-table-list/create-config/import-file/import-from-local-file.vue';
 
   const { t } = useI18n();
   const props = defineProps<{
@@ -90,13 +106,13 @@
   const pending = ref(false);
   const existConfigList = ref<IConfigImportItem[]>([]);
   const nonExistConfigList = ref<IConfigImportItem[]>([]);
-  const loading = ref(false);
   const expandNonExistTable = ref(true);
   const expandExistTable = ref(true);
   const isSelectPkgDialogShow = ref(false);
   const importType = ref('localFile');
   const isClearDraft = ref(false);
   const uploadFileLoading = ref(false);
+  const decompressing = ref(false);
 
   watch(
     () => props.show,
@@ -107,6 +123,10 @@
   );
 
   const importConfigList = computed(() => [...existConfigList.value, ...nonExistConfigList.value]);
+
+  const confirmBtnDisabled = computed(() => {
+    return !uploadFileLoading.value && !decompressing.value && importConfigList.value.length > 0;
+  });
 
   const handleBeforeClose = async () => {
     if (isTableChange.value) {
@@ -122,6 +142,7 @@
   };
 
   const handleImport = async (pkgIds: number[]) => {
+    pending.value = true;
     try {
       const res = await importTemplateBatchAdd(spaceId.value, currentTemplateSpace.value, [
         ...existConfigList.value,
@@ -133,12 +154,14 @@
       }
       batchUploadIds.value = res.ids;
       isSelectPkgDialogShow.value = false;
-      emits('added');
       close();
-      Message({
-        theme: 'success',
-        message: t('导入配置文件成功'),
-      });
+      setTimeout(() => {
+        emits('added');
+        Message({
+          theme: 'success',
+          message: t('导入配置文件成功'),
+        });
+      }, 300);
     } catch (e) {
       console.log(e);
     } finally {
@@ -194,14 +217,6 @@
     }
   }
 
-  :deep(.other-service-wrap) {
-    display: flex;
-    margin-top: 24px;
-    .label {
-      @extend .label;
-    }
-  }
-
   .content {
     margin-top: 24px;
     border-top: 1px solid #dcdee5;
@@ -220,6 +235,13 @@
         border-left: 1px solid #dcdee5;
         margin-left: 16px;
       }
+    }
+  }
+  .config-table-loading {
+    min-height: 80px;
+    :deep(.bk-loading-primary) {
+      top: 60px;
+      align-items: center;
     }
   }
 </style>

@@ -106,7 +106,7 @@
     isBatchDeleteDialogShow.value = true;
   };
 
-  const handleConfimEditPermission = async (permission: IPermissionType) => {
+  const handleConfimEditPermission = async ({ permission }: { permission: IPermissionType }) => {
     try {
       editLoading.value = true;
       const { privilege, user, user_group } = permission;
@@ -122,7 +122,7 @@
           sign: commit_spec.content.signature,
         };
       });
-      await batchAddConfigList(props.bkBizId, props.appId, editConfigList, false);
+      await batchAddConfigList(props.bkBizId, props.appId, { items: editConfigList });
       Message({
         theme: 'success',
         message: t('配置文件权限批量修改成功'),
