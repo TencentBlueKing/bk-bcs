@@ -567,6 +567,7 @@ func (s *Service) BatchUpdateTemplatePermissions(ctx context.Context, req *pbcs.
 		User:        req.User,
 		UserGroup:   req.UserGroup,
 		Privilege:   req.Privilege,
+		AppIds:      req.AppIds,
 	})
 
 	if err != nil {

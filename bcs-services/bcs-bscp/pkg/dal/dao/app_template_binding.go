@@ -32,12 +32,16 @@ type AppTemplateBinding interface {
 	Update(kit *kit.Kit, atb *table.AppTemplateBinding) error
 	// UpdateWithTx Update one app template binding's info with transaction.
 	UpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, atb *table.AppTemplateBinding) error
+	// BatchUpdateWithTx batch update app template binding's instances with transaction.
+	BatchUpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, data []*table.AppTemplateBinding) error
 	// List app template bindings with options.
 	List(kit *kit.Kit, bizID, appID uint32, opt *types.BasePage) ([]*table.AppTemplateBinding, int64, error)
 	// Delete one app template binding instance.
 	Delete(kit *kit.Kit, atb *table.AppTemplateBinding) error
 	// DeleteByAppIDWithTx delete one app template binding instance by app id with transaction.
 	DeleteByAppIDWithTx(kit *kit.Kit, tx *gen.QueryTx, appID uint32) error
+	// ListAppTemplateBindingByAppIds 按 AppId 列出应用模板绑定
+	ListAppTemplateBindingByAppIds(kit *kit.Kit, bizID uint32, appID []uint32) ([]*table.AppTemplateBinding, error)
 }
 
 var _ AppTemplateBinding = new(appTemplateBindingDao)
@@ -46,6 +50,33 @@ type appTemplateBindingDao struct {
 	genQ     *gen.Query
 	idGen    IDGenInterface
 	auditDao AuditDao
+}
+
+// BatchUpdateWithTx batch update app template binding's instances with transaction.
+func (dao *appTemplateBindingDao) BatchUpdateWithTx(kit *kit.Kit, tx *gen.QueryTx,
+	data []*table.AppTemplateBinding) error {
+	if len(data) == 0 {
+		return nil
+	}
+	for _, g := range data {
+		if err := g.ValidateUpdate(); err != nil {
+			return err
+		}
+		if err := dao.validateAttachmentExist(kit, g.Attachment); err != nil {
+			return err
+		}
+	}
+	return tx.AppTemplateBinding.WithContext(kit.Ctx).Save(data...)
+}
+
+// ListAppTemplateBindingByAppIds 按 AppId 列出应用模板绑定
+func (dao *appTemplateBindingDao) ListAppTemplateBindingByAppIds(kit *kit.Kit, bizID uint32, appIDs []uint32) (
+	[]*table.AppTemplateBinding, error) {
+
+	m := dao.genQ.AppTemplateBinding
+	return dao.genQ.AppTemplateBinding.WithContext(kit.Ctx).
+		Where(m.BizID.Eq(bizID), m.AppID.In(appIDs...)).
+		Find()
 }
 
 // Create one app template binding instance.

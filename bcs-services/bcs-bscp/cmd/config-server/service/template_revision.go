@@ -195,11 +195,6 @@ func (s *Service) ListTmplRevisionNamesByTmplIDs(ctx context.Context, req *pbcs.
 	if len(ids) > 0 {
 		return nil, fmt.Errorf("repeated ids: %v, id must be unique", ids)
 	}
-	idsLen := len(req.TemplateIds)
-	if idsLen == 0 || idsLen > constant.ArrayInputLenLimit {
-		return nil, fmt.Errorf("the length of ids is %d, it must be within the range of [1,%d]",
-			idsLen, constant.ArrayInputLenLimit)
-	}
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
