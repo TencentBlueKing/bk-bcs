@@ -1839,6 +1839,7 @@ message BatchUpdateTemplatePermissionsReq {
   string user = 3;
   string user_group = 4;
   string privilege = 5;
+  repeated uint32 app_ids = 6;
 }
 
 message BatchUpdateTemplatePermissionsResp {

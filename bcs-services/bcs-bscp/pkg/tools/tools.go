@@ -236,3 +236,21 @@ func DetectFilePathConflicts(a []CIUniqueKey, b []CIUniqueKey) error {
 
 	return nil
 }
+
+// MergeAndDeduplicate 合并并去重两个数组
+// 示例 a []uint32{1,3,5,6}  b []uint32{2,3,7,4} return []uint32{1,2,3,5,7,6,4}
+func MergeAndDeduplicate(a, b []uint32) []uint32 {
+	// 使用 map 来记录已经存在的元素
+	elementMap := make(map[uint32]bool)
+	var result []uint32
+
+	// 合并数组 a 和 b
+	for _, v := range append(a, b...) {
+		if !elementMap[v] {
+			elementMap[v] = true
+			result = append(result, v)
+		}
+	}
+
+	return result
+}
