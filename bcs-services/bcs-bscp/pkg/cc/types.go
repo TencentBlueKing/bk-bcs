@@ -1088,6 +1088,71 @@ func (lm *MatchReleaseLimiter) trySetDefault() {
 	}
 }
 
+// RateLimiter defines the rate limiter options for traffic control.
+type RateLimiter struct {
+	// ClientBandWidth为单个客户端下载文件所评估的可用带宽，用于决定单次下载流控阈值
+	ClientBandWidth int `yaml:"clientBandWidth"`
+	// Global为全局限流器配置
+	Global GlobalRL `yaml:"global"`
+}
+
+// GlobalRL defines the options for global rate limiter.
+type GlobalRL struct {
+	// Limit为流量速率限制，单位为MB/s
+	Limit int `yaml:"limit"`
+	// Burst为允许处理的突发流量上限（允许系统在短时间内处理比速率限制更多的流量），单位为MB/s
+	Burst int `yaml:"burst"`
+}
+
+const (
+	// MinByteLimit min byte limit
+	MinByteLimit = 10 * 1024 * 1024 // 10MB = 80Mb
+	// DefaultClientBandWidth default client bandwidth
+	DefaultClientBandWidth = 100 * 1024 * 1024 // 100MB = 800Mb
+	// DefaultByteLimit default byte limit
+	DefaultByteLimit = 100 * 1024 * 1024 // 100MB = 800Mb
+	// DefaultByteBurst default byte burst
+	DefaultByteBurst = 200 * 1024 * 1024 // 200MB = 1600Mb
+
+)
+
+// validate if the rate limiter is valid or not.
+func (rl RateLimiter) validate() error {
+	if rl.ClientBandWidth < MinByteLimit {
+		return fmt.Errorf("invalid rateLimiter.clientBandWidth value, should >= %d", MinByteLimit)
+	}
+
+	if rl.Global.Limit < rl.ClientBandWidth {
+		return fmt.Errorf("invalid rateLimiter.global.limit value, should >= rateLimiter.clientBandWidth value %d",
+			rl.ClientBandWidth)
+	}
+
+	if rl.Global.Burst <= MinByteLimit {
+		return fmt.Errorf("invalid rateLimiter.global.burst value, should >= %d", MinByteLimit)
+	}
+
+	if rl.Global.Limit < rl.Global.Burst {
+		return fmt.Errorf("invalid rateLimiter.global.burst value, should >= rateLimiter.global.limit")
+	}
+
+	return nil
+}
+
+// trySetDefault try set the default value of rate limiter
+func (rl *RateLimiter) trySetDefault() {
+	if rl.ClientBandWidth == 0 {
+		rl.ClientBandWidth = DefaultClientBandWidth
+	}
+
+	if rl.Global.Limit == 0 {
+		rl.Global.Limit = DefaultByteLimit
+	}
+
+	if rl.Global.Burst == 0 {
+		rl.Global.Burst = DefaultByteBurst
+	}
+}
+
 // Credential credential encryption algorithm and master key
 type Credential struct {
 	MasterKey           string `yaml:"master_key"`

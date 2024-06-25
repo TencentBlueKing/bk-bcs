@@ -75,6 +75,31 @@ func initMetric(name string) *metric {
 	}, []string{"bizID", "appName"})
 	metrics.Register().MustRegister(m.clientCurrentMemUsage)
 
+	m.downloadTotalSize = prometheus.NewGauge(prometheus.GaugeOpts{
+		Namespace:   metrics.Namespace,
+		Subsystem:   metrics.FSConfigConsume,
+		Name:        "file_download_total_size_bytes",
+		Help:        "Total size of files downloaded",
+		ConstLabels: labels,
+	})
+	metrics.Register().MustRegister(m.downloadTotalSize)
+	m.downloadDelayRequests = prometheus.NewGauge(prometheus.GaugeOpts{
+		Namespace:   metrics.Namespace,
+		Subsystem:   metrics.FSConfigConsume,
+		Name:        "file_download_delay_requests",
+		Help:        "Total number of downloaded file delayed requests",
+		ConstLabels: labels,
+	})
+	metrics.Register().MustRegister(m.downloadDelayRequests)
+	m.downloadDelayMilliseconds = prometheus.NewGauge(prometheus.GaugeOpts{
+		Namespace:   metrics.Namespace,
+		Subsystem:   metrics.FSConfigConsume,
+		Name:        "file_download_delay_milliseconds",
+		Help:        "Delay milliseconds of downloaded file",
+		ConstLabels: labels,
+	})
+	metrics.Register().MustRegister(m.downloadDelayMilliseconds)
+
 	return m
 }
 
@@ -84,6 +109,7 @@ type metric struct {
 	// watchCounter record the total connection count of sidecars with watch, used to get the new the connection count
 	// within a specified time range.
 	watchCounter *prometheus.CounterVec
+
 	// clientMaxCPUUsage The maximum cpu usage of the client was collected
 	clientMaxCPUUsage *prometheus.GaugeVec
 	// clientMaxMemUsage the maximum memory usage was collected
@@ -92,4 +118,15 @@ type metric struct {
 	clientCurrentCPUUsage *prometheus.GaugeVec
 	// clientCurrentMemUsage the current memory usage of the client is collected
 	clientCurrentMemUsage *prometheus.GaugeVec
+
+	downloadTotalSize         prometheus.Gauge
+	downloadDelayRequests     prometheus.Gauge
+	downloadDelayMilliseconds prometheus.Gauge
+}
+
+// recordDownload records metrics for download
+func (m *metric) recordDownload(totalSize, delayRequests, delayMilliseconds int64) {
+	m.downloadTotalSize.Set(float64(totalSize))
+	m.downloadDelayRequests.Set(float64(delayRequests))
+	m.downloadDelayMilliseconds.Set(float64(delayMilliseconds))
 }

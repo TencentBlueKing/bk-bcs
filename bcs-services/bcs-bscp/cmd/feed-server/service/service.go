@@ -31,6 +31,7 @@ import (
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/repository"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/auth"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/ratelimiter"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/rest"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/handler"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/shutdown"
@@ -51,6 +52,7 @@ type Service struct {
 	name  string
 	mc    *metric
 	gwMux *runtime.ServeMux
+	rl    ratelimiter.RateLimiter
 }
 
 // NewService create a service instance.
@@ -89,6 +91,7 @@ func NewService(sd serviced.Discover, name string) (*Service, error) {
 		provider:   provider,
 		mc:         initMetric(name),
 		gwMux:      gwMux,
+		rl:         ratelimiter.New(cc.FeedServer().RateLimiter.Global.Limit, cc.FeedServer().RateLimiter.Global.Burst),
 	}, nil
 }
 

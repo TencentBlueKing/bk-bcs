@@ -370,6 +370,7 @@ type FeedServerSetting struct {
 	FSLocalCache FSLocalCache        `yaml:"fsLocalCache"`
 	Downstream   Downstream          `yaml:"downstream"`
 	MRLimiter    MatchReleaseLimiter `yaml:"matchReleaseLimiter"`
+	RateLimiter  RateLimiter         `yaml:"rateLimiter"`
 }
 
 // trySetFlagBindIP try set flag bind ip.
@@ -393,6 +394,7 @@ func (s *FeedServerSetting) trySetDefault() {
 	s.GSE.trySetDefault()
 	s.RedisCluster.trySetDefault()
 	s.MRLimiter.trySetDefault()
+	s.RateLimiter.trySetDefault()
 }
 
 // Validate FeedServerSetting option.
@@ -419,6 +421,10 @@ func (s FeedServerSetting) Validate() error {
 	}
 
 	if err := s.MRLimiter.validate(); err != nil {
+		return err
+	}
+
+	if err := s.RateLimiter.validate(); err != nil {
 		return err
 	}
 
