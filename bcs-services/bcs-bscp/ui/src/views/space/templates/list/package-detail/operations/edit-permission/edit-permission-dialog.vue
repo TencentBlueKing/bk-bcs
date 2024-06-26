@@ -87,6 +87,7 @@
         theme="primary"
         style="margin-right: 8px"
         :loading="loading"
+        :disabled="loading"
         @click="emits('confirm', { permission: localVal, appIds: citeByAppIds })">
         {{ t('保存') }}
       </bk-button>

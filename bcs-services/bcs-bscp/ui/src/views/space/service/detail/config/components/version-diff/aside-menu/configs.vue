@@ -373,7 +373,7 @@
         baseGroupList.value.some((baseGroupItem) => {
           if (baseGroupItem.template_space_id === currentGroupItem.template_space_id) {
             return baseGroupItem.configs.some((config) => {
-              if (config.id === crtItem.id) {
+              if (config.id === crtItem.id || config.name === crtItem.name) {
                 baseItem = config;
                 return true;
               }
@@ -443,7 +443,7 @@
         currentGroupList.value.some((baseGroupItem) => {
           if (baseGroupItem.template_space_id === baseGroupItem.template_space_id) {
             return baseGroupItem.configs.some((config) => {
-              if (config.id === baseItem.id) {
+              if (config.id === baseItem.id || config.name === baseItem.name) {
                 currentItem = config;
                 return true;
               }
