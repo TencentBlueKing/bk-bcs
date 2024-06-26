@@ -112,6 +112,7 @@ func FilterNodesByDataDisk(instanceIDs []string, opt *cloudprovider.CommonOption
 	return filter, nil
 }
 
+// nolint : type `subnetIpNum` is unused
 type subnetIpNum struct {
 	subnetId string
 	cnt      uint64
