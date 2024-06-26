@@ -16,7 +16,7 @@ export const createCredential = (biz_id: string, params: { memo: string }) =>
  */
 export const getCredentialList = (
   biz_id: string,
-  query: { limit: number; start: number; searchKey?: string; enable?: boolean },
+  query: { limit: number; start: number; searchKey?: string; enable?: boolean; all?: boolean },
 ) => http.get(`/config/biz_id/${biz_id}/credentials`, { params: query }).then((res) => res.data);
 
 /**

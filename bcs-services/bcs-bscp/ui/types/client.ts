@@ -155,3 +155,10 @@ export interface IVersionDistributionPieItem {
   percent: number;
   children?: IVersionDistributionPieItem[];
 }
+
+export interface IExampleFormData {
+  clientKey: string;
+  privacyCredential: string;
+  tempDir?: string;
+  labelArr: string[];
+}
