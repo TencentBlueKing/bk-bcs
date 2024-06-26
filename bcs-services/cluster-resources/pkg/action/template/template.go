@@ -369,8 +369,8 @@ func (t *TemplateAction) CreateTemplateSet(ctx context.Context, req *clusterRes.
 }
 
 func getTemplateContents(ctx context.Context, model store.ClusterResourcesModel, versions []string,
-	projectCode string) ([]string, error) {
-	templates := make([]string, 0)
+	projectCode string) ([]entity.TemplateDeploy, error) {
+	templates := make([]entity.TemplateDeploy, 0)
 	for _, v := range versions {
 		vv, err := model.GetTemplateVersion(ctx, v)
 		if err != nil {
@@ -379,7 +379,11 @@ func getTemplateContents(ctx context.Context, model store.ClusterResourcesModel,
 		if vv.ProjectCode != projectCode {
 			return nil, errorx.New(errcode.NoPerm, i18n.GetMsg(ctx, "无权限访问"))
 		}
-		templates = append(templates, vv.Content)
+		templates = append(templates, entity.TemplateDeploy{
+			TemplateName:    vv.TemplateName,
+			TemplateVersion: vv.Version,
+			Content:         vv.Content,
+		})
 	}
 	return templates, nil
 }
@@ -528,19 +532,20 @@ func (t *TemplateAction) DeployTemplateFile(ctx context.Context, req *clusterRes
 }
 
 // renderTemplates render templates
-func (t *TemplateAction) renderTemplates(ctx context.Context, templates []string, vars map[string]string, ns string) (
-	[]map[string]interface{}, error) {
+func (t *TemplateAction) renderTemplates(ctx context.Context, templates []entity.TemplateDeploy,
+	vars map[string]string, ns string) ([]map[string]interface{}, error) {
 	manifests := make([]map[string]interface{}, 0)
 	for i := range templates {
-		templates[i] = replaceTemplateFileVar(templates[i], vars)
-		mm := parser.SplitManifests(templates[i])
+		templates[i].Content = replaceTemplateFileVar(templates[i].Content, vars)
+		mm := parser.SplitManifests(templates[i].Content)
 		for _, v := range mm {
 			manifest := map[string]interface{}{}
 			if errr := yaml.Unmarshal([]byte(v), &manifest); errr != nil {
 				return nil, errr
 			}
 			manifest = mapx.CleanUpMap(manifest)
-			manifest = patchTemplateAnnotations(manifest, ctxkey.GetUsernameFromCtx(ctx))
+			manifest = patchTemplateAnnotations(
+				manifest, ctxkey.GetUsernameFromCtx(ctx), templates[i].TemplateName, templates[i].TemplateVersion)
 			// patch ns
 			kind := mapx.GetStr(manifest, "kind")
 			if mapx.GetStr(manifest, "metadata.namespace") != "" || isNSRequired(kind) {

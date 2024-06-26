@@ -30,10 +30,12 @@ func CommonFormatRes(manifest map[string]interface{}) map[string]interface{} {
 		"editMode": mapx.Get(
 			manifest, []string{"metadata", "annotations", resCsts.EditModeAnnoKey}, resCsts.EditModeYaml,
 		),
-		"creator":      mapx.GetStr(manifest, []string{"metadata", "annotations", resCsts.CreatorAnnoKey}),
-		"updater":      mapx.GetStr(manifest, []string{"metadata", "annotations", resCsts.UpdaterAnnoKey}),
-		"immutable":    immutable,
-		"createSource": createSource,
+		"creator":         mapx.GetStr(manifest, []string{"metadata", "annotations", resCsts.CreatorAnnoKey}),
+		"updater":         mapx.GetStr(manifest, []string{"metadata", "annotations", resCsts.UpdaterAnnoKey}),
+		"immutable":       immutable,
+		"createSource":    createSource,
+		"templateName":    mapx.GetStr(manifest, []string{"metadata", "annotations", resCsts.TemplateNameAnnoKey}),
+		"templateVersion": mapx.GetStr(manifest, []string{"metadata", "annotations", resCsts.TemplateVersionAnnoKey}),
 	}
 	return ret
 }
