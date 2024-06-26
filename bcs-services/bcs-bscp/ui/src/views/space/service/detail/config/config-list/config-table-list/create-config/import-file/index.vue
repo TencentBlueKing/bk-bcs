@@ -22,9 +22,11 @@
       <ImportFromLocalFile
         :bk-biz-id="props.bkBizId"
         :app-id="props.appId"
+        :is-template="false"
         @change="handleUploadFile"
         @delete="handleDeleteFile"
-        @uploading="uploadFileLoading = $event" />
+        @uploading="uploadFileLoading = $event"
+        @decompressing="decompressing = $event" />
     </div>
     <div v-else-if="importType === 'configTemplate'">
       <ImportFromTemplate ref="importFromTemplateRef" :bk-biz-id="props.bkBizId" :app-id="props.appId" />
@@ -51,38 +53,58 @@
         @select-version="handleSelectVersion"
         @clear="handleClearTable" />
     </div>
-    <div v-if="importType !== 'configTemplate' && importConfigList.length" class="content">
-      <bk-loading :loading="tableLoading">
+    <bk-loading
+      :loading="decompressing || tableLoading"
+      :title="decompressing ? t('压缩包正在解压，请稍后') : ''"
+      class="config-table-loading"
+      mode="spin"
+      theme="primary"
+      size="small"
+      :opacity="0.7">
+      <div
+        v-if="importType !== 'configTemplate' && importConfigList.length + importTemplateConfigList.length > 0"
+        class="content">
         <div class="head">
           <bk-checkbox style="margin-left: 24px" v-model="isClearDraft"> {{ $t('导入前清空草稿区') }} </bk-checkbox>
           <div v-if="!isClearDraft" class="tips">
-            {{ t('共将导入') }} <span style="color: #3a84ff">{{ importConfigList.length }}</span>
-            {{ t('个配置项，其中') }} <span style="color: #ffa519">{{ existConfigList.length }}</span>
-            {{ t('个已存在,导入后将') }}
+            {{ t('共将导入') }} <span style="color: #3a84ff">{{ importConfigList.length }}</span> {{ t('个配置项') }},
+            <span style="color: #3a84ff">{{ importTemplateConfigList.length }}</span> {{ t('个模板套餐') }},
+            {{ t('其中') }}
+            <span style="color: #ffa519">{{ existConfigList.length }}</span>
+            {{ t('个配置项') }}, <span style="color: #ffa519">{{ existTemplateConfigList.length }}</span>
+            {{ t('个模板套餐已存在，导入后将') }}
             <span style="color: #ffa519">{{ t('覆盖原配置') }}</span>
           </div>
           <div v-else class="tips">
             {{ t('将') }} <span style="color: #ffa519">{{ t('清空') }}</span> {{ t('现有草稿区,并导入') }}
             <span style="color: #3a84ff">{{ importConfigList.length }}</span>
-            {{ t('个配置项') }}
+            {{ t('个配置项') }}, <span style="color: #3a84ff">{{ importTemplateConfigList.length }}</span>
+            {{ t('个模板套餐') }}
           </div>
         </div>
         <ConfigTable
           v-if="nonExistConfigList.length"
           :table-data="nonExistConfigList"
           :is-exsit-table="false"
-          :expand="expandNonExistTable"
-          @change-expand="expandNonExistTable = !expandNonExistTable"
-          @change="handleTableChange($event, true)" />
+          @change="handleConfigTableChange($event, true)" />
+        <TemplateConfigTable
+          v-if="nonExistTemplateConfigList.length"
+          :table-data="nonExistTemplateConfigList"
+          :is-exsit-table="false"
+          @change="handleTemplateTableChange($event, true)" />
         <ConfigTable
           v-if="existConfigList.length"
-          :expand="expandExistTable"
           :table-data="existConfigList"
           :is-exsit-table="true"
-          @change-expand="expandExistTable = !expandExistTable"
-          @change="handleTableChange($event, false)" />
-      </bk-loading>
-    </div>
+          @change="handleConfigTableChange($event, false)" />
+        <TemplateConfigTable
+          v-if="existTemplateConfigList.length"
+          :table-data="existTemplateConfigList"
+          :is-exsit-table="true"
+          @change="handleTemplateTableChange($event, true)" />
+      </div>
+    </bk-loading>
+
     <template #footer>
       <bk-button
         theme="primary"
@@ -115,6 +137,8 @@
   import ConfigTable from '../../../../../../../templates/list/package-detail/operations/add-configs/import-configs/config-table.vue';
   import useModalCloseConfirmation from '../../../../../../../../../utils/hooks/use-modal-close-confirmation';
   import useServiceStore from '../../../../../../../../../store/service';
+  import { ImportTemplateConfigItem } from '../../../../../../../../../../types/template';
+  import TemplateConfigTable from './template-config-table.vue';
 
   const { t } = useI18n();
 
@@ -138,22 +162,31 @@
   const tableLoading = ref(false);
   const existConfigList = ref<IConfigImportItem[]>([]);
   const nonExistConfigList = ref<IConfigImportItem[]>([]);
+  const existTemplateConfigList = ref<ImportTemplateConfigItem[]>([]);
+  const nonExistTemplateConfigList = ref<ImportTemplateConfigItem[]>([]);
   const isClearDraft = ref(false);
-  const expandNonExistTable = ref(true);
-  const expandExistTable = ref(true);
   const uploadFileLoading = ref(false);
+  const decompressing = ref(false);
 
   const confirmBtnDisabled = computed(() => {
     if (importType.value === 'configTemplate' && importFromTemplateRef.value) {
       return importFromTemplateRef.value.isImportBtnDisabled;
     }
     if (importType.value === 'localFile') {
-      return !uploadFileLoading.value;
+      return (
+        !uploadFileLoading.value &&
+        !decompressing.value &&
+        importConfigList.value.length + importTemplateConfigList.value.length > 0
+      );
     }
-    return importConfigList.value.length;
+    return importConfigList.value.length + importTemplateConfigList.value.length > 0;
   });
 
   const importConfigList = computed(() => [...nonExistConfigList.value, ...existConfigList.value]);
+  const importTemplateConfigList = computed(() => [
+    ...nonExistTemplateConfigList.value,
+    ...existTemplateConfigList.value,
+  ]);
 
   watch(
     () => props.show,
@@ -161,8 +194,8 @@
       if (val) {
         importType.value = 'localFile';
         isTableChange.value = false;
-        nonExistConfigList.value = [];
-        existConfigList.value = [];
+        handleClearTable();
+        selectVerisonId.value = undefined;
         getVersionList();
       }
     },
@@ -171,8 +204,8 @@
   watch(
     () => importType.value,
     () => {
-      nonExistConfigList.value = [];
-      existConfigList.value = [];
+      handleClearTable();
+      selectVerisonId.value = undefined;
     },
   );
 
@@ -186,24 +219,64 @@
       if (importType.value === 'configTemplate') {
         await importFromTemplateRef.value.handleImportConfirm();
       } else {
-        const res = await batchAddConfigList(
-          props.bkBizId,
-          props.appId,
-          [...existConfigList.value, ...nonExistConfigList.value],
-          isClearDraft.value,
-        );
+        let allVariables: {
+          default_val: string;
+          memo: string;
+          name: string;
+          type: string;
+        }[] = [];
+        const allConfigList: any[] = [];
+        const allTemplateConfigList: any[] = [];
+        importTemplateConfigList.value.forEach((templateConfig) => {
+          const { template_set_id, template_revisions, template_space_id } = templateConfig;
+          template_revisions.forEach((revision) => {
+            allVariables = [...allVariables, ...revision.variables];
+          });
+          allTemplateConfigList.push({
+            template_space_id,
+            template_binding: {
+              template_set_id,
+              template_revisions: template_revisions.map((revision) => {
+                const { template_id, template_revision_id, is_latest } = revision;
+                return {
+                  template_id,
+                  template_revision_id,
+                  is_latest,
+                };
+              }),
+            },
+          });
+        });
+        importConfigList.value.forEach((config) => {
+          const { variables, ...rest } = config;
+          if (variables) {
+            allVariables = [...allVariables, ...config.variables];
+          }
+          allConfigList.push({
+            ...rest,
+          });
+        });
+        const query = {
+          bindings: allTemplateConfigList,
+          items: allConfigList,
+          replace_all: isClearDraft.value,
+          variables: allVariables,
+        };
+        const res = await batchAddConfigList(props.bkBizId, props.appId, query);
         batchUploadIds.value = res.ids;
       }
-      Message({
-        theme: 'success',
-        message: t('配置文件导入成功'),
-      });
+      emits('update:show', false);
+      setTimeout(() => {
+        emits('confirm');
+        Message({
+          theme: 'success',
+          message: t('配置文件导入成功'),
+        });
+      }, 300);
     } catch (error) {
       console.error(error);
     }
     loading.value = false;
-    emits('update:show', false);
-    emits('confirm');
   };
 
   const getVersionList = async () => {
@@ -225,10 +298,32 @@
   const handleSelectVersion = async (other_app_id: number, release_id: number) => {
     tableLoading.value = true;
     try {
+      handleClearTable();
       const params = { other_app_id, release_id };
       const res = await importFromHistoryVersion(props.bkBizId, props.appId, params);
-      existConfigList.value = res.data.exist;
-      nonExistConfigList.value = res.data.non_exist;
+      res.data.non_template_configs.forEach((item: any) => {
+        const config = {
+          ...item,
+          ...item.config_item_spec,
+          ...item.config_item_spec.permission,
+          sign: item.signature,
+        };
+        delete config.config_item_spec;
+        delete config.permission;
+        delete config.signature;
+        if (item.is_exist) {
+          existConfigList.value.push(config);
+        } else {
+          nonExistConfigList.value.push(config);
+        }
+      });
+      res.data.template_configs.forEach((item: any) => {
+        if (item.is_exist) {
+          existTemplateConfigList.value.push(item);
+        } else {
+          nonExistTemplateConfigList.value.push(item);
+        }
+      });
     } catch (e) {
       console.error(e);
     } finally {
@@ -236,11 +331,20 @@
     }
   };
 
-  const handleTableChange = (data: IConfigImportItem[], isNonExistData: boolean) => {
+  const handleConfigTableChange = (data: IConfigImportItem[], isNonExistData: boolean) => {
     if (isNonExistData) {
       nonExistConfigList.value = data;
     } else {
       existConfigList.value = data;
+    }
+    isTableChange.value = true;
+  };
+
+  const handleTemplateTableChange = (deleteIndex: number, isNonExistData: boolean) => {
+    if (isNonExistData) {
+      nonExistTemplateConfigList.value.splice(deleteIndex, 1);
+    } else {
+      existTemplateConfigList.value.splice(deleteIndex, 1);
     }
     isTableChange.value = true;
   };
@@ -268,6 +372,8 @@
   const handleClearTable = () => {
     existConfigList.value = [];
     nonExistConfigList.value = [];
+    existTemplateConfigList.value = [];
+    nonExistTemplateConfigList.value = [];
   };
 </script>
 
@@ -318,6 +424,13 @@
         border-left: 1px solid #dcdee5;
         margin-left: 16px;
       }
+    }
+  }
+  .config-table-loading {
+    min-height: 80px;
+    :deep(.bk-loading-primary) {
+      top: 60px;
+      align-items: center;
     }
   }
 </style>

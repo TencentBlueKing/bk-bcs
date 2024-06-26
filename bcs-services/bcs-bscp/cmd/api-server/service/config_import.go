@@ -60,14 +60,27 @@ type configImport struct {
 }
 
 // TemplateConfigFileImport Import template config file
-func (c *configImport) TemplateConfigFileImport(w http.ResponseWriter, r *http.Request) { // nolint
+//
+//nolint:funlen
+func (c *configImport) TemplateConfigFileImport(w http.ResponseWriter, r *http.Request) {
 	kt := kit.MustGetKit(r.Context())
+
+	unzipStr := r.Header.Get("X-Bscp-Unzip")
+	unzip, _ := strconv.ParseBool(unzipStr)
+
 	tmplSpaceIdStr := chi.URLParam(r, "template_space_id")
 	tmplSpaceID, _ := strconv.Atoi(tmplSpaceIdStr)
 	if tmplSpaceID == 0 {
 		_ = render.Render(w, r, rest.BadRequest(errors.New("validation parameter fail")))
 		return
 	}
+
+	fileName := chi.URLParam(r, "filename")
+	if fileName == "" {
+		_ = render.Render(w, r, rest.BadRequest(errors.New("file name cannot be empty")))
+		return
+	}
+
 	// Validation size
 	if r.ContentLength > constant.MaxUploadContentLength {
 		_ = render.Render(w, r, rest.BadRequest(errors.New("request body size exceeds 100MB")))
@@ -86,18 +99,47 @@ func (c *configImport) TemplateConfigFileImport(w http.ResponseWriter, r *http.R
 	// 组合上一次读取
 	combinedReader := io.MultiReader(bytes.NewReader(buffer[:n]), r.Body)
 
-	identifyFileType := archive.IdentifyFileType(buffer[:n])
+	var (
+		tempDir string
+		err     error
+	)
 
-	tempDir, err := archive.Unpack(combinedReader, identifyFileType)
-	if err != nil {
-		_ = render.Render(w, r, rest.BadRequest(err))
-		return
+	// 默认当文件处理
+	identifyFileType := archive.Unknown
+	// 自动解压
+	if unzip {
+		identifyFileType = archive.IdentifyFileType(buffer[:n])
 	}
+
+	if identifyFileType != archive.Unknown {
+		tempDir, err = archive.Unpack(combinedReader, identifyFileType)
+		if err != nil {
+			_ = render.Render(w, r, rest.BadRequest(err))
+			return
+		}
+	} else {
+		tempDir, err = os.MkdirTemp("", "templateConfigItem-")
+		if err != nil {
+			_ = render.Render(w, r, rest.BadRequest(err))
+			return
+		}
+
+		if err = saveFile(combinedReader, tempDir, fileName); err != nil {
+			_ = render.Render(w, r, rest.BadRequest(err))
+			return
+		}
+	}
+
 	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	// 先扫描一遍文件夹，获取路径和名称，
 	fileItems, err := getFilePathsAndNames(tempDir)
 	if err != nil {
+		_ = render.Render(w, r, rest.BadRequest(err))
+		return
+	}
+
+	if err = c.checkFileConfictsWithTemplates(kt, uint32(tmplSpaceID), fileItems); err != nil {
 		_ = render.Render(w, r, rest.BadRequest(err))
 		return
 	}
@@ -120,8 +162,7 @@ func (c *configImport) TemplateConfigFileImport(w http.ResponseWriter, r *http.R
 		})
 	}
 
-	// 压缩包里面文件过多会导致sql占位符不够
-	// 需要分批处理
+	// 压缩包里面文件过多会导致sql占位符不够, 需要分批处理
 	batchSize := constant.UploadBatchSize
 	templateItem := map[string]*pbcs.ListTemplateByTupleResp_Item{}
 	for i := 0; i < len(templateItems); i += batchSize {
@@ -164,14 +205,13 @@ func (c *configImport) TemplateConfigFileImport(w http.ResponseWriter, r *http.R
 			newItem.FileMode = string(table.Unix)
 			nonExist = append(nonExist, newItem)
 		} else {
-			exist = append(exist, &types.TemplateItem{
-				Id:        data.GetTemplate().GetId(),
-				FileMode:  data.GetTemplateRevision().GetSpec().GetFileMode(),
-				Memo:      data.GetTemplate().GetSpec().GetMemo(),
-				Privilege: data.GetTemplateRevision().GetSpec().GetPermission().GetPrivilege(),
-				User:      data.GetTemplateRevision().GetSpec().GetPermission().GetUser(),
-				UserGroup: data.GetTemplateRevision().GetSpec().GetPermission().GetUserGroup(),
-			})
+			newItem.Id = data.GetTemplate().GetId()
+			newItem.FileMode = data.GetTemplateRevision().GetSpec().GetFileMode()
+			newItem.Memo = data.GetTemplate().GetSpec().GetMemo()
+			newItem.Privilege = data.GetTemplateRevision().GetSpec().GetPermission().GetPrivilege()
+			newItem.User = data.GetTemplateRevision().GetSpec().GetPermission().GetUser()
+			newItem.UserGroup = data.GetTemplateRevision().GetSpec().GetPermission().GetUserGroup()
+			exist = append(exist, newItem)
 		}
 	}
 	msg := "上传完成"
@@ -188,12 +228,14 @@ func (c *configImport) TemplateConfigFileImport(w http.ResponseWriter, r *http.R
 }
 
 // ConfigFileImport Import config file
-func (c *configImport) ConfigFileImport(w http.ResponseWriter, r *http.Request) { // nolint
+//
+//nolint:funlen
+func (c *configImport) ConfigFileImport(w http.ResponseWriter, r *http.Request) {
 	kt := kit.MustGetKit(r.Context())
 	// Ensure r.Body is closed after reading
 	defer r.Body.Close()
 
-	unzipStr := chi.URLParam(r, "unzip")
+	unzipStr := r.Header.Get("X-Bscp-Unzip")
 	unzip, _ := strconv.ParseBool(unzipStr)
 
 	appIdStr := chi.URLParam(r, "app_id")
@@ -204,7 +246,7 @@ func (c *configImport) ConfigFileImport(w http.ResponseWriter, r *http.Request) 
 	}
 	kt.AppID = uint32(appId)
 
-	fileName := r.Header.Get("X-Bscp-File-Name")
+	fileName := chi.URLParam(r, "filename")
 	if fileName == "" {
 		_ = render.Render(w, r, rest.BadRequest(errors.New("file name cannot be empty")))
 		return
@@ -267,9 +309,7 @@ func (c *configImport) ConfigFileImport(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	// 存在冲突直接抛出错误，无需再上传到存储桶中
-	// 检测某服务下非模板配置冲突
-	if err = c.getAllConfigFileByApp(kt, fileItems); err != nil {
+	if err = c.checkFileConfictsWithNonTemplates(kt, fileItems); err != nil {
 		_ = render.Render(w, r, rest.BadRequest(err))
 		return
 	}
@@ -292,8 +332,7 @@ func (c *configImport) ConfigFileImport(w http.ResponseWriter, r *http.Request) 
 		})
 	}
 
-	// 压缩包里面文件过多会导致sql占位符不够
-	// 需要分批处理
+	// 压缩包里面文件过多会导致sql占位符不够, 需要分批处理
 	batchSize := constant.UploadBatchSize
 	configItem := map[string]*pbci.ConfigItem{}
 	for i := 0; i < len(configItems); i += batchSize {
@@ -586,8 +625,9 @@ func sortByPathName(myStructs []*types.TemplateItem) {
 	})
 }
 
-// getAllConfigFileByApp 获取某个服务下的所有非模板配置文件
-func (c *configImport) getAllConfigFileByApp(kt *kit.Kit, newFiles []tools.CIUniqueKey) error {
+// 检测与非配置文件冲突
+func (c *configImport) checkFileConfictsWithNonTemplates(kt *kit.Kit, files []tools.CIUniqueKey) error {
+	// 获取服务下的所有非模板配置文件
 	items, err := c.cfgClient.ListConfigItems(kt.RpcCtx(), &pbcs.ListConfigItemsReq{
 		BizId: kt.BizID,
 		AppId: kt.AppID,
@@ -596,8 +636,8 @@ func (c *configImport) getAllConfigFileByApp(kt *kit.Kit, newFiles []tools.CIUni
 	if err != nil {
 		return err
 	}
-	filesToCompare := []tools.CIUniqueKey{}
 
+	filesToCompare := []tools.CIUniqueKey{}
 	for _, v := range items.GetDetails() {
 		filesToCompare = append(filesToCompare, tools.CIUniqueKey{
 			Name: v.Spec.Name,
@@ -605,7 +645,30 @@ func (c *configImport) getAllConfigFileByApp(kt *kit.Kit, newFiles []tools.CIUni
 		})
 	}
 
-	return tools.DetectFilePathConflicts(newFiles, filesToCompare)
+	return tools.DetectFilePathConflicts(files, filesToCompare)
+}
+
+// 检测与模板套餐下的文件冲突
+func (c *configImport) checkFileConfictsWithTemplates(kt *kit.Kit, templateSpaceId uint32,
+	files []tools.CIUniqueKey) error {
+	// 获取该空间下所有文件
+	items, err := c.cfgClient.ListTemplates(kt.RpcCtx(), &pbcs.ListTemplatesReq{
+		BizId:           kt.BizID,
+		TemplateSpaceId: templateSpaceId,
+		All:             true,
+	})
+	if err != nil {
+		return err
+	}
+	filesToCompare := []tools.CIUniqueKey{}
+	for _, v := range items.GetDetails() {
+		filesToCompare = append(filesToCompare, tools.CIUniqueKey{
+			Name: v.Spec.Name,
+			Path: v.Spec.Path,
+		})
+	}
+
+	return tools.DetectFilePathConflicts(files, filesToCompare)
 }
 
 // 临时保存文件

@@ -54,8 +54,6 @@ type TemplateRevision interface {
 	BatchCreateWithTx(kit *kit.Kit, tx *gen.QueryTx, revisions []*table.TemplateRevision) error
 	// ListLatestRevisionsGroupByTemplateIds Lists the latest version groups by template ids
 	ListLatestRevisionsGroupByTemplateIds(kit *kit.Kit, templateIDs []uint32) ([]*table.TemplateRevision, error)
-	// BatchCreate batch create template revisions.
-	BatchCreate(kit *kit.Kit, revisions []*table.TemplateRevision) error
 }
 
 var _ TemplateRevision = new(templateRevisionDao)
@@ -64,25 +62,6 @@ type templateRevisionDao struct {
 	genQ     *gen.Query
 	idGen    IDGenInterface
 	auditDao AuditDao
-}
-
-// BatchCreate batch create template revisions.
-func (dao *templateRevisionDao) BatchCreate(kit *kit.Kit, revisions []*table.TemplateRevision) error {
-	if len(revisions) == 0 {
-		return nil
-	}
-	ids, err := dao.idGen.Batch(kit, table.TemplateRevisionsTable, len(revisions))
-	if err != nil {
-		return err
-	}
-	for i, item := range revisions {
-		if err := item.ValidateCreate(); err != nil {
-			return err
-		}
-		item.ID = ids[i]
-	}
-
-	return dao.genQ.TemplateRevision.WithContext(kit.Ctx).CreateInBatches(revisions, 200)
 }
 
 // Create one template revision instance.

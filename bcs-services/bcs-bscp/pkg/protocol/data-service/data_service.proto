@@ -440,12 +440,17 @@ message BatchUpsertConfigItemsReq {
     pbci.ConfigItemAttachment config_item_attachment = 1;
     pbci.ConfigItemSpec config_item_spec = 2;
     pbcontent.ContentSpec content_spec = 3;
-    repeated pbtv.TemplateVariableSpec variables = 4;
   }
   uint32 biz_id = 1;
   uint32 app_id = 2;
   repeated ConfigItem items = 3;
   bool replace_all = 4;
+  repeated pbtv.TemplateVariableSpec variables = 5;
+  message TemplateBinding {
+    uint32 template_space_id = 1;
+    pbatb.TemplateBinding template_binding = 2;
+  }
+  repeated TemplateBinding bindings = 6;
 }
 
 message BatchUpsertConfigItemsResp {
@@ -1015,6 +1020,7 @@ message BatchUpdateTemplatePermissionsReq {
   string user = 3;
   string user_group = 4;
   string privilege = 5;
+  repeated uint32 app_ids = 6;
 }
 
 message BatchUpdateTemplatePermissionsResp {
