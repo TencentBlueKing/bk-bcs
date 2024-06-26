@@ -109,7 +109,7 @@
       <bk-button
         theme="primary"
         style="margin-right: 8px"
-        :disabled="!confirmBtnDisabled"
+        :disabled="!confirmBtnDisabled || loading"
         :loading="loading"
         @click="handleConfirm">
         {{ t('导入') }}
