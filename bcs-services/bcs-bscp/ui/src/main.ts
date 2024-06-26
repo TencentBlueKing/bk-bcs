@@ -43,7 +43,7 @@ auth().then(() => {
     .use(i18n)
     .use(router)
     .use(bkui, {
-      locale: getCookie('blueking_language') === 'zh-cn' ? zhCn : en,
+      locale: getCookie('blueking_language') === 'en' ? en : zhCn,
     })
     .mount('#app');
 });
