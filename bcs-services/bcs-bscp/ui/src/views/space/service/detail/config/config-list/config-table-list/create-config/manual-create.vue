@@ -11,7 +11,7 @@
       v-model:fileUploading="fileUploading"
       :config="configForm"
       :content="content"
-      :editable="true"
+      :is-edit="false"
       :bk-biz-id="props.bkBizId"
       :id="props.appId"
       :file-size-limit="spaceFeatureFlags.RESOURCE_LIMIT.maxFileSize"
