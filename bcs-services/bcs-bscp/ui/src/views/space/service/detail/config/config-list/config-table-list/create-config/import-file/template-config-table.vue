@@ -10,8 +10,8 @@
     </div>
     <div v-show="expand">
       <bk-table class="template-table" :border="['outer', 'row', 'col']" :data="data" :row-draggable="false">
-        <bk-table-column :label="t('配置模板空间')" prop="template_set_name" :width="432"></bk-table-column>
-        <bk-table-column :label="t('模板套餐')" prop="template_space_name"></bk-table-column>
+        <bk-table-column :label="t('配置模板空间')" prop="template_space_name" :width="432"></bk-table-column>
+        <bk-table-column :label="t('模板套餐')" prop="template_set_name"></bk-table-column>
         <bk-table-column label="" align="center" :width="50">
           <template #default="{ index }">
             <i class="bk-bscp-icon icon-reduce delete-icon" @click="handleDeleteConfig(index)"></i>

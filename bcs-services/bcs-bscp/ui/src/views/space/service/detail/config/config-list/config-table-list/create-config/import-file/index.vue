@@ -114,7 +114,7 @@
         @click="handleConfirm">
         {{ t('导入') }}
       </bk-button>
-      <bk-button @click="emits('update:show', false)">{{ t('取消') }}</bk-button>
+      <bk-button :loading="closeLoading" :disabled="closeLoading" @click="handleClose">{{ t('取消') }}</bk-button>
     </template>
   </bk-dialog>
 </template>
@@ -167,6 +167,7 @@
   const isClearDraft = ref(false);
   const uploadFileLoading = ref(false);
   const decompressing = ref(false);
+  const closeLoading = ref(false);
 
   const confirmBtnDisabled = computed(() => {
     if (importType.value === 'configTemplate' && importFromTemplateRef.value) {
@@ -197,6 +198,8 @@
         handleClearTable();
         selectVerisonId.value = undefined;
         getVersionList();
+        decompressing.value = false;
+        closeLoading.value = false;
       }
     },
   );
@@ -374,6 +377,11 @@
     nonExistConfigList.value = [];
     existTemplateConfigList.value = [];
     nonExistTemplateConfigList.value = [];
+  };
+
+  const handleClose = () => {
+    closeLoading.value = true;
+    emits('update:show', false);
   };
 </script>
 
