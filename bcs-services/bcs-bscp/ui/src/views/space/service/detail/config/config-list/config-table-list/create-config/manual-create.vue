@@ -105,7 +105,10 @@
         await updateConfigContent(props.bkBizId, props.appId, stringContent, sign);
       }
       const params = { ...configForm.value, ...{ sign, byte_size: size } };
-      await createServiceConfigItem(props.appId, props.bkBizId, params);
+      const res = await createServiceConfigItem(props.appId, props.bkBizId, params);
+      serviceStore.$patch((state) => {
+        state.topIds = [res.data.id];
+      });
       emits('confirm');
       close();
       Message({

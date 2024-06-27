@@ -349,7 +349,7 @@
   const serviceStore = useServiceStore();
   const { versionData, allConfigCount } = storeToRefs(configStore);
   const { checkPermBeforeOperate } = serviceStore;
-  const { permCheckLoading, hasEditServicePerm, batchUploadIds } = storeToRefs(serviceStore);
+  const { permCheckLoading, hasEditServicePerm, topIds } = storeToRefs(serviceStore);
 
   const props = defineProps<{
     bkBizId: string;
@@ -513,8 +513,8 @@
         start: 0,
         all: true,
       };
-      if (!createConfig) batchUploadIds.value = [];
-      if (batchUploadIds.value.length > 0) params.ids = batchUploadIds.value.join(',');
+      if (!createConfig) topIds.value = [];
+      if (topIds.value.length > 0) params.ids = topIds.value.join(',');
       let res;
       if (isUnNamedVersion.value) {
         if (props.searchStr) {
@@ -782,14 +782,14 @@
 
   // 设置新增行的标记class
   const getRowCls = (data: IConfigTableItem) => {
+    if (data.file_state === 'DELETE') {
+      return 'delete-row config-row';
+    }
     if (data.is_conflict) {
       return 'conflict-row config-row';
     }
-    if (batchUploadIds.value.includes(data.id)) {
+    if (topIds.value.includes(data.id)) {
       return 'new-row-marked config-row';
-    }
-    if (data.file_state === 'DELETE') {
-      return 'delete-row config-row';
     }
     return 'config-row';
   };
