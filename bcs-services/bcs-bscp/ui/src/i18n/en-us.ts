@@ -713,7 +713,7 @@ export default {
   示例参数: 'Example Params',
   示例预览: 'Example Preview',
   复制示例: 'Example Copy',
-  '与分组结合使用，实现服务实例的灰度发布场景，支持多个标签；若不需要灰度发布功能，此参数可不配置': 'It can be used in combination with grouping to realize grayscale publishing scenario of service instances and support multiple labels. If the gray scale publishing function is not required, this parameter can not be configured',
+  '与分组结合使用，实现服务实例的灰度发布场景，支持多个标签；若不需要灰度发布功能，此参数可不配置': 'It can be used in combination with grouping to realize grayscale publishing scenario of \n service instances and support multiple labels. \n If the gray scale publishing function is not required, this parameter can not be configured',
   用于客户端拉取配置时身份验证: 'Used for authentication when the client pulls the configuration',
   // Get方法: 'Get',
   // Watch方法: 'Watch',
@@ -748,6 +748,7 @@ export default {
   '获取指定服务下指定配置项元数据，支持多个配置项元数据获取，没有指定配置项，获取服务下所有配置项的元数据': 'Obtain the metadata of the specified configuration item of the specified service. You can obtain the metadata of multiple configuration items. Obtain the metadata of all configuration items of the service if no configuration item is specified',
   '暂无可用密钥，可前往密钥管理新建/启用密钥，或将已有密钥关联至此服务': 'No available keys found. You can go to key management to create/enable a key or associate an existing key with this service',
   '搜索结果为空，可前往密钥管理新建/启用密钥，或将已有密钥关联至此服务': 'Search result is empty. You can go to key management to create/enable a key or associate an existing key with this service',
+  禁止使用系统目录: 'Prohibited from using system directories',
 
   // 公共组件
   页面不存在: 'Page does not exist',

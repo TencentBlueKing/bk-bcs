@@ -99,9 +99,7 @@
     (newV) => {
       if (newV !== 'kv-cmd') {
         handleTab();
-        if (['java', 'c++'].includes(newV)) {
-          getOptionData(optionData.value);
-        }
+        getOptionData(optionData.value); // 每次切换模板需重新展示数据方式
       }
     },
   );
