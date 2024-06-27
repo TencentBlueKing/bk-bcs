@@ -53,6 +53,21 @@
   const emits = defineEmits(['update-option-data']);
 
   const { t } = useI18n();
+  const sysDirectories: string[] = [
+    '/bin/',
+    '/boot/',
+    '/dev/',
+    '/etc/',
+    '/lib/',
+    '/lib64/',
+    '/proc/',
+    '/run/',
+    '/sbin/',
+    '/sys/',
+    '/tmp/',
+    '/usr/',
+    '/var/',
+  ];
   const rules = {
     clientKey: [
       {
@@ -67,6 +82,34 @@
         required: props.directoryShow,
         message: t('请输入路径地址，替换下方示例代码后，再尝试复制示例'),
         validator: (value: string) => value.length,
+        trigger: 'change',
+      },
+      {
+        required: props.directoryShow,
+        validator: (value: string) => {
+          // 必须为绝对路径, 且不能以/结尾
+          if (!value.startsWith('/') || value.endsWith('/')) {
+            return false;
+          }
+          const parts = value.split('/').slice(1);
+          let isValid = true;
+          // 文件路径校验
+          parts.some((part) => {
+            if (part.startsWith('.') || !/^[\u4e00-\u9fa5A-Za-z0-9.\-_#%,@^+=\\[\]{}]+$/.test(part)) {
+              isValid = false;
+              return true;
+            }
+            return false;
+          });
+          return isValid;
+        },
+        trigger: 'change',
+        message: t('无效的路径,路径不符合Unix文件路径格式规范'),
+      },
+      {
+        required: props.directoryShow,
+        message: t('禁止使用系统目录'),
+        validator: (value: string) => !sysDirectories.some((dir) => value.startsWith(dir)),
         trigger: 'change',
       },
     ],
@@ -124,6 +167,7 @@
     top: 50%;
     transform: translateY(-50%);
     font-size: 14px;
+    color: #979ba5;
     cursor: pointer;
   }
 </style>

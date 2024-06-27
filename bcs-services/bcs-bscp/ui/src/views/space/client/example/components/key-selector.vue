@@ -180,7 +180,7 @@
         color: #313238;
       }
       .no-app {
-        font-size: 16px;
+        font-size: 12px;
         color: #c4c6cc;
       }
       .arrow-icon {

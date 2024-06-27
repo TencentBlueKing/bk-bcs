@@ -129,6 +129,9 @@
     flex: 1;
     height: 100%;
     overflow: hidden;
+    :deep(.bk-alert-wraper) {
+      align-items: center;
+    }
   }
   .alert-tips {
     display: flex;

@@ -2,10 +2,12 @@
   <section class="node-mana-container">
     <div class="top-tip">
       {{ $t('节点管理插件客户端需要在') }}
-      <span class="em" @click="linkTo(linkUrl.nodeManaUrl)">{{ $t('节点管理平台') }}<share /></span>
+      <span class="em" @click="linkTo(linkUrl.nodeManaUrl)">
+        {{ $t('节点管理平台') }}<share class="tip-icon-share" />
+      </span>
       {{ $t('部署“bkbscp (bscp服务配置分发和热更新)”插件，部署详情请参考产品白皮书：') }}
       <span class="em" @click="linkTo(linkUrl.clientNode)">
-        {{ $t('《客户端配置》-“节点管理插件客户端拉取配置”章节') }}<share />
+        {{ $t('《客户端配置》-“节点管理插件客户端拉取配置”章节') }}<share class="tip-icon-share" />
       </span>
     </div>
     <div class="preview-content">
@@ -92,6 +94,10 @@
       color: #3a84ff;
       cursor: pointer;
     }
+    .tip-icon-share {
+      margin: -1px 4px 0;
+      vertical-align: middle;
+    }
   }
   .preview-content {
     margin-top: 17px;
@@ -113,8 +119,9 @@
   .service-item {
     display: flex;
     justify-content: flex-start;
-    align-items: center;
+    align-items: flex-start;
     .item-label {
+      flex-shrink: 0;
       width: 60px;
       font-size: 12px;
       white-space: nowrap;
