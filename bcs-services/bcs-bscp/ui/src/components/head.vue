@@ -174,6 +174,7 @@
         { id: 'client-statistics', module: 'client-statistics', name: t('客户端统计') },
         { id: 'client-search', module: 'client-search', name: t('客户端查询') },
         { id: 'credentials-management', module: 'credentials', name: t('客户端密钥') },
+        { id: 'configuration-example', module: 'example', name: t('配置示例') },
       ],
     },
   ]);
@@ -215,7 +216,7 @@
   };
 
   const handleNavClick = (navId: String) => {
-    if (navId === 'service-all' || navId === 'client-statistics' || navId === 'client-search') {
+    if (['service-all', 'client-statistics', 'client-search', 'configuration-example'].includes(navId)) {
       const lastAccessedServiceDetail = localStorage.getItem('lastAccessedServiceDetail');
       if (lastAccessedServiceDetail) {
         const detail = JSON.parse(lastAccessedServiceDetail);
@@ -419,6 +420,7 @@
               line-height: 40px;
               padding: 0 16px;
               font-size: 14px;
+              white-space: nowrap;
               a {
                 color: #96a2b9;
               }

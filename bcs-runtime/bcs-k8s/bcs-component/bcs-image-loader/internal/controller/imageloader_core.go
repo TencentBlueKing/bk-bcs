@@ -72,7 +72,7 @@ func (r *ImageLoaderReconciler) reconcileImageLoader(ctx context.Context,
 	} else if imageLoader.Spec.NodeSelector != nil {
 		err = r.handleNodeSelector(ctx, imageLoader, baseJob)
 	} else {
-		err = r.handleAllNode(ctx, imageLoader, baseJob)
+		err = r.handleAllNode(ctx, baseJob)
 	}
 	if err != nil {
 		return newStatus, nil, err

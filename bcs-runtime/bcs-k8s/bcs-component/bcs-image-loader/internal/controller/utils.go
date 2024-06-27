@@ -208,8 +208,7 @@ func (r *ImageLoaderReconciler) handleNodeSelector(ctx context.Context, loader *
 	return nil
 }
 
-func (r *ImageLoaderReconciler) handleAllNode(ctx context.Context, loader *tkexv1alpha1.ImageLoader,
-	job *batchv1.Job) error {
+func (r *ImageLoaderReconciler) handleAllNode(ctx context.Context, job *batchv1.Job) error {
 	nodeList := &corev1.NodeList{}
 	err := r.Client.List(ctx, nodeList)
 	if err != nil {

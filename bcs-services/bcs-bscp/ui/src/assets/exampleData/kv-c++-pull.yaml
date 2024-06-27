@@ -1,0 +1,72 @@
+### Pull
+
+```c++
+#include <iostream>
+#include <string>
+#include <vector>
+
+#include "client.h"
+
+int main(int argc, char** argv)
+{
+    // set client options.
+    bscp::core::ClientOptions options;
+
+    options.m_feedAddrs.push_back({{ .Bk_Bscp_Variable_FEED_ADDR }});
+    options.m_token = {{ .Bk_Bscp_Variable_ClientKey }};
+    options.m_bizID = {{ .Bk_Bscp_Variable_BkBizId }};
+    options.m_sideRid = "xx";
+
+    // labels.
+    std::map<std::string, std::string> labels{{{ .Bk_Bscp_Variable_Leabels }}};
+    options.m_labels = labels;
+
+    // instantiate client.
+    bscp::Client client(options);
+
+    // set log handle, if not set, no logs will be output.
+    bscp::log::Log::SetLogHandler([](const bscp::log::LogLevel& level, const std::string& msg) {
+        std::cout << msg << std::endl;
+        return 0;
+    });
+
+    // you must initialize before you use client.
+    auto ret = client.Initialize();
+    if (ret)
+    {
+        std::cout << "failed to initialize client" << std::endl;
+        return ret;
+    }
+
+    bscp::core::AppOptions appOptions;
+    std::string app = "{{ .Bk_Bscp_Variable_ServiceName }}";
+
+    std::vector<std::string> match;
+    bscp::Release release;
+
+    ret = client.PullKvs(app, match, appOptions, release);
+    if (ret)
+    {
+        std::cout << "call get error, err-code(" << ret << ")" << std::endl;
+        return 0;
+    }
+
+    std::cout << "release ID: " << release.m_releaseID << std::endl;
+
+    for (auto kv : release.m_kvItems)
+    {
+        std::string value;
+        ret = client.Get(app, kv.m_key, appOptions, value);
+        if (ret)
+        {
+            std::cout << "call get error, err-code(" << ret << ")" << std::endl;
+            return ret;
+        }
+
+        std::cout << kv.m_key << "=" << value << std::endl;
+    }
+
+    std::cout << "call pull kvs success" << std::endl;
+
+    return 0;
+}

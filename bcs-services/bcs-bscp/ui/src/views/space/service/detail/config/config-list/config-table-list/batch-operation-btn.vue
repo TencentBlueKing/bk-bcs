@@ -91,9 +91,11 @@
       theme: 'success',
       message: props.isFileType ? t('批量删除配置文件成功') : t('批量删除配置项成功'),
     });
-    batchDeletePending.value = false;
     isBatchDeleteDialogShow.value = false;
-    emits('deleted');
+    setTimeout(() => {
+      emits('deleted');
+      batchDeletePending.value = false;
+    }, 300);
   };
 
   const handleOpenBantchEditPerm = () => {

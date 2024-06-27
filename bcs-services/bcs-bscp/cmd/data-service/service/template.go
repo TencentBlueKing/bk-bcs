@@ -626,7 +626,7 @@ func (s *Service) ListTemplatesNotBound(ctx context.Context, req *pbds.ListTempl
 
 // ListTmplsOfTmplSet list templates of template set.
 // 获取到该套餐的template_ids字段，根据这批ID获取对应的详情，做逻辑分页和搜索
-func (s *Service) ListTmplsOfTmplSet(ctx context.Context, req *pbds.ListTmplsOfTmplSetReq) ( // nolint
+func (s *Service) ListTmplsOfTmplSet(ctx context.Context, req *pbds.ListTmplsOfTmplSetReq) (
 	*pbds.ListTmplsOfTmplSetResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 

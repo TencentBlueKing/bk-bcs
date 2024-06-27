@@ -36,17 +36,11 @@
       :opacity="0.7">
       <div v-if="importConfigList.length" class="content">
         <div class="head">
-          <bk-checkbox style="margin-left: 24px" v-model="isClearDraft"> {{ $t('导入前清空草稿区') }} </bk-checkbox>
-          <div v-if="!isClearDraft" class="tips">
+          <div class="tips">
             {{ t('共将导入') }} <span style="color: #3a84ff">{{ importConfigList.length }}</span>
             {{ t('个配置项，其中') }} <span style="color: #ffa519">{{ existConfigList.length }}</span>
             {{ t('个已存在,导入后将') }}
             <span style="color: #ffa519">{{ t('覆盖原配置') }}</span>
-          </div>
-          <div v-else class="tips">
-            {{ t('将') }} <span style="color: #ffa519">{{ t('清空') }}</span> {{ t('现有草稿区,并导入') }}
-            <span style="color: #3a84ff">{{ importConfigList.length }}</span>
-            {{ t('个配置项') }}
           </div>
         </div>
         <ConfigTable
@@ -112,13 +106,13 @@
   const expandExistTable = ref(true);
   const isSelectPkgDialogShow = ref(false);
   const importType = ref('localFile');
-  const isClearDraft = ref(false);
   const uploadFileLoading = ref(false);
   const decompressing = ref(false);
 
   watch(
     () => props.show,
     (val) => {
+      clearData();
       isShow.value = val;
       isTableChange.value = false;
     },
@@ -233,11 +227,6 @@
       .bk-checkbox {
         margin-left: 0 !important;
         font-size: 12px;
-      }
-      .tips {
-        padding-left: 16px;
-        border-left: 1px solid #dcdee5;
-        margin-left: 16px;
       }
     }
   }
