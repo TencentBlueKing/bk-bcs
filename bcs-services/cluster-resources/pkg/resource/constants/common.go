@@ -119,6 +119,11 @@ const (
 	// UpdaterAnnoKey 更新者，为保持与 bcs-ui 中的一致，还是使用 updator（typo）
 	UpdaterAnnoKey = "io.tencent.paas.updator"
 
+	// TemplateNameAnnoKey 模板名称annotation key
+	TemplateNameAnnoKey = "io.tencent.paas.template_name"
+	// TemplateVersionAnnoKey 模板版本annotation key
+	TemplateVersionAnnoKey = "io.tencent.paas.template_version"
+
 	// TemplateSourceType 模板来源
 	TemplateSourceType = "io.tencent.paas.source_type"
 

@@ -45,7 +45,11 @@
     :name="props.configs.length > 0 ? props.configs[0].spec.name : ''"
     :current-pkg="props.currentPkg as number"
     @moved-out="emits('movedOut')" />
-  <DeleteConfigDialog v-model:show="isDeleteConfigDialogShow" :configs="props.configs" @deleted="emits('deleted')" />
+  <DeleteConfigDialog
+    v-model:show="isDeleteConfigDialogShow"
+    :is-batch-delete="true"
+    :configs="props.configs"
+    @deleted="emits('deleted')" />
 </template>
 <script lang="ts" setup>
   import { ref } from 'vue';
@@ -122,7 +126,6 @@
     appIds: number[];
   }) => {
     try {
-      console.log(appIds);
       editLoading.value = true;
       const { privilege, user, user_group } = permission;
       const query = {

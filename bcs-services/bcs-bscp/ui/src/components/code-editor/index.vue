@@ -53,12 +53,24 @@
       language?: string;
       errorLine?: errorLineItem[];
       placeholder?: string[];
+      lineNumbers?: 'on' | 'off' | 'relative' | 'interval';
+      minimap?: boolean;
+      verticalScrollbarSize?: number;
+      horizonScrollbarSize?: number;
+      renderLineHighlight?: 'none' | 'gutter' | 'line' | 'all' | undefined;
+      renderIndentGuides?: boolean;
     }>(),
     {
       variables: () => [],
       editable: true,
       lfEol: true,
       language: '',
+      lineNumbers: 'on',
+      minimap: true,
+      verticalScrollbarSize: 10,
+      horizonScrollbarSize: 10,
+      renderLineHighlight: 'all',
+      renderIndentGuides: true,
     },
   );
 
@@ -144,6 +156,16 @@
         unicodeHighlight: {
           ambiguousCharacters: false,
         },
+        lineNumbers: props.lineNumbers,
+        minimap: {
+          enabled: props.minimap,
+        },
+        scrollbar: {
+          verticalScrollbarSize: props.verticalScrollbarSize,
+          horizontalScrollbarSize: props.horizonScrollbarSize,
+        },
+        renderLineHighlight: props.renderLineHighlight,
+        renderIndentGuides: props.renderIndentGuides,
       });
     }
     if (props.lfEol) {
@@ -292,7 +314,6 @@
 
   // 校验xml、yaml、json数据类型
   const validate = (val: string) => {
-    console.log(props.language, 'd');
     let markers: any[] = [];
     if (props.language === 'xml') {
       markers = validateXML(val);
@@ -318,6 +339,11 @@
   //     editorHoverProvider.dispose()
   //   }
   // })
+
+  // 返回滚动条顶部
+  const scrollToTop = () => {
+    editor.revealLineNearTop(0);
+  };
   const destroy = () => {
     if (editor) {
       editor.dispose();
@@ -334,6 +360,7 @@
     destroy,
     openSearch,
     validate,
+    scrollToTop,
   });
 </script>
 <style lang="scss" scoped>
