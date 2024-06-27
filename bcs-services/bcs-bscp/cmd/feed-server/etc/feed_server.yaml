@@ -98,13 +98,13 @@ downstream:
 
 # feed server's rate limiter related settings.
 rateLimiter:
-  # clientBandWidth为单个客户端下载文件所评估的可用带宽，用于决定单次下载流控阈值，默认为100MB/s（=800Mb/s）
+  # clientBandWidth为单个客户端下载文件所评估的可用带宽，用于决定单次下载流控阈值，单位为MB/s，默认为10（10MB/s=80Mb/s）
   clientBandWidth:
   # global为全局限流器配置
   global:
-    # limit为流量速率限制，单位为MB/s，默认为100MB/s（=800Mb/s）
+    # limit为流量速率限制，单位为MB/s，默认为100（100MB/s=800Mb/s）
     limit:
-    # burst为允许处理的突发流量上限（允许系统在短时间内处理比速率限制更多的流量），单位为MB/s，默认为200MB/s（=1600Mb/s）
+    # burst为允许处理的突发流量上限（允许系统在短时间内处理比速率限制更多的流量），单位为MB，默认为200（200MB=1600Mb）
     burst:
 
 # feed server's local cache related settings.

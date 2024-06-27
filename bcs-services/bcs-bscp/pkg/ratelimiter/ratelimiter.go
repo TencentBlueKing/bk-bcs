@@ -31,7 +31,7 @@ type RateLimiter interface {
 
 // New news a rate limiter
 // it is intended for direct use for other package
-// limit为流量速率限制，单位为MB/s，burst为允许处理的突发流量上限（允许系统在短时间内处理比速率限制更多的流量）
+// limit为流量速率限制，单位为MB/s，burst为允许处理的突发流量上限，单位为MB（允许系统在短时间内处理比速率限制更多的流量）
 func New(limit, burst int) RateLimiter {
 	return &RL{
 		globalRL: NewGlobalRL(limit, burst),
@@ -75,7 +75,7 @@ type StatsData struct {
 var MB = 1024 * 1024
 
 // newBaseRL news a base rate limiter
-// limit为流量速率限制，单位为MB/s，burst为允许处理的突发流量上限（允许系统在短时间内处理比速率限制更多的流量）
+// limit为流量速率限制，单位为MB/s，burst为允许处理的突发流量上限，单位为MB（允许系统在短时间内处理比速率限制更多的流量）
 // 内部实现使用令牌桶算法，令牌恢复速率为limit，在令牌被消耗完且不再有任何令牌消耗时，令牌数恢复至burst需要burst/limit秒
 // 举例说明：limit为100，burst为200，则将创建一个每秒生成100MB令牌、容量为200MB的限流器
 func newBaseRL(limit, burst int) *baseRL {

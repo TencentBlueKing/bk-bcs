@@ -1090,7 +1090,7 @@ func (lm *MatchReleaseLimiter) trySetDefault() {
 
 // RateLimiter defines the rate limiter options for traffic control.
 type RateLimiter struct {
-	// ClientBandWidth为单个客户端下载文件所评估的可用带宽，用于决定单次下载流控阈值
+	// ClientBandWidth为单个客户端下载文件所评估的可用带宽，用于决定单次下载流控阈值，单位为MB/s
 	ClientBandWidth int `yaml:"clientBandWidth"`
 	// Global为全局限流器配置
 	Global GlobalRL `yaml:"global"`
@@ -1100,39 +1100,36 @@ type RateLimiter struct {
 type GlobalRL struct {
 	// Limit为流量速率限制，单位为MB/s
 	Limit int `yaml:"limit"`
-	// Burst为允许处理的突发流量上限（允许系统在短时间内处理比速率限制更多的流量），单位为MB/s
+	// Burst为允许处理的突发流量上限（允许系统在短时间内处理比速率限制更多的流量），单位为MB
 	Burst int `yaml:"burst"`
 }
 
 const (
-	// MinByteLimit min byte limit
-	MinByteLimit = 10 * 1024 * 1024 // 10MB = 80Mb
 	// DefaultClientBandWidth default client bandwidth
-	DefaultClientBandWidth = 100 * 1024 * 1024 // 100MB = 800Mb
-	// DefaultByteLimit default byte limit
-	DefaultByteLimit = 100 * 1024 * 1024 // 100MB = 800Mb
-	// DefaultByteBurst default byte burst
-	DefaultByteBurst = 200 * 1024 * 1024 // 200MB = 1600Mb
-
+	DefaultClientBandWidth = 10 // 10MB/s = 80Mb/s
+	// MinRateLimit min rate limit
+	MinRateLimit = 10 // 10MB/s = 80Mb/s
+	// DefaultRateLimit default rate limit
+	DefaultRateLimit = 100 // 100MB/s = 800Mb/s
+	// DefaultRateBurst default rate burst
+	DefaultRateBurst = 200 // 200MB = 1600Mb
 )
 
 // validate if the rate limiter is valid or not.
 func (rl RateLimiter) validate() error {
-	if rl.ClientBandWidth < MinByteLimit {
-		return fmt.Errorf("invalid rateLimiter.clientBandWidth value, should >= %d", MinByteLimit)
+	if rl.ClientBandWidth < MinRateLimit {
+		return fmt.Errorf("invalid rateLimiter.clientBandWidth value %d, should >= min rate limit value %d",
+			rl.ClientBandWidth, MinRateLimit)
 	}
 
 	if rl.Global.Limit < rl.ClientBandWidth {
-		return fmt.Errorf("invalid rateLimiter.global.limit value, should >= rateLimiter.clientBandWidth value %d",
-			rl.ClientBandWidth)
+		return fmt.Errorf("invalid rateLimiter.global.limit value %d, should >= rateLimiter.clientBandWidth value %d",
+			rl.Global.Limit, rl.ClientBandWidth)
 	}
 
-	if rl.Global.Burst <= MinByteLimit {
-		return fmt.Errorf("invalid rateLimiter.global.burst value, should >= %d", MinByteLimit)
-	}
-
-	if rl.Global.Limit < rl.Global.Burst {
-		return fmt.Errorf("invalid rateLimiter.global.burst value, should >= rateLimiter.global.limit")
+	if rl.Global.Burst < rl.Global.Limit {
+		return fmt.Errorf("invalid rateLimiter.global.burst value %d, should >= rateLimiter.global.limit value %d",
+			rl.Global.Burst, rl.Global.Limit)
 	}
 
 	return nil
@@ -1145,11 +1142,11 @@ func (rl *RateLimiter) trySetDefault() {
 	}
 
 	if rl.Global.Limit == 0 {
-		rl.Global.Limit = DefaultByteLimit
+		rl.Global.Limit = DefaultRateLimit
 	}
 
 	if rl.Global.Burst == 0 {
-		rl.Global.Burst = DefaultByteBurst
+		rl.Global.Burst = DefaultRateBurst
 	}
 }
 

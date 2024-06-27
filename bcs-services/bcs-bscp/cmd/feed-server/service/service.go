@@ -83,6 +83,11 @@ func NewService(sd serviced.Discover, name string) (*Service, error) {
 		return nil, fmt.Errorf("new repository provider failed, err: %v", err)
 	}
 
+	rl := ratelimiter.New(cc.FeedServer().RateLimiter.Global.Limit, cc.FeedServer().RateLimiter.Global.Burst)
+	logs.Infof("init rate limiter, client bandwidth: %d MB/s, limit: %d MB/s, burst: %d MB",
+		cc.FeedServer().RateLimiter.ClientBandWidth,
+		cc.FeedServer().RateLimiter.Global.Limit, cc.FeedServer().RateLimiter.Global.Burst)
+
 	return &Service{
 		bll:        bl,
 		authorizer: authorizer,
@@ -91,7 +96,7 @@ func NewService(sd serviced.Discover, name string) (*Service, error) {
 		provider:   provider,
 		mc:         initMetric(name),
 		gwMux:      gwMux,
-		rl:         ratelimiter.New(cc.FeedServer().RateLimiter.Global.Limit, cc.FeedServer().RateLimiter.Global.Burst),
+		rl:         rl,
 	}, nil
 }
 

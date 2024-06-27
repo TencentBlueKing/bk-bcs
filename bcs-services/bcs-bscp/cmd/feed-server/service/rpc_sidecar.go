@@ -38,6 +38,7 @@ import (
 	pbbase "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
 	pbkv "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/kv"
 	pbfs "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/feed-server"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/ratelimiter"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/jsoni"
 	sfs "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/sf-share"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
@@ -462,7 +463,7 @@ func (s *Service) GetDownloadURL(ctx context.Context, req *pbfs.GetDownloadURLRe
 	// 多个大文件的持续下载，会影响到限流器流控的精确性，当前暂时只计入每个大文件首次一秒内的流控情况，后续的流量消耗不计入
 	var waitTimeMil int64
 	if int(req.FileMeta.CommitSpec.Content.ByteSize) > cc.FeedServer().RateLimiter.ClientBandWidth {
-		waitTimeMil = s.rl.WaitTimeMil(cc.FeedServer().RateLimiter.ClientBandWidth)
+		waitTimeMil = s.rl.WaitTimeMil(cc.FeedServer().RateLimiter.ClientBandWidth * ratelimiter.MB)
 	} else {
 		waitTimeMil = s.rl.WaitTimeMil(int(req.FileMeta.CommitSpec.Content.ByteSize))
 	}
