@@ -89,9 +89,9 @@ func (r *baseRL) WaitTimeMil(size int) int64 {
 	atomic.AddInt64(&r.totalByteSize, int64(size))
 	reservation := r.limiter.ReserveN(time.Now(), size)
 	delay := reservation.Delay()
+	atomic.StoreInt64(&r.delayMilliseconds, delay.Milliseconds())
 	if delay > 0 {
 		atomic.AddInt64(&r.delayCnt, 1)
-		atomic.StoreInt64(&r.delayMilliseconds, delay.Milliseconds())
 	}
 	return delay.Milliseconds()
 }
