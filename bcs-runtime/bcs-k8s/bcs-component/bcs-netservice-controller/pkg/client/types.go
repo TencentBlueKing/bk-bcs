@@ -27,6 +27,7 @@ type AllocateReq struct {
 	IPAddr       string `json:"ipAddr"`
 	ContainerID  string `json:"containerID"`
 	Host         string `json:"host"`
+	HostGateway  string `json:"hostGateway"`
 }
 
 // AllocateRespData data of allocate response

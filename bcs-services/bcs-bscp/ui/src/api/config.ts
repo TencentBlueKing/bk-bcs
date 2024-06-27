@@ -149,7 +149,7 @@ export const updateConfigContent = (bizId: string, appId: number, data: string |
  */
 export const downloadConfigContent = (bizId: string, appId: number, signature: string, isBlob = false) =>
   http
-    .get<string, Blob|string>(`/biz/${bizId}/content/download`, {
+    .get<string, Blob | string>(`/biz/${bizId}/content/download`, {
       headers: {
         'X-Bscp-Template-Space-Id': appId,
         'X-Bkapi-File-Content-Id': signature,
@@ -388,20 +388,20 @@ export const deleteBoundPkg = (bizId: string, appId: number, bindingId: number, 
  * 导入非模板配置文件压缩包
  * @param biz_id 业务ID
  * @param appId 应用ID
- * @param fill 导入文件
+ * @param file 导入文件
  * @returns
  */
 export const importNonTemplateConfigFile = (
   biz_id: string,
   appId: number,
-  fill: any,
+  file: any,
   isDecompression: boolean,
   progress: Function,
 ) =>
   http
-    .post(`/config/biz/${biz_id}/apps/${appId}/config_item/import/${isDecompression}`, fill, {
+    .post(`/config/biz/${biz_id}/apps/${appId}/config_item/import/${encodeURIComponent(file.name)}`, file, {
       headers: {
-        'X-Bscp-File-Name': fill.name,
+        'X-Bscp-Unzip': isDecompression,
       },
       onUploadProgress: (progressEvent: any) => {
         const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
@@ -418,13 +418,8 @@ export const importNonTemplateConfigFile = (
  * @param template_set_ids 模板套餐ID列表
  * @returns
  */
-export const batchAddConfigList = (bizId: string, appId: number, list: any, replace_all: boolean) =>
-  http
-    .put(`/config/biz/${bizId}/apps/${appId}/config_items`, {
-      items: list,
-      replace_all,
-    })
-    .then((res) => res.data);
+export const batchAddConfigList = (bizId: string, appId: number, query: any) =>
+  http.put(`/config/biz/${bizId}/apps/${appId}/config_items`, query).then((res) => res.data);
 
 /**
  * 创建kv

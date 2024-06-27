@@ -32,7 +32,8 @@
     v-model:show="isEditPermissionShow"
     :loading="editLoading"
     :configs-length="props.configs.length"
-    @confirm="handleConfimEditPermission" />
+    :configs="props.configs"
+    @confirm="handleConfirmEditPermission($event)" />
   <BatchMoveOutFromPkgDialog
     v-model:show="isBatchMoveDialogShow"
     :current-pkg="props.currentPkg as number"
@@ -44,7 +45,11 @@
     :name="props.configs.length > 0 ? props.configs[0].spec.name : ''"
     :current-pkg="props.currentPkg as number"
     @moved-out="emits('movedOut')" />
-  <DeleteConfigDialog v-model:show="isDeleteConfigDialogShow" :configs="props.configs" @deleted="emits('deleted')" />
+  <DeleteConfigDialog
+    v-model:show="isDeleteConfigDialogShow"
+    :is-batch-delete="true"
+    :configs="props.configs"
+    @deleted="emits('deleted')" />
 </template>
 <script lang="ts" setup>
   import { ref } from 'vue';
@@ -113,7 +118,13 @@
     }
   };
 
-  const handleConfimEditPermission = async (permission: IPermissionType) => {
+  const handleConfirmEditPermission = async ({
+    permission,
+    appIds,
+  }: {
+    permission: IPermissionType;
+    appIds: number[];
+  }) => {
     try {
       editLoading.value = true;
       const { privilege, user, user_group } = permission;
@@ -122,6 +133,7 @@
         user,
         user_group,
         template_ids: props.configs.map((item) => item.id),
+        app_ids: appIds,
       };
       await batchEditTemplatePermission(bkBizId.value, query);
       Message({
@@ -129,7 +141,9 @@
         message: t('配置文件权限批量修改成功'),
       });
       isEditPermissionShow.value = false;
-      emits('refresh');
+      setTimeout(() => {
+        emits('refresh');
+      }, 300);
     } catch (error) {
       console.error(error);
     } finally {

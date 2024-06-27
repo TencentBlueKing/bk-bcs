@@ -64,15 +64,14 @@ func (plugin *ClusterPlugin) forbidden(w http.ResponseWriter, r *http.Request) {
 
 // GET /api/v1/clusters
 func (plugin *ClusterPlugin) listClustersHandler(r *http.Request) (*http.Request, *mw.HttpResponse) {
-	params := mux.Vars(r)
-	projectName, ok := params["projects"]
-	if !ok || projectName == "" {
-		return r, mw.ReturnErrorResponse(http.StatusBadRequest, errors.Errorf("lost projects param"))
+	projects := r.URL.Query()["projects"]
+	if len(projects) == 0 {
+		return r, mw.ReturnErrorResponse(http.StatusBadRequest, errors.Errorf("lost projects query param"))
 	}
-	clusterList, statusCode, err := plugin.middleware.ListClusters(r.Context(), []string{projectName})
+	clusterList, statusCode, err := plugin.middleware.ListClusters(r.Context(), projects)
 	if statusCode != http.StatusOK {
 		return r, mw.ReturnErrorResponse(statusCode,
-			errors.Wrapf(err, "list clusters by project '%s' failed", projectName))
+			errors.Wrapf(err, "list clusters by project '%v' failed", projects))
 	}
 	return r, mw.ReturnJSONResponse(clusterList)
 }

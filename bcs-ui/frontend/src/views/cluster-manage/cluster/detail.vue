@@ -248,8 +248,8 @@ watch(
         activeTabName.value = 'info';
       }
 
-      // kubeconfig集群只有总揽、基本信息、节点列表
-      if (isKubeConfigImportCluster.value && !['overview', 'info', 'node'].includes(activeTabName.value)) {
+      // kubeconfig集群只有总览、命名空间、基本信息、节点列表
+      if (isKubeConfigImportCluster.value && !['overview', 'namespace', 'info', 'node'].includes(activeTabName.value)) {
         activeTabName.value = 'overview';
       }
     });

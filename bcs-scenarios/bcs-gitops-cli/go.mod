@@ -74,6 +74,7 @@ require (
 	github.com/wk8/go-ordered-map/v2 v2.1.8
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/apimachinery v0.30.0
+	k8s.io/kubectl v0.28.0
 )
 
 require (
@@ -152,6 +153,7 @@ require (
 	github.com/cpuguy83/go-md2man/v2 v2.0.3 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.4 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
+	github.com/daviddengcn/go-colortext v0.0.0-20160507010035-511bcaf42ccd // indirect
 	github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/docker/distribution v2.8.2+incompatible // indirect
@@ -263,6 +265,7 @@ require (
 	github.com/ktrysmt/go-bitbucket v0.9.67 // indirect
 	github.com/leodido/go-urn v1.2.4 // indirect
 	github.com/liggitt/tabwriter v0.0.0-20181228230101-89fcab3d43de // indirect
+	github.com/lithammer/dedent v1.1.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattbaird/jsonpatch v0.0.0-20200820163806-098863c1fc24 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
@@ -283,6 +286,7 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/monochromegane/go-gitignore v0.0.0-20200626010858-205db1a8cc00 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
+	github.com/mxk/go-flowrate v0.0.0-20140419014527-cca7078d478f // indirect
 	github.com/nxadm/tail v1.4.8 // indirect
 	github.com/oklog/ulid v1.3.1 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
@@ -377,6 +381,7 @@ require (
 	google.golang.org/grpc v1.59.0 // indirect
 	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
+	gopkg.in/go-playground/webhooks.v5 v5.17.0 // indirect
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
@@ -397,8 +402,8 @@ require (
 	k8s.io/klog/v2 v2.120.1 // indirect
 	k8s.io/kube-aggregator v0.24.2 // indirect
 	k8s.io/kube-openapi v0.0.0-20240228011516-70dd3763d340 // indirect
-	k8s.io/kubectl v0.28.0 // indirect
 	k8s.io/kubernetes v1.24.2 // indirect
+	k8s.io/metrics v0.24.2 // indirect
 	k8s.io/mount-utils v0.24.2 // indirect
 	k8s.io/utils v0.0.0-20230726121419-3b25d923346b // indirect
 	layeh.com/gopher-json v0.0.0-20190114024228-97fed8db8427 // indirect
@@ -408,6 +413,7 @@ require (
 	sigs.k8s.io/controller-runtime v0.16.3 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/kustomize/api v0.13.5-0.20230601165947-6ce0bf390ce3 // indirect
+	sigs.k8s.io/kustomize/kustomize/v4 v4.5.4 // indirect
 	sigs.k8s.io/kustomize/kyaml v0.14.2 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect

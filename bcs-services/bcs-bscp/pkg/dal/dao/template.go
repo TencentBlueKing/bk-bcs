@@ -237,11 +237,11 @@ func (dao *templateDao) List(kit *kit.Kit, bizID, templateSpaceID uint32, s sear
 	d := q.Where(m.BizID.Eq(bizID), m.TemplateSpaceID.Eq(templateSpaceID)).Where(conds...)
 	if len(topIds) != 0 {
 		d = d.Order(utils.NewCustomExpr("CASE WHEN id IN (?) THEN 0 ELSE 1 END,"+
-			"CASE WHEN RIGHT(path, 1) = '/' THEN CONCAT(path,'name') ELSE CONCAT_WS('/', path, 'name') END",
+			"CASE WHEN RIGHT(path, 1) = '/' THEN CONCAT(path,`name`) ELSE CONCAT_WS('/', path, `name`) END",
 			[]interface{}{topIds}))
 	} else {
-		d = d.Order(utils.NewCustomExpr("CASE WHEN RIGHT(path, 1) = '/' THEN CONCAT(path,'name') ELSE "+
-			"CONCAT_WS('/', path, 'name') END", nil))
+		d = d.Order(utils.NewCustomExpr("CASE WHEN RIGHT(path, 1) = '/' THEN CONCAT(path,`name`) ELSE "+
+			"CONCAT_WS('/', path, `name`) END", nil))
 	}
 
 	if opt.All {
@@ -347,8 +347,8 @@ func (dao *templateDao) ListByIDs(kit *kit.Kit, ids []uint32) ([]*table.Template
 	m := dao.genQ.Template
 	q := dao.genQ.Template.WithContext(kit.Ctx)
 	result, err := q.Where(m.ID.In(ids...)).
-		Order(utils.NewCustomExpr("CASE WHEN RIGHT(path, 1) = '/' THEN CONCAT(path,'name') "+
-			"ELSE CONCAT_WS('/', path, 'name') END", nil)).Find()
+		Order(utils.NewCustomExpr("CASE WHEN RIGHT(path, 1) = '/' THEN CONCAT(path,`name`) "+
+			"ELSE CONCAT_WS('/', path, `name`) END", nil)).Find()
 	if err != nil {
 		return nil, err
 	}

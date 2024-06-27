@@ -91,9 +91,11 @@
       theme: 'success',
       message: props.isFileType ? t('批量删除配置文件成功') : t('批量删除配置项成功'),
     });
-    batchDeletePending.value = false;
     isBatchDeleteDialogShow.value = false;
-    emits('deleted');
+    setTimeout(() => {
+      emits('deleted');
+      batchDeletePending.value = false;
+    }, 300);
   };
 
   const handleOpenBantchEditPerm = () => {
@@ -106,7 +108,7 @@
     isBatchDeleteDialogShow.value = true;
   };
 
-  const handleConfimEditPermission = async (permission: IPermissionType) => {
+  const handleConfimEditPermission = async ({ permission }: { permission: IPermissionType }) => {
     try {
       editLoading.value = true;
       const { privilege, user, user_group } = permission;
@@ -122,7 +124,7 @@
           sign: commit_spec.content.signature,
         };
       });
-      await batchAddConfigList(props.bkBizId, props.appId, editConfigList, false);
+      await batchAddConfigList(props.bkBizId, props.appId, { items: editConfigList });
       Message({
         theme: 'success',
         message: t('配置文件权限批量修改成功'),

@@ -137,7 +137,7 @@ func CORS(next http.Handler) http.Handler {
 			"X-Bkapi-File-Content-Overwrite",
 			"X-Bscp-App-Id",
 			"X-Bscp-Template-Space-Id",
-			"X-Bscp-File-Name",
+			"X-Bscp-Unzip",
 			"X-Bscp-Upload-Id",
 			"X-Bscp-Part-Num",
 		}
