@@ -498,22 +498,22 @@
     bindingId.value = res.details.length === 1 ? res.details[0].id : 0;
   };
 
-  const getAllConfigList = async (isBatchUpload = false) => {
+  const getAllConfigList = async (createConfig = false) => {
     loading.value = true;
-    await Promise.all([getCommonConfigList(isBatchUpload), getBoundTemplateList()]);
+    await Promise.all([getCommonConfigList(createConfig), getBoundTemplateList()]);
     loading.value = false;
     tableGroupsData.value = transListToTableData();
   };
 
   // 获取非模板配置文件列表
-  const getCommonConfigList = async (isBatchUpload = false) => {
+  const getCommonConfigList = async (createConfig = false) => {
     commonConfigListLoading.value = true;
     try {
       const params: ICommonQuery = {
         start: 0,
         all: true,
       };
-      if (!isBatchUpload) batchUploadIds.value = [];
+      if (!createConfig) batchUploadIds.value = [];
       if (batchUploadIds.value.length > 0) params.ids = batchUploadIds.value.join(',');
       let res;
       if (isUnNamedVersion.value) {

@@ -746,7 +746,6 @@
   };
 
   const handleClickSearch = () => {
-    console.log(1);
     // 处理有条件处于编辑状时 点击查询框 编辑态条件未保存
     // 新增态 处理枚举型点击搜索框取消枚举
     if (editConditionItem.value || isShowSearchInput.value) {
@@ -836,7 +835,6 @@
   };
 
   const handleChildSelectorClickOutside = () => {
-    console.log('click outside');
     if (editConditionItem.value) {
       // 编辑态 取消编辑
       editConditionItem.value!.isEdit = false;

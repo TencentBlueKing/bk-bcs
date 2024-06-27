@@ -43,6 +43,8 @@
   import ConfigForm from '../../../../../../service/detail/config/config-list/config-table-list/config-form.vue';
   import SelectPackage from './select-package.vue';
 
+  const templateStore = useTemplateStore();
+
   const { spaceId } = storeToRefs(useGlobalStore());
   const { currentTemplateSpace } = storeToRefs(useTemplateStore());
   const { t } = useI18n();
@@ -105,6 +107,9 @@
       if (pkgIds.length > 1 || pkgIds[0] !== 0) {
         await addTemplateToPackage(spaceId.value, currentTemplateSpace.value, [res.data.id], pkgIds);
       }
+      templateStore.$patch((state) => {
+        state.topIds = [res.data.id];
+      });
       isSelectPkgDialogShow.value = false;
       emits('added');
       close();

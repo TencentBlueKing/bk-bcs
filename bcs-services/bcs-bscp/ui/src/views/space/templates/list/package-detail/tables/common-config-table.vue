@@ -168,7 +168,7 @@
   const { t, locale } = useI18n();
   const { spaceId } = storeToRefs(useGlobalStore());
   const templateStore = useTemplateStore();
-  const { currentTemplateSpace, versionListPageShouldOpenEdit, versionListPageShouldOpenView, batchUploadIds } =
+  const { currentTemplateSpace, versionListPageShouldOpenEdit, versionListPageShouldOpenView, topIds } =
     storeToRefs(templateStore);
   const { pagination, updatePagination } = useTablePagination('commonConfigTable');
 
@@ -224,15 +224,19 @@
     return `${path}/${name}`;
   });
 
-  const loadConfigList = async (isBatchUpload = false) => {
+  const loadConfigList = async (createConfig = false) => {
     listLoading.value = true;
     const params: ICommonQuery = {
       start: (pagination.value.current - 1) * pagination.value.limit,
       limit: pagination.value.limit,
     };
-    if (!isBatchUpload) batchUploadIds.value = [];
-    if (batchUploadIds.value.length > 0) {
-      params.ids = batchUploadIds.value.join(',');
+    if (!createConfig) {
+      templateStore.$patch((state) => {
+        state.topIds = [];
+      });
+    }
+    if (topIds.value.length > 0) {
+      params.ids = topIds.value.join(',');
     }
     if (searchStr.value) {
       params.search_fields = 'name,path,memo,creator,reviser';
@@ -271,10 +275,10 @@
     boundByAppsCountLoading.value = false;
   };
 
-  const refreshList = (current = 1, isBatchUpload = false) => {
+  const refreshList = (current = 1, createConfig = false) => {
     isSearchEmpty.value = searchStr.value !== '';
     pagination.value.current = current;
-    loadConfigList(isBatchUpload);
+    loadConfigList(createConfig);
   };
 
   // 模板移出或删除后刷新列表
@@ -282,7 +286,9 @@
     if (num === list.value.length && pagination.value.current > 1) {
       pagination.value.current -= 1;
     }
-    batchUploadIds.value = [];
+    templateStore.$patch((state) => {
+      state.topIds = [];
+    });
     refreshList();
   };
 
@@ -384,7 +390,7 @@
 
   // 设置新增行的标记class
   const getRowCls = (data: ITemplateConfigItem) => {
-    if (batchUploadIds.value.includes(data.id)) {
+    if (topIds.value.includes(data.id)) {
       return 'new-row-marked';
     }
     return '';

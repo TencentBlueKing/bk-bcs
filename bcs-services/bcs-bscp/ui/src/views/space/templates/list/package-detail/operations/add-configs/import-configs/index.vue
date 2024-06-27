@@ -98,9 +98,11 @@
     show: boolean;
   }>();
 
+  const templateStore = useTemplateStore();
+
   const emits = defineEmits(['update:show', 'added']);
   const { spaceId } = storeToRefs(useGlobalStore());
-  const { currentTemplateSpace, batchUploadIds } = storeToRefs(useTemplateStore());
+  const { currentTemplateSpace } = storeToRefs(useTemplateStore());
   const isShow = ref(false);
   const isTableChange = ref(false);
   const pending = ref(false);
@@ -152,7 +154,9 @@
       if (pkgIds.length > 1 || pkgIds[0] !== 0) {
         await addTemplateToPackage(spaceId.value, currentTemplateSpace.value, res.ids, pkgIds);
       }
-      batchUploadIds.value = res.ids;
+      templateStore.$patch((state) => {
+        state.topIds = res.ids;
+      });
       isSelectPkgDialogShow.value = false;
       close();
       setTimeout(() => {
