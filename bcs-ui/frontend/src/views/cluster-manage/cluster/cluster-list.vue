@@ -3,6 +3,7 @@
     :data="sortClusterList"
     size="medium"
     :row-class-name="rowClassName"
+    height="h-[calc(100%-48px)]"
     @row-click="handleRowClick">
     <bk-table-column :label="$t('cluster.labels.nameAndId')" :min-width="160" :show-overflow-tooltip="false">
       <template #default="{ row }">
