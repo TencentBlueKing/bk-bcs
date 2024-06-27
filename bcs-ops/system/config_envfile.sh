@@ -171,9 +171,9 @@ EOF
 check_env() {
   trap "utils::on_ERR;" ERR
   # match k8s_ver
-  if ! [[ $K8S_VER =~ ^1\.2[0-4] ]]; then
+  if ! [[ $K8S_VER =~ ^1\.2[0-8] ]]; then
     utils::log "ERROR" \
-      "Only support K8S_VER 1.2[0-4].x, here is :${K8S_VER}"
+      "Only support K8S_VER 1.2[0-8].x, here is :${K8S_VER}"
   fi
 
   # match cri and k8s_ver
