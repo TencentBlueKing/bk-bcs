@@ -1,5 +1,5 @@
 name: pr-lint
-on: [push, pull_request]
+on: [pull_request]
 jobs:
   PR-format-check:
     runs-on: ubuntu-latest
@@ -9,6 +9,8 @@ jobs:
           title="${{ github.event.pull_request.title }}"
           pattern="^(feat|fix|docs|style|refactor|perf|test|chore|revert|build|ci): .*"
           if [[ ! $title =~ $pattern ]]; then
-            echo "PR title does not match naming convention. Example: 'feat: 添加新功能'"
+            echo "PR title does not match naming convention. Example: 'feat: 添加新功能'.\
+            You can refer to this address for details:\
+            https://github.com/TencentBlueKing/bk-bcs/blob/master/docs/specification/commit-spec.md"
             exit 1
           fi
