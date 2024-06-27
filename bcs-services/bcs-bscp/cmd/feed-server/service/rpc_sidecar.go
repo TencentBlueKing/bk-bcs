@@ -457,7 +457,7 @@ func (s *Service) GetDownloadURL(ctx context.Context, req *pbfs.GetDownloadURLRe
 		return nil, status.Errorf(codes.Aborted, "generate temp download url failed, %s", err.Error())
 	}
 
-	// 对于单个大文件下载，受限于单个客户端和服务端之间的带宽（比如为800Mb/s=100MB/s）,而在存储服务端支持更高带宽的情况下（比如2000Mb/s），
+	// 对于单个大文件下载，受限于单个客户端和服务端之间的带宽（比如为10MB/s=80Mb/s），而在存储服务端支持更高带宽的情况下（比如100MB/s），
 	// 哪怕单个文件2GB，在限流器阈值比单个客户端下载带宽高的情况下，还是应该允许其他客户端去存储服务端下载，
 	// 超过客户端下载带宽的大文件暂且按客户端带宽计入流控
 	// 多个大文件的持续下载，会影响到限流器流控的精确性，当前暂时只计入每个大文件首次一秒内的流控情况，后续的流量消耗不计入
