@@ -619,8 +619,10 @@ type Network struct {
 	// RpcPort is port where server listen to rpc port.
 	RpcPort uint `yaml:"rpcPort"`
 	// HttpPort is port where server listen to http port.
-	HttpPort uint      `yaml:"httpPort"`
-	TLS      TLSConfig `yaml:"tls"`
+	HttpPort uint `yaml:"httpPort"`
+	// GwHttpPort  is port where server listen to grpc-gateway http port.
+	GwHttpPort uint      `yaml:"gwHttpPort"`
+	TLS        TLSConfig `yaml:"tls"`
 }
 
 // trySetFlagBindIP try set flag bind ip, bindIP only can set by one of the flag or configuration file.
