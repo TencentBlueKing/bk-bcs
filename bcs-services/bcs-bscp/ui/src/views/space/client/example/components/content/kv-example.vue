@@ -50,13 +50,13 @@
   const route = useRoute();
   const tabArr = [
     {
-      name: 'Pull',
-      topTip: t('Pull：用于一次性拉取最新的配置信息，适用于需要获取并更新配置的场景。'),
+      name: t('Get方法'),
+      topTip: t('Get方法：用于一次性拉取最新的配置信息，适用于需要获取并更新配置的场景。'),
     },
     {
-      name: 'Watch',
+      name: t('Watch方法'),
       topTip: t(
-        'Watch：通过建立长连接，实时监听配置版本的变更，当新版本的配置发布时，将自动调用回调方法处理新的配置信息，适用于需要实时响应配置变更的场景。',
+        'Watch方法：通过建立长连接，实时监听配置版本的变更，当新版本的配置发布时，将自动调用回调方法处理新的配置信息，适用于需要实时响应配置变更的场景。',
       ),
     },
   ];
@@ -85,23 +85,13 @@
   const topTip = computed(() => {
     return tabArr[activeTab.value].topTip;
   });
-  const labelArrShowType = computed(() => {
-    switch (props.kvName) {
-      case 'java':
-        return optionData.value.labelArrType;
-      default:
-        return `{${optionData.value.labelArrType}}`;
-    }
-  });
 
   watch(
     () => props.kvName,
     (newV) => {
       if (newV !== 'kv-cmd') {
         handleTab();
-        if (['java', 'c++'].includes(newV)) {
-          getOptionData(optionData.value);
-        }
+        getOptionData(optionData.value); // 每次切换模板需重新展示数据方式
       }
     },
   );
@@ -128,11 +118,26 @@
           labelArrType,
         };
         break;
+      case 'c++':
+        if (data.labelArr.length) {
+          labelArrType = data.labelArr
+            .map((item: string, index: number) => {
+              console.log(item);
+              const [key, value] = item.split(':');
+              return `{${key}, ${value}}${index + 1 === data.labelArr.length ? '' : ', '}`;
+            })
+            .join('');
+        }
+        optionData.value = {
+          ...data,
+          labelArrType: `{${labelArrType}}`,
+        };
+        break;
       default:
         labelArrType = data.labelArr.length ? data.labelArr.join(', ') : '';
         optionData.value = {
           ...data,
-          labelArrType,
+          labelArrType: `{${labelArrType}}`,
         };
         break;
     }
@@ -154,7 +159,7 @@
       {
         name: 'Bk_Bscp_Variable_Leabels',
         type: '',
-        default_val: labelArrShowType.value,
+        default_val: optionData.value.labelArrType,
         memo: '',
       },
       {
@@ -197,25 +202,25 @@
   /**
    *
    * @param kvName 数据模板名称
-   * @param methods 方法，0: pull，1: watch
+   * @param methods 方法，0: get，1: watch
    */
   const changeKvData = (kvName = 'python', methods = 0) => {
     switch (kvName) {
       case 'python':
         return !methods
-          ? import('/src/assets/exampleData/kv-python-pull.yaml?raw')
+          ? import('/src/assets/exampleData/kv-python-get.yaml?raw')
           : import('/src/assets/exampleData/kv-python-watch.yaml?raw');
       case 'go':
         return !methods
-          ? import('/src/assets/exampleData/kv-go-pull.yaml?raw')
+          ? import('/src/assets/exampleData/kv-go-get.yaml?raw')
           : import('/src/assets/exampleData/kv-go-watch.yaml?raw');
       case 'java':
         return !methods
-          ? import('/src/assets/exampleData/kv-java-pull.yaml?raw')
+          ? import('/src/assets/exampleData/kv-java-get.yaml?raw')
           : import('/src/assets/exampleData/kv-java-watch.yaml?raw');
       case 'c++':
         return !methods
-          ? import('/src/assets/exampleData/kv-c++-pull.yaml?raw')
+          ? import('/src/assets/exampleData/kv-c++-get.yaml?raw')
           : import('/src/assets/exampleData/kv-c++-watch.yaml?raw');
       default:
         return '';

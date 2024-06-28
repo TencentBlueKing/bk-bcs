@@ -1,6 +1,6 @@
+
 ### Watch
 
-```c++
 #include <ctime>
 #include <iostream>
 #include <string>
@@ -16,13 +16,12 @@ int main(int argc, char** argv)
     // set client options.
     bscp::core::ClientOptions options;
 
-    options.m_feedAddrs.push_back({{ .Bk_Bscp_Variable_FEED_ADDR }});
+    options.m_feedAddrs.push_back("{{ .Bk_Bscp_Variable_FEED_ADDR }}");
     options.m_token = {{ .Bk_Bscp_Variable_ClientKey }};
     options.m_bizID = {{ .Bk_Bscp_Variable_BkBizId }};
-    options.m_sideRid = "xx";
 
     // labels.
-    std::map<std::string, std::string> labels{{{ .Bk_Bscp_Variable_Leabels }}};
+    std::map<std::string, std::string> labels{{ .Bk_Bscp_Variable_Leabels }};
     options.m_labels = labels;
 
     // instantiate client.

@@ -76,7 +76,7 @@
   }
   .icon-info {
     margin-left: 9px;
-    color: #63656e;
+    color: #979ba5;
     cursor: pointer;
   }
   .add-label-button {
@@ -126,6 +126,12 @@
     border: 1px solid #979ba5;
     border-radius: 50%;
     cursor: pointer;
+    &:hover {
+      border-color: #3a84ff;
+      &::after {
+        border-color: #3a84ff;
+      }
+    }
     &::after {
       content: '';
       position: absolute;

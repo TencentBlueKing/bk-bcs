@@ -1,4 +1,5 @@
-### Pull
+
+### Get
 
 from bk_bscp.client import BscpClient
 
@@ -8,11 +9,13 @@ BIZ_ID = {{ .Bk_Bscp_Variable_BkBizId }}
 APP = "{{ .Bk_Bscp_Variable_ServiceName }}"
 LABELS = {{ .Bk_Bscp_Variable_Leabels }}
 
+
+
 def main():
     with BscpClient(SERVER_ADDRS, TOKEN, BIZ_ID) as client:
         pair = client.get(APP, "key1", LABELS)
         print(pair.value)
 
+
 if __name__ == "__main__":
     main()
-
