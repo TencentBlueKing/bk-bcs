@@ -6,7 +6,7 @@
         :class="{ fullscreen: isOpenFullScreen }"
         @mouseenter="isShowOperationBtn = true"
         @mouseleave="isShowOperationBtn = false">
-        <Card :title="$t('客户端配置版本')" :height="344">
+        <Card :title="$t('目标配置版本')" :height="344">
           <template #operation>
             <OperationBtn
               v-show="isShowOperationBtn"

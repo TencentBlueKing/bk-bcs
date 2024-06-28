@@ -258,10 +258,10 @@
     if (searchConditionList.value.length || parentSelecte.value || inputFocus.value) return '';
     if (isClientSearch.value) {
       return t(
-        'UID/IP/标签/当前配置版本/最近一次拉取配置状态/在线状态/客户端组件类型/客户端组件版本/配置拉取时间范围/错误类别',
+        'UID/IP/标签/目标配置版本/最近一次拉取配置状态/在线状态/客户端组件类型/客户端组件版本/配置拉取时间范围/错误类别',
       );
     }
-    return t('标签/当前配置版本/最近一次拉取配置状态/在线状态/客户端组件类型/客户端组件版本');
+    return t('标签/目标配置版本/最近一次拉取配置状态/在线状态/客户端组件类型/客户端组件版本');
   });
 
   const isClientSearch = computed(() => route.name === 'client-search');

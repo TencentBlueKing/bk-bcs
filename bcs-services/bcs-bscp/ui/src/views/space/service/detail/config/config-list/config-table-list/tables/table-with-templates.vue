@@ -103,7 +103,7 @@
                             </div>
                           </ContentWidthOverflowTips>
                         </td>
-                        <td class="version">{{ config.versionName }}</td>
+                        <td class="version">{{ config.is_latest ? 'latest' : config.versionName }}</td>
                         <td class="user">{{ config.creator }}</td>
                         <td class="user">{{ config.reviser }}</td>
                         <td class="datetime">{{ config.update_at }}</td>
@@ -337,6 +337,7 @@
     file_state: string;
     permission?: IPermissionType;
     is_conflict: boolean;
+    is_latest?: boolean;
   }
 
   const { t } = useI18n();
@@ -603,6 +604,7 @@
         file_state,
         permission,
         is_conflict,
+        is_latest: false,
       };
     });
 
@@ -627,6 +629,7 @@
           create_at,
           file_state,
           is_conflict,
+          is_latest,
         } = tpl;
         group.configs.push({
           id,
@@ -639,6 +642,7 @@
           update_at: datetimeFormat(create_at),
           file_state,
           is_conflict,
+          is_latest,
         });
       });
       return group;
