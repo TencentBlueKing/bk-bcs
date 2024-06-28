@@ -364,7 +364,7 @@ func (s *Service) checkTemplateBindings(kt *kit.Kit, bizID, appID uint32,
 		Spec: &table.AppTemplateBindingSpec{},
 	}
 
-	// 通过bizID和appID找到id
+	// 通过bizID和appID找到 AppTemplateBinding ID
 	oldATB, err := s.dao.AppTemplateBinding().GetAppTemplateBindingByAppID(kt, bizID, appID)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, errf.Errorf(errf.DBOpFailed,
@@ -433,6 +433,25 @@ func (s *Service) checkTemplateBindings(kt *kit.Kit, bizID, appID uint32,
 
 	if replaceAll && oldATB != nil {
 		appTemplateBinding.ID = oldATB.ID
+	}
+
+	// 校验下模板空间是否存在
+	if _, err = s.dao.TemplateSpace().ListByIDs(kt, appTemplateBindingSpec.TemplateSpaceIDs); err != nil {
+		logs.Errorf("list template spaces failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, errf.Errorf(errf.DBOpFailed,
+			i18n.T(kt, fmt.Sprintf("list template spaces failed, err: %v, rid: %s", err, kt.Rid)))
+	}
+	// 校验下模板套餐是否存在
+	if _, err = s.dao.TemplateSet().ListByIDs(kt, appTemplateBindingSpec.TemplateSetIDs); err != nil {
+		logs.Errorf("list template sets failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, errf.Errorf(errf.DBOpFailed,
+			i18n.T(kt, fmt.Sprintf("list template sets failed, err: %v, rid: %s", err, kt.Rid)))
+	}
+	// 校验下模板是否存在
+	if _, err = s.dao.Template().ListByIDs(kt, appTemplateBindingSpec.TemplateIDs); err != nil {
+		logs.Errorf("list template failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, errf.Errorf(errf.DBOpFailed,
+			i18n.T(kt, fmt.Sprintf("list template failed, err: %v, rid: %s", err, kt.Rid)))
 	}
 
 	return appTemplateBinding, nil
@@ -849,10 +868,11 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbds.ListConfigItems
 		for _, f := range fields {
 			fieldsMap[f] = true
 		}
+		fieldsMap["combinedPathName"] = true
 		cis := make([]*pbci.ConfigItem, 0)
 		for _, ci := range configItems {
-			if (fieldsMap["name"] && strings.Contains(ci.Spec.Name, req.SearchValue)) ||
-				(fieldsMap["path"] && strings.Contains(ci.Spec.Path, req.SearchValue)) ||
+			combinedPathName := path.Join(ci.Spec.Path, ci.Spec.Name)
+			if (fieldsMap["combinedPathName"] && strings.Contains(combinedPathName, req.SearchValue)) ||
 				(fieldsMap["memo"] && strings.Contains(ci.Spec.Memo, req.SearchValue)) ||
 				(fieldsMap["creator"] && strings.Contains(ci.Revision.Creator, req.SearchValue)) ||
 				(fieldsMap["reviser"] && strings.Contains(ci.Revision.Reviser, req.SearchValue)) {
