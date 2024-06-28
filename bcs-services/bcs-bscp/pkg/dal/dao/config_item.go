@@ -453,16 +453,38 @@ func (dao *configItemDao) validateAttachmentAppExist(kit *kit.Kit, am *table.Con
 	return nil
 }
 
+// maxConfigItemsLimitForApp defines the max limit of config item for an app for user to create.
+const maxConfigItemsLimitForApp = 2000
+
 // ValidateAppCINumber verify whether the current number of app config items has reached the maximum.
+// the number is the total count of template and non-template config items
 func (dao *configItemDao) ValidateAppCINumber(kt *kit.Kit, tx *gen.QueryTx, bizID, appID uint32) error {
+	// get non-template config count
 	m := tx.ConfigItem
 	count, err := m.WithContext(kt.Ctx).Where(m.BizID.Eq(bizID), m.AppID.Eq(appID)).Count()
 	if err != nil {
 		return fmt.Errorf("count app %d's config items failed, err: %v", appID, err)
 	}
 
-	if err := table.ValidateAppCINumber(count); err != nil {
-		return err
+	// get template config count
+	tm := tx.AppTemplateBinding
+	tcount := 0
+	var atb *table.AppTemplateBinding
+	atb, err = tm.WithContext(kt.Ctx).Where(tm.BizID.Eq(bizID), tm.AppID.Eq(appID)).Take()
+	if err != nil {
+		// if not found, means the count should be 0
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return fmt.Errorf("get app %d's template binding failed, err: %v", appID, err)
+		}
+	} else {
+		tcount = len(atb.Spec.TemplateRevisionIDs)
+	}
+
+	total := int(count) + tcount
+	if total > maxConfigItemsLimitForApp {
+		return errf.New(errf.InvalidParameter,
+			fmt.Sprintf("the total number of app %d's config items(including template and non-template)"+
+				" is %d, which exceeded the limit %d", appID, total, maxConfigItemsLimitForApp))
 	}
 
 	return nil

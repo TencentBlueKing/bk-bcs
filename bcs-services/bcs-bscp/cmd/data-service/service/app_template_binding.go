@@ -51,9 +51,28 @@ func (s *Service) CreateAppTemplateBinding(ctx context.Context, req *pbds.Create
 		return nil, err
 	}
 
-	id, err := s.dao.AppTemplateBinding().Create(kt, appTemplateBinding)
+	tx := s.dao.GenQuery().Begin()
+
+	id, err := s.dao.AppTemplateBinding().CreateWithTx(kt, tx, appTemplateBinding)
 	if err != nil {
 		logs.Errorf("create app template binding failed, err: %v, rid: %s", err, kt.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+		}
+		return nil, err
+	}
+
+	// validate config items count.
+	if err = s.dao.ConfigItem().ValidateAppCINumber(kt, tx, req.Attachment.BizId, req.Attachment.AppId); err != nil {
+		logs.Errorf("validate config items count failed, err: %v, rid: %s", err, kt.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+		}
+		return nil, err
+	}
+
+	if err = tx.Commit(); err != nil {
+		logs.Errorf("commit transaction failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
 
@@ -103,8 +122,24 @@ func (s *Service) UpdateAppTemplateBinding(ctx context.Context, req *pbds.Update
 		return nil, err
 	}
 
-	if err := s.dao.AppTemplateBinding().Update(kt, appTemplateBinding); err != nil {
+	tx := s.dao.GenQuery().Begin()
+
+	if err := s.dao.AppTemplateBinding().UpdateWithTx(kt, tx, appTemplateBinding); err != nil {
 		logs.Errorf("update app template binding failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	// validate config items count.
+	if err := s.dao.ConfigItem().ValidateAppCINumber(kt, tx, req.Attachment.BizId, req.Attachment.AppId); err != nil {
+		logs.Errorf("validate config items count failed, err: %v, rid: %s", err, kt.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+		}
+		return nil, err
+	}
+
+	if err := tx.Commit(); err != nil {
+		logs.Errorf("commit transaction failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
 
@@ -510,6 +545,12 @@ func (s *Service) CascadeUpdateATB(kt *kit.Kit, tx *gen.QueryTx, atb *table.AppT
 
 	if err := s.dao.AppTemplateBinding().UpdateWithTx(kt, tx, atb); err != nil {
 		logs.Errorf("cascade update app template binding failed, err: %v, rid: %s", err, kt.Rid)
+		return err
+	}
+
+	// validate config items count.
+	if err := s.dao.ConfigItem().ValidateAppCINumber(kt, tx, atb.Attachment.BizID, atb.Attachment.AppID); err != nil {
+		logs.Errorf("validate config items count failed, err: %v, rid: %s", err, kt.Rid)
 		return err
 	}
 

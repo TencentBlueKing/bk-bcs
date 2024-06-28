@@ -26,8 +26,8 @@ import (
 
 // AppTemplateBinding supplies all the app template binding related operations.
 type AppTemplateBinding interface {
-	// Create one app template binding instance.
-	Create(kit *kit.Kit, atb *table.AppTemplateBinding) (uint32, error)
+	// CreateWithTx create one app template binding instance with transaction.
+	CreateWithTx(kit *kit.Kit, tx *gen.QueryTx, atb *table.AppTemplateBinding) (uint32, error)
 	// Update one app template binding's info.
 	Update(kit *kit.Kit, atb *table.AppTemplateBinding) error
 	// UpdateWithTx Update one app template binding's info with transaction.
@@ -126,8 +126,8 @@ func (dao *appTemplateBindingDao) GetAppTemplateBindingByAppID(kit *kit.Kit, biz
 		Where(m.BizID.Eq(bizID), m.AppID.Eq(appID)).Take()
 }
 
-// Create one app template binding instance.
-func (dao *appTemplateBindingDao) Create(kit *kit.Kit, g *table.AppTemplateBinding) (uint32, error) {
+// CreateWithTx create one app template binding instance with transaction.
+func (dao *appTemplateBindingDao) CreateWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.AppTemplateBinding) (uint32, error) {
 	if err := g.ValidateCreate(); err != nil {
 		return 0, err
 	}
@@ -142,22 +142,13 @@ func (dao *appTemplateBindingDao) Create(kit *kit.Kit, g *table.AppTemplateBindi
 	}
 	g.ID = id
 
-	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareCreate(g)
-
-	// 多个使用事务处理
-	createTx := func(tx *gen.Query) error {
-		q := tx.AppTemplateBinding.WithContext(kit.Ctx)
-		if err = q.Create(g); err != nil {
-			return err
-		}
-
-		if err = ad.Do(tx); err != nil {
-			return err
-		}
-
-		return nil
+	q := tx.AppTemplateBinding.WithContext(kit.Ctx)
+	if err = q.Create(g); err != nil {
+		return 0, err
 	}
-	if err = dao.genQ.Transaction(createTx); err != nil {
+
+	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareCreate(g)
+	if err = ad.Do(tx.Query); err != nil {
 		return 0, err
 	}
 
