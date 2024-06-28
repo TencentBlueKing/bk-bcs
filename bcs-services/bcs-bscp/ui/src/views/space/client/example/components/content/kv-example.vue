@@ -50,11 +50,11 @@
   const route = useRoute();
   const tabArr = [
     {
-      name: 'Pull',
+      name: t('Get方法'),
       topTip: t('Pull：用于一次性拉取最新的配置信息，适用于需要获取并更新配置的场景。'),
     },
     {
-      name: 'Watch',
+      name: t('Watch方法'),
       topTip: t(
         'Watch：通过建立长连接，实时监听配置版本的变更，当新版本的配置发布时，将自动调用回调方法处理新的配置信息，适用于需要实时响应配置变更的场景。',
       ),
@@ -84,14 +84,6 @@
   // 代码预览上方提示框
   const topTip = computed(() => {
     return tabArr[activeTab.value].topTip;
-  });
-  const labelArrShowType = computed(() => {
-    switch (props.kvName) {
-      case 'java':
-        return optionData.value.labelArrType;
-      default:
-        return `{${optionData.value.labelArrType}}`;
-    }
   });
 
   watch(
@@ -126,11 +118,26 @@
           labelArrType,
         };
         break;
+      case 'c++':
+        if (data.labelArr.length) {
+          labelArrType = data.labelArr
+            .map((item: string, index: number) => {
+              console.log(item);
+              const [key, value] = item.split(':');
+              return `{${key}, ${value}}${index + 1 === data.labelArr.length ? '' : ', '}`;
+            })
+            .join('');
+        }
+        optionData.value = {
+          ...data,
+          labelArrType: `{${labelArrType}}`,
+        };
+        break;
       default:
         labelArrType = data.labelArr.length ? data.labelArr.join(', ') : '';
         optionData.value = {
           ...data,
-          labelArrType,
+          labelArrType: `{${labelArrType}}`,
         };
         break;
     }
@@ -152,7 +159,7 @@
       {
         name: 'Bk_Bscp_Variable_Leabels',
         type: '',
-        default_val: labelArrShowType.value,
+        default_val: optionData.value.labelArrType,
         memo: '',
       },
       {

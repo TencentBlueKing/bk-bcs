@@ -1,6 +1,6 @@
+
 ### Watch
 
-```java
 package com.example.watch;
 
 import com.tencent.bscp.helper.OptionHelper;
@@ -25,7 +25,7 @@ public class Main {
         String feedAddr = "{{ .Bk_Bscp_Variable_FEED_ADDR }}";
         Integer biz = {{ .Bk_Bscp_Variable_BkBizId }};
         String token = {{ .Bk_Bscp_Variable_ClientKey }};
-        String app = {{ .Bk_Bscp_Variable_ServiceName }};
+        String app = "{{ .Bk_Bscp_Variable_ServiceName }}";
 
         Map<String, String> labels = new HashMap<>();
         {{ .Bk_Bscp_Variable_Leabels }}

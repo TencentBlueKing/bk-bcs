@@ -7,7 +7,7 @@
         <info
           class="icon-info"
           v-bk-tooltips="{
-            content: $t('用于客户端拉取配置时身份验证'),
+            content: $t('用于客户端拉取配置时身份验证，下拉列表只会展示关联过此服务且状态为启用的密钥'),
             placement: 'top',
           }" />
       </template>
@@ -74,7 +74,6 @@
         required: true,
         message: t('请先选择客户端密钥，替换下方示例代码后，再尝试复制示例'),
         validator: (value: string) => value.length,
-        trigger: 'change',
       },
     ],
     tempDir: [
@@ -115,7 +114,7 @@
     ],
   };
 
-  const formRef = ref('');
+  const formRef = ref();
   const formData = ref<IExampleFormData>({
     clientKey: '', // 客户端密钥
     privacyCredential: '', // 脱敏的密钥
@@ -128,6 +127,9 @@
   });
 
   const setCredential = (key: string, privacyKey: string) => {
+    if (key.length && privacyKey.length) {
+      formRef.value.clearValidate();
+    }
     formData.value.clientKey = key;
     formData.value.privacyCredential = privacyKey;
   };
