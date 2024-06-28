@@ -439,6 +439,8 @@ export default {
   新建配置模板套餐: 'New configuration template package',
   '压缩包正在解压，请稍后': 'The compressed package is being decompressed, please wait',
   '确认恢复该配置项?': 'Confirm to restore the configuration item?',
+  '文件下载中，请稍后': 'File download in progress, please wait',
+  '配置文件绝对路径/创建人/修改人': 'Configuration file absolute path/creator/modifier',
 
   // 分组管理
   新增分组: 'New group',

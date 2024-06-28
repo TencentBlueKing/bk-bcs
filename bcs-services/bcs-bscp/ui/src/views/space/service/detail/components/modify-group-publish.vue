@@ -201,7 +201,6 @@
 
   // 判断是否需要对比上线版本
   const handlePublishOrOpenDiff = () => {
-    console.log(groups.value, releasedGroups.value);
     if (diffableVersionList.value.length) {
       baseVersionId.value = diffableVersionList.value[0].id;
       isDiffSliderShow.value = true;

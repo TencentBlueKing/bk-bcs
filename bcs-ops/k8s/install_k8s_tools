@@ -35,6 +35,18 @@ name=Kubernetes
 baseurl=${repo_url}
 enabled=1
 gpgcheck=0
+
+[kubernetes-v1.27]
+name=Kubernetes
+baseurl=https://mirrors.tencent.com/kubernetes_new/core%3a/stable%3a/v1.27%3a/build/rpm/
+enabled=1
+gpgcheck=0
+
+[kubernetes-v1.28]
+name=Kubernetes
+baseurl=https://mirrors.tencent.com/kubernetes_new/core%3a/stable%3a/v1.28%3a/build/rpm/
+enabled=1
+gpgcheck=0
 EOF
   yum install -y -q yum-utils
   yum-config-manager --add-repo "$ROOT_DIR/kubernetes.repo"
@@ -217,6 +229,8 @@ main() {
 
   utils::log "INFO" "check kubectl status"
   if kubectl version --client --short; then
+    utils::log "OK" "kubelet install success"
+  elif kubectl version --client ; then
     utils::log "OK" "kubelet install success"
   else
     utils::log "ERROR" "Did kubectl get installed?"

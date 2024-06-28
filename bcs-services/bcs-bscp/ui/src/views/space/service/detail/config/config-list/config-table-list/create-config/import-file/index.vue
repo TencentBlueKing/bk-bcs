@@ -128,7 +128,6 @@
     batchAddConfigList,
   } from '../../../../../../../../../api/config';
   import { IConfigVersion, IConfigImportItem } from '../../../../../../../../../../types/config';
-  import { storeToRefs } from 'pinia';
   import { Message } from 'bkui-vue';
   import createSamplePkg from '../../../../../../../../../utils/sample-file-pkg';
   import ImportFromTemplate from './import-from-templates.vue';
@@ -142,7 +141,7 @@
 
   const { t } = useI18n();
 
-  const { batchUploadIds } = storeToRefs(useServiceStore());
+  const serviceStore = useServiceStore();
 
   const props = defineProps<{
     show: boolean;
@@ -266,7 +265,9 @@
           variables: allVariables,
         };
         const res = await batchAddConfigList(props.bkBizId, props.appId, query);
-        batchUploadIds.value = res.ids;
+        serviceStore.$patch((state) => {
+          state.topIds = res.ids;
+        });
       }
       emits('update:show', false);
       setTimeout(() => {
