@@ -127,7 +127,8 @@ func (dao *appTemplateBindingDao) GetAppTemplateBindingByAppID(kit *kit.Kit, biz
 }
 
 // CreateWithTx create one app template binding instance with transaction.
-func (dao *appTemplateBindingDao) CreateWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.AppTemplateBinding) (uint32, error) {
+func (dao *appTemplateBindingDao) CreateWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.AppTemplateBinding) (
+	uint32, error) {
 	if err := g.ValidateCreate(); err != nil {
 		return 0, err
 	}

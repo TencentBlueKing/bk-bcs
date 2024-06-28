@@ -85,6 +85,17 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbds.CreateTemplateRe
 		return nil, err
 	}
 
+	// validate template set's templates count.
+	for _, tmplSetID := range req.TemplateSetIds {
+		if err = s.dao.TemplateSet().ValidateTmplNumber(kt, tx, req.Attachment.BizId, tmplSetID); err != nil {
+			logs.Errorf("validate template set's templates count failed, err: %v, rid: %s", err, kt.Rid)
+			if rErr := tx.Rollback(); rErr != nil {
+				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+			}
+			return nil, err
+		}
+	}
+
 	// 2. create template revision
 	spec := req.TrSpec.TemplateRevisionSpec()
 	// if no revision name is specified, generate it by system
@@ -435,6 +446,17 @@ func (s *Service) AddTmplsToTmplSets(ctx context.Context, req *pbds.AddTmplsToTm
 			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
 		}
 		return nil, err
+	}
+
+	// validate template set's templates count.
+	for _, tmplSetID := range req.TemplateSetIds {
+		if err := s.dao.TemplateSet().ValidateTmplNumber(kt, tx, req.BizId, tmplSetID); err != nil {
+			logs.Errorf("validate template set's templates count failed, err: %v, rid: %s", err, kt.Rid)
+			if rErr := tx.Rollback(); rErr != nil {
+				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+			}
+			return nil, err
+		}
 	}
 
 	// 2. update app template bindings if necessary

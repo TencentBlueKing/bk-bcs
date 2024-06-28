@@ -20,6 +20,7 @@ import (
 	"gorm.io/gen/field"
 	"gorm.io/gorm"
 
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
@@ -453,9 +454,6 @@ func (dao *configItemDao) validateAttachmentAppExist(kit *kit.Kit, am *table.Con
 	return nil
 }
 
-// maxConfigItemsLimitForApp defines the max limit of config item for an app for user to create.
-const maxConfigItemsLimitForApp = 2000
-
 // ValidateAppCINumber verify whether the current number of app config items has reached the maximum.
 // the number is the total count of template and non-template config items
 func (dao *configItemDao) ValidateAppCINumber(kt *kit.Kit, tx *gen.QueryTx, bizID, appID uint32) error {
@@ -481,10 +479,10 @@ func (dao *configItemDao) ValidateAppCINumber(kt *kit.Kit, tx *gen.QueryTx, bizI
 	}
 
 	total := int(count) + tcount
-	if total > maxConfigItemsLimitForApp {
+	if total > cc.DataService().ConfigLimit.AppConfigCnt {
 		return errf.New(errf.InvalidParameter,
 			fmt.Sprintf("the total number of app %d's config items(including template and non-template)"+
-				" is %d, which exceeded the limit %d", appID, total, maxConfigItemsLimitForApp))
+				"exceeded the limit %d", appID, cc.DataService().ConfigLimit.AppConfigCnt))
 	}
 
 	return nil

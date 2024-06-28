@@ -1101,6 +1101,45 @@ func (v *Vault) getConfigFromEnv() {
 	}
 }
 
+// ConfigLimit is config related limit
+type ConfigLimit struct {
+	// AppConfigCnt is the max limit of config item for an app for user to create
+	AppConfigCnt int `yaml:"appConfigCnt"`
+	// TmplSetTmplCnt is the max limit of templates for a template set for user to create
+	TmplSetTmplCnt int `yaml:"tmplSetTmplCnt"`
+}
+
+// validate if the config limit is valid or not.
+func (c ConfigLimit) validate() error {
+	if c.AppConfigCnt < 0 {
+		return fmt.Errorf("invalid configLimit.appConfigCnt value %d, should >= 1", c.AppConfigCnt)
+	}
+
+	if c.TmplSetTmplCnt < 0 {
+		return fmt.Errorf("invalid configLimit.tmplSetTmplCnt value %d, should >= 1", c.TmplSetTmplCnt)
+	}
+
+	return nil
+}
+
+const (
+	// DefaultAppConfigCnt is default app's config count
+	DefaultAppConfigCnt = 2000
+	// DefaultTmplSetTmplCnt is default template set's template count
+	DefaultTmplSetTmplCnt = 2000
+)
+
+// trySetDefault try set the default value of config limit
+func (c *ConfigLimit) trySetDefault() {
+	if c.AppConfigCnt == 0 {
+		c.AppConfigCnt = DefaultAppConfigCnt
+	}
+
+	if c.TmplSetTmplCnt == 0 {
+		c.TmplSetTmplCnt = DefaultTmplSetTmplCnt
+	}
+}
+
 // BKNotice defines all the bk notice related runtime.
 type BKNotice struct {
 	Enable bool   `yaml:"enable"`

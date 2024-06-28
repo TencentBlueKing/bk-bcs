@@ -279,11 +279,12 @@ type DataServiceSetting struct {
 	Service Service   `yaml:"service"`
 	Log     LogOption `yaml:"log"`
 
-	Credential Credential `yaml:"credential"`
-	Sharding   Sharding   `yaml:"sharding"`
-	Esb        Esb        `yaml:"esb"`
-	Repo       Repository `yaml:"repository"`
-	Vault      Vault      `yaml:"vault"`
+	Credential  Credential  `yaml:"credential"`
+	Sharding    Sharding    `yaml:"sharding"`
+	Esb         Esb         `yaml:"esb"`
+	Repo        Repository  `yaml:"repository"`
+	Vault       Vault       `yaml:"vault"`
+	ConfigLimit ConfigLimit `yaml:"configLimit"`
 }
 
 // trySetFlagBindIP try set flag bind ip.
@@ -304,6 +305,7 @@ func (s *DataServiceSetting) trySetDefault() {
 	s.Sharding.trySetDefault()
 	s.Repo.trySetDefault()
 	s.Vault.getConfigFromEnv()
+	s.ConfigLimit.trySetDefault()
 }
 
 // Validate DataServiceSetting option.
@@ -330,6 +332,10 @@ func (s DataServiceSetting) Validate() error {
 	}
 
 	if err := s.Vault.validate(); err != nil {
+		return err
+	}
+
+	if err := s.ConfigLimit.validate(); err != nil {
 		return err
 	}
 
