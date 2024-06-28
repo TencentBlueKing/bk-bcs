@@ -7,7 +7,7 @@
       <bk-input
         v-model="searchStr"
         class="search-script-input"
-        :placeholder="t('配置文件名称/路径/描述/创建人/更新人')"
+        :placeholder="t('配置文件绝对路径/描述/创建人/更新人')"
         :clearable="true"
         @clear="refreshList()"
         @input="handleSearchInputChange">

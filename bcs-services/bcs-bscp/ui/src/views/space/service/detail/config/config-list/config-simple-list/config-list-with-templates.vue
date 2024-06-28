@@ -18,7 +18,7 @@
             :key="config.id"
             @click="handleConfigClick(config, group.id)">
             <bk-overflow-title class="config-name" type="tips">
-              {{ config.path + config.name }}
+              {{ fileAP(config) }}
             </bk-overflow-title>
             <div class="config-type">{{ getConfigTypeName(config.file_type) }}</div>
           </div>
@@ -125,6 +125,15 @@
   onMounted(() => {
     getListData();
   });
+
+  // 配置文件绝对路径
+  const fileAP = (config: IConfigTableItem) => {
+    const { path, name } = config;
+    if (path.endsWith('/')) {
+      return `${path}${name}`;
+    }
+    return `${path}/${name}`;
+  };
 
   const getListData = async () => {
     // 拉取到版本列表之前不加在列表数据

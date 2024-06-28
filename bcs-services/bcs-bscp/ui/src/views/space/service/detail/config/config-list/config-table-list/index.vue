@@ -37,7 +37,7 @@
         v-model="searchStr"
         class="config-search-input"
         :width="280"
-        :placeholder="t('配置文件名/创建人/修改人')" />
+        :placeholder="t('配置文件绝对路径/创建人/修改人')" />
     </div>
     <section class="config-list-table">
       <TableWithTemplates

@@ -59,7 +59,6 @@
           @change="handleTableChange($event, false)" />
       </div>
     </bk-loading>
-
     <template #footer>
       <bk-button
         theme="primary"

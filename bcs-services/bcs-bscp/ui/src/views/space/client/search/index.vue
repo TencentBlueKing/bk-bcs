@@ -61,7 +61,7 @@
           </bk-table-column>
           <bk-table-column
             v-if="selectedShowColumn.includes('current-version')"
-            :label="t('当前配置版本')"
+            :label="t('目标配置版本')"
             :width="140">
             <template #default="{ row }">
               <div
@@ -594,10 +594,17 @@
   };
 
   const getErrorDetails = (item: any) => {
-    const { release_change_failed_reason, specific_failed_reason, failed_detail_reason } = item;
+    const {
+      release_change_failed_reason,
+      specific_failed_reason,
+      failed_detail_reason,
+      current_release_name,
+      target_release_name,
+    } = item;
     const category = CLIENT_ERROR_CATEGORY_MAP.find((item) => item.value === release_change_failed_reason)?.name;
     const subclasses = CLIENT_ERROR_SUBCLASSES_MAP.find((item) => item.value === specific_failed_reason)?.name || '--';
-    return `${t('错误类别')}: ${category}
+    return `【 ${current_release_name} -> ${target_release_name} 】
+    ${t('错误类别')}: ${category}
     ${t('错误子类别')}: ${subclasses}
     ${t('错误详情')}: ${failed_detail_reason}`;
   };
