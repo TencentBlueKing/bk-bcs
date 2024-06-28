@@ -51,12 +51,12 @@
   const tabArr = [
     {
       name: t('Get方法'),
-      topTip: t('Pull：用于一次性拉取最新的配置信息，适用于需要获取并更新配置的场景。'),
+      topTip: t('Get方法：用于一次性拉取最新的配置信息，适用于需要获取并更新配置的场景。'),
     },
     {
       name: t('Watch方法'),
       topTip: t(
-        'Watch：通过建立长连接，实时监听配置版本的变更，当新版本的配置发布时，将自动调用回调方法处理新的配置信息，适用于需要实时响应配置变更的场景。',
+        'Watch方法：通过建立长连接，实时监听配置版本的变更，当新版本的配置发布时，将自动调用回调方法处理新的配置信息，适用于需要实时响应配置变更的场景。',
       ),
     },
   ];
@@ -202,25 +202,25 @@
   /**
    *
    * @param kvName 数据模板名称
-   * @param methods 方法，0: pull，1: watch
+   * @param methods 方法，0: get，1: watch
    */
   const changeKvData = (kvName = 'python', methods = 0) => {
     switch (kvName) {
       case 'python':
         return !methods
-          ? import('/src/assets/exampleData/kv-python-pull.yaml?raw')
+          ? import('/src/assets/exampleData/kv-python-get.yaml?raw')
           : import('/src/assets/exampleData/kv-python-watch.yaml?raw');
       case 'go':
         return !methods
-          ? import('/src/assets/exampleData/kv-go-pull.yaml?raw')
+          ? import('/src/assets/exampleData/kv-go-get.yaml?raw')
           : import('/src/assets/exampleData/kv-go-watch.yaml?raw');
       case 'java':
         return !methods
-          ? import('/src/assets/exampleData/kv-java-pull.yaml?raw')
+          ? import('/src/assets/exampleData/kv-java-get.yaml?raw')
           : import('/src/assets/exampleData/kv-java-watch.yaml?raw');
       case 'c++':
         return !methods
-          ? import('/src/assets/exampleData/kv-c++-pull.yaml?raw')
+          ? import('/src/assets/exampleData/kv-c++-get.yaml?raw')
           : import('/src/assets/exampleData/kv-c++-watch.yaml?raw');
       default:
         return '';
