@@ -104,7 +104,6 @@
           @change="handleTemplateTableChange($event, true)" />
       </div>
     </bk-loading>
-
     <template #footer>
       <bk-button
         theme="primary"
@@ -382,6 +381,7 @@
 
   const handleClose = () => {
     closeLoading.value = true;
+    handleClearTable();
     emits('update:show', false);
   };
 </script>
