@@ -10,11 +10,11 @@
       @hover="handleInitSliderListHeight"
       @leave="handleInitSliderListHeight">
       <template #side-header>
-        <span class="title-icon"><img src="@/images/bcs.svg" class="w-[28px] h-[28px]"></span>
+        <span class="title-icon"><img :src="appLogo" class="w-[28px] h-[28px]"></span>
         <span
           class="title-desc cursor-pointer"
           @click="handleGoHome">
-          {{ $INTERNAL ? $t('bcs.TKEx.title') : $t('bcs.intro.title') }}
+          {{ appName }}
         </span>
       </template>
       <template #header>
@@ -164,6 +164,7 @@ import $router from '@/router';
 import $store from '@/store';
 import SystemLog from '@/views/app/log.vue';
 import ProjectSelector from '@/views/app/project-selector.vue';
+import usePlatform from '@/composables/use-platform';
 
 export default defineComponent({
   name: 'NewNavigation',
@@ -189,6 +190,9 @@ export default defineComponent({
     };
 
     const { menusData: menus } = useMenu();
+    const { config } = usePlatform();
+    const appLogo = computed(() => config.appLogo);
+    const appName = computed(() => config.i18n.name);
     const langs = ref([
       {
         icon: 'bk-icon icon-english',
@@ -364,6 +368,8 @@ export default defineComponent({
     });
 
     return {
+      appLogo,
+      appName,
       langRef,
       navRef,
       navItemRefs,

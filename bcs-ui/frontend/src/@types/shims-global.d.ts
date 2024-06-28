@@ -24,6 +24,7 @@ interface Window {
   readonly BCS_NAMESPACE_PREFIX: string
   readonly BK_LOG_HOST: string
   readonly BK_DOMAIN: string
+  readonly BK_SHARED_RES_BASE_JS_URL: string
 }
 
 declare const BK_BCS_WELCOME: string;
