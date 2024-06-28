@@ -64,9 +64,6 @@
 </script>
 
 <style scoped lang="scss">
-  // :deep(.add-label-tooltips-style) {
-  //   max-width: 50px;
-  // }
   .add-label-wrap {
     display: flex;
     justify-content: flex-start;
