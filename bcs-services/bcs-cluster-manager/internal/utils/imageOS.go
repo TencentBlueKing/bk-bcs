@@ -237,3 +237,17 @@ var CCEImageOsList = []*proto.OsImage{
 		Provider:        common.PublicImageProvider,
 	},
 }
+
+// EKSImageOsList eks default images
+var EKSImageOsList = []*proto.OsImage{
+	{
+		Alias:           "Amazon Linux 2",
+		Arch:            "x86_64",
+		ImageID:         "AL2_x86_64",
+		OsCustomizeType: "GENERAL",
+		OsName:          "AL2_x86_64",
+		SeriesName:      "",
+		Status:          "NORMAL",
+		Provider:        common.PublicImageProvider,
+	},
+}

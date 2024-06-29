@@ -111,7 +111,7 @@ func removeAsgInstances(ctx context.Context, info *cloudprovider.CloudDependBasi
 	var (
 		instanceIDList, validateInstances = make([]string, 0), make([]string, 0)
 	)
-	asgInstances, err := getInstancesFromAsg(asCli, asgName, taskID)
+	asgInstances, err := getInstancesFromAsg(asCli, asgName)
 	if err != nil {
 		blog.Errorf("removeAsgInstances[%s] getInstancesFromAsg[%s] failed: %v", taskID, asgName, err.Error())
 		return err

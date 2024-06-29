@@ -33,7 +33,6 @@ import (
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 )
 
@@ -45,7 +44,7 @@ const (
 var (
 	// DefaultUserDataHeader default user data header for creating launch template userdata
 	DefaultUserDataHeader = "MIME-Version: 1.0\nContent-Type: multipart/mixed; boundary=\"==MYBOUNDARY==\"\n\n" +
-		"-==MYBOUNDARY==\nContent-Type: text/x-shellscript; charset=\"us-ascii\"\n\n"
+		"--==MYBOUNDARY==\nContent-Type: text/x-shellscript; charset=\"us-ascii\"\n\n"
 	// DefaultUserDataTail default user data tail for creating launch template userdata
 	DefaultUserDataTail = "\n\n--==MYBOUNDARY==--"
 )
@@ -104,15 +103,16 @@ func NewAWSClientSet(opt *cloudprovider.CommonOption) (*AWSClientSet, error) {
 	}, nil
 }
 
-// GetClusterKubeConfig constructs the cluster kubeConfig
-func GetClusterKubeConfig(opt *cloudprovider.CommonOption, cluster *eks.Cluster) (string, error) {
+// GenerateAwsRestConf generate aws rest config
+func GenerateAwsRestConf(opt *cloudprovider.CommonOption, cluster *eks.Cluster) (*rest.Config, error) {
 	sess, err := NewSession(opt)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
+
 	generator, err := token.NewGenerator(false, false)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	awsToken, err := generator.GetWithOptions(&token.GetTokenOptions{
@@ -120,12 +120,12 @@ func GetClusterKubeConfig(opt *cloudprovider.CommonOption, cluster *eks.Cluster)
 		ClusterID: *cluster.Name,
 	})
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	decodedCA, err := base64.StdEncoding.DecodeString(*cluster.CertificateAuthority.Data)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	restConfig := &rest.Config{
@@ -138,6 +138,17 @@ func GetClusterKubeConfig(opt *cloudprovider.CommonOption, cluster *eks.Cluster)
 			Timeout:   30 * time.Second,
 			KeepAlive: 30 * time.Second,
 		}).DialContext,
+	}
+
+	return restConfig, nil
+}
+
+// GetClusterKubeConfig constructs the cluster kubeConfig
+func GetClusterKubeConfig(opt *cloudprovider.CommonOption, cluster *eks.Cluster) (string, error) {
+	restConfig, err := GenerateAwsRestConf(opt, cluster)
+	if err != nil {
+		return "", fmt.Errorf("GetClusterKubeConfig GenerateAwsRestConf failed, cluster=%s: %v",
+			*cluster.Name, err)
 	}
 
 	cert, err := base64.StdEncoding.DecodeString(*cluster.CertificateAuthority.Data)
@@ -189,18 +200,32 @@ func GetClusterKubeConfig(opt *cloudprovider.CommonOption, cluster *eks.Cluster)
 		return "", fmt.Errorf("GetClusterKubeConfig marsh kubeconfig failed, %v", err)
 	}
 
-	return encrypt.Encrypt(nil, string(configByte))
+	return base64.StdEncoding.EncodeToString(configByte), nil
+}
+
+func taintTransEffect(ori string) string {
+	switch ori {
+	case "NoSchedule":
+		return eks.TaintEffectNoSchedule
+	case "PreferNoSchedule":
+		return eks.TaintEffectPreferNoSchedule
+	case "NoExecute":
+		return eks.TaintEffectNoExecute
+	}
+
+	return ori
 }
 
 // MapToTaints converts a map of string-string to a slice of Taint
 func MapToTaints(taints []*proto.Taint) []*Taint {
 	result := make([]*Taint, 0)
 	for _, v := range taints {
-		key := v.Key
-		value := v.Value
-		effect := v.Effect
-		result = append(result, &Taint{Key: &key, Value: &value, Effect: &effect})
+		result = append(result, &Taint{
+			Key:    aws.String(v.Key),
+			Value:  aws.String(v.Value),
+			Effect: aws.String(taintTransEffect(v.Effect))})
 	}
+
 	return result
 }
 
@@ -218,9 +243,11 @@ func MapToAwsTaints(taints []*proto.Taint) []*eks.Taint {
 
 func generateAwsCreateNodegroupInput(input *CreateNodegroupInput) *eks.CreateNodegroupInput {
 	newInput := &eks.CreateNodegroupInput{
+		AmiType:       input.AmiType,
 		ClusterName:   input.ClusterName,
+		CapacityType:  input.CapacityType,
+		NodeRole:      input.NodeRole,
 		NodegroupName: input.NodegroupName,
-		//AmiType:       input.AmiType,
 		ScalingConfig: func(c *NodegroupScalingConfig) *eks.NodegroupScalingConfig {
 			if c == nil {
 				return nil
@@ -231,10 +258,19 @@ func generateAwsCreateNodegroupInput(input *CreateNodegroupInput) *eks.CreateNod
 				MinSize:     c.MinSize,
 			}
 		}(input.ScalingConfig),
-		NodeRole:     input.NodeRole,
-		Labels:       input.Labels,
-		Tags:         input.Tags,
-		CapacityType: input.CapacityType,
+		Subnets: input.Subnets,
+	}
+	if input.LaunchTemplate != nil {
+		newInput.LaunchTemplate = &eks.LaunchTemplateSpecification{
+			Id:      input.LaunchTemplate.Id,
+			Version: input.LaunchTemplate.Version,
+		}
+	}
+	if len(input.Labels) != 0 {
+		newInput.Labels = input.Labels
+	}
+	if len(input.Tags) != 0 {
+		newInput.Tags = input.Tags
 	}
 	newInput.Taints = make([]*eks.Taint, 0)
 	for _, v := range input.Taints {
@@ -244,13 +280,7 @@ func generateAwsCreateNodegroupInput(input *CreateNodegroupInput) *eks.CreateNod
 			Effect: v.Effect,
 		})
 	}
-	if input.LaunchTemplate != nil {
-		newInput.LaunchTemplate = &eks.LaunchTemplateSpecification{
-			Id:      input.LaunchTemplate.Id,
-			Name:    input.LaunchTemplate.Name,
-			Version: input.LaunchTemplate.Version,
-		}
-	}
+
 	return newInput
 }
 
@@ -272,16 +302,16 @@ func CreateTagSpecs(instanceTags map[string]*string) []*ec2.LaunchTemplateTagSpe
 	}
 }
 
-func buildLaunchTemplateData(input *CreateLaunchTemplateInput) *ec2.CreateLaunchTemplateInput {
+// generateAwsCreateLaunchTemplateInput generate Aws CreateLaunchTemplateInput
+func generateAwsCreateLaunchTemplateInput(input *CreateLaunchTemplateInput) *ec2.CreateLaunchTemplateInput {
 	awsInput := &ec2.CreateLaunchTemplateInput{
 		LaunchTemplateName: input.LaunchTemplateName,
 		TagSpecifications:  generateAwsTagSpecs(input.TagSpecifications),
 	}
 	if input.LaunchTemplateData != nil {
 		awsInput.LaunchTemplateData = &ec2.RequestLaunchTemplateData{
-			ImageId:      input.LaunchTemplateData.ImageId,
-			InstanceType: input.LaunchTemplateData.InstanceType,
 			KeyName:      input.LaunchTemplateData.KeyName,
+			InstanceType: input.LaunchTemplateData.InstanceType,
 			UserData:     input.LaunchTemplateData.UserData,
 		}
 	}
