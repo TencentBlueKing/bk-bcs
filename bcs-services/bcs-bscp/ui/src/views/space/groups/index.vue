@@ -38,15 +38,38 @@
     </div>
     <div class="group-table-wrapper">
       <bk-loading style="min-height: 300px" :loading="listLoading">
-        <bk-table
-          class="group-table"
-          :border="['outer']"
-          :data="tableData"
-          :checked="checkedGroups"
-          :is-row-select-enable="isRowSelectEnable"
-          @selection-change="handleSelectionChange"
-          @select-all="handleSelectAll">
-          <bk-table-column type="selection" width="60"></bk-table-column>
+        <bk-table class="group-table" :border="['outer']" :data="tableData">
+          <template #prepend>
+            <div v-show="selections.length" class="selections-style">
+              {{ $t('已选择') }}
+              <span class="checked-number">{{ selections.length }}</span>
+              <template v-if="locale === 'zh-cn'">条数据</template>
+              <span
+                class="checked-em"
+                v-show="!(selections.length === filterFailureTableData.length)"
+                @click="handleSelectionAll">
+                {{ $t('选择所有') }} {{ filterFailureTableData.length }}
+                <template v-if="locale === 'zh-cn'">条</template>
+              </span>
+              <span
+                class="checked-em"
+                v-show="selections.length === filterFailureTableData.length"
+                @click="handleClearSelection">
+                {{ $t('取消选择所有数据') }}
+              </span>
+            </div>
+          </template>
+          <bk-table-column :width="100" :label="renderSelection">
+            <template #default="{ row }">
+              <across-check-box
+                :checked="selections.some((item) => item.name === row.name && item.id === row.id)"
+                :disabled="row.released_apps_num > 0 || row.IS_CATEORY_ROW !== undefined"
+                :handle-change="
+                  () =>
+                    handleRowCheckChange(!selections.some((item) => item.name === row.name && item.id === row.id), row)
+                " />
+            </template>
+          </bk-table-column>
           <bk-table-column :label="t('分组名称')" :width="210" show-overflow-tooltip>
             <template #default="{ row }">
               <div v-if="isCategorizedView" class="categorized-view-name">
@@ -161,8 +184,10 @@
   import Message from 'bkui-vue/lib/message';
   import { debounce } from 'lodash';
   import useGlobalStore from '../../../store/global';
+  import CheckType from '../../../../types/across-checked';
   import { getSpaceGroupList, deleteGroup } from '../../../api/group';
   import useTablePagination from '../../../utils/hooks/use-table-pagination';
+  import useTableAcrossCheck from '../../../utils/hooks/use-table-across-check';
   import { IGroupItem, IGroupCategory, IGroupCategoryItem } from '../../../../types/group';
   import CreateGroup from './create-group.vue';
   import EditGroup from './edit-group.vue';
@@ -171,6 +196,7 @@
   import ServicesToPublished from './services-to-published.vue';
   import tableEmpty from '../../../components/table/table-empty.vue';
   import DeleteConfirmDialog from '../../../components/delete-confirm-dialog.vue';
+  import acrossCheckBox from '../../../components/across-checkbox.vue';
 
   const { spaceId } = storeToRefs(useGlobalStore());
   const { t, locale } = useI18n();
@@ -186,7 +212,6 @@
   const changeViewPending = ref(false);
   const isDeleteGroupDialogShow = ref(false);
   const deleteGroupItem = ref<IGroupItem>();
-  const selectedIds = ref<number[]>([]);
   const isCreateGroupShow = ref(false);
   const isEditGroupShow = ref(false);
   const editingGroup = ref<IGroupItem>({
@@ -207,9 +232,24 @@
       '分组由 1 个或多个标签选择器组成，服务配置版本选择分组上线结合客户端配置的标签用于灰度发布、A/B Test等运营场景，详情参考文档：',
     ),
   );
-
-  const checkedGroups = computed(() => {
-    return groupList.value.filter((item) => selectedIds.value.includes(item.id));
+  // 跨页全选
+  const filterFailureTableData = computed(() => groupList.value.filter((item) => item.released_apps_num < 1));
+  const filterFailureCurTableData = computed(() => tableData.value.filter((item) => item.released_apps_num! < 1));
+  const selectedIds = computed(() => {
+    return (selections.value as IGroupItem[]).filter((item) => item.released_apps_num === 0).map((item) => item.id);
+  });
+  const {
+    selectType,
+    selections,
+    // handleResetCheckStatus,
+    renderSelection,
+    handleRowCheckChange,
+    handleSelectionAll,
+    handleClearSelection,
+  } = useTableAcrossCheck({
+    tableData: filterFailureTableData, // 全量数据，排除禁用
+    curPageData: filterFailureCurTableData, // 当前页数据，排除禁用
+    arrowShow: isCategorizedView, // 展示跨页下拉框；按标签分类查看无分页，默认为当前页
   });
 
   watch(
@@ -281,33 +321,6 @@
     return categoryList;
   };
 
-  // 表格行是否可以选中
-  const isRowSelectEnable = ({ row, isCheckAll }: { row: IGroupItem; isCheckAll: boolean }) => {
-    return isCheckAll || row.released_apps_num < 1;
-  };
-
-  // 表格行选择事件
-  const handleSelectionChange = ({ checked, row }: { checked: boolean; row: IGroupItem }) => {
-    const index = selectedIds.value.findIndex((id) => id === row.id);
-    if (checked) {
-      if (index === -1) {
-        selectedIds.value.push(row.id);
-      }
-    } else {
-      selectedIds.value.splice(index, 1);
-    }
-  };
-
-  // 全选
-  const handleSelectAll = ({ checked }: { checked: boolean }) => {
-    if (checked) {
-      const list = isCategorizedView.value ? groupList.value : tableData.value;
-      selectedIds.value = (list as IGroupItem[]).filter((item) => item.released_apps_num === 0).map((item) => item.id);
-    } else {
-      selectedIds.value = [];
-    }
-  };
-
   // 分类视图下的table数据
   const getCategorizedTableData = () => {
     const list: IGroupCategoryItem[] = [];
@@ -340,8 +353,8 @@
   const handleChangeView = () => {
     changeViewPending.value = true;
     pagination.value.current = 1;
-    selectedIds.value = [];
     refreshTableData();
+    handleClearSelection();
     nextTick(() => {
       changeViewPending.value = false;
     });
@@ -381,6 +394,7 @@
       isSearchEmpty.value = true;
     }
     refreshTableData();
+    handleClearSelection();
   }, 300);
 
   // 关联服务
@@ -420,11 +434,16 @@
   const handlePageChange = (val: number) => {
     pagination.value.current = val;
     refreshTableData();
+    if (!(selectType.value === CheckType.HalfAcrossChecked || selectType.value === CheckType.AcrossChecked)) {
+      // 非跨页全选 需要重置全选状态
+      handleClearSelection();
+    }
   };
 
   const handlePageLimitChange = (val: number) => {
     updatePagination('limit', val);
     refreshTableData();
+    handleClearSelection();
   };
 
   // hover提示文字
@@ -448,13 +467,13 @@
   const refreshAfterBatchDelete = () => {
     if (
       !isCategorizedView.value &&
-      selectedIds.value.length === tableData.value.length &&
+      selections.value.length === tableData.value.length &&
       pagination.value.current > 1
     ) {
       pagination.value.current = pagination.value.current - 1;
     }
 
-    selectedIds.value = [];
+    handleClearSelection();
     loadGroupList();
   };
 
@@ -573,6 +592,27 @@
     background: #ffffff;
     :deep(.bk-pagination-list.is-last) {
       margin-left: auto;
+    }
+  }
+  .selections-style {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 30px;
+    font-size: 12px;
+    color: #63656e;
+    background: #ebecf0;
+    .checked-number {
+      padding: 0 5px;
+      font-weight: 700;
+    }
+    .checked-em {
+      margin-left: 5px;
+      color: #3a84ff;
+      cursor: pointer;
+      &:hover {
+        color: #699df4;
+      }
     }
   }
 </style>
