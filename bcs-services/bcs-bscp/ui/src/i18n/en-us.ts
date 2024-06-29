@@ -881,4 +881,10 @@ export default {
   '组件类型 / 版本分布': 'Component type / Version distribution',
   下钻: 'Drill down',
   总和: 'Total',
+
+  // 跨页全选
+  跨页全选: 'AcrossChecked',
+  已选择: 'Selected',
+  选择所有: 'Choose all',
+  取消选择所有数据: 'Cancel all data'
 };
