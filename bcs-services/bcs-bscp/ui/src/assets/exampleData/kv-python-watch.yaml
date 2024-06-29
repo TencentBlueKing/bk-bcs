@@ -1,0 +1,42 @@
+
+### Watch
+
+import logging
+
+from bk_bscp.client import BscpClient, WatchedApp
+
+SERVER_ADDRS = ["{{ .Bk_Bscp_Variable_FEED_ADDR }}"]
+TOKEN = {{ .Bk_Bscp_Variable_ClientKey }}
+BIZ_ID = {{ .Bk_Bscp_Variable_BkBizId }}
+APP = "{{ .Bk_Bscp_Variable_ServiceName }}"
+LABELS = {{ .Bk_Bscp_Variable_Leabels }}
+
+
+def main():
+    """Watch a single app."""
+    with BscpClient(SERVER_ADDRS, TOKEN, BIZ_ID) as client:
+        for ev in client.watch_forever(app=APP, labels=LABELS):
+            print(f"receive new release change event, release id:  {ev.release_id}")
+            for key in ev.key_infos:
+                value = client.get(ev.app, key.key)
+                print(f"{key.key}={value}")
+
+
+
+
+def setup_logger():
+    """Set up the logger to print logs."""
+    logger = logging.getLogger("bk_bscp")
+    logger.setLevel("DEBUG")
+
+    formatter = logging.Formatter("[%(asctime)s] %(name)s:%(levelname)s: %(message)s")
+    handler = logging.StreamHandler()
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+
+
+setup_logger()
+
+
+if __name__ == "__main__":
+    main()

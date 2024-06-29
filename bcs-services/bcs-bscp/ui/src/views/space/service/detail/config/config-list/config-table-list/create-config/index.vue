@@ -74,7 +74,7 @@
     appId: number;
   }>();
 
-  const emits = defineEmits(['created', 'imported', 'uploaded']);
+  const emits = defineEmits(['created']);
 
   const buttonRef = ref();
   const isPopoverOpen = ref(false);

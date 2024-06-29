@@ -6,7 +6,9 @@
       :need-menu="needMenu"
       :default-open="openSideMenu"
       :hover-enter-delay="300"
-      @toggle-click="handleToggleClickNav">
+      @toggle-click="handleToggleClickNav"
+      @hover="handleInitSliderListHeight"
+      @leave="handleInitSliderListHeight">
       <template #side-header>
         <span class="title-icon"><img src="@/images/bcs.svg" class="w-[28px] h-[28px]"></span>
         <span
@@ -156,6 +158,7 @@ import useMenu, { IMenu } from './use-menu';
 import { releaseNote } from '@/api/modules/project';
 import { setCookie } from '@/common/util';
 import BcsMd from '@/components/bcs-md/index.vue';
+import useCalcHeight from '@/composables/use-calc-height';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store';
@@ -171,6 +174,20 @@ export default defineComponent({
     PopoverSelector,
   },
   setup() {
+    const { init } = useCalcHeight([
+      {
+        prop: 'height',
+        el: '.nav-slider-list',
+        calc: ['#bcs-notice-com', '.bk-navigation-header', '.nav-slider-footer'],
+      },
+    ]);
+    // 修复nav悬浮时高度被组件内部覆盖问题
+    const handleInitSliderListHeight = () => {
+      setTimeout(() => {
+        init();
+      });
+    };
+
     const { menusData: menus } = useMenu();
     const langs = ref([
       {
@@ -267,6 +284,7 @@ export default defineComponent({
     const openSideMenu = computed(() => $store.state.openSideMenu);
     const handleToggleClickNav = (value) => {
       $store.commit('updateOpenSideMenu', !!value);
+      handleInitSliderListHeight();
     };
     // 首页
     const handleGoHome = () => {
@@ -374,6 +392,7 @@ export default defineComponent({
       handleChangeMenu,
       resolveMenuLink,
       backToPreVersion,
+      handleInitSliderListHeight,
     };
   },
 });

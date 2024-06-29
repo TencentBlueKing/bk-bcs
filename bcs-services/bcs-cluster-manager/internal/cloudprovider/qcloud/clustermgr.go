@@ -331,7 +331,7 @@ func checkIfWhiteImageOsNames(opt *cloudprovider.ClusterGroupOption) bool {
 
 func clusterSupportNodeNum(tkeCls *tke.Cluster, cluster *proto.Cluster) (uint32, uint32, uint32) {
 	var (
-		ipNum          uint32 = 0
+		ipNum          uint32
 		clusterCidrNum uint32
 	)
 	cidrs, err := business.GetCidrsFromCluster(tkeCls)

@@ -3,7 +3,7 @@
     <SearchInput
       v-model="searchStr"
       class="config-search-input"
-      :placeholder="t('配置文件名/创建人/修改人')"
+      :placeholder="t('配置文件绝对路径/创建人/修改人')"
       @search="getListData" />
     <bk-loading class="loading-wrapper" :loading="loading">
       <div v-for="group in tableGroupsData" :key="group.id" class="config-group">
@@ -17,7 +17,9 @@
             :class="['config-item', { disabled: config.file_state === 'DELETE' }]"
             :key="config.id"
             @click="handleConfigClick(config, group.id)">
-            <div class="config-name">{{ config.name }}</div>
+            <bk-overflow-title class="config-name" type="tips">
+              {{ fileAP(config) }}
+            </bk-overflow-title>
             <div class="config-type">{{ getConfigTypeName(config.file_type) }}</div>
           </div>
           <TableEmpty v-if="group.configs.length === 0" :is-search-empty="isSearchEmpty" @clear="clearSearch" />
@@ -123,6 +125,15 @@
   onMounted(() => {
     getListData();
   });
+
+  // 配置文件绝对路径
+  const fileAP = (config: IConfigTableItem) => {
+    const { path, name } = config;
+    if (path.endsWith('/')) {
+      return `${path}${name}`;
+    }
+    return `${path}/${name}`;
+  };
 
   const getListData = async () => {
     // 拉取到版本列表之前不加在列表数据

@@ -39,7 +39,7 @@ func NewPortLeakChecker(cli client.Client, poolCache *portpoolcache.Cache) *Port
 func (p *PortLeakChecker) Run() {
 	st := time.Now()
 	p.poolCache.Lock()
-	defer blog.Infof("port leak check cost: %d", time.Since(st).Seconds())
+	defer blog.Infof("port leak check cost: %f", time.Since(st).Seconds())
 	defer p.poolCache.Unlock()
 	for _, pool := range p.poolCache.GetPortPoolMap() {
 		for _, item := range pool.ItemList {

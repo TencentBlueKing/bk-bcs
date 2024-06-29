@@ -8,7 +8,7 @@
     <div class="slider-content-container">
       <div class="package-configs-pick">
         <div class="search-wrapper">
-          <SearchInput v-model="searchStr" :placeholder="t('配置文件名称/路径/描述')" @search="handleSearch" />
+          <SearchInput v-model="searchStr" :placeholder="t('配置文件绝对路径/描述')" @search="handleSearch" />
         </div>
         <div class="package-tables">
           <PackageTable

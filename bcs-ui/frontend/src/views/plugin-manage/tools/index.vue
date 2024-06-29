@@ -120,27 +120,24 @@
                       </td>
                       <td class="action">
                         <template v-if="crdcontroller.status === 'deployed'">
-                          <bk-dropdown-menu
-                            class="dropdown-menu"
-                            :align="'left'"
-                            ref="dropdown">
-                            <bk-button :class="['bk-button bk-default btn']" slot="dropdown-trigger" style="position: relative; width: 88px;">
+                          <PopoverSelector offset="0,6">
+                            <bk-button theme="default" style="position: relative; width: 88px;">
                               <span>{{$t('generic.label.action')}}</span>
                               <i class="bcs-icon bcs-icon-angle-down dropdown-menu-angle-down ml5" style="font-size: 10px;"></i>
                             </bk-button>
 
-                            <ul class="bk-dropdown-list" slot="dropdown-content">
-                              <li v-if="crdcontroller.supported_actions.includes('config')">
-                                <a href="javascript:void(0)" @click="goControllerInstances(crdcontroller)">{{$t('plugin.tools.config')}}</a>
+                            <ul slot="content">
+                              <li class="bcs-dropdown-item" v-if="crdcontroller.supported_actions.includes('config')">
+                                <span @click="goControllerInstances(crdcontroller)">{{$t('plugin.tools.config')}}</span>
                               </li>
-                              <li v-if="crdcontroller.supported_actions.includes('upgrade')">
-                                <a href="javascript:void(0)" @click="showInstanceDetail(crdcontroller)">{{$t('plugin.tools.upgrade')}}</a>
+                              <li class="bcs-dropdown-item" v-if="crdcontroller.supported_actions.includes('upgrade')">
+                                <span @click="showInstanceDetail(crdcontroller)">{{$t('plugin.tools.upgrade')}}</span>
                               </li>
-                              <li v-if="crdcontroller.supported_actions.includes('uninstall')">
-                                <a href="javascript:void(0)" @click="handleUninstall(crdcontroller)">{{$t('plugin.tools.uninstall')}}</a>
+                              <li class="bcs-dropdown-item" v-if="crdcontroller.supported_actions.includes('uninstall')">
+                                <span @click="handleUninstall(crdcontroller)">{{$t('plugin.tools.uninstall')}}</span>
                               </li>
                             </ul>
-                          </bk-dropdown-menu>
+                          </PopoverSelector>
                         </template>
                         <template v-else-if="!crdcontroller.status">
                           <bk-button type="primary" @click="haneldEnableCrdController(crdcontroller)">{{$t('logCollector.action.enable')}}</bk-button>
@@ -152,23 +149,20 @@
                             <bk-button type="primary" @click="haneldEnableCrdController(crdcontroller)">{{$t('plugin.tools.restart')}}</bk-button>
                           </template>
                           <template v-else>
-                            <bk-dropdown-menu
-                              class="dropdown-menu"
-                              :align="'left'"
-                              ref="dropdown">
-                              <bk-button :class="['bk-button bk-default btn']" slot="dropdown-trigger" style="position: relative; width: 88px;">
+                            <PopoverSelector>
+                              <bk-button theme="default" style="position: relative; width: 88px;">
                                 <span>{{$t('generic.label.action')}}</span>
                                 <i class="bcs-icon bcs-icon-angle-down dropdown-menu-angle-down ml5" style="font-size: 10px;"></i>
                               </bk-button>
-                              <ul class="bk-dropdown-list" slot="dropdown-content">
-                                <li v-if="crdcontroller.supported_actions.includes('upgrade')">
-                                  <a href="javascript:void(0)" @click="showInstanceDetail(crdcontroller)">{{$t('plugin.tools.upgrade')}}</a>
+                              <ul slot="content">
+                                <li class="bcs-dropdown-item" v-if="crdcontroller.supported_actions.includes('upgrade')">
+                                  <span @click="showInstanceDetail(crdcontroller)">{{$t('plugin.tools.upgrade')}}</span>
                                 </li>
-                                <li v-if="crdcontroller.supported_actions.includes('uninstall')">
-                                  <a href="javascript:void(0)" @click="handleUninstall(crdcontroller)">{{$t('plugin.tools.uninstall')}}</a>
+                                <li class="bcs-dropdown-item" v-if="crdcontroller.supported_actions.includes('uninstall')">
+                                  <span @click="handleUninstall(crdcontroller)">{{$t('plugin.tools.uninstall')}}</span>
                                 </li>
                               </ul>
-                            </bk-dropdown-menu>
+                            </PopoverSelector>
                           </template>
                         </template>
                         <template v-else-if="crdcontroller.status === 'unknown'">
@@ -241,6 +235,7 @@ import ClusterSelectComb from '@/components/cluster-selector/cluster-select-comb
 import BcsContent from '@/components/layout/Content.vue';
 import Row from '@/components/layout/Row.vue';
 import MonacoEditor from '@/components/monaco-editor/editor.vue';
+import PopoverSelector from '@/components/popover-selector.vue';
 
 export default {
   components: {
@@ -248,6 +243,7 @@ export default {
     BcsContent,
     ClusterSelectComb,
     Row,
+    PopoverSelector,
   },
   data() {
     return {

@@ -4,7 +4,7 @@
       <bk-input
         v-model="localVal.fileAP"
         :placeholder="t('请输入配置文件的绝对路径')"
-        :disabled="!editable"
+        :disabled="isEdit"
         @input="change" />
     </bk-form-item>
     <bk-form-item :label="t('配置文件描述')" property="memo">
@@ -12,14 +12,13 @@
         v-model="localVal.memo"
         type="textarea"
         :maxlength="200"
-        :disabled="!editable"
         :placeholder="t('请输入')"
         :resize="true"
         @input="change" />
     </bk-form-item>
     <bk-form-item :label="t('配置文件格式')">
       <bk-radio-group v-model="localVal.file_type" :required="true" @change="change">
-        <bk-radio v-for="typeItem in CONFIG_FILE_TYPE" :key="typeItem.id" :label="typeItem.id" :disabled="!editable">{{
+        <bk-radio v-for="typeItem in CONFIG_FILE_TYPE" :key="typeItem.id" :label="typeItem.id" :disabled="isEdit">{{
           typeItem.name
         }}</bk-radio>
       </bk-radio-group>
@@ -37,7 +36,6 @@
               v-model="privilegeInputVal"
               type="number"
               :placeholder="t('请输入三位权限数字')"
-              :disabled="!editable"
               @blur="handlePrivilegeInputBlur" />
             <template #content>
               <div>{{ t('只能输入三位 0~7 数字') }}</div>
@@ -46,13 +44,8 @@
               </div>
             </template>
           </bk-popover>
-          <bk-popover
-            ext-cls="privilege-select-popover"
-            theme="light"
-            trigger="click"
-            placement="bottom"
-            :disabled="!editable">
-            <div :class="['perm-panel-trigger', { disabled: !editable }]">
+          <bk-popover ext-cls="privilege-select-popover" theme="light" trigger="click" placement="bottom">
+            <div :class="['perm-panel-trigger']">
               <i class="bk-bscp-icon icon-configuration-line"></i>
             </div>
             <template #content>
@@ -78,10 +71,10 @@
         </div>
       </bk-form-item>
       <bk-form-item :label="t('用户')" property="user" :required="true">
-        <bk-input v-model="localVal.user" :placeholder="t('请输入')" :disabled="!editable" @input="change"></bk-input>
+        <bk-input v-model="localVal.user" :placeholder="t('请输入')" @input="change"></bk-input>
       </bk-form-item>
       <bk-form-item :label="t('用户组')" :placeholder="t('请输入')" property="user_group" :required="true">
-        <bk-input v-model="localVal.user_group" :disabled="!editable" @input="change"></bk-input>
+        <bk-input v-model="localVal.user_group" @input="change"></bk-input>
       </bk-form-item>
     </div>
     <bk-form-item v-if="isTpl" class="fixed-width-form" property="revision_name" :label="t('form_版本号')" required>
@@ -94,7 +87,6 @@
         theme="button"
         :tip="t('文件大小{size}M以内', { size: props.fileSizeLimit })"
         :size="props.fileSizeLimit"
-        :disabled="!editable"
         :multiple="false"
         :files="fileList"
         :custom-request="handleFileUpload">
@@ -124,7 +116,7 @@
       </template>
       <ConfigContentEditor
         :content="stringContent"
-        :editable="editable"
+        :editable="true"
         :variables="props.variables"
         :size-limit="props.fileSizeLimit"
         @change="handleStringContentChange" />
@@ -164,7 +156,7 @@
   const props = withDefaults(
     defineProps<{
       config: IConfigEditParams;
-      editable: boolean;
+      isEdit: boolean;
       content: string | IFileConfigContentSummary;
       variables?: IVariableEditParams[];
       bkBizId: string;
@@ -174,7 +166,7 @@
       isTpl?: boolean; // 是否未模板配置文件，非模板配置文件和模板配置文件的上传、下载接口参数有差异
     }>(),
     {
-      editable: true,
+      isEdit: false,
       fileSizeLimit: 100,
     },
   );

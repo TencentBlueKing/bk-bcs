@@ -337,9 +337,12 @@ main() {
     1.2[2-4].*)
       kubeadm_tag="v1beta3"
       ;;
+    1.2[7-8].*)
+      kubeadm_tag="v1beta3"
+      ;;
     *)
       utils::log "FATAL" \
-        "Only support 1.2[0-4].x, here is :${K8S_VER}"
+        "Only support 1.2[0-8].x, here is :${K8S_VER}"
       ;;
   esac
 

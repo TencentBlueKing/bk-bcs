@@ -11,22 +11,31 @@
       <bk-tab v-model:active="activeTab" type="card-grid" ext-cls="view-config-tab">
         <bk-tab-panel name="content" :label="t('配置文件信息')">
           <bk-form label-width="100" form-type="vertical">
-            <bk-form-item :label="t('配置文件名称')">{{ configDetail.name }}</bk-form-item>
-            <bk-form-item :label="t('配置文件路径')">{{ configDetail.path }}</bk-form-item>
+            <bk-form-item :label="t('配置文件绝对路径')">{{ fileAP() }}</bk-form-item>
             <bk-form-item :label="t('配置文件描述')">
               <div class="memo">{{ configDetail.memo || configDetail.revision_memo || '--' }}</div>
             </bk-form-item>
             <bk-form-item :label="t('配置文件内容')">
-              <div v-if="configDetail.file_type === 'binary'" class="binary-file-card" @click="handleDownloadFile">
-                <div class="basic-info">
-                  <TextFill class="file-icon" />
-                  <div class="content">
-                    <div class="name">{{ configDetail.name }}</div>
-                    <div class="time">{{ datetimeFormat(configDetail.update_at || configDetail.create_at) }}</div>
+              <bk-loading
+                v-if="configDetail.file_type === 'binary'"
+                mode="spin"
+                theme="primary"
+                :opacity="0.6"
+                size="mini"
+                :title="t('文件下载中，请稍后')"
+                :loading="fileDownloading"
+                class="file-down-loading">
+                <div class="binary-file-card" @click="handleDownloadFile">
+                  <div class="basic-info">
+                    <TextFill class="file-icon" />
+                    <div class="content">
+                      <div class="name">{{ configDetail.name }}</div>
+                      <div class="time">{{ datetimeFormat(configDetail.update_at || configDetail.create_at) }}</div>
+                    </div>
+                    <div class="size">{{ byteUnitConverse(Number(configDetail.byte_size)) }}</div>
                   </div>
-                  <div class="size">{{ byteUnitConverse(Number(configDetail.byte_size)) }}</div>
                 </div>
-              </div>
+              </bk-loading>
               <ConfigContentEditor
                 v-else
                 :content="content as string"
@@ -135,6 +144,7 @@
   const tplSpaceId = ref(0);
   const sideSliderRef = ref();
   const editorHeight = ref(0);
+  const fileDownloading = ref(false);
 
   watch(
     () => props.show,
@@ -144,9 +154,19 @@
         content.value = '';
         activeTab.value = 'content';
         variables.value = [];
+        fileDownloading.value = false;
       }
     },
   );
+
+  // 配置文件绝对路径
+  const fileAP = () => {
+    const { path, name } = configDetail.value;
+    if (path.endsWith('/')) {
+      return `${path}${name}`;
+    }
+    return `${path}/${name}`;
+  };
 
   const getDetailData = async () => {
     detailLoading.value = true;
@@ -182,9 +202,9 @@
           signature,
           origin_signature,
           md5,
-          create_at,
+          create_at: datetimeFormat(create_at),
           creator,
-          update_at,
+          update_at: datetimeFormat(update_at),
           reviser,
           user,
           user_group,
@@ -205,9 +225,9 @@
           byte_size,
           signature,
           md5,
-          create_at,
+          create_at: datetimeFormat(create_at),
           creator,
-          update_at,
+          update_at: datetimeFormat(update_at),
           reviser,
           user,
           user_group,
@@ -237,7 +257,40 @@
       let template_space_id;
       if (versionData.value.id) {
         const res = await getTemplateVersionDetail(props.bkBizId, props.appId, versionData.value.id, props.id);
-        configDetail.value = { ...res.detail };
+        const {
+          name,
+          path,
+          file_type,
+          file_mode,
+          revision_memo,
+          revision_version,
+          byte_size,
+          signature,
+          origin_signature,
+          md5,
+          create_at,
+          creator,
+          user,
+          user_group,
+          privilege,
+        } = res.detail;
+        configDetail.value = {
+          name,
+          path,
+          file_type,
+          file_mode,
+          revision_memo,
+          revision_version,
+          byte_size,
+          signature,
+          origin_signature,
+          md5,
+          create_at: datetimeFormat(create_at),
+          creator,
+          user,
+          user_group,
+          privilege,
+        };
         template_space_id = res.detail.template_space_id;
       } else {
         const res = await getTemplateVersionsDetailByIds(props.bkBizId, [props.id]);
@@ -257,7 +310,7 @@
           byte_size,
           signature,
           md5,
-          create_at,
+          create_at: datetimeFormat(create_at),
           creator,
           user,
           user_group,
@@ -294,10 +347,13 @@
   };
 
   const handleDownloadFile = async () => {
+    if (fileDownloading.value) return;
+    fileDownloading.value = true;
     const { signature, name } = content.value as IFileConfigContentSummary;
     const getContent = props.type === 'template' ? downloadTemplateContent : downloadConfigContent;
     const res = await getContent(props.bkBizId, props.id, signature, true);
     fileDownload(res, name);
+    fileDownloading.value = false;
   };
 
   const setEditorHeight = () => {
@@ -388,6 +444,19 @@
     .bk-button {
       margin-right: 8px;
       min-width: 88px;
+    }
+  }
+
+  .file-down-loading {
+    :deep(.bk-loading-indicator) {
+      align-items: center;
+      flex-direction: row;
+      .bk-loading-title {
+        margin-top: 0px;
+        margin-left: 8px;
+        color: #979ba5;
+        font-size: 12px;
+      }
     }
   }
 </style>

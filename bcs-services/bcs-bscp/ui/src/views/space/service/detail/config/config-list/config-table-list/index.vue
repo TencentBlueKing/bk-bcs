@@ -11,12 +11,7 @@
     <div class="operate-area">
       <div class="operate-btns">
         <template v-if="versionData.status.publish_status === 'editing'">
-          <CreateConfig
-            :bk-biz-id="props.bkBizId"
-            :app-id="props.appId"
-            @created="refreshConfigList"
-            @imported="refreshConfigList"
-            @uploaded="refreshConfigList(true)" />
+          <CreateConfig :bk-biz-id="props.bkBizId" :app-id="props.appId" @created="refreshConfigList(true)" />
           <EditVariables v-if="isFileType" ref="editVariablesRef" :bk-biz-id="props.bkBizId" :app-id="props.appId" />
         </template>
         <ViewVariables
@@ -42,7 +37,7 @@
         v-model="searchStr"
         class="config-search-input"
         :width="280"
-        :placeholder="t('配置文件名/创建人/修改人')" />
+        :placeholder="t('配置文件绝对路径/创建人/修改人')" />
     </div>
     <section class="config-list-table">
       <TableWithTemplates
@@ -98,9 +93,9 @@
   const selectedIds = ref<number[]>([]);
   const selectedItems = ref<any[]>([]);
 
-  const refreshConfigList = (isBatchUpload = false) => {
+  const refreshConfigList = (createConfig = false) => {
     if (isFileType.value) {
-      tableRef.value.refresh(isBatchUpload);
+      tableRef.value.refresh(createConfig);
       refreshVariable();
     } else {
       tableRef.value.refresh();

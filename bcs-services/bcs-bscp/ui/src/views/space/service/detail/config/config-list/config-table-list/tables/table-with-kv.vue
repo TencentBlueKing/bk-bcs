@@ -181,7 +181,7 @@
   const serviceStore = useServiceStore();
   const { versionData } = storeToRefs(configStore);
   const { checkPermBeforeOperate } = serviceStore;
-  const { permCheckLoading, hasEditServicePerm } = storeToRefs(serviceStore);
+  const { permCheckLoading, hasEditServicePerm, topIds } = storeToRefs(serviceStore);
   const { t } = useI18n();
   const { pagination, updatePagination } = useTablePagination('tableWithKv');
 
@@ -303,6 +303,7 @@
         params.sort = 'updated_at';
         params.order = updateSortType.value.toUpperCase();
       }
+      if (topIds.value.length > 0) params.ids = topIds.value.join(',');
       let res;
       if (isUnNamedVersion.value) {
         if (statusFilterChecked.value!.length > 0) {
@@ -501,6 +502,9 @@
   // 判断当前行是否是删除行
   const getRowCls = (config: IConfigKvType) => {
     if (config.kv_state === 'DELETE') return 'delete-row';
+    if (topIds.value.includes(config.id)) {
+      return 'new-row-marked';
+    }
   };
 
   defineExpose({
@@ -521,6 +525,9 @@
         .cell {
           color: #c4c6cc !important;
         }
+      };
+      tr.new-row-marked td {
+        background: #f2fff4 !important;
       }
     }
   }

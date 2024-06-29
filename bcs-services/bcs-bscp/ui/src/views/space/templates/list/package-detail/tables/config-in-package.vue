@@ -14,7 +14,7 @@
         :configs="selectedConfigs"
         :current-template-space="currentTemplateSpace"
         pkg-type="pkg"
-        :current-pkg="(currentPkg as number)"
+        :current-pkg="currentPkg as number"
         @refresh="refreshConfigList"
         @moved-out="handleMovedOut" />
     </template>
@@ -50,9 +50,9 @@
     updateRefreshFlag();
   };
 
-  const refreshConfigList = (isBatchUpload = false) => {
-    if (isBatchUpload) {
-      configTable.value.refreshList(1, isBatchUpload);
+  const refreshConfigList = (createConfig = false) => {
+    if (createConfig) {
+      configTable.value.refreshList(1, createConfig);
     } else {
       configTable.value.refreshList();
     }

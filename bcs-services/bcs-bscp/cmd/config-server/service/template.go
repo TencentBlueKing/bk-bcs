@@ -245,19 +245,6 @@ func (s *Service) AddTmplsToTmplSets(ctx context.Context, req *pbcs.AddTmplsToTm
 	*pbcs.AddTmplsToTmplSetsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 
-	// validate input param
-	idsLen := len(req.TemplateIds)
-	if idsLen == 0 || idsLen > constant.ArrayInputLenLimit {
-		return nil, fmt.Errorf("the length of template ids is %d, it must be within the range of [1,%d]",
-			idsLen, constant.ArrayInputLenLimit)
-	}
-
-	idsLen2 := len(req.TemplateSetIds)
-	if idsLen2 == 0 || idsLen2 > constant.ArrayInputLenLimit {
-		return nil, fmt.Errorf("the length of template set ids is %d, it must be within the range of [1,%d]",
-			idsLen2, constant.ArrayInputLenLimit)
-	}
-
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 	}
@@ -567,6 +554,7 @@ func (s *Service) BatchUpdateTemplatePermissions(ctx context.Context, req *pbcs.
 		User:        req.User,
 		UserGroup:   req.UserGroup,
 		Privilege:   req.Privilege,
+		AppIds:      req.AppIds,
 	})
 
 	if err != nil {

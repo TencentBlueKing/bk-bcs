@@ -167,8 +167,8 @@ func selectZoneAvailableSubnet(vpcId string, zoneIpCnt map[string]int,
 
 		blog.Infof("selectZoneAvailableSubnet vpc[%s] zone[%s] begin to allocate subnet", vpcId, zone)
 		subnetName, errLocal := getVpcNextSubnetName(vpcId, zone, "", opt)
-		if err != nil {
-			return nil, err
+		if errLocal != nil {
+			return nil, errLocal
 		}
 
 		// default allocate 256 ips
