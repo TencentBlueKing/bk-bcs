@@ -224,6 +224,7 @@ export const updateTemplateContent = (
   templateSpaceId: number,
   data: string | File,
   signature: string,
+  progress?: Function,
 ) =>
   http
     .put(`/biz/${biz_id}/content/upload`, data, {
@@ -232,6 +233,12 @@ export const updateTemplateContent = (
         'X-Bkapi-File-Content-Id': signature,
         'X-Bkapi-File-Content-Overwrite': 'false',
         'Content-Type': 'text/plain',
+      },
+      onUploadProgress: (progressEvent: any) => {
+        if (progress) {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          progress(percentCompleted);
+        }
       },
     })
     .then((res) => res.data);

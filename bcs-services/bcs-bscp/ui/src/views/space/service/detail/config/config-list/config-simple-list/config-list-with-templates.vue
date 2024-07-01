@@ -36,7 +36,8 @@
       v-bind="viewConfigSliderData.data"
       :bk-biz-id="props.bkBizId"
       :app-id="props.appId"
-      :version-id="versionData.id" />
+      :version-id="versionData.id"
+      @open-edit="handleOpenEdit" />
   </section>
 </template>
 <script setup lang="ts">
@@ -258,19 +259,18 @@
   };
 
   const handleConfigClick = (config: IConfigTableItem, groupId: number) => {
-    if (isUnNamedVersion.value && groupId === 0) {
-      editConfigSliderData.value = {
-        open: true,
-        id: config.id,
-      };
-    } else {
-      const id = groupId === 0 ? config.id : config.versionId;
-      const type = groupId === 0 ? 'config' : 'template';
-      viewConfigSliderData.value = {
-        open: true,
-        data: { id, type },
-      };
-    }
+    const id = groupId === 0 ? config.id : config.versionId;
+    const type = groupId === 0 ? 'config' : 'template';
+    viewConfigSliderData.value = {
+      open: true,
+      data: { id, type },
+    };
+    editConfigSliderData.value.id = id;
+  };
+
+  const handleOpenEdit = () => {
+    viewConfigSliderData.value.open = false;
+    editConfigSliderData.value.open = true;
   };
 
   const clearSearch = () => {

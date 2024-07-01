@@ -91,19 +91,40 @@
         :files="fileList"
         :custom-request="handleFileUpload">
         <template #file="{ file }">
-          <div style="width: 100%">
-            <div class="file-wrapper">
-              <div class="status-icon-area">
-                <Done v-if="file.status === 'success'" class="success-icon" />
-                <Error v-if="file.status === 'fail'" class="error-icon" />
-              </div>
+          <bk-loading
+            mode="spin"
+            theme="primary"
+            :opacity="0.6"
+            size="mini"
+            :title="t('文件下载中，请稍后')"
+            :loading="fileDownloading"
+            class="file-down-loading">
+            <div class="file-wrapper" @click="handleDownloadFile">
               <TextFill class="file-icon" />
-              <div class="name" :title="file.name" @click="handleDownloadFile">{{ file.name }}</div>
-              ({{ file.status === 'fail' ? byteUnitConverse(file.size) : file.size }})
+              <div class="file-content">
+                <div class="name" :title="file.name">{{ file.name }}</div>
+                <div v-if="uploadProgress.status === 'uploading'">
+                  <bk-progress
+                    :percent="uploadProgress.percent"
+                    :theme="file.status === 'fail' ? 'danger' : 'primary'"
+                    size="small"
+                    :show-text="false" />
+                </div>
+                <div v-else :class="[file.status === 'success' ? 'success-text' : 'error-text', 'status-icon-area']">
+                  <Done v-if="file.status === 'success'" class="success-icon" />
+                  <Error v-if="file.status === 'fail'" class="error-icon" />
+                  <span :class="[file.status === 'success' ? 'success-text' : 'error-text']">
+                    {{ file.status === 'success' ? t('上传成功') : t('上传失败') }}
+                  </span>
+                </div>
+              </div>
+              <span class="size">
+                ({{ file.status === 'fail' ? byteUnitConverse(file.size) : file.size }})
+                <span v-if="uploadProgress.status === 'uploading'">{{ `${uploadProgress.percent}%` }}</span>
+              </span>
             </div>
-            <div :class="{ 'progress-bar': uploadPending }"></div>
             <div v-if="file.status === 'fail'" class="error-msg">{{ file.statusText }}</div>
-          </div>
+          </bk-loading>
         </template>
       </bk-upload>
     </bk-form-item>
@@ -181,8 +202,12 @@
   const stringContent = ref('');
   const fileContent = ref<IFileConfigContentSummary | File>();
   const isFileChanged = ref(false); // 标识文件是否被修改，编辑配置文件时若文件未修改，不重新上传文件
-  const uploadPending = ref(false);
   const formRef = ref();
+  const uploadProgress = ref({
+    percent: 0,
+    status: '',
+  });
+  const fileDownloading = ref(false);
   const rules = {
     // 配置文件绝对路径校验规则，path+filename
     fileAP: [
@@ -345,25 +370,45 @@
   const handleFileUpload = (option: { file: File }) => {
     isFileChanged.value = true;
     return new Promise((resolve) => {
-      uploadPending.value = true;
       emits('update:fileUploading', true);
       fileContent.value = option.file;
-      uploadContent().then((res) => {
-        uploadPending.value = false;
-        emits('update:fileUploading', false);
-        change();
-        resolve(res);
-      });
+      uploadContent()
+        .then((res) => {
+          emits('update:fileUploading', false);
+          change();
+          resolve(res);
+        })
+        .finally(() => {
+          uploadProgress.value.status = 'success';
+          uploadProgress.value.percent = 0;
+        });
     });
   };
 
   // 上传配置内容
   const uploadContent = async () => {
+    uploadProgress.value.status = 'uploading';
     const signature = await getSignature();
     if (props.isTpl) {
-      return updateTemplateContent(props.bkBizId, props.id, fileContent.value as File, signature as string);
+      return updateTemplateContent(
+        props.bkBizId,
+        props.id,
+        fileContent.value as File,
+        signature as string,
+        (progress: number) => {
+          uploadProgress.value.percent = progress;
+        },
+      );
     }
-    return updateConfigContent(props.bkBizId, props.id, fileContent.value as File, signature as string);
+    return updateConfigContent(
+      props.bkBizId,
+      props.id,
+      fileContent.value as File,
+      signature as string,
+      (progress: number) => {
+        uploadProgress.value.percent = progress;
+      },
+    );
   };
 
   // 生成文件或文本的sha256
@@ -388,10 +433,18 @@
 
   // 下载已上传文件
   const handleDownloadFile = async () => {
-    const { signature, name } = fileContent.value as IFileConfigContentSummary;
-    const getContent = props.isTpl ? downloadTemplateContent : downloadConfigContent;
-    const res = await getContent(props.bkBizId, props.id, signature, true);
-    fileDownload(res, name);
+    if (uploadProgress.value.status === 'uploading' || !props.isEdit) return;
+    try {
+      fileDownloading.value = true;
+      const { signature, name } = fileContent.value as IFileConfigContentSummary;
+      const getContent = props.isTpl ? downloadTemplateContent : downloadConfigContent;
+      const res = await getContent(props.bkBizId, props.id, signature, true);
+      fileDownload(res, name);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      fileDownloading.value = false;
+    }
   };
 
   const validate = async () => {
@@ -510,40 +563,53 @@
       pointer-events: inherit;
     }
     .file-wrapper {
+      position: relative;
       display: flex;
       align-items: center;
       color: #979ba5;
       font-size: 12px;
+      border: 1px solid #c4c6cc;
+      padding: 10px;
+      width: 100%;
+      cursor: pointer;
+      &:hover .name {
+        color: #3a84ff;
+      }
+      .file-content {
+        width: 400px;
+      }
       .status-icon-area {
         display: flex;
-        width: 20px;
-        height: 100%;
         align-items: center;
-        justify-content: center;
+        &.success-text {
+          color: #2dcb56;
+        }
+        &.error-text {
+          color: #ea3636;
+        }
         .success-icon {
           font-size: 20px;
-          color: #2dcb56;
         }
         .error-icon {
           font-size: 14px;
-          color: #ea3636;
         }
       }
       .file-icon {
         margin: 0 6px 0 0;
+        font-size: 32px;
       }
       .name {
         max-width: 360px;
-        margin-right: 4px;
-        color: #63656e;
         white-space: nowrap;
         text-overflow: ellipsis;
         overflow: hidden;
-        cursor: pointer;
-        &:hover {
-          color: #3a84ff;
-          text-decoration: underline;
-        }
+        line-height: normal;
+      }
+      .size {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
       }
     }
     .error-msg {
@@ -560,18 +626,18 @@
       margin-right: 5px;
     }
   }
-  .progress-bar {
-    width: 0;
-    height: 2px;
-    background-color: #3a84ff;
-    animation: progressAnimation 1s ease-in-out forwards;
-  }
-  @keyframes progressAnimation {
-    from {
-      width: 0;
-    }
-    to {
-      width: 100%;
+  .file-down-loading {
+    width: 100%;
+    height: 70px;
+    :deep(.bk-loading-indicator) {
+      align-items: center;
+      flex-direction: row;
+      .bk-loading-title {
+        margin-top: 0px;
+        margin-left: 8px;
+        color: #979ba5;
+        font-size: 12px;
+      }
     }
   }
 </style>
