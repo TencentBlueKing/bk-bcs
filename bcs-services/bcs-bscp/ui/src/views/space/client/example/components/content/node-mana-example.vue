@@ -64,7 +64,7 @@
   const route = useRoute();
 
   const linkUrl = {
-    nodeManaUrl: (window as any).BK_NODE_HOST,
+    nodeManaUrl: `${(window as any).BK_NODE_HOST}/#/plugin-manager/rule`,
     clientNode: 'https://bk.tencent.com/docs/markdown/ZH/BSCP/1.29/UserGuide/Function/client_configuration.md',
   };
 

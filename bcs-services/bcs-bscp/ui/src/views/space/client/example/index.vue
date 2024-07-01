@@ -2,7 +2,7 @@
   <section class="configuration-example-page">
     <div class="example-aside">
       <!-- 选择服务 -->
-      <service-selector class="sel-service" @change-service="changeService" />
+      <service-selector class="sel-service" @select-service="selectService" />
       <!-- 示例列表 -->
       <div class="type-wrap">
         <bk-menu :active-key="renderComponent" @update:active-key="changeTypeItem">
@@ -88,12 +88,12 @@
   });
 
   // 服务切换
-  const changeService = (getServiceType: string, getServiceName: string) => {
-    serviceType.value = getServiceType;
-    if (serviceName.value !== getServiceName) {
+  const selectService = (serviceTypeVal: string, serviceNameVal: string) => {
+    serviceType.value = serviceTypeVal;
+    if (serviceName.value !== serviceNameVal) {
       loading.value = true;
     }
-    serviceName.value = getServiceName;
+    serviceName.value = serviceNameVal;
     changeTypeItem(navList.value[0].val);
   };
   // 服务的子类型切换

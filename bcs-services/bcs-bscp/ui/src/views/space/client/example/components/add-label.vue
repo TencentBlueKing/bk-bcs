@@ -53,7 +53,7 @@
   // 数据传递
   const sendVal = () => {
     // 处理数据格式用于展示
-    const newArr: String[] = [];
+    const newArr: string[] = [];
     labelArr.value.forEach((item) => {
       if (item.key || item.value) {
         newArr.push(`"${item.key}":"${item.value}"`);

@@ -43,7 +43,7 @@
   import { AngleUpFill } from 'bkui-vue/lib/icon';
   import { useI18n } from 'vue-i18n';
 
-  const emits = defineEmits(['change-service']);
+  const emits = defineEmits(['select-service']);
 
   const { locale } = useI18n();
   const route = useRoute();
@@ -67,7 +67,7 @@
         id: service.id!,
         serviceType: service.spec.config_type!,
       };
-      emits('change-service', localApp.value.serviceType, localApp.value.name);
+      emits('select-service', localApp.value.serviceType, localApp.value.name);
     } else if (serviceList.value.length) {
       handleAppChange(serviceList.value[0].id!);
     }
@@ -101,7 +101,7 @@
     }
     setLastAccessedServiceDetail(appId);
     await router.push({ name: route.name!, params: { spaceId: bizId.value, appId } });
-    emits('change-service', localApp.value.serviceType, localApp.value.name);
+    emits('select-service', localApp.value.serviceType, localApp.value.name);
   };
   const setLastAccessedServiceDetail = (appId: number) => {
     localStorage.setItem('lastAccessedServiceDetail', JSON.stringify({ spaceId: bizId.value, appId }));
