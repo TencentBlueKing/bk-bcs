@@ -75,14 +75,14 @@ func (f FeatureFlags) validate() error {
 	for bizID := range f.BizView.Spec {
 		if _, err := strconv.Atoi(bizID); err != nil {
 			return fmt.Errorf("invalid featureFlags.BIZ_VIEW.spec.{bizID} value %s, "+
-				"biz id should be able to convert into an interger", bizID)
+				"biz id should be an interger", bizID)
 		}
 	}
 
 	for bizID := range f.ResourceLimit.Spec {
 		if _, err := strconv.Atoi(bizID); err != nil {
 			return fmt.Errorf("invalid featureFlags.RESOURCE_LIMIT.spec.{bizID} value %s, "+
-				"biz id should be able to convert into an interger", bizID)
+				"biz id should be an interger", bizID)
 		}
 	}
 
