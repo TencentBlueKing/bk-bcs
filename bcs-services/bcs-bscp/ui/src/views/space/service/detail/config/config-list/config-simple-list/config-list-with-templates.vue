@@ -16,7 +16,7 @@
             v-for="config in group.configs"
             :class="['config-item', { disabled: config.file_state === 'DELETE' }]"
             :key="config.id"
-            @click="handleConfigClick(config, group.id)">
+            @click="handleConfigClick(config, group)">
             <bk-overflow-title class="config-name" type="tips">
               {{ fileAP(config) }}
             </bk-overflow-title>
@@ -65,6 +65,10 @@
     name: string;
     expand: boolean;
     configs: IConfigTableItem[];
+    template_space_id?: number;
+    template_space_name?: string;
+    template_set_id?: number;
+    template_set_name?: string;
   }
 
   interface IConfigTableItem {
@@ -78,6 +82,13 @@
     reviser: string;
     update_at: string;
     file_state: string;
+  }
+
+  interface ITemplateConfigMeta {
+    template_space_id: number;
+    template_space_name: string;
+    template_set_id: number;
+    template_set_name: string;
   }
 
   const store = useConfigStore();
@@ -101,9 +112,20 @@
     open: false,
     id: 0,
   });
-  const viewConfigSliderData = ref({
+  const viewConfigSliderData = ref<{
+    open: boolean;
+    data: {
+      id: number;
+      type: string;
+      templateMeta?: ITemplateConfigMeta;
+      versionName?: string;
+    };
+  }>({
     open: false,
-    data: { id: 0, type: '' },
+    data: {
+      id: 0,
+      type: '',
+    },
   });
 
   watch(
@@ -222,9 +244,14 @@
   // 将模板按套餐分组，并将模板数据格式转为表格数据
   const groupTplsByPkg = (list: IBoundTemplateGroup[]) => {
     const groups: IConfigsGroupData[] = list.map((groupItem) => {
-      const { template_space_name, template_set_id, template_set_name, template_revisions } = groupItem;
+      const { template_space_name, template_set_id, template_set_name, template_revisions, template_space_id } =
+        groupItem;
       const group: IConfigsGroupData = {
         id: template_set_id,
+        template_set_id,
+        template_set_name,
+        template_space_name,
+        template_space_id,
         name: `${template_space_name} - ${template_set_name}`,
         expand: false,
         configs: [],
@@ -258,13 +285,26 @@
     return groups;
   };
 
-  const handleConfigClick = (config: IConfigTableItem, groupId: number) => {
-    const id = groupId === 0 ? config.id : config.versionId;
-    const type = groupId === 0 ? 'config' : 'template';
-    viewConfigSliderData.value = {
-      open: true,
-      data: { id, type },
-    };
+  const handleConfigClick = (config: IConfigTableItem, group: IConfigsGroupData) => {
+    const id = group.id === 0 ? config.id : config.versionId;
+    if (group.id === 0) {
+      viewConfigSliderData.value = {
+        open: true,
+        data: { id, type: 'config' },
+      };
+    } else {
+      const { template_set_id, template_space_id, template_set_name, template_space_name } = group;
+      const templateMeta = { template_space_id, template_space_name, template_set_id, template_set_name };
+      viewConfigSliderData.value = {
+        open: true,
+        data: {
+          id,
+          versionName: config.versionName,
+          templateMeta: templateMeta as ITemplateConfigMeta,
+          type: 'template',
+        },
+      };
+    }
     editConfigSliderData.value.id = id;
   };
 

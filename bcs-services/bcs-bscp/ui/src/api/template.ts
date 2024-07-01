@@ -648,3 +648,13 @@ export const importTemplateBatchAdd = (biz_id: string, template_space_id: number
  */
 export const batchEditTemplatePermission = (biz_id: string, query: any) =>
   http.post(`/config/biz/${biz_id}/templates/batch_update_templates_permissions`, query);
+
+/**
+ * 批量修改模板权限
+ * @param biz_id 业务ID
+ * @param template_id 模板id
+ * @param revision_name 版本名称
+ * @returns
+ */
+export const getTemplateConfigMeta = (biz_id: string, template_id: number, revision_name?: string) =>
+  http.get(`/config/biz/${biz_id}/templates/${template_id}/template_revisions`, { params: { revision_name } });

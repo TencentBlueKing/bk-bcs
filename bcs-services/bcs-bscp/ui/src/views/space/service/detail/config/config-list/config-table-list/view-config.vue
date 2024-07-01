@@ -75,7 +75,7 @@
     downloadConfigContent,
   } from '../../../../../../../api/config';
   import {
-    getTemplateVersionsDetailByIds,
+    getTemplateConfigMeta,
     getTemplateVersionDetail,
     downloadTemplateContent,
   } from '../../../../../../../api/template';
@@ -86,7 +86,18 @@
   import { getReleasedAppVariables } from '../../../../../../../api/variable';
   import useConfigStore from '../../../../../../../store/config';
 
+  interface ITemplateConfigMeta {
+    template_space_id: number;
+    template_space_name: string;
+    template_set_id: number;
+    template_set_name: string;
+  }
+
   interface IConfigMeta {
+    template_space_id?: number;
+    template_space_name?: string;
+    template_set_id?: number;
+    template_set_name?: string;
     name: string;
     path: string;
     file_mode: string;
@@ -118,6 +129,8 @@
     versionId: number;
     type: string; // 取值为config/template，分别表示非模板套餐下配置文件和模板套餐下配置文件
     show: Boolean;
+    templateMeta?: ITemplateConfigMeta;
+    versionName?: string;
   }>();
 
   const emits = defineEmits(['update:show', 'openEdit']);
@@ -257,65 +270,20 @@
       let template_space_id;
       if (versionData.value.id) {
         const res = await getTemplateVersionDetail(props.bkBizId, props.appId, versionData.value.id, props.id);
-        const {
-          name,
-          path,
-          file_type,
-          file_mode,
-          revision_memo,
-          revision_version,
-          byte_size,
-          signature,
-          origin_signature,
-          md5,
-          create_at,
-          creator,
-          user,
-          user_group,
-          privilege,
-        } = res.detail;
         configDetail.value = {
-          name,
-          path,
-          file_type,
-          file_mode,
-          revision_memo,
-          revision_version,
-          byte_size,
-          signature,
-          origin_signature,
-          md5,
-          create_at: datetimeFormat(create_at),
-          creator,
-          user,
-          user_group,
-          privilege,
+          ...res.detail,
+          create_at: datetimeFormat(res.detail.create_at),
+          update_at: datetimeFormat(res.detail.update_at),
         };
         template_space_id = res.detail.template_space_id;
       } else {
-        const res = await getTemplateVersionsDetailByIds(props.bkBizId, [props.id]);
-        const { revision, spec } = res.details[0];
-        const { creator, create_at } = revision;
-        const { content_spec, file_mode, file_type, name, revision_memo, revision_version, path, permission } = spec;
-        const { byte_size, signature, md5 } = content_spec;
-        const { user, user_group, privilege } = permission;
-        template_space_id = res.details[0].attachment?.template_space_id;
+        const res = await getTemplateConfigMeta(props.bkBizId, props.id, props.versionName);
         configDetail.value = {
-          name,
-          path,
-          file_type,
-          file_mode,
-          revision_memo,
-          revision_version,
-          byte_size,
-          signature,
-          md5,
-          create_at: datetimeFormat(create_at),
-          creator,
-          user,
-          user_group,
-          privilege,
+          ...props.templateMeta,
+          ...res.data.detail,
+          create_at: datetimeFormat(res.data.detail.create_at),
         };
+        template_space_id = props.templateMeta!.template_space_id;
       }
 
       tplSpaceId.value = template_space_id;
