@@ -492,10 +492,10 @@ func (dao *configItemDao) ValidateAppCINumber(kt *kit.Kit, tx *gen.QueryTx, bizI
 func getAppConfigCnt(bizID uint32) int {
 	if resLimit, ok := cc.DataService().FeatureFlags.ResourceLimit.Spec[fmt.Sprintf("%d", bizID)]; ok {
 		if resLimit.AppConfigCnt > 0 {
-			return resLimit.AppConfigCnt
+			return int(resLimit.AppConfigCnt)
 		}
 	}
-	return cc.DataService().FeatureFlags.ResourceLimit.Default.AppConfigCnt
+	return int(cc.DataService().FeatureFlags.ResourceLimit.Default.AppConfigCnt)
 }
 
 // queryFileMode query config item file mode field.

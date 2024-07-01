@@ -65,47 +65,24 @@ type ResourceLimit struct {
 	// MaxFileSize 配置文件大小上限，单位 MB，默认为100MB
 	MaxFileSize uint `json:"maxFileSize" yaml:"maxFileSize"`
 	// AppConfigCnt 单个app下允许创建的配置数（模版+非模版），默认为2000
-	AppConfigCnt int `yaml:"appConfigCnt"`
+	AppConfigCnt uint `yaml:"appConfigCnt"`
 	// TmplSetTmplCnt 单个模版套餐下允许创建的模版数，默认为2000
-	TmplSetTmplCnt int `yaml:"tmplSetTmplCnt"`
+	TmplSetTmplCnt uint `yaml:"tmplSetTmplCnt"`
 }
 
 // validate if the feature resource limit is valid or not.
 func (f FeatureFlags) validate() error {
-	if f.ResourceLimit.Default.MaxFileSize < 0 {
-		return fmt.Errorf("invalid featureFlags.RESOURCE_LIMIT.default.maxFileSize value %d, should >= 1",
-			f.ResourceLimit.Default.MaxFileSize)
+	for bizID := range f.BizView.Spec {
+		if _, err := strconv.Atoi(bizID); err != nil {
+			return fmt.Errorf("invalid featureFlags.BIZ_VIEW.spec.{bizID} value %s, "+
+				"biz id should be able to convert into an interger", bizID)
+		}
 	}
 
-	if f.ResourceLimit.Default.AppConfigCnt < 0 {
-		return fmt.Errorf("invalid featureFlags.RESOURCE_LIMIT.default.appConfigCnt value %d, should >= 1",
-			f.ResourceLimit.Default.AppConfigCnt)
-	}
-
-	if f.ResourceLimit.Default.TmplSetTmplCnt < 0 {
-		return fmt.Errorf("invalid featureFlags.RESOURCE_LIMIT.default.tmplSetTmplCnt value %d, should >= 1",
-			f.ResourceLimit.Default.TmplSetTmplCnt)
-	}
-
-	for bizID, bizLimit := range f.ResourceLimit.Spec {
+	for bizID := range f.ResourceLimit.Spec {
 		if _, err := strconv.Atoi(bizID); err != nil {
 			return fmt.Errorf("invalid featureFlags.RESOURCE_LIMIT.spec.{bizID} value %s, "+
-				"biz id should be able to converted into an interger", bizID)
-		}
-
-		if bizLimit.MaxFileSize < 0 {
-			return fmt.Errorf("invalid featureFlags.RESOURCE_LIMIT.spec.%s.maxFileSize value %d, should >= 1",
-				bizID, f.ResourceLimit.Default.MaxFileSize)
-		}
-
-		if bizLimit.AppConfigCnt < 0 {
-			return fmt.Errorf("invalid featureFlags.RESOURCE_LIMIT.spec.%s.appConfigCnt value %d, should >= 1",
-				bizID, f.ResourceLimit.Default.AppConfigCnt)
-		}
-
-		if bizLimit.TmplSetTmplCnt < 0 {
-			return fmt.Errorf("invalid featureFlags.RESOURCE_LIMIT.spec.%s.tmplSetTmplCnt value %d, should >= 1",
-				bizID, f.ResourceLimit.Default.TmplSetTmplCnt)
+				"biz id should be able to convert into an interger", bizID)
 		}
 	}
 

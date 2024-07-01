@@ -517,8 +517,8 @@ func (dao *templateSetDao) ValidateTmplNumber(kt *kit.Kit, tx *gen.QueryTx, bizI
 func getTmplSetTmplCnt(bizID uint32) int {
 	if resLimit, ok := cc.DataService().FeatureFlags.ResourceLimit.Spec[fmt.Sprintf("%d", bizID)]; ok {
 		if resLimit.TmplSetTmplCnt > 0 {
-			return resLimit.TmplSetTmplCnt
+			return int(resLimit.TmplSetTmplCnt)
 		}
 	}
-	return cc.DataService().FeatureFlags.ResourceLimit.Default.TmplSetTmplCnt
+	return int(cc.DataService().FeatureFlags.ResourceLimit.Default.TmplSetTmplCnt)
 }
