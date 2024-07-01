@@ -114,7 +114,7 @@
                   <Done v-if="file.status === 'success'" class="success-icon" />
                   <Error v-if="file.status === 'fail'" class="error-icon" />
                   <span :class="[file.status === 'success' ? 'success-text' : 'error-text']">
-                    {{ file.status === 'success' ? t('上传成功') : t('上传失败') }}
+                    {{ file.status === 'success' ? t('上传成功') : `${t('上传失败')} ${file.statusText}` }}
                   </span>
                 </div>
               </div>
@@ -123,7 +123,6 @@
                 <span v-if="uploadProgress.status === 'uploading'">{{ `${uploadProgress.percent}%` }}</span>
               </span>
             </div>
-            <div v-if="file.status === 'fail'" class="error-msg">{{ file.statusText }}</div>
           </bk-loading>
         </template>
       </bk-upload>
@@ -555,10 +554,6 @@
     }
   }
   .config-uploader {
-    :deep(.bk-upload-list__item) {
-      padding: 0;
-      border: none;
-    }
     :deep(.bk-upload-list--disabled .bk-upload-list__item) {
       pointer-events: inherit;
     }
@@ -568,8 +563,7 @@
       align-items: center;
       color: #979ba5;
       font-size: 12px;
-      border: 1px solid #c4c6cc;
-      padding: 10px;
+      line-height: 12px;
       width: 100%;
       cursor: pointer;
       &:hover .name {
@@ -612,12 +606,6 @@
         transform: translateY(-50%);
       }
     }
-    .error-msg {
-      padding: 0 0 10px 38px;
-      line-height: 1;
-      font-size: 12px;
-      color: #ff5656;
-    }
   }
   .config-content-label {
     display: flex;
@@ -628,7 +616,6 @@
   }
   .file-down-loading {
     width: 100%;
-    height: 70px;
     :deep(.bk-loading-indicator) {
       align-items: center;
       flex-direction: row;
