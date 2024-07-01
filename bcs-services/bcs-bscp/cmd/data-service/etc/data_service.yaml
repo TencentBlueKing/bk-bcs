@@ -110,12 +110,34 @@ sharding:
     qps: 500
     burst: 500
 
-# configLimit is config related limit
-configLimit:
-  # appConfigCnt is the max limit of config item for an app for user to create, default is 2000
-  appConfigCnt:
-  # tmplSetTmplCnt is the max limit of templates for a template set for user to create, default is 2000
-  tmplSetTmplCnt:
+# 特性配置
+featureFlags:
+  # 业务展示白名单
+  BIZ_VIEW:
+    # 全局默认配置(优先级低于业务级配置)，默认为true（展示）
+    default:
+    # 业务级配置，默认为空
+    spec:
+      "2":
+  # 业务资源限制
+  RESOURCE_LIMIT:
+    # 全局默认配置(优先级低于业务级配置)
+    default:
+      # 配置文件大小上限，单位为MB，默认为100MB
+      maxFileSize:
+      # 单个app下允许创建的配置数（模版+非模版），默认为2000
+      appConfigCnt:
+      # 单个模版套餐下允许创建的模版数，默认为2000
+      tmplSetTmplCnt:
+    # 业务级配置，默认为空
+    spec:
+      "2":
+        # 配置文件大小上限，单位为MB
+        maxFileSize:
+        # 单个app下允许创建的配置数（模版+非模版）
+        appConfigCnt:
+        # 单个模版套餐下允许创建的模版数
+        tmplSetTmplCnt:
 
 # defines log's related configuration
 log:

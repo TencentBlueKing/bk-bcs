@@ -479,13 +479,23 @@ func (dao *configItemDao) ValidateAppCINumber(kt *kit.Kit, tx *gen.QueryTx, bizI
 	}
 
 	total := int(count) + tcount
-	if total > cc.DataService().ConfigLimit.AppConfigCnt {
+	appConfigCnt := getAppConfigCnt(bizID)
+	if total > appConfigCnt {
 		return errf.New(errf.InvalidParameter,
 			fmt.Sprintf("the total number of app %d's config items(including template and non-template)"+
-				"exceeded the limit %d", appID, cc.DataService().ConfigLimit.AppConfigCnt))
+				"exceeded the limit %d", appID, appConfigCnt))
 	}
 
 	return nil
+}
+
+func getAppConfigCnt(bizID uint32) int {
+	if resLimit, ok := cc.DataService().FeatureFlags.ResourceLimit.Spec[fmt.Sprintf("%d", bizID)]; ok {
+		if resLimit.AppConfigCnt > 0 {
+			return resLimit.AppConfigCnt
+		}
+	}
+	return cc.DataService().FeatureFlags.ResourceLimit.Default.AppConfigCnt
 }
 
 // queryFileMode query config item file mode field.

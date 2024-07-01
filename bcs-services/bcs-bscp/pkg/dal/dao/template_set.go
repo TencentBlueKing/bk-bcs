@@ -502,13 +502,23 @@ func (dao *templateSetDao) ValidateTmplNumber(kt *kit.Kit, tx *gen.QueryTx, bizI
 	if err != nil {
 		return fmt.Errorf("get template set %d's failed, err: %v", tmplSetID, err)
 	}
-	count := len(tmplSet.Spec.TemplateIDs)
 
-	if count > cc.DataService().ConfigLimit.TmplSetTmplCnt {
+	count := len(tmplSet.Spec.TemplateIDs)
+	tmplSetTmplCnt := getTmplSetTmplCnt(bizID)
+	if count > tmplSetTmplCnt {
 		return errf.New(errf.InvalidParameter,
 			fmt.Sprintf("the total number of template set %d's templates exceeded the limit %d",
-				tmplSetID, cc.DataService().ConfigLimit.TmplSetTmplCnt))
+				tmplSetID, tmplSetTmplCnt))
 	}
 
 	return nil
+}
+
+func getTmplSetTmplCnt(bizID uint32) int {
+	if resLimit, ok := cc.DataService().FeatureFlags.ResourceLimit.Spec[fmt.Sprintf("%d", bizID)]; ok {
+		if resLimit.TmplSetTmplCnt > 0 {
+			return resLimit.TmplSetTmplCnt
+		}
+	}
+	return cc.DataService().FeatureFlags.ResourceLimit.Default.TmplSetTmplCnt
 }

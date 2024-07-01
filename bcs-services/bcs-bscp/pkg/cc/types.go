@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -47,9 +48,9 @@ type FeatureFlags struct {
 
 // FeatureBizView 业务白名单
 type FeatureBizView struct {
-	Default bool `yaml:"default"`
+	Default *bool `yaml:"default"`
 	// map[bizID]true/false
-	Spec map[string]bool `yaml:"spec"`
+	Spec map[string]*bool `yaml:"spec"`
 }
 
 // FeatureResourceLimit 业务资源限制
@@ -61,8 +62,85 @@ type FeatureResourceLimit struct {
 
 // ResourceLimit 资源限制配置项
 type ResourceLimit struct {
-	// 配置文件大小上限，单位 Mb
+	// MaxFileSize 配置文件大小上限，单位 MB，默认为100MB
 	MaxFileSize uint `json:"maxFileSize" yaml:"maxFileSize"`
+	// AppConfigCnt 单个app下允许创建的配置数（模版+非模版），默认为2000
+	AppConfigCnt int `yaml:"appConfigCnt"`
+	// TmplSetTmplCnt 单个模版套餐下允许创建的模版数，默认为2000
+	TmplSetTmplCnt int `yaml:"tmplSetTmplCnt"`
+}
+
+// validate if the feature resource limit is valid or not.
+func (f FeatureFlags) validate() error {
+	if f.ResourceLimit.Default.MaxFileSize < 0 {
+		return fmt.Errorf("invalid featureFlags.RESOURCE_LIMIT.default.maxFileSize value %d, should >= 1",
+			f.ResourceLimit.Default.MaxFileSize)
+	}
+
+	if f.ResourceLimit.Default.AppConfigCnt < 0 {
+		return fmt.Errorf("invalid featureFlags.RESOURCE_LIMIT.default.appConfigCnt value %d, should >= 1",
+			f.ResourceLimit.Default.AppConfigCnt)
+	}
+
+	if f.ResourceLimit.Default.TmplSetTmplCnt < 0 {
+		return fmt.Errorf("invalid featureFlags.RESOURCE_LIMIT.default.tmplSetTmplCnt value %d, should >= 1",
+			f.ResourceLimit.Default.TmplSetTmplCnt)
+	}
+
+	for bizID, bizLimit := range f.ResourceLimit.Spec {
+		if _, err := strconv.Atoi(bizID); err != nil {
+			return fmt.Errorf("invalid featureFlags.RESOURCE_LIMIT.spec.{bizID} value %s, "+
+				"biz id should be able to converted into an interger", bizID)
+		}
+
+		if bizLimit.MaxFileSize < 0 {
+			return fmt.Errorf("invalid featureFlags.RESOURCE_LIMIT.spec.%s.maxFileSize value %d, should >= 1",
+				bizID, f.ResourceLimit.Default.MaxFileSize)
+		}
+
+		if bizLimit.AppConfigCnt < 0 {
+			return fmt.Errorf("invalid featureFlags.RESOURCE_LIMIT.spec.%s.appConfigCnt value %d, should >= 1",
+				bizID, f.ResourceLimit.Default.AppConfigCnt)
+		}
+
+		if bizLimit.TmplSetTmplCnt < 0 {
+			return fmt.Errorf("invalid featureFlags.RESOURCE_LIMIT.spec.%s.tmplSetTmplCnt value %d, should >= 1",
+				bizID, f.ResourceLimit.Default.TmplSetTmplCnt)
+		}
+	}
+
+	return nil
+}
+
+const (
+	// DefaultBizView is default biz view
+	DefaultBizView = true
+	// DefaultMaxFileSize is default max file size, unit is MB
+	DefaultMaxFileSize = 100
+	// DefaultAppConfigCnt is default app's config count
+	DefaultAppConfigCnt = 2000
+	// DefaultTmplSetTmplCnt is default template set's template count
+	DefaultTmplSetTmplCnt = 2000
+)
+
+// trySetDefault try set the default value of feature flag
+func (f *FeatureFlags) trySetDefault() {
+	if f.BizView.Default == nil {
+		bizView := DefaultBizView
+		f.BizView.Default = &bizView
+	}
+
+	if f.ResourceLimit.Default.MaxFileSize == 0 {
+		f.ResourceLimit.Default.MaxFileSize = DefaultMaxFileSize
+	}
+
+	if f.ResourceLimit.Default.AppConfigCnt == 0 {
+		f.ResourceLimit.Default.AppConfigCnt = DefaultAppConfigCnt
+	}
+
+	if f.ResourceLimit.Default.TmplSetTmplCnt == 0 {
+		f.ResourceLimit.Default.TmplSetTmplCnt = DefaultTmplSetTmplCnt
+	}
 }
 
 // Service defines Setting related runtime.
@@ -1098,45 +1176,6 @@ func (v *Vault) getConfigFromEnv() {
 	}
 	if v.Address == "" {
 		v.Address = os.Getenv(VaultAddressEnv)
-	}
-}
-
-// ConfigLimit is config related limit
-type ConfigLimit struct {
-	// AppConfigCnt is the max limit of config item for an app for user to create
-	AppConfigCnt int `yaml:"appConfigCnt"`
-	// TmplSetTmplCnt is the max limit of templates for a template set for user to create
-	TmplSetTmplCnt int `yaml:"tmplSetTmplCnt"`
-}
-
-// validate if the config limit is valid or not.
-func (c ConfigLimit) validate() error {
-	if c.AppConfigCnt < 0 {
-		return fmt.Errorf("invalid configLimit.appConfigCnt value %d, should >= 1", c.AppConfigCnt)
-	}
-
-	if c.TmplSetTmplCnt < 0 {
-		return fmt.Errorf("invalid configLimit.tmplSetTmplCnt value %d, should >= 1", c.TmplSetTmplCnt)
-	}
-
-	return nil
-}
-
-const (
-	// DefaultAppConfigCnt is default app's config count
-	DefaultAppConfigCnt = 2000
-	// DefaultTmplSetTmplCnt is default template set's template count
-	DefaultTmplSetTmplCnt = 2000
-)
-
-// trySetDefault try set the default value of config limit
-func (c *ConfigLimit) trySetDefault() {
-	if c.AppConfigCnt == 0 {
-		c.AppConfigCnt = DefaultAppConfigCnt
-	}
-
-	if c.TmplSetTmplCnt == 0 {
-		c.TmplSetTmplCnt = DefaultTmplSetTmplCnt
 	}
 }
 

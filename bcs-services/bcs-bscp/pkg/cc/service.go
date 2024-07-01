@@ -98,6 +98,7 @@ func (s *ApiServerSetting) trySetDefault() {
 	s.Service.trySetDefault()
 	s.Log.trySetDefault()
 	s.Repo.trySetDefault()
+	s.FeatureFlags.trySetDefault()
 }
 
 // Validate ApiServerSetting option.
@@ -112,6 +113,10 @@ func (s ApiServerSetting) Validate() error {
 	}
 
 	if err := s.Repo.validate(); err != nil {
+		return err
+	}
+
+	if err := s.FeatureFlags.validate(); err != nil {
 		return err
 	}
 
@@ -279,12 +284,12 @@ type DataServiceSetting struct {
 	Service Service   `yaml:"service"`
 	Log     LogOption `yaml:"log"`
 
-	Credential  Credential  `yaml:"credential"`
-	Sharding    Sharding    `yaml:"sharding"`
-	Esb         Esb         `yaml:"esb"`
-	Repo        Repository  `yaml:"repository"`
-	Vault       Vault       `yaml:"vault"`
-	ConfigLimit ConfigLimit `yaml:"configLimit"`
+	Credential   Credential   `yaml:"credential"`
+	Sharding     Sharding     `yaml:"sharding"`
+	Esb          Esb          `yaml:"esb"`
+	Repo         Repository   `yaml:"repository"`
+	Vault        Vault        `yaml:"vault"`
+	FeatureFlags FeatureFlags `yaml:"featureFlags"`
 }
 
 // trySetFlagBindIP try set flag bind ip.
@@ -305,7 +310,7 @@ func (s *DataServiceSetting) trySetDefault() {
 	s.Sharding.trySetDefault()
 	s.Repo.trySetDefault()
 	s.Vault.getConfigFromEnv()
-	s.ConfigLimit.trySetDefault()
+	s.FeatureFlags.trySetDefault()
 }
 
 // Validate DataServiceSetting option.
@@ -335,7 +340,7 @@ func (s DataServiceSetting) Validate() error {
 		return err
 	}
 
-	if err := s.ConfigLimit.validate(); err != nil {
+	if err := s.FeatureFlags.validate(); err != nil {
 		return err
 	}
 
