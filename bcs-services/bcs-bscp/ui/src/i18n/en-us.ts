@@ -440,6 +440,9 @@ export default {
   '压缩包正在解压，请稍后': 'The compressed package is being decompressed, please wait',
   '确认恢复该配置项?': 'Confirm to restore the configuration item?',
   '文件下载中，请稍后': 'File download in progress, please wait',
+  编辑配置文件成功: 'Edit configuration file successfully',
+  上传成功: 'Upload successful',
+  上传失败: 'Upload failed',
 
   // 分组管理
   新增分组: 'New group',
