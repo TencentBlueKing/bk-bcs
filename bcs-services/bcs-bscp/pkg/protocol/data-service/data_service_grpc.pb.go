@@ -62,6 +62,7 @@ const (
 	Data_DeprecateRelease_FullMethodName                  = "/pbds.Data/DeprecateRelease"
 	Data_UnDeprecateRelease_FullMethodName                = "/pbds.Data/UnDeprecateRelease"
 	Data_DeleteRelease_FullMethodName                     = "/pbds.Data/DeleteRelease"
+	Data_CheckReleaseName_FullMethodName                  = "/pbds.Data/CheckReleaseName"
 	Data_GetReleasedConfigItem_FullMethodName             = "/pbds.Data/GetReleasedConfigItem"
 	Data_GetReleasedKv_FullMethodName                     = "/pbds.Data/GetReleasedKv"
 	Data_ListReleasedKvs_FullMethodName                   = "/pbds.Data/ListReleasedKvs"
@@ -234,6 +235,7 @@ type DataClient interface {
 	DeprecateRelease(ctx context.Context, in *DeprecateReleaseReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	UnDeprecateRelease(ctx context.Context, in *UnDeprecateReleaseReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	DeleteRelease(ctx context.Context, in *DeleteReleaseReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
+	CheckReleaseName(ctx context.Context, in *CheckReleaseNameReq, opts ...grpc.CallOption) (*CheckReleaseNameResp, error)
 	// released config item related interface.
 	GetReleasedConfigItem(ctx context.Context, in *GetReleasedCIReq, opts ...grpc.CallOption) (*released_ci.ReleasedConfigItem, error)
 	// released kv related interface.
@@ -671,6 +673,15 @@ func (c *dataClient) UnDeprecateRelease(ctx context.Context, in *UnDeprecateRele
 func (c *dataClient) DeleteRelease(ctx context.Context, in *DeleteReleaseReq, opts ...grpc.CallOption) (*base.EmptyResp, error) {
 	out := new(base.EmptyResp)
 	err := c.cc.Invoke(ctx, Data_DeleteRelease_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) CheckReleaseName(ctx context.Context, in *CheckReleaseNameReq, opts ...grpc.CallOption) (*CheckReleaseNameResp, error) {
+	out := new(CheckReleaseNameResp)
+	err := c.cc.Invoke(ctx, Data_CheckReleaseName_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1879,6 +1890,7 @@ type DataServer interface {
 	DeprecateRelease(context.Context, *DeprecateReleaseReq) (*base.EmptyResp, error)
 	UnDeprecateRelease(context.Context, *UnDeprecateReleaseReq) (*base.EmptyResp, error)
 	DeleteRelease(context.Context, *DeleteReleaseReq) (*base.EmptyResp, error)
+	CheckReleaseName(context.Context, *CheckReleaseNameReq) (*CheckReleaseNameResp, error)
 	// released config item related interface.
 	GetReleasedConfigItem(context.Context, *GetReleasedCIReq) (*released_ci.ReleasedConfigItem, error)
 	// released kv related interface.
@@ -2131,6 +2143,9 @@ func (UnimplementedDataServer) UnDeprecateRelease(context.Context, *UnDeprecateR
 }
 func (UnimplementedDataServer) DeleteRelease(context.Context, *DeleteReleaseReq) (*base.EmptyResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteRelease not implemented")
+}
+func (UnimplementedDataServer) CheckReleaseName(context.Context, *CheckReleaseNameReq) (*CheckReleaseNameResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CheckReleaseName not implemented")
 }
 func (UnimplementedDataServer) GetReleasedConfigItem(context.Context, *GetReleasedCIReq) (*released_ci.ReleasedConfigItem, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetReleasedConfigItem not implemented")
@@ -3085,6 +3100,24 @@ func _Data_DeleteRelease_Handler(srv interface{}, ctx context.Context, dec func(
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DataServer).DeleteRelease(ctx, req.(*DeleteReleaseReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_CheckReleaseName_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CheckReleaseNameReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).CheckReleaseName(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_CheckReleaseName_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).CheckReleaseName(ctx, req.(*CheckReleaseNameReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -5541,6 +5574,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteRelease",
 			Handler:    _Data_DeleteRelease_Handler,
+		},
+		{
+			MethodName: "CheckReleaseName",
+			Handler:    _Data_CheckReleaseName_Handler,
 		},
 		{
 			MethodName: "GetReleasedConfigItem",
