@@ -1,22 +1,27 @@
 base_conf:
   app_code: ""
   app_secret: ""
+  bk_paas_host: ""
   time_zone: Asia/Shanghai
-  language_code: en
+  language_code: en-us
   run_env: dev
-
-bcs_conf:
-  host: ""
-  token: ""
-  jwt_public_key: ""
-
+  feed_addr: ""
 web:
-  route_prefix: /bscp/ui
   host: ""
+  route_prefix: ""
   preferred_domains: ""
-
+  bk_shared_res_url: ""
 etcd:
   endpoints: 127.0.0.1:2379
   ca: ""
   cert: ""
   key: ""
+frontend_conf:
+  docs: {}
+  hosts:
+    bk_iam_host: ""
+    bk_cmdb_host: ""
+    bscp_api_url: ""
+    bk_nodeman_host: ""
+  helper: ""
+  enable_bk_notice: false
