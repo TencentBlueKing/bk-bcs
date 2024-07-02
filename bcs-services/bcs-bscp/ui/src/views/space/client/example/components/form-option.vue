@@ -53,21 +53,7 @@
   const emits = defineEmits(['update-option-data']);
 
   const { t } = useI18n();
-  const sysDirectories: string[] = [
-    '/bin',
-    '/boot',
-    '/dev',
-    '/etc',
-    '/lib',
-    '/lib64',
-    '/proc',
-    '/run',
-    '/sbin',
-    '/sys',
-    '/tmp',
-    '/usr',
-    '/var',
-  ];
+  const sysDirectories: string[] = ['/bin', '/boot', '/dev', '/lib', '/lib64', '/proc', '/run', '/sbin', '/sys'];
   const rules = {
     clientKey: [
       {
