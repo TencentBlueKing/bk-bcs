@@ -1,6 +1,4 @@
 bcs:
-  title: BCS | Tencent BlueKing
-  name: BCS
   TKEx:
     title: TKEx-IEG
     welcome: Welcome to TKEX-IEG platform
@@ -11,7 +9,6 @@ bcs:
       container management services based on the characteristics of each type of
       IEG game.
   intro:
-    title: BCS
     welcome: Welcome to BCS
     article1: >-
       BCS is designed to bridge the gap between cloud-native technologies and

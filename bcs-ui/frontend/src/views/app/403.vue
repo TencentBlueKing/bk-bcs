@@ -3,7 +3,7 @@
     <span>{{$t('iam.title.perms')}}</span>
     <bk-table :data="tableData" class="mt25" v-bkloading="{ isLoading }">
       <bk-table-column :label="$t('iam.label.system')" prop="system" min-width="150">
-        {{ $t('bcs.name') }}
+        {{ name }}
       </bk-table-column>
       <bk-table-column :label="$t('iam.label.action')" prop="auth" min-width="220">
         <template #default="{ row }">
@@ -30,6 +30,7 @@ import { defineComponent, onBeforeMount, PropType, ref } from 'vue';
 import useProjects from '../project-manage/project/use-project';
 
 import $bkMessage from '@/common/bkmagic';
+import usePlatform from '@/composables/use-platform';
 import $router from '@/router';
 import actionsMap from '@/views/app/actions-map';
 
@@ -62,7 +63,8 @@ export default defineComponent({
   },
   setup(props) {
     const { fetchProjectInfo } = useProjects();
-
+    const { config } = usePlatform();
+    const name = ref(config.i18n.name);
     const tableData = ref<any[]>([]);
     const href = ref('');
     const isLoading = ref(false);
@@ -112,6 +114,7 @@ export default defineComponent({
       handleGetProjectPerms();
     });
     return {
+      name,
       handleGotoIAM,
       actionsMap,
       tableData,

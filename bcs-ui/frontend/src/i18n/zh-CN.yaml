@@ -1,6 +1,4 @@
 bcs:
-  title: 容器管理平台 | 腾讯蓝鲸智云
-  name: 容器管理平台
   newVersion: '有版本更新, 是否刷新界面'
   TKEx:
     title: TKEx-IEG 容器平台
@@ -8,7 +6,6 @@ bcs:
     article1: TKEx-IEG 是公司 K8S Oteam 指定的 IEG 容器服务平台。
     article2: TKEx-IEG 依托于 TKE，聚焦打造游戏一站式微服务部署治理方案，并基于 IEG 各类游戏的特点，提供游戏特色的容器管理服务。
   intro:
-    title: 蓝鲸容器管理平台
     welcome: 欢迎使用蓝鲸容器管理平台
     article1: 蓝鲸容器管理平台（Blueking Container Service）定位于打造云原生技术和业务实际应用场景之间的桥梁；
     article2: 聚焦于复杂应用场景的容器化部署技术方案的研发、整合和产品化；

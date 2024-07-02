@@ -8,11 +8,11 @@
       :hover-enter-delay="300"
       @toggle-click="handleToggleClickNav">
       <template #side-header>
-        <span class="title-icon"><img src="@/images/bcs.svg" class="w-[28px] h-[28px]"></span>
+        <span class="title-icon"><img :src="appLogo" class="w-[28px] h-[28px]"></span>
         <span
           class="title-desc cursor-pointer"
           @click="handleGoHome">
-          {{ $INTERNAL ? $t('bcs.TKEx.title') : $t('bcs.intro.title') }}
+          {{ appName }}
         </span>
       </template>
       <template #header>
@@ -128,6 +128,7 @@ import useMenu, { IMenu } from './use-menu';
 import { releaseNote, switchLanguage } from '@/api/modules/project';
 import { setCookie } from '@/common/util';
 import BcsMd from '@/components/bcs-md/index.vue';
+import usePlatform from '@/composables/use-platform';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store';
@@ -144,6 +145,9 @@ export default defineComponent({
   },
   setup() {
     const { menusData: menus } = useMenu();
+    const { config } = usePlatform();
+    const appLogo = computed(() => config.appLogo);
+    const appName = computed(() => config.i18n.name);
     const langs = ref([
       {
         icon: 'bk-icon icon-english',
@@ -279,6 +283,8 @@ export default defineComponent({
     });
 
     return {
+      appLogo,
+      appName,
       langRef,
       navRef,
       navItemRefs,

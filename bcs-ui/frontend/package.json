@@ -13,6 +13,7 @@
     "@blueking/bkui-form": "0.0.39",
     "@blueking/ip-selector": "0.2.0-beta",
     "@blueking/notice-component-vue2": "^2.0.3",
+    "@blueking/platform-config": "^1.0.3",
     "axios": "^1.6.2",
     "base-64": "^0.1.0",
     "bk-magic-vue": "2.5.8-beta.11",

@@ -24,6 +24,7 @@ import { bus } from '@/common/bus';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import { useAppData } from '@/composables/use-app';
 import useCalcHeight from '@/composables/use-calc-height';
+import usePlatform from '@/composables/use-platform';
 import $i18n from '@/i18n/i18n-setup';
 import PermDialog from '@/views/app/apply-perm.vue';
 import BkPaaSLogin from '@/views/app/login.vue';
@@ -34,6 +35,7 @@ export default defineComponent({
   components: { Navigation, BkPaaSLogin, PermDialog, NoticeComponent },
   setup() {
     const { getUserInfo } = useAppData();
+    const { config, getPlatformInfo, setDocumentTitle } = usePlatform();
     const isLoading = ref(false);
     const applyPermRef = ref<any>(null);
     const loginRef = ref<any>(null);
@@ -124,13 +126,13 @@ export default defineComponent({
     onMounted(async () => {
       validateResourceVersion();
       validateAllowDomains();
-
+      await getPlatformInfo();
       window.$loginModal = loginRef.value;
 
       isLoading.value = true;
       await getUserInfo();
       isLoading.value = false;
-      document.title = $i18n.t('bcs.title');
+      setDocumentTitle(config.i18n);
     });
 
     return {
