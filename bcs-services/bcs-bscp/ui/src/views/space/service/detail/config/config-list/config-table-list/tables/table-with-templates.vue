@@ -75,7 +75,7 @@
                                   () => {
                                     hasEditServicePerm &&
                                       config.file_state !== 'DELETE' &&
-                                      handleViewConfig(config.id, 'config');
+                                      handleViewConfig(config.id);
                                   }
                                 ">
                                 {{ fileAP(config) }}
@@ -85,7 +85,7 @@
                                 :class="['file-name-btn', { disabled: config.file_state === 'DELETE' }]"
                                 @click="
                                   () => {
-                                    config.file_state !== 'DELETE' && handleViewConfig(config.id, 'config');
+                                    config.file_state !== 'DELETE' && handleViewConfig(config.id);
                                   }
                                 ">
                                 {{ fileAP(config) }}
@@ -96,7 +96,7 @@
                               :class="['file-name-btn', { disabled: config.file_state === 'DELETE' }]"
                               @click="
                                 () => {
-                                  config.file_state !== 'DELETE' && handleViewConfig(config.versionId, 'template');
+                                  config.file_state !== 'DELETE' && handleViewTemplateConfig(config, group);
                                 }
                               ">
                               {{ fileAP(config) }}
@@ -163,7 +163,7 @@
                                 </bk-button>
                               </template>
                               <template v-else>
-                                <bk-button text theme="primary" @click="handleViewConfig(config.id, 'config')">
+                                <bk-button text theme="primary" @click="handleViewConfig(config.id)">
                                   {{ t('查看') }}
                                 </bk-button>
                                 <bk-button
@@ -192,7 +192,7 @@
                                 {{ t('替换版本') }}
                               </bk-button>
                               <template v-else>
-                                <bk-button text theme="primary" @click="handleViewConfig(config.versionId, 'template')">
+                                <bk-button text theme="primary" @click="handleViewTemplateConfig(config, group)">
                                   {{ t('查看') }}
                                 </bk-button>
                                 <bk-button
@@ -317,6 +317,10 @@
     name: string;
     expand: boolean;
     configs: IConfigTableItem[];
+    template_space_id?: number;
+    template_space_name?: string;
+    template_set_id?: number;
+    template_set_name?: string;
   }
 
   interface IPermissionType {
@@ -338,6 +342,13 @@
     permission?: IPermissionType;
     is_conflict: boolean;
     is_latest?: boolean;
+  }
+
+  interface ITemplateConfigMeta {
+    template_space_id: number;
+    template_space_name: string;
+    template_set_id: number;
+    template_set_name: string;
   }
 
   const { t } = useI18n();
@@ -377,9 +388,20 @@
   const deleteTemplatePkgName = ref('');
   const deleteTemplatePkgId = ref(0);
   const statusFilterChecked = ref<string[]>([]);
-  const viewConfigSliderData = ref({
+  const viewConfigSliderData = ref<{
+    open: boolean;
+    data: {
+      id: number;
+      type: string;
+      templateMeta?: ITemplateConfigMeta;
+      versionName?: string;
+    };
+  }>({
     open: false,
-    data: { id: 0, type: '' },
+    data: {
+      id: 0,
+      type: '',
+    },
   });
   const replaceDialogData = ref({
     open: false,
@@ -611,9 +633,14 @@
   // 将模板按套餐分组，并将模板数据格式转为表格数据
   const groupTplsByPkg = (list: IBoundTemplateGroup[]) => {
     const groups: IConfigsGroupData[] = list.map((groupItem) => {
-      const { template_space_name, template_set_id, template_set_name, template_revisions } = groupItem;
+      const { template_space_name, template_set_id, template_set_name, template_revisions, template_space_id } =
+        groupItem;
       const group: IConfigsGroupData = {
         id: template_set_id,
+        template_set_id,
+        template_set_name,
+        template_space_name,
+        template_space_id,
         name: `${template_space_name} - ${template_set_name}`,
         expand: true,
         configs: [],
@@ -694,11 +721,22 @@
     emits('deleteConfig');
   };
 
-  // 查看配置文件或模板版本
-  const handleViewConfig = (id: number, type: string) => {
+  // 查看配置文件
+  const handleViewConfig = (id: number) => {
     viewConfigSliderData.value = {
       open: true,
-      data: { id, type },
+      data: { id, type: 'config' },
+    };
+  };
+
+  // 查看配置模板版本
+  const handleViewTemplateConfig = (config: IConfigTableItem, group: IConfigsGroupData) => {
+    const { id, versionName } = config;
+    const { template_set_id, template_space_id, template_set_name, template_space_name } = group;
+    const templateMeta = { template_space_id, template_space_name, template_set_id, template_set_name };
+    viewConfigSliderData.value = {
+      open: true,
+      data: { id, versionName, templateMeta: templateMeta as ITemplateConfigMeta, type: 'template' },
     };
   };
 

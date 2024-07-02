@@ -127,7 +127,13 @@ export const getReleasedConfigItemDetail = (
  * @param signature 文件内容的SHA256值
  * @returns
  */
-export const updateConfigContent = (bizId: string, appId: number, data: string | File, signature: string) =>
+export const updateConfigContent = (
+  bizId: string,
+  appId: number,
+  data: string | File,
+  signature: string,
+  progress?: Function,
+) =>
   http
     .put(`/biz/${bizId}/content/upload`, data, {
       headers: {
@@ -135,6 +141,12 @@ export const updateConfigContent = (bizId: string, appId: number, data: string |
         'X-Bkapi-File-Content-Id': signature,
         'X-Bkapi-File-Content-Overwrite': 'false',
         'Content-Type': 'text/plain',
+      },
+      onUploadProgress: (progressEvent: any) => {
+        if (progress) {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          progress(percentCompleted);
+        }
       },
     })
     .then((res) => res.data);
