@@ -10,7 +10,6 @@ web:
   host: ""
   route_prefix: ""
   preferred_domains: ""
-  bk_shared_res_url: ""
 etcd:
   endpoints: 127.0.0.1:2379
   ca: ""
@@ -23,5 +22,6 @@ frontend_conf:
     bk_cmdb_host: ""
     bscp_api_url: ""
     bk_nodeman_host: ""
+    bk_shared_res_url: ""
   helper: ""
   enable_bk_notice: false

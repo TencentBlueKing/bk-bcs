@@ -41,7 +41,7 @@ func (c *Configuration) init() error {
 	if err := c.Web.init(); err != nil {
 		return err
 	}
-	if err := c.Web.initResBaseJSURL(c.Base.AppCode); err != nil {
+	if err := c.Frontend.initResBaseJSURL(c.Base.AppCode); err != nil {
 		return err
 	}
 

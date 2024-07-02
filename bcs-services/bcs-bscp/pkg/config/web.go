@@ -13,19 +13,16 @@
 package config
 
 import (
-	"fmt"
 	"net/url"
 	"path"
 )
 
 // WebConf web 相关配置
 type WebConf struct {
-	Host                 string   `yaml:"host"`
-	RoutePrefix          string   `yaml:"route_prefix"` // vue路由, 静态资源前缀
-	PreferredDomains     string   `yaml:"preferred_domains"`
-	BaseURL              *url.URL `yaml:"-"`
-	BKSharedResURL       string   `yaml:"bk_shared_res_url"` // 对应运维公共变量bkSharedResUrl, PaaS环境变量BKPAAS_SHARED_RES_URL
-	BKSharedResBaseJSURL string   `yaml:"-"`                 // 规则是${bkSharedResUrl}/${目录名 aks app_code}/base.js
+	Host             string   `yaml:"host"`
+	RoutePrefix      string   `yaml:"route_prefix"` // vue路由, 静态资源前缀
+	PreferredDomains string   `yaml:"preferred_domains"`
+	BaseURL          *url.URL `yaml:"-"`
 }
 
 // init 初始化
@@ -37,24 +34,6 @@ func (c *WebConf) init() error {
 	u.Path = path.Join(u.Path, c.RoutePrefix)
 
 	c.BaseURL = u
-	return nil
-}
-
-func (c *WebConf) initResBaseJSURL(appCode string) error {
-	if c.BKSharedResURL == "" {
-		return nil
-	}
-	if appCode == "" {
-		return fmt.Errorf("initResBaseJSURL: app_code is required")
-	}
-
-	u, err := url.Parse(c.BKSharedResURL)
-	if err != nil {
-		return err
-	}
-	u.Path = path.Join(u.Path, appCode, "base.js")
-
-	c.BKSharedResBaseJSURL = u.String()
 	return nil
 }
 
