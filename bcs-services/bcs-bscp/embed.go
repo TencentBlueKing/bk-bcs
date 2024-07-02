@@ -57,7 +57,7 @@ type IndexConfig struct {
 	Helper               string
 	ProxyAPI             bool
 	FeedAddr             string
-	BKSharedResBaseJSURL string // 规则是${bkSharedResUrl}/${目录名 aks app_code}/base.js
+	BKSharedResBaseJSURL string // 规则是${bkSharedResUrl}/${目录名 aka app_code}/base.js
 	NodeManHost          string
 }
 
