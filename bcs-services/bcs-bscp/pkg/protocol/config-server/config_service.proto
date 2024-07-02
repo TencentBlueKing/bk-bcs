@@ -218,6 +218,12 @@ service Config {
       delete: "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}"
     };
   }
+  rpc CheckReleaseName(CheckReleaseNameReq) returns (CheckReleaseNameResp) {
+    option (google.api.http) = {
+      get: "/api/v1/config/biz_id/{biz_id}/app_id/{app_id}/release/{name}/check"
+    };
+  }
+  
   rpc CreateHook(CreateHookReq) returns (CreateHookResp) {
     option (google.api.http) = {
       post: "/api/v1/config/biz/{biz_id}/hooks"
@@ -1407,6 +1413,16 @@ message CreateReleaseReq {
 
 message CreateReleaseResp {
   uint32 id = 1;
+}
+
+message CheckReleaseNameReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  string name = 3;
+}
+
+message CheckReleaseNameResp {
+  bool exist = 1;
 }
 
 message ListReleasesReq {
