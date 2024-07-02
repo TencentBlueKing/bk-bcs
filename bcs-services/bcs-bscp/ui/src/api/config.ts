@@ -608,3 +608,13 @@ export const importKvFormJson = (bizId: string, appId: number, content: string) 
  */
 export const importKvFormYaml = (bizId: string, appId: number, content: string) =>
   http.post(`/config/biz/${bizId}/apps/${appId}/kvs/yaml/import`, { data: content });
+
+/**
+ * 判断生成版本名称是否重名
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param kvs 上传kv列表
+ * @returns
+ */
+export const createVersionNameCheck = (bizId: string, appId: number, name: string) =>
+  http.get(`/config/biz_id/${bizId}/app_id/${appId}/release/${name}/check`);

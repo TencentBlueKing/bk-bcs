@@ -440,6 +440,7 @@ export default {
   '压缩包正在解压，请稍后': 'The compressed package is being decompressed, please wait',
   '确认恢复该配置项?': 'Confirm to restore the configuration item?',
   '文件下载中，请稍后': 'File download in progress, please wait',
+  版本名称已存在: 'The version name already exists',
 
   // 分组管理
   新增分组: 'New group',
