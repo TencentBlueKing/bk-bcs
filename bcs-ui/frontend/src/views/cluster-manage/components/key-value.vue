@@ -1,12 +1,16 @@
 <template>
   <div>
     <span
-      class="add-btn" v-if="!labels.length"
+      class="add-btn"
+      v-if="!labels.length"
       @click="handleAddLabel(0)">
       <i class="bk-icon icon-plus-circle-shape mr5"></i>
       {{$t('generic.button.add')}}
     </span>
-    <div class="key-value" v-for="(item, index) in labels" :key="index">
+    <div
+      v-for="(item, index) in labels"
+      :key="index"
+      :class="['key-value', { '!mb-0': index === (labels.length - 1) }]">
       <Validate class="w-[100%]" :value="item.key" :rules="keyRules">
         <bcs-input
           v-model="item.key"
