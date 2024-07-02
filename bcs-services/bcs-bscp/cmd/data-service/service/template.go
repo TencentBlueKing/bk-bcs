@@ -586,10 +586,11 @@ func (s *Service) ListTemplatesNotBound(ctx context.Context, req *pbds.ListTempl
 		for _, f := range fields {
 			fieldsMap[f] = true
 		}
+		fieldsMap["combinedPathName"] = true
 		newDetails := make([]*pbtemplate.Template, 0)
 		for _, detail := range details {
-			if (fieldsMap["name"] && strings.Contains(detail.Spec.Name, req.SearchValue)) ||
-				(fieldsMap["path"] && strings.Contains(detail.Spec.Path, req.SearchValue)) ||
+			combinedPathName := path.Join(detail.Spec.Path, detail.Spec.Name)
+			if (fieldsMap["combinedPathName"] && strings.Contains(combinedPathName, req.SearchValue)) ||
 				(fieldsMap["memo"] && strings.Contains(detail.Spec.Memo, req.SearchValue)) ||
 				(fieldsMap["creator"] && strings.Contains(detail.Revision.Creator, req.SearchValue)) ||
 				(fieldsMap["reviser"] && strings.Contains(detail.Revision.Reviser, req.SearchValue)) {
