@@ -95,6 +95,7 @@ const (
 	Config_ListTmplsOfTmplSet_FullMethodName                = "/pbcs.Config/ListTmplsOfTmplSet"
 	Config_CreateTemplateRevision_FullMethodName            = "/pbcs.Config/CreateTemplateRevision"
 	Config_ListTemplateRevisions_FullMethodName             = "/pbcs.Config/ListTemplateRevisions"
+	Config_GetTemplateRevision_FullMethodName               = "/pbcs.Config/GetTemplateRevision"
 	Config_ListTemplateRevisionsByIDs_FullMethodName        = "/pbcs.Config/ListTemplateRevisionsByIDs"
 	Config_ListTmplRevisionNamesByTmplIDs_FullMethodName    = "/pbcs.Config/ListTmplRevisionNamesByTmplIDs"
 	Config_CreateTemplateSet_FullMethodName                 = "/pbcs.Config/CreateTemplateSet"
@@ -264,6 +265,7 @@ type ConfigClient interface {
 	ListTmplsOfTmplSet(ctx context.Context, in *ListTmplsOfTmplSetReq, opts ...grpc.CallOption) (*ListTmplsOfTmplSetResp, error)
 	CreateTemplateRevision(ctx context.Context, in *CreateTemplateRevisionReq, opts ...grpc.CallOption) (*CreateTemplateRevisionResp, error)
 	ListTemplateRevisions(ctx context.Context, in *ListTemplateRevisionsReq, opts ...grpc.CallOption) (*ListTemplateRevisionsResp, error)
+	GetTemplateRevision(ctx context.Context, in *GetTemplateRevisionReq, opts ...grpc.CallOption) (*GetTemplateRevisionResp, error)
 	// 暂时不对外开发（删除模版后，服务引用的latest版本会回退到上一个老版本）
 	// rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns
 	// (DeleteTemplateRevisionResp) {
@@ -990,6 +992,15 @@ func (c *configClient) CreateTemplateRevision(ctx context.Context, in *CreateTem
 func (c *configClient) ListTemplateRevisions(ctx context.Context, in *ListTemplateRevisionsReq, opts ...grpc.CallOption) (*ListTemplateRevisionsResp, error) {
 	out := new(ListTemplateRevisionsResp)
 	err := c.cc.Invoke(ctx, Config_ListTemplateRevisions_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) GetTemplateRevision(ctx context.Context, in *GetTemplateRevisionReq, opts ...grpc.CallOption) (*GetTemplateRevisionResp, error) {
+	out := new(GetTemplateRevisionResp)
+	err := c.cc.Invoke(ctx, Config_GetTemplateRevision_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1875,6 +1886,7 @@ type ConfigServer interface {
 	ListTmplsOfTmplSet(context.Context, *ListTmplsOfTmplSetReq) (*ListTmplsOfTmplSetResp, error)
 	CreateTemplateRevision(context.Context, *CreateTemplateRevisionReq) (*CreateTemplateRevisionResp, error)
 	ListTemplateRevisions(context.Context, *ListTemplateRevisionsReq) (*ListTemplateRevisionsResp, error)
+	GetTemplateRevision(context.Context, *GetTemplateRevisionReq) (*GetTemplateRevisionResp, error)
 	// 暂时不对外开发（删除模版后，服务引用的latest版本会回退到上一个老版本）
 	// rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns
 	// (DeleteTemplateRevisionResp) {
@@ -2188,6 +2200,9 @@ func (UnimplementedConfigServer) CreateTemplateRevision(context.Context, *Create
 }
 func (UnimplementedConfigServer) ListTemplateRevisions(context.Context, *ListTemplateRevisionsReq) (*ListTemplateRevisionsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListTemplateRevisions not implemented")
+}
+func (UnimplementedConfigServer) GetTemplateRevision(context.Context, *GetTemplateRevisionReq) (*GetTemplateRevisionResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetTemplateRevision not implemented")
 }
 func (UnimplementedConfigServer) ListTemplateRevisionsByIDs(context.Context, *ListTemplateRevisionsByIDsReq) (*ListTemplateRevisionsByIDsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListTemplateRevisionsByIDs not implemented")
@@ -3706,6 +3721,24 @@ func _Config_ListTemplateRevisions_Handler(srv interface{}, ctx context.Context,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ConfigServer).ListTemplateRevisions(ctx, req.(*ListTemplateRevisionsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_GetTemplateRevision_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetTemplateRevisionReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).GetTemplateRevision(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_GetTemplateRevision_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).GetTemplateRevision(ctx, req.(*GetTemplateRevisionReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -5594,6 +5627,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListTemplateRevisions",
 			Handler:    _Config_ListTemplateRevisions_Handler,
+		},
+		{
+			MethodName: "GetTemplateRevision",
+			Handler:    _Config_GetTemplateRevision_Handler,
 		},
 		{
 			MethodName: "ListTemplateRevisionsByIDs",
