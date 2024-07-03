@@ -38,7 +38,7 @@ func (s *Service) CreateAppTemplateBinding(ctx context.Context, req *pbcs.Create
 	grpcKit := kit.FromGrpcContext(ctx)
 
 	// validate input param
-	templateSetIDs, templateIDs, err := parseBindings(req.Bindings)
+	templateSetIDs, _, err := parseBindings(req.Bindings)
 	if err != nil {
 		logs.Errorf("create app template binding failed, parse bindings err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
@@ -47,11 +47,6 @@ func (s *Service) CreateAppTemplateBinding(ctx context.Context, req *pbcs.Create
 	repeatedTmplSetIDs := tools.SliceRepeatedElements(templateSetIDs)
 	if len(repeatedTmplSetIDs) > 0 {
 		return nil, fmt.Errorf("repeated template set ids: %v, id must be unique", repeatedTmplSetIDs)
-	}
-
-	if len(templateIDs) > 500 {
-		return nil, fmt.Errorf("the length of template ids is %d, it must be within the range of [1,500]",
-			len(templateIDs))
 	}
 
 	res := []*meta.ResourceAttribute{
@@ -122,7 +117,7 @@ func (s *Service) UpdateAppTemplateBinding(ctx context.Context, req *pbcs.Update
 	grpcKit := kit.FromGrpcContext(ctx)
 
 	// validate input param
-	templateSetIDs, templateIDs, err := parseBindings(req.Bindings)
+	templateSetIDs, _, err := parseBindings(req.Bindings)
 	if err != nil {
 		logs.Errorf("update app template binding failed, parse bindings err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
@@ -131,11 +126,6 @@ func (s *Service) UpdateAppTemplateBinding(ctx context.Context, req *pbcs.Update
 	repeatedTmplSetIDs := tools.SliceRepeatedElements(templateSetIDs)
 	if len(repeatedTmplSetIDs) > 0 {
 		return nil, fmt.Errorf("repeated template set ids: %v, id must be unique", repeatedTmplSetIDs)
-	}
-
-	if len(templateIDs) > 500 {
-		return nil, fmt.Errorf("the length of template ids is %d, it must be within the range of [1,500]",
-			len(templateIDs))
 	}
 
 	res := []*meta.ResourceAttribute{
@@ -557,10 +547,6 @@ func (s *Service) UpdateAppBoundTmplRevisions(ctx context.Context, req *pbcs.Upd
 	repeatedTmplRevisionIDs := tools.SliceRepeatedElements(templateIDs)
 	if len(repeatedTmplRevisionIDs) > 0 {
 		return nil, fmt.Errorf("repeated template ids: %v, id must be unique", repeatedTmplRevisionIDs)
-	}
-	if len(templateIDs) > 500 {
-		return nil, fmt.Errorf("the length of template ids is %d, it must be within the range of [1,500]",
-			len(templateIDs))
 	}
 
 	res := []*meta.ResourceAttribute{
