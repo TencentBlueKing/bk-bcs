@@ -13,12 +13,20 @@
 // Package config xxx
 package config
 
+import (
+	"fmt"
+	"net/url"
+	"path"
+)
+
 // HostConf host conf
 type HostConf struct {
-	BKIAMHost     string `yaml:"bk_iam_host"`     // 权限中心
-	BKCMDBHost    string `yaml:"bk_cmdb_host"`    // 配置平台
-	BSCPAPIURL    string `yaml:"bscp_api_url"`    // bscp api地址
-	BKNODEMANHOST string `yaml:"bk_nodeman_host"` // 节点管理地址
+	BKIAMHost            string `yaml:"bk_iam_host"`       // 权限中心
+	BKCMDBHost           string `yaml:"bk_cmdb_host"`      // 配置平台
+	BSCPAPIURL           string `yaml:"bscp_api_url"`      // bscp api地址
+	BKNODEMANHOST        string `yaml:"bk_nodeman_host"`   // 节点管理地址
+	BKSharedResURL       string `yaml:"bk_shared_res_url"` // 对应运维公共变量bkSharedResUrl, PaaS环境变量BKPAAS_SHARED_RES_URL
+	BKSharedResBaseJSURL string `yaml:"-"`                 // 规则是${bkSharedResUrl}/${目录名 aka app_code}/base.js
 }
 
 // FrontendConf docs and host conf
@@ -36,4 +44,22 @@ func defaultUIConf() *FrontendConf {
 		Host: &HostConf{},
 	}
 	return c
+}
+
+func (c *FrontendConf) initResBaseJSURL(appCode string) error {
+	if c.Host.BKSharedResURL == "" {
+		return nil
+	}
+	if appCode == "" {
+		return fmt.Errorf("initResBaseJSURL: app_code is required")
+	}
+
+	u, err := url.Parse(c.Host.BKSharedResURL)
+	if err != nil {
+		return err
+	}
+	u.Path = path.Join(u.Path, appCode, "base.js")
+
+	c.Host.BKSharedResBaseJSURL = u.String()
+	return nil
 }
