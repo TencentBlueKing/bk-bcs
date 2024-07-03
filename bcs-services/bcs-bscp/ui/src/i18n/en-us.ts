@@ -750,6 +750,9 @@ export default {
   复制成功: 'Copy Successful',
   '下载配置文件时，保留目录层级，并将其保存到指定目录下，例如：将 /etc/nginx.conf 文件下载到 /tmp 目录时，文件保存在 /tmp/etc/nginx.conf': 'When downloading configuration files, preserve directory structure and save them to a specified directory. For example, downloading the file /etc/nginx.conf to the /tmp directory would save it as /tmp/etc/nginx.conf',
   '下载配置文件时，不保留目录层级，并将其保存到指定目录下，例如：将 /etc/nginx.conf 文件下载到 /tmp 目录时，文件保存在 /tmp/nginx.conf': 'When downloading configuration files, do not preserve directory structure and save them directly to a specified directory. For example, downloading the file /etc/nginx.conf to the /tmp directory would save it as /tmp/nginx.conf',
+  'BSCP Python SDK依赖说明': 'dependency instructions in the BSCP Python SDK',
+  '用于主动获取配置项值的场景，此方法不会监听服务器端的配置更改，有关Python SDK的部署环境和依赖组件，请参阅白皮书中的': 'For scenarios where configuration values are actively retrieved, this method does not monitor server-side configuration changes. For information on the deployment environment and dependent components of the Python SDK, please refer to the',
+  '通过建立长连接，实时监听配置版本的变更，当新版本的配置发布时，将自动调用回调方法处理新的配置信息，适用于需要实时响应配置变更的场景，有关Python SDK的部署环境和依赖组件，请参阅白皮书中的': 'By establishing a persistent connection, real-time changes to configuration versions are monitored. When a new version of configuration is released, the callback method is automatically invoked to handle the new configuration information. This method is suitable for scenarios requiring real-time response to configuration changes. For information on the deployment environment and dependent components of the Python SDK, please refer to the',
 
   // 公共组件
   页面不存在: 'Page does not exist',

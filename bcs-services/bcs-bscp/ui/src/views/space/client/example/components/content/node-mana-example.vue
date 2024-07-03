@@ -111,10 +111,11 @@
     }
   }
   .service-content {
+    width: 600px;
     padding: 7px 17px;
     border: 1px solid #dcdee5;
     border-radius: 2px;
-    background-color: #fff;
+    background-color: #fafbfd;
   }
   .service-item {
     display: flex;
