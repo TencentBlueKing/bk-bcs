@@ -10795,6 +10795,8 @@ func (m *CreateTemplateVersionReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
+	// no validation rules for EditFormat
+
 	// no validation rules for Content
 
 	if l := utf8.RuneCountInString(m.GetTemplateID()); l < 1 || l > 64 {

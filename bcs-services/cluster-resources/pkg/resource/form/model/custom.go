@@ -70,6 +70,7 @@ type GDeploy struct {
 
 // GDeploySpec xxx
 type GDeploySpec struct {
+	Labels          Labels                   `structs:"labels"`
 	Replicas        GDeployReplicas          `structs:"replicas"`
 	GracefulManage  GWorkloadGracefulManage  `structs:"gracefulManage"`
 	DeletionProtect GWorkloadDeletionProtect `structs:"deletionProtect"`
@@ -129,6 +130,7 @@ type GSTS struct {
 
 // GSTSSpec xxx
 type GSTSSpec struct {
+	Labels          Labels                   `structs:"labels"`
 	Replicas        GSTSReplicas             `structs:"replicas"`
 	GracefulManage  GWorkloadGracefulManage  `structs:"gracefulManage"`
 	DeletionProtect GWorkloadDeletionProtect `structs:"deletionProtect"`

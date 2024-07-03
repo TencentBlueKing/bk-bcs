@@ -34,6 +34,10 @@ func ParseDS(manifest map[string]interface{}) map[string]interface{} {
 
 // ParseDSSpec xxx
 func ParseDSSpec(manifest map[string]interface{}, spec *model.DSSpec) {
+	selectorLables, _ := mapx.GetItems(manifest, "spec.selector.matchLabels")
+	common.ParseLabels(selectorLables, &spec.Labels.SelectorLabels)
+	templateLables, _ := mapx.GetItems(manifest, "spec.template.metadata.labels")
+	common.ParseLabels(templateLables, &spec.Labels.TemplateLabels)
 	ParseDSReplicas(manifest, &spec.Replicas)
 	tmplSpec, _ := mapx.GetItems(manifest, "spec.template.spec")
 	podSpec, _ := tmplSpec.(map[string]interface{})

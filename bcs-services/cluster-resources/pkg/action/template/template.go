@@ -125,7 +125,22 @@ func (t *TemplateAction) Get(ctx context.Context, id string) (map[string]interfa
 		return nil, errorx.New(errcode.NoPerm, i18n.GetMsg(ctx, "无权限访问"))
 	}
 
-	return template.ToMap(), nil
+	cond := operator.NewLeafCondition(operator.Eq, operator.M{
+		entity.FieldKeyProjectCode: p.Code,
+	})
+	// 获取 templatespace id
+	templateSpace, err := t.model.ListTemplateSpace(ctx, cond)
+	if err != nil {
+		return nil, err
+	}
+	result := template.ToMap()
+	for _, v := range templateSpace {
+		if v.Name == template.TemplateSpace {
+			result["templateSpaceID"] = v.ID.Hex()
+		}
+	}
+
+	return result, nil
 }
 
 // List xxx
@@ -211,23 +226,12 @@ func (t *TemplateAction) Create(ctx context.Context, req *clusterRes.CreateTempl
 		return "", err
 	}
 
-	// get resource type
-	resourceType := ""
-	manifests := parser.SplitManifests(req.GetContent())
-	for _, v := range manifests {
-		metadata := parser.GetManifestMetadata(v)
-		if metadata.Kind != "" {
-			resourceType = metadata.Kind
-			break
-		}
-	}
-
 	template := &entity.Template{
 		Name:          req.GetName(),
 		ProjectCode:   p.Code,
 		Description:   req.GetDescription(),
 		TemplateSpace: templateSpace.Name,
-		ResourceType:  resourceType,
+		ResourceType:  parser.GetResourceTypesFromManifest(req.GetContent()),
 		Creator:       userName,
 		Updator:       userName,
 		Tags:          req.GetTags(),
@@ -380,6 +384,7 @@ func getTemplateContents(ctx context.Context, model store.ClusterResourcesModel,
 			return nil, errorx.New(errcode.NoPerm, i18n.GetMsg(ctx, "无权限访问"))
 		}
 		templates = append(templates, entity.TemplateDeploy{
+			TemplateSpace:   vv.TemplateSpace,
 			TemplateName:    vv.TemplateName,
 			TemplateVersion: vv.Version,
 			Content:         vv.Content,
@@ -470,12 +475,37 @@ func (t *TemplateAction) PreviewTemplateFile(ctx context.Context, req *clusterRe
 	if errr := t.checkClusterAccess(ctx, req.GetClusterID(), req.GetNamespace(), manifests); errr != nil {
 		return nil, errr
 	}
+	if errr := perm.Validate(ctx, "", crAction.Create, p.ID, req.GetClusterID(), req.GetNamespace()); errr != nil {
+		return nil, errr
+	}
+
+	// dry-run deploy templates
+	dryRunMsg := ""
+	clusterConf := res.NewClusterConf(req.GetClusterID())
+	for _, v := range manifests {
+		kind := mapx.GetStr(v, "kind")
+		groupVersion := mapx.GetStr(v, "apiVersion")
+		if kind == "" {
+			continue
+		}
+		k8sRes, errr := res.GetGroupVersionResource(ctx, clusterConf, kind, groupVersion)
+		if errr != nil {
+			dryRunMsg = errr.Error()
+			break
+		}
+		_, errr = cli.NewResClient(clusterConf, k8sRes).ApplyWithoutPerm(ctx, v,
+			metav1.CreateOptions{DryRun: []string{metav1.DryRunAll}})
+		if errr != nil {
+			dryRunMsg = errr.Error()
+			break
+		}
+	}
 
 	items, err := convertManifestToString(manifests)
 	if err != nil {
 		return nil, err
 	}
-	return map[string]interface{}{"items": items}, nil
+	return map[string]interface{}{"items": items, "error": dryRunMsg}, nil
 }
 
 // DeployTemplateFile deploy template file
@@ -545,7 +575,8 @@ func (t *TemplateAction) renderTemplates(ctx context.Context, templates []entity
 			}
 			manifest = mapx.CleanUpMap(manifest)
 			manifest = patchTemplateAnnotations(
-				manifest, ctxkey.GetUsernameFromCtx(ctx), templates[i].TemplateName, templates[i].TemplateVersion)
+				manifest, ctxkey.GetUsernameFromCtx(ctx),
+				templates[i].TemplateSpace, templates[i].TemplateName, templates[i].TemplateVersion)
 			// patch ns
 			kind := mapx.GetStr(manifest, "kind")
 			if mapx.GetStr(manifest, "metadata.namespace") != "" || isNSRequired(kind) {

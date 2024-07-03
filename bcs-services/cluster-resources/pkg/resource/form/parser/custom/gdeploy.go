@@ -36,6 +36,10 @@ func ParseGDeploy(manifest map[string]interface{}) map[string]interface{} {
 
 // ParseGDeploySpec xxx
 func ParseGDeploySpec(manifest map[string]interface{}, spec *model.GDeploySpec) {
+	selectorLables, _ := mapx.GetItems(manifest, "spec.selector.matchLabels")
+	common.ParseLabels(selectorLables, &spec.Labels.SelectorLabels)
+	templateLables, _ := mapx.GetItems(manifest, "spec.template.metadata.labels")
+	common.ParseLabels(templateLables, &spec.Labels.TemplateLabels)
 	ParseGDeployReplicas(manifest, &spec.Replicas)
 	ParseGWorkloadGracefulManage(manifest, &spec.GracefulManage)
 	ParseGWorkloadDeletionProtect(manifest, &spec.DeletionProtect)

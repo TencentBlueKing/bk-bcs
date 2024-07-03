@@ -304,7 +304,7 @@ func (resp *GetLogRuleResp) loadFromEntity(e *entity.LogRule, lcs []bklog.ListBC
 	// append bklog rule
 	found := false
 	for _, v := range lcs {
-		if e.RuleID == v.RuleID {
+		if e.RuleID == v.RuleID || e.RuleName == v.CollectorConfigNameEN {
 			found = true
 			resp.Config = v.ToLogRule()
 			// append bkbase info

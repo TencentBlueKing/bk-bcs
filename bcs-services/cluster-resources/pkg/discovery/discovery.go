@@ -152,9 +152,10 @@ func (d *ServiceDiscovery) GetRandServiceInst(ctx context.Context) (*registry.No
 		log.Error(ctx, "found no available node for service: %s", d.serviceName)
 		return nil, errorx.New(errcode.ComponentErr, "依赖服务 %s 不可用", d.serviceName)
 	}
-	// NOCC:gas/crypto(设计如此)
+	// NOCC:gosec/crypto(误报)
 	// nolint
-	return allNodes[rand.Int()%nodeLen], nil
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	return allNodes[r.Int()%nodeLen], nil
 }
 
 // RegisterEventHandler 注册事件回调函数

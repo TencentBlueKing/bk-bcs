@@ -114,7 +114,7 @@ hook:
 {{- define "custom.gworkloadCommonSpec" -}}
 selector:
   matchLabels:
-    {{- include "common.labelSlice2Map" .metadata.labels | indent 4 }}
+    {{- include "common.labelSlice2Map" .spec.labels.labels | indent 4 }}
 replicas: {{ .spec.replicas.cnt | default 0 }}
 updateStrategy:
   type: {{ .spec.replicas.updateStrategy }}

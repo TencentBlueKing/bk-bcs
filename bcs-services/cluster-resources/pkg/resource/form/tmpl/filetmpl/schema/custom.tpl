@@ -82,7 +82,7 @@ spec:
             ui:rules:
               - required
               - maxLength128
-              - nameRegex
+              - nameRegexWithVar
           hookType:
             title: {{ i18n "Hook 类型" .lang }}
             type: string

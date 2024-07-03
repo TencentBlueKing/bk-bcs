@@ -100,10 +100,6 @@ properties:
       scName:
         title: {{ i18n "存储类名称" .lang }}
         type: string
-        ui:component:
-          name: select
-          props:
-            clearable: false
       storageSize:
         title: {{ i18n "容量" .lang }}
         type: integer

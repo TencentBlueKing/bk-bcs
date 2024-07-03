@@ -9997,6 +9997,10 @@
           "type": "string",
           "title": "模板文件版本"
         },
+        "editFormat": {
+          "type": "string",
+          "title": "编辑模式"
+        },
         "content": {
           "type": "string",
           "title": "模板文件版本Content"
