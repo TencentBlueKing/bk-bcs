@@ -199,7 +199,7 @@
   const getContent = async () => {
     try {
       contentLoading.value = true;
-      const { file_type, sign: signature, byte_size } = formData.value;
+      const { file_type, sign: signature, byte_size } = props.data;
       if (file_type === 'binary') {
         fileContent.value = { name: props.templateName, signature, size: String(byte_size) };
       } else {
