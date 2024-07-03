@@ -73,9 +73,7 @@
                                 ]"
                                 @click="
                                   () => {
-                                    hasEditServicePerm &&
-                                      config.file_state !== 'DELETE' &&
-                                      handleViewConfig(config.id);
+                                    hasEditServicePerm && config.file_state !== 'DELETE' && handleViewConfig(config.id);
                                   }
                                 ">
                                 {{ fileAP(config) }}
@@ -395,6 +393,7 @@
       type: string;
       templateMeta?: ITemplateConfigMeta;
       versionName?: string;
+      isLatest?: boolean;
     };
   }>({
     open: false,
@@ -731,12 +730,18 @@
 
   // 查看配置模板版本
   const handleViewTemplateConfig = (config: IConfigTableItem, group: IConfigsGroupData) => {
-    const { id, versionName } = config;
+    const { id, versionName, is_latest } = config;
     const { template_set_id, template_space_id, template_set_name, template_space_name } = group;
     const templateMeta = { template_space_id, template_space_name, template_set_id, template_set_name };
     viewConfigSliderData.value = {
       open: true,
-      data: { id, versionName, templateMeta: templateMeta as ITemplateConfigMeta, type: 'template' },
+      data: {
+        id,
+        versionName,
+        templateMeta: templateMeta as ITemplateConfigMeta,
+        type: 'template',
+        isLatest: is_latest,
+      },
     };
   };
 
