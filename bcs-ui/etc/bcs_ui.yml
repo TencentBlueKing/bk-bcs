@@ -12,6 +12,7 @@ bcs_conf:
   host: ""
   token: ""
   verify: false
+  namespace_prefix: ""
   jwt_public_key: ""
 iam_conf:
   external: false
@@ -20,6 +21,9 @@ iam_conf:
   bk_iam_erver: ""
   metric: false
   debug: false
+bk_notice:
+  enable: false
+  host: ""
 web:
   host: http://127.0.0.1:8083
   route_prefix: /bcsapi/v4/ui
@@ -43,6 +47,13 @@ frontend_conf:
     bk_sre_host: ""
     bk_user_host: ""
     bk_log_host: ""
+    bk_shared_res_url: ""
+    login_full_url: ""
   features:
     zh_cn: ""
 feature_flags: {}
+etcd:
+  endpoints: ""
+  ca: ""
+  cert: ""
+  key: ""

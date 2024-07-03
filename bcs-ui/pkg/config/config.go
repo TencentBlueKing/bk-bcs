@@ -37,6 +37,9 @@ func (c *Configuration) init() error {
 	if err := c.Web.init(); err != nil {
 		return err
 	}
+	if err := c.FrontendConf.initResBaseJSURL(c.Base.AppCode); err != nil {
+		return err
+	}
 
 	if err := c.BCS.InitJWTPubKey(); err != nil {
 		return err
@@ -70,6 +73,8 @@ func newConfiguration() (*Configuration, error) {
 	// etcdc初始化
 	c.Etcd = &EtcdConf{}
 	c.Etcd.Init()
+
+	c.BKNotice = &BKNoticeConf{}
 	return c, nil
 }
 
