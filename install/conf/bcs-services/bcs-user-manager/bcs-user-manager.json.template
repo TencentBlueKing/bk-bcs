@@ -20,6 +20,7 @@
   "verify_client_tls": false,
   "mysql_dsn": "${coreDatabaseDsn}",
   "redis_dsn": "${redisDsn}",
+  "enable_token_sync": "${enableTokenSync}",
   "bootstrap_users": [
     {
       "name": "${adminUser}",
