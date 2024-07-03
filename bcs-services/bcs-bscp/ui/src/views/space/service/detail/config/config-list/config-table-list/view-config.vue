@@ -131,6 +131,7 @@
     show: Boolean;
     templateMeta?: ITemplateConfigMeta;
     versionName?: string;
+    isLatest?: boolean;
   }>();
 
   const emits = defineEmits(['update:show', 'openEdit']);
@@ -277,7 +278,14 @@
         };
         template_space_id = res.detail.template_space_id;
       } else {
-        const res = await getTemplateConfigMeta(props.bkBizId, props.id, props.versionName);
+        let res;
+        console.log(props.isLatest);
+        if (props.isLatest) {
+          // 版本为latest拉取最新版本 不传递版本名
+          res = await getTemplateConfigMeta(props.bkBizId, props.id);
+        } else {
+          res = await getTemplateConfigMeta(props.bkBizId, props.id, props.versionName);
+        }
         configDetail.value = {
           ...props.templateMeta,
           ...res.data.detail,

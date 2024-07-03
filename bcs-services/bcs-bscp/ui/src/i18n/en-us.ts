@@ -100,7 +100,7 @@ export default {
   '此操作不会删除版本，如需找回或彻底删除请去版本详情的废弃版本列表操作': 'This operation will not delete the version. If you need to recover or permanently delete it, please go to the deprecated version list in the version details and proceed with the necessary actions.',
   可用版本: 'Available Versions',
   废弃版本: 'Deprecated Versions',
-  '版本名称/版本说明/修改人': 'Version Name / Version Description / Modified',
+  '版本名称/版本描述/修改人': 'Version Name / Version Description / Modified',
   版本: 'Version',
   版本描述: 'Version Description',
   已上线分组: 'Released Groups',
@@ -595,6 +595,7 @@ export default {
   删除模板文件: 'Delete',
   批量移出套餐: 'Move out of package in batches',
   从其他空间导入: 'Import from another space',
+  '确认删除所选的 {n} 个配置文件?': 'Confirm the deletion of the selected {n} configuration fils?',
 
   // 脚本管理
   全部脚本: 'All scripts',
@@ -647,6 +648,7 @@ export default {
   当前配置版本名称: 'Current configuration version name',
   脚本更新成功: 'Script updated successfully',
   删除脚本成功: 'Delete script successfully',
+  '脚本已被引用，不能删除': 'Script is referenced, cannot be deleted',
 
   // 服务密钥
   '密钥仅用于 SDK/API 拉取配置使用。服务管理/配置管理/分组管理等功能的权限申请，请前往': 'The key is only used for SDK/API pull configurations. To apply for permissions for functions such as service management/configuration management/group management, please go to',
