@@ -36,10 +36,10 @@ func DeleteClusterTask(taskID string, stepName string) error {
 	}
 	// previous step successful when retry task
 	if step == nil {
-		blog.Infof("DeleteTKEClusterTask[%s]: current step[%s] successful and skip", taskID, stepName)
+		blog.Infof("DeleteClusterTask[%s]: current step[%s] successful and skip", taskID, stepName)
 		return nil
 	}
-	blog.Infof("DeleteTKEClusterTask[%s]: task %s run step %s, system: %s, old state: %s, params %v",
+	blog.Infof("DeleteClusterTask[%s]: task %s run step %s, system: %s, old state: %s, params %v",
 		taskID, taskID, stepName, step.System, step.Status, step.Params)
 
 	// step login started here
@@ -57,25 +57,67 @@ func DeleteClusterTask(taskID string, stepName string) error {
 		ClusterID: clusterID,
 		CloudID:   cloudID,
 	})
+	if err != nil {
+		blog.Errorf("DeleteClusterTask[%s]: GetClusterDependBasicInfo for cluster %s "+
+			"in task %s step %s failed, %s", taskID, clusterID, taskID, stepName, err.Error())
+		retErr := fmt.Errorf("get cloud/project information failed, %s", err.Error())
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
+	}
 
 	client, err := api.NewCceClient(dependInfo.CmOption)
 	if err != nil {
 		return err
 	}
 
-	nodes, err := client.ListClusterNodes(dependInfo.Cluster.SystemID)
-	if err != nil {
-		return err
+	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
+
+	blog.Infof("DeleteTKEClusterTask[%s]  clusterInfo: %v", taskID, dependInfo.Cluster.GetStatus())
+
+	if (clusterStatus == icommon.StatusCreateClusterFailed ||
+		clusterStatus == icommon.StatusDeleteClusterFailed) && dependInfo.Cluster.GetSystemID() != "" {
+		nodes, err := client.ListClusterNodes(dependInfo.Cluster.SystemID)
+		if err != nil {
+			return err
+		}
+
+		ids, err := business.DeleteClusterInstance(client, dependInfo.Cluster.SystemID, nodes)
+		if err != nil {
+			blog.Errorf("DeleteClusterTask[%s] DeleteClusterInstance failed: %v", taskID, err)
+		} else {
+			blog.Infof("DeleteClusterTask[%s] DeleteClusterInstance success: %v", taskID, ids)
+		}
+
+		nodeIds := make([]string, 0)
+		for _, node := range nodes {
+			nodeIds = append(nodeIds, *node.Metadata.Uid)
+		}
+
+		err = business.CheckClusterDeletedNodes(ctx, dependInfo, nodeIds)
+		if err != nil {
+			blog.Errorf("DeleteClusterTask[%s] CheckClusterDeletedNodes failed: %v", taskID, err)
+		}
 	}
 
-	ids, err = business.DeleteClusterInstance(client, dependInfo.Cluster.SystemID, nodes)
-
+	err = business.DeleteTkeClusterByClusterId(ctx, dependInfo.CmOption, dependInfo.Cluster.SystemID, deleteMode)
 	if err != nil {
-		blog.Errorf("DeleteTKEClusterTask[%s]: GetClusterDependBasicInfo for cluster %s "+
-			"in task %s step %s failed, %s", taskID, clusterID, taskID, stepName, err.Error())
-		retErr := fmt.Errorf("get cloud/project information failed, %s", err.Error())
+		blog.Errorf("DeleteClusterTask[%s]: task[%s] step[%s] call huawei DeleteCluster failed: %v",
+			taskID, taskID, stepName, err)
+		retErr := fmt.Errorf("call huawei DeleteTKECluster failed: %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
+
+		_ = cloudprovider.UpdateClusterErrMessage(clusterID, fmt.Sprintf("delete cluster[%s] failed: %v",
+			dependInfo.Cluster.GetClusterID(), err.Error()))
+
 		return retErr
+	}
+
+	blog.Infof("DeleteClusterTask[%s]: task %s DeleteCluster[%s] successful",
+		taskID, taskID, dependInfo.Cluster.SystemID)
+
+	if err := state.UpdateStepSucc(start, stepName); err != nil {
+		blog.Errorf("DeleteClusterTask[%s]: task %s %s update to storage fatal", taskID, taskID, stepName)
+		return err
 	}
 
 	return nil
@@ -148,11 +190,6 @@ func CleanClusterDBInfoTask(taskID string, stepName string) error {
 
 	utils.SyncDeletePassCCCluster(taskID, cluster)
 	_ = utils.DeleteClusterCredentialInfo(cluster.ClusterID)
-
-	// virtual cluster need to clean cluster token
-	if cluster.ClusterType == icommon.ClusterTypeVirtual {
-		_ = utils.DeleteBcsAgentToken(clusterID)
-	}
 
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
 		blog.Errorf("CleanClusterDBInfoTask[%s]: task %s %s update to storage fatal", taskID, taskID, stepName)

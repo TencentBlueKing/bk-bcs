@@ -11595,6 +11595,10 @@ message Subnet {
     title : "cluster",
     description : "子网是否被集群使用"
   }];
+  string hwNeutronSubnetID = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "hwNeutronSubnetID",
+    description : "华为对应子网(OpenStack Neutron)接口ID"
+  }];
 }
 
 message CheckCidrConflictFromVpcRequest {

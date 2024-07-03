@@ -215,8 +215,7 @@ func GenerateCreateNodePoolRequest(group *proto.NodeGroup,
 // GenerateCreateClusterRequest get cce cluster create request
 func GenerateCreateClusterRequest(ctx context.Context, cluster *proto.Cluster,
 	operator string) (*CreateClusterRequest, error) {
-
-	flavor, err := trans2CCEFlavor(cluster.ClusterBasicSettings.ClusterLevel)
+	flavor, err := trans2CCEFlavor(cluster.ClusterBasicSettings.ClusterLevel, len(cluster.Template))
 	if err != nil {
 		return nil, err
 	}
@@ -226,49 +225,80 @@ func GenerateCreateClusterRequest(ctx context.Context, cluster *proto.Cluster,
 		containerMode = model.GetContainerNetworkModeEnum().VPC_ROUTER.Value()
 	}
 
+	chargeType := common.POSTPAIDBYHOUR
+	period := uint32(0)
+	renewFlag := ""
+	if len(cluster.Template) > 0 {
+		chargeType = cluster.Template[0].InstanceChargeType
+		if cluster.Template[0].Charge != nil {
+			period = cluster.Template[0].Charge.Period
+			renewFlag = cluster.Template[0].Charge.RenewFlag
+		}
+	}
+
+	az := make([]string, 0)
+	for _, v := range cluster.Template {
+		if len(v.Zone) != 0 {
+			az = append(az, v.Zone)
+		}
+	}
+
 	return &CreateClusterRequest{
 		Name: cluster.ClusterID,
 		Spec: CreateClusterSpec{
+			Category:        cluster.ClusterType,
 			Flavor:          flavor,
+			Az:              az,
 			Version:         cluster.ClusterBasicSettings.Version,
 			Description:     cluster.GetDescription(),
 			VpcID:           cluster.VpcID,
 			SubnetID:        cluster.ClusterBasicSettings.SubnetID,
 			SecurityGroupID: cluster.ClusterAdvanceSettings.ClusterConnectSetting.SecurityGroup,
 			ContainerMode:   containerMode,
-			ContainerCidr:   cluster.NetworkSettings.ClusterIPv4CIDR,
+			ContainerCidr:   cluster.NetworkSettings.MultiClusterCIDR,
 			ServiceCidr:     cluster.NetworkSettings.ServiceIPv4CIDR,
 			Charge: ChargePrepaid{
-				ChargeType: "POSTPAID_BY_HOUR",
-				Period:     0,
-				RenewFlag:  "",
+				ChargeType: chargeType,
+				Period:     period,
+				RenewFlag:  renewFlag,
 			},
 			Ipv6Enable: false,
+			KubeProxyMode: func() string {
+				if cluster.ClusterAdvanceSettings.IPVS {
+					return model.GetClusterSpecKubeProxyModeEnum().IPVS.Value()
+				}
+
+				return model.GetClusterSpecKubeProxyModeEnum().IPTABLES.Value()
+			}(),
+			ClusterTag:       cluster.Labels,
+			EniNetworkSubnet: cluster.NetworkSettings.EniSubnetIDs,
 		},
 	}, nil
 }
 
-func trans2CCEFlavor(s string) (string, error) {
-	if len(s) < 2 || string(s[0]) != "L" {
-		return "", fmt.Errorf("invalid format, expected prefix 'L'")
-	}
-
-	numStr := s[1:]                       // 提取首字母后的部分
-	levelNum, err := strconv.Atoi(numStr) // 尝试转换为整数
+func trans2CCEFlavor(s string, masterNum int) (string, error) {
+	levelNum, err := strconv.Atoi(s) // 尝试转换为整数
 	if err != nil {
 		return "", fmt.Errorf("failed to parse number: %w", err)
 	}
 
+	flavor := ""
 	if levelNum <= 0 {
 		return "", fmt.Errorf("cluster level must be greater than 0")
 	} else if levelNum <= 50 {
-		return "cce.s1.small", nil
+		flavor = "cce.s1.small"
 	} else if levelNum <= 200 {
-		return "cce.s1.medium", nil
+		flavor = "cce.s1.medium"
 	} else if levelNum <= 1000 {
-		return "cce.s2.large", nil
+		flavor = "cce.s2.large"
+	} else {
+		// levelNum > 1000
+		flavor = "cce.s2.xlarge"
 	}
 
-	// levelNum > 1000
-	return "cce.s2.xlarge", nil
+	if masterNum == 3 {
+		flavor = strings.ReplaceAll(flavor, ".s1.", ".s2.")
+	}
+
+	return flavor, nil
 }

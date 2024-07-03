@@ -97,12 +97,25 @@ func (cli *CceClient) ListCceCluster(filter *ClusterFilterCond) (*[]model.Cluste
 	return rsp.Items, nil
 }
 
+// CreateCluster create cce cluster
 func (cli *CceClient) CreateCluster(req *CreateClusterRequest) (*model.CreateClusterResponse, error) {
 	if cli == nil {
 		return nil, cloudprovider.ErrServerIsNil
 	}
 
 	return cli.cce.CreateCluster(req.Trans2CreateClusterRequest())
+}
+
+// DeleteCceCluster delete cce cluster
+func (cli *CceClient) DeleteCceCluster(clusterID string) error {
+	if cli == nil {
+		return cloudprovider.ErrServerIsNil
+	}
+
+	_, err := cli.cce.DeleteCluster(&model.DeleteClusterRequest{
+		ClusterId: clusterID,
+	})
+	return err
 }
 
 // GetCceCluster get cce cluster
@@ -463,6 +476,33 @@ func (cli *CceClient) GetClusterNodePool(clusterId, nodePoolId string) (*model.N
 	}, nil
 }
 
+func (cli *CceClient) ListClusterNodeGroups(clusterId string) ([]model.NodePool, error) {
+	if cli == nil {
+		return nil, cloudprovider.ErrServerIsNil
+	}
+
+	rsp, err := cli.cce.ListNodePools(&model.ListNodePoolsRequest{
+		ClusterId: clusterId,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	nodePools := make([]model.NodePool, 0)
+	for _, item := range *rsp.Items {
+		tmp := item
+		nodePools = append(nodePools, model.NodePool{
+			Kind:       tmp.Kind,
+			ApiVersion: tmp.ApiVersion,
+			Metadata:   tmp.Metadata,
+			Spec:       tmp.Spec,
+			Status:     tmp.Status,
+		})
+	}
+
+	return nodePools, nil
+}
+
 // UpdateNodePool 全量更新接口
 func (cli *CceClient) UpdateNodePool(clsId, nodePoolId string, data UpdateNodePoolRequest) (
 	*model.UpdateNodePoolResponse, error) {
@@ -499,7 +539,7 @@ func (cli *CceClient) UpdateNodePoolV2(data *model.UpdateNodePoolRequest) (
 }
 
 // UpdateNodePoolDesiredNodes update nodePool desired desiredSize nodes count
-func (cli *CceClient) UpdateNodePoolDesiredNodes(clusterId, nodePoolId string, desiredSize int32) (
+func (cli *CceClient) UpdateNodePoolDesiredNodes(clusterId, nodePoolId string, desiredSize int32, inc bool) (
 	*model.UpdateNodePoolResponse, error) {
 	if cli == nil {
 		return nil, cloudprovider.ErrServerIsNil
@@ -534,6 +574,10 @@ func (cli *CceClient) UpdateNodePoolDesiredNodes(clusterId, nodePoolId string, d
 		autoscalingConfig = nodePool.Spec.Autoscaling
 	}
 
+	if inc {
+		desiredSize += *nodePool.Spec.InitialNodeCount
+	}
+
 	req := &model.UpdateNodePoolRequest{
 		ClusterId:  clusterId,
 		NodepoolId: nodePoolId,
@@ -546,7 +590,7 @@ func (cli *CceClient) UpdateNodePoolDesiredNodes(clusterId, nodePoolId string, d
 					Taints:  taints,
 					K8sTags: k8sTags,
 				},
-				InitialNodeCount: desiredSize + *nodePool.Spec.InitialNodeCount,
+				InitialNodeCount: desiredSize,
 				Autoscaling:      autoscalingConfig,
 			},
 		},
