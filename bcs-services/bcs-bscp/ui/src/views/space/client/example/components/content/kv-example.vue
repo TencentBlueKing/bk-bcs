@@ -49,18 +49,6 @@
 
   const { t } = useI18n();
   const route = useRoute();
-  // const tabArr = [
-  //   {
-  //     name: t('Get方法'),
-  //     topTip: t('Get方法：用于一次性拉取最新的配置信息，适用于需要获取并更新配置的场景。'),
-  //   },
-  //   {
-  //     name: t('Watch方法'),
-  // topTip: t(
-  //   'Watch方法：通过建立长连接，实时监听配置版本的变更，当新版本的配置发布时，将自动调用回调方法处理新的配置信息，适用于需要实时响应配置变更的场景。',
-  // ),
-  //   },
-  // ];
   const tabArr = [t('Get方法'), t('Watch方法')];
 
   const codePreviewRef = ref();
@@ -146,7 +134,6 @@
         };
     }
   });
-  // const codePreviewHeight = computed(() => {});
 
   watch(
     () => props.kvName,
