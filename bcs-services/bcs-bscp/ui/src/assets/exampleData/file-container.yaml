@@ -1,18 +1,18 @@
-# 在正式业务使用时，请根据实际情况将以下 manifest 中的 kind、metadata、selector、labels 以及 Nginx 示例容器替换为业务相应的信息
+# 在正式业务使用时，请根据实际情况将以下 manifest 中的 kind、metadata、selector、labels 以及 nginx 示例容器替换为业务相应的信息
 
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: demo_app
+  name: demo-app
   namespace: default
 spec:
   selector:
     matchLabels:
-      app: demo_app
+      app: demo-app
   template:
     metadata:
       labels:
-        app: demo_app
+        app: demo-app
     spec:
       initContainers:
         # BSCP Init 容器在 Pod 启动时负责首次下载配置文件至指定目录，以避免因缺少配置文件导致业务程序无法正常启动的问题
@@ -21,7 +21,7 @@ spec:
           env:
             # 业务 ID，从当前环境自动获取，无需修改
             - name: biz
-              value: {{ .Bk_Bscp_Variable_BkBizId }}
+              value: '{{ .Bk_Bscp_Variable_BkBizId }}'
             # 服务名称，从当前环境自动获取，无需修改
             - name: app
               value: {{ .Bk_Bscp_Variable_ServiceName }}
@@ -42,8 +42,8 @@ spec:
             - mountPath: {{ .Bk_Bscp_VariableTempDir }}
               name: bscp-temp-dir
       containers:
-        # 以 Nginx 容器为例的业务容器，正式使用时需将其替换为实际业务程序容器
-        - name: Nginx
+        # 以 nginx 容器为例的业务容器，正式使用时需将其替换为实际业务程序容器
+        - name: nginx
           image: nginx
           ports:
             - containerPort: 80
@@ -57,9 +57,9 @@ spec:
           env:
             # bscp-sidecar 容器的环境变量配置和 bscp-init 容器完全一致，正式使用时填写 token 与 labels 环境变量实际值即可
             - name: biz
-              value: 2
+              value: '{{ .Bk_Bscp_Variable_BkBizId }}'
             - name: app
-              value: demo_app
+              value: {{ .Bk_Bscp_Variable_ServiceName }}
             - name: feed_addrs
               value: {{ .Bk_Bscp_Variable_FEED_ADDR }}
             - name: token
@@ -73,4 +73,4 @@ spec:
               name: bscp-temp-dir
       volumes:
         - name: bscp-temp-dir
-          emptyDir: '{}'
+          emptyDir: {}

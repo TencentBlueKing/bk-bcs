@@ -404,7 +404,9 @@ func (dao *hookRevisionDao) UpdatePubStateWithTx(kit *kit.Kit, tx *gen.QueryTx, 
 	}
 	ad := dao.auditDao.DecoratorV2(kit, hr.Attachment.BizID).PrepareUpdate(hr, oldOne)
 
-	if _, e := q.Where(m.ID.Eq(hr.ID), m.BizID.Eq(hr.Attachment.BizID)).Select(m.State, m.Reviser).Updates(hr); e != nil {
+	if _, e := q.Where(m.ID.Eq(hr.ID), m.BizID.Eq(hr.Attachment.BizID)).
+		Omit(m.UpdatedAt).
+		Select(m.State, m.Reviser).Updates(hr); e != nil {
 		return e
 	}
 

@@ -15,9 +15,12 @@ package service
 import (
 	"context"
 	"fmt"
+	"time"
 
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/i18n"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 	pbbase "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
@@ -252,4 +255,44 @@ func (s *Service) doCreateTemplateRevisions(kt *kit.Kit, tx *gen.QueryTx, data [
 		return err
 	}
 	return nil
+}
+
+// GetTemplateRevision 根据版本号获取 TemplateRevisions
+func (s *Service) GetTemplateRevision(ctx context.Context, req *pbds.GetTemplateRevisionReq) (
+	*pbds.GetTemplateRevisionResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	var revision *table.TemplateRevision
+	var err error
+	if req.RevisionName == "" {
+		revision, err = s.dao.TemplateRevision().GetLatesTemplateRevision(kt, req.GetBizId(), req.GetTemplateId())
+	} else {
+		revision, err = s.dao.TemplateRevision().GetByUniqueKey(kt, req.GetBizId(), req.GetTemplateId(),
+			req.GetRevisionName())
+	}
+
+	if err != nil {
+		return nil, errf.Errorf(errf.DBOpFailed, i18n.T(kt, fmt.Sprintf("get template revision failed, err: %v", err)))
+	}
+
+	return &pbds.GetTemplateRevisionResp{
+		Detail: &pbds.GetTemplateRevisionResp_TemplateRevision{
+			TemplateId:           revision.Attachment.TemplateID,
+			Name:                 revision.Spec.Name,
+			Path:                 revision.Spec.Path,
+			TemplateRevisionId:   revision.ID,
+			TemplateRevisionName: revision.Spec.RevisionName,
+			TemplateRevisionMemo: revision.Spec.RevisionMemo,
+			FileType:             string(revision.Spec.FileType),
+			FileMode:             string(revision.Spec.FileMode),
+			User:                 revision.Spec.Permission.User,
+			UserGroup:            revision.Spec.Permission.UserGroup,
+			Privilege:            revision.Spec.Permission.Privilege,
+			Signature:            revision.Spec.ContentSpec.Signature,
+			ByteSize:             revision.Spec.ContentSpec.ByteSize,
+			Creator:              revision.Revision.Creator,
+			CreateAt:             revision.Revision.CreatedAt.Format(time.RFC3339),
+			Md5:                  revision.Spec.ContentSpec.Md5,
+		},
+	}, nil
 }

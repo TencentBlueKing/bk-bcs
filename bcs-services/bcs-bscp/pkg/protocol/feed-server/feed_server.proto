@@ -8,6 +8,7 @@ import "pkg/protocol/core/config-item/config_item.proto";
 import "pkg/protocol/core/hook/hook.proto";
 import "pkg/protocol/core/kv/kvs.proto";
 import "pkg/protocol/core/content/content.proto";
+import "google/api/annotations.proto";
 
 option go_package = "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/feed-server;pbfs";
 
@@ -18,8 +19,18 @@ service Upstream {
   rpc Watch(SideWatchMeta) returns (stream FeedWatchMessage) {}
   rpc PullAppFileMeta(PullAppFileMetaReq) returns (PullAppFileMetaResp) {}
   rpc GetDownloadURL(GetDownloadURLReq) returns (GetDownloadURLResp) {}
-  rpc PullKvMeta(PullKvMetaReq) returns (PullKvMetaResp) {}
-  rpc GetKvValue(GetKvValueReq) returns (GetKvValueResp) {}
+  rpc PullKvMeta(PullKvMetaReq) returns (PullKvMetaResp) {
+    option (google.api.http) = {
+      post: "/api/v1/feed/biz/{biz_id}/kvs/metadata"
+      body: "*"
+    };
+  }
+  rpc GetKvValue(GetKvValueReq) returns (GetKvValueResp) {
+    option (google.api.http) = {
+      post: "/api/v1/feed/biz/{biz_id}/kvs/data/{key}"
+      body: "*"
+    };
+  }
   rpc ListApps(ListAppsReq) returns (ListAppsResp) {}
   rpc AsyncDownload(AsyncDownloadReq) returns (AsyncDownloadResp) {}
   rpc AsyncDownloadStatus(AsyncDownloadStatusReq) returns (AsyncDownloadStatusResp) {}

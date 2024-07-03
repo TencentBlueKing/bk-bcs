@@ -16,6 +16,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"path"
 	"strings"
 	"time"
 
@@ -252,12 +253,13 @@ func (s *Service) ListAppBoundTmplRevisions(ctx context.Context,
 		for _, f := range fields {
 			fieldsMap[f] = true
 		}
+		fieldsMap["combinedPathName"] = true
 		newDetails := make([]*pbatb.AppBoundTmplRevision, 0)
 		for _, detail := range details {
+			combinedPathName := path.Join(detail.Path, detail.Name)
 			if (fieldsMap["revision_name"] && strings.Contains(detail.TemplateRevisionName, req.SearchValue)) ||
 				(fieldsMap["revision_memo"] && strings.Contains(detail.TemplateRevisionMemo, req.SearchValue)) ||
-				(fieldsMap["name"] && strings.Contains(detail.Name, req.SearchValue)) ||
-				(fieldsMap["path"] && strings.Contains(detail.Path, req.SearchValue)) ||
+				(fieldsMap["combinedPathName"] && strings.Contains(combinedPathName, req.SearchValue)) ||
 				(fieldsMap["creator"] && strings.Contains(detail.Creator, req.SearchValue)) {
 				newDetails = append(newDetails, detail)
 			}
@@ -364,7 +366,8 @@ func (s *Service) ListReleasedAppBoundTmplRevisions(ctx context.Context,
 		return nil, err
 	}
 
-	details, count, err := s.dao.ReleasedAppTemplate().List(kt, req.BizId, req.AppId, req.ReleaseId, searcher, opt)
+	details, count, err := s.dao.ReleasedAppTemplate().List(kt, req.BizId,
+		req.AppId, req.ReleaseId, searcher, opt, req.SearchValue)
 	if err != nil {
 		logs.Errorf("list released app bound templates revisions failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err

@@ -102,7 +102,7 @@
       } else {
         const stringContent = content.value as string;
         size = new Blob([stringContent]).size;
-        await updateConfigContent(props.bkBizId, props.appId, stringContent, sign);
+        await updateConfigContent(props.bkBizId, props.appId, stringContent, sign, () => {});
       }
       const params = { ...configForm.value, ...{ sign, byte_size: size } };
       const res = await createServiceConfigItem(props.appId, props.bkBizId, params);

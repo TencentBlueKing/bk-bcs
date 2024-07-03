@@ -296,9 +296,8 @@ func (s *Service) ListAppBoundTmplRevisions(ctx context.Context, req *pbcs.ListA
 			TemplateSetId:     tmplSet.TemplateSetId,
 			TemplateSetName:   tmplSet.TemplateSetName,
 		}
-
 		revisions := tmplSetMap[tmplSet.TemplateSetId]
-		// 先按照path+name排序好
+		// 根据path+name排序
 		sort.SliceStable(revisions, func(i, j int) bool {
 			iPath := path.Join(revisions[i].Path, revisions[i].Name)
 			jPath := path.Join(revisions[j].Path, revisions[j].Name)

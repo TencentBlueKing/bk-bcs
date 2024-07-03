@@ -59,8 +59,8 @@
   };
   const updateReplaceVal = () => {
     let updateString = replaceVal.value;
-    updateString = updateString.replace('{{ .Bk_Bscp_Variable_BkBizId }}', bkBizId.value);
-    updateString = updateString.replace('{{ .Bk_Bscp_Variable_ServiceName }}', serviceName!.value);
+    updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_BkBizId }}', bkBizId.value);
+    updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_ServiceName }}', serviceName!.value);
     replaceVal.value = updateString.replaceAll('{{ .Bk_Bscp_Variable_FEED_ADDR }}', (window as any).FEED_ADDR);
   };
   const updateVariables = () => {

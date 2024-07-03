@@ -2,7 +2,7 @@
   <section class="configuration-example-page">
     <div class="example-aside">
       <!-- 选择服务 -->
-      <service-selector class="sel-service" @change-service="changeService" />
+      <service-selector class="sel-service" @select-service="selectService" />
       <!-- 示例列表 -->
       <div class="type-wrap">
         <bk-menu :active-key="renderComponent" @update:active-key="changeTypeItem">
@@ -18,14 +18,16 @@
         </div>
       </bk-alert>
       <div class="content-wrap">
-        <component :is="currentTemplate" :kv-name="renderComponent" :content-scroll-top="contentScrollTop" />
+        <bk-loading style="height: 100%" :loading="loading">
+          <component :is="currentTemplate" :kv-name="renderComponent" :content-scroll-top="contentScrollTop" />
+        </bk-loading>
       </div>
     </div>
   </section>
 </template>
 
 <script lang="ts" setup>
-  import { computed, ref, provide } from 'vue';
+  import { computed, ref, provide, nextTick } from 'vue';
   import ServiceSelector from './components/service-selector.vue';
   import { useI18n } from 'vue-i18n';
   import ContainerExample from './components/content/container-example.vue';
@@ -52,12 +54,13 @@
   const serviceName = ref(''); // 示例预览模板中用到
   const serviceType = ref(''); // 配置类型：file/kv
   const topTip = ref('');
+  const loading = ref(true);
   provide('serviceName', serviceName); // 示例预览组件用
 
   const navList = computed(() => (serviceType.value === 'file' ? fileTypeArr : kvTypeArr));
   // 展示的示例组件与顶部提示语
   const currentTemplate = computed(() => {
-    if (serviceType.value) {
+    if (serviceType.value && !loading.value) {
       switch (renderComponent.value) {
         case 'sidecar':
           topTip.value = t('Sidecar 容器客户端用于容器化应用程序拉取文件型配置场景。');
@@ -85,14 +88,20 @@
   });
 
   // 服务切换
-  const changeService = (getServiceType: string, getServiceName: string) => {
-    serviceType.value = getServiceType;
-    serviceName.value = getServiceName;
+  const selectService = (serviceTypeVal: string, serviceNameVal: string) => {
+    serviceType.value = serviceTypeVal;
+    if (serviceName.value !== serviceNameVal) {
+      loading.value = true;
+    }
+    serviceName.value = serviceNameVal;
     changeTypeItem(navList.value[0].val);
   };
   // 服务的子类型切换
   const changeTypeItem = (data: string) => {
     renderComponent.value = data;
+    nextTick(() => {
+      loading.value = false;
+    });
   };
   // 返回顶部
   const contentScrollTop = () => {
