@@ -1,4 +1,5 @@
 export default {
+  蓝鲸: 'BlueKing',
   // 服务列表
   我的服务: 'My Service',
   全部服务: 'All Services',
