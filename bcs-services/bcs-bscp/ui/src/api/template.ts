@@ -650,7 +650,7 @@ export const batchEditTemplatePermission = (biz_id: string, query: any) =>
   http.post(`/config/biz/${biz_id}/templates/batch_update_templates_permissions`, query);
 
 /**
- * 批量修改模板权限
+ * 获取配置模板配置项元信息
  * @param biz_id 业务ID
  * @param template_id 模板id
  * @param revision_name 版本名称

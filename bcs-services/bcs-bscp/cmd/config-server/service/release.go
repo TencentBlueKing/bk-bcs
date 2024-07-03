@@ -249,3 +249,30 @@ func (s *Service) DeleteRelease(ctx context.Context, req *pbcs.DeleteReleaseReq)
 	resp := &pbcs.DeleteReleaseResp{}
 	return resp, nil
 }
+
+// CheckReleaseName 检测某个服务下已发布的名称是否存在
+func (s *Service) CheckReleaseName(ctx context.Context, req *pbcs.CheckReleaseNameReq) (
+	*pbcs.CheckReleaseNameResp, error) {
+
+	kt := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.Find, ResourceID: req.AppId}, BizID: req.BizId},
+	}
+	err := s.authorizer.Authorize(kt, res...)
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := s.client.DS.CheckReleaseName(kt.RpcCtx(), &pbds.CheckReleaseNameReq{
+		BizId: req.GetBizId(),
+		AppId: req.GetAppId(),
+		Name:  req.GetName(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &pbcs.CheckReleaseNameResp{Exist: result.GetExist()}, nil
+}
