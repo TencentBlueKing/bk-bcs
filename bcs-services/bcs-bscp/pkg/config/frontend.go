@@ -26,7 +26,7 @@ type HostConf struct {
 	BSCPAPIURL           string `yaml:"bscp_api_url"`      // bscp api地址
 	BKNODEMANHOST        string `yaml:"bk_nodeman_host"`   // 节点管理地址
 	BKSharedResURL       string `yaml:"bk_shared_res_url"` // 对应运维公共变量bkSharedResUrl, PaaS环境变量BKPAAS_SHARED_RES_URL
-	BKSharedResBaseJSURL string `yaml:"-"`                 // 规则是${bkSharedResUrl}/${目录名 aks app_code}/base.js
+	BKSharedResBaseJSURL string `yaml:"-"`                 // 规则是${bkSharedResUrl}/${目录名 aka app_code}/base.js
 }
 
 // FrontendConf docs and host conf
