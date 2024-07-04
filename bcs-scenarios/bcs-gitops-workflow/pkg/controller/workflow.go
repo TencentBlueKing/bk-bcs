@@ -178,6 +178,7 @@ func (r *WorkflowController) deleteWorkflow(ctx context.Context, workflow *gitop
 			logctx.Errorf(ctx, "workflow delete pipeline failed: %s", err.Error())
 			return ctrl.Result{Requeue: true, RequeueAfter: 5 * time.Second}, nil
 		}
+		logctx.Infof(ctx, "workflow pipeline deleted")
 	}
 	rawPatch := client.RawPatch(k8stypes.JSONPatchType, []byte(`[{"op":"remove","path":"/metadata/finalizers"}]`))
 	if err := r.Client.Patch(ctx, workflow, rawPatch); err != nil {

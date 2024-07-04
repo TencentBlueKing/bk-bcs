@@ -14,21 +14,17 @@
 package middleware
 
 import (
-	"context"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
-	traceconst "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/constants"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/tracing"
-	"github.com/google/uuid"
-	"github.com/pkg/errors"
 
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/cmd/manager/options"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/metric"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware/ctxutils"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/session"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/utils"
 )
@@ -56,59 +52,10 @@ type HttpResponse struct {
 	err        error
 }
 
-type contextKey string
-
-const (
-	ctxKeyUser contextKey = "user"
-)
-
-// RequestID return the requestID of context
-func RequestID(ctx context.Context) string {
-	return ctx.Value(traceconst.RequestIDHeaderKey).(string)
-}
-
-// User return user info of context
-func User(ctx context.Context) *proxy.UserInfo {
-	return ctx.Value(ctxKeyUser).(*proxy.UserInfo)
-}
-
-// SetContext set the user-info and trace info
-func SetContext(rw http.ResponseWriter, r *http.Request, jwtDecoder *jwt.JWTClient) (context.Context, string) {
-	// 获取 RequestID 信息，并重新存入上下文
-	var requestID string
-	requestIDHeader := r.Context().Value(traceconst.RequestIDHeaderKey)
-	if v, ok := requestIDHeader.(string); ok && v != "" {
-		requestID = v
-	} else {
-		requestID = uuid.New().String()
-	}
-	// nolint
-	ctx := context.WithValue(r.Context(), traceconst.RequestIDHeaderKey, requestID)
-	// nolint
-	ctx = tracing.ContextWithRequestID(ctx, requestID)
-	rw.Header().Set(traceconst.RequestIDHeaderKey, requestID)
-
-	// 统一获取 User 信息，并存入上下文
-	user, err := proxy.GetJWTInfo(r, jwtDecoder)
-	if err != nil || user == nil {
-		http.Error(rw, errors.Wrapf(err, "get user info failed").Error(), http.StatusUnauthorized)
-		return nil, requestID
-	}
-	if user.ClientID != "" {
-		blog.Infof("RequestID[%s] manager received user '%s' with client '%s' serve [%s/%s]",
-			requestID, user.GetUser(), user.ClientID, r.Method, r.URL.Path)
-	} else {
-		blog.Infof("RequestID[%s] manager received user '%s' serve [%s/%s]",
-			requestID, user.GetUser(), r.Method, r.URL.Path)
-	}
-	ctx = context.WithValue(ctx, ctxKeyUser, user)
-	return ctx, requestID
-}
-
 // ServeHTTP 接收请求的入口，根据返回的 type 类型做不同的操作
 func (p *httpWrapper) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	start := time.Now()
-	ctx, requestID := SetContext(rw, r, p.option.JWTDecoder)
+	ctx, requestID := ctxutils.SetContext(rw, r, p.option.JWTDecoder)
 	if ctx == nil {
 		return
 	}
@@ -145,23 +92,24 @@ func (p *httpWrapper) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		}
 	}()
 	if resp.statusCode >= 500 {
-		if !utils.IsContextCanceled(resp.err) {
+		if !utils.IsContextCanceled(resp.err) && !utils.IsAuthenticationFailed(resp.err) {
 			metric.ManagerReturnErrorNum.WithLabelValues().Inc()
 		}
 	}
+	rwWrapper := &utils.ResponseWriterWrapper{ResponseWriter: rw}
 	switch resp.respType {
 	case reverseArgo:
-		p.argoSession.ServeHTTP(rw, req)
+		p.argoSession.ServeHTTP(rwWrapper, req)
 	case reverseArgoStream:
-		p.argoStreamSession.ServeHTTP(rw, req)
+		p.argoStreamSession.ServeHTTP(rwWrapper, req)
 	case reverseSecret:
-		p.secretSession.ServeHTTP(rw, req)
+		p.secretSession.ServeHTTP(rwWrapper, req)
 	case reverseTerraform:
-		p.terraformSession.ServeHTTP(rw, req)
+		p.terraformSession.ServeHTTP(rwWrapper, req)
 	case reverseAnalysis:
-		p.analysisSession.ServeHTTP(rw, req)
+		p.analysisSession.ServeHTTP(rwWrapper, req)
 	case reverseMonitor:
-		p.monitorSession.ServeHTTP(rw, req)
+		p.monitorSession.ServeHTTP(rwWrapper, req)
 	case returnError:
 		if resp.statusCode >= 500 {
 			if utils.IsContextCanceled(resp.err) {
@@ -170,19 +118,53 @@ func (p *httpWrapper) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 				blog.Errorf("RequestID[%s] handler return code '%d': %s", requestID, resp.statusCode, resp.err.Error())
 			}
 		}
-		http.Error(rw, resp.err.Error(), resp.statusCode)
+		if resp.statusCode < 500 {
+			blog.Warnf("RequestID[%s] handler return code '%d': %s", requestID, resp.statusCode, resp.err.Error())
+		}
+		http.Error(rwWrapper, resp.err.Error(), resp.statusCode)
 	case returnGrpcError:
 		blog.Warnf("RequestID[%s] handler grpc request return code '%d': %s",
 			requestID, resp.statusCode, resp.err.Error())
-		proxy.GRPCErrorResponse(rw, resp.statusCode, resp.err)
+		proxy.GRPCErrorResponse(rwWrapper, resp.statusCode, resp.err)
 	case grpcResponse:
-		proxy.GRPCResponse(rw, resp.obj)
+		proxy.GRPCResponse(rwWrapper, resp.obj)
 	case directResponse:
-		proxy.DirectlyResponse(rw, resp.obj)
+		proxy.DirectlyResponse(rwWrapper, resp.obj)
 	case jsonResponse:
-		proxy.JSONResponse(rw, resp.obj)
+		proxy.JSONResponse(rwWrapper, resp.obj)
 	}
-	go handleAudit(req, resp, start, time.Now())
+	p.handleAudit(rwWrapper, req, resp, start)
+}
+
+func (p *httpWrapper) handleAudit(rwWrapper *utils.ResponseWriterWrapper, req *http.Request, resp *HttpResponse,
+	start time.Time) {
+	if !ctxutils.NeedAudit(req.Context()) {
+		return
+	}
+	auditResp := &ctxutils.AuditResp{Start: start, End: time.Now()}
+	auditResp.StatusCode = rwWrapper.GetStatusCode()
+	if rwWrapper.GetStatusCode() != http.StatusOK {
+		if resp.err != nil {
+			auditResp.ErrMsg = resp.err.Error()
+		} else {
+			auditResp.ErrMsg = string(rwWrapper.GetResponseBody())
+		}
+		go ctxutils.SaveAuditMessage(req.Context(), auditResp)
+		return
+	}
+	grpcMessage := rwWrapper.Header().Values("Grpc-Message")
+	grpcStatus := rwWrapper.Header().Values("Grpc-Status")
+	if rwWrapper.GetStatusCode() == http.StatusOK && len(grpcMessage) == 0 {
+		go ctxutils.SaveAuditMessage(req.Context(), auditResp)
+		return
+	}
+	auditResp.ErrMsg = strings.Join(grpcMessage, " ")
+	if len(grpcStatus) != 0 {
+		auditResp.StatusCode, _ = strconv.Atoi(grpcStatus[0])
+	} else {
+		auditResp.StatusCode = http.StatusInternalServerError
+	}
+	go ctxutils.SaveAuditMessage(req.Context(), auditResp)
 }
 
 type responseType int

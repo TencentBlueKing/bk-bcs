@@ -45,6 +45,7 @@ func (s *Setter) preCheck() error {
 	fi, err := os.Stat(dfp)
 	if err != nil {
 		if os.IsNotExist(err) {
+			// NOCC:gas/permission(设计如此)
 			if err = os.Mkdir(dfp, 0755); err != nil {
 				return errors.Wrapf(err, "create dir '%s' failed", dfp)
 			}
@@ -85,6 +86,7 @@ func (s *Setter) SetCluster(cluster string) error {
 	if err := s.preCheck(); err != nil {
 		return errors.Wrapf(err, "pre-check failed")
 	}
+	// NOCC:gas/subprocess(设计如此)
 	c := exec.Command("bash", "-c", fmt.Sprintf(`echo "%s" > %s`, cluster, s.bcsGlobalClusterFile))
 	if _, err := c.CombinedOutput(); err != nil {
 		return errors.Wrapf(err, "set global cluster failed")

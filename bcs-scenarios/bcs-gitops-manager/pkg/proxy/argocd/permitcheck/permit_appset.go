@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-package middleware
+package permitcheck
 
 import (
 	"context"
@@ -19,74 +19,94 @@ import (
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/argoproj/argo-cd/v2/applicationset/generators"
 	"github.com/argoproj/argo-cd/v2/applicationset/services"
 	"github.com/argoproj/argo-cd/v2/applicationset/utils"
-	appsetpkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/applicationset"
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 	"github.com/argoproj/argo-cd/v2/reposerver/apiclient"
 	"github.com/pkg/errors"
 
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware/ctxutils"
 )
 
 var (
 	render = utils.Render{}
 )
 
-// CheckCreateApplicationSet check the applicationset creation
-func (h *handler) CheckCreateApplicationSet(ctx context.Context,
-	appset *v1alpha1.ApplicationSet) ([]*v1alpha1.Application, int, error) {
-	projName := appset.Spec.Template.Spec.Project
-	if !strings.HasPrefix(appset.Name, projName) {
-		appset.Name = projName + "-" + appset.Name
-	}
-	if !strings.HasPrefix(appset.Spec.Template.Name, appset.Spec.Template.Spec.Project) {
-		appset.Spec.Template.Name = appset.Spec.Template.Spec.Project + "-" + appset.Spec.Template.Name
-	}
-	argoProject, statusCode, err := h.CheckProjectPermission(ctx, projName, iam.ProjectEdit)
+// CheckAppSetPermission check appset permission
+func (c *checker) CheckAppSetPermission(ctx context.Context, appSet string, action RSAction) (
+	*v1alpha1.ApplicationSet, int, error) {
+	argoAppSet, err := c.store.GetApplicationSet(ctx, appSet)
 	if err != nil {
-		return nil, statusCode, errors.Wrapf(err, "check project '%s' permission failed", projName)
+		return nil, http.StatusInternalServerError, errors.Wrapf(err, "get appset from storage failed")
 	}
-	if appset.Spec.Template.Annotations == nil {
-		appset.Spec.Template.Annotations = make(map[string]string)
+	if argoAppSet == nil {
+		return nil, http.StatusBadRequest, errors.Errorf("appset '%s' not found", appSet)
 	}
-	appset.Spec.Template.Annotations[common.ProjectIDKey] = common.GetBCSProjectID(argoProject.Annotations)
-	appset.Spec.Template.Annotations[common.ProjectBusinessIDKey] =
+	var statusCode int
+	_, statusCode, err = c.checkSingleResourcePermission(ctx, argoAppSet.Spec.Template.Spec.Project,
+		AppSetRSType, appSet, action)
+	if err != nil {
+		return nil, statusCode, err
+	}
+	return argoAppSet, http.StatusOK, nil
+}
+
+// CheckAppSetCreate check appset create permission
+func (c *checker) CheckAppSetCreate(ctx context.Context, appSet *v1alpha1.ApplicationSet) (
+	[]*v1alpha1.Application, int, error) {
+	projName := appSet.Spec.Template.Spec.Project
+	if !strings.HasPrefix(appSet.Name, projName) {
+		appSet.Name = projName + "-" + appSet.Name
+	}
+	if !strings.HasPrefix(appSet.Spec.Template.Name, projName) {
+		appSet.Spec.Template.Name = projName + "-" + appSet.Spec.Template.Name
+	}
+	argoProject, statusCode, err := c.CheckProjectPermission(ctx, projName, ProjectEditRSAction)
+	if err != nil {
+		return nil, statusCode, errors.Wrapf(err, "check project permission failed")
+	}
+	if appSet.Spec.Template.Annotations == nil {
+		appSet.Spec.Template.Annotations = make(map[string]string)
+	}
+	appSet.Spec.Template.Annotations[common.ProjectIDKey] = common.GetBCSProjectID(argoProject.Annotations)
+	appSet.Spec.Template.Annotations[common.ProjectBusinessIDKey] =
 		common.GetBCSProjectBusinessKey(argoProject.Annotations)
-	if err = h.checkApplicationSetGenerator(ctx, appset); err != nil {
+	if err = c.checkApplicationSetGenerator(ctx, appSet); err != nil {
 		return nil, http.StatusBadRequest, errors.Wrapf(err, "check applicationset generator failed")
 	}
-	blog.Infof("RequestID[%s] check application set generator success", RequestID(ctx))
+	blog.Infof("RequestID[%s] check application set generator success", ctxutils.RequestID(ctx))
 
-	repoClientSet := apiclient.NewRepoServerClientset(h.option.GitOps.RepoServer, 60,
+	repoClientSet := apiclient.NewRepoServerClientset(c.option.GitOps.RepoServer, 300,
 		apiclient.TLSConfiguration{
 			DisableTLS:       false,
 			StrictValidation: false,
 		})
-	argoCDService, _ := services.NewArgoCDService(h.store.GetArgoDB(),
+	argoCDService, _ := services.NewArgoCDService(c.store.GetArgoDB(),
 		true, repoClientSet, false)
 	// this will render the Applications by ApplicationSet's generators
 	// refer to:
 	// https://github.com/argoproj/argo-cd/blob/v2.8.2/applicationset/controllers/applicationset_controller.go#L499
 	results := make([]*v1alpha1.Application, 0)
-	for i := range appset.Spec.Generators {
-		generator := appset.Spec.Generators[i]
-		if generator.List == nil && generator.Git == nil && generator.Matrix == nil {
+	for i := range appSet.Spec.Generators {
+		generator := appSet.Spec.Generators[i]
+		if generator.List == nil && generator.Git == nil && generator.Matrix == nil && generator.Merge == nil {
 			continue
 		}
 		var tsResult []generators.TransformResult
 		listGenerator := generators.NewListGenerator()
 		gitGenerator := generators.NewGitGenerator(argoCDService)
-		tsResult, err = generators.Transform(generator, map[string]generators.Generator{
+		terminalGenerators := map[string]generators.Generator{
 			"List": listGenerator,
 			"Git":  gitGenerator,
-			"Matrix": generators.NewMatrixGenerator(map[string]generators.Generator{
-				"List": listGenerator,
-				"Git":  gitGenerator,
-			}),
-		}, appset.Spec.Template, appset, map[string]interface{}{})
+		}
+		tsResult, err = generators.Transform(generator, map[string]generators.Generator{
+			"List":   listGenerator,
+			"Git":    gitGenerator,
+			"Matrix": generators.NewMatrixGenerator(terminalGenerators),
+			"Merge":  generators.NewMergeGenerator(terminalGenerators),
+		}, appSet.Spec.Template, appSet, map[string]interface{}{})
 		if err != nil {
 			return nil, http.StatusBadRequest, errors.Wrapf(err, "transform generator[%d] failed", i)
 		}
@@ -98,12 +118,12 @@ func (h *handler) CheckCreateApplicationSet(ctx context.Context,
 			}
 			for _, p := range ts.Params {
 				var app *v1alpha1.Application
-				app, err = render.RenderTemplateParams(tmplApplication, appset.Spec.SyncPolicy,
-					p, appset.Spec.GoTemplate, nil)
+				app, err = render.RenderTemplateParams(tmplApplication, appSet.Spec.SyncPolicy,
+					p, appSet.Spec.GoTemplate, nil)
 				if err != nil {
 					return nil, http.StatusBadRequest, errors.Wrap(err, "error generating application from params")
 				}
-				statusCode, err = h.CheckCreateApplication(ctx, app)
+				statusCode, err = c.CheckApplicationCreate(ctx, app)
 				if err != nil {
 					return nil, statusCode, errors.Wrapf(err, "check create application failed")
 				}
@@ -114,16 +134,16 @@ func (h *handler) CheckCreateApplicationSet(ctx context.Context,
 	return results, 0, nil
 }
 
-func (h *handler) checkApplicationSetGenerator(ctx context.Context, appset *v1alpha1.ApplicationSet) error {
-	projName := appset.Spec.Template.Spec.Project
+// checkApplicationSetGenerator check applicationset generator
+func (c *checker) checkApplicationSetGenerator(ctx context.Context, appSet *v1alpha1.ApplicationSet) error {
+	projName := appSet.Spec.Template.Spec.Project
 	var errs []string
 	var repoUrls []string
-	// NOTE: 仅允许 List/Git/Matrix Generator
-	for i := range appset.Spec.Generators {
-		generator := appset.Spec.Generators[i]
+	// NOTE: 仅允许 List/Git/Matrix/Merge Generator
+	for i := range appSet.Spec.Generators {
+		generator := appSet.Spec.Generators[i]
 		if generator.Clusters != nil || generator.SCMProvider != nil ||
-			generator.ClusterDecisionResource != nil || generator.PullRequest != nil ||
-			generator.Merge != nil {
+			generator.ClusterDecisionResource != nil || generator.PullRequest != nil {
 			errs = append(errs, fmt.Sprintf("generator[%d] has not allowed generator type", i))
 			continue
 		}
@@ -154,13 +174,32 @@ func (h *handler) checkApplicationSetGenerator(ctx context.Context, appset *v1al
 			}
 			generator.Matrix.Template = v1alpha1.ApplicationSetTemplate{}
 		}
+		if generator.Merge != nil {
+			if len(generator.Merge.Generators) == 0 {
+				errs = append(errs, fmt.Sprintf("generator[%d] with merge generator have 0 generators", i))
+				continue
+			}
+			for j := range generator.Merge.Generators {
+				mergeGenerator := generator.Merge.Generators[j]
+				if mergeGenerator.Clusters != nil || mergeGenerator.SCMProvider != nil ||
+					mergeGenerator.ClusterDecisionResource != nil || mergeGenerator.PullRequest != nil ||
+					mergeGenerator.Merge != nil {
+					errs = append(errs, fmt.Sprintf("generator[%d] with merge generator[%d] "+
+						"has not allowed generator type", i, j))
+				}
+				if mergeGenerator.Git != nil {
+					repoUrls = append(repoUrls, mergeGenerator.Git.RepoURL)
+				}
+			}
+			generator.Merge.Template = v1alpha1.ApplicationSetTemplate{}
+		}
 	}
 	if len(errs) != 0 {
 		return errors.Errorf("gitops only allowed [list,git,matrix] generator: %s", strings.Join(errs, "; "))
 	}
 	// check repository permission
 	for _, repoUrl := range repoUrls {
-		repoBelong, err := h.checkRepositoryBelongProject(ctx, repoUrl, projName)
+		repoBelong, err := c.checkRepositoryBelongProject(ctx, repoUrl, projName)
 		if err != nil {
 			return errors.Wrapf(err, "check repository permission failed")
 		}
@@ -183,48 +222,4 @@ func getTempApplication(applicationSetTemplate v1alpha1.ApplicationSetTemplate) 
 	tmplApplication.Finalizers = applicationSetTemplate.Finalizers
 
 	return &tmplApplication
-}
-
-// CheckDeleteApplicationSet check delete applicationset
-func (h *handler) CheckDeleteApplicationSet(ctx context.Context,
-	appsetName string) (*v1alpha1.ApplicationSet, int, error) {
-	appset, err := h.store.GetApplicationSet(ctx, appsetName)
-	if err != nil {
-		return nil, http.StatusInternalServerError, errors.Wrapf(err, "get applicationset failed")
-	}
-	if appset == nil {
-		return nil, http.StatusNotFound, errors.Errorf("not found")
-	}
-	projName := appset.Spec.Template.Spec.Project
-	_, statusCode, err := h.CheckProjectPermission(ctx, projName, iam.ProjectEdit)
-	if err != nil {
-		return nil, statusCode, errors.Wrapf(err, "check project '%s' permission failed", projName)
-	}
-	return appset, 0, nil
-}
-
-func (h *handler) CheckGetApplicationSet(ctx context.Context, appsetName string) (int, error) {
-	appset, err := h.store.GetApplicationSet(ctx, appsetName)
-	if err != nil {
-		return http.StatusInternalServerError, errors.Wrapf(err, "get applicationset failed")
-	}
-	if appset == nil {
-		return http.StatusNotFound, errors.Errorf("not found")
-	}
-	projName := appset.Spec.Template.Spec.Project
-	_, statusCode, err := h.CheckProjectPermission(ctx, projName, iam.ProjectEdit)
-	if err != nil {
-		return statusCode, errors.Wrapf(err, "check project '%s' permission failed", projName)
-	}
-	return 0, nil
-}
-
-// ListApplicationSets list applicationsets
-func (h *handler) ListApplicationSets(ctx context.Context, query *appsetpkg.ApplicationSetListQuery) (
-	*v1alpha1.ApplicationSetList, error) {
-	appsets, err := h.store.ListApplicationSets(ctx, query)
-	if err != nil {
-		return nil, errors.Wrapf(err, "list application swith project '%v' failed", *query)
-	}
-	return appsets, nil
 }

@@ -33,6 +33,22 @@ func IsClusterAskCredentials(err error) bool {
 	return strings.Contains(err.Error(), "the server has asked for the client to provide credentials")
 }
 
+// IsClusterNotFound check the cluster not found
+func IsClusterNotFound(err error) bool {
+	if err == nil {
+		return false
+	}
+	return strings.Contains(err.Error(), "cluster") && strings.Contains(err.Error(), "not found")
+}
+
+// IsClusterRequestTimeout check save cluster timeout
+func IsClusterRequestTimeout(err error) bool {
+	if err == nil {
+		return false
+	}
+	return strings.Contains(err.Error(), "client.Timeout exceeded while awaiting headers")
+}
+
 // IsPermissionDenied permission
 func IsPermissionDenied(err error) bool {
 	if err == nil {
@@ -55,6 +71,14 @@ func IsContextDeadlineExceeded(err error) bool {
 		return false
 	}
 	return strings.Contains(err.Error(), "context deadline exceeded")
+}
+
+// IsAuthenticationFailed auth failed
+func IsAuthenticationFailed(err error) bool {
+	if err == nil {
+		return false
+	}
+	return strings.Contains(err.Error(), "Authentication failed")
 }
 
 // IsSecretAlreadyExist defines the secret whether exist

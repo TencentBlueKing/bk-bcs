@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package utils xxx
 package utils
 
 import (
@@ -19,5 +20,10 @@ import (
 // ToJsonString transfer any to json string, ignore error
 func ToJsonString(v any) string {
 	b, _ := json.MarshalIndent(v, "", "  ")
+	return string(b)
+}
+
+func ToJsonStringCommon(v any) string {
+	b, _ := json.Marshal(v)
 	return string(b)
 }

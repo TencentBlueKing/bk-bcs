@@ -44,9 +44,10 @@ var (
 )
 
 // Parse the ControllerOperation from config file
-func Parse() {
-	globalOption = &ControllerOption{}
+func Parse() *ControllerOption {
+	globalOption = new(ControllerOption)
 	conf.Parse(globalOption)
+	return globalOption
 }
 
 // GlobalOption return the global option

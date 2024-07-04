@@ -156,7 +156,7 @@ func (s *AdmissionWebhookServer) checkApplication(ctx context.Context, bs []byte
 		}
 	}
 	if !belongApplicationSet {
-		blog.Infof("application '%s' not belong to application, ignore it", app.Name)
+		blog.Infof("application '%s' not belong to applicationset, ignore it", app.Name)
 		return nil
 	}
 	proj := app.Spec.Project

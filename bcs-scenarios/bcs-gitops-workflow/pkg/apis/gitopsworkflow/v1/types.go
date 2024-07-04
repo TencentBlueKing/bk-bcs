@@ -17,6 +17,8 @@ import (
 	"hash/fnv"
 	"math/rand"
 	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 )
 
 const (
@@ -41,7 +43,10 @@ const (
 // SecretName defines the secret suffix
 func SecretName(prefix string, str string) string {
 	h := fnv.New32a()
-	_, _ = h.Write([]byte(str))
+	_, err := h.Write([]byte(str))
+	if err != nil {
+		blog.Warnf("write secret failed: %s", err.Error())
+	}
 	return fmt.Sprintf("%s-%v", prefix, h.Sum32())
 }
 
