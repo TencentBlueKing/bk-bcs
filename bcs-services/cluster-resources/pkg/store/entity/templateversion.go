@@ -69,3 +69,10 @@ func (r VersionsSortByVersion) Less(i, j int) bool {
 
 // Swap xxx
 func (r VersionsSortByVersion) Swap(i, j int) { r[i], r[j] = r[j], r[i] }
+
+// TemplateDeploy 定义了模板部署的一些标识
+type TemplateDeploy struct {
+	TemplateName    string `json:"templateName"`
+	TemplateVersion string `json:"templateVersion"`
+	Content         string `json:"content"`
+}

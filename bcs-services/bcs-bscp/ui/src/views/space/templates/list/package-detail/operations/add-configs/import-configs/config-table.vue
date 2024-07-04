@@ -1,7 +1,7 @@
 <template>
   <div style="margin-bottom: 16px">
     <div class="title">
-      <div class="title-content" @click="emits('changeExpand')">
+      <div class="title-content" @click="expand = !expand">
         <DownShape :class="['fold-icon', { fold: !expand }]" />
         <div class="title-text">
           {{ isExsitTable ? t('已存在配置文件') : t('新建配置文件') }} <span>({{ tableData.length }})</span>
@@ -187,11 +187,7 @@
             </td>
             <td class="td-cell-editable" :class="{ change: isContentChange(item.id, 'privilege') }">
               <div class="perm-input">
-                <bk-input
-                  v-model="item.privilege"
-                  type="number"
-                  :placeholder="t('请输入')"
-                  @blur="handlePrivilegeInputBlur(item)" />
+                <bk-input v-model="item.privilege" :placeholder="t('请输入')" @blur="handlePrivilegeInputBlur(item)" />
                 <bk-popover ext-cls="privilege-select-popover" theme="light" trigger="click" placement="bottom">
                   <div class="perm-panel-trigger">
                     <i class="bk-bscp-icon icon-configuration-line"></i>
@@ -266,17 +262,17 @@
 
   const data = ref<IConfigImportItem[]>([]);
   const initData = ref<IConfigImportItem[]>([]);
+  const expand = ref(true);
 
   const props = withDefaults(
     defineProps<{
       tableData: IConfigImportItem[];
       isExsitTable: boolean;
-      expand: boolean;
     }>(),
     {},
   );
 
-  const emits = defineEmits(['change', 'changeExpand']);
+  const emits = defineEmits(['change']);
 
   onMounted(() => {
     data.value = cloneDeep(props.tableData);
@@ -392,7 +388,6 @@
   };
 
   const handleDeleteConfig = (index: number) => {
-    console.log(index);
     data.value = data.value.filter((item, i) => i !== index);
   };
 
@@ -450,9 +445,6 @@
       }
     }
   }
-  .table-container {
-    overflow: auto;
-  }
   .table {
     width: 100%;
     border-collapse: collapse;
@@ -498,10 +490,10 @@
       width: 100px;
     }
     .memo {
-      width: 199px;
+      width: 188px;
     }
     .privilege {
-      width: 102px;
+      width: 100px;
     }
     .user {
       width: 78px;

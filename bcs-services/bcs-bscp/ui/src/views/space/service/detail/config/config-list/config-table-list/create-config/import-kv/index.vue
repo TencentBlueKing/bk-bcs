@@ -77,7 +77,7 @@
       <bk-button
         theme="primary"
         style="margin-right: 8px"
-        :disabled="confirmBtnDisabled"
+        :disabled="confirmBtnDisabled || loading"
         :loading="loading"
         @click="handleConfirm">
         {{ t('导入') }}
@@ -198,17 +198,19 @@
       } else {
         await importKvFormText(props.bkBizId, props.appId, importConfigList.value, isClearDraft.value);
       }
-      Message({
-        theme: 'success',
-        message: t('配置项导入成功'),
-      });
+      emits('update:show', false);
+      setTimeout(() => {
+        emits('confirm');
+        Message({
+          theme: 'success',
+          message: t('配置项导入成功'),
+        });
+      }, 300);
     } catch (error) {
       console.error(error);
     } finally {
       loading.value = false;
     }
-    emits('update:show', false);
-    emits('confirm');
   };
 
   const handleTableChange = (data: IConfigKvItem[], isNonExistData: boolean) => {

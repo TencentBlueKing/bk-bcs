@@ -1,9 +1,14 @@
 <template>
   <div class="wrap">
     <div class="label">{{ $t('上传配置项') }}</div>
+    <div>
+      <bk-checkbox v-model="isDecompression"> {{ $t('压缩包自动解压') }} </bk-checkbox>
+      <div class="tips">{{ uploadTips }}</div>
+    </div>
+  </div>
+  <div class="upload-file-list">
     <bk-upload
       class="config-uploader"
-      :tip="uploadTips"
       theme="button"
       :size="100000"
       :multiple="true"
@@ -15,31 +20,30 @@
         </bk-button>
       </template>
     </bk-upload>
-    <bk-checkbox style="margin-left: 24px" v-model="isDecompression"> {{ $t('压缩包自动解压') }} </bk-checkbox>
-  </div>
-  <div v-if="fileList.length > 0" class="upload-file-list">
-    <div :class="['open-btn', { 'is-open': isOpenFileList }]" @click="isOpenFileList = !isOpenFileList">
-      <angle-double-up-line class="icon" />
-      {{ isOpenFileList ? $t('收起上传列表') : $t('展开上传列表') }}
-    </div>
-    <div v-show="isOpenFileList" class="file-list">
-      <div v-for="fileItem in fileList" :key="fileItem.file.name" class="file-item">
-        <div class="file-wrapper">
-          <div class="status-icon-area">
-            <Done v-if="fileItem.status === 'success'" class="success-icon" />
-            <Error v-if="fileItem.status === 'fail'" class="error-icon" />
-          </div>
-          <TextFill class="file-icon" />
-          <div class="file-content">
-            <div class="name">{{ fileItem.file.name }}</div>
-            <div v-if="fileItem.status !== 'success'" class="progress">
-              <bk-progress
-                :percent="fileItem.progress"
-                :theme="fileItem.status === 'fail' ? 'danger' : 'primary'"
-                size="small" />
+    <div v-if="fileList.length > 0">
+      <div :class="['open-btn', { 'is-open': isOpenFileList }]" @click="isOpenFileList = !isOpenFileList">
+        <angle-double-up-line class="icon" />
+        {{ isOpenFileList ? $t('收起上传列表') : $t('展开上传列表') }}
+      </div>
+      <div v-show="isOpenFileList" class="file-list">
+        <div v-for="fileItem in fileList" :key="fileItem.file.name" class="file-item">
+          <div class="file-wrapper">
+            <div class="status-icon-area">
+              <Done v-if="fileItem.status === 'success'" class="success-icon" />
+              <Error v-if="fileItem.status === 'fail'" class="error-icon" />
             </div>
+            <TextFill class="file-icon" />
+            <div class="file-content">
+              <div class="name">{{ fileItem.file.name }}</div>
+              <div v-if="fileItem.status !== 'success'" class="progress">
+                <bk-progress
+                  :percent="fileItem.progress"
+                  :theme="fileItem.status === 'fail' ? 'danger' : 'primary'"
+                  size="small" />
+              </div>
+            </div>
+            <Del class="del-icon" @click="handleDeleteFile(fileItem.file.name)" />
           </div>
-          <Del class="del-icon" @click="handleDeleteFile(fileItem.file.name)" />
         </div>
       </div>
     </div>
@@ -47,11 +51,12 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref, computed } from 'vue';
+  import { ref, computed, watch } from 'vue';
   import { Upload, AngleDoubleUpLine, Done, TextFill, Error, Del } from 'bkui-vue/lib/icon';
   import { importNonTemplateConfigFile } from '../../../../../../../../../api/config';
   import { useI18n } from 'vue-i18n';
   import { IConfigImportItem } from '../../../../../../../../../../types/config';
+  import { importTemplateFile } from '../../../../../../../../../api/template';
 
   interface IUploadFileList {
     file: File;
@@ -62,14 +67,17 @@
   const { t } = useI18n();
 
   const props = defineProps<{
-    bkBizId: string;
-    appId: number;
+    isTemplate: boolean; // 是否是配置模板导入
+    bkBizId?: string;
+    appId?: number;
+    spaceId?: string;
+    currentTemplateSpace?: number;
   }>();
 
-  const emits = defineEmits(['change', 'delete']);
+  const emits = defineEmits(['change', 'delete', 'uploading', 'decompressing']);
 
   const loading = ref(false);
-  const isDecompression = ref(false);
+  const isDecompression = ref(true);
   const isOpenFileList = ref(true);
   const fileList = ref<IUploadFileList[]>([]);
 
@@ -82,6 +90,23 @@
     );
   });
 
+  watch(
+    () => fileList.value,
+    () => {
+      if (fileList.value.some((fileItem) => fileItem.status === 'uploading')) {
+        emits('uploading', true);
+      } else {
+        emits('uploading', false);
+      }
+      if (fileList.value.some((fileItem) => fileItem.status === 'decompressing')) {
+        emits('decompressing', true);
+      } else {
+        emits('decompressing', false);
+      }
+    },
+    { deep: true },
+  );
+
   const handleFileUpload = async (option: { file: File }) => {
     loading.value = true;
     try {
@@ -93,15 +118,32 @@
         status: 'uploading',
         progress: 0,
       });
-      const res = await importNonTemplateConfigFile(
-        props.bkBizId,
-        props.appId,
-        option.file,
-        isDecompression.value,
-        (progress: any) => {
-          fileList.value.find((fileItem) => fileItem.file === option.file)!.progress = progress;
-        },
-      );
+      let res;
+      if (props.isTemplate) {
+        res = await importTemplateFile(
+          props.spaceId!,
+          props.currentTemplateSpace!,
+          option.file,
+          isDecompression.value,
+          (progress: number) => {
+            const fileItem = fileList.value.find((fileItem) => fileItem.file === option.file);
+            if (progress === 100) fileItem!.status = 'decompressing';
+            fileList.value.find((fileItem) => fileItem.file === option.file)!.progress = progress;
+          },
+        );
+      } else {
+        res = await importNonTemplateConfigFile(
+          props.bkBizId!,
+          props.appId!,
+          option.file,
+          isDecompression.value,
+          (progress: number) => {
+            const fileItem = fileList.value.find((fileItem) => fileItem.file === option.file);
+            if (progress === 100) fileItem!.status = 'decompressing';
+            fileItem!.progress = progress;
+          },
+        );
+      }
       fileList.value.find((fileItem) => fileItem.file === option.file)!.status = 'success';
       res.non_exist.forEach((item: IConfigImportItem) => {
         item.privilege = '644';
@@ -129,27 +171,20 @@
 
 <style scoped lang="scss">
   .tips {
-    margin-left: 100px;
+    color: #979ba5;
+    height: 20px;
+    font-size: 12px;
+    line-height: 20px;
+    margin-bottom: 8px;
   }
   :deep(.config-uploader) {
-    position: relative;
-    .bk-upload__tip {
-      margin-left: 0;
-      position: absolute;
-      bottom: -28px;
-      left: 0;
-      width: 700px;
-      height: 20px;
-      font-size: 12px;
-      color: #979ba5;
-    }
     .bk-upload-list {
       display: none;
     }
   }
   .upload-file-list {
-    margin: 40px 0 0 94px;
-    padding: 8px 12px;
+    margin-left: 94px;
+    padding: 12px;
     width: 520px;
     background: #f5f7fa;
     border-radius: 2px;
@@ -160,6 +195,7 @@
       font-size: 12px;
       color: #3a84ff;
       cursor: pointer;
+      margin-top: 8px;
       .icon {
         transform: rotate(180deg);
         transition: all 0.3s ease-in-out;

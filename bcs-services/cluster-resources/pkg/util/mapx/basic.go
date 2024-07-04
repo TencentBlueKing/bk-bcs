@@ -77,6 +77,12 @@ func ReplaceMapValueString(v interface{}, old, new string) interface{} {
 		return newMap
 	case string:
 		return strings.ReplaceAll(v, old, new)
+	case map[string]interface{}:
+		newMap := make(map[string]interface{}, len(v))
+		for kk, vv := range v {
+			newMap[fmt.Sprintf("%v", kk)] = ReplaceMapValueString(vv, old, new)
+		}
+		return newMap
 	default:
 		return v
 	}

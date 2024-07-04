@@ -57,7 +57,6 @@
   };
 
   const handleDrillDown = (data: any) => {
-    console.log(data);
     isDrillDown.value = true;
     drillDownData.value = data.name;
     pieData.value = data.children;

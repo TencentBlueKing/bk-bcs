@@ -1,0 +1,68 @@
+
+### Watch
+
+// watch kv example for bscp sdk
+package main
+
+import (
+	"fmt"
+	"os"
+
+	"github.com/TencentBlueKing/bscp-go/client"
+	"github.com/TencentBlueKing/bscp-go/pkg/logger"
+)
+
+func main() {
+	// 设置日志自定义 Handler
+	// logger.SetHandler(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{}))
+
+	// 在线服务, 可设置 metrics
+	// metrics.RegisterMetrics()
+	// http.Handle("/metrics", promhttp.Handler())
+
+	// 初始化配置信息
+	var feedAddr string = "{{ .Bk_Bscp_Variable_FEED_ADDR }}"
+	var biz uint32 = {{ .Bk_Bscp_Variable_BkBizId }}
+	var token string = {{ .Bk_Bscp_Variable_ClientKey }}
+	var app string = "{{ .Bk_Bscp_Variable_ServiceName }}"
+
+	labels := map[string]string{{ .Bk_Bscp_Variable_Leabels }}
+
+	bscp, err := client.New(
+		client.WithFeedAddr(feedAddr),
+		client.WithBizID(biz),
+		client.WithToken(token),
+		client.WithLabels(labels),
+	)
+	if err != nil {
+		logger.Error("init client", logger.ErrAttr(err))
+		os.Exit(1)
+	}
+
+	opts := []client.AppOption{}
+
+	if err = bscp.AddWatcher(func(release *client.Release) error {
+		fmt.Println("receive new release change event: ", release.ReleaseName)
+		for _, kv := range release.KvItems {
+			value, err := bscp.Get(app, kv.Key, opts...)
+			if err != nil {
+				logger.Error("get value", logger.ErrAttr(err))
+				os.Exit(1)
+			}
+
+			fmt.Printf("%s=%s\n", kv.Key, value)
+		}
+
+		return nil
+	}, app, opts...); err != nil {
+		logger.Error("add watcher", logger.ErrAttr(err))
+		os.Exit(1)
+	}
+
+	if err := bscp.StartWatch(); err != nil {
+		logger.Error("start watch", logger.ErrAttr(err))
+		os.Exit(1)
+	}
+
+	select {}
+}

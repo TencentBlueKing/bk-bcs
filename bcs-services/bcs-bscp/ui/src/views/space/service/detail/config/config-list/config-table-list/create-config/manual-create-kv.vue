@@ -27,6 +27,9 @@
   import { createKv } from '../../../../../../../../api/config';
   import useModalCloseConfirmation from '../../../../../../../../utils/hooks/use-modal-close-confirmation';
   import ConfigForm from '../config-form-kv.vue';
+  import useServiceStore from '../../../../../../../../store/service';
+
+  const serviceStore = useServiceStore();
 
   const props = defineProps<{
     show: boolean;
@@ -83,7 +86,10 @@
       configForm.value.value = configForm.value.value.replace(/^0+(?=\d|$)/, '');
     }
     try {
-      await createKv(props.bkBizId, props.appId, { ...configForm.value });
+      const res = await createKv(props.bkBizId, props.appId, { ...configForm.value });
+      serviceStore.$patch((state) => {
+        state.topIds = [res.data.id];
+      });
       emits('confirm');
       close();
       Message({

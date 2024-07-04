@@ -10,6 +10,7 @@
 </template>
 
 <script setup lang="ts">
+  import { onMounted } from 'vue';
   import { storeToRefs } from 'pinia';
   import useGlobalStore from './store/global';
   import NoticeComponent from '@blueking/notice-component';
@@ -24,6 +25,10 @@
   const noticeApiURL = `${window.BK_BCS_BSCP_API}/api/v1/announcements`;
   // @ts-ignore
   const enableNotice = window.ENABLE_BK_NOTICE === 'true';
+
+  onMounted(() => {
+    globalStore.getAppGlobalConfig();
+  });
 </script>
 
 <style scoped lang="scss">

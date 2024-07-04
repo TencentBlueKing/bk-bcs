@@ -21,8 +21,10 @@ import (
 	pbstruct "github.com/golang/protobuf/ptypes/struct"
 	"gorm.io/gorm"
 
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/i18n"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 	pbbase "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
@@ -974,4 +976,25 @@ func (s *Service) deleteReleaseRelatedResources(grpcKit *kit.Kit, tx *gen.QueryT
 		}
 	}
 	return nil
+}
+
+// CheckReleaseName 检测某个服务下已发布的名称是否存在
+func (s *Service) CheckReleaseName(ctx context.Context, req *pbds.CheckReleaseNameReq) (
+	*pbds.CheckReleaseNameResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	result, err := s.dao.Release().GetByName(grpcKit, req.GetBizId(), req.GetAppId(), req.GetName())
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, errf.Errorf(errf.DBOpFailed,
+			i18n.T(grpcKit, fmt.Sprintf("get release by name failed, err: %s", err.Error())))
+	}
+
+	var exist bool
+	if result != nil && result.ID != 0 {
+		exist = true
+	}
+
+	return &pbds.CheckReleaseNameResp{
+		Exist: exist,
+	}, nil
 }

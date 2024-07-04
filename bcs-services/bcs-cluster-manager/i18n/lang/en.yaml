@@ -78,6 +78,8 @@ ReturnInstanceToResourcePoolTask: "recycle node to resource pool"
 RegisterTkeClusterKubeConfigTask: "register cluster kubeConfig"
 CheckClusterCleanNodsTask: "check nodes clean finished"
 CheckCleanDBDataTask: "clean db data"
+ModifyInstancesVpcTask: "modify node vpc"
+CheckInstanceStateTask: "check cvm status"
 #
 installGseAgent: "Install GSE Agent"
 #

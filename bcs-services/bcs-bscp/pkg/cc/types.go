@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -47,9 +48,9 @@ type FeatureFlags struct {
 
 // FeatureBizView 业务白名单
 type FeatureBizView struct {
-	Default bool `yaml:"default"`
+	Default *bool `yaml:"default"`
 	// map[bizID]true/false
-	Spec map[string]bool `yaml:"spec"`
+	Spec map[string]*bool `yaml:"spec"`
 }
 
 // FeatureResourceLimit 业务资源限制
@@ -61,8 +62,62 @@ type FeatureResourceLimit struct {
 
 // ResourceLimit 资源限制配置项
 type ResourceLimit struct {
-	// 配置文件大小上限，单位 Mb
+	// MaxFileSize 配置文件大小上限，单位 MB，默认为100MB
 	MaxFileSize uint `json:"maxFileSize" yaml:"maxFileSize"`
+	// AppConfigCnt 单个app下允许创建的配置数（模版+非模版），默认为2000
+	AppConfigCnt uint `yaml:"appConfigCnt"`
+	// TmplSetTmplCnt 单个模版套餐下允许创建的模版数，默认为2000
+	TmplSetTmplCnt uint `yaml:"tmplSetTmplCnt"`
+}
+
+// validate if the feature resource limit is valid or not.
+func (f FeatureFlags) validate() error {
+	for bizID := range f.BizView.Spec {
+		if _, err := strconv.Atoi(bizID); err != nil {
+			return fmt.Errorf("invalid featureFlags.BIZ_VIEW.spec.{bizID} value %s, "+
+				"biz id should be an interger", bizID)
+		}
+	}
+
+	for bizID := range f.ResourceLimit.Spec {
+		if _, err := strconv.Atoi(bizID); err != nil {
+			return fmt.Errorf("invalid featureFlags.RESOURCE_LIMIT.spec.{bizID} value %s, "+
+				"biz id should be an interger", bizID)
+		}
+	}
+
+	return nil
+}
+
+const (
+	// DefaultBizView is default biz view
+	DefaultBizView = true
+	// DefaultMaxFileSize is default max file size, unit is MB
+	DefaultMaxFileSize = 100
+	// DefaultAppConfigCnt is default app's config count
+	DefaultAppConfigCnt = 2000
+	// DefaultTmplSetTmplCnt is default template set's template count
+	DefaultTmplSetTmplCnt = 2000
+)
+
+// trySetDefault try set the default value of feature flag
+func (f *FeatureFlags) trySetDefault() {
+	if f.BizView.Default == nil {
+		bizView := DefaultBizView
+		f.BizView.Default = &bizView
+	}
+
+	if f.ResourceLimit.Default.MaxFileSize == 0 {
+		f.ResourceLimit.Default.MaxFileSize = DefaultMaxFileSize
+	}
+
+	if f.ResourceLimit.Default.AppConfigCnt == 0 {
+		f.ResourceLimit.Default.AppConfigCnt = DefaultAppConfigCnt
+	}
+
+	if f.ResourceLimit.Default.TmplSetTmplCnt == 0 {
+		f.ResourceLimit.Default.TmplSetTmplCnt = DefaultTmplSetTmplCnt
+	}
 }
 
 // Service defines Setting related runtime.
@@ -619,8 +674,10 @@ type Network struct {
 	// RpcPort is port where server listen to rpc port.
 	RpcPort uint `yaml:"rpcPort"`
 	// HttpPort is port where server listen to http port.
-	HttpPort uint      `yaml:"httpPort"`
-	TLS      TLSConfig `yaml:"tls"`
+	HttpPort uint `yaml:"httpPort"`
+	// GwHttpPort  is port where server listen to grpc-gateway http port.
+	GwHttpPort uint      `yaml:"gwHttpPort"`
+	TLS        TLSConfig `yaml:"tls"`
 }
 
 // trySetFlagBindIP try set flag bind ip, bindIP only can set by one of the flag or configuration file.

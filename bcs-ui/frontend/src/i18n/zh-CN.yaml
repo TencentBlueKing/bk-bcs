@@ -1,6 +1,4 @@
 bcs:
-  title: 容器管理平台 | 腾讯蓝鲸智云
-  name: 容器管理平台
   newVersion: '有版本更新, 是否刷新界面'
   preVersion: 返回旧版
   TKEx:
@@ -9,7 +7,6 @@ bcs:
     article1: TKEx-IEG 是公司 K8S Oteam 指定的 IEG 容器服务平台。
     article2: TKEx-IEG 依托于 TKE，聚焦打造游戏一站式微服务部署治理方案，并基于 IEG 各类游戏的特点，提供游戏特色的容器管理服务。
   intro:
-    title: 蓝鲸容器管理平台
     welcome: 欢迎使用蓝鲸容器管理平台
     article1: 蓝鲸容器管理平台（Blueking Container Service）定位于打造云原生技术和业务实际应用场景之间的桥梁；
     article2: 聚焦于复杂应用场景的容器化部署技术方案的研发、整合和产品化；
@@ -2515,6 +2512,36 @@ importHuaweiCloud:
     region: 所属区域
     clusterID: 云集群 ID
     nodemanArea: 管控区域
+    desc: 集群描述
+  button:
+    test: 连通性测试
+    import: 导入
+  clusterRegion:
+    zones: 可用区级集群
+    regions: 区域级集群
+    other: 其他
+amazonCloud:
+  button:
+    create: 新建凭证
+    delete: 删除凭证
+  placeholder:
+    search: 搜索名称/SecretID/集群ID
+  tips:
+    nameRegex: 仅支持英文、数字和字符(-)
+    secretKeyRegex: 仅支持英文、数字和字符(-或/)
+  label:
+    clusterType: 集群类型
+    managed: 托管集群
+    aksDesc: Kubernetes 集群的 Master 和 Etcd 会由 AWS 团队集中管理和维护，集群管理员不需要关心集群 Master的管理和维护。
+    cluster: 关联集群
+    create: 新建凭证
+importAmazonCloud:
+  title: 导入公有云集群 - aws云
+  label:
+    clusterName: 集群名称
+    token: 云凭证
+    region: 所属区域
+    clusterID: 云集群 ID
     desc: 集群描述
   button:
     test: 连通性测试

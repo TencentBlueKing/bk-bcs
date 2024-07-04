@@ -1,6 +1,4 @@
 bcs:
-  title: BCS | Tencent BlueKing
-  name: BCS
   TKEx:
     title: TKEx-IEG
     welcome: Welcome to TKEX-IEG platform
@@ -11,7 +9,6 @@ bcs:
       container management services based on the characteristics of each type of
       IEG game.
   intro:
-    title: BCS
     welcome: Welcome to BCS
     article1: >-
       BCS is designed to bridge the gap between cloud-native technologies and
@@ -3103,6 +3100,40 @@ importHuaweiCloud:
     region: Region
     clusterID: Cluster ID
     nodemanArea: Nodeman Area
+    desc: Description
+  button:
+    test: Test
+    import: Import
+  clusterRegion:
+    zones: Zones
+    regions: Regions
+    other: Other
+amazonCloud:
+  button:
+    create: Create
+    delete: Delete
+  placeholder:
+    search: Search ID/name/SubscriptionID/tenantID/ClientID/cluster
+  tips:
+    nameRegex: 'Only support English, numbers and characters (-)'
+    secretKeyRegex: 'Only support English, numbers and characters (- or /)'
+  label:
+    create: Create
+    clusterType: Cluster type
+    managed: managed cluster
+    aksDesc: >-
+      The Master and Etcd of the Kubernetes cluster will be centrally managed
+      and maintained by the AWS team, and cluster administrators do not need to
+      concern themselves with the management and maintenance of the cluster
+      Master.
+    cluster: ''
+importAmazonCloud:
+  title: Import a public cloud cluster - AWS
+  label:
+    clusterName: Cluster name
+    token: Cloud Credentials
+    region: Region
+    clusterID: Cluster ID
     desc: Description
   button:
     test: Test

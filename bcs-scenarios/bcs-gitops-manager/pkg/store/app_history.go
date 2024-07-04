@@ -60,7 +60,6 @@ func (s *appHistoryStore) handle(ch chan *v1alpha1.Application) {
 // nolint funlen
 func (s *appHistoryStore) handleApplication(item *v1alpha1.Application) error {
 	if len(item.Status.History) == 0 {
-		blog.Warnf("[HistoryStore] application '%s' have not history", item.Name)
 		return nil
 	}
 	history := item.Status.History.LastRevisionHistory()

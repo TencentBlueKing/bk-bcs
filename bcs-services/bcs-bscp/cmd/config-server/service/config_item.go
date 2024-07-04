@@ -28,12 +28,13 @@ import (
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 	pbcs "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/config-server"
+	pbatb "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/app-template-binding"
 	pbcommit "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/commit"
 	pbci "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/config-item"
 	pbcontent "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/content"
-	pbrci "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/released-ci"
 	pbtv "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/template-variable"
 	pbds "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
 // CreateConfigItem create config item with option
@@ -117,15 +118,6 @@ func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbcs.BatchUps
 			logs.Errorf("validate file content uploaded failed, err: %v, rid: %s", err, grpcKit.Rid)
 			return nil, err
 		}
-		vars := make([]*pbtv.TemplateVariableSpec, 0, len(item.Variables))
-		for _, v := range item.GetVariables() {
-			vars = append(vars, &pbtv.TemplateVariableSpec{
-				Name:       v.Name,
-				Type:       v.Type,
-				DefaultVal: v.DefaultVal,
-				Memo:       v.Memo,
-			})
-		}
 
 		items = append(items, &pbds.BatchUpsertConfigItemsReq_ConfigItem{
 			ConfigItemAttachment: &pbci.ConfigItemAttachment{
@@ -149,7 +141,14 @@ func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbcs.BatchUps
 				ByteSize:  item.ByteSize,
 				Md5:       metadata.Md5,
 			},
-			Variables: vars,
+		})
+	}
+
+	bindings := make([]*pbds.BatchUpsertConfigItemsReq_TemplateBinding, 0)
+	for _, v := range req.GetBindings() {
+		bindings = append(bindings, &pbds.BatchUpsertConfigItemsReq_TemplateBinding{
+			TemplateSpaceId: v.TemplateSpaceId,
+			TemplateBinding: v.GetTemplateBinding(),
 		})
 	}
 
@@ -158,6 +157,8 @@ func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbcs.BatchUps
 		AppId:      req.AppId,
 		Items:      items,
 		ReplaceAll: req.ReplaceAll,
+		Variables:  req.GetVariables(),
+		Bindings:   bindings,
 	}
 	batchUpsertConfigResp, e := s.client.DS.BatchUpsertConfigItems(grpcKit.RpcCtx(), buReq)
 	if e != nil {
@@ -734,45 +735,42 @@ func (s *Service) CompareConfigItemConflicts(ctx context.Context, req *pbcs.Comp
 		return nil, err
 	}
 
-	// 获取该服务未发布的版本
-	ci, err := s.client.DS.ListConfigItems(grpcKit.RpcCtx(), &pbds.ListConfigItemsReq{
-		BizId:      grpcKit.BizID,
-		AppId:      req.AppId,
-		All:        true,
-		WithStatus: true,
-		Status:     []string{constant.FileStateAdd, constant.FileStateRevise, constant.FileStateUnchange},
-	})
+	templateVars, err := s.getReleasedAppTmplVariable(grpcKit, req.BizId, req.OtherAppId, req.ReleaseId)
 	if err != nil {
-		logs.Errorf("list config items failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
-	// 从服务获取发布的版本
-	rci, err := s.client.DS.ListReleasedConfigItems(grpcKit.RpcCtx(), &pbds.ListReleasedConfigItemsReq{
-		BizId:     req.BizId,
-		AppId:     req.OtherAppId,
-		ReleaseId: req.ReleaseId,
-		All:       true,
-	})
+	templateConfigs, err := s.handleTemplateConfig(grpcKit, req.BizId, req.AppId,
+		req.OtherAppId, req.ReleaseId, templateVars)
 	if err != nil {
-		logs.Errorf("list released config items failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
-	conflicts := make(map[string]bool)
-	for _, v := range ci.GetDetails() {
-		conflicts[path.Join(v.Spec.Path, v.Spec.Name)] = true
+	nonTemplateConfigs, err := s.handleNonTemplateConfig(grpcKit, req.BizId, req.AppId,
+		req.OtherAppId, req.ReleaseId, templateVars)
+	if err != nil {
+		return nil, err
 	}
 
-	// 获取已生成版本的引用变量
+	return &pbcs.CompareConfigItemConflictsResp{
+		NonTemplateConfigs: nonTemplateConfigs,
+		TemplateConfigs:    templateConfigs,
+	}, nil
+}
+
+func (s *Service) getReleasedAppTmplVariable(grpcKit *kit.Kit, bizID, otherAppId, releaseId uint32) (
+	map[string][]*pbtv.TemplateVariableSpec, error) {
+
+	// 从历史版本/其它服务版本获取发布的版本的变量名
 	resf, err := s.client.DS.GetReleasedAppTmplVariableRefs(grpcKit.RpcCtx(), &pbds.GetReleasedAppTmplVariableRefsReq{
-		BizId:     req.BizId,
-		AppId:     req.OtherAppId,
-		ReleaseId: req.ReleaseId,
+		BizId:     bizID,
+		AppId:     otherAppId,
+		ReleaseId: releaseId,
 	})
 	if err != nil {
 		return nil, err
 	}
+
 	resfMap := make(map[string][]string, 0)
 	for _, v := range resf.GetDetails() {
 		for _, ref := range v.GetReferences() {
@@ -781,58 +779,191 @@ func (s *Service) CompareConfigItemConflicts(ctx context.Context, req *pbcs.Comp
 		}
 	}
 
-	// 获取已生成版本的变量值、描述等
+	// 从历史版本/其它服务版本获取发布的版本的变量值、描述
 	vars, err := s.client.DS.ListReleasedAppTmplVariables(grpcKit.RpcCtx(), &pbds.ListReleasedAppTmplVariablesReq{
-		BizId:     req.BizId,
-		AppId:     req.OtherAppId,
-		ReleaseId: req.ReleaseId,
+		BizId: bizID, AppId: otherAppId, ReleaseId: releaseId,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	varsMap := make(map[string][]*pbcs.CompareConfigItemConflictsResp_Variable, 0)
+	varsMap := make(map[string][]*pbtv.TemplateVariableSpec, 0)
 	for _, v := range vars.GetDetails() {
 		for key, name := range resfMap {
 			for _, n := range name {
 				if v.Name == n {
-					varsMap[key] = append(varsMap[key], &pbcs.CompareConfigItemConflictsResp_Variable{
-						Name:       n,
-						Type:       v.Type,
-						DefaultVal: v.DefaultVal,
-						Memo:       v.Memo,
+					varsMap[key] = append(varsMap[key], &pbtv.TemplateVariableSpec{
+						Name: n, Type: v.Type, DefaultVal: v.DefaultVal, Memo: v.Memo,
 					})
 				}
 			}
 		}
 	}
 
-	newConfigItem := func(v *pbrci.ReleasedConfigItem) *pbcs.CompareConfigItemConflictsResp_ConfigItem {
-		return &pbcs.CompareConfigItemConflictsResp_ConfigItem{
-			Id:        v.Id,
-			Name:      v.Spec.Name,
-			Path:      v.Spec.Path,
-			FileType:  v.Spec.FileType,
-			FileMode:  v.Spec.FileMode,
-			Memo:      v.Spec.Memo,
-			User:      v.Spec.Permission.User,
-			UserGroup: v.Spec.Permission.UserGroup,
-			Privilege: v.Spec.Permission.Privilege,
-			Sign:      v.CommitSpec.Content.OriginSignature,
-			ByteSize:  v.CommitSpec.Content.OriginByteSize,
-			Variables: varsMap[path.Join(v.Spec.Path, v.Spec.Name)],
-		}
+	return varsMap, nil
+}
+
+// 非模板配置
+func (s *Service) handleNonTemplateConfig(grpcKit *kit.Kit, bizID, appID, otherAppId, releaseId uint32,
+	templateVars map[string][]*pbtv.TemplateVariableSpec) (
+	[]*pbcs.CompareConfigItemConflictsResp_NonTemplateConfig, error) {
+
+	// 获取该服务未发布的版本
+	ci, err := s.client.DS.ListConfigItems(grpcKit.RpcCtx(), &pbds.ListConfigItemsReq{
+		BizId: bizID, AppId: appID, All: true, WithStatus: true,
+		Status: []string{constant.FileStateAdd, constant.FileStateRevise, constant.FileStateUnchange},
+	})
+	if err != nil {
+		logs.Errorf("list config items failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+	conflicts := make(map[string]bool)
+	for _, v := range ci.GetDetails() {
+		conflicts[path.Join(v.Spec.Path, v.Spec.Name)] = true
 	}
 
-	exist := make([]*pbcs.CompareConfigItemConflictsResp_ConfigItem, 0)
-	nonExist := make([]*pbcs.CompareConfigItemConflictsResp_ConfigItem, 0)
+	// 从历史版本/其它服务版本获取发布的版本
+	rci, err := s.client.DS.ListReleasedConfigItems(grpcKit.RpcCtx(), &pbds.ListReleasedConfigItemsReq{
+		BizId: bizID, AppId: otherAppId, ReleaseId: releaseId, All: true,
+	})
+	if err != nil {
+		logs.Errorf("list released config items failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	nonTemplateConfigs := make([]*pbcs.CompareConfigItemConflictsResp_NonTemplateConfig, 0)
 	for _, v := range rci.GetDetails() {
-		if conflicts[path.Join(v.Spec.Path, v.Spec.Name)] {
-			exist = append(exist, newConfigItem(v))
-		} else {
-			nonExist = append(nonExist, newConfigItem(v))
-		}
+		nonTemplateConfigs = append(nonTemplateConfigs, &pbcs.CompareConfigItemConflictsResp_NonTemplateConfig{
+			Id: v.Id,
+			ConfigItemSpec: &pbci.ConfigItemSpec{
+				Name:     v.Spec.Name,
+				Path:     v.Spec.Path,
+				FileType: v.Spec.FileType,
+				FileMode: v.Spec.FileMode,
+				Memo:     v.Spec.Memo,
+				Permission: &pbci.FilePermission{
+					User:      v.Spec.Permission.User,
+					UserGroup: v.Spec.Permission.UserGroup,
+					Privilege: v.Spec.Permission.Privilege,
+				},
+			},
+			Variables: templateVars[path.Join(v.Spec.Path, v.Spec.Name)],
+			IsExist:   conflicts[path.Join(v.Spec.Path, v.Spec.Name)],
+			Signature: v.CommitSpec.Content.OriginSignature,
+			ByteSize:  v.CommitSpec.Content.OriginByteSize,
+		})
 	}
 
-	return &pbcs.CompareConfigItemConflictsResp{Exist: exist, NonExist: nonExist}, nil
+	return nonTemplateConfigs, nil
+}
+
+// 模板配置
+// nolint:funlen
+func (s *Service) handleTemplateConfig(grpcKit *kit.Kit, bizID, appID, otherAppId, releaseId uint32,
+	templateVars map[string][]*pbtv.TemplateVariableSpec) ([]*pbcs.CompareConfigItemConflictsResp_TemplateConfig, error) {
+
+	// 从历史版本/其它服务版本获取发布的套餐以及配置文件信息
+	rp, err := s.client.DS.ListReleasedAppBoundTmplRevisions(grpcKit.RpcCtx(), &pbds.ListReleasedAppBoundTmplRevisionsReq{
+		BizId:     bizID,
+		AppId:     otherAppId,
+		ReleaseId: releaseId,
+		All:       true,
+	})
+	if err != nil {
+		logs.Errorf("list released app template revisions failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	rtmplSetMap := make(map[uint32][]*pbatb.ReleasedAppBoundTmplRevision)
+	releaseTemplateSpaceIds, releaseTemplateSetIds, releaseTemplateIds := []uint32{}, []uint32{}, []uint32{}
+	for _, v := range rp.GetDetails() {
+		releaseTemplateSpaceIds = append(releaseTemplateSpaceIds, v.TemplateSpaceId)
+		releaseTemplateSetIds = append(releaseTemplateSetIds, v.TemplateSetId)
+		releaseTemplateIds = append(releaseTemplateIds, v.TemplateId)
+		rtmplSetMap[v.TemplateSetId] = append(rtmplSetMap[v.TemplateSetId], v)
+	}
+
+	// 检测历史版本/其它服务版本空间是否存在
+	_, err = s.client.DS.ListTmplSpacesByIDs(grpcKit.RpcCtx(), &pbds.ListTmplSpacesByIDsReq{
+		Ids: tools.RemoveDuplicates(releaseTemplateSpaceIds),
+	})
+	if err != nil {
+		return nil, err
+	}
+	// 检测历史版本/其它服务版本套餐是否存在
+	templateSets, err := s.client.DS.ListTemplateSetsByIDs(grpcKit.RpcCtx(), &pbds.ListTemplateSetsByIDsReq{
+		Ids: tools.RemoveDuplicates(releaseTemplateSetIds),
+	})
+	if err != nil {
+		return nil, err
+	}
+	setTemplateIds := []uint32{}
+	for _, v := range templateSets.GetDetails() {
+		setTemplateIds = append(setTemplateIds, v.Spec.TemplateIds...)
+	}
+
+	// 从历史版本/其他服务版本导入，存在绑定的模板文件版本标识最新，其实不是最新。
+	// 需要再次查询是否是最新的
+	tmplr, _ := s.client.DS.ListTmplRevisionNamesByTmplIDs(grpcKit.RpcCtx(), &pbds.ListTmplRevisionNamesByTmplIDsReq{
+		BizId:       bizID,
+		TemplateIds: releaseTemplateIds,
+	})
+
+	isLatestMap := make(map[uint32]uint32)
+	for _, v := range tmplr.GetDetails() {
+		isLatestMap[v.TemplateId] = v.LatestTemplateRevisionId
+	}
+
+	// 获取该服务模板空间和套餐
+	tmplSetInfo, err := s.getAllAppTmplSets(grpcKit, bizID, appID)
+	if err != nil {
+		logs.Errorf("get all app template sets failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+	noNamespacePackage := make(map[string]bool)
+	for _, tmplSet := range tmplSetInfo {
+		noNamespacePackage[fmt.Sprintf("%d-%d", tmplSet.TemplateSpaceId, tmplSet.TemplateSetId)] = true
+	}
+
+	templateIds := tools.Difference(tools.RemoveDuplicates(releaseTemplateIds),
+		tools.RemoveDuplicates(setTemplateIds))
+	nonExistentTemplateIds := make(map[uint32]bool)
+	for _, v := range templateIds {
+		nonExistentTemplateIds[v] = true
+	}
+
+	templateConfigs := make([]*pbcs.CompareConfigItemConflictsResp_TemplateConfig, 0)
+	for id, revisions := range rtmplSetMap {
+		templateRevisions := make([]*pbcs.CompareConfigItemConflictsResp_TemplateConfig_TemplateRevisionDetail, 0)
+		for _, r := range revisions {
+			if nonExistentTemplateIds[r.TemplateId] {
+				continue
+			}
+			var isLatest bool
+			if r.IsLatest && isLatestMap[r.TemplateId] == r.TemplateRevisionId {
+				isLatest = true
+			}
+			templateRevisions = append(templateRevisions,
+				&pbcs.CompareConfigItemConflictsResp_TemplateConfig_TemplateRevisionDetail{
+					TemplateId:           r.TemplateId,
+					Name:                 r.Name,
+					Path:                 r.Path,
+					TemplateRevisionId:   r.TemplateRevisionId,
+					IsLatest:             isLatest,
+					TemplateRevisionName: r.TemplateRevisionName,
+					Variables:            templateVars[path.Join(r.Path, r.Name)],
+				})
+		}
+
+		templateConfigs = append(templateConfigs, &pbcs.CompareConfigItemConflictsResp_TemplateConfig{
+			TemplateSpaceId:   revisions[0].TemplateSpaceId,
+			TemplateSpaceName: revisions[0].TemplateSpaceName,
+			TemplateSetId:     id,
+			TemplateSetName:   revisions[0].TemplateSetName,
+			IsExist:           noNamespacePackage[fmt.Sprintf("%d-%d", revisions[0].TemplateSpaceId, id)],
+			TemplateRevisions: templateRevisions,
+		})
+	}
+
+	return templateConfigs, nil
 }

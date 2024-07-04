@@ -56,6 +56,10 @@ func Run(opt *options.Option) error {
 		return err
 	}
 
+	if err := fs.service.ListenAndGwServerRest(); err != nil {
+		return err
+	}
+
 	if err := fs.register(); err != nil {
 		return err
 	}

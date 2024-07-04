@@ -188,14 +188,17 @@ func (h *Handler) GetDetail(ctx context.Context, id string) {
 	fmt.Printf("id: %s\n", id)
 	result := string(utils.JsonToYaml(bs))
 	lines := strings.Split(result, "\n")
+	needDelete2Indents := false
 	for i := range lines {
 		lineResult := lines[i]
-		if strings.HasPrefix(lineResult, "            ") {
-			lineResult = strings.TrimPrefix(lineResult, "        ")
-		} else if strings.HasPrefix(lineResult, "        ") {
-			lineResult = strings.TrimPrefix(lineResult, "      ")
-		} else if strings.HasPrefix(lineResult, "    ") {
-			lineResult = strings.TrimPrefix(lineResult, "    ")
+		if strings.HasPrefix(lineResult, "  ") {
+			lineResult = strings.TrimPrefix(lineResult, "  ")
+		}
+		if needDelete2Indents && strings.HasPrefix(lineResult, "    ") {
+			lineResult = strings.TrimPrefix(lineResult, "  ")
+		}
+		if strings.HasPrefix(lineResult, "stages:") {
+			needDelete2Indents = true
 		}
 		if strings.HasPrefix(lineResult, "stages:") || strings.HasPrefix(lineResult, "stepTemplates") {
 			fmt.Println()

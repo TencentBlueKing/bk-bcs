@@ -161,7 +161,6 @@ func (h *Handler) Diff(ctx context.Context, req *argocd.ApplicationDiffRequest, 
 	tw.Render()
 	if showDetails {
 		fmt.Println()
-		color.Yellow("# left is local, right is live\n")
 		dmp := diffmatchpatch.New()
 		dmp.DiffTimeout = 0
 		for _, item := range resp.Data.Result {

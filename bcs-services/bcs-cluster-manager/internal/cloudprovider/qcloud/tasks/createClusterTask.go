@@ -1206,7 +1206,7 @@ func getRandomSubnetByVpcID(ctx context.Context, info *cloudprovider.CloudDepend
 	// pick available subnet
 	availableSubnet := make([]*vpc.Subnet, 0)
 	for i := range subnets {
-		match := utils.MatchSubnet(*subnets[i].SubnetName, info.Cluster.Region)
+		match := utils.MatchPatternSubnet(*subnets[i].SubnetName, info.Cluster.Region)
 		if match && *subnets[i].AvailableIpAddressCount > 0 {
 			availableSubnet = append(availableSubnet, subnets[i])
 		}

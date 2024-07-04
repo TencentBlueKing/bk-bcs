@@ -3,9 +3,9 @@
     <div class="head-left">
       <div class="title-wrap" @click="router.push({ name: 'service-all', params: { spaceId } })">
         <span class="logo">
-          <img src="../assets/logo.svg" alt="" />
+          <img :src="appGlobalConfig.appLogo || logo" alt="BSCP" />
         </span>
-        <span class="head-title"> {{ t('服务配置中心') }} </span>
+        <span class="head-title"> {{ appGlobalConfig.i18n.name }} </span>
       </div>
       <div class="head-routes">
         <div v-for="nav in navList" :key="nav.id" :class="['nav-item', { actived: isFirstNavActived(nav.module) }]">
@@ -127,6 +127,7 @@
   import useTemplateStore from '../store/template';
   import { ISpaceDetail } from '../../types/index';
   import { loginOut } from '../api/index';
+  import logo from '../assets/logo.svg';
   import type { IVersionLogItem } from '../../types/version-log';
   import VersionLog from './version-log.vue';
   import features from './features-dialog.vue';
@@ -144,6 +145,7 @@
     showPermApplyPage,
     showApplyPermDialog,
     permissionQuery,
+    appGlobalConfig,
   } = storeToRefs(useGlobalStore());
   const { userInfo } = storeToRefs(useUserStore());
   const templateStore = useTemplateStore();
@@ -174,6 +176,7 @@
         { id: 'client-statistics', module: 'client-statistics', name: t('客户端统计') },
         { id: 'client-search', module: 'client-search', name: t('客户端查询') },
         { id: 'credentials-management', module: 'credentials', name: t('客户端密钥') },
+        { id: 'configuration-example', module: 'example', name: t('配置示例') },
       ],
     },
   ]);
@@ -214,8 +217,8 @@
     return spaceFeatureFlags.value.BIZ_VIEW && !showPermApplyPage.value && route.meta.navModule === secondNavName;
   };
 
-  const handleNavClick = (navId: String) => {
-    if (navId === 'service-all' || navId === 'client-statistics' || navId === 'client-search') {
+  const handleNavClick = (navId: string) => {
+    if (['service-all', 'client-statistics', 'client-search', 'configuration-example'].includes(navId)) {
       const lastAccessedServiceDetail = localStorage.getItem('lastAccessedServiceDetail');
       if (lastAccessedServiceDetail) {
         const detail = JSON.parse(lastAccessedServiceDetail);
@@ -419,6 +422,7 @@
               line-height: 40px;
               padding: 0 16px;
               font-size: 14px;
+              white-space: nowrap;
               a {
                 color: #96a2b9;
               }

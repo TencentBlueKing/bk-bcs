@@ -109,10 +109,12 @@ require (
 	github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-workflow v0.0.0-00010101000000-000000000000
 	github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-controller v0.0.0-20240507114009-045488ee0cd5
 	github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4 v0.0.0-20240102072303-4173c9729642
+	github.com/sourcegraph/conc v0.3.0
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.42.0
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.44.0
 	go.opentelemetry.io/otel v1.20.0
 	gopkg.in/yaml.v3 v3.0.1
+	k8s.io/utils v0.0.0-20230726121419-3b25d923346b
 )
 
 require (
@@ -345,7 +347,6 @@ require (
 	k8s.io/kube-aggregator v0.24.2 // indirect
 	k8s.io/kubectl v0.28.0 // indirect
 	k8s.io/mount-utils v0.24.2 // indirect
-	k8s.io/utils v0.0.0-20230726121419-3b25d923346b // indirect
 	moul.io/http2curl v1.0.0 // indirect
 	oras.land/oras-go/v2 v2.3.0 // indirect
 	sigs.k8s.io/controller-runtime v0.16.3 // indirect

@@ -195,11 +195,6 @@ func (s *Service) ListTmplRevisionNamesByTmplIDs(ctx context.Context, req *pbcs.
 	if len(ids) > 0 {
 		return nil, fmt.Errorf("repeated ids: %v, id must be unique", ids)
 	}
-	idsLen := len(req.TemplateIds)
-	if idsLen == 0 || idsLen > constant.ArrayInputLenLimit {
-		return nil, fmt.Errorf("the length of ids is %d, it must be within the range of [1,%d]",
-			idsLen, constant.ArrayInputLenLimit)
-	}
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -223,4 +218,41 @@ func (s *Service) ListTmplRevisionNamesByTmplIDs(ctx context.Context, req *pbcs.
 		Details: rp.Details,
 	}
 	return resp, nil
+}
+
+// GetTemplateRevision 根据版本号获取 TemplateRevisions
+func (s *Service) GetTemplateRevision(ctx context.Context, req *pbcs.GetTemplateRevisionReq) (
+	*pbcs.GetTemplateRevisionResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	tr, err := s.client.DS.GetTemplateRevision(grpcKit.RpcCtx(), &pbds.GetTemplateRevisionReq{
+		BizId:        req.GetBizId(),
+		TemplateId:   req.GetTemplateId(),
+		RevisionName: req.GetRevisionName(),
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &pbcs.GetTemplateRevisionResp{
+		Detail: &pbcs.GetTemplateRevisionResp_TemplateRevision{
+			TemplateId:           tr.GetDetail().GetTemplateId(),
+			Name:                 tr.GetDetail().GetName(),
+			Path:                 tr.GetDetail().GetPath(),
+			TemplateRevisionId:   tr.GetDetail().GetTemplateRevisionId(),
+			TemplateRevisionName: tr.GetDetail().GetTemplateRevisionName(),
+			TemplateRevisionMemo: tr.GetDetail().GetTemplateRevisionMemo(),
+			FileType:             tr.GetDetail().GetFileType(),
+			FileMode:             tr.GetDetail().GetFileMode(),
+			User:                 tr.GetDetail().GetUser(),
+			UserGroup:            tr.GetDetail().GetUserGroup(),
+			Privilege:            tr.GetDetail().GetPrivilege(),
+			Signature:            tr.GetDetail().GetSignature(),
+			ByteSize:             tr.GetDetail().GetByteSize(),
+			Creator:              tr.GetDetail().GetCreator(),
+			CreateAt:             tr.GetDetail().GetCreateAt(),
+			Md5:                  tr.GetDetail().GetMd5(),
+		},
+	}, nil
 }

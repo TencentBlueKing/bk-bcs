@@ -50,16 +50,13 @@ func (h *handler) Validate(workflow *v1.Workflow) ([]string, []string) {
 
 // CreateOrUpdatePipeline create or update the pipeline with workflow defines
 func (h *handler) CreateOrUpdatePipeline(ctx context.Context, user string, workflow *v1.Workflow) (string, error) {
-	transfer := &workflowTransfer{workflow: workflow}
-	pp, err := transfer.transToPipeline()
-	if err != nil {
-		return "", errors.Wrapf(err, "transfer workflow to pipeline failed")
-	}
+	transfer := &workflowTransfer{ctx: ctx, workflow: workflow}
 	ppID := workflow.Status.PipelineID
+	project := workflow.Spec.Project
 	if ppID == "" {
-		return h.createPipeline(ctx, workflow.Spec.Project, user, pp)
+		return h.createPipeline(ctx, transfer, project, user)
 	}
-	return "", h.updatePipeline(ctx, workflow.Spec.Project, user, ppID, pp)
+	return "", h.updatePipeline(ctx, transfer, project, user, ppID)
 }
 
 // DeletePipeline delete pipeline
@@ -88,6 +85,7 @@ const (
 	createPath  = "/prod/v4/apigw-app/projects/%s/pipelines/pipeline"
 	updatePath  = "/prod/v4/apigw-app/projects/%s/pipelines/pipeline?pipelineId=%s"
 	deletePath  = "/prod/v4/apigw-app/projects/%s/pipelines/pipeline?pipelineId=%s"
+	getPath     = "/prod/v4/apigw-app/projects/%s/pipelines/pipeline?pipelineId=%s"
 	executePath = "/prod/v4/apigw-app/projects/%s/build_start?pipelineId=%s"
 	detailPath  = "/prod/v4/apigw-app/projects/%s/build_detail?buildId=%s"
 
@@ -96,7 +94,31 @@ const (
 	headerAuthorizationFormat = `{"bk_app_code":"%s","bk_app_secret":"%s","bk_username":"%s"}`
 )
 
-func (h *handler) createPipeline(ctx context.Context, proj, user string, pp *pipeline) (string, error) {
+func (h *handler) getPipeline(ctx context.Context, proj, user, ppID string) (*pipeline, error) {
+	respBody, err := httputils.Send(ctx, &httputils.HTTPRequest{
+		Url:    h.op.BKDevOpsUrl + fmt.Sprintf(getPath, proj, ppID),
+		Method: http.MethodGet,
+		Header: map[string]string{
+			headerDevopsUID: user,
+			headerAuthorization: fmt.Sprintf(headerAuthorizationFormat,
+				h.op.BKDevOpsAppCode, h.op.BKDevOpsAppSecret, user),
+		},
+	})
+	if err != nil {
+		return nil, errors.Wrapf(err, "do request to get pipeline '%s' failed", ppID)
+	}
+	resp := new(getResp)
+	if err = json.Unmarshal(respBody, resp); err != nil {
+		return nil, errors.Wrapf(err, "unmarshal response body failed")
+	}
+	return resp.Data, nil
+}
+
+func (h *handler) createPipeline(ctx context.Context, transfer *workflowTransfer, proj, user string) (string, error) {
+	pp, err := transfer.TransToPipeline()
+	if err != nil {
+		return "", errors.Wrapf(err, "transfer workflow to pipeline failed")
+	}
 	respBody, err := httputils.Send(ctx, &httputils.HTTPRequest{
 		Url:    h.op.BKDevOpsUrl + fmt.Sprintf(createPath, proj),
 		Method: http.MethodPost,
@@ -120,7 +142,20 @@ func (h *handler) createPipeline(ctx context.Context, proj, user string, pp *pip
 	return resp.Data.ID, nil
 }
 
-func (h *handler) updatePipeline(ctx context.Context, proj, user, ppID string, pp *pipeline) error {
+func (h *handler) updatePipeline(ctx context.Context, transfer *workflowTransfer, proj, user, ppID string) error {
+	pp, err := h.getPipeline(ctx, proj, user, ppID)
+	if err != nil {
+		return errors.Wrapf(err, "get pipeline failed")
+	}
+	changed, err := transfer.CheckPipelineChanged(pp)
+	if err != nil {
+		return errors.Wrapf(err, "check pipeline changed failed")
+	}
+	if !changed {
+		logctx.Infof(ctx, "pipeline not changed, no need update")
+		return nil
+	}
+	logctx.Infof(ctx, "pipeline changed, need update")
 	respBody, err := httputils.Send(ctx, &httputils.HTTPRequest{
 		Url:    h.op.BKDevOpsUrl + fmt.Sprintf(updatePath, proj, ppID),
 		Method: http.MethodPut,

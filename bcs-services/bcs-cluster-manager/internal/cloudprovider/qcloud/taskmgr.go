@@ -66,7 +66,6 @@ func newtask() *Task {
 	// add node to cluster
 	task.works[modifyInstancesVpcStep.StepMethod] = tasks.ModifyInstancesVpcTask
 	task.works[checkInstanceStateStep.StepMethod] = tasks.CheckInstanceStateTask
-	task.works[addNodesShieldAlarmStep.StepMethod] = tasks.AddNodesShieldAlarmTask
 	task.works[addNodesToClusterStep.StepMethod] = tasks.AddNodesToClusterTask
 	task.works[checkAddNodesStatusStep.StepMethod] = tasks.CheckAddNodesStatusTask
 	task.works[updateAddNodeDBInfoStep.StepMethod] = tasks.UpdateNodeDBInfoTask
@@ -633,8 +632,9 @@ func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Nod
 	// step1: modify nodes vpc if need
 	addNodesTask.BuildModifyInstancesVpcStep(task)
 	addNodesTask.BuildCheckInstanceStateStep(task)
+	addNodesTask.BuildCheckNodeIpsInCmdbStep(task)
 	// step2: addNodes shield nodes alarm
-	addNodesTask.BuildShieldAlertStep(task)
+	common.BuildShieldAlertTaskStep(task, cls.GetClusterID())
 	// step3: addNodesToTKECluster add node to cluster
 	addNodesTask.BuildAddNodesToClusterStep(task)
 	// step4: check cluster add node status

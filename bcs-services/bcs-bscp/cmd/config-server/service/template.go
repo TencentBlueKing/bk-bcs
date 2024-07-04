@@ -245,19 +245,6 @@ func (s *Service) AddTmplsToTmplSets(ctx context.Context, req *pbcs.AddTmplsToTm
 	*pbcs.AddTmplsToTmplSetsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 
-	// validate input param
-	idsLen := len(req.TemplateIds)
-	if idsLen == 0 || idsLen > constant.ArrayInputLenLimit {
-		return nil, fmt.Errorf("the length of template ids is %d, it must be within the range of [1,%d]",
-			idsLen, constant.ArrayInputLenLimit)
-	}
-
-	idsLen2 := len(req.TemplateSetIds)
-	if idsLen2 == 0 || idsLen2 > constant.ArrayInputLenLimit {
-		return nil, fmt.Errorf("the length of template set ids is %d, it must be within the range of [1,%d]",
-			idsLen2, constant.ArrayInputLenLimit)
-	}
-
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 	}
@@ -541,4 +528,38 @@ func (s *Service) BatchUpsertTemplates(ctx context.Context, req *pbcs.BatchUpser
 	}
 	resp := &pbcs.BatchUpsertTemplatesResp{Ids: data.Ids}
 	return resp, nil
+}
+
+// BatchUpdateTemplatePermissions 批量更新模板权限
+func (s *Service) BatchUpdateTemplatePermissions(ctx context.Context, req *pbcs.BatchUpdateTemplatePermissionsReq) (
+	*pbcs.BatchUpdateTemplatePermissionsResp, error) {
+
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+	}
+
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
+		return nil, err
+	}
+
+	if req.User == "" && req.UserGroup == "" && req.Privilege == "" {
+		return nil, nil
+	}
+
+	resp, err := s.client.DS.BatchUpdateTemplatePermissions(grpcKit.RpcCtx(), &pbds.BatchUpdateTemplatePermissionsReq{
+		BizId:       req.BizId,
+		TemplateIds: req.TemplateIds,
+		User:        req.User,
+		UserGroup:   req.UserGroup,
+		Privilege:   req.Privilege,
+		AppIds:      req.AppIds,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &pbcs.BatchUpdateTemplatePermissionsResp{Ids: resp.Ids}, nil
 }

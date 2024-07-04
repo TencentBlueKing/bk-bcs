@@ -81,10 +81,10 @@ func buildTemplateSetsAnnotation(templates []*clusterRes.TemplateID) string {
 }
 
 // parseMultiTemplateFileVar parse template file variables from multiple templates
-func parseMultiTemplateFileVar(templates []string) []string {
+func parseMultiTemplateFileVar(templates []entity.TemplateDeploy) []string {
 	vars := make([]string, 0)
 	for _, template := range templates {
-		vars = append(vars, parseTemplateFileVar(template)...)
+		vars = append(vars, parseTemplateFileVar(template.Content)...)
 	}
 	return vars
 }
@@ -118,7 +118,8 @@ func replaceTemplateFileVar(template string, values map[string]string) string {
 }
 
 // patchTemplateAnnotations patch template annotations
-func patchTemplateAnnotations(manifest map[string]interface{}, username string) map[string]interface{} {
+func patchTemplateAnnotations(
+	manifest map[string]interface{}, username, templateName, templateVersion string) map[string]interface{} {
 	annos := mapx.GetMap(manifest, "metadata.annotations")
 	if len(annos) == 0 {
 		_ = mapx.SetItems(manifest, "metadata.annotations", map[string]interface{}{})
@@ -130,6 +131,8 @@ func patchTemplateAnnotations(manifest map[string]interface{}, username string) 
 		_ = mapx.SetItems(manifest, []string{"metadata", "annotations", resCsts.UpdaterAnnoKey}, username)
 	}
 	_ = mapx.SetItems(manifest, []string{"metadata", "annotations", resCsts.TemplateSourceType}, "template")
+	_ = mapx.SetItems(manifest, []string{"metadata", "annotations", resCsts.TemplateNameAnnoKey}, templateName)
+	_ = mapx.SetItems(manifest, []string{"metadata", "annotations", resCsts.TemplateVersionAnnoKey}, templateVersion)
 	return manifest
 }
 

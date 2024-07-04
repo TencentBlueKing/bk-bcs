@@ -22,6 +22,7 @@ import (
 	"gopkg.in/go-playground/webhooks.v5/gitlab"
 
 	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware/ctxutils"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/utils"
 )
@@ -47,11 +48,11 @@ func (plugin *WebhookPlugin) Init() error {
 }
 
 func (plugin *WebhookPlugin) executeWebhook(r *http.Request) (*http.Request, *mw.HttpResponse) {
-	user := mw.User(r.Context())
-	requestID := mw.RequestID(r.Context())
+	user := ctxutils.User(r.Context())
+	requestID := ctxutils.RequestID(r.Context())
 	reqCopy, err := utils.DeepCopyHttpRequest(r, plugin.appsetWebhook)
 	if err != nil {
-		blog.Errorf("RequestID[%s] copy webhook request failed: %s", mw.RequestID(r.Context()), err.Error())
+		blog.Errorf("RequestID[%s] copy webhook request failed: %s", requestID, err.Error())
 	} else {
 		go plugin.forwardToApplicationSet(reqCopy, requestID)
 	}

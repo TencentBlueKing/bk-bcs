@@ -17,7 +17,7 @@
         <SearchInput
           v-model="searchStr"
           class="version-search-input"
-          :placeholder="t('版本名称/版本说明/修改人')"
+          :placeholder="t('版本名称/版本描述/修改人')"
           :width="320"
           @search="handleSearch" />
       </div>

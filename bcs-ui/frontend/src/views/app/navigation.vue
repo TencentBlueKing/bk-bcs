@@ -6,13 +6,15 @@
       :need-menu="needMenu"
       :default-open="openSideMenu"
       :hover-enter-delay="300"
-      @toggle-click="handleToggleClickNav">
+      @toggle-click="handleToggleClickNav"
+      @hover="handleInitSliderListHeight"
+      @leave="handleInitSliderListHeight">
       <template #side-header>
-        <span class="title-icon"><img src="@/images/bcs.svg" class="w-[28px] h-[28px]"></span>
+        <span class="title-icon"><img :src="appLogo" class="w-[28px] h-[28px]"></span>
         <span
           class="title-desc cursor-pointer"
           @click="handleGoHome">
-          {{ $INTERNAL ? $t('bcs.TKEx.title') : $t('bcs.intro.title') }}
+          {{ appName }}
         </span>
       </template>
       <template #header>
@@ -156,11 +158,13 @@ import useMenu, { IMenu } from './use-menu';
 import { releaseNote } from '@/api/modules/project';
 import { setCookie } from '@/common/util';
 import BcsMd from '@/components/bcs-md/index.vue';
+import useCalcHeight from '@/composables/use-calc-height';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store';
 import SystemLog from '@/views/app/log.vue';
 import ProjectSelector from '@/views/app/project-selector.vue';
+import usePlatform from '@/composables/use-platform';
 
 export default defineComponent({
   name: 'NewNavigation',
@@ -171,7 +175,24 @@ export default defineComponent({
     PopoverSelector,
   },
   setup() {
+    const { init } = useCalcHeight([
+      {
+        prop: 'height',
+        el: '.nav-slider-list',
+        calc: ['#bcs-notice-com', '.bk-navigation-header', '.nav-slider-footer'],
+      },
+    ]);
+    // 修复nav悬浮时高度被组件内部覆盖问题
+    const handleInitSliderListHeight = () => {
+      setTimeout(() => {
+        init();
+      });
+    };
+
     const { menusData: menus } = useMenu();
+    const { config } = usePlatform();
+    const appLogo = computed(() => config.appLogo);
+    const appName = computed(() => config.i18n.name);
     const langs = ref([
       {
         icon: 'bk-icon icon-english',
@@ -267,6 +288,7 @@ export default defineComponent({
     const openSideMenu = computed(() => $store.state.openSideMenu);
     const handleToggleClickNav = (value) => {
       $store.commit('updateOpenSideMenu', !!value);
+      handleInitSliderListHeight();
     };
     // 首页
     const handleGoHome = () => {
@@ -289,7 +311,7 @@ export default defineComponent({
       // 修改用户管理语言
       jsonp(
         `${window.BK_USER_HOST}/api/c/compapi/v2/usermanage/fe_update_user_language/?language=${item.locale}`,
-        { param: 'callback' },
+        { param: 'callback', timeout: 100 },
         () => {
           $router.go(0);
         },
@@ -346,6 +368,8 @@ export default defineComponent({
     });
 
     return {
+      appLogo,
+      appName,
       langRef,
       navRef,
       navItemRefs,
@@ -374,6 +398,7 @@ export default defineComponent({
       handleChangeMenu,
       resolveMenuLink,
       backToPreVersion,
+      handleInitSliderListHeight,
     };
   },
 });

@@ -140,6 +140,9 @@ func (w *WebServer) subRouter() http.Handler {
 
 	r.With(metrics.RequestCollect("GetCurrentAnnouncements")).Get("/announcements", w.GetCurrentAnnouncements)
 
+	// ai
+	r.With(metrics.RequestCollect("Assistant")).Post("/assistant", w.Assistant)
+
 	// 静态资源
 	r.Get("/web/*", w.embedWebServer.StaticFileHandler("/web").ServeHTTP)
 	r.With(metrics.RequestCollect("ReleaseNoteHandler")).Get("/release_note", w.ReleaseNoteHandler)

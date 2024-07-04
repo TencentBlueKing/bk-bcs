@@ -258,10 +258,10 @@
     if (searchConditionList.value.length || parentSelecte.value || inputFocus.value) return '';
     if (isClientSearch.value) {
       return t(
-        'UID/IP/标签/当前配置版本/最近一次拉取配置状态/在线状态/客户端组件类型/客户端组件版本/配置拉取时间范围/错误类别',
+        'UID/IP/标签/目标配置版本/最近一次拉取配置状态/在线状态/客户端组件类型/客户端组件版本/配置拉取时间范围/错误类别',
       );
     }
-    return t('标签/当前配置版本/最近一次拉取配置状态/在线状态/客户端组件类型/客户端组件版本');
+    return t('标签/目标配置版本/最近一次拉取配置状态/在线状态/客户端组件类型/客户端组件版本');
   });
 
   const isClientSearch = computed(() => route.name === 'client-search');
@@ -746,7 +746,6 @@
   };
 
   const handleClickSearch = () => {
-    console.log(1);
     // 处理有条件处于编辑状时 点击查询框 编辑态条件未保存
     // 新增态 处理枚举型点击搜索框取消枚举
     if (editConditionItem.value || isShowSearchInput.value) {
@@ -836,7 +835,6 @@
   };
 
   const handleChildSelectorClickOutside = () => {
-    console.log('click outside');
     if (editConditionItem.value) {
       // 编辑态 取消编辑
       editConditionItem.value!.isEdit = false;

@@ -54,8 +54,8 @@ export default defineStore('service', () => {
     user_group: 'root',
   });
 
-  // 批量上传的ids
-  const batchUploadIds = ref<number[]>([]);
+  // 置顶的ids
+  const topIds = ref<number[]>([]);
 
   return {
     appData,
@@ -63,7 +63,7 @@ export default defineStore('service', () => {
     hasEditServicePerm,
     checkPermBeforeOperate,
     lastCreatePermission,
-    batchUploadIds,
+    topIds,
     isFileType,
   };
 });

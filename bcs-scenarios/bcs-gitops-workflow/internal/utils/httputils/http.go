@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/pkg/errors"
 
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-workflow/internal/logctx"
@@ -47,6 +48,7 @@ func Send(ctx context.Context, hr *HTTPRequest) ([]byte, error) {
 			return nil, errors.Wrapf(err, "marshal body failed")
 		}
 		req, err = http.NewRequestWithContext(ctx, hr.Method, hr.Url, bytes.NewBuffer(body))
+		blog.Infof("Body: %s", string(body))
 	} else {
 		req, err = http.NewRequestWithContext(ctx, hr.Method, hr.Url, nil)
 	}

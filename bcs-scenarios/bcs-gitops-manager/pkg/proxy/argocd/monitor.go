@@ -17,10 +17,10 @@ import (
 	"net/http"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/gorilla/mux"
 
 	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/permitcheck"
 )
 
 // MonitorPlugin for internal monitor-scenario authorization
@@ -49,7 +49,7 @@ func (plugin *MonitorPlugin) Init() error {
 // GET /api/v1/monitor/{biz_id}
 func (plugin *MonitorPlugin) monitorViewHandler(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	bizID := mux.Vars(r)["biz_id"]
-	statusCode, err := plugin.middleware.CheckBusinessPermission(r.Context(), bizID, iam.ProjectView)
+	statusCode, err := plugin.middleware.CheckBusinessPermission(r.Context(), bizID, permitcheck.ProjectViewRSAction)
 	if statusCode != http.StatusOK {
 		return r, mw.ReturnErrorResponse(statusCode, fmt.Errorf("check businessID '%s' permission failed: %w", bizID,
 			err))
@@ -59,7 +59,7 @@ func (plugin *MonitorPlugin) monitorViewHandler(r *http.Request) (*http.Request,
 
 func (plugin *MonitorPlugin) monitorOperateHandler(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	bizID := mux.Vars(r)["biz_id"]
-	statusCode, err := plugin.middleware.CheckBusinessPermission(r.Context(), bizID, iam.ProjectEdit)
+	statusCode, err := plugin.middleware.CheckBusinessPermission(r.Context(), bizID, permitcheck.ProjectEditRSAction)
 	if statusCode != http.StatusOK {
 		return r, mw.ReturnErrorResponse(statusCode, fmt.Errorf("check businessID '%s' permission failed: %w", bizID,
 			err))

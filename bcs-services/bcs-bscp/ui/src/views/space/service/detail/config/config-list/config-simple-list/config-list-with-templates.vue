@@ -3,7 +3,7 @@
     <SearchInput
       v-model="searchStr"
       class="config-search-input"
-      :placeholder="t('配置文件名/创建人/修改人')"
+      :placeholder="t('配置文件绝对路径/创建人/修改人')"
       @search="getListData" />
     <bk-loading class="loading-wrapper" :loading="loading">
       <div v-for="group in tableGroupsData" :key="group.id" class="config-group">
@@ -16,8 +16,10 @@
             v-for="config in group.configs"
             :class="['config-item', { disabled: config.file_state === 'DELETE' }]"
             :key="config.id"
-            @click="handleConfigClick(config, group.id)">
-            <div class="config-name">{{ config.name }}</div>
+            @click="handleConfigClick(config, group)">
+            <bk-overflow-title class="config-name" type="tips">
+              {{ fileAP(config) }}
+            </bk-overflow-title>
             <div class="config-type">{{ getConfigTypeName(config.file_type) }}</div>
           </div>
           <TableEmpty v-if="group.configs.length === 0" :is-search-empty="isSearchEmpty" @clear="clearSearch" />
@@ -34,7 +36,8 @@
       v-bind="viewConfigSliderData.data"
       :bk-biz-id="props.bkBizId"
       :app-id="props.appId"
-      :version-id="versionData.id" />
+      :version-id="versionData.id"
+      @open-edit="handleOpenEdit" />
   </section>
 </template>
 <script setup lang="ts">
@@ -62,6 +65,10 @@
     name: string;
     expand: boolean;
     configs: IConfigTableItem[];
+    template_space_id?: number;
+    template_space_name?: string;
+    template_set_id?: number;
+    template_set_name?: string;
   }
 
   interface IConfigTableItem {
@@ -75,6 +82,13 @@
     reviser: string;
     update_at: string;
     file_state: string;
+  }
+
+  interface ITemplateConfigMeta {
+    template_space_id: number;
+    template_space_name: string;
+    template_set_id: number;
+    template_set_name: string;
   }
 
   const store = useConfigStore();
@@ -98,9 +112,20 @@
     open: false,
     id: 0,
   });
-  const viewConfigSliderData = ref({
+  const viewConfigSliderData = ref<{
+    open: boolean;
+    data: {
+      id: number;
+      type: string;
+      templateMeta?: ITemplateConfigMeta;
+      versionName?: string;
+    };
+  }>({
     open: false,
-    data: { id: 0, type: '' },
+    data: {
+      id: 0,
+      type: '',
+    },
   });
 
   watch(
@@ -123,6 +148,15 @@
   onMounted(() => {
     getListData();
   });
+
+  // 配置文件绝对路径
+  const fileAP = (config: IConfigTableItem) => {
+    const { path, name } = config;
+    if (path.endsWith('/')) {
+      return `${path}${name}`;
+    }
+    return `${path}/${name}`;
+  };
 
   const getListData = async () => {
     // 拉取到版本列表之前不加在列表数据
@@ -210,9 +244,14 @@
   // 将模板按套餐分组，并将模板数据格式转为表格数据
   const groupTplsByPkg = (list: IBoundTemplateGroup[]) => {
     const groups: IConfigsGroupData[] = list.map((groupItem) => {
-      const { template_space_name, template_set_id, template_set_name, template_revisions } = groupItem;
+      const { template_space_name, template_set_id, template_set_name, template_revisions, template_space_id } =
+        groupItem;
       const group: IConfigsGroupData = {
         id: template_set_id,
+        template_set_id,
+        template_set_name,
+        template_space_name,
+        template_space_id,
         name: `${template_space_name} - ${template_set_name}`,
         expand: false,
         configs: [],
@@ -246,20 +285,32 @@
     return groups;
   };
 
-  const handleConfigClick = (config: IConfigTableItem, groupId: number) => {
-    if (isUnNamedVersion.value && groupId === 0) {
-      editConfigSliderData.value = {
-        open: true,
-        id: config.id,
-      };
-    } else {
-      const id = groupId === 0 ? config.id : config.versionId;
-      const type = groupId === 0 ? 'config' : 'template';
+  const handleConfigClick = (config: IConfigTableItem, group: IConfigsGroupData) => {
+    const id = group.id === 0 ? config.id : config.versionId;
+    if (group.id === 0) {
       viewConfigSliderData.value = {
         open: true,
-        data: { id, type },
+        data: { id, type: 'config' },
+      };
+    } else {
+      const { template_set_id, template_space_id, template_set_name, template_space_name } = group;
+      const templateMeta = { template_space_id, template_space_name, template_set_id, template_set_name };
+      viewConfigSliderData.value = {
+        open: true,
+        data: {
+          id,
+          versionName: config.versionName,
+          templateMeta: templateMeta as ITemplateConfigMeta,
+          type: 'template',
+        },
       };
     }
+    editConfigSliderData.value.id = id;
+  };
+
+  const handleOpenEdit = () => {
+    viewConfigSliderData.value.open = false;
+    editConfigSliderData.value.open = true;
   };
 
   const clearSearch = () => {

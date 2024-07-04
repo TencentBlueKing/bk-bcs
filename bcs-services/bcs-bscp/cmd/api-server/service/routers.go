@@ -155,16 +155,17 @@ func (p *proxy) routers() http.Handler {
 	})
 
 	// 导入模板压缩包
-	r.Route("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/import", func(r chi.Router) {
-		r.Use(p.authorizer.UnifiedAuthentication)
-		r.Use(p.authorizer.BizVerified)
-		r.Use(p.HttpServerHandledTotal("", "TemplateConfigFileImport"))
-		r.Post("/", p.configImportService.TemplateConfigFileImport)
+	r.Route("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/import/{filename}",
+		func(r chi.Router) {
+			r.Use(p.authorizer.UnifiedAuthentication)
+			r.Use(p.authorizer.BizVerified)
+			r.Use(p.HttpServerHandledTotal("", "TemplateConfigFileImport"))
+			r.Post("/", p.configImportService.TemplateConfigFileImport)
 
-	})
+		})
 
 	// 导入配置压缩包
-	r.Route("/api/v1/config/biz/{biz_id}/apps/{app_id}/config_item/import/{unzip}", func(r chi.Router) {
+	r.Route("/api/v1/config/biz/{biz_id}/apps/{app_id}/config_item/import/{filename}", func(r chi.Router) {
 		r.Use(p.authorizer.UnifiedAuthentication)
 		r.Use(p.authorizer.BizVerified)
 		r.Use(p.HttpServerHandledTotal("", "ConfigFileImport"))

@@ -26,18 +26,26 @@ import (
 
 // AppTemplateBinding supplies all the app template binding related operations.
 type AppTemplateBinding interface {
-	// Create one app template binding instance.
-	Create(kit *kit.Kit, atb *table.AppTemplateBinding) (uint32, error)
+	// CreateWithTx create one app template binding instance with transaction.
+	CreateWithTx(kit *kit.Kit, tx *gen.QueryTx, atb *table.AppTemplateBinding) (uint32, error)
 	// Update one app template binding's info.
 	Update(kit *kit.Kit, atb *table.AppTemplateBinding) error
 	// UpdateWithTx Update one app template binding's info with transaction.
 	UpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, atb *table.AppTemplateBinding) error
+	// BatchUpdateWithTx batch update app template binding's instances with transaction.
+	BatchUpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, data []*table.AppTemplateBinding) error
 	// List app template bindings with options.
 	List(kit *kit.Kit, bizID, appID uint32, opt *types.BasePage) ([]*table.AppTemplateBinding, int64, error)
 	// Delete one app template binding instance.
 	Delete(kit *kit.Kit, atb *table.AppTemplateBinding) error
 	// DeleteByAppIDWithTx delete one app template binding instance by app id with transaction.
 	DeleteByAppIDWithTx(kit *kit.Kit, tx *gen.QueryTx, appID uint32) error
+	// ListAppTemplateBindingByAppIds 按 AppId 列出应用模板绑定
+	ListAppTemplateBindingByAppIds(kit *kit.Kit, bizID uint32, appID []uint32) ([]*table.AppTemplateBinding, error)
+	// GetAppTemplateBindingByAppID 通过业务和服务ID获取模板绑定关系
+	GetAppTemplateBindingByAppID(kit *kit.Kit, bizID, appID uint32) (*table.AppTemplateBinding, error)
+	// UpsertWithTx create or update one template variable instance with transaction.
+	UpsertWithTx(kit *kit.Kit, tx *gen.QueryTx, atb *table.AppTemplateBinding) error
 }
 
 var _ AppTemplateBinding = new(appTemplateBindingDao)
@@ -48,8 +56,79 @@ type appTemplateBindingDao struct {
 	auditDao AuditDao
 }
 
-// Create one app template binding instance.
-func (dao *appTemplateBindingDao) Create(kit *kit.Kit, g *table.AppTemplateBinding) (uint32, error) {
+// BatchUpdateWithTx batch update app template binding's instances with transaction.
+func (dao *appTemplateBindingDao) BatchUpdateWithTx(kit *kit.Kit, tx *gen.QueryTx,
+	data []*table.AppTemplateBinding) error {
+	if len(data) == 0 {
+		return nil
+	}
+	for _, g := range data {
+		if err := g.ValidateUpdate(); err != nil {
+			return err
+		}
+		if err := dao.validateAttachmentExist(kit, g.Attachment); err != nil {
+			return err
+		}
+	}
+	return tx.AppTemplateBinding.WithContext(kit.Ctx).Save(data...)
+}
+
+// ListAppTemplateBindingByAppIds 按 AppId 列出应用模板绑定
+func (dao *appTemplateBindingDao) ListAppTemplateBindingByAppIds(kit *kit.Kit, bizID uint32, appIDs []uint32) (
+	[]*table.AppTemplateBinding, error) {
+
+	m := dao.genQ.AppTemplateBinding
+	return dao.genQ.AppTemplateBinding.WithContext(kit.Ctx).
+		Where(m.BizID.Eq(bizID), m.AppID.In(appIDs...)).
+		Find()
+}
+
+// UpsertWithTx create or update one template variable instance with transaction.
+func (dao *appTemplateBindingDao) UpsertWithTx(kit *kit.Kit, tx *gen.QueryTx, atb *table.AppTemplateBinding) error {
+	m := dao.genQ.AppTemplateBinding
+	q := dao.genQ.AppTemplateBinding.WithContext(kit.Ctx)
+	old, findErr := q.Where(m.BizID.Eq(atb.Attachment.BizID), m.AppID.Eq(atb.Attachment.AppID)).Take()
+
+	var ad AuditDo
+	// if old exists, update it.
+	if findErr == nil {
+		atb.ID = old.ID
+		if _, err := tx.AppTemplateBinding.WithContext(kit.Ctx).
+			Where(m.BizID.Eq(atb.Attachment.BizID), m.ID.Eq(atb.ID)).
+			Select(m.Bindings, m.TemplateSpaceIDs, m.TemplateSetIDs, m.TemplateIDs, m.TemplateRevisionIDs,
+				m.LatestTemplateIDs, m.Creator, m.Reviser, m.UpdatedAt).
+			Updates(atb); err != nil {
+			return err
+		}
+		ad = dao.auditDao.DecoratorV2(kit, atb.Attachment.BizID).PrepareUpdate(atb, old)
+	} else if errors.Is(findErr, gorm.ErrRecordNotFound) {
+		// if old not exists, create it.
+		id, err := dao.idGen.One(kit, table.Name(atb.TableName()))
+		if err != nil {
+			return err
+		}
+		atb.ID = id
+		if err := tx.AppTemplateBinding.WithContext(kit.Ctx).Create(atb); err != nil {
+			return err
+		}
+		ad = dao.auditDao.DecoratorV2(kit, atb.Attachment.BizID).PrepareCreate(atb)
+	}
+
+	return ad.Do(tx.Query)
+}
+
+// GetAppTemplateBindingByAppID 通过业务和服务ID获取模板绑定关系
+func (dao *appTemplateBindingDao) GetAppTemplateBindingByAppID(kit *kit.Kit, bizID uint32, appID uint32) (
+	*table.AppTemplateBinding, error) {
+
+	m := dao.genQ.AppTemplateBinding
+	return dao.genQ.AppTemplateBinding.WithContext(kit.Ctx).
+		Where(m.BizID.Eq(bizID), m.AppID.Eq(appID)).Take()
+}
+
+// CreateWithTx create one app template binding instance with transaction.
+func (dao *appTemplateBindingDao) CreateWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.AppTemplateBinding) (
+	uint32, error) {
 	if err := g.ValidateCreate(); err != nil {
 		return 0, err
 	}
@@ -64,22 +143,13 @@ func (dao *appTemplateBindingDao) Create(kit *kit.Kit, g *table.AppTemplateBindi
 	}
 	g.ID = id
 
-	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareCreate(g)
-
-	// 多个使用事务处理
-	createTx := func(tx *gen.Query) error {
-		q := tx.AppTemplateBinding.WithContext(kit.Ctx)
-		if err = q.Create(g); err != nil {
-			return err
-		}
-
-		if err = ad.Do(tx); err != nil {
-			return err
-		}
-
-		return nil
+	q := tx.AppTemplateBinding.WithContext(kit.Ctx)
+	if err = q.Create(g); err != nil {
+		return 0, err
 	}
-	if err = dao.genQ.Transaction(createTx); err != nil {
+
+	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareCreate(g)
+	if err = ad.Do(tx.Query); err != nil {
 		return 0, err
 	}
 
