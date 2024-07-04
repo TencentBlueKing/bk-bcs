@@ -1,8 +1,7 @@
 
-### Pull
+### Get
 
-```golang
-// pull kv example for bscp sdk
+// get kv example for bscp sdk
 package main
 
 import (
@@ -27,9 +26,7 @@ func main() {
 	var token string = {{ .Bk_Bscp_Variable_ClientKey }}
 	var app string = "{{ .Bk_Bscp_Variable_ServiceName }}"
 
-	labels := map[string]string{
-		{{ .Bk_Bscp_Variable_Leabels }}
-	}
+	labels := map[string]string{{ .Bk_Bscp_Variable_Leabels }}
 
 	bscp, err := client.New(
 		client.WithFeedAddr(feedAddr),

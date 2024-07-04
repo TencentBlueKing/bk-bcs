@@ -20,6 +20,7 @@ import (
 	"gorm.io/gen/field"
 	"gorm.io/gorm"
 
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
@@ -454,18 +455,47 @@ func (dao *configItemDao) validateAttachmentAppExist(kit *kit.Kit, am *table.Con
 }
 
 // ValidateAppCINumber verify whether the current number of app config items has reached the maximum.
+// the number is the total count of template and non-template config items
 func (dao *configItemDao) ValidateAppCINumber(kt *kit.Kit, tx *gen.QueryTx, bizID, appID uint32) error {
+	// get non-template config count
 	m := tx.ConfigItem
 	count, err := m.WithContext(kt.Ctx).Where(m.BizID.Eq(bizID), m.AppID.Eq(appID)).Count()
 	if err != nil {
 		return fmt.Errorf("count app %d's config items failed, err: %v", appID, err)
 	}
 
-	if err := table.ValidateAppCINumber(count); err != nil {
-		return err
+	// get template config count
+	tm := tx.AppTemplateBinding
+	tcount := 0
+	var atb *table.AppTemplateBinding
+	atb, err = tm.WithContext(kt.Ctx).Where(tm.BizID.Eq(bizID), tm.AppID.Eq(appID)).Take()
+	if err != nil {
+		// if not found, means the count should be 0
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return fmt.Errorf("get app %d's template binding failed, err: %v", appID, err)
+		}
+	} else {
+		tcount = len(atb.Spec.TemplateRevisionIDs)
+	}
+
+	total := int(count) + tcount
+	appConfigCnt := getAppConfigCnt(bizID)
+	if total > appConfigCnt {
+		return errf.New(errf.InvalidParameter,
+			fmt.Sprintf("the total number of app %d's config items(including template and non-template)"+
+				"exceeded the limit %d", appID, appConfigCnt))
 	}
 
 	return nil
+}
+
+func getAppConfigCnt(bizID uint32) int {
+	if resLimit, ok := cc.DataService().FeatureFlags.ResourceLimit.Spec[fmt.Sprintf("%d", bizID)]; ok {
+		if resLimit.AppConfigCnt > 0 {
+			return int(resLimit.AppConfigCnt)
+		}
+	}
+	return int(cc.DataService().FeatureFlags.ResourceLimit.Default.AppConfigCnt)
 }
 
 // queryFileMode query config item file mode field.

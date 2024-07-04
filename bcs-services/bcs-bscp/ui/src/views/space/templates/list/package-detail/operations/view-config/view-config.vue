@@ -56,9 +56,7 @@
       </bk-tab>
     </bk-loading>
     <section class="action-btns">
-      <bk-button v-if="props.versionId === 0 && props.type === 'config'" theme="primary" @click="emits('openEdit')">{{
-        t('编辑')
-      }}</bk-button>
+      <bk-button theme="primary" @click="emits('openEdit')">{{ t('编辑') }}</bk-button>
       <bk-button @click="close">{{ t('关闭') }}</bk-button>
     </section>
   </bk-sideslider>
@@ -68,30 +66,15 @@
   import { useI18n } from 'vue-i18n';
   import { storeToRefs } from 'pinia';
   import { TextFill } from 'bkui-vue/lib/icon';
-  import ConfigContentEditor from '../../components/config-content-editor.vue';
-  import {
-    getConfigItemDetail,
-    getReleasedConfigItemDetail,
-    downloadConfigContent,
-  } from '../../../../../../../api/config';
-  import {
-    getTemplateConfigMeta,
-    getTemplateVersionDetail,
-    downloadTemplateContent,
-  } from '../../../../../../../api/template';
+  import ConfigContentEditor from '../../../../../service/detail/config/components/config-content-editor.vue';
+  import { getTemplateConfigMeta, downloadTemplateContent } from '../../../../../../../api/template';
   import { byteUnitConverse, datetimeFormat } from '../../../../../../../utils/index';
   import { fileDownload } from '../../../../../../../utils/file';
   import { IVariableEditParams } from '../../../../../../../../types/variable';
   import { IFileConfigContentSummary } from '../../../../../../../../types/config';
-  import { getReleasedAppVariables } from '../../../../../../../api/variable';
-  import useConfigStore from '../../../../../../../store/config';
+  import useTemplateStore from '../../../../../../../store/template';
 
-  interface ITemplateConfigMeta {
-    template_space_id: number;
-    template_space_name: string;
-    template_set_id: number;
-    template_set_name: string;
-  }
+  const { currentTemplateSpace } = storeToRefs(useTemplateStore());
 
   interface IConfigMeta {
     template_space_id?: number;
@@ -119,19 +102,12 @@
     privilege: string;
   }
 
-  const { versionData } = storeToRefs(useConfigStore());
   const { t } = useI18n();
 
   const props = defineProps<{
-    bkBizId: string;
-    appId: number;
     id: number;
-    versionId: number;
-    type: string; // 取值为config/template，分别表示非模板套餐下配置文件和模板套餐下配置文件
+    spaceId: string;
     show: Boolean;
-    templateMeta?: ITemplateConfigMeta;
-    versionName?: string;
-    isLatest?: boolean;
   }>();
 
   const emits = defineEmits(['update:show', 'openEdit']);
@@ -154,8 +130,6 @@
   });
   const content = ref<string | IFileConfigContentSummary>('');
   const variables = ref<IVariableEditParams[]>([]);
-  const variablesLoading = ref(false);
-  const tplSpaceId = ref(0);
   const sideSliderRef = ref();
   const editorHeight = ref(0);
   const fileDownloading = ref(false);
@@ -164,7 +138,7 @@
     () => props.show,
     (val) => {
       if (val) {
-        getDetailData();
+        getTemplateDetail();
         content.value = '';
         activeTab.value = 'content';
         variables.value = [];
@@ -182,130 +156,27 @@
     return `${path}/${name}`;
   };
 
-  const getDetailData = async () => {
-    detailLoading.value = true;
-    if (props.type === 'config') {
-      getConfigDetail();
-    } else if (props.type === 'template') {
-      getTemplateDetail();
-    }
-    // 未命名版本id为0，不需要展示变量替换
-    if (props.versionId) {
-      getVariableList();
-    }
-  };
-
-  // 获取非模板套餐下配置文件详情配置，非文件类型配置文件内容下载内容，文件类型手动点击时再下载
-  const getConfigDetail = async () => {
-    try {
-      if (versionData.value.id) {
-        const res = await getReleasedConfigItemDetail(props.bkBizId, props.appId, versionData.value.id, props.id);
-        const { content, memo } = res.config_item.commit_spec;
-        const { byte_size, origin_byte_size, signature, origin_signature, md5 } = content;
-        const { create_at, creator, update_at, reviser } = res.config_item.revision;
-        const { name, path, file_type, file_mode, permission } = res.config_item.spec;
-        const { user, user_group, privilege } = permission;
-        configDetail.value = {
-          name,
-          path,
-          file_type,
-          file_mode,
-          memo,
-          byte_size,
-          origin_byte_size,
-          signature,
-          origin_signature,
-          md5,
-          create_at: datetimeFormat(create_at),
-          creator,
-          update_at: datetimeFormat(update_at),
-          reviser,
-          user,
-          user_group,
-          privilege,
-        };
-      } else {
-        const res = await getConfigItemDetail(props.bkBizId, props.id, props.appId);
-        const { create_at, creator, update_at, reviser } = res.config_item.revision;
-        const { name, memo, path, file_type, file_mode, permission } = res.config_item.spec;
-        const { user, user_group, privilege } = permission;
-        const { byte_size, signature, md5 } = res.content;
-        configDetail.value = {
-          name,
-          path,
-          file_type,
-          file_mode,
-          memo,
-          byte_size,
-          signature,
-          md5,
-          create_at: datetimeFormat(create_at),
-          creator,
-          update_at: datetimeFormat(update_at),
-          reviser,
-          user,
-          user_group,
-          privilege,
-        };
-      }
-      const signature = versionData.value.id
-        ? (configDetail.value.origin_signature as string)
-        : configDetail.value.signature;
-      if (configDetail.value.file_type === 'binary') {
-        content.value = { name: configDetail.value.name, size: configDetail.value.byte_size, signature };
-      } else {
-        const configContent = await downloadConfigContent(props.bkBizId, props.appId, signature);
-        content.value = String(configContent);
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      detailLoading.value = false;
-    }
-  };
-
   // 获取模板配置详情，非文件类型配置文件内容下载内容，文件类型手动点击时再下载
   const getTemplateDetail = async () => {
     try {
       detailLoading.value = true;
-      let template_space_id;
-      if (versionData.value.id) {
-        const res = await getTemplateVersionDetail(props.bkBizId, props.appId, versionData.value.id, props.id);
-        configDetail.value = {
-          ...res.detail,
-          create_at: datetimeFormat(res.detail.create_at),
-          update_at: datetimeFormat(res.detail.update_at),
-        };
-        template_space_id = res.detail.template_space_id;
-      } else {
-        let res;
-        console.log(props.isLatest);
-        if (props.isLatest) {
-          // 版本为latest拉取最新版本 不传递版本名
-          res = await getTemplateConfigMeta(props.bkBizId, props.id);
-        } else {
-          res = await getTemplateConfigMeta(props.bkBizId, props.id, props.versionName);
-        }
-        configDetail.value = {
-          ...props.templateMeta,
-          ...res.data.detail,
-          create_at: datetimeFormat(res.data.detail.create_at),
-        };
-        template_space_id = props.templateMeta!.template_space_id;
-      }
-
-      tplSpaceId.value = template_space_id;
-      const signature = versionData.value.id
-        ? (configDetail.value.origin_signature as string)
-        : configDetail.value.signature;
+      const res = await getTemplateConfigMeta(props.spaceId, props.id);
+      configDetail.value = {
+        ...res.data.detail,
+        create_at: datetimeFormat(res.data.detail.create_at),
+      };
       if (configDetail.value.file_type === 'binary') {
         content.value = {
           name: configDetail.value.name,
-          signature,
+          signature: configDetail.value.signature,
           size: String(configDetail.value.byte_size),
         };
       } else {
-        const configContent = await downloadTemplateContent(props.bkBizId, template_space_id, signature);
+        const configContent = await downloadTemplateContent(
+          props.spaceId,
+          currentTemplateSpace.value,
+          configDetail.value.signature,
+        );
         content.value = String(configContent);
       }
     } catch (e) {
@@ -313,21 +184,13 @@
     } finally {
       detailLoading.value = false;
     }
-  };
-
-  const getVariableList = async () => {
-    variablesLoading.value = true;
-    const res = await getReleasedAppVariables(props.bkBizId, props.appId, props.versionId);
-    variables.value = res.details;
-    variablesLoading.value = false;
   };
 
   const handleDownloadFile = async () => {
     if (fileDownloading.value) return;
     fileDownloading.value = true;
     const { signature, name } = content.value as IFileConfigContentSummary;
-    const getContent = props.type === 'template' ? downloadTemplateContent : downloadConfigContent;
-    const res = await getContent(props.bkBizId, props.id, signature, true);
+    const res = await downloadTemplateContent(props.spaceId, props.id, signature, true);
     fileDownload(res, name);
     fileDownloading.value = false;
   };

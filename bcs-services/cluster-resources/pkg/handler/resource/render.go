@@ -17,7 +17,7 @@ import (
 	"fmt"
 	"strings"
 
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
@@ -90,6 +90,10 @@ func (h *Handler) YAMLToForm(ctx context.Context, req *clusterRes.YAMLToFormReq,
 		// 变量不能 yaml 解析，先替换为占位符
 		v = strings.ReplaceAll(v, ": "+YAMLVarMagic, ": "+YAMLVarMagicPlaceholder)
 		manifest := map[string]interface{}{}
+		// 检查yaml 内容格式
+		if err = checkYamlFormat(v); err != nil {
+			return err
+		}
 		if errr := yaml.Unmarshal([]byte(v), &manifest); errr != nil {
 			resp.Data, err = pbstruct.Map2pbStruct(map[string]interface{}{"resources": nil, "canTransform": false,
 				"message": errr.Error()})
@@ -111,4 +115,18 @@ func (h *Handler) YAMLToForm(ctx context.Context, req *clusterRes.YAMLToFormReq,
 	}
 	resp.Data, err = pbstruct.Map2pbStruct(map[string]interface{}{"resources": formDatas, "canTransform": true})
 	return err
+}
+
+// 检查content yaml格式
+func checkYamlFormat(content string) error {
+	if content == "" {
+		return nil
+	}
+	var v interface{}
+	decoder := yaml.NewDecoder(strings.NewReader(content))
+	err := decoder.Decode(&v)
+	if err != nil {
+		return err
+	}
+	return nil
 }

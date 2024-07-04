@@ -3,9 +3,9 @@
     <div class="head-left">
       <div class="title-wrap" @click="router.push({ name: 'service-all', params: { spaceId } })">
         <span class="logo">
-          <img src="../assets/logo.svg" alt="" />
+          <img :src="appGlobalConfig.appLogo || logo" alt="BSCP" />
         </span>
-        <span class="head-title"> {{ t('服务配置中心') }} </span>
+        <span class="head-title"> {{ appGlobalConfig.i18n.name }} </span>
       </div>
       <div class="head-routes">
         <div v-for="nav in navList" :key="nav.id" :class="['nav-item', { actived: isFirstNavActived(nav.module) }]">
@@ -127,6 +127,7 @@
   import useTemplateStore from '../store/template';
   import { ISpaceDetail } from '../../types/index';
   import { loginOut } from '../api/index';
+  import logo from '../assets/logo.svg';
   import type { IVersionLogItem } from '../../types/version-log';
   import VersionLog from './version-log.vue';
   import features from './features-dialog.vue';
@@ -144,6 +145,7 @@
     showPermApplyPage,
     showApplyPermDialog,
     permissionQuery,
+    appGlobalConfig,
   } = storeToRefs(useGlobalStore());
   const { userInfo } = storeToRefs(useUserStore());
   const templateStore = useTemplateStore();
@@ -215,7 +217,7 @@
     return spaceFeatureFlags.value.BIZ_VIEW && !showPermApplyPage.value && route.meta.navModule === secondNavName;
   };
 
-  const handleNavClick = (navId: String) => {
+  const handleNavClick = (navId: string) => {
     if (['service-all', 'client-statistics', 'client-search', 'configuration-example'].includes(navId)) {
       const lastAccessedServiceDetail = localStorage.getItem('lastAccessedServiceDetail');
       if (lastAccessedServiceDetail) {

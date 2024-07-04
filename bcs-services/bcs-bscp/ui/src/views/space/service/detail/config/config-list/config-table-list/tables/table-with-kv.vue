@@ -181,7 +181,7 @@
   const serviceStore = useServiceStore();
   const { versionData } = storeToRefs(configStore);
   const { checkPermBeforeOperate } = serviceStore;
-  const { permCheckLoading, hasEditServicePerm } = storeToRefs(serviceStore);
+  const { permCheckLoading, hasEditServicePerm, topIds } = storeToRefs(serviceStore);
   const { t } = useI18n();
   const { pagination, updatePagination } = useTablePagination('tableWithKv');
 
@@ -303,6 +303,7 @@
         params.sort = 'updated_at';
         params.order = updateSortType.value.toUpperCase();
       }
+      if (topIds.value.length > 0) params.ids = topIds.value.join(',');
       let res;
       if (isUnNamedVersion.value) {
         if (statusFilterChecked.value!.length > 0) {
@@ -461,7 +462,7 @@
   };
 
   // 批量删除配置项后刷新配置项列表
-  const refreshAfterBatchDelete = () => {
+  const refreshAfterBatchSet = () => {
     if (selectedConfigIds.value.length === configList.value.length && pagination.value.current > 1) {
       pagination.value.current -= 1;
     }
@@ -501,11 +502,14 @@
   // 判断当前行是否是删除行
   const getRowCls = (config: IConfigKvType) => {
     if (config.kv_state === 'DELETE') return 'delete-row';
+    if (topIds.value.includes(config.id)) {
+      return 'new-row-marked';
+    }
   };
 
   defineExpose({
     refresh,
-    refreshAfterBatchDelete,
+    refreshAfterBatchSet,
   });
 </script>
 <style lang="scss" scoped>
@@ -521,6 +525,9 @@
         .cell {
           color: #c4c6cc !important;
         }
+      }
+      tr.new-row-marked td {
+        background: #f2fff4 !important;
       }
     }
   }

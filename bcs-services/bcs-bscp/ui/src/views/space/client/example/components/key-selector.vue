@@ -29,9 +29,8 @@
       :label="item.spec.name + item.spec.enc_credential + item.spec.memo">
       <div class="key-option-item">
         <div class="name-text">
-          {{ item.spec.name }}({{ item.spec.privacyCredential }})&nbsp;<span class="name-text--desc">{{
-            item.spec.memo
-          }}</span>
+          {{ item.spec.name }}({{ item.spec.privacyCredential }})&nbsp;
+          <span class="name-text--desc">{{ item.spec.memo || '--' }}</span>
         </div>
       </div>
     </bk-option>
@@ -70,6 +69,7 @@
   const router = useRouter();
 
   const formError = inject<Ref<string>>('formError');
+  const serviceName = inject<Ref<string>>('serviceName');
   const isError = ref(false);
   const loading = ref(true);
   const currentValue = ref({
@@ -89,6 +89,16 @@
       }
     },
   );
+  watch(
+    () => serviceName!.value,
+    () => {
+      (Object.keys(currentValue.value) as Array<keyof typeof currentValue.value>).forEach((key) => {
+        currentValue.value[key] = '';
+      });
+      emits('current-key', '', '');
+      loadCredentialList();
+    },
+  );
 
   onMounted(() => {
     loadCredentialList();
@@ -100,16 +110,23 @@
     try {
       const query = {
         start: 0,
-        // limit: 20,
         all: true,
       };
       const res = await getCredentialList(bizId.value, query);
-      credentialList.value = dataMasking(res.details);
+      const filterCurServiceData = filterCurService(res.details);
+      credentialList.value = dataMasking(filterCurServiceData);
     } catch (e) {
       console.error(e);
     } finally {
       loading.value = false;
     }
+  };
+  // 已启用且和当前服务有关联规则的密钥
+  const filterCurService = (data: Array<any>) => {
+    return data.filter((item) => {
+      const splitStr = item.credential_scopes.map((str: string) => str.split('/')[0]);
+      return splitStr.includes(serviceName!.value) && item.spec.enable;
+    });
   };
   // 下拉列表操作
   const handleSelectChange = (val: newICredentialItem['spec']) => {
@@ -180,7 +197,7 @@
         color: #313238;
       }
       .no-app {
-        font-size: 16px;
+        font-size: 12px;
         color: #c4c6cc;
       }
       .arrow-icon {

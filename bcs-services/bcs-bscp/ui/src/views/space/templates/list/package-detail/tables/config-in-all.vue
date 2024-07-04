@@ -41,9 +41,9 @@
     return getTemplatesBySpaceId(spaceId.value, currentTemplateSpace.value, params);
   };
 
-  const refreshConfigList = (isBatchUpload = false) => {
-    if (isBatchUpload) {
-      configTable.value.refreshList(1, isBatchUpload);
+  const refreshConfigList = (createConfig = false) => {
+    if (createConfig) {
+      configTable.value.refreshList(1, createConfig);
     } else {
       configTable.value.refreshList();
     }

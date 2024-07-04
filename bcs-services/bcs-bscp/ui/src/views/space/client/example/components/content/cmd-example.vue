@@ -59,7 +59,7 @@
       },
     },
     {
-      title: t('创建命令配置文件，配置文件为 YAML 格式'),
+      title: t('创建命令配置文件，配置文件为 YAML 格式，命名为：bscp.yaml'),
       value: '',
     },
     {
@@ -72,11 +72,19 @@
     },
     {
       title: t('获取服务下所有配置文件列表'),
-      value: `./bscp get file -a ${serviceName!.value} -c ./bscp.yaml'`,
+      value: `./bscp get file -a ${serviceName!.value} -c ./bscp.yaml`,
     },
     {
-      title: t('下载指定配置文件到指定目录，例如指定文件为 /etc/nginx/nginx.conf，下载文件到 /root/config 目录'),
-      value: `./bscp get file /etc/nginx/nginx.conf  -a ${serviceName!.value} -c ./bscp.yaml  -d /root/config`,
+      title: t(
+        '下载配置文件时，保留目录层级，并将其保存到指定目录下，例如：将 /etc/nginx.conf 文件下载到 /tmp 目录时，文件保存在 /tmp/etc/nginx.conf',
+      ),
+      value: `./bscp get file /etc/nginx.conf -a ${serviceName!.value} -c ./bscp.yaml -d /tmp`,
+    },
+    {
+      title: t(
+        '下载配置文件时，不保留目录层级，并将其保存到指定目录下，例如：将 /etc/nginx.conf 文件下载到 /tmp 目录时，文件保存在 /tmp/nginx.conf',
+      ),
+      value: `./bscp get file /etc/nginx.conf -a ${serviceName!.value} -c ./bscp.yaml -d /tmp --ignore-dir`,
     },
   ];
 
@@ -91,7 +99,7 @@
       },
     },
     {
-      title: t('创建命令配置文件，配置文件为 YAML 格式'),
+      title: t('创建命令配置文件，配置文件为 YAML 格式，命名为：bscp.yaml'),
       value: '',
     },
     {
@@ -103,12 +111,12 @@
       value: `./bscp get kv -a ${serviceName!.value} -c ./bscp.yaml`,
     },
     {
-      title: t('获取指定服务下指定配置项列表，多个配置这'),
+      title: t('获取指定服务下指定配置项列表，多个配置项'),
       value: `./bscp get kv -a ${serviceName!.value} key1 key2 -c ./bscp.yaml`,
     },
     {
       title: t('获取指定服务下指定配置项值，只支持单个配置项值获取'),
-      value: ` ./bscp get kv -a ${serviceName!.value} key1  -c ./bscp.yaml -o value`,
+      value: `./bscp get kv -a ${serviceName!.value} key1  -c ./bscp.yaml -o value`,
     },
     {
       title: t(
@@ -290,11 +298,11 @@
     }
   }
   .preview-component {
-    height: 292px;
+    height: 276px;
     padding: 16px 0 0;
     background-color: #f5f7fa;
     &--kvcmd {
-      height: 247px;
+      height: 237px;
     }
   }
 </style>

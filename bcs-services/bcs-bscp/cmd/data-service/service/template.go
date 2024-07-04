@@ -44,7 +44,7 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbds.CreateTemplateRe
 
 	// Get all configuration files under a certain package of the service
 	items, _, err := s.dao.Template().List(kt, req.Attachment.BizId, req.Attachment.TemplateSpaceId,
-		nil, &types.BasePage{All: true}, nil)
+		nil, &types.BasePage{All: true}, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -83,6 +83,17 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbds.CreateTemplateRe
 			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
 		}
 		return nil, err
+	}
+
+	// validate template set's templates count.
+	for _, tmplSetID := range req.TemplateSetIds {
+		if err = s.dao.TemplateSet().ValidateTmplNumber(kt, tx, req.Attachment.BizId, tmplSetID); err != nil {
+			logs.Errorf("validate template set's templates count failed, err: %v, rid: %s", err, kt.Rid)
+			if rErr := tx.Rollback(); rErr != nil {
+				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+			}
+			return nil, err
+		}
 	}
 
 	// 2. create template revision
@@ -166,7 +177,8 @@ func (s *Service) ListTemplates(ctx context.Context, req *pbds.ListTemplatesReq)
 	}
 	topIds, _ := tools.StrToUint32Slice(req.Ids)
 	// List templates with options.
-	details, count, err := s.dao.Template().List(kt, req.BizId, req.TemplateSpaceId, searcher, opt, topIds)
+	details, count, err := s.dao.Template().List(kt, req.BizId, req.TemplateSpaceId, searcher,
+		opt, topIds, req.SearchValue)
 
 	if err != nil {
 		logs.Errorf("list templates failed, err: %v, rid: %s", err, kt.Rid)
@@ -437,6 +449,17 @@ func (s *Service) AddTmplsToTmplSets(ctx context.Context, req *pbds.AddTmplsToTm
 		return nil, err
 	}
 
+	// validate template set's templates count.
+	for _, tmplSetID := range req.TemplateSetIds {
+		if err := s.dao.TemplateSet().ValidateTmplNumber(kt, tx, req.BizId, tmplSetID); err != nil {
+			logs.Errorf("validate template set's templates count failed, err: %v, rid: %s", err, kt.Rid)
+			if rErr := tx.Rollback(); rErr != nil {
+				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+			}
+			return nil, err
+		}
+	}
+
 	// 2. update app template bindings if necessary
 	atbs, err := s.dao.TemplateBindingRelation().
 		ListTemplateSetsBoundATBs(kt, req.BizId, req.TemplateSetIds)
@@ -585,10 +608,11 @@ func (s *Service) ListTemplatesNotBound(ctx context.Context, req *pbds.ListTempl
 		for _, f := range fields {
 			fieldsMap[f] = true
 		}
+		fieldsMap["combinedPathName"] = true
 		newDetails := make([]*pbtemplate.Template, 0)
 		for _, detail := range details {
-			if (fieldsMap["name"] && strings.Contains(detail.Spec.Name, req.SearchValue)) ||
-				(fieldsMap["path"] && strings.Contains(detail.Spec.Path, req.SearchValue)) ||
+			combinedPathName := path.Join(detail.Spec.Path, detail.Spec.Name)
+			if (fieldsMap["combinedPathName"] && strings.Contains(combinedPathName, req.SearchValue)) ||
 				(fieldsMap["memo"] && strings.Contains(detail.Spec.Memo, req.SearchValue)) ||
 				(fieldsMap["creator"] && strings.Contains(detail.Revision.Creator, req.SearchValue)) ||
 				(fieldsMap["reviser"] && strings.Contains(detail.Revision.Reviser, req.SearchValue)) {
@@ -626,7 +650,7 @@ func (s *Service) ListTemplatesNotBound(ctx context.Context, req *pbds.ListTempl
 
 // ListTmplsOfTmplSet list templates of template set.
 // 获取到该套餐的template_ids字段，根据这批ID获取对应的详情，做逻辑分页和搜索
-func (s *Service) ListTmplsOfTmplSet(ctx context.Context, req *pbds.ListTmplsOfTmplSetReq) ( // nolint
+func (s *Service) ListTmplsOfTmplSet(ctx context.Context, req *pbds.ListTmplsOfTmplSetReq) (
 	*pbds.ListTmplsOfTmplSetResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
@@ -663,10 +687,12 @@ func (s *Service) ListTmplsOfTmplSet(ctx context.Context, req *pbds.ListTmplsOfT
 		for _, f := range fields {
 			fieldsMap[f] = true
 		}
+		fieldsMap["combinedPathName"] = true
 		newDetails := make([]*pbtemplate.Template, 0)
 		for _, detail := range details {
-			if (fieldsMap["name"] && strings.Contains(detail.Spec.Name, req.SearchValue)) ||
-				(fieldsMap["path"] && strings.Contains(detail.Spec.Path, req.SearchValue)) ||
+			// 拼接path和name
+			combinedPathName := path.Join(detail.Spec.Path, detail.Spec.Name)
+			if (fieldsMap["combinedPathName"] && strings.Contains(combinedPathName, req.SearchValue)) ||
 				(fieldsMap["memo"] && strings.Contains(detail.Spec.Memo, req.SearchValue)) ||
 				(fieldsMap["creator"] && strings.Contains(detail.Revision.Creator, req.SearchValue)) ||
 				(fieldsMap["reviser"] && strings.Contains(detail.Revision.Reviser, req.SearchValue)) {

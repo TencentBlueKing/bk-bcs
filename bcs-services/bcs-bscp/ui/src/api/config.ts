@@ -127,7 +127,13 @@ export const getReleasedConfigItemDetail = (
  * @param signature 文件内容的SHA256值
  * @returns
  */
-export const updateConfigContent = (bizId: string, appId: number, data: string | File, signature: string) =>
+export const updateConfigContent = (
+  bizId: string,
+  appId: number,
+  data: string | File,
+  signature: string,
+  progress?: Function,
+) =>
   http
     .put(`/biz/${bizId}/content/upload`, data, {
       headers: {
@@ -135,6 +141,12 @@ export const updateConfigContent = (bizId: string, appId: number, data: string |
         'X-Bkapi-File-Content-Id': signature,
         'X-Bkapi-File-Content-Overwrite': 'false',
         'Content-Type': 'text/plain',
+      },
+      onUploadProgress: (progressEvent: any) => {
+        if (progress) {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          progress(percentCompleted);
+        }
       },
     })
     .then((res) => res.data);
@@ -608,3 +620,13 @@ export const importKvFormJson = (bizId: string, appId: number, content: string) 
  */
 export const importKvFormYaml = (bizId: string, appId: number, content: string) =>
   http.post(`/config/biz/${bizId}/apps/${appId}/kvs/yaml/import`, { data: content });
+
+/**
+ * 判断生成版本名称是否重名
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param kvs 上传kv列表
+ * @returns
+ */
+export const createVersionNameCheck = (bizId: string, appId: number, name: string) =>
+  http.get(`/config/biz_id/${bizId}/app_id/${appId}/release/${name}/check`);

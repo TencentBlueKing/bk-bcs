@@ -16,6 +16,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"path"
 	"strings"
 	"time"
 
@@ -51,9 +52,28 @@ func (s *Service) CreateAppTemplateBinding(ctx context.Context, req *pbds.Create
 		return nil, err
 	}
 
-	id, err := s.dao.AppTemplateBinding().Create(kt, appTemplateBinding)
+	tx := s.dao.GenQuery().Begin()
+
+	id, err := s.dao.AppTemplateBinding().CreateWithTx(kt, tx, appTemplateBinding)
 	if err != nil {
 		logs.Errorf("create app template binding failed, err: %v, rid: %s", err, kt.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+		}
+		return nil, err
+	}
+
+	// validate config items count.
+	if err = s.dao.ConfigItem().ValidateAppCINumber(kt, tx, req.Attachment.BizId, req.Attachment.AppId); err != nil {
+		logs.Errorf("validate config items count failed, err: %v, rid: %s", err, kt.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+		}
+		return nil, err
+	}
+
+	if err = tx.Commit(); err != nil {
+		logs.Errorf("commit transaction failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
 
@@ -103,8 +123,24 @@ func (s *Service) UpdateAppTemplateBinding(ctx context.Context, req *pbds.Update
 		return nil, err
 	}
 
-	if err := s.dao.AppTemplateBinding().Update(kt, appTemplateBinding); err != nil {
+	tx := s.dao.GenQuery().Begin()
+
+	if err := s.dao.AppTemplateBinding().UpdateWithTx(kt, tx, appTemplateBinding); err != nil {
 		logs.Errorf("update app template binding failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	// validate config items count.
+	if err := s.dao.ConfigItem().ValidateAppCINumber(kt, tx, req.Attachment.BizId, req.Attachment.AppId); err != nil {
+		logs.Errorf("validate config items count failed, err: %v, rid: %s", err, kt.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+		}
+		return nil, err
+	}
+
+	if err := tx.Commit(); err != nil {
+		logs.Errorf("commit transaction failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
 
@@ -252,12 +288,13 @@ func (s *Service) ListAppBoundTmplRevisions(ctx context.Context,
 		for _, f := range fields {
 			fieldsMap[f] = true
 		}
+		fieldsMap["combinedPathName"] = true
 		newDetails := make([]*pbatb.AppBoundTmplRevision, 0)
 		for _, detail := range details {
+			combinedPathName := path.Join(detail.Path, detail.Name)
 			if (fieldsMap["revision_name"] && strings.Contains(detail.TemplateRevisionName, req.SearchValue)) ||
 				(fieldsMap["revision_memo"] && strings.Contains(detail.TemplateRevisionMemo, req.SearchValue)) ||
-				(fieldsMap["name"] && strings.Contains(detail.Name, req.SearchValue)) ||
-				(fieldsMap["path"] && strings.Contains(detail.Path, req.SearchValue)) ||
+				(fieldsMap["combinedPathName"] && strings.Contains(combinedPathName, req.SearchValue)) ||
 				(fieldsMap["creator"] && strings.Contains(detail.Creator, req.SearchValue)) {
 				newDetails = append(newDetails, detail)
 			}
@@ -364,7 +401,8 @@ func (s *Service) ListReleasedAppBoundTmplRevisions(ctx context.Context,
 		return nil, err
 	}
 
-	details, count, err := s.dao.ReleasedAppTemplate().List(kt, req.BizId, req.AppId, req.ReleaseId, searcher, opt)
+	details, count, err := s.dao.ReleasedAppTemplate().List(kt, req.BizId,
+		req.AppId, req.ReleaseId, searcher, opt, req.SearchValue)
 	if err != nil {
 		logs.Errorf("list released app bound templates revisions failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
@@ -513,6 +551,12 @@ func (s *Service) CascadeUpdateATB(kt *kit.Kit, tx *gen.QueryTx, atb *table.AppT
 		return err
 	}
 
+	// validate config items count.
+	if err := s.dao.ConfigItem().ValidateAppCINumber(kt, tx, atb.Attachment.BizID, atb.Attachment.AppID); err != nil {
+		logs.Errorf("validate config items count failed, err: %v, rid: %s", err, kt.Rid)
+		return err
+	}
+
 	return nil
 }
 
@@ -595,10 +639,6 @@ func (s *Service) getPBSForCascade(kt *kit.Kit, tx *gen.QueryTx, bindings []*tab
 			}
 		}
 	}
-	if e := s.validateTmplForATBWithTx(kt, tx, pbs.TemplateIDs); e != nil {
-		logs.Errorf("validate template for app template binding failed, err: %v, rid: %s", e, kt.Rid)
-		return nil, e
-	}
 
 	// get all latest revisions of latest templates
 	latestTmplRevisions, err := s.dao.TemplateRevision().ListByTemplateIDsWithTx(kt, tx, kt.BizID,
@@ -629,44 +669,6 @@ func (s *Service) getPBSForCascade(kt *kit.Kit, tx *gen.QueryTx, bindings []*tab
 	}
 
 	return pbs, nil
-}
-
-// validateTmplForATBWithTx validate template with transaction to avoid same templates are bound to one app
-func (s *Service) validateTmplForATBWithTx(kt *kit.Kit, tx *gen.QueryTx, tmplIDs []uint32) error {
-	if len(tmplIDs) == 0 {
-		return nil
-	}
-
-	if repeated := tools.SliceRepeatedElements(tmplIDs); len(repeated) > 0 {
-		// get template details
-		tmpls, err := s.dao.Template().ListByIDsWithTx(kt, tx, repeated)
-		if err != nil {
-			logs.Errorf("list template by ids failed, err: %v, rid: %s", err, kt.Rid)
-			return err
-		}
-		type tmplT struct {
-			ID   uint32 `json:"id"`
-			Name string `json:"name"`
-			Path string `json:"path"`
-		}
-		details := make([]tmplT, len(tmpls))
-		for idx, t := range tmpls {
-			details[idx] = tmplT{
-				ID:   t.ID,
-				Name: t.Spec.Name,
-				Path: t.Spec.Path,
-			}
-		}
-		detailsJs, err := json.Marshal(details)
-		if err != nil {
-			logs.Errorf("marshal template details failed, err: %v, rid: %s", err, kt.Rid)
-			return err
-		}
-		return fmt.Errorf("same template id in %v can't be bound to the same app, template details: %s",
-			repeated, detailsJs)
-	}
-
-	return nil
 }
 
 // genFinalATB generate the final app template binding.

@@ -33,7 +33,7 @@ type ReleasedAppTemplate interface {
 	// Get released app template.
 	Get(kit *kit.Kit, bizID, appID, releaseID, tmplRevisionID uint32) (*table.ReleasedAppTemplate, error)
 	// List released app templates with options.
-	List(kit *kit.Kit, bizID, appID, releaseID uint32, s search.Searcher, opt *types.BasePage) (
+	List(kit *kit.Kit, bizID, appID, releaseID uint32, s search.Searcher, opt *types.BasePage, searchValue string) (
 		[]*table.ReleasedAppTemplate, int64, error)
 	// GetReleasedLately get released templates lately
 	GetReleasedLately(kit *kit.Kit, bizID, appID uint32) ([]*table.ReleasedAppTemplate, error)
@@ -102,7 +102,7 @@ func (dao *releasedAppTemplateDao) Get(kit *kit.Kit, bizID, appID, releaseID,
 
 // List released app templates with options.
 func (dao *releasedAppTemplateDao) List(kit *kit.Kit, bizID, appID, releaseID uint32, s search.Searcher,
-	opt *types.BasePage) (
+	opt *types.BasePage, searchValue string) (
 	[]*table.ReleasedAppTemplate, int64, error) {
 	m := dao.genQ.ReleasedAppTemplate
 	q := dao.genQ.ReleasedAppTemplate.WithContext(kit.Ctx)
@@ -119,6 +119,8 @@ func (dao *releasedAppTemplateDao) List(kit *kit.Kit, bizID, appID, releaseID ui
 				}
 				do = do.Or(exprs[i])
 			}
+			do = do.Or(utils.RawCond(`CASE WHEN RIGHT(path, 1) = '/' THEN CONCAT(path,name)
+			ELSE CONCAT_WS('/', path, name) END LIKE ?`, "%"+searchValue+"%"))
 			conds = append(conds, do)
 		}
 	}
@@ -143,8 +145,8 @@ func (dao *releasedAppTemplateDao) GetReleasedLately(kit *kit.Kit, bizID, appId 
 	q := dao.genQ.ReleasedAppTemplate.WithContext(kit.Ctx)
 	query := q.Where(m.BizID.Eq(bizID), m.AppID.Eq(appId))
 	subQuery := q.Where(m.BizID.Eq(bizID), m.AppID.Eq(appId)).
-		Order(m.ReleaseID.Desc(), utils.NewCustomExpr("CASE WHEN RIGHT(path, 1) = '/' THEN CONCAT(path,'name') ELSE "+
-			"CONCAT_WS('/', path, 'name') END", nil)).
+		Order(m.ReleaseID.Desc(), utils.NewCustomExpr("CASE WHEN RIGHT(path, 1) = '/' THEN CONCAT(path,`name`) ELSE "+
+			"CONCAT_WS('/', path, `name`) END", nil)).
 		Limit(1).
 		Select(m.ReleaseID)
 	return query.Where(q.Columns(m.ReleaseID).Eq(subQuery)).Find()

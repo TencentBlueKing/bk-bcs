@@ -8,21 +8,22 @@
           <div
             :class="['tab-wrap', { 'is-active': activeTab === index }]"
             v-for="(item, index) in tabArr"
-            :key="item.name"
+            :key="item"
             @click="handleTab(index)">
-            {{ item.name }}
+            {{ item }}
           </div>
         </div>
         <bk-button theme="primary" class="copy-btn" @click="copyExample">{{ $t('复制示例') }}</bk-button>
-        <bk-alert class="alert-tips-wrap" v-show="topTipShow" theme="info">
+        <bk-alert class="alert-tips-wrap" v-show="topTipShow && kvConfig.topTip" theme="info">
           <div class="alert-tips">
-            <p>{{ topTip }}</p>
+            <span v-html="kvConfig.topTip"></span>
             <close-line class="close-line" @click="topTipShow = false" />
           </div>
         </bk-alert>
       </div>
       <code-preview
         class="preview-component"
+        :style="{ height: `${kvConfig.codePreviewHeight}px` }"
         ref="codePreviewRef"
         :code-val="replaceVal"
         :variables="variables"
@@ -48,18 +49,7 @@
 
   const { t } = useI18n();
   const route = useRoute();
-  const tabArr = [
-    {
-      name: 'Pull',
-      topTip: t('Pull：用于一次性拉取最新的配置信息，适用于需要获取并更新配置的场景。'),
-    },
-    {
-      name: 'Watch',
-      topTip: t(
-        'Watch：通过建立长连接，实时监听配置版本的变更，当新版本的配置发布时，将自动调用回调方法处理新的配置信息，适用于需要实时响应配置变更的场景。',
-      ),
-    },
-  ];
+  const tabArr = [t('Get方法'), t('Watch方法')];
 
   const codePreviewRef = ref();
   const fileOptionRef = ref();
@@ -82,27 +72,74 @@
   provide('formError', formError);
 
   // 代码预览上方提示框
-  const topTip = computed(() => {
-    return tabArr[activeTab.value].topTip;
-  });
-  const labelArrShowType = computed(() => {
+  const kvConfig = computed(() => {
+    const url = 'https://bk.tencent.com/docs/markdown/ZH/BSCP/1.29/UserGuide/Function/python_sdk_dependency.md';
     switch (props.kvName) {
+      case 'python':
+        // get
+        if (!activeTab.value) {
+          return {
+            topTip: `${t('用于主动获取配置项值的场景，此方法不会监听服务器端的配置更改，有关Python SDK的部署环境和依赖组件，请参阅白皮书中的')} <a href="${url}" target="_blank">${t('BSCP Python SDK依赖说明')}</a>`,
+            codePreviewHeight: 370,
+          };
+        }
+        // watch
+        return {
+          topTip: `${t('通过建立长连接，实时监听配置版本的变更，当新版本的配置发布时，将自动调用回调方法处理新的配置信息，适用于需要实时响应配置变更的场景，有关Python SDK的部署环境和依赖组件，请参阅白皮书中的')} <a href="${url}" target="_blank">${t('BSCP Python SDK依赖说明')}</a>`,
+          codePreviewHeight: 654,
+        };
+      case 'go':
+        if (!activeTab.value) {
+          return {
+            topTip: t('Get方法：用于一次性拉取最新的配置信息，适用于需要获取并更新配置的场景。'),
+            codePreviewHeight: 1076,
+          };
+        }
+        return {
+          topTip: t(
+            'Watch方法：通过建立长连接，实时监听配置版本的变更，当新版本的配置发布时，将自动调用回调方法处理新的配置信息，适用于需要实时响应配置变更的场景。',
+          ),
+          codePreviewHeight: 1322,
+        };
       case 'java':
-        return optionData.value.labelArrType;
+        if (!activeTab.value) {
+          return {
+            topTip: t('Get方法：用于一次性拉取最新的配置信息，适用于需要获取并更新配置的场景。'),
+            codePreviewHeight: 1210,
+          };
+        }
+        return {
+          topTip: t(
+            'Watch方法：通过建立长连接，实时监听配置版本的变更，当新版本的配置发布时，将自动调用回调方法处理新的配置信息，适用于需要实时响应配置变更的场景。',
+          ),
+          codePreviewHeight: 1230,
+        };
+      case 'c++':
+        if (!activeTab.value) {
+          return {
+            topTip: t('Get方法：用于一次性拉取最新的配置信息，适用于需要获取并更新配置的场景。'),
+            codePreviewHeight: 1382,
+          };
+        }
+        return {
+          topTip: t(
+            'Watch方法：通过建立长连接，实时监听配置版本的变更，当新版本的配置发布时，将自动调用回调方法处理新的配置信息，适用于需要实时响应配置变更的场景。',
+          ),
+          codePreviewHeight: 2048,
+        };
       default:
-        return `{${optionData.value.labelArrType}}`;
+        return {
+          topTip: '',
+          codePreviewHeight: 0,
+        };
     }
   });
 
   watch(
     () => props.kvName,
-    (newV) => {
-      if (newV !== 'kv-cmd') {
-        handleTab();
-        if (['java', 'c++'].includes(newV)) {
-          getOptionData(optionData.value);
-        }
-      }
+    () => {
+      handleTab();
+      getOptionData(optionData.value); // 每次切换模板需重新展示数据方式
     },
   );
 
@@ -128,11 +165,26 @@
           labelArrType,
         };
         break;
+      case 'c++':
+        if (data.labelArr.length) {
+          labelArrType = data.labelArr
+            .map((item: string, index: number) => {
+              console.log(item);
+              const [key, value] = item.split(':');
+              return `{${key}, ${value}}${index + 1 === data.labelArr.length ? '' : ', '}`;
+            })
+            .join('');
+        }
+        optionData.value = {
+          ...data,
+          labelArrType: `{${labelArrType}}`,
+        };
+        break;
       default:
         labelArrType = data.labelArr.length ? data.labelArr.join(', ') : '';
         optionData.value = {
           ...data,
-          labelArrType,
+          labelArrType: `{${labelArrType}}`,
         };
         break;
     }
@@ -154,13 +206,19 @@
       {
         name: 'Bk_Bscp_Variable_Leabels',
         type: '',
-        default_val: labelArrShowType.value,
+        default_val: optionData.value.labelArrType,
         memo: '',
       },
       {
         name: 'Bk_Bscp_Variable_ClientKey',
         type: '',
         default_val: `"${optionData.value.privacyCredential}"`,
+        memo: '',
+      },
+      {
+        name: 'Bk_Bscp_Variable_Python_Key',
+        type: '',
+        default_val: '{{ YOUR_KEY }}',
         memo: '',
       },
     ];
@@ -197,25 +255,25 @@
   /**
    *
    * @param kvName 数据模板名称
-   * @param methods 方法，0: pull，1: watch
+   * @param methods 方法，0: get，1: watch
    */
   const changeKvData = (kvName = 'python', methods = 0) => {
     switch (kvName) {
       case 'python':
         return !methods
-          ? import('/src/assets/exampleData/kv-python-pull.yaml?raw')
+          ? import('/src/assets/exampleData/kv-python-get.yaml?raw')
           : import('/src/assets/exampleData/kv-python-watch.yaml?raw');
       case 'go':
         return !methods
-          ? import('/src/assets/exampleData/kv-go-pull.yaml?raw')
+          ? import('/src/assets/exampleData/kv-go-get.yaml?raw')
           : import('/src/assets/exampleData/kv-go-watch.yaml?raw');
       case 'java':
         return !methods
-          ? import('/src/assets/exampleData/kv-java-pull.yaml?raw')
+          ? import('/src/assets/exampleData/kv-java-get.yaml?raw')
           : import('/src/assets/exampleData/kv-java-watch.yaml?raw');
       case 'c++':
         return !methods
-          ? import('/src/assets/exampleData/kv-c++-pull.yaml?raw')
+          ? import('/src/assets/exampleData/kv-c++-get.yaml?raw')
           : import('/src/assets/exampleData/kv-c++-watch.yaml?raw');
       default:
         return '';
@@ -252,20 +310,19 @@
   }
   .preview-container {
     margin-top: 32px;
-    padding: 8px 0;
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    height: 100%;
+    padding: 8px 0 0;
     border-top: 1px solid #dcdee5;
-    // overflow: hidden;
   }
-  .kv-handle-content {
-    flex-shrink: 0;
+  .preview-label {
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0;
+    line-height: 22px;
+    color: #63656e;
   }
   .preview-component {
     margin-top: 8px;
-    padding: 16px 0;
+    padding: 16px 0 0;
     flex: 1;
     height: 100%;
     background-color: #f5f7fa;

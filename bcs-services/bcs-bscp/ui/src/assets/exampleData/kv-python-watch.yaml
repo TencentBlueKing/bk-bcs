@@ -1,5 +1,4 @@
 ### Watch
-
 import logging
 
 from bk_bscp.client import BscpClient, WatchedApp
@@ -23,7 +22,6 @@ def setup_logger():
     """Set up the logger to print logs."""
     logger = logging.getLogger("bk_bscp")
     logger.setLevel("DEBUG")
-
     formatter = logging.Formatter("[%(asctime)s] %(name)s:%(levelname)s: %(message)s")
     handler = logging.StreamHandler()
     handler.setFormatter(formatter)
@@ -33,4 +31,3 @@ setup_logger()
 
 if __name__ == "__main__":
     main()
-```

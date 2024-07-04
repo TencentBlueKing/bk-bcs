@@ -52,6 +52,7 @@
           :class="memoEditHookId > 0 || tagEditHookId > 0 ? 'table-with-memo-edit' : ''"
           show-overflow-tooltip
           :cell-class="getCellCls"
+          :is-row-select-enable="isRowSelectEnable"
           @selection-change="handleSelectionChange"
           @select-all="handleSelectAll"
           @page-limit-change="handlePageLimitChange"
@@ -147,7 +148,14 @@
                   @click="router.push({ name: 'script-version-manage', params: { spaceId, scriptId: row.hook.id } })">
                   {{ t('版本管理') }}
                 </bk-button>
-                <bk-button text theme="primary" @click="handleDeleteScript(row)">{{ t('删除') }}</bk-button>
+                <bk-button
+                  :disabled="row.bound_num !== 0"
+                  text
+                  theme="primary"
+                  v-bk-tooltips="{ content: $t('脚本已被引用，不能删除'), disabled: row.bound_num === 0 }"
+                  @click="handleDeleteScript(row)">
+                  {{ t('删除') }}
+                </bk-button>
               </div>
             </template>
           </bk-table-column>
@@ -307,6 +315,7 @@
       theme: 'success',
       message: t('脚本更新成功'),
     });
+    getTags();
   };
 
   // 添加自定义单元格class
@@ -329,7 +338,7 @@
   // 全选
   const handleSelectAll = ({ checked }: { checked: boolean }) => {
     if (checked) {
-      selectedIds.value = scriptsData.value.map((item) => item.hook.id);
+      selectedIds.value = scriptsData.value.filter((item) => item.bound_num === 0).map((item) => item.hook.id);
     } else {
       selectedIds.value = [];
     }
@@ -476,6 +485,10 @@
   const clearSearchStr = () => {
     searchStr.value = '';
     refreshList();
+  };
+
+  const isRowSelectEnable = ({ row, isCheckAll }: any) => {
+    return isCheckAll || row.bound_num === 0;
   };
 </script>
 <style lang="scss" scoped>
