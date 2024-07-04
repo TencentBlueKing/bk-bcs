@@ -129,15 +129,13 @@
     flex-shrink: 0;
     width: 240px;
     height: 100%;
-    border-right: 1px solid #f5f7fa;
+    border-right: 1px solid #dcdee5;
     background-color: #fff;
   }
   .example-main {
-    display: flex;
-    flex-direction: column;
     flex: 1;
     height: 100%;
-    overflow: hidden;
+    overflow-y: auto;
     :deep(.bk-alert-wraper) {
       align-items: center;
     }

@@ -44,6 +44,7 @@
 
 <style scoped lang="scss">
   :deep(.monaco-editor) {
+    pointer-events: none;
     background-color: unset;
     // 取消默认背景色
     &.monaco-editor-background {

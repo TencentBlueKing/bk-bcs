@@ -8,21 +8,22 @@
           <div
             :class="['tab-wrap', { 'is-active': activeTab === index }]"
             v-for="(item, index) in tabArr"
-            :key="item.name"
+            :key="item"
             @click="handleTab(index)">
-            {{ item.name }}
+            {{ item }}
           </div>
         </div>
         <bk-button theme="primary" class="copy-btn" @click="copyExample">{{ $t('复制示例') }}</bk-button>
-        <bk-alert class="alert-tips-wrap" v-show="topTipShow" theme="info">
+        <bk-alert class="alert-tips-wrap" v-show="topTipShow && kvConfig.topTip" theme="info">
           <div class="alert-tips">
-            <p>{{ topTip }}</p>
+            <span v-html="kvConfig.topTip"></span>
             <close-line class="close-line" @click="topTipShow = false" />
           </div>
         </bk-alert>
       </div>
       <code-preview
         class="preview-component"
+        :style="{ height: `${kvConfig.codePreviewHeight}px` }"
         ref="codePreviewRef"
         :code-val="replaceVal"
         :variables="variables"
@@ -48,18 +49,7 @@
 
   const { t } = useI18n();
   const route = useRoute();
-  const tabArr = [
-    {
-      name: t('Get方法'),
-      topTip: t('Get方法：用于一次性拉取最新的配置信息，适用于需要获取并更新配置的场景。'),
-    },
-    {
-      name: t('Watch方法'),
-      topTip: t(
-        'Watch方法：通过建立长连接，实时监听配置版本的变更，当新版本的配置发布时，将自动调用回调方法处理新的配置信息，适用于需要实时响应配置变更的场景。',
-      ),
-    },
-  ];
+  const tabArr = [t('Get方法'), t('Watch方法')];
 
   const codePreviewRef = ref();
   const fileOptionRef = ref();
@@ -82,17 +72,74 @@
   provide('formError', formError);
 
   // 代码预览上方提示框
-  const topTip = computed(() => {
-    return tabArr[activeTab.value].topTip;
+  const kvConfig = computed(() => {
+    const url = 'https://bk.tencent.com/docs/markdown/ZH/BSCP/1.29/UserGuide/Function/python_sdk_dependency.md';
+    switch (props.kvName) {
+      case 'python':
+        // get
+        if (!activeTab.value) {
+          return {
+            topTip: `${t('用于主动获取配置项值的场景，此方法不会监听服务器端的配置更改，有关Python SDK的部署环境和依赖组件，请参阅白皮书中的')} <a href="${url}" target="_blank">${t('BSCP Python SDK依赖说明')}</a>`,
+            codePreviewHeight: 370,
+          };
+        }
+        // watch
+        return {
+          topTip: `${t('通过建立长连接，实时监听配置版本的变更，当新版本的配置发布时，将自动调用回调方法处理新的配置信息，适用于需要实时响应配置变更的场景，有关Python SDK的部署环境和依赖组件，请参阅白皮书中的')} <a href="${url}" target="_blank">${t('BSCP Python SDK依赖说明')}</a>`,
+          codePreviewHeight: 654,
+        };
+      case 'go':
+        if (!activeTab.value) {
+          return {
+            topTip: t('Get方法：用于一次性拉取最新的配置信息，适用于需要获取并更新配置的场景。'),
+            codePreviewHeight: 1076,
+          };
+        }
+        return {
+          topTip: t(
+            'Watch方法：通过建立长连接，实时监听配置版本的变更，当新版本的配置发布时，将自动调用回调方法处理新的配置信息，适用于需要实时响应配置变更的场景。',
+          ),
+          codePreviewHeight: 1322,
+        };
+      case 'java':
+        if (!activeTab.value) {
+          return {
+            topTip: t('Get方法：用于一次性拉取最新的配置信息，适用于需要获取并更新配置的场景。'),
+            codePreviewHeight: 1210,
+          };
+        }
+        return {
+          topTip: t(
+            'Watch方法：通过建立长连接，实时监听配置版本的变更，当新版本的配置发布时，将自动调用回调方法处理新的配置信息，适用于需要实时响应配置变更的场景。',
+          ),
+          codePreviewHeight: 1230,
+        };
+      case 'c++':
+        if (!activeTab.value) {
+          return {
+            topTip: t('Get方法：用于一次性拉取最新的配置信息，适用于需要获取并更新配置的场景。'),
+            codePreviewHeight: 1382,
+          };
+        }
+        return {
+          topTip: t(
+            'Watch方法：通过建立长连接，实时监听配置版本的变更，当新版本的配置发布时，将自动调用回调方法处理新的配置信息，适用于需要实时响应配置变更的场景。',
+          ),
+          codePreviewHeight: 2048,
+        };
+      default:
+        return {
+          topTip: '',
+          codePreviewHeight: 0,
+        };
+    }
   });
 
   watch(
     () => props.kvName,
-    (newV) => {
-      if (newV !== 'kv-cmd') {
-        handleTab();
-        getOptionData(optionData.value); // 每次切换模板需重新展示数据方式
-      }
+    () => {
+      handleTab();
+      getOptionData(optionData.value); // 每次切换模板需重新展示数据方式
     },
   );
 
@@ -166,6 +213,12 @@
         name: 'Bk_Bscp_Variable_ClientKey',
         type: '',
         default_val: `"${optionData.value.privacyCredential}"`,
+        memo: '',
+      },
+      {
+        name: 'Bk_Bscp_Variable_Python_Key',
+        type: '',
+        default_val: '{{ YOUR_KEY }}',
         memo: '',
       },
     ];
@@ -257,20 +310,19 @@
   }
   .preview-container {
     margin-top: 32px;
-    padding: 8px 0;
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    height: 100%;
+    padding: 8px 0 0;
     border-top: 1px solid #dcdee5;
-    // overflow: hidden;
   }
-  .kv-handle-content {
-    flex-shrink: 0;
+  .preview-label {
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0;
+    line-height: 22px;
+    color: #63656e;
   }
   .preview-component {
     margin-top: 8px;
-    padding: 16px 0;
+    padding: 16px 0 0;
     flex: 1;
     height: 100%;
     background-color: #f5f7fa;

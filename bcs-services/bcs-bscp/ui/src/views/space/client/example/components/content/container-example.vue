@@ -6,6 +6,7 @@
       <bk-button theme="primary" class="copy-btn" @click="copyExample">{{ $t('复制示例') }}</bk-button>
       <code-preview
         class="preview-component"
+        style="height: 1490px"
         :code-val="replaceVal"
         :variables="variables"
         @change="(val: string) => (copyReplaceVal = val)" />
@@ -107,19 +108,16 @@
 
 <style scoped lang="scss">
   .example-wrap {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
     .preview-component {
       margin-top: 16px;
       padding: 16px 0 0;
-      height: calc(100% - 48px);
+      // height: calc(100% - 48px);
       background-color: #f5f7fa;
     }
   }
   .preview-container {
     margin-top: 32px;
-    padding: 8px 0;
+    padding: 16px 0 0;
     flex: 1;
     border-top: 1px solid #dcdee5;
     overflow: hidden;

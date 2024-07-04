@@ -96,7 +96,7 @@
     }
   }
   .add-label-plus {
-    margin-right: 9px;
+    margin-right: 4px;
     line-height: 14px;
     text-align: center;
     border-radius: 50%;
