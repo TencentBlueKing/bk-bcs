@@ -1137,11 +1137,11 @@ type GSE struct {
 
 func (g *GSE) getFromEnv() {
 	if len(g.NodeAgentID) == 0 {
-		g.NodeAgentID = os.Getenv("BSCP_NODE_AGENT_ID")
+		g.NodeAgentID = os.Getenv("NODE_AGENT_ID")
 	}
 
 	if len(g.ClusterID) == 0 {
-		g.ClusterID = os.Getenv("BSCP_CLUSTER_ID")
+		g.ClusterID = os.Getenv("CLUSTER_ID")
 	}
 
 	if len(g.PodID) == 0 {
@@ -1149,7 +1149,7 @@ func (g *GSE) getFromEnv() {
 	}
 
 	if len(g.ContainerName) == 0 {
-		g.ContainerName = os.Getenv("BSCP_CONTAINER_NAME")
+		g.ContainerName = os.Getenv("CONTAINER_NAME")
 	}
 }
 

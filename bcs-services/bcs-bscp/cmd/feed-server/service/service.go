@@ -48,10 +48,7 @@ type Service struct {
 
 	// name feed server instance name.
 	name string
-	// dsSetting down stream related setting.
-	dsSetting cc.Downstream
-	mc        *metric
-	fileLock  *fileLockManager
+	mc   *metric
 }
 
 // NewService create a service instance.
@@ -82,9 +79,7 @@ func NewService(sd serviced.Discover, name string) (*Service, error) {
 		authorizer: authorizer,
 		state:      state,
 		name:       name,
-		dsSetting:  cc.FeedServer().Downstream,
 		provider:   provider,
-		fileLock:   newFileLockManager(),
 		mc:         initMetric(name),
 	}, nil
 }

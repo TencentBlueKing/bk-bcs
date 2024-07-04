@@ -346,6 +346,7 @@ type FeedServerSetting struct {
 	Esb          Esb                 `yaml:"esb"`
 	BCS          BCS                 `yaml:"bcs"`
 	GSE          GSE                 `yaml:"gse"`
+	RedisCluster RedisCluster        `yaml:"redisCluster"`
 	FSLocalCache FSLocalCache        `yaml:"fsLocalCache"`
 	Downstream   Downstream          `yaml:"downstream"`
 	MRLimiter    MatchReleaseLimiter `yaml:"matchReleaseLimiter"`
@@ -369,6 +370,7 @@ func (s *FeedServerSetting) trySetDefault() {
 	s.FSLocalCache.trySetDefault()
 	s.Downstream.trySetDefault()
 	s.GSE.getFromEnv()
+	s.RedisCluster.trySetDefault()
 	s.MRLimiter.trySetDefault()
 }
 
@@ -404,6 +406,10 @@ func (s FeedServerSetting) Validate() error {
 	}
 
 	if err := s.GSE.validate(); err != nil {
+		return err
+	}
+
+	if err := s.RedisCluster.validate(); err != nil {
 		return err
 	}
 
