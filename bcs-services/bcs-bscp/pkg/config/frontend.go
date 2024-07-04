@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"net/url"
 	"path"
+	"strings"
 )
 
 // HostConf host conf
@@ -53,6 +54,9 @@ func (c *FrontendConf) initResBaseJSURL(appCode string) error {
 	if appCode == "" {
 		return fmt.Errorf("initResBaseJSURL: app_code is required")
 	}
+
+	// 规范: 统一使用下划线做目录名
+	appCode = strings.ReplaceAll(appCode, "-", "_")
 
 	u, err := url.Parse(c.Host.BKSharedResURL)
 	if err != nil {
