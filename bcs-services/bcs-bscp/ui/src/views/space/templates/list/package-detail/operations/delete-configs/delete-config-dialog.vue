@@ -2,7 +2,7 @@
   <bk-dialog
     v-if="props.isBatchDelete"
     :title="t('确认删除所选的 {n} 个配置文件?', { n: props.configs.length })"
-    header-align="center"
+    header-align="left"
     :is-show="props.show"
     ext-cls="delete-confirm-dialog">
     <div class="tips">{{ t('一旦删除，该操作将无法撤销，请谨慎操作') }}</div>
