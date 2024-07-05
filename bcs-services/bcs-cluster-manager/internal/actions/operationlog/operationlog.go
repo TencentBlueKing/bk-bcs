@@ -84,11 +84,16 @@ func (ua *ListOperationLogsAction) fetchV2OperationLogs() error { // nolint
 	if ua.req.TaskName != "" {
 		conds = append(conds, util.Condition(operator.Eq, "taskname", []string{ua.req.TaskName}))
 	}
+	if ua.req.ResourceName != "" {
+		conds = append(conds, util.Condition(operator.Eq, "resourcename", []string{ua.req.ResourceName}))
+	}
 
-	// time range condition
-	start := time.Unix(int64(ua.req.StartTime), 0).Format(time.RFC3339)
-	end := time.Unix(int64(ua.req.EndTime), 0).Format(time.RFC3339)
-	conds = append(conds, util.Condition(util.Range, "createtime", []string{start, end}))
+	if ua.req.StartTime > 0 && ua.req.EndTime > 0 {
+		// time range condition
+		start := time.Unix(int64(ua.req.StartTime), 0).Format(time.RFC3339)
+		end := time.Unix(int64(ua.req.EndTime), 0).Format(time.RFC3339)
+		conds = append(conds, util.Condition(util.Range, "createtime", []string{start, end}))
+	}
 
 	// default taskID empty filter
 	if !ua.req.TaskIDNull {

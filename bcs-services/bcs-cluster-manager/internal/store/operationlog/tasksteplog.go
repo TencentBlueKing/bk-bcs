@@ -96,7 +96,7 @@ func (m *ModelTaskStepLog) CreateTaskStepLogInfo(ctx context.Context, taskID, st
 		StepName:   stepName,
 		Level:      "INFO",
 		Message:    message,
-		CreateTime: time.Now().Format(time.RFC3339),
+		CreateTime: time.Now().Format(time.RFC3339Nano),
 	}}); err != nil {
 		blog.Error(err.Error())
 	}
@@ -115,7 +115,7 @@ func (m *ModelTaskStepLog) CreateTaskStepLogWarn(ctx context.Context, taskID, st
 		StepName:   stepName,
 		Level:      "WARN",
 		Message:    message,
-		CreateTime: time.Now().Format(time.RFC3339),
+		CreateTime: time.Now().Format(time.RFC3339Nano),
 	}}); err != nil {
 		blog.Error(err.Error())
 	}
@@ -134,7 +134,7 @@ func (m *ModelTaskStepLog) CreateTaskStepLogError(ctx context.Context, taskID, s
 		StepName:   stepName,
 		Level:      "ERROR",
 		Message:    message,
-		CreateTime: time.Now().Format(time.RFC3339),
+		CreateTime: time.Now().Format(time.RFC3339Nano),
 	}}); err != nil {
 		blog.Error(err.Error())
 	}

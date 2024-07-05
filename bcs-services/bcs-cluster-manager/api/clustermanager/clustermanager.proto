@@ -11791,11 +11791,11 @@ message ListOperationLogsRequest {
   uint64 startTime = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "startTime",
     description: "开始时间，GMT 时间戳，秒"
-  }, (validate.rules).uint64.gt = 0];
+  }];
   uint64 endTime = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "endTime",
     description: "结束时间，GMT 时间戳，秒"
-  }, (validate.rules).uint64.gt = 0];
+  }];
   uint32 limit = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "limit",
     description: "每页数量"
@@ -11843,6 +11843,10 @@ message ListOperationLogsRequest {
   string taskName = 16 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "taskName",
     description: "默认为空, 过滤任务名称维度的操作审计"
+  }];
+  string resourceName = 17 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceName",
+    description: "默认为空, 过滤资源名称维度的操作审计"
   }];
 }
 
@@ -11937,10 +11941,6 @@ message TaskRecordsResponseData {
 }
 
 message TaskRecordStep {
-  string id = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title : "id",
-    description : "任务ID(唯一标识)"
-  }];
   string name = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "name",
     description : "任务名称"
@@ -11975,14 +11975,6 @@ message TaskRecordStepData {
   string level = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "level",
     description : "日志等级(INFO, WARN, ERROR)"
-  }];
-  bool groupStart = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title : "groupStart",
-    description : "是否是分组的开始"
-  }];
-  bool groupEnd = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title : "groupEnd",
-    description : "是否是分组的结束"
   }];
 }
 

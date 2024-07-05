@@ -48214,27 +48214,9 @@ func (m *ListOperationLogsRequest) validate(all bool) error {
 
 	// no validation rules for ResourceID
 
-	if m.GetStartTime() <= 0 {
-		err := ListOperationLogsRequestValidationError{
-			field:  "StartTime",
-			reason: "value must be greater than 0",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for StartTime
 
-	if m.GetEndTime() <= 0 {
-		err := ListOperationLogsRequestValidationError{
-			field:  "EndTime",
-			reason: "value must be greater than 0",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for EndTime
 
 	if m.GetLimit() <= 0 {
 		err := ListOperationLogsRequestValidationError{
@@ -48277,6 +48259,8 @@ func (m *ListOperationLogsRequest) validate(all bool) error {
 	// no validation rules for TaskID
 
 	// no validation rules for TaskName
+
+	// no validation rules for ResourceName
 
 	if len(errors) > 0 {
 		return ListOperationLogsRequestMultiError(errors)
@@ -49024,8 +49008,6 @@ func (m *TaskRecordStep) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for Id
-
 	// no validation rules for Name
 
 	// no validation rules for Status
@@ -49173,10 +49155,6 @@ func (m *TaskRecordStepData) validate(all bool) error {
 	// no validation rules for Timestamp
 
 	// no validation rules for Level
-
-	// no validation rules for GroupStart
-
-	// no validation rules for GroupEnd
 
 	if len(errors) > 0 {
 		return TaskRecordStepDataMultiError(errors)

@@ -21,6 +21,7 @@ import (
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	autils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
@@ -71,8 +72,19 @@ func (ua *TaskRecordsAction) fetchTaskRecords() error {
 	for _, step := range task.StepSequence {
 		for k, v := range task.Steps {
 			if step == k {
+				if v.Status == cloudprovider.TaskStatusFailure || v.Status == cloudprovider.TaskStatusTimeout {
+					v.Status = "FAILED"
+				} else if v.Status == cloudprovider.TaskStatusPartFailure {
+					v.Status = "HALFSUCCESS"
+				} else if v.Status == cloudprovider.TaskStatusRunning || v.Status == cloudprovider.TaskStatusInit {
+					v.Status = "LOADING"
+				} else if v.Status == cloudprovider.TaskStatusSkip {
+					v.Status = "SUCCESS"
+				} else if v.Status == cloudprovider.TaskStatusForceTerminate || v.Status == cloudprovider.TaskStatusNotStarted {
+					v.Status = "TERMINATE"
+				}
+
 				ua.resp.Data.Step = append(ua.resp.Data.Step, &cmproto.TaskRecordStep{
-					Id:        task.TaskID,
 					Name:      v.Name,
 					Status:    v.Status,
 					StartTime: utils.TransStrToTs(v.Start),

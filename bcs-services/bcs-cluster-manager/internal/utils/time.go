@@ -44,10 +44,10 @@ func TransTsToStr(timestamp int64) string {
 
 // TransStrToTs trans  time string totimestamp
 func TransStrToTs(input string) int64 {
-	t, err := time.Parse(time.RFC3339, input)
+	t, err := time.Parse(time.RFC3339Nano, input)
 	if err != nil {
 		return 0
 	}
 
-	return t.Unix()
+	return t.UnixMilli()
 }
