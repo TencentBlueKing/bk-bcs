@@ -445,6 +445,11 @@ export default {
   编辑配置文件成功: 'Edit configuration file successfully',
   上传成功: 'Upload successful',
   上传失败: 'Upload failed',
+  选择配置文件: 'Select configuration file',
+  选择配置项: 'Select configuration item',
+  '模板空间不存在，无法导入，请先删除此模板': 'Template space does not exist, cannot be imported, please delete this template first',
+  '模板套餐不存在，无法导入，请先删除此模板': 'Template package does not exist, cannot be imported, please delete this template first',
+  '模板套餐为空，无法导入，请先删除此模板': 'Template package is empty, cannot be imported, please delete this template first',
 
   // 分组管理
   新增分组: 'New group',

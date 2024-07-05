@@ -229,7 +229,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref, computed, watch, onMounted } from 'vue';
+  import { ref, computed, watch } from 'vue';
   import { useI18n } from 'vue-i18n';
   import { DownShape, EditLine } from 'bkui-vue/lib/icon';
   import { IConfigImportItem } from '../../../../../../../../../types/config';
@@ -274,17 +274,13 @@
 
   const emits = defineEmits(['change']);
 
-  onMounted(() => {
-    data.value = cloneDeep(props.tableData);
-    initData.value = cloneDeep(props.tableData);
-  });
-
   watch(
     () => props.tableData,
     () => {
       data.value = cloneDeep(props.tableData);
       initData.value = cloneDeep(props.tableData);
     },
+    { deep: true, immediate: true },
   );
 
   watch(

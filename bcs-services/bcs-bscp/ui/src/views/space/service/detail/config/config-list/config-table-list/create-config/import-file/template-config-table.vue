@@ -9,12 +9,31 @@
       </div>
     </div>
     <div v-show="expand">
-      <bk-table class="template-table" :border="['outer', 'row', 'col']" :data="data" :row-draggable="false">
-        <bk-table-column :label="t('配置模板空间')" prop="template_space_name" :width="432"></bk-table-column>
-        <bk-table-column :label="t('模板套餐')" prop="template_set_name"></bk-table-column>
+      <bk-table class="template-table" :border="['outer', 'row', 'col']" :row-class="getRowCls" :data="data">
+        <bk-table-column :label="t('配置模板空间')" prop="template_space_name" :width="432">
+          <template #default="{ row }">
+            <div v-if="row.template_space_id" class="row-cell">
+              <span :class="{ error: !row.template_space_exist }">{{ row.template_space_name }}</span>
+              <Warn v-if="!row.template_space_exist" class="warn-icon" v-bk-tooltips="{ content: getErrorInfo(row) }" />
+            </div>
+          </template>
+        </bk-table-column>
+        <bk-table-column :label="t('模板套餐')" prop="template_set_name">
+          <template #default="{ row }">
+            <div v-if="row.template_space_id" class="row-cell">
+              <span :class="{ error: !row.template_set_exist || row.template_revisions.length === 0 }">
+                {{ row.template_space_name }}
+              </span>
+              <Warn
+                v-if="row.template_space_exist && (!row.template_set_exist || row.template_revisions.length === 0)"
+                class="warn-icon"
+                v-bk-tooltips="{ content: getErrorInfo(row) }" />
+            </div>
+          </template>
+        </bk-table-column>
         <bk-table-column label="" align="center" :width="50">
-          <template #default="{ index }">
-            <i class="bk-bscp-icon icon-reduce delete-icon" @click="handleDeleteConfig(index)"></i>
+          <template #default="{ row }">
+            <i class="bk-bscp-icon icon-reduce delete-icon" @click="handleDeleteConfig(row)"></i>
           </template>
         </bk-table-column>
       </bk-table>
@@ -25,7 +44,7 @@
 <script lang="ts" setup>
   import { ref, watch } from 'vue';
   import { useI18n } from 'vue-i18n';
-  import { DownShape } from 'bkui-vue/lib/icon';
+  import { DownShape, Warn } from 'bkui-vue/lib/icon';
   import { ImportTemplateConfigItem } from '../../../../../../../../../../types/template';
   import { cloneDeep } from 'lodash';
 
@@ -47,12 +66,29 @@
     () => {
       data.value = cloneDeep(props.tableData);
     },
-    { immediate: true },
+    { immediate: true, deep: true },
   );
 
-  const handleDeleteConfig = (index: number) => {
-    data.value = data.value.filter((item, i) => i !== index);
-    emits('change', data.value);
+  const handleDeleteConfig = (config: ImportTemplateConfigItem) => {
+    emits('change', `${config.template_space_id} - ${config.template_set_id}`);
+  };
+
+  const getRowCls = (data: ImportTemplateConfigItem) => {
+    if (!data.template_set_exist || !data.template_space_exist || data.template_revisions.length === 0) {
+      return 'row-error';
+    }
+  };
+
+  const getErrorInfo = (data: ImportTemplateConfigItem) => {
+    if (!data.template_space_exist) {
+      return t('模板空间不存在，无法导入，请先删除此模板');
+    }
+    if (!data.template_set_exist) {
+      return t('模板套餐不存在，无法导入，请先删除此模板');
+    }
+    if (data.template_revisions.length === 0) {
+      return t('模板套餐为空，无法导入，请先删除此模板');
+    }
   };
 </script>
 
@@ -92,11 +128,25 @@
     :deep(col) {
       min-width: auto !important;
     }
+    :deep(.bk-table-body) {
+      tr.row-error td {
+        background: #fff3e1 !important;
+      }
+    }
   }
   .delete-icon {
     cursor: pointer;
     font-size: 14px;
     color: gray;
+  }
+  .warn-icon {
+    color: #ff9c01;
+    font-size: 14px;
+    margin-left: 8px;
+  }
+  .row-cell {
+    display: flex;
+    align-items: center;
   }
 </style>
 
