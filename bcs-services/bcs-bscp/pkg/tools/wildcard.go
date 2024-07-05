@@ -13,6 +13,7 @@
 package tools
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/gobwas/glob"
@@ -32,9 +33,9 @@ func MatchConfigItem(scope, path, name string) (bool, error) {
 
 // MatchAppConfigItem checks if the scope string matches the app and config item.
 func MatchAppConfigItem(scope, app, path, name string) (bool, error) {
-	arr := strings.Split(scope, "/")
-	if len(arr) < 2 {
-		return false, nil
+	arr := strings.SplitN(scope, "/", 2)
+	if len(arr) != 2 {
+		return false, fmt.Errorf("invalid scope %s for app %s, it can't be splited into 2 substrings by /", scope, app)
 	}
 	appPattern := arr[0]
 	ciPattern := arr[1]
