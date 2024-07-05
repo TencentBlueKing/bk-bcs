@@ -279,7 +279,6 @@
         template_space_id = res.detail.template_space_id;
       } else {
         let res;
-        console.log(props.isLatest);
         if (props.isLatest) {
           // 版本为latest拉取最新版本 不传递版本名
           res = await getTemplateConfigMeta(props.bkBizId, props.id);
