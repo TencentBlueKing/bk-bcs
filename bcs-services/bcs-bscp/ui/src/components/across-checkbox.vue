@@ -1,6 +1,11 @@
 <template>
   <span class="custom-checkbox-wrap">
-    <input type="checkbox" :checked="checked" :disabled="disabled" @change="handleChangeNew" class="custom-checkbox" />
+    <input
+      type="checkbox"
+      :checked="checked"
+      :disabled="disabled"
+      @change="handleInputChange"
+      class="custom-checkbox" />
   </span>
 </template>
 
@@ -20,7 +25,7 @@
     },
   });
 
-  const handleChangeNew = () => {
+  const handleInputChange = () => {
     props.handleChange();
   };
 </script>

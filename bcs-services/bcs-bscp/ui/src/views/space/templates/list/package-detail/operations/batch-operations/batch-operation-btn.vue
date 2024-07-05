@@ -8,8 +8,10 @@
     :arrow="false"
     @after-show="isPopoverOpen = true"
     @after-hidden="isPopoverOpen = false">
-    <bk-button :disabled="props.configs.length === 0" :class="['batch-set-btn', { 'popover-open': isPopoverOpen }]">
-      {{ t('批量操作') }}
+    <bk-button
+      :disabled="props.configs.length === 0 && !currentCheckType"
+      :class="['batch-set-btn', { 'popover-open': isPopoverOpen }]">
+      {{ t('批量操作') }}{{ currentCheckType }}
       <AngleDown class="angle-icon" />
     </bk-button>
     <template #content>
@@ -56,8 +58,10 @@
   import { AngleDown } from 'bkui-vue/lib/icon';
   import { useI18n } from 'vue-i18n';
   import { useRoute } from 'vue-router';
+  import { storeToRefs } from 'pinia';
   import Message from 'bkui-vue/lib/message';
   import { ITemplateConfigItem } from '../../../../../../../../types/template';
+  import useTemplateStore from '../../../../../../../store/template';
   import { batchEditTemplatePermission } from '../../../../../../../api/template';
   import AddToDialog from '../add-to-pkgs/add-to-dialog.vue';
   import EditPermissionDialg from '../edit-permission/edit-permission-dialog.vue';
@@ -71,6 +75,7 @@
     user_group: string;
   }
 
+  const { currentCheckType } = storeToRefs(useTemplateStore());
   const { t } = useI18n();
   const route = useRoute();
 

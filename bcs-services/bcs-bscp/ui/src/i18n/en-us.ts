@@ -949,5 +949,5 @@ export default {
   跨页全选: 'AcrossChecked',
   已选择: 'Selected',
   选择所有: 'Choose all',
-  取消选择所有数据: 'Cancel all data'
+  取消选择所有数据: 'Cancel all data',
 };

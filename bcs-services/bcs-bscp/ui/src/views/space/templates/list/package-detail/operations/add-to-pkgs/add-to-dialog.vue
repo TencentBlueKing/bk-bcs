@@ -12,15 +12,20 @@
     @closed="close">
     <template #header>
       <div class="header-wrapper">
-        <div class="title">{{ isMultiple ? t('批量添加至') : t('添加至套餐') }}</div>
+        <div class="title">{{ isMultiple || currentCheckType ? t('批量添加至') : t('添加至套餐') }}</div>
         <div v-if="props.value.length === 1" class="config-name">{{ props.value[0].spec.name }}</div>
       </div>
     </template>
-    <div v-if="isMultiple" class="selected-mark">
-      {{ t('已选') }} <span class="num">{{ props.value.length }}</span> {{ t('个配置文件') }}
+    <div v-if="isMultiple || currentCheckType" class="selected-mark">
+      {{ t('已选') }}
+      <span class="num">{{ currentCheckType ? acrossCheckedCount : props.value.length }}</span>
+      {{ t('个配置文件') }}
     </div>
     <bk-form ref="formRef" form-type="vertical" :model="{ pkgs: selectedPkgs }">
-      <bk-form-item :label="isMultiple ? t('添加至模板套餐') : t('模板套餐')" property="pkgs" required>
+      <bk-form-item
+        :label="isMultiple || currentCheckType ? t('添加至模板套餐') : t('模板套餐')"
+        property="pkgs"
+        required>
         <bk-select v-model="selectedPkgs" multiple @change="handPkgsChange">
           <bk-option v-for="pkg in allPackages" :key="pkg.id" :value="pkg.id" :label="pkg.spec.name"> </bk-option>
         </bk-select>
@@ -61,7 +66,8 @@
   import LinkToApp from '../../../components/link-to-app.vue';
 
   const { spaceId } = storeToRefs(useGlobalStore());
-  const { packageList, currentTemplateSpace, currentPkg } = storeToRefs(useTemplateStore());
+  const { packageList, currentTemplateSpace, currentPkg, currentCheckType, dataCount } =
+    storeToRefs(useTemplateStore());
   const { t } = useI18n();
 
   const props = defineProps<{
@@ -87,6 +93,8 @@
     const windowHeight = window.innerHeight;
     return windowHeight * 0.6 - 200;
   });
+
+  const acrossCheckedCount = computed(() => dataCount.value - props.value.length);
 
   watch(
     () => props.show,
@@ -139,7 +147,13 @@
     try {
       pending.value = true;
       const templateIds = props.value.map((item) => item.id);
-      await addTemplateToPackage(spaceId.value, currentTemplateSpace.value, templateIds, selectedPkgs.value);
+      await addTemplateToPackage(
+        spaceId.value,
+        currentTemplateSpace.value,
+        templateIds,
+        selectedPkgs.value,
+        currentCheckType.value,
+      );
       emits('added');
       close();
       Message({

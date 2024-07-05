@@ -23,7 +23,7 @@
       @after-show="isDropDownShow = true"
       @after-hidden="isDropDownShow = false">
       <angle-down
-        v-if="arrowShow"
+        v-show="arrowShow"
         :class="['check-icon', { 'icon-angle-up': isDropDownShow }, { disabled: disabled }]" />
       <template #content>
         <ul class="dropdown-ul">

@@ -292,10 +292,12 @@ export const addTemplateToPackage = (
   template_space_id: number,
   template_ids: number[],
   template_set_ids: number[],
+  exclusion_operation: boolean,
 ) =>
   http.post(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates/add_to_template_sets`, {
     template_ids,
     template_set_ids,
+    exclusion_operation,
   });
 
 /**

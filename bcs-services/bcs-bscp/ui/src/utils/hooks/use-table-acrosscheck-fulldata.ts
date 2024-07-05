@@ -1,12 +1,13 @@
 import { h, Ref, ref } from 'vue';
 import AcrossCheck from '../../components/across-check.vue';
+import TableTip from '../../components/across-check-table-tip.vue';
 import CheckType from '../../../types/across-checked';
 
 export interface IAcrossCheckConfig {
-  tableData: Ref<any[]>;
-  curPageData: Ref<any[]>;
-  rowKey?: string[];
-  arrowShow?: Ref<boolean>;
+  tableData: Ref<any[]>; // 全量数据
+  curPageData: Ref<any[]>; // 当前页数据
+  rowKey?: string[]; // 每行数据唯一标识
+  arrowShow?: Ref<boolean>; // 多选下拉菜单展示
 }
 // 表格跨页全选功能
 export default function useTableAcrossCheck({
@@ -18,6 +19,7 @@ export default function useTableAcrossCheck({
   const selectType = ref(CheckType.Uncheck);
   const selections = ref<any[]>([]);
   const renderSelection = () => {
+    // 渲染表头
     return h(AcrossCheck, {
       value: selectType.value,
       disabled: !tableData.value.length,
@@ -25,6 +27,18 @@ export default function useTableAcrossCheck({
       onChange: handleSelectTypeChange,
     });
   };
+  const renderTableTip = () => {
+    // 表格中间数据提示
+    return h(TableTip, {
+      dataLength: tableData.value.length,
+      selectionsLength: selections.value.length,
+      isFullDataMode: true,
+      arrowShow: !arrowShow?.value,
+      handleSelectTypeChange,
+      handleClearSelection,
+    });
+  };
+
   // 表头全选事件
   const handleSelectTypeChange = (value: number) => {
     switch (value) {
@@ -91,7 +105,8 @@ export default function useTableAcrossCheck({
     selectType, // 选择状态
     selections, // 选中的数据
     renderSelection, // 渲染全选框组件
-    handleRowCheckChange, // 行的全选框操作
+    renderTableTip, // 渲染表格中间数据提示
+    handleRowCheckChange, // 行的选择框操作
     handleSelectionAll, // 全选操作
     handleClearSelection, // 清空全选
   };

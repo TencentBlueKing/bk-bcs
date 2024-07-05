@@ -40,24 +40,7 @@
       <bk-loading style="min-height: 300px" :loading="listLoading">
         <bk-table class="group-table" :border="['outer']" :data="tableData">
           <template #prepend>
-            <div v-show="selections.length" class="selections-style">
-              {{ $t('已选择') }}
-              <span class="checked-number">{{ selections.length }}</span>
-              <template v-if="locale === 'zh-cn'">条数据</template>
-              <span
-                class="checked-em"
-                v-show="!(selections.length === filterFailureTableData.length)"
-                @click="handleSelectionAll">
-                {{ $t('选择所有') }} {{ filterFailureTableData.length }}
-                <template v-if="locale === 'zh-cn'">条</template>
-              </span>
-              <span
-                class="checked-em"
-                v-show="selections.length === filterFailureTableData.length"
-                @click="handleClearSelection">
-                {{ $t('取消选择所有数据') }}
-              </span>
-            </div>
+            <render-table-tip />
           </template>
           <bk-table-column :width="100" :label="renderSelection">
             <template #default="{ row }">
@@ -187,7 +170,7 @@
   import CheckType from '../../../../types/across-checked';
   import { getSpaceGroupList, deleteGroup } from '../../../api/group';
   import useTablePagination from '../../../utils/hooks/use-table-pagination';
-  import useTableAcrossCheck from '../../../utils/hooks/use-table-across-check';
+  import useTableAcrossCheck from '../../../utils/hooks/use-table-acrosscheck-fulldata';
   import { IGroupItem, IGroupCategory, IGroupCategoryItem } from '../../../../types/group';
   import CreateGroup from './create-group.vue';
   import EditGroup from './edit-group.vue';
@@ -238,19 +221,17 @@
   const selectedIds = computed(() => {
     return (selections.value as IGroupItem[]).filter((item) => item.released_apps_num === 0).map((item) => item.id);
   });
-  const {
-    selectType,
-    selections,
-    // handleResetCheckStatus,
-    renderSelection,
-    handleRowCheckChange,
-    handleSelectionAll,
-    handleClearSelection,
-  } = useTableAcrossCheck({
-    tableData: filterFailureTableData, // 全量数据，排除禁用
-    curPageData: filterFailureCurTableData, // 当前页数据，排除禁用
-    arrowShow: isCategorizedView, // 展示跨页下拉框；按标签分类查看无分页，默认为当前页
+  // 是否提供跨页全选的功能
+  const arrowShow = computed(() => {
+    return isCategorizedView.value || pagination.value.limit >= groupList.value.length;
   });
+
+  const { selectType, selections, renderSelection, renderTableTip, handleRowCheckChange, handleClearSelection } =
+    useTableAcrossCheck({
+      tableData: filterFailureTableData, // 全量数据，排除禁用
+      curPageData: filterFailureCurTableData, // 当前页数据，排除禁用
+      arrowShow, // 展示跨页下拉框；按标签分类查看无分页，默认为当前页
+    });
 
   watch(
     () => spaceId.value,
@@ -594,25 +575,25 @@
       margin-left: auto;
     }
   }
-  .selections-style {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 30px;
-    font-size: 12px;
-    color: #63656e;
-    background: #ebecf0;
-    .checked-number {
-      padding: 0 5px;
-      font-weight: 700;
-    }
-    .checked-em {
-      margin-left: 5px;
-      color: #3a84ff;
-      cursor: pointer;
-      &:hover {
-        color: #699df4;
-      }
-    }
-  }
+  // .selections-style {
+  //   display: flex;
+  //   align-items: center;
+  //   justify-content: center;
+  //   height: 30px;
+  //   font-size: 12px;
+  //   color: #63656e;
+  //   background: #ebecf0;
+  //   .checked-number {
+  //     padding: 0 5px;
+  //     font-weight: 700;
+  //   }
+  //   .checked-em {
+  //     margin-left: 5px;
+  //     color: #3a84ff;
+  //     cursor: pointer;
+  //     &:hover {
+  //       color: #699df4;
+  //     }
+  //   }
+  // }
 </style>
