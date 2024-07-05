@@ -81,9 +81,10 @@ func (p *ProjectHandler) GetProject(ctx context.Context,
 	if projectInfo.BusinessID != "" && projectInfo.BusinessID != "0" {
 		business, err := cmdb.GetBusinessByID(projectInfo.BusinessID, true)
 		if err != nil {
-			return errorx.NewRequestCMDBErr(err.Error())
+			logging.Error("get business %s failed, err: %s", projectInfo.BusinessID, err.Error())
+		} else {
+			businessName = business.BKBizName
 		}
-		businessName = business.BKBizName
 	}
 	// 处理返回数据及权限
 	setResp(resp, projectInfo)
@@ -143,9 +144,7 @@ func (p *ProjectHandler) ListProjects(ctx context.Context,
 		// without username
 		setListPermsResp(resp, projects, nil)
 	}
-	if err := projutil.PatchBusinessName(resp.Data.Results); err != nil {
-		return err
-	}
+	projutil.PatchBusinessName(resp.Data.Results)
 	return nil
 }
 
@@ -175,9 +174,8 @@ func (p *ProjectHandler) ListAuthorizedProjects(ctx context.Context,
 		// list all authorized projects, so no need to set web_annotation
 		setListResp(resp, projects)
 	}
-	if err := projutil.PatchBusinessName(resp.Data.Results); err != nil {
-		return err
-	}
+	projutil.PatchBusinessName(resp.Data.Results)
+
 	return nil
 }
 
