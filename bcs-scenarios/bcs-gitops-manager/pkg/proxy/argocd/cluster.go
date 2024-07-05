@@ -16,18 +16,19 @@ import (
 	"net/http"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
-	clusterclient "github.com/argoproj/argo-cd/v2/pkg/apiclient/cluster"
+	"github.com/argoproj/argo-cd/v2/pkg/apiclient/cluster"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 
 	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/permitcheck"
 )
 
 // ClusterPlugin for internal cluster authorization
 type ClusterPlugin struct {
 	*mux.Router
-	middleware mw.MiddlewareInterface
+	middleware    mw.MiddlewareInterface
+	permitChecker permitcheck.PermissionInterface
 }
 
 // Init implementation for plugin
@@ -79,9 +80,10 @@ func (plugin *ClusterPlugin) listClustersHandler(r *http.Request) (*http.Request
 // GET /api/v1/clusters/{name}
 func (plugin *ClusterPlugin) clusterViewHandler(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	clusterName := mux.Vars(r)["name"]
-	statusCode, err := plugin.middleware.CheckClusterPermission(r.Context(), &clusterclient.ClusterQuery{
+	_, statusCode, err := plugin.permitChecker.CheckClusterPermission(r.Context(), &cluster.ClusterQuery{
 		Name: clusterName,
-	}, iam.ClusterView)
+	},
+		permitcheck.ClusterViewRSAction)
 	if statusCode != http.StatusOK {
 		return r, mw.ReturnErrorResponse(statusCode,
 			errors.Wrapf(err, "check cluster '%s' view permision failed", clusterName))

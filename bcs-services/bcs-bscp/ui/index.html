@@ -1,20 +1,22 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" href="{{ .BK_STATIC_URL }}/favicon.ico" />
+    <link rel="shortcut icon" type="image/x-icon" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>服务配置中心 | 腾讯蓝鲸智云</title>
     <script>
-      var BK_BCS_BSCP_API = '{{ .BK_BCS_BSCP_API }}'
-      var SITE_URL = '{{ .SITE_URL }}'
-      var BK_IAM_HOST = '{{ .BK_IAM_HOST }}'
-      var BK_CC_HOST = '{{ .BK_CC_HOST }}'
-      var HELPER = '{{ .HELPER }}'
-      var ENABLE_BK_NOTICE = '{{ .ENABLE_BK_NOTICE }}'
+      var BK_BCS_BSCP_API = '{{ .BK_BCS_BSCP_API }}';
+      var SITE_URL = '{{ .SITE_URL }}';
+      var BK_STATIC_URL = '{{ .BK_STATIC_URL }}';
+      var BK_SHARED_RES_BASE_JS_URL = '{{ .BK_SHARED_RES_BASE_JS_URL }}';
+      var BK_IAM_HOST = '{{ .BK_IAM_HOST }}';
+      var BK_CC_HOST = '{{ .BK_CC_HOST }}';
+      var HELPER = '{{ .HELPER }}';
+      var ENABLE_BK_NOTICE = '{{ .ENABLE_BK_NOTICE }}';
       var FEED_ADDR = '{{ .FEED_ADDR }}';
       var BK_NODE_HOST = '{{ .BK_NODE_HOST }}';
-      window.BSCP_CONFIG = JSON.parse('{{ .BK_BSCP_CONFIG }}')
+      window.BSCP_CONFIG = JSON.parse('{{ .BK_BSCP_CONFIG }}');
     </script>
   </head>
   <body>

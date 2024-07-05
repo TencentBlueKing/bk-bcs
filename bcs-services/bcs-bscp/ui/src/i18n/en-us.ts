@@ -1,4 +1,5 @@
 export default {
+  蓝鲸: 'BlueKing',
   // 服务列表
   我的服务: 'My Service',
   全部服务: 'All Services',
@@ -99,7 +100,7 @@ export default {
   '此操作不会删除版本，如需找回或彻底删除请去版本详情的废弃版本列表操作': 'This operation will not delete the version. If you need to recover or permanently delete it, please go to the deprecated version list in the version details and proceed with the necessary actions.',
   可用版本: 'Available Versions',
   废弃版本: 'Deprecated Versions',
-  '版本名称/版本说明/修改人': 'Version Name / Version Description / Modified',
+  '版本名称/版本描述/修改人': 'Version Name / Version Description / Modified',
   版本: 'Version',
   版本描述: 'Version Description',
   已上线分组: 'Released Groups',
@@ -440,6 +441,10 @@ export default {
   '压缩包正在解压，请稍后': 'The compressed package is being decompressed, please wait',
   '确认恢复该配置项?': 'Confirm to restore the configuration item?',
   '文件下载中，请稍后': 'File download in progress, please wait',
+  版本名称已存在: 'The version name already exists',
+  编辑配置文件成功: 'Edit configuration file successfully',
+  上传成功: 'Upload successful',
+  上传失败: 'Upload failed',
 
   // 分组管理
   新增分组: 'New group',
@@ -590,6 +595,7 @@ export default {
   删除模板文件: 'Delete',
   批量移出套餐: 'Move out of package in batches',
   从其他空间导入: 'Import from another space',
+  '确认删除所选的 {n} 个配置文件?': 'Confirm the deletion of the selected {n} configuration fils?',
 
   // 脚本管理
   全部脚本: 'All scripts',
@@ -642,6 +648,7 @@ export default {
   当前配置版本名称: 'Current configuration version name',
   脚本更新成功: 'Script updated successfully',
   删除脚本成功: 'Delete script successfully',
+  '脚本已被引用，不能删除': 'Script is referenced, cannot be deleted',
 
   // 服务密钥
   '密钥仅用于 SDK/API 拉取配置使用。服务管理/配置管理/分组管理等功能的权限申请，请前往': 'The key is only used for SDK/API pull configurations. To apply for permissions for functions such as service management/configuration management/group management, please go to',
@@ -734,20 +741,25 @@ export default {
   下载二进制命令行: 'Download the binary command line',
   '如果没有安装 GO，可以通过浏览器手动下载，建议下载最新版本': 'If GO is not installed, you can download it manually through the browser. You are advised to download the latest version',
   '下载地址：': 'download url',
-  '创建命令配置文件，配置文件为 YAML 格式': 'Create a command configuration file in YAML format',
+  '创建命令配置文件，配置文件为 YAML 格式，命名为：bscp.yaml': 'Create a command configuration file, the configuration file is in YAML format, named: bscp.yaml',
   获取业务下的服务列表: 'Get the service list of the service',
   拉取服务下所有配置文件: 'Pull all configuration files under the service',
   获取服务下所有配置文件列表: 'Obtain a list of all configuration files for the service',
-  '下载指定配置文件到指定目录，例如指定文件为 /etc/nginx/nginx.conf，下载文件到 /root/config 目录': 'Download the configuration file to the specified directory, for example, /etc/nginx/nginx.conf, and download the file to the /root/config directory',
   示例已复制: 'success',
   用于客户端拉取文件型配置后的临时存储目录: 'Used by the client to pull up the temporary storage directory after the file configuration',
   获取指定服务下所有配置项列表: 'Gets a list of all configuration items for the specified service',
-  '获取指定服务下指定配置项列表，多个配置这': 'Gets a list of specified configuration items under the specified service, multiple configurations for this',
+  '获取指定服务下指定配置项列表，多个配置项': 'Retrieve a list of specified configuration items under a specified service, multiple items',
   '获取指定服务下指定配置项值，只支持单个配置项值获取': 'Obtain the value of a specified configuration item of a specified service. You can obtain only a single configuration item',
   '获取指定服务下指定配置项元数据，支持多个配置项元数据获取，没有指定配置项，获取服务下所有配置项的元数据': 'Obtain the metadata of the specified configuration item of the specified service. You can obtain the metadata of multiple configuration items. Obtain the metadata of all configuration items of the service if no configuration item is specified',
   '暂无可用密钥，可前往密钥管理新建/启用密钥，或将已有密钥关联至此服务': 'No available keys found. You can go to key management to create/enable a key or associate an existing key with this service',
   '搜索结果为空，可前往密钥管理新建/启用密钥，或将已有密钥关联至此服务': 'Search result is empty. You can go to key management to create/enable a key or associate an existing key with this service',
   禁止使用系统目录: 'Prohibited from using system directories',
+  复制成功: 'Copy Successful',
+  '下载配置文件时，保留目录层级，并将其保存到指定目录下，例如：将 /etc/nginx.conf 文件下载到 /tmp 目录时，文件保存在 /tmp/etc/nginx.conf': 'When downloading configuration files, preserve directory structure and save them to a specified directory. For example, downloading the file /etc/nginx.conf to the /tmp directory would save it as /tmp/etc/nginx.conf',
+  '下载配置文件时，不保留目录层级，并将其保存到指定目录下，例如：将 /etc/nginx.conf 文件下载到 /tmp 目录时，文件保存在 /tmp/nginx.conf': 'When downloading configuration files, do not preserve directory structure and save them directly to a specified directory. For example, downloading the file /etc/nginx.conf to the /tmp directory would save it as /tmp/nginx.conf',
+  'BSCP Python SDK依赖说明': 'dependency instructions in the BSCP Python SDK',
+  '用于主动获取配置项值的场景，此方法不会监听服务器端的配置更改，有关Python SDK的部署环境和依赖组件，请参阅白皮书中的': 'For scenarios where configuration values are actively retrieved, this method does not monitor server-side configuration changes. For information on the deployment environment and dependent components of the Python SDK, please refer to the',
+  '通过建立长连接，实时监听配置版本的变更，当新版本的配置发布时，将自动调用回调方法处理新的配置信息，适用于需要实时响应配置变更的场景，有关Python SDK的部署环境和依赖组件，请参阅白皮书中的': 'By establishing a persistent connection, real-time changes to configuration versions are monitored. When a new version of configuration is released, the callback method is automatically invoked to handle the new configuration information. This method is suitable for scenarios requiring real-time response to configuration changes. For information on the deployment environment and dependent components of the Python SDK, please refer to the',
 
   // 公共组件
   页面不存在: 'Page does not exist',

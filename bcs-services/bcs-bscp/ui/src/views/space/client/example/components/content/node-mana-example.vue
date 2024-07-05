@@ -64,7 +64,7 @@
   const route = useRoute();
 
   const linkUrl = {
-    nodeManaUrl: (window as any).BK_NODE_HOST,
+    nodeManaUrl: `${(window as any).BK_NODE_HOST}/#/plugin-manager/rule`,
     clientNode: 'https://bk.tencent.com/docs/markdown/ZH/BSCP/1.29/UserGuide/Function/client_configuration.md',
   };
 
@@ -111,10 +111,11 @@
     }
   }
   .service-content {
+    width: 600px;
     padding: 7px 17px;
     border: 1px solid #dcdee5;
     border-radius: 2px;
-    background-color: #fff;
+    background-color: #fafbfd;
   }
   .service-item {
     display: flex;

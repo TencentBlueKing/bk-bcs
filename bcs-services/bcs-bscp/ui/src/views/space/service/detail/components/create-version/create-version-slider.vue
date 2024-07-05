@@ -55,7 +55,7 @@
   import { useI18n } from 'vue-i18n';
   import { assign } from 'lodash';
   import { GET_UNNAMED_VERSION_DATA } from '../../../../../../constants/config';
-  import { createVersion } from '../../../../../../api/config';
+  import { createVersion, createVersionNameCheck } from '../../../../../../api/config';
   import useModalCloseConfirmation from '../../../../../../utils/hooks/use-modal-close-confirmation';
   import { IVariableEditParams } from '../../../../../../../types/variable';
   import { getUnReleasedAppVariables } from '../../../../../../api/variable';
@@ -99,6 +99,16 @@
           return true;
         },
         message: t('仅允许使用中文、英文、数字、下划线、中划线、点，且必须以中文、英文、数字开头和结尾'),
+      },
+      {
+        validator: async (value: string) => {
+          if (value.length > 0) {
+            const res = await createVersionNameCheck(props.bkBizId, props.appId, value);
+            return !res.data.exist;
+          }
+          return true;
+        },
+        message: t('版本名称已存在'),
       },
     ],
     memo: [

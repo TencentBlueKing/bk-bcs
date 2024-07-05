@@ -53,9 +53,10 @@
   // 数据传递
   const sendVal = () => {
     // 处理数据格式用于展示
-    const newArr = labelArr.value.map((item) => {
+    const newArr: string[] = [];
+    labelArr.value.forEach((item) => {
       if (item.key || item.value) {
-        return `"${item.key}":"${item.value}"`;
+        newArr.push(`"${item.key}":"${item.value}"`);
       }
     });
     const filterArr = newArr.filter((item) => item !== undefined);
@@ -95,7 +96,7 @@
     }
   }
   .add-label-plus {
-    margin-right: 9px;
+    margin-right: 4px;
     line-height: 14px;
     text-align: center;
     border-radius: 50%;

@@ -57,7 +57,7 @@ func (s *Service) ListReleasedConfigItems(ctx context.Context,
 		return nil, err
 	}
 
-	details, count, err := s.dao.ReleasedCI().List(kt, req.BizId, req.AppId, req.ReleaseId, searcher, opt)
+	details, count, err := s.dao.ReleasedCI().List(kt, req.BizId, req.AppId, req.ReleaseId, searcher, opt, req.SearchValue)
 	if err != nil {
 		logs.Errorf("list released app bound templates revisions failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err

@@ -137,10 +137,18 @@ type Strategy struct {
 	MaxParallel int                 `json:"maxParallel,omitempty"`
 }
 
+const (
+	// NormalRunType defines the normal run type
+	NormalRunType = "Normal"
+	// LinuxRunType defines the linux run type
+	LinuxRunType = "Linux"
+)
+
 // RunsOn defines the runsOn
 type RunsOn struct {
-	Image   string `json:"image,omitempty"`
-	Version string `json:"version,omitempty"`
+	RunsType string `json:"runsType,omitempty"`
+	Image    string `json:"image,omitempty"`
+	Version  string `json:"version,omitempty"`
 }
 
 // Step defines the step

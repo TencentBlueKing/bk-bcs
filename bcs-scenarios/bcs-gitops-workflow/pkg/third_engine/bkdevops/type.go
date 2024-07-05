@@ -22,6 +22,11 @@ type createResp struct {
 	} `json:"data"`
 }
 
+type getResp struct {
+	Status int       `json:"status"`
+	Data   *pipeline `json:"data"`
+}
+
 // createResp update or delete response
 type updateOrDeleteResp struct {
 	Status  int    `json:"status"`
@@ -66,10 +71,9 @@ type executeStatusResp struct {
 
 // pipeline defines the pipeline object
 type pipeline struct {
-	Name   string            `json:"name,omitempty"`
-	Desc   string            `json:"desc,omitempty"`
-	Stages []*pipelineStage  `json:"stages,omitempty"`
-	Labels map[string]string `json:"labels,omitempty"`
+	Name   string           `json:"name,omitempty"`
+	Desc   string           `json:"desc,omitempty"`
+	Stages []*pipelineStage `json:"stages,omitempty"`
 }
 
 // pipelineStage defines the pipeline stage object

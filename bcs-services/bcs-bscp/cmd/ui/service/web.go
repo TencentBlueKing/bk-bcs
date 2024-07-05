@@ -175,17 +175,18 @@ func (s *WebServer) subRouter() http.Handler {
 
 	shouldProxyAPI := config.G.IsDevMode()
 	conf := &bscp.IndexConfig{
-		StaticURL:      path.Join(config.G.Web.RoutePrefix, "/web"),
-		RunEnv:         config.G.Base.RunEnv,
-		ProxyAPI:       shouldProxyAPI,
-		SiteURL:        config.G.Web.RoutePrefix,
-		APIURL:         config.G.Frontend.Host.BSCPAPIURL,
-		IAMHost:        config.G.Frontend.Host.BKIAMHost,
-		CMDBHost:       config.G.Frontend.Host.BKCMDBHost,
-		EnableBKNotice: config.G.Frontend.EnableBKNotice,
-		Helper:         config.G.Frontend.Helper,
-		FeedAddr:       config.G.Base.FeedAddr,
-		NodeManHost:    config.G.Frontend.Host.BKNODEMANHOST,
+		StaticURL:            path.Join(config.G.Web.RoutePrefix, "/web"),
+		RunEnv:               config.G.Base.RunEnv,
+		ProxyAPI:             shouldProxyAPI,
+		SiteURL:              config.G.Web.RoutePrefix,
+		APIURL:               config.G.Frontend.Host.BSCPAPIURL,
+		IAMHost:              config.G.Frontend.Host.BKIAMHost,
+		CMDBHost:             config.G.Frontend.Host.BKCMDBHost,
+		BKSharedResBaseJSURL: config.G.Frontend.Host.BKSharedResBaseJSURL,
+		EnableBKNotice:       config.G.Frontend.EnableBKNotice,
+		Helper:               config.G.Frontend.Helper,
+		FeedAddr:             config.G.Base.FeedAddr,
+		NodeManHost:          config.G.Frontend.Host.BKNODEMANHOST,
 	}
 
 	if shouldProxyAPI {

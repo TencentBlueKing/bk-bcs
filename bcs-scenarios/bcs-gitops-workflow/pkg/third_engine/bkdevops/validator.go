@@ -31,7 +31,7 @@ func (c *workflowValidator) Validate() ([]string, []string) {
 }
 
 // validateStepTemplates validate the step templates
-func (c *workflowValidator) validateStepTemplates() (map[string]*gitopsv1.StepTemplate, error) {
+func (c *workflowValidator) validateWorkflow() (map[string]*gitopsv1.StepTemplate, error) {
 	errs := make([]string, 0)
 	stpTemplates := make(map[string]*gitopsv1.StepTemplate)
 	for i := range c.workflow.Spec.StepTemplates {
@@ -47,14 +47,30 @@ func (c *workflowValidator) validateStepTemplates() (map[string]*gitopsv1.StepTe
 		stage := &c.workflow.Spec.Stages[i]
 		for j := range stage.Jobs {
 			job := &stage.Jobs[j]
+			runType := job.RunsOn.RunsType
+			if runType != gitopsv1.NormalRunType && runType != gitopsv1.LinuxRunType {
+				errs = append(errs, fmt.Sprintf("stage[%d].job[%d].runsOn.runsType illegal", i, j))
+			}
 			for k := range job.Steps {
 				tpl := job.Steps[k].Template
-				_, ok := stpTemplates[tpl]
-				if ok {
+				tplObj, ok := stpTemplates[tpl]
+				if !ok {
+					errs = append(errs, fmt.Sprintf("stage[%d].job[%d].steps[%d]'s template '%s' not exist",
+						i, j, k, tpl))
 					continue
 				}
-				errs = append(errs, fmt.Sprintf("stage[%d].job[%d].steps[%d]'s template '%s' not exist",
-					i, j, k, tpl))
+				switch runType {
+				case gitopsv1.NormalRunType:
+					if strings.Contains(tplObj.Plugin, string(marketBuild)+"@") {
+						errs = append(errs, fmt.Sprintf("stage[%d].job[%d] runsType is '%s', "+
+							"cannot use '%s' plugin", i, j, runType, string(marketBuild)))
+					}
+				case gitopsv1.LinuxRunType:
+					if strings.Contains(tplObj.Plugin, string(marketBuildLess)+"@") {
+						errs = append(errs, fmt.Sprintf("stage[%d].job[%d] runsType is '%s', "+
+							"cannot use '%s' plugin", i, j, runType, string(marketBuildLess)))
+					}
+				}
 			}
 		}
 	}

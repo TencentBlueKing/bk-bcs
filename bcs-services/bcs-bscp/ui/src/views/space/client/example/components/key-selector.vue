@@ -29,9 +29,8 @@
       :label="item.spec.name + item.spec.enc_credential + item.spec.memo">
       <div class="key-option-item">
         <div class="name-text">
-          {{ item.spec.name }}({{ item.spec.privacyCredential }})&nbsp;<span class="name-text--desc">{{
-            item.spec.memo
-          }}</span>
+          {{ item.spec.name }}({{ item.spec.privacyCredential }})&nbsp;
+          <span class="name-text--desc">{{ item.spec.memo || '--' }}</span>
         </div>
       </div>
     </bk-option>

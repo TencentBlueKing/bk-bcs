@@ -462,7 +462,7 @@
   };
 
   // 批量删除配置项后刷新配置项列表
-  const refreshAfterBatchDelete = () => {
+  const refreshAfterBatchSet = () => {
     if (selectedConfigIds.value.length === configList.value.length && pagination.value.current > 1) {
       pagination.value.current -= 1;
     }
@@ -509,7 +509,7 @@
 
   defineExpose({
     refresh,
-    refreshAfterBatchDelete,
+    refreshAfterBatchSet,
   });
 </script>
 <style lang="scss" scoped>
@@ -525,7 +525,7 @@
         .cell {
           color: #c4c6cc !important;
         }
-      };
+      }
       tr.new-row-marked td {
         background: #f2fff4 !important;
       }

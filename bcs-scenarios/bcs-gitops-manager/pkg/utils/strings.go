@@ -15,6 +15,7 @@ package utils
 import (
 	"bytes"
 	"compress/gzip"
+	"encoding/json"
 	"io"
 	"strings"
 	"unsafe"
@@ -60,13 +61,16 @@ func SliceByteToString(b []byte) string {
 	if len(b) == 0 {
 		return ""
 	}
+	// NOCC:gas/calls(设计如此)
 	return *(*string)(unsafe.Pointer(&b))
 }
 
 // StringToSliceByte 字符串转字节
 func StringToSliceByte(s string) []byte {
+	// NOCC:gas/calls(设计如此)
 	x := (*[2]uintptr)(unsafe.Pointer(&s))
 	h := [3]uintptr{x[0], x[1], x[1]}
+	// NOCC:gas/calls(设计如此)
 	return *(*[]byte)(unsafe.Pointer(&h))
 }
 
@@ -87,4 +91,13 @@ func CheckGitRepoSimilar(original, compare string) bool {
 	originalRepo := t1[len(t1)-1]
 	compareRepo := t2[len(t2)-1]
 	return strings.TrimSuffix(originalRepo, ".git") == strings.TrimSuffix(compareRepo, ".git")
+}
+
+// MarshalObject marshal object
+func MarshalObject(obj interface{}) string {
+	bs, err := json.Marshal(obj)
+	if err == nil {
+		return string(bs)
+	}
+	return ""
 }

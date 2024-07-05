@@ -23,6 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
@@ -42,7 +43,7 @@ type Service struct {
 	bll *bll.BLL
 	// authorizer auth related operations.
 	authorizer auth.Authorizer
-	serve      *http.Server
+	serves     []*http.Server
 	state      serviced.State
 	provider   repository.Provider
 
@@ -52,6 +53,7 @@ type Service struct {
 	dsSetting cc.Downstream
 	mc        *metric
 	fileLock  *fileLockManager
+	gwMux     *runtime.ServeMux
 }
 
 // NewService create a service instance.
@@ -60,6 +62,11 @@ func NewService(sd serviced.Discover, name string) (*Service, error) {
 	state, ok := sd.(serviced.State)
 	if !ok {
 		return nil, errors.New("discover convert state failed")
+	}
+
+	gwMux, err := newFeedServerMux()
+	if err != nil {
+		return nil, fmt.Errorf("new gateway failed, err: %v", err)
 	}
 
 	authorizer, err := auth.NewAuthorizer(sd, cc.FeedServer().Network.TLS)
@@ -86,6 +93,7 @@ func NewService(sd serviced.Discover, name string) (*Service, error) {
 		provider:   provider,
 		fileLock:   newFileLockManager(),
 		mc:         initMetric(name),
+		gwMux:      gwMux,
 	}, nil
 }
 
@@ -147,7 +155,71 @@ func (s *Service) ListenAndServeRest() error {
 		}
 	}()
 
-	s.serve = server
+	s.serves = append(s.serves, server)
+
+	return nil
+}
+
+// ListenAndGwServerRest listen and grpc-gateway serve the restful server
+func (s *Service) ListenAndGwServerRest() error {
+	network := cc.FeedServer().Network
+
+	addr := tools.GetListenAddr(network.BindIP, int(network.GwHttpPort))
+	dualStackListener := listener.NewDualStackListener()
+	if e := dualStackListener.AddListenerWithAddr(addr); e != nil {
+		return e
+	}
+	logs.Infof("http server listen address: %s", addr)
+
+	for _, ip := range network.BindIPs {
+		if ip == network.BindIP {
+			continue
+		}
+		ipAddr := tools.GetListenAddr(ip, int(network.GwHttpPort))
+		if e := dualStackListener.AddListenerWithAddr(ipAddr); e != nil {
+			return e
+		}
+		logs.Infof("http server listen address: %s", ipAddr)
+	}
+
+	server := &http.Server{Handler: s.handlerGw()}
+
+	if network.TLS.Enable() {
+		tls := network.TLS
+		tlsC, err := tools.ClientTLSConfVerify(tls.InsecureSkipVerify, tls.CAFile, tls.CertFile, tls.KeyFile,
+			tls.Password)
+		if err != nil {
+			return fmt.Errorf("init restful tls config failed, err: %v", err)
+		}
+
+		server.TLSConfig = tlsC
+	}
+
+	go func() {
+		notifier := shutdown.AddNotifier()
+		<-notifier.Signal
+		defer notifier.Done()
+
+		logs.Infof("start shutdown restful server gracefully...")
+
+		ctx, cancel := context.WithTimeout(context.TODO(), 20*time.Second)
+		defer cancel()
+		if err := server.Shutdown(ctx); err != nil {
+			logs.Errorf("shutdown restful server failed, err: %v", err)
+			return
+		}
+
+		logs.Infof("shutdown restful server success...")
+	}()
+
+	go func() {
+		if err := server.Serve(dualStackListener); err != nil && err != http.ErrServerClosed {
+			logs.Errorf("serve restful server failed, err: %v", err)
+			shutdown.SignalShutdownGracefully()
+		}
+	}()
+
+	s.serves = append(s.serves, server)
 
 	return nil
 }
@@ -165,6 +237,18 @@ func (s *Service) handler() http.Handler {
 	r.Get("/healthz", s.Healthz)
 
 	r.Mount("/", handler.RegisterCommonToolHandler())
+	return r
+}
+
+func (s *Service) handlerGw() http.Handler {
+	r := chi.NewRouter()
+	r.Use(handler.RequestID)
+	r.Use(middleware.RealIP)
+	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
+	r.Route("/api/v1/feed", func(r chi.Router) {
+		r.Mount("/", s.gwMux)
+	})
 	return r
 }
 

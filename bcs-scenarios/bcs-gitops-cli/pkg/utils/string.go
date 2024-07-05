@@ -17,7 +17,7 @@ import (
 	"fmt"
 	"strings"
 
-	orderedmap "github.com/wk8/go-ordered-map/v2"
+	"github.com/itchyny/json2yaml"
 	"gopkg.in/yaml.v3"
 )
 
@@ -55,17 +55,13 @@ func CheckStringJsonOrYaml(body []byte) []byte {
 }
 
 // JsonToYaml transfer json to yaml
-func JsonToYaml(body []byte) []byte {
-	jsonData := orderedmap.New[string, any]()
-	err := json.Unmarshal(body, &jsonData)
-	if err != nil {
-		ExitError(fmt.Sprintf("unmarshal json '%s' failed: %s", string(body), err.Error()))
+func JsonToYaml(jsonData []byte) []byte {
+	var output strings.Builder
+	input := strings.NewReader(string(jsonData))
+	if err := json2yaml.Convert(&output, input); err != nil {
+		ExitError(fmt.Sprintf("json to yaml failed: %s", err.Error()))
 	}
-	body, err = yaml.Marshal(jsonData)
-	if err != nil {
-		ExitError(fmt.Sprintf("marshal json data failed: %s", err.Error()))
-	}
-	return body
+	return []byte(output.String())
 }
 
 // YamlToJson transfer yaml to json

@@ -1,7 +1,7 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <!-- eslint-disable max-len -->
 <template>
-  <BcsContent hide-back :title="crdKind === 'BcsLog' ? $t('nav.log') : $t('plugin.tools.title')">
+  <BcsContent hide-back :title="$t('plugin.tools.title')">
     <div>
       <Row class="mb-[16px]">
         <div class="right" slot="right">
@@ -48,7 +48,7 @@
             </g>
           </symbol>
         </svg>
-        <table class="bk-table biz-templateset-table mb20" v-if="crdKind !== 'BcsLog'">
+        <table class="bk-table biz-templateset-table mb20">
           <thead>
             <tr>
               <th style="width: 120px; padding-left: 0;" class="center">{{$t('plugin.tools.icon')}}</th>
@@ -94,17 +94,10 @@
                           </bcs-popover>
                         </span>
                         <template v-else-if="pendingStatus.includes(crdcontroller.status)">
-                          <div class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary vm" style="margin-right: 3px;">
-                            <div class="rotate rotate1"></div>
-                            <div class="rotate rotate2"></div>
-                            <div class="rotate rotate3"></div>
-                            <div class="rotate rotate4"></div>
-                            <div class="rotate rotate5"></div>
-                            <div class="rotate rotate6"></div>
-                            <div class="rotate rotate7"></div>
-                            <div class="rotate rotate8"></div>
+                          <div class="flex items-center">
+                            <LoadingIcon />
+                            <span class="vm">{{statusTextMap[crdcontroller.status] || $t('plugin.tools.doing')}}</span>
                           </div>
-                          <span class="vm">{{statusTextMap[crdcontroller.status] || $t('plugin.tools.doing')}}</span>
                         </template>
                         <span class="biz-mark" v-else>
                           <bcs-popover :width="500" :content="crdcontroller.message" placement="top">
@@ -234,6 +227,7 @@ import { catchErrorHandler } from '@/common/util';
 import ClusterSelectComb from '@/components/cluster-selector/cluster-select-comb.vue';
 import BcsContent from '@/components/layout/Content.vue';
 import Row from '@/components/layout/Row.vue';
+import LoadingIcon from '@/components/loading-icon.vue';
 import MonacoEditor from '@/components/monaco-editor/editor.vue';
 import PopoverSelector from '@/components/popover-selector.vue';
 
@@ -244,6 +238,7 @@ export default {
     ClusterSelectComb,
     Row,
     PopoverSelector,
+    LoadingIcon,
   },
   data() {
     return {
@@ -312,9 +307,6 @@ export default {
     },
     curProject() {
       return this.$store.state.curProject;
-    },
-    crdKind() {
-      return this.$route.meta.crdKind;
     },
     clusterList() {
       return this.$store.state.cluster.clusterList;
@@ -444,12 +436,7 @@ export default {
         version: item.version,
       }));
         // 搜索
-      let results = data.filter((item) => {
-        if (this.crdKind === 'BcsLog') {
-          return item.chart_name === 'bk-log-collector';
-        }
-        return item.chart_name !== 'bk-log-collector';
-      });
+      let results = data;
       if (this.searchKeyword.trim()) {
         results = [];
         const keyword = this.searchKeyword.trim();
@@ -530,40 +517,20 @@ export default {
     },
 
     async goControllerInstances(crdcontroller) {
-      if (this.crdKind === 'BcsLog') {
-        try {
-          if (this.$INTERNAL) {
-            const { projectId } = this;
-            await this.$store.dispatch('enableLogPlans', projectId);
-          }
-
-          this.$router.push({
-            name: 'crdcontrollerLogInstances',
-            params: {
-              clusterId: this.searchScope,
-            },
-          });
-        } catch (e) {
-          if (e.code !== 404) {
-            catchErrorHandler(e, this);
-          }
-        }
-      } else {
-        if (crdcontroller.chart_name === 'db-privilege') {
-          this.$router.push({
-            name: 'crdcontrollerDBInstances',
-            params: {
-              clusterId: this.searchScope,
-            },
-          });
-        } else if (crdcontroller.chart_name === 'bcs-polaris-operator') {
-          this.$router.push({
-            name: 'crdcontrollerPolarisInstances',
-            params: {
-              clusterId: this.searchScope,
-            },
-          });
-        }
+      if (crdcontroller.chart_name === 'db-privilege') {
+        this.$router.push({
+          name: 'crdcontrollerDBInstances',
+          params: {
+            clusterId: this.searchScope,
+          },
+        });
+      } else if (crdcontroller.chart_name === 'bcs-polaris-operator') {
+        this.$router.push({
+          name: 'crdcontrollerPolarisInstances',
+          params: {
+            clusterId: this.searchScope,
+          },
+        });
       }
     },
 

@@ -20,6 +20,8 @@ import (
 	rawgen "gorm.io/gen"
 	"gorm.io/gorm"
 
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
 	dtypes "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/types"
@@ -67,6 +69,8 @@ type TemplateSet interface {
 	ListAllTemplateIDs(kit *kit.Kit, bizID, templateSpaceID uint32) ([]uint32, error)
 	// ListAllTmplSetsOfBiz list all template sets of one biz
 	ListAllTmplSetsOfBiz(kit *kit.Kit, bizID, appID uint32) ([]*table.TemplateSet, error)
+	// ValidateTmplNumber verify whether the current number of template set's templates has reached the maximum.
+	ValidateTmplNumber(kt *kit.Kit, tx *gen.QueryTx, bizID, tmplSetID uint32) error
 }
 
 var _ TemplateSet = new(templateSetDao)
@@ -487,4 +491,34 @@ func (dao *templateSetDao) validateTemplatesExist(kit *kit.Kit, templateIDs []ui
 	}
 
 	return nil
+}
+
+// ValidateTmplNumber verify whether the current number of template set's templates has reached the maximum.
+func (dao *templateSetDao) ValidateTmplNumber(kt *kit.Kit, tx *gen.QueryTx, bizID, tmplSetID uint32) error {
+
+	// get template count
+	m := tx.TemplateSet
+	tmplSet, err := m.WithContext(kt.Ctx).Where(m.BizID.Eq(bizID), m.ID.Eq(tmplSetID)).Take()
+	if err != nil {
+		return fmt.Errorf("get template set %d's failed, err: %v", tmplSetID, err)
+	}
+
+	count := len(tmplSet.Spec.TemplateIDs)
+	tmplSetTmplCnt := getTmplSetTmplCnt(bizID)
+	if count > tmplSetTmplCnt {
+		return errf.New(errf.InvalidParameter,
+			fmt.Sprintf("the total number of template set %d's templates exceeded the limit %d",
+				tmplSetID, tmplSetTmplCnt))
+	}
+
+	return nil
+}
+
+func getTmplSetTmplCnt(bizID uint32) int {
+	if resLimit, ok := cc.DataService().FeatureFlags.ResourceLimit.Spec[fmt.Sprintf("%d", bizID)]; ok {
+		if resLimit.TmplSetTmplCnt > 0 {
+			return int(resLimit.TmplSetTmplCnt)
+		}
+	}
+	return int(cc.DataService().FeatureFlags.ResourceLimit.Default.TmplSetTmplCnt)
 }

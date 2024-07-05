@@ -15,7 +15,10 @@ package bkdevops
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"strings"
+
+	"github.com/pkg/errors"
 
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-workflow/internal/logctx"
 	gitopsv1 "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-workflow/pkg/apis/gitopsworkflow/v1"
@@ -27,8 +30,29 @@ type workflowTransfer struct {
 	stepTemplates map[string]*gitopsv1.StepTemplate
 }
 
-// transToPipeline will transfer workflow object to bkdevops pipeline
-func (t *workflowTransfer) transToPipeline() (*pipeline, error) {
+// CheckPipelineChanged check pipeline changed
+func (t *workflowTransfer) CheckPipelineChanged(pp *pipeline) (bool, error) {
+	wfpp, err := t.TransToPipeline()
+	if err != nil {
+		return false, errors.Wrapf(err, "transfer workflow to pipeline failed")
+	}
+	wfStages := wfpp.Stages[1:]
+	ppStages := pp.Stages[1:]
+	if len(wfStages) != len(ppStages) {
+		return true, nil
+	}
+	for i := 1; i < len(wfStages); i++ {
+		wfStage := wfStages[i]
+		ppStage := ppStages[i]
+		if !reflect.DeepEqual(wfStage, ppStage) {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+// TransToPipeline will transfer workflow object to bkdevops pipeline
+func (t *workflowTransfer) TransToPipeline() (*pipeline, error) {
 	pp := &pipeline{
 		Name: t.workflow.Spec.Name,
 		Desc: t.workflow.Spec.Desc,
@@ -37,7 +61,7 @@ func (t *workflowTransfer) transToPipeline() (*pipeline, error) {
 	// check step templates
 	checker := &workflowValidator{workflow: t.workflow}
 	var err error
-	t.stepTemplates, err = checker.validateStepTemplates()
+	t.stepTemplates, err = checker.validateWorkflow()
 	if err != nil {
 		return nil, err
 	}
@@ -81,10 +105,26 @@ func (t *workflowTransfer) transferStage(defineStage *gitopsv1.Stage) *pipelineS
 
 // transferJob transfer job object
 func (t *workflowTransfer) transferJob(defineJob *gitopsv1.Job) *container {
+	if defineJob.RunsOn.RunsType == "" {
+		defineJob.RunsOn.RunsType = gitopsv1.LinuxRunType
+	}
 	c := &container{
-		Type:            vmBuildJobType,
 		Name:            defineJob.Name,
 		ContainerEnable: !defineJob.Disable,
+	}
+	switch defineJob.RunsOn.RunsType {
+	case gitopsv1.LinuxRunType:
+		c.Type = vmBuildJobType
+		c.BaseOS = "LINUX"
+		c.DispatchType = &dispatchType{
+			BuildType:    "PUBLIC_DEVCLOUD",
+			Value:        "tlinux3_ci",
+			ImageType:    "BKSTORE",
+			ImageCode:    "tlinux3_ci",
+			ImageVersion: "2.*",
+		}
+	case gitopsv1.NormalRunType:
+		c.Type = normalJobType
 	}
 	c.JobControlOption = t.buildControlOption(jobDefaultConditionType, defineJob.Condition, defineJob.Timeout)
 
@@ -96,16 +136,8 @@ func (t *workflowTransfer) transferJob(defineJob *gitopsv1.Job) *container {
 		}
 		c.MatrixControlOption = &matrixControlOption{
 			StrategyStr:    strings.Join(matrix, "\\n"),
-			MaxConcurrency: 5,
+			MaxConcurrency: int64(defineJob.Strategy.MaxParallel),
 		}
-	}
-	c.BaseOS = "LINUX"
-	c.DispatchType = &dispatchType{
-		BuildType:    "PUBLIC_DEVCLOUD",
-		Value:        "tlinux3_ci",
-		ImageType:    "BKSTORE",
-		ImageCode:    "tlinux3_ci",
-		ImageVersion: "2.*",
 	}
 	for i := range defineJob.Steps {
 		stp := t.transferStep(&defineJob.Steps[i])

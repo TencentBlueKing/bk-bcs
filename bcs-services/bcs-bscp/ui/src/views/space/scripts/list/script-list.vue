@@ -148,7 +148,12 @@
                   @click="router.push({ name: 'script-version-manage', params: { spaceId, scriptId: row.hook.id } })">
                   {{ t('版本管理') }}
                 </bk-button>
-                <bk-button v-if="row.bound_num === 0" text theme="primary" @click="handleDeleteScript(row)">
+                <bk-button
+                  :disabled="row.bound_num !== 0"
+                  text
+                  theme="primary"
+                  v-bk-tooltips="{ content: $t('脚本已被引用，不能删除'), disabled: row.bound_num === 0 }"
+                  @click="handleDeleteScript(row)">
                   {{ t('删除') }}
                 </bk-button>
               </div>

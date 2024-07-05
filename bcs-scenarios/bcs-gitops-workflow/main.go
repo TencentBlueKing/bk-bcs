@@ -44,11 +44,10 @@ func init() {
 }
 
 func main() {
-	option.Parse()
-	op := option.GlobalOption()
+	op := option.Parse()
 	blog.InitLogs(op.LogConfig)
 	defer blog.CloseLogs()
-	blog.Infof("option: %v", utils.ToJsonString(op))
+	blog.Infof("option: %v", utils.ToJsonStringCommon(op))
 
 	ctx := ctrl.SetupSignalHandler()
 	mgr, err := buildControllerManager(op)

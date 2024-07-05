@@ -53,21 +53,7 @@
   const emits = defineEmits(['update-option-data']);
 
   const { t } = useI18n();
-  const sysDirectories: string[] = [
-    '/bin/',
-    '/boot/',
-    '/dev/',
-    '/etc/',
-    '/lib/',
-    '/lib64/',
-    '/proc/',
-    '/run/',
-    '/sbin/',
-    '/sys/',
-    '/tmp/',
-    '/usr/',
-    '/var/',
-  ];
+  const sysDirectories: string[] = ['/bin', '/boot', '/dev', '/lib', '/lib64', '/proc', '/run', '/sbin', '/sys'];
   const rules = {
     clientKey: [
       {
@@ -81,6 +67,12 @@
         required: props.directoryShow,
         message: t('请输入路径地址，替换下方示例代码后，再尝试复制示例'),
         validator: (value: string) => value.length,
+        trigger: 'change',
+      },
+      {
+        required: props.directoryShow,
+        message: t('禁止使用系统目录'),
+        validator: (value: string) => !sysDirectories.some((dir) => value === dir || value.startsWith(`${dir}/`)),
         trigger: 'change',
       },
       {
@@ -104,12 +96,6 @@
         },
         trigger: 'change',
         message: t('无效的路径,路径不符合Unix文件路径格式规范'),
-      },
-      {
-        required: props.directoryShow,
-        message: t('禁止使用系统目录'),
-        validator: (value: string) => !sysDirectories.some((dir) => value.startsWith(dir)),
-        trigger: 'change',
       },
     ],
   };

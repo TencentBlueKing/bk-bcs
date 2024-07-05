@@ -149,7 +149,7 @@
       close();
       Message({
         theme: 'success',
-        message: '编辑配置文件成功',
+        message: t('编辑配置文件成功'),
       });
     } catch (e) {
       console.log(e);

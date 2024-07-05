@@ -20,6 +20,7 @@ import (
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/utils"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/search"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
@@ -34,7 +35,7 @@ type ReleasedCI interface {
 	// GetReleasedLately get released config items lately.
 	GetReleasedLately(kit *kit.Kit, bizID, appId uint32) ([]*table.ReleasedConfigItem, error)
 	// List released config items with options.
-	List(kit *kit.Kit, bizID, appID, releaseID uint32, s search.Searcher, opt *types.BasePage) (
+	List(kit *kit.Kit, bizID, appID, releaseID uint32, s search.Searcher, opt *types.BasePage, searchValue string) (
 		[]*table.ReleasedConfigItem, int64, error)
 	// ListAll list all released config items in biz.
 	ListAll(kit *kit.Kit, bizID uint32) ([]*table.ReleasedConfigItem, error)
@@ -104,8 +105,8 @@ func (dao *releasedCIDao) Get(kit *kit.Kit, bizID, appID, releaseID, configItemI
 }
 
 // List released config items with options.
-func (dao *releasedCIDao) List(kit *kit.Kit, bizID, appID, releaseID uint32, s search.Searcher, opt *types.BasePage) (
-	[]*table.ReleasedConfigItem, int64, error) {
+func (dao *releasedCIDao) List(kit *kit.Kit, bizID, appID, releaseID uint32, s search.Searcher,
+	opt *types.BasePage, searchValue string) ([]*table.ReleasedConfigItem, int64, error) {
 	m := dao.genQ.ReleasedConfigItem
 	q := dao.genQ.ReleasedConfigItem.WithContext(kit.Ctx)
 
@@ -121,6 +122,8 @@ func (dao *releasedCIDao) List(kit *kit.Kit, bizID, appID, releaseID uint32, s s
 				}
 				do = do.Or(exprs[i])
 			}
+			do = do.Or(utils.RawCond(`CASE WHEN RIGHT(path, 1) = '/' THEN CONCAT(path,name)
+			ELSE CONCAT_WS('/', path, name) END LIKE ?`, "%"+searchValue+"%"))
 			conds = append(conds, do)
 		}
 	}

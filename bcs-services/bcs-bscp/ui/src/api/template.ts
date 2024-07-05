@@ -224,6 +224,7 @@ export const updateTemplateContent = (
   templateSpaceId: number,
   data: string | File,
   signature: string,
+  progress?: Function,
 ) =>
   http
     .put(`/biz/${biz_id}/content/upload`, data, {
@@ -232,6 +233,12 @@ export const updateTemplateContent = (
         'X-Bkapi-File-Content-Id': signature,
         'X-Bkapi-File-Content-Overwrite': 'false',
         'Content-Type': 'text/plain',
+      },
+      onUploadProgress: (progressEvent: any) => {
+        if (progress) {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          progress(percentCompleted);
+        }
       },
     })
     .then((res) => res.data);
@@ -643,3 +650,13 @@ export const importTemplateBatchAdd = (biz_id: string, template_space_id: number
  */
 export const batchEditTemplatePermission = (biz_id: string, query: any) =>
   http.post(`/config/biz/${biz_id}/templates/batch_update_templates_permissions`, query);
+
+/**
+ * 获取配置模板配置项元信息
+ * @param biz_id 业务ID
+ * @param template_id 模板id
+ * @param revision_name 版本名称
+ * @returns
+ */
+export const getTemplateConfigMeta = (biz_id: string, template_id: number, revision_name?: string) =>
+  http.get(`/config/biz/${biz_id}/templates/${template_id}/template_revisions`, { params: { revision_name } });

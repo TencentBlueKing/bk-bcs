@@ -212,14 +212,10 @@ func (control *cluster) innerLoop(ctx context.Context) error {
 		len(appProjects.Items), len(controlledProjects))
 	// list all cluster for every project
 	for proID, appPro := range controlledProjects {
-		blog.Infof("syncing clusters for project [%s]%s", appPro.Name, proID)
+		blog.Infof("sync clusters/secrets for project [%s] %s", appPro.Name, proID)
 		if err = control.syncClustersByProject(ctx, proID, appPro); err != nil {
 			blog.Errorf("sync clusters for project [%s]%s failed: %s", appPro.Name, proID, err.Error())
-			// continue
 		}
-		blog.Infof("sync clusters for project [%s]%s complete, next...", appPro.Name, proID)
-
-		// sync secret init
 		if err = control.secretStore.InitProjectSecret(ctx, appPro.Name); err != nil {
 			if utils.IsSecretAlreadyExist(err) {
 				continue
@@ -227,28 +223,30 @@ func (control *cluster) innerLoop(ctx context.Context) error {
 			blog.Errorf("sync secrets for project [%s]%s failed: %s", appPro.Name, proID, err.Error())
 			continue
 		}
-		blog.Infof("init project [%s]%s secrets complete", appPro.Name, proID)
 
 		// sync secret info to pro annotations
 		// secretVal := vaultcommon.GetVaultSecForProAnno(appPro.Name)
 		secretVal, err := control.secretStore.GetProjectSecret(ctx, appPro.Name)
 		if err != nil {
-			blog.Errorf("[getErr]sync secret info to pro annotations [%s]%s failed: %s", appPro.Name, proID, err.Error())
+			blog.Errorf("[getErr]sync secret info to pro annotations [%s]%s failed: %s", appPro.Name,
+				proID, err.Error())
 			continue
 		}
 		actualVal, ok := appPro.Annotations[common.SecretKey]
 		if !ok {
 			appPro.Annotations[common.SecretKey] = secretVal
 			if err := control.storage.UpdateProject(ctx, appPro); err != nil {
-				blog.Errorf("[existErr] sync secret info to pro annotations [%s]%s failed: %s", appPro.Name, proID, err.Error())
+				blog.Errorf("[existErr] sync secret info to pro annotations [%s]%s failed: %s", appPro.Name,
+					proID, err.Error())
 			}
 		} else if secretVal != actualVal {
 			appPro.Annotations[common.SecretKey] = secretVal
 			if err := control.storage.UpdateProject(ctx, appPro); err != nil {
-				blog.Errorf("[valErr]sync secret info to pro annotations [%s]%s failed: %s", appPro.Name, proID, err.Error())
+				blog.Errorf("[valErr]sync secret info to pro annotations [%s]%s failed: %s", appPro.Name,
+					proID, err.Error())
 			}
 		}
-		blog.Infof("sync secret info to pro annotations[val:%s] [%s]%s complete. next...", secretVal, appPro.Name, proID)
+		blog.Infof("sync secrets for project init success")
 	}
 	return nil
 }
@@ -292,13 +290,16 @@ func (control *cluster) syncClustersByProject(ctx context.Context, projectID str
 			blog.Errorf("cluster '%s' update to argo storage failed: %s", clsID, err.Error())
 			continue
 		}
-		blog.Infof("update cluster '%s' to argo storage success", clsID)
 	}
 	for _, clsID := range needCreate {
 		cls := clusterMap[clsID]
 		if err = control.saveToStorage(ctx, cls, appPro); err != nil {
 			if utils.IsClusterAskCredentials(err) {
 				blog.Warnf("cluster '%s' save to storage ask credentials", clsID)
+				continue
+			}
+			if utils.IsClusterRequestTimeout(err) {
+				blog.Warnf("cluster '%s' save to storage timeout", clsID)
 				continue
 			}
 			blog.Errorf("cluster '%s' save to argo storage failed: %s", clsID, err.Error())
@@ -313,6 +314,8 @@ func (control *cluster) syncClustersByProject(ctx context.Context, projectID str
 		}
 		blog.Infof("delete cluster '%s' argo success", clsID)
 	}
+	blog.Infof("sync project's cluster: update[%d], create[%d], delete[%d]", len(needUpdate),
+		len(needCreate), len(needDelete))
 	return nil
 }
 

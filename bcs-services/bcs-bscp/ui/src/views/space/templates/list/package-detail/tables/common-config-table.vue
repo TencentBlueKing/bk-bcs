@@ -40,7 +40,7 @@
         </bk-table-column>
         <bk-table-column :label="t('配置文件绝对路径')">
           <template #default="{ row }">
-            <div v-if="row.spec" v-overflow-title class="config-name" @click="goToViewVersionManage(row.id)">
+            <div v-if="row.spec" v-overflow-title class="config-name" @click="handleViewConfig(row.id)">
               {{ fileAP(row) }}
             </div>
           </template>
@@ -91,7 +91,7 @@
           <template #default="{ row, index }">
             <div class="actions-wrapper">
               <slot name="columnOperations" :config="row">
-                <bk-button theme="primary" text @click="goToCreateVersionManage(row.id)">{{ t('编辑') }}</bk-button>
+                <bk-button theme="primary" text @click="handleEditConfig(row.id)">{{ t('编辑') }}</bk-button>
                 <bk-button theme="primary" text @click="goToVersionManage(row.id)">{{ t('版本管理') }}</bk-button>
                 <bk-popover
                   theme="light template-config-actions-popover"
@@ -145,6 +145,12 @@
       :current-template-space="currentTemplateSpace"
       :config="appBoundByTemplateSliderData.data" />
     <DeleteConfigDialog v-model:show="isDeleteConfigDialogShow" :configs="crtConfig" @deleted="handleConfigsDeleted" />
+    <ViewConfig
+      v-model:show="isViewConfigShow"
+      :space-id="spaceId"
+      :id="viewConfigId"
+      @open-edit="handleEditConfig(viewConfigId)" />
+    <EditConfig v-model:show="isEditConfigShow" :space-id="spaceId" :id="editConfigId" />
   </div>
 </template>
 <script lang="ts" setup>
@@ -175,13 +181,14 @@
   import DownloadConfig from '../operations/download-config/download-config.vue';
   import DeleteConfigDialog from '../operations/delete-configs/delete-config-dialog.vue';
   import acrossCheckBox from '../../../../../../components/across-checkbox.vue';
+  import ViewConfig from '../operations/view-config/view-config.vue';
+  import EditConfig from '../operations/edit-config/edit-config.vue';
 
   const router = useRouter();
   const { t, locale } = useI18n();
   const { spaceId } = storeToRefs(useGlobalStore());
   const templateStore = useTemplateStore();
-  const { currentTemplateSpace, versionListPageShouldOpenEdit, versionListPageShouldOpenView, topIds } =
-    storeToRefs(templateStore);
+  const { currentTemplateSpace, topIds } = storeToRefs(templateStore);
   const { pagination, updatePagination } = useTablePagination('commonConfigTable');
 
   const props = defineProps<{
@@ -214,6 +221,10 @@
   });
   const crtConfig = ref<ITemplateConfigItem[]>([]);
   const isSearchEmpty = ref(false);
+  const isViewConfigShow = ref(false);
+  const viewConfigId = ref(0);
+  const isEditConfigShow = ref(false);
+  const editConfigId = ref(0);
 
   const arrowShow = computed(() => pagination.value.limit <= pagination.value.count);
 
@@ -461,14 +472,15 @@
     });
   };
 
-  const goToViewVersionManage = (id: number) => {
-    versionListPageShouldOpenView.value = true;
-    goToVersionManage(id);
+  const handleViewConfig = (id: number) => {
+    isViewConfigShow.value = true;
+    viewConfigId.value = id;
   };
 
-  const goToCreateVersionManage = (id: number) => {
-    versionListPageShouldOpenEdit.value = true;
-    goToVersionManage(id);
+  const handleEditConfig = (id: number) => {
+    isViewConfigShow.value = false;
+    isEditConfigShow.value = true;
+    editConfigId.value = id;
   };
 
   // 设置新增行的标记class

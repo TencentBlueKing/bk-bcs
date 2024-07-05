@@ -34,6 +34,7 @@ import (
 	pbcontent "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/content"
 	pbtv "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/template-variable"
 	pbds "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
 // CreateConfigItem create config item with option
@@ -857,20 +858,9 @@ func (s *Service) handleNonTemplateConfig(grpcKit *kit.Kit, bizID, appID, otherA
 }
 
 // 模板配置
+// nolint:funlen
 func (s *Service) handleTemplateConfig(grpcKit *kit.Kit, bizID, appID, otherAppId, releaseId uint32,
 	templateVars map[string][]*pbtv.TemplateVariableSpec) ([]*pbcs.CompareConfigItemConflictsResp_TemplateConfig, error) {
-
-	// 获取该服务模板空间和套餐
-	tmplSetInfo, err := s.getAllAppTmplSets(grpcKit, bizID, appID)
-	if err != nil {
-		logs.Errorf("get all app template sets failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
-	}
-
-	noNamespacePackage := make(map[string]bool)
-	for _, tmplSet := range tmplSetInfo {
-		noNamespacePackage[fmt.Sprintf("%d-%d", tmplSet.TemplateSpaceId, tmplSet.TemplateSetId)] = true
-	}
 
 	// 从历史版本/其它服务版本获取发布的套餐以及配置文件信息
 	rp, err := s.client.DS.ListReleasedAppBoundTmplRevisions(grpcKit.RpcCtx(), &pbds.ListReleasedAppBoundTmplRevisionsReq{
@@ -885,38 +875,74 @@ func (s *Service) handleTemplateConfig(grpcKit *kit.Kit, bizID, appID, otherAppI
 	}
 
 	rtmplSetMap := make(map[uint32][]*pbatb.ReleasedAppBoundTmplRevision)
-
-	templateIds := []uint32{}
-	for _, d := range rp.Details {
-		rtmplSetMap[d.TemplateSetId] = append(rtmplSetMap[d.TemplateSetId], d)
-		templateIds = append(templateIds, d.TemplateId)
+	releaseTemplateSpaceIds, releaseTemplateSetIds, releaseTemplateIds := []uint32{}, []uint32{}, []uint32{}
+	for _, v := range rp.GetDetails() {
+		releaseTemplateSpaceIds = append(releaseTemplateSpaceIds, v.TemplateSpaceId)
+		releaseTemplateSetIds = append(releaseTemplateSetIds, v.TemplateSetId)
+		releaseTemplateIds = append(releaseTemplateIds, v.TemplateId)
+		rtmplSetMap[v.TemplateSetId] = append(rtmplSetMap[v.TemplateSetId], v)
 	}
 
-	tmplr, err := s.client.DS.ListTmplRevisionNamesByTmplIDs(grpcKit.RpcCtx(), &pbds.ListTmplRevisionNamesByTmplIDsReq{
-		BizId:       bizID,
-		TemplateIds: templateIds,
+	// 检测历史版本/其它服务版本空间是否存在
+	_, err = s.client.DS.ListTmplSpacesByIDs(grpcKit.RpcCtx(), &pbds.ListTmplSpacesByIDsReq{
+		Ids: tools.RemoveDuplicates(releaseTemplateSpaceIds),
 	})
 	if err != nil {
 		return nil, err
 	}
+	// 检测历史版本/其它服务版本套餐是否存在
+	templateSets, err := s.client.DS.ListTemplateSetsByIDs(grpcKit.RpcCtx(), &pbds.ListTemplateSetsByIDsReq{
+		Ids: tools.RemoveDuplicates(releaseTemplateSetIds),
+	})
+	if err != nil {
+		return nil, err
+	}
+	setTemplateIds := []uint32{}
+	for _, v := range templateSets.GetDetails() {
+		setTemplateIds = append(setTemplateIds, v.Spec.TemplateIds...)
+	}
+
+	// 从历史版本/其他服务版本导入，存在绑定的模板文件版本标识最新，其实不是最新。
+	// 需要再次查询是否是最新的
+	tmplr, _ := s.client.DS.ListTmplRevisionNamesByTmplIDs(grpcKit.RpcCtx(), &pbds.ListTmplRevisionNamesByTmplIDsReq{
+		BizId:       bizID,
+		TemplateIds: releaseTemplateIds,
+	})
 
 	isLatestMap := make(map[uint32]uint32)
 	for _, v := range tmplr.GetDetails() {
 		isLatestMap[v.TemplateId] = v.LatestTemplateRevisionId
 	}
 
-	templateConfigs := make([]*pbcs.CompareConfigItemConflictsResp_TemplateConfig, 0)
+	// 获取该服务模板空间和套餐
+	tmplSetInfo, err := s.getAllAppTmplSets(grpcKit, bizID, appID)
+	if err != nil {
+		logs.Errorf("get all app template sets failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+	noNamespacePackage := make(map[string]bool)
+	for _, tmplSet := range tmplSetInfo {
+		noNamespacePackage[fmt.Sprintf("%d-%d", tmplSet.TemplateSpaceId, tmplSet.TemplateSetId)] = true
+	}
 
+	templateIds := tools.Difference(tools.RemoveDuplicates(releaseTemplateIds),
+		tools.RemoveDuplicates(setTemplateIds))
+	nonExistentTemplateIds := make(map[uint32]bool)
+	for _, v := range templateIds {
+		nonExistentTemplateIds[v] = true
+	}
+
+	templateConfigs := make([]*pbcs.CompareConfigItemConflictsResp_TemplateConfig, 0)
 	for id, revisions := range rtmplSetMap {
 		templateRevisions := make([]*pbcs.CompareConfigItemConflictsResp_TemplateConfig_TemplateRevisionDetail, 0)
 		for _, r := range revisions {
+			if nonExistentTemplateIds[r.TemplateId] {
+				continue
+			}
 			var isLatest bool
 			if r.IsLatest && isLatestMap[r.TemplateId] == r.TemplateRevisionId {
 				isLatest = true
-			} else {
-				isLatest = false
 			}
-
 			templateRevisions = append(templateRevisions,
 				&pbcs.CompareConfigItemConflictsResp_TemplateConfig_TemplateRevisionDetail{
 					TemplateId:           r.TemplateId,

@@ -79,7 +79,7 @@ func (s *ArgoSession) initReverseProxy() {
 			// backend real path with encoded format
 			realPath := strings.TrimPrefix(r.Request.URL.RequestURI(), common.GitOpsProxyURL)
 			fullPath := fmt.Sprintf("https://%s%s", s.option.GitOps.Service, realPath)
-			blog.Infof("RequestID[%s] GitOps proxy %s response header details: %+v, status %s, code: %d",
+			blog.Infof("RequestID[%s] gitops proxy %s response header details: %+v, status %s, code: %d",
 				requestID, fullPath, r.Header, r.Status, r.StatusCode)
 			return nil
 		},
@@ -104,6 +104,6 @@ func (s *ArgoSession) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	req.URL = newURL
 	req.Header.Set(traceconst.RequestIDHeaderKey, requestID)
 	// all ready to serve
-	blog.Infof("RequestID[%s] GitOps serve %s %s", requestID, req.Method, fullPath)
+	blog.Infof("RequestID[%s] gitops serve %s %s", requestID, req.Method, fullPath)
 	s.reverseProxy.ServeHTTP(rw, req)
 }
