@@ -372,11 +372,11 @@ func (s *Service) PullAppFileMeta(ctx context.Context, req *pbfs.PullAppFileMeta
 	}
 	for _, ci := range metas.ConfigItems {
 		if len(match) > 0 {
-			isMatch := lo.Filter(match, func(scope string, _ int) bool {
+			isMatch := lo.SomeBy(match, func(scope string) bool {
 				ok, _ := tools.MatchConfigItem(scope, ci.ConfigItemSpec.Path, ci.ConfigItemSpec.Name)
 				return ok
 			})
-			if len(isMatch) == 0 {
+			if !isMatch {
 				continue
 			}
 		}
