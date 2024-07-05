@@ -22,7 +22,7 @@
           <template #default="{ row }">
             <div v-if="row.template_space_id" class="row-cell">
               <span :class="{ error: !row.template_set_exist || row.template_revisions.length === 0 }">
-                {{ row.template_space_name }}
+                {{ row.template_set_name }}
               </span>
               <Warn
                 v-if="row.template_space_exist && (!row.template_set_exist || row.template_revisions.length === 0)"
