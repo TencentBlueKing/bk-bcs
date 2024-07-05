@@ -215,6 +215,7 @@ export interface IConfigImportItem {
     type: string;
   }[];
   file_name?: string;
+  is_exist: boolean;
 }
 
 // kv类型
@@ -223,6 +224,7 @@ export interface IConfigKvItem {
   kv_type: string;
   value: string;
   memo: string;
+  is_exist?: boolean;
 }
 
 // 单个kv配置详情
