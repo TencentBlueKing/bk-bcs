@@ -2887,12 +2887,9 @@ message CompareConfigItemConflictsResp {
   message TemplateConfig {
     message TemplateRevisionDetail {
       uint32 template_id = 1;
-      string name = 2;
-      string path = 3;
-      uint32 template_revision_id = 4;
-      bool is_latest = 5;
-      string template_revision_name = 6;
-      repeated pbtv.TemplateVariableSpec variables = 7;
+      uint32 template_revision_id = 2;
+      bool is_latest = 3;
+      repeated pbtv.TemplateVariableSpec variables = 5;
     }
     uint32 template_space_id = 1;
     string template_space_name = 2;
@@ -2900,6 +2897,8 @@ message CompareConfigItemConflictsResp {
     string template_set_name = 4;
     bool is_exist = 5;
     repeated TemplateRevisionDetail template_revisions = 6;
+    bool template_space_exist = 7;
+    bool template_set_exist = 8;
   }
   repeated NonTemplateConfig non_template_configs = 2;
   repeated TemplateConfig template_configs = 1;

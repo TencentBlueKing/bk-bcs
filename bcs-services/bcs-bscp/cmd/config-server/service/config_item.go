@@ -28,13 +28,10 @@ import (
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 	pbcs "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/config-server"
-	pbatb "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/app-template-binding"
 	pbcommit "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/commit"
 	pbci "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/config-item"
 	pbcontent "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/content"
-	pbtv "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/template-variable"
 	pbds "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
-	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
 // CreateConfigItem create config item with option
@@ -722,7 +719,7 @@ func checkExistingPathConflict(existing []string) (uint32, map[string]bool) {
 }
 
 // CompareConfigItemConflicts compare config item version conflicts
-func (s *Service) CompareConfigItemConflicts(ctx context.Context, req *pbcs.CompareConfigItemConflictsReq) ( // nolint
+func (s *Service) CompareConfigItemConflicts(ctx context.Context, req *pbcs.CompareConfigItemConflictsReq) (
 	*pbcs.CompareConfigItemConflictsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 
@@ -735,235 +732,54 @@ func (s *Service) CompareConfigItemConflicts(ctx context.Context, req *pbcs.Comp
 		return nil, err
 	}
 
-	templateVars, err := s.getReleasedAppTmplVariable(grpcKit, req.BizId, req.OtherAppId, req.ReleaseId)
+	result, err := s.client.DS.CompareConfigItemConflicts(grpcKit.RpcCtx(), &pbds.CompareConfigItemConflictsReq{
+		BizId:      req.GetBizId(),
+		AppId:      req.GetAppId(),
+		ReleaseId:  req.GetReleaseId(),
+		OtherAppId: req.GetOtherAppId(),
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	templateConfigs, err := s.handleTemplateConfig(grpcKit, req.BizId, req.AppId,
-		req.OtherAppId, req.ReleaseId, templateVars)
-	if err != nil {
-		return nil, err
+	nonTemplateConfigs := make([]*pbcs.CompareConfigItemConflictsResp_NonTemplateConfig, 0)
+	for _, v := range result.NonTemplateConfigs {
+		nonTemplateConfigs = append(nonTemplateConfigs, &pbcs.CompareConfigItemConflictsResp_NonTemplateConfig{
+			Id:             v.GetId(),
+			ConfigItemSpec: v.GetConfigItemSpec(),
+			Variables:      v.GetVariables(),
+			IsExist:        v.GetIsExist(),
+			Signature:      v.GetSignature(),
+			ByteSize:       v.GetByteSize(),
+		})
 	}
 
-	nonTemplateConfigs, err := s.handleNonTemplateConfig(grpcKit, req.BizId, req.AppId,
-		req.OtherAppId, req.ReleaseId, templateVars)
-	if err != nil {
-		return nil, err
+	templateConfigs := make([]*pbcs.CompareConfigItemConflictsResp_TemplateConfig, 0)
+	for _, v := range result.TemplateConfigs {
+		revisions := make([]*pbcs.CompareConfigItemConflictsResp_TemplateConfig_TemplateRevisionDetail, 0,
+			len(v.TemplateRevisions))
+		for _, revision := range v.TemplateRevisions {
+			revisions = append(revisions, &pbcs.CompareConfigItemConflictsResp_TemplateConfig_TemplateRevisionDetail{
+				TemplateId:         revision.TemplateId,
+				TemplateRevisionId: revision.TemplateRevisionId,
+				IsLatest:           revision.IsLatest,
+				Variables:          revision.GetVariables(),
+			})
+		}
+		templateConfigs = append(templateConfigs, &pbcs.CompareConfigItemConflictsResp_TemplateConfig{
+			TemplateSpaceId:    v.GetTemplateSpaceId(),
+			TemplateSpaceName:  v.GetTemplateSpaceName(),
+			TemplateSetId:      v.GetTemplateSetId(),
+			TemplateSetName:    v.GetTemplateSetName(),
+			IsExist:            v.IsExist,
+			TemplateRevisions:  revisions,
+			TemplateSpaceExist: v.TemplateSpaceExist,
+			TemplateSetExist:   v.TemplateSetExist,
+		})
 	}
 
 	return &pbcs.CompareConfigItemConflictsResp{
 		NonTemplateConfigs: nonTemplateConfigs,
 		TemplateConfigs:    templateConfigs,
 	}, nil
-}
-
-func (s *Service) getReleasedAppTmplVariable(grpcKit *kit.Kit, bizID, otherAppId, releaseId uint32) (
-	map[string][]*pbtv.TemplateVariableSpec, error) {
-
-	// 从历史版本/其它服务版本获取发布的版本的变量名
-	resf, err := s.client.DS.GetReleasedAppTmplVariableRefs(grpcKit.RpcCtx(), &pbds.GetReleasedAppTmplVariableRefsReq{
-		BizId:     bizID,
-		AppId:     otherAppId,
-		ReleaseId: releaseId,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	resfMap := make(map[string][]string, 0)
-	for _, v := range resf.GetDetails() {
-		for _, ref := range v.GetReferences() {
-			filePath := path.Join(ref.Path, ref.Name)
-			resfMap[filePath] = append(resfMap[filePath], v.GetVariableName())
-		}
-	}
-
-	// 从历史版本/其它服务版本获取发布的版本的变量值、描述
-	vars, err := s.client.DS.ListReleasedAppTmplVariables(grpcKit.RpcCtx(), &pbds.ListReleasedAppTmplVariablesReq{
-		BizId: bizID, AppId: otherAppId, ReleaseId: releaseId,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	varsMap := make(map[string][]*pbtv.TemplateVariableSpec, 0)
-	for _, v := range vars.GetDetails() {
-		for key, name := range resfMap {
-			for _, n := range name {
-				if v.Name == n {
-					varsMap[key] = append(varsMap[key], &pbtv.TemplateVariableSpec{
-						Name: n, Type: v.Type, DefaultVal: v.DefaultVal, Memo: v.Memo,
-					})
-				}
-			}
-		}
-	}
-
-	return varsMap, nil
-}
-
-// 非模板配置
-func (s *Service) handleNonTemplateConfig(grpcKit *kit.Kit, bizID, appID, otherAppId, releaseId uint32,
-	templateVars map[string][]*pbtv.TemplateVariableSpec) (
-	[]*pbcs.CompareConfigItemConflictsResp_NonTemplateConfig, error) {
-
-	// 获取该服务未发布的版本
-	ci, err := s.client.DS.ListConfigItems(grpcKit.RpcCtx(), &pbds.ListConfigItemsReq{
-		BizId: bizID, AppId: appID, All: true, WithStatus: true,
-		Status: []string{constant.FileStateAdd, constant.FileStateRevise, constant.FileStateUnchange},
-	})
-	if err != nil {
-		logs.Errorf("list config items failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
-	}
-	conflicts := make(map[string]bool)
-	for _, v := range ci.GetDetails() {
-		conflicts[path.Join(v.Spec.Path, v.Spec.Name)] = true
-	}
-
-	// 从历史版本/其它服务版本获取发布的版本
-	rci, err := s.client.DS.ListReleasedConfigItems(grpcKit.RpcCtx(), &pbds.ListReleasedConfigItemsReq{
-		BizId: bizID, AppId: otherAppId, ReleaseId: releaseId, All: true,
-	})
-	if err != nil {
-		logs.Errorf("list released config items failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
-	}
-
-	nonTemplateConfigs := make([]*pbcs.CompareConfigItemConflictsResp_NonTemplateConfig, 0)
-	for _, v := range rci.GetDetails() {
-		nonTemplateConfigs = append(nonTemplateConfigs, &pbcs.CompareConfigItemConflictsResp_NonTemplateConfig{
-			Id: v.Id,
-			ConfigItemSpec: &pbci.ConfigItemSpec{
-				Name:     v.Spec.Name,
-				Path:     v.Spec.Path,
-				FileType: v.Spec.FileType,
-				FileMode: v.Spec.FileMode,
-				Memo:     v.Spec.Memo,
-				Permission: &pbci.FilePermission{
-					User:      v.Spec.Permission.User,
-					UserGroup: v.Spec.Permission.UserGroup,
-					Privilege: v.Spec.Permission.Privilege,
-				},
-			},
-			Variables: templateVars[path.Join(v.Spec.Path, v.Spec.Name)],
-			IsExist:   conflicts[path.Join(v.Spec.Path, v.Spec.Name)],
-			Signature: v.CommitSpec.Content.OriginSignature,
-			ByteSize:  v.CommitSpec.Content.OriginByteSize,
-		})
-	}
-
-	return nonTemplateConfigs, nil
-}
-
-// 模板配置
-// nolint:funlen
-func (s *Service) handleTemplateConfig(grpcKit *kit.Kit, bizID, appID, otherAppId, releaseId uint32,
-	templateVars map[string][]*pbtv.TemplateVariableSpec) ([]*pbcs.CompareConfigItemConflictsResp_TemplateConfig, error) {
-
-	// 从历史版本/其它服务版本获取发布的套餐以及配置文件信息
-	rp, err := s.client.DS.ListReleasedAppBoundTmplRevisions(grpcKit.RpcCtx(), &pbds.ListReleasedAppBoundTmplRevisionsReq{
-		BizId:     bizID,
-		AppId:     otherAppId,
-		ReleaseId: releaseId,
-		All:       true,
-	})
-	if err != nil {
-		logs.Errorf("list released app template revisions failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
-	}
-
-	rtmplSetMap := make(map[uint32][]*pbatb.ReleasedAppBoundTmplRevision)
-	releaseTemplateSpaceIds, releaseTemplateSetIds, releaseTemplateIds := []uint32{}, []uint32{}, []uint32{}
-	for _, v := range rp.GetDetails() {
-		releaseTemplateSpaceIds = append(releaseTemplateSpaceIds, v.TemplateSpaceId)
-		releaseTemplateSetIds = append(releaseTemplateSetIds, v.TemplateSetId)
-		releaseTemplateIds = append(releaseTemplateIds, v.TemplateId)
-		rtmplSetMap[v.TemplateSetId] = append(rtmplSetMap[v.TemplateSetId], v)
-	}
-
-	// 检测历史版本/其它服务版本空间是否存在
-	_, err = s.client.DS.ListTmplSpacesByIDs(grpcKit.RpcCtx(), &pbds.ListTmplSpacesByIDsReq{
-		Ids: tools.RemoveDuplicates(releaseTemplateSpaceIds),
-	})
-	if err != nil {
-		return nil, err
-	}
-	// 检测历史版本/其它服务版本套餐是否存在
-	templateSets, err := s.client.DS.ListTemplateSetsByIDs(grpcKit.RpcCtx(), &pbds.ListTemplateSetsByIDsReq{
-		Ids: tools.RemoveDuplicates(releaseTemplateSetIds),
-	})
-	if err != nil {
-		return nil, err
-	}
-	setTemplateIds := []uint32{}
-	for _, v := range templateSets.GetDetails() {
-		setTemplateIds = append(setTemplateIds, v.Spec.TemplateIds...)
-	}
-
-	// 从历史版本/其他服务版本导入，存在绑定的模板文件版本标识最新，其实不是最新。
-	// 需要再次查询是否是最新的
-	tmplr, _ := s.client.DS.ListTmplRevisionNamesByTmplIDs(grpcKit.RpcCtx(), &pbds.ListTmplRevisionNamesByTmplIDsReq{
-		BizId:       bizID,
-		TemplateIds: releaseTemplateIds,
-	})
-
-	isLatestMap := make(map[uint32]uint32)
-	for _, v := range tmplr.GetDetails() {
-		isLatestMap[v.TemplateId] = v.LatestTemplateRevisionId
-	}
-
-	// 获取该服务模板空间和套餐
-	tmplSetInfo, err := s.getAllAppTmplSets(grpcKit, bizID, appID)
-	if err != nil {
-		logs.Errorf("get all app template sets failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
-	}
-	noNamespacePackage := make(map[string]bool)
-	for _, tmplSet := range tmplSetInfo {
-		noNamespacePackage[fmt.Sprintf("%d-%d", tmplSet.TemplateSpaceId, tmplSet.TemplateSetId)] = true
-	}
-
-	templateIds := tools.Difference(tools.RemoveDuplicates(releaseTemplateIds),
-		tools.RemoveDuplicates(setTemplateIds))
-	nonExistentTemplateIds := make(map[uint32]bool)
-	for _, v := range templateIds {
-		nonExistentTemplateIds[v] = true
-	}
-
-	templateConfigs := make([]*pbcs.CompareConfigItemConflictsResp_TemplateConfig, 0)
-	for id, revisions := range rtmplSetMap {
-		templateRevisions := make([]*pbcs.CompareConfigItemConflictsResp_TemplateConfig_TemplateRevisionDetail, 0)
-		for _, r := range revisions {
-			if nonExistentTemplateIds[r.TemplateId] {
-				continue
-			}
-			var isLatest bool
-			if r.IsLatest && isLatestMap[r.TemplateId] == r.TemplateRevisionId {
-				isLatest = true
-			}
-			templateRevisions = append(templateRevisions,
-				&pbcs.CompareConfigItemConflictsResp_TemplateConfig_TemplateRevisionDetail{
-					TemplateId:           r.TemplateId,
-					Name:                 r.Name,
-					Path:                 r.Path,
-					TemplateRevisionId:   r.TemplateRevisionId,
-					IsLatest:             isLatest,
-					TemplateRevisionName: r.TemplateRevisionName,
-					Variables:            templateVars[path.Join(r.Path, r.Name)],
-				})
-		}
-
-		templateConfigs = append(templateConfigs, &pbcs.CompareConfigItemConflictsResp_TemplateConfig{
-			TemplateSpaceId:   revisions[0].TemplateSpaceId,
-			TemplateSpaceName: revisions[0].TemplateSpaceName,
-			TemplateSetId:     id,
-			TemplateSetName:   revisions[0].TemplateSetName,
-			IsExist:           noNamespacePackage[fmt.Sprintf("%d-%d", revisions[0].TemplateSpaceId, id)],
-			TemplateRevisions: templateRevisions,
-		})
-	}
-
-	return templateConfigs, nil
 }
