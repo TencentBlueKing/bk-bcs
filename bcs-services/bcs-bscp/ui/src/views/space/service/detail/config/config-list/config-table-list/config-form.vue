@@ -77,9 +77,6 @@
         <bk-input v-model="localVal.user_group" @input="change"></bk-input>
       </bk-form-item>
     </div>
-    <bk-form-item v-if="isTpl" class="fixed-width-form" property="revision_name" :label="t('form_版本号')" required>
-      <bk-input v-model="localVal.revision_name" :placeholder="t('请输入')"></bk-input>
-    </bk-form-item>
     <bk-form-item v-if="localVal.file_type === 'binary'" :label="t('配置内容')" :required="true">
       <bk-upload
         class="config-uploader"
