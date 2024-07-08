@@ -4,7 +4,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.4.0
+    controller-gen.kubebuilder.io/version: v0.5.0
   creationTimestamp: null
   name: bcsdbprivconfigs.bkbcs.tencent.com
 spec:
@@ -22,14 +22,10 @@ spec:
         description: BcsDbPrivConfig is the Schema for the bcsdbprivconfigs API
         properties:
           apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation
-              of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
             type: string
           kind:
-            description: 'Kind is a string value representing the REST resource this
-              object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
             type: string
           metadata:
             type: object
@@ -52,6 +48,8 @@ spec:
                 type: object
               targetDb:
                 type: string
+              useCDP:
+                type: boolean
             required:
             - appName
             - callUser
@@ -60,6 +58,53 @@ spec:
             - operator
             - podSelector
             - targetDb
+            - useCDP
+            type: object
+          status:
+            description: BcsDbPrivConfigStatus Stores status information about whether the pod is dbm authorized
+            properties:
+              dbPrivConfigStatusMap:
+                additionalProperties:
+                  description: DbPrivConfigStatus dbm authorization status information
+                  properties:
+                    appName:
+                      type: string
+                    callUser:
+                      type: string
+                    dbName:
+                      type: string
+                    dbType:
+                      type: string
+                    nodeIp:
+                      type: string
+                    operator:
+                      type: string
+                    podIp:
+                      type: string
+                    podName:
+                      type: string
+                    status:
+                      type: string
+                    targetDb:
+                      type: string
+                    useCDP:
+                      type: boolean
+                  required:
+                  - appName
+                  - callUser
+                  - dbName
+                  - dbType
+                  - nodeIp
+                  - operator
+                  - podIp
+                  - podName
+                  - status
+                  - targetDb
+                  - useCDP
+                  type: object
+                type: object
+            required:
+            - dbPrivConfigStatusMap
             type: object
         type: object
     served: true

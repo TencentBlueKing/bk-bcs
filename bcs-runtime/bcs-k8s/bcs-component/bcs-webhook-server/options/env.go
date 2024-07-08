@@ -10,16 +10,17 @@
  * limitations under the License.
  */
 
-// Package dbprivilege  xx
-package dbprivilege
+package options
 
-import (
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/internal/pluginmanager"
-)
-
-func init() {
-	p := &Hooker{}
-	pluginmanager.Register(DBPrivilegePluginName, p)
-	mp := &Hooker{}
-	pluginmanager.RegisterMesos(DBPrivilegePluginName, mp)
+// Env 传递参数给initContainer
+type Env struct {
+	NodeIp             string `json:"node_ip"`
+	PodIp              string `json:"pod_ip"`
+	CallType           string `json:"call_type"`
+	ExternalSysType    string `json:"external_sys_type"`
+	ExternalSysConfig  string `json:"external_sys_config"`
+	InitContainerImage string `json:"init_container_image"`
+	AppCode            string `json:"app_code"`
+	AppSecret          string `json:"app_secret"`
+	AppOperator        string `json:"app_operator"`
 }

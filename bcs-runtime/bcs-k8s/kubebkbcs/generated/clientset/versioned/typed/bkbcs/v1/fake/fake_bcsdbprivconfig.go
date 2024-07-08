@@ -98,6 +98,18 @@ func (c *FakeBcsDbPrivConfigs) Update(ctx context.Context, bcsDbPrivConfig *bkbc
 	return obj.(*bkbcsv1.BcsDbPrivConfig), err
 }
 
+// UpdateStatus was generated because the type contains a Status member.
+// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
+func (c *FakeBcsDbPrivConfigs) UpdateStatus(ctx context.Context, bcsDbPrivConfig *bkbcsv1.BcsDbPrivConfig, opts v1.UpdateOptions) (*bkbcsv1.BcsDbPrivConfig, error) {
+	obj, err := c.Fake.
+		Invokes(testing.NewUpdateSubresourceAction(bcsdbprivconfigsResource, "status", c.ns, bcsDbPrivConfig), &bkbcsv1.BcsDbPrivConfig{})
+
+	if obj == nil {
+		return nil, err
+	}
+	return obj.(*bkbcsv1.BcsDbPrivConfig), err
+}
+
 // Delete takes name of the bcsDbPrivConfig and deletes it. Returns an error if one occurs.
 func (c *FakeBcsDbPrivConfigs) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.

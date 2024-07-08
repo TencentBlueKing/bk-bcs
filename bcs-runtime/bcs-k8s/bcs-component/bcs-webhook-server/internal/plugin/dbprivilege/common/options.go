@@ -10,16 +10,10 @@
  * limitations under the License.
  */
 
-// Package dbprivilege  xx
-package dbprivilege
+// Package common xx
+package common
 
-import (
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/internal/pluginmanager"
+const (
+	// ExternalSysTypeDBM external system DBM
+	ExternalSysTypeDBM = "DBM"
 )
-
-func init() {
-	p := &Hooker{}
-	pluginmanager.Register(DBPrivilegePluginName, p)
-	mp := &Hooker{}
-	pluginmanager.RegisterMesos(DBPrivilegePluginName, mp)
-}

@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package dbprivilege  x
 package dbprivilege
 
 import (
@@ -24,6 +25,12 @@ type DbPrivOptions struct {
 	ExternalSysType    string `json:"external_sys_type"`
 	ExternalSysConfig  string `json:"external_sys_config"`
 	InitContainerImage string `json:"init_container_image"`
+	ServicePort        int    `json:"service_port"`
+	ServiceName        string `json:"service_name"`
+	ServiceNamespace   string `json:"service_namespace"`
+	ServiceServerPort  int    `json:"service_server_port"`
+	DbmOptimizeEnabled bool   `json:"dbm_enabled"`
+	TicketTimer        int    `json:"ticket_timer"`
 }
 
 // Validate validate options

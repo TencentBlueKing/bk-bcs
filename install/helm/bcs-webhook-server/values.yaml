@@ -5,6 +5,10 @@
 plugins:
   dbpriv:
     enabled: false
+    servicePort: 443
+    serviceServerPort: 8089
+    dbmEnabled: true
+    ticketTimer: 60
   imageloader:
     enabled: true
   randhostport:
@@ -24,17 +28,17 @@ image:
   pullPolicy: Always
   #tag: "test1"
 
-imagePullSecrets: []
+imagePullSecrets: [ ]
 
-podAnnotations: {}
+podAnnotations: { }
 
-nodeSelector: {}
+nodeSelector: { }
 
-tolerations: []
+tolerations: [ ]
 
-affinity: {}
+affinity: { }
 
-resource: {}
+resource: { }
 # webhook server certification
 serverCert: "xxxxxx"
 serverKey: "xxxxxx"

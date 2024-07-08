@@ -10,16 +10,16 @@
  * limitations under the License.
  */
 
-// Package dbprivilege  xx
-package dbprivilege
+// Package common xx
+package common
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/internal/pluginmanager"
+	"math/rand"
+	"time"
 )
 
-func init() {
-	p := &Hooker{}
-	pluginmanager.Register(DBPrivilegePluginName, p)
-	mp := &Hooker{}
-	pluginmanager.RegisterMesos(DBPrivilegePluginName, mp)
+// WaitForSeveralSeconds wait for several seconds
+func WaitForSeveralSeconds() {
+	randNumber := rand.Float32() // nolint
+	time.Sleep(3*time.Second + time.Duration(randNumber*3000)*time.Millisecond)
 }

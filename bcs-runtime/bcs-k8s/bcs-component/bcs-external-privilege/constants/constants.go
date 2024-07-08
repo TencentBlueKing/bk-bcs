@@ -10,34 +10,34 @@
  * limitations under the License.
  */
 
-package dbprivilege
+// Package constants xxx
+package constants
 
 const (
-	// DBPrivilegePluginName plugin name for db privilege
-	DBPrivilegePluginName = "dbpriv"
-	// NetworkTypeOverlay overlay network
-	NetworkTypeOverlay = "overlay"
-	// NetworkTypeUnderlay underlay network
-	NetworkTypeUnderlay = "underlay"
-	// DbPrivilegeSecretName the name of secret to store db privilege info
-	DbPrivilegeSecretName = "bcs-db-privilege" // nolint
-
 	// BcsPodName podName
 	BcsPodName = "io_tencent_bcs_pod_name"
 	// BcsPodNamespace pod namespace
 	BcsPodNamespace = "io_tencent_bcs_pod_namespace"
 	// BcsPrivilegeServiceURL service 域名地址
 	BcsPrivilegeServiceURL = "io_tencent_bcs_privilege_service_url"
-	// BcsPrivilegeHost  service 域名地址
-	BcsPrivilegeHost = "http://%s.%s.svc.cluster.local:%d"
 	// BcsPrivilegeDbmOptimizeEnabled dbm优化开关
 	BcsPrivilegeDbmOptimizeEnabled = "io_tencent_bcs_privilege_dbm_optimize_enabled"
 	// BcsPrivilegeServiceTicketTimer 服务间隔时间单位 int
 	BcsPrivilegeServiceTicketTimer = "io_tencent_bcs_privilege_service_ticket_timer"
-	// BcsPrivilegeDBMAuthStatusDone dbm授权成功
-	BcsPrivilegeDBMAuthStatusDone = "done"
-	// BcsPrivilegeDBMAuthStatusPending  dbm授权未成功
-	BcsPrivilegeDBMAuthStatusPending = "pending"
-	// BcsPrivilegeDBMAuthStatusChanged  dbm授权信息已被修改
-	BcsPrivilegeDBMAuthStatusChanged = "changed"
+	// BcsPrivilegeAppCode appcode
+	BcsPrivilegeAppCode = "io_tencent_bcs_app_code"
+	// BcsPrivilegeAppSecret appsecret
+	BcsPrivilegeAppSecret = "io_tencent_bcs_app_secret"
+	// BcsPrivilegeAppOperator operator
+	BcsPrivilegeAppOperator = "io_tencent_bcs_app_operator"
+	// BcsPrivilegePrivilegeIP nodeip
+	BcsPrivilegePrivilegeIP = "io_tencent_bcs_privilege_ip"
+	// BcsPrivilegePodIP pod ip
+	BcsPrivilegePodIP = "io_tencent_bcs_pod_ip"
+	// BcsPrivilegeExternalSysType external_sys_type
+	BcsPrivilegeExternalSysType = "external_sys_type"
+	// BcsPrivilegeExternalSysConfig external_sys_config
+	BcsPrivilegeExternalSysConfig = "external_sys_config"
+	// BcsPrivilegeDbPrivilegeEnv db_privilege_env
+	BcsPrivilegeDbPrivilegeEnv = "io_tencent_bcs_db_privilege_env"
 )
