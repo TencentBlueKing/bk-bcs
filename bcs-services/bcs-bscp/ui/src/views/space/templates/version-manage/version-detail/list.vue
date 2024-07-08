@@ -1,9 +1,10 @@
 <template>
   <bk-table :border="['row']" :data="tableList" :row-class="getRowCls" @row-click="handleSelectVersion">
     <bk-table-column :label="t('版本号')" show-overflow-tooltip>
-      <template #default="{ row }">
+      <template #default="{ row, index }">
         <div class="version-name-wrapper">
           <div class="name">{{ row.name }}</div>
+          <bk-tag v-if="index === 0" theme="success"> Latest </bk-tag>
           <RightShape v-if="props.id === row.id" class="arrow-icon" />
         </div>
       </template>
@@ -60,11 +61,14 @@
 </script>
 <style scoped lang="scss">
   .version-name-wrapper {
+    display: flex;
+    align-items: center;
     position: relative;
     width: 100%;
     padding-right: 5px;
     .name {
       color: #3a84ff;
+      margin-right: 8px;
     }
     .arrow-icon {
       position: absolute;

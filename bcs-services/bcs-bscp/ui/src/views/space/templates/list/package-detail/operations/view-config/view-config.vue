@@ -13,7 +13,7 @@
           <bk-form label-width="100" form-type="vertical">
             <bk-form-item :label="t('配置文件绝对路径')">{{ fileAP() }}</bk-form-item>
             <bk-form-item :label="t('配置文件描述')">
-              <div class="memo">{{ configDetail.memo || configDetail.revision_memo || '--' }}</div>
+              <div class="memo">{{ props.memo ||  '--' }}</div>
             </bk-form-item>
             <bk-form-item :label="t('配置文件内容')">
               <bk-loading
@@ -108,6 +108,7 @@
     id: number;
     spaceId: string;
     show: Boolean;
+    memo: string;
   }>();
 
   const emits = defineEmits(['update:show', 'openEdit']);
