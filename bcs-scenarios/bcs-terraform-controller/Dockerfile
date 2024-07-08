@@ -1,6 +1,7 @@
 # Use distroless as minimal base image to package the bcs-terraform-controller binary
 # Refer to https://github.com/GoogleContainerTools/distroless for more details
 FROM centos:7
+RUN sed -i s/mirror.centos.org/vault.centos.org/g /etc/yum.repos.d/*.repo && sed -i s/^#.*baseurl=http/baseurl=http/g /etc/yum.repos.d/*.repo && sed -i s/^mirrorlist=http/#mirrorlist=http/g /etc/yum.repos.d/*.repo
 # Switch to root to have permissions for operations
 USER root
 
