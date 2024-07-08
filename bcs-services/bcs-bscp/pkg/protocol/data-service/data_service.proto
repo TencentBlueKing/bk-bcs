@@ -1900,6 +1900,7 @@ message CompareConfigItemConflictsResp {
     repeated TemplateRevisionDetail template_revisions = 6;
     bool template_space_exist = 7;
     bool template_set_exist = 8;
+    bool template_set_is_empty = 9;
   }
   repeated NonTemplateConfig non_template_configs = 2;
   repeated TemplateConfig template_configs = 1;
