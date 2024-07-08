@@ -103,6 +103,7 @@ const (
 	Data_BatchUpsertTemplates_FullMethodName              = "/pbds.Data/BatchUpsertTemplates"
 	Data_BatchUpdateTemplatePermissions_FullMethodName    = "/pbds.Data/BatchUpdateTemplatePermissions"
 	Data_CreateTemplateRevision_FullMethodName            = "/pbds.Data/CreateTemplateRevision"
+	Data_UpdateTemplateRevision_FullMethodName            = "/pbds.Data/UpdateTemplateRevision"
 	Data_ListTemplateRevisions_FullMethodName             = "/pbds.Data/ListTemplateRevisions"
 	Data_GetTemplateRevision_FullMethodName               = "/pbds.Data/GetTemplateRevision"
 	Data_DeleteTemplateRevision_FullMethodName            = "/pbds.Data/DeleteTemplateRevision"
@@ -285,6 +286,7 @@ type DataClient interface {
 	BatchUpdateTemplatePermissions(ctx context.Context, in *BatchUpdateTemplatePermissionsReq, opts ...grpc.CallOption) (*BatchUpdateTemplatePermissionsResp, error)
 	// template release related interface.
 	CreateTemplateRevision(ctx context.Context, in *CreateTemplateRevisionReq, opts ...grpc.CallOption) (*CreateResp, error)
+	UpdateTemplateRevision(ctx context.Context, in *UpdateTemplateRevisionReq, opts ...grpc.CallOption) (*CreateResp, error)
 	ListTemplateRevisions(ctx context.Context, in *ListTemplateRevisionsReq, opts ...grpc.CallOption) (*ListTemplateRevisionsResp, error)
 	GetTemplateRevision(ctx context.Context, in *GetTemplateRevisionReq, opts ...grpc.CallOption) (*GetTemplateRevisionResp, error)
 	DeleteTemplateRevision(ctx context.Context, in *DeleteTemplateRevisionReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
@@ -1047,6 +1049,15 @@ func (c *dataClient) BatchUpdateTemplatePermissions(ctx context.Context, in *Bat
 func (c *dataClient) CreateTemplateRevision(ctx context.Context, in *CreateTemplateRevisionReq, opts ...grpc.CallOption) (*CreateResp, error) {
 	out := new(CreateResp)
 	err := c.cc.Invoke(ctx, Data_CreateTemplateRevision_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) UpdateTemplateRevision(ctx context.Context, in *UpdateTemplateRevisionReq, opts ...grpc.CallOption) (*CreateResp, error) {
+	out := new(CreateResp)
+	err := c.cc.Invoke(ctx, Data_UpdateTemplateRevision_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1961,6 +1972,7 @@ type DataServer interface {
 	BatchUpdateTemplatePermissions(context.Context, *BatchUpdateTemplatePermissionsReq) (*BatchUpdateTemplatePermissionsResp, error)
 	// template release related interface.
 	CreateTemplateRevision(context.Context, *CreateTemplateRevisionReq) (*CreateResp, error)
+	UpdateTemplateRevision(context.Context, *UpdateTemplateRevisionReq) (*CreateResp, error)
 	ListTemplateRevisions(context.Context, *ListTemplateRevisionsReq) (*ListTemplateRevisionsResp, error)
 	GetTemplateRevision(context.Context, *GetTemplateRevisionReq) (*GetTemplateRevisionResp, error)
 	DeleteTemplateRevision(context.Context, *DeleteTemplateRevisionReq) (*base.EmptyResp, error)
@@ -2292,6 +2304,9 @@ func (UnimplementedDataServer) BatchUpdateTemplatePermissions(context.Context, *
 }
 func (UnimplementedDataServer) CreateTemplateRevision(context.Context, *CreateTemplateRevisionReq) (*CreateResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateTemplateRevision not implemented")
+}
+func (UnimplementedDataServer) UpdateTemplateRevision(context.Context, *UpdateTemplateRevisionReq) (*CreateResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateTemplateRevision not implemented")
 }
 func (UnimplementedDataServer) ListTemplateRevisions(context.Context, *ListTemplateRevisionsReq) (*ListTemplateRevisionsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListTemplateRevisions not implemented")
@@ -3870,6 +3885,24 @@ func _Data_CreateTemplateRevision_Handler(srv interface{}, ctx context.Context, 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DataServer).CreateTemplateRevision(ctx, req.(*CreateTemplateRevisionReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_UpdateTemplateRevision_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateTemplateRevisionReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).UpdateTemplateRevision(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_UpdateTemplateRevision_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).UpdateTemplateRevision(ctx, req.(*UpdateTemplateRevisionReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -5806,6 +5839,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateTemplateRevision",
 			Handler:    _Data_CreateTemplateRevision_Handler,
+		},
+		{
+			MethodName: "UpdateTemplateRevision",
+			Handler:    _Data_UpdateTemplateRevision_Handler,
 		},
 		{
 			MethodName: "ListTemplateRevisions",
