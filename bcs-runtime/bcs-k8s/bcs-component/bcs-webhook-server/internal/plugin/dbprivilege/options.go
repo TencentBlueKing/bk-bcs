@@ -10,7 +10,6 @@
  * limitations under the License.
  */
 
-// Package dbprivilege  x
 package dbprivilege
 
 import (
@@ -29,7 +28,7 @@ type DbPrivOptions struct {
 	ServiceName        string `json:"service_name"`
 	ServiceNamespace   string `json:"service_namespace"`
 	ServiceServerPort  int    `json:"service_server_port"`
-	DbmOptimizeEnabled bool   `json:"dbm_enabled"`
+	DbmOptimizeEnabled bool   `json:"dbm_optimize_enabled"`
 	TicketTimer        int    `json:"ticket_timer"`
 }
 

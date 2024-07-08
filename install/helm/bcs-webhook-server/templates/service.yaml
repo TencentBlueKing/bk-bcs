@@ -11,7 +11,7 @@ spec:
       targetPort: http
       protocol: TCP
       name: http
-    {{- if .Values.plugins.dbpriv.dbmEnabled }}
+    {{- if .Values.plugins.dbpriv.dbmOptimizeEnabled }}
     - port: 8089
       targetPort: 8089
       protocol: TCP
