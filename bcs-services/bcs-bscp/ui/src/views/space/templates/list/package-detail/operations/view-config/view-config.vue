@@ -68,7 +68,7 @@
   import { TextFill } from 'bkui-vue/lib/icon';
   import ConfigContentEditor from '../../../../../service/detail/config/components/config-content-editor.vue';
   import { getTemplateConfigMeta, downloadTemplateContent } from '../../../../../../../api/template';
-  import { byteUnitConverse, datetimeFormat } from '../../../../../../../utils/index';
+  import { byteUnitConverse, datetimeFormat, sortObjectKeysByAscii } from '../../../../../../../utils/index';
   import { fileDownload } from '../../../../../../../utils/file';
   import { IVariableEditParams } from '../../../../../../../../types/variable';
   import { IFileConfigContentSummary } from '../../../../../../../../types/config';
@@ -161,10 +161,10 @@
     try {
       detailLoading.value = true;
       const res = await getTemplateConfigMeta(props.spaceId, props.id);
-      configDetail.value = {
+      configDetail.value = sortObjectKeysByAscii({
         ...res.data.detail,
         create_at: datetimeFormat(res.data.detail.create_at),
-      };
+      });
       if (configDetail.value.file_type === 'binary') {
         content.value = {
           name: configDetail.value.name,

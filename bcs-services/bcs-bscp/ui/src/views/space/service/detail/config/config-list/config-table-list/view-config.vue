@@ -79,7 +79,7 @@
     getTemplateVersionDetail,
     downloadTemplateContent,
   } from '../../../../../../../api/template';
-  import { byteUnitConverse, datetimeFormat } from '../../../../../../../utils/index';
+  import { byteUnitConverse, datetimeFormat, sortObjectKeysByAscii } from '../../../../../../../utils/index';
   import { fileDownload } from '../../../../../../../utils/file';
   import { IVariableEditParams } from '../../../../../../../../types/variable';
   import { IFileConfigContentSummary } from '../../../../../../../../types/config';
@@ -205,7 +205,7 @@
         const { create_at, creator, update_at, reviser } = res.config_item.revision;
         const { name, path, file_type, file_mode, permission } = res.config_item.spec;
         const { user, user_group, privilege } = permission;
-        configDetail.value = {
+        configDetail.value = sortObjectKeysByAscii({
           name,
           path,
           file_type,
@@ -223,14 +223,14 @@
           user,
           user_group,
           privilege,
-        };
+        });
       } else {
         const res = await getConfigItemDetail(props.bkBizId, props.id, props.appId);
         const { create_at, creator, update_at, reviser } = res.config_item.revision;
         const { name, memo, path, file_type, file_mode, permission } = res.config_item.spec;
         const { user, user_group, privilege } = permission;
         const { byte_size, signature, md5 } = res.content;
-        configDetail.value = {
+        configDetail.value = sortObjectKeysByAscii({
           name,
           path,
           file_type,
@@ -246,7 +246,7 @@
           user,
           user_group,
           privilege,
-        };
+        });
       }
       const signature = versionData.value.id
         ? (configDetail.value.origin_signature as string)
@@ -271,11 +271,13 @@
       let template_space_id;
       if (versionData.value.id) {
         const res = await getTemplateVersionDetail(props.bkBizId, props.appId, versionData.value.id, props.id);
-        configDetail.value = {
+        delete res.detail.update_at;
+        delete res.detail.reviser;
+        configDetail.value = sortObjectKeysByAscii({
           ...res.detail,
           create_at: datetimeFormat(res.detail.create_at),
           update_at: datetimeFormat(res.detail.update_at),
-        };
+        });
         template_space_id = res.detail.template_space_id;
       } else {
         let res;
@@ -285,11 +287,11 @@
         } else {
           res = await getTemplateConfigMeta(props.bkBizId, props.id, props.versionName);
         }
-        configDetail.value = {
+        configDetail.value = sortObjectKeysByAscii({
           ...props.templateMeta,
           ...res.data.detail,
           create_at: datetimeFormat(res.data.detail.create_at),
-        };
+        });
         template_space_id = props.templateMeta!.template_space_id;
       }
 

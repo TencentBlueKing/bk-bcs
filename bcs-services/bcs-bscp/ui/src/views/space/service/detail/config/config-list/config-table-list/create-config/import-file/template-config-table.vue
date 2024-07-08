@@ -21,11 +21,11 @@
         <bk-table-column :label="t('模板套餐')" prop="template_set_name">
           <template #default="{ row }">
             <div v-if="row.template_space_id" class="row-cell">
-              <span :class="{ error: !row.template_set_exist || row.template_revisions.length === 0 }">
+              <span :class="{ error: !row.template_set_exist || row.template_set_is_empty }">
                 {{ row.template_set_name }}
               </span>
               <Warn
-                v-if="row.template_space_exist && (!row.template_set_exist || row.template_revisions.length === 0)"
+                v-if="row.template_space_exist && (!row.template_set_exist || row.template_set_is_empty)"
                 class="warn-icon"
                 v-bk-tooltips="{ content: getErrorInfo(row) }" />
             </div>
@@ -74,7 +74,7 @@
   };
 
   const getRowCls = (data: ImportTemplateConfigItem) => {
-    if (!data.template_set_exist || !data.template_space_exist || data.template_revisions.length === 0) {
+    if (!data.template_set_exist || !data.template_space_exist || data.template_set_is_empty) {
       return 'row-error';
     }
   };
@@ -86,7 +86,7 @@
     if (!data.template_set_exist) {
       return t('模板套餐不存在，无法导入，请先删除此模板');
     }
-    if (data.template_revisions.length === 0) {
+    if (data.template_set_is_empty) {
       return t('模板套餐为空，无法导入，请先删除此模板');
     }
   };
