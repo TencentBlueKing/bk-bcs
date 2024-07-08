@@ -24,26 +24,30 @@ import (
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 )
 
-// maxCacheSizeBytes async download source file dir total max size, default is 100G
-// TODO: confirm the max size that pod MaxAsyncDownloadSourceFileCacheSizeRetentionRate
-var maxCacheSizeBytes = 1024 * 1024 * 1024 * 100
-
-var maxCacheSizeRetentionRate = 0.5
+// GB is the size of 1GB in bytes
+const GB = 1024 * 1024 * 1024
 
 // CacheCleaner scheduled task to clean source file cache dir
 type CacheCleaner struct {
-	ctx    context.Context
-	cancel context.CancelFunc
-	metric *metric
+	// source file max cache size in GB
+	cacheSizeGB int
+	// source file cache retention rate, when cache size is greater than max size,
+	// clean up oldest files but retain cache size * retention rate
+	cacheRetentionRate float64
+	ctx                context.Context
+	cancel             context.CancelFunc
+	metric             *metric
 }
 
 // NewCacheCleaner create a CacheCleaner
-func NewCacheCleaner(mc *metric) *CacheCleaner {
+func NewCacheCleaner(cacaheSizeGB int, cacheRetentionRate float64, mc *metric) *CacheCleaner {
 	ctx, cancel := context.WithCancel(context.Background())
 	return &CacheCleaner{
-		ctx:    ctx,
-		cancel: cancel,
-		metric: mc,
+		cacheSizeGB:        cacaheSizeGB,
+		cacheRetentionRate: cacheRetentionRate,
+		ctx:                ctx,
+		cancel:             cancel,
+		metric:             mc,
 	}
 }
 
@@ -66,12 +70,12 @@ func (sfc *CacheCleaner) Run() {
 }
 
 func (sfc *CacheCleaner) do() {
-	source := cc.FeedServer().GSE.SourceDir
-	if err := os.MkdirAll(source, os.ModePerm); err != nil {
-		logs.Errorf("create source file cache dir %s failed, err %s", source, err.Error())
+	sourceDir := cc.FeedServer().GSE.CacheDir
+	if err := os.MkdirAll(sourceDir, os.ModePerm); err != nil {
+		logs.Errorf("create source file cache dir %s failed, err %s", sourceDir, err.Error())
 		return
 	}
-	size, count, err := sfc.getDirSize(source)
+	size, count, err := sfc.getDirSize(sourceDir)
 	if err != nil {
 		logs.Errorf("get source file cache size failed, err %s", err.Error())
 		return
@@ -79,14 +83,14 @@ func (sfc *CacheCleaner) do() {
 	sfc.metric.sourceFilesSizeBytes.Set(float64(size))
 	sfc.metric.sourceFilesCounter.Set(float64(count))
 
-	if size < int64(maxCacheSizeBytes) {
+	if size < int64(sfc.cacheSizeGB*GB) {
 		return
 	}
 	logs.Infof("source file cache size %d MB bytes is greater than %d MB, start clean up oldest files",
-		size/1024/1024, maxCacheSizeBytes/1024/1024)
-	spaceToFree := size - int64(float64(maxCacheSizeBytes)*maxCacheSizeRetentionRate)
-	sfc.cleanupOldestFiles(source, spaceToFree)
-	cleanedSize, cleanedCount, err := sfc.getDirSize(source)
+		size/1024/1024, sfc.cacheSizeGB*1024)
+	spaceToFree := size - int64(float64(sfc.cacheSizeGB*GB)*sfc.cacheRetentionRate)
+	sfc.cleanupOldestFiles(sourceDir, spaceToFree)
+	cleanedSize, cleanedCount, err := sfc.getDirSize(sourceDir)
 	if err != nil {
 		logs.Errorf("get source file cache size failed, err %s", err.Error())
 		return

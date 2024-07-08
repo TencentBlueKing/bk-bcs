@@ -381,6 +381,7 @@ func (s *FeedServerSetting) trySetDefault() {
 	s.FSLocalCache.trySetDefault()
 	s.Downstream.trySetDefault()
 	s.GSE.getFromEnv()
+	s.GSE.trySetDefault()
 	s.RedisCluster.trySetDefault()
 	s.MRLimiter.trySetDefault()
 }

@@ -204,7 +204,7 @@ func (a *Scheduler) handleDownload(job *types.AsyncDownloadJob) error {
 	}
 
 	// 2. 下载文件到本地
-	sourceDir := path.Join(cc.FeedServer().GSE.SourceDir, strconv.Itoa(int(job.BizID)))
+	sourceDir := path.Join(cc.FeedServer().GSE.CacheDir, strconv.Itoa(int(job.BizID)))
 	if err := os.MkdirAll(sourceDir, os.ModePerm); err != nil {
 		return err
 	}

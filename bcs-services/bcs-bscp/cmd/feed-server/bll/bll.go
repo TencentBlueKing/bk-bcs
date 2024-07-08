@@ -90,7 +90,8 @@ func New(sd serviced.Discover, authorizer iamauth.Authorizer, name string) (*BLL
 
 	bll.adService = adService
 
-	if cc.FeedServer().GSE.Enabled {
+	gseConf := cc.FeedServer().GSE
+	if gseConf.Enabled {
 		scheduler, err := asyncdownload.NewScheduler(mc, redLock)
 		if err != nil {
 			return nil, err
@@ -98,7 +99,7 @@ func New(sd serviced.Discover, authorizer iamauth.Authorizer, name string) (*BLL
 		bll.adScheduler = scheduler
 		bll.adScheduler.Run()
 
-		cleaner := asyncdownload.NewCacheCleaner(mc)
+		cleaner := asyncdownload.NewCacheCleaner(int(gseConf.CacheSizeGB), gseConf.CacheRetentionRate, mc)
 		bll.adCleaner = cleaner
 		bll.adCleaner.Run()
 	}

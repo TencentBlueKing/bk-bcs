@@ -1188,8 +1188,27 @@ type GSE struct {
 	ContainerName string `yaml:"containerName"`
 	// AgentUser is the user exists in the feed server container/node.
 	AgentUser string `yaml:"agentUser"`
-	// SourceDir is the directory where the source file download to and stored.
-	SourceDir string `yaml:"sourceDir"`
+	// CacheDir is the directory where the source file download to and cached.
+	CacheDir string `yaml:"cacheDir"`
+	// CacheSizeGB is the cache size of the source file in the feed server.
+	CacheSizeGB uint `yaml:"cacheSizeGB"`
+	// CacheRetentionRate is the cache retention rate of the source file in the feed server.
+	CacheRetentionRate float64 `yaml:"cacheRetentionRate"`
+}
+
+func (g *GSE) trySetDefault() {
+	if g.AgentUser == "" {
+		g.AgentUser = "root"
+	}
+	if g.CacheDir == "" {
+		g.CacheDir = "/data/bscp/gse/cache"
+	}
+	if g.CacheSizeGB == 0 {
+		g.CacheSizeGB = 10
+	}
+	if g.CacheRetentionRate == 0 {
+		g.CacheRetentionRate = 0.5
+	}
 }
 
 func (g *GSE) getFromEnv() {
@@ -1214,6 +1233,9 @@ func (g *GSE) getFromEnv() {
 func (g GSE) validate() error {
 	if !g.Enabled {
 		return nil
+	}
+	if g.Host == "" {
+		return errors.New("gse host is not set")
 	}
 	if g.NodeAgentID == "" && (g.ClusterID == "" || g.PodID == "" || g.ContainerName == "") {
 		return errors.New("to enable p2p download, either agent id must be set or cluster id, " +
