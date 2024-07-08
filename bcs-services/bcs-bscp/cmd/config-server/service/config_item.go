@@ -775,6 +775,7 @@ func (s *Service) CompareConfigItemConflicts(ctx context.Context, req *pbcs.Comp
 			TemplateRevisions:  revisions,
 			TemplateSpaceExist: v.TemplateSpaceExist,
 			TemplateSetExist:   v.TemplateSetExist,
+			TemplateSetIsEmpty: v.GetTemplateSetIsEmpty(),
 		})
 	}
 

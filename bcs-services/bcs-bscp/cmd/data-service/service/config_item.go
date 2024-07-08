@@ -1390,7 +1390,7 @@ func (s *Service) handleTemplateConfig(grpcKit *kit.Kit, bizID, appID, otherAppI
 		releaseTemplateIds = append(releaseTemplateIds, v.Spec.TemplateID)
 	}
 
-	templateSpaceExist, templateSetExist, currentSpaceSetTemplateExist, templateExist, err :=
+	templateSpaceExist, templateSetExist, currentSpaceSetTemplateExist, templateExist, templateSetTemplateExist, err :=
 		s.getTemplateSpaceSetfile(grpcKit, releaseTemplateSpaceIds, releaseTemplateSetIds, releaseTemplateIds)
 	if err != nil {
 		return nil, err
@@ -1417,6 +1417,7 @@ func (s *Service) handleTemplateConfig(grpcKit *kit.Kit, bizID, appID, otherAppI
 			TemplateSpaceExist: templateSpaceExist[revisions[0].Spec.TemplateSpaceID],
 			TemplateSetExist:   templateSetExist[id],
 			IsExist:            noNamespacePackage[fmt.Sprintf("%d-%d", revisions[0].Spec.TemplateSpaceID, id)],
+			TemplateSetIsEmpty: templateSetTemplateExist[id],
 		}
 		for _, r := range revisions {
 			// 历史套餐模板文件被删除了
@@ -1444,11 +1445,11 @@ func (s *Service) handleTemplateConfig(grpcKit *kit.Kit, bizID, appID, otherAppI
 
 // 返回空间、套餐、模板配置数据
 func (s *Service) getTemplateSpaceSetfile(grpcKit *kit.Kit, templateSpaceIds, templateSetIds, templateIds []uint32) (
-	map[uint32]bool, map[uint32]bool, map[string]bool, map[uint32]bool, error) {
+	map[uint32]bool, map[uint32]bool, map[string]bool, map[uint32]bool, map[uint32]bool, error) {
 	// 获取空间
 	templateSpace, err := s.dao.TemplateSpace().ListByIDs(grpcKit, templateSpaceIds)
 	if err != nil {
-		return nil, nil, nil, nil, err
+		return nil, nil, nil, nil, nil, err
 	}
 	templateSpaceExist := make(map[uint32]bool)
 	for _, v := range templateSpace {
@@ -1458,11 +1459,16 @@ func (s *Service) getTemplateSpaceSetfile(grpcKit *kit.Kit, templateSpaceIds, te
 	// 获取套餐
 	templateSet, err := s.dao.TemplateSet().ListByIDs(grpcKit, templateSetIds)
 	if err != nil {
-		return nil, nil, nil, nil, err
+		return nil, nil, nil, nil, nil, err
 	}
 	templateSetExist := make(map[uint32]bool)
 	currentSpaceSetTemplateExist := make(map[string]bool)
+	templateSetTemplateExist := make(map[uint32]bool)
 	for _, v := range templateSet {
+		templateSetTemplateExist[v.ID] = false
+		if len(v.Spec.TemplateIDs) == 0 {
+			templateSetTemplateExist[v.ID] = true
+		}
 		templateSetExist[v.ID] = true
 		for _, tid := range v.Spec.TemplateIDs {
 			currentSpaceSetTemplateExist[fmt.Sprintf("%d-%d-%d", v.Attachment.TemplateSpaceID, v.ID, tid)] = true
@@ -1472,14 +1478,14 @@ func (s *Service) getTemplateSpaceSetfile(grpcKit *kit.Kit, templateSpaceIds, te
 	// 获取模板
 	template, err := s.dao.Template().ListByIDs(grpcKit, templateIds)
 	if err != nil {
-		return nil, nil, nil, nil, err
+		return nil, nil, nil, nil, nil, err
 	}
 	templateExist := make(map[uint32]bool)
 	for _, v := range template {
 		templateExist[v.ID] = true
 	}
 
-	return templateSpaceExist, templateSetExist, currentSpaceSetTemplateExist, templateExist, nil
+	return templateSpaceExist, templateSetExist, currentSpaceSetTemplateExist, templateExist, templateSetTemplateExist, nil
 }
 
 // 获取未命名版本的模板套餐
