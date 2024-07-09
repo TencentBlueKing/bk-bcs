@@ -189,7 +189,7 @@
   );
 
   const emits = defineEmits(['change', 'update:fileUploading']);
-  const configContentTip = t('configTips.createConfig');
+  const configContentTip = t('tips.createConfig');
   const localVal = ref({ ...props.config, fileAP: '' });
   const privilegeInputVal = ref('');
   const showPrivilegeErrorTips = ref(false);

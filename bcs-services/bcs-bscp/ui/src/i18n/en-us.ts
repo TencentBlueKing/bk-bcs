@@ -57,6 +57,9 @@ export default {
          number: Numeric values, including integers, floating-point numbers, and checksum data types
          text: Multi-line string text, unverified data structure, size 2Mb
          json、xml、yaml: For structured data in different formats, the data structure is checked`,
+    createConfig: `You can reference global variables and define new BSCP variables in the configuration file. The variable rules are as follows
+         1.To go template syntax, for example {{ .bk_bscp_appid }}
+         2.The variable name must start with “bk_bscp_” or “BK_BSCP_”`,
   },
   '确认删除服务？': 'Are you sure to delete the service?',
   删除的服务: 'Deleted service ',
@@ -450,13 +453,9 @@ export default {
   '模板空间不存在，无法导入，请先删除此模板': 'Template space does not exist, cannot be imported, please delete this template first',
   '模板套餐不存在，无法导入，请先删除此模板': 'Template package does not exist, cannot be imported, please delete this template first',
   '模板套餐为空，无法导入，请先删除此模板': 'Template package is empty, cannot be imported, please delete this template first',
-  文件大小不能超过100M: 'The file size cannot exceed 100 MB',
+  单文件大小不能超过100M: 'The file size cannot exceed 100 MB',
+  压缩包大小不能超过2GB: 'The compressed package size cannot exceed 2 GB',
   重置: 'Reset',
-  configTips: {
-    createConfig: `You can reference global variables and define new BSCP variables in the configuration file. The variable rules are as follows
-                          1.To go template syntax, for example {{ .bk_bscp_appid }}
-                          2.The variable name must start with “bk_bscp_” or “BK_BSCP_”`
-  },
 
   // 分组管理
   新增分组: 'New group',
@@ -525,8 +524,8 @@ export default {
   删除空间成功: 'Space deleted successfully',
   新建空间: 'New a new space',
   模板空间名称: 'Template space name',
-  模板空间描述: '模板空间描述',
-  创建空间成功: 'Template space description',
+  模板空间描述: 'Template space description',
+  创建空间成功: 'Space created successfully',
   编辑空间: 'Edit Space',
   编辑空间成功: 'Edit space successfully',
   新建模板套餐: 'New template package',
