@@ -157,7 +157,13 @@ func getAvailableIPNumByVpc(model store.ClusterManagerModel, ipType string, vpc 
 		return 0, err
 	}
 
-	return vpcMgr.GetVpcIpSurplus(vpc.VpcID, ipType, nil, cmOption)
+	_, availableIpNum, err := vpcMgr.GetVpcIpUsage(vpc.VpcID, ipType, nil, cmOption)
+	if err != nil {
+		blog.Errorf("getAvailableIPNumByVpc[%s:%s] failed: %v", vpc.Region, vpc.VpcID, err)
+		return 0, err
+	}
+
+	return availableIpNum, nil
 }
 
 func (la *ListAction) setResp(code uint32, msg string) {

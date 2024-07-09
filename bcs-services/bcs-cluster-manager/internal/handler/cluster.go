@@ -248,7 +248,7 @@ func (cm *ClusterManager) ListProjectCluster(ctx context.Context,
 	}
 
 	start := time.Now()
-	ca := clusterac.NewListProjectClusterAction(cm.model, cm.iam)
+	ca := clusterac.NewListProjectClusterAction(cm.model, cm.iam, cm.kubeOp)
 	ca.Handle(ctx, req, resp)
 
 	metrics.ReportAPIRequestMetric("ListProjectCluster", "grpc", strconv.Itoa(int(resp.Code)), start)
@@ -441,5 +441,22 @@ func (cm *ClusterManager) AddSubnetToCluster(ctx context.Context,
 	na.Handle(ctx, req, resp)
 	metrics.ReportAPIRequestMetric("AddSubnetToCluster", "grpc", strconv.Itoa(int(resp.Code)), start)
 	blog.Infof("reqID: %s, action: AddSubnetToCluster, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
+// SwitchClusterUnderlayNetwork implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) SwitchClusterUnderlayNetwork(ctx context.Context,
+	req *cmproto.SwitchClusterUnderlayNetworkReq, resp *cmproto.SwitchClusterUnderlayNetworkResp) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	na := clusterac.NewSwitchClusterUnderlayNetworkAction(cm.model)
+	na.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("SwitchClusterUnderlayNetwork", "grpc",
+		strconv.Itoa(int(resp.Code)), start)
+
+	blog.Infof("reqID: %s, action: SwitchClusterUnderlayNetwork, req %v, resp %v", reqID, req, resp)
 	return nil
 }

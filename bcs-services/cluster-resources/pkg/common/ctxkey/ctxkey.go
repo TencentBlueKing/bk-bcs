@@ -34,6 +34,12 @@ const (
 	UserAgentHeaderKey = "Grpcgateway-User-Agent"
 	// ForwardedForHeaderKey is the header name of X-Forwarded-For.
 	ForwardedForHeaderKey = "X-Forwarded-For"
+	// InnerClientHeaderKey is the key for client in header
+	InnerClientHeaderKey = "X-Bcs-Client"
+	// AuthorizationHeaderKey is the key for authorization in header
+	AuthorizationHeaderKey = "Authorization"
+	// CustomUsernameHeaderKey is the key for custom username in header
+	CustomUsernameHeaderKey = "X-Bcs-Username"
 )
 
 // GetUsernameFromCtx 通过 ctx 获取 username

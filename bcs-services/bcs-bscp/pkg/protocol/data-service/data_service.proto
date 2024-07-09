@@ -131,6 +131,7 @@ service Data {
 
   // template release related interface.
   rpc CreateTemplateRevision(CreateTemplateRevisionReq) returns (CreateResp) {}
+  rpc UpdateTemplateRevision(UpdateTemplateRevisionReq) returns (CreateResp) {}
   rpc ListTemplateRevisions(ListTemplateRevisionsReq) returns (ListTemplateRevisionsResp) {}
   rpc GetTemplateRevision(GetTemplateRevisionReq) returns (GetTemplateRevisionResp) {}
   rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (pbbase.EmptyResp) {}
@@ -1047,6 +1048,11 @@ message CreateTemplateRevisionReq {
   pbtr.TemplateRevisionSpec spec = 2;
 }
 
+message UpdateTemplateRevisionReq {
+  pbtr.TemplateRevisionAttachment attachment = 1;
+  pbtr.TemplateRevisionSpec spec = 2;
+}
+
 message ListTemplateRevisionsReq {
   uint32 biz_id = 1;
   uint32 template_space_id = 2;
@@ -1087,6 +1093,7 @@ message GetTemplateRevisionResp {
     string creator = 14;
     string create_at = 15;
     string md5 = 16;
+    bool is_latest = 17;
   }
   TemplateRevision detail = 1;
 }
@@ -1900,6 +1907,7 @@ message CompareConfigItemConflictsResp {
     repeated TemplateRevisionDetail template_revisions = 6;
     bool template_space_exist = 7;
     bool template_set_exist = 8;
+    bool template_set_is_empty = 9;
   }
   repeated NonTemplateConfig non_template_configs = 2;
   repeated TemplateConfig template_configs = 1;

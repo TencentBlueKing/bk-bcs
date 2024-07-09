@@ -825,8 +825,9 @@ type Esb struct {
 	// AppSecret is the blueking app secret of bscp to request esb.
 	AppSecret string `yaml:"appSecret"`
 	// User is the blueking user of bscp to request esb.
-	User string    `yaml:"user"`
-	TLS  TLSConfig `yaml:"tls"`
+	User     string    `yaml:"user"`
+	TLS      TLSConfig `yaml:"tls"`
+	BscpHost string    `yaml:"bscpHost"`
 }
 
 // validate esb runtime.
@@ -1188,17 +1189,36 @@ type GSE struct {
 	ContainerName string `yaml:"containerName"`
 	// AgentUser is the user exists in the feed server container/node.
 	AgentUser string `yaml:"agentUser"`
-	// SourceDir is the directory where the source file download to and stored.
-	SourceDir string `yaml:"sourceDir"`
+	// CacheDir is the directory where the source file download to and cached.
+	CacheDir string `yaml:"cacheDir"`
+	// CacheSizeGB is the cache size of the source file in the feed server.
+	CacheSizeGB uint `yaml:"cacheSizeGB"`
+	// CacheRetentionRate is the cache retention rate of the source file in the feed server.
+	CacheRetentionRate float64 `yaml:"cacheRetentionRate"`
+}
+
+func (g *GSE) trySetDefault() {
+	if g.AgentUser == "" {
+		g.AgentUser = "root"
+	}
+	if g.CacheDir == "" {
+		g.CacheDir = "/data/bscp/gse/cache"
+	}
+	if g.CacheSizeGB == 0 {
+		g.CacheSizeGB = 10
+	}
+	if g.CacheRetentionRate == 0 {
+		g.CacheRetentionRate = 0.5
+	}
 }
 
 func (g *GSE) getFromEnv() {
 	if len(g.NodeAgentID) == 0 {
-		g.NodeAgentID = os.Getenv("BSCP_NODE_AGENT_ID")
+		g.NodeAgentID = os.Getenv("NODE_AGENT_ID")
 	}
 
 	if len(g.ClusterID) == 0 {
-		g.ClusterID = os.Getenv("BSCP_CLUSTER_ID")
+		g.ClusterID = os.Getenv("CLUSTER_ID")
 	}
 
 	if len(g.PodID) == 0 {
@@ -1206,7 +1226,7 @@ func (g *GSE) getFromEnv() {
 	}
 
 	if len(g.ContainerName) == 0 {
-		g.ContainerName = os.Getenv("BSCP_CONTAINER_NAME")
+		g.ContainerName = os.Getenv("CONTAINER_NAME")
 	}
 }
 
@@ -1214,6 +1234,9 @@ func (g *GSE) getFromEnv() {
 func (g GSE) validate() error {
 	if !g.Enabled {
 		return nil
+	}
+	if g.Host == "" {
+		return errors.New("gse host is not set")
 	}
 	if g.NodeAgentID == "" && (g.ClusterID == "" || g.PodID == "" || g.ContainerName == "") {
 		return errors.New("to enable p2p download, either agent id must be set or cluster id, " +

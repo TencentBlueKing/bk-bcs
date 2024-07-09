@@ -211,10 +211,10 @@ func parseSVCPorts(manifest map[string]interface{}) (ports []string) {
 	rawPorts := mapx.GetList(manifest, "spec.ports")
 	for _, p := range rawPorts {
 		p2, _ := p.(map[string]interface{})
-		if nodePort, ok := p2["nodePort"]; ok {
-			ports = append(ports, fmt.Sprintf("%d:%d/%s", p2["port"], nodePort, p2["protocol"]))
+		if nodePort := mapx.GetInt64(p2, "port"); nodePort != 0 {
+			ports = append(ports, fmt.Sprintf("%d:%d/%s", mapx.GetInt64(p2, "port"), nodePort, p2["protocol"]))
 		} else {
-			ports = append(ports, fmt.Sprintf("%d/%s", p2["port"], p2["protocol"]))
+			ports = append(ports, fmt.Sprintf("%d/%s", mapx.GetInt64(p2, "port"), p2["protocol"]))
 		}
 	}
 	return ports

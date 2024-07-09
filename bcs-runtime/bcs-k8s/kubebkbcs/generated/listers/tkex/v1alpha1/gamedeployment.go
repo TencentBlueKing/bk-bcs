@@ -22,8 +22,10 @@ import (
 )
 
 // GameDeploymentLister helps list GameDeployments.
+// All objects returned here must be treated as read-only.
 type GameDeploymentLister interface {
 	// List lists all GameDeployments in the indexer.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1alpha1.GameDeployment, err error)
 	// GameDeployments returns an object that can list and get GameDeployments.
 	GameDeployments(namespace string) GameDeploymentNamespaceLister
@@ -54,10 +56,13 @@ func (s *gameDeploymentLister) GameDeployments(namespace string) GameDeploymentN
 }
 
 // GameDeploymentNamespaceLister helps list and get GameDeployments.
+// All objects returned here must be treated as read-only.
 type GameDeploymentNamespaceLister interface {
 	// List lists all GameDeployments in the indexer for a given namespace.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1alpha1.GameDeployment, err error)
 	// Get retrieves the GameDeployment from the indexer for a given namespace and name.
+	// Objects returned here must be treated as read-only.
 	Get(name string) (*v1alpha1.GameDeployment, error)
 	GameDeploymentNamespaceListerExpansion
 }

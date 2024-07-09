@@ -19,7 +19,6 @@ import (
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/components"
-	pbfs "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/feed-server"
 )
 
 // TransferFileReq defines transfer file task request
@@ -58,19 +57,25 @@ type TransferFileAgent struct {
 	BkContainerID string `json:"bk_container_id"`
 }
 
-// TransferFileRespData defines transfer file task data
-type TransferFileRespData struct {
-	Result TransferFileRespResult `json:"result"`
+// CommonTaskRespData defines gse common task response data
+type CommonTaskRespData struct {
+	Result CommonTaskRespResult `json:"result"`
 }
 
-// TransferFileRespResult defines transfer file task result
-type TransferFileRespResult struct {
+// CommonTaskRespResult defines gse common task response result
+type CommonTaskRespResult struct {
 	TaskID string `json:"task_id"`
+}
+
+// TerminateTransferFileTaskReq defines terminate transfer file task request
+type TerminateTransferFileTaskReq struct {
+	Agents []TransferFileAgent `json:"agents"`
+	TaskID string              `json:"task_id"`
 }
 
 // CreateTransferFileTask create sync transfer file task
 func CreateTransferFileTask(ctx context.Context, sourceAgentID, sourceContainerID, sourceFileDir, sourceUser,
-	filename string, targetAgentID, targetContainerID, targetFileDir, targetUser string) (string, error) {
+	filename string, targetFileDir string, targetsAgents []TransferFileAgent) (string, error) {
 
 	// 1. if sourceContainerID is set, means source is node, else is container
 	// 2. if targetContainerID is set, means target is node, else is container
@@ -100,13 +105,7 @@ func CreateTransferFileTask(ctx context.Context, sourceAgentID, sourceContainerI
 					Target: TransferFileTarget{
 						FileName: filename,
 						StoreDir: targetFileDir,
-						Agents: []TransferFileAgent{
-							{
-								User:          targetUser,
-								BkAgentID:     targetAgentID,
-								BkContainerID: targetContainerID,
-							},
-						},
+						Agents:   targetsAgents,
 					},
 				},
 			},
@@ -117,7 +116,7 @@ func CreateTransferFileTask(ctx context.Context, sourceAgentID, sourceContainerI
 		return "", err
 	}
 
-	data := &TransferFileRespData{}
+	data := &CommonTaskRespData{}
 	if err := components.UnmarshalBKResult(resp, data); err != nil {
 		return "", err
 	}
@@ -160,7 +159,7 @@ type TransferFileResultDataResultContent struct {
 }
 
 // TransferFileResult query transfer file task result
-func TransferFileResult(ctx context.Context, taskID string) (pbfs.AsyncDownloadStatus, error) {
+func TransferFileResult(ctx context.Context, taskID string) ([]TransferFileResultDataResult, error) {
 
 	url := fmt.Sprintf("%s/api/v2/task/extensions/get_transfer_file_result", cc.FeedServer().GSE.Host)
 	authHeader := fmt.Sprintf("{\"bk_app_code\": \"%s\", \"bk_app_secret\": \"%s\"}",
@@ -174,31 +173,39 @@ func TransferFileResult(ctx context.Context, taskID string) (pbfs.AsyncDownloadS
 		Post(url)
 
 	if err != nil {
-		return pbfs.AsyncDownloadStatus_FAILED, err
+		return nil, err
 	}
 
 	data := &TransferFileResultData{}
 	if err := components.UnmarshalBKResult(resp, data); err != nil {
-		return pbfs.AsyncDownloadStatus_FAILED, err
+		return nil, err
 	}
 
-	// any task failed, return failed
-	// any task downloading, return downloading
-	// all task success, return success
-	allSuccess := true
-	for _, result := range data.Result {
-		if result.ErrorCode != 0 && result.ErrorCode != 115 {
-			return pbfs.AsyncDownloadStatus_FAILED, fmt.Errorf(result.ErrorMsg)
-		}
-		if result.ErrorCode == 115 {
-			allSuccess = false
-		}
+	return data.Result, nil
+}
+
+// TerminateTransferFileTask terminate transfer file task
+func TerminateTransferFileTask(ctx context.Context, taskID string, targetsAgents []TransferFileAgent) (string, error) {
+	url := fmt.Sprintf("%s/api/v2/task/extensions/async_terminate_transfer_file", cc.FeedServer().GSE.Host)
+	authHeader := fmt.Sprintf("{\"bk_app_code\": \"%s\", \"bk_app_secret\": \"%s\"}",
+		cc.FeedServer().Esb.AppCode, cc.FeedServer().Esb.AppSecret)
+	resp, err := components.GetClient().R().
+		SetContext(ctx).
+		SetHeader("X-Bkapi-Authorization", authHeader).
+		SetBody(TerminateTransferFileTaskReq{
+			TaskID: taskID,
+			Agents: targetsAgents,
+		}).
+		Post(url)
+
+	if err != nil {
+		return "", err
 	}
 
-	if !allSuccess {
-		// 如果存在正在下载的任务
-		return pbfs.AsyncDownloadStatus_DOWNLOADING, nil
+	data := &CommonTaskRespData{}
+	if err := components.UnmarshalBKResult(resp, data); err != nil {
+		return "", err
 	}
-	// 如果没有失败或下载中的任务，则返回成功
-	return pbfs.AsyncDownloadStatus_SUCCESS, nil
+
+	return data.Result.TaskID, nil
 }

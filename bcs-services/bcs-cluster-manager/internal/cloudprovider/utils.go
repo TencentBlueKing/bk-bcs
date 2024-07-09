@@ -184,6 +184,28 @@ func GetCredential(data *CredentialData) (*CommonOption, error) {
 	return option, nil
 }
 
+// GetCloudCmOptionByCluster get common option by cluster
+func GetCloudCmOptionByCluster(cls proto.Cluster) (*CommonOption, error) {
+	cloud, err := GetStorageModel().GetCloud(context.Background(), cls.GetProvider())
+	if err != nil {
+		blog.Errorf("GetCloudCmOptionByCluster[%s:%s] get cloud failed: %v",
+			cls.GetClusterID(), cls.GetProvider(), err)
+		return nil, err
+	}
+	cmOption, err := GetCredential(&CredentialData{
+		Cloud:     cloud,
+		AccountID: cls.GetCloudAccountID(),
+	})
+	if err != nil {
+		blog.Errorf("getCredential for cloudprovider[%s] when GetCloudCmOptionByCluster[%s:%s] failed, %s",
+			cloud.CloudID, cls.ClusterID, cls.Region, err.Error())
+		return nil, err
+	}
+	cmOption.Region = cls.GetRegion()
+
+	return cmOption, nil
+}
+
 func checkCloudCredentialValidate(cloud *proto.Cloud, option *CommonOption) error {
 	validate, err := GetCloudValidateMgr(cloud.CloudProvider)
 	if err != nil {

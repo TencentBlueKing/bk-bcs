@@ -6,10 +6,6 @@ metadata:
     - apiVersion
     - name
     - namespace
-    # 部分资源类型允许不填写 labels
-    {{- if isLabelRequired .kind }}
-    - labels
-    {{- end }}
   properties:
     apiVersion:
       title: apiVersion
@@ -71,10 +67,6 @@ metadata:
     labels:
       title: {{ i18n "标签" .lang }}
       type: array
-      {{- if isLabelAsSelector .kind }}
-      description: {{ i18n "将作为 Pod & Selector 标签" .lang }}
-      {{- end }}
-      minItems: {{ if isLabelRequired .kind }} 1 {{ else }} 0 {{ end }}
       items:
         properties:
           key:
@@ -95,7 +87,6 @@ metadata:
         name: bfArray
         props:
           visible: {{ isLabelVisible .kind }}
-          disabled: {{ isLabelEditDisabled .kind .action }}
     annotations:
       title: {{ i18n "注解" .lang }}
       type: array

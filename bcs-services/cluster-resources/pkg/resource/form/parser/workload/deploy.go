@@ -34,6 +34,10 @@ func ParseDeploy(manifest map[string]interface{}) map[string]interface{} {
 
 // ParseDeploySpec xxx
 func ParseDeploySpec(manifest map[string]interface{}, spec *model.DeploySpec) {
+	selectorLables, _ := mapx.GetItems(manifest, "spec.selector.matchLabels")
+	common.ParseLabels(selectorLables, &spec.Labels.SelectorLabels)
+	templateLables, _ := mapx.GetItems(manifest, "spec.template.metadata.labels")
+	common.ParseLabels(templateLables, &spec.Labels.TemplateLabels)
 	ParseDeployReplicas(manifest, &spec.Replicas)
 	tmplSpec, _ := mapx.GetItems(manifest, "spec.template.spec")
 	podSpec, _ := tmplSpec.(map[string]interface{})
@@ -48,7 +52,7 @@ func ParseDeploySpec(manifest map[string]interface{}, spec *model.DeploySpec) {
 
 // ParseDeployReplicas xxx
 func ParseDeployReplicas(manifest map[string]interface{}, replicas *model.DeployReplicas) {
-	replicas.Cnt = mapx.GetInt64(manifest, "spec.replicas")
+	replicas.Cnt = mapx.GetIntStr(manifest, "spec.replicas")
 	replicas.UpdateStrategy = mapx.Get(manifest, "spec.strategy.type", resCsts.DefaultUpdateStrategy).(string)
 	replicas.MaxSurge, replicas.MSUnit = resCsts.DefaultMaxSurge, util.UnitPercent
 	if maxSurge, err := mapx.GetItems(manifest, "spec.strategy.rollingUpdate.maxSurge"); err == nil {

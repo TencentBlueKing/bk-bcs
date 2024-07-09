@@ -58,6 +58,8 @@ func NewSchemaRenderer(ctx context.Context, clusterID, apiVersion, kind, namespa
 	}
 	// 避免名称重复，每次默认添加随机后缀
 	randSuffix := stringx.Rand(RandomSuffixLength, SuffixCharset)
+	resName := fmt.Sprintf("%s-%s", strings.ToLower(kind), randSuffix)
+	selectorLabel := genWorkloadSelectorLabel(resName)
 	// 尝试从 context 中获取集群类型，若获取失败，则默认独立集群
 	clusterType := cluster.ClusterTypeSingle
 	if clusterInfo, err := cluster.FromContext(ctx); err == nil && clusterInfo != nil {
@@ -71,11 +73,12 @@ func NewSchemaRenderer(ctx context.Context, clusterID, apiVersion, kind, namespa
 		kind:           kind,
 		isTemplateFile: isTemplateFile,
 		values: map[string]interface{}{
-			"kind":      kind,
-			"namespace": namespace,
-			"resName":   fmt.Sprintf("%s-%s", strings.ToLower(kind), randSuffix),
-			"lang":      i18n.GetLangFromContext(ctx),
-			"action":    action,
+			"kind":          kind,
+			"namespace":     namespace,
+			"resName":       resName,
+			"selectorLabel": selectorLabel,
+			"lang":          i18n.GetLangFromContext(ctx),
+			"action":        action,
 			// 集群类型：目前可选值有 Single 独立集群，Shared 共享集群
 			"clusterType": clusterType,
 		},
@@ -161,6 +164,10 @@ func genSchemaRules(ctx context.Context) map[string]interface{} {
 			"validator": "/^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$/",
 			"message":   i18n.GetMsg(ctx, "仅支持小写字母，数字及 '-' 且需以字母数字开头和结尾"),
 		},
+		"nameRegexWithVar": map[string]interface{}{
+			"validator": "/^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*|{{.*}})$/",
+			"message":   i18n.GetMsg(ctx, "仅支持小写字母，数字及 '-' 且需以字母数字开头和结尾"),
+		},
 		"numberRegex": map[string]interface{}{
 			"validator": "/^[0-9]+(\\.[0-9])?[0-9]*$/",
 			"message":   i18n.GetMsg(ctx, "仅可包含数字字符与小数点"),
@@ -182,10 +189,22 @@ func genSchemaRules(ctx context.Context) map[string]interface{} {
 			"validator": "/^[a-z0-9A-Z]([-_a-z0-9A-Z]*[a-z0-9A-Z])?((\\.|\\/)[a-z0-9A-Z]([-_a-z0-9A-Z]*[a-z0-9A-Z])?)*$/",
 			"message":   i18n.GetMsg(ctx, "仅支持字母，数字，'-'，'_'，'.' 及 '/' 且需以字母数字开头和结尾"),
 		},
+		"labelKeyRegexWithVar": map[string]interface{}{
+			"validator": "/^([a-z0-9A-Z]([-_a-z0-9A-Z]*[a-z0-9A-Z])?((\\.|\\/)[a-z0-9A-Z]([-_a-z0-9A-Z]*[a-z0-9A-Z])?)*|{{.*}})$/",
+			"message":   i18n.GetMsg(ctx, "仅支持字母，数字，'-'，'_'，'.' 及 '/' 且需以字母数字开头和结尾"),
+		},
 		// NOTE 标签值允许为空
 		"labelValRegex": map[string]interface{}{
 			"validator": "/^(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?$/",
 			"message":   i18n.GetMsg(ctx, "需以字母数字开头和结尾，可包含 '-'，'_'，'.' 和字母数字"),
+		},
+		"labelValRegexWithVar": map[string]interface{}{
+			"validator": "/^((([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?|{{.*}})$/",
+			"message":   i18n.GetMsg(ctx, "需以字母数字开头和结尾，可包含 '-'，'_'，'.' 和字母数字"),
+		},
+		"sliceLength1": map[string]interface{}{
+			"validator": "{{ $self.value.length > 0 }}",
+			"message":   i18n.GetMsg(ctx, "不应少于 1 个项"),
 		},
 	}
 }

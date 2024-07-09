@@ -45,10 +45,15 @@ func NewContextInjectWrapper() server.HandlerWrapper {
 			if !ok {
 				return errorx.New(errcode.General, "failed to get micro's metadata")
 			}
-
 			username := envs.AnonymousUsername
+
+			// 内部用户，不鉴权
+			clientName, ok := md.Get(ctxkey.InnerClientHeaderKey)
+			if ok {
+				username = clientName
+			}
 			// 1. 从 Metadata（headers）中获取 jwtToken，转换为 username
-			if !canExemptAuth(req) {
+			if !canExemptAuth(req) && clientName == "" {
 				if username, err = parseUsername(md); err != nil {
 					return err
 				}
@@ -115,11 +120,23 @@ func parseUsername(md metadata.Metadata) (string, error) {
 		return "", errorx.New(errcode.Unauth, "authorization token error")
 	}
 
-	claims, err := jwtDecode(authorization[7:])
+	u, err := jwtDecode(authorization[7:])
 	if err != nil {
 		return "", err
 	}
-	return claims.UserName, nil
+	if u.SubType == bcsJwt.User.String() {
+		if u.UserName == "" {
+			return u.ClientID, nil
+		}
+		return u.UserName, nil
+	}
+	if u.SubType == bcsJwt.Client.String() {
+		if username, ok := md.Get(ctxkey.CustomUsernameHeaderKey); ok {
+			return username, nil
+		}
+		return "", errorx.New(errcode.Unauth, "username is empty")
+	}
+	return u.UserName, nil
 }
 
 // jwtDecode 解析 jwt

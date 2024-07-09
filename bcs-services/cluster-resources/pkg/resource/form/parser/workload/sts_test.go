@@ -79,7 +79,7 @@ func TestParseSTS(t *testing.T) {
 }
 
 var exceptedSTSReplicas = model.STSReplicas{
-	Cnt:            3,
+	Cnt:            "3",
 	UpdateStrategy: "OnDelete",
 	PodManPolicy:   "OrderedReady",
 }

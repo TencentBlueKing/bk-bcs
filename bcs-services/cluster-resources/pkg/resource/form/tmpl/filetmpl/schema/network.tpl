@@ -67,10 +67,6 @@ ruleConf:
                 targetSVC:
                   title: {{ i18n "目标 Service" .lang }}
                   type: string
-                  ui:component:
-                    name: select
-                    props:
-                      clearable: true
                   ui:rules:
                     - required
                 port:
@@ -169,10 +165,6 @@ defaultBackend:
       type: string
       description: {{ i18n "控制器类型 qcloud 暂时不支持配置默认后端" .lang }}
       default: ""
-      ui:component:
-        name: select
-        props:
-          clearable: true
       ui:rules:
         - maxLength128
     port:
@@ -208,10 +200,6 @@ cert:
           secretName:
             title: {{ i18n "证书" .lang }}
             type: string
-            ui:component:
-              name: select
-              props:
-                clearable: true
           hosts:
             title: Hosts
             type: array
@@ -388,6 +376,7 @@ portConf:
                 then:
                   state:
                     disabled: true
+                    visible: false
                 else:
                   state:
                     disabled: false
@@ -396,6 +385,7 @@ portConf:
                 then:
                   state:
                     disabled: true
+                    visible: false
                 else:
                   state:
                     disabled: false
@@ -422,7 +412,7 @@ selector:
             type: string
             ui:rules:
               - required
-              - labelKeyRegex
+              - labelKeyRegexWithVar
               - maxLength128
           value:
             title: {{ i18n "值" .lang }}

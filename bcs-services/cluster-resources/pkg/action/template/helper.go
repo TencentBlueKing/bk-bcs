@@ -118,8 +118,8 @@ func replaceTemplateFileVar(template string, values map[string]string) string {
 }
 
 // patchTemplateAnnotations patch template annotations
-func patchTemplateAnnotations(
-	manifest map[string]interface{}, username, templateName, templateVersion string) map[string]interface{} {
+func patchTemplateAnnotations(manifest map[string]interface{}, username, templateSpace, templateName,
+	templateVersion string) map[string]interface{} {
 	annos := mapx.GetMap(manifest, "metadata.annotations")
 	if len(annos) == 0 {
 		_ = mapx.SetItems(manifest, "metadata.annotations", map[string]interface{}{})
@@ -127,11 +127,11 @@ func patchTemplateAnnotations(
 	if mapx.GetStr(manifest, []string{"metadata", "annotations", resCsts.CreatorAnnoKey}) == "" {
 		_ = mapx.SetItems(manifest, []string{"metadata", "annotations", resCsts.CreatorAnnoKey}, username)
 	}
-	if mapx.GetStr(manifest, []string{"metadata", "annotations", resCsts.UpdaterAnnoKey}) == "" {
-		_ = mapx.SetItems(manifest, []string{"metadata", "annotations", resCsts.UpdaterAnnoKey}, username)
-	}
-	_ = mapx.SetItems(manifest, []string{"metadata", "annotations", resCsts.TemplateSourceType}, "template")
-	_ = mapx.SetItems(manifest, []string{"metadata", "annotations", resCsts.TemplateNameAnnoKey}, templateName)
+	_ = mapx.SetItems(manifest, []string{"metadata", "annotations", resCsts.UpdaterAnnoKey}, username)
+	_ = mapx.SetItems(manifest, []string{"metadata", "annotations", resCsts.TemplateSourceType},
+		resCsts.TemplateSourceTypeValue)
+	_ = mapx.SetItems(manifest, []string{"metadata", "annotations", resCsts.TemplateNameAnnoKey}, fmt.Sprintf("%s/%s",
+		templateSpace, templateName))
 	_ = mapx.SetItems(manifest, []string{"metadata", "annotations", resCsts.TemplateVersionAnnoKey}, templateVersion)
 	return manifest
 }

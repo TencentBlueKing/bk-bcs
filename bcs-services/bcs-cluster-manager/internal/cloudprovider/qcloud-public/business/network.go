@@ -170,7 +170,7 @@ func subnetFromVpcSubnet(info *vpc.Subnet) (n *cidrtree.Subnet) {
 	s.VpcID = *info.VpcId
 	s.Zone = *info.Zone
 	s.CreatedTime = *info.CreatedTime
-	s.AvaliableIP = *info.AvailableIpAddressCount
+	s.AvailableIps = *info.AvailableIpAddressCount
 	return s
 }
 

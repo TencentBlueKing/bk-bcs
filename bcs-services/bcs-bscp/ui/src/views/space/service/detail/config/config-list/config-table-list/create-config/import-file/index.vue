@@ -225,7 +225,7 @@
 
   const hasError = computed(() => {
     return importTemplateConfigList.value.some(
-      (config) => !config.template_space_exist || !config.template_set_exist || config.template_revisions.length === 0,
+      (config) => !config.template_space_exist || !config.template_set_exist || config.template_set_is_empty,
     );
   });
 

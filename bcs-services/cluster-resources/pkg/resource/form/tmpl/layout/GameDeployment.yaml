@@ -9,6 +9,7 @@
             - [ "minReadySecs", "partition" ]
             - [ "gracePeriodSecs", "." ]
           prop: replicas
+      {{- include "workload.labels" . | nindent 6 }}
       - - group:
             - - group:
                   - [ "enabled", "tmplName" ]

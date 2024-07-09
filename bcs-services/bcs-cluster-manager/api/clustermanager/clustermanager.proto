@@ -207,6 +207,17 @@ service ClusterManager {
     };
   }
 
+  rpc SwitchClusterUnderlayNetwork(SwitchClusterUnderlayNetworkReq) returns (SwitchClusterUnderlayNetworkResp) {
+    option (google.api.http) = {
+      post : "/clustermanager/v1/clusters/{clusterID}/networks/underlay"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "切换不同云集群的网络模式支持 underlay 网络模式(腾讯云支持vpc-cni等)"
+      summary : "切换集群的网络模式"
+    };
+  }
+
   rpc CreateVirtualCluster(CreateVirtualClusterReq) returns (CreateVirtualClusterResp) {
     option (google.api.http) = {
       post : "/clustermanager/v1/vcluster"
@@ -694,6 +705,16 @@ service ClusterManager {
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
       description : "更新NodeGroup中autoscaling信息的最大最小限额，主要是协调多nodeGroup资源"
       summary : "更新minSize/maxSize信息"
+    };
+  }
+  rpc UpdateGroupAsTimeRange(UpdateGroupAsTimeRangeRequest) returns (UpdateGroupAsTimeRangeResponse) {
+    option (google.api.http) = {
+      post : "/clustermanager/v1/nodegroup/{nodeGroupID}/timerange"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "更新节点池定时扩缩容策略"
+      summary : "更新节点池定时扩缩容策略"
     };
   }
 
@@ -1737,11 +1758,11 @@ message NetworkSetting {
     description: "VPC-CNI网络模式下,弹性网卡的子网ID"
   }];
   SubnetSource subnetSource = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "isNonStaticIpMode",
+    title: "subnetSource",
     description: "集群VPC-CNI模式是否为非固定IP，默认: FALSE 非固定IP"
   }];
   bool isStaticIpMode = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "isNonStaticIpMode",
+    title: "isStaticIpMode",
     description: "集群VPC-CNI模式是否为非固定IP，默认: FALSE 非固定IP"
   }];
   uint32 claimExpiredSeconds = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
@@ -1767,6 +1788,10 @@ message NetworkSetting {
   string serviceIPv6CIDR = 14[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "serviceIPv6CIDR",
     description: "集群service使用的IPv6地址池"
+  }];
+  string status = 15[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "status",
+    description: "集群网络状态, 主要是变更网络组件过程中记录网络状态"
   }];
 }
 
@@ -2134,6 +2159,15 @@ message ClusterMgr {
     title: "checkExternalNodeEmptyAction",
     description: "集群第三方节点空闲检查"
   }];
+  repeated ManagedConfig managedConfig = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "managedConfig",
+    description: "托管集群规格配置,目前适用于TKE"
+  }];
+}
+
+message ManagedConfig {
+  string spec=1;
+  string desc=2;
 }
 
 message NodeGroupMgr {
@@ -3308,6 +3342,41 @@ message CloudNetworkInfo {
       title: "cidrStep",
       description: "cidr自动扩容步长设置"
     }];
+  repeated EnvCidrStep cidrSteps = 2[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "cidrSteps",
+      description: "cidr自动扩容步长设置(随环境变量配置而变化)"
+    }];
+  repeated uint32 serviceSteps = 3[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "serviceSteps",
+      description: "service数量扩容步长设置"
+    }];
+  repeated uint32 perNodePodNum = 4[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "perNodePodNum",
+      description: "单节点pod数量配置"
+    }];
+  repeated uint32 underlaySteps = 5[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "underlaySteps",
+      description: "underlay网络模式下用户手动分配子网的步长"
+    }];
+  repeated uint32 underlayAutoSteps = 6[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "underlayAutoSteps",
+      description: "underlay网络模式下自动分配子网的步长"
+    }];
+  uint32 underlayRatio = 7 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "underlayAutoSteps",
+      description: "underlay网络模式下自动分配子网的步长"
+    }];
+}
+
+message EnvCidrStep {
+  string env=1;
+  uint32 step=2;
 }
 
 // NodeGroup pool for kubernetes cluster-autoscaling
@@ -3509,7 +3578,7 @@ message TimeRange {
   },(validate.rules).string = {min_len : 2, max_len : 1024}];
   string zone = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "zone",
-    description: "定时cron时区"
+    description: "定时cron时区,如果不执行时区则默认是服务所在时区"
   }];
   uint32 desiredNum = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "desiredNum",
@@ -5183,6 +5252,75 @@ message AddSubnetToClusterResp {
   WebAnnotationsV2 web_annotations = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "web_annotations",
     description : "用户所属的集群权限"
+  }];
+}
+
+message SwitchClusterUnderlayNetworkReq {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "SwitchClusterUnderlayNetworkReq"
+      description : "切换集群underlay网络模式请求"
+      required : [ "clusterID", "disable" ]
+    }
+  };
+
+  string clusterID = 1 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "clusterID",
+      description : "集群ID"
+    },(validate.rules).string = {min_len : 1, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}];
+  bool disable = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "disable",
+    description : "开关集群网络模式, 默认打开"
+  }];
+  SubnetSource subnet = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "subnet",
+    description : "添加子网的资源"
+  }];
+  bool isStaticIpMode = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "isStaticIpMode",
+    description : "是否开启静态IP模式"
+  }];
+  uint32 claimExpiredSeconds = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "claimExpiredSeconds",
+    description : "VPC-CNI网络模式下,弹性网卡IP回收时间"
+  }];
+  string operator = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "operator",
+    description : "操作人"
+  }];
+}
+
+message SwitchClusterUnderlayNetworkResp {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "SwitchClusterUnderlayNetworkResp"
+      description : "切换集群网络模式返回"
+      required : [ "code", "message" ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code", description : "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result", description : "返回结果"
+  }];
+  Task task = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "task",
+    description : "集群创建任务（如果有），可用于查询自动化任务结果"
+  }];
+  WebAnnotationsV2 web_annotations = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "web_annotations",
+    description : "用户所属的集群权限"
+  }];
+  Cluster cluster = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "cluster",
+    description : "返回集群数据"
   }];
 }
 
@@ -9070,6 +9208,55 @@ message UpdateGroupMinMaxSizeResponse {
   }];
 }
 
+message UpdateGroupAsTimeRangeRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "UpdateGroupAsTimeRangeRequest"
+      description : "更新NodeGroup定时扩缩策略"
+      required : [ "nodeGroupID", "timeRanges"]
+    }
+  };
+
+  string nodeGroupID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "nodeGroupID",
+    description : "NodeGroupID"
+  }, (validate.rules).string = {min_len : 5, max_len : 100, pattern : "^[0-9a-zA-Z-]+$"}];
+  repeated TimeRange timeRanges = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "timeRanges",
+    description: "定时自动扩容集群节点配置信息"
+  }];
+  string operator = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "operator",
+    description : "操作人员"
+  }];
+}
+
+message UpdateGroupAsTimeRangeResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "UpdateGroupAsTimeRangeResponse"
+      description : "g更新NodeGroup定时扩缩节点策略请求结果"
+    }
+  };
+
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  bool result = 3 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+  WebAnnotationsV2 web_annotations = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "web_annotations",
+    description : "用户所属集群权限"
+  }];
+}
+
 message TransNodeGroupToNodeTemplateRequest {
   option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
     json_schema : {
@@ -11501,7 +11688,7 @@ message ListCloudSubnetsRequest {
   string accountID = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "accountID",
     description : "云凭证ID"
-  },(validate.rules).string = {min_len : 2}];
+  }];
   string vpcID = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "vpcID",
     description: "过滤查询指定vpc的子网列表"
@@ -11521,6 +11708,10 @@ message ListCloudSubnetsRequest {
   string resourceGroupName = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "resourceGroupName",
     description: "Azure Cloud中subnet所属resource group名称"
+  }];
+  string name = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "name",
+    description: "过滤查询子网名称包含name的子网"
   }];
 }
 

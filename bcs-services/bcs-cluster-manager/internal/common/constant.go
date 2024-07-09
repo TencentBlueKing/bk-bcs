@@ -201,6 +201,8 @@ const (
 	ClusterSupNodeNum = "clusterSupNodeNum"
 	// ClusterMaxNodeNum max node num
 	ClusterMaxNodeNum = "clusterMaxNodeNum"
+	// ClusterNodeNum cluster node num
+	ClusterNodeNum = "clusterNodeNum"
 
 	// ShowSharedCluster flag show shared cluster
 	ShowSharedCluster = "showSharedCluster"

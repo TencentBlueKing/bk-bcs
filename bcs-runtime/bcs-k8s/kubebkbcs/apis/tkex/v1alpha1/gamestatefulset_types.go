@@ -249,7 +249,7 @@ type GameStatefulSetStatus struct {
 	PreInplaceHookConditions []PreInplaceHookCondition `json:"preInplaceHookCondition,omitempty"`
 }
 
-//GameStatefulSetConditionType condition type for statefulset
+// GameStatefulSetConditionType condition type for statefulset
 type GameStatefulSetConditionType string
 
 // GameStatefulSetCondition describes the state of a statefulset at a certain point.

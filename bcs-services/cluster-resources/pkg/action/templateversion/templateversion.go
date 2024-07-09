@@ -26,6 +26,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam"
 	projectAuth "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam/perm/resource/project"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/store"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/store/entity"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
@@ -222,6 +223,7 @@ func (t *TemplateVersionAction) Create(ctx context.Context, req *clusterRes.Crea
 		TemplateName:  tmp.Name,
 		TemplateSpace: tmp.TemplateSpace,
 		Version:       req.GetVersion(),
+		EditFormat:    req.GetEditFormat(),
 		Content:       req.GetContent(),
 		Creator:       userName,
 	}
@@ -233,7 +235,9 @@ func (t *TemplateVersionAction) Create(ctx context.Context, req *clusterRes.Crea
 	// update template lastet version
 	if tmp.VersionMode == int(clusterRes.VersionMode_LatestUpdateTime) {
 		updateTemplate := entity.M{
-			"version": req.GetVersion(),
+			"version":      req.GetVersion(),
+			"resourceType": parser.GetResourceTypesFromManifest(req.GetContent()),
+			"updator":      userName,
 		}
 		if err = t.model.UpdateTemplate(ctx, req.GetTemplateID(), updateTemplate); err != nil {
 			return "", err
