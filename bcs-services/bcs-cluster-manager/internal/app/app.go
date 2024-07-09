@@ -652,7 +652,7 @@ func (cm *ClusterManager) initK8SOperator() {
 
 // init daemon
 func (cm *ClusterManager) initDaemon() {
-	cm.daemon = daemon.NewDaemon(0, cm.model, daemon.DaemonOptions{EnableDaemon: cm.opt.Daemon.Enable})
+	cm.daemon = daemon.NewDaemon(0, cm.model, cm.locker, daemon.DaemonOptions{EnableDaemon: cm.opt.Daemon.Enable})
 }
 
 // initRegistry etcd registry

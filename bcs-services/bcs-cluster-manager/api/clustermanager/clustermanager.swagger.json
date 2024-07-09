@@ -2025,6 +2025,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "name",
+            "description": "name. 过滤查询子网名称包含name的子网",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -3558,6 +3565,47 @@
         ]
       }
     },
+    "/clustermanager/v1/clusters/{clusterID}/networks/underlay": {
+      "post": {
+        "summary": "切换集群的网络模式",
+        "description": "切换不同云集群的网络模式支持 underlay 网络模式(腾讯云支持vpc-cni等)",
+        "operationId": "ClusterManager_SwitchClusterUnderlayNetwork",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerSwitchClusterUnderlayNetworkResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterID",
+            "description": "集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerSwitchClusterUnderlayNetworkReq"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/clusters/{clusterID}/nodegroups": {
       "get": {
         "summary": "查询集群的NodeGroup列表",
@@ -4797,6 +4845,47 @@
             "in": "path",
             "required": true,
             "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/nodegroup/{nodeGroupID}/timerange": {
+      "post": {
+        "summary": "更新节点池定时扩缩容策略",
+        "description": "更新节点池定时扩缩容策略",
+        "operationId": "ClusterManager_UpdateGroupAsTimeRange",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerUpdateGroupAsTimeRangeResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "nodeGroupID",
+            "description": "NodeGroupID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerUpdateGroupAsTimeRangeRequest"
+            }
           }
         ],
         "tags": [
@@ -7682,6 +7771,56 @@
           },
           "description": "cidr自动扩容步长设置",
           "title": "cidrStep"
+        },
+        "cidrSteps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerEnvCidrStep"
+          },
+          "description": "cidr自动扩容步长设置(随环境变量配置而变化)",
+          "title": "cidrSteps"
+        },
+        "serviceSteps": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "description": "service数量扩容步长设置",
+          "title": "serviceSteps"
+        },
+        "perNodePodNum": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "description": "单节点pod数量配置",
+          "title": "perNodePodNum"
+        },
+        "underlaySteps": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "description": "underlay网络模式下用户手动分配子网的步长",
+          "title": "underlaySteps"
+        },
+        "underlayAutoSteps": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "description": "underlay网络模式下自动分配子网的步长",
+          "title": "underlayAutoSteps"
+        },
+        "underlayRatio": {
+          "type": "integer",
+          "format": "int64",
+          "description": "underlay网络模式下自动分配子网的步长",
+          "title": "underlayAutoSteps"
         }
       },
       "description": "用于记录公共网络配置信息",
@@ -8668,6 +8807,14 @@
           "$ref": "#/definitions/clustermanagerAction",
           "description": "集群第三方节点空闲检查",
           "title": "checkExternalNodeEmptyAction"
+        },
+        "managedConfig": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerManagedConfig"
+          },
+          "description": "托管集群规格配置,目前适用于TKE",
+          "title": "managedConfig"
         }
       },
       "description": "用于记录集群层面固定、模板信息，帮助集群创建与维护.目前仅支持action(创建集群/删除集群/集群添加节点/集群删除节点)",
@@ -11331,6 +11478,18 @@
       },
       "description": "开启NodeGroup自动扩缩容返回结果",
       "title": "EnableNodeGroupAutoScaleResponse"
+    },
+    "clustermanagerEnvCidrStep": {
+      "type": "object",
+      "properties": {
+        "env": {
+          "type": "string"
+        },
+        "step": {
+          "type": "integer",
+          "format": "int64"
+        }
+      }
     },
     "clustermanagerExistedSubnetIDs": {
       "type": "object",
@@ -14605,6 +14764,17 @@
         "message"
       ]
     },
+    "clustermanagerManagedConfig": {
+      "type": "object",
+      "properties": {
+        "spec": {
+          "type": "string"
+        },
+        "desc": {
+          "type": "string"
+        }
+      }
+    },
     "clustermanagerMapStruct": {
       "type": "object",
       "properties": {
@@ -14872,13 +15042,13 @@
         "subnetSource": {
           "$ref": "#/definitions/clustermanagerSubnetSource",
           "description": "集群VPC-CNI模式是否为非固定IP，默认: FALSE 非固定IP",
-          "title": "isNonStaticIpMode"
+          "title": "subnetSource"
         },
         "isStaticIpMode": {
           "type": "boolean",
           "format": "boolean",
           "description": "集群VPC-CNI模式是否为非固定IP，默认: FALSE 非固定IP",
-          "title": "isNonStaticIpMode"
+          "title": "isStaticIpMode"
         },
         "claimExpiredSeconds": {
           "type": "integer",
@@ -14914,6 +15084,11 @@
           "type": "string",
           "description": "集群service使用的IPv6地址池",
           "title": "serviceIPv6CIDR"
+        },
+        "status": {
+          "type": "string",
+          "description": "集群网络状态, 主要是变更网络组件过程中记录网络状态",
+          "title": "status"
         }
       }
     },
@@ -16721,6 +16896,93 @@
         }
       }
     },
+    "clustermanagerSwitchClusterUnderlayNetworkReq": {
+      "type": "object",
+      "properties": {
+        "clusterID": {
+          "type": "string",
+          "description": "集群ID",
+          "title": "clusterID"
+        },
+        "disable": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "开关集群网络模式, 默认打开",
+          "title": "disable"
+        },
+        "subnet": {
+          "$ref": "#/definitions/clustermanagerSubnetSource",
+          "description": "添加子网的资源",
+          "title": "subnet"
+        },
+        "isStaticIpMode": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否开启静态IP模式",
+          "title": "isStaticIpMode"
+        },
+        "claimExpiredSeconds": {
+          "type": "integer",
+          "format": "int64",
+          "description": "VPC-CNI网络模式下,弹性网卡IP回收时间",
+          "title": "claimExpiredSeconds"
+        },
+        "operator": {
+          "type": "string",
+          "description": "操作人",
+          "title": "operator"
+        }
+      },
+      "description": "切换集群underlay网络模式请求",
+      "title": "SwitchClusterUnderlayNetworkReq",
+      "required": [
+        "clusterID",
+        "disable"
+      ]
+    },
+    "clustermanagerSwitchClusterUnderlayNetworkResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "task": {
+          "$ref": "#/definitions/clustermanagerTask",
+          "description": "集群创建任务（如果有），可用于查询自动化任务结果",
+          "title": "task"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/clustermanagerWebAnnotationsV2",
+          "description": "用户所属的集群权限",
+          "title": "web_annotations"
+        },
+        "cluster": {
+          "$ref": "#/definitions/clustermanagerCluster",
+          "description": "返回集群数据",
+          "title": "cluster"
+        }
+      },
+      "description": "切换集群网络模式返回",
+      "title": "SwitchClusterUnderlayNetworkResp",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
     "clustermanagerSyncAutoScalingOptionRequest": {
       "type": "object",
       "properties": {
@@ -17154,7 +17416,7 @@
         },
         "zone": {
           "type": "string",
-          "description": "定时cron时区",
+          "description": "定时cron时区,如果不执行时区则默认是服务所在时区",
           "title": "zone"
         },
         "desiredNum": {
@@ -18354,6 +18616,64 @@
         "code",
         "message"
       ]
+    },
+    "clustermanagerUpdateGroupAsTimeRangeRequest": {
+      "type": "object",
+      "properties": {
+        "nodeGroupID": {
+          "type": "string",
+          "description": "NodeGroupID",
+          "title": "nodeGroupID"
+        },
+        "timeRanges": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerTimeRange"
+          },
+          "description": "定时自动扩容集群节点配置信息",
+          "title": "timeRanges"
+        },
+        "operator": {
+          "type": "string",
+          "description": "操作人员",
+          "title": "operator"
+        }
+      },
+      "description": "更新NodeGroup定时扩缩策略",
+      "title": "UpdateGroupAsTimeRangeRequest",
+      "required": [
+        "nodeGroupID",
+        "timeRanges"
+      ]
+    },
+    "clustermanagerUpdateGroupAsTimeRangeResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/clustermanagerWebAnnotationsV2",
+          "description": "用户所属集群权限",
+          "title": "web_annotations"
+        }
+      },
+      "description": "g更新NodeGroup定时扩缩节点策略请求结果",
+      "title": "UpdateGroupAsTimeRangeResponse"
     },
     "clustermanagerUpdateGroupDesiredNodeRequest": {
       "type": "object",
