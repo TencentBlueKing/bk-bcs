@@ -60,7 +60,7 @@ type ApiGw interface {
 }
 
 // NewApiGw 初始化网关
-func NewApiGw(opt cc.ApiServerSetting) (ApiGw, error) {
+func NewApiGw(opt cc.Esb) (ApiGw, error) {
 
 	c, err := client.NewClient(nil)
 	if err != nil {
@@ -70,11 +70,12 @@ func NewApiGw(opt cc.ApiServerSetting) (ApiGw, error) {
 		client: c,
 		opt:    opt,
 	}, nil
+
 }
 
 type apiGw struct {
 	client *http.Client
-	opt    cc.ApiServerSetting
+	opt    cc.Esb
 }
 
 // SyncApi 同步网关，如果网关不存在，创建网关，如果网关已存在，更新网关
@@ -359,7 +360,7 @@ func (a *apiGw) newRequest(method, url string, body []byte) (*http.Request, erro
 
 	// 设置请求头
 	req.Header.Set("X-Bkapi-Authorization", fmt.Sprintf(`{"bk_app_code": "%s", "bk_app_secret": "%s"}`,
-		a.opt.Esb.AppCode, a.opt.Esb.AppSecret))
+		a.opt.AppCode, a.opt.AppSecret))
 	req.Header.Set("Content-Type", "application/json")
 
 	return req, nil

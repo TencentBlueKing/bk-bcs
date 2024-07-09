@@ -825,8 +825,9 @@ type Esb struct {
 	// AppSecret is the blueking app secret of bscp to request esb.
 	AppSecret string `yaml:"appSecret"`
 	// User is the blueking user of bscp to request esb.
-	User string    `yaml:"user"`
-	TLS  TLSConfig `yaml:"tls"`
+	User     string    `yaml:"user"`
+	TLS      TLSConfig `yaml:"tls"`
+	BscpHost string    `yaml:"bscpHost"`
 }
 
 // validate esb runtime.
