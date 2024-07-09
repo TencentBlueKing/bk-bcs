@@ -97,7 +97,7 @@ func (dao *hookDao) ListWithRefer(kit *kit.Kit, opt *types.ListHooksWithReferOpt
 	q := dao.genQ.Hook.WithContext(kit.Ctx).Where(h.BizID.Eq(opt.BizID)).Order(h.Name)
 
 	if opt.Name != "" {
-		q = q.Where(h.Name.Regexp("(?i)" + opt.Name))
+		q = q.Where(h.Name.Like("%" + opt.Name + "%"))
 	}
 	if opt.Tag != "" {
 		q = q.Where(rawgen.Cond(datatypes.JSONArrayQuery("tags").Contains(opt.Tag))...)
