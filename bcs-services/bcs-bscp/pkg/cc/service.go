@@ -125,12 +125,13 @@ func (s ApiServerSetting) Validate() error {
 
 // AuthServerSetting defines auth server used setting options.
 type AuthServerSetting struct {
-	Network   Network           `yaml:"network"`
-	Service   Service           `yaml:"service"`
-	Log       LogOption         `yaml:"log"`
-	LoginAuth LoginAuthSettings `yaml:"loginAuth"`
-	IAM       IAM               `yaml:"iam"`
-	Esb       Esb               `yaml:"esb"`
+	Network    Network           `yaml:"network"`
+	Service    Service           `yaml:"service"`
+	Log        LogOption         `yaml:"log"`
+	LoginAuth  LoginAuthSettings `yaml:"loginAuth"`
+	IAM        IAM               `yaml:"iam"`
+	Esb        Esb               `yaml:"esb"`
+	ApiGateway ApiGateway        `yaml:"apiGateway"`
 }
 
 // LoginAuthSettings login conf
@@ -140,6 +141,13 @@ type LoginAuthSettings struct {
 	Provider  string `yaml:"provider"`
 	UseESB    bool   `yaml:"useEsb"`
 	GWPubKey  string `yaml:"gwPubkey"`
+}
+
+// ApiGateway gateway conf
+type ApiGateway struct {
+	// AutoRegister 是否自动注册
+	AutoRegister bool   `yaml:"autoRegister"`
+	GWPubKey     string `yaml:"gwPubkey"`
 }
 
 // trySetFlagBindIP try set flag bind ip.
