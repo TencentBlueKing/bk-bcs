@@ -10,28 +10,29 @@
  * limitations under the License.
  */
 
-package service
+package lock
 
 import (
 	"sync"
 )
 
-// fileLockManager manage file lock
-type fileLockManager struct {
+// FileLock is used to protect the file operation, lock the file by path.
+// !It is essentially a resource lock that cannot be shared between processes or between FileLock instances.
+type FileLock struct {
 	lock     sync.Mutex             // used to protect the mutex of the lock map
 	lockPool map[string]*sync.Mutex // mutex lock map, key is the file path
 }
 
-// newFileLockManager create a file lock manager
-func newFileLockManager() *fileLockManager {
-	return &fileLockManager{
+// NewFileLock create a file lock
+func NewFileLock() *FileLock {
+	return &FileLock{
 		lock:     sync.Mutex{},
 		lockPool: make(map[string]*sync.Mutex),
 	}
 }
 
-// Lock lock the file by file path
-func (flm *fileLockManager) Lock(filePath string) {
+// Acquire try get the file lock by file path
+func (flm *FileLock) Acquire(filePath string) {
 	flm.lock.Lock()
 	if _, ok := flm.lockPool[filePath]; !ok {
 		flm.lockPool[filePath] = &sync.Mutex{}
@@ -41,8 +42,19 @@ func (flm *fileLockManager) Lock(filePath string) {
 	flm.lockPool[filePath].Lock()
 }
 
-// Unlock unlock the file by file path
-func (flm *fileLockManager) Unlock(filePath string) {
+// TryAcquire try get the file lock by file path
+func (flm *FileLock) TryAcquire(filePath string) bool {
+	flm.lock.Lock()
+	if _, ok := flm.lockPool[filePath]; !ok {
+		flm.lockPool[filePath] = &sync.Mutex{}
+	}
+	flm.lock.Unlock()
+
+	return flm.lockPool[filePath].TryLock()
+}
+
+// Release release the file lock by file path
+func (flm *FileLock) Release(filePath string) {
 	flm.lock.Lock()
 	defer flm.lock.Unlock()
 
