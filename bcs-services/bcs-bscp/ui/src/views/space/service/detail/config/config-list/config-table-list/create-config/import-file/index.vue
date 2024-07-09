@@ -91,21 +91,22 @@
             collapse-tags
             filterable
             multiple
-            show-select-all>
+            show-select-all
+            @focus="handleFocusConfigSelect"
+            @blur="handleCloseConfigSelect">
             <template #trigger>
               <div class="select-btn">{{ $t('选择配置文件') }}</div>
             </template>
             <bk-option-group :label="$t('配置文件')" collapsible>
-              <bk-option v-for="(item, index) in allConfigList" :id="item.id" :key="index">
-                <span>{{ fileAP(item) }}</span>
+              <bk-option v-for="(item, index) in allConfigList" :id="item.id" :key="index" :label="fileAP(item)">
               </bk-option>
             </bk-option-group>
             <bk-option-group :label="$t('模板套餐')" collapsible>
               <bk-option
                 v-for="(item, index) in allTemplateConfigList"
                 :id="`${item.template_space_id} - ${item.template_set_id}`"
-                :key="index">
-                <span>{{ `${item.template_space_name} - ${item.template_set_name}` }}</span>
+                :key="index"
+                :label="`${item.template_space_name} - ${item.template_set_name}`">
               </bk-option>
             </bk-option-group>
             <template #extension>
@@ -135,7 +136,7 @@
           v-if="existTemplateConfigList.length"
           :table-data="existTemplateConfigList"
           :is-exsit-table="true"
-          @change="handleTemplateTableChange($event, true)" />
+          @change="handleTemplateTableChange($event, false)" />
       </div>
     </bk-loading>
     <template #footer>
@@ -170,6 +171,7 @@
   import useServiceStore from '../../../../../../../../../store/service';
   import { ImportTemplateConfigItem } from '../../../../../../../../../../types/template';
   import TemplateConfigTable from './template-config-table.vue';
+  import { cloneDeep } from 'lodash';
 
   const { t } = useI18n();
 
@@ -202,6 +204,7 @@
   const closeLoading = ref(false);
   const selectedConfigIds = ref<(string | number)[]>([]);
   const configSelectRef = ref();
+  const lastSelectedConfigIds = ref<(string | number)[]>([]); // 上一次选中导入的配置项
 
   const confirmBtnDisabled = computed(() => {
     if (importType.value === 'configTemplate' && importFromTemplateRef.value) {
@@ -454,6 +457,11 @@
 
   const handleCloseConfigSelect = () => {
     configSelectRef.value.hidePopover();
+    selectedConfigIds.value = cloneDeep(lastSelectedConfigIds.value);
+  };
+
+  const handleFocusConfigSelect = () => {
+    lastSelectedConfigIds.value = cloneDeep(selectedConfigIds.value);
   };
 
   const handleConfirmSelect = () => {
