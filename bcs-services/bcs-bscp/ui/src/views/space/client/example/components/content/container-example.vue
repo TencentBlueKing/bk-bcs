@@ -9,6 +9,7 @@
         style="height: 1490px"
         :code-val="replaceVal"
         :variables="variables"
+        language="yaml"
         @change="(val: string) => (copyReplaceVal = val)" />
     </div>
   </section>
@@ -89,7 +90,7 @@
   // 复制示例
   const copyExample = async () => {
     try {
-      await fileOptionRef.value.formRef.validate();
+      await fileOptionRef.value.handleValidate();
       // 复制示例使用未脱敏的密钥
       const reg = /'(.{1}|.{3})\*{3}(.{1}|.{3})'/g;
       const copyVal = copyReplaceVal.value.replaceAll(reg, `'${optionData.value.clientKey}'`);

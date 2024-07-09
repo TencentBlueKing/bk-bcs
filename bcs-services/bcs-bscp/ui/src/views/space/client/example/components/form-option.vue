@@ -26,17 +26,12 @@
       <bk-input v-model="formData.tempDir" :placeholder="$t('请输入')" clearable />
     </bk-form-item>
   </bk-form>
-  <!-- 添加标签1 -->
-  <AddLabel
-    @send-label="
-      (obj) => {
-        formData.labelArr = obj;
-      }
-    " />
+  <!-- 添加标签 -->
+  <AddLabel @send-label="(obj) => (formData.labelArr = obj)" @send-validate="(val) => (validateLabel = val)" />
 </template>
 
 <script lang="ts" setup>
-  import { ref, watch } from 'vue';
+  import { onMounted, ref, watch } from 'vue';
   import KeySelect from './key-selector.vue';
   import { Info } from 'bkui-vue/lib/icon';
   import AddLabel from './add-label.vue';
@@ -54,6 +49,16 @@
 
   const { t } = useI18n();
   const sysDirectories: string[] = ['/bin', '/boot', '/dev', '/lib', '/lib64', '/proc', '/run', '/sbin', '/sys'];
+
+  const formRef = ref();
+  const formData = ref<IExampleFormData>({
+    clientKey: '', // 客户端密钥
+    privacyCredential: '', // 脱敏的密钥
+    tempDir: '/data/bscp', // 临时目录
+    labelArr: [], // 添加的标签
+  });
+  const validateLabel = ref(true);
+
   const rules = {
     clientKey: [
       {
@@ -100,18 +105,20 @@
     ],
   };
 
-  const formRef = ref();
-  const formData = ref<IExampleFormData>({
-    clientKey: '', // 客户端密钥
-    privacyCredential: '', // 脱敏的密钥
-    tempDir: '/data/bscp', // 临时目录
-    labelArr: [], // 添加的标签
-  });
-
   watch(formData.value, () => {
     sendAll();
   });
 
+  onMounted(() => {
+    sendAll();
+  });
+
+  const handleValidate = () => {
+    if (!validateLabel.value) {
+      return new Promise((reject) => reject);
+    }
+    return formRef.value.validate();
+  };
   const setCredential = (key: string, privacyKey: string) => {
     if (key.length && privacyKey.length) {
       formRef.value.clearValidate();
@@ -128,7 +135,7 @@
   };
 
   defineExpose({
-    formRef,
+    handleValidate,
   });
 </script>
 
@@ -158,4 +165,9 @@
     color: #979ba5;
     cursor: pointer;
   }
+  // :deep(.is-error) {
+  //   &.add-label-item .bk-input {
+  //     border-color: #c4c6cc;
+  //   }
+  // }
 </style>

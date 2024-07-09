@@ -1,4 +1,3 @@
-### Watch
 import logging
 
 from bk_bscp.client import BscpClient, WatchedApp
