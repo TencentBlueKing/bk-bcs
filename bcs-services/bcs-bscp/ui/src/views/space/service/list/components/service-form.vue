@@ -68,7 +68,7 @@
         message: t('最大长度32个字符'),
       },
       {
-        validator: (value: string) => /^[a-zA-Z0-9][a-zA-Z0-9_-]*[a-zA-Z0-9]?$/.test(value),
+        validator: (value: string) => /^[a-zA-Z0-9](?:[a-zA-Z0-9_-]*[a-zA-Z0-9])?$/.test(value),
         message: t('服务名称由英文、数字、下划线、中划线组成且以英文、数字开头和结尾'),
       },
     ],
