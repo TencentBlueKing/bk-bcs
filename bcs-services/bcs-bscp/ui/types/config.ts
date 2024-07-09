@@ -234,7 +234,7 @@ export interface IConfigKvType {
   content_spec: {
     signature: string;
     byte_size: string;
-    md5: string;
+    md5?: string;
   };
   kv_state: string;
   attachment: {
