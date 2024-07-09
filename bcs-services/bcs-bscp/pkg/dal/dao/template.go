@@ -36,6 +36,8 @@ type Template interface {
 	CreateWithTx(kit *kit.Kit, tx *gen.QueryTx, template *table.Template) (uint32, error)
 	// Update one template's info.
 	Update(kit *kit.Kit, template *table.Template) error
+	// UpdateWithTx Update one template instance with transaction.
+	UpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, template *table.Template) error
 	// List templates with options.
 	List(kit *kit.Kit, bizID, templateSpaceID uint32, s search.Searcher,
 		opt *types.BasePage, topIds []uint32, searchValue string) ([]*table.Template, int64, error)
@@ -67,6 +69,45 @@ type templateDao struct {
 	genQ     *gen.Query
 	idGen    IDGenInterface
 	auditDao AuditDao
+}
+
+// UpdateWithTx Update one template instance with transaction.
+func (dao *templateDao) UpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.Template) error {
+	if err := g.ValidateUpdate(); err != nil {
+		return err
+	}
+
+	// 更新操作, 获取当前记录做审计
+	m := tx.Template
+	q := tx.Template.WithContext(kit.Ctx)
+	oldOne, err := q.Where(m.ID.Eq(g.ID), m.BizID.Eq(g.Attachment.BizID)).Take()
+	if err != nil {
+		return err
+	}
+
+	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareUpdate(g, oldOne)
+	if err := ad.Do(tx.Query); err != nil {
+		return err
+	}
+
+	if _, err := q.Where(m.BizID.Eq(g.Attachment.BizID), m.ID.Eq(g.ID)).
+		Select(m.Memo, m.Reviser, m.UpdatedAt).Updates(g); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// ListByExclusionIDs list templates by template exclusion ids.
+func (dao *templateDao) ListByExclusionIDs(kit *kit.Kit, ids []uint32) ([]*table.Template, error) {
+	m := dao.genQ.Template
+	q := dao.genQ.Template.WithContext(kit.Ctx)
+	result, err := q.Where(m.ID.NotIn(ids...)).Find()
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 // ListTemplateByTuple 按照多个字段in查询template 列表

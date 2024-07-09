@@ -1372,3 +1372,9 @@ func (t *Task) BuildUpdateNodeGroupTask(group *proto.NodeGroup, opt *cloudprovid
 	task.CommonParams[cloudprovider.JobTypeKey.String()] = cloudprovider.UpdateNodeGroupJob.String()
 	return task, nil
 }
+
+// BuildSwitchClusterNetworkTask switch cluster network mode
+func (t *Task) BuildSwitchClusterNetworkTask(cls *proto.Cluster,
+	subnet *proto.SubnetSource, opt *cloudprovider.SwitchClusterNetworkOption) (*proto.Task, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}

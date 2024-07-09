@@ -52,7 +52,7 @@ func TestParseDeploy(t *testing.T) {
 }
 
 var exceptedDeployReplicas = model.DeployReplicas{
-	Cnt:                  3,
+	Cnt:                  "3",
 	UpdateStrategy:       "RollingUpdate",
 	MaxSurge:             2,
 	MSUnit:               "cnt",

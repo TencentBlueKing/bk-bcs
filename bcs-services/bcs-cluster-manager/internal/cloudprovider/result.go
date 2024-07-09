@@ -51,6 +51,8 @@ var (
 	AddExternalNodeJob JobType = "add-external-node"
 	// DeleteExternalNodeJob for deleteNodes job
 	DeleteExternalNodeJob JobType = "delete-external-node"
+	// SwitchClusterNetworkJob for switchClusterNetwork job
+	SwitchClusterNetworkJob JobType = "switch-cluster-network"
 
 	// CreateNodeGroupJob for createNodeGroup job
 	CreateNodeGroupJob JobType = "create-nodegroup"
@@ -147,11 +149,16 @@ func (sjr *SyncJobResult) UpdateJobResultStatus(isSuccess bool) error {
 		sjr.Status = generateStatusResult(common.StatusRunning, common.StatusNodeGroupUpdateFailed)
 		return sjr.updateNodeGroupStatus(isSuccess)
 	case UpdateAutoScalingOptionJob:
-		sjr.Status = generateStatusResult(common.StatusAutoScalingOptionNormal, common.StatusAutoScalingOptionUpdateFailed)
+		sjr.Status = generateStatusResult(common.StatusAutoScalingOptionNormal,
+			common.StatusAutoScalingOptionUpdateFailed)
 		return sjr.updateAutoScalingStatus(isSuccess)
 	case SwitchAutoScalingOptionStatusJob:
-		sjr.Status = generateStatusResult(common.StatusAutoScalingOptionNormal, common.StatusAutoScalingOptionUpdateFailed)
+		sjr.Status = generateStatusResult(common.StatusAutoScalingOptionNormal,
+			common.StatusAutoScalingOptionUpdateFailed)
 		return sjr.updateAutoScalingStatus(isSuccess)
+	case SwitchClusterNetworkJob:
+		sjr.Status = generateStatusResult(common.TaskStatusSuccess, common.TaskStatusFailure)
+		return sjr.updateClusterNetworkStatus(isSuccess)
 	}
 
 	return fmt.Errorf(ErrJobType, sjr.JobType)
@@ -252,6 +259,26 @@ func (sjr *SyncJobResult) updateClusterResultStatus(isSuccess bool) error {
 	cluster.Status = sjr.Status.Failure
 	if isSuccess {
 		cluster.Status = sjr.Status.Success
+		cluster.Message = ""
+	}
+
+	err = GetStorageModel().UpdateCluster(context.Background(), cluster)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (sjr *SyncJobResult) updateClusterNetworkStatus(isSuccess bool) error {
+	cluster, err := GetStorageModel().GetCluster(context.Background(), sjr.ClusterID)
+	if err != nil {
+		return err
+	}
+
+	cluster.NetworkSettings.Status = sjr.Status.Failure
+	if isSuccess {
+		cluster.NetworkSettings.Status = sjr.Status.Success
 		cluster.Message = ""
 	}
 

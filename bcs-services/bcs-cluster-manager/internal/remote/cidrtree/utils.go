@@ -22,14 +22,15 @@ import (
 
 // Subnet container info for vpc subnet
 type Subnet struct {
-	ID          string     `json:"id,omitempty"`
-	IPNet       *net.IPNet `json:"ipNet,omitempty"`
-	Name        string     `json:"name,omitempty"`
-	Zone        string     `json:"zone,omitempty"`
-	ZoneName    string     `json:"zonename,omitempty"`
-	VpcID       string     `json:"vpcId,omitempty"`
-	CreatedTime string     `json:"createdTime,omitempty"`
-	AvaliableIP uint64     `json:"avaliableIP,omitempty"`
+	ID           string     `json:"id,omitempty"`
+	IPNet        *net.IPNet `json:"ipNet,omitempty"`
+	Name         string     `json:"name,omitempty"`
+	Zone         string     `json:"zone,omitempty"`
+	ZoneName     string     `json:"zonename,omitempty"`
+	VpcID        string     `json:"vpcId,omitempty"`
+	CreatedTime  string     `json:"createdTime,omitempty"`
+	AvailableIps uint64     `json:"availableIps,omitempty"`
+	TotalIps     uint64     `json:"totalIps,omitempty"`
 }
 
 // InSlice report wether a in s

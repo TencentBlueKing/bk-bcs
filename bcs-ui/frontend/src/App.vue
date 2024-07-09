@@ -31,7 +31,7 @@ import BkPaaSLogin from '@/views/app/login.vue';
 import Navigation from '@/views/app/navigation.vue';
 
 const { getUserInfo } = useAppData();
-const { config, getPlatformInfo, setDocumentTitle } = usePlatform();
+const { config, getPlatformInfo, setDocumentTitle, setShortcutIcon } = usePlatform();
 const isLoading = ref(false);
 const applyPermRef = ref<any>(null);
 const loginRef = ref<any>(null);
@@ -132,6 +132,7 @@ onMounted(async () => {
   await getUserInfo();
   isLoading.value = false;
   setDocumentTitle(config.i18n);
+  setShortcutIcon(config.favicon);
 });
 
 onBeforeUnmount(() => {

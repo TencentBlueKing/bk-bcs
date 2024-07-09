@@ -20,6 +20,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/lock"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 )
 
@@ -44,11 +45,13 @@ type Daemon struct {
 	cancel   context.CancelFunc
 	interval int
 	model    store.ClusterManagerModel
+	lock     lock.DistributedLock
 	options  DaemonOptions
 }
 
 // NewDaemon init daemon
-func NewDaemon(interval int, model store.ClusterManagerModel, options DaemonOptions) DaemonInterface {
+func NewDaemon(interval int, model store.ClusterManagerModel,
+	lock lock.DistributedLock, options DaemonOptions) DaemonInterface {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	if interval <= 0 {
@@ -59,6 +62,7 @@ func NewDaemon(interval int, model store.ClusterManagerModel, options DaemonOpti
 		ctx:      ctx,
 		cancel:   cancel,
 		model:    model,
+		lock:     lock,
 		interval: interval,
 		options:  options,
 	}
@@ -81,7 +85,11 @@ func (d *Daemon) InitDaemon(ctx context.Context) {
 	}()
 
 	go d.simpleDaemon(ctx, &wg, func() {
-		d.reportVpcAvailableIPCount(errChan)
+		d.reportVpcIpResourceUsage(errChan)
+	}, 180)
+
+	go d.simpleDaemon(ctx, &wg, func() {
+		d.reportClusterVpcUsage(errChan)
 	}, 180)
 
 	go d.simpleDaemon(ctx, &wg, func() {
@@ -103,6 +111,10 @@ func (d *Daemon) InitDaemon(ctx context.Context) {
 	go d.simpleDaemon(ctx, &wg, func() {
 		d.reportRegionInsTypeUsage(errChan)
 	}, 300)
+
+	go d.simpleDaemon(ctx, &wg, func() {
+		d.autoAllocateTcClusterCidr(errChan)
+	}, 30)
 
 	wg.Wait()
 }

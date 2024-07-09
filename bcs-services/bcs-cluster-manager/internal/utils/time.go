@@ -18,6 +18,8 @@ import (
 
 const (
 	format = "2006-01-02 15:04:05"
+	// DefaultTimeZone 默认时区
+	DefaultTimeZone = "Asia/Shanghai"
 )
 
 // TransTimeFormat trans time.RFC3339 to format that user easy to read

@@ -861,123 +861,57 @@ func CheckTkeClusterStatusTask(taskID string, stepName string) error {
 }
 
 // enableTkeClusterVpcCni enable tke cluster vpc-cni mode
-func enableTkeClusterVpcCni(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, systemID string) error {
+func enableTkeClusterVpcCni(ctx context.Context,
+	systemID string, subnetIds []string, cluster *proto.Cluster, opt *cloudprovider.CommonOption) error {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
-	cli, err := api.NewTkeClient(info.CmOption)
+	cli, err := api.NewTkeClient(opt)
 	if err != nil {
 		blog.Errorf("enableTkeClusterVpcCni[%s] getTkeClient cluster[%s] failed: %v",
-			taskID, info.Cluster.ClusterID, err.Error())
+			taskID, cluster.ClusterID, err.Error())
 		retErr := fmt.Errorf("get cloud tke client err, %s", err.Error())
 		return retErr
 	}
+	blog.Infof("enableTkeClusterVpcCni[%s] enable %v subnets %+v",
+		taskID, cluster.NetworkSettings.EnableVPCCni, cluster.NetworkSettings.EniSubnetIDs)
 
-	blog.Infof("enableTkeClusterVpcCni[%s]: enableVPCCni %v", taskID, info.Cluster.NetworkSettings.EnableVPCCni)
-
-	var (
-		abnormal = false
-	)
-
-	if info.Cluster.NetworkSettings.EnableVPCCni {
-		err = cli.EnableTKEVpcCniMode(&api.EnableVpcCniInput{
-			TkeClusterID:   systemID,
-			VpcCniType:     api.TKEDirectEni,
-			SubnetsIDs:     info.Cluster.NetworkSettings.EniSubnetIDs,
-			EnableStaticIp: info.Cluster.NetworkSettings.IsStaticIpMode,
-			ExpiredSeconds: int(info.Cluster.NetworkSettings.ClaimExpiredSeconds),
-		})
-		if err != nil {
-			blog.Errorf("enableTkeClusterVpcCni[%s] tke EnableTKEVpcCniMode for cluster[%s] failed: %v",
-				taskID, info.Cluster.ClusterID, err)
-			retErr := fmt.Errorf("EnableTKEVpcCniMode failed: %s", err.Error())
-			return retErr
-		}
-
-		ctxTime, cancel := context.WithTimeout(context.Background(), time.Minute*30)
-		defer cancel()
-
-		err = loop.LoopDoFunc(ctxTime, func() error {
-			status, errGet := cli.GetEnableVpcCniProgress(systemID)
-			if errGet != nil {
-				blog.Errorf("enableTkeClusterVpcCni[%s] GetEnableVpcCniProgress failed: %v", taskID, errGet)
-				return nil
-			}
-
-			blog.Infof("enableTkeClusterVpcCni[%s]: GetEnableVpcCniProgress current status[%s]",
-				taskID, status.Status)
-
-			switch status.Status {
-			case string(api.Succeed):
-				return loop.EndLoop
-			case string(api.Failed):
-				abnormal = true
-				return loop.EndLoop
-			}
-
-			return nil
-		}, loop.LoopInterval(time.Second*5))
-		if err != nil {
-			blog.Errorf("enableTkeClusterVpcCni[%s] GetEnableVpcCniProgress failed: %v", taskID, err)
-			return err
-		}
-		if abnormal {
-			blog.Errorf("enableTkeClusterVpcCni[%s] GetEnableVpcCniProgress status abnormal", taskID)
-			retErr := fmt.Errorf("GetEnableVpcCniProgress[%s] api timeout|abnormal", info.Cluster.ClusterID)
-			return retErr
-		}
-	}
-
-	return nil
-}
-
-// EnableTkeClusterVpcCniTask enable on vpc-cni networkMode
-func EnableTkeClusterVpcCniTask(taskID string, stepName string) error {
-	start := time.Now()
-	// get task and task current step
-	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
-	if err != nil {
-		return err
-	}
-	// previous step successful when retry task
-	if step == nil {
-		blog.Infof("EnableTkeClusterVpcCniTask[%s]: current step[%s] successful and skip", taskID, stepName)
-		return nil
-	}
-	blog.Infof("EnableTkeClusterVpcCniTask[%s]: task %s run step %s, system: %s, old state: %s, params %v",
-		taskID, taskID, stepName, step.System, step.Status, step.Params)
-
-	// step login started here
-	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
-	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
-	systemID := state.Task.CommonParams[cloudprovider.CloudSystemID.String()]
-
-	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
-		ClusterID: clusterID,
-		CloudID:   cloudID,
+	err = cli.EnableTKEVpcCniMode(&api.EnableVpcCniInput{
+		TkeClusterID:   systemID,
+		VpcCniType:     api.TKERouteEni,
+		SubnetsIDs:     subnetIds,
+		EnableStaticIp: cluster.NetworkSettings.IsStaticIpMode,
+		ExpiredSeconds: int(cluster.NetworkSettings.ClaimExpiredSeconds),
 	})
 	if err != nil {
-		blog.Errorf("EnableTkeClusterVpcCniTask[%s]: GetClusterDependBasicInfo for cluster %s in task %s "+
-			"step %s failed, %s", taskID, clusterID, taskID, stepName, err.Error())
-		retErr := fmt.Errorf("get cloud/project information failed, %s", err.Error())
-		_ = state.UpdateStepFailure(start, stepName, retErr)
+		blog.Errorf("enableTkeClusterVpcCni[%s] tke EnableTKEVpcCniMode for cluster[%s] failed: %v",
+			taskID, cluster.ClusterID, err)
+		retErr := fmt.Errorf("EnableTKEVpcCniMode failed: %s", err.Error())
 		return retErr
 	}
 
-	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
+	ctxTime, cancel := context.WithTimeout(context.Background(), time.Minute*5)
+	defer cancel()
 
-	// enableTkeClusterVpcCni task
-	err = enableTkeClusterVpcCni(ctx, dependInfo, systemID)
+	err = loop.LoopDoFunc(ctxTime, func() error {
+		status, errGet := cli.GetEnableVpcCniProgress(systemID)
+		if errGet != nil {
+			blog.Errorf("enableTkeClusterVpcCni[%s] GetEnableVpcCniProgress failed: %v", taskID, errGet)
+			return nil
+		}
+
+		blog.Infof("enableTkeClusterVpcCni[%s]: GetEnableVpcCniProgress current status[%s] message[%s]",
+			taskID, status.Status, status.Message)
+
+		switch status.Status {
+		case string(api.Succeed):
+			return loop.EndLoop
+		default:
+		}
+
+		return nil
+	}, loop.LoopInterval(time.Second*5))
 	if err != nil {
-		blog.Errorf("EnableTkeClusterVpcCniTask[%s] enableTkeClusterVpcCni failed: %v",
-			taskID, err)
-		retErr := fmt.Errorf("enableTkeClusterVpcCni[%s] abnormal", clusterID)
-		_ = state.UpdateStepFailure(start, stepName, retErr)
-		return retErr
-	}
-
-	// update step
-	if err = state.UpdateStepSucc(start, stepName); err != nil {
-		blog.Errorf("EnableTkeClusterVpcCniTask[%s] task %s %s update to storage fatal", taskID, taskID, stepName)
+		blog.Errorf("enableTkeClusterVpcCni[%s] GetEnableVpcCniProgress failed: %v", taskID, err)
 		return err
 	}
 

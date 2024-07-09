@@ -7,6 +7,7 @@ properties:
     type: object
     properties:
       {{- include "workload.cjJobManage" . | indent 6 }}
+      {{- include "workload.labels" . | indent 6 }}
       {{- include "workload.nodeSelect" . | indent 6 }}
       {{- include "workload.affinity" . | indent 6 }}
       {{- include "workload.toleration" . | indent 6 }}
@@ -22,6 +23,7 @@ properties:
         verifiable: true
     ui:order:
       - jobManage
+      - labels
       - nodeSelect
       - affinity
       - toleration

@@ -13,13 +13,19 @@
 
 package v1
 
+const (
+	// PortDefineFirst select first port of segment
+	PortDefineFirst = "FIRST"
+	// PortDefineLast select last port of segment
+	PortDefineLast = "LAST"
+)
+
 // UptimeCheckConfig 拨测配置
 type UptimeCheckConfig struct {
 	Enabled bool `json:"enabled"`
-	// Name    string `json:"name,omitempty"`
 
-	Protocol string `json:"protocol,omitempty"` // if not set, use listener protocol as default,
 	// support HTTP(S)/ TCP/ UDP/ ICMP
+	Protocol string `json:"protocol,omitempty"` // if not set, use listener protocol as default,
 	// Target   []string `json:"target"`
 	Port int64 `json:"port,omitempty"` // if not set, use listeners port as default
 
@@ -43,6 +49,17 @@ type UptimeCheckConfig struct {
 	Headers      []*Params  `json:"headers,omitempty"`
 	ResponseCode string     `json:"response_code,omitempty"`
 	URLList      []string   `json:"url_list,omitempty"`
+
+	// define which port should be selected to check when use port segment
+	// +kubebuilder:validation:Enum=FIRST;LAST
+	PortDefine string `json:"port_define,omitempty"`
+}
+
+func (u *UptimeCheckConfig) GetPortDefine() string {
+	if u.PortDefine != "" {
+		return u.PortDefine
+	}
+	return PortDefineFirst
 }
 
 // Params http check params

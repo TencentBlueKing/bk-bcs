@@ -22,8 +22,10 @@ import (
 )
 
 // BcsDbPrivConfigLister helps list BcsDbPrivConfigs.
+// All objects returned here must be treated as read-only.
 type BcsDbPrivConfigLister interface {
 	// List lists all BcsDbPrivConfigs in the indexer.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1.BcsDbPrivConfig, err error)
 	// BcsDbPrivConfigs returns an object that can list and get BcsDbPrivConfigs.
 	BcsDbPrivConfigs(namespace string) BcsDbPrivConfigNamespaceLister
@@ -54,10 +56,13 @@ func (s *bcsDbPrivConfigLister) BcsDbPrivConfigs(namespace string) BcsDbPrivConf
 }
 
 // BcsDbPrivConfigNamespaceLister helps list and get BcsDbPrivConfigs.
+// All objects returned here must be treated as read-only.
 type BcsDbPrivConfigNamespaceLister interface {
 	// List lists all BcsDbPrivConfigs in the indexer for a given namespace.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1.BcsDbPrivConfig, err error)
 	// Get retrieves the BcsDbPrivConfig from the indexer for a given namespace and name.
+	// Objects returned here must be treated as read-only.
 	Get(name string) (*v1.BcsDbPrivConfig, error)
 	BcsDbPrivConfigNamespaceListerExpansion
 }

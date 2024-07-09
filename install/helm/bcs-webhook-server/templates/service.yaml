@@ -11,5 +11,11 @@ spec:
       targetPort: http
       protocol: TCP
       name: http
+    {{- if .Values.plugins.dbpriv.dbmEnabled }}
+    - port: 8089
+      targetPort: 8089
+      protocol: TCP
+      name: hookserver
+    {{- end }}
   selector:
     app: bcs-webhook-server

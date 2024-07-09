@@ -17,6 +17,7 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
@@ -285,6 +286,7 @@ type ListProjectClusterAction struct {
 	ctx   context.Context
 	model store.ClusterManagerModel
 	iam   iam.PermClient
+	k8sOp *clusterops.K8SOperator
 
 	req         *cmproto.ListProjectClusterReq
 	resp        *cmproto.ListProjectClusterResp
@@ -292,10 +294,12 @@ type ListProjectClusterAction struct {
 }
 
 // NewListProjectClusterAction create list action for project cluster
-func NewListProjectClusterAction(model store.ClusterManagerModel, iam iam.PermClient) *ListProjectClusterAction {
+func NewListProjectClusterAction(model store.ClusterManagerModel,
+	iam iam.PermClient, k8sOp *clusterops.K8SOperator) *ListProjectClusterAction {
 	return &ListProjectClusterAction{
 		model: model,
 		iam:   iam,
+		k8sOp: k8sOp,
 	}
 }
 
@@ -336,19 +340,43 @@ func (la *ListProjectClusterAction) listProjectCluster() error {
 		otherCluster   = make([]*cmproto.Cluster, 0)
 		runningCluster = make([]*cmproto.Cluster, 0)
 		clusterIDList  = make([]string, 0)
+		lock           = sync.Mutex{}
 	)
-	for i := range clusterList {
-		if clusterList[i].IsShared {
-			clusterList[i].IsShared = false
-		}
 
-		if clusterList[i].Status == common.StatusRunning {
-			runningCluster = append(runningCluster, shieldClusterInfo(&clusterList[i]))
-		} else {
-			otherCluster = append(otherCluster, shieldClusterInfo(&clusterList[i]))
-		}
-		clusterIDList = append(clusterIDList, clusterList[i].ClusterID)
+	concurency := utils.NewRoutinePool(10)
+	defer concurency.Close()
+
+	for i := range clusterList {
+		concurency.Add(1)
+
+		go func(cluster cmproto.Cluster) {
+			defer concurency.Done()
+
+			if cluster.IsShared {
+				cluster.IsShared = false
+			}
+			// get cluster nodes num when cluster status is running
+			var clusterNodeNum uint32 = 0
+			if cluster.Status == common.StatusRunning {
+				clusterNodeNum = autils.GetClusterNodesNum(la.k8sOp, cluster.GetClusterID(), false)
+			}
+			if cluster.ExtraInfo == nil {
+				cluster.ExtraInfo = make(map[string]string)
+			}
+			cluster.ExtraInfo[common.ClusterNodeNum] = fmt.Sprintf("%v", clusterNodeNum)
+
+			lock.Lock()
+			if cluster.Status == common.StatusRunning {
+				runningCluster = append(runningCluster, shieldClusterInfo(&cluster))
+			} else {
+				otherCluster = append(otherCluster, shieldClusterInfo(&cluster))
+			}
+			clusterIDList = append(clusterIDList, cluster.ClusterID)
+			lock.Unlock()
+		}(clusterList[i])
 	}
+	concurency.Wait()
+
 	if len(otherCluster) > 0 {
 		sort.Sort(utils.ClusterSlice(otherCluster))
 	}
@@ -362,7 +390,7 @@ func (la *ListProjectClusterAction) listProjectCluster() error {
 	la.resp.ClusterExtraInfo = returnClusterExtraInfo(la.model, clusterList)
 
 	// get shared cluster
-	sharedClusters, err := getSharedCluster(la.model)
+	sharedClusters, err := getSharedCluster(la.k8sOp, la.model)
 	if err != nil {
 		blog.Errorf("ListProjectClusterAction getSharedCluster failed: %v", err)
 	} else {
@@ -658,7 +686,7 @@ func (la *ListNodesInClusterAction) listNodes() error {
 	}
 
 	// get cluster nodes
-	k8sNodes := filterNodesRole(la.getK8sNodes(cmNodes), false)
+	k8sNodes := autils.FilterNodesRole(la.getK8sNodes(cmNodes), false)
 	la.nodes = mergeClusterNodes(la.cluster, cmNodes, k8sNodes)
 
 	return nil
@@ -826,7 +854,7 @@ func (la *ListMastersInClusterAction) listNodes() error {
 			return err
 		}
 
-		masters = filterNodesRole(masters, true)
+		masters = autils.FilterNodesRole(masters, true)
 		la.nodes = transK8sNodesToClusterNodes(la.req.ClusterID, masters)
 	}
 
@@ -978,7 +1006,7 @@ func returnClusterExtraInfo(model store.ClusterManagerModel,
 }
 
 // getSharedCluster get shared clusters
-func getSharedCluster(model store.ClusterManagerModel) ([]*cmproto.Cluster, error) {
+func getSharedCluster(k8sOp *clusterops.K8SOperator, model store.ClusterManagerModel) ([]*cmproto.Cluster, error) {
 	condM := make(operator.M)
 	condM["isshared"] = true
 	condCluster := operator.NewLeafCondition(operator.Eq, condM)
@@ -990,11 +1018,37 @@ func getSharedCluster(model store.ClusterManagerModel) ([]*cmproto.Cluster, erro
 		return nil, err
 	}
 
-	clusters := make([]*cmproto.Cluster, 0)
+	var (
+		clusters = make([]*cmproto.Cluster, 0)
+		lock     = sync.Mutex{}
+	)
+
+	concurency := utils.NewRoutinePool(10)
+	defer concurency.Close()
 
 	for i := range clusterList {
-		clusters = append(clusters, shieldClusterInfo(&clusterList[i]))
+		concurency.Add(1)
+
+		go func(cluster cmproto.Cluster) {
+			defer concurency.Done()
+
+			// get cluster nodes num when cluster status is running
+			var clusterNodeNum uint32 = 0
+			if cluster.Status == common.StatusRunning {
+				clusterNodeNum = autils.GetClusterNodesNum(k8sOp, cluster.GetClusterID(), false)
+			}
+			if cluster.ExtraInfo == nil {
+				cluster.ExtraInfo = make(map[string]string)
+			}
+			cluster.ExtraInfo[common.ClusterNodeNum] = fmt.Sprintf("%v", clusterNodeNum)
+
+			lock.Lock()
+			clusters = append(clusters, shieldClusterInfo(&cluster))
+			lock.Unlock()
+		}(clusterList[i])
+
 	}
+	concurency.Wait()
 
 	return clusters, nil
 }

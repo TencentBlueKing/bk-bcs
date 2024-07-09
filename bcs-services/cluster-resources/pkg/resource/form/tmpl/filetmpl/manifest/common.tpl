@@ -2,7 +2,9 @@
 metadata:
   name: {{ .name }}
   {{- if isNSRequired .kind }}
-  namespace: {{ .namespace | default "default" }}
+  {{- if .namespace }}
+  namespace: {{ .namespace }}
+  {{- end }}
   {{- end }}
   {{- if .labels }}
   labels:
@@ -21,6 +23,19 @@ metadata:
 {{- range . }}
 {{- if ne .key "io.tencent.bcs.dev/deletion-allow" }}
 {{ .key | quote }}: {{ .value | default "" | quote }}
+{{- end }}
+{{- else }}
+{}
+{{- end }}
+{{- end }}
+
+{{- define "common.cfgDataToYaml" -}}
+{{- range . }}
+{{- if contains .value "\n" }}
+{{ .key }}: |
+{{ .value | indent 2 }}
+{{- else }}
+{{ .key }}: {{ .value | default "" | quote }}
 {{- end }}
 {{- else }}
 {}
