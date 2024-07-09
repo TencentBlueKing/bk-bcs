@@ -28,6 +28,7 @@ import (
 	pbatb "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/app-template-binding"
 	pbtset "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/template-set"
 	pbds "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/natsort"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
@@ -327,6 +328,14 @@ func (s *Service) ListAppBoundTmplRevisions(ctx context.Context, req *pbcs.ListA
 		details = append(details, group)
 	}
 
+	// 自然排序
+	sort.SliceStable(details, func(i, j int) bool {
+		if details[i].TemplateSpaceName == details[j].TemplateSpaceName {
+			return natsort.NaturalLess(details[i].TemplateSetName, details[j].TemplateSetName)
+		}
+		return natsort.NaturalLess(details[i].TemplateSpaceName, details[j].TemplateSpaceName)
+	})
+
 	resp := &pbcs.ListAppBoundTmplRevisionsResp{
 		Details: details,
 	}
@@ -486,6 +495,13 @@ func (s *Service) ListReleasedAppBoundTmplRevisions(ctx context.Context,
 		}
 		details = append(details, group)
 	}
+
+	sort.SliceStable(details, func(i, j int) bool {
+		if details[i].TemplateSpaceName == details[j].TemplateSpaceName {
+			return natsort.NaturalLess(details[i].TemplateSetName, details[j].TemplateSetName)
+		}
+		return natsort.NaturalLess(details[i].TemplateSpaceName, details[j].TemplateSpaceName)
+	})
 
 	resp := &pbcs.ListReleasedAppBoundTmplRevisionsResp{
 		Details: details,

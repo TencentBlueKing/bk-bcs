@@ -13,7 +13,7 @@
           <bk-form label-width="100" form-type="vertical">
             <bk-form-item :label="t('配置文件绝对路径')">{{ fileAP() }}</bk-form-item>
             <bk-form-item :label="t('配置文件描述')">
-              <div class="memo">{{ configDetail.memo || configDetail.revision_memo || '--' }}</div>
+              <div class="memo">{{ props.memo ||  '--' }}</div>
             </bk-form-item>
             <bk-form-item :label="t('配置文件内容')">
               <bk-loading
@@ -68,7 +68,7 @@
   import { TextFill } from 'bkui-vue/lib/icon';
   import ConfigContentEditor from '../../../../../service/detail/config/components/config-content-editor.vue';
   import { getTemplateConfigMeta, downloadTemplateContent } from '../../../../../../../api/template';
-  import { byteUnitConverse, datetimeFormat } from '../../../../../../../utils/index';
+  import { byteUnitConverse, datetimeFormat, sortObjectKeysByAscii } from '../../../../../../../utils/index';
   import { fileDownload } from '../../../../../../../utils/file';
   import { IVariableEditParams } from '../../../../../../../../types/variable';
   import { IFileConfigContentSummary } from '../../../../../../../../types/config';
@@ -108,6 +108,7 @@
     id: number;
     spaceId: string;
     show: Boolean;
+    memo: string;
   }>();
 
   const emits = defineEmits(['update:show', 'openEdit']);
@@ -161,10 +162,10 @@
     try {
       detailLoading.value = true;
       const res = await getTemplateConfigMeta(props.spaceId, props.id);
-      configDetail.value = {
+      configDetail.value = sortObjectKeysByAscii({
         ...res.data.detail,
         create_at: datetimeFormat(res.data.detail.create_at),
-      };
+      });
       if (configDetail.value.file_type === 'binary') {
         content.value = {
           name: configDetail.value.name,

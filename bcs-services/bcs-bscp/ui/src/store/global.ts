@@ -23,7 +23,7 @@ export default defineStore('global', () => {
     name: '服务配置中心',
     nameEn: 'BSCP',
     appLogo: '',
-    favIcon: `${(window as any).BK_STATIC_URL}/favicon.ico`,
+    favicon: `${(window as any).BK_STATIC_URL}/favicon.ico`,
     brandName: '蓝鲸',
     brandNameEn: 'BlueKing',
     footerCopyrightContent: '',
@@ -42,7 +42,7 @@ export default defineStore('global', () => {
       console.log(config);
       appGlobalConfig.value = config;
     }
-    setShortcutIcon(appGlobalConfig.value.favIcon);
+    setShortcutIcon(appGlobalConfig.value.favicon);
     setDocumentTitle(appGlobalConfig.value.i18n);
   };
 

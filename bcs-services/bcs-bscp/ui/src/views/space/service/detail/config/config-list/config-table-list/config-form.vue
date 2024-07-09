@@ -77,9 +77,6 @@
         <bk-input v-model="localVal.user_group" @input="change"></bk-input>
       </bk-form-item>
     </div>
-    <bk-form-item v-if="isTpl" class="fixed-width-form" property="revision_name" :label="t('form_版本号')" required>
-      <bk-input v-model="localVal.revision_name" :placeholder="t('请输入')"></bk-input>
-    </bk-form-item>
     <bk-form-item v-if="localVal.file_type === 'binary'" :label="t('配置内容')" :required="true">
       <bk-upload
         class="config-uploader"
@@ -200,6 +197,7 @@
   const showPrivilegeErrorTips = ref(false);
   const stringContent = ref('');
   const fileContent = ref<IFileConfigContentSummary | File>();
+  const uploadFileSignature = ref(''); // 新上传文件的sha256
   const isFileChanged = ref(false); // 标识文件是否被修改，编辑配置文件时若文件未修改，不重新上传文件
   const formRef = ref();
   const uploadProgress = ref({
@@ -388,6 +386,7 @@
   const uploadContent = async () => {
     uploadProgress.value.status = 'uploading';
     const signature = await getSignature();
+    uploadFileSignature.value = signature;
     if (props.isTpl) {
       return updateTemplateContent(
         props.bkBizId,
@@ -432,12 +431,13 @@
 
   // 下载已上传文件
   const handleDownloadFile = async () => {
-    if (uploadProgress.value.status === 'uploading' || !props.isEdit) return;
+    if (uploadProgress.value.status === 'uploading') return;
     try {
       fileDownloading.value = true;
       const { signature, name } = fileContent.value as IFileConfigContentSummary;
+      const fileSignature = signature || uploadFileSignature.value;
       const getContent = props.isTpl ? downloadTemplateContent : downloadConfigContent;
-      const res = await getContent(props.bkBizId, props.id, signature, true);
+      const res = await getContent(props.bkBizId, props.id, fileSignature, true);
       fileDownload(res, name);
     } catch (error) {
       console.error(error);

@@ -34,7 +34,7 @@
   import useGlobalStore from '../../../../../../../store/global';
   import useTemplateStore from '../../../../../../../store/template';
   import {
-    createTemplateVersion,
+    updateTemplateConfig,
     getTemplateConfigMeta,
     downloadTemplateContent,
     updateTemplateContent,
@@ -53,9 +53,10 @@
     id: number;
     spaceId: string;
     show: Boolean;
+    memo: string;
   }>();
 
-  const emits = defineEmits(['update:show', 'added']);
+  const emits = defineEmits(['update:show', 'added', 'edited']);
 
   const configForm = ref<IConfigEditParams>(getConfigEditParams());
   const fileUploading = ref(false);
@@ -87,13 +88,12 @@
     try {
       configDetailLoading.value = true;
       const res = await getTemplateConfigMeta(props.spaceId, props.id);
-      const { name, template_revision_memo, path, file_type, user, user_group, privilege, signature, byte_size } =
-        res.data.detail;
+      const { name, path, file_type, user, user_group, privilege, signature, byte_size } = res.data.detail;
       configForm.value = {
         ...configForm.value,
         id: props.id,
         name,
-        memo: template_revision_memo,
+        memo: props.memo,
         file_type,
         path,
         user,
@@ -127,9 +127,8 @@
         size = new Blob([stringContent]).size;
         await updateTemplateContent(props.spaceId, currentTemplateSpace.value, stringContent, sign);
       }
-      const { memo, file_type, file_mode, user, user_group, privilege, revision_name } = configForm.value;
+      const { memo, file_type, file_mode, user, user_group, privilege } = configForm.value;
       const formData = {
-        revision_name,
         revision_memo: memo,
         file_type,
         file_mode,
@@ -139,7 +138,7 @@
         sign,
         byte_size: size,
       };
-      await createTemplateVersion(
+      await updateTemplateConfig(
         props.spaceId,
         currentTemplateSpace.value,
         props.id,
@@ -150,6 +149,7 @@
         message: t('编辑配置文件成功'),
       });
       close();
+      emits('edited');
     } catch (e) {
       console.log(e);
     } finally {

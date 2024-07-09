@@ -14,10 +14,9 @@
                   :model-value="isAllSelected"
                   :indeterminate="isIndeterminate"
                   @change="handleAllSelectionChange" />
-                <div class="name-text">{{ t('配置文件名称') }}</div>
+                <div class="name-text">{{ t('配置文件绝对路径') }}</div>
               </div>
             </th>
-            <th class="th-cell path">{{ t('配置文件路径') }}</th>
             <th class="th-cell memo">{{ t('配置文件描述') }}</th>
           </tr>
         </thead>
@@ -28,12 +27,7 @@
                 <bk-checkbox
                   :model-value="isConfigSelected(config.id)"
                   @change="handleConfigSelectionChange($event, config)" />
-                <div class="name-text">{{ config.spec.name }}</div>
-              </div>
-            </td>
-            <td class="td-cell name">
-              <div class="cell">
-                {{ config.spec.path }}
+                <div class="name-text">{{ fileAP(config) }}</div>
               </div>
             </td>
             <td class="td-cell name">
@@ -85,8 +79,8 @@
     if (checked) {
       props.configList.forEach((config) => {
         if (!configs.find((item) => item.id === config.id)) {
-          const { id, spec } = config;
-          configs.push({ id, name: spec.name });
+          const { id } = config;
+          configs.push({ id, name: fileAP(config) });
         }
       });
     } else {
@@ -105,8 +99,8 @@
     const configs = props.selectedConfigs.slice();
     if (checked) {
       if (!configs.find((item) => item.id === config.id)) {
-        const { id, spec } = config;
-        configs.push({ id, name: spec.name });
+        const { id } = config;
+        configs.push({ id, name: fileAP(config) });
       }
     } else {
       const index = configs.findIndex((item) => item.id === config.id);
@@ -116,6 +110,15 @@
     }
     emits('update:selectedConfigs', configs);
     emits('change');
+  };
+
+  // 配置文件绝对路径
+  const fileAP = (config: ITemplateConfigItem) => {
+    const { path, name } = config.spec;
+    if (path.endsWith('/')) {
+      return `${path}${name}`;
+    }
+    return `${path}/${name}`;
   };
 </script>
 <style lang="scss" scoped>

@@ -213,6 +213,10 @@ export interface ImportTemplateConfigItem {
   template_space_id: number;
   template_set_name: string;
   template_set_id: number;
+  template_space_exist: boolean;
+  template_set_exist: boolean;
+  is_exist: boolean;
+  template_set_is_empty: boolean;
   template_revisions: {
     template_id: number;
     template_revision_id: number;
