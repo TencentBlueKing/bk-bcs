@@ -103,7 +103,8 @@ func (dao *hookDao) ListWithRefer(kit *kit.Kit, opt *types.ListHooksWithReferOpt
 		q = q.Where(rawgen.Cond(datatypes.JSONArrayQuery("tags").Contains(opt.Tag))...)
 	} else if opt.NotTag {
 		// when the length of tags is 2, it must be '[]'
-		q = q.Where(h.Tags.Length().Eq(2))
+		// It could also be null
+		q = q.Where(h.Tags.Length().Eq(2)).Or(h.Tags.Length().Eq(4))
 	}
 
 	if opt.SearchKey != "" {

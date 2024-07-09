@@ -253,6 +253,62 @@ func (s *Service) GetTemplateRevision(ctx context.Context, req *pbcs.GetTemplate
 			Creator:              tr.GetDetail().GetCreator(),
 			CreateAt:             tr.GetDetail().GetCreateAt(),
 			Md5:                  tr.GetDetail().GetMd5(),
+			IsLatest:             tr.GetDetail().GetIsLatest(),
 		},
 	}, nil
+}
+
+// UpdateTemplateRevision implements pbcs.ConfigServer.
+func (s *Service) UpdateTemplateRevision(ctx context.Context, req *pbcs.UpdateTemplateRevisionReq) (
+	*pbcs.UpdateTemplateRevisionResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+	}
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
+		return nil, err
+	}
+
+	metadata, err := s.client.provider.Metadata(grpcKit, req.Sign)
+	if err != nil {
+		logs.Errorf("validate file content uploaded failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	r := &pbds.UpdateTemplateRevisionReq{
+		Attachment: &pbtr.TemplateRevisionAttachment{
+			BizId:           grpcKit.BizID,
+			TemplateSpaceId: req.TemplateSpaceId,
+			TemplateId:      req.TemplateId,
+		},
+		Spec: &pbtr.TemplateRevisionSpec{
+			RevisionName: req.RevisionName,
+			RevisionMemo: req.RevisionMemo,
+			Name:         req.Name,
+			Path:         req.Path,
+			FileType:     req.FileType,
+			FileMode:     req.FileMode,
+			Permission: &pbci.FilePermission{
+				User:      req.User,
+				UserGroup: req.UserGroup,
+				Privilege: req.Privilege,
+			},
+			ContentSpec: &pbcontent.ContentSpec{
+				Signature: req.Sign,
+				ByteSize:  req.ByteSize,
+				Md5:       metadata.Md5,
+			},
+		},
+	}
+	rp, err := s.client.DS.UpdateTemplateRevision(grpcKit.RpcCtx(), r)
+	if err != nil {
+		logs.Errorf("update template Revision failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	resp := &pbcs.UpdateTemplateRevisionResp{
+		Id: rp.Id,
+	}
+	return resp, nil
 }

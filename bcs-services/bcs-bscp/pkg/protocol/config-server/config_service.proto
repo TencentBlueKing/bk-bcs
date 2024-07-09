@@ -451,6 +451,13 @@ service Config {
       body: "*"
     };
   }
+  rpc UpdateTemplateRevision(UpdateTemplateRevisionReq) returns (UpdateTemplateRevisionResp) {
+    option (google.api.http) = {
+      put: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/"
+           "templates/{template_id}/template_revisions"
+      body: "*"
+    };
+  }
   rpc ListTemplateRevisions(ListTemplateRevisionsReq) returns (ListTemplateRevisionsResp) {
     option (google.api.http) = {
       get: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/"
@@ -1964,6 +1971,27 @@ message CreateTemplateRevisionResp {
   uint32 id = 1;
 }
 
+message UpdateTemplateRevisionReq {
+  uint32 biz_id = 1;
+  uint32 template_space_id = 2;
+  uint32 template_id = 3;
+  string revision_name = 4;
+  string revision_memo = 5;
+  string name = 6;
+  string path = 7;
+  string file_type = 8;  // file_type is enum type
+  string file_mode = 9;  // file_mode is enum type
+  string user = 10;
+  string user_group = 11;
+  string privilege = 12;
+  string sign = 13;
+  uint64 byte_size = 14;
+}
+
+message UpdateTemplateRevisionResp {
+  uint32 id = 1;
+}
+
 message ListTemplateRevisionsReq {
   uint32 biz_id = 1;
   uint32 template_space_id = 2;
@@ -2004,6 +2032,7 @@ message GetTemplateRevisionResp {
     string creator = 14;
     string create_at = 15;
     string md5 = 16;
+    bool is_latest = 17;
   }
   TemplateRevision detail = 1;
 }
