@@ -35,7 +35,7 @@ export default defineComponent({
   components: { Navigation, BkPaaSLogin, PermDialog, NoticeComponent },
   setup() {
     const { getUserInfo } = useAppData();
-    const { config, getPlatformInfo, setDocumentTitle } = usePlatform();
+    const { config, getPlatformInfo, setDocumentTitle, setShortcutIcon } = usePlatform();
     const isLoading = ref(false);
     const applyPermRef = ref<any>(null);
     const loginRef = ref<any>(null);
@@ -133,6 +133,7 @@ export default defineComponent({
       await getUserInfo();
       isLoading.value = false;
       setDocumentTitle(config.i18n);
+      setShortcutIcon(config.favicon);
     });
 
     return {
