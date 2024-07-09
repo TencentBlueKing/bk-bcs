@@ -286,7 +286,7 @@ func transInstancesToNode(ctx context.Context, instanceNames []string, info *clo
 		nodes, err = nodeCli.ListNodesByInstanceID(instanceNames, &cloudprovider.ListNodesOption{
 			Common:       info.CmOption,
 			ClusterVPCID: info.Cluster.VpcID,
-		})
+		}, true)
 		if err != nil {
 			return err
 		}
