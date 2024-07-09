@@ -57,7 +57,7 @@
   import { useI18n } from 'vue-i18n';
   import { IConfigImportItem } from '../../../../../../../../../../types/config';
   import { importTemplateFile } from '../../../../../../../../../api/template';
-  // import { Message } from 'bkui-vue';
+  import { Message } from 'bkui-vue';
 
   interface IUploadFileList {
     file: File;
@@ -109,29 +109,37 @@
   );
 
   const handleFileUpload = async (option: { file: File }) => {
-    // const fileSize = option.file.size / 1024 / 1024;
-    // if (
-    //   option.file.name.endsWith('.zip') ||
-    //   option.file.name.endsWith('.tar') ||
-    //   option.file.name.endsWith('.tar.gz') ||
-    //   option.file.name.endsWith('.tgz')
-    // ) {
-    //   if (fileSize > 2048) {
-    //     Message({
-    //       theme: 'error',
-    //       message: t('压缩包大小不能超过2GB'),
-    //     });
-    //     return;
-    //   }
-    // } else {
-    //   if (fileSize > 100) {
-    //     Message({
-    //       theme: 'error',
-    //       message: t('单文件大小不能超过100M'),
-    //     });
-    //     return;
-    //   }
-    // }
+    const fileSize = option.file.size / 1024 / 1024;
+    const isCompressionFile =
+      option.file.name.endsWith('.zip') ||
+      option.file.name.endsWith('.tar') ||
+      option.file.name.endsWith('.tar.gz') ||
+      option.file.name.endsWith('.tgz');
+
+    if (isDecompression.value) {
+      if (isCompressionFile && fileSize > 2048) {
+        Message({
+          theme: 'error',
+          message: t('压缩包大小不能超过{n}GB', { n: 2 }),
+        });
+        return;
+      }
+      if (!isCompressionFile && fileSize > 200) {
+        Message({
+          theme: 'error',
+          message: t('单文件大小不能超过{n}M', { n: 200 }),
+        });
+        return;
+      }
+    }
+
+    if (!isDecompression.value && fileSize > 200) {
+      Message({
+        theme: 'error',
+        message: t('单文件大小不能超过{n}M', { n: 200 }),
+      });
+      return;
+    }
 
     loading.value = true;
     try {

@@ -453,8 +453,8 @@ export default {
   '模板空间不存在，无法导入，请先删除此模板': 'Template space does not exist, cannot be imported, please delete this template first',
   '模板套餐不存在，无法导入，请先删除此模板': 'Template package does not exist, cannot be imported, please delete this template first',
   '模板套餐为空，无法导入，请先删除此模板': 'Template package is empty, cannot be imported, please delete this template first',
-  单文件大小不能超过100M: 'The file size cannot exceed 100 MB',
-  压缩包大小不能超过2GB: 'The compressed package size cannot exceed 2 GB',
+  '单文件大小不能超过{n}M': 'The file size cannot exceed {n} MB',
+  '压缩包大小不能超过{n}GB': 'The compressed package size cannot exceed {n} GB',
   重置: 'Reset',
 
   // 分组管理
