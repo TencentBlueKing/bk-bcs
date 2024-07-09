@@ -57,6 +57,7 @@
   import { useI18n } from 'vue-i18n';
   import { IConfigImportItem } from '../../../../../../../../../../types/config';
   import { importTemplateFile } from '../../../../../../../../../api/template';
+  import { Message } from 'bkui-vue';
 
   interface IUploadFileList {
     file: File;
@@ -108,6 +109,14 @@
   );
 
   const handleFileUpload = async (option: { file: File }) => {
+    const fileSize = option.file.size / 1024 / 1024;
+    if (fileSize > 100) {
+      Message({
+        theme: 'error',
+        message: t('文件大小不能超过100M'),
+      });
+      return;
+    }
     loading.value = true;
     try {
       if (fileList.value.find((fileItem) => fileItem.file.name === option.file.name)) {

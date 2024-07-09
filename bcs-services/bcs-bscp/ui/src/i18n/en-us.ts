@@ -450,6 +450,13 @@ export default {
   '模板空间不存在，无法导入，请先删除此模板': 'Template space does not exist, cannot be imported, please delete this template first',
   '模板套餐不存在，无法导入，请先删除此模板': 'Template package does not exist, cannot be imported, please delete this template first',
   '模板套餐为空，无法导入，请先删除此模板': 'Template package is empty, cannot be imported, please delete this template first',
+  文件大小不能超过100M: 'The file size cannot exceed 100 MB',
+  重置: 'Reset',
+  configTips: {
+    createConfig: `You can reference global variables and define new BSCP variables in the configuration file. The variable rules are as follows
+                          1.To go template syntax, for example {{ .bk_bscp_appid }}
+                          2.The variable name must start with “bk_bscp_” or “BK_BSCP_”`
+  },
 
   // 分组管理
   新增分组: 'New group',

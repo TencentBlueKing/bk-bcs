@@ -189,9 +189,7 @@
   );
 
   const emits = defineEmits(['change', 'update:fileUploading']);
-  const configContentTip = `配置文件内支持引用全局变量与定义新的BSCP变量，变量规则如下
-                          1.需是要go template语法， 例如 {{ .bk_bscp_appid }}
-                          2.变量名需以 “bk_bscp_” 或 “BK_BSCP_” 开头`;
+  const configContentTip = t('configTips.createConfig');
   const localVal = ref({ ...props.config, fileAP: '' });
   const privilegeInputVal = ref('');
   const showPrivilegeErrorTips = ref(false);
