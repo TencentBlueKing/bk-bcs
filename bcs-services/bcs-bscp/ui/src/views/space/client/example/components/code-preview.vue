@@ -3,7 +3,7 @@
     <CodeEditor
       ref="codeEditorRef"
       :model-value="props.codeVal"
-      :language="'yaml'"
+      :language="codeLanguage"
       :editable="false"
       line-numbers="off"
       :minimap="false"
@@ -16,11 +16,12 @@
   </div>
 </template>
 <script lang="ts" setup>
-  import { onBeforeUnmount, ref } from 'vue';
+  import { computed, onBeforeUnmount, ref } from 'vue';
   import CodeEditor from '../../../../../components/code-editor/index.vue';
   import { IVariableEditParams } from '../../../../../../types/variable';
 
   const props = defineProps<{
+    language: string;
     codeVal: string;
     variables?: IVariableEditParams[];
   }>();
@@ -28,6 +29,10 @@
   const emits = defineEmits(['change']);
 
   const codeEditorRef = ref();
+
+  const codeLanguage = computed(() => {
+    return props.language.includes('cmd') ? 'shell' : props.language;
+  });
 
   onBeforeUnmount(() => {
     codeEditorRef.value.destroy();

@@ -1,6 +1,3 @@
-
-### Get
-
 package com.example.get;
 
 import com.tencent.bscp.helper.OptionHelper;

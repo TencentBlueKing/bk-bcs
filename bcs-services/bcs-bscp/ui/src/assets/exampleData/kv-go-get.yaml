@@ -1,7 +1,3 @@
-
-### Get
-
-// get kv example for bscp sdk
 package main
 
 import (

@@ -46,7 +46,7 @@
     { name: 'Python SDK', val: 'python' },
     { name: 'Go SDK', val: 'go' },
     { name: 'Java SDK', val: 'java' },
-    { name: 'C++ SDK', val: 'c++' },
+    { name: 'C++ SDK', val: 'cpp' },
     { name: t('命令行工具'), val: 'kv-cmd' },
   ];
 
@@ -105,7 +105,7 @@
   };
   // 返回顶部
   const contentScrollTop = () => {
-    const scrollDom = document.querySelector('.content-wrap');
+    const scrollDom = document.querySelector('.example-main');
     if (scrollDom!.scrollTop > 64) {
       scrollDom!.scrollTo({ top: 0, behavior: 'smooth' });
     }

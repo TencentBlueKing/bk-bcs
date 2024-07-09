@@ -27,6 +27,7 @@
         ref="codePreviewRef"
         :code-val="replaceVal"
         :variables="variables"
+        :language="kvName"
         @change="(val: string) => (copyReplaceVal = val)" />
     </div>
   </section>
@@ -80,52 +81,52 @@
         if (!activeTab.value) {
           return {
             topTip: `${t('用于主动获取配置项值的场景，此方法不会监听服务器端的配置更改，有关Python SDK的部署环境和依赖组件，请参阅白皮书中的')} <a href="${url}" target="_blank">${t('BSCP Python SDK依赖说明')}</a>`,
-            codePreviewHeight: 370,
+            codePreviewHeight: 356,
           };
         }
         // watch
         return {
           topTip: `${t('通过建立长连接，实时监听配置版本的变更，当新版本的配置发布时，将自动调用回调方法处理新的配置信息，适用于需要实时响应配置变更的场景，有关Python SDK的部署环境和依赖组件，请参阅白皮书中的')} <a href="${url}" target="_blank">${t('BSCP Python SDK依赖说明')}</a>`,
-          codePreviewHeight: 654,
+          codePreviewHeight: 640,
         };
       case 'go':
         if (!activeTab.value) {
           return {
             topTip: t('Get方法：用于一次性拉取最新的配置信息，适用于需要获取并更新配置的场景。'),
-            codePreviewHeight: 1076,
+            codePreviewHeight: 1002,
           };
         }
         return {
           topTip: t(
             'Watch方法：通过建立长连接，实时监听配置版本的变更，当新版本的配置发布时，将自动调用回调方法处理新的配置信息，适用于需要实时响应配置变更的场景。',
           ),
-          codePreviewHeight: 1322,
+          codePreviewHeight: 1250,
         };
       case 'java':
         if (!activeTab.value) {
           return {
             topTip: t('Get方法：用于一次性拉取最新的配置信息，适用于需要获取并更新配置的场景。'),
-            codePreviewHeight: 1210,
+            codePreviewHeight: 1156,
           };
         }
         return {
           topTip: t(
             'Watch方法：通过建立长连接，实时监听配置版本的变更，当新版本的配置发布时，将自动调用回调方法处理新的配置信息，适用于需要实时响应配置变更的场景。',
           ),
-          codePreviewHeight: 1230,
+          codePreviewHeight: 1172,
         };
-      case 'c++':
+      case 'cpp':
         if (!activeTab.value) {
           return {
             topTip: t('Get方法：用于一次性拉取最新的配置信息，适用于需要获取并更新配置的场景。'),
-            codePreviewHeight: 1382,
+            codePreviewHeight: 1324,
           };
         }
         return {
           topTip: t(
             'Watch方法：通过建立长连接，实时监听配置版本的变更，当新版本的配置发布时，将自动调用回调方法处理新的配置信息，适用于需要实时响应配置变更的场景。',
           ),
-          codePreviewHeight: 2048,
+          codePreviewHeight: 1990,
         };
       default:
         return {
@@ -165,11 +166,10 @@
           labelArrType,
         };
         break;
-      case 'c++':
+      case 'cpp':
         if (data.labelArr.length) {
           labelArrType = data.labelArr
             .map((item: string, index: number) => {
-              console.log(item);
               const [key, value] = item.split(':');
               return `{${key}, ${value}}${index + 1 === data.labelArr.length ? '' : ', '}`;
             })
@@ -197,6 +197,17 @@
   };
   const updateReplaceVal = () => {
     let updateString = replaceVal.value;
+    if (props.kvName === 'python') {
+      updateString = updateString.replace(
+        '请将 {{ YOUR_KEY }} 替换为您的实际 Key',
+        t('请将 {{ YOUR_KEY }} 替换为您的实际 Key'),
+      );
+    }
+    if (props.kvName === 'go') {
+      updateString = updateString.replace('设置日志自定义 Handler', t('设置日志自定义 Handler'));
+      updateString = updateString.replace('在线服务, 可设置 metrics', t('在线服务, 可设置 metrics'));
+      updateString = updateString.replace('初始化配置信息', t('初始化配置信息'));
+    }
     updateString = updateString.replace('{{ .Bk_Bscp_Variable_BkBizId }}', bkBizId.value);
     updateString = updateString.replace('{{ .Bk_Bscp_Variable_ServiceName }}', serviceName!.value);
     replaceVal.value = updateString.replaceAll('{{ .Bk_Bscp_Variable_FEED_ADDR }}', (window as any).FEED_ADDR);
@@ -227,10 +238,33 @@
   // 复制示例
   const copyExample = async () => {
     try {
-      await fileOptionRef.value.formRef.validate();
+      await fileOptionRef.value.handleValidate();
       // 复制示例使用未脱敏的密钥
       const reg = /"(.{1}|.{3})\*{3}(.{1}|.{3})"/g;
-      const copyVal = copyReplaceVal.value.replaceAll(reg, `"${optionData.value.clientKey}"`);
+      let copyVal = copyReplaceVal.value.replaceAll(reg, `"${optionData.value.clientKey}"`);
+      // 键值型复制时，内容开头插入注释信息；插入文案除python以外，其他都一样
+      if (props.kvName === 'python') {
+        if (!activeTab.value) {
+          // get
+          const tempStr = `'''\n${t('用于主动获取配置项值的场景，此方法不会监听服务器端的配置更改\n有关Python SDK的部署环境和依赖组件，请参阅白皮书中的 BSCP Python SDK依赖说明')}\n(https://bk.tencent.com/docs/markdown/ZH/BSCP/1.29/UserGuide/Function/python_sdk_dependency.md)\n'''`;
+          copyVal = `${tempStr}\n${copyVal}`;
+        } else {
+          // watch
+          const tempStr = `'''\n${t('通过建立长连接，实时监听配置版本的变更，当新版本的配置发布时，将自动调用回调方法处理新的配置信息，适用于需要实时响应配置变更的场景\n有关Python SDK的部署环境和依赖组件，请参阅白皮书中的 BSCP Python SDK依赖说明')}\n(https://bk.tencent.com/docs/markdown/ZH/BSCP/1.29/UserGuide/Function/python_sdk_dependency.md)\n'''`;
+          copyVal = `${tempStr}\n${copyVal}`;
+        }
+        copyVal = `${copyVal}`;
+      } else {
+        if (!activeTab.value) {
+          // get
+          const tempStr = `// ${t('Get方法：用于一次性拉取最新的配置信息，适用于需要获取并更新配置的场景。\n')}`;
+          copyVal = `${tempStr}\n${copyVal}`;
+        } else {
+          // watch
+          const tempStr = `// ${t('Watch方法：通过建立长连接，实时监听配置版本的变更，当新版本的配置发布时，将自动调用回调方法处理新的配置信息，适用于需要实时响应配置变更的场景。')}\n`;
+          copyVal = `${tempStr}\n${copyVal}`;
+        }
+      }
       copyToClipBoard(copyVal);
       BkMessage({
         theme: 'success',
@@ -271,7 +305,7 @@
         return !methods
           ? import('/src/assets/exampleData/kv-java-get.yaml?raw')
           : import('/src/assets/exampleData/kv-java-watch.yaml?raw');
-      case 'c++':
+      case 'cpp':
         return !methods
           ? import('/src/assets/exampleData/kv-c++-get.yaml?raw')
           : import('/src/assets/exampleData/kv-c++-watch.yaml?raw');
