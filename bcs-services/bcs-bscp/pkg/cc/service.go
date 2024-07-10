@@ -140,7 +140,6 @@ type LoginAuthSettings struct {
 	InnerHost string `yaml:"innerHost"`
 	Provider  string `yaml:"provider"`
 	UseESB    bool   `yaml:"useEsb"`
-	GWPubKey  string `yaml:"gwPubkey"`
 }
 
 // ApiGateway gateway conf

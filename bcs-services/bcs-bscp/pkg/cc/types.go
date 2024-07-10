@@ -294,8 +294,6 @@ func (rs RedisCluster) validate() error {
 type IAM struct {
 	// IAM api url.
 	APIURL string `yaml:"api_url"`
-	// Host is the host of current system, in the other word bk-bscp.
-	Host string `yaml:"host"`
 	// AppCode blueking belong to bscp's appcode.
 	AppCode string `yaml:"appCode"`
 	// AppSecret blueking belong to bscp app's secret.
@@ -307,10 +305,6 @@ type IAM struct {
 func (s IAM) validate() error {
 	if len(s.APIURL) == 0 {
 		return errors.New("iam api url is not set")
-	}
-
-	if len(s.Host) == 0 {
-		return errors.New("iam host is not set")
 	}
 
 	if len(s.AppCode) == 0 {
@@ -1171,7 +1165,7 @@ type BCS struct {
 	Token string `yaml:"token"`
 }
 
-// GSE defines all the gse related runtime.-
+// GSE defines all the gse related runtime.
 type GSE struct {
 	// Enabled is the flag to enable gse p2p download.
 	Enabled bool `yaml:"enabled"`
