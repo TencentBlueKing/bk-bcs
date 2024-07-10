@@ -3524,6 +3524,40 @@
         ]
       }
     },
+    "/clustermanager/v1/clusters/-/meta": {
+      "post": {
+        "summary": "查询多喝集群的元数据信息",
+        "description": "查询多个集群的元数据信息",
+        "operationId": "ClusterManager_GetClustersMetaData",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerGetClustersMetaDataResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerGetClustersMetaDataRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/clusters/{clusterID}/module": {
       "put": {
         "summary": "更新集群master和node的转移模块信息",
@@ -8762,6 +8796,24 @@
         }
       }
     },
+    "clustermanagerClusterMeta": {
+      "type": "object",
+      "properties": {
+        "clusterId": {
+          "type": "string",
+          "description": "集群Id",
+          "title": "clusterId"
+        },
+        "clusterNodeNum": {
+          "type": "integer",
+          "format": "int64",
+          "description": "集群节点数",
+          "title": "clusterNodeNum"
+        }
+      },
+      "description": "集群元数据信息列表",
+      "title": "ClusterMeta"
+    },
     "clustermanagerClusterMgr": {
       "type": "object",
       "properties": {
@@ -11993,6 +12045,63 @@
       },
       "description": "查询集群返回",
       "title": "GetClusterResp",
+      "required": [
+        "code",
+        "message",
+        "data"
+      ]
+    },
+    "clustermanagerGetClustersMetaDataRequest": {
+      "type": "object",
+      "properties": {
+        "clusters": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "集群列表",
+          "title": "clusters"
+        }
+      },
+      "description": "获取集群元数据信息",
+      "title": "GetClustersMetaDataRequest"
+    },
+    "clustermanagerGetClustersMetaDataResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerClusterMeta"
+          },
+          "description": "集群元数据信息列表",
+          "title": "data"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/clustermanagerWebAnnotationsV2",
+          "description": "权限信息",
+          "title": "web_annotations"
+        }
+      },
+      "description": "查询集群元数据信息返回",
+      "title": "GetClustersMetaDataResponse",
       "required": [
         "code",
         "message",

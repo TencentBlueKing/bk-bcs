@@ -41,6 +41,8 @@ func (d *Daemon) autoAllocateTcClusterCidr(error chan<- error) {
 	d.lock.Lock(autoAllocateTcClusterCidrLockKey, []lock.LockOption{lock.LockTTL(time.Second * 10)}...) // nolint
 	defer d.lock.Unlock(autoAllocateTcClusterCidrLockKey)                                               // nolint
 
+	defer utils.RecoverPrintStack("autoAllocateTcClusterCidr")
+
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
 		"status":   common.StatusRunning,
 		"provider": tencentCloud,
@@ -110,7 +112,7 @@ func checkClusterAutoScaleCidrValidate(cluster cmproto.Cluster) error {
 			"cluster[%s] region or vpc empty", cluster.GetClusterID())
 	}
 
-	if !cluster.GetNetworkSettings().EnableVPCCni {
+	if !cluster.GetNetworkSettings().GetEnableVPCCni() {
 		return fmt.Errorf("autoAllocateTcClusterCidr checkClusterAutoScaleCidrValidate "+
 			"cluster[%s] platform not enable vpc-cni", cluster.GetClusterID())
 	}

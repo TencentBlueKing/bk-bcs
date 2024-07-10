@@ -126,6 +126,17 @@ service ClusterManager {
     };
   }
 
+  rpc GetClustersMetaData(GetClustersMetaDataRequest) returns (GetClustersMetaDataResponse) {
+    option (google.api.http) = {
+      post : "/clustermanager/v1/clusters/-/meta"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "查询多个集群的元数据信息"
+      summary : "查询多喝集群的元数据信息"
+    };
+  }
+
   rpc ListNodesInCluster(ListNodesInClusterRequest) returns (ListNodesInClusterResponse) {
     option (google.api.http) = {
       get : "/clustermanager/v1/cluster/{clusterID}/node"
@@ -7178,7 +7189,7 @@ message ListNodesInClusterRequest {
       title : "limit",
       description : "查询限制数量"
     },
-    (validate.rules).uint32.lte = 1000
+    (validate.rules).uint32.lte = 5000
   ];
   bool showPwd = 9 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
@@ -7345,6 +7356,69 @@ message ClusterNode {
   string failedReason = 30[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "failedReason",
     description: "上下架节点过程中失败原因"
+  }];
+}
+
+message GetClustersMetaDataRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetClustersMetaDataRequest"
+      description : "获取集群元数据信息"
+    }
+  };
+
+  repeated string clusters = 1 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "clusters",
+      description : "集群列表"
+    },(validate.rules).repeated = {min_items: 1, max_items: 1000}];
+}
+
+message GetClustersMetaDataResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetClustersMetaDataResponse"
+      description : "查询集群元数据信息返回"
+      required : [ "code", "message", "data" ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "code",
+    description: "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description: "返回错误信息"
+  }];
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "result",
+    description: "返回结果"
+  }];
+  repeated ClusterMeta data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "集群元数据信息列表"
+  }];
+  WebAnnotationsV2 web_annotations = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "web_annotations",
+    description : "权限信息"
+  }];
+}
+
+message ClusterMeta {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ClusterMeta"
+      description : "集群元数据信息列表"
+    }
+  };
+  string clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterId",
+    description: "集群Id"
+  }];
+  uint32 clusterNodeNum = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterNodeNum",
+    description: "集群节点数"
   }];
 }
 

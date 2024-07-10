@@ -22,6 +22,7 @@ import (
 var NoAuthMethod = []string{
 	// 集群相关
 	"ClusterManager.ListCommonCluster",
+	"ClusterManager.GetClustersMetaData",
 
 	// 节点相关
 	"ClusterManager.GetNodeInfo",

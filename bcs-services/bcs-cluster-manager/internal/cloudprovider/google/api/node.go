@@ -179,7 +179,7 @@ func (n *NodeManager) ListExternalNodesByIP(ips []string, opt *cloudprovider.Lis
 
 // ListNodesByInstanceID list node by instance id
 // checkIP - It may take time when an instance get an ip after scaling up a nodegroup in GKE
-func (n *NodeManager) ListNodesByInstanceID(ids []string, opt *cloudprovider.ListNodesOption, checkIP bool) (
+func (n *NodeManager) ListNodesByInstanceID(ids []string, opt *cloudprovider.ListNodesOption) (
 	[]*proto.Node, error) {
 	idChunks := utils.SplitStringsChunks(ids, limit)
 	nodeList := make([]*proto.Node, 0)
@@ -187,7 +187,7 @@ func (n *NodeManager) ListNodesByInstanceID(ids []string, opt *cloudprovider.Lis
 	blog.Infof("ListNodesByInstanceID idChunks %+v", idChunks)
 	for _, chunk := range idChunks {
 		if len(chunk) > 0 {
-			nodes, err := n.transInstanceIDsToNodes(chunk, opt, checkIP)
+			nodes, err := n.transInstanceIDsToNodes(chunk, opt)
 			if err != nil {
 				blog.Errorf("ListNodesByInstanceID failed: %v", err)
 				return nil, err
@@ -213,7 +213,7 @@ func (n *NodeManager) GetResourceGroups(opt *cloudprovider.CommonOption) ([]*pro
 }
 
 // transInstanceIDsToNodes trans IDList to Nodes
-func (n *NodeManager) transInstanceIDsToNodes(ids []string, opt *cloudprovider.ListNodesOption, checkIP bool) (
+func (n *NodeManager) transInstanceIDsToNodes(ids []string, opt *cloudprovider.ListNodesOption) (
 	[]*proto.Node, error) {
 	client, err := NewComputeServiceClient(opt.Common)
 	if err != nil {
@@ -249,7 +249,7 @@ func (n *NodeManager) transInstanceIDsToNodes(ids []string, opt *cloudprovider.L
 		}
 		nodeMap[node.NodeID] = node
 
-		if len(inst.NetworkInterfaces[0].NetworkIP) == 0 && checkIP {
+		if len(inst.NetworkInterfaces[0].NetworkIP) == 0 && opt.CheckIP {
 			err = checkInstanceIP(client, inst)
 			if err != nil {
 				return nil, err

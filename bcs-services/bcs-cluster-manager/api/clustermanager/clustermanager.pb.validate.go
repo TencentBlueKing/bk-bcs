@@ -15414,10 +15414,10 @@ func (m *ListNodesInClusterRequest) Validate() error {
 		}
 	}
 
-	if m.GetLimit() > 1000 {
+	if m.GetLimit() > 5000 {
 		return ListNodesInClusterRequestValidationError{
 			field:  "Limit",
-			reason: "value must be less than or equal to 1000",
+			reason: "value must be less than or equal to 5000",
 		}
 	}
 
@@ -15717,6 +15717,248 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ClusterNodeValidationError{}
+
+// Validate checks the field values on GetClustersMetaDataRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *GetClustersMetaDataRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if l := len(m.GetClusters()); l < 1 || l > 1000 {
+		return GetClustersMetaDataRequestValidationError{
+			field:  "Clusters",
+			reason: "value must contain between 1 and 1000 items, inclusive",
+		}
+	}
+
+	return nil
+}
+
+// GetClustersMetaDataRequestValidationError is the validation error returned
+// by GetClustersMetaDataRequest.Validate if the designated constraints aren't met.
+type GetClustersMetaDataRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetClustersMetaDataRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetClustersMetaDataRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetClustersMetaDataRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetClustersMetaDataRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetClustersMetaDataRequestValidationError) ErrorName() string {
+	return "GetClustersMetaDataRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetClustersMetaDataRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetClustersMetaDataRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetClustersMetaDataRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetClustersMetaDataRequestValidationError{}
+
+// Validate checks the field values on GetClustersMetaDataResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *GetClustersMetaDataResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return GetClustersMetaDataResponseValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if v, ok := interface{}(m.GetWebAnnotations()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GetClustersMetaDataResponseValidationError{
+				field:  "WebAnnotations",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// GetClustersMetaDataResponseValidationError is the validation error returned
+// by GetClustersMetaDataResponse.Validate if the designated constraints
+// aren't met.
+type GetClustersMetaDataResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetClustersMetaDataResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetClustersMetaDataResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetClustersMetaDataResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetClustersMetaDataResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetClustersMetaDataResponseValidationError) ErrorName() string {
+	return "GetClustersMetaDataResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetClustersMetaDataResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetClustersMetaDataResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetClustersMetaDataResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetClustersMetaDataResponseValidationError{}
+
+// Validate checks the field values on ClusterMeta with the rules defined in
+// the proto definition for this message. If any rules are violated, an error
+// is returned.
+func (m *ClusterMeta) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for ClusterId
+
+	// no validation rules for ClusterNodeNum
+
+	return nil
+}
+
+// ClusterMetaValidationError is the validation error returned by
+// ClusterMeta.Validate if the designated constraints aren't met.
+type ClusterMetaValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ClusterMetaValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ClusterMetaValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ClusterMetaValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ClusterMetaValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ClusterMetaValidationError) ErrorName() string { return "ClusterMetaValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ClusterMetaValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sClusterMeta.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ClusterMetaValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ClusterMetaValidationError{}
 
 // Validate checks the field values on ListMastersInClusterRequest with the
 // rules defined in the proto definition for this message. If any rules are
