@@ -268,12 +268,3 @@ type ReleaseKvValueCache struct {
 	Value     string `json:"value"`
 	KvType    string `json:"kv_type"`
 }
-
-// AsyncDownloadTaskCache is the async download task info which will be stored in cache.
-type AsyncDownloadTaskCache struct {
-	BizID    uint32 `json:"biz_id"`
-	AppID    uint32 `json:"app_id"`
-	TaskID   string `json:"task_id"`
-	FilePath string `json:"file_path"`
-	FileName string `json:"file_name"`
-}

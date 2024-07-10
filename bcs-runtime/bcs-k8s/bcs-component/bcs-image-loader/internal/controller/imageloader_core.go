@@ -43,6 +43,7 @@ func (r *ImageLoaderReconciler) reconcileImageLoader(ctx context.Context,
 		return newStatus, nil, nil
 	}
 	if newStatus.Revision == "" {
+		r.resetStatus(imageLoader, newStatus)
 		now := metav1.Now()
 		newStatus.StartTime = &now
 		newStatus.Revision = newRevision
@@ -78,8 +79,10 @@ func (r *ImageLoaderReconciler) reconcileImageLoader(ctx context.Context,
 		return newStatus, nil, err
 	}
 	if baseJob.Spec.Completions == nil || *baseJob.Spec.Completions == 0 {
+		r.resetStatus(imageLoader, newStatus)
 		newStatus.ObservedGeneration = imageLoader.Generation
 		newStatus.Completed = newStatus.Desired
+		newStatus.Succeeded = newStatus.Desired
 		logger.Info("no node need to preload image")
 		r.Recorder.Eventf(imageLoader, corev1.EventTypeWarning, "Complete", "no node need to preload image")
 		return newStatus, nil, nil
@@ -132,6 +135,7 @@ func (r *ImageLoaderReconciler) cleanJobs(ctx context.Context,
 func (r *ImageLoaderReconciler) createJobsIfNeed(ctx context.Context,
 	loader *tkexv1alpha1.ImageLoader, baseJob *batchv1.Job) error {
 	for i := range loader.Spec.Images {
+		logger.Info(fmt.Sprintf("create job for %d image", i))
 		job := &batchv1.Job{}
 		err := r.Get(ctx, types.NamespacedName{Namespace: loader.Namespace,
 			Name: getJobName(loader, i)}, job)
@@ -229,7 +233,8 @@ func (r *ImageLoaderReconciler) updateStatus(ctx context.Context, loader *tkexv1
 				newStatus.Desired)
 			r.Recorder.Eventf(loader, corev1.EventTypeWarning, "Completed", "Some imageloader jobs failed")
 		}
-
+		return nil
 	}
+	logger.Info("waiting for job done")
 	return nil
 }

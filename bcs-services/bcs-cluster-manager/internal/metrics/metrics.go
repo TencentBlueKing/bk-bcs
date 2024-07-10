@@ -56,11 +56,23 @@ var (
 		Buckets:   []float64{0.01, 0.1, 0.5, 0.75, 1.0, 2.0, 3.0, 5.0, 10.0},
 	}, []string{"handler", "method", "status"})
 
-	reportVPCAvailableIPNum = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+	reportCloudVpcResourceUsage = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: BkBcsClusterManager,
-		Name:      "vpc_remaining_IPNum",
-		Help:      "census cloud vpc available ip number",
-	}, []string{"cloud", "vpc"})
+		Name:      "vpc_resource_usage",
+		Help:      "census cloud vpc ip resource number",
+	}, []string{"cloud", "region", "vpc", "type", "method"})
+
+	reportClusterVpcResourceUsage = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: BkBcsClusterManager,
+		Name:      "vpc_cluster_usage",
+		Help:      "census cloud cluster vpc ip resource number",
+	}, []string{"cloud", "biz", "cluster", "type", "method"})
+
+	reportClusterVpcCniSubnetResourceUsage = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: BkBcsClusterManager,
+		Name:      "vpc_cluster_zone_subnet_usage",
+		Help:      "census cloud cluster vpc ip resource number",
+	}, []string{"cloud", "biz", "cluster", "method", "zone"})
 
 	reportClusterHealthStatus = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: BkBcsClusterManager,
@@ -122,7 +134,9 @@ func init() {
 	prometheus.MustRegister(requestLatencyLib)
 	prometheus.MustRegister(requestsTotalAPI)
 	prometheus.MustRegister(requestLatencyAPI)
-	prometheus.MustRegister(reportVPCAvailableIPNum)
+	prometheus.MustRegister(reportCloudVpcResourceUsage)
+	prometheus.MustRegister(reportClusterVpcResourceUsage)
+	prometheus.MustRegister(reportClusterVpcCniSubnetResourceUsage)
 	prometheus.MustRegister(reportMasterTaskCount)
 	prometheus.MustRegister(reportMasterTaskLatency)
 	prometheus.MustRegister(reportClusterHealthStatus)
@@ -162,9 +176,19 @@ func ReportClusterGroupMaxNodeNum(cluster, group, instanceType string, bizId str
 	reportClusterGroupMaxResourceNum.WithLabelValues(cluster, group, instanceType, bizId).Set(num)
 }
 
-// ReportCloudVpcAvailableIPNum report vpc available ipNum
-func ReportCloudVpcAvailableIPNum(cloud, vpc string, num float64) {
-	reportVPCAvailableIPNum.WithLabelValues(cloud, vpc).Set(num)
+// ReportCloudVpcResourceUsage report vpc available ipNum
+func ReportCloudVpcResourceUsage(cloud, region, vpc, category, method string, num float64) {
+	reportCloudVpcResourceUsage.WithLabelValues(cloud, region, vpc, category, method).Set(num)
+}
+
+// ReportClusterVpcResourceUsage report cluster vpc ip usage
+func ReportClusterVpcResourceUsage(cloud, biz, cluster, category, method string, num float64) {
+	reportClusterVpcResourceUsage.WithLabelValues(cloud, biz, cluster, category, method).Set(num)
+}
+
+// ReportClusterVpcCniSubnetResourceUsage report cluster vpc-cni mode ip usage
+func ReportClusterVpcCniSubnetResourceUsage(cloud, biz, cluster, method, zone string, num float64) {
+	reportClusterVpcCniSubnetResourceUsage.WithLabelValues(cloud, biz, cluster, method, zone).Set(num)
 }
 
 // ReportCloudClusterHealthStatus report cluster status

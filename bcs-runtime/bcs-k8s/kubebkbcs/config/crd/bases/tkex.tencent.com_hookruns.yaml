@@ -4,7 +4,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.4.0
+    controller-gen.kubebuilder.io/version: v0.5.0
   creationTimestamp: null
   name: hookruns.tkex.tencent.com
 spec:
@@ -22,14 +22,10 @@ spec:
         description: HookRun is the Schema for the hookruns API
         properties:
           apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation
-              of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
             type: string
           kind:
-            description: 'Kind is a string value representing the REST resource this
-              object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
             type: string
           metadata:
             type: object
@@ -53,65 +49,44 @@ spec:
                 items:
                   properties:
                     consecutiveErrorLimit:
-                      description: 'ConsecutiveErrorLimit is the maximum number of
-                        times the measurement is allowed to error in succession, before
-                        the metric is considered error (default: 4)'
+                      description: 'ConsecutiveErrorLimit is the maximum number of times the measurement is allowed to error in succession, before the metric is considered error (default: 4)'
                       format: int32
                       type: integer
                     consecutiveSuccessfulLimit:
-                      description: ConsecutiveSuccessfulLimit is the minmum number
-                        of times the measurement is allowed to success in succession,
-                        before the metric is considered success
+                      description: ConsecutiveSuccessfulLimit is the minmum number of times the measurement is allowed to success in succession, before the metric is considered success
                       format: int32
                       type: integer
                     count:
-                      description: Count is the number of times to run the measurement.
-                        If both interval and count are omitted, the effective count
-                        is 1. If only interval is specified, metric runs indefinitely.
-                        If count > 1, interval must be specified.
+                      description: Count is the number of times to run the measurement. If both interval and count are omitted, the effective count is 1. If only interval is specified, metric runs indefinitely. If count > 1, interval must be specified.
                       format: int32
                       type: integer
                     failureCondition:
-                      description: FailureCondition is an expression which determines
-                        if a measurement is considered failed If both success and
-                        failure conditions are specified, and the measurement does
-                        not fall into either condition, the measurement is considered
-                        Inconclusive
+                      description: FailureCondition is an expression which determines if a measurement is considered failed If both success and failure conditions are specified, and the measurement does not fall into either condition, the measurement is considered Inconclusive
                       type: string
                     failureLimit:
-                      description: 'FailureLimit is the maximum number of times the
-                        measurement is allowed to fail, before the entire metric is
-                        considered Failed (default: 0)'
+                      description: 'FailureLimit is the maximum number of times the measurement is allowed to fail, before the entire metric is considered Failed (default: 0)'
                       format: int32
                       type: integer
                     inconclusiveLimit:
-                      description: 'InconclusiveLimit is the maximum number of times
-                        the measurement is allowed to measure Inconclusive, before
-                        the entire metric is considered Inconclusive (default: 0)'
+                      description: 'InconclusiveLimit is the maximum number of times the measurement is allowed to measure Inconclusive, before the entire metric is considered Inconclusive (default: 0)'
                       format: int32
                       type: integer
                     initialDelay:
-                      description: InitialDelay how long the AnalysisRun should wait
-                        before starting this metric
+                      description: InitialDelay how long the AnalysisRun should wait before starting this metric
                       type: string
                     interval:
-                      description: Interval defines an interval string (e.g. 30s,
-                        5m, 1h) between each measurement. If omitted, will perform
-                        a single measurement
+                      description: Interval defines an interval string (e.g. 30s, 5m, 1h) between each measurement. If omitted, will perform a single measurement
                       type: string
                     name:
                       type: string
                     provider:
-                      description: Provider configuration to the external system to
-                        use to verify the analysis
+                      description: Provider configuration to the external system to use to verify the analysis
                       properties:
                         prometheus:
-                          description: Prometheus specifies the prometheus metric
-                            to query
+                          description: Prometheus specifies the prometheus metric to query
                           properties:
                             address:
-                              description: Address is the HTTP address and port of
-                                the prometheus server
+                              description: Address is the HTTP address and port of the prometheus server
                               type: string
                             query:
                               description: Query is a raw prometheus query to perform
@@ -143,17 +118,10 @@ spec:
                           type: object
                       type: object
                     successCondition:
-                      description: 'SuccessCondition is an expression which determines
-                        if a measurement is considered successful Expression is a
-                        goevaluate expression. The keyword `result` is a variable
-                        reference to the value of measurement. Results can be both
-                        structured data or primitive. Examples:   result > 10   (result.requests_made
-                        * result.requests_succeeded / 100) >= 90'
+                      description: 'SuccessCondition is an expression which determines if a measurement is considered successful Expression is a goevaluate expression. The keyword `result` is a variable reference to the value of measurement. Results can be both structured data or primitive. Examples:   result > 10   (result.requests_made * result.requests_succeeded / 100) >= 90'
                       type: string
                     successfulLimit:
-                      description: 'SuccessfulLimit is the maximum number of times
-                        the measurement is to success, before the entire metric is
-                        considered Running (default: 0)'
+                      description: 'SuccessfulLimit is the maximum number of times the measurement is to success, before the entire metric is considered Running (default: 0)'
                       format: int32
                       type: integer
                   required:

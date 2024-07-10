@@ -50,6 +50,7 @@ type RedisClient interface {
 	TxPipeline() redis.Pipeliner
 	SetNX(ctx context.Context, key string, value interface{}, expiration time.Duration) *redis.BoolCmd
 	Get(ctx context.Context, key string) *redis.StringCmd
+	GetSet(ctx context.Context, key string, value interface{}) *redis.StringCmd
 	MGet(ctx context.Context, keys ...string) *redis.SliceCmd
 	HDel(ctx context.Context, key string, fields ...string) *redis.IntCmd
 	HGet(ctx context.Context, key, field string) *redis.StringCmd
@@ -74,6 +75,7 @@ type Client interface {
 	HGetWithTxnPipe(ctx context.Context, hashKey string, field string) (string, error)
 	SetNX(ctx context.Context, key string, value interface{}, ttlSeconds int) (bool, error)
 	Get(ctx context.Context, key string) (string, error)
+	GetSet(ctx context.Context, key string, value interface{}) (string, error)
 	MGet(ctx context.Context, key ...string) ([]string, error)
 	HSets(ctx context.Context, hashKey string, kv map[string]string, ttlSeconds int) error
 	HDelete(ctx context.Context, hashKey string, subKey []string) error

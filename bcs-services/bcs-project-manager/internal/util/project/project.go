@@ -19,7 +19,7 @@ import (
 )
 
 // PatchBusinessName patch business name by business id for each project
-func PatchBusinessName(projects []*proto.Project) error {
+func PatchBusinessName(projects []*proto.Project) {
 	bizIDs := []string{}
 	for _, project := range projects {
 		// 历史遗留原因，以前迁移的一部分项目未开启容器服务，但是却设置了业务ID为0
@@ -27,14 +27,10 @@ func PatchBusinessName(projects []*proto.Project) error {
 			bizIDs = append(bizIDs, project.BusinessID)
 		}
 	}
-	businessMap, err := cmdb.BatchSearchBusinessByBizIDs(bizIDs)
-	if err != nil {
-		return err
-	}
+	businessMap := cmdb.BatchSearchBusinessByBizIDs(bizIDs)
 	for _, project := range projects {
 		if biz, ok := businessMap[project.BusinessID]; ok {
 			project.BusinessName = biz.BKBizName
 		}
 	}
-	return nil
 }

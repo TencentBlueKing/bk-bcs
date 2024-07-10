@@ -276,7 +276,6 @@
         configDetail.value = sortObjectKeysByAscii({
           ...res.detail,
           create_at: datetimeFormat(res.detail.create_at),
-          update_at: datetimeFormat(res.detail.update_at),
         });
         template_space_id = res.detail.template_space_id;
       } else {

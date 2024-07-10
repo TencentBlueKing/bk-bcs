@@ -32,6 +32,8 @@ func ParseJob(manifest map[string]interface{}) map[string]interface{} {
 
 // ParseJobSpec xxx
 func ParseJobSpec(manifest map[string]interface{}, spec *model.JobSpec) {
+	templateLables, _ := mapx.GetItems(manifest, "spec.template.metadata.labels")
+	common.ParseLabels(templateLables, &spec.Labels.TemplateLabels)
 	ParseJobManage(manifest, &spec.JobManage)
 	tmplSpec, _ := mapx.GetItems(manifest, "spec.template.spec")
 	podSpec, _ := tmplSpec.(map[string]interface{})

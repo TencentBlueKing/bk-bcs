@@ -554,19 +554,22 @@ func ModifyInstancesVpcAttribute(ctx context.Context, vpcId string, ids []string
 			blog.Errorf("ModifyInstancesVpcAttribute[%s] zone[%s] not exist subnet", taskId, zone)
 			continue
 		}
+		// tke modify instances vpc attribute support max 20 nodes
 
 		// get zone nodes instanceIds
 		instanceIds := make([]string, 0)
 		for i := range zoneNodes[zone] {
 			instanceIds = append(instanceIds, zoneNodes[zone][i].NodeID)
 		}
-
-		// modify instances vpc
-		err = nodeClient.ModifyInstancesVpcAttribute(vpcId, subnetId, instanceIds)
-		if err != nil {
-			blog.Errorf("ModifyInstancesVpcAttribute[%s][%s:%s] instances[%v] failed: %v",
-				taskId, vpcId, zone, instanceIds, err)
-			return err
+		instanceIdsSlice := utils.SplitStringsChunks(instanceIds, 20)
+		for i := range instanceIdsSlice {
+			// modify instances vpc
+			err = nodeClient.ModifyInstancesVpcAttribute(vpcId, subnetId, instanceIdsSlice[i])
+			if err != nil {
+				blog.Errorf("ModifyInstancesVpcAttribute[%s][%s:%s] instances[%v] failed: %v",
+					taskId, vpcId, zone, instanceIdsSlice[i], err)
+				return err
+			}
 		}
 
 		blog.Infof("ModifyInstancesVpcAttribute[%s][%s:%s] instances successful",

@@ -49,13 +49,13 @@ type Option struct {
 
 // New initialize a resource lock instance.
 func New(opt Option) Interface {
-	mc := initMetric()
+	mc := initResourceLockMetric()
 	lo := &resLock{
 		lo:      sync.Mutex{},
 		pool:    make(map[string]*spinLock),
 		mc:      mc,
 		limiter: rate.NewLimiter(rate.Limit(opt.QPS), int(opt.Burst)),
-		stat:    &statistic{mc: mc},
+		stat:    &resourceLockStatistic{mc: mc},
 	}
 
 	go lo.collectMetric()
@@ -70,8 +70,8 @@ type resLock struct {
 	lo      sync.Mutex
 	pool    map[string]*spinLock
 	limiter *rate.Limiter
-	stat    *statistic
-	mc      *metric
+	stat    *resourceLockStatistic
+	mc      *resourceLockMetric
 }
 
 // Acquire test if the caller can get the resource's lock.
@@ -172,26 +172,26 @@ func (s *State) Release(withLimit bool) {
 	s.lock.Release(s.resource, withLimit)
 }
 
-type statistic struct {
+type resourceLockStatistic struct {
 	Total    atomic.Int64
 	Acquired atomic.Int64
-	mc       *metric
+	mc       *resourceLockMetric
 }
 
 // IncTotal increase the total by one.
-func (sc *statistic) IncTotal() {
+func (sc *resourceLockStatistic) IncTotal() {
 	sc.Total.Inc()
 	sc.mc.totalCounter.With(prm.Labels{}).Inc()
 }
 
 // IncAcquired increase the acquired by one.
-func (sc *statistic) IncAcquired() {
+func (sc *resourceLockStatistic) IncAcquired() {
 	sc.Total.Inc()
 	sc.mc.acquiredCounter.With(prm.Labels{}).Inc()
 }
 
 // Rate is the acquired rate of total.
-func (sc *statistic) Rate() float64 {
+func (sc *resourceLockStatistic) Rate() float64 {
 	if sc.Total.Load() == 0 {
 		return 0
 	}

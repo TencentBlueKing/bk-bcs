@@ -5,4 +5,4 @@ kind: ConfigMap
 immutable: true
 {{- end }}
 data:
-  {{- include "common.kvSlice2Map" .data.items | indent 2 }}
+  {{- include "common.cfgDataToYaml" .data.items | indent 2 }}

@@ -157,6 +157,8 @@ type ListNodesOption struct {
 	ClusterID string
 	// NodeTemplateID for node templateID
 	NodeTemplateID string
+	// CheckIP check instance ip
+	CheckIP bool
 }
 
 // TaskOptions option for create specified task
@@ -520,6 +522,28 @@ type CheckEndpointStatusOption struct {
 type AddSubnetsToClusterOption struct {
 	CommonOption
 	Cluster *proto.Cluster
+	Cloud   *proto.Cloud
+}
+
+// SwitchClusterNetworkOption switch cluster network option
+type SwitchClusterNetworkOption struct {
+	CommonOption
+	Cluster             *proto.Cluster
+	Cloud               *proto.Cloud
+	Operator            string
+	Disable             bool
+	IsStaticIpMode      bool
+	ClaimExpiredSeconds uint32
+}
+
+// CheckClusterNetworkStatusOption check cluster network option
+type CheckClusterNetworkStatusOption struct {
+	CommonOption
+	Cluster             *proto.Cluster
+	SubnetSource        *proto.SubnetSource
+	Disable             bool
+	IsStaticIpMode      bool
+	ClaimExpiredSeconds uint32
 }
 
 // GetMasterSuggestedMachinesOption master suggested machine

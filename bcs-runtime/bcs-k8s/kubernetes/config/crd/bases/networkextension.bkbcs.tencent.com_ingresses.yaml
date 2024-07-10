@@ -211,11 +211,18 @@ spec:
                               format: int64
                               type: integer
                             port:
-                              description: support HTTP(S)/ TCP/ UDP/ ICMP Target   []string
-                                `json:"target"`
+                              description: Target   []string `json:"target"`
                               format: int64
                               type: integer
+                            port_define:
+                              description: define which port should be selected to
+                                check when use port segment
+                              enum:
+                              - FIRST
+                              - LAST
+                              type: string
                             protocol:
+                              description: support HTTP(S)/ TCP/ UDP/ ICMP
                               type: string
                             query_params:
                               items:
@@ -422,11 +429,18 @@ spec:
                                     format: int64
                                     type: integer
                                   port:
-                                    description: support HTTP(S)/ TCP/ UDP/ ICMP Target   []string
-                                      `json:"target"`
+                                    description: Target   []string `json:"target"`
                                     format: int64
                                     type: integer
+                                  port_define:
+                                    description: define which port should be selected
+                                      to check when use port segment
+                                    enum:
+                                    - FIRST
+                                    - LAST
+                                    type: string
                                   protocol:
+                                    description: support HTTP(S)/ TCP/ UDP/ ICMP
                                     type: string
                                   query_params:
                                     items:
@@ -690,11 +704,18 @@ spec:
                                     format: int64
                                     type: integer
                                   port:
-                                    description: support HTTP(S)/ TCP/ UDP/ ICMP Target   []string
-                                      `json:"target"`
+                                    description: Target   []string `json:"target"`
                                     format: int64
                                     type: integer
+                                  port_define:
+                                    description: define which port should be selected
+                                      to check when use port segment
+                                    enum:
+                                    - FIRST
+                                    - LAST
+                                    type: string
                                   protocol:
+                                    description: support HTTP(S)/ TCP/ UDP/ ICMP
                                     type: string
                                   query_params:
                                     items:
@@ -948,11 +969,18 @@ spec:
                               format: int64
                               type: integer
                             port:
-                              description: support HTTP(S)/ TCP/ UDP/ ICMP Target   []string
-                                `json:"target"`
+                              description: Target   []string `json:"target"`
                               format: int64
                               type: integer
+                            port_define:
+                              description: define which port should be selected to
+                                check when use port segment
+                              enum:
+                              - FIRST
+                              - LAST
+                              type: string
                             protocol:
+                              description: support HTTP(S)/ TCP/ UDP/ ICMP
                               type: string
                             query_params:
                               items:

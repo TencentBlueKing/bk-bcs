@@ -41,7 +41,7 @@ data:
         showTitle: false
   ui:group:
     props:
-      border: true
+      border: false
       showTitle: true
       type: card
 {{- end }}
@@ -378,7 +378,7 @@ data:
               rows: 10
   ui:group:
     props:
-      border: true
+      border: false
       showTitle: true
       type: card
       verifiable: true

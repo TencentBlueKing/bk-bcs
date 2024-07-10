@@ -4,7 +4,7 @@
       <template #default="{ row, index }">
         <div class="version-name-wrapper">
           <div class="name">{{ row.name }}</div>
-          <bk-tag v-if="index === 0" theme="success"> Latest </bk-tag>
+          <bk-tag v-if="index === 0" theme="success"> latest </bk-tag>
           <RightShape v-if="props.id === row.id" class="arrow-icon" />
         </div>
       </template>

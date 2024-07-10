@@ -66,7 +66,9 @@
             collapse-tags
             filterable
             multiple
-            show-select-all>
+            show-select-all
+            @focus="handleFocusConfigSelect"
+            @blur="handleCloseConfigSelect">
             <template #trigger>
               <div class="select-btn">{{ $t('选择配置项') }}</div>
             </template>
@@ -122,6 +124,7 @@
   import TextImport from './text-import.vue';
   import ImportFormOtherService from '../import-file/import-form-other-service.vue';
   import ConfigTable from './kv-config-table.vue';
+  import { cloneDeep } from 'lodash';
 
   const { t } = useI18n();
   const props = defineProps<{
@@ -147,6 +150,7 @@
   const selectedConfigIds = ref<string[]>([]);
   const allConfigList = ref<IConfigKvItem[]>([]);
   const configSelectRef = ref();
+  const lastSelectedConfigIds = ref<string[]>([]); // 上一次选中导入的配置项
 
   watch(
     () => props.show,
@@ -291,6 +295,11 @@
 
   const handleCloseConfigSelect = () => {
     configSelectRef.value.hidePopover();
+    selectedConfigIds.value = cloneDeep(lastSelectedConfigIds.value);
+  };
+
+  const handleFocusConfigSelect = () => {
+    lastSelectedConfigIds.value = cloneDeep(selectedConfigIds.value);
   };
 </script>
 

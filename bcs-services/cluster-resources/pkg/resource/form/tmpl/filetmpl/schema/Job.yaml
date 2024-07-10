@@ -6,6 +6,7 @@ properties:
     title: {{ i18n "配置信息" .lang }}
     type: object
     properties:
+      {{- include "workload.labels" . | indent 6 }}
       {{- include "workload.jobManage" . | indent 6 }}
       {{- include "workload.nodeSelect" . | indent 6 }}
       {{- include "workload.affinity" . | indent 6 }}
@@ -17,10 +18,10 @@ properties:
       name: tab
       props:
         border: false
-        showTitle: true
-        type: card
+        showTitle: false
         verifiable: true
     ui:order:
+      - labels
       - jobManage
       - nodeSelect
       - affinity
@@ -30,3 +31,15 @@ properties:
       - other
   {{- include "workload.volume" . | indent 2 }}
   {{- include "container.containerGroup" . | indent 2 }}
+ui:group:
+  name: collapse
+  props:
+    border: false
+    showTitle: false
+    verifiable: true
+    collapseStyle: default
+ui:order:
+  - metadata
+  - spec
+  - containerGroup
+  - volume

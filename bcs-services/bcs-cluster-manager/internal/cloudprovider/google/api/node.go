@@ -19,13 +19,15 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	compute "google.golang.org/api/compute/v1"
+	computev1 "google.golang.org/api/compute/v1"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -127,7 +129,7 @@ func (n *NodeManager) ListNodeInstanceType(info cloudprovider.InstanceInfo, opt 
 	return instanceTypes, nil
 }
 
-func convertToInstanceType(mt []*compute.MachineType, family string) []*proto.InstanceType {
+func convertToInstanceType(mt []*computev1.MachineType, family string) []*proto.InstanceType {
 	result := make([]*proto.InstanceType, 0)
 
 	for _, m := range mt {
@@ -176,7 +178,9 @@ func (n *NodeManager) ListExternalNodesByIP(ips []string, opt *cloudprovider.Lis
 }
 
 // ListNodesByInstanceID list node by instance id
-func (n *NodeManager) ListNodesByInstanceID(ids []string, opt *cloudprovider.ListNodesOption) ([]*proto.Node, error) {
+// checkIP - It may take time when an instance get an ip after scaling up a nodegroup in GKE
+func (n *NodeManager) ListNodesByInstanceID(ids []string, opt *cloudprovider.ListNodesOption) (
+	[]*proto.Node, error) {
 	idChunks := utils.SplitStringsChunks(ids, limit)
 	nodeList := make([]*proto.Node, 0)
 
@@ -209,8 +213,8 @@ func (n *NodeManager) GetResourceGroups(opt *cloudprovider.CommonOption) ([]*pro
 }
 
 // transInstanceIDsToNodes trans IDList to Nodes
-func (n *NodeManager) transInstanceIDsToNodes(ids []string, opt *cloudprovider.ListNodesOption) ([]*proto.Node,
-	error) {
+func (n *NodeManager) transInstanceIDsToNodes(ids []string, opt *cloudprovider.ListNodesOption) (
+	[]*proto.Node, error) {
 	client, err := NewComputeServiceClient(opt.Common)
 	if err != nil {
 		blog.Errorf("create ComputeServiceClient failed when GetNodeByIP, %s", err.Error())
@@ -236,14 +240,21 @@ func (n *NodeManager) transInstanceIDsToNodes(ids []string, opt *cloudprovider.L
 	nodeMap := make(map[string]*proto.Node)
 	var nodes []*proto.Node
 	for _, inst := range instances {
+		blog.Infof("transInstanceIDsToNodes instance[%s], ip[%s]", inst.Name, inst.NetworkInterfaces[0].NetworkIP)
 		node := InstanceToNode(client, inst)
 		// clean duplicated Node if user input multiple ip that
 		// belong to one instance
 		if _, ok := nodeMap[node.NodeID]; ok {
 			continue
 		}
-
 		nodeMap[node.NodeID] = node
+
+		if len(inst.NetworkInterfaces[0].NetworkIP) == 0 && opt.CheckIP {
+			err = checkInstanceIP(client, inst)
+			if err != nil {
+				return nil, err
+			}
+		}
 		node.InnerIP = inst.NetworkInterfaces[0].NetworkIP
 		nodes = append(nodes, node)
 	}
@@ -251,10 +262,38 @@ func (n *NodeManager) transInstanceIDsToNodes(ids []string, opt *cloudprovider.L
 	return nodes, nil
 }
 
+func checkInstanceIP(client *ComputeServiceClient, inst *computev1.Instance) error {
+	timeCtx, cancel := context.WithTimeout(context.TODO(), 3*time.Minute)
+	defer cancel()
+	err := loop.LoopDoFunc(timeCtx, func() error {
+		insList2, err := client.ListZoneInstanceWithFilter(context.Background(),
+			InstanceNameFilter([]string{inst.Name}))
+		if err != nil {
+			blog.Errorf("ListZoneInstanceWithFilter failed, %s", err.Error())
+			return err
+		}
+		if len(insList2.Items) == 0 {
+			return fmt.Errorf("ListZoneInstanceWithFilter instance[%s] not found", inst.Name)
+		}
+
+		if len(insList2.Items[0].NetworkInterfaces[0].NetworkIP) == 0 {
+			return nil
+		}
+
+		inst.NetworkInterfaces[0].NetworkIP = insList2.Items[0].NetworkInterfaces[0].NetworkIP
+		return loop.EndLoop
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // InstanceToNode parse Instance information in gcloud to Node in clustermanager
 // @param Instance: gcloud instance information, can not be nil;
 // @return Node: cluster-manager node information;
-func InstanceToNode(cli *ComputeServiceClient, ins *compute.Instance) *proto.Node {
+func InstanceToNode(cli *ComputeServiceClient, ins *computev1.Instance) *proto.Node {
 	zoneInfo, _ := GetGCEResourceInfo(ins.Zone)
 	zone, _ := cli.GetZone(context.Background(), zoneInfo[len(zoneInfo)-1])
 
@@ -274,7 +313,7 @@ func InstanceToNode(cli *ComputeServiceClient, ins *compute.Instance) *proto.Nod
 
 	networkInfo := strings.Split(ins.NetworkInterfaces[0].Subnetwork, "/")
 	node.VPC = networkInfo[len(networkInfo)-1]
-	node.Status = common.StatusRunning
+	node.Status = ins.Status
 
 	return node
 }
