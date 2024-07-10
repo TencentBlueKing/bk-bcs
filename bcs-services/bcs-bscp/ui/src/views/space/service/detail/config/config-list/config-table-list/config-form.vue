@@ -128,7 +128,7 @@
       <template #label>
         <div class="config-content-label">
           <span>{{ t('配置内容') }}</span>
-          <info v-bk-tooltips="{ content: configContentTip, placement: 'top' }" fill="#3a84ff" />
+          <info v-bk-tooltips="{ content: t('tips.createConfig'), placement: 'top' }" fill="#3a84ff" />
         </div>
       </template>
       <ConfigContentEditor
@@ -145,6 +145,7 @@
   import { useI18n } from 'vue-i18n';
   import SHA256 from 'crypto-js/sha256';
   import WordArray from 'crypto-js/lib-typedarrays';
+  import CryptoJS from 'crypto-js';
   import { TextFill, Done, Info, Error } from 'bkui-vue/lib/icon';
   import BkMessage from 'bkui-vue/lib/message';
   import { IConfigEditParams, IFileConfigContentSummary } from '../../../../../../../../types/config';
@@ -189,7 +190,6 @@
   );
 
   const emits = defineEmits(['change', 'update:fileUploading']);
-  const configContentTip = t('tips.createConfig');
   const localVal = ref({ ...props.config, fileAP: '' });
   const privilegeInputVal = ref('');
   const showPrivilegeErrorTips = ref(false);
@@ -384,7 +384,6 @@
   const uploadContent = async () => {
     uploadProgress.value.status = 'uploading';
     const signature = await getSignature();
-    console.log(signature);
     uploadFileSignature.value = signature;
     if (props.isTpl) {
       return updateTemplateContent(
@@ -418,6 +417,7 @@
       if (isFileChanged.value) {
         return new Promise((resolve) => {
           const reader = new FileReader();
+          const hash = CryptoJS.algo.SHA256.create();
           const processChunk = () => {
             // @ts-ignore
             const slice = fileContent.value.slice(start, end);
@@ -425,12 +425,14 @@
           };
           reader.onload = function () {
             const wordArray = WordArray.create(reader.result);
+            hash.update(wordArray);
             if (end < (fileContent.value!.size as number)) {
               start += CHUNK_SIZE;
               end = Math.min(start + CHUNK_SIZE, fileContent.value!.size as number);
               processChunk();
             } else {
-              resolve(SHA256(wordArray).toString());
+              const sha256Hash = hash.finalize();
+              resolve(sha256Hash.toString());
             }
           };
           // 开始处理第一个切片
@@ -442,6 +444,7 @@
     if (!stringContent.value.endsWith('\n')) stringContent.value += '\n';
     return SHA256(stringContent.value).toString();
   };
+
 
   // 下载已上传文件
   const handleDownloadFile = async () => {

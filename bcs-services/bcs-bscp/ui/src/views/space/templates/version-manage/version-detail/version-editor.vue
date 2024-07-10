@@ -79,6 +79,7 @@
   import { useI18n } from 'vue-i18n';
   import SHA256 from 'crypto-js/sha256';
   import WordArray from 'crypto-js/lib-typedarrays';
+  import CryptoJS from 'crypto-js';
   import Message from 'bkui-vue/lib/message';
   import { Done, TextFill } from 'bkui-vue/lib/icon';
   import { ITemplateVersionEditingData } from '../../../../../../types/template';
@@ -249,6 +250,7 @@
       if (isFileChanged.value) {
         return new Promise((resolve) => {
           const reader = new FileReader();
+          const hash = CryptoJS.algo.SHA256.create();
           const processChunk = () => {
             // @ts-ignore
             const slice = fileContent.value.slice(start, end);
@@ -256,12 +258,14 @@
           };
           reader.onload = function () {
             const wordArray = WordArray.create(reader.result);
+            hash.update(wordArray);
             if (end < (fileContent.value!.size as number)) {
               start += CHUNK_SIZE;
               end = Math.min(start + CHUNK_SIZE, fileContent.value!.size as number);
               processChunk();
             } else {
-              resolve(SHA256(wordArray).toString());
+              const sha256Hash = hash.finalize();
+              resolve(sha256Hash.toString());
             }
           };
           // 开始处理第一个切片
