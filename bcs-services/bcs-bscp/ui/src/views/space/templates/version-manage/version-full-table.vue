@@ -12,7 +12,7 @@
           <bk-button v-if="row.spec" text theme="primary" @click="emits('select', row.id)">{{
             row.spec.revision_name
           }}</bk-button>
-          <bk-tag v-if="index === 0" theme="success"> Latest </bk-tag>
+          <bk-tag v-if="index === 0" theme="success"> latest </bk-tag>
         </div>
       </template>
     </bk-table-column>

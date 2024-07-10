@@ -1038,7 +1038,7 @@
       width: 158px;
     }
     .status {
-      width: 120px;
+      width: 140px;
     }
     .operation {
       width: 150px;

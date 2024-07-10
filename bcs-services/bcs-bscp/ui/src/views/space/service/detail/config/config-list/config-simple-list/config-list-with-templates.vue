@@ -178,7 +178,7 @@
         all: true,
       };
       if (searchStr.value) {
-        params.search_fields = 'name,memo,path,creator,reviser';
+        params.search_fields = 'name,path,creator,reviser';
         params.search_value = searchStr.value;
       }
 
@@ -206,7 +206,7 @@
         all: true,
       };
       if (searchStr.value) {
-        params.search_fields = 'name,memo,path,creator,reviser';
+        params.search_fields = 'name,path,creator,reviser';
         params.search_value = searchStr.value;
       }
 
