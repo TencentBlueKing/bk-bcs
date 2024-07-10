@@ -100,6 +100,8 @@
         openedPkgTable.value = '';
         selectedConfigs.value = [];
         isFormChange.value = false;
+        searchStr.value = '';
+        handleSearch();
       }
     },
   );

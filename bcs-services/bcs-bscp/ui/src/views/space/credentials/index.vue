@@ -170,7 +170,7 @@
               </div>
             </template>
           </bk-table-column>
-          <bk-table-column :label="t('操作')" :width="locale === 'zh-CN' ? '160' : '260'" :fixed="'right'">
+          <bk-table-column :label="t('操作')" :width="locale === 'zh-cn' ? '160' : '260'" :fixed="'right'">
             <template #default="{ row, index }">
               <template v-if="index === 0 && isCreateCredential">
                 <bk-button text theme="primary" @click="handleCreateCredential">{{ t('创建') }}</bk-button>
