@@ -174,7 +174,7 @@
     defineProps<{
       config: IConfigEditParams;
       isEdit: boolean;
-      content: string | IFileConfigContentSummary;
+      content?: string | IFileConfigContentSummary;
       variables?: IVariableEditParams[];
       bkBizId: string;
       id: number; // 服务ID或者模板空间ID
@@ -386,6 +386,7 @@
   const uploadContent = async () => {
     uploadProgress.value.status = 'uploading';
     const signature = await getSignature();
+    console.log(signature);
     uploadFileSignature.value = signature;
     if (props.isTpl) {
       return updateTemplateContent(
@@ -412,15 +413,30 @@
   // 生成文件或文本的sha256
   const getSignature = async () => {
     if (localVal.value.file_type === 'binary') {
+      const CHUNK_SIZE = 1024 * 1024; // 1MB
+      // 初始化第一个切片的处理
+      let start = 0;
+      let end = Math.min(CHUNK_SIZE, fileContent.value!.size as number);
       if (isFileChanged.value) {
         return new Promise((resolve) => {
           const reader = new FileReader();
-          // @ts-ignore
-          reader.readAsArrayBuffer(fileContent.value);
-          reader.onload = () => {
-            const wordArray = WordArray.create(reader.result);
-            resolve(SHA256(wordArray).toString());
+          const processChunk = () => {
+            // @ts-ignore
+            const slice = fileContent.value.slice(start, end);
+            reader.readAsArrayBuffer(slice);
           };
+          reader.onload = function () {
+            const wordArray = WordArray.create(reader.result);
+            if (end < (fileContent.value!.size as number)) {
+              start += CHUNK_SIZE;
+              end = Math.min(start + CHUNK_SIZE, fileContent.value!.size as number);
+              processChunk();
+            } else {
+              resolve(SHA256(wordArray).toString());
+            }
+          };
+          // 开始处理第一个切片
+          processChunk();
         });
       }
       return (fileContent.value as IFileConfigContentSummary).signature;
