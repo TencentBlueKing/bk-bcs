@@ -16,18 +16,18 @@
   <div class="label-content" v-if="labelArr.length">
     <div class="label-item" v-for="(item, index) in labelArr" :key="index">
       <bk-input
-        :class="['bk-input-wrap', { 'is-error': !validateKey.test(item.key) }]"
+        :class="['bk-input-wrap', { 'is-error': !keyValidateReg.test(item.key) }]"
         :id="'key' + index"
         v-model.trim="item.key" />
-      <span v-show="!validateKey.test(item.key)" class="error-msg">{{
-        $t("仅支持字母，数字，'-'，'_'，'.' 及 '/' 且需以字母数字开头和结尾")
-      }}</span>
+      <span v-show="!keyValidateReg.test(item.key)" class="error-msg">
+        {{ $t("仅支持字母，数字，'-'，'_'，'.' 及 '/' 且需以字母数字开头和结尾") }}
+      </span>
       <span class="label-item-icon">=</span>
       <bk-input
-        :class="['bk-input-wrap', { 'is-error': validateKey.test(item.key) && !validateValue.test(item.value) }]"
+        :class="['bk-input-wrap', { 'is-error': keyValidateReg.test(item.key) && !valueValidateReg.test(item.value) }]"
         :id="'val' + index"
         v-model.trim="item.value" />
-      <span v-show="validateKey.test(item.key) && !validateValue.test(item.value)" class="error-msg is--value">
+      <span v-show="keyValidateReg.test(item.key) && !valueValidateReg.test(item.value)" class="error-msg is--value">
         {{ $t("需以字母数字开头和结尾，可包含 '-'，'_'，'.' 和字母数字") }}
       </span>
       <div class="label-item-minus" @click="deleteItem(index)"></div>
@@ -35,32 +35,31 @@
   </div>
 </template>
 <script lang="ts" setup>
-  import { computed, ref, watch } from 'vue';
+  import { ref, watch } from 'vue';
   import { Info, Plus } from 'bkui-vue/lib/icon';
 
   const emits = defineEmits(['send-label', 'send-validate']);
 
   const labelArr = ref<{ key: string; value: string }[]>([]);
 
-  const validateKey = new RegExp(
+  const keyValidateReg = new RegExp(
     '^[a-z0-9A-Z]([-_a-z0-9A-Z]*[a-z0-9A-Z])?((\\.|\\/)[a-z0-9A-Z]([-_a-z0-9A-Z]*[a-z0-9A-Z])?)*$',
   );
-  const validateValue = new RegExp('^(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?$');
-
-  // 所有label验证状态
-  const validateAll = computed(() => {
-    if (labelArr.value.length) {
-      return labelArr.value.every((item) => validateKey.test(item.key) && validateValue.test(item.value));
-    }
-    return true;
-  });
+  const valueValidateReg = new RegExp('^(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?$');
 
   // 数据变化后需要传递出去
   watch(labelArr.value, () => {
-    emits('send-validate', validateAll.value);
+    emits('send-validate', isAllValid());
     sendVal();
   });
 
+  // 所有label验证状态
+  const isAllValid = () => {
+    if (labelArr.value.length) {
+      return labelArr.value.every((item) => keyValidateReg.test(item.key) && valueValidateReg.test(item.value));
+    }
+    return true;
+  };
   // 添加项目
   const addItem = () => {
     labelArr.value.push({

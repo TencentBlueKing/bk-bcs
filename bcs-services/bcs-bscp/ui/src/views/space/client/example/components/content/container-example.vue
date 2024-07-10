@@ -26,6 +26,8 @@
   import { useRoute } from 'vue-router';
   import yamlString from '/src/assets/example-data/file-container.yaml?raw';
 
+  const props = defineProps<{ contentScrollTop: Function }>();
+
   const { t } = useI18n();
   const route = useRoute();
 
@@ -102,6 +104,7 @@
     } catch (error) {
       // 通知密钥选择组件校验状态
       formError.value = new Date().getTime();
+      props.contentScrollTop();
       console.log(error);
     }
   };

@@ -11,7 +11,7 @@
       </div>
     </div>
     <!-- 右侧区域 -->
-    <div class="example-main">
+    <div class="example-main" ref="exampleMainRef">
       <bk-alert v-show="serviceType === 'file' && topTip" theme="info">
         <div class="alert-tips">
           <p>{{ topTip }}</p>
@@ -50,6 +50,7 @@
     { name: t('命令行工具'), val: 'kv-cmd' },
   ];
 
+  const exampleMainRef = ref();
   const renderComponent = ref(''); // 渲染的示例组件
   const serviceName = ref(''); // 示例预览模板中用到
   const serviceType = ref(''); // 配置类型：file/kv
@@ -105,9 +106,8 @@
   };
   // 返回顶部
   const contentScrollTop = () => {
-    const scrollDom = document.querySelector('.example-main');
-    if (scrollDom!.scrollTop > 64) {
-      scrollDom!.scrollTo({ top: 0, behavior: 'smooth' });
+    if (exampleMainRef.value.scrollTop > 64) {
+      exampleMainRef.value.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 </script>
