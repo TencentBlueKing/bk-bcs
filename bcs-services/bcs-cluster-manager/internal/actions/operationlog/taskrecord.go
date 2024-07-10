@@ -36,6 +36,18 @@ type TaskRecordsAction struct {
 	resp  *cmproto.TaskRecordsResponse
 }
 
+var (
+	statusMap = map[string]string{
+		cloudprovider.TaskStatusInit:        "LOADING",
+		cloudprovider.TaskStatusRunning:     "LOADING",
+		cloudprovider.TaskStatusSuccess:     "SUCCESS",
+		cloudprovider.TaskStatusPartFailure: "HALFSUCCESS",
+		cloudprovider.TaskStatusFailure:     "FAILED",
+		cloudprovider.TaskStatusNotStarted:  "WAITING",
+		cloudprovider.TaskStatusTimeout:     "TERMINATE",
+	}
+)
+
 // NewTaskRecordsAction create action
 func NewTaskRecordsAction(model store.ClusterManagerModel) *TaskRecordsAction {
 	return &TaskRecordsAction{
@@ -72,16 +84,10 @@ func (ua *TaskRecordsAction) fetchTaskRecords() error {
 	for _, step := range task.StepSequence {
 		for k, v := range task.Steps {
 			if step == k {
-				if v.Status == cloudprovider.TaskStatusFailure || v.Status == cloudprovider.TaskStatusTimeout {
-					v.Status = "FAILED"
-				} else if v.Status == cloudprovider.TaskStatusPartFailure {
-					v.Status = "HALFSUCCESS"
-				} else if v.Status == cloudprovider.TaskStatusRunning || v.Status == cloudprovider.TaskStatusInit {
-					v.Status = "LOADING"
-				} else if v.Status == cloudprovider.TaskStatusSkip {
-					v.Status = "SUCCESS"
-				} else if v.Status == cloudprovider.TaskStatusForceTerminate || v.Status == cloudprovider.TaskStatusNotStarted {
-					v.Status = "TERMINATE"
+				if status, ok := statusMap[v.Status]; ok {
+					v.Status = status
+				} else {
+					v.Status = ""
 				}
 
 				ua.resp.Data.Step = append(ua.resp.Data.Step, &cmproto.TaskRecordStep{

@@ -62,6 +62,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
 	clusterops "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
 	cmcommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/commonhandler"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/daemon"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/discovery"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/handler"
@@ -806,11 +807,30 @@ func (cm *ClusterManager) initHTTPGateway(router *mux.Router) error {
 	return nil
 }
 
+// initCommonHandler common handler
+func (cm *ClusterManager) initCommonHandler(router *mux.Router) error {
+	commonHandler := commonhandler.NewCommonHandler(cm.model, cm.locker)
+	commonContainer := restful.NewContainer()
+	commonHandlerURL := "/clustermanager/v1/common/{uri:.*}"
+	commonWebService := new(restful.WebService).
+		Consumes(restful.MIME_XML, restful.MIME_JSON).
+		Produces(restful.MIME_JSON, restful.MIME_XML)
+	commonWebService.Route(commonWebService.GET("/clustermanager/v1/common/downloadtaskrecords").To(commonHandler.DownloadTaskRecords))
+	commonContainer.Add(commonWebService)
+	router.Handle(commonHandlerURL, commonContainer)
+	blog.Infof("register common handler to path %s", commonHandlerURL)
+	return nil
+}
+
 // initHTTPService init http service
 func (cm *ClusterManager) initHTTPService() error {
 	router := mux.NewRouter()
 	// init tke cidr handler
 	if err := cm.initTkeHandler(router); err != nil {
+		return err
+	}
+	// init common http handler
+	if err := cm.initCommonHandler(router); err != nil {
 		return err
 	}
 	// init tunnel server
