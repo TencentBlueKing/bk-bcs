@@ -24,7 +24,7 @@
   import CodePreview from '../code-preview.vue';
   import { useI18n } from 'vue-i18n';
   import { useRoute } from 'vue-router';
-  import yamlString from '/src/assets/exampleData/file-container.yaml?raw';
+  import yamlString from '/src/assets/example-data/file-container.yaml?raw';
 
   const { t } = useI18n();
   const route = useRoute();

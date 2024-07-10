@@ -295,20 +295,20 @@
     switch (kvName) {
       case 'python':
         return !methods
-          ? import('/src/assets/exampleData/kv-python-get.yaml?raw')
-          : import('/src/assets/exampleData/kv-python-watch.yaml?raw');
+          ? import('/src/assets/example-data/kv-python-get.yaml?raw')
+          : import('/src/assets/example-data/kv-python-watch.yaml?raw');
       case 'go':
         return !methods
-          ? import('/src/assets/exampleData/kv-go-get.yaml?raw')
-          : import('/src/assets/exampleData/kv-go-watch.yaml?raw');
+          ? import('/src/assets/example-data/kv-go-get.yaml?raw')
+          : import('/src/assets/example-data/kv-go-watch.yaml?raw');
       case 'java':
         return !methods
-          ? import('/src/assets/exampleData/kv-java-get.yaml?raw')
-          : import('/src/assets/exampleData/kv-java-watch.yaml?raw');
+          ? import('/src/assets/example-data/kv-java-get.yaml?raw')
+          : import('/src/assets/example-data/kv-java-watch.yaml?raw');
       case 'cpp':
         return !methods
-          ? import('/src/assets/exampleData/kv-c++-get.yaml?raw')
-          : import('/src/assets/exampleData/kv-c++-watch.yaml?raw');
+          ? import('/src/assets/example-data/kv-c++-get.yaml?raw')
+          : import('/src/assets/example-data/kv-c++-watch.yaml?raw');
       default:
         return '';
     }

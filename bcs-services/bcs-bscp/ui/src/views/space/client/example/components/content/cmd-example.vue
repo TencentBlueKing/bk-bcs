@@ -233,8 +233,8 @@
    */
   const changeKvData = (serviceType = 'file-cmd') => {
     return serviceType === 'file-cmd'
-      ? import('/src/assets/exampleData/file-cmd.yaml?raw')
-      : import('/src/assets/exampleData/kv-cmd.yaml?raw');
+      ? import('/src/assets/example-data/file-cmd.yaml?raw')
+      : import('/src/assets/example-data/kv-cmd.yaml?raw');
   };
 </script>
 
