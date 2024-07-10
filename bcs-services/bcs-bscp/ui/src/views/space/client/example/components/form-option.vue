@@ -122,9 +122,11 @@
   const setCredential = (key: string, privacyKey: string) => {
     if (key.length && privacyKey.length) {
       formRef.value.clearValidate();
+      formData.value.clientKey = key;
+      formData.value.privacyCredential = privacyKey;
+    } else {
+      sendAll();
     }
-    formData.value.clientKey = key;
-    formData.value.privacyCredential = privacyKey;
   };
   const sendAll = () => {
     if (!props.directoryShow) {

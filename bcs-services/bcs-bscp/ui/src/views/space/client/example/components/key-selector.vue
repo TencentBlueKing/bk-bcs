@@ -51,6 +51,8 @@
 <script lang="ts" setup>
   import { ref, Ref, onMounted, inject, watch } from 'vue';
   import { useRoute, useRouter } from 'vue-router';
+  import { storeToRefs } from 'pinia';
+  import useClientStore from '../../../../../store/client';
   import { ICredentialItem } from '../../../../../../types/credential';
   import { getCredentialList } from '../../../../../api/credentials';
   import { AngleUpFill, RightTurnLine } from 'bkui-vue/lib/icon';
@@ -67,9 +69,10 @@
 
   const route = useRoute();
   const router = useRouter();
+  const clientStore = useClientStore();
+  const { basicInfo } = storeToRefs(clientStore);
 
   const formError = inject<Ref<string>>('formError');
-  const serviceName = inject<Ref<string>>('serviceName');
   const isError = ref(false);
   const loading = ref(true);
   const currentValue = ref({
@@ -90,7 +93,7 @@
     },
   );
   watch(
-    () => serviceName!.value,
+    () => basicInfo.value.name,
     () => {
       (Object.keys(currentValue.value) as Array<keyof typeof currentValue.value>).forEach((key) => {
         currentValue.value[key] = '';
@@ -125,7 +128,7 @@
   const filterCurService = (data: Array<any>) => {
     return data.filter((item) => {
       const splitStr = item.credential_scopes.map((str: string) => str.split('/')[0]);
-      return splitStr.includes(serviceName!.value) && item.spec.enable;
+      return splitStr.includes(basicInfo.value.name) && item.spec.enable;
     });
   };
   // 下拉列表操作

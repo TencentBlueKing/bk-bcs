@@ -34,7 +34,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref, provide, computed, onMounted, watch, Ref, inject, nextTick } from 'vue';
+  import { ref, provide, computed, onMounted, watch, nextTick } from 'vue';
   import { copyToClipBoard } from '../../../../../../utils/index';
   import { CloseLine } from 'bkui-vue/lib/icon';
   import { IVariableEditParams } from '../../../../../../../types/variable';
@@ -43,6 +43,8 @@
   import codePreview from '../code-preview.vue';
   import { useI18n } from 'vue-i18n';
   import { useRoute } from 'vue-router';
+  import { storeToRefs } from 'pinia';
+  import useClientStore from '../../../../../../store/client';
 
   const props = defineProps<{
     kvName: string;
@@ -50,6 +52,8 @@
 
   const { t } = useI18n();
   const route = useRoute();
+  const clientStore = useClientStore();
+  const { basicInfo } = storeToRefs(clientStore);
   const tabArr = [t('Get方法'), t('Watch方法')];
 
   const codePreviewRef = ref();
@@ -68,7 +72,6 @@
     labelArr: [],
     labelArrType: '', // 展示格式
   });
-  const serviceName = inject<Ref<string>>('serviceName');
   const formError = ref<number>();
   provide('formError', formError);
 
@@ -209,7 +212,7 @@
       updateString = updateString.replace('初始化配置信息', t('初始化配置信息'));
     }
     updateString = updateString.replace('{{ .Bk_Bscp_Variable_BkBizId }}', bkBizId.value);
-    updateString = updateString.replace('{{ .Bk_Bscp_Variable_ServiceName }}', serviceName!.value);
+    updateString = updateString.replace('{{ .Bk_Bscp_Variable_ServiceName }}', basicInfo.value.name);
     replaceVal.value = updateString.replaceAll('{{ .Bk_Bscp_Variable_FEED_ADDR }}', (window as any).FEED_ADDR);
   };
   const updateVariables = () => {

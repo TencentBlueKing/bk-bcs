@@ -16,9 +16,11 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref, inject, Ref, provide, nextTick } from 'vue';
+  import { ref, provide, nextTick } from 'vue';
   import { copyToClipBoard } from '../../../../../../utils/index';
   import { IVariableEditParams } from '../../../../../../../types/variable';
+  import { storeToRefs } from 'pinia';
+  import useClientStore from '../../../../../../store/client';
   import BkMessage from 'bkui-vue/lib/message';
   import FormOption from '../form-option.vue';
   import CodePreview from '../code-preview.vue';
@@ -30,6 +32,8 @@
 
   const { t } = useI18n();
   const route = useRoute();
+  const clientStore = useClientStore();
+  const { basicInfo } = storeToRefs(clientStore);
 
   const fileOptionRef = ref();
   // fileOption组件传递过来的数据汇总
@@ -42,7 +46,6 @@
   const bkBizId = ref(String(route.params.spaceId));
   const replaceVal = ref('');
   const copyReplaceVal = ref(''); // 渲染的值，用于复制未脱敏密钥的yaml数据
-  const serviceName = inject<Ref<string>>('serviceName');
   const variables = ref<IVariableEditParams[]>();
   const formError = ref<number>();
   provide('formError', formError);
@@ -64,7 +67,7 @@
   const updateReplaceVal = () => {
     let updateString = replaceVal.value;
     updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_BkBizId }}', bkBizId.value);
-    updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_ServiceName }}', serviceName!.value);
+    updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_ServiceName }}', basicInfo.value.name);
     replaceVal.value = updateString.replaceAll('{{ .Bk_Bscp_Variable_FEED_ADDR }}', (window as any).FEED_ADDR);
   };
   const updateVariables = () => {

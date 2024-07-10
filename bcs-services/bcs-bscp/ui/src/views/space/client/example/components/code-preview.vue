@@ -3,7 +3,7 @@
     <CodeEditor
       ref="codeEditorRef"
       :model-value="props.codeVal"
-      :language="codeLanguage"
+      :language="language"
       :editable="false"
       line-numbers="off"
       :minimap="false"
@@ -16,7 +16,7 @@
   </div>
 </template>
 <script lang="ts" setup>
-  import { computed, onBeforeUnmount, ref } from 'vue';
+  import { onBeforeUnmount, ref } from 'vue';
   import CodeEditor from '../../../../../components/code-editor/index.vue';
   import { IVariableEditParams } from '../../../../../../types/variable';
 
@@ -29,10 +29,6 @@
   const emits = defineEmits(['change']);
 
   const codeEditorRef = ref();
-
-  const codeLanguage = computed(() => {
-    return props.language.includes('cmd') ? 'shell' : props.language;
-  });
 
   onBeforeUnmount(() => {
     codeEditorRef.value.destroy();

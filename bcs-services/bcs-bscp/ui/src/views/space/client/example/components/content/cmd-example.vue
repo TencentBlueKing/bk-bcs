@@ -1,6 +1,9 @@
 <template>
   <section class="cmd-tool-wrap">
-    <form-option ref="fileOptionRef" :directory-show="props.kvName !== 'kv-cmd'" @update-option-data="getOptionData" />
+    <form-option
+      ref="fileOptionRef"
+      :directory-show="basicInfo.serviceType === 'file'"
+      @update-option-data="getOptionData" />
     <div class="preview-container">
       <p class="headline">{{ $t('配置指引与示例预览') }}</p>
       <div class="guide-wrap">
@@ -13,7 +16,7 @@
           <template v-else>
             <bk-button theme="primary" class="copy-btn" @click="copyExample">{{ $t('复制命令') }}</bk-button>
             <code-preview
-              :class="['preview-component', { 'preview-component--kvcmd': props.kvName === 'kv-cmd' }]"
+              :class="['preview-component', { 'preview-component--kvcmd': basicInfo.serviceType === 'kv' }]"
               :code-val="replaceVal"
               :variables="variables"
               :language="kvName"
@@ -34,7 +37,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed, provide, ref, onMounted, inject, Ref, nextTick } from 'vue';
+  import { computed, provide, ref, onMounted, nextTick } from 'vue';
   import { copyToClipBoard } from '../../../../../../utils/index';
   import { IVariableEditParams } from '../../../../../../../types/variable';
   import BkMessage from 'bkui-vue/lib/message';
@@ -43,12 +46,15 @@
   import { CopyShape } from 'bkui-vue/lib/icon';
   import { useI18n } from 'vue-i18n';
   import { useRoute } from 'vue-router';
+  import { storeToRefs } from 'pinia';
+  import useClientStore from '../../../../../../store/client';
 
   const props = defineProps<{ contentScrollTop: Function; kvName: string }>();
 
   const { t } = useI18n();
   const route = useRoute();
-  const serviceName = inject<Ref<string>>('serviceName');
+  const clientStore = useClientStore();
+  const { basicInfo } = storeToRefs(clientStore);
   const fileText = [
     {
       title: t('下载二进制命令行'),
@@ -69,23 +75,23 @@
     },
     {
       title: t('拉取服务下所有配置文件'),
-      value: `./bscp pull -a ${serviceName!.value} -c ./bscp.yaml`,
+      value: `./bscp pull -a ${basicInfo.value.name} -c ./bscp.yaml`,
     },
     {
       title: t('获取服务下所有配置文件列表'),
-      value: `./bscp get file -a ${serviceName!.value} -c ./bscp.yaml`,
+      value: `./bscp get file -a ${basicInfo.value.name} -c ./bscp.yaml`,
     },
     {
       title: t(
         '下载配置文件时，保留目录层级，并将其保存到指定目录下，例如：将 /etc/nginx.conf 文件下载到 /tmp 目录时，文件保存在 /tmp/etc/nginx.conf',
       ),
-      value: `./bscp get file /etc/nginx.conf -a ${serviceName!.value} -c ./bscp.yaml -d /tmp`,
+      value: `./bscp get file /etc/nginx.conf -a ${basicInfo.value.name} -c ./bscp.yaml -d /tmp`,
     },
     {
       title: t(
         '下载配置文件时，不保留目录层级，并将其保存到指定目录下，例如：将 /etc/nginx.conf 文件下载到 /tmp 目录时，文件保存在 /tmp/nginx.conf',
       ),
-      value: `./bscp get file /etc/nginx.conf -a ${serviceName!.value} -c ./bscp.yaml -d /tmp --ignore-dir`,
+      value: `./bscp get file /etc/nginx.conf -a ${basicInfo.value.name} -c ./bscp.yaml -d /tmp --ignore-dir`,
     },
   ];
 
@@ -109,21 +115,21 @@
     },
     {
       title: t('获取指定服务下所有配置项列表'),
-      value: `./bscp get kv -a ${serviceName!.value} -c ./bscp.yaml`,
+      value: `./bscp get kv -a ${basicInfo.value.name} -c ./bscp.yaml`,
     },
     {
       title: t('获取指定服务下指定配置项列表，多个配置项'),
-      value: `./bscp get kv -a ${serviceName!.value} key1 key2 -c ./bscp.yaml`,
+      value: `./bscp get kv -a ${basicInfo.value.name} key1 key2 -c ./bscp.yaml`,
     },
     {
       title: t('获取指定服务下指定配置项值，只支持单个配置项值获取'),
-      value: `./bscp get kv -a ${serviceName!.value} key1  -c ./bscp.yaml -o value`,
+      value: `./bscp get kv -a ${basicInfo.value.name} key1  -c ./bscp.yaml -o value`,
     },
     {
       title: t(
         '获取指定服务下指定配置项元数据，支持多个配置项元数据获取，没有指定配置项，获取服务下所有配置项的元数据',
       ),
-      value: `./bscp get kv -a ${serviceName!.value} key1 key2  -c ./bscp.yaml -o json`,
+      value: `./bscp get kv -a ${basicInfo.value.name} key1 key2  -c ./bscp.yaml -o json`,
     },
   ];
 
@@ -144,11 +150,11 @@
   });
 
   const cmdContent = computed(() => {
-    return props.kvName === 'file-cmd' ? fileText : kvText;
+    return basicInfo.value.serviceType === 'file' ? fileText : kvText;
   });
 
   onMounted(async () => {
-    const newKvData = await changeKvData(props.kvName);
+    const newKvData = await changeKvData(basicInfo.value.serviceType);
     codeVal.value = newKvData.default;
     replaceVal.value = newKvData.default;
     updateReplaceVal();
@@ -171,7 +177,7 @@
   const updateReplaceVal = () => {
     let updateString = replaceVal.value;
     updateString = updateString.replace('{{ .Bk_Bscp_Variable_BkBizId }}', bkBizId.value);
-    updateString = updateString.replace('{{ .Bk_Bscp_Variable_ServiceName }}', serviceName!.value);
+    updateString = updateString.replace('{{ .Bk_Bscp_Variable_ServiceName }}', basicInfo.value.name);
     replaceVal.value = updateString.replaceAll('{{ .Bk_Bscp_Variable_FEED_ADDR }}', (window as any).FEED_ADDR);
   };
   const updateVariables = () => {
@@ -231,8 +237,8 @@
    *
    * @param serviceType 数据模板名称
    */
-  const changeKvData = (serviceType = 'file-cmd') => {
-    return serviceType === 'file-cmd'
+  const changeKvData = (serviceType = 'file') => {
+    return serviceType === 'file'
       ? import('/src/assets/example-data/file-cmd.yaml?raw')
       : import('/src/assets/example-data/kv-cmd.yaml?raw');
   };

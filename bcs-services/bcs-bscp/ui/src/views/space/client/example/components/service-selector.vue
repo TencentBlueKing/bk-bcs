@@ -38,6 +38,8 @@
 <script lang="ts" setup>
   import { ref, onMounted } from 'vue';
   import { useRoute, useRouter } from 'vue-router';
+  import useClientStore from '../../../../../store/client';
+  import { cloneDeep } from 'lodash';
   import { IAppItem } from '../../../../../../types/app';
   import { getAppList } from '../../../../../api';
   import { AngleUpFill } from 'bkui-vue/lib/icon';
@@ -48,6 +50,7 @@
   const { locale } = useI18n();
   const route = useRoute();
   const router = useRouter();
+  const clientStore = useClientStore();
 
   const loading = ref(false);
   const localApp = ref({
@@ -67,6 +70,9 @@
         id: service.id!,
         serviceType: service.spec.config_type!,
       };
+      clientStore.$patch((state) => {
+        state.basicInfo = cloneDeep(localApp.value);
+      });
       emits('select-service', localApp.value.serviceType, localApp.value.name);
     } else if (serviceList.value.length) {
       handleAppChange(serviceList.value[0].id!);
@@ -101,6 +107,9 @@
     }
     setLastAccessedServiceDetail(appId);
     await router.push({ name: route.name!, params: { spaceId: bizId.value, appId } });
+    clientStore.$patch((state) => {
+      state.basicInfo = cloneDeep(localApp.value);
+    });
     emits('select-service', localApp.value.serviceType, localApp.value.name);
   };
   const setLastAccessedServiceDetail = (appId: number) => {
