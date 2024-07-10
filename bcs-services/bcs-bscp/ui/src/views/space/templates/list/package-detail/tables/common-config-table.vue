@@ -78,7 +78,7 @@
             </template>
           </template>
         </bk-table-column>
-        <bk-table-column :label="t('操作')" :width="locale === 'zh-CN' ? '160' : '200'" fixed="right">
+        <bk-table-column :label="t('操作')" :width="locale === 'zh-cn' ? '160' : '200'" fixed="right">
           <template #default="{ row, index }">
             <div class="actions-wrapper">
               <slot name="columnOperations" :config="row">

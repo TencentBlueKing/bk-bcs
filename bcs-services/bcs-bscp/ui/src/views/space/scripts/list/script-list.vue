@@ -65,7 +65,7 @@
               </div>
             </template>
           </bk-table-column>
-          <bk-table-column prop="hook.spec.type" :label="t('脚本语言')" :width="locale === 'zh-CN' ? '120' : '150'">
+          <bk-table-column prop="hook.spec.type" :label="t('脚本语言')" :width="locale === 'zh-cn' ? '120' : '150'">
           </bk-table-column>
           <bk-table-column :label="t('分类标签')" property="tag">
             <template #default="{ row }">
@@ -138,7 +138,7 @@
               <span v-if="row.hook">{{ datetimeFormat(row.hook.revision.update_at) }}</span>
             </template>
           </bk-table-column>
-          <bk-table-column :label="t('操作')" width="180">
+          <bk-table-column :label="t('操作')" :width="locale === 'zh-cn' ? '180' : '250'">
             <template #default="{ row }">
               <div class="action-btns">
                 <bk-button text theme="primary" @click="handleEditClick(row)">{{ t('编辑') }}</bk-button>
