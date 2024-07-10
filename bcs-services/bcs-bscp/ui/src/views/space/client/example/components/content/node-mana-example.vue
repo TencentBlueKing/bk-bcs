@@ -23,8 +23,8 @@
             <div class="service-item">
               <span :class="['item-label', { 'item-label--en': locale === 'en' }]"> {{ $t('服务名称') }}： </span>
               <span class="bk-form-content">
-                <span class="content-em" @click="copyText(basicInfo.name)">
-                  {{ basicInfo.name }} <copy-shape class="icon-shape" />
+                <span class="content-em" @click="copyText(basicInfo!.serviceName.value)">
+                  {{ basicInfo!.serviceName.value }} <copy-shape class="icon-shape" />
                 </span>
               </span>
             </div>
@@ -53,10 +53,8 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref } from 'vue';
+  import { ref, Ref, inject } from 'vue';
   import { useRoute } from 'vue-router';
-  import { storeToRefs } from 'pinia';
-  import useClientStore from '../../../../../../store/client';
   import { Share, CopyShape } from 'bkui-vue/lib/icon';
   import { copyToClipBoard } from '../../../../../../utils/index';
   import BkMessage from 'bkui-vue/lib/message';
@@ -64,8 +62,7 @@
 
   const { t, locale } = useI18n();
   const route = useRoute();
-  const clientStore = useClientStore();
-  const { basicInfo } = storeToRefs(clientStore);
+  const basicInfo = inject<{ serviceName: Ref<string>; serviceType: Ref<string> }>('basicInfo');
 
   const linkUrl = {
     nodeManaUrl: `${(window as any).BK_NODE_HOST}/#/plugin-manager/rule`,

@@ -12,16 +12,6 @@ export default defineStore('client', () => {
     last_heartbeat_time: 1,
     search: {},
   });
-  // 配置示例-基本信息
-  const basicInfo = ref<{
-    name: string;
-    serviceType: string;
-    id: string | number;
-  }>({
-    name: '',
-    serviceType: '',
-    id: '',
-  });
 
-  return { searchQuery, basicInfo };
+  return { searchQuery };
 });

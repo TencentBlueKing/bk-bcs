@@ -120,19 +120,11 @@
     return formRef.value.validate();
   };
   const setCredential = (key: string, privacyKey: string) => {
-    if (key.length && privacyKey.length) {
-      formRef.value.clearValidate();
-      formData.value.clientKey = key;
-      formData.value.privacyCredential = privacyKey;
-    } else {
-      sendAll();
-    }
+    formData.value.clientKey = key;
+    formData.value.privacyCredential = privacyKey;
+    formRef.value.validate();
   };
   const sendAll = () => {
-    if (!props.directoryShow) {
-      // 不显示临时目录的菜单，删除对应值
-      delete formData.value.tempDir;
-    }
     emits('update-option-data', formData.value);
   };
 

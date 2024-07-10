@@ -12,7 +12,7 @@
     </div>
     <!-- 右侧区域 -->
     <div class="example-main" ref="exampleMainRef">
-      <bk-alert v-show="(basicInfo.serviceType === 'file' || renderComponent === 'shell') && topTip" theme="info">
+      <bk-alert v-show="(serviceType === 'file' || renderComponent === 'shell') && topTip" theme="info">
         <div class="alert-tips">
           <p>{{ topTip }}</p>
         </div>
@@ -27,10 +27,8 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed, ref, nextTick } from 'vue';
+  import { computed, ref, nextTick, provide } from 'vue';
   import ServiceSelector from './components/service-selector.vue';
-  import { storeToRefs } from 'pinia';
-  import useClientStore from '../../../../store/client';
   import { useI18n } from 'vue-i18n';
   import ContainerExample from './components/content/container-example.vue';
   import NodeManaExample from './components/content/node-mana-example.vue';
@@ -39,8 +37,6 @@
   import Exception from '../components/exception.vue';
 
   const { t } = useI18n();
-  const clientStore = useClientStore();
-  const { basicInfo } = storeToRefs(clientStore);
   const fileTypeArr = [
     { name: t('Sidecar容器'), val: 'sidecar' },
     { name: t('节点管理插件'), val: 'node' },
@@ -56,13 +52,16 @@
 
   const exampleMainRef = ref();
   const renderComponent = ref(''); // 渲染的示例组件
+  const serviceName = ref('');
+  const serviceType = ref('');
   const topTip = ref('');
   const loading = ref(true);
+  provide('basicInfo', { serviceName, serviceType });
 
-  const navList = computed(() => (basicInfo.value.serviceType === 'file' ? fileTypeArr : kvTypeArr));
+  const navList = computed(() => (serviceType.value === 'file' ? fileTypeArr : kvTypeArr));
   // 展示的示例组件与顶部提示语
   const currentTemplate = computed(() => {
-    if (basicInfo.value.serviceType && !loading.value) {
+    if (serviceType.value && !loading.value) {
       switch (renderComponent.value) {
         case 'sidecar':
           topTip.value = t('Sidecar 容器客户端用于容器化应用程序拉取文件型配置场景。');
@@ -85,8 +84,12 @@
   });
 
   // 服务切换
-  const selectService = () => {
-    loading.value = true;
+  const selectService = (serviceTypeVal: string, serviceNameVal: string) => {
+    if (serviceName.value !== serviceNameVal || serviceType.value !== serviceTypeVal) {
+      loading.value = true;
+      serviceName.value = serviceNameVal;
+      serviceType.value = serviceTypeVal;
+    }
     changeTypeItem(navList.value[0].val);
   };
   // 服务的子类型切换
