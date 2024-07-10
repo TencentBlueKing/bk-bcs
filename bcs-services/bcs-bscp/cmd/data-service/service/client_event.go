@@ -117,28 +117,24 @@ func (s *Service) handleCreateClientEvents(kt *kit.Kit, clientEvents []*pbce.Cli
 			item.Spec.EndTime = nil
 		}
 		fullKey := fmt.Sprintf("%d-%d-%s", item.Attachment.BizId, item.Attachment.AppId, item.Attachment.Uid)
-		if clientID[fullKey] > 0 {
-			item.Attachment.ClientId = clientID[fullKey]
-			if !ok {
-				if !existingKeys[keyWithoutCursor] {
-					toCreate = append(toCreate, &table.ClientEvent{
-						Attachment: item.Attachment.ClientEventAttachment(),
-						Spec:       item.Spec.ClientEventSpec(),
-					})
-					existingKeys[keyWithoutCursor] = true
-				} else {
-					toUpdate[item.MessageType] = append(toUpdate[item.MessageType], &table.ClientEvent{
-						Attachment: item.Attachment.ClientEventAttachment(),
-						Spec:       item.Spec.ClientEventSpec(),
-					})
-				}
+		if clientID[fullKey] <= 0 {
+			continue
+		}
+		item.Attachment.ClientId = clientID[fullKey]
+		clientEvent := &table.ClientEvent{
+			Attachment: item.Attachment.ClientEventAttachment(),
+			Spec:       item.Spec.ClientEventSpec(),
+		}
+		if !ok {
+			if !existingKeys[keyWithoutCursor] {
+				toCreate = append(toCreate, clientEvent)
+				existingKeys[keyWithoutCursor] = true
 			} else {
-				toUpdate[item.MessageType] = append(toUpdate[item.MessageType], &table.ClientEvent{
-					ID:         v,
-					Attachment: item.Attachment.ClientEventAttachment(),
-					Spec:       item.Spec.ClientEventSpec(),
-				})
+				toUpdate[item.MessageType] = append(toUpdate[item.MessageType], clientEvent)
 			}
+		} else {
+			clientEvent.ID = v
+			toUpdate[item.MessageType] = append(toUpdate[item.MessageType], clientEvent)
 		}
 	}
 
@@ -153,14 +149,14 @@ func (s *Service) ListClientEvents(ctx context.Context, req *pbds.ListClientEven
 	var err error
 	var starTime, endTime time.Time
 	if len(req.GetStartTime()) > 0 {
-		starTime, err = time.ParseInLocation("2006-01-02 15:04:05", req.GetStartTime(), time.UTC)
+		starTime, err = time.ParseInLocation(time.RFC3339, req.GetStartTime(), time.UTC)
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	if len(req.GetEndTime()) > 0 {
-		endTime, err = time.ParseInLocation("2006-01-02 15:04:05", req.GetEndTime(), time.UTC)
+		endTime, err = time.ParseInLocation(time.RFC3339, req.GetEndTime(), time.UTC)
 		if err != nil {
 			return nil, err
 		}

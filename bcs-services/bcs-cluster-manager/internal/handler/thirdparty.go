@@ -122,6 +122,22 @@ func (cm *ClusterManager) ListCCTopology(ctx context.Context,
 	return nil
 }
 
+// GetProviderResourceUsage implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) GetProviderResourceUsage(ctx context.Context,
+	req *cmproto.GetProviderResourceUsageRequest, resp *cmproto.GetProviderResourceUsageResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	la := thirdparty.NewGetProviderResourceUsageAction(cm.model)
+	la.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("GetProviderResourceUsage", "grpc",
+		strconv.Itoa(int(resp.Code)), start)
+	blog.V(3).Infof("reqID: %s, action: GetProviderResourceUsage, req %v", reqID, req)
+	return nil
+}
+
 // GetBatchCustomSetting implements interface cmproto.ClusterManagerServer
 func (cm *ClusterManager) GetBatchCustomSetting(ctx context.Context,
 	req *cmproto.GetBatchCustomSettingRequest, resp *cmproto.GetBatchCustomSettingResponse) error {

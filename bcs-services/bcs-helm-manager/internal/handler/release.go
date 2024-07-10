@@ -28,6 +28,15 @@ func (hm *HelmManager) ListReleaseV1(ctx context.Context,
 	return action.Handle(ctx, req, resp)
 }
 
+// ListReleaseV2 provide the actions to do list release
+func (hm *HelmManager) ListReleaseV2(ctx context.Context,
+	req *helmmanager.ListReleaseV1Req, resp *helmmanager.ListReleaseV1Resp) error {
+
+	defer recorder(ctx, "ListReleaseV2", req, resp)()
+	action := actionRelease.NewListReleaseV2Action(hm.model, hm.releaseHandler)
+	return action.Handle(ctx, req, resp)
+}
+
 // GetReleaseDetailV1 provide the actions to do get release detail
 func (hm *HelmManager) GetReleaseDetailV1(ctx context.Context,
 	req *helmmanager.GetReleaseDetailV1Req, resp *helmmanager.GetReleaseDetailV1Resp) error {

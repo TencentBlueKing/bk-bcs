@@ -39,4 +39,6 @@ type Repo interface {
 	GetURL() string
 	GetDirectory() string
 	GetRepoKey() string
+
+	GetScenarioInfos() []*ScenarioInfo
 }

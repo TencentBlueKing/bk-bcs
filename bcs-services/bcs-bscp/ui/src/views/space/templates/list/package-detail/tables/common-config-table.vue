@@ -7,7 +7,7 @@
       <bk-input
         v-model="searchStr"
         class="search-script-input"
-        :placeholder="t('配置文件名称/路径/描述/创建人/更新人')"
+        :placeholder="t('配置文件绝对路径/描述/创建人/更新人')"
         :clearable="true"
         @clear="refreshList()"
         @input="handleSearchInputChange">
@@ -24,15 +24,14 @@
         :row-class="getRowCls"
         :remote-pagination="true"
         :pagination="pagination"
-        :is-selected-fn="isSelectedFn"
         @page-limit-change="handlePageLimitChange"
         @page-value-change="refreshList($event, true)"
         @selection-change="handleSelectionChange"
         @select-all="handleSelectAll">
-        <bk-table-column type="selection" :min-width="40" :width="40" class="aaaa"></bk-table-column>
+        <bk-table-column type="selection" :min-width="40" :width="40"></bk-table-column>
         <bk-table-column :label="t('配置文件绝对路径')">
           <template #default="{ row }">
-            <div v-if="row.spec" v-overflow-title class="config-name" @click="goToViewVersionManage(row.id)">
+            <div v-if="row.spec" v-overflow-title class="config-name" @click="handleViewConfig(row)">
               {{ fileAP(row) }}
             </div>
           </template>
@@ -83,7 +82,7 @@
           <template #default="{ row, index }">
             <div class="actions-wrapper">
               <slot name="columnOperations" :config="row">
-                <bk-button theme="primary" text @click="goToCreateVersionManage(row.id)">{{ t('编辑') }}</bk-button>
+                <bk-button theme="primary" text @click="handleEditConfig(row)">{{ t('编辑') }}</bk-button>
                 <bk-button theme="primary" text @click="goToVersionManage(row.id)">{{ t('版本管理') }}</bk-button>
                 <bk-popover
                   theme="light template-config-actions-popover"
@@ -137,6 +136,18 @@
       :current-template-space="currentTemplateSpace"
       :config="appBoundByTemplateSliderData.data" />
     <DeleteConfigDialog v-model:show="isDeleteConfigDialogShow" :configs="crtConfig" @deleted="handleConfigsDeleted" />
+    <ViewConfig
+      v-model:show="isViewConfigShow"
+      :space-id="spaceId"
+      :id="viewConfig?.id as number"
+      :memo="selectConfigMemo"
+      @open-edit="handleEditConfig(viewConfig as ITemplateConfigItem)" />
+    <EditConfig
+      v-model:show="isEditConfigShow"
+      :memo="selectConfigMemo"
+      :space-id="spaceId"
+      :id="editConfigId"
+      @edited="refreshList"/>
   </div>
 </template>
 <script lang="ts" setup>
@@ -149,10 +160,11 @@
   import useGlobalStore from '../../../../../../store/global';
   import useTemplateStore from '../../../../../../store/template';
   import { ICommonQuery } from '../../../../../../../types/index';
+  import useTablePagination from '../../../../../../utils/hooks/use-table-pagination';
   import {
-    ITemplateConfigItem,
     ITemplateCitedCountDetailItem,
     ITemplateCitedByPkgs,
+    ITemplateConfigItem,
   } from '../../../../../../../types/template';
   import { getPackagesByTemplateIds, getCountsByTemplateIds } from '../../../../../../api/template';
   import { datetimeFormat } from '../../../../../../utils/index';
@@ -163,13 +175,15 @@
   import TableEmpty from '../../../../../../components/table/table-empty.vue';
   import DownloadConfig from '../operations/download-config/download-config.vue';
   import DeleteConfigDialog from '../operations/delete-configs/delete-config-dialog.vue';
+  import ViewConfig from '../operations/view-config/view-config.vue';
+  import EditConfig from '../operations/edit-config/edit-config.vue';
 
   const router = useRouter();
   const { t, locale } = useI18n();
   const { spaceId } = storeToRefs(useGlobalStore());
   const templateStore = useTemplateStore();
-  const { currentTemplateSpace, versionListPageShouldOpenEdit, versionListPageShouldOpenView, batchUploadIds } =
-    storeToRefs(templateStore);
+  const { currentTemplateSpace, topIds } = storeToRefs(templateStore);
+  const { pagination, updatePagination } = useTablePagination('commonConfigTable');
 
   const props = defineProps<{
     currentPkg: number | string;
@@ -189,11 +203,6 @@
   const boundByAppsCountLoading = ref(false);
   const boundByAppsCountList = ref<ITemplateCitedCountDetailItem[]>([]);
   const searchStr = ref('');
-  const pagination = ref({
-    current: 1,
-    count: 0,
-    limit: 10,
-  });
   const isAddToPkgsDialogShow = ref(false); // 显示添加至套餐弹窗
   const isMoveOutFromPkgsDialogShow = ref(false); // 显示从套餐移除弹窗
   const isDeleteConfigDialogShow = ref(false); // 显示删除配置弹窗
@@ -206,6 +215,11 @@
   });
   const crtConfig = ref<ITemplateConfigItem[]>([]);
   const isSearchEmpty = ref(false);
+  const isViewConfigShow = ref(false);
+  const viewConfig = ref<ITemplateConfigItem>();
+  const isEditConfigShow = ref(false);
+  const editConfigId = ref(0);
+  const selectConfigMemo = ref('');
 
   watch(
     () => props.currentPkg,
@@ -228,15 +242,19 @@
     return `${path}/${name}`;
   });
 
-  const loadConfigList = async (isBatchUpload = false) => {
+  const loadConfigList = async (createConfig = false) => {
     listLoading.value = true;
     const params: ICommonQuery = {
       start: (pagination.value.current - 1) * pagination.value.limit,
       limit: pagination.value.limit,
     };
-    if (!isBatchUpload) batchUploadIds.value = [];
-    if (batchUploadIds.value.length > 0) {
-      params.ids = batchUploadIds.value.join(',');
+    if (!createConfig) {
+      templateStore.$patch((state) => {
+        state.topIds = [];
+      });
+    }
+    if (topIds.value.length > 0) {
+      params.ids = topIds.value.join(',');
     }
     if (searchStr.value) {
       params.search_fields = 'name,path,memo,creator,reviser';
@@ -275,10 +293,10 @@
     boundByAppsCountLoading.value = false;
   };
 
-  const refreshList = (current = 1, isBatchUpload = false) => {
+  const refreshList = (current = 1, createConfig = false) => {
     isSearchEmpty.value = searchStr.value !== '';
     pagination.value.current = current;
-    loadConfigList(isBatchUpload);
+    loadConfigList(createConfig);
   };
 
   // 模板移出或删除后刷新列表
@@ -286,7 +304,9 @@
     if (num === list.value.length && pagination.value.current > 1) {
       pagination.value.current -= 1;
     }
-    batchUploadIds.value = [];
+    templateStore.$patch((state) => {
+      state.topIds = [];
+    });
     refreshList();
   };
 
@@ -313,9 +333,6 @@
       emits('update:selectedConfigs', []);
     }
   };
-
-  const isSelectedFn = ({ row }: { row: ITemplateConfigItem }) =>
-    props.selectedConfigs.findIndex((item) => item.id === row.id) > -1;
 
   // 添加至套餐
   const handleOpenAddToPkgsDialog = (config: ITemplateConfigItem) => {
@@ -379,26 +396,30 @@
     });
   };
 
-  const goToViewVersionManage = (id: number) => {
-    versionListPageShouldOpenView.value = true;
-    goToVersionManage(id);
+  const handleViewConfig = (config: ITemplateConfigItem) => {
+    isViewConfigShow.value = true;
+    viewConfig.value = config;
+    selectConfigMemo.value = config.spec.memo;
   };
 
-  const goToCreateVersionManage = (id: number) => {
-    versionListPageShouldOpenEdit.value = true;
-    goToVersionManage(id);
+  const handleEditConfig = (config: ITemplateConfigItem) => {
+    isViewConfigShow.value = false;
+    isEditConfigShow.value = true;
+    console.log(config.id);
+    editConfigId.value = config.id;
+    selectConfigMemo.value = config.spec.memo;
   };
 
   // 设置新增行的标记class
   const getRowCls = (data: ITemplateConfigItem) => {
-    if (batchUploadIds.value.includes(data.id)) {
+    if (topIds.value.includes(data.id)) {
       return 'new-row-marked';
     }
     return '';
   };
 
   const handlePageLimitChange = (val: number) => {
-    pagination.value.limit = val;
+    updatePagination('limit', val);
     refreshList(1, true);
   };
 

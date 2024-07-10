@@ -12,6 +12,11 @@
   import { useRouter, useRoute } from 'vue-router';
   import pieChart from './pie.vue';
   import columnChart from './column.vue';
+  import { storeToRefs } from 'pinia';
+  import useClientStore from '../../../../../../../store/client';
+  const clientStore = useClientStore();
+
+  const { searchQuery } = storeToRefs(clientStore);
 
   const props = defineProps<{
     data: any;
@@ -46,13 +51,12 @@
     const routeData = router.resolve({
       name: 'client-search',
       params: { appId: appId.value, bizId: bizId.value },
-      query,
+      query: { ...query, heartTime: searchQuery.value.last_heartbeat_time },
     });
     window.open(routeData.href, '_blank');
   };
 
   const handleDrillDown = (data: any) => {
-    console.log(data);
     isDrillDown.value = true;
     drillDownData.value = data.name;
     pieData.value = data.children;
@@ -61,7 +65,6 @@
 
 <style scoped lang="scss">
   :deep(.g2-tooltip) {
-    visibility: hidden;
     .g2-tooltip-list-item {
       .g2-tooltip-marker {
         border-radius: initial !important;

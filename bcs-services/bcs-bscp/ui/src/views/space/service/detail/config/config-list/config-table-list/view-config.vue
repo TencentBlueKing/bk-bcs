@@ -11,22 +11,31 @@
       <bk-tab v-model:active="activeTab" type="card-grid" ext-cls="view-config-tab">
         <bk-tab-panel name="content" :label="t('配置文件信息')">
           <bk-form label-width="100" form-type="vertical">
-            <bk-form-item :label="t('配置文件名称')">{{ configDetail.name }}</bk-form-item>
-            <bk-form-item :label="t('配置文件路径')">{{ configDetail.path }}</bk-form-item>
+            <bk-form-item :label="t('配置文件绝对路径')">{{ fileAP() }}</bk-form-item>
             <bk-form-item :label="t('配置文件描述')">
               <div class="memo">{{ configDetail.memo || configDetail.revision_memo || '--' }}</div>
             </bk-form-item>
             <bk-form-item :label="t('配置文件内容')">
-              <div v-if="configDetail.file_type === 'binary'" class="binary-file-card" @click="handleDownloadFile">
-                <div class="basic-info">
-                  <TextFill class="file-icon" />
-                  <div class="content">
-                    <div class="name">{{ configDetail.name }}</div>
-                    <div class="time">{{ datetimeFormat(configDetail.update_at || configDetail.create_at) }}</div>
+              <bk-loading
+                v-if="configDetail.file_type === 'binary'"
+                mode="spin"
+                theme="primary"
+                :opacity="0.6"
+                size="mini"
+                :title="t('文件下载中，请稍后')"
+                :loading="fileDownloading"
+                class="file-down-loading">
+                <div class="binary-file-card" @click="handleDownloadFile">
+                  <div class="basic-info">
+                    <TextFill class="file-icon" />
+                    <div class="content">
+                      <div class="name">{{ configDetail.name }}</div>
+                      <div class="time">{{ datetimeFormat(configDetail.update_at || configDetail.create_at) }}</div>
+                    </div>
+                    <div class="size">{{ byteUnitConverse(Number(configDetail.byte_size)) }}</div>
                   </div>
-                  <div class="size">{{ byteUnitConverse(Number(configDetail.byte_size)) }}</div>
                 </div>
-              </div>
+              </bk-loading>
               <ConfigContentEditor
                 v-else
                 :content="content as string"
@@ -66,18 +75,29 @@
     downloadConfigContent,
   } from '../../../../../../../api/config';
   import {
-    getTemplateVersionsDetailByIds,
+    getTemplateConfigMeta,
     getTemplateVersionDetail,
     downloadTemplateContent,
   } from '../../../../../../../api/template';
-  import { byteUnitConverse, datetimeFormat } from '../../../../../../../utils/index';
+  import { byteUnitConverse, datetimeFormat, sortObjectKeysByAscii } from '../../../../../../../utils/index';
   import { fileDownload } from '../../../../../../../utils/file';
   import { IVariableEditParams } from '../../../../../../../../types/variable';
   import { IFileConfigContentSummary } from '../../../../../../../../types/config';
   import { getReleasedAppVariables } from '../../../../../../../api/variable';
   import useConfigStore from '../../../../../../../store/config';
 
+  interface ITemplateConfigMeta {
+    template_space_id: number;
+    template_space_name: string;
+    template_set_id: number;
+    template_set_name: string;
+  }
+
   interface IConfigMeta {
+    template_space_id?: number;
+    template_space_name?: string;
+    template_set_id?: number;
+    template_set_name?: string;
     name: string;
     path: string;
     file_mode: string;
@@ -109,6 +129,9 @@
     versionId: number;
     type: string; // 取值为config/template，分别表示非模板套餐下配置文件和模板套餐下配置文件
     show: Boolean;
+    templateMeta?: ITemplateConfigMeta;
+    versionName?: string;
+    isLatest?: boolean;
   }>();
 
   const emits = defineEmits(['update:show', 'openEdit']);
@@ -135,6 +158,7 @@
   const tplSpaceId = ref(0);
   const sideSliderRef = ref();
   const editorHeight = ref(0);
+  const fileDownloading = ref(false);
 
   watch(
     () => props.show,
@@ -144,9 +168,19 @@
         content.value = '';
         activeTab.value = 'content';
         variables.value = [];
+        fileDownloading.value = false;
       }
     },
   );
+
+  // 配置文件绝对路径
+  const fileAP = () => {
+    const { path, name } = configDetail.value;
+    if (path.endsWith('/')) {
+      return `${path}${name}`;
+    }
+    return `${path}/${name}`;
+  };
 
   const getDetailData = async () => {
     detailLoading.value = true;
@@ -171,7 +205,7 @@
         const { create_at, creator, update_at, reviser } = res.config_item.revision;
         const { name, path, file_type, file_mode, permission } = res.config_item.spec;
         const { user, user_group, privilege } = permission;
-        configDetail.value = {
+        configDetail.value = sortObjectKeysByAscii({
           name,
           path,
           file_type,
@@ -182,21 +216,21 @@
           signature,
           origin_signature,
           md5,
-          create_at,
+          create_at: datetimeFormat(create_at),
           creator,
-          update_at,
+          update_at: datetimeFormat(update_at),
           reviser,
           user,
           user_group,
           privilege,
-        };
+        });
       } else {
         const res = await getConfigItemDetail(props.bkBizId, props.id, props.appId);
         const { create_at, creator, update_at, reviser } = res.config_item.revision;
         const { name, memo, path, file_type, file_mode, permission } = res.config_item.spec;
         const { user, user_group, privilege } = permission;
         const { byte_size, signature, md5 } = res.content;
-        configDetail.value = {
+        configDetail.value = sortObjectKeysByAscii({
           name,
           path,
           file_type,
@@ -205,14 +239,14 @@
           byte_size,
           signature,
           md5,
-          create_at,
+          create_at: datetimeFormat(create_at),
           creator,
-          update_at,
+          update_at: datetimeFormat(update_at),
           reviser,
           user,
           user_group,
           privilege,
-        };
+        });
       }
       const signature = versionData.value.id
         ? (configDetail.value.origin_signature as string)
@@ -237,32 +271,27 @@
       let template_space_id;
       if (versionData.value.id) {
         const res = await getTemplateVersionDetail(props.bkBizId, props.appId, versionData.value.id, props.id);
-        configDetail.value = { ...res.detail };
+        delete res.detail.update_at;
+        delete res.detail.reviser;
+        configDetail.value = sortObjectKeysByAscii({
+          ...res.detail,
+          create_at: datetimeFormat(res.detail.create_at),
+        });
         template_space_id = res.detail.template_space_id;
       } else {
-        const res = await getTemplateVersionsDetailByIds(props.bkBizId, [props.id]);
-        const { revision, spec } = res.details[0];
-        const { creator, create_at } = revision;
-        const { content_spec, file_mode, file_type, name, revision_memo, revision_version, path, permission } = spec;
-        const { byte_size, signature, md5 } = content_spec;
-        const { user, user_group, privilege } = permission;
-        template_space_id = res.details[0].attachment?.template_space_id;
-        configDetail.value = {
-          name,
-          path,
-          file_type,
-          file_mode,
-          revision_memo,
-          revision_version,
-          byte_size,
-          signature,
-          md5,
-          create_at,
-          creator,
-          user,
-          user_group,
-          privilege,
-        };
+        let res;
+        if (props.isLatest) {
+          // 版本为latest拉取最新版本 不传递版本名
+          res = await getTemplateConfigMeta(props.bkBizId, props.id);
+        } else {
+          res = await getTemplateConfigMeta(props.bkBizId, props.id, props.versionName);
+        }
+        configDetail.value = sortObjectKeysByAscii({
+          ...props.templateMeta,
+          ...res.data.detail,
+          create_at: datetimeFormat(res.data.detail.create_at),
+        });
+        template_space_id = props.templateMeta!.template_space_id;
       }
 
       tplSpaceId.value = template_space_id;
@@ -294,10 +323,13 @@
   };
 
   const handleDownloadFile = async () => {
+    if (fileDownloading.value) return;
+    fileDownloading.value = true;
     const { signature, name } = content.value as IFileConfigContentSummary;
     const getContent = props.type === 'template' ? downloadTemplateContent : downloadConfigContent;
     const res = await getContent(props.bkBizId, props.id, signature, true);
     fileDownload(res, name);
+    fileDownloading.value = false;
   };
 
   const setEditorHeight = () => {
@@ -388,6 +420,19 @@
     .bk-button {
       margin-right: 8px;
       min-width: 88px;
+    }
+  }
+
+  .file-down-loading {
+    :deep(.bk-loading-indicator) {
+      align-items: center;
+      flex-direction: row;
+      .bk-loading-title {
+        margin-top: 0px;
+        margin-left: 8px;
+        color: #979ba5;
+        font-size: 12px;
+      }
     }
   }
 </style>

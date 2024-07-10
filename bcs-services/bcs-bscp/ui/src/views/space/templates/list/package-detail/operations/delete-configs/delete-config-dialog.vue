@@ -1,30 +1,35 @@
 <template>
   <bk-dialog
     v-if="props.isBatchDelete"
-    :title="t('确认删除以下配置文件？')"
-    header-align="center"
+    :title="t('确认删除所选的 {n} 个配置文件?', { n: props.configs.length })"
+    header-align="left"
     :is-show="props.show"
-    ext-cls="delete-confirm-dialog"
-    @confirm="handleConfirm"
-    @closed="close">
+    ext-cls="delete-confirm-dialog">
     <div class="tips">{{ t('一旦删除，该操作将无法撤销，请谨慎操作') }}</div>
     <bk-table :data="props.configs" border="outer" max-height="200">
-      <bk-table-column :label="t('配置文件名称')">
+      <bk-table-column :label="t('配置文件绝对路径')">
         <template #default="{ row }">
-          <span v-if="row.spec">{{ row.spec.name }}</span>
-        </template>
-      </bk-table-column>
-      <bk-table-column :label="t('配置文件路径')">
-        <template #default="{ row }">
-          <span v-if="row.spec">{{ row.spec.path }}</span>
+          <span v-if="row.spec">{{ fileAP(row) }}</span>
         </template>
       </bk-table-column>
     </bk-table>
+    <template #footer>
+      <bk-button
+        theme="primary"
+        style="margin-right: 8px"
+        :disabled="pending"
+        :loading="pending"
+        @click="handleConfirm">
+        {{ t('删除') }}
+      </bk-button>
+      <bk-button @click="close">{{ t('取消') }}</bk-button>
+    </template>
   </bk-dialog>
   <DeleteConfirmDialog
     v-else
     :title="t('确认删除该配置文件？')"
     :is-show="props.show"
+    :pending="pending"
     @confirm="handleConfirm"
     @close="close">
     <div style="margin-bottom: 8px">
@@ -58,17 +63,28 @@
 
   const pending = ref(false);
 
+  // 配置文件绝对路径
+  const fileAP = (config: ITemplateConfigItem) => {
+    const { path, name } = config.spec;
+    if (path.endsWith('/')) {
+      return `${path}${name}`;
+    }
+    return `${path}/${name}`;
+  };
+
   const handleConfirm = async () => {
     try {
       pending.value = true;
       const ids = props.configs.map((config) => config.id);
       await deleteTemplate(spaceId.value, currentTemplateSpace.value, ids);
       close();
-      emits('deleted');
-      Message({
-        theme: 'success',
-        message: t('删除配置文件成功'),
-      });
+      setTimeout(() => {
+        emits('deleted');
+        Message({
+          theme: 'success',
+          message: t('删除配置文件成功'),
+        });
+      }, 300);
     } catch (e) {
       console.log(e);
     } finally {
@@ -87,15 +103,10 @@
     border: 1px solid #dbdbdb;
     border-radius: 2px;
   }
-  .delete-confirm-dialog {
-    :deep(.bk-modal-body) {
-      .tips {
-        text-align: center;
-        margin-bottom: 8px;
-      }
-    }
-  }
+
   :deep(.bk-table) {
     margin-bottom: 16px;
+    margin-top: 8px;
   }
 </style>
+

@@ -36,6 +36,22 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
+// 集群相关接口
+
+// GetTkeCluster returns cluster by clusterId
+func GetTkeCluster(opt *cloudprovider.CommonOption, clusterId string) (*tke.Cluster, error) {
+	tkeCli, err := api.NewTkeClient(opt)
+	if err != nil {
+		return nil, err
+	}
+
+	cluster, err := tkeCli.GetTKECluster(clusterId)
+	if err != nil {
+		return nil, err
+	}
+	return cluster, nil
+}
+
 // 集群下架节点
 
 // 第三方节点下架操作

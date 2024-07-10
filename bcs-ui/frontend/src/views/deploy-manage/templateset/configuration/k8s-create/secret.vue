@@ -1,160 +1,160 @@
 <!-- eslint-disable max-len -->
 <template>
-  <div class="biz-content">
-    <biz-header
-      ref="commonHeader"
-      @exception="exceptionHandler"
-      @saveSecretSuccess="saveSecretSuccess"
-      @switchVersion="initResource"
-      @exmportToYaml="exportToYaml">
-    </biz-header>
-    <template>
-      <div class="biz-content-wrapper biz-confignation-wrapper" v-bkloading="{ isLoading: isTemplateSaving }">
-        <div class="biz-tab-box" v-show="!isDataLoading">
-          <biz-tabs @tab-change="tabResource" ref="commonTab"></biz-tabs>
-          <div class="biz-tab-content" v-bkloading="{ isLoading: isTabChanging }">
-            <bk-alert type="info" class="mb20">
-              <div slot="title">
-                {{$t('deploy.templateset.secretDescription')}}，
-                <a class="bk-text-button" :href="PROJECT_CONFIG.k8sSecret" target="_blank">{{$t('plugin.tools.docs')}}</a>
-              </div>
-            </bk-alert>
-            <template v-if="!secrets.length">
-              <div class="biz-guide-box mt0">
-                <bk-button icon="plus" type="primary" @click.stop.prevent="addLocalSecret">
-                  <span style="margin-left: 0;">{{$t('generic.button.add')}}Secret</span>
-                </bk-button>
-              </div>
-            </template>
-            <template v-else>
-              <div class="biz-configuration-topbar">
-                <div class="biz-list-operation">
-                  <div class="item" v-for="(secret, index) in secrets" :key="secret.id">
-                    <bk-button :class="['bk-button', { 'bk-primary': curSecret.id === secret.id }]" @click.stop="setCurSecret(secret, index)">
-                      {{(secret && secret.config.metadata.name) || $t('deploy.templateset.unnamed')}}
-                      <span class="biz-update-dot" v-show="secret.isEdited"></span>
-                    </bk-button>
-                    <span class="bcs-icon bcs-icon-close" @click.stop="removeSecret(secret, index)"></span>
-                  </div>
-
-                  <bcs-popover ref="secretTooltip" :content="$t('deploy.templateset.addSecret')" placement="top">
-                    <bk-button class="bk-button bk-default is-outline is-icon" @click.stop="addLocalSecret">
-                      <i class="bcs-icon bcs-icon-plus"></i>
-                    </bk-button>
-                  </bcs-popover>
+  <BcsContent>
+    <template #header>
+      <biz-header
+        ref="commonHeader"
+        @exception="exceptionHandler"
+        @saveSecretSuccess="saveSecretSuccess"
+        @switchVersion="initResource"
+        @exmportToYaml="exportToYaml">
+      </biz-header>
+    </template>
+    <div class="biz-confignation-wrapper" v-bkloading="{ isLoading: isTemplateSaving }">
+      <div class="biz-tab-box" v-show="!isDataLoading">
+        <biz-tabs @tab-change="tabResource" ref="commonTab"></biz-tabs>
+        <div class="biz-tab-content" v-bkloading="{ isLoading: isTabChanging }">
+          <bk-alert type="info" class="mb20">
+            <div slot="title">
+              {{$t('deploy.templateset.secretDescription')}}，
+              <a class="bk-text-button" :href="PROJECT_CONFIG.k8sSecret" target="_blank">{{$t('plugin.tools.docs')}}</a>
+            </div>
+          </bk-alert>
+          <template v-if="!secrets.length">
+            <div class="biz-guide-box mt0">
+              <bk-button icon="plus" type="primary" @click.stop.prevent="addLocalSecret">
+                <span style="margin-left: 0;">{{$t('generic.button.add')}}Secret</span>
+              </bk-button>
+            </div>
+          </template>
+          <template v-else>
+            <div class="biz-configuration-topbar">
+              <div class="biz-list-operation">
+                <div class="item" v-for="(secret, index) in secrets" :key="secret.id">
+                  <bk-button :class="['bk-button', { 'bk-primary': curSecret.id === secret.id }]" @click.stop="setCurSecret(secret, index)">
+                    {{(secret && secret.config.metadata.name) || $t('deploy.templateset.unnamed')}}
+                    <span class="biz-update-dot" v-show="secret.isEdited"></span>
+                  </bk-button>
+                  <span class="bcs-icon bcs-icon-close" @click.stop="removeSecret(secret, index)"></span>
                 </div>
+
+                <bcs-popover ref="secretTooltip" :content="$t('deploy.templateset.addSecret')" placement="top">
+                  <bk-button class="bk-button bk-default is-outline is-icon" @click.stop="addLocalSecret">
+                    <i class="bcs-icon bcs-icon-plus"></i>
+                  </bk-button>
+                </bcs-popover>
               </div>
+            </div>
 
-              <div class="biz-configuration-content" style="position: relative; margin-bottom: 105px;">
-                <div class="bk-form biz-configuration-form">
-                  <a href="javascript:void(0);" class="bk-text-button from-json-btn" @click.stop.prevent="showJsonPanel">{{$t('deploy.templateset.importYAML')}}</a>
+            <div class="biz-configuration-content" style="position: relative; margin-bottom: 105px;">
+              <div class="bk-form biz-configuration-form">
+                <a href="javascript:void(0);" class="bk-text-button from-json-btn" @click.stop.prevent="showJsonPanel">{{$t('deploy.templateset.importYAML')}}</a>
 
-                  <bk-sideslider
-                    :is-show.sync="toJsonDialogConf.isShow"
-                    :title="toJsonDialogConf.title"
-                    :width="toJsonDialogConf.width"
-                    :quick-close="false"
-                    class="biz-app-container-tojson-sideslider"
-                    @hidden="closeToJson">
-                    <div slot="content" style="position: relative;">
-                      <div class="biz-log-box" :style="{ height: `${winHeight - 60}px` }" v-bkloading="{ isLoading: toJsonDialogConf.loading }">
-                        <bk-button class="bk-button bk-primary save-json-btn" @click.stop.prevent="saveApplicationJson">{{$t('generic.button.import')}}</bk-button>
-                        <bk-button class="bk-button bk-default hide-json-btn" @click.stop.prevent="hideApplicationJson">{{$t('generic.button.cancel')}}</bk-button>
-                        <ace
-                          :value="editorConfig.value"
-                          :width="editorConfig.width"
-                          :height="editorConfig.height"
-                          :lang="editorConfig.lang"
-                          :read-only="editorConfig.readOnly"
-                          :full-screen="editorConfig.fullScreen"
-                          @init="editorInitAfter">
-                        </ace>
-                      </div>
+                <bk-sideslider
+                  :is-show.sync="toJsonDialogConf.isShow"
+                  :title="toJsonDialogConf.title"
+                  :width="toJsonDialogConf.width"
+                  :quick-close="false"
+                  class="biz-app-container-tojson-sideslider"
+                  @hidden="closeToJson">
+                  <div slot="content" style="position: relative;">
+                    <div class="biz-log-box" :style="{ height: `${winHeight - 60}px` }" v-bkloading="{ isLoading: toJsonDialogConf.loading }">
+                      <bk-button class="bk-button bk-primary save-json-btn" @click.stop.prevent="saveApplicationJson">{{$t('generic.button.import')}}</bk-button>
+                      <bk-button class="bk-button bk-default hide-json-btn" @click.stop.prevent="hideApplicationJson">{{$t('generic.button.cancel')}}</bk-button>
+                      <ace
+                        :value="editorConfig.value"
+                        :width="editorConfig.width"
+                        :height="editorConfig.height"
+                        :lang="editorConfig.lang"
+                        :read-only="editorConfig.readOnly"
+                        :full-screen="editorConfig.fullScreen"
+                        @init="editorInitAfter">
+                      </ace>
                     </div>
-                  </bk-sideslider>
+                  </div>
+                </bk-sideslider>
 
+                <div class="bk-form-item is-required">
+                  <label class="bk-label" style="width: 105px;">{{$t('generic.label.name')}}：</label>
+                  <div class="bk-form-content" style="margin-left: 105px;">
+                    <input type="text" :class="['bk-form-input',{ 'is-danger': errors.has('secretName') }]" :placeholder="$t('deploy.templateset.enterCharacterLimit')" style="width: 310px;" maxlength="64" v-model="curSecret.config.metadata.name" name="secretName" v-validate="{ required: true, regex: /^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$/ }">
+                    <div class="bk-form-tip" v-if="errors.has('secretName')">
+                      <p class="bk-tip-text">{{$t('deploy.templateset.nameIsRequired')}}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="bk-form-item is-required">
+                  <label class="bk-label" style="width: 105px;">{{$t('generic.label.kind')}}：</label>
+                  <div class="bk-form-content" style="margin-left: 105px;">
+                    <bk-selector
+                      style="width: 310px;"
+                      :placeholder="$t('generic.placeholder.select')"
+                      :setting-key="'id'"
+                      :display-key="'name'"
+                      :selected.sync="curSecret.config.type"
+                      :list="typeList"
+                      @item-selected="handleTypeChange">
+                    </bk-selector>
+                  </div>
+                </div>
+
+                <template>
                   <div class="bk-form-item is-required">
-                    <label class="bk-label" style="width: 105px;">{{$t('generic.label.name')}}：</label>
+                    <label class="bk-label" style="width: 105px;">{{$t('generic.label.key')}}：</label>
                     <div class="bk-form-content" style="margin-left: 105px;">
-                      <input type="text" :class="['bk-form-input',{ 'is-danger': errors.has('secretName') }]" :placeholder="$t('deploy.templateset.enterCharacterLimit')" style="width: 310px;" maxlength="64" v-model="curSecret.config.metadata.name" name="secretName" v-validate="{ required: true, regex: /^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$/ }">
-                      <div class="bk-form-tip" v-if="errors.has('secretName')">
-                        <p class="bk-tip-text">{{$t('deploy.templateset.nameIsRequired')}}</p>
+                      <div class="biz-list-operation">
+                        <template v-if="curSecret.config.type === 'Opaque'">
+                          <div class="item" v-for="(data, index) in curSecret.secretKeyList" :key="index">
+                            <bk-button :class="['bk-button', { 'bk-primary': curKeyIndex === index }]" @click.stop.prevent="setCurKey(data, index)" v-if="!data.isEdit">
+                              {{data.key || $t('deploy.templateset.unnamed')}}
+                            </bk-button>
+                            <bkbcs-input
+                              type="text"
+                              placeholder=""
+                              v-else
+                              style="width: 150px;"
+                              :auto-focus="true"
+                              :value.sync="data.key"
+                              :list="varList"
+                              @blur="setKey(data, index)">
+                            </bkbcs-input>
+                            <span class="bcs-icon bcs-icon-edit" v-show="!data.isEdit" @click.stop.prevent="editKey(data, index)"></span>
+                            <span class="bcs-icon bcs-icon-close" v-show="!data.isEdit" @click.stop.prevent="removeKey(data, index)"></span>
+                          </div>
+                          <bcs-popover ref="keyTooltip" :content="$t('deploy.templateset.addKey')" placement="top">
+                            <bk-button class="bk-button bk-default is-outline is-icon" @click.stop.prevent="addKey">
+                              <i class="bcs-icon bcs-icon-plus"></i>
+                            </bk-button>
+                          </bcs-popover>
+                        </template>
+                        <template v-else>
+                          <div class="item" v-for="(data, index) in curSecret.secretKeyList" :key="index">
+                            <bk-button :class="['bk-button', { 'bk-primary': curKeyIndex === index }]" style="cursor: default;">
+                              {{data.key || $t('deploy.templateset.unnamed')}}
+                            </bk-button>
+                          </div>
+                        </template>
                       </div>
                     </div>
                   </div>
-
-                  <div class="bk-form-item is-required">
-                    <label class="bk-label" style="width: 105px;">{{$t('generic.label.kind')}}：</label>
-                    <div class="bk-form-content" style="margin-left: 105px;">
-                      <bk-selector
-                        style="width: 310px;"
-                        :placeholder="$t('generic.placeholder.select')"
-                        :setting-key="'id'"
-                        :display-key="'name'"
-                        :selected.sync="curSecret.config.type"
-                        :list="typeList"
-                        @item-selected="handleTypeChange">
-                      </bk-selector>
-                    </div>
-                  </div>
-
-                  <template>
-                    <div class="bk-form-item is-required">
-                      <label class="bk-label" style="width: 105px;">{{$t('generic.label.key')}}：</label>
+                  <template v-if="curKeyParams">
+                    <div class="bk-form-item">
+                      <label class="bk-label" style="width: 105px;">{{$t('generic.label.value')}}：</label>
                       <div class="bk-form-content" style="margin-left: 105px;">
-                        <div class="biz-list-operation">
-                          <template v-if="curSecret.config.type === 'Opaque'">
-                            <div class="item" v-for="(data, index) in curSecret.secretKeyList" :key="index">
-                              <bk-button :class="['bk-button', { 'bk-primary': curKeyIndex === index }]" @click.stop.prevent="setCurKey(data, index)" v-if="!data.isEdit">
-                                {{data.key || $t('deploy.templateset.unnamed')}}
-                              </bk-button>
-                              <bkbcs-input
-                                type="text"
-                                placeholder=""
-                                v-else
-                                style="width: 150px;"
-                                :auto-focus="true"
-                                :value.sync="data.key"
-                                :list="varList"
-                                @blur="setKey(data, index)">
-                              </bkbcs-input>
-                              <span class="bcs-icon bcs-icon-edit" v-show="!data.isEdit" @click.stop.prevent="editKey(data, index)"></span>
-                              <span class="bcs-icon bcs-icon-close" v-show="!data.isEdit" @click.stop.prevent="removeKey(data, index)"></span>
-                            </div>
-                            <bcs-popover ref="keyTooltip" :content="$t('deploy.templateset.addKey')" placement="top">
-                              <bk-button class="bk-button bk-default is-outline is-icon" @click.stop.prevent="addKey">
-                                <i class="bcs-icon bcs-icon-plus"></i>
-                              </bk-button>
-                            </bcs-popover>
-                          </template>
-                          <template v-else>
-                            <div class="item" v-for="(data, index) in curSecret.secretKeyList" :key="index">
-                              <bk-button :class="['bk-button', { 'bk-primary': curKeyIndex === index }]" style="cursor: default;">
-                                {{data.key || $t('deploy.templateset.unnamed')}}
-                              </bk-button>
-                            </div>
-                          </template>
-                        </div>
+                        <textarea class="bk-form-textarea biz-resize-textarea" style="height: 300px;" v-model="curKeyParams.content" :placeholder="valuePlaceholder"></textarea>
+                        <p class="biz-tip mt5">{{$t('deploy.templateset.base64Encoding')}}</p>
                       </div>
                     </div>
-                    <template v-if="curKeyParams">
-                      <div class="bk-form-item">
-                        <label class="bk-label" style="width: 105px;">{{$t('generic.label.value')}}：</label>
-                        <div class="bk-form-content" style="margin-left: 105px;">
-                          <textarea class="bk-form-textarea biz-resize-textarea" style="height: 300px;" v-model="curKeyParams.content" :placeholder="valuePlaceholder"></textarea>
-                          <p class="biz-tip mt5">{{$t('deploy.templateset.base64Encoding')}}</p>
-                        </div>
-                      </div>
-                    </template>
                   </template>
-                </div>
+                </template>
               </div>
-            </template>
-          </div>
+            </div>
+          </template>
         </div>
       </div>
-    </template>
-  </div>
+    </div>
+  </BcsContent>
 </template>
 
 <script>
@@ -172,6 +172,7 @@ import header from './header.vue';
 import tabs from './tabs.vue';
 
 import ace from '@/components/ace-editor';
+import BcsContent from '@/components/layout/Content.vue';
 import secretParams from '@/json/k8s-secret.json';
 import k8sBase from '@/mixins/configuration/k8s-base';
 import mixinBase from '@/mixins/configuration/mixin-base';
@@ -182,6 +183,7 @@ export default {
     'biz-header': header,
     'biz-tabs': tabs,
     ace,
+    BcsContent,
   },
   mixins: [mixinBase, k8sBase],
   data() {

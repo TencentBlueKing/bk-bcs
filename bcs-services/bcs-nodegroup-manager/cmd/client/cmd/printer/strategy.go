@@ -10,9 +10,11 @@
  * limitations under the License.
  */
 
+// Package printer xxx
 package printer
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -61,8 +63,24 @@ func PrintStrategyInJSON(strategyList []*nodegroupmanager.NodeGroupStrategy) {
 		return
 	}
 	for _, strategy := range strategyList {
-		var data []byte
-		_ = encodeJSONWithIndent(4, strategy, &data)
-		fmt.Println(string(pretty.Color(pretty.Pretty(data), nil)))
+		data, err := json.Marshal(strategy)
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+		res, err := PrettyString(string(data))
+		if err != nil {
+			fmt.Println(err.Error())
+		} else {
+			fmt.Println(string(pretty.Color(pretty.Pretty([]byte(res)), nil)))
+		}
 	}
+}
+
+// PrettyString 格式化
+func PrettyString(str string) (string, error) {
+	var prettyJSON bytes.Buffer
+	if err := json.Indent(&prettyJSON, []byte(str), "", " "); err != nil {
+		return "", err
+	}
+	return prettyJSON.String(), nil
 }

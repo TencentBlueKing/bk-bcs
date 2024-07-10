@@ -19,18 +19,18 @@ import (
 	"net/http"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
 	bcsapi "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapiv4"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
+	githubpkg "gopkg.in/go-playground/webhooks.v5/github"
+	gitlabpkg "gopkg.in/go-playground/webhooks.v5/gitlab"
 
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/cmd/manager/options"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/internal/dao"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/analyze"
 	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/permitcheck"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store/terraformstore"
 )
@@ -50,10 +50,6 @@ type ArgocdProxy struct {
 	*mux.Router // for http handler implementation
 
 	option *options.Options
-	// JWTClient for authentication
-	JWTDecoder *jwt.JWTClient
-	// IAMClient is basic client
-	IAMClient iam.PermClient
 }
 
 // Init gitops essential session
@@ -84,7 +80,8 @@ func (ops *ArgocdProxy) Stop() {
 // initArgoPathHandler
 // nolint
 func (ops *ArgocdProxy) initArgoPathHandler() error {
-	middleware := mw.NewMiddlewareHandler()
+	permitChecker := permitcheck.NewPermitChecker()
+	middleware := mw.NewMiddlewareHandler(permitChecker)
 	if err := middleware.Init(); err != nil {
 		return errors.Wrapf(err, "middleware init failed")
 	}
@@ -97,63 +94,76 @@ func (ops *ArgocdProxy) initArgoPathHandler() error {
 	})
 
 	projectPlugin := &ProjectPlugin{
-		Router:         ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/projects").Subrouter(),
-		middleware:     middleware,
-		analysisClient: analyze.NewCollectApplication(),
+		Router:        ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/projects").Subrouter(),
+		middleware:    middleware,
+		permitChecker: permitChecker,
 	}
 	clusterPlugin := &ClusterPlugin{
-		Router:     ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/clusters").Subrouter(),
-		middleware: middleware,
+		Router:        ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/clusters").Subrouter(),
+		middleware:    middleware,
+		permitChecker: permitChecker,
 	}
 	repositoryRouter := ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/repositories").Subrouter()
 	repositoryRouter.UseEncodedPath()
 	repositoryPlugin := &RepositoryPlugin{
-		Router:     repositoryRouter,
-		middleware: middleware,
+		Router:        repositoryRouter,
+		middleware:    middleware,
+		permitChecker: permitChecker,
 	}
 	appPlugin := &AppPlugin{
-		storage:    store.GlobalStore(),
-		db:         dao.GlobalDB(),
-		Router:     ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/applications").Subrouter(),
-		middleware: middleware,
-		appCollect: analyze.NewCollectApplication(),
-		bcsStorage: bcsStorage,
+		storage:       store.GlobalStore(),
+		db:            dao.GlobalDB(),
+		Router:        ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/applications").Subrouter(),
+		middleware:    middleware,
+		permitChecker: permitChecker,
+		bcsStorage:    bcsStorage,
 	}
 	appsetPlugin := &ApplicationSetPlugin{
-		storage:    store.GlobalStore(),
-		Router:     ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/applicationsets").Subrouter(),
-		middleware: middleware,
+		storage:       store.GlobalStore(),
+		db:            dao.GlobalDB(),
+		Router:        ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/applicationsets").Subrouter(),
+		middleware:    middleware,
+		permitChecker: permitChecker,
 	}
 	secretPlugin := &SecretPlugin{
-		Router:     ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/secrets").Subrouter(),
-		middleware: middleware,
+		Router:        ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/secrets").Subrouter(),
+		middleware:    middleware,
+		permitChecker: permitChecker,
 	}
 	streamPlugin := &StreamPlugin{
-		Router:     ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/stream/applications").Subrouter(),
-		appHandler: appPlugin,
-		middleware: middleware,
-		storage:    store.GlobalStore(),
-		bcsStorage: bcsStorage,
+		Router:        ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/stream/applications").Subrouter(),
+		appHandler:    appPlugin,
+		middleware:    middleware,
+		permitChecker: permitChecker,
+		storage:       store.GlobalStore(),
+		bcsStorage:    bcsStorage,
 	}
+	github, _ := githubpkg.New()
+	gitlab, _ := gitlabpkg.New()
 	webhookPlugin := &WebhookPlugin{
 		Router:        ops.PathPrefix(common.GitOpsProxyURL + "/api/webhook").Subrouter(),
 		middleware:    middleware,
 		appsetWebhook: ops.option.GitOps.AppsetControllerWebhook,
+		github:        github,
+		gitlab:        gitlab,
+		storage:       store.GlobalStore(),
 	}
 	// grpc access handler
 	grpcPlugin := &GrpcPlugin{
 		Router: ops.NewRoute().Path(common.GitOpsProxyURL +
 			"/{package:[a-z]+}.{service:[A-Z][a-zA-Z]+}/{method:[A-Z][a-zA-Z]+}").Subrouter(),
-		middleware: middleware,
+		middleware:    middleware,
+		permitChecker: permitChecker,
 	}
 	metricPlugin := &MetricPlugin{
 		Router:     ops.PathPrefix(common.GitOpsProxyURL + "/api/metric").Subrouter(),
 		middleware: middleware,
 	}
 	analysisPlugin := &AnalysisPlugin{
-		Router:         ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/analysis").Subrouter(),
-		middleware:     middleware,
-		store:          store.GlobalStore(),
+		Router:        ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/analysis").Subrouter(),
+		middleware:    middleware,
+		permitChecker: permitChecker,
+		store:         store.GlobalStore(),
 	}
 	monitorPlugin := &MonitorPlugin{
 		Router:     ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/monitor").Subrouter(),
@@ -163,12 +173,26 @@ func (ops *ArgocdProxy) initArgoPathHandler() error {
 		Router:         ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/terraforms").Subrouter(),
 		middleware:     middleware,
 		terraformStore: terraformstore.NewTerraformStore(),
+		permitChecker:  permitChecker,
+	}
+	permissionPlugin := &PermissionPlugin{
+		Router:        ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/permissions").Subrouter(),
+		middleware:    middleware,
+		permitChecker: permitChecker,
+		storage:       store.GlobalStore(),
+		db:            dao.GlobalDB(),
+	}
+	workflowPlugin := &WorkflowPlugin{
+		Router:        ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/workflows").Subrouter(),
+		op:            options.GlobalOptions(),
+		middleware:    middleware,
+		permitChecker: permitChecker,
 	}
 	initializer := []func() error{
 		projectPlugin.Init, clusterPlugin.Init, repositoryPlugin.Init,
 		appPlugin.Init, streamPlugin.Init, webhookPlugin.Init, grpcPlugin.Init,
 		secretPlugin.Init, metricPlugin.Init, appsetPlugin.Init, analysisPlugin.Init,
-		monitorPlugin.Init, terraformPlugin.Init,
+		monitorPlugin.Init, terraformPlugin.Init, permissionPlugin.Init, workflowPlugin.Init,
 	}
 
 	// access deny URL, keep in mind that there are paths need to proxy

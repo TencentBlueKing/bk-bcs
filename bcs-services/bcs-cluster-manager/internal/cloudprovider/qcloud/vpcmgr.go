@@ -13,6 +13,9 @@
 package qcloud
 
 import (
+	"context"
+	"fmt"
+	"net"
 	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -20,6 +23,9 @@ import (
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/business"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cidrtree"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -98,13 +104,13 @@ func (c *VPCManager) ListSubnets(vpcID, zone string, opt *cloudprovider.ListNetw
 	result := make([]*proto.Subnet, 0)
 	for _, v := range subnets {
 		result = append(result, &proto.Subnet{
-			VpcID:                   *v.VpcID,
-			SubnetID:                *v.SubnetID,
+			VpcID:                   *v.VpcId,
+			SubnetID:                *v.SubnetId,
 			SubnetName:              *v.SubnetName,
 			CidrRange:               *v.CidrBlock,
 			Ipv6CidrRange:           *v.Ipv6CidrBlock,
 			Zone:                    *v.Zone,
-			AvailableIPAddressCount: *v.AvailableIPAddressCount,
+			AvailableIPAddressCount: *v.AvailableIpAddressCount,
 		})
 	}
 	return result, nil
@@ -194,4 +200,80 @@ func (c *VPCManager) ListBandwidthPacks(opt *cloudprovider.CommonOption) ([]*pro
 func (c *VPCManager) CheckConflictInVpcCidr(vpcID string, cidr string,
 	opt *cloudprovider.CommonOption) ([]string, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// AllocateOverlayCidr allocate overlay cidr
+func (c *VPCManager) AllocateOverlayCidr(vpcId string, cluster *proto.Cluster, cidrLens []uint32,
+	reservedBlocks []*net.IPNet, opt *cloudprovider.CommonOption) ([]string, error) {
+	return business.AllocateGlobalRouterCidr(opt, vpcId, nil, cidrLens, nil)
+}
+
+// AddClusterOverlayCidr add cidr to cluster
+func (c *VPCManager) AddClusterOverlayCidr(clusterId string, cidrs []string, opt *cloudprovider.CommonOption) error {
+	return business.AddClusterGrCidr(opt, clusterId, cidrs)
+}
+
+// GetVpcIpUsage get vpc ipTotal / ipSurplus
+func (c *VPCManager) GetVpcIpUsage(
+	vpcId string, ipType string, reservedBlocks []*net.IPNet, opt *cloudprovider.CommonOption) (uint32, uint32, error) {
+	cloud, _ := cloudprovider.GetCloudByProvider(cloudName)
+	switch ipType {
+	case common.ClusterOverlayNetwork:
+		surplusNum, err := business.GetGrVPCIPSurplus(opt, cloud.CloudID, vpcId, nil)
+		if err != nil {
+			return 0, 0, err
+		}
+		totalNum, err := business.GetVpcOverlayIpNum(cloud.CloudID, vpcId)
+		if err != nil {
+			return 0, 0, err
+		}
+		return totalNum, surplusNum, nil
+	case common.ClusterUnderlayNetwork:
+		frees, err := business.GetFreeIPNets(opt, vpcId)
+		if err != nil {
+			return 0, 0, err
+		}
+		surplusNum, err := cidrtree.GetIPNetsNum(frees)
+		if err != nil {
+			return 0, 0, err
+		}
+
+		totalNum, err := business.GetVpcUnderlayIpNum(opt, vpcId)
+		if err != nil {
+			return 0, 0, err
+		}
+
+		return totalNum, surplusNum, nil
+	}
+
+	return 0, 0, fmt.Errorf("not supported ipType[%s]", ipType)
+}
+
+// GetClusterIpUsage get cluster overlay ip usage
+func (c *VPCManager) GetClusterIpUsage(clusterId string, ipType string, opt *cloudprovider.CommonOption) (
+	uint32, uint32, error) {
+	cls, err := cloudprovider.GetStorageModel().GetCluster(context.Background(), clusterId)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	switch ipType {
+	case common.ClusterOverlayNetwork:
+		return business.GetClusterGrIPSurplus(opt, "", cls.GetSystemID())
+	case common.ClusterUnderlayNetwork:
+		zoneSubs, _, _, errLocal := business.GetClusterCurrentVpcCniSubnets(*cls, false)
+		if errLocal != nil {
+			return 0, 0, err
+		}
+
+		var total, surplus uint32
+		for _, sub := range zoneSubs {
+			total += uint32(sub.TotalIps)
+			surplus += uint32(sub.AvailableIps)
+		}
+
+		return total, surplus, nil
+	}
+
+	return 0, 0, fmt.Errorf("not supported ipType[%s]", ipType)
 }

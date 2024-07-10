@@ -40,6 +40,7 @@ import (
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/components/bkpaas"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/apigw"
 	iamauth "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/auth"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/client"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
@@ -76,6 +77,7 @@ type Service struct {
 	// auth logic module.
 	auth     *auth.Auth
 	spaceMgr *space.Manager
+	pubKey   string
 }
 
 // NewService create a service instance.
@@ -110,11 +112,37 @@ func NewService(sd serviced.Discover, iamSettings cc.IAM, disableAuth bool,
 		spaceMgr:        spaceMgr,
 	}
 
+	if errH := s.handlerAutoRegister(); errH != nil {
+		return nil, errH
+	}
+
 	if err = s.initLogicModule(); err != nil {
 		return nil, err
 	}
 
 	return s, nil
+}
+
+// 注册网关
+func (s *Service) handlerAutoRegister() error {
+	s.pubKey = cc.AuthServer().LoginAuth.GWPubKey
+	if cc.AuthServer().ApiGateway.AutoRegister {
+		gw, err := apigw.NewApiGw(cc.AuthServer().Esb)
+		if err != nil {
+			return err
+		}
+
+		result, err := gw.GetApigwPublicKey(apigw.Name)
+		if err != nil {
+			return err
+		}
+		if result.Code != 0 && result.Data.PublicKey == "" {
+			return fmt.Errorf("get the gateway public key failed, err: %s", result.Message)
+		}
+		s.pubKey = result.Data.PublicKey
+	}
+
+	return nil
 }
 
 // Handler return service's handler.
@@ -252,14 +280,31 @@ func (s *Service) InitAuthCenter(ctx context.Context, req *pbas.InitAuthCenterRe
 	return s.initial.InitAuthCenter(ctx, req)
 }
 
-// GetAuthLoginConf get auth login conf
-func (s *Service) GetAuthLoginConf(_ context.Context,
-	_ *pbas.GetAuthLoginConfReq) (*pbas.GetAuthLoginConfResp, error) {
-	resp := &pbas.GetAuthLoginConfResp{
-		Host:      cc.AuthServer().LoginAuth.Host,
-		InnerHost: cc.AuthServer().LoginAuth.InnerHost,
-		Provider:  cc.AuthServer().LoginAuth.Provider,
-		GwPubkey:  cc.AuthServer().LoginAuth.GWPubKey,
+// GetAuthConf get auth login conf
+func (s *Service) GetAuthConf(_ context.Context,
+	_ *pbas.GetAuthConfReq) (*pbas.GetAuthConfResp, error) {
+
+	resp := &pbas.GetAuthConfResp{
+		LoginAuth: &pbas.LoginAuth{
+			Host:      cc.AuthServer().LoginAuth.Host,
+			InnerHost: cc.AuthServer().LoginAuth.InnerHost,
+			Provider:  cc.AuthServer().LoginAuth.Provider,
+			GwPubkey:  s.pubKey,
+			UseEsb:    false,
+		},
+		Esb: &pbas.ESB{
+			Endpoints: cc.AuthServer().Esb.Endpoints,
+			AppCode:   cc.AuthServer().Esb.AppCode,
+			AppSecret: cc.AuthServer().Esb.AppSecret,
+			User:      cc.AuthServer().Esb.User,
+			Tls: &pbas.TLS{
+				InsecureSkipVerify: cc.AuthServer().Esb.TLS.InsecureSkipVerify,
+				CertFile:           cc.AuthServer().Esb.TLS.CertFile,
+				KeyFile:            cc.AuthServer().Esb.TLS.KeyFile,
+				CaFile:             cc.AuthServer().Esb.TLS.CAFile,
+				Password:           cc.AuthServer().Esb.TLS.Password,
+			},
+		},
 	}
 	return resp, nil
 }

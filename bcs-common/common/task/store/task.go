@@ -30,7 +30,7 @@ const (
 	TableName = "task"
 	// TableUniqueKey task unique key
 	TableUniqueKey = "taskId"
-	//TableCustomIndex task custom index
+	// TableCustomIndex task custom index
 	TableCustomIndex = "index"
 	// DefaultTaskListLength default task list length
 	DefaultTaskListLength = 1000
@@ -66,7 +66,7 @@ type ModelTask struct {
 // New create Task model
 func New(db drivers.DB, tablePrefix string) *ModelTask {
 	return &ModelTask{
-		tableName: tablePrefix + TableName,
+		tableName: tablePrefix + "_" + TableName,
 		indexes:   taskIndexes,
 		db:        db,
 	}

@@ -29,48 +29,11 @@
     var BK_USER_HOST = '<%= process.env.BK_USER_HOST %>'
     var BCS_NAMESPACE_PREFIX = '<%= process.env.BK_BCS_NAMESPACE_PREFIX %>'
     var BK_LOG_HOST = '<%= process.env.BK_LOG_HOST %>'
+    var BK_DOMAIN = '<%= process.env.BK_DOMAIN %>'
+    var BK_SHARED_RES_BASE_JS_URL = '<%= process.env.BK_SHARED_RES_BASE_JS_URL %>'
 
     // 加载配置文件
     window.BCS_CONFIG = JSON.parse('<%= process.env.BK_BCS_CONFIG %>')
-</script>
-<script charset="utf-8">
-    function loadMonitorScript() {
-        if (!window.BCS_CONFIG.BK_UI_MONITOR_URL) return
-        const script = document.createElement("script");
-        script.type = "text/javascript";
-        script.src = window.BCS_CONFIG.BK_UI_MONITOR_URL;
-        document.body.appendChild(script);
-        script.onload = function() {
-            emonitor.create({
-                name: 'bk_bcs',
-                atta: {
-                name: 'bk_bcs',
-                },
-                mode: '007',
-                cgi: {
-                sampling: 1,
-                code: ['ret'],
-                msg: ['info', 'result']
-                },
-                // onBeforeSend: function(data) {
-                //   console.log('onBeforeSend::', data);
-                // },
-                // onload: function() {
-                //   if (!emonitor.getUrlParam({
-                //     name: 'debug'
-                //   })) {
-                //     setTimeout(function() {
-                //     window.location.reload();
-                //   }, 10000);
-                //   }
-                // },
-                // onCustom: function(data) {
-                //   console.warn('onCustom', data);
-                // },
-            });
-        }
-    }
-    loadMonitorScript()
 </script>
 </body>
 </html>

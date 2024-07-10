@@ -106,6 +106,7 @@ func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbcs.BatchUps
 	if err != nil {
 		return nil, err
 	}
+
 	items := make([]*pbds.BatchUpsertConfigItemsReq_ConfigItem, 0, len(req.Items))
 	for _, item := range req.Items {
 		// validate if file content uploaded.
@@ -114,6 +115,7 @@ func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbcs.BatchUps
 			logs.Errorf("validate file content uploaded failed, err: %v, rid: %s", err, grpcKit.Rid)
 			return nil, err
 		}
+
 		items = append(items, &pbds.BatchUpsertConfigItemsReq_ConfigItem{
 			ConfigItemAttachment: &pbci.ConfigItemAttachment{
 				BizId: req.BizId,
@@ -138,11 +140,22 @@ func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbcs.BatchUps
 			},
 		})
 	}
+
+	bindings := make([]*pbds.BatchUpsertConfigItemsReq_TemplateBinding, 0)
+	for _, v := range req.GetBindings() {
+		bindings = append(bindings, &pbds.BatchUpsertConfigItemsReq_TemplateBinding{
+			TemplateSpaceId: v.TemplateSpaceId,
+			TemplateBinding: v.GetTemplateBinding(),
+		})
+	}
+
 	buReq := &pbds.BatchUpsertConfigItemsReq{
 		BizId:      req.BizId,
 		AppId:      req.AppId,
 		Items:      items,
 		ReplaceAll: req.ReplaceAll,
+		Variables:  req.GetVariables(),
+		Bindings:   bindings,
 	}
 	batchUpsertConfigResp, e := s.client.DS.BatchUpsertConfigItems(grpcKit.RpcCtx(), buReq)
 	if e != nil {
@@ -499,7 +512,6 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbcs.ListConfigItems
 			existingPaths = append(existingPaths, path.Join(v.Spec.Path, v.Spec.Name))
 		}
 	}
-
 	for _, v := range trc.GetDetails() {
 		if v.FileState != constant.FileStateDelete {
 			existingPaths = append(existingPaths, path.Join(v.Path, v.Name))
@@ -507,7 +519,6 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbcs.ListConfigItems
 	}
 
 	conflictNums, conflictPaths := checkExistingPathConflict(existingPaths)
-
 	for _, v := range rp.GetDetails() {
 		if v.FileState != constant.FileStateDelete {
 			v.IsConflict = conflictPaths[path.Join(v.Spec.Path, v.Spec.Name)]
@@ -681,30 +692,95 @@ func (s *Service) UndoConfigItem(ctx context.Context, req *pbcs.UndoConfigItemRe
 
 // checkExistingPathConflict Check existing path collections for conflicts.
 func checkExistingPathConflict(existing []string) (uint32, map[string]bool) {
-	var conflictNums uint32
 	conflictPaths := make(map[string]bool, len(existing))
-	count := len(existing) - 1
+	var conflictNums uint32
+	conflictMap := make(map[string]bool, 0)
+	// 遍历每一个路径
+	for i := 0; i < len(existing); i++ {
+		// 检查当前路径与后续路径之间是否存在冲突
+		for j := i + 1; j < len(existing); j++ {
+			if strings.HasPrefix(existing[j]+"/", existing[i]+"/") || strings.HasPrefix(existing[i]+"/", existing[j]+"/") {
+				// 相等也算冲突
+				if len(existing[j]) == len(existing[i]) {
+					conflictNums++
+				} else if len(existing[j]) < len(existing[i]) {
+					conflictMap[existing[j]] = true
+				} else {
+					conflictMap[existing[i]] = true
+				}
 
-	for k1 := 0; k1 <= count; k1++ {
-		conflict := false
-		for k2 := k1 + 1; k2 <= count; k2++ {
-			if len(existing[k1]) > len(existing[k2]) {
-				existing[k1], existing[k2] = existing[k2], existing[k1]
+				conflictPaths[existing[i]] = true
+				conflictPaths[existing[j]] = true
 			}
-			if strings.HasPrefix(existing[k2]+"/", existing[k1]+"/") {
-				conflictPaths[existing[k2]] = true
-				conflict = true
-				existing[k2], existing[count] = existing[count], existing[k2]
-				k2--
-				count--
-			}
-		}
-
-		if conflict {
-			conflictPaths[existing[k1]] = true
-			conflictNums++
 		}
 	}
 
-	return conflictNums, conflictPaths
+	return uint32(len(conflictMap)) + conflictNums, conflictPaths
+}
+
+// CompareConfigItemConflicts compare config item version conflicts
+func (s *Service) CompareConfigItemConflicts(ctx context.Context, req *pbcs.CompareConfigItemConflictsReq) (
+	*pbcs.CompareConfigItemConflictsResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.Update, ResourceID: req.AppId}, BizID: req.BizId},
+	}
+
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
+		return nil, err
+	}
+
+	result, err := s.client.DS.CompareConfigItemConflicts(grpcKit.RpcCtx(), &pbds.CompareConfigItemConflictsReq{
+		BizId:      req.GetBizId(),
+		AppId:      req.GetAppId(),
+		ReleaseId:  req.GetReleaseId(),
+		OtherAppId: req.GetOtherAppId(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	nonTemplateConfigs := make([]*pbcs.CompareConfigItemConflictsResp_NonTemplateConfig, 0)
+	for _, v := range result.NonTemplateConfigs {
+		nonTemplateConfigs = append(nonTemplateConfigs, &pbcs.CompareConfigItemConflictsResp_NonTemplateConfig{
+			Id:             v.GetId(),
+			ConfigItemSpec: v.GetConfigItemSpec(),
+			Variables:      v.GetVariables(),
+			IsExist:        v.GetIsExist(),
+			Signature:      v.GetSignature(),
+			ByteSize:       v.GetByteSize(),
+		})
+	}
+
+	templateConfigs := make([]*pbcs.CompareConfigItemConflictsResp_TemplateConfig, 0)
+	for _, v := range result.TemplateConfigs {
+		revisions := make([]*pbcs.CompareConfigItemConflictsResp_TemplateConfig_TemplateRevisionDetail, 0,
+			len(v.TemplateRevisions))
+		for _, revision := range v.TemplateRevisions {
+			revisions = append(revisions, &pbcs.CompareConfigItemConflictsResp_TemplateConfig_TemplateRevisionDetail{
+				TemplateId:         revision.TemplateId,
+				TemplateRevisionId: revision.TemplateRevisionId,
+				IsLatest:           revision.IsLatest,
+				Variables:          revision.GetVariables(),
+			})
+		}
+		templateConfigs = append(templateConfigs, &pbcs.CompareConfigItemConflictsResp_TemplateConfig{
+			TemplateSpaceId:    v.GetTemplateSpaceId(),
+			TemplateSpaceName:  v.GetTemplateSpaceName(),
+			TemplateSetId:      v.GetTemplateSetId(),
+			TemplateSetName:    v.GetTemplateSetName(),
+			IsExist:            v.IsExist,
+			TemplateRevisions:  revisions,
+			TemplateSpaceExist: v.TemplateSpaceExist,
+			TemplateSetExist:   v.TemplateSetExist,
+			TemplateSetIsEmpty: v.GetTemplateSetIsEmpty(),
+		})
+	}
+
+	return &pbcs.CompareConfigItemConflictsResp{
+		NonTemplateConfigs: nonTemplateConfigs,
+		TemplateConfigs:    templateConfigs,
+	}, nil
 }

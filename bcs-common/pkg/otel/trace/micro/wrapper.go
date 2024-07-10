@@ -58,8 +58,10 @@ func NewTracingWrapper() server.HandlerWrapper {
 				ctx = context.WithValue(ctx, constants.RequestIDKey, requestID)
 				ctx = utils.ContextWithRequestID(ctx, requestID)
 			}
-			h := http.Header{traceParent: m.Get(traceParent)}
-			ctx = prop.Extract(ctx, propagation.HeaderCarrier(h))
+			headerCarrier := propagation.HeaderCarrier{
+				traceParent: m.Get(traceParent),
+			}
+			ctx = prop.Extract(ctx, headerCarrier)
 			name := fmt.Sprintf("%s.%s", req.Service(), req.Endpoint())
 			tracer := otel.Tracer(req.Service())
 			commonAttrs := []attribute.KeyValue{

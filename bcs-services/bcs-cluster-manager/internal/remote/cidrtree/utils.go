@@ -22,14 +22,15 @@ import (
 
 // Subnet container info for vpc subnet
 type Subnet struct {
-	ID          string     `json:"id,omitempty"`
-	IPNet       *net.IPNet `json:"ipNet,omitempty"`
-	Name        string     `json:"name,omitempty"`
-	Zone        string     `json:"zone,omitempty"`
-	ZoneName    string     `json:"zonename,omitempty"`
-	VpcID       string     `json:"vpcId,omitempty"`
-	CreatedTime string     `json:"createdTime,omitempty"`
-	AvaliableIP uint64     `json:"avaliableIP,omitempty"`
+	ID           string     `json:"id,omitempty"`
+	IPNet        *net.IPNet `json:"ipNet,omitempty"`
+	Name         string     `json:"name,omitempty"`
+	Zone         string     `json:"zone,omitempty"`
+	ZoneName     string     `json:"zonename,omitempty"`
+	VpcID        string     `json:"vpcId,omitempty"`
+	CreatedTime  string     `json:"createdTime,omitempty"`
+	AvailableIps uint64     `json:"availableIps,omitempty"`
+	TotalIps     uint64     `json:"totalIps,omitempty"`
 }
 
 // InSlice report wether a in s
@@ -55,7 +56,7 @@ func StringToCidr(cidrstr string) (cidr *Cidr, err error) {
 }
 
 // GetFreeIPNets get cidr block free cidrs
-func GetFreeIPNets(allBlocks, allExistingSubnets []*net.IPNet) []*net.IPNet {
+func GetFreeIPNets(allBlocks, reservedBlocks, allExistingSubnets []*net.IPNet) []*net.IPNet {
 	var allFrees []*net.IPNet
 
 	for _, block := range allBlocks {
@@ -64,7 +65,9 @@ func GetFreeIPNets(allBlocks, allExistingSubnets []*net.IPNet) []*net.IPNet {
 		man := NewCidrManager(block, exsits)
 		// nolint
 		for _, free := range man.GetFrees() {
-			allFrees = append(allFrees, free)
+			if !inReserved(free, reservedBlocks) {
+				allFrees = append(allFrees, free)
+			}
 		}
 	}
 	return allFrees
@@ -111,4 +114,18 @@ func GetIPNum(ipnet *net.IPNet) (ipnum uint32, err error) {
 	}
 	ipnum = uint32(math.Pow(2, float64(totalSize-prefixSize)))
 	return ipnum, nil
+}
+
+// GetIPNetsNum get ip nets num
+func GetIPNetsNum(frees []*net.IPNet) (uint32, error) {
+	ipSurplus := uint32(0)
+	for _, free := range frees {
+		freeIPNum, errLocal := GetIPNum(free)
+		if errLocal != nil {
+			return 0, errLocal
+		}
+		ipSurplus += freeIPNum
+	}
+
+	return ipSurplus, nil
 }

@@ -1,0 +1,39 @@
+apiVersion: {{ .metadata.apiVersion }}
+kind: CronJob
+{{ include "common.metadata" .metadata }}
+spec:
+  schedule: {{ .spec.jobManage.schedule | quote }}
+  concurrencyPolicy: {{ .spec.jobManage.concurrencyPolicy }}
+  {{- if .spec.jobManage.suspend }}
+  suspend: {{ .spec.jobManage.suspend }}
+  {{- end }}
+  {{- if .spec.jobManage.successfulJobsHistoryLimit }}
+  successfulJobsHistoryLimit: {{ .spec.jobManage.successfulJobsHistoryLimit }}
+  {{- end }}
+  {{- if .spec.jobManage.failedJobsHistoryLimit }}
+  failedJobsHistoryLimit: {{ .spec.jobManage.failedJobsHistoryLimit }}
+  {{- end }}
+  {{- if .spec.jobManage.startingDDLSecs }}
+  startingDeadlineSeconds: {{ .spec.jobManage.startingDDLSecs }}
+  {{- end }}
+  jobTemplate:
+    {{- if .spec.labels.jobTemplatelabels }}
+    metadata:
+      labels:
+        {{- include "common.labelSlice2Map" .spec.labels.jobTemplatelabels | indent 8 }}
+    {{- end }}
+    spec:
+      # Job 无需手动配置 Selector https://stackoverflow.com/questions/64223630/job-invalid-selector-not-auto-generated
+      {{- if .spec.jobManage.completions }}
+      completions: {{ .spec.jobManage.completions }}
+      {{- end }}
+      {{- if .spec.jobManage.parallelism }}
+      parallelism: {{ .spec.jobManage.parallelism }}
+      {{- end }}
+      {{- if .spec.jobManage.backoffLimit }}
+      backoffLimit: {{ .spec.jobManage.backoffLimit }}
+      {{- end }}
+      {{- if .spec.jobManage.activeDDLSecs }}
+      activeDeadlineSeconds: {{ .spec.jobManage.activeDDLSecs }}
+      {{- end }}
+      {{- include "workload.podTemplate" . | nindent 6 }}

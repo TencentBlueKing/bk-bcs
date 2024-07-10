@@ -47,6 +47,7 @@
   import { AngleUpFill } from 'bkui-vue/lib/icon';
   import useGlobalStore from '../../../../../store/global';
   import useServiceStore from '../../../../../store/service';
+  import useConfigStoe from '../../../../../store/config';
   import { IAppItem } from '../../../../../../types/app';
   import { getAppList } from '../../../../../api';
   import { useI18n } from 'vue-i18n';
@@ -54,6 +55,8 @@
   const route = useRoute();
   const router = useRouter();
   const { t } = useI18n();
+
+  const configStore = useConfigStoe();
 
   const { appData } = storeToRefs(useServiceStore());
   const { showApplyPermDialog, permissionQuery } = storeToRefs(useGlobalStore());
@@ -123,6 +126,9 @@
   const handleAppChange = (id: number) => {
     const service = serviceList.value.find((service) => service.id === id);
     if (service) {
+      configStore.$patch((state) => {
+        state.conflictFileCount = 0;
+      });
       let name = route.name as string;
       if (route.name === 'init-script' && service.spec.config_type === 'kv') {
         name = 'service-config';

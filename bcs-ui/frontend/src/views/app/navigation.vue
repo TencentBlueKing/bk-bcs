@@ -6,13 +6,15 @@
       :need-menu="needMenu"
       :default-open="openSideMenu"
       :hover-enter-delay="300"
-      @toggle-click="handleToggleClickNav">
+      @toggle-click="handleToggleClickNav"
+      @hover="handleInitSliderListHeight"
+      @leave="handleInitSliderListHeight">
       <template #side-header>
-        <span class="title-icon"><img src="@/images/bcs.svg" class="w-[28px] h-[28px]"></span>
+        <span class="title-icon"><img :src="appLogo" class="w-[28px] h-[28px]"></span>
         <span
           class="title-desc cursor-pointer"
           @click="handleGoHome">
-          {{ $INTERNAL ? $t('bcs.TKEx.title') : $t('bcs.intro.title') }}
+          {{ appName }}
         </span>
       </template>
       <template #header>
@@ -146,19 +148,23 @@
   </div>
 </template>
 <script lang="ts">
+import jsonp from 'jsonp';
 import { computed, defineComponent, onBeforeUnmount, onMounted, reactive, ref, toRef } from 'vue';
 
 import PopoverSelector from '../../components/popover-selector.vue';
 
 import useMenu, { IMenu } from './use-menu';
 
-import { releaseNote, switchLanguage } from '@/api/modules/project';
+import { releaseNote } from '@/api/modules/project';
+import { setCookie } from '@/common/util';
 import BcsMd from '@/components/bcs-md/index.vue';
+import useCalcHeight from '@/composables/use-calc-height';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store';
 import SystemLog from '@/views/app/log.vue';
 import ProjectSelector from '@/views/app/project-selector.vue';
+import usePlatform from '@/composables/use-platform';
 
 export default defineComponent({
   name: 'NewNavigation',
@@ -169,7 +175,24 @@ export default defineComponent({
     PopoverSelector,
   },
   setup() {
+    const { init } = useCalcHeight([
+      {
+        prop: 'height',
+        el: '.nav-slider-list',
+        calc: ['#bcs-notice-com', '.bk-navigation-header', '.nav-slider-footer'],
+      },
+    ]);
+    // 修复nav悬浮时高度被组件内部覆盖问题
+    const handleInitSliderListHeight = () => {
+      setTimeout(() => {
+        init();
+      });
+    };
+
     const { menusData: menus } = useMenu();
+    const { config } = usePlatform();
+    const appLogo = computed(() => config.appLogo);
+    const appName = computed(() => config.i18n.name);
     const langs = ref([
       {
         icon: 'bk-icon icon-english',
@@ -180,8 +203,8 @@ export default defineComponent({
       {
         icon: 'bk-icon icon-chinese',
         name: '中文',
-        id: 'zh-CN',
-        locale: 'zh-CN', // cookie标识
+        id: 'zh-CN', // bcs 前端语言标识
+        locale: 'zh-cn', // cookie标识
       },
     ]);
     const curLang = computed(() => langs.value.find(item => item.id === $i18n.locale) || { id: 'zh-CN', icon: 'bk-icon icon-chinese' });
@@ -265,6 +288,7 @@ export default defineComponent({
     const openSideMenu = computed(() => $store.state.openSideMenu);
     const handleToggleClickNav = (value) => {
       $store.commit('updateOpenSideMenu', !!value);
+      handleInitSliderListHeight();
     };
     // 首页
     const handleGoHome = () => {
@@ -282,10 +306,16 @@ export default defineComponent({
     const handleChangeLang = async (item) => {
       // $i18n.locale = item.id;// 后面 $router.go(0) 会重新加载界面，这里会导致一瞬间被切换了，然后界面再刷新
       langRef.value?.hide();
-      await switchLanguage({
-        lang: item.locale,
-      });
-      await $router.go(0);
+      // 修改cookie
+      setCookie('blueking_language', item.locale, window.BK_DOMAIN);
+      // 修改用户管理语言
+      jsonp(
+        `${window.BK_USER_HOST}/api/c/compapi/v2/usermanage/fe_update_user_language/?language=${item.locale}`,
+        { param: 'callback', timeout: 100 },
+        () => {
+          $router.go(0);
+        },
+      );
     };
     // 帮助文档
     const handleGotoHelp  = () => {
@@ -308,7 +338,8 @@ export default defineComponent({
     };
     // 注销登录态
     const handleLogout = () => {
-      window.location.href = `${window.LOGIN_FULL}?c_url=${window.location}`;
+      // 注销登录只注销当前登录态，清除bk_token，不做登录弹窗
+      window.location.href = `${window.LOGIN_FULL}?is_from_logout=1&c_url=${encodeURIComponent(window.location.href)}`;
     };
 
     // release信息
@@ -337,6 +368,8 @@ export default defineComponent({
     });
 
     return {
+      appLogo,
+      appName,
       langRef,
       navRef,
       navItemRefs,
@@ -365,6 +398,7 @@ export default defineComponent({
       handleChangeMenu,
       resolveMenuLink,
       backToPreVersion,
+      handleInitSliderListHeight,
     };
   },
 });

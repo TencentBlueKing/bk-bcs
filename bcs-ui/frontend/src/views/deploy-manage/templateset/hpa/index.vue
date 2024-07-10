@@ -1,24 +1,27 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <!-- eslint-disable max-len -->
 <template>
-  <div class="biz-content">
-    <Header hide-back :title="$t('deploy.templateset.HPAManagement')" />
-    <div class="biz-content-wrapper" style="padding: 0;" v-bkloading="{ isLoading: isInitLoading }">
-      <div class="biz-panel-header">
-        <div class="left">
-          <bk-button @click.stop.prevent="removeHPAs">
-            <span>{{$t('generic.button.batchDelete')}}</span>
-          </bk-button>
-        </div>
-        <div class="right">
-          <ClusterSelectComb
-            :search.sync="searchKeyword"
-            :cluster-id.sync="searchScope"
-            cluster-type="all"
-            @search-change="searchHPA"
-            @refresh="refresh" />
-        </div>
-      </div>
+  <BcsContent hide-back :title="$t('deploy.templateset.HPAManagement')">
+    <div v-bkloading="{ isLoading: isInitLoading }">
+      <Row class="mb-[16px]">
+        <template #left>
+          <div class="left">
+            <bk-button @click.stop.prevent="removeHPAs">
+              <span>{{$t('generic.button.batchDelete')}}</span>
+            </bk-button>
+          </div>
+        </template>
+        <template #right>
+          <div class="right">
+            <ClusterSelectComb
+              :search.sync="searchKeyword"
+              :cluster-id.sync="searchScope"
+              cluster-type="all"
+              @search-change="searchHPA"
+              @refresh="refresh" />
+          </div>
+        </template>
+      </Row>
       <div class="biz-hpa biz-table-wrapper">
         <bk-table
           v-bkloading="{ isLoading: isPageLoading && !isInitLoading }"
@@ -114,7 +117,7 @@
         @hide-update="hideConditionsDialog">
       </conditions-dialog>
     </div>
-  </div>
+  </BcsContent>
 </template>
 
 <script>
@@ -122,13 +125,15 @@ import ConditionsDialog from './conditions-dialog';
 
 import { catchErrorHandler } from '@/common/util';
 import ClusterSelectComb from '@/components/cluster-selector/cluster-select-comb.vue';
-import Header from '@/components/layout/Header.vue';
+import BcsContent from '@/components/layout/Content.vue';
+import Row from '@/components/layout/Row.vue';
 
 export default {
   components: {
     ConditionsDialog,
-    Header,
+    BcsContent,
     ClusterSelectComb,
+    Row,
   },
   data() {
     return {

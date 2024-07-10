@@ -33,6 +33,10 @@ func ParseCJ(manifest map[string]interface{}) map[string]interface{} {
 
 // ParseCJSpec xxx
 func ParseCJSpec(manifest map[string]interface{}, spec *model.CJSpec) {
+	jobTemplatelabels, _ := mapx.GetItems(manifest, "spec.jobTemplate.metadata.labels")
+	common.ParseLabels(jobTemplatelabels, &spec.Labels.JobTemplatelabels)
+	templateLables, _ := mapx.GetItems(manifest, "spec.jobTemplate.spec.template.metadata.labels")
+	common.ParseLabels(templateLables, &spec.Labels.TemplateLabels)
 	ParseCJJobManage(manifest, &spec.JobManage)
 	tmplSpec, _ := mapx.GetItems(manifest, "spec.jobTemplate.spec.template.spec")
 	podSpec, _ := tmplSpec.(map[string]interface{})

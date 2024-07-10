@@ -55,7 +55,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref, onMounted } from 'vue';
+  import { ref, onMounted, watch } from 'vue';
   import { useRoute, useRouter } from 'vue-router';
   import { AngleUpFill, Search } from 'bkui-vue/lib/icon';
   import { getAppList } from '../../../../api';
@@ -84,11 +84,26 @@
   const serviceList = ref<IAppItem[]>([]);
   const heartbeatTime = ref(searchQuery.value.last_heartbeat_time);
   const heartbeatTimeList = ref(CLIENT_HEARTBEAT_LIST);
-  const selectorRef = ref();
 
   const bizId = ref(String(route.params.spaceId));
 
+  watch(
+    () => heartbeatTime.value,
+    (val) => {
+      router.replace({
+        query: {
+          ...route.query,
+          heartTime: val,
+        },
+      });
+    },
+  );
+
   onMounted(async () => {
+    if (Object.keys(route.query).find((key) => key === 'heartTime')) {
+      heartbeatTime.value = Number(route.query.heartTime) || searchQuery.value.last_heartbeat_time;
+      handleHeartbeatTimeChange(heartbeatTime.value);
+    }
     await loadServiceList();
     const service = serviceList.value.find((service) => service.id === Number(route.params.appId));
     if (service) {
@@ -126,11 +141,10 @@
         id: service.id!,
       };
     }
-    setLastSelectedClientService(appId);
-    heartbeatTime.value = 60;
-    handleHeartbeatTimeChange(60);
+    setLastAccessedService(appId);
     await router.push({ name: route.name!, params: { spaceId: bizId.value, appId } });
-    emits('search');
+    heartbeatTime.value = 1;
+    handleHeartbeatTimeChange(1);
   };
 
   const handleHeartbeatTimeChange = (value: number) => {
@@ -141,18 +155,19 @@
     emits('search');
   };
 
-  const setLastSelectedClientService = (appId: number) => {
-    localStorage.setItem('lastSelectedClientService', JSON.stringify({ spaceId: bizId.value, appId }));
+  const setLastAccessedService = (appId: number) => {
+    localStorage.setItem('lastAccessedServiceDetail', JSON.stringify({ spaceId: bizId.value, appId }));
   };
 </script>
 
 <style scoped lang="scss">
   .head {
-    position: relative;
+    display: flex;
     font-size: 20px;
     line-height: 28px;
-    height: 32px;
+    min-height: 32px;
     .head-left {
+      height: 32px;
       display: flex;
       align-items: center;
       .line {
@@ -164,7 +179,6 @@
       .title {
         position: relative;
         color: #313238;
-        font-weight: 700;
       }
       .service-selector {
         &.popover-show {
@@ -178,11 +192,16 @@
           }
         }
         .selector-trigger {
+          width: 260px;
+          height: 32px;
           cursor: pointer;
           display: flex;
           align-items: center;
+          border-radius: 2px;
+          transition: all 0.3s;
+          font-size: 20px;
           .app-name {
-            max-width: 150px;
+            max-width: 220px;
             color: #63656e;
           }
           .no-app {
@@ -190,8 +209,8 @@
             color: #c4c6cc;
           }
           .arrow-icon {
+            font-size: 16px;
             margin-left: 13.5px;
-            font-size: 14px;
             color: #979ba5;
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
           }
@@ -199,11 +218,8 @@
       }
     }
     .head-right {
-      position: absolute;
-      left: 27%;
-      top: 0;
+      margin-left: calc(27% - 393px);
       display: flex;
-      align-items: center;
       font-size: 12px;
       .selector-tips {
         min-width: 88px;

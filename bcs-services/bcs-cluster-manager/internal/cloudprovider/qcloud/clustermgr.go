@@ -29,8 +29,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/business"
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cidrmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -331,6 +329,43 @@ func checkIfWhiteImageOsNames(opt *cloudprovider.ClusterGroupOption) bool {
 	return utils.StringInSlice(osName, utils.WhiteImageOsName)
 }
 
+func clusterSupportNodeNum(tkeCls *tke.Cluster, cluster *proto.Cluster) (uint32, uint32, uint32) {
+	var (
+		ipNum          uint32
+		clusterCidrNum uint32
+	)
+	cidrs, err := business.GetCidrsFromCluster(tkeCls)
+	if err != nil {
+		blog.Errorf("clusterSupportNodeNum failed: %v", err)
+		return 0, 0, 0
+	}
+	for i := range cidrs {
+		if utils.StringInSlice(cidrs[i].Type, []string{utils.ClusterCIDR, utils.MultiClusterCIDR}) {
+			clusterCidrNum++
+			num, _ := cidrs[i].GetIPNum()
+			ipNum += num
+		}
+	}
+
+	// 已经存在的节点数量
+	clusterNodeNum := *tkeCls.ClusterNodeNum
+	if *tkeCls.ClusterType == icommon.ClusterManageTypeIndependent {
+		clusterNodeNum += *tkeCls.ClusterMaterNodeNum
+	}
+
+	// 集群可添加节点数
+	maxClusterNodeNum := float64(uint64(ipNum)-*tkeCls.ClusterNetworkSettings.MaxClusterServiceNum) /
+		float64(*tkeCls.ClusterNetworkSettings.MaxNodePodNum)
+
+	// 剩余可支持的节点数量
+	step := getClusterCidrStep(cluster)
+
+	surplusNodeNum := float64((business.GrBcsMaxClusterCidrNum-clusterCidrNum)*step) /
+		float64(*tkeCls.ClusterNetworkSettings.MaxNodePodNum)
+
+	return uint32(clusterNodeNum), uint32(maxClusterNodeNum) - uint32(clusterNodeNum), uint32(surplusNodeNum)
+}
+
 func updateClusterInfo(cloudID string, opt *cloudprovider.GetClusterOption) (*proto.Cluster, error) {
 	cls, err := getCloudCluster(cloudID, &opt.CommonOption)
 	if err != nil {
@@ -369,6 +404,23 @@ func updateClusterInfo(cloudID string, opt *cloudprovider.GetClusterOption) (*pr
 		opt.Cluster.ClusterBasicSettings.OS = *cls.ClusterOs
 		opt.Cluster.ExtraInfo[icommon.ImageProvider] = icommon.PublicImageProvider
 	}
+
+	// 计算集群可支持节点容量
+	currentNodeNum, supNodeNum, maxNodeNum := clusterSupportNodeNum(cls, opt.Cluster)
+	opt.Cluster.ExtraInfo[icommon.ClusterCurNodeNum] = fmt.Sprintf("%v", currentNodeNum)
+	opt.Cluster.ExtraInfo[icommon.ClusterSupNodeNum] = fmt.Sprintf("%v", supNodeNum)
+	opt.Cluster.ExtraInfo[icommon.ClusterMaxNodeNum] = fmt.Sprintf("%v", maxNodeNum)
+
+	if opt.Cluster.NetworkSettings == nil {
+		opt.Cluster.NetworkSettings = &proto.NetworkSetting{}
+	}
+	if opt.Cluster.NetworkSettings.SubnetSource == nil {
+		opt.Cluster.NetworkSettings.SubnetSource = &proto.SubnetSource{}
+	}
+
+	// 集群VPC-CNI模式子网信息
+	opt.Cluster.NetworkSettings.EnableVPCCni = business.GetClusterVpcCniStatus(cls)
+	opt.Cluster.NetworkSettings.EniSubnetIDs = business.GetClusterVpcCniSubnets(cls)
 
 	return opt.Cluster, nil
 }
@@ -511,17 +563,13 @@ func (c *Cluster) CheckClusterCidrAvailable(cls *proto.Cluster,
 		return true, nil
 	}
 
-	if options.GetEditionInfo().IsCommunicationEdition() || options.GetEditionInfo().IsEnterpriseEdition() {
-		return true, nil
-	}
-
 	// skip clusterCidr autoScale about some scene
 	if skipGlobalRouterCIDR(cls) {
 		blog.Infof("CheckClusterCidrAvailable skipGlobalRouterCIDR successful")
 		return true, nil
 	}
 
-	ipNum, err := getClusterCidrAvailableIPNum(cls)
+	_, ipNum, err := getClusterCidrAvailableIPNum(cls.ClusterID, cls.SystemID, &opt.CommonOption)
 	if err != nil {
 		return false, err
 	}
@@ -533,7 +581,7 @@ func (c *Cluster) CheckClusterCidrAvailable(cls *proto.Cluster,
 		return true, nil
 	}
 
-	cidrList, err := autoScaleClusterCidr(cls, sumIPNum-ipNum)
+	cidrList, err := autoScaleClusterCidr(opt.CommonOption, cls, sumIPNum-ipNum)
 	if err != nil {
 		return false, err
 	}
@@ -702,10 +750,65 @@ func (c *Cluster) AppendCloudNodeInfo(ctx context.Context,
 	return nil
 }
 
+func mergeSubnetSource(originSubs, newSubs []*proto.NewSubnet) []*proto.NewSubnet {
+	if originSubs == nil {
+		originSubs = make([]*proto.NewSubnet, 0)
+	}
+
+	originSubsMap := make(map[string]*proto.NewSubnet, 0)
+	for i := range originSubs {
+		originSubsMap[originSubs[i].GetZone()] = originSubs[i]
+	}
+
+	for i := range newSubs {
+		zone := newSubs[i].GetZone()
+
+		sub, ok := originSubsMap[zone]
+		if ok {
+			sub.IpCnt += newSubs[i].GetIpCnt()
+		} else {
+			originSubs = append(originSubs, &proto.NewSubnet{
+				Zone:  zone,
+				IpCnt: newSubs[i].GetIpCnt(),
+			})
+		}
+	}
+
+	return originSubs
+}
+
 // AddSubnetsToCluster add subnets to cluster
 func (c *Cluster) AddSubnetsToCluster(ctx context.Context, subnet *proto.SubnetSource,
 	opt *cloudprovider.AddSubnetsToClusterOption) error {
-	return cloudprovider.ErrCloudNotImplemented
+	if opt == nil || opt.Cluster == nil || opt.Account == nil || len(opt.Account.SecretID) == 0 ||
+		len(opt.Account.SecretKey) == 0 {
+		return fmt.Errorf("AddSubnetsToCluster lost cloud accoount")
+	}
+	if subnet == nil || len(subnet.GetNew()) == 0 {
+		return fmt.Errorf("AddSubnetsToCluster subnet data empty")
+	}
+
+	// 检测当前集群子网资源使用率, 如果使用率达标则继续扩容, 不达标则拒绝扩容
+	zoneSubnetRatio, _, _, err := business.GetClusterCurrentVpcCniSubnets(*opt.Cluster, false)
+	if err != nil {
+		return fmt.Errorf("AddSubnetsToCluster failed: %v", err)
+	}
+
+	goalRatio := opt.Cloud.GetNetworkInfo().GetUnderlayRatio()
+	for i := range subnet.GetNew() {
+		zoneRatio, ok := zoneSubnetRatio[subnet.GetNew()[i].GetZone()]
+		if ok && zoneRatio.Ratio < float64(goalRatio) {
+			return fmt.Errorf("zone[%s] usage lt goalRatio %+v%", subnet.GetNew()[i].GetZone(), goalRatio)
+		}
+	}
+
+	newClusterSubnets := mergeSubnetSource(opt.Cluster.GetNetworkSettings().GetSubnetSource().GetNew(), subnet.GetNew())
+	if opt.Cluster.NetworkSettings.SubnetSource == nil {
+		opt.Cluster.NetworkSettings.SubnetSource = &proto.SubnetSource{}
+	}
+
+	opt.Cluster.NetworkSettings.SubnetSource.New = newClusterSubnets
+	return cloudprovider.UpdateCluster(opt.Cluster)
 }
 
 // GetMasterSuggestedMachines get master suggested machines
@@ -767,69 +870,130 @@ func (c *Cluster) CheckIfGetNodesFromCluster(ctx context.Context, cluster *proto
 	return true
 }
 
-func getClusterCidrAvailableIPNum(cls *proto.Cluster) (uint32, error) {
-	cidrCli, conClose, err := cidrmanager.GetCidrClient().GetCidrManagerClient()
-	if err != nil {
-		return 0, err
-	}
-	defer func() {
-		if conClose != nil {
-			conClose()
-		}
-	}()
-
-	// get cluster container available IPNum
-	req := &cidrmanager.GetClusterIPSurplusRequest{
-		Region:    cls.Region,
-		CidrType:  utils.GlobalRouter.String(),
-		ClusterID: cls.SystemID,
-	}
-	resp, err := cidrCli.GetClusterIPSurplus(context.Background(), req)
-	if err != nil {
-		return 0, err
-	}
-	if resp.Code != 0 {
-		return 0, fmt.Errorf(resp.Message)
+// SwitchClusterNetwork switch cluster network mode
+func (c *Cluster) SwitchClusterNetwork(
+	cls *proto.Cluster, subnet *proto.SubnetSource, opt *cloudprovider.SwitchClusterNetworkOption) (*proto.Task, error) {
+	if opt == nil || opt.Account == nil || len(opt.Account.SecretID) == 0 ||
+		len(opt.Account.SecretKey) == 0 || len(opt.Region) == 0 {
+		return nil, fmt.Errorf("qcloud SwitchClusterNetwork lost authoration")
 	}
 
-	return resp.Data.IPSurplus, nil
-}
-
-// TKE cluster exist master clusterCIDR and multiCIDRList, multiCIDRList add length 4 CIDRs at most.
-// when scale tke cluster CIDRs at present, BCS use [step, step, 2 * step, xxx] rules, xxx need to manually assign
-func autoScaleClusterCidr(cls *proto.Cluster, needIPNum uint32) ([]string, error) {
-	cidrCli, conClose, err := cidrmanager.GetCidrClient().GetCidrManagerClient()
+	// GetTaskManager for cluster manager initialization
+	mgr, err := cloudprovider.GetTaskManager(opt.Cloud.CloudProvider)
 	if err != nil {
+		blog.Errorf("get cloud %s TaskManager when SwitchClusterNetwork %d failed, %s",
+			opt.Cloud.CloudID, cls.ClusterName, err.Error(),
+		)
 		return nil, err
 	}
-	defer func() {
-		if conClose != nil {
-			conClose()
-		}
-	}()
 
-	// not allow when assign full multiCIDR
-	if len(cls.NetworkSettings.MultiClusterCIDR) >= 3 {
-		return nil, fmt.Errorf("cluster[%s] scaleNodes exceed max cdir number", cls.ClusterID)
+	// build create cluster task
+	task, err := mgr.BuildSwitchClusterNetworkTask(cls, subnet, opt)
+	if err != nil {
+		blog.Errorf("build SwitchClusterNetwork task for cluster %s with cloudProvider %s failed, %s",
+			cls.ClusterName, cls.Provider, err.Error(),
+		)
+		return nil, err
+	}
+	return task, nil
+}
+
+// CheckClusterNetworkStatus check cluster network status
+func (c *Cluster) CheckClusterNetworkStatus(clusterId string,
+	opt *cloudprovider.CheckClusterNetworkStatusOption) (bool, error) {
+	if clusterId == "" {
+		return false, fmt.Errorf("cluster[%s] cloud systemId empty", opt.Cluster.ClusterID)
 	}
 
-	// auto scale cidr resource when addNodes
-	// previous clusters may be not set cidrStep
-	defaultCidrStep := cls.NetworkSettings.CidrStep
-	if defaultCidrStep <= 0 {
-		defaultCidrStep = func() uint32 {
-			if cls.Environment == "prod" {
-				return 4096
+	// get cloud cluster
+	cls, err := getCloudCluster(clusterId, &opt.CommonOption)
+	if err != nil {
+		blog.Errorf("Get Cluster %s failed, %s", clusterId, err.Error())
+		return false, err
+	}
+
+	if opt.Cluster.GetNetworkSettings().GetSubnetSource() == nil {
+		opt.Cluster.GetNetworkSettings().SubnetSource = &proto.SubnetSource{}
+	}
+
+	switch opt.Disable {
+	case true:
+		if !business.GetClusterVpcCniStatus(cls) {
+			opt.Cluster.NetworkSettings.EnableVPCCni = false
+			opt.Cluster.NetworkSettings.EniSubnetIDs = nil
+			opt.Cluster.NetworkSettings.SubnetSource.New = nil
+			opt.Cluster.NetworkSettings.Status = icommon.StatusRunning
+
+			return false, nil
+		}
+
+		// check subnets usage when close vpc-cni
+		opt.Cluster.NetworkSettings.EniSubnetIDs = nil
+		opt.Cluster.NetworkSettings.SubnetSource.New = nil
+	default:
+		if business.GetClusterVpcCniStatus(cls) {
+			opt.Cluster.NetworkSettings.EnableVPCCni = true
+			opt.Cluster.NetworkSettings.EniSubnetIDs = business.GetClusterVpcCniSubnets(cls)
+			opt.Cluster.NetworkSettings.Status = icommon.StatusRunning
+
+			zoneSubs, _, errLocal := business.GetClusterSubnetsZoneUsage(&opt.CommonOption,
+				business.GetClusterVpcCniSubnets(cls), true)
+			if errLocal != nil {
+				return false, errLocal
 			}
 
-			return 2048
-		}()
+			opt.Cluster.NetworkSettings.SubnetSource.New = func() []*proto.NewSubnet {
+				newSubnets := make([]*proto.NewSubnet, 0)
+				for zone, sub := range zoneSubs {
+					newSubnets = append(newSubnets, &proto.NewSubnet{
+						Zone:  zone,
+						IpCnt: uint32(sub.TotalIps),
+					})
+				}
+
+				return newSubnets
+			}()
+
+			return false, nil
+		}
+
+		if opt.Cluster.GetNetworkSettings().GetEnableVPCCni() {
+			return false,
+				fmt.Errorf("cluster %s/%s already open vpc-cni", opt.Cluster.ClusterID, opt.Cluster.ClusterName)
+		}
+		opt.Cluster.NetworkSettings.IsStaticIpMode = opt.IsStaticIpMode
+		opt.Cluster.NetworkSettings.ClaimExpiredSeconds = opt.ClaimExpiredSeconds
+		opt.Cluster.NetworkSettings.SubnetSource = opt.SubnetSource
+		if opt.Cluster.NetworkSettings.GetClaimExpiredSeconds() <= 0 {
+			opt.Cluster.NetworkSettings.ClaimExpiredSeconds = 300
+		}
 	}
+
+	return true, nil
+}
+
+func getClusterCidrAvailableIPNum(clusterId, tkeId string, option *cloudprovider.CommonOption) (uint32, uint32, error) {
+	return business.GetClusterGrIPSurplus(option, clusterId, tkeId)
+}
+
+// TKE cluster exist master clusterCIDR and multiCIDRList, multiCIDRList add length 9 CIDRs at most.
+// when scale tke cluster CIDRs at present,
+// BCS use [step, ..., step, xxx, xxx] 7 step rules, xxx need to manually assign
+func autoScaleClusterCidr(option cloudprovider.CommonOption, cls *proto.Cluster, needIPNum uint32) ([]string, error) {
+	// not allow when assign full multiCIDR
+	if len(cls.NetworkSettings.MultiClusterCIDR) >= utils.MultiClusterCIDRCnt {
+		return nil, fmt.Errorf("cluster[%s] scaleNodes exceed max cdir number[%v]", cls.ClusterID,
+			utils.MultiClusterCIDRCnt)
+	}
+
+	// auto scale cidr resource when addNodes previous clusters may be not set cidrStep
+	defaultCidrStep := getClusterCidrStep(cls)
 
 	// surPlusIPNum if enough
 	surPlusIPNum := getSurplusCidrNum(cls.NetworkSettings.MultiClusterCIDR, defaultCidrStep)
 	blog.Infof("cluster[%s] cloud[%s] CheckClusterCidrAvailable surPlusIPCount[%v] needIPCount[%v]",
 		cls.ClusterID, cloudName, surPlusIPNum, needIPNum)
+
 	if surPlusIPNum < needIPNum {
 		return nil, fmt.Errorf("cluster[%s] scaleNodes exceed max cdir number", cls.ClusterID)
 	}
@@ -839,10 +1003,10 @@ func autoScaleClusterCidr(cls *proto.Cluster, needIPNum uint32) ([]string, error
 		maskIPNum = make([]uint32, 0)
 		sumIPSum  uint32
 	)
-
 	for _, segNum := range getSurplusCidrList(cls.NetworkSettings.MultiClusterCIDR, defaultCidrStep) {
 		sumIPSum += segNum
 		maskIPNum = append(maskIPNum, utils.CalMaskLen(float64(segNum)))
+
 		if sumIPSum >= needIPNum {
 			break
 		}
@@ -850,26 +1014,23 @@ func autoScaleClusterCidr(cls *proto.Cluster, needIPNum uint32) ([]string, error
 	blog.Infof("cluster[%s] cloud[%s] CheckClusterCidrAvailable maskIPNum[%v]",
 		cls.ClusterID, cloudName, maskIPNum)
 
-	addResp, err := cidrCli.AddClusterCidr(context.Background(), &cidrmanager.AddClusterCidrRequest{
-		Region:    cls.Region,
-		CidrType:  utils.GlobalRouter.String(),
-		ClusterID: cls.SystemID,
-		CidrLens:  maskIPNum,
-	})
-	if err != nil {
-		return nil, err
-	}
-	if addResp.Code != 0 {
-		return nil, fmt.Errorf(addResp.Message)
-	}
-	cidrList := make([]string, 0)
-	for _, cidr := range addResp.Data.Cidrs {
-		if cidr.Type == utils.MultiClusterCIDR {
-			cidrList = append(cidrList, cidr.Ipnet)
-		}
+	return business.AddGrCidrsToCluster(&option, cls.GetVpcID(), cls, maskIPNum, nil)
+}
+
+func getClusterCidrStep(cls *proto.Cluster) uint32 {
+	defaultCidrStep := cls.NetworkSettings.CidrStep
+
+	if defaultCidrStep <= 0 {
+		defaultCidrStep = func() uint32 {
+			if cls.Environment == icommon.Prod {
+				return 4096
+			}
+
+			return 2048
+		}()
 	}
 
-	return cidrList, nil
+	return defaultCidrStep
 }
 
 func getTkeClusterNetworkType(cluster *tke.Cluster) string {
@@ -892,17 +1053,17 @@ func getTkeClusterNetworkType(cluster *tke.Cluster) string {
 }
 
 func getSurplusCidrList(mulList []string, step uint32) []uint32 {
-	defaultCIDRList := []uint32{step, step, 2 * step}
-	return defaultCIDRList[len(mulList):]
+	cidrList := make([]uint32, 0)
+
+	for i := len(mulList); i < utils.MultiClusterCIDRCnt; i++ {
+		cidrList = append(cidrList, step)
+	}
+
+	return cidrList
 }
 
 func getSurplusCidrNum(mulList []string, step uint32) uint32 {
-	defaultCIDRList := []uint32{step, step, 2 * step}
+	surplusCidrCnt := utils.MultiClusterCIDRCnt - len(mulList)
 
-	var ipSum uint32
-	for _, cidrIPNum := range defaultCIDRList[len(mulList):] {
-		ipSum += cidrIPNum
-	}
-
-	return ipSum
+	return step * uint32(surplusCidrCnt)
 }

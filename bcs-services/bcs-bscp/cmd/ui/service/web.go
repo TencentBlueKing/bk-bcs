@@ -44,7 +44,7 @@ type WebServer struct {
 	ctx               context.Context
 	srv               *http.Server
 	addr              string
-	addrIPv6          string
+	addrs             []string
 	embedWebServer    bscp.EmbedWebServer
 	discover          serviced.Discover
 	state             serviced.State
@@ -53,7 +53,7 @@ type WebServer struct {
 }
 
 // NewWebServer :
-func NewWebServer(ctx context.Context, addr string, addrIPv6 string) (*WebServer, error) {
+func NewWebServer(ctx context.Context, addr string, addrs []string) (*WebServer, error) {
 	etcdOpt, err := config.G.EtcdConf()
 	if err != nil {
 		return nil, fmt.Errorf("get etcd config failed, err: %v", err)
@@ -82,7 +82,7 @@ func NewWebServer(ctx context.Context, addr string, addrIPv6 string) (*WebServer
 	s := &WebServer{
 		ctx:               ctx,
 		addr:              addr,
-		addrIPv6:          addrIPv6,
+		addrs:             addrs,
 		discover:          dis,
 		state:             state,
 		embedWebServer:    bscp.NewEmbedWeb(),
@@ -102,12 +102,16 @@ func (s *WebServer) Run() error {
 	if err := dualStackListener.AddListenerWithAddr(s.addr); err != nil {
 		return err
 	}
+	klog.Infof("http server listen address: %s", s.addr)
 
-	if s.addrIPv6 != "" && s.addrIPv6 != s.addr {
-		if err := dualStackListener.AddListenerWithAddr(s.addrIPv6); err != nil {
+	for _, a := range s.addrs {
+		if a == s.addr {
+			continue
+		}
+		if err := dualStackListener.AddListenerWithAddr(a); err != nil {
 			return err
 		}
-		klog.Infof("api serve dualStackListener with ipv6: %s", s.addrIPv6)
+		klog.Infof("http serve listener with addr: %s", a)
 	}
 
 	return s.srv.Serve(dualStackListener)
@@ -171,19 +175,22 @@ func (s *WebServer) subRouter() http.Handler {
 
 	shouldProxyAPI := config.G.IsDevMode()
 	conf := &bscp.IndexConfig{
-		StaticURL:      path.Join(config.G.Web.RoutePrefix, "/web"),
-		RunEnv:         config.G.Base.RunEnv,
-		ProxyAPI:       shouldProxyAPI,
-		SiteURL:        config.G.Web.RoutePrefix,
-		APIURL:         config.G.Frontend.Host.BSCPAPIURL,
-		IAMHost:        config.G.Frontend.Host.BKIAMHost,
-		CMDBHost:       config.G.Frontend.Host.BKCMDBHost,
-		EnableBKNotice: config.G.Frontend.EnableBKNotice,
-		Helper:         config.G.Frontend.Helper,
+		StaticURL:            path.Join(config.G.Web.RoutePrefix, "/web"),
+		RunEnv:               config.G.Base.RunEnv,
+		ProxyAPI:             shouldProxyAPI,
+		SiteURL:              config.G.Web.RoutePrefix,
+		APIURL:               config.G.Frontend.Host.BSCPAPIURL,
+		IAMHost:              config.G.Frontend.Host.BKIAMHost,
+		CMDBHost:             config.G.Frontend.Host.BKCMDBHost,
+		BKSharedResBaseJSURL: config.G.Frontend.Host.BKSharedResBaseJSURL,
+		EnableBKNotice:       config.G.Frontend.EnableBKNotice,
+		Helper:               config.G.Frontend.Helper,
+		FeedAddr:             config.G.Base.FeedAddr,
+		NodeManHost:          config.G.Frontend.Host.BKNODEMANHOST,
 	}
 
 	if shouldProxyAPI {
-		r.Mount("/bscp", handler.ReverseProxyHandler("bscp_api", config.G.Web.Host))
+		r.Mount("/bscp", handler.ReverseProxyHandler("bscp_api", "", config.G.Web.Host))
 	}
 
 	r.With(metrics.RequestCollect("no_permission")).Get("/403.html",

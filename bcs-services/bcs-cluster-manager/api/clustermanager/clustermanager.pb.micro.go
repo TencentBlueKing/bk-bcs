@@ -139,6 +139,12 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "ClusterManager.SwitchClusterUnderlayNetwork",
+			Path:    []string{"/clustermanager/v1/clusters/{clusterID}/networks/underlay"},
+			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "ClusterManager.CreateVirtualCluster",
 			Path:    []string{"/clustermanager/v1/vcluster"},
 			Method:  []string{"POST"},
@@ -421,6 +427,12 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "ClusterManager.UpdateGroupAsTimeRange",
+			Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}/timerange"},
+			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "ClusterManager.GetExternalNodeScriptByGroupID",
 			Path:    []string{"/clustermanager/v1/nodegroups/{nodeGroupID}/script"},
 			Method:  []string{"GET"},
@@ -442,6 +454,12 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Name:    "ClusterManager.DisableNodeGroupAutoScale",
 			Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}/autoscale/disable"},
 			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "ClusterManager.GetProviderResourceUsage",
+			Path:    []string{"/clustermanager/v1/providers/{providerID}/resource_usage"},
+			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
 		{
@@ -894,6 +912,7 @@ type ClusterManagerService interface {
 	ListCluster(ctx context.Context, in *ListClusterReq, opts ...client.CallOption) (*ListClusterResp, error)
 	ListCommonCluster(ctx context.Context, in *ListCommonClusterReq, opts ...client.CallOption) (*ListCommonClusterResp, error)
 	AddSubnetToCluster(ctx context.Context, in *AddSubnetToClusterReq, opts ...client.CallOption) (*AddSubnetToClusterResp, error)
+	SwitchClusterUnderlayNetwork(ctx context.Context, in *SwitchClusterUnderlayNetworkReq, opts ...client.CallOption) (*SwitchClusterUnderlayNetworkResp, error)
 	CreateVirtualCluster(ctx context.Context, in *CreateVirtualClusterReq, opts ...client.CallOption) (*CreateVirtualClusterResp, error)
 	DeleteVirtualCluster(ctx context.Context, in *DeleteVirtualClusterReq, opts ...client.CallOption) (*DeleteVirtualClusterResp, error)
 	UpdateVirtualClusterQuota(ctx context.Context, in *UpdateVirtualClusterQuotaReq, opts ...client.CallOption) (*UpdateVirtualClusterQuotaResp, error)
@@ -947,10 +966,12 @@ type ClusterManagerService interface {
 	UpdateGroupDesiredNode(ctx context.Context, in *UpdateGroupDesiredNodeRequest, opts ...client.CallOption) (*UpdateGroupDesiredNodeResponse, error)
 	UpdateGroupDesiredSize(ctx context.Context, in *UpdateGroupDesiredSizeRequest, opts ...client.CallOption) (*UpdateGroupDesiredSizeResponse, error)
 	UpdateGroupMinMaxSize(ctx context.Context, in *UpdateGroupMinMaxSizeRequest, opts ...client.CallOption) (*UpdateGroupMinMaxSizeResponse, error)
+	UpdateGroupAsTimeRange(ctx context.Context, in *UpdateGroupAsTimeRangeRequest, opts ...client.CallOption) (*UpdateGroupAsTimeRangeResponse, error)
 	GetExternalNodeScriptByGroupID(ctx context.Context, in *GetExternalNodeScriptRequest, opts ...client.CallOption) (*GetExternalNodeScriptResponse, error)
 	TransNodeGroupToNodeTemplate(ctx context.Context, in *TransNodeGroupToNodeTemplateRequest, opts ...client.CallOption) (*TransNodeGroupToNodeTemplateResponse, error)
 	EnableNodeGroupAutoScale(ctx context.Context, in *EnableNodeGroupAutoScaleRequest, opts ...client.CallOption) (*EnableNodeGroupAutoScaleResponse, error)
 	DisableNodeGroupAutoScale(ctx context.Context, in *DisableNodeGroupAutoScaleRequest, opts ...client.CallOption) (*DisableNodeGroupAutoScaleResponse, error)
+	GetProviderResourceUsage(ctx context.Context, in *GetProviderResourceUsageRequest, opts ...client.CallOption) (*GetProviderResourceUsageResponse, error)
 	//* Task information management *
 	CreateTask(ctx context.Context, in *CreateTaskRequest, opts ...client.CallOption) (*CreateTaskResponse, error)
 	RetryTask(ctx context.Context, in *RetryTaskRequest, opts ...client.CallOption) (*RetryTaskResponse, error)
@@ -1223,6 +1244,16 @@ func (c *clusterManagerService) ListCommonCluster(ctx context.Context, in *ListC
 func (c *clusterManagerService) AddSubnetToCluster(ctx context.Context, in *AddSubnetToClusterReq, opts ...client.CallOption) (*AddSubnetToClusterResp, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.AddSubnetToCluster", in)
 	out := new(AddSubnetToClusterResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) SwitchClusterUnderlayNetwork(ctx context.Context, in *SwitchClusterUnderlayNetworkReq, opts ...client.CallOption) (*SwitchClusterUnderlayNetworkResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.SwitchClusterUnderlayNetwork", in)
+	out := new(SwitchClusterUnderlayNetworkResp)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -1700,6 +1731,16 @@ func (c *clusterManagerService) UpdateGroupMinMaxSize(ctx context.Context, in *U
 	return out, nil
 }
 
+func (c *clusterManagerService) UpdateGroupAsTimeRange(ctx context.Context, in *UpdateGroupAsTimeRangeRequest, opts ...client.CallOption) (*UpdateGroupAsTimeRangeResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.UpdateGroupAsTimeRange", in)
+	out := new(UpdateGroupAsTimeRangeResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *clusterManagerService) GetExternalNodeScriptByGroupID(ctx context.Context, in *GetExternalNodeScriptRequest, opts ...client.CallOption) (*GetExternalNodeScriptResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.GetExternalNodeScriptByGroupID", in)
 	out := new(GetExternalNodeScriptResponse)
@@ -1733,6 +1774,16 @@ func (c *clusterManagerService) EnableNodeGroupAutoScale(ctx context.Context, in
 func (c *clusterManagerService) DisableNodeGroupAutoScale(ctx context.Context, in *DisableNodeGroupAutoScaleRequest, opts ...client.CallOption) (*DisableNodeGroupAutoScaleResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.DisableNodeGroupAutoScale", in)
 	out := new(DisableNodeGroupAutoScaleResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) GetProviderResourceUsage(ctx context.Context, in *GetProviderResourceUsageRequest, opts ...client.CallOption) (*GetProviderResourceUsageResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.GetProviderResourceUsage", in)
+	out := new(GetProviderResourceUsageResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -2471,6 +2522,7 @@ type ClusterManagerHandler interface {
 	ListCluster(context.Context, *ListClusterReq, *ListClusterResp) error
 	ListCommonCluster(context.Context, *ListCommonClusterReq, *ListCommonClusterResp) error
 	AddSubnetToCluster(context.Context, *AddSubnetToClusterReq, *AddSubnetToClusterResp) error
+	SwitchClusterUnderlayNetwork(context.Context, *SwitchClusterUnderlayNetworkReq, *SwitchClusterUnderlayNetworkResp) error
 	CreateVirtualCluster(context.Context, *CreateVirtualClusterReq, *CreateVirtualClusterResp) error
 	DeleteVirtualCluster(context.Context, *DeleteVirtualClusterReq, *DeleteVirtualClusterResp) error
 	UpdateVirtualClusterQuota(context.Context, *UpdateVirtualClusterQuotaReq, *UpdateVirtualClusterQuotaResp) error
@@ -2524,10 +2576,12 @@ type ClusterManagerHandler interface {
 	UpdateGroupDesiredNode(context.Context, *UpdateGroupDesiredNodeRequest, *UpdateGroupDesiredNodeResponse) error
 	UpdateGroupDesiredSize(context.Context, *UpdateGroupDesiredSizeRequest, *UpdateGroupDesiredSizeResponse) error
 	UpdateGroupMinMaxSize(context.Context, *UpdateGroupMinMaxSizeRequest, *UpdateGroupMinMaxSizeResponse) error
+	UpdateGroupAsTimeRange(context.Context, *UpdateGroupAsTimeRangeRequest, *UpdateGroupAsTimeRangeResponse) error
 	GetExternalNodeScriptByGroupID(context.Context, *GetExternalNodeScriptRequest, *GetExternalNodeScriptResponse) error
 	TransNodeGroupToNodeTemplate(context.Context, *TransNodeGroupToNodeTemplateRequest, *TransNodeGroupToNodeTemplateResponse) error
 	EnableNodeGroupAutoScale(context.Context, *EnableNodeGroupAutoScaleRequest, *EnableNodeGroupAutoScaleResponse) error
 	DisableNodeGroupAutoScale(context.Context, *DisableNodeGroupAutoScaleRequest, *DisableNodeGroupAutoScaleResponse) error
+	GetProviderResourceUsage(context.Context, *GetProviderResourceUsageRequest, *GetProviderResourceUsageResponse) error
 	//* Task information management *
 	CreateTask(context.Context, *CreateTaskRequest, *CreateTaskResponse) error
 	RetryTask(context.Context, *RetryTaskRequest, *RetryTaskResponse) error
@@ -2644,6 +2698,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		ListCluster(ctx context.Context, in *ListClusterReq, out *ListClusterResp) error
 		ListCommonCluster(ctx context.Context, in *ListCommonClusterReq, out *ListCommonClusterResp) error
 		AddSubnetToCluster(ctx context.Context, in *AddSubnetToClusterReq, out *AddSubnetToClusterResp) error
+		SwitchClusterUnderlayNetwork(ctx context.Context, in *SwitchClusterUnderlayNetworkReq, out *SwitchClusterUnderlayNetworkResp) error
 		CreateVirtualCluster(ctx context.Context, in *CreateVirtualClusterReq, out *CreateVirtualClusterResp) error
 		DeleteVirtualCluster(ctx context.Context, in *DeleteVirtualClusterReq, out *DeleteVirtualClusterResp) error
 		UpdateVirtualClusterQuota(ctx context.Context, in *UpdateVirtualClusterQuotaReq, out *UpdateVirtualClusterQuotaResp) error
@@ -2691,10 +2746,12 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		UpdateGroupDesiredNode(ctx context.Context, in *UpdateGroupDesiredNodeRequest, out *UpdateGroupDesiredNodeResponse) error
 		UpdateGroupDesiredSize(ctx context.Context, in *UpdateGroupDesiredSizeRequest, out *UpdateGroupDesiredSizeResponse) error
 		UpdateGroupMinMaxSize(ctx context.Context, in *UpdateGroupMinMaxSizeRequest, out *UpdateGroupMinMaxSizeResponse) error
+		UpdateGroupAsTimeRange(ctx context.Context, in *UpdateGroupAsTimeRangeRequest, out *UpdateGroupAsTimeRangeResponse) error
 		GetExternalNodeScriptByGroupID(ctx context.Context, in *GetExternalNodeScriptRequest, out *GetExternalNodeScriptResponse) error
 		TransNodeGroupToNodeTemplate(ctx context.Context, in *TransNodeGroupToNodeTemplateRequest, out *TransNodeGroupToNodeTemplateResponse) error
 		EnableNodeGroupAutoScale(ctx context.Context, in *EnableNodeGroupAutoScaleRequest, out *EnableNodeGroupAutoScaleResponse) error
 		DisableNodeGroupAutoScale(ctx context.Context, in *DisableNodeGroupAutoScaleRequest, out *DisableNodeGroupAutoScaleResponse) error
+		GetProviderResourceUsage(ctx context.Context, in *GetProviderResourceUsageRequest, out *GetProviderResourceUsageResponse) error
 		CreateTask(ctx context.Context, in *CreateTaskRequest, out *CreateTaskResponse) error
 		RetryTask(ctx context.Context, in *RetryTaskRequest, out *RetryTaskResponse) error
 		SkipTask(ctx context.Context, in *SkipTaskRequest, out *SkipTaskResponse) error
@@ -2870,6 +2927,12 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.AddSubnetToCluster",
 		Path:    []string{"/clustermanager/v1/clusters/{clusterID}/subnets"},
+		Method:  []string{"POST"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.SwitchClusterUnderlayNetwork",
+		Path:    []string{"/clustermanager/v1/clusters/{clusterID}/networks/underlay"},
 		Method:  []string{"POST"},
 		Handler: "rpc",
 	}))
@@ -3156,6 +3219,12 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.UpdateGroupAsTimeRange",
+		Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}/timerange"},
+		Method:  []string{"POST"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.GetExternalNodeScriptByGroupID",
 		Path:    []string{"/clustermanager/v1/nodegroups/{nodeGroupID}/script"},
 		Method:  []string{"GET"},
@@ -3177,6 +3246,12 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Name:    "ClusterManager.DisableNodeGroupAutoScale",
 		Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}/autoscale/disable"},
 		Method:  []string{"POST"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.GetProviderResourceUsage",
+		Path:    []string{"/clustermanager/v1/providers/{providerID}/resource_usage"},
+		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -3680,6 +3755,10 @@ func (h *clusterManagerHandler) AddSubnetToCluster(ctx context.Context, in *AddS
 	return h.ClusterManagerHandler.AddSubnetToCluster(ctx, in, out)
 }
 
+func (h *clusterManagerHandler) SwitchClusterUnderlayNetwork(ctx context.Context, in *SwitchClusterUnderlayNetworkReq, out *SwitchClusterUnderlayNetworkResp) error {
+	return h.ClusterManagerHandler.SwitchClusterUnderlayNetwork(ctx, in, out)
+}
+
 func (h *clusterManagerHandler) CreateVirtualCluster(ctx context.Context, in *CreateVirtualClusterReq, out *CreateVirtualClusterResp) error {
 	return h.ClusterManagerHandler.CreateVirtualCluster(ctx, in, out)
 }
@@ -3868,6 +3947,10 @@ func (h *clusterManagerHandler) UpdateGroupMinMaxSize(ctx context.Context, in *U
 	return h.ClusterManagerHandler.UpdateGroupMinMaxSize(ctx, in, out)
 }
 
+func (h *clusterManagerHandler) UpdateGroupAsTimeRange(ctx context.Context, in *UpdateGroupAsTimeRangeRequest, out *UpdateGroupAsTimeRangeResponse) error {
+	return h.ClusterManagerHandler.UpdateGroupAsTimeRange(ctx, in, out)
+}
+
 func (h *clusterManagerHandler) GetExternalNodeScriptByGroupID(ctx context.Context, in *GetExternalNodeScriptRequest, out *GetExternalNodeScriptResponse) error {
 	return h.ClusterManagerHandler.GetExternalNodeScriptByGroupID(ctx, in, out)
 }
@@ -3882,6 +3965,10 @@ func (h *clusterManagerHandler) EnableNodeGroupAutoScale(ctx context.Context, in
 
 func (h *clusterManagerHandler) DisableNodeGroupAutoScale(ctx context.Context, in *DisableNodeGroupAutoScaleRequest, out *DisableNodeGroupAutoScaleResponse) error {
 	return h.ClusterManagerHandler.DisableNodeGroupAutoScale(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) GetProviderResourceUsage(ctx context.Context, in *GetProviderResourceUsageRequest, out *GetProviderResourceUsageResponse) error {
+	return h.ClusterManagerHandler.GetProviderResourceUsage(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) CreateTask(ctx context.Context, in *CreateTaskRequest, out *CreateTaskResponse) error {

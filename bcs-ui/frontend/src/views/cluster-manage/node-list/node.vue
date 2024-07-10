@@ -21,7 +21,7 @@
       </div>
     </bcs-alert>
     <!-- 修改节点转移模块 -->
-    <template v-if="['tencentCloud', 'tencentPublicCloud', 'gcpCloud', 'azureCloud'].includes(curSelectedCluster.provider || '')">
+    <template v-if="['tencentCloud', 'tencentPublicCloud', 'gcpCloud', 'azureCloud', 'huaweiCloud'].includes(curSelectedCluster.provider || '')">
       <div class="flex items-center text-[12px]">
         <div class="text-[#979BA5] bcs-border-tips" v-bk-tooltips="$t('tke.tips.transferNodeCMDBModule')">
           {{ $t('tke.label.nodeModule.text') }}
@@ -85,7 +85,7 @@
                   cluster_id: localClusterId
                 }
               }"
-              :disabled="isKubeConfigImportCluster || ['huaweiCloud'].includes(curSelectedCluster.provider || '')"
+              :disabled="isKubeConfigImportCluster || ['awsCloud'].includes(curSelectedCluster.provider || '')"
               @click="handleAddNode">
               {{$t('cluster.nodeList.create.text')}}
             </bcs-button>
@@ -198,6 +198,7 @@
         ref="tableRef"
         :key="tableKey"
         :pagination="pagination"
+        :row-key="(row) => row.nodeName"
         @filter-change="handleFilterChange"
         @page-change="pageChange"
         @page-limit-change="pageSizeChange">
@@ -1127,7 +1128,7 @@ export default defineComponent({
     // cloud私有节点
     const isCloudSelfNode = row => curSelectedCluster.value.clusterCategory === 'importer'
       && (curSelectedCluster.value.provider === 'gcpCloud' || curSelectedCluster.value.provider === 'azureCloud'
-      || curSelectedCluster.value.provider === 'huaweiCloud')
+      || curSelectedCluster.value.provider === 'huaweiCloud' || curSelectedCluster.value.provider === 'awsCloud')
       && !row.nodeGroupID;
     // 全量表格数据
     const tableData = ref<any[]>([]);
@@ -1813,7 +1814,7 @@ export default defineComponent({
         });
         logStatus = latestTask?.status;
         logSideDialogConf.value.taskData = taskData || [];
-        logSideDialogConf.value.taskID = latestTask.taskID;
+        logSideDialogConf.value.taskID = latestTask?.taskID || '';
       }
       if (['RUNNING', 'INITIALZING'].includes(logStatus)) {
         logIntervalStart();

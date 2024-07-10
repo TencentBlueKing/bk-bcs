@@ -113,11 +113,12 @@ export default defineComponent({
       part_failure: 'red',
       skip: 'red',
     };
+    const autoChangeActive = ref(true);
     const activeIndex = ref(0);
-    const watchOnce = watch(() => props.data, () => {
-      if (!props.data.length) return;
+    // 日志变化时自动更新当前active的步骤
+    watch(() => props.data, () => {
+      if (!props.data.length || !autoChangeActive.value) return;
       activeIndex.value = props.data.findIndex(item => ['INITIALZING', 'RUNNING', 'FAILURE'].includes(item.status)) || 0;
-      watchOnce?.();
     }, { deep: true, immediate: true });
     const curTaskRow = computed<Record<string, any>>(() => props.data?.[activeIndex.value] || {});
 
@@ -136,6 +137,7 @@ export default defineComponent({
 
     const handleRowClick = (row, event, column, rowIndex) => {
       activeIndex.value = rowIndex;
+      autoChangeActive.value = false;// 手动切换日志后取消自动active功能
     };
     const rowClass = ({ rowIndex }) => (activeIndex.value === rowIndex ? 'active-row' : 'normal-row');
 

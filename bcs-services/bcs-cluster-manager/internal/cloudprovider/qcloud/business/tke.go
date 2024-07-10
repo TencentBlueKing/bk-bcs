@@ -24,6 +24,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/avast/retry-go"
 	qcommon "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
+	tke "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tke/v20180525"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
@@ -33,6 +34,148 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
+
+// 集群相关接口
+
+// GetTkeCluster returns cluster by clusterId
+func GetTkeCluster(opt *cloudprovider.CommonOption, clusterId string) (*tke.Cluster, error) {
+	tkeCli, err := api.NewTkeClient(opt)
+	if err != nil {
+		return nil, err
+	}
+
+	cluster, err := tkeCli.GetTKECluster(clusterId)
+	if err != nil {
+		return nil, err
+	}
+	return cluster, nil
+}
+
+// GetClusterVpcCniStatus cluster vpc-cni status
+func GetClusterVpcCniStatus(cls *tke.Cluster) bool {
+	if cls != nil && cls.Property != nil {
+		if strings.Contains(*cls.Property, api.TKERouteEni) || strings.Contains(*cls.Property, api.TKEDirectEni) {
+			return true
+		}
+	}
+
+	return false
+}
+
+// GetClusterVpcCniSubnets cluster vpc-cni subnets
+func GetClusterVpcCniSubnets(cls *tke.Cluster) []string {
+	subnetIDs := make([]string, 0)
+
+	if cls != nil && cls.ClusterNetworkSettings != nil && len(cls.ClusterNetworkSettings.Subnets) > 0 {
+		for _, subnet := range cls.ClusterNetworkSettings.Subnets {
+			subnetIDs = append(subnetIDs, *subnet)
+		}
+	}
+
+	blog.Infof("getClusterVpcCniSubnets %v", subnetIDs)
+	return subnetIDs
+}
+
+// GetClusterSubnetsZoneUsage get cluster subnets zone usage
+func GetClusterSubnetsZoneUsage(cmOption *cloudprovider.CommonOption, subnetIds []string, extraIp bool) (
+	map[string]*ZoneSubnetRatio, float64, error) {
+	subnets, err := GetDrSubnetInfo(cmOption, subnetIds)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	zoneSubnetNum := make(map[string]*ZoneSubnetRatio, 0)
+	for i := range subnets {
+		if zoneSubnetNum[subnets[i].Zone] == nil {
+			zoneSubnetNum[subnets[i].Zone] = &ZoneSubnetRatio{}
+		}
+
+		if extraIp {
+			zoneSubnetNum[subnets[i].Zone].TotalIps += subnets[i].TotalIps + 3
+		} else {
+			zoneSubnetNum[subnets[i].Zone].TotalIps += subnets[i].TotalIps
+		}
+		zoneSubnetNum[subnets[i].Zone].AvailableIps += subnets[i].AvailableIps
+	}
+
+	var (
+		totalIps     uint64
+		availableIps uint64
+	)
+
+	for zone := range zoneSubnetNum {
+		zoneSubnetNum[zone].Ratio = 100 * (float64(zoneSubnetNum[zone].TotalIps-zoneSubnetNum[zone].AvailableIps) /
+			float64(zoneSubnetNum[zone].TotalIps))
+
+		totalIps += zoneSubnetNum[zone].TotalIps
+		availableIps += zoneSubnetNum[zone].AvailableIps
+	}
+
+	totalRatio := 100 * (float64(totalIps-availableIps) / float64(totalIps))
+
+	return zoneSubnetNum, totalRatio, nil
+}
+
+// ZoneSubnetRatio zone subnet ratio
+type ZoneSubnetRatio struct {
+	TotalIps     uint64
+	AvailableIps uint64
+	Ratio        float64
+}
+
+// GetClusterCurrentVpcCniSubnets get tke cluster subnets
+func GetClusterCurrentVpcCniSubnets(cls proto.Cluster, extraIp bool) (map[string]*ZoneSubnetRatio, float64, []string, error) {
+	cmOption, err := cloudprovider.GetCloudCmOptionByCluster(cls)
+	if err != nil {
+		return nil, 0, nil, err
+	}
+
+	tkeCls, err := GetTkeCluster(cmOption, cls.GetSystemID())
+	if err != nil {
+		return nil, 0, nil, err
+	}
+
+	if !GetClusterVpcCniStatus(tkeCls) {
+		return nil, 0, nil, fmt.Errorf("cluster not enable vpc-cni mode")
+	}
+
+	// 获取集群子网
+	subnetIds := GetClusterVpcCniSubnets(tkeCls)
+	if len(subnetIds) == 0 {
+		return nil, 0, nil, fmt.Errorf("clsuter[%s] subnets empty", cls.GetClusterID())
+	}
+
+	zoneSubnetNum, totalRatio, err := GetClusterSubnetsZoneUsage(cmOption, subnetIds, extraIp)
+	if err != nil {
+		return nil, 0, nil, err
+	}
+
+	return zoneSubnetNum, totalRatio, subnetIds, nil
+}
+
+// AddSubnetsToCluster add subnet to tke cluster
+func AddSubnetsToCluster(cls *proto.Cluster, subnets []string, opt *cloudprovider.CommonOption) error {
+	client, err := api.NewTkeClient(opt)
+	if err != nil {
+		return err
+	}
+
+	err = client.AddVpcCniSubnets(&api.AddVpcCniSubnetsInput{
+		ClusterID: cls.GetSystemID(),
+		VpcID:     cls.GetVpcID(),
+		SubnetIDs: subnets,
+	})
+	if err != nil {
+		blog.Errorf("AddSubnetsToCluster[%s] failed:%v", cls.GetClusterID(), err)
+		return err
+	}
+	if cls.GetNetworkSettings().GetEniSubnetIDs() == nil {
+		cls.GetNetworkSettings().EniSubnetIDs = make([]string, 0)
+	}
+
+	cls.GetNetworkSettings().EniSubnetIDs = append(cls.GetNetworkSettings().EniSubnetIDs, subnets...)
+	return cloudprovider.GetStorageModel().UpdateCluster(context.Background(), cls)
+}
 
 // 集群下架节点
 

@@ -195,6 +195,15 @@ const (
 	// RegionName regionName
 	RegionName = "regionName"
 
+	// ClusterCurNodeNum cluster current node num
+	ClusterCurNodeNum = "clusterCurNodeNum"
+	// ClusterSupNodeNum support node num
+	ClusterSupNodeNum = "clusterSupNodeNum"
+	// ClusterMaxNodeNum max node num
+	ClusterMaxNodeNum = "clusterMaxNodeNum"
+	// ClusterNodeNum cluster node num
+	ClusterNodeNum = "clusterNodeNum"
+
 	// ShowSharedCluster flag show shared cluster
 	ShowSharedCluster = "showSharedCluster"
 	// VClusterNetworkKey xxx
@@ -353,6 +362,11 @@ const (
 	StatusNodeUnknown = "UNKNOWN"
 	// StatusNodeNotReady node not ready
 	StatusNodeNotReady = "NOTREADY"
+
+	// NodeChildStatus node child status
+	NodeChildStatus = "child_status"
+	// StatusCheckNodeFailed check node status failure
+	StatusCheckNodeFailed = "CHECK-FAILURE"
 
 	// StatusDeleteNodeGroupFailed xxx
 	StatusDeleteNodeGroupFailed = "DELETE-FAILURE"

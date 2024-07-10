@@ -53,6 +53,80 @@ func (s *repoService) UploadFile(w http.ResponseWriter, r *http.Request) {
 	render.Render(w, r, rest.OKRender(metadata))
 }
 
+// InitMultipartUploadFile init multipart upload to repo provider
+func (s *repoService) InitMultipartUploadFile(w http.ResponseWriter, r *http.Request) {
+	kt := kit.MustGetKit(r.Context())
+
+	sign, err := repository.GetFileSign(r)
+	if err != nil {
+		render.Render(w, r, rest.BadRequest(err))
+		return
+	}
+
+	uploadID, err := s.provider.InitMultipartUpload(kt, sign)
+	if err != nil {
+		render.Render(w, r, rest.BadRequest(err))
+		return
+	}
+
+	render.Render(w, r, rest.OKRender(uploadID))
+}
+
+// MultipartUploadFile multipart upload to repo provider
+func (s *repoService) MultipartUploadFile(w http.ResponseWriter, r *http.Request) {
+	kt := kit.MustGetKit(r.Context())
+
+	sign, err := repository.GetFileSign(r)
+	if err != nil {
+		render.Render(w, r, rest.BadRequest(err))
+		return
+	}
+
+	uploadID, err := repository.GetMultipartUploadID(r)
+	if err != nil {
+		render.Render(w, r, rest.BadRequest(err))
+		return
+	}
+
+	partNum, err := repository.GetPartNum(r)
+	if err != nil {
+		render.Render(w, r, rest.BadRequest(err))
+		return
+	}
+
+	if err := s.provider.MultipartUpload(kt, sign, uploadID, partNum, r.Body); err != nil {
+		render.Render(w, r, rest.BadRequest(err))
+		return
+	}
+
+	render.Render(w, r, rest.OKRender(nil))
+}
+
+// CompleteMultipartUploadFile complete multipart upload to repo provider
+func (s *repoService) CompleteMultipartUploadFile(w http.ResponseWriter, r *http.Request) {
+	kt := kit.MustGetKit(r.Context())
+
+	sign, err := repository.GetFileSign(r)
+	if err != nil {
+		render.Render(w, r, rest.BadRequest(err))
+		return
+	}
+
+	uploadID, err := repository.GetMultipartUploadID(r)
+	if err != nil {
+		render.Render(w, r, rest.BadRequest(err))
+		return
+	}
+
+	metadata, err := s.provider.CompleteMultipartUpload(kt, sign, uploadID)
+	if err != nil {
+		render.Render(w, r, rest.BadRequest(err))
+		return
+	}
+
+	render.Render(w, r, rest.OKRender(metadata))
+}
+
 // DownloadFile download file from provider repo
 func (s *repoService) DownloadFile(w http.ResponseWriter, r *http.Request) {
 	kt := kit.MustGetKit(r.Context())

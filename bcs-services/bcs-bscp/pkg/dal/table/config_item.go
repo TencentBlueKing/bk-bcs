@@ -19,7 +19,6 @@ import (
 	"time"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/enumor"
-	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
 )
 
@@ -32,18 +31,6 @@ var ConfigItemColumnDescriptor = mergeColumnDescriptors("",
 	mergeColumnDescriptors("spec", CISpecColumnDescriptor),
 	mergeColumnDescriptors("attachment", CIAttachmentColumnDescriptor),
 	mergeColumnDescriptors("revision", RevisionColumnDescriptor))
-
-// maxConfigItemsLimitForApp defines the max limit of config item for an app for user to create.
-const maxConfigItemsLimitForApp = 2000
-
-// ValidateAppCINumber verify whether the current number of app config items has reached the maximum.
-func ValidateAppCINumber(count int64) error {
-	if count > maxConfigItemsLimitForApp {
-		return errf.New(errf.InvalidParameter, fmt.Sprintf("an application only create %d config items",
-			maxConfigItemsLimitForApp))
-	}
-	return nil
-}
 
 // ConfigItem defines a basic configuration item
 type ConfigItem struct {

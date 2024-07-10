@@ -18,8 +18,13 @@ import (
 	"math/rand"
 	"sort"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-nodegroup-manager/pkg/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-nodegroup-manager/pkg/storage"
 )
+
+const defaultClusterLimit = 2000
 
 // balancer try to partition specified number to N units.
 // it designs for allocating resources into different elastic nodegroups.
@@ -150,4 +155,121 @@ func (balance *weightBalancer) distribute(n int) []*nodeGroup {
 		totalLimit--
 	}
 	return balance.nodes
+}
+
+type limitBalancer struct {
+	nodeGroups  []*nodeGroup
+	totalWeight int
+}
+
+func newLimitBalancer(nodeGroups map[string]*storage.NodeGroup, buffer map[string]*storage.NodegroupBuffer,
+	groupInfo []*storage.GroupInfo, deviceTotal int, clusterCli cluster.Client) balancer {
+	// sort nodegroup according their weights
+	sort.SliceStable(groupInfo, func(i int, j int) bool {
+		return groupInfo[i].Weight < groupInfo[j].Weight
+	})
+
+	nodes := make([]*nodeGroup, 0)
+	totalWeight := 0
+	for _, ng := range groupInfo {
+		n := &nodeGroup{
+			GroupInfo: *ng,
+			partition: 0,
+		}
+		if ng.Limit != nil && (ng.Limit.ClusterLimit || ng.Limit.NodegroupLimit) {
+			n.limitation = getNodegroupLimitCount(ng.Limit, clusterCli, nodeGroups[ng.NodeGroupID])
+		} else {
+			n.limitation = deviceTotal - nodeGroups[ng.NodeGroupID].CmDesiredSize
+		}
+		if len(buffer) != 0 && buffer[ng.NodeGroupID] != nil {
+			n.limitation = getLimitWithBuffer(buffer[ng.NodeGroupID], n.limitation,
+				deviceTotal, nodeGroups[ng.NodeGroupID].CmDesiredSize)
+		}
+		nodes = append(nodes, n)
+		totalWeight += ng.Weight
+	}
+	return &limitBalancer{
+		nodeGroups:  nodes,
+		totalWeight: totalWeight,
+	}
+}
+
+func (balancer *limitBalancer) distribute(n int) []*nodeGroup {
+	total := 0
+	distn := float64(n)
+	for _, node := range balancer.nodeGroups {
+		node.partition = int(math.Floor(distn * float64(node.Weight) / float64(balancer.totalWeight)))
+		if node.partition >= node.limitation {
+			node.partition = node.limitation
+		}
+		total += node.partition
+	}
+	// add left resource to max weight node simply
+	left := n - total
+	if left > 0 {
+		for index := len(balancer.nodeGroups) - 1; index >= 0; index-- {
+			if balancer.nodeGroups[index].partition+left > balancer.nodeGroups[index].limitation {
+				left -= balancer.nodeGroups[index].limitation - balancer.nodeGroups[index].partition
+				balancer.nodeGroups[index].partition = balancer.nodeGroups[index].limitation
+				continue
+			}
+			balancer.nodeGroups[len(balancer.nodeGroups)-1].partition += left
+		}
+	}
+	return balancer.nodeGroups
+}
+
+func getNodegroupLimitCount(limit *storage.NodegroupLimit, clusterCli cluster.Client, ng *storage.NodeGroup) int {
+	if limit.ClusterLimit {
+		clusterNode, err := clusterCli.ListClusterNodes(ng.ClusterID)
+		if err != nil {
+			blog.Errorf("get cluster %s node count failed:%s", ng.ClusterID, err.Error())
+			return 0
+		}
+		clusterLimitCount := limit.ClusterLimitNum
+		if clusterLimitCount == 0 {
+			clusterLimitCount = defaultClusterLimit
+		}
+		clusterNodeBuffer := int(clusterLimitCount) - len(clusterNode)
+		if clusterNodeBuffer < 0 {
+			clusterNodeBuffer = 0
+		}
+		if limit.NodegroupLimit {
+			nodegroupBuffer := int(limit.NodegroupLimitNum) - ng.CmDesiredSize
+			if limit.NodegroupLimitNum == 0 {
+				nodegroupBuffer = ng.MaxSize - ng.CmDesiredSize
+			}
+			if nodegroupBuffer <= 0 {
+				return 0
+			}
+			if nodegroupBuffer <= clusterNodeBuffer {
+				return nodegroupBuffer
+			}
+			return clusterNodeBuffer
+		}
+		return clusterNodeBuffer
+	}
+	nodegroupLimitNum := limit.NodegroupLimitNum
+	if nodegroupLimitNum == 0 {
+		nodegroupLimitNum = int32(ng.MaxSize)
+	}
+	if int(nodegroupLimitNum)-ng.CmDesiredSize <= 0 || int(nodegroupLimitNum)-ng.DesiredSize <= 0 {
+		return 0
+	}
+	return int(nodegroupLimitNum) - ng.CmDesiredSize
+}
+
+func getLimitWithBuffer(buffer *storage.NodegroupBuffer, originLimit, deviceTotal, desireSize int) int {
+	percentBuffer := int(math.Floor(float64(buffer.Percent) * float64(deviceTotal) / 100))
+	countBuffer := int(buffer.Count)
+	if percentBuffer > countBuffer {
+		countBuffer = percentBuffer
+	}
+	if countBuffer < desireSize+originLimit {
+		if countBuffer-desireSize <= 0 {
+			return 0
+		}
+		return countBuffer - desireSize
+	}
+	return originLimit
 }

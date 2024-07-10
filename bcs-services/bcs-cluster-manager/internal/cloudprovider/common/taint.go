@@ -84,6 +84,7 @@ func RemoveClusterNodesInnerTaintTask(taskID string, stepName string) error {
 	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
 	// inject success nodesNames
 	nodeNames := strings.Split(state.Task.CommonParams[cloudprovider.NodeNamesKey.String()], ",")
+	removeTaints := strings.Split(state.Task.CommonParams[cloudprovider.RemoveTaintsKey.String()], ",")
 
 	if len(clusterID) == 0 || len(nodeGroupID) == 0 || len(cloudID) == 0 || len(nodeNames) == 0 {
 		blog.Errorf("RemoveClusterNodesTaintTask[%s]: check parameter validate failed", taskID)
@@ -104,7 +105,7 @@ func RemoveClusterNodesInnerTaintTask(taskID string, stepName string) error {
 	}
 
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
-	err = removeClusterNodesTaint(ctx, dependInfo.Cluster.ClusterID, nodeNames)
+	err = removeClusterNodesTaint(ctx, dependInfo.Cluster.ClusterID, nodeNames, removeTaints)
 	if err != nil {
 		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
 			fmt.Sprintf("remove cluster nodes taint failed [%s]", err))
@@ -126,7 +127,7 @@ func RemoveClusterNodesInnerTaintTask(taskID string, stepName string) error {
 	return nil
 }
 
-func removeClusterNodesTaint(ctx context.Context, clusterID string, nodeNames []string) error {
+func removeClusterNodesTaint(ctx context.Context, clusterID string, nodeNames, removeTaints []string) error {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
 	k8sOperator := clusterops.NewK8SOperator(options.GetGlobalCMOptions(), cloudprovider.GetStorageModel())
@@ -144,7 +145,7 @@ func removeClusterNodesTaint(ctx context.Context, clusterID string, nodeNames []
 
 		newTaints := make([]corev1.Taint, 0)
 		for _, taint := range node.Spec.Taints {
-			if taint.Key != cutils.BCSNodeGroupTaintKey {
+			if !utils.SliceContainInString(removeTaints, taint.Key) && taint.Key != cutils.BCSNodeGroupTaintKey {
 				newTaints = append(newTaints, taint)
 			}
 		}

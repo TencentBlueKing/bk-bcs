@@ -1,6 +1,10 @@
 <template>
   <div ref="canvasRef" class="canvas-wrap">
-    <Tooltip ref="tooltipRef" @jump="emits('jump', labelValue)" />
+    <Tooltip
+      ref="tooltipRef"
+      :need-down-icon="!!drillDownDemension && !isShowSunburst && !isDrillDown"
+      :down="drillDownDemension"
+      @jump="emits('jump', { label: jumpLabels, drillDownVal: drillDownVal })" />
   </div>
 </template>
 
@@ -21,6 +25,10 @@
     value: number;
     percent: number;
     children?: ISunburstChildrenType[];
+    primary_val?: string;
+    primary_key?: string;
+    foreign_key?: string;
+    foreign_val?: string;
   }
 
   const { t } = useI18n();
@@ -30,16 +38,19 @@
     bkBizId: string;
     appId: number;
     isShowSunburst: boolean;
+    drillDownDemension: string;
+    isDrillDown: boolean;
   }>();
 
-  const emits = defineEmits(['jump']);
+  const emits = defineEmits(['jump', 'drillDown']);
 
   let piePlot: Pie | null;
   let sunburstPlot: Sunburst | null;
   const canvasRef = ref<HTMLElement>();
   const tooltipRef = ref();
-  const labelValue = ref('');
+  const drillDownVal = ref('');
   const sunburstData = ref<ISunburstDataType>();
+  const jumpLabels = ref<{ [key: string]: string }>();
 
   watch(
     () => props.data,
@@ -88,18 +99,24 @@
         autoRotate: false,
       },
       tooltip: {
-        fields: ['count', 'percent'],
+        fields: ['count', 'percent', 'primary_key', 'primary_val', 'foreign_key', 'foreign_val'],
+        customItems: (originalItems: any[]) => {
+          const datum = originalItems[0].data as IClientLabelItem;
+          if (datum.foreign_val === datum.primary_key) {
+            jumpLabels.value = { [datum.primary_key]: datum.primary_val };
+          } else {
+            jumpLabels.value = { [datum.primary_key]: datum.primary_val, [datum.foreign_key]: datum.foreign_val };
+          }
+          drillDownVal.value = originalItems[0].title;
+          originalItems[0].name = t('客户端数量');
+          originalItems[1].name = t('占比');
+          originalItems[1].value = `${(originalItems[1].value * 100).toFixed(1)}%`;
+          return originalItems.slice(0, 2);
+        },
         showTitle: true,
         title: 'primary_val',
         container: tooltipRef.value?.getDom(),
         enterable: true,
-        customItems: (originalItems: any[]) => {
-          labelValue.value = originalItems[0].title;
-          originalItems[0].name = t('客户端数量');
-          originalItems[1].name = t('占比');
-          originalItems[1].value = `${(originalItems[1].value * 100).toFixed(1)}%`;
-          return originalItems;
-        },
       },
       interactions: [{ type: 'element-highlight' }],
       state: {
@@ -117,6 +134,10 @@
         maxWidth: 300,
         reversed: true,
       },
+    });
+    piePlot.on('plot:click', (e: any) => {
+      if (!e.data) return;
+      emits('drillDown', e.data.data as IClientLabelItem);
     });
     piePlot.render();
   };
@@ -149,9 +170,16 @@
         fields: ['value', 'name'],
         showTitle: true,
         title: 'name',
-        container: tooltipRef.value?.getDom(),
         enterable: true,
+        container: tooltipRef.value?.getDom(),
         customItems: (originalItems: any[]) => {
+          const datum = originalItems[0].data.data as IClientLabelItem;
+          if (datum.foreign_val) {
+            jumpLabels.value = { [datum.primary_key]: datum.primary_val, [datum.foreign_key]: datum.foreign_val };
+          } else {
+            jumpLabels.value = { [datum.primary_key]: datum.primary_val };
+          }
+          drillDownVal.value = originalItems[0].title;
           originalItems[0].marker = false;
           originalItems[0].name = t('客户端数量');
           originalItems[1].name = t('占比');
@@ -170,16 +198,20 @@
     const tree: ISunburstChildrenType[] = [];
     let sunburstTitle = '';
     data.forEach((item) => {
-      const { primary_val, primary_key, foreign_val, percent, count } = item;
+      const { primary_val, primary_key, foreign_val, percent, count, foreign_key } = item;
       let typeNode = tree.find((node) => node.name === primary_val);
       if (!typeNode) {
-        typeNode = { name: primary_val!, children: [], percent: 0, value: 0 };
+        typeNode = { name: primary_val!, children: [], percent: 0, value: 0, primary_key, primary_val };
         tree.push(typeNode);
       }
       const versionNode: ISunburstChildrenType = {
         name: foreign_val,
         percent,
         value: count,
+        primary_val,
+        primary_key,
+        foreign_key,
+        foreign_val,
       };
       typeNode.children?.push(versionNode);
       typeNode.value += count;
@@ -195,7 +227,6 @@
 
 <style lang="scss" scoped>
   :deep(.g2-tooltip) {
-    visibility: hidden;
     .g2-tooltip-title {
       padding-left: 16px;
       font-size: 14px;

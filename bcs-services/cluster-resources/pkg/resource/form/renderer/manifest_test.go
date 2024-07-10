@@ -91,7 +91,7 @@ func TestManifestRenderer(t *testing.T) {
 	formData := workload.ParseDeploy(deployManifest4RenderTest)
 	ctx := context.WithValue(context.TODO(), ctxkey.UsernameKey, envs.AnonymousUsername)
 	manifest, err := NewManifestRenderer(
-		ctx, formData, envs.TestClusterID, resCsts.Deploy, resCsts.UpdateAction,
+		ctx, formData, envs.TestClusterID, "", resCsts.Deploy, resCsts.UpdateAction, false,
 	).Render()
 	assert.Nil(t, err)
 
@@ -168,7 +168,8 @@ func TestManifestRenderByPipe(t *testing.T) {
 		// 根据表单数据渲染的结果
 		formDataMap := structs.Map(data.formData)
 		resKind := mapx.GetStr(formDataMap, "metadata.kind")
-		result, err := NewManifestRenderer(ctx, formDataMap, envs.TestClusterID, resKind, resCsts.UpdateAction).Render()
+		result, err := NewManifestRenderer(ctx, formDataMap, envs.TestClusterID, "", resKind, resCsts.UpdateAction,
+			false).Render()
 		assert.Nil(t, err, "kind [%s] manifest render failed: %v", resKind, err)
 
 		// 做对比确保一致（在同步随机名称后）

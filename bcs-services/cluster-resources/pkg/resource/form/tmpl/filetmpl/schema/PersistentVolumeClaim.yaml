@@ -1,0 +1,126 @@
+title: persistentVolumeClaim
+type: object
+properties:
+  {{- include "common.metadata" . | indent 2 }}
+  spec:
+    title: {{ i18n "配置信息" .lang }}
+    type: object
+    required:
+      - accessModes
+      - pvName
+      - storageSize
+    properties:
+      claimType:
+        title: {{ i18n "卷声明类型" .lang }}
+        type: string
+        default: createBySC
+        {{- if eq .clusterType "Shared" }}
+        description: {{ i18n "共享集群暂不支持使用已存在的持久卷" .lang }}
+        {{- end }}
+        ui:component:
+          name: radio
+          props:
+            disabled: {{ eq .action "update" }}
+            visible: {{ eq .action "create" }}
+            datasource:
+              - label: {{ i18n "指定存储类以创建持久卷" .lang }}
+                value: createBySC
+              - label: {{ i18n "使用已存在的持久卷" .lang }}
+                value: useExistPV
+                {{- if eq .clusterType "Shared" }}
+                disabled: true
+                {{- end }}
+        ui:reactions:
+          - target: spec.pvName
+            if: "{{`{{`}} $self.value === 'useExistPV' {{`}}`}}"
+            then:
+              state:
+                visible: true
+            else:
+              state:
+                visible: false
+          - target: spec.scName
+            if: "{{`{{`}} $self.value === 'createBySC' {{`}}`}}"
+            then:
+              state:
+                visible: true
+            else:
+              state:
+                visible: false
+        ui:rules:
+          - required
+      pvName:
+        title: {{ i18n "持久卷名称" .lang }}
+        type: string
+        ui:component:
+          props:
+            clearable: false
+            disabled: {{ eq .action "update" }}
+        ui:reactions:
+          - lifetime: init
+            then:
+              actions:
+                - "{{`{{`}} $loadDataSource {{`}}`}}"
+        ui:rules:
+          - validator: "{{`{{`}} $self.getValue('spec.claimType') !== 'useExistPV' || $self.value {{`}}`}}"
+            message: {{ i18n "值不能为空" .lang }}
+      scName:
+        title: {{ i18n "存储类名称" .lang }}
+        type: string
+        description: {{ i18n "留空将使用默认 StorageClass" .lang }}
+        ui:component:
+          props:
+            disabled: {{ eq .action "update" }}
+        ui:reactions:
+          - lifetime: init
+            then:
+              actions:
+                - "{{`{{`}} $loadDataSource {{`}}`}}"
+      storageSize:
+        title: {{ i18n "容量" .lang }}
+        type: integer
+        default: 10
+        ui:component:
+          name: bfInput
+          props:
+            disabled: {{ eq .action "update" }}
+            min: 1
+            max: 4096
+            unit: Gi
+        ui:rules:
+          - validator: "{{`{{`}} $self.value !== 0 {{`}}`}}"
+            message: {{ i18n "值不能为零" .lang }}
+      accessModes:
+        title: {{ i18n "访问模式" .lang }}
+        type: array
+        items:
+          type: string
+        ui:component:
+          name: select
+          props:
+            clearable: true
+            searchable: true
+            disabled: {{ eq .action "update" }}
+            datasource:
+              - label: ReadWriteOnce
+                value: ReadWriteOnce
+              - label: ReadOnlyMany
+                value: ReadOnlyMany
+              - label: ReadWriteMany
+                value: ReadWriteMany
+        ui:rules:
+          - validator: "{{`{{`}} $self.value.length > 0 {{`}}`}}"
+            message: {{ i18n "至少选择一个 AccessMode" .lang }}
+    ui:order:
+      - claimType
+      - pvName
+      - scName
+      - storageSize
+      - accessModes
+    ui:group:
+      props:
+        border: false
+        showTitle: true
+        type: card
+        verifiable: true
+        hideEmptyRow: true

@@ -8,7 +8,7 @@
     <div class="slider-content-container">
       <div class="package-configs-pick">
         <div class="search-wrapper">
-          <SearchInput v-model="searchStr" :placeholder="t('配置文件名称/路径/描述')" @search="handleSearch" />
+          <SearchInput v-model="searchStr" :placeholder="t('配置文件绝对路径/描述')" @search="handleSearch" />
         </div>
         <div class="package-tables">
           <PackageTable
@@ -120,11 +120,15 @@
       packageGroups.value.forEach((pkg) => {
         const matchedConfigs = pkg.configs.filter((config) => {
           const { name, path, memo } = config.spec;
+          let fileAp;
+          if (path.endsWith('/')) {
+            fileAp = `${path}${name}`;
+          } else {
+            fileAp = `${path}/${name}`;
+          }
           const lowerSearchStr = searchStr.value.toLocaleLowerCase();
           return (
-            name.toLocaleLowerCase().includes(lowerSearchStr) ||
-            path.toLocaleLowerCase().includes(lowerSearchStr) ||
-            memo.toLocaleLowerCase().includes(lowerSearchStr)
+            fileAp.toLocaleLowerCase().includes(lowerSearchStr) || memo.toLocaleLowerCase().includes(lowerSearchStr)
           );
         });
         if (matchedConfigs.length > 0) {

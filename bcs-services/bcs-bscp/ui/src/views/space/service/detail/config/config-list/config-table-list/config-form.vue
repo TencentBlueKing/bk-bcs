@@ -4,7 +4,7 @@
       <bk-input
         v-model="localVal.fileAP"
         :placeholder="t('请输入配置文件的绝对路径')"
-        :disabled="!editable"
+        :disabled="isEdit"
         @input="change" />
     </bk-form-item>
     <bk-form-item :label="t('配置文件描述')" property="memo">
@@ -12,14 +12,13 @@
         v-model="localVal.memo"
         type="textarea"
         :maxlength="200"
-        :disabled="!editable"
         :placeholder="t('请输入')"
         :resize="true"
         @input="change" />
     </bk-form-item>
     <bk-form-item :label="t('配置文件格式')">
       <bk-radio-group v-model="localVal.file_type" :required="true" @change="change">
-        <bk-radio v-for="typeItem in CONFIG_FILE_TYPE" :key="typeItem.id" :label="typeItem.id" :disabled="!editable">{{
+        <bk-radio v-for="typeItem in CONFIG_FILE_TYPE" :key="typeItem.id" :label="typeItem.id" :disabled="isEdit">{{
           typeItem.name
         }}</bk-radio>
       </bk-radio-group>
@@ -37,7 +36,6 @@
               v-model="privilegeInputVal"
               type="number"
               :placeholder="t('请输入三位权限数字')"
-              :disabled="!editable"
               @blur="handlePrivilegeInputBlur" />
             <template #content>
               <div>{{ t('只能输入三位 0~7 数字') }}</div>
@@ -46,13 +44,8 @@
               </div>
             </template>
           </bk-popover>
-          <bk-popover
-            ext-cls="privilege-select-popover"
-            theme="light"
-            trigger="click"
-            placement="bottom"
-            :disabled="!editable">
-            <div :class="['perm-panel-trigger', { disabled: !editable }]">
+          <bk-popover ext-cls="privilege-select-popover" theme="light" trigger="click" placement="bottom">
+            <div :class="['perm-panel-trigger']">
               <i class="bk-bscp-icon icon-configuration-line"></i>
             </div>
             <template #content>
@@ -64,7 +57,7 @@
                       class="group-checkboxs"
                       :model-value="privilegeGroupsValue[index]"
                       @change="handleSelectPrivilege(index, $event)">
-                      <bk-checkbox size="small" :label="4" :disabled="privilegeGroupsValue[0]">
+                      <bk-checkbox size="small" :label="4" :disabled="index === 0">
                         {{ t('读') }}
                       </bk-checkbox>
                       <bk-checkbox size="small" :label="2">{{ t('写') }}</bk-checkbox>
@@ -78,15 +71,12 @@
         </div>
       </bk-form-item>
       <bk-form-item :label="t('用户')" property="user" :required="true">
-        <bk-input v-model="localVal.user" :placeholder="t('请输入')" :disabled="!editable" @input="change"></bk-input>
+        <bk-input v-model="localVal.user" :placeholder="t('请输入')" @input="change"></bk-input>
       </bk-form-item>
       <bk-form-item :label="t('用户组')" :placeholder="t('请输入')" property="user_group" :required="true">
-        <bk-input v-model="localVal.user_group" :disabled="!editable" @input="change"></bk-input>
+        <bk-input v-model="localVal.user_group" @input="change"></bk-input>
       </bk-form-item>
     </div>
-    <bk-form-item v-if="isTpl" class="fixed-width-form" property="revision_name" :label="t('form_版本号')" required>
-      <bk-input v-model="localVal.revision_name" :placeholder="t('请输入')"></bk-input>
-    </bk-form-item>
     <bk-form-item v-if="localVal.file_type === 'binary'" :label="t('配置内容')" :required="true">
       <bk-upload
         class="config-uploader"
@@ -94,24 +84,43 @@
         theme="button"
         :tip="t('文件大小{size}M以内', { size: props.fileSizeLimit })"
         :size="props.fileSizeLimit"
-        :disabled="!editable"
         :multiple="false"
         :files="fileList"
         :custom-request="handleFileUpload">
         <template #file="{ file }">
-          <div style="width: 100%">
-            <div class="file-wrapper">
-              <div class="status-icon-area">
-                <Done v-if="file.status === 'success'" class="success-icon" />
-                <Error v-if="file.status === 'fail'" class="error-icon" />
-              </div>
+          <bk-loading
+            mode="spin"
+            theme="primary"
+            :opacity="0.6"
+            size="mini"
+            :title="t('文件下载中，请稍后')"
+            :loading="fileDownloading"
+            class="file-down-loading">
+            <div class="file-wrapper" @click="handleDownloadFile">
               <TextFill class="file-icon" />
-              <div class="name" :title="file.name" @click="handleDownloadFile">{{ file.name }}</div>
-              ({{ file.status === 'fail' ? byteUnitConverse(file.size) : file.size }})
+              <div class="file-content">
+                <div class="name" :title="file.name">{{ file.name }}</div>
+                <div v-if="uploadProgress.status === 'uploading'">
+                  <bk-progress
+                    :percent="uploadProgress.percent"
+                    :theme="file.status === 'fail' ? 'danger' : 'primary'"
+                    size="small"
+                    :show-text="false" />
+                </div>
+                <div v-else :class="[file.status === 'success' ? 'success-text' : 'error-text', 'status-icon-area']">
+                  <Done v-if="file.status === 'success'" class="success-icon" />
+                  <Error v-if="file.status === 'fail'" class="error-icon" />
+                  <span :class="[file.status === 'success' ? 'success-text' : 'error-text']">
+                    {{ file.status === 'success' ? t('上传成功') : `${t('上传失败')} ${file.statusText}` }}
+                  </span>
+                </div>
+              </div>
+              <span class="size">
+                ({{ file.status === 'fail' ? byteUnitConverse(file.size) : file.size }})
+                <span v-if="uploadProgress.status === 'uploading'">{{ `${uploadProgress.percent}%` }}</span>
+              </span>
             </div>
-            <div :class="{ 'progress-bar': uploadPending }"></div>
-            <div v-if="file.status === 'fail'" class="error-msg">{{ file.statusText }}</div>
-          </div>
+          </bk-loading>
         </template>
       </bk-upload>
     </bk-form-item>
@@ -124,7 +133,7 @@
       </template>
       <ConfigContentEditor
         :content="stringContent"
-        :editable="editable"
+        :editable="true"
         :variables="props.variables"
         :size-limit="props.fileSizeLimit"
         @change="handleStringContentChange" />
@@ -164,7 +173,7 @@
   const props = withDefaults(
     defineProps<{
       config: IConfigEditParams;
-      editable: boolean;
+      isEdit: boolean;
       content: string | IFileConfigContentSummary;
       variables?: IVariableEditParams[];
       bkBizId: string;
@@ -174,28 +183,56 @@
       isTpl?: boolean; // 是否未模板配置文件，非模板配置文件和模板配置文件的上传、下载接口参数有差异
     }>(),
     {
-      editable: true,
+      isEdit: false,
       fileSizeLimit: 100,
     },
   );
 
   const emits = defineEmits(['change', 'update:fileUploading']);
-  const configContentTip = `配置文件内支持引用全局变量与定义新的BSCP变量，变量规则如下
-                          1.需是要go template语法， 例如 {{ .bk_bscp_appid }}
-                          2.变量名需以 “bk_bscp_” 或 “BK_BSCP_” 开头`;
+  const configContentTip = t('tips.createConfig');
   const localVal = ref({ ...props.config, fileAP: '' });
   const privilegeInputVal = ref('');
   const showPrivilegeErrorTips = ref(false);
   const stringContent = ref('');
   const fileContent = ref<IFileConfigContentSummary | File>();
+  const uploadFileSignature = ref(''); // 新上传文件的sha256
   const isFileChanged = ref(false); // 标识文件是否被修改，编辑配置文件时若文件未修改，不重新上传文件
-  const uploadPending = ref(false);
   const formRef = ref();
+  const uploadProgress = ref({
+    percent: 0,
+    status: '',
+  });
+  const fileDownloading = ref(false);
   const rules = {
+    // 配置文件绝对路径校验规则，path+filename
     fileAP: [
       {
-        validator: (val: string) =>
-          /^\/([\u4e00-\u9fa5A-Za-z0-9_\-#%,@^+=[\]{}]+[\u4e00-\u9fa5A-Za-z0-9_\-#%,.@^+=[\]{}]*\/?)*[^/]$/.test(val),
+        validator: (val: string) => {
+          // 必须为绝对路径, 且不能以/结尾
+          if (!val.startsWith('/') || val.endsWith('/')) {
+            return false;
+          }
+
+          const parts = val.split('/').slice(1);
+          const fileName = parts.pop() as string;
+
+          // 文件名称校验
+          if (fileName.startsWith('.') || !/^[\u4e00-\u9fa5A-Za-z0-9.\-_#%,:?!@$^+=\\[\]{}]+$/.test(fileName)) {
+            return false;
+          }
+
+          let isValid = true;
+          // 文件路径校验
+          parts.some((part) => {
+            if (part.startsWith('.') || !/^[\u4e00-\u9fa5A-Za-z0-9.\-_#%,@^+=\\[\]{}]+$/.test(part)) {
+              isValid = false;
+              return true;
+            }
+            return false;
+          });
+
+          return isValid;
+        },
         message: t('无效的路径,路径不符合Unix文件路径格式规范'),
         trigger: 'change',
       },
@@ -328,25 +365,46 @@
   const handleFileUpload = (option: { file: File }) => {
     isFileChanged.value = true;
     return new Promise((resolve) => {
-      uploadPending.value = true;
       emits('update:fileUploading', true);
       fileContent.value = option.file;
-      uploadContent().then((res) => {
-        uploadPending.value = false;
-        emits('update:fileUploading', false);
-        change();
-        resolve(res);
-      });
+      uploadContent()
+        .then((res) => {
+          emits('update:fileUploading', false);
+          change();
+          resolve(res);
+        })
+        .finally(() => {
+          uploadProgress.value.status = 'success';
+          uploadProgress.value.percent = 0;
+        });
     });
   };
 
   // 上传配置内容
   const uploadContent = async () => {
+    uploadProgress.value.status = 'uploading';
     const signature = await getSignature();
+    uploadFileSignature.value = signature;
     if (props.isTpl) {
-      return updateTemplateContent(props.bkBizId, props.id, fileContent.value as File, signature as string);
+      return updateTemplateContent(
+        props.bkBizId,
+        props.id,
+        fileContent.value as File,
+        signature as string,
+        (progress: number) => {
+          uploadProgress.value.percent = progress;
+        },
+      );
     }
-    return updateConfigContent(props.bkBizId, props.id, fileContent.value as File, signature as string);
+    return updateConfigContent(
+      props.bkBizId,
+      props.id,
+      fileContent.value as File,
+      signature as string,
+      (progress: number) => {
+        uploadProgress.value.percent = progress;
+      },
+    );
   };
 
   // 生成文件或文本的sha256
@@ -371,10 +429,19 @@
 
   // 下载已上传文件
   const handleDownloadFile = async () => {
-    const { signature, name } = fileContent.value as IFileConfigContentSummary;
-    const getContent = props.isTpl ? downloadTemplateContent : downloadConfigContent;
-    const res = await getContent(props.bkBizId, props.id, signature, true);
-    fileDownload(res, name);
+    if (uploadProgress.value.status === 'uploading') return;
+    try {
+      fileDownloading.value = true;
+      const { signature, name } = fileContent.value as IFileConfigContentSummary;
+      const fileSignature = signature || uploadFileSignature.value;
+      const getContent = props.isTpl ? downloadTemplateContent : downloadConfigContent;
+      const res = await getContent(props.bkBizId, props.id, fileSignature, true);
+      fileDownload(res, name);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      fileDownloading.value = false;
+    }
   };
 
   const validate = async () => {
@@ -485,55 +552,57 @@
     }
   }
   .config-uploader {
-    :deep(.bk-upload-list__item) {
-      padding: 0;
-      border: none;
-    }
     :deep(.bk-upload-list--disabled .bk-upload-list__item) {
       pointer-events: inherit;
     }
     .file-wrapper {
+      position: relative;
       display: flex;
       align-items: center;
       color: #979ba5;
       font-size: 12px;
+      line-height: 12px;
+      width: 100%;
+      cursor: pointer;
+      &:hover .name {
+        color: #3a84ff;
+      }
+      .file-content {
+        width: 400px;
+      }
       .status-icon-area {
         display: flex;
-        width: 20px;
-        height: 100%;
         align-items: center;
-        justify-content: center;
+        &.success-text {
+          color: #2dcb56;
+        }
+        &.error-text {
+          color: #ea3636;
+        }
         .success-icon {
           font-size: 20px;
-          color: #2dcb56;
         }
         .error-icon {
           font-size: 14px;
-          color: #ea3636;
         }
       }
       .file-icon {
         margin: 0 6px 0 0;
+        font-size: 32px;
       }
       .name {
         max-width: 360px;
-        margin-right: 4px;
-        color: #63656e;
         white-space: nowrap;
         text-overflow: ellipsis;
         overflow: hidden;
-        cursor: pointer;
-        &:hover {
-          color: #3a84ff;
-          text-decoration: underline;
-        }
+        line-height: normal;
       }
-    }
-    .error-msg {
-      padding: 0 0 10px 38px;
-      line-height: 1;
-      font-size: 12px;
-      color: #ff5656;
+      .size {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+      }
     }
   }
   .config-content-label {
@@ -543,18 +612,17 @@
       margin-right: 5px;
     }
   }
-  .progress-bar {
-    width: 0;
-    height: 2px;
-    background-color: #3a84ff;
-    animation: progressAnimation 1s ease-in-out forwards;
-  }
-  @keyframes progressAnimation {
-    from {
-      width: 0;
-    }
-    to {
-      width: 100%;
+  .file-down-loading {
+    width: 100%;
+    :deep(.bk-loading-indicator) {
+      align-items: center;
+      flex-direction: row;
+      .bk-loading-title {
+        margin-top: 0px;
+        margin-left: 8px;
+        color: #979ba5;
+        font-size: 12px;
+      }
     }
   }
 </style>

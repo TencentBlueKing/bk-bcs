@@ -285,7 +285,7 @@ func (a authorizer) BizVerified(next http.Handler) http.Handler {
 		kt := kit.MustGetKit(r.Context())
 		bizIDStr := getBizID(r)
 		if bizIDStr == "" {
-			err := errors.New("biz_id is required in url params")
+			err := errors.New("biz id is required in url params")
 			render.Render(w, r, rest.BadRequest(err))
 			return
 		}
@@ -296,6 +296,12 @@ func (a authorizer) BizVerified(next http.Handler) http.Handler {
 			return
 		}
 		kt.BizID = uint32(bizID)
+
+		if !a.HasBiz(uint32(bizID)) {
+			err := fmt.Errorf("biz id %d does not exist", bizID)
+			render.Render(w, r, rest.BadRequest(err))
+			return
+		}
 
 		// skip validate biz permission when user is for test
 		if strings.HasPrefix(kt.User, constant.BKUserForTestPrefix) {

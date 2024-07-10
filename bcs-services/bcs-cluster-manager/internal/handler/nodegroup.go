@@ -276,6 +276,21 @@ func (cm *ClusterManager) UpdateGroupMinMaxSize(ctx context.Context,
 	return nil
 }
 
+// UpdateGroupAsTimeRange implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) UpdateGroupAsTimeRange(ctx context.Context,
+	req *cmproto.UpdateGroupAsTimeRangeRequest, resp *cmproto.UpdateGroupAsTimeRangeResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	ca := nodegroup.NewUpdateGroupAsTimeRangeAction(cm.model)
+	ca.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("UpdateGroupAsTimeRange", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: UpdateGroupAsTimeRange, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
 // EnableNodeGroupAutoScale implements interface cmproto.ClusterManagerServer
 func (cm *ClusterManager) EnableNodeGroupAutoScale(ctx context.Context,
 	req *cmproto.EnableNodeGroupAutoScaleRequest, resp *cmproto.EnableNodeGroupAutoScaleResponse) error {

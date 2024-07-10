@@ -28,7 +28,13 @@
           @search="loadTableData" />
       </div>
       <bk-loading :loading="loading">
-        <bk-table :data="tableData" :border="['outer', 'row']" :pagination="pagination">
+        <bk-table
+          :data="tableData"
+          :border="['outer', 'row']"
+          :pagination="pagination"
+          :remote-pagination="true"
+          @page-limit-change="handlePageLimitChange"
+          @page-value-change="loadTableData">
           <bk-table-column :label="$t('开始时间')" width="154">
             <template #default="{ row }">
               <span v-if="row.spec">
@@ -39,7 +45,7 @@
           <bk-table-column :label="$t('结束时间')" width="154">
             <template #default="{ row }">
               <span v-if="row.spec">
-                {{ datetimeFormat(row.spec.end_time) }}
+                {{ row.spec.release_change_status === 'Processing' ? '--' : datetimeFormat(row.spec.end_time) }}
               </span>
             </template>
           </bk-table-column>
@@ -117,6 +123,7 @@
   import { Share, Spinner, InfoLine } from 'bkui-vue/lib/icon';
   import SearchInput from '../../../../../components/search-input.vue';
   import { getClientPullRecord } from '../../../../../api/client';
+  import useTablePagination from '../../../../../utils/hooks/use-table-pagination';
   import { datetimeFormat, byteUnitConverse, getTimeRange } from '../../../../../utils';
   import {
     CLIENT_STATUS_MAP,
@@ -129,6 +136,8 @@
   const { t } = useI18n();
 
   const router = useRouter();
+
+  const { pagination, updatePagination } = useTablePagination('clientPullRecord');
 
   const props = defineProps<{
     bkBizId: string;
@@ -165,12 +174,6 @@
   const isSearchEmpty = ref(false);
   const datePickerRef = ref();
 
-  const pagination = ref({
-    count: 0,
-    current: 1,
-    limit: 10,
-  });
-
   watch(
     () => props.show,
     (val) => {
@@ -204,12 +207,15 @@
       const params = {
         start: pagination.value.limit * (pagination.value.current - 1),
         limit: pagination.value.limit,
-        start_time: initDateTime.value![0],
-        end_time: initDateTime.value![1],
+        start_time: new Date(`${initDateTime.value![0].replace(' ', 'T')}+08:00`).toISOString(),
+        end_time: new Date(`${initDateTime.value![1].replace(' ', 'T')}+08:00`).toISOString(),
         search_value,
+        order: {
+          desc: 'start_time',
+        },
       };
       const resp = await getClientPullRecord(props.bkBizId, props.appId, props.id, params);
-      pagination.value.count = resp.data.count;
+      updatePagination('count', resp.data.count);
       tableData.value = resp.data.details;
     } catch (error) {
       console.error(error);
@@ -246,13 +252,17 @@
     ${t('错误详情')}: ${failed_detail_reason}`;
   };
 
-
   const handleSelectTimeChange = (val: any) => {
     if (val) {
       initDateTime.value = getTimeRange(val);
     } else {
       datePickerRef.value.handleFocus();
     }
+  };
+
+  const handlePageLimitChange = (val: number) => {
+    updatePagination('limit', val);
+    loadTableData();
   };
 </script>
 

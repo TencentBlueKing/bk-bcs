@@ -15,10 +15,15 @@ package parser
 
 import (
 	"context"
+	"regexp"
+	"strings"
+
+	"gopkg.in/yaml.v2"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
 )
 
 // GetResParseFunc 获取资源对应 Parser
@@ -31,4 +36,55 @@ func GetResParseFunc(
 		return nil, errorx.New(errcode.Unsupported, i18n.GetMsg(ctx, "资源类型 `%s` 不支持表单化"), kind)
 	}
 	return parseFunc, nil
+}
+
+var sep = regexp.MustCompile("(?:^|\\s*\n)---\\s*")
+
+// SplitManifests takes a string of manifest and returns a map contains individual manifests
+func SplitManifests(bigFile string) []string {
+	// Basically, we're quickly splitting a stream of YAML documents into an
+	// array of YAML docs. The file name is just a place holder, but should be
+	// integer-sortable so that manifests get output in the same order as the
+	// input (see `BySplitManifestsOrder`).
+	res := make([]string, 0)
+	// Making sure that any extra whitespace in YAML stream doesn't interfere in splitting documents correctly.
+	bigFileTmp := strings.TrimSpace(bigFile)
+	docs := sep.Split(bigFileTmp, -1)
+	for _, d := range docs {
+		if d == "" {
+			continue
+		}
+
+		d = strings.TrimSpace(d)
+		res = append(res, d)
+	}
+	return res
+}
+
+// SimpleHead defines what the structure of the head of a manifest file
+type SimpleHead struct {
+	Version string `yaml:"apiVersion"`
+	Kind    string `yaml:"kind,omitempty"`
+}
+
+// GetManifestMetadata 获取 Manifest metadata
+func GetManifestMetadata(manifest string) SimpleHead {
+	var entry SimpleHead
+	if err := yaml.Unmarshal([]byte(manifest), &entry); err != nil {
+		return entry
+	}
+	return entry
+}
+
+// GetResourceTypesFromManifest get resourceTypes from manifest
+func GetResourceTypesFromManifest(manifest string) []string {
+	resourceType := make([]string, 0)
+	manifests := SplitManifests(manifest)
+	for _, v := range manifests {
+		metadata := GetManifestMetadata(v)
+		if metadata.Kind != "" {
+			resourceType = append(resourceType, metadata.Kind)
+		}
+	}
+	return slice.RemoveDuplicateValues(resourceType)
 }

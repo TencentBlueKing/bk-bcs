@@ -75,3 +75,15 @@ export const getTimeRange = (n: number) => {
   end.setSeconds(59);
   return [dayjs(start).format('YYYY-MM-DD HH:mm:ss'), dayjs(end).format('YYYY-MM-DD HH:mm:ss')];
 };
+
+export const sortObjectKeysByAscii = (obj: any) => {
+  // 获取对象的所有键，并按ASCII码排序
+  const sortedKeys = Object.keys(obj).sort((a, b) => a.localeCompare(b, 'en'));
+  const sortedObj: any = {};
+  sortedKeys.forEach((key) => {
+    sortedObj[key] = obj[key];
+  });
+
+  return sortedObj;
+};
+

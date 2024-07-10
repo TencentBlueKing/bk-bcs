@@ -30,10 +30,8 @@
             <bk-button
               theme="danger"
               v-authority="{
-                clickable: webAnnotations.perms
-                  && webAnnotations.perms.page.deleteBtn ? webAnnotations.perms.page.deleteBtn.clickable : true,
-                content: webAnnotations.perms
-                  && webAnnotations.perms.page.deleteBtn ? webAnnotations.perms.page.deleteBtn.tip : '',
+                clickable: pagePerms.deleteBtn.clickable,
+                content: pagePerms.deleteBtn.tip,
                 disablePerms: true
               }"
               @click="handleDeleteResource">{{$t('generic.button.delete')}}</bk-button>
@@ -266,6 +264,7 @@
             :cluster-id="clusterId"
             :namespace="namespace"
             :name="kindsNames"
+            :reset-page-when-name-change="false"
             v-if="!loading">
           </EventQueryTable>
         </bcs-tab-panel>
@@ -434,7 +433,7 @@ export default defineComponent({
       spec,
       metadata,
       manifestExt,
-      webAnnotations,
+      pagePerms,
       additionalColumns,
       yaml,
       showYamlPanel,
@@ -754,7 +753,7 @@ export default defineComponent({
       spec,
       metadata,
       manifestExt,
-      webAnnotations,
+      pagePerms,
       additionalColumns,
       basicInfoList,
       activePanel,

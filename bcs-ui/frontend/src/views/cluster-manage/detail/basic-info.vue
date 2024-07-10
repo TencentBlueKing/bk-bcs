@@ -54,31 +54,35 @@
             </span>
           </div>
           <template v-else>
-            <KeyValue2
-              :value="clusterData.labels || {}"
-              :key-rules="[
-                {
-                  message: $t('generic.validate.label'),
-                  validator: LABEL_KEY_REGEXP,
-                }
-              ]"
-              :value-rules="[
-                {
-                  message: $t('generic.validate.label'),
-                  validator: LABEL_KEY_REGEXP,
-                }
-              ]"
-              @validate="setValidate"
-              @change="setClusterLabel" />
-            <div class="flex items-center mt-[-10px]">
-              <bk-button
-                class="text-[12px]"
-                text
-                @click="handleModifyLabel">{{ $t('generic.button.save') }}</bk-button>
-              <bk-button
-                class="text-[12px] ml-[8px]"
-                text
-                @click="isEdit = false">{{ $t('generic.button.cancel') }}</bk-button>
+            <div class="flex items-center">
+              <KeyValue2
+                :value="clusterData.labels || {}"
+                :key-rules="[
+                  {
+                    message: $t('generic.validate.label'),
+                    validator: LABEL_KEY_REGEXP,
+                  }
+                ]"
+                :value-rules="[
+                  {
+                    message: $t('generic.validate.label'),
+                    validator: LABEL_KEY_REGEXP,
+                  }
+                ]"
+                :min-item="0"
+                class="flex-1"
+                @validate="setValidate"
+                @change="setClusterLabel" />
+              <div class="flex items-center h-[32px] ml-[16px]">
+                <bk-button
+                  class="text-[12px] leading-none"
+                  text
+                  @click="handleModifyLabel">{{ $t('generic.button.save') }}</bk-button>
+                <bk-button
+                  class="text-[12px] ml-[8px] leading-none"
+                  text
+                  @click="isEdit = false">{{ $t('generic.button.cancel') }}</bk-button>
+              </div>
             </div>
           </template>
         </bk-form-item>

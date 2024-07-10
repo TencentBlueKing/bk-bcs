@@ -20,10 +20,8 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	bcsapi "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapiv4"
 	traceconst "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/constants"
-	iamnamespace "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/namespace"
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
@@ -31,6 +29,8 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/cmd/manager/options"
 	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware/ctxutils"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/permitcheck"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/resources"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/utils/jsonq"
@@ -44,8 +44,9 @@ import (
 type StreamPlugin struct {
 	*mux.Router
 
-	appHandler *AppPlugin
-	middleware mw.MiddlewareInterface
+	appHandler    *AppPlugin
+	middleware    mw.MiddlewareInterface
+	permitChecker permitcheck.PermissionInterface
 
 	storage    store.Store
 	bcsStorage bcsapi.Storage
@@ -76,7 +77,8 @@ func (plugin *StreamPlugin) projectViewHandler(r *http.Request) (*http.Request, 
 	}
 	for i := range projects {
 		projectName := projects[i]
-		_, statusCode, err := plugin.middleware.CheckProjectPermission(r.Context(), projectName, iam.ProjectView)
+		_, statusCode, err := plugin.permitChecker.CheckProjectPermission(r.Context(), projectName,
+			permitcheck.ProjectViewRSAction)
 		if statusCode != http.StatusOK {
 			return r, mw.ReturnErrorResponse(statusCode,
 				errors.Wrapf(err, "check project '%s' permission failed", projectName))
@@ -97,10 +99,15 @@ func (plugin *StreamPlugin) applicationViewsHandler(r *http.Request) (*http.Requ
 		return r, mw.ReturnErrorResponse(http.StatusBadRequest,
 			fmt.Errorf("request application name cannot be empty"))
 	}
-	_, statusCode, err := plugin.middleware.CheckApplicationPermission(r.Context(), appName,
-		iamnamespace.NameSpaceScopedView)
+	_, statusCode, err := plugin.permitChecker.CheckApplicationPermission(r.Context(), appName,
+		permitcheck.AppViewRSAction)
 	if statusCode != http.StatusOK {
 		return r, mw.ReturnErrorResponse(statusCode, err)
+	}
+	// only return argo stream reverse when fields query not empty
+	fields := r.URL.Query().Get("fields")
+	if fields == "" {
+		return r, mw.ReturnArgoReverse()
 	}
 	return r, mw.ReturnArgoStreamReverse()
 }
@@ -124,7 +131,7 @@ const (
 
 // ServeHTTP 用来处理 application 的 pod-resource event-stream 接口实现
 func (s *streamPodResources) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
-	ctx, requestID := mw.SetContext(rw, req, s.op.JWTDecoder)
+	ctx, requestID := ctxutils.SetContext(rw, req, s.op.JWTDecoder)
 	if ctx == nil {
 		return
 	}
@@ -134,8 +141,8 @@ func (s *streamPodResources) ServeHTTP(rw http.ResponseWriter, req *http.Request
 		http.Error(rw, "request application name cannot be empty", http.StatusBadRequest)
 		return
 	}
-	argoApp, statusCode, err := s.plugin.middleware.CheckApplicationPermission(
-		req.Context(), appName, iamnamespace.NameSpaceScopedView)
+	argoApp, statusCode, err := s.plugin.permitChecker.CheckApplicationPermission(req.Context(), appName,
+		permitcheck.AppViewRSAction)
 	if statusCode != http.StatusOK {
 		http.Error(rw, err.Error(), statusCode)
 		return
@@ -172,10 +179,8 @@ func (s *streamPodResources) ServeHTTP(rw http.ResponseWriter, req *http.Request
 				return
 			}
 		case <-timeout:
-			rw.WriteHeader(http.StatusOK)
 			return
 		case <-req.Context().Done():
-			rw.WriteHeader(http.StatusOK)
 			return
 		}
 	}
@@ -198,9 +203,7 @@ func (s *streamPodResources) queryPodResources(rw http.ResponseWriter, req *http
 		}
 	}
 	// nolint
-	_, _ = rw.Write(result)
-	// nolint
-	_, _ = rw.Write([]byte("\n"))
+	_, _ = rw.Write([]byte(fmt.Sprintf("data: %s\n\n", result)))
 	rw.(http.Flusher).Flush()
 	return http.StatusOK, nil
 }

@@ -8,7 +8,12 @@
     :get-config-list="getConfigList">
     <template #tableOperations>
       <AddConfigs @refresh="refreshConfigList" />
-      <BatchAddTo :configs="selectedConfigs" @refresh="refreshConfigList" />
+      <BatchOperationButton
+        :space-id="spaceId"
+        :configs="selectedConfigs"
+        :current-template-space="currentTemplateSpace"
+        pkg-type="all"
+        @refresh="refreshConfigList"/>
     </template>
   </CommonConfigTable>
 </template>
@@ -22,7 +27,7 @@
   import { getTemplatesBySpaceId } from '../../../../../../api/template';
   import CommonConfigTable from './common-config-table.vue';
   import AddConfigs from '../operations/add-configs/add-button.vue';
-  import BatchAddTo from '../operations/add-to-pkgs/add-to-button.vue';
+  import BatchOperationButton from '../operations/batch-operations/batch-operation-btn.vue';
 
   const { spaceId } = storeToRefs(useGlobalStore());
   const templateStore = useTemplateStore();
@@ -36,9 +41,9 @@
     return getTemplatesBySpaceId(spaceId.value, currentTemplateSpace.value, params);
   };
 
-  const refreshConfigList = (isBatchUpload = false) => {
-    if (isBatchUpload) {
-      configTable.value.refreshList(1, isBatchUpload);
+  const refreshConfigList = (createConfig = false) => {
+    if (createConfig) {
+      configTable.value.refreshList(1, createConfig);
     } else {
       configTable.value.refreshList();
     }

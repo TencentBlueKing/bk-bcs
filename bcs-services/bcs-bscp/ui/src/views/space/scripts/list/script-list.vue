@@ -52,6 +52,7 @@
           :class="memoEditHookId > 0 || tagEditHookId > 0 ? 'table-with-memo-edit' : ''"
           show-overflow-tooltip
           :cell-class="getCellCls"
+          :is-row-select-enable="isRowSelectEnable"
           @selection-change="handleSelectionChange"
           @select-all="handleSelectAll"
           @page-limit-change="handlePageLimitChange"
@@ -137,8 +138,8 @@
               <span v-if="row.hook">{{ datetimeFormat(row.hook.revision.update_at) }}</span>
             </template>
           </bk-table-column>
-          <bk-table-column :label="t('操作')">
-            <template #default="{ row }" width="180">
+          <bk-table-column :label="t('操作')" width="180">
+            <template #default="{ row }">
               <div class="action-btns">
                 <bk-button text theme="primary" @click="handleEditClick(row)">{{ t('编辑') }}</bk-button>
                 <bk-button
@@ -147,7 +148,14 @@
                   @click="router.push({ name: 'script-version-manage', params: { spaceId, scriptId: row.hook.id } })">
                   {{ t('版本管理') }}
                 </bk-button>
-                <bk-button text theme="primary" @click="handleDeleteScript(row)">{{ t('删除') }}</bk-button>
+                <bk-button
+                  :disabled="row.bound_num !== 0"
+                  text
+                  theme="primary"
+                  v-bk-tooltips="{ content: $t('脚本已被引用，不能删除'), disabled: row.bound_num === 0 }"
+                  @click="handleDeleteScript(row)">
+                  {{ t('删除') }}
+                </bk-button>
               </div>
             </template>
           </bk-table-column>
@@ -203,6 +211,7 @@
     getScriptCiteList,
   } from '../../../../api/script';
   import { IScriptItem, IScriptTagItem, IScriptListQuery } from '../../../../../types/script';
+  import useTablePagination from '../../../../utils/hooks/use-table-pagination';
   import { datetimeFormat } from '../../../../utils/index';
   import BatchDeleteBtn from './batch-delete-btn.vue';
   import CreateScript from './create-script.vue';
@@ -217,6 +226,8 @@
   const { versionListPageShouldOpenEdit, versionListPageShouldOpenView } = storeToRefs(useScriptStore());
   const router = useRouter();
   const { t, locale } = useI18n();
+
+  const { pagination, updatePagination } = useTablePagination('scriptCited');
 
   interface IAppItem {
     app_id: number;
@@ -251,11 +262,6 @@
     return scriptsData.value.filter((item) => selectedIds.value.includes(item.hook.id));
   });
 
-  const pagination = ref({
-    current: 1,
-    count: 0,
-    limit: 10,
-  });
   const isSearchEmpty = ref(false);
   watch(
     () => spaceId.value,
@@ -309,6 +315,7 @@
       theme: 'success',
       message: t('脚本更新成功'),
     });
+    getTags();
   };
 
   // 添加自定义单元格class
@@ -331,7 +338,7 @@
   // 全选
   const handleSelectAll = ({ checked }: { checked: boolean }) => {
     if (checked) {
-      selectedIds.value = scriptsData.value.map((item) => item.hook.id);
+      selectedIds.value = scriptsData.value.filter((item) => item.bound_num === 0).map((item) => item.hook.id);
     } else {
       selectedIds.value = [];
     }
@@ -429,7 +436,7 @@
     }
     Message({
       theme: 'success',
-      message: t('删除版本成功'),
+      message: t('删除脚本成功'),
     });
     isDeleteScriptDialogShow.value = false;
     getScripts();
@@ -466,7 +473,7 @@
   };
 
   const handlePageLimitChange = (val: number) => {
-    pagination.value.limit = val;
+    updatePagination('limit', val);
     refreshList();
   };
 
@@ -478,6 +485,10 @@
   const clearSearchStr = () => {
     searchStr.value = '';
     refreshList();
+  };
+
+  const isRowSelectEnable = ({ row, isCheckAll }: any) => {
+    return isCheckAll || row.bound_num === 0;
   };
 </script>
 <style lang="scss" scoped>

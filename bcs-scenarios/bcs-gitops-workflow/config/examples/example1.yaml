@@ -1,0 +1,25 @@
+apiVersion: gitopsworkflow.bkbcs.tencent.com/v1
+kind: Workflow
+metadata:
+  creationTimestamp: null
+spec:
+  name: test-pelenli
+  desc: ''
+  project: ''
+  engine: bkdevops
+  params:
+    - name: test1
+    - name: test2
+  stepTemplates:
+    - name: plugin1
+      plugin: linuxScript@linuxScript@1.*
+      with:
+        script: echo 1
+  stages:
+    - jobs:
+        - strategy: {}
+          runsOn: {}
+          steps:
+            - name: 测试执行脚本1111
+              disable: false
+              template: plugin1

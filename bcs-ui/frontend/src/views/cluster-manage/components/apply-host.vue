@@ -624,7 +624,7 @@ export default {
         this.vpcLoading = false;
         const vpcList = data.map(item => ({
           vpcId: item.vpcID,
-          vpcName: `${item.vpcName}(${item.vpcId})`,
+          vpcName: `${item.vpcName}(${item.vpcID})`,
         }));
         this.vpcList.splice(0, this.vpcList.length, ...vpcList);
         if (this.clusterInfo.vpcID && this.isBackfill) {

@@ -36,7 +36,7 @@ export interface IClinetCommonQuery {
 export interface IClientSearchParams {
   uid?: string;
   ip?: string;
-  label?: { [key: string]: string };
+  label?: string[];
   current_release_name?: string;
   target_release_name?: string;
   release_change_status?: string[];
@@ -46,6 +46,8 @@ export interface IClientSearchParams {
   client_type?: string;
   start_pull_time?: string;
   end_pull_time?: string;
+  failed_reason?: string;
+  client_ids?: number[];
 }
 
 export interface IGetClientSearchListQuery {
@@ -95,7 +97,7 @@ export interface IPullSuccessRate {
 
 // 信息展示卡片
 export interface IInfoCard {
-  value: number;
+  value: string | number;
   name: string;
   key: string;
   unit?: string;
@@ -128,6 +130,7 @@ export interface IClientLabelItem {
   percent: number;
   primary_key: string;
   primary_val: string;
+  x_field: string; // 平铺柱状图渲染参数
 }
 
 // 组件版本发布(柱状图和表格)
@@ -151,4 +154,11 @@ export interface IVersionDistributionPieItem {
   value: number;
   percent: number;
   children?: IVersionDistributionPieItem[];
+}
+
+export interface IExampleFormData {
+  clientKey: string;
+  privacyCredential: string;
+  tempDir?: string;
+  labelArr: string[];
 }

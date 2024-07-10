@@ -1,0 +1,83 @@
+title: ingress
+type: object
+properties:
+  {{- include "common.metadata" . | indent 2 }}
+  controller:
+    title: {{ i18n "控制器" .lang }}
+    type: object
+    properties:
+      type:
+        title: {{ i18n "控制器类" .lang }}
+        type: string
+        default: qcloud
+        ui:component:
+          name: select
+          props:
+            clearable: false
+            datasource:
+              - label: qcloud
+                value: qcloud
+                disabled: false
+                tips: ""
+              - label: nginx
+                value: nginx
+                disabled: true
+                tips: {{ i18n "暂时不支持该控制器" .lang }}
+              - label: bcs
+                value: bcs
+                disabled: true
+                tips: {{ i18n "暂时不支持该控制器" .lang }}
+        ui:reactions:
+          # qcloud 暂时不支持 defaultBackend
+          - target: spec.defaultBackend.targetSVC
+            if: "{{`{{`}} $self.value === 'qcloud' {{`}}`}}"
+            then:
+              state:
+                value: ""
+                disabled: true
+            else:
+              state:
+                disabled: false
+          - target: spec.defaultBackend.port
+            if: "{{`{{`}} $self.value === 'qcloud' {{`}}`}}"
+            then:
+              state:
+                value: 0
+                disabled: true
+            else:
+              state:
+                disabled: false
+          # 目前只支持 qcloud 的重定向，nginx 后续支持了再开放
+          - target: spec.cert.autoRewriteHttp
+            if: "{{`{{`}} $self.value === 'qcloud' {{`}}`}}"
+            then:
+              state:
+                visible: true
+            else:
+              state:
+                visible: false
+    ui:group:
+      props:
+        border: false
+        showTitle: true
+        type: card
+  spec:
+    title: {{ i18n "配置信息" .lang }}
+    type: object
+    properties:
+      {{- include "network.ingRules" . | indent 6 }}
+      {{- include "network.ingNetwork" . | indent 6 }}
+      {{- include "network.ingDefaultBackend" . | indent 6 }}
+      {{- include "network.ingCert" . | indent 6 }}
+    ui:group:
+      name: tab
+      props:
+        border: false
+        showTitle: true
+        type: card
+        verifiable: true
+    ui:order:
+      - ruleConf
+      - network
+      - defaultBackend
+      - cert

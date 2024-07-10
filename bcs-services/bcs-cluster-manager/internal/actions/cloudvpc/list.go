@@ -17,14 +17,14 @@ import (
 	"sort"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cidrmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
@@ -93,7 +93,7 @@ func (la *ListAction) listCloudVPC() error {
 			}()
 
 			var surPlusIPNum uint32
-			ipNum, err := getAvailableIPNumByVpc(utils.GlobalRouter.String(), vpc.Region, vpc.VpcID)
+			ipNum, err := getAvailableIPNumByVpc(la.model, common.ClusterOverlayNetwork, vpc)
 			if err != nil {
 				blog.Errorf("listCloudVPC getAvailableIPNumByVpc failed: %v", err)
 			} else {
@@ -117,6 +117,7 @@ func (la *ListAction) listCloudVPC() error {
 				Extra:          vpc.Extra,
 				ReservedIPNum:  vpc.ReservedIPNum,
 				AvailableIPNum: surPlusIPNum,
+				BusinessID:     vpc.GetBusinessID(),
 			}
 			lock.Lock()
 			la.cloudVPCList = append(la.cloudVPCList, cloud)
@@ -131,31 +132,38 @@ func (la *ListAction) listCloudVPC() error {
 	return nil
 }
 
-func getAvailableIPNumByVpc(networkType, region, vpc string) (uint32, error) {
-	cidrCli, conClose, err := cidrmanager.GetCidrClient().GetCidrManagerClient()
+func getAvailableIPNumByVpc(model store.ClusterManagerModel, ipType string, vpc cmproto.CloudVPC) (uint32, error) {
+	cloud, err := actions.GetCloudByCloudID(model, vpc.CloudID)
 	if err != nil {
+		blog.Errorf("getAvailableIPNumByVpc[%s:%s] failed: %v", vpc.Region, vpc.VpcID, err)
 		return 0, err
 	}
-	defer func() {
-		if conClose != nil {
-			conClose()
-		}
-	}()
-
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
-	defer cancel()
-
-	req := &cidrmanager.GetVPCIPSurplusRequest{
-		Region:   region,
-		CidrType: networkType,
-		VpcID:    vpc,
-	}
-	resp, err := cidrCli.GetVPCIPSurplus(ctx, req)
+	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
+		Cloud: cloud,
+	})
 	if err != nil {
+		blog.Errorf("get credential for cloudprovider %s/%s when getAvailableIPNumByVpc[%s:%s] failed, %s",
+			cloud.CloudID, cloud.CloudProvider, vpc.Region, vpc.VpcID, err.Error(),
+		)
+		return 0, err
+	}
+	cmOption.Region = vpc.Region
+
+	vpcMgr, err := cloudprovider.GetVPCMgr(cloud.CloudProvider)
+	if err != nil {
+		blog.Errorf("get cloudprovider[%s] vpcManager[%s:%s] for getAvailableIPNumByVpc failed, %s",
+			cloud.CloudProvider, vpc.Region, vpc.VpcID, err.Error(),
+		)
 		return 0, err
 	}
 
-	return resp.Data.IPSurplus, nil
+	_, availableIpNum, err := vpcMgr.GetVpcIpUsage(vpc.VpcID, ipType, nil, cmOption)
+	if err != nil {
+		blog.Errorf("getAvailableIPNumByVpc[%s:%s] failed: %v", vpc.Region, vpc.VpcID, err)
+		return 0, err
+	}
+
+	return availableIpNum, nil
 }
 
 func (la *ListAction) setResp(code uint32, msg string) {

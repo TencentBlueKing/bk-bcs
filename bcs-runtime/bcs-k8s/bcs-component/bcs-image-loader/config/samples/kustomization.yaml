@@ -1,0 +1,4 @@
+## Append samples of your project ##
+resources:
+- tkex.tencent.com_v1alpha1_imageloader.yaml
+#+kubebuilder:scaffold:manifestskustomizesamples

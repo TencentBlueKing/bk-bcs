@@ -252,12 +252,6 @@ export default function useMenu() {
           route: 'clusterMain',
           id: 'CLUSTER',
         },
-        // {
-        //   title: $i18n.t('nav.nodeList'),
-        //   icon: 'bcs-icon-jd-node',
-        //   route: 'nodeMain',
-        //   id: 'NODE',
-        // },
         {
           title: $i18n.t('nav.nodeTemplate'),
           icon: 'bcs-icon-mobanpeizhi',
@@ -414,6 +408,11 @@ export default function useMenu() {
               id: 'HUAWEICLOUD',
               route: 'huaweiCloud',
             },
+            {
+              title: 'Aws Cloud',
+              id: 'AMAZONCLOUD',
+              route: 'amazonCloud',
+            },
           ],
         },
         {
@@ -515,8 +514,8 @@ export default function useMenu() {
   };
   const allLeafMenus = computed(() => flatLeafMenus(menusData.value));
   // 所有路由父节点只是用于分组（指向子路由），真正的菜单项是子节点
-  const getCurrentMenuByRoute = (name: string, id?: string) => allLeafMenus.value
-    .find(item => item.route === name || item.id === id);
+  const getCurrentMenuByRouteName = (name: string) => allLeafMenus.value
+    .find(item => item.route === name);
   // 根据ID获取当前一级导航菜单
   const getNavByID = (id: string) => {
     if (!id || !menusDataMap[id]) return;
@@ -552,18 +551,26 @@ export default function useMenu() {
       return false;
     }
     // 直接返回的菜单项不包含parent信息, 需要去menusDataMap找含有parent信息的菜单项
-    const menuID = getCurrentMenuByRoute(route.name || '')?.id || '';
+    const menuID = getCurrentMenuByRouteName(route.name || '')?.id || '';
     return menusDataMap[menuID] ? validateMenuID(menusDataMap[menuID]) : true;
   };
   const disabledMenuIDs = computed<string[]>(() => []);
+
+  // 获取路由对应的导航
+  const getNavByRoute = (route: Route) => {
+    let menu = getCurrentMenuByRouteName(route.name || '')?.root || getNavByID(route.meta?.menuId || '');
+    if (!menu && route.matched.some(item => item.name === 'dashboardIndex')) {
+      menu = menusDataMap.CLUSTERRESOURCE;
+    }
+    return menu;
+  };
 
   return {
     menusData,
     menus,
     disabledMenuIDs,
-    getNavByID,
-    getCurrentMenuByRoute,
     flatLeafMenus,
     validateRouteEnable,
+    getNavByRoute,
   };
 }

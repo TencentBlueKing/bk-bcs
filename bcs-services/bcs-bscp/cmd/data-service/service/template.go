@@ -21,8 +21,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/i18n"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 	pbbase "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
@@ -42,7 +44,7 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbds.CreateTemplateRe
 
 	// Get all configuration files under a certain package of the service
 	items, _, err := s.dao.Template().List(kt, req.Attachment.BizId, req.Attachment.TemplateSpaceId,
-		nil, &types.BasePage{All: true}, nil)
+		nil, &types.BasePage{All: true}, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -81,6 +83,17 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbds.CreateTemplateRe
 			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
 		}
 		return nil, err
+	}
+
+	// validate template set's templates count.
+	for _, tmplSetID := range req.TemplateSetIds {
+		if err = s.dao.TemplateSet().ValidateTmplNumber(kt, tx, req.Attachment.BizId, tmplSetID); err != nil {
+			logs.Errorf("validate template set's templates count failed, err: %v, rid: %s", err, kt.Rid)
+			if rErr := tx.Rollback(); rErr != nil {
+				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+			}
+			return nil, err
+		}
 	}
 
 	// 2. create template revision
@@ -164,7 +177,8 @@ func (s *Service) ListTemplates(ctx context.Context, req *pbds.ListTemplatesReq)
 	}
 	topIds, _ := tools.StrToUint32Slice(req.Ids)
 	// List templates with options.
-	details, count, err := s.dao.Template().List(kt, req.BizId, req.TemplateSpaceId, searcher, opt, topIds)
+	details, count, err := s.dao.Template().List(kt, req.BizId, req.TemplateSpaceId, searcher,
+		opt, topIds, req.SearchValue)
 
 	if err != nil {
 		logs.Errorf("list templates failed, err: %v, rid: %s", err, kt.Rid)
@@ -435,6 +449,17 @@ func (s *Service) AddTmplsToTmplSets(ctx context.Context, req *pbds.AddTmplsToTm
 		return nil, err
 	}
 
+	// validate template set's templates count.
+	for _, tmplSetID := range req.TemplateSetIds {
+		if err := s.dao.TemplateSet().ValidateTmplNumber(kt, tx, req.BizId, tmplSetID); err != nil {
+			logs.Errorf("validate template set's templates count failed, err: %v, rid: %s", err, kt.Rid)
+			if rErr := tx.Rollback(); rErr != nil {
+				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+			}
+			return nil, err
+		}
+	}
+
 	// 2. update app template bindings if necessary
 	atbs, err := s.dao.TemplateBindingRelation().
 		ListTemplateSetsBoundATBs(kt, req.BizId, req.TemplateSetIds)
@@ -583,10 +608,11 @@ func (s *Service) ListTemplatesNotBound(ctx context.Context, req *pbds.ListTempl
 		for _, f := range fields {
 			fieldsMap[f] = true
 		}
+		fieldsMap["combinedPathName"] = true
 		newDetails := make([]*pbtemplate.Template, 0)
 		for _, detail := range details {
-			if (fieldsMap["name"] && strings.Contains(detail.Spec.Name, req.SearchValue)) ||
-				(fieldsMap["path"] && strings.Contains(detail.Spec.Path, req.SearchValue)) ||
+			combinedPathName := path.Join(detail.Spec.Path, detail.Spec.Name)
+			if (fieldsMap["combinedPathName"] && strings.Contains(combinedPathName, req.SearchValue)) ||
 				(fieldsMap["memo"] && strings.Contains(detail.Spec.Memo, req.SearchValue)) ||
 				(fieldsMap["creator"] && strings.Contains(detail.Revision.Creator, req.SearchValue)) ||
 				(fieldsMap["reviser"] && strings.Contains(detail.Revision.Reviser, req.SearchValue)) {
@@ -624,7 +650,7 @@ func (s *Service) ListTemplatesNotBound(ctx context.Context, req *pbds.ListTempl
 
 // ListTmplsOfTmplSet list templates of template set.
 // 获取到该套餐的template_ids字段，根据这批ID获取对应的详情，做逻辑分页和搜索
-func (s *Service) ListTmplsOfTmplSet(ctx context.Context, req *pbds.ListTmplsOfTmplSetReq) ( // nolint
+func (s *Service) ListTmplsOfTmplSet(ctx context.Context, req *pbds.ListTmplsOfTmplSetReq) (
 	*pbds.ListTmplsOfTmplSetResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
@@ -661,10 +687,12 @@ func (s *Service) ListTmplsOfTmplSet(ctx context.Context, req *pbds.ListTmplsOfT
 		for _, f := range fields {
 			fieldsMap[f] = true
 		}
+		fieldsMap["combinedPathName"] = true
 		newDetails := make([]*pbtemplate.Template, 0)
 		for _, detail := range details {
-			if (fieldsMap["name"] && strings.Contains(detail.Spec.Name, req.SearchValue)) ||
-				(fieldsMap["path"] && strings.Contains(detail.Spec.Path, req.SearchValue)) ||
+			// 拼接path和name
+			combinedPathName := path.Join(detail.Spec.Path, detail.Spec.Name)
+			if (fieldsMap["combinedPathName"] && strings.Contains(combinedPathName, req.SearchValue)) ||
 				(fieldsMap["memo"] && strings.Contains(detail.Spec.Memo, req.SearchValue)) ||
 				(fieldsMap["creator"] && strings.Contains(detail.Revision.Creator, req.SearchValue)) ||
 				(fieldsMap["reviser"] && strings.Contains(detail.Revision.Reviser, req.SearchValue)) {
@@ -952,4 +980,102 @@ func (s *Service) validateBatchUpsertTemplates(grpcKit *kit.Kit, updateId []uint
 		}
 	}
 	return oldTemplateData, nil
+}
+
+// BatchUpdateTemplatePermissions 批量更新模板权限
+// nolint:funlen
+func (s *Service) BatchUpdateTemplatePermissions(ctx context.Context, req *pbds.BatchUpdateTemplatePermissionsReq) (
+	*pbds.BatchUpdateTemplatePermissionsResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	// 获取最新的模板配置
+	tmps, err := s.dao.TemplateRevision().ListLatestRevisionsGroupByTemplateIds(kt, req.GetTemplateIds())
+	if err != nil {
+		return nil, errf.Errorf(errf.DBOpFailed,
+			i18n.T(kt, fmt.Sprintf("lists the latest version by template ids failed, err: %s", err.Error())))
+	}
+
+	now := time.Now().UTC()
+	toCreate := make([]*table.TemplateRevision, 0)
+	for _, v := range tmps {
+		v.Spec.RevisionName = tools.GenerateRevisionName()
+		if req.User != "" {
+			v.Spec.Permission.User = req.User
+		}
+		if req.UserGroup != "" {
+			v.Spec.Permission.UserGroup = req.UserGroup
+		}
+		if req.Privilege != "" {
+			v.Spec.Permission.Privilege = req.Privilege
+		}
+		v.Revision = &table.CreatedRevision{Creator: kt.User, CreatedAt: now}
+		toCreate = append(toCreate, &table.TemplateRevision{
+			Spec:       v.Spec,
+			Attachment: v.Attachment,
+			Revision:   v.Revision,
+		})
+	}
+
+	tx := s.dao.GenQuery().Begin()
+	if err := s.dao.TemplateRevision().BatchCreateWithTx(kt, tx, toCreate); err != nil {
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+		}
+		return nil, errf.Errorf(errf.DBOpFailed,
+			i18n.T(kt, fmt.Sprintf("batch update of template permissions failed, err: %s", err.Error())))
+	}
+
+	ids := []uint32{}
+	templateIds := []uint32{}
+	templateRevisionID := map[uint32]uint32{}
+	for _, v := range toCreate {
+		ids = append(ids, v.ID)
+		templateIds = append(templateIds, v.Attachment.TemplateID)
+		templateRevisionID[v.Attachment.TemplateID] = v.ID
+	}
+
+	if len(req.GetAppIds()) > 0 {
+		// 更新引用的服务
+		items, err := s.dao.AppTemplateBinding().ListAppTemplateBindingByAppIds(kt, req.GetBizId(), req.GetAppIds())
+		if err != nil {
+			return nil, err
+		}
+		for _, item := range items {
+			templateRevisionIDs := make([]uint32, 0, len(item.Spec.Bindings))
+			for _, binding := range item.Spec.Bindings {
+				for _, revision := range binding.TemplateRevisions {
+					// 如果存在更新TemplateRevisionID
+					if id, exists := templateRevisionID[revision.TemplateID]; exists && id > 0 {
+						revision.TemplateRevisionID = id
+						revision.IsLatest = true
+						templateRevisionIDs = append(templateRevisionIDs, id)
+					} else {
+						templateRevisionIDs = append(templateRevisionIDs, revision.TemplateRevisionID)
+					}
+				}
+			}
+			item.Revision.Reviser = kt.User
+			item.Revision.UpdatedAt = now
+			item.Spec.TemplateRevisionIDs = tools.RemoveDuplicates(templateRevisionIDs)
+			item.Spec.LatestTemplateIDs = tools.RemoveDuplicates(tools.MergeAndDeduplicate(templateIds,
+				item.Spec.LatestTemplateIDs))
+		}
+
+		// 更新未命名版本绑定关系
+		if err := s.dao.AppTemplateBinding().BatchUpdateWithTx(kt, tx, items); err != nil {
+			if rErr := tx.Rollback(); rErr != nil {
+				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+			}
+			return nil, errf.Errorf(errf.DBOpFailed,
+				i18n.T(kt, fmt.Sprintf("batch update of template permissions failed, err: %s", err.Error())))
+		}
+	}
+
+	if e := tx.Commit(); e != nil {
+		logs.Errorf("commit transaction failed, err: %v, rid: %s", e, kt.Rid)
+		return nil, errf.Errorf(errf.DBOpFailed,
+			i18n.T(kt, fmt.Sprintf("batch update of template permissions failed, err: %s", e.Error())))
+	}
+
+	return &pbds.BatchUpdateTemplatePermissionsResp{Ids: ids}, nil
 }

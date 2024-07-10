@@ -4,14 +4,16 @@ base_conf:
   system_id: ""
   bk_username: ""
   time_zone: Asia/Shanghai
-  language_code: en-us
+  language_code: en
   run_env: dev
   region: ce
   domain: ""
+  module_name: ""
 bcs_conf:
   host: ""
   token: ""
   verify: false
+  namespace_prefix: ""
   jwt_public_key: ""
 iam_conf:
   external: false
@@ -20,6 +22,14 @@ iam_conf:
   bk_iam_erver: ""
   metric: false
   debug: false
+bk_notice:
+  enable: false
+  host: ""
+bk_ai_agent:
+  enable: false
+  host: ""
+  path: ""
+  assistants: []
 web:
   host: http://127.0.0.1:8083
   route_prefix: /bcsapi/v4/ui
@@ -43,6 +53,13 @@ frontend_conf:
     bk_sre_host: ""
     bk_user_host: ""
     bk_log_host: ""
+    bk_shared_res_url: ""
+    login_full_url: ""
   features:
     zh_cn: ""
 feature_flags: {}
+etcd:
+  endpoints: ""
+  ca: ""
+  cert: ""
+  key: ""

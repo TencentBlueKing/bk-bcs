@@ -46,6 +46,11 @@ var (
 		StepMethod: cloudprovider.RemoveHostFromCmdbAction,
 		StepName:   "移除主机",
 	}
+
+	checkNodeIpsInCmdbStep = cloudprovider.StepInfo{
+		StepMethod: cloudprovider.CheckNodeIpsInCmdbAction,
+		StepName:   "检测节点同步至cmdb",
+	}
 )
 
 // BuildTransferHostModuleStep build common transfer module step
@@ -69,6 +74,17 @@ func BuildRemoveHostStep(task *proto.Task, bizID string, nodeIPs []string) {
 
 	task.Steps[removeHostFromCmdbStep.StepMethod] = removeStep
 	task.StepSequence = append(task.StepSequence, removeHostFromCmdbStep.StepMethod)
+}
+
+// BuildCheckNodeIpsInCmdbStep check node ips sync to cmdb step
+func BuildCheckNodeIpsInCmdbStep(task *proto.Task, cluster *proto.Cluster) {
+	checkCmdbStep := cloudprovider.InitTaskStep(checkNodeIpsInCmdbStep)
+
+	checkCmdbStep.Params[cloudprovider.CloudIDKey.String()] = cluster.Provider
+	checkCmdbStep.Params[cloudprovider.ClusterIDKey.String()] = cluster.ClusterID
+
+	task.Steps[checkNodeIpsInCmdbStep.StepMethod] = checkCmdbStep
+	task.StepSequence = append(task.StepSequence, checkNodeIpsInCmdbStep.StepMethod)
 }
 
 // TransferHostModuleTask transfer host module task
@@ -350,17 +366,16 @@ func CheckNodeIpsInCMDBTask(taskID string, stepName string) error {
 	}
 
 	// get nodeIPs
-	nodeIPs := state.Task.CommonParams[cloudprovider.NodeIPsKey.String()]
-	ips := strings.Split(nodeIPs, ",")
-
-	if len(ips) == 0 {
+	ipList := cloudprovider.ParseNodeIpOrIdFromCommonMap(state.Task.GetCommonParams(),
+		cloudprovider.NodeIPsKey.String(), ",")
+	if len(ipList) == 0 {
 		blog.Infof("CheckNodeIpsInCMDBTask[%s] nodeIPs empty", taskID)
 		return nil
 	}
 
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
 
-	err = CheckIPsInCmdb(ctx, ips)
+	err = CheckIPsInCmdb(ctx, ipList)
 	if err != nil {
 		blog.Errorf("CheckNodeIpsInCMDBTask[%s] failed: %v", taskID, err)
 		_ = state.UpdateStepFailure(start, stepName, err)

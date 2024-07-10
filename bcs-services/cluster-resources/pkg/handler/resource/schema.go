@@ -24,11 +24,29 @@ import (
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
+// GetMultiResFormSchema xxx
+func (h *Handler) GetMultiResFormSchema(
+	ctx context.Context, req *clusterRes.GetMultiResFormSchemaReq, resp *clusterRes.CommonListResp,
+) error {
+	result := make([]map[string]interface{}, 0)
+	var err error
+	for _, v := range req.GetResourceTypes() {
+		schema, ierr := renderer.NewSchemaRenderer(ctx, "", v.ApiVersion, v.Kind, "", "create", true).Render()
+		if ierr != nil {
+			return ierr
+		}
+		result = append(result, schema)
+	}
+	resp.Data, err = pbstruct.MapSlice2ListValue(result)
+	return err
+}
+
 // GetResFormSchema xxx
 func (h *Handler) GetResFormSchema(
 	ctx context.Context, req *clusterRes.GetResFormSchemaReq, resp *clusterRes.CommonResp,
 ) error {
-	schema, err := renderer.NewSchemaRenderer(ctx, req.ClusterID, req.Kind, req.Namespace, req.Action).Render()
+	schema, err := renderer.NewSchemaRenderer(ctx, req.ClusterID, "", req.Kind, req.Namespace, req.Action, false).
+		Render()
 	if err != nil {
 		return err
 	}

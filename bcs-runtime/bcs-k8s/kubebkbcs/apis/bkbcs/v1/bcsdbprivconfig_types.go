@@ -34,7 +34,6 @@ type BcsDbPrivConfigSpec struct {
 
 // +kubebuilder:object:root=true
 // +genclient
-// +genclient:noStatus
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // BcsDbPrivConfig is the Schema for the bcsdbprivconfigs API
@@ -42,7 +41,28 @@ type BcsDbPrivConfig struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec BcsDbPrivConfigSpec `json:"spec,omitempty"`
+	Spec   BcsDbPrivConfigSpec   `json:"spec,omitempty"`
+	Status BcsDbPrivConfigStatus `json:"status,omitempty"`
+}
+
+// BcsDbPrivConfigStatus Stores status information about whether the pod is dbm authorized
+type BcsDbPrivConfigStatus struct {
+	DbPrivConfigStatusMap map[string]*DbPrivConfigStatus `json:"dbPrivConfigStatusMap"`
+}
+
+// DbPrivConfigStatus dbm authorization status information
+type DbPrivConfigStatus struct {
+	AppName  string `json:"appName"`
+	TargetDb string `json:"targetDb"`
+	DbType   string `json:"dbType"`
+	CallUser string `json:"callUser"`
+	DbName   string `json:"dbName"`
+	Operator string `json:"operator"`
+	UseCDP   bool   `json:"useCDP"`
+	Status   string `json:"status"`
+	PodIp    string `json:"podIp"`
+	NodeIp   string `json:"nodeIp"`
+	PodName  string `json:"podName"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

@@ -185,7 +185,7 @@
     const routeData = router.resolve({
       name: 'client-search',
       params: { appId: props.appId, bizId: props.bkBizId },
-      query: { release_change_status: jumpStatus.value },
+      query: { release_change_status: jumpStatus.value, heartTime: searchQuery.value.last_heartbeat_time },
     });
     window.open(routeData.href, '_blank');
   };
@@ -217,7 +217,6 @@
   }
 
   :deep(.g2-tooltip) {
-    visibility: hidden;
     .g2-tooltip-title {
       padding-left: 16px;
       font-size: 14px;

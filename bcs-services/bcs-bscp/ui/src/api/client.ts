@@ -141,3 +141,24 @@ export const getClientLabelsAndAnnotations = (bizId: string, appId: number, quer
  */
 export const getClientPullFailedReason = (bizId: string, appId: number, query: any) =>
   http.post(`/config/biz/${bizId}/apps/${appId}/clients/specific_failed_reason`, query);
+
+/**
+ *  获取常用查询重名校验
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param appId 应用ID
+ * @returns name 名称
+ */
+
+export const getClientCommonlyUsedNameCheck = (bizId: string, appId: number, name: string) =>
+  http.get(`/config/biz/${bizId}/apps/${appId}/client_querys/check_exists`, { params: { name } });
+
+/**
+ *
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param ids 客户端ID
+ * @returns
+ */
+export const retryClients = (bizId: string, appId: number, ids: number[]) =>
+  http.post(`/config/biz/${bizId}/apps/${appId}/clients/retry`, { client_ids: ids, all: false });

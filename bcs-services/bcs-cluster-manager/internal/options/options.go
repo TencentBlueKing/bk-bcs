@@ -14,6 +14,7 @@
 package options
 
 import (
+	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-common/common/encryptv2" // nolint
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
@@ -121,6 +122,12 @@ type NodeManConfig struct {
 
 // ResourceManagerConfig init resource_module
 type ResourceManagerConfig struct {
+	Enable bool   `json:"enable"`
+	Module string `json:"module"`
+}
+
+// ProjectManagerConfig init project_module
+type ProjectManagerConfig struct {
 	Enable bool   `json:"enable"`
 	Module string `json:"module"`
 }
@@ -235,6 +242,7 @@ type ComponentDeploy struct {
 	BCSAPIGateway string         `json:"bcsApiGateway"`
 	Token         string         `json:"token"`
 	DeployService string         `json:"deployService"`
+	BcsClusterUrl string         `json:"bcsClusterUrl"`
 }
 
 // AuthConfig config for auth
@@ -271,6 +279,11 @@ type JobConfig struct {
 	JobTaskLink string `json:"jobTaskLink"`
 }
 
+// DaemonConfig for daemon
+type DaemonConfig struct {
+	Enable bool `json:"enable"`
+}
+
 // ClusterManagerOptions options of cluster manager
 type ClusterManagerOptions struct {
 	Etcd               EtcdOption            `json:"etcd"`
@@ -283,6 +296,7 @@ type ClusterManagerOptions struct {
 	Cmdb               CmdbConfig            `json:"cmdb"`
 	NodeMan            NodeManConfig         `json:"nodeman"`
 	ResourceManager    ResourceManagerConfig `json:"resource"`
+	ProjectManager     ProjectManagerConfig  `json:"project"`
 	CidrManager        CidrManagerConfig     `json:"cidr"`
 	CloudTemplatePath  string                `json:"cloudTemplatePath"`
 	Access             AccessConfig          `json:"access"`
@@ -301,7 +315,9 @@ type ClusterManagerOptions struct {
 	ResourceSchemaPath string                `json:"resourceSchemaPath"`
 	TagDepart          string                `json:"tagDepart"`
 	PrefixVcluster     string                `json:"prefixVcluster"`
+	TracingConfig      conf.TracingConfig    `json:"tracingConfig"`
 	Encrypt            encryptv2.Config      `json:"encrypt"`
+	Daemon             DaemonConfig          `json:"daemon"`
 	ServerConfig
 	ClientConfig
 }

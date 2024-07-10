@@ -22,8 +22,10 @@ import (
 )
 
 // BcsLogConfigLister helps list BcsLogConfigs.
+// All objects returned here must be treated as read-only.
 type BcsLogConfigLister interface {
 	// List lists all BcsLogConfigs in the indexer.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1.BcsLogConfig, err error)
 	// BcsLogConfigs returns an object that can list and get BcsLogConfigs.
 	BcsLogConfigs(namespace string) BcsLogConfigNamespaceLister
@@ -54,10 +56,13 @@ func (s *bcsLogConfigLister) BcsLogConfigs(namespace string) BcsLogConfigNamespa
 }
 
 // BcsLogConfigNamespaceLister helps list and get BcsLogConfigs.
+// All objects returned here must be treated as read-only.
 type BcsLogConfigNamespaceLister interface {
 	// List lists all BcsLogConfigs in the indexer for a given namespace.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1.BcsLogConfig, err error)
 	// Get retrieves the BcsLogConfig from the indexer for a given namespace and name.
+	// Objects returned here must be treated as read-only.
 	Get(name string) (*v1.BcsLogConfig, error)
 	BcsLogConfigNamespaceListerExpansion
 }

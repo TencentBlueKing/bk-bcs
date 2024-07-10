@@ -22,9 +22,12 @@
           <bk-input
             v-model="searchStr"
             class="search-group-input"
-            :placeholder="t('密钥名称/说明/关联规则/更新人')"
+            :placeholder="t('密钥名称/密钥/说明/关联规则/更新人')"
             :clearable="true"
-            v-bk-tooltips="{ content: t('密钥名称/说明/关联规则/更新人'), disabled: locale === 'zh-cn' || searchStr }"
+            v-bk-tooltips="{
+              content: t('密钥名称/密钥/说明/关联规则/更新人'),
+              disabled: locale === 'zh-cn' || searchStr,
+            }"
             @clear="refreshListWithLoading()"
             @input="handleSearchInputChange">
             <template #suffix>
@@ -42,7 +45,8 @@
           :remote-pagination="true"
           :pagination="pagination"
           @page-limit-change="handlePageLimitChange"
-          @page-value-change="refreshListWithLoading">
+          @page-value-change="refreshListWithLoading"
+          @column-filter="handleFilter">
           <bk-table-column :label="t('密钥名称')" width="188">
             <template #default="{ row, index }">
               <bk-input
@@ -147,7 +151,10 @@
               <span v-if="row.revision">{{ datetimeFormat(row.revision.update_at) }}</span>
             </template>
           </bk-table-column> -->
-          <bk-table-column :label="t('状态')" width="110">
+          <bk-table-column
+            :label="t('状态')"
+            width="110"
+            :filter="{ filterFn: () => true, list: statusFilterList, checked: statusFilterChecked }">
             <template #default="{ row }">
               <div v-if="row.spec" class="status-action">
                 <bk-switcher
@@ -248,6 +255,7 @@
   import { useI18n } from 'vue-i18n';
   import { storeToRefs } from 'pinia';
   import useGlobalStore from '../../../store/global';
+  import useTablePagination from '../../../utils/hooks/use-table-pagination';
   import { Plus, Search, Eye, Unvisible, Copy, EditLine, Warn } from 'bkui-vue/lib/icon';
   import BkMessage from 'bkui-vue/lib/message';
   import { InfoBox } from 'bkui-vue';
@@ -267,6 +275,7 @@
 
   const { spaceId, permissionQuery, showApplyPermDialog } = storeToRefs(useGlobalStore());
   const { t, locale } = useI18n();
+  const { pagination, updatePagination } = useTablePagination('credentialList');
 
   const permCheckLoading = ref(false);
   const hasManagePerm = ref(false);
@@ -285,16 +294,22 @@
   const isAssociateSliderShow = ref(false);
   const currentCredential = ref(0);
   const isSearchEmpty = ref(false);
-  const pagination = ref({
-    current: 1,
-    count: 0,
-    limit: 10,
-  });
   const tableData = ref<any>([]);
   const isShowDeleteDialog = ref(false);
   const dialogInputStr = ref('');
   const deleteCredentialInfo = ref<ICredentialItem>();
   const isCreateCredentialNameExist = ref(false);
+  const statusFilterChecked = ref<string[]>();
+  const statusFilterList = [
+    {
+      value: 'enable',
+      text: t('已启用'),
+    },
+    {
+      value: 'unEnable',
+      text: t('已禁用'),
+    },
+  ];
 
   watch(
     () => spaceId.value,
@@ -348,7 +363,7 @@
 
   // 加载密钥列表
   const loadCredentialList = async () => {
-    const query: { limit: number; start: number; searchKey?: string; top_ids?: number } = {
+    const query: { limit: number; start: number; searchKey?: string; top_ids?: number; enable?: boolean } = {
       start: pagination.value.limit * (pagination.value.current - 1),
       limit: pagination.value.limit,
     };
@@ -357,6 +372,9 @@
     }
     if (newCredential.value) {
       query.top_ids = newCredential.value;
+    }
+    if (statusFilterChecked.value && statusFilterChecked.value.length === 1) {
+      query.enable = statusFilterChecked.value[0] === 'enable';
     }
     const res = await getCredentialList(spaceId.value, query);
     res.details.forEach((item: ICredentialItem) => (item.visible = false));
@@ -601,7 +619,7 @@
 
   // 更改每页条数
   const handlePageLimitChange = (val: number) => {
-    pagination.value.limit = val;
+    updatePagination('limit', val);
     refreshListWithLoading();
   };
 
@@ -653,6 +671,12 @@
     } else {
       credential.showRules = credential.credential_scopes.slice(0, 3);
     }
+  };
+
+  // 表格状态过滤
+  const handleFilter = ({ checked }: any) => {
+    statusFilterChecked.value = checked;
+    loadCredentialList();
   };
 </script>
 <style lang="scss" scoped>

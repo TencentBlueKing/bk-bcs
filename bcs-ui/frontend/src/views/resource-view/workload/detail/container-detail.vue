@@ -79,7 +79,8 @@
           :params="params"
           category="containers"
           :colors="['#30d878', '#ff5656']"
-          :series="[{ }, { areaStyle: null }]">
+          :series="[{ }, { areaStyle: null }]"
+          unit="percent-number">
         </Metric>
         <Metric
           :title="$t('metrics.memUsage1')"

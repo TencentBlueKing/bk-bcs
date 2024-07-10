@@ -13,17 +13,20 @@
             :is-open-full-screen="isOpenFullScreen"
             :all-label="allLabel"
             :primary-dimension="primaryDimension"
-            @refresh="loadChartData"
+            :select-dimension="selectDimension"
+            :drill-dimension="drillDimension"
+            :is-stack="isStack"
+            @refresh="handleRefresh"
             @toggle-full-screen="isOpenFullScreen = !isOpenFullScreen"
             @toggle-show-btn="isOpenPopover = $event"
             @select-dimension="selectedDimension = $event"
-            @select-down-dimension="selectedDownDimension = $event"
-            @toggle-chart-show-type="chartShowType = $event" />
+            @select-down-dimension="handleSelectDownDimension"
+            @toggle-chart-show-type="handleToggleChartShowType" />
         </template>
         <template #head-suffix>
           <div class="head-suffix">
             <bk-tag theme="info" type="stroke"> {{ $t('标签') }} </bk-tag>
-            <div v-if="selectedDownDimension && currentType === 'column'" class="icon-wrap">
+            <div v-if="selectedDownDimension" class="icon-wrap">
               <span
                 class="action-icon bk-bscp-icon icon-download"
                 v-bk-tooltips="{
@@ -34,11 +37,12 @@
           </div>
         </template>
         <bk-loading class="loading-wrap" :loading="loading">
-          <div v-if="isDrillDown && currentType === 'column'" class="nav">
-            <span class="group-dimension" @click="handleCancelDrillDown">{{ $t('组合维度') }}</span> /
+          <div v-if="isDrillDown" class="nav">
+            <span class="group-dimension" @click="handleCancelDrillDown">{{ primaryDimension }}</span> /
             <span class="drill-down-data">{{ navDrillDownData }}</span>
           </div>
           <component
+            v-if="data.length"
             :bk-biz-id="bkBizId"
             :app-id="appId"
             :is="currentComponent"
@@ -47,8 +51,19 @@
             :chart-show-type="chartShowType"
             :is-show-sunburst="isShowSunburst"
             :drill-down-demension="selectedDownDimension"
-            @jump="jumpToSearch($event as string)"
+            :is-drill-down="isDrillDown"
+            @jump="jumpToSearch($event as any)"
             @drill-down="handleDrillDown" />
+          <bk-exception
+            v-else
+            class="exception-wrap-item exception-part"
+            type="empty"
+            scene="part"
+            :description="$t('暂无数据')">
+            <template #type>
+              <span class="bk-bscp-icon icon-bar-chart exception-icon" />
+            </template>
+          </bk-exception>
         </bk-loading>
       </Card>
     </div>
@@ -79,7 +94,12 @@
     appId: number;
     primaryDimension: string;
     allLabel: string[];
+    selectDimension: string[];
+    drillDimension: string;
+    isStack: boolean;
   }>();
+
+  const emits = defineEmits(['select']);
 
   const currentType = ref('column');
   const componentMap = {
@@ -94,11 +114,13 @@
   const isOpenPopover = ref(false);
   const loading = ref(false);
   const data = ref<IClientLabelItem[]>([]);
-  const selectedDimension = ref<string[]>([props.primaryDimension]);
-  const selectedDownDimension = ref('');
+  const selectedDimension = ref<string[]>(props.selectDimension || []);
+  const selectedDownDimension = ref(props.drillDimension || '');
   const navDrillDownData = ref('');
   const isDrillDown = ref(false);
-  const chartShowType = ref('tile');
+  const chartShowType = ref(props.isStack ? 'pile' : 'tile');
+  const drillDownItem = ref<IClientLabelItem>();
+  const jumpLabels = ref<{ [key: string]: string }>();
 
   const isShowOperationBtn = computed(() => isMouseEnter.value || isOpenPopover.value);
 
@@ -123,6 +145,14 @@
     () => {
       selectedDownDimension.value = '';
       isDrillDown.value = false;
+      loadChartData();
+      handleSelecteDimension();
+    },
+  );
+
+  watch(
+    () => searchQuery.value.last_heartbeat_time,
+    () => {
       loadChartData();
     },
   );
@@ -162,6 +192,15 @@
       } else {
         data.value = res[props.primaryDimension];
       }
+      if (selectedDimension.value.length > 1 && !isDrillDown.value) {
+        data.value.forEach((item: IClientLabelItem) => {
+          item.x_field = `${item.primary_val}, ${item.foreign_val}`;
+        });
+      } else {
+        data.value.forEach((item: IClientLabelItem) => {
+          item.x_field = item.primary_val;
+        });
+      }
     } catch (error) {
       console.error(error);
     } finally {
@@ -169,11 +208,24 @@
     }
   };
 
-  const jumpToSearch = (value: string) => {
+  const jumpToSearch = ({ drillDownVal, label }: { label: any; drillDownVal: string }) => {
+    let labels: any;
+    // 判断是否是下钻
+    if (isDrillDown.value) {
+      labels = {
+        ...jumpLabels.value,
+        [selectedDownDimension.value]: drillDownVal,
+      };
+    } else {
+      labels = label;
+    }
     const routeData = router.resolve({
       name: 'client-search',
       params: { appId: props.appId, bizId: props.bkBizId },
-      query: { label: value ? `${props.primaryDimension}=${value}` : props.primaryDimension },
+      query: {
+        label: JSON.stringify(labels),
+        heartTime: searchQuery.value.last_heartbeat_time,
+      },
     });
     window.open(routeData.href, '_blank');
   };
@@ -181,11 +233,17 @@
   // 下钻
   const handleDrillDown = (data: any) => {
     if (!selectedDownDimension.value || isDrillDown.value) return;
-    loadChartData({
+    drillDownItem.value = data;
+    jumpLabels.value = {
       [data.foreign_key]: data.foreign_val,
       [data.primary_key]: data.primary_val,
-    });
-    navDrillDownData.value = `${data.foreign_val}, ${data.primary_val}`;
+    };
+    loadChartData(jumpLabels.value);
+    if (data.foreign_val === data.primary_val) {
+      navDrillDownData.value = `${data.primary_val}`;
+    } else {
+      navDrillDownData.value = `${data.primary_val}, ${data.foreign_val}`;
+    }
     isDrillDown.value = true;
   };
 
@@ -193,6 +251,36 @@
     loadChartData();
     navDrillDownData.value = '';
     isDrillDown.value = false;
+  };
+
+  const handleRefresh = () => {
+    if (isDrillDown.value) {
+      loadChartData({
+        [drillDownItem.value!.foreign_key]: drillDownItem.value!.foreign_val,
+        [drillDownItem.value!.primary_key]: drillDownItem.value!.primary_val,
+      });
+    } else {
+      loadChartData();
+    }
+  };
+
+  const handleSelectDownDimension = (dimension: string) => {
+    selectedDownDimension.value = dimension;
+    handleSelecteDimension();
+  };
+
+  const handleToggleChartShowType = (type: string) => {
+    chartShowType.value = type;
+    handleSelecteDimension();
+  };
+
+  const handleSelecteDimension = () => {
+    emits('select', {
+      primaryDimension: props.primaryDimension,
+      minorDimension: selectedDimension.value,
+      drillDownDimension: selectedDownDimension.value,
+      isStack: chartShowType.value === 'pile',
+    });
   };
 </script>
 
@@ -215,6 +303,8 @@
   .loading-wrap {
     height: 100%;
     .nav {
+      position: relative;
+      z-index: 999;
       font-size: 12px;
       color: #313238;
       .group-dimension {
@@ -228,6 +318,10 @@
         color: #979ba5;
         margin-left: 8px;
       }
+    }
+    :deep(.bk-exception) {
+      justify-content: center;
+      transform: translateY(-20px);
     }
   }
   .head-suffix {

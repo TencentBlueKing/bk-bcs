@@ -17,10 +17,10 @@ import (
 	"net/http"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/gorilla/mux"
 
 	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/permitcheck"
 )
 
 // MonitorPlugin for internal monitor-scenario authorization
@@ -30,6 +30,7 @@ type MonitorPlugin struct {
 }
 
 // GET:		/api/v1/monitor/{biz_id}, 查询bizID下对应的所有AppMonitor信息
+// GET:		/api/v1/monitor/{biz_id}/list_scenario, 查询bizID下能安装的场景信息
 // DELETE:	/api/v1/monitor/{biz_id}/{scenario}, 删除bizID下安装的对应场景监控
 // POST:	/api/v1/monitor/{biz_id}/{scenario}, 创建/更新bizID下安装的对应场景监控
 
@@ -37,6 +38,8 @@ type MonitorPlugin struct {
 // project plugin is a subRouter, all path registered is relative
 func (plugin *MonitorPlugin) Init() error {
 	plugin.Path("/{biz_id}").Methods(http.MethodGet).Handler(plugin.middleware.HttpWrapper(plugin.monitorViewHandler))
+	plugin.Path("/{biz_id}/list_scenario").Methods(http.MethodGet).Handler(plugin.middleware.HttpWrapper(plugin.
+		monitorViewHandler))
 	plugin.Path("/{biz_id}/{scenario}").Methods(http.MethodPost, http.MethodDelete).Handler(plugin.middleware.
 		HttpWrapper(plugin.monitorOperateHandler))
 	blog.Infof("monitor plugin init successfully")
@@ -46,7 +49,7 @@ func (plugin *MonitorPlugin) Init() error {
 // GET /api/v1/monitor/{biz_id}
 func (plugin *MonitorPlugin) monitorViewHandler(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	bizID := mux.Vars(r)["biz_id"]
-	statusCode, err := plugin.middleware.CheckBusinessPermission(r.Context(), bizID, iam.ProjectView)
+	statusCode, err := plugin.middleware.CheckBusinessPermission(r.Context(), bizID, permitcheck.ProjectViewRSAction)
 	if statusCode != http.StatusOK {
 		return r, mw.ReturnErrorResponse(statusCode, fmt.Errorf("check businessID '%s' permission failed: %w", bizID,
 			err))
@@ -56,7 +59,7 @@ func (plugin *MonitorPlugin) monitorViewHandler(r *http.Request) (*http.Request,
 
 func (plugin *MonitorPlugin) monitorOperateHandler(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	bizID := mux.Vars(r)["biz_id"]
-	statusCode, err := plugin.middleware.CheckBusinessPermission(r.Context(), bizID, iam.ProjectEdit)
+	statusCode, err := plugin.middleware.CheckBusinessPermission(r.Context(), bizID, permitcheck.ProjectEditRSAction)
 	if statusCode != http.StatusOK {
 		return r, mw.ReturnErrorResponse(statusCode, fmt.Errorf("check businessID '%s' permission failed: %w", bizID,
 			err))

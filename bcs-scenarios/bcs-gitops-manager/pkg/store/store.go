@@ -65,7 +65,7 @@ type Store interface {
 	GetCluster(ctx context.Context, query *cluster.ClusterQuery) (*v1alpha1.Cluster, error)
 	GetClusterFromDB(ctx context.Context, serverUrL string) (*v1alpha1.Cluster, error)
 	ListCluster(ctx context.Context) (*v1alpha1.ClusterList, error)
-	ListClustersByProject(ctx context.Context, project string) (*v1alpha1.ClusterList, error)
+	ListClustersByProject(ctx context.Context, projectID string) (*v1alpha1.ClusterList, error)
 	UpdateCluster(ctx context.Context, cluster *v1alpha1.Cluster) error
 	DeleteCluster(ctx context.Context, name string) error
 
@@ -87,7 +87,11 @@ type Store interface {
 		live *unstructured.Unstructured, hideData bool) error
 	UpdateApplicationSpec(ctx context.Context, spec *appclient.ApplicationUpdateSpecRequest) (
 		*v1alpha1.ApplicationSpec, error)
+	PatchApplicationResource(ctx context.Context, appName string, resource *v1alpha1.ResourceStatus, patch,
+		patchType string) error
 
+	AllApplicationSets() []*v1alpha1.ApplicationSet
+	RefreshApplicationSet(namespace, name string) error
 	GetApplicationSet(ctx context.Context, name string) (*v1alpha1.ApplicationSet, error)
 	ListApplicationSets(ctx context.Context, query *appsetpkg.ApplicationSetListQuery) (
 		*v1alpha1.ApplicationSetList, error)
@@ -106,6 +110,8 @@ func NewStore(opt *Options) Store {
 	globalStore = &argo{
 		option:           opt,
 		cacheApplication: &sync.Map{},
+		cacheAppSet:      &sync.Map{},
+		cacheAppProject:  &sync.Map{},
 	}
 	return globalStore
 }

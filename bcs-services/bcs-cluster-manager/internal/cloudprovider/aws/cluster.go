@@ -22,6 +22,9 @@ import (
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/aws/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/aws/business"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 )
 
 func init() {
@@ -91,7 +94,28 @@ func (c *Cluster) DeleteCluster(cls *proto.Cluster, opt *cloudprovider.DeleteClu
 
 // GetCluster get kubenretes cluster detail information according cloudprovider
 func (c *Cluster) GetCluster(cloudID string, opt *cloudprovider.GetClusterOption) (*proto.Cluster, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+	runtimeInfo, err := business.GetRuntimeInfo(opt.Cluster.ClusterID)
+	if err != nil {
+		return nil, err
+	}
+
+	if opt.Cluster.ClusterAdvanceSettings == nil {
+		opt.Cluster.ClusterAdvanceSettings = &proto.ClusterAdvanceSetting{}
+	}
+	if v, ok := runtimeInfo[common.ContainerdRuntime]; ok {
+
+		opt.Cluster.ClusterAdvanceSettings.ContainerRuntime = common.ContainerdRuntime
+		if len(v) > 0 {
+			opt.Cluster.ClusterAdvanceSettings.RuntimeVersion = v[0]
+		}
+	} else if v, ok := runtimeInfo[common.DockerContainerRuntime]; ok {
+		opt.Cluster.ClusterAdvanceSettings.ContainerRuntime = common.DockerContainerRuntime
+		if len(v) > 0 {
+			opt.Cluster.ClusterAdvanceSettings.RuntimeVersion = v[0]
+		}
+	}
+
+	return opt.Cluster, nil
 }
 
 // ListCluster get cloud cluster list by region
@@ -112,9 +136,17 @@ func (c *Cluster) ListCluster(opt *cloudprovider.ListClusterOption) ([]*proto.Cl
 
 	cloudClusterList := make([]*proto.CloudClusterInfo, 0)
 	for _, v := range clusters {
+		cluster, err := cli.GetEksCluster(*v)
+		if err != nil {
+			return nil, err
+		}
+
 		cloudClusterList = append(cloudClusterList, &proto.CloudClusterInfo{
-			ClusterID:   *v,
-			ClusterName: *v,
+			ClusterID:      *v,
+			ClusterName:    *v,
+			ClusterStatus:  *cluster.Status,
+			ClusterVersion: *cluster.Version,
+			Location:       opt.CommonOption.Region,
 		})
 	}
 
@@ -166,7 +198,36 @@ func (c *Cluster) ListProjects(opt *cloudprovider.CommonOption) ([]*proto.CloudP
 // CheckClusterEndpointStatus check cluster endpoint status
 func (c *Cluster) CheckClusterEndpointStatus(clusterID string, isExtranet bool,
 	opt *cloudprovider.CheckEndpointStatusOption) (bool, error) {
-	return false, cloudprovider.ErrCloudNotImplemented
+	if opt == nil || len(opt.Account.SecretID) == 0 || len(opt.Account.SecretKey) == 0 || len(opt.Region) == 0 {
+		return false, fmt.Errorf("cloud CheckClusterEndpointStatus lost authoration")
+	}
+
+	client, err := api.NewEksClient(&opt.CommonOption)
+	if err != nil {
+		return false, fmt.Errorf("CheckClusterEndpointStatus get eks client failed, %v", err)
+	}
+
+	cluster, err := client.GetEksCluster(clusterID)
+	if err != nil {
+		return false, fmt.Errorf("CheckClusterEndpointStatus get cluster failed, %v", err)
+	}
+
+	kubeConfig, err := api.GetClusterKubeConfig(&opt.CommonOption, cluster)
+	if err != nil {
+		return false, fmt.Errorf("CheckClusterEndpointStatus get kubeConfig failed, %v", err)
+	}
+
+	data, err := encrypt.Decrypt(nil, kubeConfig)
+	if err != nil {
+		return false, fmt.Errorf("decode kube config failed: %v", err)
+	}
+
+	_, err = cloudprovider.GetCRDByKubeConfig(data)
+	if err != nil {
+		return false, fmt.Errorf("CheckClusterEndpointStatus get CRDB failed, %v", err)
+	}
+
+	return true, nil
 }
 
 // AddSubnetsToCluster add subnets to cluster
@@ -191,4 +252,16 @@ func (c *Cluster) AppendCloudNodeInfo(ctx context.Context,
 func (c *Cluster) CheckIfGetNodesFromCluster(ctx context.Context, cluster *proto.Cluster,
 	nodes []*proto.ClusterNode) bool {
 	return true
+}
+
+// SwitchClusterNetwork switch cluster network mode
+func (c *Cluster) SwitchClusterNetwork(
+	cls *proto.Cluster, subnet *proto.SubnetSource, opt *cloudprovider.SwitchClusterNetworkOption) (*proto.Task, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// CheckClusterNetworkStatus get cluster network
+func (c *Cluster) CheckClusterNetworkStatus(cloudID string,
+	opt *cloudprovider.CheckClusterNetworkStatusOption) (bool, error) {
+	return false, cloudprovider.ErrCloudNotImplemented
 }

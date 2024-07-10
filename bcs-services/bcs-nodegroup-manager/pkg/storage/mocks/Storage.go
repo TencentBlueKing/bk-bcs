@@ -289,6 +289,29 @@ func (_m *Storage) ListNodeGroupAction(nodeGroupID string, opt *storage.ListOpti
 	return r0, r1
 }
 
+// ListNodeGroupActionByEvent provides a mock function with given fields: event, opt
+func (_m *Storage) ListNodeGroupActionByEvent(event string, opt *storage.ListOptions) ([]*storage.NodeGroupAction, error) {
+	ret := _m.Called(event, opt)
+
+	var r0 []*storage.NodeGroupAction
+	if rf, ok := ret.Get(0).(func(string, *storage.ListOptions) []*storage.NodeGroupAction); ok {
+		r0 = rf(event, opt)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*storage.NodeGroupAction)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, *storage.ListOptions) error); ok {
+		r1 = rf(event, opt)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // ListNodeGroupActionByTaskID provides a mock function with given fields: taskID, opt
 func (_m *Storage) ListNodeGroupActionByTaskID(taskID string, opt *storage.ListOptions) ([]*storage.NodeGroupAction, error) {
 	ret := _m.Called(taskID, opt)

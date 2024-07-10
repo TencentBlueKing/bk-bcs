@@ -8,6 +8,7 @@ replace (
 	github.com/Tencent/bk-bcs/bcs-scenarios/kourse => github.com/TencentBlueKing/bk-bcs/bcs-scenarios/kourse v0.0.0-20230620070606-922d3a7a9517
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
 	github.com/go-logr/logr => github.com/go-logr/logr v0.4.0
+	github.com/mholt/caddy => github.com/caddyserver/caddy v0.11.1
 	go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4
 	google.golang.org/grpc => google.golang.org/grpc v1.26.0
 	k8s.io/api => k8s.io/api v0.20.0
@@ -39,21 +40,26 @@ replace (
 	k8s.io/sample-apiserver => k8s.io/sample-apiserver v0.20.0
 )
 
+replace github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubebkbcs => ../../kubebkbcs
+
 require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230707084844-155f32c8f606
 	github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubebkbcs v0.0.0-20220118090807-f41aacaffdf9
 	github.com/deckarep/golang-set v1.7.1
+	github.com/elazarl/goproxy v0.0.0-20231117061959-7cc037d33fb5 // indirect
 	github.com/evanphx/json-patch v4.12.0+incompatible
+	github.com/parnurzeal/gorequest v0.2.16
 	github.com/prometheus/client_golang v1.11.0
 	k8s.io/api v0.26.5
 	k8s.io/apiextensions-apiserver v0.20.0
 	k8s.io/apimachinery v0.26.5
 	k8s.io/client-go v0.26.5
+	moul.io/http2curl v1.0.0 // indirect
 )
 
 require (
 	github.com/pkg/errors v0.9.1
-	github.com/stretchr/testify v1.7.1
+	github.com/stretchr/testify v1.9.0
 )
 
 require (
@@ -72,7 +78,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/docker/distribution v2.7.1+incompatible // indirect
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
-	github.com/go-logr/logr v1.2.3 // indirect
+	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
@@ -82,7 +88,6 @@ require (
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/imdario/mergo v0.3.13 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/kr/text v0.2.0 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
@@ -116,4 +121,11 @@ require (
 	sigs.k8s.io/controller-runtime v0.6.0 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.3 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
+)
+
+require (
+	github.com/google/uuid v1.6.0 // indirect
+	github.com/kr/pretty v0.3.1 // indirect
+	github.com/rogpeppe/go-internal v1.11.0 // indirect
+	github.com/smartystreets/goconvey v1.8.1 // indirect
 )

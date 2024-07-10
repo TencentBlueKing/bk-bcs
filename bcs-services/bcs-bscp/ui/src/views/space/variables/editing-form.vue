@@ -72,11 +72,11 @@
       {
         validator: (value: string) => {
           if (value.length > 0) {
-            return /^[a-zA-Z_]\w*$/.test(value);
+            return /^[a-zA-Z0-9_]+$/.test(localPrefix.value + value);
           }
           return true;
         },
-        message: t('仅允许使用中文、英文、数字、下划线，且不能以数字开头'),
+        message: t('仅允许使用英文、数字、下划线'),
         trigger: 'blur',
       },
     ],

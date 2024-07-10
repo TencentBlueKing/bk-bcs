@@ -53,11 +53,14 @@
   import useGlobalStore from '../../../../store/global';
   import { IScriptCiteQuery, IScriptCitedItem } from '../../../../../types/script';
   import { getScriptCiteList, getScriptVersionCiteList } from '../../../../api/script';
+  import useTablePagination from '../../../../utils/hooks/use-table-pagination';
   import SearchInput from '../../../../components/search-input.vue';
 
   const { spaceId } = storeToRefs(useGlobalStore());
   const { t } = useI18n();
   const router = useRouter();
+
+  const { pagination, updatePagination } = useTablePagination('scriptCited');
 
   const props = defineProps<{
     show: boolean;
@@ -70,11 +73,6 @@
   const loading = ref(false);
   const list = ref<IScriptCitedItem[]>([]);
   const searchStr = ref('');
-  const pagination = ref({
-    current: 1,
-    count: 0,
-    limit: 10,
-  });
 
   watch(
     () => props.show,
@@ -119,7 +117,7 @@
   };
 
   const handlePageLimitChange = (val: number) => {
-    pagination.value.limit = val;
+    updatePagination('limit', val);
     getCitedData();
   };
 

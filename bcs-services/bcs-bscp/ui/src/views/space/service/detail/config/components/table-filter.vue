@@ -17,8 +17,10 @@
           </bk-checkbox-group>
         </div>
         <div class="popover-footer">
-          <bk-button theme="primary" size="small" style="margin-right: 6px" @click="handleConfirm">确定</bk-button>
-          <bk-button size="small" @click="handleReset">重置</bk-button>
+          <bk-button theme="primary" size="small" style="margin-right: 6px" @click="handleConfirm">
+            {{ $t('确定') }}
+          </bk-button>
+          <bk-button size="small" @click="handleReset">{{ $t('重置') }}</bk-button>
         </div>
       </template>
     </bk-popover>

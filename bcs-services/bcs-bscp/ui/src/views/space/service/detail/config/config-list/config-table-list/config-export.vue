@@ -3,7 +3,7 @@
     v-if="isFileType"
     :key="appData.id"
     style="margin-left: 8px"
-    :disabled="allConfigCount === 0"
+    :disabled="allConfigCount === 0 || conflictFileCount > 0"
     @click="handleExportFile">
     {{ $t('打包下载') }}
   </bk-button>
@@ -37,7 +37,7 @@
   const serviceStore = useServiceStore();
   const configStore = useConfigStore();
   const { appData, isFileType } = storeToRefs(serviceStore);
-  const { allConfigCount } = storeToRefs(configStore);
+  const { allConfigCount, conflictFileCount } = storeToRefs(configStore);
 
   const props = defineProps<{
     bkBizId: string;

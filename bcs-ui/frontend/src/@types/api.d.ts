@@ -27,7 +27,7 @@ interface IRuntimeModuleParams {
   networkType: string
 }
 
-type CloudID = 'tencentCloud'|'gcpCloud'|'tencentPublicCloud'|'bluekingCloud'|'azureCloud'|'huaweiCloud';
+type CloudID = 'tencentCloud'|'gcpCloud'|'tencentPublicCloud'|'bluekingCloud'|'azureCloud'|'huaweiCloud'| 'awsCloud';
 
 interface IViewFilter {
   name?: string

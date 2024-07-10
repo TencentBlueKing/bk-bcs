@@ -20,6 +20,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/lock"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 )
 
@@ -27,6 +28,12 @@ import (
 type DaemonInterface interface { // nolint
 	InitDaemon(ctx context.Context)
 	Stop()
+}
+
+// DaemonOptions options
+type DaemonOptions struct { // nolint
+	// EnableDaemon enable
+	EnableDaemon bool
 }
 
 // DoFunc func() type
@@ -38,10 +45,13 @@ type Daemon struct {
 	cancel   context.CancelFunc
 	interval int
 	model    store.ClusterManagerModel
+	lock     lock.DistributedLock
+	options  DaemonOptions
 }
 
 // NewDaemon init daemon
-func NewDaemon(interval int, model store.ClusterManagerModel) DaemonInterface {
+func NewDaemon(interval int, model store.ClusterManagerModel,
+	lock lock.DistributedLock, options DaemonOptions) DaemonInterface {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	if interval <= 0 {
@@ -52,12 +62,19 @@ func NewDaemon(interval int, model store.ClusterManagerModel) DaemonInterface {
 		ctx:      ctx,
 		cancel:   cancel,
 		model:    model,
+		lock:     lock,
 		interval: interval,
+		options:  options,
 	}
 }
 
 // InitDaemon init task and run daemon
 func (d *Daemon) InitDaemon(ctx context.Context) {
+	if !d.options.EnableDaemon {
+		blog.Infof("cluster-manager InitDaemon %s", d.options.EnableDaemon)
+		return
+	}
+
 	wg := sync.WaitGroup{}
 
 	errChan := make(chan error)
@@ -68,7 +85,11 @@ func (d *Daemon) InitDaemon(ctx context.Context) {
 	}()
 
 	go d.simpleDaemon(ctx, &wg, func() {
-		d.reportVpcAvailableIPCount(errChan)
+		d.reportVpcIpResourceUsage(errChan)
+	}, 180)
+
+	go d.simpleDaemon(ctx, &wg, func() {
+		d.reportClusterVpcUsage(errChan)
 	}, 180)
 
 	go d.simpleDaemon(ctx, &wg, func() {
@@ -82,6 +103,18 @@ func (d *Daemon) InitDaemon(ctx context.Context) {
 	go d.simpleDaemon(ctx, &wg, func() {
 		d.reportMachineryTaskNum(errChan)
 	}, 60)
+
+	go d.simpleDaemon(ctx, &wg, func() {
+		d.reportClusterCaUsageRatio(errChan)
+	}, 300)
+
+	go d.simpleDaemon(ctx, &wg, func() {
+		d.reportRegionInsTypeUsage(errChan)
+	}, 300)
+
+	go d.simpleDaemon(ctx, &wg, func() {
+		d.autoAllocateTcClusterCidr(errChan)
+	}, 30)
 
 	wg.Wait()
 }
@@ -111,5 +144,8 @@ func (d *Daemon) simpleDaemon(ctx context.Context, wg *sync.WaitGroup, exec DoFu
 
 // Stop quit all daemon
 func (d *Daemon) Stop() {
+	if !d.options.EnableDaemon {
+		return
+	}
 	d.cancel()
 }

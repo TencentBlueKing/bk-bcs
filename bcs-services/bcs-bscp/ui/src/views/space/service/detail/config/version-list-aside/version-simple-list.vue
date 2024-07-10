@@ -55,7 +55,7 @@
         v-bk-tooltips="{
           disabled: selectedVersion?.status.publish_status === 'not_released',
           placement: 'bottom',
-          content: '只支持未上线版本',
+          content: t('只支持未上线版本'),
         }"
         :class="['action-item', { disabled: selectedVersion?.status.publish_status !== 'not_released' }]"
         @click="handleDeprecateDialogShow(selectedVersion!)">
@@ -386,7 +386,6 @@
     position: absolute;
     right: 25px;
     padding: 4px 0;
-    width: 80px;
     border: 1px solid #dcdee5;
     box-shadow: 0 2px 6px 0 #0000001a;
     background-color: #fff;

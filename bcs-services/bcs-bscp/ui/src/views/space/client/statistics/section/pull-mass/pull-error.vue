@@ -21,7 +21,7 @@
           </template>
           <bk-loading class="loading-wrap" :loading="loading">
             <div v-if="isShowSpecificReason" class="nav">
-              <span class="main-reason" @click="refresh">{{ t('主要失败原因') }}</span> /
+              <span class="main-reason" @click="refresh">{{ t('错误类别') }}</span> /
               <span class="reason">{{ selectFailedReason.mapName }}</span>
             </div>
             <div v-if="data.length && !isShowSpecificReason" ref="canvasRef" class="canvas-wrap">
@@ -48,7 +48,7 @@
       <Card v-for="item in pullTime" :key="item.key" :title="item.name" :width="207" :height="128">
         <div class="time-info">
           <span v-if="item.value">
-            <span class="time">{{ Math.round(item.value) }}</span>
+            <span class="time">{{ Math.round(item.value as number) }}</span>
             <span class="unit">{{ item.unit }}</span>
           </span>
           <span v-else class="empty">{{ t('暂无数据') }}</span>
@@ -117,6 +117,7 @@
     mapName: '',
   });
   const isShowOperationBtn = ref(false);
+  const jumpError = ref('');
 
   watch(
     () => props.appId,
@@ -292,6 +293,7 @@
         container: tooltipRef.value?.getDom(),
         enterable: true,
         customItems: (originalItems: any[]) => {
+          jumpError.value = originalItems[0].data.release_change_failed_reason;
           originalItems[0].name = originalItems[0].data.mapName;
           return originalItems;
         },
@@ -339,6 +341,7 @@
     const routeData = router.resolve({
       name: 'client-search',
       params: { appId: props.appId, bizId: props.bkBizId },
+      query: { failed_reason: jumpError.value, heartTime: searchQuery.value.last_heartbeat_time },
     });
     window.open(routeData.href, '_blank');
   };
@@ -434,9 +437,6 @@
     height: 100%;
     justify-content: center;
     transform: translateY(-20px);
-  }
-  :deep(.g2-tooltip) {
-    visibility: hidden;
   }
 
   .icon-wrap {

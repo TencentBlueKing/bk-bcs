@@ -47,4 +47,14 @@ const (
 
 	// ResourceNameForBCSNetIP is resource name for bcsnetip
 	ResourceNameForBCSNetIP = "netservice.bkbcs.tencent.com/bcsnetip"
+
+	// NodeGatewayPolicyEnv node gateway policy env
+	NodeGatewayPolicyEnv = "NODE_GATEWAY_POLICY"
+	// NodeGatewayPolicyHostDiscovery node gateway policy host discovery
+	NodeGatewayPolicyHostDiscovery = "HostDiscovery"
+	// NodeGatewayPolicyNodeAnnotation node gateway policy node annotation
+	NodeGatewayPolicyNodeAnnotation = "Node"
+
+	// NodeGatewayAnnotationKey node gateway annotation key
+	NodeGatewayAnnotationKey = "netservicecontroller.bkbcs.tencent.com/gateway"
 )

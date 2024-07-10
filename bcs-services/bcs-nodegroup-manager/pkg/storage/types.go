@@ -26,6 +26,8 @@ const (
 	ScaleDownState = "Scaledown"
 	// ScaleDownByTaskState nodegroup is scaling down by resource manager group
 	ScaleDownByTaskState = "ScaleDownByTask"
+	// UpdateNodeMeta nodegroup need to update node meta
+	UpdateNodeMeta = "UpdateNodeMeta"
 	// ErrState error happened
 	ErrState = "ErrState"
 	// TimeoutState timeout
@@ -48,6 +50,14 @@ const (
 	TaskUnknownState = "UNKNOWN"
 	// TaskFailedState task failed
 	TaskFailedState = "FAILED"
+	// ActionFinishedState action finished
+	ActionFinishedState = "FINISHED"
+	// ActionRunningState action running
+	ActionRunningState = "RUNNING"
+	// ActionTimeoutState action timeout
+	ActionTimeoutState = "TIMEOUT"
+	// ActionTerminatedState action terminated
+	ActionTerminatedState = "TERMINATED"
 )
 
 const (
@@ -55,6 +65,17 @@ const (
 	BufferStrategyType = "buffer"
 	// HierarchicalStrategyType hierarchicalBuffer
 	HierarchicalStrategyType = "hierarchicalBuffer"
+)
+
+const (
+	// NodeDrainDelayLabel node drain delay
+	NodeDrainDelayLabel = "node.bkbcs.tencent.com/drain-delay"
+	// NodeDeadlineLabel deadline
+	NodeDeadlineLabel = "node.bkbcs.tencent.com/deadline"
+	// NodeDrainTaskLabel task id
+	NodeDrainTaskLabel = "node.bkbcs.tencent.com/drain-task-id"
+	// NodeGroupLabel nodegroup
+	NodeGroupLabel = "bkbcs.tencent.com/nodegroupid"
 )
 
 // NodeGroupMgrStrategy 定义如何管理指定的NodeGroup策略
@@ -71,10 +92,19 @@ type NodeGroupMgrStrategy struct {
 
 // GroupInfo 定义
 type GroupInfo struct {
-	NodeGroupID string `json:"nodeGroupId" bson:"node_group_id"`
-	ConsumerID  string `json:"consumerID" bson:"consumer_id"`
-	ClusterID   string `json:"clusterId" bson:"cluster_id"`
-	Weight      int    `json:"weight" bson:"weight"`
+	NodeGroupID string          `json:"nodeGroupId" bson:"node_group_id"`
+	ConsumerID  string          `json:"consumerID" bson:"consumer_id"`
+	ClusterID   string          `json:"clusterId" bson:"cluster_id"`
+	Weight      int             `json:"weight" bson:"weight"`
+	Limit       *NodegroupLimit `json:"limit" bson:"limit"`
+}
+
+// NodegroupLimit 节点池/集群 节点数量限制
+type NodegroupLimit struct {
+	NodegroupLimit    bool  `json:"nodegroupLimit" bson:"nodegroup_limit"`
+	NodegroupLimitNum int32 `json:"nodegroupLimitNum" bson:"nodegroup_limit_num"`
+	ClusterLimit      bool  `json:"clusterLimit" bson:"cluster_limit"`
+	ClusterLimitNum   int32 `json:"clusterLimitNum" bson:"cluster_limit_num"`
 }
 
 // Strategy define ResourcePool strategy of management
@@ -96,18 +126,41 @@ type Strategy struct {
 	Buffer *BufferStrategy `json:"buffer" bson:"buffer"`
 	// ScaleDownBeforeDDL 在ddl指定分钟前执行缩容
 	ScaleDownBeforeDDL int `json:"scaleDownBeforeDDL" bson:"scale_down_before_ddl"`
+	// TimeMode 定时模式
+	TimeMode *BufferTimeMode `json:"timeMode" bson:"time_mode"`
+	// 多个nodegroup分别设置buffer
+	NodegroupBuffer map[string]*NodegroupBuffer `json:"nodegroupBuffer" bson:"nodegroup_buffer"`
 }
 
 // BufferStrategy 空闲资源水位策略
-// It's hard to control resources to specified number in resourcepool.
+// It's hard to control resources to specified number in resource pool.
 // So when resources are between Low and High, controller considers that pool is stable.
 type BufferStrategy struct {
 	// Low低水位，空闲资源比例小于该水位时，elasticNodeGroup必须缩容补充资源池
 	Low int `json:"low" bson:"low"`
 	// High高水位，空闲资源比例大于该水位时，elasticNodeGroup可以扩容消耗资源池资源
 	High int `json:"high" bson:"high"`
-	// ReservedDays 资源保留时间，单位天
-	ReservedDays int `json:"reservedDays" bson:"reserved_days"`
+}
+
+// BufferTimeMode 时间模式配置
+type BufferTimeMode struct {
+	ScaleDownWhenTimeout bool          `json:"scaleDownWhenTimeout" bson:"scale_down_when_timeout"`
+	TimePeriods          []*TimePeriod `json:"timePeriods" bson:"time_periods"`
+	ReservedHours        int           `json:"reservedHours" bson:"reserved_hours"`
+}
+
+// NodegroupBuffer 单nodegroup buffer设置
+type NodegroupBuffer struct {
+	Percent int32 `json:"percent" bson:"percent"`
+	Count   int32 `json:"count" bson:"count"`
+}
+
+// TimePeriod 扩缩容时间周期
+type TimePeriod struct {
+	ScaleOutCron string `json:"scaleOutCron" bson:"scale_out_cron"`
+	ScaleInCron  string `json:"scaleInCron" bson:"scale_in_cron"`
+	ScaleOutTime string `json:"scaleOutTime" bson:"scale_out_time"`
+	ScaleInTime  string `json:"scaleInTime" bson:"scale_in_time"`
 }
 
 // State strategy status
@@ -209,6 +262,8 @@ type NodeGroupAction struct {
 	UpdatedTime time.Time `json:"updatedTime" bson:"updated_time"`
 	// IsDeleted 软删除
 	IsDeleted bool `json:"isDeleted" bson:"is_deleted"`
+	// Strategy 关联的strategy
+	Strategy string `json:"strategy" bson:"strategy"`
 }
 
 // IsTerminated check nodegroup action progress is in final state
@@ -303,6 +358,7 @@ type ScaleDownTask struct {
 	TaskID            string             `json:"taskID" bson:"task_id"`
 	TotalNum          int                `json:"totalNum" bson:"total_num"`
 	NodeGroupStrategy string             `json:"nodeGroupStrategy" bson:"node_group_strategy"`
+	DevicePoolID      string             `json:"devicePoolID" bson:"device_pool_id"`
 	ScaleDownGroups   []*ScaleDownDetail `json:"scaleDownGroups" bson:"scale_down_groups"`
 	DrainDelay        string             `json:"drainDelay" bson:"drain_delay"`
 	Deadline          time.Time          `json:"deadline" bson:"deadline"`
@@ -314,6 +370,9 @@ type ScaleDownTask struct {
 	IsDeleted        bool      `json:"isDeleted" bson:"is_deleted"`
 	IsExecuted       bool      `json:"isExecuted" bson:"is_executed"`
 	Status           string    `json:"status" bson:"status"`
+	DeviceList       []string  `json:"deviceList" bson:"device_list"`
+	SpecifyScaleDown bool      `json:"specifyScaleDown" bson:"specify_scale_down"`
+	AllocatedNum     int       `json:"allocatedNum" bson:"allocated_num"`
 }
 
 // IsTerminated check task status
@@ -354,4 +413,12 @@ type DeviceGroup struct {
 	Resources []*Resource `json:"resources" bson:"resources"`
 	// UpdatedTime 资源池状态变化更新时间
 	UpdatedTime time.Time `json:"updateTime" bson:"update_time"`
+}
+
+// ScaleDownNodegroup 可以用于下架备份的nodegroup信息
+type ScaleDownNodegroup struct {
+	DrainDelayHour int
+	Total          int
+	GroupInfos     []*GroupInfo
+	NodeGroups     map[string]*NodeGroup
 }

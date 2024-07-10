@@ -13,6 +13,7 @@
 package eop
 
 import (
+	"net"
 	"strconv"
 	"sync"
 
@@ -102,4 +103,27 @@ func (vm *VPCManager) CheckConflictInVpcCidr(vpcID string, cidr string,
 // ListSecurityGroups list security groups
 func (vm *VPCManager) ListSecurityGroups(opt *cloudprovider.ListNetworksOption) ([]*cmproto.SecurityGroup, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// AllocateOverlayCidr allocate overlay cidr
+func (vm *VPCManager) AllocateOverlayCidr(vpcId string, cluster *cmproto.Cluster, cidrLens []uint32,
+	reservedBlocks []*net.IPNet, opt *cloudprovider.CommonOption) ([]string, error) {
+	return nil, nil
+}
+
+// AddClusterOverlayCidr add cidr to cluster
+func (vm *VPCManager) AddClusterOverlayCidr(clusterId string, cidrs []string, opt *cloudprovider.CommonOption) error {
+	return nil
+}
+
+// GetVpcIpUsage get vpc ipTotal/ipSurplus
+func (vm *VPCManager) GetVpcIpUsage(
+	vpcId string, ipType string, reservedBlocks []*net.IPNet, opt *cloudprovider.CommonOption) (uint32, uint32, error) {
+	return 0, 0, nil
+}
+
+// GetClusterIpUsage get cluster ip usage
+func (vm *VPCManager) GetClusterIpUsage(clusterId string, ipType string, opt *cloudprovider.CommonOption) (
+	uint32, uint32, error) {
+	return 0, 0, nil
 }

@@ -13,13 +13,17 @@
 package xbknodeman
 
 const (
-	ServiceName   = "bk-nodeman"
+	// ServiceName node man service name
+	ServiceName = "bk-nodeman"
+	// ServiceNameSg sg service name
 	ServiceNameSg = "nodeman"
-	UrlPrefix     = "/prod/api"
-
+	// UrlPrefix url prefix
+	UrlPrefix = "/prod/api"
+	// UrlPrefixSgEsb sg env, use esb interface
 	UrlPrefixSgEsb = "api"
 
-	EnvSg = "sg"
+	// EnvSg env sg
+	EnvSg = "ap-singapore"
 )
 
 const (

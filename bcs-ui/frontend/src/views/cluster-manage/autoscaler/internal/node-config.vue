@@ -1,182 +1,148 @@
 <!-- eslint-disable max-len -->
 <template>
-  <div class="p-[24px] node-config-wrapper" ref="nodeConfigRef">
-    <FormGroup :title="$t('cluster.ca.button.createNodePool')" :allow-toggle="false" class="mb-[16px]">
-      <bk-form :model="nodePoolConfig" :rules="basicFormRules" ref="basicFormRef">
-        <bk-form-item class="max-w-[674px]" :label="$t('cluster.ca.nodePool.label.name')" property="name" required>
-          <bk-input v-model="nodePoolConfig.name"></bk-input>
-          <p class="text-[#979BA5] leading-4 mt-[4px]">{{ $t('cluster.ca.nodePool.validate.name') }}</p>
-        </bk-form-item>
-      </bk-form>
-    </FormGroup>
-    <FormGroup :title="$t('cluster.ca.nodePool.title.nodeConfig')" :allow-toggle="false">
-      <bk-form class="node-config" :model="nodePoolConfig" :rules="nodePoolConfigRules" ref="formRef">
-        <bk-form-item :label="$t('cluster.ca.nodePool.create.imageProvider.title')" :desc="$t('cluster.ca.nodePool.create.imageProvider.desc')">
-          <bk-radio-group :value="extraInfo.IMAGE_PROVIDER">
-            <bk-radio value="PUBLIC_IMAGE" disabled>{{$t('deploy.image.publicImage')}}</bk-radio>
-            <bk-radio value="PRIVATE_IMAGE" disabled>{{$t('cluster.ca.nodePool.create.imageProvider.private_image')}}</bk-radio>
-          </bk-radio-group>
-        </bk-form-item>
-        <bk-form-item :label="$t('cluster.ca.nodePool.label.system')">
-          <bcs-input disabled :value="clusterOS"></bcs-input>
-        </bk-form-item>
-        <bk-form-item
-          :label="$t('cluster.ca.nodePool.create.az.title')"
-          :desc="$t('cluster.ca.nodePool.create.az.desc')"
-          property="nodePoolConfig.autoScaling.zones">
-          <div class="flex items-center h-[32px]">
-            <bk-radio-group
-              :value="isSpecifiedZoneList"
-              class="w-[auto]"
-              @change="handleZoneChange">
-              <bk-radio :value="false" :disabled="isEdit">
-                <TextTips :text="$t('cluster.ca.nodePool.create.az.random')" />
-              </bk-radio>
-              <bk-radio :value="true" :disabled="isEdit">
-                <TextTips :text="$t('cluster.ca.nodePool.create.az.selected')" />
-              </bk-radio>
+  <div>
+    <div class="p-[24px] node-config-wrapper" ref="nodeConfigRef">
+      <FormGroup :title="$t('cluster.ca.button.createNodePool')" :allow-toggle="false" class="mb-[16px]">
+        <bk-form :model="nodePoolConfig" :rules="basicFormRules" ref="basicFormRef">
+          <bk-form-item class="max-w-[674px]" :label="$t('cluster.ca.nodePool.label.name')" property="name" required>
+            <bk-input v-model="nodePoolConfig.name"></bk-input>
+            <p class="text-[#979BA5] leading-4 mt-[4px]">{{ $t('cluster.ca.nodePool.validate.name') }}</p>
+          </bk-form-item>
+        </bk-form>
+      </FormGroup>
+      <FormGroup :title="$t('cluster.ca.nodePool.title.nodeConfig')" :allow-toggle="false">
+        <bk-form class="node-config" :model="nodePoolConfig" :rules="nodePoolConfigRules" ref="formRef">
+          <bk-form-item :label="$t('cluster.ca.nodePool.create.imageProvider.title')" :desc="$t('cluster.ca.nodePool.create.imageProvider.desc')">
+            <bk-radio-group :value="extraInfo.IMAGE_PROVIDER">
+              <bk-radio value="PUBLIC_IMAGE" disabled>{{$t('deploy.image.publicImage')}}</bk-radio>
+              <bk-radio value="PRIVATE_IMAGE" disabled>{{$t('cluster.ca.nodePool.create.imageProvider.private_image')}}</bk-radio>
             </bk-radio-group>
-            <bcs-select
-              class="flex-1 ml-[10px]"
-              v-if="isSpecifiedZoneList"
-              v-model="nodePoolConfig.autoScaling.zones"
-              multiple
-              searchable
-              :loading="zoneListLoading"
-              :disabled="isEdit"
-              :clearable="false"
-              selected-style="checkbox"
-              @change="handleSpecifiedZoneChange">
-              <bcs-option
-                v-for="zone in zoneList"
-                :key="zone.zoneID"
-                :id="zone.zone"
-                :name="zone.zoneName" />
-            </bcs-select>
-          </div>
-        </bk-form-item>
-        <bk-form-item
-          :label="$t('cluster.ca.nodePool.create.instanceTypeConfig.title')"
-          :desc="instanceDesc">
-          <div class="mb15" style="display: flex;">
-            <div class="prefix-select">
-              <span :class="['prefix', { disabled: isEdit }]">CPU</span>
+          </bk-form-item>
+          <bk-form-item :label="$t('cluster.ca.nodePool.label.system')">
+            <bcs-input disabled :value="clusterOS"></bcs-input>
+          </bk-form-item>
+          <bk-form-item
+            :label="$t('cluster.ca.nodePool.create.az.title')"
+            :desc="$t('cluster.ca.nodePool.create.az.desc')"
+            property="nodePoolConfig.autoScaling.zones">
+            <div class="flex items-center h-[32px]">
+              <bk-radio-group
+                :value="isSpecifiedZoneList"
+                class="w-[auto]"
+                @change="handleZoneChange">
+                <bk-radio :value="false" :disabled="isEdit">
+                  <TextTips :text="$t('cluster.ca.nodePool.create.az.random')" />
+                </bk-radio>
+                <bk-radio :value="true" :disabled="isEdit">
+                  <TextTips :text="$t('cluster.ca.nodePool.create.az.selected')" />
+                </bk-radio>
+              </bk-radio-group>
               <bcs-select
-                v-model="CPU"
+                class="flex-1 ml-[10px]"
+                v-if="isSpecifiedZoneList"
+                v-model="nodePoolConfig.autoScaling.zones"
+                multiple
                 searchable
-                :clearable="false"
+                :loading="zoneListLoading"
                 :disabled="isEdit"
-                :placeholder="' '"
-                class="bg-[#fff]">
-                <bcs-option id="" :name="$t('generic.label.total')"></bcs-option>
-                <bcs-option
-                  v-for="cpuItem in cpuList"
-                  :key="cpuItem"
-                  :id="cpuItem"
-                  :name="cpuItem">
-                </bcs-option>
-              </bcs-select>
-              <span :class="['company', { disabled: isEdit }]">{{$t('units.suffix.cores')}}</span>
-            </div>
-            <div class="prefix-select ml30">
-              <span :class="['prefix', { disabled: isEdit }]">{{$t('generic.label.mem')}}</span>
-              <bcs-select
-                v-model="Mem"
-                searchable
                 :clearable="false"
-                :disabled="isEdit"
-                :placeholder="' '"
-                class="bg-[#fff]">
-                <bcs-option id="" :name="$t('generic.label.total')"></bcs-option>
+                selected-style="checkbox"
+                @change="handleSpecifiedZoneChange">
                 <bcs-option
-                  v-for="memItem in memList"
-                  :key="memItem"
-                  :id="memItem"
-                  :name="memItem">
-                </bcs-option>
+                  v-for="zone in zoneList"
+                  :key="zone.zoneID"
+                  :id="zone.zone"
+                  :name="zone.zoneName" />
               </bcs-select>
-              <span :class="['company', { disabled: isEdit }]">G</span>
             </div>
-          </div>
-          <bcs-table
-            :data="instanceList"
-            v-bkloading="{ isLoading: instanceTypesLoading || clusterDetailLoading }"
-            :pagination="pagination"
-            :row-class-name="instanceRowClass"
-            @page-change="pageChange"
-            @page-limit-change="pageSizeChange"
-            @row-click="handleCheckInstanceType">
-            <bcs-table-column :label="$t('generic.ipSelector.label.serverModel')" prop="typeName" show-overflow-tooltip>
-              <template #default="{ row }">
-                <span v-bk-tooltips="{ disabled: row.status !== 'SOLD_OUT', content: $t('cluster.ca.nodePool.create.instanceTypeConfig.status.soldOut') }">
-                  <bcs-radio
-                    :value="nodePoolConfig.launchTemplate.instanceType === row.nodeType"
-                    :disabled="row.status === 'SOLD_OUT' || isEdit">
-                    <span class="bcs-ellipsis">{{row.typeName || row.nodeType}}</span>
-                  </bcs-radio>
-                </span>
-              </template>
-            </bcs-table-column>
-            <bcs-table-column :label="$t('generic.label.specifications')" min-width="160" show-overflow-tooltip prop="nodeType"></bcs-table-column>
-            <bcs-table-column label="CPU" prop="cpu" width="80" align="right">
-              <template #default="{ row }">
-                <span>{{ `${row.cpu}${$t('units.suffix.cores')}` }}</span>
-              </template>
-            </bcs-table-column>
-            <bcs-table-column :label="$t('generic.label.mem')" prop="memory" width="80" align="right">
-              <template #default="{ row }">
-                <span>{{ row.memory }}G</span>
-              </template>
-            </bcs-table-column>
-          </bcs-table>
-          <p
-            class="text-[12px] text-[#ea3636] error-tips"
-            v-if="!nodePoolConfig.launchTemplate.instanceType">
-            {{ $t('generic.validate.required') }}
-          </p>
-          <!-- self资源池不支持数据盘、系统盘和公网IP -->
-          <template v-if="$route.query.provider !== 'self'">
-            <div class="mt25" style="display:flex;align-items:center;">
+          </bk-form-item>
+          <bk-form-item
+            :label="$t('cluster.ca.nodePool.create.instanceTypeConfig.title')"
+            :desc="instanceDesc">
+            <div class="mb15" style="display: flex;">
               <div class="prefix-select">
-                <span :class="['prefix', { disabled: isEdit }]">{{$t('cluster.ca.nodePool.create.instanceTypeConfig.disk.system')}}</span>
+                <span :class="['prefix', { disabled: isEdit }]">CPU</span>
                 <bcs-select
-                  v-model="nodePoolConfig.launchTemplate.systemDisk.diskType"
-                  :disabled="isEdit"
+                  v-model="CPU"
+                  searchable
                   :clearable="false"
-                  class="min-width-150 bg-[#fff]">
+                  :disabled="isEdit"
+                  :placeholder="' '"
+                  class="bg-[#fff]">
+                  <bcs-option id="" :name="$t('generic.label.total')"></bcs-option>
                   <bcs-option
-                    v-for="diskItem in diskEnum"
-                    :key="diskItem.id"
-                    :id="diskItem.id"
-                    :name="diskItem.name">
+                    v-for="cpuItem in cpuList"
+                    :key="cpuItem"
+                    :id="cpuItem"
+                    :name="cpuItem">
                   </bcs-option>
                 </bcs-select>
+                <span :class="['company', { disabled: isEdit }]">{{$t('units.suffix.cores')}}</span>
               </div>
-              <bcs-select
-                class="w-[88px] bg-[#fff] ml10"
-                :disabled="isEdit"
-                :clearable="false"
-                v-model="nodePoolConfig.launchTemplate.systemDisk.diskSize">
-                <bcs-option id="50" name="50"></bcs-option>
-                <bcs-option id="100" name="100"></bcs-option>
-              </bcs-select>
-              <span :class="['company', { disabled: isEdit }]">GB</span>
+              <div class="prefix-select ml30">
+                <span :class="['prefix', { disabled: isEdit }]">{{$t('generic.label.mem')}}</span>
+                <bcs-select
+                  v-model="Mem"
+                  searchable
+                  :clearable="false"
+                  :disabled="isEdit"
+                  :placeholder="' '"
+                  class="bg-[#fff]">
+                  <bcs-option id="" :name="$t('generic.label.total')"></bcs-option>
+                  <bcs-option
+                    v-for="memItem in memList"
+                    :key="memItem"
+                    :id="memItem"
+                    :name="memItem">
+                  </bcs-option>
+                </bcs-select>
+                <span :class="['company', { disabled: isEdit }]">G</span>
+              </div>
             </div>
-            <div class="mt20">
-              <bk-checkbox
-                disabled
-                :value="true"
-                @change="handleShowDataDisksChange">
-                {{$t('cluster.ca.nodePool.create.instanceTypeConfig.label.purchaseDataDisk')}}
-              </bk-checkbox>
-            </div>
-            <div class="panel" v-for="(disk, index) in nodePoolConfig.nodeTemplate.dataDisks" :key="index">
-              <div class="panel-item">
+            <bcs-table
+              :data="instanceList"
+              v-bkloading="{ isLoading: instanceTypesLoading || clusterDetailLoading }"
+              :pagination="pagination"
+              :row-class-name="instanceRowClass"
+              @page-change="pageChange"
+              @page-limit-change="pageSizeChange"
+              @row-click="handleCheckInstanceType">
+              <bcs-table-column :label="$t('generic.ipSelector.label.serverModel')" prop="typeName" show-overflow-tooltip>
+                <template #default="{ row }">
+                  <span v-bk-tooltips="{ disabled: row.status !== 'SOLD_OUT', content: $t('cluster.ca.nodePool.create.instanceTypeConfig.status.soldOut') }">
+                    <bcs-radio
+                      :value="nodePoolConfig.launchTemplate.instanceType === row.nodeType"
+                      :disabled="row.status === 'SOLD_OUT' || isEdit">
+                      <span class="bcs-ellipsis">{{row.typeName || row.nodeType}}</span>
+                    </bcs-radio>
+                  </span>
+                </template>
+              </bcs-table-column>
+              <bcs-table-column :label="$t('generic.label.specifications')" min-width="160" show-overflow-tooltip prop="nodeType"></bcs-table-column>
+              <bcs-table-column label="CPU" prop="cpu" width="80" align="right">
+                <template #default="{ row }">
+                  <span>{{ `${row.cpu}${$t('units.suffix.cores')}` }}</span>
+                </template>
+              </bcs-table-column>
+              <bcs-table-column :label="$t('generic.label.mem')" prop="memory" width="80" align="right">
+                <template #default="{ row }">
+                  <span>{{ row.memory }}G</span>
+                </template>
+              </bcs-table-column>
+            </bcs-table>
+            <p
+              class="text-[12px] text-[#ea3636] error-tips"
+              v-if="!nodePoolConfig.launchTemplate.instanceType">
+              {{ $t('generic.validate.required') }}
+            </p>
+            <!-- self资源池不支持数据盘、系统盘和公网IP -->
+            <template v-if="$route.query.provider !== 'self'">
+              <div class="mt25" style="display:flex;align-items:center;">
                 <div class="prefix-select">
-                  <span :class="['prefix', { disabled: isEdit }]">{{$t('cluster.ca.nodePool.create.instanceTypeConfig.disk.data')}}</span>
+                  <span :class="['prefix', { disabled: isEdit }]">{{$t('cluster.ca.nodePool.create.instanceTypeConfig.disk.system')}}</span>
                   <bcs-select
+                    v-model="nodePoolConfig.launchTemplate.systemDisk.diskType"
                     :disabled="isEdit"
-                    v-model="disk.diskType"
                     :clearable="false"
                     class="min-width-150 bg-[#fff]">
                     <bcs-option
@@ -187,164 +153,200 @@
                     </bcs-option>
                   </bcs-select>
                 </div>
-                <bk-input
-                  class="max-width-130 ml10"
-                  type="number"
+                <bcs-select
+                  class="w-[88px] bg-[#fff] ml10"
                   :disabled="isEdit"
-                  :min="50"
-                  :max="16380"
-                  v-model="disk.diskSize">
-                </bk-input>
+                  :clearable="false"
+                  v-model="nodePoolConfig.launchTemplate.systemDisk.diskSize">
+                  <bcs-option id="50" name="50"></bcs-option>
+                  <bcs-option id="100" name="100"></bcs-option>
+                </bcs-select>
                 <span :class="['company', { disabled: isEdit }]">GB</span>
               </div>
-              <p class="error-tips" v-if="disk.diskSize % 10 !== 0">{{$t('cluster.ca.nodePool.create.instanceTypeConfig.validate.dataDisks')}}</p>
-              <div class="panel-item mt10">
+              <div class="mt20">
                 <bk-checkbox
-                  :disabled="(isEdit || index === 0)"
-                  v-model="disk.autoFormatAndMount">
-                  {{$t('cluster.ca.nodePool.create.instanceTypeConfig.label.mountPath')}}
+                  disabled
+                  :value="true"
+                  @change="handleShowDataDisksChange">
+                  {{$t('cluster.ca.nodePool.create.instanceTypeConfig.label.purchaseDataDisk')}}
                 </bk-checkbox>
-                <template v-if="disk.autoFormatAndMount">
-                  <bcs-select
-                    class="min-width-80 ml10 bg-[#fff]"
+              </div>
+              <div class="panel" v-for="(disk, index) in nodePoolConfig.nodeTemplate.dataDisks" :key="index">
+                <div class="panel-item">
+                  <div class="prefix-select">
+                    <span :class="['prefix', { disabled: isEdit }]">{{$t('cluster.ca.nodePool.create.instanceTypeConfig.disk.data')}}</span>
+                    <bcs-select
+                      :disabled="isEdit"
+                      v-model="disk.diskType"
+                      :clearable="false"
+                      class="min-width-150 bg-[#fff]">
+                      <bcs-option
+                        v-for="diskItem in diskEnum"
+                        :key="diskItem.id"
+                        :id="diskItem.id"
+                        :name="diskItem.name">
+                      </bcs-option>
+                    </bcs-select>
+                  </div>
+                  <bk-input
+                    class="max-width-130 ml10"
+                    type="number"
+                    :disabled="isEdit"
+                    :min="50"
+                    :max="16380"
+                    v-model="disk.diskSize">
+                  </bk-input>
+                  <span :class="['company', { disabled: isEdit }]">GB</span>
+                </div>
+                <p class="error-tips" v-if="disk.diskSize % 10 !== 0">{{$t('cluster.ca.nodePool.create.instanceTypeConfig.validate.dataDisks')}}</p>
+                <div class="panel-item mt10">
+                  <bk-checkbox
                     :disabled="(isEdit || index === 0)"
-                    v-model="disk.fileSystem"
-                    :clearable="false">
-                    <bcs-option
-                      v-for="fileSystem in getSchemaByProp('launchTemplate.dataDisks.fileSystem').enum"
-                      :key="fileSystem"
-                      :id="fileSystem"
-                      :name="fileSystem">
-                    </bcs-option>
-                  </bcs-select>
-                  <bcs-input class="ml10" :disabled="(isEdit || index === 0)" v-model="disk.mountTarget"></bcs-input>
-                </template>
+                    v-model="disk.autoFormatAndMount">
+                    {{$t('cluster.ca.nodePool.create.instanceTypeConfig.label.mountPath')}}
+                  </bk-checkbox>
+                  <template v-if="disk.autoFormatAndMount">
+                    <bcs-select
+                      class="min-width-80 ml10 bg-[#fff]"
+                      :disabled="(isEdit || index === 0)"
+                      v-model="disk.fileSystem"
+                      :clearable="false">
+                      <bcs-option
+                        v-for="fileSystem in getSchemaByProp('launchTemplate.dataDisks.fileSystem').enum"
+                        :key="fileSystem"
+                        :id="fileSystem"
+                        :name="fileSystem">
+                      </bcs-option>
+                    </bcs-select>
+                    <bcs-input class="ml10" :disabled="(isEdit || index === 0)" v-model="disk.mountTarget"></bcs-input>
+                  </template>
+                </div>
+                <p class="error-tips" v-if="showRepeatMountTarget(index)">{{$t('cluster.ca.nodePool.create.instanceTypeConfig.validate.repeatPath')}}</p>
+                <span :class="['panel-delete', { disabled: isEdit || index === 0 }]" @click="handleDeleteDiskData(index)">
+                  <i class="bk-icon icon-close3-shape"></i>
+                </span>
               </div>
-              <p class="error-tips" v-if="showRepeatMountTarget(index)">{{$t('cluster.ca.nodePool.create.instanceTypeConfig.validate.repeatPath')}}</p>
-              <span :class="['panel-delete', { disabled: isEdit || index === 0 }]" @click="handleDeleteDiskData(index)">
-                <i class="bk-icon icon-close3-shape"></i>
+              <div
+                :class="['add-panel-btn', { disabled: isEdit || nodePoolConfig.nodeTemplate.dataDisks.length > 4 }]"
+                v-bk-tooltips="{
+                  content: $t('cluster.ca.nodePool.create.instanceTypeConfig.validate.maxDataDisks'),
+                  disabled: nodePoolConfig.nodeTemplate.dataDisks.length <= 4
+                }"
+                @click="handleAddDiskData">
+                <i class="bk-icon left-icon icon-plus"></i>
+                <span>{{$t('cluster.ca.nodePool.create.instanceTypeConfig.button.addDataDisks')}}</span>
+              </div>
+              <span class="inline-flex mt15" v-bk-tooltips="$t('cluster.ca.nodePool.create.instanceTypeConfig.publicIPAssigned.tips')">
+                <bk-checkbox
+                  disabled
+                  v-model="nodePoolConfig.launchTemplate.internetAccess.publicIPAssigned">
+                  {{$t('cluster.ca.nodePool.create.instanceTypeConfig.publicIPAssigned.text')}}
+                </bk-checkbox>
               </span>
-            </div>
-            <div
-              :class="['add-panel-btn', { disabled: isEdit || nodePoolConfig.nodeTemplate.dataDisks.length > 4 }]"
-              v-bk-tooltips="{
-                content: $t('cluster.ca.nodePool.create.instanceTypeConfig.validate.maxDataDisks'),
-                disabled: nodePoolConfig.nodeTemplate.dataDisks.length <= 4
-              }"
-              @click="handleAddDiskData">
-              <i class="bk-icon left-icon icon-plus"></i>
-              <span>{{$t('cluster.ca.nodePool.create.instanceTypeConfig.button.addDataDisks')}}</span>
-            </div>
-            <span class="inline-flex mt15" v-bk-tooltips="$t('cluster.ca.nodePool.create.instanceTypeConfig.publicIPAssigned.tips')">
-              <bk-checkbox
-                disabled
-                v-model="nodePoolConfig.launchTemplate.internetAccess.publicIPAssigned">
-                {{$t('cluster.ca.nodePool.create.instanceTypeConfig.publicIPAssigned.text')}}
-              </bk-checkbox>
-            </span>
-            <div class="panel" v-if="nodePoolConfig.launchTemplate.internetAccess.publicIPAssigned">
-              <div class="panel-item">
-                <label class="label">{{$t('cluster.ca.nodePool.create.instanceTypeConfig.publicIPAssigned.chargeMode.text')}}</label>
-                <bk-radio-group v-model="nodePoolConfig.launchTemplate.internetAccess.internetChargeType">
-                  <bk-radio :disabled="isEdit" value="TRAFFIC_POSTPAID_BY_HOUR">{{$t('cluster.ca.nodePool.create.instanceTypeConfig.publicIPAssigned.chargeMode.traffic_postpaid_by_hour')}}</bk-radio>
-                  <bk-radio :disabled="isEdit" value="BANDWIDTH_PREPAID">{{$t('cluster.ca.nodePool.create.instanceTypeConfig.publicIPAssigned.chargeMode.bandwidth_prepaid')}}</bk-radio>
-                </bk-radio-group>
+              <div class="panel" v-if="nodePoolConfig.launchTemplate.internetAccess.publicIPAssigned">
+                <div class="panel-item">
+                  <label class="label">{{$t('cluster.ca.nodePool.create.instanceTypeConfig.publicIPAssigned.chargeMode.text')}}</label>
+                  <bk-radio-group v-model="nodePoolConfig.launchTemplate.internetAccess.internetChargeType">
+                    <bk-radio :disabled="isEdit" value="TRAFFIC_POSTPAID_BY_HOUR">{{$t('cluster.ca.nodePool.create.instanceTypeConfig.publicIPAssigned.chargeMode.traffic_postpaid_by_hour')}}</bk-radio>
+                    <bk-radio :disabled="isEdit" value="BANDWIDTH_PREPAID">{{$t('cluster.ca.nodePool.create.instanceTypeConfig.publicIPAssigned.chargeMode.bandwidth_prepaid')}}</bk-radio>
+                  </bk-radio-group>
+                </div>
+                <div class="panel-item mt10">
+                  <label class="label">{{$t('cluster.ca.nodePool.create.instanceTypeConfig.publicIPAssigned.maxBandWidth')}}</label>
+                  <bk-input
+                    class="max-width-150"
+                    type="number"
+                    :disabled="isEdit"
+                    v-model="nodePoolConfig.launchTemplate.internetAccess.internetMaxBandwidth">
+                  </bk-input>
+                  <span :class="['company', { disabled: isEdit }]">Mbps</span>
+                </div>
               </div>
-              <div class="panel-item mt10">
-                <label class="label">{{$t('cluster.ca.nodePool.create.instanceTypeConfig.publicIPAssigned.maxBandWidth')}}</label>
-                <bk-input
-                  class="max-width-150"
-                  type="number"
-                  :disabled="isEdit"
-                  v-model="nodePoolConfig.launchTemplate.internetAccess.internetMaxBandwidth">
-                </bk-input>
-                <span :class="['company', { disabled: isEdit }]">Mbps</span>
-              </div>
-            </div>
-          </template>
-        </bk-form-item>
-        <bk-form-item
-          :label="$t('cluster.ca.nodePool.create.password.set')"
-          property="nodePoolConfig.launchTemplate.initLoginPassword"
-          error-display-type="normal">
-          <bcs-input
-            type="password"
-            disabled
-            :placeholder="$t('cluster.ca.nodePool.create.password.placeholder')"
-            v-model="nodePoolConfig.launchTemplate.initLoginPassword"></bcs-input>
-        </bk-form-item>
-        <bk-form-item
-          :label="$t('cluster.ca.nodePool.create.password.confirm')"
-          property="confirmPassword"
-          error-display-type="normal">
-          <bcs-input
-            type="password"
-            :placeholder="$t('cluster.ca.nodePool.create.password.placeholder')"
-            disabled
-            v-model="confirmPassword"></bcs-input>
-        </bk-form-item>
-        <bk-form-item
-          :label="$t('cluster.ca.nodePool.create.securityGroup')"
-          property="nodePoolConfig.launchTemplate.securityGroupIDs"
-          error-display-type="normal"
-          required
-          v-if="$route.query.provider !== 'self'">
-          <bcs-select
-            :loading="securityGroupsLoading"
-            v-model="nodePoolConfig.launchTemplate.securityGroupIDs"
-            multiple
-            searchable
-            class="bg-[#fff]"
-            selected-style="checkbox"
-            :disabled="isEdit || $route.query.provider === 'self'"
-            :clearable="false">
-            <bcs-option
-              v-for="securityGroup in securityGroupsList"
-              :key="securityGroup.securityGroupID"
-              :id="securityGroup.securityGroupID"
-              :name="securityGroup.securityGroupName"
-              :disabled="securityGroup.securityGroupName === defaultSecurityGroupName">
-              <div class="flex items-center text-[12px]">
-                <span>{{ securityGroup.securityGroupName }}</span>
-                <span class="text-[#C4C6CC]">({{ securityGroup.securityGroupID }})</span>
-              </div>
+            </template>
+          </bk-form-item>
+          <bk-form-item
+            :label="$t('cluster.ca.nodePool.create.password.set')"
+            property="nodePoolConfig.launchTemplate.initLoginPassword"
+            error-display-type="normal">
+            <bcs-input
+              type="password"
+              disabled
+              :placeholder="$t('cluster.ca.nodePool.create.password.placeholder')"
+              v-model="nodePoolConfig.launchTemplate.initLoginPassword"></bcs-input>
+          </bk-form-item>
+          <bk-form-item
+            :label="$t('cluster.ca.nodePool.create.password.confirm')"
+            property="confirmPassword"
+            error-display-type="normal">
+            <bcs-input
+              type="password"
+              :placeholder="$t('cluster.ca.nodePool.create.password.placeholder')"
+              disabled
+              v-model="confirmPassword"></bcs-input>
+          </bk-form-item>
+          <bk-form-item
+            :label="$t('cluster.ca.nodePool.create.securityGroup')"
+            property="nodePoolConfig.launchTemplate.securityGroupIDs"
+            error-display-type="normal"
+            required
+            v-if="$route.query.provider !== 'self'">
+            <bcs-select
+              :loading="securityGroupsLoading"
+              v-model="nodePoolConfig.launchTemplate.securityGroupIDs"
+              multiple
+              searchable
+              class="bg-[#fff]"
+              selected-style="checkbox"
+              :disabled="isEdit || $route.query.provider === 'self'"
+              :clearable="false">
+              <bcs-option
+                v-for="securityGroup in securityGroupsList"
+                :key="securityGroup.securityGroupID"
+                :id="securityGroup.securityGroupID"
+                :name="securityGroup.securityGroupName"
+                :disabled="securityGroup.securityGroupName === defaultSecurityGroupName">
+                <div class="flex items-center text-[12px]">
+                  <span>{{ securityGroup.securityGroupName }}</span>
+                  <span class="text-[#C4C6CC]">({{ securityGroup.securityGroupID }})</span>
+                </div>
               <!-- 性能问题，暂时隐藏 -->
               <!-- <bcs-checkbox
                 :value="nodePoolConfig.launchTemplate.securityGroupIDs.includes(securityGroup.securityGroupID)"
                 :disabled="securityGroup.securityGroupName === defaultSecurityGroupName">
 
               </bcs-checkbox> -->
-            </bcs-option>
-          </bcs-select>
-          <p class="text-[#979BA5] leading-4 mt-[4px] text-[12px]">
-            {{ $t('tke.label.securityGroup.defaultSecurityGroupTips') }}
-          </p>
-        </bk-form-item>
-        <bk-form-item
-          :label="$t('cluster.ca.nodePool.create.subnet.title')"
-          :desc="$t('cluster.ca.nodePool.create.subnet.desc')">
-          <bcs-input
-            :placeholder="$t('cluster.ca.nodePool.create.subnet.placeholder')"
-            disabled></bcs-input>
-        </bk-form-item>
-        <bk-form-item :label="$t('dashboard.workload.container.dataDir')" :desc="$t('cluster.ca.nodePool.create.dockerGraphPath.desc')">
-          <bcs-input disabled v-model="nodePoolConfig.nodeTemplate.dockerGraphPath"></bcs-input>
-        </bk-form-item>
-        <bk-form-item :label="$t('cluster.ca.nodePool.create.containerRuntime.title')" :desc="$t('cluster.ca.nodePool.create.containerRuntime.desc')">
-          <bk-radio-group v-model="clusterAdvanceSettings.containerRuntime">
-            <bk-radio value="docker" disabled>docker</bk-radio>
-            <bk-radio value="containerd" disabled>containerd</bk-radio>
-          </bk-radio-group>
-        </bk-form-item>
-        <bk-form-item :label="$t('cluster.ca.nodePool.create.runtimeVersion.title')" :desc="$t('cluster.ca.nodePool.create.runtimeVersion.desc')">
-          <bcs-input disabled v-model="clusterAdvanceSettings.runtimeVersion"></bcs-input>
-        </bk-form-item>
-        <div class="bcs-fixed-footer" v-if="!isEdit">
-          <bcs-button theme="primary" @click="handleNext">{{$t('generic.button.next')}}</bcs-button>
-          <bcs-button class="ml10" @click="handleCancel">{{$t('generic.button.cancel')}}</bcs-button>
-        </div>
-      </bk-form>
-    </FormGroup>
+              </bcs-option>
+            </bcs-select>
+            <p class="text-[#979BA5] leading-4 mt-[4px] text-[12px]">
+              {{ $t('tke.label.securityGroup.defaultSecurityGroupTips') }}
+            </p>
+          </bk-form-item>
+          <bk-form-item
+            :label="$t('cluster.ca.nodePool.create.subnet.title')"
+            :desc="$t('cluster.ca.nodePool.create.subnet.desc')">
+            <bcs-input
+              :placeholder="$t('cluster.ca.nodePool.create.subnet.placeholder')"
+              disabled></bcs-input>
+          </bk-form-item>
+          <bk-form-item :label="$t('dashboard.workload.container.dataDir')" :desc="$t('cluster.ca.nodePool.create.dockerGraphPath.desc')">
+            <bcs-input disabled v-model="nodePoolConfig.nodeTemplate.dockerGraphPath"></bcs-input>
+          </bk-form-item>
+          <bk-form-item :label="$t('cluster.ca.nodePool.create.containerRuntime.title')" :desc="$t('cluster.ca.nodePool.create.containerRuntime.desc')">
+            <bk-radio-group v-model="clusterAdvanceSettings.containerRuntime">
+              <bk-radio value="docker" disabled>docker</bk-radio>
+              <bk-radio value="containerd" disabled>containerd</bk-radio>
+            </bk-radio-group>
+          </bk-form-item>
+          <bk-form-item :label="$t('cluster.ca.nodePool.create.runtimeVersion.title')" :desc="$t('cluster.ca.nodePool.create.runtimeVersion.desc')">
+            <bcs-input disabled v-model="clusterAdvanceSettings.runtimeVersion"></bcs-input>
+          </bk-form-item>
+        </bk-form>
+      </FormGroup>
+    </div>
+    <div class="bcs-border-top z-10 flex items-center sticky bottom-0 bg-[#fff] h-[60px] px-[24px]" v-if="!isEdit">
+      <bcs-button theme="primary" @click="handleNext">{{$t('generic.button.next')}}</bcs-button>
+      <bcs-button class="ml10" @click="handleCancel">{{$t('generic.button.cancel')}}</bcs-button>
+    </div>
   </div>
 </template>
 <script lang="ts">
@@ -861,7 +863,6 @@ export default defineComponent({
 </script>
 <style lang="postcss" scoped>
 .node-config-wrapper {
-  max-height: calc(100vh - 164px);
   overflow: auto;
 }
 .node-config {

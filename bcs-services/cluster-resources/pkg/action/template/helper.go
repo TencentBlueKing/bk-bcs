@@ -15,12 +15,22 @@ package template
 import (
 	"encoding/json"
 	"fmt"
+	"regexp"
+	"strings"
 
+	"gopkg.in/yaml.v2"
 	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/chartutil"
 
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/store/entity"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
+)
+
+const (
+	templateFileVarPattern = `{{\s*([^}]*)\s*}}`
 )
 
 func toEntityTemplateIDs(templateIDs []*clusterRes.TemplateID) []entity.TemplateID {
@@ -68,4 +78,83 @@ func buildChart(templates []*entity.TemplateVersion, req *clusterRes.CreateTempl
 func buildTemplateSetsAnnotation(templates []*clusterRes.TemplateID) string {
 	b, _ := json.Marshal(templates)
 	return string(b)
+}
+
+// parseMultiTemplateFileVar parse template file variables from multiple templates
+func parseMultiTemplateFileVar(templates []entity.TemplateDeploy) []string {
+	vars := make([]string, 0)
+	for _, template := range templates {
+		vars = append(vars, parseTemplateFileVar(template.Content)...)
+	}
+	return vars
+}
+
+// parseTemplateFileVar parse template file variables
+func parseTemplateFileVar(template string) []string {
+	re := regexp.MustCompile(templateFileVarPattern)
+	vars := make([]string, 0)
+	matches := re.FindAllStringSubmatch(template, -1)
+	for _, match := range matches {
+		if match == nil || len(match) < 2 {
+			continue
+		}
+		if match[1] == "" {
+			continue
+		}
+		vars = append(vars, strings.TrimSpace(match[1]))
+	}
+	vars = slice.RemoveDuplicateValues(vars)
+	return vars
+}
+
+// replaceTemplateFileVar replace template file variables
+func replaceTemplateFileVar(template string, values map[string]string) string {
+	re := regexp.MustCompile(templateFileVarPattern)
+	return re.ReplaceAllStringFunc(template, func(s string) string {
+		// 去掉 {{ 和 }}
+		varName := strings.TrimSpace(s[2 : len(s)-2])
+		return values[varName]
+	})
+}
+
+// patchTemplateAnnotations patch template annotations
+func patchTemplateAnnotations(manifest map[string]interface{}, username, templateSpace, templateName,
+	templateVersion string) map[string]interface{} {
+	annos := mapx.GetMap(manifest, "metadata.annotations")
+	if len(annos) == 0 {
+		_ = mapx.SetItems(manifest, "metadata.annotations", map[string]interface{}{})
+	}
+	if mapx.GetStr(manifest, []string{"metadata", "annotations", resCsts.CreatorAnnoKey}) == "" {
+		_ = mapx.SetItems(manifest, []string{"metadata", "annotations", resCsts.CreatorAnnoKey}, username)
+	}
+	_ = mapx.SetItems(manifest, []string{"metadata", "annotations", resCsts.UpdaterAnnoKey}, username)
+	_ = mapx.SetItems(manifest, []string{"metadata", "annotations", resCsts.TemplateSourceType},
+		resCsts.TemplateSourceTypeValue)
+	_ = mapx.SetItems(manifest, []string{"metadata", "annotations", resCsts.TemplateNameAnnoKey}, fmt.Sprintf("%s/%s",
+		templateSpace, templateName))
+	_ = mapx.SetItems(manifest, []string{"metadata", "annotations", resCsts.TemplateVersionAnnoKey}, templateVersion)
+	return manifest
+}
+
+// convertManifestToString convert manifest to string
+func convertManifestToString(manifests []map[string]interface{}) (interface{}, error) {
+	result := make([]interface{}, 0)
+	for _, v := range manifests {
+		name := mapx.GetStr(v, "metadata.name")
+		kind := mapx.GetStr(v, "kind")
+		d, err := yaml.Marshal(v)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, map[string]interface{}{
+			"name":    name,
+			"kind":    kind,
+			"content": string(d),
+		})
+	}
+	return result, nil
+}
+
+func isNSRequired(kind string) bool {
+	return !slice.StringInSlice(kind, []string{resCsts.PV, resCsts.SC, resCsts.ClusterRole, resCsts.ClusterRoleBinding})
 }

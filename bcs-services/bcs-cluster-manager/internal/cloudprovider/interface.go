@@ -14,9 +14,11 @@ package cloudprovider
 
 import (
 	"context"
+	"net"
 	"sync"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	ilock "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/lock"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 )
 
@@ -32,6 +34,8 @@ var (
 	taskMgrs          map[string]TaskManager
 	vpcMgrs           map[string]VPCManager
 	storage           store.ClusterManagerModel
+	etcdStorage       store.EtcdStoreInterface
+	distributeLock    ilock.DistributedLock
 )
 
 func init() {
@@ -57,6 +61,30 @@ func InitStorageModel(model store.ClusterManagerModel) {
 // GetStorageModel for cluster manager storage tools
 func GetStorageModel() store.ClusterManagerModel {
 	return storage
+}
+
+// InitEtcdModel for cluster manager etcd storage
+func InitEtcdModel(model store.EtcdStoreInterface) {
+	lock.Lock()
+	defer lock.Unlock()
+	etcdStorage = model
+}
+
+// GetEtcdModel for cluster manager etcd storage
+func GetEtcdModel() store.EtcdStoreInterface {
+	return etcdStorage
+}
+
+// InitDistributeLock for cluster manager distribute lock
+func InitDistributeLock(dLock ilock.DistributedLock) {
+	lock.Lock()
+	defer lock.Unlock()
+	distributeLock = dLock
+}
+
+// GetDistributeLock for cluster manager distribute lock
+func GetDistributeLock() ilock.DistributedLock {
+	return distributeLock
 }
 
 // InitTaskManager for cluster manager initialization
@@ -315,6 +343,12 @@ type ClusterManager interface {
 	AppendCloudNodeInfo(ctx context.Context, nodes []*proto.ClusterNode, opt *CommonOption) error
 	// CheckIfGetNodesFromCluster check cluster if can get nodes from k8s
 	CheckIfGetNodesFromCluster(ctx context.Context, cluster *proto.Cluster, nodes []*proto.ClusterNode) bool
+
+	// SwitchClusterNetwork switch cluster network mode
+	SwitchClusterNetwork(
+		cls *proto.Cluster, subnet *proto.SubnetSource, opt *SwitchClusterNetworkOption) (*proto.Task, error)
+	// CheckClusterNetworkStatus check cluster network status
+	CheckClusterNetworkStatus(cloudID string, opt *CheckClusterNetworkStatusOption) (bool, error)
 }
 
 // NodeGroupManager cloud interface for nodegroup management
@@ -332,6 +366,8 @@ type NodeGroupManager interface {
 	GetNodesInGroupV2(group *proto.NodeGroup, opt *CommonOption) ([]*proto.NodeGroupNode, error)
 	// MoveNodesToGroup add cluster nodes to NodeGroup
 	MoveNodesToGroup(nodes []*proto.Node, group *proto.NodeGroup, opt *MoveNodesOption) (*proto.Task, error)
+	// CheckResourcePoolQuota need to check resource pool quota when revise group quota
+	CheckResourcePoolQuota(region, instanceType string, groupId string) error
 
 	// RemoveNodesFromGroup remove nodes from NodeGroup, nodes are still in cluster
 	RemoveNodesFromGroup(nodes []*proto.Node, group *proto.NodeGroup, opt *RemoveNodesOption) error
@@ -386,6 +422,15 @@ type VPCManager interface {
 	ListBandwidthPacks(opt *CommonOption) ([]*proto.BandwidthPackageInfo, error)
 	// CheckConflictInVpcCidr check cidr if conflict with vpc cidrs
 	CheckConflictInVpcCidr(vpcID string, cidr string, opt *CommonOption) ([]string, error)
+	// AllocateOverlayCidr allocate overlay cidr
+	AllocateOverlayCidr(vpcId string, cluster *proto.Cluster, cidrLens []uint32,
+		reservedBlocks []*net.IPNet, opt *CommonOption) ([]string, error)
+	// AddClusterOverlayCidr add overlay cidr to cluster
+	AddClusterOverlayCidr(clusterId string, cidrs []string, opt *CommonOption) error
+	// GetVpcIpUsage get VPC ip total / surplus
+	GetVpcIpUsage(vpcId string, ipType string, reservedBlocks []*net.IPNet, opt *CommonOption) (uint32, uint32, error)
+	// GetClusterIpUsage get cluster ip usage
+	GetClusterIpUsage(clusterId string, ipType string, opt *CommonOption) (uint32, uint32, error)
 }
 
 // InstanceConfig get machine cpu/mem/disk config
@@ -452,6 +497,9 @@ type TaskManager interface {
 	// BuildRemoveNodesFromClusterTask remove instances from cluster
 	BuildRemoveNodesFromClusterTask(
 		cls *proto.Cluster, nodes []*proto.Node, opt *DeleteNodesOption) (*proto.Task, error)
+	// BuildSwitchClusterNetworkTask switch cluster network mode
+	BuildSwitchClusterNetworkTask(
+		cls *proto.Cluster, subnet *proto.SubnetSource, opt *SwitchClusterNetworkOption) (*proto.Task, error)
 
 	// BuildAddExternalNodeToCluster add external to cluster
 	BuildAddExternalNodeToCluster(

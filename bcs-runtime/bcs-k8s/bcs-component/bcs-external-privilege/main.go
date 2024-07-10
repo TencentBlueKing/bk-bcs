@@ -13,13 +13,16 @@
 package main
 
 import (
+	"fmt"
+	"io/ioutil"
+	"net/http"
 	"os"
 	"runtime"
 	"sync"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
-
 	"github.com/TencentBlueKing/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-external-privilege/common"
 	"github.com/TencentBlueKing/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-external-privilege/pkg"
 )
@@ -28,12 +31,18 @@ const failRetryLimit = 40
 
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
-
 	option := common.LoadOption()
 	blog.InitLogs(conf.LogConfig{ToStdErr: true, Verbosity: 3})
+	blog.Infof("start initContainer option %+v", option)
+	if option.DbmOptimizeEnabled {
+		blog.Infof("start initContainer new logic option %+v", option)
+		checkPodStatus(option)
+		return
+	}
 
+	blog.Infof("start initContainer logic option %+v", option)
 	var wg sync.WaitGroup
-	var success = false
+	var success = true
 	for _, v := range option.DBPrivEnvList {
 		wg.Add(1)
 		go func(env common.DBPrivEnv) {
@@ -43,6 +52,7 @@ func main() {
 			client, err := pkg.InitClient(option, &env)
 			if err != nil {
 				blog.Errorf("failed to init client for external system, %v", err)
+				success = false
 				return
 			}
 
@@ -58,6 +68,7 @@ func main() {
 			if doPriRetry >= failRetryLimit {
 				blog.Errorf("error calling the privilege api with db: %s, dbname: %s, max retry times reached",
 					env.TargetDb, env.DbName)
+				success = false
 				return
 			}
 
@@ -74,10 +85,10 @@ func main() {
 			if checkRetry >= failRetryLimit {
 				blog.Errorf("check operation status failed with db: %s, dbname: %s, max retry times reached",
 					env.TargetDb, env.DbName)
+				success = false
 				return
 			}
 
-			success = true
 			blog.Infof("granting privilege to db: %s, dbname: %s succeeded", env.TargetDb, env.DbName)
 		}(v)
 	}
@@ -88,4 +99,53 @@ func main() {
 	}
 
 	os.Exit(0)
+}
+
+// checkPodStatus
+func checkPodStatus(option *common.Option) {
+	if option.TicketTimer == 0 {
+		option.TicketTimer = 60
+	}
+	ticker := time.NewTicker(time.Duration(option.TicketTimer) * time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			status, _ := checkDbPrivConfigStatus(option)
+			if status == "ok" {
+				os.Exit(0)
+			}
+		}
+	}
+}
+
+// checkDbPrivConfigStatus request webhook service check pod status
+func checkDbPrivConfigStatus(option *common.Option) (string, error) {
+	// 目标URL
+	url := option.ServiceUrl
+	url = fmt.Sprintf("%s/check_status?podName=%s&podNameSpace=%s", url, option.PodName, option.PodNameSpace)
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		blog.Errorf("checkDbPrivConfigStatus3 req: %+v, err: %s", req, err.Error())
+		return "", err
+	}
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		blog.Errorf("checkDbPrivConfigStatus4 res: %+v, err: %s", res, err.Error())
+		return "", err
+	}
+
+	defer res.Body.Close()
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		blog.Errorf("checkDbPrivConfigStatus6 body: %s, err: %s", string(body), err.Error())
+		return "", err
+	}
+
+	// 打印响应内容
+	blog.Infof("checkDbPrivConfigStatus podName=%s&podNameSpace=%s; body=%s", option.PodName, option.PodNameSpace, string(body))
+	return string(body), nil
 }

@@ -140,7 +140,7 @@ func (v *VpcClient) DescribeVpcs(vpcIds []string, filters []*Filter) (
 
 // DescribeSubnets describe subnets (https://cloud.tencent.com/document/api/215/15784)
 func (v *VpcClient) DescribeSubnets(subnetIds []string, filters []*Filter) (
-	[]*Subnet, error) {
+	[]*vpc.Subnet, error) {
 	blog.Infof("DescribeSubnets input: %s, %s", utils.ToJSONString(subnetIds),
 		utils.ToJSONString(filters))
 
@@ -155,7 +155,7 @@ func (v *VpcClient) DescribeSubnets(subnetIds []string, filters []*Filter) (
 	}
 	got, total := 0, 0
 	first := true
-	subnets := make([]*Subnet, 0)
+	subnets := make([]*vpc.Subnet, 0)
 	for got < total || first {
 		first = false
 		req.Offset = common.StringPtr(strconv.Itoa(got))
@@ -169,7 +169,8 @@ func (v *VpcClient) DescribeSubnets(subnetIds []string, filters []*Filter) (
 			return nil, fmt.Errorf("DescribeSubnets resp is nil")
 		}
 		blog.Infof("DescribeSubnets success, requestID: %s", resp.Response.RequestId)
-		subnets = append(subnets, convertSubnet(resp.Response.SubnetSet)...)
+		// convertSubnet(resp.Response.SubnetSet)...
+		subnets = append(subnets, resp.Response.SubnetSet...)
 		got += len(resp.Response.SubnetSet)
 		total = int(*resp.Response.TotalCount)
 	}

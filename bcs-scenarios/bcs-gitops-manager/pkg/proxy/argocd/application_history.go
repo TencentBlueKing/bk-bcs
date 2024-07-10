@@ -18,13 +18,14 @@ import (
 	"net/http"
 	"strconv"
 
-	iamnamespace "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/namespace"
 	argoappv1 "github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
 	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware/ctxutils"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/permitcheck"
 )
 
 // ApplicationHistoryManifestResponse defines the response for get history manifests of application
@@ -66,8 +67,8 @@ func (plugin *AppPlugin) applicationHistoryState(r *http.Request) (*http.Request
 			errors.Wrapf(err, "request query param 'historyID' %s not int", historyIDStr))
 	}
 
-	app, statusCode, err := plugin.middleware.CheckApplicationPermission(r.Context(), appName,
-		iamnamespace.NameSpaceScopedView)
+	app, statusCode, err := plugin.permitChecker.CheckApplicationPermission(r.Context(), appName,
+		permitcheck.AppViewRSAction)
 	if statusCode != http.StatusOK {
 		return r, mw.ReturnErrorResponse(statusCode, errors.Wrapf(err, "check application permission failed"))
 	}
@@ -107,7 +108,7 @@ func (plugin *AppPlugin) applicationHistoryState(r *http.Request) (*http.Request
 	}
 	return r, mw.ReturnJSONResponse(&ApplicationHistoryManifestResponse{
 		Code:      0,
-		RequestID: mw.RequestID(r.Context()),
+		RequestID: ctxutils.RequestID(r.Context()),
 		Data: &HistoryManifestData{
 			Manifests: manifests,
 		},

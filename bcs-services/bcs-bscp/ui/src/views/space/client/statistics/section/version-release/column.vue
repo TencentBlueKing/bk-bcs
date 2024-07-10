@@ -96,8 +96,3 @@
   };
 </script>
 
-<style scoped lang="scss">
-  :deep(.g2-tooltip) {
-    visibility: hidden;
-  }
-</style>

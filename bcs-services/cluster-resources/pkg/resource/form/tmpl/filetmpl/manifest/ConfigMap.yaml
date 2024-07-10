@@ -1,0 +1,8 @@
+apiVersion: {{ .metadata.apiVersion }}
+kind: ConfigMap
+{{ include "common.metadata" .metadata }}
+{{- if .data.immutable }}
+immutable: true
+{{- end }}
+data:
+  {{- include "common.cfgDataToYaml" .data.items | indent 2 }}

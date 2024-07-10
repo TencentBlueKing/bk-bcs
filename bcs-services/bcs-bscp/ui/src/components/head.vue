@@ -3,9 +3,9 @@
     <div class="head-left">
       <div class="title-wrap" @click="router.push({ name: 'service-all', params: { spaceId } })">
         <span class="logo">
-          <img src="../assets/logo.svg" alt="" />
+          <img :src="appGlobalConfig.appLogo || logo" alt="BSCP" />
         </span>
-        <span class="head-title"> {{ t('服务配置中心') }} </span>
+        <span class="head-title"> {{ appGlobalConfig.i18n.name }} </span>
       </div>
       <div class="head-routes">
         <div v-for="nav in navList" :key="nav.id" :class="['nav-item', { actived: isFirstNavActived(nav.module) }]">
@@ -16,7 +16,9 @@
                 v-for="secondNav in nav.children"
                 :key="secondNav.id"
                 :class="['secondNav-item', { actived: isSecondNavActived(secondNav.module) }]">
-                <router-link :to="getRoute(secondNav.id)">
+                <router-link
+                  :to="{ name: secondNav.id, params: { spaceId: spaceId || 0 } }"
+                  @click="handleNavClick(secondNav.id)">
                   {{ secondNav.name }}
                 </router-link>
               </div>
@@ -59,7 +61,7 @@
             v-cursor="{ active: !item.permission }"
             :class="['biz-option-item', { 'no-perm': !item.permission }]"
             v-bk-tooltips="{
-              content: `项目名称: ${item.space_name}\n业务ID: ${item.space_id}`,
+              content: `${t('业务名')}: ${item.space_name}\n${t('业务')}ID: ${item.space_id}`,
               placement: 'left',
             }">
             <div class="name-wrapper">
@@ -117,7 +119,7 @@
 <script setup lang="ts">
   import { ref, computed, watch } from 'vue';
   import { useI18n } from 'vue-i18n';
-  import { useRoute, useRouter } from 'vue-router';
+  import { useRoute, useRouter, RouteRecordName } from 'vue-router';
   import { storeToRefs } from 'pinia';
   import { AngleDown, HelpFill, DownShape, Plus } from 'bkui-vue/lib/icon';
   import useGlobalStore from '../store/global';
@@ -125,6 +127,7 @@
   import useTemplateStore from '../store/template';
   import { ISpaceDetail } from '../../types/index';
   import { loginOut } from '../api/index';
+  import logo from '../assets/logo.svg';
   import type { IVersionLogItem } from '../../types/version-log';
   import VersionLog from './version-log.vue';
   import features from './features-dialog.vue';
@@ -142,6 +145,7 @@
     showPermApplyPage,
     showApplyPermDialog,
     permissionQuery,
+    appGlobalConfig,
   } = storeToRefs(useGlobalStore());
   const { userInfo } = storeToRefs(useUserStore());
   const templateStore = useTemplateStore();
@@ -172,6 +176,7 @@
         { id: 'client-statistics', module: 'client-statistics', name: t('客户端统计') },
         { id: 'client-search', module: 'client-search', name: t('客户端查询') },
         { id: 'credentials-management', module: 'credentials', name: t('客户端密钥') },
+        { id: 'configuration-example', module: 'example', name: t('配置示例') },
       ],
     },
   ]);
@@ -212,30 +217,20 @@
     return spaceFeatureFlags.value.BIZ_VIEW && !showPermApplyPage.value && route.meta.navModule === secondNavName;
   };
 
-  const handleNavClick = (navId: String) => {
-    if (navId === 'service-all') {
+  const handleNavClick = (navId: string) => {
+    if (['service-all', 'client-statistics', 'client-search', 'configuration-example'].includes(navId)) {
       const lastAccessedServiceDetail = localStorage.getItem('lastAccessedServiceDetail');
       if (lastAccessedServiceDetail) {
         const detail = JSON.parse(lastAccessedServiceDetail);
         if (detail.spaceId === spaceId.value) {
-          router.push({ name: 'service-config', params: { spaceId: detail.spaceId, appId: detail.appId } });
+          router.push({
+            name: navId === 'service-all' ? 'service-config' : (navId as RouteRecordName),
+            params: { spaceId: detail.spaceId, appId: detail.appId },
+          });
           return;
         }
       }
     }
-  };
-  const getRoute = (navId: string) => {
-    if (navId === 'client-statistics' || navId === 'client-search') {
-      const lastSelectedClientService = localStorage.getItem('lastSelectedClientService');
-      if (lastSelectedClientService) {
-        const detail = JSON.parse(lastSelectedClientService);
-        if (detail.spaceId === spaceId.value) {
-          return { name: navId, params: { spaceId: detail.spaceId, appId: detail.appId } };
-        }
-      }
-      return { name: navId, params: { spaceId: spaceId.value || 0, appId: 0 } };
-    }
-    return { name: navId, params: { spaceId: spaceId.value || 0 } };
   };
 
   const handleSpaceSearch = (searchStr: string) => {
@@ -417,7 +412,7 @@
             position: absolute;
             top: 52px;
             left: 0;
-            z-index: 1000;
+            z-index: 9999;
             background: #182132;
             border-radius: 0 0 2px 2px;
             padding: 4px 1px;
@@ -427,6 +422,7 @@
               line-height: 40px;
               padding: 0 16px;
               font-size: 14px;
+              white-space: nowrap;
               a {
                 color: #96a2b9;
               }

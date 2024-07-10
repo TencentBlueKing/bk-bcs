@@ -1,0 +1,106 @@
+
+### Watch
+
+#include <ctime>
+#include <iostream>
+#include <string>
+#include <thread>
+#include <vector>
+
+#include <unistd.h>
+
+#include "client.h"
+
+int main(int argc, char** argv)
+{
+    // set client options.
+    bscp::core::ClientOptions options;
+
+    options.m_feedAddrs.push_back("{{ .Bk_Bscp_Variable_FEED_ADDR }}");
+    options.m_token = {{ .Bk_Bscp_Variable_ClientKey }};
+    options.m_bizID = {{ .Bk_Bscp_Variable_BkBizId }};
+
+    // labels.
+    std::map<std::string, std::string> labels{{ .Bk_Bscp_Variable_Leabels }};
+    options.m_labels = labels;
+
+    // instantiate client.
+    bscp::Client client(options);
+
+    // set log handle, if not set, no logs will be output.
+    bscp::log::Log::SetLogHandler([](const bscp::log::LogLevel& level, const std::string& msg) {
+        std::cout << msg << std::endl;
+        return 0;
+    });
+
+    // you must initialize before you use client.
+    auto ret = client.Initialize();
+    if (ret)
+    {
+        std::cout << "failed to initialize client" << std::endl;
+        return ret;
+    }
+
+    bscp::core::AppOptions appOptions;
+    std::string app = "{{ .Bk_Bscp_Variable_ServiceName }}";
+
+    // add watch.
+    // set handle function for the watch receive release data.
+    ret = client.AddWatcher(
+        app,
+        [&app, &appOptions, &client](const bscp::Release& release) {
+            std::cout << "release ID: " << release.m_releaseID << std::endl;
+
+            for (auto kv : release.m_kvItems)
+            {
+                std::string value;
+
+                auto ret = client.Get(app, kv.m_key, appOptions, value);
+                if (ret)
+                {
+                    std::cout << "call get error, err-code(" << ret << ")" << std::endl;
+                    return ret;
+                }
+
+                std::cout << kv.m_key << "=" << value << std::endl;
+            }
+            return 0;
+        },
+        appOptions);
+    if (ret)
+    {
+        std::cout << "failed to add watcher" << std::endl;
+    }
+    else
+    {
+        std::cout << "add watcher success" << std::endl;
+    }
+
+    // watch.
+    // call this to watch the bscp server, if bscp server publish new release, it will call the handle callback function
+    // user setted to handle the received release data.
+    ret = client.StartWatch();
+    if (ret)
+    {
+        std::cout << "failed to start watch" << std::endl;
+    }
+    std::cout << "start watch success" << std::endl;
+
+    // in here, user can exec their tasks.
+    // feel free to call other client api in here, such as Client::Get(), Client::PullKvs().
+    std::cout << "exec other tasks" << std::endl;
+    sleep(30);
+
+    // when user does not need to watch, call stop watch to close the watch channel.
+    ret = client.StopWatch();
+    if (ret)
+    {
+        std::cout << "failed to stop watch" << std::endl;
+    }
+    else
+    {
+        std::cout << "stop watch success" << std::endl;
+    }
+
+    return 0;
+}

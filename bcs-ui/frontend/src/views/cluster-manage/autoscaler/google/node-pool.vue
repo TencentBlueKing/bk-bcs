@@ -1,11 +1,11 @@
 <template>
-  <BcsContent>
+  <BcsContent :padding="0">
     <template #header>
       <HeaderNav :list="navList">
         <bcs-steps style="max-width: 360px" :steps="steps" :cur-step="curStep"></bcs-steps>
       </HeaderNav>
     </template>
-    <div v-bkloading="{ isLoading }" class="node-pool">
+    <div v-bkloading="{ isLoading }" class="h-full">
       <keep-alive>
         <component
           :is="stepComMap[curStep]"
@@ -17,7 +17,7 @@
           @next="handleNextStep"
           @pre="handlePreStep"
           @confirm="handleConfirm"
-        ></component>
+        />
       </keep-alive>
     </div>
   </BcsContent>
@@ -29,12 +29,12 @@ import NodeConfig from './node-config.vue';
 import NodePoolInfo from './node-pool-info.vue';
 
 import { mergeDeep } from '@/common/util';
+import BcsContent from '@/components/layout/Content.vue';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store/index';
 import Schema from '@/views/cluster-manage/autoscaler/resolve-schema';
 import { useClusterList } from '@/views/cluster-manage/cluster/use-cluster';
-import BcsContent from '@/views/cluster-manage/components/bcs-content.vue';
 import HeaderNav from '@/views/cluster-manage/components/header-nav.vue';
 
 export default defineComponent({
@@ -191,9 +191,3 @@ export default defineComponent({
   },
 });
 </script>
-<style lang="postcss" scoped>
-.node-pool {
-  margin: -24px;
-  height: calc(100vh - 104px);
-}
-</style>

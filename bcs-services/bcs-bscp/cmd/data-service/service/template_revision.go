@@ -15,9 +15,12 @@ package service
 import (
 	"context"
 	"fmt"
+	"time"
 
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/i18n"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 	pbbase "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
@@ -252,4 +255,142 @@ func (s *Service) doCreateTemplateRevisions(kt *kit.Kit, tx *gen.QueryTx, data [
 		return err
 	}
 	return nil
+}
+
+// GetTemplateRevision 根据版本号获取 TemplateRevisions
+func (s *Service) GetTemplateRevision(ctx context.Context, req *pbds.GetTemplateRevisionReq) (
+	*pbds.GetTemplateRevisionResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	var revision *table.TemplateRevision
+	var err error
+	var isLatest bool
+	if req.RevisionName == "" {
+		revision, err = s.dao.TemplateRevision().GetLatestTemplateRevision(kt, req.GetBizId(), req.GetTemplateId())
+		isLatest = true
+	} else {
+		revision, err = s.dao.TemplateRevision().GetByUniqueKey(kt, req.GetBizId(), req.GetTemplateId(),
+			req.GetRevisionName())
+		latestRevision, errL := s.dao.TemplateRevision().GetLatestTemplateRevision(kt, req.GetBizId(), req.GetTemplateId())
+		if errL != nil {
+			return nil, errL
+		}
+		if latestRevision.ID <= revision.ID {
+			isLatest = true
+		}
+	}
+	if err != nil {
+		return nil, errf.Errorf(errf.DBOpFailed, i18n.T(kt, fmt.Sprintf("get template revision failed, err: %v", err)))
+	}
+
+	return &pbds.GetTemplateRevisionResp{
+		Detail: &pbds.GetTemplateRevisionResp_TemplateRevision{
+			TemplateId:           revision.Attachment.TemplateID,
+			Name:                 revision.Spec.Name,
+			Path:                 revision.Spec.Path,
+			TemplateRevisionId:   revision.ID,
+			TemplateRevisionName: revision.Spec.RevisionName,
+			TemplateRevisionMemo: revision.Spec.RevisionMemo,
+			FileType:             string(revision.Spec.FileType),
+			FileMode:             string(revision.Spec.FileMode),
+			User:                 revision.Spec.Permission.User,
+			UserGroup:            revision.Spec.Permission.UserGroup,
+			Privilege:            revision.Spec.Permission.Privilege,
+			Signature:            revision.Spec.ContentSpec.Signature,
+			ByteSize:             revision.Spec.ContentSpec.ByteSize,
+			Creator:              revision.Revision.Creator,
+			CreateAt:             revision.Revision.CreatedAt.Format(time.RFC3339),
+			Md5:                  revision.Spec.ContentSpec.Md5,
+			IsLatest:             isLatest,
+		},
+	}, nil
+}
+
+// UpdateTemplateRevision implements pbds.DataServer.
+func (s *Service) UpdateTemplateRevision(ctx context.Context, req *pbds.UpdateTemplateRevisionReq) (
+	*pbds.CreateResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	if _, err := s.dao.TemplateRevision().GetByUniqueKey(kt, req.Attachment.BizId, req.Attachment.TemplateId,
+		req.Spec.RevisionName); err == nil {
+		return nil, fmt.Errorf("template revision's same revision name %s already exists", req.Spec.RevisionName)
+	}
+
+	template, err := s.dao.Template().GetByID(kt, req.Attachment.BizId, req.Attachment.TemplateId)
+	if err != nil {
+		logs.Errorf("get template by id failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	tx := s.dao.GenQuery().Begin()
+
+	// 1. create template revision
+	spec := req.Spec.TemplateRevisionSpec()
+	// if no revision name is specified, generate it by system
+	if spec.RevisionName == "" {
+		spec.RevisionName = tools.GenerateRevisionName()
+	}
+	spec.RevisionMemo = ""
+	// keep the revision's name and path same with template
+	spec.Name = template.Spec.Name
+	spec.Path = template.Spec.Path
+	templateRevision := &table.TemplateRevision{
+		Spec:       spec,
+		Attachment: req.Attachment.TemplateRevisionAttachment(),
+		Revision: &table.CreatedRevision{
+			Creator: kt.User,
+		},
+	}
+	id, err := s.dao.TemplateRevision().CreateWithTx(kt, tx, templateRevision)
+	if err != nil {
+		logs.Errorf("create template revision failed, err: %v, rid: %s", err, kt.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+		}
+		return nil, err
+	}
+
+	// update template
+	err = s.dao.Template().UpdateWithTx(kt, tx, &table.Template{
+		ID: template.ID,
+		Spec: &table.TemplateSpec{
+			Memo: req.Spec.RevisionMemo,
+		},
+		Attachment: template.Attachment,
+		Revision: &table.Revision{
+			Reviser:   kt.User,
+			UpdatedAt: time.Now().UTC(),
+		},
+	})
+	if err != nil {
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+		}
+		return nil, err
+	}
+
+	// 2. update app template bindings if necessary
+	atbs, err := s.dao.TemplateBindingRelation().
+		ListLatestTmplBoundUnnamedApps(kt, req.Attachment.BizId, req.Attachment.TemplateId)
+	if err != nil {
+		logs.Errorf("list latest template bound app template bindings failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+	if len(atbs) > 0 {
+		for _, atb := range atbs {
+			if e := s.CascadeUpdateATB(kt, tx, atb); e != nil {
+				logs.Errorf("cascade update app template binding failed, err: %v, rid: %s", e, kt.Rid)
+				if rErr := tx.Rollback(); rErr != nil {
+					logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+				}
+				return nil, e
+			}
+		}
+	}
+
+	if e := tx.Commit(); e != nil {
+		logs.Errorf("commit transaction failed, err: %v, rid: %s", e, kt.Rid)
+		return nil, e
+	}
+	return &pbds.CreateResp{Id: id}, nil
 }
