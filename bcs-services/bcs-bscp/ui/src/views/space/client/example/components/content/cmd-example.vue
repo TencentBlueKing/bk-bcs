@@ -1,6 +1,9 @@
 <template>
   <section class="cmd-tool-wrap">
-    <form-option ref="fileOptionRef" :directory-show="props.kvName !== 'kv-cmd'" @update-option-data="getOptionData" />
+    <form-option
+      ref="fileOptionRef"
+      :directory-show="basicInfo!.serviceType.value === 'file'"
+      @update-option-data="getOptionData" />
     <div class="preview-container">
       <p class="headline">{{ $t('配置指引与示例预览') }}</p>
       <div class="guide-wrap">
@@ -11,11 +14,12 @@
             <copy-shape class="icon-copy" />
           </p>
           <template v-else>
-            <bk-button theme="primary" class="copy-btn" @click="copyExample">{{ $t('复制示例') }}</bk-button>
+            <bk-button theme="primary" class="copy-btn" @click="copyExample">{{ $t('复制命令') }}</bk-button>
             <code-preview
-              :class="['preview-component', { 'preview-component--kvcmd': props.kvName === 'kv-cmd' }]"
+              :class="['preview-component', { 'preview-component--kvcmd': basicInfo!.serviceType.value === 'kv' }]"
               :code-val="replaceVal"
               :variables="variables"
+              :language="kvName"
               @change="(val: string) => (copyReplaceVal = val)" />
           </template>
           <template v-if="item.tips">
@@ -33,7 +37,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed, provide, ref, onMounted, inject, Ref, nextTick } from 'vue';
+  import { ref, Ref, computed, provide, inject, onMounted, nextTick } from 'vue';
   import { copyToClipBoard } from '../../../../../../utils/index';
   import { IVariableEditParams } from '../../../../../../../types/variable';
   import BkMessage from 'bkui-vue/lib/message';
@@ -47,7 +51,7 @@
 
   const { t } = useI18n();
   const route = useRoute();
-  const serviceName = inject<Ref<string>>('serviceName');
+  const basicInfo = inject<{ serviceName: Ref<string>; serviceType: Ref<string> }>('basicInfo');
   const fileText = [
     {
       title: t('下载二进制命令行'),
@@ -59,7 +63,7 @@
       },
     },
     {
-      title: t('创建命令配置文件，配置文件为 YAML 格式，命名为：bscp.yaml'),
+      title: t('为命令行工具创建所需的配置文件bscp.yaml，请复制以下命令并在与该命令行工具相同的目录下执行'),
       value: '',
     },
     {
@@ -68,23 +72,23 @@
     },
     {
       title: t('拉取服务下所有配置文件'),
-      value: `./bscp pull -a ${serviceName!.value} -c ./bscp.yaml`,
+      value: `./bscp pull -a ${basicInfo!.serviceName.value} -c ./bscp.yaml`,
     },
     {
       title: t('获取服务下所有配置文件列表'),
-      value: `./bscp get file -a ${serviceName!.value} -c ./bscp.yaml`,
+      value: `./bscp get file -a ${basicInfo!.serviceName.value} -c ./bscp.yaml`,
     },
     {
       title: t(
         '下载配置文件时，保留目录层级，并将其保存到指定目录下，例如：将 /etc/nginx.conf 文件下载到 /tmp 目录时，文件保存在 /tmp/etc/nginx.conf',
       ),
-      value: `./bscp get file /etc/nginx.conf -a ${serviceName!.value} -c ./bscp.yaml -d /tmp`,
+      value: `./bscp get file /etc/nginx.conf -a ${basicInfo!.serviceName.value} -c ./bscp.yaml -d /tmp`,
     },
     {
       title: t(
         '下载配置文件时，不保留目录层级，并将其保存到指定目录下，例如：将 /etc/nginx.conf 文件下载到 /tmp 目录时，文件保存在 /tmp/nginx.conf',
       ),
-      value: `./bscp get file /etc/nginx.conf -a ${serviceName!.value} -c ./bscp.yaml -d /tmp --ignore-dir`,
+      value: `./bscp get file /etc/nginx.conf -a ${basicInfo!.serviceName.value} -c ./bscp.yaml -d /tmp --ignore-dir`,
     },
   ];
 
@@ -99,7 +103,7 @@
       },
     },
     {
-      title: t('创建命令配置文件，配置文件为 YAML 格式，命名为：bscp.yaml'),
+      title: t('为命令行工具创建所需的配置文件bscp.yaml，请复制以下命令并在与该命令行工具相同的目录下执行'),
       value: '',
     },
     {
@@ -108,21 +112,21 @@
     },
     {
       title: t('获取指定服务下所有配置项列表'),
-      value: `./bscp get kv -a ${serviceName!.value} -c ./bscp.yaml`,
+      value: `./bscp get kv -a ${basicInfo!.serviceName.value} -c ./bscp.yaml`,
     },
     {
       title: t('获取指定服务下指定配置项列表，多个配置项'),
-      value: `./bscp get kv -a ${serviceName!.value} key1 key2 -c ./bscp.yaml`,
+      value: `./bscp get kv -a ${basicInfo!.serviceName.value} key1 key2 -c ./bscp.yaml`,
     },
     {
       title: t('获取指定服务下指定配置项值，只支持单个配置项值获取'),
-      value: `./bscp get kv -a ${serviceName!.value} key1  -c ./bscp.yaml -o value`,
+      value: `./bscp get kv -a ${basicInfo!.serviceName.value} key1  -c ./bscp.yaml -o value`,
     },
     {
       title: t(
         '获取指定服务下指定配置项元数据，支持多个配置项元数据获取，没有指定配置项，获取服务下所有配置项的元数据',
       ),
-      value: `./bscp get kv -a ${serviceName!.value} key1 key2  -c ./bscp.yaml -o json`,
+      value: `./bscp get kv -a ${basicInfo!.serviceName.value} key1 key2  -c ./bscp.yaml -o json`,
     },
   ];
 
@@ -143,11 +147,11 @@
   });
 
   const cmdContent = computed(() => {
-    return props.kvName === 'file-cmd' ? fileText : kvText;
+    return basicInfo!.serviceType.value === 'file' ? fileText : kvText;
   });
 
   onMounted(async () => {
-    const newKvData = await changeKvData(props.kvName);
+    const newKvData = await changeKvData(basicInfo!.serviceType.value);
     codeVal.value = newKvData.default;
     replaceVal.value = newKvData.default;
     updateReplaceVal();
@@ -170,7 +174,7 @@
   const updateReplaceVal = () => {
     let updateString = replaceVal.value;
     updateString = updateString.replace('{{ .Bk_Bscp_Variable_BkBizId }}', bkBizId.value);
-    updateString = updateString.replace('{{ .Bk_Bscp_Variable_ServiceName }}', serviceName!.value);
+    updateString = updateString.replace('{{ .Bk_Bscp_Variable_ServiceName }}', basicInfo!.serviceName.value);
     replaceVal.value = updateString.replaceAll('{{ .Bk_Bscp_Variable_FEED_ADDR }}', (window as any).FEED_ADDR);
   };
   const updateVariables = () => {
@@ -198,14 +202,14 @@
   // 复制示例
   const copyExample = async () => {
     try {
-      await fileOptionRef.value.formRef.validate();
+      await fileOptionRef.value.handleValidate();
       // 复制示例使用未脱敏的密钥
       const reg = /'(.{1}|.{3})\*{3}(.{1}|.{3})'/g;
       const copyVal = copyReplaceVal.value.replaceAll(reg, `'${optionData.value.clientKey}'`);
       copyToClipBoard(copyVal);
       BkMessage({
         theme: 'success',
-        message: t('示例已复制'),
+        message: t('复制成功'),
       });
     } catch (error) {
       // 通知密钥选择组件校验状态
@@ -230,10 +234,10 @@
    *
    * @param serviceType 数据模板名称
    */
-  const changeKvData = (serviceType = 'file-cmd') => {
-    return serviceType === 'file-cmd'
-      ? import('/src/assets/exampleData/file-cmd.yaml?raw')
-      : import('/src/assets/exampleData/kv-cmd.yaml?raw');
+  const changeKvData = (serviceType = 'file') => {
+    return serviceType === 'file'
+      ? import('/src/assets/example-data/file-cmd.yaml?raw')
+      : import('/src/assets/example-data/kv-cmd.yaml?raw');
   };
 </script>
 
@@ -298,11 +302,11 @@
     }
   }
   .preview-component {
-    height: 276px;
+    height: 334px;
     padding: 16px 0 0;
     background-color: #f5f7fa;
     &--kvcmd {
-      height: 237px;
+      height: 276px;
     }
   }
 </style>

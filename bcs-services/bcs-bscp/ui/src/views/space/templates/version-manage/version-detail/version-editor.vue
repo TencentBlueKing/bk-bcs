@@ -79,6 +79,7 @@
   import { useI18n } from 'vue-i18n';
   import SHA256 from 'crypto-js/sha256';
   import WordArray from 'crypto-js/lib-typedarrays';
+  import CryptoJS from 'crypto-js';
   import Message from 'bkui-vue/lib/message';
   import { Done, TextFill } from 'bkui-vue/lib/icon';
   import { ITemplateVersionEditingData } from '../../../../../../types/template';
@@ -242,15 +243,33 @@
   // 生成文件或文本的sha256
   const getSignature = async () => {
     if (props.data.file_type === 'binary') {
+      const CHUNK_SIZE = 1024 * 1024; // 1MB
+      // 初始化第一个切片的处理
+      let start = 0;
+      let end = Math.min(CHUNK_SIZE, fileContent.value!.size as number);
       if (isFileChanged.value) {
         return new Promise((resolve) => {
           const reader = new FileReader();
-          // @ts-ignore
-          reader.readAsArrayBuffer(fileContent.value);
-          reader.onload = () => {
-            const wordArray = WordArray.create(reader.result);
-            resolve(SHA256(wordArray).toString());
+          const hash = CryptoJS.algo.SHA256.create();
+          const processChunk = () => {
+            // @ts-ignore
+            const slice = fileContent.value.slice(start, end);
+            reader.readAsArrayBuffer(slice);
           };
+          reader.onload = function () {
+            const wordArray = WordArray.create(reader.result);
+            hash.update(wordArray);
+            if (end < (fileContent.value!.size as number)) {
+              start += CHUNK_SIZE;
+              end = Math.min(start + CHUNK_SIZE, fileContent.value!.size as number);
+              processChunk();
+            } else {
+              const sha256Hash = hash.finalize();
+              resolve(sha256Hash.toString());
+            }
+          };
+          // 开始处理第一个切片
+          processChunk();
         });
       }
       return (fileContent.value as IFileConfigContentSummary).signature;

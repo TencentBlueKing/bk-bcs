@@ -1,12 +1,8 @@
-
-### Get
-
-package com.example.get;
+package com.example.watch;
 
 import com.tencent.bscp.helper.OptionHelper;
 import com.tencent.bscp.pojo.AppOption;
 import com.tencent.bscp.pojo.KvMetaV1;
-import com.tencent.bscp.pojo.Release;
 import com.tencent.bscp.sdk.Client;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,21 +35,23 @@ public class Main {
                     OptionHelper.withLabels(labels));
 
             List<AppOption> opts = new ArrayList<>();
-            List<String> match = new ArrayList<>();
 
-            Release release = bscp.pullKvs(app, match, opts.toArray(new AppOption[0]));
+            bscp.addWatcher((release) -> {
+                System.out.println("receive new release change event: " + release.getReleaseID());
+                for (KvMetaV1 kv : release.getKvItems()) {
+                    try {
+                        System.out.println(
+                                kv.getKey() + "=" + bscp.get(app, kv.getKey(), opts.toArray(new AppOption[0])));
+                    } catch (Exception e) {
+                        System.exit(1);
+                    }
+                }
+            }, app, opts.toArray(new AppOption[0]));
 
-            for (KvMetaV1 kv : release.getKvItems()) {
-                System.out.println(
-                        kv.getKey() + "=" + bscp.get(app, kv.getKey(), opts.toArray(new AppOption[0])));
-            }
-
-            bscp.close();
-
-            System.out.println("get success");
+            bscp.startWatch();
 
         } catch (Exception e) {
-            LOGGER.error("get bscp kv failed", e);
+            LOGGER.error("watch bscp kv failed", e);
             System.exit(1);
             return;
         }
