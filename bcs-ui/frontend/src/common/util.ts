@@ -416,7 +416,7 @@ export const sort = (arr, key, order = 'ascending', extraDataFn?): any[] => {
 };
 
 // 格式化时间
-export const formatTime = (timestamp, fmt) => {
+export const formatTime = (timestamp, fmt = 'yyyy-MM-dd hh:mm:ss') => {
   const time = new Date(timestamp);
   const opt = {
     'M+': time.getMonth() + 1, // 月份

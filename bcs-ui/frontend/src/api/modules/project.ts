@@ -1,5 +1,7 @@
 import { createRequest } from '../request';
 
+import { BCS_UI_PREFIX } from '@/common/constant';
+
 // 项目管理，变量变量，命名空间, Quota 管理，权限
 const request = createRequest({
   domain: window.BCS_API_HOST,
@@ -45,7 +47,7 @@ export const projectBusiness = projectRequest('get', '/projects/$projectCode/bus
 
 const uiRequest = createRequest({
   domain: window.BCS_API_HOST,
-  prefix: '/bcsapi/v4/ui',
+  prefix: BCS_UI_PREFIX,
 });
 export const releaseNote = uiRequest('get', '/release_note');
 export const featureFlags = uiRequest('get', '/feature_flags');
