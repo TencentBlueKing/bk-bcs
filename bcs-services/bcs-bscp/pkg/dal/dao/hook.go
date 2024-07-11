@@ -40,6 +40,8 @@ type Hook interface {
 	DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.Hook) error
 	// Update one hook instance.
 	Update(kit *kit.Kit, hook *table.Hook) error
+	// UpdateWithTx update one hook instance with transaction.
+	UpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, hook *table.Hook) error
 	// GetByID get hook only with id.
 	GetByID(kit *kit.Kit, bizID, hookID uint32) (*table.Hook, error)
 	// GetByName get hook by name
@@ -52,6 +54,34 @@ type hookDao struct {
 	genQ     *gen.Query
 	idGen    IDGenInterface
 	auditDao AuditDao
+}
+
+// UpdateWithTx update one hook instance with transaction.
+func (dao *hookDao) UpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.Hook) error {
+	if err := g.ValidateUpdate(); err != nil {
+		return err
+	}
+
+	// 更新操作, 获取当前记录做审计
+	m := tx.Hook
+	q := tx.Hook.WithContext(kit.Ctx)
+	oldOne, err := q.Where(m.ID.Eq(g.ID), m.BizID.Eq(g.Attachment.BizID)).Take()
+	if err != nil {
+		return err
+	}
+
+	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareUpdate(g, oldOne)
+
+	if _, err := q.Where(m.BizID.Eq(g.Attachment.BizID), m.ID.Eq(g.ID)).Updates(g); err != nil {
+		return err
+	}
+
+	if err := ad.Do(tx.Query); err != nil {
+		return err
+	}
+
+	return nil
+
 }
 
 // CreateWithTx create one hook instance with transaction.
@@ -256,7 +286,7 @@ func (dao *hookDao) Update(kit *kit.Kit, g *table.Hook) error {
 	updateTx := func(tx *gen.Query) error {
 		q = tx.Hook.WithContext(kit.Ctx)
 		if _, err := q.Where(m.BizID.Eq(g.Attachment.BizID), m.ID.Eq(g.ID)).
-			Select(m.Tags, m.Memo, m.Reviser).Updates(g); err != nil {
+			Select(m.Tags, m.Memo).Omit(m.Reviser, m.UpdatedAt).Updates(g); err != nil {
 			return err
 		}
 

@@ -14,7 +14,6 @@ package service
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"path"
 	"strings"
@@ -573,10 +572,6 @@ func (s *Service) genFinalATBForCascade(kt *kit.Kit, tx *gen.QueryTx, atb *table
 		return err
 	}
 
-	if e := s.validateATBUniqueKey(kt, tmplRevisions); e != nil {
-		return e
-	}
-
 	if e := s.fillATBTmplSpace(kt, atb, tmplRevisions); e != nil {
 		return e
 	}
@@ -911,22 +906,6 @@ func (s *Service) validateATBLatestRevisions(kt *kit.Kit, b *parsedBindings) err
 	}
 
 	return nil
-}
-
-// validateATBUniqueKey validate unique key for app template binding
-func (s *Service) validateATBUniqueKey(kt *kit.Kit, tmplRevisions []*table.TemplateRevision) error {
-	_, uKeys, err := s.getDuplicatedCIs(kt, tmplRevisions)
-	if err != nil {
-		logs.Errorf("get duplicated config items failed, err: %v, rid: %s", err, kt.Rid)
-		return err
-	}
-
-	if len(uKeys) == 0 {
-		return nil
-	}
-
-	js, _ := json.Marshal(uKeys)
-	return fmt.Errorf("config item's name and path must be unique, these are repeated: %s", js)
 }
 
 // getDuplicatedCIs get duplicated config items whose unique keys `name+path` are same
