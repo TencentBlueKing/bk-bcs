@@ -9,49 +9,51 @@
     :esc-close="false"
     :before-close="handleBeforeClose"
     @closed="emits('update:show', false)">
-    <div class="import-type-select">
-      <div class="label">{{ t('导入方式') }}</div>
-      <bk-radio-group v-model="importType">
-        <bk-radio-button label="localFile">{{ t('导入本地文件') }}</bk-radio-button>
-        <bk-radio-button label="configTemplate">{{ t('从配置模板导入') }}</bk-radio-button>
-        <bk-radio-button label="historyVersion">{{ t('从历史版本导入') }}</bk-radio-button>
-        <bk-radio-button label="otherService">{{ t('从其他服务导入') }}</bk-radio-button>
-      </bk-radio-group>
-    </div>
-    <div v-if="importType === 'localFile'">
-      <ImportFromLocalFile
-        :bk-biz-id="props.bkBizId"
-        :app-id="props.appId"
-        :is-template="false"
-        @change="handleUploadFile"
-        @delete="handleDeleteFile"
-        @uploading="uploadFileLoading = $event"
-        @decompressing="decompressing = $event" />
-    </div>
-    <div v-else-if="importType === 'configTemplate'">
-      <ImportFromTemplate ref="importFromTemplateRef" :bk-biz-id="props.bkBizId" :app-id="props.appId" />
-    </div>
-    <div v-else-if="importType === 'historyVersion'">
-      <div class="wrap">
-        <div class="label">{{ $t('选择版本') }}</div>
-        <bk-select
-          v-model="selectVerisonId"
-          :loading="versionListLoading"
-          style="width: 374px"
-          filterable
-          auto-focus
-          :clearable="false"
-          @select="handleSelectVersion(appId, $event)">
-          <bk-option v-for="item in versionList" :id="item.id" :key="item.id" :name="item.spec.name" />
-        </bk-select>
+    <div :class="['select-wrap', { 'en-select-wrap': locale === 'en' }]">
+      <div class="import-type-select">
+        <div :class="['label', { 'en-label': locale === 'en' }]">{{ t('导入方式') }}</div>
+        <bk-radio-group v-model="importType">
+          <bk-radio-button label="localFile">{{ t('导入本地文件') }}</bk-radio-button>
+          <bk-radio-button label="configTemplate">{{ t('从配置模板导入') }}</bk-radio-button>
+          <bk-radio-button label="historyVersion">{{ t('从历史版本导入') }}</bk-radio-button>
+          <bk-radio-button label="otherService">{{ t('从其他服务导入') }}</bk-radio-button>
+        </bk-radio-group>
       </div>
-    </div>
-    <div v-else-if="importType === 'otherService'">
-      <ImportFormOtherService
-        :bk-biz-id="props.bkBizId"
-        :app-id="props.appId"
-        @select-version="handleSelectVersion"
-        @clear="handleClearTable" />
+      <div v-if="importType === 'localFile'">
+        <ImportFromLocalFile
+          :bk-biz-id="props.bkBizId"
+          :app-id="props.appId"
+          :is-template="false"
+          @change="handleUploadFile"
+          @delete="handleDeleteFile"
+          @uploading="uploadFileLoading = $event"
+          @decompressing="decompressing = $event" />
+      </div>
+      <div v-else-if="importType === 'configTemplate'">
+        <ImportFromTemplate ref="importFromTemplateRef" :bk-biz-id="props.bkBizId" :app-id="props.appId" />
+      </div>
+      <div v-else-if="importType === 'historyVersion'">
+        <div class="wrap">
+          <div class="label">{{ $t('选择版本') }}</div>
+          <bk-select
+            v-model="selectVerisonId"
+            :loading="versionListLoading"
+            style="width: 374px"
+            filterable
+            auto-focus
+            :clearable="false"
+            @select="handleSelectVersion(appId, $event)">
+            <bk-option v-for="item in versionList" :id="item.id" :key="item.id" :name="item.spec.name" />
+          </bk-select>
+        </div>
+      </div>
+      <div v-else-if="importType === 'otherService'">
+        <ImportFormOtherService
+          :bk-biz-id="props.bkBizId"
+          :app-id="props.appId"
+          @select-version="handleSelectVersion"
+          @clear="handleClearTable" />
+      </div>
     </div>
     <bk-loading
       :loading="decompressing || tableLoading"
@@ -173,7 +175,7 @@
   import TemplateConfigTable from './template-config-table.vue';
   import { cloneDeep } from 'lodash';
 
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
 
   const serviceStore = useServiceStore();
 
@@ -541,23 +543,38 @@
 </script>
 
 <style scoped lang="scss">
-  .import-type-select {
-    display: flex;
-  }
-  .label {
-    width: 72px;
-    height: 32px;
-    line-height: 32px;
-    font-size: 12px;
-    color: #63656e;
-    margin-right: 22px;
-    text-align: right;
-  }
-  :deep(.wrap) {
-    display: flex;
-    margin-top: 24px;
+  .select-wrap {
+    .import-type-select {
+      display: flex;
+    }
     .label {
-      @extend .label;
+      height: 32px;
+      line-height: 32px;
+      width: 72px;
+      font-size: 12px;
+      color: #63656e;
+      margin-right: 22px;
+      text-align: right;
+    }
+    :deep(.wrap) {
+      display: flex;
+      margin-top: 24px;
+      .label {
+        @extend .label;
+      }
+    }
+    &.en-select-wrap {
+      .label {
+        width: 100px !important;
+      }
+      :deep(.wrap) {
+        .label {
+          @extend .label;
+        }
+      }
+      :deep(.upload-file-list) {
+        margin-left: 120px;
+      }
     }
   }
 

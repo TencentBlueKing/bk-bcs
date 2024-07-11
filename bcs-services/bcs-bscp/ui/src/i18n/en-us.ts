@@ -71,6 +71,7 @@ export default {
   请输入配置文件绝对路径: 'Please enter the absolute path of the configuration file',
   没有匹配到配置项: 'No configuration item was matched',
   请先在左侧表单设置关联规则并预览: 'Please first set the association rules in the left form and preview',
+  删除服务成功: 'Service deleted successfully',
 
   // 导航栏
   服务配置中心: 'BSCP',
@@ -411,7 +412,7 @@ export default {
   收起上传列表: 'Drop upload list',
   展开上传列表: 'Expand upload list',
   '支持上传多个文件、目录树结构，同时也支持将扩展名为 .zip / .tar / .tar.gz / .tgz 的压缩文件解压后导入': 'You can upload multiple files and directory trees. You can also decompress and import the compressed file with the extension name of.zip /.tar /.tar.gz /.tgz',
-  '支持上传多个文件、目录树结构，其中扩展名为 .zip / .tar / .tar.gz / .tgz 的压缩文件不会解压，将整体作为二进制配置项上传': 'You can upload multiple files and directory trees. The compressed files with the extension name of.zip /.tar /.tar.gz /.tgz are not decompressed and are uploaded as binary configuration items .zip / .tar / .tar.gz / .tgz 的压缩文件不会解压，将整体作为二进制配置项上传',
+  '支持上传多个文件、目录树结构，其中扩展名为 .zip / .tar / .tar.gz / .tgz 的压缩文件不会解压，将整体作为二进制配置项上传': 'You can upload multiple files and directory trees. The compressed files with the extension name of.zip /.tar /.tar.gz /.tgz are not decompressed and are uploaded as binary configuration items',
   简单文本: 'Simple text',
   '每行表示一个配置项，包含配置项名称、数据类型和配置项值，默认通过空格分隔': 'Each line represents a configuration item, including the configuration item name, data type, and configuration item value, separated by Spaces by default',
   '以 JSON 格式导入键值 (KV) 配置项，配置项名称作为 JSON 对象的 Key，而配置项的数据类型和值组成一个嵌套对象，作为对应 Key 的 Value': 'Import the key-value (KV) configuration item in JSON format. The name of the configuration item is used as the Key of the JSON object, and the data type and Value of the configuration item form a nested object as the value of the corresponding Key',

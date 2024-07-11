@@ -58,6 +58,8 @@
   import { IConfigImportItem } from '../../../../../../../../../../types/config';
   import { importTemplateFile } from '../../../../../../../../../api/template';
   import { Message } from 'bkui-vue';
+  import useGlobalStore from '../../../../../../../../../store/global';
+  import { storeToRefs } from 'pinia';
 
   interface IUploadFileList {
     file: File;
@@ -66,6 +68,7 @@
   }
 
   const { t } = useI18n();
+  const { spaceFeatureFlags } = storeToRefs(useGlobalStore());
 
   const props = defineProps<{
     isTemplate: boolean; // 是否是配置模板导入
@@ -109,6 +112,9 @@
   );
 
   const handleFileUpload = async (option: { file: File }) => {
+    const {
+      RESOURCE_LIMIT: { MaxUploadContentLength, MaxUploadSingleContentLength },
+    } = spaceFeatureFlags.value;
     const fileSize = option.file.size / 1024 / 1024;
     const isCompressionFile =
       option.file.name.endsWith('.zip') ||
@@ -117,26 +123,26 @@
       option.file.name.endsWith('.tgz');
 
     if (isDecompression.value) {
-      if (isCompressionFile && fileSize > 2048) {
+      if (isCompressionFile && fileSize > MaxUploadContentLength) {
         Message({
           theme: 'error',
-          message: t('压缩包大小不能超过{n}GB', { n: 2 }),
+          message: t('压缩包大小不能超过{n}GB', { n: MaxUploadContentLength / 1024 }),
         });
         return;
       }
-      if (!isCompressionFile && fileSize > 200) {
+      if (!isCompressionFile && fileSize > MaxUploadSingleContentLength) {
         Message({
           theme: 'error',
-          message: t('单文件大小不能超过{n}M', { n: 200 }),
+          message: t('单文件大小不能超过{n}M', { n: MaxUploadSingleContentLength }),
         });
         return;
       }
     }
 
-    if (!isDecompression.value && fileSize > 200) {
+    if (!isDecompression.value && fileSize > MaxUploadSingleContentLength) {
       Message({
         theme: 'error',
-        message: t('单文件大小不能超过{n}M', { n: 200 }),
+        message: t('单文件大小不能超过{n}M', { n: MaxUploadSingleContentLength }),
       });
       return;
     }
@@ -205,10 +211,10 @@
 <style scoped lang="scss">
   .tips {
     color: #979ba5;
-    height: 20px;
     font-size: 12px;
     line-height: 20px;
     margin-bottom: 8px;
+    width: 780px;
   }
   :deep(.config-uploader) {
     .bk-upload-list {
@@ -216,7 +222,7 @@
     }
   }
   .upload-file-list {
-    margin-left: 94px;
+    margin-left: 100px;
     padding: 12px;
     width: 520px;
     background: #f5f7fa;
