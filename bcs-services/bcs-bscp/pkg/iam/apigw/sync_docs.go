@@ -29,7 +29,7 @@ const (
 
 // ReleaseSwagger 导入swagge 文档
 // nolint:funlen
-func ReleaseSwagger(opt cc.ApiServerSetting, language, version string) error {
+func ReleaseSwagger(esbOpt cc.Esb, apiGwOpt cc.ApiGateway, language, version string) error {
 
 	// 获取需要导入的文档
 	swaggerData, err := docs.Assets.ReadFile("swagger/bkapigw.swagger.json")
@@ -37,7 +37,7 @@ func ReleaseSwagger(opt cc.ApiServerSetting, language, version string) error {
 		return fmt.Errorf("reads and returns the content of the named file failed, err: %s", err.Error())
 	}
 	// 初始化网关
-	gw, err := NewApiGw(opt.Esb)
+	gw, err := NewApiGw(esbOpt, apiGwOpt)
 	if err != nil {
 		return fmt.Errorf("init api gateway failed, err: %s", err.Error())
 	}
@@ -64,7 +64,7 @@ func ReleaseSwagger(opt cc.ApiServerSetting, language, version string) error {
 			Upstreams: Upstreams{
 				Loadbalance: "roundrobin",
 				Hosts: []Host{{
-					Host:   opt.Esb.BscpHost,
+					Host:   esbOpt.BscpHost,
 					Weight: 100,
 				}},
 			},
