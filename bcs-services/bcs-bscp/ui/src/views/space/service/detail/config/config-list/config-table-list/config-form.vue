@@ -77,9 +77,6 @@
         <bk-input v-model="localVal.user_group" @input="change"></bk-input>
       </bk-form-item>
     </div>
-    <bk-form-item v-if="isTpl" class="fixed-width-form" property="revision_name" :label="t('form_版本号')" required>
-      <bk-input v-model="localVal.revision_name" :placeholder="t('请输入')"></bk-input>
-    </bk-form-item>
     <bk-form-item v-if="localVal.file_type === 'binary'" :label="t('配置内容')" :required="true">
       <bk-upload
         class="config-uploader"
@@ -131,7 +128,7 @@
       <template #label>
         <div class="config-content-label">
           <span>{{ t('配置内容') }}</span>
-          <info v-bk-tooltips="{ content: configContentTip, placement: 'top' }" fill="#3a84ff" />
+          <info v-bk-tooltips="{ content: t('tips.createConfig'), placement: 'top' }" fill="#3a84ff" />
         </div>
       </template>
       <ConfigContentEditor
@@ -148,6 +145,7 @@
   import { useI18n } from 'vue-i18n';
   import SHA256 from 'crypto-js/sha256';
   import WordArray from 'crypto-js/lib-typedarrays';
+  import CryptoJS from 'crypto-js';
   import { TextFill, Done, Info, Error } from 'bkui-vue/lib/icon';
   import BkMessage from 'bkui-vue/lib/message';
   import { IConfigEditParams, IFileConfigContentSummary } from '../../../../../../../../types/config';
@@ -177,7 +175,7 @@
     defineProps<{
       config: IConfigEditParams;
       isEdit: boolean;
-      content: string | IFileConfigContentSummary;
+      content?: string | IFileConfigContentSummary;
       variables?: IVariableEditParams[];
       bkBizId: string;
       id: number; // 服务ID或者模板空间ID
@@ -192,14 +190,12 @@
   );
 
   const emits = defineEmits(['change', 'update:fileUploading']);
-  const configContentTip = `配置文件内支持引用全局变量与定义新的BSCP变量，变量规则如下
-                          1.需是要go template语法， 例如 {{ .bk_bscp_appid }}
-                          2.变量名需以 “bk_bscp_” 或 “BK_BSCP_” 开头`;
   const localVal = ref({ ...props.config, fileAP: '' });
   const privilegeInputVal = ref('');
   const showPrivilegeErrorTips = ref(false);
   const stringContent = ref('');
   const fileContent = ref<IFileConfigContentSummary | File>();
+  const uploadFileSignature = ref(''); // 新上传文件的sha256
   const isFileChanged = ref(false); // 标识文件是否被修改，编辑配置文件时若文件未修改，不重新上传文件
   const formRef = ref();
   const uploadProgress = ref({
@@ -388,6 +384,7 @@
   const uploadContent = async () => {
     uploadProgress.value.status = 'uploading';
     const signature = await getSignature();
+    uploadFileSignature.value = signature;
     if (props.isTpl) {
       return updateTemplateContent(
         props.bkBizId,
@@ -413,15 +410,33 @@
   // 生成文件或文本的sha256
   const getSignature = async () => {
     if (localVal.value.file_type === 'binary') {
+      const CHUNK_SIZE = 1024 * 1024; // 1MB
+      // 初始化第一个切片的处理
+      let start = 0;
+      let end = Math.min(CHUNK_SIZE, fileContent.value!.size as number);
       if (isFileChanged.value) {
         return new Promise((resolve) => {
           const reader = new FileReader();
-          // @ts-ignore
-          reader.readAsArrayBuffer(fileContent.value);
-          reader.onload = () => {
-            const wordArray = WordArray.create(reader.result);
-            resolve(SHA256(wordArray).toString());
+          const hash = CryptoJS.algo.SHA256.create();
+          const processChunk = () => {
+            // @ts-ignore
+            const slice = fileContent.value.slice(start, end);
+            reader.readAsArrayBuffer(slice);
           };
+          reader.onload = function () {
+            const wordArray = WordArray.create(reader.result);
+            hash.update(wordArray);
+            if (end < (fileContent.value!.size as number)) {
+              start += CHUNK_SIZE;
+              end = Math.min(start + CHUNK_SIZE, fileContent.value!.size as number);
+              processChunk();
+            } else {
+              const sha256Hash = hash.finalize();
+              resolve(sha256Hash.toString());
+            }
+          };
+          // 开始处理第一个切片
+          processChunk();
         });
       }
       return (fileContent.value as IFileConfigContentSummary).signature;
@@ -430,14 +445,16 @@
     return SHA256(stringContent.value).toString();
   };
 
+
   // 下载已上传文件
   const handleDownloadFile = async () => {
-    if (uploadProgress.value.status === 'uploading' || !props.isEdit) return;
+    if (uploadProgress.value.status === 'uploading') return;
     try {
       fileDownloading.value = true;
       const { signature, name } = fileContent.value as IFileConfigContentSummary;
+      const fileSignature = signature || uploadFileSignature.value;
       const getContent = props.isTpl ? downloadTemplateContent : downloadConfigContent;
-      const res = await getContent(props.bkBizId, props.id, signature, true);
+      const res = await getContent(props.bkBizId, props.id, fileSignature, true);
       fileDownload(res, name);
     } catch (error) {
       console.error(error);

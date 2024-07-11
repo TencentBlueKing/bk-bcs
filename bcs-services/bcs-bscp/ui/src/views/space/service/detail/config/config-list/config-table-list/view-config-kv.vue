@@ -53,6 +53,7 @@
   import { IConfigKvType } from '../../../../../../../../types/config';
   import kvConfigContentEditor from '../../components/kv-config-content-editor.vue';
   import ConfigContentEditor from '../../components/config-content-editor.vue';
+  import { sortObjectKeysByAscii, datetimeFormat } from '../../../../../../../utils';
 
   const { t } = useI18n();
   const props = defineProps<{
@@ -70,10 +71,21 @@
 
   const metaData = computed(() => {
     const { content_spec, revision, spec } = props.config;
-    const { byte_size, signature } = content_spec;
+    const { byte_size, signature, md5 } = content_spec;
     const { create_at, creator, reviser, update_at } = revision;
-    const { key, kv_type } = spec;
-    return { key, kv_type, byte_size, signature, create_at, creator, reviser, update_at };
+    const { key, kv_type, memo } = spec;
+    return sortObjectKeysByAscii({
+      key,
+      kv_type,
+      byte_size,
+      signature,
+      create_at: datetimeFormat(create_at),
+      creator,
+      reviser,
+      update_at: datetimeFormat(update_at),
+      md5,
+      memo,
+    });
   });
 
   watch(

@@ -1,8 +1,10 @@
 {{- define "workload.podTemplate" -}}
 template:
+  {{- if .spec.labels.templateLabels }}
   metadata:
     labels:
-      {{- include "common.labelSlice2Map" .metadata.labels | indent 6 }}
+      {{- include "common.labelSlice2Map" .spec.labels.templateLabels | indent 6 }}
+  {{- end }}
   {{- include "workload.podSpec" . | nindent 2 }}
 {{- end }}
 

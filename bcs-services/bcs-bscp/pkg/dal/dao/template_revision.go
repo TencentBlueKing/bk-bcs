@@ -54,8 +54,8 @@ type TemplateRevision interface {
 	BatchCreateWithTx(kit *kit.Kit, tx *gen.QueryTx, revisions []*table.TemplateRevision) error
 	// ListLatestRevisionsGroupByTemplateIds Lists the latest version groups by template ids
 	ListLatestRevisionsGroupByTemplateIds(kit *kit.Kit, templateIDs []uint32) ([]*table.TemplateRevision, error)
-	// GetLatesTemplateRevision get lates template revision.
-	GetLatesTemplateRevision(kit *kit.Kit, bizID, templateID uint32) (*table.TemplateRevision, error)
+	// GetLatestTemplateRevision get latest template revision.
+	GetLatestTemplateRevision(kit *kit.Kit, bizID, templateID uint32) (*table.TemplateRevision, error)
 }
 
 var _ TemplateRevision = new(templateRevisionDao)
@@ -66,8 +66,8 @@ type templateRevisionDao struct {
 	auditDao AuditDao
 }
 
-// GetLatesTemplateRevision get lates template revision.
-func (dao *templateRevisionDao) GetLatesTemplateRevision(kit *kit.Kit, bizID uint32, templateID uint32) (
+// GetLatestTemplateRevision get latest template revision.
+func (dao *templateRevisionDao) GetLatestTemplateRevision(kit *kit.Kit, bizID uint32, templateID uint32) (
 	*table.TemplateRevision, error) {
 	m := dao.genQ.TemplateRevision
 	q := dao.genQ.TemplateRevision.WithContext(kit.Ctx)

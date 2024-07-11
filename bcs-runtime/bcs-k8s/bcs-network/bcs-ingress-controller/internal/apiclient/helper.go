@@ -224,6 +224,9 @@ func (m *MonitorHelper) fillCreateOrUpdateReqDefault(req *CreateOrUpdateUptimeCh
 	}
 	if req.Config.Port == "" || req.Config.Port == "0" {
 		req.Config.Port = strconv.Itoa(listener.Spec.Port)
+		if uptimeCheckConfig.GetPortDefine() == networkextensionv1.PortDefineLast && listener.Spec.EndPort != 0 {
+			req.Config.Port = strconv.Itoa(listener.Spec.EndPort)
+		}
 	}
 
 	req.Config.Method = uptimeCheckConfig.Method
@@ -341,6 +344,11 @@ func (m *MonitorHelper) compareUptimeCheckTask(cloudTask *UptimeCheckTask, creat
 }
 
 func genUptimeCheckTaskName(listener *networkextensionv1.Listener, bcsClusterID string) string {
+	port := listener.Spec.Port
+	if listener.Spec.ListenerAttribute.UptimeCheck.GetPortDefine() == networkextensionv1.PortDefineLast && listener.Spec.
+		EndPort != 0 {
+		port = listener.Spec.EndPort
+	}
 	return fmt.Sprintf("bcs-%s-%s-%d/%s/%s", listener.Spec.LoadbalancerID, listener.Spec.Protocol,
-		listener.Spec.Port, bcsClusterID, listener.GetListenerSourceNamespace())
+		port, bcsClusterID, listener.GetListenerSourceNamespace())
 }

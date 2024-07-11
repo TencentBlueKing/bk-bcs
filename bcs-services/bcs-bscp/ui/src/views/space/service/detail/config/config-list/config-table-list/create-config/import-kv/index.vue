@@ -41,7 +41,7 @@
         @select-version="handleSelectVersion"
         @clear="handleClearTable" />
     </div>
-    <div v-if="importType !== 'text' && importConfigList.length" class="content">
+    <div v-if="importType !== 'text' && allConfigList.length" class="content">
       <bk-loading :loading="tableLoading">
         <div class="head">
           <bk-checkbox style="margin-left: 24px" v-model="isClearDraft"> {{ $t('导入前清空草稿区') }} </bk-checkbox>
@@ -56,6 +56,30 @@
             <span style="color: #3a84ff">{{ importConfigList.length }}</span>
             {{ t('个配置项') }}
           </div>
+          <bk-select
+            v-if="importType === 'historyVersion' || importType === 'otherService'"
+            ref="configSelectRef"
+            class="config-select"
+            v-model="selectedConfigIds"
+            selected-style="checkbox"
+            :popover-options="{ theme: 'light bk-select-popover config-selector-popover', placement: 'bottom-end' }"
+            collapse-tags
+            filterable
+            multiple
+            show-select-all
+            @focus="handleFocusConfigSelect"
+            @blur="handleCloseConfigSelect">
+            <template #trigger>
+              <div class="select-btn">{{ $t('选择配置项') }}</div>
+            </template>
+            <bk-option v-for="(item, index) in allConfigList" :id="item.key" :key="index" :label="item.key" />
+            <template #extension>
+              <div class="config-select-btns">
+                <bk-button theme="primary" @click="handleConfirmSelect">{{ $t('确定') }}</bk-button>
+                <bk-button @click="handleCloseConfigSelect">{{ $t('取消') }}</bk-button>
+              </div>
+            </template>
+          </bk-select>
         </div>
         <ConfigTable
           v-if="nonExistConfigList.length"
@@ -100,6 +124,7 @@
   import TextImport from './text-import.vue';
   import ImportFormOtherService from '../import-file/import-form-other-service.vue';
   import ConfigTable from './kv-config-table.vue';
+  import { cloneDeep } from 'lodash';
 
   const { t } = useI18n();
   const props = defineProps<{
@@ -122,6 +147,10 @@
   const expandNonExistTable = ref(true);
   const expandExistTable = ref(true);
   const textImport = ref();
+  const selectedConfigIds = ref<string[]>([]);
+  const allConfigList = ref<IConfigKvItem[]>([]);
+  const configSelectRef = ref();
+  const lastSelectedConfigIds = ref<string[]>([]); // 上一次选中导入的配置项
 
   watch(
     () => props.show,
@@ -131,6 +160,8 @@
         isFormChange.value = false;
         nonExistConfigList.value = [];
         existConfigList.value = [];
+        allConfigList.value = [];
+        selectedConfigIds.value = [];
         getVersionList();
       }
     },
@@ -142,6 +173,8 @@
       nonExistConfigList.value = [];
       existConfigList.value = [];
       selectVerisonId.value = undefined;
+      allConfigList.value = [];
+      selectedConfigIds.value = [];
     },
   );
 
@@ -179,6 +212,10 @@
       const res = await importKvFromHistoryVersion(props.bkBizId, props.appId, params);
       existConfigList.value = res.data.exist;
       nonExistConfigList.value = res.data.non_exist;
+      existConfigList.value = existConfigList.value.map((item) => ({ ...item, is_exist: true }));
+      nonExistConfigList.value = nonExistConfigList.value.map((item) => ({ ...item, is_exist: false }));
+      allConfigList.value = [...existConfigList.value, ...nonExistConfigList.value];
+      selectedConfigIds.value = allConfigList.value.map((item) => item.key);
     } catch (e) {
       console.error(e);
     } finally {
@@ -226,6 +263,44 @@
     nonExistConfigList.value = [];
     existConfigList.value = [];
   };
+
+  const handleConfirmSelect = () => {
+    // 配置项添加
+    selectedConfigIds.value.forEach((key) => {
+      const findConfig = importConfigList.value.find((item) => item.key === key);
+      if (!findConfig) {
+        const addConfig = allConfigList.value.find((item) => item.key === key);
+        if (addConfig?.is_exist) {
+          existConfigList.value.push(addConfig!);
+        } else {
+          nonExistConfigList.value.push(addConfig!);
+        }
+      }
+    });
+
+    // 配置项删除
+    importConfigList.value.forEach((config) => {
+      if (!selectedConfigIds.value.includes(config.key)) {
+        if (config.is_exist) {
+          console.log(1);
+          existConfigList.value = existConfigList.value.filter((item) => item.key !== config.key);
+        } else {
+          nonExistConfigList.value = nonExistConfigList.value.filter((item) => item.key !== config.key);
+        }
+      }
+    });
+
+    configSelectRef.value.hidePopover();
+  };
+
+  const handleCloseConfigSelect = () => {
+    configSelectRef.value.hidePopover();
+    selectedConfigIds.value = cloneDeep(lastSelectedConfigIds.value);
+  };
+
+  const handleFocusConfigSelect = () => {
+    lastSelectedConfigIds.value = cloneDeep(selectedConfigIds.value);
+  };
 </script>
 
 <style scoped lang="scss">
@@ -266,6 +341,7 @@
     overflow: auto;
     max-height: 490px;
     .head {
+      position: relative;
       display: flex;
       align-items: center;
       margin: 16px 0;
@@ -280,7 +356,36 @@
         border-left: 1px solid #dcdee5;
         margin-left: 16px;
       }
+      .config-select {
+        position: absolute;
+        right: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        .select-btn {
+          width: 102px;
+          height: 32px;
+          background: #ffffff;
+          border: 1px solid #c4c6cc;
+          border-radius: 2px;
+          font-size: 14px;
+          color: #63656e;
+          line-height: 32px;
+          text-align: center;
+          cursor: pointer;
+        }
+      }
     }
+  }
+
+  .config-select-btns {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 16px;
+    justify-content: flex-end;
+    width: 100%;
+    height: 100%;
+    background: #fafbfd;
   }
 </style>
 
@@ -289,6 +394,12 @@
     .bk-modal-content {
       height: calc(100% - 50px) !important;
       overflow: hidden !important;
+    }
+  }
+  .config-selector-popover {
+    width: 238px !important;
+    .bk-select-option {
+      padding: 0 12px !important;
     }
   }
 </style>

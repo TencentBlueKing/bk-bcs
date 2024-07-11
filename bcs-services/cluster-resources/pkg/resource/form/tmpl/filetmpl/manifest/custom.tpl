@@ -1,7 +1,7 @@
 {{- define "custom.hookTmplMetadata" -}}
 metadata:
   name: {{ .metadata.name }}
-  namespace: {{ .metadata.namespace }}
+  namespace: {{ .metadata.namespace | default "default" }}
   # HookTemplate 不允许用户自己编辑标签，所以只会有删除保护策略的标签
   {{- if eq .spec.deletionProtectPolicy "Always" }}
   labels:
@@ -75,7 +75,7 @@ provider:
 {{- define "custom.gWorkloadMetadata" }}
 metadata:
   name: {{ .metadata.name }}
-  namespace: {{ .metadata.namespace }}
+  namespace: {{ .metadata.namespace | default "default" }}
   labels:
     {{- range .metadata.labels }}
     # 特殊的 LabelKey 单独更新
@@ -114,7 +114,7 @@ hook:
 {{- define "custom.gworkloadCommonSpec" -}}
 selector:
   matchLabels:
-    {{- include "common.labelSlice2Map" .metadata.labels | indent 4 }}
+    {{- include "common.labelSlice2Map" .spec.labels.labels | indent 4 }}
 replicas: {{ .spec.replicas.cnt | default 0 }}
 updateStrategy:
   type: {{ .spec.replicas.updateStrategy }}

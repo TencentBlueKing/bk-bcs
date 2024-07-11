@@ -448,6 +448,8 @@ func (m *NetworkSetting) Validate() error {
 
 	// no validation rules for ServiceIPv6CIDR
 
+	// no validation rules for Status
+
 	return nil
 }
 
@@ -1780,6 +1782,21 @@ func (m *ClusterMgr) Validate() error {
 		}
 	}
 
+	for idx, item := range m.GetManagedConfig() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ClusterMgrValidationError{
+					field:  fmt.Sprintf("ManagedConfig[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
 	return nil
 }
 
@@ -1836,6 +1853,75 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ClusterMgrValidationError{}
+
+// Validate checks the field values on ManagedConfig with the rules defined in
+// the proto definition for this message. If any rules are violated, an error
+// is returned.
+func (m *ManagedConfig) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Spec
+
+	// no validation rules for Desc
+
+	return nil
+}
+
+// ManagedConfigValidationError is the validation error returned by
+// ManagedConfig.Validate if the designated constraints aren't met.
+type ManagedConfigValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ManagedConfigValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ManagedConfigValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ManagedConfigValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ManagedConfigValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ManagedConfigValidationError) ErrorName() string { return "ManagedConfigValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ManagedConfigValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sManagedConfig.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ManagedConfigValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ManagedConfigValidationError{}
 
 // Validate checks the field values on NodeGroupMgr with the rules defined in
 // the proto definition for this message. If any rules are violated, an error
@@ -5695,6 +5781,23 @@ func (m *CloudNetworkInfo) Validate() error {
 		return nil
 	}
 
+	for idx, item := range m.GetCidrSteps() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return CloudNetworkInfoValidationError{
+					field:  fmt.Sprintf("CidrSteps[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	// no validation rules for UnderlayRatio
+
 	return nil
 }
 
@@ -5751,6 +5854,75 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = CloudNetworkInfoValidationError{}
+
+// Validate checks the field values on EnvCidrStep with the rules defined in
+// the proto definition for this message. If any rules are violated, an error
+// is returned.
+func (m *EnvCidrStep) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Env
+
+	// no validation rules for Step
+
+	return nil
+}
+
+// EnvCidrStepValidationError is the validation error returned by
+// EnvCidrStep.Validate if the designated constraints aren't met.
+type EnvCidrStepValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e EnvCidrStepValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e EnvCidrStepValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e EnvCidrStepValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e EnvCidrStepValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e EnvCidrStepValidationError) ErrorName() string { return "EnvCidrStepValidationError" }
+
+// Error satisfies the builtin error interface
+func (e EnvCidrStepValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sEnvCidrStep.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = EnvCidrStepValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = EnvCidrStepValidationError{}
 
 // Validate checks the field values on NodeGroup with the rules defined in the
 // proto definition for this message. If any rules are violated, an error is returned.
@@ -9906,6 +10078,219 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = AddSubnetToClusterRespValidationError{}
+
+// Validate checks the field values on SwitchClusterUnderlayNetworkReq with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *SwitchClusterUnderlayNetworkReq) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 1 || l > 100 {
+		return SwitchClusterUnderlayNetworkReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 1 and 100 runes, inclusive",
+		}
+	}
+
+	if !strings.HasPrefix(m.GetClusterID(), "BCS-") {
+		return SwitchClusterUnderlayNetworkReqValidationError{
+			field:  "ClusterID",
+			reason: "value does not have prefix \"BCS-\"",
+		}
+	}
+
+	if !_SwitchClusterUnderlayNetworkReq_ClusterID_Pattern.MatchString(m.GetClusterID()) {
+		return SwitchClusterUnderlayNetworkReqValidationError{
+			field:  "ClusterID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
+
+	// no validation rules for Disable
+
+	if v, ok := interface{}(m.GetSubnet()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return SwitchClusterUnderlayNetworkReqValidationError{
+				field:  "Subnet",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for IsStaticIpMode
+
+	// no validation rules for ClaimExpiredSeconds
+
+	// no validation rules for Operator
+
+	return nil
+}
+
+// SwitchClusterUnderlayNetworkReqValidationError is the validation error
+// returned by SwitchClusterUnderlayNetworkReq.Validate if the designated
+// constraints aren't met.
+type SwitchClusterUnderlayNetworkReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e SwitchClusterUnderlayNetworkReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e SwitchClusterUnderlayNetworkReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e SwitchClusterUnderlayNetworkReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e SwitchClusterUnderlayNetworkReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e SwitchClusterUnderlayNetworkReqValidationError) ErrorName() string {
+	return "SwitchClusterUnderlayNetworkReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e SwitchClusterUnderlayNetworkReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sSwitchClusterUnderlayNetworkReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = SwitchClusterUnderlayNetworkReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = SwitchClusterUnderlayNetworkReqValidationError{}
+
+var _SwitchClusterUnderlayNetworkReq_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+// Validate checks the field values on SwitchClusterUnderlayNetworkResp with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, an error is returned.
+func (m *SwitchClusterUnderlayNetworkResp) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if v, ok := interface{}(m.GetTask()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return SwitchClusterUnderlayNetworkRespValidationError{
+				field:  "Task",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetWebAnnotations()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return SwitchClusterUnderlayNetworkRespValidationError{
+				field:  "WebAnnotations",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetCluster()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return SwitchClusterUnderlayNetworkRespValidationError{
+				field:  "Cluster",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// SwitchClusterUnderlayNetworkRespValidationError is the validation error
+// returned by SwitchClusterUnderlayNetworkResp.Validate if the designated
+// constraints aren't met.
+type SwitchClusterUnderlayNetworkRespValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e SwitchClusterUnderlayNetworkRespValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e SwitchClusterUnderlayNetworkRespValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e SwitchClusterUnderlayNetworkRespValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e SwitchClusterUnderlayNetworkRespValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e SwitchClusterUnderlayNetworkRespValidationError) ErrorName() string {
+	return "SwitchClusterUnderlayNetworkRespValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e SwitchClusterUnderlayNetworkRespValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sSwitchClusterUnderlayNetworkResp.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = SwitchClusterUnderlayNetworkRespValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = SwitchClusterUnderlayNetworkRespValidationError{}
 
 // Validate checks the field values on CreateVirtualClusterReq with the rules
 // defined in the proto definition for this message. If any rules are
@@ -15029,10 +15414,10 @@ func (m *ListNodesInClusterRequest) Validate() error {
 		}
 	}
 
-	if m.GetLimit() > 1000 {
+	if m.GetLimit() > 5000 {
 		return ListNodesInClusterRequestValidationError{
 			field:  "Limit",
-			reason: "value must be less than or equal to 1000",
+			reason: "value must be less than or equal to 5000",
 		}
 	}
 
@@ -15332,6 +15717,248 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ClusterNodeValidationError{}
+
+// Validate checks the field values on GetClustersMetaDataRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *GetClustersMetaDataRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if l := len(m.GetClusters()); l < 1 || l > 1000 {
+		return GetClustersMetaDataRequestValidationError{
+			field:  "Clusters",
+			reason: "value must contain between 1 and 1000 items, inclusive",
+		}
+	}
+
+	return nil
+}
+
+// GetClustersMetaDataRequestValidationError is the validation error returned
+// by GetClustersMetaDataRequest.Validate if the designated constraints aren't met.
+type GetClustersMetaDataRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetClustersMetaDataRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetClustersMetaDataRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetClustersMetaDataRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetClustersMetaDataRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetClustersMetaDataRequestValidationError) ErrorName() string {
+	return "GetClustersMetaDataRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetClustersMetaDataRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetClustersMetaDataRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetClustersMetaDataRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetClustersMetaDataRequestValidationError{}
+
+// Validate checks the field values on GetClustersMetaDataResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *GetClustersMetaDataResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return GetClustersMetaDataResponseValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if v, ok := interface{}(m.GetWebAnnotations()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GetClustersMetaDataResponseValidationError{
+				field:  "WebAnnotations",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// GetClustersMetaDataResponseValidationError is the validation error returned
+// by GetClustersMetaDataResponse.Validate if the designated constraints
+// aren't met.
+type GetClustersMetaDataResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetClustersMetaDataResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetClustersMetaDataResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetClustersMetaDataResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetClustersMetaDataResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetClustersMetaDataResponseValidationError) ErrorName() string {
+	return "GetClustersMetaDataResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetClustersMetaDataResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetClustersMetaDataResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetClustersMetaDataResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetClustersMetaDataResponseValidationError{}
+
+// Validate checks the field values on ClusterMeta with the rules defined in
+// the proto definition for this message. If any rules are violated, an error
+// is returned.
+func (m *ClusterMeta) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for ClusterId
+
+	// no validation rules for ClusterNodeNum
+
+	return nil
+}
+
+// ClusterMetaValidationError is the validation error returned by
+// ClusterMeta.Validate if the designated constraints aren't met.
+type ClusterMetaValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ClusterMetaValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ClusterMetaValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ClusterMetaValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ClusterMetaValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ClusterMetaValidationError) ErrorName() string { return "ClusterMetaValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ClusterMetaValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sClusterMeta.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ClusterMetaValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ClusterMetaValidationError{}
 
 // Validate checks the field values on ListMastersInClusterRequest with the
 // rules defined in the proto definition for this message. If any rules are
@@ -21264,6 +21891,191 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = UpdateGroupMinMaxSizeResponseValidationError{}
+
+// Validate checks the field values on UpdateGroupAsTimeRangeRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *UpdateGroupAsTimeRangeRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if l := utf8.RuneCountInString(m.GetNodeGroupID()); l < 5 || l > 100 {
+		return UpdateGroupAsTimeRangeRequestValidationError{
+			field:  "NodeGroupID",
+			reason: "value length must be between 5 and 100 runes, inclusive",
+		}
+	}
+
+	if !_UpdateGroupAsTimeRangeRequest_NodeGroupID_Pattern.MatchString(m.GetNodeGroupID()) {
+		return UpdateGroupAsTimeRangeRequestValidationError{
+			field:  "NodeGroupID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
+
+	for idx, item := range m.GetTimeRanges() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return UpdateGroupAsTimeRangeRequestValidationError{
+					field:  fmt.Sprintf("TimeRanges[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	// no validation rules for Operator
+
+	return nil
+}
+
+// UpdateGroupAsTimeRangeRequestValidationError is the validation error
+// returned by UpdateGroupAsTimeRangeRequest.Validate if the designated
+// constraints aren't met.
+type UpdateGroupAsTimeRangeRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateGroupAsTimeRangeRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateGroupAsTimeRangeRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateGroupAsTimeRangeRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateGroupAsTimeRangeRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateGroupAsTimeRangeRequestValidationError) ErrorName() string {
+	return "UpdateGroupAsTimeRangeRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateGroupAsTimeRangeRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateGroupAsTimeRangeRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateGroupAsTimeRangeRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateGroupAsTimeRangeRequestValidationError{}
+
+var _UpdateGroupAsTimeRangeRequest_NodeGroupID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+// Validate checks the field values on UpdateGroupAsTimeRangeResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *UpdateGroupAsTimeRangeResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if v, ok := interface{}(m.GetWebAnnotations()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateGroupAsTimeRangeResponseValidationError{
+				field:  "WebAnnotations",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// UpdateGroupAsTimeRangeResponseValidationError is the validation error
+// returned by UpdateGroupAsTimeRangeResponse.Validate if the designated
+// constraints aren't met.
+type UpdateGroupAsTimeRangeResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateGroupAsTimeRangeResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateGroupAsTimeRangeResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateGroupAsTimeRangeResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateGroupAsTimeRangeResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateGroupAsTimeRangeResponseValidationError) ErrorName() string {
+	return "UpdateGroupAsTimeRangeResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateGroupAsTimeRangeResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateGroupAsTimeRangeResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateGroupAsTimeRangeResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateGroupAsTimeRangeResponseValidationError{}
 
 // Validate checks the field values on TransNodeGroupToNodeTemplateRequest with
 // the rules defined in the proto definition for this message. If any rules
@@ -28943,12 +29755,7 @@ func (m *ListCloudSubnetsRequest) Validate() error {
 
 	// no validation rules for Region
 
-	if utf8.RuneCountInString(m.GetAccountID()) < 2 {
-		return ListCloudSubnetsRequestValidationError{
-			field:  "AccountID",
-			reason: "value length must be at least 2 runes",
-		}
-	}
+	// no validation rules for AccountID
 
 	// no validation rules for VpcID
 
@@ -28959,6 +29766,8 @@ func (m *ListCloudSubnetsRequest) Validate() error {
 	// no validation rules for InjectCluster
 
 	// no validation rules for ResourceGroupName
+
+	// no validation rules for Name
 
 	return nil
 }

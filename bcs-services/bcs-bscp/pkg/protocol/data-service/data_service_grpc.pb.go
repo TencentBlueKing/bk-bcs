@@ -103,6 +103,7 @@ const (
 	Data_BatchUpsertTemplates_FullMethodName              = "/pbds.Data/BatchUpsertTemplates"
 	Data_BatchUpdateTemplatePermissions_FullMethodName    = "/pbds.Data/BatchUpdateTemplatePermissions"
 	Data_CreateTemplateRevision_FullMethodName            = "/pbds.Data/CreateTemplateRevision"
+	Data_UpdateTemplateRevision_FullMethodName            = "/pbds.Data/UpdateTemplateRevision"
 	Data_ListTemplateRevisions_FullMethodName             = "/pbds.Data/ListTemplateRevisions"
 	Data_GetTemplateRevision_FullMethodName               = "/pbds.Data/GetTemplateRevision"
 	Data_DeleteTemplateRevision_FullMethodName            = "/pbds.Data/DeleteTemplateRevision"
@@ -193,6 +194,7 @@ const (
 	Data_FetchInstanceInfo_FullMethodName                 = "/pbds.Data/FetchInstanceInfo"
 	Data_Ping_FullMethodName                              = "/pbds.Data/Ping"
 	Data_BatchUpsertClientMetrics_FullMethodName          = "/pbds.Data/BatchUpsertClientMetrics"
+	Data_CompareConfigItemConflicts_FullMethodName        = "/pbds.Data/CompareConfigItemConflicts"
 )
 
 // DataClient is the client API for Data service.
@@ -284,6 +286,7 @@ type DataClient interface {
 	BatchUpdateTemplatePermissions(ctx context.Context, in *BatchUpdateTemplatePermissionsReq, opts ...grpc.CallOption) (*BatchUpdateTemplatePermissionsResp, error)
 	// template release related interface.
 	CreateTemplateRevision(ctx context.Context, in *CreateTemplateRevisionReq, opts ...grpc.CallOption) (*CreateResp, error)
+	UpdateTemplateRevision(ctx context.Context, in *UpdateTemplateRevisionReq, opts ...grpc.CallOption) (*CreateResp, error)
 	ListTemplateRevisions(ctx context.Context, in *ListTemplateRevisionsReq, opts ...grpc.CallOption) (*ListTemplateRevisionsResp, error)
 	GetTemplateRevision(ctx context.Context, in *GetTemplateRevisionReq, opts ...grpc.CallOption) (*GetTemplateRevisionResp, error)
 	DeleteTemplateRevision(ctx context.Context, in *DeleteTemplateRevisionReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
@@ -392,6 +395,8 @@ type DataClient interface {
 	Ping(ctx context.Context, in *PingMsg, opts ...grpc.CallOption) (*PingMsg, error)
 	// client metric related interface
 	BatchUpsertClientMetrics(ctx context.Context, in *BatchUpsertClientMetricsReq, opts ...grpc.CallOption) (*BatchUpsertClientMetricsResp, error)
+	// config item compare conflicts related interface
+	CompareConfigItemConflicts(ctx context.Context, in *CompareConfigItemConflictsReq, opts ...grpc.CallOption) (*CompareConfigItemConflictsResp, error)
 }
 
 type dataClient struct {
@@ -1044,6 +1049,15 @@ func (c *dataClient) BatchUpdateTemplatePermissions(ctx context.Context, in *Bat
 func (c *dataClient) CreateTemplateRevision(ctx context.Context, in *CreateTemplateRevisionReq, opts ...grpc.CallOption) (*CreateResp, error) {
 	out := new(CreateResp)
 	err := c.cc.Invoke(ctx, Data_CreateTemplateRevision_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) UpdateTemplateRevision(ctx context.Context, in *UpdateTemplateRevisionReq, opts ...grpc.CallOption) (*CreateResp, error) {
+	out := new(CreateResp)
+	err := c.cc.Invoke(ctx, Data_UpdateTemplateRevision_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1860,6 +1874,15 @@ func (c *dataClient) BatchUpsertClientMetrics(ctx context.Context, in *BatchUpse
 	return out, nil
 }
 
+func (c *dataClient) CompareConfigItemConflicts(ctx context.Context, in *CompareConfigItemConflictsReq, opts ...grpc.CallOption) (*CompareConfigItemConflictsResp, error) {
+	out := new(CompareConfigItemConflictsResp)
+	err := c.cc.Invoke(ctx, Data_CompareConfigItemConflicts_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // DataServer is the server API for Data service.
 // All implementations should embed UnimplementedDataServer
 // for forward compatibility
@@ -1949,6 +1972,7 @@ type DataServer interface {
 	BatchUpdateTemplatePermissions(context.Context, *BatchUpdateTemplatePermissionsReq) (*BatchUpdateTemplatePermissionsResp, error)
 	// template release related interface.
 	CreateTemplateRevision(context.Context, *CreateTemplateRevisionReq) (*CreateResp, error)
+	UpdateTemplateRevision(context.Context, *UpdateTemplateRevisionReq) (*CreateResp, error)
 	ListTemplateRevisions(context.Context, *ListTemplateRevisionsReq) (*ListTemplateRevisionsResp, error)
 	GetTemplateRevision(context.Context, *GetTemplateRevisionReq) (*GetTemplateRevisionResp, error)
 	DeleteTemplateRevision(context.Context, *DeleteTemplateRevisionReq) (*base.EmptyResp, error)
@@ -2057,6 +2081,8 @@ type DataServer interface {
 	Ping(context.Context, *PingMsg) (*PingMsg, error)
 	// client metric related interface
 	BatchUpsertClientMetrics(context.Context, *BatchUpsertClientMetricsReq) (*BatchUpsertClientMetricsResp, error)
+	// config item compare conflicts related interface
+	CompareConfigItemConflicts(context.Context, *CompareConfigItemConflictsReq) (*CompareConfigItemConflictsResp, error)
 }
 
 // UnimplementedDataServer should be embedded to have forward compatible implementations.
@@ -2278,6 +2304,9 @@ func (UnimplementedDataServer) BatchUpdateTemplatePermissions(context.Context, *
 }
 func (UnimplementedDataServer) CreateTemplateRevision(context.Context, *CreateTemplateRevisionReq) (*CreateResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateTemplateRevision not implemented")
+}
+func (UnimplementedDataServer) UpdateTemplateRevision(context.Context, *UpdateTemplateRevisionReq) (*CreateResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateTemplateRevision not implemented")
 }
 func (UnimplementedDataServer) ListTemplateRevisions(context.Context, *ListTemplateRevisionsReq) (*ListTemplateRevisionsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListTemplateRevisions not implemented")
@@ -2548,6 +2577,9 @@ func (UnimplementedDataServer) Ping(context.Context, *PingMsg) (*PingMsg, error)
 }
 func (UnimplementedDataServer) BatchUpsertClientMetrics(context.Context, *BatchUpsertClientMetricsReq) (*BatchUpsertClientMetricsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BatchUpsertClientMetrics not implemented")
+}
+func (UnimplementedDataServer) CompareConfigItemConflicts(context.Context, *CompareConfigItemConflictsReq) (*CompareConfigItemConflictsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CompareConfigItemConflicts not implemented")
 }
 
 // UnsafeDataServer may be embedded to opt out of forward compatibility for this service.
@@ -3853,6 +3885,24 @@ func _Data_CreateTemplateRevision_Handler(srv interface{}, ctx context.Context, 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DataServer).CreateTemplateRevision(ctx, req.(*CreateTemplateRevisionReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_UpdateTemplateRevision_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateTemplateRevisionReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).UpdateTemplateRevision(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_UpdateTemplateRevision_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).UpdateTemplateRevision(ctx, req.(*UpdateTemplateRevisionReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -5477,6 +5527,24 @@ func _Data_BatchUpsertClientMetrics_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Data_CompareConfigItemConflicts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CompareConfigItemConflictsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).CompareConfigItemConflicts(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_CompareConfigItemConflicts_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).CompareConfigItemConflicts(ctx, req.(*CompareConfigItemConflictsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Data_ServiceDesc is the grpc.ServiceDesc for Data service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -5771,6 +5839,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateTemplateRevision",
 			Handler:    _Data_CreateTemplateRevision_Handler,
+		},
+		{
+			MethodName: "UpdateTemplateRevision",
+			Handler:    _Data_UpdateTemplateRevision_Handler,
 		},
 		{
 			MethodName: "ListTemplateRevisions",
@@ -6131,6 +6203,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "BatchUpsertClientMetrics",
 			Handler:    _Data_BatchUpsertClientMetrics_Handler,
+		},
+		{
+			MethodName: "CompareConfigItemConflicts",
+			Handler:    _Data_CompareConfigItemConflicts_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

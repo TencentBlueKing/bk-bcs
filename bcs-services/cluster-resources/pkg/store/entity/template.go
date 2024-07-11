@@ -23,7 +23,7 @@ type Template struct {
 	ProjectCode   string             `json:"projectCode" bson:"projectCode"`
 	Description   string             `json:"description" bson:"description"`
 	TemplateSpace string             `json:"templateSpace" bson:"templateSpace"`
-	ResourceType  string             `json:"resourceType" bson:"resourceType"`
+	ResourceType  []string           `json:"resourceType" bson:"resourceType"`
 	Creator       string             `json:"creator" bson:"creator"`
 	Updator       string             `json:"updator" bson:"updator"`
 	CreateAt      int64              `json:"createAt" bson:"createAt"`

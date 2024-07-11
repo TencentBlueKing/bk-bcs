@@ -3,7 +3,7 @@
     <CodeEditor
       ref="codeEditorRef"
       :model-value="props.codeVal"
-      :language="'yaml'"
+      :language="language"
       :editable="false"
       line-numbers="off"
       :minimap="false"
@@ -21,6 +21,7 @@
   import { IVariableEditParams } from '../../../../../../types/variable';
 
   const props = defineProps<{
+    language: string;
     codeVal: string;
     variables?: IVariableEditParams[];
   }>();

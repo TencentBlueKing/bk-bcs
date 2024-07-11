@@ -654,8 +654,7 @@ func (da *DeleteNodesAction) getClusterNodesByIPs(nodeMgr cloudprovider.NodeMana
 	} else {
 		// get cloud support CVM nodes
 		nodeList, err = nodeMgr.ListNodesByIP(ips, &cloudprovider.ListNodesOption{
-			Common:       cmOption,
-			ClusterVPCID: da.cluster.VpcID,
+			Common: cmOption,
 		})
 	}
 

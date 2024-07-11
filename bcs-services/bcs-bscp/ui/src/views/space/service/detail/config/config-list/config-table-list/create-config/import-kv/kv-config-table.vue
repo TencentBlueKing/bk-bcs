@@ -11,7 +11,6 @@
     <bk-table
       v-show="expand"
       :data="data"
-      :max-height="'330'"
       :border="['outer', 'row', 'col']"
       class="kv-config-table"
       :cell-class="getCellCls"

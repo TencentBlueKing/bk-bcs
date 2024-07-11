@@ -70,6 +70,11 @@ func (c *CloudInfoManager) InitCloudClusterDefaultInfo(cls *cmproto.Cluster,
 	clusterCloudDefaultAdvancedSetting(cls, opt.Cloud, opt.ClusterVersion)
 	// cluster cloud node setting
 	clusterCloudDefaultNodeSetting(cls, true)
+	// cluster cloud network setting
+	err := clusterCloudNetworkSetting(cls)
+	if err != nil {
+		return err
+	}
 
 	if cls.NetworkSettings.CidrStep <= 0 {
 		switch cls.Environment {
@@ -321,6 +326,26 @@ func clusterCloudDefaultAdvancedSetting(cls *cmproto.Cluster, cloud *cmproto.Clo
 			cls.ClusterAdvanceSettings.ExtraArgs = common.DefaultClusterConfig
 		}
 	}
+}
+
+func clusterCloudNetworkSetting(cls *cmproto.Cluster) error {
+	if cls.GetNetworkSettings() == nil {
+		return fmt.Errorf("initCloudCluster network setting empty")
+	}
+
+	if cls.GetNetworkSettings().GetEnableVPCCni() {
+		if cls.NetworkSettings.SubnetSource == nil ||
+			(len(cls.NetworkSettings.SubnetSource.New) == 0 && cls.NetworkSettings.SubnetSource.Existed == nil) {
+			return fmt.Errorf("network[%s] subnet resource empty", common.VpcCni)
+		}
+
+		// 固定IP模式下, IP默认回收时间
+		if cls.NetworkSettings.IsStaticIpMode && cls.NetworkSettings.ClaimExpiredSeconds < 300 {
+			cls.NetworkSettings.ClaimExpiredSeconds = 300
+		}
+	}
+
+	return nil
 }
 
 func clusterCloudDefaultNodeSetting(cls *cmproto.Cluster, defaultNodeConfig bool) {

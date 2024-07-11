@@ -51,8 +51,14 @@ const (
 	// ResourceLockSubSys defines all the runtime lock related sub system.
 	ResourceLockSubSys = "resource_lock"
 
+	// RedisLockSubSys defines all the redis lock related sub system.
+	RedisLockSubSys = "redis_lock"
+
 	// FSLocalCacheSubSys defines feed server's local cache metric sub system.
 	FSLocalCacheSubSys = "local_cache"
+
+	// AsyncDownload defines feed server's async download sub system.
+	AsyncDownload = "async_download"
 
 	// FSObserver defines feed server's observer sub system
 	FSObserver = "observer"

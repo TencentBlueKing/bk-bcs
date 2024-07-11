@@ -49,6 +49,11 @@ spec:
           - name: http
             containerPort: 443
             protocol: TCP
+          {{- if .Values.plugins.dbpriv.dbmOptimizeEnabled }}
+          - name: hookserver
+            containerPort: 8089
+            protocol: TCP
+          {{- end }}
           {{- with .Values.resources }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}

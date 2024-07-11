@@ -11,8 +11,8 @@
       </div>
     </div>
     <!-- 右侧区域 -->
-    <div class="example-main">
-      <bk-alert v-show="serviceType === 'file' && topTip" theme="info">
+    <div class="example-main" ref="exampleMainRef">
+      <bk-alert v-show="(serviceType === 'file' || renderComponent === 'shell') && topTip" theme="info">
         <div class="alert-tips">
           <p>{{ topTip }}</p>
         </div>
@@ -27,7 +27,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed, ref, provide, nextTick } from 'vue';
+  import { computed, ref, nextTick, provide } from 'vue';
   import ServiceSelector from './components/service-selector.vue';
   import { useI18n } from 'vue-i18n';
   import ContainerExample from './components/content/container-example.vue';
@@ -40,22 +40,23 @@
   const fileTypeArr = [
     { name: t('Sidecar容器'), val: 'sidecar' },
     { name: t('节点管理插件'), val: 'node' },
-    { name: t('命令行工具'), val: 'file-cmd' },
+    { name: t('命令行工具'), val: 'shell' },
   ];
   const kvTypeArr = [
     { name: 'Python SDK', val: 'python' },
     { name: 'Go SDK', val: 'go' },
     { name: 'Java SDK', val: 'java' },
-    { name: 'C++ SDK', val: 'c++' },
-    { name: t('命令行工具'), val: 'kv-cmd' },
+    { name: 'C++ SDK', val: 'cpp' },
+    { name: t('命令行工具'), val: 'shell' },
   ];
 
+  const exampleMainRef = ref();
   const renderComponent = ref(''); // 渲染的示例组件
-  const serviceName = ref(''); // 示例预览模板中用到
-  const serviceType = ref(''); // 配置类型：file/kv
+  const serviceName = ref('');
+  const serviceType = ref('');
   const topTip = ref('');
   const loading = ref(true);
-  provide('serviceName', serviceName); // 示例预览组件用
+  provide('basicInfo', { serviceName, serviceType });
 
   const navList = computed(() => (serviceType.value === 'file' ? fileTypeArr : kvTypeArr));
   // 展示的示例组件与顶部提示语
@@ -68,12 +69,7 @@
         case 'node':
           topTip.value = t('节点管理插件客户端用于非容器化应用程序 (传统主机) 拉取文件型配置场景。');
           return NodeManaExample;
-        case 'file-cmd':
-          topTip.value = t(
-            '命令行工具通常用于在脚本 (如 Bash、Python 等) 中手动拉取应用程序配置，同时支持文件型和键值型配置的获取。',
-          );
-          return CmdExample;
-        case 'kv-cmd':
+        case 'shell':
           topTip.value = t(
             '命令行工具通常用于在脚本 (如 Bash、Python 等) 中手动拉取应用程序配置，同时支持文件型和键值型配置的获取。',
           );
@@ -89,11 +85,11 @@
 
   // 服务切换
   const selectService = (serviceTypeVal: string, serviceNameVal: string) => {
-    serviceType.value = serviceTypeVal;
-    if (serviceName.value !== serviceNameVal) {
+    if (serviceName.value !== serviceNameVal || serviceType.value !== serviceTypeVal) {
       loading.value = true;
+      serviceName.value = serviceNameVal;
+      serviceType.value = serviceTypeVal;
     }
-    serviceName.value = serviceNameVal;
     changeTypeItem(navList.value[0].val);
   };
   // 服务的子类型切换
@@ -105,9 +101,8 @@
   };
   // 返回顶部
   const contentScrollTop = () => {
-    const scrollDom = document.querySelector('.content-wrap');
-    if (scrollDom!.scrollTop > 64) {
-      scrollDom!.scrollTo({ top: 0, behavior: 'smooth' });
+    if (exampleMainRef.value.scrollTop > 64) {
+      exampleMainRef.value.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 </script>

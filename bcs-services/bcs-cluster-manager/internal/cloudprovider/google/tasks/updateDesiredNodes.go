@@ -286,6 +286,7 @@ func transInstancesToNode(ctx context.Context, instanceNames []string, info *clo
 		nodes, err = nodeCli.ListNodesByInstanceID(instanceNames, &cloudprovider.ListNodesOption{
 			Common:       info.CmOption,
 			ClusterVPCID: info.Cluster.VpcID,
+			CheckIP:      true,
 		})
 		if err != nil {
 			return err
@@ -464,7 +465,7 @@ func CheckClusterNodesStatusTask(taskID string, stepName string) error {
 			// rollback failed nodes
 			_ = returnGkeInstancesAndCleanNodes(ctx, dependInfo, failureInstances)
 		}
-		blog.Errorf("CheckClusterNodesStatusTask[%s]: checkClusterInstanceStatus failed: %s", taskID, err.Error())
+		blog.Errorf("CheckClusterNodesStatusTask[%s]: checkClusterInstanceStatus failed: %v", taskID, err)
 		retErr := fmt.Errorf("CheckClusterNodesStatusTask checkClusterInstanceStatus failed")
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr

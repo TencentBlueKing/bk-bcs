@@ -58,7 +58,7 @@ properties:
                 visible: false
     ui:group:
       props:
-        border: true
+        border: false
         showTitle: true
         type: card
   spec:

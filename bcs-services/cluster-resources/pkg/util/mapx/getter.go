@@ -13,6 +13,7 @@
 package mapx
 
 import (
+	"strconv"
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
@@ -77,6 +78,15 @@ func GetInt64(obj map[string]interface{}, paths interface{}) int64 {
 // GetStr 获取 string 类型快捷方法，默认值为 ""
 func GetStr(obj map[string]interface{}, paths interface{}) string {
 	return Get(obj, paths, "").(string)
+}
+
+// GetIntStr 获取 string or int 类型快捷方法，默认值为 ""
+func GetIntStr(obj map[string]interface{}, paths interface{}) string {
+	if s, ok := Get(obj, paths, "").(string); ok {
+		return s
+	}
+	i := GetInt64(obj, paths)
+	return strconv.Itoa(int(i))
 }
 
 // GetList 获取 []interface{} 类型快捷方法，默认值为 []interface{}{}

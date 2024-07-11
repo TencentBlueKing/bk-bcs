@@ -141,3 +141,8 @@ const (
 	// UploadBatchSize 上传时分批检测文件路冲突
 	UploadBatchSize = 50
 )
+
+const (
+	// LabelKeyAgentID is the key of agent id in bcs node labels.
+	LabelKeyAgentID = "bkcmdb.tencent.com/bk-agent-id"
+)

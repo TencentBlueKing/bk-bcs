@@ -80,6 +80,8 @@
   en: "only letters, numbers, '-', '_' and '/' are supported and must start and end with alphanumeric"
 - msgID: "需以字母数字开头和结尾，可包含 '-'，'_'，'.' 和字母数字"
   en: "must start and end with alphanumeric, can contain '-', '_', '.' and alphanumeric"
+- msgID: "不应少于 1 个项"
+  en: "Should not be less than 1 item."
 - msgID: "资源类型 %s APIVersion %s 不在受支持的版本列表 %v 中，请改用 Yaml 模式而非表单化"
   en: "resource kind %s apiVersion %s not in the list of supported versions %v, please use yaml rather than form edit mode"
 - msgID: 标签有重复的键，请检查
@@ -424,8 +426,6 @@
   en: Metadata
 - msgID: 标签
   en: Labels
-- msgID: "将作为 Pod & Selector 标签"
-  en: "Will be used as pod & selector label"
 - msgID: 注解
   en: Annotations
 - msgID: 设置为默认类
@@ -570,6 +570,14 @@
   en: NodeName
 - msgID: 至少包含一条调度规则
   en: "At least contains one scheduling rule"
+- msgID: 标签管理
+  en: "Labels & Selector"
+- msgID: 标签选择器在创建资源后是不可变的，请务必小心谨慎更改选择器。
+  en: "Label selector is immutable after it gets created, please be great careful."
+- msgID: "该标签将添加到 Pod 标签中。"
+  en: "This label will be added to the Pod labels."
+- msgID: "该标签将添加到 Job 标签中。"
+  en: "This label will be added to the Job labels."
 - msgID: 亲和性/反亲和性
   en: "Affinity / Anit"
 - msgID: 污点/容忍
@@ -630,6 +638,8 @@
   en: TerminationGracePeriodSecs
 - msgID: 数据卷
   en: Volume
+- msgID: "将作为 Pod & Selector 标签"
+  en: "Will be used as pod & selector label"
 - msgID: 无集群查看权限
   en: "no cluster view permission"
 - msgID: 检查共享集群命名空间权限失败
@@ -659,7 +669,7 @@
 - msgID: "当前资源类型 %s 不受支持"
   en: "resource kind %s is unsupported"
 - msgID: 预览表单渲染结果失败，请检查您填写的表单配置；错误信息：%s
-  en: <TODO>
+  en: "Preview form rendering failed, please check the form configuration you filled in; Error message: %s"
 - msgID: "获取项目 %s 信息失败：%v"
   en: "failed to get project %s info: %v"
 - msgID: "获取集群 %s 信息失败：%v"

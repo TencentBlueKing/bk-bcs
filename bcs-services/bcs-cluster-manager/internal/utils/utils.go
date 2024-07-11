@@ -19,12 +19,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"math/rand"
 	"net"
 	"net/http"
 	"os"
 	"regexp"
 	"runtime/debug"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -33,6 +35,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/common/util"
 	"github.com/kirito41dd/xslice"
+	"github.com/robfig/cron/v3"
 	"go-micro.dev/v4/registry"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -638,4 +641,48 @@ func BuildAllocateVpcCidrLockKey(cloud, region, vpcId string) string {
 // BuildClusterLockKey generate cluster lock
 func BuildClusterLockKey(clusterId string) string {
 	return fmt.Sprintf("/bcs-services/bcs-cluster-manager/%s", clusterId)
+}
+
+// ValidateCronExpr 验证给定的 cron 表达式是否有效
+func ValidateCronExpr(expr string) error {
+	_, err := cron.ParseStandard(expr)
+	return err
+}
+
+// Decompose 将给定的数字分割为指定的值集合内的最大值分布
+func Decompose(num int, values []int) ([]int, error) {
+	if num <= 0 {
+		return nil, fmt.Errorf("无效的数字：%d，必须为正整数", num)
+	}
+	// 对 values 按降序排序
+	sort.Sort(sort.Reverse(sort.IntSlice(values)))
+
+	var result []int
+	for _, v := range values {
+		for num >= v {
+			result = append(result, v)
+			num -= v
+		}
+	}
+
+	if num > 0 {
+		result = append(result, values[len(values)-1])
+	}
+
+	return result, nil
+}
+
+// Uint32ToInt uint32 to int
+func Uint32ToInt(uint32Nums []uint32) ([]int, error) {
+	intNums := make([]int, 0)
+
+	for i := range uint32Nums {
+		if uint32Nums[i] > math.MaxInt32 {
+			return nil, fmt.Errorf("无法将 %d 转换为 int：超出范围", uint32Nums[i])
+		}
+
+		intNums = append(intNums, int(uint32Nums[i]))
+	}
+
+	return intNums, nil
 }

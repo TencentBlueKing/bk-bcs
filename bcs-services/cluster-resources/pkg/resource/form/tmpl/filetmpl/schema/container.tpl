@@ -9,8 +9,7 @@ containerGroup:
     name: collapse
     props:
       border: false
-      showTitle: true
-      type: card
+      showTitle: false
       verifiable: true
       defaultActiveName:
         - containers

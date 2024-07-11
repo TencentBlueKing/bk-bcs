@@ -34,6 +34,7 @@ import (
 	pbcommit "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/commit"
 	pbci "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/config-item"
 	pbrci "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/released-ci"
+	pbtset "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/template-set"
 	pbtv "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/template-variable"
 	pbds "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/search"
@@ -252,6 +253,7 @@ func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbds.BatchUps
 			return nil, e
 		}
 	}
+
 	// validate config items count.
 	if e := s.dao.ConfigItem().ValidateAppCINumber(grpcKit, tx, req.BizId, req.AppId); e != nil {
 		logs.Errorf("validate config items count failed, err: %v, rid: %s", e, grpcKit.Rid)
@@ -343,25 +345,18 @@ func (s *Service) checkConfigItemVars(kt *kit.Kit, bizID, appID uint32, variable
 }
 
 // 检测模板绑定
-// nolint:funlen
 func (s *Service) checkTemplateBindings(kt *kit.Kit, bizID, appID uint32,
 	bindings []*pbds.BatchUpsertConfigItemsReq_TemplateBinding,
 	replaceAll bool) (*table.AppTemplateBinding, error) {
+
 	if len(bindings) == 0 {
 		return nil, nil
 	}
-
 	// 对比原有数据和现有数据
 	appTemplateBinding := &table.AppTemplateBinding{
-		Revision: &table.Revision{
-			Reviser: kt.User,
-			Creator: kt.User,
-		},
-		Attachment: &table.AppTemplateBindingAttachment{
-			BizID: bizID,
-			AppID: appID,
-		},
-		Spec: &table.AppTemplateBindingSpec{},
+		Revision:   &table.Revision{Reviser: kt.User, Creator: kt.User},
+		Attachment: &table.AppTemplateBindingAttachment{BizID: bizID, AppID: appID},
+		Spec:       &table.AppTemplateBindingSpec{},
 	}
 
 	// 通过bizID和appID找到 AppTemplateBinding ID
@@ -371,107 +366,167 @@ func (s *Service) checkTemplateBindings(kt *kit.Kit, bizID, appID uint32,
 			i18n.T(kt, fmt.Sprintf("get template info for service binding failed %s", err.Error())))
 	}
 
-	appTemplateBindingSpec := new(table.AppTemplateBindingSpec)
-	appTemplateBindingSpec.Bindings = make(table.TemplateBindings, len(bindings))
-
-	templateRevisions := make(map[string]bool)
-	for _, binding := range bindings {
-		appTemplateBinding.Spec.TemplateSpaceIDs = append(appTemplateBinding.Spec.TemplateSpaceIDs,
-			binding.GetTemplateSpaceId())
-		appTemplateBinding.Spec.TemplateSetIDs = append(appTemplateBinding.Spec.TemplateSetIDs,
-			binding.GetTemplateBinding().GetTemplateSetId())
-		for _, v := range binding.GetTemplateBinding().GetTemplateRevisions() {
-			appTemplateBinding.Spec.TemplateIDs = append(appTemplateBinding.Spec.TemplateIDs, v.GetTemplateId())
-			appTemplateBinding.Spec.TemplateRevisionIDs = append(appTemplateBinding.Spec.TemplateRevisionIDs,
-				v.GetTemplateRevisionId())
-			if v.IsLatest {
-				appTemplateBinding.Spec.LatestTemplateIDs = append(appTemplateBinding.Spec.LatestTemplateIDs,
-					v.GetTemplateId())
-			}
-			templateRevisions[fmt.Sprintf("%d-%d", binding.GetTemplateBinding().GetTemplateSetId(),
-				v.GetTemplateId())] = true
+	templateSpaceIDs, templateSetIDs := []uint32{}, []uint32{}
+	templateRevisions := make(table.TemplateBindings, 0)
+	for _, v := range bindings {
+		templateSpaceIDs = append(templateSpaceIDs, v.GetTemplateSpaceId())
+		templateSetIDs = append(templateSetIDs, v.GetTemplateBinding().GetTemplateSetId())
+		revision := make([]*table.TemplateRevisionBinding, 0)
+		for _, binding := range v.GetTemplateBinding().GetTemplateRevisions() {
+			revision = append(revision, &table.TemplateRevisionBinding{
+				TemplateID:         binding.GetTemplateId(),
+				TemplateRevisionID: binding.GetTemplateRevisionId(),
+				IsLatest:           binding.GetIsLatest(),
+			})
 		}
-		appTemplateBinding.Spec.Bindings = append(appTemplateBinding.Spec.Bindings, &table.TemplateBinding{
-			TemplateSetID:     binding.GetTemplateBinding().GetTemplateSetId(),
-			TemplateRevisions: binding.GetTemplateBinding().TemplateBinding().TemplateRevisions,
+		templateRevisions = append(templateRevisions, &table.TemplateBinding{
+			TemplateSetID:     v.GetTemplateBinding().GetTemplateSetId(),
+			TemplateRevisions: revision,
 		})
 	}
 
-	// 不清空且存在旧数据
 	if !replaceAll && oldATB != nil {
 		appTemplateBinding.ID = oldATB.ID
-		oldTemplateIds, oldRevisionIds := []uint32{}, []uint32{}
-		for _, binding := range oldATB.Spec.Bindings {
-			revisonMap := make([]*table.TemplateRevisionBinding, 0)
-			for _, revision := range binding.TemplateRevisions {
-				if !templateRevisions[fmt.Sprintf("%d-%d", binding.TemplateSetID, revision.TemplateID)] {
-					revisonMap = append(revisonMap, revision)
-					oldTemplateIds = append(oldTemplateIds, revision.TemplateID)
-					oldRevisionIds = append(oldRevisionIds, revision.TemplateRevisionID)
-				}
-			}
-			// 把旧的空间套餐追加到新数据中
-			if len(revisonMap) > 0 {
-				appTemplateBinding.Spec.Bindings = append(appTemplateBinding.Spec.Bindings, &table.TemplateBinding{
-					TemplateSetID: binding.TemplateSetID, TemplateRevisions: revisonMap,
-				})
+		templateSetIDsExist := make(map[uint32]bool)
+		for _, v := range oldATB.Spec.Bindings {
+			templateSetIDsExist[v.TemplateSetID] = true
+		}
+		currentTemplateSetID := []uint32{}
+		for _, v := range templateRevisions {
+			if !templateSetIDsExist[v.TemplateSetID] {
+				currentTemplateSetID = append(currentTemplateSetID, v.TemplateSetID)
 			}
 		}
-
-		// 合并现有空间、套餐、版本等
-		appTemplateBinding.Spec.TemplateSpaceIDs = mergeAndDeduplicate(appTemplateBinding.Spec.TemplateSpaceIDs,
-			oldATB.Spec.TemplateSpaceIDs)
-		appTemplateBinding.Spec.TemplateIDs = mergeAndDeduplicate(appTemplateBinding.Spec.TemplateIDs,
-			oldTemplateIds)
-		appTemplateBinding.Spec.TemplateRevisionIDs = mergeAndDeduplicate(appTemplateBinding.Spec.TemplateRevisionIDs,
-			oldRevisionIds)
-		appTemplateBinding.Spec.LatestTemplateIDs = mergeAndDeduplicate(appTemplateBinding.Spec.LatestTemplateIDs,
-			oldATB.Spec.LatestTemplateIDs)
-		appTemplateBinding.Spec.TemplateSetIDs = mergeAndDeduplicate(appTemplateBinding.Spec.TemplateSetIDs,
-			oldATB.Spec.TemplateSetIDs)
+		unBindingTemplateSets, err := s.getUnBindingTemplateSets(kt, currentTemplateSetID)
+		if err != nil {
+			return nil, err
+		}
+		oldATB.Spec.Bindings = append(oldATB.Spec.Bindings, unBindingTemplateSets...)
+		appTemplateBinding.Spec = mergeTemplateSets(templateRevisions, oldATB.Spec.Bindings)
+		appTemplateBinding.Spec.TemplateSpaceIDs = tools.MergeAndDeduplicate(tools.RemoveDuplicates(templateSpaceIDs),
+			tools.RemoveDuplicates(oldATB.Spec.TemplateSpaceIDs))
+	} else {
+		unBindingTemplateSets, err := s.getUnBindingTemplateSets(kt, templateSetIDs)
+		if err != nil {
+			return nil, err
+		}
+		appTemplateBinding.Spec = mergeTemplateSets(templateRevisions, unBindingTemplateSets)
+		appTemplateBinding.Spec.TemplateSpaceIDs = tools.RemoveDuplicates(templateSpaceIDs)
 	}
 
-	if replaceAll && oldATB != nil {
-		appTemplateBinding.ID = oldATB.ID
-	}
-
-	// 校验下模板空间是否存在
-	if _, err = s.dao.TemplateSpace().ListByIDs(kt, appTemplateBindingSpec.TemplateSpaceIDs); err != nil {
-		logs.Errorf("list template spaces failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, errf.Errorf(errf.DBOpFailed,
-			i18n.T(kt, fmt.Sprintf("list template spaces failed, err: %v, rid: %s", err, kt.Rid)))
-	}
-	// 校验下模板套餐是否存在
-	if _, err = s.dao.TemplateSet().ListByIDs(kt, appTemplateBindingSpec.TemplateSetIDs); err != nil {
-		logs.Errorf("list template sets failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, errf.Errorf(errf.DBOpFailed,
-			i18n.T(kt, fmt.Sprintf("list template sets failed, err: %v, rid: %s", err, kt.Rid)))
-	}
-	// 校验下模板是否存在
-	if _, err = s.dao.Template().ListByIDs(kt, appTemplateBindingSpec.TemplateIDs); err != nil {
-		logs.Errorf("list template failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, errf.Errorf(errf.DBOpFailed,
-			i18n.T(kt, fmt.Sprintf("list template failed, err: %v, rid: %s", err, kt.Rid)))
+	if replaceAll {
+		appTemplateBinding.Spec.TemplateSpaceIDs = tools.RemoveDuplicates(templateSpaceIDs)
 	}
 
 	return appTemplateBinding, nil
 }
 
-// 合并并去重两个数组
-func mergeAndDeduplicate(a, b []uint32) []uint32 {
-	// 使用 map 来记录已经存在的元素
-	elementMap := make(map[uint32]bool)
-	var result []uint32
+// 获取未关联的模板套餐
+func (s *Service) getUnBindingTemplateSets(kt *kit.Kit, templateSetID []uint32) (table.TemplateBindings, error) {
+	// 查询未关联的套餐
+	templateSet, err := s.dao.TemplateSet().ListByIDs(kt, templateSetID)
+	if err != nil {
+		return nil, err
+	}
 
-	// 合并数组 a 和 b
-	for _, v := range append(a, b...) {
-		if !elementMap[v] {
-			elementMap[v] = true
-			result = append(result, v)
+	unBindingTemplateSets := make(table.TemplateBindings, 0)
+	for _, v := range templateSet {
+		// 获取每个套餐下所有配置的最新版本
+		tmplRevisions, err := s.dao.TemplateRevision().
+			ListLatestRevisionsGroupByTemplateIds(kt, tools.RemoveDuplicates(v.Spec.TemplateIDs))
+		if err != nil {
+			return nil, err
+		}
+		revisions := make([]*table.TemplateRevisionBinding, 0)
+		for _, revision := range tmplRevisions {
+			revisions = append(revisions, &table.TemplateRevisionBinding{
+				TemplateID:         revision.Attachment.TemplateID,
+				TemplateRevisionID: revision.ID,
+				IsLatest:           true,
+			})
+		}
+		unBindingTemplateSets = append(unBindingTemplateSets, &table.TemplateBinding{
+			TemplateSetID:     v.ID,
+			TemplateRevisions: revisions,
+		})
+	}
+
+	return unBindingTemplateSets, nil
+}
+
+// 把原有的模板空间、套餐、模板文件合并现有的数据
+func mergeTemplateSets(a, b table.TemplateBindings) *table.AppTemplateBindingSpec {
+	mergedMap := make(map[uint32]*table.TemplateBinding)
+
+	// 把所有的 a 元素添加到 mergedMap
+	for _, aItem := range a {
+		mergedMap[aItem.TemplateSetID] = aItem
+	}
+
+	// 把元素 b 合并添加到 mergedMap
+	for _, bItem := range b {
+		if existing, exists := mergedMap[bItem.TemplateSetID]; exists {
+			// 合并 template revisions
+			revisionMap := make(map[uint32]*table.TemplateRevisionBinding)
+			for _, rev := range existing.TemplateRevisions {
+				revisionMap[rev.TemplateID] = rev
+			}
+			for _, rev := range bItem.TemplateRevisions {
+				if existingRev, exists := revisionMap[rev.TemplateID]; exists {
+					// 如果template_id存在，请检查is_latest
+					if existingRev.IsLatest {
+						if rev.IsLatest {
+							// 如果两者都是最新的，请比较TemplateRevisionID
+							if existingRev.TemplateRevisionID < rev.TemplateRevisionID {
+								revisionMap[rev.TemplateID] = rev
+							}
+						}
+					} else {
+						// 如果existingRev不是最新版本，请保持existingRev
+						revisionMap[rev.TemplateID] = existingRev
+					}
+				} else {
+					revisionMap[rev.TemplateID] = rev
+				}
+			}
+			// 将 map 转换回切片
+			mergedRevisions := []*table.TemplateRevisionBinding{}
+			for _, rev := range revisionMap {
+				mergedRevisions = append(mergedRevisions, rev)
+			}
+			existing.TemplateRevisions = mergedRevisions
+			mergedMap[bItem.TemplateSetID] = existing
+		} else {
+			mergedMap[bItem.TemplateSetID] = bItem
 		}
 	}
 
-	return result
+	// 将 map 转换回切片
+	merged := []*table.TemplateBinding{}
+	for _, item := range mergedMap {
+		merged = append(merged, item)
+	}
+
+	templateSetIDs, templateIDs, templateRevisionIDs, latestTemplateIDs :=
+		[]uint32{}, []uint32{}, []uint32{}, []uint32{}
+	for _, v := range merged {
+		templateSetIDs = append(templateSetIDs, v.TemplateSetID)
+		for _, d := range v.TemplateRevisions {
+			templateIDs = append(templateIDs, d.TemplateID)
+			templateRevisionIDs = append(templateRevisionIDs, d.TemplateRevisionID)
+			if d.IsLatest {
+				latestTemplateIDs = append(latestTemplateIDs, d.TemplateID)
+			}
+		}
+	}
+
+	return &table.AppTemplateBindingSpec{
+		TemplateSetIDs:      tools.RemoveDuplicates(templateSetIDs),
+		TemplateIDs:         tools.RemoveDuplicates(templateIDs),
+		TemplateRevisionIDs: tools.RemoveDuplicates(templateRevisionIDs),
+		LatestTemplateIDs:   tools.RemoveDuplicates(latestTemplateIDs),
+		Bindings:            merged,
+	}
 }
 
 func (s *Service) checkConfigItems(kt *kit.Kit, req *pbds.BatchUpsertConfigItemsReq,
@@ -1206,4 +1261,397 @@ func (s *Service) UndoConfigItem(ctx context.Context, req *pbds.UndoConfigItemRe
 	}
 
 	return new(pbbase.EmptyResp), nil
+}
+
+// CompareConfigItemConflicts compare config item version conflicts
+func (s *Service) CompareConfigItemConflicts(ctx context.Context, req *pbds.CompareConfigItemConflictsReq) (
+	*pbds.CompareConfigItemConflictsResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	nonTemplateConfig, err := s.handleNonTemplateConfig(grpcKit, req.GetBizId(), req.GetAppId(),
+		req.GetOtherAppId(), req.GetReleaseId())
+	if err != nil {
+		return nil, err
+	}
+
+	templateConfig, err := s.handleTemplateConfig(grpcKit, req.GetBizId(), req.GetAppId(),
+		req.GetOtherAppId(), req.GetReleaseId())
+	if err != nil {
+		return nil, err
+	}
+
+	return &pbds.CompareConfigItemConflictsResp{
+		NonTemplateConfigs: nonTemplateConfig,
+		TemplateConfigs:    templateConfig,
+	}, nil
+}
+
+// 处理非模板配置
+func (s *Service) handleNonTemplateConfig(grpcKit *kit.Kit, bizID, appID, otherAppId, releaseId uint32) (
+	[]*pbds.CompareConfigItemConflictsResp_NonTemplateConfig, error) {
+
+	nonTemplateConfigs := make([]*pbds.CompareConfigItemConflictsResp_NonTemplateConfig, 0)
+
+	// 获取未命名版本配置文件
+	ci, err := s.dao.ConfigItem().ListAllByAppID(grpcKit, appID, bizID)
+	if err != nil {
+		logs.Errorf("list config items failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	conflicts := make(map[string]bool)
+	for _, v := range ci {
+		conflicts[path.Join(v.Spec.Path, v.Spec.Name)] = true
+	}
+
+	// 获取已发布版本的配置文件
+	rci, count, err := s.dao.ReleasedCI().List(grpcKit, bizID, otherAppId, releaseId, nil, &types.BasePage{
+		All: true,
+	}, "")
+	if err != nil {
+		logs.Errorf("list released config items failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	if count == 0 {
+		return nonTemplateConfigs, nil
+	}
+
+	configItems := make(map[string]bool)
+	for _, v := range rci {
+		configItems[path.Join(v.ConfigItemSpec.Path, v.ConfigItemSpec.Name)] = true
+	}
+
+	vars, err := s.getReleasedNonTemplateConfigVariables(grpcKit, bizID, otherAppId, releaseId)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, v := range rci {
+		nonTemplateConfigs = append(nonTemplateConfigs, &pbds.CompareConfigItemConflictsResp_NonTemplateConfig{
+			Id: v.ConfigItemID,
+			ConfigItemSpec: &pbci.ConfigItemSpec{
+				Name:     v.ConfigItemSpec.Name,
+				Path:     v.ConfigItemSpec.Path,
+				FileType: string(v.ConfigItemSpec.FileType),
+				FileMode: string(v.ConfigItemSpec.FileMode),
+				Memo:     v.ConfigItemSpec.Memo,
+				Permission: &pbci.FilePermission{
+					User:      v.ConfigItemSpec.Permission.User,
+					UserGroup: v.ConfigItemSpec.Permission.UserGroup,
+					Privilege: v.ConfigItemSpec.Permission.Privilege,
+				},
+			},
+			Variables: vars[path.Join(v.ConfigItemSpec.Path, v.ConfigItemSpec.Name)],
+			IsExist:   conflicts[path.Join(v.ConfigItemSpec.Path, v.ConfigItemSpec.Name)],
+			Signature: v.CommitSpec.Content.OriginSignature,
+			ByteSize:  v.CommitSpec.Content.OriginByteSize,
+		})
+	}
+
+	return nonTemplateConfigs, nil
+}
+
+// 处理模板套餐配置
+func (s *Service) handleTemplateConfig(grpcKit *kit.Kit, bizID, appID, otherAppId, releaseId uint32) (
+	[]*pbds.CompareConfigItemConflictsResp_TemplateConfig, error) {
+	templateConfigs := make([]*pbds.CompareConfigItemConflictsResp_TemplateConfig, 0)
+
+	// 获取已发布版本的空间、套餐、配置文件
+	rp, count, err := s.dao.ReleasedAppTemplate().List(grpcKit, bizID, otherAppId, releaseId, nil, &types.BasePage{
+		All: true,
+	}, "")
+	if err != nil {
+		logs.Errorf("list released app template revisions failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+	if count == 0 {
+		return templateConfigs, nil
+	}
+
+	noNamespacePackage, err := s.getConfigTemplateSet(grpcKit, bizID, appID)
+	if err != nil {
+		return nil, err
+	}
+
+	releaseTemplateSpaceIds, releaseTemplateSetIds, releaseTemplateIds := []uint32{}, []uint32{}, []uint32{}
+	releaseTemplateSpaceIdsExist, releaseTemplateSetIdsExist := make(map[uint32]bool), make(map[uint32]bool)
+	tmplSetMap := make(map[uint32][]*table.ReleasedAppTemplate)
+	for _, v := range rp {
+		tmplSetMap[v.Spec.TemplateSetID] = append(tmplSetMap[v.Spec.TemplateSetID], v)
+		if !releaseTemplateSpaceIdsExist[v.Spec.TemplateSpaceID] {
+			releaseTemplateSpaceIds = append(releaseTemplateSpaceIds, v.Spec.TemplateSpaceID)
+			releaseTemplateSpaceIdsExist[v.Spec.TemplateSpaceID] = true
+		}
+		if !releaseTemplateSetIdsExist[v.Spec.TemplateSetID] {
+			releaseTemplateSetIds = append(releaseTemplateSetIds, v.Spec.TemplateSetID)
+			releaseTemplateSetIdsExist[v.Spec.TemplateSetID] = true
+		}
+		releaseTemplateIds = append(releaseTemplateIds, v.Spec.TemplateID)
+	}
+
+	templateSpaceExist, templateSetExist, currentSpaceSetTemplateExist, templateExist, templateSetTemplateExist, err :=
+		s.getTemplateSpaceSetfile(grpcKit, releaseTemplateSpaceIds, releaseTemplateSetIds, releaseTemplateIds)
+	if err != nil {
+		return nil, err
+	}
+
+	nonExistentTemplateIds := make(map[uint32]bool)
+	for _, v := range releaseTemplateIds {
+		if !templateExist[v] {
+			nonExistentTemplateIds[v] = true
+		}
+	}
+
+	vars, err := s.getReleasedTemplateConfigVariables(grpcKit, bizID, otherAppId, releaseId, nonExistentTemplateIds)
+	if err != nil {
+		return nil, err
+	}
+
+	for id, revisions := range tmplSetMap {
+		group := &pbds.CompareConfigItemConflictsResp_TemplateConfig{
+			TemplateSpaceId:    revisions[0].Spec.TemplateSpaceID,
+			TemplateSpaceName:  revisions[0].Spec.TemplateSpaceName,
+			TemplateSetId:      id,
+			TemplateSetName:    revisions[0].Spec.TemplateSetName,
+			TemplateSpaceExist: templateSpaceExist[revisions[0].Spec.TemplateSpaceID],
+			TemplateSetExist:   templateSetExist[id],
+			IsExist:            noNamespacePackage[fmt.Sprintf("%d-%d", revisions[0].Spec.TemplateSpaceID, id)],
+			TemplateSetIsEmpty: templateSetTemplateExist[id],
+		}
+		for _, r := range revisions {
+			// 历史套餐模板文件被删除了
+			if !templateExist[r.Spec.TemplateID] {
+				continue
+			}
+			// 历史套餐模板不在现有套餐模板中, 被移走了
+			if !currentSpaceSetTemplateExist[fmt.Sprintf("%d-%d-%d", r.Spec.TemplateSpaceID,
+				r.Spec.TemplateSetID, r.Spec.TemplateID)] {
+				continue
+			}
+			group.TemplateRevisions = append(group.TemplateRevisions,
+				&pbds.CompareConfigItemConflictsResp_TemplateConfig_TemplateRevisionDetail{
+					TemplateId:         r.Spec.TemplateID,
+					TemplateRevisionId: r.Spec.TemplateRevisionID,
+					IsLatest:           r.Spec.IsLatest,
+					Variables:          vars[path.Join(r.Spec.Path, r.Spec.Name)],
+				})
+		}
+		templateConfigs = append(templateConfigs, group)
+	}
+
+	return templateConfigs, nil
+}
+
+// 返回空间、套餐、模板配置数据
+func (s *Service) getTemplateSpaceSetfile(grpcKit *kit.Kit, templateSpaceIds, templateSetIds, templateIds []uint32) (
+	map[uint32]bool, map[uint32]bool, map[string]bool, map[uint32]bool, map[uint32]bool, error) {
+	// 获取空间
+	templateSpace, err := s.dao.TemplateSpace().ListByIDs(grpcKit, templateSpaceIds)
+	if err != nil {
+		return nil, nil, nil, nil, nil, err
+	}
+	templateSpaceExist := make(map[uint32]bool)
+	for _, v := range templateSpace {
+		templateSpaceExist[v.ID] = true
+	}
+
+	// 获取套餐
+	templateSet, err := s.dao.TemplateSet().ListByIDs(grpcKit, templateSetIds)
+	if err != nil {
+		return nil, nil, nil, nil, nil, err
+	}
+	templateSetExist := make(map[uint32]bool)
+	currentSpaceSetTemplateExist := make(map[string]bool)
+	templateSetTemplateExist := make(map[uint32]bool)
+	for _, v := range templateSet {
+		templateSetTemplateExist[v.ID] = false
+		if len(v.Spec.TemplateIDs) == 0 {
+			templateSetTemplateExist[v.ID] = true
+		}
+		templateSetExist[v.ID] = true
+		for _, tid := range v.Spec.TemplateIDs {
+			currentSpaceSetTemplateExist[fmt.Sprintf("%d-%d-%d", v.Attachment.TemplateSpaceID, v.ID, tid)] = true
+		}
+	}
+
+	// 获取模板
+	template, err := s.dao.Template().ListByIDs(grpcKit, templateIds)
+	if err != nil {
+		return nil, nil, nil, nil, nil, err
+	}
+	templateExist := make(map[uint32]bool)
+	for _, v := range template {
+		templateExist[v.ID] = true
+	}
+
+	return templateSpaceExist, templateSetExist, currentSpaceSetTemplateExist, templateExist, templateSetTemplateExist, nil
+}
+
+// 获取未命名版本的模板套餐
+func (s *Service) getConfigTemplateSet(grpcKit *kit.Kit, bizID, appID uint32) (
+	map[string]bool, error) {
+
+	noNamespacePackage := make(map[string]bool)
+
+	tmplSetInfo, count, err := s.dao.AppTemplateBinding().List(grpcKit, bizID, appID, &types.BasePage{All: true})
+	if err != nil {
+		return nil, err
+	}
+
+	if count == 0 {
+		return noNamespacePackage, nil
+	}
+
+	tmplSets, err := s.dao.TemplateSet().ListByIDs(grpcKit, tmplSetInfo[0].Spec.TemplateSetIDs)
+	if err != nil {
+		logs.Errorf("list template sets failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	tmplSetMap := make(map[uint32]*table.TemplateSet)
+	tmplSpaceIDs := make([]uint32, 0)
+	for _, ts := range tmplSets {
+		tmplSetMap[ts.ID] = ts
+		tmplSpaceIDs = append(tmplSpaceIDs, ts.Attachment.TemplateSpaceID)
+	}
+	tmplSpaceIDs = tools.RemoveDuplicates(tmplSpaceIDs)
+
+	// template space details
+	tmplSpaces, err := s.dao.TemplateSpace().ListByIDs(grpcKit, tmplSpaceIDs)
+	if err != nil {
+		logs.Errorf("list template spaces failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+	tmplSpaceMap := make(map[uint32]*table.TemplateSpace)
+	for _, ts := range tmplSpaces {
+		tmplSpaceMap[ts.ID] = ts
+	}
+
+	details := make([]*pbtset.TemplateSetBriefInfo, len(tmplSets))
+	for idx, t := range tmplSets {
+		details[idx] = &pbtset.TemplateSetBriefInfo{
+			TemplateSpaceId:   t.Attachment.TemplateSpaceID,
+			TemplateSpaceName: tmplSpaceMap[t.Attachment.TemplateSpaceID].Spec.Name,
+			TemplateSetId:     t.ID,
+			TemplateSetName:   tmplSetMap[t.ID].Spec.Name,
+		}
+	}
+
+	for _, tmplSet := range details {
+		noNamespacePackage[fmt.Sprintf("%d-%d", tmplSet.TemplateSpaceId, tmplSet.TemplateSetId)] = true
+	}
+
+	return noNamespacePackage, nil
+}
+
+// 获取已发布的模板配置变量
+func (s *Service) getReleasedTemplateConfigVariables(grpcKit *kit.Kit, bizID, otherAppId, releaseId uint32,
+	templateIds map[uint32]bool) (map[string][]*pbtv.TemplateVariableSpec, error) {
+	varsMap := make(map[string][]*pbtv.TemplateVariableSpec, 0)
+
+	releasedTmpls, count, err := s.dao.ReleasedAppTemplate().List(grpcKit, bizID, otherAppId, releaseId,
+		nil, &types.BasePage{All: true}, "")
+	if err != nil {
+		logs.Errorf("list released app templates failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	if count == 0 {
+		return varsMap, nil
+	}
+
+	tmplRevisions := getTmplRevisionsFromReleased(releasedTmpls)
+	tmplRevisions = filterSizeForTmplRevisions(tmplRevisions)
+
+	newTmplRevisions := make([]*table.TemplateRevision, 0)
+	for _, v := range tmplRevisions {
+		if templateIds[v.Attachment.TemplateID] {
+			continue
+		}
+		newTmplRevisions = append(newTmplRevisions, v)
+	}
+
+	refs, err := s.getVariableReferences(grpcKit, newTmplRevisions, nil)
+	if err != nil {
+		logs.Errorf("get variable references failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	resfMap := make(map[string][]string, 0)
+	for _, v := range refs {
+		for _, ref := range v.GetReferences() {
+			filePath := path.Join(ref.Path, ref.Name)
+			resfMap[filePath] = append(resfMap[filePath], v.GetVariableName())
+		}
+	}
+
+	vars, err := s.dao.ReleasedAppTemplateVariable().ListVariables(grpcKit, bizID, otherAppId, releaseId)
+	if err != nil {
+		logs.Errorf("list released app template variables failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	for _, v := range vars {
+		for key, name := range resfMap {
+			for _, n := range name {
+				if v.Name == n {
+					varsMap[key] = append(varsMap[key], &pbtv.TemplateVariableSpec{
+						Name: n, Type: string(v.Type), DefaultVal: v.DefaultVal, Memo: v.Memo,
+					})
+				}
+			}
+		}
+	}
+
+	return varsMap, nil
+}
+
+// 获取已发布的非配置配置变量
+func (s *Service) getReleasedNonTemplateConfigVariables(grpcKit *kit.Kit, bizID, otherAppId, releaseId uint32) (
+	map[string][]*pbtv.TemplateVariableSpec, error) {
+	varsMap := make(map[string][]*pbtv.TemplateVariableSpec, 0)
+
+	releasedCIs, _, err := s.dao.ReleasedCI().List(grpcKit, bizID, otherAppId, releaseId, nil,
+		&types.BasePage{All: true}, "")
+	if err != nil {
+		logs.Errorf("list released config items failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+	cis := getPbConfigItemsFromReleased(releasedCIs)
+	cis = filterSizeForConfigItems(cis)
+
+	refs, err := s.getVariableReferences(grpcKit, nil, cis)
+	if err != nil {
+		logs.Errorf("get variable references failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	resfMap := make(map[string][]string, 0)
+	for _, v := range refs {
+		for _, ref := range v.GetReferences() {
+			filePath := path.Join(ref.Path, ref.Name)
+			resfMap[filePath] = append(resfMap[filePath], v.GetVariableName())
+		}
+	}
+
+	vars, err := s.dao.ReleasedAppTemplateVariable().ListVariables(grpcKit, bizID, otherAppId, releaseId)
+	if err != nil {
+		logs.Errorf("list released app template variables failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	for _, v := range vars {
+		for key, name := range resfMap {
+			for _, n := range name {
+				if v.Name == n {
+					varsMap[key] = append(varsMap[key], &pbtv.TemplateVariableSpec{
+						Name: n, Type: string(v.Type), DefaultVal: v.DefaultVal, Memo: v.Memo,
+					})
+				}
+			}
+		}
+	}
+
+	return varsMap, nil
 }

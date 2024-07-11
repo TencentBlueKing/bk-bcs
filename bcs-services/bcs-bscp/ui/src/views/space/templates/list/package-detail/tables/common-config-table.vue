@@ -40,7 +40,7 @@
         </bk-table-column>
         <bk-table-column :label="t('配置文件绝对路径')">
           <template #default="{ row }">
-            <div v-if="row.spec" v-overflow-title class="config-name" @click="handleViewConfig(row.id)">
+            <div v-if="row.spec" v-overflow-title class="config-name" @click="handleViewConfig(row)">
               {{ fileAP(row) }}
             </div>
           </template>
@@ -87,11 +87,11 @@
             </template>
           </template>
         </bk-table-column>
-        <bk-table-column :label="t('操作')" :width="locale === 'zh-CN' ? '160' : '200'" fixed="right">
+        <bk-table-column :label="t('操作')" :width="locale === 'zh-cn' ? '160' : '200'" fixed="right">
           <template #default="{ row, index }">
             <div class="actions-wrapper">
               <slot name="columnOperations" :config="row">
-                <bk-button theme="primary" text @click="handleEditConfig(row.id)">{{ t('编辑') }}</bk-button>
+                <bk-button theme="primary" text @click="handleEditConfig(row)">{{ t('编辑') }}</bk-button>
                 <bk-button theme="primary" text @click="goToVersionManage(row.id)">{{ t('版本管理') }}</bk-button>
                 <bk-popover
                   theme="light template-config-actions-popover"
@@ -148,9 +148,15 @@
     <ViewConfig
       v-model:show="isViewConfigShow"
       :space-id="spaceId"
-      :id="viewConfigId"
-      @open-edit="handleEditConfig(viewConfigId)" />
-    <EditConfig v-model:show="isEditConfigShow" :space-id="spaceId" :id="editConfigId" />
+      :id="viewConfig?.id as number"
+      :memo="selectConfigMemo"
+      @open-edit="handleEditConfig(viewConfig as ITemplateConfigItem)" />
+    <EditConfig
+      v-model:show="isEditConfigShow"
+      :memo="selectConfigMemo"
+      :space-id="spaceId"
+      :id="editConfigId"
+      @edited="refreshList"/>
   </div>
 </template>
 <script lang="ts" setup>
@@ -167,9 +173,9 @@
   import useTablePagination from '../../../../../../utils/hooks/use-table-pagination';
   import useTableAcrossCheck from '../../../../../../utils/hooks/use-table-acrosscheck';
   import {
-    ITemplateConfigItem,
     ITemplateCitedCountDetailItem,
     ITemplateCitedByPkgs,
+    ITemplateConfigItem,
   } from '../../../../../../../types/template';
   import { getPackagesByTemplateIds, getCountsByTemplateIds } from '../../../../../../api/template';
   import { datetimeFormat } from '../../../../../../utils/index';
@@ -222,9 +228,10 @@
   const crtConfig = ref<ITemplateConfigItem[]>([]);
   const isSearchEmpty = ref(false);
   const isViewConfigShow = ref(false);
-  const viewConfigId = ref(0);
+  const viewConfig = ref<ITemplateConfigItem>();
   const isEditConfigShow = ref(false);
   const editConfigId = ref(0);
+  const selectConfigMemo = ref('');
 
   const arrowShow = computed(() => pagination.value.limit <= pagination.value.count);
 
@@ -472,15 +479,18 @@
     });
   };
 
-  const handleViewConfig = (id: number) => {
+  const handleViewConfig = (config: ITemplateConfigItem) => {
     isViewConfigShow.value = true;
-    viewConfigId.value = id;
+    viewConfig.value = config;
+    selectConfigMemo.value = config.spec.memo;
   };
 
-  const handleEditConfig = (id: number) => {
+  const handleEditConfig = (config: ITemplateConfigItem) => {
     isViewConfigShow.value = false;
     isEditConfigShow.value = true;
-    editConfigId.value = id;
+    console.log(config.id);
+    editConfigId.value = config.id;
+    selectConfigMemo.value = config.spec.memo;
   };
 
   // 设置新增行的标记class

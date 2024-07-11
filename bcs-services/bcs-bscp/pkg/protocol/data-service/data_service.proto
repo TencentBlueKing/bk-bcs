@@ -131,6 +131,7 @@ service Data {
 
   // template release related interface.
   rpc CreateTemplateRevision(CreateTemplateRevisionReq) returns (CreateResp) {}
+  rpc UpdateTemplateRevision(UpdateTemplateRevisionReq) returns (CreateResp) {}
   rpc ListTemplateRevisions(ListTemplateRevisionsReq) returns (ListTemplateRevisionsResp) {}
   rpc GetTemplateRevision(GetTemplateRevisionReq) returns (GetTemplateRevisionResp) {}
   rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (pbbase.EmptyResp) {}
@@ -266,6 +267,9 @@ service Data {
 
   // client metric related interface
   rpc BatchUpsertClientMetrics(BatchUpsertClientMetricsReq) returns (BatchUpsertClientMetricsResp) {}
+
+  // config item compare conflicts related interface
+  rpc CompareConfigItemConflicts(CompareConfigItemConflictsReq) returns (CompareConfigItemConflictsResp) {}
 }
 message UpdateCredentialScopesReq {
   uint32 biz_id = 1;
@@ -1044,6 +1048,11 @@ message CreateTemplateRevisionReq {
   pbtr.TemplateRevisionSpec spec = 2;
 }
 
+message UpdateTemplateRevisionReq {
+  pbtr.TemplateRevisionAttachment attachment = 1;
+  pbtr.TemplateRevisionSpec spec = 2;
+}
+
 message ListTemplateRevisionsReq {
   uint32 biz_id = 1;
   uint32 template_space_id = 2;
@@ -1084,6 +1093,7 @@ message GetTemplateRevisionResp {
     string creator = 14;
     string create_at = 15;
     string md5 = 16;
+    bool is_latest = 17;
   }
   TemplateRevision detail = 1;
 }
@@ -1864,4 +1874,41 @@ message ListClientLabelAndAnnotationReq {
   uint32 biz_id = 1;
   uint32 app_id = 2;
   int64 last_heartbeat_time = 3;
+}
+
+message CompareConfigItemConflictsReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  uint32 release_id = 3;
+  uint32 other_app_id = 4;
+}
+
+message CompareConfigItemConflictsResp {
+  message NonTemplateConfig {
+    uint32 id = 1;
+    pbci.ConfigItemSpec config_item_spec = 2;
+    repeated pbtv.TemplateVariableSpec variables = 3;
+    bool is_exist = 4;
+    string signature = 5;
+    uint64 byte_size = 6;
+  }
+  message TemplateConfig {
+    message TemplateRevisionDetail {
+      uint32 template_id = 1;
+      uint32 template_revision_id = 2;
+      bool is_latest = 3;
+      repeated pbtv.TemplateVariableSpec variables = 5;
+    }
+    uint32 template_space_id = 1;
+    string template_space_name = 2;
+    uint32 template_set_id = 3;
+    string template_set_name = 4;
+    bool is_exist = 5;
+    repeated TemplateRevisionDetail template_revisions = 6;
+    bool template_space_exist = 7;
+    bool template_set_exist = 8;
+    bool template_set_is_empty = 9;
+  }
+  repeated NonTemplateConfig non_template_configs = 2;
+  repeated TemplateConfig template_configs = 1;
 }

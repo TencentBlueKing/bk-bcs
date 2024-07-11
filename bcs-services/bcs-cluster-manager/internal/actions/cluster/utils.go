@@ -518,17 +518,6 @@ func transNodeStatus(cmNodeStatus string, k8sNode *corev1.Node) string {
 	return common.StatusNodeUnknown
 }
 
-func filterNodesRole(k8sNodes []*corev1.Node, master bool) []*corev1.Node {
-	nodes := make([]*corev1.Node, 0)
-	for _, v := range k8sNodes {
-		ok := utils.IsMasterNode(v.Labels)
-		if ok == master {
-			nodes = append(nodes, v)
-		}
-	}
-	return nodes
-}
-
 // mergeClusterNodes merge k8s nodes and db nodes
 // 1. 集群中不存在的节点，并且在cluster manager中状态处于初始化中、初始化失败、移除中、移除失败状态时，需要展示cluster manager中数据
 // 2. 集群中存在的节点，则以集群中为准，注意状态的转换

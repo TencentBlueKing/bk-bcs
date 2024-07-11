@@ -646,7 +646,8 @@
       };
       template_revisions.forEach((tpl) => {
         const {
-          template_id: id,
+          template_id,
+          template_revision_id,
           name,
           template_revision_id: versionId,
           template_revision_name: versionName,
@@ -658,7 +659,7 @@
           is_latest,
         } = tpl;
         group.configs.push({
-          id,
+          id: isUnNamedVersion.value ? template_id : template_revision_id,
           name,
           versionId,
           versionName,
@@ -1037,7 +1038,7 @@
       width: 158px;
     }
     .status {
-      width: 120px;
+      width: 140px;
     }
     .operation {
       width: 150px;

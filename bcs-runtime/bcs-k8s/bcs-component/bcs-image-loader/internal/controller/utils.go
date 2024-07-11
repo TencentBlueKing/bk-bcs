@@ -63,6 +63,7 @@ func newJob(loader *tkexv1alpha1.ImageLoader) *batchv1.Job {
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: loader.Namespace,
 			Labels: map[string]string{
+				// specific label
 				ImageLoaderNameKey: loader.Name,
 			},
 			Annotations: loader.Annotations,
@@ -100,7 +101,9 @@ func newJob(loader *tkexv1alpha1.ImageLoader) *batchv1.Job {
 		},
 	}
 	if loader.Labels != nil && len(loader.Labels) != 0 {
-		job.Labels = loader.Labels
+		for k, v := range loader.Labels {
+			job.Labels[k] = v
+		}
 		job.Spec.Template.Labels = loader.Labels
 	}
 	if loader.Annotations != nil && len(loader.Annotations) != 0 {

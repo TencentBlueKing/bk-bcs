@@ -13,32 +13,53 @@
       {{ $t('添加') }}
     </div>
   </div>
-  <div class="label-content" v-show="labelArr.length">
+  <div class="label-content" v-if="labelArr.length">
     <div class="label-item" v-for="(item, index) in labelArr" :key="index">
-      <bk-input :id="'key' + index" v-model.trim="item.key" />
+      <bk-input
+        :class="['bk-input-wrap', { 'is-error': !keyValidateReg.test(item.key) }]"
+        :id="'key' + index"
+        v-model.trim="item.key" />
+      <span v-show="!keyValidateReg.test(item.key)" class="error-msg">
+        {{ $t("仅支持字母，数字，'-'，'_'，'.' 及 '/' 且需以字母数字开头和结尾") }}
+      </span>
       <span class="label-item-icon">=</span>
-      <bk-input :id="'val' + index" v-model.trim="item.value" />
+      <bk-input
+        :class="['bk-input-wrap', { 'is-error': keyValidateReg.test(item.key) && !valueValidateReg.test(item.value) }]"
+        :id="'val' + index"
+        v-model.trim="item.value" />
+      <span v-show="keyValidateReg.test(item.key) && !valueValidateReg.test(item.value)" class="error-msg is--value">
+        {{ $t("需以字母数字开头和结尾，可包含 '-'，'_'，'.' 和字母数字") }}
+      </span>
       <div class="label-item-minus" @click="deleteItem(index)"></div>
     </div>
   </div>
 </template>
 <script lang="ts" setup>
-  import { onMounted, ref, watch } from 'vue';
+  import { ref, watch } from 'vue';
   import { Info, Plus } from 'bkui-vue/lib/icon';
 
-  const emits = defineEmits(['send-label']);
+  const emits = defineEmits(['send-label', 'send-validate']);
 
   const labelArr = ref<{ key: string; value: string }[]>([]);
 
+  const keyValidateReg = new RegExp(
+    '^[a-z0-9A-Z]([-_a-z0-9A-Z]*[a-z0-9A-Z])?((\\.|\\/)[a-z0-9A-Z]([-_a-z0-9A-Z]*[a-z0-9A-Z])?)*$',
+  );
+  const valueValidateReg = new RegExp('^(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?$');
+
   // 数据变化后需要传递出去
   watch(labelArr.value, () => {
+    emits('send-validate', isAllValid());
     sendVal();
   });
 
-  onMounted(() => {
-    sendVal();
-  });
-
+  // 所有label验证状态
+  const isAllValid = () => {
+    if (labelArr.value.length) {
+      return labelArr.value.every((item) => keyValidateReg.test(item.key) && valueValidateReg.test(item.value));
+    }
+    return true;
+  };
   // 添加项目
   const addItem = () => {
     labelArr.value.push({
@@ -53,14 +74,17 @@
   // 数据传递
   const sendVal = () => {
     // 处理数据格式用于展示
-    const newArr: string[] = [];
-    labelArr.value.forEach((item) => {
-      if (item.key || item.value) {
-        newArr.push(`"${item.key}":"${item.value}"`);
-      }
+    // const newArr: string[] = [];
+    // labelArr.value.forEach((item) => {
+    //   if (item.key || item.value) {
+    //     newArr.push(`"${item.key}":"${item.value}"`);
+    //   }
+    // });
+    // const filterArr = newArr.filter((item) => item !== undefined);
+    const newArr = labelArr.value.map((item) => {
+      return `"${item.key}":"${item.value}"`;
     });
-    const filterArr = newArr.filter((item) => item !== undefined);
-    emits('send-label', filterArr);
+    emits('send-label', newArr);
   };
 </script>
 
@@ -107,6 +131,8 @@
     width: 560px;
   }
   .label-item {
+    position: relative;
+    width: 100%;
     display: flex;
     justify-content: flex-start;
     align-items: center;
@@ -115,7 +141,39 @@
       font-size: 12px;
     }
     & + .label-item {
-      margin-top: 12px;
+      margin-top: 18px;
+    }
+    .bk-input-wrap {
+      flex: 1;
+      &.is-error {
+        border-color: #ea3636;
+        &:focus-within {
+          border-color: #3a84ff;
+        }
+      }
+    }
+    .error-msg {
+      position: absolute;
+      left: 0;
+      bottom: -14px;
+      font-size: 12px;
+      line-height: 1;
+      white-space: nowrap;
+      color: #ea3636;
+      animation: form-error-appear-animation 0.15s;
+      &.is--value {
+        left: 50%;
+      }
+    }
+  }
+  @keyframes form-error-appear-animation {
+    0% {
+      opacity: 0;
+      transform: translateY(-30%);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
     }
   }
   .label-item-minus {

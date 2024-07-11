@@ -20,11 +20,11 @@ import (
 
 	v1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubebkbcs/apis/tkex/v1alpha1"
 	scheme "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubebkbcs/generated/clientset/versioned/scheme"
+	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	rest "k8s.io/client-go/rest"
-	autoscaling "k8s.io/api/autoscaling/v1"
 )
 
 // GameStatefulSetsGetter has a method to return a GameStatefulSetInterface.
@@ -44,8 +44,8 @@ type GameStatefulSetInterface interface {
 	List(ctx context.Context, opts v1.ListOptions) (*v1alpha1.GameStatefulSetList, error)
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
 	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.GameStatefulSet, err error)
-	GetScale(ctx context.Context, gameStatefulSetName string, options v1.GetOptions) (*autoscaling.Scale, error)
-	UpdateScale(ctx context.Context, gameStatefulSetName string, scale *autoscaling.Scale, opts v1.UpdateOptions) (*autoscaling.Scale, error)
+	GetScale(ctx context.Context, gameStatefulSetName string, options v1.GetOptions) (*autoscalingv1.Scale, error)
+	UpdateScale(ctx context.Context, gameStatefulSetName string, scale *autoscalingv1.Scale, opts v1.UpdateOptions) (*autoscalingv1.Scale, error)
 
 	GameStatefulSetExpansion
 }
@@ -194,9 +194,9 @@ func (c *gameStatefulSets) Patch(ctx context.Context, name string, pt types.Patc
 	return
 }
 
-// GetScale takes name of the gameStatefulSet, and returns the corresponding autoscaling.Scale object, and an error if there is any.
-func (c *gameStatefulSets) GetScale(ctx context.Context, gameStatefulSetName string, options v1.GetOptions) (result *autoscaling.Scale, err error) {
-	result = &autoscaling.Scale{}
+// GetScale takes name of the gameStatefulSet, and returns the corresponding autoscalingv1.Scale object, and an error if there is any.
+func (c *gameStatefulSets) GetScale(ctx context.Context, gameStatefulSetName string, options v1.GetOptions) (result *autoscalingv1.Scale, err error) {
+	result = &autoscalingv1.Scale{}
 	err = c.client.Get().
 		Namespace(c.ns).
 		Resource("gamestatefulsets").
@@ -209,8 +209,8 @@ func (c *gameStatefulSets) GetScale(ctx context.Context, gameStatefulSetName str
 }
 
 // UpdateScale takes the top resource name and the representation of a scale and updates it. Returns the server's representation of the scale, and an error, if there is any.
-func (c *gameStatefulSets) UpdateScale(ctx context.Context, gameStatefulSetName string, scale *autoscaling.Scale, opts v1.UpdateOptions) (result *autoscaling.Scale, err error) {
-	result = &autoscaling.Scale{}
+func (c *gameStatefulSets) UpdateScale(ctx context.Context, gameStatefulSetName string, scale *autoscalingv1.Scale, opts v1.UpdateOptions) (result *autoscalingv1.Scale, err error) {
+	result = &autoscalingv1.Scale{}
 	err = c.client.Put().
 		Namespace(c.ns).
 		Resource("gamestatefulsets").

@@ -62,7 +62,7 @@
       size="small"
       :opacity="0.7">
       <div
-        v-if="importType !== 'configTemplate' && importConfigList.length + importTemplateConfigList.length > 0"
+        v-if="importType !== 'configTemplate' && allConfigList.length + allTemplateConfigList.length > 0"
         class="content">
         <div class="head">
           <bk-checkbox style="margin-left: 24px" v-model="isClearDraft"> {{ $t('导入前清空草稿区') }} </bk-checkbox>
@@ -81,6 +81,41 @@
             {{ t('个配置项') }}, <span style="color: #3a84ff">{{ importTemplateConfigList.length }}</span>
             {{ t('个模板套餐') }}
           </div>
+          <bk-select
+            v-if="importType === 'historyVersion' || importType === 'otherService'"
+            ref="configSelectRef"
+            class="config-select"
+            v-model="selectedConfigIds"
+            selected-style="checkbox"
+            :popover-options="{ theme: 'light bk-select-popover config-selector-popover', placement: 'bottom-end' }"
+            collapse-tags
+            filterable
+            multiple
+            show-select-all
+            @focus="handleFocusConfigSelect"
+            @blur="handleCloseConfigSelect">
+            <template #trigger>
+              <div class="select-btn">{{ $t('选择配置文件') }}</div>
+            </template>
+            <bk-option-group :label="$t('配置文件')" collapsible>
+              <bk-option v-for="(item, index) in allConfigList" :id="item.id" :key="index" :label="fileAP(item)">
+              </bk-option>
+            </bk-option-group>
+            <bk-option-group :label="$t('模板套餐')" collapsible>
+              <bk-option
+                v-for="(item, index) in allTemplateConfigList"
+                :id="`${item.template_space_id} - ${item.template_set_id}`"
+                :key="index"
+                :label="`${item.template_space_name} - ${item.template_set_name}`">
+              </bk-option>
+            </bk-option-group>
+            <template #extension>
+              <div class="config-select-btns">
+                <bk-button theme="primary" @click="handleConfirmSelect">{{ $t('确定') }}</bk-button>
+                <bk-button @click="handleCloseConfigSelect">{{ $t('取消') }}</bk-button>
+              </div>
+            </template>
+          </bk-select>
         </div>
         <ConfigTable
           v-if="nonExistConfigList.length"
@@ -101,7 +136,7 @@
           v-if="existTemplateConfigList.length"
           :table-data="existTemplateConfigList"
           :is-exsit-table="true"
-          @change="handleTemplateTableChange($event, true)" />
+          @change="handleTemplateTableChange($event, false)" />
       </div>
     </bk-loading>
     <template #footer>
@@ -119,7 +154,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref, watch, computed, onMounted } from 'vue';
+  import { ref, watch, computed } from 'vue';
   import { useI18n } from 'vue-i18n';
   import {
     getConfigVersionList,
@@ -128,7 +163,6 @@
   } from '../../../../../../../../../api/config';
   import { IConfigVersion, IConfigImportItem } from '../../../../../../../../../../types/config';
   import { Message } from 'bkui-vue';
-  import createSamplePkg from '../../../../../../../../../utils/sample-file-pkg';
   import ImportFromTemplate from './import-from-templates.vue';
   import ImportFromLocalFile from './import-from-local-file.vue';
   import ImportFormOtherService from './import-form-other-service.vue';
@@ -137,6 +171,7 @@
   import useServiceStore from '../../../../../../../../../store/service';
   import { ImportTemplateConfigItem } from '../../../../../../../../../../types/template';
   import TemplateConfigTable from './template-config-table.vue';
+  import { cloneDeep } from 'lodash';
 
   const { t } = useI18n();
 
@@ -152,7 +187,6 @@
   const isTableChange = ref(false);
   const importType = ref('localFile');
   const loading = ref(false);
-  const downloadHref = ref('');
   const importFromTemplateRef = ref();
   const versionListLoading = ref(false);
   const selectVerisonId = ref();
@@ -162,10 +196,15 @@
   const nonExistConfigList = ref<IConfigImportItem[]>([]);
   const existTemplateConfigList = ref<ImportTemplateConfigItem[]>([]);
   const nonExistTemplateConfigList = ref<ImportTemplateConfigItem[]>([]);
+  const allConfigList = ref<IConfigImportItem[]>([]);
+  const allTemplateConfigList = ref<ImportTemplateConfigItem[]>([]);
   const isClearDraft = ref(false);
   const uploadFileLoading = ref(false);
   const decompressing = ref(false);
   const closeLoading = ref(false);
+  const selectedConfigIds = ref<(string | number)[]>([]);
+  const configSelectRef = ref();
+  const lastSelectedConfigIds = ref<(string | number)[]>([]); // 上一次选中导入的配置项
 
   const confirmBtnDisabled = computed(() => {
     if (importType.value === 'configTemplate' && importFromTemplateRef.value) {
@@ -178,7 +217,7 @@
         importConfigList.value.length + importTemplateConfigList.value.length > 0
       );
     }
-    return importConfigList.value.length + importTemplateConfigList.value.length > 0;
+    return importConfigList.value.length + importTemplateConfigList.value.length > 0 && !hasError.value;
   });
 
   const importConfigList = computed(() => [...nonExistConfigList.value, ...existConfigList.value]);
@@ -186,6 +225,12 @@
     ...nonExistTemplateConfigList.value,
     ...existTemplateConfigList.value,
   ]);
+
+  const hasError = computed(() => {
+    return importTemplateConfigList.value.some(
+      (config) => !config.template_space_exist || !config.template_set_exist || config.template_set_is_empty,
+    );
+  });
 
   watch(
     () => props.show,
@@ -210,9 +255,14 @@
     },
   );
 
-  onMounted(async () => {
-    downloadHref.value = (await createSamplePkg()) as string;
-  });
+  // 配置文件绝对路径
+  const fileAP = (config: IConfigImportItem) => {
+    const { path, name } = config;
+    if (path.endsWith('/')) {
+      return `${path}${name}`;
+    }
+    return `${path}/${name}`;
+  };
 
   const handleConfirm = async () => {
     loading.value = true;
@@ -319,13 +369,17 @@
         } else {
           nonExistConfigList.value.push(config);
         }
+        allConfigList.value.push(config);
+        selectedConfigIds.value.push(item.id);
       });
-      res.data.template_configs.forEach((item: any) => {
+      res.data.template_configs.forEach((item: ImportTemplateConfigItem) => {
         if (item.is_exist) {
           existTemplateConfigList.value.push(item);
         } else {
           nonExistTemplateConfigList.value.push(item);
         }
+        allTemplateConfigList.value.push(item);
+        selectedConfigIds.value.push(`${item.template_space_id} - ${item.template_set_id}`);
       });
     } catch (e) {
       console.error(e);
@@ -340,15 +394,28 @@
     } else {
       existConfigList.value = data;
     }
+    selectedConfigIds.value = selectedConfigIds.value.filter((id) => {
+      if (typeof id === 'number') {
+        return importConfigList.value.some((config) => config.id === id);
+      }
+      return true;
+    });
     isTableChange.value = true;
   };
 
-  const handleTemplateTableChange = (deleteIndex: number, isNonExistData: boolean) => {
+  const handleTemplateTableChange = (deleteId: string, isNonExistData: boolean) => {
     if (isNonExistData) {
-      nonExistTemplateConfigList.value.splice(deleteIndex, 1);
+      const index = nonExistTemplateConfigList.value.findIndex(
+        (config) => `${config.template_space_id} - ${config.template_set_id}` === deleteId,
+      );
+      nonExistTemplateConfigList.value.splice(index, 1);
     } else {
-      existTemplateConfigList.value.splice(deleteIndex, 1);
+      const index = existTemplateConfigList.value.findIndex(
+        (config) => `${config.template_space_id} - ${config.template_set_id}` === deleteId,
+      );
+      existTemplateConfigList.value.splice(index, 1);
     }
+    selectedConfigIds.value = selectedConfigIds.value.filter((id) => id !== deleteId);
     isTableChange.value = true;
   };
 
@@ -377,12 +444,99 @@
     nonExistConfigList.value = [];
     existTemplateConfigList.value = [];
     nonExistTemplateConfigList.value = [];
+    allConfigList.value = [];
+    allTemplateConfigList.value = [];
+    selectedConfigIds.value = [];
   };
 
   const handleClose = () => {
     closeLoading.value = true;
     handleClearTable();
     emits('update:show', false);
+  };
+
+  const handleCloseConfigSelect = () => {
+    configSelectRef.value.hidePopover();
+    selectedConfigIds.value = cloneDeep(lastSelectedConfigIds.value);
+  };
+
+  const handleFocusConfigSelect = () => {
+    lastSelectedConfigIds.value = cloneDeep(selectedConfigIds.value);
+  };
+
+  const handleConfirmSelect = () => {
+    selectedConfigIds.value.forEach((id) => {
+      // 配置文件被删除后重新添加
+      if (typeof id === 'number') {
+        // 非模板配置文件
+        const findConfig = importConfigList.value.find((config) => config.id === id);
+        if (!findConfig) {
+          const config = allConfigList.value.find((config) => config.id === id);
+          if (config?.is_exist) {
+            existConfigList.value.push(config);
+          } else {
+            nonExistConfigList.value.push(config!);
+          }
+        }
+      } else {
+        // 模板配置文件
+        const findConfig = importTemplateConfigList.value.find(
+          (config) => `${config.template_space_id} - ${config.template_set_id}` === id,
+        );
+        if (!findConfig) {
+          const config = allTemplateConfigList.value.find(
+            (config) => `${config.template_space_id} - ${config.template_set_id}` === id,
+          );
+          if (config?.is_exist) {
+            existTemplateConfigList.value.push(config);
+          } else {
+            nonExistTemplateConfigList.value.push(config!);
+          }
+        }
+      }
+    });
+
+    // 删除已选配置文件
+    importConfigList.value.forEach((config) => {
+      if (!selectedConfigIds.value.includes(config.id)) {
+        if (config.is_exist) {
+          const index = existConfigList.value.findIndex((item) => item.id === config.id);
+          if (index !== -1) {
+            existConfigList.value.splice(index, 1);
+          }
+        } else {
+          const index = nonExistConfigList.value.findIndex((item) => item.id === config.id);
+          if (index !== -1) {
+            nonExistConfigList.value.splice(index, 1);
+          }
+        }
+      }
+    });
+
+    importTemplateConfigList.value.forEach((config) => {
+      if (!selectedConfigIds.value.includes(`${config.template_space_id} - ${config.template_set_id}`)) {
+        if (config.is_exist) {
+          const index = existTemplateConfigList.value.findIndex(
+            (item) =>
+              `${item.template_space_id} - ${item.template_set_id}` ===
+              `${config.template_space_id} - ${config.template_set_id}`,
+          );
+          if (index !== -1) {
+            existTemplateConfigList.value.splice(index, 1);
+          }
+        } else {
+          const index = nonExistTemplateConfigList.value.findIndex(
+            (item) =>
+              `${item.template_space_id} - ${item.template_set_id}` ===
+              `${config.template_space_id} - ${config.template_set_id}`,
+          );
+          if (index !== -1) {
+            nonExistTemplateConfigList.value.splice(index, 1);
+          }
+        }
+      }
+    });
+    configSelectRef.value.hidePopover();
   };
 </script>
 
@@ -419,6 +573,7 @@
     margin-top: 24px;
     border-top: 1px solid #dcdee5;
     .head {
+      position: relative;
       display: flex;
       align-items: center;
       margin: 16px 0;
@@ -433,14 +588,44 @@
         border-left: 1px solid #dcdee5;
         margin-left: 16px;
       }
+      .config-select {
+        position: absolute;
+        right: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        .select-btn {
+          width: 102px;
+          height: 32px;
+          background: #ffffff;
+          border: 1px solid #c4c6cc;
+          border-radius: 2px;
+          font-size: 14px;
+          color: #63656e;
+          line-height: 32px;
+          text-align: center;
+          cursor: pointer;
+        }
+      }
     }
   }
+
   .config-table-loading {
     min-height: 80px;
     :deep(.bk-loading-primary) {
       top: 60px;
       align-items: center;
     }
+  }
+
+  .config-select-btns {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 16px;
+    justify-content: flex-end;
+    width: 100%;
+    height: 100%;
+    background: #fafbfd;
   }
 </style>
 
@@ -449,6 +634,13 @@
     .bk-modal-content {
       height: calc(100% - 50px) !important;
       overflow: auto;
+    }
+  }
+
+  .config-selector-popover {
+    width: 238px !important;
+    .bk-select-option {
+      padding: 0 12px !important;
     }
   }
 </style>

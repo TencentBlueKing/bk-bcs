@@ -13,6 +13,7 @@
 package qcloud
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"sync"
@@ -212,25 +213,67 @@ func (c *VPCManager) AddClusterOverlayCidr(clusterId string, cidrs []string, opt
 	return business.AddClusterGrCidr(opt, clusterId, cidrs)
 }
 
-// GetVpcIpSurplus get vpc ipSurplus
-func (c *VPCManager) GetVpcIpSurplus(
-	vpcId string, ipType string, reservedBlocks []*net.IPNet, opt *cloudprovider.CommonOption) (uint32, error) {
+// GetVpcIpUsage get vpc ipTotal / ipSurplus
+func (c *VPCManager) GetVpcIpUsage(
+	vpcId string, ipType string, reservedBlocks []*net.IPNet, opt *cloudprovider.CommonOption) (uint32, uint32, error) {
 	cloud, _ := cloudprovider.GetCloudByProvider(cloudName)
 	switch ipType {
 	case common.ClusterOverlayNetwork:
-		return business.GetGrVPCIPSurplus(opt, cloud.CloudID, vpcId, nil)
+		surplusNum, err := business.GetGrVPCIPSurplus(opt, cloud.CloudID, vpcId, nil)
+		if err != nil {
+			return 0, 0, err
+		}
+		totalNum, err := business.GetVpcOverlayIpNum(cloud.CloudID, vpcId)
+		if err != nil {
+			return 0, 0, err
+		}
+		return totalNum, surplusNum, nil
 	case common.ClusterUnderlayNetwork:
 		frees, err := business.GetFreeIPNets(opt, vpcId)
 		if err != nil {
-			return 0, err
+			return 0, 0, err
 		}
-		return cidrtree.GetIPNetsNum(frees)
+		surplusNum, err := cidrtree.GetIPNetsNum(frees)
+		if err != nil {
+			return 0, 0, err
+		}
+
+		totalNum, err := business.GetVpcUnderlayIpNum(opt, vpcId)
+		if err != nil {
+			return 0, 0, err
+		}
+
+		return totalNum, surplusNum, nil
 	}
 
-	return 0, fmt.Errorf("not supported ipType[%s]", ipType)
+	return 0, 0, fmt.Errorf("not supported ipType[%s]", ipType)
 }
 
-// GetOverlayClusterIPSurplus get cluster overlay ipSurplus
-func (c *VPCManager) GetOverlayClusterIPSurplus(clusterId string, opt *cloudprovider.CommonOption) (uint32, error) {
-	return business.GetClusterGrIPSurplus(opt, "", clusterId)
+// GetClusterIpUsage get cluster overlay ip usage
+func (c *VPCManager) GetClusterIpUsage(clusterId string, ipType string, opt *cloudprovider.CommonOption) (
+	uint32, uint32, error) {
+	cls, err := cloudprovider.GetStorageModel().GetCluster(context.Background(), clusterId)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	switch ipType {
+	case common.ClusterOverlayNetwork:
+		return business.GetClusterGrIPSurplus(opt, "", cls.GetSystemID())
+	case common.ClusterUnderlayNetwork:
+		zoneSubs, _, _, errLocal := business.GetClusterCurrentVpcCniSubnets(*cls, false)
+		if errLocal != nil {
+			return 0, 0, err
+		}
+
+		var total, surplus uint32
+		for _, sub := range zoneSubs {
+			total += uint32(sub.TotalIps)
+			surplus += uint32(sub.AvailableIps)
+		}
+
+		return total, surplus, nil
+	}
+
+	return 0, 0, fmt.Errorf("not supported ipType[%s]", ipType)
 }
