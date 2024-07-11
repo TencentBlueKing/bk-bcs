@@ -213,30 +213,22 @@ func (n *NodeManager) transInstanceIDsToNodes(ids []string, opt *cloudprovider.L
 	error) {
 	client, err := NewComputeServiceClient(opt.Common)
 	if err != nil {
-		blog.Errorf("create ComputeServiceClient failed when GetNodeByIP, %s", err.Error())
+		blog.Errorf("transInstanceIDsToNodes create ComputeServiceClient failed, %s", err.Error())
 		return nil, err
 	}
 
 	insList, err := client.ListZoneInstanceWithFilter(context.Background(), InstanceNameFilter(ids))
 	if err != nil {
-		blog.Errorf("ListZoneInstanceWithFilter failed, %s", err.Error())
+		blog.Errorf("transInstanceIDsToNodes ListZoneInstanceWithFilter failed, %s", err.Error())
 		return nil, err
 	}
-	instances := insList.Items
-	// check response data
-	blog.Infof("ListZoneInstanceWithFilter len(%d) id response num %d", len(ids), len(instances))
-	if len(instances) == 0 {
-		// * no data response
-		return nil, nil
-	}
-	if len(instances) != len(ids) {
-		blog.Warnf("ListZoneInstanceWithFilter expect %d, but got %d", len(ids), len(instances))
-	}
+	blog.Infof("transInstanceIDsToNodes desired %d, response %d", len(ids), len(insList.Items))
 
 	nodeMap := make(map[string]*proto.Node)
 	var nodes []*proto.Node
-	for _, inst := range instances {
-		node := InstanceToNode(client, inst)
+	for _, in := range insList.Items {
+		blog.Infof("transInstanceIDsToNodes instance[%s], ip[%s]", in.Name, in.NetworkInterfaces[0].NetworkIP)
+		node := InstanceToNode(client, in)
 		// clean duplicated Node if user input multiple ip that
 		// belong to one instance
 		if _, ok := nodeMap[node.NodeID]; ok {
@@ -244,7 +236,6 @@ func (n *NodeManager) transInstanceIDsToNodes(ids []string, opt *cloudprovider.L
 		}
 
 		nodeMap[node.NodeID] = node
-		node.InnerIP = inst.NetworkInterfaces[0].NetworkIP
 		nodes = append(nodes, node)
 	}
 
@@ -261,6 +252,7 @@ func InstanceToNode(cli *ComputeServiceClient, ins *compute.Instance) *proto.Nod
 	node := &proto.Node{}
 	node.NodeID = strconv.Itoa(int(ins.Id))
 	node.NodeName = ins.Name
+	node.InnerIP = ins.NetworkInterfaces[0].NetworkIP
 
 	if zoneInfo != nil {
 		node.ZoneID = zone.Zone

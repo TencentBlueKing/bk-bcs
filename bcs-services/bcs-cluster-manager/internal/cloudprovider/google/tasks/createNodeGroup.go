@@ -295,15 +295,18 @@ func getIgmAndIt(computeCli *api.ComputeServiceClient, cloudNodeGroup *container
 
 	if newIt.Name != oldItName {
 		// 如果使用了新模版,则删除旧模版
-		o, err := computeCli.DeleteInstanceTemplate(context.Background(), oldItName)
-		if err != nil {
-			return nil, nil, err
+		o, err2 := computeCli.DeleteInstanceTemplate(context.Background(), oldItName)
+		if err2 != nil {
+			return nil, nil, err2
 		}
-		if o.Error != nil {
-			return nil, nil,
-				fmt.Errorf("%d, %s, %s", o.HttpErrorStatusCode, o.HttpErrorMessage, o.Error.Errors[0].Message)
+
+		err2 = checkOperationStatus(computeCli, o.SelfLink, taskID, 3*time.Second)
+		if err2 != nil {
+			return nil, nil, err2
 		}
-		blog.Infof("taskID[%s] DeleteInstanceTemplate[%s], operationID: %s", oldItName, taskID, o.SelfLink)
+
+		blog.Infof("taskID[%s] DeleteInstanceTemplate[%s] success, operationID[%s]",
+			taskID, oldItName, o.SelfLink)
 	}
 
 	return newIt, igm, nil
@@ -322,15 +325,18 @@ func patchIgm(newIt *compute.InstanceTemplate, igm *compute.InstanceGroupManager
 
 	o, err := api.PatchInstanceGroupManager(computeCli, igm.SelfLink, newIgm)
 	if err != nil {
-		blog.Errorf("taskID[%s] PatchInstanceGroupManager failed: %v", taskID, err)
+		blog.Errorf("taskID[%s] patchIgm PatchInstanceGroupManager failed: %v", taskID, err)
 		return err
 	}
 	blog.Infof("taskID[%s] PatchInstanceGroupManager, operationID: %s", taskID, o.SelfLink)
 	// 检查操作是否成功
 	err = checkOperationStatus(computeCli, o.SelfLink, taskID, 3*time.Second)
 	if err != nil {
-		return fmt.Errorf("CheckCloudNodeGroupStatusTask[%s] checkOperationStatus failed: %v", taskID, err)
+		return fmt.Errorf("taskID[%s] patchIgm CheckCloudNodeGroupStatusTask[%s] checkOperationStatus failed: %v",
+			taskID, igm.Name, err)
 	}
+	blog.Infof("taskID[%s] patchIgm PatchInstanceGroupManager[%s] success, operationID[%s]", taskID, igm.Name,
+		o.SelfLink)
 
 	return nil
 }
@@ -428,14 +434,15 @@ func newItFromBaseIt(newIt *compute.InstanceTemplate, group *proto.NodeGroup, //
 
 	o, err := computeCli.CreateInstanceTemplate(context.Background(), newIt)
 	if err != nil {
-		blog.Errorf("taskID[%s] CreateInstanceTemplate failed: %v", taskID, err)
+		blog.Errorf("taskID[%s] newItFromBaseIt CreateInstanceTemplate failed: %v", taskID, err)
 		return err
 	}
 	// 检查实例模版是否创建成功
 	err = checkOperationStatus(computeCli, o.SelfLink, taskID, 3*time.Second)
 	if err != nil {
-		return fmt.Errorf("CheckCloudNodeGroupStatusTask[%s] checkOperationStatus failed: %v", taskID, err)
+		return fmt.Errorf("newItFromBaseIt[%s] checkOperationStatus failed: %v", taskID, err)
 	}
+	blog.Infof("taskID[%s] newItFromBaseIt CreateInstanceTemplate[%s] successful", taskID, newIt.Name)
 
 	return nil
 }

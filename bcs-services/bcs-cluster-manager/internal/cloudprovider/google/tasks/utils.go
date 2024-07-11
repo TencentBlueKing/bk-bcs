@@ -44,7 +44,10 @@ func updateNodeGroupCloudNodeGroupID(nodeGroupID string, newGroup *cmproto.NodeG
 }
 
 func checkOperationStatus(computeCli *api.ComputeServiceClient, url, taskID string, d time.Duration) error {
-	return loop.LoopDoFunc(context.Background(), func() error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
+
+	return loop.LoopDoFunc(ctx, func() error {
 		o, err := api.GetOperation(computeCli, url)
 		if err != nil {
 			blog.Warnf("Error[%s] while getting operation %s on %s: %v", taskID, o.Name, o.TargetLink, err)
@@ -69,7 +72,10 @@ func checkOperationStatus(computeCli *api.ComputeServiceClient, url, taskID stri
 
 func checkGKEOperationStatus(containerCli *api.ContainerServiceClient, operation *container.Operation,
 	taskID string, d time.Duration) error {
-	return loop.LoopDoFunc(context.Background(), func() error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
+
+	return loop.LoopDoFunc(ctx, func() error {
 
 		o, err := containerCli.GetGKEOperation(context.Background(), operation.Name)
 		if err != nil {
