@@ -1,4 +1,3 @@
-### Get
 from bk_bscp.client import BscpClient
 
 SERVER_ADDRS = ["{{ .Bk_Bscp_Variable_FEED_ADDR }}"]

@@ -23,8 +23,8 @@
             <div class="service-item">
               <span :class="['item-label', { 'item-label--en': locale === 'en' }]"> {{ $t('服务名称') }}： </span>
               <span class="bk-form-content">
-                <span class="content-em" @click="copyText(serviceName!)">
-                  {{ serviceName }} <copy-shape class="icon-shape" />
+                <span class="content-em" @click="copyText(basicInfo!.serviceName.value)">
+                  {{ basicInfo!.serviceName.value }} <copy-shape class="icon-shape" />
                 </span>
               </span>
             </div>
@@ -62,6 +62,7 @@
 
   const { t, locale } = useI18n();
   const route = useRoute();
+  const basicInfo = inject<{ serviceName: Ref<string>; serviceType: Ref<string> }>('basicInfo');
 
   const linkUrl = {
     nodeManaUrl: `${(window as any).BK_NODE_HOST}/#/plugin-manager/rule`,
@@ -70,7 +71,6 @@
 
   const bizId = ref(String(route.params.spaceId));
   const feedAddr = ref((window as any).FEED_ADDR);
-  const serviceName = inject<Ref<string>>('serviceName');
 
   const linkTo = (url: string) => {
     window.open(url, '__blank');

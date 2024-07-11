@@ -9,13 +9,14 @@
         style="height: 1490px"
         :code-val="replaceVal"
         :variables="variables"
+        language="yaml"
         @change="(val: string) => (copyReplaceVal = val)" />
     </div>
   </section>
 </template>
 
 <script lang="ts" setup>
-  import { ref, inject, Ref, provide, nextTick } from 'vue';
+  import { ref, provide, inject, Ref, nextTick } from 'vue';
   import { copyToClipBoard } from '../../../../../../utils/index';
   import { IVariableEditParams } from '../../../../../../../types/variable';
   import BkMessage from 'bkui-vue/lib/message';
@@ -23,7 +24,9 @@
   import CodePreview from '../code-preview.vue';
   import { useI18n } from 'vue-i18n';
   import { useRoute } from 'vue-router';
-  import yamlString from '/src/assets/exampleData/file-container.yaml?raw';
+  import yamlString from '/src/assets/example-data/file-container.yaml?raw';
+
+  const props = defineProps<{ contentScrollTop: Function }>();
 
   const { t } = useI18n();
   const route = useRoute();
@@ -39,7 +42,7 @@
   const bkBizId = ref(String(route.params.spaceId));
   const replaceVal = ref('');
   const copyReplaceVal = ref(''); // 渲染的值，用于复制未脱敏密钥的yaml数据
-  const serviceName = inject<Ref<string>>('serviceName');
+  const basicInfo = inject<{ serviceName: Ref<string>; serviceType: Ref<string> }>('basicInfo');
   const variables = ref<IVariableEditParams[]>();
   const formError = ref<number>();
   provide('formError', formError);
@@ -61,7 +64,7 @@
   const updateReplaceVal = () => {
     let updateString = replaceVal.value;
     updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_BkBizId }}', bkBizId.value);
-    updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_ServiceName }}', serviceName!.value);
+    updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_ServiceName }}', basicInfo!.serviceName.value);
     replaceVal.value = updateString.replaceAll('{{ .Bk_Bscp_Variable_FEED_ADDR }}', (window as any).FEED_ADDR);
   };
   const updateVariables = () => {
@@ -89,7 +92,7 @@
   // 复制示例
   const copyExample = async () => {
     try {
-      await fileOptionRef.value.formRef.validate();
+      await fileOptionRef.value.handleValidate();
       // 复制示例使用未脱敏的密钥
       const reg = /'(.{1}|.{3})\*{3}(.{1}|.{3})'/g;
       const copyVal = copyReplaceVal.value.replaceAll(reg, `'${optionData.value.clientKey}'`);
@@ -101,6 +104,7 @@
     } catch (error) {
       // 通知密钥选择组件校验状态
       formError.value = new Date().getTime();
+      props.contentScrollTop();
       console.log(error);
     }
   };

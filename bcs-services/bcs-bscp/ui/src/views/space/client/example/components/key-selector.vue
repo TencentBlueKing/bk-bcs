@@ -69,7 +69,7 @@
   const router = useRouter();
 
   const formError = inject<Ref<string>>('formError');
-  const serviceName = inject<Ref<string>>('serviceName');
+  const basicInfo = inject<{ serviceName: Ref<string>; serviceType: Ref<string> }>('basicInfo');
   const isError = ref(false);
   const loading = ref(true);
   const currentValue = ref({
@@ -87,16 +87,6 @@
       if (!currentValue.value.privacyCredential) {
         isError.value = true;
       }
-    },
-  );
-  watch(
-    () => serviceName!.value,
-    () => {
-      (Object.keys(currentValue.value) as Array<keyof typeof currentValue.value>).forEach((key) => {
-        currentValue.value[key] = '';
-      });
-      emits('current-key', '', '');
-      loadCredentialList();
     },
   );
 
@@ -125,7 +115,7 @@
   const filterCurService = (data: Array<any>) => {
     return data.filter((item) => {
       const splitStr = item.credential_scopes.map((str: string) => str.split('/')[0]);
-      return splitStr.includes(serviceName!.value) && item.spec.enable;
+      return splitStr.includes(basicInfo!.serviceName.value) && item.spec.enable;
     });
   };
   // 下拉列表操作
