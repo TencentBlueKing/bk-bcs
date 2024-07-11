@@ -145,8 +145,10 @@ type LoginAuthSettings struct {
 // ApiGateway gateway conf
 type ApiGateway struct {
 	// AutoRegister 是否自动注册
-	AutoRegister bool   `yaml:"autoRegister"`
-	GWPubKey     string `yaml:"gwPubkey"`
+	AutoRegister bool `yaml:"autoRegister"`
+	// Host apigateway host
+	Host     string `yaml:"host"`
+	GWPubKey string `yaml:"gwPubkey"`
 }
 
 // trySetFlagBindIP try set flag bind ip.

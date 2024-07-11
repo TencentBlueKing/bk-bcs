@@ -717,6 +717,9 @@ func (n *Network) trySetDefault() {
 			n.BindIPs = []string{n.BindIP}
 		}
 	}
+	if n.GwHttpPort == 0 {
+		n.GwHttpPort = 80
+	}
 }
 
 // validate network options
