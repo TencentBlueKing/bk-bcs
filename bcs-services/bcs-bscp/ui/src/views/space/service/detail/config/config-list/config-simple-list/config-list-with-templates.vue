@@ -82,6 +82,7 @@
     reviser: string;
     update_at: string;
     file_state: string;
+    is_latest?: boolean;
   }
 
   interface ITemplateConfigMeta {
@@ -119,6 +120,7 @@
       type: string;
       templateMeta?: ITemplateConfigMeta;
       versionName?: string;
+      isLatest?: boolean;
     };
   }>({
     open: false,
@@ -177,15 +179,18 @@
         start: 0,
         all: true,
       };
-      if (searchStr.value) {
-        params.search_fields = 'name,path,creator,reviser';
-        params.search_value = searchStr.value;
-      }
-
       let res;
       if (isUnNamedVersion.value) {
+        if (searchStr.value) {
+          params.search_fields = 'name,path,memo,creator';
+          params.search_value = searchStr.value;
+        }
         res = await getConfigList(props.bkBizId, props.appId, params);
       } else {
+        if (searchStr.value) {
+          params.search_fields = 'name,path,memo,creator';
+          params.search_value = searchStr.value;
+        }
         res = await getReleasedConfigList(props.bkBizId, props.appId, versionData.value.id, params);
       }
 
@@ -206,7 +211,7 @@
         all: true,
       };
       if (searchStr.value) {
-        params.search_fields = 'name,path,creator,reviser';
+        params.search_fields = 'revision_name,revision_memo,name,path,creator';
         params.search_value = searchStr.value;
       }
 
@@ -293,15 +298,18 @@
         data: { id, type: 'config' },
       };
     } else {
+      const { versionName, is_latest, id, versionId } = config;
       const { template_set_id, template_space_id, template_set_name, template_space_name } = group;
       const templateMeta = { template_space_id, template_space_name, template_set_id, template_set_name };
+      const viewTemplateId = isUnNamedVersion.value ? id : versionId;
       viewConfigSliderData.value = {
         open: true,
         data: {
-          id,
-          versionName: config.versionName,
+          id: viewTemplateId,
+          versionName,
           templateMeta: templateMeta as ITemplateConfigMeta,
           type: 'template',
+          isLatest: is_latest,
         },
       };
     }
