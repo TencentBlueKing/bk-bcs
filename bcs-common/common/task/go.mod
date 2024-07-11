@@ -6,7 +6,6 @@ require (
 	github.com/RichardKnop/machinery/v2 v2.0.13
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230707084844-155f32c8f606
 	github.com/google/uuid v1.6.0
-	github.com/opentracing/opentracing-go v1.2.0
 	github.com/urfave/cli v1.22.5
 	go.etcd.io/etcd/client/v3 v3.5.2
 	go.mongodb.org/mongo-driver v1.15.0
@@ -38,6 +37,7 @@ require (
 	github.com/klauspost/compress v1.13.6 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 // indirect
 	github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe // indirect
+	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/client_golang v1.11.0 // indirect
 	github.com/prometheus/client_model v0.2.0 // indirect

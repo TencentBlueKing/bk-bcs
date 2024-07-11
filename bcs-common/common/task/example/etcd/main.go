@@ -13,8 +13,6 @@ import (
 	"github.com/RichardKnop/machinery/v2/log"
 	"github.com/RichardKnop/machinery/v2/tasks"
 	"github.com/google/uuid"
-	"github.com/opentracing/opentracing-go"
-	opentracinglog "github.com/opentracing/opentracing-go/log"
 	"github.com/urfave/cli"
 
 	etcdbackend "github.com/Tencent/bk-bcs/bcs-common/common/task/backends/etcd"
@@ -279,13 +277,9 @@ func send() error {
 	 * set a batch id as baggage so it can travel all the way into
 	 * the worker functions.
 	 */
-	span, ctx := opentracing.StartSpanFromContext(context.Background(), "send")
-	defer span.Finish()
 
+	ctx := context.Background()
 	batchID := uuid.New().String()
-	span.SetBaggageItem("batch.id", batchID)
-	span.LogFields(opentracinglog.String("batch.id", batchID))
-
 	log.INFO.Println("Starting batch:", batchID)
 	/*
 	 * First, let's try sending a single task
