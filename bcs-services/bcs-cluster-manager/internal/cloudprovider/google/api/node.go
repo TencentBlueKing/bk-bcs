@@ -19,7 +19,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	computev1 "google.golang.org/api/compute/v1"
@@ -27,7 +26,6 @@ import (
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -217,77 +215,32 @@ func (n *NodeManager) transInstanceIDsToNodes(ids []string, opt *cloudprovider.L
 	[]*proto.Node, error) {
 	client, err := NewComputeServiceClient(opt.Common)
 	if err != nil {
-		blog.Errorf("create ComputeServiceClient failed when GetNodeByIP, %s", err.Error())
+		blog.Errorf("transInstanceIDsToNodes create ComputeServiceClient failed, %s", err.Error())
+		return nil, err
+	}
+	insList, err := client.ListZoneInstanceWithFilter(context.Background(), InstanceNameFilter(ids))
+	if err != nil {
+		blog.Errorf("transInstanceIDsToNodes ListZoneInstanceWithFilter failed, %s", err.Error())
 		return nil, err
 	}
 
-	insList, err := client.ListZoneInstanceWithFilter(context.Background(), InstanceNameFilter(ids))
-	if err != nil {
-		blog.Errorf("ListZoneInstanceWithFilter failed, %s", err.Error())
-		return nil, err
-	}
-	instances := insList.Items
-	// check response data
-	blog.Infof("ListZoneInstanceWithFilter len(%d) id response num %d", len(ids), len(instances))
-	if len(instances) == 0 {
-		// * no data response
-		return nil, nil
-	}
-	if len(instances) != len(ids) {
-		blog.Warnf("ListZoneInstanceWithFilter expect %d, but got %d", len(ids), len(instances))
-	}
+	blog.Infof("transInstanceIDsToNodes desired %d, response %d", len(ids), len(insList.Items))
 
 	nodeMap := make(map[string]*proto.Node)
 	var nodes []*proto.Node
-	for _, inst := range instances {
-		blog.Infof("transInstanceIDsToNodes instance[%s], ip[%s]", inst.Name, inst.NetworkInterfaces[0].NetworkIP)
-		node := InstanceToNode(client, inst)
+	for _, in := range insList.Items {
+		blog.Infof("transInstanceIDsToNodes instance[%s], ip[%s]", in.Name, in.NetworkInterfaces[0].NetworkIP)
+		node := InstanceToNode(client, in)
 		// clean duplicated Node if user input multiple ip that
 		// belong to one instance
 		if _, ok := nodeMap[node.NodeID]; ok {
 			continue
 		}
 		nodeMap[node.NodeID] = node
-
-		if len(inst.NetworkInterfaces[0].NetworkIP) == 0 && opt.CheckIP {
-			err = checkInstanceIP(client, inst)
-			if err != nil {
-				return nil, err
-			}
-		}
-		node.InnerIP = inst.NetworkInterfaces[0].NetworkIP
 		nodes = append(nodes, node)
 	}
 
 	return nodes, nil
-}
-
-func checkInstanceIP(client *ComputeServiceClient, inst *computev1.Instance) error {
-	timeCtx, cancel := context.WithTimeout(context.TODO(), 3*time.Minute)
-	defer cancel()
-	err := loop.LoopDoFunc(timeCtx, func() error {
-		insList2, err := client.ListZoneInstanceWithFilter(context.Background(),
-			InstanceNameFilter([]string{inst.Name}))
-		if err != nil {
-			blog.Errorf("ListZoneInstanceWithFilter failed, %s", err.Error())
-			return err
-		}
-		if len(insList2.Items) == 0 {
-			return fmt.Errorf("ListZoneInstanceWithFilter instance[%s] not found", inst.Name)
-		}
-
-		if len(insList2.Items[0].NetworkInterfaces[0].NetworkIP) == 0 {
-			return nil
-		}
-
-		inst.NetworkInterfaces[0].NetworkIP = insList2.Items[0].NetworkInterfaces[0].NetworkIP
-		return loop.EndLoop
-	})
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 // InstanceToNode parse Instance information in gcloud to Node in clustermanager
@@ -300,6 +253,7 @@ func InstanceToNode(cli *ComputeServiceClient, ins *computev1.Instance) *proto.N
 	node := &proto.Node{}
 	node.NodeID = strconv.Itoa(int(ins.Id))
 	node.NodeName = ins.Name
+	node.InnerIP = ins.NetworkInterfaces[0].NetworkIP
 
 	if zoneInfo != nil {
 		node.ZoneID = zone.Zone

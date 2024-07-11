@@ -271,6 +271,40 @@ func recordClusterInstanceToDB(ctx context.Context, state *cloudprovider.TaskSta
 	return nil
 }
 
+func checkInstance(client *api.ComputeServiceClient, ids []string) error {
+	timeCtx, cancel := context.WithTimeout(context.TODO(), 5*time.Minute)
+	defer cancel()
+	err := loop.LoopDoFunc(timeCtx, func() error {
+		insList, err := client.ListZoneInstanceWithFilter(context.Background(), api.InstanceNameFilter(ids))
+		if err != nil {
+			blog.Errorf("checkInstance ListZoneInstanceWithFilter failed, %s", err.Error())
+			return err
+		}
+
+		// check response data
+		if len(insList.Items) != len(ids) {
+			blog.Warnf("checkInstance desired %d, but got %d", len(ids), len(insList.Items))
+			return nil
+		}
+
+		blog.Infof("checkInstance desired %d, response %d", len(ids), len(insList.Items))
+
+		for _, in := range insList.Items {
+			if len(in.NetworkInterfaces[0].NetworkIP) == 0 {
+				blog.Warnf("checkInstance[%s] IP is still not distributed", in.Name)
+				return nil
+			}
+		}
+
+		return loop.EndLoop
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // transInstancesToNode record success nodes to cm DB
 func transInstancesToNode(ctx context.Context, instanceNames []string, info *cloudprovider.CloudDependBasicInfo) (
 	[]string, error) {
@@ -280,13 +314,23 @@ func transInstancesToNode(ctx context.Context, instanceNames []string, info *clo
 		nodeIPs = make([]string, 0)
 		err     error
 	)
+	client, err := api.NewComputeServiceClient(info.CmOption)
+	if err != nil {
+		blog.Errorf("transInstanceIDsToNodes create ComputeServiceClient failed, %s", err.Error())
+		return nil, err
+	}
+
+	err = checkInstance(client, instanceNames)
+	if err != nil {
+		blog.Errorf("transInstanceIDsToNodes checkInstance failed, %s", err.Error())
+		return nil, err
+	}
 
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 	err = retry.Do(func() error {
 		nodes, err = nodeCli.ListNodesByInstanceID(instanceNames, &cloudprovider.ListNodesOption{
 			Common:       info.CmOption,
 			ClusterVPCID: info.Cluster.VpcID,
-			CheckIP:      true,
 		})
 		if err != nil {
 			return err
