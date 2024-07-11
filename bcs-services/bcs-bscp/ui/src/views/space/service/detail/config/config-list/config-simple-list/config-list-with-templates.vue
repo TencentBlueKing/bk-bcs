@@ -179,18 +179,14 @@
         start: 0,
         all: true,
       };
+      if (searchStr.value) {
+        params.search_fields = 'name,path,memo,creator';
+        params.search_value = searchStr.value;
+      }
       let res;
       if (isUnNamedVersion.value) {
-        if (searchStr.value) {
-          params.search_fields = 'name,path,memo,creator';
-          params.search_value = searchStr.value;
-        }
         res = await getConfigList(props.bkBizId, props.appId, params);
       } else {
-        if (searchStr.value) {
-          params.search_fields = 'name,path,memo,creator';
-          params.search_value = searchStr.value;
-        }
         res = await getReleasedConfigList(props.bkBizId, props.appId, versionData.value.id, params);
       }
 
