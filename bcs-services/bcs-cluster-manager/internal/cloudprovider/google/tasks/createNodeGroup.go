@@ -305,7 +305,7 @@ func getIgmAndIt(computeCli *api.ComputeServiceClient, cloudNodeGroup *container
 			return nil, nil, err2
 		}
 
-		blog.Infof("taskID[%s] DeleteInstanceTemplate[%s], operationID: %s", taskID, oldItName, o.SelfLink)
+		blog.Infof("taskID[%s] DeleteInstanceTemplate[%s] success, operationID[%s]", taskID, oldItName, o.SelfLink)
 	}
 
 	return newIt, igm, nil
@@ -327,13 +327,13 @@ func patchIgm(newIt *compute.InstanceTemplate, igm *compute.InstanceGroupManager
 		blog.Errorf("taskID[%s] patchIgm PatchInstanceGroupManager failed: %v", taskID, err)
 		return err
 	}
-	blog.Infof("taskID[%s] patchIgm PatchInstanceGroupManager, operationID: %s", taskID, o.SelfLink)
 	// 检查操作是否成功
 	err = checkOperationStatus(computeCli, o.SelfLink, taskID, 3*time.Second)
 	if err != nil {
 		return fmt.Errorf("taskID[%s] patchIgm checkOperationStatus failed: %v", taskID, err)
 	}
-	blog.Infof("taskID[%s] patchIgm PatchInstanceGroupManager[%s] successful", taskID, igm.Name)
+	blog.Infof("taskID[%s] patchIgm PatchInstanceGroupManager[%s] success, operationID[%s]", taskID, igm.Name,
+		o.SelfLink)
 
 	return nil
 }
