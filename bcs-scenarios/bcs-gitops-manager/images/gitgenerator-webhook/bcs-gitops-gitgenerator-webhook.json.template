@@ -12,5 +12,14 @@
     "tls_key": "${tlsKey}",
     "argo_service": "${argoService}",
     "argo_user": "${argoUser}",
-    "argo_pass": "${argoPass}"
+    "argo_pass": "${argoPass}",
+    "recoverProjects": "${recoverProjects}",
+    "adminNamespace": "${adminNamespace}",
+    "dbConfig": {
+       "username": "${bcsDatabaseUsername}",
+       "password": "${bcsDatabasePassword}",
+       "addr": "${bcsDatabaseAddr}",
+       "database": "${bcsDatabaseName}",
+       "limitQps": ${bcsDatabaseLimitQps}
+    }
 }

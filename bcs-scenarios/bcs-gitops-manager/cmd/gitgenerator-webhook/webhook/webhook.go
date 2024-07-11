@@ -19,19 +19,24 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	clusterclient "github.com/argoproj/argo-cd/v2/pkg/apiclient/cluster"
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application"
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
+	synccommon "github.com/argoproj/gitops-engine/pkg/sync/common"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/admission/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/watch"
+	"k8s.io/utils/strings/slices"
 
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/cmd/gitgenerator-webhook/options"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/internal/dao"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
 )
 
@@ -41,6 +46,7 @@ type AdmissionWebhookServer struct {
 	HttpHandler *gin.Engine
 	cfg         *options.Config
 	argoStore   store.Store
+	db          dao.Interface
 }
 
 // NewAdmissionWebhookServer create the webhook-server instance
@@ -65,7 +71,12 @@ func (s *AdmissionWebhookServer) Init() error {
 		Cache:        false,
 		CacheHistory: false,
 	})
-	if err := s.argoStore.Init(); err != nil {
+	var err error
+	s.db, err = dao.NewDriver(&s.cfg.DBConfig)
+	if err != nil {
+		return errors.Wrapf(err, "init database failed")
+	}
+	if err = s.argoStore.Init(); err != nil {
 		return errors.Wrapf(err, "init argocd stroe failed")
 	}
 	return nil
@@ -84,6 +95,14 @@ func (s *AdmissionWebhookServer) Run() error {
 			Certificates: []tls.Certificate{pair},
 		},
 	}
+	go func() {
+		for {
+			time.Sleep(3 * time.Second)
+			if recoverErr := s.recoverApplicationOperation(); recoverErr != nil {
+				blog.Errorf("[recover] recover app operation failed: %s", recoverErr.Error())
+			}
+		}
+	}()
 	blog.Infof("Server serving on: %s:%d", s.cfg.ListenAddr, s.cfg.ListenPort)
 	if err := srv.ListenAndServeTLS("", ""); err != nil {
 		return err
@@ -124,15 +143,17 @@ func (s *AdmissionWebhookServer) check(ctx *gin.Context) {
 	blog.Infof("Received request. UID: %s, Name: %s, Operation: %s, Kind: %v.", req.UID, req.Name,
 		req.Operation, req.Kind)
 
-	switch req.Kind.Kind {
-	case application.ApplicationKind:
+	if req.Kind.Kind != application.ApplicationKind {
+		s.webhookAllow(ctx, true, req.UID, "")
+		return
+	}
+	if req.Operation == v1.Create {
+		// check application-create which belong to appset
 		if err := s.checkApplication(ctx, req.Object.Raw); err != nil {
 			blog.Errorf("UID: %s, check application failed: %s", req.UID, err.Error())
 			s.webhookAllow(ctx, false, req.UID, err.Error())
 			return
 		}
-	default:
-		blog.Warnf("Unknown request kind: %s", req.Kind.Kind)
 	}
 	s.webhookAllow(ctx, true, req.UID, "")
 }
@@ -141,6 +162,7 @@ var (
 	defaultTimeout = 15 * time.Second
 )
 
+// checkApplication the application which belong-to appset
 // nolint funlen
 func (s *AdmissionWebhookServer) checkApplication(ctx context.Context, bs []byte) error {
 	app := new(v1alpha1.Application)
@@ -148,16 +170,21 @@ func (s *AdmissionWebhookServer) checkApplication(ctx context.Context, bs []byte
 		return errors.Wrapf(err, "unmarshal failed with '%s'", string(bs))
 	}
 	belongApplicationSet := false
+	var appsetName string
 	for i := range app.ObjectMeta.OwnerReferences {
 		owner := app.ObjectMeta.OwnerReferences[i]
 		if owner.Kind == "ApplicationSet" {
 			belongApplicationSet = true
+			appsetName = owner.Name
 			break
 		}
 	}
 	if !belongApplicationSet {
 		blog.Infof("application '%s' not belong to applicationset, ignore it", app.Name)
 		return nil
+	}
+	if appsetName == "" {
+		return errors.Errorf("application '%s' belong to appset, but appset name is empty", app.Name)
 	}
 	proj := app.Spec.Project
 	cxt, cancel := context.WithTimeout(ctx, defaultTimeout)
@@ -170,6 +197,7 @@ func (s *AdmissionWebhookServer) checkApplication(ctx context.Context, bs []byte
 		return errors.Errorf("project '%s' not exist", proj)
 	}
 
+	// check app whether belong to appset
 	var repoBelong bool
 	var repoProj string
 	for i := range app.Spec.Sources {
@@ -194,6 +222,7 @@ func (s *AdmissionWebhookServer) checkApplication(ctx context.Context, bs []byte
 		}
 	}
 
+	// check dest server is legal
 	cls := app.Spec.Destination.Server
 	var argoCls *v1alpha1.Cluster
 	argoCls, err = s.argoStore.GetCluster(ctx, &clusterclient.ClusterQuery{
@@ -207,6 +236,19 @@ func (s *AdmissionWebhookServer) checkApplication(ctx context.Context, bs []byte
 	}
 	if argoCls.Project != proj {
 		return errors.Errorf("cluster '%s' project is '%s', not same as '%s'", cls, argoCls.Project, proj)
+	}
+
+	// check dest server belong to appset's cluster-scope
+	appSetScope, err := s.db.GetAppSetClusterScope(appsetName)
+	if err != nil {
+		return errors.Wrapf(err, "get appset '%s' cluster-scope from db failed", appsetName)
+	}
+	if appSetScope != nil && appSetScope.Clusters != "" {
+		clusters := strings.Split(appSetScope.Clusters, ",")
+		if !slices.Contains(clusters, argoCls.Name) {
+			return errors.Errorf("application '%s' dest server '%s' not belong appset's cluster-scope [%s]",
+				app.Name, argoCls.Name, appSetScope.Clusters)
+		}
 	}
 	blog.Infof("check application '%s' success", app.Name)
 	return nil
@@ -225,4 +267,65 @@ func (s *AdmissionWebhookServer) checkRepositoryBelongProject(ctx context.Contex
 		return "", false, nil
 	}
 	return repo.Project, true, nil
+}
+
+// recoverApplicationOperation 补偿 application.operation 被 argocd 未知删除问题
+// 通过检查应用是否仍在同步进程中（status.operationState.Phase == Running），如果应用在同步进程中
+// 但是 application.operation 是空的，通过 Patch 的方式恢复 application.operation
+// refer to: https://github.com/argoproj/argo-cd/issues/17155
+func (s *AdmissionWebhookServer) recoverApplicationOperation() error {
+	argoK8SClient := s.argoStore.ReturnArgoK8SClient()
+	watchInter, err := argoK8SClient.Applications(s.cfg.AdminNamespace).Watch(context.Background(), metav1.ListOptions{})
+	if err != nil {
+		return errors.Wrapf(err, "create application watch failed")
+	}
+	defer watchInter.Stop()
+	var recoverProjects []string
+	if s.cfg.RecoverProjects != "" {
+		recoverProjects = strings.Split(s.cfg.RecoverProjects, ",")
+	}
+	blog.Infof("[recover] create application watch success")
+	defer blog.Errorf("[recover] application watch channel closed")
+	for e := range watchInter.ResultChan() {
+		if e.Type != watch.Modified {
+			continue
+		}
+		if e.Object == nil {
+			continue
+		}
+		obj := e.Object.DeepCopyObject()
+		argoApp, ok := obj.(*v1alpha1.Application)
+		if !ok {
+			continue
+		}
+		if len(recoverProjects) != 0 && !slices.Contains(recoverProjects, argoApp.Spec.Project) {
+			continue
+		}
+		if argoApp.Operation != nil {
+			continue
+		}
+		if argoApp.Status.OperationState == nil {
+			continue
+		}
+		opState := argoApp.Status.OperationState
+		if opState.Phase != synccommon.OperationRunning {
+			continue
+		}
+		var patchJSON []byte
+		patchJSON, err = json.Marshal(opState.Operation)
+		if err != nil {
+			blog.Errorf("[recover] app '%s' operation marshal failed: %s", argoApp.Name, err.Error())
+			continue
+		}
+		resultPatch := fmt.Sprintf(`{"operation":%s}`, string(patchJSON))
+		blog.Infof("[recover] app '%s' patch app.operation: %s", argoApp.Name, resultPatch)
+		_, err = argoK8SClient.Applications(s.cfg.AdminNamespace).Patch(context.Background(), argoApp.Name,
+			types.MergePatchType, []byte(resultPatch), metav1.PatchOptions{})
+		if err != nil {
+			blog.Errorf("[recover] app '%s' patch app.operation failed: %s", argoApp.Name, err.Error())
+		} else {
+			blog.Infof("[recover] app '%s' patch app.operation success", argoApp.Name)
+		}
+	}
+	return nil
 }

@@ -31,6 +31,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware/ctxutils"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/permitcheck"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/utils"
 )
 
 // ApplicationSetPlugin defines the application http serve plugin
@@ -45,14 +46,14 @@ type ApplicationSetPlugin struct {
 // Init will init the path that http need served
 func (plugin *ApplicationSetPlugin) Init() error {
 	// 自定义接口
-	plugin.Path("/generate").Methods(http.MethodPost).
-		Handler(plugin.middleware.HttpWrapper(plugin.Generate))
-	plugin.Path("/{name}/orphan-delete").Methods(http.MethodDelete).
-		Handler(plugin.middleware.HttpWrapper(plugin.OrphanDelete))
-	plugin.Path("/{name}/cluster-scope").Methods(http.MethodGet).
-		Handler(plugin.middleware.HttpWrapper(plugin.getClusterScope))
-	plugin.Path("/{name}/cluster-scope").Methods(http.MethodPut).
-		Handler(plugin.middleware.HttpWrapper(plugin.setClusterScope))
+	plugin.Path("/generate").Methods(http.MethodPost).Handler(plugin.middleware.
+		HttpWrapper(plugin.Generate))
+	plugin.Path("/{name}/orphan-delete").Methods(http.MethodDelete).Handler(plugin.middleware.
+		HttpWrapper(plugin.OrphanDelete))
+	plugin.Path("/{name}/cluster-scope").Methods(http.MethodGet).Handler(plugin.middleware.
+		HttpWrapper(plugin.getClusterScope))
+	plugin.Path("/{name}/cluster-scope").Methods(http.MethodPut).Handler(plugin.middleware.
+		HttpWrapper(plugin.setClusterScope))
 
 	plugin.Path("").Methods(http.MethodGet).Handler(plugin.middleware.HttpWrapper(plugin.List))
 	plugin.Path("").Methods(http.MethodPost).Handler(plugin.middleware.HttpWrapper(plugin.CreateOrUpdate))
@@ -152,11 +153,19 @@ func (plugin *ApplicationSetPlugin) setClusterScope(r *http.Request) (*http.Requ
 		return r, mw.ReturnErrorResponse(http.StatusBadRequest,
 			fmt.Errorf("request applicationset name cannot be empty"))
 	}
-	argoAppSet, statusCode, err := plugin.permitChecker.CheckAppSetPermission(r.Context(), appsetName,
-		permitcheck.AppSetUpdateRSAction)
+	argoAppSet, err := plugin.storage.GetApplicationSet(r.Context(), appsetName)
+	if err != nil {
+		return r, mw.ReturnErrorResponse(http.StatusInternalServerError, errors.Wrapf(err, "get appset failed"))
+	}
+	if argoAppSet == nil {
+		return r, mw.ReturnErrorResponse(http.StatusBadRequest, fmt.Errorf("appset '%s' not found", appsetName))
+	}
+	_, statusCode, err := plugin.permitChecker.CheckProjectPermission(r.Context(), argoAppSet.Spec.Template.Spec.Project,
+		permitcheck.ProjectEditRSAction)
 	if err != nil {
 		return r, mw.ReturnErrorResponse(statusCode, errors.Wrapf(err, "check update applicationset failed"))
 	}
+
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		return r, mw.ReturnErrorResponse(http.StatusBadRequest, errors.Wrapf(err, "read body failed"))
@@ -212,10 +221,18 @@ func (plugin *ApplicationSetPlugin) CreateOrUpdate(r *http.Request) (*http.Reque
 	}
 	r = plugin.setApplicationSetAudit(r, argoAppSet.Spec.Template.Spec.Project, argoAppSet.Name,
 		ctxutils.ApplicationSetCreateOrUpdate, string(body))
-	_, statusCode, err := plugin.permitChecker.CheckAppSetCreate(r.Context(), argoAppSet)
+	_, statusCode, err := plugin.permitChecker.CheckAppSetPermission(r.Context(), argoAppSet.Name,
+		permitcheck.AppSetUpdateRSAction)
 	if err != nil {
-		return r, mw.ReturnErrorResponse(statusCode, errors.Wrapf(err, "check create applicationset failed"))
+		if !utils.IsNotFound(err) {
+			return r, mw.ReturnErrorResponse(statusCode, errors.Wrapf(err, "cehck update applicationset failed"))
+		}
+		_, statusCode, err = plugin.permitChecker.CheckAppSetCreate(r.Context(), argoAppSet)
+		if err != nil {
+			return r, mw.ReturnErrorResponse(statusCode, errors.Wrapf(err, "check create applicationset failed"))
+		}
 	}
+
 	updatedBody, err := json.Marshal(argoAppSet)
 	if err != nil {
 		return r, mw.ReturnErrorResponse(http.StatusBadRequest,
