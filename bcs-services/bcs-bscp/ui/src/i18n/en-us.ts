@@ -906,7 +906,7 @@ export default {
   暂无标签: 'No label',
   附加信息: 'additional information',
   暂无附加信息: 'No additional information',
-  '按 {n} 统计': '按 {n} 统计',
+  '按 {n} 统计': 'Statistics by {n}',
   客户端组件信息统计: 'Statistics on client components',
   组件版本分布: 'Component version release',
   '平均 CPU 资源占用': 'Average CPU usage',
