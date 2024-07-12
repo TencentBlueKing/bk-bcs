@@ -18,7 +18,7 @@
     </template>
     <div v-if="isMultiple || currentCheckType" class="selected-mark">
       {{ t('已选') }}
-      <span class="num">{{ currentCheckType ? acrossCheckedCount : props.value.length }}</span>
+      <span class="num">{{ currentCheckType ? dataCount - props.value.length : props.value.length }}</span>
       {{ t('个配置文件') }}
     </div>
     <bk-form ref="formRef" form-type="vertical" :model="{ pkgs: selectedPkgs }">
@@ -94,8 +94,6 @@
     return windowHeight * 0.6 - 200;
   });
 
-  const acrossCheckedCount = computed(() => dataCount.value - props.value.length);
-
   watch(
     () => props.show,
     (val) => {
@@ -152,6 +150,7 @@
         currentTemplateSpace.value,
         templateIds,
         selectedPkgs.value,
+        currentPkg.value,
         currentCheckType.value,
       );
       emits('added');

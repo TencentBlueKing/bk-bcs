@@ -80,7 +80,7 @@ export default function useTableAcrossCheck({
       selectType.value = CheckType.HalfChecked;
     } else if (
       selections.value.length === curPageData.value.length &&
-      selectType.value !== CheckType.HalfAcrossChecked
+      ![CheckType.HalfAcrossChecked, CheckType.AcrossChecked].includes(selectType.value)
     ) {
       // 当前页全选
       selectType.value = CheckType.Checked;
@@ -116,7 +116,6 @@ export default function useTableAcrossCheck({
       selections.value.splice(index, 1);
       console.log('勾选slice');
     }
-    console.log(selections.value, 'selections++++');
     handleSetSelectType();
   };
 

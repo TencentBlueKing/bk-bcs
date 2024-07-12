@@ -299,13 +299,17 @@ export const addTemplateToPackage = (
   template_space_id: number,
   template_ids: number[],
   template_set_ids: number[],
+  template_set_id: string | number,
   exclusion_operation: boolean,
 ) =>
-  http.post(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates/add_to_template_sets`, {
-    template_ids,
-    template_set_ids,
-    exclusion_operation,
-  });
+  http.post(
+    `/config/biz/${biz_id}/template_spaces/${template_space_id}/template_set/${template_set_id}/templates/add_to_template_sets`,
+    {
+      template_ids,
+      template_set_ids,
+      exclusion_operation,
+    },
+  );
 
 /**
  * 将模版移出套餐(多个模板移出多个套餐)

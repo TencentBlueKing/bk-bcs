@@ -27,7 +27,7 @@ export default defineStore('template', () => {
   // 表格是否跨页选择
   const currentCheckType = ref(false);
   // 表格数据总数
-  const dataCount = ref(false);
+  const dataCount = ref(0);
 
   return {
     templateSpaceList,

@@ -80,7 +80,7 @@ export default function useTableAcrossCheck({
       selectType.value = CheckType.HalfChecked;
     } else if (
       selections.value.length === curPageData.value.length &&
-      selectType.value !== CheckType.HalfAcrossChecked
+      ![CheckType.HalfAcrossChecked, CheckType.AcrossChecked].includes(selectType.value)
     ) {
       selectType.value = CheckType.Checked;
     } else if (selections.value.length < tableData.value.length && selectType.value === CheckType.AcrossChecked) {

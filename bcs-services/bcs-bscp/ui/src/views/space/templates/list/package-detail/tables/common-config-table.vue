@@ -156,7 +156,7 @@
       :memo="selectConfigMemo"
       :space-id="spaceId"
       :id="editConfigId"
-      @edited="refreshList"/>
+      @edited="refreshList" />
   </div>
 </template>
 <script lang="ts" setup>
@@ -233,18 +233,15 @@
   const editConfigId = ref(0);
   const selectConfigMemo = ref('');
 
-  const arrowShow = computed(() => pagination.value.limit <= pagination.value.count);
+  const arrowShow = computed(() => pagination.value.limit < pagination.value.count);
 
   const { selectType, selections, renderSelection, renderTableTip, handleRowCheckChange, handleClearSelection } =
     useTableAcrossCheck({
-      dataCount: toRef(pagination.value, 'count'), // 总共多少条数据,后端返回
+      dataCount: toRef(pagination.value, 'count'),
       curPageData: list, // 当前页数据
       rowKey: ['id'],
       arrowShow,
     });
-  const currCheckType = computed(() =>
-    [CheckType.HalfAcrossChecked, CheckType.AcrossChecked].includes(selectType.value),
-  );
 
   watch(
     () => props.currentPkg,
@@ -253,16 +250,12 @@
       loadConfigList();
     },
   );
-  watch(
-    selections,
-    (newV) => {
-      templateStore.$patch((state) => {
-        state.currentCheckType = currCheckType.value;
-      });
-      emits('update:selectedConfigs', newV);
-    },
-    { deep: true },
-  );
+  watch(selections, () => {
+    templateStore.$patch((state) => {
+      state.currentCheckType = [CheckType.HalfAcrossChecked, CheckType.AcrossChecked].includes(selectType.value);
+    });
+    emits('update:selectedConfigs', selections.value);
+  });
 
   onMounted(() => {
     loadConfigList();
@@ -395,6 +388,7 @@
         row,
       );
     }
+    emits('update:selectedConfigs', selections.value);
   };
   // 选中状态
   const isChecked = (row: ITemplateConfigItem) => {

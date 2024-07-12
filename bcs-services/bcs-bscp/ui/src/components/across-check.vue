@@ -1,7 +1,7 @@
 <template>
   <div class="check">
     <bk-checkbox
-      :checked="isChecked"
+      v-model="localValue"
       :indeterminate="indeterminate"
       :class="{
         'across-all-check': localValue === CheckType.AcrossChecked,
@@ -85,7 +85,7 @@
   // 当前页半选和跨页半选
   const indeterminate = computed(() => [CheckType.HalfChecked, CheckType.HalfAcrossChecked].includes(localValue.value));
   // 当前页全选和跨页全选
-  const isChecked = computed(() => [CheckType.Checked, CheckType.AcrossChecked].includes(localValue.value));
+  // const isChecked = computed(() => [CheckType.Checked, CheckType.AcrossChecked].includes(localValue.value));
 
   const setCheckBoxStatus = computed(() => {
     const status = value.value;
