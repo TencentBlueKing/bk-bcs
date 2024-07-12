@@ -318,6 +318,8 @@
         .error-message {
           position: absolute;
           color: #ff5656;
+          right: 10px;
+          top: 0;
         }
         :deep(.bk-progress) {
           position: absolute;

@@ -571,6 +571,10 @@
     height: 100%;
     background: #ffffff;
     overflow: auto;
+    :deep(.bk-table-body) {
+      max-height: calc(100vh - 280px);
+      overflow: auto;
+    }
   }
   .operate-area {
     display: flex;
