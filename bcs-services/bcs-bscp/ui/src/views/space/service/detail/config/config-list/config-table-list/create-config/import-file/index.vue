@@ -6,9 +6,9 @@
     width="960"
     height="720"
     ext-cls="import-file-dialog"
-    :esc-close="false"
     :before-close="handleBeforeClose"
-    @closed="emits('update:show', false)">
+    :quick-close="false"
+    @closed="handleClose">
     <div :class="['select-wrap', { 'en-select-wrap': locale === 'en' }]">
       <div class="import-type-select">
         <div :class="['label', { 'en-label': locale === 'en' }]">{{ t('导入方式') }}</div>
@@ -186,7 +186,7 @@
   }>();
   const emits = defineEmits(['update:show', 'confirm']);
 
-  const isTableChange = ref(false);
+  const isFormChange = ref(false);
   const importType = ref('localFile');
   const loading = ref(false);
   const importFromTemplateRef = ref();
@@ -239,7 +239,7 @@
     (val) => {
       if (val) {
         importType.value = 'localFile';
-        isTableChange.value = false;
+        isFormChange.value = false;
         handleClearTable();
         selectVerisonId.value = undefined;
         getVersionList();
@@ -351,6 +351,7 @@
   };
 
   const handleSelectVersion = async (other_app_id: number, release_id: number) => {
+    isFormChange.value = true;
     tableLoading.value = true;
     try {
       handleClearTable();
@@ -402,7 +403,7 @@
       }
       return true;
     });
-    isTableChange.value = true;
+    isFormChange.value = true;
   };
 
   const handleTemplateTableChange = (deleteId: string, isNonExistData: boolean) => {
@@ -418,21 +419,15 @@
       existTemplateConfigList.value.splice(index, 1);
     }
     selectedConfigIds.value = selectedConfigIds.value.filter((id) => id !== deleteId);
-    isTableChange.value = true;
-  };
-
-  const handleBeforeClose = async () => {
-    if (isTableChange.value) {
-      const result = await useModalCloseConfirmation();
-      return result;
-    }
-    return true;
+    isFormChange.value = true;
   };
 
   // 上传文件获取表格数据
   const handleUploadFile = (exist: IConfigImportItem[], nonExist: IConfigImportItem[]) => {
+    isFormChange.value = true;
     existConfigList.value = [...existConfigList.value, ...exist];
     nonExistConfigList.value = [...nonExistConfigList.value, ...nonExist];
+    allConfigList.value = [...allConfigList.value, ...exist, ...nonExist];
   };
 
   // 删除文件处理表格数据
@@ -451,7 +446,15 @@
     selectedConfigIds.value = [];
   };
 
-  const handleClose = () => {
+  const handleBeforeClose = async () => {
+    if (isFormChange.value) {
+      const result = await useModalCloseConfirmation();
+      return result;
+    }
+    return true;
+  };
+
+  const handleClose = async () => {
     closeLoading.value = true;
     handleClearTable();
     emits('update:show', false);
@@ -548,8 +551,7 @@
       display: flex;
     }
     .label {
-      height: 32px;
-      line-height: 32px;
+      padding-top: 8px;
       width: 72px;
       font-size: 12px;
       color: #63656e;

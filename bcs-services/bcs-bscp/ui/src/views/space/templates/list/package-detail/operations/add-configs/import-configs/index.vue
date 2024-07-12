@@ -6,25 +6,27 @@
     width="960"
     height="720"
     ext-cls="import-file-dialog"
-    :esc-close="false"
     :before-close="handleBeforeClose"
-    @closed="emits('update:show', false)">
-    <div class="import-type-select">
-      <div class="label">{{ t('导入方式') }}</div>
-      <bk-radio-group v-model="importType">
-        <bk-radio-button label="localFile">{{ t('导入本地文件') }}</bk-radio-button>
-        <bk-radio-button label="otherSpace" :disabled="true">{{ t('从其他空间导入') }}</bk-radio-button>
-      </bk-radio-group>
-    </div>
-    <div v-if="importType === 'localFile'">
-      <ImportFromLocalFile
-        :space-id="spaceId"
-        :current-template-space="currentTemplateSpace"
-        :is-template="true"
-        @change="handleUploadFile"
-        @delete="handleDeleteFile"
-        @uploading="uploadFileLoading = $event"
-        @decompressing="decompressing = $event" />
+    :quick-close="false"
+    @closed="handleClose">
+    <div :class="['select-wrap', { 'en-select-wrap': locale === 'en' }]">
+      <div class="import-type-select">
+        <div class="label">{{ t('导入方式') }}</div>
+        <bk-radio-group v-model="importType">
+          <bk-radio-button label="localFile">{{ t('导入本地文件') }}</bk-radio-button>
+          <bk-radio-button label="otherSpace" :disabled="true">{{ t('从其他空间导入') }}</bk-radio-button>
+        </bk-radio-group>
+      </div>
+      <div v-if="importType === 'localFile'">
+        <ImportFromLocalFile
+          :space-id="spaceId"
+          :current-template-space="currentTemplateSpace"
+          :is-template="true"
+          @change="handleUploadFile"
+          @delete="handleDeleteFile"
+          @uploading="uploadFileLoading = $event"
+          @decompressing="decompressing = $event" />
+      </div>
     </div>
     <bk-loading
       :loading="decompressing"
@@ -86,7 +88,7 @@
   import Message from 'bkui-vue/lib/message';
   import ImportFromLocalFile from '../../../../../../service/detail/config/config-list/config-table-list/create-config/import-file/import-from-local-file.vue';
 
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const props = defineProps<{
     show: boolean;
   }>();
@@ -97,7 +99,7 @@
   const { spaceId } = storeToRefs(useGlobalStore());
   const { currentTemplateSpace } = storeToRefs(useTemplateStore());
   const isShow = ref(false);
-  const isTableChange = ref(false);
+  const isFormChange = ref(false);
   const pending = ref(false);
   const existConfigList = ref<IConfigImportItem[]>([]);
   const nonExistConfigList = ref<IConfigImportItem[]>([]);
@@ -113,7 +115,7 @@
     (val) => {
       clearData();
       isShow.value = val;
-      isTableChange.value = false;
+      isFormChange.value = false;
     },
   );
 
@@ -124,14 +126,14 @@
   });
 
   const handleBeforeClose = async () => {
-    if (isTableChange.value) {
+    if (isFormChange.value) {
       const result = await useModalCloseConfirmation();
       return result;
     }
     return true;
   };
 
-  const close = () => {
+  const handleClose = () => {
     clearData();
     emits('update:show', false);
   };
@@ -151,7 +153,7 @@
         state.topIds = res.ids;
       });
       isSelectPkgDialogShow.value = false;
-      close();
+      handleClose();
       setTimeout(() => {
         emits('added');
         Message({
@@ -172,7 +174,7 @@
     } else {
       existConfigList.value = data;
     }
-    isTableChange.value = true;
+    isFormChange.value = true;
   };
 
   const clearData = () => {
@@ -190,27 +192,42 @@
   const handleUploadFile = (exist: IConfigImportItem[], nonExist: IConfigImportItem[]) => {
     existConfigList.value = [...existConfigList.value, ...exist];
     nonExistConfigList.value = [...nonExistConfigList.value, ...nonExist];
+    isFormChange.value = true;
   };
 </script>
 
 <style scoped lang="scss">
-  .import-type-select {
-    display: flex;
-  }
-  .label {
-    width: 72px;
-    height: 32px;
-    line-height: 32px;
-    font-size: 12px;
-    color: #63656e;
-    margin-right: 22px;
-    text-align: right;
-  }
-  :deep(.wrap) {
-    display: flex;
-    margin-top: 24px;
+  .select-wrap {
+    .import-type-select {
+      display: flex;
+    }
     .label {
-      @extend .label;
+      padding-top: 8px;
+      width: 72px;
+      font-size: 12px;
+      color: #63656e;
+      margin-right: 22px;
+      text-align: right;
+    }
+    :deep(.wrap) {
+      display: flex;
+      margin-top: 24px;
+      .label {
+        @extend .label;
+      }
+    }
+    &.en-select-wrap {
+      .label {
+        width: 100px !important;
+      }
+      :deep(.wrap) {
+        .label {
+          @extend .label;
+        }
+      }
+      :deep(.upload-file-list) {
+        margin-left: 120px;
+      }
     }
   }
 

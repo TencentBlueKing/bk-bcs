@@ -6,7 +6,8 @@
     width="1200"
     height="720"
     ext-cls="import-kv-dialog"
-    :esc-close="false"
+    :before-close="handleBeforeClose"
+    :quick-close="false"
     @closed="handleClose">
     <div class="import-type-select">
       <div class="label">{{ t('导入方式') }}</div>
@@ -123,6 +124,7 @@
   import { Message } from 'bkui-vue';
   import TextImport from './text-import.vue';
   import ImportFormOtherService from '../import-file/import-form-other-service.vue';
+  import useModalCloseConfirmation from '../../../../../../../../../utils/hooks/use-modal-close-confirmation';
   import ConfigTable from './kv-config-table.vue';
   import { cloneDeep } from 'lodash';
 
@@ -206,6 +208,7 @@
   };
 
   const handleSelectVersion = async (other_app_id: number, release_id: number) => {
+    isFormChange.value = true;
     tableLoading.value = true;
     try {
       const params = { other_app_id, release_id };
@@ -221,6 +224,14 @@
     } finally {
       tableLoading.value = false;
     }
+  };
+
+  const handleBeforeClose = async () => {
+    if (isFormChange.value) {
+      const result = await useModalCloseConfirmation();
+      return result;
+    }
+    return true;
   };
 
   const handleClose = () => {
