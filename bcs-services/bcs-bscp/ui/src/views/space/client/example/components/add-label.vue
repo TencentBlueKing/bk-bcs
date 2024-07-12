@@ -43,13 +43,13 @@
   const emits = defineEmits(['send-label', 'send-validate']);
 
   const labelArr = ref<{ key: string; value: string }[]>([]);
-  const showErrorKeyValidation = ref<boolean[]>([]); // 存储
-  const showErrorValueValidation = ref<boolean[]>([]);
+  const showErrorKeyValidation = ref<boolean[]>([]); // key的错误状态
+  const showErrorValueValidation = ref<boolean[]>([]); // value的错误状态
 
   const keyValidateReg = new RegExp(
     '^[a-z0-9A-Z]([-_a-z0-9A-Z]*[a-z0-9A-Z])?((\\.|\\/)[a-z0-9A-Z]([-_a-z0-9A-Z]*[a-z0-9A-Z])?)*$',
   );
-  const valueValidateReg = new RegExp('^(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?$');
+  const valueValidateReg = new RegExp(/^(?:-?\d+(\.\d+)?|[A-Za-z0-9]([-A-Za-z0-9_.]*[A-Za-z0-9])?)$/);
 
   // 数据变化后需要传递出去
   watch(labelArr.value, () => {
@@ -58,26 +58,23 @@
 
   // 所有label验证状态
   const isAllValid = () => {
-    if (labelArr.value.length) {
-      return labelArr.value.every((item, index) => {
-        if (keyValidateReg.test(item.key) && valueValidateReg.test(item.value)) {
-          return true;
-        }
-        keyValidateReg.test(item.key)
-          ? (showErrorValueValidation.value[index] = true)
-          : (showErrorKeyValidation.value[index] = true);
-        return false;
-      });
-    }
-    return true;
+    let allValid = true;
+    labelArr.value.forEach((item, index) => {
+      validateKey(index);
+    });
+    allValid = !showErrorKeyValidation.value.includes(true) && !showErrorValueValidation.value.includes(true);
+    return allValid;
   };
   // 验证key
   const validateKey = (index: number) => {
     showErrorKeyValidation.value[index] = !keyValidateReg.test(labelArr.value[index].key);
+    validateValue(index);
   };
   // 验证value
   const validateValue = (index: number) => {
-    showErrorValueValidation.value[index] = !valueValidateReg.test(labelArr.value[index].value);
+    // 只在key验证通过才显示value校验结果。如果value校验失败时去改key值，并且key值改变后也校验失败，只展示key的校验结果
+    showErrorValueValidation.value[index] =
+      keyValidateReg.test(labelArr.value[index].key) && !valueValidateReg.test(labelArr.value[index].value);
   };
   // 添加项目
   const addItem = () => {
@@ -85,10 +82,14 @@
       key: '',
       value: '',
     });
+    showErrorKeyValidation.value.push(false);
+    showErrorValueValidation.value.push(false);
   };
   // 删除点击项
   const deleteItem = (index: number) => {
     labelArr.value.splice(index, 1);
+    showErrorKeyValidation.value.splice(index, 1);
+    showErrorValueValidation.value.splice(index, 1);
   };
   // 数据传递
   const sendVal = () => {
