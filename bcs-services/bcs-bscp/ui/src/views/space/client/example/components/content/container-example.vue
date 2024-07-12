@@ -16,7 +16,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref, provide, inject, Ref, nextTick } from 'vue';
+  import { ref, inject, Ref, nextTick } from 'vue';
   import { copyToClipBoard } from '../../../../../../utils/index';
   import { IVariableEditParams } from '../../../../../../../types/variable';
   import BkMessage from 'bkui-vue/lib/message';
@@ -44,8 +44,6 @@
   const copyReplaceVal = ref(''); // 渲染的值，用于复制未脱敏密钥的yaml数据
   const basicInfo = inject<{ serviceName: Ref<string>; serviceType: Ref<string> }>('basicInfo');
   const variables = ref<IVariableEditParams[]>();
-  const formError = ref<number>();
-  provide('formError', formError);
 
   const getOptionData = (data: any) => {
     // 标签展示方式加工
@@ -102,8 +100,6 @@
         message: t('示例已复制'),
       });
     } catch (error) {
-      // 通知密钥选择组件校验状态
-      formError.value = new Date().getTime();
       props.contentScrollTop();
       console.log(error);
     }

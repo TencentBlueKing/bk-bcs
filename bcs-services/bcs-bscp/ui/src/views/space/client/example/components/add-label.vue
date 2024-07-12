@@ -16,18 +16,20 @@
   <div class="label-content" v-if="labelArr.length">
     <div class="label-item" v-for="(item, index) in labelArr" :key="index">
       <bk-input
-        :class="['bk-input-wrap', { 'is-error': !keyValidateReg.test(item.key) }]"
+        :class="['bk-input-wrap', { 'is-error': showErrorKeyValidation[index] }]"
         :id="'key' + index"
-        v-model.trim="item.key" />
-      <span v-show="!keyValidateReg.test(item.key)" class="error-msg">
+        v-model.trim="item.key"
+        @blur="validateKey(index)" />
+      <span v-show="showErrorKeyValidation[index]" class="error-msg">
         {{ $t("仅支持字母，数字，'-'，'_'，'.' 及 '/' 且需以字母数字开头和结尾") }}
       </span>
       <span class="label-item-icon">=</span>
       <bk-input
-        :class="['bk-input-wrap', { 'is-error': keyValidateReg.test(item.key) && !valueValidateReg.test(item.value) }]"
+        :class="['bk-input-wrap', { 'is-error': showErrorValueValidation[index] }]"
         :id="'val' + index"
-        v-model.trim="item.value" />
-      <span v-show="keyValidateReg.test(item.key) && !valueValidateReg.test(item.value)" class="error-msg is--value">
+        v-model.trim="item.value"
+        @blur="validateValue(index)" />
+      <span v-show="showErrorValueValidation[index]" class="error-msg is--value">
         {{ $t("需以字母数字开头和结尾，可包含 '-'，'_'，'.' 和字母数字") }}
       </span>
       <div class="label-item-minus" @click="deleteItem(index)"></div>
@@ -41,24 +43,38 @@
   const emits = defineEmits(['send-label', 'send-validate']);
 
   const labelArr = ref<{ key: string; value: string }[]>([]);
+  const showErrorKeyValidation = ref<boolean[]>([]); // key的错误状态
+  const showErrorValueValidation = ref<boolean[]>([]); // value的错误状态
 
   const keyValidateReg = new RegExp(
     '^[a-z0-9A-Z]([-_a-z0-9A-Z]*[a-z0-9A-Z])?((\\.|\\/)[a-z0-9A-Z]([-_a-z0-9A-Z]*[a-z0-9A-Z])?)*$',
   );
-  const valueValidateReg = new RegExp('^(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?$');
+  const valueValidateReg = new RegExp(/^(?:-?\d+(\.\d+)?|[A-Za-z0-9]([-A-Za-z0-9_.]*[A-Za-z0-9])?)$/);
 
   // 数据变化后需要传递出去
   watch(labelArr.value, () => {
-    emits('send-validate', isAllValid());
     sendVal();
   });
 
   // 所有label验证状态
   const isAllValid = () => {
-    if (labelArr.value.length) {
-      return labelArr.value.every((item) => keyValidateReg.test(item.key) && valueValidateReg.test(item.value));
-    }
-    return true;
+    let allValid = true;
+    labelArr.value.forEach((item, index) => {
+      validateKey(index);
+    });
+    allValid = !showErrorKeyValidation.value.includes(true) && !showErrorValueValidation.value.includes(true);
+    return allValid;
+  };
+  // 验证key
+  const validateKey = (index: number) => {
+    showErrorKeyValidation.value[index] = !keyValidateReg.test(labelArr.value[index].key);
+    validateValue(index);
+  };
+  // 验证value
+  const validateValue = (index: number) => {
+    // 只在key验证通过才显示value校验结果。如果value校验失败时去改key值，并且key值改变后也校验失败，只展示key的校验结果
+    showErrorValueValidation.value[index] =
+      keyValidateReg.test(labelArr.value[index].key) && !valueValidateReg.test(labelArr.value[index].value);
   };
   // 添加项目
   const addItem = () => {
@@ -66,10 +82,14 @@
       key: '',
       value: '',
     });
+    showErrorKeyValidation.value.push(false);
+    showErrorValueValidation.value.push(false);
   };
   // 删除点击项
   const deleteItem = (index: number) => {
     labelArr.value.splice(index, 1);
+    showErrorKeyValidation.value.splice(index, 1);
+    showErrorValueValidation.value.splice(index, 1);
   };
   // 数据传递
   const sendVal = () => {
@@ -86,6 +106,9 @@
     });
     emits('send-label', newArr);
   };
+  defineExpose({
+    isAllValid,
+  });
 </script>
 
 <style scoped lang="scss">

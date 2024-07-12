@@ -34,7 +34,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref, Ref, provide, inject, computed, onMounted, watch, nextTick } from 'vue';
+  import { ref, Ref, inject, computed, onMounted, watch, nextTick } from 'vue';
   import { copyToClipBoard } from '../../../../../../utils/index';
   import { CloseLine } from 'bkui-vue/lib/icon';
   import { IVariableEditParams } from '../../../../../../../types/variable';
@@ -69,8 +69,6 @@
     labelArr: [],
     labelArrType: '', // 展示格式
   });
-  const formError = ref<number>();
-  provide('formError', formError);
 
   // 代码预览上方提示框
   const kvConfig = computed(() => {
@@ -246,18 +244,18 @@
       if (props.kvName === 'python') {
         if (!activeTab.value) {
           // get
-          const tempStr = `'''\n${t('用于主动获取配置项值的场景，此方法不会监听服务器端的配置更改\n有关Python SDK的部署环境和依赖组件，请参阅白皮书中的 BSCP Python SDK依赖说明')}\n(https://bk.tencent.com/docs/markdown/ZH/BSCP/1.29/UserGuide/Function/python_sdk_dependency.md)\n'''`;
+          const tempStr = `'''\n${t('用于主动获取配置项值的场景，此方法不会监听服务器端的配置更改\n有关Python SDK的部署环境和依赖组件，请参阅白皮书中的 [BSCP Python SDK依赖说明]')}\n(https://bk.tencent.com/docs/markdown/ZH/BSCP/1.29/UserGuide/Function/python_sdk_dependency.md)\n'''\n`;
           copyVal = `${tempStr}\n${copyVal}`;
         } else {
           // watch
-          const tempStr = `'''\n${t('通过建立长连接，实时监听配置版本的变更，当新版本的配置发布时，将自动调用回调方法处理新的配置信息，适用于需要实时响应配置变更的场景\n有关Python SDK的部署环境和依赖组件，请参阅白皮书中的 BSCP Python SDK依赖说明')}\n(https://bk.tencent.com/docs/markdown/ZH/BSCP/1.29/UserGuide/Function/python_sdk_dependency.md)\n'''`;
+          const tempStr = `'''\n${t('通过建立长连接，实时监听配置版本的变更，当新版本的配置发布时，将自动调用回调方法处理新的配置信息，适用于需要实时响应配置变更的场景\n有关Python SDK的部署环境和依赖组件，请参阅白皮书中的 [BSCP Python SDK依赖说明]')}\n(https://bk.tencent.com/docs/markdown/ZH/BSCP/1.29/UserGuide/Function/python_sdk_dependency.md)\n'''\n`;
           copyVal = `${tempStr}\n${copyVal}`;
         }
         copyVal = `${copyVal}`;
       } else {
         if (!activeTab.value) {
           // get
-          const tempStr = `// ${t('Get方法：用于一次性拉取最新的配置信息，适用于需要获取并更新配置的场景。\n')}`;
+          const tempStr = `// ${t('Get方法：用于一次性拉取最新的配置信息，适用于需要获取并更新配置的场景。')}\n`;
           copyVal = `${tempStr}\n${copyVal}`;
         } else {
           // watch
@@ -271,8 +269,6 @@
         message: t('示例已复制'),
       });
     } catch (error) {
-      // 通知密钥选择组件校验状态
-      formError.value = new Date().getTime();
       console.log(error);
     }
   };

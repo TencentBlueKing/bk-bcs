@@ -37,7 +37,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref, Ref, computed, provide, inject, onMounted, nextTick } from 'vue';
+  import { ref, Ref, computed, inject, onMounted, nextTick } from 'vue';
   import { copyToClipBoard } from '../../../../../../utils/index';
   import { IVariableEditParams } from '../../../../../../../types/variable';
   import BkMessage from 'bkui-vue/lib/message';
@@ -136,8 +136,6 @@
   const replaceVal = ref('');
   const copyReplaceVal = ref(''); // 渲染的值，用于复制未脱敏密钥的yaml数据
   const variables = ref<IVariableEditParams[]>();
-  const formError = ref<number>();
-  provide('formError', formError);
   // fileOption组件传递过来的数据汇总
   const optionData = ref({
     clientKey: '',
@@ -212,8 +210,6 @@
         message: t('复制成功'),
       });
     } catch (error) {
-      // 通知密钥选择组件校验状态
-      formError.value = new Date().getTime();
       props.contentScrollTop();
       console.log(error);
     }
