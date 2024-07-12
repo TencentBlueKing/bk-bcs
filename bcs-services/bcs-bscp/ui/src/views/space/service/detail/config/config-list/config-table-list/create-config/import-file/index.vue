@@ -27,7 +27,8 @@
           @change="handleUploadFile"
           @delete="handleDeleteFile"
           @uploading="uploadFileLoading = $event"
-          @decompressing="decompressing = $event" />
+          @decompressing="decompressing = $event"
+          @file-processing="fileProcessing = $event" />
       </div>
       <div v-else-if="importType === 'configTemplate'">
         <ImportFromTemplate ref="importFromTemplateRef" :bk-biz-id="props.bkBizId" :app-id="props.appId" />
@@ -56,8 +57,8 @@
       </div>
     </div>
     <bk-loading
-      :loading="decompressing || tableLoading"
-      :title="decompressing ? t('压缩包正在解压，请稍后') : ''"
+      :loading="decompressing || fileProcessing || tableLoading"
+      :title="loadingText"
       class="config-table-loading"
       mode="spin"
       theme="primary"
@@ -202,7 +203,8 @@
   const allTemplateConfigList = ref<ImportTemplateConfigItem[]>([]);
   const isClearDraft = ref(false);
   const uploadFileLoading = ref(false);
-  const decompressing = ref(false);
+  const decompressing = ref(false); // 后台压缩包解压
+  const fileProcessing = ref(false); // 后台文件处理
   const closeLoading = ref(false);
   const selectedConfigIds = ref<(string | number)[]>([]);
   const configSelectRef = ref();
@@ -232,6 +234,16 @@
     return importTemplateConfigList.value.some(
       (config) => !config.template_space_exist || !config.template_set_exist || config.template_set_is_empty,
     );
+  });
+
+  const loadingText = computed(() => {
+    if (decompressing.value) {
+      return t('压缩包正在解压，请稍后...');
+    }
+    if (fileProcessing.value) {
+      return t('后台正在处理上传数据，请稍后...');
+    }
+    return '';
   });
 
   watch(

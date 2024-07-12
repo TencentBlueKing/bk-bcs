@@ -25,12 +25,13 @@
           @change="handleUploadFile"
           @delete="handleDeleteFile"
           @uploading="uploadFileLoading = $event"
-          @decompressing="decompressing = $event" />
+          @decompressing="decompressing = $event"
+          @file-processing="fileProcessing = $event" />
       </div>
     </div>
     <bk-loading
-      :loading="decompressing"
-      :title="t('压缩包正在解压，请稍后')"
+      :loading="decompressing || fileProcessing"
+      :title="loadingText"
       class="config-table-loading"
       mode="spin"
       theme="primary"
@@ -108,7 +109,8 @@
   const isSelectPkgDialogShow = ref(false);
   const importType = ref('localFile');
   const uploadFileLoading = ref(false);
-  const decompressing = ref(false);
+  const decompressing = ref(false); // 后台压缩包解压
+  const fileProcessing = ref(false); // 后台文件处理
 
   watch(
     () => props.show,
@@ -123,6 +125,16 @@
 
   const confirmBtnDisabled = computed(() => {
     return !uploadFileLoading.value && !decompressing.value && importConfigList.value.length > 0;
+  });
+
+  const loadingText = computed(() => {
+    if (decompressing.value) {
+      return t('压缩包正在解压，请稍后...');
+    }
+    if (fileProcessing.value) {
+      return t('后台正在处理上传数据，请稍后...');
+    }
+    return '';
   });
 
   const handleBeforeClose = async () => {

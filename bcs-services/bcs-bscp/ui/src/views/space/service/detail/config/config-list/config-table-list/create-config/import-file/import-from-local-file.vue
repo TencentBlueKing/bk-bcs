@@ -35,12 +35,13 @@
             <TextFill class="file-icon" />
             <div class="file-content">
               <div class="name">{{ fileItem.file.name }}</div>
-              <div v-if="fileItem.status !== 'success'" class="progress">
+              <div v-if="fileItem.status !== 'success' && fileItem.status !== 'fail'" class="progress">
                 <bk-progress
                   :percent="fileItem.progress"
                   :theme="fileItem.status === 'fail' ? 'danger' : 'primary'"
                   size="small" />
               </div>
+              <div v-else-if="fileItem.status === 'fail'" class="error-message">{{ fileItem.errorMessage }}</div>
             </div>
             <Del class="del-icon" @click="handleDeleteFile(fileItem.file.name)" />
           </div>
@@ -65,6 +66,7 @@
     file: File;
     status: string;
     progress: number;
+    errorMessage?: string;
   }
 
   const { t } = useI18n();
@@ -78,7 +80,7 @@
     currentTemplateSpace?: number;
   }>();
 
-  const emits = defineEmits(['change', 'delete', 'uploading', 'decompressing']);
+  const emits = defineEmits(['change', 'delete', 'uploading', 'decompressing', 'fileProcessing']);
 
   const loading = ref(false);
   const isDecompression = ref(true);
@@ -103,9 +105,17 @@
         emits('uploading', false);
       }
       if (fileList.value.some((fileItem) => fileItem.status === 'decompressing')) {
-        emits('decompressing', true);
+        const decompressingFile = fileList.value.find((file) => file.status === 'decompressing');
+        const isCompressionFile = handleCheckIsCompressedFile(decompressingFile!.file.name);
+        if (isCompressionFile) {
+          console.log(1);
+          emits('decompressing', true);
+        } else {
+          emits('fileProcessing', true);
+        }
       } else {
         emits('decompressing', false);
+        emits('fileProcessing', false);
       }
     },
     { deep: true },
@@ -116,11 +126,7 @@
       RESOURCE_LIMIT: { MaxUploadContentLength, MaxUploadSingleContentLength },
     } = spaceFeatureFlags.value;
     const fileSize = option.file.size / 1024 / 1024;
-    const isCompressionFile =
-      option.file.name.endsWith('.zip') ||
-      option.file.name.endsWith('.tar') ||
-      option.file.name.endsWith('.tar.gz') ||
-      option.file.name.endsWith('.tgz');
+    const isCompressionFile = handleCheckIsCompressedFile(option.file.name);
 
     if (isDecompression.value) {
       if (isCompressionFile && fileSize > MaxUploadContentLength) {
@@ -194,9 +200,11 @@
         item.file_name = option.file.name;
       });
       emits('change', res.exist, res.non_exist);
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      fileList.value.find((fileItem) => fileItem.file === option.file)!.status = 'fail';
+      const file = fileList.value.find((fileItem) => fileItem.file === option.file);
+      file!.status = 'fail';
+      file!.errorMessage = e.response.data.error.message;
     } finally {
       loading.value = false;
     }
@@ -205,6 +213,12 @@
   const handleDeleteFile = (fileName: string) => {
     fileList.value = fileList.value.filter((fileItem) => fileItem.file.name !== fileName);
     emits('delete', fileName);
+  };
+
+  // 判断是否是压缩包
+  const handleCheckIsCompressedFile = (filename: string) => {
+    const ext = filename.split('.').pop()!.toLowerCase();
+    return ['zip', 'rar', 'tar', 'gz', 'tgz'].includes(ext);
   };
 </script>
 
@@ -300,6 +314,10 @@
           white-space: nowrap;
           text-overflow: ellipsis;
           overflow: hidden;
+        }
+        .error-message {
+          position: absolute;
+          color: #ff5656;
         }
         :deep(.bk-progress) {
           position: absolute;
