@@ -147,7 +147,7 @@
       :memo="selectConfigMemo"
       :space-id="spaceId"
       :id="editConfigId"
-      @edited="refreshList"/>
+      @edited="refreshList" />
   </div>
 </template>
 <script lang="ts" setup>
@@ -489,6 +489,8 @@
   }
   .config-table {
     :deep(.bk-table-body) {
+      max-height: calc(100vh - 320px);
+      overflow: auto;
       tr.new-row-marked td {
         background: #f2fff4 !important;
       }

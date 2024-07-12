@@ -245,6 +245,7 @@
     padding: 4px 0;
     border: 1px solid #dcdee5;
     box-shadow: 0 2px 6px 0 #0000001a;
+    width: auto !important;
     .operation-item {
       padding: 0 12px;
       min-width: 58px;
