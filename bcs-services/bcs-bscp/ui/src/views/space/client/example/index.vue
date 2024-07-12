@@ -85,6 +85,9 @@
 
   // 服务切换
   const selectService = (serviceTypeVal: string, serviceNameVal: string) => {
+    if (!serviceTypeVal || !serviceNameVal) {
+      return (loading.value = false);
+    }
     if (serviceName.value !== serviceNameVal || serviceType.value !== serviceTypeVal) {
       loading.value = true;
       serviceName.value = serviceNameVal;
