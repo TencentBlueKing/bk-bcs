@@ -17,15 +17,87 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
 )
 
-func TestNewRateLimiter(t *testing.T) {
-	rl := New(10, 20)
-	assert.NotNil(t, rl)
+var config = cc.RateLimiter{
+	Enable:          true,
+	ClientBandwidth: 10,
+	Global: cc.BasicRL{
+		Limit: 10,
+		Burst: 20,
+	},
+	Biz: cc.BizRLs{
+		Default: cc.BasicRL{
+			Limit: 5,
+			Burst: 5,
+		},
+		Spec: map[uint]cc.BasicRL{
+			1: {
+				Limit: 10,
+				Burst: 20,
+			},
+			2: {
+				Limit: 10,
+				Burst: 10,
+			},
+		},
+	},
 }
 
-func TestWaitTime(t *testing.T) {
-	rl := New(10, 20)
+func TestNewRateLimiter(t *testing.T) {
+	rl := New(config)
+	assert.NotNil(t, rl)
+	assert.NotNil(t, rl.Global())
+	assert.NotNil(t, rl.UseBiz(1))
+	assert.NotNil(t, rl.UseBiz(2))
+	// rl.UseBiz(3) will create new one with default biz config
+	assert.NotNil(t, rl.UseBiz(3))
+
+}
+
+func TestGlobalWaitTime(t *testing.T) {
+	r := New(config)
+	rl := r.Global()
+	testWaitTime(t, rl)
+}
+
+func TestBizWaitTime(t *testing.T) {
+	r := New(config)
+	rl := r.UseBiz(1)
+	testWaitTime(t, rl)
+}
+
+func TestGlobalStats(t *testing.T) {
+	config2 := config
+	config2.Global = cc.BasicRL{
+		Limit: 10,
+		Burst: 10,
+	}
+	r := New(config2)
+	rl := r.Global()
+	testStats(t, rl)
+}
+
+func TestBizStats(t *testing.T) {
+	r := New(config)
+	rl := r.UseBiz(2)
+	testStats(t, rl)
+}
+
+func TestBizStats2(t *testing.T) {
+	config3 := config
+	config3.Biz.Default = cc.BasicRL{
+		Limit: 10,
+		Burst: 10,
+	}
+	r := New(config3)
+	rl := r.UseBiz(3)
+	testStats(t, rl)
+}
+
+func testWaitTime(t *testing.T, rl RateLimiter) {
 
 	// Add a request that fits within the burst capacity
 	waitTime := rl.WaitTimeMil(MB * 20)
@@ -54,9 +126,7 @@ func TestWaitTime(t *testing.T) {
 	assert.Equal(t, int64(0), waitTime)
 }
 
-func TestStats(t *testing.T) {
-	rl := New(10, 10)
-
+func testStats(t *testing.T, rl RateLimiter) {
 	// Test initial stats
 	stats := rl.Stats()
 	assert.NotNil(t, stats)

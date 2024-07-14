@@ -52,7 +52,7 @@ type Service struct {
 	name  string
 	mc    *metric
 	gwMux *runtime.ServeMux
-	rl    ratelimiter.RateLimiter
+	rl    *ratelimiter.RL
 }
 
 // NewService create a service instance.
@@ -83,10 +83,8 @@ func NewService(sd serviced.Discover, name string) (*Service, error) {
 		return nil, fmt.Errorf("new repository provider failed, err: %v", err)
 	}
 
-	rl := ratelimiter.New(cc.FeedServer().RateLimiter.Global.Limit, cc.FeedServer().RateLimiter.Global.Burst)
-	logs.Infof("init rate limiter, client bandwidth: %d MB/s, limit: %d MB/s, burst: %d MB",
-		cc.FeedServer().RateLimiter.ClientBandWidth,
-		cc.FeedServer().RateLimiter.Global.Limit, cc.FeedServer().RateLimiter.Global.Burst)
+	rl := ratelimiter.New(cc.FeedServer().RateLimiter)
+	logs.Infof("init rate limiter, conf: %+v", cc.FeedServer().RateLimiter)
 
 	return &Service{
 		bll:        bl,

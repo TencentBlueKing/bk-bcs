@@ -75,29 +75,29 @@ func initMetric(name string) *metric {
 	}, []string{"bizID", "appName"})
 	metrics.Register().MustRegister(m.clientCurrentMemUsage)
 
-	m.downloadTotalSize = prometheus.NewGauge(prometheus.GaugeOpts{
+	m.downloadTotalSize = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace:   metrics.Namespace,
 		Subsystem:   metrics.FSConfigConsume,
 		Name:        "file_download_total_size_bytes",
-		Help:        "Total size of files downloaded",
+		Help:        "Total size of files downloaded, biz 0 means global",
 		ConstLabels: labels,
-	})
+	}, []string{"bizID"})
 	metrics.Register().MustRegister(m.downloadTotalSize)
-	m.downloadDelayRequests = prometheus.NewGauge(prometheus.GaugeOpts{
+	m.downloadDelayRequests = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace:   metrics.Namespace,
 		Subsystem:   metrics.FSConfigConsume,
 		Name:        "file_download_delay_requests",
-		Help:        "Total number of downloaded file delayed requests",
+		Help:        "Total number of downloaded file delayed requests, biz 0 means global",
 		ConstLabels: labels,
-	})
+	}, []string{"bizID"})
 	metrics.Register().MustRegister(m.downloadDelayRequests)
-	m.downloadDelayMilliseconds = prometheus.NewGauge(prometheus.GaugeOpts{
+	m.downloadDelayMilliseconds = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace:   metrics.Namespace,
 		Subsystem:   metrics.FSConfigConsume,
 		Name:        "file_download_delay_milliseconds",
-		Help:        "Delay milliseconds of downloaded file",
+		Help:        "Delay milliseconds of downloaded file, biz 0 means global",
 		ConstLabels: labels,
-	})
+	}, []string{"bizID"})
 	metrics.Register().MustRegister(m.downloadDelayMilliseconds)
 
 	return m
@@ -119,14 +119,14 @@ type metric struct {
 	// clientCurrentMemUsage the current memory usage of the client is collected
 	clientCurrentMemUsage *prometheus.GaugeVec
 
-	downloadTotalSize         prometheus.Gauge
-	downloadDelayRequests     prometheus.Gauge
-	downloadDelayMilliseconds prometheus.Gauge
+	downloadTotalSize         *prometheus.GaugeVec
+	downloadDelayRequests     *prometheus.GaugeVec
+	downloadDelayMilliseconds *prometheus.GaugeVec
 }
 
-// recordDownload records metrics for download
-func (m *metric) recordDownload(totalSize, delayRequests, delayMilliseconds int64) {
-	m.downloadTotalSize.Set(float64(totalSize))
-	m.downloadDelayRequests.Set(float64(delayRequests))
-	m.downloadDelayMilliseconds.Set(float64(delayMilliseconds))
+// collectDownload collects metrics for download
+func (m *metric) collectDownload(biz string, totalSize, delayRequests, delayMilliseconds int64) {
+	m.downloadTotalSize.With(prm.Labels{"bizID": biz}).Set(float64(totalSize))
+	m.downloadDelayRequests.With(prm.Labels{"bizID": biz}).Set(float64(delayRequests))
+	m.downloadDelayMilliseconds.With(prm.Labels{"bizID": biz}).Set(float64(delayMilliseconds))
 }

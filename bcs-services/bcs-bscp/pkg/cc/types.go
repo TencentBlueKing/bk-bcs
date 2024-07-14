@@ -1090,46 +1090,59 @@ func (lm *MatchReleaseLimiter) trySetDefault() {
 
 // RateLimiter defines the rate limiter options for traffic control.
 type RateLimiter struct {
-	// ClientBandWidth为单个客户端下载文件所评估的可用带宽，用于决定单次下载流控阈值，单位为MB/s
-	ClientBandWidth int `yaml:"clientBandWidth"`
-	// Global为全局限流器配置
-	Global GlobalRL `yaml:"global"`
+	Enable          bool    `yaml:"enable"`
+	ClientBandwidth uint    `yaml:"clientBandwidth"`
+	Global          BasicRL `yaml:"global"`
+	Biz             BizRLs  `yaml:"biz"`
 }
 
-// GlobalRL defines the options for global rate limiter.
-type GlobalRL struct {
-	// Limit为流量速率限制，单位为MB/s
-	Limit int `yaml:"limit"`
-	// Burst为允许处理的突发流量上限（允许系统在短时间内处理比速率限制更多的流量），单位为MB
-	Burst int `yaml:"burst"`
+// BizRLs defines the rate limiters for biz
+type BizRLs struct {
+	Default BasicRL          `yaml:"default"`
+	Spec    map[uint]BasicRL `yaml:"spec"`
+}
+
+// BasicRL defines the basic options for rate limiter.
+type BasicRL struct {
+	Limit uint `yaml:"limit"`
+	Burst uint `yaml:"burst"`
 }
 
 const (
-	// DefaultClientBandWidth default client bandwidth
-	DefaultClientBandWidth = 10 // 10MB/s = 80Mb/s
-	// MinRateLimit min rate limit
-	MinRateLimit = 10 // 10MB/s = 80Mb/s
-	// DefaultRateLimit default rate limit
-	DefaultRateLimit = 100 // 100MB/s = 800Mb/s
-	// DefaultRateBurst default rate burst
-	DefaultRateBurst = 200 // 200MB = 1600Mb
+	// DefaultClientBandwidth default client bandwidth
+	DefaultClientBandwidth = 50 // 50MB/s = 400Mb/s
+	// DefaultGlobalRateLimit default global rate limit
+	DefaultGlobalRateLimit = 1000 // 1000MB/s = 8000Mb/s
+	// DefaultGlobalRateBurst default global rate burst
+	DefaultGlobalRateBurst = 2000 // 2000MB = 16000Mb
+	// DefaultBizRateLimit default biz rate limit
+	DefaultBizRateLimit = 100 // 100MB/s = 800Mb/s
+	// DefaultBizRateBurst default biz rate burst
+	DefaultBizRateBurst = 200 // 200MB = 1600Mb
 )
 
 // validate if the rate limiter is valid or not.
 func (rl RateLimiter) validate() error {
-	if rl.ClientBandWidth < MinRateLimit {
-		return fmt.Errorf("invalid rateLimiter.clientBandWidth value %d, should >= min rate limit value %d",
-			rl.ClientBandWidth, MinRateLimit)
+	if rl.Biz.Default.Burst < rl.Biz.Default.Limit {
+		return fmt.Errorf("invalid rateLimiter.biz.default.burst value %d, should >= rateLimiter.biz.default.limit "+
+			"value %d", rl.Global.Burst, rl.Global.Limit)
 	}
 
-	if rl.Global.Limit < rl.ClientBandWidth {
-		return fmt.Errorf("invalid rateLimiter.global.limit value %d, should >= rateLimiter.clientBandWidth value %d",
-			rl.Global.Limit, rl.ClientBandWidth)
+	if rl.Global.Limit < rl.Biz.Default.Limit {
+		return fmt.Errorf("invalid rateLimiter.global.limit value %d, should >= rateLimiter.biz.default.limit value %d",
+			rl.Global.Limit, rl.ClientBandwidth)
 	}
 
-	if rl.Global.Burst < rl.Global.Limit {
-		return fmt.Errorf("invalid rateLimiter.global.burst value %d, should >= rateLimiter.global.limit value %d",
+	if rl.Global.Burst < rl.Biz.Default.Burst {
+		return fmt.Errorf("invalid rateLimiter.global.burst value %d, should >= rateLimiter.biz.default.burst value %d",
 			rl.Global.Burst, rl.Global.Limit)
+	}
+
+	for bizID, l := range rl.Biz.Spec {
+		if l.Burst < l.Limit {
+			return fmt.Errorf("invalid rateLimiter.biz.spec.%d.burst value %d, "+
+				"should >= rateLimiter.biz.spec.%d.limit value %d", bizID, l.Burst, bizID, l.Limit)
+		}
 	}
 
 	return nil
@@ -1137,16 +1150,39 @@ func (rl RateLimiter) validate() error {
 
 // trySetDefault try set the default value of rate limiter
 func (rl *RateLimiter) trySetDefault() {
-	if rl.ClientBandWidth == 0 {
-		rl.ClientBandWidth = DefaultClientBandWidth
+	if rl.ClientBandwidth == 0 {
+		rl.ClientBandwidth = DefaultClientBandwidth
 	}
 
 	if rl.Global.Limit == 0 {
-		rl.Global.Limit = DefaultRateLimit
+		rl.Global.Limit = DefaultGlobalRateLimit
 	}
 
 	if rl.Global.Burst == 0 {
-		rl.Global.Burst = DefaultRateBurst
+		rl.Global.Burst = DefaultGlobalRateBurst
+	}
+
+	if rl.Biz.Default.Limit == 0 {
+		rl.Biz.Default.Limit = DefaultBizRateLimit
+	}
+
+	if rl.Biz.Default.Burst == 0 {
+		rl.Biz.Default.Burst = DefaultBizRateBurst
+	}
+
+	for bizID, l := range rl.Biz.Spec {
+		if l.Limit == 0 {
+			rl.Biz.Spec[bizID] = BasicRL{
+				Limit: DefaultBizRateLimit,
+				Burst: l.Burst,
+			}
+		}
+		if l.Burst == 0 {
+			rl.Biz.Spec[bizID] = BasicRL{
+				Limit: rl.Biz.Spec[bizID].Limit,
+				Burst: DefaultBizRateBurst,
+			}
+		}
 	}
 }
 
