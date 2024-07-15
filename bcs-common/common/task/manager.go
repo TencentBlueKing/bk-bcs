@@ -20,16 +20,16 @@ import (
 	"time"
 
 	"github.com/RichardKnop/machinery/v2"
-	"github.com/RichardKnop/machinery/v2/backends/mongo"
-	"github.com/RichardKnop/machinery/v2/brokers/amqp"
+	ibackend "github.com/RichardKnop/machinery/v2/backends/iface"
+	ibroker "github.com/RichardKnop/machinery/v2/brokers/iface"
 	"github.com/RichardKnop/machinery/v2/config"
-	"github.com/RichardKnop/machinery/v2/locks/eager"
+	ilock "github.com/RichardKnop/machinery/v2/locks/iface"
 	"github.com/RichardKnop/machinery/v2/tasks"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/task/store"
+	istep "github.com/Tencent/bk-bcs/bcs-common/common/task/steps/iface"
+	istore "github.com/Tencent/bk-bcs/bcs-common/common/task/store/iface"
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
-	bcsmongo "github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 )
 
@@ -39,10 +39,6 @@ const (
 )
 
 // BrokerConfig config for go-machinery broker
-type BrokerConfig struct {
-	QueueAddress string `json:"address"`
-	Exchange     string `json:"exchange"`
-}
 
 // TaskManager manager for task server
 type TaskManager struct { // nolint
@@ -50,13 +46,14 @@ type TaskManager struct { // nolint
 	lock       sync.Locker
 	server     *machinery.Server
 	worker     *machinery.Worker
-
-	brokerConfig *BrokerConfig
-	mongoConfig  *bcsmongo.Options
+	broker     ibroker.Broker
+	mlock      ilock.Lock
+	backend    ibackend.Backend
+	store      istore.Store
 
 	workerNum     int
-	stepWorkers   map[string]StepWorkerInterface
-	callBackFuncs map[string]CallbackInterface
+	stepWorkers   map[string]istep.StepWorkerInterface
+	callBackFuncs map[string]istep.CallbackInterface
 
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -65,15 +62,13 @@ type TaskManager struct { // nolint
 // ManagerConfig options for manager
 type ManagerConfig struct {
 	ModuleName  string
-	StepWorkers []StepWorkerInterface
-	CallBacks   []CallbackInterface
+	StepWorkers []istep.StepWorkerInterface
+	CallBacks   []istep.CallbackInterface
 	WorkerNum   int
-	Broker      *BrokerConfig
-	Backend     *bcsmongo.Options
 }
 
 // NewTaskManager create new manager
-func NewTaskManager() *TaskManager {
+func NewTaskManager(broker ibroker.Broker, backend ibackend.Backend, lock ilock.Lock, store istore.Store) *TaskManager {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	m := &TaskManager{
@@ -81,6 +76,10 @@ func NewTaskManager() *TaskManager {
 		cancel:    cancel,
 		lock:      &sync.Mutex{},
 		workerNum: DefaultWorkerConcurrency,
+		broker:    broker,
+		backend:   backend,
+		mlock:     lock,
+		store:     store,
 	}
 	return m
 }
@@ -93,15 +92,13 @@ func (m *TaskManager) Init(cfg *ManagerConfig) error {
 	}
 
 	if m.stepWorkers == nil {
-		m.stepWorkers = make(map[string]StepWorkerInterface)
+		m.stepWorkers = make(map[string]istep.StepWorkerInterface)
 	}
 
 	if m.callBackFuncs == nil {
-		m.callBackFuncs = make(map[string]CallbackInterface)
+		m.callBackFuncs = make(map[string]istep.CallbackInterface)
 	}
 
-	m.brokerConfig = cfg.Broker
-	m.mongoConfig = cfg.Backend
 	m.moduleName = cfg.ModuleName
 	if cfg.WorkerNum != 0 {
 		m.workerNum = cfg.WorkerNum
@@ -121,10 +118,6 @@ func (m *TaskManager) Init(cfg *ManagerConfig) error {
 			return fmt.Errorf("callback func [%s] already exists", c.GetName())
 		}
 		m.callBackFuncs[c.GetName()] = c
-	}
-
-	if err := m.initGlobalStorage(); err != nil {
-		return err
 	}
 
 	if err := m.initServer(); err != nil {
@@ -149,64 +142,15 @@ func (m *TaskManager) validate(c *ManagerConfig) error {
 		return fmt.Errorf("step worker is empty")
 	}
 
-	// broker config check
-	if c.Broker == nil || c.Broker.Exchange == "" || c.Broker.QueueAddress == "" {
-		return fmt.Errorf("broker config is empty")
-	}
-
-	if c.Backend == nil {
-		return fmt.Errorf("backend config is empty")
-	}
-
-	return nil
-}
-
-func (m *TaskManager) initGlobalStorage() error {
-	mongoDB, err := bcsmongo.NewDB(m.mongoConfig)
-	if err != nil {
-		return fmt.Errorf("init mongo db failed, err %s", err.Error())
-	}
-	if err = mongoDB.Ping(); err != nil {
-		return fmt.Errorf("ping mongo db failed, err %s", err.Error())
-	}
-
-	if m.moduleName == "" {
-		return fmt.Errorf("module name is empty")
-	}
-	modelSet := store.NewModelSet(mongoDB, m.moduleName)
-
-	globalStorage = modelSet
 	return nil
 }
 
 func (m *TaskManager) initServer() error {
-	mongoCli, err := newMongoCli(m.mongoConfig)
-	if err != nil {
-		return err
+	serverConfig := &config.Config{
+		ResultsExpireIn: 3600 * 48,
 	}
 
-	serverConfig := &config.Config{
-		Broker:          m.brokerConfig.QueueAddress,
-		DefaultQueue:    m.brokerConfig.Exchange,
-		ResultsExpireIn: 3600 * 48,
-		MongoDB: &config.MongoDBConfig{
-			Client:   mongoCli,
-			Database: m.mongoConfig.Database,
-		},
-		AMQP: &config.AMQPConfig{
-			Exchange:      m.brokerConfig.Exchange,
-			ExchangeType:  "direct",
-			BindingKey:    m.brokerConfig.Exchange,
-			PrefetchCount: 50,
-		},
-	}
-	broker := amqp.New(serverConfig)
-	backend, err := mongo.New(serverConfig)
-	if err != nil {
-		return fmt.Errorf("task server init mongo backend failed, %s", err.Error())
-	}
-	lock := eager.New()
-	m.server = machinery.NewServer(serverConfig, broker, backend, lock)
+	m.server = machinery.NewServer(serverConfig, m.broker, m.backend, m.mlock)
 
 	return nil
 }
@@ -256,7 +200,7 @@ func (m *TaskManager) GetTaskWithID(ctx context.Context, taskId string) (*types.
 
 // ListTask return tasks with conditions
 func (m *TaskManager) ListTask(ctx context.Context, cond *operator.Condition,
-	opt *store.ListOption) ([]types.Task, error) {
+	opt *istore.ListOption) ([]types.Task, error) {
 	return GetGlobalStorage().ListTask(ctx, cond, opt)
 }
 

@@ -10,18 +10,15 @@
  * limitations under the License.
  */
 
-// Package store implements task storage
-package store
+package iface
 
 import (
 	"context"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 )
 
-// ListOption options for list task
 type ListOption struct {
 	// Sort map for sort list results
 	Sort map[string]int
@@ -37,7 +34,16 @@ type ListOption struct {
 	SkipDecrypt bool
 }
 
-// TaskManagerModel model for TaskManager
+// Store model for TaskManager
+type Store interface {
+	CreateTask(ctx context.Context, task *types.Task) error
+	UpdateTask(ctx context.Context, task *types.Task) error
+	DeleteTask(ctx context.Context, taskID string) error
+	GetTask(ctx context.Context, taskID string) (*types.Task, error)
+	ListTask(ctx context.Context, opt *ListOption) ([]types.Task, error)
+	WriteStepOutput(ctx context.Context, taskId string, name string, output map[string]string) error
+}
+
 type TaskManagerModel interface {
 	// task information storage management
 	CreateTask(ctx context.Context, task *types.Task) error
@@ -46,17 +52,4 @@ type TaskManagerModel interface {
 	DeleteTask(ctx context.Context, taskID string) error
 	GetTask(ctx context.Context, taskID string) (*types.Task, error)
 	ListTask(ctx context.Context, cond *operator.Condition, opt *ListOption) ([]types.Task, error)
-}
-
-// ModelSet model for task
-type ModelSet struct {
-	*ModelTask
-}
-
-// NewModelSet create a new model set
-func NewModelSet(db drivers.DB, taskPrefix string) TaskManagerModel {
-	storeClient := &ModelSet{
-		ModelTask: New(db, taskPrefix),
-	}
-	return storeClient
 }

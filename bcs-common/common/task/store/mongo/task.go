@@ -11,7 +11,7 @@
  */
 
 // Package store implements task storage
-package store
+package mongo
 
 import (
 	"context"
@@ -20,6 +20,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/task/store/iface"
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
@@ -163,7 +164,7 @@ func (m *ModelTask) GetTask(ctx context.Context, taskID string) (*types.Task, er
 }
 
 // ListTask list clusters
-func (m *ModelTask) ListTask(ctx context.Context, cond *operator.Condition, opt *ListOption) ([]types.Task, error) {
+func (m *ModelTask) ListTask(ctx context.Context, cond *operator.Condition, opt *iface.ListOption) ([]types.Task, error) {
 	taskList := make([]types.Task, 0)
 	finder := m.db.Table(m.tableName).Find(cond)
 	if len(opt.Sort) != 0 {
@@ -181,4 +182,16 @@ func (m *ModelTask) ListTask(ctx context.Context, cond *operator.Condition, opt 
 		return nil, err
 	}
 	return taskList, nil
+}
+
+type ModelSet struct {
+	*ModelTask
+}
+
+// NewModelSet create a new model set
+func NewModelSet(db drivers.DB, taskPrefix string) iface.TaskManagerModel {
+	storeClient := &ModelSet{
+		ModelTask: New(db, taskPrefix),
+	}
+	return storeClient
 }

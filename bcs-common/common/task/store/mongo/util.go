@@ -11,7 +11,7 @@
  */
 
 // Package store implements task storage
-package store
+package mongo
 
 import (
 	"context"

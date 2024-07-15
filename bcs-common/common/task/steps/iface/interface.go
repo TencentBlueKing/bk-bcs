@@ -11,7 +11,7 @@
  */
 
 // Package task is a package for task management
-package task
+package iface
 
 import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"

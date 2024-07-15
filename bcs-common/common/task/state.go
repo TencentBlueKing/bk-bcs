@@ -19,12 +19,13 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	istep "github.com/Tencent/bk-bcs/bcs-common/common/task/steps/iface"
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
 )
 
 // getTaskStateAndCurrentStep get task state and current step
 func getTaskStateAndCurrentStep(taskId, stepName string,
-	callBackFuncs map[string]CallbackInterface) (*State, *types.Step, error) {
+	callBackFuncs map[string]istep.CallbackInterface) (*State, *types.Step, error) {
 	task, err := GetGlobalStorage().GetTask(context.Background(), taskId)
 	if err != nil {
 		return nil, nil, fmt.Errorf("get task %s information failed, %s", taskId, err.Error())
