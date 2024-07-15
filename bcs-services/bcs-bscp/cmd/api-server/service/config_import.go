@@ -35,6 +35,7 @@ import (
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/repository"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/auth"
@@ -517,16 +518,29 @@ func (c *configImport) fileScannerHasherUploader(kt *kit.Kit, path, rootDir stri
 		fileType = detectFileType(fileBuffer.Bytes())
 	}
 	_, _ = fileContent.Seek(0, 0)
+
+	// if err is ErrFileContentNotFound, the file does not exist. Do not handle it
+	existObjectMetadata, err := c.provider.Metadata(kt, hashString)
+	if err != nil && !errors.Is(err, errf.ErrFileContentNotFound) {
+		return resp, err
+	}
+
+	resp.Name = fileInfo.Name()
+	resp.FileType = fileType
+	resp.Path = filePath
+	// it exists in repo/cos without any errors
+	if err == nil {
+		resp.ByteSize = uint64(existObjectMetadata.ByteSize)
+		resp.Sign = existObjectMetadata.Sha256
+		return resp, nil
+	}
+
 	result, err := c.provider.Upload(kt, hashString, fileContent)
 	if err != nil {
 		return resp, fmt.Errorf("fiel upload fail filename: %s; err: %s", fileInfo.Name(), err.Error())
 	}
-
-	resp.Name = fileInfo.Name()
 	resp.ByteSize = uint64(result.ByteSize)
 	resp.Sign = result.Sha256
-	resp.FileType = fileType
-	resp.Path = filePath
 
 	return resp, nil
 }
