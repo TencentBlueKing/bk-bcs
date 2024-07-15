@@ -5,13 +5,21 @@
         v-model="localData.name"
         :placeholder="t('请输入2-32字符，只允许英文、数字、下划线、中划线且必须以英文、数字开头和结尾')"
         :disabled="editable"
-        @input="handleChange" />
+        @input="handleChange"
+        v-bk-tooltips="{
+          content: t('请输入2-32字符，只允许英文、数字、下划线、中划线且必须以英文、数字开头和结尾'),
+          disabled: locale === 'zh-cn',
+        }" />
     </bk-form-item>
     <bk-form-item :label="t('form_服务别名')" property="alias" required>
       <bk-input
         v-model="localData.alias"
         :placeholder="t('请输入2-128字符，只允许中文、英文、数字、下划线、中划线且必须以中文、英文、数字开头和结尾')"
-        @input="handleChange" />
+        @input="handleChange"
+        v-bk-tooltips="{
+          content: t('请输入2-128字符，只允许中文、英文、数字、下划线、中划线且必须以中文、英文、数字开头和结尾'),
+          disabled: locale === 'zh-cn',
+        }" />
     </bk-form-item>
     <bk-form-item :label="t('服务描述')" property="memo">
       <bk-input
@@ -48,7 +56,7 @@
   import { IServiceEditForm } from '../../../../../../types/service';
   import { CONFIG_KV_TYPE } from '../../../../../constants/config';
 
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
 
   const emits = defineEmits(['change']);
 
