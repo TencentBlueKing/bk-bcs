@@ -94,7 +94,9 @@
                   </div>
                   <template #content>
                     <div class="config-actions">
-                      <div class="action-item" @click="handleOpenAddToPkgsDialog(row)">{{ t('添加至套餐') }}</div>
+                      <div class="action-item" @click="handleOpenAddToPkgsDialog(row, index)">
+                        {{ t('添加至套餐') }}
+                      </div>
                       <div
                         v-if="citeByPkgsList[index]?.length > 0"
                         class="action-item"
@@ -103,7 +105,7 @@
                       </div>
                       <DownloadConfig
                         class="action-item"
-                        theme="default"
+                        theme=""
                         :text="$t('下载模板文件')"
                         :space-id="spaceId"
                         :template-space-id="currentTemplateSpace"
@@ -123,11 +125,15 @@
         </template>
       </bk-table>
     </bk-loading>
-    <AddToDialog v-model:show="isAddToPkgsDialogShow" :value="crtConfig" @added="handleAdded" />
+    <AddToDialog
+      v-model:show="isAddToPkgsDialogShow"
+      :value="crtConfig"
+      :cite-by-pkg-ids="configCiteByPkgIds"
+      @added="handleAdded" />
     <MoveOutFromPkgsDialog
       v-model:show="isMoveOutFromPkgsDialogShow"
       :id="crtConfig.length > 0 ? crtConfig[0].id : 0"
-      :name="crtConfig.length > 0 ? crtConfig[0].spec.name : ''"
+      :name="crtConfig.length > 0 ? fileAP(crtConfig[0]) : ''"
       :current-pkg="props.currentPkg"
       @moved-out="handleMovedOut" />
     <AppsBoundByTemplate
@@ -220,6 +226,7 @@
   const isEditConfigShow = ref(false);
   const editConfigId = ref(0);
   const selectConfigMemo = ref('');
+  const configCiteByPkgIds = ref<number[]>([]);
 
   watch(
     () => props.currentPkg,
@@ -335,9 +342,10 @@
   };
 
   // 添加至套餐
-  const handleOpenAddToPkgsDialog = (config: ITemplateConfigItem) => {
+  const handleOpenAddToPkgsDialog = (config: ITemplateConfigItem, index: number) => {
     isAddToPkgsDialogShow.value = true;
     crtConfig.value = [config];
+    configCiteByPkgIds.value = citeByPkgsList.value[index].map((pkg) => pkg.template_set_id);
   };
 
   // 从套餐移除
