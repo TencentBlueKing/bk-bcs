@@ -212,6 +212,9 @@ set_yum_repo() {
           elif grep "Tencent tlinux release 2.[0-9]*" /etc/tlinux-release;then
             sed -i "s/\$releasever/7/g" /etc/yum.repos.d/epel.repo
             sed -i "s/\$releasever/7/g" /etc/yum.repos.d/CentOS-Base.repo
+          elif grep -i "Tencent Linux release 2.[0-9]*" /etc/tlinux-release;then
+            sed -i "s/\$releasever/7/g" /etc/yum.repos.d/epel.repo
+            sed -i "s/\$releasever/7/g" /etc/yum.repos.d/CentOS-Base.repo
           fi
         fi
         yum clean all
