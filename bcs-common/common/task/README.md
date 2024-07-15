@@ -13,6 +13,12 @@
 
 ### 任务框架
 
+### 支持的组件
+
+* Brokers: etcd
+* Locks：etcd
+* Backends: etcd
+
 ### 任务框架实现功能
 
 * 基于协程级别的轻量级任务执行
