@@ -60,7 +60,7 @@ export default {
          text：多行字符串文本，不校验数据结构，大小2Mb
          json、xml、yaml：不同格式的结构化数据，会校验数据结构`,
     createConfig: `你可以在配置文件中引用全局变量并定义新的 BSCP 变量。变量命名规则如下：
-         1.使用 Go 模板语法，例如{{ .bk_bscp_appid }}
+         1.使用 Go 模板语法，例如"{'{{'} .bk_bscp_appid {'}}'}"
          2.变量名必须以 "bk_bscp_" 或者 "BK_BSCP_" 开头`,
   },
   '确认删除服务？': '确认删除服务？',

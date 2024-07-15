@@ -15,13 +15,10 @@ package service
 import (
 	"context"
 	"fmt"
-	"path"
-	"strings"
 	"sync"
 
 	"golang.org/x/sync/errgroup"
 
-	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/i18n"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
@@ -495,40 +492,10 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbcs.ListConfigItems
 		return nil, err
 	}
 
-	// 对比模板配置, 检测是否存在冲突
-	trc, err := s.client.DS.ListAppBoundTmplRevisions(grpcKit.RpcCtx(), &pbds.ListAppBoundTmplRevisionsReq{
-		BizId: grpcKit.BizID,
-		AppId: req.AppId,
-		All:   true,
-	})
-	if err != nil {
-		logs.Errorf("list app template revisions failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
-	}
-
-	existingPaths := []string{}
-	for _, v := range rp.GetDetails() {
-		if v.FileState != constant.FileStateDelete {
-			existingPaths = append(existingPaths, path.Join(v.Spec.Path, v.Spec.Name))
-		}
-	}
-	for _, v := range trc.GetDetails() {
-		if v.FileState != constant.FileStateDelete {
-			existingPaths = append(existingPaths, path.Join(v.Path, v.Name))
-		}
-	}
-
-	conflictNums, conflictPaths := checkExistingPathConflict(existingPaths)
-	for _, v := range rp.GetDetails() {
-		if v.FileState != constant.FileStateDelete {
-			v.IsConflict = conflictPaths[path.Join(v.Spec.Path, v.Spec.Name)]
-		}
-	}
-
 	resp := &pbcs.ListConfigItemsResp{
 		Count:          rp.Count,
 		Details:        rp.Details,
-		ConflictNumber: conflictNums,
+		ConflictNumber: rp.ConflictNumber,
 	}
 	return resp, nil
 }
@@ -688,34 +655,6 @@ func (s *Service) UndoConfigItem(ctx context.Context, req *pbcs.UndoConfigItemRe
 		return nil, err
 	}
 	return &pbcs.UndoConfigItemResp{}, nil
-}
-
-// checkExistingPathConflict Check existing path collections for conflicts.
-func checkExistingPathConflict(existing []string) (uint32, map[string]bool) {
-	conflictPaths := make(map[string]bool, len(existing))
-	var conflictNums uint32
-	conflictMap := make(map[string]bool, 0)
-	// 遍历每一个路径
-	for i := 0; i < len(existing); i++ {
-		// 检查当前路径与后续路径之间是否存在冲突
-		for j := i + 1; j < len(existing); j++ {
-			if strings.HasPrefix(existing[j]+"/", existing[i]+"/") || strings.HasPrefix(existing[i]+"/", existing[j]+"/") {
-				// 相等也算冲突
-				if len(existing[j]) == len(existing[i]) {
-					conflictNums++
-				} else if len(existing[j]) < len(existing[i]) {
-					conflictMap[existing[j]] = true
-				} else {
-					conflictMap[existing[i]] = true
-				}
-
-				conflictPaths[existing[i]] = true
-				conflictPaths[existing[j]] = true
-			}
-		}
-	}
-
-	return uint32(len(conflictMap)) + conflictNums, conflictPaths
 }
 
 // CompareConfigItemConflicts compare config item version conflicts

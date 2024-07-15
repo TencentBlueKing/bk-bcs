@@ -60,7 +60,7 @@ export default {
          text: Multi-line string text, unverified data structure, size 2Mb
          json、xml、yaml: For structured data in different formats, the data structure is checked`,
     createConfig: `You can reference global variables and define new BSCP variables in the configuration file. The variable rules are as follows
-         1.To go template syntax, for example {{ .bk_bscp_appid }}
+         1.To go template syntax, for example {'{{'} .bk_bscp_appid {'}}'}
          2.The variable name must start with “bk_bscp_” or “BK_BSCP_”`,
   },
   '确认删除服务？': 'Are you sure to delete the service?',
