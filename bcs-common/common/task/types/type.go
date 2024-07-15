@@ -78,12 +78,11 @@ type Step struct {
 	Alias  string            `json:"alias" bson:"alias"`
 	Params map[string]string `json:"params" bson:"params"`
 	// step extras for string json, need client step to parse
-	Extras       string `json:"extras" bson:"extras"`
-	Status       string `json:"status" bson:"status"`
-	Message      string `json:"message" bson:"message"`
-	SkipOnFailed bool   `json:"skipOnFailed" bson:"skipOnFailed"`
-	RetryCount   uint32 `json:"retryCount" bson:"retryCount"`
-
+	Extras              string `json:"extras" bson:"extras"`
+	Status              string `json:"status" bson:"status"`
+	Message             string `json:"message" bson:"message"`
+	SkipOnFailed        bool   `json:"skipOnFailed" bson:"skipOnFailed"`
+	RetryCount          uint32 `json:"retryCount" bson:"retryCount"`
 	Start               string `json:"start" bson:"start"`
 	End                 string `json:"end" bson:"end"`
 	ExecutionTime       uint32 `json:"executionTime" bson:"executionTime"`
