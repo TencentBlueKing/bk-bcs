@@ -781,7 +781,7 @@ export default {
   初始化配置信息: 'Initialize configuration information',
   复制命令: 'Command Copy',
   '仅支持字母，数字，\'-\'，\'_\'，\'.\' 及 \'/\' 且需以字母数字开头和结尾': 'Only supports letters, numbers, \'-\', \'_\', \'.\' and \'/\' characters, and must start and end with a letter or number',
-  '需以字母数字开头和结尾，可包含 \'-\'，\'_\'，\'.\' 和字母数字': 'Must start and end with a letter or number, and may include \'-\', \'_\', \'.\', and alphanumeric characters',
+  '需以字母、数字开头和结尾，可包含 \'-\'，\'_\'，\'.\' 和字母数字及负数': 'Must start and end with a letter or number, can include \'-\', \'_\', \'.\', and alphanumeric characters, as well as negative numbers',
 
   // 公共组件
   页面不存在: 'Page does not exist',
