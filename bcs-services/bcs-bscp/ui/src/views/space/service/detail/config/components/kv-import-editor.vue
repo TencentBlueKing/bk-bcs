@@ -215,7 +215,7 @@
         });
       }
     });
-    emits('hasError', textContent.value && errorLine.value.length === 0);
+    emits('hasError', textContent.value && errorLine.value.length > 0);
     return hasSeparatorError;
   };
 
