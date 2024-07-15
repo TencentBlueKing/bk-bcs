@@ -26,6 +26,7 @@ import (
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 	pbatb "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/app-template-binding"
 	pbbase "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
+	pbrci "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/released-ci"
 	pbds "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/search"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
@@ -276,6 +277,24 @@ func (s *Service) ListAppBoundTmplRevisions(ctx context.Context,
 		}
 	}
 
+	existingPaths := []string{}
+	for _, v := range details {
+		if v.FileState != constant.FileStateDelete {
+			existingPaths = append(existingPaths, path.Join(v.Path, v.Name))
+		}
+	}
+
+	conflictPaths, err := s.compareNonTemplateConfigConflicts(kt, req.BizId, req.AppId, existingPaths)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, v := range details {
+		if v.FileState != constant.FileStateDelete {
+			v.IsConflict = conflictPaths[path.Join(v.Path, v.Name)]
+		}
+	}
+
 	// search by logic
 	if req.SearchValue != "" {
 		searcher, err := search.NewSearcher(req.SearchFields, req.SearchValue, search.TemplateRevision)
@@ -326,6 +345,43 @@ func (s *Service) ListAppBoundTmplRevisions(ctx context.Context,
 		Details: details,
 	}
 	return resp, nil
+}
+
+// 对比非模板配置冲突
+func (s *Service) compareNonTemplateConfigConflicts(kt *kit.Kit, bizID, appID uint32,
+	existingPaths []string) (map[string]bool, error) {
+
+	configItemDetails, err := s.dao.ConfigItem().ListAllByAppID(kt, appID, bizID)
+	if err != nil {
+		logs.Errorf("list editing config items failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+	var fileReleased []*table.ReleasedConfigItem
+	fileReleased, err = s.dao.ReleasedCI().GetReleasedLately(kt, bizID, appID)
+	if err != nil {
+		logs.Errorf("get released failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	var commits []*table.Commit
+	commits, err = s.dao.Commit().ListAppLatestCommits(kt, bizID, appID)
+	if err != nil {
+		logs.Errorf("get commit, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+	// 过滤被删除的非模板配置
+	configItems := pbrci.PbConfigItemState(configItemDetails, fileReleased, commits,
+		[]string{constant.FileStateUnchange, constant.FileStateAdd, constant.FileStateRevise})
+
+	for _, v := range configItems {
+		if v.FileState != constant.FileStateDelete {
+			existingPaths = append(existingPaths, path.Join(v.Spec.Path, v.Spec.Name))
+		}
+	}
+
+	_, conflictPaths := checkExistingPathConflict(existingPaths)
+
+	return conflictPaths, nil
 }
 
 // setFileState set file state for template config items.
