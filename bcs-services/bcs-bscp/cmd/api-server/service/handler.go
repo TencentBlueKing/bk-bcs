@@ -100,6 +100,9 @@ func FeatureFlagsHandler(w http.ResponseWriter, r *http.Request) {
 		if resource.TmplSetTmplCnt != 0 {
 			featureFlags.ResourceLimit.TmplSetTmplCnt = resource.TmplSetTmplCnt
 		}
+		if resource.MaxUploadContentLength != 0 {
+			featureFlags.ResourceLimit.MaxUploadContentLength = resource.MaxUploadContentLength
+		}
 		// NOCC:golint/todo(忽略)
 		// nolint TODO：其他资源限制
 	}
