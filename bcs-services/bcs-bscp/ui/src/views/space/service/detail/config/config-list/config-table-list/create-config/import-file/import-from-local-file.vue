@@ -123,7 +123,7 @@
 
   const handleFileUpload = async (option: { file: File }) => {
     const {
-      RESOURCE_LIMIT: { MaxUploadContentLength, MaxUploadSingleContentLength },
+      RESOURCE_LIMIT: { MaxUploadContentLength, maxFileSize },
     } = spaceFeatureFlags.value;
     const fileSize = option.file.size / 1024 / 1024;
     const isCompressionFile = handleCheckIsCompressedFile(option.file.name);
@@ -136,19 +136,19 @@
         });
         return;
       }
-      if (!isCompressionFile && fileSize > MaxUploadSingleContentLength) {
+      if (!isCompressionFile && fileSize > maxFileSize) {
         Message({
           theme: 'error',
-          message: t('单文件大小不能超过{n}M', { n: MaxUploadSingleContentLength }),
+          message: t('单文件大小不能超过{n}M', { n: maxFileSize }),
         });
         return;
       }
     }
 
-    if (!isDecompression.value && fileSize > MaxUploadSingleContentLength) {
+    if (!isDecompression.value && fileSize > maxFileSize) {
       Message({
         theme: 'error',
-        message: t('单文件大小不能超过{n}M', { n: MaxUploadSingleContentLength }),
+        message: t('单文件大小不能超过{n}M', { n: maxFileSize }),
       });
       return;
     }
