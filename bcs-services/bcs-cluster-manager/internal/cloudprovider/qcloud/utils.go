@@ -17,15 +17,22 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/template"
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 var (
 	cloudName = "qcloud"
+)
+
+const (
+	defaultRegion = "ap-nanjing"
 )
 
 // qcloud taskName
@@ -66,6 +73,8 @@ const (
 	updateAutoScalingOptionTemplate = "tke-update auto scaling option: %s"
 	// switchAutoScalingOptionStatusTemplate bk-sops add task template
 	switchAutoScalingOptionStatusTemplate = "tke-switch auto scaling option status: %s"
+	// switchClusterNetworkTemplate bk-sops add task template
+	switchClusterNetworkTemplate = "tke-update cluster network: %s"
 )
 
 // step task name&method
@@ -105,10 +114,6 @@ var (
 		StepMethod: fmt.Sprintf("%s-RegisterManageClusterKubeConfigTask", cloudName),
 		StepName:   "注册集群连接信息",
 	}
-	enableTkeClusterVpcCniStep = cloudprovider.StepInfo{
-		StepMethod: fmt.Sprintf("%s-EnableTkeClusterVpcCniTask", cloudName),
-		StepName:   "开启VPC-CNI网络模式",
-	}
 	updateCreateClusterDBInfoStep = cloudprovider.StepInfo{
 		StepMethod: fmt.Sprintf("%s-UpdateCreateClusterDBInfoTask", cloudName),
 		StepName:   "更新任务状态",
@@ -132,10 +137,6 @@ var (
 	checkInstanceStateStep = cloudprovider.StepInfo{
 		StepMethod: fmt.Sprintf("%s-CheckInstanceStateTask", cloudName),
 		StepName:   "节点转vpc状态检测",
-	}
-	addNodesShieldAlarmStep = cloudprovider.StepInfo{
-		StepMethod: fmt.Sprintf("%s-AddNodesShieldAlarmTask", cloudName),
-		StepName:   "屏蔽机器告警",
 	}
 	addNodesToClusterStep = cloudprovider.StepInfo{
 		StepMethod: fmt.Sprintf("%s-AddNodesToClusterTask", cloudName),
@@ -220,10 +221,16 @@ var (
 		StepMethod: fmt.Sprintf("%s-%s", cloudName, cloudprovider.ApplyExternalNodeMachinesTask),
 		StepName:   "申请IDC节点任务",
 	}
+
 	checkClusterNodesStatusStep = cloudprovider.StepInfo{
 		StepMethod: fmt.Sprintf("%s-CheckClusterNodesStatusTask", cloudName),
 		StepName:   "检测节点状态",
 	}
+	checkExternalNodesEmptyStep = cloudprovider.StepInfo{
+		StepMethod: fmt.Sprintf("%s-%s", cloudName, cloudprovider.CheckExternalNodesEmptyTask),
+		StepName:   "节点空闲检查",
+	}
+
 	updateDesiredNodesDBInfoStep = cloudprovider.StepInfo{ // nolint
 		StepMethod: fmt.Sprintf("%s-UpdateDesiredNodesDBInfoTask", cloudName),
 		StepName:   "清理节点数据",
@@ -251,6 +258,24 @@ var (
 	removeExternalNodesFromClusterStep = cloudprovider.StepInfo{
 		StepMethod: fmt.Sprintf("%s-RemoveExternalNodesFromClusterTask", cloudName),
 		StepName:   "删除第三方节点",
+	}
+
+	// allocateClusterSubnetStep allocate cluster subnet ip
+	allocateClusterSubnetStep = cloudprovider.StepInfo{
+		StepMethod: fmt.Sprintf("%s-AllocateClusterSubnetTask", cloudName),
+		StepName:   "分配集群子网",
+	}
+
+	// open cluster vpc cni
+	openClusterVpcCniStep = cloudprovider.StepInfo{
+		StepMethod: fmt.Sprintf("%s-OpenClusterVpcCniTask", cloudName),
+		StepName:   "开启集群VPC-CNI网络模式",
+	}
+
+	// close cluster vpc cni
+	closeClusterVpcCniStep = cloudprovider.StepInfo{
+		StepMethod: fmt.Sprintf("%s-CloseClusterVpcCniTask", cloudName),
+		StepName:   "关闭集群VPC-CNI网络模式",
 	}
 )
 
@@ -337,14 +362,32 @@ func (cn *CreateClusterTaskOption) BuildNodeLabelsStep(task *proto.Task) {
 	common.BuildNodeLabelsTaskStep(task, cn.Cluster.ClusterID, cn.Nodes, nil)
 }
 
+// BuildAllocateSubnetTask 为集群开启vpc-cni时分配子网
+func (cn *CreateClusterTaskOption) BuildAllocateSubnetTask(task *proto.Task) {
+	if !cn.Cluster.GetNetworkSettings().GetEnableVPCCni() {
+		return
+	}
+
+	allocateStep := cloudprovider.InitTaskStep(allocateClusterSubnetStep)
+	allocateStep.Params[cloudprovider.ClusterIDKey.String()] = cn.Cluster.ClusterID
+	allocateStep.Params[cloudprovider.CloudIDKey.String()] = cn.Cluster.Provider
+
+	task.Steps[allocateClusterSubnetStep.StepMethod] = allocateStep
+	task.StepSequence = append(task.StepSequence, allocateClusterSubnetStep.StepMethod)
+}
+
 // BuildEnableVpcCniStep 开启vpc-cni网络特性
 func (cn *CreateClusterTaskOption) BuildEnableVpcCniStep(task *proto.Task) {
-	enableVpcCniStep := cloudprovider.InitTaskStep(enableTkeClusterVpcCniStep)
+	if !cn.Cluster.GetNetworkSettings().GetEnableVPCCni() {
+		return
+	}
+
+	enableVpcCniStep := cloudprovider.InitTaskStep(openClusterVpcCniStep)
 	enableVpcCniStep.Params[cloudprovider.ClusterIDKey.String()] = cn.Cluster.ClusterID
 	enableVpcCniStep.Params[cloudprovider.CloudIDKey.String()] = cn.Cluster.Provider
 
-	task.Steps[enableTkeClusterVpcCniStep.StepMethod] = enableVpcCniStep
-	task.StepSequence = append(task.StepSequence, enableTkeClusterVpcCniStep.StepMethod)
+	task.Steps[openClusterVpcCniStep.StepMethod] = enableVpcCniStep
+	task.StepSequence = append(task.StepSequence, openClusterVpcCniStep.StepMethod)
 }
 
 // BuildUpdateTaskStatusStep 更新任务状态
@@ -478,8 +521,12 @@ func (ic *ImportClusterTaskOption) BuildRegisterClusterKubeConfigStep(task *prot
 
 // DeleteClusterTaskOption 删除集群
 type DeleteClusterTaskOption struct {
-	Cluster    *proto.Cluster
+	// Cluster cluster
+	Cluster *proto.Cluster
+	// DeleteMode delete mode
 	DeleteMode string
+	// LastClusterStatus last cluster status
+	LastClusterStatus string
 }
 
 // BuildDeleteTKEClusterStep 删除集群
@@ -488,6 +535,7 @@ func (dc *DeleteClusterTaskOption) BuildDeleteTKEClusterStep(task *proto.Task) {
 	deleteStep.Params[cloudprovider.ClusterIDKey.String()] = dc.Cluster.ClusterID
 	deleteStep.Params[cloudprovider.CloudIDKey.String()] = dc.Cluster.Provider
 	deleteStep.Params[cloudprovider.DeleteModeKey.String()] = dc.DeleteMode
+	deleteStep.Params[cloudprovider.LastClusterStatus.String()] = dc.LastClusterStatus
 
 	task.Steps[deleteTKEClusterStep.StepMethod] = deleteStep
 	task.StepSequence = append(task.StepSequence, deleteTKEClusterStep.StepMethod)
@@ -612,13 +660,13 @@ func (ac *AddNodesToClusterTaskOption) BuildCheckInstanceStateStep(task *proto.T
 	task.StepSequence = append(task.StepSequence, checkInstanceStateStep.StepMethod)
 }
 
-// BuildShieldAlertStep 屏蔽上架节点告警
-func (ac *AddNodesToClusterTaskOption) BuildShieldAlertStep(task *proto.Task) {
-	shieldStep := cloudprovider.InitTaskStep(addNodesShieldAlarmStep)
-	shieldStep.Params[cloudprovider.ClusterIDKey.String()] = ac.Cluster.ClusterID
+// BuildCheckNodeIpsInCmdbStep 节点转移vpc时检测信息同步
+func (ac *AddNodesToClusterTaskOption) BuildCheckNodeIpsInCmdbStep(task *proto.Task) {
+	if len(ac.DiffVpcNodeIds) == 0 {
+		return
+	}
 
-	task.Steps[addNodesShieldAlarmStep.StepMethod] = shieldStep
-	task.StepSequence = append(task.StepSequence, addNodesShieldAlarmStep.StepMethod)
+	common.BuildCheckNodeIpsInCmdbStep(task, ac.Cluster)
 }
 
 // BuildAddNodesToClusterStep 上架集群节点
@@ -719,8 +767,8 @@ func (rn *RemoveNodesFromClusterTaskOption) BuildRemoveNodesFromClusterStep(task
 	task.StepSequence = append(task.StepSequence, removeNodesFromClusterStep.StepMethod)
 }
 
-// BuildCheckClusterCleanNodsStep 检测集群清理节点池节点
-func (rn *RemoveNodesFromClusterTaskOption) BuildCheckClusterCleanNodsStep(task *proto.Task) {
+// BuildCheckClusterCleanNodesStep 检测集群清理节点池节点
+func (rn *RemoveNodesFromClusterTaskOption) BuildCheckClusterCleanNodesStep(task *proto.Task) {
 	checkStep := cloudprovider.InitTaskStep(checkClusterCleanNodsStep)
 
 	checkStep.Params[cloudprovider.ClusterIDKey.String()] = rn.Cluster.ClusterID
@@ -797,8 +845,8 @@ func (cn *CleanNodeInGroupTaskOption) BuildCleanNodeGroupNodesStep(task *proto.T
 	task.StepSequence = append(task.StepSequence, cleanNodeGroupNodesStep.StepMethod)
 }
 
-// BuildCheckClusterCleanNodsStep 检测集群清理节点池节点
-func (cn *CleanNodeInGroupTaskOption) BuildCheckClusterCleanNodsStep(task *proto.Task) {
+// BuildCheckClusterCleanNodesStep 检测集群清理节点池节点
+func (cn *CleanNodeInGroupTaskOption) BuildCheckClusterCleanNodesStep(task *proto.Task) {
 	checkStep := cloudprovider.InitTaskStep(checkClusterCleanNodsStep)
 
 	checkStep.Params[cloudprovider.ClusterIDKey.String()] = cn.Group.ClusterID
@@ -875,7 +923,9 @@ func (dn *DeleteNodeGroupTaskOption) BuildDeleteNodeGroupStep(task *proto.Task) 
 
 // UpdateDesiredNodesTaskOption 扩容节点组节点
 type UpdateDesiredNodesTaskOption struct {
+	Cluster  *proto.Cluster
 	Group    *proto.NodeGroup
+	Cloud    *proto.Cloud
 	Desired  uint32
 	Operator string
 }
@@ -906,6 +956,35 @@ func (ud *UpdateDesiredNodesTaskOption) BuildApplyExternalNodeMachinesStep(task 
 
 	task.Steps[applyExternalNodeMachinesStep.StepMethod] = applyExternalNodeStep
 	task.StepSequence = append(task.StepSequence, applyExternalNodeMachinesStep.StepMethod)
+}
+
+// BuildCheckExternalNodesEmptyStep 第三方节点空闲检查
+func (ud *UpdateDesiredNodesTaskOption) BuildCheckExternalNodesEmptyStep(task *proto.Task) {
+	plugin := template.GetPluginByAction(ud.Cloud.GetClusterManagement().GetCheckExternalNodeEmptyAction(),
+		cloudprovider.CheckExternalNodesEmptyTask.String())
+	if plugin == nil {
+		blog.Infof("UpdateDesiredNodesTaskOption BuildCheckExternalNodesEmptyStep plugin is null")
+		return
+	}
+
+	extra := template.ExtraInfo{
+		NodeIPList:      "",
+		BusinessID:      ud.Cluster.GetBusinessID(),
+		GroupColocation: ud.Group.GetNodeTemplate().GetSkipSystemInit(),
+	}
+	checkExternalNodeStep, err := template.GenerateBKopsStep(checkExternalNodesEmptyStep.StepMethod,
+		checkExternalNodesEmptyStep.StepName, checkExternalNodesEmptyStep.StepMethod, ud.Cluster, plugin, extra)
+	if err != nil {
+		blog.Errorf("UpdateDesiredNodesTaskOption BuildCheckExternalNodesEmptyStep failed: %v", err)
+		return
+	}
+
+	checkExternalNodeStep.Params[cloudprovider.ClusterIDKey.String()] = ud.Group.ClusterID
+	checkExternalNodeStep.Params[cloudprovider.NodeGroupIDKey.String()] = ud.Group.NodeGroupID
+	checkExternalNodeStep.Params[cloudprovider.CloudIDKey.String()] = ud.Group.Provider
+
+	task.Steps[checkExternalNodesEmptyStep.StepMethod] = checkExternalNodeStep
+	task.StepSequence = append(task.StepSequence, checkExternalNodesEmptyStep.StepMethod)
 }
 
 // BuildGetExternalNodeScriptStep 获取上架第三方节点脚本
@@ -946,4 +1025,48 @@ func (ud *UpdateDesiredNodesTaskOption) BuildCheckClusterNodeStatusStep(task *pr
 
 	task.Steps[checkClusterNodesStatusStep.StepMethod] = checkClusterNodeStatusStep
 	task.StepSequence = append(task.StepSequence, checkClusterNodesStatusStep.StepMethod)
+}
+
+// SwitchClusterNetworkTaskOption 切换集群网络模式
+type SwitchClusterNetworkTaskOption struct {
+	Cluster                 *proto.Cluster
+	SubnetInfo              string
+	IsStaticIpModeInfo      string
+	ClaimExpiredSecondsInfo string
+}
+
+// BuildAllocateClusterSubnetTask allocate cluster subnet
+func (sn *SwitchClusterNetworkTaskOption) BuildAllocateClusterSubnetTask(task *proto.Task) {
+	allocateSubnetStep := cloudprovider.InitTaskStep(allocateClusterSubnetStep)
+
+	allocateSubnetStep.Params[cloudprovider.ClusterIDKey.String()] = sn.Cluster.ClusterID
+	allocateSubnetStep.Params[cloudprovider.SubnetInfoKey.String()] = sn.SubnetInfo
+	allocateSubnetStep.Params[cloudprovider.IsStaticIpModeKey.String()] = sn.IsStaticIpModeInfo
+	allocateSubnetStep.Params[cloudprovider.ClaimExpiredSecondsKey.String()] = sn.ClaimExpiredSecondsInfo
+
+	task.Steps[allocateClusterSubnetStep.StepMethod] = allocateSubnetStep
+	task.StepSequence = append(task.StepSequence, allocateClusterSubnetStep.StepMethod)
+}
+
+// BuildClusterOpenVpcCniStep 开启vpc-cni网络模式
+func (sn *SwitchClusterNetworkTaskOption) BuildClusterOpenVpcCniStep(task *proto.Task) {
+	openVpcCniStep := cloudprovider.InitTaskStep(openClusterVpcCniStep)
+
+	openVpcCniStep.Params[cloudprovider.ClusterIDKey.String()] = sn.Cluster.ClusterID
+	openVpcCniStep.Params[cloudprovider.SubnetInfoKey.String()] = sn.SubnetInfo
+	openVpcCniStep.Params[cloudprovider.IsStaticIpModeKey.String()] = sn.IsStaticIpModeInfo
+	openVpcCniStep.Params[cloudprovider.ClaimExpiredSecondsKey.String()] = sn.ClaimExpiredSecondsInfo
+
+	task.Steps[openClusterVpcCniStep.StepMethod] = openVpcCniStep
+	task.StepSequence = append(task.StepSequence, openClusterVpcCniStep.StepMethod)
+}
+
+// BuildClusterCloseVpcCniStep 关闭cpv-cni网络模式
+func (sn *SwitchClusterNetworkTaskOption) BuildClusterCloseVpcCniStep(task *proto.Task) {
+	closeVpcCniStep := cloudprovider.InitTaskStep(closeClusterVpcCniStep)
+
+	closeVpcCniStep.Params[cloudprovider.ClusterIDKey.String()] = sn.Cluster.ClusterID
+
+	task.Steps[closeClusterVpcCniStep.StepMethod] = closeVpcCniStep
+	task.StepSequence = append(task.StepSequence, closeClusterVpcCniStep.StepMethod)
 }

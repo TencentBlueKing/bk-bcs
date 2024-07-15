@@ -19,12 +19,13 @@ import (
 	"net/http"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	iamnamespace "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/namespace"
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
 	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware/ctxutils"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/permitcheck"
 )
 
 // ApplicationDiffRequest defines the diff request
@@ -70,7 +71,7 @@ func (plugin *AppPlugin) applicationDiff(r *http.Request) (*http.Request, *mw.Ht
 	if err != nil {
 		return r, mw.ReturnErrorResponse(http.StatusBadRequest, errors.Wrapf(err, "build request failed"))
 	}
-	blog.Infof("RequestID[%s] received diff request: %v", mw.RequestID(r.Context()), req)
+	blog.Infof("RequestID[%s] received diff request: %v", ctxutils.RequestID(r.Context()), req)
 	application, err := plugin.checkApplicationDiffRequest(r.Context(), req)
 	if err != nil {
 		return r, mw.ReturnErrorResponse(http.StatusBadRequest,
@@ -83,12 +84,12 @@ func (plugin *AppPlugin) applicationDiff(r *http.Request) (*http.Request, *mw.Ht
 	}
 	return r, mw.ReturnJSONResponse(&ApplicationDiffResponse{
 		Code:      0,
-		RequestID: mw.RequestID(r.Context()),
+		RequestID: ctxutils.RequestID(r.Context()),
 		Data: &ApplicationDiffData{
 			Cluster:       application.Spec.Destination.Server,
-			RepoUrl:       application.Spec.Source.RepoURL,
+			RepoUrl:       application.Spec.GetSource().RepoURL,
 			LocalRevision: req.Revision,
-			LiveRevision:  application.Spec.Source.TargetRevision,
+			LiveRevision:  application.Status.Sync.Revision,
 			Result:        result,
 		},
 	})
@@ -103,8 +104,8 @@ func (plugin *AppPlugin) handleApplicationDiff(ctx context.Context, req *Applica
 		return nil, errors.Wrapf(err, "get live manifest failed")
 	}
 	// 获取应用要对比的目标 revision 的 manifest
-	if len(req.Revisions) != 0 {
-		for i := range application.Spec.Sources {
+	if application.Spec.HasMultipleSources() {
+		for i := range req.Revisions {
 			application.Spec.Sources[i].TargetRevision = req.Revisions[i]
 		}
 	} else if req.Revision != "" {
@@ -165,23 +166,23 @@ func (plugin *AppPlugin) handleApplicationDiff(ctx context.Context, req *Applica
 
 func (plugin *AppPlugin) checkApplicationDiffRequest(ctx context.Context,
 	req *ApplicationDiffRequest) (*v1alpha1.Application, error) {
-	application, statusCode, err := plugin.middleware.CheckApplicationPermission(ctx, req.ApplicationName,
-		iamnamespace.NameSpaceScopedView)
-	if statusCode != http.StatusOK {
+	argoApp, _, err := plugin.permitChecker.CheckApplicationPermission(ctx, req.ApplicationName,
+		permitcheck.AppViewRSAction)
+	if err != nil {
 		return nil, errors.Wrapf(err, "check application permission failed")
 	}
-	if application.Spec.HasMultipleSources() {
-		if len(req.Revisions) != 0 && len(req.Revisions) != len(application.Spec.Sources) {
+	if argoApp.Spec.HasMultipleSources() {
+		if len(req.Revisions) != 0 && len(req.Revisions) > len(argoApp.Spec.Sources) {
 			return nil, errors.Errorf("application has '%d' resources, but request body 'revisions' only "+
 				"have '%d'. Or you can set empty 'revisions', we will use default revisions in application",
-				len(application.Spec.Sources), len(req.Revisions))
+				len(argoApp.Spec.Sources), len(req.Revisions))
 		}
-		return application, nil
+		return argoApp, nil
 	}
-	if application.Spec.Source == nil {
+	if argoApp.Spec.Source == nil {
 		return nil, errors.Errorf("application spec.source is nil")
 	}
-	return application, nil
+	return argoApp, nil
 }
 
 func buildDiffRequest(r *http.Request) (*ApplicationDiffRequest, error) {

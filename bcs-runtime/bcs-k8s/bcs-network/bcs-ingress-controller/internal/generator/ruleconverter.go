@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"sort"
 	"strconv"
+	"strings"
 
 	k8scorev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -27,9 +28,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
+	federationv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/federation/v1"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
@@ -146,6 +149,13 @@ func (rc *RuleConverter) generate7LayerListener(region, lbID string) (*networkex
 		if rc.rule.ListenerAttribute.KeepAliveEnable != 0 {
 			li.Spec.ListenerAttribute.KeepAliveEnable = rc.rule.ListenerAttribute.KeepAliveEnable
 		}
+		if rc.rule.ListenerAttribute.UptimeCheck != nil {
+			li.Spec.ListenerAttribute.UptimeCheck = rc.rule.ListenerAttribute.UptimeCheck
+			if li.IsUptimeCheckEnable() {
+				li.Finalizers = append(li.Finalizers, constant.FinalizerNameUptimeCheck)
+				li.Labels[networkextensionv1.LabelKeyForUptimeCheckListener] = networkextensionv1.LabelValueTrue
+			}
+		}
 	}
 
 	listenerRules, err := rc.generateListenerRule(rc.rule.Routes)
@@ -187,7 +197,7 @@ func (rc *RuleConverter) generate4LayerListener(region, lbID string) (*networkex
 	li := &networkextensionv1.Listener{}
 
 	if rc.isTCPUDPPortReuse {
-		li.SetName(GetListenerNameWithProtocol(lbID, rc.rule.Protocol, rc.rule.Port))
+		li.SetName(common.GetListenerNameWithProtocol(lbID, rc.rule.Protocol, rc.rule.Port, 0))
 	} else {
 		li.SetName(GetListenerName(lbID, rc.rule.Port))
 	}
@@ -209,6 +219,10 @@ func (rc *RuleConverter) generate4LayerListener(region, lbID string) (*networkex
 	li.Spec.LoadbalancerID = lbID
 	if rc.rule.ListenerAttribute != nil {
 		li.Spec.ListenerAttribute = rc.rule.ListenerAttribute
+		if li.IsUptimeCheckEnable() {
+			li.Finalizers = append(li.Finalizers, constant.FinalizerNameUptimeCheck)
+			li.Labels[networkextensionv1.LabelKeyForUptimeCheckListener] = networkextensionv1.LabelValueTrue
+		}
 	}
 	if rc.rule.Certificate != nil {
 		li.Spec.Certificate = rc.rule.Certificate
@@ -228,11 +242,20 @@ func (rc *RuleConverter) generateTargetGroup(protocol string, routes []networkex
 
 	var retBackends []networkextensionv1.ListenerBackend
 	for _, route := range routes {
-		backends, err := rc.generateServiceBackendList(&route)
-		if err != nil {
-			return nil, err
+		switch strings.ToLower(route.GetServiceKind()) {
+		case networkextensionv1.ServiceKindNativeService:
+			backends, err := rc.generateServiceBackendList(&route)
+			if err != nil {
+				return nil, err
+			}
+			retBackends = mergeBackendList(retBackends, backends)
+		case networkextensionv1.ServiceKindMultiClusterService:
+			backends, err := rc.generateMcsBackendList(&route)
+			if err != nil {
+				return nil, err
+			}
+			retBackends = mergeBackendList(retBackends, backends)
 		}
-		retBackends = mergeBackendList(retBackends, backends)
 	}
 	sort.Sort(networkextensionv1.ListenerBackendList(retBackends))
 	return &networkextensionv1.ListenerTargetGroup{
@@ -244,7 +267,6 @@ func (rc *RuleConverter) generateTargetGroup(protocol string, routes []networkex
 // generate service backend list
 func (rc *RuleConverter) generateServiceBackendList(svcRoute *networkextensionv1.ServiceRoute) (
 	[]networkextensionv1.ListenerBackend, error) {
-
 	// set namespace when namespaced flag is set
 	svcNamespace := svcRoute.ServiceNamespace
 	// use ingressNS as default
@@ -313,6 +335,86 @@ func (rc *RuleConverter) generateServiceBackendList(svcRoute *networkextensionv1
 	retBackends, err := rc.getNodePortBackends(svc, svcPort, svcRoute.GetWeight())
 	if err != nil {
 		return nil, err
+	}
+	return retBackends, nil
+}
+
+func (rc *RuleConverter) generateMcsBackendList(svcRoute *networkextensionv1.ServiceRoute) (
+	[]networkextensionv1.ListenerBackend, error) {
+	if svcRoute.IsDirectConnect == false {
+		return nil, fmt.Errorf("serviceKind MultiClusterService can only support DirectConnect")
+	}
+
+	// set namespace when namespaced flag is set
+	svcNamespace := svcRoute.ServiceNamespace
+	// use ingressNS as default
+	if rc.isNamespaced || svcNamespace == "" {
+		svcNamespace = rc.ingressNamespace
+	}
+
+	multiClusterService := &federationv1.MultiClusterService{}
+	if err := rc.cli.Get(context.TODO(), k8stypes.NamespacedName{
+		Namespace: svcNamespace,
+		Name:      svcRoute.ServiceName,
+	}, multiClusterService); err != nil {
+		if k8serrors.IsNotFound(err) {
+			rc.eventer.Eventf(rc.ingress, k8scorev1.EventTypeWarning, constant.EventIngressBindFailed,
+				fmt.Sprintf("multiClusterService '%s/%s' not found", svcNamespace, svcRoute.ServiceName))
+			return nil, nil
+		}
+		return nil, fmt.Errorf("get multiClusterService %s/%s failed, err %s",
+			svcNamespace, svcRoute.ServiceName, err.Error())
+	}
+	var svcPort *k8scorev1.ServicePort
+	for _, port := range multiClusterService.Spec.Ports {
+		if port.Port == int32(svcRoute.ServicePort) {
+			svcPort = &port
+			break
+		}
+	}
+
+	// 遍历所有mEps找到和service对应的eps（MultiClusterService和MultiClusterEndpoints可能不在一个命名空间）
+	multiClusterEndpointsList := &federationv1.MultiClusterEndpointSliceList{}
+	matchedMultiClusterEpsList := make([]federationv1.MultiClusterEndpointSlice, 0)
+	if err := rc.cli.List(context.TODO(), multiClusterEndpointsList); err != nil {
+		return nil, fmt.Errorf("list multiClusterEndpoints failed, err %s", err.Error())
+	}
+	for _, mEps := range multiClusterEndpointsList.Items {
+		if mEps.GetRelatedServiceNameSpace() == svcNamespace && mEps.GetName() == svcRoute.ServiceName {
+			matchedMultiClusterEpsList = append(matchedMultiClusterEpsList, mEps)
+		}
+	}
+
+	var retBackends []networkextensionv1.ListenerBackend
+	for _, mEps := range matchedMultiClusterEpsList {
+		for _, ep := range mEps.Spec.Endpoints {
+			for _, port := range ep.Ports {
+				if (*port.Name == svcPort.TargetPort.String() || int(*port.Port) == svcPort.TargetPort.IntValue()) && *port.Protocol == svcPort.Protocol {
+					// 这里默认都是直通模式
+					if svcRoute.HostPort {
+						if port.HostPort == nil {
+							blog.Warnf("hostPort is true, but not found related definition in port [%s]",
+								*port.Name)
+							rc.eventer.Eventf(rc.ingress, k8scorev1.EventTypeWarning, constant.EventIngressBindFailed,
+								fmt.Sprintf("hostPort is true, but not found related definition in port [%s]",
+									*port.Name))
+							continue
+						}
+						retBackends = append(retBackends, networkextensionv1.ListenerBackend{
+							IP:     ep.NodeAddresses[0],
+							Port:   int(*port.HostPort),
+							Weight: svcRoute.GetWeight(),
+						})
+					} else {
+						retBackends = append(retBackends, networkextensionv1.ListenerBackend{
+							IP:     ep.Addresses[0],
+							Port:   int(*port.Port),
+							Weight: svcRoute.GetWeight(),
+						})
+					}
+				}
+			}
+		}
 	}
 	return retBackends, nil
 }

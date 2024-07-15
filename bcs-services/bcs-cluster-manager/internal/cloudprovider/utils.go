@@ -16,6 +16,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
 	"strconv"
 	"strings"
 	"time"
@@ -55,6 +56,8 @@ const (
 	WatchTask = "watchjob"
 	// RemoveHostFromCmdbAction remove host action
 	RemoveHostFromCmdbAction = "removeHostFromCmdb"
+	// CheckNodeIpsInCmdbAction check node if in cmdb
+	CheckNodeIpsInCmdbAction = "checkNodeIpsInCmdb"
 	// InstallGseAgentAction install gseAgent action
 	InstallGseAgentAction = "installGseAgent"
 	// TransferHostModuleAction transfer module action
@@ -93,6 +96,8 @@ const (
 	RemoveClusterNodesInnerTaintAction = "removeClusterNodesInnerTaint"
 	// LadderResourcePoolLabelAction 标签设置
 	LadderResourcePoolLabelAction = "yunti-ResourcePoolLabelTask"
+	// AddNodesShieldAlarmAction 屏蔽机器告警
+	AddNodesShieldAlarmAction = "addNodesShieldAlarm"
 )
 
 var (
@@ -177,6 +182,28 @@ func GetCredential(data *CredentialData) (*CommonOption, error) {
 	}
 
 	return option, nil
+}
+
+// GetCloudCmOptionByCluster get common option by cluster
+func GetCloudCmOptionByCluster(cls proto.Cluster) (*CommonOption, error) {
+	cloud, err := GetStorageModel().GetCloud(context.Background(), cls.GetProvider())
+	if err != nil {
+		blog.Errorf("GetCloudCmOptionByCluster[%s:%s] get cloud failed: %v",
+			cls.GetClusterID(), cls.GetProvider(), err)
+		return nil, err
+	}
+	cmOption, err := GetCredential(&CredentialData{
+		Cloud:     cloud,
+		AccountID: cls.GetCloudAccountID(),
+	})
+	if err != nil {
+		blog.Errorf("getCredential for cloudprovider[%s] when GetCloudCmOptionByCluster[%s:%s] failed, %s",
+			cloud.CloudID, cls.ClusterID, cls.Region, err.Error())
+		return nil, err
+	}
+	cmOption.Region = cls.GetRegion()
+
+	return cmOption, nil
 }
 
 func checkCloudCredentialValidate(cloud *proto.Cloud, option *CommonOption) error {
@@ -294,6 +321,11 @@ func GetClusterByID(clusterID string) (*proto.Cluster, error) {
 	return GetStorageModel().GetCluster(context.Background(), clusterID)
 }
 
+// GetNodeGroupByID get nodeGroup by groupID
+func GetNodeGroupByID(nodeGroupId string) (*proto.NodeGroup, error) {
+	return GetStorageModel().GetNodeGroup(context.Background(), nodeGroupId)
+}
+
 // UpdateCluster set cluster status
 func UpdateCluster(cluster *proto.Cluster) error {
 	err := GetStorageModel().UpdateCluster(context.Background(), cluster)
@@ -362,13 +394,32 @@ func UpdateClusterCredentialByConfig(clusterID string, config *types.Config) err
 	return nil
 }
 
+func getNodeNormalStatus(extraStatus []string) []string {
+	defaultStatus := []string{common.StatusRunning, common.StatusInitialization,
+		common.StatusAddNodesFailed, common.StatusResourceApplyFailed,
+		common.StatusDeleting}
+
+	if len(extraStatus) > 0 {
+		defaultStatus = append(defaultStatus, extraStatus...)
+	}
+
+	return defaultStatus
+}
+
+func getClusterOrPoolNodes(clusterId, nodePoolId string) ([]*proto.Node, error) {
+	condM := make(operator.M)
+	condM["clusterid"] = clusterId
+
+	if len(nodePoolId) > 0 {
+		condM["nodegroupid"] = nodePoolId
+	}
+	cond := operator.NewLeafCondition(operator.Eq, condM)
+	return GetStorageModel().ListNode(context.Background(), cond, &storeopt.ListOption{})
+}
+
 // ListNodesInClusterNodePool list nodeGroup nodes
 func ListNodesInClusterNodePool(clusterID, nodePoolID string) ([]*proto.Node, error) {
-	condM := make(operator.M)
-	condM["nodegroupid"] = nodePoolID
-	condM["clusterid"] = clusterID
-	cond := operator.NewLeafCondition(operator.Eq, condM)
-	nodes, err := GetStorageModel().ListNode(context.Background(), cond, &storeopt.ListOption{})
+	nodes, err := getClusterOrPoolNodes(clusterID, nodePoolID)
 	if err != nil {
 		blog.Errorf("ListNodesInClusterNodePool NodeGroup %s all Nodes failed, %s", nodePoolID, err.Error())
 		return nil, err
@@ -379,9 +430,28 @@ func ListNodesInClusterNodePool(clusterID, nodePoolID string) ([]*proto.Node, er
 		goodNodes []*proto.Node
 	)
 	for _, node := range nodes {
-		if node.Status == common.StatusRunning || node.Status == common.StatusInitialization ||
-			node.Status == common.StatusAddNodesFailed || node.Status == common.StatusResourceApplyFailed ||
-			node.Status == common.StatusDeleting {
+		if utils.StringInSlice(node.Status, getNodeNormalStatus(nil)) {
+			goodNodes = append(goodNodes, node)
+		}
+	}
+
+	return goodNodes, nil
+}
+
+// ListClusterNodes list cluster nodes (运行中/上架中状态)
+func ListClusterNodes(clusterID string) ([]*proto.Node, error) {
+	nodes, err := getClusterOrPoolNodes(clusterID, "")
+	if err != nil {
+		blog.Errorf("ListClusterNodes %s all Nodes failed, %s", clusterID, err.Error())
+		return nil, err
+	}
+
+	// sum running & creating nodes, these status are ready to serve workload
+	var (
+		goodNodes []*proto.Node
+	)
+	for _, node := range nodes {
+		if utils.StringInSlice(node.Status, getNodeNormalStatus([]string{common.StatusResourceApplying})) {
 			goodNodes = append(goodNodes, node)
 		}
 	}
@@ -659,24 +729,33 @@ func UpdateNodeListStatus(isInstanceIP bool, instances []string, status string) 
 	return nil
 }
 
-// UpdateNodeStatus update node status; isInstanceIP true, instance is InstanceIP; isInstanceIP true,
-// instance is InstanceID
-func UpdateNodeStatus(isInstanceIP bool, instance, status string) error {
+// GetNodeByIpOrId get node info by ip or id
+func GetNodeByIpOrId(isIp bool, instance string) (*proto.Node, error) {
 	var (
 		node *proto.Node
 		err  error
 	)
-	if isInstanceIP {
+	if isIp {
 		node, err = GetStorageModel().GetNodeByIP(context.Background(), instance)
 	} else {
 		node, err = GetStorageModel().GetNode(context.Background(), instance)
 	}
 	if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) {
-		return err
+		return nil, err
 	}
 
 	if errors.Is(err, drivers.ErrTableRecordNotFound) {
-		return nil
+		return nil, fmt.Errorf("instance[%s] not found", instance)
+	}
+
+	return node, nil
+}
+
+// UpdateNodeStatus update node status
+func UpdateNodeStatus(isInstanceIP bool, instance, status string) error {
+	node, err := GetNodeByIpOrId(isInstanceIP, instance)
+	if err != nil {
+		return err
 	}
 
 	node.Status = status
@@ -925,6 +1004,22 @@ func GetModuleName(bkBizID, bkModuleID int) string {
 	return name
 }
 
+// GetBizMaintainers get biz maintainers
+func GetBizMaintainers(bkBizID int) string {
+	cli := cmdb.GetCmdbClient()
+	if cli == nil {
+		return ""
+	}
+
+	bizData, err := cli.GetBusinessMaintainer(bkBizID)
+	if err != nil {
+		blog.Errorf("GetBizMaintainers failed: %v", err.Error())
+		return ""
+	}
+
+	return bizData.BKBizMaintainer
+}
+
 // IsMasterIp check ip if is cluster master
 func IsMasterIp(ip string, cls *proto.Cluster) bool {
 	if cls == nil || cls.Master == nil {
@@ -1006,9 +1101,10 @@ func ShieldHostAlarm(ctx context.Context, bizID string, ips []string) error {
 			CloudID: uint64(hostData[i].BkCloudID),
 		})
 	}
-
 	blog.Infof("ShieldHostAlarm[%s] bizID[%s] hostInfo[%+v]", taskID, bizID, hosts)
+
 	var alarms = []alarm.AlarmInterface{tmp.GetBKAlarmClient(), bkmonitor.GetBkMonitorClient()}
+
 	for i := range alarms {
 		err = alarms[i].ShieldHostAlarmConfig(maintainers[0], &alarm.ShieldHost{
 			BizID:    bizID,
@@ -1281,4 +1377,46 @@ func GetNodeResourceGroup(cls *proto.Cluster) string {
 	}
 
 	return ""
+}
+
+// ListProjectNotifyTemplates list project notify templates
+func ListProjectNotifyTemplates(projectId string) ([]proto.NotifyTemplate, error) {
+	condM := make(operator.M)
+	condM["projectid"] = projectId
+
+	cond := operator.NewLeafCondition(operator.Eq, condM)
+	templates, err := GetStorageModel().ListNotifyTemplate(context.Background(), cond, &storeopt.ListOption{})
+	if err != nil {
+		return nil, err
+	}
+
+	return templates, nil
+}
+
+// GetOverlayCidrBlocks get overlayIps from vpc
+func GetOverlayCidrBlocks(cloudId, vpcId string) ([]*net.IPNet, error) {
+	vpc, err := GetStorageModel().GetCloudVPC(context.Background(), cloudId, vpcId)
+	if err != nil {
+		return nil, err
+	}
+
+	cidrs := make([]string, 0)
+	for i := range vpc.GetOverlay().GetCidrs() {
+		if vpc.GetOverlay().GetCidrs()[i].GetBlock() {
+			continue
+		}
+		cidrs = append(cidrs, vpc.GetOverlay().GetCidrs()[i].GetCidr())
+	}
+
+	var blocks []*net.IPNet
+	for _, v := range cidrs {
+		_, ipnet, _ := net.ParseCIDR(v)
+		blocks = append(blocks, ipnet)
+	}
+	return blocks, nil
+}
+
+// GetCloudByProvider get cloud by provider
+func GetCloudByProvider(provider string) (*proto.Cloud, error) {
+	return GetStorageModel().GetCloudByProvider(context.Background(), provider)
 }

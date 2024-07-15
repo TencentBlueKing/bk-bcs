@@ -56,8 +56,8 @@ type MonitorRuleReconciler struct {
 	SubPath string
 }
 
-// +kubebuilder:rbac:groups=monitorextension.bkbcs.tencent.com,resources=monitorrules,
-// verbs=get;list;watch;create;update;patch;delete
+// nolint
+// +kubebuilder:rbac:groups=monitorextension.bkbcs.tencent.com,resources=monitorrules,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=monitorextension.bkbcs.tencent.com,resources=monitorrules/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=monitorextension.bkbcs.tencent.com,resources=monitorrules/finalizers,verbs=update
 

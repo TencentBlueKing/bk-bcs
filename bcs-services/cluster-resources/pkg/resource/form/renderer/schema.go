@@ -41,36 +41,44 @@ const (
 
 // SchemaRenderer 渲染并加载表单 Schema 模板
 type SchemaRenderer struct {
-	ctx       context.Context
-	clusterID string
-	kind      string
-	values    map[string]interface{}
+	ctx            context.Context
+	clusterID      string
+	apiVersion     string
+	kind           string
+	values         map[string]interface{}
+	isTemplateFile bool
 }
 
 // NewSchemaRenderer xxx
-func NewSchemaRenderer(ctx context.Context, clusterID, kind, namespace, action string) *SchemaRenderer {
+func NewSchemaRenderer(ctx context.Context, clusterID, apiVersion, kind, namespace, action string,
+	isTemplateFile bool) *SchemaRenderer {
 	// 若没有指定命名空间，则使用 default
 	if namespace == "" {
 		namespace = "default"
 	}
 	// 避免名称重复，每次默认添加随机后缀
 	randSuffix := stringx.Rand(RandomSuffixLength, SuffixCharset)
+	resName := fmt.Sprintf("%s-%s", strings.ToLower(kind), randSuffix)
+	selectorLabel := genWorkloadSelectorLabel(resName)
 	// 尝试从 context 中获取集群类型，若获取失败，则默认独立集群
 	clusterType := cluster.ClusterTypeSingle
-	if clusterInfo, err := cluster.FromContext(ctx); err == nil {
+	if clusterInfo, err := cluster.FromContext(ctx); err == nil && clusterInfo != nil {
 		clusterType = clusterInfo.Type
 	}
 
 	return &SchemaRenderer{
-		ctx:       ctx,
-		clusterID: clusterID,
-		kind:      kind,
+		ctx:            ctx,
+		clusterID:      clusterID,
+		apiVersion:     apiVersion,
+		kind:           kind,
+		isTemplateFile: isTemplateFile,
 		values: map[string]interface{}{
-			"kind":      kind,
-			"namespace": namespace,
-			"resName":   fmt.Sprintf("%s-%s", strings.ToLower(kind), randSuffix),
-			"lang":      i18n.GetLangFromContext(ctx),
-			"action":    action,
+			"kind":          kind,
+			"namespace":     namespace,
+			"resName":       resName,
+			"selectorLabel": selectorLabel,
+			"lang":          i18n.GetLangFromContext(ctx),
+			"action":        action,
 			// 集群类型：目前可选值有 Single 独立集群，Shared 共享集群
 			"clusterType": clusterType,
 		},
@@ -78,30 +86,38 @@ func NewSchemaRenderer(ctx context.Context, clusterID, kind, namespace, action s
 }
 
 // Render 将模板渲染成 Schema
-func (r *SchemaRenderer) Render() (ret map[string]interface{}, err error) {
+func (r *SchemaRenderer) Render() (map[string]interface{}, error) {
+	var err error
 	// 1. 检查指定资源类型是否支持表单化
 	supportedAPIVersions, ok := validator.FormSupportedResAPIVersion[r.kind]
 	if !ok {
 		return nil, errorx.New(errcode.Unsupported, i18n.GetMsg(r.ctx, "资源类型 `%s` 不支持表单化"), r.kind)
 	}
 
-	// 2. 预设 apiVersion，默认值为集群该类型资源的 PreferredVersion，如果获取不到且不是支持表单化的自定义资源，则抛出错误
-	apiVersion, err := res.GetResPreferredVersion(r.ctx, r.clusterID, r.kind)
-	if err != nil && !validator.IsFormSupportedCObjKinds(r.kind) {
-		return nil, err
-	}
-	// 若 PreferredVersion 不支持表单化，则渲染为支持表单化的首个 apiVersion
-	if !slice.StringInSlice(apiVersion, supportedAPIVersions) {
-		apiVersion = supportedAPIVersions[0]
-	}
-	r.values["apiVersion"] = apiVersion
+	if r.clusterID != "" {
+		// 2. 预设 apiVersion，默认值为集群该类型资源的 PreferredVersion，如果获取不到且不是支持表单化的自定义资源，则抛出错误
+		apiVersion, ierr := res.GetResPreferredVersion(r.ctx, r.clusterID, r.kind)
+		if ierr != nil && !validator.IsFormSupportedCObjKinds(r.kind) {
+			return nil, ierr
+		}
+		// 若 PreferredVersion 不支持表单化，则渲染为支持表单化的首个 apiVersion
+		if !slice.StringInSlice(apiVersion, supportedAPIVersions) {
+			apiVersion = supportedAPIVersions[0]
+		}
+		r.values["apiVersion"] = apiVersion
 
-	// 3. 填充特性门控信息
-	serverVerInfo, err := res.GetServerVersion(r.ctx, r.clusterID)
-	if err != nil {
-		return nil, err
+		// 3. 填充特性门控信息
+		serverVerInfo, ierr := res.GetServerVersion(r.ctx, r.clusterID)
+		if ierr != nil {
+			return nil, ierr
+		}
+		r.values["featureGates"] = feature.GenFeatureGates(serverVerInfo)
 	}
-	r.values["featureGates"] = feature.GenFeatureGates(serverVerInfo)
+
+	// 自定义 apiVersion
+	if r.apiVersion != "" {
+		r.values["apiVersion"] = r.apiVersion
+	}
 
 	// 表单模板 Schema 包含原始 Schema + Layout 信息，两者格式不同，因此分别加载
 	schema := map[string]interface{}{}
@@ -114,12 +130,16 @@ func (r *SchemaRenderer) Render() (ret map[string]interface{}, err error) {
 		return nil, err
 	}
 
-	return map[string]interface{}{"schema": schema, "layout": layout, "rules": genSchemaRules(r.ctx)}, nil
+	return map[string]interface{}{"apiVersion": r.values["apiVersion"], "kind": r.kind, "schema": schema,
+		"layout": layout, "rules": genSchemaRules(r.ctx)}, nil
 }
 
-func (r *SchemaRenderer) renderSubTypeTmpl2Map(subType string, ret interface{}) error {
+func (r *SchemaRenderer) renderSubTypeTmpl2Map(dir string, ret interface{}) error {
 	// 1. 加载模板并初始化
-	tmpl, err := initTemplate(fmt.Sprintf("%s/%s/", envs.FormTmplFileBaseDir, subType), "*")
+	if r.isTemplateFile {
+		dir = "filetmpl/" + dir
+	}
+	tmpl, err := initTemplate(fmt.Sprintf("%s/%s/", envs.FormTmplFileBaseDir, dir), "*")
 	if err != nil {
 		return errorx.New(errcode.General, i18n.GetMsg(r.ctx, "加载模板失败：%v"), err)
 	}
@@ -144,6 +164,10 @@ func genSchemaRules(ctx context.Context) map[string]interface{} {
 			"validator": "/^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$/",
 			"message":   i18n.GetMsg(ctx, "仅支持小写字母，数字及 '-' 且需以字母数字开头和结尾"),
 		},
+		"nameRegexWithVar": map[string]interface{}{
+			"validator": "/^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*|{{.*}})$/",
+			"message":   i18n.GetMsg(ctx, "仅支持小写字母，数字及 '-' 且需以字母数字开头和结尾"),
+		},
 		"numberRegex": map[string]interface{}{
 			"validator": "/^[0-9]+(\\.[0-9])?[0-9]*$/",
 			"message":   i18n.GetMsg(ctx, "仅可包含数字字符与小数点"),
@@ -165,10 +189,22 @@ func genSchemaRules(ctx context.Context) map[string]interface{} {
 			"validator": "/^[a-z0-9A-Z]([-_a-z0-9A-Z]*[a-z0-9A-Z])?((\\.|\\/)[a-z0-9A-Z]([-_a-z0-9A-Z]*[a-z0-9A-Z])?)*$/",
 			"message":   i18n.GetMsg(ctx, "仅支持字母，数字，'-'，'_'，'.' 及 '/' 且需以字母数字开头和结尾"),
 		},
+		"labelKeyRegexWithVar": map[string]interface{}{
+			"validator": "/^([a-z0-9A-Z]([-_a-z0-9A-Z]*[a-z0-9A-Z])?((\\.|\\/)[a-z0-9A-Z]([-_a-z0-9A-Z]*[a-z0-9A-Z])?)*|{{.*}})$/",
+			"message":   i18n.GetMsg(ctx, "仅支持字母，数字，'-'，'_'，'.' 及 '/' 且需以字母数字开头和结尾"),
+		},
 		// NOTE 标签值允许为空
 		"labelValRegex": map[string]interface{}{
 			"validator": "/^(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?$/",
 			"message":   i18n.GetMsg(ctx, "需以字母数字开头和结尾，可包含 '-'，'_'，'.' 和字母数字"),
+		},
+		"labelValRegexWithVar": map[string]interface{}{
+			"validator": "/^((([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?|{{.*}})$/",
+			"message":   i18n.GetMsg(ctx, "需以字母数字开头和结尾，可包含 '-'，'_'，'.' 和字母数字"),
+		},
+		"sliceLength1": map[string]interface{}{
+			"validator": "{{ $self.value.length > 0 }}",
+			"message":   i18n.GetMsg(ctx, "不应少于 1 个项"),
 		},
 	}
 }

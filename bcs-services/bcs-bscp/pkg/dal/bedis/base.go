@@ -132,6 +132,26 @@ func (bs *bedis) Get(ctx context.Context, key string) (string, error) {
 	return value, nil
 }
 
+// GetSet get a key's value and replace it with a new value.
+func (bs *bedis) GetSet(ctx context.Context, key string, value interface{}) (string, error) {
+
+	start := time.Now()
+	oldValue, err := bs.client.GetSet(ctx, key, value).Result()
+	if err != nil {
+		if IsNilError(err) {
+			return "", nil
+		}
+
+		bs.mc.errCounter.With(prm.Labels{"cmd": "getset"}).Inc()
+		return "", err
+	}
+
+	bs.logSlowCmd(ctx, key, time.Since(start))
+	bs.mc.cmdLagMS.With(prm.Labels{"cmd": "getset"}).Observe(float64(time.Since(start).Milliseconds()))
+
+	return oldValue, nil
+}
+
 // MGet many key's value.
 func (bs *bedis) MGet(ctx context.Context, key ...string) ([]string, error) {
 
@@ -421,6 +441,19 @@ func (bs *bedis) LPush(ctx context.Context, key string, values ...interface{}) e
 	}
 	bs.logSlowCmd(ctx, key, time.Since(start))
 	bs.mc.cmdLagMS.With(prm.Labels{"cmd": "lpush"}).Observe(float64(time.Since(start).Milliseconds()))
+	return nil
+}
+
+// RPush 在列表中添加一个或多个值到列表尾部
+func (bs *bedis) RPush(ctx context.Context, key string, values ...interface{}) error {
+	start := time.Now()
+	_, err := bs.client.RPush(ctx, key, values).Result()
+	if err != nil {
+		bs.mc.errCounter.With(prm.Labels{"cmd": "rpush"}).Inc()
+		return err
+	}
+	bs.logSlowCmd(ctx, key, time.Since(start))
+	bs.mc.cmdLagMS.With(prm.Labels{"cmd": "rpush"}).Observe(float64(time.Since(start).Milliseconds()))
 	return nil
 }
 

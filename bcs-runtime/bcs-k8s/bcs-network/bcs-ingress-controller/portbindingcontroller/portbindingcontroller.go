@@ -133,6 +133,12 @@ func (pbr *PortBindingReconciler) Reconcile(req ctrl.Request) (ctrl.Result, erro
 		return ctrl.Result{}, nil
 	}
 
+	// portBinding创建后， 标记使用的端口（checker会根据这个标记，释放泄漏的端口）
+	for _, portBindingItem := range portBinding.Spec.PortBindingList {
+		pbr.poolCache.SetPortBindingUsed(portBindingItem, portBindingType, portBinding.GetNamespace(),
+			portBinding.GetName())
+	}
+
 	// when statefulset pod is recreated, the old portbinding may be deleting
 	if portBinding.DeletionTimestamp != nil {
 		blog.V(3).Infof("found deleting portbinding, continue clean portbinding %v", req.NamespacedName)
@@ -153,14 +159,6 @@ func (pbr *PortBindingReconciler) Reconcile(req ctrl.Request) (ctrl.Result, erro
 			return pbr.createPortBinding(portBindingType, pod.GetNamespace(), pod.GetName(), pod.GetAnnotations())
 		}
 
-		if len(pod.Status.PodIP) == 0 {
-			blog.Warnf("pod %s/%s has not pod ip, requeue it", pod.GetName(), pod.GetNamespace())
-			return ctrl.Result{
-				Requeue:      true,
-				RequeueAfter: 300 * time.Millisecond,
-			}, nil
-		}
-
 		// pod状态成为Failed后，需要删除对应PortBinding， 避免端口持续被占用无法释放
 		if pod.Status.Phase == k8scorev1.PodFailed {
 			blog.Infof("pod '%s/%s' is failed, reason: %s, msg: %s, so clean portbinding", pod.GetNamespace(),
@@ -168,35 +166,17 @@ func (pbr *PortBindingReconciler) Reconcile(req ctrl.Request) (ctrl.Result, erro
 			return pbr.cleanPortBinding(portBinding)
 		}
 
+		if len(pod.Status.PodIP) == 0 {
+			blog.V(5).Infof("pod %s/%s has not pod ip, requeue it", pod.GetName(), pod.GetNamespace())
+			return ctrl.Result{
+				Requeue:      true,
+				RequeueAfter: 300 * time.Millisecond,
+			}, nil
+		}
+
 		pbhandler = newPodPortBindingHandler(pbr.ctx, pbr.k8sClient, pbr.eventer, pod)
 	case networkextensionv1.PortBindingTypeNode:
-		// 节点和Pod的webhook策略不通。为了避免节点加入失败，即使端口分配失败，也允许节点变更
-		// 所以这里需要检查节点对应注解是否合法
-		if _, ok := node.Annotations[constant.AnnotationForPortPoolBindings]; !ok {
-			err := fmt.Errorf("node %s has not port allocate annotation %s", node.GetName(),
-				constant.AnnotationForPortPoolPorts)
-			blog.Errorf(err.Error())
-			metrics.ReportPortAllocate(node.GetName(), node.GetNamespace(), false)
-
-			needPatch := true
-			if notReadyTimeStr, timeOk := node.Annotations[constant.
-				AnnotationForPortBindingNotReadyTimestamp]; timeOk && notReadyTimeStr != "" {
-				if notReadyTime, inErr := time.Parse(time.RFC3339Nano, notReadyTimeStr); inErr != nil {
-					blog.Warnf("parse not ready timestamp on node %s failed, err: %s", node.GetName(), inErr.Error())
-				} else if time.Since(notReadyTime) < time.Second*10 {
-					// 距离上次刷新时间未超过10秒
-					needPatch = false
-				}
-			}
-			if needPatch {
-				// 更新注解触发mutate逻辑
-				blog.Infof("patch node %s annotation %s", node.GetName(), constant.AnnotationForPortBindingNotReadyTimestamp)
-				if err = utils.PatchNodeAnnotation(pbr.ctx, pbr.k8sClient, node, map[string]interface{}{
-					constant.AnnotationForPortBindingNotReadyTimestamp: time.Now().Format(time.RFC3339Nano),
-				}); err != nil {
-					blog.Errorf(err.Error())
-				}
-			}
+		if !pbr.isNodeValid(node) {
 			return ctrl.Result{Requeue: true, RequeueAfter: time.Second * 10}, nil
 		}
 		metrics.ReportPortAllocate(node.GetName(), node.GetNamespace(), true)
@@ -269,7 +249,7 @@ func (pbr *PortBindingReconciler) createPortBinding(portBindingType, namespace, 
 	portBinding.SetNamespace(namespace)
 	labels := make(map[string]string)
 	for _, binding := range portBindingList {
-		tmpKey := fmt.Sprintf(networkextensionv1.PortPoolBindingLabelKeyFromat, binding.PoolName, binding.PoolNamespace)
+		tmpKey := utils.GenPortBindingLabel(binding.PoolName, binding.PoolNamespace)
 		labels[tmpKey] = binding.PoolItemName
 	}
 	labels[networkextensionv1.PortBindingTypeLabelKey] = portBindingType
@@ -445,4 +425,36 @@ func (pbr *PortBindingReconciler) getPortBindingPredicate() predicate.Predicate 
 			return true
 		},
 	}
+}
+
+func (pbr *PortBindingReconciler) isNodeValid(node *k8scorev1.Node) bool {
+	// 节点和Pod的webhook策略不同。为了避免节点加入失败，即使端口分配失败，也允许节点变更
+	// 所以需要检查节点是否成功分配了端口
+	if _, ok := node.Annotations[constant.AnnotationForPortPoolBindings]; !ok {
+		blog.Errorf("node %s has not port allocate annotation %s", node.GetName(),
+			constant.AnnotationForPortPoolPorts)
+		metrics.ReportPortAllocate(node.GetName(), node.GetNamespace(), false)
+
+		needPatch := true
+		if notReadyTimeStr, timeOk := node.Annotations[constant.
+			AnnotationForPortBindingNotReadyTimestamp]; timeOk && notReadyTimeStr != "" {
+			if notReadyTime, inErr := time.Parse(time.RFC3339Nano, notReadyTimeStr); inErr != nil {
+				blog.Warnf("parse not ready timestamp on node %s failed, err: %s", node.GetName(), inErr.Error())
+			} else if time.Since(notReadyTime) < time.Second*10 {
+				// 距离上次刷新时间未超过10秒
+				needPatch = false
+			}
+		}
+		if needPatch {
+			// 更新注解触发mutate逻辑
+			blog.Infof("patch node %s annotation %s", node.GetName(), constant.AnnotationForPortBindingNotReadyTimestamp)
+			if err := utils.PatchNodeAnnotation(pbr.ctx, pbr.k8sClient, node, map[string]interface{}{
+				constant.AnnotationForPortBindingNotReadyTimestamp: time.Now().Format(time.RFC3339Nano),
+			}); err != nil {
+				blog.Errorf("patch node %s annotation failed, err: %s", node.GetName(), err.Error())
+			}
+		}
+		return false
+	}
+	return true
 }

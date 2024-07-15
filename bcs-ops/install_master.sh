@@ -41,6 +41,8 @@ safe_source() {
   return 0
 }
 
+# try init host then check host
+"${ROOT_DIR}"/system/init_host.sh -i all
 "${ROOT_DIR}"/system/check_host.sh -c all
 safe_source "${ROOT_DIR}/functions/utils.sh"
 safe_source "${ROOT_DIR}/functions/k8s.sh"
@@ -63,7 +65,7 @@ if [[ -z ${MASTER_JOIN_CMD:-} ]]; then
   else
     kubeadm init --config="${ROOT_DIR}/kubeadm-config" -v 11 \
       || utils::log "FATAL" "${LAN_IP} failed to join master: ${K8S_CTRL_IP}"
-	systemctl enable --now kubelet
+	  systemctl enable --now kubelet
   fi
   install -dv "$HOME/.kube"
   install -v -m 600 -o "$(id -u)" -g "$(id -g)" \
@@ -98,6 +100,7 @@ else
   else
     kubeadm join --config="${ROOT_DIR}/kubeadm-config" -v 11 \
       || utils::log "FATAL" "${LAN_IP} failed to join master: ${K8S_CTRL_IP}"
+    systemctl enable --now kubelet
   fi
   install -dv "$HOME/.kube"
   install -v -m 600 -o "$(id -u)" -g "$(id -g)" \

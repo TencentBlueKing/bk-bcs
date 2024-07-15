@@ -18,11 +18,16 @@ import (
 	"net"
 	"strconv"
 	"strings"
+	"time"
 	"unicode"
+	"unicode/utf8"
 )
 
 // DefaultCharset 默认字符集（用于生成随机字符串）
 const DefaultCharset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
+
+// LowerCharset 小写字符集（用于生成随机字符串）
+const LowerCharset = "abcdefghijklmnopqrstuvwxyz"
 
 // Split 分割字符串，支持 " ", ";", "," 分隔符
 func Split(originStr string) []string {
@@ -54,7 +59,8 @@ func Rand(n int, charset string) string {
 	for i := range b {
 		// NOCC:gosec/crypto(误报)
 		// nolint
-		b[i] = charset[rand.Intn(len(charset))]
+		r := rand.New(rand.NewSource(time.Now().UnixNano()))
+		b[i] = charset[r.Intn(len(charset))]
 	}
 	return string(b)
 }
@@ -84,4 +90,19 @@ func IsIPv6(s string) bool {
 // GetInt64 string转换成int64
 func GetInt64(s string) (int64, error) {
 	return strconv.ParseInt(s, 10, 64)
+}
+
+// TrimStringToRuneCount 裁剪字符串使其不超过指定的字符数（rune count）
+func TrimStringToRuneCount(s string, maxRunes int) string {
+	if utf8.RuneCountInString(s) <= maxRunes {
+		return s
+	}
+	trimmed := make([]rune, 0, maxRunes)
+	for i, r := range s {
+		if i >= maxRunes {
+			break
+		}
+		trimmed = append(trimmed, r)
+	}
+	return string(trimmed)
 }

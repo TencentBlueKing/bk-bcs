@@ -81,6 +81,24 @@ func NewBcsTerraformBkProviderEndpoints() []*api.Endpoint {
 			Method:  []string{"POST"},
 			Handler: "rpc",
 		},
+		{
+			Name:    "BcsTerraformBkProvider.RegisterBkWhitelist",
+			Path:    []string{"/terraform-bkprovider/v1/register_bk_whitelist"},
+			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "BcsTerraformBkProvider.ListBkWhitelist",
+			Path:    []string{"/terraform-bkprovider/v1/list_bk_whitelist"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "BcsTerraformBkProvider.GetBkOuterIP",
+			Path:    []string{"/terraform-bkprovider/v1/get_bk_outer_ip"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
 	}
 }
 
@@ -95,6 +113,9 @@ type BcsTerraformBkProviderService interface {
 	ListCloud(ctx context.Context, in *CloudListRequest, opts ...client.CallOption) (*CloudListResponse, error)
 	DeleteCloud(ctx context.Context, in *CloudDeleteRequest, opts ...client.CallOption) (*CloudDeleteResponse, error)
 	GetJobDetail(ctx context.Context, in *GetJobDetailRequest, opts ...client.CallOption) (*GetJobDetailResponse, error)
+	RegisterBkWhitelist(ctx context.Context, in *RegisterBkWhitelistRequest, opts ...client.CallOption) (*RegisterBkWhitelistResponse, error)
+	ListBkWhitelist(ctx context.Context, in *ListBkWhiteListRequest, opts ...client.CallOption) (*ListBkWhiteListResponse, error)
+	GetBkOuterIP(ctx context.Context, in *GetBkOuterIPRequest, opts ...client.CallOption) (*GetBkOuterIPResponse, error)
 }
 
 type bcsTerraformBkProviderService struct {
@@ -189,6 +210,36 @@ func (c *bcsTerraformBkProviderService) GetJobDetail(ctx context.Context, in *Ge
 	return out, nil
 }
 
+func (c *bcsTerraformBkProviderService) RegisterBkWhitelist(ctx context.Context, in *RegisterBkWhitelistRequest, opts ...client.CallOption) (*RegisterBkWhitelistResponse, error) {
+	req := c.c.NewRequest(c.name, "BcsTerraformBkProvider.RegisterBkWhitelist", in)
+	out := new(RegisterBkWhitelistResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *bcsTerraformBkProviderService) ListBkWhitelist(ctx context.Context, in *ListBkWhiteListRequest, opts ...client.CallOption) (*ListBkWhiteListResponse, error) {
+	req := c.c.NewRequest(c.name, "BcsTerraformBkProvider.ListBkWhitelist", in)
+	out := new(ListBkWhiteListResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *bcsTerraformBkProviderService) GetBkOuterIP(ctx context.Context, in *GetBkOuterIPRequest, opts ...client.CallOption) (*GetBkOuterIPResponse, error) {
+	req := c.c.NewRequest(c.name, "BcsTerraformBkProvider.GetBkOuterIP", in)
+	out := new(GetBkOuterIPResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for BcsTerraformBkProvider service
 
 type BcsTerraformBkProviderHandler interface {
@@ -200,6 +251,9 @@ type BcsTerraformBkProviderHandler interface {
 	ListCloud(context.Context, *CloudListRequest, *CloudListResponse) error
 	DeleteCloud(context.Context, *CloudDeleteRequest, *CloudDeleteResponse) error
 	GetJobDetail(context.Context, *GetJobDetailRequest, *GetJobDetailResponse) error
+	RegisterBkWhitelist(context.Context, *RegisterBkWhitelistRequest, *RegisterBkWhitelistResponse) error
+	ListBkWhitelist(context.Context, *ListBkWhiteListRequest, *ListBkWhiteListResponse) error
+	GetBkOuterIP(context.Context, *GetBkOuterIPRequest, *GetBkOuterIPResponse) error
 }
 
 func RegisterBcsTerraformBkProviderHandler(s server.Server, hdlr BcsTerraformBkProviderHandler, opts ...server.HandlerOption) error {
@@ -212,6 +266,9 @@ func RegisterBcsTerraformBkProviderHandler(s server.Server, hdlr BcsTerraformBkP
 		ListCloud(ctx context.Context, in *CloudListRequest, out *CloudListResponse) error
 		DeleteCloud(ctx context.Context, in *CloudDeleteRequest, out *CloudDeleteResponse) error
 		GetJobDetail(ctx context.Context, in *GetJobDetailRequest, out *GetJobDetailResponse) error
+		RegisterBkWhitelist(ctx context.Context, in *RegisterBkWhitelistRequest, out *RegisterBkWhitelistResponse) error
+		ListBkWhitelist(ctx context.Context, in *ListBkWhiteListRequest, out *ListBkWhiteListResponse) error
+		GetBkOuterIP(ctx context.Context, in *GetBkOuterIPRequest, out *GetBkOuterIPResponse) error
 	}
 	type BcsTerraformBkProvider struct {
 		bcsTerraformBkProvider
@@ -265,6 +322,24 @@ func RegisterBcsTerraformBkProviderHandler(s server.Server, hdlr BcsTerraformBkP
 		Method:  []string{"POST"},
 		Handler: "rpc",
 	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "BcsTerraformBkProvider.RegisterBkWhitelist",
+		Path:    []string{"/terraform-bkprovider/v1/register_bk_whitelist"},
+		Method:  []string{"POST"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "BcsTerraformBkProvider.ListBkWhitelist",
+		Path:    []string{"/terraform-bkprovider/v1/list_bk_whitelist"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "BcsTerraformBkProvider.GetBkOuterIP",
+		Path:    []string{"/terraform-bkprovider/v1/get_bk_outer_ip"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
 	return s.Handle(s.NewHandler(&BcsTerraformBkProvider{h}, opts...))
 }
 
@@ -302,4 +377,16 @@ func (h *bcsTerraformBkProviderHandler) DeleteCloud(ctx context.Context, in *Clo
 
 func (h *bcsTerraformBkProviderHandler) GetJobDetail(ctx context.Context, in *GetJobDetailRequest, out *GetJobDetailResponse) error {
 	return h.BcsTerraformBkProviderHandler.GetJobDetail(ctx, in, out)
+}
+
+func (h *bcsTerraformBkProviderHandler) RegisterBkWhitelist(ctx context.Context, in *RegisterBkWhitelistRequest, out *RegisterBkWhitelistResponse) error {
+	return h.BcsTerraformBkProviderHandler.RegisterBkWhitelist(ctx, in, out)
+}
+
+func (h *bcsTerraformBkProviderHandler) ListBkWhitelist(ctx context.Context, in *ListBkWhiteListRequest, out *ListBkWhiteListResponse) error {
+	return h.BcsTerraformBkProviderHandler.ListBkWhitelist(ctx, in, out)
+}
+
+func (h *bcsTerraformBkProviderHandler) GetBkOuterIP(ctx context.Context, in *GetBkOuterIPRequest, out *GetBkOuterIPResponse) error {
+	return h.BcsTerraformBkProviderHandler.GetBkOuterIP(ctx, in, out)
 }

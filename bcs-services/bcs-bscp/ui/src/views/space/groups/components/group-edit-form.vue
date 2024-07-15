@@ -39,7 +39,16 @@
         </span>
       </template>
       <div v-for="(rule, index) in formData.rules" class="rule-config" :key="index">
-        <bk-input v-model="rule.key" style="width: 174px" placeholder="key" @change="ruleChange"></bk-input>
+        <bk-input
+          v-model="rule.key"
+          style="width: 174px"
+          placeholder="key"
+          :class="{ 'is-error': showErrorKeyValidation[index] }"
+          @change="ruleChange"
+          @blur="validateKey(index)"></bk-input>
+        <span v-show="showErrorKeyValidation[index]" class="error-msg">
+          {{ $t("仅支持字母，数字，'-'，'_'，'.' 及 '/' 且需以字母数字开头和结尾") }}
+        </span>
         <bk-select
           :model-value="rule.op"
           style="width: 82px"
@@ -51,6 +60,7 @@
           <bk-tag-input
             v-if="['in', 'nin'].includes(rule.op)"
             v-model="rule.value"
+            :class="{ 'is-error': showErrorValueValidation[index] }"
             :allow-create="true"
             :collapse-tags="true"
             :has-delete-icon="true"
@@ -58,15 +68,20 @@
             :allow-auto-match="true"
             :list="[]"
             placeholder="value"
-            @change="ruleChange">
+            @change="validateValue(index)">
           </bk-tag-input>
           <bk-input
             v-else
             v-model="rule.value"
             placeholder="value"
+            :class="{ 'is-error': showErrorValueValidation[index] }"
             :type="['gt', 'ge', 'lt', 'le'].includes(rule.op) ? 'number' : 'text'"
-            @change="ruleChange">
+            @change="() => (['gt', 'ge', 'lt', 'le'].includes(rule.op) ? validateValue(index) : ruleChange)"
+            @blur="validateValue(index)">
           </bk-input>
+          <span v-show="showErrorValueValidation[index]" class="error-msg is--value">
+            {{ $t("需以字母数字开头和结尾，可包含 '-'，'_'，'.' 和字母数字") }}
+          </span>
         </div>
         <div class="action-btns">
           <i
@@ -76,7 +91,7 @@
           <i v-if="index === formData.rules.length - 1" class="bk-bscp-icon icon-add" @click="handleAddRule(index)"></i>
         </div>
       </div>
-      <div v-if="!rulesValid" class="bk-form-error">{{ t('分组规则表单不能为空') }}</div>
+      <!-- <div v-if="!rulesValid" class="bk-form-error">{{ t('分组规则表单不能为空') }}</div> -->
     </bk-form-item>
   </bk-form>
 </template>
@@ -105,11 +120,18 @@
 
   const emits = defineEmits(['change']);
 
+  const keyValidateReg = new RegExp(
+    '^[a-z0-9A-Z]([-_a-z0-9A-Z]*[a-z0-9A-Z])?((\\.|\\/)[a-z0-9A-Z]([-_a-z0-9A-Z]*[a-z0-9A-Z])?)*$',
+  );
+  const valueValidateReg = new RegExp(/^(?:-?\d+(\.\d+)?|[A-Za-z0-9]([-A-Za-z0-9_.]*[A-Za-z0-9])?)$/);
+
   const serviceLoading = ref(false);
   const serviceList = ref<IAppItem[]>([]);
   const formData = ref(cloneDeep(props.group));
   const formRef = ref();
-  const rulesValid = ref(true);
+  // const rulesValid = ref(true);
+  const showErrorKeyValidation = ref<boolean[]>([]);
+  const showErrorValueValidation = ref<boolean[]>([]);
 
   const rules = {
     name: [
@@ -182,11 +204,15 @@
   const handleAddRule = (index: number) => {
     const rule = getDefaultRuleConfig();
     formData.value.rules.splice(index + 1, 0, rule);
+    showErrorKeyValidation.value.push(false);
+    showErrorValueValidation.value.push(false);
   };
 
   // 删除规则
   const handleDeleteRule = (index: number) => {
     formData.value.rules.splice(index, 1);
+    showErrorKeyValidation.value.splice(index, 1);
+    showErrorValueValidation.value.splice(index, 1);
     change();
   };
 
@@ -226,14 +252,36 @@
 
   // 校验分组规则是否有表单项为空
   const validateRules = () => {
-    const inValid = formData.value.rules.some((item) => {
-      const { key, op, value } = item;
-      return key === '' || op === '' || (Array.isArray(value) ? (value as string[]).length === 0 : value === '');
+    let allValid = true;
+    formData.value.rules.forEach((item, index) => {
+      const { op } = item;
+      if (op === '') return (allValid = false);
+      validateKey(index);
     });
+    allValid = !showErrorKeyValidation.value.includes(true) && !showErrorValueValidation.value.includes(true);
+    return allValid;
+  };
 
-    rulesValid.value = !inValid;
-
-    return !inValid;
+  // 验证key
+  const validateKey = (index: number) => {
+    showErrorKeyValidation.value[index] = !keyValidateReg.test(formData.value.rules[index].key);
+    validateValue(index);
+  };
+  // 验证value
+  const validateValue = (index: number) => {
+    // 只在key验证通过才显示value校验结果。如果value校验失败时去改key值，并且key值改变后也校验失败，只展示key的校验结果
+    if (Array.isArray(formData.value.rules[index].value)) {
+      const valueArrValidation = (formData.value.rules[index].value as string[]).every((item: string) =>
+        valueValidateReg.test(item),
+      );
+      showErrorValueValidation.value[index] =
+        keyValidateReg.test(formData.value.rules[index].key) && !valueArrValidation;
+    } else {
+      showErrorValueValidation.value[index] =
+        keyValidateReg.test(formData.value.rules[index].key) &&
+        !valueValidateReg.test(`${formData.value.rules[index].value}`);
+    }
+    change();
   };
 
   defineExpose({
@@ -258,6 +306,7 @@
     color: #313238;
   }
   .rule-config {
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -300,5 +349,40 @@
     color: #3a84ff;
     line-height: 19px;
     vertical-align: middle;
+  }
+  .is-error {
+    border-color: #ea3636;
+    &:focus-within {
+      border-color: #3a84ff;
+    }
+    &:hover:not(.is-disabled) {
+      border-color: #ea3636;
+    }
+    :deep(.bk-tag-input-trigger) {
+      border-color: #ea3636;
+    }
+  }
+  .error-msg {
+    position: absolute;
+    left: 0;
+    bottom: -14px;
+    font-size: 12px;
+    line-height: 1;
+    white-space: nowrap;
+    color: #ea3636;
+    animation: form-error-appear-animation 0.15s;
+    &.is--value {
+      left: 45.5%;
+    }
+  }
+  @keyframes form-error-appear-animation {
+    0% {
+      opacity: 0;
+      transform: translateY(-30%);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 </style>

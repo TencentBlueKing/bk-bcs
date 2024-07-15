@@ -136,9 +136,7 @@ func (h *Handler) FetchMultiClusterCustomResource(ctx context.Context,
 	if err != nil {
 		return err
 	}
-	resp.WebAnnotations, err = web.NewAnnos(
-		web.NewFeatureFlag(featureflag.FormCreate, true),
-	).ToPbStruct()
+	resp.WebAnnotations, err = web.GenListCObjWebAnnos(ctx, data, crdInfo, "")
 	return err
 }
 

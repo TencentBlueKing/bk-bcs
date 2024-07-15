@@ -26,7 +26,9 @@
           :class="['service-option-item', { 'no-perm': !item.permissions.view }]"
           @click="handleOptionClick(item, $event)">
           <div class="name-text">{{ item.spec.name }}</div>
-          <div class="type-tag">{{ item.spec.config_type === 'file' ? t('文件型') : t('键值型') }}</div>
+          <div :class="['type-tag', { 'type-tag--en': locale === 'en' }]">
+            {{ item.spec.config_type === 'file' ? t('文件型') : t('键值型') }}
+          </div>
         </div>
       </bk-option>
       <template #extension>
@@ -47,13 +49,16 @@
   import { AngleUpFill } from 'bkui-vue/lib/icon';
   import useGlobalStore from '../../../../../store/global';
   import useServiceStore from '../../../../../store/service';
+  import useConfigStoe from '../../../../../store/config';
   import { IAppItem } from '../../../../../../types/app';
   import { getAppList } from '../../../../../api';
   import { useI18n } from 'vue-i18n';
 
   const route = useRoute();
   const router = useRouter();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+
+  const configStore = useConfigStoe();
 
   const { appData } = storeToRefs(useServiceStore());
   const { showApplyPermDialog, permissionQuery } = storeToRefs(useGlobalStore());
@@ -123,6 +128,9 @@
   const handleAppChange = (id: number) => {
     const service = serviceList.value.find((service) => service.id === id);
     if (service) {
+      configStore.$patch((state) => {
+        state.conflictFileCount = 0;
+      });
       let name = route.name as string;
       if (route.name === 'init-script' && service.spec.config_type === 'kv') {
         name = 'service-config';
@@ -204,14 +212,17 @@
       position: absolute;
       top: 5px;
       right: 16px;
-      width: 52px;
       height: 22px;
+      width: 52px;
       line-height: 22px;
       color: #63656e;
       font-size: 12px;
       text-align: center;
       background: #f0f1f5;
       border-radius: 2px;
+      &--en {
+        width: 96px;
+      }
     }
   }
   .selector-extensition {

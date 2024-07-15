@@ -52,20 +52,6 @@ type ResourceInfo struct {
 	UpdateTime  time.Time `json:"updateTime" gorm:"column:updateTime;type:datetime NOT NULL"`
 }
 
-const (
-	// PreferenceTypeApplication xxx
-	PreferenceTypeApplication = "application"
-)
-
-// ResourcePreference defines the resource preference
-type ResourcePreference struct {
-	ID           int64  `json:"id" gorm:"column:id;primaryKey;type:int(11) AUTO_INCREMENT NOT NULL"`
-	Project      string `json:"project" gorm:"index:idx_proj;column:project;type:varchar(256) NOT NULL"`
-	ResourceType string `json:"resourceType" gorm:"index:idx_rt;column:resourceType;type:varchar(64) NOT NULL"`
-	Name         string `json:"name" gorm:"index:idx_name;column:name;type:varchar(256) NOT NULL"`
-	Collect      int64  `json:"collect" gorm:"column:collect;type:int(4) DEFAULT 0"`
-}
-
 // ApplicationHistoryManifest defines the manifest of application every history
 type ApplicationHistoryManifest struct {
 	ID              int64  `json:"id" gorm:"column:id;primaryKey;type:int(11) AUTO_INCREMENT NOT NULL"`
@@ -88,7 +74,49 @@ type ApplicationHistoryManifest struct {
 	ManagedResourcesBytes []byte `json:"managedResourcesBytes" gorm:"column:managedResourcesBytes;type:LONGBLOB DEFAULT NULL"` // nolint
 }
 
-// Encode 很对大字符串在保存前进行压缩
+// UserPermission defines the permission of resources
+type UserPermission struct {
+	ID             int64  `json:"id" gorm:"column:id;primaryKey;type:int(11) AUTO_INCREMENT NOT NULL"`
+	Project        string `json:"project" gorm:"index:idx_rs,unique;index:idx_proj;column:project;type:varchar(256) NOT NULL"` // nolint
+	User           string `json:"user" gorm:"index:idx_rs,unique;column:user;type:varchar(64) NOT NULL"`
+	ResourceType   string `json:"resourceType" gorm:"index:idx_rs,unique;column:resourceType;type:varchar(64) NOT NULL"`
+	ResourceName   string `json:"resourceName" gorm:"index:idx_rs,unique;column:resourceName;type:varchar(128) NOT NULL"`
+	ResourceAction string `json:"resourceAction" gorm:"index:idx_rs,unique;column:resourceAction;type:varchar(64) NOT NULL"` // nolint
+}
+
+// UserAudit defines the user audit
+type UserAudit struct {
+	ID            int64  `json:"id" gorm:"column:id;primaryKey;type:int(11) AUTO_INCREMENT NOT NULL"`
+	Project       string `json:"project" gorm:"index:idx_proj;column:project;type:varchar(256) NOT NULL"`
+	User          string `json:"user" gorm:"index:idx_user;column:user;type:varchar(64) NOT NULL"`
+	Client        string `json:"client" gorm:"column:client;type:varchar(64) NOT NULL"`
+	Action        string `json:"action" gorm:"index:idx_action;column:action;type:varchar(64) DEFAULT NULL"`
+	ResourceType  string `json:"resourceType" gorm:"index:idx_rstp;column:resourceType;type:varchar(64) NOT NULL"`
+	ResourceName  string `json:"resourceName" gorm:"index:idx_rsnm;column:resourceName;type:varchar(64) DEFAULT NULL"` // nolint
+	ResourceData  string `json:"resourceData" gorm:"column:resourceData;type:longtext DEFAULT NULL"`
+	RequestID     string `json:"requestID" gorm:"column:requestID;type:varchar(64) DEFAULT NULL"`
+	RequestURI    string `json:"requestURI" gorm:"column:requestURI;type:varchar(256) DEFAULT NULL"`
+	RequestType   string `json:"requestType" gorm:"column:requestType;type:varchar(64) DEFAULT NULL"`
+	RequestMethod string `json:"requestMethod" gorm:"column:requestMethod;type:varchar(32) DEFAULT NULL"`
+	SourceIP      string `json:"sourceIP" gorm:"column:sourceIP;type:varchar(256) DEFAULT NULL"`
+	UserAgent     string `json:"userAgent" gorm:"column:userAgent;type:longtext DEFAULT NULL"`
+
+	ResponseStatus int       `json:"responseStatus" gorm:"column:responseStatus;type:int(8) DEFAULT NULL"`
+	Status         string    `json:"status" gorm:"column:status;type:varchar(64) DEFAULT NULL"`
+	ErrMsg         string    `json:"errMsg" gorm:"column:errMsg;type:longtext DEFAULT NULL"`
+	StartTime      time.Time `json:"startTime" gorm:"column:startTime;type:datetime DEFAULT NULL"`
+	EndTime        time.Time `json:"endTime" gorm:"column:endTime;type:datetime DEFAULT NULL"`
+}
+
+// AppSetClusterScope 定义 AppSet 能创建的集群范围
+type AppSetClusterScope struct {
+	ID         int64     `json:"id" gorm:"column:id;primaryKey;type:int(11) AUTO_INCREMENT NOT NULL"`
+	AppSetName string    `json:"appSetName" gorm:"index:idx_appset,unique;column:appSetName;type:varchar(64) NOT NULL"`
+	Clusters   string    `json:"clusters" gorm:"column:clusters;type:longtext DEFAULT NULL"`
+	UpdateTime time.Time `json:"updateTime" gorm:"column:updateTime;type:datetime DEFAULT NULL"`
+}
+
+// Encode 针对大字符串在保存前进行压缩
 func (ahm *ApplicationHistoryManifest) Encode() error {
 	appYaml, err := utils.GzipEncode(utils.StringToSliceByte(ahm.ApplicationYaml))
 	if err != nil {
@@ -138,36 +166,31 @@ func (ahm *ApplicationHistoryManifest) GetApplicationYaml() string {
 
 const (
 	tableActivityUser       = "bcs_gitops_activity_user" // nolint
-	tableSyncInfo           = "bcs_gitops_sync_info"
-	tableResourcePreference = "bcs_gitops_resource_preference"
 	tableHistoryManifest    = "bcs_gitops_app_history_manifest"
-	// nolint
-	tableResourceInfo = "bcs_gitops_resource_info"
+	tableUserPermission     = "bcs_gitops_user_permission"
+	tableUserAudit          = "bcs_gitops_user_audit"
+	tableAppSetClusterScope = "bcs_gitops_appset_cluster_scope"
 )
 
 // Interface xxx interface
 type Interface interface {
 	Init() error
 
-	SaveActivityUser(user *ActivityUser) error
-	GetActivityUser(project, user string) (*ActivityUser, error)
-	UpdateActivityUser(user *ActivityUser) error
-	ListActivityUser(project string) ([]ActivityUser, error)
-
-	GetSyncInfo(project, cluster, app, phase string) (*SyncInfo, error)
-	ListSyncInfosForProject(project string) ([]SyncInfo, error)
-	SaveSyncInfo(info *SyncInfo) error
-	UpdateSyncInfo(info *SyncInfo) error
-
-	SaveOrUpdateResourceInfo(info *ResourceInfo) error
-	ListResourceInfosByProject(projects []string) ([]ResourceInfo, error)
-	GetResourceInfo(project, app string) (*ResourceInfo, error)
-
-	SaveResourcePreference(prefer *ResourcePreference) error
-	DeleteResourcePreference(project, resourceType, name string) error
-	ListResourcePreferences(project, resourceType string) ([]ResourcePreference, error)
+	UpdateActivityUserWithName(item *ActivityUserItem)
 
 	SaveApplicationHistoryManifest(hm *ApplicationHistoryManifest) error
 	GetApplicationHistoryManifest(appName, appUID string, historyID int64) (*ApplicationHistoryManifest, error)
 	CheckAppHistoryManifestExist(appName, appUID string, historyID int64) (bool, error)
+
+	CreateUserPermission(permission *UserPermission) error
+	DeleteUserPermission(permission *UserPermission) error
+	ListUserPermissions(project, user, resourceType string) ([]*UserPermission, error)
+	ListResourceUsers(project, resourceType string, resourceNames []string) ([]*UserPermission, error)
+	GetUserPermission(permission *UserPermission) (*UserPermission, error)
+
+	SaveAuditMessage(audit *UserAudit) error
+
+	UpdateAppSetClusterScope(appSet, clusters string) error
+	GetAppSetClusterScope(appSet string) (*AppSetClusterScope, error)
+	DeleteAppSetClusterScope(appSet string) error
 }

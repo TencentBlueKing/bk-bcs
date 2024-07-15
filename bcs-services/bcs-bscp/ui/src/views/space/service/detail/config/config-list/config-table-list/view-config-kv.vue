@@ -40,6 +40,9 @@
       </bk-tab>
     </div>
     <section class="action-btns">
+      <bk-button v-if="config.kv_state !== 'DELETE'" theme="primary" @click="emits('openEdit')">{{
+        t('编辑')
+      }}</bk-button>
       <bk-button @click="close">{{ t('关闭') }}</bk-button>
     </section>
   </bk-sideslider>
@@ -50,14 +53,16 @@
   import { IConfigKvType } from '../../../../../../../../types/config';
   import kvConfigContentEditor from '../../components/kv-config-content-editor.vue';
   import ConfigContentEditor from '../../components/config-content-editor.vue';
+  import { sortObjectKeysByAscii, datetimeFormat } from '../../../../../../../utils';
 
   const { t } = useI18n();
   const props = defineProps<{
     config: IConfigKvType;
     show: boolean;
+    showEditBtn?: boolean;
   }>();
 
-  const emits = defineEmits(['update:show', 'confirm']);
+  const emits = defineEmits(['update:show', 'confirm', 'openEdit']);
 
   const activeTab = ref('content');
   const isFormChange = ref(false);
@@ -66,10 +71,21 @@
 
   const metaData = computed(() => {
     const { content_spec, revision, spec } = props.config;
-    const { byte_size, signature } = content_spec;
+    const { byte_size, signature, md5 } = content_spec;
     const { create_at, creator, reviser, update_at } = revision;
-    const { key, kv_type } = spec;
-    return { key, kv_type, byte_size, signature, create_at, creator, reviser, update_at };
+    const { key, kv_type, memo } = spec;
+    return sortObjectKeysByAscii({
+      key,
+      kv_type,
+      byte_size,
+      signature,
+      create_at: datetimeFormat(create_at),
+      creator,
+      reviser,
+      update_at: datetimeFormat(update_at),
+      md5,
+      memo,
+    });
   });
 
   watch(

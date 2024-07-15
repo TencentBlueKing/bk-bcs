@@ -102,32 +102,38 @@
               searchable
               :clearable="false"
               :remote-method="vpcRemoteSearch">
-              <!-- VPC可用容器网络IP数量最低限制 -->
-              <bcs-option
-                v-for="item in filterVpcList"
-                :key="item.vpcID"
-                :id="item.vpcID"
-                :name="item.vpcName"
-                :disabled="basicInfo.environment === 'prod'
-                  ? item.availableIPNum < 4096
-                  : item.availableIPNum < 2048
-                "
-                v-bk-tooltips="{
-                  content: $t('cluster.create.label.vpc.deficiencyIpNumTips'),
-                  disabled: basicInfo.environment === 'prod'
-                    ? item.availableIPNum >= 4096
-                    : item.availableIPNum >= 2048
-                }">
-                <div class="flex items-center place-content-between">
-                  <span>
-                    {{item.vpcName}}
-                    <span class="vpc-id">{{`(${item.vpcID})`}}</span>
-                  </span>
-                  <span class="text-[#979ba5]">
-                    {{ $t('cluster.create.label.vpc.availableIpNum', [item.availableIPNum]) }}
-                  </span>
-                </div>
-              </bcs-option>
+              <!-- VPC可用容器网络IP数量最低限制, 并以businessID分组（有businessID为业务专属VPC，否则为公共VPC） -->
+              <bcs-option-group
+                v-for="(vpc, index) in filterVpcList"
+                :name="vpc.name"
+                :key="index">
+
+                <bcs-option
+                  v-for="item in vpc.children"
+                  :key="item.vpcID"
+                  :id="item.vpcID"
+                  :name="item.vpcName"
+                  :disabled="basicInfo.environment === 'prod'
+                    ? item.availableIPNum < 4096
+                    : item.availableIPNum < 2048
+                  "
+                  v-bk-tooltips="{
+                    content: $t('cluster.create.label.vpc.deficiencyIpNumTips'),
+                    disabled: basicInfo.environment === 'prod'
+                      ? item.availableIPNum >= 4096
+                      : item.availableIPNum >= 2048
+                  }">
+                  <div class="flex items-center place-content-between">
+                    <span>
+                      {{item.vpcName}}
+                      <span class="vpc-id">{{`(${item.vpcID})`}}</span>
+                    </span>
+                    <span class="text-[#979ba5]">
+                      {{ $t('cluster.create.label.vpc.availableIpNum', [item.availableIPNum]) }}
+                    </span>
+                  </div>
+                </bcs-option>
+              </bcs-option-group>
             </bcs-select>
             <div class="text-[12px] text-[#979BA5]" v-if="curVpc">
               <i18n path="cluster.create.label.vpc.availableIpNum2">
@@ -578,13 +584,28 @@ export default defineComponent({
     const vpcList = ref<any[]>([]);
     const vpcLoading = ref(false);
     const filterVpcList = computed(() => vpcList.value
-      .filter(item => item.vpcName.includes(filterValue.value) || item.vpcID.includes(filterValue.value)));
+      // filter放到reduce
+      .reduce((acc, cur: any) => { // 分两组
+        // 匹配下拉搜索项
+        if (cur.vpcName.includes(filterValue.value) || cur.vpcID.includes(filterValue.value)) {
+          // 有businessID的是归属业务专属vpc，index为0
+          const index = cur.businessID ? 0 : 1;
+          acc[index].children.push(cur);
+        }
+        return acc;
+      }, [ // vpc组：业务专属vpc，公共vpc
+        { id: 1, name: $i18n.t('cluster.create.label.vpc.businessSpecificVPC'), children: [] },
+        { id: 2, name: $i18n.t('cluster.create.label.vpc.publicVPC'), children: [] },
+      ])
+      .filter(item => item.children.length > 0), // 去除空组
+    );
     const getVpcList = async () => {
       vpcLoading.value = true;
       const data = await $store.dispatch('clustermanager/fetchCloudVpc', {
         cloudID: basicInfo.value.provider,
         region: networkConfig.value.region,
         networkType: networkConfig.value.networkType,
+        businessID: curProject.value.businessID,
       });
       vpcList.value = data.filter(item => item.available === 'true');
       vpcLoading.value = false;
@@ -628,7 +649,7 @@ export default defineComponent({
       if (!ipNumber || !serviceNumber) return [];
 
       const minExponential = Math.log2(32);
-      const maxExponential = Math.log2(Math.min(ipNumber - serviceNumber, 128));
+      const maxExponential = Math.log2(Math.min(ipNumber - serviceNumber, 256));
       return getIpNumRange(minExponential, maxExponential);
     });
     // 集群最大节点数

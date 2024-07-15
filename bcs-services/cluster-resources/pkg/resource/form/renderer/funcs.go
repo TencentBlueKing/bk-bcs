@@ -15,7 +15,9 @@ package renderer
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"text/template"
 
@@ -47,15 +49,19 @@ func newTmplFuncMap() template.FuncMap {
 		"matchKVInSlice":         slice.MatchKVInSlice,
 		"i18n":                   i18n.GetMsgWithLang,
 		"genDockerConfigJson":    genDockerConfigJSON,
+		"contains":               contains,
+		"toInt":                  toInt,
 
 		// 辅助类方法
-		"isNSRequired":        isNSRequired,
-		"isLabelRequired":     isLabelRequired,
-		"isLabelVisible":      isLabelVisible,
-		"isLabelAsSelector":   isLabelAsSelector,
-		"isLabelEditDisabled": isLabelEditDisabled,
-		"isAnnoVisible":       isAnnoVisible,
-		"canRenderResVersion": canRenderResVersion,
+		"isNSRequired":             isNSRequired,
+		"isLabelRequired":          isLabelRequired,
+		"isLabelVisible":           isLabelVisible,
+		"isLabelAsSelector":        isLabelAsSelector,
+		"isLabelEditDisabled":      isLabelEditDisabled,
+		"hasLabelSelector":         hasLabelSelector,
+		"isAnnoVisible":            isAnnoVisible,
+		"canRenderResVersion":      canRenderResVersion,
+		"genWorkloadSelectorLabel": genWorkloadSelectorLabel,
 
 		// This is a placeholder for the "include" function, which is late-bound to a template.
 		// By declaring it here, we preserve the integrity of the linter.
@@ -135,6 +141,19 @@ func isLabelAsSelector(kind string) bool {
 	})
 }
 
+// 判断对于当前这种资源类型，是否有 labelSelector
+func hasLabelSelector(kind string) bool {
+	return slice.StringInSlice(kind, []string{
+		resCsts.Deploy, resCsts.STS, resCsts.DS, resCsts.GDeploy, resCsts.GSTS,
+	})
+}
+
+// genWorkloadSelectorLabel 生成 Workload 类型资源的 selector label
+func genWorkloadSelectorLabel(v string) string {
+	value := fmt.Sprintf("[{key: 'workload.bcs.tencent.io/workloadSelector', value: '%s'}]", v)
+	return value
+}
+
 // 判断资源类型和使用场景下，能否编辑 labels
 func isLabelEditDisabled(kind, action string) bool {
 	if action == "create" {
@@ -168,4 +187,18 @@ func genDockerConfigJSON(registry, username, password string) string {
 		return err.Error()
 	}
 	return string(c)
+}
+
+// contains 判断字符串是否包含子串
+func contains(str, substr string) bool {
+	return strings.Contains(str, substr)
+}
+
+// toInt 字符串转 int
+func toInt(s string) int {
+	i, err := strconv.Atoi(s)
+	if err != nil {
+		return 0
+	}
+	return i
 }

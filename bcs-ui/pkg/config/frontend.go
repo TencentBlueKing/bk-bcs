@@ -13,6 +13,13 @@
 // Package config xxx
 package config
 
+import (
+	"fmt"
+	"net/url"
+	"path"
+	"strings"
+)
+
 // HostConf :
 type HostConf struct {
 	SiteURL               string `yaml:"site_url"`                // 前端路由URL
@@ -26,6 +33,8 @@ type HostConf struct {
 	BKSREHOST             string `yaml:"bk_sre_host"`             // 申请服务器地址
 	BKUserHost            string `yaml:"bk_user_host"`            // 用户中心地址
 	BKLogHost             string `yaml:"bk_log_host"`             // 日志平台地址
+	BKSharedResURL        string `yaml:"bk_shared_res_url"`       // 对应运维公共变量bkSharedResUrl, PaaS环境变量BKPAAS_SHARED_RES_URL
+	BKSharedResBaseJSURL  string `yaml:"-"`                       // 规则是${bkSharedResUrl}/${目录名 aka app_code}/base.js
 	LoginFullURL          string `yaml:"login_full_url"`          // 登录跳转地址
 }
 
@@ -44,4 +53,27 @@ func defaultFrontendConf() *FrontendConf {
 		Features: map[string]string{"zh_cn": ""},
 	}
 	return c
+}
+
+func (c *FrontendConf) initResBaseJSURL(appCode string) error {
+	if c.Host.BKSharedResURL == "" {
+		return nil
+	}
+	if appCode == "" {
+		return fmt.Errorf("initResBaseJSURL: app_code is required")
+	}
+
+	// 规范: 统一使用下划线做目录名
+	appCode = strings.ReplaceAll(appCode, "-", "_")
+	// 兼容: bcs去掉老的_app后缀
+	appCode = strings.TrimSuffix(appCode, "_app")
+
+	u, err := url.Parse(c.Host.BKSharedResURL)
+	if err != nil {
+		return err
+	}
+	u.Path = path.Join(u.Path, appCode, "base.js")
+
+	c.Host.BKSharedResBaseJSURL = u.String()
+	return nil
 }

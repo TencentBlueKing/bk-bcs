@@ -18,8 +18,8 @@ import (
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/metrics"
 )
 
-func initMetric() *metric {
-	m := new(metric)
+func initResourceLockMetric() *resourceLockMetric {
+	m := new(resourceLockMetric)
 	labels := prometheus.Labels{}
 	m.totalCounter = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
@@ -53,7 +53,65 @@ func initMetric() *metric {
 	return m
 }
 
-type metric struct {
+type resourceLockMetric struct {
+	// totalCounter record all the try to lock request count.
+	totalCounter *prometheus.CounterVec
+
+	// acquiredCounter all the acquired lock request count.
+	acquiredCounter *prometheus.CounterVec
+
+	// acquiredRate record the acquired rate of the total request.
+	acquiredRate *prometheus.GaugeVec
+}
+
+func initRedisLockMetric() *redisLockMetric {
+	m := new(redisLockMetric)
+	labels := prometheus.Labels{}
+	m.timeoutCounter = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace:   metrics.Namespace,
+			Subsystem:   metrics.RedisLockSubSys,
+			Name:        "timeout_count",
+			Help:        "the total timeout count of the redis lock",
+			ConstLabels: labels,
+		}, []string{})
+
+	m.totalCounter = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace:   metrics.Namespace,
+			Subsystem:   metrics.RedisLockSubSys,
+			Name:        "total_count",
+			Help:        "the total request counts which are try to acquire the redis lock",
+			ConstLabels: labels,
+		}, []string{})
+	metrics.Register().MustRegister(m.totalCounter)
+
+	m.acquiredRate = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace:   metrics.Namespace,
+		Subsystem:   metrics.RedisLockSubSys,
+		Name:        "acquired_rate",
+		Help:        "the acquire rate is the value of acquired_count/total_count",
+		ConstLabels: labels,
+	}, []string{})
+	metrics.Register().MustRegister(m.acquiredRate)
+
+	m.acquiredCounter = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace:   metrics.Namespace,
+			Subsystem:   metrics.RedisLockSubSys,
+			Name:        "acquired_count",
+			Help:        "the total request count which are are successfully acquire the redis lock",
+			ConstLabels: labels,
+		}, []string{})
+	metrics.Register().MustRegister(m.acquiredCounter)
+
+	return m
+}
+
+type redisLockMetric struct {
+	// timeoutCounter record the total timeout count of the redis lock.
+	timeoutCounter *prometheus.CounterVec
+
 	// totalCounter record all the try to lock request count.
 	totalCounter *prometheus.CounterVec
 

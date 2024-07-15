@@ -15,14 +15,16 @@ package huawei
 
 import (
 	"context"
-	"encoding/base64"
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/i18n"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/huawei/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/huawei/business"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -81,6 +83,23 @@ func (c *Cluster) DeleteCluster(cls *proto.Cluster, opt *cloudprovider.DeleteClu
 
 // GetCluster get kubenretes cluster detail information according cloudprovider
 func (c *Cluster) GetCluster(cloudID string, opt *cloudprovider.GetClusterOption) (*proto.Cluster, error) {
+	runtimeInfo, err := business.GetRuntimeInfo(opt.Cluster.ClusterID)
+	if err != nil {
+		return nil, err
+	}
+
+	if v, ok := runtimeInfo[common.ContainerdRuntime]; ok {
+		opt.Cluster.ClusterAdvanceSettings.ContainerRuntime = common.ContainerdRuntime
+		if len(v) > 0 {
+			opt.Cluster.ClusterAdvanceSettings.RuntimeVersion = v[0]
+		}
+	} else if v, ok := runtimeInfo[common.DockerContainerRuntime]; ok {
+		opt.Cluster.ClusterAdvanceSettings.ContainerRuntime = common.DockerContainerRuntime
+		if len(v) > 0 {
+			opt.Cluster.ClusterAdvanceSettings.RuntimeVersion = v[0]
+		}
+	}
+
 	return opt.Cluster, nil
 }
 
@@ -95,13 +114,13 @@ func (c *Cluster) ListCluster(opt *cloudprovider.ListClusterOption) ([]*proto.Cl
 		return nil, err
 	}
 
-	rsp, err := cli.ListCceCluster()
+	clusters, err := cli.ListCceCluster(nil)
 	if err != nil {
 		return nil, err
 	}
 
 	cloudClusterList := make([]*proto.CloudClusterInfo, 0)
-	for _, v := range *rsp.Items {
+	for _, v := range *clusters {
 		cloudClusterList = append(cloudClusterList, &proto.CloudClusterInfo{
 			ClusterID:          *v.Metadata.Uid,
 			ClusterName:        v.Metadata.Name,
@@ -125,6 +144,17 @@ func (c *Cluster) AddSubnetsToCluster(ctx context.Context, subnet *proto.SubnetS
 // AppendCloudNodeInfo append cloud node detailed info
 func (c *Cluster) AppendCloudNodeInfo(ctx context.Context,
 	nodes []*proto.ClusterNode, opt *cloudprovider.CommonOption) error {
+
+	// 获取语言
+	lang := i18n.LanguageFromCtx(ctx)
+	if lang == utils.ZH {
+		for i, node := range nodes {
+			if node.ZoneID != "" {
+				nodes[i].ZoneName = fmt.Sprintf("可用区%d", business.GetZoneNameByZoneId(opt.Region, node.ZoneID))
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -144,30 +174,16 @@ func (c *Cluster) CheckClusterEndpointStatus(clusterID string, isExtranet bool,
 	if err != nil {
 		return false, err
 	}
-
-	blog.Infof("cluster endpoint status: %s", *cluster.Status.Phase)
-
-	if *cluster.Status.Phase != "Available" {
-		return false, fmt.Errorf("cluster endpoint status is not created")
+	if *cluster.Status.Phase != api.Available {
+		return false, fmt.Errorf("cluster status is not available")
 	}
 
-	kubeConfig := ""
-	// 获取内网的kubeconfig
-	if !isExtranet {
-		kubeConfig, err = api.GetInternalClusterKubeConfig(cli, clusterID)
-	} else {
-		kubeConfig, err = api.GetClusterKubeConfig(cli, clusterID)
-	}
+	kubeConfig, err := cli.GetClusterKubeConfig(clusterID, isExtranet)
 	if err != nil {
 		return false, err
 	}
 
-	data, err := base64.StdEncoding.DecodeString(kubeConfig)
-	if err != nil {
-		return false, fmt.Errorf("decode kube config failed: %v", err)
-	}
-
-	_, err = cloudprovider.GetCRDByKubeConfig(string(data))
+	_, err = cloudprovider.GetCRDByKubeConfig(kubeConfig)
 	if err != nil {
 		return false, err
 	}
@@ -239,4 +255,16 @@ func (c *Cluster) ListOsImage(provider string, opt *cloudprovider.CommonOption) 
 	}
 
 	return utils.CCEImageOsList, nil
+}
+
+// SwitchClusterNetwork switch cluster network mode
+func (c *Cluster) SwitchClusterNetwork(
+	cls *proto.Cluster, subnet *proto.SubnetSource, opt *cloudprovider.SwitchClusterNetworkOption) (*proto.Task, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// CheckClusterNetworkStatus get cluster network
+func (c *Cluster) CheckClusterNetworkStatus(cloudID string,
+	opt *cloudprovider.CheckClusterNetworkStatusOption) (bool, error) {
+	return false, cloudprovider.ErrCloudNotImplemented
 }

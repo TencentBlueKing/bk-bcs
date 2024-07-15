@@ -15,7 +15,9 @@ package types
 
 import (
 	"net/http"
+	"time"
 
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/components/gse"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
 	pbbase "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
@@ -24,6 +26,19 @@ import (
 	pbcontent "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/content"
 	pbhook "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/hook"
 	pbkv "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/kv"
+)
+
+var (
+	// AsyncDownloadJobStatusPending in pending status, job can collect the target(task) clients.
+	AsyncDownloadJobStatusPending = "Pending"
+	// AsyncDownloadJobStatusRunning running status to precess downloading task and gse task.
+	AsyncDownloadJobStatusRunning = "Running"
+	// AsyncDownloadJobStatusSuccess means all the targets(tasks) in job were successd.
+	AsyncDownloadJobStatusSuccess = "Success"
+	// AsyncDownloadJobStatusFailed means there are failed targets(tasks) in job.
+	AsyncDownloadJobStatusFailed = "Failed"
+	// AsyncDownloadJobStatusTimeout means there are targets(tasks) still in process until job time out.
+	AsyncDownloadJobStatusTimeout = "Timeout"
 )
 
 // AppInstanceMeta defines an app instance's metadata information.
@@ -127,4 +142,45 @@ type ReleasedKvMeta struct {
 	Revision     *pbbase.Revision       `json:"revision,omitempty"`
 	KvAttachment *pbkv.KvAttachment     `json:"kv_attachment,omitempty"`
 	ContentSpec  *pbcontent.ContentSpec `json:"content_spec,omitempty"`
+}
+
+// AsyncDownloadJob defines async download job.
+type AsyncDownloadJob struct {
+	BizID              uint32                                             `json:"biz_id"`
+	AppID              uint32                                             `json:"app_id"`
+	JobID              string                                             `json:"job_id"`
+	FilePath           string                                             `json:"file_path"`
+	FileName           string                                             `json:"file_name"`
+	FileSignature      string                                             `json:"file_signature"`
+	TargetFileDir      string                                             `json:"target_file_dir"`
+	TargetUser         string                                             `json:"target_user"`
+	Targets            []*AsyncDownloadTarget                             `json:"targets"`
+	GSETaskID          string                                             `json:"gse_task_id"`
+	ExecuteTime        time.Time                                          `json:"execute_time"`
+	Status             string                                             `json:"status"`
+	CreateTime         time.Time                                          `json:"create_time"`
+	SuccessTargets     map[string]gse.TransferFileResultDataResultContent `json:"success_targets"`
+	FailedTargets      map[string]gse.TransferFileResultDataResultContent `json:"failed_targets"`
+	DownloadingTargets map[string]gse.TransferFileResultDataResultContent `json:"downloading_targets"`
+	TimeoutTargets     map[string]gse.TransferFileResultDataResultContent `json:"timeout_targets"`
+}
+
+// AsyncDownloadTarget defines async download target.
+type AsyncDownloadTarget struct {
+	AgentID     string `json:"agent_id"`
+	ContainerID string `json:"container_id"`
+}
+
+// AsyncDownloadTask defines async download task.
+type AsyncDownloadTask struct {
+	BizID             uint32    `json:"biz_id"`
+	AppID             uint32    `json:"app_id"`
+	JobID             string    `json:"job_id"`
+	TargetAgentID     string    `json:"target_agent_id"`
+	TargetContainerID string    `json:"target_container_id"`
+	FilePath          string    `json:"file_path"`
+	FileName          string    `json:"file_name"`
+	FileSignature     string    `json:"file_signature"`
+	Status            string    `json:"status"`
+	CreateTime        time.Time `json:"create_time"`
 }

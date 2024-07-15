@@ -1,5 +1,5 @@
 <template>
-  <div class="bcs-content-wrapper p-[24px] text-[12px]">
+  <div class="p-[24px] text-[12px] overflow-auto">
     <bk-form class="bg-[#fff] py-[20px]">
       <bk-form-item :label="$t('manualNode.title.source.text')">
         <bk-radio-group v-model="nodeSource">

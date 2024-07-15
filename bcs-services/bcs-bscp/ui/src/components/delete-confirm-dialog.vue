@@ -3,13 +3,17 @@
     :is-show="isShow"
     :title="title"
     :theme="'primary'"
-    :loading="pending"
     quick-close
     ext-cls="delete-confirm-dialog"
     @closed="handleClose">
     <slot></slot>
     <template #footer>
-      <bk-button theme="primary" @click="emits('confirm')" style="margin-right: 8px">
+      <bk-button
+        theme="primary"
+        @click="emits('confirm')"
+        :disabled="pending"
+        :loading="pending"
+        style="margin-right: 8px">
         {{ confirmText || t('删除') }}
       </bk-button>
       <bk-button @click="handleClose">{{ t('取消') }}</bk-button>
@@ -39,16 +43,11 @@
   const emits = defineEmits(['update:isShow', 'confirm', 'close']);
 </script>
 
-<style scoped lang="scss">
+<style lang="scss">
   .delete-confirm-dialog {
-    :deep(.bk-modal-body) {
-      .bk-modal-footer {
-        background-color: #fff;
-        border: none;
-        padding-bottom: 24px !important;
-        .bk-button {
-          width: 80px;
-        }
+    .bk-modal-body {
+      .bk-dialog-header .bk-dialog-title {
+        white-space: normal;
       }
     }
   }

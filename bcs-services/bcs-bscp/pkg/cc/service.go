@@ -13,6 +13,7 @@
 package cc
 
 import (
+	"errors"
 	"net"
 	"sync"
 )
@@ -50,10 +51,14 @@ const (
 	ConfigServerName Name = "config-server"
 	// FeedServerName is the feed server's service name
 	FeedServerName Name = "feed-server"
+	// FeedProxyName is the feed proxy's service name
+	FeedProxyName Name = "feed-proxy"
 	// AuthServerName is the auth server's service name
 	AuthServerName Name = "auth-server"
 	// VaultServerName is the vault server's service name
 	VaultServerName Name = "vault-server"
+	// VaultSidecarName is the vault sidecar's service name
+	VaultSidecarName Name = "vault-sidecar"
 	// UIName is the ui service name
 	UIName Name = "ui"
 )
@@ -93,6 +98,7 @@ func (s *ApiServerSetting) trySetDefault() {
 	s.Service.trySetDefault()
 	s.Log.trySetDefault()
 	s.Repo.trySetDefault()
+	s.FeatureFlags.trySetDefault()
 }
 
 // Validate ApiServerSetting option.
@@ -110,17 +116,22 @@ func (s ApiServerSetting) Validate() error {
 		return err
 	}
 
+	if err := s.FeatureFlags.validate(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
 // AuthServerSetting defines auth server used setting options.
 type AuthServerSetting struct {
-	Network   Network           `yaml:"network"`
-	Service   Service           `yaml:"service"`
-	Log       LogOption         `yaml:"log"`
-	LoginAuth LoginAuthSettings `yaml:"loginAuth"`
-	IAM       IAM               `yaml:"iam"`
-	Esb       Esb               `yaml:"esb"`
+	Network    Network           `yaml:"network"`
+	Service    Service           `yaml:"service"`
+	Log        LogOption         `yaml:"log"`
+	LoginAuth  LoginAuthSettings `yaml:"loginAuth"`
+	IAM        IAM               `yaml:"iam"`
+	Esb        Esb               `yaml:"esb"`
+	ApiGateway ApiGateway        `yaml:"apiGateway"`
 }
 
 // LoginAuthSettings login conf
@@ -129,7 +140,15 @@ type LoginAuthSettings struct {
 	InnerHost string `yaml:"innerHost"`
 	Provider  string `yaml:"provider"`
 	UseESB    bool   `yaml:"useEsb"`
-	GWPubKey  string `yaml:"gwPubkey"`
+}
+
+// ApiGateway gateway conf
+type ApiGateway struct {
+	// AutoRegister 是否自动注册
+	AutoRegister bool `yaml:"autoRegister"`
+	// Host apigateway host
+	Host     string `yaml:"host"`
+	GWPubKey string `yaml:"gwPubkey"`
 }
 
 // trySetFlagBindIP try set flag bind ip.
@@ -274,11 +293,12 @@ type DataServiceSetting struct {
 	Service Service   `yaml:"service"`
 	Log     LogOption `yaml:"log"`
 
-	Credential Credential `yaml:"credential"`
-	Sharding   Sharding   `yaml:"sharding"`
-	Esb        Esb        `yaml:"esb"`
-	Repo       Repository `yaml:"repository"`
-	Vault      Vault      `yaml:"vault"`
+	Credential   Credential   `yaml:"credential"`
+	Sharding     Sharding     `yaml:"sharding"`
+	Esb          Esb          `yaml:"esb"`
+	Repo         Repository   `yaml:"repository"`
+	Vault        Vault        `yaml:"vault"`
+	FeatureFlags FeatureFlags `yaml:"featureFlags"`
 }
 
 // trySetFlagBindIP try set flag bind ip.
@@ -299,6 +319,7 @@ func (s *DataServiceSetting) trySetDefault() {
 	s.Sharding.trySetDefault()
 	s.Repo.trySetDefault()
 	s.Vault.getConfigFromEnv()
+	s.FeatureFlags.trySetDefault()
 }
 
 // Validate DataServiceSetting option.
@@ -328,6 +349,10 @@ func (s DataServiceSetting) Validate() error {
 		return err
 	}
 
+	if err := s.FeatureFlags.validate(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -338,6 +363,10 @@ type FeedServerSetting struct {
 	Log     LogOption `yaml:"log"`
 
 	Repository   Repository          `yaml:"repository"`
+	Esb          Esb                 `yaml:"esb"`
+	BCS          BCS                 `yaml:"bcs"`
+	GSE          GSE                 `yaml:"gse"`
+	RedisCluster RedisCluster        `yaml:"redisCluster"`
 	FSLocalCache FSLocalCache        `yaml:"fsLocalCache"`
 	Downstream   Downstream          `yaml:"downstream"`
 	MRLimiter    MatchReleaseLimiter `yaml:"matchReleaseLimiter"`
@@ -360,6 +389,9 @@ func (s *FeedServerSetting) trySetDefault() {
 	s.Log.trySetDefault()
 	s.FSLocalCache.trySetDefault()
 	s.Downstream.trySetDefault()
+	s.GSE.getFromEnv()
+	s.GSE.trySetDefault()
+	s.RedisCluster.trySetDefault()
 	s.MRLimiter.trySetDefault()
 }
 
@@ -390,6 +422,90 @@ func (s FeedServerSetting) Validate() error {
 		return err
 	}
 
+	if err := s.Esb.validate(); err != nil {
+		return err
+	}
+
+	if err := s.GSE.validate(); err != nil {
+		return err
+	}
+
+	if err := s.RedisCluster.validate(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// FeedProxySetting defines feed proxy used setting options.
+type FeedProxySetting struct {
+	Network Network   `yaml:"network"`
+	Log     LogOption `yaml:"log"`
+
+	Upstream Upstream `yaml:"upstream"`
+}
+
+// trySetFlagBindIP try set flag bind ip.
+func (s *FeedProxySetting) trySetFlagBindIP(ip net.IP) error {
+	return s.Network.trySetFlagBindIP(ip)
+}
+
+// trySetFlagPort set http and grpc port
+func (s *FeedProxySetting) trySetFlagPort(port, grpcPort int) error {
+	return s.Network.trySetFlagPort(port, grpcPort)
+}
+
+// trySetDefault set the FeedProxySetting default value if user not configured.
+func (s *FeedProxySetting) trySetDefault() {
+	s.Network.trySetDefault()
+	s.Log.trySetDefault()
+	s.Upstream.trySetDefault()
+}
+
+// Validate FeedProxySetting option.
+func (s FeedProxySetting) Validate() error {
+
+	if err := s.Network.validate(); err != nil {
+		return err
+	}
+
+	if err := s.Upstream.validate(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Upstream defines feed proxy upstream setting.
+type Upstream struct {
+	FeedServerHost string      `yaml:"feedServerHost"`
+	BkRepoHost     string      `yaml:"bkRepoHost"`
+	CosHost        string      `yaml:"cosHost"`
+	StorageType    StorageMode `yaml:"storageType"`
+}
+
+func (u *Upstream) trySetDefault() {
+	if u.StorageType == "" {
+		u.StorageType = BkRepo
+	}
+}
+
+func (u *Upstream) validate() error {
+	if u.FeedServerHost == "" {
+		return errors.New("feedServerHost can not be empty")
+	}
+	switch u.StorageType {
+	case BkRepo:
+		if u.BkRepoHost == "" {
+			return errors.New("bkRepoHost can not be empty")
+		}
+	case S3:
+		if u.CosHost == "" {
+			return errors.New("cosHost can not be empty")
+		}
+	default:
+		return errors.New("invalid storageType")
+	}
 	return nil
 }
 
@@ -432,6 +548,46 @@ func (s VaultServerSetting) Validate() error {
 	}
 
 	if err := s.Sharding.validate(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// VaultSidecarSetting defines vault sidecar used setting options.
+type VaultSidecarSetting struct {
+	Network Network   `yaml:"network"`
+	Service Service   `yaml:"service"`
+	Log     LogOption `yaml:"log"`
+	Vault   Vault     `yaml:"vault"`
+}
+
+// trySetFlagBindIP try set flag bind ip.
+func (s *VaultSidecarSetting) trySetFlagBindIP(ip net.IP) error {
+	return s.Network.trySetFlagBindIP(ip)
+}
+
+// trySetFlagPort set http and grpc port
+func (s *VaultSidecarSetting) trySetFlagPort(port, grpcPort int) error {
+	return s.Network.trySetFlagPort(port, grpcPort)
+}
+
+// trySetDefault set the VaultSidecarSetting default value if user not configured.
+func (s *VaultSidecarSetting) trySetDefault() {
+	s.Network.trySetDefault()
+	s.Service.trySetDefault()
+	s.Log.trySetDefault()
+	s.Vault.getConfigFromEnv()
+}
+
+// Validate VaultSidecarSetting option.
+func (s VaultSidecarSetting) Validate() error {
+
+	if err := s.Network.validate(); err != nil {
+		return err
+	}
+
+	if err := s.Service.validate(); err != nil {
 		return err
 	}
 

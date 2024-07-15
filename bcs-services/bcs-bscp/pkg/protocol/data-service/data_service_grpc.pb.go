@@ -62,12 +62,14 @@ const (
 	Data_DeprecateRelease_FullMethodName                  = "/pbds.Data/DeprecateRelease"
 	Data_UnDeprecateRelease_FullMethodName                = "/pbds.Data/UnDeprecateRelease"
 	Data_DeleteRelease_FullMethodName                     = "/pbds.Data/DeleteRelease"
+	Data_CheckReleaseName_FullMethodName                  = "/pbds.Data/CheckReleaseName"
 	Data_GetReleasedConfigItem_FullMethodName             = "/pbds.Data/GetReleasedConfigItem"
 	Data_GetReleasedKv_FullMethodName                     = "/pbds.Data/GetReleasedKv"
 	Data_ListReleasedKvs_FullMethodName                   = "/pbds.Data/ListReleasedKvs"
 	Data_CreateHook_FullMethodName                        = "/pbds.Data/CreateHook"
 	Data_ListHooks_FullMethodName                         = "/pbds.Data/ListHooks"
 	Data_DeleteHook_FullMethodName                        = "/pbds.Data/DeleteHook"
+	Data_UpdateHook_FullMethodName                        = "/pbds.Data/UpdateHook"
 	Data_ListHookTags_FullMethodName                      = "/pbds.Data/ListHookTags"
 	Data_ListHookReferences_FullMethodName                = "/pbds.Data/ListHookReferences"
 	Data_GetHook_FullMethodName                           = "/pbds.Data/GetHook"
@@ -99,8 +101,11 @@ const (
 	Data_ListTmplsOfTmplSet_FullMethodName                = "/pbds.Data/ListTmplsOfTmplSet"
 	Data_ListTemplateByTuple_FullMethodName               = "/pbds.Data/ListTemplateByTuple"
 	Data_BatchUpsertTemplates_FullMethodName              = "/pbds.Data/BatchUpsertTemplates"
+	Data_BatchUpdateTemplatePermissions_FullMethodName    = "/pbds.Data/BatchUpdateTemplatePermissions"
 	Data_CreateTemplateRevision_FullMethodName            = "/pbds.Data/CreateTemplateRevision"
+	Data_UpdateTemplateRevision_FullMethodName            = "/pbds.Data/UpdateTemplateRevision"
 	Data_ListTemplateRevisions_FullMethodName             = "/pbds.Data/ListTemplateRevisions"
+	Data_GetTemplateRevision_FullMethodName               = "/pbds.Data/GetTemplateRevision"
 	Data_DeleteTemplateRevision_FullMethodName            = "/pbds.Data/DeleteTemplateRevision"
 	Data_ListTemplateRevisionsByIDs_FullMethodName        = "/pbds.Data/ListTemplateRevisionsByIDs"
 	Data_ListTmplRevisionNamesByTmplIDs_FullMethodName    = "/pbds.Data/ListTmplRevisionNamesByTmplIDs"
@@ -170,11 +175,13 @@ const (
 	Data_UnDeleteKv_FullMethodName                        = "/pbds.Data/UnDeleteKv"
 	Data_UndoKv_FullMethodName                            = "/pbds.Data/UndoKv"
 	Data_ListClients_FullMethodName                       = "/pbds.Data/ListClients"
+	Data_RetryClients_FullMethodName                      = "/pbds.Data/RetryClients"
 	Data_ListClientEvents_FullMethodName                  = "/pbds.Data/ListClientEvents"
 	Data_ListClientQuerys_FullMethodName                  = "/pbds.Data/ListClientQuerys"
 	Data_CreateClientQuery_FullMethodName                 = "/pbds.Data/CreateClientQuery"
 	Data_UpdateClientQuery_FullMethodName                 = "/pbds.Data/UpdateClientQuery"
 	Data_DeleteClientQuery_FullMethodName                 = "/pbds.Data/DeleteClientQuery"
+	Data_CheckClientQueryName_FullMethodName              = "/pbds.Data/CheckClientQueryName"
 	Data_ClientConfigVersionStatistics_FullMethodName     = "/pbds.Data/ClientConfigVersionStatistics"
 	Data_ClientPullTrendStatistics_FullMethodName         = "/pbds.Data/ClientPullTrendStatistics"
 	Data_ClientPullStatistics_FullMethodName              = "/pbds.Data/ClientPullStatistics"
@@ -182,10 +189,12 @@ const (
 	Data_ClientAnnotationStatistics_FullMethodName        = "/pbds.Data/ClientAnnotationStatistics"
 	Data_ClientVersionStatistics_FullMethodName           = "/pbds.Data/ClientVersionStatistics"
 	Data_ListClientLabelAndAnnotation_FullMethodName      = "/pbds.Data/ListClientLabelAndAnnotation"
+	Data_ClientSpecificFailedReason_FullMethodName        = "/pbds.Data/ClientSpecificFailedReason"
 	Data_ListInstances_FullMethodName                     = "/pbds.Data/ListInstances"
 	Data_FetchInstanceInfo_FullMethodName                 = "/pbds.Data/FetchInstanceInfo"
 	Data_Ping_FullMethodName                              = "/pbds.Data/Ping"
 	Data_BatchUpsertClientMetrics_FullMethodName          = "/pbds.Data/BatchUpsertClientMetrics"
+	Data_CompareConfigItemConflicts_FullMethodName        = "/pbds.Data/CompareConfigItemConflicts"
 )
 
 // DataClient is the client API for Data service.
@@ -229,6 +238,7 @@ type DataClient interface {
 	DeprecateRelease(ctx context.Context, in *DeprecateReleaseReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	UnDeprecateRelease(ctx context.Context, in *UnDeprecateReleaseReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	DeleteRelease(ctx context.Context, in *DeleteReleaseReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
+	CheckReleaseName(ctx context.Context, in *CheckReleaseNameReq, opts ...grpc.CallOption) (*CheckReleaseNameResp, error)
 	// released config item related interface.
 	GetReleasedConfigItem(ctx context.Context, in *GetReleasedCIReq, opts ...grpc.CallOption) (*released_ci.ReleasedConfigItem, error)
 	// released kv related interface.
@@ -238,6 +248,7 @@ type DataClient interface {
 	CreateHook(ctx context.Context, in *CreateHookReq, opts ...grpc.CallOption) (*CreateResp, error)
 	ListHooks(ctx context.Context, in *ListHooksReq, opts ...grpc.CallOption) (*ListHooksResp, error)
 	DeleteHook(ctx context.Context, in *DeleteHookReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
+	UpdateHook(ctx context.Context, in *UpdateHookReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	ListHookTags(ctx context.Context, in *ListHookTagReq, opts ...grpc.CallOption) (*ListHookTagResp, error)
 	ListHookReferences(ctx context.Context, in *ListHookReferencesReq, opts ...grpc.CallOption) (*ListHookReferencesResp, error)
 	GetHook(ctx context.Context, in *GetHookReq, opts ...grpc.CallOption) (*GetHookResp, error)
@@ -272,9 +283,12 @@ type DataClient interface {
 	ListTmplsOfTmplSet(ctx context.Context, in *ListTmplsOfTmplSetReq, opts ...grpc.CallOption) (*ListTmplsOfTmplSetResp, error)
 	ListTemplateByTuple(ctx context.Context, in *ListTemplateByTupleReq, opts ...grpc.CallOption) (*ListTemplateByTupleReqResp, error)
 	BatchUpsertTemplates(ctx context.Context, in *BatchUpsertTemplatesReq, opts ...grpc.CallOption) (*BatchUpsertTemplatesReqResp, error)
+	BatchUpdateTemplatePermissions(ctx context.Context, in *BatchUpdateTemplatePermissionsReq, opts ...grpc.CallOption) (*BatchUpdateTemplatePermissionsResp, error)
 	// template release related interface.
 	CreateTemplateRevision(ctx context.Context, in *CreateTemplateRevisionReq, opts ...grpc.CallOption) (*CreateResp, error)
+	UpdateTemplateRevision(ctx context.Context, in *UpdateTemplateRevisionReq, opts ...grpc.CallOption) (*CreateResp, error)
 	ListTemplateRevisions(ctx context.Context, in *ListTemplateRevisionsReq, opts ...grpc.CallOption) (*ListTemplateRevisionsResp, error)
+	GetTemplateRevision(ctx context.Context, in *GetTemplateRevisionReq, opts ...grpc.CallOption) (*GetTemplateRevisionResp, error)
 	DeleteTemplateRevision(ctx context.Context, in *DeleteTemplateRevisionReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	ListTemplateRevisionsByIDs(ctx context.Context, in *ListTemplateRevisionsByIDsReq, opts ...grpc.CallOption) (*ListTemplateRevisionsByIDsResp, error)
 	ListTmplRevisionNamesByTmplIDs(ctx context.Context, in *ListTmplRevisionNamesByTmplIDsReq, opts ...grpc.CallOption) (*ListTmplRevisionNamesByTmplIDsResp, error)
@@ -356,6 +370,7 @@ type DataClient interface {
 	UndoKv(ctx context.Context, in *UndoKvReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	// client related interface
 	ListClients(ctx context.Context, in *ListClientsReq, opts ...grpc.CallOption) (*ListClientsResp, error)
+	RetryClients(ctx context.Context, in *RetryClientsReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	// client event related interface
 	ListClientEvents(ctx context.Context, in *ListClientEventsReq, opts ...grpc.CallOption) (*ListClientEventsResp, error)
 	// client query related interface
@@ -363,6 +378,7 @@ type DataClient interface {
 	CreateClientQuery(ctx context.Context, in *CreateClientQueryReq, opts ...grpc.CallOption) (*CreateClientQueryResp, error)
 	UpdateClientQuery(ctx context.Context, in *UpdateClientQueryReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	DeleteClientQuery(ctx context.Context, in *DeleteClientQueryReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
+	CheckClientQueryName(ctx context.Context, in *CheckClientQueryNameReq, opts ...grpc.CallOption) (*CheckClientQueryNameResp, error)
 	// client metrics chart related interface
 	ClientConfigVersionStatistics(ctx context.Context, in *client.ClientCommonReq, opts ...grpc.CallOption) (*structpb.Struct, error)
 	ClientPullTrendStatistics(ctx context.Context, in *client.ClientCommonReq, opts ...grpc.CallOption) (*structpb.Struct, error)
@@ -371,6 +387,7 @@ type DataClient interface {
 	ClientAnnotationStatistics(ctx context.Context, in *client.ClientCommonReq, opts ...grpc.CallOption) (*structpb.Struct, error)
 	ClientVersionStatistics(ctx context.Context, in *client.ClientCommonReq, opts ...grpc.CallOption) (*structpb.Struct, error)
 	ListClientLabelAndAnnotation(ctx context.Context, in *ListClientLabelAndAnnotationReq, opts ...grpc.CallOption) (*structpb.Struct, error)
+	ClientSpecificFailedReason(ctx context.Context, in *client.ClientCommonReq, opts ...grpc.CallOption) (*structpb.Struct, error)
 	// used iam pull resource callback.
 	ListInstances(ctx context.Context, in *ListInstancesReq, opts ...grpc.CallOption) (*ListInstancesResp, error)
 	FetchInstanceInfo(ctx context.Context, in *FetchInstanceInfoReq, opts ...grpc.CallOption) (*FetchInstanceInfoResp, error)
@@ -378,6 +395,8 @@ type DataClient interface {
 	Ping(ctx context.Context, in *PingMsg, opts ...grpc.CallOption) (*PingMsg, error)
 	// client metric related interface
 	BatchUpsertClientMetrics(ctx context.Context, in *BatchUpsertClientMetricsReq, opts ...grpc.CallOption) (*BatchUpsertClientMetricsResp, error)
+	// config item compare conflicts related interface
+	CompareConfigItemConflicts(ctx context.Context, in *CompareConfigItemConflictsReq, opts ...grpc.CallOption) (*CompareConfigItemConflictsResp, error)
 }
 
 type dataClient struct {
@@ -667,6 +686,15 @@ func (c *dataClient) DeleteRelease(ctx context.Context, in *DeleteReleaseReq, op
 	return out, nil
 }
 
+func (c *dataClient) CheckReleaseName(ctx context.Context, in *CheckReleaseNameReq, opts ...grpc.CallOption) (*CheckReleaseNameResp, error) {
+	out := new(CheckReleaseNameResp)
+	err := c.cc.Invoke(ctx, Data_CheckReleaseName_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *dataClient) GetReleasedConfigItem(ctx context.Context, in *GetReleasedCIReq, opts ...grpc.CallOption) (*released_ci.ReleasedConfigItem, error) {
 	out := new(released_ci.ReleasedConfigItem)
 	err := c.cc.Invoke(ctx, Data_GetReleasedConfigItem_FullMethodName, in, out, opts...)
@@ -715,6 +743,15 @@ func (c *dataClient) ListHooks(ctx context.Context, in *ListHooksReq, opts ...gr
 func (c *dataClient) DeleteHook(ctx context.Context, in *DeleteHookReq, opts ...grpc.CallOption) (*base.EmptyResp, error) {
 	out := new(base.EmptyResp)
 	err := c.cc.Invoke(ctx, Data_DeleteHook_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) UpdateHook(ctx context.Context, in *UpdateHookReq, opts ...grpc.CallOption) (*base.EmptyResp, error) {
+	out := new(base.EmptyResp)
+	err := c.cc.Invoke(ctx, Data_UpdateHook_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1000,6 +1037,15 @@ func (c *dataClient) BatchUpsertTemplates(ctx context.Context, in *BatchUpsertTe
 	return out, nil
 }
 
+func (c *dataClient) BatchUpdateTemplatePermissions(ctx context.Context, in *BatchUpdateTemplatePermissionsReq, opts ...grpc.CallOption) (*BatchUpdateTemplatePermissionsResp, error) {
+	out := new(BatchUpdateTemplatePermissionsResp)
+	err := c.cc.Invoke(ctx, Data_BatchUpdateTemplatePermissions_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *dataClient) CreateTemplateRevision(ctx context.Context, in *CreateTemplateRevisionReq, opts ...grpc.CallOption) (*CreateResp, error) {
 	out := new(CreateResp)
 	err := c.cc.Invoke(ctx, Data_CreateTemplateRevision_FullMethodName, in, out, opts...)
@@ -1009,9 +1055,27 @@ func (c *dataClient) CreateTemplateRevision(ctx context.Context, in *CreateTempl
 	return out, nil
 }
 
+func (c *dataClient) UpdateTemplateRevision(ctx context.Context, in *UpdateTemplateRevisionReq, opts ...grpc.CallOption) (*CreateResp, error) {
+	out := new(CreateResp)
+	err := c.cc.Invoke(ctx, Data_UpdateTemplateRevision_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *dataClient) ListTemplateRevisions(ctx context.Context, in *ListTemplateRevisionsReq, opts ...grpc.CallOption) (*ListTemplateRevisionsResp, error) {
 	out := new(ListTemplateRevisionsResp)
 	err := c.cc.Invoke(ctx, Data_ListTemplateRevisions_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) GetTemplateRevision(ctx context.Context, in *GetTemplateRevisionReq, opts ...grpc.CallOption) (*GetTemplateRevisionResp, error) {
+	out := new(GetTemplateRevisionResp)
+	err := c.cc.Invoke(ctx, Data_GetTemplateRevision_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1639,6 +1703,15 @@ func (c *dataClient) ListClients(ctx context.Context, in *ListClientsReq, opts .
 	return out, nil
 }
 
+func (c *dataClient) RetryClients(ctx context.Context, in *RetryClientsReq, opts ...grpc.CallOption) (*base.EmptyResp, error) {
+	out := new(base.EmptyResp)
+	err := c.cc.Invoke(ctx, Data_RetryClients_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *dataClient) ListClientEvents(ctx context.Context, in *ListClientEventsReq, opts ...grpc.CallOption) (*ListClientEventsResp, error) {
 	out := new(ListClientEventsResp)
 	err := c.cc.Invoke(ctx, Data_ListClientEvents_FullMethodName, in, out, opts...)
@@ -1678,6 +1751,15 @@ func (c *dataClient) UpdateClientQuery(ctx context.Context, in *UpdateClientQuer
 func (c *dataClient) DeleteClientQuery(ctx context.Context, in *DeleteClientQueryReq, opts ...grpc.CallOption) (*base.EmptyResp, error) {
 	out := new(base.EmptyResp)
 	err := c.cc.Invoke(ctx, Data_DeleteClientQuery_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) CheckClientQueryName(ctx context.Context, in *CheckClientQueryNameReq, opts ...grpc.CallOption) (*CheckClientQueryNameResp, error) {
+	out := new(CheckClientQueryNameResp)
+	err := c.cc.Invoke(ctx, Data_CheckClientQueryName_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1747,6 +1829,15 @@ func (c *dataClient) ListClientLabelAndAnnotation(ctx context.Context, in *ListC
 	return out, nil
 }
 
+func (c *dataClient) ClientSpecificFailedReason(ctx context.Context, in *client.ClientCommonReq, opts ...grpc.CallOption) (*structpb.Struct, error) {
+	out := new(structpb.Struct)
+	err := c.cc.Invoke(ctx, Data_ClientSpecificFailedReason_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *dataClient) ListInstances(ctx context.Context, in *ListInstancesReq, opts ...grpc.CallOption) (*ListInstancesResp, error) {
 	out := new(ListInstancesResp)
 	err := c.cc.Invoke(ctx, Data_ListInstances_FullMethodName, in, out, opts...)
@@ -1777,6 +1868,15 @@ func (c *dataClient) Ping(ctx context.Context, in *PingMsg, opts ...grpc.CallOpt
 func (c *dataClient) BatchUpsertClientMetrics(ctx context.Context, in *BatchUpsertClientMetricsReq, opts ...grpc.CallOption) (*BatchUpsertClientMetricsResp, error) {
 	out := new(BatchUpsertClientMetricsResp)
 	err := c.cc.Invoke(ctx, Data_BatchUpsertClientMetrics_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) CompareConfigItemConflicts(ctx context.Context, in *CompareConfigItemConflictsReq, opts ...grpc.CallOption) (*CompareConfigItemConflictsResp, error) {
+	out := new(CompareConfigItemConflictsResp)
+	err := c.cc.Invoke(ctx, Data_CompareConfigItemConflicts_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1824,6 +1924,7 @@ type DataServer interface {
 	DeprecateRelease(context.Context, *DeprecateReleaseReq) (*base.EmptyResp, error)
 	UnDeprecateRelease(context.Context, *UnDeprecateReleaseReq) (*base.EmptyResp, error)
 	DeleteRelease(context.Context, *DeleteReleaseReq) (*base.EmptyResp, error)
+	CheckReleaseName(context.Context, *CheckReleaseNameReq) (*CheckReleaseNameResp, error)
 	// released config item related interface.
 	GetReleasedConfigItem(context.Context, *GetReleasedCIReq) (*released_ci.ReleasedConfigItem, error)
 	// released kv related interface.
@@ -1833,6 +1934,7 @@ type DataServer interface {
 	CreateHook(context.Context, *CreateHookReq) (*CreateResp, error)
 	ListHooks(context.Context, *ListHooksReq) (*ListHooksResp, error)
 	DeleteHook(context.Context, *DeleteHookReq) (*base.EmptyResp, error)
+	UpdateHook(context.Context, *UpdateHookReq) (*base.EmptyResp, error)
 	ListHookTags(context.Context, *ListHookTagReq) (*ListHookTagResp, error)
 	ListHookReferences(context.Context, *ListHookReferencesReq) (*ListHookReferencesResp, error)
 	GetHook(context.Context, *GetHookReq) (*GetHookResp, error)
@@ -1867,9 +1969,12 @@ type DataServer interface {
 	ListTmplsOfTmplSet(context.Context, *ListTmplsOfTmplSetReq) (*ListTmplsOfTmplSetResp, error)
 	ListTemplateByTuple(context.Context, *ListTemplateByTupleReq) (*ListTemplateByTupleReqResp, error)
 	BatchUpsertTemplates(context.Context, *BatchUpsertTemplatesReq) (*BatchUpsertTemplatesReqResp, error)
+	BatchUpdateTemplatePermissions(context.Context, *BatchUpdateTemplatePermissionsReq) (*BatchUpdateTemplatePermissionsResp, error)
 	// template release related interface.
 	CreateTemplateRevision(context.Context, *CreateTemplateRevisionReq) (*CreateResp, error)
+	UpdateTemplateRevision(context.Context, *UpdateTemplateRevisionReq) (*CreateResp, error)
 	ListTemplateRevisions(context.Context, *ListTemplateRevisionsReq) (*ListTemplateRevisionsResp, error)
+	GetTemplateRevision(context.Context, *GetTemplateRevisionReq) (*GetTemplateRevisionResp, error)
 	DeleteTemplateRevision(context.Context, *DeleteTemplateRevisionReq) (*base.EmptyResp, error)
 	ListTemplateRevisionsByIDs(context.Context, *ListTemplateRevisionsByIDsReq) (*ListTemplateRevisionsByIDsResp, error)
 	ListTmplRevisionNamesByTmplIDs(context.Context, *ListTmplRevisionNamesByTmplIDsReq) (*ListTmplRevisionNamesByTmplIDsResp, error)
@@ -1951,6 +2056,7 @@ type DataServer interface {
 	UndoKv(context.Context, *UndoKvReq) (*base.EmptyResp, error)
 	// client related interface
 	ListClients(context.Context, *ListClientsReq) (*ListClientsResp, error)
+	RetryClients(context.Context, *RetryClientsReq) (*base.EmptyResp, error)
 	// client event related interface
 	ListClientEvents(context.Context, *ListClientEventsReq) (*ListClientEventsResp, error)
 	// client query related interface
@@ -1958,6 +2064,7 @@ type DataServer interface {
 	CreateClientQuery(context.Context, *CreateClientQueryReq) (*CreateClientQueryResp, error)
 	UpdateClientQuery(context.Context, *UpdateClientQueryReq) (*base.EmptyResp, error)
 	DeleteClientQuery(context.Context, *DeleteClientQueryReq) (*base.EmptyResp, error)
+	CheckClientQueryName(context.Context, *CheckClientQueryNameReq) (*CheckClientQueryNameResp, error)
 	// client metrics chart related interface
 	ClientConfigVersionStatistics(context.Context, *client.ClientCommonReq) (*structpb.Struct, error)
 	ClientPullTrendStatistics(context.Context, *client.ClientCommonReq) (*structpb.Struct, error)
@@ -1966,6 +2073,7 @@ type DataServer interface {
 	ClientAnnotationStatistics(context.Context, *client.ClientCommonReq) (*structpb.Struct, error)
 	ClientVersionStatistics(context.Context, *client.ClientCommonReq) (*structpb.Struct, error)
 	ListClientLabelAndAnnotation(context.Context, *ListClientLabelAndAnnotationReq) (*structpb.Struct, error)
+	ClientSpecificFailedReason(context.Context, *client.ClientCommonReq) (*structpb.Struct, error)
 	// used iam pull resource callback.
 	ListInstances(context.Context, *ListInstancesReq) (*ListInstancesResp, error)
 	FetchInstanceInfo(context.Context, *FetchInstanceInfoReq) (*FetchInstanceInfoResp, error)
@@ -1973,6 +2081,8 @@ type DataServer interface {
 	Ping(context.Context, *PingMsg) (*PingMsg, error)
 	// client metric related interface
 	BatchUpsertClientMetrics(context.Context, *BatchUpsertClientMetricsReq) (*BatchUpsertClientMetricsResp, error)
+	// config item compare conflicts related interface
+	CompareConfigItemConflicts(context.Context, *CompareConfigItemConflictsReq) (*CompareConfigItemConflictsResp, error)
 }
 
 // UnimplementedDataServer should be embedded to have forward compatible implementations.
@@ -2072,6 +2182,9 @@ func (UnimplementedDataServer) UnDeprecateRelease(context.Context, *UnDeprecateR
 func (UnimplementedDataServer) DeleteRelease(context.Context, *DeleteReleaseReq) (*base.EmptyResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteRelease not implemented")
 }
+func (UnimplementedDataServer) CheckReleaseName(context.Context, *CheckReleaseNameReq) (*CheckReleaseNameResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CheckReleaseName not implemented")
+}
 func (UnimplementedDataServer) GetReleasedConfigItem(context.Context, *GetReleasedCIReq) (*released_ci.ReleasedConfigItem, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetReleasedConfigItem not implemented")
 }
@@ -2089,6 +2202,9 @@ func (UnimplementedDataServer) ListHooks(context.Context, *ListHooksReq) (*ListH
 }
 func (UnimplementedDataServer) DeleteHook(context.Context, *DeleteHookReq) (*base.EmptyResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteHook not implemented")
+}
+func (UnimplementedDataServer) UpdateHook(context.Context, *UpdateHookReq) (*base.EmptyResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateHook not implemented")
 }
 func (UnimplementedDataServer) ListHookTags(context.Context, *ListHookTagReq) (*ListHookTagResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListHookTags not implemented")
@@ -2183,11 +2299,20 @@ func (UnimplementedDataServer) ListTemplateByTuple(context.Context, *ListTemplat
 func (UnimplementedDataServer) BatchUpsertTemplates(context.Context, *BatchUpsertTemplatesReq) (*BatchUpsertTemplatesReqResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BatchUpsertTemplates not implemented")
 }
+func (UnimplementedDataServer) BatchUpdateTemplatePermissions(context.Context, *BatchUpdateTemplatePermissionsReq) (*BatchUpdateTemplatePermissionsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BatchUpdateTemplatePermissions not implemented")
+}
 func (UnimplementedDataServer) CreateTemplateRevision(context.Context, *CreateTemplateRevisionReq) (*CreateResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateTemplateRevision not implemented")
 }
+func (UnimplementedDataServer) UpdateTemplateRevision(context.Context, *UpdateTemplateRevisionReq) (*CreateResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateTemplateRevision not implemented")
+}
 func (UnimplementedDataServer) ListTemplateRevisions(context.Context, *ListTemplateRevisionsReq) (*ListTemplateRevisionsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListTemplateRevisions not implemented")
+}
+func (UnimplementedDataServer) GetTemplateRevision(context.Context, *GetTemplateRevisionReq) (*GetTemplateRevisionResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetTemplateRevision not implemented")
 }
 func (UnimplementedDataServer) DeleteTemplateRevision(context.Context, *DeleteTemplateRevisionReq) (*base.EmptyResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteTemplateRevision not implemented")
@@ -2396,6 +2521,9 @@ func (UnimplementedDataServer) UndoKv(context.Context, *UndoKvReq) (*base.EmptyR
 func (UnimplementedDataServer) ListClients(context.Context, *ListClientsReq) (*ListClientsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListClients not implemented")
 }
+func (UnimplementedDataServer) RetryClients(context.Context, *RetryClientsReq) (*base.EmptyResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RetryClients not implemented")
+}
 func (UnimplementedDataServer) ListClientEvents(context.Context, *ListClientEventsReq) (*ListClientEventsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListClientEvents not implemented")
 }
@@ -2410,6 +2538,9 @@ func (UnimplementedDataServer) UpdateClientQuery(context.Context, *UpdateClientQ
 }
 func (UnimplementedDataServer) DeleteClientQuery(context.Context, *DeleteClientQueryReq) (*base.EmptyResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteClientQuery not implemented")
+}
+func (UnimplementedDataServer) CheckClientQueryName(context.Context, *CheckClientQueryNameReq) (*CheckClientQueryNameResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CheckClientQueryName not implemented")
 }
 func (UnimplementedDataServer) ClientConfigVersionStatistics(context.Context, *client.ClientCommonReq) (*structpb.Struct, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ClientConfigVersionStatistics not implemented")
@@ -2432,6 +2563,9 @@ func (UnimplementedDataServer) ClientVersionStatistics(context.Context, *client.
 func (UnimplementedDataServer) ListClientLabelAndAnnotation(context.Context, *ListClientLabelAndAnnotationReq) (*structpb.Struct, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListClientLabelAndAnnotation not implemented")
 }
+func (UnimplementedDataServer) ClientSpecificFailedReason(context.Context, *client.ClientCommonReq) (*structpb.Struct, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ClientSpecificFailedReason not implemented")
+}
 func (UnimplementedDataServer) ListInstances(context.Context, *ListInstancesReq) (*ListInstancesResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListInstances not implemented")
 }
@@ -2443,6 +2577,9 @@ func (UnimplementedDataServer) Ping(context.Context, *PingMsg) (*PingMsg, error)
 }
 func (UnimplementedDataServer) BatchUpsertClientMetrics(context.Context, *BatchUpsertClientMetricsReq) (*BatchUpsertClientMetricsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BatchUpsertClientMetrics not implemented")
+}
+func (UnimplementedDataServer) CompareConfigItemConflicts(context.Context, *CompareConfigItemConflictsReq) (*CompareConfigItemConflictsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CompareConfigItemConflicts not implemented")
 }
 
 // UnsafeDataServer may be embedded to opt out of forward compatibility for this service.
@@ -3014,6 +3151,24 @@ func _Data_DeleteRelease_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Data_CheckReleaseName_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CheckReleaseNameReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).CheckReleaseName(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_CheckReleaseName_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).CheckReleaseName(ctx, req.(*CheckReleaseNameReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Data_GetReleasedConfigItem_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetReleasedCIReq)
 	if err := dec(in); err != nil {
@@ -3118,6 +3273,24 @@ func _Data_DeleteHook_Handler(srv interface{}, ctx context.Context, dec func(int
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DataServer).DeleteHook(ctx, req.(*DeleteHookReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_UpdateHook_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateHookReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).UpdateHook(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_UpdateHook_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).UpdateHook(ctx, req.(*UpdateHookReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -3680,6 +3853,24 @@ func _Data_BatchUpsertTemplates_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Data_BatchUpdateTemplatePermissions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BatchUpdateTemplatePermissionsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).BatchUpdateTemplatePermissions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_BatchUpdateTemplatePermissions_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).BatchUpdateTemplatePermissions(ctx, req.(*BatchUpdateTemplatePermissionsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Data_CreateTemplateRevision_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateTemplateRevisionReq)
 	if err := dec(in); err != nil {
@@ -3698,6 +3889,24 @@ func _Data_CreateTemplateRevision_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Data_UpdateTemplateRevision_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateTemplateRevisionReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).UpdateTemplateRevision(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_UpdateTemplateRevision_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).UpdateTemplateRevision(ctx, req.(*UpdateTemplateRevisionReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Data_ListTemplateRevisions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListTemplateRevisionsReq)
 	if err := dec(in); err != nil {
@@ -3712,6 +3921,24 @@ func _Data_ListTemplateRevisions_Handler(srv interface{}, ctx context.Context, d
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DataServer).ListTemplateRevisions(ctx, req.(*ListTemplateRevisionsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_GetTemplateRevision_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetTemplateRevisionReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).GetTemplateRevision(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_GetTemplateRevision_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).GetTemplateRevision(ctx, req.(*GetTemplateRevisionReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -4958,6 +5185,24 @@ func _Data_ListClients_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Data_RetryClients_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RetryClientsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).RetryClients(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_RetryClients_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).RetryClients(ctx, req.(*RetryClientsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Data_ListClientEvents_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListClientEventsReq)
 	if err := dec(in); err != nil {
@@ -5044,6 +5289,24 @@ func _Data_DeleteClientQuery_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DataServer).DeleteClientQuery(ctx, req.(*DeleteClientQueryReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_CheckClientQueryName_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CheckClientQueryNameReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).CheckClientQueryName(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_CheckClientQueryName_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).CheckClientQueryName(ctx, req.(*CheckClientQueryNameReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -5174,6 +5437,24 @@ func _Data_ListClientLabelAndAnnotation_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Data_ClientSpecificFailedReason_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(client.ClientCommonReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).ClientSpecificFailedReason(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_ClientSpecificFailedReason_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).ClientSpecificFailedReason(ctx, req.(*client.ClientCommonReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Data_ListInstances_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListInstancesReq)
 	if err := dec(in); err != nil {
@@ -5242,6 +5523,24 @@ func _Data_BatchUpsertClientMetrics_Handler(srv interface{}, ctx context.Context
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DataServer).BatchUpsertClientMetrics(ctx, req.(*BatchUpsertClientMetricsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_CompareConfigItemConflicts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CompareConfigItemConflictsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).CompareConfigItemConflicts(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_CompareConfigItemConflicts_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).CompareConfigItemConflicts(ctx, req.(*CompareConfigItemConflictsReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -5378,6 +5677,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Data_DeleteRelease_Handler,
 		},
 		{
+			MethodName: "CheckReleaseName",
+			Handler:    _Data_CheckReleaseName_Handler,
+		},
+		{
 			MethodName: "GetReleasedConfigItem",
 			Handler:    _Data_GetReleasedConfigItem_Handler,
 		},
@@ -5400,6 +5703,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteHook",
 			Handler:    _Data_DeleteHook_Handler,
+		},
+		{
+			MethodName: "UpdateHook",
+			Handler:    _Data_UpdateHook_Handler,
 		},
 		{
 			MethodName: "ListHookTags",
@@ -5526,12 +5833,24 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Data_BatchUpsertTemplates_Handler,
 		},
 		{
+			MethodName: "BatchUpdateTemplatePermissions",
+			Handler:    _Data_BatchUpdateTemplatePermissions_Handler,
+		},
+		{
 			MethodName: "CreateTemplateRevision",
 			Handler:    _Data_CreateTemplateRevision_Handler,
 		},
 		{
+			MethodName: "UpdateTemplateRevision",
+			Handler:    _Data_UpdateTemplateRevision_Handler,
+		},
+		{
 			MethodName: "ListTemplateRevisions",
 			Handler:    _Data_ListTemplateRevisions_Handler,
+		},
+		{
+			MethodName: "GetTemplateRevision",
+			Handler:    _Data_GetTemplateRevision_Handler,
 		},
 		{
 			MethodName: "DeleteTemplateRevision",
@@ -5810,6 +6129,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Data_ListClients_Handler,
 		},
 		{
+			MethodName: "RetryClients",
+			Handler:    _Data_RetryClients_Handler,
+		},
+		{
 			MethodName: "ListClientEvents",
 			Handler:    _Data_ListClientEvents_Handler,
 		},
@@ -5828,6 +6151,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteClientQuery",
 			Handler:    _Data_DeleteClientQuery_Handler,
+		},
+		{
+			MethodName: "CheckClientQueryName",
+			Handler:    _Data_CheckClientQueryName_Handler,
 		},
 		{
 			MethodName: "ClientConfigVersionStatistics",
@@ -5858,6 +6185,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Data_ListClientLabelAndAnnotation_Handler,
 		},
 		{
+			MethodName: "ClientSpecificFailedReason",
+			Handler:    _Data_ClientSpecificFailedReason_Handler,
+		},
+		{
 			MethodName: "ListInstances",
 			Handler:    _Data_ListInstances_Handler,
 		},
@@ -5872,6 +6203,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "BatchUpsertClientMetrics",
 			Handler:    _Data_BatchUpsertClientMetrics_Handler,
+		},
+		{
+			MethodName: "CompareConfigItemConflicts",
+			Handler:    _Data_CompareConfigItemConflicts_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

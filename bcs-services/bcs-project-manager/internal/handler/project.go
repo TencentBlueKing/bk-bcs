@@ -81,9 +81,10 @@ func (p *ProjectHandler) GetProject(ctx context.Context,
 	if projectInfo.BusinessID != "" && projectInfo.BusinessID != "0" {
 		business, err := cmdb.GetBusinessByID(projectInfo.BusinessID, true)
 		if err != nil {
-			return errorx.NewRequestCMDBErr(err.Error())
+			logging.Error("get business %s failed, err: %s", projectInfo.BusinessID, err.Error())
+		} else {
+			businessName = business.BKBizName
 		}
-		businessName = business.BKBizName
 	}
 	// 处理返回数据及权限
 	setResp(resp, projectInfo)
@@ -130,7 +131,7 @@ func (p *ProjectHandler) ListProjects(ctx context.Context,
 		// with username
 		// 获取 project id, 用以获取对应的权限
 		ids := getProjectIDs(projects)
-		perms, err := auth.ProjectIamClient.GetMultiProjectMultiActionPermission(
+		perms, err := auth.ProjectIamClient.GetMultiProjectMultiActionPerm(
 			authUser.Username, ids,
 			[]string{auth.ProjectCreate, auth.ProjectView, auth.ProjectEdit, auth.ProjectDelete},
 		)
@@ -143,9 +144,7 @@ func (p *ProjectHandler) ListProjects(ctx context.Context,
 		// without username
 		setListPermsResp(resp, projects, nil)
 	}
-	if err := projutil.PatchBusinessName(resp.Data.Results); err != nil {
-		return err
-	}
+	projutil.PatchBusinessName(resp.Data.Results)
 	return nil
 }
 
@@ -161,7 +160,7 @@ func (p *ProjectHandler) ListAuthorizedProjects(ctx context.Context,
 		authUser, err := middleware.GetUserFromContext(ctx)
 		if err == nil && authUser.Username != "" {
 			ids := getProjectIDs(projects)
-			perms, err := auth.ProjectIamClient.GetMultiProjectMultiActionPermission(
+			perms, err := auth.ProjectIamClient.GetMultiProjectMultiActionPerm(
 				authUser.Username, ids,
 				[]string{auth.ProjectCreate, auth.ProjectView, auth.ProjectEdit, auth.ProjectDelete},
 			)
@@ -175,9 +174,8 @@ func (p *ProjectHandler) ListAuthorizedProjects(ctx context.Context,
 		// list all authorized projects, so no need to set web_annotation
 		setListResp(resp, projects)
 	}
-	if err := projutil.PatchBusinessName(resp.Data.Results); err != nil {
-		return err
-	}
+	projutil.PatchBusinessName(resp.Data.Results)
+
 	return nil
 }
 

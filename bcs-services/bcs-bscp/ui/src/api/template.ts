@@ -224,6 +224,7 @@ export const updateTemplateContent = (
   templateSpaceId: number,
   data: string | File,
   signature: string,
+  progress?: Function,
 ) =>
   http
     .put(`/biz/${biz_id}/content/upload`, data, {
@@ -233,6 +234,12 @@ export const updateTemplateContent = (
         'X-Bkapi-File-Content-Overwrite': 'false',
         'Content-Type': 'text/plain',
       },
+      onUploadProgress: (progressEvent: any) => {
+        if (progress) {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          progress(percentCompleted);
+        }
+      },
     })
     .then((res) => res.data);
 
@@ -241,9 +248,10 @@ export const updateTemplateContent = (
  * @param biz_id 业务ID
  * @param templateSpaceId 模板空间ID
  * @param signature sha256签名
+ * @param isBlob 是否需要返回二进制流，下载配置文件时需要
  * @returns
  */
-export const downloadTemplateContent = (biz_id: string, templateSpaceId: number, signature: string) =>
+export const downloadTemplateContent = (biz_id: string, templateSpaceId: number, signature: string, isBlob = false) =>
   http
     .get<string, string>(`/biz/${biz_id}/content/download`, {
       headers: {
@@ -253,6 +261,7 @@ export const downloadTemplateContent = (biz_id: string, templateSpaceId: number,
       transitional: {
         forcedJSONParsing: false,
       },
+      ...(isBlob && { responseType: 'blob' }), // 文件为二进制流，需要设置响应类型为blob才能正确解析
     })
     .then((res) => res);
 
@@ -593,13 +602,27 @@ export const getTemplateVersionsNameByIds = (biz_id: string, template_ids: numbe
  * @param fill 导入文件
  * @returns
  */
-export const importTemplateFile = (biz_id: string, template_space_id: number, fill: any) =>
+export const importTemplateFile = (
+  biz_id: string,
+  template_space_id: number,
+  file: any,
+  isDecompression: boolean,
+  progress: Function,
+) =>
   http
-    .post(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates/import`, fill, {
-      headers: {
-        'Content-Type': 'application/zip',
+    .post(
+      `/config/biz/${biz_id}/template_spaces/${template_space_id}/templates/import/${encodeURIComponent(file.name)}`,
+      file,
+      {
+        headers: {
+          'X-Bscp-Unzip': isDecompression,
+        },
+        onUploadProgress: (progressEvent: any) => {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          progress(percentCompleted);
+        },
       },
-    })
+    )
     .then((res) => res.data);
 
 /**
@@ -614,4 +637,45 @@ export const importTemplateBatchAdd = (biz_id: string, template_space_id: number
     .post(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates/batch_upsert_templates`, {
       items: configData,
     })
+    .then((res) => res.data);
+
+/**
+ * 批量修改模板权限
+ * @param biz_id 业务ID
+ * @param template_space_id 空间id
+ * @param configData 配置列表
+ * @returns
+ */
+export const batchEditTemplatePermission = (biz_id: string, query: any) =>
+  http.post(`/config/biz/${biz_id}/templates/batch_update_templates_permissions`, query);
+
+/**
+ * 获取配置模板配置项元信息
+ * @param biz_id 业务ID
+ * @param template_id 模板id
+ * @param revision_name 版本名称
+ * @returns
+ */
+export const getTemplateConfigMeta = (biz_id: string, template_id: number, revision_name?: string) =>
+  http.get(`/config/biz/${biz_id}/templates/${template_id}/template_revisions`, { params: { revision_name } });
+
+/**
+ * 编辑模板配置文件
+ * @param biz_id 业务ID
+ * @param template_space_id 空间ID
+ * @param template_id 模板ID
+ * @param params 模板配置参数
+ * @returns
+ */
+export const updateTemplateConfig = (
+  biz_id: string,
+  template_space_id: number,
+  template_id: number,
+  params: ITemplateVersionEditingData,
+) =>
+  http
+    .put(
+      `/config/biz/${biz_id}/template_spaces/${template_space_id}/templates/${template_id}/template_revisions`,
+      params,
+    )
     .then((res) => res.data);

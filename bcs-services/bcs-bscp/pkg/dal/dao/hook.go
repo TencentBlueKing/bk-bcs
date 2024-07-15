@@ -15,8 +15,12 @@ package dao
 import (
 	"errors"
 
+	"gorm.io/datatypes"
+	rawgen "gorm.io/gen"
+
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	dtypes "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/types"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
@@ -34,6 +38,10 @@ type Hook interface {
 	CountHookTag(kit *kit.Kit, bizID uint32) ([]*types.HookTagCount, error)
 	// DeleteWithTx delete hook instance with transaction.
 	DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.Hook) error
+	// Update one hook instance.
+	Update(kit *kit.Kit, hook *table.Hook) error
+	// UpdateWithTx update one hook instance with transaction.
+	UpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, hook *table.Hook) error
 	// GetByID get hook only with id.
 	GetByID(kit *kit.Kit, bizID, hookID uint32) (*table.Hook, error)
 	// GetByName get hook by name
@@ -46,6 +54,34 @@ type hookDao struct {
 	genQ     *gen.Query
 	idGen    IDGenInterface
 	auditDao AuditDao
+}
+
+// UpdateWithTx update one hook instance with transaction.
+func (dao *hookDao) UpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.Hook) error {
+	if err := g.ValidateUpdate(); err != nil {
+		return err
+	}
+
+	// 更新操作, 获取当前记录做审计
+	m := tx.Hook
+	q := tx.Hook.WithContext(kit.Ctx)
+	oldOne, err := q.Where(m.ID.Eq(g.ID), m.BizID.Eq(g.Attachment.BizID)).Take()
+	if err != nil {
+		return err
+	}
+
+	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareUpdate(g, oldOne)
+
+	if _, err := q.Where(m.BizID.Eq(g.Attachment.BizID), m.ID.Eq(g.ID)).Updates(g); err != nil {
+		return err
+	}
+
+	if err := ad.Do(tx.Query); err != nil {
+		return err
+	}
+
+	return nil
+
 }
 
 // CreateWithTx create one hook instance with transaction.
@@ -91,12 +127,14 @@ func (dao *hookDao) ListWithRefer(kit *kit.Kit, opt *types.ListHooksWithReferOpt
 	q := dao.genQ.Hook.WithContext(kit.Ctx).Where(h.BizID.Eq(opt.BizID)).Order(h.Name)
 
 	if opt.Name != "" {
-		q = q.Where(h.Name.Regexp("(?i)" + opt.Name))
+		q = q.Where(h.Name.Like("%" + opt.Name + "%"))
 	}
 	if opt.Tag != "" {
-		q = q.Where(h.Tag.Eq(opt.Tag))
+		q = q.Where(rawgen.Cond(datatypes.JSONArrayQuery("tags").Contains(opt.Tag))...)
 	} else if opt.NotTag {
-		q = q.Where(h.Tag.Eq(""))
+		// when the length of tags is 2, it must be '[]'
+		// It could also be null
+		q = q.Where(h.Tags.Length().Eq(2)).Or(h.Tags.Length().Eq(4))
 	}
 
 	if opt.SearchKey != "" {
@@ -169,14 +207,29 @@ func (dao *hookDao) ListHookReferences(kit *kit.Kit, opt *types.ListHookReferenc
 
 // CountHookTag count hook tag
 func (dao *hookDao) CountHookTag(kit *kit.Kit, bizID uint32) ([]*types.HookTagCount, error) {
-
 	m := dao.genQ.Hook
 	q := dao.genQ.Hook.WithContext(kit.Ctx)
 
-	counts := make([]*types.HookTagCount, 0)
-	err := q.Select(m.Tag, m.ID.Count().As("counts")).Where(m.BizID.Eq(bizID), m.Tag.Neq("")).Group(m.Tag).Scan(&counts)
-	if err != nil {
+	var allTags []dtypes.StringSlice
+	if err := q.Select(m.Tags).Where(m.BizID.Eq(bizID)).
+		// when the length of tags greater than 2, it must not be empty which means not be '[]'
+		Where(m.Tags.Length().Gt(2)).
+		Scan(&allTags); err != nil {
 		return nil, err
+	}
+	if len(allTags) == 0 {
+		return []*types.HookTagCount{}, nil
+	}
+	tagCnt := make(map[string]uint32)
+	for _, tags := range allTags {
+		for _, t := range tags {
+			tagCnt[t]++
+		}
+	}
+
+	counts := make([]*types.HookTagCount, 0)
+	for t, cnt := range tagCnt {
+		counts = append(counts, &types.HookTagCount{Tag: t, Counts: cnt})
 	}
 
 	return counts, nil
@@ -209,6 +262,41 @@ func (dao *hookDao) DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.Hook) e
 
 	if e := ad.Do(tx.Query); e != nil {
 		return e
+	}
+
+	return nil
+}
+
+// Update one hook instance.
+func (dao *hookDao) Update(kit *kit.Kit, g *table.Hook) error {
+	if err := g.ValidateUpdate(); err != nil {
+		return err
+	}
+
+	// 更新操作, 获取当前记录做审计
+	m := dao.genQ.Hook
+	q := dao.genQ.Hook.WithContext(kit.Ctx)
+	oldOne, err := q.Where(m.ID.Eq(g.ID), m.BizID.Eq(g.Attachment.BizID)).Take()
+	if err != nil {
+		return err
+	}
+	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareUpdate(g, oldOne)
+
+	// 多个使用事务处理
+	updateTx := func(tx *gen.Query) error {
+		q = tx.Hook.WithContext(kit.Ctx)
+		if _, err := q.Where(m.BizID.Eq(g.Attachment.BizID), m.ID.Eq(g.ID)).
+			Select(m.Tags, m.Memo).Omit(m.Reviser, m.UpdatedAt).Updates(g); err != nil {
+			return err
+		}
+
+		if err := ad.Do(tx); err != nil {
+			return err
+		}
+		return nil
+	}
+	if err := dao.genQ.Transaction(updateTx); err != nil {
+		return err
 	}
 
 	return nil

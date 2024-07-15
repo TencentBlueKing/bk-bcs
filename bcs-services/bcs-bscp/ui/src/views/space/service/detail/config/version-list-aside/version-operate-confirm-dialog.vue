@@ -60,9 +60,8 @@
     emits('cancel');
   };
 </script>
-<style>
+<style lang="scss">
   .confirm-content {
-    margin-top: 30px;
     color: #63656e;
     .name {
       color: #313238;

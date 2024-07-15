@@ -20,6 +20,7 @@ import (
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	k8sapitypes "k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/util/retry"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
@@ -39,8 +40,9 @@ func newPortBindingItemHandler(ctx context.Context, k8sClient client.Client) *po
 }
 
 func (pbih *portBindingItemHandler) ensureItem(
-	tmpTargetGroup *networkextensionv1.ListenerTargetGroup, item *networkextensionv1.PortBindingItem,
-	itemStatus *networkextensionv1.PortBindingStatusItem) *networkextensionv1.PortBindingStatusItem {
+	portBinding *networkextensionv1.PortBinding, tmpTargetGroup *networkextensionv1.ListenerTargetGroup,
+	item *networkextensionv1.PortBindingItem, itemStatus *networkextensionv1.
+		PortBindingStatusItem) *networkextensionv1.PortBindingStatusItem {
 	// when status is empty, just return initializing status
 	if itemStatus == nil {
 		return pbih.generateStatus(item, constant.PortBindingItemStatusInitializing)
@@ -82,15 +84,33 @@ func (pbih *portBindingItemHandler) ensureItem(
 			}
 			// listener has targetGroup but targetGroup(include pod ip) has changed
 		}
-		// listener has no targetGroup or ip has changed
-		listener.Spec.ListenerAttribute = portPool.Spec.ListenerAttribute
-		if item.ListenerAttribute != nil {
-			listener.Spec.ListenerAttribute = item.ListenerAttribute
-		}
-		listener.Status.Status = networkextensionv1.ListenerStatusNotSynced
-		listener.Spec.TargetGroup = tmpTargetGroup
 
-		if err := pbih.k8sClient.Update(context.Background(), listener, &client.UpdateOptions{}); err != nil {
+		if err := retry.RetryOnConflict(retry.DefaultBackoff, func() error {
+			li := &networkextensionv1.Listener{}
+			if err := pbih.k8sClient.Get(context.Background(), k8sapitypes.NamespacedName{
+				Namespace: item.PoolNamespace,
+				Name:      listenerName,
+			}, li); err != nil {
+				return err
+			}
+
+			// listener has no targetGroup or ip has changed
+			li.Spec.ListenerAttribute = portPool.Spec.ListenerAttribute
+			if item.ListenerAttribute != nil {
+				li.Spec.ListenerAttribute = item.ListenerAttribute
+			}
+			li.Status.Status = networkextensionv1.ListenerStatusNotSynced
+			li.Spec.TargetGroup = tmpTargetGroup
+			if li.Labels == nil {
+				li.Labels = make(map[string]string)
+			}
+			li.Labels[networkextensionv1.LabelKeyForSourceNamespace] = portBinding.GetNamespace()
+
+			if err := pbih.k8sClient.Update(context.Background(), li, &client.UpdateOptions{}); err != nil {
+				return err
+			}
+			return nil
+		}); err != nil {
 			blog.Warnf("failed to update listener %s/%s, err %s", listenerName, item.PoolNamespace, err.Error())
 			return pbih.generateStatus(item, constant.PortBindingItemStatusInitializing)
 		}
@@ -141,6 +161,9 @@ func (pbih *portBindingItemHandler) deleteItem(
 		}
 		listener.Spec.TargetGroup = nil
 		listener.Status.Status = networkextensionv1.ListenerStatusNotSynced
+		if listener.Labels != nil {
+			delete(listener.Labels, networkextensionv1.LabelKeyForSourceNamespace)
+		}
 		if err := pbih.k8sClient.Update(context.Background(), listener, &client.UpdateOptions{}); err != nil {
 			blog.Warnf("failed to update listener %s/%s, err %s", listenerName, item.PoolNamespace, err.Error())
 			return pbih.generateStatus(item, constant.PortBindingItemStatusDeleting)

@@ -53,7 +53,6 @@ func newtask() *Task {
 	task.works[applyCVMFromResourcePoolStep.StepMethod] = tasks.ApplyCVMFromResourcePoolTask
 	task.works[addNodesToClusterStep.StepMethod] = tasks.AddNodesToClusterTask
 	task.works[checkClusterNodeStatusStep.StepMethod] = tasks.CheckClusterNodeStatusTask
-	task.works[checkClusterNodesInCMDBStep.StepMethod] = tasks.CheckClusterNodesInCMDBTask
 	task.works[syncClusterNodesToCMDBStep.StepMethod] = tasks.SyncClusterNodesToCMDBTask
 	// task.works[resourcePoolLabelStep.StepMethod] = tasks.SetResourcePoolDeviceLabels
 
@@ -220,6 +219,8 @@ func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.Node
 
 	// step0: cluster cordon nodes
 	cleanTask.BuildCordonNodesStep(task)
+	// step1: shield nodes alarm
+	common.BuildShieldAlertTaskStep(task, opt.Cluster.GetClusterID())
 
 	// 业务自定义流程: 缩容前置流程支持 标准运维任务和执行业务job脚本
 	if group.NodeTemplate != nil && len(group.NodeTemplate.ScaleInPreScript) > 0 {
@@ -265,9 +266,9 @@ func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.Node
 		}
 	}
 
-	// step1: cluster scale-in to clean nodes
+	// step2: cluster scale-in to clean nodes
 	cleanTask.BuildRemoveNodesStep(task)
-	// step2: cluster return nodes
+	// step3: cluster return nodes
 	cleanTask.BuildReturnNodesStep(task)
 
 	if len(task.StepSequence) > 0 {
@@ -333,13 +334,14 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 	}
 	// step1: apply Instance from resourcePool
 	updateDesiredNodes.BuildApplyInstanceStep(task)
-	// step2: add Nodes to cluster
-	updateDesiredNodes.BuildAddNodesToClusterStep(task)
-	// step3: check nodes status
-	updateDesiredNodes.BuildCheckClusterNodeStatusStep(task)
-	// step4: check nodes if sync to cmdb
-	// updateDesiredNodes.BuildCheckClusterNodesInCMDBStep(task)
+	// step2: check nodes if sync to cmdb
 	updateDesiredNodes.BuildSyncClusterNodesToCMDBStep(task)
+	// step3: shied nodes alert
+	common.BuildShieldAlertTaskStep(task, opt.Cluster.GetClusterID())
+	// step4: add Nodes to cluster
+	updateDesiredNodes.BuildAddNodesToClusterStep(task)
+	// step5: check nodes status
+	updateDesiredNodes.BuildCheckClusterNodeStatusStep(task)
 	// platform define sops task
 	if opt.Cloud != nil && opt.Cloud.NodeGroupManagement != nil &&
 		opt.Cloud.NodeGroupManagement.UpdateDesiredNodes != nil {
@@ -350,6 +352,7 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 				InstancePasswd: passwd,
 				NodeIPList:     "",
 				NodeOperator:   opt.Operator,
+				GroupCreator:   group.Creator,
 				ModuleID: cloudprovider.GetScaleOutModuleID(opt.Cluster, opt.AsOption, group.NodeTemplate,
 					true),
 				BusinessID: cloudprovider.GetBusinessID(opt.Cluster, opt.AsOption, group.NodeTemplate, true),
@@ -388,6 +391,23 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 			return nil, fmt.Errorf("BuildScalingNodesTask business BuildBkSopsStepAction failed: %v", err)
 		}
 	}
+
+	// 混部集群需要执行混部节点流程
+	if opt.Cluster.GetIsMixed() && opt.Cloud != nil && opt.Cloud.ClusterManagement != nil &&
+		opt.Cloud.ClusterManagement.CommonMixedAction != nil {
+		err := template.BuildSopsFactory{
+			StepName: template.NodeMixedInitCh,
+			Cluster:  opt.Cluster,
+			Extra: template.ExtraInfo{
+				NodeIPList:      "",
+				ShowSopsUrl:     true,
+				TranslateMethod: template.NodeMixedInit,
+			}}.BuildSopsStep(task, opt.Cloud.ClusterManagement.CommonMixedAction, false)
+		if err != nil {
+			return nil, fmt.Errorf("BuildScalingNodesTask BuildBkSopsStepAction failed: %v", err)
+		}
+	}
+
 	// step3: annotation nodes
 	updateDesiredNodes.BuildNodeAnnotationsStep(task)
 	// step4: nodes common labels: sZoneID / bizID
@@ -778,4 +798,10 @@ func (t *Task) BuildUpdateNodeGroupTask(group *proto.NodeGroup, opt *cloudprovid
 	task.CurrentStep = task.StepSequence[0]
 	task.CommonParams[cloudprovider.JobTypeKey.String()] = cloudprovider.UpdateNodeGroupJob.String()
 	return task, nil
+}
+
+// BuildSwitchClusterNetworkTask switch cluster network mode
+func (t *Task) BuildSwitchClusterNetworkTask(cls *proto.Cluster,
+	subnet *proto.SubnetSource, opt *cloudprovider.SwitchClusterNetworkOption) (*proto.Task, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
 }

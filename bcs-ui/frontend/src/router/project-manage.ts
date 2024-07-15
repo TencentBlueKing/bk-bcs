@@ -8,6 +8,10 @@ const tencentCloud = () => import(/* webpackChunkName: 'project' */'@/views/proj
 const tencentPublicCloud = () => import(/* webpackChunkName: 'project' */'@/views/project-manage/cloudtoken/tencentPublicCloud.vue');
 const googleCloud = () => import(/* webpackChunkName: 'project' */'@/views/project-manage/cloudtoken/googleCloud.vue');
 const azureCloud = () => import(/* webpackChunkName: 'project' */'@/views/project-manage/cloudtoken/azureCloud.vue');
+// 华为云
+const huaweiCloud = () => import(/* webpackChunkName: 'project' */'@/views/project-manage/cloudtoken/huaweiCloud.vue');
+// 亚马逊云
+const amazonCloud = () => import(/* webpackChunkName: 'project' */'@/views/project-manage/cloudtoken/amazonCloud.vue');
 
 export default [
   {
@@ -58,6 +62,26 @@ export default [
     component: azureCloud,
     meta: {
       title: 'Azure Cloud',
+      hideBack: true,
+    },
+  },
+  // 华为云
+  {
+    path: 'huawei-cloud',
+    name: 'huaweiCloud',
+    component: huaweiCloud,
+    meta: {
+      title: 'Huawei Cloud',
+      hideBack: true,
+    },
+  },
+  // aws
+  {
+    path: 'amazon-cloud',
+    name: 'amazonCloud',
+    component: amazonCloud,
+    meta: {
+      title: 'Aws Cloud',
       hideBack: true,
     },
   },

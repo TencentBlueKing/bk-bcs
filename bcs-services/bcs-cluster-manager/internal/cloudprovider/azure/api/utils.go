@@ -234,13 +234,14 @@ func (c *nodeGroupToPool) setTaints() {
 	}
 
 	/*
-		// attention: gke not support addNodes to set unScheduled nodes, thus realize this feature by taint
+		// attention: azure not support addNodes to set unScheduled nodes, thus realize this feature by taint
 		taints = append(taints, &proto.Taint{
 			Key:    cutils.BCSNodeGroupTaintKey,
 			Value:  cutils.BCSNodeGroupTaintValue,
 			Effect: cutils.BCSNodeGroupAzureTaintEffect,
 		})
 	*/
+
 	// key=value:NoSchedule NoExecute PreferNoSchedule
 	c.pool.Properties.NodeTaints = make([]*string, 0)
 	target := &c.pool.Properties.NodeTaints
@@ -336,7 +337,7 @@ func (c *poolToNodeGroup) convert() {
 	// 设置tags
 	c.setTags()
 	// 设置状态
-	c.setStatus()
+	// c.setStatus()
 	// 设置CloudNodeGroupID
 	c.setCloudNodeGroupID()
 	// 设置NodeGroupID
@@ -1146,8 +1147,10 @@ func BuyDataDisk(group *proto.NodeGroup, set *armcompute.VirtualMachineScaleSet)
 	if set.Properties.VirtualMachineProfile.StorageProfile == nil {
 		set.Properties.VirtualMachineProfile.StorageProfile = new(armcompute.VirtualMachineScaleSetStorageProfile)
 	}
+
 	set.Properties.VirtualMachineProfile.StorageProfile.DataDisks = make([]*armcompute.VirtualMachineScaleSetDataDisk, 0)
 	disks := &set.Properties.VirtualMachineProfile.StorageProfile.DataDisks
+
 	for i, d := range lc.DataDisks {
 		disk := new(armcompute.VirtualMachineScaleSetDataDisk)
 		if len(d.DiskType) != 0 && checkDataDiskType(d.DiskType) { // 设置磁盘类型

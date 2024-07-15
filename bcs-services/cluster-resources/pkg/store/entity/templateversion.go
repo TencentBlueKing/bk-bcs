@@ -13,6 +13,7 @@
 package entity
 
 import (
+	"github.com/coreos/go-semver/semver"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -24,15 +25,21 @@ type TemplateVersion struct {
 	TemplateName  string             `json:"templateName" bson:"templateName"`
 	TemplateSpace string             `json:"templateSpace" bson:"templateSpace"`
 	Version       string             `json:"version" bson:"version"`
+	EditFormat    string             `json:"editFormat" bson:"editFormat"`
 	Content       string             `json:"content" bson:"content"`
 	Creator       string             `json:"creator" bson:"creator"`
 	CreateAt      int64              `json:"createAt" bson:"createAt"`
+	Latest        bool               `json:"latest" bson:"-"` // 是否是最新版本，不存储在数据库
 }
 
 // ToMap trans TemplateVersion to map
 func (t *TemplateVersion) ToMap() map[string]interface{} {
 	if t == nil {
 		return nil
+	}
+	editFormat := t.EditFormat
+	if editFormat == "" {
+		editFormat = "yaml"
 	}
 	m := make(map[string]interface{}, 0)
 	m["id"] = t.ID.Hex()
@@ -41,9 +48,11 @@ func (t *TemplateVersion) ToMap() map[string]interface{} {
 	m["templateName"] = t.TemplateName
 	m["templateSpace"] = t.TemplateSpace
 	m["version"] = t.Version
+	m["editFormat"] = editFormat
 	m["content"] = t.Content
 	m["creator"] = t.Creator
 	m["createAt"] = t.CreateAt
+	m["latest"] = t.Latest
 	return m
 }
 
@@ -52,4 +61,34 @@ type TemplateID struct {
 	TemplateSpace   string `json:"templateSpace"`
 	TemplateName    string `json:"templateName"`
 	TemplateVersion string `json:"templateVersion"`
+}
+
+// VersionsSortByVersion sort template version by version
+type VersionsSortByVersion []*TemplateVersion
+
+// Len xxx
+func (r VersionsSortByVersion) Len() int { return len(r) }
+
+// Less xxx
+func (r VersionsSortByVersion) Less(i, j int) bool {
+	vA, err := semver.NewVersion(r[i].Version)
+	if err != nil {
+		return false
+	}
+	vB, err := semver.NewVersion(r[j].Version)
+	if err != nil {
+		return false
+	}
+	return vB.LessThan(*vA)
+}
+
+// Swap xxx
+func (r VersionsSortByVersion) Swap(i, j int) { r[i], r[j] = r[j], r[i] }
+
+// TemplateDeploy 定义了模板部署的一些标识
+type TemplateDeploy struct {
+	TemplateSpace   string `json:"templateSpace"`
+	TemplateName    string `json:"templateName"`
+	TemplateVersion string `json:"templateVersion"`
+	Content         string `json:"content"`
 }

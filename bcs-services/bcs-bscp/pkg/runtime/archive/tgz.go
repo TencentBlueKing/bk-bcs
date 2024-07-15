@@ -14,6 +14,7 @@ package archive
 
 import (
 	"archive/tar"
+	"compress/gzip"
 	"fmt"
 	"io"
 	"os"
@@ -21,17 +22,36 @@ import (
 	"time"
 )
 
-// TgzHandler tgz xxx
-type TgzHandler struct {
+// TgzArchive 实现了 Archive 接口，用于处理 gzip 文件
+type TgzArchive struct {
+	destPath      string
+	limitFileSize int64
 }
 
-// NewTgzHandler xxx
-func NewTgzHandler() *TgzHandler {
-	return &TgzHandler{}
+// NewTgzArchive xxx
+func NewTgzArchive(destPath string, limitFileSize int64) TgzArchive {
+	return TgzArchive{
+		destPath:      destPath,
+		limitFileSize: limitFileSize,
+	}
 }
 
-// UnTar unarchives a TAR archive and returns the final destination path or an error
-func (t *TgzHandler) UnTar(r io.Reader, destPath string) error {
+// UnTgzPack decompresses the gzip archive and returns an error
+func (t TgzArchive) UnTgzPack(reader io.Reader) error {
+	gzr, err := gzip.NewReader(reader)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		// NOCC:gas/error(ignore)
+		_ = gzr.Close()
+	}()
+
+	return t.UnTar(gzr)
+}
+
+// UnTar decompresses a TAR archive and returns an error
+func (t TgzArchive) UnTar(r io.Reader) error {
 	tr := tar.NewReader(r)
 	for {
 		hdr, err := tr.Next()
@@ -44,7 +64,11 @@ func (t *TgzHandler) UnTar(r io.Reader, destPath string) error {
 			return err
 		}
 
-		fp := filepath.Join(destPath, sanitize(hdr.Name))
+		if hdr.Size > t.limitFileSize {
+			return fmt.Errorf("file %s exceeds size", hdr.Name)
+		}
+
+		fp := filepath.Join(t.destPath, sanitize(hdr.Name))
 
 		if hdr.FileInfo().IsDir() {
 			if err = os.MkdirAll(fp, os.FileMode(hdr.Mode)); err != nil {
@@ -62,7 +86,7 @@ func (t *TgzHandler) UnTar(r io.Reader, destPath string) error {
 	return nil
 }
 
-func (t *TgzHandler) unTarFile(hdr *tar.Header, tr *tar.Reader, fp string) error {
+func (t TgzArchive) unTarFile(hdr *tar.Header, tr *tar.Reader, fp string) error {
 	parentDir, _ := filepath.Split(fp)
 
 	// NOCC:gas/permission(ignore)
@@ -76,6 +100,7 @@ func (t *TgzHandler) unTarFile(hdr *tar.Header, tr *tar.Reader, fp string) error
 	}
 
 	defer func() {
+		// NOCC:gas/error(ignore)
 		_ = file.Close()
 	}()
 

@@ -1,16 +1,21 @@
 <template>
   <div>
     <span
-      class="add-btn" v-if="!labels.length"
+      class="add-btn"
+      v-if="!labels.length"
       @click="handleAddLabel(0)">
       <i class="bk-icon icon-plus-circle-shape mr5"></i>
       {{$t('generic.button.add')}}
     </span>
-    <div class="key-value" v-for="(item, index) in labels" :key="index">
+    <div
+      v-for="(item, index) in labels"
+      :key="index"
+      :class="['key-value', { '!mb-0': index === (labels.length - 1) }]">
       <Validate class="w-[100%]" :value="item.key" :rules="keyRules">
         <bcs-input
           v-model="item.key"
           :placeholder="$t('generic.label.key')"
+          ref="inputRef"
           @change="handleLabelKeyChange">
         </bcs-input>
       </Validate>
@@ -19,6 +24,7 @@
         <bcs-input
           v-model="item.value"
           :placeholder="$t('generic.label.value')"
+          ref="inputRef"
           @change="handleLabelValueChange">
         </bcs-input>
       </Validate>
@@ -120,6 +126,12 @@ export default defineComponent({
       if (disabledDelete.value) return;
       labels.value.splice(index, 1);
     };
+    // 聚焦
+    const inputRef = ref<any[]>([]);
+    const focus = () => {
+      const [firstInput] = inputRef.value || [];
+      firstInput?.focus();
+    };
     // 数据校验
     const validate = () => {
       const keys: string[] = [];
@@ -137,6 +149,7 @@ export default defineComponent({
       && values.every(value => props.valueRules.every(rule => new RegExp(rule.validator).test(value)));
     };
     return {
+      focus,
       labels,
       disabledDelete,
       handleLabelKeyChange,

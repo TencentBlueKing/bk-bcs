@@ -197,12 +197,43 @@ set_yum_repo() {
         if [ "$whichWget" == "" ]; then
             yum install wget -y 2>&1 >/dev/null
         fi
-        mv /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo.$BACKUPTIME
-        wget -O /etc/yum.repos.d/CentOS-Base.repo $BASE_YUM_LINK
-        mv /etc/yum.repos.d/epel.repo /etc/yum.repos.d/epel.repo.$BACKUPTIME
-        wget -O /etc/yum.repos.d/epel.repo $BASE_EPEL_LINK
-        yum clean all
-        yum makecache
+
+        if ! grep -r BaseOS /etc/yum.repos.d/;then
+
+          if [[ -f /etc/tlinux-release ]];then
+            if grep "TencentOS Server 3.[0-9]*" /etc/tlinux-release;then
+              BASE_YUM_LINK="http://mirrors.cloud.tencent.com/repo/centos8_base.repo"
+            elif grep "TencentOS Server 2.[0-9]*" /etc/tlinux-release;then
+              BASE_YUM_LINK="http://mirrors.cloud.tencent.com/repo/centos7_base.repo"
+              BASE_EPEL_LINK="http://mirrors.cloud.tencent.com/repo/epel-7.repo"
+            elif grep "Tencent tlinux release 2.[0-9]*" /etc/tlinux-release;then
+              BASE_YUM_LINK="http://mirrors.cloud.tencent.com/repo/centos7_base.repo"
+              BASE_EPEL_LINK="http://mirrors.cloud.tencent.com/repo/epel-7.repo"
+            fi
+          fi
+
+
+          mv /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo.$BACKUPTIME
+          wget -O /etc/yum.repos.d/CentOS-Base.repo $BASE_YUM_LINK
+          mv /etc/yum.repos.d/epel.repo /etc/yum.repos.d/epel.repo.$BACKUPTIME
+          wget -O /etc/yum.repos.d/epel.repo $BASE_EPEL_LINK
+
+          if [[ -f /etc/tlinux-release ]];then
+            if grep "TencentOS Server 3.[0-9]*" /etc/tlinux-release;then
+              sed -i "s/\$releasever/8/g" /etc/yum.repos.d/epel.repo
+              sed -i "s/\$releasever/8/g" /etc/yum.repos.d/CentOS-Base.repo
+            elif grep "TencentOS Server 2.[0-9]*" /etc/tlinux-release;then
+              sed -i "s/\$releasever/7/g" /etc/yum.repos.d/epel.repo
+              sed -i "s/\$releasever/7/g" /etc/yum.repos.d/CentOS-Base.repo
+            elif grep "Tencent tlinux release 2.[0-9]*" /etc/tlinux-release;then
+              sed -i "s/\$releasever/7/g" /etc/yum.repos.d/epel.repo
+              sed -i "s/\$releasever/7/g" /etc/yum.repos.d/CentOS-Base.repo
+            fi
+          fi
+
+          yum clean all
+          yum makecache
+        fi
 
         curr=$(yum repolist | grep EPEL | awk '{print $2,$3,$4,$5}')
         if [ "$curr" == "EPEL for redhat/centos 7" ]; then

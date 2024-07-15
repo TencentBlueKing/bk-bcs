@@ -14,8 +14,14 @@
 package component
 
 import (
+	"bytes"
+	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
+	"io"
+	"net"
+	"net/http"
 	"sync"
 	"time"
 
@@ -86,4 +92,64 @@ func GetAuditClient() *audit.Client {
 		})
 	}
 	return auditClient
+}
+
+var (
+	clientOnce   sync.Once
+	globalClient *http.Client
+	dialer       = &net.Dialer{
+		Timeout:   30 * time.Second,
+		KeepAlive: 30 * time.Second,
+	}
+	// defaultTransport default transport
+	defaultTransport http.RoundTripper = &http.Transport{
+		DialContext:           dialer.DialContext,
+		ForceAttemptHTTP2:     true,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+		// NOCC:gas/tls(设计如此)
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // nolint
+	}
+)
+
+// GetHttpClient : 新建Client
+func GetHttpClient() *http.Client {
+	if globalClient == nil {
+		clientOnce.Do(func() {
+			globalClient = &http.Client{
+				Transport: defaultTransport,
+			}
+		})
+	}
+	return globalClient
+}
+
+// HttpRequest http 请求
+func HttpRequest(ctx context.Context, url, method string, header http.Header, data []byte) ([]byte, error) {
+	var req *http.Request
+	var err error
+	if data != nil {
+		req, err = http.NewRequestWithContext(ctx, method, url, bytes.NewReader(data))
+	} else {
+		req, err = http.NewRequestWithContext(ctx, method, url, nil)
+	}
+	if err != nil {
+		return nil, err
+	}
+	if header != nil {
+		req.Header = header
+	}
+	resp, err := GetHttpClient().Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	return body, nil
 }

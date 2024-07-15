@@ -425,9 +425,10 @@ type SidecarHandshakePayload struct {
 type SidecarRuntimeOption struct {
 	// BounceIntervalHour sidecar connect bounce interval, if reach this bounce interval, sidecar will
 	// reconnect stream server instance.
-	BounceIntervalHour uint          `json:"bounceInterval"`
-	RepositoryTLS      *TLSBytes     `json:"repositoryTLS"`
-	Repository         *RepositoryV1 `json:"repository"`
+	BounceIntervalHour  uint          `json:"bounceInterval"`
+	RepositoryTLS       *TLSBytes     `json:"repositoryTLS"`
+	Repository          *RepositoryV1 `json:"repository"`
+	EnableAsyncDownload bool          `json:"enableAsyncDownload"`
 }
 
 // ServiceInfo defines the sidecar's need info from the upstream server with handshake.
@@ -694,7 +695,6 @@ func (cm ClientMode) String() string {
 
 // ClientMetricData feed-server 和 cache-service 通信的结构体
 type ClientMetricData struct {
-	AppID         uint32
 	MessagingType uint32
 	Payload       []byte
 }
@@ -706,6 +706,28 @@ type HeartbeatItem struct {
 	Application SideAppMeta `json:"application"`
 	// ResourceUsage 资源相关信息：例如 cpu、内存等
 	ResourceUsage ResourceUsage `json:"resourceUsage"`
+}
+
+// Decode the HeartbeatItem to bytes.
+func (h *HeartbeatItem) Decode(data []byte) error {
+	if len(data) == 0 {
+		return errors.New("Heartbeat is nil, can not be decoded")
+	}
+
+	err := jsoni.Unmarshal(data, h)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// Encode the HeartbeatItem to bytes.
+func (h *HeartbeatItem) Encode() ([]byte, error) {
+	if h == nil {
+		return nil, errors.New("HeartbeatItem is nil, can not be encoded")
+	}
+
+	return jsoni.Marshal(h)
 }
 
 // ClientType client type (agent、sidecar、sdk、command).

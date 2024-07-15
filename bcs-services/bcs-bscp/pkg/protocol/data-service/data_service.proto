@@ -76,6 +76,7 @@ service Data {
   rpc DeprecateRelease(DeprecateReleaseReq) returns (pbbase.EmptyResp) {}
   rpc UnDeprecateRelease(UnDeprecateReleaseReq) returns (pbbase.EmptyResp) {}
   rpc DeleteRelease(DeleteReleaseReq) returns (pbbase.EmptyResp) {}
+  rpc CheckReleaseName(CheckReleaseNameReq) returns (CheckReleaseNameResp) {}
 
   // released config item related interface.
   rpc GetReleasedConfigItem(GetReleasedCIReq) returns (pbrci.ReleasedConfigItem) {}
@@ -88,6 +89,7 @@ service Data {
   rpc CreateHook(CreateHookReq) returns (CreateResp) {}
   rpc ListHooks(ListHooksReq) returns (ListHooksResp) {}
   rpc DeleteHook(DeleteHookReq) returns (pbbase.EmptyResp) {}
+  rpc UpdateHook(UpdateHookReq) returns (pbbase.EmptyResp) {}
   rpc ListHookTags(ListHookTagReq) returns (ListHookTagResp) {}
   rpc ListHookReferences(ListHookReferencesReq) returns (ListHookReferencesResp) {}
   rpc GetHook(GetHookReq) returns (GetHookResp) {}
@@ -125,10 +127,13 @@ service Data {
   rpc ListTmplsOfTmplSet(ListTmplsOfTmplSetReq) returns (ListTmplsOfTmplSetResp) {}
   rpc ListTemplateByTuple(ListTemplateByTupleReq) returns (ListTemplateByTupleReqResp) {}
   rpc BatchUpsertTemplates(BatchUpsertTemplatesReq) returns (BatchUpsertTemplatesReqResp) {}
+  rpc BatchUpdateTemplatePermissions(BatchUpdateTemplatePermissionsReq) returns (BatchUpdateTemplatePermissionsResp) {}
 
   // template release related interface.
   rpc CreateTemplateRevision(CreateTemplateRevisionReq) returns (CreateResp) {}
+  rpc UpdateTemplateRevision(UpdateTemplateRevisionReq) returns (CreateResp) {}
   rpc ListTemplateRevisions(ListTemplateRevisionsReq) returns (ListTemplateRevisionsResp) {}
+  rpc GetTemplateRevision(GetTemplateRevisionReq) returns (GetTemplateRevisionResp) {}
   rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (pbbase.EmptyResp) {}
   rpc ListTemplateRevisionsByIDs(ListTemplateRevisionsByIDsReq) returns (ListTemplateRevisionsByIDsResp) {}
   rpc ListTmplRevisionNamesByTmplIDs(ListTmplRevisionNamesByTmplIDsReq) returns (ListTmplRevisionNamesByTmplIDsResp) {}
@@ -226,6 +231,7 @@ service Data {
 
   // client related interface
   rpc ListClients(ListClientsReq) returns (ListClientsResp) {};
+  rpc RetryClients(RetryClientsReq) returns (pbbase.EmptyResp) {};
 
   // client event related interface
   rpc ListClientEvents(ListClientEventsReq) returns (ListClientEventsResp) {};
@@ -235,6 +241,7 @@ service Data {
   rpc CreateClientQuery(CreateClientQueryReq) returns (CreateClientQueryResp) {};
   rpc UpdateClientQuery(UpdateClientQueryReq) returns (pbbase.EmptyResp) {};
   rpc DeleteClientQuery(DeleteClientQueryReq) returns (pbbase.EmptyResp) {};
+  rpc CheckClientQueryName(CheckClientQueryNameReq) returns (CheckClientQueryNameResp) {};
 
   // client metrics chart related interface
   rpc ClientConfigVersionStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {}
@@ -244,6 +251,7 @@ service Data {
   rpc ClientAnnotationStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {}
   rpc ClientVersionStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {}
   rpc ListClientLabelAndAnnotation(ListClientLabelAndAnnotationReq) returns (google.protobuf.Struct) {}
+  rpc ClientSpecificFailedReason(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {}
 
   // used iam pull resource callback.
   rpc ListInstances(ListInstancesReq) returns (ListInstancesResp) {};
@@ -259,6 +267,9 @@ service Data {
 
   // client metric related interface
   rpc BatchUpsertClientMetrics(BatchUpsertClientMetricsReq) returns (BatchUpsertClientMetricsResp) {}
+
+  // config item compare conflicts related interface
+  rpc CompareConfigItemConflicts(CompareConfigItemConflictsReq) returns (CompareConfigItemConflictsResp) {}
 }
 message UpdateCredentialScopesReq {
   uint32 biz_id = 1;
@@ -320,6 +331,9 @@ message ListCredentialReq {
   uint32 start = 3;
   uint32 limit = 4;
   string top_ids = 5;
+  bool all = 6;
+  string enc_credential = 7;
+  optional bool enable = 8;
 }
 
 message ListCredentialResp {
@@ -437,6 +451,12 @@ message BatchUpsertConfigItemsReq {
   uint32 app_id = 2;
   repeated ConfigItem items = 3;
   bool replace_all = 4;
+  repeated pbtv.TemplateVariableSpec variables = 5;
+  message TemplateBinding {
+    uint32 template_space_id = 1;
+    pbatb.TemplateBinding template_binding = 2;
+  }
+  repeated TemplateBinding bindings = 6;
 }
 
 message BatchUpsertConfigItemsResp {
@@ -487,6 +507,7 @@ message ListConfigItemsReq {
 message ListConfigItemsResp {
   uint32 count = 1;
   repeated pbci.ConfigItem details = 2;
+  uint32 conflict_number = 3;
 }
 
 message ListReleasedConfigItemsReq {
@@ -602,6 +623,16 @@ message DeleteReleaseReq {
   uint32 release_id = 3;
 }
 
+message CheckReleaseNameReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  string name = 3;
+}
+
+message CheckReleaseNameResp {
+  bool exist = 1;
+}
+
 message GetReleasedCIReq {
   uint32 biz_id = 1;
   uint32 app_id = 2;
@@ -659,7 +690,7 @@ message GetHookResp {
 message GetHookInfoSpec {
   string name = 1;
   string type = 3;
-  string tag = 4;
+  repeated string tags = 4;
   string memo = 5;
   uint32 publish_num = 7;
   message Releases {
@@ -721,6 +752,12 @@ message DeleteHookReq {
   uint32 biz_id = 1;
   uint32 hook_id = 2;
   bool force = 3;
+}
+
+message UpdateHookReq {
+  uint32 id = 1;
+  pbhook.HookAttachment attachment = 2;
+  pbhook.HookSpec spec = 3;
 }
 
 message CreateHookRevisionReq {
@@ -994,7 +1031,25 @@ message BatchUpsertTemplatesReqResp {
   repeated uint32 ids = 1;
 }
 
+message BatchUpdateTemplatePermissionsReq {
+  uint32 biz_id = 1;
+  repeated uint32 template_ids = 2;
+  string user = 3;
+  string user_group = 4;
+  string privilege = 5;
+  repeated uint32 app_ids = 6;
+}
+
+message BatchUpdateTemplatePermissionsResp {
+  repeated uint32 ids = 1;
+}
+
 message CreateTemplateRevisionReq {
+  pbtr.TemplateRevisionAttachment attachment = 1;
+  pbtr.TemplateRevisionSpec spec = 2;
+}
+
+message UpdateTemplateRevisionReq {
   pbtr.TemplateRevisionAttachment attachment = 1;
   pbtr.TemplateRevisionSpec spec = 2;
 }
@@ -1013,6 +1068,35 @@ message ListTemplateRevisionsReq {
 message ListTemplateRevisionsResp {
   uint32 count = 1;
   repeated pbtr.TemplateRevision details = 2;
+}
+
+message GetTemplateRevisionReq {
+  uint32 biz_id = 1;
+  uint32 template_id = 2;
+  string revision_name = 3;
+}
+
+message GetTemplateRevisionResp {
+  message TemplateRevision {
+    uint32 template_id = 1;
+    string name = 2;
+    string path = 3;
+    uint32 template_revision_id = 4;
+    string template_revision_name = 5;
+    string template_revision_memo = 6;
+    string file_type = 7;
+    string file_mode = 8;
+    string user = 9;
+    string user_group = 10;
+    string privilege = 11;
+    string signature = 12;
+    uint64 byte_size = 13;
+    string creator = 14;
+    string create_at = 15;
+    string md5 = 16;
+    bool is_latest = 17;
+  }
+  TemplateRevision detail = 1;
 }
 
 message DeleteTemplateRevisionReq {
@@ -1696,9 +1780,23 @@ message ListClientsReq {
   pbclient.ClientQueryCondition search = 8;
 }
 
+message RetryClientsReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  repeated uint32 client_ids = 3;
+  bool all = 4;
+}
+
 message ListClientsResp {
+  message Item {
+    pbclient.Client client = 1;
+    string cpu_usage_str = 2;
+    string cpu_max_usage_str = 3;
+    string memory_usage_str = 4;
+    string memory_max_usage_str = 5;
+  }
   uint32 count = 1;
-  repeated pbclient.Client details = 2;
+  repeated Item details = 2;
 }
 
 message ListClientEventsReq {
@@ -1763,7 +1861,55 @@ message DeleteClientQueryReq {
   uint32 app_id = 3;
 }
 
+message CheckClientQueryNameReq {
+  string name = 1;
+  uint32 biz_id = 2;
+  uint32 app_id = 3;
+}
+
+message CheckClientQueryNameResp {
+  bool exist = 1;
+}
+
 message ListClientLabelAndAnnotationReq {
   uint32 biz_id = 1;
   uint32 app_id = 2;
+  int64 last_heartbeat_time = 3;
+}
+
+message CompareConfigItemConflictsReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  uint32 release_id = 3;
+  uint32 other_app_id = 4;
+}
+
+message CompareConfigItemConflictsResp {
+  message NonTemplateConfig {
+    uint32 id = 1;
+    pbci.ConfigItemSpec config_item_spec = 2;
+    repeated pbtv.TemplateVariableSpec variables = 3;
+    bool is_exist = 4;
+    string signature = 5;
+    uint64 byte_size = 6;
+  }
+  message TemplateConfig {
+    message TemplateRevisionDetail {
+      uint32 template_id = 1;
+      uint32 template_revision_id = 2;
+      bool is_latest = 3;
+      repeated pbtv.TemplateVariableSpec variables = 5;
+    }
+    uint32 template_space_id = 1;
+    string template_space_name = 2;
+    uint32 template_set_id = 3;
+    string template_set_name = 4;
+    bool is_exist = 5;
+    repeated TemplateRevisionDetail template_revisions = 6;
+    bool template_space_exist = 7;
+    bool template_set_exist = 8;
+    bool template_set_is_empty = 9;
+  }
+  repeated NonTemplateConfig non_template_configs = 2;
+  repeated TemplateConfig template_configs = 1;
 }

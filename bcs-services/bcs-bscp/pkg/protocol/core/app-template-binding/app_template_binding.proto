@@ -63,6 +63,7 @@ message AppBoundTmplRevisionGroupBySet {
     string create_at = 16;
     string file_state = 17;
     string md5 = 18;
+    bool is_conflict = 19;
   }
   uint32 template_space_id = 1;
   string template_space_name = 2;
@@ -127,6 +128,7 @@ message AppBoundTmplRevision {
   string create_at = 20;
   string file_state = 21;
   string md5 = 22;
+  bool is_conflict = 23;
 }
 
 // ReleasedAppBoundTmplRevision is released app bound template revision

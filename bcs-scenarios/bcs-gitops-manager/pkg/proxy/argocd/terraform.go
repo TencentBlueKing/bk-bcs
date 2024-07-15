@@ -20,7 +20,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-controller/pkg/apis/httpapi"
 	terraformextensionsv1 "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-controller/pkg/apis/terraformextensions/v1"
 	"github.com/gorilla/mux"
@@ -28,6 +27,7 @@ import (
 	"gopkg.in/yaml.v3"
 
 	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/permitcheck"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store/terraformstore"
 )
 
@@ -36,6 +36,7 @@ type TerraformPlugin struct {
 	*mux.Router
 	middleware     mw.MiddlewareInterface
 	terraformStore terraformstore.TerraformInterface
+	permitChecker  permitcheck.PermissionInterface
 }
 
 // Init the terraform route
@@ -90,7 +91,8 @@ func (plugin *TerraformPlugin) applyHandler(r *http.Request) (*http.Request, *mw
 		return r, mw.ReturnErrorResponse(http.StatusBadRequest,
 			errors.Errorf("name must have preffix '%s-'", terraform.Spec.Project))
 	}
-	_, status, err := plugin.middleware.CheckProjectPermission(r.Context(), terraform.Spec.Project, iam.ProjectView)
+	_, status, err := plugin.permitChecker.CheckProjectPermission(r.Context(), terraform.Spec.Project,
+		permitcheck.ProjectEditRSAction)
 	if err != nil {
 		return r, mw.ReturnErrorResponse(status, err)
 	}
@@ -104,11 +106,11 @@ func (plugin *TerraformPlugin) applyHandler(r *http.Request) (*http.Request, *mw
 	return r, mw.ReturnTerraformReverse()
 }
 
-// listHandler list the terraforms
+// listHandler list the terraform
 func (plugin *TerraformPlugin) listHandler(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	projectList, statusCode, err := plugin.middleware.ListProjects(r.Context())
 	if statusCode != http.StatusOK {
-		return r, mw.ReturnGRPCErrorResponse(statusCode, errors.Wrapf(err, "list projects failed"))
+		return r, mw.ReturnErrorResponse(statusCode, errors.Wrapf(err, "list projects failed"))
 	}
 	allProjects := make(map[string]struct{})
 	for i := range projectList.Items {
@@ -135,7 +137,7 @@ func (plugin *TerraformPlugin) listHandler(r *http.Request) (*http.Request, *mw.
 	}
 	values := r.URL.Query()
 	values.Set("projects", queryProjects[0])
-	for i := 1; i < len(queryProjects); i++ {
+	for i := 0; i < len(queryProjects); i++ {
 		values.Add("projects", queryProjects[i])
 	}
 	r.URL.RawQuery = values.Encode()
@@ -159,7 +161,8 @@ func (plugin *TerraformPlugin) createHandler(r *http.Request) (*http.Request, *m
 		return r, mw.ReturnErrorResponse(http.StatusBadRequest,
 			errors.Errorf("name must have preffix '%s-'", createReq.Project))
 	}
-	_, status, err := plugin.middleware.CheckProjectPermission(r.Context(), createReq.Project, iam.ProjectView)
+	_, status, err := plugin.permitChecker.CheckProjectPermission(r.Context(), createReq.Project,
+		permitcheck.ProjectEditRSAction)
 	if err != nil {
 		return r, mw.ReturnErrorResponse(status, err)
 	}
@@ -194,7 +197,8 @@ func (plugin *TerraformPlugin) getHandler(r *http.Request) (*http.Request, *mw.H
 	if err != nil {
 		return r, mw.ReturnErrorResponse(http.StatusInternalServerError, err)
 	}
-	_, status, err := plugin.middleware.CheckProjectPermission(r.Context(), tf.Spec.Project, iam.ProjectView)
+	_, status, err := plugin.permitChecker.CheckProjectPermission(r.Context(), tf.Spec.Project,
+		permitcheck.ProjectViewRSAction)
 	if err != nil {
 		return r, mw.ReturnErrorResponse(status, err)
 	}
@@ -208,7 +212,8 @@ func (plugin *TerraformPlugin) deleteHandler(r *http.Request) (*http.Request, *m
 	if err != nil {
 		return r, mw.ReturnErrorResponse(http.StatusInternalServerError, err)
 	}
-	_, status, err := plugin.middleware.CheckProjectPermission(r.Context(), tf.Spec.Project, iam.ProjectView)
+	_, status, err := plugin.permitChecker.CheckProjectPermission(r.Context(), tf.Spec.Project,
+		permitcheck.ProjectDeleteRSAction)
 	if err != nil {
 		return r, mw.ReturnErrorResponse(status, err)
 	}
@@ -222,23 +227,23 @@ func (plugin *TerraformPlugin) getDiffHandler(r *http.Request) (*http.Request, *
 	if err != nil {
 		return r, mw.ReturnErrorResponse(http.StatusInternalServerError, err)
 	}
-	_, status, err := plugin.middleware.CheckProjectPermission(r.Context(),
-		data.Terraform.Spec.Project, iam.ProjectView)
+	_, status, err := plugin.permitChecker.CheckProjectPermission(r.Context(), data.Terraform.Spec.Project,
+		permitcheck.ProjectViewRSAction)
 	if err != nil {
 		return r, mw.ReturnErrorResponse(status, err)
 	}
 	return r, mw.ReturnJSONResponse(data.Result)
 }
 
-// getApplyHandler get the terraform's apply
+// getApplyHandler get the terraform' apply
 func (plugin *TerraformPlugin) getApplyHandler(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	name := mux.Vars(r)["name"]
 	data, err := plugin.terraformStore.GetApply(r.Context(), name)
 	if err != nil {
 		return r, mw.ReturnErrorResponse(http.StatusInternalServerError, err)
 	}
-	_, status, err := plugin.middleware.CheckProjectPermission(r.Context(),
-		data.Terraform.Spec.Project, iam.ProjectView)
+	_, status, err := plugin.permitChecker.CheckProjectPermission(r.Context(), data.Terraform.Spec.Project,
+		permitcheck.ProjectViewRSAction)
 	if err != nil {
 		return r, mw.ReturnErrorResponse(status, err)
 	}
@@ -252,7 +257,8 @@ func (plugin *TerraformPlugin) syncHandler(r *http.Request) (*http.Request, *mw.
 	if err != nil {
 		return r, mw.ReturnErrorResponse(http.StatusInternalServerError, err)
 	}
-	_, status, err := plugin.middleware.CheckProjectPermission(r.Context(), tf.Spec.Project, iam.ProjectEdit)
+	_, status, err := plugin.permitChecker.CheckProjectPermission(r.Context(), tf.Spec.Project,
+		permitcheck.ProjectEditRSAction)
 	if err != nil {
 		return r, mw.ReturnErrorResponse(status, err)
 	}
@@ -266,7 +272,8 @@ func (plugin *TerraformPlugin) cleanHandler(r *http.Request) (*http.Request, *mw
 	if err != nil {
 		return r, mw.ReturnErrorResponse(http.StatusInternalServerError, err)
 	}
-	_, status, err := plugin.middleware.CheckProjectPermission(r.Context(), tf.Spec.Project, iam.ProjectEdit)
+	_, status, err := plugin.permitChecker.CheckProjectPermission(r.Context(), tf.Spec.Project,
+		permitcheck.ProjectEditRSAction)
 	if err != nil {
 		return r, mw.ReturnErrorResponse(status, err)
 	}

@@ -57,6 +57,7 @@ func CreateECKClusterTask(taskID string, stepName string) error {
 	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
 	nodeGroupIDs := step.Params[cloudprovider.NodeGroupIDKey.String()]
 
+	// depend basic info
 	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
 		ClusterID: clusterID,
 		CloudID:   cloudID,
@@ -69,6 +70,7 @@ func CreateECKClusterTask(taskID string, stepName string) error {
 		return retErr
 	}
 
+	// split node groups
 	nodeGroups := make([]*proto.NodeGroup, 0)
 	for _, ngID := range strings.Split(nodeGroupIDs, ",") {
 		nodeGroup, errGet := actions.GetNodeGroupByGroupID(cloudprovider.GetStorageModel(), ngID)
@@ -100,6 +102,7 @@ func CreateECKClusterTask(taskID string, stepName string) error {
 		state.Task.CommonParams = make(map[string]string)
 	}
 
+	// inject cloud cluster id
 	state.Task.CommonParams[cloudprovider.CloudSystemID.String()] = cls.ClusterId
 
 	// update step
@@ -110,11 +113,13 @@ func CreateECKClusterTask(taskID string, stepName string) error {
 	return nil
 }
 
+// createECKCluster create eck cluster
 func createECKCluster(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, groups []*proto.NodeGroup) (
 	*api.CreateClusterReObj, error) {
 	var err error
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
+	// init eck client
 	eckCli, err := api.NewCTClient(info.CmOption)
 	if err != nil {
 		blog.Errorf("createECKCluster[%s]: get ECK client for cluster[%s] failed, %s",
@@ -123,6 +128,7 @@ func createECKCluster(ctx context.Context, info *cloudprovider.CloudDependBasicI
 		return nil, retErr
 	}
 
+	// vpc list
 	vpcs, err := eckCli.ListVpcs(info.Cluster.Region)
 	if err != nil {
 		blog.Errorf("createECKCluster ListVpcs failed, %v", err)
@@ -134,18 +140,21 @@ func createECKCluster(ctx context.Context, info *cloudprovider.CloudDependBasicI
 		return nil, err
 	}
 
+	// generateCreateECKReq build create cluster request
 	req, err := generateCreateECKReq(info, vpcId, subnetId, groups)
 	if err != nil {
 		blog.Errorf("createECKCluster eck client CreateCluster failed, %v", err)
 		return nil, err
 	}
 
+	// create cluster
 	eckCluster, err := eckCli.CreateCluster(req)
 	if err != nil {
 		blog.Errorf("createECKCluster eck client CreateCluster failed, %v", err)
 		return nil, err
 	}
 
+	// uodate cluster cloud id
 	err = cloudprovider.UpdateClusterSystemID(info.Cluster.ClusterID, eckCluster.ClusterId)
 	if err != nil {
 		blog.Errorf("createECKCluster[%s] updateClusterSystemID[%s] failed %s",
@@ -159,6 +168,7 @@ func createECKCluster(ctx context.Context, info *cloudprovider.CloudDependBasicI
 	return eckCluster, nil
 }
 
+// generateCreateECKReq build create cluster request
 func generateCreateECKReq(info *cloudprovider.CloudDependBasicInfo, vpcId, subnetId uint32, groups []*proto.NodeGroup) (
 	*api.CreateClusterRequest, error) {
 	var err error
@@ -166,6 +176,7 @@ func generateCreateECKReq(info *cloudprovider.CloudDependBasicInfo, vpcId, subne
 	compnents = append(compnents, &api.Component{Name: "prometheus"}, &api.Component{Name: "node-local-dns"})
 	blog.Infof("----------- generateCreateECKReq k8s version is %s", info.Cluster.ClusterBasicSettings.Version)
 
+	// build create cluster request
 	req := &api.CreateClusterRequest{
 		Components: compnents,
 		ContainerRuntime: &api.ContainerRuntime{
@@ -188,18 +199,21 @@ func generateCreateECKReq(info *cloudprovider.CloudDependBasicInfo, vpcId, subne
 		WorkerNodes: nil,
 	}
 
+	// generateK8SExtension build k8s extension
 	req.K8SExtension, err = generateK8SExtension(info.Cluster)
 	if err != nil {
 		blog.Errorf("createECKCluster generateK8SExtension failed, %v", err)
 		return nil, err
 	}
 
+	// generateMasterNodes build master nodes
 	req.MasterNodes, err = generateMasterNodes(info.Cluster, vpcId, subnetId)
 	if err != nil {
 		blog.Errorf("createECKCluster generateMasterNodes failed, %v", err)
 		return nil, err
 	}
 
+	// generateWorkerNodes build worker nodes
 	req.WorkerNodes, err = generateWorkerNodes(info.Cluster, vpcId, subnetId, groups)
 	if err != nil {
 		blog.Errorf("createECKCluster generateWorkerNodes failed, %v", err)
@@ -209,6 +223,7 @@ func generateCreateECKReq(info *cloudprovider.CloudDependBasicInfo, vpcId, subne
 	return req, nil
 }
 
+// generateK8SExtension build k8s extension
 func generateK8SExtension(cls *proto.Cluster) (string, error) {
 	extension, ok := cls.ExtraInfo[common.CloudClusterTypeKey]
 	if !ok {
@@ -221,6 +236,7 @@ func generateK8SExtension(cls *proto.Cluster) (string, error) {
 	return extension, nil
 }
 
+// generate Kube Proxy Mode
 func generateKubeProxyMode(cls *proto.Cluster) string {
 	if cls.ClusterAdvanceSettings.IPVS {
 		return "KUBEPROXYMODE_IPVS"
@@ -229,6 +245,7 @@ func generateKubeProxyMode(cls *proto.Cluster) string {
 	return "KUBEPROXYMODE_IPTABLES"
 }
 
+// generateLabels build labels
 func generateLabels(cls *proto.Cluster) []*api.Label {
 	labels := make([]*api.Label, 0)
 	for k, v := range cls.Labels {
@@ -238,9 +255,12 @@ func generateLabels(cls *proto.Cluster) []*api.Label {
 	return labels
 }
 
+// generateWorkerNodes build worker nodes
 func generateWorkerNodes(cls *proto.Cluster, vpcId, subnetId uint32, groups []*proto.NodeGroup) (
 	*api.WorkerNode, error) {
 	workerNodes := make([]*api.WorkerNode, 0)
+
+	// build worker nodes
 	for _, ng := range groups {
 		if ng.AutoScaling == nil {
 			return nil, fmt.Errorf("empty AutoScaling for cluster %s NodeGroup %s", cls.ClusterID, ng.Name)
@@ -308,11 +328,13 @@ func generateWorkerNodes(cls *proto.Cluster, vpcId, subnetId uint32, groups []*p
 	return workerNodes[0], nil
 }
 
+// generateMasterNodes build master nodes
 func generateMasterNodes(cls *proto.Cluster, vpcId, subnetId uint32) (*api.MasterNode, error) {
 	if cls.Template[0].InitLoginPassword == "" {
 		return nil, fmt.Errorf("empty InitLoginPassword for cluster %s", cls.ClusterID)
 	}
 
+	// build system disks
 	if cls.Template[0].SystemDisk == nil {
 		return nil, fmt.Errorf("empty system disk for cluster %s", cls.ClusterID)
 	}
@@ -322,12 +344,14 @@ func generateMasterNodes(cls *proto.Cluster, vpcId, subnetId uint32) (*api.Maste
 			cls.Template[0].SystemDisk.DiskSize, cls.ClusterID)
 	}
 
+	// parse passwd
 	passwd, err := encrypt.Decrypt(nil, cls.Template[0].InitLoginPassword)
 	if err != nil {
 		return nil, fmt.Errorf("generateWorkerNodes for cluster %s decrypt password failed, %v",
 			cls.ClusterID, err)
 	}
 
+	// data disks
 	dataDisks := make([]*api.Disk, 0)
 	for _, d := range cls.Template[0].DataDisks {
 		size, err := strconv.Atoi(d.DiskSize)
@@ -342,6 +366,7 @@ func generateMasterNodes(cls *proto.Cluster, vpcId, subnetId uint32) (*api.Maste
 		})
 	}
 
+	// build master nodes
 	masterNode := &api.MasterNode{
 		DataDisks:     dataDisks,
 		ImageName:     cls.ClusterBasicSettings.OS,
@@ -365,6 +390,7 @@ func generateMasterNodes(cls *proto.Cluster, vpcId, subnetId uint32) (*api.Maste
 	return masterNode, nil
 }
 
+// getVpcIdAndSubnetId get vpc/subnet
 func getVpcIdAndSubnetId(vpcs []*api.Vpc, cls *proto.Cluster) (uint32, uint32, error) {
 	var vpcId, subnetId uint32
 	for _, vpc := range vpcs {
@@ -408,6 +434,7 @@ func CheckECKClusterStatusTask(taskID string, stepName string) error {
 	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
 	systemID := state.Task.CommonParams[cloudprovider.CloudSystemID.String()]
 
+	// get depend basic info
 	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
 		ClusterID: clusterID,
 		CloudID:   cloudID,
@@ -486,6 +513,7 @@ func checkClusterStatus(ctx context.Context, info *cloudprovider.CloudDependBasi
 		return err
 	}
 
+	// failed status
 	if failed {
 		blog.Errorf("checkClusterStatus[%s] GeteckCluster[%s] failed: abnormal", taskID, info.Cluster.ClusterID)
 		retErr := fmt.Errorf("cluster[%s] status abnormal", info.Cluster.ClusterID)
@@ -518,6 +546,7 @@ func CheckECKNodesGroupStatusTask(taskID string, stepName string) error {
 		cloudprovider.NodeGroupIDKey.String(), ",")
 	systemID := state.Task.CommonParams[cloudprovider.CloudSystemID.String()]
 
+	// get depend basic info
 	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
 		ClusterID: clusterID,
 		CloudID:   cloudID,
@@ -569,6 +598,7 @@ func CheckECKNodesGroupStatusTask(taskID string, stepName string) error {
 	return nil
 }
 
+// checkNodesGroupStatus check nodeGroup status
 func checkNodesGroupStatus(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
 	systemID string, nodeGroupIDs []string) ([]string, []string, error) {
 
@@ -579,6 +609,7 @@ func checkNodesGroupStatus(ctx context.Context, info *cloudprovider.CloudDependB
 
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
+	// get node groups
 	nodeGroups := make([]*proto.NodeGroup, 0)
 	for _, ngID := range nodeGroupIDs {
 		nodeGroup, err := actions.GetNodeGroupByGroupID(cloudprovider.GetStorageModel(), ngID)
@@ -599,7 +630,7 @@ func checkNodesGroupStatus(ctx context.Context, info *cloudprovider.CloudDependB
 	defer cancel()
 
 	running, failure := make([]string, 0), make([]string, 0)
-	// loop cluster status
+	// loop cluster groups status
 	err = loop.LoopDoFunc(ctx, func() error {
 		index := 0
 		for _, ng := range nodeGroups {
@@ -704,6 +735,7 @@ func UpdateECKNodesGroupToDBTask(taskID string, stepName string) error {
 	return nil
 }
 
+// updateNodeGroups update node groups
 func updateNodeGroups(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
 	addFailedNodeGroupIDs, addSuccessNodeGroupIDs []string) error {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
@@ -820,6 +852,7 @@ func CheckECKClusterNodesStatusTask(taskID string, stepName string) error {
 	return nil
 }
 
+// checkClusterNodesStatus check cluster nodes status
 func checkClusterNodesStatus(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, // nolint
 	systemID string, nodeGroupIDs []string) ([]string, []string, error) {
 	var (
@@ -871,6 +904,7 @@ func checkClusterNodesStatus(ctx context.Context, info *cloudprovider.CloudDepen
 
 	// loop cluster status
 	err = loop.LoopDoFunc(ctx, func() error {
+		// ListNodes lists ECK cluster nodes
 		nodes, errGet := cli.ListNodes(&api.ListNodeReq{
 			ClusterID: systemID,
 			Page:      1,
@@ -919,6 +953,7 @@ func checkClusterNodesStatus(ctx context.Context, info *cloudprovider.CloudDepen
 		blog.Errorf("checkClusterNodesStatus[%s] ListNodes failed: %v", taskID, err)
 
 		running, failure := make([]string, 0), make([]string, 0)
+		// ListNodes lists ECK cluster nodes
 		nodes, errQuery := cli.ListNodes(&api.ListNodeReq{
 			ClusterID: systemID,
 			Page:      1,
@@ -972,8 +1007,10 @@ func UpdateECKNodesToDBTask(taskID string, stepName string) error {
 	// step login started here
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
 	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
+	// ParseNodeIpOrIdFromCommonMap parse nodeIDs or nodeIPs by chart
 	nodes := cloudprovider.ParseNodeIpOrIdFromCommonMap(state.Task.CommonParams,
 		cloudprovider.SuccessClusterNodeIDsKey.String(), ",")
+	// ParseNodeIpOrIdFromCommonMap parse nodeIDs or nodeIPs by chart
 	nodeGroupIDs := cloudprovider.ParseNodeIpOrIdFromCommonMap(state.Task.CommonParams,
 		cloudprovider.SuccessNodeGroupIDsKey.String(), ",")
 
@@ -1017,11 +1054,13 @@ func UpdateECKNodesToDBTask(taskID string, stepName string) error {
 	return nil
 }
 
+// update node to DB
 func updateNodeToDB(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, nodes, nodeGroupIDs []string) error {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
 	nodeGroups := make([]*proto.NodeGroup, 0)
 	for _, ngID := range nodeGroupIDs {
+		// GetNodeGroupByGroupID get nodeGroup info
 		nodeGroup, err := actions.GetNodeGroupByGroupID(cloudprovider.GetStorageModel(), ngID)
 		if err != nil {
 			return fmt.Errorf("get nodegroup information failed, %s", err.Error())
@@ -1037,6 +1076,7 @@ func updateNodeToDB(ctx context.Context, info *cloudprovider.CloudDependBasicInf
 	}
 
 	for _, n := range nodes {
+		// ListNodes lists ECK cluster nodes
 		result, errGet := cli.ListNodes(&api.ListNodeReq{
 			ClusterID: info.Cluster.SystemID,
 			NodeNames: n,
@@ -1057,6 +1097,7 @@ func updateNodeToDB(ctx context.Context, info *cloudprovider.CloudDependBasicInf
 				NodeName:     result[0].NodeName,
 				Status:       common.StatusRunning,
 			}
+			// create node
 			err = cloudprovider.GetStorageModel().CreateNode(context.Background(), node)
 			if err != nil {
 				return fmt.Errorf("updateNodeToDB CreateNode[%s] failed, %v", node.NodeName, err)
@@ -1077,6 +1118,7 @@ func updateNodeToDB(ctx context.Context, info *cloudprovider.CloudDependBasicInf
 					NodeName:     result[0].NodeName,
 					Status:       common.StatusRunning,
 				}
+				// create node
 				err = cloudprovider.GetStorageModel().CreateNode(context.Background(), node)
 				if err != nil {
 					return fmt.Errorf("updateNodeToDB CreateNode[%s] failed, %v", node.NodeName, err)
@@ -1144,6 +1186,7 @@ func RegisterClusterKubeConfigTask(taskID string, stepName string) error {
 	return nil
 }
 
+// import Cluster Credential
 func importClusterCredential(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) error {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
@@ -1154,6 +1197,7 @@ func importClusterCredential(ctx context.Context, info *cloudprovider.CloudDepen
 		return fmt.Errorf("importClusterCredential get cloud eck client err, %s", err.Error())
 	}
 
+	// GetKubeConfig gets kubeconfig
 	result, err := cli.GetKubeConfig(info.Cluster.SystemID)
 	if err != nil {
 		return fmt.Errorf("importClusterCredential[%s] GetKubeConfig failed, %v", taskID, err)
@@ -1163,6 +1207,7 @@ func importClusterCredential(ctx context.Context, info *cloudprovider.CloudDepen
 		return fmt.Errorf("importClusterCredential[%s] GetKubeConfig failed, empty ExternalKubeConfig", taskID)
 	}
 
+	// GetKubeConfigFromYAMLBody get kubeConfig from YAML file
 	kubeConfig, err := types.GetKubeConfigFromYAMLBody(false, types.YamlInput{
 		FileName:    "",
 		YamlContent: result.ExternalKubeConfig.Content,
@@ -1170,6 +1215,7 @@ func importClusterCredential(ctx context.Context, info *cloudprovider.CloudDepen
 	if err != nil {
 		return fmt.Errorf("importClusterCredential[%s] GetKubeConfigFromYAMLBody failed, %v", taskID, err)
 	}
+	// UpdateClusterCredentialByConfig update clusterCredential by kubeConfig
 	err = cloudprovider.UpdateClusterCredentialByConfig(info.Cluster.ClusterID, kubeConfig)
 	if err != nil {
 		return err

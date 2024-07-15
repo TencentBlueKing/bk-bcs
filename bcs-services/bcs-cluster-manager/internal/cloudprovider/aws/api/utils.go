@@ -20,11 +20,6 @@ import (
 	"net"
 	"time"
 
-	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -34,6 +29,12 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/aws-iam-authenticator/pkg/token"
+
+	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 )
 
 const (
@@ -141,12 +142,13 @@ func GetClusterKubeConfig(opt *cloudprovider.CommonOption, cluster *eks.Cluster)
 
 	cert, err := base64.StdEncoding.DecodeString(*cluster.CertificateAuthority.Data)
 	if err != nil {
-		return "", fmt.Errorf("GetClusterKubeConfig invalid certificate failed, cluster=%s: %w", *cluster.Name, err)
+		return "", fmt.Errorf("GetClusterKubeConfig invalid certificate failed, cluster=%s: %v",
+			*cluster.Name, err)
 	}
 
 	saToken, err := utils.GenerateSATokenByRestConfig(context.Background(), restConfig)
 	if err != nil {
-		return "", fmt.Errorf("getClusterKubeConfig generate k8s serviceaccount token failed,cluster=%s: %w",
+		return "", fmt.Errorf("getClusterKubeConfig generate k8s serviceaccount token failed,cluster=%s: %v",
 			*cluster.Name, err)
 	}
 
@@ -157,7 +159,7 @@ func GetClusterKubeConfig(opt *cloudprovider.CommonOption, cluster *eks.Cluster)
 			{
 				Name: *cluster.Name,
 				Cluster: types.ClusterInfo{
-					Server:                   "https://" + *cluster.Endpoint,
+					Server:                   *cluster.Endpoint,
 					CertificateAuthorityData: cert,
 				},
 			},
@@ -187,7 +189,7 @@ func GetClusterKubeConfig(opt *cloudprovider.CommonOption, cluster *eks.Cluster)
 		return "", fmt.Errorf("GetClusterKubeConfig marsh kubeconfig failed, %v", err)
 	}
 
-	return base64.StdEncoding.EncodeToString(configByte), nil
+	return encrypt.Encrypt(nil, string(configByte))
 }
 
 // MapToTaints converts a map of string-string to a slice of Taint
@@ -270,7 +272,7 @@ func CreateTagSpecs(instanceTags map[string]*string) []*ec2.LaunchTemplateTagSpe
 	}
 }
 
-func generateAwsCreateLaunchTemplateInput(input *CreateLaunchTemplateInput) *ec2.CreateLaunchTemplateInput {
+func buildLaunchTemplateData(input *CreateLaunchTemplateInput) *ec2.CreateLaunchTemplateInput {
 	awsInput := &ec2.CreateLaunchTemplateInput{
 		LaunchTemplateName: input.LaunchTemplateName,
 		TagSpecifications:  generateAwsTagSpecs(input.TagSpecifications),

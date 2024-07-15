@@ -112,10 +112,6 @@ func (h *HeartbeatItem) PbClientMetric() (*pbclient.Client, error) {
 	if h == nil {
 		return nil, errors.New("HeartbeatItem is nil, can not be convert to proto")
 	}
-	// 过滤没有目标版本号的数据，无意义
-	if h.Application.CursorID == "" {
-		return nil, nil
-	}
 
 	data := &pbclient.Client{
 		Spec: &pbclient.ClientSpec{
@@ -159,12 +155,6 @@ func (h *HeartbeatItem) PbClientEventMetric() (*pbce.ClientEvent, error) {
 		return nil, errors.New("HeartbeatItem is nil, can not be convert to proto")
 	}
 
-	// 客户端启动时可能有客户端连接和心跳数据，
-	// 但没有发生拉取和变更事件, 所以CursorID会存在空
-	// 过滤CursorID为空的数据，该数据没有任何意义
-	if h.Application.CursorID == "" {
-		return nil, nil
-	}
 	data := &pbce.ClientEvent{
 		Spec: &pbce.ClientEventSpec{
 			ReleaseChangeStatus: h.Application.ReleaseChangeStatus.String(),

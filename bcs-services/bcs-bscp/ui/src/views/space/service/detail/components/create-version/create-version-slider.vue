@@ -8,7 +8,14 @@
     <bk-loading :loading="pending" :title="t('版本生成中')">
       <div class="slider-form-content">
         <div class="version-basic-form">
-          <div class="section-title">{{ t('版本信息') }}</div>
+          <div class="section-title-area">
+            <div class="title">{{ t('版本信息') }}</div>
+            <div class="pushlish-checkbox">
+              <bk-checkbox v-model="goToPublish" :true-label="true" :false-label="false" @change="formChange">
+                <span style="font-size: 12px">{{ t('同时上线版本') }}</span>
+              </bk-checkbox>
+            </div>
+          </div>
           <bk-form class="form-wrapper" form-type="vertical" ref="formRef" :rules="rules" :model="formData">
             <bk-form-item :label="t('版本名称')" property="name" :required="true">
               <bk-input v-model="formData.name" :placeholder="t('请输入')" @input="formChange" />
@@ -22,13 +29,12 @@
                 @input="formChange"
                 :resize="true" />
             </bk-form-item>
-            <bk-checkbox v-model="goToPublish" :true-label="true" :false-label="false" @change="formChange">
-              <span style="font-size: 12px">{{ t('同时上线版本') }}</span>
-            </bk-checkbox>
           </bk-form>
         </div>
         <div class="variable-form" v-if="isFileType">
-          <div v-bkloading="{ loading }" class="section-title">{{ t('服务变量赋值') }}</div>
+          <div v-bkloading="{ loading }" class="section-title-area">
+            <div class="title">{{ t('服务变量赋值') }}</div>
+          </div>
           <ResetDefaultValue
             class="reset-default-btn"
             :bk-biz-id="bkBizId"
@@ -49,7 +55,7 @@
   import { useI18n } from 'vue-i18n';
   import { assign } from 'lodash';
   import { GET_UNNAMED_VERSION_DATA } from '../../../../../../constants/config';
-  import { createVersion } from '../../../../../../api/config';
+  import { createVersion, createVersionNameCheck } from '../../../../../../api/config';
   import useModalCloseConfirmation from '../../../../../../utils/hooks/use-modal-close-confirmation';
   import { IVariableEditParams } from '../../../../../../../types/variable';
   import { getUnReleasedAppVariables } from '../../../../../../api/variable';
@@ -93,6 +99,16 @@
           return true;
         },
         message: t('仅允许使用中文、英文、数字、下划线、中划线、点，且必须以中文、英文、数字开头和结尾'),
+      },
+      {
+        validator: async (value: string) => {
+          if (value.length > 0) {
+            const res = await createVersionNameCheck(props.bkBizId, props.appId, value);
+            return !res.data.exist;
+          }
+          return true;
+        },
+        message: t('版本名称已存在'),
       },
     ],
     memo: [
@@ -188,24 +204,32 @@
     height: calc(100vh - 101px);
     overflow: auto;
   }
-  .version-basic-form {
-    padding-bottom: 24px;
-    border-bottom: 1px solid #dcdee5;
-  }
   .variable-form {
     position: relative;
-    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #dcdee5;
     .reset-default-btn {
       position: absolute;
       top: 4px;
       right: 10px;
     }
   }
-  .section-title {
+  .section-title-area {
+    display: flex;
+    align-items: center;
     margin: 0 0 16px;
-    font-size: 14px;
-    font-weight: 700;
-    color: #63656e;
+    .title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #63656e;
+    }
+    .pushlish-checkbox {
+      display: flex;
+      align-items: center;
+      margin-left: 16px;
+      padding-left: 16px;
+      border-left: 1px solid #dcdee5;
+    }
   }
   .action-btns {
     border-top: 1px solid #dcdee5;

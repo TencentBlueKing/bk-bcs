@@ -18,7 +18,7 @@
       <div class="service-config">
         <div class="config-info">
           <span class="bk-bscp-icon icon-configuration-line"></span>
-          <span>{{ props.service.config?.count }}{{ isFileType ? t('个配置文件') : t('个配置项') }}</span>
+          <span>{{ props.service.config?.count }} {{ isFileType ? t('个配置文件') : t('个配置项') }}</span>
         </div>
         <div class="time-info">
           <span class="bk-bscp-icon icon-time-2" v-bk-tooltips="{ content: t('最新上线'), placement: 'top' }"></span>
@@ -194,18 +194,22 @@
       color: #63656e;
     }
     .service-config {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      margin: 12px 8px 16px;
+      padding: 0 8px;
       font-size: 12px;
       background: #f5f7fa;
       border-radius: 2px;
       color: #979ba5;
       line-height: 28px;
-      margin: 12px 8px;
-      padding-left: 8px;
-      display: flex;
-      align-items: end;
-      margin-bottom: 16px;
+      flex-wrap: wrap;
+      .config-info {
+        flex-shrink: 0;
+      }
       .time-info {
-        padding-left: 16px;
+        flex-shrink: 0;
       }
       .bk-bscp-icon {
         font-size: 14px;

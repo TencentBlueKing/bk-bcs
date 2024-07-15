@@ -16,6 +16,7 @@ package config
 import (
 	"os"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-common/common/util"
 	"gopkg.in/yaml.v2"
 
@@ -189,6 +190,7 @@ type ProjectConfig struct {
 	App                    AppConfig                    `yaml:"app"`
 	BcsGateway             BCSGatewayConfig             `yaml:"bcsGateway"`
 	ListForIAM             ListForIAMConfig             `yaml:"listForIAM"`
+	TracingConfig          conf.TracingConfig           `yaml:"tracingConfig"`
 }
 
 func (conf *ProjectConfig) initServerAddress() {

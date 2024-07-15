@@ -30,9 +30,9 @@ type Client struct {
 }
 
 // NewClient  return new client
-func NewClient(bkBizId int64, env, bkAppCode, bkAppSecret, accessToken, username string) *Client {
+func NewClient(env, bkAppCode, bkAppSecret, accessToken, username string) *Client {
 	return &Client{
-		BaseRequest: NewBaseRequest(bkBizId, bkAppCode, bkAppSecret, accessToken, username),
+		BaseRequest: NewBaseRequest(bkAppCode, bkAppSecret, accessToken, username),
 		Env:         env,
 		Host:        os.Getenv(EnvBkNodeManHost),
 	}
@@ -151,13 +151,14 @@ func (t *Client) CreateCloud(ctx context.Context, request *CreateCloudRequest) (
 	}
 
 	data := CloudID{}
-	var uri string
-	switch t.Env {
-	case EnvSg:
-		uri = "/cloud/create_cloud_area/"
-	default:
-		uri = "/cloud/"
-	}
+	// var uri string
+	// switch t.Env {
+	// case EnvSg:
+	// 	uri = "/cloud/create_cloud_area/"
+	// default:
+	// 	uri = "/cloud/"
+	// }
+	uri := "/cloud/"
 	baseResponse, err := t.SendRequest(ctx, http.MethodPost, uri, param, &data)
 	if err != nil {
 		return nil, err
@@ -277,7 +278,7 @@ func (t *Client) GetJobDetails(ctx context.Context, request *GetJobDetailRequest
 		GetJobDetailRequest: request,
 	}
 	data := &GetJobDetailData{}
-	uri := "/job/details/"
+	uri := fmt.Sprintf("/job/%d/details/", request.JobID)
 	baseResponse, err := t.SendRequest(ctx, http.MethodPost, uri, param, &data)
 	if err != nil {
 		return nil, err

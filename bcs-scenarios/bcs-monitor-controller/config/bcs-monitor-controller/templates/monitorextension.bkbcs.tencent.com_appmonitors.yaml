@@ -217,6 +217,28 @@ spec:
               ruleEnhance:
                 description: RuleEnhance 告警规则增强能力
                 properties:
+                  copyRules:
+                    items:
+                      description: CopyRules 根据基础配置额外生成一份告警规则, 允许根据不同告警策略设定不同告警组
+                      properties:
+                        namePrefix:
+                          type: string
+                        nameSuffix:
+                          type: string
+                        noticeGroupAppend:
+                          items:
+                            type: string
+                          type: array
+                        noticeGroupReplace:
+                          items:
+                            type: string
+                          type: array
+                        whereAdd:
+                          type: string
+                        whereOr:
+                          type: string
+                      type: object
+                    type: array
                   ignoreChange:
                     description: if true, controller will ignore resource's change
                     type: boolean
@@ -342,6 +364,10 @@ spec:
                           type: object
                         trigger:
                           type: string
+                        whereAdd:
+                          type: string
+                        whereOr:
+                          type: string
                       required:
                       - rule
                       type: object
@@ -354,8 +380,7 @@ spec:
                     type: string
                 type: object
               scenario:
-                description: 'INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-                  Important: Run "make" to regenerate code after modifying this file'
+                description: 监控场景名称
                 type: string
             required:
             - bizID

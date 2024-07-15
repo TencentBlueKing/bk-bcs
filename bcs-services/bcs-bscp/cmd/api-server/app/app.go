@@ -20,6 +20,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
+
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/api-server/options"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/api-server/service"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
@@ -102,13 +104,29 @@ func (as *apiServer) listenAndServe() error {
 	as.service = svc
 
 	network := cc.ApiServer().Network
-	addr := net.JoinHostPort(network.BindIP, strconv.Itoa(int(network.HttpPort)))
+	addr := tools.GetListenAddr(network.BindIP, int(network.HttpPort))
+	dualStackListener := listener.NewDualStackListener()
+	if e := dualStackListener.AddListenerWithAddr(addr); e != nil {
+		return e
+	}
+	logs.Infof("http server listen address: %s", addr)
+
+	for _, ip := range network.BindIPs {
+		if ip == network.BindIP {
+			continue
+		}
+		ipAddr := tools.GetListenAddr(ip, int(network.HttpPort))
+		if e := dualStackListener.AddListenerWithAddr(ipAddr); e != nil {
+			return e
+		}
+		logs.Infof("http server listen address: %s", ipAddr)
+	}
 
 	handler, err := as.service.Handler()
 	if err != nil {
 		return err
 	}
-	as.serve = &http.Server{Addr: addr, Handler: handler}
+	as.serve = &http.Server{Handler: handler}
 
 	go func() {
 		notifier := shutdown.AddNotifier()
@@ -132,20 +150,19 @@ func (as *apiServer) listenAndServe() error {
 		as.serve.TLSConfig = tlsC
 
 		go func() {
-			if err := as.serve.ListenAndServeTLS("", ""); err != nil {
+			if err := as.serve.ServeTLS(dualStackListener, "", ""); err != nil {
 				logs.Errorf("https server listen and serve failed, err: %v", err)
 				shutdown.SignalShutdownGracefully()
 			}
 		}()
 	} else {
 		go func() {
-			if err := as.serve.ListenAndServe(); err != nil {
+			if err := as.serve.Serve(dualStackListener); err != nil {
 				logs.Errorf("http server listen and serve failed, err: %v", err)
 				shutdown.SignalShutdownGracefully()
 			}
 		}()
 	}
-	logs.Infof("api server listen and serve success. addr=%s", addr)
 
 	return nil
 }

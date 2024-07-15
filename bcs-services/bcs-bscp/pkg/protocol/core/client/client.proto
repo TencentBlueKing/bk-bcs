@@ -33,6 +33,7 @@ message ClientSpec {
   string client_type = 14;
   string current_release_name = 15;
   string specific_failed_reason = 16;
+  string target_release_name = 17;
 }
 
 // ClientAttachment source resource reference: pkg/dal/table/client.go
@@ -58,7 +59,7 @@ message ClientResource {
 message ClientQueryCondition {
   string uid = 1;
   string ip = 2;
-  google.protobuf.Struct label = 3;           // 标签
+  repeated string label = 3;                  // 标签
   string current_release_name = 4;            // 当前版本
   string target_release_name = 5;             // 目标版本
   repeated string release_change_status = 6;  // 最近一次拉取状态：Success、Failed、Processing、Skip
@@ -66,6 +67,10 @@ message ClientQueryCondition {
   repeated string online_status = 8;          // 在线状态：online、offline
   string client_version = 9;                  // 客户端组件版本
   string client_type = 10;                    // 客户端组件类型
+  string failed_reason = 11;                  // 客户端失败主类原因
+  string start_pull_time = 12;                // 开始拉取时间
+  string end_pull_time = 13;                  // 结束拉取时间
+  repeated uint32 client_ids = 14;            // client id
 }
 
 // ClientCommonReq request param
@@ -73,6 +78,9 @@ message ClientCommonReq {
   uint32 biz_id = 1;
   uint32 app_id = 2;
   pbclient.ClientQueryCondition search = 3;
-  int64 last_heartbeat_time = 4;
-  int64 pull_time = 5;
+  int64 last_heartbeat_time = 4;            // 心跳时间
+  int64 pull_time = 5;                      // 拉取趋势时间
+  bool is_duplicates = 6;                   // 拉取趋势是否去重
+  string primary_key = 7;                   // 区分标签的主维度
+  google.protobuf.Struct foreign_keys = 8;  // 副维度的数据
 }

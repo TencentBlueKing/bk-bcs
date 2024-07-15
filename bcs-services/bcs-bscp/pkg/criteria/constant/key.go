@@ -56,6 +56,10 @@ const (
 
 	// ContentIDHeaderKey is common content sha256 id.
 	ContentIDHeaderKey = "X-Bkapi-File-Content-Id"
+	// PartNumHeaderKey is multipart upload part num key.
+	PartNumHeaderKey = "X-Bscp-Part-Num"
+	// MultipartUploadID is multipart upload id key.
+	UploadIDHeaderKey = "X-Bscp-Upload-Id"
 	// AppIDHeaderKey is app id.
 	AppIDHeaderKey = "X-Bscp-App-Id"
 	// TmplSpaceIDHeaderKey is template space id.
@@ -130,8 +134,17 @@ const (
 const (
 	// MaxUploadTextFileSize 最大上传文件大小
 	MaxUploadTextFileSize = 5 * 1024 * 1024
-	// MaxUploadContentLength 最大内容长度
-	MaxUploadContentLength = 100 * 1024 * 1024
 	// MaxConcurrentUpload 限制上传文件并发数
 	MaxConcurrentUpload = 10
+	// UploadBatchSize 上传时分批检测文件路冲突
+	UploadBatchSize = 50
+	// UploadTemporaryDirectory 上传的临时目录
+	UploadTemporaryDirectory = "upload/files"
+	// MB 字节
+	MB = 1 << 20 // 1MB = 2^20 bytes
+)
+
+const (
+	// LabelKeyAgentID is the key of agent id in bcs node labels.
+	LabelKeyAgentID = "bkcmdb.tencent.com/bk-agent-id"
 )

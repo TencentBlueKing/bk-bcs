@@ -3,10 +3,11 @@
 <script>
 import mixinBaseInstantiation from '../mixins/mixin-base-instantiation';
 
-import Header from '@/components/layout/Header.vue';
+import BcsContent from '@/components/layout/Content.vue';
+import Row from '@/components/layout/Row.vue';
 
 export default {
-  components: { Header },
+  components: { BcsContent, Row },
   mixins: [mixinBaseInstantiation],
   data() {
     return {

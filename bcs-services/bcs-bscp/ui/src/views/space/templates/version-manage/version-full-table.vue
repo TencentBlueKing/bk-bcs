@@ -7,10 +7,13 @@
     @page-value-change="emits('page-value-change', $event)"
     @page-limit-change="emits('page-limit-change', $event)">
     <bk-table-column :label="t('版本号')" prop="spec.revision_name">
-      <template #default="{ row }">
-        <bk-button v-if="row.spec" text theme="primary" @click="emits('select', row.id)">{{
-          row.spec.revision_name
-        }}</bk-button>
+      <template #default="{ row, index }">
+        <div class="revision_name">
+          <bk-button v-if="row.spec" text theme="primary" @click="emits('select', row.id)">{{
+            row.spec.revision_name
+          }}</bk-button>
+          <bk-tag v-if="index === 0" theme="success"> latest </bk-tag>
+        </div>
       </template>
     </bk-table-column>
     <bk-table-column :label="t('版本说明')">
@@ -120,7 +123,7 @@
 
   const handleDownload = async (version: ITemplateVersionItem) => {
     const { name, revision_name, content_spec } = version.spec;
-    const content = await downloadTemplateContent(props.spaceId, props.templateSpaceId, content_spec.signature);
+    const content = await downloadTemplateContent(props.spaceId, props.templateSpaceId, content_spec.signature, true);
     fileDownload(content, `${name}_${revision_name}`);
   };
 
@@ -142,6 +145,12 @@
   .version-table {
     width: 100%;
     background: #ffffff;
+    .revision_name {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      height: 100%;
+    }
   }
   .actions-wrapper {
     .bk-button {

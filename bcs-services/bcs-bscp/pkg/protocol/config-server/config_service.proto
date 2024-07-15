@@ -25,6 +25,7 @@ import "pkg/protocol/core/template-variable/template_variable.proto";
 import "pkg/protocol/core/kv/kvs.proto";
 import "pkg/protocol/core/released-kv/released_kv.proto";
 import "google/api/annotations.proto";
+import "google/api/visibility.proto";
 import "google/protobuf/struct.proto";
 
 package pbcs;
@@ -32,6 +33,7 @@ package pbcs;
 option go_package = "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/config-server;pbcs";
 
 service Config {
+  option (google.api.api_visibility).restriction = "BKAPIGW";
   rpc CreateApp(CreateAppReq) returns (CreateAppResp) {
     option (google.api.http) = {
       post: "/api/v1/config/create/app/app/biz_id/{biz_id}"
@@ -75,7 +77,8 @@ service Config {
 
   rpc CreateConfigItem(CreateConfigItemReq) returns (CreateConfigItemResp) {
     option (google.api.http) = {
-      post: "/api/v1/config/create/config_item/config_item/app_id/{app_id}/biz_id/{biz_id}"
+      post: "/api/v1/config/create/config_item/config_item/app_id/{app_id}/"
+            "biz_id/{biz_id}"
       body: "*"
     };
   }
@@ -87,39 +90,46 @@ service Config {
   }
   rpc UpdateConfigItem(UpdateConfigItemReq) returns (UpdateConfigItemResp) {
     option (google.api.http) = {
-      put: "/api/v1/config/update/config_item/config_item/config_item_id/{id}/app_id/{app_id}/biz_id/{biz_id}"
+      put: "/api/v1/config/update/config_item/config_item/config_item_id/{id}/"
+           "app_id/{app_id}/biz_id/{biz_id}"
       body: "*"
     };
   }
   rpc DeleteConfigItem(DeleteConfigItemReq) returns (DeleteConfigItemResp) {
     option (google.api.http) = {
-      delete: "/api/v1/config/delete/config_item/config_item/config_item_id/{id}/app_id/{app_id}/biz_id/{biz_id}"
+      delete: "/api/v1/config/delete/config_item/config_item/config_item_id/"
+              "{id}/app_id/{app_id}/biz_id/{biz_id}"
     };
   }
   rpc BatchDeleteConfigItems(BatchDeleteAppResourcesReq) returns (BatchDeleteResp) {
     option (google.api.http) = {
-      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/config_items/batch_delete"
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/config_items/"
+            "batch_delete"
       body: "*"
     };
   }
   rpc UnDeleteConfigItem(UnDeleteConfigItemReq) returns (UnDeleteConfigItemResp) {
     option (google.api.http) = {
-      post: "/api/v1/config/undelete/config_item/config_item/config_item_id/{id}/app_id/{app_id}/biz_id/{biz_id}"
+      post: "/api/v1/config/undelete/config_item/config_item/config_item_id/"
+            "{id}/app_id/{app_id}/biz_id/{biz_id}"
     };
   }
   rpc UndoConfigItem(UndoConfigItemReq) returns (UndoConfigItemResp) {
     option (google.api.http) = {
-      post: "/api/v1/config/undo/config_item/config_item/config_item_id/{id}/app_id/{app_id}/biz_id/{biz_id}"
+      post: "/api/v1/config/undo/config_item/config_item/config_item_id/{id}/"
+            "app_id/{app_id}/biz_id/{biz_id}"
     };
   }
   rpc GetConfigItem(GetConfigItemReq) returns (GetConfigItemResp) {
     option (google.api.http) = {
-      get: "/api/v1/config/biz/{biz_id}/apps/{app_id}/config_items/{config_item_id}"
+      get: "/api/v1/config/biz/{biz_id}/apps/{app_id}/config_items/"
+           "{config_item_id}"
     };
   }
   rpc GetReleasedConfigItem(GetReleasedConfigItemReq) returns (GetReleasedConfigItemResp) {
     option (google.api.http) = {
-      get: "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/config_items/{config_item_id}"
+      get: "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/"
+           "config_items/{config_item_id}"
     };
   }
   rpc ListConfigItems(ListConfigItemsReq) returns (ListConfigItemsResp) {
@@ -129,7 +139,8 @@ service Config {
   }
   rpc ListReleasedConfigItems(ListReleasedConfigItemsReq) returns (ListReleasedConfigItemsResp) {
     option (google.api.http) = {
-      get: "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/config_items"
+      get: "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/"
+           "config_items"
     };
   }
   rpc ListConfigItemCount(ListConfigItemCountReq) returns (ListConfigItemCountResp) {
@@ -148,12 +159,14 @@ service Config {
   // ReleasedKv
   rpc GetReleasedKv(GetReleasedKvReq) returns (GetReleasedKvResp) {
     option (google.api.http) = {
-      get: "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/kvs/{key}"
+      get: "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/"
+           "kvs/{key}"
     };
   }
   rpc ListReleasedKvs(ListReleasedKvsReq) returns (ListReleasedKvsResp) {
     option (google.api.http) = {
-      get: "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/kvs"
+      get: "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/"
+           "kvs"
     };
   }
 
@@ -166,7 +179,8 @@ service Config {
 
   rpc CreateRelease(CreateReleaseReq) returns (CreateReleaseResp) {
     option (google.api.http) = {
-      post: "/api/v1/config/create/release/release/app_id/{app_id}/biz_id/{biz_id}"
+      post: "/api/v1/config/create/release/release/app_id/{app_id}/biz_id/"
+            "{biz_id}"
       body: "*"
     };
   }
@@ -177,7 +191,8 @@ service Config {
   }
   rpc GetReleaseByName(GetReleaseByNameReq) returns (pbrelease.Release) {
     option (google.api.http) = {
-      get: "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/query/name/{release_name}"
+      get: "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/query/name/"
+           "{release_name}"
     };
   }
   rpc GetRelease(GetReleaseReq) returns (pbrelease.Release) {
@@ -187,12 +202,14 @@ service Config {
   }
   rpc DeprecateRelease(DeprecateReleaseReq) returns (DeprecateReleaseResp) {
     option (google.api.http) = {
-      put: "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/deprecate"
+      put: "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/"
+           "deprecate"
     };
   }
   rpc UnDeprecateRelease(UnDeprecateReleaseReq) returns (UnDeprecateReleaseResp) {
     option (google.api.http) = {
-      put: "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/undeprecate"
+      put: "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/"
+           "undeprecate"
       body: "*"
     };
   }
@@ -201,6 +218,12 @@ service Config {
       delete: "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}"
     };
   }
+  rpc CheckReleaseName(CheckReleaseNameReq) returns (CheckReleaseNameResp) {
+    option (google.api.http) = {
+      get: "/api/v1/config/biz_id/{biz_id}/app_id/{app_id}/release/{name}/check"
+    };
+  }
+
   rpc CreateHook(CreateHookReq) returns (CreateHookResp) {
     option (google.api.http) = {
       post: "/api/v1/config/biz/{biz_id}/hooks"
@@ -215,6 +238,12 @@ service Config {
   rpc BatchDeleteHook(BatchDeleteHookReq) returns (BatchDeleteResp) {
     option (google.api.http) = {
       post: "/api/v1/config/biz/{biz_id}/hooks/batch_delete"
+      body: "*"
+    };
+  }
+  rpc UpdateHook(UpdateHookReq) returns (UpdateHookResp) {
+    option (google.api.http) = {
+      put: "/api/v1/config/biz/{biz_id}/hooks/{hook_id}"
       body: "*"
     };
   }
@@ -247,22 +276,26 @@ service Config {
   }
   rpc DeleteHookRevision(DeleteHookRevisionReq) returns (DeleteHookRevisionResp) {
     option (google.api.http) = {
-      delete: "/api/v1/config/biz/{biz_id}/hooks/{hook_id}/hook_revisions/{revision_id}"
+      delete: "/api/v1/config/biz/{biz_id}/hooks/{hook_id}/hook_revisions/"
+              "{revision_id}"
     };
   }
   rpc PublishHookRevision(PublishHookRevisionReq) returns (PublishHookRevisionResp) {
     option (google.api.http) = {
-      put: "/api/v1/config/biz/{biz_id}/hooks/{hook_id}/hook_revisions/{revision_id}/publish"
+      put: "/api/v1/config/biz/{biz_id}/hooks/{hook_id}/hook_revisions/"
+           "{revision_id}/publish"
     };
   }
   rpc GetHookRevision(GetHookRevisionReq) returns (pbhr.HookRevision) {
     option (google.api.http) = {
-      get: "/api/v1/config/biz/{biz_id}/hooks/{hook_id}/hook_revisions/{revision_id}"
+      get: "/api/v1/config/biz/{biz_id}/hooks/{hook_id}/hook_revisions/"
+           "{revision_id}"
     };
   }
   rpc UpdateHookRevision(UpdateHookRevisionReq) returns (UpdateHookRevisionResp) {
     option (google.api.http) = {
-      put: "/api/v1/config/biz/{biz_id}/hooks/{hook_id}/hook_revisions/{revision_id}"
+      put: "/api/v1/config/biz/{biz_id}/hooks/{hook_id}/hook_revisions/"
+           "{revision_id}"
       body: "*"
     };
   }
@@ -273,12 +306,14 @@ service Config {
   }
   rpc ListHookRevisionReferences(ListHookRevisionReferencesReq) returns (ListHookRevisionReferencesResp) {
     option (google.api.http) = {
-      get: "/api/v1/config/biz/{biz_id}/hooks/{hook_id}/hook_revisions/{revision_id}/references"
+      get: "/api/v1/config/biz/{biz_id}/hooks/{hook_id}/hook_revisions/"
+           "{revision_id}/references"
     };
   }
   rpc GetReleaseHook(GetReleaseHookReq) returns (GetReleaseHookResp) {
     option (google.api.http) = {
-      get: "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/hooks"
+      get: "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/"
+           "hooks"
     };
   }
 
@@ -326,46 +361,60 @@ service Config {
 
   rpc CreateTemplate(CreateTemplateReq) returns (CreateTemplateResp) {
     option (google.api.http) = {
-      post: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates"
+      post: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/"
+            "templates"
       body: "*"
     };
   }
   rpc DeleteTemplate(DeleteTemplateReq) returns (DeleteTemplateResp) {
     option (google.api.http) = {
-      delete: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}"
+      delete: "/api/v1/config/biz/{biz_id}/template_spaces/"
+              "{template_space_id}/templates/{template_id}"
     };
   }
   rpc BatchDeleteTemplate(BatchDeleteTemplateReq) returns (BatchDeleteTemplateResp) {
     option (google.api.http) = {
-      delete: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates"
+      delete: "/api/v1/config/biz/{biz_id}/template_spaces/"
+              "{template_space_id}/templates"
     };
   }
   rpc UpdateTemplate(UpdateTemplateReq) returns (UpdateTemplateResp) {
     option (google.api.http) = {
-      put: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}"
+      put: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/"
+           "templates/{template_id}"
       body: "*"
     };
   }
   rpc ListTemplates(ListTemplatesReq) returns (ListTemplatesResp) {
     option (google.api.http) = {
-      get: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates"
+      get: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/"
+           "templates"
     };
   }
   rpc BatchUpsertTemplates(BatchUpsertTemplatesReq) returns (BatchUpsertTemplatesResp) {
     option (google.api.http) = {
-      post: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/batch_upsert_templates"
+      post: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/"
+            "templates/batch_upsert_templates"
+      body: "*"
+    };
+  }
+  rpc BatchUpdateTemplatePermissions(BatchUpdateTemplatePermissionsReq) returns (BatchUpdateTemplatePermissionsResp) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/templates/batch_update_templates_permissions"
       body: "*"
     };
   }
   rpc AddTmplsToTmplSets(AddTmplsToTmplSetsReq) returns (AddTmplsToTmplSetsResp) {
     option (google.api.http) = {
-      post: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/add_to_template_sets"
+      post: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/"
+            "templates/add_to_template_sets"
       body: "*"
     };
   }
   rpc DeleteTmplsFromTmplSets(DeleteTmplsFromTmplSetsReq) returns (DeleteTmplsFromTmplSetsResp) {
     option (google.api.http) = {
-      post: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/delete_from_template_sets"
+      post: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/"
+            "templates/delete_from_template_sets"
       body: "*"
     };
   }
@@ -377,35 +426,54 @@ service Config {
   }
   rpc ListTemplatesNotBound(ListTemplatesNotBoundReq) returns (ListTemplatesNotBoundResp) {
     option (google.api.http) = {
-      get: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/list_not_bound"
+      get: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/"
+           "templates/list_not_bound"
     };
   }
   rpc ListTemplateByTuple(ListTemplateByTupleReq) returns (ListTemplateByTupleResp) {
     option (google.api.http) = {
-      post: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/tuple"
+      post: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/"
+            "templates/tuple"
       body: "*"
     };
   }
   rpc ListTmplsOfTmplSet(ListTmplsOfTmplSetReq) returns (ListTmplsOfTmplSetResp) {
     option (google.api.http) = {
-      get: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/{template_set_id}/templates"
+      get: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/"
+           "template_sets/{template_set_id}/templates"
     };
   }
 
   rpc CreateTemplateRevision(CreateTemplateRevisionReq) returns (CreateTemplateRevisionResp) {
     option (google.api.http) = {
-      post: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions"
+      post: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/"
+            "templates/{template_id}/template_revisions"
+      body: "*"
+    };
+  }
+  rpc UpdateTemplateRevision(UpdateTemplateRevisionReq) returns (UpdateTemplateRevisionResp) {
+    option (google.api.http) = {
+      put: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/"
+           "templates/{template_id}/template_revisions"
       body: "*"
     };
   }
   rpc ListTemplateRevisions(ListTemplateRevisionsReq) returns (ListTemplateRevisionsResp) {
     option (google.api.http) = {
-      get: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions"
+      get: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/"
+           "templates/{template_id}/template_revisions"
+    };
+  }
+  rpc GetTemplateRevision(GetTemplateRevisionReq) returns (GetTemplateRevisionResp) {
+    option (google.api.http) = {
+      get: "/api/v1/config/biz/{biz_id}/templates/{template_id}/template_revisions"
     };
   }
   /* 暂时不对外开发（删除模版后，服务引用的latest版本会回退到上一个老版本）
-  rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (DeleteTemplateRevisionResp) {
-      option (google.api.http) = {
+  rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns
+(DeleteTemplateRevisionResp) {
+
+option (google.api.http) = {
           delete :
   "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
       };
@@ -419,31 +487,36 @@ service Config {
   }
   rpc ListTmplRevisionNamesByTmplIDs(ListTmplRevisionNamesByTmplIDsReq) returns (ListTmplRevisionNamesByTmplIDsResp) {
     option (google.api.http) = {
-      post: "/api/v1/config/biz/{biz_id}/template_revisions/list_names_by_template_ids"
+      post: "/api/v1/config/biz/{biz_id}/template_revisions/"
+            "list_names_by_template_ids"
       body: "*"
     };
   }
 
   rpc CreateTemplateSet(CreateTemplateSetReq) returns (CreateTemplateSetResp) {
     option (google.api.http) = {
-      post: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets"
+      post: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/"
+            "template_sets"
       body: "*"
     };
   }
   rpc DeleteTemplateSet(DeleteTemplateSetReq) returns (DeleteTemplateSetResp) {
     option (google.api.http) = {
-      delete: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/{template_set_id}"
+      delete: "/api/v1/config/biz/{biz_id}/template_spaces/"
+              "{template_space_id}/template_sets/{template_set_id}"
     };
   }
   rpc UpdateTemplateSet(UpdateTemplateSetReq) returns (UpdateTemplateSetResp) {
     option (google.api.http) = {
-      put: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/{template_set_id}"
+      put: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/"
+           "template_sets/{template_set_id}"
       body: "*"
     };
   }
   rpc ListTemplateSets(ListTemplateSetsReq) returns (ListTemplateSetsResp) {
     option (google.api.http) = {
-      get: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets"
+      get: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/"
+           "template_sets"
     };
   }
   rpc ListAppTemplateSets(ListAppTemplateSetsReq) returns (ListAppTemplateSetsResp) {
@@ -471,12 +544,14 @@ service Config {
   }
   rpc DeleteAppTemplateBinding(DeleteAppTemplateBindingReq) returns (DeleteAppTemplateBindingResp) {
     option (google.api.http) = {
-      delete: "/api/v1/config/biz/{biz_id}/apps/{app_id}/template_bindings/{binding_id}"
+      delete: "/api/v1/config/biz/{biz_id}/apps/{app_id}/template_bindings/"
+              "{binding_id}"
     };
   }
   rpc UpdateAppTemplateBinding(UpdateAppTemplateBindingReq) returns (UpdateAppTemplateBindingResp) {
     option (google.api.http) = {
-      put: "/api/v1/config/biz/{biz_id}/apps/{app_id}/template_bindings/{binding_id}"
+      put: "/api/v1/config/biz/{biz_id}/apps/{app_id}/template_bindings/"
+           "{binding_id}"
       body: "*"
     };
   }
@@ -493,101 +568,121 @@ service Config {
   rpc ListReleasedAppBoundTmplRevisions(ListReleasedAppBoundTmplRevisionsReq)
       returns (ListReleasedAppBoundTmplRevisionsResp) {
     option (google.api.http) = {
-      get: "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/template_revisions"
+      get: "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/"
+           "template_revisions"
     };
   }
   rpc GetReleasedAppBoundTmplRevision(GetReleasedAppBoundTmplRevisionReq)
       returns (GetReleasedAppBoundTmplRevisionResp) {
     option (google.api.http) = {
-      get: "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/template_revisions/{template_revision_id}"
+      get: "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/"
+           "template_revisions/{template_revision_id}"
     };
   }
   rpc UpdateAppBoundTmplRevisions(UpdateAppBoundTmplRevisionsReq) returns (UpdateAppBoundTmplRevisionsResp) {
     option (google.api.http) = {
-      put: "/api/v1/config/biz/{biz_id}/apps/{app_id}/template_bindings/{binding_id}/template_revisions"
+      put: "/api/v1/config/biz/{biz_id}/apps/{app_id}/template_bindings/"
+           "{binding_id}/template_revisions"
       body: "*"
     };
   }
   rpc DeleteAppBoundTmplSets(DeleteAppBoundTmplSetsReq) returns (DeleteAppBoundTmplSetsResp) {
     option (google.api.http) = {
-      delete: "/api/v1/config/biz/{biz_id}/apps/{app_id}/template_bindings/{binding_id}/template_sets"
+      delete: "/api/v1/config/biz/{biz_id}/apps/{app_id}/template_bindings/"
+              "{binding_id}/template_sets"
     };
   }
   rpc CheckAppTemplateBinding(CheckAppTemplateBindingReq) returns (CheckAppTemplateBindingResp) {
     option (google.api.http) = {
-      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/template_bindings/conflict_check"
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/template_bindings/"
+            "conflict_check"
       body: "*"
     };
   }
 
   rpc ListTmplBoundCounts(ListTmplBoundCountsReq) returns (ListTmplBoundCountsResp) {
     option (google.api.http) = {
-      post: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/bound_counts"
+      post: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/"
+            "templates/bound_counts"
       body: "*"
     };
   }
   rpc ListTmplRevisionBoundCounts(ListTmplRevisionBoundCountsReq) returns (ListTmplRevisionBoundCountsResp) {
     option (google.api.http) = {
-      post: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/bound_counts"
+      post: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/"
+            "templates/{template_id}/template_revisions/bound_counts"
       body: "*"
     };
   }
   rpc ListTmplSetBoundCounts(ListTmplSetBoundCountsReq) returns (ListTmplSetBoundCountsResp) {
     option (google.api.http) = {
-      post: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/bound_counts"
+      post: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/"
+            "template_sets/bound_counts"
       body: "*"
     };
   }
   rpc ListTmplBoundUnnamedApps(ListTmplBoundUnnamedAppsReq) returns (ListTmplBoundUnnamedAppsResp) {
     option (google.api.http) = {
-      get: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/bound_unnamed_app_details"
+      get: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/"
+           "templates/{template_id}/bound_unnamed_app_details"
     };
   }
   rpc ListTmplBoundNamedApps(ListTmplBoundNamedAppsReq) returns (ListTmplBoundNamedAppsResp) {
     option (google.api.http) = {
-      get: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/bound_named_app_details"
+      get: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/"
+           "templates/{template_id}/bound_named_app_details"
     };
   }
   rpc ListTmplBoundTmplSets(ListTmplBoundTmplSetsReq) returns (ListTmplBoundTmplSetsResp) {
     option (google.api.http) = {
-      get: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/bound_template_set_details"
+      get: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/"
+           "templates/{template_id}/bound_template_set_details"
     };
   }
   rpc ListMultiTmplBoundTmplSets(ListMultiTmplBoundTmplSetsReq) returns (ListMultiTmplBoundTmplSetsResp) {
     option (google.api.http) = {
-      get: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/bound_template_set_details"
+      get: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/"
+           "templates/bound_template_set_details"
     };
   }
   rpc ListTmplRevisionBoundUnnamedApps(ListTmplRevisionBoundUnnamedAppsReq)
       returns (ListTmplRevisionBoundUnnamedAppsResp) {
     option (google.api.http) = {
-      get: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}/bound_unnamed_app_details"
+      get: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/"
+           "templates/{template_id}/template_revisions/{template_revision_id}/"
+           "bound_unnamed_app_details"
     };
   }
   rpc ListTmplRevisionBoundNamedApps(ListTmplRevisionBoundNamedAppsReq) returns (ListTmplRevisionBoundNamedAppsResp) {
     option (google.api.http) = {
-      get: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}/bound_named_app_details"
+      get: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/"
+           "templates/{template_id}/template_revisions/{template_revision_id}/"
+           "bound_named_app_details"
     };
   }
   rpc ListTmplSetBoundUnnamedApps(ListTmplSetBoundUnnamedAppsReq) returns (ListTmplSetBoundUnnamedAppsResp) {
     option (google.api.http) = {
-      get: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/{template_set_id}/bound_unnamed_app_details"
+      get: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/"
+           "template_sets/{template_set_id}/bound_unnamed_app_details"
     };
   }
   rpc ListMultiTmplSetBoundUnnamedApps(ListMultiTmplSetBoundUnnamedAppsReq)
       returns (ListMultiTmplSetBoundUnnamedAppsResp) {
     option (google.api.http) = {
-      get: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/bound_unnamed_app_details"
+      get: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/"
+           "template_sets/bound_unnamed_app_details"
     };
   }
   rpc ListTmplSetBoundNamedApps(ListTmplSetBoundNamedAppsReq) returns (ListTmplSetBoundNamedAppsResp) {
     option (google.api.http) = {
-      get: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/{template_set_id}/bound_named_app_details"
+      get: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/"
+           "template_sets/{template_set_id}/bound_named_app_details"
     };
   }
   rpc ListLatestTmplBoundUnnamedApps(ListLatestTmplBoundUnnamedAppsReq) returns (ListLatestTmplBoundUnnamedAppsResp) {
     option (google.api.http) = {
-      get: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/latest/bound_unnamed_app_details"
+      get: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/"
+           "templates/{template_id}/latest/bound_unnamed_app_details"
     };
   }
 
@@ -599,7 +694,8 @@ service Config {
   }
   rpc DeleteTemplateVariable(DeleteTemplateVariableReq) returns (DeleteTemplateVariableResp) {
     option (google.api.http) = {
-      delete: "/api/v1/config/biz/{biz_id}/template_variables/{template_variable_id}"
+      delete: "/api/v1/config/biz/{biz_id}/template_variables/"
+              "{template_variable_id}"
     };
   }
   rpc BatchDeleteTemplateVariable(BatchDeleteBizResourcesReq) returns (BatchDeleteResp) {
@@ -610,7 +706,8 @@ service Config {
   }
   rpc UpdateTemplateVariable(UpdateTemplateVariableReq) returns (UpdateTemplateVariableResp) {
     option (google.api.http) = {
-      put: "/api/v1/config/biz/{biz_id}/template_variables/{template_variable_id}"
+      put: "/api/v1/config/biz/{biz_id}/template_variables/"
+           "{template_variable_id}"
       body: "*"
     };
   }
@@ -628,17 +725,20 @@ service Config {
 
   rpc ExtractAppTmplVariables(ExtractAppTmplVariablesReq) returns (ExtractAppTmplVariablesResp) {
     option (google.api.http) = {
-      get: "/api/v1/config/biz/{biz_id}/apps/{app_id}/extract_template_variables"
+      get: "/api/v1/config/biz/{biz_id}/apps/{app_id}/"
+           "extract_template_variables"
     };
   }
   rpc GetAppTmplVariableRefs(GetAppTmplVariableRefsReq) returns (GetAppTmplVariableRefsResp) {
     option (google.api.http) = {
-      get: "/api/v1/config/biz/{biz_id}/apps/{app_id}/template_variables_references"
+      get: "/api/v1/config/biz/{biz_id}/apps/{app_id}/"
+           "template_variables_references"
     };
   }
   rpc GetReleasedAppTmplVariableRefs(GetReleasedAppTmplVariableRefsReq) returns (GetReleasedAppTmplVariableRefsResp) {
     option (google.api.http) = {
-      get: "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/template_variables_references"
+      get: "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/"
+           "template_variables_references"
     };
   }
   rpc UpdateAppTmplVariables(UpdateAppTmplVariablesReq) returns (UpdateAppTmplVariablesResp) {
@@ -654,7 +754,8 @@ service Config {
   }
   rpc ListReleasedAppTmplVariables(ListReleasedAppTmplVariablesReq) returns (ListReleasedAppTmplVariablesResp) {
     option (google.api.http) = {
-      get: "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/template_variables"
+      get: "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/"
+           "template_variables"
     };
   }
 
@@ -697,14 +798,17 @@ service Config {
     };
   }
   rpc GetGroupByName(GetGroupByNameReq) returns (pbgroup.Group) {
+    option (google.api.method_visibility).restriction = "BKAPIGW";
     option (google.api.http) = {
       get: "/api/v1/config/biz/{biz_id}/groups/query/name/{group_name}"
     };
   }
 
   rpc Publish(PublishReq) returns (PublishResp) {
+    option (google.api.method_visibility).restriction = "BKAPIGW";
     option (google.api.http) = {
-      post: "/api/v1/config/update/strategy/publish/publish/release_id/{release_id}/app_id/{app_id}/biz_id/{biz_id}"
+      post: "/api/v1/config/update/strategy/publish/publish/release_id/"
+            "{release_id}/app_id/{app_id}/biz_id/{biz_id}"
       body: "*"
     };
   }
@@ -805,6 +909,12 @@ service Config {
       post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/kvs/{key}/undo"
     };
   };
+  rpc ImportKvs(ImportKvsReq) returns (ImportKvsResp) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/kvs/{format}/import"
+      body: "*"
+    };
+  };
 
   rpc ListClients(ListClientsReq) returns (ListClientsResp) {
     option (google.api.http) = {
@@ -815,7 +925,15 @@ service Config {
 
   rpc ListClientEvents(ListClientEventsReq) returns (ListClientEventsResp) {
     option (google.api.http) = {
-      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/client_events/{client_id}"
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/client_events/"
+            "{client_id}"
+      body: "*"
+    };
+  };
+
+  rpc RetryClients(RetryClientsReq) returns (RetryClientsResp) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/clients/retry"
       body: "*"
     };
   };
@@ -843,17 +961,25 @@ service Config {
       delete: "/api/v1/config/biz/{biz_id}/apps/{app_id}/client_querys/{id}"
     };
   };
+  rpc CheckClientQueryName(CheckClientQueryNameReq) returns (CheckClientQueryNameResp) {
+    option (google.api.http) = {
+      get: "/api/v1/config/biz/{biz_id}/apps/{app_id}/client_querys/"
+           "check_exists"
+    };
+  };
 
   // client chart related interface
   rpc ClientConfigVersionStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {
     option (google.api.http) = {
-      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/clients/config_version_statistics"
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/clients/"
+            "config_version_statistics"
       body: "*"
     };
   };
   rpc ClientPullTrendStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {
     option (google.api.http) = {
-      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/clients/pull_trend_statistics"
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/clients/"
+            "pull_trend_statistics"
       body: "*"
     };
   };
@@ -865,28 +991,52 @@ service Config {
   };
   rpc ClientLabelStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {
     option (google.api.http) = {
-      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/clients/label_statistics"
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/clients/"
+            "label_statistics"
       body: "*"
     };
   };
   rpc ClientAnnotationStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {
     option (google.api.http) = {
-      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/clients/annotation_statistics"
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/clients/"
+            "annotation_statistics"
       body: "*"
     };
   };
   rpc ClientVersionStatistics(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {
     option (google.api.http) = {
-      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/clients/version_statistics"
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/clients/"
+            "version_statistics"
       body: "*"
     };
   };
   rpc ListClientLabelAndAnnotation(ListClientLabelAndAnnotationReq) returns (google.protobuf.Struct) {
     option (google.api.http) = {
-      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/clients/labels_and_annotations"
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/clients/"
+            "labels_and_annotations"
       body: "*"
     };
   };
+  rpc ClientSpecificFailedReason(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/clients/"
+            "specific_failed_reason"
+      body: "*"
+    };
+  }
+
+  // config item compare conflicts related interface
+  rpc CompareConfigItemConflicts(CompareConfigItemConflictsReq) returns (CompareConfigItemConflictsResp) {
+    option (google.api.http) = {
+      get: "/api/v1/config/biz/{biz_id}/apps/{app_id}/config_items/"
+           "compare_conflicts"
+    };
+  }
+  rpc CompareKvConflicts(CompareKvConflictsReq) returns (CompareKvConflictsResp) {
+    option (google.api.http) = {
+      get: "/api/v1/config/biz/{biz_id}/apps/{app_id}/kvs/compare_conflicts"
+    };
+  }
 }
 
 message UpdateCredentialScopeReq {
@@ -966,6 +1116,8 @@ message ListCredentialsReq {
   uint32 start = 3;
   uint32 limit = 4;
   string top_ids = 5;
+  bool all = 6;
+  optional bool enable = 7;
 }
 
 message ListCredentialsResp {
@@ -987,10 +1139,12 @@ message CreateCredentialResp {
 message CreateAppReq {
   uint32 biz_id = 1;
   string name = 2;
-  string config_type = 3;  // config_type is enum type, source resource reference: pkg/dal/table/app.go
+  string config_type = 3;  // config_type is enum type, source resource
+                           // reference: pkg/dal/table/app.go
   string memo = 4;
   string alias = 5;
-  string data_type = 6;  // data_type is enum type, source resource reference: pkg/dal/table/app.go
+  string data_type = 6;  // data_type is enum type, source resource reference:
+                         // pkg/dal/table/app.go
 }
 
 message CreateAppResp {
@@ -1050,8 +1204,10 @@ message CreateConfigItemReq {
   uint32 app_id = 2;
   string name = 3;
   string path = 4;
-  string file_type = 5;  // file_type is enum type, source resource reference: pkg/dal/table/config_item.go
-  string file_mode = 6;  // file_mode is enum type, source resource reference: pkg/dal/table/config_item.go
+  string file_type = 5;  // file_type is enum type, source resource reference:
+                         // pkg/dal/table/config_item.go
+  string file_mode = 6;  // file_mode is enum type, source resource reference:
+                         // pkg/dal/table/config_item.go
   string memo = 7;
   string user = 8;
   string user_group = 9;
@@ -1064,8 +1220,10 @@ message BatchUpsertConfigItemsReq {
   message ConfigItem {
     string name = 1;
     string path = 2;
-    string file_type = 3;  // file_type is enum type, source resource reference: pkg/dal/table/config_item.go
-    string file_mode = 4;  // file_mode is enum type, source resource reference: pkg/dal/table/config_item.go
+    string file_type = 3;  // file_type is enum type, source resource reference:
+                           // pkg/dal/table/config_item.go
+    string file_mode = 4;  // file_mode is enum type, source resource reference:
+                           // pkg/dal/table/config_item.go
     string memo = 5;
     string user = 6;
     string user_group = 7;
@@ -1077,6 +1235,12 @@ message BatchUpsertConfigItemsReq {
   uint32 app_id = 2;
   repeated ConfigItem items = 3;
   bool replace_all = 4;
+  repeated pbtv.TemplateVariableSpec variables = 5;  // 非配置模板和模板配置变量
+  message TemplateBinding {
+    uint32 template_space_id = 1;
+    pbatb.TemplateBinding template_binding = 2;
+  }
+  repeated TemplateBinding bindings = 6;  // 绑定的套餐
 }
 
 message BatchUpsertConfigItemsResp {
@@ -1093,8 +1257,10 @@ message UpdateConfigItemReq {
   uint32 app_id = 3;
   string name = 4;
   string path = 5;
-  string file_type = 6;  // file_type is enum type, source resource reference: pkg/dal/table/config_item.go
-  string file_mode = 7;  // file_mode is enum type, source resource reference: pkg/dal/table/config_item.go
+  string file_type = 6;  // file_type is enum type, source resource reference:
+                         // pkg/dal/table/config_item.go
+  string file_mode = 7;  // file_mode is enum type, source resource reference:
+                         // pkg/dal/table/config_item.go
   string memo = 8;
   string user = 9;
   string user_group = 10;
@@ -1168,6 +1334,7 @@ message ListConfigItemsReq {
 message ListConfigItemsResp {
   uint32 count = 1;
   repeated pbci.ConfigItem details = 2;
+  uint32 conflict_number = 3;
 }
 
 message ListReleasedConfigItemsReq {
@@ -1260,6 +1427,16 @@ message CreateReleaseResp {
   uint32 id = 1;
 }
 
+message CheckReleaseNameReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  string name = 3;
+}
+
+message CheckReleaseNameResp {
+  bool exist = 1;
+}
+
 message ListReleasesReq {
   uint32 biz_id = 1;
   uint32 app_id = 2;
@@ -1315,7 +1492,7 @@ message CreateHookReq {
   uint32 biz_id = 1;
   string name = 2;
   string type = 3;
-  string tag = 4;
+  repeated string tags = 4;
   string memo = 5;
   string content = 6;
   string revision_name = 7;
@@ -1338,6 +1515,15 @@ message BatchDeleteHookReq {
   repeated uint32 ids = 2;
   bool force = 3;
 }
+
+message UpdateHookReq {
+  uint32 biz_id = 1;
+  uint32 hook_id = 2;
+  repeated string tags = 3;
+  string memo = 4;
+}
+
+message UpdateHookResp {}
 
 message ListHooksReq {
   uint32 biz_id = 1;
@@ -1433,7 +1619,7 @@ message GetHookResp {
 message GetHookInfoSpec {
   string name = 1;
   string type = 3;
-  string tag = 4;
+  repeated string tags = 4;
   string memo = 5;
   message Releases {
     uint32 not_release_id = 1;
@@ -1654,8 +1840,10 @@ message BatchUpsertTemplatesReq {
     uint32 id = 1;
     string name = 2;
     string path = 3;
-    string file_type = 4;  // file_type is enum type, source resource reference: pkg/dal/table/config_item.go
-    string file_mode = 5;  // file_mode is enum type, source resource reference: pkg/dal/table/config_item.go
+    string file_type = 4;  // file_type is enum type, source resource reference:
+                           // pkg/dal/table/config_item.go
+    string file_mode = 5;  // file_mode is enum type, source resource reference:
+                           // pkg/dal/table/config_item.go
     string memo = 6;
     string user = 7;
     string user_group = 8;
@@ -1669,6 +1857,19 @@ message BatchUpsertTemplatesReq {
 }
 
 message BatchUpsertTemplatesResp {
+  repeated uint32 ids = 1;
+}
+
+message BatchUpdateTemplatePermissionsReq {
+  uint32 biz_id = 1;
+  repeated uint32 template_ids = 2;
+  string user = 3;
+  string user_group = 4;
+  string privilege = 5;
+  repeated uint32 app_ids = 6;
+}
+
+message BatchUpdateTemplatePermissionsResp {
   repeated uint32 ids = 1;
 }
 
@@ -1770,6 +1971,27 @@ message CreateTemplateRevisionResp {
   uint32 id = 1;
 }
 
+message UpdateTemplateRevisionReq {
+  uint32 biz_id = 1;
+  uint32 template_space_id = 2;
+  uint32 template_id = 3;
+  string revision_name = 4;
+  string revision_memo = 5;
+  string name = 6;
+  string path = 7;
+  string file_type = 8;  // file_type is enum type
+  string file_mode = 9;  // file_mode is enum type
+  string user = 10;
+  string user_group = 11;
+  string privilege = 12;
+  string sign = 13;
+  uint64 byte_size = 14;
+}
+
+message UpdateTemplateRevisionResp {
+  uint32 id = 1;
+}
+
 message ListTemplateRevisionsReq {
   uint32 biz_id = 1;
   uint32 template_space_id = 2;
@@ -1784,6 +2006,35 @@ message ListTemplateRevisionsReq {
 message ListTemplateRevisionsResp {
   uint32 count = 1;
   repeated pbtr.TemplateRevision details = 2;
+}
+
+message GetTemplateRevisionReq {
+  uint32 biz_id = 1;
+  uint32 template_id = 2;
+  string revision_name = 3;
+}
+
+message GetTemplateRevisionResp {
+  message TemplateRevision {
+    uint32 template_id = 1;
+    string name = 2;
+    string path = 3;
+    uint32 template_revision_id = 4;
+    string template_revision_name = 5;
+    string template_revision_memo = 6;
+    string file_type = 7;
+    string file_mode = 8;
+    string user = 9;
+    string user_group = 10;
+    string privilege = 11;
+    string signature = 12;
+    uint64 byte_size = 13;
+    string creator = 14;
+    string create_at = 15;
+    string md5 = 16;
+    bool is_latest = 17;
+  }
+  TemplateRevision detail = 1;
 }
 
 message DeleteTemplateRevisionReq {
@@ -2519,6 +2770,15 @@ message UndoKvReq {
 
 message UndoKvResp {}
 
+message ImportKvsReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  string format = 3;
+  string data = 4;
+}
+
+message ImportKvsResp {}
+
 message ListClientsReq {
   message Order {
     string desc = 1;
@@ -2535,8 +2795,15 @@ message ListClientsReq {
 }
 
 message ListClientsResp {
+  message Item {
+    pbclient.Client client = 1;
+    string cpu_usage_str = 2;
+    string cpu_max_usage_str = 3;
+    string memory_usage_str = 4;
+    string memory_max_usage_str = 5;
+  }
   uint32 count = 1;
-  repeated pbclient.Client details = 2;
+  repeated Item details = 2;
 }
 
 message ListClientEventsReq {
@@ -2560,6 +2827,15 @@ message ListClientEventsResp {
   uint32 count = 1;
   repeated pbce.ClientEvent details = 2;
 }
+
+message RetryClientsReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  repeated uint32 client_ids = 3;
+  bool all = 4;
+}
+
+message RetryClientsResp {}
 
 message ListClientQuerysReq {
   uint32 biz_id = 1;
@@ -2605,7 +2881,73 @@ message DeleteClientQueryReq {
 
 message DeleteClientQueryResp {}
 
+message CheckClientQueryNameReq {
+  string name = 1;
+  uint32 biz_id = 2;
+  uint32 app_id = 3;
+}
+
+message CheckClientQueryNameResp {
+  bool exist = 1;
+}
+
 message ListClientLabelAndAnnotationReq {
   uint32 biz_id = 1;
   uint32 app_id = 2;
+  int64 last_heartbeat_time = 3;
+}
+
+message CompareConfigItemConflictsReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  uint32 release_id = 3;
+  uint32 other_app_id = 4;
+}
+
+message CompareConfigItemConflictsResp {
+  message NonTemplateConfig {
+    uint32 id = 1;
+    pbci.ConfigItemSpec config_item_spec = 2;
+    repeated pbtv.TemplateVariableSpec variables = 3;
+    bool is_exist = 4;
+    string signature = 5;
+    uint64 byte_size = 6;
+  }
+  message TemplateConfig {
+    message TemplateRevisionDetail {
+      uint32 template_id = 1;
+      uint32 template_revision_id = 2;
+      bool is_latest = 3;
+      repeated pbtv.TemplateVariableSpec variables = 5;
+    }
+    uint32 template_space_id = 1;
+    string template_space_name = 2;
+    uint32 template_set_id = 3;
+    string template_set_name = 4;
+    bool is_exist = 5;
+    repeated TemplateRevisionDetail template_revisions = 6;
+    bool template_space_exist = 7;
+    bool template_set_exist = 8;
+    bool template_set_is_empty = 9;
+  }
+  repeated NonTemplateConfig non_template_configs = 2;
+  repeated TemplateConfig template_configs = 1;
+}
+
+message CompareKvConflictsReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  uint32 release_id = 3;
+  uint32 other_app_id = 4;
+}
+
+message CompareKvConflictsResp {
+  message Kv {
+    string key = 1;
+    string kv_type = 2;
+    string value = 3;
+    string memo = 4;
+  }
+  repeated Kv exist = 1;
+  repeated Kv non_exist = 2;
 }

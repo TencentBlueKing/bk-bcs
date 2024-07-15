@@ -5,11 +5,8 @@ replicas:
   properties:
     cnt:
       title: {{ i18n "副本数量" .lang }}
-      type: integer
-      default: 1
-      ui:component:
-        props:
-          max: 4096
+      type: string
+      default: "1"
     updateStrategy:
       title: {{ i18n "升级策略" .lang }}
       type: string
@@ -218,11 +215,8 @@ replicas:
   properties:
     cnt:
       title: {{ i18n "副本数量" .lang }}
-      type: integer
-      default: 1
-      ui:component:
-        props:
-          max: 4096
+      type: string
+      default: "1"
     svcName:
       title: {{ i18n "服务名称" .lang }}
       type: string
@@ -646,6 +640,125 @@ nodeSelect:
     - type
     - selector
     - nodeName
+{{- end }}
+
+{{- define "workload.labels" }}
+labels:
+  title: {{ i18n "标签管理" .lang }}
+  type: object
+  properties:
+    {{- if (hasLabelSelector .kind) }}
+    labels:
+      title: {{ i18n "选择器" .lang }}
+      type: array
+      default: {{ .selectorLabel }}
+      description: {{ i18n "标签选择器在创建资源后是不可变的，请务必小心谨慎更改选择器。" .lang }}
+      ui:rules:
+        - sliceLength1
+      items:
+        properties:
+          key:
+            title: {{ i18n "键" .lang }}
+            type: string
+            ui:rules:
+              - required
+              - maxLength128
+              - labelKeyRegex
+            ui:reactions:
+              - if: "{{`{{`}} $self.value === 'workload.bcs.tencent.io/workloadSelector' {{`}}`}}"
+                then:
+                  state:
+                    disabled: true
+                else:
+                  state:
+                    disabled: false
+              - target: "{{`{{`}} $widgetNode?.getSibling('value')?.id {{`}}`}}"
+                if: "{{`{{`}} $self.value === 'workload.bcs.tencent.io/workloadSelector' {{`}}`}}"
+                then:
+                  state:
+                    disabled: true
+                else:
+                  state:
+                    disabled: false
+          value:
+            title: {{ i18n "值" .lang }}
+            type: string
+            ui:rules:
+              - maxLength64
+              - labelValRegex
+        type: object
+      ui:component:
+        name: bfArray
+    {{- end }}
+    templateLabels:
+      title: Pod {{ i18n "标签" .lang }}
+      type: array
+      default: {{ .selectorLabel }}
+      ui:rules:
+        - sliceLength1
+      description: {{ i18n "该标签将添加到 Pod 标签中。" .lang }}
+      items:
+        properties:
+          key:
+            title: {{ i18n "键" .lang }}
+            type: string
+            ui:rules:
+              - required
+              - maxLength128
+              - labelKeyRegex
+            ui:reactions:
+              - if: "{{`{{`}} $self.value === 'workload.bcs.tencent.io/workloadSelector' {{`}}`}}"
+                then:
+                  state:
+                    disabled: true
+                else:
+                  state:
+                    disabled: false
+              - target: "{{`{{`}} $widgetNode?.getSibling('value')?.id {{`}}`}}"
+                if: "{{`{{`}} $self.value === 'workload.bcs.tencent.io/workloadSelector' {{`}}`}}"
+                then:
+                  state:
+                    disabled: true
+                else:
+                  state:
+                    disabled: false
+          value:
+            title: {{ i18n "值" .lang }}
+            type: string
+            ui:rules:
+              - maxLength64
+              - labelValRegex
+        type: object
+      ui:component:
+        name: bfArray
+    {{- if eq .kind "CronJob" }}
+    jobTemplatelabels:
+      title: Job {{ i18n "标签" .lang }}
+      type: array
+      description: {{ i18n "该标签将添加到 Job 标签中。" .lang }}
+      items:
+        properties:
+          key:
+            title: {{ i18n "键" .lang }}
+            type: string
+            ui:rules:
+              - required
+              - maxLength128
+              - labelKeyRegex
+          value:
+            title: {{ i18n "值" .lang }}
+            type: string
+            ui:rules:
+              - maxLength64
+              - labelValRegex
+        type: object
+      ui:component:
+        name: bfArray
+    {{- end }}
+  ui:order:
+    - labels
+    - templateLabels
+    - jobTemplatelabels
 {{- end }}
 
 {{- define "workload.affinity" }}

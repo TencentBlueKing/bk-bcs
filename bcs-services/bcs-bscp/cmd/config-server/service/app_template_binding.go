@@ -28,6 +28,7 @@ import (
 	pbatb "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/app-template-binding"
 	pbtset "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/template-set"
 	pbds "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/natsort"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
@@ -38,7 +39,7 @@ func (s *Service) CreateAppTemplateBinding(ctx context.Context, req *pbcs.Create
 	grpcKit := kit.FromGrpcContext(ctx)
 
 	// validate input param
-	templateSetIDs, templateIDs, err := parseBindings(req.Bindings)
+	templateSetIDs, _, err := parseBindings(req.Bindings)
 	if err != nil {
 		logs.Errorf("create app template binding failed, parse bindings err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
@@ -47,14 +48,6 @@ func (s *Service) CreateAppTemplateBinding(ctx context.Context, req *pbcs.Create
 	repeatedTmplSetIDs := tools.SliceRepeatedElements(templateSetIDs)
 	if len(repeatedTmplSetIDs) > 0 {
 		return nil, fmt.Errorf("repeated template set ids: %v, id must be unique", repeatedTmplSetIDs)
-	}
-	repeatedTmplRevisionIDs := tools.SliceRepeatedElements(templateIDs)
-	if len(repeatedTmplRevisionIDs) > 0 {
-		return nil, fmt.Errorf("repeated template ids: %v, id must be unique", repeatedTmplRevisionIDs)
-	}
-	if len(templateIDs) > 500 {
-		return nil, fmt.Errorf("the length of template ids is %d, it must be within the range of [1,500]",
-			len(templateIDs))
 	}
 
 	res := []*meta.ResourceAttribute{
@@ -125,7 +118,7 @@ func (s *Service) UpdateAppTemplateBinding(ctx context.Context, req *pbcs.Update
 	grpcKit := kit.FromGrpcContext(ctx)
 
 	// validate input param
-	templateSetIDs, templateIDs, err := parseBindings(req.Bindings)
+	templateSetIDs, _, err := parseBindings(req.Bindings)
 	if err != nil {
 		logs.Errorf("update app template binding failed, parse bindings err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
@@ -134,14 +127,6 @@ func (s *Service) UpdateAppTemplateBinding(ctx context.Context, req *pbcs.Update
 	repeatedTmplSetIDs := tools.SliceRepeatedElements(templateSetIDs)
 	if len(repeatedTmplSetIDs) > 0 {
 		return nil, fmt.Errorf("repeated template set ids: %v, id must be unique", repeatedTmplSetIDs)
-	}
-	repeatedTmplRevisionIDs := tools.SliceRepeatedElements(templateIDs)
-	if len(repeatedTmplRevisionIDs) > 0 {
-		return nil, fmt.Errorf("repeated template ids: %v, id must be unique", repeatedTmplRevisionIDs)
-	}
-	if len(templateIDs) > 500 {
-		return nil, fmt.Errorf("the length of template ids is %d, it must be within the range of [1,500]",
-			len(templateIDs))
 	}
 
 	res := []*meta.ResourceAttribute{
@@ -227,6 +212,7 @@ func parseBindings(bindings []*pbatb.TemplateBinding) (templateSetIDs, templateI
 }
 
 // ListAppBoundTmplRevisions list app bound template revisions
+// nolint:funlen
 func (s *Service) ListAppBoundTmplRevisions(ctx context.Context, req *pbcs.ListAppBoundTmplRevisionsReq) (
 	*pbcs.ListAppBoundTmplRevisionsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
@@ -275,9 +261,8 @@ func (s *Service) ListAppBoundTmplRevisions(ctx context.Context, req *pbcs.ListA
 			TemplateSetId:     tmplSet.TemplateSetId,
 			TemplateSetName:   tmplSet.TemplateSetName,
 		}
-
 		revisions := tmplSetMap[tmplSet.TemplateSetId]
-		// 先按照path+name排序好
+		// 根据path+name排序
 		sort.SliceStable(revisions, func(i, j int) bool {
 			iPath := path.Join(revisions[i].Path, revisions[i].Name)
 			jPath := path.Join(revisions[j].Path, revisions[j].Name)
@@ -304,6 +289,7 @@ func (s *Service) ListAppBoundTmplRevisions(ctx context.Context, req *pbcs.ListA
 					CreateAt:             r.CreateAt,
 					FileState:            r.FileState,
 					Md5:                  r.Md5,
+					IsConflict:           r.IsConflict,
 				})
 		}
 		if req.WithStatus {
@@ -311,6 +297,14 @@ func (s *Service) ListAppBoundTmplRevisions(ctx context.Context, req *pbcs.ListA
 		}
 		details = append(details, group)
 	}
+
+	// 自然排序
+	sort.SliceStable(details, func(i, j int) bool {
+		if details[i].TemplateSpaceName == details[j].TemplateSpaceName {
+			return natsort.NaturalLess(details[i].TemplateSetName, details[j].TemplateSetName)
+		}
+		return natsort.NaturalLess(details[i].TemplateSpaceName, details[j].TemplateSpaceName)
+	})
 
 	resp := &pbcs.ListAppBoundTmplRevisionsResp{
 		Details: details,
@@ -472,6 +466,13 @@ func (s *Service) ListReleasedAppBoundTmplRevisions(ctx context.Context,
 		details = append(details, group)
 	}
 
+	sort.SliceStable(details, func(i, j int) bool {
+		if details[i].TemplateSpaceName == details[j].TemplateSpaceName {
+			return natsort.NaturalLess(details[i].TemplateSetName, details[j].TemplateSetName)
+		}
+		return natsort.NaturalLess(details[i].TemplateSpaceName, details[j].TemplateSpaceName)
+	})
+
 	resp := &pbcs.ListReleasedAppBoundTmplRevisionsResp{
 		Details: details,
 	}
@@ -532,10 +533,6 @@ func (s *Service) UpdateAppBoundTmplRevisions(ctx context.Context, req *pbcs.Upd
 	repeatedTmplRevisionIDs := tools.SliceRepeatedElements(templateIDs)
 	if len(repeatedTmplRevisionIDs) > 0 {
 		return nil, fmt.Errorf("repeated template ids: %v, id must be unique", repeatedTmplRevisionIDs)
-	}
-	if len(templateIDs) > 500 {
-		return nil, fmt.Errorf("the length of template ids is %d, it must be within the range of [1,500]",
-			len(templateIDs))
 	}
 
 	res := []*meta.ResourceAttribute{

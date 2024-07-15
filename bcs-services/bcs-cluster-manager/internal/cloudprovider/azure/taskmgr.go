@@ -558,7 +558,11 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 		cloudprovider.GetAnnotationsByNg(opt.NodeGroup))
 
 	// step5: remove nodes inner taints
-	// common.BuildRemoveClusterNodesInnerTaintTaskStep(task, group)
+	// azure not allow to remove nodePool taint
+	// admission webhook "aks-node-validating-webhook.azmk8s.io" denied the request:
+	// Taint delete request "bcs-cluster-manager=noSchedule:NoExecute" refused. User is attempting to delete a taint
+	// configured on aks node pool "hsboykuj".
+	// common.BuildRemoveInnerTaintTaskStep(task, group)
 
 	// set current step
 	if len(task.StepSequence) == 0 {
@@ -727,5 +731,11 @@ func (t *Task) BuildDeleteExternalNodeFromCluster(group *proto.NodeGroup, nodes 
 
 // BuildUpdateNodeGroupTask when update nodegroup, we need to create background task,
 func (t *Task) BuildUpdateNodeGroupTask(group *proto.NodeGroup, opt *cloudprovider.CommonOption) (*proto.Task, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// BuildSwitchClusterNetworkTask switch cluster network mode
+func (t *Task) BuildSwitchClusterNetworkTask(cls *proto.Cluster,
+	subnet *proto.SubnetSource, opt *cloudprovider.SwitchClusterNetworkOption) (*proto.Task, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }

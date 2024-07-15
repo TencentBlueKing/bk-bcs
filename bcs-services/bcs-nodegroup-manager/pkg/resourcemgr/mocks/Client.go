@@ -13,22 +13,36 @@ type Client struct {
 	mock.Mock
 }
 
-// GetResourcePool provides a mock function with given fields: poolID, option
-func (_m *Client) GetResourcePool(poolID string, option *resourcemgr.GetOptions) (*storage.ResourcePool, error) {
-	ret := _m.Called(poolID, option)
+// FillDeviceRecordIp provides a mock function with given fields: recordID, ipList
+func (_m *Client) FillDeviceRecordIp(recordID string, ipList []string) error {
+	ret := _m.Called(recordID, ipList)
 
-	var r0 *storage.ResourcePool
-	if rf, ok := ret.Get(0).(func(string, *resourcemgr.GetOptions) *storage.ResourcePool); ok {
-		r0 = rf(poolID, option)
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string, []string) error); ok {
+		r0 = rf(recordID, ipList)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// GetDeviceListByConsumer provides a mock function with given fields: consumerID, option
+func (_m *Client) GetDeviceListByConsumer(consumerID string, option *resourcemgr.GetOptions) (*storage.DeviceGroup, error) {
+	ret := _m.Called(consumerID, option)
+
+	var r0 *storage.DeviceGroup
+	if rf, ok := ret.Get(0).(func(string, *resourcemgr.GetOptions) *storage.DeviceGroup); ok {
+		r0 = rf(consumerID, option)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*storage.ResourcePool)
+			r0 = ret.Get(0).(*storage.DeviceGroup)
 		}
 	}
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(string, *resourcemgr.GetOptions) error); ok {
-		r1 = rf(poolID, option)
+		r1 = rf(consumerID, option)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -36,22 +50,22 @@ func (_m *Client) GetResourcePool(poolID string, option *resourcemgr.GetOptions)
 	return r0, r1
 }
 
-// GetResourcePoolByCondition provides a mock function with given fields: poolID, consumerID, deviceRecord, option
-func (_m *Client) GetResourcePoolByCondition(poolID string, consumerID string, deviceRecord string, option *resourcemgr.GetOptions) (*storage.ResourcePool, error) {
-	ret := _m.Called(poolID, consumerID, deviceRecord, option)
+// GetDeviceListByPoolID provides a mock function with given fields: consumerID, devicePoolID, option
+func (_m *Client) GetDeviceListByPoolID(consumerID string, devicePoolID []string, option *resourcemgr.GetOptions) (*storage.DeviceGroup, error) {
+	ret := _m.Called(consumerID, devicePoolID, option)
 
-	var r0 *storage.ResourcePool
-	if rf, ok := ret.Get(0).(func(string, string, string, *resourcemgr.GetOptions) *storage.ResourcePool); ok {
-		r0 = rf(poolID, consumerID, deviceRecord, option)
+	var r0 *storage.DeviceGroup
+	if rf, ok := ret.Get(0).(func(string, []string, *resourcemgr.GetOptions) *storage.DeviceGroup); ok {
+		r0 = rf(consumerID, devicePoolID, option)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*storage.ResourcePool)
+			r0 = ret.Get(0).(*storage.DeviceGroup)
 		}
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(string, string, string, *resourcemgr.GetOptions) error); ok {
-		r1 = rf(poolID, consumerID, deviceRecord, option)
+	if rf, ok := ret.Get(1).(func(string, []string, *resourcemgr.GetOptions) error); ok {
+		r1 = rf(consumerID, devicePoolID, option)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -59,13 +73,36 @@ func (_m *Client) GetResourcePoolByCondition(poolID string, consumerID string, d
 	return r0, r1
 }
 
-// GetTask provides a mock function with given fields: poolID, consumerID, option
-func (_m *Client) ListTasks(poolID string, consumerID string, option *resourcemgr.ListOptions) ([]*storage.ScaleDownTask, error) {
-	ret := _m.Called(poolID, consumerID, option)
+// GetTaskByID provides a mock function with given fields: recordID, opt
+func (_m *Client) GetTaskByID(recordID string, opt *resourcemgr.GetOptions) (*storage.ScaleDownTask, error) {
+	ret := _m.Called(recordID, opt)
+
+	var r0 *storage.ScaleDownTask
+	if rf, ok := ret.Get(0).(func(string, *resourcemgr.GetOptions) *storage.ScaleDownTask); ok {
+		r0 = rf(recordID, opt)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*storage.ScaleDownTask)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, *resourcemgr.GetOptions) error); ok {
+		r1 = rf(recordID, opt)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ListTasksByCond provides a mock function with given fields: recordType, status
+func (_m *Client) ListTasksByCond(recordType []int64, status []int64) ([]*storage.ScaleDownTask, error) {
+	ret := _m.Called(recordType, status)
 
 	var r0 []*storage.ScaleDownTask
-	if rf, ok := ret.Get(0).(func(string, string, *resourcemgr.ListOptions) []*storage.ScaleDownTask); ok {
-		r0 = rf(poolID, consumerID, option)
+	if rf, ok := ret.Get(0).(func([]int64, []int64) []*storage.ScaleDownTask); ok {
+		r0 = rf(recordType, status)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]*storage.ScaleDownTask)
@@ -73,8 +110,8 @@ func (_m *Client) ListTasks(poolID string, consumerID string, option *resourcemg
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(string, string, *resourcemgr.ListOptions) error); ok {
-		r1 = rf(poolID, consumerID, option)
+	if rf, ok := ret.Get(1).(func([]int64, []int64) error); ok {
+		r1 = rf(recordType, status)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -82,26 +119,22 @@ func (_m *Client) ListTasks(poolID string, consumerID string, option *resourcemg
 	return r0, r1
 }
 
-func (_m *Client) GetTaskByID(recordID string, opt *resourcemgr.GetOptions) (*storage.ScaleDownTask, error) {
-	panic("not impleted")
-}
+// ListTasksByConsumer provides a mock function with given fields: consumerID, option
+func (_m *Client) ListTasksByConsumer(consumerID string, option *resourcemgr.ListOptions) ([]*storage.ScaleDownTask, error) {
+	ret := _m.Called(consumerID, option)
 
-// ListResourcePools provides a mock function with given fields: option
-func (_m *Client) ListResourcePools(option *resourcemgr.ListOptions) ([]*storage.ResourcePool, error) {
-	ret := _m.Called(option)
-
-	var r0 []*storage.ResourcePool
-	if rf, ok := ret.Get(0).(func(*resourcemgr.ListOptions) []*storage.ResourcePool); ok {
-		r0 = rf(option)
+	var r0 []*storage.ScaleDownTask
+	if rf, ok := ret.Get(0).(func(string, *resourcemgr.ListOptions) []*storage.ScaleDownTask); ok {
+		r0 = rf(consumerID, option)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]*storage.ResourcePool)
+			r0 = ret.Get(0).([]*storage.ScaleDownTask)
 		}
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(*resourcemgr.ListOptions) error); ok {
-		r1 = rf(option)
+	if rf, ok := ret.Get(1).(func(string, *resourcemgr.ListOptions) error); ok {
+		r1 = rf(consumerID, option)
 	} else {
 		r1 = ret.Error(1)
 	}

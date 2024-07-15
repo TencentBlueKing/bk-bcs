@@ -3,6 +3,7 @@
     :data="sortClusterList"
     size="medium"
     :row-class-name="rowClassName"
+    height="h-[calc(100%-48px)]"
     @row-click="handleRowClick">
     <bk-table-column :label="$t('cluster.labels.nameAndId')" :min-width="160" :show-overflow-tooltip="false">
       <template #default="{ row }">
@@ -59,9 +60,11 @@
       :label="$t('cluster.labels.clusterType')"
       prop="manageType"
       :filters="clusterTypeFilterList"
-      :filter-method="filterMethod">
+      :filter-method="filterMethod"
+      :key="clusterTypeKey">
       <template #default="{ row }">
-        <template v-if="row.clusterType === 'virtual'">vCluster</template>
+        <template v-if="row.is_shared">{{ $t('bcs.cluster.share') }}</template>
+        <template v-else-if="row.clusterType === 'virtual'">vCluster</template>
         <template v-else>
           {{ row.manageType === 'INDEPENDENT_CLUSTER' ? $t('bcs.cluster.selfDeployed') : $t('bcs.cluster.managed') }}
         </template>
@@ -69,7 +72,9 @@
     </bk-table-column>
     <bk-table-column :label="$t('cluster.labels.nodeCounts')">
       <template #default="{ row }">
-        <template v-if="perms[row.clusterID] && perms[row.clusterID].cluster_manage && row.clusterType !== 'virtual'">
+        <template
+          v-if="perms[row.clusterID] && perms[row.clusterID].cluster_manage
+            && !row.is_shared && row.clusterType !== 'virtual'">
           <LoadingIcon v-if="!clusterNodesMap[row.clusterID]">{{ $t('generic.status.loading') }}...</LoadingIcon>
           <div
             :class=" row.status === 'RUNNING' ? 'cursor-pointer' : 'cursor-not-allowed'"
@@ -102,7 +107,8 @@
         <span v-else>--</span>
       </template>
     </bk-table-column>
-    <bk-table-column :label="$t('generic.label.action')" prop="action" width="200">
+    <!-- 220: 兼容英文状态时大小 -->
+    <bk-table-column :label="$t('generic.label.action')" prop="action" width="220">
       <template #default="{ row }">
         <!-- 进行中 -->
         <template v-if="['INITIALIZATION', 'DELETING'].includes(row.status)">
@@ -164,37 +170,48 @@
         </template>
         <!-- 正常状态 -->
         <template v-else-if="normalStatusList.includes(row.status)">
-          <bk-button text class="mr10" @click.stop="handleGotoClusterOverview(row)">
-            {{ $t('cluster.button.overview') }}
+          <bk-button text class="mr10" @click.stop="handleGotoClusterDetail(row, 'namespace')">
+            {{ $t('k8s.namespace') }}
           </bk-button>
-          <bk-button
-            text
-            class="mr10"
-            v-if="row.clusterType === 'virtual'"
-            @click.stop="handleGotoDashborad(row)">{{ $t('cluster.button.dashboard') }}</bk-button>
-          <bk-button
-            text
-            class="mr10"
-            v-authority="{
-              clickable: perms[row.clusterID]
-                && perms[row.clusterID].cluster_manage,
-              actionId: 'cluster_manage',
-              resourceName: row.clusterName,
-              disablePerms: true,
-              permCtx: {
-                project_id: curProject.projectID,
-                cluster_id: row.clusterID
-              }
-            }"
-            key="nodeList"
-            v-if="row.clusterType !== 'virtual'"
-            @click.stop="handleGotoClusterNode(row)">
-            {{ $t('cluster.detail.title.nodeList') }}
-          </bk-button>
+          <!-- 共享集群 -->
+          <!-- 托管集群 -->
+          <template v-if="row.is_shared || row.clusterType === 'virtual'">
+            <bk-button
+              text
+              class="mr10"
+              @click.stop="handleGotoDashborad(row)">
+              {{ $t('cluster.button.dashboard') }}
+            </bk-button>
+          </template>
+          <!-- 独立集群 -->
+          <template v-else>
+            <bk-button
+              text
+              class="mr10"
+              v-authority="{
+                clickable: perms[row.clusterID]
+                  && perms[row.clusterID].cluster_manage,
+                actionId: 'cluster_manage',
+                resourceName: row.clusterName,
+                disablePerms: true,
+                permCtx: {
+                  project_id: curProject.projectID,
+                  cluster_id: row.clusterID
+                }
+              }"
+              key="nodeList"
+              @click.stop="handleGotoClusterNode(row)">
+              {{ $t('cluster.detail.title.nodeList') }}
+            </bk-button>
+          </template>
           <PopoverSelector offset="0, 10">
             <span class="bcs-icon-more-btn"><i class="bcs-icon bcs-icon-more"></i></span>
             <template #content>
               <ul class="bg-[#fff]">
+                <li
+                  class="bcs-dropdown-item"
+                  v-if="!row.is_shared"
+                  @click.stop="handleGotoClusterOverview(row)">{{ $t('cluster.button.overview') }}</li>
                 <li
                   class="bcs-dropdown-item"
                   @click.stop="handleGotoClusterDetail(row, 'info')">{{ $t('generic.title.basicInfo1') }}</li>
@@ -213,7 +230,8 @@
                   </li>
                   <li
                     class="bcs-dropdown-item"
-                    v-if="!(row.clusterCategory === 'importer' && row.importCategory === 'kubeConfig')"
+                    v-if="!(row.clusterCategory === 'importer' && row.importCategory === 'kubeConfig')
+                      && !row.is_shared"
                     @click.stop="handleGotoClusterDetail(row, 'master')">
                     {{ $t('cluster.detail.title.master') }}
                   </li>
@@ -221,7 +239,8 @@
                     class="bcs-dropdown-item"
                     v-if="clusterExtraInfo
                       && clusterExtraInfo[row.clusterID]
-                      && clusterExtraInfo[row.clusterID].autoScale"
+                      && clusterExtraInfo[row.clusterID].autoScale
+                      && !row.is_shared"
                     v-authority="{
                       clickable: perms[row.clusterID]
                         && perms[row.clusterID].cluster_manage,
@@ -239,51 +258,53 @@
                   </li>
                 </template>
                 <li class="bcs-dropdown-item" @click.stop="handleGotoToken">KubeConfig</li>
-                <li class="bcs-dropdown-item" @click.stop="handleGotoWebConsole(row)">WebConsole</li>
-                <li
-                  class="bcs-dropdown-item"
-                  v-authority="{
-                    clickable: perms[row.clusterID]
-                      && perms[row.clusterID].cluster_delete,
-                    actionId: 'cluster_delete',
-                    resourceName: row.clusterName,
-                    disablePerms: true,
-                    permCtx: {
-                      project_id: curProject.projectID,
-                      cluster_id: row.clusterID
-                    }
-                  }"
-                  key="deletevCluster"
-                  v-if="row.clusterType === 'virtual' || row.clusterCategory === 'importer'"
-                  @click.stop="handleDeleteCluster(row)">
-                  {{ $t('generic.button.delete') }}
-                </li>
-                <li
-                  :class="[
-                    'bcs-dropdown-item',
-                    { disabled: clusterNodesMap[row.clusterID] && clusterNodesMap[row.clusterID].length > 0 }
-                  ]"
-                  v-authority="{
-                    clickable: perms[row.clusterID]
-                      && perms[row.clusterID].cluster_delete,
-                    actionId: 'cluster_delete',
-                    resourceName: row.clusterName,
-                    disablePerms: true,
-                    permCtx: {
-                      project_id: curProject.projectID,
-                      cluster_id: row.clusterID
-                    }
-                  }"
-                  key="deleteCluster"
-                  v-bk-tooltips="{
-                    content: $t('cluster.validate.exitNodes'),
-                    disabled: !clusterNodesMap[row.clusterID] || clusterNodesMap[row.clusterID].length === 0,
-                    placement: 'right'
-                  }"
-                  v-else
-                  @click.stop="handleDeleteCluster(row)">
-                  {{ $t('generic.button.delete') }}
-                </li>
+                <template v-if="!row.is_shared">
+                  <li class="bcs-dropdown-item" @click.stop="handleGotoWebConsole(row)">WebConsole</li>
+                  <li
+                    class="bcs-dropdown-item"
+                    v-authority="{
+                      clickable: perms[row.clusterID]
+                        && perms[row.clusterID].cluster_delete,
+                      actionId: 'cluster_delete',
+                      resourceName: row.clusterName,
+                      disablePerms: true,
+                      permCtx: {
+                        project_id: curProject.projectID,
+                        cluster_id: row.clusterID
+                      }
+                    }"
+                    key="deletevCluster"
+                    v-if="row.clusterType === 'virtual' || row.clusterCategory === 'importer'"
+                    @click.stop="handleDeleteCluster(row)">
+                    {{ $t('generic.button.delete') }}
+                  </li>
+                  <li
+                    :class="[
+                      'bcs-dropdown-item',
+                      { disabled: clusterNodesMap[row.clusterID] && clusterNodesMap[row.clusterID].length > 0 }
+                    ]"
+                    v-authority="{
+                      clickable: perms[row.clusterID]
+                        && perms[row.clusterID].cluster_delete,
+                      actionId: 'cluster_delete',
+                      resourceName: row.clusterName,
+                      disablePerms: true,
+                      permCtx: {
+                        project_id: curProject.projectID,
+                        cluster_id: row.clusterID
+                      }
+                    }"
+                    key="deleteCluster"
+                    v-bk-tooltips="{
+                      content: $t('cluster.validate.exitNodes'),
+                      disabled: !clusterNodesMap[row.clusterID] || clusterNodesMap[row.clusterID].length === 0,
+                      placement: 'right'
+                    }"
+                    v-else
+                    @click.stop="handleDeleteCluster(row)">
+                    {{ $t('generic.button.delete') }}
+                  </li>
+                </template>
               </ul>
             </template>
           </PopoverSelector>
@@ -311,6 +332,7 @@ import StatusIcon from '@/components/status-icon';
 import { ICluster, useProject } from '@/composables/use-app';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
+import $store from '@/store';
 import RingCell from '@/views/cluster-manage/components/ring-cell.vue';
 
 export default defineComponent({
@@ -394,9 +416,12 @@ export default defineComponent({
       return pre;
     }, []));
     // 集群类型列表
+    const hideSharedCluster = computed(() => $store.state.hideSharedCluster);
     const clusterTypeFilterList = computed(() => {
-      const typeMap =  clusterList.value.reduce<Record<string, string>>((pre, item) => {
-        if (item.clusterType === 'virtual') {
+      const typeMap = clusterList.value.reduce<Record<string, string>>((pre, item) => {
+        if (item.is_shared && !hideSharedCluster.value) {
+          pre.isShared = $i18n.t('bcs.cluster.share');
+        } else if (item.clusterType === 'virtual') {
           pre.virtual = 'vCluster';
         } else if (item.manageType === 'INDEPENDENT_CLUSTER') {
           pre.INDEPENDENT_CLUSTER = $i18n.t('bcs.cluster.selfDeployed');
@@ -411,11 +436,18 @@ export default defineComponent({
         text: typeMap[key],
       }));
     });
+    const clusterTypeKey = computed(() => clusterTypeFilterList.value.map(item => item.value).join(','));
     const filterMethod = (value, row, column) => {
       const { property } = column;
-      // 出来集群类型搜索逻辑
       if (property === 'manageType') {
-        return value === 'virtual' ? row.clusterType === 'virtual' : row[property] === value;
+        // 筛选集群类型搜索逻辑
+        if (value === 'isShared') {
+          return row.is_shared;
+        }
+        if (value === 'virtual') {
+          return row.clusterType === 'virtual';
+        }
+        return row[property] === value && !row.is_shared && row.clusterType !== 'virtual';
       }
       return row[property] === value;
     };
@@ -462,8 +494,9 @@ export default defineComponent({
     };
     // 资源视图
     const handleGotoDashborad = (row) => {
+      // 跳到集群视图
       $router.push({
-        name: 'dashboardHome',
+        name: 'dashboardWorkloadDeployments',
         params: {
           clusterId: row.clusterID,
         },
@@ -495,6 +528,7 @@ export default defineComponent({
     };
 
     return {
+      clusterTypeKey,
       normalStatusList,
       failedStatusList,
       sortClusterList,

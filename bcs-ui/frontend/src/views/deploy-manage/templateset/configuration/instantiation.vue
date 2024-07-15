@@ -1,11 +1,10 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <!-- eslint-disable max-len -->
 <template>
-  <div class="biz-content">
-    <Header :title="$t('deploy.templateset.templateInstantiation')" />
-    <div class="biz-content-wrapper pt0">
+  <BcsContent :title="$t('deploy.templateset.templateInstantiation')">
+    <div class="pt0">
       <div class="biz-configuration-instantiation-wrapper">
-        <div class="biz-tip mt20 mb15">{{$t('deploy.templateset.noteTemplateInstantiation')}}</div>
+        <div class="biz-tip mb15">{{$t('deploy.templateset.noteTemplateInstantiation')}}</div>
         <div class="biz-configuration-instantiation-header">
           <div class="left">
             <svg style="display: none;">
@@ -373,7 +372,7 @@
       v-if="editorConfig.fullScreen">
       <i class="bcs-icon bcs-icon-close"></i>
     </div>
-  </div>
+  </BcsContent>
 </template>
 
 <script>
@@ -382,8 +381,8 @@ import yamljs from 'js-yaml';
 
 import { catchErrorHandler } from '@/common/util';
 import ace from '@/components/ace-editor';
-import Header from '@/components/layout/Header.vue';
-import { useNamespace } from '@/views/resource-view/namespace/use-namespace';
+import BcsContent from '@/components/layout/Content.vue';
+import { useNamespace } from '@/views/cluster-manage/namespace/use-namespace';
 
 const ARR = [
   'Application',
@@ -414,7 +413,7 @@ const { toString } = Object.prototype;
 export default {
   components: {
     ace,
-    Header,
+    BcsContent,
   },
   data() {
     return {

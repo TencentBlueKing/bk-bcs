@@ -150,6 +150,15 @@ func (s *Service) UpdateTemplateSet(ctx context.Context, req *pbds.UpdateTemplat
 		return nil, err
 	}
 
+	// validate template set's templates count.
+	if err = s.dao.TemplateSet().ValidateTmplNumber(kt, tx, req.Attachment.BizId, req.Id); err != nil {
+		logs.Errorf("validate template set's templates count failed, err: %v, rid: %s", err, kt.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+		}
+		return nil, err
+	}
+
 	// 2. update app template bindings if necessary
 	// delete invisible template set from correspond app template bindings
 	if len(invisibleATBs) > 0 {

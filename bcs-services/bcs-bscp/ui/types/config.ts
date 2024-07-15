@@ -59,6 +59,7 @@ export interface IConfigItem {
     update_at: string;
   };
   file_state: string;
+  is_conflict: boolean;
 }
 
 // 配置文件详情（包含签名信息）
@@ -145,6 +146,7 @@ export interface ITemplateBoundByAppData {
     template_revision_id: number;
     is_latest: boolean;
   }[];
+  template_set_name?: string;
 }
 
 // 服务绑定下的模板配置文件按照套餐分组数据
@@ -177,6 +179,8 @@ export interface IBoundTemplateDetail {
   byte_size: string;
   creator: string;
   create_at: string;
+  update_at: string;
+  is_conflict: boolean;
 }
 
 // 配置文件对比选中项
@@ -202,8 +206,16 @@ export interface IConfigImportItem {
   privilege: string;
   user: string;
   user_group: string;
-  sign: string;
+  signature: string;
   id: number;
+  variables: {
+    default_val: string;
+    memo: string;
+    name: string;
+    type: string;
+  }[];
+  file_name?: string;
+  is_exist: boolean;
 }
 
 // kv类型
@@ -212,6 +224,7 @@ export interface IConfigKvItem {
   kv_type: string;
   value: string;
   memo: string;
+  is_exist?: boolean;
 }
 
 // 单个kv配置详情
@@ -221,6 +234,7 @@ export interface IConfigKvType {
   content_spec: {
     signature: string;
     byte_size: string;
+    md5?: string;
   };
   kv_state: string;
   attachment: {

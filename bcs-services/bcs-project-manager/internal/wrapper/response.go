@@ -19,8 +19,8 @@ import (
 	"time"
 
 	authutils "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
-	"github.com/micro/go-micro/v2/errors"
-	"github.com/micro/go-micro/v2/server"
+	"go-micro.dev/v4/errors"
+	"go-micro.dev/v4/server"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/convert"

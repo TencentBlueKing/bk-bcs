@@ -17,7 +17,7 @@
         <SearchInput
           v-model="searchStr"
           class="version-search-input"
-          :placeholder="t('版本名称/版本说明/修改人')"
+          :placeholder="t('版本名称/版本描述/修改人')"
           :width="320"
           @search="handleSearch" />
       </div>
@@ -77,7 +77,7 @@
               </template>
             </template>
           </bk-table-column>
-          <bk-table-column :label="t('操作')">
+          <bk-table-column :label="t('操作')" :width="locale === 'zh-cn' ? '200' : '270'">
             <template #default="{ row }">
               <template v-if="row.status">
                 <template v-if="currentTab === 'avaliable'">
@@ -138,6 +138,7 @@
   import { datetimeFormat } from '../../../../../../utils/index';
   import { VERSION_STATUS_MAP, GET_UNNAMED_VERSION_DATA } from '../../../../../../constants/config';
   import { IConfigVersion, IConfigVersionQueryParams } from '../../../../../../../types/config';
+  import useTablePagination from '../../../../../../utils/hooks/use-table-pagination';
   import ServiceSelector from '../../components/service-selector.vue';
   import SearchInput from '../../../../../../components/search-input.vue';
   import VersionDiff from '../../config/components/version-diff/index.vue';
@@ -149,7 +150,8 @@
   const { versionData } = storeToRefs(configStore);
 
   const router = useRouter();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const { pagination, updatePagination } = useTablePagination('serviceVersionTableList');
 
   const props = defineProps<{
     bkBizId: string;
@@ -164,11 +166,6 @@
   const searchStr = ref('');
   const showDiffPanel = ref(false);
   const diffVersion = ref();
-  const pagination = ref({
-    current: 1,
-    count: 0,
-    limit: 10,
-  });
   const isSearchEmpty = ref(false);
   const operateConfirmDialog = ref({
     open: false,
@@ -263,8 +260,8 @@
   // 废弃
   const handleDeprecate = (version: IConfigVersion) => {
     operateConfirmDialog.value.open = true;
-    operateConfirmDialog.value.title = '确认废弃该版本';
-    operateConfirmDialog.value.tips = '此操作不会删除版本，如需找回或彻底删除请去版本详情的废弃版本列表操作';
+    operateConfirmDialog.value.title = t('确认废弃该版本');
+    operateConfirmDialog.value.tips = t('此操作不会删除版本，如需找回或彻底删除请去版本详情的废弃版本列表操作');
     operateConfirmDialog.value.version = version;
     operateConfirmDialog.value.confirmFn = () =>
       new Promise(() => {
@@ -272,7 +269,7 @@
           operateConfirmDialog.value.open = false;
           Message({
             theme: 'success',
-            message: '版本废弃成功',
+            message: t('版本废弃成功'),
           });
           updateListAndSetVersionAfterOperate(version.id);
         });
@@ -335,7 +332,7 @@
   };
 
   const handlePageLimitChange = (limit: number) => {
-    pagination.value.limit = limit;
+    updatePagination('limit', limit);
     refreshVersionList();
   };
 

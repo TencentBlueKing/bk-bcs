@@ -118,6 +118,7 @@ init_env() {
   REPO_MIRRORS=${REPO_MIRRORS:-"https://mirror.ccs.tencentyun.com"}
   ### other image
   BK_PUBLIC_REPO=${BK_PUBLIC_REPO:-"hub.bktencent.com"}
+  PRIVATE_DOCKER_REPO=${PRIVATE_DOCKER_REPO:-""}
 
   # helm
   BKREPO_URL=${BKREPO_URL:-"https://hub.bktencent.com/chartrepo/blueking"}
@@ -170,9 +171,9 @@ EOF
 check_env() {
   trap "utils::on_ERR;" ERR
   # match k8s_ver
-  if ! [[ $K8S_VER =~ ^1\.2[0-4] ]]; then
+  if ! [[ $K8S_VER =~ ^1\.2[0-8] ]]; then
     utils::log "ERROR" \
-      "Only support K8S_VER 1.2[0-4].x, here is :${K8S_VER}"
+      "Only support K8S_VER 1.2[0-8].x, here is :${K8S_VER}"
   fi
 
   # match cri and k8s_ver
@@ -317,6 +318,7 @@ MIRROR_IP="${MIRROR_IP}"
 REPO_MIRRORS="${REPO_MIRRORS}"
 ### registry.k8s.io
 BK_PUBLIC_REPO="${BK_PUBLIC_REPO}"
+PRIVATE_DOCKER_REPO="${PRIVATE_DOCKER_REPO}"
 
 ## helm
 BKREPO_URL="${BKREPO_URL}"

@@ -99,7 +99,7 @@ func (c *ClientOnlineState) syncClientOnlineState(kt *kit.Kit) {
 	for i := 0; i < listLen; i += limit {
 		list, err := c.set.Client().ListByHeartbeatTimeOnlineState(kt, heartbeatTime, onlineStatus, limit, page)
 		if err != nil {
-			logs.Errorf("get client data failed, rid: %s, heartbeatTime: %s, page: %s, err: %s", kt.Rid,
+			logs.Errorf("get client data failed, rid: %s, heartbeatTime: %s, page: %d, err: %s", kt.Rid,
 				heartbeatTime, page, err.Error())
 			return
 		}
@@ -111,7 +111,7 @@ func (c *ClientOnlineState) syncClientOnlineState(kt *kit.Kit) {
 		page = list[len(list)-1].ID
 		err = c.updateClientOnlineState(kt, list, heartbeatTime, onlineStatus)
 		if err != nil {
-			logs.Errorf("update client online state failed, rid: %s, heartbeatTime: %s, page: %s, err: %s", kt.Rid,
+			logs.Errorf("update client online state failed, rid: %s, heartbeatTime: %s, page: %d, err: %s", kt.Rid,
 				heartbeatTime, page, err.Error())
 			return
 		}

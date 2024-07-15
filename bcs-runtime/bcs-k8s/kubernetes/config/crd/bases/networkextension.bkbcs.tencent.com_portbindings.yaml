@@ -116,6 +116,147 @@ spec:
                           type: integer
                         sniSwitch:
                           type: integer
+                        uptimeCheck:
+                          description: UptimeCheckConfig 拨测配置
+                          properties:
+                            authorize:
+                              description: Authorize auth config
+                              properties:
+                                auth_config:
+                                  description: AuthConfig auth config
+                                  properties:
+                                    password:
+                                      type: string
+                                    token:
+                                      type: string
+                                    username:
+                                      type: string
+                                  type: object
+                                auth_type:
+                                  type: string
+                                insecure_skip_verify:
+                                  type: boolean
+                              type: object
+                            body:
+                              description: Body http body
+                              properties:
+                                content:
+                                  type: string
+                                content_type:
+                                  type: string
+                                data_type:
+                                  type: string
+                                params:
+                                  items:
+                                    description: Params http check params
+                                    properties:
+                                      desc:
+                                        type: string
+                                      is_enabled:
+                                        type: boolean
+                                      key:
+                                        type: string
+                                      value:
+                                        type: string
+                                    required:
+                                    - desc
+                                    - is_enabled
+                                    - key
+                                    - value
+                                    type: object
+                                  type: array
+                              type: object
+                            enabled:
+                              type: boolean
+                            groups:
+                              items:
+                                type: string
+                              type: array
+                            headers:
+                              items:
+                                description: Params http check params
+                                properties:
+                                  desc:
+                                    type: string
+                                  is_enabled:
+                                    type: boolean
+                                  key:
+                                    type: string
+                                  value:
+                                    type: string
+                                required:
+                                - desc
+                                - is_enabled
+                                - key
+                                - value
+                                type: object
+                              type: array
+                            method:
+                              description: HTTP(S) Related properties
+                              type: string
+                            nodes:
+                              items:
+                                type: string
+                              type: array
+                            period:
+                              format: int64
+                              type: integer
+                            port:
+                              description: Target   []string `json:"target"`
+                              format: int64
+                              type: integer
+                            port_define:
+                              description: define which port should be selected to
+                                check when use port segment
+                              enum:
+                              - FIRST
+                              - LAST
+                              type: string
+                            protocol:
+                              description: support HTTP(S)/ TCP/ UDP/ ICMP
+                              type: string
+                            query_params:
+                              items:
+                                description: Params http check params
+                                properties:
+                                  desc:
+                                    type: string
+                                  is_enabled:
+                                    type: boolean
+                                  key:
+                                    type: string
+                                  value:
+                                    type: string
+                                required:
+                                - desc
+                                - is_enabled
+                                - key
+                                - value
+                                type: object
+                              type: array
+                            request:
+                              type: string
+                            request_format:
+                              type: string
+                            response:
+                              type: string
+                            response_code:
+                              type: string
+                            response_format:
+                              type: string
+                            timeout:
+                              format: int64
+                              type: integer
+                            url_list:
+                              items:
+                                type: string
+                              type: array
+                            wait_empty_response:
+                              type: boolean
+                          required:
+                          - enabled
+                          - nodes
+                          type: object
                       type: object
                     loadBalancerIDs:
                       items:

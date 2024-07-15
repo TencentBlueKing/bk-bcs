@@ -15,6 +15,7 @@ package ingresscontroller
 
 import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 	k8scorev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/util/workqueue"
@@ -43,7 +44,8 @@ func NewEndpointsFilter(cli client.Client, endpointsCache *ingresscache.Cache) *
 }
 
 func (ef *EndpointsFilter) enqueueEndpointsRelatedIngress(eps *k8scorev1.Endpoints, q workqueue.RateLimitingInterface) {
-	ingressMetas := ef.ingressCache.GetRelatedIngressOfService(eps.GetNamespace(), eps.GetName())
+	ingressMetas := ef.ingressCache.GetRelatedIngressOfService(networkextensionv1.ServiceKindNativeService,
+		eps.GetNamespace(), eps.GetName())
 	if len(ingressMetas) == 0 {
 		return
 	}

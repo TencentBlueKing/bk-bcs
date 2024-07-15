@@ -122,6 +122,9 @@ func (r *BCSNetIPClaimReconciler) unboundIP(ctx context.Context, claim *netservi
 		return err
 	}
 	if netIP.Status.Phase == constant.BCSNetIPActiveStatus {
+		if err := utils.FixActiveIP(r.Client, netIP); err != nil {
+			return err
+		}
 		return fmt.Errorf("delete claim %s failed, bounded BCSNetIP %s in Active status",
 			fmt.Sprintf("%s/%s", claim.Namespace, claim.Name), claim.Status.BoundedIP)
 	}

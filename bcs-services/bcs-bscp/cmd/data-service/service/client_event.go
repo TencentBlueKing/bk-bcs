@@ -113,32 +113,28 @@ func (s *Service) handleCreateClientEvents(kt *kit.Kit, clientEvents []*pbce.Cli
 		keyWithoutCursor := fmt.Sprintf("%d-%d-%s-%s", item.Attachment.BizId, item.Attachment.AppId, item.Attachment.Uid,
 			item.Attachment.CursorId)
 		v, ok := oldData[keyWithoutCursor]
-		if item.Spec.EndTime.GetSeconds() < 0 {
+		if item.Spec.EndTime.GetSeconds() <= 0 {
 			item.Spec.EndTime = nil
 		}
 		fullKey := fmt.Sprintf("%d-%d-%s", item.Attachment.BizId, item.Attachment.AppId, item.Attachment.Uid)
-		if clientID[fullKey] > 0 {
-			item.Attachment.ClientId = clientID[fullKey]
-			if !ok {
-				if !existingKeys[keyWithoutCursor] {
-					toCreate = append(toCreate, &table.ClientEvent{
-						Attachment: item.Attachment.ClientEventAttachment(),
-						Spec:       item.Spec.ClientEventSpec(),
-					})
-					existingKeys[keyWithoutCursor] = true
-				} else {
-					toUpdate[item.MessageType] = append(toUpdate[item.MessageType], &table.ClientEvent{
-						Attachment: item.Attachment.ClientEventAttachment(),
-						Spec:       item.Spec.ClientEventSpec(),
-					})
-				}
+		if clientID[fullKey] <= 0 {
+			continue
+		}
+		item.Attachment.ClientId = clientID[fullKey]
+		clientEvent := &table.ClientEvent{
+			Attachment: item.Attachment.ClientEventAttachment(),
+			Spec:       item.Spec.ClientEventSpec(),
+		}
+		if !ok {
+			if !existingKeys[keyWithoutCursor] {
+				toCreate = append(toCreate, clientEvent)
+				existingKeys[keyWithoutCursor] = true
 			} else {
-				toUpdate[item.MessageType] = append(toUpdate[item.MessageType], &table.ClientEvent{
-					ID:         v,
-					Attachment: item.Attachment.ClientEventAttachment(),
-					Spec:       item.Spec.ClientEventSpec(),
-				})
+				toUpdate[item.MessageType] = append(toUpdate[item.MessageType], clientEvent)
 			}
+		} else {
+			clientEvent.ID = v
+			toUpdate[item.MessageType] = append(toUpdate[item.MessageType], clientEvent)
 		}
 	}
 
@@ -153,17 +149,14 @@ func (s *Service) ListClientEvents(ctx context.Context, req *pbds.ListClientEven
 	var err error
 	var starTime, endTime time.Time
 	if len(req.GetStartTime()) > 0 {
-		starTime, err = time.Parse("2006-01-02", req.GetStartTime())
+		starTime, err = time.ParseInLocation(time.RFC3339, req.GetStartTime(), time.UTC)
 		if err != nil {
 			return nil, err
 		}
-		// 设置时分秒为 00:00:00
-		starTime = time.Date(starTime.Year(), starTime.Month(), starTime.Day(), 0, 0, 0, 0, starTime.Location())
 	}
+
 	if len(req.GetEndTime()) > 0 {
-		endTime, err = time.Parse("2006-01-02", req.GetEndTime())
-		// 设置时分秒为 23:59:59
-		endTime = time.Date(endTime.Year(), endTime.Month(), endTime.Day(), 23, 59, 59, 0, endTime.Location())
+		endTime, err = time.ParseInLocation(time.RFC3339, req.GetEndTime(), time.UTC)
 		if err != nil {
 			return nil, err
 		}

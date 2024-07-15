@@ -13,6 +13,7 @@
 package service
 
 import (
+	"errors"
 	"io"
 	"net/http"
 	"strconv"
@@ -21,6 +22,7 @@ import (
 	"k8s.io/klog/v2"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/repository"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/auth"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
@@ -44,7 +46,98 @@ func (s *repoService) UploadFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	metadata, err := s.provider.Upload(kt, sign, r.Body)
+	metadata := &repository.ObjectMetadata{
+		Sha256: sign,
+	}
+
+	// if err is ErrFileContentNotFound, the file does not exist. Do not handle it
+	existObjectMetadata, err := s.provider.Metadata(kt, sign)
+	if err != nil && !errors.Is(err, errf.ErrFileContentNotFound) {
+		render.Render(w, r, rest.BadRequest(err))
+		return
+	}
+
+	if err == nil {
+		metadata.ByteSize = existObjectMetadata.ByteSize
+		render.Render(w, r, rest.OKRender(metadata))
+		return
+	}
+
+	metadata, err = s.provider.Upload(kt, sign, r.Body)
+	if err != nil {
+		render.Render(w, r, rest.BadRequest(err))
+		return
+	}
+
+	render.Render(w, r, rest.OKRender(metadata))
+}
+
+// InitMultipartUploadFile init multipart upload to repo provider
+func (s *repoService) InitMultipartUploadFile(w http.ResponseWriter, r *http.Request) {
+	kt := kit.MustGetKit(r.Context())
+
+	sign, err := repository.GetFileSign(r)
+	if err != nil {
+		render.Render(w, r, rest.BadRequest(err))
+		return
+	}
+
+	uploadID, err := s.provider.InitMultipartUpload(kt, sign)
+	if err != nil {
+		render.Render(w, r, rest.BadRequest(err))
+		return
+	}
+
+	render.Render(w, r, rest.OKRender(uploadID))
+}
+
+// MultipartUploadFile multipart upload to repo provider
+func (s *repoService) MultipartUploadFile(w http.ResponseWriter, r *http.Request) {
+	kt := kit.MustGetKit(r.Context())
+
+	sign, err := repository.GetFileSign(r)
+	if err != nil {
+		render.Render(w, r, rest.BadRequest(err))
+		return
+	}
+
+	uploadID, err := repository.GetMultipartUploadID(r)
+	if err != nil {
+		render.Render(w, r, rest.BadRequest(err))
+		return
+	}
+
+	partNum, err := repository.GetPartNum(r)
+	if err != nil {
+		render.Render(w, r, rest.BadRequest(err))
+		return
+	}
+
+	if err := s.provider.MultipartUpload(kt, sign, uploadID, partNum, r.Body); err != nil {
+		render.Render(w, r, rest.BadRequest(err))
+		return
+	}
+
+	render.Render(w, r, rest.OKRender(nil))
+}
+
+// CompleteMultipartUploadFile complete multipart upload to repo provider
+func (s *repoService) CompleteMultipartUploadFile(w http.ResponseWriter, r *http.Request) {
+	kt := kit.MustGetKit(r.Context())
+
+	sign, err := repository.GetFileSign(r)
+	if err != nil {
+		render.Render(w, r, rest.BadRequest(err))
+		return
+	}
+
+	uploadID, err := repository.GetMultipartUploadID(r)
+	if err != nil {
+		render.Render(w, r, rest.BadRequest(err))
+		return
+	}
+
+	metadata, err := s.provider.CompleteMultipartUpload(kt, sign, uploadID)
 	if err != nil {
 		render.Render(w, r, rest.BadRequest(err))
 		return

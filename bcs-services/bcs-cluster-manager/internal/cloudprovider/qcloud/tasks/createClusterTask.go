@@ -26,6 +26,7 @@ import (
 	"github.com/ghodss/yaml"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	cvm "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cvm/v20170312"
+	vpc "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/vpc/v20170312"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
@@ -34,6 +35,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/template"
 	providerutils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/lock"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
@@ -44,7 +46,8 @@ import (
 // as far as possible to keep every operation unit simple
 
 // generateClusterCIDRInfo cidr info
-func generateClusterCIDRInfo(cluster *proto.Cluster) *api.ClusterCIDRSettings {
+func generateClusterCIDRInfo(ctx context.Context, cluster *proto.Cluster,
+	opt *cloudprovider.CommonOption) (*api.ClusterCIDRSettings, error) {
 	cidrInfo := &api.ClusterCIDRSettings{
 		ClusterCIDR:          cluster.NetworkSettings.ClusterIPv4CIDR,
 		MaxNodePodNum:        uint64(cluster.NetworkSettings.MaxNodePodNum),
@@ -52,7 +55,28 @@ func generateClusterCIDRInfo(cluster *proto.Cluster) *api.ClusterCIDRSettings {
 		ServiceCIDR:          cluster.NetworkSettings.ServiceIPv4CIDR,
 	}
 
-	return cidrInfo
+	// cluster.NetworkSettings.ClusterIPv4CIDR is empty, auto allocate cidr when create cluster
+	if cluster.NetworkSettings.ClusterIPv4CIDR == "" {
+
+		cloudprovider.GetDistributeLock().Lock(utils.BuildAllocateVpcCidrLockKey(
+			cluster.Provider, cluster.Region, cluster.VpcID), []lock.LockOption{lock.LockTTL(time.Second * 5)}...)
+		defer cloudprovider.GetDistributeLock().Unlock(utils.BuildAllocateVpcCidrLockKey(
+			cluster.Provider, cluster.Region, cluster.VpcID))
+
+		mask := utils.CalMaskLen(float64(cluster.NetworkSettings.CidrStep))
+		subnet, err := business.AllocateGrCidrSubnet(ctx, opt, cluster.GetProvider(),
+			cluster.VpcID, int(mask), nil)
+		if err != nil {
+			return nil, err
+		}
+		cidrInfo.ClusterCIDR = subnet.ID
+		cluster.NetworkSettings.ClusterIPv4CIDR = subnet.ID
+
+		// update cluster cidr info
+		_ = cloudprovider.UpdateCluster(cluster)
+	}
+
+	return cidrInfo, nil
 }
 
 // generateTags tags info
@@ -550,12 +574,17 @@ func createTkeCluster(ctx context.Context, info *cloudprovider.CloudDependBasicI
 		}
 	}
 
+	clusterCidr, err := generateClusterCIDRInfo(ctx, info.Cluster, info.CmOption)
+	if err != nil {
+		return nil, err
+	}
+
 	// cluster create request
 	req := &api.CreateClusterRequest{
 		AddNodeMode:     info.Cluster.AutoGenerateMasterNodes,
 		Region:          info.Cluster.Region,
 		ClusterType:     info.Cluster.ManageType,
-		ClusterCIDR:     generateClusterCIDRInfo(info.Cluster),
+		ClusterCIDR:     clusterCidr,
 		ClusterBasic:    generateClusterBasicInfo(info.Cluster, imageID, operator),
 		ClusterAdvanced: generateClusterAdvancedInfo(info.Cluster),
 		InstanceAdvanced: business.GenerateClsAdvancedInsSettingFromNT(info, template.RenderVars{
@@ -832,123 +861,57 @@ func CheckTkeClusterStatusTask(taskID string, stepName string) error {
 }
 
 // enableTkeClusterVpcCni enable tke cluster vpc-cni mode
-func enableTkeClusterVpcCni(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, systemID string) error {
+func enableTkeClusterVpcCni(ctx context.Context,
+	systemID string, subnetIds []string, cluster *proto.Cluster, opt *cloudprovider.CommonOption) error {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
-	cli, err := api.NewTkeClient(info.CmOption)
+	cli, err := api.NewTkeClient(opt)
 	if err != nil {
 		blog.Errorf("enableTkeClusterVpcCni[%s] getTkeClient cluster[%s] failed: %v",
-			taskID, info.Cluster.ClusterID, err.Error())
+			taskID, cluster.ClusterID, err.Error())
 		retErr := fmt.Errorf("get cloud tke client err, %s", err.Error())
 		return retErr
 	}
+	blog.Infof("enableTkeClusterVpcCni[%s] enable %v subnets %+v",
+		taskID, cluster.NetworkSettings.EnableVPCCni, cluster.NetworkSettings.EniSubnetIDs)
 
-	blog.Infof("enableTkeClusterVpcCni[%s]: enableVPCCni %v", taskID, info.Cluster.NetworkSettings.EnableVPCCni)
-
-	var (
-		abnormal = false
-	)
-
-	if info.Cluster.NetworkSettings.EnableVPCCni {
-		err = cli.EnableTKEVpcCniMode(&api.EnableVpcCniInput{
-			TkeClusterID:   systemID,
-			VpcCniType:     api.TKEDirectEni,
-			SubnetsIDs:     info.Cluster.NetworkSettings.EniSubnetIDs,
-			EnableStaticIp: info.Cluster.NetworkSettings.IsStaticIpMode,
-			ExpiredSeconds: int(info.Cluster.NetworkSettings.ClaimExpiredSeconds),
-		})
-		if err != nil {
-			blog.Errorf("enableTkeClusterVpcCni[%s] tke EnableTKEVpcCniMode for cluster[%s] failed: %v",
-				taskID, info.Cluster.ClusterID, err)
-			retErr := fmt.Errorf("EnableTKEVpcCniMode failed: %s", err.Error())
-			return retErr
-		}
-
-		ctxTime, cancel := context.WithTimeout(context.Background(), time.Minute*30)
-		defer cancel()
-
-		err = loop.LoopDoFunc(ctxTime, func() error {
-			status, errGet := cli.GetEnableVpcCniProgress(systemID)
-			if errGet != nil {
-				blog.Errorf("enableTkeClusterVpcCni[%s] GetEnableVpcCniProgress failed: %v", taskID, errGet)
-				return nil
-			}
-
-			blog.Infof("enableTkeClusterVpcCni[%s]: GetEnableVpcCniProgress current status[%s]",
-				taskID, status.Status)
-
-			switch status.Status {
-			case string(api.Succeed):
-				return loop.EndLoop
-			case string(api.Failed):
-				abnormal = true
-				return loop.EndLoop
-			}
-
-			return nil
-		}, loop.LoopInterval(time.Second*5))
-		if err != nil {
-			blog.Errorf("enableTkeClusterVpcCni[%s] GetEnableVpcCniProgress failed: %v", taskID, err)
-			return err
-		}
-		if abnormal {
-			blog.Errorf("enableTkeClusterVpcCni[%s] GetEnableVpcCniProgress status abnormal", taskID)
-			retErr := fmt.Errorf("GetEnableVpcCniProgress[%s] api timeout|abnormal", info.Cluster.ClusterID)
-			return retErr
-		}
-	}
-
-	return nil
-}
-
-// EnableTkeClusterVpcCniTask enable on vpc-cni networkMode
-func EnableTkeClusterVpcCniTask(taskID string, stepName string) error {
-	start := time.Now()
-	// get task and task current step
-	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
-	if err != nil {
-		return err
-	}
-	// previous step successful when retry task
-	if step == nil {
-		blog.Infof("EnableTkeClusterVpcCniTask[%s]: current step[%s] successful and skip", taskID, stepName)
-		return nil
-	}
-	blog.Infof("EnableTkeClusterVpcCniTask[%s]: task %s run step %s, system: %s, old state: %s, params %v",
-		taskID, taskID, stepName, step.System, step.Status, step.Params)
-
-	// step login started here
-	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
-	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
-	systemID := state.Task.CommonParams[cloudprovider.CloudSystemID.String()]
-
-	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
-		ClusterID: clusterID,
-		CloudID:   cloudID,
+	err = cli.EnableTKEVpcCniMode(&api.EnableVpcCniInput{
+		TkeClusterID:   systemID,
+		VpcCniType:     api.TKERouteEni,
+		SubnetsIDs:     subnetIds,
+		EnableStaticIp: cluster.NetworkSettings.IsStaticIpMode,
+		ExpiredSeconds: int(cluster.NetworkSettings.ClaimExpiredSeconds),
 	})
 	if err != nil {
-		blog.Errorf("EnableTkeClusterVpcCniTask[%s]: GetClusterDependBasicInfo for cluster %s in task %s "+
-			"step %s failed, %s", taskID, clusterID, taskID, stepName, err.Error())
-		retErr := fmt.Errorf("get cloud/project information failed, %s", err.Error())
-		_ = state.UpdateStepFailure(start, stepName, retErr)
+		blog.Errorf("enableTkeClusterVpcCni[%s] tke EnableTKEVpcCniMode for cluster[%s] failed: %v",
+			taskID, cluster.ClusterID, err)
+		retErr := fmt.Errorf("EnableTKEVpcCniMode failed: %s", err.Error())
 		return retErr
 	}
 
-	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
+	ctxTime, cancel := context.WithTimeout(context.Background(), time.Minute*5)
+	defer cancel()
 
-	// enableTkeClusterVpcCni task
-	err = enableTkeClusterVpcCni(ctx, dependInfo, systemID)
+	err = loop.LoopDoFunc(ctxTime, func() error {
+		status, errGet := cli.GetEnableVpcCniProgress(systemID)
+		if errGet != nil {
+			blog.Errorf("enableTkeClusterVpcCni[%s] GetEnableVpcCniProgress failed: %v", taskID, errGet)
+			return nil
+		}
+
+		blog.Infof("enableTkeClusterVpcCni[%s]: GetEnableVpcCniProgress current status[%s] message[%s]",
+			taskID, status.Status, status.Message)
+
+		switch status.Status {
+		case string(api.Succeed):
+			return loop.EndLoop
+		default:
+		}
+
+		return nil
+	}, loop.LoopInterval(time.Second*5))
 	if err != nil {
-		blog.Errorf("EnableTkeClusterVpcCniTask[%s] enableTkeClusterVpcCni failed: %v",
-			taskID, err)
-		retErr := fmt.Errorf("enableTkeClusterVpcCni[%s] abnormal", clusterID)
-		_ = state.UpdateStepFailure(start, stepName, retErr)
-		return retErr
-	}
-
-	// update step
-	if err = state.UpdateStepSucc(start, stepName); err != nil {
-		blog.Errorf("EnableTkeClusterVpcCniTask[%s] task %s %s update to storage fatal", taskID, taskID, stepName)
+		blog.Errorf("enableTkeClusterVpcCni[%s] GetEnableVpcCniProgress failed: %v", taskID, err)
 		return err
 	}
 
@@ -1175,10 +1138,10 @@ func getRandomSubnetByVpcID(ctx context.Context, info *cloudprovider.CloudDepend
 	}
 
 	// pick available subnet
-	availableSubnet := make([]*api.Subnet, 0)
+	availableSubnet := make([]*vpc.Subnet, 0)
 	for i := range subnets {
-		match := utils.MatchSubnet(*subnets[i].SubnetName, info.Cluster.Region)
-		if match && *subnets[i].AvailableIPAddressCount > 0 {
+		match := utils.MatchPatternSubnet(*subnets[i].SubnetName, info.Cluster.Region)
+		if match && *subnets[i].AvailableIpAddressCount > 0 {
 			availableSubnet = append(availableSubnet, subnets[i])
 		}
 	}
@@ -1187,7 +1150,7 @@ func getRandomSubnetByVpcID(ctx context.Context, info *cloudprovider.CloudDepend
 	}
 
 	rand.Seed(time.Now().Unix())                                           // nolint
-	return *availableSubnet[rand.Intn(len(availableSubnet))].SubnetID, nil // nolint
+	return *availableSubnet[rand.Intn(len(availableSubnet))].SubnetId, nil // nolint
 }
 
 // openClusterAdminKubeConfig open account cluster admin perm

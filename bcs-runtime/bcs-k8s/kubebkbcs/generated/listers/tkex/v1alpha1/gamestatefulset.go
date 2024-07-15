@@ -22,8 +22,10 @@ import (
 )
 
 // GameStatefulSetLister helps list GameStatefulSets.
+// All objects returned here must be treated as read-only.
 type GameStatefulSetLister interface {
 	// List lists all GameStatefulSets in the indexer.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1alpha1.GameStatefulSet, err error)
 	// GameStatefulSets returns an object that can list and get GameStatefulSets.
 	GameStatefulSets(namespace string) GameStatefulSetNamespaceLister
@@ -54,10 +56,13 @@ func (s *gameStatefulSetLister) GameStatefulSets(namespace string) GameStatefulS
 }
 
 // GameStatefulSetNamespaceLister helps list and get GameStatefulSets.
+// All objects returned here must be treated as read-only.
 type GameStatefulSetNamespaceLister interface {
 	// List lists all GameStatefulSets in the indexer for a given namespace.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1alpha1.GameStatefulSet, err error)
 	// Get retrieves the GameStatefulSet from the indexer for a given namespace and name.
+	// Objects returned here must be treated as read-only.
 	Get(name string) (*v1alpha1.GameStatefulSet, error)
 	GameStatefulSetNamespaceListerExpansion
 }

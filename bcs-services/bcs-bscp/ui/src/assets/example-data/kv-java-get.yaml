@@ -1,0 +1,59 @@
+package com.example.get;
+
+import com.tencent.bscp.helper.OptionHelper;
+import com.tencent.bscp.pojo.AppOption;
+import com.tencent.bscp.pojo.KvMetaV1;
+import com.tencent.bscp.pojo.Release;
+import com.tencent.bscp.sdk.Client;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.lang.invoke.MethodHandles;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class Main {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
+    public static void main(String[] args) {
+
+        String feedAddr = "{{ .Bk_Bscp_Variable_FEED_ADDR }}";
+        Integer biz = {{ .Bk_Bscp_Variable_BkBizId }};
+        String token = {{ .Bk_Bscp_Variable_ClientKey }};
+        String app = "{{ .Bk_Bscp_Variable_ServiceName }}";
+
+        Map<String, String> labels = new HashMap<>();
+        {{ .Bk_Bscp_Variable_Leabels }}
+
+        try {
+            Client bscp = new Client(
+                    OptionHelper.withFeedAddr(feedAddr),
+                    OptionHelper.withBizID(biz),
+                    OptionHelper.withToken(token),
+                    OptionHelper.withLabels(labels));
+
+            List<AppOption> opts = new ArrayList<>();
+            List<String> match = new ArrayList<>();
+
+            Release release = bscp.pullKvs(app, match, opts.toArray(new AppOption[0]));
+
+            for (KvMetaV1 kv : release.getKvItems()) {
+                System.out.println(
+                        kv.getKey() + "=" + bscp.get(app, kv.getKey(), opts.toArray(new AppOption[0])));
+            }
+
+            bscp.close();
+
+            System.out.println("get success");
+
+        } catch (Exception e) {
+            LOGGER.error("get bscp kv failed", e);
+            System.exit(1);
+            return;
+        }
+        return;
+    }
+}

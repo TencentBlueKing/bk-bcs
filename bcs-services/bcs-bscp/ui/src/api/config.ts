@@ -127,7 +127,13 @@ export const getReleasedConfigItemDetail = (
  * @param signature 文件内容的SHA256值
  * @returns
  */
-export const updateConfigContent = (bizId: string, appId: number, data: string | File, signature: string) =>
+export const updateConfigContent = (
+  bizId: string,
+  appId: number,
+  data: string | File,
+  signature: string,
+  progress?: Function,
+) =>
   http
     .put(`/biz/${bizId}/content/upload`, data, {
       headers: {
@@ -135,6 +141,12 @@ export const updateConfigContent = (bizId: string, appId: number, data: string |
         'X-Bkapi-File-Content-Id': signature,
         'X-Bkapi-File-Content-Overwrite': 'false',
         'Content-Type': 'text/plain',
+      },
+      onUploadProgress: (progressEvent: any) => {
+        if (progress) {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          progress(percentCompleted);
+        }
       },
     })
     .then((res) => res.data);
@@ -144,11 +156,12 @@ export const updateConfigContent = (bizId: string, appId: number, data: string |
  * @param bizId 业务ID
  * @param appId 模板空间ID
  * @param signature sha256签名
+ * @param isBlob 是否需要返回二进制流，下载配置文件时需要
  * @returns
  */
-export const downloadConfigContent = (bizId: string, appId: number, signature: string) =>
+export const downloadConfigContent = (bizId: string, appId: number, signature: string, isBlob = false) =>
   http
-    .get<string, string>(`/biz/${bizId}/content/download`, {
+    .get<string, Blob | string>(`/biz/${bizId}/content/download`, {
       headers: {
         'X-Bscp-Template-Space-Id': appId,
         'X-Bkapi-File-Content-Id': signature,
@@ -156,6 +169,7 @@ export const downloadConfigContent = (bizId: string, appId: number, signature: s
       transitional: {
         forcedJSONParsing: false,
       },
+      ...(isBlob && { responseType: 'blob' }), // 文件为二进制流，需要设置响应类型为blob才能正确解析
     })
     .then((res) => res);
 
@@ -386,14 +400,24 @@ export const deleteBoundPkg = (bizId: string, appId: number, bindingId: number, 
  * 导入非模板配置文件压缩包
  * @param biz_id 业务ID
  * @param appId 应用ID
- * @param fill 导入文件
+ * @param file 导入文件
  * @returns
  */
-export const importNonTemplateConfigFile = (biz_id: string, appId: number, fill: any) =>
+export const importNonTemplateConfigFile = (
+  biz_id: string,
+  appId: number,
+  file: any,
+  isDecompression: boolean,
+  progress: Function,
+) =>
   http
-    .post(`/config/biz/${biz_id}/apps/${appId}/config_item/import`, fill, {
+    .post(`/config/biz/${biz_id}/apps/${appId}/config_item/import/${encodeURIComponent(file.name)}`, file, {
       headers: {
-        'Content-Type': 'application/zip',
+        'X-Bscp-Unzip': isDecompression,
+      },
+      onUploadProgress: (progressEvent: any) => {
+        const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+        progress(percentCompleted);
       },
     })
     .then((res) => res.data);
@@ -406,12 +430,8 @@ export const importNonTemplateConfigFile = (biz_id: string, appId: number, fill:
  * @param template_set_ids 模板套餐ID列表
  * @returns
  */
-export const batchAddConfigList = (bizId: string, appId: number, list: any) =>
-  http
-    .put(`/config/biz/${bizId}/apps/${appId}/config_items`, {
-      items: list,
-    })
-    .then((res) => res.data);
+export const batchAddConfigList = (bizId: string, appId: number, query: any) =>
+  http.put(`/config/biz/${bizId}/apps/${appId}/config_items`, query).then((res) => res.data);
 
 /**
  * 创建kv
@@ -431,16 +451,6 @@ export const createKv = (bizId: string, appId: number, kv: any) =>
  */
 export const getKvList = (bizId: string, appId: number, query: ICommonQuery) =>
   http.get(`/config/biz/${bizId}/apps/${appId}/kvs`, { params: query }).then((res) => res.data);
-
-/**
- * 批量上传｜更新kv
- * @param bizId 业务ID
- * @param appId 应用ID
- * @param kvs 上传kv列表
- * @returns
- */
-export const batchUpsertKv = (bizId: string, appId: number, kvs: any) =>
-  http.put(`/config/biz/${bizId}/apps/${appId}/kvs`, { kvs });
 
 /**
  * 更新kv
@@ -552,3 +562,71 @@ export const unModifyConfigItem = (bizId: string, appId: number, id: number) =>
  */
 export const unDeleteConfigItem = (bizId: string, appId: number, id: number) =>
   http.post(`/config/undelete/config_item/config_item/config_item_id/${id}/app_id/${appId}/biz_id/${bizId}`);
+
+/**
+ * 从历史版本导入配置项
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param other_app_id 导入服务id
+ * @param release_id 版本id
+ * @returns
+ */
+export const importFromHistoryVersion = (
+  bizId: string,
+  appId: number,
+  params: { other_app_id: number; release_id: number },
+) => http.get(`/config/biz/${bizId}/apps/${appId}/config_items/compare_conflicts`, { params });
+
+/**
+ * 从历史版本导入kv配置项
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param other_app_id 导入服务id
+ * @param release_id 版本id
+ * @returns
+ */
+export const importKvFromHistoryVersion = (
+  bizId: string,
+  appId: number,
+  params: { other_app_id: number; release_id: number },
+) => http.get(`/config/biz/${bizId}/apps/${appId}/kvs/compare_conflicts`, { params });
+
+/**
+ * 简单文本导入kv配置项
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param kvs 上传kv列表
+ * @returns
+ */
+export const importKvFormText = (bizId: string, appId: number, kvs: any, replace_all: boolean) =>
+  http.put(`/config/biz/${bizId}/apps/${appId}/kvs`, { kvs, replace_all });
+
+/**
+ * json文本导入kv配置项
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param kvs 上传kv列表
+ * @returns
+ */
+export const importKvFormJson = (bizId: string, appId: number, content: string) =>
+  http.post(`/config/biz/${bizId}/apps/${appId}/kvs/json/import`, { data: content });
+
+/**
+ * yaml文本导入kv配置项
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param kvs 上传kv列表
+ * @returns
+ */
+export const importKvFormYaml = (bizId: string, appId: number, content: string) =>
+  http.post(`/config/biz/${bizId}/apps/${appId}/kvs/yaml/import`, { data: content });
+
+/**
+ * 判断生成版本名称是否重名
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param kvs 上传kv列表
+ * @returns
+ */
+export const createVersionNameCheck = (bizId: string, appId: number, name: string) =>
+  http.get(`/config/biz_id/${bizId}/app_id/${appId}/release/${name}/check`);

@@ -1,9 +1,13 @@
 <template>
   <Teleport :disabled="!isOpenFullScreen" to="body">
-    <div :class="{ fullscreen: isOpenFullScreen }">
+    <div
+      :class="{ fullscreen: isOpenFullScreen }"
+      @mouseenter="isShowOperationBtn = true"
+      @mouseleave="isShowOperationBtn = false">
       <Card :title="t('拉取成功率')" :height="416" :width="318">
         <template #operation>
           <OperationBtn
+            v-show="isShowOperationBtn"
             :is-open-full-screen="isOpenFullScreen"
             @refresh="loadChartData"
             @toggle-full-screen="isOpenFullScreen = !isOpenFullScreen" />
@@ -60,6 +64,7 @@
   const tooltipRef = ref();
   const jumpStatus = ref('');
   const isOpenFullScreen = ref(false);
+  const isShowOperationBtn = ref(false);
 
   watch(
     () => props.appId,
@@ -81,16 +86,21 @@
       if (!val.length && piePlot) {
         piePlot!.destroy();
         piePlot = null;
-      } else {
-        piePlot?.changeData(data.value);
       }
     },
   );
 
   watch(
     () => searchQuery.value,
-    () => {
-      loadChartData();
+    async () => {
+      await loadChartData();
+      if (data.value.length) {
+        if (piePlot) {
+          piePlot!.changeData(data.value);
+        } else {
+          initChart();
+        }
+      }
     },
     { deep: true },
   );
@@ -129,20 +139,27 @@
       angleField: 'count',
       colorField: 'release_change_status',
       color: ({ release_change_status }) => {
-        return release_change_status === '拉取成功' ? '#85CCA8' : '#F5876C';
+        return release_change_status === t('拉取成功') ? '#85CCA8' : '#F5876C';
       },
       radius: 0.9,
       label: {
         type: 'inner',
         offset: '-30%',
-        content: ({ percent }) => `${(percent * 100).toFixed(0)}%`,
+        content: ({ percent }) => `${(percent * 100).toFixed(1)}%`,
         style: {
           fontSize: 14,
           textAlign: 'center',
         },
         autoRotate: false,
       },
-      interactions: [{ type: 'element-active' }],
+      interactions: [{ type: 'element-highlight' }],
+      state: {
+        active: {
+          style: {
+            stroke: '#ffffff',
+          },
+        },
+      },
       legend: {
         position: 'bottom',
       },
@@ -153,7 +170,7 @@
         container: tooltipRef.value?.getDom(),
         enterable: true,
         customItems: (originalItems: any[]) => {
-          jumpStatus.value = originalItems[0].data.release_change_status;
+          jumpStatus.value = originalItems[0].data.release_change_status === t('拉取成功') ? 'Success' : 'Failed';
           originalItems[0].name = t('客户端数量');
           originalItems[1].name = t('占比');
           originalItems[1].value = `${(parseFloat(originalItems[1].value) * 100).toFixed(1)}%`;
@@ -165,11 +182,12 @@
   };
 
   const jumpToSearch = () => {
-    router.push({
+    const routeData = router.resolve({
       name: 'client-search',
       params: { appId: props.appId, bizId: props.bkBizId },
-      query: { release_change_status: jumpStatus.value },
+      query: { release_change_status: jumpStatus.value, heartTime: searchQuery.value.last_heartbeat_time },
     });
+    window.open(routeData.href, '_blank');
   };
 </script>
 
@@ -184,13 +202,41 @@
     width: 100vw;
     height: 100vh;
     z-index: 5000;
-    background-color: rgba(0, 0, 0, 0.6);
     .card {
-      position: absolute;
       width: 100% !important;
-      height: 80vh !important;
-      top: 50%;
-      transform: translateY(-50%);
+      height: 100vh !important;
+      :deep(.operation-btn) {
+        top: 0 !important;
+      }
+    }
+  }
+  :deep(.bk-exception) {
+    height: 100%;
+    justify-content: center;
+    transform: translateY(-20px);
+  }
+
+  :deep(.g2-tooltip) {
+    .g2-tooltip-title {
+      padding-left: 16px;
+      font-size: 14px;
+    }
+    .g2-tooltip-list-item:nth-child(2) {
+      .g2-tooltip-marker {
+        display: none !important;
+      }
+      .g2-tooltip-name {
+        margin-left: 16px;
+      }
+    }
+    .g2-tooltip-list-item:nth-child(1) {
+      .g2-tooltip-marker {
+        position: absolute;
+        top: 15px;
+      }
+      .g2-tooltip-name {
+        margin-left: 16px;
+      }
     }
   }
 </style>

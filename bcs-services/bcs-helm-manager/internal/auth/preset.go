@@ -40,6 +40,7 @@ var ActionPermissions = map[string]string{
 
 	// Release
 	"HelmManager.ListReleaseV1":          project.CanViewProjectOperation,
+	"HelmManager.ListReleaseV2":          project.CanViewProjectOperation,
 	"HelmManager.GetReleaseDetailV1":     namespace.CanViewNamespaceScopedResourceOperation,
 	"HelmManager.InstallReleaseV1":       namespace.CanCreateNamespaceScopedResourceOperation,
 	"HelmManager.UninstallReleaseV1":     namespace.CanDeleteNamespaceScopedResourceOperation,

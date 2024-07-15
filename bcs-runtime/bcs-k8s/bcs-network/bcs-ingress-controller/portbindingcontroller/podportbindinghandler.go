@@ -23,6 +23,7 @@ import (
 	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8stypes "k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
+	"k8s.io/client-go/util/retry"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
@@ -123,34 +124,45 @@ func (p *PodPortBindingHandler) updatePodCondition(pod *k8scorev1.Pod, status st
 	if _, ok := pod.Annotations[constant.AnnotationForPortPoolReadinessGate]; !ok {
 		return nil
 	}
-	found := false
-	for i, condition := range pod.Status.Conditions {
-		if condition.Type == constant.ConditionTypeBcsIngressPortBinding {
-			if condition.Status == k8scorev1.ConditionFalse {
-				if status == constant.PortBindingStatusReady {
-					pod.Status.Conditions[i].Status = k8scorev1.ConditionTrue
-					pod.Status.Conditions[i].Reason = constant.ConditionReasonReadyBcsIngressPortBinding
-					pod.Status.Conditions[i].Message = constant.ConditionMessageReadyBcsIngressPortBinding
-				} else {
-					pod.Status.Conditions[i].Status = k8scorev1.ConditionFalse
-					pod.Status.Conditions[i].Reason = constant.ConditionReasonNotReadyBcsIngressPortBinding
-					pod.Status.Conditions[i].Message = constant.ConditionMessageNotReadyBcsIngressPortBinding
-				}
-			}
-			found = true
-			break
+	if err := retry.RetryOnConflict(retry.DefaultBackoff, func() error {
+		newPod := &k8scorev1.Pod{}
+		if err := p.k8sClient.Get(p.ctx, k8stypes.NamespacedName{Namespace: pod.GetNamespace(),
+			Name: pod.GetName()}, newPod); err != nil {
+			return err
 		}
-	}
-	if !found && status == constant.PortBindingStatusReady {
-		pod.Status.Conditions = append(pod.Status.Conditions, k8scorev1.PodCondition{
-			Type:    constant.ConditionTypeBcsIngressPortBinding,
-			Status:  k8scorev1.ConditionTrue,
-			Reason:  constant.ConditionReasonReadyBcsIngressPortBinding,
-			Message: constant.ConditionMessageReadyBcsIngressPortBinding,
-		})
-	}
-	if err := p.k8sClient.Status().Update(context.Background(), pod, &client.UpdateOptions{}); err != nil {
-		err = errors.Wrapf(err, "update pod %s/%s condition failed", pod.GetName(), pod.GetNamespace())
+
+		found := false
+		for i, condition := range newPod.Status.Conditions {
+			if condition.Type == constant.ConditionTypeBcsIngressPortBinding {
+				if condition.Status == k8scorev1.ConditionFalse {
+					if status == constant.PortBindingStatusReady {
+						newPod.Status.Conditions[i].Status = k8scorev1.ConditionTrue
+						newPod.Status.Conditions[i].Reason = constant.ConditionReasonReadyBcsIngressPortBinding
+						newPod.Status.Conditions[i].Message = constant.ConditionMessageReadyBcsIngressPortBinding
+					} else {
+						newPod.Status.Conditions[i].Status = k8scorev1.ConditionFalse
+						newPod.Status.Conditions[i].Reason = constant.ConditionReasonNotReadyBcsIngressPortBinding
+						newPod.Status.Conditions[i].Message = constant.ConditionMessageNotReadyBcsIngressPortBinding
+					}
+				}
+				found = true
+				break
+			}
+		}
+		if !found && status == constant.PortBindingStatusReady {
+			newPod.Status.Conditions = append(newPod.Status.Conditions, k8scorev1.PodCondition{
+				Type:    constant.ConditionTypeBcsIngressPortBinding,
+				Status:  k8scorev1.ConditionTrue,
+				Reason:  constant.ConditionReasonReadyBcsIngressPortBinding,
+				Message: constant.ConditionMessageReadyBcsIngressPortBinding,
+			})
+		}
+		if err := p.k8sClient.Status().Update(context.Background(), newPod, &client.UpdateOptions{}); err != nil {
+			return err
+		}
+		return nil
+	}); err != nil {
+		err = errors.Wrapf(err, "update pod %s/%s condition failed", pod.GetNamespace(), pod.GetName())
 		blog.Warnf("%s", err.Error())
 		return err
 	}

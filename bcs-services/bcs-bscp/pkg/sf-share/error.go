@@ -38,6 +38,8 @@ const (
 	DeleteOldFilesFailed FailedReason = 8
 	// UpdateMetadataFailed represents failure in updating metadata
 	UpdateMetadataFailed FailedReason = 9
+	// UnknownFailed represents failure in unknown
+	UnknownFailed FailedReason = 10
 )
 
 // Validate the failed reason is valid or not
@@ -73,6 +75,8 @@ func (fr FailedReason) String() string {
 		return "DeleteOldFilesFailed"
 	case UpdateMetadataFailed:
 		return "UpdateMetadataFailed"
+	case UnknownFailed:
+		return "UnknownFailed"
 	default:
 		return ""
 	}
@@ -130,6 +134,9 @@ const (
 
 	// SDKVersionIsTooLowFailed represents failure due to sdk version being too low
 	SDKVersionIsTooLowFailed
+
+	// UnknownSpecificFailed represents failure in unknown
+	UnknownSpecificFailed
 )
 
 // Validate the specific failed reason is valid or not
@@ -196,6 +203,8 @@ func (s SpecificFailedReason) String() string {
 		return "ReadFileFailed"
 	case SDKVersionIsTooLowFailed:
 		return "SDKVersionIsTooLowFailed"
+	case UnknownSpecificFailed:
+		return "UnknownSpecificFailed"
 	default:
 		return ""
 	}

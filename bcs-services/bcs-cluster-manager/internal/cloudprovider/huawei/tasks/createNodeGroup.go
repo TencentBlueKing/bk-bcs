@@ -19,7 +19,6 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/huaweicloud/huaweicloud-sdk-go-v3/services/cce/v3/model"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/huawei/api"
@@ -164,27 +163,20 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error { // no
 	ctx, cancel := context.WithTimeout(context.TODO(), 20*time.Minute)
 	defer cancel()
 
-	rsp := &model.ShowNodePoolResponse{}
 	err = loop.LoopDoFunc(ctx, func() error {
-		req := &model.ShowNodePoolRequest{
-			ClusterId:  cluster.SystemID,
-			NodepoolId: group.CloudNodeGroupID,
-		}
-		blog.Infof("ShowNodePoolRequest: %+v", *req)
-
-		rsp, err = cceCli.ShowNodePool(req)
-		if err != nil {
+		nodePool, errLocal := cceCli.GetClusterNodePool(cluster.SystemID, group.CloudNodeGroupID)
+		if errLocal != nil {
 			blog.Errorf("taskID[%s] GetClusterNodePool[%s/%s] failed: %v", taskID, cluster.SystemID,
-				group.CloudNodeGroupID, err)
+				group.CloudNodeGroupID, errLocal)
 			return nil
 		}
 
 		switch {
-		case rsp.Status.Phase.Value() != "":
+		case nodePool.Status.Phase.Value() != "":
 			blog.Infof("taskID[%s] GetClusterNodePool[%s] still creating, status[%s]",
-				taskID, group.CloudNodeGroupID, rsp.Status.Phase.Value())
+				taskID, group.CloudNodeGroupID, nodePool.Status.Phase.Value())
 			return nil
-		case rsp.Status.Phase.Value() == "":
+		case nodePool.Status.Phase.Value() == "":
 			return loop.EndLoop
 		default:
 			return nil

@@ -1,0 +1,1318 @@
+{
+  "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+  "enabled": true,
+  "operations": [
+    {
+      "operation": "upsert_instance_selection",
+      "data": {
+        "id": "project_list",
+        "name": "容器服务项目",
+        "name_en": "BCS project",
+        "resource_type_chain": [
+          {
+            "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+            "id": "project"
+          }
+        ]
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "project_create",
+        "name": "项目创建",
+        "name_en": "Create Project",
+        "description": "用户创建项目",
+        "description_en": "User create project",
+        "type": "create",
+        "related_resource_types": [],
+        "related_actions": [],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "project_view",
+        "name": "项目查看",
+        "name_en": "View Project",
+        "description": "用户查看项目",
+        "description_en": "User view project",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+            "id": "project",
+            "name_alias": "",
+            "name_alias_en": "",
+            "selection_mode": "instance",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+                "id": "project_list"
+              }
+            ]
+          }
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "project_edit",
+        "name": "项目编辑",
+        "name_en": "Edit Project",
+        "description": "用户编辑项目",
+        "description_en": "User edit project",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+            "id": "project",
+            "name_alias": "",
+            "name_alias_en": "",
+            "selection_mode": "instance",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+                "id": "project_list"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "project_delete",
+        "name": "项目删除",
+        "name_en": "Delete Project",
+        "description": "用户删除项目",
+        "description_en": "User delete project",
+        "type": "delete",
+        "related_resource_types": [
+          {
+            "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+            "id": "project",
+            "name_alias": "",
+            "name_alias_en": "",
+            "selection_mode": "instance",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+                "id": "project_list"
+              }
+            ]
+          }
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cluster_scoped_create",
+        "name": "资源创建(集群域)",
+        "name_en": "Create Resource",
+        "description": "用户创建集群域资源(不包括命名空间创建)",
+        "description_en": "User create cluster-scoped resource(e.g. create clusterrolebinding, exclude namespace)",
+        "type": "create",
+        "related_resource_types": [
+          {
+            "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+            "id": "cluster",
+            "name_alias": "",
+            "name_alias_en": "",
+            "selection_mode": "all",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+                "id": "cluster_list"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "cluster_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cluster_scoped_view",
+        "name": "资源查看(集群域)",
+        "name_en": "View Resource",
+        "description": "用户查看集群域资源(不包括命名空间查看)",
+        "description_en": "User view cluster-scoped resource(e.g. view clusterrolebinding, exclude namespace)",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+            "id": "cluster",
+            "name_alias": "",
+            "name_alias_en": "",
+            "selection_mode": "all",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+                "id": "cluster_list"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "cluster_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cluster_scoped_update",
+        "name": "资源更新(集群域)",
+        "name_en": "Update Resource",
+        "description": "用户更新集群域资源(不包括命名空间更新)",
+        "description_en": "User update cluster-scoped resource(e.g. update clusterrolebinding, exclude namespace)",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+            "id": "cluster",
+            "name_alias": "",
+            "name_alias_en": "",
+            "selection_mode": "all",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+                "id": "cluster_list"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "cluster_view",
+          "cluster_scoped_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cluster_scoped_delete",
+        "name": "资源删除(集群域)",
+        "name_en": "Delete Resource",
+        "description": "用户删除集群域资源(不包括命名空间更新)",
+        "description_en": "User delete cluster-scoped resource(e.g. update clusterrolebinding, exclude namespace)",
+        "type": "delete",
+        "related_resource_types": [
+          {
+            "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+            "id": "cluster",
+            "name_alias": "",
+            "name_alias_en": "",
+            "selection_mode": "all",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+                "id": "cluster_list"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "cluster_view",
+          "cluster_scoped_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "namespace_scoped_create",
+        "name": "资源创建(命名空间域)",
+        "name_en": "Create Resource(namespace_scoped)",
+        "description": "用户创建命名空间域资源",
+        "description_en": "User create namespace-scoped resource(e.g. create pod)",
+        "type": "create",
+        "related_resource_types": [
+          {
+            "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+            "id": "namespace",
+            "name_alias": "",
+            "name_alias_en": "",
+            "selection_mode": "all",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+                "id": "namespace_list"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "cluster_view",
+          "namespace_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "namespace_scoped_view",
+        "name": "资源查看(命名空间域)",
+        "name_en": "View Resource(namespace_scoped)",
+        "description": "用户查看命名空间域资源",
+        "description_en": "User view namespace-scoped resource(e.g. view pod)",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+            "id": "namespace",
+            "name_alias": "",
+            "name_alias_en": "",
+            "selection_mode": "all",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+                "id": "namespace_list"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "cluster_view",
+          "namespace_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "namespace_scoped_update",
+        "name": "资源更新(命名空间域)",
+        "name_en": "Update Resource(namespace_scoped)",
+        "description": "用户更新命名空间域资源",
+        "description_en": "User update namespace-scoped resource(e.g. update pod)",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+            "id": "namespace",
+            "name_alias": "",
+            "name_alias_en": "",
+            "selection_mode": "all",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+                "id": "namespace_list"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "cluster_view",
+          "namespace_view",
+          "namespace_scoped_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "namespace_scoped_delete",
+        "name": "资源删除(命名空间域)",
+        "name_en": "Delete Resource(namespace_scoped)",
+        "description": "用户删除命名空间域资源",
+        "description_en": "User delete namespace-scoped resource(e.g. delete pod)",
+        "type": "delete",
+        "related_resource_types": [
+          {
+            "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+            "id": "namespace",
+            "name_alias": "",
+            "name_alias_en": "",
+            "selection_mode": "all",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+                "id": "namespace_list"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "cluster_view",
+          "namespace_view",
+          "namespace_scoped_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_instance_selection",
+      "data": {
+        "id": "cluster_list",
+        "name": "集群",
+        "name_en": "Clusters",
+        "resource_type_chain": [
+          {
+            "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+            "id": "project"
+          },
+          {
+            "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+            "id": "cluster"
+          }
+        ]
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cluster_create",
+        "name": "集群创建",
+        "name_en": "Create Cluster",
+        "description": "用户创建集群",
+        "description_en": "User create cluster",
+        "type": "create",
+        "related_resource_types": [
+          {
+            "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+            "id": "project",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+                "id": "project_list"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cluster_view",
+        "name": "集群查看",
+        "name_en": "View Cluster",
+        "description": "用户查看集群",
+        "description_en": "User view cluster",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+            "id": "cluster",
+            "name_alias": "",
+            "name_alias_en": "",
+            "selection_mode": "instance",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+                "id": "cluster_list"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cluster_manage",
+        "name": "集群管理",
+        "name_en": "Manage Cluster",
+        "description": "用户管理集群(包括添加/删除节点)",
+        "description_en": "User manage cluster(include add/delete node)",
+        "type": "manage",
+        "related_resource_types": [
+          {
+            "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+            "id": "cluster",
+            "name_alias": "",
+            "name_alias_en": "",
+            "selection_mode": "instance",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+                "id": "cluster_list"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "cluster_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cluster_delete",
+        "name": "集群删除",
+        "name_en": "Delete Cluster",
+        "description": "用户删除集群",
+        "description_en": "User delete cluster",
+        "type": "delete",
+        "related_resource_types": [
+          {
+            "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+            "id": "cluster",
+            "name_alias": "",
+            "name_alias_en": "",
+            "selection_mode": "instance",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+                "id": "cluster_list"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "cluster_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cluster_use",
+        "name": "集群使用",
+        "name_en": "Use Cluster",
+        "description": "用户使用集群(如创建命名空间等)",
+        "description_en": "User use cluster(e.g. create namespace)",
+        "type": "use",
+        "related_resource_types": [
+          {
+            "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+            "id": "cluster",
+            "name_alias": "",
+            "name_alias_en": "",
+            "selection_mode": "instance",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+                "id": "cluster_list"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "cluster_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_instance_selection",
+      "data": {
+        "id": "namespace_list",
+        "name": "命名空间",
+        "name_en": "Namespaces",
+        "resource_type_chain": [
+          {
+            "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+            "id": "project"
+          },
+          {
+            "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+            "id": "cluster"
+          },
+          {
+            "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+            "id": "namespace"
+          }
+        ]
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "namespace_create",
+        "name": "命名空间创建",
+        "name_en": "Create Namespace",
+        "description": "用户创建命名空间",
+        "description_en": "User create namespace",
+        "type": "create",
+        "related_resource_types": [
+          {
+            "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+            "id": "cluster",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+                "id": "cluster_list"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "cluster_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "namespace_view",
+        "name": "命名空间查看",
+        "name_en": "View Namespace",
+        "description": "用户查看命名空间",
+        "description_en": "User view namespace",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+            "id": "namespace",
+            "name_alias": "",
+            "name_alias_en": "",
+            "selection_mode": "instance",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+                "id": "namespace_list"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "cluster_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "namespace_update",
+        "name": "命名空间更新",
+        "name_en": "Update Namespace",
+        "description": "用户更新命名空间",
+        "description_en": "User update namespace",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+            "id": "namespace",
+            "name_alias": "",
+            "name_alias_en": "",
+            "selection_mode": "instance",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+                "id": "namespace_list"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "cluster_view",
+          "namespace_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "namespace_delete",
+        "name": "命名空间删除",
+        "name_en": "Delete Namespace",
+        "description": "用户删除命名空间",
+        "description_en": "User delete namespace",
+        "type": "delete",
+        "related_resource_types": [
+          {
+            "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+            "id": "namespace",
+            "name_alias": "",
+            "name_alias_en": "",
+            "selection_mode": "instance",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+                "id": "namespace_list"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "cluster_view",
+          "namespace_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "namespace_use",
+        "name": "命名空间使用",
+        "name_en": "Use Namespace",
+        "description": "用户使用命名空间",
+        "description_en": "User use namespace",
+        "type": "use",
+        "related_resource_types": [
+          {
+            "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+            "id": "namespace",
+            "name_alias": "",
+            "name_alias_en": "",
+            "selection_mode": "instance",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+                "id": "namespace_list"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "cluster_view",
+          "cluster_use",
+          "namespace_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "namespace_list",
+        "name": "命名空间列举",
+        "name_en": "List Namespaces",
+        "description": "用户查询命名空间列表",
+        "description_en": "User list namespaces",
+        "type": "list",
+        "related_resource_types": [
+          {
+            "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+            "id": "cluster",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+                "id": "cluster_list"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "cluster_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "templateset",
+        "name": "模板集",
+        "name_en": "TemplateSet",
+        "description": "",
+        "description_en": "",
+        "provider_config": {
+          "path": "/bcsapi/v4/iam-provider/v1/templatesets/"
+        },
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_instance_selection",
+      "data": {
+        "id": "templateset_list",
+        "name": "模板集",
+        "name_en": "TemplateSets",
+        "resource_type_chain": [
+          {
+            "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+            "id": "project"
+          },
+          {
+            "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+            "id": "templateset"
+          }
+        ]
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "templateset_create",
+        "name": "模板集创建",
+        "name_en": "Create TemplateSet",
+        "description": "用户创建模板集",
+        "description_en": "User create templateset",
+        "type": "create",
+        "related_resource_types": [
+          {
+            "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+            "id": "project",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+                "id": "project_list"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "templateset_view",
+        "name": "模板集查看",
+        "name_en": "View TemplateSet",
+        "description": "用户查看模板集",
+        "description_en": "User view templateset",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+            "id": "templateset",
+            "name_alias": "",
+            "name_alias_en": "",
+            "selection_mode": "instance",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+                "id": "templateset_list"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "templateset_copy",
+        "name": "模板集复制",
+        "name_en": "Copy TemplateSet",
+        "description": "用户复制模板集",
+        "description_en": "User copy templateset",
+        "type": "use",
+        "related_resource_types": [
+          {
+            "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+            "id": "templateset",
+            "name_alias": "",
+            "name_alias_en": "",
+            "selection_mode": "instance",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+                "id": "templateset_list"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "templateset_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "templateset_update",
+        "name": "模板集更新",
+        "name_en": "Update TemplateSet",
+        "description": "用户更新模板集",
+        "description_en": "User update templateset",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+            "id": "templateset",
+            "name_alias": "",
+            "name_alias_en": "",
+            "selection_mode": "instance",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+                "id": "templateset_list"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "templateset_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "templateset_delete",
+        "name": "模板集删除",
+        "name_en": "Delete TemplateSet",
+        "description": "用户删除模板集",
+        "description_en": "User delete templateset",
+        "type": "delete",
+        "related_resource_types": [
+          {
+            "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+            "id": "templateset",
+            "name_alias": "",
+            "name_alias_en": "",
+            "selection_mode": "instance",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+                "id": "templateset_list"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "templateset_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "templateset_instantiate",
+        "name": "模板集实例化",
+        "name_en": "Instantiate TemplateSet",
+        "description": "用户实例化模板集",
+        "description_en": "User instantiate templateset",
+        "type": "use",
+        "related_resource_types": [
+          {
+            "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+            "id": "templateset",
+            "name_alias": "",
+            "name_alias_en": "",
+            "selection_mode": "instance",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+                "id": "templateset_list"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "templateset_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_instance_selection",
+      "data": {
+        "id": "account_list",
+        "name": "云账号",
+        "name_en": "Cloud Accounts",
+        "resource_type_chain": [
+          {
+            "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+            "id": "project"
+          },
+          {
+            "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+            "id": "cloud_account"
+          }
+        ]
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cloud_account_create",
+        "name": "云账号创建",
+        "name_en": "Create Cloud Account",
+        "description": "用户创建云账号",
+        "description_en": "User create cloud account",
+        "type": "create",
+        "related_resource_types": [
+          {
+            "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+            "id": "project",
+            "name_alias": "",
+            "name_alias_en": "",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+                "id": "project_list"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cloud_account_manage",
+        "name": "云账号管理",
+        "name_en": "Manage Cloud Account",
+        "description": "用户更新删除云账号",
+        "description_en": "User create/update/delete cloud account",
+        "type": "manage",
+        "related_resource_types": [
+          {
+            "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+            "id": "cloud_account",
+            "name_alias": "",
+            "name_alias_en": "",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+                "id": "account_list"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cloud_account_use",
+        "name": "云账号使用",
+        "name_en": "Use Cloud Account",
+        "description": "用户使用云账号",
+        "description_en": "User use cloud account",
+        "type": "use",
+        "related_resource_types": [
+          {
+            "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+            "id": "cloud_account",
+            "name_alias": "",
+            "name_alias_en": "",
+            "selection_mode": "instance",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+                "id": "account_list"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "project",
+        "name": "容器服务项目",
+        "name_en": "BCS Project",
+        "description": "",
+        "description_en": "",
+        "parents": [],
+        "provider_config": {
+          "path": "/bcsapi/v4/usermanager/v1/iam-provider/resources/"
+        },
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "cluster",
+        "name": "集群",
+        "name_en": "Cluster",
+        "description": "",
+        "description_en": "",
+        "provider_config": {
+          "path": "/bcsapi/v4/usermanager/v1/iam-provider/resources/"
+        },
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "namespace",
+        "name": "命名空间",
+        "name_en": "Namespace",
+        "description": "",
+        "description_en": "",
+        "provider_config": {
+          "path": "/bcsapi/v4/usermanager/v1/iam-provider/resources/"
+        },
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "cloud_account",
+        "name": "云账号",
+        "name_en": "Cloud Account",
+        "description": "",
+        "description_en": "",
+        "provider_config": {
+          "path": "/bcsapi/v4/usermanager/v1/iam-provider/resources/"
+        },
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_common_actions",
+      "data": [
+        {
+          "name": "业务只读",
+          "name_en": "Read Only",
+          "actions": [
+            {
+              "id": "project_view"
+            },
+            {
+              "id": "cluster_view"
+            },
+            {
+              "id": "cluster_scoped_view"
+            },
+            {
+              "id": "namespace_view"
+            },
+            {
+              "id": "namespace_list"
+            },
+            {
+              "id": "namespace_scoped_view"
+            },
+            {
+              "id": "templateset_view"
+            }
+          ]
+        },
+        {
+          "name": "业务开发",
+          "name_en": "Developer",
+          "actions": [
+            {
+              "id": "project_view"
+            },
+            {
+              "id": "cluster_view"
+            },
+            {
+              "id": "cluster_scoped_view"
+            },
+            {
+              "id": "cluster_scoped_create"
+            },
+            {
+              "id": "cluster_scoped_update"
+            },
+            {
+              "id": "cluster_scoped_delete"
+            },
+            {
+              "id": "namespace_create"
+            },
+            {
+              "id": "namespace_list"
+            },
+            {
+              "id": "namespace_view"
+            },
+            {
+              "id": "namespace_update"
+            },
+            {
+              "id": "namespace_delete"
+            },
+            {
+              "id": "namespace_scoped_create"
+            },
+            {
+              "id": "namespace_scoped_view"
+            },
+            {
+              "id": "namespace_scoped_update"
+            },
+            {
+              "id": "namespace_scoped_delete"
+            },
+            {
+              "id": "templateset_create"
+            },
+            {
+              "id": "templateset_view"
+            },
+            {
+              "id": "templateset_copy"
+            },
+            {
+              "id": "templateset_update"
+            },
+            {
+              "id": "templateset_delete"
+            },
+            {
+              "id": "templateset_instantiate"
+            }
+          ]
+        },
+        {
+          "name": "业务运维",
+          "name_en": "Operator",
+          "actions": [
+            {
+              "id": "project_create"
+            },
+            {
+              "id": "project_view"
+            },
+            {
+              "id": "project_edit"
+            },
+            {
+              "id": "cluster_create"
+            },
+            {
+              "id": "cluster_view"
+            },
+            {
+              "id": "cluster_manage"
+            },
+            {
+              "id": "cluster_delete"
+            },
+            {
+              "id": "cluster_scoped_view"
+            },
+            {
+              "id": "cluster_scoped_create"
+            },
+            {
+              "id": "cluster_scoped_update"
+            },
+            {
+              "id": "cluster_scoped_delete"
+            },
+            {
+              "id": "namespace_create"
+            },
+            {
+              "id": "namespace_list"
+            },
+            {
+              "id": "namespace_view"
+            },
+            {
+              "id": "namespace_update"
+            },
+            {
+              "id": "namespace_delete"
+            },
+            {
+              "id": "namespace_scoped_create"
+            },
+            {
+              "id": "namespace_scoped_view"
+            },
+            {
+              "id": "namespace_scoped_update"
+            },
+            {
+              "id": "namespace_scoped_delete"
+            },
+            {
+              "id": "templateset_create"
+            },
+            {
+              "id": "templateset_view"
+            },
+            {
+              "id": "templateset_copy"
+            },
+            {
+              "id": "templateset_update"
+            },
+            {
+              "id": "templateset_delete"
+            },
+            {
+              "id": "templateset_instantiate"
+            },
+            {
+              "id": "cloud_account_create"
+            },
+            {
+              "id": "cloud_account_manage"
+            },
+            {
+              "id": "cloud_account_use"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

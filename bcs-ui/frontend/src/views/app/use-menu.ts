@@ -2,7 +2,7 @@ import { has } from 'lodash';
 import { computed } from 'vue';
 import { Route } from 'vue-router';
 
-import { useAppData, useCluster } from '@/composables/use-app';
+import { useAppData } from '@/composables/use-app';
 import $i18n from '@/i18n/i18n-setup';
 
 export interface IMenu {
@@ -14,6 +14,7 @@ export interface IMenu {
   tag?: string
   children?: IMenu[]
   parent?: IMenu
+  meta?: Record<string, any>
 }
 
 export default function useMenu() {
@@ -22,46 +23,65 @@ export default function useMenu() {
       title: $i18n.t('nav.dashboard'),
       id: 'CLUSTERRESOURCE',
       children: [
-        {
-          title: $i18n.t('nav.namespace'),
-          icon: 'bcs-icon-namespace',
-          id: 'NAMESPACE',
-          route: 'dashboardNamespace',
-        },
+        // {
+        //   title: $i18n.t('nav.namespace'),
+        //   icon: 'bcs-icon-namespace',
+        //   id: 'NAMESPACE',
+        //   route: 'dashboardNamespace',
+        // },
         {
           title: $i18n.t('nav.workload'),
           icon: 'bcs-icon-yy-apply',
           id: 'WORKLOAD',
+          route: 'dashboardWorkloadDeployments',
           children: [
             {
               title: 'Deployments',
               route: 'dashboardWorkloadDeployments',
               id: 'DEPLOYMENT',
+              meta: {
+                kind: 'Deployment',
+              },
             },
             {
               title: 'StatefulSets',
               route: 'dashboardWorkloadStatefulSets',
               id: 'STATEFULSET',
+              meta: {
+                kind: 'StatefulSet',
+              },
             },
             {
               title: 'DaemonSets',
               route: 'dashboardWorkloadDaemonSets',
               id: 'DAEMONSET',
+              meta: {
+                kind: 'DaemonSet',
+              },
             },
             {
               title: 'Jobs',
               route: 'dashboardWorkloadJobs',
               id: 'JOB',
+              meta: {
+                kind: 'Job',
+              },
             },
             {
               title: 'CronJobs',
               route: 'dashboardWorkloadCronJobs',
               id: 'CRONJOB',
+              meta: {
+                kind: 'CronJob',
+              },
             },
             {
               title: 'Pods',
               route: 'dashboardWorkloadPods',
               id: 'POD',
+              meta: {
+                kind: 'Pod',
+              },
             },
           ],
         },
@@ -74,16 +94,25 @@ export default function useMenu() {
               title: 'Ingresses',
               route: 'dashboardNetworkIngress',
               id: 'INGRESS',
+              meta: {
+                kind: 'Ingress',
+              },
             },
             {
               title: 'Services',
               route: 'dashboardNetworkService',
               id: 'SERVICE',
+              meta: {
+                kind: 'Service',
+              },
             },
             {
               title: 'Endpoints',
               route: 'dashboardNetworkEndpoints',
               id: 'ENDPOINTS',
+              meta: {
+                kind: 'Endpoints',
+              },
             },
           ],
         },
@@ -95,11 +124,17 @@ export default function useMenu() {
               title: 'ConfigMaps',
               route: 'dashboardConfigsConfigMaps',
               id: 'CONFIGMAP',
+              meta: {
+                kind: 'ConfigMap',
+              },
             },
             {
               title: 'Secrets',
               route: 'dashboardConfigsSecrets',
               id: 'SECRET',
+              meta: {
+                kind: 'Secret',
+              },
             },
           ],
           id: 'CONFIGURATION',
@@ -112,16 +147,25 @@ export default function useMenu() {
               title: 'PersistentVolumes',
               route: 'dashboardStoragePersistentVolumes',
               id: 'PERSISTENTVOLUME',
+              meta: {
+                kind: 'PersistentVolume',
+              },
             },
             {
               title: 'PersistentVolumesClaims',
               route: 'dashboardStoragePersistentVolumesClaims',
               id: 'PERSISTENTVOLUMECLAIM',
+              meta: {
+                kind: 'PersistentVolumeClaim',
+              },
             },
             {
               title: 'StorageClass',
               route: 'dashboardStorageStorageClass',
               id: 'STORAGECLASS',
+              meta: {
+                kind: 'StorageClass',
+              },
             },
           ],
           id: 'STORAGE',
@@ -134,6 +178,9 @@ export default function useMenu() {
               title: 'ServiceAccounts',
               route: 'dashboardRbacServiceAccounts',
               id: 'SERVICEACCOUNT',
+              meta: {
+                kind: 'ServiceAccount',
+              },
             },
           ],
           id: 'RBAC',
@@ -143,36 +190,52 @@ export default function useMenu() {
           icon: 'bcs-icon-hpa',
           route: 'dashboardHPA',
           id: 'HORIZONTALPODAUTOSCALER',
+          meta: {
+            kind: 'HorizontalPodAutoscaler',
+          },
         },
         {
-          title: $i18n.t('nav.customResource'),
-          icon: 'bcs-icon-customize',
+          title: 'CRD',
+          icon: 'bcs-icon-crd-3',
+          route: 'dashboardCRD',
+          id: 'CRD',
+          meta: {
+            kind: 'CustomResourceDefinition',
+          },
+        },
+        {
+          title: $i18n.t('nav.tkexCRD'),
+          icon: 'bcs-icon-bcs',
           children: [
             {
               title: 'GameDeployments',
               route: 'dashboardGameDeployments',
               id: 'GAMEDEPLOYMENT',
+              meta: {
+                kind: 'GameDeployment',
+              },
             },
             {
               title: 'GameStatefulSets',
               route: 'dashboardGameStatefulSets',
               id: 'GAMESTATEFULSET',
+              meta: {
+                kind: 'GameStatefulSet',
+              },
             },
             {
               title: 'HookTemplates',
               route: 'dashboardHookTemplates',
               id: 'HOOKTEMPLATE',
+              meta: {
+                kind: 'HookTemplate',
+              },
             },
-            {
-              title: 'CustomObjects',
-              route: 'dashboardCustomObjects',
-              id: 'CUSTOMOBJECT',
-            },
-            {
-              title: 'CRD',
-              route: 'dashboardCRD',
-              id: 'CRD',
-            },
+            // {
+            //   title: 'CustomObjects',
+            //   route: 'dashboardCustomObjects',
+            //   id: 'CUSTOMOBJECT',
+            // },
           ],
           id: 'CUSTOM_RESOURCE',
         },
@@ -189,12 +252,6 @@ export default function useMenu() {
           route: 'clusterMain',
           id: 'CLUSTER',
         },
-        // {
-        //   title: $i18n.t('nav.nodeList'),
-        //   icon: 'bcs-icon-jd-node',
-        //   route: 'nodeMain',
-        //   id: 'NODE',
-        // },
         {
           title: $i18n.t('nav.nodeTemplate'),
           icon: 'bcs-icon-mobanpeizhi',
@@ -346,6 +403,16 @@ export default function useMenu() {
               id: 'AZURECLOUD',
               route: 'azureCloud',
             },
+            {
+              title: 'Huawei Cloud',
+              id: 'HUAWEICLOUD',
+              route: 'huaweiCloud',
+            },
+            {
+              title: 'Aws Cloud',
+              id: 'AMAZONCLOUD',
+              route: 'amazonCloud',
+            },
           ],
         },
         {
@@ -447,8 +514,18 @@ export default function useMenu() {
   };
   const allLeafMenus = computed(() => flatLeafMenus(menusData.value));
   // 所有路由父节点只是用于分组（指向子路由），真正的菜单项是子节点
-  const getCurrentMenuByRoute = (name: string, id?: string) => allLeafMenus.value
-    .find(item => item.route === name || item.id === id);
+  const getCurrentMenuByRouteName = (name: string) => allLeafMenus.value
+    .find(item => item.route === name);
+  // 根据ID获取当前一级导航菜单
+  const getNavByID = (id: string) => {
+    if (!id || !menusDataMap[id]) return;
+
+    let menu = menusDataMap[id];
+    while (menu.parent) {
+      menu = menu.parent;
+    }
+    return menu;
+  };
   // 校验菜单是否开启
   const validateMenuID = (menu: IMenu): boolean => {
     if (has(flagsMap.value, menu?.id || '') && !flagsMap.value[menu?.id || '']) {
@@ -474,21 +551,19 @@ export default function useMenu() {
       return false;
     }
     // 直接返回的菜单项不包含parent信息, 需要去menusDataMap找含有parent信息的菜单项
-    const menuID = getCurrentMenuByRoute(route.name || '')?.id || '';
+    const menuID = getCurrentMenuByRouteName(route.name || '')?.id || '';
     return menusDataMap[menuID] ? validateMenuID(menusDataMap[menuID]) : true;
   };
-  // 共享集群禁用菜单
-  const { isSharedCluster } = useCluster();
-  const disabledMenuIDs = computed(() => (isSharedCluster.value
-    ? [
-      'DAEMONSET',
-      'PERSISTENTVOLUME',
-      'STORAGECLASS',
-      'HPA',
-      'CRD',
-      'CUSTOMOBJECT',
-    ]
-    : []));
+  const disabledMenuIDs = computed<string[]>(() => []);
+
+  // 获取路由对应的导航
+  const getNavByRoute = (route: Route) => {
+    let menu = getCurrentMenuByRouteName(route.name || '')?.root || getNavByID(route.meta?.menuId || '');
+    if (!menu && route.matched.some(item => item.name === 'dashboardIndex')) {
+      menu = menusDataMap.CLUSTERRESOURCE;
+    }
+    return menu;
+  };
 
   return {
     menusData,
@@ -496,5 +571,6 @@ export default function useMenu() {
     disabledMenuIDs,
     flatLeafMenus,
     validateRouteEnable,
+    getNavByRoute,
   };
 }

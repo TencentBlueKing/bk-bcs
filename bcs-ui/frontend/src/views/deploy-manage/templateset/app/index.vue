@@ -19,61 +19,45 @@
 const deployments = () => import(
   /* webpackChunkName: 'app-list' */'./k8s/deployments');
 const deploymentsInstanceDetail = () => import(
-  /* webpackChunkName: 'app-instance' */'@/views/resource-view/workload/detail/index.vue');
+  /* webpackChunkName: 'app-instance' */'@/views/resource-view/workload/detail/old-index.vue');
 const deploymentsInstanceDetail2 = () => import(
-  /* webpackChunkName: 'app-instance' */'@/views/resource-view/workload/detail/index.vue');
-const deploymentsContainerDetail = () => import(
-  /* webpackChunkName: 'app-container' */'./k8s/deployments-container');
-const deploymentsContainerDetail2 = () => import(
-  /* webpackChunkName: 'app-container' */'./k8s/deployments-container2');
+  /* webpackChunkName: 'app-instance' */'@/views/resource-view/workload/detail/old-index.vue');
 const deploymentsInstantiation = () => import(
   /* webpackChunkName: 'app-instantiation' */'./k8s/deployments-instantiation');
 const daemonset = () => import(
   /* webpackChunkName: 'app-list' */'./k8s/daemonset');
 const daemonsetInstanceDetail = () => import(
-  /* webpackChunkName: 'app-instance' */'@/views/resource-view/workload/detail/index.vue');
+  /* webpackChunkName: 'app-instance' */'@/views/resource-view/workload/detail/old-index.vue');
 const daemonsetInstanceDetail2 = () => import(
-  /* webpackChunkName: 'app-instance' */'@/views/resource-view/workload/detail/index.vue');
-const daemonsetContainerDetail = () => import(
-  /* webpackChunkName: 'app-container' */'./k8s/daemonset-container');
-const daemonsetContainerDetail2 = () => import(
-  /* webpackChunkName: 'app-container' */'./k8s/daemonset-container2');
+  /* webpackChunkName: 'app-instance' */'@/views/resource-view/workload/detail/old-index.vue');
 const daemonsetInstantiation = () => import(
   /* webpackChunkName: 'app-instantiation' */'./k8s/daemonset-instantiation');
 
 const job = () => import(
   /* webpackChunkName: 'app-list' */'./k8s/job');
 const jobInstanceDetail = () => import(
-  /* webpackChunkName: 'app-instance' */'@/views/resource-view/workload/detail/index.vue');
+  /* webpackChunkName: 'app-instance' */'@/views/resource-view/workload/detail/old-index.vue');
 const jobInstanceDetail2 = () => import(
-  /* webpackChunkName: 'app-instance' */'@/views/resource-view/workload/detail/index.vue');
-const jobContainerDetail = () => import(
-  /* webpackChunkName: 'app-container' */'./k8s/job-container');
-const jobContainerDetail2 = () => import(
-  /* webpackChunkName: 'app-container' */'./k8s/job-container2');
+  /* webpackChunkName: 'app-instance' */'@/views/resource-view/workload/detail/old-index.vue');
 const jobInstantiation = () => import(
   /* webpackChunkName: 'app-instantiation' */'./k8s/job-instantiation');
 
 const statefulset = () => import(
   /* webpackChunkName: 'app-list' */'./k8s/statefulset');
 const statefulsetInstanceDetail = () => import(
-  /* webpackChunkName: 'app-instance' */'@/views/resource-view/workload/detail/index.vue');
+  /* webpackChunkName: 'app-instance' */'@/views/resource-view/workload/detail/old-index.vue');
 const statefulsetInstanceDetail2 = () => import(
-  /* webpackChunkName: 'app-instance' */'@/views/resource-view/workload/detail/index.vue');
-const statefulsetContainerDetail = () => import(
-  /* webpackChunkName: 'app-container' */'./k8s/statefulset-container');
-const statefulsetContainerDetail2 = () => import(
-  /* webpackChunkName: 'app-container' */'./k8s/statefulset-container2');
+  /* webpackChunkName: 'app-instance' */'@/views/resource-view/workload/detail/old-index.vue');
 const statefulsetInstantiation = () => import(
   /* webpackChunkName: 'app-instantiation' */'./k8s/statefulset-instantiation');
 const gamestatefulset = () => import(
   /* webpackChunkName: 'app-list' */'./k8s/gamestatefulset');
 const gamestatefulSetsInstanceDetail = () => import(
-  /* webpackChunkName: 'app-instance' */'@/views/resource-view/workload/detail/index.vue');
+  /* webpackChunkName: 'app-instance' */'@/views/resource-view/workload/detail/old-index.vue');
 const gamedeployments = () => import(
   /* webpackChunkName: 'app-list' */'./k8s/gamedeployments');
 const gamedeploymentsInstanceDetail = () => import(
-  /* webpackChunkName: 'app-instance' */'@/views/resource-view/workload/detail/index.vue');
+  /* webpackChunkName: 'app-instance' */'@/views/resource-view/workload/detail/old-index.vue');
 const customobjects = () => import(
   /* webpackChunkName: 'app-list' */'./k8s/customobjects');
 
@@ -84,29 +68,21 @@ export default {
     deployments,
     deploymentsInstanceDetail,
     deploymentsInstanceDetail2,
-    deploymentsContainerDetail,
-    deploymentsContainerDetail2,
     deploymentsInstantiation,
 
     daemonset,
     daemonsetInstanceDetail,
     daemonsetInstanceDetail2,
-    daemonsetContainerDetail,
-    daemonsetContainerDetail2,
     daemonsetInstantiation,
 
     job,
     jobInstanceDetail,
     jobInstanceDetail2,
-    jobContainerDetail,
-    jobContainerDetail2,
     jobInstantiation,
 
     statefulset,
     statefulsetInstanceDetail,
     statefulsetInstanceDetail2,
-    statefulsetContainerDetail,
-    statefulsetContainerDetail2,
     statefulsetInstantiation,
 
     gamestatefulset,
@@ -121,26 +97,18 @@ export default {
         'deployments',
         'deploymentsInstanceDetail',
         'deploymentsInstanceDetail2',
-        'deploymentsContainerDetail',
-        'deploymentsContainerDetail2',
         'deploymentsInstantiation',
         'daemonset',
         'daemonsetInstanceDetail',
         'daemonsetInstanceDetail2',
-        'daemonsetContainerDetail',
-        'daemonsetContainerDetail2',
         'daemonsetInstantiation',
         'job',
         'jobInstanceDetail',
         'jobInstanceDetail2',
-        'jobContainerDetail',
-        'jobContainerDetail2',
         'jobInstantiation',
         'statefulset',
         'statefulsetInstanceDetail',
         'statefulsetInstanceDetail2',
-        'statefulsetContainerDetail',
-        'statefulsetContainerDetail2',
         'statefulsetInstantiation',
 
         'gamestatefulset',

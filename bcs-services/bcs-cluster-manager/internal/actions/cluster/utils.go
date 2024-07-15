@@ -294,7 +294,16 @@ func getUserHasPermHosts(bizID int, user string) []string {
 		return nil
 	}
 	for i := range hostList {
-		hostUsers := []string{hostList[i].Operator, hostList[i].BKBakOperator}
+		mainOperators := strings.Split(hostList[i].Operator, ",")
+		bakOperators := strings.Split(hostList[i].BKBakOperator, ",")
+
+		var hostUsers = make([]string, 0)
+		if len(mainOperators) > 0 {
+			hostUsers = append(hostUsers, mainOperators...)
+		}
+		if len(bakOperators) > 0 {
+			hostUsers = append(hostUsers, bakOperators...)
+		}
 		if utils.StringInSlice(user, hostUsers) {
 			hostIPs = append(hostIPs, hostList[i].BKHostInnerIP)
 		}
@@ -507,17 +516,6 @@ func transNodeStatus(cmNodeStatus string, k8sNode *corev1.Node) string {
 	}
 
 	return common.StatusNodeUnknown
-}
-
-func filterNodesRole(k8sNodes []*corev1.Node, master bool) []*corev1.Node {
-	nodes := make([]*corev1.Node, 0)
-	for _, v := range k8sNodes {
-		ok := utils.IsMasterNode(v.Labels)
-		if ok == master {
-			nodes = append(nodes, v)
-		}
-	}
-	return nodes
 }
 
 // mergeClusterNodes merge k8s nodes and db nodes

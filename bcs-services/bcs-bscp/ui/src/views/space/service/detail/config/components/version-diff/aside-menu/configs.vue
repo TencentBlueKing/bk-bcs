@@ -108,6 +108,10 @@
     base: string;
     currentPermission?: IPermissionType;
     basePermission?: IPermissionType;
+    baseUpdate: string;
+    currentUpdate: string;
+    baseByte_size: string;
+    currentByte_size: string;
   }
 
   interface IConfigsGroupData {
@@ -264,7 +268,7 @@
       {
         template_space_id: 0,
         id: 0,
-        name: '非模板配置',
+        name: t('非模板配置'),
         expand: true,
         configs: configs.map((config) => {
           const { id, spec, commit_spec, revision, file_state } = config;
@@ -324,6 +328,7 @@
           signature,
           template_revision_id,
           create_at,
+          update_at,
           privilege,
           user,
           user_group,
@@ -335,7 +340,7 @@
             name: joinPathName(path, name),
             file_type,
             file_state,
-            update_at: datetimeFormat(create_at),
+            update_at: datetimeFormat(update_at || create_at),
             byte_size: unNamedVersion ? byte_size : origin_byte_size,
             signature: unNamedVersion ? signature : origin_signature,
             permission: { privilege, user, user_group },
@@ -368,7 +373,7 @@
         baseGroupList.value.some((baseGroupItem) => {
           if (baseGroupItem.template_space_id === currentGroupItem.template_space_id) {
             return baseGroupItem.configs.some((config) => {
-              if (config.id === crtItem.id) {
+              if (config.id === crtItem.id || config.name === crtItem.name) {
                 baseItem = config;
                 return true;
               }
@@ -388,6 +393,10 @@
             current: crtItem.signature,
             currentPermission: crtItem.permission,
             currentContent: crtItem.diffSignature,
+            baseUpdate: baseItem.update_at,
+            currentUpdate: crtItem.update_at,
+            baseByte_size: baseItem.byte_size,
+            currentByte_size: crtItem.byte_size,
           };
           if (
             crtItem.template_revision_id !== baseItem.template_revision_id ||
@@ -411,6 +420,10 @@
             currentPermission: crtItem.permission,
             base: '',
             basePermission: { privilege: '', user: '', user_group: '' },
+            baseUpdate: '',
+            currentUpdate: crtItem.update_at,
+            baseByte_size: '',
+            currentByte_size: crtItem.byte_size,
           });
         }
       });
@@ -430,7 +443,7 @@
         currentGroupList.value.some((baseGroupItem) => {
           if (baseGroupItem.template_space_id === baseGroupItem.template_space_id) {
             return baseGroupItem.configs.some((config) => {
-              if (config.id === baseItem.id) {
+              if (config.id === baseItem.id || config.name === baseItem.name) {
                 currentItem = config;
                 return true;
               }
@@ -448,6 +461,10 @@
             currentPermission: { privilege: '', user: '', user_group: '' },
             base: baseItem.signature,
             basePermission: baseItem.permission,
+            baseUpdate: baseItem.update_at,
+            currentUpdate: '',
+            baseByte_size: baseItem.byte_size,
+            currentByte_size: '',
           });
         }
       });
@@ -541,6 +558,7 @@
         return res;
       });
       if (config) {
+        console.log(config, 'config');
         selected.value = selectedConfig;
         const data = await getConfigDiffDetail(config);
         emits('selected', data);
@@ -560,12 +578,14 @@
       id,
       name,
       file_type,
-      update_at,
-      byte_size,
       current: currentSignature,
       base: baseSignature,
       currentPermission,
       basePermission,
+      baseUpdate,
+      currentUpdate,
+      baseByte_size,
+      currentByte_size,
     } = config;
 
     if (config.current) {
@@ -573,8 +593,8 @@
         id,
         name,
         file_type,
-        update_at,
-        byte_size,
+        update_at: currentUpdate,
+        byte_size: currentByte_size,
         signature: currentSignature,
       });
     }
@@ -584,8 +604,8 @@
         id,
         name,
         file_type,
-        update_at,
-        byte_size,
+        update_at: baseUpdate,
+        byte_size: baseByte_size,
         signature: baseSignature,
       });
     }

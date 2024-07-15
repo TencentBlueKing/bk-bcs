@@ -79,6 +79,9 @@ func (nm *NodeManager) GetZoneList(opt *cloudprovider.GetZoneListOption) ([]*pro
 
 // GetCloudRegions get regionInfo
 func (nm *NodeManager) GetCloudRegions(opt *cloudprovider.CommonOption) ([]*proto.RegionInfo, error) {
+	if opt.Region == "" {
+		opt.Region = defaultRegion
+	}
 	return business.GetCloudRegions(opt)
 }
 
@@ -512,4 +515,9 @@ func (nm *NodeManager) ListExternalNodesByIP(ips []string, opt *cloudprovider.Li
 	}
 
 	return nodes, nil
+}
+
+// ListRuntimeInfo get runtime info list
+func (nm *NodeManager) ListRuntimeInfo(opt *cloudprovider.ListRuntimeInfoOption) (map[string][]string, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
 }

@@ -6487,6 +6487,683 @@ var _ interface {
 
 var _FormRenderPreviewReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
 
+// Validate checks the field values on FormData with the rules defined in the
+// proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *FormData) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on FormData with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in FormDataMultiError, or nil
+// if none found.
+func (m *FormData) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *FormData) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if utf8.RuneCountInString(m.GetApiVersion()) > 128 {
+		err := FormDataValidationError{
+			field:  "ApiVersion",
+			reason: "value length must be at most 128 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetKind()) > 128 {
+		err := FormDataValidationError{
+			field:  "Kind",
+			reason: "value length must be at most 128 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if all {
+		switch v := interface{}(m.GetFormData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, FormDataValidationError{
+					field:  "FormData",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, FormDataValidationError{
+					field:  "FormData",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetFormData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return FormDataValidationError{
+				field:  "FormData",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return FormDataMultiError(errors)
+	}
+
+	return nil
+}
+
+// FormDataMultiError is an error wrapping multiple validation errors returned
+// by FormData.ValidateAll() if the designated constraints aren't met.
+type FormDataMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m FormDataMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m FormDataMultiError) AllErrors() []error { return m }
+
+// FormDataValidationError is the validation error returned by
+// FormData.Validate if the designated constraints aren't met.
+type FormDataValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e FormDataValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e FormDataValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e FormDataValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e FormDataValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e FormDataValidationError) ErrorName() string { return "FormDataValidationError" }
+
+// Error satisfies the builtin error interface
+func (e FormDataValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sFormData.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = FormDataValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = FormDataValidationError{}
+
+// Validate checks the field values on FormToYAMLReq with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *FormToYAMLReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on FormToYAMLReq with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in FormToYAMLReqMultiError, or
+// nil if none found.
+func (m *FormToYAMLReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *FormToYAMLReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
+		err := FormToYAMLReqValidationError{
+			field:  "ProjectCode",
+			reason: "value length must be between 1 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	for idx, item := range m.GetResources() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, FormToYAMLReqValidationError{
+						field:  fmt.Sprintf("Resources[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, FormToYAMLReqValidationError{
+						field:  fmt.Sprintf("Resources[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return FormToYAMLReqValidationError{
+					field:  fmt.Sprintf("Resources[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return FormToYAMLReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// FormToYAMLReqMultiError is an error wrapping multiple validation errors
+// returned by FormToYAMLReq.ValidateAll() if the designated constraints
+// aren't met.
+type FormToYAMLReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m FormToYAMLReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m FormToYAMLReqMultiError) AllErrors() []error { return m }
+
+// FormToYAMLReqValidationError is the validation error returned by
+// FormToYAMLReq.Validate if the designated constraints aren't met.
+type FormToYAMLReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e FormToYAMLReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e FormToYAMLReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e FormToYAMLReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e FormToYAMLReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e FormToYAMLReqValidationError) ErrorName() string { return "FormToYAMLReqValidationError" }
+
+// Error satisfies the builtin error interface
+func (e FormToYAMLReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sFormToYAMLReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = FormToYAMLReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = FormToYAMLReqValidationError{}
+
+// Validate checks the field values on YAMLToFormReq with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *YAMLToFormReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on YAMLToFormReq with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in YAMLToFormReqMultiError, or
+// nil if none found.
+func (m *YAMLToFormReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *YAMLToFormReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
+		err := YAMLToFormReqValidationError{
+			field:  "ProjectCode",
+			reason: "value length must be between 1 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for Yaml
+
+	if len(errors) > 0 {
+		return YAMLToFormReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// YAMLToFormReqMultiError is an error wrapping multiple validation errors
+// returned by YAMLToFormReq.ValidateAll() if the designated constraints
+// aren't met.
+type YAMLToFormReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m YAMLToFormReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m YAMLToFormReqMultiError) AllErrors() []error { return m }
+
+// YAMLToFormReqValidationError is the validation error returned by
+// YAMLToFormReq.Validate if the designated constraints aren't met.
+type YAMLToFormReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e YAMLToFormReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e YAMLToFormReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e YAMLToFormReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e YAMLToFormReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e YAMLToFormReqValidationError) ErrorName() string { return "YAMLToFormReqValidationError" }
+
+// Error satisfies the builtin error interface
+func (e YAMLToFormReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sYAMLToFormReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = YAMLToFormReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = YAMLToFormReqValidationError{}
+
+// Validate checks the field values on FormResourceType with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *FormResourceType) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on FormResourceType with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// FormResourceTypeMultiError, or nil if none found.
+func (m *FormResourceType) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *FormResourceType) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if utf8.RuneCountInString(m.GetApiVersion()) > 128 {
+		err := FormResourceTypeValidationError{
+			field:  "ApiVersion",
+			reason: "value length must be at most 128 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetKind()) > 128 {
+		err := FormResourceTypeValidationError{
+			field:  "Kind",
+			reason: "value length must be at most 128 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return FormResourceTypeMultiError(errors)
+	}
+
+	return nil
+}
+
+// FormResourceTypeMultiError is an error wrapping multiple validation errors
+// returned by FormResourceType.ValidateAll() if the designated constraints
+// aren't met.
+type FormResourceTypeMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m FormResourceTypeMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m FormResourceTypeMultiError) AllErrors() []error { return m }
+
+// FormResourceTypeValidationError is the validation error returned by
+// FormResourceType.Validate if the designated constraints aren't met.
+type FormResourceTypeValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e FormResourceTypeValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e FormResourceTypeValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e FormResourceTypeValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e FormResourceTypeValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e FormResourceTypeValidationError) ErrorName() string { return "FormResourceTypeValidationError" }
+
+// Error satisfies the builtin error interface
+func (e FormResourceTypeValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sFormResourceType.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = FormResourceTypeValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = FormResourceTypeValidationError{}
+
+// Validate checks the field values on GetMultiResFormSchemaReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetMultiResFormSchemaReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetMultiResFormSchemaReq with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetMultiResFormSchemaReqMultiError, or nil if none found.
+func (m *GetMultiResFormSchemaReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetMultiResFormSchemaReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
+		err := GetMultiResFormSchemaReqValidationError{
+			field:  "ProjectCode",
+			reason: "value length must be between 1 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	for idx, item := range m.GetResourceTypes() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, GetMultiResFormSchemaReqValidationError{
+						field:  fmt.Sprintf("ResourceTypes[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, GetMultiResFormSchemaReqValidationError{
+						field:  fmt.Sprintf("ResourceTypes[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return GetMultiResFormSchemaReqValidationError{
+					field:  fmt.Sprintf("ResourceTypes[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return GetMultiResFormSchemaReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetMultiResFormSchemaReqMultiError is an error wrapping multiple validation
+// errors returned by GetMultiResFormSchemaReq.ValidateAll() if the designated
+// constraints aren't met.
+type GetMultiResFormSchemaReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetMultiResFormSchemaReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetMultiResFormSchemaReqMultiError) AllErrors() []error { return m }
+
+// GetMultiResFormSchemaReqValidationError is the validation error returned by
+// GetMultiResFormSchemaReq.Validate if the designated constraints aren't met.
+type GetMultiResFormSchemaReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetMultiResFormSchemaReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetMultiResFormSchemaReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetMultiResFormSchemaReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetMultiResFormSchemaReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetMultiResFormSchemaReqValidationError) ErrorName() string {
+	return "GetMultiResFormSchemaReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetMultiResFormSchemaReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetMultiResFormSchemaReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetMultiResFormSchemaReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetMultiResFormSchemaReqValidationError{}
+
 // Validate checks the field values on GetResFormSchemaReq with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
@@ -6674,10 +7351,10 @@ func (m *GetFormSupportedApiVersionsReq) validate(all bool) error {
 
 	var errors []error
 
-	if !_GetFormSupportedApiVersionsReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 64 {
 		err := GetFormSupportedApiVersionsReqValidationError{
 			field:  "ProjectID",
-			reason: "value does not match regex pattern \"^[0-9a-f]{32}$\"",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -6685,16 +7362,7 @@ func (m *GetFormSupportedApiVersionsReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
-		err := GetFormSupportedApiVersionsReqValidationError{
-			field:  "ClusterID",
-			reason: "value length must be between 13 and 14 runes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for ClusterID
 
 	if utf8.RuneCountInString(m.GetKind()) > 128 {
 		err := GetFormSupportedApiVersionsReqValidationError{
@@ -6787,8 +7455,6 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = GetFormSupportedApiVersionsReqValidationError{}
-
-var _GetFormSupportedApiVersionsReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
 
 // Validate checks the field values on GetResSelectItemsReq with the rules
 // defined in the proto definition for this message. If any rules are
@@ -8940,8 +9606,6 @@ func (m *DeleteTemplateSpaceReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	// no validation rules for IsRelateDelete
-
 	if len(errors) > 0 {
 		return DeleteTemplateSpaceReqMultiError(errors)
 	}
@@ -9180,9 +9844,9 @@ func (m *ListTemplateMetadataReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetTemplateSpace()); l < 1 || l > 64 {
+	if l := utf8.RuneCountInString(m.GetTemplateSpaceID()); l < 1 || l > 64 {
 		err := ListTemplateMetadataReqValidationError{
-			field:  "TemplateSpace",
+			field:  "TemplateSpaceID",
 			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
@@ -9317,20 +9981,9 @@ func (m *CreateTemplateMetadataReq) validate(all bool) error {
 
 	// no validation rules for Description
 
-	if l := utf8.RuneCountInString(m.GetTemplateSpace()); l < 1 || l > 64 {
+	if l := utf8.RuneCountInString(m.GetTemplateSpaceID()); l < 1 || l > 64 {
 		err := CreateTemplateMetadataReqValidationError{
-			field:  "TemplateSpace",
-			reason: "value length must be between 1 and 64 runes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if l := utf8.RuneCountInString(m.GetResourceType()); l < 1 || l > 64 {
-		err := CreateTemplateMetadataReqValidationError{
-			field:  "ResourceType",
+			field:  "TemplateSpaceID",
 			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
@@ -9492,27 +10145,7 @@ func (m *UpdateTemplateMetadataReq) validate(all bool) error {
 
 	// no validation rules for Description
 
-	if l := utf8.RuneCountInString(m.GetResourceType()); l < 1 || l > 64 {
-		err := UpdateTemplateMetadataReqValidationError{
-			field:  "ResourceType",
-			reason: "value length must be between 1 and 64 runes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if l := utf8.RuneCountInString(m.GetVersion()); l < 1 || l > 64 {
-		err := UpdateTemplateMetadataReqValidationError{
-			field:  "Version",
-			reason: "value length must be between 1 and 64 runes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for Version
 
 	// no validation rules for VersionMode
 
@@ -9640,8 +10273,6 @@ func (m *DeleteTemplateMetadataReq) validate(all bool) error {
 		}
 		errors = append(errors, err)
 	}
-
-	// no validation rules for IsRelateDelete
 
 	if len(errors) > 0 {
 		return DeleteTemplateMetadataReqMultiError(errors)
@@ -9848,6 +10479,152 @@ var _ interface {
 	ErrorName() string
 } = GetTemplateVersionReqValidationError{}
 
+// Validate checks the field values on GetTemplateContentReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetTemplateContentReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetTemplateContentReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetTemplateContentReqMultiError, or nil if none found.
+func (m *GetTemplateContentReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetTemplateContentReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
+		err := GetTemplateContentReqValidationError{
+			field:  "ProjectCode",
+			reason: "value length must be between 1 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetTemplateSpace()); l < 1 || l > 64 {
+		err := GetTemplateContentReqValidationError{
+			field:  "TemplateSpace",
+			reason: "value length must be between 1 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetTemplateName()); l < 1 || l > 64 {
+		err := GetTemplateContentReqValidationError{
+			field:  "TemplateName",
+			reason: "value length must be between 1 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetVersion()); l < 1 || l > 64 {
+		err := GetTemplateContentReqValidationError{
+			field:  "Version",
+			reason: "value length must be between 1 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return GetTemplateContentReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetTemplateContentReqMultiError is an error wrapping multiple validation
+// errors returned by GetTemplateContentReq.ValidateAll() if the designated
+// constraints aren't met.
+type GetTemplateContentReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetTemplateContentReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetTemplateContentReqMultiError) AllErrors() []error { return m }
+
+// GetTemplateContentReqValidationError is the validation error returned by
+// GetTemplateContentReq.Validate if the designated constraints aren't met.
+type GetTemplateContentReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetTemplateContentReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetTemplateContentReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetTemplateContentReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetTemplateContentReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetTemplateContentReqValidationError) ErrorName() string {
+	return "GetTemplateContentReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetTemplateContentReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetTemplateContentReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetTemplateContentReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetTemplateContentReqValidationError{}
+
 // Validate checks the field values on ListTemplateVersionReq with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
@@ -9881,20 +10658,9 @@ func (m *ListTemplateVersionReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetTemplateName()); l < 1 || l > 64 {
+	if l := utf8.RuneCountInString(m.GetTemplateID()); l < 1 || l > 64 {
 		err := ListTemplateVersionReqValidationError{
-			field:  "TemplateName",
-			reason: "value length must be between 1 and 64 runes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if l := utf8.RuneCountInString(m.GetTemplateSpace()); l < 1 || l > 64 {
-		err := ListTemplateVersionReqValidationError{
-			field:  "TemplateSpace",
+			field:  "TemplateID",
 			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
@@ -10029,22 +10795,13 @@ func (m *CreateTemplateVersionReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
+	// no validation rules for EditFormat
+
 	// no validation rules for Content
 
-	if l := utf8.RuneCountInString(m.GetTemplateName()); l < 1 || l > 64 {
+	if l := utf8.RuneCountInString(m.GetTemplateID()); l < 1 || l > 64 {
 		err := CreateTemplateVersionReqValidationError{
-			field:  "TemplateName",
-			reason: "value length must be between 1 and 64 runes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if l := utf8.RuneCountInString(m.GetTemplateSpace()); l < 1 || l > 64 {
-		err := CreateTemplateVersionReqValidationError{
-			field:  "TemplateSpace",
+			field:  "TemplateID",
 			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
@@ -10579,6 +11336,279 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = TemplateIDValidationError{}
+
+// Validate checks the field values on ListTemplateFileVariablesReq with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListTemplateFileVariablesReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListTemplateFileVariablesReq with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListTemplateFileVariablesReqMultiError, or nil if none found.
+func (m *ListTemplateFileVariablesReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListTemplateFileVariablesReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+		err := ListTemplateFileVariablesReqValidationError{
+			field:  "ProjectCode",
+			reason: "value length must be between 1 and 32 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
+		err := ListTemplateFileVariablesReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 13 and 14 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetNamespace()); l < 1 || l > 64 {
+		err := ListTemplateFileVariablesReqValidationError{
+			field:  "Namespace",
+			reason: "value length must be between 1 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return ListTemplateFileVariablesReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListTemplateFileVariablesReqMultiError is an error wrapping multiple
+// validation errors returned by ListTemplateFileVariablesReq.ValidateAll() if
+// the designated constraints aren't met.
+type ListTemplateFileVariablesReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListTemplateFileVariablesReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListTemplateFileVariablesReqMultiError) AllErrors() []error { return m }
+
+// ListTemplateFileVariablesReqValidationError is the validation error returned
+// by ListTemplateFileVariablesReq.Validate if the designated constraints
+// aren't met.
+type ListTemplateFileVariablesReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListTemplateFileVariablesReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListTemplateFileVariablesReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListTemplateFileVariablesReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListTemplateFileVariablesReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListTemplateFileVariablesReqValidationError) ErrorName() string {
+	return "ListTemplateFileVariablesReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListTemplateFileVariablesReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListTemplateFileVariablesReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListTemplateFileVariablesReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListTemplateFileVariablesReqValidationError{}
+
+// Validate checks the field values on DeployTemplateFileReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *DeployTemplateFileReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on DeployTemplateFileReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// DeployTemplateFileReqMultiError, or nil if none found.
+func (m *DeployTemplateFileReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *DeployTemplateFileReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+		err := DeployTemplateFileReqValidationError{
+			field:  "ProjectCode",
+			reason: "value length must be between 1 and 32 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for Variables
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
+		err := DeployTemplateFileReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 13 and 14 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetNamespace()); l < 1 || l > 64 {
+		err := DeployTemplateFileReqValidationError{
+			field:  "Namespace",
+			reason: "value length must be between 1 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return DeployTemplateFileReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// DeployTemplateFileReqMultiError is an error wrapping multiple validation
+// errors returned by DeployTemplateFileReq.ValidateAll() if the designated
+// constraints aren't met.
+type DeployTemplateFileReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m DeployTemplateFileReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m DeployTemplateFileReqMultiError) AllErrors() []error { return m }
+
+// DeployTemplateFileReqValidationError is the validation error returned by
+// DeployTemplateFileReq.Validate if the designated constraints aren't met.
+type DeployTemplateFileReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DeployTemplateFileReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DeployTemplateFileReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DeployTemplateFileReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DeployTemplateFileReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DeployTemplateFileReqValidationError) ErrorName() string {
+	return "DeployTemplateFileReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DeployTemplateFileReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDeployTemplateFileReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DeployTemplateFileReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DeployTemplateFileReqValidationError{}
 
 // Validate checks the field values on GetEnvManageReq with the rules defined
 // in the proto definition for this message. If any rules are violated, the

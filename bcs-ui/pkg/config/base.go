@@ -41,13 +41,14 @@ type BaseConf struct {
 	Region       string         `yaml:"region"`
 	Location     *time.Location `yaml:"-"`
 	Domain       string         `yaml:"domain"`
+	ModuleName   string         `yaml:"module_name"`
 }
 
 // Init :
 func (c *BaseConf) Init() error {
 	var err error
 	c.TimeZone = "Asia/Shanghai"
-	c.LanguageCode = "en-us"
+	c.LanguageCode = "en"
 	c.RunEnv = DevEnv
 	c.Region = "ce"
 	c.Location, err = time.LoadLocation(c.TimeZone)
@@ -63,6 +64,10 @@ func (c *BaseConf) InitBaseConf() error {
 	// if the configuration is incorrect, panic
 	if !i18n.IsAvailableLanguage(c.LanguageCode) {
 		return errors.New("invalid language configuration")
+	}
+	// ModuleName为空或者不配置的情况下默认为bcs-ui
+	if c.ModuleName == "" {
+		c.ModuleName = "bcs-ui"
 	}
 	return nil
 }

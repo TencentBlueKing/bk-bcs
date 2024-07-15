@@ -2,12 +2,13 @@
   <div>
     <SectionTitle :title="$t('客户端标签/附加信息分布')">
       <template #suffix>
+        <div class="line"></div>
         <bk-select
           v-model="selectedLabel"
-          :popover-options="{ theme: 'light bk-select-popover add-chart-wrap' }"
+          :popover-options="{ theme: 'light bk-select-popover add-chart-popover', placement: 'bottom-start' }"
           :popover-min-width="240"
-          multiple
-          filterable>
+          :filterable="false"
+          multiple>
           <template #trigger>
             <div class="add-chart-wrap">
               <Plus class="add-icon" />
@@ -37,14 +38,20 @@
       </template>
     </SectionTitle>
     <div class="chart-list">
-      <div v-if="selectedChart?.length" v-for="item in selectedChart" :key="item.label" class="chart">
+      <div
+        v-if="chartSelectDimensions?.length"
+        v-for="selectDimension in chartSelectDimensions"
+        :key="selectDimension.primaryDimension"
+        class="chart">
         <Chart
-          :data="item.data as IClientLabelItem[]"
-          :label="item.label"
+          :primary-dimension="selectDimension.primaryDimension"
+          :all-label="addChartData!.labels"
+          :select-dimension="selectDimension.minorDimension"
+          :drill-dimension="selectDimension.drillDownDimension"
           :bk-biz-id="bkBizId"
           :app-id="appId"
-          :loading="loading"
-          @refresh="loadLabelsAndAnnotationsData" />
+          :is-stack="selectDimension.isStack"
+          @select="handleSelectDimension" />
       </div>
       <Card v-else :height="368">
         <bk-exception
@@ -64,18 +71,12 @@
 <script lang="ts" setup>
   import { ref, onMounted, watch } from 'vue';
   import { Plus } from 'bkui-vue/lib/icon';
-  import { getClientLabelsAndAnnotations, getClientLabelData } from '../../../../../../api/client';
+  import { getClientLabelsAndAnnotations } from '../../../../../../api/client';
   import { storeToRefs } from 'pinia';
-  import { IClientLabelItem, IClinetCommonQuery } from '../../../../../../../types/client';
   import useClientStore from '../../../../../../store/client';
   import SectionTitle from '../../components/section-title.vue';
   import Chart from './chart/index.vue';
   import Card from '../../components/card.vue';
-
-  interface ISelectedChart {
-    label: string;
-    data: IClientLabelItem[];
-  }
 
   const clientStore = useClientStore();
   const { searchQuery } = storeToRefs(clientStore);
@@ -86,31 +87,36 @@
   }>();
 
   const selectedLabel = ref<string[]>([]);
-
-  const allLabelData = ref<{ [key: string]: IClientLabelItem[] }>(); // 所有标签图表数据
-
-  const selectedChart = ref<ISelectedChart[]>([]); // 选择展示的图表
-
-  const loading = ref(false);
+  const chartSelectDimensions = ref<
+    {
+      primaryDimension: string;
+      minorDimension: string[];
+      drillDownDimension: string;
+      isStack: boolean;
+    }[]
+  >([]);
 
   const addChartData = ref<{
     annotations: string[];
     labels: string[];
-  }>();
+  }>({
+    annotations: [],
+    labels: [],
+  });
 
   watch(
     () => props.appId,
-    () => {
-      getAddChartDate();
-      loadLabelsAndAnnotationsData();
+    async () => {
+      await getAddChartDate();
+      handleChartDimension();
     },
   );
 
   watch(
     () => searchQuery.value,
-    () => {
-      getAddChartDate();
-      loadLabelsAndAnnotationsData();
+    async () => {
+      await getAddChartDate();
+      handleChartDimension();
     },
     { deep: true },
   );
@@ -118,71 +124,113 @@
   watch(
     () => selectedLabel.value,
     () => {
-      selectedChart.value = [];
-      selectedLabel.value.forEach((item) => {
-        const data = allLabelData.value?.[item];
-        if (data) {
-          selectedChart.value.push({
-            label: item,
-            data,
+      selectedLabel.value.forEach((label) => {
+        if (chartSelectDimensions.value?.findIndex((item) => item.primaryDimension === label) === -1) {
+          chartSelectDimensions.value?.push({
+            primaryDimension: label,
+            minorDimension: [label],
+            drillDownDimension: '',
+            isStack: false,
           });
+        }
+      });
+      chartSelectDimensions.value?.forEach((item, index) => {
+        const label = selectedLabel.value.find((label) => label === item.primaryDimension);
+        if (!label) {
+          chartSelectDimensions.value?.splice(index, 1);
         }
       });
     },
   );
 
-  onMounted(() => {
-    loadLabelsAndAnnotationsData();
-    getAddChartDate();
+  // 缓存图表维度数据
+  watch(
+    () => chartSelectDimensions.value,
+    () => {
+      const localStorageKey = 'clientLabelAndAnnotationsSelectDimension';
+      const jsonString = localStorage.getItem(localStorageKey);
+      const allService = jsonString ? JSON.parse(jsonString) : [];
+      const serviceIndex = allService.findIndex((item: any) => item.id === props.appId);
+      if (serviceIndex !== -1) {
+        allService[serviceIndex].selectedDimension = chartSelectDimensions.value;
+      } else {
+        allService.push({ id: props.appId, selectedDimension: chartSelectDimensions.value });
+      }
+      localStorage.setItem(localStorageKey, JSON.stringify(allService));
+    },
+    { deep: true },
+  );
+
+  onMounted(async () => {
+    await getAddChartDate();
+    handleChartDimension();
   });
 
   const getAddChartDate = async () => {
     try {
-      const res = await getClientLabelsAndAnnotations(props.bkBizId, props.appId);
+      const res = await getClientLabelsAndAnnotations(props.bkBizId, props.appId, {
+        last_heartbeat_time: searchQuery.value.last_heartbeat_time,
+      });
+      res.data.annotations.sort(sortByLowerCase);
+      res.data.labels.sort(sortByLowerCase);
       addChartData.value = res.data;
-      selectedLabel.value = addChartData.value?.labels.slice(0, 2) || addChartData.value?.labels.slice(0, 1) || [];
     } catch (e) {
       console.error(e);
     }
   };
 
-  const loadLabelsAndAnnotationsData = async () => {
-    const params: IClinetCommonQuery = {
-      last_heartbeat_time: searchQuery.value.last_heartbeat_time,
-      search: searchQuery.value.search,
-    };
-    try {
-      loading.value = true;
-      const res = await getClientLabelData(props.bkBizId, props.appId, params);
-      allLabelData.value = res;
-      selectedChart.value = [];
-      if (Object.keys(res).length) {
-        selectedLabel.value.forEach((item) => {
-          const data = allLabelData.value?.[item];
-          if (data) {
-            selectedChart.value.push({
-              label: item,
-              data,
-            });
-          }
-        });
-      }
-    } catch (error) {
-      console.error(error);
-    } finally {
-      loading.value = false;
+  const sortByLowerCase = (a: string, b: string) => {
+    const str1 = a.toLowerCase();
+    const str2 = b.toLowerCase();
+    return str1.localeCompare(str2);
+  };
+
+  const handleSelectDimension = ({ primaryDimension, minorDimension, drillDownDimension, isStack }: any) => {
+    const selectedItem = chartSelectDimensions.value!.find((item) => item.primaryDimension === primaryDimension);
+    if (selectedItem) {
+      Object.assign(selectedItem, { primaryDimension, minorDimension, drillDownDimension, isStack });
     }
+  };
+
+  // 获取缓存的维度数据
+  const handleChartDimension = () => {
+    const jsonString = localStorage.getItem('clientLabelAndAnnotationsSelectDimension');
+    let selectedDimensions = [];
+    if (jsonString) {
+      const allService = JSON.parse(jsonString);
+      const service = allService.find((item: any) => item.id === props.appId);
+      selectedDimensions = service
+        ? service.selectedDimension.filter((item: any) => addChartData.value.labels.includes(item.primaryDimension))
+        : [];
+    }
+    selectedLabel.value =
+      selectedDimensions.length > 0
+        ? selectedDimensions.map((item: any) => item.primaryDimension)
+        : addChartData.value.labels.slice(0, Math.min(2, addChartData.value.labels.length));
+    chartSelectDimensions.value = selectedDimensions.map((item: any) => {
+      return {
+        primaryDimension: item.primaryDimension,
+        minorDimension: item.minorDimension.filter((dimension: string) =>
+          addChartData.value.labels.includes(dimension),
+        ),
+        drillDownDimension: addChartData.value.labels.includes(item.drillDownDimension) ? item.drillDownDimension : '',
+        isStack: item.isStack,
+      };
+    });
   };
 </script>
 
 <style scoped lang="scss">
+  .line {
+    width: 1px;
+    height: 16px;
+    background-color: #dcdee5;
+    margin: 0 16px;
+  }
   .add-chart-wrap {
     display: flex;
     align-items: center;
     height: 16px;
-    margin-left: 16px;
-    padding: 0 16px;
-    border-left: 1px solid #dcdee5;
     cursor: pointer;
     .add-icon {
       border-radius: 50%;
@@ -199,6 +247,7 @@
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
+    gap: 16px;
     .chart {
       width: calc(50% - 8px);
     }
@@ -210,5 +259,10 @@
     .no-data {
       color: #c4c6cc !important;
     }
+  }
+  :deep(.bk-exception) {
+    height: 100%;
+    justify-content: center;
+    transform: translateY(-20px);
   }
 </style>

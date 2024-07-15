@@ -14,6 +14,7 @@ package api
 
 import (
 	"fmt"
+	"net"
 	"strings"
 	"sync"
 
@@ -43,20 +44,40 @@ func (vm *VPCManager) CheckConflictInVpcCidr(vpcID string, cidr string, opt *clo
 
 // ListVpcs list vpcs
 func (vm *VPCManager) ListVpcs(vpcID string, opt *cloudprovider.ListNetworksOption) ([]*proto.CloudVpc, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+	client, err := GetEc2Client(&opt.CommonOption)
+	if err != nil {
+		return nil, fmt.Errorf("create aws client failed, err %s", err.Error())
+	}
+
+	input := &ec2.DescribeVpcsInput{}
+	if vpcID != "" {
+		input.VpcIds = []*string{&vpcID}
+	}
+
+	cloudVpcs, err := client.DescribeVpcs(input)
+	if err != nil {
+		return nil, err
+	}
+
+	vpcs := make([]*proto.CloudVpc, 0)
+	for _, v := range cloudVpcs.Vpcs {
+		vpcs = append(vpcs, &proto.CloudVpc{
+			VpcId:    *v.VpcId,
+			Name:     *v.VpcId,
+			Ipv4Cidr: *v.CidrBlock,
+		})
+	}
+
+	return vpcs, nil
 }
 
 // ListSubnets list vpc subnets
 func (vm *VPCManager) ListSubnets(vpcID string, zone string, opt *cloudprovider.ListNetworksOption) ([]*proto.Subnet, error) {
-	locationList := strings.Split(opt.Region, "-")
-	if len(locationList) == 3 {
-		opt.Region = strings.Join(locationList[:2], "-")
-	}
-
 	client, err := GetEc2Client(&opt.CommonOption)
 	if err != nil {
-		return nil, fmt.Errorf("create google client failed, err %s", err.Error())
+		return nil, fmt.Errorf("create aws client failed, err %s", err.Error())
 	}
+
 	output, err := client.DescribeSubnets(&ec2.DescribeSubnetsInput{})
 	if err != nil {
 		return nil, fmt.Errorf("list regions failed, err %s", err.Error())
@@ -65,11 +86,12 @@ func (vm *VPCManager) ListSubnets(vpcID string, zone string, opt *cloudprovider.
 	result := make([]*proto.Subnet, 0)
 	for _, v := range output.Subnets {
 		subnet := &proto.Subnet{
-			VpcID:      aws.StringValue(v.VpcId),
-			SubnetID:   aws.StringValue(v.SubnetId),
-			SubnetName: aws.StringValue(v.SubnetId),
-			CidrRange:  aws.StringValue(v.CidrBlock),
-			Zone:       aws.StringValue(v.AvailabilityZone),
+			VpcID:                   aws.StringValue(v.VpcId),
+			SubnetID:                aws.StringValue(v.SubnetId),
+			SubnetName:              aws.StringValue(v.SubnetId),
+			CidrRange:               aws.StringValue(v.CidrBlock),
+			Zone:                    aws.StringValue(v.AvailabilityZone),
+			AvailableIPAddressCount: uint64(aws.Int64Value(v.AvailableIpAddressCount)),
 		}
 
 		ipv6CidrBlocks := make([]string, 0)
@@ -99,4 +121,27 @@ func (vm *VPCManager) GetCloudNetworkAccountType(opt *cloudprovider.CommonOption
 // ListBandwidthPacks list bandWidthPacks
 func (vm *VPCManager) ListBandwidthPacks(opt *cloudprovider.CommonOption) ([]*proto.BandwidthPackageInfo, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// AllocateOverlayCidr allocate overlay cidr
+func (vm *VPCManager) AllocateOverlayCidr(vpcId string, cluster *proto.Cluster, cidrLens []uint32,
+	reservedBlocks []*net.IPNet, opt *cloudprovider.CommonOption) ([]string, error) {
+	return nil, nil
+}
+
+// AddClusterOverlayCidr add cidr to cluster
+func (vm *VPCManager) AddClusterOverlayCidr(clusterId string, cidrs []string, opt *cloudprovider.CommonOption) error {
+	return nil
+}
+
+// GetVpcIpUsage get vpc ipTotal/ipSurplus
+func (vm *VPCManager) GetVpcIpUsage(
+	vpcId string, ipType string, reservedBlocks []*net.IPNet, opt *cloudprovider.CommonOption) (uint32, uint32, error) {
+	return 0, 0, nil
+}
+
+// GetClusterIpUsage get cluster ip usage
+func (vm *VPCManager) GetClusterIpUsage(clusterId string, ipType string, opt *cloudprovider.CommonOption) (
+	uint32, uint32, error) {
+	return 0, 0, nil
 }

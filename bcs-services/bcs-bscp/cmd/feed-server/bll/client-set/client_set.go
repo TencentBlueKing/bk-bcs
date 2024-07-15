@@ -19,6 +19,7 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/bedis"
 	iamauth "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/auth"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 	pbcs "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/cache-service"
@@ -56,9 +57,16 @@ func newClientSet(sd serviced.Discover, tls cc.TLSConfig, authorizer iamauth.Aut
 		return nil, fmt.Errorf("new cache service client pool failed, err: %v", err)
 	}
 
+	// init redis client
+	bds, err := bedis.NewRedisCache(cc.FeedServer().RedisCluster)
+	if err != nil {
+		return nil, fmt.Errorf("new redis cluster failed, err: %v", err)
+	}
+
 	return &ClientSet{
 		cachePool:  cachePool,
 		authorizer: authorizer,
+		bds:        bds,
 	}, nil
 
 }
@@ -67,6 +75,7 @@ func newClientSet(sd serviced.Discover, tls cc.TLSConfig, authorizer iamauth.Aut
 type ClientSet struct {
 	cachePool  brpc.PoolInterface
 	authorizer iamauth.Authorizer
+	bds        bedis.Client
 }
 
 // CS return one cache service client from the client pool
@@ -77,4 +86,9 @@ func (cs *ClientSet) CS() pbcs.CacheClient {
 // Authorizer return an authorization client
 func (cs *ClientSet) Authorizer() iamauth.Authorizer {
 	return cs.authorizer
+}
+
+// Redis return redis client
+func (cs *ClientSet) Redis() bedis.Client {
+	return cs.bds
 }

@@ -109,30 +109,30 @@ env:
   - name: {{ .name | quote }}
     value: {{ .value | quote }}
   {{- else if eq .type "podField" }}
-  - name: {{ .name }}
+  - name: {{ .name | quote }}
     valueFrom:
       fieldRef:
         apiVersion: v1
-        fieldPath: {{ .value }}
+        fieldPath: {{ .value | quote }}
   {{- else if eq .type "resource" }}
-  - name: {{ .name }}
+  - name: {{ .name | quote }}
     valueFrom:
       resourceFieldRef:
-        containerName: {{ .source }}
+        containerName: {{ .source | quote }}
         divisor: 0
-        resource: {{ .value }}
+        resource: {{ .value | quote }}
   {{- else if eq .type "configMapKey" }}
-  - name: {{ .name }}
+  - name: {{ .name | quote }}
     valueFrom:
       configMapKeyRef:
-        name: {{ .source }}
-        key: {{ .value }}
+        name: {{ .source | quote }}
+        key: {{ .value | quote }}
   {{- else if eq .type "secretKey" }}
-  - name: {{ .name }}
+  - name: {{ .name | quote }}
     valueFrom:
       secretKeyRef:
-        name: {{ .source }}
-        key: {{ .value }}
+        name: {{ .source | quote }}
+        key: {{ .value | quote }}
   {{- end }}
   {{- end }}
 {{- end }}

@@ -14,6 +14,8 @@
 package common
 
 import (
+	"sort"
+
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/model"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 )
@@ -24,18 +26,26 @@ func ParseMetadata(manifest map[string]interface{}, metadata *model.Metadata) {
 	metadata.Kind = mapx.GetStr(manifest, "kind")
 	metadata.Name = mapx.GetStr(manifest, "metadata.name")
 	metadata.Namespace = mapx.GetStr(manifest, "metadata.namespace")
-	ParseLabels(manifest, &metadata.Labels)
+	lables, _ := mapx.GetItems(manifest, "metadata.labels")
+	ParseLabels(lables, &metadata.Labels)
 	ParseAnnotations(manifest, &metadata.Annotations)
 	metadata.ResVersion = mapx.GetStr(manifest, "metadata.resourceVersion")
 }
 
 // ParseLabels xxx
-func ParseLabels(manifest map[string]interface{}, labels *[]model.Label) {
-	if ls, _ := mapx.GetItems(manifest, "metadata.labels"); ls != nil {
-		for k, v := range ls.(map[string]interface{}) {
-			*labels = append(*labels, model.Label{Key: k, Value: v.(string)})
-		}
+func ParseLabels(manifest interface{}, labels *[]model.Label) {
+	if manifest == nil {
+		return
 	}
+	for k, v := range manifest.(map[string]interface{}) {
+		*labels = append(*labels, model.Label{Key: k, Value: v.(string)})
+	}
+	if labels == nil || len(*labels) == 0 {
+		return
+	}
+	sort.Slice(*labels, func(i, j int) bool {
+		return (*labels)[i].Key < (*labels)[j].Key
+	})
 }
 
 // ParseAnnotations xxx
@@ -45,4 +55,10 @@ func ParseAnnotations(manifest map[string]interface{}, annotations *[]model.Anno
 			*annotations = append(*annotations, model.Annotation{Key: k, Value: v.(string)})
 		}
 	}
+	if annotations == nil || len(*annotations) == 0 {
+		return
+	}
+	sort.Slice(*annotations, func(i, j int) bool {
+		return (*annotations)[i].Key < (*annotations)[j].Key
+	})
 }

@@ -23,7 +23,7 @@ import (
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 
-	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware/ctxutils"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
 )
 
@@ -75,18 +75,22 @@ func (p *PodQuery) Query(ctx context.Context, argoApp *v1alpha1.Application) ([]
 		for _, pod := range pods {
 			if pod.Data == nil {
 				blog.Warnf("RequestID[%s] pod '%s' from bcs-storage data is nil",
-					mw.RequestID(ctx), pod.ResourceName)
+					ctxutils.RequestID(ctx), pod.ResourceName)
 				continue
 			}
 			podsMap[pod.Data.Name] = pod.Data
 		}
+		var notQueried int
 		for _, pod := range nspods {
 			v, ok := podsMap[pod.Name]
 			if ok {
 				result = append(result, *v)
 			} else {
-				blog.Warnf("RequestID[%s] pod '%s' not queried", mw.RequestID(ctx), pod.Name)
+				notQueried++
 			}
+		}
+		if notQueried != 0 {
+			blog.Warnf("RequestID[%s] not queried pods '%d'", ctxutils.RequestID(ctx), notQueried)
 		}
 	}
 	return result, nil

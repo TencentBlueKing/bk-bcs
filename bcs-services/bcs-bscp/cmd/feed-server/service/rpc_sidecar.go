@@ -21,10 +21,14 @@ import (
 	"time"
 
 	prm "github.com/prometheus/client_golang/prometheus"
+	"github.com/samber/lo"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/types"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/components/bcs"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
@@ -48,7 +52,12 @@ func (s *Service) Handshake(ctx context.Context, hm *pbfs.HandshakeMessage) (*pb
 	}
 
 	if err = hm.Validate(); err != nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid handshake message "+err.Error())
+		return nil, status.Error(codes.InvalidArgument, "invalid handshake message, "+err.Error())
+	}
+
+	if !s.authorizer.HasBiz(hm.Spec.BizId) {
+		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid handshake message, "+
+			"biz id %d does not exist", hm.Spec.BizId))
 	}
 
 	// check if the sidecar's version can be accepted.
@@ -81,11 +90,12 @@ func (s *Service) Handshake(ctx context.Context, hm *pbfs.HandshakeMessage) (*pb
 			Name: s.name,
 		},
 		RuntimeOption: &sfs.SidecarRuntimeOption{
-			BounceIntervalHour: s.dsSetting.BounceIntervalHour,
+			BounceIntervalHour: cc.FeedServer().Downstream.BounceIntervalHour,
 			Repository: &sfs.RepositoryV1{
 				Root: decorator.Root(),
 				Url:  decorator.Url(),
 			},
+			EnableAsyncDownload: cc.FeedServer().GSE.Enabled,
 		},
 	}
 
@@ -177,7 +187,7 @@ func (s *Service) Messaging(ctx context.Context, msg *pbfs.MessagingMeta) (*pbfs
 		return nil, status.Errorf(codes.PermissionDenied, "no permission to access bscp server")
 	}
 
-	clientMetricData := make(map[string]*sfs.ClientMetricData)
+	clientMetricData := make(map[uint32]*sfs.ClientMetricData)
 	// 按照服务级别上报数据
 	// 上报的事件分两种 心跳事件、变更事件
 	switch sfs.MessagingType(msg.Type) {
@@ -188,18 +198,45 @@ func (s *Service) Messaging(ctx context.Context, msg *pbfs.MessagingMeta) (*pbfs
 			logs.Errorf("version change message decoding failed, %s", err.Error())
 			return nil, err
 		}
-		// 处理 心跳时间和在线状态
-		vc.BasicData.HeartbeatTime = time.Now().Local().UTC()
-		vc.BasicData.OnlineStatus = sfs.Online
-		payload, errE := vc.Encode()
-		if errE != nil {
-			logs.Errorf("version change message encoding failed, %s", errE.Error())
-			return nil, err
-		}
-		s.handleResourceUsageMetrics(vc.BasicData.BizID, vc.Application.App, vc.ResourceUsage)
-		clientMetricData[vc.Application.App] = &sfs.ClientMetricData{
-			MessagingType: msg.Type,
-			Payload:       payload,
+
+		if vc.BasicData.BizID != 0 {
+			appID, errApp := s.bll.AppCache().GetAppID(im.Kit, im.Meta.BizID, vc.Application.App)
+			if errApp != nil {
+				logs.Errorf("get app id failed, %s", errApp.Error())
+				return nil, errApp
+			}
+			vc.Application.AppID = appID
+
+			// pull 首次是需要获取app meta, 会出现权限等问题导致失败，
+			// 因此TargetReleaseID会出现0的情况，
+			// 获取TargetReleaseID时出现错误直接忽略
+			if vc.Application.TargetReleaseID == 0 {
+				meta := &types.AppInstanceMeta{
+					BizID:  vc.BasicData.BizID,
+					App:    vc.Application.App,
+					AppID:  appID,
+					Uid:    vc.Application.Uid,
+					Labels: vc.Application.Labels,
+				}
+				cancel := im.Kit.CtxWithTimeoutMS(1500)
+				defer cancel()
+				metas, _ := s.bll.Release().ListAppLatestReleaseMeta(im.Kit, meta)
+				vc.Application.TargetReleaseID = metas.ReleaseId
+			}
+
+			// 处理 心跳时间和在线状态
+			vc.BasicData.HeartbeatTime = time.Now().Local().UTC()
+			vc.BasicData.OnlineStatus = sfs.Online
+			payload, errE := vc.Encode()
+			if errE != nil {
+				logs.Errorf("version change message encoding failed, %s", errE.Error())
+				return nil, err
+			}
+			s.handleResourceUsageMetrics(vc.BasicData.BizID, vc.Application.App, vc.ResourceUsage)
+			clientMetricData[appID] = &sfs.ClientMetricData{
+				MessagingType: msg.Type,
+				Payload:       payload,
+			}
 		}
 	case sfs.Heartbeat:
 		hb := new(sfs.HeartbeatPayload)
@@ -207,35 +244,40 @@ func (s *Service) Messaging(ctx context.Context, msg *pbfs.MessagingMeta) (*pbfs
 		if err != nil {
 			return nil, err
 		}
-		heartbeatTime := time.Now().UTC()
-		onlineStatus := sfs.Online
-		for _, item := range hb.Applications {
-			s.handleResourceUsageMetrics(hb.BasicData.BizID, item.App, hb.ResourceUsage)
-			hb.BasicData.HeartbeatTime = heartbeatTime
-			hb.BasicData.OnlineStatus = onlineStatus
-			oneData := sfs.HeartbeatItem{
-				BasicData:     hb.BasicData,
-				Application:   item,
-				ResourceUsage: hb.ResourceUsage,
-			}
-			marshal, errHb := jsoni.Marshal(oneData)
-			if errHb != nil {
-				return nil, errHb
-			}
-			clientMetricData[item.App] = &sfs.ClientMetricData{
-				MessagingType: msg.Type,
-				Payload:       marshal,
+
+		if hb.BasicData.BizID != 0 {
+			heartbeatTime := time.Now().UTC()
+			onlineStatus := sfs.Online
+			for _, item := range hb.Applications {
+				if item.CursorID != "" {
+					appID, errApp := s.bll.AppCache().GetAppID(im.Kit, im.Meta.BizID, item.App)
+					if errApp != nil {
+						logs.Errorf("get app id failed, %s", errApp.Error())
+						return nil, errApp
+					}
+					item.AppID = appID
+					s.handleResourceUsageMetrics(hb.BasicData.BizID, item.App, hb.ResourceUsage)
+					hb.BasicData.HeartbeatTime = heartbeatTime
+					hb.BasicData.OnlineStatus = onlineStatus
+					oneData := sfs.HeartbeatItem{
+						BasicData:     hb.BasicData,
+						Application:   item,
+						ResourceUsage: hb.ResourceUsage,
+					}
+					marshal, errHb := oneData.Encode()
+					if errHb != nil {
+						return nil, errHb
+					}
+					clientMetricData[appID] = &sfs.ClientMetricData{
+						MessagingType: msg.Type,
+						Payload:       marshal,
+					}
+				}
 			}
 		}
 	}
 
-	for appName, v := range clientMetricData {
-		appID, err := s.bll.AppCache().GetAppID(im.Kit, im.Meta.BizID, appName)
-		if err != nil {
-			logs.Errorf("get app id failed, %s", err.Error())
-			continue
-		}
-		v.AppID = appID
+	for appID, v := range clientMetricData {
 		payload, err := jsoni.Marshal(v)
 		if err != nil {
 			logs.Errorf("failed to serialize clientMetricData, err: %s", err.Error())
@@ -256,12 +298,20 @@ func (s *Service) Messaging(ctx context.Context, msg *pbfs.MessagingMeta) (*pbfs
 }
 
 // PullAppFileMeta pull an app's latest release metadata only when the app's configures is file type.
-func (s *Service) PullAppFileMeta(ctx context.Context, req *pbfs.PullAppFileMetaReq) (
+func (s *Service) PullAppFileMeta(ctx context.Context, req *pbfs.PullAppFileMetaReq) ( // nolint
 	*pbfs.PullAppFileMetaResp, error) {
 
 	// check if the sidecar's version can be accepted.
 	if !sfs.IsAPIVersionMatch(req.ApiVersion) {
-		return nil, status.Error(codes.InvalidArgument, "sdk's api version is too low, should be upgraded")
+		st := status.New(codes.FailedPrecondition, "sdk's api version is too low, should be upgraded")
+		st, err := st.WithDetails(&pbbase.ErrDetails{
+			PrimaryError:   uint32(sfs.VersionIsTooLowFailed),
+			SecondaryError: uint32(sfs.SDKVersionIsTooLowFailed),
+		})
+		if err != nil {
+			return nil, status.Error(codes.Internal, "grpc status with details failed")
+		}
+		return nil, st.Err()
 	}
 
 	im, err := sfs.ParseFeedIncomingContext(ctx)
@@ -308,11 +358,22 @@ func (s *Service) PullAppFileMeta(ctx context.Context, req *pbfs.PullAppFileMeta
 	}
 
 	fileMetas := make([]*pbfs.FileMeta, 0, len(metas.ConfigItems))
+	// 支持req.Match多个匹配，且兼容原有req.Key单个匹配，当req.Match和req.Key都未设置时则获取全部配置项
+	match := req.Match
+	if req.Key != "" {
+		match = append(match, req.Key)
+	}
 	for _, ci := range metas.ConfigItems {
-		ok, _ := tools.MatchConfigItem(req.Key, ci.ConfigItemSpec.Path, ci.ConfigItemSpec.Name)
-		if req.Key != "" && !ok {
-			continue
+		if len(match) > 0 {
+			isMatch := lo.SomeBy(match, func(scope string) bool {
+				ok, _ := tools.MatchConfigItem(scope, ci.ConfigItemSpec.Path, ci.ConfigItemSpec.Name)
+				return ok
+			})
+			if !isMatch {
+				continue
+			}
 		}
+
 		app, err := s.bll.AppCache().GetMeta(im.Kit, req.BizId, ci.ConfigItemAttachment.AppId)
 		if err != nil {
 			return nil, status.Errorf(codes.Aborted, "get app meta failed, %s", err.Error())
@@ -582,6 +643,139 @@ func (s *Service) ListApps(ctx context.Context, req *pbfs.ListAppsReq) (*pbfs.Li
 
 	r := &pbfs.ListAppsResp{Apps: apps}
 	return r, nil
+}
+
+// AsyncDownload 异步 p2p 下载，文件名为 sha256
+func (s *Service) AsyncDownload(ctx context.Context, req *pbfs.AsyncDownloadReq) (*pbfs.AsyncDownloadResp, error) {
+	kit := kit.FromGrpcContext(ctx)
+
+	// 1. 鉴权
+	credential := getCredential(ctx)
+	app, err := s.bll.AppCache().GetMeta(kit, req.BizId, req.FileMeta.ConfigItemAttachment.AppId)
+	if err != nil {
+		return nil, status.Errorf(codes.Aborted, "get app %d metadata failed, %s",
+			req.FileMeta.ConfigItemAttachment.AppId, err.Error())
+	}
+	if !credential.MatchApp(app.Name) {
+		return nil, status.Errorf(codes.PermissionDenied, "not have app %s permission", app.Name)
+	}
+
+	if !credential.MatchConfigItem(app.Name, req.FileMeta.ConfigItemSpec.Path, req.FileMeta.ConfigItemSpec.Name) {
+		return nil, status.Error(codes.PermissionDenied, "no permission download file")
+	}
+
+	gseConf := cc.FeedServer().GSE
+	if !gseConf.Enabled {
+		return nil, status.Error(codes.FailedPrecondition, "p2p download is disabled in server")
+	}
+
+	// 2. 获取客户端信息，check 是否支持 p2p 下载
+	clientAgentID, clientContainerID, err := s.getAsyncDownloadAgentInfo(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	// 3. 创建下载任务
+	taskID, err := s.bll.AsyncDownload().CreateAsyncDownloadTask(kit, req.BizId,
+		req.FileMeta.ConfigItemAttachment.AppId, req.FileMeta.ConfigItemSpec.Path, req.FileMeta.ConfigItemSpec.Name,
+		clientAgentID, clientContainerID, req.FileMeta.ConfigItemSpec.Permission.User, req.FileDir,
+		req.FileMeta.CommitSpec.Content.Signature)
+	if err != nil {
+		return nil, err
+	}
+
+	r := &pbfs.AsyncDownloadResp{
+		TaskId: taskID,
+	}
+	return r, nil
+}
+
+// TODO: 优化点
+// 1. AgentID 和 ContainerID 的值可以缓存起来，一个客户端多次文件下载不用重复查询
+// 2. 客户端 AgentID 和 ContainerID 也可以在客户端注册的时候就获取到，不用每次请求都去查
+func (s *Service) getAsyncDownloadAgentInfo(ctx context.Context, req *pbfs.AsyncDownloadReq) (
+	agentID string, containerID string, err error) {
+	if req.BkAgentId != "" {
+		// target is node
+		return req.BkAgentId, "", nil
+	}
+	// target is container
+	if req.ClusterId == "" || req.PodId == "" {
+		return "", "", status.Error(codes.InvalidArgument, "client agnet_id or (cluster_id and pod_id) is required")
+	}
+	pod, qErr := bcs.QueryPod(ctx, req.ClusterId, req.PodId)
+	if qErr != nil {
+		return "", "", qErr
+	}
+	for _, initContainer := range pod.Status.InitContainerStatuses {
+		if initContainer.Name == req.ContainerName {
+			containerID = tools.SplitContainerID(initContainer.ContainerID)
+		}
+	}
+	for _, container := range pod.Status.ContainerStatuses {
+		if container.Name == req.ContainerName {
+			containerID = tools.SplitContainerID(container.ContainerID)
+		}
+	}
+	if containerID == "" {
+		return "", "", status.Errorf(codes.InvalidArgument, "client container %s not found in pod %s/%s",
+			req.ContainerName, req.ClusterId, req.PodId)
+	}
+	node, qErr := bcs.QueryNode(ctx, req.ClusterId, pod.Spec.NodeName)
+	if qErr != nil {
+		return "", "", qErr
+	}
+	agentID = node.Labels[constant.LabelKeyAgentID]
+	if agentID == "" {
+		return "", "", status.Errorf(codes.InvalidArgument, "bk-agent-id not found in client node %s/%s",
+			req.ClusterId, pod.Spec.NodeName)
+	}
+	return agentID, containerID, nil
+}
+
+// AsyncDownloadStatus 查询异步 p2p 下载任务状态
+func (s *Service) AsyncDownloadStatus(ctx context.Context, req *pbfs.AsyncDownloadStatusReq) (
+	*pbfs.AsyncDownloadStatusResp, error) {
+	kit := kit.FromGrpcContext(ctx)
+	// 1.1 从 Redis 获取到任务对应的服务、文件信息，用token鉴权
+	task, err := s.bll.AsyncDownload().GetAsyncDownloadTask(kit, req.BizId, req.TaskId)
+	if err != nil {
+		return nil, err
+	}
+	// 1. 鉴权
+	credential := getCredential(ctx)
+	app, err := s.bll.AppCache().GetMeta(kit, task.BizID, task.AppID)
+	if err != nil {
+		return nil, status.Errorf(codes.Aborted, "get app %d metadata failed, %s",
+			task.AppID, err.Error())
+	}
+	if !credential.MatchApp(app.Name) {
+		return nil, status.Errorf(codes.PermissionDenied, "have not app %s permission", app.Name)
+	}
+
+	if !credential.MatchConfigItem(app.Name, task.FilePath, task.FileName) {
+		return nil, status.Error(codes.PermissionDenied, "no permission download file")
+	}
+
+	taskStatus, err := s.bll.AsyncDownload().GetAsyncDownloadTaskStatus(kit, req.BizId, req.TaskId)
+	if err != nil {
+		return nil, err
+	}
+
+	var status pbfs.AsyncDownloadStatus
+
+	switch taskStatus {
+	case types.AsyncDownloadJobStatusSuccess:
+		status = pbfs.AsyncDownloadStatus_SUCCESS
+	case types.AsyncDownloadJobStatusPending, types.AsyncDownloadJobStatusRunning:
+		status = pbfs.AsyncDownloadStatus_DOWNLOADING
+	case types.AsyncDownloadJobStatusFailed, types.AsyncDownloadJobStatusTimeout:
+		status = pbfs.AsyncDownloadStatus_FAILED
+	}
+	resp := &pbfs.AsyncDownloadStatusResp{
+		Status: status,
+	}
+	return resp, nil
 }
 
 // 匹配

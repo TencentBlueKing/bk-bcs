@@ -14,6 +14,8 @@
 package tools
 
 import (
+	"fmt"
+	"path"
 	"sort"
 	"strconv"
 	"strings"
@@ -182,4 +184,94 @@ func MergeDoubleStringSlice(input [][]string) []string {
 	sort.Strings(uniqueElements)
 
 	return uniqueElements
+}
+
+// CheckPathConflict Check whether the new path conflicts
+// with the existing set of paths.
+func CheckPathConflict(newPath string, existingPaths []string) bool {
+	// If the new path is a directory,
+	// add a slash at the end for easier comparison
+	if !strings.HasSuffix(newPath, "/") {
+		newPath += "/"
+	}
+
+	for _, path := range existingPaths {
+		// If the existing path is a directory,
+		// add a slash at the end for easier comparison
+		compPath := path
+		if !strings.HasSuffix(path, "/") {
+			compPath += "/"
+		}
+
+		// Check if the new path is the same as the existing path or a sub-path of it
+		if strings.HasPrefix(compPath, newPath) || strings.HasPrefix(newPath, compPath) {
+			return true
+		}
+	}
+	return false
+}
+
+// CIUniqueKey defines struct of unique key of config item.
+type CIUniqueKey struct {
+	Name string `json:"name"`
+	Path string `json:"path"`
+}
+
+// DetectFilePathConflicts 检测文件路径冲突
+// 示例 /a 和 /a 两者路径+名称全等忽略
+// 示例 /a 和 /a/1.txt 两者同级下出现同名的文件夹和文件会视为错误
+func DetectFilePathConflicts(a []CIUniqueKey, b []CIUniqueKey) error {
+	for _, v1 := range a {
+		path1 := path.Join(v1.Path, v1.Name)
+		for _, v2 := range b {
+			path2 := path.Join(v2.Path, v2.Name)
+			if path1 == path2 {
+				continue
+			}
+			if strings.HasPrefix(path1+"/", path2+"/") || strings.HasPrefix(path2+"/", path1+"/") {
+				return fmt.Errorf("%s and %s path file conflict", path2, path1)
+			}
+		}
+	}
+
+	return nil
+}
+
+// MergeAndDeduplicate 合并并去重两个数组
+// 示例 a []uint32{1,3,5,6}  b []uint32{2,3,7,4} return []uint32{1,2,3,5,7,6,4}
+func MergeAndDeduplicate(a, b []uint32) []uint32 {
+	// 使用 map 来记录已经存在的元素
+	elementMap := make(map[uint32]bool)
+	var result []uint32
+
+	// 合并数组 a 和 b
+	for _, v := range append(a, b...) {
+		if !elementMap[v] {
+			elementMap[v] = true
+			result = append(result, v)
+		}
+	}
+
+	return result
+}
+
+// Difference 返回在数组 a 中但不在数组 b 中的元素
+// 返回值是一个包含在数组 a 中但不在数组 b 中的去重后的元素的数组
+// 示例 a []uint32{1,3,5,6}  b []uint32{2,3,7,4} return []uint32{1,5,6}
+func Difference(a, b []uint32) []uint32 {
+	// 使用map来记录数组b中的元素
+	bMap := make(map[uint32]bool)
+	for _, num := range b {
+		bMap[num] = true
+	}
+
+	var result []uint32
+	// 遍历数组a，如果元素不在b中，则添加到结果中
+	for _, num := range a {
+		if !bMap[num] {
+			result = append(result, num)
+		}
+	}
+
+	return result
 }

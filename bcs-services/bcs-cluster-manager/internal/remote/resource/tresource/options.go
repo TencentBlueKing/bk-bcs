@@ -74,7 +74,7 @@ func NewResourceManager(config *Config) (ResourceManagerClient, func()) {
 	if config.TLSConfig != nil {
 		opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(config.TLSConfig)))
 	} else {
-		opts = append(opts, grpc.WithInsecure())
+		opts = append(opts, grpc.WithInsecure()) // nolint
 	}
 	var conn *grpc.ClientConn
 	var err error
@@ -120,6 +120,12 @@ func (os OrderState) String() string {
 const (
 	statusOnSale  = "ONSALE"  // nolint
 	statusNotSale = "NOTSALE" // nolint
+)
+
+const (
+	userQuota      = "userQuota"
+	usedQuota      = "usedQuota"
+	availableQuota = "availableQuota"
 )
 
 // PoolLabel xxx

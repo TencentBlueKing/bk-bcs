@@ -1,20 +1,20 @@
 <template>
-  <div>
-    <ContentHeader :title="$t('cluster.nodeTemplate.text')">
-      <template #right>
-        <a
-          :href="PROJECT_CONFIG.nodeTemplate"
-          target="_blank"
-          class="bk-text-button"
-        >{{$t('cluster.nodeTemplate.button.useLink')}}</a>
-      </template>
-    </ContentHeader>
-    <div class="node-template bcs-content-wrapper">
+  <BcsContent :title="$t('cluster.nodeTemplate.text')">
+    <template #header-right>
+      <a
+        :href="PROJECT_CONFIG.nodeTemplate"
+        target="_blank"
+        class="bk-text-button"
+      >{{$t('cluster.nodeTemplate.button.useLink')}}</a>
+    </template>
+    <div class="node-template">
       <div class="node-template-header">
         <bk-button
           theme="primary"
           icon="plus"
-          @click="handleAddTemplate">{{$t('cluster.nodeTemplate.title.create')}}</bk-button>
+          @click="handleAddTemplate">
+          {{$t('cluster.nodeTemplate.title.create')}}
+        </bk-button>
         <bk-input
           class="search-input"
           v-model="searchValue"
@@ -64,17 +64,17 @@
         :title="currentRow.name"
         quick-close
         :width="800">
-        <div slot="content">
+        <template #content>
           <NodeTemplateDetail
             :data="currentRow"
             operate
+            class="h-[calc(100vh-60px)] overflow-auto"
             @delete="handleDeleteDetail"
-            @cancel="showDetail = false">
-          </NodeTemplateDetail>
-        </div>
+            @cancel="showDetail = false" />
+        </template>
       </bcs-sideslider>
     </div>
-  </div>
+  </BcsContent>
 </template>
 <script lang="ts">
 import { defineComponent, onMounted, ref } from 'vue';
@@ -83,7 +83,7 @@ import NodeTemplateDetail from './node-template-detail.vue';
 
 import $bkMessage from '@/common/bkmagic';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
-import ContentHeader from '@/components/layout/Header.vue';
+import BcsContent from '@/components/layout/Content.vue';
 import usePage from '@/composables/use-page';
 import useSearch from '@/composables/use-search';
 import $i18n from '@/i18n/i18n-setup';
@@ -92,7 +92,7 @@ import $store from '@/store/index';
 
 export default defineComponent({
   name: 'NodeTemplateConfig',
-  components: { NodeTemplateDetail, ContentHeader },
+  components: { NodeTemplateDetail, BcsContent },
   setup() {
     const loading = ref(false);
     const data = ref<any[]>([]);
@@ -181,7 +181,6 @@ export default defineComponent({
 </script>
 <style lang="postcss" scoped>
 .node-template {
-    padding: 20px 24px;
     &-header {
         display: flex;
         align-items: center;

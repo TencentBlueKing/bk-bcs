@@ -1,79 +1,78 @@
 <template>
-  <bk-sideslider
+  <bk-dialog
+    :is-show="props.show"
     :title="t('批量上传配置文件')"
-    :width="960"
-    :is-show="isShow"
+    :theme="'primary'"
+    width="960"
+    height="720"
+    ext-cls="import-file-dialog"
     :before-close="handleBeforeClose"
-    @closed="close">
-    <div class="slider-content-container">
-      <bk-form form-type="vertical">
-        <bk-form-item :label="t('上传配置文件包')" required property="package">
-          <bk-upload
-            v-show="!isTableChange"
-            class="config-uploader"
-            theme="button"
-            :tip="t('支持扩展名：.zip  .tar  .gz')"
-            :size="100"
-            :multiple="false"
-            accept=".zip, .tar, .gz"
-            :custom-request="handleFileUpload">
-            <template #trigger>
-              <div ref="buttonRef">
-                <bk-button class="upload-button">
-                  <upload />
-                  <span class="text">{{ t('上传文件') }}</span>
-                </bk-button>
-              </div>
-            </template>
-          </bk-upload>
-          <div v-show="isTableChange">
-            <bk-pop-confirm
-              :title="t('确认放弃下方修改，重新上传配置项包？')"
-              trigger="click"
-              @confirm="() => buttonRef.click()">
-              <bk-button class="upload-button">
-                <upload />
-                <span class="text">{{ t('重新上传') }}</span>
-              </bk-button>
-              <span class="upload-tips">{{ t('支持扩展名：.zip .tar .gz') }}</span>
-            </bk-pop-confirm>
+    :quick-close="false"
+    @closed="handleClose">
+    <div :class="['select-wrap', { 'en-select-wrap': locale === 'en' }]">
+      <div class="import-type-select">
+        <div class="label">{{ t('导入方式') }}</div>
+        <bk-radio-group v-model="importType">
+          <bk-radio-button label="localFile">{{ t('导入本地文件') }}</bk-radio-button>
+          <bk-radio-button label="otherSpace" :disabled="true">{{ t('从其他空间导入') }}</bk-radio-button>
+        </bk-radio-group>
+      </div>
+      <div v-if="importType === 'localFile'">
+        <ImportFromLocalFile
+          :space-id="spaceId"
+          :current-template-space="currentTemplateSpace"
+          :is-template="true"
+          @change="handleUploadFile"
+          @delete="handleDeleteFile"
+          @uploading="uploadFileLoading = $event"
+          @decompressing="decompressing = $event"
+          @file-processing="fileProcessing = $event" />
+      </div>
+    </div>
+    <bk-loading
+      :loading="decompressing || fileProcessing"
+      :title="loadingText"
+      class="config-table-loading"
+      mode="spin"
+      theme="primary"
+      size="small"
+      :opacity="0.7">
+      <div v-if="importConfigList.length" class="content">
+        <div class="head">
+          <div class="tips">
+            {{ t('共将导入') }} <span style="color: #3a84ff">{{ importConfigList.length }}</span>
+            {{ t('个配置项，其中') }} <span style="color: #ffa519">{{ existConfigList.length }}</span>
+            {{ t('个已存在,导入后将') }}
+            <span style="color: #ffa519">{{ t('覆盖原配置') }}</span>
           </div>
-        </bk-form-item>
-      </bk-form>
-      <span v-if="loading" style="color: #63656e">上传中...</span>
-      <bk-loading :loading="loading">
-        <div class="tips" v-if="!loading">
-          {{ t('共将导入') }} <span>{{ importConfigList.length }}</span> {{ t('个配置项，其中') }}
-          <span>{{ existConfigList.length }}</span> {{ t('个已存在,导入后将') }}
-          <span style="color: #ff9c01">{{ t('覆盖原配置') }}</span>
         </div>
         <ConfigTable
+          v-if="nonExistConfigList.length"
           :table-data="nonExistConfigList"
           :is-exsit-table="false"
-          v-if="nonExistConfigList.length"
           :expand="expandNonExistTable"
           @change-expand="expandNonExistTable = !expandNonExistTable"
           @change="handleTableChange($event, true)" />
         <ConfigTable
+          v-if="existConfigList.length"
+          :expand="expandExistTable"
           :table-data="existConfigList"
           :is-exsit-table="true"
-          v-if="existConfigList.length"
-          :expand="!expandNonExistTable"
-          @change-expand="expandNonExistTable = !expandNonExistTable"
+          @change-expand="expandExistTable = !expandExistTable"
           @change="handleTableChange($event, false)" />
-      </bk-loading>
-    </div>
-    <div class="action-btns">
+      </div>
+    </bk-loading>
+    <template #footer>
       <bk-button
         theme="primary"
-        :loading="pending"
-        :disabled="!importConfigList.length"
+        style="margin-right: 8px"
+        :disabled="!confirmBtnDisabled"
         @click="isSelectPkgDialogShow = true">
-        {{ t('确定') }}
+        {{ t('导入') }}
       </bk-button>
-      <bk-button @click="close">{{ t('取消') }}</bk-button>
-    </div>
-  </bk-sideslider>
+      <bk-button @click="emits('update:show', false)">{{ t('取消') }}</bk-button>
+    </template>
+  </bk-dialog>
   <SelectPackage v-model:show="isSelectPkgDialogShow" :pending="pending" @confirm="handleImport" />
 </template>
 <script lang="ts" setup>
@@ -84,79 +83,75 @@
   import useTemplateStore from '../../../../../../../../store/template';
   import useModalCloseConfirmation from '../../../../../../../../utils/hooks/use-modal-close-confirmation';
   import { IConfigImportItem } from '../../../../../../../../../types/config';
-  import {
-    importTemplateFile,
-    importTemplateBatchAdd,
-    addTemplateToPackage,
-  } from '../../../../../../../../api/template';
+  import { importTemplateBatchAdd, addTemplateToPackage } from '../../../../../../../../api/template';
   import ConfigTable from './config-table.vue';
   import SelectPackage from './select-package.vue';
   import Message from 'bkui-vue/lib/message';
-  import { Upload } from 'bkui-vue/lib/icon';
+  import ImportFromLocalFile from '../../../../../../service/detail/config/config-list/config-table-list/create-config/import-file/import-from-local-file.vue';
 
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const props = defineProps<{
     show: boolean;
   }>();
 
+  const templateStore = useTemplateStore();
+
   const emits = defineEmits(['update:show', 'added']);
   const { spaceId } = storeToRefs(useGlobalStore());
-  const { currentTemplateSpace, batchUploadIds } = storeToRefs(useTemplateStore());
+  const { currentTemplateSpace } = storeToRefs(useTemplateStore());
   const isShow = ref(false);
-  const isTableChange = ref(false);
+  const isFormChange = ref(false);
   const pending = ref(false);
   const existConfigList = ref<IConfigImportItem[]>([]);
   const nonExistConfigList = ref<IConfigImportItem[]>([]);
-  const loading = ref(false);
   const expandNonExistTable = ref(true);
+  const expandExistTable = ref(true);
   const isSelectPkgDialogShow = ref(false);
-  const buttonRef = ref();
+  const importType = ref('localFile');
+  const uploadFileLoading = ref(false);
+  const decompressing = ref(false); // 后台压缩包解压
+  const fileProcessing = ref(false); // 后台文件处理
 
   watch(
     () => props.show,
     (val) => {
+      clearData();
       isShow.value = val;
-      isTableChange.value = false;
+      isFormChange.value = false;
     },
   );
 
   const importConfigList = computed(() => [...existConfigList.value, ...nonExistConfigList.value]);
 
-  const handleFileUpload = async (option: { file: File }) => {
-    clearData();
-    loading.value = true;
-    try {
-      const res = await importTemplateFile(spaceId.value, currentTemplateSpace.value, option.file);
-      existConfigList.value = res.exist;
-      nonExistConfigList.value = res.non_exist;
-      nonExistConfigList.value.forEach((item: IConfigImportItem) => {
-        item.privilege = '644';
-        item.user = 'root';
-        item.user_group = 'root';
-      });
-      if (nonExistConfigList.value.length === 0) expandNonExistTable.value = false;
-      isTableChange.value = false;
-    } catch (e) {
-      console.error(e);
-    } finally {
-      loading.value = false;
+  const confirmBtnDisabled = computed(() => {
+    return !uploadFileLoading.value && !decompressing.value && importConfigList.value.length > 0;
+  });
+
+  const loadingText = computed(() => {
+    if (decompressing.value) {
+      return t('压缩包正在解压，请稍后...');
     }
-  };
+    if (fileProcessing.value) {
+      return t('后台正在处理上传数据，请稍后...');
+    }
+    return '';
+  });
 
   const handleBeforeClose = async () => {
-    if (isTableChange.value) {
+    if (isFormChange.value) {
       const result = await useModalCloseConfirmation();
       return result;
     }
     return true;
   };
 
-  const close = () => {
+  const handleClose = () => {
     clearData();
     emits('update:show', false);
   };
 
   const handleImport = async (pkgIds: number[]) => {
+    pending.value = true;
     try {
       const res = await importTemplateBatchAdd(spaceId.value, currentTemplateSpace.value, [
         ...existConfigList.value,
@@ -166,14 +161,18 @@
       if (pkgIds.length > 1 || pkgIds[0] !== 0) {
         await addTemplateToPackage(spaceId.value, currentTemplateSpace.value, res.ids, pkgIds);
       }
-      batchUploadIds.value = res.ids;
-      isSelectPkgDialogShow.value = false;
-      emits('added');
-      close();
-      Message({
-        theme: 'success',
-        message: t('导入配置文件成功'),
+      templateStore.$patch((state) => {
+        state.topIds = res.ids;
       });
+      isSelectPkgDialogShow.value = false;
+      handleClose();
+      setTimeout(() => {
+        emits('added');
+        Message({
+          theme: 'success',
+          message: t('导入配置文件成功'),
+        });
+      }, 300);
     } catch (e) {
       console.log(e);
     } finally {
@@ -187,48 +186,92 @@
     } else {
       existConfigList.value = data;
     }
-    isTableChange.value = true;
+    isFormChange.value = true;
   };
 
   const clearData = () => {
     nonExistConfigList.value = [];
     existConfigList.value = [];
   };
+
+  // 删除文件处理表格数据
+  const handleDeleteFile = (fileName: string) => {
+    existConfigList.value = existConfigList.value.filter((item) => item.file_name !== fileName);
+    nonExistConfigList.value = nonExistConfigList.value.filter((item) => item.file_name !== fileName);
+  };
+
+  // 上传文件获取表格数据
+  const handleUploadFile = (exist: IConfigImportItem[], nonExist: IConfigImportItem[]) => {
+    existConfigList.value = [...existConfigList.value, ...exist];
+    nonExistConfigList.value = [...nonExistConfigList.value, ...nonExist];
+    isFormChange.value = true;
+  };
 </script>
-<style lang="scss" scoped>
-  .slider-content-container {
-    padding: 20px 40px;
-    height: calc(100vh - 101px);
-  }
-  .upload-button {
-    width: 100px;
-    .text {
-      margin-left: 5px;
+
+<style scoped lang="scss">
+  .select-wrap {
+    .import-type-select {
+      display: flex;
+    }
+    .label {
+      padding-top: 8px;
+      width: 72px;
+      font-size: 12px;
+      color: #63656e;
+      margin-right: 22px;
+      text-align: right;
+    }
+    :deep(.wrap) {
+      display: flex;
+      margin-top: 24px;
+      .label {
+        @extend .label;
+      }
+    }
+    &.en-select-wrap {
+      .label {
+        width: 100px !important;
+      }
+      :deep(.wrap) {
+        .label {
+          @extend .label;
+        }
+      }
+      :deep(.upload-file-list) {
+        margin-left: 120px;
+      }
     }
   }
-  .upload-tips {
-    margin-left: 8px;
-    font-size: 12px;
-    color: #63656e;
-  }
-  .action-btns {
+
+  .content {
+    margin-top: 24px;
     border-top: 1px solid #dcdee5;
-    padding: 8px 24px;
-    .bk-button {
-      margin-right: 8px;
-      min-width: 88px;
+    .head {
+      display: flex;
+      align-items: center;
+      margin: 16px 0;
+      font-size: 12px;
+      color: #63656e;
+      .bk-checkbox {
+        margin-left: 0 !important;
+        font-size: 12px;
+      }
     }
   }
-  .config-uploader {
-    :deep(.bk-upload-list) {
-      display: none;
+  .config-table-loading {
+    min-height: 80px;
+    :deep(.bk-loading-primary) {
+      top: 60px;
+      align-items: center;
     }
   }
-  .tips {
-    color: #63656e;
-    margin-bottom: 16px;
-    span {
-      color: #313238;
+</style>
+
+<style lang="scss">
+  .import-file-dialog {
+    .bk-modal-content {
+      height: calc(100% - 50px) !important;
+      overflow: auto;
     }
   }
 </style>

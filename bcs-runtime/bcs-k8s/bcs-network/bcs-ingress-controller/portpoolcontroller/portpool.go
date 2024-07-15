@@ -19,6 +19,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
+	gocache "github.com/patrickmn/go-cache"
 	"github.com/pkg/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -26,27 +27,33 @@ import (
 	ingresscommon "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/portpoolcache"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/utils"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/pkg/common"
 )
 
 // PortPoolHandler handler for port pool
 type PortPoolHandler struct {
-	namespace string
-	region    string
-	k8sClient client.Client
-	lbClient  cloud.LoadBalance
-	poolCache *portpoolcache.Cache
+	namespace   string
+	region      string
+	k8sClient   client.Client
+	lbClient    cloud.LoadBalance
+	poolCache   *portpoolcache.Cache
+	lbIDCache   *gocache.Cache
+	lbNameCache *gocache.Cache
 }
 
 // newPortPoolHandler create port pool handler
 func newPortPoolHandler(ns, region string,
-	lbClient cloud.LoadBalance, k8sClient client.Client, poolCache *portpoolcache.Cache) *PortPoolHandler {
+	lbClient cloud.LoadBalance, k8sClient client.Client, poolCache *portpoolcache.Cache,
+	lbIDCache *gocache.Cache, lbNameCache *gocache.Cache) *PortPoolHandler {
 	return &PortPoolHandler{
-		namespace: ns,
-		region:    region,
-		k8sClient: k8sClient,
-		lbClient:  lbClient,
-		poolCache: poolCache,
+		namespace:   ns,
+		region:      region,
+		k8sClient:   k8sClient,
+		lbClient:    lbClient,
+		poolCache:   poolCache,
+		lbIDCache:   lbIDCache,
+		lbNameCache: lbNameCache,
 	}
 }
 
@@ -77,7 +84,9 @@ func (pph *PortPoolHandler) ensurePortPool(pool *networkextensionv1.PortPool) (b
 		DefaultRegion: pph.region,
 		LbClient:      pph.lbClient,
 		K8sClient:     pph.k8sClient,
-		ListenerAttr:  pool.Spec.ListenerAttribute}
+		ListenerAttr:  pool.Spec.ListenerAttribute,
+		lbIDCache:     pph.lbIDCache,
+		lbNameCache:   pph.lbNameCache}
 
 	// try to delete
 	successDeletedKeyMap := make(map[string]struct{})
@@ -129,7 +138,7 @@ func (pph *PortPoolHandler) ensurePortPool(pool *networkextensionv1.PortPool) (b
 	}
 	pool.Status.PoolItemStatuses = append(pool.Status.PoolItemStatuses, newItemStatusList...)
 
-	pool.Status.Status = checkPortPoolStatus(pool)
+	pool.Status.Status = getPortPoolStatus(pool)
 
 	err := pph.k8sClient.Status().Update(context.Background(), pool, &client.UpdateOptions{})
 	if err != nil {
@@ -169,7 +178,9 @@ func (pph *PortPoolHandler) deletePortPool(pool *networkextensionv1.PortPool) (b
 		DefaultRegion: pph.region,
 		LbClient:      pph.lbClient,
 		K8sClient:     pph.k8sClient,
-		ListenerAttr:  pool.Spec.ListenerAttribute}
+		ListenerAttr:  pool.Spec.ListenerAttribute,
+		lbIDCache:     pph.lbIDCache,
+		lbNameCache:   pph.lbNameCache}
 
 	pph.poolCache.Lock()
 	defer pph.poolCache.Unlock()
@@ -224,7 +235,7 @@ func (pph *PortPoolHandler) deletePortPool(pool *networkextensionv1.PortPool) (b
 func (pph *PortPoolHandler) ensurePortBinding(pool *networkextensionv1.PortPool) error {
 	for i, poolItem := range pool.Spec.PoolItems {
 		portBindingList := &networkextensionv1.PortBindingList{}
-		labelKey := fmt.Sprintf(networkextensionv1.PortPoolBindingLabelKeyFromat, pool.GetName(), pool.GetNamespace())
+		labelKey := utils.GenPortBindingLabel(pool.GetName(), pool.GetNamespace())
 		if err := pph.k8sClient.List(context.Background(), portBindingList,
 			client.MatchingLabels{labelKey: poolItem.ItemName}); err != nil {
 			return errors.Wrapf(err, "list portBinding with label['%s'='%s'] failed", labelKey, poolItem.ItemName)

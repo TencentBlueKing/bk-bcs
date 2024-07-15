@@ -14,7 +14,6 @@
 package api
 
 import (
-	"github.com/huaweicloud/huaweicloud-sdk-go-v3/core/auth/basic"
 	eip "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/eip/v3"
 	"github.com/huaweicloud/huaweicloud-sdk-go-v3/services/eip/v3/model"
 	region "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/eip/v3/region"
@@ -24,7 +23,7 @@ import (
 
 // EipClient eip client
 type EipClient struct {
-	*eip.EipClient
+	eip *eip.EipClient
 }
 
 // NewEipClient new eip client
@@ -40,22 +39,16 @@ func NewEipClient(opt *cloudprovider.CommonOption) (*EipClient, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	auth, err := basic.NewCredentialsBuilder().WithAk(opt.Account.SecretID).WithSk(opt.Account.SecretKey).
-		WithProjectId(projectID).SafeBuild()
+	auth, err := getProjectAuth(opt.Account.SecretID, opt.Account.SecretKey, projectID)
 	if err != nil {
 		return nil, err
 	}
-
 	rn, err := region.SafeValueOf(opt.Region)
 	if err != nil {
 		return nil, err
 	}
 
-	hcClient, err := eip.EipClientBuilder().
-		WithCredential(auth).
-		WithRegion(rn). //指定region区域
-		SafeBuild()
+	hcClient, err := eip.EipClientBuilder().WithCredential(auth).WithRegion(rn).SafeBuild()
 	if err != nil {
 		return nil, err
 	}
@@ -64,8 +57,8 @@ func NewEipClient(opt *cloudprovider.CommonOption) (*EipClient, error) {
 }
 
 // GetAllBandwidths get all bandwidths
-func (k *EipClient) GetAllBandwidths() ([]model.BandwidthResponseBody, error) {
-	rsp, err := k.ListBandwidth(&model.ListBandwidthRequest{})
+func (e *EipClient) GetAllBandwidths() ([]model.BandwidthResponseBody, error) {
+	rsp, err := e.eip.ListBandwidth(&model.ListBandwidthRequest{})
 	if err != nil {
 		return nil, err
 	}

@@ -13,7 +13,11 @@
 // Package options xxx
 package options
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+)
 
 // EtcdOption option for etcd
 type EtcdOption struct {
@@ -70,7 +74,7 @@ type RepoConfig struct {
 	// bkrepo api url
 	URL string `json:"url" yaml:"url"`
 	// repo base url
-	BaseURL           string `json:"baseURL" yaml:"baseURL"`
+	BaseURL           string `json:"baseurl" yaml:"baseurl"`
 	UID               string `json:"uid" yaml:"uid"`
 	Username          string `json:"username" yaml:"username"`
 	Password          string `json:"password" yaml:"password"`
@@ -107,13 +111,13 @@ type JWTConfig struct {
 
 // IAMConfig for perm interface
 type IAMConfig struct {
-	SystemID      string `json:"systemID" yaml:"systemID"`
-	AppCode       string `json:"appCode" yaml:"appCode"`
-	AppSecret     string `json:"appSecret" yaml:"appSecret"`
+	SystemID      string `json:"systemid" yaml:"systemid"`
+	AppCode       string `json:"appcode" yaml:"appcode"`
+	AppSecret     string `json:"appsecret" yaml:"appsecret"`
 	External      bool   `json:"external" yaml:"external"`
-	GatewayServer string `json:"gateWayServer" yaml:"gateWayServer"`
-	IAMServer     string `json:"iamServer" yaml:"iamServer"`
-	BkiIAMServer  string `json:"bkiIamServer" yaml:"bkiIamServer"`
+	GatewayServer string `json:"gatewayserver" yaml:"gatewayserver"`
+	IAMServer     string `json:"iamserver" yaml:"iamserver"`
+	BkiIAMServer  string `json:"bkiiamserver" yaml:"bkiiamserver"`
 	Metric        bool   `json:"metric" yaml:"metric"`
 	Debug         bool   `json:"debug" yaml:"debug"`
 }
@@ -158,18 +162,19 @@ type EncryptSecret struct {
 
 // HelmManagerOptions options of helm manager
 type HelmManagerOptions struct {
-	Etcd        EtcdOption    `json:"etcd" yaml:"etcd"`
-	BcsLog      LogConfig     `json:"log" yaml:"log"`
-	Swagger     SwaggerConfig `json:"swagger" yaml:"swagger"`
-	Mongo       MongoConfig   `json:"mongo" yaml:"mongo"`
-	Repo        RepoConfig    `json:"repo" yaml:"repo"`
-	Release     ReleaseConfig `json:"release" yaml:"release"`
-	IAM         IAMConfig     `json:"iam" yaml:"iam"`
-	JWT         JWTConfig     `json:"jwt" yaml:"jwt"`
-	Credentials []Credential  `json:"credentials" yaml:"credentials"`
-	Encrypt     Encrypt       `json:"encrypt" yaml:"encrypt"`
-	Debug       bool          `json:"debug" yaml:"debug"`
-	TLS         TLS           `json:"tls" yaml:"tls"`
+	Etcd          EtcdOption         `json:"etcd" yaml:"etcd"`
+	BcsLog        LogConfig          `json:"log" yaml:"log"`
+	Swagger       SwaggerConfig      `json:"swagger" yaml:"swagger"`
+	Mongo         MongoConfig        `json:"mongo" yaml:"mongo"`
+	Repo          RepoConfig         `json:"repo" yaml:"repo"`
+	Release       ReleaseConfig      `json:"release" yaml:"release"`
+	IAM           IAMConfig          `json:"iam" yaml:"iam"`
+	JWT           JWTConfig          `json:"jwt" yaml:"jwt"`
+	Credentials   []Credential       `json:"credentials" yaml:"credentials"`
+	Encrypt       Encrypt            `json:"encrypt" yaml:"encrypt"`
+	Debug         bool               `json:"debug" yaml:"debug"`
+	TLS           TLS                `json:"tls" yaml:"tls"`
+	TracingConfig conf.TracingConfig `json:"tracingConfig" yaml:"tracingConfig"`
 	ServerConfig
 }
 

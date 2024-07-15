@@ -14,6 +14,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 
 	"google.golang.org/protobuf/types/known/structpb"
 
@@ -53,6 +54,11 @@ func (s *Service) ListClients(ctx context.Context, req *pbcs.ListClientsReq) (
 			Annotations:         req.GetSearch().GetAnnotations(),
 			OnlineStatus:        req.GetSearch().GetOnlineStatus(),
 			ClientVersion:       req.GetSearch().GetClientVersion(),
+			StartPullTime:       req.GetSearch().GetStartPullTime(),
+			EndPullTime:         req.GetSearch().GetEndPullTime(),
+			ClientType:          req.GetSearch().GetClientType(),
+			FailedReason:        req.GetSearch().GetFailedReason(),
+			ClientIds:           req.GetSearch().GetClientIds(),
 		},
 		Order: &pbds.ListClientsReq_Order{
 			Desc: req.GetOrder().GetDesc(),
@@ -66,9 +72,21 @@ func (s *Service) ListClients(ctx context.Context, req *pbcs.ListClientsReq) (
 		return nil, err
 	}
 
+	var details []*pbcs.ListClientsResp_Item
+
+	for _, v := range items.GetDetails() {
+		details = append(details, &pbcs.ListClientsResp_Item{
+			Client:            v.GetClient(),
+			CpuUsageStr:       v.GetCpuUsageStr(),
+			CpuMaxUsageStr:    v.GetCpuMaxUsageStr(),
+			MemoryUsageStr:    v.GetMemoryUsageStr(),
+			MemoryMaxUsageStr: v.GetMemoryMaxUsageStr(),
+		})
+	}
+
 	resp := &pbcs.ListClientsResp{
 		Count:   items.Count,
-		Details: items.Details,
+		Details: details,
 	}
 
 	return resp, nil
@@ -100,6 +118,7 @@ func (s *Service) ClientConfigVersionStatistics(ctx context.Context, req *pbclie
 			Annotations:         req.GetSearch().GetAnnotations(),
 			ClientVersion:       req.GetSearch().GetClientVersion(),
 			ClientType:          req.GetSearch().GetClientType(),
+			OnlineStatus:        req.GetSearch().GetOnlineStatus(),
 		},
 		LastHeartbeatTime: req.GetLastHeartbeatTime(),
 	})
@@ -132,9 +151,11 @@ func (s *Service) ClientPullTrendStatistics(ctx context.Context, req *pbclient.C
 			Annotations:         req.GetSearch().GetAnnotations(),
 			ClientVersion:       req.GetSearch().GetClientVersion(),
 			ClientType:          req.GetSearch().GetClientType(),
+			OnlineStatus:        req.GetSearch().GetOnlineStatus(),
 		},
 		LastHeartbeatTime: req.GetLastHeartbeatTime(),
 		PullTime:          req.GetPullTime(),
+		IsDuplicates:      req.GetIsDuplicates(),
 	})
 }
 
@@ -165,6 +186,7 @@ func (s *Service) ClientPullStatistics(ctx context.Context, req *pbclient.Client
 			Annotations:         req.GetSearch().GetAnnotations(),
 			ClientVersion:       req.GetSearch().GetClientVersion(),
 			ClientType:          req.GetSearch().GetClientType(),
+			OnlineStatus:        req.GetSearch().GetOnlineStatus(),
 		},
 		LastHeartbeatTime: req.GetLastHeartbeatTime(),
 	})
@@ -197,8 +219,11 @@ func (s *Service) ClientLabelStatistics(ctx context.Context, req *pbclient.Clien
 			Annotations:         req.GetSearch().GetAnnotations(),
 			ClientVersion:       req.GetSearch().GetClientVersion(),
 			ClientType:          req.GetSearch().GetClientType(),
+			OnlineStatus:        req.GetSearch().GetOnlineStatus(),
 		},
 		LastHeartbeatTime: req.GetLastHeartbeatTime(),
+		PrimaryKey:        req.GetPrimaryKey(),
+		ForeignKeys:       req.GetForeignKeys(),
 	})
 }
 
@@ -229,6 +254,7 @@ func (s *Service) ClientAnnotationStatistics(ctx context.Context, req *pbclient.
 			Annotations:         req.GetSearch().GetAnnotations(),
 			ClientVersion:       req.GetSearch().GetClientVersion(),
 			ClientType:          req.GetSearch().GetClientType(),
+			OnlineStatus:        req.GetSearch().GetOnlineStatus(),
 		},
 		LastHeartbeatTime: req.GetLastHeartbeatTime(),
 	})
@@ -261,6 +287,7 @@ func (s *Service) ClientVersionStatistics(ctx context.Context, req *pbclient.Cli
 			Annotations:         req.GetSearch().GetAnnotations(),
 			ClientVersion:       req.GetSearch().GetClientVersion(),
 			ClientType:          req.GetSearch().GetClientType(),
+			OnlineStatus:        req.GetSearch().GetOnlineStatus(),
 		},
 		LastHeartbeatTime: req.GetLastHeartbeatTime(),
 	})
@@ -283,7 +310,75 @@ func (s *Service) ListClientLabelAndAnnotation(ctx context.Context, req *pbcs.Li
 	}
 
 	return s.client.DS.ListClientLabelAndAnnotation(kt.RpcCtx(), &pbds.ListClientLabelAndAnnotationReq{
+		BizId:             req.GetBizId(),
+		AppId:             req.GetAppId(),
+		LastHeartbeatTime: req.GetLastHeartbeatTime(),
+	})
+}
+
+// ClientSpecificFailedReason 统计客户端失败详细原因
+func (s *Service) ClientSpecificFailedReason(ctx context.Context, req *pbclient.ClientCommonReq) (
+	*structpb.Struct, error) {
+
+	kt := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.View, ResourceID: req.AppId}, BizID: req.BizId},
+	}
+
+	err := s.authorizer.Authorize(kt, res...)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.client.DS.ClientSpecificFailedReason(kt.RpcCtx(), &pbclient.ClientCommonReq{
 		BizId: req.GetBizId(),
 		AppId: req.GetAppId(),
+		Search: &pbclient.ClientQueryCondition{
+			Label:               req.GetSearch().GetLabel(),
+			CurrentReleaseName:  req.GetSearch().GetCurrentReleaseName(),
+			TargetReleaseName:   req.GetSearch().GetTargetReleaseName(),
+			ReleaseChangeStatus: req.GetSearch().GetReleaseChangeStatus(),
+			Annotations:         req.GetSearch().GetAnnotations(),
+			ClientVersion:       req.GetSearch().GetClientVersion(),
+			ClientType:          req.GetSearch().GetClientType(),
+			FailedReason:        req.GetSearch().GetFailedReason(),
+			OnlineStatus:        req.GetSearch().GetOnlineStatus(),
+		},
+		LastHeartbeatTime: req.GetLastHeartbeatTime(),
 	})
+}
+
+// RetryClients 重试客户端执行版本变更回调
+func (s *Service) RetryClients(ctx context.Context, req *pbcs.RetryClientsReq) (*pbcs.RetryClientsResp, error) {
+
+	kt := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.Publish, ResourceID: req.AppId}, BizID: req.BizId},
+	}
+
+	if err := s.authorizer.Authorize(kt, res...); err != nil {
+		return nil, err
+	}
+
+	if !req.All && len(req.ClientIds) == 0 {
+		return nil, fmt.Errorf("client ids is empty")
+	}
+
+	_, err := s.client.DS.RetryClients(kt.RpcCtx(), &pbds.RetryClientsReq{
+		BizId:     req.BizId,
+		AppId:     req.AppId,
+		All:       req.All,
+		ClientIds: req.ClientIds,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &pbcs.RetryClientsResp{}, nil
+
 }

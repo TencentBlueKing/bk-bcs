@@ -128,11 +128,13 @@ func (c *WebConsoleManager) Init() error {
 	microService.Init(
 		micro.Server(mhttp.NewServer(mhttp.Listener(dualStackListener))),
 		micro.AfterStop(func() error {
+			logger.Info("receive interput, gracefully shutdown...")
+
 			// close audit client
 			consoleAudit.GetAuditClient().Close()
-			// 会让 websocket 发送 EndOfTransmission, 不能保证一定发送成功
-			logger.Info("receive interput, gracefully shutdown")
-			<-c.ctx.Done()
+
+			// 会让 websocket 发送 EndOfTransmission
+			api.WaitWebsocketClose(time.Second * 5)
 			return nil
 		}),
 	)
@@ -248,6 +250,7 @@ func (c *WebConsoleManager) initHTTPService() *gin.Engine {
 	router.Group("").StaticFS("/casts", http.Dir(replayPath))
 
 	handlerOpts := &route.Options{
+		StopSignCtx: c.ctx,
 		RoutePrefix: routePrefix,
 		Client:      c.microService.Client(),
 		Router:      router,

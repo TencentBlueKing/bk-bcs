@@ -36,7 +36,7 @@ func ManifestToK8sResources(namespace, manifest string, restClientGetter resourc
 		blog.Errorf("get manifest err: %s", err.Error())
 		return nil, err
 	}
-	blog.Debug("parse manifest took %s", time.Since(start).String()) // nolint
+	blog.Debug("parse manifest took ", time.Since(start).String())
 
 	wg := &sync.WaitGroup{}
 	wg.Add(len(infos))
@@ -52,6 +52,6 @@ func ManifestToK8sResources(namespace, manifest string, restClientGetter resourc
 		}(i)
 	}
 	wg.Wait()
-	blog.Debug("get k8s resource took %s", time.Since(start).String()) // nolint
+	blog.Debug("get k8s resource took ", time.Since(start).String())
 	return infos, nil
 }

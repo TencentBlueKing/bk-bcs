@@ -29,6 +29,10 @@ var (
 	cloudName = "qcloud-public"
 )
 
+const (
+	defaultRegion = "ap-nanjing"
+)
+
 // qcloud-public taskName
 const (
 	// createClusterTaskTemplate bk-sops add task template
@@ -666,8 +670,8 @@ func (rn *RemoveNodesFromClusterTaskOption) BuildRemoveNodesFromClusterStep(task
 	task.StepSequence = append(task.StepSequence, removeNodesFromClusterStep.StepMethod)
 }
 
-// BuildCheckClusterCleanNodsStep 检测集群清理节点池节点
-func (rn *RemoveNodesFromClusterTaskOption) BuildCheckClusterCleanNodsStep(task *proto.Task) {
+// BuildCheckClusterCleanNodesStep 检测集群清理节点池节点
+func (rn *RemoveNodesFromClusterTaskOption) BuildCheckClusterCleanNodesStep(task *proto.Task) {
 	checkStep := cloudprovider.InitTaskStep(checkClusterCleanNodsStep)
 
 	checkStep.Params[cloudprovider.ClusterIDKey.String()] = rn.Cluster.ClusterID
@@ -752,8 +756,8 @@ func (cn *CleanNodeInGroupTaskOption) BuildCleanNodeGroupNodesStep(task *proto.T
 	task.StepSequence = append(task.StepSequence, cleanNodeGroupNodesStep.StepMethod)
 }
 
-// BuildCheckClusterCleanNodsStep 检测集群清理节点池节点
-func (cn *CleanNodeInGroupTaskOption) BuildCheckClusterCleanNodsStep(task *proto.Task) {
+// BuildCheckClusterCleanNodesStep 检测集群清理节点池节点
+func (cn *CleanNodeInGroupTaskOption) BuildCheckClusterCleanNodesStep(task *proto.Task) {
 	checkStep := cloudprovider.InitTaskStep(checkClusterCleanNodsStep)
 
 	checkStep.Params[cloudprovider.ClusterIDKey.String()] = cn.Group.ClusterID

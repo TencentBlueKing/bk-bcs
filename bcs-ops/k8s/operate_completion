@@ -56,6 +56,9 @@ check_completion() {
       "yum")
         _yum_bash-completion
         ;;
+      "curl")
+        _yum_bash-completion
+        ;;
       *)
         utils::log "ERROR" \
           "unkown ${INSTALL_METHOD} to exec download bash_completion"

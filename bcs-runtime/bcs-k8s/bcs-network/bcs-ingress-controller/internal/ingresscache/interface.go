@@ -20,7 +20,7 @@ import (
 type IngressCache interface {
 	Add(ingress *networkextensionv1.Ingress)
 	Remove(ingress *networkextensionv1.Ingress)
-	GetRelatedIngressOfService(serviceNamespace, serviceName string) []IngressMeta
+	GetRelatedIngressOfService(serviceKind, serviceNamespace, serviceName string) []IngressMeta
 	GetRelatedIngressOfWorkload(workloadKind, workloadNamespace, workloadName string) []IngressMeta
 }
 

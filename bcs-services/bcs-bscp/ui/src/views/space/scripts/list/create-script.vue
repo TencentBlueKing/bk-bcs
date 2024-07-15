@@ -14,7 +14,6 @@
               display-key="tag"
               save-key="tag"
               search-key="tag"
-              :max-data="1"
               :list="tagsData"
               :allow-create="true"
               trigger="focus" />
@@ -46,7 +45,7 @@
                   </div>
                 </template>
                 <template #sufContent>
-                  <InternalVariable v-if="isShowVariable" :language="formData.type"/>
+                  <InternalVariable v-if="isShowVariable" :language="formData.type" />
                 </template>
               </ScriptEditor>
             </div>
@@ -92,15 +91,17 @@
   const selectTags = ref<string[]>([]);
   const formData = ref<IScriptEditingForm>({
     name: '',
-    tag: '',
+    tags: [],
     memo: '',
     type: EScriptType.Shell,
     content: '',
     revision_name: `v${dayjs().format('YYYYMMDDHHmmss')}`,
   });
   const formDataContent = ref({
-    shell: '#!/bin/bash\n##### 进入配置文件存放目录： cd ${bk_bscp_app_temp_dir}/files\n##### 进入前/后置脚本存放目录： cd ${bk_bscp_app_temp_dir}/hooks',
-    python: '#!/usr/bin/env python\n# -*- coding: utf8 -*-\n##### 进入配置文件存放目录： config_dir = os.environ.get(‘bk_bscp_app_temp_dir’)+”/files”;os.chdir(config_dir)\n##### 进入前/后置脚本存放目录： hook_dir = os.environ.get(‘bk_bscp_app_temp_dir’)+”/hooks”;os.chdir(hook_dir)',
+    shell:
+      '#!/bin/bash\n##### 进入配置文件存放目录： cd ${bk_bscp_app_temp_dir}/files\n##### 进入前/后置脚本存放目录： cd ${bk_bscp_app_temp_dir}/hooks',
+    python:
+      '#!/usr/bin/env python\n# -*- coding: utf8 -*-\n##### 进入配置文件存放目录： config_dir = os.environ.get(‘bk_bscp_app_temp_dir’)+”/files”;os.chdir(config_dir)\n##### 进入前/后置脚本存放目录： hook_dir = os.environ.get(‘bk_bscp_app_temp_dir’)+”/hooks”;os.chdir(hook_dir)',
   });
   const showContent = computed({
     get: () => (formData.value.type === 'shell' ? formDataContent.value.shell : formDataContent.value.python),
@@ -159,7 +160,7 @@
     await formRef.value.validate();
     try {
       pending.value = true;
-      formData.value.tag = selectTags.value[0];
+      formData.value.tags = selectTags.value;
       if (!formData.value.content.endsWith('\n')) {
         formData.value.content += '\n';
       }

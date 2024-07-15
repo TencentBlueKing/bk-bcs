@@ -60,7 +60,6 @@ class VariableReplace {
     const reg = new RegExp(varRegStr, 'g');
     const variablePos: { name: string; start: number; end: number }[] = [];
     let match = reg.exec(text);
-
     while (match && match.length > 0) {
       const name = match[1];
       if (name in variablesMap) {

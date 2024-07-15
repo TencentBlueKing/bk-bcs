@@ -1,35 +1,42 @@
 <template>
-  <SectionTitle :title="$t('配置版本发布')" />
-  <Teleport :disabled="!isOpenFullScreen" to="body">
-    <div :class="{ fullscreen: isOpenFullScreen }">
-      <Card :title="$t('客户端配置版本')" :height="344">
-        <template #operation>
-          <OperationBtn
-            :is-open-full-screen="isOpenFullScreen"
-            @refresh="loadChartData"
-            @toggle-full-screen="isOpenFullScreen = !isOpenFullScreen" />
-        </template>
-        <template #head-suffix>
-          <TriggerBtn v-model:currentType="currentType" style="margin-left: 16px" />
-        </template>
-        <bk-loading class="loading-wrap" :loading="loading">
-          <component
-            v-if="data?.length"
-            :bk-biz-id="bkBizId"
-            :app-id="appId"
-            :is="currentComponent"
-            :data="data"
-            @update="jumpVersionName = $event as string"
-            @jump="jumpToSearch" />
-          <bk-exception v-else type="empty" scene="part" :description="$t('暂无数据')">
-            <template #type>
-              <span class="bk-bscp-icon icon-pie-chart exception-icon" />
-            </template>
-          </bk-exception>
-        </bk-loading>
-      </Card>
-    </div>
-  </Teleport>
+  <div>
+    <SectionTitle :title="$t('配置版本发布')" />
+    <Teleport :disabled="!isOpenFullScreen" to="body">
+      <div
+        :class="{ fullscreen: isOpenFullScreen }"
+        @mouseenter="isShowOperationBtn = true"
+        @mouseleave="isShowOperationBtn = false">
+        <Card :title="$t('目标配置版本')" :height="344">
+          <template #operation>
+            <OperationBtn
+              v-show="isShowOperationBtn"
+              :is-open-full-screen="isOpenFullScreen"
+              @refresh="loadChartData"
+              @toggle-full-screen="isOpenFullScreen = !isOpenFullScreen" />
+          </template>
+          <template #head-suffix>
+            <TriggerBtn v-model:currentType="currentType" style="margin-left: 16px" />
+          </template>
+          <bk-loading class="loading-wrap" :loading="loading">
+            <component
+              v-if="data?.length"
+              :bk-biz-id="bkBizId"
+              :app-id="appId"
+              :is="currentComponent"
+              :data="data"
+              :is-full-screen="isOpenFullScreen"
+              @update="jumpVersionName = $event as string"
+              @jump="jumpToSearch" />
+            <bk-exception v-else type="empty" scene="part" :description="$t('暂无数据')">
+              <template #type>
+                <span class="bk-bscp-icon icon-pie-chart exception-icon" />
+              </template>
+            </bk-exception>
+          </bk-loading>
+        </Card>
+      </div>
+    </Teleport>
+  </div>
 </template>
 
 <script lang="ts" setup>
@@ -68,6 +75,7 @@
   const loading = ref(false);
   const jumpVersionName = ref('');
   const isOpenFullScreen = ref(false);
+  const isShowOperationBtn = ref(false);
 
   onMounted(() => {
     loadChartData();
@@ -105,11 +113,12 @@
   };
 
   const jumpToSearch = () => {
-    router.push({
+    const routeData = router.resolve({
       name: 'client-search',
       params: { appId: props.appId, bizId: props.bkBizId },
-      query: { current_release_name: jumpVersionName.value },
+      query: { current_release_name: jumpVersionName.value, heartTime: searchQuery.value.last_heartbeat_time },
     });
+    window.open(routeData.href, '_blank');
   };
 </script>
 
@@ -121,19 +130,20 @@
     width: 100vw;
     height: 100vh;
     z-index: 5000;
-    background-color: rgba(0, 0, 0, 0.6);
     .card {
-      position: absolute;
-      width: 100%;
-      height: 80vh !important;
-      top: 50%;
-      transform: translateY(-50%);
-      .loading-wrap {
-        height: 100%;
+      height: 100vh !important;
+      :deep(.operation-btn) {
+        top: 0 !important;
       }
     }
   }
   .loading-wrap {
     height: 100%;
+  }
+
+  :deep(.bk-exception) {
+    height: 100%;
+    justify-content: center;
+    transform: translateY(-20px);
   }
 </style>

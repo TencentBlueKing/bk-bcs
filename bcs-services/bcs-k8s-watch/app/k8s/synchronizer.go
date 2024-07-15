@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -88,77 +88,130 @@ func (sync *Synchronizer) Run(stopCh <-chan struct{}) {
 	}
 }
 
-// RunOnce sync resources once.
-func (sync *Synchronizer) RunOnce() error {
-	// check all watchers sync-state.
-	for _, watcher := range sync.watchers {
-		w := watcher.(*Watcher)
-		var count = 0
-		for {
-			if count >= 10 {
-				break
-			}
-			if w.controller.HasSynced() {
-				break
-			} else {
-				time.Sleep(30 * time.Second)
-			}
-			count++
-		}
-
-		if count >= 10 {
-			glog.Errorf("watcher %s is not synced, skip sync", w.resourceType)
-			return fmt.Errorf("watcher %s is not synced, skip sync", w.resourceType)
-		}
-	}
-
+func (sync *Synchronizer) getWatchNamespaces() ([]string, error) {
 	var namespaces []string
 	if sync.namespace == "" {
 		namespacesWatcher := sync.watchers["Namespace"]
 		if namespacesWatcher != nil {
+			// 开始前需要判断Namespace的Watcher是否OK，即可开始进行watcher的同步
+			nsWatcher := namespacesWatcher.(*Watcher)
+			var count = 0
+			for {
+				if count >= 10 {
+					break
+				}
+				if nsWatcher.controller.HasSynced() {
+					break
+				} else {
+					time.Sleep(30 * time.Second)
+				}
+				count++
+			}
+
+			if count >= 10 {
+				glog.Errorf("watcher %s is not synced, skip sync", nsWatcher.resourceType)
+				return nil, fmt.Errorf("watcher %s is not synced, skip sync", nsWatcher.resourceType)
+			}
+
 			namespaces = namespacesWatcher.(*Watcher).store.ListKeys()
 		}
 	} else {
 		// 如果指定了namespace
 		namespaces = []string{sync.namespace}
 	}
+	return namespaces, nil
+}
 
-	for resourceType, resourceObjType := range resources.K8sWatcherConfigList {
-		labelSelector := sync.labelSelectors[resourceType]
-		if curSelector, ok := sync.labelSelectors[resourceType]; ok {
-			labelSelector = curSelector
-		}
-		if resourceObjType.Namespaced {
-			glog.Info("begin to sync %s", resourceType)
-			sync.syncNamespaceResource(resourceType, namespaces, labelSelector, sync.watchers[resourceType].(*Watcher))
-			glog.Info("sync %s done", resourceType)
-		} else {
-			glog.Info("begin to sync %s", resourceType)
-			sync.syncClusterResource(resourceType, labelSelector, sync.watchers[resourceType].(*Watcher))
-			glog.Info("sync %s done", resourceType)
-		}
+// RunOnce sync resources once.
+// Note: 原来的同步逻辑为：等待所有的watcher的controller都“HasSynced”之后，再开始与storage进行同步，
+// 如果有任何一个watcher一直都处于“NotSynced”状态，最终会超时报错，在上层panic，从而导致只要有watcher不能synced就会有脏数据永远无法清理
+// 新的逻辑修改为：每个watcher只要HasSynced了，就进行有且仅有一次的同步，如果watcher一直处于NotSynced状态，那么就一直等待，直到OK为止
+// 新逻辑可以避免部分watcher一直处于NotSynced状态（配置可能无法兼容所有集群），导致脏数据无法清理
+func (sync *Synchronizer) RunOnce() error {
+	namespaces, err := sync.getWatchNamespaces()
+	if err != nil {
+		return err
 	}
 
-	for _, watcher := range sync.crdWatchers {
-		w := watcher.(*Watcher)
-		if !w.controller.HasSynced() {
-			continue
-		}
-		if w.resourceNamespaced {
-			glog.Info("begin to sync %s", w.resourceType)
-			sync.syncNamespaceResource(w.resourceType, namespaces, "", w)
-			glog.Info("sync %s done", w.resourceType)
-		} else {
-			glog.Info("begin to sync %s", w.resourceType)
-			sync.syncClusterResource(w.resourceType, "", w)
-			glog.Info("sync %s done", w.resourceType)
-		}
-	}
+	// 保证所有watcher都至少执行一次同步，如果有watcher controller没有就绪，则跳过这个watcher，在下一次循环中进行同步
+	// 如果有watcher永远不就绪，该循环永远保持不退出（以前超时会报错，在上层panic）
+	for {
+		allWatcherSyncedFlag := true
 
-	return nil
+		// 同步内建资源watcher
+		for resourceType, resourceObjType := range resources.K8sWatcherConfigList {
+			// 如果watcher没有OK，则跳过这个watcher
+
+			w := sync.watchers[resourceType].(*Watcher)
+			// 如果watcher没有OK，则跳过这个watcher，并将allWatcherSynced置为false，直到所有watcher都OK
+			if !w.controller.HasSynced() {
+				glog.Infof("watcher controller %s is not synced, skip sync for this period", w.resourceType)
+				allWatcherSyncedFlag = false
+				continue
+			}
+
+			// 已经同步过一次了，跳过这个watcher
+			if w.storageSynced {
+				continue
+			}
+			// 该watcher未同步，执行同步，并标志已被同步
+			w.storageSynced = true
+
+			labelSelector := sync.labelSelectors[resourceType]
+			if curSelector, ok := sync.labelSelectors[resourceType]; ok {
+				labelSelector = curSelector
+			}
+
+			if resourceObjType.Namespaced {
+				sync.syncNamespaceResource(resourceType, namespaces, labelSelector, w)
+			} else {
+				sync.syncClusterResource(resourceType, labelSelector, w)
+			}
+		}
+
+		// 同步自定义资源watcher
+		for _, watcher := range sync.crdWatchers {
+			w := watcher.(*Watcher)
+			// 如果watcher没有OK，则跳过这个watcher，并将allWatcherSynced置为false，直到所有watcher都OK
+			if !w.controller.HasSynced() {
+				glog.Infof("watcher controller %s is not synced, skip sync for this period", w.resourceType)
+				allWatcherSyncedFlag = false
+				continue
+			}
+
+			// 已经同步过一次了，跳过这个watcher
+			if w.storageSynced {
+				continue
+			}
+			// 该watcher未同步，执行同步，并标志已被同步
+			w.storageSynced = true
+
+			if w.resourceNamespaced {
+				sync.syncNamespaceResource(w.resourceType, namespaces, "", w)
+			} else {
+				sync.syncClusterResource(w.resourceType, "", w)
+			}
+		}
+
+		// 如果所有watcher的controller都OK，则应该全部至少与storage同步了一次，跳出循环
+		if allWatcherSyncedFlag {
+			// 重置所有watcher的storageSynced标志
+			for _, watcher := range sync.watchers {
+				w := watcher.(*Watcher)
+				w.storageSynced = false
+			}
+			for _, watcher := range sync.crdWatchers {
+				w := watcher.(*Watcher)
+				w.storageSynced = false
+			}
+			return nil
+		}
+		time.Sleep(30 * time.Second)
+	}
 }
 
 func (sync *Synchronizer) syncNamespaceResource(kind string, namespaces []string, selector string, watcher *Watcher) {
+	glog.Info("begin to sync %s", kind)
 	// get all resources from local store.
 
 	localKeys := watcher.store.ListKeys()
@@ -187,9 +240,11 @@ func (sync *Synchronizer) syncNamespaceResource(kind string, namespaces []string
 
 	glog.Infof("Sync %s got list from storage: len=%d", kind, len(totalData))
 	sync.doSync(localKeys, totalData, watcher)
+	glog.Info("sync %s done", kind)
 }
 
 func (sync *Synchronizer) syncClusterResource(kind, selector string, watcher *Watcher) {
+	glog.Info("begin to sync %s", kind)
 	data, err := sync.doRequest("", selector, kind)
 	if err != nil {
 		glog.Errorf("sync cluster resource %s selector %s fail: err=%s", kind, selector, err)
@@ -206,6 +261,7 @@ func (sync *Synchronizer) syncClusterResource(kind, selector string, watcher *Wa
 
 	glog.Infof("sync cluster resource got %s list from storage: %v", kind, data)
 	sync.doSync(localKeys, d, watcher)
+	glog.Info("sync %s done", kind)
 }
 
 func (sync *Synchronizer) transData(data interface{}) (d []map[string]string, err error) {

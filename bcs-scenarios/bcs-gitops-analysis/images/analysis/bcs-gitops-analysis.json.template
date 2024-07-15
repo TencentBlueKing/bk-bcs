@@ -1,0 +1,44 @@
+{
+    "log_dir": "${logDir}",
+    "v": ${verbosity},
+    "alsologtostderr": true,
+    "log_max_size": 500,
+    "log_max_num": 10,
+    "logtostderr": false,
+    "stderrthreshold": "2",
+    "address": "${address}",
+    "port": ${port},
+    "appMetricNamespace": "${appMetricNamespace}",
+    "appMetricName": "${appMetricName}",
+    "externalAnalysisUrl": "${externalAnalysisUrl}",
+    "externalAnalysisToken": "${externalAnalysisToken}",
+    "bkMonitorPushUrl": "${bkMonitorPushUrl}",
+    "bkMonitorPushDataID": ${bkMonitorPushDataID},
+    "bkMonitorPushToken": "${bkMonitorPushToken}",
+    "bkMonitorGetUrl": "${bkMonitorGetUrl}",
+    "bkMonitorGetUser": "${bkMonitorGetUser}",
+    "bkMonitorGetBizID": ${bkMonitorGetBizID},
+    "bkMonitorSLOStartDay": "${bkMonitorSLOStartDay}",
+    "bkccUrl": "${bkccUrl}",
+    "auth": {
+        "appCode": "${appCode}",
+        "appSecret": "${appSecret}"
+    },
+    "dbConfig": {
+        "username": "${dbUsername}",
+        "password": "${dbPassword}",
+        "addr": "${dbAddr}",
+        "database": "${dbDatabase}",
+        "limitQps": ${dbLimitQPS}
+    },
+    "argoConfig": {
+        "argoService": "${argoService}",
+        "argoUser": "${argoUser}",
+        "argoPass": "${argoPass}",
+        "adminNamespace": "${adminNamespace}"
+    },
+    "secretConfig": {
+        "address": "${secretAddress}",
+        "port": ${secretPort}
+    }
+}

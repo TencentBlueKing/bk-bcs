@@ -11,6 +11,41 @@ else
 GOBIN=$(shell go env GOBIN)
 endif
 
+# init the build information
+ifdef HASTAG
+	GITTAG=${HASTAG}
+else
+	GITTAG=$(shell git describe --always)
+endif
+
+ifndef BUILDTIME
+	BUILDTIME = $(shell date +%Y-%m-%dT%T%z)
+  	GITHASH=$(shell git rev-parse HEAD)
+	VERSION?=${GITTAG}-$(shell date +%y.%m.%d)
+endif
+
+ifndef LDFLAG
+LDFLAG=-ldflags "-X github.com/Tencent/bk-bcs/bcs-common/common/static.ZookeeperClientUser=${bcs_zk_client_user} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/static.ZookeeperClientPwd=${bcs_zk_client_pwd} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/static.EncryptionKey=${bcs_encryption_key} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/static.ServerCertPwd=${bcs_server_cert_pwd} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/static.ClientCertPwd=${bcs_client_cert_pwd} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/static.LicenseServerClientCertPwd=${bcs_license_server_client_cert_pwd} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/static.BcsDefaultUser=${bcs_registry_default_user} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/static.BcsDefaultPasswd=${bcs_registry_default_pwd} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/version.BcsVersion=${VERSION} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/version.BcsBuildTime=${BUILDTIME} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/version.BcsGitHash=${GITHASH} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/version.BcsTag=${GITTAG} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/version.BcsEdition=${bcs_edition}"
+endif
+
+# build path config
+OUTPUT=build/bcs.${VERSION}
+ifdef SCENARIOSPACKAGE
+	OUTPUT=${SCENARIOSPACKAGE}
+endif
+
 # Setting SHELL to bash allows bash commands to be executed by recipes.
 # This is a requirement for 'setup-envtest.sh' in the test target.
 # Options are set to exit when a recipe line exits non-zero or a piped command fails.
@@ -38,10 +73,10 @@ help: ## Display this help.
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
 ##@ Development
-
+#manifest:controller-gen paths=./... crd:crdVersions=v1,trivialVersions=true,maxDescLen=1000,generateEmbeddedObjectMeta=true rbac:roleName=operator output:crd:artifacts:config=config/crd
 .PHONY: manifests
-manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
-	$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=config/crd/bases
+manifests: ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
+	controller-gen paths=./... crd:crdVersions=v1,trivialVersions=true,maxDescLen=1000,generateEmbeddedObjectMeta=true rbac:roleName=operator output:crd:artifacts:config=config/crd
 
 .PHONY: generate
 generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
@@ -61,44 +96,15 @@ test: manifests generate fmt vet envtest ## Run tests.
 
 ##@ Build
 
-.PHONY: build
-build: generate fmt vet ## Build manager binary.
-	go build -o bin/manager main.go
+.PHONY: tidy
+tidy:
+	go mod tidy
 
-.PHONY: run
-run: manifests generate fmt vet ## Run a controller from your host.
-	go run ./main.go
-
-.PHONY: docker-build
-docker-build: test ## Build docker image with the manager.
-	docker build -t ${IMG} .
-
-.PHONY: docker-push
-docker-push: ## Push docker image with the manager.
-	docker push ${IMG}
-
-##@ Deployment
-
-ifndef ignore-not-found
-  ignore-not-found = false
-endif
-
-.PHONY: install
-install: manifests kustomize ## Install CRDs into the K8s cluster specified in ~/.kube/config.
-	$(KUSTOMIZE) build config/crd | kubectl apply -f -
-
-.PHONY: uninstall
-uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
-	$(KUSTOMIZE) build config/crd | kubectl delete --ignore-not-found=$(ignore-not-found) -f -
-
-.PHONY: deploy
-deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
-	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
-	$(KUSTOMIZE) build config/default | kubectl apply -f -
-
-.PHONY: undeploy
-undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
-	$(KUSTOMIZE) build config/default | kubectl delete --ignore-not-found=$(ignore-not-found) -f -
+.PHONY: manager
+manager: tidy
+	mkdir -p ${OUTPUT}/bcs-monitor-controller
+	cp -r images/* ${OUTPUT}/bcs-monitor-controller/
+	go build ${LDFLAG} -o ${OUTPUT}/bcs-monitor-controller/bcs-monitor-controller main.go
 
 ##@ Build Dependencies
 
@@ -126,12 +132,3 @@ $(KUSTOMIZE): $(LOCALBIN)
 controller-gen: $(CONTROLLER_GEN) ## Download controller-gen locally if necessary.
 $(CONTROLLER_GEN): $(LOCALBIN)
 	GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-tools/cmd/controller-gen@$(CONTROLLER_TOOLS_VERSION)
-
-.PHONY: envtest
-envtest: $(ENVTEST) ## Download envtest-setup locally if necessary.
-$(ENVTEST): $(LOCALBIN)
-	GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
-
-manifest:controller-gen paths=./... crd:crdVersions=v1,trivialVersions=true,maxDescLen=1000,generateEmbeddedObjectMeta=true rbac:roleName=operator output:crd:artifacts:config=config/crd
-
-object: controller-gen object paths=./api/...

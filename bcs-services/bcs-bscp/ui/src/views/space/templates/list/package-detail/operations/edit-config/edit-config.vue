@@ -1,36 +1,164 @@
 <template>
-  <bk-sideslider title="编辑配置文件" :width="640" :is-show="isShow" :before-close="handleBeforeClose" @closed="close">
-    <div class="slider-content-container"></div>
+  <bk-sideslider
+    :title="t('编辑配置文件')"
+    :width="640"
+    :is-show="props.show"
+    :quick-close="!isSelectPkgDialogShow"
+    :before-close="handleBeforeClose"
+    @closed="close">
+    <bk-loading :loading="configDetailLoading" class="config-loading-container">
+      <ConfigForm
+        v-if="!configDetailLoading"
+        ref="formRef"
+        v-model:fileUploading="fileUploading"
+        class="config-form-wrapper"
+        :config="configForm"
+        :content="content"
+        :is-edit="true"
+        :is-tpl="true"
+        :bk-biz-id="spaceId"
+        :id="currentTemplateSpace"
+        @change="handleFormChange" />
+    </bk-loading>
     <div class="action-btns">
-      <bk-button theme="primary" :loading="pending">保存</bk-button>
-      <bk-button @click="close">取消</bk-button>
+      <bk-button :loading="submitPending" theme="primary" @click="handleCreateConfirm">{{ t('保存') }}</bk-button>
+      <bk-button @click="close">{{ t('取消') }}</bk-button>
     </div>
   </bk-sideslider>
 </template>
 <script lang="ts" setup>
   import { ref, watch } from 'vue';
+  import { useI18n } from 'vue-i18n';
+  import { storeToRefs } from 'pinia';
+  import Message from 'bkui-vue/lib/message';
+  import useGlobalStore from '../../../../../../../store/global';
+  import useTemplateStore from '../../../../../../../store/template';
+  import {
+    updateTemplateConfig,
+    getTemplateConfigMeta,
+    downloadTemplateContent,
+    updateTemplateContent,
+  } from '../../../../../../../api/template';
+  import { IConfigEditParams, IFileConfigContentSummary } from '../../../../../../../../types/config';
+  import { getConfigEditParams } from '../../../../../../../utils/config';
+  import { ITemplateVersionEditingData } from '../../../../../../../../types/template';
   import useModalCloseConfirmation from '../../../../../../../utils/hooks/use-modal-close-confirmation';
+  import ConfigForm from '../../../../../service/detail/config/config-list/config-table-list/config-form.vue';
+
+  const { spaceId } = storeToRefs(useGlobalStore());
+  const { currentTemplateSpace } = storeToRefs(useTemplateStore());
+  const { t } = useI18n();
 
   const props = defineProps<{
-    show: boolean;
+    id: number;
+    spaceId: string;
+    show: Boolean;
+    memo: string;
   }>();
 
-  const emits = defineEmits(['update:show']);
+  const emits = defineEmits(['update:show', 'added', 'edited']);
 
-  const isShow = ref(false);
-  const isFormChange = ref(false);
-  const pending = ref(false);
+  const configForm = ref<IConfigEditParams>(getConfigEditParams());
+  const fileUploading = ref(false);
+  const content = ref<IFileConfigContentSummary | string>('');
+  const formRef = ref();
+  const submitPending = ref(false);
+  const isSelectPkgDialogShow = ref(false);
+  const isFormChanged = ref(false);
+  const configDetailLoading = ref(false);
 
   watch(
     () => props.show,
     (val) => {
-      isShow.value = val;
-      isFormChange.value = false;
+      if (val) {
+        isFormChanged.value = false;
+        getConfigDetail();
+      }
     },
   );
 
+  const handleFormChange = (data: IConfigEditParams, configContent: IFileConfigContentSummary | string) => {
+    configForm.value = data;
+    content.value = configContent;
+    isFormChanged.value = true;
+  };
+
+  // 获取配置文件详情配置及配置内容
+  const getConfigDetail = async () => {
+    try {
+      configDetailLoading.value = true;
+      const res = await getTemplateConfigMeta(props.spaceId, props.id);
+      const { name, path, file_type, user, user_group, privilege, signature, byte_size } = res.data.detail;
+      configForm.value = {
+        ...configForm.value,
+        id: props.id,
+        name,
+        memo: props.memo,
+        file_type,
+        path,
+        user,
+        user_group,
+        privilege,
+      };
+      if (file_type === 'binary') {
+        content.value = { name, signature, size: byte_size };
+      } else {
+        const configContent = await downloadTemplateContent(props.spaceId, currentTemplateSpace.value, signature);
+        content.value = String(configContent);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      configDetailLoading.value = false;
+    }
+  };
+
+  const handleCreateConfirm = async () => {
+    const isValid = await formRef.value.validate();
+    if (!isValid) return;
+    try {
+      submitPending.value = true;
+      const sign = await formRef.value.getSignature();
+      let size = 0;
+      if (configForm.value.file_type === 'binary') {
+        size = Number((content.value as IFileConfigContentSummary).size);
+      } else {
+        const stringContent = content.value as string;
+        size = new Blob([stringContent]).size;
+        await updateTemplateContent(props.spaceId, currentTemplateSpace.value, stringContent, sign);
+      }
+      const { memo, file_type, file_mode, user, user_group, privilege } = configForm.value;
+      const formData = {
+        revision_memo: memo,
+        file_type,
+        file_mode,
+        user,
+        user_group,
+        privilege,
+        sign,
+        byte_size: size,
+      };
+      await updateTemplateConfig(
+        props.spaceId,
+        currentTemplateSpace.value,
+        props.id,
+        formData as ITemplateVersionEditingData,
+      );
+      Message({
+        theme: 'success',
+        message: t('编辑配置文件成功'),
+      });
+      close();
+      emits('edited');
+    } catch (e) {
+      console.log(e);
+    } finally {
+      submitPending.value = false;
+    }
+  };
+
   const handleBeforeClose = async () => {
-    if (isFormChange.value) {
+    if (isFormChanged.value) {
       const result = await useModalCloseConfirmation();
       return result;
     }
@@ -38,13 +166,19 @@
   };
 
   const close = () => {
+    content.value = '';
+    configForm.value = getConfigEditParams();
     emits('update:show', false);
   };
 </script>
 <style lang="scss" scoped>
-  .slider-content-container {
-    padding: 20px 40px;
+  .config-loading-container {
     height: calc(100vh - 101px);
+    overflow: auto;
+    .config-form-wrapper {
+      padding: 20px 40px;
+      height: 100%;
+    }
   }
   .action-btns {
     border-top: 1px solid #dcdee5;

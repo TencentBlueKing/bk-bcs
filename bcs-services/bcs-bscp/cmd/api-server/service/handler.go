@@ -82,9 +82,9 @@ func FeatureFlagsHandler(w http.ResponseWriter, r *http.Request) {
 	biz := r.URL.Query().Get("biz")
 	// set biz_view feature flag
 	bizViewConf := cc.ApiServer().FeatureFlags.BizView
-	featureFlags.BizView = bizViewConf.Default
-	if enable, ok := bizViewConf.Spec[biz]; ok {
-		featureFlags.BizView = enable
+	featureFlags.BizView = *bizViewConf.Default
+	if enable, ok := bizViewConf.Spec[biz]; ok && enable != nil {
+		featureFlags.BizView = *enable
 	}
 	// set biz resource limit
 	resourceLimitConf := cc.ApiServer().FeatureFlags.ResourceLimit
@@ -94,7 +94,17 @@ func FeatureFlagsHandler(w http.ResponseWriter, r *http.Request) {
 		if resource.MaxFileSize != 0 {
 			featureFlags.ResourceLimit.MaxFileSize = resource.MaxFileSize
 		}
-		// TODO：其他资源限制
+		if resource.AppConfigCnt != 0 {
+			featureFlags.ResourceLimit.AppConfigCnt = resource.AppConfigCnt
+		}
+		if resource.TmplSetTmplCnt != 0 {
+			featureFlags.ResourceLimit.TmplSetTmplCnt = resource.TmplSetTmplCnt
+		}
+		if resource.MaxUploadContentLength != 0 {
+			featureFlags.ResourceLimit.MaxUploadContentLength = resource.MaxUploadContentLength
+		}
+		// NOCC:golint/todo(忽略)
+		// nolint TODO：其他资源限制
 	}
 
 	render.Render(w, r, rest.OKRender(featureFlags))

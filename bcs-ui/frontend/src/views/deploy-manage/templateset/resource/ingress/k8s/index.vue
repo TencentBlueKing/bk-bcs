@@ -1,11 +1,10 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <!-- eslint-disable max-len -->
 <template>
-  <div class="biz-content">
-    <Header hide-back title="Ingresses" :desc="$t('deploy.templateset.createFromTemplateOrHelmIngress')" />
-    <div class="biz-content-wrapper p0" v-bkloading="{ isLoading: isInitLoading }">
-      <div class="biz-panel-header">
-        <div class="left">
+  <BcsContent hide-back title="Ingresses" :desc="$t('deploy.templateset.createFromTemplateOrHelmIngress')">
+    <div v-bkloading="{ isLoading: isInitLoading }">
+      <Row class="mb-[16px]">
+        <div class="left" slot="left">
           <bk-button
             class="bk-button bk-default"
             v-if="curPageData.length"
@@ -13,7 +12,7 @@
             <span>{{$t('generic.button.batchDelete')}}</span>
           </bk-button>
         </div>
-        <div class="right">
+        <div class="right" slot="right">
           <ClusterSelectComb
             :placeholder="$t('deploy.templateset.searchNameOrNamespaceEnter')"
             :search.sync="searchKeyword"
@@ -22,7 +21,7 @@
             @search-change="searchIngress"
             @refresh="refresh" />
         </div>
-      </div>
+      </Row>
 
       <div class="biz-resource">
         <div class="biz-table-wrapper">
@@ -426,21 +425,23 @@
         </template>
       </bk-dialog>
     </div>
-  </div>
+  </BcsContent>
 </template>
 
 <script>
 import { catchErrorHandler, formatDate } from '@/common/util';
 import ClusterSelectComb from '@/components/cluster-selector/cluster-select-comb.vue';
 import bkKeyer from '@/components/keyer';
-import Header from '@/components/layout/Header.vue';
+import BcsContent from '@/components/layout/Content.vue';
+import Row from '@/components/layout/Row.vue';
 import ingressParams from '@/json/k8s-ingress.json';
 import ruleParams from '@/json/k8s-ingress-rule.json';
 
 export default {
   components: {
     bkKeyer,
-    Header,
+    BcsContent,
+    Row,
     ClusterSelectComb,
   },
   data() {
@@ -1209,8 +1210,7 @@ export default {
     },
     rowSelectable(row) {
       return row.can_delete
-                    && this.webAnnotations.perms[row.iam_ns_id]
-                    && this.webAnnotations.perms[row.iam_ns_id].namespace_scoped_delete;
+                    && this.webAnnotations.perms[row.iam_ns_id]?.namespace_scoped_delete;
     },
     handleClearSearchData() {
       this.searchKeyword = '';

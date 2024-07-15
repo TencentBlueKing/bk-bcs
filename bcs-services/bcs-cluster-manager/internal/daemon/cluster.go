@@ -20,6 +20,7 @@ import (
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/metrics"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/project"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
@@ -50,10 +51,16 @@ func (d *Daemon) reportClusterGroupNodeNum(error chan<- error) {
 				return
 			}
 
+			bizId := ""
+			pInfo, errLocal := project.GetProjectManagerClient().GetProjectInfo(group.ProjectID, true)
+			if errLocal == nil {
+				bizId = pInfo.GetBusinessID()
+			}
+
 			metrics.ReportClusterGroupAvailableNodeNum(group.ClusterID, group.NodeGroupID,
-				group.LaunchTemplate.InstanceType, float64(group.AutoScaling.DesiredSize))
+				group.LaunchTemplate.InstanceType, bizId, float64(group.AutoScaling.DesiredSize))
 			metrics.ReportClusterGroupMaxNodeNum(group.ClusterID, group.NodeGroupID,
-				group.LaunchTemplate.InstanceType, float64(group.AutoScaling.MaxSize))
+				group.LaunchTemplate.InstanceType, bizId, float64(group.AutoScaling.MaxSize))
 		}(groupList[i])
 	}
 

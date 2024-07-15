@@ -111,7 +111,7 @@ func (c *Client) ShieldHostAlarmConfig(user string, config *alarm.ShieldHost) er
 		AppID:       config.BizID,
 		IPList:      strings.Join(IpList, ","),
 		ShieldStart: time.Now().Format("2006-01-02 15:04"),
-		ShieldEnd:   time.Now().Add(time.Minute * 15).Format("2006-01-02 15:04"),
+		ShieldEnd:   time.Now().Add(time.Minute * 30).Format("2006-01-02 15:04"),
 		Operator:    user,
 	}
 	_, _, errs := gorequest.New().

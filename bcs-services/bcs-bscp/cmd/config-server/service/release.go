@@ -14,6 +14,7 @@ package service
 
 import (
 	"context"
+	"errors"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
@@ -36,6 +37,20 @@ func (s *Service) CreateRelease(ctx context.Context, req *pbcs.CreateReleaseReq)
 	err := s.authorizer.Authorize(grpcKit, res...)
 	if err != nil {
 		return nil, err
+	}
+
+	// 创建版本前验证非模板配置和模板配置是否存在冲突
+	ci, err := s.ListConfigItems(grpcKit.RpcCtx(), &pbcs.ListConfigItemsReq{
+		BizId: req.BizId,
+		AppId: req.AppId,
+		All:   true,
+	})
+	if err != nil {
+		return nil, err
+	}
+	if ci.ConflictNumber > 0 {
+		logs.Errorf("create release failed there is a file conflict, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, errors.New("create release failed there is a file conflict")
 	}
 
 	r := &pbds.CreateReleaseReq{
@@ -233,4 +248,31 @@ func (s *Service) DeleteRelease(ctx context.Context, req *pbcs.DeleteReleaseReq)
 
 	resp := &pbcs.DeleteReleaseResp{}
 	return resp, nil
+}
+
+// CheckReleaseName 检测某个服务下已发布的名称是否存在
+func (s *Service) CheckReleaseName(ctx context.Context, req *pbcs.CheckReleaseNameReq) (
+	*pbcs.CheckReleaseNameResp, error) {
+
+	kt := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.Find, ResourceID: req.AppId}, BizID: req.BizId},
+	}
+	err := s.authorizer.Authorize(kt, res...)
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := s.client.DS.CheckReleaseName(kt.RpcCtx(), &pbds.CheckReleaseNameReq{
+		BizId: req.GetBizId(),
+		AppId: req.GetAppId(),
+		Name:  req.GetName(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &pbcs.CheckReleaseNameResp{Exist: result.GetExist()}, nil
 }

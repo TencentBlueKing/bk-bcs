@@ -1,0 +1,25 @@
+{
+    "log_dir": "${logDir}",
+    "v": ${verbosity},
+    "alsologtostderr": true,
+    "log_max_size": 500,
+    "log_max_num": 10,
+    "logtostderr": false,
+    "stderrthreshold": "2",
+
+    "address": "${address}",
+    "port": ${port},
+    "metricPort": ${metricPort},
+    "grpcPort": ${grpcPort},
+    "healthPort": ${healthPort},
+    "httpPort": ${httpPort},
+
+    "enableLeaderElection": ${enableLeaderElection},
+    "kubernetesQPS": ${kubernetesQPS},
+    "kubernetesBurst": ${kubernetesBurst},
+    "maxWorkers": ${maxWorkers},
+
+    "bkDevOpsUrl": "${bkDevOpsUrl}",
+    "bkDevOpsAppCode": "${bkDevOpsAppCode}",
+    "bkDevOpsAppSecret": "${bkDevOpsAppSecret}"
+}

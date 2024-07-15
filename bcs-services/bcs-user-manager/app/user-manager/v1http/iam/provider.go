@@ -15,6 +15,7 @@ package iam
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/TencentBlueKing/iam-go-sdk/resource"
 	"github.com/emicklei/go-restful"
@@ -97,4 +98,15 @@ func convertFilter(data map[string]interface{}) Filter {
 
 func combineNameID(name, id string) string {
 	return fmt.Sprintf("%s(%s)", name, id)
+}
+
+// SplitString 分割字符串, 允许半角逗号、分号及空格
+func SplitString(str string) []string {
+	str = strings.TrimSpace(str)
+	str = strings.ReplaceAll(str, ";", ",")
+	str = strings.ReplaceAll(str, " ", ",")
+	if str == "" {
+		return []string{}
+	}
+	return strings.Split(str, ",")
 }

@@ -54,7 +54,9 @@ const messages = {
   'zh-CN': Object.assign(lang.zhCN, modules['zh-CN']),
 };
 
-let curLang = cookie.parse(document.cookie).blueking_language || 'zh-cn';
+// 1. 从cookie获取 2.获取不到默认用浏览器语言 3. 默认中文
+let curLang = cookie.parse(document.cookie).blueking_language || navigator.language || navigator.userLanguage || 'zh-cn';
+// 转换成标准格式
 if (['en-US', 'enUS', 'enus', 'en-us', 'en'].includes(curLang)) {
   curLang = 'en-US';
 } else {

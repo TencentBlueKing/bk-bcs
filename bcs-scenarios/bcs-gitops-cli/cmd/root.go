@@ -15,21 +15,28 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"path"
+	"strings"
 
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-cli/cmd/argocd"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-cli/cmd/kubectl"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-cli/cmd/secret"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-cli/cmd/terraform"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-cli/cmd/workflow"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-cli/options"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-cli/pkg/clusterset"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-cli/pkg/version"
 )
 
-const (
-	defaultCfgFile = "/root/.bcs/config.yaml"
+var (
+	defaultCfgFile = "./.bcs/config.yaml"
 )
 
 func ensureConfig() {
@@ -44,6 +51,9 @@ func ensureConfig() {
 		Verbosity:       2,
 		StdErrThreshold: "2",
 	})
+	if options.LogV != 0 {
+		blog.SetV(int32(options.LogV))
+	}
 	options.Parse(options.ConfigFile)
 }
 
@@ -67,6 +77,7 @@ func NewRootCommand() *cobra.Command {
 
 	rootCmd.AddCommand(versionCmd)
 	rootCmd.AddCommand(terraform.NewTerraformCmd())
+	rootCmd.AddCommand(workflow.NewWorkflowCmd())
 	rootCmd.AddCommand(secret.NewSecretCmd())
 	argoCmd := argocd.NewArgoCmd()
 	argoCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
@@ -79,7 +90,38 @@ func NewRootCommand() *cobra.Command {
 			options.GlobalOption().Token))
 	}
 	rootCmd.AddCommand(argoCmd)
+	kubeObj := kubectl.NewKubectlCmd()
+	kubeCmd := kubeObj.GetCommand()
+	kubectlPreRunOriginal := kubeCmd.PersistentPreRunE
+	kubeCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		if err := kubectlPreRunOriginal(cmd, args); err != nil {
+			return nil
+		}
+		ensureConfig()
+		kubeCfg := kubeObj.GetConfigs()
+		serverUrl := options.GlobalOption().Server
+		// NOTE: dirty transfer used to make user to prod api
+		serverUrl = strings.ReplaceAll(serverUrl, "debug-bcs-api", "prod-bcs-api")
 
+		setter := clusterset.Setter{}
+		clusterID, err := setter.GetCurrentCluster()
+		if err != nil {
+			return errors.Wrapf(err, "no cluster set")
+		}
+		apiServer := fmt.Sprintf("https://%s/clusters/%s/", serverUrl, clusterID)
+		bearerToken := options.GlobalOption().Token
+		kubeCfg.APIServer = &apiServer
+		kubeCfg.BearerToken = &bearerToken
+		return nil
+	}
+	rootCmd.AddCommand(kubeCmd)
+
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		panic(errors.Wrapf(err, "get user home directory failed"))
+	} else {
+		defaultCfgFile = path.Join(homeDir, defaultCfgFile)
+	}
 	rootCmd.PersistentFlags().StringVar(&options.ConfigFile, "bcscfg", defaultCfgFile,
 		"Config file. Example: '{\"server\": \"bcs-api.gateway.com\", \"token\": \"\"}'")
 	rootCmd.CompletionOptions.DisableDefaultCmd = true

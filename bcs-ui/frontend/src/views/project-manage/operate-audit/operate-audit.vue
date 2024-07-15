@@ -1,58 +1,59 @@
 <!-- eslint-disable max-len -->
 <template>
-  <div class="biz-content">
-    <Header hide-back :title="$t('projects.operateAudit.record')" />
-    <div class="biz-content-wrapper" style="padding: 0;" v-bkloading="{ isLoading: isInitLoading, opacity: 0.1 }">
+  <BcsContent hide-back :title="$t('projects.operateAudit.record')">
+    <div v-bkloading="{ isLoading: isInitLoading, opacity: 0.1 }">
       <template v-if="!isInitLoading">
-        <div class="biz-panel-header biz-operate-audit-query">
-          <div class="left">
-            <bk-selector
-              :placeholder="$t('projects.operateAudit.opObjType')"
-              :selected.sync="resourceTypeIndex"
-              :list="resourceTypeList"
-              :setting-key="'id'"
-              :display-key="'name'"
-              :allow-clear="true"
-              @clear="resourceTypeClear">
-            </bk-selector>
-          </div>
-          <div class="left">
-            <bk-selector
-              :placeholder="$t('projects.operateAudit.opType')"
-              :selected.sync="activityTypeIndex"
-              :list="activityTypeList"
-              :setting-key="'id'"
-              :display-key="'name'"
-              :allow-clear="true"
-              @clear="activityTypeClear">
-            </bk-selector>
-          </div>
-          <div class="left">
-            <bk-selector
-              :placeholder="$t('generic.label.status')"
-              :selected.sync="activityStatusIndex"
-              :list="activityStatusList"
-              :setting-key="'id'"
-              :display-key="'name'"
-              :allow-clear="true"
-              @clear="activityStatusClear">
-            </bk-selector>
-          </div>
-          <div class="left range-picker">
-            <bk-date-picker
-              :placeholder="$t('generic.placeholder.searchDate')"
-              :shortcuts="shortcuts"
-              :type="'datetimerange'"
-              :placement="'bottom-end'"
-              @change="change">
-            </bk-date-picker>
-          </div>
-          <div class="left">
-            <bk-button type="primary" :title="$t('generic.button.query')" icon="search" @click="handleClick">
-              {{$t('generic.button.query')}}
-            </bk-button>
-          </div>
-        </div>
+        <Row class="biz-operate-audit-query mb-[16px]">
+          <template #left>
+            <div class="left">
+              <bk-selector
+                :placeholder="$t('projects.operateAudit.opObjType')"
+                :selected.sync="resourceTypeIndex"
+                :list="resourceTypeList"
+                :setting-key="'id'"
+                :display-key="'name'"
+                :allow-clear="true"
+                @clear="resourceTypeClear">
+              </bk-selector>
+            </div>
+            <div class="left">
+              <bk-selector
+                :placeholder="$t('projects.operateAudit.opType')"
+                :selected.sync="activityTypeIndex"
+                :list="activityTypeList"
+                :setting-key="'id'"
+                :display-key="'name'"
+                :allow-clear="true"
+                @clear="activityTypeClear">
+              </bk-selector>
+            </div>
+            <div class="left">
+              <bk-selector
+                :placeholder="$t('generic.label.status')"
+                :selected.sync="activityStatusIndex"
+                :list="activityStatusList"
+                :setting-key="'id'"
+                :display-key="'name'"
+                :allow-clear="true"
+                @clear="activityStatusClear">
+              </bk-selector>
+            </div>
+            <div class="left range-picker">
+              <bk-date-picker
+                :placeholder="$t('generic.placeholder.searchDate')"
+                :shortcuts="shortcuts"
+                :type="'datetimerange'"
+                :placement="'bottom-end'"
+                @change="change">
+              </bk-date-picker>
+            </div>
+            <div class="left">
+              <bk-button type="primary" :title="$t('generic.button.query')" icon="search" @click="handleClick">
+                {{$t('generic.button.query')}}
+              </bk-button>
+            </div>
+          </template>
+        </Row>
         <bk-table
           v-bkloading="{ isLoading: isPageLoading && !isInitLoading }"
           ext-cls="biz-operate-audit-table"
@@ -91,16 +92,17 @@
         </bk-table>
       </template>
     </div>
-  </div>
+  </BcsContent>
 </template>
 
 <script>
 import { activityLogs, activityLogsResourceTypes } from '@/api/modules/user-manager';
-import Header from '@/components/layout/Header.vue';;
+import BcsContent from '@/components/layout/Content.vue';
+import Row from '@/components/layout/Row.vue';
 
 export default {
   name: 'OperateAudit',
-  components: { Header },
+  components: { BcsContent, Row },
   data() {
     // 操作类型下拉框 list
     const activityTypeList = [

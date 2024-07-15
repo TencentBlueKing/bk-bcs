@@ -21,6 +21,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	corev1 "k8s.io/api/core/v1"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
@@ -32,7 +33,12 @@ import (
 )
 
 const (
-	nodeTemplate = "nt"
+	// NodeTemplate node template
+	NodeTemplate = "nt"
+	// GroupTemplate node group template
+	GroupTemplate = "ng"
+	// NotifyTemplate notify template
+	NotifyTemplate = "nf"
 )
 
 // CheckClusterConnection check cluster connection when delete cluster or other scenes
@@ -48,6 +54,33 @@ func CheckClusterConnection(operator *clusterops.K8SOperator, clusterID string) 
 
 	blog.Infof("CheckClusterConnection[%s] success", clusterID)
 	return true
+}
+
+// GetClusterNodesNum get cluster num
+func GetClusterNodesNum(operator *clusterops.K8SOperator, clusterID string, master bool) uint32 {
+	if !CheckClusterConnection(operator, clusterID) {
+		return 0
+	}
+
+	nodes, err := operator.ListClusterNodes(context.Background(), clusterID)
+	if err != nil {
+		blog.Errorf("GetClusterNodesNum[%s] failed: %v", clusterID, err)
+		return 0
+	}
+
+	return uint32(len(FilterNodesRole(nodes, master)))
+}
+
+// FilterNodesRole filter node role
+func FilterNodesRole(k8sNodes []*corev1.Node, master bool) []*corev1.Node {
+	nodes := make([]*corev1.Node, 0)
+	for _, v := range k8sNodes {
+		ok := utils.IsMasterNode(v.Labels)
+		if ok == master {
+			nodes = append(nodes, v)
+		}
+	}
+	return nodes
 }
 
 // GetCloudZones get cloud region zones
@@ -184,17 +217,11 @@ func HandleTaskStepData(ctx context.Context, task *proto.Task) {
 	}
 }
 
-// GenerateNodeTemplateID generate random nodeTemplateID
-func GenerateNodeTemplateID() string {
+// GenerateTemplateID generate random templateID
+func GenerateTemplateID(templateType string) string {
 	randomStr := utils.RandomString(8)
 
-	return fmt.Sprintf("BCS-%s-%s", nodeTemplate, randomStr)
-}
-
-// GenerateNodeGroupID build nodegroup id
-func GenerateNodeGroupID() string {
-	str := utils.RandomString(8)
-	return fmt.Sprintf("BCS-ng-%s", str)
+	return fmt.Sprintf("BCS-%s-%s", templateType, randomStr)
 }
 
 // IsKubeConfigImportCluster kubeconfig cluster

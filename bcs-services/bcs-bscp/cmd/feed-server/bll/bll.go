@@ -17,13 +17,16 @@ package bll
 import (
 	"fmt"
 
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/asyncdownload"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/auth"
 	clientset "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/client-set"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/eventc"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/lcache"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/observer"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/release"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
 	iamauth "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/auth"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/lock"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/serviced"
 )
 
@@ -64,28 +67,57 @@ func New(sd serviced.Discover, authorizer iamauth.Authorizer, name string) (*BLL
 	handler := &eventc.Handler{
 		GetMatchedRelease: rs.GetMatchedRelease,
 	}
-	if err := sch.Run(handler); err != nil {
-		return nil, fmt.Errorf("run scheduler faield, err: %v", err)
+	if e := sch.Run(handler); e != nil {
+		return nil, fmt.Errorf("run scheduler faield, err: %v", e)
 	}
 
-	return &BLL{
+	bll := &BLL{
 		client:  client,
 		release: rs,
 		auth:    auth.New(localCache),
 		cache:   localCache,
 		ob:      ob,
 		sch:     sch,
-	}, nil
+	}
+
+	mc := asyncdownload.InitMetric()
+	redLock := lock.NewRedisLock(client.Redis(), 60)
+
+	adService, err := asyncdownload.NewService(client, mc, redLock)
+	if err != nil {
+		return nil, err
+	}
+
+	bll.adService = adService
+
+	gseConf := cc.FeedServer().GSE
+	if gseConf.Enabled {
+		scheduler, err := asyncdownload.NewScheduler(mc, redLock)
+		if err != nil {
+			return nil, err
+		}
+		bll.adScheduler = scheduler
+		bll.adScheduler.Run()
+
+		cleaner := asyncdownload.NewCacheCleaner(int(gseConf.CacheSizeGB), gseConf.CacheRetentionRate, mc)
+		bll.adCleaner = cleaner
+		bll.adCleaner.Run()
+	}
+
+	return bll, nil
 }
 
 // BLL defines business logical layer instance.
 type BLL struct {
-	client  *clientset.ClientSet
-	release *release.ReleasedService
-	auth    *auth.AuthService
-	cache   *lcache.Cache
-	ob      observer.Interface
-	sch     *eventc.Scheduler
+	client      *clientset.ClientSet
+	release     *release.ReleasedService
+	auth        *auth.AuthService
+	cache       *lcache.Cache
+	ob          observer.Interface
+	sch         *eventc.Scheduler
+	adService   *asyncdownload.Service
+	adScheduler *asyncdownload.Scheduler
+	adCleaner   *asyncdownload.CacheCleaner
 }
 
 // Release return the release service instance.
@@ -111,4 +143,9 @@ func (b *BLL) RKvCache() *lcache.ReleasedKv {
 // ClientMetric return the client metric instance.
 func (b *BLL) ClientMetric() *lcache.ClientMetric {
 	return b.cache.ClientMetric
+}
+
+// AsyncDownload return the async download instance.
+func (b *BLL) AsyncDownload() *asyncdownload.Service {
+	return b.adService
 }

@@ -1,0 +1,270 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.13.0
+  name: imageloaders.tkex.tencent.com
+spec:
+  group: tkex.tencent.com
+  names:
+    kind: ImageLoader
+    listKind: ImageLoaderList
+    plural: imageloaders
+    singular: imageloader
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - description: The desired number of jobs.
+      jsonPath: .status.desired
+      name: Desired
+      type: integer
+    - description: The active number of jobs.
+      jsonPath: .status.active
+      name: Active
+      type: integer
+    - description: The complete number of jobs.
+      jsonPath: .status.completed
+      name: Completed
+      type: integer
+    - description: The succeeded number of jobs.
+      jsonPath: .status.succeeded
+      name: Succeeded
+      type: integer
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: ImageLoader is the Schema for the imageloaders API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: ImageLoaderSpec defines the desired state of ImageLoader
+            properties:
+              backoffLimit:
+                default: 3
+                description: BackoffLimit is the backoff limit for the job defaults
+                  to 3
+                format: int32
+                type: integer
+              imagePullPolicy:
+                default: Always
+                description: ImagePullPolicy is the image pull policy for the job
+                type: string
+              imagePullSecrets:
+                description: ImagePullSecrets is an optional list of references to
+                  secrets in the same namespace to use for pulling the image. If specified,
+                  these secrets will be passed to individual puller implementations
+                  for them to use.  For example, in the case of docker, only DockerConfig
+                  type secrets are honored.
+                items:
+                  description: LocalObjectReference contains enough information to
+                    let you locate the referenced object inside the same namespace.
+                  properties:
+                    name:
+                      description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                        TODO: Add other useful fields. apiVersion, kind, uid?'
+                      type: string
+                  type: object
+                  x-kubernetes-map-type: atomic
+                type: array
+              images:
+                description: Images is the image list to be pulled by the job
+                items:
+                  type: string
+                type: array
+              jobTimeout:
+                default: 600
+                description: JobTimeout is the timeout for the job defaults to 10
+                  minutes
+                format: int64
+                type: integer
+              nodeSelector:
+                description: NodeSelector is a query over nodes that should match
+                  the job. nil to match all nodes.
+                properties:
+                  matchLabels:
+                    additionalProperties:
+                      type: string
+                    description: LabelSelector is a label query over nodes that should
+                      match the job.
+                    type: object
+                  names:
+                    description: Names specify a set of nodes to execute the job.
+                    items:
+                      type: string
+                    type: array
+                type: object
+              podSelector:
+                description: PodSelector is a query over pods that should pull image
+                  on nodes of these pods. Mutually exclusive with Selector.
+                properties:
+                  matchExpressions:
+                    description: matchExpressions is a list of label selector requirements.
+                      The requirements are ANDed.
+                    items:
+                      description: A label selector requirement is a selector that
+                        contains values, a key, and an operator that relates the key
+                        and values.
+                      properties:
+                        key:
+                          description: key is the label key that the selector applies
+                            to.
+                          type: string
+                        operator:
+                          description: operator represents a key's relationship to
+                            a set of values. Valid operators are In, NotIn, Exists
+                            and DoesNotExist.
+                          type: string
+                        values:
+                          description: values is an array of string values. If the
+                            operator is In or NotIn, the values array must be non-empty.
+                            If the operator is Exists or DoesNotExist, the values
+                            array must be empty. This array is replaced during a strategic
+                            merge patch.
+                          items:
+                            type: string
+                          type: array
+                      required:
+                      - key
+                      - operator
+                      type: object
+                    type: array
+                  matchLabels:
+                    additionalProperties:
+                      type: string
+                    description: matchLabels is a map of {key,value} pairs. A single
+                      {key,value} in the matchLabels map is equivalent to an element
+                      of matchExpressions, whose key field is "key", the operator
+                      is "In", and the values array contains only "value". The requirements
+                      are ANDed.
+                    type: object
+                type: object
+                x-kubernetes-map-type: atomic
+              tolerations:
+                description: Tolerations is a list of tolerations applied to the job.
+                items:
+                  description: The pod this Toleration is attached to tolerates any
+                    taint that matches the triple <key,value,effect> using the matching
+                    operator <operator>.
+                  properties:
+                    effect:
+                      description: Effect indicates the taint effect to match. Empty
+                        means match all taint effects. When specified, allowed values
+                        are NoSchedule, PreferNoSchedule and NoExecute.
+                      type: string
+                    key:
+                      description: Key is the taint key that the toleration applies
+                        to. Empty means match all taint keys. If the key is empty,
+                        operator must be Exists; this combination means to match all
+                        values and all keys.
+                      type: string
+                    operator:
+                      description: Operator represents a key's relationship to the
+                        value. Valid operators are Exists and Equal. Defaults to Equal.
+                        Exists is equivalent to wildcard for value, so that a pod
+                        can tolerate all taints of a particular category.
+                      type: string
+                    tolerationSeconds:
+                      description: TolerationSeconds represents the period of time
+                        the toleration (which must be of effect NoExecute, otherwise
+                        this field is ignored) tolerates the taint. By default, it
+                        is not set, which means tolerate the taint forever (do not
+                        evict). Zero and negative values will be treated as 0 (evict
+                        immediately) by the system.
+                      format: int64
+                      type: integer
+                    value:
+                      description: Value is the taint value the toleration matches
+                        to. If the operator is Exists, the value should be empty,
+                        otherwise just a regular string.
+                      type: string
+                  type: object
+                type: array
+            required:
+            - backoffLimit
+            - images
+            - jobTimeout
+            type: object
+          status:
+            description: ImageLoaderStatus defines the observed state of ImageLoader
+            properties:
+              active:
+                description: Active is the number of running ImagePullJobs which are
+                  acknowledged by the imagepulljob controller.
+                format: int32
+                type: integer
+              completed:
+                description: Completed is the number of ImagePullJobs which are finished
+                format: int32
+                type: integer
+              completionTime:
+                description: Represents time when the all the image pull job was completed.
+                  It is not guaranteed to be set in happens-before order across separate
+                  operations. It is represented in RFC3339 form and is in UTC.
+                format: date-time
+                type: string
+              desired:
+                description: Desired is the desired number of ImagePullJobs, this
+                  is typically equal to the number of len(spec.Images).
+                format: int32
+                type: integer
+              failedStatuses:
+                description: FailedStatuses is the status of ImagePullJob which has
+                  the failed nodes(status.Failed>0) .
+                items:
+                  description: FailedStatus the state of ImagePullJob which has the
+                    failed nodes(status.Failed>0)
+                  properties:
+                    imagePullJob:
+                      description: JobName is the name of ImagePullJob which has the
+                        failed nodes(status.Failed>0)
+                      type: string
+                    message:
+                      description: Message is the text prompt for job running status.
+                      type: string
+                    name:
+                      description: Name of the image
+                      type: string
+                  type: object
+                type: array
+              observedGeneration:
+                description: ObservedGeneration is the most recent generation observed
+                  for this ImageLoader. It corresponds to the ImageLoader's generation,
+                  which is updated on mutation by the API Server.
+                format: int64
+                type: integer
+              revision:
+                description: Revision is the revision of the imageloader
+                type: string
+              startTime:
+                description: Represents time when the job was acknowledged by the
+                  job controller. It is not guaranteed to be set in happens-before
+                  order across separate operations. It is represented in RFC3339 form
+                  and is in UTC.
+                format: date-time
+                type: string
+              succeeded:
+                description: Succeeded is the number of image pull job which are finished
+                  and status.Succeeded==status.Desired.
+                format: int32
+                type: integer
+            required:
+            - desired
+            - revision
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

@@ -80,7 +80,7 @@
               </template>
             </template>
           </bk-table-column>
-          <bk-table-column :label="t('分组状态')" :width="locale === 'zh-CN' ? '100' : '140'">
+          <bk-table-column :label="t('分组状态')" :width="locale === 'zh-cn' ? '100' : '140'">
             <template #default="{ row }">
               <template v-if="!row.IS_CATEORY_ROW">
                 <span class="group-status">
@@ -90,7 +90,7 @@
               </template>
             </template>
           </bk-table-column>
-          <bk-table-column :label="t('上线服务数')" :align="'center'" :width="locale === 'zh-CN' ? '110' : '130'">
+          <bk-table-column :label="t('上线服务数')" :align="'center'" :width="locale === 'zh-cn' ? '110' : '130'">
             <template #default="{ row }">
               <template v-if="!row.IS_CATEORY_ROW">
                 <template v-if="row.released_apps_num === 0">0</template>
@@ -100,7 +100,7 @@
               </template>
             </template>
           </bk-table-column>
-          <bk-table-column :label="t('操作')" :width="locale === 'zh-CN' ? '120' : '150'">
+          <bk-table-column :label="t('操作')" :width="locale === 'zh-cn' ? '120' : '150'">
             <template #default="{ row }">
               <div v-if="!row.IS_CATEORY_ROW" class="action-btns">
                 <div v-bk-tooltips="handleTooltip(row.released_apps_num, t('编辑'))" class="btn-item">
@@ -162,6 +162,7 @@
   import { debounce } from 'lodash';
   import useGlobalStore from '../../../store/global';
   import { getSpaceGroupList, deleteGroup } from '../../../api/group';
+  import useTablePagination from '../../../utils/hooks/use-table-pagination';
   import { IGroupItem, IGroupCategory, IGroupCategoryItem } from '../../../../types/group';
   import CreateGroup from './create-group.vue';
   import EditGroup from './edit-group.vue';
@@ -173,6 +174,7 @@
 
   const { spaceId } = storeToRefs(useGlobalStore());
   const { t, locale } = useI18n();
+  const { pagination, updatePagination } = useTablePagination('groupList');
 
   const listLoading = ref(false);
   const groupList = ref<IGroupItem[]>([]);
@@ -185,11 +187,6 @@
   const isDeleteGroupDialogShow = ref(false);
   const deleteGroupItem = ref<IGroupItem>();
   const selectedIds = ref<number[]>([]);
-  const pagination = ref({
-    current: 1,
-    count: 0,
-    limit: 10,
-  });
   const isCreateGroupShow = ref(false);
   const isEditGroupShow = ref(false);
   const editingGroup = ref<IGroupItem>({
@@ -426,8 +423,7 @@
   };
 
   const handlePageLimitChange = (val: number) => {
-    pagination.value.current = 1;
-    pagination.value.limit = val;
+    updatePagination('limit', val);
     refreshTableData();
   };
 

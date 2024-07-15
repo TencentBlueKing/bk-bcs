@@ -38,7 +38,6 @@ import (
 	v1 "k8s.io/api/admission/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/eventer"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/portpoolcache"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
@@ -70,7 +69,6 @@ type Server struct {
 	// k8s client
 	k8sClient        client.Client
 	lbClient         cloud.LoadBalance
-	eventWatcher     eventer.WatchEventInterface
 	poolCache        *portpoolcache.Cache
 	podName          string
 	podNamespace     string
@@ -85,7 +83,7 @@ type Server struct {
 
 // NewHookServer create new hook server object
 func NewHookServer(opt *ServerOption, k8sClient client.Client, lbClient cloud.LoadBalance, poolCache *portpoolcache.Cache,
-	eventWatcher eventer.WatchEventInterface, validater cloud.Validater, converter *generator.IngressConverter,
+	validater cloud.Validater, converter *generator.IngressConverter,
 	conflictHandler *conflicthandler.ConflictHandler, nodePortBindingNs string,
 	eventer record.EventRecorder) (*Server, error) {
 	pair, err := tls.LoadX509KeyPair(opt.ServerCertFile, opt.ServerKeyFile)
@@ -99,7 +97,6 @@ func NewHookServer(opt *ServerOption, k8sClient client.Client, lbClient cloud.Lo
 			&tls.Config{Certificates: []tls.Certificate{pair}}, nil),
 		k8sClient:         k8sClient,
 		lbClient:          lbClient,
-		eventWatcher:      eventWatcher,
 		poolCache:         poolCache,
 		podName:           os.Getenv(constant.EnvIngressPodName),
 		podNamespace:      os.Getenv(constant.EnvIngressPodNamespace),
@@ -118,6 +115,7 @@ func (s *Server) Start(stop <-chan struct{}) error {
 	// register handler function
 	mux.HandleFunc("/portpool/v1/validate", s.HandleValidatingWebhook)
 	mux.HandleFunc("/portpool/v1/mutate", s.HandleMutatingWebhook)
+	mux.HandleFunc("/portpool/v1/delete", s.HandleDeletePortPoolWebhook)
 	mux.HandleFunc("/crd/v1/validate", s.HandleValidatingCRD)
 	mux.HandleFunc("/ingress/v1/mutate", s.HandleValidatingIngress)
 	mux.HandleFunc("/node/v1/mutate", s.HandleMutatingNodeWebhook)
@@ -162,6 +160,11 @@ func (s *Server) HandleValidatingWebhook(w http.ResponseWriter, r *http.Request)
 // HandleMutatingWebhook handle mutating webhook request
 func (s *Server) HandleMutatingWebhook(w http.ResponseWriter, r *http.Request) {
 	s.handleWebhook(w, r, "mutate", newDelegateToV1AdmitHandler(s.mutatingWebhook))
+}
+
+// HandleDeletePortPoolWebhook handle mutating webhook request
+func (s *Server) HandleDeletePortPoolWebhook(w http.ResponseWriter, r *http.Request) {
+	s.handleWebhook(w, r, "deletePortPool", newDelegateToV1AdmitHandler(s.deletePortPool))
 }
 
 // HandleValidatingCRD handle validating CRD delete webhook request
@@ -308,7 +311,7 @@ func (s *Server) mutatingIngress(ar v1.AdmissionReview) *v1.AdmissionResponse {
 		blog.Warnf("kind %s is not Ingress", req.Kind.Kind)
 		return errResponse(fmt.Errorf("kind %s is not PortPool or Ingress", req.Kind.Kind))
 	}
-	if req.Kind.Group != "networkextension.bkbcs.tencent.com" {
+	if req.Kind.Group != networkextensionv1.GroupVersion.Group {
 		blog.Warnf("group %s is not networkextension.bkbcs.tencent.com", req.Kind.Group)
 		return errResponse(fmt.Errorf("group %s is not networkextension.bkbcs.tencent.com", req.Kind.Group))
 	}
@@ -339,6 +342,40 @@ func (s *Server) mutatingIngress(ar v1.AdmissionReview) *v1.AdmissionResponse {
 			return &pt
 		}(),
 	}
+}
+
+// deletePortPool 校验端口池删除操作， 仅允许删除未被使用的端口池
+func (s *Server) deletePortPool(ar v1.AdmissionReview) *v1.AdmissionResponse {
+	allowResp := &v1.AdmissionResponse{Allowed: true}
+
+	req := ar.Request
+	// only hook delete operation
+	if req.Operation != v1.Delete {
+		blog.Warnf("operation is not delete, ignore")
+		return allowResp
+	}
+	// only hook portpool
+	if req.Kind.Kind != "PortPool" {
+		blog.Warnf("kind %s is not PortPool", req.Kind.Kind)
+		return allowResp
+	}
+	if req.Kind.Group != networkextensionv1.GroupVersion.Group {
+		blog.Warnf("group %s is not %s", req.Kind.Group, networkextensionv1.GroupVersion.Group)
+		return allowResp
+	}
+
+	portpool := &networkextensionv1.PortPool{}
+	if err := json.Unmarshal(req.OldObject.Raw, portpool); err != nil {
+		blog.Warnf("decode %s to portpool failed, err %s", string(req.Object.Raw), err.Error)
+		return allowResp
+	}
+	err := s.validateDeletePortPool(portpool)
+	if err != nil {
+		blog.Warnf("validate delete portpool[%s/%s] failed, err: %v", portpool.GetNamespace(), portpool.GetName(), err)
+		return errResponse(err)
+	}
+
+	return allowResp
 }
 
 // mutatingWebhook 根据用户注解，分配端口池端口到Pod

@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/coreos/etcd/clientv3/concurrency"
+	"go.etcd.io/etcd/client/v3/concurrency"
 	corev1 "k8s.io/api/core/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"

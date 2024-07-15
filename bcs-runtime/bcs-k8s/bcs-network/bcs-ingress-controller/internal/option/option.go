@@ -23,6 +23,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 )
 
@@ -110,6 +111,9 @@ type ControllerOption struct {
 	Conf Conf
 	// ServCert http server cert
 	ServCert ServCert
+
+	// IsFederationMode if true, watch multiClusterEndpoints for ingress
+	IsFederationMode bool
 }
 
 // Conf 服务配置
@@ -224,6 +228,7 @@ func (op *ControllerOption) BindFromCommandLine() {
 
 	flag.IntVar(&op.ListenerAutoReconcileSeconds, "listener_auto_reconcile_seconds", 1200,
 		"seconds to auto reconcile listeners")
+	flag.BoolVar(&op.IsFederationMode, "is_federation_mode", false, "if true, watch multiClusterEndpoints for ingress ")
 
 	flag.Parse()
 

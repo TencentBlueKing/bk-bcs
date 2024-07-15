@@ -9,6 +9,7 @@
     :esc-close="false"
     :quick-close="false"
     :is-loading="props.pending"
+    :is-disabled="props.pending"
     @confirm="handleConfirm"
     @closed="close">
     <bk-form ref="formRef" form-type="vertical" :model="{ pkgs: selectedPkgs }">
@@ -43,6 +44,17 @@
         </bk-table>
       </bk-loading>
     </div>
+    <template #footer>
+      <bk-button
+        theme="primary"
+        style="margin-right: 8px"
+        :disabled="props.pending"
+        :loading="props.pending"
+        @click="handleConfirm">
+        {{ t('确认') }}
+      </bk-button>
+      <bk-button @click="close">{{ t('取消') }}</bk-button>
+    </template>
   </bk-dialog>
 </template>
 <script lang="ts" setup>

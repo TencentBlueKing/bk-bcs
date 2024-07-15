@@ -19,20 +19,24 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"math/rand"
 	"net"
 	"net/http"
 	"os"
 	"regexp"
 	"runtime/debug"
+	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/common/util"
 	"github.com/kirito41dd/xslice"
-	"github.com/micro/go-micro/v2/registry"
+	"github.com/robfig/cron/v3"
+	"go-micro.dev/v4/registry"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 
@@ -433,10 +437,11 @@ func Int64PtrToInt64(num *int64) int64 {
 	return *num
 }
 
-// MatchSubnet inner match subnet
-func MatchSubnet(subnetName, region string) bool {
+// MatchPatternSubnet inner match inner subnet,
+// if str == region, match node subnet; if str == region-clusterId, match cluster subnet
+func MatchPatternSubnet(subnetName, str string) bool {
 	var match bool
-	patterns := []string{fmt.Sprintf("^%s-[1-9]-[0-9]+", region)}
+	patterns := []string{fmt.Sprintf("^%s-[1-9]-[0-9]+", str)}
 
 	for _, pattern := range patterns {
 		m, _ := regexp.MatchString(pattern, subnetName)
@@ -506,7 +511,7 @@ func K8sTaintToTaint(taint []corev1.Taint) []*proto.Taint {
 	return taints
 }
 
-// AllocateMachinesToAZs alocate num machines ro num zones
+// AllocateMachinesToAZs allocate num machines ro num zones
 func AllocateMachinesToAZs(numMachines, numAZs int) [][]int {
 	if numAZs <= 0 {
 		return nil
@@ -556,4 +561,128 @@ func FilterEmptyString(strList []string) []string {
 	}
 
 	return filterStrings
+}
+
+// CompareVersion 比较两个版本号字符串
+func CompareVersion(v1, v2 string) int {
+	parts1 := strings.Split(v1, ".")
+	parts2 := strings.Split(v2, ".")
+
+	for i := 0; i < len(parts1) || i < len(parts2); i++ {
+		num1, _ := strconv.Atoi(parts1[i])
+		num2, _ := strconv.Atoi(parts2[i])
+
+		if num1 < num2 {
+			return -1
+		} else if num1 > num2 {
+			return 1
+		}
+	}
+
+	return 0
+}
+
+// DistributeMachines 平均分配机器到各个区域
+func DistributeMachines(numMachines int, rZones []string) []int {
+	if len(rZones) == 0 {
+		return nil
+	}
+
+	numZones := len(rZones)
+
+	base := numMachines / numZones      // 每个区域基本分配的机器数
+	remainder := numMachines % numZones // 不能均匀分配的余数
+
+	// 创建一个slice来存储每个区域分配到的机器数
+	distributions := make([]int, numZones)
+
+	// 每个区域都分配到基本的机器数
+	for i := range distributions {
+		distributions[i] = base
+	}
+
+	// 将余下的机器随机分散到各个区域
+	for i := 0; i < remainder; i++ {
+		distributions[generateRandomNumber(0, numZones)]++
+	}
+
+	return distributions
+}
+
+// generateRandomNumber 生成一个在[min, max)之间的随机整数
+func generateRandomNumber(min int, max int) int {
+	rand.Seed(time.Now().UnixNano()) // nolint
+	return rand.Intn(max-min) + min  // nolint
+}
+
+// MergeStringIntMaps 合并两个 map[string]int
+func MergeStringIntMaps(map1, map2 map[string]int) map[string]int {
+	copyMap1 := make(map[string]int) // 创建一个新的 map
+	for key, value := range map1 {
+		copyMap1[key] = value // 复制元素
+	}
+
+	// 将 map2 的内容合并到 map1
+	for key, value := range map2 {
+		if existingValue, ok := copyMap1[key]; ok { // 键已存在
+			copyMap1[key] = existingValue + value // 累加值
+		} else { // 键不存在
+			copyMap1[key] = value // 添加新键值对
+		}
+	}
+	return copyMap1
+}
+
+// BuildAllocateVpcCidrLockKey generate vpc cidr lock
+func BuildAllocateVpcCidrLockKey(cloud, region, vpcId string) string {
+	return fmt.Sprintf("/bcs-services/bcs-cluster-manager/%s/%s/%s", cloud, region, vpcId)
+}
+
+// BuildClusterLockKey generate cluster lock
+func BuildClusterLockKey(clusterId string) string {
+	return fmt.Sprintf("/bcs-services/bcs-cluster-manager/%s", clusterId)
+}
+
+// ValidateCronExpr 验证给定的 cron 表达式是否有效
+func ValidateCronExpr(expr string) error {
+	_, err := cron.ParseStandard(expr)
+	return err
+}
+
+// Decompose 将给定的数字分割为指定的值集合内的最大值分布
+func Decompose(num int, values []int) ([]int, error) {
+	if num <= 0 {
+		return nil, fmt.Errorf("无效的数字：%d，必须为正整数", num)
+	}
+	// 对 values 按降序排序
+	sort.Sort(sort.Reverse(sort.IntSlice(values)))
+
+	var result []int
+	for _, v := range values {
+		for num >= v {
+			result = append(result, v)
+			num -= v
+		}
+	}
+
+	if num > 0 {
+		result = append(result, values[len(values)-1])
+	}
+
+	return result, nil
+}
+
+// Uint32ToInt uint32 to int
+func Uint32ToInt(uint32Nums []uint32) ([]int, error) {
+	intNums := make([]int, 0)
+
+	for i := range uint32Nums {
+		if uint32Nums[i] > math.MaxInt32 {
+			return nil, fmt.Errorf("无法将 %d 转换为 int：超出范围", uint32Nums[i])
+		}
+
+		intNums = append(intNums, int(uint32Nums[i]))
+	}
+
+	return intNums, nil
 }

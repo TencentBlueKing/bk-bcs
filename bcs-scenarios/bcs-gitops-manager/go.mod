@@ -3,6 +3,7 @@ module github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager
 go 1.20
 
 replace (
+	github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-workflow => ../bcs-gitops-workflow
 	github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-controller => ../bcs-terraform-controller
 	github.com/argoproj/gitops-engine => github.com/argoproj/gitops-engine v0.7.1-0.20230906152414-b0fffe419a0f
 	github.com/chai2010/gettext-go => github.com/chai2010/gettext-go v0.1.0
@@ -10,7 +11,6 @@ replace (
 	// https://github.com/golang/go/issues/33546#issuecomment-519656923
 	github.com/go-check/check => github.com/go-check/check v0.0.0-20180628173108-788fd7840127
 
-	github.com/golang/protobuf => github.com/golang/protobuf v1.4.2
 	github.com/grpc-ecosystem/grpc-gateway => github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/micro/go-micro => go-micro.dev/v4/api v1.18.0
 	go.opentelemetry.io/otel => go.opentelemetry.io/otel v1.16.0
@@ -75,7 +75,7 @@ require (
 	github.com/go-micro/plugins/v4/server/grpc v1.2.0
 	github.com/go-sql-driver/mysql v1.7.1
 	github.com/gogo/protobuf v1.3.2
-	github.com/golang/protobuf v1.5.3
+	github.com/golang/protobuf v1.5.4
 	github.com/google/uuid v1.5.0
 	github.com/gorilla/mux v1.8.1
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
@@ -91,27 +91,30 @@ require (
 	go.opentelemetry.io/otel/metric v1.20.0 // indirect
 	go.opentelemetry.io/otel/trace v1.20.0
 	go.opentelemetry.io/proto/otlp v1.0.0 // indirect
-	golang.org/x/exp v0.0.0-20230905200255-921286631fa9 // indirect
+	golang.org/x/exp v0.0.0-20230905200255-921286631fa9
 	google.golang.org/genproto/googleapis/api v0.0.0-20231106174013-bbf56f31fb17
 	google.golang.org/grpc v1.59.0
-	google.golang.org/protobuf v1.31.0
+	google.golang.org/protobuf v1.33.0
 	gopkg.in/go-playground/webhooks.v5 v5.17.0
 	gorm.io/driver/mysql v1.5.2
 	gorm.io/gorm v1.25.5
 	k8s.io/api v0.28.3
-	k8s.io/apimachinery v0.28.3
-	k8s.io/client-go v0.28.3
-	k8s.io/kube-openapi v0.0.0-20230905202853-d090da108d2f // indirect
+	k8s.io/apimachinery v0.30.0
+	k8s.io/client-go v11.0.1-0.20190816222228-6d55c1b1f1ca+incompatible
+	k8s.io/kube-openapi v0.0.0-20240228011516-70dd3763d340 // indirect
 	k8s.io/kubernetes v1.24.2
 )
 
 require (
-	github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-controller v0.0.0-00010101000000-000000000000
+	github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-workflow v0.0.0-00010101000000-000000000000
+	github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-controller v0.0.0-20240507114009-045488ee0cd5
 	github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4 v0.0.0-20240102072303-4173c9729642
+	github.com/sourcegraph/conc v0.3.0
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.42.0
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.44.0
 	go.opentelemetry.io/otel v1.20.0
 	gopkg.in/yaml.v3 v3.0.1
+	k8s.io/utils v0.0.0-20230726121419-3b25d923346b
 )
 
 require (
@@ -175,7 +178,7 @@ require (
 	github.com/go-git/go-billy/v5 v5.5.0 // indirect
 	github.com/go-git/go-git/v5 v5.11.0 // indirect
 	github.com/go-jose/go-jose/v3 v3.0.0 // indirect
-	github.com/go-logr/logr v1.3.0 // indirect
+	github.com/go-logr/logr v1.4.1 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-openapi/jsonpointer v0.20.0 // indirect
 	github.com/go-openapi/jsonreference v0.20.2 // indirect
@@ -315,16 +318,16 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.25.0 // indirect
 	golang.org/x/arch v0.3.0 // indirect
-	golang.org/x/crypto v0.17.0 // indirect
-	golang.org/x/mod v0.14.0 // indirect
-	golang.org/x/net v0.19.0 // indirect
+	golang.org/x/crypto v0.21.0 // indirect
+	golang.org/x/mod v0.15.0 // indirect
+	golang.org/x/net v0.23.0 // indirect
 	golang.org/x/oauth2 v0.13.0 // indirect
-	golang.org/x/sync v0.3.0 // indirect
-	golang.org/x/sys v0.16.0 // indirect
-	golang.org/x/term v0.16.0 // indirect
+	golang.org/x/sync v0.6.0 // indirect
+	golang.org/x/sys v0.18.0 // indirect
+	golang.org/x/term v0.18.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
-	golang.org/x/tools v0.13.0 // indirect
+	golang.org/x/tools v0.18.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto v0.0.0-20231030173426-d783a09b4405 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20231030173426-d783a09b4405 // indirect
@@ -340,17 +343,16 @@ require (
 	k8s.io/component-helpers v0.28.0 // indirect
 	k8s.io/cri-api v0.0.0 // indirect
 	k8s.io/klog v1.0.0 // indirect
-	k8s.io/klog/v2 v2.100.1 // indirect
+	k8s.io/klog/v2 v2.120.1 // indirect
 	k8s.io/kube-aggregator v0.24.2 // indirect
 	k8s.io/kubectl v0.28.0 // indirect
 	k8s.io/mount-utils v0.24.2 // indirect
-	k8s.io/utils v0.0.0-20230726121419-3b25d923346b // indirect
 	moul.io/http2curl v1.0.0 // indirect
 	oras.land/oras-go/v2 v2.3.0 // indirect
 	sigs.k8s.io/controller-runtime v0.16.3 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/kustomize/api v0.13.5-0.20230601165947-6ce0bf390ce3 // indirect
 	sigs.k8s.io/kustomize/kyaml v0.14.2 // indirect
-	sigs.k8s.io/structured-merge-diff/v4 v4.3.0 // indirect
+	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )

@@ -14,16 +14,19 @@
 package main
 
 import (
+	"context"
 	"flag"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	commonConf "github.com/Tencent/bk-bcs/bcs-common/common/conf"
-	microCfg "github.com/micro/go-micro/v2/config"
-	microYaml "github.com/micro/go-micro/v2/config/encoder/yaml"
-	"github.com/micro/go-micro/v2/config/reader"
-	microJson "github.com/micro/go-micro/v2/config/reader/json"
-	"github.com/micro/go-micro/v2/config/source/env"
-	microFile "github.com/micro/go-micro/v2/config/source/file"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/constants"
+	microYaml "github.com/go-micro/plugins/v4/config/encoder/yaml"
+	microCfg "go-micro.dev/v4/config"
+	"go-micro.dev/v4/config/reader"
+	microJson "go-micro.dev/v4/config/reader/json"
+	"go-micro.dev/v4/config/source/env"
+	microFile "go-micro.dev/v4/config/source/file"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/app"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/i18n"
@@ -91,6 +94,19 @@ func main() {
 	// 初始化 I18N 相关配置
 	if err = i18n.InitMsgMap(); err != nil {
 		blog.Fatalf("init i18n message map failed %s", err.Error())
+	}
+
+	// 初始化 Tracer
+	shutdown, errorInitTracing := trace.InitTracing(&opt.TracingConfig, constants.BCSHelmManager)
+	if errorInitTracing != nil {
+		blog.Info(errorInitTracing.Error())
+	}
+	if shutdown != nil {
+		defer func() {
+			if err := shutdown(context.Background()); err != nil {
+				blog.Infof("failed to shutdown TracerProvider: %s", err.Error())
+			}
+		}()
 	}
 
 	blog.InitLogs(commonConf.LogConfig{

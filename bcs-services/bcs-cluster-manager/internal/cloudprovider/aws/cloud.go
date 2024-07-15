@@ -16,11 +16,13 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/eks"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/aws/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 var cloudInfoMgr sync.Once
@@ -60,7 +62,7 @@ func (c *CloudInfoManager) SyncClusterCloudInfo(cls *cmproto.Cluster,
 		return err
 	}
 
-	cluster, err := client.GetEksCluster(cls.ClusterName)
+	cluster, err := client.GetEksCluster(opt.ImportMode.CloudID)
 	if err != nil {
 		return err
 	}
@@ -74,11 +76,31 @@ func (c *CloudInfoManager) SyncClusterCloudInfo(cls *cmproto.Cluster,
 	cls.SystemID = *cluster.Name
 	cls.VpcID = *cluster.ResourcesVpcConfig.VpcId
 
+	ec2Client, err := api.GetEc2Client(opt.Common)
+	if err != nil {
+		return err
+	}
+
+	res, err := ec2Client.DescribeVpcs(&ec2.DescribeVpcsInput{
+		VpcIds: []*string{&cls.VpcID},
+	})
+	if err != nil {
+		return err
+	}
+
+	var ipv4Cidr, ipv6Cidr string
+	if len(res.Vpcs) == 1 {
+		ipv4Cidr = *res.Vpcs[0].CidrBlock
+		if len(res.Vpcs[0].Ipv6CidrBlockAssociationSet) > 0 {
+			ipv6Cidr = *res.Vpcs[0].Ipv6CidrBlockAssociationSet[0].Ipv6CidrBlock
+		}
+	}
+
 	// cluster cloud basic setting
 	clusterBasicSettingByEks(cls, cluster)
 
 	// cluster cloud network setting
-	clusterNetworkSettingByEks(cls, cluster)
+	clusterNetworkSettingByEks(cls, cluster, ipv4Cidr, ipv6Cidr)
 
 	return nil
 }
@@ -93,16 +115,18 @@ func clusterBasicSettingByEks(cls *cmproto.Cluster, cluster *eks.Cluster) {
 	// }
 }
 
-func clusterNetworkSettingByEks(cls *cmproto.Cluster, cluster *eks.Cluster) {
+func clusterNetworkSettingByEks(cls *cmproto.Cluster, cluster *eks.Cluster, ipv4Cidr, ipv6Cidr string) {
 	if cluster.KubernetesNetworkConfig.ServiceIpv4Cidr != nil {
+		maxServiceNum, _ := utils.ConvertCIDRToStep(*cluster.KubernetesNetworkConfig.ServiceIpv4Cidr)
 		cls.NetworkSettings = &cmproto.NetworkSetting{
-			ClusterIPv4CIDR: *cluster.KubernetesNetworkConfig.ServiceIpv4Cidr,
+			ClusterIPv4CIDR: ipv4Cidr,
 			ServiceIPv4CIDR: *cluster.KubernetesNetworkConfig.ServiceIpv4Cidr,
+			MaxServiceNum:   maxServiceNum,
 		}
 	} else if cluster.KubernetesNetworkConfig.ServiceIpv6Cidr != nil {
 		cls.NetworkSettings = &cmproto.NetworkSetting{
-			ClusterIPv4CIDR: *cluster.KubernetesNetworkConfig.ServiceIpv6Cidr,
-			ServiceIPv4CIDR: *cluster.KubernetesNetworkConfig.ServiceIpv6Cidr,
+			ClusterIPv6CIDR: ipv6Cidr,
+			ServiceIPv6CIDR: *cluster.KubernetesNetworkConfig.ServiceIpv6Cidr,
 		}
 	}
 

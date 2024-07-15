@@ -43,6 +43,22 @@ func (aks *AksServiceImpl) GetVmInterfaceAndReturn(ctx context.Context, nodeReso
 	return &resp.Interface, nil
 }
 
+// ListNetworkNicAll 获取全量网络接口
+func (aks *AksServiceImpl) ListNetworkNicAll(ctx context.Context) (
+	[]*armnetwork.Interface, error) {
+	pager := aks.netClient.NewListAllPager(nil)
+	result := make([]*armnetwork.Interface, 0)
+	for pager.More() {
+		next, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to advance page")
+		}
+		result = append(result, next.Value...)
+	}
+
+	return result, nil
+}
+
 // GetVirtualNetworks 查询vpc
 //
 // nodeResourceGroup - 基础结构资源组(AutoScalingGroup.autoScalingName/Cluster.ExtraInfo["nodeResourceGroup"]).

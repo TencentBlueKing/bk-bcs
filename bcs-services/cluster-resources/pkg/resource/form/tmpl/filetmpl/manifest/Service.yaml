@@ -1,0 +1,65 @@
+apiVersion: {{ .metadata.apiVersion }}
+kind: Service
+metadata:
+  name: {{ .metadata.name }}
+  {{- if .metadata.namespace }}
+  namespace: {{ .metadata.namespace }}
+  {{- end }}
+  {{- if .metadata.labels }}
+  labels:
+    {{- include "common.labelSlice2Map" .metadata.labels | indent 4 }}
+  {{- end }}
+  annotations:
+    {{- range .metadata.annotations }}
+    {{- if and (ne .key "service.kubernetes.io/tke-existed-lbid") (ne .key "service.kubernetes.io/qcloud-loadbalancer-internal-subnetid") }}
+    {{ .key | quote }}: {{ .value | default "" | quote }}
+    {{- end }}
+    {{- end }}
+    {{- if eq .spec.portConf.type "LoadBalancer" }}
+    {{- if eq .spec.portConf.lb.useType "useExists" }}
+    service.kubernetes.io/tke-existed-lbid: {{ .spec.portConf.lb.existLBID | quote }}
+    {{- else }}
+    service.kubernetes.io/qcloud-loadbalancer-internal-subnetid: {{ .spec.portConf.lb.subNetID | quote }}
+    {{- end }}
+    {{- end }}
+  {{- if .metadata.resVersion }}
+  resourceVersion: {{ .metadata.resVersion | quote }}
+  {{- end }}
+spec:
+  type: {{ .spec.portConf.type }}
+  {{- if .spec.portConf.ports }}
+  ports:
+  {{- range .spec.portConf.ports }}
+  - protocol: {{ .protocol }}
+    {{- if .name }}
+    name: {{ .name }}
+    {{- end }}
+    port: {{ .port }}
+    targetPort: {{ .targetPort }}
+    {{- if and (ne $.spec.portConf.type "ClusterIP") .nodePort }}
+    nodePort: {{ .nodePort }}
+    {{- end }}
+  {{- end }}
+  {{- end }}
+  # selector
+  {{- if .spec.selector.labels }}
+  selector:
+    {{- include "common.kvSlice2Map" .spec.selector.labels | indent 4 }}
+  {{- end }}
+  # sessionAffinity
+  sessionAffinity: {{ .spec.sessionAffinity.type }}
+  {{- if eq .spec.sessionAffinity.type "ClientIP" }}
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: {{ .spec.sessionAffinity.stickyTime }}
+  {{- end }}
+  # ip
+  {{- if .spec.ip.address }}
+  clusterIP: {{ .spec.ip.address }}
+  {{- end }}
+  {{- if .spec.ip.external }}
+  externalIPs:
+    {{- range .spec.ip.external }}
+    - {{ . }}
+    {{- end }}
+  {{- end }}

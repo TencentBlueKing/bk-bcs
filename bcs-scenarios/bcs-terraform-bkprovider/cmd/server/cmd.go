@@ -19,6 +19,8 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/spf13/cobra"
+
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-bkprovider/common"
 )
 
 var (
@@ -28,7 +30,7 @@ var (
 
 // NewServerCommand create command line for server
 func NewServerCommand() *cobra.Command {
-	option := DefaultOptions()
+	option := common.DefaultOptions()
 
 	cmd := &cobra.Command{
 		Use:   commandName,
@@ -43,6 +45,7 @@ func NewServerCommand() *cobra.Command {
 				return err
 			}
 			blog.InitLogs(option.LogConfig)
+			blog.Infof("configs: %s", common.ToJsonString(option))
 			// config option verification
 			if err := option.Complete(); err != nil {
 				fmt.Fprintf(os.Stderr, "server option complete failed, %s\n", err.Error())
@@ -68,7 +71,7 @@ func NewServerCommand() *cobra.Command {
 }
 
 // loadConfigFile loading json config file
-func loadConfigFile(fileName string, opt *Options) error {
+func loadConfigFile(fileName string, opt *common.Options) error {
 	content, err := os.ReadFile(fileName)
 	if err != nil {
 		return err

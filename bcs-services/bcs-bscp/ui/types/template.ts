@@ -180,6 +180,7 @@ export interface IPkgTreeItem {
   checked?: boolean;
   disabled?: boolean;
   indeterminate?: boolean;
+  parentName?: string;
 }
 
 // 模板下多个版本名称
@@ -204,4 +205,28 @@ export interface DiffSliderDataType {
     user: string;
     user_group: string;
   };
+}
+
+// 从历史版本导入配置模板
+export interface ImportTemplateConfigItem {
+  template_space_name: string;
+  template_space_id: number;
+  template_set_name: string;
+  template_set_id: number;
+  template_space_exist: boolean;
+  template_set_exist: boolean;
+  is_exist: boolean;
+  template_set_is_empty: boolean;
+  template_revisions: {
+    template_id: number;
+    template_revision_id: number;
+    is_latest: boolean;
+    template_space_id: number;
+    variables: {
+      default_val: string;
+      memo: string;
+      name: string;
+      type: string;
+    }[];
+  }[];
 }

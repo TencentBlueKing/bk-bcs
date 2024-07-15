@@ -1,54 +1,58 @@
 <template>
-  <div class="biz-content">
-    <Header hide-back title="CustomObjects" />
-    <div class="biz-content-wrapper" style="padding: 0;" v-bkloading="{ isLoading: isInitLoading, opacity: 0.1 }">
+  <BcsContent hide-back title="CustomObjects">
+    <div v-bkloading="{ isLoading: isInitLoading, opacity: 0.1 }">
       <template v-if="!isInitLoading">
-        <div class="biz-panel-header biz-event-query-query" style="padding-right: 0;">
-          <div class="left !w-[260px]">
-            <ClusterSelect
-              :placeholder="$t('deploy.templateset.cluster')"
-              :value="selectedClusterId"
-              @change="handleChangeCluster" />
-          </div>
-          <div class="left" style="width: 290px;">
-            <bk-selector
-              :placeholder="$t('dashboard.validate.selectCRD')"
-              :searchable="true"
-              :setting-key="'name'"
-              :display-key="'name'"
-              :selected.sync="selectedCRD"
-              :list="crdList"
-              :is-loading="crdLoading"
-              :search-placeholder="$t('deploy.templateset.crd')"
-              @item-selected="handleChangeCRD">
-            </bk-selector>
-          </div>
-          <div class="left" v-if="isNamespaceScope">
-            <bk-selector
-              :placeholder="$t('dashboard.ns.validate.emptyNs')"
-              :searchable="true"
-              :allow-clear="true"
-              :setting-key="'name'"
-              :display-key="'name'"
-              :selected.sync="selectedNamespaceName"
-              :list="namespaceList"
-              :is-loading="namespaceLoading"
-              :search-placeholder="$t('deploy.templateset.searchNs')"
-              @item-selected="handleChangeNamespace"
-              @clear="handleClearNamespace">
-            </bk-selector>
-          </div>
-          <div class="left">
-            <bk-input v-model="searchKey" clearable :placeholder="$t('generic.placeholder.searchName')" @clear="clearSearch" />
-          </div>
-          <div class="left" style="width: auto;">
-            <bk-button type="primary" :title="$t('generic.button.query')" icon="search" @click="handleClick">
-              {{$t('generic.button.query')}}
-            </bk-button>
-          </div>
-        </div>
+        <Row class="mb-[16px] biz-event-query-query" style="padding-right: 0;">
+          <template #left>
+            <div class="left !w-[260px]">
+              <ClusterSelect
+                :placeholder="$t('deploy.templateset.cluster')"
+                :value="selectedClusterId"
+                @change="handleChangeCluster" />
+            </div>
+            <div class="left" style="width: 290px;">
+              <bk-selector
+                :placeholder="$t('dashboard.validate.selectCRD')"
+                :searchable="true"
+                :setting-key="'name'"
+                :display-key="'name'"
+                :selected.sync="selectedCRD"
+                :list="crdList"
+                :is-loading="crdLoading"
+                :search-placeholder="$t('deploy.templateset.crd')"
+                @item-selected="handleChangeCRD">
+              </bk-selector>
+            </div>
+            <div class="left" v-if="isNamespaceScope">
+              <bk-selector
+                :placeholder="$t('dashboard.ns.validate.emptyNs')"
+                :searchable="true"
+                :allow-clear="true"
+                :setting-key="'name'"
+                :display-key="'name'"
+                :selected.sync="selectedNamespaceName"
+                :list="namespaceList"
+                :is-loading="namespaceLoading"
+                :search-placeholder="$t('deploy.templateset.searchNs')"
+                @item-selected="handleChangeNamespace"
+                @clear="handleClearNamespace">
+              </bk-selector>
+            </div>
+            <div class="left">
+              <bk-input
+                v-model="searchKey"
+                clearable
+                :placeholder="$t('generic.placeholder.searchName')" @clear="clearSearch" />
+            </div>
+            <div class="left" style="width: auto;">
+              <bk-button type="primary" :title="$t('generic.button.query')" icon="search" @click="handleClick">
+                {{$t('generic.button.query')}}
+              </bk-button>
+            </div>
+          </template>
+        </Row>
         <div v-bkloading="{ isLoading: isPageLoading && !isInitLoading }">
-          <div class="biz-table-wrapper gamestatefullset-table-wrapper">
+          <div class="gamestatefullset-table-wrapper">
             <bk-table
               :data="curPageData"
               :page-params="pageConf"
@@ -76,7 +80,10 @@
               </bk-table-column>
               <bk-table-column :label="$t('generic.label.action')" width="150">
                 <template slot-scope="{ row }">
-                  <a href="javascript:void(0);" class="bk-text-button" @click.stop="del(row, index)">{{$t('generic.button.delete')}}</a>
+                  <a
+                    href="javascript:void(0);"
+                    class="bk-text-button"
+                    @click.stop="del(row, index)">{{$t('generic.button.delete')}}</a>
                 </template>
               </bk-table-column>
               <template #empty>
@@ -95,7 +102,7 @@
       :crd="selectedCRD"
       @hide-sideslider="hideSideslider">
     </gamestatefulset-sideslider>
-  </div>
+  </BcsContent>
 </template>
 
 <script>
@@ -103,15 +110,17 @@ import GamestatefulsetSideslider from './gamestatefulset-sideslider';
 
 import { catchErrorHandler } from '@/common/util';
 import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
-import Header from '@/components/layout/Header.vue';
-import { useNamespace } from '@/views/resource-view/namespace/use-namespace';
+import BcsContent from '@/components/layout/Content.vue';
+import Row from '@/components/layout/Row.vue';
+import { useNamespace } from '@/views/cluster-manage/namespace/use-namespace';
 
 export default {
   name: 'CustomObjects',
   components: {
     GamestatefulsetSideslider,
-    Header,
+    BcsContent,
     ClusterSelect,
+    Row,
   },
   data() {
     return {

@@ -1,5 +1,10 @@
 <template>
-  <div class="biz-content form-resource" v-bkloading="{ isLoading }">
+  <BcsContent
+    :title="title"
+    :cluster-id="clusterId"
+    :namespace="isEdit ? namespace : ''"
+    class="form-resource"
+    v-bkloading="{ isLoading }">
     <bcs-popconfirm
       class="switch-button-pop"
       :title="$t('dashboard.workload.editor.yamlMode.confirm')"
@@ -9,8 +14,7 @@
       @confirm="handleSwitchMode">
       <FixedButton position="unset" :title="$t('dashboard.workload.editor.actions.switchToYAMLMode')" />
     </bcs-popconfirm>
-    <Header :title="title" />
-    <div class="form-resource-content" ref="editorWrapperRef">
+    <div :class="['form-resource-content', { 'h-full': showDiff }]" ref="editorWrapperRef">
       <BKForm
         v-model="schemaFormData"
         ref="bkuiFormRef"
@@ -22,7 +26,8 @@
           request
         }"
         form-type="vertical"
-        v-show="!showDiff">
+        v-show="!showDiff"
+        class="mb-[60px]">
       </BKForm>
       <div class="code-diff" v-bkloading="{ isLoading: diffLoading }" v-if="showDiff">
         <div class="top-operate">
@@ -116,7 +121,7 @@
         </CodeEditor>
       </template>
     </bcs-sideslider>
-  </div>
+  </BcsContent>
 </template>
 <script>
 import yamljs from 'js-yaml';
@@ -128,7 +133,7 @@ import FixedButton from './fixed-button.vue';
 import '@blueking/bkui-form/dist/bkui-form.css';
 import { CR_API_URL } from '@/api/base';
 import request from '@/api/request';
-import Header from '@/components/layout/Header.vue';
+import BcsContent from '@/components/layout/Content.vue';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 import fullScreen from '@/directives/full-screen';
 import $router from '@/router';
@@ -145,7 +150,7 @@ export default {
     BKForm,
     FixedButton,
     CodeEditor,
-    Header,
+    BcsContent,
   },
   directives: {
     'full-screen': fullScreen,
@@ -277,7 +282,7 @@ export default {
   methods: {
     handleSetHeight() {
       const bounding = this.$refs.editorWrapperRef?.getBoundingClientRect();
-      this.height = bounding ? bounding.height - 80 : 600;
+      this.height = bounding ? bounding.height - 72 : 600;
     },
     handleShowDiff() {
       const valid = this.$refs.bkuiFormRef?.validateForm();
@@ -507,6 +512,8 @@ export default {
 </script>
 <style lang="postcss" scoped>
 .form-resource {
+    display: flex;
+    flex-direction: column;
     padding-bottom: 0;
     height: 100%;
     /deep/ .bk-form-radio {
@@ -536,13 +543,12 @@ export default {
         margin-left: 0px;
     }
     .form-resource-content {
-        padding: 20px;
-        max-height: calc(100vh - 162px);
-        height: 100%;
         overflow: auto;
+        flex: 1;
     }
     .code-diff {
         width: 100%;
+        height: calc(100% - 84px);
         position: relative;
         .top-operate {
             display: flex;

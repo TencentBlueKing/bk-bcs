@@ -904,3 +904,8 @@ func (ng *NodeGroup) GetExternalNodeScript(group *proto.NodeGroup, internal bool
 	blog.Infof("GetExternalNodeScript[%s] successful", group.NodeGroupID)
 	return script, nil
 }
+
+// CheckResourcePoolQuota check resource pool quota when revise group limit
+func (ng *NodeGroup) CheckResourcePoolQuota(region, instanceType string, groupId string) error {
+	return nil
+}

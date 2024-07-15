@@ -229,7 +229,7 @@
     const list = props.value.slice();
 
     if ('children' in node) {
-      const parentNode = treeData.value.find((item) => item.id === node.id);
+      const parentNode = searchTreeData.value.find((item) => item.id === node.id);
       if (parentNode) {
         // 父节点
         parentNode.children.forEach((childNode) => {

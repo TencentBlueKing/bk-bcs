@@ -101,7 +101,7 @@ export default defineComponent({
   box-shadow: inset 0 -1px 0 0 #DCDEE5;
 }
 .content-wrapper {
-  max-height: calc(100vh - 275px);
+  max-height: calc(100% - 52px);
   overflow: auto;
 }
 .content {

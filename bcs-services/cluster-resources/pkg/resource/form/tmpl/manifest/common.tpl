@@ -19,7 +19,6 @@ metadata:
 
 {{- define "common.labelSlice2Map" -}}
 {{- range . }}
-# 跳过一些特殊的键，这些键需要走独立的 labels 渲染逻辑，比如 custom.gdeployMetadata
 {{- if ne .key "io.tencent.bcs.dev/deletion-allow" }}
 {{ .key | quote }}: {{ .value | default "" | quote }}
 {{- end }}

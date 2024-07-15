@@ -1,14 +1,12 @@
 bcs:
-  title: 容器管理平台 | 腾讯蓝鲸智云
-  name: 容器管理平台
   newVersion: '有版本更新, 是否刷新界面'
+  preVersion: 返回旧版
   TKEx:
     title: TKEx-IEG 容器平台
     welcome: 欢迎使用 TKEx-IEG 容器平台
     article1: TKEx-IEG 是公司 K8S Oteam 指定的 IEG 容器服务平台。
     article2: TKEx-IEG 依托于 TKE，聚焦打造游戏一站式微服务部署治理方案，并基于 IEG 各类游戏的特点，提供游戏特色的容器管理服务。
   intro:
-    title: 蓝鲸容器管理平台
     welcome: 欢迎使用蓝鲸容器管理平台
     article1: 蓝鲸容器管理平台（Blueking Container Service）定位于打造云原生技术和业务实际应用场景之间的桥梁；
     article2: 聚焦于复杂应用场景的容器化部署技术方案的研发、整合和产品化；
@@ -20,8 +18,6 @@ bcs:
     federation: 联邦集群
     kubeConfig: kubeConfig导入
     cloud: 云凭证导入
-    publicIcon: 共享
-    privateIcon: 专用
     platform: 平台创建
   msg:
     emptyHostResource: 您在当前业务下没有主机资源，请联系业务运维
@@ -100,7 +96,7 @@ nav:
   workload: 工作负载
   configuration: 配置
   storage: 存储
-  customResource: 自定义资源
+  tkexCRD: 游戏场景CRD
   cluster: 集群管理
   clusterList: 集群列表
   nodeList: 节点列表
@@ -197,8 +193,14 @@ metrics:
   podUsage: Pod使用率
   cpuRequestUsage:
     text: CPU装箱率
+    clusterDesc: >-
+      集群CPU装箱率 = 集群所有Pod CPU Request之和 /
+      集群所有节点CPU总核数（不包含Master节点），集群CPU装箱率越接近集群CPU使用率，集群CPU资源利用率越高 {0}
   memRequestUsage:
     text: 内存装箱率
+    clusterDesc: >-
+      集群内存装箱率 = 集群所有Pod 内存 Request之和 /
+      集群所有节点内存总大小（不包含Master节点），集群内存装箱率越接近集群内存使用率，集群内存资源利用率越高 {0}
   diskIOUsage: 磁盘IO
   diskIOUsage1: 磁盘IO总量
   diskIOUsage2: 磁盘IO使用率
@@ -247,6 +249,7 @@ generic:
       noMatchData: 无匹配数据
       searchEmpty:
         text: 搜索结果为空
+        subTitle: '可以尝试 调整关键词 或{action}'
     info:
       tips: 提示
       refreshAuth: 当前操作有权限，请刷新界面
@@ -271,6 +274,7 @@ generic:
     command: 多个命令用空格分隔，例如/bin/bash &quot;-c&quot
     searchIp: '输入IP搜索, 多个IP用逗号或空格隔开'
   button:
+    resetSearch: 调整筛选条件
     validate: 校验
     confirm: 确定
     confirm1: 确认
@@ -374,6 +378,7 @@ generic:
     start: 开始
     stop: 停止
     basicConfig: 基本配置
+    abnormal: 异常
   status:
     part_failure: 部分失败
     support: 支持
@@ -540,8 +545,8 @@ cluster:
   tips:
     highMetricData: 集群指标过载
     createK8SCluster: 新建 K8S 原生集群
-    clusterStatus: '集群状态: {0}'
   labels:
+    hideSharedCluster: 隐藏共享集群
     nameAndId: 集群名称/ID
     name: 集群名称
     status: 集群状态
@@ -597,7 +602,7 @@ cluster:
       cloudProvider:
         title: 公有云集群
         subTitle: 实现多云集群统一管理，降低业务管理成本
-        desc: 目前支持腾讯云、亚马逊云、谷歌云、微软云四种云服务商集群创建
+        desc: 目前支持腾讯云、亚马逊云、谷歌云、微软云、华为云五种云服务商集群创建
     label:
       system: 操作系统
       containerRuntime: 运行时组件
@@ -619,13 +624,6 @@ cluster:
       clusterVersion: 集群版本
       desc: 描述
       desc1: 集群描述
-      params:
-        text: 附加参数
-        dockerPath: Docker数据目录
-        dockerVersion: Docker版本
-        kubeletPath: kubelet数据目录
-        k8sServiceCIDR: 集群Service网段
-        k8sPodCIDR: 集群Pod网段
       region: 所属区域
       initNodeTemplate: 节点初始化模板
       Kubernetes:
@@ -658,6 +656,8 @@ cluster:
         deficiencyIpNumTips: 可用容器网络IP数量不足
         availableIpNum: '可用IP数量: {0}'
         availableIpNum2: '可用容器网络 IP {num} 个'
+        businessSpecificVPC: 业务专属VPC
+        publicVPC: 公共VPC
       networkSetting1:
         text: IP资源
         maxNodePodNum: Pod IP 数量
@@ -674,6 +674,8 @@ cluster:
           text: 单节点Pod数量上限
           desc: 单节点Pod数量上限一旦分配后将无法调整，请谨慎评估后再填写
         article3: 集群可添加节点数（包含Master节点与Node节点）= (IP数量 - Service的数量) / 单节点Pod数量上限
+        article1: '容器网络资源有限，请合理分配，当前容器网络配置下，集群最多可以添加 {count} 个节点'
+        article2: '当容器网络资源超额使用时，会触发容器网络自动扩容，扩容后集群最多可以添加 {count} 个节点'
       networkMode:
         text: 网络模式
         overlay:
@@ -693,7 +695,6 @@ cluster:
       coefficient: 系数
       cpuQuota: CPU配额(核)
       memQuota: 内存配额(GiB)
-      chooseMaster: 选择Master
       importType: 导入方式
       cloudToken: 云凭证
       kubeConfig: 集群kubeconfig
@@ -719,7 +720,6 @@ cluster:
       name: 请输入集群名称，不超过64个字符
       masterNum35: 仅支持3台或5台主机
       masterNum135: 仅支持1台、3台或5台主机
-      masterNum2: 仅支持奇数个服务器
       quota: CPU配额最少40核，内存配额最少40GiB
       regionDiff: '节点地域需要与集群地域保持一致，节点地域：{region1}，集群地域：{region2}'
       vpcDiff: '节点VPC需要与集群VPC保存一致，节点VPC：{vpc1}，集群VPC：{vpc2}'
@@ -729,18 +729,13 @@ cluster:
       addHost: 添加服务器
       confirmCreateCluster:
         text: 确认创建集群
-        text2: 确定，创建集群
         doc:
-          title: 请确认以下配置
-          article0: 服务器将安装容器服务相关组件
           article1: '该集群创建后单个节点最大允许创建 {num} 个pod（TKE内部需占用3个IP），创建后不允许调整，请慎重确认'
           article2: 为了保证集群环境标准化，创建集群会格式化数据盘/dev/vdb，盘内数据将被清除，请确认该数据盘内没有放置业务数据
           article3: '为了保证集群环境标准化，此操作会对 {ip} 等 {num} 个IP进行操作系统重装初始化和安装容器服务相关组件等操作'
       confirmCreate: 确定创建
       cancel: 我再想想
       remove: 移除
-      expandConfig: 展开更多设置
-      putAwayConfig: 收起更多设置
       createCloudToken: 新增凭证
       fileImport: 文件导入
       textKubeConfig: 可用性测试
@@ -863,6 +858,7 @@ cluster:
       text: 节点池
       validate:
         name: 名称不超过255个字符，仅支持中文、英文、数字、下划线，分隔符(-)及小数点
+        nodeQuotaMaxSize: '节点配额上限为{maximum}'
       label:
         nameAndID: 节点池名称 (ID)
         nodeQuota: 节点配额
@@ -906,6 +902,7 @@ cluster:
           label:
             purchaseDataDisk: 购买数据盘
             mountPath: 格式化并挂载于
+            huaweiMountPath: 挂载路径
             configurationFee:
               text: 配置费用
               unit: '￥{price}元/小时起'
@@ -930,6 +927,17 @@ cluster:
             hssd: 增强型SSD云硬盘
             balanced: 平衡性磁盘
             standard: 标准磁盘
+            Standard_LRS: 标准 HDD
+            StandardSSD_LRS: 标准 SSD
+            StandardSSD_ZRS: 标准 SSD_ZRS
+            Premium_LRS: 高级 SSD
+            PremiumV2_LRS: 高级 SSD v2
+            Premium_ZRS: 高级 SSD_ZRS
+            SATA: 普通IO云硬盘
+            SAS: 高IO云硬盘
+            SSD: 超高IO云硬盘
+            GPSSD: 通用性SSD云硬盘
+            ESSD: 极速IO云硬盘
           disk:
             system: 系统盘
             data: 数据盘
@@ -1164,9 +1172,6 @@ cluster:
       retry: 失败重试
       setLabel: 设置标签
       setTaint: 设置污点
-      addTag: 添加标签
-      saveSettings: 保存设置
-      cancel: 取消
       copy:
         text: 复制
         checkedIP: 复制勾选IP
@@ -1197,7 +1202,6 @@ cluster:
       batchSetLabel:
         text: 批量设置标签
         desc: 批量设置只展示相同Key的标签
-      batchSetTaint: 批量设置污点
     label:
       podCounts: Pod数量
       index: 序号
@@ -1310,18 +1314,8 @@ deploy:
   image:
     publicImage: 公共镜像
     marketImage: 市场镜像
-    counts: 次下载
     lastUpdatedBy: 最近更新人
     LastUpdatedAt: 最近更新时间
-    path: 仓库相对地址
-    repo: 地址
-    dev: 研发仓库
-    prod: 生产仓库
-    nomoreTag: 没有更多TAG
-    search: 输入镜像名搜索
-    sources: 来源：
-    detail: 详情
-    projectImage: 项目镜像
   templateset:
     restartPolicy: 重启策略
     killPolicy: Kill策略
@@ -1351,13 +1345,6 @@ deploy:
     unselectedGameDeployments: 还未选择GameDeployments
     oneNS: 批量删除功能只支持选中单个命名空间
     unselectedGameStatefulSets: 还未选择GameStatefulSets
-    hostname: 主机名称：
-    hostIP: 主机IP：
-    containerIP：: 容器IP：
-    containerID：: 容器ID：
-    image: 镜像：
-    network: 网络模式：
-    noportmapping: 该应用的网络模式无需端口映射
     templateset: 模板
     tempalte: 实例化
     createdBy: 创建人：
@@ -1838,21 +1825,6 @@ deploy:
     virtualHostName: 虚拟主机名
     sameHostnameMultiplePathsHint: 提示：同一个虚拟主机名可以有多个路径
     pathGroupMissingService: '{name}中路径组：关联的Service【{serviceName}】不存在，请重新绑定'
-    officialIngressNginx: K8S官方维护的ingress-nginx
-    newLoadBalancer: 新建LoadBalancer
-    searchClusterName: 输入集群名称搜索
-    chartNameAndVersion: Chart名称及版本
-    nodeIP: 节点IP
-    selectVersion: 选择版本
-    selectChartVersion: '选择chart:blueking-nginx-ingress对应的版本'
-    valuesContent: Values内容
-    editLoadBalancer: 编辑LoadBalancer
-    confirmDeleteLoadBalancer: 确定要删除LoadBalancer
-    enterHttpPort: 请输入http端口
-    enterHttpsPort: 请输入https端口
-    addNode: 请添加节点
-    selectNodeIP: 请选择节点IP
-    enterValuesContent: 请填写Values内容
     createFromTemplateOrHelmService: 请通过模板集或Helm创建Service
     belongingClusterNamespace: 所属集群/命名空间
     belongingCluster: '所属集群: '
@@ -1943,7 +1915,6 @@ plugin:
     title: Metric管理
     action:
       add: 前往添加
-      upgrade: 升级
       create: 新建Metric
     label:
       service: 选择Service
@@ -1958,36 +1929,14 @@ plugin:
     tips:
       noLabel: 当前Service没有设置Labels
       needLabel: 至少关联一个Label
-      promtheus: 支持 Prometheus 格式的 Metric
-    search: 输入名称，按Enter搜索
-    lastTime: 最后请求时间
-    last: 前
-    reqTime: 请求耗时
-    errorMsg: 错误信息
-    metricsNotFound: 无指标信息
-    metrics: 指标查询
-    upgradeTips: 升级大约需要 1~2 分钟，请勿重复提交；升级过程中 Prometheus 服务将会重启，数据无损失
-    hours: 小时
-    mins: 分
-    noData1: 无数据（新建 Metric 需要1~2分钟生效，请刷新），通过计算创建时间和当前时间判断
-    noData2: 无数据（请检查 Service 是否有关联的 Endpoints)
-    notEdited: 系统指标无法修改
-    notDeleted: 系统指标无法删除
-    unselected: 还未选择Metric
-    deleted: 删除Metric成功
-    systemNS: 当前页全是系统命名空间
     serviceNotFound: Service对象不存在
-    _serviceNotFound: service对象不存在
     edit: '编辑 {name}'
     multidelete: '确定删除 {name} 等 {count} 个Metric'
-    multidelete1: '确定删除所选的{len}个Metric？'
     delete: '确定删除Metric {name}'
-    _delete: 确定要删除Metric
   tools:
     standardLog: 标准日志
     title: 组件库
     appName: 应用名称
-    _appName: 应用名
     toolName: 组件名称
     intro: 简介
     _intro: 简介：
@@ -2024,53 +1973,13 @@ plugin:
     confirmUninstall: 确定卸载
     restart: 重新启用
     enable: 启用组件：
-    bklogconfig: 日志采集规则
     create: 新建规则
     appType: 应用类型
     all: 所有
-    logSRC: 日志源
-    matchLables: 匹配标签
-    matchPattern: 匹配表达式
-    log: 日志信息
-    allNS: 不选择表示所有命名空间
-    container: 指定容器
-    allContainers: 所有容器
-    label: 指定标签
-    enabled: 是否采集
-    stdoutTips: 如果不勾选，将不采集此容器的标准输出
-    stdoutDataid: 标准采集ID
-    custom: 是否自定义
-    dataIdDesc: >-
-      采集id对应数据平台的data id，不勾选平台将分配默认的data
-      id进行日志的清洗和入库。如果有特别的清洗和计算要求，用户可以填写自己的data id
-    path: 文件路径
-    delimiter: 多个以;分隔
-    fileDataid: 文件采集ID
-    inputName: 请输入应用名称，支持正则匹配
-    collectionPath: 采集路径
     containerName: 容器名
     clickToAdd: 点击增加
-    labels: 匹配标签(labels)
-    expressions: 匹配表达式(expressions)
-    podLabels: 是否自动添加Pod中的labels
-    pack: 是否打包上报
-    logDesc: 若单日志文件打印速度超过10条/秒，可以考虑开启日志打包上报功能以节约带宽并在一定程度上降低日志采集组件的资源占用
     ruleName: 规则名称
     _ruleName: 规则名
-    dsInfo: 日志源信息
-    dsType: 日志源类型
-    dataID: 采集ID
-    default: 默认
-    editRule: 编辑规则
-    selectAppType: 请选择应用类型
-    appNameError: 应用名称不合法
-    enterContainerName: 请输入容器名
-    stdinDataID: 请输入标准采集ID
-    fileDataID: 请输入文件采集ID
-    emptyTips: 匹配标签和匹配表达式不能同时为空
-    filePath: 请输入文件路径
-    success: 规则创建成功
-    upgraded: 规则更新成功
     cluster_ns: 集群/命名空间
     polarisInfo: Polaris信息
     syncStatus: 同步状态
@@ -2141,11 +2050,10 @@ dashboard:
     confirmDelete: 确认删除当前资源
     overview: 总览
     confirmSchedule: '确认{action}当前资源下所有Pod'
+  button:
+    createResource: 创建资源
   placeholder:
-    selectCRD: 选择CRD
     search1: 搜索名称
-    search2: 输入名称、创建人搜索
-    search3: 输入名称、创建人、IP搜索
   label:
     formMode: 表单模式
     yamlMode: YAML模式
@@ -2169,7 +2077,6 @@ dashboard:
       emptyNs: 请选择命名空间
       name: 命名空间名称只能包含小写字母、数字以及连字符(-)，连字符（-）后面必须接英文或者数字
       sharedClusterNs: '命名规则：{prefix}自定义名称'
-      sharedQuota: 共享集群需设置MEN、CPU配额，且两者最小值不小于0
       setMinMaxMemCpu: 请设置MEN、CPU配额，且两者最小值不小于0
     status:
       waitingApproval: 待审批
@@ -2422,6 +2329,50 @@ logCollector:
         tips: 如果添加多个标签，只会采集Pod上同时存在多个标签的容器日志
       workload: 按工作负载选择
       container: 按容器名选择
+view:
+  labels:
+    creator: 创建人
+    allNs: 全部命名空间
+    clusterAndNs: 集群/命名空间
+    saveAs: 另存为
+    name: 视图名称
+    all: 全部
+    resourceName: 资源名称
+    viewDataRange: 视图数据范围
+    editView: 编辑视图
+    newView: 新建视图
+    custom: 自定义
+  button:
+    addField: 添加条件
+    addQueryField: 添加查询条件
+    query: 查询
+    saveAsView: 另存为视图
+    moreResource: 更多资源
+    addCluster: 添加集群
+    edit: 编辑
+    clone: 克隆
+    delete: 删除
+    reset: 重置条件
+    confirmAndChangeView: 保存并进入新视图
+    clusterView: 集群视图
+    customView: 自定义视图
+    addCustomView: 添加自定义视图
+  tips:
+    selectMultiCluster: 批量选择集群
+    confirmDelete: 确定删除视图
+    sharedClusterDoNotSupportTheKind: 共享集群不支持创建该资源
+    editMode: 视图结果预览
+    invalidate: 部分条件已失效，请重新选择
+  placeholder:
+    searchCluster: 搜索集群名称
+    creator: 请输入创建人
+    resourceName: 请输入资源名称
+    searchView: 搜索视图
+    searchNameOrCreator: 搜索资源名称/创建人
+    searchNameOrCreatorOrIP: 搜索资源名称/创建人/IP
+    searchResourceKind: 搜索资源类型
+  status:
+    saveAs: 另存成功
 manualNode:
   title:
     source:
@@ -2514,6 +2465,7 @@ azureCloud:
     nameRegex: 仅支持英文、数字和字符(-)
     secretRegex: 仅支持英文、数字和字符(-或~)
   label:
+    loginUser: 登录用户
     create: 新建凭证
     cluster: 关联集群
     clusterType: 集群类型
@@ -2536,6 +2488,68 @@ importAzureCloud:
     zones: 可用区级集群
     regions: 区域级集群
     other: 其他
+huaweiCloud:
+  button:
+    create: 新建凭证
+    delete: 删除凭证
+  placeholder:
+    search: 搜索名称/SecretID/集群ID
+  tips:
+    nameRegex: 仅支持英文、数字和字符(-)
+  label:
+    clusterType: 集群类型
+    managed: 托管集群
+    aksDesc: >-
+      Kubernetes 集群的 Master 和 Etcd 会由 Huawei 团队集中管理和维护，集群管理员不需要关心集群
+      Master的管理和维护。
+    cluster: 关联集群
+    create: 新建凭证
+importHuaweiCloud:
+  title: 导入公有云集群 - 华为云
+  label:
+    clusterName: 集群名称
+    token: 云凭证
+    region: 所属区域
+    clusterID: 云集群 ID
+    nodemanArea: 管控区域
+    desc: 集群描述
+  button:
+    test: 连通性测试
+    import: 导入
+  clusterRegion:
+    zones: 可用区级集群
+    regions: 区域级集群
+    other: 其他
+amazonCloud:
+  button:
+    create: 新建凭证
+    delete: 删除凭证
+  placeholder:
+    search: 搜索名称/SecretID/集群ID
+  tips:
+    nameRegex: 仅支持英文、数字和字符(-)
+    secretKeyRegex: 仅支持英文、数字和字符(-或/)
+  label:
+    clusterType: 集群类型
+    managed: 托管集群
+    aksDesc: Kubernetes 集群的 Master 和 Etcd 会由 AWS 团队集中管理和维护，集群管理员不需要关心集群 Master的管理和维护。
+    cluster: 关联集群
+    create: 新建凭证
+importAmazonCloud:
+  title: 导入公有云集群 - aws云
+  label:
+    clusterName: 集群名称
+    token: 云凭证
+    region: 所属区域
+    clusterID: 云集群 ID
+    desc: 集群描述
+  button:
+    test: 连通性测试
+    import: 导入
+  clusterRegion:
+    zones: 可用区级集群
+    regions: 区域级集群
+    other: 其他
 googleCA:
   tips:
     zone: 目前只支持单可用区
@@ -2547,6 +2561,17 @@ googleCA:
     securityGroup: '节点池使用 VPC 防火墙规则控制节点实例的出/入流量，请前往{0}页面设置'
   button:
     vpcRule: VPC 防火墙规则
+azureCA:
+  tips:
+    zone: 目前只支持单可用区
+    system: >-
+      因为操作系统“包含 Containerd 的 Container-Optimized OS (cos_containerd)
+      （默认）”有诸多限制，蓝鲸组件依赖这些被限制的功能，目前只支持操作系统“包含 Containerd 的 Ubuntu
+      (ubuntu_containerd)”
+    dataDisk: 购买数据盘后添加节点后需要手工格式化与挂载磁盘
+  password:
+    set: 设置密码
+    confirm: 确认密码
 regions:
   asia: 亚洲
   australia: 澳洲
@@ -2577,6 +2602,12 @@ publicCloud:
       Azure Kubernetes Service (AKS)
       内置代码到云端管道以及护栏，能够帮助开发人员以最快速的方式开始开发和部署云原生应用。在本地、边缘和多云 Kubernetes
       集群试试统一的管理和治理。提供与 Azure 安全、身份、成本管理和迁移服务的互操作性。
+  huawei:
+    title: 华为云
+    desc: >-
+      Huawei Kubernetes Service
+      (HKS)允许用户在华为云平台上部署、管理和扩展容器化应用程序，无需对底层的计算资源进行复杂配置,
+      能够帮助开发者利用Kubernetes生态系统的强大功能，同时享受华为云提供的安全、可靠和高性能的基础设施。
 updateRecord:
   placeholder:
     search: 搜索 镜像/更新人

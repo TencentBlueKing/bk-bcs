@@ -15,8 +15,12 @@ package namespacedlb
 import (
 	"context"
 	"fmt"
+	"sync"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/eventer"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
@@ -29,10 +33,14 @@ import (
 const (
 	// IDKeySecretName secret name to store secret id and secret key
 	IDKeySecretName = "ingress-secret.networkextension.bkbcs.tencent.com"
+	// IDKeyConfigName config name to store controller config, include cloud secret
+	IDKeyConfigName = "ingress-config.networkextension.bkbcs.tencent.com"
 )
 
 // NamespacedLB client for cloud which is aware of listener namespace
 type NamespacedLB struct {
+	ctx context.Context
+
 	k8sClient client.Client
 
 	eventWatcher eventer.WatchEventInterface
@@ -40,49 +48,136 @@ type NamespacedLB struct {
 	// map for (namespace, cloud.LoadBalance)
 	nsClientSet map[string]cloud.LoadBalance
 
+	// map for (namespace, resource version)
+	ncClientResourceVersionMap map[string]string
+
 	// func for create cloud.LoadBalance
-	newLBFunc func(*k8scorev1.Secret, client.Client, eventer.WatchEventInterface) (cloud.LoadBalance, error)
+	newLBFunc func(map[string][]byte, client.Client, eventer.WatchEventInterface) (cloud.LoadBalance, error)
+
+	clientLock sync.Mutex
 }
 
 // NewNamespacedLB create namespaced lb client
-func NewNamespacedLB(k8sClient client.Client, eventWatcher eventer.WatchEventInterface,
-	newLBFunc func(secret *k8scorev1.Secret, cli client.Client, eventWatcher eventer.WatchEventInterface) (cloud.
+func NewNamespacedLB(ctx context.Context, k8sClient client.Client, eventWatcher eventer.WatchEventInterface,
+	newLBFunc func(data map[string][]byte, cli client.Client, eventWatcher eventer.WatchEventInterface) (cloud.
 		LoadBalance, error)) *NamespacedLB {
-	return &NamespacedLB{
-		k8sClient:    k8sClient,
-		eventWatcher: eventWatcher,
-		nsClientSet:  make(map[string]cloud.LoadBalance),
-		newLBFunc:    newLBFunc,
+	lb := &NamespacedLB{
+		k8sClient:                  k8sClient,
+		eventWatcher:               eventWatcher,
+		nsClientSet:                make(map[string]cloud.LoadBalance),
+		ncClientResourceVersionMap: make(map[string]string),
+		newLBFunc:                  newLBFunc,
+	}
+
+	go func() {
+		ticker := time.NewTicker(time.Minute)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ticker.C:
+				lb.reloadNsClient()
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
+
+	return lb
+}
+
+func (nc *NamespacedLB) reloadNsClient() {
+	nc.clientLock.Lock()
+	defer nc.clientLock.Unlock()
+	for ns := range nc.nsClientSet {
+		cloudSecret, resourceVersion, err := nc.getNsSecret(ns)
+		if err != nil {
+			blog.Errorf("get namespace[%s] cloud secret failed, err: %s", ns, err.Error())
+			continue
+		}
+
+		// 如果secret发生变化， 需要重新重新初始化client
+		if resourceVersion != nc.ncClientResourceVersionMap[ns] {
+			newClient, err1 := nc.newLBFunc(cloudSecret, nc.k8sClient, nc.eventWatcher)
+			if err1 != nil {
+				blog.Errorf("create client for namespace [%s] failed, err %s", ns, err.Error())
+				continue
+			}
+
+			nc.nsClientSet[ns] = newClient
+			nc.ncClientResourceVersionMap[ns] = resourceVersion
+			blog.Infof("namespace[%s] cloud secret changed, reload client", ns)
+		}
 	}
 }
 
-// init client for namespace
-func (nc *NamespacedLB) initNsClient(ns string) (cloud.LoadBalance, error) {
+func (nc *NamespacedLB) getNsSecret(ns string) (map[string][]byte, string, error) {
 	var err error
+	var foundSecret, foundConfig = true, true
 	tmpSecret := &k8scorev1.Secret{}
 	err = nc.k8sClient.Get(context.TODO(), k8stypes.NamespacedName{
 		Name:      IDKeySecretName,
 		Namespace: ns,
 	}, tmpSecret)
 	if err != nil {
-		return nil, fmt.Errorf("get secret %s/%s failed, err %s", IDKeySecretName, ns, err.Error())
+		foundSecret = false
+		if !k8serrors.IsNotFound(err) {
+			return nil, "", fmt.Errorf("get secret %s/%s failed, err %s", IDKeySecretName, ns, err.Error())
+		}
 	}
-	newClient, err := nc.newLBFunc(tmpSecret, nc.k8sClient, nc.eventWatcher)
+
+	controllerConfig := &networkextensionv1.ControllerConfig{}
+	err = nc.k8sClient.Get(context.TODO(), k8stypes.NamespacedName{
+		Name:      IDKeyConfigName,
+		Namespace: ns,
+	}, controllerConfig)
 	if err != nil {
-		return nil, fmt.Errorf("create client for ns %s failed, err %s", ns, err.Error())
+		foundConfig = false
+		if !k8serrors.IsNotFound(err) {
+			return nil, "", fmt.Errorf("get controller config %s/%s failed, err %s", IDKeyConfigName, ns, err.Error())
+		}
 	}
-	return newClient, nil
+
+	var cloudSecret map[string][]byte
+	var resourceVersion string
+	if foundSecret {
+		cloudSecret = tmpSecret.Data
+		resourceVersion = tmpSecret.GetResourceVersion()
+	} else if foundConfig {
+		cloudSecret = controllerConfig.Spec.Secret
+		resourceVersion = controllerConfig.GetResourceVersion()
+	} else {
+		return nil, "", fmt.Errorf("not found secret or controllerConfig in namespace %s, "+
+			"please create secret '%s' or controllerConfig %s in namespace", ns, IDKeySecretName, IDKeyConfigName)
+	}
+	return cloudSecret, resourceVersion, nil
+}
+
+// init client for namespace
+func (nc *NamespacedLB) initNsClient(ns string) (cloud.LoadBalance, string, error) {
+	cloudSecret, resourceVersion, err := nc.getNsSecret(ns)
+	if err != nil {
+		return nil, "", err
+	}
+
+	newClient, err := nc.newLBFunc(cloudSecret, nc.k8sClient, nc.eventWatcher)
+	if err != nil {
+		return nil, "", fmt.Errorf("create client for ns %s failed, err %s", ns, err.Error())
+	}
+	return newClient, resourceVersion, nil
 }
 
 // get client for certain namespace, if it is not existed, try to create one
 func (nc *NamespacedLB) getNsClient(ns string) (cloud.LoadBalance, error) {
 	tmpClient, ok := nc.nsClientSet[ns]
 	if !ok {
-		newClient, err := nc.initNsClient(ns)
+		newClient, resourceVersion, err := nc.initNsClient(ns)
 		if err != nil {
 			return nil, err
 		}
+		nc.clientLock.Lock()
+		defer nc.clientLock.Unlock()
 		nc.nsClientSet[ns] = newClient
+		nc.ncClientResourceVersionMap[ns] = resourceVersion
 		return newClient, nil
 	}
 	return tmpClient, nil

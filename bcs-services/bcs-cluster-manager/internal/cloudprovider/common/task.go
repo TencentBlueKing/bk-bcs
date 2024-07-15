@@ -55,6 +55,8 @@ func RegisterCommonActions() map[string]interface{} {
 		cloudprovider.LadderResourcePoolLabelAction:      EmptyAction,
 		cloudprovider.CheckClusterCleanNodesAction:       CheckClusterCleanNodsTask,
 		cloudprovider.RemoveClusterNodesInnerTaintAction: RemoveClusterNodesInnerTaintTask,
+		cloudprovider.AddNodesShieldAlarmAction:          AddNodesShieldAlarmTask,
+		cloudprovider.CheckNodeIpsInCmdbAction:           CheckNodeIpsInCMDBTask,
 	}
 }
 
@@ -109,7 +111,7 @@ func RunBKsopsJob(taskID string, stepName string) error {
 	}
 
 	// render constants dynamic value parameter
-	consMap, err := renderDynamicParaToConstants(state.Task, constants)
+	consMap, err := RenderDynamicParaToConstants(state.Task, constants)
 	if err != nil {
 		errMsg := fmt.Sprintf("RunBKsopsJob[%s] unmarshal constants failed[%v]", taskID, err)
 		blog.Errorf(errMsg)
@@ -128,15 +130,15 @@ func RunBKsopsJob(taskID string, stepName string) error {
 	timeOutCtx, cancel := context.WithTimeout(ctx, time.Minute*60)
 	defer cancel()
 
-	taskUrl, err := execBkSopsTask(timeOutCtx, createBkSopsTaskParas{
-		url:            url,
-		bizID:          bizID,
-		templateID:     templateID,
-		operator:       operator,
-		templateSource: templateSource,
-		taskName:       taskName,
-		constants:      consMap,
-		stepName:       stepName,
+	taskUrl, err := ExecBkSopsTask(timeOutCtx, CreateBkSopsTaskParas{
+		Url:            url,
+		BizID:          bizID,
+		TemplateID:     templateID,
+		Operator:       operator,
+		TemplateSource: templateSource,
+		TaskName:       taskName,
+		Constants:      consMap,
+		StepName:       stepName,
 	})
 	if err != nil {
 		state.TaskUrl = taskUrl
@@ -153,8 +155,8 @@ func RunBKsopsJob(taskID string, stepName string) error {
 	return nil
 }
 
-// renderDynamicParaToConstants extract constants parameter & inject dynamic value
-func renderDynamicParaToConstants(task *cmproto.Task, constants string) (map[string]string, error) {
+// RenderDynamicParaToConstants extract constants parameter & inject dynamic value
+func RenderDynamicParaToConstants(task *cmproto.Task, constants string) (map[string]string, error) {
 	consMap := map[string]string{}
 	err := json.Unmarshal([]byte(constants), &consMap)
 	if err != nil {
@@ -174,7 +176,8 @@ func renderDynamicParaToConstants(task *cmproto.Task, constants string) (map[str
 	return consMap, nil
 }
 
-func execBkSopsTask(ctx context.Context, paras createBkSopsTaskParas) (string, error) {
+// ExecBkSopsTask exec bksops task
+func ExecBkSopsTask(ctx context.Context, paras CreateBkSopsTaskParas) (string, error) {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
 	taskResp, err := createBkSopsTask(ctx, paras)
@@ -185,13 +188,13 @@ func execBkSopsTask(ctx context.Context, paras createBkSopsTaskParas) (string, e
 	blog.Infof("execBkSopsTask[%s] createBkSopsTask successful: taskID[%v]", taskID, taskResp.TaskID)
 
 	// update bksops taskUrl to task
-	_ = cloudprovider.SetTaskStepParas(taskID, paras.stepName, cloudprovider.BkSopsTaskUrlKey.String(),
+	_ = cloudprovider.SetTaskStepParas(taskID, paras.StepName, cloudprovider.BkSopsTaskUrlKey.String(),
 		taskResp.TaskURL)
 
 	startTaskReq := startBkSopsTaskParas{
-		bizID:    paras.bizID,
+		bizID:    paras.BizID,
 		taskID:   taskResp.TaskID,
-		operator: paras.operator,
+		operator: paras.Operator,
 	}
 	err = startBkSopsTask(ctx, startTaskReq)
 	if err != nil {
@@ -201,9 +204,9 @@ func execBkSopsTask(ctx context.Context, paras createBkSopsTaskParas) (string, e
 	blog.Infof("execBkSopsTask[%s] startBkSopsTask successful", taskID)
 
 	getTaskStatusReq := &TaskPathParas{
-		BkBizID:  paras.bizID,
+		BkBizID:  paras.BizID,
 		TaskID:   fmt.Sprintf("%d", taskResp.TaskID),
-		Operator: paras.operator,
+		Operator: paras.Operator,
 	}
 
 	err = loop.LoopDoFunc(ctx, func() error {
@@ -246,17 +249,18 @@ func execBkSopsTask(ctx context.Context, paras createBkSopsTaskParas) (string, e
 	return taskResp.TaskURL, nil
 }
 
-type createBkSopsTaskParas struct {
-	url        string
-	bizID      string
-	templateID string
-	operator   string
+// CreateBkSopsTaskParas create sops task paras
+type CreateBkSopsTaskParas struct {
+	Url        string
+	BizID      string
+	TemplateID string
+	Operator   string
 
-	templateSource string
-	taskName       string
-	constants      map[string]string
+	TemplateSource string
+	TaskName       string
+	Constants      map[string]string
 
-	stepName string
+	StepName string
 }
 
 type startBkSopsTaskParas struct {
@@ -266,19 +270,19 @@ type startBkSopsTaskParas struct {
 }
 
 // createBkSopsTask 从模板创建标准运维任务
-func createBkSopsTask(ctx context.Context, paras createBkSopsTaskParas) (*ResData, error) {
+func createBkSopsTask(ctx context.Context, paras CreateBkSopsTaskParas) (*ResData, error) {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
 	// create task
 	pathParas := &CreateTaskPathParas{
-		BkBizID:    paras.bizID,
-		TemplateID: paras.templateID,
-		Operator:   paras.operator,
+		BkBizID:    paras.BizID,
+		TemplateID: paras.TemplateID,
+		Operator:   paras.Operator,
 	}
 	createTaskReq := &CreateTaskRequest{
-		TemplateSource: paras.templateSource,
-		TaskName:       paras.taskName,
-		Constants:      paras.constants,
+		TemplateSource: paras.TemplateSource,
+		TaskName:       paras.TaskName,
+		Constants:      paras.Constants,
 	}
 
 	var (

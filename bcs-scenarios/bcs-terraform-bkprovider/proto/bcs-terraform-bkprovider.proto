@@ -99,6 +99,37 @@ service BcsTerraformBkProvider {
       summary : "获取Job详情"
     };
   }
+
+  rpc RegisterBkWhitelist(RegisterBkWhitelistRequest) returns(RegisterBkWhitelistResponse) {
+    option (google.api.http) = {
+      post: "/terraform-bkprovider/v1/register_bk_whitelist"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "注册出口IP到蓝鲸白名单"
+      summary : "注册出口IP到蓝鲸白名单"
+    };
+  }
+
+  rpc ListBkWhitelist(ListBkWhiteListRequest) returns(ListBkWhiteListResponse) {
+    option (google.api.http) = {
+      get: "/terraform-bkprovider/v1/list_bk_whitelist"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "查询蓝鲸白名单"
+      summary : "查询蓝鲸白名单"
+    };
+  }
+
+  rpc GetBkOuterIP(GetBkOuterIPRequest) returns(GetBkOuterIPResponse) {
+    option (google.api.http) = {
+      get: "/terraform-bkprovider/v1/get_bk_outer_ip"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "获取蓝鲸出口IP"
+      summary : "获取蓝鲸出口IP"
+    };
+  }
 }
 
 message InstallJobRequest {
@@ -149,6 +180,10 @@ message ListHostRequest {
   int32 pagesize = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "pagesize",
     description: "分页大小，默认为10"
+  }];
+  repeated int32 bk_biz_ids = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "bk_biz_ids",
+    description: "蓝鲸业务ID"
   }];
 }
 
@@ -691,4 +726,86 @@ message List {
   int64 job_id = 10;
   string status = 11;
   string status_display = 12;
+}
+
+message RegisterBkWhitelistRequest{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "RegisterBkWhitelistRequest"
+      description : "注册出口IP到蓝鲸白名单"
+    }
+  };
+
+  repeated string ip_list = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "ip_list",
+    description: "出口IP"
+  }];
+  string biz_name = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "biz_name",
+    description: "业务名称， 用于白名单备注 "
+  }];
+}
+
+message RegisterBkWhitelistResponse{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "RegisterBkWhitelistResponse"
+      description : "注册出口IP到蓝鲸白名单"
+    }
+  };
+
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+  string message = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+}
+
+message GetBkOuterIPRequest{}
+message GetBkOuterIPResponse{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetBkOuterIPResponse"
+      description : "蓝鲸出口IP"
+    }
+  };
+
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+  string message = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  repeated string data = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "蓝鲸出口IP"
+  }];
+}
+
+message ListBkWhiteListRequest{}
+message ListBkWhiteListResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListBkWhiteListResponse"
+      description : "蓝鲸白名单"
+    }
+  };
+
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+  string message = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  repeated string data = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "白名单IP"
+  }];
 }

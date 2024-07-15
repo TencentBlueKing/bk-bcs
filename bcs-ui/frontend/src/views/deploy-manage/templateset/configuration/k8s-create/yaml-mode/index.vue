@@ -1,54 +1,105 @@
 <template>
-    <div class="biz-content">
-        <Header :style="{ marginBottom: isNewTemplate ? '0px' : '70px' }">
-            <i class="bcs-icon bcs-icon-arrows-left" @click="handleBeforeLeave"></i>
-            <div class="biz-templateset-title">
-                <span v-show="!isEditName">{{curTemplate.name}}</span>
-                <input
-                    type="text"
-                    :placeholder="$t('deploy.templateset.charLimit30')"
-                    maxlength="30"
-                    class="bk-form-input"
-                    v-model="editTemplate.name"
-                    v-if="isEditName"
-                    ref="templateNameInput"
-                    @blur="saveTemplate"
-                    @keyup.enter="saveTemplate" />
-                <a 
-                    href="javascript:void(0)" 
-                    class="bk-text-button bk-default ml5 mr5" 
-                    v-show="!isEditName" 
-                    @click="editTemplateName">
-                    <i class="bcs-icon bcs-icon-edit"></i>
-                </a>
-            </div>
-            <div class="biz-templateset-desc">
-                <span v-show="!isEditDesc">{{curTemplate.desc}}</span>
-                <input
-                    type="text"
-                    :placeholder="$t('deploy.templateset.charLimit50')"
-                    maxlength="50"
-                    class="bk-form-input"
-                    v-model="editTemplate.desc"
-                    v-if="isEditDesc"
-                    ref="templateDescInput"
-                    @blur="saveTemplate"
-                    @keyup.enter="saveTemplate" />
-                <a href="javascript:void(0)" class="bk-text-button bk-default" v-show="!isEditDesc" @click="editTemplateDesc" @keyup.enter="saveTemplate">
-                    <i class="bcs-icon bcs-icon-edit"></i>
-                </a>
-            </div>
-            <template #right>
-                <div>
-                    <!-- 如果不是新增状态的模板集并且有权限编辑才可查看加锁状态 -->
-                    <template v-if="String(templateId) !== '0'">
-                        <template v-if="templateLockStatus.isLocked">
-                            <template v-if="templateLockStatus.isCurLocker">
+    <BcsContent :padding="0">
+        <template #header>
+            <ContentHeader :style="{ marginBottom: isNewTemplate ? '0px' : '70px' }">
+                <i class="bcs-icon bcs-icon-arrows-left" @click="handleBeforeLeave"></i>
+                <div class="biz-templateset-title">
+                    <span v-show="!isEditName">{{curTemplate.name}}</span>
+                    <input
+                        type="text"
+                        :placeholder="$t('deploy.templateset.charLimit30')"
+                        maxlength="30"
+                        class="bk-form-input"
+                        v-model="editTemplate.name"
+                        v-if="isEditName"
+                        ref="templateNameInput"
+                        @blur="saveTemplate"
+                        @keyup.enter="saveTemplate" />
+                    <a 
+                        href="javascript:void(0)" 
+                        class="bk-text-button bk-default ml5 mr5" 
+                        v-show="!isEditName" 
+                        @click="editTemplateName">
+                        <i class="bcs-icon bcs-icon-edit"></i>
+                    </a>
+                </div>
+                <div class="biz-templateset-desc">
+                    <span v-show="!isEditDesc">{{curTemplate.desc}}</span>
+                    <input
+                        type="text"
+                        :placeholder="$t('deploy.templateset.charLimit50')"
+                        maxlength="50"
+                        class="bk-form-input"
+                        v-model="editTemplate.desc"
+                        v-if="isEditDesc"
+                        ref="templateDescInput"
+                        @blur="saveTemplate"
+                        @keyup.enter="saveTemplate" />
+                    <a href="javascript:void(0)" class="bk-text-button bk-default" v-show="!isEditDesc" @click="editTemplateDesc" @keyup.enter="saveTemplate">
+                        <i class="bcs-icon bcs-icon-edit"></i>
+                    </a>
+                </div>
+                <template #right>
+                    <div>
+                        <!-- 如果不是新增状态的模板集并且有权限编辑才可查看加锁状态 -->
+                        <template v-if="String(templateId) !== '0'">
+                            <template v-if="templateLockStatus.isLocked">
+                                <template v-if="templateLockStatus.isCurLocker">
+                                    <div class="biz-lock-box">
+                                        <div class="lock-wrapper warning">
+                                            <i class="bcs-icon bcs-icon-info-circle-shape"></i>
+                                            <strong class="desc">
+                                                {{$t('deploy.templateset.templateSetLocked')}}
+                                                <span v-if="lateShowVersionName">
+                                                    （{{$t('deploy.templateset.currentVersionNumber')}}：{{lateShowVersionName}}
+                                                    <bcs-popover
+                                                        :delay="300"
+                                                        :content="displayVersionNotes || '--'"
+                                                        style="padding-left: 6px;"
+                                                        placement="bottom">
+                                                        <span style="color: #3a84ff;">{{$t('deploy.templateset.versionDescription')}}</span>
+                                                    </bcs-popover>）
+                                                </span>
+                                            </strong>
+                                            <div class="action" @click="updateTemplateLockStatus">
+                                                <bk-switcher
+                                                    :selected="templateLockStatus.isLocked"
+                                                    size="small">
+                                                </bk-switcher>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                                <template v-else>
+                                    <div class="biz-lock-box">
+                                        <div class="lock-wrapper warning">
+                                            <i class="bcs-icon bcs-icon-info-circle-shape"></i>
+                                            <strong class="desc">
+                                                {{$t('deploy.templateset.msg.multiOperator', templateLockStatus)}}
+                                                <span v-if="lateShowVersionName">
+                                                    （{{$t('deploy.templateset.currentVersionNumber')}}：{{lateShowVersionName}}
+                                                    <bcs-popover
+                                                        :delay="300"
+                                                        :content="displayVersionNotes || '--'"
+                                                        style="padding-left: 6px;"
+                                                        placement="bottom">
+                                                        <span style="color: #3a84ff;">{{$t('deploy.templateset.versionDescription')}}</span>
+                                                    </bcs-popover>）
+                                                </span>
+                                            </strong>
+                                            <div class="action">
+                                                <a href="javascript: void(0);" class="bk-text-button" @click="reloadTemplateLockStatus">{{$t('deploy.templateset.clickRefresh')}}</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </template>
+                            <template v-else>
                                 <div class="biz-lock-box">
-                                    <div class="lock-wrapper warning">
+                                    <div class="lock-wrapper">
                                         <i class="bcs-icon bcs-icon-info-circle-shape"></i>
                                         <strong class="desc">
-                                            {{$t('deploy.templateset.templateSetLocked')}}
+                                            {{$t('deploy.templateset.protectionWhileEditing')}}
                                             <span v-if="lateShowVersionName">
                                                 （{{$t('deploy.templateset.currentVersionNumber')}}：{{lateShowVersionName}}
                                                 <bcs-popover
@@ -69,109 +120,60 @@
                                     </div>
                                 </div>
                             </template>
-                            <template v-else>
-                                <div class="biz-lock-box">
-                                    <div class="lock-wrapper warning">
-                                        <i class="bcs-icon bcs-icon-info-circle-shape"></i>
-                                        <strong class="desc">
-                                            {{$t('deploy.templateset.msg.multiOperator', templateLockStatus)}}
-                                            <span v-if="lateShowVersionName">
-                                                （{{$t('deploy.templateset.currentVersionNumber')}}：{{lateShowVersionName}}
-                                                <bcs-popover
-                                                    :delay="300"
-                                                    :content="displayVersionNotes || '--'"
-                                                    style="padding-left: 6px;"
-                                                    placement="bottom">
-                                                    <span style="color: #3a84ff;">{{$t('deploy.templateset.versionDescription')}}</span>
-                                                </bcs-popover>）
-                                            </span>
-                                        </strong>
-                                        <div class="action">
-                                            <a href="javascript: void(0);" class="bk-text-button" @click="reloadTemplateLockStatus">{{$t('deploy.templateset.clickRefresh')}}</a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </template>
+                        </template>
+
+                        <!-- 如果模板集没有加锁或者当前用户是加锁者才可以操作 -->
+                        <template v-if="templateLockStatus.isLocked && !templateLockStatus.isCurLocker">
+                            <bk-button type="primary" disabled>{{$t('generic.button.save')}}</bk-button>
                         </template>
                         <template v-else>
-                            <div class="biz-lock-box">
-                                <div class="lock-wrapper">
-                                    <i class="bcs-icon bcs-icon-info-circle-shape"></i>
-                                    <strong class="desc">
-                                        {{$t('deploy.templateset.protectionWhileEditing')}}
-                                        <span v-if="lateShowVersionName">
-                                            （{{$t('deploy.templateset.currentVersionNumber')}}：{{lateShowVersionName}}
-                                            <bcs-popover
-                                                :delay="300"
-                                                :content="displayVersionNotes || '--'"
-                                                style="padding-left: 6px;"
-                                                placement="bottom">
-                                                <span style="color: #3a84ff;">{{$t('deploy.templateset.versionDescription')}}</span>
-                                            </bcs-popover>）
-                                        </span>
-                                    </strong>
-                                    <div class="action" @click="updateTemplateLockStatus">
-                                        <bk-switcher
-                                            :selected="templateLockStatus.isLocked"
-                                            size="small">
-                                        </bk-switcher>
-                                    </div>
-                                </div>
-                            </div>
+                            <bk-button type="primary"
+                                v-authority="{
+                                    actionId: isNewTemplate ? 'templateset_create' : 'templateset_update',
+                                    resourceName: curTemplate.name,
+                                    permCtx: {
+                                        resource_type: isNewTemplate ? 'project' : 'templateset',
+                                        project_id: projectId,
+                                        template_id: isNewTemplate ? undefined : Number(curTemplate.id)
+                                    }
+                                }"
+                                @click="handleSaveTemplate"
+                            >{{$t('generic.button.save')}}</bk-button>
                         </template>
-                    </template>
 
-                    <!-- 如果模板集没有加锁或者当前用户是加锁者才可以操作 -->
-                    <template v-if="templateLockStatus.isLocked && !templateLockStatus.isCurLocker">
-                        <bk-button type="primary" disabled>{{$t('generic.button.save')}}</bk-button>
-                    </template>
-                    <template v-else>
-                        <bk-button type="primary"
+                        <bk-button :disabled="templateId === 0"
                             v-authority="{
-                                actionId: isNewTemplate ? 'templateset_create' : 'templateset_update',
+                                clickable: isNewTemplate ? true : getAuthority('templateset_instantiate', Number(curTemplate.id)),
+                                actionId: 'templateset_instantiate',
                                 resourceName: curTemplate.name,
+                                disablePerms: true,
                                 permCtx: {
-                                    resource_type: isNewTemplate ? 'project' : 'templateset',
                                     project_id: projectId,
-                                    template_id: isNewTemplate ? undefined : Number(curTemplate.id)
+                                    template_id: Number(curTemplate.id)
                                 }
                             }"
-                            @click="handleSaveTemplate"
-                        >{{$t('generic.button.save')}}</bk-button>
-                    </template>
+                            @click="createInstance">
+                            {{$t('deploy.templateset.tempalte')}}
+                        </bk-button>
 
-                    <bk-button :disabled="templateId === 0"
-                        v-authority="{
-                            clickable: isNewTemplate ? true : getAuthority('templateset_instantiate', Number(curTemplate.id)),
-                            actionId: 'templateset_instantiate',
-                            resourceName: curTemplate.name,
-                            disablePerms: true,
-                            permCtx: {
-                                project_id: projectId,
-                                template_id: Number(curTemplate.id)
-                            }
-                        }"
-                        @click="createInstance">
-                        {{$t('deploy.templateset.tempalte')}}
-                    </bk-button>
-
-                    <bk-button :disabled="!allVersionList.length"
-                        v-authority="{
-                            clickable: isNewTemplate ? true : getAuthority('templateset_view', Number(curTemplate.id)),
-                            actionId: 'templateset_view',
-                            resourceName: curTemplate.name,
-                            disablePerms: true,
-                            permCtx: {
-                                project_id: projectId,
-                                template_id: Number(curTemplate.id)
-                            }
-                        }"
-                        @click="showVersionPanel"
-                    >{{$t('deploy.templateset.versionList')}}</bk-button>
-                </div>
-            </template>
-        </Header>
-        <div class="bcs-content-wrapper">
+                        <bk-button :disabled="!allVersionList.length"
+                            v-authority="{
+                                clickable: isNewTemplate ? true : getAuthority('templateset_view', Number(curTemplate.id)),
+                                actionId: 'templateset_view',
+                                resourceName: curTemplate.name,
+                                disablePerms: true,
+                                permCtx: {
+                                    project_id: projectId,
+                                    template_id: Number(curTemplate.id)
+                                }
+                            }"
+                            @click="showVersionPanel"
+                        >{{$t('deploy.templateset.versionList')}}</bk-button>
+                    </div>
+                </template>
+            </ContentHeader>
+        </template>
+        <div>
             <p class="biz-tip m20 mb15">
                 {{$t('deploy.templateset.namespaceAutogenerated')}}
             </p>
@@ -567,10 +569,10 @@
                 </div>
             </template>
         </bk-dialog>
-    </div>
+    </BcsContent>
 </template>
 
-<script>
+<script lang="jsx">
     import yamljs from 'js-yaml'
     import MonacoEditor from './editor'
     // import CollapseTransition from '@/components/menu/collapse-transition'
@@ -582,7 +584,8 @@
     import { Archive } from 'libarchive.js/main.js'
     import path2tree from '@/common/path2tree'
     import resizer from '@/components/resize'
-    import Header from '@/components/layout/Header.vue';
+    import BcsContent from '@/components/layout/Content.vue';
+    import ContentHeader from '@/components/layout/Header.vue';
 
     Archive.init({
         workerUrl: `${window.BK_STATIC_URL}/static/archive-worker/worker-bundle.js`
@@ -591,7 +594,8 @@
         components: {
             MonacoEditor,
             resizer,
-            Header
+            BcsContent,
+            ContentHeader
         },
         directives: {
             clickoutside

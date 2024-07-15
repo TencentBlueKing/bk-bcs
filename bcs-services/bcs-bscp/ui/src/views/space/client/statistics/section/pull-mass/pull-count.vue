@@ -1,28 +1,44 @@
 <template>
   <Teleport :disabled="!isOpenFullScreen" to="body">
-    <div :class="{ fullscreen: isOpenFullScreen }">
-      <Card :title="$t('拉取数量趋势')" :height="360">
+    <div
+      :class="{ fullscreen: isOpenFullScreen }"
+      @mouseenter="isShowOperationBtn = true"
+      @mouseleave="isShowOperationBtn = false">
+      <Card :title="props.title" :height="360" style="margin-bottom: 16px">
         <template #operation>
           <OperationBtn
+            v-show="isShowOperationBtn"
             :is-open-full-screen="isOpenFullScreen"
             @refresh="loadChartData"
             @toggle-full-screen="isOpenFullScreen = !isOpenFullScreen" />
         </template>
         <template #head-suffix>
-          <bk-select v-model="selectTime" class="time-selector" :clearable="false">
+          <bk-select v-model="selectTime" class="time-selector" :filterable="false" :clearable="false">
             <bk-option v-for="item in selectorTimeList" :id="item.value" :key="item.value" :name="item.label" />
           </bk-select>
         </template>
         <bk-loading class="loading-wrap" :loading="loading">
-          <div v-if="data.time.length" ref="canvasRef" class="canvas-wrap">
-            <Tooltip ref="tooltipRef" @jump="jumpToSearch" />
+          <div v-if="!isDataEmpty" ref="canvasRef" class="canvas-wrap">
+            <Tooltip ref="tooltipRef" :is-custom="true" @jump="jumpToSearch">
+              <div class="tooltips-list">
+                <div
+                  v-for="item in customTooltip"
+                  :key="item.x"
+                  class="tooltips-item"
+                  @click="handleClickTooltipsItem(item)">
+                  <div class="tooltip-left">
+                    <div class="marker" :style="{ background: item.color }"></div>
+                    <div class="name">{{ item.name }}</div>
+                  </div>
+                  <div class="tooltip-right">
+                    <div class="value">{{ item.value }}</div>
+                    <Share class="icon" />
+                  </div>
+                </div>
+              </div>
+            </Tooltip>
           </div>
-          <bk-exception
-            v-else
-            class="exception-wrap-item exception-part"
-            type="empty"
-            scene="part"
-            :description="$t('暂无数据')">
+          <bk-exception v-else type="empty" scene="part" :description="$t('暂无数据')">
             <template #type>
               <span class="bk-bscp-icon icon-bar-chart exception-icon" />
             </template>
@@ -34,7 +50,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref, onMounted, watch } from 'vue';
+  import { ref, onMounted, watch, computed } from 'vue';
   import Card from '../../components/card.vue';
   import OperationBtn from '../../components/operation-btn.vue';
   import { DualAxes } from '@antv/g2plot';
@@ -45,6 +61,7 @@
   import { storeToRefs } from 'pinia';
   import { useRouter } from 'vue-router';
   import { useI18n } from 'vue-i18n';
+  import { Share } from 'bkui-vue/lib/icon';
 
   const { t } = useI18n();
 
@@ -56,6 +73,8 @@
   const props = defineProps<{
     bkBizId: string;
     appId: number;
+    title: string;
+    isDuplicates: boolean;
   }>();
 
   let dualAxes: DualAxes | null;
@@ -82,12 +101,17 @@
   });
   const loading = ref(false);
   const isOpenFullScreen = ref(false);
+  const jumpSearchTime = ref('');
+  const isShowOperationBtn = ref(false);
+  const customTooltip = ref();
+
+  const isDataEmpty = computed(() => !data.value.time.some((item) => item.count > 0));
 
   watch([() => selectTime.value, () => props.appId], async () => {
     await loadChartData();
-    if (data.value.time.length) {
+    if (!isDataEmpty.value) {
       if (dualAxes) {
-        dualAxes.changeData([data.value.time_and_type, data.value.time]);
+        dualAxes.changeData([data.value.time, data.value.time_and_type]);
       } else {
         initChart();
       }
@@ -98,15 +122,21 @@
     () => searchQuery.value,
     async () => {
       await loadChartData();
-      dualAxes!.changeData([data.value.time_and_type, data.value.time]);
+      if (!isDataEmpty.value) {
+        if (dualAxes) {
+          dualAxes.changeData([data.value.time, data.value.time_and_type]);
+        } else {
+          initChart();
+        }
+      }
     },
     { deep: true },
   );
 
   watch(
     () => data.value.time,
-    (val) => {
-      if (!val.length && dualAxes) {
+    () => {
+      if (isDataEmpty.value && dualAxes) {
         dualAxes!.destroy();
         dualAxes = null;
       }
@@ -115,7 +145,7 @@
 
   onMounted(async () => {
     await loadChartData();
-    if (data.value.time.length) {
+    if (!isDataEmpty.value) {
       initChart();
     }
   });
@@ -124,12 +154,31 @@
     const params: IClinetCommonQuery = {
       search: searchQuery.value.search,
       pull_time: selectTime.value,
+      last_heartbeat_time: searchQuery.value.last_heartbeat_time,
+      is_duplicates: props.isDuplicates,
     };
     try {
       loading.value = true;
       const res = await getClientPullCountData(props.bkBizId, props.appId, params);
       data.value.time = res.time || [];
-      data.value.time_and_type = res.time_and_type || [];
+      data.value.time_and_type =
+        res.time_and_type?.map((item: any) => {
+          switch (item.type) {
+            case 'sidecar':
+              item.name = `SideCar ${t('客户端')}`;
+              break;
+            case 'sdk':
+              item.name = `SDK ${t('客户端')}`;
+              break;
+            case 'agent':
+              item.name = t('主机插件客户端');
+              break;
+            case 'command':
+              item.name = `CLI ${t('客户端')}`;
+              break;
+          }
+          return item;
+        }) || [];
     } catch (error) {
       console.error(error);
     } finally {
@@ -139,11 +188,11 @@
 
   const initChart = () => {
     dualAxes = new DualAxes(canvasRef.value!, {
-      data: [data.value.time_and_type, data.value.time],
+      data: [data.value.time, data.value.time_and_type],
       xField: 'time',
-      yField: ['value', 'count'],
-      yAxis: [
-        {
+      yField: ['count', 'value'],
+      yAxis: {
+        value: {
           grid: {
             line: {
               style: {
@@ -152,21 +201,23 @@
               },
             },
           },
-        },
-        {
+          tickCount: 5,
           min: 0,
         },
-      ],
-
-      padding: [10, 20, 30, 20],
-      geometryOptions: [
-        {
-          geometry: 'column',
-          isGroup: true,
-          seriesField: 'type',
-          columnWidthRatio: 0.2,
-          color: ['#3E96C2', '#61B2C2', '#61B2C2'],
+        count: {
+          grid: {
+            line: {
+              style: {
+                stroke: '#979BA5',
+                lineDash: [4, 5],
+              },
+            },
+          },
+          tickCount: 5,
+          min: 0,
         },
+      },
+      geometryOptions: [
         {
           geometry: 'line',
           lineStyle: {
@@ -176,10 +227,28 @@
           label: {
             position: 'top',
           },
+          point: {
+            shape: 'circle',
+          },
+        },
+        {
+          geometry: 'column',
+          isGroup: true,
+          seriesField: 'type',
+          columnWidthRatio: 0.3,
+          color: ['#3E96C2', '#61B2C2', '#85CCA8', '#B5E0AB'],
         },
       ],
       legend: {
         position: 'bottom',
+        itemName: {
+          formatter: (text) => {
+            if (text === 'count') {
+              return t('总量');
+            }
+            return text;
+          },
+        },
       },
       tooltip: {
         fields: ['value', 'count'],
@@ -188,24 +257,16 @@
         container: tooltipRef.value?.getDom(),
         enterable: true,
         customItems: (originalItems: any[]) => {
+          jumpSearchTime.value = originalItems[0].title.replace(/\//g, '-');
           originalItems.forEach((item) => {
-            switch (item.data.type) {
-              case 'sidecar':
-                item.name = `SideCar ${t('客户端')}`;
-                break;
-              case 'sdk':
-                item.name = `SDK ${t('客户端')}`;
-                break;
-              case 'agent':
-                item.name = t('主机插件客户端');
-                break;
-              case 'command':
-                item.name = 'command';
-                break;
-              default:
-                item.name = t('总量');
+            if (item.name === 'count') {
+              item.name = t('总量');
+            } else {
+              item.name = item.data.name;
             }
           });
+          originalItems.unshift(originalItems.pop());
+          customTooltip.value = originalItems;
           return originalItems;
         },
       },
@@ -214,10 +275,29 @@
   };
 
   const jumpToSearch = () => {
-    router.push({
+    const routeData = router.resolve({
       name: 'client-search',
       params: { appId: props.appId, bizId: props.bkBizId },
+      query: {
+        pull_time: `${jumpSearchTime.value} 00:00:00 - ${jumpSearchTime.value} 23:59:59`,
+        heartTime: searchQuery.value.last_heartbeat_time,
+      },
     });
+    window.open(routeData.href, '_blank');
+  };
+
+  const handleClickTooltipsItem = (item: any) => {
+    if (item.name === '总量') return;
+    const routeData = router.resolve({
+      name: 'client-search',
+      params: { appId: props.appId, bizId: props.bkBizId },
+      query: {
+        pull_time: `${jumpSearchTime.value} 00:00:00 - ${jumpSearchTime.value} 23:59:59`,
+        heartTime: searchQuery.value.last_heartbeat_time,
+        client_type: item.data.type,
+      },
+    });
+    window.open(routeData.href, '_blank');
   };
 </script>
 
@@ -239,15 +319,70 @@
     width: 100vw;
     height: 100vh;
     z-index: 5000;
-    background-color: rgba(0, 0, 0, 0.6);
     .card {
-      position: absolute;
-      width: 100%;
-      height: 80vh !important;
-      top: 50%;
-      transform: translateY(-50%);
-      .loading-wrap {
-        height: 100%;
+      height: 100vh !important;
+      :deep(.operation-btn) {
+        top: 0 !important;
+      }
+    }
+  }
+  :deep(.bk-exception) {
+    height: 100%;
+    justify-content: center;
+    transform: translateY(-20px);
+  }
+  :deep(.g2-tooltip) {
+    .g2-tooltip-list-item {
+      .g2-tooltip-marker {
+        border-radius: initial !important;
+      }
+    }
+    .g2-tooltip-list-item:nth-child(1) {
+      .g2-tooltip-marker {
+        height: 2px !important;
+        transform: translatey(-3px);
+      }
+    }
+  }
+  .tooltips-list {
+    margin-bottom: 12px;
+    .tooltips-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 27px;
+      cursor: pointer;
+      &:nth-child(1) {
+        .marker {
+          height: 2px !important;
+        }
+        .tooltip-right {
+          margin-right: 20px;
+        }
+        .icon {
+          display: none !important;
+        }
+      }
+      &:hover {
+        background: #f5f7fa;
+      }
+      .tooltip-left {
+        display: flex;
+        align-items: center;
+      }
+      .tooltip-right {
+        @extend .tooltip-left;
+        margin-left: 20px;
+        .icon {
+          color: #3a84ff;
+          margin-left: 8px;
+          font-size: 12px;
+        }
+      }
+      .marker {
+        width: 8px;
+        height: 8px;
+        margin-right: 8px;
       }
     }
   }

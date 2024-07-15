@@ -1,0 +1,15 @@
+{{ include "common.metadata" . }}
+- - group:
+      - [ "setAsDefault", "provisioner" ]
+      - [ "volumeBindingMode", "reclaimPolicy" ]
+      - - group:
+            - [ "key", "value", "." ]
+          prop: params
+          container:
+            grid-template-columns: "1fr 1fr 60px"
+      - - group:
+            - [ ".", ".", "." ]
+          prop: mountOpts
+          container:
+            grid-template-columns: "1fr 60px 1fr"
+    prop: spec

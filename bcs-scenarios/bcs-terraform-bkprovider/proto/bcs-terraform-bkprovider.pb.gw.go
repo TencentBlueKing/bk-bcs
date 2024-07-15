@@ -293,6 +293,76 @@ func local_request_BcsTerraformBkProvider_GetJobDetail_0(ctx context.Context, ma
 
 }
 
+func request_BcsTerraformBkProvider_RegisterBkWhitelist_0(ctx context.Context, marshaler runtime.Marshaler, client BcsTerraformBkProviderClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq RegisterBkWhitelistRequest
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.RegisterBkWhitelist(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_BcsTerraformBkProvider_RegisterBkWhitelist_0(ctx context.Context, marshaler runtime.Marshaler, server BcsTerraformBkProviderServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq RegisterBkWhitelistRequest
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.RegisterBkWhitelist(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+func request_BcsTerraformBkProvider_ListBkWhitelist_0(ctx context.Context, marshaler runtime.Marshaler, client BcsTerraformBkProviderClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListBkWhiteListRequest
+	var metadata runtime.ServerMetadata
+
+	msg, err := client.ListBkWhitelist(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_BcsTerraformBkProvider_ListBkWhitelist_0(ctx context.Context, marshaler runtime.Marshaler, server BcsTerraformBkProviderServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListBkWhiteListRequest
+	var metadata runtime.ServerMetadata
+
+	msg, err := server.ListBkWhitelist(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+func request_BcsTerraformBkProvider_GetBkOuterIP_0(ctx context.Context, marshaler runtime.Marshaler, client BcsTerraformBkProviderClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq GetBkOuterIPRequest
+	var metadata runtime.ServerMetadata
+
+	msg, err := client.GetBkOuterIP(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_BcsTerraformBkProvider_GetBkOuterIP_0(ctx context.Context, marshaler runtime.Marshaler, server BcsTerraformBkProviderServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq GetBkOuterIPRequest
+	var metadata runtime.ServerMetadata
+
+	msg, err := server.GetBkOuterIP(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
 // RegisterBcsTerraformBkProviderGwServer registers the http handlers for service BcsTerraformBkProvider to "mux".
 // UnaryRPC     :call BcsTerraformBkProviderServer directly.
 // StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
@@ -480,6 +550,75 @@ func RegisterBcsTerraformBkProviderGwServer(ctx context.Context, mux *runtime.Se
 		}
 
 		forward_BcsTerraformBkProvider_GetJobDetail_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("POST", pattern_BcsTerraformBkProvider_RegisterBkWhitelist_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_BcsTerraformBkProvider_RegisterBkWhitelist_0(rctx, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_BcsTerraformBkProvider_RegisterBkWhitelist_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_BcsTerraformBkProvider_ListBkWhitelist_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_BcsTerraformBkProvider_ListBkWhitelist_0(rctx, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_BcsTerraformBkProvider_ListBkWhitelist_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_BcsTerraformBkProvider_GetBkOuterIP_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_BcsTerraformBkProvider_GetBkOuterIP_0(rctx, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_BcsTerraformBkProvider_GetBkOuterIP_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -684,6 +823,66 @@ func RegisterBcsTerraformBkProviderGwClient(ctx context.Context, mux *runtime.Se
 
 	})
 
+	mux.Handle("POST", pattern_BcsTerraformBkProvider_RegisterBkWhitelist_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_BcsTerraformBkProvider_RegisterBkWhitelist_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_BcsTerraformBkProvider_RegisterBkWhitelist_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_BcsTerraformBkProvider_ListBkWhitelist_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_BcsTerraformBkProvider_ListBkWhitelist_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_BcsTerraformBkProvider_ListBkWhitelist_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_BcsTerraformBkProvider_GetBkOuterIP_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_BcsTerraformBkProvider_GetBkOuterIP_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_BcsTerraformBkProvider_GetBkOuterIP_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	return nil
 }
 
@@ -703,6 +902,12 @@ var (
 	pattern_BcsTerraformBkProvider_DeleteCloud_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"terraform-bkprovider", "v1", "cloud"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_BcsTerraformBkProvider_GetJobDetail_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"terraform-bkprovider", "v1", "get_job_detail"}, "", runtime.AssumeColonVerbOpt(true)))
+
+	pattern_BcsTerraformBkProvider_RegisterBkWhitelist_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"terraform-bkprovider", "v1", "register_bk_whitelist"}, "", runtime.AssumeColonVerbOpt(true)))
+
+	pattern_BcsTerraformBkProvider_ListBkWhitelist_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"terraform-bkprovider", "v1", "list_bk_whitelist"}, "", runtime.AssumeColonVerbOpt(true)))
+
+	pattern_BcsTerraformBkProvider_GetBkOuterIP_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"terraform-bkprovider", "v1", "get_bk_outer_ip"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (
@@ -721,4 +926,10 @@ var (
 	forward_BcsTerraformBkProvider_DeleteCloud_0 = runtime.ForwardResponseMessage
 
 	forward_BcsTerraformBkProvider_GetJobDetail_0 = runtime.ForwardResponseMessage
+
+	forward_BcsTerraformBkProvider_RegisterBkWhitelist_0 = runtime.ForwardResponseMessage
+
+	forward_BcsTerraformBkProvider_ListBkWhitelist_0 = runtime.ForwardResponseMessage
+
+	forward_BcsTerraformBkProvider_GetBkOuterIP_0 = runtime.ForwardResponseMessage
 )

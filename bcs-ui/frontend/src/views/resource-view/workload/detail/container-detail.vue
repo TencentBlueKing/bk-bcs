@@ -1,5 +1,5 @@
 <template>
-  <div class="workload-detail bcs-content-wrapper">
+  <div class="workload-detail">
     <div class="workload-detail-info" v-bkloading="{ isLoading }">
       <div class="workload-info-basic">
         <div class="basic-left">
@@ -79,7 +79,8 @@
           :params="params"
           category="containers"
           :colors="['#30d878', '#ff5656']"
-          :series="[{ }, { areaStyle: null }]">
+          :series="[{ }, { areaStyle: null }]"
+          unit="percent-number">
         </Metric>
         <Metric
           :title="$t('metrics.memUsage1')"
@@ -211,11 +212,11 @@ export default defineComponent({
       required: true,
     },
     // 容器ID
-    id: {
-      type: String,
-      default: '',
-      required: true,
-    },
+    // id: {
+    //   type: String,
+    //   default: '',
+    //   required: true,
+    // },
     clusterId: {
       type: String,
       default: '',

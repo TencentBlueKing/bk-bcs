@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package registry xxx
 package registry
 
 import (

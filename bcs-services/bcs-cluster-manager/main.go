@@ -14,14 +14,17 @@
 package main
 
 import (
+	"context"
 	"flag"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	bcsconf "github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-common/common/util"
-	mconfig "github.com/micro/go-micro/v2/config"
-	mfile "github.com/micro/go-micro/v2/config/source/file"
-	mflag "github.com/micro/go-micro/v2/config/source/flag"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/constants"
+	mconfig "go-micro.dev/v4/config"
+	mfile "go-micro.dev/v4/config/source/file"
+	mflag "go-micro.dev/v4/config/source/flag"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/app"
 	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
@@ -72,6 +75,7 @@ func main() { // nolint
 	flag.String("mongo_password", "", "mongo passsword for cluster manager")
 	flag.Uint("mongo_maxpoolsize", 0, "mongo client connection pool max size, 0 means not set")
 	flag.Uint("mongo_minpoolsize", 0, "mongo client connection pool min size, 0 means not set")
+
 	// broker config
 	flag.String("broker_address", "127.0.0.1:5672", "broker server for background taskserver")
 	flag.String("broker_username", "", "broker username for background taskserver")
@@ -117,6 +121,19 @@ func main() { // nolint
 		VModule:         opt.BcsLog.VModule,
 		TraceLocation:   opt.BcsLog.TraceLocation,
 	})
+
+	// 初始化 Tracer
+	shutdown, errorInitTracing := trace.InitTracing(&opt.TracingConfig, constants.BCSClusterManager)
+	if errorInitTracing != nil {
+		blog.Info(errorInitTracing.Error())
+	}
+	if shutdown != nil {
+		defer func() {
+			if err := shutdown(context.Background()); err != nil {
+				blog.Infof("failed to shutdown TracerProvider: %s", err.Error())
+			}
+		}()
+	}
 
 	// init serverConfig Ipv6Address
 	opt.ServerConfig.Ipv6Address = util.InitIPv6Address(opt.ServerConfig.Ipv6Address)

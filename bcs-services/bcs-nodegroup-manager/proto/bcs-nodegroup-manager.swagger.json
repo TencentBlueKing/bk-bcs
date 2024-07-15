@@ -284,12 +284,23 @@
           "format": "int32",
           "description": "定义resource pool中空闲资源的最高水位",
           "title": "high"
-        },
-        "reservedDays": {
+        }
+      }
+    },
+    "nodegroupmanagerBufferParam": {
+      "type": "object",
+      "properties": {
+        "percent": {
           "type": "integer",
           "format": "int32",
-          "description": "定义资源池保留天数",
-          "title": "reservedDays"
+          "description": "百分比",
+          "title": "percent"
+        },
+        "count": {
+          "type": "integer",
+          "format": "int32",
+          "description": "数量",
+          "title": "count"
         }
       }
     },
@@ -424,6 +435,11 @@
           "format": "int32",
           "description": "权重",
           "title": "weight"
+        },
+        "limit": {
+          "$ref": "#/definitions/nodegroupmanagerNodegroupLimit",
+          "description": "限制",
+          "title": "limit"
         }
       }
     },
@@ -530,6 +546,18 @@
           },
           "description": "NodeIPs are the IP of nodes which belongs to the node group",
           "title": "nodeIPs"
+        },
+        "priority": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Priority is the priority of node group.",
+          "title": "priority"
+        },
+        "deletingSize": {
+          "type": "integer",
+          "format": "int32",
+          "description": "DeletingSize is the number of nodes in the node group that are in the process of deletion",
+          "title": "deletingSize"
         }
       },
       "description": "NodeGroup is the information of node group",
@@ -692,6 +720,35 @@
       "description": "NodeTemplate is the information of node",
       "title": "NodeTemplate"
     },
+    "nodegroupmanagerNodegroupLimit": {
+      "type": "object",
+      "properties": {
+        "nodegroupLimit": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "nodegroup限制开关",
+          "title": "nodegroupLimit"
+        },
+        "nodegroupLimitNum": {
+          "type": "integer",
+          "format": "int32",
+          "description": "nodegroup限制数量",
+          "title": "nodegroupLimitNum"
+        },
+        "clusterLimit": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "cluster 限制开关",
+          "title": "clusterLimit"
+        },
+        "clusterLimitNum": {
+          "type": "integer",
+          "format": "int32",
+          "description": "cluster限制数量",
+          "title": "clusterLimitNum"
+        }
+      }
+    },
     "nodegroupmanagerReservedNodeGroup": {
       "type": "object",
       "properties": {
@@ -765,6 +822,67 @@
           "format": "int32",
           "description": "在ddl多少分钟之前执行策略，用于分级资源池",
           "title": "scaleDownBeforeDDL"
+        },
+        "nodegroupBuffer": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/nodegroupmanagerBufferParam"
+          }
+        },
+        "timeMode": {
+          "$ref": "#/definitions/nodegroupmanagerTimeMode",
+          "description": "时间模式，扩缩容周期",
+          "title": "timeMode"
+        }
+      }
+    },
+    "nodegroupmanagerTimeMode": {
+      "type": "object",
+      "properties": {
+        "scaleDownWhenTimeout": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "到期是否缩容",
+          "title": "scaleDownWhenTimeout"
+        },
+        "timePeriods": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/nodegroupmanagerTimePeriod"
+          },
+          "description": "扩缩容周期",
+          "title": "timePeriods"
+        },
+        "reservedHours": {
+          "type": "integer",
+          "format": "int32",
+          "description": "保留时长",
+          "title": "reservedHours"
+        }
+      }
+    },
+    "nodegroupmanagerTimePeriod": {
+      "type": "object",
+      "properties": {
+        "scaleOutCron": {
+          "type": "string",
+          "description": "扩容周期",
+          "title": "scaleOutCron"
+        },
+        "scaleInCron": {
+          "type": "string",
+          "description": "缩容周期",
+          "title": "scaleInCron"
+        },
+        "scaleOutTime": {
+          "type": "string",
+          "description": "扩容时间",
+          "title": "scaleOutTime"
+        },
+        "scaleInTime": {
+          "type": "string",
+          "description": "缩容时间",
+          "title": "scaleInTime"
         }
       }
     },
