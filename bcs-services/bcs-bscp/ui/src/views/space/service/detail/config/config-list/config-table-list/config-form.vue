@@ -491,7 +491,12 @@
   };
 
   defineExpose({
-    getSignature: () => uploadFileSignature.value,
+    getSignature: () => {
+      if (localVal.value.file_type === 'binary') {
+        return uploadFileSignature.value;
+      }
+      return getSignature();
+    },
     validate,
   });
 </script>
