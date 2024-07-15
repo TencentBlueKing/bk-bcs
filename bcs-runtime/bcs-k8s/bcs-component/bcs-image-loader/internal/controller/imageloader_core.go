@@ -135,11 +135,11 @@ func (r *ImageLoaderReconciler) cleanJobs(ctx context.Context,
 func (r *ImageLoaderReconciler) createJobsIfNeed(ctx context.Context,
 	loader *tkexv1alpha1.ImageLoader, baseJob *batchv1.Job) error {
 	for i := range loader.Spec.Images {
-		logger.Info(fmt.Sprintf("create job for %d image", i))
 		job := &batchv1.Job{}
 		err := r.Get(ctx, types.NamespacedName{Namespace: loader.Namespace,
 			Name: getJobName(loader, i)}, job)
 		if err != nil && errors.IsNotFound(err) {
+			logger.Info(fmt.Sprintf("create job for %d image", i))
 			err = r.createJob(ctx, loader, baseJob, i)
 			if err != nil {
 				return err
@@ -154,6 +154,7 @@ func (r *ImageLoaderReconciler) createJobsIfNeed(ctx context.Context,
 
 func (r *ImageLoaderReconciler) createJob(ctx context.Context, loader *tkexv1alpha1.ImageLoader,
 	baseJob *batchv1.Job, index int) error {
+	// some field may be nil after deepcopy
 	job := baseJob.DeepCopy()
 	modifyJob(job, loader, index)
 
