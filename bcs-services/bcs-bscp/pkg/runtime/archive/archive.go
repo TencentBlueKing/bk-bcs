@@ -17,7 +17,6 @@ import (
 	"bytes"
 	"errors"
 	"io"
-	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -48,30 +47,26 @@ const (
 )
 
 // Unpack 解压zip、gzip、tar
-func Unpack(reader io.Reader, archiveType ArchiveType) (string, error) {
+func Unpack(reader io.Reader, archiveType ArchiveType, dirPath string, limitFileSize int64) error {
 
-	tempDir, err := os.MkdirTemp("", "configItem-")
-	if err != nil {
-		return "", err
-	}
 	switch archiveType {
 	case ZIP:
-		if err := NewZipArchive(tempDir).UnZipPack(reader); err != nil {
-			return "", err
+		if err := NewZipArchive(dirPath, limitFileSize).UnZipPack(reader); err != nil {
+			return err
 		}
 	case GZIP:
-		if err := NewTgzArchive(tempDir).UnTgzPack(reader); err != nil {
-			return "", err
+		if err := NewTgzArchive(dirPath, limitFileSize).UnTgzPack(reader); err != nil {
+			return err
 		}
 	case TAR:
-		if err := NewTgzArchive(tempDir).UnTar(reader); err != nil {
-			return "", err
+		if err := NewTgzArchive(dirPath, limitFileSize).UnTar(reader); err != nil {
+			return err
 		}
 	default:
-		return "", errors.New("file type detection failed")
+		return errors.New("file type detection failed")
 	}
 
-	return tempDir, nil
+	return nil
 }
 
 // IdentifyFileType 检测文件类型：zip、zip、tar

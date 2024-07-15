@@ -68,6 +68,8 @@ type ResourceLimit struct {
 	AppConfigCnt uint `yaml:"appConfigCnt"`
 	// TmplSetTmplCnt 单个模版套餐下允许创建的模版数，默认为2000
 	TmplSetTmplCnt uint `yaml:"tmplSetTmplCnt"`
+	// MaxUploadContentLength 最大内容长度
+	MaxUploadContentLength uint `yaml:"maxUploadContentLength"`
 }
 
 // validate if the feature resource limit is valid or not.
@@ -98,6 +100,10 @@ const (
 	DefaultAppConfigCnt = 2000
 	// DefaultTmplSetTmplCnt is default template set's template count
 	DefaultTmplSetTmplCnt = 2000
+	// DefaultMaxUploadContentLength 默认最大内容长度(2048MB)
+	DefaultMaxUploadContentLength = 2 * 1024
+	// DefaultMaxUploadSingleContentLength 默认最大单个内容长度(200MB)
+	DefaultMaxUploadSingleContentLength = 200
 )
 
 // trySetDefault try set the default value of feature flag
@@ -117,6 +123,10 @@ func (f *FeatureFlags) trySetDefault() {
 
 	if f.ResourceLimit.Default.TmplSetTmplCnt == 0 {
 		f.ResourceLimit.Default.TmplSetTmplCnt = DefaultTmplSetTmplCnt
+	}
+
+	if f.ResourceLimit.Default.MaxUploadContentLength == 0 {
+		f.ResourceLimit.Default.MaxUploadContentLength = DefaultMaxUploadContentLength
 	}
 }
 
