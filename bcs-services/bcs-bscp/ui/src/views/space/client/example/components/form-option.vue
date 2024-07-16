@@ -27,7 +27,7 @@
     </bk-form-item>
   </bk-form>
   <!-- 添加标签 -->
-  <AddLabel ref="addLabelRef" @send-label="(obj) => (formData.labelArr = obj)" />
+  <AddLabel ref="addLabelRef" :label-name="labelName" @send-label="(obj) => (formData.labelArr = obj)" />
 </template>
 
 <script lang="ts" setup>
@@ -42,6 +42,10 @@
     directoryShow: {
       type: Boolean,
       default: true,
+    },
+    labelName: {
+      type: String,
+      default: '标签',
     },
   });
 

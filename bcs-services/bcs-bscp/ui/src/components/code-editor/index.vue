@@ -59,6 +59,9 @@
       horizonScrollbarSize?: number;
       renderLineHighlight?: 'none' | 'gutter' | 'line' | 'all' | undefined;
       renderIndentGuides?: boolean;
+      folding?: boolean;
+      alwaysConsumeMouseWheel?: boolean;
+      contextmenu?: boolean;
     }>(),
     {
       variables: () => [],
@@ -71,6 +74,9 @@
       horizonScrollbarSize: 10,
       renderLineHighlight: 'all',
       renderIndentGuides: true,
+      folding: true,
+      alwaysConsumeMouseWheel: true,
+      contextmenu: true,
     },
   );
 
@@ -163,9 +169,12 @@
         scrollbar: {
           verticalScrollbarSize: props.verticalScrollbarSize,
           horizontalScrollbarSize: props.horizonScrollbarSize,
+          alwaysConsumeMouseWheel: props.alwaysConsumeMouseWheel,
         },
         renderLineHighlight: props.renderLineHighlight,
         renderIndentGuides: props.renderIndentGuides,
+        folding: props.folding,
+        contextmenu: props.contextmenu,
       });
     }
     if (props.lfEol) {
