@@ -251,22 +251,16 @@ func (m *TaskManager) Dispatch(task *types.Task) error {
 func (m *TaskManager) transTaskToSignature(task *types.Task, stepNameBegin string) ([]*tasks.Signature, error) {
 	var signatures []*tasks.Signature
 
-	for _, stepName := range task.StepSequence {
-		_, ok := task.Steps[stepName]
-		if !ok {
-			blog.Errorf("task[%s] transTaskToSignature failed: %s not exist", stepName)
-			return nil, fmt.Errorf("%s not exist", stepName)
-		}
-
+	for _, step := range task.Steps {
 		// skip steps which before begin step, empty str not skip any steps
-		if stepName != "" && stepNameBegin != "" && stepName != stepNameBegin {
+		if step.Name != "" && stepNameBegin != "" && step.Name != stepNameBegin {
 			continue
 		}
 
 		// build signature from step
 		signature := &tasks.Signature{
-			UUID: fmt.Sprintf("%s-%s", task.TaskID, stepName),
-			Name: stepName,
+			UUID: fmt.Sprintf("%s-%s", task.TaskID, step.Name),
+			Name: step.Name,
 			// two parameters: taskID, stepName
 			Args: []tasks.Arg{
 				{
@@ -275,7 +269,7 @@ func (m *TaskManager) transTaskToSignature(task *types.Task, stepNameBegin strin
 				},
 				{
 					Type:  "string",
-					Value: stepName,
+					Value: step.Name,
 				},
 			},
 			IgnoreWhenTaskNotRegistered: true,

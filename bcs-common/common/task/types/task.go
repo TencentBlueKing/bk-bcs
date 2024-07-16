@@ -62,15 +62,13 @@ func NewTask(o *TaskInfo, opts ...TaskOption) *Task {
 
 	nowTime := time.Now().Format(TaskTimeFormat)
 	return &Task{
-		TaskIndex:           o.TaskIndex,
 		TaskID:              uuid.NewString(),
 		TaskType:            o.TaskType,
 		TaskName:            o.TaskName,
 		Status:              TaskStatusInit,
 		ForceTerminate:      false,
 		Start:               nowTime,
-		Steps:               make(map[string]*Step, 0),
-		StepSequence:        make([]string, 0),
+		Steps:               make([]*Step, 0),
 		Creator:             o.Creator,
 		Updater:             o.Creator,
 		LastUpdate:          nowTime,
@@ -87,11 +85,6 @@ func (t *Task) GetTaskID() string {
 	return t.TaskID
 }
 
-// GetIndex get task id
-func (t *Task) GetIndex() string {
-	return t.TaskIndex
-}
-
 // GetTaskType get task type
 func (t *Task) GetTaskType() string {
 	return t.TaskType
@@ -104,10 +97,12 @@ func (t *Task) GetTaskName() string {
 
 // GetStep get step by name
 func (t *Task) GetStep(stepName string) (*Step, bool) {
-	if _, ok := t.Steps[stepName]; !ok {
-		return nil, false
+	for _, step := range t.Steps {
+		if step.Name == stepName {
+			return step, true
+		}
 	}
-	return t.Steps[stepName], true
+	return nil, true
 }
 
 // AddStep add step to task
@@ -116,11 +111,7 @@ func (t *Task) AddStep(step *Step) *Task {
 		return t
 	}
 
-	if t.StepSequence == nil {
-		t.StepSequence = make([]string, 0)
-	}
-	t.StepSequence = append(t.StepSequence, step.GetName())
-	t.Steps[step.GetName()] = step
+	t.Steps = append(t.Steps, step)
 	return t
 }
 
@@ -316,11 +307,13 @@ func (t *Task) AddStepParams(stepName string, k, v string) error {
 
 // AddStepParamsBatch add step params batch
 func (t *Task) AddStepParamsBatch(stepName string, params map[string]string) error {
-	if _, ok := t.Steps[stepName]; !ok {
+	step, ok := t.GetStep(stepName)
+	if !ok {
 		return fmt.Errorf("step %s not exist", stepName)
 	}
+
 	for k, v := range params {
-		t.Steps[stepName].AddParam(k, v)
+		step.AddParam(k, v)
 	}
 	return nil
 }

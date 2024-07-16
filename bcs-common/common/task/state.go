@@ -127,14 +127,10 @@ func (s *State) isReadyToStep(stepName string) (*types.Step, error) {
 	}
 
 	// first time to execute step
-	for _, name := range s.task.StepSequence {
-		step, ok := s.task.GetStep(name)
-		if !ok {
-			return nil, fmt.Errorf("step %s is not exist", stepName)
-		}
+	for _, step := range s.task.Steps {
 
 		// find current step
-		if name == stepName {
+		if step.Name == stepName {
 			// step already success
 			if step.GetStatus() == types.TaskStatusSuccess {
 				return nil, fmt.Errorf("task %s step %s already success", s.task.GetTaskID(), stepName)
@@ -278,7 +274,12 @@ func (s *State) updateStepFailure(start time.Time, name string, stepErr error, t
 }
 
 func (s *State) isLastStep(stepName string) bool {
-	return stepName == s.task.StepSequence[len(s.task.StepSequence)-1]
+	count := len(s.task.Steps)
+	// 没有step默认返回false
+	if count == 0 {
+		return false
+	}
+	return stepName == s.task.Steps[count-1].Name
 }
 
 // GetCommonParams get common params by key
