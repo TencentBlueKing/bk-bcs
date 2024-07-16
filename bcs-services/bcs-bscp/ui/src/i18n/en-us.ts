@@ -745,11 +745,9 @@ export default {
   '部署“bkbscp (bscp服务配置分发和热更新)”插件，部署详情请参考产品白皮书：': 'Deploy the bkbscp (bscp Service Configuration Distribution and Hot Update) plug-in. For details, see the product white paper:',
   '《客户端配置》-“节点管理插件客户端拉取配置”章节': 'Client Configuration - "Node Management Plug-in Client Pulling Configuration" section',
   '服务：': 'service：',
-  '(通常用于按标签进行灰度发布，支持设置多个标签；如果不需要按标签灰度，可不设置)': '(Usually used for grayscale release by label, support to set multiple labels; If you do not need to press the label grayscale, do not set)',
   '业务ID：': 'BizId：',
   '临时目录：': 'Temp Directory：',
   '全局标签：': 'Global Label：',
-  '服务密钥：': 'Service Key：',
   '(全局标签与服务标签参数一样，常用于按标签进行灰度发布；不同的是全局标签可供多个服务共用)': '(The global tag, like the service tag parameter, is often used for grayscale publishing by tag; The difference is that global tags can be shared by multiple services)',
   '(即客户端密钥，需填写与此服务配置关联过的实际客户端密钥)': '(That is, client key, the actual client key associated with this service configuration must be filled in.)',
   配置指引与示例预览: 'Configuration guide and sample preview',
@@ -783,7 +781,8 @@ export default {
   初始化配置信息: 'Initialize configuration information',
   复制命令: 'Command Copy',
   '仅支持字母，数字，\'-\'，\'_\'，\'.\' 及 \'/\' 且需以字母数字开头和结尾': 'Only supports letters, numbers, \'-\', \'_\', \'.\' and \'/\' characters, and must start and end with a letter or number',
-  '需以字母数字开头和结尾，可包含 \'-\'，\'_\'，\'.\' 和字母数字': 'Must start and end with a letter or number, and may include \'-\', \'_\', \'.\', and alphanumeric characters',
+  '需以字母、数字开头和结尾，可包含 \'-\'，\'_\'，\'.\' 和字母数字及负数': 'Must start and end with a letter or number, can include \'-\', \'_\', \'.\', and alphanumeric characters, as well as negative numbers',
+  服务标签: 'service label',
 
   // 公共组件
   页面不存在: 'Page does not exist',

@@ -6,7 +6,7 @@
       <bk-button theme="primary" class="copy-btn" @click="copyExample">{{ $t('复制示例') }}</bk-button>
       <code-preview
         class="preview-component"
-        style="height: 1490px"
+        style="height: 1496px"
         :code-val="replaceVal"
         :variables="variables"
         language="yaml"
@@ -110,15 +110,13 @@
   .example-wrap {
     .preview-component {
       margin-top: 16px;
-      padding: 16px 0 0;
-      // height: calc(100% - 48px);
+      padding: 16px 8px;
       background-color: #f5f7fa;
     }
   }
   .preview-container {
     margin-top: 32px;
     padding: 16px 0 0;
-    flex: 1;
     border-top: 1px solid #dcdee5;
     overflow: hidden;
   }
