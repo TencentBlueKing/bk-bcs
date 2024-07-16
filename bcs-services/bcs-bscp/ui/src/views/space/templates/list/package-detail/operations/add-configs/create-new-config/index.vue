@@ -101,7 +101,11 @@
       if (configForm.value.path?.endsWith('/') && configForm.value.path !== '/') {
         configForm.value.path = configForm.value.path.slice(0, -1);
       }
-      const params = { ...configForm.value, ...{ sign, byte_size: size } };
+      const params = {
+        ...configForm.value,
+        ...{ sign, byte_size: size },
+        template_set_ids: pkgIds[0] === 0 ? [] : pkgIds,
+      };
       const res = await createTemplate(spaceId.value, currentTemplateSpace.value, params);
       // 选择未指定套餐时,不需要调用添加接口
       if (pkgIds.length > 1 || pkgIds[0] !== 0) {

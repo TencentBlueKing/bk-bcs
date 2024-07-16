@@ -18,7 +18,7 @@
       <div class="service-config">
         <div class="config-info">
           <span class="bk-bscp-icon icon-configuration-line"></span>
-          <span>{{ props.service.config?.count }} {{ isFileType ? t('个配置文件') : t('个配置项') }}</span>
+          <span>{{ props.service.config?.count }} {{ isFileType ? t('card_配置文件') : t('card_配置项') }}</span>
         </div>
         <div class="time-info">
           <span class="bk-bscp-icon icon-time-2" v-bk-tooltips="{ content: t('最新上线'), placement: 'top' }"></span>

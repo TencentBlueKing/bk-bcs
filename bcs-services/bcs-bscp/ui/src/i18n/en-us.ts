@@ -29,6 +29,8 @@ export default {
   创建时间: 'Creation time',
   配置文件: 'Configuration File',
   配置项: 'Configuration Item',
+  card_配置项: 'Item',
+  card_配置文件: 'File',
   个配置文件: 'configuration file',
   个配置项: 'configuration item',
   未更新: 'Not updated',
