@@ -133,7 +133,6 @@
     v-model:show="viewPanelShow"
     :config="activeConfig"
     :show-edit-btn="isUnNamedVersion"
-    :is-un-named-version="isUnNamedVersion"
     @open-edit="handleSwitchToEdit" />
   <VersionDiff v-model:show="isDiffPanelShow" :current-version="versionData" :selected-kv-config-id="diffConfig" />
   <DeleteConfirmDialog
@@ -313,27 +312,6 @@
         res = await getKvList(props.bkBizId, props.appId, params);
       } else {
         res = await getReleaseKvList(props.bkBizId, props.appId, versionData.value.id, params);
-        res.details = res.details.map((config: any) => {
-          const { original_create_at, original_creator, original_reviser, original_updated_at, released_kv } = config;
-          console.log({
-            ...released_kv,
-            release_kv_revision: {
-              creator: original_creator,
-              create_at: original_create_at,
-              reviser: original_reviser,
-              update_at: original_updated_at,
-            },
-          });
-          return {
-            ...released_kv,
-            release_kv_revision: {
-              creator: original_creator,
-              create_at: original_create_at,
-              reviser: original_reviser,
-              update_at: original_updated_at,
-            },
-          };
-        });
       }
       configList.value = res.details.sort((a: IConfigKvType, b: IConfigKvType) => {
         if (a.kv_state === 'DELETE' && b.kv_state !== 'DELETE') {

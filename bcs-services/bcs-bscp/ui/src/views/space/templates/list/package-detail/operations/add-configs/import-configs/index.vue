@@ -157,7 +157,6 @@
         spaceId.value,
         currentTemplateSpace.value,
         [...existConfigList.value, ...nonExistConfigList.value],
-        pkgIds,
       );
       // 选择未指定套餐时,不需要调用添加接口
       if (pkgIds.length > 1 || pkgIds[0] !== 0) {

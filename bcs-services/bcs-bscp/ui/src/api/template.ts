@@ -636,7 +636,7 @@ export const importTemplateBatchAdd = (
   biz_id: string,
   template_space_id: number,
   configData: any,
-  template_set_ids: number[],
+  template_set_ids?: number[],
 ) =>
   http
     .post(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates/batch_upsert_templates`, {
