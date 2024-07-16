@@ -247,4 +247,10 @@ export interface IConfigKvType {
     reviser: string;
     update_at: string;
   };
+  release_kv_revision?: {
+    creator: string;
+    create_at: string;
+    reviser: string;
+    update_at: string;
+  };
 }
