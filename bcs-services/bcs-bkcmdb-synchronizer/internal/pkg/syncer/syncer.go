@@ -149,7 +149,7 @@ func (s *Syncer) SyncCluster(cluster *cmp.Cluster) error {
 			// CreateBcsCluster creates a new BCS cluster with the given request.
 			_, err = s.CMDBClient.CreateBcsCluster(&client.CreateBcsClusterRequest{
 				BKBizID:          &clusterBkBizID,
-				Name:             &cluster.ClusterID,
+				Name:             &cluster.ClusterName,
 				SchedulingEngine: &cluster.EngineType,
 				UID:              &cluster.ClusterID,
 				XID:              &cluster.SystemID,
@@ -178,6 +178,7 @@ func (s *Syncer) SyncCluster(cluster *cmp.Cluster) error {
 			BKBizID: &bkCluster.BizID,
 			IDs:     &[]int64{bkCluster.ID},
 			Data: &client.UpdateBcsClusterRequestData{
+				Name:        &cluster.ClusterName,
 				Version:     &cluster.ClusterBasicSettings.Version,
 				NetworkType: &cluster.NetworkType,
 				Region:      &cluster.Region,
@@ -361,10 +362,6 @@ func (s *Syncer) SyncNamespaces(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Clus
 				} else {
 					blog.Errorf("get project error : %v", err)
 				}
-			}
-
-			if bizid != bkCluster.BizID {
-				bizid = int64(71)
 			}
 
 			if _, ok = nsToAdd[bizid]; ok {
