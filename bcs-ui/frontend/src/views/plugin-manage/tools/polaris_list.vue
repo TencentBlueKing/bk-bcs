@@ -1,26 +1,37 @@
 <template>
   <BcsContent
     title="Polaris"
-    :desc="`(${$t('plugin.tools.cluster', { name: curCluster?.clusterName })})`">
+    :desc="`(${$t('plugin.tools.cluster', { name: customCrdList.curCluster?.clusterName })})`">
     <div class="flex items-center justify-between mb-[16px]">
-      <bcs-button theme="primary" icon="plus" @click="showCreateCrdSideslider">
+      <bcs-button
+        class="mr-[5px] min-w-[115px]" theme="primary" icon="plus" @click="customCrdList.showCreateCrdSideslider">
         {{$t('plugin.tools.create')}}
       </bcs-button>
-      <bcs-input
-        class="w-[320px]"
-        right-icon="bk-icon icon-search"
-        clearable
-        :placeholder="$t('generic.placeholder.searchName')"
-        v-model.trim="searchValue">
-      </bcs-input>
+      <div class="flex justify-end">
+        <ClusterSelect v-model="propClusterId" cluster-type="all" @change="handleClusterChange"></ClusterSelect>
+        <NamespaceSelect
+          :cluster-id="propClusterId"
+          class="w-[250px] ml-[5px] mr-[5px]"
+          :clearable="true"
+          v-model="ns"
+          @change="handleGetList">
+        </NamespaceSelect>
+        <bcs-input
+          class="w-[320px]"
+          right-icon="bk-icon icon-search"
+          clearable
+          :placeholder="$t('generic.placeholder.searchName')"
+          v-model.trim="customCrdList.searchValue">
+        </bcs-input>
+      </div>
     </div>
     <bcs-table
       size="large"
-      :data="curPageData"
-      :pagination="pagination"
-      v-bkloading="{ isLoading: tableLoading }"
-      @page-change="pageChange"
-      @page-limit-change="pageSizeChange">
+      :data="customCrdList.curPageData"
+      :pagination="customCrdList.pagination"
+      v-bkloading="{ isLoading: customCrdList.tableLoading }"
+      @page-change="customCrdList.pageChange"
+      @page-limit-change="customCrdList.pageSizeChange">
       <bcs-table-column :label="$t('plugin.tools._ruleName')" show-overflow-tooltip min-width="100">
         <template #default="{ row }">
           {{ row.metadata.name || '--' }}
@@ -28,9 +39,9 @@
       </bcs-table-column>
       <bcs-table-column :label="$t('plugin.tools.cluster_ns')" min-width="220">
         <template #default="{ row }">
-          <p class="bcs-ellipsis leading-[24px]" :title="curCluster?.clusterName">
+          <p class="bcs-ellipsis leading-[24px]" :title="customCrdList.curCluster?.clusterName">
             <span>{{ $t('generic.label.cluster1') }}：</span>
-            <span>{{ curCluster?.clusterName }}</span>
+            <span>{{ customCrdList.curCluster?.clusterName }}</span>
           </p>
           <p class="bcs-ellipsis leading-[24px]" :title="row.namespace">
             <span>{{ $t('k8s.namespace') }}：</span>
@@ -104,7 +115,9 @@
       <bcs-table-column :label="$t('projects.operateAudit.record')" min-width="240">
         <template #default="{ row }">
           <p class="bcs-ellipsis leading-[24px]">
-            {{ $t('generic.label.updator') }}：<span>{{ handleGetExtData(row.metadata.uid, 'updater') || '--' }}</span>
+            {{ $t('generic.label.updator') }}：<span>
+              {{ customCrdList.handleGetExtData(row.metadata.uid, 'updater') || '--' }}
+            </span>
           </p>
           <p class="bcs-ellipsis leading-[24px]">
             {{ $t('cluster.labels.updatedAt') }}：
@@ -120,27 +133,27 @@
         <template #default="{ row }">
           <bcs-button
             text
-            @click="showUpdateCrdSideslider(row)">
+            @click="customCrdList.showUpdateCrdSideslider(row)">
             {{$t('generic.label.update')}}
           </bcs-button>
           <bcs-button
             text
             class="ml-[8px]"
-            @click="deleteCrd(row)">
+            @click="customCrdList.deleteCrd(row)">
             {{$t('generic.label.delete')}}
           </bcs-button>
         </template>
       </bcs-table-column>
       <template #empty>
         <BcsEmptyTableStatus
-          :type="searchValue ? 'search-empty' : 'empty'"
-          @clear="handleClearSearchData" />
+          :type="customCrdList.searchValue ? 'search-empty' : 'empty'"
+          @clear="customCrdList.handleClearSearchData" />
       </template>
     </bcs-table>
     <!-- 创建 & 更新 -->
     <bcs-sideslider
-      :is-show.sync="isShowCreate"
-      :title="title"
+      :is-show.sync="customCrdList.isShowCreate"
+      :title="customCrdList.title"
       quick-close
       :width="800">
       <template #content>
@@ -156,7 +169,7 @@
             error-display-type="normal"
             required>
             <bcs-input
-              :disabled="!!currentRow"
+              :disabled="!!customCrdList.currentRow"
               clearable
               class="w-[calc(50%-16px)]"
               :maxlength="64"
@@ -165,7 +178,7 @@
           </bk-form-item>
           <div class="flex items-start mt-[8px]">
             <bk-form-item class="flex-1 mr-[32px]" :label="$t('generic.label.cluster1')" required>
-              <bcs-input readonly :value="curCluster?.clusterName"></bcs-input>
+              <bcs-input readonly :value="customCrdList.curCluster?.clusterName"></bcs-input>
             </bk-form-item>
             <bk-form-item
               class="flex-1 !mt-0"
@@ -173,7 +186,9 @@
               property="metadata.namespace"
               error-display-type="normal"
               required>
-              <NamespaceSelect :disabled="!!currentRow" :cluster-id="clusterId" v-model="formData.metadata.namespace" />
+              <NamespaceSelect
+                :disabled="!!customCrdList.currentRow"
+                :cluster-id="propClusterId" v-model="formData.metadata.namespace" />
             </bk-form-item>
           </div>
           <!-- Polaris信息 -->
@@ -187,7 +202,7 @@
                   error-display-type="normal"
                   required>
                   <bcs-input
-                    :disabled="!!currentRow"
+                    :disabled="!!customCrdList.currentRow"
                     :placeholder="$t('plugin.tools.allowNumLettersSymbols')"
                     :maxlength="128"
                     v-model="formData.spec.polaris.name">
@@ -200,8 +215,8 @@
                   error-display-type="normal"
                   required>
                   <bcs-select
-                    :disabled="!!currentRow"
-                    :class="!currentRow ? 'bg-[#fff]' : ''"
+                    :disabled="!!customCrdList.currentRow"
+                    :class="!customCrdList.currentRow ? 'bg-[#fff]' : ''"
                     searchable
                     v-model="formData.spec.polaris.namespace">
                     <bcs-option
@@ -213,7 +228,8 @@
                   </bcs-select>
                 </bk-form-item>
               </div>
-              <bcs-checkbox :disabled="!!currentRow" class="mt-[20px]" v-model="showToken" @change="toggleShowToken">
+              <bcs-checkbox
+                :disabled="!!customCrdList.currentRow" class="mt-[20px]" v-model="showToken" @change="toggleShowToken">
                 {{ $t('plugin.tools.polaris') }}
               </bcs-checkbox>
               <bk-form-item
@@ -281,10 +297,10 @@
             </div>
           </bk-form-item>
           <div class="mt-[25px]">
-            <bcs-button :loading="saving" theme="primary" @click="createOrUpdateCrd">
-              {{ currentRow ? $t('generic.button.update') : $t('generic.button.create') }}
+            <bcs-button :loading="customCrdList.saving" theme="primary" @click="customCrdList.createOrUpdateCrd">
+              {{ customCrdList.currentRow ? $t('generic.button.update') : $t('generic.button.create') }}
             </bcs-button>
-            <bcs-button @click="isShowCreate = false">{{ $t('generic.button.cancel') }}</bcs-button>
+            <bcs-button @click="customCrdList.isShowCreate = false">{{ $t('generic.button.cancel') }}</bcs-button>
           </div>
         </bk-form>
       </template>
@@ -297,9 +313,11 @@ import { ref, watch } from 'vue';
 import useCustomCrdList from './use-custom-crd';
 
 import { formatDate } from '@/common/util';
+import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
 import BcsContent from '@/components/layout/Content.vue';
 import NamespaceSelect from '@/components/namespace-selector/namespace-select.vue';
 import $i18n from '@/i18n/i18n-setup';
+import $router from '@/router';
 import $store from '@/store';
 
 interface IPolarisFormData {
@@ -371,6 +389,10 @@ const formData = ref<IPolarisFormData>({
   ...initFormData,
 });
 
+const propClusterId = ref<string>(props.clusterId);
+
+const ns = ref<string>('');
+
 const getParams = () => {
   const data: IPolarisFormData = JSON.parse(JSON.stringify(formData.value));
   data.spec.polaris.operator = $store.state.user?.username;
@@ -430,38 +452,28 @@ const rules = ref({
 });
 
 // hooks
-const {
-  curCluster,
-  currentRow,
-  curPageData,
-  pagination,
-  tableLoading,
-  saving,
-  searchValue,
-  isShowCreate,
-  title,
-  formRef,
-  pageChange,
-  pageSizeChange,
-  handleGetExtData,
-  showCreateCrdSideslider,
-  showUpdateCrdSideslider,
-  createOrUpdateCrd,
-  deleteCrd,
-  handleClearSearchData,
-} = useCustomCrdList({
+
+const customCrdList = ref(useCustomCrdList({
   $crd: 'polarisconfigs.tkex.tencent.com',
   $apiVersion: 'tkex.tencent.com/v1',
   $kind: 'PolarisConfig',
-  clusterId: props.clusterId,
+  clusterId: propClusterId.value,
   formData,
   initFormData,
   getParams,
-});
+  $namespace: ns.value || undefined,
+}));
 
 const showToken = ref(false);
-watch(currentRow, () => {
-  showToken.value = !!currentRow.value?.spec?.polaris?.token;
+watch(() => customCrdList.value.currentRow, () => {
+  showToken.value = !!customCrdList.value.currentRow?.spec?.polaris?.token;
+});
+watch(propClusterId, () => {
+  $router.push({
+    params: {
+      clusterId: propClusterId.value,
+    },
+  });
 });
 const toggleShowToken = () => {
   formData.value.spec.polaris.token = '';
@@ -481,5 +493,17 @@ const handleAddService = () => {
 // 删除service
 const handleDeleteService = (index: number) => {
   formData.value.spec.services.splice(index, 1);
+};
+const handleClusterChange = () => {
+  ns.value = '';
+  handleGetList();
+};
+const handleGetList = () => {
+  customCrdList.value.handleGetCrdList({
+    $crd: 'polarisconfigs.tkex.tencent.com',
+    $clusterId: propClusterId.value,
+    $category: 'custom_objects',
+    namespace: ns.value || undefined,
+  });
 };
 </script>
