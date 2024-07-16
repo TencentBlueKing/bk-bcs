@@ -27,7 +27,7 @@
             :key="pkg.id"
             :value="pkg.id"
             :label="pkg.spec.name"
-            :disabled="citeByPkgIds.includes(pkg.id)">
+            :disabled="citeByPkgIds && citeByPkgIds.includes(pkg.id)">
           </bk-option>
         </bk-select>
       </bk-form-item>
@@ -73,7 +73,7 @@
   const props = defineProps<{
     show: boolean;
     value: ITemplateConfigItem[];
-    citeByPkgIds: number[];
+    citeByPkgIds?: number[];
   }>();
 
   const emits = defineEmits(['update:show', 'added']);
@@ -103,9 +103,11 @@
         pending.value = false;
         if (props.citeByPkgIds && props.citeByPkgIds.length > 0) {
           selectedPkgs.value = allPackages.value
-            .filter((pkg) => props.citeByPkgIds.includes(pkg.id))
+            .filter((pkg) => props.citeByPkgIds!.includes(pkg.id))
             .map((pkg) => pkg.id);
-          getCitedData();
+          if (selectedPkgs.value.length > 0) {
+            getCitedData();
+          }
         } else {
           selectedPkgs.value = [];
         }
@@ -156,7 +158,7 @@
   };
 
   const handleClearPkgs = () => {
-    selectedPkgs.value = allPackages.value.filter((pkg) => props.citeByPkgIds.includes(pkg.id)).map((pkg) => pkg.id);
+    selectedPkgs.value = allPackages.value.filter((pkg) => props.citeByPkgIds!.includes(pkg.id)).map((pkg) => pkg.id);
     getCitedData();
   };
 

@@ -127,7 +127,7 @@
         size = new Blob([stringContent]).size;
         await updateTemplateContent(props.spaceId, currentTemplateSpace.value, stringContent, sign);
       }
-      const { memo, file_type, file_mode, user, user_group, privilege } = configForm.value;
+      const { memo, file_type, file_mode, user, user_group, privilege, revision_name } = configForm.value;
       const formData = {
         revision_memo: memo,
         file_type,
@@ -137,6 +137,7 @@
         privilege,
         sign,
         byte_size: size,
+        revision_name,
       };
       await updateTemplateConfig(
         props.spaceId,

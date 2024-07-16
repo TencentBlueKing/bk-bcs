@@ -19,6 +19,8 @@
           v-if="!loading"
           :data="citedList"
           :max-height="maxTableHeight"
+          :checked="checkedPkgs"
+          :is-row-select-enable="isRowSelectEnable"
           @selection-change="handleSelectionChange"
           @select-all="handleSelectAll">
           <bk-table-column v-if="citedList.length > 1" type="selection" min-width="30" width="40" />
@@ -34,7 +36,7 @@
         </bk-table>
       </bk-loading>
     </div>
-    <p class="tips">
+    <p v-if="citedList.length === 1 || selectedPkgs.length === citedList.length" class="tips">
       <Warn class="warn-icon" />
       {{ t('移出后配置文件将不存在任一套餐。你仍可在「全部配置文件」或「未指定套餐」分类下找回。') }}
     </p>
@@ -90,6 +92,10 @@
   const maxTableHeight = computed(() => {
     const windowHeight = window.innerHeight;
     return windowHeight * 0.6 - 200;
+  });
+
+  const checkedPkgs = computed(() => {
+    return citedList.value.filter((pkg) => selectedPkgs.value.includes(pkg.id));
   });
 
   watch(
@@ -160,14 +166,20 @@
   };
 
   const handleSelectAll = ({ checked }: { checked: boolean }) => {
-    console.log(checked);
     if (checked) {
       selectedPkgs.value = citedList.value.map((item) => item.id);
     } else {
-      selectedPkgs.value = [];
+      if (typeof props.currentPkg === 'number') {
+        selectedPkgs.value = [props.currentPkg];
+      } else if (props.currentPkg === 'all' && citedList.value.length === 1) {
+        selectedPkgs.value = [citedList.value[0].id];
+      }
     }
   };
 
+  const isRowSelectEnable = ({ row, isCheckAll }: any) => {
+    return isCheckAll || props.currentPkg !== row.id;
+  };
   const handleConfirm = async () => {
     try {
       pending.value = true;

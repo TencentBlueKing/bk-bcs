@@ -71,8 +71,8 @@
 
   const metaData = computed(() => {
     const { content_spec, revision, spec } = props.config;
+    const { create_at, creator, update_at, reviser } = revision;
     const { byte_size, signature, md5 } = content_spec;
-    const { create_at, creator, reviser, update_at } = revision;
     const { key, kv_type, memo } = spec;
     return sortObjectKeysByAscii({
       key,
