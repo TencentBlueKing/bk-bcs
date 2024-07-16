@@ -16,13 +16,12 @@ interface IConfig<T> {
   formData: Ref<T>
   initFormData: T
   getParams?: Function
-  $namespace?: string
 }
 
 export default function useCustomCrdList<
 T extends { metadata: { name: string, namespace: string } }
 >(config: IConfig<T>) {
-  const { $crd, $kind, $apiVersion, clusterId, formData, initFormData, getParams, $namespace } = config;
+  const { $crd, $kind, $apiVersion, clusterId, formData, initFormData, getParams } = config;
 
   const { clusterList } = useCluster();
   const curCluster = computed(() => clusterList.value.find(item => item.clusterID === clusterId));
@@ -45,9 +44,13 @@ T extends { metadata: { name: string, namespace: string } }
 
   // 获取表格数据
   const tableLoading = ref(false);
-  const handleGetCrdList = async (params) => {
+  const handleGetCrdList = async () => {
     tableLoading.value = true;
-    const { manifest, manifestExt } = await customResourceList(params).catch(() => ({ manifest: {} }));
+    const { manifest, manifestExt } = await customResourceList({
+      $crd,
+      $clusterId: clusterId,
+      $category: 'custom_objects',
+    }).catch(() => ({ manifest: {} }));
     crdList.value = manifest.items || [];
     crdManifestExt.value = manifestExt;
     tableLoading.value = false;
@@ -122,12 +125,7 @@ T extends { metadata: { name: string, namespace: string } }
         message: $i18n.t('generic.msg.success.ok'),
       });
       isShowCreate.value = false;
-      handleGetCrdList({
-        $crd,
-        $clusterId: clusterId,
-        $category: 'custom_objects',
-        namespace: $namespace,
-      });
+      handleGetCrdList();
     }
     saving.value = false;
   };
@@ -157,12 +155,7 @@ T extends { metadata: { name: string, namespace: string } }
             theme: 'success',
             message: $i18n.t('generic.msg.success.delete'),
           });
-          handleGetCrdList({
-            $crd,
-            $clusterId: clusterId,
-            $category: 'custom_objects',
-            namespace: $namespace,
-          });
+          handleGetCrdList();
         }
       },
     });
@@ -170,12 +163,7 @@ T extends { metadata: { name: string, namespace: string } }
 
 
   onBeforeMount(() => {
-    handleGetCrdList({
-      $crd,
-      $clusterId: clusterId,
-      $category: 'custom_objects',
-      namespace: $namespace,
-    });
+    handleGetCrdList();
   });
 
   return {
@@ -197,6 +185,5 @@ T extends { metadata: { name: string, namespace: string } }
     createOrUpdateCrd,
     deleteCrd,
     handleClearSearchData,
-    handleGetCrdList,
   };
 }
