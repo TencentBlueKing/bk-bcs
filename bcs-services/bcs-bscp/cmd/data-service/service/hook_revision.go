@@ -34,8 +34,7 @@ func (s *Service) CreateHookRevision(ctx context.Context,
 
 	kt := kit.FromGrpcContext(ctx)
 
-	hook, err := s.dao.Hook().GetByID(kt, req.Attachment.BizId, req.Attachment.HookId)
-	if err != nil {
+	if _, err := s.dao.Hook().GetByID(kt, req.Attachment.BizId, req.Attachment.HookId); err != nil {
 		logs.Errorf("get hook (%d) failed, err: %v, rid: %s", req.Attachment.HookId, err, kt.Rid)
 		return nil, err
 	}
@@ -73,22 +72,6 @@ func (s *Service) CreateHookRevision(ctx context.Context,
 			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
 		}
 		return nil, err
-	}
-
-	hookData := &table.Hook{
-		ID: hook.ID, Spec: hook.Spec, Attachment: hook.Attachment,
-		Revision: &table.Revision{
-			Creator:   hook.Revision.Creator,
-			CreatedAt: hook.Revision.CreatedAt,
-			Reviser:   kt.User,
-			UpdatedAt: time.Now().UTC(),
-		},
-	}
-	if err = s.dao.Hook().UpdateWithTx(kt, tx, hookData); err != nil {
-		logs.Errorf("update hook failed, err: %v, rid: %s", err, kt.Rid)
-		if rErr := tx.Rollback(); rErr != nil {
-			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
-		}
 	}
 
 	if e := tx.Commit(); e != nil {
@@ -241,7 +224,6 @@ func (s *Service) PublishHookRevision(ctx context.Context, req *pbds.PublishHook
 			return nil, e
 		}
 	}
-
 	// 2. 上线脚本版本
 	hookRevision, err := s.dao.HookRevision().Get(kt, req.BizId, req.HookId, req.Id)
 	if err != nil {
@@ -251,6 +233,31 @@ func (s *Service) PublishHookRevision(ctx context.Context, req *pbds.PublishHook
 		}
 		return nil, err
 	}
+
+	// 如果是未发布 => 发布, 需要更新脚本的更新时间和更新人
+	if hookRevision.Spec.State == table.HookRevisionStatusNotDeployed {
+		hook, err := s.dao.Hook().GetByID(kt, req.GetBizId(), req.GetHookId())
+		if err != nil {
+			logs.Errorf("get hook (%d) failed, err: %v, rid: %s", req.GetHookId(), err, kt.Rid)
+			return nil, err
+		}
+		hookData := &table.Hook{
+			ID: hook.ID, Spec: hook.Spec, Attachment: hook.Attachment,
+			Revision: &table.Revision{
+				Creator:   hook.Revision.Creator,
+				CreatedAt: hook.Revision.CreatedAt,
+				Reviser:   kt.User,
+				UpdatedAt: time.Now().UTC(),
+			},
+		}
+		if err = s.dao.Hook().UpdateWithTx(kt, tx, hookData); err != nil {
+			logs.Errorf("update hook failed, err: %v, rid: %s", err, kt.Rid)
+			if rErr := tx.Rollback(); rErr != nil {
+				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+			}
+		}
+	}
+
 	hookRevision.Revision.Reviser = kt.User
 	hookRevision.Spec.State = table.HookRevisionStatusDeployed
 	if e := s.dao.HookRevision().UpdatePubStateWithTx(kt, tx, hookRevision); e != nil {
