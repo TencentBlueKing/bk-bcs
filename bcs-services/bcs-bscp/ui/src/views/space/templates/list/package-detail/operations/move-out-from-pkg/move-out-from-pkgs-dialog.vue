@@ -19,8 +19,8 @@
           v-if="!loading"
           :data="citedList"
           :max-height="maxTableHeight"
-          :is-selected-fn="getSelectionStatus"
-          @selection-change="handleSelectionChange">
+          @selection-change="handleSelectionChange"
+          @select-all="handleSelectAll">
           <bk-table-column v-if="citedList.length > 1" type="selection" min-width="30" width="40" />
           <bk-table-column :label="t('所在模板套餐')">
             <template #default="{ row }">
@@ -34,7 +34,7 @@
         </bk-table>
       </bk-loading>
     </div>
-    <p v-if="citedList.length === 1" class="tips">
+    <p class="tips">
       <Warn class="warn-icon" />
       {{ t('移出后配置文件将不存在任一套餐。你仍可在「全部配置文件」或「未指定套餐」分类下找回。') }}
     </p>
@@ -146,29 +146,25 @@
     loading.value = false;
   };
 
-  const getSelectionStatus = ({ row }: { row: ICitedItem }) => {
-    console.log(row.name, selectedPkgs.value.includes(row.id));
-    return selectedPkgs.value.includes(row.id);
-  };
-
-  const handleSelectionChange = ({ checked, isAll, row }: { checked: boolean; isAll: boolean; row: ICitedItem }) => {
-    if (isAll) {
-      if (checked) {
-        selectedPkgs.value = citedList.value.map((item) => item.id);
-      } else {
-        selectedPkgs.value = [];
+  const handleSelectionChange = ({ checked, row }: { checked: boolean; row: ICitedItem }) => {
+    if (checked) {
+      if (!selectedPkgs.value.includes(row.id)) {
+        selectedPkgs.value.push(row.id);
       }
     } else {
-      if (checked) {
-        if (!selectedPkgs.value.includes(row.id)) {
-          selectedPkgs.value.push(row.id);
-        }
-      } else {
-        const index = selectedPkgs.value.findIndex((id) => id === row.id);
-        if (index > -1) {
-          selectedPkgs.value.splice(index, 1);
-        }
+      const index = selectedPkgs.value.findIndex((id) => id === row.id);
+      if (index > -1) {
+        selectedPkgs.value.splice(index, 1);
       }
+    }
+  };
+
+  const handleSelectAll = ({ checked }: { checked: boolean }) => {
+    console.log(checked);
+    if (checked) {
+      selectedPkgs.value = citedList.value.map((item) => item.id);
+    } else {
+      selectedPkgs.value = [];
     }
   };
 

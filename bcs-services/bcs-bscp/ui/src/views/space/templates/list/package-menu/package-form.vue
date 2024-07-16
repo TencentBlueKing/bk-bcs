@@ -105,7 +105,7 @@
         operator: userInfo.value.username,
       };
       const resp = await getAppList(bizId, query);
-      serviceList.value = resp.details;
+      serviceList.value = resp.details.filter((service: IAppItem) => service.spec.config_type === 'file');
     } catch (e) {
       console.error(e);
     } finally {
