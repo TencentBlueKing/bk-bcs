@@ -309,6 +309,7 @@
   import TableFilter from '../../../components/table-filter.vue';
   import DownloadConfigBtn from '../download-config-btn.vue';
   import ContentWidthOverflowTips from '../../../../../../../../components/content-width-overflow-tips/index.vue';
+  import { debounce } from 'lodash';
 
   interface IConfigsGroupData {
     id: number;
@@ -515,12 +516,15 @@
     bindingId.value = res.details.length === 1 ? res.details[0].id : 0;
   };
 
-  const getAllConfigList = async (createConfig = false) => {
+  const getAllConfigList = debounce(async (createConfig = false) => {
+    const currentSearchStr = props.searchStr;
     loading.value = true;
     await Promise.all([getCommonConfigList(createConfig), getBoundTemplateList()]);
     loading.value = false;
+    // 处理文件数量过多 导致上一次搜索结果返回比这一次慢 导入搜索结果错误 取消数据处理
+    if (currentSearchStr !== props.searchStr) return;
     tableGroupsData.value = transListToTableData();
-  };
+  }, 500);
 
   // 获取非模板配置文件列表
   const getCommonConfigList = async (createConfig = false) => {

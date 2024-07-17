@@ -77,7 +77,7 @@
               </template>
             </template>
           </bk-table-column>
-          <bk-table-column :label="t('操作')">
+          <bk-table-column :label="t('操作')" :width="locale === 'zh-cn' ? '200' : '270'">
             <template #default="{ row }">
               <template v-if="row.status">
                 <template v-if="currentTab === 'avaliable'">
@@ -150,7 +150,7 @@
   const { versionData } = storeToRefs(configStore);
 
   const router = useRouter();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { pagination, updatePagination } = useTablePagination('serviceVersionTableList');
 
   const props = defineProps<{
@@ -260,8 +260,8 @@
   // 废弃
   const handleDeprecate = (version: IConfigVersion) => {
     operateConfirmDialog.value.open = true;
-    operateConfirmDialog.value.title = '确认废弃该版本';
-    operateConfirmDialog.value.tips = '此操作不会删除版本，如需找回或彻底删除请去版本详情的废弃版本列表操作';
+    operateConfirmDialog.value.title = t('确认废弃该版本');
+    operateConfirmDialog.value.tips = t('此操作不会删除版本，如需找回或彻底删除请去版本详情的废弃版本列表操作');
     operateConfirmDialog.value.version = version;
     operateConfirmDialog.value.confirmFn = () =>
       new Promise(() => {
@@ -269,7 +269,7 @@
           operateConfirmDialog.value.open = false;
           Message({
             theme: 'success',
-            message: '版本废弃成功',
+            message: t('版本废弃成功'),
           });
           updateListAndSetVersionAfterOperate(version.id);
         });

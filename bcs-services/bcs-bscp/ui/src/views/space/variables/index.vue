@@ -306,6 +306,10 @@
     }
   }
   .variable-table {
+    :deep(.bk-table-body) {
+      max-height: calc(100vh - 300px);
+      overflow: auto;
+    }
     padding: 16px 24px 24px;
   }
   .action-btns {

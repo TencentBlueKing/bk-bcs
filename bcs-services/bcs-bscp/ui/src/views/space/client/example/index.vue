@@ -4,7 +4,7 @@
       <!-- 选择服务 -->
       <service-selector class="sel-service" @select-service="selectService" />
       <!-- 示例列表 -->
-      <div class="type-wrap">
+      <div class="type-wrap" v-show="serviceName && serviceType">
         <bk-menu :active-key="renderComponent" @update:active-key="changeTypeItem">
           <bk-menu-item :need-icon="false" v-for="item in navList" :key="item.val"> {{ item.name }} </bk-menu-item>
         </bk-menu>
@@ -85,6 +85,9 @@
 
   // 服务切换
   const selectService = (serviceTypeVal: string, serviceNameVal: string) => {
+    if (!serviceTypeVal || !serviceNameVal) {
+      return (loading.value = false);
+    }
     if (serviceName.value !== serviceNameVal || serviceType.value !== serviceTypeVal) {
       loading.value = true;
       serviceName.value = serviceNameVal;

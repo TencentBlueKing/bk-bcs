@@ -34,6 +34,11 @@
 .info-box-style .bk-modal-body{
   .bk-dialog-header {
     padding: 24px 24px 0;
+    .bk-dialog-title {
+      min-height: 27px;
+      height: auto !important;
+      white-space: normal;
+    }
   }
   .bk-modal-content {
     min-height: auto;

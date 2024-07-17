@@ -11,7 +11,7 @@
             placement: 'top',
           }" />
       </template>
-      <KeySelect @current-key="setCredential" />
+      <KeySelect ref="keySelectorRef" @current-key="setCredential" />
     </bk-form-item>
     <bk-form-item v-if="props.directoryShow" property="tempDir" :required="props.directoryShow">
       <template #label>
@@ -27,7 +27,7 @@
     </bk-form-item>
   </bk-form>
   <!-- 添加标签 -->
-  <AddLabel @send-label="(obj) => (formData.labelArr = obj)" @send-validate="(val) => (validateLabel = val)" />
+  <AddLabel ref="addLabelRef" :label-name="labelName" @send-label="(obj) => (formData.labelArr = obj)" />
 </template>
 
 <script lang="ts" setup>
@@ -43,6 +43,10 @@
       type: Boolean,
       default: true,
     },
+    labelName: {
+      type: String,
+      default: '标签',
+    },
   });
 
   const emits = defineEmits(['update-option-data']);
@@ -50,6 +54,8 @@
   const { t } = useI18n();
   const sysDirectories: string[] = ['/bin', '/boot', '/dev', '/lib', '/lib64', '/proc', '/run', '/sbin', '/sys'];
 
+  const addLabelRef = ref();
+  const keySelectorRef = ref();
   const formRef = ref();
   const formData = ref<IExampleFormData>({
     clientKey: '', // 客户端密钥
@@ -57,7 +63,6 @@
     tempDir: '/data/bscp', // 临时目录
     labelArr: [], // 添加的标签
   });
-  const validateLabel = ref(true);
 
   const rules = {
     clientKey: [
@@ -114,9 +119,13 @@
   });
 
   const handleValidate = () => {
-    if (!validateLabel.value) {
-      return new Promise((reject) => reject);
+    // 先验证label是否都满足条件
+    if (!addLabelRef.value.isAllValid()) {
+      keySelectorRef.value.validateCredential();
+      formRef.value.validate();
+      return Promise.reject();
     }
+    keySelectorRef.value.validateCredential();
     return formRef.value.validate();
   };
   const setCredential = (key: string, privacyKey: string) => {

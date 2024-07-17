@@ -798,7 +798,7 @@ func (c *Cluster) AddSubnetsToCluster(ctx context.Context, subnet *proto.SubnetS
 	for i := range subnet.GetNew() {
 		zoneRatio, ok := zoneSubnetRatio[subnet.GetNew()[i].GetZone()]
 		if ok && zoneRatio.Ratio < float64(goalRatio) {
-			return fmt.Errorf("zone[%s] usage lt goalRatio %+v%", subnet.GetNew()[i].GetZone(), goalRatio)
+			return fmt.Errorf("zone[%s] usage lt goalRatio %+v", subnet.GetNew()[i].GetZone(), goalRatio)
 		}
 	}
 

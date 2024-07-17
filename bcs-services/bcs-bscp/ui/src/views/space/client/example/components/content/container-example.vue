@@ -6,7 +6,7 @@
       <bk-button theme="primary" class="copy-btn" @click="copyExample">{{ $t('复制示例') }}</bk-button>
       <code-preview
         class="preview-component"
-        style="height: 1490px"
+        style="height: 1496px"
         :code-val="replaceVal"
         :variables="variables"
         language="yaml"
@@ -16,7 +16,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref, provide, inject, Ref, nextTick } from 'vue';
+  import { ref, inject, Ref, nextTick } from 'vue';
   import { copyToClipBoard } from '../../../../../../utils/index';
   import { IVariableEditParams } from '../../../../../../../types/variable';
   import BkMessage from 'bkui-vue/lib/message';
@@ -44,8 +44,6 @@
   const copyReplaceVal = ref(''); // 渲染的值，用于复制未脱敏密钥的yaml数据
   const basicInfo = inject<{ serviceName: Ref<string>; serviceType: Ref<string> }>('basicInfo');
   const variables = ref<IVariableEditParams[]>();
-  const formError = ref<number>();
-  provide('formError', formError);
 
   const getOptionData = (data: any) => {
     // 标签展示方式加工
@@ -102,8 +100,6 @@
         message: t('示例已复制'),
       });
     } catch (error) {
-      // 通知密钥选择组件校验状态
-      formError.value = new Date().getTime();
       props.contentScrollTop();
       console.log(error);
     }
@@ -114,15 +110,13 @@
   .example-wrap {
     .preview-component {
       margin-top: 16px;
-      padding: 16px 0 0;
-      // height: calc(100% - 48px);
+      padding: 16px 8px;
       background-color: #f5f7fa;
     }
   }
   .preview-container {
     margin-top: 32px;
     padding: 16px 0 0;
-    flex: 1;
     border-top: 1px solid #dcdee5;
     overflow: hidden;
   }

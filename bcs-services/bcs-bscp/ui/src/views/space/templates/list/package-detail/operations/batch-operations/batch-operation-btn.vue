@@ -168,3 +168,24 @@
     }
   }
 </style>
+
+<style lang="scss">
+  .batch-operation-button-popover.bk-popover.bk-pop2-content {
+    padding: 4px 0;
+    border: 1px solid #dcdee5;
+    width: auto !important;
+    box-shadow: 0 2px 6px 0 #0000001a;
+    .operation-item {
+      padding: 0 12px;
+      min-width: 58px;
+      height: 32px;
+      line-height: 32px;
+      color: #63656e;
+      font-size: 12px;
+      cursor: pointer;
+      &:hover {
+        background: #f5f7fa;
+      }
+    }
+  }
+</style>

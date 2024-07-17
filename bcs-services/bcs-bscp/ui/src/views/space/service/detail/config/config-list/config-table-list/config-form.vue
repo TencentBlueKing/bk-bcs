@@ -307,6 +307,9 @@
     () => {
       if (props.config.file_type === 'binary') {
         fileContent.value = props.content as IFileConfigContentSummary;
+        if (props.isEdit) {
+          uploadFileSignature.value = fileContent.value.signature;
+        }
       } else {
         stringContent.value = props.content as string;
       }
@@ -445,7 +448,6 @@
     return SHA256(stringContent.value).toString();
   };
 
-
   // 下载已上传文件
   const handleDownloadFile = async () => {
     if (uploadProgress.value.status === 'uploading') return;
@@ -489,7 +491,12 @@
   };
 
   defineExpose({
-    getSignature,
+    getSignature: () => {
+      if (localVal.value.file_type === 'binary') {
+        return uploadFileSignature.value;
+      }
+      return getSignature();
+    },
     validate,
   });
 </script>

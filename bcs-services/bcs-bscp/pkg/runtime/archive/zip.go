@@ -23,13 +23,15 @@ import (
 
 // ZipArchive 实现了 Archive 接口，用于处理 zip 文件
 type ZipArchive struct {
-	destPath string
+	destPath      string
+	limitFileSize int64
 }
 
 // NewZipArchive xxx
-func NewZipArchive(destPath string) ZipArchive {
+func NewZipArchive(destPath string, limitFileSize int64) ZipArchive {
 	return ZipArchive{
-		destPath: destPath,
+		destPath:      destPath,
+		limitFileSize: limitFileSize,
 	}
 }
 
@@ -81,6 +83,9 @@ func (z ZipArchive) Unzip(zipFile *os.File) error {
 
 func (z ZipArchive) unpackZip(zr *zip.Reader) error {
 	for _, f := range zr.File {
+		if f.UncompressedSize64 > uint64(z.limitFileSize) {
+			return fmt.Errorf("file %s exceeds size", f.Name)
+		}
 		err := z.unzipFile(f)
 		if err != nil {
 			return err

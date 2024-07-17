@@ -268,7 +268,7 @@
       {
         template_space_id: 0,
         id: 0,
-        name: '非模板配置',
+        name: t('非模板配置'),
         expand: true,
         configs: configs.map((config) => {
           const { id, spec, commit_spec, revision, file_state } = config;
