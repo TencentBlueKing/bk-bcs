@@ -690,3 +690,5 @@
   en: "reschedule pod %s/%s is not allowed because has not ownerRef"
 - msgID: "Pod %s/%s 父级资源存在 Job，不允许重新调度"
   en: "reschedule pod %s/%s is not allowed because ownerRef exists Job"
+- msgID: "版本字段不能为空"
+  en: "version field required"

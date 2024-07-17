@@ -3070,9 +3070,18 @@ message CreateTemplateMetadataReq {
 	}];
 	string version = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "模板文件版本"
-	}, (validate.rules).string = {min_len : 1, max_len : 64}];
+	}];
 	string content = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "模板文件版本Content"
+	}];
+	bool isDraft = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "是否草稿"
+	}];
+	string baseVersion = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "基于模板文件版本"
+	}];
+	string draftContent = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板文件草稿内容"
 	}];
 }
 
@@ -3100,6 +3109,15 @@ message UpdateTemplateMetadataReq {
 	}];
 	VersionMode versionMode = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "模板文件版本模式"
+	}];
+	bool isDraft = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "是否草稿"
+	}];
+	string baseVersion = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "基于模板文件版本"
+	}];
+	string draftContent = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板文件草稿内容"
 	}];
 }
 
