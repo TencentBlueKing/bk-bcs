@@ -23,6 +23,7 @@ import (
 	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/chartutil"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/klog/v2"
 
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
@@ -179,10 +180,14 @@ func getK8sResource(ctx context.Context, kind, name, clusterID string, v map[str
 	}
 	k8sRes, err := res.GetGroupVersionResource(ctx, clusterConf, kind, groupVersion)
 	if err != nil {
+		// 报错不影响 preview 接口返回
+		klog.Errorf("get group version resource err: %v", err)
 		return ""
 	}
 	content, err := cli.NewResClient(clusterConf, k8sRes).Get(ctx, namespace, name, metav1.GetOptions{})
 	if err != nil {
+		// 报错不影响 preview 接口返回
+		klog.Errorf("new res client get err: %v", err)
 		return ""
 	}
 
@@ -191,6 +196,8 @@ func getK8sResource(ctx context.Context, kind, name, clusterID string, v map[str
 
 	d2, err := yaml.Marshal(object)
 	if err != nil {
+		// 报错不影响 preview 接口返回
+		klog.Errorf("yaml marshal err: %v", err)
 		return ""
 	}
 	return string(d2)
