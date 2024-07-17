@@ -15,7 +15,6 @@ package template
 
 import (
 	"context"
-	"errors"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"gopkg.in/yaml.v2"
@@ -191,7 +190,7 @@ func (t *TemplateAction) Create(ctx context.Context, req *clusterRes.CreateTempl
 
 	// 非草稿模板文件需要版本号
 	if !req.GetIsDraft() && req.Version == "" {
-		return "", errors.New("non draft template files require version")
+		return "", errorx.New(errcode.ValidateErr, i18n.GetMsg(ctx, ("版本字段不能为空")))
 	}
 
 	templateSpace, err := t.model.GetTemplateSpace(ctx, req.GetTemplateSpaceID())
@@ -312,21 +311,17 @@ func (t *TemplateAction) Update(ctx context.Context, req *clusterRes.UpdateTempl
 	}
 
 	updateTemplate := entity.M{
-		"name":        req.GetName(),
-		"description": req.GetDescription(),
-		"updator":     userName,
-		"tags":        req.GetTags(),
-		"versionMode": req.GetVersionMode(),
+		"name":         req.GetName(),
+		"description":  req.GetDescription(),
+		"updator":      userName,
+		"tags":         req.GetTags(),
+		"versionMode":  req.GetVersionMode(),
+		"isDraft":      req.GetIsDraft(),
+		"baseVersion":  req.GetBaseVersion(),
+		"draftContent": req.GetDraftContent(),
 	}
 	if req.GetVersionMode() == clusterRes.VersionMode_SpecifyVersion && req.GetVersion() != "" {
 		updateTemplate["version"] = req.GetVersion()
-	}
-
-	// 草稿状态下并且模板文件处于草稿状态，才更新相关草稿相关字段
-	if req.GetIsDraft() && template.IsDraft {
-		updateTemplate["isDraft"] = req.GetIsDraft()
-		updateTemplate["baseVersion"] = req.GetBaseVersion()
-		updateTemplate["draftContent"] = req.GetDraftContent()
 	}
 
 	if err = t.model.UpdateTemplate(ctx, req.GetId(), updateTemplate); err != nil {

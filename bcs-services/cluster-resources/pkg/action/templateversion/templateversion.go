@@ -233,10 +233,10 @@ func (t *TemplateVersionAction) Create(ctx context.Context, req *clusterRes.Crea
 	}
 
 	updateTemplate := make(entity.M, 0)
-	// 如果草稿态的情况下，创建版本解除草稿态，草稿内容清空
+	// 如果草稿态的情况下，创建版本解除草稿态
 	if tmp.IsDraft {
 		updateTemplate["isDraft"] = false
-		updateTemplate["baseVersion"] = req.GetVersion()
+		updateTemplate["baseVersion"] = ""
 		updateTemplate["draftContent"] = ""
 	}
 
