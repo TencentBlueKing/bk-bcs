@@ -292,6 +292,9 @@ export const getTemplatesDetailByIds = (biz_id: string, ids: number[]) =>
  * @param template_space_id 空间ID
  * @param template_id 模板ID
  * @param template_set_ids 模板套餐列表
+ * @param exclusion_operation 是否跨页全选
+ * @param template_set_id 设置目标模板套餐
+ * @param no_set_specified 是否未指定套餐
  * @returns
  */
 export const addTemplateToPackage = (
@@ -299,15 +302,17 @@ export const addTemplateToPackage = (
   template_space_id: number,
   template_ids: number[],
   template_set_ids: number[],
-  template_set_id: string | number,
   exclusion_operation: boolean,
+  template_set_id: number | string,
+  no_set_specified: boolean,
 ) =>
   http.post(
     `/config/biz/${biz_id}/template_spaces/${template_space_id}/template_set/${template_set_id}/templates/add_to_template_sets`,
     {
-      template_ids,
       template_set_ids,
       exclusion_operation,
+      template_ids,
+      no_set_specified,
     },
   );
 

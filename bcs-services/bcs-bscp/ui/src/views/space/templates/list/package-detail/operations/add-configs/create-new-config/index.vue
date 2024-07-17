@@ -30,7 +30,7 @@
     @confirm="handleCreateConfirm" />
 </template>
 <script lang="ts" setup>
-  import { ref, watch } from 'vue';
+  import { ref, watch, computed } from 'vue';
   import { useI18n } from 'vue-i18n';
   import { storeToRefs } from 'pinia';
   import Message from 'bkui-vue/lib/message';
@@ -46,7 +46,7 @@
   const templateStore = useTemplateStore();
 
   const { spaceId } = storeToRefs(useGlobalStore());
-  const { currentTemplateSpace } = storeToRefs(useTemplateStore());
+  const { currentTemplateSpace, currentPkg } = storeToRefs(useTemplateStore());
   const { t } = useI18n();
 
   const props = defineProps<{
@@ -62,6 +62,10 @@
   const pending = ref(false);
   const isSelectPkgDialogShow = ref(false);
   const isFormChanged = ref(false);
+
+  const templateSetID = computed(() => {
+    return typeof currentPkg.value === 'string' ? 0 : currentPkg.value;
+  });
 
   watch(
     () => props.show,
@@ -104,8 +108,17 @@
       const params = { ...configForm.value, ...{ sign, byte_size: size } };
       const res = await createTemplate(spaceId.value, currentTemplateSpace.value, params);
       // 选择未指定套餐时,不需要调用添加接口
+      // 新建配置不存在全选反选，未指定套餐不存在新建
       if (pkgIds.length > 1 || pkgIds[0] !== 0) {
-        await addTemplateToPackage(spaceId.value, currentTemplateSpace.value, [res.data.id], pkgIds);
+        await addTemplateToPackage(
+          spaceId.value,
+          currentTemplateSpace.value,
+          [res.data.id],
+          pkgIds,
+          false,
+          templateSetID.value,
+          false,
+        );
       }
       templateStore.$patch((state) => {
         state.topIds = [res.data.id];

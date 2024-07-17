@@ -93,6 +93,12 @@
     const windowHeight = window.innerHeight;
     return windowHeight * 0.6 - 200;
   });
+  const templateSetID = computed(() => {
+    return typeof currentPkg.value === 'string' ? 0 : currentPkg.value;
+  });
+  const noSetSpecified = computed(() => {
+    return currentPkg.value === 'no_specified';
+  });
 
   watch(
     () => props.show,
@@ -141,7 +147,6 @@
   const handleConfirm = async () => {
     const isValid = await formRef.value.validate();
     if (!isValid) return;
-
     try {
       pending.value = true;
       const templateIds = props.value.map((item) => item.id);
@@ -150,8 +155,9 @@
         currentTemplateSpace.value,
         templateIds,
         selectedPkgs.value,
-        currentPkg.value,
         currentCheckType.value,
+        templateSetID.value,
+        noSetSpecified.value,
       );
       emits('added');
       close();
