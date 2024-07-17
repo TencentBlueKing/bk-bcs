@@ -188,6 +188,11 @@ func (t *TemplateAction) Create(ctx context.Context, req *clusterRes.CreateTempl
 		return "", err
 	}
 
+	// 非草稿模板文件需要版本号
+	if !req.GetIsDraft() && req.Version == "" {
+		return "", errorx.New(errcode.ValidateErr, i18n.GetMsg(ctx, ("版本字段不能为空")))
+	}
+
 	templateSpace, err := t.model.GetTemplateSpace(ctx, req.GetTemplateSpaceID())
 	if err != nil {
 		return "", err
@@ -210,20 +215,22 @@ func (t *TemplateAction) Create(ctx context.Context, req *clusterRes.CreateTempl
 
 	userName := ctxkey.GetUsernameFromCtx(ctx)
 
-	// 创建顺序：templateVersion -> template
-	templateVersion := &entity.TemplateVersion{
-		ProjectCode:   p.Code,
-		Description:   req.GetVersionDescription(),
-		TemplateName:  req.Name,
-		TemplateSpace: templateSpace.Name,
-		Version:       req.Version,
-		Content:       req.Content,
-		Creator:       userName,
-	}
-
-	_, err = t.model.CreateTemplateVersion(ctx, templateVersion)
-	if err != nil {
-		return "", err
+	// 非草稿状态下：创建模板文件版本
+	if !req.GetIsDraft() {
+		// 创建顺序：templateVersion -> template
+		templateVersion := &entity.TemplateVersion{
+			ProjectCode:   p.Code,
+			Description:   req.GetVersionDescription(),
+			TemplateName:  req.Name,
+			TemplateSpace: templateSpace.Name,
+			Version:       req.Version,
+			Content:       req.Content,
+			Creator:       userName,
+		}
+		_, err = t.model.CreateTemplateVersion(ctx, templateVersion)
+		if err != nil {
+			return "", err
+		}
 	}
 
 	template := &entity.Template{
@@ -237,12 +244,19 @@ func (t *TemplateAction) Create(ctx context.Context, req *clusterRes.CreateTempl
 		Tags:          req.GetTags(),
 		VersionMode:   0,
 		Version:       req.GetVersion(),
+		IsDraft:       req.GetIsDraft(),
 	}
+	// 草稿状态，新增相关字段
+	if req.GetIsDraft() {
+		template.BaseVersion = req.GetBaseVersion()
+		template.DraftContent = req.GetDraftContent()
+	}
+
+	// 没有记录的情况下直接创建
 	templateID, err := t.model.CreateTemplate(ctx, template)
 	if err != nil {
 		return "", err
 	}
-
 	return templateID, nil
 }
 
@@ -297,15 +311,19 @@ func (t *TemplateAction) Update(ctx context.Context, req *clusterRes.UpdateTempl
 	}
 
 	updateTemplate := entity.M{
-		"name":        req.GetName(),
-		"description": req.GetDescription(),
-		"updator":     userName,
-		"tags":        req.GetTags(),
-		"versionMode": req.GetVersionMode(),
+		"name":         req.GetName(),
+		"description":  req.GetDescription(),
+		"updator":      userName,
+		"tags":         req.GetTags(),
+		"versionMode":  req.GetVersionMode(),
+		"isDraft":      req.GetIsDraft(),
+		"baseVersion":  req.GetBaseVersion(),
+		"draftContent": req.GetDraftContent(),
 	}
 	if req.GetVersionMode() == clusterRes.VersionMode_SpecifyVersion && req.GetVersion() != "" {
 		updateTemplate["version"] = req.GetVersion()
 	}
+
 	if err = t.model.UpdateTemplate(ctx, req.GetId(), updateTemplate); err != nil {
 		return err
 	}
