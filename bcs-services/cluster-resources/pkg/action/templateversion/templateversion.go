@@ -232,13 +232,22 @@ func (t *TemplateVersionAction) Create(ctx context.Context, req *clusterRes.Crea
 		return "", err
 	}
 
+	updateTemplate := make(entity.M, 0)
+	// 如果草稿态的情况下，创建版本解除草稿态，草稿内容清空
+	if tmp.IsDraft {
+		updateTemplate["isDraft"] = false
+		updateTemplate["baseVersion"] = req.GetVersion()
+		updateTemplate["draftContent"] = ""
+	}
+
 	// update template lastet version
 	if tmp.VersionMode == int(clusterRes.VersionMode_LatestUpdateTime) {
-		updateTemplate := entity.M{
-			"version":      req.GetVersion(),
-			"resourceType": parser.GetResourceTypesFromManifest(req.GetContent()),
-			"updator":      userName,
-		}
+		updateTemplate["version"] = req.GetVersion()
+		updateTemplate["resourceType"] = parser.GetResourceTypesFromManifest(req.GetContent())
+		updateTemplate["updator"] = userName
+	}
+
+	if len(updateTemplate) != 0 {
 		if err = t.model.UpdateTemplate(ctx, req.GetTemplateID(), updateTemplate); err != nil {
 			return "", err
 		}
