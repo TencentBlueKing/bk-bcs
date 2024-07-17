@@ -6,13 +6,22 @@
       <bcs-button theme="primary" icon="plus" @click="showCreateCrdSideslider">
         {{$t('plugin.tools.create')}}
       </bcs-button>
-      <bcs-input
-        class="w-[320px]"
-        right-icon="bk-icon icon-search"
-        clearable
-        :placeholder="$t('generic.placeholder.searchName')"
-        v-model.trim="searchValue">
-      </bcs-input>
+      <div class="flex justify-end">
+        <NamespaceSelect
+          :cluster-id="curClusterID"
+          class="w-[250px] mr-[5px]"
+          :clearable="true"
+          v-model="ns"
+          @change="handleGetCrdList">
+        </NamespaceSelect>
+        <bcs-input
+          class="w-[320px]"
+          right-icon="bk-icon icon-search"
+          clearable
+          :placeholder="$t('generic.placeholder.searchName')"
+          v-model.trim="searchValue">
+        </bcs-input>
+      </div>
     </div>
     <bcs-table
       size="large"
@@ -431,7 +440,9 @@ const rules = ref({
 
 // hooks
 const {
+  curClusterID,
   curCluster,
+  ns,
   currentRow,
   curPageData,
   pagination,
@@ -449,6 +460,7 @@ const {
   createOrUpdateCrd,
   deleteCrd,
   handleClearSearchData,
+  handleGetCrdList,
 } = useCustomCrdList({
   $crd: 'polarisconfigs.tkex.tencent.com',
   $apiVersion: 'tkex.tencent.com/v1',
