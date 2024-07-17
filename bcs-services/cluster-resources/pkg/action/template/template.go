@@ -501,7 +501,7 @@ func (t *TemplateAction) PreviewTemplateFile(ctx context.Context, req *clusterRe
 		}
 	}
 
-	items, err := convertManifestToString(manifests)
+	items, err := convertManifestToString(ctx, manifests, req.GetClusterID())
 	if err != nil {
 		return nil, err
 	}
