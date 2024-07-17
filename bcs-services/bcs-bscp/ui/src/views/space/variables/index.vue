@@ -16,7 +16,7 @@
         </bk-button>
         <bk-button @click="isImportVariableShow = true">{{ t('导入变量') }}</bk-button>
         <VaribaleExport :biz-id="spaceId" />
-        <bk-button @click="handleExport">{{ t('导出变量') }} </bk-button>
+        <bk-button :disabled="list.length === 0" @click="handleExport">{{ t('导出变量') }} </bk-button>
         <BatchDeleteBtn :bk-biz-id="spaceId" :selected-ids="selectedIds" @deleted="refreshAfterBatchDelete" />
       </div>
       <SearchInput v-model="searchStr" :placeholder="t('请输入变量名称')" :width="320" @search="refreshList()" />
