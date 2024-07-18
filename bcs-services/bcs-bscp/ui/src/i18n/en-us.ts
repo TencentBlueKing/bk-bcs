@@ -289,7 +289,7 @@ export default {
   移除模板套餐成功: 'Template package removed successfully',
   删除配置文件成功: 'Configuration file deleted successfully',
   编辑配置文件: 'Edit configuration file',
-  目标版本: 'target version',
+  目标版本: 'Target version',
   当前最新为: 'The current latest is',
   模板版本更新成功: 'Template version updated successfully',
   查看配置文件: 'View configuration file',
@@ -490,6 +490,7 @@ export default {
   '服务名称/服务版本': 'Service name/Service version',
   服务版本: 'Service version',
   '未在配置文件中检测到变量，请确保配置文件中包含变量后再尝试设置变量': 'Variable not detected in the configuration file. Please ensure the configuration file includes the variable before attempting to set it.',
+  标签最大数量为5个: 'Label maximum number is 5',
 
   // 全局变量
   配置模板与变量: 'Configure templates and variables',
@@ -832,8 +833,8 @@ export default {
   最后心跳时间: 'Last heartbeat time',
   查询: 'Search',
   标签: 'label',
-  当前配置版本: 'current configuration version',
-  目标配置版本: 'target configuration version',
+  当前配置版本: 'Current configuration version',
+  目标配置版本: 'Target configuration version',
   最近一次拉取配置状态: 'Last pull configuration status',
   成功: 'success',
   失败: 'failed',

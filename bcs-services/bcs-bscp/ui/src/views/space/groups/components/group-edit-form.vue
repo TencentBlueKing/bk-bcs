@@ -109,6 +109,7 @@
   import { getAppList } from '../../../../api/index';
   import { IAppItem } from '../../../../../types/app';
   import { Info } from 'bkui-vue/lib/icon';
+  import { Message } from 'bkui-vue';
 
   const getDefaultRuleConfig = (): IGroupRuleItem => ({ key: '', op: 'eq', value: '' });
 
@@ -204,6 +205,13 @@
 
   // 增加规则
   const handleAddRule = (index: number) => {
+    if (formData.value.rules.length === 5) {
+      Message({
+        theme: 'error',
+        message: t('标签最大数量为5个'),
+      });
+      return;
+    }
     const rule = getDefaultRuleConfig();
     formData.value.rules.splice(index + 1, 0, rule);
     showErrorKeyValidation.value.push(false);
