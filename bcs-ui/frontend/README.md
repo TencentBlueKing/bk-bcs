@@ -3,7 +3,7 @@
 ### 依赖
 
 - vscode
-- node > 14
+- node > 14 （ps:推荐用20）
 - volar、tailwindcss、eslint插件
 - 浏览器插件 Gimli Tailwind
 
@@ -21,7 +21,7 @@ npm i
 
   - BK_PROXY_DEVOPS_BCS_API_URL （后端服务地址）
   - BK_BCS_API_HOST （下沉服务地址）
-  - BK_LOCAL_HOST （本地HOST地址）
+  - BK_LOCAL_HOST （本地HOST地址）项目启动之前看看是否已配置本地host地址，教程（https://blog.csdn.net/cc1949/article/details/78411865）
 
 ```text
 # .env.development 开发模式生效

@@ -39,16 +39,17 @@
         </span>
       </template>
       <div v-for="(rule, index) in formData.rules" class="rule-config" :key="index">
-        <bk-input
-          v-model="rule.key"
-          style="width: 174px"
-          placeholder="key"
-          :class="{ 'is-error': showErrorKeyValidation[index] }"
-          @change="ruleChange"
-          @blur="validateKey(index)"></bk-input>
-        <span v-show="showErrorKeyValidation[index]" class="error-msg">
-          {{ $t("仅支持字母，数字，'-'，'_'，'.' 及 '/' 且需以字母数字开头和结尾") }}
-        </span>
+        <div style="max-width: 174px; min-width: 174px">
+          <bk-input
+            v-model="rule.key"
+            placeholder="key"
+            :class="{ 'is-error': showErrorKeyValidation[index] }"
+            @change="ruleChange"
+            @blur="validateKey(index)"></bk-input>
+          <div v-show="showErrorKeyValidation[index]" class="error-msg is--key">
+            {{ $t("仅支持字母，数字，'-'，'_'，'.' 及 '/' 且需以字母数字开头和结尾") }}
+          </div>
+        </div>
         <bk-select
           :model-value="rule.op"
           style="width: 82px"
@@ -68,7 +69,8 @@
             :allow-auto-match="true"
             :list="[]"
             placeholder="value"
-            @change="validateValue(index)">
+            @change="validateValue(index)"
+            @blur="validateValue(index)">
           </bk-tag-input>
           <bk-input
             v-else
@@ -79,9 +81,9 @@
             @change="() => (['gt', 'ge', 'lt', 'le'].includes(rule.op) ? validateValue(index) : ruleChange)"
             @blur="validateValue(index)">
           </bk-input>
-          <span v-show="showErrorValueValidation[index]" class="error-msg is--value">
-            {{ $t("需以字母数字开头和结尾，可包含 '-'，'_'，'.' 和字母数字") }}
-          </span>
+          <div v-show="showErrorValueValidation[index]" class="error-msg is--value">
+            {{ $t("需以字母、数字开头和结尾，可包含 '-'，'_'，'.' 和字母数字及负数") }}
+          </div>
         </div>
         <div class="action-btns">
           <i
@@ -256,7 +258,8 @@
     formData.value.rules.forEach((item, index) => {
       const { op } = item;
       if (op === '') return (allValid = false);
-      validateKey(index);
+      // 批量检测时，展示先校验失败的错误信息
+      keyValidateReg.test(item.key) ? validateValue(index) : validateKey(index);
     });
     allValid = !showErrorKeyValidation.value.includes(true) && !showErrorValueValidation.value.includes(true);
     return allValid;
@@ -265,21 +268,23 @@
   // 验证key
   const validateKey = (index: number) => {
     showErrorKeyValidation.value[index] = !keyValidateReg.test(formData.value.rules[index].key);
-    validateValue(index);
+    if (showErrorValueValidation.value[index]) {
+      showErrorValueValidation.value[index] = false;
+    }
   };
   // 验证value
   const validateValue = (index: number) => {
-    // 只在key验证通过才显示value校验结果。如果value校验失败时去改key值，并且key值改变后也校验失败，只展示key的校验结果
     if (Array.isArray(formData.value.rules[index].value)) {
-      const valueArrValidation = (formData.value.rules[index].value as string[]).every((item: string) =>
-        valueValidateReg.test(item),
-      );
+      const valueArrValidation = (formData.value.rules[index].value as string[]).every((item: string) => {
+        return valueValidateReg.test(item);
+      });
       showErrorValueValidation.value[index] =
-        keyValidateReg.test(formData.value.rules[index].key) && !valueArrValidation;
+        !valueArrValidation || !((formData.value.rules[index].value as string[]).length > 0);
     } else {
-      showErrorValueValidation.value[index] =
-        keyValidateReg.test(formData.value.rules[index].key) &&
-        !valueValidateReg.test(`${formData.value.rules[index].value}`);
+      showErrorValueValidation.value[index] = !valueValidateReg.test(`${formData.value.rules[index].value}`);
+    }
+    if (showErrorKeyValidation.value[index]) {
+      showErrorKeyValidation.value[index] = false;
     }
     change();
   };
@@ -308,7 +313,7 @@
   .rule-config {
     position: relative;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
     position: relative;
     margin-top: 15px;
@@ -334,9 +339,12 @@
     align-items: center;
     justify-content: space-between;
     width: 38px;
+    height: 32px;
     font-size: 14px;
     color: #979ba5;
-    cursor: pointer;
+    .bk-bscp-icon {
+      cursor: pointer;
+    }
     i:hover {
       color: #3a84ff;
     }
@@ -363,16 +371,14 @@
     }
   }
   .error-msg {
-    position: absolute;
-    left: 0;
-    bottom: -14px;
     font-size: 12px;
-    line-height: 1;
-    white-space: nowrap;
+    line-height: 14px;
+    white-space: normal;
+    word-wrap: break-word;
     color: #ea3636;
     animation: form-error-appear-animation 0.15s;
-    &.is--value {
-      left: 45.5%;
+    &.is--key {
+      white-space: nowrap;
     }
   }
   @keyframes form-error-appear-animation {

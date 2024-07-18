@@ -298,11 +298,11 @@
     }
   }
   .preview-component {
-    height: 334px;
-    padding: 16px 0 0;
+    height: 336px;
+    padding: 16px 10px;
     background-color: #f5f7fa;
     &--kvcmd {
-      height: 276px;
+      height: 279px;
     }
   }
 </style>

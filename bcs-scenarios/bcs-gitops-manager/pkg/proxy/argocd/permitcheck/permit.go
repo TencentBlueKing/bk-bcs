@@ -518,7 +518,7 @@ func (c *checker) buildClusterNSForQueryByApp(ctx context.Context, project strin
 			return nil, nil, nil, errors.Wrapf(err, "get cluster '%s' failed", clsServer)
 		}
 		if argoCluster == nil {
-			return nil, nil, nil, errors.Errorf("cluster '%s' not found", clsServer)
+			continue
 		}
 		clusterServerNameMap[clsServer] = argoCluster.Name
 	}
@@ -742,34 +742,22 @@ func (c *checker) updateAppSetPermissions(ctx context.Context, project string,
 	if len(notFoundAppSet) != 0 {
 		return http.StatusBadRequest, fmt.Errorf("appset '%v' not found", notFoundAppSet)
 	}
+
 	// 添加权限
-	permissions := make([]*dao.UserPermission, 0)
-	for _, appSet := range resultAppSets {
-		proj := appSet.Spec.Template.Spec.Project
-		for _, user := range req.Users {
-			for _, action := range req.ResourceActions {
-				permissions = append(permissions, &dao.UserPermission{
-					Project:        proj,
-					User:           user,
-					ResourceType:   string(AppSetRSType),
-					ResourceName:   appSet.Name,
-					ResourceAction: action,
-				})
-			}
-		}
-	}
 	errs := make([]string, 0)
-	for _, permission := range permissions {
-		if err = c.db.CreateUserPermission(permission); err != nil {
-			errMsg := fmt.Sprintf("create permission for user '%s' with resource '%s/%s/%s' failed: %s",
-				permission.User, permission.ResourceType, permission.ResourceName,
-				permission.ResourceAction, err.Error())
+	for _, appSet := range resultAppSets {
+		for _, action := range req.ResourceActions {
+			err = c.db.UpdateResourcePermissions(project, string(AppSetRSType), appSet.Name, action, req.Users)
+			if err == nil {
+				blog.Infof("RequestID[%s] update resource '%s/%s' permissions success", ctxutils.RequestID(ctx),
+					string(AppSetRSType), appSet.Name)
+				continue
+			}
+
+			errMsg := fmt.Sprintf("update resource '%s/%s' permissions failed", string(AppSetRSType), appSet.Name)
 			errs = append(errs, errMsg)
-			blog.Errorf("RequestID[%s] create permission failed: %s", ctxutils.RequestID(ctx), errMsg)
-			continue
+			blog.Errorf("RequestID[%s] update permission failed: %s", ctxutils.RequestID(ctx), errMsg)
 		}
-		blog.Infof("RequestID[%s] create permission for user '%s' with resource '%s/%s/%s' success",
-			permission.User, permission.ResourceType, permission.ResourceName, permission.ResourceAction)
 	}
 	if len(errs) != 0 {
 		return http.StatusInternalServerError, fmt.Errorf("create permission with multiple error: %v", errs)

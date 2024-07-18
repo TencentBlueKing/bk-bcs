@@ -62,7 +62,7 @@ type FeatureResourceLimit struct {
 
 // ResourceLimit 资源限制配置项
 type ResourceLimit struct {
-	// MaxFileSize 配置文件大小上限，单位 MB，默认为100MB
+	// MaxFileSize 配置文件大小上限，单位 MB，默认为200MB
 	MaxFileSize uint `json:"maxFileSize" yaml:"maxFileSize"`
 	// AppConfigCnt 单个app下允许创建的配置数（模版+非模版），默认为2000
 	AppConfigCnt uint `yaml:"appConfigCnt"`
@@ -95,7 +95,7 @@ const (
 	// DefaultBizView is default biz view
 	DefaultBizView = true
 	// DefaultMaxFileSize is default max file size, unit is MB
-	DefaultMaxFileSize = 100
+	DefaultMaxFileSize = 200
 	// DefaultAppConfigCnt is default app's config count
 	DefaultAppConfigCnt = 2000
 	// DefaultTmplSetTmplCnt is default template set's template count

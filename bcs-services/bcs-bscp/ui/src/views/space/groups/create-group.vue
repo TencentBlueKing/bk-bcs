@@ -12,6 +12,17 @@
     @closed="handleClose"
     @confirm="handleConfirm">
     <group-edit-form ref="groupFormRef" :group="groupData" @change="updateData"></group-edit-form>
+    <template #footer>
+      <bk-button
+        theme="primary"
+        @click="handleConfirm"
+        :disabled="pending"
+        :loading="pending"
+        style="margin-right: 8px">
+        {{ t('提交') }}
+      </bk-button>
+      <bk-button @click="handleClose">{{ t('取消') }}</bk-button>
+    </template>
   </bk-dialog>
 </template>
 <script setup lang="ts">
@@ -67,6 +78,7 @@
       return;
     }
     try {
+      pending.value = true;
       const { name, public: isPublic, bind_apps, rule_logic, rules } = groupData.value;
       const params = {
         biz_id: route.params.spaceId,
@@ -86,7 +98,9 @@
     } catch (e) {
       console.error(e);
     } finally {
-      pending.value = false;
+      setTimeout(() => {
+        pending.value = false;
+      }, 300);
     }
   };
 

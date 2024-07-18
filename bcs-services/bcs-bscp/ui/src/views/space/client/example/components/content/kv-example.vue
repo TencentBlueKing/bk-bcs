@@ -352,9 +352,7 @@
   }
   .preview-component {
     margin-top: 8px;
-    padding: 16px 0 0;
-    flex: 1;
-    height: 100%;
+    padding: 16px 10px;
     background-color: #f5f7fa;
   }
   .alert-tips-wrap {

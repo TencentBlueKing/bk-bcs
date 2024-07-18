@@ -34,6 +34,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/permitcheck"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/resources"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/utils"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/utils/jsonq"
 )
 
@@ -240,7 +241,7 @@ func (plugin *AppPlugin) applicationCleanHandler(r *http.Request) (*http.Request
 		}
 	}
 	if len(errs) != 0 {
-		return r, mw.ReturnErrorResponse(http.StatusInternalServerError,
+		return r, mw.ReturnErrorResponse(http.StatusBadRequest,
 			errors.Errorf("clean application resources failed: %v", errs))
 	}
 	return r, mw.ReturnJSONResponse("clean application subresource success")
@@ -554,7 +555,7 @@ var (
 )
 
 const (
-	defaultPathType  = "application/strategic-merge-patch+json"
+	defaultPathType  = "application/merge-patch+json"
 	defaultPatchJson = `{"spec": {"replicas": 0}}`
 )
 
@@ -581,6 +582,10 @@ func (plugin *AppPlugin) applicationWorkloadReplicasZero(r *http.Request) (*http
 		patched = append(patched, fmt.Sprintf("%s/%s/%s-%s", res.Group, res.Version, res.Kind, res.Name))
 		if err = plugin.storage.PatchApplicationResource(r.Context(), argoApp.Name, &res,
 			defaultPatchJson, defaultPathType); err != nil {
+			if utils.IsArgoNotFoundAsPartOf(err) {
+				blog.Warnf("RequestID[%s] patch argo resource failed: %s", ctxutils.RequestID(r.Context()), err.Error())
+				continue
+			}
 			errs = append(errs, err.Error())
 		}
 	}
@@ -588,7 +593,7 @@ func (plugin *AppPlugin) applicationWorkloadReplicasZero(r *http.Request) (*http
 	if len(errs) != 0 {
 		blog.Warnf("RequestID[%s] patch app '%s' resources failed: %s", ctxutils.RequestID(r.Context()),
 			argoApp.Name, strings.Join(errs, "; "))
-		return r, mw.ReturnErrorResponse(http.StatusInternalServerError,
+		return r, mw.ReturnErrorResponse(http.StatusBadRequest,
 			errors.Errorf("patch application workload to 0 failed: %s", strings.Join(errs, ", ")))
 	}
 	return r, mw.ReturnJSONResponse("ok")

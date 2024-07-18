@@ -344,7 +344,7 @@ func (c *configImport) ConfigFileImport(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	folder, err := c.processAndUploadDirectoryFiles(kt, dirPath, len(fileItems))
+	folder, err := c.processAndUploadDirectoryFiles(kt, tempDir, len(fileItems))
 	if err != nil {
 		_ = render.Render(w, r, rest.BadRequest(err))
 		return

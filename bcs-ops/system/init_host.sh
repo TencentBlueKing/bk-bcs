@@ -209,6 +209,9 @@ set_yum_repo() {
             elif grep -i "Tencent tlinux release 2.[0-9]*" /etc/tlinux-release;then
               BASE_YUM_LINK="http://mirrors.cloud.tencent.com/repo/centos7_base.repo"
               BASE_EPEL_LINK="http://mirrors.cloud.tencent.com/repo/epel-7.repo"
+            elif grep -i "Tencent linux release 2.[0-9]*" /etc/tlinux-release;then
+              BASE_YUM_LINK="http://mirrors.cloud.tencent.com/repo/centos7_base.repo"
+              BASE_EPEL_LINK="http://mirrors.cloud.tencent.com/repo/epel-7.repo"
             fi
           fi
 
@@ -226,6 +229,9 @@ set_yum_repo() {
               sed -i "s/\$releasever/7/g" /etc/yum.repos.d/epel.repo
               sed -i "s/\$releasever/7/g" /etc/yum.repos.d/CentOS-Base.repo
             elif grep -i "Tencent tlinux release 2.[0-9]*" /etc/tlinux-release;then
+              sed -i "s/\$releasever/7/g" /etc/yum.repos.d/epel.repo
+              sed -i "s/\$releasever/7/g" /etc/yum.repos.d/CentOS-Base.repo
+            elif grep -i "Tencent linux release 2.[0-9]*" /etc/tlinux-release;then
               sed -i "s/\$releasever/7/g" /etc/yum.repos.d/epel.repo
               sed -i "s/\$releasever/7/g" /etc/yum.repos.d/CentOS-Base.repo
             fi

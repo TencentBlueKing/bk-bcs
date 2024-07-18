@@ -110,6 +110,12 @@ func (ops *ArgocdProxy) initArgoPathHandler() error {
 		middleware:    middleware,
 		permitChecker: permitChecker,
 	}
+	auditPlugin := &AuditPlugin{
+		Router:        ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/audits").Subrouter(),
+		db:            dao.GlobalDB(),
+		middleware:    middleware,
+		permitChecker: permitChecker,
+	}
 	appPlugin := &AppPlugin{
 		storage:       store.GlobalStore(),
 		db:            dao.GlobalDB(),
@@ -189,7 +195,7 @@ func (ops *ArgocdProxy) initArgoPathHandler() error {
 		permitChecker: permitChecker,
 	}
 	initializer := []func() error{
-		projectPlugin.Init, clusterPlugin.Init, repositoryPlugin.Init,
+		auditPlugin.Init, projectPlugin.Init, clusterPlugin.Init, repositoryPlugin.Init,
 		appPlugin.Init, streamPlugin.Init, webhookPlugin.Init, grpcPlugin.Init,
 		secretPlugin.Init, metricPlugin.Init, appsetPlugin.Init, analysisPlugin.Init,
 		monitorPlugin.Init, terraformPlugin.Init, permissionPlugin.Init, workflowPlugin.Init,

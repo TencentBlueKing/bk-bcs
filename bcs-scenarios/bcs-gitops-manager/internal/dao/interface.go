@@ -84,6 +84,23 @@ type UserPermission struct {
 	ResourceAction string `json:"resourceAction" gorm:"index:idx_rs,unique;column:resourceAction;type:varchar(64) NOT NULL"` // nolint
 }
 
+// UserAuditQuery defines the query for user audits
+type UserAuditQuery struct {
+	Projects      []string `json:"projects"`
+	Users         []string `json:"users"`
+	Actions       []string `json:"actions"`
+	ResourceTypes []string `json:"resourceTypes"`
+	ResourceNames []string `json:"resourceNames"`
+	RequestIDs    []string `json:"requestIDs"`
+	RequestURI    string   `json:"requestURI"`
+	RequestType   string   `json:"requestType"`
+	RequestMethod string   `json:"requestMethod"`
+	StartTime     string   `json:"startTime"`
+	EndTime       string   `json:"endTime"`
+	Limit         int      `json:"limit"`
+	Offset        int      `json:"offset"`
+}
+
 // UserAudit defines the user audit
 type UserAudit struct {
 	ID            int64  `json:"id" gorm:"column:id;primaryKey;type:int(11) AUTO_INCREMENT NOT NULL"`
@@ -182,6 +199,7 @@ type Interface interface {
 	GetApplicationHistoryManifest(appName, appUID string, historyID int64) (*ApplicationHistoryManifest, error)
 	CheckAppHistoryManifestExist(appName, appUID string, historyID int64) (bool, error)
 
+	UpdateResourcePermissions(project, rsType, rsName, rsAction string, users []string) error
 	CreateUserPermission(permission *UserPermission) error
 	DeleteUserPermission(permission *UserPermission) error
 	ListUserPermissions(project, user, resourceType string) ([]*UserPermission, error)
@@ -189,6 +207,7 @@ type Interface interface {
 	GetUserPermission(permission *UserPermission) (*UserPermission, error)
 
 	SaveAuditMessage(audit *UserAudit) error
+	QueryUserAudits(query *UserAuditQuery) ([]*UserAudit, error)
 
 	UpdateAppSetClusterScope(appSet, clusters string) error
 	GetAppSetClusterScope(appSet string) (*AppSetClusterScope, error)

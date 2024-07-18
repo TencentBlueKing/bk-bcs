@@ -1,7 +1,7 @@
 <template>
   <!-- 标签 -->
   <div class="add-label-wrap">
-    <span class="label-span">{{ $t('标签') }}</span>
+    <span class="label-span">{{ $t(labelName) }}</span>
     <info
       class="icon-info"
       v-bk-tooltips="{
@@ -30,7 +30,7 @@
         v-model.trim="item.value"
         @blur="validateValue(index)" />
       <span v-show="showErrorValueValidation[index]" class="error-msg is--value">
-        {{ $t("需以字母数字开头和结尾，可包含 '-'，'_'，'.' 和字母数字") }}
+        {{ $t("需以字母、数字开头和结尾，可包含 '-'，'_'，'.' 和字母数字及负数") }}
       </span>
       <div class="label-item-minus" @click="deleteItem(index)"></div>
     </div>
@@ -39,6 +39,8 @@
 <script lang="ts" setup>
   import { ref, watch } from 'vue';
   import { Info, Plus } from 'bkui-vue/lib/icon';
+
+  defineProps<{ labelName: string }>();
 
   const emits = defineEmits(['send-label', 'send-validate']);
 
@@ -60,7 +62,8 @@
   const isAllValid = () => {
     let allValid = true;
     labelArr.value.forEach((item, index) => {
-      validateKey(index);
+      // 批量检测时，展示先校验失败的错误信息
+      keyValidateReg.test(item.key) ? validateValue(index) : validateKey(index);
     });
     allValid = !showErrorKeyValidation.value.includes(true) && !showErrorValueValidation.value.includes(true);
     return allValid;
@@ -68,13 +71,16 @@
   // 验证key
   const validateKey = (index: number) => {
     showErrorKeyValidation.value[index] = !keyValidateReg.test(labelArr.value[index].key);
-    validateValue(index);
+    if (showErrorValueValidation.value[index]) {
+      showErrorValueValidation.value[index] = false;
+    }
   };
   // 验证value
   const validateValue = (index: number) => {
-    // 只在key验证通过才显示value校验结果。如果value校验失败时去改key值，并且key值改变后也校验失败，只展示key的校验结果
-    showErrorValueValidation.value[index] =
-      keyValidateReg.test(labelArr.value[index].key) && !valueValidateReg.test(labelArr.value[index].value);
+    showErrorValueValidation.value[index] = !valueValidateReg.test(labelArr.value[index].value);
+    if (showErrorKeyValidation.value[index]) {
+      showErrorKeyValidation.value[index] = false;
+    }
   };
   // 添加项目
   const addItem = () => {

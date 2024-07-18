@@ -225,7 +225,7 @@
       return data.status.released_groups.map((item) => item.name).join('; ');
     }
     if (status === 'full_released') {
-      return '全部实例';
+      return t('全部实例');
     }
     return '--';
   };
