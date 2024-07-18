@@ -314,15 +314,36 @@
   const logList = ref<IVersionLogItem[]>([]);
   const isShowVersionLog = ref(false);
   // @ts-ignore
-  const modules = import.meta.glob('../../../docs/changelog/zh_CN/*.md', {
-    as: 'raw',
-    eager: true,
+  // const modules = import.meta.glob('../../../docs/changelog/zh_CN/*.md', {
+  //   as: 'raw',
+  //   eager: true,
+  // });
+  // const modules = import.meta.glob('../../../docs/changelog/en_US/*.md', {
+  //   as: 'raw',
+  //   eager: true,
+  // });
+
+  const modules = computed(() => {
+    if (locale.value === 'zh-cn') {
+      // @ts-ignore
+      return import.meta.glob('../../../docs/changelog/zh_CN/*.md', {
+        as: 'raw',
+        eager: true,
+      });
+    }
+    // @ts-ignore
+    return import.meta.glob('../../../docs/changelog/en_US/*.md', {
+      as: 'raw',
+      eager: true,
+    });
   });
-  Object.keys(modules).forEach((path) => {
+  Object.keys(modules.value).forEach((path) => {
+    const separator = locale.value === 'zh-cn' ? 'CN/' : 'US/';
     logList.value!.push({
-      title: path.split('CN/')[1].split('_')[0],
-      date: path.split('CN/')[1].split('_')[1].slice(0, -3),
-      detail: md.render(modules[path]),
+      title: path.split(separator)[1].split('_')[0],
+      date: path.split(separator)[1].split('_')[1].slice(0, -3),
+      // @ts-ignore
+      detail: md.render(modules.value[path]),
     });
   });
 

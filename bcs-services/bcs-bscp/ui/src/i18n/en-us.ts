@@ -74,6 +74,7 @@ export default {
   没有匹配到配置项: 'No configuration item was matched',
   请先在左侧表单设置关联规则并预览: 'Please first set the association rules in the left form and preview',
   删除服务成功: 'Service deleted successfully',
+  log_当前版本: 'Version',
 
   // 导航栏
   服务配置中心: 'BSCP',
