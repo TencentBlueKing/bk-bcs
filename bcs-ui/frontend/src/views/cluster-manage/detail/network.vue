@@ -362,7 +362,7 @@ export default defineComponent({
     });
     const vpc = computed(() => {
       const data = vpcList.value.find(item => item.vpcId === clusterData.value.vpcID);
-      return data ? `${data.name}(${data.vpcId})` : clusterData.value.vpcID;
+      return data ? `${data.name}(${data.vpcId})` : (clusterData.value.vpcID || '--');
     });
 
     onMounted(async () => {
