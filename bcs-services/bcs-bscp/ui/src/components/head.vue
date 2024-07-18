@@ -323,7 +323,7 @@
   //   eager: true,
   // });
 
-  const modules = computed(() => {
+  const logModules = computed(() => {
     if (locale.value === 'zh-cn') {
       // @ts-ignore
       return import.meta.glob('../../../docs/changelog/zh_CN/*.md', {
@@ -337,13 +337,13 @@
       eager: true,
     });
   });
-  Object.keys(modules.value).forEach((path) => {
+  Object.keys(logModules.value).forEach((path) => {
     const separator = locale.value === 'zh-cn' ? 'CN/' : 'US/';
     logList.value!.push({
       title: path.split(separator)[1].split('_')[0],
       date: path.split(separator)[1].split('_')[1].slice(0, -3),
       // @ts-ignore
-      detail: md.render(modules.value[path]),
+      detail: md.render(logModules.value[path]),
     });
   });
 
@@ -355,9 +355,22 @@
   const featuresContent = ref('');
   const isShowFeatures = ref(false);
   // @ts-ignore
-  const module = import.meta.glob('../../../docs/features/features.md', { as: 'raw', eager: true });
-  Object.keys(module).forEach((path) => {
-    featuresContent.value = md.render(module[path]);
+  const featuresModule = computed(() => {
+    if (locale.value === 'zh-cn') {
+      // @ts-ignore
+      return import.meta.glob('../../../docs/features/features.md', {
+        as: 'raw',
+        eager: true,
+      });
+    }
+    // @ts-ignore
+    return import.meta.glob('../../../docs/features/features_en.md', {
+      as: 'raw',
+      eager: true,
+    });
+  });
+  Object.keys(featuresModule.value).forEach((path) => {
+    featuresContent.value = md.render(featuresModule.value[path]);
   });
   const handleLoginOut = () => {
     loginOut();
