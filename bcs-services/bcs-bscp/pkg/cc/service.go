@@ -79,6 +79,7 @@ type ApiServerSetting struct {
 	Repo         Repository   `yaml:"repository"`
 	BKNotice     BKNotice     `yaml:"bkNotice"`
 	Esb          Esb          `yaml:"esb"`
+	ApiGateway   ApiGateway   `yaml:"apiGateway"`
 	FeatureFlags FeatureFlags `yaml:"featureFlags"`
 }
 
