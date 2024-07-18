@@ -460,6 +460,10 @@ export default {
   '单文件大小不能超过{n}M': 'The file size cannot exceed {n} MB',
   '压缩包大小不能超过{n}GB': 'The compressed package size cannot exceed {n} GB',
   重置: 'Reset',
+  '请确保文件大小不超过 {n} MB': 'Please ensure that the file size does not exceed {n} MB',
+  '文件上传失败，请重新上传文件': 'File upload failed, please re-upload the file',
+  新版本已生成: 'New version has been generated',
+  未上线版本的分组: 'Group of unlaunched versions',
 
   // 分组管理
   新增分组: 'New group',

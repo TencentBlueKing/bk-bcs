@@ -58,7 +58,7 @@
                     text
                     theme="primary"
                     :disabled="!!unPublishVersion"
-                    v-bk-tooltips="{ content: '当前已有「未上线」版本', disabled: !unPublishVersion }"
+                    v-bk-tooltips="{ content: t('当前已有「未上线」版本'), disabled: !unPublishVersion }"
                     @click="handleCreateVersionClick(data.hook_revision.spec.content)">
                     {{ t('复制并新建') }}
                   </bk-button>
