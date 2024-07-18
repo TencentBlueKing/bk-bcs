@@ -2,7 +2,11 @@
   <div class="package-list-comp">
     <div class="search-wrapper">
       <div class="search-input">
-        <SearchInput v-model="searchStr" :placeholder="t('搜索模板套餐')" @search="handleSearch" />
+        <SearchInput
+          v-model="searchStr"
+          :placeholder="t('搜索模板套餐')"
+          @search="handleSearch"
+          v-bk-tooltips="{ content: t('搜索模板套餐'), disabled: locale === 'zh-cn' }" />
       </div>
       <div class="create-btn" v-bk-tooltips="t('新建模板套餐')" @click="isCreatePackageDialogShow = true">
         <Plus />
@@ -81,7 +85,7 @@
 
   const router = useRouter();
   const { spaceId } = storeToRefs(useGlobalStore());
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const templateStore = useTemplateStore();
   const {
     currentTemplateSpace,

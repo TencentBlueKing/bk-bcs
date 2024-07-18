@@ -1,7 +1,7 @@
 <template>
   <div ref="tableRef" class="table-container">
     <bk-loading :loading="loading" style="height: 100%">
-      <table class="config-groups-table" :key="appId">
+      <table :class="['config-groups-table', { 'en-table': locale === 'en' }]" :key="appId">
         <thead>
           <tr class="config-groups-table-tr">
             <th v-if="isUnNamedVersion" class="selection">
@@ -350,7 +350,7 @@
     template_set_name: string;
   }
 
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const configStore = useConfigStore();
   const serviceStore = useServiceStore();
   const { versionData, allConfigCount } = storeToRefs(configStore);
@@ -938,6 +938,11 @@
     // table-layout: fixed;
     > tbody tr:last-child > td:before {
       background: none;
+    }
+    &.en-table {
+      .operation {
+        width: 220px;
+      }
     }
     .config-groups-table-tr {
       background: #ffffff;
