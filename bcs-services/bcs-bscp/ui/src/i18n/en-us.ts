@@ -74,7 +74,6 @@ export default {
   没有匹配到配置项: 'No configuration item was matched',
   请先在左侧表单设置关联规则并预览: 'Please first set the association rules in the left form and preview',
   删除服务成功: 'Service deleted successfully',
-  log_当前版本: 'Version',
 
   // 导航栏
   服务配置中心: 'BSCP',
@@ -465,6 +464,8 @@ export default {
   '文件上传失败，请重新上传文件': 'File upload failed, please re-upload the file',
   新版本已生成: 'New version has been generated',
   未上线版本的分组: 'Group of unlaunched versions',
+  '文件格式错误，请重新选择文本文件上传': 'File format error, please re-select the text file to upload',
+  只查看差异项: 'Only view differences',
 
   // 分组管理
   新增分组: 'New group',
@@ -494,7 +495,7 @@ export default {
   '服务名称/服务版本': 'Service name/Service version',
   服务版本: 'Service version',
   '未在配置文件中检测到变量，请确保配置文件中包含变量后再尝试设置变量': 'Variable not detected in the configuration file. Please ensure the configuration file includes the variable before attempting to set it.',
-  标签最大数量为5个: 'Label maximum number is 5',
+  '分组最多支持 5 个标签选择器': 'The group supports a maximum of 5 tag selectors',
 
   // 全局变量
   配置模板与变量: 'Configure templates and variables',

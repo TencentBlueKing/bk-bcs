@@ -323,6 +323,9 @@
         return 0;
       });
       configsCount.value = res.count;
+      configStore.$patch((state) => {
+        state.allConfigCount = res.count;
+      });
       pagination.value.count = res.count;
     } catch (e) {
       console.error(e);

@@ -243,6 +243,13 @@
 </style>
 <style lang="scss">
   .move-out-from-pkgs-dialog.bk-modal-wrapper {
+    .bk-dialog-header {
+      line-height: normal !important;
+      .bk-dialog-title {
+        white-space: pre-wrap !important;
+      }
+    }
+
     .bk-modal-footer {
       background: #ffffff;
       border-top: none;

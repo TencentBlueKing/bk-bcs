@@ -318,7 +318,6 @@
 
 <style scoped lang="scss">
   .select-wrap {
-
     .import-type-select {
       display: flex;
     }
@@ -390,7 +389,7 @@
         top: 50%;
         transform: translateY(-50%);
         .select-btn {
-          width: 102px;
+          min-width: 102px;
           height: 32px;
           background: #ffffff;
           border: 1px solid #c4c6cc;

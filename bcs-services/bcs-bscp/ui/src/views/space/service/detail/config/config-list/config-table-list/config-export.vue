@@ -16,7 +16,7 @@
     trigger="click"
     @after-show="isPopoverOpen = true"
     @after-hidden="isPopoverOpen = false">
-    <bk-button>{{ $t('导出至') }}</bk-button>
+    <bk-button :disabled="allConfigCount === 0">{{ $t('导出至') }}</bk-button>
     <template #content>
       <div class="export-config-operations">
         <div v-for="item in exportItem" :key="item.value" class="operation-item" @click="handleExportKv(item.value)">
