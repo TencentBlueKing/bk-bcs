@@ -28,6 +28,7 @@
         :remote-pagination="true"
         :checked="checkedVariables"
         :pagination="pagination"
+        show-overflow-tooltip
         @selection-change="handleSelectionChange"
         @select-all="handleSelectAll"
         @page-limit-change="handlePageLimitChange"

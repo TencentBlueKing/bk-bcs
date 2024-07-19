@@ -722,17 +722,15 @@
     background: #ffffff;
   }
   .credential-table {
-    overflow: visible !important;
     :deep(.bk-table-body) {
+      max-height: calc(100vh - 280px);
+      overflow: auto;
       tr.new-row-marked td {
         background: #f2fff4 !important;
       }
       tr.selected td {
         background: #e1ecff !important;
       }
-    }
-    :deep(.bk-table-body) {
-      overflow: visible !important;
       tbody td .cell {
         overflow: visible !important;
       }
