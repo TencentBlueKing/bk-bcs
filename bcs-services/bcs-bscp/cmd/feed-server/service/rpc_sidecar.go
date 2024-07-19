@@ -38,6 +38,7 @@ import (
 	pbbase "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
 	pbkv "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/kv"
 	pbfs "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/feed-server"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/ratelimiter"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/jsoni"
 	sfs "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/sf-share"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
@@ -456,7 +457,37 @@ func (s *Service) GetDownloadURL(ctx context.Context, req *pbfs.GetDownloadURLRe
 		return nil, status.Errorf(codes.Aborted, "generate temp download url failed, %s", err.Error())
 	}
 
-	return &pbfs.GetDownloadURLResp{Url: downloadLink}, nil
+	if !s.rl.Enable() {
+		return &pbfs.GetDownloadURLResp{Url: downloadLink, WaitTimeMil: 0}, nil
+	}
+	// 对于单个大文件下载，受限于单个客户端和服务端之间的带宽（比如为10MB/s=80Mb/s），而在存储服务端支持更高带宽的情况下（比如100MB/s），
+	// 哪怕单个文件2GB，在限流器阈值比单个客户端下载带宽高的情况下，还是应该允许其他客户端去存储服务端下载，
+	// 超过客户端下载带宽的大文件暂且按客户端带宽计入流控
+	// 多个大文件的持续下载，会影响到限流器流控的精确性，当前暂时只计入每个大文件首次一秒内的流控情况，后续的流量消耗不计入
+	var gWaitTimeMil, bWaitTimeMil int64
+	bandwidth := int(s.rl.ClientBandwidth()) * ratelimiter.MB
+	if int(req.FileMeta.CommitSpec.Content.ByteSize) > bandwidth {
+		gWaitTimeMil = s.rl.Global().WaitTimeMil(bandwidth)
+		bWaitTimeMil = s.rl.UseBiz(uint(req.BizId)).WaitTimeMil(bandwidth)
+	} else {
+		gWaitTimeMil = s.rl.Global().WaitTimeMil(int(req.FileMeta.CommitSpec.Content.ByteSize))
+		bWaitTimeMil = s.rl.UseBiz(uint(req.BizId)).WaitTimeMil(int(req.FileMeta.CommitSpec.Content.ByteSize))
+	}
+
+	// 分别统计全局和业务粒度流控情况
+	gs := s.rl.Global().Stats()
+	s.mc.collectDownload("0", gs.TotalByteSize, gs.DelayCnt, gs.DelayMilliseconds)
+	bs := s.rl.UseBiz(uint(req.BizId)).Stats()
+	logs.V(1).Infof("biz: %d, download file total byte size:%d, delay cnt:%d, delay milliseconds:%d",
+		req.BizId, bs.TotalByteSize, bs.DelayCnt, bs.DelayMilliseconds)
+	s.mc.collectDownload(fmt.Sprintf("%d", req.BizId), bs.TotalByteSize, bs.DelayCnt, bs.DelayMilliseconds)
+
+	// 优先使用流控时间长的
+	wt := bWaitTimeMil
+	if bWaitTimeMil < gWaitTimeMil {
+		wt = gWaitTimeMil
+	}
+	return &pbfs.GetDownloadURLResp{Url: downloadLink, WaitTimeMil: wt}, nil
 }
 
 // PullKvMeta pull an app's latest release metadata only when the app's configures is kv type.

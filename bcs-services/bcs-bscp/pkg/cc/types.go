@@ -1098,6 +1098,104 @@ func (lm *MatchReleaseLimiter) trySetDefault() {
 	}
 }
 
+// RateLimiter defines the rate limiter options for traffic control.
+type RateLimiter struct {
+	Enable          bool    `yaml:"enable"`
+	ClientBandwidth uint    `yaml:"clientBandwidth"`
+	Global          BasicRL `yaml:"global"`
+	Biz             BizRLs  `yaml:"biz"`
+}
+
+// BizRLs defines the rate limiters for biz
+type BizRLs struct {
+	Default BasicRL          `yaml:"default"`
+	Spec    map[uint]BasicRL `yaml:"spec"`
+}
+
+// BasicRL defines the basic options for rate limiter.
+type BasicRL struct {
+	Limit uint `yaml:"limit"`
+	Burst uint `yaml:"burst"`
+}
+
+const (
+	// DefaultClientBandwidth default client bandwidth
+	DefaultClientBandwidth = 50 // 50MB/s = 400Mb/s
+	// DefaultGlobalRateLimit default global rate limit
+	DefaultGlobalRateLimit = 1000 // 1000MB/s = 8000Mb/s
+	// DefaultGlobalRateBurst default global rate burst
+	DefaultGlobalRateBurst = 2000 // 2000MB = 16000Mb
+	// DefaultBizRateLimit default biz rate limit
+	DefaultBizRateLimit = 100 // 100MB/s = 800Mb/s
+	// DefaultBizRateBurst default biz rate burst
+	DefaultBizRateBurst = 200 // 200MB = 1600Mb
+)
+
+// validate if the rate limiter is valid or not.
+func (rl RateLimiter) validate() error {
+	if rl.Biz.Default.Burst < rl.Biz.Default.Limit {
+		return fmt.Errorf("invalid rateLimiter.biz.default.burst value %d, should >= rateLimiter.biz.default.limit "+
+			"value %d", rl.Global.Burst, rl.Global.Limit)
+	}
+
+	if rl.Global.Limit < rl.Biz.Default.Limit {
+		return fmt.Errorf("invalid rateLimiter.global.limit value %d, should >= rateLimiter.biz.default.limit value %d",
+			rl.Global.Limit, rl.ClientBandwidth)
+	}
+
+	if rl.Global.Burst < rl.Biz.Default.Burst {
+		return fmt.Errorf("invalid rateLimiter.global.burst value %d, should >= rateLimiter.biz.default.burst value %d",
+			rl.Global.Burst, rl.Global.Limit)
+	}
+
+	for bizID, l := range rl.Biz.Spec {
+		if l.Burst < l.Limit {
+			return fmt.Errorf("invalid rateLimiter.biz.spec.%d.burst value %d, "+
+				"should >= rateLimiter.biz.spec.%d.limit value %d", bizID, l.Burst, bizID, l.Limit)
+		}
+	}
+
+	return nil
+}
+
+// trySetDefault try set the default value of rate limiter
+func (rl *RateLimiter) trySetDefault() {
+	if rl.ClientBandwidth == 0 {
+		rl.ClientBandwidth = DefaultClientBandwidth
+	}
+
+	if rl.Global.Limit == 0 {
+		rl.Global.Limit = DefaultGlobalRateLimit
+	}
+
+	if rl.Global.Burst == 0 {
+		rl.Global.Burst = DefaultGlobalRateBurst
+	}
+
+	if rl.Biz.Default.Limit == 0 {
+		rl.Biz.Default.Limit = DefaultBizRateLimit
+	}
+
+	if rl.Biz.Default.Burst == 0 {
+		rl.Biz.Default.Burst = DefaultBizRateBurst
+	}
+
+	for bizID, l := range rl.Biz.Spec {
+		if l.Limit == 0 {
+			rl.Biz.Spec[bizID] = BasicRL{
+				Limit: DefaultBizRateLimit,
+				Burst: l.Burst,
+			}
+		}
+		if l.Burst == 0 {
+			rl.Biz.Spec[bizID] = BasicRL{
+				Limit: rl.Biz.Spec[bizID].Limit,
+				Burst: DefaultBizRateBurst,
+			}
+		}
+	}
+}
+
 // Credential credential encryption algorithm and master key
 type Credential struct {
 	MasterKey           string `yaml:"master_key"`
