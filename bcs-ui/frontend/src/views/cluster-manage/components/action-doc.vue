@@ -44,6 +44,7 @@ import { copyText } from '@/common/util';
 import BcsMd from '@/components/bcs-md/index.vue';
 import $i18n from '@/i18n/i18n-setup';
 import $store from '@/store/index';
+import useCalcHeight from '@/composables/use-calc-height';
 
 export default defineComponent({
   name: 'ActionDoc',
@@ -75,6 +76,13 @@ export default defineComponent({
         message: $i18n.t('generic.msg.success.copy'),
       });
     };
+    // 设置content高度
+    useCalcHeight({
+      offset: 255,
+      prop: 'max-height',
+      el: '.content-wrapper',
+      calc: ['#bcs-notice-com'],
+    });
 
     onMounted(() => {
       handleGetConfigList();
@@ -101,7 +109,6 @@ export default defineComponent({
   box-shadow: inset 0 -1px 0 0 #DCDEE5;
 }
 .content-wrapper {
-  max-height: calc(100vh - 275px);
   overflow: auto;
 }
 .content {

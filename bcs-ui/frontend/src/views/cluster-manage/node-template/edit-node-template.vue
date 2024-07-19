@@ -359,6 +359,7 @@ import FormGroup from '@/views/cluster-manage/add/common/form-group.vue';
 import InputType from '@/views/cluster-manage/components/input-type.vue';
 import KeyValue from '@/views/cluster-manage/components/key-value.vue';
 import Taints from '@/views/cluster-manage/components/new-taints.vue';
+import useCalcHeight from '@/composables/use-calc-height';
 
 export default defineComponent({
   components: { FormGroup, KeyValue, Taints, InputType, ActionDoc },
@@ -395,6 +396,13 @@ export default defineComponent({
       scaleOutExtraAddons: {
         plugins: {},
       },
+    });
+    // 设置content高度
+    useCalcHeight({
+      offset: 200,
+      prop: 'height',
+      el: '.bk-resize-layout-main',
+      calc: ['#bcs-notice-com'],
     });
     const rules = ref({
       name: [{
@@ -966,7 +974,6 @@ export default defineComponent({
         margin: 0 24px;
     }
     .bk-resize-layout-main {
-        height: calc(100vh - 200px);
         overflow: auto;
     }
     &.bk-resize-layout-collapsed {

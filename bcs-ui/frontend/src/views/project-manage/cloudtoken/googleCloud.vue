@@ -384,6 +384,9 @@ watch(() => formData.value.account.serviceAccountSecret, () => {
   isValidate.value = false;
 });
 const handleValidateFile = async () => {
+  const valid = await formRef.value?.validate().catch(() => false);
+  if (!valid) return;
+
   if (!formData.value.account.serviceAccountSecret) return;
 
   validating.value = true;
