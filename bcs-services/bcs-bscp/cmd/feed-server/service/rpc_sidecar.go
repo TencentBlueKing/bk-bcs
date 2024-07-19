@@ -15,7 +15,6 @@ package service
 import (
 	"context"
 	"fmt"
-	"path"
 	"strconv"
 	"strings"
 	"time"
@@ -511,7 +510,7 @@ func (s *Service) PullKvMeta(ctx context.Context, req *pbfs.PullKvMetaReq) (*pbf
 		}
 
 		// 客户端匹配
-		if !matchPattern(kv.Key, req.Match) {
+		if !tools.MatchPattern(kv.Key, req.Match) {
 			continue
 		}
 
@@ -629,7 +628,7 @@ func (s *Service) ListApps(ctx context.Context, req *pbfs.ListAppsReq) (*pbfs.Li
 		}
 
 		// 客户端匹配
-		if !matchPattern(d.Spec.Name, req.Match) {
+		if !tools.MatchPattern(d.Spec.Name, req.Match) {
 			continue
 		}
 
@@ -776,21 +775,6 @@ func (s *Service) AsyncDownloadStatus(ctx context.Context, req *pbfs.AsyncDownlo
 		Status: status,
 	}
 	return resp, nil
-}
-
-// 匹配
-func matchPattern(name string, match []string) bool {
-	if len(match) == 0 {
-		return true
-	}
-
-	for _, m := range match {
-		ok, _ := path.Match(m, name)
-		if ok {
-			return true
-		}
-	}
-	return false
 }
 
 func (s *Service) handleResourceUsageMetrics(bizID uint32, appName string, resource sfs.ResourceUsage) {
