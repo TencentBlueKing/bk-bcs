@@ -27,6 +27,7 @@ export default defineComponent({
         running: 'green',
         completed: 'green',
         failed: 'red',
+        FAILURE: 'red',
         terminating: 'blue',
         true: 'green',
         false: 'red',
