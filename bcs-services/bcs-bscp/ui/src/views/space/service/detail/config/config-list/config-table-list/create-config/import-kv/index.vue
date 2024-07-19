@@ -9,38 +9,40 @@
     :before-close="handleBeforeClose"
     :quick-close="false"
     @closed="handleClose">
-    <div class="import-type-select">
-      <div class="label">{{ t('导入方式') }}</div>
-      <bk-radio-group v-model="importType">
-        <bk-radio-button label="text">{{ t('文本格式导入') }}</bk-radio-button>
-        <bk-radio-button label="historyVersion">{{ t('从历史版本导入') }}</bk-radio-button>
-        <bk-radio-button label="otherService">{{ t('从其他服务导入') }}</bk-radio-button>
-      </bk-radio-group>
-    </div>
-    <div v-if="importType === 'text'">
-      <TextImport ref="textImport" :bk-biz-id="bkBizId" :app-id="appId" />
-    </div>
-    <div v-else-if="importType === 'historyVersion'">
-      <div class="wrap">
-        <div class="label">{{ $t('选择版本') }}</div>
-        <bk-select
-          v-model="selectVerisonId"
-          :loading="versionListLoading"
-          style="width: 374px"
-          filterable
-          auto-focus
-          :clearable="false"
-          @select="handleSelectVersion(appId, $event)">
-          <bk-option v-for="item in versionList" :id="item.id" :key="item.id" :name="item.spec.name" />
-        </bk-select>
+    <div :class="['select-wrap', { 'en-select-wrap': locale === 'en' }]">
+      <div class="import-type-select">
+        <div class="label">{{ t('导入方式') }}</div>
+        <bk-radio-group v-model="importType">
+          <bk-radio-button label="text">{{ t('文本格式导入') }}</bk-radio-button>
+          <bk-radio-button label="historyVersion">{{ t('从历史版本导入') }}</bk-radio-button>
+          <bk-radio-button label="otherService">{{ t('从其他服务导入') }}</bk-radio-button>
+        </bk-radio-group>
       </div>
-    </div>
-    <div v-else>
-      <ImportFormOtherService
-        :bk-biz-id="bkBizId"
-        :app-id="appId"
-        @select-version="handleSelectVersion"
-        @clear="handleClearTable" />
+      <div v-if="importType === 'text'">
+        <TextImport ref="textImport" :bk-biz-id="bkBizId" :app-id="appId" />
+      </div>
+      <div v-else-if="importType === 'historyVersion'">
+        <div class="wrap">
+          <div class="label">{{ $t('选择版本') }}</div>
+          <bk-select
+            v-model="selectVerisonId"
+            :loading="versionListLoading"
+            style="width: 374px"
+            filterable
+            auto-focus
+            :clearable="false"
+            @select="handleSelectVersion(appId, $event)">
+            <bk-option v-for="item in versionList" :id="item.id" :key="item.id" :name="item.spec.name" />
+          </bk-select>
+        </div>
+      </div>
+      <div v-else>
+        <ImportFormOtherService
+          :bk-biz-id="bkBizId"
+          :app-id="appId"
+          @select-version="handleSelectVersion"
+          @clear="handleClearTable" />
+      </div>
     </div>
     <div v-if="importType !== 'text' && allConfigList.length" class="content">
       <bk-loading :loading="tableLoading">
@@ -128,7 +130,7 @@
   import ConfigTable from './kv-config-table.vue';
   import { cloneDeep } from 'lodash';
 
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const props = defineProps<{
     show: boolean;
     bkBizId: string;
@@ -315,34 +317,49 @@
 </script>
 
 <style scoped lang="scss">
-  .import-type-select {
-    display: flex;
-  }
-  .label {
-    width: 70px;
-    height: 32px;
-    line-height: 32px;
-    font-size: 12px;
-    color: #63656e;
-  }
-  .wrap {
-    display: flex;
-    margin-top: 24px;
-  }
-  :deep(.wrap) {
-    display: flex;
-    flex-wrap: wrap;
-    margin-top: 24px;
-    .label {
-      @extend .label;
+  .select-wrap {
+
+    .import-type-select {
+      display: flex;
     }
-  }
-  :deep(.other-service-wrap) {
-    display: flex;
-    margin-top: 24px;
-    gap: 24px;
     .label {
-      @extend .label;
+      width: 70px;
+      height: 32px;
+      line-height: 32px;
+      font-size: 12px;
+      color: #63656e;
+      text-align: right;
+      margin-right: 22px;
+    }
+    .wrap {
+      display: flex;
+      margin-top: 24px;
+    }
+    :deep(.wrap) {
+      display: flex;
+      flex-wrap: wrap;
+      margin-top: 24px;
+      .label {
+        @extend .label;
+      }
+    }
+    &.en-select-wrap {
+      .label {
+        width: 100px !important;
+      }
+      :deep(.wrap) {
+        .label {
+          @extend .label;
+        }
+      }
+    }
+    :deep(.other-service-wrap) {
+      display: flex;
+      margin-top: 24px;
+      gap: 24px;
+      .label {
+        @extend .label;
+      }
     }
   }
 

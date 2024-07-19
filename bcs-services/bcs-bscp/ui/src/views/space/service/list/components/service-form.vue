@@ -43,7 +43,10 @@
       :label="t('数据类型')"
       property="kv_type"
       :description="t('tips.type')">
-      <bk-radio-group v-model="localData.data_type" @change="handleChange">
+      <bk-radio-group
+        v-model="localData.data_type"
+        :class="{ 'en-type-group': locale === 'en' }"
+        @change="handleChange">
         <bk-radio label="any">{{ t('任意类型') }}</bk-radio>
         <bk-radio v-for="kvType in CONFIG_KV_TYPE" :key="kvType.id" :label="kvType.id">{{ kvType.name }}</bk-radio>
       </bk-radio-group>
@@ -122,3 +125,11 @@
     validate,
   });
 </script>
+
+<style lang="scss" scoped>
+  .en-type-group {
+    :deep(.bk-radio ~ .bk-radio) {
+      margin-left: 20px;
+    }
+  }
+</style>

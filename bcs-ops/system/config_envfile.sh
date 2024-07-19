@@ -51,6 +51,7 @@ init_env() {
   BK_HOME=${BK_HOME:-"/data/bcs"}
   K8S_IPv6_STATUS=${K8S_IPv6_STATUS:-"Disable"}
   LAN_IP=${LAN_IP:-}
+  LAN_DEV=${LAN_DEV:-}
   LAN_IPv6=${LAN_IPv6:-}
   BCS_SYSCTL=${BCS_SYSCTL:=1}
   if [[ -z ${LAN_IP} ]] && [[ ${K8S_IPv6_STATUS,,} != "singlestack" ]]; then
@@ -239,6 +240,7 @@ render_env() {
 # bcs config begin
 ## HOST
 BK_HOME="${BK_HOME}"
+LAN_DEV="${LAN_DEV}"
 LAN_IP="${LAN_IP}"
 $(
     [[ ${K8S_IPv6_STATUS,,} == "dualstack" ]] \

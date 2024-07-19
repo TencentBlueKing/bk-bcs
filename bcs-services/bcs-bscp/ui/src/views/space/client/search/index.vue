@@ -195,7 +195,7 @@
             :label="t('客户端组件版本')"
             :width="128"
             prop="client.spec.client_version"></bk-table-column>
-          <bk-table-column :label="t('操作')" :width="160" fixed="right">
+          <bk-table-column :label="t('操作')" :width="locale === 'zh-cn' ? 160 : 230" fixed="right">
             <template #default="{ row }">
               <div v-if="row.client">
                 <bk-button theme="primary" text @click="handleShowPullRecord(row.client.attachment.uid, row.client.id)">
@@ -253,7 +253,7 @@
   import RetryBtn from './components/retry-btn.vue';
   import { useI18n } from 'vue-i18n';
 
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
 
   const clientStore = useClientStore();
   const { searchQuery } = storeToRefs(clientStore);
