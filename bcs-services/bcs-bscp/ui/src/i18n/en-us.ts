@@ -465,6 +465,7 @@ export default {
   '文件上传失败，请重新上传文件': 'File upload failed, please re-upload the file',
   新版本已生成: 'New version has been generated',
   未上线版本的分组: 'Group of unlaunched versions',
+  '文件格式错误，请重新选择文本文件上传': 'File format error, please re-select the text file to upload',
 
   // 分组管理
   新增分组: 'New group',
