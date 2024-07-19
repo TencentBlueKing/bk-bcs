@@ -162,3 +162,13 @@ export const getClientCommonlyUsedNameCheck = (bizId: string, appId: number, nam
  */
 export const retryClients = (bizId: string, appId: number, ids: number[]) =>
   http.post(`/config/biz/${bizId}/apps/${appId}/clients/retry`, { client_ids: ids, all: false });
+
+/**
+ *  获取集群列表
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param appId 应用ID
+ * @returns
+ */
+
+export const getClusterList = (bizId: string, appId: number) => http.get(`/config/biz/${bizId}/apps/${appId}/xxx/xxx`);

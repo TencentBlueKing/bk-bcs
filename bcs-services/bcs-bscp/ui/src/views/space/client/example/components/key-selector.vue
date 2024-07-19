@@ -86,6 +86,7 @@
   // 表单校验失败检查密钥是否为空
   const validateCredential = () => {
     isError.value = !currentValue.value.privacyCredential;
+    return !isError.value;
   };
   // 获取密钥列表
   const loadCredentialList = async () => {

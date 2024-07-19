@@ -339,7 +339,7 @@
     }
   }
   .preview-container {
-    margin-top: 32px;
+    margin-top: 8px;
     padding: 8px 0 0;
     border-top: 1px solid #dcdee5;
   }

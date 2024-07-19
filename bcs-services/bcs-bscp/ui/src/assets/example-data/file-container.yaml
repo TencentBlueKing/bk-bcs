@@ -36,10 +36,11 @@ spec:
               value: {{ .Bk_Bscp_Variable_Leabels }}
             # 配置文件临时目录，文件将下发到 {temp_dir}/files 目录下
             - name: temp_dir
-              value: {{ .Bk_Bscp_VariableTempDir }}
+              value: {{ .Bk_Bscp_Variable_TempDir }}
+            {{ .Bk_Bscp_Variable_p2p_part1 }}
           # 需要同时挂载文件临时目录到 Init 容器，sidecar 容器，业务容器
           volumeMounts:
-            - mountPath: {{ .Bk_Bscp_VariableTempDir }}
+            - mountPath: {{ .Bk_Bscp_Variable_TempDir }}
               name: bscp-temp-dir
       containers:
         # 以 nginx 容器为例的业务容器，正式使用时需将其替换为实际业务程序容器
@@ -49,7 +50,7 @@ spec:
             - containerPort: 80
           # 需要同时挂载文件临时目录到 Init 容器，sidecar 容器，业务容器
           volumeMounts:
-            - mountPath: {{ .Bk_Bscp_VariableTempDir }}
+            - mountPath: {{ .Bk_Bscp_Variable_TempDir }}
               name: bscp-temp-dir
         # BSCP Sidecar 容器负责监控配置文件版本变动，并将更新的配置文件下载到指定临时目录，业务可以通过后置脚本或其他流程实现新配置文件的生效
         - name: bscp-sidecar
@@ -67,9 +68,10 @@ spec:
             - name: labels
               value: {{ .Bk_Bscp_Variable_Leabels }}
             - name: temp_dir
-              value: {{ .Bk_Bscp_VariableTempDir }}
+              value: {{ .Bk_Bscp_Variable_TempDir }}
+            {{ .Bk_Bscp_Variable_p2p_part2 }}
           volumeMounts:
-            - mountPath: {{ .Bk_Bscp_VariableTempDir }}
+            - mountPath: {{ .Bk_Bscp_Variable_TempDir }}
               name: bscp-temp-dir
       volumes:
         - name: bscp-temp-dir
