@@ -37,7 +37,8 @@
         v-model="searchStr"
         class="config-search-input"
         :width="280"
-        :placeholder="t('配置文件绝对路径/创建人/修改人')" />
+        :placeholder="t('配置文件绝对路径/创建人/修改人')"
+        v-bk-tooltips="{ content: t('配置文件绝对路径/创建人/修改人'), disabled: locale === 'zh-cn' }" />
     </div>
     <section class="config-list-table">
       <TableWithTemplates
@@ -80,7 +81,7 @@
   const serviceStore = useServiceStore();
   const { versionData, conflictFileCount } = storeToRefs(configStore);
   const { isFileType } = storeToRefs(serviceStore);
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
 
   const props = defineProps<{
     bkBizId: string;

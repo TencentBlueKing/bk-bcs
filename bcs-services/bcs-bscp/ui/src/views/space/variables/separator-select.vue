@@ -1,5 +1,5 @@
 <template>
-  <div class="wrap">
+  <div class="separator-wrap">
     <div class="title">{{ t('分隔符') }}</div>
     <div class="select">
       <div
@@ -13,7 +13,10 @@
     </div>
     <bk-form ref="formRef" v-if="selectSeparatorId === 4" :rules="rules" :model="formData">
       <bk-form-item required property="separator">
-        <bk-input class="custom-input" v-model="formData.separator" :placeholder="t('请输入分隔符，限制为10个字符')" />
+        <bk-input
+          class="custom-input"
+          v-model="formData.separator"
+          :placeholder="t('请输入分隔符，限制为10个字符')" />
       </bk-form-item>
     </bk-form>
     <div class="footer">
@@ -67,8 +70,8 @@
 </script>
 
 <style scoped lang="scss">
-  .wrap {
-    width: 276px;
+  .separator-wrap {
+    min-width: 276px;
     background: #2e2e2e;
     border: 1px solid #63656e;
     box-shadow: 0 2px 6px 0 #0000001a;
@@ -84,7 +87,8 @@
       display: flex;
       margin: 12px 0 20px;
       .item {
-        width: 48px;
+        min-width: 48px;
+        padding: 0 8px;
         height: 26px;
         border: 1px solid #8e8e8e;
         color: #e0e0e0;
@@ -109,19 +113,20 @@
         border-color: #488eff;
       }
     }
+    :deep(.custom-input) {
+      .bk-input--text {
+        background-color: rgba($color: #000000, $alpha: 0);
+        color: #c4c6cc;
+      }
+    }
+    :deep(.bk-form-content) {
+      margin-left: 0 !important;
+    }
     .footer {
       display: flex;
-      justify-content: space-between;
-      margin-left: 132px;
+      justify-content: flex-end;
     }
   }
 </style>
 
-<style lang="scss">
-  .custom-input {
-    .bk-input--text {
-      background-color: rgba($color: #000000, $alpha: 0);
-      color: #c4c6cc;
-    }
-  }
-</style>
+<style lang="scss"></style>

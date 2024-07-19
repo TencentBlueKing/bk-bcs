@@ -83,7 +83,7 @@
   import useTemplateStore from '../../../../../../../../store/template';
   import useModalCloseConfirmation from '../../../../../../../../utils/hooks/use-modal-close-confirmation';
   import { IConfigImportItem } from '../../../../../../../../../types/config';
-  import { importTemplateBatchAdd, addTemplateToPackage } from '../../../../../../../../api/template';
+  import { importTemplateBatchAdd } from '../../../../../../../../api/template';
   import ConfigTable from './config-table.vue';
   import SelectPackage from './select-package.vue';
   import Message from 'bkui-vue/lib/message';
@@ -159,10 +159,6 @@
         [...existConfigList.value, ...nonExistConfigList.value],
         pkgIds[0] === 0 ? [] : pkgIds,
       );
-      // 选择未指定套餐时,不需要调用添加接口
-      if (pkgIds.length > 1 || pkgIds[0] !== 0) {
-        await addTemplateToPackage(spaceId.value, currentTemplateSpace.value, res.ids, pkgIds);
-      }
       templateStore.$patch((state) => {
         state.topIds = res.ids;
       });

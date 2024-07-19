@@ -159,12 +159,13 @@ import { releaseNote } from '@/api/modules/project';
 import { setCookie } from '@/common/util';
 import BcsMd from '@/components/bcs-md/index.vue';
 import useCalcHeight from '@/composables/use-calc-height';
+import usePlatform from '@/composables/use-platform';
 import $i18n from '@/i18n/i18n-setup';
+import logoSvg from '@/images/bcs.svg';
 import $router from '@/router';
 import $store from '@/store';
 import SystemLog from '@/views/app/log.vue';
 import ProjectSelector from '@/views/app/project-selector.vue';
-import usePlatform from '@/composables/use-platform';
 
 export default defineComponent({
   name: 'NewNavigation',
@@ -191,7 +192,7 @@ export default defineComponent({
 
     const { menusData: menus } = useMenu();
     const { config } = usePlatform();
-    const appLogo = computed(() => config.appLogo);
+    const appLogo = computed(() => config.appLogo || logoSvg);
     const appName = computed(() => config.i18n.name);
     const langs = ref([
       {

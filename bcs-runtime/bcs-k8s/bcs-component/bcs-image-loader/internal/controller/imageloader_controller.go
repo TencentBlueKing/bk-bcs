@@ -59,6 +59,7 @@ func (r *ImageLoaderReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		return ctrl.Result{}, nil
 	}
 
+	logger.Info("start reconcile")
 	imageLoader := originImageLoader.DeepCopy()
 	newStatus, requeueTime, err := r.reconcileImageLoader(ctx, imageLoader)
 	if err != nil {

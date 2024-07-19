@@ -228,13 +228,22 @@ func (r *ImageLoaderReconciler) handleAllNode(ctx context.Context, job *batchv1.
 
 func modifyJob(job *batchv1.Job, loader *tkexv1alpha1.ImageLoader, index int) {
 	job.Name = getJobName(loader, index)
+	if job.Annotations == nil {
+		job.Annotations = make(map[string]string)
+	}
 	job.Annotations[LoaderJobNameKey] = job.Name
+	if job.Spec.Template.Labels == nil {
+		job.Spec.Template.Labels = make(map[string]string)
+	}
 	job.Spec.Template.Labels[LoaderJobNameKey] = job.Name
 	job.Spec.Template.Spec.Containers[0].Image = loader.Spec.Images[index]
 	job.Spec.Template.Spec.Containers[0].Command = []string{
 		"echo", "pull " + loader.Spec.Images[index],
 	}
 	// ensure the job runs one pod on each node
+	if job.Spec.Template.Spec.Affinity == nil {
+		job.Spec.Template.Spec.Affinity = &corev1.Affinity{}
+	}
 	job.Spec.Template.Spec.Affinity.PodAntiAffinity = &corev1.PodAntiAffinity{
 		RequiredDuringSchedulingIgnoredDuringExecution: []corev1.PodAffinityTerm{
 			{

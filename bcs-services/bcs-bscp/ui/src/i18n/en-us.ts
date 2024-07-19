@@ -74,6 +74,7 @@ export default {
   没有匹配到配置项: 'No configuration item was matched',
   请先在左侧表单设置关联规则并预览: 'Please first set the association rules in the left form and preview',
   删除服务成功: 'Service deleted successfully',
+  log_当前版本: 'Version',
 
   // 导航栏
   服务配置中心: 'BSCP',
@@ -288,7 +289,7 @@ export default {
   移除模板套餐成功: 'Template package removed successfully',
   删除配置文件成功: 'Configuration file deleted successfully',
   编辑配置文件: 'Edit configuration file',
-  目标版本: 'target version',
+  目标版本: 'Target version',
   当前最新为: 'The current latest is',
   模板版本更新成功: 'Template version updated successfully',
   查看配置文件: 'View configuration file',
@@ -460,6 +461,10 @@ export default {
   '单文件大小不能超过{n}M': 'The file size cannot exceed {n} MB',
   '压缩包大小不能超过{n}GB': 'The compressed package size cannot exceed {n} GB',
   重置: 'Reset',
+  '请确保文件大小不超过 {n} MB': 'Please ensure that the file size does not exceed {n} MB',
+  '文件上传失败，请重新上传文件': 'File upload failed, please re-upload the file',
+  新版本已生成: 'New version has been generated',
+  未上线版本的分组: 'Group of unlaunched versions',
 
   // 分组管理
   新增分组: 'New group',
@@ -489,6 +494,7 @@ export default {
   '服务名称/服务版本': 'Service name/Service version',
   服务版本: 'Service version',
   '未在配置文件中检测到变量，请确保配置文件中包含变量后再尝试设置变量': 'Variable not detected in the configuration file. Please ensure the configuration file includes the variable before attempting to set it.',
+  标签最大数量为5个: 'Label maximum number is 5',
 
   // 全局变量
   配置模板与变量: 'Configure templates and variables',
@@ -515,6 +521,7 @@ export default {
   '变量名 变量类型 变量值 变量描述（可选）': 'Variable name Variable type Variable value Variable Description (optional)',
   ' bk_bscp_nginx_port number 8080 nginx端口': ' bk_bscp_nginx_port number 8080 nginx port',
   导出变量: 'Export variables',
+  全局变量: 'Global variables',
 
   // 配置模板
   '配置模板用于同一业务下服务间配置文件复用，可以在创建服务配置时引用配置模板。': 'Configuration templates are used to reuse configuration files between services under same services, and can be referenced when creating service configurations.',
@@ -841,8 +848,8 @@ export default {
   最后心跳时间: 'Last heartbeat time',
   查询: 'Search',
   标签: 'label',
-  当前配置版本: 'current configuration version',
-  目标配置版本: 'target configuration version',
+  当前配置版本: 'Current configuration version',
+  目标配置版本: 'Target configuration version',
   最近一次拉取配置状态: 'Last pull configuration status',
   成功: 'success',
   失败: 'failed',
