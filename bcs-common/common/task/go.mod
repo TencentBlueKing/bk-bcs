@@ -10,6 +10,7 @@ require (
 	go.etcd.io/etcd/client/v3 v3.5.2
 	go.mongodb.org/mongo-driver v1.15.0
 	golang.org/x/sync v0.1.0
+	gorm.io/gorm v1.25.11
 )
 
 require (
@@ -74,5 +75,4 @@ require (
 	google.golang.org/grpc v1.46.0 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	gorm.io/gorm v1.25.11 // indirect
 )

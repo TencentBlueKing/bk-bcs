@@ -36,6 +36,7 @@ type ListOption struct {
 
 // Store model for TaskManager
 type Store interface {
+	EnsureTable(ctx context.Context, dst ...any) error
 	CreateTask(ctx context.Context, task *types.Task) error
 	UpdateTask(ctx context.Context, task *types.Task) error
 	DeleteTask(ctx context.Context, taskID string) error
