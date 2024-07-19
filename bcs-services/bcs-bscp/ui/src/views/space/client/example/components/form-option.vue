@@ -25,9 +25,22 @@
       </template>
       <bk-input v-model="formData.tempDir" :placeholder="$t('请输入')" clearable />
     </bk-form-item>
+    <bk-form-item>
+      <!-- 添加标签 -->
+      <AddLabel ref="addLabelRef" :label-name="labelName" @send-label="(obj) => (formData.labelArr = obj)" />
+    </bk-form-item>
+    <bk-form-item v-if="p2pShow">
+      <!-- p2p网络加速 -->
+      <p2p-acceleration
+        ref="p2pAccelerationRef"
+        @send-cluster="
+          ({ clusterSwitch, clusterInfo }) => {
+            formData.clusterSwitch = clusterSwitch;
+            formData.clusterInfo = clusterInfo;
+          }
+        " />
+    </bk-form-item>
   </bk-form>
-  <!-- 添加标签 -->
-  <AddLabel ref="addLabelRef" :label-name="labelName" @send-label="(obj) => (formData.labelArr = obj)" />
 </template>
 
 <script lang="ts" setup>
@@ -35,8 +48,10 @@
   import KeySelect from './key-selector.vue';
   import { Info } from 'bkui-vue/lib/icon';
   import AddLabel from './add-label.vue';
+  import p2pAcceleration from './p2p-acceleration.vue';
   import { IExampleFormData } from '../../../../../../types/client';
   import { useI18n } from 'vue-i18n';
+  import { cloneDeep } from 'lodash';
 
   const props = defineProps({
     directoryShow: {
@@ -47,6 +62,10 @@
       type: String,
       default: '标签',
     },
+    p2pShow: {
+      type: Boolean,
+      default: false,
+    },
   });
 
   const emits = defineEmits(['update-option-data']);
@@ -56,12 +75,18 @@
 
   const addLabelRef = ref();
   const keySelectorRef = ref();
+  const p2pAccelerationRef = ref();
   const formRef = ref();
   const formData = ref<IExampleFormData>({
     clientKey: '', // 客户端密钥
     privacyCredential: '', // 脱敏的密钥
     tempDir: '/data/bscp', // 临时目录
     labelArr: [], // 添加的标签
+    clusterSwitch: false, // 集群开关
+    clusterInfo: {
+      name: '', // 集群名称
+      value: '', // 集群id
+    },
   });
 
   const rules = {
@@ -119,13 +144,17 @@
   });
 
   const handleValidate = () => {
-    // 先验证label是否都满足条件
-    if (!addLabelRef.value.isAllValid()) {
-      keySelectorRef.value.validateCredential();
+    // label验证，数组长度为空时返回true
+    const labelValid = addLabelRef.value.isAllValid();
+    // p2p网络加速验证，目前只有Sidecar使用，根据有无使用决定验证情况
+    const p2pValid = props.p2pShow ? p2pAccelerationRef.value.isValid() : true;
+    // 密钥验证
+    const keyValid = keySelectorRef.value.validateCredential();
+    const isAllValid = [labelValid, p2pValid, keyValid].includes(false);
+    if (isAllValid) {
       formRef.value.validate();
       return Promise.reject();
     }
-    keySelectorRef.value.validateCredential();
     return formRef.value.validate();
   };
   const setCredential = (key: string, privacyKey: string) => {
@@ -134,7 +163,17 @@
     formRef.value.validate();
   };
   const sendAll = () => {
-    emits('update-option-data', formData.value);
+    const filterFormData = cloneDeep(formData.value);
+    // 过滤发送数据
+    if (!props.directoryShow) {
+      delete filterFormData.tempDir;
+    }
+    if (!props.p2pShow) {
+      delete filterFormData.clusterSwitch;
+      delete filterFormData.clusterInfo;
+    }
+    console.log(filterFormData);
+    emits('update-option-data', filterFormData);
   };
 
   defineExpose({

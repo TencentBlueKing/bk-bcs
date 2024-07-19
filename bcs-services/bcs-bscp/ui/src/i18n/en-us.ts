@@ -790,6 +790,16 @@ export default {
   '仅支持字母，数字，\'-\'，\'_\'，\'.\' 及 \'/\' 且需以字母数字开头和结尾': 'Only supports letters, numbers, \'-\', \'_\', \'.\' and \'/\' characters, and must start and end with a letter or number',
   '需以字母、数字开头和结尾，可包含 \'-\'，\'_\'，\'.\' 和字母数字及负数': 'Must start and end with a letter or number, can include \'-\', \'_\', \'.\', and alphanumeric characters, as well as negative numbers',
   服务标签: 'service label',
+  '启用 P2P 网络加速': 'Enable P2P network acceleration',
+  查看说明: 'View instructions',
+  '启用 P2P 网络加速主要适用于业务但配置文件较大及大量节点拉取配置的场景，以实现更优的文件传输速度。': 'Enabling P2P network acceleration is primarily suitable for scenarios where business configuration files are large and many nodes are pulling configurations, to achieve better file transfer speeds',
+  '以下是启用 P2P 网络加速的基本条件，已确保实现有效的网络加速：': 'Below are the basic conditions for enabling P2P network acceleration, ensuring effective network acceleration:',
+  '⒈ 单个配置文件的大小应超过 50MB': '⒈ The size of a single configuration file should exceed 50MB',
+  '⒉ 客户端实例数量应超过 50 个': '⒉ The number of client instances should exceed 50',
+  'P2P 网络加速依赖于 BCS 集群的元数据，请指定客户端即将部署的 BCS 集群 ID。\n更多 P2P 前置依赖信息，请查阅白皮书 P2P 网络加速': 'P2P network acceleration depends on the metadata of the BCS cluster. Please specify the BCS cluster ID where the client will be deployed.\nFor more P2P pre-requisite information, please refer to the P2P network acceleration white paper',
+  'BCS 集群 ID': 'BCS cluster ID',
+  搜索视图: 'Search view',
+'请先选择BCS 集群 ID，替换下方示例代码后，再尝试复制示例': 'Please select the BCS cluster ID first, replace the example code below, and then try to copy the example',
 
   // 公共组件
   页面不存在: 'Page does not exist',
