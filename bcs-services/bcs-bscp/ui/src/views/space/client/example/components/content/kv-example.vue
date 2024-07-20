@@ -1,6 +1,10 @@
 <template>
   <section class="kv-example-template">
-    <form-option ref="fileOptionRef" :directory-show="false" @update-option-data="getOptionData" />
+    <form-option
+      ref="fileOptionRef"
+      :directory-show="false"
+      :http-config-show="props.kvName === 'http'"
+      @update-option-data="(data) => getOptionData(data)" />
     <div class="preview-container">
       <div class="kv-handle-content">
         <span class="preview-label">{{ $t('示例预览') }}</span>
@@ -24,17 +28,16 @@
       <code-preview
         class="preview-component"
         :style="{ height: `${kvConfig.codePreviewHeight}px` }"
-        ref="codePreviewRef"
         :code-val="replaceVal"
         :variables="variables"
-        :language="kvName"
+        :language="codeLanguage"
         @change="(val: string) => (copyReplaceVal = val)" />
     </div>
   </section>
 </template>
 
 <script lang="ts" setup>
-  import { ref, Ref, inject, computed, onMounted, watch, nextTick } from 'vue';
+  import { ref, Ref, inject, computed, watch, nextTick } from 'vue';
   import { copyToClipBoard } from '../../../../../../utils/index';
   import { CloseLine } from 'bkui-vue/lib/icon';
   import { IVariableEditParams } from '../../../../../../../types/variable';
@@ -51,9 +54,8 @@
   const basicInfo = inject<{ serviceName: Ref<string>; serviceType: Ref<string> }>('basicInfo');
   const { t } = useI18n();
   const route = useRoute();
-  const tabArr = [t('Get方法'), t('Watch方法')];
 
-  const codePreviewRef = ref();
+  const tabArr = ref([t('Get方法'), t('Watch方法')]);
   const fileOptionRef = ref();
   const bkBizId = ref(String(route.params.spaceId));
   const codeVal = ref(''); // 存储yaml字符原始值
@@ -68,6 +70,7 @@
     privacyCredential: '',
     labelArr: [],
     labelArrType: '', // 展示格式
+    httpConfigName: '', // http配置项名称
   });
 
   // 代码预览上方提示框
@@ -126,6 +129,17 @@
           ),
           codePreviewHeight: 1990,
         };
+      case 'http':
+        if (!activeTab.value) {
+          return {
+            topTip: '',
+            codePreviewHeight: 488,
+          };
+        }
+        return {
+          topTip: '',
+          codePreviewHeight: 640,
+        };
       default:
         return {
           topTip: '',
@@ -133,18 +147,25 @@
         };
     }
   });
+  // http分别使用shell和python高亮格式，其他保持原有
+  const codeLanguage = computed(() => {
+    if (props.kvName === 'http') {
+      return tabArr.value[activeTab.value].toLocaleLowerCase();
+    }
+    return props.kvName;
+  });
 
   watch(
     () => props.kvName,
-    () => {
-      handleTab();
-      getOptionData(optionData.value); // 每次切换模板需重新展示数据方式
+    (newV) => {
+      if (newV === 'http') {
+        tabArr.value = ['Shell', 'Python'];
+      }
+      codeVal.value = '';
+      nextTick(() => handleTab());
     },
+    { immediate: true },
   );
-
-  onMounted(() => {
-    handleTab();
-  });
 
   const getOptionData = (data: any) => {
     // labels展示方式加工，并替换数据
@@ -178,6 +199,17 @@
           labelArrType: `{${labelArrType}}`,
         };
         break;
+      case 'http':
+        if (!activeTab.value) {
+          labelArrType = data.labelArr.length ? `'{${data.labelArr.join(', ')}}'` : "'{}'";
+        } else {
+          labelArrType = data.labelArr.length ? `{${data.labelArr.join(', ')}}` : '{}';
+        }
+        optionData.value = {
+          ...data,
+          labelArrType,
+        };
+        break;
       default:
         labelArrType = data.labelArr.length ? data.labelArr.join(', ') : '';
         optionData.value = {
@@ -186,8 +218,8 @@
         };
         break;
     }
-    updateVariables(); // 表单数据更新，配置需要同时更新
     replaceVal.value = codeVal.value; // 数据重置
+    updateVariables(); // 表单数据更新，配置需要同时更新
     nextTick(() => {
       // 等待monaco渲染完成(高亮)再改固定值
       updateReplaceVal();
@@ -201,10 +233,13 @@
         t('请将 {{ YOUR_KEY }} 替换为您的实际 Key'),
       );
     }
-    if (props.kvName === 'go') {
-      updateString = updateString.replace('设置日志自定义 Handler', t('设置日志自定义 Handler'));
-      updateString = updateString.replace('在线服务, 可设置 metrics', t('在线服务, 可设置 metrics'));
-      updateString = updateString.replace('初始化配置信息', t('初始化配置信息'));
+    // http的两个label特殊处理
+    if (props.kvName === 'http') {
+      if (optionData.value.labelArr.length) {
+        updateString = updateString.replace('{{ .Bk_Bscp_Variable_Start_Leabels }}', 'labels=');
+      } else {
+        updateString = updateString.replace('{{ .Bk_Bscp_Variable_Start_Leabels }}', '# labels=');
+      }
     }
     updateString = updateString.replace('{{ .Bk_Bscp_Variable_BkBizId }}', bkBizId.value);
     updateString = updateString.replace('{{ .Bk_Bscp_Variable_ServiceName }}', basicInfo!.serviceName.value);
@@ -230,6 +265,12 @@
         default_val: '{{ YOUR_KEY }}',
         memo: '',
       },
+      {
+        name: 'Bk_Bscp_Variable_KeyName',
+        type: '',
+        default_val: `"${optionData.value.httpConfigName}"`,
+        memo: '',
+      },
     ];
   };
 
@@ -252,6 +293,16 @@
           copyVal = `${tempStr}\n${copyVal}`;
         }
         copyVal = `${copyVal}`;
+      } else if (props.kvName === 'http') {
+        if (!activeTab.value) {
+          // get
+          const tempStr = `# ${t('Shell方法：用于一次性拉取最新的配置信息，适用于需要获取并更新配置的场景。')}\n`;
+          copyVal = `${tempStr}\n${copyVal}`;
+        } else {
+          // watch
+          const tempStr = `# ${t('Python方法：通过建立长连接，实时监听配置版本的变更，当新版本的配置发布时，将自动调用回调方法处理新的配置信息，适用于需要实时响应配置变更的场景。')}\n`;
+          copyVal = `${tempStr}\n${copyVal}`;
+        }
       } else {
         if (!activeTab.value) {
           // get
@@ -274,12 +325,13 @@
   };
   // 切换tab
   const handleTab = async (index = 0) => {
-    codePreviewRef.value.scrollTo();
+    if (index === activeTab.value && codeVal.value) return;
     activeTab.value = index;
     const newKvData = await changeKvData(props.kvName, index);
     codeVal.value = newKvData.default;
     replaceVal.value = newKvData.default;
-    updateReplaceVal();
+    getOptionData(optionData.value);
+    // updateReplaceVal();
   };
   // 键值型数据模板切换
   /**
@@ -305,6 +357,10 @@
         return !methods
           ? import('/src/assets/example-data/kv-c++-get.yaml?raw')
           : import('/src/assets/example-data/kv-c++-watch.yaml?raw');
+      case 'http':
+        return !methods
+          ? import('/src/assets/example-data/kv-http-shell.yaml?raw')
+          : import('/src/assets/example-data/kv-http-python.yaml?raw');
       default:
         return '';
     }

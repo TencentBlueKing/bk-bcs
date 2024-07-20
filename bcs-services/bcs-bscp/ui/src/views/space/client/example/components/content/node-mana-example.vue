@@ -173,7 +173,7 @@
 <style scoped lang="scss">
   .node-mana-container {
     .node-content {
-      margin-top: 32px;
+      margin-top: 24px;
       padding-top: 12px;
       border-top: 1px solid #dcdee5;
     }
