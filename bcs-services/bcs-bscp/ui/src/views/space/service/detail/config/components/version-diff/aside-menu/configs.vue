@@ -18,7 +18,7 @@
     <div v-if="isOpenSearch" class="search-wrapper">
       <SearchInput v-model="searchStr" :placeholder="t('搜索配置文件名称')" @search="handleSearch" />
     </div>
-    <div class="groups-wrapper">
+    <div :class="['groups-wrapper', { 'en-groups-wrapper': locale === 'en' }]">
       <div v-for="group in groupedConfigListOnShow" class="config-group-item" :key="group.id">
         <div :class="['group-header', { expand: group.expand }]" @click="group.expand = !group.expand">
           <RightShape class="arrow-icon" />
@@ -126,7 +126,7 @@
     configs: IConfigDiffItem[];
   }
 
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const props = withDefaults(
     defineProps<{
       currentVersionId: number;
@@ -719,6 +719,9 @@
   .groups-wrapper {
     height: calc(100% - 40px);
     overflow: auto;
+    &.en-groups-wrapper {
+      height: calc(100% - 58px);
+    }
   }
   .config-group-item {
     .group-header {

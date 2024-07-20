@@ -96,6 +96,34 @@ downstream:
     burst: 500
     waitTimeMil: 50
 
+# feed server's rate limiter related settings.
+rateLimiter:
+  # 是否启用限流器，默认为false（关闭）
+  enable:
+  # clientBandwidth为单个客户端下载文件所评估的可用带宽，用于决定单次下载流控阈值，单位为MB/s，默认为50（50MB/s=400Mb/s）
+  clientBandwidth:
+  # global为全局限流器配置，整个feed-server粒度
+  global:
+    # limit为流量速率限制，单位为MB/s，默认为1000（1000MB/s=8000Mb/s）
+    limit:
+    # burst为允许处理的突发流量上限（允许系统在短时间内处理比速率限制更多的流量），单位为MB，默认为2000（2000MB=16000Mb）
+    burst:
+  # biz为业务粒度限流器配置
+  biz:
+    # 业务默认配置(优先级低于显示设置的业务配置)
+    default:
+      # limit为流量速率限制，单位为MB/s，默认为100（100MB/s=800Mb/s）
+      limit:
+      # burst为允许处理的突发流量上限（允许系统在短时间内处理比速率限制更多的流量），单位为MB，默认为200（200MB=1600Mb）
+      burst:
+    # 显示设置的业务配置
+    spec:
+      2:
+        # limit为流量速率限制，单位为MB/s
+        limit:
+        # burst为允许处理的突发流量上限（允许系统在短时间内处理比速率限制更多的流量），单位为MB
+        burst:
+
 # feed server's local cache related settings.
 # Note: 
 # 1. These configurations depend on you host's in-memory cache size, the larger the value of these 

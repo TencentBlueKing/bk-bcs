@@ -148,6 +148,7 @@ message GetDownloadURLReq {
 
 message GetDownloadURLResp {
   string url = 1;
+  int64 wait_time_mil = 2;  // the time(milliseconds) that the client should wait before downloading file
 }
 
 // App 对外简单版本
