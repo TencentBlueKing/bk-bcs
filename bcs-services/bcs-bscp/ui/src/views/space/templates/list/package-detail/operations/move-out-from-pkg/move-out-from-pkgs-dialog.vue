@@ -21,6 +21,7 @@
           :max-height="maxTableHeight"
           :checked="checkedPkgs"
           :is-row-select-enable="isRowSelectEnable"
+          show-overflow-tooltip
           @selection-change="handleSelectionChange"
           @select-all="handleSelectAll">
           <bk-table-column v-if="citedList.length > 1" type="selection" min-width="30" width="40" />
