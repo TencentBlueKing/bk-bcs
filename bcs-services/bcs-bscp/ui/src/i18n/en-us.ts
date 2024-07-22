@@ -800,7 +800,7 @@ export default {
   'P2P 网络加速依赖于 BCS 集群的元数据，请指定客户端即将部署的 BCS 集群 ID。\n更多 P2P 前置依赖信息，请查阅白皮书 P2P 网络加速': 'P2P network acceleration depends on the metadata of the BCS cluster. Please specify the BCS cluster ID where the client will be deployed.\nFor more P2P pre-requisite information, please refer to the P2P network acceleration white paper',
   'BCS 集群 ID': 'BCS cluster ID',
   搜索视图: 'Search view',
-'请先选择BCS 集群 ID，替换下方示例代码后，再尝试复制示例': 'Please select the BCS cluster ID first, replace the example code below, and then try to copy the example',
+  '请先选择BCS 集群 ID，替换下方示例代码后，再尝试复制示例': 'Please select the BCS cluster ID first, replace the example code below, and then try to copy the example',
 
   // 公共组件
   页面不存在: 'Page does not exist',
