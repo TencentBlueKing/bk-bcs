@@ -63,6 +63,8 @@ type ConfigItem interface {
 	RecoverConfigItem(kit *kit.Kit, tx *gen.QueryTx, configItem *table.ConfigItem) error
 	// UpdateWithTx one configItem instance with transaction.
 	UpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, configItem *table.ConfigItem) error
+	// GetConfigItemCount 获取配置项数量
+	GetConfigItemCount(kit *kit.Kit, bizID uint32, appID uint32) (int64, error)
 }
 
 var _ ConfigItem = new(configItemDao)
@@ -72,6 +74,16 @@ type configItemDao struct {
 	idGen    IDGenInterface
 	auditDao AuditDao
 	lock     LockDao
+}
+
+// GetConfigItemCount 获取配置项数量
+func (dao *configItemDao) GetConfigItemCount(kit *kit.Kit, bizID uint32, appID uint32) (int64, error) {
+
+	m := dao.genQ.ConfigItem
+
+	return dao.genQ.ConfigItem.WithContext(kit.Ctx).
+		Where(m.BizID.Eq(bizID), m.AppID.Eq(appID)).
+		Count()
 }
 
 // UpdateWithTx one configItem instance with transaction.

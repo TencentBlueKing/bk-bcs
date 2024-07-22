@@ -185,14 +185,14 @@ func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbds.BatchUps
 	}
 	now := time.Now().UTC()
 	tx := s.dao.GenQuery().Begin()
-	createId, e := s.doBatchCreateConfigItems(grpcKit, tx, toCreate, now, req.BizId, req.AppId)
+	createIds, e := s.doBatchCreateConfigItems(grpcKit, tx, toCreate, now, req.BizId, req.AppId)
 	if e != nil {
 		if rErr := tx.Rollback(); rErr != nil {
 			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
 		}
 		return nil, e
 	}
-	updateId, e := s.doBatchUpdateConfigItemSpec(grpcKit, tx, toUpdateSpec, now,
+	updateIds, e := s.doBatchUpdateConfigItemSpec(grpcKit, tx, toUpdateSpec, now,
 		req.BizId, req.AppId, editingCIMap)
 	if e != nil {
 		if rErr := tx.Rollback(); rErr != nil {
@@ -263,12 +263,14 @@ func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbds.BatchUps
 		}
 		return nil, e
 	}
+
 	if e := tx.Commit(); e != nil {
 		logs.Errorf("commit transaction failed, err: %v, rid: %s", e, grpcKit.Rid)
 		return nil, e
 	}
 	// 返回创建和更新的ID
-	mergedID := append(createId, updateId...) // nolint
+	mergedID := tools.MergeAndDeduplicate(createIds, updateIds)
+
 	return &pbds.BatchUpsertConfigItemsResp{Ids: mergedID}, nil
 }
 
@@ -579,7 +581,7 @@ func (s *Service) checkConfigItems(kt *kit.Kit, req *pbds.BatchUpsertConfigItems
 
 func (s *Service) doBatchCreateConfigItems(kt *kit.Kit, tx *gen.QueryTx,
 	toCreate []*pbds.BatchUpsertConfigItemsReq_ConfigItem, now time.Time, bizID, appID uint32) ([]uint32, error) {
-	createId := []uint32{}
+	createIds := []uint32{}
 	toCreateConfigItems := []*table.ConfigItem{}
 	for _, item := range toCreate {
 		ci := &table.ConfigItem{
@@ -596,10 +598,11 @@ func (s *Service) doBatchCreateConfigItems(kt *kit.Kit, tx *gen.QueryTx,
 	}
 	if err := s.dao.ConfigItem().BatchCreateWithTx(kt, tx, bizID, appID, toCreateConfigItems); err != nil {
 		logs.Errorf("batch create config items failed, err: %v, rid: %s", err, kt.Rid)
-		return createId, err
+		return nil, err
 	}
 	toCreateContent := []*table.Content{}
 	for i, item := range toCreate {
+		createIds = append(createIds, toCreateConfigItems[i].ID)
 		toCreateContent = append(toCreateContent, &table.Content{
 			Spec: item.ContentSpec.ContentSpec(),
 			Attachment: &table.ContentAttachment{
@@ -614,7 +617,7 @@ func (s *Service) doBatchCreateConfigItems(kt *kit.Kit, tx *gen.QueryTx,
 	}
 	if err := s.dao.Content().BatchCreateWithTx(kt, tx, toCreateContent); err != nil {
 		logs.Errorf("batch create config items failed, err: %v, rid: %s", err, kt.Rid)
-		return createId, err
+		return nil, err
 	}
 	toCreateCommit := []*table.Commit{}
 	for i := range toCreateContent {
@@ -635,21 +638,16 @@ func (s *Service) doBatchCreateConfigItems(kt *kit.Kit, tx *gen.QueryTx,
 	}
 	if err := s.dao.Commit().BatchCreateWithTx(kt, tx, toCreateCommit); err != nil {
 		logs.Errorf("batch create commits failed, err: %v, rid: %s", err, kt.Rid)
-		return createId, err
+		return nil, err
 	}
 
-	// 返回创建ID
-	for _, item := range toCreateConfigItems {
-		createId = append(createId, item.ID)
-	}
-
-	return createId, nil
+	return createIds, nil
 }
 
 func (s *Service) doBatchUpdateConfigItemSpec(kt *kit.Kit, tx *gen.QueryTx,
 	toUpdate []*pbds.BatchUpsertConfigItemsReq_ConfigItem, now time.Time, _, _ uint32,
 	ciMap map[string]*table.ConfigItem) ([]uint32, error) {
-	updateId := []uint32{}
+	updateIds := []uint32{}
 	configItems := []*table.ConfigItem{}
 	for _, item := range toUpdate {
 		ci := &table.ConfigItem{
@@ -667,14 +665,14 @@ func (s *Service) doBatchUpdateConfigItemSpec(kt *kit.Kit, tx *gen.QueryTx,
 	}
 	if err := s.dao.ConfigItem().BatchUpdateWithTx(kt, tx, configItems); err != nil {
 		logs.Errorf("batch update config items failed, err: %v, rid: %s", err, kt.Rid)
-		return updateId, err
+		return nil, err
 	}
 	// 返回编辑ID
 	for _, item := range configItems {
-		updateId = append(updateId, item.ID)
+		updateIds = append(updateIds, item.ID)
 	}
 
-	return updateId, nil
+	return updateIds, nil
 }
 
 func (s *Service) doBatchUpdateConfigItemContent(kt *kit.Kit, tx *gen.QueryTx,
@@ -1729,4 +1727,26 @@ func checkExistingPathConflict(existing []string) (uint32, map[string]bool) {
 	}
 
 	return uint32(len(conflictMap)) + conflictNums, conflictPaths
+}
+
+// GetTemplateAndNonTemplateCICount 获取模板和非模板配置项数量
+func (s *Service) GetTemplateAndNonTemplateCICount(ctx context.Context, req *pbds.GetTemplateAndNonTemplateCICountReq) (
+	*pbds.GetTemplateAndNonTemplateCICountResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	count, err := s.dao.ConfigItem().GetConfigItemCount(kt, req.BizId, req.AppId)
+	if err != nil {
+		return nil, errf.Errorf(errf.DBOpFailed, i18n.T(kt, "obtain the number of configuration items"))
+	}
+
+	binding, err := s.dao.AppTemplateBinding().GetAppTemplateBindingByAppID(kt, req.BizId, req.AppId)
+	if err != nil {
+		return nil, errf.Errorf(errf.DBOpFailed,
+			i18n.T(kt, "obtain template binding relationships through business and service IDs"))
+	}
+
+	return &pbds.GetTemplateAndNonTemplateCICountResp{
+		ConfigItemCount:         uint64(count),
+		TemplateConfigItemCount: uint64(len(binding.Spec.TemplateIDs)),
+	}, nil
 }

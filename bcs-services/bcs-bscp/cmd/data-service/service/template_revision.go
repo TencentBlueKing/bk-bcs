@@ -244,15 +244,17 @@ func getLatestTmplRevisions(tmplRevisions []*table.TemplateRevision) map[uint32]
 	return latestRevisionMap
 }
 
+// 创建模板版本
 func (s *Service) doCreateTemplateRevisions(kt *kit.Kit, tx *gen.QueryTx, data []*table.TemplateRevision) error {
+
 	for i := range data {
-		// 生成 RevisionName
 		data[i].Spec.RevisionName = tools.GenerateRevisionName()
 	}
-	// Write template revisions table
+
 	if err := s.dao.TemplateRevision().BatchCreateWithTx(kt, tx, data); err != nil {
 		logs.Errorf("batch create template revisions failed, err: %v, rid: %s", err, kt.Rid)
-		return err
+		return errf.Errorf(errf.DBOpFailed,
+			i18n.T(kt, fmt.Sprintf("batch create template revisions failed, err: %v, rid: %s", err, kt.Rid)))
 	}
 	return nil
 }

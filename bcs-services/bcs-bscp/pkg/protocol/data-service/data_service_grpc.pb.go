@@ -195,6 +195,7 @@ const (
 	Data_Ping_FullMethodName                              = "/pbds.Data/Ping"
 	Data_BatchUpsertClientMetrics_FullMethodName          = "/pbds.Data/BatchUpsertClientMetrics"
 	Data_CompareConfigItemConflicts_FullMethodName        = "/pbds.Data/CompareConfigItemConflicts"
+	Data_GetTemplateAndNonTemplateCICount_FullMethodName  = "/pbds.Data/GetTemplateAndNonTemplateCICount"
 )
 
 // DataClient is the client API for Data service.
@@ -397,6 +398,8 @@ type DataClient interface {
 	BatchUpsertClientMetrics(ctx context.Context, in *BatchUpsertClientMetricsReq, opts ...grpc.CallOption) (*BatchUpsertClientMetricsResp, error)
 	// config item compare conflicts related interface
 	CompareConfigItemConflicts(ctx context.Context, in *CompareConfigItemConflictsReq, opts ...grpc.CallOption) (*CompareConfigItemConflictsResp, error)
+	// 获取模板和非模板配置项数量
+	GetTemplateAndNonTemplateCICount(ctx context.Context, in *GetTemplateAndNonTemplateCICountReq, opts ...grpc.CallOption) (*GetTemplateAndNonTemplateCICountResp, error)
 }
 
 type dataClient struct {
@@ -1883,6 +1886,15 @@ func (c *dataClient) CompareConfigItemConflicts(ctx context.Context, in *Compare
 	return out, nil
 }
 
+func (c *dataClient) GetTemplateAndNonTemplateCICount(ctx context.Context, in *GetTemplateAndNonTemplateCICountReq, opts ...grpc.CallOption) (*GetTemplateAndNonTemplateCICountResp, error) {
+	out := new(GetTemplateAndNonTemplateCICountResp)
+	err := c.cc.Invoke(ctx, Data_GetTemplateAndNonTemplateCICount_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // DataServer is the server API for Data service.
 // All implementations should embed UnimplementedDataServer
 // for forward compatibility
@@ -2083,6 +2095,8 @@ type DataServer interface {
 	BatchUpsertClientMetrics(context.Context, *BatchUpsertClientMetricsReq) (*BatchUpsertClientMetricsResp, error)
 	// config item compare conflicts related interface
 	CompareConfigItemConflicts(context.Context, *CompareConfigItemConflictsReq) (*CompareConfigItemConflictsResp, error)
+	// 获取模板和非模板配置项数量
+	GetTemplateAndNonTemplateCICount(context.Context, *GetTemplateAndNonTemplateCICountReq) (*GetTemplateAndNonTemplateCICountResp, error)
 }
 
 // UnimplementedDataServer should be embedded to have forward compatible implementations.
@@ -2580,6 +2594,9 @@ func (UnimplementedDataServer) BatchUpsertClientMetrics(context.Context, *BatchU
 }
 func (UnimplementedDataServer) CompareConfigItemConflicts(context.Context, *CompareConfigItemConflictsReq) (*CompareConfigItemConflictsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CompareConfigItemConflicts not implemented")
+}
+func (UnimplementedDataServer) GetTemplateAndNonTemplateCICount(context.Context, *GetTemplateAndNonTemplateCICountReq) (*GetTemplateAndNonTemplateCICountResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetTemplateAndNonTemplateCICount not implemented")
 }
 
 // UnsafeDataServer may be embedded to opt out of forward compatibility for this service.
@@ -5545,6 +5562,24 @@ func _Data_CompareConfigItemConflicts_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Data_GetTemplateAndNonTemplateCICount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetTemplateAndNonTemplateCICountReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).GetTemplateAndNonTemplateCICount(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_GetTemplateAndNonTemplateCICount_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).GetTemplateAndNonTemplateCICount(ctx, req.(*GetTemplateAndNonTemplateCICountReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Data_ServiceDesc is the grpc.ServiceDesc for Data service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -6207,6 +6242,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CompareConfigItemConflicts",
 			Handler:    _Data_CompareConfigItemConflicts_Handler,
+		},
+		{
+			MethodName: "GetTemplateAndNonTemplateCICount",
+			Handler:    _Data_GetTemplateAndNonTemplateCICount_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
