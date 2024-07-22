@@ -2,6 +2,212 @@
     "language": "en",
     "messages": [
         {
+            "id": "id is required",
+            "message": "id is required",
+            "translation": "id is required",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "read file failed {ErrR}",
+            "message": "read file failed {ErrR}",
+            "translation": "read file failed {ErrR}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "ErrR",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "errR"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "create directory failed {Err}",
+            "message": "create directory failed {Err}",
+            "translation": "create directory failed {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "create temporary directory failed {Err}",
+            "message": "create temporary directory failed {Err}",
+            "translation": "create temporary directory failed {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "decompress the file. The size of file {Message} exceeds the maximum limit of {MB}",
+            "message": "decompress the file. The size of file {Message} exceeds the maximum limit of {MB}",
+            "translation": "decompress the file. The size of file {Message} exceeds the maximum limit of {MB}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Message",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "compare.Message"
+                },
+                {
+                    "id": "MB",
+                    "string": "%[2]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 2,
+                    "expr": "tools.BytesToHumanReadable(uint64(singleContentLength * constant.MB))"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "decompression failed {Err}",
+            "message": "decompression failed {Err}",
+            "translation": "decompression failed {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "upload file failed {Err}",
+            "message": "upload file failed {Err}",
+            "translation": "upload file failed {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "detecting file conflicts failed {Err}",
+            "message": "detecting file conflicts failed {Err}",
+            "translation": "detecting file conflicts failed {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "upload completed",
+            "message": "upload completed",
+            "translation": "upload completed",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "upload completed, {UploadErrCount} failed",
+            "message": "upload completed, {UploadErrCount} failed",
+            "translation": "upload completed, {UploadErrCount} failed",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "UploadErrCount",
+                    "string": "%[1]d",
+                    "type": "int",
+                    "underlyingType": "int",
+                    "argNum": 1,
+                    "expr": "uploadErrCount"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "decompress file failed, exceeding the maximum file limit threshold of {Limit}",
+            "message": "decompress file failed, exceeding the maximum file limit threshold of {Limit}",
+            "translation": "decompress file failed, exceeding the maximum file limit threshold of {Limit}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Limit",
+                    "string": "%[1]d",
+                    "type": "int",
+                    "underlyingType": "int",
+                    "argNum": 1,
+                    "expr": "limit"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "upload failed, please make sure the file size does not exceed {BytesToHumanReadableuint64maxSize}",
+            "message": "upload failed, please make sure the file size does not exceed {BytesToHumanReadableuint64maxSize}",
+            "translation": "upload failed, please make sure the file size does not exceed {BytesToHumanReadableuint64maxSize}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "BytesToHumanReadableuint64maxSize",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "tools.BytesToHumanReadable(uint64(maxSize))"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "batch delete config items failed",
+            "message": "batch delete config items failed",
+            "translation": "batch delete config items failed",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "batch delete groups failed",
+            "message": "batch delete groups failed",
+            "translation": "batch delete groups failed",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
             "id": "the length of hook ids is {IdsLen}, it must be within the range of [1,{ArrayInputLenLimit}]",
             "message": "the length of hook ids is {IdsLen}, it must be within the range of [1,{ArrayInputLenLimit}]",
             "translation": "the length of hook ids is {IdsLen}, it must be within the range of [1,{ArrayInputLenLimit}]",
@@ -30,13 +236,6 @@
             "id": "batch delete failed",
             "message": "batch delete failed",
             "translation": "batch delete failed",
-            "translatorComment": "Copied from source.",
-            "fuzzy": true
-        },
-        {
-            "id": "id is required",
-            "message": "id is required",
-            "translation": "id is required",
             "translatorComment": "Copied from source.",
             "fuzzy": true
         },
@@ -97,6 +296,20 @@
                     "expr": "req.AppId"
                 }
             ],
+            "fuzzy": true
+        },
+        {
+            "id": "obtain the number of configuration items",
+            "message": "obtain the number of configuration items",
+            "translation": "obtain the number of configuration items",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "obtain template binding relationships through business and service IDs",
+            "message": "obtain template binding relationships through business and service IDs",
+            "translation": "obtain template binding relationships through business and service IDs",
+            "translatorComment": "Copied from source.",
             "fuzzy": true
         },
         {

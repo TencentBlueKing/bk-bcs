@@ -788,42 +788,32 @@ func (s *Service) ListTemplateByTuple(ctx context.Context, req *pbds.ListTemplat
 }
 
 // BatchUpsertTemplates batch upsert templates.
+// nolint:funlen
 func (s *Service) BatchUpsertTemplates(ctx context.Context, req *pbds.BatchUpsertTemplatesReq) (
 	*pbds.BatchUpsertTemplatesReqResp, error) {
-	var (
-		oldTemplateData map[uint32]*table.Template
-		err             error
-	)
-	kt := kit.FromGrpcContext(ctx)
 
-	// 没有ID是都是需要创建 否则都是修改
-	createData := make([]*pbds.BatchUpsertTemplatesReq_Item, 0)
-	updateData := make([]*pbds.BatchUpsertTemplatesReq_Item, 0)
-	updateId := []uint32{}
+	kt := kit.FromGrpcContext(ctx)
+	// 1. 验证套餐是否存在
+	if err := s.dao.Validator().ValidateTmplSetsExist(kt, req.TemplateSetIds); err != nil {
+		return nil, err
+	}
+
+	// 2. 创建模板配置
+	createData, updateData := make([]*pbds.BatchUpsertTemplatesReq_Item, 0), make([]*pbds.BatchUpsertTemplatesReq_Item, 0)
+	updateIds := []uint32{}
+	// 筛选出新增和修改的数据
 	for _, item := range req.Items {
 		if item.GetTemplate().GetId() != 0 {
-			updateId = append(updateId, item.GetTemplate().GetId())
+			updateIds = append(updateIds, item.GetTemplate().GetId())
 			updateData = append(updateData, item)
 		} else {
 			createData = append(createData, item)
 		}
 	}
 
-	// 只有更新的情况下
-	// 返回旧数据
-	// 针对文件类型做校验
-	if len(updateId) > 0 {
-		oldTemplateData, err = s.validateBatchUpsertTemplates(kt, updateId, updateData)
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	now := time.Now().UTC()
 	tx := s.dao.GenQuery().Begin()
-
-	// 创建模板配置
-	createId, e := s.doBatchCreateTemplates(kt, tx, createData, now)
+	createIds, e := s.doBatchCreateTemplates(kt, tx, createData, now)
 	if e != nil {
 		if rErr := tx.Rollback(); rErr != nil {
 			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
@@ -831,29 +821,88 @@ func (s *Service) BatchUpsertTemplates(ctx context.Context, req *pbds.BatchUpser
 		return nil, e
 	}
 
-	// 更新模板配置
-	if e := s.doBatchUpdateTemplates(kt, tx, updateData, oldTemplateData, now); e != nil {
+	if len(updateIds) > 0 {
+		oldTemplateData, err := s.validateBatchUpsertTemplates(kt, updateIds, updateData)
+		if err != nil {
+			return nil, err
+		}
+		if e := s.doBatchUpdateTemplates(kt, tx, updateData, oldTemplateData, now); e != nil {
+			if rErr := tx.Rollback(); rErr != nil {
+				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+			}
+			return nil, e
+		}
+	}
+
+	// 合并创建和编辑后的模板ID
+	templateIds := tools.MergeAndDeduplicate(createIds, updateIds)
+
+	// 3. 添加至套餐中
+	if err := s.dao.TemplateSet().AddTmplsToTmplSetsWithTx(kt, tx, templateIds,
+		req.TemplateSetIds); err != nil {
+		logs.Errorf("add templates to template sets failed, err: %v, rid: %s", err, kt.Rid)
 		if rErr := tx.Rollback(); rErr != nil {
 			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
 		}
-		return nil, e
+		return nil, errf.Errorf(errf.DBOpFailed,
+			i18n.T(kt, fmt.Sprintf("add templates to template sets failed, err: %v, rid: %s", err, kt.Rid)))
+	}
+
+	// 验证套餐中模板数量
+	if len(req.GetTemplateSetIds()) > 0 {
+		for _, tmplSetID := range req.TemplateSetIds {
+			if err := s.dao.TemplateSet().ValidateTmplNumber(kt, tx, req.GetBizId(), tmplSetID); err != nil {
+				logs.Errorf("validate template set's templates count failed, err: %v, rid: %s", err, kt.Rid)
+				if rErr := tx.Rollback(); rErr != nil {
+					logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+				}
+				return nil, err
+			}
+		}
+	}
+
+	// 4. 查询绑定服务的套餐以及更新绑定的数据
+	atbs, err := s.dao.TemplateBindingRelation().
+		ListTemplateSetsBoundATBs(kt, req.BizId, req.TemplateSetIds)
+	if err != nil {
+		logs.Errorf("list template sets bound app template bindings failed, err: %v, rid: %s", err, kt.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+		}
+		return nil, errf.Errorf(0,
+			i18n.T(kt, fmt.Sprintf("list template sets bound app template bindings failed, err: %v, rid: %s", err, kt.Rid)))
+	}
+
+	// 验证被引用的套餐是否超出限额
+	if len(atbs) > 0 {
+		for _, atb := range atbs {
+			if err := s.CascadeUpdateATB(kt, tx, atb); err != nil {
+				logs.Errorf("cascade update app template binding failed, err: %v, rid: %s", err, kt.Rid)
+				if e := tx.Rollback(); e != nil {
+					logs.Errorf("transaction rollback failed, err: %v, rid: %s", e, kt.Rid)
+				}
+				return nil, err
+			}
+		}
 	}
 
 	if e := tx.Commit(); e != nil {
 		logs.Errorf("commit transaction failed, err: %v, rid: %s", e, kt.Rid)
 		return nil, e
 	}
-	// 返回创建和更新的ID
-	mergedID := append(createId, updateId...) // nolint
+
 	return &pbds.BatchUpsertTemplatesReqResp{
-		Ids: mergedID,
+		Ids: templateIds,
 	}, nil
 }
 
+// 创建模板配置以及模板配置版本
 func (s *Service) doBatchCreateTemplates(kt *kit.Kit, tx *gen.QueryTx, createData []*pbds.BatchUpsertTemplatesReq_Item,
 	now time.Time) ([]uint32, error) {
-	createId := []uint32{}
+
+	createIds := []uint32{}
 	toCreate := []*table.Template{}
+
 	for _, item := range createData {
 		toCreate = append(toCreate, &table.Template{
 			Spec:       item.GetTemplate().GetSpec().TemplateSpec(),
@@ -867,14 +916,15 @@ func (s *Service) doBatchCreateTemplates(kt *kit.Kit, tx *gen.QueryTx, createDat
 		})
 	}
 
-	// Write template table
 	if err := s.dao.Template().BatchCreateWithTx(kt, tx, toCreate); err != nil {
 		logs.Errorf("batch create templates failed, err: %v, rid: %s", err, kt.Rid)
-		return createId, err
+		return nil, errf.Errorf(errf.DBOpFailed,
+			i18n.T(kt, fmt.Sprintf("batch create templates failed, err: %v, rid: %s", err, kt.Rid)))
 	}
 
 	toCreateTr := []*table.TemplateRevision{}
 	for i, item := range createData {
+		createIds = append(createIds, toCreate[i].ID)
 		toCreateTr = append(toCreateTr, &table.TemplateRevision{
 			Spec: item.GetTemplateRevision().GetSpec().TemplateRevisionSpec(),
 			Attachment: &table.TemplateRevisionAttachment{
@@ -889,19 +939,14 @@ func (s *Service) doBatchCreateTemplates(kt *kit.Kit, tx *gen.QueryTx, createDat
 		})
 	}
 
-	err := s.doCreateTemplateRevisions(kt, tx, toCreateTr)
-	if err != nil {
-		return createId, err
+	if err := s.doCreateTemplateRevisions(kt, tx, toCreateTr); err != nil {
+		return nil, err
 	}
 
-	// 返回创建ID
-	for _, item := range toCreate {
-		createId = append(createId, item.ID)
-	}
-
-	return createId, nil
+	return createIds, nil
 }
 
+// 更新模板配置以及模板配置版本
 func (s *Service) doBatchUpdateTemplates(kt *kit.Kit, tx *gen.QueryTx, updateData []*pbds.BatchUpsertTemplatesReq_Item,
 	oldTemplateData map[uint32]*table.Template, now time.Time) error {
 	toUpdate := []*table.Template{}
@@ -939,17 +984,17 @@ func (s *Service) doBatchUpdateTemplates(kt *kit.Kit, tx *gen.QueryTx, updateDat
 		})
 	}
 
-	err := s.doCreateTemplateRevisions(kt, tx, toUpdateTr)
-	if err != nil {
+	if err := s.doCreateTemplateRevisions(kt, tx, toUpdateTr); err != nil {
 		return err
 	}
+
 	return nil
 }
 
-func (s *Service) validateBatchUpsertTemplates(grpcKit *kit.Kit, updateId []uint32,
+func (s *Service) validateBatchUpsertTemplates(grpcKit *kit.Kit, updateIds []uint32,
 	updateData []*pbds.BatchUpsertTemplatesReq_Item) (map[uint32]*table.Template, error) {
 	// 针对更新的数据做查询 获取创建时间和创建人
-	template, err := s.dao.Template().ListByIDs(grpcKit, updateId)
+	template, err := s.dao.Template().ListByIDs(grpcKit, updateIds)
 	if err != nil {
 		logs.Errorf("list templates by template ids failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
@@ -961,7 +1006,7 @@ func (s *Service) validateBatchUpsertTemplates(grpcKit *kit.Kit, updateId []uint
 	}
 
 	// 通过模板id获取最新的template revision数据
-	templateRevisions, err := s.dao.TemplateRevision().ListLatestRevisionsGroupByTemplateIds(grpcKit, updateId)
+	templateRevisions, err := s.dao.TemplateRevision().ListLatestRevisionsGroupByTemplateIds(grpcKit, updateIds)
 	if err != nil {
 		return nil, err
 	}
