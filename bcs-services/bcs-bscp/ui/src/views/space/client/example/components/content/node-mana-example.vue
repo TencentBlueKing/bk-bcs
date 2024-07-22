@@ -111,7 +111,7 @@
 
   const fileOptionRef = ref();
   const bizId = ref(String(route.params.spaceId));
-  const feedAddr = ref((window as any).FEED_ADDR);
+  const feedAddr = ref(`${(window as any).FEED_HOST}:${(window as any).FEED_GRPC_PORT}`);
   // fileOption组件传递过来的数据汇总
   const optionData = ref({
     clientKey: '',

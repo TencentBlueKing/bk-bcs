@@ -180,44 +180,26 @@
             })
             .join('');
         }
-        optionData.value = {
-          ...data,
-          labelArrType,
-        };
         break;
       case 'cpp':
-        if (data.labelArr.length) {
-          labelArrType = data.labelArr
-            .map((item: string, index: number) => {
-              const [key, value] = item.split(':');
-              return `{${key}, ${value}}${index + 1 === data.labelArr.length ? '' : ', '}`;
-            })
-            .join('');
-        }
-        optionData.value = {
-          ...data,
-          labelArrType: `{${labelArrType}}`,
-        };
+        labelArrType = data.labelArr.length
+          ? `{${data.labelArr.map((item: string) => `{${item.split(':').join(', ')}}`).join(', ')}}`
+          : '{}';
         break;
       case 'http':
+        labelArrType = data.labelArr.length ? `{${data.labelArr.join(', ')}}` : '{}';
         if (!activeTab.value) {
-          labelArrType = data.labelArr.length ? `'{${data.labelArr.join(', ')}}'` : "'{}'";
-        } else {
-          labelArrType = data.labelArr.length ? `{${data.labelArr.join(', ')}}` : '{}';
+          labelArrType = `'${labelArrType}'`;
         }
-        optionData.value = {
-          ...data,
-          labelArrType,
-        };
         break;
       default:
-        labelArrType = data.labelArr.length ? data.labelArr.join(', ') : '';
-        optionData.value = {
-          ...data,
-          labelArrType: `{${labelArrType}}`,
-        };
+        labelArrType = data.labelArr.length ? `{${data.labelArr.join(', ')}}` : '{}';
         break;
     }
+    optionData.value = {
+      ...data,
+      labelArrType,
+    };
     replaceVal.value = codeVal.value; // 数据重置
     updateVariables(); // 表单数据更新，配置需要同时更新
     nextTick(() => {
@@ -227,23 +209,23 @@
   };
   const updateReplaceVal = () => {
     let updateString = replaceVal.value;
+    let feedAddrVal = `${(window as any).FEED_HOST}:${(window as any).FEED_GRPC_PORT}`;
     if (props.kvName === 'python') {
       updateString = updateString.replace(
         '请将 {{ YOUR_KEY }} 替换为您的实际 Key',
         t('请将 {{ YOUR_KEY }} 替换为您的实际 Key'),
       );
     }
-    // http的两个label特殊处理
     if (props.kvName === 'http') {
-      if (optionData.value.labelArr.length) {
-        updateString = updateString.replace('{{ .Bk_Bscp_Variable_Start_Leabels }}', 'labels=');
-      } else {
-        updateString = updateString.replace('{{ .Bk_Bscp_Variable_Start_Leabels }}', '# labels=');
-      }
+      // http的两个label特殊处理
+      const replaceStr = optionData.value.labelArr.length > 0 ? 'labels=' : '# labels=';
+      updateString = updateString.replace('{{ .Bk_Bscp_Variable_Start_Leabels }}', replaceStr);
+      // http的host特殊处理
+      feedAddrVal = `${(window as any).FEED_HOST}:${(window as any).FEED_HTTP_PORT}`;
     }
     updateString = updateString.replace('{{ .Bk_Bscp_Variable_BkBizId }}', bkBizId.value);
     updateString = updateString.replace('{{ .Bk_Bscp_Variable_ServiceName }}', basicInfo!.serviceName.value);
-    replaceVal.value = updateString.replaceAll('{{ .Bk_Bscp_Variable_FEED_ADDR }}', (window as any).FEED_ADDR);
+    replaceVal.value = updateString.replaceAll('{{ .Bk_Bscp_Variable_FEED_ADDR }}', feedAddrVal);
   };
   const updateVariables = () => {
     variables.value = [
@@ -281,39 +263,24 @@
       // 复制示例使用未脱敏的密钥
       const reg = /"(.{1}|.{3})\*{3}(.{1}|.{3})"/g;
       let copyVal = copyReplaceVal.value.replaceAll(reg, `"${optionData.value.clientKey}"`);
-      // 键值型复制时，内容开头插入注释信息；插入文案除python以外，其他都一样
+      let tempStr = '';
+      // 键值型示例复制时，内容开头插入注释信息(http除外)；插入文案除python以外，其他都一样
       if (props.kvName === 'python') {
+        // watch
+        tempStr = `'''\n${t('通过建立长连接，实时监听配置版本的变更，当新版本的配置发布时，将自动调用回调方法处理新的配置信息，适用于需要实时响应配置变更的场景\n有关Python SDK的部署环境和依赖组件，请参阅白皮书中的 [BSCP Python SDK依赖说明]')}\n(https://bk.tencent.com/docs/markdown/ZH/BSCP/1.29/UserGuide/Function/python_sdk_dependency.md)\n'''\n`;
         if (!activeTab.value) {
           // get
-          const tempStr = `'''\n${t('用于主动获取配置项值的场景，此方法不会监听服务器端的配置更改\n有关Python SDK的部署环境和依赖组件，请参阅白皮书中的 [BSCP Python SDK依赖说明]')}\n(https://bk.tencent.com/docs/markdown/ZH/BSCP/1.29/UserGuide/Function/python_sdk_dependency.md)\n'''\n`;
-          copyVal = `${tempStr}\n${copyVal}`;
-        } else {
-          // watch
-          const tempStr = `'''\n${t('通过建立长连接，实时监听配置版本的变更，当新版本的配置发布时，将自动调用回调方法处理新的配置信息，适用于需要实时响应配置变更的场景\n有关Python SDK的部署环境和依赖组件，请参阅白皮书中的 [BSCP Python SDK依赖说明]')}\n(https://bk.tencent.com/docs/markdown/ZH/BSCP/1.29/UserGuide/Function/python_sdk_dependency.md)\n'''\n`;
-          copyVal = `${tempStr}\n${copyVal}`;
+          tempStr = `'''\n${t('用于主动获取配置项值的场景，此方法不会监听服务器端的配置更改\n有关Python SDK的部署环境和依赖组件，请参阅白皮书中的 [BSCP Python SDK依赖说明]')}\n(https://bk.tencent.com/docs/markdown/ZH/BSCP/1.29/UserGuide/Function/python_sdk_dependency.md)\n'''\n`;
         }
-        copyVal = `${copyVal}`;
-      } else if (props.kvName === 'http') {
+      } else if (props.kvName !== 'http') {
+        // watch
+        tempStr = `// ${t('Watch方法：通过建立长连接，实时监听配置版本的变更，当新版本的配置发布时，将自动调用回调方法处理新的配置信息，适用于需要实时响应配置变更的场景。')}\n`;
         if (!activeTab.value) {
           // get
-          const tempStr = `# ${t('Shell方法：用于一次性拉取最新的配置信息，适用于需要获取并更新配置的场景。')}\n`;
-          copyVal = `${tempStr}\n${copyVal}`;
-        } else {
-          // watch
-          const tempStr = `# ${t('Python方法：通过建立长连接，实时监听配置版本的变更，当新版本的配置发布时，将自动调用回调方法处理新的配置信息，适用于需要实时响应配置变更的场景。')}\n`;
-          copyVal = `${tempStr}\n${copyVal}`;
-        }
-      } else {
-        if (!activeTab.value) {
-          // get
-          const tempStr = `// ${t('Get方法：用于一次性拉取最新的配置信息，适用于需要获取并更新配置的场景。')}\n`;
-          copyVal = `${tempStr}\n${copyVal}`;
-        } else {
-          // watch
-          const tempStr = `// ${t('Watch方法：通过建立长连接，实时监听配置版本的变更，当新版本的配置发布时，将自动调用回调方法处理新的配置信息，适用于需要实时响应配置变更的场景。')}\n`;
-          copyVal = `${tempStr}\n${copyVal}`;
+          tempStr = `// ${t('Get方法：用于一次性拉取最新的配置信息，适用于需要获取并更新配置的场景。')}\n`;
         }
       }
+      copyVal = `${tempStr}${tempStr ? '\n' : ''}${copyVal}`;
       copyToClipBoard(copyVal);
       BkMessage({
         theme: 'success',
@@ -331,7 +298,6 @@
     codeVal.value = newKvData.default;
     replaceVal.value = newKvData.default;
     getOptionData(optionData.value);
-    // updateReplaceVal();
   };
   // 键值型数据模板切换
   /**

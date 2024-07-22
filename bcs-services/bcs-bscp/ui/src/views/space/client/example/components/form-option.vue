@@ -39,7 +39,7 @@
     </bk-form-item>
     <bk-form-item>
       <!-- 添加标签 -->
-      <AddLabel ref="addLabelRef" :label-name="labelName" @send-label="(obj) => (formData.labelArr = obj)" />
+      <AddLabel ref="addLabelRef" :label-name="labelName" @send-label="formData.labelArr = $event" />
     </bk-form-item>
     <!-- <bk-form-item v-if="p2pShow">
       由于集群列表接口暂不支持，产品将下拉框改为输入框，待后续接口支持后改回下拉框
@@ -53,16 +53,11 @@
         " />
     </bk-form-item> -->
     <bk-form-item v-if="p2pShow">
-      <p2p-label
-        @send-switcher="
-          (clusterSwitch) => {
-            formData.clusterSwitch = clusterSwitch;
-          }
-        " />
+      <p2p-label @send-switcher="formData.clusterSwitch = $event" />
     </bk-form-item>
     <bk-form-item
-      class="cluster-form-item"
       v-if="p2pShow && formData.clusterSwitch"
+      class="cluster-form-item"
       property="clusterInfo"
       :required="formData.clusterSwitch">
       <bk-input v-model.trim="formData.clusterInfo" :placeholder="$t('请输入')" clearable />
@@ -81,24 +76,20 @@
   import { useI18n } from 'vue-i18n';
   import { cloneDeep } from 'lodash';
 
-  const props = defineProps({
-    directoryShow: {
-      type: Boolean,
-      default: true,
+  const props = withDefaults(
+    defineProps<{
+      directoryShow?: boolean;
+      labelName?: string;
+      p2pShow?: boolean;
+      httpConfigShow?: boolean;
+    }>(),
+    {
+      directoryShow: true,
+      labelName: '标签',
+      p2pShow: false,
+      httpConfigShow: false,
     },
-    labelName: {
-      type: String,
-      default: '标签',
-    },
-    p2pShow: {
-      type: Boolean,
-      default: false,
-    },
-    httpConfigShow: {
-      type: Boolean,
-      default: false,
-    },
-  });
+  );
 
   const emits = defineEmits(['update-option-data']);
 

@@ -66,7 +66,10 @@
     let updateString = replaceVal.value;
     updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_BkBizId }}', bkBizId.value);
     updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_ServiceName }}', basicInfo!.serviceName.value);
-    updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_FEED_ADDR }}', (window as any).FEED_ADDR);
+    updateString = updateString.replaceAll(
+      '{{ .Bk_Bscp_Variable_FEED_ADDR }}',
+      `${(window as any).FEED_HOST}:${(window as any).FEED_GRPC_PORT}`,
+    );
     // p2p网络加速打开后动态插入内容
     if (optionData.value.clusterSwitch) {
       const p2pPart1 = `

@@ -748,8 +748,6 @@ export default {
   Watch方法: 'Watch',
   'Get方法：用于一次性拉取最新的配置信息，适用于需要获取并更新配置的场景。': 'Get method: Used for fetching the latest configuration information in a single request, suitable for scenarios requiring both retrieval and update of configurations',
   'Watch方法：通过建立长连接，实时监听配置版本的变更，当新版本的配置发布时，将自动调用回调方法处理新的配置信息，适用于需要实时响应配置变更的场景。': 'Shell method: Establish a long connection to monitor changes in the configuration version in real time. When the new configuration version is released, the callback method is automatically invoked to process the new configuration information. This method is applicable to scenarios that require real-time response to configuration changes.',
-  'Shell方法：用于一次性拉取最新的配置信息，适用于需要获取并更新配置的场景。': 'Shell method: Used for fetching the latest configuration information in a single request, suitable for scenarios requiring both retrieval and update of configurations',
-  'Python方法：通过建立长连接，实时监听配置版本的变更，当新版本的配置发布时，将自动调用回调方法处理新的配置信息，适用于需要实时响应配置变更的场景。': 'Python method: Establish a long connection to monitor changes in the configuration version in real time. When the new configuration version is released, the callback method is automatically invoked to process the new configuration information. This method is applicable to scenarios that require real-time response to configuration changes.',
   节点管理插件客户端需要在: 'Node management plug-in client needs to be in',
   节点管理平台: 'Node management platform',
   '部署“bkbscp (bscp服务配置分发和热更新)”插件，部署详情请参考产品白皮书：': 'Deploy the bkbscp (bscp Service Configuration Distribution and Hot Update) plug-in. For details, see the product white paper:',

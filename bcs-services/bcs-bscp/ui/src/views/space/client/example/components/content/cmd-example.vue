@@ -173,7 +173,10 @@
     let updateString = replaceVal.value;
     updateString = updateString.replace('{{ .Bk_Bscp_Variable_BkBizId }}', bkBizId.value);
     updateString = updateString.replace('{{ .Bk_Bscp_Variable_ServiceName }}', basicInfo!.serviceName.value);
-    replaceVal.value = updateString.replaceAll('{{ .Bk_Bscp_Variable_FEED_ADDR }}', (window as any).FEED_ADDR);
+    replaceVal.value = updateString.replaceAll(
+      '{{ .Bk_Bscp_Variable_FEED_ADDR }}',
+      `${(window as any).FEED_HOST}:${(window as any).FEED_GRPC_PORT}`,
+    );
   };
   const updateVariables = () => {
     variables.value = [

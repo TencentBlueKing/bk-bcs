@@ -1,14 +1,15 @@
 #!/bin/bash
 
 # 设置参数
-biz_id={{ .Bk_Bscp_Variable_BkBizId }};
-key_name={{ .Bk_Bscp_Variable_KeyName }};
+feed_addr="{{ .Bk_Bscp_Variable_FEED_ADDR }}"
+biz_id={{ .Bk_Bscp_Variable_BkBizId }}
 service_name="{{ .Bk_Bscp_Variable_ServiceName }}"
-token={{ .Bk_Bscp_Variable_ClientKey }};
+key_name={{ .Bk_Bscp_Variable_KeyName }}
+token={{ .Bk_Bscp_Variable_ClientKey }}
 {{ .Bk_Bscp_Variable_Start_Leabels }}{{ .Bk_Bscp_Variable_Leabels }}
 
 # 使用参数构建URL
-url="http://feed.sit.bktencent.com:8080/api/v1/feed/biz/${biz_id}/kvs/data/${key_name}"
+url="http://{{ .Bk_Bscp_Variable_FEED_ADDR }}/api/v1/feed/biz/${biz_id}/kvs/data/${key_name}"
 
 # 设置请求头，包括Authorization token
 auth_header="Authorization: Bearer ${token}"
