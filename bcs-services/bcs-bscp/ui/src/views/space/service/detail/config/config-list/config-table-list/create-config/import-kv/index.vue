@@ -283,6 +283,7 @@
       const findConfig = importConfigList.value.find((item) => item.key === key);
       if (!findConfig) {
         const addConfig = allConfigList.value.find((item) => item.key === key);
+        console.log(addConfig);
         if (addConfig?.is_exist) {
           existConfigList.value.push(addConfig!);
         } else {
