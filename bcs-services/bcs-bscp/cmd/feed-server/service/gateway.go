@@ -14,19 +14,22 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net"
+	"net/http"
 	"strconv"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/status"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 	pbfs "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/feed-server"
-	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/grpcgw"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
@@ -73,10 +76,40 @@ func newFeedServerMux() (*runtime.ServeMux, error) {
 
 // newGrpcMux new grpc mux that has some processing of built-in http request to grpc request.
 func newGrpcMux() *runtime.ServeMux {
+
+	// 自定义错误处理器
+	errorHandler := runtime.WithErrorHandler(errorHandler)
+
 	return runtime.NewServeMux(runtime.WithIncomingHeaderMatcher(func(key string) (string, bool) {
 		if key == "Authorization" {
 			return key, true
 		}
 		return runtime.DefaultHeaderMatcher(key)
-	}), grpcgw.JsonMarshalerOpt)
+	}), errorHandler)
+}
+
+// ErrorResponse 定义错误响应结构
+type ErrorResponse struct {
+	Code    string `json:"code"`
+	Message string `json:"message"`
+}
+
+func errorHandler(ctx context.Context, mux *runtime.ServeMux, marshaler runtime.Marshaler,
+	w http.ResponseWriter, r *http.Request, err error) {
+	// 设置 Content-Type 为 application/json
+	w.Header().Set("Content-Type", "application/json")
+	// 将gRpc 错误码转换为相应的HTTP响应状态
+	w.WriteHeader(runtime.HTTPStatusFromCode(status.Code(err)))
+	_ = json.NewEncoder(w).Encode(grpcErr(err))
+}
+
+// grpcErr GRPC-Gateway 错误
+func grpcErr(err error) *ErrorResponse {
+	s := status.Convert(err)
+	code := errf.BscpCodeMap[int32(s.Code())]
+	if code == "" {
+		code = "INVALID_REQUEST"
+	}
+
+	return &ErrorResponse{Code: code, Message: s.Message()}
 }
