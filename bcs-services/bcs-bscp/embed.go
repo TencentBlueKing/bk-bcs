@@ -56,7 +56,9 @@ type IndexConfig struct {
 	EnableBKNotice       bool   // 是否启用蓝鲸通知中心
 	Helper               string
 	ProxyAPI             bool
-	FeedAddr             string
+	FeedHost             string // feed-server 地址
+	FeedGrpcPort         uint   // feed-server grpc 端口
+	FeedHttpPort         uint   // feed-server http 端口
 	BKSharedResBaseJSURL string // 规则是${bkSharedResUrl}/${目录名 aka app_code}/base.js
 	NodeManHost          string
 }
@@ -159,7 +161,7 @@ func (e *EmbedWeb) RenderIndexHandler(conf *IndexConfig) http.Handler {
 	bscpConfig := string(configBytes)
 
 	fn := func(w http.ResponseWriter, r *http.Request) {
-		tplData := map[string]string{
+		tplData := map[string]interface{}{
 			"BK_STATIC_URL":             conf.StaticURL,
 			"RUN_ENV":                   conf.RunEnv,
 			"BK_BCS_BSCP_API":           conf.APIURL,
@@ -168,9 +170,11 @@ func (e *EmbedWeb) RenderIndexHandler(conf *IndexConfig) http.Handler {
 			"BK_SHARED_RES_BASE_JS_URL": conf.BKSharedResBaseJSURL,
 			"BK_BSCP_CONFIG":            bscpConfig,
 			"SITE_URL":                  conf.SiteURL,
-			"ENABLE_BK_NOTICE":          strconv.FormatBool(conf.EnableBKNotice),
+			"ENABLE_BK_NOTICE":          conf.EnableBKNotice,
 			"HELPER":                    conf.Helper,
-			"FEED_ADDR":                 conf.FeedAddr,
+			"FEED_HOST":                 conf.FeedHost,
+			"FEED_GRPC_PORT":            conf.FeedGrpcPort,
+			"FEED_HTTP_PORT":            conf.FeedHttpPort,
 			"BK_NODE_HOST":              conf.NodeManHost,
 		}
 

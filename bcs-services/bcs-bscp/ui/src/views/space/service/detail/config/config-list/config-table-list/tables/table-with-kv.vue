@@ -523,6 +523,8 @@
   }
   .config-table {
     :deep(.bk-table-body) {
+      max-height: calc(100vh - 280px);
+      overflow: auto;
       tr.delete-row td {
         background: #fafbfd !important;
         .cell {

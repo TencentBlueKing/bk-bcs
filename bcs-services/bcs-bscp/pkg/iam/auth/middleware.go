@@ -290,6 +290,10 @@ func (a authorizer) BizVerified(next http.Handler) http.Handler {
 			return
 		}
 
+		// 设置语言
+		lang := tools.GetLangFromReq(r)
+		kt.Lang = lang
+
 		bizID, err := strconv.Atoi(bizIDStr)
 		if err != nil {
 			render.Render(w, r, rest.BadRequest(err))

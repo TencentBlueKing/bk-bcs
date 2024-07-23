@@ -186,6 +186,7 @@ const (
 	Config_ClientSpecificFailedReason_FullMethodName        = "/pbcs.Config/ClientSpecificFailedReason"
 	Config_CompareConfigItemConflicts_FullMethodName        = "/pbcs.Config/CompareConfigItemConflicts"
 	Config_CompareKvConflicts_FullMethodName                = "/pbcs.Config/CompareKvConflicts"
+	Config_GetTemplateAndNonTemplateCICount_FullMethodName  = "/pbcs.Config/GetTemplateAndNonTemplateCICount"
 )
 
 // ConfigClient is the client API for Config service.
@@ -369,6 +370,8 @@ type ConfigClient interface {
 	// config item compare conflicts related interface
 	CompareConfigItemConflicts(ctx context.Context, in *CompareConfigItemConflictsReq, opts ...grpc.CallOption) (*CompareConfigItemConflictsResp, error)
 	CompareKvConflicts(ctx context.Context, in *CompareKvConflictsReq, opts ...grpc.CallOption) (*CompareKvConflictsResp, error)
+	// 获取模板和非模板配置项数量
+	GetTemplateAndNonTemplateCICount(ctx context.Context, in *GetTemplateAndNonTemplateCICountReq, opts ...grpc.CallOption) (*GetTemplateAndNonTemplateCICountResp, error)
 }
 
 type configClient struct {
@@ -1819,6 +1822,15 @@ func (c *configClient) CompareKvConflicts(ctx context.Context, in *CompareKvConf
 	return out, nil
 }
 
+func (c *configClient) GetTemplateAndNonTemplateCICount(ctx context.Context, in *GetTemplateAndNonTemplateCICountReq, opts ...grpc.CallOption) (*GetTemplateAndNonTemplateCICountResp, error) {
+	out := new(GetTemplateAndNonTemplateCICountResp)
+	err := c.cc.Invoke(ctx, Config_GetTemplateAndNonTemplateCICount_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ConfigServer is the server API for Config service.
 // All implementations should embed UnimplementedConfigServer
 // for forward compatibility
@@ -2000,6 +2012,8 @@ type ConfigServer interface {
 	// config item compare conflicts related interface
 	CompareConfigItemConflicts(context.Context, *CompareConfigItemConflictsReq) (*CompareConfigItemConflictsResp, error)
 	CompareKvConflicts(context.Context, *CompareKvConflictsReq) (*CompareKvConflictsResp, error)
+	// 获取模板和非模板配置项数量
+	GetTemplateAndNonTemplateCICount(context.Context, *GetTemplateAndNonTemplateCICountReq) (*GetTemplateAndNonTemplateCICountResp, error)
 }
 
 // UnimplementedConfigServer should be embedded to have forward compatible implementations.
@@ -2485,6 +2499,9 @@ func (UnimplementedConfigServer) CompareConfigItemConflicts(context.Context, *Co
 }
 func (UnimplementedConfigServer) CompareKvConflicts(context.Context, *CompareKvConflictsReq) (*CompareKvConflictsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CompareKvConflicts not implemented")
+}
+func (UnimplementedConfigServer) GetTemplateAndNonTemplateCICount(context.Context, *GetTemplateAndNonTemplateCICountReq) (*GetTemplateAndNonTemplateCICountResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetTemplateAndNonTemplateCICount not implemented")
 }
 
 // UnsafeConfigServer may be embedded to opt out of forward compatibility for this service.
@@ -5378,6 +5395,24 @@ func _Config_CompareKvConflicts_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Config_GetTemplateAndNonTemplateCICount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetTemplateAndNonTemplateCICountReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).GetTemplateAndNonTemplateCICount(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_GetTemplateAndNonTemplateCICount_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).GetTemplateAndNonTemplateCICount(ctx, req.(*GetTemplateAndNonTemplateCICountReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Config_ServiceDesc is the grpc.ServiceDesc for Config service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -6024,6 +6059,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CompareKvConflicts",
 			Handler:    _Config_CompareKvConflicts_Handler,
+		},
+		{
+			MethodName: "GetTemplateAndNonTemplateCICount",
+			Handler:    _Config_GetTemplateAndNonTemplateCICount_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
