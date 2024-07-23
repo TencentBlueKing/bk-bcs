@@ -672,6 +672,7 @@ export default {
   脚本更新成功: 'Script updated successfully',
   删除脚本成功: 'Delete script successfully',
   '脚本已被引用，不能删除': 'Script is referenced, cannot be deleted',
+  '脚本名称有误，请重新输入': 'Script name is incorrect, please re-enter',
 
   // 服务密钥
   '密钥仅用于 SDK/API 拉取配置使用。服务管理/配置管理/分组管理等功能的权限申请，请前往': 'The key is only used for SDK/API pull configurations. To apply for permissions for functions such as service management/configuration management/group management, please go to',
@@ -800,7 +801,7 @@ export default {
   'P2P 网络加速依赖于 BCS 集群的元数据，请指定客户端即将部署的 BCS 集群 ID。\n更多 P2P 前置依赖信息，请查阅白皮书 P2P 网络加速': 'P2P network acceleration depends on the metadata of the BCS cluster. Please specify the BCS cluster ID where the client will be deployed.\nFor more P2P pre-requisite information, please refer to the P2P network acceleration white paper',
   'BCS 集群 ID': 'BCS cluster ID',
   搜索视图: 'Search view',
-'请先选择BCS 集群 ID，替换下方示例代码后，再尝试复制示例': 'Please select the BCS cluster ID first, replace the example code below, and then try to copy the example',
+  '请先选择BCS 集群 ID，替换下方示例代码后，再尝试复制示例': 'Please select the BCS cluster ID first, replace the example code below, and then try to copy the example',
 
   // 公共组件
   页面不存在: 'Page does not exist',

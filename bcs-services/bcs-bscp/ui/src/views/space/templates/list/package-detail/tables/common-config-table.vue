@@ -414,7 +414,6 @@
   const handleEditConfig = (config: ITemplateConfigItem) => {
     isViewConfigShow.value = false;
     isEditConfigShow.value = true;
-    console.log(config.id);
     editConfigId.value = config.id;
     selectConfigMemo.value = config.spec.memo;
   };

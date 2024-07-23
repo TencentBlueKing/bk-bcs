@@ -7,6 +7,7 @@
         </div>
         <div class="actions">
           <span
+            v-if="!props.isPreview"
             v-bk-tooltips="{
               content: t('内置变量'),
               placement: 'top',
@@ -73,10 +74,12 @@
       language?: string;
       editable?: boolean;
       uploadIcon?: boolean;
+      isPreview?: boolean; // 是否是脚本预览
     }>(),
     {
       editable: true,
       uploadIcon: true,
+      isPreview: false,
     },
   );
 

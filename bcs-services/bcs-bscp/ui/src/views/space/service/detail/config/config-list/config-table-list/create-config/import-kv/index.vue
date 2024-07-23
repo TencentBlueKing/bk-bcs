@@ -269,6 +269,9 @@
     } else {
       existConfigList.value = data;
     }
+    selectedConfigIds.value = selectedConfigIds.value.filter((key) => {
+      return importConfigList.value.some((config) => config.key === key);
+    });
     isFormChange.value = true;
   };
 
@@ -295,7 +298,6 @@
     importConfigList.value.forEach((config) => {
       if (!selectedConfigIds.value.includes(config.key)) {
         if (config.is_exist) {
-          console.log(1);
           existConfigList.value = existConfigList.value.filter((item) => item.key !== config.key);
         } else {
           nonExistConfigList.value = nonExistConfigList.value.filter((item) => item.key !== config.key);
