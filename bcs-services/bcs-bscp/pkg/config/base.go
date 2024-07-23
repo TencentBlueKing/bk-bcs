@@ -34,7 +34,9 @@ type BaseConf struct {
 	TimeZone     string         `yaml:"time_zone"`
 	LanguageCode string         `yaml:"language_code"`
 	RunEnv       string         `yaml:"run_env"`
-	FeedAddr     string         `yaml:"feed_addr"`
+	FeedHost     string         `yaml:"feed_host"`
+	FeedGrpcPort uint           `yaml:"feed_grpc_port"`
+	FeedHttpPort uint           `yaml:"feed_http_port"`
 	Location     *time.Location `yaml:"-"`
 }
 

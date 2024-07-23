@@ -300,6 +300,7 @@ func (s *Service) UpdateTemplateRevision(ctx context.Context, req *pbcs.UpdateTe
 				Md5:       metadata.Md5,
 			},
 		},
+		TemplateRevisionId: req.GetTemplateRevisionId(),
 	}
 	rp, err := s.client.DS.UpdateTemplateRevision(grpcKit.RpcCtx(), r)
 	if err != nil {

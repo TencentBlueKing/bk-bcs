@@ -1,12 +1,12 @@
 <template>
   <section class="example-wrap">
-    <form-option ref="fileOptionRef" @update-option-data="getOptionData" />
+    <form-option ref="fileOptionRef" :p2p-show="true" @update-option-data="getOptionData" />
     <div class="preview-container">
       <span class="preview-label">{{ $t('示例预览') }}</span>
       <bk-button theme="primary" class="copy-btn" @click="copyExample">{{ $t('复制示例') }}</bk-button>
       <code-preview
         class="preview-component"
-        style="height: 1496px"
+        :style="{ height: optionData.clusterSwitch ? '1990px' : '1496px' }"
         :code-val="replaceVal"
         :variables="variables"
         language="yaml"
@@ -22,6 +22,7 @@
   import BkMessage from 'bkui-vue/lib/message';
   import FormOption from '../form-option.vue';
   import CodePreview from '../code-preview.vue';
+  import { IExampleFormData } from '../../../../../../../types/client';
   import { useI18n } from 'vue-i18n';
   import { useRoute } from 'vue-router';
   import yamlString from '/src/assets/example-data/file-container.yaml?raw';
@@ -33,11 +34,13 @@
 
   const fileOptionRef = ref();
   // fileOption组件传递过来的数据汇总
-  const optionData = ref({
+  const optionData = ref<IExampleFormData>({
     clientKey: '',
     privacyCredential: '',
     labelArr: [],
     tempDir: '',
+    clusterSwitch: false,
+    clusterInfo: '',
   });
   const bkBizId = ref(String(route.params.spaceId));
   const replaceVal = ref('');
@@ -63,8 +66,50 @@
     let updateString = replaceVal.value;
     updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_BkBizId }}', bkBizId.value);
     updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_ServiceName }}', basicInfo!.serviceName.value);
-    replaceVal.value = updateString.replaceAll('{{ .Bk_Bscp_Variable_FEED_ADDR }}', (window as any).FEED_ADDR);
+    updateString = updateString.replaceAll(
+      '{{ .Bk_Bscp_Variable_FEED_ADDR }}',
+      `${(window as any).FEED_HOST}:${(window as any).FEED_GRPC_PORT}`,
+    );
+    // p2p网络加速打开后动态插入内容
+    if (optionData.value.clusterSwitch) {
+      const p2pPart1 = `
+            # 是否启用P2P网络加速
+            - name: enable_p2p_download
+              value: 'true'
+            # 以下几个环境变量在启用 p2p 文件加速时为必填项
+            # BCS集群ID
+            - name: cluster_id
+              value: {{ .Bk_Bscp_Variable_Cluster_Value }}
+            # BSCP容器名称
+            - name: container_name
+              value: bscp-init
+            - name: pod_id
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.uid`;
+      const p2pPart2 = `
+            - name: enable_p2p_download
+              value: 'true'
+            - name: cluster_id
+              value: {{ .Bk_Bscp_Variable_Cluster_Value }}
+            - name: container_name
+              value: bscp-sidecar
+            - name: pod_id
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.uid`;
+      updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_p2p_part1 }}', p2pPart1.trim());
+      replaceVal.value = updateString.replaceAll('{{ .Bk_Bscp_Variable_p2p_part2 }}', p2pPart2.trim());
+    } else {
+      updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_p2p_part1 }}', '');
+      updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_p2p_part2 }}', '');
+      // 去除不含p2p相关内容后，遗留的空白行去除
+      replaceVal.value = updateString.replaceAll(/\r\n\s+\r\n/g, '\n');
+    }
   };
+  // 高亮配置
   const updateVariables = () => {
     variables.value = [
       {
@@ -80,9 +125,15 @@
         memo: '',
       },
       {
-        name: 'Bk_Bscp_VariableTempDir',
+        name: 'Bk_Bscp_Variable_TempDir',
         type: '',
         default_val: `'${optionData.value.tempDir}'`,
+        memo: '',
+      },
+      {
+        name: 'Bk_Bscp_Variable_Cluster_Value',
+        type: '',
+        default_val: `${optionData.value.clusterInfo}`,
         memo: '',
       },
     ];

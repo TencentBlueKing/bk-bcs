@@ -42,7 +42,7 @@
 
   defineProps<{ labelName: string }>();
 
-  const emits = defineEmits(['send-label', 'send-validate']);
+  const emits = defineEmits(['send-label']);
 
   const labelArr = ref<{ key: string; value: string }[]>([]);
   const showErrorKeyValidation = ref<boolean[]>([]); // key的错误状态
@@ -100,14 +100,15 @@
   // 数据传递
   const sendVal = () => {
     // 处理数据格式用于展示
-    // const newArr: string[] = [];
-    // labelArr.value.forEach((item) => {
-    //   if (item.key || item.value) {
-    //     newArr.push(`"${item.key}":"${item.value}"`);
-    //   }
-    // });
-    // const filterArr = newArr.filter((item) => item !== undefined);
     const newArr = labelArr.value.map((item) => {
+      // let { key, value } = item;
+      // key与value的输入不符合时直接为空(同步临时目录输入)
+      // if (!keyValidateReg.test(labelArr.value[index].key)) {
+      //   key = '';
+      // }
+      // if (!valueValidateReg.test(labelArr.value[index].value)) {
+      //   value = '';
+      // }
       return `"${item.key}":"${item.value}"`;
     });
     emits('send-label', newArr);
@@ -122,6 +123,7 @@
     display: flex;
     justify-content: flex-start;
     align-items: center;
+    height: 20px;
   }
   .label-span {
     font-size: 12px;
@@ -140,6 +142,7 @@
     justify-content: flex-start;
     align-items: center;
     font-size: 12px;
+    line-height: 20px;
     color: #3a84ff;
     cursor: pointer;
     border-left: 1px solid #dcdee5;

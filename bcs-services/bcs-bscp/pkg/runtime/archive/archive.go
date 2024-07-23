@@ -33,7 +33,8 @@ var (
 )
 
 // ArchiveType 文件类型
-type ArchiveType string // nolint
+// nolint:revive
+type ArchiveType string
 
 const (
 	// GZIP gzip
@@ -44,6 +45,15 @@ const (
 	TAR ArchiveType = "TAR"
 	// Unknown unknown
 	Unknown ArchiveType = "Unknown"
+)
+
+// ArchiveErrCode 错误码
+// nolint:revive
+type ArchiveErrCode int32
+
+const (
+	// FileTooLarge 文件过大
+	FileTooLarge ArchiveErrCode = 400413
 )
 
 // Unpack 解压zip、gzip、tar

@@ -19,7 +19,9 @@ import (
 
 	"gorm.io/gorm"
 
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/i18n"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 	pbbase "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
@@ -35,7 +37,7 @@ func (s *Service) CreateHook(ctx context.Context, req *pbds.CreateHookReq) (*pbd
 
 	// GetByName get hook by name
 	if _, err := s.dao.Hook().GetByName(kt, req.Attachment.BizId, req.Spec.Name); err == nil {
-		return nil, fmt.Errorf("hook name %s already exists", req.Spec.Name)
+		return nil, errf.Errorf(errf.InvalidArgument, i18n.T(kt, "hook name %s already exists", req.Spec.Name))
 	}
 
 	res := &table.Revision{

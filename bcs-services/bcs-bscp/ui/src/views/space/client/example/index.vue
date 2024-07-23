@@ -47,6 +47,7 @@
     { name: 'Go SDK', val: 'go' },
     { name: 'Java SDK', val: 'java' },
     { name: 'C++ SDK', val: 'cpp' },
+    { name: t('HTTP(S)接口调用'), val: 'http' },
     { name: t('命令行工具'), val: 'shell' },
   ];
 

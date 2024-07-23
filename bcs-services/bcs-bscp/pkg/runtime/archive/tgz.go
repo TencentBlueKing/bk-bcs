@@ -20,6 +20,8 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
 )
 
 // TgzArchive 实现了 Archive 接口，用于处理 gzip 文件
@@ -65,7 +67,7 @@ func (t TgzArchive) UnTar(r io.Reader) error {
 		}
 
 		if hdr.Size > t.limitFileSize {
-			return fmt.Errorf("file %s exceeds size", hdr.Name)
+			return errf.New(int32(FileTooLarge), hdr.Name)
 		}
 
 		fp := filepath.Join(t.destPath, sanitize(hdr.Name))

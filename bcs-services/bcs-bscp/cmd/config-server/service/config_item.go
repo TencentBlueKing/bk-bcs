@@ -664,7 +664,6 @@ func (s *Service) CompareConfigItemConflicts(ctx context.Context, req *pbcs.Comp
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
-		{Basic: meta.Basic{Type: meta.App, Action: meta.Update, ResourceID: req.AppId}, BizID: req.BizId},
 	}
 
 	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
@@ -722,4 +721,33 @@ func (s *Service) CompareConfigItemConflicts(ctx context.Context, req *pbcs.Comp
 		NonTemplateConfigs: nonTemplateConfigs,
 		TemplateConfigs:    templateConfigs,
 	}, nil
+}
+
+// GetTemplateAndNonTemplateCICount 获取模板和非模板配置项数量
+func (s *Service) GetTemplateAndNonTemplateCICount(ctx context.Context, req *pbcs.GetTemplateAndNonTemplateCICountReq) (
+	*pbcs.GetTemplateAndNonTemplateCICountResp, error) {
+
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+	}
+
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
+		return nil, err
+	}
+
+	result, err := s.client.DS.GetTemplateAndNonTemplateCICount(grpcKit.RpcCtx(),
+		&pbds.GetTemplateAndNonTemplateCICountReq{
+			BizId: req.GetBizId(),
+			AppId: req.GetAppId(),
+		})
+	if err != nil {
+		return nil, err
+	}
+
+	return &pbcs.GetTemplateAndNonTemplateCICountResp{
+		ConfigItemCount:         result.GetConfigItemCount(),
+		TemplateConfigItemCount: result.GetTemplateConfigItemCount(),
+	}, err
 }

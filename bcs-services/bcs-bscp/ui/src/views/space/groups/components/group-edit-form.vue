@@ -90,7 +90,11 @@
             v-if="index > 0 || formData.rules.length > 1"
             class="bk-bscp-icon icon-reduce"
             @click="handleDeleteRule(index)"></i>
-          <i v-if="index === formData.rules.length - 1" class="bk-bscp-icon icon-add" @click="handleAddRule(index)"></i>
+          <i
+            v-if="index === formData.rules.length - 1"
+            class="bk-bscp-icon icon-add"
+            v-bk-tooltips="{ content: $t('分组最多支持 5 个标签选择器'), disabled: formData.rules.length < 5 }"
+            @click="handleAddRule(index)"></i>
         </div>
       </div>
       <!-- <div v-if="!rulesValid" class="bk-form-error">{{ t('分组规则表单不能为空') }}</div> -->
@@ -109,7 +113,6 @@
   import { getAppList } from '../../../../api/index';
   import { IAppItem } from '../../../../../types/app';
   import { Info } from 'bkui-vue/lib/icon';
-  import { Message } from 'bkui-vue';
 
   const getDefaultRuleConfig = (): IGroupRuleItem => ({ key: '', op: 'eq', value: '' });
 
@@ -206,10 +209,6 @@
   // 增加规则
   const handleAddRule = (index: number) => {
     if (formData.value.rules.length === 5) {
-      Message({
-        theme: 'error',
-        message: t('标签最大数量为5个'),
-      });
       return;
     }
     const rule = getDefaultRuleConfig();

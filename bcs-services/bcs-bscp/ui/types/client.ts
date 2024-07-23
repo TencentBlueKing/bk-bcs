@@ -156,9 +156,16 @@ export interface IVersionDistributionPieItem {
   children?: IVersionDistributionPieItem[];
 }
 
+// interface IClusterInfo {
+//   name: string;
+//   value: string;
+// }
 export interface IExampleFormData {
   clientKey: string;
   privacyCredential: string;
   tempDir?: string;
+  httpConfigName?: string;
   labelArr: string[];
+  clusterSwitch?: boolean;
+  clusterInfo?: string;
 }
