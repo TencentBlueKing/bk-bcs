@@ -271,6 +271,21 @@
             "translation": "通过业务和服务ID获取模板绑定关系"
         },
         {
+            "id": "hook name {Name} already exists",
+            "message": "hook name {Name} already exists",
+            "translation": "脚本名称 {Name} 已存在",
+            "placeholders": [
+                {
+                    "id": "Name",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "req.Spec.Name"
+                }
+            ]
+        },
+        {
             "id": "same template variable name {Name} already exists",
             "message": "same template variable name {Name} already exists",
             "translation": "同名的模版变量名称{Name}已存在",
@@ -339,6 +354,11 @@
                     "expr": "name"
                 }
             ]
+        },
+        {
+            "id": "hook is nil",
+            "message": "hook is nil",
+            "translation": "脚本不存在"
         },
         {
             "id": "default_val {DefaultVal} is not a number type",

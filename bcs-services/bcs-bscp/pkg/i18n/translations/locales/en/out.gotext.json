@@ -313,6 +313,23 @@
             "fuzzy": true
         },
         {
+            "id": "hook name {Name} already exists",
+            "message": "hook name {Name} already exists",
+            "translation": "hook name {Name} already exists",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Name",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "req.Spec.Name"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
             "id": "same template variable name {Name} already exists",
             "message": "same template variable name {Name} already exists",
             "translation": "same template variable name {Name} already exists",
@@ -400,6 +417,13 @@
                     "expr": "name"
                 }
             ],
+            "fuzzy": true
+        },
+        {
+            "id": "hook is nil",
+            "message": "hook is nil",
+            "translation": "hook is nil",
+            "translatorComment": "Copied from source.",
             "fuzzy": true
         },
         {

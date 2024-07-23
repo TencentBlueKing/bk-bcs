@@ -1058,6 +1058,7 @@ message CreateTemplateRevisionReq {
 message UpdateTemplateRevisionReq {
   pbtr.TemplateRevisionAttachment attachment = 1;
   pbtr.TemplateRevisionSpec spec = 2;
+  uint32 template_revision_id = 3;
 }
 
 message ListTemplateRevisionsReq {
