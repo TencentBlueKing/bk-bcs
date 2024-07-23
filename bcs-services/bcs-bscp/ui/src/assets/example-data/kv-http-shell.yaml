@@ -6,10 +6,10 @@ biz_id={{ .Bk_Bscp_Variable_BkBizId }}
 service_name="{{ .Bk_Bscp_Variable_ServiceName }}"
 key_name={{ .Bk_Bscp_Variable_KeyName }}
 token={{ .Bk_Bscp_Variable_ClientKey }}
-{{ .Bk_Bscp_Variable_Start_Leabels }}{{ .Bk_Bscp_Variable_Leabels }}
+labels={{ .Bk_Bscp_Variable_Leabels }}
 
 # 使用参数构建URL
-url="http://{{ .Bk_Bscp_Variable_FEED_ADDR }}/api/v1/feed/biz/${biz_id}/kvs/data/${key_name}"
+url="http://{{ .Bk_Bscp_Variable_FEED_ADDR }}/api/v1/feed/biz/${biz_id}/kvs/value/${key_name}"
 
 # 设置请求头，包括Authorization token
 auth_header="Authorization: Bearer ${token}"
@@ -21,4 +21,10 @@ data="{\"app_meta\": {\"app\": \"${service_name}\", \"labels\": ${labels}}}"
 response=$(curl -s -X POST -H "${auth_header}" -d "${data}" "${url}")
 
 # 打印响应内容
+# 当调用接口成功并正确获取配置项值时，返回“data”字段
+# 返回格式样例：{"data": "value"}
+
+# 当调用接口失败或获取配置项值出错时，返回“code”与“message”字段
+# 返回格式样例：{"code": "PERMISSION_DENIED", "message": "credential is disabled"}
+
 echo "Response content: ${response}"

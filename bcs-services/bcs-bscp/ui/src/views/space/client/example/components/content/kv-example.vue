@@ -133,12 +133,12 @@
         if (!activeTab.value) {
           return {
             topTip: '',
-            codePreviewHeight: 488,
+            codePreviewHeight: 604,
           };
         }
         return {
           topTip: '',
-          codePreviewHeight: 640,
+          codePreviewHeight: 754,
         };
       default:
         return {
@@ -218,8 +218,8 @@
     }
     if (props.kvName === 'http') {
       // http的两个label特殊处理
-      const replaceStr = optionData.value.labelArr.length > 0 ? 'labels=' : '# labels=';
-      updateString = updateString.replace('{{ .Bk_Bscp_Variable_Start_Leabels }}', replaceStr);
+      // const replaceStr = optionData.value.labelArr.length > 0 ? 'labels=' : '# labels=';
+      // updateString = updateString.replace('{{ .Bk_Bscp_Variable_Start_Leabels }}', replaceStr);
       // http的host特殊处理
       feedAddrVal = `${(window as any).FEED_HOST}:${(window as any).FEED_HTTP_PORT}`;
     }
