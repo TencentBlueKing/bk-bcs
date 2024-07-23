@@ -13,7 +13,7 @@
       <div class="mb5 link">
         <span v-html="config.i18n.footerInfoHTML"></span>
       </div>
-      <p>{{ config.footerCopyright }}</p>
+      <p>{{ config.footerCopyrightContent }}</p>
     </div>
   </div>
 </template>
@@ -45,5 +45,9 @@ export default defineComponent({
   .link a {
     color: #3a84ff;
   }
+}
+
+>>> .link-item {
+  color: #3a84ff;
 }
 </style>

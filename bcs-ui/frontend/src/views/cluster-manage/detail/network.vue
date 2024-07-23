@@ -7,7 +7,7 @@
       </bk-form-item>
       <bk-form-item :label="$t('cluster.create.label.privateNet.text')">
         <LoadingIcon v-if="vpcLoading">{{ $t('generic.status.loading') }}...</LoadingIcon>
-        <span v-else>{{ vpc }}</span>
+        <span v-else>{{ vpc || '--' }}</span>
       </bk-form-item>
       <bk-form-item :label="$t('cluster.labels.networkType')">
         {{ networkType }}

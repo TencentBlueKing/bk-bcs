@@ -130,6 +130,7 @@ import { setCookie } from '@/common/util';
 import BcsMd from '@/components/bcs-md/index.vue';
 import usePlatform from '@/composables/use-platform';
 import $i18n from '@/i18n/i18n-setup';
+import logoSvg from '@/images/bcs.svg';
 import $router from '@/router';
 import $store from '@/store';
 import SystemLog from '@/views/app/log.vue';
@@ -145,8 +146,8 @@ export default defineComponent({
   },
   setup() {
     const { menusData: menus } = useMenu();
-    const { config } = usePlatform();
-    const appLogo = computed(() => config.appLogo);
+    const { config, getPlatformInfo } = usePlatform();
+    const appLogo = computed(() => config.appLogo || logoSvg);
     const appName = computed(() => config.i18n.name);
     const langs = ref([
       {
@@ -264,7 +265,8 @@ export default defineComponent({
     };
     // 注销登录态
     const handleLogout = () => {
-      window.location.href = `${window.LOGIN_FULL}?c_url=${window.location}`;
+      // 注销登录只注销当前登录态，清除bk_token，不做登录弹窗
+      window.location.href = `${window.LOGIN_FULL}?is_from_logout=1&c_url=${encodeURIComponent(window.location.href)}`;
     };
 
     // release信息
@@ -276,6 +278,8 @@ export default defineComponent({
     onMounted(async () => {
       navRef.value && resizeObserver.observe(navRef.value);
       releaseData.value = await releaseNote().catch(() => ({ changelog: [], feature: {} }));
+      localStorage.setItem('__bcs_latest_version__', releaseData.value.changelog?.[0]?.version);
+      getPlatformInfo();
     });
 
     onBeforeUnmount(() => {

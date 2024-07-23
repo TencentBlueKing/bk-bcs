@@ -82,7 +82,7 @@
     <ProjectCreate
       v-model="showCreateDialog"
       :project-data="curProjectData"
-      @finished="handleGetProjectList"></ProjectCreate>
+      @finished="handleUpdateProjectList" />
   </div>
 </template>
 <script lang="ts">
@@ -91,6 +91,7 @@ import { defineComponent, onMounted, ref, watch } from 'vue';
 import ProjectCreate from './project-create.vue';
 import useProjects from './use-project';
 
+import { bus } from '@/common/bus';
 import useDebouncedRef from '@/composables/use-debounce';
 import $router from '@/router';
 
@@ -156,6 +157,12 @@ export default defineComponent({
       isLoading.value = false;
     };
 
+    // 更新项目列表和顶部项目选择器
+    function handleUpdateProjectList() {
+      handleGetProjectList();
+      bus.$emit('refresh-project-list');
+    }
+
     onMounted(() => {
       handleGetProjectList();
     });
@@ -173,6 +180,7 @@ export default defineComponent({
       handlePageChange,
       handleLimitChange,
       handleGetProjectList,
+      handleUpdateProjectList,
     };
   },
 });

@@ -142,6 +142,14 @@
           <bcs-button
             theme="primary"
             class="w-[88px] mt-[16px]"
+            v-authority="{
+              actionId: 'cluster_view',
+              resourceName: curCluster.clusterName,
+              permCtx: {
+                project_id: curProject.projectID,
+                cluster_id: clusterId
+              }
+            }"
             @click="confirmUpdate">
             {{ $t('logCollector.action.enable') }}
           </bcs-button>
@@ -159,7 +167,7 @@
             actionId: 'cluster_view',
             resourceName: curCluster.clusterName,
             permCtx: {
-              project_id: curProject.project_id,
+              project_id: curProject.projectID,
               cluster_id: clusterId
             }
           }"
