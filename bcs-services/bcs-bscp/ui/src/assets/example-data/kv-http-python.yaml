@@ -1,0 +1,32 @@
+#!/usr/bin/env python3
+import requests
+
+# 设置参数
+feed_addr="{{ .Bk_Bscp_Variable_FEED_ADDR }}"
+biz_id = {{ .Bk_Bscp_Variable_BkBizId }}
+service_name = "{{ .Bk_Bscp_Variable_ServiceName }}"
+key_name = {{ .Bk_Bscp_Variable_KeyName }}
+token = {{ .Bk_Bscp_Variable_ClientKey }}
+{{ .Bk_Bscp_Variable_Start_Leabels }}{{ .Bk_Bscp_Variable_Leabels }}
+
+# 使用参数构建URL
+url = f"http://{{ .Bk_Bscp_Variable_FEED_ADDR }}/api/v1/feed/biz/{biz_id}/kvs/data/{key_name}"
+
+# 设置请求头，包括Authorization token
+headers = {
+    "Authorization": f"Bearer {token}",
+}
+
+# 设置请求数据
+data = {
+    "app_meta": {
+        "app": service_name,
+        "labels": labels,
+    }
+}
+
+# 发送POST请求
+response = requests.post(url, headers=headers, json=data)
+
+# 打印响应内容
+print("Response content:", response.text)
