@@ -213,6 +213,9 @@ const (
 	// VclusterNetworkMode xxx
 	VclusterNetworkMode = "vclusterMode"
 
+	// ClusterOsType cluster os type (linux,windows)
+	ClusterOsType = "osType"
+
 	// ClusterManager xxx
 	ClusterManager = "bcs-cluster-manager"
 

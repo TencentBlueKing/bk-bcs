@@ -419,7 +419,13 @@ func updateClusterInfo(cloudID string, opt *cloudprovider.GetClusterOption) (*pr
 	}
 
 	// 集群VPC-CNI模式子网信息
-	opt.Cluster.NetworkSettings.EnableVPCCni = business.GetClusterVpcCniStatus(cls)
+	if !utils.StringInSlice(opt.Cluster.GetNetworkSettings().GetStatus(),
+		[]string{icommon.StatusInitialization, icommon.TaskStatusFailure}) {
+		opt.Cluster.NetworkSettings.EnableVPCCni = business.GetClusterVpcCniStatus(cls)
+	}
+	if opt.Cluster.NetworkSettings.GetNetworkMode() == "" {
+		opt.Cluster.NetworkSettings.NetworkMode = api.TKERouteEni
+	}
 	opt.Cluster.NetworkSettings.EniSubnetIDs = business.GetClusterVpcCniSubnets(cls)
 
 	return opt.Cluster, nil
@@ -918,6 +924,7 @@ func (c *Cluster) CheckClusterNetworkStatus(clusterId string,
 
 	switch opt.Disable {
 	case true:
+		// 底层集群已经关闭
 		if !business.GetClusterVpcCniStatus(cls) {
 			opt.Cluster.NetworkSettings.EnableVPCCni = false
 			opt.Cluster.NetworkSettings.EniSubnetIDs = nil
@@ -925,6 +932,12 @@ func (c *Cluster) CheckClusterNetworkStatus(clusterId string,
 			opt.Cluster.NetworkSettings.Status = icommon.StatusRunning
 
 			return false, nil
+		}
+
+		if !opt.Cluster.GetNetworkSettings().GetEnableVPCCni() &&
+			opt.Cluster.GetNetworkSettings().GetStatus() != icommon.TaskStatusFailure {
+			return false,
+				fmt.Errorf("cluster %s/%s already close vpc-cni", opt.Cluster.ClusterID, opt.Cluster.ClusterName)
 		}
 
 		// check subnets usage when close vpc-cni
@@ -957,7 +970,8 @@ func (c *Cluster) CheckClusterNetworkStatus(clusterId string,
 			return false, nil
 		}
 
-		if opt.Cluster.GetNetworkSettings().GetEnableVPCCni() {
+		if opt.Cluster.GetNetworkSettings().GetEnableVPCCni() &&
+			opt.Cluster.GetNetworkSettings().GetStatus() != icommon.TaskStatusFailure {
 			return false,
 				fmt.Errorf("cluster %s/%s already open vpc-cni", opt.Cluster.ClusterID, opt.Cluster.ClusterName)
 		}

@@ -113,8 +113,7 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 	taskName := fmt.Sprintf(createClusterTaskTemplate, cls.ClusterID)
 	task.CommonParams[cloudprovider.TaskNameKey.String()] = taskName
 
-	// step1: call bkops preAction operation
-	// postAction bkops, platform run default steps
+	// step1: call bkops preAction operation 创建集群
 	if opt.Cloud != nil && opt.Cloud.ClusterManagement != nil && opt.Cloud.ClusterManagement.CreateCluster != nil {
 		step := &template.BkSopsStepAction{
 			TaskName: template.SystemInit,
@@ -122,17 +121,38 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 			Plugins:  opt.Cloud.ClusterManagement.CreateCluster.Plugins,
 		}
 		err := step.BuildBkSopsStepAction(task, cls, template.ExtraInfo{
-			NodeIPList:   strings.Join(opt.WorkerNodes, ","),
-			BusinessID:   cls.BusinessID,
-			NodeOperator: opt.Operator,
-			Operator:     opt.Operator,
+			NodeIPList:      strings.Join(opt.WorkerNodes, ","),
+			BusinessID:      cls.BusinessID,
+			NodeOperator:    opt.Operator,
+			Operator:        opt.Operator,
+			TranslateMethod: createClusterStep.StepMethod,
 		})
 		if err != nil {
 			return nil, fmt.Errorf("BuildCreateClusterTask BuildBkSopsStepAction failed: %v", err)
 		}
 	}
 
-	// step2: update cluster DB info and associated data
+	// step2: call bksops add nodes to cluster 上架节点
+	if len(opt.WorkerNodes) > 0 && opt.Cloud != nil && opt.Cloud.ClusterManagement != nil &&
+		opt.Cloud.ClusterManagement.AddNodesToCluster != nil {
+		step := &template.BkSopsStepAction{
+			TaskName: template.SystemInit,
+			Actions:  opt.Cloud.ClusterManagement.AddNodesToCluster.PreActions,
+			Plugins:  opt.Cloud.ClusterManagement.AddNodesToCluster.Plugins,
+		}
+		err := step.BuildBkSopsStepAction(task, cls, template.ExtraInfo{
+			NodeIPList:      strings.Join(opt.WorkerNodes, ","),
+			NodeOperator:    opt.Operator,
+			BusinessID:      cls.BusinessID,
+			Operator:        opt.Operator,
+			TranslateMethod: addNodesToClusterStep.StepMethod,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("BuildCreateClusterTask BuildBkSopsStepAction failed: %v", err)
+		}
+	}
+
+	// step3: update cluster DB info and associated data
 	createClusterTask := &CreateClusterTaskOption{Cluster: cls, WorkerNodes: opt.WorkerNodes}
 	createClusterTask.BuildUpdateClusterDbInfoStep(task)
 
@@ -258,8 +278,9 @@ func (t *Task) BuildDeleteClusterTask(cls *proto.Cluster, opt *cloudprovider.Del
 			Plugins:  opt.Cloud.ClusterManagement.DeleteCluster.Plugins,
 		}
 		err := step.BuildBkSopsStepAction(task, cls, template.ExtraInfo{
-			BusinessID: cls.BusinessID,
-			Operator:   opt.Operator,
+			BusinessID:      cls.BusinessID,
+			Operator:        opt.Operator,
+			TranslateMethod: deleteClusterStep.StepMethod,
 		})
 		if err != nil {
 			return nil, fmt.Errorf("BuildDeleteClusterTask BuildBkSopsStepAction failed: %v", err)
@@ -339,10 +360,11 @@ func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Nod
 			Plugins:  opt.Cloud.ClusterManagement.AddNodesToCluster.Plugins,
 		}
 		err := step.BuildBkSopsStepAction(task, cls, template.ExtraInfo{
-			NodeIPList:   strings.Join(nodeIPs, ","),
-			NodeOperator: opt.Operator,
-			BusinessID:   cls.BusinessID,
-			Operator:     opt.Operator,
+			NodeIPList:      strings.Join(nodeIPs, ","),
+			NodeOperator:    opt.Operator,
+			BusinessID:      cls.BusinessID,
+			Operator:        opt.Operator,
+			TranslateMethod: addNodesToClusterStep.StepMethod,
 		})
 		if err != nil {
 			return nil, fmt.Errorf("BuildAddNodesToClusterTask BuildBkSopsStepAction failed: %v", err)
@@ -429,10 +451,11 @@ func (t *Task) BuildRemoveNodesFromClusterTask(cls *proto.Cluster, nodes []*prot
 			Plugins:  opt.Cloud.ClusterManagement.DeleteNodesFromCluster.Plugins,
 		}
 		err := step.BuildBkSopsStepAction(task, cls, template.ExtraInfo{
-			NodeIPList:   strings.Join(nodeIPs, ","),
-			NodeOperator: opt.Operator,
-			BusinessID:   cls.BusinessID,
-			Operator:     opt.Operator,
+			NodeIPList:      strings.Join(nodeIPs, ","),
+			NodeOperator:    opt.Operator,
+			BusinessID:      cls.BusinessID,
+			Operator:        opt.Operator,
+			TranslateMethod: removeNodesFromClusterStep.StepMethod,
 		})
 		if err != nil {
 			return nil, fmt.Errorf("BuildAddNodesToClusterTask BuildBkSopsStepAction failed: %v", err)

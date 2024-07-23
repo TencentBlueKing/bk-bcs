@@ -157,7 +157,7 @@ func (sjr *SyncJobResult) UpdateJobResultStatus(isSuccess bool) error {
 			common.StatusAutoScalingOptionUpdateFailed)
 		return sjr.updateAutoScalingStatus(isSuccess)
 	case SwitchClusterNetworkJob:
-		sjr.Status = generateStatusResult(common.TaskStatusSuccess, common.TaskStatusFailure)
+		sjr.Status = generateStatusResult("", common.TaskStatusFailure)
 		return sjr.updateClusterNetworkStatus(isSuccess)
 	}
 
