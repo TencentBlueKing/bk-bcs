@@ -262,11 +262,11 @@ func ListNodeOverviews(c *rest.Context) (interface{}, error) {
 				"provider":  PROVIDER,
 			}
 
-			result, err := bcsmonitor.QueryMultiValues(c.Request.Context(), c.ProjectId, promqlMap, params,
+			// 设计如此，忽略报错原因如下两点：
+			// 1、忽略报错信息，底层函数始终也是返回err nil的情况；
+			// 2、如果报错的情况下，result始终也是有默认值的，而且结果需要返回空的结构体
+			result, _ := bcsmonitor.QueryMultiValues(c.Request.Context(), c.ProjectId, promqlMap, params,
 				utils.GetNowQueryTime())
-			if err != nil {
-				return err
-			}
 
 			overview := &NodeOveriewMetric{
 				ContainerCount:     result["container_count"],
