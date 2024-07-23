@@ -104,7 +104,8 @@
         <bcs-tab-panel
           name="container"
           :label="$t('dashboard.workload.container.title')"
-          v-bkloading="{ isLoading: containerLoading }">
+          v-bkloading="{ isLoading: containerLoading }"
+          render-directive="if">
           <bk-table :data="container">
             <bk-table-column :label="$t('dashboard.workload.container.name')" prop="name">
               <template #default="{ row }">
@@ -159,7 +160,7 @@
             </bk-table-column>
           </bk-table>
         </bcs-tab-panel>
-        <bcs-tab-panel name="event" :label="$t('generic.label.event')">
+        <bcs-tab-panel name="event" :label="$t('generic.label.event')" render-directive="if">
           <EventQueryTable
             class="min-h-[360px]"
             hide-cluster-and-namespace
@@ -169,7 +170,7 @@
             :name="name">
           </EventQueryTable>
         </bcs-tab-panel>
-        <bcs-tab-panel name="conditions" :label="$t('k8s.conditions')">
+        <bcs-tab-panel name="conditions" :label="$t('k8s.conditions')" render-directive="if">
           <bk-table :data="conditions">
             <bk-table-column :label="$t('generic.label.type')" prop="type"></bk-table-column>
             <bk-table-column :label="$t('generic.label.status')" prop="status">
@@ -194,7 +195,11 @@
             </bk-table-column>
           </bk-table>
         </bcs-tab-panel>
-        <bcs-tab-panel name="storage" :label="$t('generic.label.storage')" v-bkloading="{ isLoading: storageLoading }">
+        <bcs-tab-panel
+          name="storage"
+          :label="$t('generic.label.storage')"
+          v-bkloading="{ isLoading: storageLoading }"
+          render-directive="if">
           <div class="storage storage-pvcs">
             <div class="title">PersistentVolumeClaims</div>
             <bk-table :data="storageTableData.pvcs">
@@ -295,13 +300,13 @@
             </bk-table>
           </div>
         </bcs-tab-panel>
-        <bcs-tab-panel name="label" :label="$t('k8s.label')">
+        <bcs-tab-panel name="label" :label="$t('k8s.label')" render-directive="if">
           <bk-table :data="labels">
             <bk-table-column label="Key" prop="key"></bk-table-column>
             <bk-table-column label="Value" prop="value"></bk-table-column>
           </bk-table>
         </bcs-tab-panel>
-        <bcs-tab-panel name="annotations" :label="$t('k8s.annotation')">
+        <bcs-tab-panel name="annotations" :label="$t('k8s.annotation')" render-directive="if">
           <bk-table :data="annotations">
             <bk-table-column label="Key" prop="key"></bk-table-column>
             <bk-table-column label="Value" prop="value"></bk-table-column>

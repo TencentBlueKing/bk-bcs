@@ -55,10 +55,11 @@ import AddSubnetDialog from './add-subnet-dialog.vue';
 
 import { cloudSubnets } from '@/api/modules/cluster-manager';
 import { countIPsInCIDR } from '@/common/util';
+import { ICluster } from '@/composables/use-app';
 import $i18n from '@/i18n/i18n-setup';
 
 interface Props {
-  clusterID: string
+  data: ICluster
 }
 
 const props = defineProps<Props>();
@@ -137,7 +138,7 @@ const handleShowSubnetsDialog = () => {
 const handleConfirmAddSubnet = async () => {
   showSubnets.value = false;
   subnetLoading.value = true;
-  await getClusterDetail(props.clusterID, true);// 获取最新的子网ID
+  await getClusterDetail(props.data?.clusterID, true);// 获取最新的子网ID
   await handleGetSubnets();
   subnetLoading.value = false;
 };
@@ -165,11 +166,11 @@ const objectSpanMethod = ({ row, column }) => {
   }
 };
 
-watch(() => props.clusterID, async () => {
-  if (!props?.clusterID) return;
+watch(() => props.data?.clusterID, async () => {
+  if (!props.data?.clusterID) return;
 
+  clusterData.value = props.data;// 初始化值，不用再请求一次详情
   subnetLoading.value = true;
-  await getClusterDetail(props.clusterID, true);
   await handleGetSubnets();
   subnetLoading.value = false;
 }, { immediate: true });

@@ -161,7 +161,7 @@ import BcsMd from '@/components/bcs-md/index.vue';
 import useCalcHeight from '@/composables/use-calc-height';
 import usePlatform from '@/composables/use-platform';
 import $i18n from '@/i18n/i18n-setup';
-import logoSvg from '@/images/bcs.svg';
+import logoSvg from '@/images/rtx.svg';
 import $router from '@/router';
 import $store from '@/store';
 import SystemLog from '@/views/app/log.vue';

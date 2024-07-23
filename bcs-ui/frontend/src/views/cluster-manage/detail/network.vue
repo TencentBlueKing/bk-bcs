@@ -7,7 +7,7 @@
       </bk-form-item>
       <bk-form-item :label="$t('cluster.create.label.privateNet.text')">
         <LoadingIcon v-if="vpcLoading">{{ $t('generic.status.loading') }}...</LoadingIcon>
-        <span v-else>{{ vpc }}</span>
+        <span v-else>{{ vpc || '--' }}</span>
       </bk-form-item>
       <bk-form-item :label="$t('cluster.labels.networkType')">
         {{ networkType }}
@@ -29,7 +29,7 @@
           {{ clusterData.networkSettings &&clusterData.networkSettings.serviceIPv4CIDR
             ? clusterData.networkSettings.serviceIPv4CIDR : '--' }}
         </bk-form-item>
-        <VpcCniDetail :cluster-i-d="clusterId" />
+        <VpcCniDetail :data="clusterData" />
       </template>
       <!-- 其他网络插件: Global Route -->
       <template v-else>
@@ -130,7 +130,7 @@
               </bcs-switcher>
             </bk-form-item>
             <VpcCniDetail
-              :cluster-i-d="clusterId"
+              :data="clusterData"
               v-if="clusterData.networkSettings?.enableVPCCni
                 && (['RUNNING', ''].includes(clusterData.networkSettings?.status))" />
           </template>

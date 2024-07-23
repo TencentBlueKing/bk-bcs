@@ -47,11 +47,13 @@ export default {
 
       if (this.autoResize) {
         this.resizeObserver = new ResizeObserver((entries) => {
-          for (const entry of entries) {
-            if (entry.target === this.$el) {
-              this.chart?.resize();
+          window.requestAnimationFrame(() => {
+            for (const entry of entries) {
+              if (entry.target === this.$el) {
+                this.chart?.resize();
+              }
             }
-          }
+          });
         });
         this.resizeObserver.observe(this.$el);
       }

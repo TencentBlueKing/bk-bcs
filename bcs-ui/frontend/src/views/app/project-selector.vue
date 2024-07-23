@@ -76,10 +76,11 @@
   </div>
 </template>
 <script lang="ts">
-import { computed, defineComponent, onBeforeMount, onMounted, ref, watch } from 'vue';
+import { computed, defineComponent, onBeforeMount, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
 import useProjects, { IProjectPerm } from '../project-manage/project/use-project';
 
+import { bus } from '@/common/bus';
 import cancelRequest from '@/common/cancel-request';
 import { IProject } from '@/composables/use-app';
 import useDebouncedRef from '@/composables/use-debounce';
@@ -212,8 +213,17 @@ export default defineComponent({
     });
 
     onMounted(() => {
+      bus.$on('refresh-project-list', async () => {
+        loading.value = true;
+        await handleInitProjectList();
+        loading.value = false;
+      });
       // hack 禁用select输入框
       selectRef.value?.$refs?.createInput?.setAttribute('readonly', true);
+    });
+
+    onBeforeUnmount(() => {
+      bus.$off('refresh-project-list');
     });
 
     return {
