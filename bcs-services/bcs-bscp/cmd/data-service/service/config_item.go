@@ -47,13 +47,6 @@ import (
 func (s *Service) CreateConfigItem(ctx context.Context, req *pbds.CreateConfigItemReq) (*pbds.CreateResp, error) { // nolint
 	grpcKit := kit.FromGrpcContext(ctx)
 
-	// validates unique key name+path both in table app_template_bindings and config_items
-	// validate in table app_template_bindings
-	if err := s.ValidateAppTemplateBindingUniqueKey(grpcKit, req.ConfigItemAttachment.BizId,
-		req.ConfigItemAttachment.AppId, req.ConfigItemSpec.Name, req.ConfigItemSpec.Path); err != nil {
-		return nil, err
-	}
-
 	// get all configuration files under this service
 	items, err := s.dao.ConfigItem().ListAllByAppID(grpcKit,
 		req.ConfigItemAttachment.AppId, req.ConfigItemAttachment.BizId)

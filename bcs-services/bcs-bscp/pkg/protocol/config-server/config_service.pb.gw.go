@@ -18147,7 +18147,7 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/GetTemplateAndNonTemplateCICount", runtime.WithHTTPPathPattern("/api/v1/config/config_item_count/biz_id/{biz_id}/apps/{app_id}"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/GetTemplateAndNonTemplateCICount", runtime.WithHTTPPathPattern("/api/v1/config/biz_id/{biz_id}/apps/{app_id}/config_items/count"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -21731,7 +21731,7 @@ func RegisterConfigHandlerClient(ctx context.Context, mux *runtime.ServeMux, cli
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/GetTemplateAndNonTemplateCICount", runtime.WithHTTPPathPattern("/api/v1/config/config_item_count/biz_id/{biz_id}/apps/{app_id}"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/GetTemplateAndNonTemplateCICount", runtime.WithHTTPPathPattern("/api/v1/config/biz_id/{biz_id}/apps/{app_id}/config_items/count"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -22071,7 +22071,7 @@ var (
 
 	pattern_Config_CompareKvConflicts_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 2, 8}, []string{"api", "v1", "config", "biz", "biz_id", "apps", "app_id", "kvs", "compare_conflicts"}, ""))
 
-	pattern_Config_GetTemplateAndNonTemplateCICount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"api", "v1", "config", "config_item_count", "biz_id", "apps", "app_id"}, ""))
+	pattern_Config_GetTemplateAndNonTemplateCICount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 2, 7}, []string{"api", "v1", "config", "biz_id", "apps", "app_id", "config_items", "count"}, ""))
 )
 
 var (

@@ -1995,6 +1995,7 @@ message UpdateTemplateRevisionReq {
   string privilege = 12;
   string sign = 13;
   uint64 byte_size = 14;
+  uint32 template_revision_id = 15;
 }
 
 message UpdateTemplateRevisionResp {
