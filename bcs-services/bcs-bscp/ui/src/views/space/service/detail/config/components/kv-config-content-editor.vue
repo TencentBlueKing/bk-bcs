@@ -48,7 +48,7 @@
     defineProps<{
       content: string;
       languages: string;
-      editable: boolean;
+      editable?: boolean;
       height?: number;
     }>(),
     {
