@@ -95,7 +95,7 @@
             filterable
             multiple
             show-select-all
-            @focus="handleFocusConfigSelect"
+            @toggle="handleToggleConfigSelectShow"
             @blur="handleCloseConfigSelect">
             <template #trigger>
               <div class="select-btn">{{ $t('选择配置文件') }}</div>
@@ -477,8 +477,10 @@
     selectedConfigIds.value = cloneDeep(lastSelectedConfigIds.value);
   };
 
-  const handleFocusConfigSelect = () => {
-    lastSelectedConfigIds.value = cloneDeep(selectedConfigIds.value);
+  const handleToggleConfigSelectShow = (isShow: boolean) => {
+    if (isShow) {
+      lastSelectedConfigIds.value = cloneDeep(selectedConfigIds.value);
+    }
   };
 
   const handleConfirmSelect = () => {
