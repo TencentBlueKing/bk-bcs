@@ -209,7 +209,7 @@
   };
   const updateReplaceVal = () => {
     let updateString = replaceVal.value;
-    let feedAddrVal = `${(window as any).FEED_HOST}:${(window as any).FEED_GRPC_PORT}`;
+    let feedAddrVal = (window as any).GRPC_ADDR;
     if (props.kvName === 'python') {
       updateString = updateString.replace(
         '请将 {{ YOUR_KEY }} 替换为您的实际 Key',
@@ -221,7 +221,7 @@
       // const replaceStr = optionData.value.labelArr.length > 0 ? 'labels=' : '# labels=';
       // updateString = updateString.replace('{{ .Bk_Bscp_Variable_Start_Leabels }}', replaceStr);
       // http的host特殊处理
-      feedAddrVal = `${(window as any).FEED_HOST}:${(window as any).FEED_HTTP_PORT}`;
+      feedAddrVal = (window as any).HTTP_ADDR;
     }
     updateString = updateString.replace('{{ .Bk_Bscp_Variable_BkBizId }}', bkBizId.value);
     updateString = updateString.replace('{{ .Bk_Bscp_Variable_ServiceName }}', basicInfo!.serviceName.value);
