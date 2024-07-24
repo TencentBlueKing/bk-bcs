@@ -56,9 +56,8 @@ type IndexConfig struct {
 	EnableBKNotice       bool   // 是否启用蓝鲸通知中心
 	Helper               string
 	ProxyAPI             bool
-	FeedHost             string // feed-server 地址
-	FeedGrpcPort         uint   // feed-server grpc 端口
-	FeedHttpPort         uint   // feed-server http 端口
+	GrpcAddr             string // feed-server grpc 地址
+	HttpAddr             string // feed-server http 地址
 	BKSharedResBaseJSURL string // 规则是${bkSharedResUrl}/${目录名 aka app_code}/base.js
 	NodeManHost          string
 }
@@ -172,9 +171,8 @@ func (e *EmbedWeb) RenderIndexHandler(conf *IndexConfig) http.Handler {
 			"SITE_URL":                  conf.SiteURL,
 			"ENABLE_BK_NOTICE":          conf.EnableBKNotice,
 			"HELPER":                    conf.Helper,
-			"FEED_HOST":                 conf.FeedHost,
-			"FEED_GRPC_PORT":            conf.FeedGrpcPort,
-			"FEED_HTTP_PORT":            conf.FeedHttpPort,
+			"GRPC_ADDR":                 conf.GrpcAddr,
+			"HTTP_ADDR":                 conf.HttpAddr,
 			"BK_NODE_HOST":              conf.NodeManHost,
 		}
 
