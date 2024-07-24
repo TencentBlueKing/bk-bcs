@@ -39,7 +39,6 @@ export default defineStore('global', () => {
   const getAppGlobalConfig = async () => {
     if ((window as any).BK_SHARED_RES_BASE_JS_URL) {
       const config = await getPlatformConfig((window as any).BK_SHARED_RES_BASE_JS_URL, { version: bscpVersion.value });
-      console.log(config);
       appGlobalConfig.value = config;
     }
     setShortcutIcon(appGlobalConfig.value.favicon);
