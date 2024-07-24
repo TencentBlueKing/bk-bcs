@@ -118,6 +118,11 @@
         message: t('不能超过64个字符'),
         trigger: 'change',
       },
+      {
+        validator: (value: string) => /^[\u4e00-\u9fa5A-Za-z0-9.\-_#%,:?!@$^+=\\[\]{}]+$/.test(value),
+        message: t('脚本名称有误，请重新输入'),
+        trigger: 'change',
+      },
     ],
     memo: [
       {

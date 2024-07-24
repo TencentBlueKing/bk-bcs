@@ -9,7 +9,7 @@
         type="textarea"
         :placeholder="t('请输入')"
         :rows="6"
-        :maxlength="256"
+        :maxlength="200"
         :resize="true"
         @input="change" />
     </bk-form-item>

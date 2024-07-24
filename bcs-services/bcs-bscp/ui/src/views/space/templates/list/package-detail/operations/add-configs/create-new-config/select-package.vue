@@ -2,7 +2,7 @@
   <bk-dialog
     :title="t('创建至套餐')"
     ext-cls="create-to-pkg-dialog"
-    confirm-text="创建"
+    :confirm-text="$t('创建')"
     :width="640"
     :is-show="props.show"
     :esc-close="false"

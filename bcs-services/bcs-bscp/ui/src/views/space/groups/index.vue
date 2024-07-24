@@ -44,6 +44,7 @@
           :data="tableData"
           :checked="checkedGroups"
           :is-row-select-enable="isRowSelectEnable"
+          show-overflow-tooltip
           @selection-change="handleSelectionChange"
           @select-all="handleSelectAll">
           <bk-table-column type="selection" width="60"></bk-table-column>

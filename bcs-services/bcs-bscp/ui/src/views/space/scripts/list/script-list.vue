@@ -120,6 +120,7 @@
                   :model-value="row.hook.spec.memo"
                   :autosize="{ maxRows: 4 }"
                   :resize="false"
+                  :maxlength="200"
                   @blur="handleMemoEditBlur(row, $event)" />
               </div>
             </template>
