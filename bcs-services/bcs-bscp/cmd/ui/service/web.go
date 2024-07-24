@@ -185,9 +185,8 @@ func (s *WebServer) subRouter() http.Handler {
 		BKSharedResBaseJSURL: config.G.Frontend.Host.BKSharedResBaseJSURL,
 		EnableBKNotice:       config.G.Frontend.EnableBKNotice,
 		Helper:               config.G.Frontend.Helper,
-		FeedHost:             config.G.Base.FeedHost,
-		FeedGrpcPort:         config.G.Base.FeedGrpcPort,
-		FeedHttpPort:         config.G.Base.FeedHttpPort,
+		GrpcAddr:             config.G.Base.GrpcAddr,
+		HttpAddr:             config.G.Base.HttpAddr,
 		NodeManHost:          config.G.Frontend.Host.BKNODEMANHOST,
 	}
 
