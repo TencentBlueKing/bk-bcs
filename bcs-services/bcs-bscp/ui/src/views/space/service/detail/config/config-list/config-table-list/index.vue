@@ -7,7 +7,7 @@
         n: conflictFileCount,
       })
     " />
-  <section class="config-list-wrapper">
+  <section :class="['config-list-wrapper', { 'has-conflict': isFileType && conflictFileCount > 0 }]">
     <div class="operate-area">
       <div class="operate-btns">
         <template v-if="versionData.status.publish_status === 'editing'">
@@ -125,6 +125,9 @@
     position: relative;
     padding: 0 24px 24px 24px;
     height: 100%;
+    &.has-conflict {
+      height: calc(100% - 34px);
+    }
   }
   .operate-area {
     display: flex;

@@ -40,7 +40,7 @@
   const createChart = () => {
     columnPlot = new Column(canvasRef.value!, {
       data: data.value,
-      xField: 'current_release_name',
+      xField: 'target_release_name',
       yField: 'count',
       padding: [30, 10, 50, 30],
       limitInPlot: false,
@@ -72,7 +72,7 @@
       tooltip: {
         fields: ['count'],
         showTitle: true,
-        title: 'current_release_name',
+        title: 'target_release_name',
         container: tooltipRef.value?.getDom(),
         enterable: true,
         customItems: (originalItems: any[]) => {
