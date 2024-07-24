@@ -10431,6 +10431,8 @@ func (m *InternetAccessible) validate(all bool) error {
 
 	// no validation rules for BandwidthPackageId
 
+	// no validation rules for PublicIP
+
 	if len(errors) > 0 {
 		return InternetAccessibleMultiError(errors)
 	}
@@ -15384,10 +15386,10 @@ func (m *CreateClusterReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if utf8.RuneCountInString(m.GetVpcID()) > 32 {
+	if utf8.RuneCountInString(m.GetVpcID()) > 40 {
 		err := CreateClusterReqValidationError{
 			field:  "VpcID",
-			reason: "value length must be at most 32 runes",
+			reason: "value length must be at most 40 runes",
 		}
 		if !all {
 			return err
@@ -15463,16 +15465,7 @@ func (m *CreateClusterReq) validate(all bool) error {
 
 	// no validation rules for IsExclusive
 
-	if _, ok := _CreateClusterReq_ClusterType_InLookup[m.GetClusterType()]; !ok {
-		err := CreateClusterReqValidationError{
-			field:  "ClusterType",
-			reason: "value must be in list [federation single]",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for ClusterType
 
 	// no validation rules for FederationClusterID
 
@@ -15873,11 +15866,6 @@ var _CreateClusterReq_Environment_InLookup = map[string]struct{}{
 var _CreateClusterReq_EngineType_InLookup = map[string]struct{}{
 	"k8s":   {},
 	"mesos": {},
-}
-
-var _CreateClusterReq_ClusterType_InLookup = map[string]struct{}{
-	"federation": {},
-	"single":     {},
 }
 
 // Validate checks the field values on CreateClusterResp with the rules defined

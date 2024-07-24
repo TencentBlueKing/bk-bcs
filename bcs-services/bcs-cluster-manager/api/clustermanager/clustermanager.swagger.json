@@ -13181,6 +13181,11 @@
           "type": "string",
           "description": "共享带宽包ID",
           "title": "bandwidthPackageId"
+        },
+        "publicIP": {
+          "type": "string",
+          "description": "公网ip地址",
+          "title": "publicIP"
         }
       },
       "title": "InternetAccessible 公网带宽设置"

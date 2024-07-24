@@ -904,7 +904,7 @@ func (c *CreateClusterRequest) Trans2CreateClusterRequest() *model.CreateCluster
 
 	billingMode, periodType, periodNum, isAutoRenew, isAutoPay := GetChargeConfig(c.Spec.Charge)
 	// 根据 单节点 Pod 数量上限 算出 容器网络固定IP池掩码位数
-	alphaCceFixPoolMask := fmt.Sprintf("%d", math.Log2(float64(c.Spec.AlphaCceFixPoolMask)))
+	alphaCceFixPoolMask := fmt.Sprintf("%d", 32-int(math.Log2(float64(c.Spec.AlphaCceFixPoolMask))))
 
 	clusterTags := make([]model.ResourceTag, 0)
 	for k, v := range c.Spec.ClusterTag {
@@ -982,6 +982,10 @@ func (c *CreateClusterRequest) Trans2CreateClusterRequest() *model.CreateCluster
 		req.Body.Spec.Masters = &masters
 	}
 
+	if len(c.Spec.PublicIP) > 0 {
+		req.Body.Spec.ExtendParam.ClusterExternalIP = &c.Spec.PublicIP
+	}
+
 	if c.Spec.Category == model.GetClusterSpecCategoryEnum().CCE.Value() {
 		category = model.GetClusterSpecCategoryEnum().CCE
 		containerCidr := make([]model.ContainerCidr, 0)
@@ -1054,4 +1058,6 @@ type CreateClusterSpec struct {
 	ClusterTag map[string]string
 	// EniNetworkSubnet IPv4子网ID列表
 	EniNetworkSubnet []string
+	// PublicIP 公网ip地址
+	PublicIP string
 }

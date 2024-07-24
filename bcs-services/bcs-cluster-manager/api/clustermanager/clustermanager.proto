@@ -3579,6 +3579,10 @@ message InternetAccessible {
     title: "bandwidthPackageId",
     description: "共享带宽包ID"
   }];
+  string publicIP = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "publicIP",
+    description: "公网ip地址"
+  }];
 }
 
 // InstanceTemplateConfig instance config info
@@ -4935,7 +4939,7 @@ message CreateClusterReq {
       title : "vpcID",
       description : "集群私有网络id，云上集群填写"
     },
-    (validate.rules).string.max_len = 32
+    (validate.rules).string.max_len = 40
   ];
   string projectID = 6 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
@@ -4973,7 +4977,7 @@ message CreateClusterReq {
       title : "clusterType",
       description : "集群类型, 例如[federation, single], "
                   "federation表示为联邦集群，single表示独立集群，默认为single"
-  },(validate.rules).string = { in: ["federation", "single"]}];
+  }];
   string federationClusterID = 12[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "federationClusterID", 
     description: "如果该集群为联邦集群的一部分，用该ID记录联邦Host信息"

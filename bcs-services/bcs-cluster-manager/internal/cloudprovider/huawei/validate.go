@@ -260,7 +260,28 @@ func (c *CloudValidate) CreateCloudAccountValidate(account *proto.Account) error
 
 // CreateClusterValidate check createCluster operation
 func (c *CloudValidate) CreateClusterValidate(req *proto.CreateClusterReq, opt *cloudprovider.CommonOption) error {
-	return cloudprovider.ErrCloudNotImplemented
+	if c == nil || req == nil || opt == nil {
+		return fmt.Errorf("%s CreateClusterValidate request&options is empty", cloudName)
+	}
+
+	if opt.Account == nil || len(opt.Account.SecretID) == 0 || len(opt.Account.SecretKey) == 0 {
+		return fmt.Errorf("%s CreateClusterValidate opt lost valid crendential info", cloudName)
+	}
+
+	client, err := api.NewIamClient(&cloudprovider.CommonOption{Account: opt.Account})
+	if err != nil {
+		return err
+	}
+
+	regions, err := client.ListCloudRegions()
+	if err != nil {
+		return fmt.Errorf("account check failed: %v", err)
+	}
+	if len(regions) == 0 {
+		return fmt.Errorf("%s invalid aksk", cloudName)
+	}
+
+	return nil
 }
 
 // DeleteNodesFromClusterValidate xxx

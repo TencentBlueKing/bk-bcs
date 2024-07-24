@@ -108,3 +108,8 @@ const (
 	"category":["CCE","Turbo"]}}},{"addonTemplateName":"everest"},
 	{"addonTemplateName":"node-local-dns"},{"addonTemplateName":"npd"}]`
 )
+
+const (
+	ContainerNetworkModeVpcRouter = "vpc-router"
+	ContainerNetworkModeOverlayL2 = "overlay_l2"
+)

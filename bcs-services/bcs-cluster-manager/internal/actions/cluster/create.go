@@ -30,6 +30,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/taskserver"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 const (
@@ -371,6 +372,13 @@ func (ca *CreateAction) createNodegroup(cls *cmproto.Cluster) error {
 					return fmt.Errorf("createNodegroup[%s] Encrypt KeyPublic failed", ng.Name)
 				}
 				ng.LaunchTemplate.KeyPair.KeyPublic = keyPublic
+			}
+			// base64 encode script file
+			if ng.NodeTemplate != nil {
+				ng.NodeTemplate.UserScript = utils.Base64Encode(ng.NodeTemplate.UserScript)
+				ng.NodeTemplate.PreStartUserScript = utils.Base64Encode(ng.NodeTemplate.PreStartUserScript)
+				ng.NodeTemplate.ScaleInPreScript = utils.Base64Encode(ng.NodeTemplate.ScaleInPreScript)
+				ng.NodeTemplate.ScaleInPostScript = utils.Base64Encode(ng.NodeTemplate.ScaleInPostScript)
 			}
 
 			err := ca.model.CreateNodeGroup(context.Background(), ng)

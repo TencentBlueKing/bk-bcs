@@ -299,6 +299,8 @@ var (
 	MasterIDs ParamKey = "masterIDs"
 	// CloudSystemID xxx
 	CloudSystemID ParamKey = "systemID"
+	// CloudJobID xxx
+	CloudJobID ParamKey = "jobID"
 
 	// BkSopsUrlKey bk-sops depend Key
 	// BkSopsUrlKey url

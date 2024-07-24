@@ -112,8 +112,31 @@ func (cli *CceClient) DeleteCceCluster(clusterID string) error {
 		return cloudprovider.ErrServerIsNil
 	}
 
+	var (
+		deleteEfs          = model.GetDeleteClusterRequestDeleteEfsEnum().TRUE
+		deleteEni          = model.GetDeleteClusterRequestDeleteEniEnum().FALSE
+		deleteEvs          = model.GetDeleteClusterRequestDeleteEvsEnum().TRUE
+		deleteNet          = model.GetDeleteClusterRequestDeleteNetEnum().TRUE
+		deleteObs          = model.GetDeleteClusterRequestDeleteObsEnum().TRUE
+		deleteSfs          = model.GetDeleteClusterRequestDeleteSfsEnum().TRUE
+		deleteSfs30        = model.GetDeleteClusterRequestDeleteSfs30Enum().TRUE
+		tobedeleted        = model.GetDeleteClusterRequestTobedeletedEnum().TRUE
+		ondemandNodePolicy = model.GetDeleteClusterRequestOndemandNodePolicyEnum().DELETE
+		periodicNodePolicy = model.GetDeleteClusterRequestPeriodicNodePolicyEnum().RESET
+	)
+
 	_, err := cli.cce.DeleteCluster(&model.DeleteClusterRequest{
-		ClusterId: clusterID,
+		ClusterId:          clusterID,
+		DeleteEfs:          &deleteEfs,
+		DeleteEni:          &deleteEni,
+		DeleteEvs:          &deleteEvs,
+		DeleteNet:          &deleteNet,
+		DeleteObs:          &deleteObs,
+		DeleteSfs:          &deleteSfs,
+		DeleteSfs30:        &deleteSfs30,
+		Tobedeleted:        &tobedeleted,
+		OndemandNodePolicy: &ondemandNodePolicy,
+		PeriodicNodePolicy: &periodicNodePolicy,
 	})
 	return err
 }

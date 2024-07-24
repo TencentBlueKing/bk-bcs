@@ -215,36 +215,48 @@ func GenerateCreateNodePoolRequest(group *proto.NodeGroup,
 // GenerateCreateClusterRequest get cce cluster create request
 func GenerateCreateClusterRequest(ctx context.Context, cluster *proto.Cluster,
 	operator string) (*CreateClusterRequest, error) {
-	flavor, err := trans2CCEFlavor(cluster.ClusterBasicSettings.ClusterLevel, len(cluster.Template))
+	flavor, err := trans2CCEFlavor(cluster.ClusterBasicSettings.ClusterLevel, cluster.Template)
 	if err != nil {
 		return nil, err
 	}
 
 	containerMode := model.GetContainerNetworkModeEnum().OVERLAY_L2.Value()
-	if cluster.ClusterAdvanceSettings.NetworkType == common.VpcCni {
+	if cluster.NetworkType == ContainerNetworkModeVpcRouter {
 		containerMode = model.GetContainerNetworkModeEnum().VPC_ROUTER.Value()
 	}
 
 	chargeType := common.POSTPAIDBYHOUR
 	period := uint32(0)
 	renewFlag := ""
-	if len(cluster.Template) > 0 {
-		chargeType = cluster.Template[0].InstanceChargeType
-		if cluster.Template[0].Charge != nil {
-			period = cluster.Template[0].Charge.Period
-			renewFlag = cluster.Template[0].Charge.RenewFlag
-		}
-	}
-
 	az := make([]string, 0)
 	for _, v := range cluster.Template {
-		if len(v.Zone) != 0 {
-			az = append(az, v.Zone)
+		if v.NodeRole == common.NodeRoleMaster {
+			if len(v.Zone) != 0 {
+				az = append(az, v.Zone)
+			}
+
+			if len(v.InstanceChargeType) != 0 {
+				chargeType = v.InstanceChargeType
+			}
+
+			if v.Charge != nil {
+				period = v.Charge.Period
+				renewFlag = v.Charge.RenewFlag
+			}
 		}
 	}
 
-	return &CreateClusterRequest{
-		Name: cluster.ClusterID,
+	var alphaCceFixPoolMask uint64
+	alphaCceFixPoolMask = 256
+	if v, ok := cluster.ExtraInfo["numberOfReservedPodIp"]; ok {
+		alphaCceFixPoolMask, err = strconv.ParseUint(v, 10, 32)
+		if err != nil {
+			return nil, fmt.Errorf("numberOfReservedPodIp conversion failed")
+		}
+	}
+
+	req := &CreateClusterRequest{
+		Name: strings.ToLower(cluster.ClusterID),
 		Spec: CreateClusterSpec{
 			Category:        cluster.ClusterType,
 			Flavor:          flavor,
@@ -252,7 +264,7 @@ func GenerateCreateClusterRequest(ctx context.Context, cluster *proto.Cluster,
 			Version:         cluster.ClusterBasicSettings.Version,
 			Description:     cluster.GetDescription(),
 			VpcID:           cluster.VpcID,
-			SubnetID:        cluster.ClusterBasicSettings.SubnetID,
+			SubnetID:        cluster.ClusterAdvanceSettings.ClusterConnectSetting.SubnetId,
 			SecurityGroupID: cluster.ClusterAdvanceSettings.ClusterConnectSetting.SecurityGroup,
 			ContainerMode:   containerMode,
 			ContainerCidr:   cluster.NetworkSettings.MultiClusterCIDR,
@@ -270,13 +282,21 @@ func GenerateCreateClusterRequest(ctx context.Context, cluster *proto.Cluster,
 
 				return model.GetClusterSpecKubeProxyModeEnum().IPTABLES.Value()
 			}(),
-			ClusterTag:       cluster.Labels,
-			EniNetworkSubnet: cluster.NetworkSettings.EniSubnetIDs,
+			ClusterTag:          cluster.Labels,
+			EniNetworkSubnet:    cluster.NetworkSettings.EniSubnetIDs,
+			AlphaCceFixPoolMask: uint32(alphaCceFixPoolMask),
 		},
-	}, nil
+	}
+
+	internet := cluster.ClusterAdvanceSettings.ClusterConnectSetting.Internet
+	if internet != nil {
+		req.Spec.PublicIP = internet.PublicIP
+	}
+
+	return req, nil
 }
 
-func trans2CCEFlavor(s string, masterNum int) (string, error) {
+func trans2CCEFlavor(s string, instance []*proto.InstanceTemplateConfig) (string, error) {
 	levelNum, err := strconv.Atoi(s) // 尝试转换为整数
 	if err != nil {
 		return "", fmt.Errorf("failed to parse number: %w", err)
@@ -296,7 +316,14 @@ func trans2CCEFlavor(s string, masterNum int) (string, error) {
 		flavor = "cce.s2.xlarge"
 	}
 
-	if masterNum == 3 {
+	masterNum := 0
+	for _, v := range instance {
+		if v.NodeRole == common.NodeRoleMaster {
+			masterNum++
+		}
+	}
+
+	if masterNum >= 3 {
 		flavor = strings.ReplaceAll(flavor, ".s1.", ".s2.")
 	}
 

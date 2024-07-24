@@ -174,8 +174,7 @@ func CleanClusterDBInfoTask(taskID string, stepName string) error {
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
-	blog.Infof("CleanClusterDBInfoTask[%s]: delete nodeGroups for cluster[%s] in DB successful",
-		taskID, clusterID)
+	blog.Infof("CleanClusterDBInfoTask[%s]: delete nodeGroups for cluster[%s] in DB successful", taskID, clusterID)
 
 	// delete cluster
 	cluster.Status = icommon.StatusDeleting
