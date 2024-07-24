@@ -65,11 +65,11 @@
             :width="140">
             <template #default="{ row }">
               <div
-                v-if="row.client && row.client.spec.current_release_id"
+                v-if="row.client && row.client.spec.target_release_id"
                 class="current-version"
-                @click="linkToApp(row.client.spec.current_release_id)">
+                @click="linkToApp(row.client.spec.target_release_id)">
                 <Share class="icon" />
-                <span class="text">{{ row.client.spec.current_release_name }}</span>
+                <span class="text">{{ row.client.spec.target_release_name }}</span>
               </div>
               <span v-else>--</span>
             </template>
