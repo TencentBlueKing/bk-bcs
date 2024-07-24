@@ -270,6 +270,10 @@ service Data {
 
   // config item compare conflicts related interface
   rpc CompareConfigItemConflicts(CompareConfigItemConflictsReq) returns (CompareConfigItemConflictsResp) {}
+
+  // 获取模板和非模板配置项数量
+  rpc GetTemplateAndNonTemplateCICount(GetTemplateAndNonTemplateCICountReq)
+      returns (GetTemplateAndNonTemplateCICountResp) {}
 }
 message UpdateCredentialScopesReq {
   uint32 biz_id = 1;
@@ -1020,11 +1024,13 @@ message ListTemplateByTupleReqResp {
 }
 
 message BatchUpsertTemplatesReq {
+  uint32 biz_id = 1;
   message Item {
     pbtemplate.Template template = 1;
     pbtr.TemplateRevision template_revision = 2;
   }
-  repeated Item items = 1;
+  repeated Item items = 2;
+  repeated uint32 template_set_ids = 3;
 }
 
 message BatchUpsertTemplatesReqResp {
@@ -1052,6 +1058,7 @@ message CreateTemplateRevisionReq {
 message UpdateTemplateRevisionReq {
   pbtr.TemplateRevisionAttachment attachment = 1;
   pbtr.TemplateRevisionSpec spec = 2;
+  uint32 template_revision_id = 3;
 }
 
 message ListTemplateRevisionsReq {
@@ -1912,4 +1919,14 @@ message CompareConfigItemConflictsResp {
   }
   repeated NonTemplateConfig non_template_configs = 2;
   repeated TemplateConfig template_configs = 1;
+}
+
+message GetTemplateAndNonTemplateCICountReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+}
+
+message GetTemplateAndNonTemplateCICountResp {
+  uint64 config_item_count = 1;
+  uint64 template_config_item_count = 2;
 }

@@ -36,6 +36,30 @@ const (
 )
 
 var (
+	// create cluster task steps
+	createClusterStep = cloudprovider.StepInfo{
+		StepMethod: fmt.Sprintf("%s-CreateCluster", cloudName),
+		StepName:   "创建集群",
+	}
+
+	// delete cluster task steps
+	deleteClusterStep = cloudprovider.StepInfo{
+		StepMethod: fmt.Sprintf("%s-DeleteCluster", cloudName),
+		StepName:   "删除集群",
+	}
+
+	// cluster add nodes task steps
+	addNodesToClusterStep = cloudprovider.StepInfo{
+		StepMethod: fmt.Sprintf("%s-AddNodesToCluster", cloudName),
+		StepName:   "集群上架节点",
+	}
+
+	// cluster remove nodes task steps
+	removeNodesFromClusterStep = cloudprovider.StepInfo{
+		StepMethod: fmt.Sprintf("%s-RemoveNodesFromCluster", cloudName),
+		StepName:   "集群下架节点",
+	}
+
 	// import cluster task steps
 	importClusterNodesStep = cloudprovider.StepInfo{
 		StepMethod: fmt.Sprintf("%s-ImportClusterNodesTask", cloudName),

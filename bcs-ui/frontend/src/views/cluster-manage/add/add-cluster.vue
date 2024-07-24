@@ -69,78 +69,105 @@
                 :key="item.region" :id="item.region" :name="item.regionName"></bcs-option>
             </bcs-select>
           </bk-form-item>
-          <bk-form-item :label="$t('cluster.create.label.networkMode.text')" property="networkType" error-display-type="normal" required>
-            <bk-radio-group v-model="networkConfig.networkType">
-              <bk-radio value="overlay">
-                {{ $t('cluster.create.label.networkMode.overlay.text') }}
-                <span
-                  class="ml5 text-[#C4C6CC]"
-                  v-bk-tooltips="{
-                    content: $t('cluster.create.label.networkMode.overlay.desc')
-                  }">
-                  <i class="bcs-icon bcs-icon-info-circle-shape"></i>
-                </span>
-              </bk-radio>
-              <!-- todo 暂不支持vpc网络 -->
-              <bk-radio disabled value="vpc-cni">
-                {{ $t('cluster.create.label.networkMode.vpc-cni.text') }}
-                <span
-                  class="ml5 text-[#C4C6CC]"
-                  v-bk-tooltips="{
-                    content: $t('cluster.create.label.networkMode.vpc-cni.desc')
-                  }">
-                  <i class="bcs-icon bcs-icon-info-circle-shape"></i>
-                </span>
-              </bk-radio>
-            </bk-radio-group>
-          </bk-form-item>
-          <bk-form-item :label="$t('cluster.create.label.vpc.text')" property="vpcID" error-display-type="normal" required>
-            <bcs-select
-              class="max-w-[600px]"
-              v-model="networkConfig.vpcID"
-              :loading="vpcLoading"
-              searchable
-              :clearable="false"
-              :remote-method="vpcRemoteSearch">
-              <!-- VPC可用容器网络IP数量最低限制, 并以businessID分组（有businessID为业务专属VPC，否则为公共VPC） -->
-              <bcs-option-group
-                v-for="(vpc, index) in filterVpcList"
-                :name="vpc.name"
-                :key="index">
+          <bk-form-item :label="$t('cluster.create.label.privateNet.text')" property="vpcID" error-display-type="normal" required>
+            <div class="flex items-center w-full">
+              <bcs-select
+                class="flex-1 max-w-[600px]"
+                v-model="networkConfig.vpcID"
+                :loading="vpcLoading"
+                searchable
+                :clearable="false"
+                :remote-method="vpcRemoteSearch">
+                <!-- VPC可用容器网络IP数量最低限制, 并以businessID分组（有businessID为业务专属VPC，否则为公共VPC） -->
+                <bcs-option-group
+                  v-for="(vpc, index) in filterVpcList"
+                  :name="vpc.name"
+                  :key="index">
 
-                <bcs-option
-                  v-for="item in vpc.children"
-                  :key="item.vpcID"
-                  :id="item.vpcID"
-                  :name="item.vpcName"
-                  :disabled="basicInfo.environment === 'prod'
-                    ? item.availableIPNum < 4096
-                    : item.availableIPNum < 2048
-                  "
-                  v-bk-tooltips="{
-                    content: $t('cluster.create.label.vpc.deficiencyIpNumTips'),
-                    disabled: basicInfo.environment === 'prod'
-                      ? item.availableIPNum >= 4096
-                      : item.availableIPNum >= 2048
-                  }">
-                  <div class="flex items-center place-content-between">
-                    <span>
-                      {{item.vpcName}}
-                      <span class="vpc-id">{{`(${item.vpcID})`}}</span>
-                    </span>
-                    <span class="text-[#979ba5]">
-                      {{ $t('cluster.create.label.vpc.availableIpNum', [item.availableIPNum]) }}
-                    </span>
-                  </div>
-                </bcs-option>
-              </bcs-option-group>
-            </bcs-select>
-            <div class="text-[12px] text-[#979BA5]" v-if="curVpc">
-              <i18n path="cluster.create.label.vpc.availableIpNum2">
-                <span place="num" class="text-[#313238]">{{ curVpc.availableIPNum }}</span>
-              </i18n>
+                  <bcs-option
+                    v-for="item in vpc.children"
+                    :key="item.vpcID"
+                    :id="item.vpcID"
+                    :name="item.vpcName"
+                    :disabled="basicInfo.environment === 'prod'
+                      ? item.availableIPNum < 4096
+                      : item.availableIPNum < 2048
+                    "
+                    v-bk-tooltips="{
+                      content: $t('cluster.create.label.vpc.deficiencyIpNumTips'),
+                      disabled: basicInfo.environment === 'prod'
+                        ? item.availableIPNum >= 4096
+                        : item.availableIPNum >= 2048
+                    }">
+                    <div class="flex items-center place-content-between">
+                      <span>
+                        {{item.vpcName}}
+                        <span class="vpc-id">{{`(${item.vpcID})`}}</span>
+                      </span>
+                      <span class="text-[#979ba5]">
+                        {{ $t('cluster.create.label.vpc.availableIpNum', [item.availableIPNum]) }}
+                      </span>
+                    </div>
+                  </bcs-option>
+                </bcs-option-group>
+              </bcs-select>
+              <span
+                :class="[
+                  'inline-flex items-center',
+                  'px-[16px] h-[24px] rounded-full bg-[#F0F1F5] text-[12px] ml-[8px]'
+                ]"
+                v-if="curVpc">
+                {{ $t('tke.tips.totalIpNum', [curVpc.availableIPNum || '--']) }}
+              </span>
             </div>
           </bk-form-item>
+          <bk-form-item
+            :label="$t('cluster.create.label.defaultNetPlugin')"
+            property="networkType"
+            error-display-type="normal"
+            required>
+            <bcs-select :clearable="false" searchable v-model="networkConfig.networkType" class="max-w-[600px]">
+              <bcs-option id="overlay" :name="$t('cluster.create.label.networkMode.overlay.text')"></bcs-option>
+            </bcs-select>
+          </bk-form-item>
+          <!-- VPC-CNI需要设置POD ID -->
+          <bk-form-item label="VPC-CNI">
+            <bcs-switcher v-model="networkConfig.networkSettings.enableVPCCni"></bcs-switcher>
+          </bk-form-item>
+          <template v-if="networkConfig.networkSettings.enableVPCCni">
+            <bk-form-item
+              label="Pod IP"
+              :desc="$t('tke.tips.vpcCniPodIp')"
+              property="podIP"
+              error-display-type="normal"
+              required>
+              <VpcCni
+                :subnets="networkConfig.networkSettings.subnetSource.new"
+                cloud-i-d="tencentCloud"
+                :region="networkConfig.region"
+                class="max-w-[600px]"
+                @change="handleSetSubnetSourceNew" />
+            </bk-form-item>
+            <!-- <bk-form-item
+              :label="$t('tke.label.staticIpMode')"
+              :desc="{
+                allowHTML: true,
+                content: '#staticIpMode',
+              }"
+              key="staticIpMode">
+              <bk-checkbox v-model="networkConfig.networkSettings.isStaticIpMode">
+                {{ $t('tke.label.enableStaticIpMode') }}
+              </bk-checkbox>
+              <div id="staticIpMode">
+                <div>{{ $t('tke.tips.staticIpMode.p1') }}</div>
+                <i18n tag="div" path="tke.tips.staticIpMode.p2">
+                  <bk-link theme="primary" target="_blank" href="https://cloud.tencent.com/document/product/457/34994">
+                    <span class="text-[12px]">{{ $t('tke.link.staticIpMode') }}</span>
+                  </bk-link>
+                </i18n>
+              </div>
+            </bk-form-item> -->
+          </template>
           <bk-form-item
             :label="$t('cluster.create.label.networkSetting.text')"
             property="networkSettings"
@@ -351,7 +378,11 @@
         @click="handleShowConfirmDialog">
         {{ $t('cluster.create.button.createCluster') }}
       </bk-button>
-      <bk-button theme="primary" class="ml10" v-else @click="nextStep">{{ $t('generic.button.next') }}</bk-button>
+      <bk-button
+        theme="primary"
+        :class="activeTabName !== steps[0].name ?'ml10':''"
+        v-else
+        @click="nextStep">{{ $t('generic.button.next') }}</bk-button>
       <bk-button class="ml10" @click="handleCancel">{{ $t('generic.button.cancel') }}</bk-button>
     </div>
     <ConfirmDialog
@@ -372,6 +403,7 @@ import { computed, defineComponent, getCurrentInstance, onMounted, ref, watch } 
 import ApplyHost from './common/apply-host.vue';
 import clusterScaleData from './common/cluster-scale.json';
 import StepTabLabel from './common/step-tab-label.vue';
+import VpcCni from './tencent/vpc-cni.vue';
 
 import $bkMessage from '@/common/bkmagic';
 import ConfirmDialog from '@/components/comfirm-dialog.vue';
@@ -392,7 +424,7 @@ interface IScale {
 }
 export default defineComponent({
   name: 'AddCluster',
-  components: { ConfirmDialog, BcsContent, TemplateSelector, ApplyHost, StepTabLabel },
+  components: { ConfirmDialog, BcsContent, TemplateSelector, ApplyHost, StepTabLabel, VpcCni },
   setup() {
     const runEnv = ref(window.RUN_ENV);
     const steps = ref([
@@ -406,7 +438,7 @@ export default defineComponent({
     const basicInfo = ref({
       clusterName: '',
       environment: '',
-      provider: '',
+      provider: 'tencentCloud',
       clusterBasicSettings: {
         version: '',
         isAutoUpgradeClusterLevel: true,
@@ -445,6 +477,13 @@ export default defineComponent({
         cidrStep: '',
         maxNodePodNum: '',
         maxServiceNum: '',
+        enableVPCCni: false,
+        isStaticIpMode: true, // 暂不支持配置
+        claimExpiredSeconds: 300,
+        subnetSource: {
+          new: [],
+        },
+        networkMode: 'tke-route-eni', // 共享网卡模式
       },
     });
     const networkConfigRules = ref({
@@ -473,8 +512,42 @@ export default defineComponent({
         {
           message: $i18n.t('generic.validate.required'),
           trigger: 'blur',
-          validator: () => Object.keys(networkConfig.value.networkSettings)
-            .every(key => !!networkConfig.value.networkSettings[key]),
+          validator: () => networkConfig.value.networkSettings.cidrStep
+          && networkConfig.value.networkSettings.maxNodePodNum
+          && networkConfig.value.networkSettings.maxServiceNum,
+        },
+      ],
+      // POD IP数量
+      podIP: [
+        {
+          trigger: 'blur',
+          message: $i18n.t('generic.validate.required'),
+          validator() {
+            if (networkConfig.value.networkSettings.enableVPCCni) {
+              const subnetSource = networkConfig.value.networkSettings.subnetSource.new as Array<{
+                ipCnt: number
+                zone: string
+              }>;
+              return subnetSource.length && subnetSource.every(item => item.ipCnt && item.zone);
+            }
+            return true;
+          },
+        },
+        {
+          trigger: 'custom',
+          message: $i18n.t('tke.validate.podIPsNeedLessThanVpcIPs'),
+          validator() {
+            const subnetSource = networkConfig.value.networkSettings.subnetSource.new as Array<{
+              ipCnt: number
+              zone: string
+            }>;
+            const counts = subnetSource.reduce((counts, item) => {
+              counts += item.ipCnt;
+              return counts;
+            }, 0);
+
+            return counts <= (curVpc.value.availableIPNum || 0);
+          },
         },
       ],
     });
@@ -540,17 +613,12 @@ export default defineComponent({
     const handleGetTemplateList = async () => {
       templateLoading.value = true;
       templateList.value = await $store.dispatch('clustermanager/fetchCloudList');
-      basicInfo.value.provider = templateList.value[0]?.cloudID || '';
       templateLoading.value = false;
     };
     // 版本列表
     const versionList = computed(() => {
       const cloud = templateList.value.find(item => item.cloudID === basicInfo.value.provider);
       return cloud?.clusterManagement.availableVersion || [];
-    });
-    // 区域列表
-    watch(() => basicInfo.value.provider, () => {
-      getRegionList();
     });
     const regionList = ref<any[]>([]);
     const regionLoading = ref(false);
@@ -623,6 +691,12 @@ export default defineComponent({
     };
     // 当前选择VPC
     const curVpc = computed(() => vpcList.value.find(item => item.vpcID === networkConfig.value.vpcID));
+
+    // 设置vpc-cni子网
+    const handleSetSubnetSourceNew = (data) => {
+      networkConfig.value.networkSettings.subnetSource.new = data;
+    };
+
     // IP数量列表
     const cidrStepList = computed(() => {
       const cloud = templateList.value.find(item => item.cloudID === basicInfo.value.provider);
@@ -785,6 +859,7 @@ export default defineComponent({
 
     onMounted(() => {
       handleGetTemplateList();
+      getRegionList();
     });
 
     return {
@@ -828,6 +903,7 @@ export default defineComponent({
       validateMaster,
       validateNodes,
       vpcRemoteSearch,
+      handleSetSubnetSourceNew,
     };
   },
 });

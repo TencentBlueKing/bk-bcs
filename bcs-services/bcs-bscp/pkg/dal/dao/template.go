@@ -90,8 +90,7 @@ func (dao *templateDao) UpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.Tem
 		return err
 	}
 
-	if _, err := q.Where(m.BizID.Eq(g.Attachment.BizID), m.ID.Eq(g.ID)).
-		Select(m.Memo, m.Reviser, m.UpdatedAt).Updates(g); err != nil {
+	if _, err := q.Where(m.BizID.Eq(g.Attachment.BizID), m.ID.Eq(g.ID)).UpdateColumns(g); err != nil {
 		return err
 	}
 

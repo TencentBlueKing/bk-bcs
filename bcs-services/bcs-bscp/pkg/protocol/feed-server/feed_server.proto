@@ -34,6 +34,20 @@ service Upstream {
   rpc ListApps(ListAppsReq) returns (ListAppsResp) {}
   rpc AsyncDownload(AsyncDownloadReq) returns (AsyncDownloadResp) {}
   rpc AsyncDownloadStatus(AsyncDownloadStatusReq) returns (AsyncDownloadStatusResp) {}
+
+  // 获取单个kv实例
+  rpc GetSingleKvValue(GetSingleKvValueReq) returns (GetSingleKvValueResp) {
+    option (google.api.http) = {
+      post: "/api/v1/feed/biz/{biz_id}/kvs/value/{key}"
+      body: "*"
+    };
+  }
+  rpc GetSingleKvMeta(GetSingleKvValueReq) returns (GetSingleKvMetaResp) {
+    option (google.api.http) = {
+      post: "/api/v1/feed/biz/{biz_id}/kvs/metadata/{key}"
+      body: "*"
+    };
+  }
 }
 
 // SidecarSpec defines a sidecar's specifics.
@@ -226,4 +240,18 @@ enum AsyncDownloadStatus {
   SUCCESS = 0;
   DOWNLOADING = 1;
   FAILED = 2;
+}
+
+message GetSingleKvValueReq {
+  uint32 biz_id = 1;
+  AppMeta app_meta = 2;
+  string key = 3;
+}
+
+message GetSingleKvValueResp {
+  string data = 1;
+}
+
+message GetSingleKvMetaResp {
+  KvMeta data = 1;
 }

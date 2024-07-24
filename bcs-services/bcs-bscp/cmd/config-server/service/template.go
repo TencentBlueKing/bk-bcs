@@ -521,7 +521,7 @@ func (s *Service) BatchUpsertTemplates(ctx context.Context, req *pbcs.BatchUpser
 	if err := g.Wait(); err != nil {
 		return nil, err
 	}
-	in := &pbds.BatchUpsertTemplatesReq{Items: items}
+	in := &pbds.BatchUpsertTemplatesReq{Items: items, TemplateSetIds: req.GetTemplateSetIds(), BizId: req.GetBizId()}
 	data, err := s.client.DS.BatchUpsertTemplates(grpcKit.RpcCtx(), in)
 	if err != nil {
 		return nil, err

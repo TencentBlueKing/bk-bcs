@@ -33,25 +33,15 @@
             placement: 'top',
           }" />
       </div>
-      <cluster-selector
-        ref="clusterSelectorRef"
-        class="cluster-selector"
-        @current-cluster="(val) => (clusterInfo = val)" />
     </div>
   </div>
 </template>
 <script lang="ts" setup>
-  import { ref, watch, h } from 'vue';
+  import { ref, h } from 'vue';
   import { Info } from 'bkui-vue/lib/icon';
-  import ClusterSelector from '../components/cluster-selector.vue';
   import { useI18n } from 'vue-i18n';
 
-  interface IclusterInfo {
-    name: string;
-    value: string;
-  }
-
-  const emits = defineEmits(['send-cluster']);
+  const emits = defineEmits(['send-switcher']);
 
   const { t } = useI18n();
 
@@ -76,43 +66,16 @@
     ],
   );
 
-  const clusterSelectorRef = ref();
   const clusterSwitch = ref(false);
   const isShow = ref(false);
-  const clusterInfo = ref<IclusterInfo>({
-    name: '',
-    value: '',
-  });
-
-  watch(clusterInfo, () => {
-    sendVal({ clusterSwitch: clusterSwitch.value, clusterInfo: clusterInfo.value });
-  });
-
-  // 验证是否打开p2p网络加速开关
-  const isValid = () => {
-    if (clusterSwitch.value && !(clusterInfo.value.name || clusterInfo.value.value)) {
-      clusterSelectorRef.value.validateCluster();
-      return false;
-    }
-    return true;
-  };
 
   const handleSwitcher = (val: boolean) => {
     clusterSwitch.value = val;
-    // 关闭开关清空值
-    if (!val) {
-      clusterInfo.value.name = '';
-      clusterInfo.value.value = '';
-    }
-    sendVal({ clusterSwitch: clusterSwitch.value, clusterInfo: clusterInfo.value });
+    sendVal(clusterSwitch.value);
   };
-  const sendVal = ({ clusterSwitch, clusterInfo }: { clusterSwitch: boolean; clusterInfo: IclusterInfo }) => {
-    emits('send-cluster', { clusterSwitch, clusterInfo });
+  const sendVal = (clusterSwitch: boolean) => {
+    emits('send-switcher', clusterSwitch);
   };
-
-  defineExpose({
-    isValid,
-  });
 </script>
 
 <style scoped lang="scss">
@@ -159,55 +122,6 @@
     font-size: 14px;
     color: #979ba5;
     cursor: pointer;
-  }
-  .cluster-selector {
-    margin-top: 8px;
-  }
-  .label-item {
-    position: relative;
-    width: 100%;
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    .label-item-icon {
-      margin: 0 4px;
-      font-size: 12px;
-    }
-    & + .label-item {
-      margin-top: 18px;
-    }
-    .bk-input-wrap {
-      flex: 1;
-      &.is-error {
-        border-color: #ea3636;
-        &:focus-within {
-          border-color: #3a84ff;
-        }
-      }
-    }
-    .error-msg {
-      position: absolute;
-      left: 0;
-      bottom: -14px;
-      font-size: 12px;
-      line-height: 1;
-      white-space: nowrap;
-      color: #ea3636;
-      animation: form-error-appear-animation 0.15s;
-      &.is--value {
-        left: 50%;
-      }
-    }
-  }
-  @keyframes form-error-appear-animation {
-    0% {
-      opacity: 0;
-      transform: translateY(-30%);
-    }
-    100% {
-      opacity: 1;
-      transform: translateY(0);
-    }
   }
   .popover-wrap {
     font-size: 14px;

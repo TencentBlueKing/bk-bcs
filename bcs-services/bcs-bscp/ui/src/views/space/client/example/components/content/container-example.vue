@@ -40,10 +40,7 @@
     labelArr: [],
     tempDir: '',
     clusterSwitch: false,
-    clusterInfo: {
-      name: '', // 集群名称
-      value: '', // 集群id
-    },
+    clusterInfo: '',
   });
   const bkBizId = ref(String(route.params.spaceId));
   const replaceVal = ref('');
@@ -69,7 +66,10 @@
     let updateString = replaceVal.value;
     updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_BkBizId }}', bkBizId.value);
     updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_ServiceName }}', basicInfo!.serviceName.value);
-    replaceVal.value = updateString.replaceAll('{{ .Bk_Bscp_Variable_FEED_ADDR }}', (window as any).FEED_ADDR);
+    updateString = updateString.replaceAll(
+      '{{ .Bk_Bscp_Variable_FEED_ADDR }}',
+      `${(window as any).FEED_HOST}:${(window as any).FEED_GRPC_PORT}`,
+    );
     // p2p网络加速打开后动态插入内容
     if (optionData.value.clusterSwitch) {
       const p2pPart1 = `
@@ -78,7 +78,7 @@
               value: 'true'
             # 以下几个环境变量在启用 p2p 文件加速时为必填项
             # BCS集群ID
-            - name: {{ .Bk_Bscp_Variable_Cluster_Name }}
+            - name: cluster_id
               value: {{ .Bk_Bscp_Variable_Cluster_Value }}
             # BSCP容器名称
             - name: container_name
@@ -91,7 +91,7 @@
       const p2pPart2 = `
             - name: enable_p2p_download
               value: 'true'
-            - name: {{ .Bk_Bscp_Variable_Cluster_Name }}
+            - name: cluster_id
               value: {{ .Bk_Bscp_Variable_Cluster_Value }}
             - name: container_name
               value: bscp-sidecar
@@ -131,15 +131,9 @@
         memo: '',
       },
       {
-        name: 'Bk_Bscp_Variable_Cluster_Name',
-        type: '',
-        default_val: `${optionData.value.clusterInfo?.name}`,
-        memo: '',
-      },
-      {
         name: 'Bk_Bscp_Variable_Cluster_Value',
         type: '',
-        default_val: `${optionData.value.clusterInfo?.value}`,
+        default_val: `${optionData.value.clusterInfo}`,
         memo: '',
       },
     ];

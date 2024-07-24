@@ -302,6 +302,14 @@ func getTemplateParameterByName(name string, cluster *proto.Cluster, extra Extra
 		return envs, nil
 	case nodeGroupID:
 		return extra.NodeGroupID, nil
+	case clusterCloudArea:
+		return fmt.Sprintf("%v", getClusterCloudArea(cluster)), nil
+	case clusterOsType:
+		return getClusterOsType(cluster), nil
+	case clusterK8sVersion:
+		return cluster.GetClusterBasicSettings().GetVersion(), nil
+	case clusterProvider:
+		return cluster.GetProvider(), nil
 	default:
 	}
 

@@ -1037,6 +1037,14 @@ option (google.api.http) = {
       get: "/api/v1/config/biz/{biz_id}/apps/{app_id}/kvs/compare_conflicts"
     };
   }
+
+  // 获取模板和非模板配置项数量
+  rpc GetTemplateAndNonTemplateCICount(GetTemplateAndNonTemplateCICountReq)
+      returns (GetTemplateAndNonTemplateCICountResp) {
+    option (google.api.http) = {
+      get: "/api/v1/config/biz_id/{biz_id}/apps/{app_id}/config_items/count"
+    };
+  }
 }
 
 message UpdateCredentialScopeReq {
@@ -1854,6 +1862,7 @@ message BatchUpsertTemplatesReq {
   uint32 biz_id = 1;
   uint32 template_space_id = 2;
   repeated Item items = 3;
+  repeated uint32 template_set_ids = 4;
 }
 
 message BatchUpsertTemplatesResp {
@@ -1986,6 +1995,7 @@ message UpdateTemplateRevisionReq {
   string privilege = 12;
   string sign = 13;
   uint64 byte_size = 14;
+  uint32 template_revision_id = 15;
 }
 
 message UpdateTemplateRevisionResp {
@@ -2950,4 +2960,14 @@ message CompareKvConflictsResp {
   }
   repeated Kv exist = 1;
   repeated Kv non_exist = 2;
+}
+
+message GetTemplateAndNonTemplateCICountReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+}
+
+message GetTemplateAndNonTemplateCICountResp {
+  uint64 config_item_count = 1;
+  uint64 template_config_item_count = 2;
 }

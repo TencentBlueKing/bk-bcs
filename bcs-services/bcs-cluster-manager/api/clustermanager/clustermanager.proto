@@ -1770,7 +1770,7 @@ message NetworkSetting {
   }];
   SubnetSource subnetSource = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "subnetSource",
-    description: "集群VPC-CNI模式是否为非固定IP，默认: FALSE 非固定IP"
+    description: "集群VPC-CNI模式下的使用子网情况"
   }];
   bool isStaticIpMode = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "isStaticIpMode",
@@ -1803,6 +1803,10 @@ message NetworkSetting {
   string status = 15[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "status",
     description: "集群网络状态, 主要是变更网络组件过程中记录网络状态"
+  }];
+  string networkMode = 16 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "networkMode",
+    description: "集群VpcCni网络模式(目前支持共享网卡模式tke-route-eni和独占网卡模式tke-direct-eni, 默认情况下是共享网卡模式)"
   }];
 }
 
@@ -3383,11 +3387,22 @@ message CloudNetworkInfo {
       title: "underlayAutoSteps",
       description: "underlay网络模式下自动分配子网的步长"
     }];
+  repeated NetworkMode vpcCniModes = 8 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "vpcCniModes",
+      description: "vpc-cni插件下支持的网络模式"
+    }];
 }
 
 message EnvCidrStep {
   string env=1;
   uint32 step=2;
+}
+
+message NetworkMode {
+  string mode=1;
+  bool   default=2;
+  string name=3;
 }
 
 // NodeGroup pool for kubernetes cluster-autoscaling

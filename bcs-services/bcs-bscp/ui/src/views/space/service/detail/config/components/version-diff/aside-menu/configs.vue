@@ -1,5 +1,7 @@
 <template>
-  <div v-bkloading="{ loading }" :class="['configs-menu', { 'search-opened': isOpenSearch }]">
+  <div
+    v-bkloading="{ loading }"
+    :class="['configs-menu', { 'search-opened': isOpenSearch }, { 'en-search-open': isOpenSearch && locale === 'en' }]">
     <div class="title-area">
       <div class="title">{{ t('配置文件') }}</div>
       <div class="title-extend">
@@ -670,6 +672,11 @@
     &.search-opened {
       .groups-wrapper {
         height: calc(100% - 80px);
+      }
+    }
+    &.en-search-open {
+      .groups-wrapper {
+        height: calc(100% - 98px);
       }
     }
   }

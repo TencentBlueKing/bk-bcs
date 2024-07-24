@@ -824,10 +824,144 @@ func matchPattern(name string, match []string) bool {
 	return false
 }
 
+// GetSingleKvMeta 获取单个kv mate data
+func (s *Service) GetSingleKvMeta(ctx context.Context, req *pbfs.GetSingleKvValueReq) (
+	*pbfs.GetSingleKvMetaResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	if req.GetAppMeta() == nil || req.GetAppMeta().App == "" {
+		return nil, status.Error(codes.InvalidArgument, "app_meta is required")
+	}
+
+	credential := getCredential(ctx)
+	if !credential.MatchApp(req.AppMeta.App) {
+		return nil, status.Errorf(codes.PermissionDenied, "not have app %s permission", req.AppMeta.App)
+	}
+
+	if !credential.MatchKv(req.AppMeta.App, req.Key) {
+		return nil, status.Error(codes.PermissionDenied, "no permission get value")
+	}
+
+	appID, err := s.bll.AppCache().GetAppID(kt, req.BizId, req.AppMeta.App)
+	if err != nil {
+		return nil, status.Errorf(codes.Aborted, "get app id failed, %s", err.Error())
+	}
+
+	app, err := s.bll.AppCache().GetMeta(kt, req.BizId, appID)
+	if err != nil {
+		return nil, status.Errorf(codes.Aborted, "get app failed, %s", err.Error())
+	}
+
+	if app.ConfigType != table.KV {
+		return nil, status.Errorf(codes.Aborted, "app not %s type", table.KV)
+	}
+
+	meta := &types.AppInstanceMeta{
+		BizID:  req.BizId,
+		App:    req.AppMeta.App,
+		AppID:  appID,
+		Uid:    req.AppMeta.Uid,
+		Labels: req.AppMeta.Labels,
+	}
+
+	metas, err := s.bll.Release().ListAppLatestReleaseKvMeta(kt, meta)
+	if err != nil {
+		// appid等未找到, 刷新缓存, 客户端重试请求
+		if isAppNotExistErr(err) {
+			s.bll.AppCache().RemoveCache(kt, req.BizId, req.AppMeta.App)
+		}
+		return nil, err
+	}
+
+	var kvMetas *pbfs.KvMeta
+	for _, kv := range metas.Kvs {
+		if kv.Key != req.GetKey() {
+			continue
+		}
+		kvMetas = &pbfs.KvMeta{
+			Key:      req.GetKey(),
+			KvType:   kv.KvType,
+			Revision: kv.Revision,
+			KvAttachment: &pbkv.KvAttachment{
+				BizId: kv.KvAttachment.BizId,
+				AppId: kv.KvAttachment.AppId,
+			},
+			ContentSpec: kv.ContentSpec,
+		}
+	}
+
+	resp := &pbfs.GetSingleKvMetaResp{
+		Data: kvMetas,
+	}
+
+	return resp, nil
+}
+
+// GetSingleKvValue 获取单个kv
+func (s *Service) GetSingleKvValue(ctx context.Context, req *pbfs.GetSingleKvValueReq) (
+	*pbfs.GetSingleKvValueResp, error) {
+
+	kt := kit.FromGrpcContext(ctx)
+	if req.GetAppMeta() == nil || req.GetAppMeta().App == "" {
+		return nil, status.Error(codes.InvalidArgument, "app_meta is required")
+	}
+
+	credential := getCredential(ctx)
+	if !credential.MatchApp(req.AppMeta.App) {
+		return nil, status.Errorf(codes.PermissionDenied, "not have app %s permission", req.AppMeta.App)
+	}
+
+	if !credential.MatchKv(req.AppMeta.App, req.Key) {
+		return nil, status.Error(codes.PermissionDenied, "no permission get value")
+	}
+
+	appID, err := s.bll.AppCache().GetAppID(kt, req.BizId, req.GetAppMeta().App)
+	if err != nil {
+		return nil, status.Errorf(codes.Aborted, "get app id failed, %s", err.Error())
+	}
+
+	app, err := s.bll.AppCache().GetMeta(kt, req.BizId, appID)
+	if err != nil {
+		return nil, status.Errorf(codes.Aborted, "get app failed, %s", err.Error())
+	}
+
+	if app.ConfigType != table.KV {
+		return nil, status.Errorf(codes.Aborted, "app not %s type", table.KV)
+	}
+
+	meta := &types.AppInstanceMeta{
+		BizID:  req.BizId,
+		App:    req.GetAppMeta().App,
+		AppID:  appID,
+		Uid:    req.AppMeta.Uid,
+		Labels: req.AppMeta.Labels,
+	}
+
+	metas, err := s.bll.Release().ListAppLatestReleaseKvMeta(kt, meta)
+	if err != nil {
+		return nil, err
+	}
+
+	rkv, err := s.bll.RKvCache().GetKvValue(kt, req.BizId, appID, metas.ReleaseId, req.Key)
+	if err != nil {
+		// appid等未找到, 刷新缓存, 客户端重试请求
+		if isAppNotExistErr(err) {
+			s.bll.AppCache().RemoveCache(kt, req.BizId, req.GetAppMeta().App)
+		}
+
+		return nil, status.Errorf(codes.Aborted, "get rkv failed, %s", err.Error())
+	}
+
+	kv := &pbfs.GetSingleKvValueResp{
+		Data: rkv.Value,
+	}
+
+	return kv, nil
+}
+
 func (s *Service) handleResourceUsageMetrics(bizID uint32, appName string, resource sfs.ResourceUsage) {
 	s.mc.clientMaxCPUUsage.WithLabelValues(strconv.Itoa(int(bizID)), appName).Set(resource.CpuMaxUsage)
 	s.mc.clientCurrentCPUUsage.WithLabelValues(strconv.Itoa(int(bizID)), appName).Set(resource.CpuUsage)
 	s.mc.clientMaxMemUsage.WithLabelValues(strconv.Itoa(int(bizID)), appName).Set(float64(resource.MemoryMaxUsage))
 	s.mc.clientCurrentMemUsage.WithLabelValues(strconv.Itoa(int(bizID)), appName).Set(float64(resource.MemoryUsage))
-
 }

@@ -439,6 +439,10 @@ generic:
     restarting: Restarting
     pending: Pending
     skip: Skipped
+    enable: Enabling
+    enableFailed: Enable failed
+    disable: Disabling
+    disableFailed: Disable failed
   validate:
     repeatKey: Repeat key
     required: Requiring item
@@ -718,7 +722,6 @@ cluster:
         text: VPC
         deficiencyIpNumTips: The number of available container network IP is insufficient
         availableIpNum: 'Number of ip available: {0}'
-        availableIpNum2: 'Available container network IP {num}'
         businessSpecificVPC: Business-specific VPC
         publicVPC: Public VPC
       networkSetting1:
@@ -759,21 +762,11 @@ cluster:
           expanded, the cluster can be added at most {count}.
       networkMode:
         text: Network Mode
+        cni:
+          route: TKE-ROUTE-ENI
+          direct: TKE-DIRECT-ENI
         overlay:
           text: GlobalRoute
-          desc: >-
-            The global routing network mode is the global routing capability of
-            TKE based on the underlying private network (VPC), which realizes
-            the routing strategy of container network and VPC interoperability.
-        vpc-cni:
-          text: Global router with VPC-CNI hybrid mode
-          desc: >-
-            The cluster supports the global routing mode and VPC-CNI mode. The
-            VPC-CNI network mode is a container network capability implemented
-            by TKE based on CNI and VPC elastic network cards. The VPC-CNI
-            network mode is similar to cloud-native UNDERLAY network mode. If
-            you need to use, please contact BlueWhale container assistant
-            assistance
       applyResource: Apply for node resources
       useExitHost: Use existing server
       index: No.
@@ -875,6 +868,12 @@ cluster:
       quota: Quota
       nodeList: Nodes
       controlConfig: Control plane
+      disableVpcCNI:
+        text: Confirm disable VPC-CNI
+        p1: 'if it is disabled, you cannot create StatefulSet with fixed Pod IP.'
+        p2: >-
+          Please make sure you have deleted all Pods of VPC-CNI mode in the
+          cluster.
     label:
       tkeID: TKE Cluster ID
   ca:
@@ -1442,10 +1441,6 @@ cluster:
       When the container network resources are overused, the container network
       will be automatically expanded. After the expansion, a maximum of
       {maxRemainNodesCount} nodes can be added.
-    article4: >-
-      The number of container network segments has reached the maximum limit. If
-      you need to continue expanding the container network, please contact the
-      container platform administrator.
     button:
       selectPage: Selected on this page
       selectAcrossPage: Cross page
