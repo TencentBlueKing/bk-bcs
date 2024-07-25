@@ -222,14 +222,15 @@
           const fileName = parts.pop() as string;
 
           // 文件名称校验
-          if (fileName.startsWith('.') || !/^[\u4e00-\u9fa5A-Za-z0-9.\-_#%,:?!@$^+=\\[\]{}]+$/.test(fileName)) {
+          // 文件名和路径不能全由.组成
+          if (!/^((?!\.{1,}$)[\u4e00-\u9fa5A-Za-z0-9.\-_#%,:?!@$^+=\\[\]{}]+)$/.test(fileName)) {
             return false;
           }
 
           let isValid = true;
           // 文件路径校验
           parts.some((part) => {
-            if (part.startsWith('.') || !/^[\u4e00-\u9fa5A-Za-z0-9.\-_#%,@^+=\\[\]{}]+$/.test(part)) {
+            if (!/^((?!\.{1,}$)[\u4e00-\u9fa5A-Za-z0-9.\-_#%,:?!@$^+=\\[\]{}]+)$/.test(part)) {
               isValid = false;
               return true;
             }

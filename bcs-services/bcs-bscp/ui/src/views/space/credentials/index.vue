@@ -62,22 +62,23 @@
                   </span>
                 </template>
               </bk-input>
-              <div v-if="row.spec" class="credential-memo">
-                <div v-if="editingNameId !== row.id" class="memo-content" :title="row.spec.memo || '--'">
-                  {{ row.spec.name || '--' }}
+              <div v-if="row.spec" class="credential-edit">
+                <div v-if="editingNameId !== row.id" class="content">
+                  <bk-overflow-title class="name-text" type="tips">
+                    {{ row.spec.name || '--' }}
+                  </bk-overflow-title>
+                  <span class="edit-icon">
+                    <EditLine @click="handleEditName(row.id)" />
+                  </span>
                 </div>
-                <div v-else class="memo-edit">
-                  <div
-                    ref="nameInputRef"
-                    class="edit-name-input"
-                    contenteditable="true"
-                    @blur="handleMemoOrNameBlur(row)">
-                    {{ row.spec.name }}
-                  </div>
-                </div>
-                <div class="edit-icon">
-                  <EditLine @click="handleEditName(row.id)" />
-                </div>
+                <bk-input
+                  v-else
+                  ref="nameInputRef"
+                  class="input"
+                  :model-value="row.spec.name"
+                  :autosize="{ maxRows: 4 }"
+                  :resize="false"
+                  @blur="handleMemoOrNameBlur(row, true, $event)" />
               </div>
             </template>
           </bk-table-column>
@@ -101,24 +102,29 @@
             <template #default="{ row, index }">
               <bk-input
                 v-if="index === 0 && isCreateCredential"
+                type="textarea"
+                :maxlength="200"
+                :resize="false"
                 :placeholder="t('请输入密钥说明')"
                 v-model="createCredentialMemo"></bk-input>
-              <div v-if="row.spec" class="credential-memo">
-                <div v-if="editingMemoId !== row.id" class="memo-content" :title="row.spec.memo || '--'">
-                  {{ row.spec.memo || '--' }}
+              <div v-if="row.spec" class="credential-edit">
+                <div v-if="editingMemoId !== row.id" class="content">
+                  <bk-overflow-title class="name-text" type="tips">
+                    {{ row.spec.memo || '--' }}
+                  </bk-overflow-title>
+                  <span class="edit-icon">
+                    <EditLine @click="handleEditMemo(row)" />
+                  </span>
                 </div>
-                <div v-else class="memo-edit">
-                  <div
-                    ref="memoInputRef"
-                    class="edit-input"
-                    contenteditable="true"
-                    @blur="handleMemoOrNameBlur(row, false)">
-                    {{ row.spec.memo }}
-                  </div>
-                </div>
-                <div class="edit-icon">
-                  <EditLine @click="handleEditMemo(row.id)" />
-                </div>
+                <bk-input
+                  v-else
+                  ref="memoInputRef"
+                  class="textarea"
+                  type="textarea"
+                  v-model="editMemoStr"
+                  :maxlength="200"
+                  :resize="false"
+                  @blur="handleMemoOrNameBlur(row, false, $event)" />
               </div>
             </template>
           </bk-table-column>
@@ -291,6 +297,7 @@
   const editingNameId = ref(0); // 记录当前正在编辑名称的密钥id
   const memoInputRef = ref();
   const nameInputRef = ref();
+  const editMemoStr = ref('');
   const isAssociateSliderShow = ref(false);
   const currentCredential = ref(0);
   const isSearchEmpty = ref(false);
@@ -477,8 +484,13 @@
   const handleSearchInputChange = debounce(() => refreshListWithLoading(), 300);
 
   // 密钥说明编辑
-  const handleEditMemo = (id: number) => {
+  const handleEditMemo = (credential: ICredentialItem) => {
+    const {
+      id,
+      spec: { memo },
+    } = credential;
     editingMemoId.value = id;
+    editMemoStr.value = memo;
     nextTick(() => {
       if (memoInputRef.value) {
         memoInputRef.value.focus();
@@ -497,27 +509,27 @@
   };
 
   // 失焦时保存密钥说明或密钥名称
-  const handleMemoOrNameBlur = async (credential: ICredentialItem, isEditName = true) => {
+  const handleMemoOrNameBlur = async (credential: ICredentialItem, isEditName = true, e: FocusEvent) => {
+    const { name, memo } = credential.spec;
     const params = {
       id: credential.id,
       enable: credential.spec.enable,
       name: credential.spec.name,
       memo: credential.spec.memo,
     };
+    const val = (e.target as HTMLInputElement).value.trim();
     if (isEditName) {
+      params.name = val;
       editingNameId.value = 0;
-      const name = nameInputRef.value.textContent.trim();
-      if (credential.spec.name === name) {
+      if (val === name) {
         return;
       }
-      params.name = name;
     } else {
+      params.memo = val;
       editingMemoId.value = 0;
-      const memo = memoInputRef.value.textContent.trim();
-      if (credential.spec.memo === memo) {
+      if (val === memo) {
         return;
       }
-      params.memo = memo;
     }
     await updateCredential(spaceId.value, params);
     credential.spec.memo = params.memo;
@@ -722,19 +734,46 @@
     background: #ffffff;
   }
   .credential-table {
-    overflow: visible !important;
     :deep(.bk-table-body) {
+      max-height: calc(100vh - 280px);
+      overflow: auto;
       tr.new-row-marked td {
         background: #f2fff4 !important;
       }
       tr.selected td {
         background: #e1ecff !important;
       }
-    }
-    :deep(.bk-table-body) {
-      overflow: visible !important;
       tbody td .cell {
         overflow: visible !important;
+      }
+    }
+    .credential-edit {
+      .content {
+        width: 100%;
+        display: flex;
+        &:hover {
+          .edit-icon {
+            display: block;
+          }
+        }
+        .name-text {
+          margin-right: 4px;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          overflow: hidden;
+        }
+        .edit-icon {
+          display: none;
+          font-size: 12px;
+          color: #979ba5;
+          cursor: pointer;
+          &:hover {
+            color: #3a84ff;
+          }
+        }
+        .textarea {
+          height: 100%;
+        }
       }
     }
     .delete-btn {
@@ -774,51 +813,6 @@
         &:hover {
           color: #3a84ff;
         }
-      }
-    }
-  }
-  .credential-memo {
-    display: flex;
-    align-items: center;
-    &:hover {
-      .edit-icon {
-        display: inline-block;
-      }
-    }
-    .memo-content {
-      max-width: calc(100% - 40px);
-      overflow: hidden;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-    }
-    .edit-input {
-      padding: 6px 10px;
-      min-height: 60px;
-      line-height: 20px;
-      font-size: 12px;
-      color: #63656e;
-      border: 1px solid #c4c6cc;
-      border-radius: 2px;
-      background: #ffffff;
-      outline: none;
-      -webkit-user-modify: read-write-plaintext-only;
-      &:focus {
-        border-color: #3a84ff;
-        box-shadow: 0 0 3px #a3c5fd;
-      }
-    }
-    .edit-name-input {
-      @extend .edit-input;
-      min-height: 32px;
-    }
-    .edit-icon {
-      display: none;
-      padding-left: 16px;
-      font-size: 14px;
-      color: #979ba5;
-      cursor: pointer;
-      &:hover {
-        color: #3a84ff;
       }
     }
   }

@@ -6,6 +6,12 @@
     </div>
   </div>
   <section v-show="!isShowPlaceholder || !placeholder" class="code-editor-wrapper" ref="codeEditorRef"></section>
+  <div v-if="errorMessage" ref="errorMsgRef" class="error-msg-container">
+    <span class="error-icon">
+      <Close />
+    </span>
+    <span class="message">{{ errorMessage }}</span>
+  </div>
 </template>
 <script setup lang="ts">
   import { ref, watch, onMounted, nextTick, computed } from 'vue';
@@ -15,6 +21,7 @@
   import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker.js?worker';
   import htmlWorker from 'monaco-editor/esm/vs/language/html/html.worker.js?worker';
   import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker.js?worker';
+  import { Close } from 'bkui-vue/lib/icon';
   import { IVariableEditParams } from '../../../types/variable';
   import useEditorVariableReplace from '../../utils/hooks/use-editor-variable-replace';
   import { useRoute } from 'vue-router';
@@ -93,6 +100,8 @@
   const variableNameList = ref<string[]>(['']);
   const privateVariableNameList = ref<string[]>(['']);
   const isShowPlaceholder = ref(true);
+  const errorMessage = ref('');
+  const errorMsgRef = ref();
 
   watch(
     () => props.modelValue,
@@ -141,6 +150,24 @@
     },
   );
 
+  watch(
+    () => errorMessage.value,
+    (newVal, oldVal) => {
+      nextTick(() => {
+        if (newVal !== oldVal) {
+          if (newVal) {
+            if (errorMsgRef.value) {
+              const errorMsgHeight = errorMsgRef.value.clientHeight;
+              codeEditorRef.value.style.height = `calc(100% - ${errorMsgHeight}px)`;
+            }
+          } else {
+            codeEditorRef.value.style.height = '100%';
+          }
+        }
+      });
+    },
+  );
+
   const tabSize = computed(() => {
     if (props.language === 'xml' || props.language === 'yaml') return 2;
     return 4;
@@ -148,7 +175,7 @@
 
   onMounted(() => {
     handleVariableList();
-    aotoCompletion();
+    autoCompletion();
     if (!editor) {
       registerLanguage();
       editor = monaco.editor.create(codeEditorRef.value as HTMLElement, {
@@ -269,7 +296,7 @@
     });
   };
   // 联想输入
-  const aotoCompletion = () => {
+  const autoCompletion = () => {
     editorVariableProvide = monaco.languages.registerCompletionItemProvider(props.language || 'custom-language', {
       triggerCharacters: ['{'], // 触发自动补全的字符
       provideCompletionItems(model: any, position: any) {
@@ -323,19 +350,30 @@
 
   // 校验xml、yaml、json数据类型
   const validate = (val: string) => {
+    // json类型
+    if (props.language === 'json') {
+      const validResult = validateJSON(val);
+      errorMessage.value = validResult.result ? '' : validResult.message;
+      return validResult.result;
+    }
+
     let markers: any[] = [];
     if (props.language === 'xml') {
       markers = validateXML(val);
     } else if (props.language === 'yaml') {
       markers = validateYAML(val);
-    } else if (props.language === 'json') {
-      return validateJSON(val);
-    } else {
-      return;
     }
-    // 添加错误行
+
+    if (markers.length > 0) {
+      const { startLineNumber, startColumn, message } = markers[0];
+      errorMessage.value = `${message} at line ${startLineNumber}, column ${startColumn}`;
+    } else {
+      errorMessage.value = '';
+    }
+
+    // 编辑器设置错误标记
     monaco.editor.setModelMarkers(editor.getModel() as monaco.editor.ITextModel, 'error', markers);
-    // 返回当前内容是否正确
+
     return !markers.length;
   };
 
@@ -402,6 +440,29 @@
       .lineContent {
         color: #63656e;
       }
+    }
+  }
+  .error-msg-container {
+    display: flex;
+    align-items: flex-start;
+    padding: 8px 16px;
+    background: #212121;
+    border-left: 4px solid #b34747;
+    max-height: 60px;
+    overflow: auto;
+    .error-icon {
+      display: flex;
+      align-items: center;
+      color: #b34747;
+      height: 20px;
+      font-size: 12px;
+    }
+    .message {
+      margin-left: 8px;
+      color: #dcdee5;
+      line-height: 20px;
+      font-size: 12px;
+      word-break: break-all;
     }
   }
 </style>

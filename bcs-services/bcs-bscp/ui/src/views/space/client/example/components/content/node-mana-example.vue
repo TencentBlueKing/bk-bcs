@@ -38,7 +38,10 @@
               <div class="service-item">
                 <span :class="['item-label', { 'item-label--en': locale === 'en' }]"> {{ $t('服务名称') }}： </span>
                 <span class="bk-form-content">
-                  <span class="content-em" @click="copyText(basicInfo!.serviceName.value)">
+                  <span
+                    class="content-em"
+                    v-if="basicInfo!.serviceName.value"
+                    @click="copyText(basicInfo!.serviceName.value)">
                     {{ basicInfo!.serviceName.value }} <copy-shape class="icon-shape" />
                   </span>
                 </span>
@@ -51,10 +54,12 @@
             </span>
           </bk-form-item>
           <bk-form-item :label="$t('业务ID：')">
-            <span class="content-em" @click="copyText(bizId)"> {{ bizId }} <copy-shape class="icon-shape" /> </span>
+            <span class="content-em" v-if="bizId" @click="copyText(bizId)">
+              {{ bizId }} <copy-shape class="icon-shape" />
+            </span>
           </bk-form-item>
           <bk-form-item :label="$t('临时目录：')">
-            <span class="content-em" @click="copyText(optionData.tempDir)">
+            <span class="content-em" v-show="optionData.tempDir" @click="copyText(optionData.tempDir)">
               {{ optionData.tempDir }} <copy-shape class="icon-shape" />
             </span>
           </bk-form-item>
@@ -64,7 +69,7 @@
             </span>
           </bk-form-item>
           <bk-form-item :label="`${$t('客户端密钥')}:`">
-            <span class="content-em" @click="copyText(optionData.clientKey)">
+            <span class="content-em" v-if="optionData.clientKey" @click="copyText(optionData.clientKey)">
               {{ optionData.privacyCredential }} <copy-shape class="icon-shape" />
             </span>
           </bk-form-item>
@@ -82,7 +87,7 @@
   import BkMessage from 'bkui-vue/lib/message';
   import FormOption from '../form-option.vue';
   import { useI18n } from 'vue-i18n';
-  import { cloneDeep } from 'lodash';
+  // import { cloneDeep } from 'lodash';
 
   interface labelItem {
     key: String;
@@ -102,9 +107,11 @@
     '^[a-z0-9A-Z]([-_a-z0-9A-Z]*[a-z0-9A-Z])?((\\.|\\/)[a-z0-9A-Z]([-_a-z0-9A-Z]*[a-z0-9A-Z])?)*$',
   );
   const valueValidateReg = new RegExp(/^(?:-?\d+(\.\d+)?|[A-Za-z0-9]([-A-Za-z0-9_.]*[A-Za-z0-9])?)$/);
+  const sysDirectories: string[] = ['/bin', '/boot', '/dev', '/lib', '/lib64', '/proc', '/run', '/sbin', '/sys'];
 
+  const fileOptionRef = ref();
   const bizId = ref(String(route.params.spaceId));
-  const feedAddr = ref((window as any).FEED_ADDR);
+  const feedAddr = ref((window as any).GRPC_ADDR);
   // fileOption组件传递过来的数据汇总
   const optionData = ref({
     clientKey: '',
@@ -113,10 +120,12 @@
     tempDir: '',
   });
 
-  const getOptionData = (data: any) => {
+  const getOptionData = async (data: any) => {
+    let labelArr = [];
+    let tempDir = data.tempDir;
     // 标签展示方式加工
     if (data.labelArr.length) {
-      const labelArr = data.labelArr.map((item: string) => {
+      labelArr = data.labelArr.map((item: string) => {
         // 转换字符串
         let [key, value] = item.replace(/"/g, '').split(':');
         // 与其他模板同样校验
@@ -124,13 +133,29 @@
         value = valueValidateReg.test(value) ? value : '';
         return { key, value };
       });
-      optionData.value = {
-        ...data,
-        labelArr,
-      };
-    } else {
-      optionData.value = cloneDeep(data);
     }
+    // 临时目录展示方式加工
+    if (tempDir) {
+      if (sysDirectories.some((dir) => tempDir === dir || tempDir.startsWith(`${dir}/`))) {
+        tempDir = '';
+      }
+      if (!tempDir.startsWith('/') || tempDir.endsWith('/')) {
+        tempDir = '';
+      }
+      const parts = tempDir.split('/').slice(1);
+      parts.some((part: string) => {
+        if (part.startsWith('.') || !/^[\u4e00-\u9fa5A-Za-z0-9.\-_#%,@^+=\\[\]{}]+$/.test(part)) {
+          tempDir = '';
+          return true;
+        }
+        return false;
+      });
+    }
+    optionData.value = {
+      ...data,
+      tempDir,
+      labelArr,
+    };
   };
 
   const linkTo = (url: string) => {

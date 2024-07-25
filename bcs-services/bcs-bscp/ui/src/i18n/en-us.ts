@@ -74,7 +74,6 @@ export default {
   没有匹配到配置项: 'No configuration item was matched',
   请先在左侧表单设置关联规则并预览: 'Please first set the association rules in the left form and preview',
   删除服务成功: 'Service deleted successfully',
-  log_当前版本: 'Version',
 
   // 导航栏
   服务配置中心: 'BSCP',
@@ -465,6 +464,8 @@ export default {
   '文件上传失败，请重新上传文件': 'File upload failed, please re-upload the file',
   新版本已生成: 'New version has been generated',
   未上线版本的分组: 'Group of unlaunched versions',
+  '文件格式错误，请重新选择文本文件上传': 'File format error, please re-select the text file to upload',
+  只查看差异项: 'Only view differences',
 
   // 分组管理
   新增分组: 'New group',
@@ -494,7 +495,7 @@ export default {
   '服务名称/服务版本': 'Service name/Service version',
   服务版本: 'Service version',
   '未在配置文件中检测到变量，请确保配置文件中包含变量后再尝试设置变量': 'Variable not detected in the configuration file. Please ensure the configuration file includes the variable before attempting to set it.',
-  标签最大数量为5个: 'Label maximum number is 5',
+  '分组最多支持 5 个标签选择器': 'The group supports a maximum of 5 tag selectors',
 
   // 全局变量
   配置模板与变量: 'Configure templates and variables',
@@ -671,6 +672,8 @@ export default {
   脚本更新成功: 'Script updated successfully',
   删除脚本成功: 'Delete script successfully',
   '脚本已被引用，不能删除': 'Script is referenced, cannot be deleted',
+  '脚本名称有误，请重新输入': 'Script name is incorrect, please re-enter',
+  请输入脚本名称: 'Please enter script name',
 
   // 服务密钥
   '密钥仅用于 SDK/API 拉取配置使用。服务管理/配置管理/分组管理等功能的权限申请，请前往': 'The key is only used for SDK/API pull configurations. To apply for permissions for functions such as service management/configuration management/group management, please go to',
@@ -746,7 +749,7 @@ export default {
   Get方法: 'Get',
   Watch方法: 'Watch',
   'Get方法：用于一次性拉取最新的配置信息，适用于需要获取并更新配置的场景。': 'Get method: Used for fetching the latest configuration information in a single request, suitable for scenarios requiring both retrieval and update of configurations',
-  'Watch方法：通过建立长连接，实时监听配置版本的变更，当新版本的配置发布时，将自动调用回调方法处理新的配置信息，适用于需要实时响应配置变更的场景。': 'Watch method: Establish a long connection to monitor changes in the configuration version in real time. When the new configuration version is released, the callback method is automatically invoked to process the new configuration information. This method is applicable to scenarios that require real-time response to configuration changes.',
+  'Watch方法：通过建立长连接，实时监听配置版本的变更，当新版本的配置发布时，将自动调用回调方法处理新的配置信息，适用于需要实时响应配置变更的场景。': 'Shell method: Establish a long connection to monitor changes in the configuration version in real time. When the new configuration version is released, the callback method is automatically invoked to process the new configuration information. This method is applicable to scenarios that require real-time response to configuration changes.',
   节点管理插件客户端需要在: 'Node management plug-in client needs to be in',
   节点管理平台: 'Node management platform',
   '部署“bkbscp (bscp服务配置分发和热更新)”插件，部署详情请参考产品白皮书：': 'Deploy the bkbscp (bscp Service Configuration Distribution and Hot Update) plug-in. For details, see the product white paper:',
@@ -783,13 +786,26 @@ export default {
   '用于主动获取配置项值的场景，此方法不会监听服务器端的配置更改\n有关Python SDK的部署环境和依赖组件，请参阅白皮书中的 [BSCP Python SDK依赖说明]': 'For scenarios where configuration values are actively retrieved, this method does not monitor server-side configuration changes\nFor information on the deployment environment and dependent components of the Python SDK, please refer to the [dependency instructions in the BSCP Python SDK]',
   '通过建立长连接，实时监听配置版本的变更，当新版本的配置发布时，将自动调用回调方法处理新的配置信息，适用于需要实时响应配置变更的场景\n有关Python SDK的部署环境和依赖组件，请参阅白皮书中的 [BSCP Python SDK依赖说明]': 'By establishing a persistent connection, real-time changes to configuration versions are monitored. When a new version of configuration is released, the callback method is automatically invoked to handle the new configuration information. This method is suitable for scenarios requiring real-time response to configuration changes\nFor information on the deployment environment and dependent components of the Python SDK, please refer to the [dependency instructions in the BSCP Python SDK]',
   '请将 {{ YOUR_KEY }} 替换为您的实际 Key': 'Please replace {\'{{ YOUR_KEY }}\'} with your actual key',
-  '设置日志自定义 Handler': 'Configure custom logging Handler',
-  '在线服务, 可设置 metrics': 'Online service with configurable metrics',
-  初始化配置信息: 'Initialize configuration information',
   复制命令: 'Command Copy',
   '仅支持字母，数字，\'-\'，\'_\'，\'.\' 及 \'/\' 且需以字母数字开头和结尾': 'Only supports letters, numbers, \'-\', \'_\', \'.\' and \'/\' characters, and must start and end with a letter or number',
   '需以字母、数字开头和结尾，可包含 \'-\'，\'_\'，\'.\' 和字母数字及负数': 'Must start and end with a letter or number, can include \'-\', \'_\', \'.\', and alphanumeric characters, as well as negative numbers',
   服务标签: 'service label',
+  '启用 P2P 网络加速': 'Enable P2P network acceleration',
+  查看说明: 'View instructions',
+  '启用 P2P 网络加速主要适用于业务但配置文件较大及大量节点拉取配置的场景，以实现更优的文件传输速度。': 'Enabling P2P network acceleration is primarily suitable for scenarios where business configuration files are large and many nodes are pulling configurations, to achieve better file transfer speeds',
+  '以下是启用 P2P 网络加速的基本条件，已确保实现有效的网络加速：': 'Below are the basic conditions for enabling P2P network acceleration, ensuring effective network acceleration:',
+  '⒈ 单个配置文件的大小应超过 50MB': '⒈ The size of a single configuration file should exceed 50MB',
+  '⒉ 客户端实例数量应超过 50 个': '⒉ The number of client instances should exceed 50',
+  'P2P 网络加速依赖于 BCS 集群的元数据，请指定客户端即将部署的 BCS 集群 ID。': 'P2P network acceleration relies on the metadata of the BCS cluster. Please specify the BCS cluster ID to which the client will soon be deployed',
+  '更多 P2P 前置依赖信息，请查阅白皮书 ': 'For more P2P prerequisite information, please refer to the white paper ',
+  'P2P 网络加速': 'P2P network acceleration',
+  'BCS 集群 ID': 'BCS cluster ID',
+  搜索视图: 'Search view',
+  '请先选择BCS 集群 ID，替换下方示例代码后，再尝试复制示例': 'Please select the BCS cluster ID first, replace the example code below, and then try to copy the example',
+  '请输入配置项名称（key）用以获取对应值（value）': 'Please enter the configuration item name (key) to retrieve the corresponding value',
+  'HTTP(S)接口调用': 'HTTP(S) interface invocation',
+  '请输入BCS 集群 ID，替换下方示例代码后，再尝试复制示例': 'Please enter the BCS cluster ID, replace the example code below, and then try copying the example',
+  'BCS集群ID须符合以下格式：BCS-K8S-xxxxx，其中xxxxx为5位数字': 'The BCS cluster ID must follow the format: BCS-K8S-xxxxx, where xxxxx is a five-digit numbe',
 
   // 公共组件
   页面不存在: 'Page does not exist',

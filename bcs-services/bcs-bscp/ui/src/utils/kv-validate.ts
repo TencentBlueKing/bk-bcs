@@ -33,9 +33,15 @@ export const validateJSON = (jsonString: string) => {
   try {
     // 尝试解析JSON文本
     JSON.parse(jsonString);
-    return true;
+    return {
+      result: true,
+      message: '',
+    };
   } catch (e) {
-    return false;
+    return {
+      result: false,
+      message: e,
+    };
   }
 };
 

@@ -37,7 +37,7 @@
             </td>
           </tr>
           <tr v-if="props.configList.length === 0">
-            <td class="td-cell" :colspan="3">
+            <td class="td-cell" :colspan="2">
               <bk-exception class="empty-tips" type="empty" scene="part">{{ t('暂无配置文件') }}</bk-exception>
             </td>
           </tr>

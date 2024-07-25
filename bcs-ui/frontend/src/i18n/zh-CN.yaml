@@ -416,6 +416,10 @@ generic:
     restarting: 重启中
     pending: 处理中
     skip: 已跳过
+    enable: 启用中
+    enableFailed: 开启失败
+    disable: 禁用中
+    disableFailed: 禁用失败
   validate:
     name: 仅支持字母，数字和字符(-)，且以字母开头
     repeatKey: 重复键
@@ -655,7 +659,6 @@ cluster:
         text: 所属VPC
         deficiencyIpNumTips: 可用容器网络IP数量不足
         availableIpNum: '可用IP数量: {0}'
-        availableIpNum2: '可用容器网络 IP {num} 个'
         businessSpecificVPC: 业务专属VPC
         publicVPC: 公共VPC
       networkSetting1:
@@ -678,15 +681,11 @@ cluster:
         article2: '当容器网络资源超额使用时，会触发容器网络自动扩容，扩容后集群最多可以添加 {count} 个节点'
       networkMode:
         text: 网络模式
+        cni:
+          route: 共享网卡模式
+          direct: 独占网卡模式
         overlay:
           text: 全局路由模式
-          desc: >-
-            全局路由网络模式是TKE基于底层私有网络（VPC）的全局路由能力，实现了容器网络和VPC互访的路由策略，类似云原生的Overlay网络模式
-        vpc-cni:
-          text: 全局路由与 VPC-CNI 混合模式
-          desc: >-
-            集群同时支持全局路由模式与VPC-CNI模式，VPC-CNI 网络模式是 TKE 基于 CNI 和 VPC
-            弹性网卡实现的容器网络能力，VPC-CNI网络模式类似云原生的Underlay网络模式，如需使用请联系蓝鲸容器助手协助
       applyResource: 申请节点资源
       useExitHost: 使用已有服务器
       index: 序列
@@ -748,6 +747,10 @@ cluster:
       quota: 配额管理
       nodeList: 节点列表
       controlConfig: 控制面配置
+      disableVpcCNI:
+        text: 确定关闭VPC-CNI模式
+        p1: 关闭后将不再支持创建固定 Pod IP 的 StatefulSet
+        p2: 请确保集群内已删除所有 VPC-CNI 模式的Pod
     label:
       tkeID: TKE集群ID
   ca:
@@ -1163,7 +1166,6 @@ cluster:
     article1: 集群就绪后，您可以创建命名空间、推送项目镜像到仓库，然后通过服务配置模板集部署服务。
     article2: '当前集群已添加节点数（含Master） {nodes}，还可添加节点数 {realRemainNodesCount}。'
     article3: '当容器网络资源超额使用时，会触发容器网络自动扩容，扩容后最多可以添加 {maxRemainNodesCount} 个节点。'
-    article4: 容器网络网段数量已达到最大限制，如需继续扩容容器网络，请联系容器平台管理员。
     button:
       selectPage: 本页全选
       selectAcrossPage: 跨页全选

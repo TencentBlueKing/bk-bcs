@@ -21,6 +21,7 @@
           :max-height="maxTableHeight"
           :checked="checkedPkgs"
           :is-row-select-enable="isRowSelectEnable"
+          show-overflow-tooltip
           @selection-change="handleSelectionChange"
           @select-all="handleSelectAll">
           <bk-table-column v-if="citedList.length > 1" type="selection" min-width="30" width="40" />
@@ -243,6 +244,13 @@
 </style>
 <style lang="scss">
   .move-out-from-pkgs-dialog.bk-modal-wrapper {
+    .bk-dialog-header {
+      line-height: normal !important;
+      .bk-dialog-title {
+        white-space: pre-wrap !important;
+      }
+    }
+
     .bk-modal-footer {
       background: #ffffff;
       border-top: none;

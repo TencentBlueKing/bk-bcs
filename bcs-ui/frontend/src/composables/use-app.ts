@@ -34,6 +34,9 @@ export interface ICluster {
     serviceIPv4CIDR: string
     isStaticIpMode: boolean
     eniSubnetIDs: string[]
+    enableVPCCni: boolean
+    status: string
+    networkMode: 'tke-route-eni' | 'tke-direct-eni'
   }
   master: any
   provider: CloudID,

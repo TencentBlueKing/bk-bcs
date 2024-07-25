@@ -70,7 +70,7 @@
             filterable
             multiple
             show-select-all
-            @focus="handleFocusConfigSelect"
+            @toggle="handleToggleConfigSelectShow"
             @blur="handleCloseConfigSelect">
             <template #trigger>
               <div class="select-btn">{{ $t('选择配置项') }}</div>
@@ -269,6 +269,9 @@
     } else {
       existConfigList.value = data;
     }
+    selectedConfigIds.value = selectedConfigIds.value.filter((key) => {
+      return importConfigList.value.some((config) => config.key === key);
+    });
     isFormChange.value = true;
   };
 
@@ -283,6 +286,7 @@
       const findConfig = importConfigList.value.find((item) => item.key === key);
       if (!findConfig) {
         const addConfig = allConfigList.value.find((item) => item.key === key);
+        console.log(addConfig);
         if (addConfig?.is_exist) {
           existConfigList.value.push(addConfig!);
         } else {
@@ -295,7 +299,6 @@
     importConfigList.value.forEach((config) => {
       if (!selectedConfigIds.value.includes(config.key)) {
         if (config.is_exist) {
-          console.log(1);
           existConfigList.value = existConfigList.value.filter((item) => item.key !== config.key);
         } else {
           nonExistConfigList.value = nonExistConfigList.value.filter((item) => item.key !== config.key);
@@ -311,14 +314,15 @@
     selectedConfigIds.value = cloneDeep(lastSelectedConfigIds.value);
   };
 
-  const handleFocusConfigSelect = () => {
-    lastSelectedConfigIds.value = cloneDeep(selectedConfigIds.value);
+  const handleToggleConfigSelectShow = (isShow: boolean) => {
+    if (isShow) {
+      lastSelectedConfigIds.value = cloneDeep(selectedConfigIds.value);
+    }
   };
 </script>
 
 <style scoped lang="scss">
   .select-wrap {
-
     .import-type-select {
       display: flex;
     }
@@ -390,7 +394,7 @@
         top: 50%;
         transform: translateY(-50%);
         .select-btn {
-          width: 102px;
+          min-width: 102px;
           height: 32px;
           background: #ffffff;
           border: 1px solid #c4c6cc;

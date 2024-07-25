@@ -1,5 +1,7 @@
 <template>
-  <div v-bkloading="{ loading }" :class="['configs-menu', { 'search-opened': isOpenSearch }]">
+  <div
+    v-bkloading="{ loading }"
+    :class="['configs-menu', { 'search-opened': isOpenSearch }, { 'en-search-open': isOpenSearch && locale === 'en' }]">
     <div class="title-area">
       <div class="title">{{ t('配置文件') }}</div>
       <div class="title-extend">
@@ -18,7 +20,7 @@
     <div v-if="isOpenSearch" class="search-wrapper">
       <SearchInput v-model="searchStr" :placeholder="t('搜索配置文件名称')" @search="handleSearch" />
     </div>
-    <div class="groups-wrapper">
+    <div :class="['groups-wrapper', { 'en-groups-wrapper': locale === 'en' }]">
       <div v-for="group in groupedConfigListOnShow" class="config-group-item" :key="group.id">
         <div :class="['group-header', { expand: group.expand }]" @click="group.expand = !group.expand">
           <RightShape class="arrow-icon" />
@@ -126,7 +128,7 @@
     configs: IConfigDiffItem[];
   }
 
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const props = withDefaults(
     defineProps<{
       currentVersionId: number;
@@ -672,6 +674,11 @@
         height: calc(100% - 80px);
       }
     }
+    &.en-search-open {
+      .groups-wrapper {
+        height: calc(100% - 98px);
+      }
+    }
   }
   .title-area {
     display: flex;
@@ -719,6 +726,9 @@
   .groups-wrapper {
     height: calc(100% - 40px);
     overflow: auto;
+    &.en-groups-wrapper {
+      height: calc(100% - 58px);
+    }
   }
   .config-group-item {
     .group-header {

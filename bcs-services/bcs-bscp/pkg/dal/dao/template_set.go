@@ -71,6 +71,9 @@ type TemplateSet interface {
 	ListAllTmplSetsOfBiz(kit *kit.Kit, bizID, appID uint32) ([]*table.TemplateSet, error)
 	// ValidateTmplNumber verify whether the current number of template set's templates has reached the maximum.
 	ValidateTmplNumber(kt *kit.Kit, tx *gen.QueryTx, bizID, tmplSetID uint32) error
+	// ValidateWillExceedMaxTmplCount 给定一个数 和当前数量相加, 判断是否超过最大限制
+	ValidateWillExceedMaxTmplCount(kt *kit.Kit, tx *gen.QueryTx, bizID,
+		tmplSetID uint32, number int) error
 }
 
 var _ TemplateSet = new(templateSetDao)
@@ -500,10 +503,33 @@ func (dao *templateSetDao) ValidateTmplNumber(kt *kit.Kit, tx *gen.QueryTx, bizI
 	m := tx.TemplateSet
 	tmplSet, err := m.WithContext(kt.Ctx).Where(m.BizID.Eq(bizID), m.ID.Eq(tmplSetID)).Take()
 	if err != nil {
-		return fmt.Errorf("get template set %d's failed, err: %v", tmplSetID, err)
+		return errf.New(errf.InvalidParameter,
+			fmt.Sprintf("get template set %d's failed, err: %v", tmplSetID, err))
 	}
 
 	count := len(tmplSet.Spec.TemplateIDs)
+	tmplSetTmplCnt := getTmplSetTmplCnt(bizID)
+	if count > tmplSetTmplCnt {
+		return errf.New(errf.InvalidParameter,
+			fmt.Sprintf("the total number of template set %d's templates exceeded the limit %d",
+				tmplSetID, tmplSetTmplCnt))
+	}
+
+	return nil
+}
+
+// ValidateWillExceedMaxTmplCount 给定一个数 和当前数量相加, 判断是否超过最大限制
+func (dao *templateSetDao) ValidateWillExceedMaxTmplCount(kt *kit.Kit, tx *gen.QueryTx, bizID,
+	tmplSetID uint32, number int) error {
+
+	// get template count
+	m := tx.TemplateSet
+	tmplSet, err := m.WithContext(kt.Ctx).Where(m.BizID.Eq(bizID), m.ID.Eq(tmplSetID)).Take()
+	if err != nil {
+		return fmt.Errorf("get template set %d's failed, err: %v", tmplSetID, err)
+	}
+
+	count := len(tmplSet.Spec.TemplateIDs) + number
 	tmplSetTmplCnt := getTmplSetTmplCnt(bizID)
 	if count > tmplSetTmplCnt {
 		return errf.New(errf.InvalidParameter,
