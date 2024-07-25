@@ -17,7 +17,7 @@
           @click="handleGotoProjectManage">{{ $t('projects.project.create') }}</bk-button>
         <bk-button @click="handleGotoIAM">{{ $t('projects.project.join') }}</bk-button>
       </div>
-      <div class="flex justify-center mt-[16px]">
+      <div class="flex justify-center mt-[16px]" v-if="$INTERNAL">
         <bk-button text @click="handleGotoDoc">
           <span class="relative top-[-1px]">
             <i class="bcs-icon bcs-icon-question-circle"></i>
@@ -47,7 +47,7 @@
           @click="handleGotoProjectManage">{{ $t('projects.project.create') }}</bk-button>
         <bk-button @click="handleGotoIAM">{{ $t('projects.project.join') }}</bk-button>
       </div>
-      <div class="flex justify-center mt-[16px]">
+      <div class="flex justify-center mt-[16px]" v-if="$INTERNAL">
         <bk-button text @click="handleGotoDoc">
           <span class="relative top-[-1px]">
             <i class="bcs-icon bcs-icon-question-circle"></i>

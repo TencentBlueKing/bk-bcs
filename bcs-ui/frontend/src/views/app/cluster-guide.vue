@@ -20,7 +20,7 @@
         }"
         @click="handleCreateCluster">{{ $t('cluster.button.addCluster') }}</bk-button>
     </div>
-    <div class="flex justify-center mt-[16px]">
+    <div class="flex justify-center mt-[16px]" v-if="$INTERNAL">
       <bk-button text @click="handleGotoDoc">
         <span class="relative top-[-1px]">
           <i class="bcs-icon bcs-icon-question-circle"></i>
