@@ -24,6 +24,7 @@ import (
 
 	"gorm.io/gorm"
 
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
@@ -45,13 +46,6 @@ import (
 // CreateConfigItem create config item.
 func (s *Service) CreateConfigItem(ctx context.Context, req *pbds.CreateConfigItemReq) (*pbds.CreateResp, error) { // nolint
 	grpcKit := kit.FromGrpcContext(ctx)
-
-	// validates unique key name+path both in table app_template_bindings and config_items
-	// validate in table app_template_bindings
-	if err := s.ValidateAppTemplateBindingUniqueKey(grpcKit, req.ConfigItemAttachment.BizId,
-		req.ConfigItemAttachment.AppId, req.ConfigItemSpec.Name, req.ConfigItemSpec.Path); err != nil {
-		return nil, err
-	}
 
 	// get all configuration files under this service
 	items, err := s.dao.ConfigItem().ListAllByAppID(grpcKit,
@@ -184,14 +178,14 @@ func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbds.BatchUps
 	}
 	now := time.Now().UTC()
 	tx := s.dao.GenQuery().Begin()
-	createId, e := s.doBatchCreateConfigItems(grpcKit, tx, toCreate, now, req.BizId, req.AppId)
+	createIds, e := s.doBatchCreateConfigItems(grpcKit, tx, toCreate, now, req.BizId, req.AppId)
 	if e != nil {
 		if rErr := tx.Rollback(); rErr != nil {
 			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
 		}
 		return nil, e
 	}
-	updateId, e := s.doBatchUpdateConfigItemSpec(grpcKit, tx, toUpdateSpec, now,
+	updateIds, e := s.doBatchUpdateConfigItemSpec(grpcKit, tx, toUpdateSpec, now,
 		req.BizId, req.AppId, editingCIMap)
 	if e != nil {
 		if rErr := tx.Rollback(); rErr != nil {
@@ -262,12 +256,14 @@ func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbds.BatchUps
 		}
 		return nil, e
 	}
+
 	if e := tx.Commit(); e != nil {
 		logs.Errorf("commit transaction failed, err: %v, rid: %s", e, grpcKit.Rid)
 		return nil, e
 	}
 	// 返回创建和更新的ID
-	mergedID := append(createId, updateId...) // nolint
+	mergedID := tools.MergeAndDeduplicate(createIds, updateIds)
+
 	return &pbds.BatchUpsertConfigItemsResp{Ids: mergedID}, nil
 }
 
@@ -578,7 +574,7 @@ func (s *Service) checkConfigItems(kt *kit.Kit, req *pbds.BatchUpsertConfigItems
 
 func (s *Service) doBatchCreateConfigItems(kt *kit.Kit, tx *gen.QueryTx,
 	toCreate []*pbds.BatchUpsertConfigItemsReq_ConfigItem, now time.Time, bizID, appID uint32) ([]uint32, error) {
-	createId := []uint32{}
+	createIds := []uint32{}
 	toCreateConfigItems := []*table.ConfigItem{}
 	for _, item := range toCreate {
 		ci := &table.ConfigItem{
@@ -595,10 +591,11 @@ func (s *Service) doBatchCreateConfigItems(kt *kit.Kit, tx *gen.QueryTx,
 	}
 	if err := s.dao.ConfigItem().BatchCreateWithTx(kt, tx, bizID, appID, toCreateConfigItems); err != nil {
 		logs.Errorf("batch create config items failed, err: %v, rid: %s", err, kt.Rid)
-		return createId, err
+		return nil, err
 	}
 	toCreateContent := []*table.Content{}
 	for i, item := range toCreate {
+		createIds = append(createIds, toCreateConfigItems[i].ID)
 		toCreateContent = append(toCreateContent, &table.Content{
 			Spec: item.ContentSpec.ContentSpec(),
 			Attachment: &table.ContentAttachment{
@@ -613,7 +610,7 @@ func (s *Service) doBatchCreateConfigItems(kt *kit.Kit, tx *gen.QueryTx,
 	}
 	if err := s.dao.Content().BatchCreateWithTx(kt, tx, toCreateContent); err != nil {
 		logs.Errorf("batch create config items failed, err: %v, rid: %s", err, kt.Rid)
-		return createId, err
+		return nil, err
 	}
 	toCreateCommit := []*table.Commit{}
 	for i := range toCreateContent {
@@ -634,21 +631,16 @@ func (s *Service) doBatchCreateConfigItems(kt *kit.Kit, tx *gen.QueryTx,
 	}
 	if err := s.dao.Commit().BatchCreateWithTx(kt, tx, toCreateCommit); err != nil {
 		logs.Errorf("batch create commits failed, err: %v, rid: %s", err, kt.Rid)
-		return createId, err
+		return nil, err
 	}
 
-	// 返回创建ID
-	for _, item := range toCreateConfigItems {
-		createId = append(createId, item.ID)
-	}
-
-	return createId, nil
+	return createIds, nil
 }
 
 func (s *Service) doBatchUpdateConfigItemSpec(kt *kit.Kit, tx *gen.QueryTx,
 	toUpdate []*pbds.BatchUpsertConfigItemsReq_ConfigItem, now time.Time, _, _ uint32,
 	ciMap map[string]*table.ConfigItem) ([]uint32, error) {
-	updateId := []uint32{}
+	updateIds := []uint32{}
 	configItems := []*table.ConfigItem{}
 	for _, item := range toUpdate {
 		ci := &table.ConfigItem{
@@ -666,14 +658,14 @@ func (s *Service) doBatchUpdateConfigItemSpec(kt *kit.Kit, tx *gen.QueryTx,
 	}
 	if err := s.dao.ConfigItem().BatchUpdateWithTx(kt, tx, configItems); err != nil {
 		logs.Errorf("batch update config items failed, err: %v, rid: %s", err, kt.Rid)
-		return updateId, err
+		return nil, err
 	}
 	// 返回编辑ID
 	for _, item := range configItems {
-		updateId = append(updateId, item.ID)
+		updateIds = append(updateIds, item.ID)
 	}
 
-	return updateId, nil
+	return updateIds, nil
 }
 
 func (s *Service) doBatchUpdateConfigItemContent(kt *kit.Kit, tx *gen.QueryTx,
@@ -867,7 +859,8 @@ func (s *Service) GetConfigItem(ctx context.Context, req *pbds.GetConfigItemReq)
 }
 
 // ListConfigItems list config items by query condition.
-func (s *Service) ListConfigItems(ctx context.Context, req *pbds.ListConfigItemsReq) (*pbds.ListConfigItemsResp, // nolint
+// nolint:funlen
+func (s *Service) ListConfigItems(ctx context.Context, req *pbds.ListConfigItemsReq) (*pbds.ListConfigItemsResp,
 	error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 
@@ -909,6 +902,24 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbds.ListConfigItems
 	if err = s.setCommitSpecForCIs(grpcKit, configItems); err != nil {
 		logs.Errorf("set commit spec for config items failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
+	}
+
+	existingPaths := []string{}
+	for _, v := range configItems {
+		if v.FileState != constant.FileStateDelete {
+			existingPaths = append(existingPaths, path.Join(v.Spec.Path, v.Spec.Name))
+		}
+	}
+
+	conflictNums, conflictPaths, err := s.compareTemplateConfConflicts(grpcKit, req.BizId, req.AppId, existingPaths)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, v := range configItems {
+		if v.FileState != constant.FileStateDelete {
+			v.IsConflict = conflictPaths[path.Join(v.Spec.Path, v.Spec.Name)]
+		}
 	}
 
 	// search by logic
@@ -967,10 +978,37 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbds.ListConfigItems
 		return i < j
 	})
 	resp := &pbds.ListConfigItemsResp{
-		Count:   uint32(len(configItems)),
-		Details: configItems[start:end],
+		Count:          uint32(len(configItems)),
+		Details:        configItems[start:end],
+		ConflictNumber: conflictNums,
 	}
 	return resp, nil
+}
+
+// 检测冲突，非模板配置之间对比、非模板配置对比套餐模板配置、空间套餐之间的对比
+// 1. 先把非配置模板 path+name 添加到 existingPaths 中
+// 2. 把所有关联的空间套餐配置都添加到 existingPaths 中
+func (s *Service) compareTemplateConfConflicts(grpcKit *kit.Kit, bizID, appID uint32, existingPaths []string) (uint32, map[string]bool, error) {
+
+	tmplRevisions, err := s.ListAppBoundTmplRevisions(grpcKit.RpcCtx(), &pbds.ListAppBoundTmplRevisionsReq{
+		BizId:      bizID,
+		AppId:      appID,
+		All:        true,
+		WithStatus: true,
+	})
+	if err != nil {
+		return 0, nil, err
+	}
+
+	for _, revision := range tmplRevisions.GetDetails() {
+		if revision.FileState != constant.FileStateDelete {
+			existingPaths = append(existingPaths, path.Join(revision.Path, revision.Name))
+		}
+	}
+
+	conflictNums, conflictPaths := checkExistingPathConflict(existingPaths)
+
+	return conflictNums, conflictPaths, nil
 }
 
 // setCommitSpecForCIs set commit spec for config items
@@ -1654,4 +1692,54 @@ func (s *Service) getReleasedNonTemplateConfigVariables(grpcKit *kit.Kit, bizID,
 	}
 
 	return varsMap, nil
+}
+
+// checkExistingPathConflict Check existing path collections for conflicts.
+func checkExistingPathConflict(existing []string) (uint32, map[string]bool) {
+	conflictPaths := make(map[string]bool, len(existing))
+	var conflictNums uint32
+	conflictMap := make(map[string]bool, 0)
+	// 遍历每一个路径
+	for i := 0; i < len(existing); i++ {
+		// 检查当前路径与后续路径之间是否存在冲突
+		for j := i + 1; j < len(existing); j++ {
+			if strings.HasPrefix(existing[j]+"/", existing[i]+"/") || strings.HasPrefix(existing[i]+"/", existing[j]+"/") {
+				// 相等也算冲突
+				if len(existing[j]) == len(existing[i]) {
+					conflictNums++
+				} else if len(existing[j]) < len(existing[i]) {
+					conflictMap[existing[j]] = true
+				} else {
+					conflictMap[existing[i]] = true
+				}
+
+				conflictPaths[existing[i]] = true
+				conflictPaths[existing[j]] = true
+			}
+		}
+	}
+
+	return uint32(len(conflictMap)) + conflictNums, conflictPaths
+}
+
+// GetTemplateAndNonTemplateCICount 获取模板和非模板配置项数量
+func (s *Service) GetTemplateAndNonTemplateCICount(ctx context.Context, req *pbds.GetTemplateAndNonTemplateCICountReq) (
+	*pbds.GetTemplateAndNonTemplateCICountResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	count, err := s.dao.ConfigItem().GetConfigItemCount(kt, req.BizId, req.AppId)
+	if err != nil {
+		return nil, errf.Errorf(errf.DBOpFailed, i18n.T(kt, "obtain the number of configuration items"))
+	}
+
+	binding, err := s.dao.AppTemplateBinding().GetAppTemplateBindingByAppID(kt, req.BizId, req.AppId)
+	if err != nil {
+		return nil, errf.Errorf(errf.DBOpFailed,
+			i18n.T(kt, "obtain template binding relationships through business and service IDs"))
+	}
+
+	return &pbds.GetTemplateAndNonTemplateCICountResp{
+		ConfigItemCount:         uint64(count),
+		TemplateConfigItemCount: uint64(len(binding.Spec.TemplateIDs)),
+	}, nil
 }

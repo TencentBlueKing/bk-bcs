@@ -102,9 +102,6 @@ func (plugin *PermissionPlugin) updatePermissions(r *http.Request) (*http.Reques
 	if err = json.Unmarshal(bs, req); err != nil {
 		return r, mw.ReturnErrorResponse(http.StatusBadRequest, errors.Wrapf(err, "unmarshal request failed"))
 	}
-	if len(req.Users) == 0 {
-		return r, mw.ReturnErrorResponse(http.StatusBadRequest, fmt.Errorf("request 'users' cannot be empty"))
-	}
 	if len(req.ResourceNames) == 0 {
 		return r, mw.ReturnErrorResponse(http.StatusBadRequest,
 			fmt.Errorf("request 'resourceNames' cannot be empty"))

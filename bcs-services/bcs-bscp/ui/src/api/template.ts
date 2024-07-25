@@ -661,10 +661,16 @@ export const importTemplateFile = (
  * @param configData 配置列表
  * @returns
  */
-export const importTemplateBatchAdd = (biz_id: string, template_space_id: number, configData: any) =>
+export const importTemplateBatchAdd = (
+  biz_id: string,
+  template_space_id: number,
+  configData: any,
+  template_set_ids: number[],
+) =>
   http
     .post(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates/batch_upsert_templates`, {
       items: configData,
+      template_set_ids,
     })
     .then((res) => res.data);
 

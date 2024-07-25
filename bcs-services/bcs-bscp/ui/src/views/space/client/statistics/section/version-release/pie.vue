@@ -60,7 +60,7 @@
     piePlot = new Pie(canvasRef.value!, {
       data: props.data,
       angleField: 'count',
-      colorField: 'current_release_name',
+      colorField: 'target_release_name',
       radius: 1,
       padding: [20, 800, 20, 50],
       label: {
@@ -76,7 +76,7 @@
       tooltip: {
         fields: ['count', 'percent'],
         showTitle: true,
-        title: 'current_release_name',
+        title: 'target_release_name',
         container: tooltipRef.value?.getDom(),
         enterable: true,
         showMarkers: false,

@@ -1,12 +1,12 @@
 <template>
   <section class="example-wrap">
-    <form-option ref="fileOptionRef" @update-option-data="getOptionData" />
+    <form-option ref="fileOptionRef" :p2p-show="true" @update-option-data="getOptionData" />
     <div class="preview-container">
       <span class="preview-label">{{ $t('示例预览') }}</span>
       <bk-button theme="primary" class="copy-btn" @click="copyExample">{{ $t('复制示例') }}</bk-button>
       <code-preview
         class="preview-component"
-        style="height: 1490px"
+        :style="{ height: optionData.clusterSwitch ? '1990px' : '1496px' }"
         :code-val="replaceVal"
         :variables="variables"
         language="yaml"
@@ -16,12 +16,13 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref, provide, inject, Ref, nextTick } from 'vue';
+  import { ref, inject, Ref, nextTick } from 'vue';
   import { copyToClipBoard } from '../../../../../../utils/index';
   import { IVariableEditParams } from '../../../../../../../types/variable';
   import BkMessage from 'bkui-vue/lib/message';
   import FormOption from '../form-option.vue';
   import CodePreview from '../code-preview.vue';
+  import { IExampleFormData } from '../../../../../../../types/client';
   import { useI18n } from 'vue-i18n';
   import { useRoute } from 'vue-router';
   import yamlString from '/src/assets/example-data/file-container.yaml?raw';
@@ -33,19 +34,19 @@
 
   const fileOptionRef = ref();
   // fileOption组件传递过来的数据汇总
-  const optionData = ref({
+  const optionData = ref<IExampleFormData>({
     clientKey: '',
     privacyCredential: '',
     labelArr: [],
     tempDir: '',
+    clusterSwitch: false,
+    clusterInfo: '',
   });
   const bkBizId = ref(String(route.params.spaceId));
   const replaceVal = ref('');
   const copyReplaceVal = ref(''); // 渲染的值，用于复制未脱敏密钥的yaml数据
   const basicInfo = inject<{ serviceName: Ref<string>; serviceType: Ref<string> }>('basicInfo');
   const variables = ref<IVariableEditParams[]>();
-  const formError = ref<number>();
-  provide('formError', formError);
 
   const getOptionData = (data: any) => {
     // 标签展示方式加工
@@ -65,8 +66,47 @@
     let updateString = replaceVal.value;
     updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_BkBizId }}', bkBizId.value);
     updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_ServiceName }}', basicInfo!.serviceName.value);
-    replaceVal.value = updateString.replaceAll('{{ .Bk_Bscp_Variable_FEED_ADDR }}', (window as any).FEED_ADDR);
+    updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_FEED_ADDR }}', (window as any).GRPC_ADDR);
+    // p2p网络加速打开后动态插入内容
+    if (optionData.value.clusterSwitch) {
+      const p2pPart1 = `
+            # 是否启用P2P网络加速
+            - name: enable_p2p_download
+              value: 'true'
+            # 以下几个环境变量在启用 p2p 文件加速时为必填项
+            # BCS集群ID
+            - name: cluster_id
+              value: {{ .Bk_Bscp_Variable_Cluster_Value }}
+            # BSCP容器名称
+            - name: container_name
+              value: bscp-init
+            - name: pod_id
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.uid`;
+      const p2pPart2 = `
+            - name: enable_p2p_download
+              value: 'true'
+            - name: cluster_id
+              value: {{ .Bk_Bscp_Variable_Cluster_Value }}
+            - name: container_name
+              value: bscp-sidecar
+            - name: pod_id
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.uid`;
+      updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_p2p_part1 }}', p2pPart1.trim());
+      replaceVal.value = updateString.replaceAll('{{ .Bk_Bscp_Variable_p2p_part2 }}', p2pPart2.trim());
+    } else {
+      updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_p2p_part1 }}', '');
+      updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_p2p_part2 }}', '');
+      // 去除不含p2p相关内容后，遗留的空白行去除
+      replaceVal.value = updateString.replaceAll(/\r\n\s+\r\n/g, '\n');
+    }
   };
+  // 高亮配置
   const updateVariables = () => {
     variables.value = [
       {
@@ -82,9 +122,15 @@
         memo: '',
       },
       {
-        name: 'Bk_Bscp_VariableTempDir',
+        name: 'Bk_Bscp_Variable_TempDir',
         type: '',
         default_val: `'${optionData.value.tempDir}'`,
+        memo: '',
+      },
+      {
+        name: 'Bk_Bscp_Variable_Cluster_Value',
+        type: '',
+        default_val: `${optionData.value.clusterInfo}`,
         memo: '',
       },
     ];
@@ -102,8 +148,6 @@
         message: t('示例已复制'),
       });
     } catch (error) {
-      // 通知密钥选择组件校验状态
-      formError.value = new Date().getTime();
       props.contentScrollTop();
       console.log(error);
     }
@@ -114,15 +158,13 @@
   .example-wrap {
     .preview-component {
       margin-top: 16px;
-      padding: 16px 0 0;
-      // height: calc(100% - 48px);
+      padding: 16px 8px;
       background-color: #f5f7fa;
     }
   }
   .preview-container {
     margin-top: 32px;
     padding: 16px 0 0;
-    flex: 1;
     border-top: 1px solid #dcdee5;
     overflow: hidden;
   }

@@ -460,7 +460,7 @@
     // 添加默认查询条件ip
     if (!parentSelecte.value?.value) {
       parentSelecte.value = selectorData.value.find((item) => {
-        return isClientSearch.value ? item.value === 'ip' : item.value === 'current_release_name';
+        return isClientSearch.value ? item.value === 'ip' : item.value === 'target_release_name';
       })!;
     }
     // 重复的查询项去重

@@ -46,9 +46,14 @@ func RKvs(kvs []*pbkv.Kv, versionMap map[string]int, releaseID uint32) ([]*table
 
 	for _, kv := range kvs {
 
-		createdAt, err := time.Parse(time.RFC3339, kv.Revision.UpdateAt)
+		createdAt, err := time.Parse(time.RFC3339, kv.Revision.CreateAt)
 		if err != nil {
 			return nil, fmt.Errorf("parse time from createAt string failed, err: %v", err)
+		}
+
+		updateAt, err := time.Parse(time.RFC3339, kv.Revision.UpdateAt)
+		if err != nil {
+			return nil, fmt.Errorf("parse time from updateAt string failed, err: %v", err)
 		}
 
 		rkv := &table.ReleasedKv{
@@ -59,7 +64,7 @@ func RKvs(kvs []*pbkv.Kv, versionMap map[string]int, releaseID uint32) ([]*table
 				Creator:   kv.Revision.Creator,
 				Reviser:   kv.Revision.Reviser,
 				CreatedAt: createdAt,
-				UpdatedAt: createdAt,
+				UpdatedAt: updateAt,
 			},
 			ContentSpec: &table.ContentSpec{
 				Signature: kv.ContentSpec.Signature,

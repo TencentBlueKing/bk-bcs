@@ -85,7 +85,7 @@ const disabledList = computed(() => {
 const zoneList = ref<Array<IZoneItem>>($store.state.cloudMetadata.zoneList);
 const zoneLoading = ref(false);
 const handleGetZoneList = async () => {
-  if (!props.region || !props.cloudAccountID || !props.cloudID) return;
+  if (!props.region || !props.cloudID) return;
   zoneLoading.value = true;
   const data = await cloudsZones({
     $cloudId: props.cloudID,

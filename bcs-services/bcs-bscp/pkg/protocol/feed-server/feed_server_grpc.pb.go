@@ -29,6 +29,8 @@ const (
 	Upstream_ListApps_FullMethodName            = "/pbfs.Upstream/ListApps"
 	Upstream_AsyncDownload_FullMethodName       = "/pbfs.Upstream/AsyncDownload"
 	Upstream_AsyncDownloadStatus_FullMethodName = "/pbfs.Upstream/AsyncDownloadStatus"
+	Upstream_GetSingleKvValue_FullMethodName    = "/pbfs.Upstream/GetSingleKvValue"
+	Upstream_GetSingleKvMeta_FullMethodName     = "/pbfs.Upstream/GetSingleKvMeta"
 )
 
 // UpstreamClient is the client API for Upstream service.
@@ -46,6 +48,9 @@ type UpstreamClient interface {
 	ListApps(ctx context.Context, in *ListAppsReq, opts ...grpc.CallOption) (*ListAppsResp, error)
 	AsyncDownload(ctx context.Context, in *AsyncDownloadReq, opts ...grpc.CallOption) (*AsyncDownloadResp, error)
 	AsyncDownloadStatus(ctx context.Context, in *AsyncDownloadStatusReq, opts ...grpc.CallOption) (*AsyncDownloadStatusResp, error)
+	// 获取单个kv实例
+	GetSingleKvValue(ctx context.Context, in *GetSingleKvValueReq, opts ...grpc.CallOption) (*GetSingleKvValueResp, error)
+	GetSingleKvMeta(ctx context.Context, in *GetSingleKvValueReq, opts ...grpc.CallOption) (*GetSingleKvMetaResp, error)
 }
 
 type upstreamClient struct {
@@ -169,6 +174,24 @@ func (c *upstreamClient) AsyncDownloadStatus(ctx context.Context, in *AsyncDownl
 	return out, nil
 }
 
+func (c *upstreamClient) GetSingleKvValue(ctx context.Context, in *GetSingleKvValueReq, opts ...grpc.CallOption) (*GetSingleKvValueResp, error) {
+	out := new(GetSingleKvValueResp)
+	err := c.cc.Invoke(ctx, Upstream_GetSingleKvValue_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *upstreamClient) GetSingleKvMeta(ctx context.Context, in *GetSingleKvValueReq, opts ...grpc.CallOption) (*GetSingleKvMetaResp, error) {
+	out := new(GetSingleKvMetaResp)
+	err := c.cc.Invoke(ctx, Upstream_GetSingleKvMeta_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UpstreamServer is the server API for Upstream service.
 // All implementations should embed UnimplementedUpstreamServer
 // for forward compatibility
@@ -184,6 +207,9 @@ type UpstreamServer interface {
 	ListApps(context.Context, *ListAppsReq) (*ListAppsResp, error)
 	AsyncDownload(context.Context, *AsyncDownloadReq) (*AsyncDownloadResp, error)
 	AsyncDownloadStatus(context.Context, *AsyncDownloadStatusReq) (*AsyncDownloadStatusResp, error)
+	// 获取单个kv实例
+	GetSingleKvValue(context.Context, *GetSingleKvValueReq) (*GetSingleKvValueResp, error)
+	GetSingleKvMeta(context.Context, *GetSingleKvValueReq) (*GetSingleKvMetaResp, error)
 }
 
 // UnimplementedUpstreamServer should be embedded to have forward compatible implementations.
@@ -219,6 +245,12 @@ func (UnimplementedUpstreamServer) AsyncDownload(context.Context, *AsyncDownload
 }
 func (UnimplementedUpstreamServer) AsyncDownloadStatus(context.Context, *AsyncDownloadStatusReq) (*AsyncDownloadStatusResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AsyncDownloadStatus not implemented")
+}
+func (UnimplementedUpstreamServer) GetSingleKvValue(context.Context, *GetSingleKvValueReq) (*GetSingleKvValueResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetSingleKvValue not implemented")
+}
+func (UnimplementedUpstreamServer) GetSingleKvMeta(context.Context, *GetSingleKvValueReq) (*GetSingleKvMetaResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetSingleKvMeta not implemented")
 }
 
 // UnsafeUpstreamServer may be embedded to opt out of forward compatibility for this service.
@@ -415,6 +447,42 @@ func _Upstream_AsyncDownloadStatus_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Upstream_GetSingleKvValue_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetSingleKvValueReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UpstreamServer).GetSingleKvValue(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Upstream_GetSingleKvValue_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UpstreamServer).GetSingleKvValue(ctx, req.(*GetSingleKvValueReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Upstream_GetSingleKvMeta_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetSingleKvValueReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UpstreamServer).GetSingleKvMeta(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Upstream_GetSingleKvMeta_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UpstreamServer).GetSingleKvMeta(ctx, req.(*GetSingleKvValueReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Upstream_ServiceDesc is the grpc.ServiceDesc for Upstream service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -457,6 +525,14 @@ var Upstream_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AsyncDownloadStatus",
 			Handler:    _Upstream_AsyncDownloadStatus_Handler,
+		},
+		{
+			MethodName: "GetSingleKvValue",
+			Handler:    _Upstream_GetSingleKvValue_Handler,
+		},
+		{
+			MethodName: "GetSingleKvMeta",
+			Handler:    _Upstream_GetSingleKvMeta_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

@@ -49,7 +49,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref, Ref, onMounted, inject, watch } from 'vue';
+  import { ref, Ref, onMounted, inject } from 'vue';
   import { useRoute, useRouter } from 'vue-router';
   import { ICredentialItem } from '../../../../../../types/credential';
   import { getCredentialList } from '../../../../../api/credentials';
@@ -68,7 +68,6 @@
   const route = useRoute();
   const router = useRouter();
 
-  const formError = inject<Ref<string>>('formError');
   const basicInfo = inject<{ serviceName: Ref<string>; serviceType: Ref<string> }>('basicInfo');
   const isError = ref(false);
   const loading = ref(true);
@@ -80,20 +79,15 @@
   const bizId = ref(String(route.params.spaceId));
   const credentialList = ref<newICredentialItem[]>([]);
 
-  watch(
-    () => formError!.value,
-    () => {
-      // 表单校验失败检查密钥是否为空
-      if (!currentValue.value.privacyCredential) {
-        isError.value = true;
-      }
-    },
-  );
-
   onMounted(() => {
     loadCredentialList();
   });
 
+  // 表单校验失败检查密钥是否为空
+  const validateCredential = () => {
+    isError.value = !currentValue.value.privacyCredential;
+    return !isError.value;
+  };
   // 获取密钥列表
   const loadCredentialList = async () => {
     loading.value = true;
@@ -125,9 +119,7 @@
     currentValue.value.key = enc_credential;
     currentValue.value.privacyCredential = privacyCredential;
     emits('current-key', enc_credential, privacyCredential);
-    if (isError.value) {
-      isError.value = false;
-    }
+    validateCredential();
   };
   // 密钥脱敏
   const dataMasking = (data: Array<newICredentialItem>) => {
@@ -151,6 +143,9 @@
     window.open(routeData.href, '__blank');
   };
   const flushData = debounce(loadCredentialList, 300);
+  defineExpose({
+    validateCredential,
+  });
 </script>
 
 <style scoped lang="scss">

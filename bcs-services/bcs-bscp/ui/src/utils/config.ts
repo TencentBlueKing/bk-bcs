@@ -1,4 +1,5 @@
 import { CONFIG_FILE_TYPE } from '../constants/config';
+import dayjs from 'dayjs';
 
 // 查询配置文件类型名称
 export const getConfigTypeName = (type: string) => {
@@ -72,6 +73,7 @@ export function getConfigEditParams() {
     user: 'root',
     user_group: 'root',
     privilege: '644',
+    revision_name: `v${dayjs().format('YYYYMMDDHHmmss')}`,
   };
 }
 

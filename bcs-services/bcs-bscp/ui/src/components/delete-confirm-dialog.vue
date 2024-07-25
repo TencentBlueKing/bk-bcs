@@ -43,16 +43,11 @@
   const emits = defineEmits(['update:isShow', 'confirm', 'close']);
 </script>
 
-<style scoped lang="scss">
+<style lang="scss">
   .delete-confirm-dialog {
-    :deep(.bk-modal-body) {
-      .bk-modal-footer {
-        background-color: #fff;
-        border: none;
-        padding-bottom: 24px !important;
-        .bk-button {
-          width: 80px;
-        }
+    .bk-modal-body {
+      .bk-dialog-header .bk-dialog-title {
+        white-space: normal;
       }
     }
   }

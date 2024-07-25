@@ -180,7 +180,6 @@ func (sa *SwitchClusterUnderlayNetworkAction) Handle(ctx context.Context,
 	}
 
 	sa.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }
 
 func (sa *SwitchClusterUnderlayNetworkAction) switchClusterNetworkTask() error {

@@ -107,7 +107,8 @@ else
     /etc/kubernetes/admin.conf "$HOME/.kube/config"
   "${ROOT_DIR}"/system/config_bcs_dns -u "${LAN_IP}" k8s-api.bcs.local
   "${ROOT_DIR}"/system/config_envfile.sh -c clean
-  K8S_CTRL_IP=$LAN_IP "${ROOT_DIR}"/system/config_envfile.sh -c init
+  K8S_CTRL_IP=$LAN_IP
+  "${ROOT_DIR}"/system/config_envfile.sh -c init
   k8s::restart_kubelet
   sleep 30
   k8s::check_master

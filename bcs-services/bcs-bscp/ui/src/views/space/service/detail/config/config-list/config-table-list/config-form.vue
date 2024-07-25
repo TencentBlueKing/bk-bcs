@@ -83,46 +83,44 @@
         url=""
         theme="button"
         :tip="t('文件大小{size}M以内', { size: props.fileSizeLimit })"
-        :size="props.fileSizeLimit"
+        :size="100000"
         :multiple="false"
-        :files="fileList"
         :custom-request="handleFileUpload">
-        <template #file="{ file }">
-          <bk-loading
-            mode="spin"
-            theme="primary"
-            :opacity="0.6"
-            size="mini"
-            :title="t('文件下载中，请稍后')"
-            :loading="fileDownloading"
-            class="file-down-loading">
-            <div class="file-wrapper" @click="handleDownloadFile">
-              <TextFill class="file-icon" />
-              <div class="file-content">
-                <div class="name" :title="file.name">{{ file.name }}</div>
-                <div v-if="uploadProgress.status === 'uploading'">
-                  <bk-progress
-                    :percent="uploadProgress.percent"
-                    :theme="file.status === 'fail' ? 'danger' : 'primary'"
-                    size="small"
-                    :show-text="false" />
-                </div>
-                <div v-else :class="[file.status === 'success' ? 'success-text' : 'error-text', 'status-icon-area']">
-                  <Done v-if="file.status === 'success'" class="success-icon" />
-                  <Error v-if="file.status === 'fail'" class="error-icon" />
-                  <span :class="[file.status === 'success' ? 'success-text' : 'error-text']">
-                    {{ file.status === 'success' ? t('上传成功') : `${t('上传失败')} ${file.statusText}` }}
-                  </span>
-                </div>
-              </div>
-              <span class="size">
-                ({{ file.status === 'fail' ? byteUnitConverse(file.size) : file.size }})
-                <span v-if="uploadProgress.status === 'uploading'">{{ `${uploadProgress.percent}%` }}</span>
+      </bk-upload>
+      <bk-loading
+        v-if="uploadFile"
+        mode="spin"
+        theme="primary"
+        :opacity="0.6"
+        size="mini"
+        :title="t('文件下载中，请稍后')"
+        :loading="fileDownloading"
+        class="file-down-loading">
+        <div :class="['file-wrapper', { 'upload-fail': uploadFile.status === 'fail' }]" @click="handleDownloadFile">
+          <TextFill class="file-icon" />
+          <div class="file-content">
+            <div class="name" :title="uploadFile?.file.name">{{ uploadFile?.file.name }}</div>
+            <div v-if="uploadProgress.status === 'uploading'">
+              <bk-progress
+                :percent="uploadProgress.percent"
+                :theme="uploadFile.status === 'fail' ? 'danger' : 'primary'"
+                size="small"
+                :show-text="false" />
+            </div>
+            <div v-else :class="[uploadFile.status === 'success' ? 'success-text' : 'error-text', 'status-icon-area']">
+              <Done v-if="uploadFile.status === 'success'" class="success-icon" />
+              <Error v-if="uploadFile.status === 'fail'" class="error-icon" />
+              <span :class="[uploadFile.status === 'success' ? 'success-text' : 'error-text']">
+                {{ uploadFile.status === 'success' ? t('上传成功') : `${t('上传失败')} ${uploadFile.errorMessage}` }}
               </span>
             </div>
-          </bk-loading>
-        </template>
-      </bk-upload>
+          </div>
+          <span class="size">
+            ({{ byteUnitConverse(uploadFile.file.size) }})
+            <span v-if="uploadProgress.status === 'uploading'">{{ `${uploadProgress.percent}%` }}</span>
+          </span>
+        </div>
+      </bk-loading>
     </bk-form-item>
     <bk-form-item v-else>
       <template #label>
@@ -153,9 +151,15 @@
   import { updateConfigContent, downloadConfigContent } from '../../../../../../../api/config';
   import { downloadTemplateContent, updateTemplateContent } from '../../../../../../../api/template';
   import { stringLengthInBytes, byteUnitConverse } from '../../../../../../../utils/index';
-  import { transFileToObject, fileDownload } from '../../../../../../../utils/file';
+  import { fileDownload } from '../../../../../../../utils/file';
   import { CONFIG_FILE_TYPE } from '../../../../../../../constants/config';
   import ConfigContentEditor from '../../components/config-content-editor.vue';
+
+  interface IUploadFile {
+    file: any;
+    status: string;
+    errorMessage?: string;
+  }
 
   const { t } = useI18n();
 
@@ -203,6 +207,7 @@
     status: '',
   });
   const fileDownloading = ref(false);
+  const uploadFile = ref<IUploadFile>();
   const rules = {
     // 配置文件绝对路径校验规则，path+filename
     fileAP: [
@@ -217,14 +222,15 @@
           const fileName = parts.pop() as string;
 
           // 文件名称校验
-          if (fileName.startsWith('.') || !/^[\u4e00-\u9fa5A-Za-z0-9.\-_#%,:?!@$^+=\\[\]{}]+$/.test(fileName)) {
+          // 文件名和路径不能全由.组成
+          if (!/^((?!\.{1,}$)[\u4e00-\u9fa5A-Za-z0-9.\-_#%,:?!@$^+=\\[\]{}]+)$/.test(fileName)) {
             return false;
           }
 
           let isValid = true;
           // 文件路径校验
           parts.some((part) => {
-            if (part.startsWith('.') || !/^[\u4e00-\u9fa5A-Za-z0-9.\-_#%,@^+=\\[\]{}]+$/.test(part)) {
+            if (!/^((?!\.{1,}$)[\u4e00-\u9fa5A-Za-z0-9.\-_#%,:?!@$^+=\\[\]{}]+)$/.test(part)) {
               isValid = false;
               return true;
             }
@@ -280,7 +286,7 @@
   };
 
   // 传入到bk-upload组件的文件对象
-  const fileList = computed(() => (fileContent.value ? [transFileToObject(fileContent.value as File)] : []));
+  // const fileList = computed(() => (fileContent.value ? [transFileToObject(fileContent.value as File)] : []));
 
   // 将权限数字拆分成三个分组配置
   const privilegeGroupsValue = computed(() => {
@@ -307,6 +313,13 @@
     () => {
       if (props.config.file_type === 'binary') {
         fileContent.value = props.content as IFileConfigContentSummary;
+        if (props.isEdit) {
+          uploadFile.value = {
+            file: { ...fileContent.value },
+            status: 'success',
+          };
+          uploadFileSignature.value = fileContent.value.signature;
+        }
       } else {
         stringContent.value = props.content as string;
       }
@@ -363,17 +376,35 @@
 
   // 选择文件后上传
   const handleFileUpload = (option: { file: File }) => {
+    fileContent.value = option.file;
+    uploadFile.value = {
+      file: option.file,
+      status: 'uploading',
+    };
+    const fileSize = option.file.size / 1024 / 1024;
+    if (fileSize > props.fileSizeLimit) {
+      uploadFile.value!.status = 'fail';
+      uploadFile.value.errorMessage = t('请确保文件大小不超过 {n} MB', { n: props.fileSizeLimit });
+      return;
+    }
     isFileChanged.value = true;
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       emits('update:fileUploading', true);
-      fileContent.value = option.file;
+
       uploadContent()
         .then((res) => {
-          emits('update:fileUploading', false);
+          uploadFile.value!.status = 'success';
           change();
           resolve(res);
         })
+        .catch((err) => {
+          console.error(err);
+          uploadFile.value!.status = 'fail';
+          uploadFile.value!.errorMessage = '';
+          reject(err);
+        })
         .finally(() => {
+          emits('update:fileUploading', false);
           uploadProgress.value.status = 'success';
           uploadProgress.value.percent = 0;
         });
@@ -445,7 +476,6 @@
     return SHA256(stringContent.value).toString();
   };
 
-
   // 下载已上传文件
   const handleDownloadFile = async () => {
     if (uploadProgress.value.status === 'uploading') return;
@@ -466,8 +496,12 @@
   const validate = async () => {
     await formRef.value.validate();
     if (localVal.value.file_type === 'binary') {
-      if (fileList.value.length === 0) {
+      if (!uploadFile.value) {
         BkMessage({ theme: 'error', message: t('请上传文件') });
+        return false;
+      }
+      if (uploadFile.value.status === 'fail') {
+        BkMessage({ theme: 'error', message: t('文件上传失败，请重新上传文件') });
         return false;
       }
     } else if (localVal.value.file_type === 'text') {
@@ -489,7 +523,12 @@
   };
 
   defineExpose({
-    getSignature,
+    getSignature: () => {
+      if (localVal.value.file_type === 'binary') {
+        return uploadFileSignature.value;
+      }
+      return getSignature();
+    },
     validate,
   });
 </script>
@@ -570,58 +609,65 @@
       }
     }
   }
-  .config-uploader {
-    :deep(.bk-upload-list--disabled .bk-upload-list__item) {
-      pointer-events: inherit;
+  :deep(.config-uploader) {
+    .bk-upload-list {
+      display: none;
     }
-    .file-wrapper {
-      position: relative;
+  }
+  .file-wrapper {
+    margin: 8px 0;
+    position: relative;
+    display: flex;
+    align-items: center;
+    color: #979ba5;
+    font-size: 12px;
+    line-height: 12px;
+    width: 100%;
+    border: 1px solid #c4c6cc;
+    padding: 10px;
+    cursor: pointer;
+    &.upload-fail {
+      border-color: #ff5656;
+      background: #fedddc66;
+    }
+    &:hover .name {
+      color: #3a84ff;
+    }
+    .file-content {
+      width: 400px;
+    }
+    .status-icon-area {
       display: flex;
       align-items: center;
-      color: #979ba5;
-      font-size: 12px;
-      line-height: 12px;
-      width: 100%;
-      cursor: pointer;
-      &:hover .name {
-        color: #3a84ff;
+      &.success-text {
+        color: #2dcb56;
       }
-      .file-content {
-        width: 400px;
+      &.error-text {
+        color: #ea3636;
       }
-      .status-icon-area {
-        display: flex;
-        align-items: center;
-        &.success-text {
-          color: #2dcb56;
-        }
-        &.error-text {
-          color: #ea3636;
-        }
-        .success-icon {
-          font-size: 20px;
-        }
-        .error-icon {
-          font-size: 14px;
-        }
+      .success-icon {
+        font-size: 20px;
       }
-      .file-icon {
-        margin: 0 6px 0 0;
-        font-size: 32px;
+      .error-icon {
+        font-size: 14px;
       }
-      .name {
-        max-width: 360px;
-        white-space: nowrap;
-        text-overflow: ellipsis;
-        overflow: hidden;
-        line-height: normal;
-      }
-      .size {
-        position: absolute;
-        right: 10px;
-        top: 50%;
-        transform: translateY(-50%);
-      }
+    }
+    .file-icon {
+      margin: 0 6px 0 0;
+      font-size: 32px;
+    }
+    .name {
+      max-width: 360px;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      line-height: normal;
+    }
+    .size {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
     }
   }
   .config-content-label {

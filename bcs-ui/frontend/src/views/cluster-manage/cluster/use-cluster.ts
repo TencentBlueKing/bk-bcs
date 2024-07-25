@@ -249,8 +249,8 @@ export function useClusterInfo() {
   const clusterOS = computed(() => clusterData.value?.clusterBasicSettings?.OS);
   const clusterAdvanceSettings = computed(() => clusterData.value?.clusterAdvanceSettings || {});
   const extraInfo = computed(() => clusterData.value?.extraInfo || {});
-  const getClusterDetail = async ($clusterId: string, cloudInfo = false) => {
-    isLoading.value = true;
+  const getClusterDetail = async ($clusterId: string, cloudInfo = false, loading = true) => {
+    isLoading.value = loading;
     const res = await clusterDetail({
       $clusterId,
       cloudInfo,

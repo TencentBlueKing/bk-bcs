@@ -262,7 +262,7 @@
   const handleDeleteConfirm = async () => {
     await deleteApp(deleteService.value!.id as number, deleteService.value!.biz_id);
     Message({
-      message: '删除服务成功',
+      message: t('删除服务成功'),
       theme: 'success',
     });
     loadAppList();

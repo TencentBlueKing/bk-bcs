@@ -103,7 +103,7 @@
         </Metric>
       </div>
       <bcs-tab class="workload-tab" :active.sync="activePanel" type="card" :label-height="42">
-        <bcs-tab-panel name="ports" :label="$t('dashboard.network.portmapping')">
+        <bcs-tab-panel name="ports" :label="$t('dashboard.network.portmapping')" render-directive="if">
           <bk-table :data="ports">
             <bk-table-column label="Name" prop="name">
               <template #default="{ row }">
@@ -119,7 +119,7 @@
             <bk-table-column label="Protocol" prop="protocol"></bk-table-column>
           </bk-table>
         </bcs-tab-panel>
-        <bcs-tab-panel name="command" :label="$t('dashboard.workload.container.command')">
+        <bcs-tab-panel name="command" :label="$t('dashboard.workload.container.command')" render-directive="if">
           <bk-table :data="command">
             <bk-table-column label="Command" prop="command">
               <template #default="{ row }">
@@ -133,7 +133,7 @@
             </bk-table-column>
           </bk-table>
         </bcs-tab-panel>
-        <bcs-tab-panel name="volumes" :label="$t('k8s.volume')">
+        <bcs-tab-panel name="volumes" :label="$t('k8s.volume')" render-directive="if">
           <bk-table :data="volumes">
             <bk-table-column label="Host Path" prop="name"></bk-table-column>
             <bk-table-column label="Mount Path" prop="mountPath"></bk-table-column>
@@ -144,19 +144,19 @@
             </bk-table-column>
           </bk-table>
         </bcs-tab-panel>
-        <bcs-tab-panel name="env" :label="$t('dashboard.workload.container.env')">
+        <bcs-tab-panel name="env" :label="$t('dashboard.workload.container.env')" render-directive="if">
           <bk-table :data="envs" v-bkloading="{ isLoading: envsTableLoading }">
             <bk-table-column label="Key" prop="name"></bk-table-column>
             <bk-table-column label="Value" prop="value"></bk-table-column>
           </bk-table>
         </bcs-tab-panel>
-        <bcs-tab-panel name="label" :label="$t('k8s.label')">
+        <bcs-tab-panel name="label" :label="$t('k8s.label')" render-directive="if">
           <bk-table :data="labels">
             <bk-table-column label="Key" prop="key"></bk-table-column>
             <bk-table-column label="Value" prop="val"></bk-table-column>
           </bk-table>
         </bcs-tab-panel>
-        <bcs-tab-panel name="resources" :label="$t('dashboard.workload.container.limits')">
+        <bcs-tab-panel name="resources" :label="$t('dashboard.workload.container.limits')" render-directive="if">
           <bk-table :data="resources">
             <bk-table-column label="Cpu">
               <template #default="{ row }">

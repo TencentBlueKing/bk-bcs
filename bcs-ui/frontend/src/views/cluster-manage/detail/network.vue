@@ -7,7 +7,7 @@
       </bk-form-item>
       <bk-form-item :label="$t('cluster.create.label.privateNet.text')">
         <LoadingIcon v-if="vpcLoading">{{ $t('generic.status.loading') }}...</LoadingIcon>
-        <span v-else>{{ vpc }}</span>
+        <span v-else>{{ vpc || '--' }}</span>
       </bk-form-item>
       <bk-form-item :label="$t('cluster.labels.networkType')">
         {{ networkType }}
@@ -17,7 +17,7 @@
       </bk-form-item>
     </DescList>
     <DescList class="mt-[16px]" :title="$t('k8s.containerNetwork')">
-      <!-- VPC-CNI模式 -->
+      <!-- 底层网络插件: VPC-CNI模式 -->
       <template
         v-if="clusterData.clusterAdvanceSettings && clusterData.clusterAdvanceSettings.networkType === 'VPC-CNI'">
         <bk-form-item
@@ -29,41 +29,9 @@
           {{ clusterData.networkSettings &&clusterData.networkSettings.serviceIPv4CIDR
             ? clusterData.networkSettings.serviceIPv4CIDR : '--' }}
         </bk-form-item>
-        <bk-form-item
-          :label="$t('tke.label.staticIpMode')">
-          {{ clusterData.networkSettings && clusterData.networkSettings.isStaticIpMode
-            ? $t('generic.status.support')
-            : $t('generic.status.unSupport') }}
-        </bk-form-item>
-        <div class="px-[30px]">
-          <bk-table
-            :data="subnets"
-            :span-method="objectSpanMethod"
-            col-border
-            v-bkloading="{ isLoading: subnetLoading }"
-            class="network-table">
-            <bk-table-column :label="$t('tke.label.zone')" prop="zoneName"></bk-table-column>
-            <bk-table-column :label="$t('tke.label.subnetID')" prop="subnetID"></bk-table-column>
-            <bk-table-column :label="$t('tke.label.subnetName')" prop="subnetName"></bk-table-column>
-            <bk-table-column label="CIDR" prop="cidrRange"></bk-table-column>
-            <bk-table-column :label="$t('tke.label.ipNum')" prop="counts">
-              <template #default="{ row }">
-                <span>{{ getIpNumber(row) }}</span>
-              </template>
-            </bk-table-column>
-          </bk-table>
-          <div
-            :class="[
-              'h-[36px] bg-[#FAFBFD] bcs-border mt-[-1px]',
-              'flex items-center justify-center cursor-pointer'
-            ]"
-            @click="handleShowSubnetsDialog">
-            <i class="bk-icon icon-plus-circle-shape mr5 text-[#979BA5] text-[14px]"></i>
-            <span>{{ $t('tke.button.addSubnets') }}</span>
-          </div>
-        </div>
+        <VpcCniDetail :data="clusterData" />
       </template>
-      <!-- 其他 -->
+      <!-- 其他网络插件: Global Route -->
       <template v-else>
         <!-- Google 云 -->
         <template v-if="clusterData.provider === 'gcpCloud'">
@@ -142,54 +110,64 @@
             :label="$t('cluster.create.label.networkSetting.maxNodePodNum.text')">
             {{ maxNodePodNum }}
           </bk-form-item>
+          <template v-if="clusterData.provider === 'tencentCloud'">
+            <!-- GR模式下 是否启用vpc-cni -->
+            <bk-form-item label="VPC-CNI">
+              <LoadingIcon v-if="clusterData.networkSettings?.status === 'INITIALIZATION'">
+                {{ clusterData.networkSettings?.enableVPCCni
+                  ? $t('generic.status.enable') : $t('generic.status.disable') }}...
+              </LoadingIcon>
+              <StatusIcon
+                :status="clusterData.networkSettings?.status"
+                v-else-if="clusterData.networkSettings?.status === 'FAILURE'">
+                {{ clusterData.networkSettings?.enableVPCCni
+                  ? $t('generic.status.enableFailed') : $t('generic.status.disableFailed') }}
+              </StatusIcon>
+              <bcs-switcher
+                :value="clusterData.networkSettings?.enableVPCCni"
+                :pre-check="toggleVpcCNIStatus"
+                v-else>
+              </bcs-switcher>
+            </bk-form-item>
+            <VpcCniDetail
+              :data="clusterData"
+              v-if="clusterData.networkSettings?.enableVPCCni
+                && (['RUNNING', ''].includes(clusterData.networkSettings?.status))" />
+          </template>
         </template>
       </template>
     </DescList>
-    <!-- 添加子网 -->
-    <bk-dialog
-      :is-show.sync="showSubnets"
-      :title="$t('tke.title.addSubnets')"
-      :width="480"
-      @cancel="showSubnets = false">
-      <bk-form form-type="vertical">
-        <bk-form-item label="Pod IP" required>
-          <VpcCni
-            :subnets="newSubnets"
-            :region="clusterData.region"
-            :cloud-account-i-d="clusterData.cloudAccountID"
-            :cloud-i-d="clusterData.provider"
-            @change="handleSetSubnets" />
-        </bk-form-item>
-      </bk-form>
-      <template #footer>
-        <div>
-          <bk-button
-            :disabled="!isSubnetsValidate"
-            :loading="pending"
-            theme="primary"
-            @click="handleAddSubnets">{{ $t('generic.button.confirm') }}</bk-button>
-          <bk-button @click="showSubnets = false">{{ $t('generic.button.cancel') }}</bk-button>
-        </div>
-      </template>
-    </bk-dialog>
+    <AddSubnetDialog
+      :model-value="showSubnets"
+      :cluster-data="clusterData"
+      :width="600"
+      :confirm-fn="handleConfirmEnableVpcCNI"
+      @cancel="showSubnets = false" />
   </bk-form>
 </template>
 <script lang="ts">
-import { computed, defineComponent, onMounted, ref } from 'vue';
+import { computed, defineComponent, onMounted, ref, watch } from 'vue';
 
-import { ISubnet } from '../add/tencent/types';
-import VpcCni from '../add/tencent/vpc-cni.vue';
+import { ISubnetItem } from '../add/tencent/types';
 import { useClusterInfo } from '../cluster/use-cluster';
 
-import { addSubnets, cloudSubnets } from '@/api/modules/cluster-manager';
+import AddSubnetDialog from './add-subnet-dialog.vue';
+import VpcCniDetail from './vpc-cni-detail.vue';
+
+import { underlayNetwork  } from '@/api/modules/cluster-manager';
 import { countIPsInCIDR } from '@/common/util';
+import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import DescList from '@/components/desc-list.vue';
 import LoadingIcon from '@/components/loading-icon.vue';
+import StatusIcon from '@/components/status-icon';
+import useInterval from '@/composables/use-interval';
+import $i18n from '@/i18n/i18n-setup';
+import $store from '@/store';
 import useCloud from '@/views/cluster-manage/use-cloud';
 
 export default defineComponent({
   name: 'ClusterNetwork',
-  components: { DescList, VpcCni, LoadingIcon },
+  components: { DescList, LoadingIcon, VpcCniDetail, StatusIcon, AddSubnetDialog },
   props: {
     clusterId: {
       type: String,
@@ -236,117 +214,7 @@ export default defineComponent({
         : '--';
     });
 
-    // 子网
-    const subnets = ref<Array<ISubnet>>([]);
-    const subnetLoading = ref(false);
-    const handleGetSubnets = async () => {
-      const { provider, cloudAccountID, region, vpcID } = clusterData.value;
-      if (!provider || !cloudAccountID || !region || !vpcID) return;
-
-      subnetLoading.value = true;
-      subnets.value = await cloudSubnets({
-        $cloudId: provider,
-        region,
-        accountID: cloudAccountID,
-        vpcID,
-        subnetID: clusterData.value.networkSettings?.eniSubnetIDs?.join(','),
-        resourceGroupName: clusterData.value.extraInfo?.nodeResourceGroup,
-      }).catch(() => []);
-      firstRowspan.value = {};
-      // 排序子网，将相同子网放在一起
-      subnets.value = subnets.value.sort((a, b) => {
-        if (a.zone < b.zone) {
-          return -1;
-        }
-        if (a.zone > b.zone) {
-          return 1;
-        }
-        return 0;
-      });
-      subnetLoading.value = false;
-    };
-
-    // 可用区展示
-    const zoneCounts = computed<Record<string, ISubnet[]>>(() => {
-      const counts = {};
-      subnets.value.forEach((item) => {
-        if (!counts[item.zone]) {
-          counts[item.zone] = [item];
-        } else {
-          counts[item.zone].push(item);
-        }
-      });
-      return counts;
-    });
-
-    // 获取IP数量
-    const getIpNumber = (row: ISubnet) => {
-      const zones = zoneCounts.value[row.zone];
-      const availableIPAddressCounts = zones.reduce((pre, item) => {
-        pre += Number(item.availableIPAddressCount);
-        return pre;
-      }, 0);
-      const cidrs = zones.reduce((pre, item) => {
-        pre += Number(countIPsInCIDR(item.cidrRange));
-        return pre;
-      }, 0);
-      return `${availableIPAddressCounts}/${cidrs}`;
-    };
-
-    // 添加子网
-    const showSubnets = ref(false);
-    const newSubnets = ref([{
-      ipCnt: 256,
-      zone: '',
-    }]);
-    const isSubnetsValidate = computed(() => newSubnets.value.every(item => item.ipCnt && item.zone));
-    const handleSetSubnets = (data) => {
-      newSubnets.value = data;
-    };
-    const handleShowSubnetsDialog = () => {
-      showSubnets.value = true;
-    };
-    const pending = ref(false);
-    const handleAddSubnets = async () => {
-      pending.value = true;
-      const result = await addSubnets({
-        $clusterId: props.clusterId,
-        subnet: {
-          new: newSubnets.value,
-        },
-      }).then(() => true)
-        .catch(() => false);
-      if (result) {
-        await getClusterDetail(props.clusterId, true);
-        await handleGetSubnets();
-        showSubnets.value = false;
-      }
-      pending.value = false;
-    };
-
-    // 合并单元格
-    const firstRowspan = ref({});
-    const objectSpanMethod = ({ row, column }) => {
-      if (column.property === 'zoneName' || column.property === 'counts') {
-        if (zoneCounts.value[row.zone]?.length === 1) return {
-          rowspan: 1,
-          colspan: 1,
-        };
-        // 合并相同可用区
-        if (zoneCounts.value[row.zone]?.length > 1 && !firstRowspan.value[`${column.property}-${row.zone}`]) {
-          firstRowspan.value[`${column.property}-${row.zone}`] = true;
-          return {
-            rowspan: zoneCounts.value[row.zone]?.length,
-            colspan: 1,
-          };
-        }
-        return {
-          rowspan: 0,
-          colspan: 1,
-        };
-      }
-    };
-
+    // 可用区 和 vpc
     const {
       regionLoading,
       regionList,
@@ -362,13 +230,80 @@ export default defineComponent({
     });
     const vpc = computed(() => {
       const data = vpcList.value.find(item => item.vpcId === clusterData.value.vpcID);
-      return data ? `${data.name}(${data.vpcId})` : clusterData.value.vpcID;
+      return data ? `${data.name}(${data.vpcId})` : (clusterData.value.vpcID || '--');
+    });
+
+    // 启用vpc-cni确认
+    const showSubnets = ref(false);
+    const toggleVpcCNIStatus = async (value: boolean) => new Promise(async (resolve, reject) => {
+      if (value) {
+      // 启用vpc-cni
+        showSubnets.value = true;
+        reject();// dialog处理手后续流程
+        return;
+      }
+      // 禁用vpc-cni
+      $bkInfo({
+        type: 'warning',
+        theme: 'warning',
+        clsName: 'custom-info-confirm',
+        title: $i18n.t('cluster.detail.title.disableVpcCNI.text'),
+        subTitle: `${$i18n.t('cluster.detail.title.disableVpcCNI.p1')}, ${$i18n.t('cluster.detail.title.disableVpcCNI.p2')}`,
+        defaultInfo: true,
+        confirmFn: async () => {
+          const result = await underlayNetwork({
+            $clusterId: clusterData.value.clusterID,
+            disable: true,
+            operator: $store.state.user?.username,
+          }).then(() => true)
+            .catch(() => false);
+          if (result) {
+            getClusterDetail(props.clusterId, true);
+            resolve(true);
+          } else {
+            reject();
+          }
+        },
+        cancelFn: () => {
+          reject(false);
+        },
+      });
+    });
+    const handleConfirmEnableVpcCNI = async (subnets: Array<ISubnetItem>) => {
+      const result = await underlayNetwork({
+        $clusterId: clusterData.value.clusterID,
+        disable: false,
+        isStaticIpMode: true, // 自研云默认为 true，暂时不允许用户传递
+        claimExpiredSeconds: 300, // 默认为 300
+        operator: $store.state.user?.username,
+        subnet: {
+          new: subnets,
+          existed: {
+            ids: [], // 暂时不需要了
+          },
+        },
+      }).then(() => true)
+        .catch(() => false);
+      if (result) {
+        getClusterDetail(props.clusterId, true);
+        showSubnets.value = false;
+      }
+    };
+    // 轮询vpc-cni状态
+    const { start, stop } = useInterval(async () => {
+      await getClusterDetail(props.clusterId, true, false);
+    }, 5000, true);
+    watch(() => clusterData.value?.networkSettings?.status, () => {
+      if (clusterData.value?.networkSettings?.status !== 'INITIALIZATION') {
+        stop();
+      } else {
+        start();
+      }
     });
 
     onMounted(async () => {
       await getClusterDetail(props.clusterId, true);
       await Promise.all([
-        handleGetSubnets(),
         handleGetRegionList({
           cloudAccountID: clusterData.value.cloudAccountID,
           cloudID: clusterData.value.provider,
@@ -383,12 +318,6 @@ export default defineComponent({
     });
 
     return {
-      pending,
-      isSubnetsValidate,
-      showSubnets,
-      newSubnets,
-      subnetLoading,
-      subnets,
       isLoading,
       clusterData,
       clusterIPv4CIDR,
@@ -400,9 +329,6 @@ export default defineComponent({
       serviceIPv4CIDR,
       networkType,
       countIPsInCIDR,
-      handleShowSubnetsDialog,
-      handleSetSubnets,
-      handleAddSubnets,
       region,
       regionLoading,
       regionList,
@@ -411,8 +337,9 @@ export default defineComponent({
       vpcList,
       vpcLoading,
       handleGetVPCList,
-      objectSpanMethod,
-      getIpNumber,
+      toggleVpcCNIStatus,
+      showSubnets,
+      handleConfirmEnableVpcCNI,
     };
   },
 });

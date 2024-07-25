@@ -1,0 +1,19 @@
+{
+  "recommendations": [
+    "dbaeumer.vscode-eslint",                // 代码质量和风格检查
+    "esbenp.prettier-vscode",                // 代码格式化工具
+    "christian-kohler.path-intellisense",    // 文件路径的智能提示
+    "eamodio.gitlens",                       // 增强的 Git 功能
+    "vscode-icons-team.vscode-icons",        // 图标主题，使文件和文件夹更易识别
+    "ritwickdey.liveserver",                 // 提供本地开发服务器，支持实时重新加载
+    "vue.volar",                             // 支持 Vue 3 的 Composition API 等新特性
+    "bradlc.vscode-tailwindcss",             // 提供 Tailwind CSS 类名自动补全和文档
+    "ecmel.vscode-html-css",                 // 为 HTML 提供 CSS 类名自动补全
+    "xabikos.javascriptsnippets",            // 提供 ES6 的代码片段
+    "rbbit.typescript-hero",                 // TypeScript 导入管理，总结类和接口等
+    "ms-vscode.vscode-typescript-tslint-plugin", // TypeScript Linter，确保 TypeScript 代码风格一致
+    "formulahendry.auto-close-tag",          // 标签自动闭合
+    "streetsidesoftware.code-spell-checker", // 检查单词是否拼写错误
+    "ms-ceintl.vscode-language-pack-zh-hans",// VSCode汉化插件
+  ]
+}

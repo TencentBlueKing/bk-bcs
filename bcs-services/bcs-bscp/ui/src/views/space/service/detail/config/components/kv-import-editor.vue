@@ -1,6 +1,6 @@
 <template>
   <Teleport :disabled="!isOpenFullScreen" to="body">
-    <div :class="['config-content-editor', { fullscreen: isOpenFullScreen }]">
+    <div :class="['config-content-editor', { fullscreen: isOpenFullScreen, 'show-example': modelValue }]">
       <div class="editor-title">
         <div class="tips">
           <div class="title">{{ t('导入数据') }}</div>
@@ -215,7 +215,7 @@
         });
       }
     });
-    emits('hasError', textContent.value && errorLine.value.length === 0);
+    emits('hasError', textContent.value && errorLine.value.length > 0);
     return hasSeparatorError;
   };
 
@@ -286,6 +286,26 @@
       width: 100vw;
       height: 100vh;
       z-index: 5000;
+      &.show-example {
+        :deep(.code-editor-wrapper) {
+          width: calc(100vw - 520px);
+        }
+        :deep(.example-wrap) {
+          position: absolute;
+          right: 0;
+          top: 0;
+          height: 100%;
+          .content {
+            height: calc(100% - 40px);
+            .example {
+              height: 100%;
+            }
+            .bk-textarea {
+              height: 100%;
+            }
+          }
+        }
+      }
     }
     .editor-title {
       display: flex;

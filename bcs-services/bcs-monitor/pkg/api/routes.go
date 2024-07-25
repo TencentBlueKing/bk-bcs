@@ -181,6 +181,7 @@ func registerMetricsRoutes(engine *gin.RouterGroup) {
 		route.GET("/nodegroup/:nodegroup/max_node_num", rest.RestHandlerFunc(metrics.ClusterGroupMaxNodeNum))
 		route.GET("/nodes/:node/info", rest.RestHandlerFunc(metrics.GetNodeInfo))
 		route.GET("/nodes/:node/overview", rest.RestHandlerFunc(metrics.GetNodeOverview))
+		route.POST("/nodes/overviews", rest.RestHandlerFunc(metrics.ListNodeOverviews))
 		route.GET("/nodes/:node/cpu_usage", rest.RestHandlerFunc(metrics.GetNodeCPUUsage))
 		route.GET("/nodes/:node/cpu_request_usage", rest.RestHandlerFunc(metrics.GetNodeCPURequestUsage))
 		route.GET("/nodes/:node/memory_usage", rest.RestHandlerFunc(metrics.GetNodeMemoryUsage))

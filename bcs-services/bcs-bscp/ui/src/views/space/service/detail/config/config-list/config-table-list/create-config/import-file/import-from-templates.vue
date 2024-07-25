@@ -117,6 +117,7 @@
             selectedPkgs.value.push({
               template_set_id: id,
               template_revisions: [],
+              template_set_name: `${spaceGroup.template_space_name} - ${pkg.template_set_name}`,
             });
             return true;
           }

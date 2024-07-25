@@ -44,16 +44,15 @@
 <script setup lang="ts">
 import { PropType, ref, watch } from 'vue';
 
+import { ISubnetItem } from './types';
+
 import Zone from '@/views/cluster-manage/add/form/zone.vue';
 
 const nodePodNumList = ref([128, 256, 512, 1024, 2048, 4096]);
 
 const props = defineProps({
   subnets: {
-    type: Array as PropType<Array<{
-      zone: string
-      ipCnt: number
-    }>>,
+    type: Array as PropType<Array<ISubnetItem>>,
     default: () => [],
   },
   cloudAccountID: {

@@ -13,7 +13,7 @@
     <template #header>
       <div class="header-wrapper">
         <div class="title">{{ isMultiple || isAcrossChecked ? t('批量添加至') : t('添加至套餐') }}</div>
-        <div v-if="props.value.length === 1" class="config-name">{{ props.value[0].spec.name }}</div>
+        <div v-if="props.value.length === 1" class="config-name">{{ fileAP(props.value[0]) }}</div>
       </div>
     </template>
     <div v-if="isMultiple || isAcrossChecked" class="selected-mark">
@@ -25,9 +25,19 @@
       <bk-form-item
         :label="isMultiple || isAcrossChecked ? t('添加至模板套餐') : t('模板套餐')"
         property="pkgs"
+        required />
+      <bk-form-item
+        :label="isMultiple || isAcrossChecked ? t('添加至模板套餐') : t('模板套餐')"
+        property="pkgs"
         required>
-        <bk-select v-model="selectedPkgs" multiple @change="handPkgsChange">
-          <bk-option v-for="pkg in allPackages" :key="pkg.id" :value="pkg.id" :label="pkg.spec.name"> </bk-option>
+        <bk-select v-model="selectedPkgs" multiple @change="handPkgsChange" @clear="handleClearPkgs">
+          <bk-option
+            v-for="pkg in allPackages"
+            :key="pkg.id"
+            :value="pkg.id"
+            :label="pkg.spec.name"
+            :disabled="citeByPkgIds && citeByPkgIds.includes(pkg.id)">
+          </bk-option>
         </bk-select>
       </bk-form-item>
     </bk-form>
@@ -72,6 +82,7 @@
   const props = defineProps<{
     show: boolean;
     value: ITemplateConfigItem[];
+    citeByPkgIds?: number[];
   }>();
 
   const emits = defineEmits(['update:show', 'added']);
@@ -97,12 +108,30 @@
     () => props.show,
     (val) => {
       if (val) {
-        selectedPkgs.value = [];
         citedList.value = [];
         pending.value = false;
+        if (props.citeByPkgIds && props.citeByPkgIds.length > 0) {
+          selectedPkgs.value = allPackages.value
+            .filter((pkg) => props.citeByPkgIds!.includes(pkg.id))
+            .map((pkg) => pkg.id);
+          if (selectedPkgs.value.length > 0) {
+            getCitedData();
+          }
+        } else {
+          selectedPkgs.value = [];
+        }
       }
     },
   );
+
+  // 配置文件绝对路径
+  const fileAP = computed(() => (config: ITemplateConfigItem) => {
+    const { path, name } = config.spec;
+    if (path.endsWith('/')) {
+      return `${path}${name}`;
+    }
+    return `${path}/${name}`;
+  });
 
   const goToConfigPageImport = (id: number) => {
     const { href } = router.resolve({
@@ -135,6 +164,11 @@
     } else {
       citedList.value = [];
     }
+  };
+
+  const handleClearPkgs = () => {
+    selectedPkgs.value = allPackages.value.filter((pkg) => props.citeByPkgIds!.includes(pkg.id)).map((pkg) => pkg.id);
+    getCitedData();
   };
 
   const handleConfirm = async () => {

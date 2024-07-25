@@ -19,8 +19,11 @@
           v-if="!loading"
           :data="citedList"
           :max-height="maxTableHeight"
-          :is-selected-fn="getSelectionStatus"
-          @selection-change="handleSelectionChange">
+          :checked="checkedPkgs"
+          :is-row-select-enable="isRowSelectEnable"
+          show-overflow-tooltip
+          @selection-change="handleSelectionChange"
+          @select-all="handleSelectAll">
           <bk-table-column v-if="citedList.length > 1" type="selection" min-width="30" width="40" />
           <bk-table-column :label="t('所在模板套餐')">
             <template #default="{ row }">
@@ -34,7 +37,7 @@
         </bk-table>
       </bk-loading>
     </div>
-    <p v-if="citedList.length === 1" class="tips">
+    <p v-if="citedList.length === 1 || selectedPkgs.length === citedList.length" class="tips">
       <Warn class="warn-icon" />
       {{ t('移出后配置文件将不存在任一套餐。你仍可在「全部配置文件」或「未指定套餐」分类下找回。') }}
     </p>
@@ -92,6 +95,10 @@
     return windowHeight * 0.6 - 200;
   });
 
+  const checkedPkgs = computed(() => {
+    return citedList.value.filter((pkg) => selectedPkgs.value.includes(pkg.id));
+  });
+
   watch(
     () => props.show,
     (val) => {
@@ -146,32 +153,34 @@
     loading.value = false;
   };
 
-  const getSelectionStatus = ({ row }: { row: ICitedItem }) => {
-    console.log(row.name, selectedPkgs.value.includes(row.id));
-    return selectedPkgs.value.includes(row.id);
-  };
-
-  const handleSelectionChange = ({ checked, isAll, row }: { checked: boolean; isAll: boolean; row: ICitedItem }) => {
-    if (isAll) {
-      if (checked) {
-        selectedPkgs.value = citedList.value.map((item) => item.id);
-      } else {
-        selectedPkgs.value = [];
+  const handleSelectionChange = ({ checked, row }: { checked: boolean; row: ICitedItem }) => {
+    if (checked) {
+      if (!selectedPkgs.value.includes(row.id)) {
+        selectedPkgs.value.push(row.id);
       }
     } else {
-      if (checked) {
-        if (!selectedPkgs.value.includes(row.id)) {
-          selectedPkgs.value.push(row.id);
-        }
-      } else {
-        const index = selectedPkgs.value.findIndex((id) => id === row.id);
-        if (index > -1) {
-          selectedPkgs.value.splice(index, 1);
-        }
+      const index = selectedPkgs.value.findIndex((id) => id === row.id);
+      if (index > -1) {
+        selectedPkgs.value.splice(index, 1);
       }
     }
   };
 
+  const handleSelectAll = ({ checked }: { checked: boolean }) => {
+    if (checked) {
+      selectedPkgs.value = citedList.value.map((item) => item.id);
+    } else {
+      if (typeof props.currentPkg === 'number') {
+        selectedPkgs.value = [props.currentPkg];
+      } else if (props.currentPkg === 'all' && citedList.value.length === 1) {
+        selectedPkgs.value = [citedList.value[0].id];
+      }
+    }
+  };
+
+  const isRowSelectEnable = ({ row, isCheckAll }: any) => {
+    return isCheckAll || props.currentPkg !== row.id;
+  };
   const handleConfirm = async () => {
     try {
       pending.value = true;
@@ -243,6 +252,13 @@
 </style>
 <style lang="scss">
   .move-out-from-pkgs-dialog.bk-modal-wrapper {
+    .bk-dialog-header {
+      line-height: normal !important;
+      .bk-dialog-title {
+        white-space: pre-wrap !important;
+      }
+    }
+
     .bk-modal-footer {
       background: #ffffff;
       border-top: none;

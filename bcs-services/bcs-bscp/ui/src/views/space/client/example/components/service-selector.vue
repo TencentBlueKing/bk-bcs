@@ -70,6 +70,8 @@
       emits('select-service', localApp.value.serviceType, localApp.value.name);
     } else if (serviceList.value.length) {
       handleAppChange(serviceList.value[0].id!);
+    } else {
+      emits('select-service');
     }
   });
 
@@ -84,6 +86,7 @@
       const resp = await getAppList(bizId.value, query);
       serviceList.value = resp.details;
     } catch (e) {
+      emits('select-service');
       console.error(e);
     } finally {
       loading.value = false;

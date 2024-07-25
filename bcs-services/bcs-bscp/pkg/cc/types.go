@@ -62,12 +62,14 @@ type FeatureResourceLimit struct {
 
 // ResourceLimit 资源限制配置项
 type ResourceLimit struct {
-	// MaxFileSize 配置文件大小上限，单位 MB，默认为100MB
+	// MaxFileSize 配置文件大小上限，单位 MB，默认为200MB
 	MaxFileSize uint `json:"maxFileSize" yaml:"maxFileSize"`
 	// AppConfigCnt 单个app下允许创建的配置数（模版+非模版），默认为2000
 	AppConfigCnt uint `yaml:"appConfigCnt"`
 	// TmplSetTmplCnt 单个模版套餐下允许创建的模版数，默认为2000
 	TmplSetTmplCnt uint `yaml:"tmplSetTmplCnt"`
+	// MaxUploadContentLength 最大内容长度
+	MaxUploadContentLength uint `yaml:"maxUploadContentLength"`
 }
 
 // validate if the feature resource limit is valid or not.
@@ -93,11 +95,15 @@ const (
 	// DefaultBizView is default biz view
 	DefaultBizView = true
 	// DefaultMaxFileSize is default max file size, unit is MB
-	DefaultMaxFileSize = 100
+	DefaultMaxFileSize = 200
 	// DefaultAppConfigCnt is default app's config count
 	DefaultAppConfigCnt = 2000
 	// DefaultTmplSetTmplCnt is default template set's template count
 	DefaultTmplSetTmplCnt = 2000
+	// DefaultMaxUploadContentLength 默认最大内容长度(2048MB)
+	DefaultMaxUploadContentLength = 2 * 1024
+	// DefaultMaxUploadSingleContentLength 默认最大单个内容长度(200MB)
+	DefaultMaxUploadSingleContentLength = 200
 )
 
 // trySetDefault try set the default value of feature flag
@@ -117,6 +123,10 @@ func (f *FeatureFlags) trySetDefault() {
 
 	if f.ResourceLimit.Default.TmplSetTmplCnt == 0 {
 		f.ResourceLimit.Default.TmplSetTmplCnt = DefaultTmplSetTmplCnt
+	}
+
+	if f.ResourceLimit.Default.MaxUploadContentLength == 0 {
+		f.ResourceLimit.Default.MaxUploadContentLength = DefaultMaxUploadContentLength
 	}
 }
 
@@ -717,6 +727,9 @@ func (n *Network) trySetDefault() {
 			n.BindIPs = []string{n.BindIP}
 		}
 	}
+	if n.GwHttpPort == 0 {
+		n.GwHttpPort = 80
+	}
 }
 
 // validate network options
@@ -1082,6 +1095,104 @@ func (lm *MatchReleaseLimiter) trySetDefault() {
 
 	if lm.WaitTimeMil == 0 {
 		lm.WaitTimeMil = 50
+	}
+}
+
+// RateLimiter defines the rate limiter options for traffic control.
+type RateLimiter struct {
+	Enable          bool    `yaml:"enable"`
+	ClientBandwidth uint    `yaml:"clientBandwidth"`
+	Global          BasicRL `yaml:"global"`
+	Biz             BizRLs  `yaml:"biz"`
+}
+
+// BizRLs defines the rate limiters for biz
+type BizRLs struct {
+	Default BasicRL          `yaml:"default"`
+	Spec    map[uint]BasicRL `yaml:"spec"`
+}
+
+// BasicRL defines the basic options for rate limiter.
+type BasicRL struct {
+	Limit uint `yaml:"limit"`
+	Burst uint `yaml:"burst"`
+}
+
+const (
+	// DefaultClientBandwidth default client bandwidth
+	DefaultClientBandwidth = 50 // 50MB/s = 400Mb/s
+	// DefaultGlobalRateLimit default global rate limit
+	DefaultGlobalRateLimit = 1000 // 1000MB/s = 8000Mb/s
+	// DefaultGlobalRateBurst default global rate burst
+	DefaultGlobalRateBurst = 2000 // 2000MB = 16000Mb
+	// DefaultBizRateLimit default biz rate limit
+	DefaultBizRateLimit = 100 // 100MB/s = 800Mb/s
+	// DefaultBizRateBurst default biz rate burst
+	DefaultBizRateBurst = 200 // 200MB = 1600Mb
+)
+
+// validate if the rate limiter is valid or not.
+func (rl RateLimiter) validate() error {
+	if rl.Biz.Default.Burst < rl.Biz.Default.Limit {
+		return fmt.Errorf("invalid rateLimiter.biz.default.burst value %d, should >= rateLimiter.biz.default.limit "+
+			"value %d", rl.Global.Burst, rl.Global.Limit)
+	}
+
+	if rl.Global.Limit < rl.Biz.Default.Limit {
+		return fmt.Errorf("invalid rateLimiter.global.limit value %d, should >= rateLimiter.biz.default.limit value %d",
+			rl.Global.Limit, rl.ClientBandwidth)
+	}
+
+	if rl.Global.Burst < rl.Biz.Default.Burst {
+		return fmt.Errorf("invalid rateLimiter.global.burst value %d, should >= rateLimiter.biz.default.burst value %d",
+			rl.Global.Burst, rl.Global.Limit)
+	}
+
+	for bizID, l := range rl.Biz.Spec {
+		if l.Burst < l.Limit {
+			return fmt.Errorf("invalid rateLimiter.biz.spec.%d.burst value %d, "+
+				"should >= rateLimiter.biz.spec.%d.limit value %d", bizID, l.Burst, bizID, l.Limit)
+		}
+	}
+
+	return nil
+}
+
+// trySetDefault try set the default value of rate limiter
+func (rl *RateLimiter) trySetDefault() {
+	if rl.ClientBandwidth == 0 {
+		rl.ClientBandwidth = DefaultClientBandwidth
+	}
+
+	if rl.Global.Limit == 0 {
+		rl.Global.Limit = DefaultGlobalRateLimit
+	}
+
+	if rl.Global.Burst == 0 {
+		rl.Global.Burst = DefaultGlobalRateBurst
+	}
+
+	if rl.Biz.Default.Limit == 0 {
+		rl.Biz.Default.Limit = DefaultBizRateLimit
+	}
+
+	if rl.Biz.Default.Burst == 0 {
+		rl.Biz.Default.Burst = DefaultBizRateBurst
+	}
+
+	for bizID, l := range rl.Biz.Spec {
+		if l.Limit == 0 {
+			rl.Biz.Spec[bizID] = BasicRL{
+				Limit: DefaultBizRateLimit,
+				Burst: l.Burst,
+			}
+		}
+		if l.Burst == 0 {
+			rl.Biz.Spec[bizID] = BasicRL{
+				Limit: rl.Biz.Spec[bizID].Limit,
+				Burst: DefaultBizRateBurst,
+			}
+		}
 	}
 }
 

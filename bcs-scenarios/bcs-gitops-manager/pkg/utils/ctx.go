@@ -97,6 +97,14 @@ func IsArgoResourceNotFound(err error) bool {
 	return strings.Contains(err.Error(), "code = NotFound")
 }
 
+// IsNotFound defines is not found
+func IsNotFound(err error) bool {
+	if err == nil {
+		return false
+	}
+	return strings.Contains(err.Error(), "not found")
+}
+
 // IsArgoNotFoundAsPartOf defines the resource not found as port of application
 func IsArgoNotFoundAsPartOf(err error) bool {
 	if err == nil {

@@ -7855,6 +7855,14 @@
           "format": "int64",
           "description": "underlay网络模式下自动分配子网的步长",
           "title": "underlayAutoSteps"
+        },
+        "vpcCniModes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerNetworkMode"
+          },
+          "description": "vpc-cni插件下支持的网络模式",
+          "title": "vpcCniModes"
         }
       },
       "description": "用于记录公共网络配置信息",
@@ -15109,6 +15117,21 @@
         }
       }
     },
+    "clustermanagerNetworkMode": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "type": "string"
+        },
+        "default": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
     "clustermanagerNetworkSetting": {
       "type": "object",
       "properties": {
@@ -15150,7 +15173,7 @@
         },
         "subnetSource": {
           "$ref": "#/definitions/clustermanagerSubnetSource",
-          "description": "集群VPC-CNI模式是否为非固定IP，默认: FALSE 非固定IP",
+          "description": "集群VPC-CNI模式下的使用子网情况",
           "title": "subnetSource"
         },
         "isStaticIpMode": {
@@ -15198,6 +15221,11 @@
           "type": "string",
           "description": "集群网络状态, 主要是变更网络组件过程中记录网络状态",
           "title": "status"
+        },
+        "networkMode": {
+          "type": "string",
+          "description": "集群VpcCni网络模式(目前支持共享网卡模式tke-route-eni和独占网卡模式tke-direct-eni, 默认情况下是共享网卡模式)",
+          "title": "networkMode"
         }
       }
     },

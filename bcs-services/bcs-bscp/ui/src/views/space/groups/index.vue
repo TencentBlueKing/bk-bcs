@@ -508,7 +508,7 @@
   }
   .group-table-wrapper {
     :deep(.bk-table-body) {
-      max-height: calc(100vh - 240px);
+      max-height: calc(100vh - 280px);
       overflow: auto;
     }
   }

@@ -113,7 +113,7 @@
       close();
       Message({
         theme: 'success',
-        message: '新建配置文件成功',
+        message: t('新建配置文件成功'),
       });
     } catch (e) {
       console.log(e);

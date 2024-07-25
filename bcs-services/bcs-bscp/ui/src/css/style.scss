@@ -23,7 +23,8 @@
 div::-webkit-scrollbar,
 ul::-webkit-scrollbar,
 section::-webkit-scrollbar,
-article::-webkit-scrollbar {
+article::-webkit-scrollbar,
+form::-webkit-scrollbar {
   width: 4px;
   height: 4px;
 }
@@ -31,7 +32,8 @@ article::-webkit-scrollbar {
 div::-webkit-scrollbar-thumb,
 ul::-webkit-scrollbar-thumb,
 section::-webkit-scrollbar-thumb,
-article::-webkit-scrollbar-thumb {
+article::-webkit-scrollbar-thumb,
+form::-webkit-scrollbar-thumb {
   background: #ddd;
   border-radius: 20px;
   box-shadow: inset 0 0 6px #cccccc4d;

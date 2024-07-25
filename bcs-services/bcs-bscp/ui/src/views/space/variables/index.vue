@@ -16,7 +16,7 @@
         </bk-button>
         <bk-button @click="isImportVariableShow = true">{{ t('导入变量') }}</bk-button>
         <!-- <VaribaleExport :biz-id="spaceId" /> -->
-        <bk-button @click="handleExport">{{ t('导出变量') }} </bk-button>
+        <bk-button :disabled="list.length === 0" @click="handleExport">{{ t('导出变量') }} </bk-button>
         <BatchDeleteBtn
           :bk-biz-id="spaceId"
           :selected-ids="selectedIds"
@@ -32,6 +32,7 @@
         :data="list"
         :remote-pagination="true"
         :pagination="pagination"
+        show-overflow-tooltip
         @page-limit-change="handlePageLimitChange"
         @page-value-change="refreshList($event, true)">
         <template #prepend>
@@ -361,6 +362,10 @@
     }
   }
   .variable-table {
+    :deep(.bk-table-body) {
+      max-height: calc(100vh - 300px);
+      overflow: auto;
+    }
     padding: 16px 24px 24px;
   }
   .action-btns {

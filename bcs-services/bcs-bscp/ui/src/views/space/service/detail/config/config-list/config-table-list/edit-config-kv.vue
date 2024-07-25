@@ -105,10 +105,10 @@
 <style lang="scss" scoped>
   .config-container {
     height: calc(100vh - 101px);
-    overflow: auto;
     .config-form-wrapper {
       padding: 20px 40px;
       height: 100%;
+      overflow: auto;
     }
   }
 

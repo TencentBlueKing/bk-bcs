@@ -73,6 +73,18 @@ _on_cloud() {
 }
 
 _on_baremetal() {
+  if [ -n "$LAN_DEV" ];then
+    if ip addr show ${LAN_DEV} >/dev/null;then
+      LAN_IP=$(ip addr show ${LAN_DEV}|grep "inet "|awk ' { print $2 } '|sed "s/\/.*//g")
+      if [[ -n $LAN_IP ]]; then
+        echo "$LAN_IP"
+        return 0
+      fi
+      error "fail to obtain LAN_IP"  >&2
+      exit 1
+    fi
+  fi
+
   if ip route show | grep -q "default via"; then
     LAN_IP=$(ip -4 -o route get 10/8 | sed -n 's/.*src \([0-9.]\+\).*/\1/p')
       if [[ -n $LAN_IP ]]; then

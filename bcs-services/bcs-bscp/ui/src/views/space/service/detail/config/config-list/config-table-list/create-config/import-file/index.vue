@@ -6,56 +6,59 @@
     width="960"
     height="720"
     ext-cls="import-file-dialog"
-    :esc-close="false"
     :before-close="handleBeforeClose"
-    @closed="emits('update:show', false)">
-    <div class="import-type-select">
-      <div class="label">{{ t('导入方式') }}</div>
-      <bk-radio-group v-model="importType">
-        <bk-radio-button label="localFile">{{ t('导入本地文件') }}</bk-radio-button>
-        <bk-radio-button label="configTemplate">{{ t('从配置模板导入') }}</bk-radio-button>
-        <bk-radio-button label="historyVersion">{{ t('从历史版本导入') }}</bk-radio-button>
-        <bk-radio-button label="otherService">{{ t('从其他服务导入') }}</bk-radio-button>
-      </bk-radio-group>
-    </div>
-    <div v-if="importType === 'localFile'">
-      <ImportFromLocalFile
-        :bk-biz-id="props.bkBizId"
-        :app-id="props.appId"
-        :is-template="false"
-        @change="handleUploadFile"
-        @delete="handleDeleteFile"
-        @uploading="uploadFileLoading = $event"
-        @decompressing="decompressing = $event" />
-    </div>
-    <div v-else-if="importType === 'configTemplate'">
-      <ImportFromTemplate ref="importFromTemplateRef" :bk-biz-id="props.bkBizId" :app-id="props.appId" />
-    </div>
-    <div v-else-if="importType === 'historyVersion'">
-      <div class="wrap">
-        <div class="label">{{ $t('选择版本') }}</div>
-        <bk-select
-          v-model="selectVerisonId"
-          :loading="versionListLoading"
-          style="width: 374px"
-          filterable
-          auto-focus
-          :clearable="false"
-          @select="handleSelectVersion(appId, $event)">
-          <bk-option v-for="item in versionList" :id="item.id" :key="item.id" :name="item.spec.name" />
-        </bk-select>
+    :quick-close="false"
+    @closed="handleClose">
+    <div :class="['select-wrap', { 'en-select-wrap': locale === 'en' }]">
+      <div class="import-type-select">
+        <div :class="['label', { 'en-label': locale === 'en' }]">{{ t('导入方式') }}</div>
+        <bk-radio-group v-model="importType">
+          <bk-radio-button label="localFile">{{ t('导入本地文件') }}</bk-radio-button>
+          <bk-radio-button label="configTemplate">{{ t('从配置模板导入') }}</bk-radio-button>
+          <bk-radio-button label="historyVersion">{{ t('从历史版本导入') }}</bk-radio-button>
+          <bk-radio-button label="otherService">{{ t('从其他服务导入') }}</bk-radio-button>
+        </bk-radio-group>
+      </div>
+      <div v-if="importType === 'localFile'">
+        <ImportFromLocalFile
+          :bk-biz-id="props.bkBizId"
+          :app-id="props.appId"
+          :is-template="false"
+          @change="handleUploadFile"
+          @delete="handleDeleteFile"
+          @uploading="uploadFileLoading = $event"
+          @decompressing="decompressing = $event"
+          @file-processing="fileProcessing = $event" />
+      </div>
+      <div v-else-if="importType === 'configTemplate'">
+        <ImportFromTemplate ref="importFromTemplateRef" :bk-biz-id="props.bkBizId" :app-id="props.appId" />
+      </div>
+      <div v-else-if="importType === 'historyVersion'">
+        <div class="wrap">
+          <div class="label">{{ $t('选择版本') }}</div>
+          <bk-select
+            v-model="selectVerisonId"
+            :loading="versionListLoading"
+            style="width: 374px"
+            filterable
+            auto-focus
+            :clearable="false"
+            @select="handleSelectVersion(appId, $event)">
+            <bk-option v-for="item in versionList" :id="item.id" :key="item.id" :name="item.spec.name" />
+          </bk-select>
+        </div>
+      </div>
+      <div v-else-if="importType === 'otherService'">
+        <ImportFormOtherService
+          :bk-biz-id="props.bkBizId"
+          :app-id="props.appId"
+          @select-version="handleSelectVersion"
+          @clear="handleClearTable" />
       </div>
     </div>
-    <div v-else-if="importType === 'otherService'">
-      <ImportFormOtherService
-        :bk-biz-id="props.bkBizId"
-        :app-id="props.appId"
-        @select-version="handleSelectVersion"
-        @clear="handleClearTable" />
-    </div>
     <bk-loading
-      :loading="decompressing || tableLoading"
-      :title="decompressing ? t('压缩包正在解压，请稍后') : ''"
+      :loading="decompressing || fileProcessing || tableLoading"
+      :title="loadingText"
       class="config-table-loading"
       mode="spin"
       theme="primary"
@@ -92,7 +95,7 @@
             filterable
             multiple
             show-select-all
-            @focus="handleFocusConfigSelect"
+            @toggle="handleToggleConfigSelectShow"
             @blur="handleCloseConfigSelect">
             <template #trigger>
               <div class="select-btn">{{ $t('选择配置文件') }}</div>
@@ -173,7 +176,7 @@
   import TemplateConfigTable from './template-config-table.vue';
   import { cloneDeep } from 'lodash';
 
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
 
   const serviceStore = useServiceStore();
 
@@ -184,7 +187,7 @@
   }>();
   const emits = defineEmits(['update:show', 'confirm']);
 
-  const isTableChange = ref(false);
+  const isFormChange = ref(false);
   const importType = ref('localFile');
   const loading = ref(false);
   const importFromTemplateRef = ref();
@@ -200,7 +203,8 @@
   const allTemplateConfigList = ref<ImportTemplateConfigItem[]>([]);
   const isClearDraft = ref(false);
   const uploadFileLoading = ref(false);
-  const decompressing = ref(false);
+  const decompressing = ref(false); // 后台压缩包解压
+  const fileProcessing = ref(false); // 后台文件处理
   const closeLoading = ref(false);
   const selectedConfigIds = ref<(string | number)[]>([]);
   const configSelectRef = ref();
@@ -232,12 +236,22 @@
     );
   });
 
+  const loadingText = computed(() => {
+    if (decompressing.value) {
+      return t('压缩包正在解压，请稍后...');
+    }
+    if (fileProcessing.value) {
+      return t('后台正在处理上传数据，请稍后...');
+    }
+    return '';
+  });
+
   watch(
     () => props.show,
     (val) => {
       if (val) {
         importType.value = 'localFile';
-        isTableChange.value = false;
+        isFormChange.value = false;
         handleClearTable();
         selectVerisonId.value = undefined;
         getVersionList();
@@ -349,6 +363,7 @@
   };
 
   const handleSelectVersion = async (other_app_id: number, release_id: number) => {
+    isFormChange.value = true;
     tableLoading.value = true;
     try {
       handleClearTable();
@@ -400,7 +415,7 @@
       }
       return true;
     });
-    isTableChange.value = true;
+    isFormChange.value = true;
   };
 
   const handleTemplateTableChange = (deleteId: string, isNonExistData: boolean) => {
@@ -416,21 +431,15 @@
       existTemplateConfigList.value.splice(index, 1);
     }
     selectedConfigIds.value = selectedConfigIds.value.filter((id) => id !== deleteId);
-    isTableChange.value = true;
-  };
-
-  const handleBeforeClose = async () => {
-    if (isTableChange.value) {
-      const result = await useModalCloseConfirmation();
-      return result;
-    }
-    return true;
+    isFormChange.value = true;
   };
 
   // 上传文件获取表格数据
   const handleUploadFile = (exist: IConfigImportItem[], nonExist: IConfigImportItem[]) => {
+    isFormChange.value = true;
     existConfigList.value = [...existConfigList.value, ...exist];
     nonExistConfigList.value = [...nonExistConfigList.value, ...nonExist];
+    allConfigList.value = [...allConfigList.value, ...exist, ...nonExist];
   };
 
   // 删除文件处理表格数据
@@ -449,7 +458,15 @@
     selectedConfigIds.value = [];
   };
 
-  const handleClose = () => {
+  const handleBeforeClose = async () => {
+    if (isFormChange.value) {
+      const result = await useModalCloseConfirmation();
+      return result;
+    }
+    return true;
+  };
+
+  const handleClose = async () => {
     closeLoading.value = true;
     handleClearTable();
     emits('update:show', false);
@@ -460,8 +477,10 @@
     selectedConfigIds.value = cloneDeep(lastSelectedConfigIds.value);
   };
 
-  const handleFocusConfigSelect = () => {
-    lastSelectedConfigIds.value = cloneDeep(selectedConfigIds.value);
+  const handleToggleConfigSelectShow = (isShow: boolean) => {
+    if (isShow) {
+      lastSelectedConfigIds.value = cloneDeep(selectedConfigIds.value);
+    }
   };
 
   const handleConfirmSelect = () => {
@@ -541,23 +560,37 @@
 </script>
 
 <style scoped lang="scss">
-  .import-type-select {
-    display: flex;
-  }
-  .label {
-    width: 72px;
-    height: 32px;
-    line-height: 32px;
-    font-size: 12px;
-    color: #63656e;
-    margin-right: 22px;
-    text-align: right;
-  }
-  :deep(.wrap) {
-    display: flex;
-    margin-top: 24px;
+  .select-wrap {
+    .import-type-select {
+      display: flex;
+    }
     .label {
-      @extend .label;
+      padding-top: 8px;
+      width: 72px;
+      font-size: 12px;
+      color: #63656e;
+      margin-right: 22px;
+      text-align: right;
+    }
+    :deep(.wrap) {
+      display: flex;
+      margin-top: 24px;
+      .label {
+        @extend .label;
+      }
+    }
+    &.en-select-wrap {
+      .label {
+        width: 100px !important;
+      }
+      :deep(.wrap) {
+        .label {
+          @extend .label;
+        }
+      }
+      :deep(.upload-file-list) {
+        margin-left: 120px;
+      }
     }
   }
 
@@ -594,7 +627,7 @@
         top: 50%;
         transform: translateY(-50%);
         .select-btn {
-          width: 102px;
+          min-width: 102px;
           height: 32px;
           background: #ffffff;
           border: 1px solid #c4c6cc;
