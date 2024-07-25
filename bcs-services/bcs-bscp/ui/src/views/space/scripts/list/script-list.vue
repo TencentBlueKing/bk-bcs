@@ -108,7 +108,7 @@
                   <bk-overflow-title class="memo-text" type="tips">
                     {{ row.hook.spec.memo || '--' }}
                   </bk-overflow-title>
-                  <span class="edit-icon" @click="handleOpenMemoEdit(row.hook.id)">
+                  <span class="edit-icon" @click="handleOpenMemoEdit(row)">
                     <EditLine />
                   </span>
                 </div>
@@ -117,7 +117,7 @@
                   ref="memoInputRef"
                   class="memo-input"
                   type="textarea"
-                  :model-value="row.hook.spec.memo"
+                  v-model="editMemoStr"
                   :autosize="{ maxRows: 4 }"
                   :resize="false"
                   :maxlength="200"
@@ -253,6 +253,7 @@
   const memoInputRef = ref();
   const tagEditHookId = ref(0); // 当前正在编辑标签的脚本id
   const tagInputRef = ref();
+  const editMemoStr = ref(''); // 编辑描述内容
 
   const maxTableHeight = computed(() => {
     const windowHeight = window.innerHeight;
@@ -372,8 +373,13 @@
   };
 
   // 触发编辑脚本描述
-  const handleOpenMemoEdit = (id: number) => {
+  const handleOpenMemoEdit = (script: IScriptItem) => {
+    const {
+      id,
+      spec: { memo },
+    } = script.hook;
     memoEditHookId.value = id;
+    editMemoStr.value = memo;
     nextTick(() => {
       memoInputRef.value?.focus();
     });
@@ -601,15 +607,6 @@
     color: #979ba5;
     background: #ffffff;
   }
-  // 脚本标签、描述编辑需要溢出table
-  :deep(.bk-table) {
-    &.table-with-memo-edit .bk-table-body {
-      overflow: visible;
-    }
-    .bk-table-body table td.memo-cell .cell {
-      overflow: visible;
-    }
-  }
   .hook-name {
     color: #348aff;
     cursor: pointer;
@@ -662,7 +659,6 @@
     }
   }
   .script-memo {
-    position: relative;
     .memo-display {
       display: flex;
       align-items: center;
@@ -686,13 +682,6 @@
       &:hover {
         color: #3a84ff;
       }
-    }
-    .memo-input {
-      position: absolute;
-      top: 4px;
-      left: 0;
-      right: 0;
-      z-index: 2;
     }
   }
   .action-btns {

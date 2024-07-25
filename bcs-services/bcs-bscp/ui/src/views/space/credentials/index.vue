@@ -102,6 +102,9 @@
             <template #default="{ row, index }">
               <bk-input
                 v-if="index === 0 && isCreateCredential"
+                type="textarea"
+                :maxlength="200"
+                :resize="false"
                 :placeholder="t('请输入密钥说明')"
                 v-model="createCredentialMemo"></bk-input>
               <div v-if="row.spec" class="credential-edit">
@@ -110,7 +113,7 @@
                     {{ row.spec.memo || '--' }}
                   </bk-overflow-title>
                   <span class="edit-icon">
-                    <EditLine @click="handleEditMemo(row.id)" />
+                    <EditLine @click="handleEditMemo(row)" />
                   </span>
                 </div>
                 <bk-input
@@ -118,7 +121,7 @@
                   ref="memoInputRef"
                   class="textarea"
                   type="textarea"
-                  :model-value="row.spec.memo"
+                  v-model="editMemoStr"
                   :maxlength="200"
                   :resize="false"
                   @blur="handleMemoOrNameBlur(row, false, $event)" />
@@ -294,6 +297,7 @@
   const editingNameId = ref(0); // 记录当前正在编辑名称的密钥id
   const memoInputRef = ref();
   const nameInputRef = ref();
+  const editMemoStr = ref('');
   const isAssociateSliderShow = ref(false);
   const currentCredential = ref(0);
   const isSearchEmpty = ref(false);
@@ -480,8 +484,13 @@
   const handleSearchInputChange = debounce(() => refreshListWithLoading(), 300);
 
   // 密钥说明编辑
-  const handleEditMemo = (id: number) => {
+  const handleEditMemo = (credential: ICredentialItem) => {
+    const {
+      id,
+      spec: { memo },
+    } = credential;
     editingMemoId.value = id;
+    editMemoStr.value = memo;
     nextTick(() => {
       if (memoInputRef.value) {
         memoInputRef.value.focus();
@@ -501,6 +510,7 @@
 
   // 失焦时保存密钥说明或密钥名称
   const handleMemoOrNameBlur = async (credential: ICredentialItem, isEditName = true, e: FocusEvent) => {
+    const { name, memo } = credential.spec;
     const params = {
       id: credential.id,
       enable: credential.spec.enable,
@@ -511,9 +521,15 @@
     if (isEditName) {
       params.name = val;
       editingNameId.value = 0;
+      if (val === name) {
+        return;
+      }
     } else {
       params.memo = val;
       editingMemoId.value = 0;
+      if (val === memo) {
+        return;
+      }
     }
     await updateCredential(spaceId.value, params);
     credential.spec.memo = params.memo;
