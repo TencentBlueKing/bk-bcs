@@ -1113,6 +1113,7 @@ export default defineComponent({
       setNodeLabels,
       batchDeleteNodes,
       taskDetail,
+      getAllNodeOverview,
     } = useNode();
 
     const tableLoading = ref(false);
@@ -1872,18 +1873,14 @@ export default defineComponent({
     const handleGetNodeOverview = async () => {
       const data = curPageData.value.filter(item => !nodeMetric.value[item.nodeName]
         && ['RUNNING', 'REMOVABLE'].includes(item.status));
-      const promiseList: Promise<any>[] = [];
-      for (const row of data) {
-        (function (item) {
-          promiseList.push(getNodeOverview({
-            nodeIP: item.nodeName,
-            clusterId: localClusterId.value,
-          }).then((data) => {
-            set(nodeMetric.value, item.nodeName, formatMetricData(data));
-          }));
-        }(row));
+      let nodes = data.map(item => item.nodeName) as string[];
+      const result = await getAllNodeOverview({
+        clusterId: localClusterId.value,
+        nodes
+      }).catch(() => {})
+      for (const key in result) {
+        set(nodeMetric.value, key, formatMetricData(result[key]));
       }
-      await Promise.all(promiseList);
     };
     watch(curPageData, async () => {
       await handleGetNodeOverview();
