@@ -15,9 +15,14 @@
           {{ t('新增变量') }}
         </bk-button>
         <bk-button @click="isImportVariableShow = true">{{ t('导入变量') }}</bk-button>
-        <VaribaleExport :biz-id="spaceId" />
+        <!-- <VaribaleExport :biz-id="spaceId" /> -->
         <bk-button @click="handleExport">{{ t('导出变量') }} </bk-button>
-        <BatchDeleteBtn :bk-biz-id="spaceId" :selected-ids="selectedIds" @deleted="refreshAfterBatchDelete" />
+        <BatchDeleteBtn
+          :bk-biz-id="spaceId"
+          :selected-ids="selectedIds"
+          :is-across-checked="isAcrossChecked"
+          :data-count="pagination.count"
+          @deleted="refreshAfterBatchDelete" />
       </div>
       <SearchInput v-model="searchStr" :placeholder="t('请输入变量名称')" :width="320" @search="refreshList()" />
     </div>
@@ -26,13 +31,18 @@
         :border="['outer']"
         :data="list"
         :remote-pagination="true"
-        :checked="checkedVariables"
         :pagination="pagination"
-        @selection-change="handleSelectionChange"
-        @select-all="handleSelectAll"
         @page-limit-change="handlePageLimitChange"
-        @page-value-change="refreshList">
-        <bk-table-column type="selection" :width="60"></bk-table-column>
+        @page-value-change="refreshList($event, true)">
+        <template #prepend>
+          <render-table-tip />
+        </template>
+        <bk-table-column :min-width="70" :width="70" :label="renderSelection">
+          <template #default="{ row }">
+            <across-check-box :checked="isChecked(row)" :handle-change="() => handleSelectionChange(row)" />
+          </template>
+        </bk-table-column>
+        <!-- <bk-table-column type="selection" :width="60"></bk-table-column> -->
         <bk-table-column :label="t('变量名称')" width="300">
           <template #default="{ row }">
             <div v-if="row.spec" class="var-name-wrapper">
@@ -82,7 +92,7 @@
   </DeleteConfirmDialog>
 </template>
 <script lang="ts" setup>
-  import { onMounted, ref, computed, watch } from 'vue';
+  import { onMounted, ref, computed, watch, toRef } from 'vue';
   import { useI18n } from 'vue-i18n';
   import { storeToRefs } from 'pinia';
   import { Plus, Copy } from 'bkui-vue/lib/icon';
@@ -101,6 +111,9 @@
   import SearchInput from '../../../components/search-input.vue';
   import TableEmpty from '../../../components/table/table-empty.vue';
   import DeleteConfirmDialog from '../../../components/delete-confirm-dialog.vue';
+  import useTableAcrossCheck from '../../../utils/hooks/use-table-acrosscheck';
+  import acrossCheckBox from '../../../components/across-checkbox.vue';
+  import CheckType from '../../../../types/across-checked';
 
   const { spaceId } = storeToRefs(useGlobalStore());
   const { t } = useI18n();
@@ -125,11 +138,22 @@
     },
   });
   const isSearchEmpty = ref(false);
+  const isAcrossChecked = ref(false);
 
   // table组件的checked属性需要的类型为string[]|rowItem[]，所以这里传原始数据
-  const checkedVariables = computed(() => {
-    return list.value.filter((item) => selectedIds.value.includes(item.id));
-  });
+  // const checkedVariables = computed(() => {
+  //   return list.value.filter((item) => selectedIds.value.includes(item.id));
+  // });
+
+  const arrowShow = computed(() => pagination.value.limit < pagination.value.count);
+
+  const { selectType, selections, renderSelection, renderTableTip, handleRowCheckChange, handleClearSelection } =
+    useTableAcrossCheck({
+      dataCount: toRef(pagination.value, 'count'),
+      curPageData: list, // 当前页数据
+      rowKey: ['id'],
+      arrowShow,
+    });
 
   watch(
     () => spaceId.value,
@@ -137,10 +161,30 @@
       refreshList();
     },
   );
+  watch(
+    selections,
+    () => {
+      isAcrossChecked.value = [CheckType.HalfAcrossChecked, CheckType.AcrossChecked].includes(selectType.value);
+      selectedIds.value = selections.value.map((item) => item.id);
+    },
+    {
+      deep: true,
+    },
+  );
 
   onMounted(() => {
     getVariables();
   });
+
+  // 选中状态
+  const isChecked = (row: IVariableItem) => {
+    if (![CheckType.AcrossChecked, CheckType.HalfAcrossChecked].includes(selectType.value)) {
+      // 当前页状态传递
+      return selections.value.some((item) => item.id === row.id);
+    }
+    // 跨页状态传递
+    return !selections.value.some((item) => item.id === row.id);
+  };
 
   const getVariables = async () => {
     loading.value = true;
@@ -173,25 +217,32 @@
   };
 
   // 表格行选择事件
-  const handleSelectionChange = ({ checked, row }: { checked: boolean; row: IVariableItem }) => {
-    const index = selectedIds.value.findIndex((id) => id === row.id);
-    if (checked) {
-      if (index === -1) {
-        selectedIds.value.push(row.id);
-      }
-    } else {
-      selectedIds.value.splice(index, 1);
-    }
+  // const handleSelectionChange = ({ checked, row }: { checked: boolean; row: IVariableItem }) => {
+  //   const index = selectedIds.value.findIndex((id) => id === row.id);
+  //   if (checked) {
+  //     if (index === -1) {
+  //       selectedIds.value.push(row.id);
+  //     }
+  //   } else {
+  //     selectedIds.value.splice(index, 1);
+  //   }
+  // };
+  const handleSelectionChange = (row: IVariableItem) => {
+    const isSelected = selections.value.some((item) => item.id === row.id);
+    const isAcrossChecked = [CheckType.AcrossChecked, CheckType.HalfAcrossChecked].includes(selectType.value);
+    // 根据选择类型决定传递的状态
+    const shouldBeChecked = isAcrossChecked ? isSelected : !isSelected;
+    handleRowCheckChange(shouldBeChecked, row);
   };
 
   // 全选
-  const handleSelectAll = ({ checked }: { checked: boolean }) => {
-    if (checked) {
-      selectedIds.value = list.value.map((item) => item.id);
-    } else {
-      selectedIds.value = [];
-    }
-  };
+  // const handleSelectAll = ({ checked }: { checked: boolean }) => {
+  //   if (checked) {
+  //     selectedIds.value = list.value.map((item) => item.id);
+  //   } else {
+  //     selectedIds.value = [];
+  //   }
+  // };
 
   // 复制
   const handleCopyText = (name: string) => {
@@ -236,9 +287,13 @@
     refreshList(pagination.value.current);
   };
 
-  const refreshList = (current = 1) => {
+  const refreshList = (current = 1, pageChange = false) => {
     isSearchEmpty.value = searchStr.value !== '';
     pagination.value.current = current;
+    // 非跨页全选/半选 需要重置全选状态
+    if (![CheckType.HalfAcrossChecked, CheckType.AcrossChecked].includes(selectType.value) || !pageChange) {
+      handleClearSelection();
+    }
     getVariables();
   };
 

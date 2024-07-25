@@ -33,7 +33,7 @@
         <template #prepend>
           <render-table-tip />
         </template>
-        <bk-table-column :min-width="60" :label="renderSelection">
+        <bk-table-column :min-width="70" :width="70" :label="renderSelection">
           <template #default="{ row }">
             <across-check-box :checked="isChecked(row)" :handle-change="() => handleSelectionChange(row)" />
           </template>
@@ -252,12 +252,13 @@
   );
   watch(selections, () => {
     templateStore.$patch((state) => {
-      state.currentCheckType = [CheckType.HalfAcrossChecked, CheckType.AcrossChecked].includes(selectType.value);
+      state.isAcrossChecked = [CheckType.HalfAcrossChecked, CheckType.AcrossChecked].includes(selectType.value);
     });
     emits('update:selectedConfigs', selections.value);
   });
 
   onMounted(() => {
+    handleClearSelection();
     loadConfigList();
   });
 
@@ -326,16 +327,16 @@
 
   // 翻页
   const handlePageChange = (event: number) => {
-    if (!(selectType.value === CheckType.HalfAcrossChecked || selectType.value === CheckType.AcrossChecked)) {
-      // 非跨页全选 需要重置全选状态
-      handleClearSelection();
-    }
-    refreshList(event, true);
+    refreshList(event, true, true);
   };
 
-  const refreshList = (current = 1, createConfig = false) => {
+  const refreshList = (current = 1, createConfig = false, pageChange = false) => {
     isSearchEmpty.value = searchStr.value !== '';
     pagination.value.current = current;
+    // 非跨页全选/半选 需要重置全选状态
+    if (![CheckType.HalfAcrossChecked, CheckType.AcrossChecked].includes(selectType.value) || !pageChange) {
+      handleClearSelection();
+    }
     loadConfigList(createConfig);
   };
 
@@ -347,12 +348,10 @@
     templateStore.$patch((state) => {
       state.topIds = [];
     });
-    handleClearSelection();
     refreshList();
   };
 
   const handleSearchInputChange = debounce(() => {
-    handleClearSelection();
     refreshList();
   }, 300);
   // const handleSelectionChange = ({ checked, row }: { checked: boolean; row: ITemplateConfigItem }) => {
@@ -370,26 +369,35 @@
   //   }
   //   emits('update:selectedConfigs', configs);
   // };
+  // const handleSelectionChange = (row: ITemplateConfigItem) => {
+  //   if (![CheckType.AcrossChecked, CheckType.HalfAcrossChecked].includes(selectType.value)) {
+  //     // 当前页状态传递
+  //     handleRowCheckChange(
+  //       !selections.value.some((item) => {
+  //         return item.id === row.id;
+  //       }),
+  //       row,
+  //     );
+  //   } else {
+  //     // 跨页状态传递
+  //     handleRowCheckChange(
+  //       selections.value.some((item) => {
+  //         return item.id === row.id;
+  //       }),
+  //       row,
+  //     );
+  //   }
+  //   emits('update:selectedConfigs', selections.value);
+  // };
   const handleSelectionChange = (row: ITemplateConfigItem) => {
-    if (![CheckType.AcrossChecked, CheckType.HalfAcrossChecked].includes(selectType.value)) {
-      // 当前页状态传递
-      handleRowCheckChange(
-        !selections.value.some((item) => {
-          return item.id === row.id;
-        }),
-        row,
-      );
-    } else {
-      // 跨页状态传递
-      handleRowCheckChange(
-        selections.value.some((item) => {
-          return item.id === row.id;
-        }),
-        row,
-      );
-    }
+    const isSelected = selections.value.some((item) => item.id === row.id);
+    const isAcrossChecked = [CheckType.AcrossChecked, CheckType.HalfAcrossChecked].includes(selectType.value);
+    const shouldBeChecked = isAcrossChecked ? isSelected : !isSelected;
+    // 根据选择类型决定传递的状态
+    handleRowCheckChange(shouldBeChecked, row);
     emits('update:selectedConfigs', selections.value);
   };
+
   // 选中状态
   const isChecked = (row: ITemplateConfigItem) => {
     if (![CheckType.AcrossChecked, CheckType.HalfAcrossChecked].includes(selectType.value)) {
@@ -423,7 +431,6 @@
   };
 
   const handleAdded = () => {
-    handleClearSelection();
     refreshList();
     updateRefreshFlag();
   };
@@ -497,13 +504,11 @@
 
   const handlePageLimitChange = (val: number) => {
     updatePagination('limit', val);
-    handleClearSelection();
     refreshList(1, true);
   };
 
   const clearSearchStr = () => {
     searchStr.value = '';
-    handleClearSelection();
     refreshList();
   };
 

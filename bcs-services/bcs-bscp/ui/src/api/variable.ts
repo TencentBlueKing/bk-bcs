@@ -46,9 +46,10 @@ export const deleteVariable = (biz_id: string, template_variable_id: number) =>
  * 批量删除变量
  * @param bizId 业务ID
  * @param ids 变量ID列表
+ * @param exclusionOperation 是否跨页
  */
-export const batchDeleteVariable = (biz_id: string, ids: number[]) =>
-  http.post(`/config/biz/${biz_id}/template_variables/batch_delete`, { ids });
+export const batchDeleteVariable = (biz_id: string, ids: number[], exclusion_operation: boolean) =>
+  http.post(`/config/biz/${biz_id}/template_variables/batch_delete`, { ids, exclusion_operation });
 
 /**
  * 获取未命名版本服务变量列表

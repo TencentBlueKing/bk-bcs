@@ -270,11 +270,18 @@ export const downloadTemplateContent = (biz_id: string, templateSpaceId: number,
  * @param biz_id 业务ID
  * @param template_space_id 空间ID
  * @param template_ids 模板ID列表
+ * @param exclusion_operation 是否跨页全选
+ * @param no_set_specified 是否未指定套餐，此处固定传true
  * @returns
  */
-export const deleteTemplate = (biz_id: string, template_space_id: number, template_ids: number[]) =>
+export const deleteTemplate = (
+  biz_id: string,
+  template_space_id: number,
+  template_ids: number[],
+  exclusion_operation: boolean,
+) =>
   http.delete(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates`, {
-    params: { template_ids: template_ids.join(',') },
+    params: { template_ids: template_ids.join(','), exclusion_operation },
   });
 
 /**
@@ -293,7 +300,7 @@ export const getTemplatesDetailByIds = (biz_id: string, ids: number[]) =>
  * @param template_id 模板ID
  * @param template_set_ids 模板套餐列表
  * @param exclusion_operation 是否跨页全选
- * @param template_set_id 设置目标模板套餐
+ * @param template_set_id 正在操作的套餐id，全部套餐和未指定套餐传0
  * @param no_set_specified 是否未指定套餐
  * @returns
  */
@@ -310,8 +317,8 @@ export const addTemplateToPackage = (
     `/config/biz/${biz_id}/template_spaces/${template_space_id}/template_set/${template_set_id}/templates/add_to_template_sets`,
     {
       template_set_ids,
-      exclusion_operation,
       template_ids,
+      exclusion_operation,
       no_set_specified,
     },
   );
@@ -322,6 +329,9 @@ export const addTemplateToPackage = (
  * @param template_space_id 空间ID
  * @param template_id 模板ID
  * @param template_set_ids 模板套餐列表
+ * @param exclusion_operation 是否跨页全选
+ * @param template_set_id 正在操作的套餐id，全部套餐和未指定套餐传0
+ * @param no_set_specified 是否未指定套餐
  * @returns
  */
 export const moveOutTemplateFromPackage = (
@@ -329,11 +339,19 @@ export const moveOutTemplateFromPackage = (
   template_space_id: number,
   template_ids: number[],
   template_set_ids: number[],
+  exclusion_operation: boolean,
+  template_set_id: number | string,
+  no_set_specified: boolean,
 ) =>
-  http.post(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates/delete_from_template_sets`, {
-    template_ids,
-    template_set_ids,
-  });
+  http.post(
+    `/config/biz/${biz_id}/template_spaces/${template_space_id}/template_set/${template_set_id}/templates/delete_from_template_sets`,
+    {
+      template_ids,
+      template_set_ids,
+      exclusion_operation,
+      no_set_specified,
+    },
+  );
 
 /**
  * 查询单个模板被套餐引用详情
@@ -655,10 +673,16 @@ export const importTemplateBatchAdd = (biz_id: string, template_space_id: number
  * @param biz_id 业务ID
  * @param template_space_id 空间id
  * @param configData 配置列表
+ * @param exclusion_operation: boolean, // 是否跨页
+ * @param template_set_id: number | string, // 正在操作的套餐id，全部套餐和未指定传0
+ * @param no_set_specified: boolean, // 是否未指定套餐
  * @returns
  */
 export const batchEditTemplatePermission = (biz_id: string, query: any) =>
-  http.post(`/config/biz/${biz_id}/templates/batch_update_templates_permissions`, query);
+  http.post(
+    `/config/biz/${biz_id}/template_spaces/${query.template_space_id}/template_set/${query.template_set_id}/templates/batch_update_templates_permissions`,
+    query,
+  );
 
 /**
  * 获取配置模板配置项元信息

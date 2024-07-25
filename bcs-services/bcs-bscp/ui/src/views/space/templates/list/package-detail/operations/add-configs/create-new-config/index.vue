@@ -30,7 +30,7 @@
     @confirm="handleCreateConfirm" />
 </template>
 <script lang="ts" setup>
-  import { ref, watch, computed } from 'vue';
+  import { ref, watch } from 'vue';
   import { useI18n } from 'vue-i18n';
   import { storeToRefs } from 'pinia';
   import Message from 'bkui-vue/lib/message';
@@ -62,10 +62,6 @@
   const pending = ref(false);
   const isSelectPkgDialogShow = ref(false);
   const isFormChanged = ref(false);
-
-  const templateSetID = computed(() => {
-    return typeof currentPkg.value === 'string' ? 0 : currentPkg.value;
-  });
 
   watch(
     () => props.show,
@@ -116,7 +112,7 @@
           [res.data.id],
           pkgIds,
           false,
-          templateSetID.value,
+          typeof currentPkg.value === 'string' ? 0 : currentPkg.value,
           false,
         );
       }

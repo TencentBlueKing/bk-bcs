@@ -70,7 +70,7 @@
   }
 
   const { spaceId } = storeToRefs(useGlobalStore());
-  const { currentTemplateSpace } = storeToRefs(useTemplateStore());
+  const { currentTemplateSpace, isAcrossChecked } = storeToRefs(useTemplateStore());
   const { t } = useI18n();
 
   const props = defineProps<{
@@ -175,7 +175,15 @@
   const handleConfirm = async () => {
     try {
       pending.value = true;
-      await moveOutTemplateFromPackage(spaceId.value, currentTemplateSpace.value, [props.id], selectedPkgs.value);
+      await moveOutTemplateFromPackage(
+        spaceId.value,
+        currentTemplateSpace.value,
+        [props.id],
+        selectedPkgs.value,
+        isAcrossChecked.value,
+        typeof props.currentPkg === 'string' ? 0 : props.currentPkg,
+        props.currentPkg === 'no_specified',
+      );
       emits('movedOut');
       close();
       Message({

@@ -95,7 +95,7 @@
 
   const emits = defineEmits(['update:show', 'added']);
   const { spaceId } = storeToRefs(useGlobalStore());
-  const { currentTemplateSpace } = storeToRefs(useTemplateStore());
+  const { currentTemplateSpace, currentPkg } = storeToRefs(useTemplateStore());
   const isShow = ref(false);
   const isTableChange = ref(false);
   const pending = ref(false);
@@ -145,7 +145,15 @@
       ]);
       // 选择未指定套餐时,不需要调用添加接口
       if (pkgIds.length > 1 || pkgIds[0] !== 0) {
-        await addTemplateToPackage(spaceId.value, currentTemplateSpace.value, res.ids, pkgIds);
+        await addTemplateToPackage(
+          spaceId.value,
+          currentTemplateSpace.value,
+          res.ids,
+          pkgIds,
+          false,
+          typeof currentPkg.value === 'string' ? 0 : currentPkg.value,
+          false,
+        );
       }
       templateStore.$patch((state) => {
         state.topIds = res.ids;
