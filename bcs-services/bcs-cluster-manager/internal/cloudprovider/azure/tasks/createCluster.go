@@ -36,7 +36,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 // CreateAKSClusterTask call azure interface to create cluster
@@ -505,10 +504,10 @@ func checkNodesGroupStatus(ctx context.Context, info *cloudprovider.CloudDependB
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Minute)
 	defer cancel()
 
-	running, failure := make([]string, 0), make([]string, 0)
 	// loop cluster status
 	err = loop.LoopDoFunc(ctx, func() error {
 		index := 0
+		running, failure := make([]string, 0), make([]string, 0)
 		for _, ng := range nodeGroups {
 			aksAgentPool, errQuery := cli.GetPoolAndReturn(ctx, info.Cluster.ExtraInfo[common.ClusterResourceGroup],
 				systemID, getCloudNodeGroupID(ng))
@@ -526,14 +525,10 @@ func checkNodesGroupStatus(ctx context.Context, info *cloudprovider.CloudDependB
 
 			switch *aksAgentPool.Properties.ProvisioningState {
 			case api.AgentPoolPodIdentityProvisioningStateSucceeded:
-				if !utils.StringInSlice(ng.NodeGroupID, running) {
-					running = append(running, ng.NodeGroupID)
-				}
+				running = append(running, ng.NodeGroupID)
 				index++
 			case api.AgentPoolPodIdentityProvisioningStateFailed:
-				if !utils.StringInSlice(ng.NodeGroupID, failure) {
-					failure = append(failure, ng.NodeGroupID)
-				}
+				failure = append(failure, ng.NodeGroupID)
 				index++
 			}
 		}
