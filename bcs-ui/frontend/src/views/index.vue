@@ -30,6 +30,7 @@ import { computed, defineComponent, onErrorCaptured, onMounted, reactive, ref, t
 import useProjects from './project-manage/project/use-project';
 
 import $bkMessage from '@/common/bkmagic';
+import { setCookie } from '@/common/util';
 import ContentHeader from '@/components/layout/Header.vue';
 import { IProject } from '@/composables/use-app';
 import $router from '@/router';
@@ -62,6 +63,7 @@ export default defineComponent({
       // 设置路由projectId和projectCode信息（旧模块很多地方用到），后续路由切换时也会在全局导航钩子上注入这个两个参数
       currentRoute.value.params.projectId = data.projectID;
       currentRoute.value.params.projectCode = data.projectCode;
+      setCookie('X-BCS-PROJECT-CODE', data.projectCode, window.BK_DOMAIN);
     };
     // 校验项目Code
     const validateProjectCode = async () => {
