@@ -25,6 +25,7 @@
 </template>
 <script lang="ts">
 /* eslint-disable camelcase */
+import cookie from 'cookie';
 import { computed, defineComponent, onErrorCaptured, onMounted, reactive, ref, toRef } from 'vue';
 
 import useProjects from './project-manage/project/use-project';
@@ -63,7 +64,12 @@ export default defineComponent({
       // 设置路由projectId和projectCode信息（旧模块很多地方用到），后续路由切换时也会在全局导航钩子上注入这个两个参数
       currentRoute.value.params.projectId = data.projectID;
       currentRoute.value.params.projectCode = data.projectCode;
-      setCookie('X-BCS-PROJECT-CODE', data.projectCode, window.BK_DOMAIN);
+      const curCookieProjectCode = cookie.parse(document.cookie)?.['X-BCS-Project-Code'];
+      setCookie('X-BCS-Project-Code', data.projectCode, window.BK_DOMAIN);
+      if (curCookieProjectCode && curCookieProjectCode !== data.projectCode) {
+        // 判断cookie和当前项目code是否一致，不一致刷新当前界面
+        window.location.reload();
+      }
     };
     // 校验项目Code
     const validateProjectCode = async () => {

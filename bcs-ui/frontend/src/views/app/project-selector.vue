@@ -82,6 +82,7 @@ import useProjects, { IProjectPerm } from '../project-manage/project/use-project
 
 import { bus } from '@/common/bus';
 import cancelRequest from '@/common/cancel-request';
+import { setCookie } from '@/common/util';
 import { IProject } from '@/composables/use-app';
 import useDebouncedRef from '@/composables/use-debounce';
 import $router from '@/router';
@@ -193,6 +194,8 @@ export default defineComponent({
         // query: currentRoute.query,
       });
       await cancelRequest();
+      // 设置项目cookie，防止第一次请求还是之前的cookie
+      setCookie('X-BCS-Project-Code', projectCode, window.BK_DOMAIN);
       window.location.href = href;
     };
     // 项目管理
