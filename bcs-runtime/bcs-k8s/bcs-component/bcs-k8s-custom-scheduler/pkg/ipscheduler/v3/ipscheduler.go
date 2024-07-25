@@ -168,6 +168,7 @@ func HandleIpSchedulerPredicate(extenderArgs schedulerapi.ExtenderArgs) (*schedu
 
 	var availableHosts []string
 	claimName, ok := extenderArgs.Pod.ObjectMeta.Annotations[DefaultIpScheduler.FixedIpAnnotationKey]
+	alreadyHasBoundIP := false
 	if ok {
 		netClaim, err := getIPClaim(extenderArgs.Pod.Namespace, claimName)
 		if err != nil {
@@ -179,6 +180,7 @@ func HandleIpSchedulerPredicate(extenderArgs schedulerapi.ExtenderArgs) (*schedu
 		}
 		// if claim has bound ip, just schedule to the pool of the bounded ip
 		if netClaim.Status.Phase == BCSNetIPClaimBoundedStatus && netClaim.Status.BoundedIP != "" {
+			alreadyHasBoundIP = true
 			netIP, err := getIP(netClaim.Status.BoundedIP)
 			if err != nil {
 				return nil, fmt.Errorf("get ip of claim failed")
@@ -193,18 +195,23 @@ func HandleIpSchedulerPredicate(extenderArgs schedulerapi.ExtenderArgs) (*schedu
 				return nil, fmt.Errorf("get pool of claim failed")
 			}
 			availableHosts = append(availableHosts, netPool.Spec.Hosts...)
+			blog.Infof("pod %s/%s find available hosts in pool %s,and return",
+				extenderArgs.Pod.Namespace, extenderArgs.Pod.Name, poolName)
 		}
 	}
-	blog.Infof("pod %s/%s without claim or bounded fixed ip", extenderArgs.Pod.Namespace, extenderArgs.Pod.Name)
-	availablePools := DefaultIpScheduler.cache.GetAvailablePoolNameList()
-	for _, poolName := range availablePools {
-		netPool, err := getPool(poolName)
-		if err != nil {
-			blog.Warnf("get net pool %s failed, err %s", poolName, err.Error())
-			continue
+
+	if !alreadyHasBoundIP {
+		blog.Infof("pod %s/%s without claim or bounded fixed ip", extenderArgs.Pod.Namespace, extenderArgs.Pod.Name)
+		availablePools := DefaultIpScheduler.cache.GetAvailablePoolNameList()
+		for _, poolName := range availablePools {
+			netPool, err := getPool(poolName)
+			if err != nil {
+				blog.Warnf("get net pool %s failed, err %s", poolName, err.Error())
+				continue
+			}
+			blog.Infof("find available hosts in pool %s", poolName)
+			availableHosts = append(availableHosts, netPool.Spec.Hosts...)
 		}
-		blog.Infof("find available hosts in pool %s", poolName)
-		availableHosts = append(availableHosts, netPool.Spec.Hosts...)
 	}
 
 	for _, node := range extenderArgs.Nodes.Items {
