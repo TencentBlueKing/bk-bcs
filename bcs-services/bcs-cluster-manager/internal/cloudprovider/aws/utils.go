@@ -19,6 +19,7 @@ import (
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 )
 
 var (
@@ -27,6 +28,8 @@ var (
 
 // awsCloud taskName
 const (
+	// createClusterTaskTemplate bk-sops add task template
+	createClusterTaskTemplate = "aws-create cluster: %s"
 	// importClusterTaskTemplate bk-sops add task template
 	importClusterTaskTemplate = "aws-import cluster: %s"
 
@@ -56,6 +59,28 @@ const (
 
 // tasks
 var (
+	// create cluster task
+	createEKSClusterStep = cloudprovider.StepInfo{
+		StepMethod: fmt.Sprintf("%s-CreateEKSClusterTask", cloudName),
+		StepName:   "创建集群",
+	}
+	checkEKSClusterStatusStep = cloudprovider.StepInfo{
+		StepMethod: fmt.Sprintf("%s-CheckEKSClusterStatusTask", cloudName),
+		StepName:   "检测集群状态",
+	}
+	checkCreateClusterNodeStatusStep = cloudprovider.StepInfo{
+		StepMethod: fmt.Sprintf("%s-CheckCreateClusterNodeStatusTask", cloudName),
+		StepName:   "检测集群节点状态",
+	}
+	registerEKSClusterKubeConfigStep = cloudprovider.StepInfo{
+		StepMethod: fmt.Sprintf("%s-RegisterEKSClusterKubeConfigTask", cloudName),
+		StepName:   "注册集群连接信息",
+	}
+	updateEKSNodesToDBStep = cloudprovider.StepInfo{
+		StepMethod: fmt.Sprintf("%s-UpdateEKSNodesToDBTask", cloudName),
+		StepName:   "更新任务状态",
+	}
+
 	// import cluster task
 	importClusterNodesStep = cloudprovider.StepInfo{
 		StepMethod: fmt.Sprintf("%s-ImportClusterNodesTask", cloudName),
@@ -64,6 +89,16 @@ var (
 	registerClusterKubeConfigStep = cloudprovider.StepInfo{
 		StepMethod: fmt.Sprintf("%s-RegisterClusterKubeConfigTask", cloudName),
 		StepName:   "注册集群kubeConfig认证",
+	}
+
+	// delete cluster task
+	deleteEKSClusterStep = cloudprovider.StepInfo{
+		StepMethod: fmt.Sprintf("%s-DeleteEKSClusterTask", cloudName),
+		StepName:   "删除集群",
+	}
+	cleanClusterDBInfoStep = cloudprovider.StepInfo{
+		StepMethod: fmt.Sprintf("%s-CleanClusterDBInfoTask", cloudName),
+		StepName:   "清理集群数据",
 	}
 
 	// create nodeGroup task
@@ -111,6 +146,99 @@ var (
 	}
 )
 
+// CreateClusterTaskOption 创建集群构建step子任务
+type CreateClusterTaskOption struct {
+	Cluster      *proto.Cluster
+	NodeGroupIDs []string
+}
+
+// BuildCreateClusterStep 创建集群任务
+func (cn *CreateClusterTaskOption) BuildCreateClusterStep(task *proto.Task) {
+	createStep := cloudprovider.InitTaskStep(createEKSClusterStep)
+	createStep.Params[cloudprovider.ClusterIDKey.String()] = cn.Cluster.ClusterID
+	createStep.Params[cloudprovider.CloudIDKey.String()] = cn.Cluster.Provider
+	createStep.Params[cloudprovider.NodeGroupIDKey.String()] = strings.Join(cn.NodeGroupIDs, ",")
+
+	task.Steps[createEKSClusterStep.StepMethod] = createStep
+	task.StepSequence = append(task.StepSequence, createEKSClusterStep.StepMethod)
+}
+
+// BuildCheckClusterStatusStep 检测集群状态任务
+func (cn *CreateClusterTaskOption) BuildCheckClusterStatusStep(task *proto.Task) {
+	checkStep := cloudprovider.InitTaskStep(checkEKSClusterStatusStep)
+	checkStep.Params[cloudprovider.ClusterIDKey.String()] = cn.Cluster.ClusterID
+	checkStep.Params[cloudprovider.CloudIDKey.String()] = cn.Cluster.Provider
+
+	task.Steps[checkEKSClusterStatusStep.StepMethod] = checkStep
+	task.StepSequence = append(task.StepSequence, checkEKSClusterStatusStep.StepMethod)
+}
+
+// BuildCreateCloudNodeGroupStep 通过云接口创建节点组
+func (cn *CreateClusterTaskOption) BuildCreateCloudNodeGroupStep(task *proto.Task) {
+	createStep := cloudprovider.InitTaskStep(createCloudNodeGroupStep)
+
+	createStep.Params[cloudprovider.ClusterIDKey.String()] = cn.Cluster.ClusterID
+	createStep.Params[cloudprovider.NodeGroupIDKey.String()] = strings.Join(cn.NodeGroupIDs, ",")
+	createStep.Params[cloudprovider.CloudIDKey.String()] = cn.Cluster.Provider
+
+	task.Steps[createCloudNodeGroupStep.StepMethod] = createStep
+	task.StepSequence = append(task.StepSequence, createCloudNodeGroupStep.StepMethod)
+}
+
+// BuildCheckCloudNodeGroupStatusStep 检测节点组状态
+func (cn *CreateClusterTaskOption) BuildCheckCloudNodeGroupStatusStep(task *proto.Task) {
+	checkStep := cloudprovider.InitTaskStep(checkCloudNodeGroupStatusStep)
+
+	checkStep.Params[cloudprovider.ClusterIDKey.String()] = cn.Cluster.ClusterID
+	checkStep.Params[cloudprovider.NodeGroupIDKey.String()] = strings.Join(cn.NodeGroupIDs, ",")
+	checkStep.Params[cloudprovider.CloudIDKey.String()] = cn.Cluster.Provider
+
+	task.Steps[checkCloudNodeGroupStatusStep.StepMethod] = checkStep
+	task.StepSequence = append(task.StepSequence, checkCloudNodeGroupStatusStep.StepMethod)
+}
+
+// BuildCheckClusterNodesStatusStep 检测创建集群节点状态任务
+func (cn *CreateClusterTaskOption) BuildCheckClusterNodesStatusStep(task *proto.Task) {
+	createStep := cloudprovider.InitTaskStep(checkCreateClusterNodeStatusStep)
+	createStep.Params[cloudprovider.NodeGroupIDKey.String()] = strings.Join(cn.NodeGroupIDs, ",")
+	createStep.Params[cloudprovider.ClusterIDKey.String()] = cn.Cluster.ClusterID
+	createStep.Params[cloudprovider.CloudIDKey.String()] = cn.Cluster.Provider
+
+	task.Steps[checkCreateClusterNodeStatusStep.StepMethod] = createStep
+	task.StepSequence = append(task.StepSequence, checkCreateClusterNodeStatusStep.StepMethod)
+}
+
+// BuildUpdateNodesToDBStep 更新集群节点信息任务
+func (cn *CreateClusterTaskOption) BuildUpdateNodesToDBStep(task *proto.Task) {
+	updateStep := cloudprovider.InitTaskStep(updateEKSNodesToDBStep)
+	updateStep.Params[cloudprovider.ClusterIDKey.String()] = cn.Cluster.ClusterID
+	updateStep.Params[cloudprovider.CloudIDKey.String()] = cn.Cluster.Provider
+
+	task.Steps[updateEKSNodesToDBStep.StepMethod] = updateStep
+	task.StepSequence = append(task.StepSequence, updateEKSNodesToDBStep.StepMethod)
+}
+
+// BuildRegisterClsKubeConfigStep 托管集群注册连接信息
+func (cn *CreateClusterTaskOption) BuildRegisterClsKubeConfigStep(task *proto.Task) {
+	registerStep := cloudprovider.InitTaskStep(registerEKSClusterKubeConfigStep)
+	registerStep.Params[cloudprovider.ClusterIDKey.String()] = cn.Cluster.ClusterID
+	registerStep.Params[cloudprovider.CloudIDKey.String()] = cn.Cluster.Provider
+	registerStep.Params[cloudprovider.IsExtranetKey.String()] = icommon.True
+
+	task.Steps[registerEKSClusterKubeConfigStep.StepMethod] = registerStep
+	task.StepSequence = append(task.StepSequence, registerEKSClusterKubeConfigStep.StepMethod)
+}
+
+// BuildImportClusterNodesStep 纳管集群节点
+func (cn *CreateClusterTaskOption) BuildImportClusterNodesStep(task *proto.Task) {
+	importNodesStep := cloudprovider.InitTaskStep(importClusterNodesStep)
+	importNodesStep.Params[cloudprovider.ClusterIDKey.String()] = cn.Cluster.ClusterID
+	importNodesStep.Params[cloudprovider.CloudIDKey.String()] = cn.Cluster.Provider
+
+	task.Steps[importClusterNodesStep.StepMethod] = importNodesStep
+	task.StepSequence = append(task.StepSequence, importClusterNodesStep.StepMethod)
+}
+
 // ImportClusterTaskOption 纳管集群
 type ImportClusterTaskOption struct {
 	Cluster *proto.Cluster
@@ -134,6 +262,35 @@ func (ic *ImportClusterTaskOption) BuildImportClusterNodesStep(task *proto.Task)
 
 	task.Steps[importClusterNodesStep.StepMethod] = importNodesStep
 	task.StepSequence = append(task.StepSequence, importClusterNodesStep.StepMethod)
+}
+
+// DeleteClusterTaskOption 删除集群
+type DeleteClusterTaskOption struct {
+	Cluster           *proto.Cluster
+	DeleteMode        string
+	LastClusterStatus string
+}
+
+// BuildDeleteEKSClusterStep 删除集群
+func (dc *DeleteClusterTaskOption) BuildDeleteEKSClusterStep(task *proto.Task) {
+	deleteStep := cloudprovider.InitTaskStep(deleteEKSClusterStep)
+	deleteStep.Params[cloudprovider.ClusterIDKey.String()] = dc.Cluster.ClusterID
+	deleteStep.Params[cloudprovider.CloudIDKey.String()] = dc.Cluster.Provider
+	deleteStep.Params[cloudprovider.DeleteModeKey.String()] = dc.DeleteMode
+	deleteStep.Params[cloudprovider.LastClusterStatus.String()] = dc.LastClusterStatus
+
+	task.Steps[deleteEKSClusterStep.StepMethod] = deleteStep
+	task.StepSequence = append(task.StepSequence, deleteEKSClusterStep.StepMethod)
+}
+
+// BuildCleanClusterDBInfoStep 清理集群数据
+func (dc *DeleteClusterTaskOption) BuildCleanClusterDBInfoStep(task *proto.Task) {
+	updateStep := cloudprovider.InitTaskStep(cleanClusterDBInfoStep)
+	updateStep.Params[cloudprovider.ClusterIDKey.String()] = dc.Cluster.ClusterID
+	updateStep.Params[cloudprovider.CloudIDKey.String()] = dc.Cluster.Provider
+
+	task.Steps[cleanClusterDBInfoStep.StepMethod] = updateStep
+	task.StepSequence = append(task.StepSequence, cleanClusterDBInfoStep.StepMethod)
 }
 
 // CreateNodeGroupTaskOption 创建节点组

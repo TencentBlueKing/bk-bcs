@@ -19,11 +19,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/avast/retry-go"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/aws/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
@@ -138,12 +138,11 @@ func removeAsgInstances(ctx context.Context, info *cloudprovider.CloudDependBasi
 				ShouldDecrementDesiredCapacity: aws.Bool(true),
 			})
 			if terErr != nil {
-				blog.Errorf("removeAsgInstances[%s] TerminateInstanceInAutoScalingGroup[%s] failed: %v", taskID,
-					id, terErr)
+				blog.Errorf("removeAsgInstances[%s] RemoveInstances[%s] failed: %v", taskID, id, terErr)
 				return terErr
 			}
 
-			blog.Infof("removeAsgInstances[%s] TerminateInstanceInAutoScalingGroup[%s] successful", taskID, id)
+			blog.Infof("removeAsgInstances[%s] RemoveInstances[%s] successful", taskID, id)
 			return nil
 		}, retry.Attempts(3))
 

@@ -137,7 +137,7 @@ func generateCreateNodePoolInput(group *proto.NodeGroup, cluster *proto.Cluster)
 			// gke nodePool名称中不允许有大写字母
 			Name:             group.CloudNodeGroupID,
 			Config:           generateNodeConfig(group),
-			InitialNodeCount: 0,
+			InitialNodeCount: int64(group.AutoScaling.DesiredSize),
 			Locations:        group.AutoScaling.Zones,
 			MaxPodsConstraint: &api.MaxPodsConstraint{
 				MaxPodsPerNode: int64(group.NodeTemplate.MaxPodsPerNode),
