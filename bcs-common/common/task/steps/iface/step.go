@@ -26,9 +26,6 @@ type StepHandler interface {
 type Step interface {
 	GetParam(key string) (string, error)
 	GetParams() (map[string]string, error)
-	GetOutput(key string) (string, error)
 	GetOutputs() (map[string]string, error)
-	AddOutput(key, value string) error
-	AddOutputs(map[string]string) error
 	SetOutputs(map[string]string) error
 }
