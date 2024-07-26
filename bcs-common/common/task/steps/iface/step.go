@@ -2,8 +2,6 @@ package iface
 
 import (
 	"context"
-
-	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
 )
 
 // A Step processes tasks.
@@ -18,8 +16,19 @@ import (
 // One exception to this rule is when Process returns a SkipRetry error.
 // If the returned error is SkipRetry or an error wraps SkipRetry, retry is
 // skipped and the task will be immediately archived instead.
-type Step interface {
+type StepHandler interface {
 	Name() string
-	Run(context.Context, *types.Step) error
+	Run(context.Context, Step) error
 	Close(error)
+}
+
+// Step ...
+type Step interface {
+	GetParam(key string) (string, error)
+	GetParams() (map[string]string, error)
+	GetOutput(key string) (string, error)
+	GetOutputs() (map[string]string, error)
+	AddOutput(key, value string) error
+	AddOutputs(map[string]string) error
+	SetOutputs(map[string]string) error
 }
