@@ -19,7 +19,7 @@ import (
 // If the returned error is SkipRetry or an error wraps SkipRetry, retry is
 // skipped and the task will be immediately archived instead.
 type Step interface {
-	Process(context.Context, *types.Step) error
+	Run(context.Context, *types.Step) error
 }
 
 // The StepFunc type is an adapter to allow the use of
@@ -28,7 +28,7 @@ type Step interface {
 // Step that calls f.
 type StepFunc func(context.Context, *types.Step) error
 
-// Process calls fn(ctx, task)
-func (fn StepFunc) Process(ctx context.Context, task *types.Step) error {
+// Run calls fn(ctx, task)
+func (fn StepFunc) Run(ctx context.Context, task *types.Step) error {
 	return fn(ctx, task)
 }
