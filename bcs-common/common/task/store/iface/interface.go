@@ -36,13 +36,13 @@ type ListOption struct {
 
 // Store model for TaskManager
 type Store interface {
-	EnsureTable(ctx context.Context, dst ...any) error
-	CreateTask(ctx context.Context, task *types.Task) error
-	UpdateTask(ctx context.Context, task *types.Task) error
-	DeleteTask(ctx context.Context, taskID string) error
-	GetTask(ctx context.Context, taskID string) (*types.Task, error)
-	ListTask(ctx context.Context, opt *ListOption) ([]types.Task, error)
-	WriteStepOutput(ctx context.Context, taskId string, name string, output map[string]string) error
+	EnsureTable(dst ...any) error
+	// CreateTask(ctx context.Context, task *types.Task) error
+	// UpdateTask(ctx context.Context, task *types.Task) error
+	// DeleteTask(ctx context.Context, taskID string) error
+	// GetTask(ctx context.Context, taskID string) (*types.Task, error)
+	// ListTask(ctx context.Context, opt *ListOption) ([]types.Task, error)
+	// WriteStepOutput(ctx context.Context, taskId string, name string, output map[string]string) error
 }
 
 type TaskManagerModel interface {

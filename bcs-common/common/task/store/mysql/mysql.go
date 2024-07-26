@@ -13,19 +13,61 @@
 package mysql
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-common/common/task/store/iface"
+	"net/url"
+	"strconv"
+
+	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/task/store/iface"
 )
 
 type mysqlStore struct {
-	db *gorm.DB
+	dsn   string
+	debug bool
+	db    *gorm.DB
 }
 
-func NewMysqlStore() (iface.Store, error) {
-	return nil, nil
+// New init mysql iface.Store
+func New(dsn string) (iface.Store, error) {
+	store := &mysqlStore{dsn: dsn, debug: false}
+
+	u, err := url.Parse(dsn)
+	if err != nil {
+		return nil, err
+	}
+	query := u.Query()
+
+	// 是否开启debug
+	debugStr := query.Get("debug")
+	if debugStr != "" {
+		debug, e := strconv.ParseBool(debugStr)
+		if e != nil {
+			return nil, e
+		}
+		store.debug = debug
+		query.Del("debug")
+		u.RawQuery = query.Encode()
+	}
+
+	refinedDsn := u.String()
+	db, err := gorm.Open(mysql.Open(refinedDsn))
+	if err != nil {
+		return nil, err
+	}
+	store.db = db
+	if store.debug {
+		db.Debug()
+	}
+
+	return store, nil
 }
 
 // EnsureTable 创建db表
 func (s *mysqlStore) EnsureTable(dst ...any) error {
+	// 没有自定义数据, 使用默认表结构
+	if len(dst) == 0 {
+		dst = []any{&TaskRecords{}, &StepRecords{}}
+	}
 	return s.db.AutoMigrate(dst)
 }
