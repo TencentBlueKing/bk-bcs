@@ -21,4 +21,5 @@ import (
 type Step interface {
 	Name() string
 	Run(context.Context, *types.Step) error
+	Close(error)
 }
