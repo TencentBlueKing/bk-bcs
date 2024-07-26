@@ -32,10 +32,10 @@ type TaskRecords struct {
 	TaskType            string            `json:"taskType" gorm:"taskType"`
 	TaskName            string            `json:"taskName" gorm:"taskName"`
 	CurrentStep         string            `json:"currentStep" gorm:"currentStep"`
-	StepSequence        []string          `json:"stepSequence" gorm:"stepSequence"`
-	StepIds             map[string]int64  `json:"stepIds" gorm:"stepIds"`
+	StepSequence        []string          `json:"stepSequence" gorm:"stepSequence;serializer:json"`
+	StepIds             map[string]int64  `json:"stepIds" gorm:"stepIds;serializer:json"`
 	CallBackFuncName    string            `json:"callBackFuncName" gorm:"callBackFuncName"`
-	CommonParams        map[string]string `json:"commonParams" gorm:"commonParams"`
+	CommonParams        map[string]string `json:"commonParams" gorm:"commonParams;serializer:json"`
 	ExtraJson           string            `json:"extraJson" gorm:"extraJson"`
 	Status              string            `json:"status" gorm:"status"`
 	Message             string            `json:"message" gorm:"message"`
@@ -59,8 +59,8 @@ type StepRecords struct {
 	BaseModel
 	Name                string            `json:"name" gorm:"name"`
 	Alias               string            `json:"alias" gorm:"alias"`
-	Input               map[string]string `json:"input" gorm:"input"`
-	Output              map[string]string `json:"output" gorm:"output"`
+	Input               map[string]string `json:"input" gorm:"input;serializer:json"`
+	Output              map[string]string `json:"output" gorm:"output;serializer:json"`
 	Extras              string            `json:"extras" gorm:"extras"`
 	Status              string            `json:"status" gorm:"status"`
 	Message             string            `json:"message" gorm:"message"`

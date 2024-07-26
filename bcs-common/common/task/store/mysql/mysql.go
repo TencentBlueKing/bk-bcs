@@ -69,5 +69,5 @@ func (s *mysqlStore) EnsureTable(dst ...any) error {
 	if len(dst) == 0 {
 		dst = []any{&TaskRecords{}, &StepRecords{}}
 	}
-	return s.db.AutoMigrate(dst)
+	return s.db.AutoMigrate(dst...)
 }
