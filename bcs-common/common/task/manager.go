@@ -107,18 +107,18 @@ func (m *TaskManager) Init(cfg *ManagerConfig) error {
 
 	// save step workers and check duplicate
 	for _, w := range cfg.StepWorkers {
-		if _, ok := m.stepWorkers[w.GetName()]; ok {
-			return fmt.Errorf("step [%s] already exists", w.GetName())
+		if _, ok := m.stepWorkers[w.Name()]; ok {
+			return fmt.Errorf("step [%s] already exists", w.Name())
 		}
-		m.stepWorkers[w.GetName()] = w
+		m.stepWorkers[w.Name()] = w
 	}
 
 	// save callbacks and check duplicate
 	for _, c := range cfg.CallBacks {
-		if _, ok := m.callBackFuncs[c.GetName()]; ok {
-			return fmt.Errorf("callback func [%s] already exists", c.GetName())
+		if _, ok := m.callBackFuncs[c.Name()]; ok {
+			return fmt.Errorf("callback func [%s] already exists", c.Name())
 		}
-		m.callBackFuncs[c.GetName()] = c
+		m.callBackFuncs[c.Name()] = c
 	}
 
 	if err := m.initGlobalStorage(); err != nil {
@@ -368,9 +368,8 @@ func (m *TaskManager) registerStepWorkers() error {
 
 			tmpCh := make(chan error, 1)
 			go func() {
-				defer RecoverPrintStack(fmt.Sprintf("%s-%s", taskID, stepName))
 				// call step worker
-				tmpCh <- do(state.task)
+				tmpCh <- do(stepCtx, step)
 			}()
 
 			select {

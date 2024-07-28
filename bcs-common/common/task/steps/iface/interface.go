@@ -14,18 +14,26 @@
 package iface
 
 import (
+	"context"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
 )
 
 // StepWorkerInterface that client must implement
-type StepWorkerInterface interface {
+type StepWorkerInterface1 interface {
 	GetName() string
 	DoWork(task *types.Task) error
 }
 
+type StepWorkerInterface interface {
+	Name() string
+	DoWork(context.Context, *types.Step) error
+	Close(error)
+}
+
 // CallbackInterface that client must implement
 type CallbackInterface interface {
-	GetName() string
+	Name() string
 	Callback(isSuccess bool, task *types.Task)
 }
 
