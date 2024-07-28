@@ -30,7 +30,6 @@ import (
 	istep "github.com/Tencent/bk-bcs/bcs-common/common/task/steps/iface"
 	istore "github.com/Tencent/bk-bcs/bcs-common/common/task/store/iface"
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 )
 
 const (
@@ -208,12 +207,6 @@ func (m *TaskManager) GetTaskWithID(ctx context.Context, taskId string) (*types.
 	return GetGlobalStorage().GetTask(ctx, taskId)
 }
 
-// ListTask return tasks with conditions
-func (m *TaskManager) ListTask(ctx context.Context, cond *operator.Condition,
-	opt *istore.ListOption) ([]types.Task, error) {
-	return GetGlobalStorage().ListTask(ctx, opt)
-}
-
 // UpdateTask update task
 // ! warning: modify task status will cause task status not consistent
 func (m *TaskManager) UpdateTask(ctx context.Context, task *types.Task) error {
@@ -335,94 +328,100 @@ func (m *TaskManager) dispatchAt(task *types.Task, stepNameBegin string) error {
 // registerStepWorkers build machinery workers for all step worker
 func (m *TaskManager) registerStepWorkers() error {
 	allTasks := make(map[string]interface{}, 0)
-
-	for stepName, stepWorker := range m.stepWorkers {
-		do := stepWorker.DoWork
-
-		t := func(taskID string, stepName string) error {
-			defer RecoverPrintStack(fmt.Sprintf("%s-%s", taskID, stepName))
-
-			blog.Infof("start to execute task[%s] stepName[%s]", taskID, stepName)
-
-			start := time.Now()
-			state, step, err := getTaskStateAndCurrentStep(taskID, stepName, m.callBackFuncs)
-			if err != nil {
-				blog.Errorf("task[%s] stepName[%s] getTaskStateAndCurrentStep failed: %v",
-					taskID, stepName, err)
-				return err
-			}
-			// step executed success
-			if step == nil {
-				blog.Infof("task[%s] stepName[%s] already exec successful && skip",
-					taskID, stepName, err)
-				return nil
-			}
-
-			// step timeout
-			stepCtx, stepCancel := GetTimeOutCtx(m.ctx, step.MaxExecutionSeconds)
-			defer stepCancel()
-			// task timeout
-			t, _ := state.task.GetStartTime()
-			taskCtx, taskCancel := GetDeadlineCtx(m.ctx, &t, state.task.MaxExecutionSeconds)
-			defer taskCancel()
-
-			tmpCh := make(chan error, 1)
-			go func() {
-				// call step worker
-				tmpCh <- do(stepCtx, step)
-			}()
-
-			select {
-			case errLocal := <-tmpCh:
-				blog.Infof("task %s step %s errLocal: %v", taskID, stepName, errLocal)
-
-				// update task & step status
-				if errLocal != nil {
-					if err := state.updateStepFailure(start, step.GetName(), errLocal, false); err != nil {
-						blog.Infof("task %s update step %s to failure failed: %s",
-							taskID, step.GetName(), errLocal.Error())
-					}
-				} else {
-					if err := state.updateStepSuccess(start, step.GetName()); err != nil {
-						blog.Infof("task %s update step %s to success failed: %s",
-							taskID, step.GetName(), err.Error())
-					}
-				}
-
-				if errLocal != nil && !step.GetSkipOnFailed() {
-					return errLocal
-				}
-
-				return nil
-			case <-stepCtx.Done():
-				retErr := fmt.Errorf("task %s step %s timeout", taskID, step.GetName())
-				errLocal := state.updateStepFailure(start, step.GetName(), retErr, false)
-				if errLocal != nil {
-					blog.Infof("update step %s to failure failed: %s", step.GetName(), errLocal.Error())
-				}
-				if !step.GetSkipOnFailed() {
-					return retErr
-				}
-				return nil
-			case <-taskCtx.Done():
-				// task timeOut
-				retErr := fmt.Errorf("task %s exec timeout", taskID)
-				errLocal := state.updateStepFailure(start, step.GetName(), retErr, true)
-				if errLocal != nil {
-					blog.Errorf("update step %s to failure failed: %s", step.GetName(), errLocal.Error())
-				}
-
-				return retErr
-			}
-		}
-
+	for stepName, _ := range m.stepWorkers {
 		if _, ok := allTasks[stepName]; ok {
 			return fmt.Errorf("task %s already exists", stepName)
 		}
-		allTasks[stepName] = t
+		allTasks[stepName] = m.doWork
 	}
 	err := m.server.RegisterTasks(allTasks)
 	return err
+}
+
+// doWork machinery 通用处理函数
+func (m *TaskManager) doWork(taskID string, stepName string) error {
+	defer RecoverPrintStack(fmt.Sprintf("%s-%s", taskID, stepName))
+
+	stepWorker, ok := m.stepWorkers[stepName]
+	if !ok {
+		return fmt.Errorf("step worker %s not found", stepName)
+	}
+
+	blog.Infof("start to execute task[%s] stepName[%s]", taskID, stepName)
+
+	start := time.Now()
+	state, step, err := getTaskStateAndCurrentStep(taskID, stepName, m.callBackFuncs)
+	if err != nil {
+		blog.Errorf("task[%s] stepName[%s] getTaskStateAndCurrentStep failed: %v",
+			taskID, stepName, err)
+		return err
+	}
+	// step executed success
+	if step == nil {
+		blog.Infof("task[%s] stepName[%s] already exec successful && skip",
+			taskID, stepName, err)
+		return nil
+	}
+
+	// step timeout
+	stepCtx, stepCancel := GetTimeOutCtx(m.ctx, step.MaxExecutionSeconds)
+	defer stepCancel()
+
+	// task timeout
+	t, _ := state.task.GetStartTime()
+	taskCtx, taskCancel := GetDeadlineCtx(m.ctx, &t, state.task.MaxExecutionSeconds)
+	defer taskCancel()
+
+	tmpCh := make(chan error, 1)
+	go func() {
+		// call step worker
+		tmpCh <- stepWorker.DoWork(stepCtx, step)
+	}()
+
+	select {
+	case errLocal := <-tmpCh:
+		blog.Infof("task %s step %s errLocal: %v", taskID, stepName, errLocal)
+
+		// update task & step status
+		if errLocal != nil {
+			if err := state.updateStepFailure(start, step.GetName(), errLocal, false); err != nil {
+				blog.Infof("task %s update step %s to failure failed: %s",
+					taskID, step.GetName(), errLocal.Error())
+			}
+		} else {
+			if err := state.updateStepSuccess(start, step.GetName()); err != nil {
+				blog.Infof("task %s update step %s to success failed: %s",
+					taskID, step.GetName(), err.Error())
+			}
+		}
+
+		if errLocal != nil && !step.GetSkipOnFailed() {
+			return errLocal
+		}
+
+		return nil
+
+	case <-stepCtx.Done():
+		retErr := fmt.Errorf("task %s step %s timeout", taskID, step.GetName())
+		errLocal := state.updateStepFailure(start, step.GetName(), retErr, false)
+		if errLocal != nil {
+			blog.Infof("update step %s to failure failed: %s", step.GetName(), errLocal.Error())
+		}
+		if !step.GetSkipOnFailed() {
+			return retErr
+		}
+		return nil
+
+	case <-taskCtx.Done():
+		// task timeOut
+		retErr := fmt.Errorf("task %s exec timeout", taskID)
+		errLocal := state.updateStepFailure(start, step.GetName(), retErr, true)
+		if errLocal != nil {
+			blog.Errorf("update step %s to failure failed: %s", step.GetName(), errLocal.Error())
+		}
+
+		return retErr
+	}
 }
 
 // Stop running
