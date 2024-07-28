@@ -90,7 +90,7 @@ func (m *TaskManager) Init(cfg *ManagerConfig) error {
 		return err
 	}
 	m.cfg = cfg
-	m.store = cfg.store
+	m.store = cfg.Store
 
 	if m.stepWorkers == nil {
 		m.stepWorkers = make(map[string]istep.StepWorkerInterface)
@@ -151,7 +151,7 @@ func (m *TaskManager) initServer() error {
 		ResultsExpireIn: 3600 * 48,
 	}
 
-	m.server = machinery.NewServer(serverConfig, m.cfg.broker, m.cfg.backend, m.cfg.lock)
+	m.server = machinery.NewServer(serverConfig, m.cfg.Broker, m.cfg.Backend, m.cfg.Lock)
 
 	return nil
 }
