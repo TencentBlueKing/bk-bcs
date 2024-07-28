@@ -16,7 +16,6 @@ import (
 	"context"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 )
 
 type ListOption struct {
@@ -44,14 +43,4 @@ type Store interface {
 	PatchTask(ctx context.Context, taskID string, patchs map[string]interface{}) error
 	ListTask(ctx context.Context, opt *ListOption) ([]types.Task, error)
 	// WriteStepOutput(ctx context.Context, taskId string, name string, output map[string]string) error
-}
-
-type TaskManagerModel interface {
-	// task information storage management
-	CreateTask(ctx context.Context, task *types.Task) error
-	UpdateTask(ctx context.Context, task *types.Task) error
-	PatchTask(ctx context.Context, taskID string, patchs map[string]interface{}) error
-	DeleteTask(ctx context.Context, taskID string) error
-	GetTask(ctx context.Context, taskID string) (*types.Task, error)
-	ListTask(ctx context.Context, cond *operator.Condition, opt *ListOption) ([]types.Task, error)
 }
