@@ -22,33 +22,33 @@ import (
 
 // BaseModel 基础模型
 type BaseModel struct {
-	ID        uint           `json:"id" gorm:"primarykey"`
-	CreatedAt time.Time      `json:"createdAt" gorm:"createdAt"`
-	UpdatedAt time.Time      `json:"updatedAt" gorm:"updatedAt"`
+	ID        uint `gorm:"primarykey"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
 	DeletedAt gorm.DeletedAt `gorm:"index"`
 }
 
 // TaskRecords 任务记录
 type TaskRecords struct {
 	BaseModel
-	TaskID              string            `json:"taskID" gorm:"index:idx_task_id,unique"` // 唯一索引
-	TaskType            string            `json:"taskType" gorm:"taskType"`
-	TaskName            string            `json:"taskName" gorm:"taskName"`
-	CurrentStep         string            `json:"currentStep" gorm:"currentStep"`
-	StepSequence        []string          `json:"stepSequence" gorm:"stepSequence;serializer:json"`
-	CallBackFuncName    string            `json:"callBackFuncName" gorm:"callBackFuncName"`
-	CommonParams        map[string]string `json:"commonParams" gorm:"commonParams;serializer:json"`
-	ExtraJson           string            `json:"extraJson" gorm:"extraJson"`
-	Status              string            `json:"status" gorm:"status"`
-	Message             string            `json:"message" gorm:"message"`
-	ForceTerminate      bool              `json:"forceTerminate" gorm:"forceTerminate"`
-	Start               string            `json:"start" gorm:"start"`
-	End                 string            `json:"end" gorm:"end"`
-	ExecutionTime       uint32            `json:"executionTime" gorm:"executionTime"`
-	MaxExecutionSeconds uint32            `json:"maxExecutionSeconds" gorm:"maxExecutionSeconds"`
-	Creator             string            `json:"creator" gorm:"creator"`
-	LastUpdate          string            `json:"lastUpdate" gorm:"lastUpdate"`
-	Updater             string            `json:"updater" gorm:"updater"`
+	TaskID              string            `json:"taskID" gorm:"type:varchar(255),index:idx_task_id,unique"` // 唯一索引
+	TaskType            string            `json:"taskType"`
+	TaskName            string            `json:"taskName"`
+	CurrentStep         string            `json:"currentStep"`
+	StepSequence        []string          `json:"stepSequence" gorm:"serializer:json"`
+	CallBackFuncName    string            `json:"callBackFuncName"`
+	CommonParams        map[string]string `json:"commonParams" gorm:"serializer:json"`
+	ExtraJson           string            `json:"extraJson"`
+	Status              string            `json:"status"`
+	Message             string            `json:"message"`
+	ForceTerminate      bool              `json:"forceTerminate"`
+	Start               time.Time         `json:"start"`
+	End                 time.Time         `json:"end"`
+	LastUpdate          time.Time         `json:"lastUpdate"`
+	ExecutionTime       uint32            `json:"executionTime"`
+	MaxExecutionSeconds uint32            `json:"maxExecutionSeconds"`
+	Creator             string            `json:"creator"`
+	Updater             string            `json:"updater"`
 }
 
 // TableName ..
@@ -59,21 +59,21 @@ func (t *TaskRecords) TableName() string {
 // StepRecords 步骤记录
 type StepRecords struct {
 	BaseModel
-	TaskID              string            `json:"taskID" gorm:"index:idx_task_id"` // 索引
-	Name                string            `json:"name"`
-	Alias               string            `json:"alias" gorm:"alias"`
-	Input               map[string]string `json:"input" gorm:"input;serializer:json"`
-	Output              map[string]string `json:"output" gorm:"output;serializer:json"`
-	Extras              string            `json:"extras" gorm:"extras"`
-	Status              string            `json:"status" gorm:"status"`
-	Message             string            `json:"message" gorm:"message"`
-	SkipOnFailed        bool              `json:"skipOnFailed" gorm:"skipOnFailed"`
-	RetryCount          uint32            `json:"retryCount" gorm:"retryCount"`
-	Start               string            `json:"start" gorm:"start"`
-	End                 string            `json:"end" gorm:"end"`
-	ExecutionTime       uint32            `json:"executionTime" gorm:"executionTime"`
-	MaxExecutionSeconds uint32            `json:"maxExecutionSeconds" gorm:"maxExecutionSeconds"`
-	LastUpdate          string            `json:"lastUpdate" gorm:"lastUpdate"`
+	TaskID              string            `json:"taskID" gorm:"type:varchar(255),index:idx_task_id"` // 索引
+	Name                string            `json:"name" gorm:"type:varchar(255)"`
+	Alias               string            `json:"alias" gorm:"type:varchar(255)"`
+	Input               map[string]string `json:"input" gorm:"serializer:json"`
+	Output              map[string]string `json:"output" gorm:"serializer:json"`
+	Extras              string            `json:"extras"`
+	Status              string            `json:"status" gorm:"type:varchar(255)"`
+	Message             string            `json:"message" gorm:"type:varchar(255)"`
+	SkipOnFailed        bool              `json:"skipOnFailed"`
+	RetryCount          uint32            `json:"retryCount"`
+	Start               time.Time         `json:"start"`
+	End                 time.Time         `json:"end"`
+	LastUpdate          time.Time         `json:"lastUpdate"`
+	ExecutionTime       uint32            `json:"executionTime"`
+	MaxExecutionSeconds uint32            `json:"maxExecutionSeconds"`
 }
 
 // TableName ..
@@ -82,6 +82,7 @@ func (t *StepRecords) TableName() string {
 }
 
 func GetStepRecords(t *types.Task) []*StepRecords {
+
 	records := make([]*StepRecords, 0, len(t.Steps))
 	for _, step := range t.Steps {
 		record := &StepRecords{
@@ -109,6 +110,7 @@ func GetTaskRecord(t *types.Task) *TaskRecords {
 	for i := range t.Steps {
 		stepSequence = append(stepSequence, t.Steps[i].Name)
 	}
+
 	record := &TaskRecords{
 		TaskID:              t.TaskID,
 		TaskType:            t.TaskType,

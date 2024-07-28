@@ -60,18 +60,18 @@ func NewTask(o *TaskInfo, opts ...TaskOption) *Task {
 		opt(defaultOptions)
 	}
 
-	nowTime := time.Now().Format(TaskTimeFormat)
+	now := time.Now()
 	return &Task{
 		TaskID:              uuid.NewString(),
 		TaskType:            o.TaskType,
 		TaskName:            o.TaskName,
 		Status:              TaskStatusInit,
 		ForceTerminate:      false,
-		Start:               nowTime,
+		Start:               now,
 		Steps:               make([]*Step, 0),
 		Creator:             o.Creator,
 		Updater:             o.Creator,
-		LastUpdate:          nowTime,
+		LastUpdate:          now,
 		CommonParams:        make(map[string]string, 0),
 		ExtraJson:           DefaultJsonExtrasContent,
 		CallBackFuncName:    defaultOptions.CallBackFuncName,
@@ -200,23 +200,23 @@ func (t *Task) SetForceTerminate(f bool) *Task {
 
 // GetStartTime get start time
 func (t *Task) GetStartTime() (time.Time, error) {
-	return time.Parse(TaskTimeFormat, t.Start)
+	return t.Start, nil
 }
 
 // SetStartTime set start time
 func (t *Task) SetStartTime(time time.Time) *Task {
-	t.Start = time.Format(TaskTimeFormat)
+	t.Start = time
 	return t
 }
 
 // GetEndTime get end time
 func (t *Task) GetEndTime() (time.Time, error) {
-	return time.Parse(TaskTimeFormat, t.End)
+	return t.End, nil
 }
 
 // SetEndTime set end time
 func (t *Task) SetEndTime(time time.Time) *Task {
-	t.End = time.Format(TaskTimeFormat)
+	t.End = time
 	return t
 }
 
@@ -266,12 +266,12 @@ func (t *Task) SetUpdater(updater string) *Task {
 
 // GetLastUpdate get last update time
 func (t *Task) GetLastUpdate() (time.Time, error) {
-	return time.Parse(TaskTimeFormat, t.LastUpdate)
+	return t.LastUpdate, nil
 }
 
 // SetLastUpdate set last update time
 func (t *Task) SetLastUpdate(lastUpdate time.Time) *Task {
-	t.LastUpdate = lastUpdate.Format(TaskTimeFormat)
+	t.LastUpdate = lastUpdate
 	return t
 }
 

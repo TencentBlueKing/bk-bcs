@@ -56,7 +56,6 @@ func NewStep(name string, alias string, opts ...StepOption) *Step {
 		opt(defaultOptions)
 	}
 
-	nowStr := time.Now().Format(TaskTimeFormat)
 	return &Step{
 		Name:                name,
 		Alias:               alias,
@@ -66,7 +65,7 @@ func NewStep(name string, alias string, opts ...StepOption) *Step {
 		Message:             "",
 		SkipOnFailed:        defaultOptions.SkipFailed,
 		RetryCount:          defaultOptions.Retry,
-		Start:               nowStr,
+		Start:               time.Now(),
 		MaxExecutionSeconds: defaultOptions.MaxExecutionSeconds,
 	}
 }
@@ -201,24 +200,24 @@ func (s *Step) AddRetryCount(count uint32) *Step {
 
 // GetStartTime get start time
 func (s *Step) GetStartTime() (time.Time, error) {
-	return time.Parse(TaskTimeFormat, s.Start)
+	return s.Start, nil
 }
 
 // SetStartTime update start time
 func (s *Step) SetStartTime(t time.Time) *Step {
-	s.Start = t.Format(TaskTimeFormat)
+	s.Start = t
 	return s
 }
 
 // GetEndTime get end time
 func (s *Step) GetEndTime() (time.Time, error) {
-	return time.Parse(TaskTimeFormat, s.End)
+	return s.End, nil
 }
 
 // SetEndTime set end time
 func (s *Step) SetEndTime(t time.Time) *Step {
 	// set end time
-	s.End = t.Format(TaskTimeFormat)
+	s.End = t
 	return s
 }
 
@@ -246,11 +245,11 @@ func (s *Step) SetMaxExecutionSeconds(maxExecutionSeconds time.Duration) *Step {
 
 // GetLastUpdate get last update time
 func (s *Step) GetLastUpdate() (time.Time, error) {
-	return time.Parse(TaskTimeFormat, s.LastUpdate)
+	return s.LastUpdate, nil
 }
 
 // SetLastUpdate set last update time
 func (s *Step) SetLastUpdate(t time.Time) *Step {
-	s.LastUpdate = t.Format(TaskTimeFormat)
+	s.LastUpdate = t
 	return s
 }

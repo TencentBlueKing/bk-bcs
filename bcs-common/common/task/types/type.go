@@ -58,12 +58,12 @@ type Task struct {
 	Status              string            `json:"status"`
 	Message             string            `json:"message"`
 	ForceTerminate      bool              `json:"forceTerminate"`
-	Start               string            `json:"start"`
-	End                 string            `json:"end"`
+	Start               time.Time         `json:"start"`
+	End                 time.Time         `json:"end"`
 	ExecutionTime       uint32            `json:"executionTime"`
 	MaxExecutionSeconds uint32            `json:"maxExecutionSeconds"`
 	Creator             string            `json:"creator"`
-	LastUpdate          string            `json:"lastUpdate"`
+	LastUpdate          time.Time         `json:"lastUpdate"`
 	Updater             string            `json:"updater"`
 }
 
@@ -77,9 +77,9 @@ type Step struct {
 	Message             string            `json:"message"`
 	SkipOnFailed        bool              `json:"skipOnFailed"`
 	RetryCount          uint32            `json:"retryCount"`
-	Start               string            `json:"start"`
-	End                 string            `json:"end"`
+	Start               time.Time         `json:"start"`
+	End                 time.Time         `json:"end"`
 	ExecutionTime       uint32            `json:"executionTime"`
 	MaxExecutionSeconds uint32            `json:"maxExecutionSeconds"`
-	LastUpdate          string            `json:"lastUpdate"`
+	LastUpdate          time.Time         `json:"lastUpdate"`
 }
