@@ -28,6 +28,7 @@ import (
 	etcdlock "github.com/Tencent/bk-bcs/bcs-common/common/task/locks/etcd"
 	istep "github.com/Tencent/bk-bcs/bcs-common/common/task/steps/iface"
 	mongostore "github.com/Tencent/bk-bcs/bcs-common/common/task/store/mongo"
+	mysqlstore "github.com/Tencent/bk-bcs/bcs-common/common/task/store/mysql"
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
 	bcsmongo "github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
 )
@@ -47,6 +48,7 @@ var (
 	moduleName   = "example"
 	queueAddress = "amqp://guest:guest@127.0.0.1:5672"
 	mongoHosts   = []string{"127.0.0.1:27017"}
+	mysqlDSN     = "root:%s@tcp(127.0.0.1:3306)/bk-env-manager-1?charset=utf8mb4&parseTime=True&loc=Local"
 )
 
 func main() {
@@ -54,6 +56,7 @@ func main() {
 	if pwd == "" {
 		pwd = "12345"
 	}
+
 	mongoOpts := &bcsmongo.Options{
 		Hosts:                 mongoHosts,
 		ConnectTimeoutSeconds: 10,
@@ -96,6 +99,15 @@ func main() {
 		panic(err)
 	}
 	store := mongostore.New(mongoDB, moduleName)
+
+	if mysqlPwd := os.Getenv("MYSQL_PASSWORD"); mysqlPwd != "" {
+		dns := fmt.Sprintf(mysqlDSN, mysqlPwd)
+		store, err = mysqlstore.New(dns)
+		if err != nil {
+			panic(err)
+		}
+		store.EnsureTable(ctx)
+	}
 
 	btm := task.NewTaskManager()
 	config := &task.ManagerConfig{
