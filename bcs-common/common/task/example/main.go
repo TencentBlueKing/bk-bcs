@@ -14,6 +14,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/signal"
@@ -21,9 +22,10 @@ import (
 	"time"
 
 	"github.com/RichardKnop/machinery/v2/backends/mongo"
-	"github.com/RichardKnop/machinery/v2/brokers/amqp"
 	"github.com/RichardKnop/machinery/v2/config"
 	"github.com/Tencent/bk-bcs/bcs-common/common/task"
+	etcdbroker "github.com/Tencent/bk-bcs/bcs-common/common/task/brokers/etcd"
+	etcdlock "github.com/Tencent/bk-bcs/bcs-common/common/task/locks/etcd"
 	istep "github.com/Tencent/bk-bcs/bcs-common/common/task/steps/iface"
 	mongostore "github.com/Tencent/bk-bcs/bcs-common/common/task/store/mongo"
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
@@ -48,14 +50,16 @@ var (
 )
 
 func main() {
-	btm := task.NewTaskManager()
-
+	pwd := os.Getenv("MONGO_PASSWORD")
+	if pwd == "" {
+		pwd = "12345"
+	}
 	mongoOpts := &bcsmongo.Options{
 		Hosts:                 mongoHosts,
 		ConnectTimeoutSeconds: 10,
 		Database:              "cluster",
-		Username:              "admin",
-		Password:              "123456",
+		Username:              "root",
+		Password:              pwd,
 		MaxPoolSize:           0,
 		MinPoolSize:           0,
 	}
@@ -64,27 +68,37 @@ func main() {
 		panic(err)
 	}
 
+	ctx := context.Background()
 	serverConfig := &config.Config{
-		Broker:          queueAddress,
-		DefaultQueue:    "bcs-cluster-manager",
+		DefaultQueue:    "machinery_tasks",
+		Broker:          "http://127.0.0.1:2379",
+		Lock:            "http://127.0.0.1:2379",
 		ResultsExpireIn: 3600 * 48,
 		MongoDB: &config.MongoDBConfig{
 			Client:   mongoCli,
 			Database: mongoOpts.Database,
 		},
-		AMQP: &config.AMQPConfig{
-			ExchangeType:  "direct",
-			PrefetchCount: 50,
-		},
 	}
-	broker := amqp.New(serverConfig)
+	broker, err := etcdbroker.New(ctx, serverConfig)
+	if err != nil {
+		panic(err)
+	}
+	lock, err := etcdlock.New(ctx, serverConfig, 3)
+	if err != nil {
+		panic(lock)
+	}
 	backend, err := mongo.New(serverConfig)
+	if err != nil {
+		panic(err)
+	}
 
+	btm := task.NewTaskManager()
 	config := &task.ManagerConfig{
 		ModuleName: moduleName,
 		WorkerNum:  100,
 		Broker:     broker,
 		Backend:    backend,
+		Lock:       lock,
 	}
 	// register step worker && callback
 	config.StepWorkers = registerSteps()
@@ -93,8 +107,7 @@ func main() {
 	// init task manager
 	err = btm.Init(config)
 	if err != nil {
-		fmt.Println(err)
-		return
+		panic(err)
 	}
 
 	// run task manager
