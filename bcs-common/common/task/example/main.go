@@ -106,7 +106,11 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		store.EnsureTable(ctx)
+		err = store.EnsureTable(ctx)
+		if err != nil {
+			panic(err)
+		}
+
 	}
 
 	btm := task.NewTaskManager()

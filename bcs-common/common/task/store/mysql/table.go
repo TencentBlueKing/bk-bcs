@@ -31,15 +31,15 @@ type BaseModel struct {
 // TaskRecords 任务记录
 type TaskRecords struct {
 	BaseModel
-	TaskID              string            `json:"taskID" gorm:"type:varchar(255),index:idx_task_id,unique"` // 唯一索引
-	TaskType            string            `json:"taskType"`
-	TaskName            string            `json:"taskName"`
-	CurrentStep         string            `json:"currentStep"`
+	TaskID              string            `json:"taskID" gorm:"type:varchar(255);uniqueIndex:idx_task_id"` // 唯一索引
+	TaskType            string            `json:"taskType" gorm:"type:varchar(255)"`
+	TaskName            string            `json:"taskName" gorm:"type:varchar(255)"`
+	CurrentStep         string            `json:"currentStep" gorm:"type:varchar(255)"`
 	StepSequence        []string          `json:"stepSequence" gorm:"serializer:json"`
-	CallBackFuncName    string            `json:"callBackFuncName"`
+	CallBackFuncName    string            `json:"callBackFuncName" gorm:"type:varchar(255)"`
 	CommonParams        map[string]string `json:"commonParams" gorm:"serializer:json"`
 	ExtraJson           string            `json:"extraJson"`
-	Status              string            `json:"status"`
+	Status              string            `json:"status" gorm:"type:varchar(255)"`
 	Message             string            `json:"message"`
 	ForceTerminate      bool              `json:"forceTerminate"`
 	Start               time.Time         `json:"start"`
@@ -47,8 +47,8 @@ type TaskRecords struct {
 	LastUpdate          time.Time         `json:"lastUpdate"`
 	ExecutionTime       uint32            `json:"executionTime"`
 	MaxExecutionSeconds uint32            `json:"maxExecutionSeconds"`
-	Creator             string            `json:"creator"`
-	Updater             string            `json:"updater"`
+	Creator             string            `json:"creator" gorm:"type:varchar(255)"`
+	Updater             string            `json:"updater" gorm:"type:varchar(255)"`
 }
 
 // TableName ..
@@ -59,7 +59,7 @@ func (t *TaskRecords) TableName() string {
 // StepRecords 步骤记录
 type StepRecords struct {
 	BaseModel
-	TaskID              string            `json:"taskID" gorm:"type:varchar(255),index:idx_task_id"` // 索引
+	TaskID              string            `json:"taskID" gorm:"type:varchar(255);index:idx_task_id"` // 索引
 	Name                string            `json:"name" gorm:"type:varchar(255)"`
 	Alias               string            `json:"alias" gorm:"type:varchar(255)"`
 	Input               map[string]string `json:"input" gorm:"serializer:json"`
