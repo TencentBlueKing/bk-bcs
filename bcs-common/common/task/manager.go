@@ -63,10 +63,10 @@ type ManagerConfig struct {
 	StepWorkers []istep.StepWorkerInterface
 	CallBacks   []istep.CallbackInterface
 	WorkerNum   int
-	broker      ibroker.Broker
-	backend     ibackend.Backend
-	lock        ilock.Lock
-	store       istore.Store
+	Broker      ibroker.Broker
+	Backend     ibackend.Backend
+	Lock        ilock.Lock
+	Store       istore.Store
 }
 
 // NewTaskManager create new manager

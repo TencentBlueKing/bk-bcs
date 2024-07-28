@@ -9,7 +9,8 @@ import (
 	mopt "go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func newMongoCli(opt *bcsmongo.Options) (*driver.Client, error) {
+// NewMongoCli ...
+func NewMongoCli(opt *bcsmongo.Options) (*driver.Client, error) {
 	credential := mopt.Credential{
 		AuthMechanism: opt.AuthMechanism,
 		AuthSource:    opt.AuthDatabase,

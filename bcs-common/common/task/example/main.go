@@ -20,8 +20,12 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/RichardKnop/machinery/v2/backends/mongo"
+	"github.com/RichardKnop/machinery/v2/brokers/amqp"
+	"github.com/RichardKnop/machinery/v2/config"
 	"github.com/Tencent/bk-bcs/bcs-common/common/task"
 	istep "github.com/Tencent/bk-bcs/bcs-common/common/task/steps/iface"
+	mongostore "github.com/Tencent/bk-bcs/bcs-common/common/task/store/mongo"
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
 	bcsmongo "github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
 )
@@ -46,29 +50,48 @@ var (
 func main() {
 	btm := task.NewTaskManager()
 
+	mongoOpts := &bcsmongo.Options{
+		Hosts:                 mongoHosts,
+		ConnectTimeoutSeconds: 10,
+		Database:              "cluster",
+		Username:              "admin",
+		Password:              "123456",
+		MaxPoolSize:           0,
+		MinPoolSize:           0,
+	}
+	mongoCli, err := mongostore.NewMongoCli(mongoOpts)
+	if err != nil {
+		panic(err)
+	}
+
+	serverConfig := &config.Config{
+		Broker:          queueAddress,
+		DefaultQueue:    "bcs-cluster-manager",
+		ResultsExpireIn: 3600 * 48,
+		MongoDB: &config.MongoDBConfig{
+			Client:   mongoCli,
+			Database: mongoOpts.Database,
+		},
+		AMQP: &config.AMQPConfig{
+			ExchangeType:  "direct",
+			PrefetchCount: 50,
+		},
+	}
+	broker := amqp.New(serverConfig)
+	backend, err := mongo.New(serverConfig)
+
 	config := &task.ManagerConfig{
 		ModuleName: moduleName,
 		WorkerNum:  100,
-		Broker: &task.BrokerConfig{
-			QueueAddress: queueAddress,
-			Exchange:     "bcs-cluster-manager",
-		},
-		Backend: &bcsmongo.Options{
-			Hosts:                 mongoHosts,
-			ConnectTimeoutSeconds: 10,
-			Database:              "cluster",
-			Username:              "admin",
-			Password:              "123456",
-			MaxPoolSize:           0,
-			MinPoolSize:           0,
-		},
+		Broker:     broker,
+		Backend:    backend,
 	}
 	// register step worker && callback
 	config.StepWorkers = registerSteps()
 	config.CallBacks = registerCallbacks()
 
 	// init task manager
-	err := btm.Init(config)
+	err = btm.Init(config)
 	if err != nil {
 		fmt.Println(err)
 		return
