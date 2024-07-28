@@ -13,6 +13,7 @@
 package mysql
 
 import (
+	"context"
 	"net/url"
 	"strconv"
 
@@ -20,6 +21,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/store/iface"
+	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
 )
 
 type mysqlStore struct {
@@ -64,10 +66,62 @@ func New(dsn string) (iface.Store, error) {
 }
 
 // EnsureTable 创建db表
-func (s *mysqlStore) EnsureTable(dst ...any) error {
+func (s *mysqlStore) EnsureTable(ctx context.Context, dst ...any) error {
 	// 没有自定义数据, 使用默认表结构
 	if len(dst) == 0 {
 		dst = []any{&TaskRecords{}, &StepRecords{}}
 	}
 	return s.db.AutoMigrate(dst...)
+}
+
+func (s *mysqlStore) CreateTask(ctx context.Context, task *types.Task) error {
+	return s.db.Transaction(func(tx *gorm.DB) error {
+		record := GetTaskRecord(task)
+		if err := tx.Create(record).Error; err != nil {
+			return err
+		}
+
+		steps := GetStepRecords(task)
+		if err := tx.CreateInBatches(steps, 100).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
+func (s *mysqlStore) UpdateTask(ctx context.Context, task *types.Task) error {
+	return nil
+}
+
+func (s *mysqlStore) DeleteTask(ctx context.Context, taskID string) error {
+	return s.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Where("task_id = ?", taskID).Delete(&TaskRecords{}).Error; err != nil {
+			return err
+		}
+		if err := tx.Where("task_id = ?", taskID).Delete(&StepRecords{}).Error; err != nil {
+			return err
+		}
+		return nil
+	})
+}
+
+func (s *mysqlStore) GetTask(ctx context.Context, taskID string) (*types.Task, error) {
+	stepRecords := []*StepRecords{}
+	if err := s.db.Where("task_id = ?", taskID).Find(&stepRecords).Error; err != nil {
+		return nil, err
+	}
+	taskRecord := TaskRecords{}
+	if err := s.db.Where("task_id = ?", taskID).First(&taskRecord).Error; err != nil {
+		return nil, err
+	}
+	return ToTask(&taskRecord, stepRecords), nil
+}
+
+func (s *mysqlStore) PatchTask(ctx context.Context, taskID string, patchs map[string]interface{}) error {
+	return nil
+}
+
+func (s *mysqlStore) ListTask(ctx context.Context, opt *iface.ListOption) ([]types.Task, error) {
+	return nil, nil
 }
