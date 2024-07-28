@@ -16,7 +16,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/task"
+	istep "github.com/Tencent/bk-bcs/bcs-common/common/task/steps/iface"
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
 )
 
@@ -57,7 +57,7 @@ func (s HelloStep) DoWork(task *types.Task) error {
 }
 
 // BuildStep build step
-func (s HelloStep) BuildStep(kvs []task.KeyValue, opts ...types.StepOption) *types.Step {
+func (s HelloStep) BuildStep(kvs []istep.KeyValue, opts ...types.StepOption) *types.Step {
 	step := types.NewStep(s.GetName(), s.Alias(), opts...)
 
 	// build step paras

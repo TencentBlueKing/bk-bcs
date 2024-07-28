@@ -17,7 +17,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/task"
+	istep "github.com/Tencent/bk-bcs/bcs-common/common/task/steps/iface"
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
 )
 
@@ -27,9 +27,9 @@ const (
 )
 
 var (
-	sumA task.ParamKey = "sumA"
-	sumB task.ParamKey = "sumB"
-	sumC task.ParamKey = "sumC"
+	sumA istep.ParamKey = "sumA"
+	sumB istep.ParamKey = "sumB"
+	sumC istep.ParamKey = "sumC"
 )
 
 // NewSumStep sum step
@@ -72,7 +72,7 @@ func (s SumStep) DoWork(task *types.Task) error {
 }
 
 // BuildStep build step
-func (s SumStep) BuildStep(kvs []task.KeyValue, opts ...types.StepOption) *types.Step {
+func (s SumStep) BuildStep(kvs []istep.KeyValue, opts ...types.StepOption) *types.Step {
 	step := types.NewStep(s.GetName(), s.Alias(), opts...)
 
 	// build step paras

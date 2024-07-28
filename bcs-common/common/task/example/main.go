@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/task"
+	istep "github.com/Tencent/bk-bcs/bcs-common/common/task/steps/iface"
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
 	bcsmongo "github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
 )
@@ -110,8 +111,8 @@ func main() {
 	fmt.Printf("Got OS shutdown signal, shutting down server gracefully...")
 }
 
-func registerSteps() []task.StepWorkerInterface {
-	steps := make([]task.StepWorkerInterface, 0)
+func registerSteps() []istep.StepWorkerInterface {
+	steps := make([]istep.StepWorkerInterface, 0)
 
 	sum := NewSumStep()
 	steps = append(steps, sum)
@@ -122,8 +123,8 @@ func registerSteps() []task.StepWorkerInterface {
 	return steps
 }
 
-func registerCallbacks() []task.CallbackInterface {
-	callbacks := make([]task.CallbackInterface, 0)
+func registerCallbacks() []istep.CallbackInterface {
+	callbacks := make([]istep.CallbackInterface, 0)
 	callbacks = append(callbacks, &callBack{})
 
 	return callbacks

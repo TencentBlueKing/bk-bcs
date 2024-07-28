@@ -46,14 +46,12 @@ type TaskManager struct { // nolint
 	lock       sync.Locker
 	server     *machinery.Server
 	worker     *machinery.Worker
-	broker     ibroker.Broker
-	mlock      ilock.Lock
-	backend    ibackend.Backend
-	store      istore.Store
 
 	workerNum     int
 	stepWorkers   map[string]istep.StepWorkerInterface
 	callBackFuncs map[string]istep.CallbackInterface
+	cfg           *ManagerConfig
+	store         istore.Store
 
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -65,10 +63,14 @@ type ManagerConfig struct {
 	StepWorkers []istep.StepWorkerInterface
 	CallBacks   []istep.CallbackInterface
 	WorkerNum   int
+	broker      ibroker.Broker
+	backend     ibackend.Backend
+	lock        ilock.Lock
+	store       istore.Store
 }
 
 // NewTaskManager create new manager
-func NewTaskManager(broker ibroker.Broker, backend ibackend.Backend, lock ilock.Lock, store istore.Store) *TaskManager {
+func NewTaskManager() *TaskManager {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	m := &TaskManager{
@@ -76,10 +78,7 @@ func NewTaskManager(broker ibroker.Broker, backend ibackend.Backend, lock ilock.
 		cancel:    cancel,
 		lock:      &sync.Mutex{},
 		workerNum: DefaultWorkerConcurrency,
-		broker:    broker,
-		backend:   backend,
-		mlock:     lock,
-		store:     store,
+		cfg:       &ManagerConfig{},
 	}
 	return m
 }
@@ -90,6 +89,8 @@ func (m *TaskManager) Init(cfg *ManagerConfig) error {
 	if err != nil {
 		return err
 	}
+	m.cfg = cfg
+	m.store = cfg.store
 
 	if m.stepWorkers == nil {
 		m.stepWorkers = make(map[string]istep.StepWorkerInterface)
@@ -150,7 +151,7 @@ func (m *TaskManager) initServer() error {
 		ResultsExpireIn: 3600 * 48,
 	}
 
-	m.server = machinery.NewServer(serverConfig, m.broker, m.backend, m.mlock)
+	m.server = machinery.NewServer(serverConfig, m.cfg.broker, m.cfg.backend, m.cfg.lock)
 
 	return nil
 }
