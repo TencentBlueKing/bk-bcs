@@ -31,7 +31,7 @@ type BaseModel struct {
 // TaskRecords 任务记录
 type TaskRecords struct {
 	BaseModel
-	TaskID              string            `json:"taskID" gorm:"taskID"`
+	TaskID              string            `json:"taskID" gorm:"index:idx_task_id,unique"` // 唯一索引
 	TaskType            string            `json:"taskType" gorm:"taskType"`
 	TaskName            string            `json:"taskName" gorm:"taskName"`
 	CurrentStep         string            `json:"currentStep" gorm:"currentStep"`
@@ -59,8 +59,8 @@ func (t *TaskRecords) TableName() string {
 // StepRecords 步骤记录
 type StepRecords struct {
 	BaseModel
-	TaskID              string            `json:"taskID" gorm:"taskID"`
-	Name                string            `json:"name" gorm:"name"`
+	TaskID              string            `json:"taskID" gorm:"index:idx_task_id"` // 索引
+	Name                string            `json:"name"`
 	Alias               string            `json:"alias" gorm:"alias"`
 	Input               map[string]string `json:"input" gorm:"input;serializer:json"`
 	Output              map[string]string `json:"output" gorm:"output;serializer:json"`
