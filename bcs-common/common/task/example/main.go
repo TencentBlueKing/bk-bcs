@@ -63,6 +63,10 @@ func main() {
 		MaxPoolSize:           0,
 		MinPoolSize:           0,
 	}
+	mongoDB, err := bcsmongo.NewDB(mongoOpts)
+	if err != nil {
+		panic(err)
+	}
 	mongoCli, err := mongostore.NewMongoCli(mongoOpts)
 	if err != nil {
 		panic(err)
@@ -91,6 +95,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	store := mongostore.New(mongoDB, moduleName)
 
 	btm := task.NewTaskManager()
 	config := &task.ManagerConfig{
@@ -99,6 +104,7 @@ func main() {
 		Broker:     broker,
 		Backend:    backend,
 		Lock:       lock,
+		Store:      store,
 	}
 	// register step worker && callback
 	config.StepWorkers = registerSteps()

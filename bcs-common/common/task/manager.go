@@ -121,6 +121,10 @@ func (m *TaskManager) Init(cfg *ManagerConfig) error {
 		m.callBackFuncs[c.GetName()] = c
 	}
 
+	if err := m.initGlobalStorage(); err != nil {
+		return err
+	}
+
 	if err := m.initServer(); err != nil {
 		return err
 	}
