@@ -85,6 +85,7 @@ func (st *Example) BuildTask(info *types.TaskInfo, opts ...types.TaskOption) (*t
 		return nil, fmt.Errorf("task steps empty")
 	}
 
+	t.Steps = st.Steps()
 	t.CurrentStep = t.Steps[0].GetName()
 
 	return t, nil

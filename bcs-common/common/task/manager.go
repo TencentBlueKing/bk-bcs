@@ -132,6 +132,11 @@ func (m *TaskManager) Init(cfg *ManagerConfig) error {
 	return nil
 }
 
+func (m *TaskManager) initGlobalStorage() error {
+	globalStorage = m.store
+	return nil
+}
+
 func (m *TaskManager) validate(c *ManagerConfig) error {
 	// module name check
 	if c.ModuleName == "" {
@@ -202,7 +207,7 @@ func (m *TaskManager) GetTaskWithID(ctx context.Context, taskId string) (*types.
 // ListTask return tasks with conditions
 func (m *TaskManager) ListTask(ctx context.Context, cond *operator.Condition,
 	opt *istore.ListOption) ([]types.Task, error) {
-	return GetGlobalStorage().ListTask(ctx, cond, opt)
+	return GetGlobalStorage().ListTask(ctx, opt)
 }
 
 // UpdateTask update task

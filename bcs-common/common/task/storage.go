@@ -19,10 +19,10 @@ import (
 
 var (
 	// globalStorage used for state and task manager
-	globalStorage store.TaskManagerModel
+	globalStorage store.Store
 )
 
 // GetGlobalStorage for cluster manager storage tools
-func GetGlobalStorage() store.TaskManagerModel {
+func GetGlobalStorage() store.Store {
 	return globalStorage
 }
