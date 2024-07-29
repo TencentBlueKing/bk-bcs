@@ -1,6 +1,7 @@
 import http from '../request';
 import { IGroupCategoriesQuery, IGroupEditArg, IGroupItemInService } from '../../types/group';
 import { ICommonQuery } from '../../types/index';
+import { localT } from '../i18n';
 
 /**
  * 获取分类列表
@@ -39,7 +40,7 @@ export const getServiceGroupList = (biz_id: string, app_id: number) =>
   http.get(`/config/biz/${biz_id}/apps/${app_id}/groups`).then((res) => {
     const defaultGroup = res.data.details.find((item: IGroupItemInService) => item.group_id === 0);
     if (defaultGroup) {
-      defaultGroup.group_name = '全部实例';
+      defaultGroup.group_name = localT('全部实例');
     }
     return res.data;
   });

@@ -276,6 +276,21 @@ func Difference(a, b []uint32) []uint32 {
 	return result
 }
 
+// MatchPattern reports whether name matches the shell pattern.
+func MatchPattern(name string, match []string) bool {
+	if len(match) == 0 {
+		return true
+	}
+
+	for _, m := range match {
+		ok, _ := path.Match(m, name)
+		if ok {
+			return true
+		}
+	}
+	return false
+}
+
 // BytesToHumanReadable converts bytes to a human-readable format (KB, MB, GB)
 func BytesToHumanReadable(bytes uint64) string {
 	const (
