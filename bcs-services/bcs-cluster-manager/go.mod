@@ -72,8 +72,6 @@ require (
 	sigs.k8s.io/aws-iam-authenticator v0.6.17
 )
 
-require github.com/robfig/cron/v3 v3.0.1
-
 require (
 	cloud.google.com/go v0.112.0 // indirect
 	cloud.google.com/go/compute v1.23.3 // indirect
