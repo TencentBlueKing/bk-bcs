@@ -54,7 +54,7 @@ func (cm *ClusterManager) ListTaskStepLogs(ctx context.Context,
 	return nil
 }
 
-// ListTaskRecords implements interface cmproto.ClusterManagerServer
+// TaskRecords implements interface cmproto.ClusterManagerServer
 func (cm *ClusterManager) TaskRecords(ctx context.Context,
 	req *cmproto.TaskRecordsRequest, resp *cmproto.TaskRecordsResponse) error {
 	reqID, err := requestIDFromContext(ctx)

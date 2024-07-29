@@ -599,7 +599,7 @@ type NodeInfo struct {
 }
 
 // UpdateClusterNodesLabels update cluster labels
-func UpdateClusterNodesLabels(ctx context.Context, data NodeLabelsData) error {
+func UpdateClusterNodesLabels(ctx context.Context, data NodeLabelsData) error { // nolint
 	taskID, stepName := cloudprovider.GetTaskIDAndStepNameFromContext(ctx)
 
 	k8sOperator := clusterops.NewK8SOperator(options.GetGlobalCMOptions(), cloudprovider.GetStorageModel())
