@@ -232,7 +232,7 @@ watch(
        */
       if (
         (!showAutoScaler.value && activeTabName.value === 'autoscaler')
-        || (curCluster.value.clusterType === 'virtual' && !['overview', 'info', 'quota'].includes(activeTabName.value))
+        || (curCluster.value.clusterType === 'virtual' && !['overview', 'namespace', 'info', 'quota'].includes(activeTabName.value))
         || (curCluster.value.clusterType !== 'virtual' && activeTabName.value === 'quota')
       ) {
         activeTabName.value = 'overview';

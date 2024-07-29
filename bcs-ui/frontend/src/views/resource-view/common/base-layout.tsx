@@ -332,6 +332,18 @@ export default defineComponent({
       detailLoading.value = false;
       return res.data?.manifest;
     };
+    // 自定义资源详情
+    const handleGetCustomObjectDetail = async ({ namespace, name, clusterID }) => {
+      detailLoading.value = true;
+      const res = await $store.dispatch('dashboard/getCustomObjectResourceDetail', {
+        $crdName: crd.value,
+        $namespaceId: namespace,
+        $name: name,
+        $clusterId: clusterID,
+      });
+      detailLoading.value = false;
+      return res.data?.manifest;
+    };
 
     // 显示侧栏详情
     const handleShowDetail = async (row) => {
@@ -340,11 +352,19 @@ export default defineComponent({
       showDetailPanel.value = true;
 
       // 从详情接口中获取全量数据
-      curDetailRow.value.data = await handleGetResourceDetail({
-        name: row?.metadata?.name,
-        namespace: row?.metadata?.namespace,
-        clusterID: curDetailRow.value.extData?.clusterID,
-      });
+      if (category.value === 'custom_objects') {
+        curDetailRow.value.data = await handleGetCustomObjectDetail({
+          name: row?.metadata?.name,
+          namespace: row?.metadata?.namespace,
+          clusterID: curDetailRow.value.extData?.clusterID,
+        });
+      } else {
+        curDetailRow.value.data = await handleGetResourceDetail({
+          name: row?.metadata?.name,
+          namespace: row?.metadata?.namespace,
+          clusterID: curDetailRow.value.extData?.clusterID,
+        });
+      }
     };
 
     const showCapacityDialog = ref(false);
@@ -808,7 +828,7 @@ export default defineComponent({
                       }
                   </div>
                 ),
-                content: () => <div class="h-[calc(100vh-52px)] overflow-auto" v-bkloading={{ isLoading: this.detailLoading }}>
+                content: () => <div class="h-[calc(100vh-60px)] overflow-auto" v-bkloading={{ isLoading: this.detailLoading }}>
                   {
                     (this.detailType.active === 'overview'
                       ? (this.$scopedSlots.detail?.({
