@@ -19,7 +19,13 @@
               <bk-input v-model="localVal.name" :placeholder="t('请输入')" />
             </bk-form-item>
             <bk-form-item :label="t('版本说明')" propperty="memo">
-              <bk-input v-model="localVal.memo" type="textarea" :placeholder="t('请输入')" :rows="8" :resize="true" />
+              <bk-input
+                v-model="localVal.memo"
+                type="textarea"
+                :placeholder="t('请输入')"
+                :rows="8"
+                :resize="true"
+                :maxlength="200" />
             </bk-form-item>
           </bk-form>
         </div>

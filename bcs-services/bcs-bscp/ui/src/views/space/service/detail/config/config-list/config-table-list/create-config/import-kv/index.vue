@@ -70,7 +70,7 @@
             filterable
             multiple
             show-select-all
-            @focus="handleFocusConfigSelect"
+            @toggle="handleToggleConfigSelectShow"
             @blur="handleCloseConfigSelect">
             <template #trigger>
               <div class="select-btn">{{ $t('选择配置项') }}</div>
@@ -269,6 +269,9 @@
     } else {
       existConfigList.value = data;
     }
+    selectedConfigIds.value = selectedConfigIds.value.filter((key) => {
+      return importConfigList.value.some((config) => config.key === key);
+    });
     isFormChange.value = true;
   };
 
@@ -296,7 +299,6 @@
     importConfigList.value.forEach((config) => {
       if (!selectedConfigIds.value.includes(config.key)) {
         if (config.is_exist) {
-          console.log(1);
           existConfigList.value = existConfigList.value.filter((item) => item.key !== config.key);
         } else {
           nonExistConfigList.value = nonExistConfigList.value.filter((item) => item.key !== config.key);
@@ -312,8 +314,10 @@
     selectedConfigIds.value = cloneDeep(lastSelectedConfigIds.value);
   };
 
-  const handleFocusConfigSelect = () => {
-    lastSelectedConfigIds.value = cloneDeep(selectedConfigIds.value);
+  const handleToggleConfigSelectShow = (isShow: boolean) => {
+    if (isShow) {
+      lastSelectedConfigIds.value = cloneDeep(selectedConfigIds.value);
+    }
   };
 </script>
 

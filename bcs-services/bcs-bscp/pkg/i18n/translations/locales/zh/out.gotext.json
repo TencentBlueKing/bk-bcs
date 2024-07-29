@@ -54,7 +54,7 @@
         {
             "id": "decompress the file. The size of file {Message} exceeds the maximum limit of {MB}",
             "message": "decompress the file. The size of file {Message} exceeds the maximum limit of {MB}",
-            "translation": "解压文件失败，文件 {Message} 的大小超过了最大限制闽值 {MB}",
+            "translation": "解压文件失败，文件 {Message} 的大小超过了最大限制阈值 {MB}",
             "placeholders": [
                 {
                     "id": "Message",

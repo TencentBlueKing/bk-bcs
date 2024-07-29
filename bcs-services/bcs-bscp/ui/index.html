@@ -4,7 +4,6 @@
     <meta charset="UTF-8" />
     <link rel="shortcut icon" type="image/x-icon" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>服务配置中心 | 腾讯蓝鲸智云</title>
     <script>
       var BK_BCS_BSCP_API = '{{ .BK_BCS_BSCP_API }}';
       var SITE_URL = '{{ .SITE_URL }}';
@@ -14,9 +13,8 @@
       var BK_CC_HOST = '{{ .BK_CC_HOST }}';
       var HELPER = '{{ .HELPER }}';
       var ENABLE_BK_NOTICE = '{{ .ENABLE_BK_NOTICE }}';
-      var FEED_HOST = '{{ .FEED_HOST }}';
-      var FEED_GRPC_PORT = '{{ .FEED_GRPC_PORT }}';
-      var FEED_HTTP_PORT = '{{ .FEED_HTTP_PORT }}';
+      var GRPC_ADDR = '{{ .GRPC_ADDR }}';
+      var HTTP_ADDR = '{{ .HTTP_ADDR }}';
       var BK_NODE_HOST = '{{ .BK_NODE_HOST }}';
       window.BSCP_CONFIG = JSON.parse('{{ .BK_BSCP_CONFIG }}');
     </script>

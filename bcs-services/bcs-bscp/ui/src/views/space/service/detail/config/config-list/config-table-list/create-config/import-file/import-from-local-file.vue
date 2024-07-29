@@ -112,7 +112,6 @@
         const decompressingFile = fileList.value.find((file) => file.status === 'decompressing');
         const isCompressionFile = handleCheckIsCompressedFile(decompressingFile!.file.name);
         if (isCompressionFile) {
-          console.log(1);
           emits('decompressing', true);
         } else {
           emits('fileProcessing', true);

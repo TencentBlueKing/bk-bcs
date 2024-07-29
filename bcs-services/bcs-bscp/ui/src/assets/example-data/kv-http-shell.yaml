@@ -9,7 +9,7 @@ token={{ .Bk_Bscp_Variable_ClientKey }}
 labels={{ .Bk_Bscp_Variable_Leabels }}
 
 # 使用参数构建URL
-url="http://{{ .Bk_Bscp_Variable_FEED_ADDR }}/api/v1/feed/biz/${biz_id}/kvs/value/${key_name}"
+url="${feed_addr}/api/v1/feed/biz/${biz_id}/kvs/value/${key_name}"
 
 # 设置请求头，包括Authorization token
 auth_header="Authorization: Bearer ${token}"

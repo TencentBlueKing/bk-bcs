@@ -59,7 +59,8 @@
         :model-value="previewConfig.content"
         :editable="false"
         :upload-icon="false"
-        :language="previewConfig.type">
+        :language="previewConfig.type"
+        :is-preview="true">
         <template #header>
           <div class="script-preview-title">
             <div class="close-area" @click="previewConfig.open = false">

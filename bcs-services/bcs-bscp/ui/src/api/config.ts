@@ -7,6 +7,7 @@ import {
 } from '../../types/config';
 import { IVariableEditParams } from '../../types/variable';
 import { ICommonQuery } from '../../types/index';
+import { localT } from '../i18n';
 
 // 配置文件版本下脚本配置接口可能会返回null，做数据兼容处理
 export const getDefaultConfigScriptData = () => ({
@@ -230,7 +231,7 @@ export const getConfigVersionList = (bizId: string, appId: number, params: IConf
     res.data.details.forEach((item: IConfigVersion) => {
       const defaultGroup = item.status.released_groups.find((group) => group.id === 0);
       if (defaultGroup) {
-        defaultGroup.name = '全部实例';
+        defaultGroup.name = localT('全部实例');
       }
     });
     return res;

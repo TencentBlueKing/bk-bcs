@@ -4,7 +4,7 @@
       <div class="create-script-forms">
         <bk-form ref="formRef" form-type="vertical" :model="formData" :rules="rules">
           <bk-form-item class="fixed-width-form" :label="t('脚本名称')" property="name" required>
-            <bk-input v-model="formData.name" :placeholder="t('请输入')" />
+            <bk-input v-model="formData.name" :placeholder="t('请输入脚本名称')" />
           </bk-form-item>
           <bk-form-item class="fixed-width-form" property="tag" :label="t('分类标签')">
             <!-- <bk-input v-model="formData.tag" /> -->
@@ -116,6 +116,11 @@
       {
         validator: (value: string) => value.length <= 64,
         message: t('不能超过64个字符'),
+        trigger: 'change',
+      },
+      {
+        validator: (value: string) => /^[\u4e00-\u9fa5A-Za-z0-9.\-_#%,:?!@$^+=\\[\]{}]+$/.test(value),
+        message: t('脚本名称有误，请重新输入'),
         trigger: 'change',
       },
     ],
