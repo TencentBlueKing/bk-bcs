@@ -126,6 +126,17 @@ service ClusterManager {
     };
   }
 
+  rpc GetClustersMetaData(GetClustersMetaDataRequest) returns (GetClustersMetaDataResponse) {
+    option (google.api.http) = {
+      post : "/clustermanager/v1/clusters/-/meta"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "查询多个集群的元数据信息"
+      summary : "查询多喝集群的元数据信息"
+    };
+  }
+
   rpc ListNodesInCluster(ListNodesInClusterRequest) returns (ListNodesInClusterResponse) {
     option (google.api.http) = {
       get : "/clustermanager/v1/cluster/{clusterID}/node"
@@ -1781,7 +1792,7 @@ message NetworkSetting {
   }];
   SubnetSource subnetSource = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "subnetSource",
-    description: "集群VPC-CNI模式是否为非固定IP，默认: FALSE 非固定IP"
+    description: "集群VPC-CNI模式下的使用子网情况"
   }];
   bool isStaticIpMode = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "isStaticIpMode",
@@ -1814,6 +1825,10 @@ message NetworkSetting {
   string status = 15[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "status",
     description: "集群网络状态, 主要是变更网络组件过程中记录网络状态"
+  }];
+  string networkMode = 16 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "networkMode",
+    description: "集群VpcCni网络模式(目前支持共享网卡模式tke-route-eni和独占网卡模式tke-direct-eni, 默认情况下是共享网卡模式)"
   }];
 }
 
@@ -3394,11 +3409,22 @@ message CloudNetworkInfo {
       title: "underlayAutoSteps",
       description: "underlay网络模式下自动分配子网的步长"
     }];
+  repeated NetworkMode vpcCniModes = 8 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "vpcCniModes",
+      description: "vpc-cni插件下支持的网络模式"
+    }];
 }
 
 message EnvCidrStep {
   string env=1;
   uint32 step=2;
+}
+
+message NetworkMode {
+  string mode=1;
+  bool   default=2;
+  string name=3;
 }
 
 // NodeGroup pool for kubernetes cluster-autoscaling
@@ -7200,7 +7226,7 @@ message ListNodesInClusterRequest {
       title : "limit",
       description : "查询限制数量"
     },
-    (validate.rules).uint32.lte = 1000
+    (validate.rules).uint32.lte = 5000
   ];
   bool showPwd = 9 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
@@ -7367,6 +7393,69 @@ message ClusterNode {
   string failedReason = 30[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "failedReason",
     description: "上下架节点过程中失败原因"
+  }];
+}
+
+message GetClustersMetaDataRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetClustersMetaDataRequest"
+      description : "获取集群元数据信息"
+    }
+  };
+
+  repeated string clusters = 1 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "clusters",
+      description : "集群列表"
+    },(validate.rules).repeated = {min_items: 1, max_items: 1000}];
+}
+
+message GetClustersMetaDataResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetClustersMetaDataResponse"
+      description : "查询集群元数据信息返回"
+      required : [ "code", "message", "data" ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "code",
+    description: "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description: "返回错误信息"
+  }];
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "result",
+    description: "返回结果"
+  }];
+  repeated ClusterMeta data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "集群元数据信息列表"
+  }];
+  WebAnnotationsV2 web_annotations = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "web_annotations",
+    description : "权限信息"
+  }];
+}
+
+message ClusterMeta {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ClusterMeta"
+      description : "集群元数据信息列表"
+    }
+  };
+  string clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterId",
+    description: "集群Id"
+  }];
+  uint32 clusterNodeNum = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterNodeNum",
+    description: "集群节点数"
   }];
 }
 

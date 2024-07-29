@@ -16,7 +16,7 @@
         </bk-button>
         <bk-button @click="isImportVariableShow = true">{{ t('导入变量') }}</bk-button>
         <VaribaleExport :biz-id="spaceId" />
-        <bk-button @click="handleExport">{{ t('导出变量') }} </bk-button>
+        <bk-button :disabled="list.length === 0" @click="handleExport">{{ t('导出变量') }} </bk-button>
         <BatchDeleteBtn :bk-biz-id="spaceId" :selected-ids="selectedIds" @deleted="refreshAfterBatchDelete" />
       </div>
       <SearchInput v-model="searchStr" :placeholder="t('请输入变量名称')" :width="320" @search="refreshList()" />
@@ -28,6 +28,7 @@
         :remote-pagination="true"
         :checked="checkedVariables"
         :pagination="pagination"
+        show-overflow-tooltip
         @selection-change="handleSelectionChange"
         @select-all="handleSelectAll"
         @page-limit-change="handlePageLimitChange"
@@ -306,6 +307,10 @@
     }
   }
   .variable-table {
+    :deep(.bk-table-body) {
+      max-height: calc(100vh - 300px);
+      overflow: auto;
+    }
     padding: 16px 24px 24px;
   }
   .action-btns {

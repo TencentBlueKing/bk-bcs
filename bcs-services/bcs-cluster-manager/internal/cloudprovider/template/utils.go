@@ -69,6 +69,10 @@ var (
 	clusterKubeConfig      = "CM.cluster.Kubeconfig"
 	clusterBizOperator     = "CM.cluster.ClusterBizOperator"
 	clusterGroupColocation = "CM.cluster.ClusterGroupColocation"
+	clusterCloudArea       = "CM.cluster.ClusterCloudArea"
+	clusterOsType          = "CM.cluster.ClusterOsType"
+	clusterK8sVersion      = "CM.cluster.ClusterK8sVersion"
+	clusterProvider        = "CM.cluster.ClusterProvider"
 
 	// node render info
 	// NOCC:gas/crypto(误报)
@@ -121,6 +125,20 @@ func getClusterMasterIPs(cluster *proto.Cluster) string {
 	}
 
 	return strings.Join(masterIPs, ",")
+}
+
+func getClusterCloudArea(cluster *proto.Cluster) uint32 {
+	return cluster.GetClusterBasicSettings().GetArea().GetBkCloudID()
+}
+
+func getClusterOsType(cluster *proto.Cluster) string {
+	osType := "linux"
+	t, ok := cluster.GetExtraInfo()[common.ClusterOsType]
+	if ok {
+		return t
+	}
+
+	return osType
 }
 
 func getClusterType(cls *proto.Cluster) string {

@@ -318,11 +318,33 @@ export default defineComponent({
         },
       ],
     });
+    // 资源详情(列表数据不全)
+    const detailLoading = ref(false);
+    const handleGetResourceDetail = async ({ namespace, name, clusterID }) => {
+      detailLoading.value = true;
+      const res = await $store.dispatch('dashboard/getResourceDetail', {
+        $namespaceId: namespace,
+        $category: props.category,
+        $name: name,
+        $type: props.type,
+        $clusterId: clusterID,
+      });
+      detailLoading.value = false;
+      return res.data?.manifest;
+    };
+
     // 显示侧栏详情
-    const handleShowDetail = (row) => {
-      curDetailRow.value.data = row;
+    const handleShowDetail = async (row) => {
       curDetailRow.value.extData = handleGetExtData(row.metadata.uid);
+      curDetailRow.value.data = row;// 先设置当前行数据（防止详情页时data为空）
       showDetailPanel.value = true;
+
+      // 从详情接口中获取全量数据
+      curDetailRow.value.data = await handleGetResourceDetail({
+        name: row?.metadata?.name,
+        namespace: row?.metadata?.namespace,
+        clusterID: curDetailRow.value.extData?.clusterID,
+      });
     };
 
     const showCapacityDialog = ref(false);
@@ -628,6 +650,7 @@ export default defineComponent({
       searchSelectChange,
       searchSelectValue,
       searchSelectKey,
+      detailLoading,
     };
   },
   render() {
@@ -785,7 +808,7 @@ export default defineComponent({
                       }
                   </div>
                 ),
-                content: () => <div class="h-[calc(100vh-60px)] overflow-auto">
+                content: () => <div class="h-[calc(100vh-52px)] overflow-auto" v-bkloading={{ isLoading: this.detailLoading }}>
                   {
                     (this.detailType.active === 'overview'
                       ? (this.$scopedSlots.detail?.({

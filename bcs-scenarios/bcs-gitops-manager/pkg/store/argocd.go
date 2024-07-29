@@ -142,6 +142,11 @@ func (cd *argo) GetOptions() *Options {
 	return cd.option
 }
 
+// ReturnArgoK8SClient return the argo k8s client
+func (cd *argo) ReturnArgoK8SClient() *argopkg.ArgoprojV1alpha1Client {
+	return cd.argoK8SClient
+}
+
 func (cd *argo) ApplicationNormalizeWhenDiff(app *v1alpha1.Application, target,
 	live *unstructured.Unstructured, hideData bool) error {
 	var err error

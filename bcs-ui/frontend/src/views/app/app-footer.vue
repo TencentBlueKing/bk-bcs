@@ -6,19 +6,20 @@
         <a :href="PAAS_HOST" target="_blank">{{ $t('blueking.desktop') }}</a>
       </div>
       <p>
-        {{ config.footerCopyright }}
+        {{ config.footerCopyrightContent }}
       </p>
     </div>
     <div v-else>
       <div class="mb5 link">
         <span v-html="config.i18n.footerInfoHTML"></span>
       </div>
-      <p>{{ config.footerCopyright }}</p>
+      <p>{{ config.footerCopyrightContent }}</p>
     </div>
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, computed } from 'vue';
+import { defineComponent } from 'vue';
+
 import usePlatform from '@/composables/use-platform';
 
 export default defineComponent({
@@ -44,5 +45,8 @@ export default defineComponent({
   .link a {
     color: #3a84ff;
   }
+}
+>>> .link-item {
+  color: #3a84ff;
 }
 </style>

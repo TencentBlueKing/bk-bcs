@@ -23,8 +23,8 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/cmd/manager/options"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/internal/dao/mysqlrate"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 )
 
 type driver struct {
@@ -42,8 +42,7 @@ func GlobalDB() Interface {
 }
 
 // NewDriver creates the MySQL instance
-func NewDriver() (Interface, error) {
-	dbCfg := options.GlobalOptions().DBConfig
+func NewDriver(dbCfg *common.DBConfig) (Interface, error) {
 	connArgs := fmt.Sprintf("%s:%s@(%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 		dbCfg.Username, dbCfg.Password, dbCfg.Addr, dbCfg.Database)
 	var err error
@@ -228,6 +227,38 @@ func (d *driver) UpdateActivityUserWithName(item *ActivityUserItem) {
 	}
 }
 
+// UpdateResourcePermissions update the resource's permission with users
+func (d *driver) UpdateResourcePermissions(project, rsType, rsName, rsAction string, users []string) error {
+	err := d.db.Transaction(func(tx *gorm.DB) error {
+		if err := d.db.Table(tableUserPermission).Where("project = ?", project).
+			Where("resourceType = ?", rsType).Where("resourceName = ?", rsName).
+			Where("resourceAction = ?", rsAction).
+			Not(map[string]interface{}{"user": users}).Delete(&UserPermission{}).Error; err != nil {
+			return errors.Wrapf(err, "delete user permissions failed")
+		}
+		for _, user := range users {
+			up := &UserPermission{
+				Project:        project,
+				User:           user,
+				ResourceType:   rsType,
+				ResourceName:   rsName,
+				ResourceAction: rsAction,
+			}
+			if err := d.db.Table(tableUserPermission).Save(up).Error; err != nil {
+				if strings.Contains(err.Error(), "Duplicate") {
+					continue
+				}
+				return errors.Wrapf(err, "save user permissions failed")
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return errors.Wrapf(err, "update user permissions failed")
+	}
+	return nil
+}
+
 // CreateUserPermission create user permission
 func (d *driver) CreateUserPermission(permission *UserPermission) error {
 	if err := d.db.Table(tableUserPermission).Save(permission).Error; err != nil {
@@ -329,6 +360,46 @@ func (d *driver) SaveAuditMessage(audit *UserAudit) error {
 		return errors.Wrapf(err, "save user audit failed")
 	}
 	return nil
+}
+
+// QueryUserAudits query the user audits
+func (d *driver) QueryUserAudits(query *UserAuditQuery) ([]*UserAudit, error) {
+	dbQuery := d.db.Table(tableUserAudit).Where("project IN (?)", query.Projects)
+	if len(query.Users) != 0 {
+		dbQuery.Where("user IN (?)", query.Users)
+	}
+	if len(query.Actions) != 0 {
+		dbQuery.Where("action IN (?)", query.Actions)
+	}
+	if len(query.ResourceTypes) != 0 {
+		dbQuery.Where("resourceType IN (?)", query.ResourceTypes)
+	}
+	if len(query.ResourceNames) != 0 {
+		dbQuery.Where("resourceName IN (?)", query.ResourceNames)
+	}
+	if len(query.RequestIDs) != 0 {
+		dbQuery.Where("requestID IN (?)", query.RequestIDs)
+	}
+	if query.RequestURI != "" {
+		dbQuery.Where("requestURI LIKE ?", "%"+query.RequestURI+"%")
+	}
+	if query.RequestType != "" {
+		dbQuery.Where("requestType = ?", query.RequestType)
+	}
+	if query.RequestMethod != "" {
+		dbQuery.Where("requestMethod = ?", query.RequestMethod)
+	}
+	if query.StartTime != "" {
+		dbQuery.Where("startTime >= ?", query.StartTime)
+	}
+	if query.EndTime != "" {
+		dbQuery.Where("endTime <>>= ?", query.EndTime)
+	}
+	audits := make([]*UserAudit, 0)
+	if err := dbQuery.Order("id desc").Offset(query.Offset).Limit(query.Limit).Find(&audits).Error; err != nil {
+		return nil, errors.Wrapf(err, "query user audits failed")
+	}
+	return audits, nil
 }
 
 // UpdateAppSetClusterScope update appset cluster scope

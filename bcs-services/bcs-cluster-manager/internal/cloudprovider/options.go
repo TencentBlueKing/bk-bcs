@@ -157,6 +157,8 @@ type ListNodesOption struct {
 	ClusterID string
 	// NodeTemplateID for node templateID
 	NodeTemplateID string
+	// CheckIP check instance ip
+	CheckIP bool
 }
 
 // TaskOptions option for create specified task

@@ -35,8 +35,10 @@ import (
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/repository"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/i18n"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/auth"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	pbcs "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/config-server"
@@ -57,6 +59,7 @@ type configImport struct {
 	authorizer auth.Authorizer
 	provider   repository.Provider
 	cfgClient  pbcs.ConfigClient
+	mc         *metric
 }
 
 // TemplateConfigFileImport Import template config file
@@ -71,38 +74,40 @@ func (c *configImport) TemplateConfigFileImport(w http.ResponseWriter, r *http.R
 	tmplSpaceIdStr := chi.URLParam(r, "template_space_id")
 	tmplSpaceID, _ := strconv.Atoi(tmplSpaceIdStr)
 	if tmplSpaceID == 0 {
-		_ = render.Render(w, r, rest.BadRequest(errors.New("validation parameter fail")))
+		_ = render.Render(w, r, rest.BadRequest(errors.New(i18n.T(kt, "id is required"))))
 		return
 	}
 
 	fileName := chi.URLParam(r, "filename")
-	if fileName == "" {
-		_ = render.Render(w, r, rest.BadRequest(errors.New("file name cannot be empty")))
+
+	// Validation size
+	totleContentLength, singleContentLength := getUploadConfig(kt.BizID)
+
+	var maxSize int64
+	if unzip {
+		maxSize = totleContentLength
+	} else {
+		maxSize = singleContentLength
+	}
+
+	if err := checkUploadSize(kt, r, maxSize); err != nil {
+		_ = render.Render(w, r, rest.BadRequest(err))
 		return
 	}
 
-	// Validation size
-	if r.ContentLength > constant.MaxUploadContentLength {
-		_ = render.Render(w, r, rest.BadRequest(errors.New("request body size exceeds 100MB")))
-		return
-	}
 	// Ensure r.Body is closed after reading
 	defer r.Body.Close()
 	buffer := make([]byte, 512)
 	// 读取前512字节以检测文件类型
 	n, errR := r.Body.Read(buffer[:512])
 	if errR != nil && errR != io.EOF {
-		_ = render.Render(w, r, rest.BadRequest(errR))
+		_ = render.Render(w, r,
+			rest.BadRequest(errors.New(i18n.T(kt, "read file failed %s", errR))))
 		return
 	}
 
 	// 组合上一次读取
 	combinedReader := io.MultiReader(bytes.NewReader(buffer[:n]), r.Body)
-
-	var (
-		tempDir string
-		err     error
-	)
 
 	// 默认当文件处理
 	identifyFileType := archive.Unknown
@@ -111,21 +116,36 @@ func (c *configImport) TemplateConfigFileImport(w http.ResponseWriter, r *http.R
 		identifyFileType = archive.IdentifyFileType(buffer[:n])
 	}
 
+	// 创建目录
+	dirPath := path.Join(os.TempDir(), constant.UploadTemporaryDirectory)
+	if err := createTemporaryDirectory(dirPath); err != nil {
+		_ = render.Render(w, r, rest.BadRequest(errors.New(i18n.T(kt, "create directory failed %s", err))))
+		return
+	}
+	// 随机生成临时目录
+	tempDir, err := os.MkdirTemp(dirPath, "templateConfigItem-")
+	if err != nil {
+		_ = render.Render(w, r, rest.BadRequest(errors.New(i18n.T(kt, "create temporary directory failed %s", err))))
+		return
+	}
+
 	if identifyFileType != archive.Unknown {
-		tempDir, err = archive.Unpack(combinedReader, identifyFileType)
-		if err != nil {
-			_ = render.Render(w, r, rest.BadRequest(err))
+		if err = archive.Unpack(combinedReader, identifyFileType, tempDir, singleContentLength*constant.MB); err != nil {
+			compare := new(errf.ErrorF)
+			if errors.As(err, &compare) {
+				if compare.Code == int32(archive.FileTooLarge) {
+					_ = render.Render(w, r, rest.BadRequest(errors.New(i18n.T(kt,
+						"decompress the file. The size of file %s exceeds the maximum limit of %s", compare.Message,
+						tools.BytesToHumanReadable(uint64(singleContentLength*constant.MB))))))
+					return
+				}
+			}
+			_ = render.Render(w, r, rest.BadRequest(errors.New(i18n.T(kt, "decompression failed %s", err))))
 			return
 		}
 	} else {
-		tempDir, err = os.MkdirTemp("", "templateConfigItem-")
-		if err != nil {
-			_ = render.Render(w, r, rest.BadRequest(err))
-			return
-		}
-
 		if err = saveFile(combinedReader, tempDir, fileName); err != nil {
-			_ = render.Render(w, r, rest.BadRequest(err))
+			_ = render.Render(w, r, rest.BadRequest(errors.New(i18n.T(kt, "upload file failed %s", err))))
 			return
 		}
 	}
@@ -135,18 +155,23 @@ func (c *configImport) TemplateConfigFileImport(w http.ResponseWriter, r *http.R
 	// 先扫描一遍文件夹，获取路径和名称，
 	fileItems, err := getFilePathsAndNames(tempDir)
 	if err != nil {
-		_ = render.Render(w, r, rest.BadRequest(err))
+		_ = render.Render(w, r, rest.BadRequest(errors.New(i18n.T(kt, "upload file failed %s", err))))
 		return
 	}
 
+	// 扫描某个目录大小
+	// 暴露 metrics
+	totalSize, _ := getDirSize(dirPath)
+	c.uploadFileMetrics(kt.BizID, tmplSpaceIdStr, dirPath, totalSize)
+
 	if err = c.checkFileConfictsWithTemplates(kt, uint32(tmplSpaceID), fileItems); err != nil {
-		_ = render.Render(w, r, rest.BadRequest(err))
+		_ = render.Render(w, r, rest.BadRequest(errors.New(i18n.T(kt, "detecting file conflicts failed %s", err))))
 		return
 	}
 
 	folder, err := c.processAndUploadDirectoryFiles(kt, tempDir, len(fileItems))
 	if err != nil {
-		_ = render.Render(w, r, rest.BadRequest(err))
+		_ = render.Render(w, r, rest.BadRequest(errors.New(i18n.T(kt, "upload file failed %s", err))))
 		return
 	}
 
@@ -214,9 +239,10 @@ func (c *configImport) TemplateConfigFileImport(w http.ResponseWriter, r *http.R
 			exist = append(exist, newItem)
 		}
 	}
-	msg := "上传完成"
+
+	msg := i18n.T(kt, "upload completed")
 	if uploadErrCount > 0 {
-		msg = fmt.Sprintf("上传完成，失败 %d 个", uploadErrCount)
+		msg = i18n.T(kt, "upload completed, %d failed", uploadErrCount)
 	}
 	sortByPathName(exist)
 	sortByPathName(nonExist)
@@ -231,6 +257,7 @@ func (c *configImport) TemplateConfigFileImport(w http.ResponseWriter, r *http.R
 //
 //nolint:funlen
 func (c *configImport) ConfigFileImport(w http.ResponseWriter, r *http.Request) {
+
 	kt := kit.MustGetKit(r.Context())
 	// Ensure r.Body is closed after reading
 	defer r.Body.Close()
@@ -241,38 +268,36 @@ func (c *configImport) ConfigFileImport(w http.ResponseWriter, r *http.Request) 
 	appIdStr := chi.URLParam(r, "app_id")
 	appId, _ := strconv.Atoi(appIdStr)
 	if appId == 0 {
-		_ = render.Render(w, r, rest.BadRequest(errors.New("validation parameter fail")))
+		_ = render.Render(w, r, rest.BadRequest(errors.New(i18n.T(kt, "id is required"))))
 		return
 	}
 	kt.AppID = uint32(appId)
 
 	fileName := chi.URLParam(r, "filename")
-	if fileName == "" {
-		_ = render.Render(w, r, rest.BadRequest(errors.New("file name cannot be empty")))
-		return
-	}
 
 	// Validation size
-	if r.ContentLength > constant.MaxUploadContentLength {
-		_ = render.Render(w, r, rest.BadRequest(errors.New("request body size exceeds 100MB")))
+	totleContentLength, singleContentLength := getUploadConfig(kt.BizID)
+	var maxSize int64
+	if unzip {
+		maxSize = totleContentLength
+	} else {
+		maxSize = singleContentLength
+	}
+	if err := checkUploadSize(kt, r, maxSize); err != nil {
+		_ = render.Render(w, r, rest.BadRequest(err))
 		return
 	}
-
 	buffer := make([]byte, 512)
 	// 读取前512字节以检测文件类型
 	n, errR := r.Body.Read(buffer[:512])
 	if errR != nil && errR != io.EOF {
-		_ = render.Render(w, r, rest.BadRequest(errR))
+		_ = render.Render(w, r,
+			rest.BadRequest(errors.New(i18n.T(kt, "read file failed %s", errR))))
 		return
 	}
 
 	// 组合上一次读取
 	combinedReader := io.MultiReader(bytes.NewReader(buffer[:n]), r.Body)
-
-	var (
-		tempDir string
-		err     error
-	)
 
 	// 默认当文件处理
 	identifyFileType := archive.Unknown
@@ -281,21 +306,38 @@ func (c *configImport) ConfigFileImport(w http.ResponseWriter, r *http.Request) 
 		identifyFileType = archive.IdentifyFileType(buffer[:n])
 	}
 
+	// 创建目录
+	dirPath := path.Join(os.TempDir(), constant.UploadTemporaryDirectory)
+	if err := createTemporaryDirectory(dirPath); err != nil {
+		_ = render.Render(w, r,
+			rest.BadRequest(errors.New(i18n.T(kt, "create directory failed %s", err))))
+		return
+	}
+
+	// 随机生成临时目录
+	tempDir, err := os.MkdirTemp(dirPath, "configItem-")
+	if err != nil {
+		_ = render.Render(w, r, rest.BadRequest(errors.New(i18n.T(kt, "create temporary directory failed %s", err))))
+		return
+	}
+
 	if identifyFileType != archive.Unknown {
-		tempDir, err = archive.Unpack(combinedReader, identifyFileType)
-		if err != nil {
-			_ = render.Render(w, r, rest.BadRequest(err))
+		if err = archive.Unpack(combinedReader, identifyFileType, tempDir, singleContentLength*constant.MB); err != nil {
+			compare := new(errf.ErrorF)
+			if errors.As(err, &compare) {
+				if compare.Code == int32(archive.FileTooLarge) {
+					_ = render.Render(w, r, rest.BadRequest(errors.New(i18n.T(kt,
+						"decompress the file. The size of file %s exceeds the maximum limit of %s", compare.Message,
+						tools.BytesToHumanReadable(uint64(singleContentLength*constant.MB))))))
+					return
+				}
+			}
+			_ = render.Render(w, r, rest.BadRequest(errors.New(i18n.T(kt, "decompression failed %s", err))))
 			return
 		}
 	} else {
-		tempDir, err = os.MkdirTemp("", "configItem-")
-		if err != nil {
-			_ = render.Render(w, r, rest.BadRequest(err))
-			return
-		}
-
 		if err = saveFile(combinedReader, tempDir, fileName); err != nil {
-			_ = render.Render(w, r, rest.BadRequest(err))
+			_ = render.Render(w, r, rest.BadRequest(errors.New(i18n.T(kt, "upload file failed %s", err))))
 			return
 		}
 	}
@@ -305,30 +347,26 @@ func (c *configImport) ConfigFileImport(w http.ResponseWriter, r *http.Request) 
 	// 先扫描一遍文件夹，获取路径和名称，
 	fileItems, err := getFilePathsAndNames(tempDir)
 	if err != nil {
-		_ = render.Render(w, r, rest.BadRequest(err))
+		_ = render.Render(w, r, rest.BadRequest(errors.New(i18n.T(kt, "upload file failed %s", err))))
 		return
 	}
+
+	// 扫描某个目录大小
+	// 暴露 metrics
+	totalSize, _ := getDirSize(dirPath)
+	c.uploadFileMetrics(kt.BizID, appIdStr, dirPath, totalSize)
 
 	if err = c.checkFileConfictsWithNonTemplates(kt, fileItems); err != nil {
-		_ = render.Render(w, r, rest.BadRequest(err))
+		_ = render.Render(w, r, rest.BadRequest(errors.New(i18n.T(kt, "detecting file conflicts failed %s", err))))
 		return
 	}
 
-	folder, err := c.processAndUploadDirectoryFiles(kt, tempDir, len(fileItems))
-	if err != nil {
-		_ = render.Render(w, r, rest.BadRequest(err))
-		return
-	}
-
+	// 批量验证biz_id、app_id、name、path是否存在
 	configItems := []*pbcs.ListConfigItemByTupleReq_Item{}
-	uploadErrCount := 0
-	for _, item := range folder {
-		if item.Err != nil {
-			uploadErrCount++
-		}
+	for _, item := range fileItems {
 		configItems = append(configItems, &pbcs.ListConfigItemByTupleReq_Item{
-			Name: item.File.Name,
-			Path: item.File.Path,
+			Name: item.Name,
+			Path: item.Path,
 		})
 	}
 
@@ -341,18 +379,49 @@ func (c *configImport) ConfigFileImport(w http.ResponseWriter, r *http.Request) 
 			end = len(configItems)
 		}
 		batch := configItems[i:end]
-		// 批量验证biz_id、app_id、name、path是否存在
-		tuple, err := c.cfgClient.ListConfigItemByTuple(kt.RpcCtx(), &pbcs.ListConfigItemByTupleReq{
+		tuple, errC := c.cfgClient.ListConfigItemByTuple(kt.RpcCtx(), &pbcs.ListConfigItemByTupleReq{
 			BizId: kt.BizID,
 			AppId: kt.AppID,
 			Items: batch,
 		})
-		if err != nil {
-			_ = render.Render(w, r, rest.BadRequest(err))
+		if errC != nil {
+			_ = render.Render(w, r, rest.BadRequest(errC))
 			return
 		}
 		for _, item := range tuple.GetDetails() {
 			configItem[path.Join(item.GetSpec().GetPath(), item.GetSpec().GetName())] = item
+		}
+	}
+
+	// 配置项总数 + 引入的套餐配置项数量 - 已存在的数量 + 新增的数量
+	result, err := c.cfgClient.GetTemplateAndNonTemplateCICount(kt.RpcCtx(), &pbcs.GetTemplateAndNonTemplateCICountReq{
+		BizId: kt.BizID,
+		AppId: kt.AppID,
+	})
+	if err != nil {
+		_ = render.Render(w, r, rest.BadRequest(err))
+		return
+	}
+
+	addCount := len(fileItems) - len(configItem)
+	total := int(result.GetConfigItemCount()+result.GetTemplateConfigItemCount()) + len(configItem) + addCount
+	limit := getAppConfigCnt(kt.BizID)
+	if total > limit {
+		_ = render.Render(w, r, rest.BadRequest(errors.New(i18n.T(kt,
+			"decompress file failed, exceeding the maximum file limit threshold of %d", limit))))
+		return
+	}
+
+	folder, err := c.processAndUploadDirectoryFiles(kt, tempDir, len(fileItems))
+	if err != nil {
+		_ = render.Render(w, r, rest.BadRequest(errors.New(i18n.T(kt, "upload file failed %s", err))))
+		return
+	}
+
+	uploadErrCount := 0
+	for _, item := range folder {
+		if item.Err != nil {
+			uploadErrCount++
 		}
 	}
 
@@ -382,9 +451,9 @@ func (c *configImport) ConfigFileImport(w http.ResponseWriter, r *http.Request) 
 		}
 	}
 
-	msg := "上传完成"
+	msg := i18n.T(kt, "upload completed")
 	if uploadErrCount > 0 {
-		msg = fmt.Sprintf("上传完成，失败 %d 个", uploadErrCount)
+		msg = i18n.T(kt, "upload completed, %d failed", uploadErrCount)
 	}
 	sortByPathName(exist)
 	sortByPathName(nonExist)
@@ -395,8 +464,18 @@ func (c *configImport) ConfigFileImport(w http.ResponseWriter, r *http.Request) 
 	}))
 }
 
+// 检测上传文件的大小
+func checkUploadSize(kt *kit.Kit, r *http.Request, maxSizeMB int64) error {
+	maxSize := maxSizeMB * constant.MB
+	if r.ContentLength > maxSize {
+		return errors.New(i18n.T(kt, "upload failed, please make sure the file size does not exceed %s",
+			tools.BytesToHumanReadable(uint64(maxSize))))
+	}
+	return nil
+}
+
 // getFilePathsAndNames Retrieve all files in the specified directory and
-// return the path and name of the file
+// return the path, name, and directory size of the files
 func getFilePathsAndNames(fileDir string) ([]tools.CIUniqueKey, error) {
 
 	rootDir := fileDir
@@ -411,12 +490,10 @@ func getFilePathsAndNames(fileDir string) ([]tools.CIUniqueKey, error) {
 			if err != nil {
 				return err
 			}
-
 			fileDir, err := handlerFilePath(rootDir, path)
 			if err != nil {
 				return err
 			}
-
 			files = append(files, tools.CIUniqueKey{Path: fileDir, Name: fileInfo.Name()})
 		}
 		return nil
@@ -517,16 +594,29 @@ func (c *configImport) fileScannerHasherUploader(kt *kit.Kit, path, rootDir stri
 		fileType = detectFileType(fileBuffer.Bytes())
 	}
 	_, _ = fileContent.Seek(0, 0)
+
+	// if err is ErrFileContentNotFound, the file does not exist. Do not handle it
+	existObjectMetadata, err := c.provider.Metadata(kt, hashString)
+	if err != nil && !errors.Is(err, errf.ErrFileContentNotFound) {
+		return resp, err
+	}
+
+	resp.Name = fileInfo.Name()
+	resp.FileType = fileType
+	resp.Path = filePath
+	// it exists in repo/cos without any errors
+	if err == nil {
+		resp.ByteSize = uint64(existObjectMetadata.ByteSize)
+		resp.Sign = existObjectMetadata.Sha256
+		return resp, nil
+	}
+
 	result, err := c.provider.Upload(kt, hashString, fileContent)
 	if err != nil {
 		return resp, fmt.Errorf("fiel upload fail filename: %s; err: %s", fileInfo.Name(), err.Error())
 	}
-
-	resp.Name = fileInfo.Name()
 	resp.ByteSize = uint64(result.ByteSize)
 	resp.Sign = result.Sha256
-	resp.FileType = fileType
-	resp.Path = filePath
 
 	return resp, nil
 }
@@ -608,6 +698,7 @@ func newConfigImportService(settings cc.Repository, authorizer auth.Authorizer,
 		authorizer: authorizer,
 		provider:   provider,
 		cfgClient:  cfgClient,
+		mc:         initMetric(),
 	}
 	return config, nil
 }
@@ -691,4 +782,60 @@ func saveFile(reader io.Reader, tempDir, fileName string) error {
 	}
 
 	return nil
+}
+
+// Check if a directory exists and create it if it does not exist
+func createTemporaryDirectory(dirPath string) error {
+	// Check if the directory exists
+	_, err := os.Stat(dirPath)
+	if !os.IsNotExist(err) {
+		return err
+	}
+	// If the directory does not exist, create it
+	err = os.MkdirAll(dirPath, 0755)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// Function to calculate the size of a directory
+func getDirSize(path string) (int64, error) {
+	var size int64
+	err := filepath.Walk(path, func(_ string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() {
+			size += info.Size()
+		}
+		return nil
+	})
+	return size, err
+}
+
+// 上传文件夹时暴露 metrics
+func (c *configImport) uploadFileMetrics(bizID uint32, resourceID, directory string,
+	directorySize int64) {
+	c.mc.currentUploadedFolderSize.WithLabelValues(strconv.Itoa(int(bizID)),
+		resourceID, directory).Set(float64(directorySize))
+}
+
+func getUploadConfig(bizID uint32) (int64, int64) {
+	if resLimit, ok := cc.ApiServer().FeatureFlags.ResourceLimit.Spec[fmt.Sprintf("%d", bizID)]; ok {
+		if resLimit.MaxUploadContentLength > 0 && resLimit.MaxFileSize > 0 {
+			return int64(resLimit.MaxUploadContentLength), int64(resLimit.MaxFileSize)
+		}
+	}
+	resLimit := cc.ApiServer().FeatureFlags.ResourceLimit
+	return int64(resLimit.Default.MaxUploadContentLength), int64(resLimit.Default.MaxFileSize)
+}
+
+func getAppConfigCnt(bizID uint32) int {
+	if resLimit, ok := cc.ApiServer().FeatureFlags.ResourceLimit.Spec[fmt.Sprintf("%d", bizID)]; ok {
+		if resLimit.AppConfigCnt > 0 {
+			return int(resLimit.AppConfigCnt)
+		}
+	}
+	return int(cc.ApiServer().FeatureFlags.ResourceLimit.Default.AppConfigCnt)
 }

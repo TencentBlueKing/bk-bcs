@@ -7,24 +7,26 @@
       @search="getListData" />
     <bk-loading class="loading-wrapper" :loading="loading">
       <div v-for="group in tableGroupsData" :key="group.id" class="config-group">
-        <div class="group-title" @click="group.expand = !group.expand">
-          <DownShape :class="['fold-icon', { fold: !group.expand }]" />
-          {{ group.name }}
-        </div>
-        <div v-if="group.expand" class="config-list-wrapper">
-          <div
-            v-for="config in group.configs"
-            :class="['config-item', { disabled: config.file_state === 'DELETE' }]"
-            :key="config.id"
-            @click="handleConfigClick(config, group)">
-            <bk-overflow-title class="config-name" type="tips">
-              {{ fileAP(config) }}
-            </bk-overflow-title>
-            <div class="config-type">{{ getConfigTypeName(config.file_type) }}</div>
+        <template v-if="group.configs.length > 0">
+          <div class="group-title" @click="group.expand = !group.expand">
+            <DownShape :class="['fold-icon', { fold: !group.expand }]" />
+            {{ group.name }}
           </div>
-          <TableEmpty v-if="group.configs.length === 0" :is-search-empty="isSearchEmpty" @clear="clearSearch" />
-        </div>
+          <div v-if="group.expand" class="config-list-wrapper">
+            <div
+              v-for="config in group.configs"
+              :class="['config-item', { disabled: config.file_state === 'DELETE' }]"
+              :key="config.id"
+              @click="handleConfigClick(config, group)">
+              <bk-overflow-title class="config-name" type="tips">
+                {{ fileAP(config) }}
+              </bk-overflow-title>
+              <div class="config-type">{{ getConfigTypeName(config.file_type) }}</div>
+            </div>
+          </div>
+        </template>
       </div>
+      <TableEmpty v-if="isTableEmpty" :is-search-empty="isSearchEmpty" @clear="clearSearch" />
     </bk-loading>
     <EditConfig
       v-model:show="editConfigSliderData.open"
@@ -59,6 +61,7 @@
   import EditConfig from '../config-table-list/edit-config.vue';
   import ViewConfig from '../config-table-list/view-config.vue';
   import TableEmpty from '../../../../../../../components/table/table-empty.vue';
+  import { debounce } from 'lodash';
 
   interface IConfigsGroupData {
     id: number;
@@ -82,6 +85,7 @@
     reviser: string;
     update_at: string;
     file_state: string;
+    is_latest?: boolean;
   }
 
   interface ITemplateConfigMeta {
@@ -119,6 +123,7 @@
       type: string;
       templateMeta?: ITemplateConfigMeta;
       versionName?: string;
+      isLatest?: boolean;
     };
   }>({
     open: false,
@@ -145,6 +150,8 @@
   // 是否为未命名版本
   const isUnNamedVersion = computed(() => versionData.value.id === 0);
 
+  const isTableEmpty = computed(() => tableGroupsData.value.every((group) => group.configs.length === 0));
+
   onMounted(() => {
     getListData();
   });
@@ -158,16 +165,19 @@
     return `${path}/${name}`;
   };
 
-  const getListData = async () => {
+  const getListData = debounce(async () => {
+    const currentSearchStr = searchStr.value;
     // 拉取到版本列表之前不加在列表数据
     if (typeof versionData.value.id !== 'number') {
       return;
     }
     loading.value = true;
     await Promise.all([getCommonConfigList(), getBoundTemplateList()]);
-    tableGroupsData.value = transListToTableData();
     loading.value = false;
-  };
+    // 处理文件数量过多 导致上一次搜索结果返回比这一次慢 导入搜索结果错误 取消数据处理
+    if (currentSearchStr !== searchStr.value) return;
+    tableGroupsData.value = transListToTableData();
+  }, 500);
 
   // 获取非模板配置文件列表
   const getCommonConfigList = async () => {
@@ -178,10 +188,9 @@
         all: true,
       };
       if (searchStr.value) {
-        params.search_fields = 'name,path,creator,reviser';
+        params.search_fields = 'name,path,memo,creator';
         params.search_value = searchStr.value;
       }
-
       let res;
       if (isUnNamedVersion.value) {
         res = await getConfigList(props.bkBizId, props.appId, params);
@@ -206,7 +215,7 @@
         all: true,
       };
       if (searchStr.value) {
-        params.search_fields = 'name,path,creator,reviser';
+        params.search_fields = 'revision_name,revision_memo,name,path,creator';
         params.search_value = searchStr.value;
       }
 
@@ -293,15 +302,18 @@
         data: { id, type: 'config' },
       };
     } else {
+      const { versionName, is_latest, id, versionId } = config;
       const { template_set_id, template_space_id, template_set_name, template_space_name } = group;
       const templateMeta = { template_space_id, template_space_name, template_set_id, template_set_name };
+      const viewTemplateId = isUnNamedVersion.value ? id : versionId;
       viewConfigSliderData.value = {
         open: true,
         data: {
-          id,
-          versionName: config.versionName,
+          id: viewTemplateId,
+          versionName,
           templateMeta: templateMeta as ITemplateConfigMeta,
           type: 'template',
+          isLatest: is_latest,
         },
       };
     }

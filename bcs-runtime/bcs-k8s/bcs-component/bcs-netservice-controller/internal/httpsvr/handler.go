@@ -319,6 +319,9 @@ func (c *HttpServerClient) allocateIPByClaim(
 		return nil, nil, fmt.Errorf(message)
 	}
 	if bcsNetIP.Status.Phase != constant.BCSNetIPReservedStatus {
+		if err := utils.FixActiveIP(c.K8SClient, bcsNetIP); err != nil {
+			return nil, nil, err
+		}
 		message := fmt.Sprintf(
 			"BCSNetIP %s bound with BCSNetIPClaim %s/%s is not in reserved status, BCSNetIP status %v",
 			bcsNetIP.Name, ipClaim.Name, ipClaim.Namespace, bcsNetIP.Status)

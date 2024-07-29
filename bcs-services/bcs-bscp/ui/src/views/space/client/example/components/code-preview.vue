@@ -3,7 +3,7 @@
     <CodeEditor
       ref="codeEditorRef"
       :model-value="props.codeVal"
-      :language="'yaml'"
+      :language="language"
       :editable="false"
       line-numbers="off"
       :minimap="false"
@@ -12,6 +12,9 @@
       render-line-highlight="none"
       :render-indent-guides="false"
       :variables="props.variables"
+      :folding="false"
+      :always-consume-mouse-wheel="false"
+      :contextmenu="false"
       @update:model-value="emits('change', $event)" />
   </div>
 </template>
@@ -21,6 +24,7 @@
   import { IVariableEditParams } from '../../../../../../types/variable';
 
   const props = defineProps<{
+    language: string;
     codeVal: string;
     variables?: IVariableEditParams[];
   }>();
@@ -44,7 +48,6 @@
 
 <style scoped lang="scss">
   :deep(.monaco-editor) {
-    pointer-events: none;
     background-color: unset;
     // 取消默认背景色
     &.monaco-editor-background {

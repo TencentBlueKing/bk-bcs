@@ -323,6 +323,9 @@
         return 0;
       });
       configsCount.value = res.count;
+      configStore.$patch((state) => {
+        state.allConfigCount = res.count;
+      });
       pagination.value.count = res.count;
     } catch (e) {
       console.error(e);
@@ -520,6 +523,8 @@
   }
   .config-table {
     :deep(.bk-table-body) {
+      max-height: calc(100vh - 280px);
+      overflow: auto;
       tr.delete-row td {
         background: #fafbfd !important;
         .cell {

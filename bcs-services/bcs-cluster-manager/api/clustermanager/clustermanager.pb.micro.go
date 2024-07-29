@@ -91,6 +91,12 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "ClusterManager.GetClustersMetaData",
+			Path:    []string{"/clustermanager/v1/clusters/-/meta"},
+			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "ClusterManager.ListNodesInCluster",
 			Path:    []string{"/clustermanager/v1/cluster/{clusterID}/node"},
 			Method:  []string{"GET"},
@@ -904,6 +910,7 @@ type ClusterManagerService interface {
 	AddNodesToCluster(ctx context.Context, in *AddNodesRequest, opts ...client.CallOption) (*AddNodesResponse, error)
 	DeleteNodesFromCluster(ctx context.Context, in *DeleteNodesRequest, opts ...client.CallOption) (*DeleteNodesResponse, error)
 	BatchDeleteNodesFromCluster(ctx context.Context, in *BatchDeleteClusterNodesRequest, opts ...client.CallOption) (*BatchDeleteClusterNodesResponse, error)
+	GetClustersMetaData(ctx context.Context, in *GetClustersMetaDataRequest, opts ...client.CallOption) (*GetClustersMetaDataResponse, error)
 	ListNodesInCluster(ctx context.Context, in *ListNodesInClusterRequest, opts ...client.CallOption) (*ListNodesInClusterResponse, error)
 	ListMastersInCluster(ctx context.Context, in *ListMastersInClusterRequest, opts ...client.CallOption) (*ListMastersInClusterResponse, error)
 	DeleteCluster(ctx context.Context, in *DeleteClusterReq, opts ...client.CallOption) (*DeleteClusterResp, error)
@@ -1164,6 +1171,16 @@ func (c *clusterManagerService) DeleteNodesFromCluster(ctx context.Context, in *
 func (c *clusterManagerService) BatchDeleteNodesFromCluster(ctx context.Context, in *BatchDeleteClusterNodesRequest, opts ...client.CallOption) (*BatchDeleteClusterNodesResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.BatchDeleteNodesFromCluster", in)
 	out := new(BatchDeleteClusterNodesResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) GetClustersMetaData(ctx context.Context, in *GetClustersMetaDataRequest, opts ...client.CallOption) (*GetClustersMetaDataResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.GetClustersMetaData", in)
+	out := new(GetClustersMetaDataResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -2514,6 +2531,7 @@ type ClusterManagerHandler interface {
 	AddNodesToCluster(context.Context, *AddNodesRequest, *AddNodesResponse) error
 	DeleteNodesFromCluster(context.Context, *DeleteNodesRequest, *DeleteNodesResponse) error
 	BatchDeleteNodesFromCluster(context.Context, *BatchDeleteClusterNodesRequest, *BatchDeleteClusterNodesResponse) error
+	GetClustersMetaData(context.Context, *GetClustersMetaDataRequest, *GetClustersMetaDataResponse) error
 	ListNodesInCluster(context.Context, *ListNodesInClusterRequest, *ListNodesInClusterResponse) error
 	ListMastersInCluster(context.Context, *ListMastersInClusterRequest, *ListMastersInClusterResponse) error
 	DeleteCluster(context.Context, *DeleteClusterReq, *DeleteClusterResp) error
@@ -2690,6 +2708,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		AddNodesToCluster(ctx context.Context, in *AddNodesRequest, out *AddNodesResponse) error
 		DeleteNodesFromCluster(ctx context.Context, in *DeleteNodesRequest, out *DeleteNodesResponse) error
 		BatchDeleteNodesFromCluster(ctx context.Context, in *BatchDeleteClusterNodesRequest, out *BatchDeleteClusterNodesResponse) error
+		GetClustersMetaData(ctx context.Context, in *GetClustersMetaDataRequest, out *GetClustersMetaDataResponse) error
 		ListNodesInCluster(ctx context.Context, in *ListNodesInClusterRequest, out *ListNodesInClusterResponse) error
 		ListMastersInCluster(ctx context.Context, in *ListMastersInClusterRequest, out *ListMastersInClusterResponse) error
 		DeleteCluster(ctx context.Context, in *DeleteClusterReq, out *DeleteClusterResp) error
@@ -2880,6 +2899,12 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Name:    "ClusterManager.BatchDeleteNodesFromCluster",
 		Path:    []string{"/clustermanager/v1/clusters/{clusterID}/nodes/-/batch"},
 		Method:  []string{"DELETE"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.GetClustersMetaData",
+		Path:    []string{"/clustermanager/v1/clusters/-/meta"},
+		Method:  []string{"POST"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -3721,6 +3746,10 @@ func (h *clusterManagerHandler) DeleteNodesFromCluster(ctx context.Context, in *
 
 func (h *clusterManagerHandler) BatchDeleteNodesFromCluster(ctx context.Context, in *BatchDeleteClusterNodesRequest, out *BatchDeleteClusterNodesResponse) error {
 	return h.ClusterManagerHandler.BatchDeleteNodesFromCluster(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) GetClustersMetaData(ctx context.Context, in *GetClustersMetaDataRequest, out *GetClustersMetaDataResponse) error {
+	return h.ClusterManagerHandler.GetClustersMetaData(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) ListNodesInCluster(ctx context.Context, in *ListNodesInClusterRequest, out *ListNodesInClusterResponse) error {

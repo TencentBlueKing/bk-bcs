@@ -1,6 +1,8 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import Vue from 'vue';
 
+import VueI18n from './vue-i18n';
+
 declare module 'vue/types/vue' {
   interface Vue {
     PROJECT_CONFIG: Record<string, string>;
@@ -9,6 +11,7 @@ declare module 'vue/types/vue' {
     $bkMessage: any;
     $bkNotify: any;
     $chainable: (obj: any, path: string) => any;
+    $t: typeof VueI18n.prototype.t;
   }
 }
 

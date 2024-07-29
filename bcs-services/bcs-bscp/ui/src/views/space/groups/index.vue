@@ -44,6 +44,7 @@
           :data="tableData"
           :checked="checkedGroups"
           :is-row-select-enable="isRowSelectEnable"
+          show-overflow-tooltip
           @selection-change="handleSelectionChange"
           @select-all="handleSelectAll">
           <bk-table-column type="selection" width="60"></bk-table-column>
@@ -80,7 +81,7 @@
               </template>
             </template>
           </bk-table-column>
-          <bk-table-column :label="t('分组状态')" :width="locale === 'zh-CN' ? '100' : '140'">
+          <bk-table-column :label="t('分组状态')" :width="locale === 'zh-cn' ? '100' : '140'">
             <template #default="{ row }">
               <template v-if="!row.IS_CATEORY_ROW">
                 <span class="group-status">
@@ -90,7 +91,7 @@
               </template>
             </template>
           </bk-table-column>
-          <bk-table-column :label="t('上线服务数')" :align="'center'" :width="locale === 'zh-CN' ? '110' : '130'">
+          <bk-table-column :label="t('上线服务数')" :align="'center'" :width="locale === 'zh-cn' ? '110' : '130'">
             <template #default="{ row }">
               <template v-if="!row.IS_CATEORY_ROW">
                 <template v-if="row.released_apps_num === 0">0</template>
@@ -100,7 +101,7 @@
               </template>
             </template>
           </bk-table-column>
-          <bk-table-column :label="t('操作')" :width="locale === 'zh-CN' ? '120' : '150'">
+          <bk-table-column :label="t('操作')" :width="locale === 'zh-cn' ? '120' : '150'">
             <template #default="{ row }">
               <div v-if="!row.IS_CATEORY_ROW" class="action-btns">
                 <div v-bk-tooltips="handleTooltip(row.released_apps_num, t('编辑'))" class="btn-item">
@@ -508,7 +509,7 @@
   }
   .group-table-wrapper {
     :deep(.bk-table-body) {
-      max-height: calc(100vh - 240px);
+      max-height: calc(100vh - 280px);
       overflow: auto;
     }
   }

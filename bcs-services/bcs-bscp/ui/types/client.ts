@@ -83,8 +83,8 @@ export interface ICommonlyUsedItem {
 // 客户端配置版本
 export interface IClientConfigVersionItem {
   count: number;
-  current_release_id: number; // 版本ID
-  current_release_name: string; // 版本名称
+  target_release_id: number; // 版本ID
+  target_release_name: string; // 版本名称
   percent: number;
 }
 
@@ -156,9 +156,16 @@ export interface IVersionDistributionPieItem {
   children?: IVersionDistributionPieItem[];
 }
 
+// interface IClusterInfo {
+//   name: string;
+//   value: string;
+// }
 export interface IExampleFormData {
   clientKey: string;
   privacyCredential: string;
   tempDir?: string;
+  httpConfigName?: string;
   labelArr: string[];
+  clusterSwitch?: boolean;
+  clusterInfo?: string;
 }

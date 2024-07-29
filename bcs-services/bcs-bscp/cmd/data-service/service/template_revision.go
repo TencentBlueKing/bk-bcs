@@ -15,6 +15,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
@@ -244,15 +245,17 @@ func getLatestTmplRevisions(tmplRevisions []*table.TemplateRevision) map[uint32]
 	return latestRevisionMap
 }
 
+// 创建模板版本
 func (s *Service) doCreateTemplateRevisions(kt *kit.Kit, tx *gen.QueryTx, data []*table.TemplateRevision) error {
+
 	for i := range data {
-		// 生成 RevisionName
 		data[i].Spec.RevisionName = tools.GenerateRevisionName()
 	}
-	// Write template revisions table
+
 	if err := s.dao.TemplateRevision().BatchCreateWithTx(kt, tx, data); err != nil {
 		logs.Errorf("batch create template revisions failed, err: %v, rid: %s", err, kt.Rid)
-		return err
+		return errf.Errorf(errf.DBOpFailed,
+			i18n.T(kt, fmt.Sprintf("batch create template revisions failed, err: %v, rid: %s", err, kt.Rid)))
 	}
 	return nil
 }
@@ -322,15 +325,22 @@ func (s *Service) UpdateTemplateRevision(ctx context.Context, req *pbds.UpdateTe
 		return nil, err
 	}
 
-	tx := s.dao.GenQuery().Begin()
+	// 获取对应已存在的版本
+	revision, err := s.dao.TemplateRevision().GetTemplateRevisionById(kt,
+		req.GetAttachment().GetBizId(), req.GetTemplateRevisionId())
+	if err != nil {
+		return nil, err
+	}
 
+	tx := s.dao.GenQuery().Begin()
 	// 1. create template revision
 	spec := req.Spec.TemplateRevisionSpec()
+	spec.RevisionMemo = ""
 	// if no revision name is specified, generate it by system
 	if spec.RevisionName == "" {
 		spec.RevisionName = tools.GenerateRevisionName()
 	}
-	spec.RevisionMemo = ""
+
 	// keep the revision's name and path same with template
 	spec.Name = template.Spec.Name
 	spec.Path = template.Spec.Path
@@ -338,10 +348,19 @@ func (s *Service) UpdateTemplateRevision(ctx context.Context, req *pbds.UpdateTe
 		Spec:       spec,
 		Attachment: req.Attachment.TemplateRevisionAttachment(),
 		Revision: &table.CreatedRevision{
-			Creator: kt.User,
+			Creator:   kt.User,
+			CreatedAt: time.Now().UTC(),
 		},
 	}
-	id, err := s.dao.TemplateRevision().CreateWithTx(kt, tx, templateRevision)
+
+	var id uint32
+	//  如果文件权限和内容没变化不更新模板版本数据
+	if !reflect.DeepEqual(revision.Spec.ContentSpec, spec.ContentSpec) ||
+		!reflect.DeepEqual(revision.Spec.Permission, spec.Permission) {
+		id, err = s.dao.TemplateRevision().CreateWithTx(kt, tx, templateRevision)
+		template.Revision.Reviser = kt.User
+		template.Revision.UpdatedAt = time.Now().UTC()
+	}
 	if err != nil {
 		logs.Errorf("create template revision failed, err: %v, rid: %s", err, kt.Rid)
 		if rErr := tx.Rollback(); rErr != nil {
@@ -357,35 +376,13 @@ func (s *Service) UpdateTemplateRevision(ctx context.Context, req *pbds.UpdateTe
 			Memo: req.Spec.RevisionMemo,
 		},
 		Attachment: template.Attachment,
-		Revision: &table.Revision{
-			Reviser:   kt.User,
-			UpdatedAt: time.Now().UTC(),
-		},
+		Revision:   template.Revision,
 	})
 	if err != nil {
 		if rErr := tx.Rollback(); rErr != nil {
 			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
 		}
 		return nil, err
-	}
-
-	// 2. update app template bindings if necessary
-	atbs, err := s.dao.TemplateBindingRelation().
-		ListLatestTmplBoundUnnamedApps(kt, req.Attachment.BizId, req.Attachment.TemplateId)
-	if err != nil {
-		logs.Errorf("list latest template bound app template bindings failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, err
-	}
-	if len(atbs) > 0 {
-		for _, atb := range atbs {
-			if e := s.CascadeUpdateATB(kt, tx, atb); e != nil {
-				logs.Errorf("cascade update app template binding failed, err: %v, rid: %s", e, kt.Rid)
-				if rErr := tx.Rollback(); rErr != nil {
-					logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
-				}
-				return nil, e
-			}
-		}
 	}
 
 	if e := tx.Commit(); e != nil {

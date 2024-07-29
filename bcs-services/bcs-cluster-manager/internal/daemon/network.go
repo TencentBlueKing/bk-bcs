@@ -41,6 +41,8 @@ func (d *Daemon) autoAllocateTcClusterCidr(error chan<- error) {
 	d.lock.Lock(autoAllocateTcClusterCidrLockKey, []lock.LockOption{lock.LockTTL(time.Second * 10)}...) // nolint
 	defer d.lock.Unlock(autoAllocateTcClusterCidrLockKey)                                               // nolint
 
+	defer utils.RecoverPrintStack("autoAllocateTcClusterCidr")
+
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
 		"status":   common.StatusRunning,
 		"provider": tencentCloud,
@@ -82,9 +84,8 @@ func (d *Daemon) autoAllocateTcClusterCidr(error chan<- error) {
 			for i := range clusters {
 				errLocal := checkClusterAutoScaleCidrValidate(clusters[i])
 				if errLocal != nil {
-					blog.Errorf("autoAllocateTcClusterCidr checkClusterAutoScaleCidrValidate[%s:%s:%s] "+
-						"failed: %v", clusterList[i].GetRegion(), clusterList[i].GetVpcID(),
-						clusterList[i].GetClusterID(), errLocal)
+					blog.Errorf("autoAllocateTcClusterCidr checkClusterAutoScaleCidrValidate[%s:%s:%s] failed: %v",
+						clusterList[i].GetRegion(), clusterList[i].GetVpcID(), clusterList[i].GetClusterID(), errLocal)
 					continue
 				}
 
@@ -105,25 +106,22 @@ func (d *Daemon) autoAllocateTcClusterCidr(error chan<- error) {
 }
 
 func checkClusterAutoScaleCidrValidate(cluster cmproto.Cluster) error {
+	errStr := "autoAllocateTcClusterCidr checkClusterAutoScaleCidrValidate"
 	if cluster.GetRegion() == "" || cluster.GetVpcID() == "" {
-		return fmt.Errorf("autoAllocateTcClusterCidr checkClusterAutoScaleCidrValidate "+
-			"cluster[%s] region or vpc empty", cluster.GetClusterID())
+		return fmt.Errorf("%s cluster[%s] region or vpc empty", errStr, cluster.GetClusterID())
 	}
 
-	if !cluster.GetNetworkSettings().EnableVPCCni {
-		return fmt.Errorf("autoAllocateTcClusterCidr checkClusterAutoScaleCidrValidate "+
-			"cluster[%s] platform not enable vpc-cni", cluster.GetClusterID())
+	if !cluster.GetNetworkSettings().GetEnableVPCCni() {
+		return fmt.Errorf("%s cluster[%s] platform not enable vpc-cni", errStr, cluster.GetClusterID())
 	}
 
 	if cluster.GetNetworkSettings().GetStatus() == common.StatusRunning {
-		return fmt.Errorf("autoAllocateTcClusterCidr checkClusterAutoScaleCidrValidate "+
-			"cluster[%s] doing enable/disable vpc-cni", cluster.GetClusterID())
+		return fmt.Errorf("%s cluster[%s] doing enable/disable vpc-cni", errStr, cluster.GetClusterID())
 	}
 
 	if cluster.GetNetworkSettings().GetSubnetSource() == nil ||
 		len(cluster.GetNetworkSettings().GetSubnetSource().GetNew()) == 0 {
-		return fmt.Errorf("autoAllocateTcClusterCidr checkClusterAutoScaleCidrValidate "+
-			"cluster[%s] need to allocate resource empty", cluster.GetClusterID())
+		return fmt.Errorf("%s cluster[%s] need to allocate resource empty", errStr, cluster.GetClusterID())
 	}
 
 	return nil
@@ -230,7 +228,7 @@ func getClusterAllocatedEmptySubnets(cls cmproto.Cluster, subnetIds []string) (
 	return allocatedZoneSubnetNum, allocatedSubnetsIds, nil
 }
 
-func allocateSubnetsToCluster(ctx context.Context, model store.ClusterManagerModel, cls cmproto.Cluster) error {
+func allocateSubnetsToCluster(ctx context.Context, model store.ClusterManagerModel, cls cmproto.Cluster) error { // nolint
 	cloud, err := model.GetCloud(ctx, cls.GetProvider())
 	if err != nil {
 		blog.Errorf("autoAllocateTcClusterCidr allocateSubnetsToCluster[%s:%s:%s] GetCloud failed: %v",
@@ -240,8 +238,9 @@ func allocateSubnetsToCluster(ctx context.Context, model store.ClusterManagerMod
 
 	needAllocateSubnets, curSubnetIds, needScale, err := checkClusterNeedToScaleSubnet(cls)
 	if err != nil {
-		blog.Errorf("autoAllocateTcClusterCidr allocateSubnetsToCluster[%s:%s:%s] checkClusterNeedToScaleSubnet "+
-			"failed: %v", cls.GetRegion(), cls.GetVpcID(), cls.GetClusterID(), err)
+		blog.Errorf("autoAllocateTcClusterCidr allocateSubnetsToCluster"+
+			"[%s:%s:%s] checkClusterNeedToScaleSubnet failed: %v",
+			cls.GetRegion(), cls.GetVpcID(), cls.GetClusterID(), err)
 		return err
 	}
 	if !needScale {
@@ -262,8 +261,8 @@ func allocateSubnetsToCluster(ctx context.Context, model store.ClusterManagerMod
 	// 优先选择已有的子网, 选择已存在子网后再分配新子网
 	allocatedEmptyZoneSubnetNum, allocatedEmptyZoneSubnets, err := getClusterAllocatedEmptySubnets(cls, curSubnetIds)
 	if err != nil {
-		blog.Infof("autoAllocateTcClusterCidr allocateSubnetsToCluster[%s:%s:%s] "+
-			"getClusterAllocatedEmptySubnets failed: %v", cls.GetRegion(), cls.GetVpcID(), cls.GetClusterID(), err)
+		blog.Infof("autoAllocateTcClusterCidr allocateSubnetsToCluster[%s:%s:%s] getClusterAllocatedEmptySubnets "+
+			"failed: %v", cls.GetRegion(), cls.GetVpcID(), cls.GetClusterID(), err)
 		return err
 	}
 	existedSubnetIds := make([]string, 0)

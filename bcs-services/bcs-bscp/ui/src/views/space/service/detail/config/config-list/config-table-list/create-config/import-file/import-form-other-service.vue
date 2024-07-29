@@ -5,7 +5,7 @@
       <bk-select
         v-model="selectAppId"
         :loading="serviceListloading"
-        style="width: 362px"
+        style="width: 342px"
         filterable
         auto-focus
         :clearable="false"
@@ -18,7 +18,7 @@
       <bk-select
         v-model="selectVerisonId"
         :loading="versionListLoading"
-        style="width: 362px"
+        style="width: 342px"
         filterable
         auto-focus
         :clearable="false"

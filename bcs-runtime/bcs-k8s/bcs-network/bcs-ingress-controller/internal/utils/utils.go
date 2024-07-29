@@ -21,7 +21,7 @@ import (
 )
 
 // GenPortBindingLabel 生成portBinding label, 当长度超过63时（k8s限制）， 将截取前50位+md5值的前13位作为label key
-func GenPortBindingLabel(namespace string, name string) string {
+func GenPortBindingLabel(name string, namespace string) string {
 	result := fmt.Sprintf(networkextensionv1.PortPoolBindingLabelKeyFormat, name, namespace)
 	if len(result) > 63 {
 		hash := fmt.Sprintf("%x", md5.Sum([]byte(result)))

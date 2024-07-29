@@ -134,6 +134,8 @@ type SideAppMeta struct {
 	Namespace string            `json:"namespace"`
 	Uid       string            `json:"uid"`
 	Labels    map[string]string `json:"labels"`
+	// Match is app config item's match conditions
+	Match []string `json:"match"`
 	// CurrentReleaseID is sidecar's current effected release id.
 	CurrentReleaseID uint32 `json:"currentReleaseID"`
 	// sidecar's current cursor id
@@ -224,12 +226,14 @@ type ReleaseEventMetaV1 struct {
 
 // InstanceSpec defines the specifics for an app instance to watch the event.
 type InstanceSpec struct {
-	BizID      uint32            `json:"bizID"`
-	AppID      uint32            `json:"appID"`
-	App        string            `json:"app"`
-	Uid        string            `json:"uid"`
-	Labels     map[string]string `json:"labels"`
-	ConfigType table.ConfigType  `json:"configType"`
+	BizID  uint32            `json:"bizID"`
+	AppID  uint32            `json:"appID"`
+	App    string            `json:"app"`
+	Uid    string            `json:"uid"`
+	Labels map[string]string `json:"labels"`
+	// Match is app config item's match conditions
+	Match      []string         `json:"match"`
+	ConfigType table.ConfigType `json:"configType"`
 }
 
 // Validate the instance spec is valid or not

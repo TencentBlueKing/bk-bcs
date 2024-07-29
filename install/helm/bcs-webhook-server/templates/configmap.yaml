@@ -10,13 +10,16 @@ data:
     "kubeconfig": "{{ .Values.plugins.dbpriv.kubeconfigPath }}",
     "network_type": "{{ .Values.plugins.dbpriv.networkType }}",
     "esb_url": "{{ .Values.plugins.dbpriv.esbURL }}",
-    "init_container_image": "{{ .Values.plugins.dbpriv.initContainerImage }}",
+    {{- if .Values.plugins.dbpriv.dbmOptimizeEnabled }}
     "service_name": "{{ .Release.Name }}",
     "service_namespace": "{{ .Release.Namespace }}",
     "service_port": "{{ .Values.plugins.dbpriv.servicePort }}",
     "service_server_port": "{{ .Values.plugins.dbpriv.serviceServerPort }}",
-    "dbm_enabled": "{{ .Values.plugins.dbpriv.dbmEnabled }}",
-    "ticket_timer": "{{ .Values.plugins.dbpriv.ticketTimer }}"
+    "dbm_optimize_enabled": "{{ .Values.plugins.dbpriv.dbmOptimizeEnabled }}",
+    "ticket_timer": "{{ .Values.plugins.dbpriv.ticketTimer }}",
+    {{- end }}
+    "init_container_image": "{{ .Values.plugins.dbpriv.initContainerImage }}"
+
 }'
   {{- end }}
   {{- if .Values.plugins.randhostport.enabled }}

@@ -7,6 +7,7 @@ import { useCluster } from '@/composables/use-app';
 import usePage from '@/composables/use-page';
 import useSearch from '@/composables/use-search';
 import $i18n from '@/i18n/i18n-setup';
+import $router from '@/router';
 
 interface IConfig<T> {
   $crd: string
@@ -23,8 +24,11 @@ T extends { metadata: { name: string, namespace: string } }
 >(config: IConfig<T>) {
   const { $crd, $kind, $apiVersion, clusterId, formData, initFormData, getParams } = config;
 
+  const curClusterID = ref(clusterId);
+  const ns = ref('');
+
   const { clusterList } = useCluster();
-  const curCluster = computed(() => clusterList.value.find(item => item.clusterID === clusterId));
+  const curCluster = computed(() => clusterList.value.find(item => item.clusterID === curClusterID.value));
 
   const crdList = ref([]);
   const crdManifestExt = ref({});
@@ -38,6 +42,11 @@ T extends { metadata: { name: string, namespace: string } }
   const handleClearSearchData = () => {
     searchValue.value = '';
   };
+  // 切换集群
+  const handleClusterChange = () => {
+    ns.value = '';
+    handleGetCrdList();
+  };
 
   // 前端分页
   const { curPageData, pagination, pageChange, pageSizeChange } = usePage(tableDataMatchSearch);
@@ -48,8 +57,9 @@ T extends { metadata: { name: string, namespace: string } }
     tableLoading.value = true;
     const { manifest, manifestExt } = await customResourceList({
       $crd,
-      $clusterId: clusterId,
+      $clusterId: curClusterID.value,
       $category: 'custom_objects',
+      namespace: ns.value,
     }).catch(() => ({ manifest: {} }));
     crdList.value = manifest.items || [];
     crdManifestExt.value = manifestExt;
@@ -92,7 +102,7 @@ T extends { metadata: { name: string, namespace: string } }
       // 创建配置
       result = await customResourceCreate({
         $crd,
-        $clusterId: clusterId,
+        $clusterId: curClusterID.value,
         $category: 'custom_objects',
         format: 'manifest',
         rawData: {
@@ -106,7 +116,7 @@ T extends { metadata: { name: string, namespace: string } }
       // 更新配置
       result = await customResourceUpdate({
         $crd,
-        $clusterId: clusterId,
+        $clusterId: curClusterID.value,
         $category: 'custom_objects',
         $name: formData.value.metadata.name,
         format: 'manifest',
@@ -144,7 +154,7 @@ T extends { metadata: { name: string, namespace: string } }
       confirmFn: async () => {
         const result = await customResourceDelete({
           $crd,
-          $clusterId: clusterId,
+          $clusterId: curClusterID.value,
           $category: 'custom_objects',
           $name: name,
           namespace,
@@ -162,11 +172,22 @@ T extends { metadata: { name: string, namespace: string } }
   };
 
 
+  watch(curClusterID, (newValue, oldValue) => {
+    if (newValue === oldValue || !newValue) return;
+    $router.replace({
+      params: {
+        clusterId: curClusterID.value,
+      },
+    });
+  });
+
   onBeforeMount(() => {
     handleGetCrdList();
   });
 
   return {
+    ns,
+    curClusterID,
     tableLoading,
     saving,
     currentRow,
@@ -185,5 +206,7 @@ T extends { metadata: { name: string, namespace: string } }
     createOrUpdateCrd,
     deleteCrd,
     handleClearSearchData,
+    handleClusterChange,
+    handleGetCrdList,
   };
 }

@@ -88,7 +88,8 @@
     try {
       configDetailLoading.value = true;
       const res = await getTemplateConfigMeta(props.spaceId, props.id);
-      const { name, path, file_type, user, user_group, privilege, signature, byte_size } = res.data.detail;
+      const { name, path, file_type, user, user_group, privilege, signature, byte_size, template_revision_id } =
+        res.data.detail;
       configForm.value = {
         ...configForm.value,
         id: props.id,
@@ -99,6 +100,7 @@
         user,
         user_group,
         privilege,
+        template_revision_id,
       };
       if (file_type === 'binary') {
         content.value = { name, signature, size: byte_size };
@@ -127,7 +129,8 @@
         size = new Blob([stringContent]).size;
         await updateTemplateContent(props.spaceId, currentTemplateSpace.value, stringContent, sign);
       }
-      const { memo, file_type, file_mode, user, user_group, privilege } = configForm.value;
+      const { memo, file_type, file_mode, user, user_group, privilege, revision_name, template_revision_id } =
+        configForm.value;
       const formData = {
         revision_memo: memo,
         file_type,
@@ -137,6 +140,8 @@
         privilege,
         sign,
         byte_size: size,
+        revision_name,
+        template_revision_id,
       };
       await updateTemplateConfig(
         props.spaceId,

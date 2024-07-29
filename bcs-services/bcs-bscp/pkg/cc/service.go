@@ -79,6 +79,7 @@ type ApiServerSetting struct {
 	Repo         Repository   `yaml:"repository"`
 	BKNotice     BKNotice     `yaml:"bkNotice"`
 	Esb          Esb          `yaml:"esb"`
+	ApiGateway   ApiGateway   `yaml:"apiGateway"`
 	FeatureFlags FeatureFlags `yaml:"featureFlags"`
 }
 
@@ -140,14 +141,15 @@ type LoginAuthSettings struct {
 	InnerHost string `yaml:"innerHost"`
 	Provider  string `yaml:"provider"`
 	UseESB    bool   `yaml:"useEsb"`
-	GWPubKey  string `yaml:"gwPubkey"`
 }
 
 // ApiGateway gateway conf
 type ApiGateway struct {
 	// AutoRegister 是否自动注册
-	AutoRegister bool   `yaml:"autoRegister"`
-	GWPubKey     string `yaml:"gwPubkey"`
+	AutoRegister bool `yaml:"autoRegister"`
+	// Host apigateway host
+	Host     string `yaml:"host"`
+	GWPubKey string `yaml:"gwPubkey"`
 }
 
 // trySetFlagBindIP try set flag bind ip.
@@ -369,6 +371,7 @@ type FeedServerSetting struct {
 	FSLocalCache FSLocalCache        `yaml:"fsLocalCache"`
 	Downstream   Downstream          `yaml:"downstream"`
 	MRLimiter    MatchReleaseLimiter `yaml:"matchReleaseLimiter"`
+	RateLimiter  RateLimiter         `yaml:"rateLimiter"`
 }
 
 // trySetFlagBindIP try set flag bind ip.
@@ -392,6 +395,7 @@ func (s *FeedServerSetting) trySetDefault() {
 	s.GSE.trySetDefault()
 	s.RedisCluster.trySetDefault()
 	s.MRLimiter.trySetDefault()
+	s.RateLimiter.trySetDefault()
 }
 
 // Validate FeedServerSetting option.
@@ -418,6 +422,10 @@ func (s FeedServerSetting) Validate() error {
 	}
 
 	if err := s.MRLimiter.validate(); err != nil {
+		return err
+	}
+
+	if err := s.RateLimiter.validate(); err != nil {
 		return err
 	}
 

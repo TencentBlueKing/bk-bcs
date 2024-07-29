@@ -1,7 +1,7 @@
 <template>
   <div ref="tableRef" class="table-container">
     <bk-loading :loading="loading" style="height: 100%">
-      <table class="config-groups-table" :key="appId">
+      <table :class="['config-groups-table', { 'en-table': locale === 'en' }]" :key="appId">
         <thead>
           <tr class="config-groups-table-tr">
             <th v-if="isUnNamedVersion" class="selection">
@@ -309,6 +309,7 @@
   import TableFilter from '../../../components/table-filter.vue';
   import DownloadConfigBtn from '../download-config-btn.vue';
   import ContentWidthOverflowTips from '../../../../../../../../components/content-width-overflow-tips/index.vue';
+  import { debounce } from 'lodash';
 
   interface IConfigsGroupData {
     id: number;
@@ -349,7 +350,7 @@
     template_set_name: string;
   }
 
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const configStore = useConfigStore();
   const serviceStore = useServiceStore();
   const { versionData, allConfigCount } = storeToRefs(configStore);
@@ -515,12 +516,15 @@
     bindingId.value = res.details.length === 1 ? res.details[0].id : 0;
   };
 
-  const getAllConfigList = async (createConfig = false) => {
+  const getAllConfigList = debounce(async (createConfig = false) => {
+    const currentSearchStr = props.searchStr;
     loading.value = true;
     await Promise.all([getCommonConfigList(createConfig), getBoundTemplateList()]);
     loading.value = false;
+    // 处理文件数量过多 导致上一次搜索结果返回比这一次慢 导入搜索结果错误 取消数据处理
+    if (currentSearchStr !== props.searchStr) return;
     tableGroupsData.value = transListToTableData();
-  };
+  }, 500);
 
   // 获取非模板配置文件列表
   const getCommonConfigList = async (createConfig = false) => {
@@ -934,6 +938,11 @@
     // table-layout: fixed;
     > tbody tr:last-child > td:before {
       background: none;
+    }
+    &.en-table {
+      .operation {
+        width: 220px;
+      }
     }
     .config-groups-table-tr {
       background: #ffffff;

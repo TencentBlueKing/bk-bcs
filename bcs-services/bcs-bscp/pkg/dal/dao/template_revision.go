@@ -56,6 +56,8 @@ type TemplateRevision interface {
 	ListLatestRevisionsGroupByTemplateIds(kit *kit.Kit, templateIDs []uint32) ([]*table.TemplateRevision, error)
 	// GetLatestTemplateRevision get latest template revision.
 	GetLatestTemplateRevision(kit *kit.Kit, bizID, templateID uint32) (*table.TemplateRevision, error)
+	// GetTemplateRevisionById get template revision by id.
+	GetTemplateRevisionById(kit *kit.Kit, bizID, id uint32) (*table.TemplateRevision, error)
 }
 
 var _ TemplateRevision = new(templateRevisionDao)
@@ -64,6 +66,14 @@ type templateRevisionDao struct {
 	genQ     *gen.Query
 	idGen    IDGenInterface
 	auditDao AuditDao
+}
+
+// GetTemplateRevisionById get template revision by id.
+func (dao *templateRevisionDao) GetTemplateRevisionById(kit *kit.Kit, bizID uint32, id uint32) (
+	*table.TemplateRevision, error) {
+	m := dao.genQ.TemplateRevision
+	q := dao.genQ.TemplateRevision.WithContext(kit.Ctx)
+	return q.Where(m.BizID.Eq(bizID), m.ID.Eq(id)).Take()
 }
 
 // GetLatestTemplateRevision get latest template revision.

@@ -144,7 +144,7 @@ func (s *Server) stop() {
 }
 
 func (s *Server) initDB() error {
-	db, err := dao.NewDriver()
+	db, err := dao.NewDriver(options.GlobalOptions().DBConfig)
 	if err != nil {
 		return errors.Wrapf(err, "create db failed")
 	}

@@ -264,3 +264,6 @@ export const diskEnum = [
 ];
 
 export const VUEX_STROAGE_KEY = '__bcs_vuex_stroage__';
+
+// BCS UI接口的前缀
+export const BCS_UI_PREFIX = `${window.BCS_CONFIG?.uiPrefix || ''}/bcsapi/v4/ui`;

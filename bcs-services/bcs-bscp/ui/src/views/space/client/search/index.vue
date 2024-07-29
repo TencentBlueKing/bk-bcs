@@ -65,11 +65,11 @@
             :width="140">
             <template #default="{ row }">
               <div
-                v-if="row.client && row.client.spec.current_release_id"
+                v-if="row.client && row.client.spec.target_release_id"
                 class="current-version"
-                @click="linkToApp(row.client.spec.current_release_id)">
+                @click="linkToApp(row.client.spec.target_release_id)">
                 <Share class="icon" />
-                <span class="text">{{ row.client.spec.current_release_name }}</span>
+                <span class="text">{{ row.client.spec.target_release_name }}</span>
               </div>
               <span v-else>--</span>
             </template>
@@ -195,7 +195,7 @@
             :label="t('客户端组件版本')"
             :width="128"
             prop="client.spec.client_version"></bk-table-column>
-          <bk-table-column :label="t('操作')" :width="160" fixed="right">
+          <bk-table-column :label="t('操作')" :width="locale === 'zh-cn' ? 160 : 230" fixed="right">
             <template #default="{ row }">
               <div v-if="row.client">
                 <bk-button theme="primary" text @click="handleShowPullRecord(row.client.attachment.uid, row.client.id)">
@@ -253,7 +253,7 @@
   import RetryBtn from './components/retry-btn.vue';
   import { useI18n } from 'vue-i18n';
 
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
 
   const clientStore = useClientStore();
   const { searchQuery } = storeToRefs(clientStore);

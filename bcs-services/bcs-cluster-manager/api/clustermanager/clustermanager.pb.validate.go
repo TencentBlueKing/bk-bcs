@@ -740,6 +740,8 @@ func (m *NetworkSetting) validate(all bool) error {
 
 	// no validation rules for Status
 
+	// no validation rules for NetworkMode
+
 	if len(errors) > 0 {
 		return NetworkSettingMultiError(errors)
 	}
@@ -9561,6 +9563,40 @@ func (m *CloudNetworkInfo) validate(all bool) error {
 
 	// no validation rules for UnderlayRatio
 
+	for idx, item := range m.GetVpcCniModes() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, CloudNetworkInfoValidationError{
+						field:  fmt.Sprintf("VpcCniModes[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, CloudNetworkInfoValidationError{
+						field:  fmt.Sprintf("VpcCniModes[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return CloudNetworkInfoValidationError{
+					field:  fmt.Sprintf("VpcCniModes[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
 	if len(errors) > 0 {
 		return CloudNetworkInfoMultiError(errors)
 	}
@@ -9741,6 +9777,111 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = EnvCidrStepValidationError{}
+
+// Validate checks the field values on NetworkMode with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *NetworkMode) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on NetworkMode with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in NetworkModeMultiError, or
+// nil if none found.
+func (m *NetworkMode) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *NetworkMode) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Mode
+
+	// no validation rules for Default
+
+	// no validation rules for Name
+
+	if len(errors) > 0 {
+		return NetworkModeMultiError(errors)
+	}
+
+	return nil
+}
+
+// NetworkModeMultiError is an error wrapping multiple validation errors
+// returned by NetworkMode.ValidateAll() if the designated constraints aren't met.
+type NetworkModeMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m NetworkModeMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m NetworkModeMultiError) AllErrors() []error { return m }
+
+// NetworkModeValidationError is the validation error returned by
+// NetworkMode.Validate if the designated constraints aren't met.
+type NetworkModeValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e NetworkModeValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e NetworkModeValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e NetworkModeValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e NetworkModeValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e NetworkModeValidationError) ErrorName() string { return "NetworkModeValidationError" }
+
+// Error satisfies the builtin error interface
+func (e NetworkModeValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sNetworkMode.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = NetworkModeValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = NetworkModeValidationError{}
 
 // Validate checks the field values on NodeGroup with the rules defined in the
 // proto definition for this message. If any rules are violated, the first
@@ -25551,10 +25692,10 @@ func (m *ListNodesInClusterRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if m.GetLimit() > 1000 {
+	if m.GetLimit() > 5000 {
 		err := ListNodesInClusterRequestValidationError{
 			field:  "Limit",
-			reason: "value must be less than or equal to 1000",
+			reason: "value must be less than or equal to 5000",
 		}
 		if !all {
 			return err
@@ -26005,6 +26146,394 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ClusterNodeValidationError{}
+
+// Validate checks the field values on GetClustersMetaDataRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetClustersMetaDataRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetClustersMetaDataRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetClustersMetaDataRequestMultiError, or nil if none found.
+func (m *GetClustersMetaDataRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetClustersMetaDataRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := len(m.GetClusters()); l < 1 || l > 1000 {
+		err := GetClustersMetaDataRequestValidationError{
+			field:  "Clusters",
+			reason: "value must contain between 1 and 1000 items, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return GetClustersMetaDataRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetClustersMetaDataRequestMultiError is an error wrapping multiple
+// validation errors returned by GetClustersMetaDataRequest.ValidateAll() if
+// the designated constraints aren't met.
+type GetClustersMetaDataRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetClustersMetaDataRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetClustersMetaDataRequestMultiError) AllErrors() []error { return m }
+
+// GetClustersMetaDataRequestValidationError is the validation error returned
+// by GetClustersMetaDataRequest.Validate if the designated constraints aren't met.
+type GetClustersMetaDataRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetClustersMetaDataRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetClustersMetaDataRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetClustersMetaDataRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetClustersMetaDataRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetClustersMetaDataRequestValidationError) ErrorName() string {
+	return "GetClustersMetaDataRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetClustersMetaDataRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetClustersMetaDataRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetClustersMetaDataRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetClustersMetaDataRequestValidationError{}
+
+// Validate checks the field values on GetClustersMetaDataResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetClustersMetaDataResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetClustersMetaDataResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetClustersMetaDataResponseMultiError, or nil if none found.
+func (m *GetClustersMetaDataResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetClustersMetaDataResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, GetClustersMetaDataResponseValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, GetClustersMetaDataResponseValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return GetClustersMetaDataResponseValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if all {
+		switch v := interface{}(m.GetWebAnnotations()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, GetClustersMetaDataResponseValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, GetClustersMetaDataResponseValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetWebAnnotations()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GetClustersMetaDataResponseValidationError{
+				field:  "WebAnnotations",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return GetClustersMetaDataResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetClustersMetaDataResponseMultiError is an error wrapping multiple
+// validation errors returned by GetClustersMetaDataResponse.ValidateAll() if
+// the designated constraints aren't met.
+type GetClustersMetaDataResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetClustersMetaDataResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetClustersMetaDataResponseMultiError) AllErrors() []error { return m }
+
+// GetClustersMetaDataResponseValidationError is the validation error returned
+// by GetClustersMetaDataResponse.Validate if the designated constraints
+// aren't met.
+type GetClustersMetaDataResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetClustersMetaDataResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetClustersMetaDataResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetClustersMetaDataResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetClustersMetaDataResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetClustersMetaDataResponseValidationError) ErrorName() string {
+	return "GetClustersMetaDataResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetClustersMetaDataResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetClustersMetaDataResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetClustersMetaDataResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetClustersMetaDataResponseValidationError{}
+
+// Validate checks the field values on ClusterMeta with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *ClusterMeta) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ClusterMeta with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in ClusterMetaMultiError, or
+// nil if none found.
+func (m *ClusterMeta) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ClusterMeta) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ClusterId
+
+	// no validation rules for ClusterNodeNum
+
+	if len(errors) > 0 {
+		return ClusterMetaMultiError(errors)
+	}
+
+	return nil
+}
+
+// ClusterMetaMultiError is an error wrapping multiple validation errors
+// returned by ClusterMeta.ValidateAll() if the designated constraints aren't met.
+type ClusterMetaMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ClusterMetaMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ClusterMetaMultiError) AllErrors() []error { return m }
+
+// ClusterMetaValidationError is the validation error returned by
+// ClusterMeta.Validate if the designated constraints aren't met.
+type ClusterMetaValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ClusterMetaValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ClusterMetaValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ClusterMetaValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ClusterMetaValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ClusterMetaValidationError) ErrorName() string { return "ClusterMetaValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ClusterMetaValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sClusterMeta.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ClusterMetaValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ClusterMetaValidationError{}
 
 // Validate checks the field values on ListMastersInClusterRequest with the
 // rules defined in the proto definition for this message. If any rules are

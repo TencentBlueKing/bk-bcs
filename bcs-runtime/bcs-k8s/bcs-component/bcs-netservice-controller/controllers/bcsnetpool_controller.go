@@ -86,6 +86,9 @@ func (r *BCSNetPoolReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 
 		for _, ip := range netIPList.Items {
 			if ip.Status.Phase == constant.BCSNetIPActiveStatus {
+				if err := utils.FixActiveIP(r.Client, &ip); err != nil {
+					return ctrl.Result{Requeue: true, RequeueAfter: 5 * time.Second}, err
+				}
 				blog.Errorf("can not perform operation for pool %s, active IP %s exists", netPool.Name, ip)
 				return ctrl.Result{
 					Requeue:      true,

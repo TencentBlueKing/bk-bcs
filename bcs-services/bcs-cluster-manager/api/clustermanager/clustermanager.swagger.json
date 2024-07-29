@@ -3524,6 +3524,40 @@
         ]
       }
     },
+    "/clustermanager/v1/clusters/-/meta": {
+      "post": {
+        "summary": "查询多喝集群的元数据信息",
+        "description": "查询多个集群的元数据信息",
+        "operationId": "ClusterManager_GetClustersMetaData",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerGetClustersMetaDataResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerGetClustersMetaDataRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/clusters/{clusterID}/module": {
       "put": {
         "summary": "更新集群master和node的转移模块信息",
@@ -7931,6 +7965,14 @@
           "format": "int64",
           "description": "underlay网络模式下自动分配子网的步长",
           "title": "underlayAutoSteps"
+        },
+        "vpcCniModes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerNetworkMode"
+          },
+          "description": "vpc-cni插件下支持的网络模式",
+          "title": "vpcCniModes"
         }
       },
       "description": "用于记录公共网络配置信息",
@@ -8871,6 +8913,24 @@
           "type": "string"
         }
       }
+    },
+    "clustermanagerClusterMeta": {
+      "type": "object",
+      "properties": {
+        "clusterId": {
+          "type": "string",
+          "description": "集群Id",
+          "title": "clusterId"
+        },
+        "clusterNodeNum": {
+          "type": "integer",
+          "format": "int64",
+          "description": "集群节点数",
+          "title": "clusterNodeNum"
+        }
+      },
+      "description": "集群元数据信息列表",
+      "title": "ClusterMeta"
     },
     "clustermanagerClusterMgr": {
       "type": "object",
@@ -12109,6 +12169,63 @@
         "data"
       ]
     },
+    "clustermanagerGetClustersMetaDataRequest": {
+      "type": "object",
+      "properties": {
+        "clusters": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "集群列表",
+          "title": "clusters"
+        }
+      },
+      "description": "获取集群元数据信息",
+      "title": "GetClustersMetaDataRequest"
+    },
+    "clustermanagerGetClustersMetaDataResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerClusterMeta"
+          },
+          "description": "集群元数据信息列表",
+          "title": "data"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/clustermanagerWebAnnotationsV2",
+          "description": "权限信息",
+          "title": "web_annotations"
+        }
+      },
+      "description": "查询集群元数据信息返回",
+      "title": "GetClustersMetaDataResponse",
+      "required": [
+        "code",
+        "message",
+        "data"
+      ]
+    },
     "clustermanagerGetExternalNodeScriptResponse": {
       "type": "object",
       "properties": {
@@ -15156,6 +15273,21 @@
         }
       }
     },
+    "clustermanagerNetworkMode": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "type": "string"
+        },
+        "default": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
     "clustermanagerNetworkSetting": {
       "type": "object",
       "properties": {
@@ -15197,7 +15329,7 @@
         },
         "subnetSource": {
           "$ref": "#/definitions/clustermanagerSubnetSource",
-          "description": "集群VPC-CNI模式是否为非固定IP，默认: FALSE 非固定IP",
+          "description": "集群VPC-CNI模式下的使用子网情况",
           "title": "subnetSource"
         },
         "isStaticIpMode": {
@@ -15245,6 +15377,11 @@
           "type": "string",
           "description": "集群网络状态, 主要是变更网络组件过程中记录网络状态",
           "title": "status"
+        },
+        "networkMode": {
+          "type": "string",
+          "description": "集群VpcCni网络模式(目前支持共享网卡模式tke-route-eni和独占网卡模式tke-direct-eni, 默认情况下是共享网卡模式)",
+          "title": "networkMode"
         }
       }
     },

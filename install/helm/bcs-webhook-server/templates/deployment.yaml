@@ -49,7 +49,7 @@ spec:
           - name: http
             containerPort: 443
             protocol: TCP
-          {{- if .Values.plugins.dbpriv.dbmEnabled }}
+          {{- if .Values.plugins.dbpriv.dbmOptimizeEnabled }}
           - name: hookserver
             containerPort: 8089
             protocol: TCP

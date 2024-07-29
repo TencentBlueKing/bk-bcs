@@ -465,7 +465,7 @@ func (rc *RuleConverter) getServiceBackendsFromPods(
 
 	var retBackends []networkextensionv1.ListenerBackend
 	for _, pod := range podList {
-		if len(pod.Status.PodIP) == 0 || pod.Status.Phase != k8scorev1.PodRunning {
+		if !rc.checkPodNeedHandle(pod) {
 			continue
 		}
 		backendWeight := rc.getPodWeight(pod, weight)
@@ -623,4 +623,26 @@ func (rc *RuleConverter) patchPodLBWeightReady(pod *k8scorev1.Pod) error {
 		},
 	}
 	return rc.cli.Patch(context.TODO(), updatePod, client.RawPatch(k8stypes.MergePatchType, patchData))
+}
+
+// return true if pod need to be handled
+func (rc *RuleConverter) checkPodNeedHandle(pod *k8scorev1.Pod) bool {
+	if len(pod.Status.PodIP) == 0 || pod.Status.Phase != k8scorev1.PodRunning {
+		return false
+	}
+
+	containerAllDown := true
+	for _, containerStatus := range pod.Status.ContainerStatuses {
+		// if terminated is nil, means container is running or waiting
+		if containerStatus.State.Terminated == nil {
+			containerAllDown = false
+			break
+		}
+	}
+	// if all of pod's containers all down, no need to handle the pod
+	if containerAllDown {
+		blog.Infof("pod[%s/%s] containers all down, skip...", pod.GetNamespace(), pod.GetName())
+		return false
+	}
+	return true
 }

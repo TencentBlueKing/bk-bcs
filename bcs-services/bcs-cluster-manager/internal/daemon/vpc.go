@@ -61,7 +61,8 @@ func getIpUsageByVpc(model store.ClusterManagerModel, ipType string, vpc cmproto
 	return vpcMgr.GetVpcIpUsage(vpc.VpcID, ipType, nil, cmOption)
 }
 
-func getIpUsageByCluster(model store.ClusterManagerModel, ipType string, cluster cmproto.Cluster) (uint32, uint32, error) {
+func getIpUsageByCluster(model store.ClusterManagerModel, ipType string, cluster cmproto.Cluster) (uint32,
+	uint32, error) {
 	cloud, err := actions.GetCloudByCloudID(model, cluster.GetProvider())
 	if err != nil {
 		blog.Errorf("getIpUsageByCluster[%s:%s] failed: %v", cluster.Region, cluster.GetClusterID(), err)

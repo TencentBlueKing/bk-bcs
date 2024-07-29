@@ -24,7 +24,7 @@
   // @ts-ignore
   const noticeApiURL = `${window.BK_BCS_BSCP_API}/api/v1/announcements`;
   // @ts-ignore
-  const enableNotice = window.ENABLE_BK_NOTICE === 'true';
+  const enableNotice = window.ENABLE_BK_NOTICE === true;
 
   onMounted(() => {
     globalStore.getAppGlobalConfig();

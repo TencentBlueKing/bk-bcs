@@ -125,9 +125,9 @@ func NewService(sd serviced.Discover, iamSettings cc.IAM, disableAuth bool,
 
 // 注册网关
 func (s *Service) handlerAutoRegister() error {
-	s.pubKey = cc.AuthServer().LoginAuth.GWPubKey
+	s.pubKey = cc.AuthServer().ApiGateway.GWPubKey
 	if cc.AuthServer().ApiGateway.AutoRegister {
-		gw, err := apigw.NewApiGw(cc.AuthServer().Esb)
+		gw, err := apigw.NewApiGw(cc.AuthServer().Esb, cc.AuthServer().ApiGateway)
 		if err != nil {
 			return err
 		}
