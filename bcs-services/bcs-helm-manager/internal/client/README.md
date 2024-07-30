@@ -99,3 +99,21 @@ $ helmctl rollback -p <project_code> -c <cluster_id> -n <namespace> <release_nam
 ```bash
 $ helmctl uninstall -p <project_code> -c <cluster_id> -n <namespace> <release_name>
 ```
+
+### 13. 差异化显示revison Release revison
+
+```bash
+$ helmctl diff revision -p <project_code> -c <cluster_id> -n <namespace> <release_name> <revision1> <revision2>
+```
+
+### 14. 差异化显示回滚版本 Release rollback
+
+```bash
+$ helmctl diff rollback -p <project_code> -c <cluster_id> -n <namespace> <release_name> <revision>
+```
+
+### 15. 差异化显示values.yaml更新 Release upgrade
+
+```bash
+$ helmctl diff upgrade -p <project_code> -c <cluster_id> -n <namespace> <release_name> <chart_name> <version> -f values.yaml
+```
