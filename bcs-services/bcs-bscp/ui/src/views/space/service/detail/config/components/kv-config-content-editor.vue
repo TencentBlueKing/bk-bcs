@@ -97,7 +97,7 @@
   defineExpose({
     validate: () => {
       if (codeEditorRef.value) {
-        return codeEditorRef.value.validate(props.content);
+        return codeEditorRef.value.validateAndMarkErrorLine(props.content);
       }
     },
   });
