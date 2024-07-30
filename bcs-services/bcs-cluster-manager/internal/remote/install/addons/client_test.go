@@ -10,34 +10,4 @@
  * limitations under the License.
  */
 
-package cr
-
-import (
-	"fmt"
-	"testing"
-
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-powertrading/pkg/apis"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-powertrading/pkg/apis/requester"
-)
-
-func Test_GetPerfDetail(t *testing.T) {
-	testCli := New(&apis.ClientOptions{}, requester.NewRequester())
-	req := &GetPerfDetailReq{
-		Dsl: &GetPerfDetailDsl{MatchExpr: []GetPerfDetailMatchExpr{{
-			Key:      "IP",
-			Values:   []string{""},
-			Operator: "In",
-		}, {
-			Key:      "sync_date",
-			Values:   []string{"2024-01-15"},
-			Operator: "In",
-		}}},
-		Offset: 0,
-		Limit:  1,
-	}
-
-	rsp, err := testCli.GetPerfDetail(req)
-	fmt.Println(err)
-	fmt.Println(rsp)
-
-}
+package addons

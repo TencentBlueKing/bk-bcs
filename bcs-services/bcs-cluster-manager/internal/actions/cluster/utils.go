@@ -685,12 +685,24 @@ func asyncDeleteImportedClusterInfo(ctx context.Context, store store.ClusterMana
 		fmt.Sprintf("asyncDeleteImportedClusterInfo:%s", cluster.ClusterID))
 
 	if options.GetEditionInfo().IsEnterpriseEdition() || options.GetEditionInfo().IsCommunicationEdition() {
-		err := provider.DeleteWatchComponentByHelm(ctx, cluster.ProjectID, cluster.ClusterID, "")
+		err := provider.DeleteWatchComponentByHelm(ctx, cluster.ProjectID, cluster.ClusterID,
+			options.GetGlobalCMOptions().ComponentDeploy.Watch.ReleaseNamespace)
 		if err != nil {
 			blog.Errorf("asyncDeleteImportedClusterInfo DeleteWatchComponentByHelm[%s] failed: %v",
 				cluster.ClusterID, err)
 		} else {
-			blog.Errorf("asyncDeleteImportedClusterInfo DeleteWatchComponentByHelm[%s] successful",
+			blog.Infof("asyncDeleteImportedClusterInfo DeleteWatchComponentByHelm[%s] successful",
+				cluster.ClusterID)
+		}
+	}
+	if options.GetGlobalCMOptions().ComponentDeploy.ImagePullSecret.AddonName != "" {
+		err := provider.DeleteImagePullSecretByAddon(ctx, cluster.ProjectID, cluster.ClusterID,
+			options.GetGlobalCMOptions().ComponentDeploy.ImagePullSecret.AddonName)
+		if err != nil {
+			blog.Errorf("asyncDeleteImportedClusterInfo DeleteImagePullSecretByAddon[%s] failed: %v",
+				cluster.ClusterID, err)
+		} else {
+			blog.Infof("asyncDeleteImportedClusterInfo DeleteImagePullSecretByAddon[%s] successful",
 				cluster.ClusterID)
 		}
 	}

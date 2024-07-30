@@ -10,34 +10,20 @@
  * limitations under the License.
  */
 
-package cr
+// Package addon xxx
+package addon
 
 import (
-	"fmt"
-	"testing"
-
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-powertrading/pkg/apis"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-powertrading/pkg/apis/requester"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/component"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/install"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/install/addons"
 )
 
-func Test_GetPerfDetail(t *testing.T) {
-	testCli := New(&apis.ClientOptions{}, requester.NewRequester())
-	req := &GetPerfDetailReq{
-		Dsl: &GetPerfDetailDsl{MatchExpr: []GetPerfDetailMatchExpr{{
-			Key:      "IP",
-			Values:   []string{""},
-			Operator: "In",
-		}, {
-			Key:      "sync_date",
-			Values:   []string{"2024-01-15"},
-			Operator: "In",
-		}}},
-		Offset: 0,
-		Limit:  1,
-	}
-
-	rsp, err := testCli.GetPerfDetail(req)
-	fmt.Println(err)
-	fmt.Println(rsp)
-
+// GetAddonInstaller addon installer
+func GetAddonInstaller(projectID string, addonName string) (install.Installer, error) {
+	return component.GetComponentInstaller(component.InstallOptions{
+		InstallType: addons.Addons.String(),
+		ProjectID:   projectID,
+		AddonName:   addonName,
+	})
 }

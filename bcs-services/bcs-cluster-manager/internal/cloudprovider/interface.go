@@ -367,7 +367,7 @@ type NodeGroupManager interface {
 	// MoveNodesToGroup add cluster nodes to NodeGroup
 	MoveNodesToGroup(nodes []*proto.Node, group *proto.NodeGroup, opt *MoveNodesOption) (*proto.Task, error)
 	// CheckResourcePoolQuota need to check resource pool quota when revise group quota
-	CheckResourcePoolQuota(region, instanceType string, groupId string) error
+	CheckResourcePoolQuota(group *proto.NodeGroup, scaleUpNum uint32) error
 
 	// RemoveNodesFromGroup remove nodes from NodeGroup, nodes are still in cluster
 	RemoveNodesFromGroup(nodes []*proto.Node, group *proto.NodeGroup, opt *RemoveNodesOption) error

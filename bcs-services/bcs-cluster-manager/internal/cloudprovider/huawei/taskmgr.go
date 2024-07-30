@@ -129,6 +129,8 @@ func (t *Task) BuildImportClusterTask(cls *proto.Cluster, opt *cloudprovider.Imp
 	importCluster.BuildImportClusterNodesStep(task)
 	// step3: install cluster watch component
 	common.BuildWatchComponentTaskStep(task, cls, "")
+	// step3: install image pull secret addon if config
+	common.BuildInstallImageSecretAddonTaskStep(task, cls)
 
 	// set current step
 	if len(task.StepSequence) == 0 {

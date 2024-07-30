@@ -23,6 +23,7 @@ import (
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/component/addon"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/component/autoscaler"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/component/vcluster"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/component/watch"
@@ -37,6 +38,11 @@ var (
 	installWatchComponentStep = cloudprovider.StepInfo{
 		StepMethod: cloudprovider.WatchTask,
 		StepName:   "安装集群watch组件",
+	}
+
+	installImagePullSecretAddonStep = cloudprovider.StepInfo{
+		StepMethod: cloudprovider.InstallImagePullSecretAddonAction,
+		StepName:   "安装集群公共imagePullSecret",
 	}
 
 	ensureAutoScalerStep = cloudprovider.StepInfo{
@@ -181,6 +187,96 @@ func DeleteWatchComponentByHelm(ctx context.Context, projectID,
 	}
 
 	blog.Infof("DeleteWatchComponentByHelm[%s] successful[%s:%s]", traceID, projectID, clusterID)
+	return nil
+}
+
+// BuildInstallImageSecretAddonTaskStep build install image pull secret step
+func BuildInstallImageSecretAddonTaskStep(task *proto.Task, cls *proto.Cluster) {
+	if ioptions.GetGlobalCMOptions().ComponentDeploy.ImagePullSecret.AddonName == "" {
+		return
+	}
+
+	installStep := cloudprovider.InitTaskStep(installImagePullSecretAddonStep)
+
+	installStep.Params[cloudprovider.ProjectIDKey.String()] = cls.ProjectID
+	installStep.Params[cloudprovider.ClusterIDKey.String()] = cls.ClusterID
+
+	task.Steps[installImagePullSecretAddonStep.StepMethod] = installStep
+	task.StepSequence = append(task.StepSequence, installImagePullSecretAddonStep.StepMethod)
+}
+
+// EnsureInstallImageSecretTask deploy image pull secret task
+func EnsureInstallImageSecretTask(taskID string, stepName string) error {
+	start := time.Now()
+	// get task information and validate
+	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
+	if err != nil {
+		return err
+	}
+	if step == nil {
+		return nil
+	}
+
+	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
+
+	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
+	projectID := step.Params[cloudprovider.ProjectIDKey.String()]
+
+	// InstallImagePullSecretByAddon install imagePullSecret but not handle error, need user to handle
+	err = InstallImagePullSecretByAddon(ctx, projectID, clusterID)
+	if err != nil {
+		blog.Errorf("EnsureInstallImageSecretTask[%s] failed: %v", taskID, err)
+	}
+
+	// update step
+	if err := state.UpdateStepSucc(start, stepName); err != nil {
+		blog.Errorf("EnsureInstallImageSecretTask[%s] %s update to storage fatal", taskID, stepName)
+		return err
+	}
+
+	return nil
+}
+
+// InstallImagePullSecretByAddon deploy image pull secret by addon
+func InstallImagePullSecretByAddon(ctx context.Context, projectID, clusterID string) error {
+	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+
+	if ioptions.GetGlobalCMOptions().ComponentDeploy.ImagePullSecret.AddonName == "" {
+		return nil
+	}
+	installer, err := addon.GetAddonInstaller(projectID,
+		ioptions.GetGlobalCMOptions().ComponentDeploy.ImagePullSecret.AddonName)
+	if err != nil {
+		blog.Errorf("InstallImagePullSecretByAddon[%s] GetAddonInstaller failed: %v", taskID, err)
+		return err
+	}
+	err = installer.Install(clusterID, "")
+	if err != nil {
+		blog.Errorf("InstallImagePullSecretByAddon[%s] Install failed: %v", taskID, err)
+		return err
+	}
+
+	blog.Infof("InstallImagePullSecretByAddon[%s] successful[%s:%s]", taskID, projectID, clusterID)
+	return nil
+}
+
+// DeleteImagePullSecretByAddon unInstall imagePullSecret
+func DeleteImagePullSecretByAddon(ctx context.Context, projectID,
+	clusterID, addonName string) error {
+	traceID := cloudprovider.GetTaskIDFromContext(ctx)
+
+	install, err := addon.GetAddonInstaller(projectID, addonName)
+	if err != nil {
+		blog.Errorf("DeleteImagePullSecretByAddon[%s] GetAddonInstaller failed: %v", traceID, err)
+		return err
+	}
+	err = install.Uninstall(clusterID)
+	if err != nil {
+		blog.Errorf("DeleteImagePullSecretByAddon[%s] Uninstall failed: %v", traceID, err)
+		return err
+	}
+
+	blog.Infof("DeleteImagePullSecretByAddon[%s] successful[%s:%s]", traceID, projectID, clusterID)
 	return nil
 }
 

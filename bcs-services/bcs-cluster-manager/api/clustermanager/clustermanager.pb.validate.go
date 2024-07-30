@@ -5718,6 +5718,8 @@ func (m *CloudConfigInfo) Validate() error {
 
 	// no validation rules for VpcDomain
 
+	// no validation rules for DisableCheckGroupResource
+
 	return nil
 }
 

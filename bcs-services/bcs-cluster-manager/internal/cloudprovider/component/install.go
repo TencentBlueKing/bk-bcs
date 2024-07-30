@@ -16,9 +16,8 @@ package component
 import (
 	"fmt"
 
-	cmoptions "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/install"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/install/bkapi"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/install/addons"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/install/helm"
 )
 
@@ -30,17 +29,21 @@ type ComponentValues interface { // nolint
 
 // InstallOptions options for installer
 type InstallOptions struct {
+	// InstallType install type
 	InstallType string
-	ProjectID   string
+	// ProjectID project info
+	ProjectID string
 	// component dependent paras
-	// chartName
+	// ChartName chartName
 	ChartName string
-	// namespace
+	// ReleaseNamespace namespace
 	ReleaseNamespace string
-	// releaseName
+	// ReleaseName releaseName
 	ReleaseName string
-	// public repo
+	// IsPublicRepo public repo
 	IsPublicRepo bool
+	// AddonName addon name
+	AddonName string
 }
 
 // GetComponentInstaller get component installer
@@ -50,10 +53,11 @@ func GetComponentInstaller(opts InstallOptions) (install.Installer, error) {
 		err       error
 	)
 	switch opts.InstallType {
-	case bkapi.BcsApp.String():
-		client, debug := GetBCSAppClient()
-		installer = bkapi.NewBKAPIInstaller(opts.ProjectID, opts.ChartName, opts.ReleaseName, opts.ReleaseNamespace,
-			opts.IsPublicRepo, client, debug)
+	case addons.Addons.String():
+		installer, err = addons.NewAddonsInstaller(addons.AddonOptions{
+			ProjectID: opts.ProjectID,
+			AddonName: opts.AddonName,
+		}, addons.GetAddonsClient(), false)
 	case helm.Helm.String():
 		installer, err = helm.NewHelmInstaller(helm.HelmOptions{
 			ProjectID:   opts.ProjectID,
@@ -70,23 +74,4 @@ func GetComponentInstaller(opts InstallOptions) (install.Installer, error) {
 	}
 
 	return installer, nil
-}
-
-// GetBCSAppClient get installer init client
-func GetBCSAppClient() (*bkapi.BCSAppClient, bool) {
-	op := cmoptions.GetGlobalCMOptions()
-	client := bkapi.NewBCSAppClient(
-		op.BCSAppConfig.Server,
-		op.BCSAppConfig.AppCode,
-		op.BCSAppConfig.AppSecret,
-		op.BCSAppConfig.BkUserName,
-		op.BCSAppConfig.Debug,
-	)
-	// installer if close by debug
-	debug := false
-	if !op.BCSAppConfig.Enable {
-		debug = true
-	}
-
-	return client, debug
 }

@@ -14,6 +14,7 @@ package nodegroup
 
 import (
 	"context"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 
@@ -70,4 +71,13 @@ func listNodeGroupByConds(model store.ClusterManagerModel, options filterNodeGro
 
 func virtualNodeID() string {
 	return "bcs-" + utils.RandomHexString(8)
+}
+
+func checkNodeGroupResourceValidate(provider string, nodeGroup *cmproto.NodeGroup, scaleUpResource uint32) error {
+	ngr, err := cloudprovider.GetNodeGroupMgr(provider)
+	if err != nil {
+		return err
+	}
+
+	return ngr.CheckResourcePoolQuota(nodeGroup, scaleUpResource)
 }

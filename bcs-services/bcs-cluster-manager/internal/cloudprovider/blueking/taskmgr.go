@@ -209,6 +209,8 @@ func (t *Task) BuildImportClusterTask(cls *proto.Cluster, opt *cloudprovider.Imp
 	if options.GetEditionInfo().IsCommunicationEdition() || options.GetEditionInfo().IsEnterpriseEdition() {
 		common.BuildWatchComponentTaskStep(task, cls, "")
 	}
+	// step2: install image pull secret addon if config
+	common.BuildInstallImageSecretAddonTaskStep(task, cls)
 
 	// set current step
 	if len(task.StepSequence) == 0 {
