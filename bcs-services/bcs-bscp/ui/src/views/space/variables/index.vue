@@ -38,7 +38,7 @@
         <template #prepend>
           <render-table-tip />
         </template>
-        <bk-table-column :min-width="70" :width="70" :label="renderSelection">
+        <bk-table-column :min-width="80" :width="80" :label="renderSelection" :show-overflow-tooltip="false">
           <template #default="{ row }">
             <across-check-box :checked="isChecked(row)" :handle-change="() => handleSelectionChange(row)" />
           </template>
@@ -230,9 +230,9 @@
   // };
   const handleSelectionChange = (row: IVariableItem) => {
     const isSelected = selections.value.some((item) => item.id === row.id);
-    const isAcrossChecked = [CheckType.AcrossChecked, CheckType.HalfAcrossChecked].includes(selectType.value);
+    // const isAcrossChecked = [CheckType.AcrossChecked, CheckType.HalfAcrossChecked].includes(selectType.value);
     // 根据选择类型决定传递的状态
-    const shouldBeChecked = isAcrossChecked ? isSelected : !isSelected;
+    const shouldBeChecked = isAcrossChecked.value ? isSelected : !isSelected;
     handleRowCheckChange(shouldBeChecked, row);
   };
 

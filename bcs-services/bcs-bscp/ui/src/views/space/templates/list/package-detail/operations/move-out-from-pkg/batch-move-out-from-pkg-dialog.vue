@@ -97,6 +97,7 @@
       params,
     );
     citedList.value = res.details;
+    console.log('res.details', res.details);
     loading.value = false;
   };
 
@@ -107,6 +108,7 @@
     try {
       pending.value = true;
       const ids = props.value.map((item) => item.id);
+      const appIds = citedList.value.map((item) => item.app_id);
       await moveOutTemplateFromPackage(
         spaceId.value,
         currentTemplateSpace.value,
@@ -115,6 +117,7 @@
         isAcrossChecked.value,
         pkg.id, // 全部配置文件/未指定套餐没有移出套餐选项
         false, // 未指定套餐没有移出套餐选项
+        appIds, // 服务配置未命名版本中引用此套餐的内容
       );
       emits('movedOut');
       close();

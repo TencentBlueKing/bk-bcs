@@ -201,7 +201,7 @@
   const { t, locale } = useI18n();
   const { spaceId } = storeToRefs(useGlobalStore());
   const templateStore = useTemplateStore();
-  const { currentTemplateSpace, topIds } = storeToRefs(templateStore);
+  const { currentTemplateSpace, topIds, isAcrossChecked } = storeToRefs(templateStore);
   const { pagination, updatePagination } = useTablePagination('commonConfigTable');
 
   const props = defineProps<{
@@ -399,8 +399,8 @@
   // };
   const handleSelectionChange = (row: ITemplateConfigItem) => {
     const isSelected = selections.value.some((item) => item.id === row.id);
-    const isAcrossChecked = [CheckType.AcrossChecked, CheckType.HalfAcrossChecked].includes(selectType.value);
-    const shouldBeChecked = isAcrossChecked ? isSelected : !isSelected;
+    // const isAcrossChecked = [CheckType.AcrossChecked, CheckType.HalfAcrossChecked].includes(selectType.value);
+    const shouldBeChecked = isAcrossChecked.value ? isSelected : !isSelected;
     // 根据选择类型决定传递的状态
     handleRowCheckChange(shouldBeChecked, row);
     emits('update:selectedConfigs', selections.value);

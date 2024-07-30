@@ -25,10 +25,6 @@
       <bk-form-item
         :label="isMultiple || isAcrossChecked ? t('添加至模板套餐') : t('模板套餐')"
         property="pkgs"
-        required />
-      <bk-form-item
-        :label="isMultiple || isAcrossChecked ? t('添加至模板套餐') : t('模板套餐')"
-        property="pkgs"
         required>
         <bk-select v-model="selectedPkgs" multiple @change="handPkgsChange" @clear="handleClearPkgs">
           <bk-option
@@ -143,6 +139,7 @@
   };
 
   const getCitedData = async () => {
+    console.log('获取表格');
     loading.value = true;
     const params = {
       start: 0,
@@ -177,6 +174,7 @@
     try {
       pending.value = true;
       const templateIds = props.value.map((item) => item.id);
+      const appIds = citedList.value.map((item) => item.app_id);
       await addTemplateToPackage(
         spaceId.value,
         currentTemplateSpace.value,
@@ -185,6 +183,7 @@
         isAcrossChecked.value,
         typeof currentPkg.value === 'string' ? 0 : currentPkg.value,
         currentPkg.value === 'no_specified',
+        appIds,
       );
       emits('added');
       close();

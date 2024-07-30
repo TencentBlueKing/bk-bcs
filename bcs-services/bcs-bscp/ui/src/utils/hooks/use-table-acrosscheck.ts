@@ -69,9 +69,10 @@ export default function useTableAcrossCheck({
   };
   // 表格行勾选后重置状态
   const handleSetSelectType = () => {
-    if (selections.value.length === 0 && [CheckType.HalfChecked, CheckType.Checked].includes(selectType.value)) {
+    if (selections.value.length === 0 && selectType.value !== CheckType.Uncheck) {
       // 取消全选状态
       selectType.value = CheckType.Uncheck;
+      console.log('123');
     } else if (
       selections.value.length < curPageData.value.length &&
       [CheckType.Checked, CheckType.Uncheck].includes(selectType.value)
@@ -87,7 +88,7 @@ export default function useTableAcrossCheck({
     } else if (selections.value.length < dataCount.value && selectType.value === CheckType.AcrossChecked) {
       // 跨页半选
       selectType.value = CheckType.HalfAcrossChecked;
-    } else if (!selections.value.length) {
+    } else if (!selections.value.length && [CheckType.HalfAcrossChecked].includes(selectType.value)) {
       // 跨页全选
       selectType.value = CheckType.AcrossChecked;
     }
@@ -110,6 +111,14 @@ export default function useTableAcrossCheck({
     ) {
       // 跨页全选/半选时，取消勾选数据push
       selections.value.push(row);
+      if (selections.value.length === dataCount.value) {
+        // 跨页半选/全选时，当取消勾选的数据和可选总数相同时，即清空
+        console.log('row触发清空');
+        selections.value = [];
+      }
+      console.log(typeof selections.value.length, 'length');
+      console.log(typeof dataCount.value, 'dataCount');
+      console.log(selections.value.length === dataCount.value, '??????????');
       console.log('取消push');
     } else if (value && index > -1 && selectType.value === CheckType.HalfAcrossChecked) {
       // 跨页半选时，勾选数据splice

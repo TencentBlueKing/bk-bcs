@@ -302,6 +302,7 @@ export const getTemplatesDetailByIds = (biz_id: string, ids: number[]) =>
  * @param exclusion_operation 是否跨页全选
  * @param template_set_id 正在操作的套餐id，全部套餐和未指定套餐传0
  * @param no_set_specified 是否未指定套餐
+ * @param app_ids 服务配置未命名版本中引用此套餐的内容
  * @returns
  */
 export const addTemplateToPackage = (
@@ -312,6 +313,7 @@ export const addTemplateToPackage = (
   exclusion_operation: boolean,
   template_set_id: number | string,
   no_set_specified: boolean,
+  app_ids: number[],
 ) =>
   http.post(
     `/config/biz/${biz_id}/template_spaces/${template_space_id}/template_set/${template_set_id}/templates/add_to_template_sets`,
@@ -320,6 +322,7 @@ export const addTemplateToPackage = (
       template_ids,
       exclusion_operation,
       no_set_specified,
+      app_ids,
     },
   );
 
@@ -332,6 +335,7 @@ export const addTemplateToPackage = (
  * @param exclusion_operation 是否跨页全选
  * @param template_set_id 正在操作的套餐id，全部套餐和未指定套餐传0
  * @param no_set_specified 是否未指定套餐
+ * @param app_ids 服务配置未命名版本中引用此套餐的内容
  * @returns
  */
 export const moveOutTemplateFromPackage = (
@@ -342,6 +346,7 @@ export const moveOutTemplateFromPackage = (
   exclusion_operation: boolean,
   template_set_id: number | string,
   no_set_specified: boolean,
+  app_ids: number[],
 ) =>
   http.post(
     `/config/biz/${biz_id}/template_spaces/${template_space_id}/template_set/${template_set_id}/templates/delete_from_template_sets`,
@@ -350,6 +355,7 @@ export const moveOutTemplateFromPackage = (
       template_set_ids,
       exclusion_operation,
       no_set_specified,
+      app_ids,
     },
   );
 

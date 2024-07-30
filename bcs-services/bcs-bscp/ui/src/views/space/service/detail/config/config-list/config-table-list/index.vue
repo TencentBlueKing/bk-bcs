@@ -31,6 +31,7 @@
           :selected-ids="selectedIds"
           :is-file-type="isFileType"
           :selected-items="selectedItems"
+          :is-across-checked="isAcrossChecked"
           @deleted="handleBatchDeleted" />
       </div>
       <SearchInput
@@ -58,7 +59,12 @@
         :app-id="props.appId"
         :search-str="searchStr"
         @clear-str="clearStr"
-        @update-selected-ids="selectedIds = $event" />
+        @update-selected-ids="
+          (data) => {
+            selectedIds = data.selectedConfigIds;
+            isAcrossChecked = data.isAcrossChecked;
+          }
+        " />
     </section>
   </section>
 </template>
@@ -93,6 +99,7 @@
   const editVariablesRef = ref();
   const selectedIds = ref<number[]>([]);
   const selectedItems = ref<any[]>([]);
+  const isAcrossChecked = ref(false);
 
   const refreshConfigList = (createConfig = false) => {
     if (isFileType.value) {

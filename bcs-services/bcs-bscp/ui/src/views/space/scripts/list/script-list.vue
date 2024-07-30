@@ -28,14 +28,19 @@
             <Plus class="button-icon" />
             {{ t('新建脚本') }}
           </bk-button>
-          <BatchDeleteBtn :bk-biz-id="spaceId" :selected-ids="selectedIds" @deleted="refreshAfterBatchDelete" />
+          <BatchDeleteBtn
+            :bk-biz-id="spaceId"
+            :selected-ids="selectedIds"
+            :is-across-checked="isAcrossChecked"
+            :filter-disable-count="filterDisableCount"
+            @deleted="refreshAfterBatchDelete" />
         </div>
         <bk-input
           v-model="searchStr"
           class="search-script-input"
           :placeholder="t('脚本名称')"
           :clearable="true"
-          @clear="refreshList"
+          @clear="refreshList()"
           @input="handleNameInputChange">
           <template #suffix>
             <Search class="search-input-icon" />
@@ -46,18 +51,30 @@
         <bk-table
           :border="['outer']"
           :data="scriptsData"
-          :checked="checkedScripts"
           :remote-pagination="true"
           :pagination="pagination"
           :class="memoEditHookId > 0 || tagEditHookId > 0 ? 'table-with-memo-edit' : ''"
           show-overflow-tooltip
           :cell-class="getCellCls"
-          :is-row-select-enable="isRowSelectEnable"
-          @selection-change="handleSelectionChange"
-          @select-all="handleSelectAll"
           @page-limit-change="handlePageLimitChange"
-          @page-value-change="handlePageCurrentChange">
-          <bk-table-column type="selection" width="60"></bk-table-column>
+          @page-value-change="refreshList($event, true)">
+          <!-- :checked="checkedScripts" -->
+          <!-- @selection-change="handleSelectionChange" -->
+          <!-- :is-row-select-enable="isRowSelectEnable" -->
+          <!-- <bk-table-column type="selection" width="60"></bk-table-column> -->
+          <!-- @page-value-change="handlePageCurrentChange" -->
+          <!-- @select-all="handleSelectAll" -->
+          <template #prepend>
+            <render-table-tip />
+          </template>
+          <bk-table-column :min-width="80" :width="80" :label="renderSelection" :show-overflow-tooltip="false">
+            <template #default="{ row }">
+              <across-check-box
+                :checked="isChecked(row)"
+                :disabled="row.bound_num !== 0"
+                :handle-change="() => handleSelectionChange(row)" />
+            </template>
+          </bk-table-column>
           <bk-table-column :label="t('脚本名称')" :min-width="200">
             <template #default="{ row }">
               <div v-if="row.hook" class="hook-name" @click="handleViewVersionClick(row.hook.id)">
@@ -221,10 +238,14 @@
   import DeleteConfirmDialog from '../../../../components/delete-confirm-dialog.vue';
   import LinkToApp from '../../templates/list/components/link-to-app.vue';
   import ContentWidthOverflowTips from '../../../../components/content-width-overflow-tips/index.vue';
+  import useTableAcrossCheck from '../../../../utils/hooks/use-table-acrosscheck';
+  import acrossCheckBox from '../../../../components/across-checkbox.vue';
+  import CheckType from '../../../../../types/across-checked';
   import { debounce } from 'lodash';
 
   const { spaceId } = storeToRefs(useGlobalStore());
-  const { versionListPageShouldOpenEdit, versionListPageShouldOpenView } = storeToRefs(useScriptStore());
+  const scriptStore = useScriptStore();
+  const { versionListPageShouldOpenEdit, versionListPageShouldOpenView, filterDisableCount } = storeToRefs(scriptStore);
   const router = useRouter();
   const { t, locale } = useI18n();
 
@@ -254,15 +275,27 @@
   const tagEditHookId = ref(0); // 当前正在编辑标签的脚本id
   const tagInputRef = ref();
   const editMemoStr = ref(''); // 编辑描述内容
+  const isAcrossChecked = ref(false);
 
   const maxTableHeight = computed(() => {
     const windowHeight = window.innerHeight;
     return windowHeight * 0.6 - 200;
   });
 
-  const checkedScripts = computed(() => {
-    return scriptsData.value.filter((item) => selectedIds.value.includes(item.hook.id));
-  });
+  // const checkedScripts = computed(() => {
+  //   return scriptsData.value.filter((item) => selectedIds.value.includes(item.hook.id));
+  // });
+
+  // 当前页数据，不含禁用
+  const filterFailureCurTableData = computed(() => scriptsData.value.filter((item) => item.bound_num === 0));
+  const arrowShow = computed(() => pagination.value.limit < pagination.value.count);
+  const { selectType, selections, renderSelection, renderTableTip, handleRowCheckChange, handleClearSelection } =
+    useTableAcrossCheck({
+      dataCount: filterDisableCount,
+      curPageData: filterFailureCurTableData, // 当前页数据，不含禁用
+      rowKey: ['published_revision_id'],
+      arrowShow,
+    });
 
   const isSearchEmpty = ref(false);
   watch(
@@ -270,6 +303,17 @@
     () => {
       refreshList();
       getTags();
+    },
+  );
+
+  watch(
+    selections,
+    () => {
+      isAcrossChecked.value = [CheckType.HalfAcrossChecked, CheckType.AcrossChecked].includes(selectType.value);
+      selectedIds.value = selections.value.map((item) => item.published_revision_id);
+    },
+    {
+      deep: true,
     },
   );
 
@@ -299,6 +343,9 @@
       item.hook.spec.type = item.hook.spec.type.charAt(0).toUpperCase() + item.hook.spec.type.slice(1);
     });
     pagination.value.count = res.count;
+    scriptStore.$patch((state) => {
+      state.filterDisableCount = Number(res.uncited_count); // 待更新
+    });
     scriptsLoading.value = false;
   };
 
@@ -326,25 +373,31 @@
   };
 
   // 表格行选择事件
-  const handleSelectionChange = ({ checked, row }: { checked: boolean; row: IScriptItem }) => {
-    const index = selectedIds.value.findIndex((id) => id === row.hook.id);
-    if (checked) {
-      if (index === -1) {
-        selectedIds.value.push(row.hook.id);
-      }
-    } else {
-      selectedIds.value.splice(index, 1);
-    }
+  // const handleSelectionChange = ({ checked, row }: { checked: boolean; row: IScriptItem }) => {
+  //   const index = selectedIds.value.findIndex((id) => id === row.hook.id);
+  //   if (checked) {
+  //     if (index === -1) {
+  //       selectedIds.value.push(row.hook.id);
+  //     }
+  //   } else {
+  //     selectedIds.value.splice(index, 1);
+  //   }
+  // };
+  const handleSelectionChange = (row: IScriptItem) => {
+    const isSelected = selections.value.some((item) => item.published_revision_id === row.published_revision_id);
+    // 根据选择类型决定传递的状态
+    const shouldBeChecked = isAcrossChecked.value ? isSelected : !isSelected;
+    handleRowCheckChange(shouldBeChecked, row);
   };
 
   // 全选
-  const handleSelectAll = ({ checked }: { checked: boolean }) => {
-    if (checked) {
-      selectedIds.value = scriptsData.value.filter((item) => item.bound_num === 0).map((item) => item.hook.id);
-    } else {
-      selectedIds.value = [];
-    }
-  };
+  // const handleSelectAll = ({ checked }: { checked: boolean }) => {
+  //   if (checked) {
+  //     selectedIds.value = scriptsData.value.filter((item) => item.bound_num === 0).map((item) => item.hook.id);
+  //   } else {
+  //     selectedIds.value = [];
+  //   }
+  // };
 
   const handleSelectTag = (tag: string, all = false) => {
     searchStr.value = '';
@@ -473,7 +526,11 @@
     refreshList(pagination.value.current);
   };
 
-  const refreshList = (current = 1) => {
+  const refreshList = (current = 1, pageChange = false) => {
+    // 非跨页全选/半选 需要重置全选状态
+    if (![CheckType.HalfAcrossChecked, CheckType.AcrossChecked].includes(selectType.value) || !pageChange) {
+      handleClearSelection();
+    }
     isSearchEmpty.value = searchStr.value !== '';
     pagination.value.current = current;
     getScripts();
@@ -484,18 +541,26 @@
     refreshList();
   };
 
-  const handlePageCurrentChange = (val: number) => {
-    pagination.value.current = val;
-    getScripts();
-  };
+  // const handlePageCurrentChange = (val: number) => {
+  //   pagination.value.current = val;
+  //   getScripts();
+  // };
 
   const clearSearchStr = () => {
     searchStr.value = '';
     refreshList();
   };
 
-  const isRowSelectEnable = ({ row, isCheckAll }: any) => {
-    return isCheckAll || row.bound_num === 0;
+  // const isRowSelectEnable = ({ row, isCheckAll }: any) => {
+  //   return isCheckAll || row.bound_num === 0;
+  // };
+  const isChecked = (row: IScriptItem) => {
+    if (![CheckType.AcrossChecked, CheckType.HalfAcrossChecked].includes(selectType.value)) {
+      // 当前页状态传递
+      return selections.value.some((item) => item.published_revision_id === row.published_revision_id);
+    }
+    // 跨页状态传递
+    return !selections.value.some((item) => item.published_revision_id === row.published_revision_id);
   };
 </script>
 <style lang="scss" scoped>

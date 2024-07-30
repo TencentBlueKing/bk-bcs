@@ -265,7 +265,7 @@
   };
 
   // 刷新表格数据
-  const refreshTableData = () => {
+  const refreshTableData = (pageChange = false) => {
     if (isCategorizedView.value) {
       categorizedGroupList.value = categorizingData(searchGroupList.value);
       categorizedGroupList.value.forEach((item) => {
@@ -277,6 +277,10 @@
       const start = pagination.value.limit * (pagination.value.current - 1);
       tableData.value = searchGroupList.value.slice(start, start + pagination.value.limit);
       pagination.value.count = searchGroupList.value.length;
+    }
+    // 非跨页全选/半选 需要重置全选状态
+    if (![CheckType.HalfAcrossChecked, CheckType.AcrossChecked].includes(selectType.value) || !pageChange) {
+      handleClearSelection();
     }
   };
 
@@ -335,7 +339,6 @@
     changeViewPending.value = true;
     pagination.value.current = 1;
     refreshTableData();
-    handleClearSelection();
     nextTick(() => {
       changeViewPending.value = false;
     });
@@ -375,7 +378,6 @@
       isSearchEmpty.value = true;
     }
     refreshTableData();
-    handleClearSelection();
   }, 300);
 
   // 关联服务
@@ -414,17 +416,12 @@
 
   const handlePageChange = (val: number) => {
     pagination.value.current = val;
-    refreshTableData();
-    if (!(selectType.value === CheckType.HalfAcrossChecked || selectType.value === CheckType.AcrossChecked)) {
-      // 非跨页全选 需要重置全选状态
-      handleClearSelection();
-    }
+    refreshTableData(true);
   };
 
   const handlePageLimitChange = (val: number) => {
     updatePagination('limit', val);
     refreshTableData();
-    handleClearSelection();
   };
 
   // hover提示文字
@@ -453,8 +450,6 @@
     ) {
       pagination.value.current = pagination.value.current - 1;
     }
-
-    handleClearSelection();
     loadGroupList();
   };
 
