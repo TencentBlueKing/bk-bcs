@@ -126,35 +126,18 @@ func (r *ReleasePreviewAction) getReleasePreview() (*helmmanager.ReleasePreview,
 
 // 过滤掉不支持的参数
 func filtArgs(args []string) []string {
+	// 黑名单参数
 	filtContent := map[string]struct{}{
-		"--replace":                    {},
-		"--timeout":                    {},
-		"--wait-for-jobs":              {},
-		"--disable-openapi-validation": {},
-		"--render-subchart-notes":      {},
-		"--insecure-skip-tls-verify":   {},
-		"--values":                     {},
-		"--set-file":                   {},
-		"--wait":                       {},
-		"--name-template":              {},
-		"--description":                {},
-		"--skip-crds":                  {},
-		"--atomic":                     {},
-		"--set":                        {},
-		"--set-string":                 {},
-		"--create-namespace":           {},
-		"--no-hooks":                   {},
-		"--devel":                      {},
-		"--dependency-update":          {},
-		"--history-max":                {},
+		"--force": {},
 	}
 	result := []string{}
 	for _, value := range args {
 		s := strings.Split(value, "=")
 		if len(s) > 0 {
 			if _, ok := filtContent[s[0]]; ok {
-				result = append(result, value)
+				continue
 			}
+			result = append(result, value)
 		}
 	}
 	return result
