@@ -31,6 +31,7 @@
           :model-value="props.content"
           :editable="editable"
           :language="languages"
+          :always-consume-mouse-wheel="false"
           @update:model-value="emits('change', $event)" />
       </div>
     </div>
