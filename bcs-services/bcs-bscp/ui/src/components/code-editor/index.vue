@@ -395,6 +395,9 @@
     if (markers.length > 0) {
       setLineRevealAndSelected(markers[0].startLineNumber);
     }
+    // 编辑器设置错误标记
+    monaco.editor.setModelMarkers(editor.getModel() as monaco.editor.ITextModel, 'error', markers);
+    return markers.length === 0;
   };
 
   // 将某一行滚动到编辑器中心并选中
