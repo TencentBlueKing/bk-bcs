@@ -295,6 +295,7 @@
       brackets: [['{', '}']],
     });
   };
+
   // 联想输入
   const autoCompletion = () => {
     editorVariableProvide = monaco.languages.registerCompletionItemProvider(props.language || 'custom-language', {
@@ -350,23 +351,12 @@
 
   // 校验xml、yaml、json数据类型
   const validate = (val: string) => {
-    // json类型
-    if (props.language === 'json') {
-      const validResult = validateJSON(val);
-      errorMessage.value = validResult.result ? '' : validResult.message;
-      return validResult.result;
-    }
-
-    let markers: any[] = [];
-    if (props.language === 'xml') {
-      markers = validateXML(val);
-    } else if (props.language === 'yaml') {
-      markers = validateYAML(val);
-    }
+    const markers = getValidateDetail(val);
 
     if (markers.length > 0) {
       const { startLineNumber, startColumn, message } = markers[0];
-      errorMessage.value = `${message} at line ${startLineNumber}, column ${startColumn}`;
+      errorMessage.value =
+        props.language === 'json' ? message : `${message} at line ${startLineNumber}, column ${startColumn}`;
     } else {
       errorMessage.value = '';
     }
@@ -374,7 +364,21 @@
     // 编辑器设置错误标记
     monaco.editor.setModelMarkers(editor.getModel() as monaco.editor.ITextModel, 'error', markers);
 
-    return !markers.length;
+    return markers.length === 0;
+  };
+
+  const getValidateDetail = (val: string) => {
+    let markers: any[] = [];
+
+    if (props.language === 'xml') {
+      markers = validateXML(val);
+    } else if (props.language === 'yaml') {
+      markers = validateYAML(val);
+    } else if (props.language === 'json') {
+      markers = validateJSON(val);
+    }
+
+    return markers;
   };
 
   // @bug vue3的Teleport组件销毁时，子组件的onBeforeUnmount不会被执行，会出现内存泄漏，目前尚未被修复 https://github.com/vuejs/core/issues/6347
@@ -386,6 +390,20 @@
   //     editorHoverProvider.dispose()
   //   }
   // })
+  const validateAndMarkErrorLine = (val: string) => {
+    const markers = getValidateDetail(val);
+    if (markers.length > 0) {
+      setLineRevealAndSelected(markers[0].startLineNumber);
+    }
+  };
+
+  // 将某一行滚动到编辑器中心并选中
+  const setLineRevealAndSelected = (lineNumber: number) => {
+    const lineContent = editor.getModel()!.getLineContent(lineNumber);
+    const range = new monaco.Range(lineNumber, 1, lineNumber, lineContent.length + 1);
+    editor.revealLineInCenter(lineNumber);
+    editor.setSelection(range);
+  };
 
   // 返回滚动条顶部
   const scrollToTop = () => {
@@ -407,6 +425,7 @@
     destroy,
     openSearch,
     validate,
+    validateAndMarkErrorLine,
     scrollToTop,
   });
 </script>

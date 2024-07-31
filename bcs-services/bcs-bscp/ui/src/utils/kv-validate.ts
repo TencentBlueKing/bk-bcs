@@ -1,12 +1,21 @@
 import yaml from 'js-yaml';
 import * as monaco from 'monaco-editor';
 
+interface IMonacoEditorErrorMarkerItem {
+  severity: monaco.MarkerSeverity.Error;
+  message: string;
+  startLineNumber: number;
+  startColumn: number;
+  endLineNumber: number;
+  endColumn: number;
+}
+
 // 校验xml返回错误行和错误信息
-export const validateXML = (xmlString: string) => {
+export const validateXML = (xmlString: string): IMonacoEditorErrorMarkerItem[] => {
   const parser = new DOMParser();
   const xmlDoc = parser.parseFromString(xmlString, 'text/xml');
   const parserErrors = xmlDoc.getElementsByTagName('parsererror');
-  const markers = [];
+  const markers: IMonacoEditorErrorMarkerItem[] = [];
   if (parserErrors.length > 0) {
     const error = parserErrors[0];
     const errorMsg = error.textContent!.trim();
@@ -28,26 +37,9 @@ export const validateXML = (xmlString: string) => {
   return markers;
 };
 
-// 校验json 编辑器自带校验错误行和错误信息 只需返回是否正确
-export const validateJSON = (jsonString: string) => {
-  try {
-    // 尝试解析JSON文本
-    JSON.parse(jsonString);
-    return {
-      result: true,
-      message: '',
-    };
-  } catch (e) {
-    return {
-      result: false,
-      message: e,
-    };
-  }
-};
-
 // 校验yaml返回错误行和错误信息
-export const validateYAML = (yamlString: string) => {
-  const markers = [];
+export const validateYAML = (yamlString: string): IMonacoEditorErrorMarkerItem[] => {
+  const markers: IMonacoEditorErrorMarkerItem[] = [];
   try {
     yaml.load(yamlString, 'utf8');
   } catch (e: any) {
@@ -62,3 +54,49 @@ export const validateYAML = (yamlString: string) => {
   }
   return markers;
 };
+
+// 校验json返回错误行和错误信息
+export const validateJSON = (jsonString: string): IMonacoEditorErrorMarkerItem[] => {
+  const markers: IMonacoEditorErrorMarkerItem[] = [];
+  try {
+    JSON.parse(jsonString);
+  } catch (error) {
+    if (error instanceof SyntaxError) {
+      const position = getErrorPosition(error, jsonString);
+      console.log(position);
+      markers.push({
+        severity: monaco.MarkerSeverity.Error,
+        message: error.message,
+        startLineNumber: position.line,
+        startColumn: position.column,
+        endLineNumber: position.line,
+        endColumn: position.column,
+      });
+    }
+  }
+  return markers;
+};
+
+function getErrorPosition(error: SyntaxError, jsonString: string) {
+  const errorMessage = error.message;
+  const match = /at position (\d+)/.exec(errorMessage);
+  if (match) {
+    const position = parseInt(match[1], 10);
+    return calculateLineAndColumn(jsonString, position);
+  }
+  return { line: 0, column: 0 };
+}
+
+function calculateLineAndColumn(jsonString: string, position: number) {
+  let line = 1;
+  let column = 1;
+  for (let i = 0; i < position; i++) {
+    if (jsonString[i] === '\n') {
+      line += 1;
+      column = 1;
+    } else {
+      column += 1;
+    }
+  }
+  return { line, column };
+}
