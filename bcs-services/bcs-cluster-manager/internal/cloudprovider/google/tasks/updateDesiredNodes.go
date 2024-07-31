@@ -352,6 +352,10 @@ func checkInstance(client *api.ComputeServiceClient, ids []string) ([]string, []
 
 		successIns = running
 		failureIns = failed
+
+		if len(failureIns) > 0 {
+			return successIns, failureIns, fmt.Errorf("failed to get all instance ip")
+		}
 	}
 
 	return successIns, failureIns, nil
