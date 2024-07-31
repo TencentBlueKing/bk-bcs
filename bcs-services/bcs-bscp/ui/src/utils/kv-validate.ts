@@ -63,7 +63,6 @@ export const validateJSON = (jsonString: string): IMonacoEditorErrorMarkerItem[]
   } catch (error) {
     if (error instanceof SyntaxError) {
       const position = getErrorPosition(error, jsonString);
-      console.log(position);
       markers.push({
         severity: monaco.MarkerSeverity.Error,
         message: error.message,
