@@ -13,7 +13,6 @@
 package validator
 
 import (
-	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -27,12 +26,12 @@ import (
 var reservedResNamePrefix = []string{"_bk"}
 
 // validResNamePrefix verify whether the resource naming takes up the reserved resource name prefix of bscp.
-func validResNamePrefix(name string) error {
+func validResNamePrefix(kit *kit.Kit, name string) error {
 	lowerName := strings.ToLower(name)
 	for _, prefix := range reservedResNamePrefix {
 		if strings.HasPrefix(lowerName, prefix) {
-			return fmt.Errorf("resource name '%s' is prefixed with '%s' is reserved name, "+
-				"which is not allows to use", lowerName, prefix)
+			return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "resource name '%s' is prefixed with '%s' is reserved name, "+
+				"which is not allows to use", lowerName, prefix))
 		}
 	}
 
@@ -43,22 +42,22 @@ func validResNamePrefix(name string) error {
 var qualifiedAppNameRegexp = regexp.MustCompile(`^[a-zA-Z0-9][\w\-]*[a-zA-Z0-9]$`)
 
 // ValidateAppName validate bscp app name's length and format.
-func ValidateAppName(name string) error {
+func ValidateAppName(kit *kit.Kit, name string) error {
 	if len(name) < 1 {
-		return errors.New("invalid name, length should >= 1")
+		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "invalid name, length should >= 1"))
 	}
 
 	if len(name) > 128 {
-		return errors.New("invalid name, length should <= 128")
+		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "invalid name, length should <= 128"))
 	}
 
-	if err := validResNamePrefix(name); err != nil {
+	if err := validResNamePrefix(kit, name); err != nil {
 		return err
 	}
 
 	if !qualifiedAppNameRegexp.MatchString(name) {
-		return fmt.Errorf("invalid name: %s, only allows to include english、numbers、underscore (_)"+
-			"、hyphen (-), and must start and end with an english、numbers", name)
+		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "invalid name: %s, only allows to include english、"+
+			"numbers、underscore (_)、hyphen (-), and must start and end with an english、numbers", name))
 	}
 
 	return nil
@@ -68,23 +67,22 @@ func ValidateAppName(name string) error {
 var qualifiedAppAliasRegexp = regexp.MustCompile(`^[a-zA-Z0-9\p{Han}][\w\p{Han}\-]*[a-zA-Z0-9\p{Han}]$`)
 
 // ValidateAppAlias validate bscp app Alias length and format.
-func ValidateAppAlias(alias string) error {
+func ValidateAppAlias(kit *kit.Kit, alias string) error {
 	if len(alias) < 1 {
-		return errors.New("invalid name, length should >= 1")
+		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "invalid name, length should >= 1"))
 	}
 
 	if len(alias) > 128 {
-		return errors.New("invalid name, length should <= 128")
+		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "invalid name, length should <= 128"))
 	}
 
-	if err := validResNamePrefix(alias); err != nil {
+	if err := validResNamePrefix(kit, alias); err != nil {
 		return err
 	}
 
 	if !qualifiedAppAliasRegexp.MatchString(alias) {
-		return fmt.Errorf("invalid name: %s, only allows to include Chinese, English, numbers, underscore (_), "+
-			"hyphen (-), and must start and end with Chinese, English, or a number", alias)
-
+		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, fmt.Sprintf(`invalid name: %s, only allows to include Chinese,
+		 English, numbers, underscore (_), hyphen (-), and must start and end with Chinese, English, or a number`, alias)))
 	}
 
 	return nil
@@ -102,8 +100,7 @@ func ValidateVariableName(kit *kit.Kit, name string) error {
 	}
 
 	if len(name) > 128 {
-		return errf.Errorf(errf.InvalidArgument,
-			i18n.T(kit, "invalid name, length should <= 128"))
+		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "invalid name, length should <= 128"))
 	}
 
 	if !qualifiedVariableNameRegexp.MatchString(name) {
@@ -127,22 +124,22 @@ const (
 var qualifiedNameRegexp = regexp.MustCompile("^" + qualifiedNameFmt + "$")
 
 // ValidateName validate bscp resource name's length and format.
-func ValidateName(name string) error {
+func ValidateName(kit *kit.Kit, name string) error {
 	if len(name) < 1 {
-		return errors.New("invalid name, length should >= 1")
+		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "invalid name, length should >= 1"))
 	}
 
 	if len(name) > 128 {
-		return errors.New("invalid name, length should <= 128")
+		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "invalid name, length should <= 128"))
 	}
 
-	if err := validResNamePrefix(name); err != nil {
+	if err := validResNamePrefix(kit, name); err != nil {
 		return err
 	}
 
 	if !qualifiedNameRegexp.MatchString(name) {
-		return fmt.Errorf("invalid name: %s, only allows to include chinese、english、numbers、underscore (_)"+
-			"、hyphen (-), and must start and end with an chinese、english、numbers", name)
+		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, fmt.Sprintf(`invalid name: %s, only allows to include chinese、
+		english、numbers、underscore (_)、hyphen (-), and must start and end with an chinese、english、numbers`, name)))
 	}
 
 	return nil
@@ -158,22 +155,22 @@ const (
 var qualifiedRNRegexp = regexp.MustCompile("^" + qualifiedReleaseNameFmt + "$")
 
 // ValidateReleaseName validate release name's length and format.
-func ValidateReleaseName(name string) error {
+func ValidateReleaseName(kit *kit.Kit, name string) error {
 	if len(name) < 1 {
-		return errors.New("invalid name, length should >= 1")
+		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "invalid name, length should >= 1"))
 	}
 
 	if len(name) > 128 {
-		return errors.New("invalid name, length should <= 128")
+		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "invalid name, length should <= 128"))
 	}
 
-	if err := validResNamePrefix(name); err != nil {
+	if err := validResNamePrefix(kit, name); err != nil {
 		return err
 	}
 
 	if !qualifiedRNRegexp.MatchString(name) {
-		return fmt.Errorf("invalid name: %s, only allows to include chinese、english、numbers、underscore (_)"+
-			"、hyphen (-)、point (.), and must start and end with an chinese、english、numbers", name)
+		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "invalid name: %s, only allows to include Chinese, English,"+
+			"numbers, underscore (_),hyphen (-), and must start and end with Chinese, English, or a number", name))
 	}
 
 	return nil
@@ -181,66 +178,66 @@ func ValidateReleaseName(name string) error {
 
 // qualifiedFileNameRegexp file name regexp.
 // support character: chinese, english, number,
-// '-', '_', '#', '%', ',', '@', '^', '+', '=', '[', ']', '{', '}, '{'. '}'.
+// '-', '_', '#', '%', ',', '@', '^', '+', '=', '[', ']', '{', '}, '.'
 var qualifiedFileNameRegexp = regexp.MustCompile("^[\u4e00-\u9fa5A-Za-z0-9-_#%,.@^+=\\[\\]\\{\\}]+$")
 
 var dotsRegexp = regexp.MustCompile(`^\.+$`)
 
 // ValidateFileName validate config item's name.
-func ValidateFileName(name string) error {
+func ValidateFileName(kit *kit.Kit, name string) error {
 	if len(name) < 1 {
-		return errors.New("invalid name, length should >= 1")
+		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "invalid name, length should >= 1"))
 	}
 
 	if len(name) > 64 {
-		return errors.New("invalid name, length should <= 64")
+		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "invalid name, length should <= 64"))
 	}
 
-	if err := validResNamePrefix(name); err != nil {
+	if err := validResNamePrefix(kit, name); err != nil {
 		return err
 	}
 
 	if dotsRegexp.MatchString(name) {
-		return fmt.Errorf("invalid name %s, name cannot all be '{'. '}'", name)
+		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "invalid name %s, name cannot all be '.'", name))
 	}
 
 	if !qualifiedFileNameRegexp.MatchString(name) {
-		return fmt.Errorf("invalid name %s, should only contains chinese, english, "+
-			"number, '-', '_', '#', '%%', ',', '@', '^', '+', '=', '[', ']', '{', '}', '{'. '}", name)
+		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, fmt.Sprintf(`invalid name %s, should only contains chinese,
+		 english, number, '-', '_', '#', '%%', ',', '@', '^', '+', '=', '[', ']', '{', '}', '.'`, name)))
 	}
 
 	return nil
 }
 
 // ValidateNamespace validate namespace is valid or not.
-func ValidateNamespace(namespace string) error {
+func ValidateNamespace(kit *kit.Kit, namespace string) error {
 	if len(namespace) < 1 {
-		return errors.New("invalid namespace, length should >= 1")
+		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "invalid namespace, length should >= 1"))
 	}
 
 	if len(namespace) > 128 {
-		return errors.New("invalid namespace, length should <= 128")
+		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "invalid namespace, length should <= 128"))
 	}
 
-	if err := validResNamePrefix(namespace); err != nil {
+	if err := validResNamePrefix(kit, namespace); err != nil {
 		return err
 	}
 
 	if !qualifiedNameRegexp.MatchString(namespace) {
-		return fmt.Errorf("invalid namespace: %s, only allows to include chinese、english、numbers、"+
-			"underscore (_)、hyphen (-), and must start and end with an chinese、english、numbers", namespace)
+		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "invalid name: %s, only allows to include Chinese, English,"+
+			"numbers, underscore (_),hyphen (-), and must start and end with Chinese, English, or a number", namespace))
 	}
 	return nil
 }
 
 // ValidateUserName validate username.
-func ValidateUserName(username string) error {
+func ValidateUserName(kit *kit.Kit, username string) error {
 	if len(username) < 1 {
-		return errors.New("invalid username, length should >= 1")
+		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "invalid username, length should >= 1"))
 	}
 
 	if len(username) > 32 {
-		return errors.New("invalid username, length should <= 32")
+		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "invalid username, length should <= 32"))
 	}
 
 	return nil

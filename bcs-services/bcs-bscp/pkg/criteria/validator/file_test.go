@@ -17,17 +17,18 @@ import (
 	"testing"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 )
 
 func TestUnixFilePath(t *testing.T) {
 	unixPath := "/root/code/go/src/github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/test/benchmark/tools/gen-data"
-	if err := ValidateUnixFilePath(unixPath); err != nil {
+	if err := ValidateUnixFilePath(kit.New(), unixPath); err != nil {
 		t.Log(err)
 		return
 	}
 
 	winPath := `C:\Documents\Newsletters`
-	if err := ValidateUnixFilePath(winPath); err == nil {
+	if err := ValidateUnixFilePath(kit.New(), winPath); err == nil {
 		t.Log("unix file path validate failed")
 		return
 	}
@@ -35,13 +36,13 @@ func TestUnixFilePath(t *testing.T) {
 
 func TestWinFilePath(t *testing.T) {
 	winPath := `C:\Documents\Newsletters/test`
-	if err := ValidateWinFilePath(winPath); err != nil {
+	if err := ValidateWinFilePath(kit.New(), winPath); err != nil {
 		t.Log(err)
 		return
 	}
 
 	unixPath := "/root/code/go/src/github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/test/benchmark/tools/gen-data"
-	if err := ValidateWinFilePath(unixPath); err == nil {
+	if err := ValidateWinFilePath(kit.New(), unixPath); err == nil {
 		t.Log("win file path validate failed")
 		return
 	}
@@ -49,13 +50,13 @@ func TestWinFilePath(t *testing.T) {
 
 func TestReloadFilePath(t *testing.T) {
 	path := "/root/reload/reload.json"
-	if err := ValidateReloadFilePath(path); err != nil {
+	if err := ValidateReloadFilePath(kit.New(), path); err != nil {
 		t.Error(err)
 		return
 	}
 
 	path = fmt.Sprintf("/root/%s/reload/reload.json", constant.SideWorkspaceDir)
-	if err := ValidateReloadFilePath(path); err == nil {
+	if err := ValidateReloadFilePath(kit.New(), path); err == nil {
 		t.Errorf("validate reload file path failed, case result not except")
 		return
 	}

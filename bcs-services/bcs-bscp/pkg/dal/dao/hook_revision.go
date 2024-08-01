@@ -63,7 +63,7 @@ type hookRevisionDao struct {
 // Create one hook instance.
 func (dao *hookRevisionDao) Create(kit *kit.Kit, hr *table.HookRevision) (uint32, error) {
 
-	if err := hr.ValidateCreate(); err != nil {
+	if err := hr.ValidateCreate(kit); err != nil {
 		return 0, err
 	}
 
@@ -102,7 +102,7 @@ func (dao *hookRevisionDao) Create(kit *kit.Kit, hr *table.HookRevision) (uint32
 // CreateWithTx create one hookRevision instance with transaction.
 func (dao *hookRevisionDao) CreateWithTx(kit *kit.Kit, tx *gen.QueryTx, hr *table.HookRevision) (uint32, error) {
 
-	if err := hr.ValidateCreate(); err != nil {
+	if err := hr.ValidateCreate(kit); err != nil {
 		return 0, err
 	}
 
@@ -420,7 +420,7 @@ func (dao *hookRevisionDao) UpdatePubStateWithTx(kit *kit.Kit, tx *gen.QueryTx, 
 // Update one HookRevision's info.
 func (dao *hookRevisionDao) Update(kit *kit.Kit, hr *table.HookRevision) error {
 
-	if err := hr.ValidateUpdate(); err != nil {
+	if err := hr.ValidateUpdate(kit); err != nil {
 		return err
 	}
 

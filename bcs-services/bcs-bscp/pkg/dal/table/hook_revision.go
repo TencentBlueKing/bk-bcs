@@ -18,6 +18,7 @@ import (
 	"strings"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 )
 
 // HookRevision 脚本版本
@@ -65,13 +66,13 @@ func (r *HookRevision) ResType() string {
 }
 
 // ValidateCreate validate hook is valid or not when create it.
-func (r *HookRevision) ValidateCreate() error {
+func (r *HookRevision) ValidateCreate(kit *kit.Kit) error {
 
 	if r.Spec == nil {
 		return errors.New("spec not set")
 	}
 
-	if err := r.Spec.ValidateCreate(); err != nil {
+	if err := r.Spec.ValidateCreate(kit); err != nil {
 		return err
 	}
 
@@ -95,13 +96,13 @@ func (r *HookRevision) ValidateCreate() error {
 }
 
 // ValidateCreate validate spec when created.
-func (s *HookRevisionSpec) ValidateCreate() error {
+func (s *HookRevisionSpec) ValidateCreate(kit *kit.Kit) error {
 
-	if err := validator.ValidateReleaseName(s.Name); err != nil {
+	if err := validator.ValidateReleaseName(kit, s.Name); err != nil {
 		return err
 	}
 
-	if err := validator.ValidateMemo(s.Memo, false); err != nil {
+	if err := validator.ValidateMemo(kit, s.Memo, false); err != nil {
 		return err
 	}
 
@@ -113,13 +114,13 @@ func (s *HookRevisionSpec) ValidateCreate() error {
 }
 
 // ValidateUpdate validate spec when updated.
-func (s *HookRevisionSpec) ValidateUpdate() error {
+func (s *HookRevisionSpec) ValidateUpdate(kit *kit.Kit) error {
 
-	if err := validator.ValidateReleaseName(s.Name); err != nil {
+	if err := validator.ValidateReleaseName(kit, s.Name); err != nil {
 		return err
 	}
 
-	if err := validator.ValidateMemo(s.Memo, false); err != nil {
+	if err := validator.ValidateMemo(kit, s.Memo, false); err != nil {
 		return err
 	}
 
@@ -194,7 +195,7 @@ func (r HookRevision) ValidatePublish() error {
 }
 
 // ValidateUpdate validate the update
-func (r HookRevision) ValidateUpdate() error {
+func (r HookRevision) ValidateUpdate(kit *kit.Kit) error {
 
 	if r.ID <= 0 {
 		return errors.New("hook revision id should be set")
@@ -212,7 +213,7 @@ func (r HookRevision) ValidateUpdate() error {
 		return errors.New("spec not set")
 	}
 
-	if err := r.Spec.ValidateUpdate(); err != nil {
+	if err := r.Spec.ValidateUpdate(kit); err != nil {
 		return err
 	}
 

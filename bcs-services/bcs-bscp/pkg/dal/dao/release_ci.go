@@ -65,7 +65,7 @@ func (dao *releasedCIDao) BulkCreateWithTx(kit *kit.Kit, tx *gen.QueryTx, items 
 
 	// validate released config item field.
 	for _, item := range items {
-		if err := item.Validate(); err != nil {
+		if err := item.Validate(kit); err != nil {
 			return err
 		}
 	}

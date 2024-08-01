@@ -25,6 +25,7 @@ import (
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
 	dtypes "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/types"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/i18n"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/search"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
@@ -86,7 +87,7 @@ type templateSetDao struct {
 
 // Create one template set instance.
 func (dao *templateSetDao) Create(kit *kit.Kit, g *table.TemplateSet) (uint32, error) {
-	if err := g.ValidateCreate(); err != nil {
+	if err := g.ValidateCreate(kit); err != nil {
 		return 0, err
 	}
 
@@ -129,7 +130,7 @@ func (dao *templateSetDao) Create(kit *kit.Kit, g *table.TemplateSet) (uint32, e
 
 // Update one template set instance.
 func (dao *templateSetDao) Update(kit *kit.Kit, g *table.TemplateSet) error {
-	if err := g.ValidateUpdate(); err != nil {
+	if err := g.ValidateUpdate(kit); err != nil {
 		return err
 	}
 
@@ -170,7 +171,7 @@ func (dao *templateSetDao) Update(kit *kit.Kit, g *table.TemplateSet) error {
 
 // UpdateWithTx update one template set's info with transaction.
 func (dao *templateSetDao) UpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.TemplateSet) error {
-	if err := g.ValidateUpdate(); err != nil {
+	if err := g.ValidateUpdate(kit); err != nil {
 		return err
 	}
 
@@ -511,8 +512,7 @@ func (dao *templateSetDao) ValidateTmplNumber(kt *kit.Kit, tx *gen.QueryTx, bizI
 	tmplSetTmplCnt := getTmplSetTmplCnt(bizID)
 	if count > tmplSetTmplCnt {
 		return errf.New(errf.InvalidParameter,
-			fmt.Sprintf("the total number of template set %d's templates exceeded the limit %d",
-				tmplSetID, tmplSetTmplCnt))
+			i18n.T(kt, "the total number of template set %d's templates exceeded the limit %d", tmplSetID, tmplSetTmplCnt))
 	}
 
 	return nil
@@ -533,8 +533,7 @@ func (dao *templateSetDao) ValidateWillExceedMaxTmplCount(kt *kit.Kit, tx *gen.Q
 	tmplSetTmplCnt := getTmplSetTmplCnt(bizID)
 	if count > tmplSetTmplCnt {
 		return errf.New(errf.InvalidParameter,
-			fmt.Sprintf("the total number of template set %d's templates exceeded the limit %d",
-				tmplSetID, tmplSetTmplCnt))
+			i18n.T(kt, "the total number of template set %d's templates exceeded the limit %d", tmplSetID, tmplSetTmplCnt))
 	}
 
 	return nil

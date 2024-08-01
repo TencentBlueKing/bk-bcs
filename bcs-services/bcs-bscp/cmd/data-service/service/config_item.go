@@ -60,8 +60,8 @@ func (s *Service) CreateConfigItem(ctx context.Context, req *pbds.CreateConfigIt
 
 	// validate in table config_items
 	if tools.CheckPathConflict(path.Join(req.ConfigItemSpec.Path, req.ConfigItemSpec.Name), existingPaths) {
-		return nil, fmt.Errorf("config item's same name %s and path %s already exists",
-			req.ConfigItemSpec.Name, req.ConfigItemSpec.Path)
+		return nil, errf.Errorf(errf.InvalidRequest, i18n.T(grpcKit, "config item's same name %s and path %s already exists",
+			req.ConfigItemSpec.Name, req.ConfigItemSpec.Path))
 	}
 
 	tx := s.dao.GenQuery().Begin()
@@ -166,7 +166,7 @@ func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbds.BatchUps
 			Name: item.GetConfigItemSpec().GetName(), Path: item.GetConfigItemSpec().GetPath(),
 		})
 	}
-	if err = tools.DetectFilePathConflicts(file2, file1); err != nil {
+	if err = tools.DetectFilePathConflicts(grpcKit, file2, file1); err != nil {
 		return nil, err
 	}
 
@@ -1141,7 +1141,7 @@ func (s *Service) UnDeleteConfigItem(ctx context.Context, req *pbds.UnDeleteConf
 		})
 	}
 
-	if err = tools.DetectFilePathConflicts(file1, file2); err != nil {
+	if err = tools.DetectFilePathConflicts(grpcKit, file1, file2); err != nil {
 		return nil, err
 	}
 

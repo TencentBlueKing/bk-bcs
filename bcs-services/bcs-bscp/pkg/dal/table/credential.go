@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 )
 
 // Credential defines a credential's detail information
@@ -50,7 +51,7 @@ func (c *Credential) ResType() string {
 }
 
 // ValidateCreate validate Credential is valid or not when create it.
-func (c *Credential) ValidateCreate() error {
+func (c *Credential) ValidateCreate(kit *kit.Kit) error {
 
 	if c.ID > 0 {
 		return errors.New("id should not be set")
@@ -60,7 +61,7 @@ func (c *Credential) ValidateCreate() error {
 		return errors.New("spec not set")
 	}
 
-	if err := c.Spec.ValidateCreate(); err != nil {
+	if err := c.Spec.ValidateCreate(kit); err != nil {
 		return err
 	}
 
@@ -122,18 +123,18 @@ func (s CredentialType) String() string {
 }
 
 // ValidateCreate validate credential spec when it is created.
-func (c *CredentialSpec) ValidateCreate() error {
+func (c *CredentialSpec) ValidateCreate(kit *kit.Kit) error {
 	if err := c.CredentialType.Validate(); err != nil {
 		return err
 	}
-	if err := validator.ValidateName(c.Name); err != nil {
+	if err := validator.ValidateName(kit, c.Name); err != nil {
 		return err
 	}
 	return nil
 }
 
 // ValidateUpdate validate credential spec when it is updated.
-func (c *CredentialSpec) ValidateUpdate() error {
+func (c *CredentialSpec) ValidateUpdate(kit *kit.Kit) error {
 	if c.CredentialType != "" {
 		return errors.New("credential type cannot be updated once created")
 	}
@@ -143,7 +144,7 @@ func (c *CredentialSpec) ValidateUpdate() error {
 	if c.EncCredential != "" {
 		return errors.New("enc credential cannot be updated once created")
 	}
-	if err := validator.ValidateName(c.Name); err != nil {
+	if err := validator.ValidateName(kit, c.Name); err != nil {
 		return err
 	}
 	return nil
@@ -182,7 +183,7 @@ func (c *Credential) ValidateDelete() error {
 }
 
 // ValidateUpdate validate Credential is valid or not when update it.
-func (c *Credential) ValidateUpdate() error {
+func (c *Credential) ValidateUpdate(kit *kit.Kit) error {
 
 	if c.ID <= 0 {
 		return errors.New("id should be set")
@@ -192,7 +193,7 @@ func (c *Credential) ValidateUpdate() error {
 		return errors.New("spec should be set")
 	}
 
-	if err := c.Spec.ValidateUpdate(); err != nil {
+	if err := c.Spec.ValidateUpdate(kit); err != nil {
 		return err
 	}
 

@@ -18,6 +18,7 @@ import (
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/enumor"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 )
 
 // ReleaseColumns defines Release's columns
@@ -62,7 +63,7 @@ func (r *Release) ResType() string {
 }
 
 // ValidateCreate a release's information
-func (r Release) ValidateCreate() error {
+func (r Release) ValidateCreate(kit *kit.Kit) error {
 	if r.ID != 0 {
 		return errors.New("id should not set")
 	}
@@ -71,7 +72,7 @@ func (r Release) ValidateCreate() error {
 		return errors.New("spec should be set")
 	}
 
-	if err := r.Spec.Validate(); err != nil {
+	if err := r.Spec.Validate(kit); err != nil {
 		return err
 	}
 
@@ -126,12 +127,12 @@ type ReleaseSpec struct {
 }
 
 // Validate a release specifics when it is created.
-func (r ReleaseSpec) Validate() error {
-	if err := validator.ValidateReleaseName(r.Name); err != nil {
+func (r ReleaseSpec) Validate(kit *kit.Kit) error {
+	if err := validator.ValidateReleaseName(kit, r.Name); err != nil {
 		return err
 	}
 
-	if err := validator.ValidateMemo(r.Memo, false); err != nil {
+	if err := validator.ValidateMemo(kit, r.Memo, false); err != nil {
 		return err
 	}
 

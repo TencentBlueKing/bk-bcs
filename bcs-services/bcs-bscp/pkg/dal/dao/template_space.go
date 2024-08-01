@@ -56,7 +56,7 @@ type templateSpaceDao struct {
 // Create one template space instance.
 // Every template space must have one default template set, so they should be created together.
 func (dao *templateSpaceDao) Create(kit *kit.Kit, g *table.TemplateSpace) (uint32, error) {
-	if err := g.ValidateCreate(); err != nil {
+	if err := g.ValidateCreate(kit); err != nil {
 		return 0, err
 	}
 
@@ -119,7 +119,7 @@ func (dao *templateSpaceDao) Create(kit *kit.Kit, g *table.TemplateSpace) (uint3
 
 // Update one template space instance.
 func (dao *templateSpaceDao) Update(kit *kit.Kit, g *table.TemplateSpace) error {
-	if err := g.ValidateUpdate(); err != nil {
+	if err := g.ValidateUpdate(kit); err != nil {
 		return err
 	}
 

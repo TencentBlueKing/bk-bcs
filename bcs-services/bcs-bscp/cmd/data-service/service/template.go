@@ -54,7 +54,8 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbds.CreateTemplateRe
 	}
 
 	if tools.CheckPathConflict(path.Join(req.Spec.Path, req.Spec.Name), existingPaths) {
-		return nil, fmt.Errorf("config item's same name %s and path %s already exists", req.Spec.Name, req.Spec.Path)
+		return nil, errf.Errorf(errf.InvalidRequest, i18n.T(kt, "config item's same name %s and path %s already exists",
+			req.Spec.Name, req.Spec.Path))
 	}
 
 	if len(req.TemplateSetIds) > 0 {

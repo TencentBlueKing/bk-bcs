@@ -165,7 +165,7 @@ func (c *configImport) TemplateConfigFileImport(w http.ResponseWriter, r *http.R
 	c.uploadFileMetrics(kt.BizID, tmplSpaceIdStr, dirPath, totalSize)
 
 	if err = c.checkFileConfictsWithTemplates(kt, uint32(tmplSpaceID), fileItems); err != nil {
-		_ = render.Render(w, r, rest.BadRequest(errors.New(i18n.T(kt, "detecting file conflicts failed %s", err))))
+		_ = render.Render(w, r, rest.BadRequest(err))
 		return
 	}
 
@@ -203,7 +203,7 @@ func (c *configImport) TemplateConfigFileImport(w http.ResponseWriter, r *http.R
 			Items:           batch,
 		})
 		if err != nil {
-			_ = render.Render(w, r, rest.BadRequest(err))
+			_ = render.Render(w, r, rest.BadRequest(errors.New(i18n.T(kt, "list template config failed %s", err))))
 			return
 		}
 		if len(tuple.Items) > 0 {
@@ -357,7 +357,7 @@ func (c *configImport) ConfigFileImport(w http.ResponseWriter, r *http.Request) 
 	c.uploadFileMetrics(kt.BizID, appIdStr, dirPath, totalSize)
 
 	if err = c.checkFileConfictsWithNonTemplates(kt, fileItems); err != nil {
-		_ = render.Render(w, r, rest.BadRequest(errors.New(i18n.T(kt, "detecting file conflicts failed %s", err))))
+		_ = render.Render(w, r, rest.BadRequest(err))
 		return
 	}
 
@@ -385,7 +385,7 @@ func (c *configImport) ConfigFileImport(w http.ResponseWriter, r *http.Request) 
 			Items: batch,
 		})
 		if errC != nil {
-			_ = render.Render(w, r, rest.BadRequest(errC))
+			_ = render.Render(w, r, rest.BadRequest(errors.New(i18n.T(kt, "list config item failed %s", errC))))
 			return
 		}
 		for _, item := range tuple.GetDetails() {
@@ -399,7 +399,8 @@ func (c *configImport) ConfigFileImport(w http.ResponseWriter, r *http.Request) 
 		AppId: kt.AppID,
 	})
 	if err != nil {
-		_ = render.Render(w, r, rest.BadRequest(err))
+		_ = render.Render(w, r, rest.BadRequest(errors.New(
+			i18n.T(kt, "obtain the current number of service configuration items failed %s", err))))
 		return
 	}
 
@@ -617,7 +618,6 @@ func (c *configImport) fileScannerHasherUploader(kt *kit.Kit, path, rootDir stri
 	}
 	resp.ByteSize = uint64(result.ByteSize)
 	resp.Sign = result.Sha256
-
 	return resp, nil
 }
 
@@ -736,7 +736,7 @@ func (c *configImport) checkFileConfictsWithNonTemplates(kt *kit.Kit, files []to
 		})
 	}
 
-	return tools.DetectFilePathConflicts(files, filesToCompare)
+	return tools.DetectFilePathConflicts(kt, files, filesToCompare)
 }
 
 // 检测与模板套餐下的文件冲突
@@ -749,7 +749,7 @@ func (c *configImport) checkFileConfictsWithTemplates(kt *kit.Kit, templateSpace
 		All:             true,
 	})
 	if err != nil {
-		return err
+		return errors.New(i18n.T(kt, "list templates failed %s", err))
 	}
 	filesToCompare := []tools.CIUniqueKey{}
 	for _, v := range items.GetDetails() {
@@ -759,7 +759,7 @@ func (c *configImport) checkFileConfictsWithTemplates(kt *kit.Kit, templateSpace
 		})
 	}
 
-	return tools.DetectFilePathConflicts(files, filesToCompare)
+	return tools.DetectFilePathConflicts(kt, files, filesToCompare)
 }
 
 // 临时保存文件

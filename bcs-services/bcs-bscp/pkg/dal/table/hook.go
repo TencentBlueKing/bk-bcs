@@ -19,6 +19,7 @@ import (
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/enumor"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/types"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 )
 
 // Hook defines a hook for an app to publish.
@@ -52,7 +53,7 @@ func (h *Hook) ResType() string {
 }
 
 // ValidateCreate validate hook is valid or not when create it.
-func (h Hook) ValidateCreate() error {
+func (h Hook) ValidateCreate(kit *kit.Kit) error {
 
 	if h.ID > 0 {
 		return errors.New("id should not be set")
@@ -62,7 +63,7 @@ func (h Hook) ValidateCreate() error {
 		return errors.New("spec not set")
 	}
 
-	if err := h.Spec.ValidateCreate(); err != nil {
+	if err := h.Spec.ValidateCreate(kit); err != nil {
 		return err
 	}
 
@@ -99,13 +100,13 @@ func (h Hook) ValidateDelete() error {
 }
 
 // ValidateUpdate validate the hook's info when update it.
-func (h Hook) ValidateUpdate() error {
+func (h Hook) ValidateUpdate(kit *kit.Kit) error {
 	if h.ID <= 0 {
 		return errors.New("hook id should be set")
 	}
 
 	if h.Spec != nil {
-		if err := h.Spec.ValidateUpdate(); err != nil {
+		if err := h.Spec.ValidateUpdate(kit); err != nil {
 			return err
 		}
 	}
@@ -170,12 +171,12 @@ func (s ScriptType) Validate() error {
 }
 
 // ValidateCreate validate hook spec when it is created.
-func (s HookSpec) ValidateCreate() error {
-	if err := validator.ValidateFileName(s.Name); err != nil {
+func (s HookSpec) ValidateCreate(kit *kit.Kit) error {
+	if err := validator.ValidateFileName(kit, s.Name); err != nil {
 		return err
 	}
 
-	if err := validator.ValidateMemo(s.Memo, false); err != nil {
+	if err := validator.ValidateMemo(kit, s.Memo, false); err != nil {
 		return err
 	}
 
@@ -187,8 +188,8 @@ func (s HookSpec) ValidateCreate() error {
 }
 
 // ValidateUpdate validate hook spec when it is updated.
-func (s HookSpec) ValidateUpdate() error {
-	if err := validator.ValidateMemo(s.Memo, false); err != nil {
+func (s HookSpec) ValidateUpdate(kit *kit.Kit) error {
+	if err := validator.ValidateMemo(kit, s.Memo, false); err != nil {
 		return err
 	}
 

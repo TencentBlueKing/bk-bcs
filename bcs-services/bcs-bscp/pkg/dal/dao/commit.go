@@ -83,7 +83,7 @@ func (dao *commitDao) Create(kit *kit.Kit, commit *table.Commit) (uint32, error)
 		return 0, errf.New(errf.InvalidParameter, "commit is nil")
 	}
 
-	if err := commit.ValidateCreate(); err != nil {
+	if err := commit.ValidateCreate(kit); err != nil {
 		return 0, errf.New(errf.InvalidParameter, err.Error())
 	}
 
@@ -127,7 +127,7 @@ func (dao *commitDao) CreateWithTx(kit *kit.Kit, tx *gen.QueryTx, commit *table.
 		return 0, errf.New(errf.InvalidParameter, "commit is nil")
 	}
 
-	if err := commit.ValidateCreate(); err != nil {
+	if err := commit.ValidateCreate(kit); err != nil {
 		return 0, errf.New(errf.InvalidParameter, err.Error())
 	}
 
@@ -163,7 +163,7 @@ func (dao *commitDao) BatchCreateWithTx(kit *kit.Kit, tx *gen.QueryTx, commits [
 		return err
 	}
 	for i, commit := range commits {
-		if err := commit.ValidateCreate(); err != nil {
+		if err := commit.ValidateCreate(kit); err != nil {
 			return err
 		}
 		commit.ID = ids[i]

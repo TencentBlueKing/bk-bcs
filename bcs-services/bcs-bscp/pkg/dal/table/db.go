@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 )
 
 // ShardingDB defines a mysql instance
@@ -37,7 +38,7 @@ func (s ShardingDB) TableName() Name {
 }
 
 // ValidateCreate sharding db details
-func (s ShardingDB) ValidateCreate() error {
+func (s ShardingDB) ValidateCreate(kit *kit.Kit) error {
 	if s.ID > 0 {
 		return errors.New("id can not set")
 	}
@@ -46,7 +47,7 @@ func (s ShardingDB) ValidateCreate() error {
 		return errors.New("spec not set")
 	}
 
-	if err := s.Spec.Validate(); err != nil {
+	if err := s.Spec.Validate(kit); err != nil {
 		return err
 	}
 
@@ -58,7 +59,7 @@ func (s ShardingDB) ValidateCreate() error {
 }
 
 // ValidateUpdate sharding db details
-func (s ShardingDB) ValidateUpdate() error {
+func (s ShardingDB) ValidateUpdate(kit *kit.Kit) error {
 
 	if s.ID <= 0 {
 		return errors.New("id not set")
@@ -68,7 +69,7 @@ func (s ShardingDB) ValidateUpdate() error {
 		return errors.New("spec not set")
 	}
 
-	if err := s.Spec.Validate(); err != nil {
+	if err := s.Spec.Validate(kit); err != nil {
 		return err
 	}
 
@@ -133,7 +134,7 @@ type ShardingDBSpec struct {
 }
 
 // Validate sharding db instance's specifics
-func (s ShardingDBSpec) Validate() error {
+func (s ShardingDBSpec) Validate(kit *kit.Kit) error {
 
 	if err := s.Type.Validate(); err != nil {
 		return err
@@ -155,7 +156,7 @@ func (s ShardingDBSpec) Validate() error {
 		return errors.New("passport not set")
 	}
 
-	if err := validator.ValidateMemo(s.Memo, false); err != nil {
+	if err := validator.ValidateMemo(kit, s.Memo, false); err != nil {
 		return err
 	}
 
@@ -175,7 +176,7 @@ func (s ShardingBiz) TableName() Name {
 }
 
 // ValidateCreate validate sharding biz details when create it
-func (s ShardingBiz) ValidateCreate() error {
+func (s ShardingBiz) ValidateCreate(kit *kit.Kit) error {
 
 	if s.ID > 0 {
 		return errors.New("id should not be set")
@@ -185,7 +186,7 @@ func (s ShardingBiz) ValidateCreate() error {
 		return errors.New("invalid spec")
 	}
 
-	if err := s.Spec.Validate(); err != nil {
+	if err := s.Spec.Validate(kit); err != nil {
 		return err
 	}
 
@@ -201,7 +202,7 @@ func (s ShardingBiz) ValidateCreate() error {
 }
 
 // ValidateUpdate validate sharding biz details when update it
-func (s ShardingBiz) ValidateUpdate() error {
+func (s ShardingBiz) ValidateUpdate(kit *kit.Kit) error {
 
 	if s.ID <= 0 {
 		return errors.New("invalid id")
@@ -211,7 +212,7 @@ func (s ShardingBiz) ValidateUpdate() error {
 		return errors.New("spec not set")
 	}
 
-	if err := s.Spec.Validate(); err != nil {
+	if err := s.Spec.Validate(kit); err != nil {
 		return err
 	}
 
@@ -243,7 +244,7 @@ type ShardingBizSpec struct {
 }
 
 // Validate sharding biz specifics
-func (s ShardingBizSpec) Validate() error {
+func (s ShardingBizSpec) Validate(kit *kit.Kit) error {
 	if s.ShardingDBID <= 0 {
 		return errors.New("invalid sharding db id")
 	}
@@ -252,7 +253,7 @@ func (s ShardingBizSpec) Validate() error {
 		return errors.New("invalid biz id")
 	}
 
-	if err := validator.ValidateMemo(s.Memo, false); err != nil {
+	if err := validator.ValidateMemo(kit, s.Memo, false); err != nil {
 		return err
 	}
 

@@ -105,9 +105,9 @@
             ]
         },
         {
-            "id": "detecting file conflicts failed {Err}",
-            "message": "detecting file conflicts failed {Err}",
-            "translation": "检测文件冲突失败: {Err}",
+            "id": "list template config failed {Err}",
+            "message": "list template config failed {Err}",
+            "translation": "拉取列表模板配置失败 {Err}",
             "placeholders": [
                 {
                     "id": "Err",
@@ -140,6 +140,36 @@
             ]
         },
         {
+            "id": "list config item failed {ErrC}",
+            "message": "list config item failed {ErrC}",
+            "translation": "拉取列表配置项失败 {ErrC}",
+            "placeholders": [
+                {
+                    "id": "ErrC",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "errC"
+                }
+            ]
+        },
+        {
+            "id": "obtain the current number of service configuration items failed {Err}",
+            "message": "obtain the current number of service configuration items failed {Err}",
+            "translation": "获取当前服务配置项数失败 {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
             "id": "decompress file failed, exceeding the maximum file limit threshold of {Limit}",
             "message": "decompress file failed, exceeding the maximum file limit threshold of {Limit}",
             "translation": "解压文件失败，超过了文件数量最大限制阈值 {Limit}",
@@ -168,6 +198,26 @@
                     "expr": "tools.BytesToHumanReadable(uint64(maxSize))"
                 }
             ]
+        },
+        {
+            "id": "list templates failed {Err}",
+            "message": "list templates failed {Err}",
+            "translation": "获取列表模板失败 {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "client ids is empty",
+            "message": "client ids is empty",
+            "translation": "客户端 ID 为空"
         },
         {
             "id": "batch delete config items failed",
@@ -246,6 +296,133 @@
             ]
         },
         {
+            "id": "app name {Name} already exists",
+            "message": "app name {Name} already exists",
+            "translation": "服务名称 {Name} 已存在",
+            "placeholders": [
+                {
+                    "id": "Name",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "req.Spec.Name"
+                }
+            ]
+        },
+        {
+            "id": "app alias {Alias} already exists",
+            "message": "app alias {Alias} already exists",
+            "translation": "服务别名 {Alias} 已存在",
+            "placeholders": [
+                {
+                    "id": "Alias",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "req.Spec.Alias"
+                }
+            ]
+        },
+        {
+            "id": "get app failed, err: {Err}, rid: {Rid}",
+            "message": "get app failed, err: {Err}, rid: {Rid}",
+            "translation": "获取服务失败, err: {Err}, rid: {Rid}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                },
+                {
+                    "id": "Rid",
+                    "string": "%[2]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 2,
+                    "expr": "grpcKit.Rid"
+                }
+            ]
+        },
+        {
+            "id": "the specified type does not match the actual configuration",
+            "message": "the specified type does not match the actual configuration",
+            "translation": "指定的类型与实际配置不匹配"
+        },
+        {
+            "id": "delete app related resources failed, err: {Err}, rid: {Rid}",
+            "message": "delete app related resources failed, err: {Err}, rid: {Rid}",
+            "translation": "删除服务相关资源失败, err: {Err}, rid: {Rid}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                },
+                {
+                    "id": "Rid",
+                    "string": "%[2]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 2,
+                    "expr": "grpcKit.Rid"
+                }
+            ]
+        },
+        {
+            "id": "delete app failed, err: {Err}, rid: {Rid}",
+            "message": "delete app failed, err: {Err}, rid: {Rid}",
+            "translation": "删除服务失败, err: {Err}, rid: {Rid}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                },
+                {
+                    "id": "Rid",
+                    "string": "%[2]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 2,
+                    "expr": "grpcKit.Rid"
+                }
+            ]
+        },
+        {
+            "id": "commit transaction failed, err: {Err}, rid: {Rid}",
+            "message": "commit transaction failed, err: {Err}, rid: {Rid}",
+            "translation": "事务提交失败，err: {Err}, rid: {Rid}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                },
+                {
+                    "id": "Rid",
+                    "string": "%[2]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 2,
+                    "expr": "grpcKit.Rid"
+                }
+            ]
+        },
+        {
             "id": "app {AppId} not found",
             "message": "app {AppId} not found",
             "translation": "ID为{AppId}的服务不存在",
@@ -257,6 +434,59 @@
                     "underlyingType": "uint32",
                     "argNum": 1,
                     "expr": "req.AppId"
+                }
+            ]
+        },
+        {
+            "id": "business query failed {Err}",
+            "message": "business query failed {Err}",
+            "translation": "业务查询失败 {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "app related biz {BizID} is not exist",
+            "message": "app related biz {BizID} is not exist",
+            "translation": "服务相关业务 {BizID} 不存在",
+            "placeholders": [
+                {
+                    "id": "BizID",
+                    "string": "%[1]d",
+                    "type": "uint32",
+                    "underlyingType": "uint32",
+                    "argNum": 1,
+                    "expr": "bizID"
+                }
+            ]
+        },
+        {
+            "id": "config item's same name {Name} and path {Path} already exists",
+            "message": "config item's same name {Name} and path {Path} already exists",
+            "translation": "配置项的相同名称 {Name} 和路径 {Path} 已经存在",
+            "placeholders": [
+                {
+                    "id": "Name",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "name"
+                },
+                {
+                    "id": "Path",
+                    "string": "%[2]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 2,
+                    "expr": "path"
                 }
             ]
         },
@@ -282,6 +512,106 @@
                     "underlyingType": "string",
                     "argNum": 1,
                     "expr": "req.Spec.Name"
+                }
+            ]
+        },
+        {
+            "id": "get kv ({Key}) failed, err: {Err}, rid: {Rid}",
+            "message": "get kv ({Key}) failed, err: {Err}, rid: {Rid}",
+            "translation": "获取 kv ({Key}) 失败, err: {Err}, rid: {Rid}",
+            "placeholders": [
+                {
+                    "id": "Key",
+                    "string": "%[1]d",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "req.Spec.Key"
+                },
+                {
+                    "id": "Err",
+                    "string": "%[2]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 2,
+                    "expr": "err"
+                },
+                {
+                    "id": "Rid",
+                    "string": "%[3]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 3,
+                    "expr": "kt.Rid"
+                }
+            ]
+        },
+        {
+            "id": "get app fail, key: {Key},err : {Err}",
+            "message": "get app fail, key: {Key},err : {Err}",
+            "translation": "获取服务失败, key: {Key},err : {Err}",
+            "placeholders": [
+                {
+                    "id": "Key",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "req.Spec.Key"
+                },
+                {
+                    "id": "Err",
+                    "string": "%[2]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 2,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "create kv failed, err: {Err}, rid: {Rid}",
+            "message": "create kv failed, err: {Err}, rid: {Rid}",
+            "translation": "创建 kv 失败, err: {Err}, rid: {Rid}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                },
+                {
+                    "id": "Rid",
+                    "string": "%[2]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 2,
+                    "expr": "kt.Rid"
+                }
+            ]
+        },
+        {
+            "id": "update kv failed, err: {Err}, rid: {Rid}",
+            "message": "update kv failed, err: {Err}, rid: {Rid}",
+            "translation": "编辑 kv 失败, err: {Err}, rid: {Rid}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                },
+                {
+                    "id": "Rid",
+                    "string": "%[2]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 2,
+                    "expr": "kt.Rid"
                 }
             ]
         },
@@ -331,14 +661,137 @@
             "translation": "revision没有被设置"
         },
         {
-            "id": "invalid name, length should \u003e= 9 and must start with prefix bk_bscp_ (ignore case)",
-            "message": "invalid name, length should \u003e= 9 and must start with prefix bk_bscp_ (ignore case)",
-            "translation": "无效名称，长度应该\u003e=9且必须以bk_bscp_前缀开头（忽略大小写）"
+            "id": "invalid path, length should \u003e= 1",
+            "message": "invalid path, length should \u003e= 1",
+            "translation": "路径无效，长度应为 \u003e= 1"
+        },
+        {
+            "id": "invalid path, length should \u003c= 1024",
+            "message": "invalid path, length should \u003c= 1024",
+            "translation": "路径无效，长度应为 \u003c= 1024"
+        },
+        {
+            "id": "invalid path, should start with '/'",
+            "message": "invalid path, should start with '/'",
+            "translation": "路径无效，应以“/”开头"
+        },
+        {
+            "id": "invalid path {Part}, path cannot all be '.'",
+            "message": "invalid path {Part}, path cannot all be '.'",
+            "translation": "路径 {Part} 无效，路径不能全部为“.”",
+            "placeholders": [
+                {
+                    "id": "Part",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "part"
+                }
+            ]
+        },
+        {
+            "id": "invalid path, length should \u003c= 256",
+            "message": "invalid path, length should \u003c= 256",
+            "translation": "路径无效，长度应为 \u003c= 256"
+        },
+        {
+            "id": "invalid path,path does not conform to the win file path format specification",
+            "message": "invalid path,path does not conform to the win file path format specification",
+            "translation": "路径无效，路径不符合win文件路径格式规范"
+        },
+        {
+            "id": "reload file path is required",
+            "message": "reload file path is required",
+            "translation": "需要重新加载文件路径"
+        },
+        {
+            "id": "invalid reload file path, should \u003c= 128",
+            "message": "invalid reload file path, should \u003c= 128",
+            "translation": "重新加载文件路径无效，应该 \u003c= 128"
+        },
+        {
+            "id": "reload file path is not the absolute path",
+            "message": "reload file path is not the absolute path",
+            "translation": "重新加载文件路径不是绝对路径"
+        },
+        {
+            "id": "{SideWorkspaceDir} sub path is system reserved path, do not allow to use",
+            "message": "{SideWorkspaceDir} sub path is system reserved path, do not allow to use",
+            "translation": "{SideWorkspaceDir} 子路径为系统保留路径，不允许使用",
+            "placeholders": [
+                {
+                    "id": "SideWorkspaceDir",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "constant.SideWorkspaceDir"
+                }
+            ]
+        },
+        {
+            "id": "memo is required, can not be empty",
+            "message": "memo is required, can not be empty",
+            "translation": "描述为必填项，不能为空"
+        },
+        {
+            "id": "invalid memo, length should \u003c= 200",
+            "message": "invalid memo, length should \u003c= 200",
+            "translation": "无效描述，长度应为 \u003c= 200"
+        },
+        {
+            "id": "resource name '{LowerName}' is prefixed with '{Prefix}' is reserved name, which is not allows to use",
+            "message": "resource name '{LowerName}' is prefixed with '{Prefix}' is reserved name, which is not allows to use",
+            "translation": "资源名称“{LowerName}”以“{Prefix}”为前缀，是保留名称，不允许使用",
+            "placeholders": [
+                {
+                    "id": "LowerName",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "lowerName"
+                },
+                {
+                    "id": "Prefix",
+                    "string": "%[2]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 2,
+                    "expr": "prefix"
+                }
+            ]
+        },
+        {
+            "id": "invalid name, length should \u003e= 1",
+            "message": "invalid name, length should \u003e= 1",
+            "translation": "名称无效，长度应为 \u003e= 1"
         },
         {
             "id": "invalid name, length should \u003c= 128",
             "message": "invalid name, length should \u003c= 128",
             "translation": "无效名称，长度应该\u003c=128"
+        },
+        {
+            "id": "invalid name: {Name}, only allows to include english、numbers、underscore (_)、hyphen (-), and must start and end with an english、numbers",
+            "message": "invalid name: {Name}, only allows to include english、numbers、underscore (_)、hyphen (-), and must start and end with an english、numbers",
+            "translation": "无效名称：{Name}，只允许包含英文、数字、下划线（_）、连字符（-），且必须以英文、数字开头和结尾",
+            "placeholders": [
+                {
+                    "id": "Name",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "name"
+                }
+            ]
+        },
+        {
+            "id": "invalid name, length should \u003e= 9 and must start with prefix bk_bscp_ (ignore case)",
+            "message": "invalid name, length should \u003e= 9 and must start with prefix bk_bscp_ (ignore case)",
+            "translation": "无效名称，长度应该\u003e=9且必须以bk_bscp_前缀开头（忽略大小写）"
         },
         {
             "id": "invalid name: {Name}, only allows to include english、numbers、underscore (_), and must start with prefix bk_bscp_ (ignore case)",
@@ -356,9 +809,727 @@
             ]
         },
         {
+            "id": "invalid name: {Name}, only allows to include Chinese, English,numbers, underscore (_),hyphen (-), and must start and end with Chinese, English, or a number",
+            "message": "invalid name: {Name}, only allows to include Chinese, English,numbers, underscore (_),hyphen (-), and must start and end with Chinese, English, or a number",
+            "translation": "无效名称：{Name}，只允许包含中文、英文、数字、下划线（_）、连字符（-），且必须以中文、英文或数字开头和结尾",
+            "placeholders": [
+                {
+                    "id": "Name",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "name"
+                }
+            ]
+        },
+        {
+            "id": "invalid name, length should \u003c= 64",
+            "message": "invalid name, length should \u003c= 64",
+            "translation": "名称无效，长度应为 \u003c= 64"
+        },
+        {
+            "id": "invalid name {Name}, name cannot all be '.'",
+            "message": "invalid name {Name}, name cannot all be '.'",
+            "translation": "名称 {Name} 无效，名称不能全部为“.”",
+            "placeholders": [
+                {
+                    "id": "Name",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "name"
+                }
+            ]
+        },
+        {
+            "id": "invalid namespace, length should \u003e= 1",
+            "message": "invalid namespace, length should \u003e= 1",
+            "translation": "命名空间无效，长度应为 \u003e= 1"
+        },
+        {
+            "id": "invalid namespace, length should \u003c= 128",
+            "message": "invalid namespace, length should \u003c= 128",
+            "translation": "命名空间无效，长度应为 \u003c= 128"
+        },
+        {
+            "id": "invalid username, length should \u003e= 1",
+            "message": "invalid username, length should \u003e= 1",
+            "translation": "用户名无效，长度应为 \u003e= 1"
+        },
+        {
+            "id": "invalid username, length should \u003c= 32",
+            "message": "invalid username, length should \u003c= 32",
+            "translation": "用户名无效，长度应为 \u003c= 32"
+        },
+        {
+            "id": "app is nil",
+            "message": "app is nil",
+            "translation": "服务为空"
+        },
+        {
+            "id": "create data failed, {Err}",
+            "message": "create data failed, {Err}",
+            "translation": "创建数据失败，{Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "execution of transactions failed, {Err}",
+            "message": "execution of transactions failed, {Err}",
+            "translation": "事务执行失败，{Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "fire event failed, {Error}",
+            "message": "fire event failed, {Error}",
+            "translation": "触发资源的操作（创建/更新/删除）事件失败，{Error}",
+            "placeholders": [
+                {
+                    "id": "Error",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "err.Error()"
+                }
+            ]
+        },
+        {
+            "id": "transaction processing failed {Err}",
+            "message": "transaction processing failed {Err}",
+            "translation": "事务处理失败 {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "get update app failed, err: {Err}",
+            "message": "get update app failed, err: {Err}",
+            "translation": "获取更新服务失败，err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "fire event failed, err: {Err}",
+            "message": "fire event failed, err: {Err}",
+            "translation": "触发资源的操作（创建/更新/删除）事件失败，err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "get app failed, err: {Err}",
+            "message": "get app failed, err: {Err}",
+            "translation": "获取服务失败，err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "count app {AppID}'s config items failed, err: {Err}",
+            "message": "count app {AppID}'s config items failed, err: {Err}",
+            "translation": "统计服务 {AppID} 的配置项失败，err: {Err}",
+            "placeholders": [
+                {
+                    "id": "AppID",
+                    "string": "%[1]d",
+                    "type": "uint32",
+                    "underlyingType": "uint32",
+                    "argNum": 1,
+                    "expr": "appID"
+                },
+                {
+                    "id": "Err",
+                    "string": "%[2]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 2,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "get app {AppID}'s template binding failed, err: {Err}",
+            "message": "get app {AppID}'s template binding failed, err: {Err}",
+            "translation": "获取服务 {AppID} 的模板绑定失败， err: {Err}",
+            "placeholders": [
+                {
+                    "id": "AppID",
+                    "string": "%[1]d",
+                    "type": "uint32",
+                    "underlyingType": "uint32",
+                    "argNum": 1,
+                    "expr": "appID"
+                },
+                {
+                    "id": "Err",
+                    "string": "%[2]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 2,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "the total number of app {AppID}'s config items(including template and non-template)exceeded the limit {AppConfigCnt}",
+            "message": "the total number of app {AppID}'s config items(including template and non-template)exceeded the limit {AppConfigCnt}",
+            "translation": "服务 {AppID} 的配置项总数（包括模板和非模板）超出限制 {AppConfigCnt}",
+            "placeholders": [
+                {
+                    "id": "AppID",
+                    "string": "%[1]d",
+                    "type": "uint32",
+                    "underlyingType": "uint32",
+                    "argNum": 1,
+                    "expr": "appID"
+                },
+                {
+                    "id": "AppConfigCnt",
+                    "string": "%[2]d",
+                    "type": "int",
+                    "underlyingType": "int",
+                    "argNum": 2,
+                    "expr": "appConfigCnt"
+                }
+            ]
+        },
+        {
             "id": "hook is nil",
             "message": "hook is nil",
             "translation": "脚本不存在"
+        },
+        {
+            "id": "appID can not be 0",
+            "message": "appID can not be 0",
+            "translation": "appID不能为0"
+        },
+        {
+            "id": "the total number of template set {TmplSetID}'s templates exceeded the limit {TmplSetTmplCnt}",
+            "message": "the total number of template set {TmplSetID}'s templates exceeded the limit {TmplSetTmplCnt}",
+            "translation": "模板套餐 {TmplSetID} 的模板总数超出了限制 {TmplSetTmplCnt}",
+            "placeholders": [
+                {
+                    "id": "TmplSetID",
+                    "string": "%[1]d",
+                    "type": "uint32",
+                    "underlyingType": "uint32",
+                    "argNum": 1,
+                    "expr": "tmplSetID"
+                },
+                {
+                    "id": "TmplSetTmplCnt",
+                    "string": "%[2]d",
+                    "type": "int",
+                    "underlyingType": "int",
+                    "argNum": 2,
+                    "expr": "tmplSetTmplCnt"
+                }
+            ]
+        },
+        {
+            "id": "validate templates exist failed, err: {Err}",
+            "message": "validate templates exist failed, err: {Err}",
+            "translation": "验证模板是否存在失败，err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "template space id in {DiffIDs} is not exist",
+            "message": "template space id in {DiffIDs} is not exist",
+            "translation": "{DiffIDs} 不在该模板空间下",
+            "placeholders": [
+                {
+                    "id": "DiffIDs",
+                    "string": "%[1]v",
+                    "type": "[]uint32",
+                    "underlyingType": "[]uint32",
+                    "argNum": 1,
+                    "expr": "diffIDs"
+                }
+            ]
+        },
+        {
+            "id": "template id in {DiffIDs} is not exist",
+            "message": "template id in {DiffIDs} is not exist",
+            "translation": "{DiffIDs} 中的模板 ID 不存在",
+            "placeholders": [
+                {
+                    "id": "DiffIDs",
+                    "string": "%[1]v",
+                    "type": "[]uint32",
+                    "underlyingType": "[]uint32",
+                    "argNum": 1,
+                    "expr": "diffIDs"
+                }
+            ]
+        },
+        {
+            "id": "validate template releases exist failed, err: {Err}",
+            "message": "validate template releases exist failed, err: {Err}",
+            "translation": "验证模板版本是否存在失败，err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "template revision id in {DiffIDs} is not exist",
+            "message": "template revision id in {DiffIDs} is not exist",
+            "translation": "{DiffIDs} ID的模板版本不存在",
+            "placeholders": [
+                {
+                    "id": "DiffIDs",
+                    "string": "%[1]v",
+                    "type": "[]uint32",
+                    "underlyingType": "[]uint32",
+                    "argNum": 1,
+                    "expr": "diffIDs"
+                }
+            ]
+        },
+        {
+            "id": "validate template sets exist failed, err: {Err}",
+            "message": "validate template sets exist failed, err: {Err}",
+            "translation": "验证模板套餐是否存在失败，err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "template set id in {DiffIDs} is not exist",
+            "message": "template set id in {DiffIDs} is not exist",
+            "translation": "{DiffIDs} ID不存在该模板套餐下",
+            "placeholders": [
+                {
+                    "id": "DiffIDs",
+                    "string": "%[1]v",
+                    "type": "[]uint32",
+                    "underlyingType": "[]uint32",
+                    "argNum": 1,
+                    "expr": "diffIDs"
+                }
+            ]
+        },
+        {
+            "id": "template {Id} is not exist",
+            "message": "template {Id} is not exist",
+            "translation": "模板 {Id} 不存在",
+            "placeholders": [
+                {
+                    "id": "Id",
+                    "string": "%[1]d",
+                    "type": "uint32",
+                    "underlyingType": "uint32",
+                    "argNum": 1,
+                    "expr": "id"
+                }
+            ]
+        },
+        {
+            "id": "get template failed, err: {Err}",
+            "message": "get template failed, err: {Err}",
+            "translation": "获取模板失败，err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "template release {Id} is not exist",
+            "message": "template release {Id} is not exist",
+            "translation": "模板版本 {Id} 不存在",
+            "placeholders": [
+                {
+                    "id": "Id",
+                    "string": "%[1]d",
+                    "type": "uint32",
+                    "underlyingType": "uint32",
+                    "argNum": 1,
+                    "expr": "id"
+                }
+            ]
+        },
+        {
+            "id": "get template release failed, err: {Err}",
+            "message": "get template release failed, err: {Err}",
+            "translation": "获取模板版本失败，err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "template set {Id} is not exist",
+            "message": "template set {Id} is not exist",
+            "translation": "模板套餐 {Id} 不存在",
+            "placeholders": [
+                {
+                    "id": "Id",
+                    "string": "%[1]d",
+                    "type": "uint32",
+                    "underlyingType": "uint32",
+                    "argNum": 1,
+                    "expr": "id"
+                }
+            ]
+        },
+        {
+            "id": "get template set failed, err: {Err}",
+            "message": "get template set failed, err: {Err}",
+            "translation": "获取模板套餐失败，err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "get template set count failed, err: {Err}",
+            "message": "get template set count failed, err: {Err}",
+            "translation": "获取模板套餐数量失败，err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "there are template sets under the template space, need to delete them first",
+            "message": "there are template sets under the template space, need to delete them first",
+            "translation": "模板空间下有模板套餐，需要先删除"
+        },
+        {
+            "id": "get template count failed, err: {Err}",
+            "message": "get template count failed, err: {Err}",
+            "translation": "获取模板数量失败，err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "there are templates under the template space, need to delete them first",
+            "message": "there are templates under the template space, need to delete them first",
+            "translation": "模板空间下有模板，需要先删除"
+        },
+        {
+            "id": "validate templates in a template set failed, err: {Err}",
+            "message": "validate templates in a template set failed, err: {Err}",
+            "translation": "验证模板套餐中的模板失败，err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "template id in {DiffIDs} is not belong to template set id {TemplateSetID}",
+            "message": "template id in {DiffIDs} is not belong to template set id {TemplateSetID}",
+            "translation": "{DiffIDs} 中的模板 ID 不属于模板套餐 ID {TemplateSetID}",
+            "placeholders": [
+                {
+                    "id": "DiffIDs",
+                    "string": "%[1]v",
+                    "type": "[]uint32",
+                    "underlyingType": "[]uint32",
+                    "argNum": 1,
+                    "expr": "diffIDs"
+                },
+                {
+                    "id": "TemplateSetID",
+                    "string": "%[2]d",
+                    "type": "uint32",
+                    "underlyingType": "uint32",
+                    "argNum": 2,
+                    "expr": "templateSetID"
+                }
+            ]
+        },
+        {
+            "id": "id can not be set",
+            "message": "id can not be set",
+            "translation": "无法设置 id"
+        },
+        {
+            "id": "invalid biz id",
+            "message": "invalid biz id",
+            "translation": "无效的业务ID"
+        },
+        {
+            "id": "invalid spec, is nil",
+            "message": "invalid spec, is nil",
+            "translation": "无效参数，为空"
+        },
+        {
+            "id": "app spec is nil",
+            "message": "app spec is nil",
+            "translation": "服务参数为空"
+        },
+        {
+            "id": "unknown config type: {ConfigType}",
+            "message": "unknown config type: {ConfigType}",
+            "translation": "未知的配置类型：{ConfigType}",
+            "placeholders": [
+                {
+                    "id": "ConfigType",
+                    "string": "%[1]s",
+                    "type": "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table.ConfigType",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "as.ConfigType"
+                }
+            ]
+        },
+        {
+            "id": "app's type can not be updated",
+            "message": "app's type can not be updated",
+            "translation": "服务类型无法更新"
+        },
+        {
+            "id": "not support table config type for now",
+            "message": "not support table config type for now",
+            "translation": "暂不支持表配置类型"
+        },
+        {
+            "id": "unsupported config type: {ConfigType}",
+            "message": "unsupported config type: {ConfigType}",
+            "translation": "不支持的配置类型：{ConfigType}",
+            "placeholders": [
+                {
+                    "id": "ConfigType",
+                    "string": "%[1]s",
+                    "type": "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table.ConfigType",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "c"
+                }
+            ]
+        },
+        {
+            "id": "unsupported app reload type: {AppReloadType}",
+            "message": "unsupported app reload type: {AppReloadType}",
+            "translation": "不支持的服务编辑类型：{AppReloadType}",
+            "placeholders": [
+                {
+                    "id": "AppReloadType",
+                    "string": "%[1]s",
+                    "type": "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table.AppReloadType",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "rt"
+                }
+            ]
+        },
+        {
+            "id": "invalid data-type",
+            "message": "invalid data-type",
+            "translation": "无效的数据类型"
+        },
+        {
+            "id": "spec should be set",
+            "message": "spec should be set",
+            "translation": "参数不能为空"
+        },
+        {
+            "id": "invalid commit spec's content id",
+            "message": "invalid commit spec's content id",
+            "translation": "内容 ID 无效"
+        },
+        {
+            "id": "commit spec's content is empty",
+            "message": "commit spec's content is empty",
+            "translation": "内容为空"
+        },
+        {
+            "id": "{Path} {Err}",
+            "message": "{Path} {Err}",
+            "translation": "{Path} {Err}",
+            "placeholders": [
+                {
+                    "id": "Path",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "path"
+                },
+                {
+                    "id": "Err",
+                    "string": "%[2]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 2,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "unsupported file format: {FileFormat}",
+            "message": "unsupported file format: {FileFormat}",
+            "translation": "不支持的文件格式：{FileFormat}",
+            "placeholders": [
+                {
+                    "id": "FileFormat",
+                    "string": "%[1]s",
+                    "type": "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table.FileFormat",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "f"
+                }
+            ]
+        },
+        {
+            "id": "unsupported file mode: {FileMode}",
+            "message": "unsupported file mode: {FileMode}",
+            "translation": "不支持的文件模式：{FileMode}",
+            "placeholders": [
+                {
+                    "id": "FileMode",
+                    "string": "%[1]s",
+                    "type": "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table.FileMode",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "f"
+                }
+            ]
+        },
+        {
+            "id": "content id can not set",
+            "message": "content id can not set",
+            "translation": "内容 ID 不能为空"
+        },
+        {
+            "id": "invalid content signature, should be config's sha256 value",
+            "message": "invalid content signature, should be config's sha256 value",
+            "translation": "内容签名无效，应为配置的 sha256 值"
+        },
+        {
+            "id": "content signature should be lowercase",
+            "message": "content signature should be lowercase",
+            "translation": "内容签名应小写"
+        },
+        {
+            "id": "invalid origin content signature, should be config's sha256 value",
+            "message": "invalid origin content signature, should be config's sha256 value",
+            "translation": "无效的原始内容签名，应为配置的 sha256 值"
+        },
+        {
+            "id": "origin content signature should be lowercase",
+            "message": "origin content signature should be lowercase",
+            "translation": "原始内容签名应小写"
+        },
+        {
+            "id": "invalid app id",
+            "message": "invalid app id",
+            "translation": "无效服务ID"
+        },
+        {
+            "id": "invalid config item id",
+            "message": "invalid config item id",
+            "translation": "无效配置项ID"
         },
         {
             "id": "default_val {DefaultVal} is not a number type",
@@ -387,6 +1558,74 @@
                     "underlyingType": "string",
                     "argNum": 1,
                     "expr": "t"
+                }
+            ]
+        },
+        {
+            "id": "failed to get 'kv_type' as a string from kv.Data, err : {Err}",
+            "message": "failed to get 'kv_type' as a string from kv.Data, err : {Err}",
+            "translation": "无法从 kv.Data 获取“kv_type”字符串，err : {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "value type assertion failed: err : {Err}",
+            "message": "value type assertion failed: err : {Err}",
+            "translation": "值类型断言失败：err : {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "authorize failed",
+            "message": "authorize failed",
+            "translation": "授权失败"
+        },
+        {
+            "id": "get permission to apply failed",
+            "message": "get permission to apply failed",
+            "translation": "申请权限失败"
+        },
+        {
+            "id": "grpc status with details failed",
+            "message": "grpc status with details failed",
+            "translation": "grpc 状态详细信息失败"
+        },
+        {
+            "id": "{Path2} and {Path1} path file conflict",
+            "message": "{Path2} and {Path1} path file conflict",
+            "translation": "{Path2} 与 {Path1} 路径文件冲突",
+            "placeholders": [
+                {
+                    "id": "Path2",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "path2"
+                },
+                {
+                    "id": "Path1",
+                    "string": "%[2]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 2,
+                    "expr": "path1"
                 }
             ]
         }

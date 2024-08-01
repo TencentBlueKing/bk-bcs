@@ -163,7 +163,7 @@ func (t *TemplateVariableSpec) ValidateUpdate(kit *kit.Kit) error {
 		return err
 	}
 
-	if err := validator.ValidateMemo(t.Memo, false); err != nil {
+	if err := validator.ValidateMemo(kit, t.Memo, false); err != nil {
 		return err
 	}
 

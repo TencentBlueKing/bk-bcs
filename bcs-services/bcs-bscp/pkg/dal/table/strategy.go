@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/selector"
 )
 
@@ -84,7 +85,7 @@ func (s *Strategy) ResType() string {
 }
 
 // ValidateCreate validate strategy is valid or not when create it.
-func (s *Strategy) ValidateCreate() error {
+func (s *Strategy) ValidateCreate(kit *kit.Kit) error {
 
 	if s.ID > 0 {
 		return errors.New("id should not be set")
@@ -94,7 +95,7 @@ func (s *Strategy) ValidateCreate() error {
 		return errors.New("spec not set")
 	}
 
-	if err := s.Spec.ValidateCreate(); err != nil {
+	if err := s.Spec.ValidateCreate(kit); err != nil {
 		return err
 	}
 
@@ -126,7 +127,7 @@ func (s *Strategy) ValidateCreate() error {
 }
 
 // ValidateUpdate validate strategy is valid or not when update it.
-func (s *Strategy) ValidateUpdate(asDefault bool, namespaced bool) error {
+func (s *Strategy) ValidateUpdate(kit *kit.Kit, asDefault bool, namespaced bool) error {
 
 	if s.ID <= 0 {
 		return errors.New("id should be set")
@@ -135,7 +136,7 @@ func (s *Strategy) ValidateUpdate(asDefault bool, namespaced bool) error {
 	changed := false
 	if s.Spec != nil {
 		changed = true
-		if err := s.Spec.ValidateUpdate(asDefault, namespaced); err != nil {
+		if err := s.Spec.ValidateUpdate(kit, asDefault, namespaced); err != nil {
 			return err
 		}
 	}
@@ -226,8 +227,8 @@ type StrategySpec struct {
 }
 
 // ValidateCreate validate strategy spec when it is created.
-func (s StrategySpec) ValidateCreate() error {
-	if err := validator.ValidateName(s.Name); err != nil {
+func (s StrategySpec) ValidateCreate(kit *kit.Kit) error {
+	if err := validator.ValidateName(kit, s.Name); err != nil {
 		return err
 	}
 
@@ -240,13 +241,13 @@ func (s StrategySpec) ValidateCreate() error {
 			return errors.New("strategy's scope can not be empty at gray release mode")
 		}
 		for _, group := range s.Scope.Groups {
-			if err := group.ValidateCreate(); err != nil {
+			if err := group.ValidateCreate(kit); err != nil {
 				return err
 			}
 		}
 	}
 
-	if err := validator.ValidateMemo(s.Memo, false); err != nil {
+	if err := validator.ValidateMemo(kit, s.Memo, false); err != nil {
 		return err
 	}
 
@@ -254,10 +255,10 @@ func (s StrategySpec) ValidateCreate() error {
 }
 
 // ValidateUpdate validate strategy spec when it is updated.
-func (s StrategySpec) ValidateUpdate(asDefault bool, namespaced bool) error {
+func (s StrategySpec) ValidateUpdate(kit *kit.Kit, asDefault bool, namespaced bool) error {
 
 	if len(s.Name) != 0 {
-		if err := validator.ValidateName(s.Name); err != nil {
+		if err := validator.ValidateName(kit, s.Name); err != nil {
 			return err
 		}
 	}
@@ -270,7 +271,7 @@ func (s StrategySpec) ValidateUpdate(asDefault bool, namespaced bool) error {
 		return errors.New("namespace can not be updated")
 	}
 
-	if err := validator.ValidateMemo(s.Memo, false); err != nil {
+	if err := validator.ValidateMemo(kit, s.Memo, false); err != nil {
 		return err
 	}
 
@@ -440,12 +441,12 @@ func (s SubStrategy) IsEmpty() bool {
 }
 
 // ValidateCreate validate sub strategy when it is created.
-func (s SubStrategy) ValidateCreate() error {
+func (s SubStrategy) ValidateCreate(kit *kit.Kit) error {
 	if s.Spec == nil {
 		return errors.New("sub strategy's spec is empty")
 	}
 
-	if err := s.Spec.Validate(); err != nil {
+	if err := s.Spec.Validate(kit); err != nil {
 		return err
 	}
 
@@ -453,12 +454,12 @@ func (s SubStrategy) ValidateCreate() error {
 }
 
 // ValidateUpdate validate sub strategy when it is updated.
-func (s SubStrategy) ValidateUpdate() error {
+func (s SubStrategy) ValidateUpdate(kit *kit.Kit) error {
 	if s.Spec == nil {
 		return errors.New("sub strategy's spec is empty")
 	}
 
-	if err := s.Spec.Validate(); err != nil {
+	if err := s.Spec.Validate(kit); err != nil {
 		return err
 	}
 
@@ -498,8 +499,8 @@ func (s SubStrategySpec) IsEmpty() bool {
 }
 
 // Validate the sub strategy's specifics
-func (s SubStrategySpec) Validate() error {
-	if err := validator.ValidateName(s.Name); err != nil {
+func (s SubStrategySpec) Validate(kit *kit.Kit) error {
+	if err := validator.ValidateName(kit, s.Name); err != nil {
 		return err
 	}
 
@@ -515,7 +516,7 @@ func (s SubStrategySpec) Validate() error {
 		return err
 	}
 
-	if err := validator.ValidateMemo(s.Memo, false); err != nil {
+	if err := validator.ValidateMemo(kit, s.Memo, false); err != nil {
 		return err
 	}
 

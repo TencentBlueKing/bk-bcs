@@ -40,7 +40,7 @@ import (
 func (s *Service) CreateApp(ctx context.Context, req *pbcs.CreateAppReq) (*pbcs.CreateAppResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
-	if err := req.Validate(); err != nil {
+	if err := req.Validate(kt); err != nil {
 		return nil, err
 	}
 

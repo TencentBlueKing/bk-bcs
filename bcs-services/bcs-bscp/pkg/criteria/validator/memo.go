@@ -13,20 +13,23 @@
 package validator
 
 import (
-	"errors"
 	"unicode/utf8"
+
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/i18n"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 )
 
 // ValidateMemo validate bscp resource memo's length and format.
-func ValidateMemo(memo string, required bool) error {
+func ValidateMemo(kit *kit.Kit, memo string, required bool) error {
 	// check data is nil and required.
 	if required && len(memo) == 0 {
-		return errors.New("memo is required, can not be empty")
+		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "memo is required, can not be empty"))
 	}
 
 	if required {
 		if len(memo) == 0 {
-			return errors.New("memo is required, can not be empty")
+			return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "memo is required, can not be empty"))
 		}
 	} else {
 		if len(memo) == 0 {
@@ -36,7 +39,7 @@ func ValidateMemo(memo string, required bool) error {
 
 	charLength := utf8.RuneCountInString(memo)
 	if charLength > 200 {
-		return errors.New("invalid memo, length should <= 200")
+		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "invalid memo, length should <= 200"))
 	}
 
 	return nil

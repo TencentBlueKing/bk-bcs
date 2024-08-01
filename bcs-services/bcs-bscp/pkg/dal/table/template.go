@@ -17,6 +17,7 @@ import (
 	"fmt"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 )
 
 // Template 模版
@@ -48,7 +49,7 @@ func (t *Template) ResType() string {
 }
 
 // ValidateCreate validate template is valid or not when create it.
-func (t *Template) ValidateCreate() error {
+func (t *Template) ValidateCreate(kit *kit.Kit) error {
 	if t.ID > 0 {
 		return errors.New("id should not be set")
 	}
@@ -57,7 +58,7 @@ func (t *Template) ValidateCreate() error {
 		return errors.New("spec not set")
 	}
 
-	if err := t.Spec.ValidateCreate(); err != nil {
+	if err := t.Spec.ValidateCreate(kit); err != nil {
 		return err
 	}
 
@@ -81,14 +82,14 @@ func (t *Template) ValidateCreate() error {
 }
 
 // ValidateUpdate validate template is valid or not when update it.
-func (t *Template) ValidateUpdate() error {
+func (t *Template) ValidateUpdate(kit *kit.Kit) error {
 
 	if t.ID <= 0 {
 		return errors.New("id should be set")
 	}
 
 	if t.Spec != nil {
-		if err := t.Spec.ValidateUpdate(); err != nil {
+		if err := t.Spec.ValidateUpdate(kit); err != nil {
 			return err
 		}
 	}
@@ -137,12 +138,12 @@ type TemplateSpec struct {
 }
 
 // ValidateCreate validate template spec when it is created.
-func (t *TemplateSpec) ValidateCreate() error {
-	if err := validator.ValidateFileName(t.Name); err != nil {
+func (t *TemplateSpec) ValidateCreate(kit *kit.Kit) error {
+	if err := validator.ValidateFileName(kit, t.Name); err != nil {
 		return err
 	}
 
-	if err := ValidatePath(t.Path, Unix); err != nil {
+	if err := ValidatePath(kit, t.Path, Unix); err != nil {
 		return fmt.Errorf("%s err: %v", t.Path, err)
 	}
 
@@ -150,8 +151,8 @@ func (t *TemplateSpec) ValidateCreate() error {
 }
 
 // ValidateUpdate validate template spec when it is updated.
-func (t *TemplateSpec) ValidateUpdate() error {
-	if err := validator.ValidateMemo(t.Memo, false); err != nil {
+func (t *TemplateSpec) ValidateUpdate(kit *kit.Kit) error {
+	if err := validator.ValidateMemo(kit, t.Memo, false); err != nil {
 		return err
 	}
 

@@ -17,6 +17,7 @@ import (
 	"fmt"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/enumor"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 )
 
 // ReleasedConfigItemColumns defines ReleasedConfigItem's columns
@@ -108,7 +109,7 @@ func (rs RciList) ResType() string {
 }
 
 // Validate the released config item information.
-func (r *ReleasedConfigItem) Validate() error {
+func (r *ReleasedConfigItem) Validate(kit *kit.Kit) error {
 	if r.ID != 0 {
 		return errors.New("id should not set")
 	}
@@ -128,12 +129,12 @@ func (r *ReleasedConfigItem) Validate() error {
 			return errors.New("invalid commit id")
 		}
 
-		if err := r.CommitSpec.Validate(); err != nil {
+		if err := r.CommitSpec.Validate(kit); err != nil {
 			return err
 		}
 	} else {
 		// for rendered template config item, need to validate content signature
-		if err := r.CommitSpec.Content.Validate(); err != nil {
+		if err := r.CommitSpec.Content.Validate(kit); err != nil {
 			return err
 		}
 	}
@@ -142,7 +143,7 @@ func (r *ReleasedConfigItem) Validate() error {
 		return errors.New("config item spec is empty")
 	}
 
-	if err := r.ConfigItemSpec.ValidateCreate(); err != nil {
+	if err := r.ConfigItemSpec.ValidateCreate(kit); err != nil {
 		return fmt.Errorf("invalid config item spec, err: %v", err)
 	}
 
