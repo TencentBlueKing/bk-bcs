@@ -11,7 +11,7 @@
     <bk-button
       :disabled="props.configs.length === 0 && !isAcrossChecked"
       :class="['batch-set-btn', { 'popover-open': isPopoverOpen }]">
-      {{ t('批量操作') }}{{ isAcrossChecked }}
+      {{ t('批量操作') }}
       <AngleDown class="angle-icon" />
     </bk-button>
     <template #content>
