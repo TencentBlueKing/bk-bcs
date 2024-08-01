@@ -14,7 +14,7 @@ def main():
         for ev in client.watch_forever(app=APP, labels=LABELS):
             print(f"receive new release change event, release id:  {ev.release_id}")
             for key in ev.key_infos:
-                value = client.get(ev.app, key.key)
+                value = client.get(ev.app, key.key, LABELS)
                 print(f"{key.key}={value}")
 
 def setup_logger():
