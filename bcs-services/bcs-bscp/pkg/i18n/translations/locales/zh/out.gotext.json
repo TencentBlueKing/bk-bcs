@@ -266,9 +266,19 @@
             "translation": "获取配置项数量"
         },
         {
-            "id": "obtain template binding relationships through business and service IDs",
-            "message": "obtain template binding relationships through business and service IDs",
-            "translation": "通过业务和服务ID获取模板绑定关系"
+            "id": "get template binding relationships through business and service IDs failed, err: {Err}",
+            "message": "get template binding relationships through business and service IDs failed, err: {Err}",
+            "translation": "通过业务和服务ID获取模板绑定关系失败，err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
         },
         {
             "id": "hook name {Name} already exists",
