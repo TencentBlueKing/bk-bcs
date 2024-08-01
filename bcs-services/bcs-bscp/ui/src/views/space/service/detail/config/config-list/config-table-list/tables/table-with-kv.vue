@@ -14,12 +14,6 @@
       @page-value-change="refresh($event, true)"
       @column-sort="handleSort"
       @column-filter="handleFilter">
-      <!--
-        :is-row-select-enable="isRowSelectEnable"
-        @selection-change="handleSelectionChange"
-      @select-all="handleSelectAll"
-        <bk-table-column v-if="versionData.id === 0" type="selection" :width="40" :min-width="40"></bk-table-column>
-      -->
       <template #prepend v-if="versionData.id === 0">
         <render-table-tip />
       </template>
@@ -263,10 +257,6 @@
     return '';
   });
 
-  // const checkedConfigs = computed(() => {
-  //   return configList.value.filter((config) => selectedConfigIds.value.includes(config.id));
-  // });
-
   // 跨页全选
   const filterFailureCurTableData = computed(() => configList.value.filter((item) => item.kv_state !== 'DELETE'));
   const arrowShow = computed(() => pagination.value.limit < pagination.value.count && filterDisableCount.value !== 0);
@@ -380,11 +370,6 @@
     }
   };
 
-  // 表格行是否可以选中
-  // const isRowSelectEnable = ({ row, isCheckAll }: { row: IConfigKvType; isCheckAll: boolean }) => {
-  //   return isCheckAll || row.kv_state !== 'DELETE';
-  // };
-
   // 选中状态
   const isChecked = (row: IConfigKvType) => {
     if (![CheckType.AcrossChecked, CheckType.HalfAcrossChecked].includes(selectType.value)) {
@@ -396,30 +381,8 @@
   };
 
   // 表格行选择事件
-  // const handleSelectionChange = ({ checked, row }: { checked: boolean; row: IConfigKvType }) => {
-  //   const index = selectedConfigIds.value.findIndex((id) => id === row.id);
-  //   if (checked) {
-  //     if (index === -1) {
-  //       selectedConfigIds.value.push(row.id);
-  //     }
-  //   } else {
-  //     selectedConfigIds.value.splice(index, 1);
-  //   }
-  //   emits('updateSelectedIds', selectedConfigIds.value);
-  // };
-
-  // 全选
-  // const handleSelectAll = ({ checked }: { checked: boolean }) => {
-  //   if (checked) {
-  //     selectedConfigIds.value = configList.value.filter((item) => item.kv_state !== 'DELETE').map((item) => item.id);
-  //   } else {
-  //     selectedConfigIds.value = [];
-  //   }
-  //   emits('updateSelectedIds', selectedConfigIds.value);
-  // };
   const handleSelectionChange = (row: IConfigKvType) => {
     const isSelected = selections.value.some((item) => item.id === row.id);
-    // const isAcrossChecked = [CheckType.AcrossChecked, CheckType.HalfAcrossChecked].includes(selectType.value);
     // 根据选择类型决定传递的状态
     const shouldBeChecked = isAcrossChecked.value ? isSelected : !isSelected;
     handleRowCheckChange(shouldBeChecked, row);

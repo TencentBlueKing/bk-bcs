@@ -25,23 +25,6 @@
           @page-value-change="loadList(true)"
           @column-filter="handleFilter"
           @setting-change="handleSettingsChange">
-          <!--
-            :is-row-select-enable="isRowSelectEnable"
-            :checked="selectedClient.map((item) => item.id)"
-            @selection-change="handleSelectRow"
-            @select-all="handleSelectAll"
-           -->
-          <!-- <template v-if="selectedClient.length" #prepend>
-            <div class="row-selection-display">
-              {{ t('当前已选择 {n} 个客户端，', { n: selectedClient.length }) }}
-              <bk-button text theme="primary" @click="handleClearSelection">{{ t('清除选择') }}</bk-button>
-            </div>
-          </template> -->
-          <!-- <bk-table-column type="selection" fixed="left" :min-width="48" :width="48"> </bk-table-column> -->
-          <!-- :disabled="
-                  row.client.spec &&
-                  !(row.client.spec.release_change_status !== 'Failed' || row.client.spec.online_status !== 'Online')
-                " -->
           <template #prepend>
             <render-table-tip />
           </template>
@@ -339,7 +322,6 @@
   const pollTimer = ref(0);
 
   // 当前页数据，不含禁用
-  // !(item.client.spec.release_change_status !== 'Failed' || item.client.spec.online_status !== 'Online'),
   const processCurrentData = computed(() => {
     return tableData.value
       .filter(
@@ -439,12 +421,6 @@
   });
 
   // 行的启用/禁用
-  // const isRowSelectEnable = ({ row, isCheckAll }: any) =>
-  //   isCheckAll ||
-  //   !(
-  //     row.client.spec &&
-  //     (row.client.spec.release_change_status !== 'Failed' || row.client.spec.online_status !== 'Online')
-  //   );
   const isChecked = (row: any) => {
     if (![CheckType.AcrossChecked, CheckType.HalfAcrossChecked].includes(selectType.value)) {
       // 当前页状态传递
@@ -637,54 +613,12 @@
   };
 
   // 选择单行
-  // const handleSelectRow = ({ row, checked }: { row: any; checked: boolean }) => {
-  //   const index = selectedClient.value.findIndex((item) => item.id === row.client.id);
-  //   if (checked) {
-  //     if (index === -1) {
-  //       selectedClient.value.push({
-  //         id: row.client.id,
-  //         uid: row.client.attachment.uid,
-  //         current_release_name: row.client.spec.current_release_name,
-  //         target_release_name: row.client.spec.target_release_name,
-  //       });
-  //     }
-  //   } else {
-  //     if (index > -1) {
-  //       selectedClient.value.splice(index, 1);
-  //     }
-  //   }
-  // };
   const handleSelectionChange = (row: any) => {
     const isSelected = selections.value.some((item) => item.client.id === row.client.id);
     // 根据选择类型决定传递的状态
     const shouldBeChecked = isAcrossChecked.value ? isSelected : !isSelected;
     handleRowCheckChange(shouldBeChecked, { ...row, id: row.client.id });
   };
-
-  // 全选/取消
-  // const handleSelectAll = ({ checked }: { checked: boolean }) => {
-  //   if (checked) {
-  //     tableData.value.forEach((item: any) => {
-  //       if (item.client.spec.release_change_status !== 'Failed' && item.spec.online_status !== 'Online') return;
-  //       if (!selectedClient.value.find((selected) => selected.id === item.client.id)) {
-  //         selectedClient.value.push({
-  //           id: item.client.id,
-  //           uid: item.client.attachment.uid,
-  //           current_release_name: item.client.spec.current_release_name,
-  //           target_release_name: item.client.spec.target_release_name,
-  //         });
-  //       }
-  //     });
-  //   } else {
-  //     selectedClient.value = [];
-  //   }
-  // };
-
-  // 清空选择
-  // const handleClearSelection = () => {
-  //   selectedClient.value = [];
-  //   tableRef.value.clearSelection();
-  // };
 
   const getErrorDetails = (item: any) => {
     const {

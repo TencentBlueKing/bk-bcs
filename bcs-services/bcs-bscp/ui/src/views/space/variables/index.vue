@@ -141,11 +141,6 @@
   const isSearchEmpty = ref(false);
   const isAcrossChecked = ref(false);
 
-  // table组件的checked属性需要的类型为string[]|rowItem[]，所以这里传原始数据
-  // const checkedVariables = computed(() => {
-  //   return list.value.filter((item) => selectedIds.value.includes(item.id));
-  // });
-
   const arrowShow = computed(() => pagination.value.limit < pagination.value.count);
 
   const { selectType, selections, renderSelection, renderTableTip, handleRowCheckChange, handleClearSelection } =
@@ -218,32 +213,12 @@
   };
 
   // 表格行选择事件
-  // const handleSelectionChange = ({ checked, row }: { checked: boolean; row: IVariableItem }) => {
-  //   const index = selectedIds.value.findIndex((id) => id === row.id);
-  //   if (checked) {
-  //     if (index === -1) {
-  //       selectedIds.value.push(row.id);
-  //     }
-  //   } else {
-  //     selectedIds.value.splice(index, 1);
-  //   }
-  // };
   const handleSelectionChange = (row: IVariableItem) => {
     const isSelected = selections.value.some((item) => item.id === row.id);
-    // const isAcrossChecked = [CheckType.AcrossChecked, CheckType.HalfAcrossChecked].includes(selectType.value);
     // 根据选择类型决定传递的状态
     const shouldBeChecked = isAcrossChecked.value ? isSelected : !isSelected;
     handleRowCheckChange(shouldBeChecked, row);
   };
-
-  // 全选
-  // const handleSelectAll = ({ checked }: { checked: boolean }) => {
-  //   if (checked) {
-  //     selectedIds.value = list.value.map((item) => item.id);
-  //   } else {
-  //     selectedIds.value = [];
-  //   }
-  // };
 
   // 复制
   const handleCopyText = (name: string) => {

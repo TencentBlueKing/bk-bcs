@@ -58,12 +58,6 @@
           :cell-class="getCellCls"
           @page-limit-change="handlePageLimitChange"
           @page-value-change="refreshList($event, true)">
-          <!-- :checked="checkedScripts" -->
-          <!-- @selection-change="handleSelectionChange" -->
-          <!-- :is-row-select-enable="isRowSelectEnable" -->
-          <!-- <bk-table-column type="selection" width="60"></bk-table-column> -->
-          <!-- @page-value-change="handlePageCurrentChange" -->
-          <!-- @select-all="handleSelectAll" -->
           <template #prepend>
             <render-table-tip />
           </template>
@@ -282,10 +276,6 @@
     return windowHeight * 0.6 - 200;
   });
 
-  // const checkedScripts = computed(() => {
-  //   return scriptsData.value.filter((item) => selectedIds.value.includes(item.hook.id));
-  // });
-
   // 当前页数据，不含禁用
   const filterFailureCurTableData = computed(() => {
     return scriptsData.value
@@ -296,7 +286,7 @@
       }));
   });
 
-  const arrowShow = computed(() => pagination.value.limit < pagination.value.count);
+  const arrowShow = computed(() => pagination.value.limit < pagination.value.count && filterDisableCount.value !== 0);
   const { selectType, selections, renderSelection, renderTableTip, handleRowCheckChange, handleClearSelection } =
     useTableAcrossCheck({
       dataCount: filterDisableCount,
@@ -381,31 +371,12 @@
   };
 
   // 表格行选择事件
-  // const handleSelectionChange = ({ checked, row }: { checked: boolean; row: IScriptItem }) => {
-  //   const index = selectedIds.value.findIndex((id) => id === row.hook.id);
-  //   if (checked) {
-  //     if (index === -1) {
-  //       selectedIds.value.push(row.hook.id);
-  //     }
-  //   } else {
-  //     selectedIds.value.splice(index, 1);
-  //   }
-  // };
   const handleSelectionChange = (row: IScriptItem) => {
     const isSelected = selections.value.some((item) => item.hook.id === row.hook.id);
     // 根据选择类型决定传递的状态
     const shouldBeChecked = isAcrossChecked.value ? isSelected : !isSelected;
     handleRowCheckChange(shouldBeChecked, { ...row, id: row.hook.id });
   };
-
-  // 全选
-  // const handleSelectAll = ({ checked }: { checked: boolean }) => {
-  //   if (checked) {
-  //     selectedIds.value = scriptsData.value.filter((item) => item.bound_num === 0).map((item) => item.hook.id);
-  //   } else {
-  //     selectedIds.value = [];
-  //   }
-  // };
 
   const handleSelectTag = (tag: string, all = false) => {
     searchStr.value = '';
@@ -549,19 +520,11 @@
     refreshList();
   };
 
-  // const handlePageCurrentChange = (val: number) => {
-  //   pagination.value.current = val;
-  //   getScripts();
-  // };
-
   const clearSearchStr = () => {
     searchStr.value = '';
     refreshList();
   };
 
-  // const isRowSelectEnable = ({ row, isCheckAll }: any) => {
-  //   return isCheckAll || row.bound_num === 0;
-  // };
   const isChecked = (row: IScriptItem) => {
     if (![CheckType.AcrossChecked, CheckType.HalfAcrossChecked].includes(selectType.value)) {
       // 当前页状态传递

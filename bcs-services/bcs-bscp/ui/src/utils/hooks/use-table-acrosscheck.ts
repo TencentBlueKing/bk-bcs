@@ -104,11 +104,9 @@ export default function useTableAcrossCheck({
     if (value && index === -1 && [CheckType.Uncheck, CheckType.HalfChecked].includes(selectType.value)) {
       // 非跨页选择时，勾选数据正常push
       selections.value.push(row);
-      console.log('正常push');
     } else if (!value && index > -1 && [CheckType.Checked, CheckType.HalfChecked].includes(selectType.value)) {
       // 非跨页选择时，取消勾选数据正常splice
       selections.value.splice(index, 1);
-      console.log('正常slice');
     } else if (
       !value &&
       index === -1 &&
@@ -116,13 +114,6 @@ export default function useTableAcrossCheck({
     ) {
       // 跨页全选/半选时，取消勾选数据push
       selections.value.push(row);
-      console.log(selections.value.length, 'selLength');
-      console.log(dataCount.value, 'dataCount.value');
-      // if (selections.value.length === dataCount.value) {
-      //   // 跨页半选/全选时，当取消勾选的数据和可选总数相同时，即清空
-      //   selections.value = [];
-      // }
-      console.log('取消push');
     } else if (
       value &&
       index > -1 &&
@@ -130,9 +121,7 @@ export default function useTableAcrossCheck({
     ) {
       // 跨页半选时，勾选数据splice
       selections.value.splice(index, 1);
-      console.log('勾选slice');
     }
-    console.log(selections.value, '+++++');
     handleSetSelectType();
   };
 

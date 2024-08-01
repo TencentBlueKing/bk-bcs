@@ -27,10 +27,6 @@
         :pagination="pagination"
         @page-limit-change="handlePageLimitChange"
         @page-value-change="handlePageChange($event)">
-        <!-- @select-all="handleSelectAll" -->
-        <!-- @page-value-change="refreshList($event, true)" -->
-        <!-- @selection-change="handleSelectionChange" -->
-        <!-- <bk-table-column type="selection" :min-width="40" :width="40"></bk-table-column> -->
         <template #prepend>
           <render-table-tip />
         </template>
@@ -362,41 +358,7 @@
   const handleSearchInputChange = debounce(() => {
     refreshList();
   }, 300);
-  // const handleSelectionChange = ({ checked, row }: { checked: boolean; row: ITemplateConfigItem }) => {
-  //   console.log('item选择');
-  //   const configs = props.selectedConfigs.slice();
-  //   if (checked) {
-  //     if (!configs.find((item) => item.id === row.id)) {
-  //       configs.push(row);
-  //     }
-  //   } else {
-  //     const index = configs.findIndex((item) => item.id === row.id);
-  //     if (index > -1) {
-  //       configs.splice(index, 1);
-  //     }
-  //   }
-  //   emits('update:selectedConfigs', configs);
-  // };
-  // const handleSelectionChange = (row: ITemplateConfigItem) => {
-  //   if (![CheckType.AcrossChecked, CheckType.HalfAcrossChecked].includes(selectType.value)) {
-  //     // 当前页状态传递
-  //     handleRowCheckChange(
-  //       !selections.value.some((item) => {
-  //         return item.id === row.id;
-  //       }),
-  //       row,
-  //     );
-  //   } else {
-  //     // 跨页状态传递
-  //     handleRowCheckChange(
-  //       selections.value.some((item) => {
-  //         return item.id === row.id;
-  //       }),
-  //       row,
-  //     );
-  //   }
-  //   emits('update:selectedConfigs', selections.value);
-  // };
+
   const handleSelectionChange = (row: ITemplateConfigItem) => {
     const isSelected = selections.value.some((item) => item.id === row.id);
     // const isAcrossChecked = [CheckType.AcrossChecked, CheckType.HalfAcrossChecked].includes(selectType.value);
@@ -415,16 +377,6 @@
     // 跨页状态传递
     return !selections.value.some((item) => item.id === row.id);
   };
-
-  // const handleSelectAll = ({ checked }: { checked: boolean }) => {
-  //   console.log('全选按钮');
-  //   console.log(list.value);
-  //   if (checked) {
-  //     emits('update:selectedConfigs', list.value);
-  //   } else {
-  //     emits('update:selectedConfigs', []);
-  //   }
-  // };
 
   // 添加至套餐
   const handleOpenAddToPkgsDialog = (config: ITemplateConfigItem, index: number) => {
