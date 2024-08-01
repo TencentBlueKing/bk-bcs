@@ -1733,13 +1733,17 @@ func (s *Service) GetTemplateAndNonTemplateCICount(ctx context.Context, req *pbd
 	}
 
 	binding, err := s.dao.AppTemplateBinding().GetAppTemplateBindingByAppID(kt, req.BizId, req.AppId)
-	if err != nil {
-		return nil, errf.Errorf(errf.DBOpFailed,
-			i18n.T(kt, "obtain template binding relationships through business and service IDs"))
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, errf.Errorf(errf.DBOpFailed, i18n.T(kt,
+			"get template binding relationships through business and service IDs failed, err: %s", err))
+	}
+	templateConfigItemCount := 0
+	if binding != nil {
+		templateConfigItemCount = len(binding.Spec.TemplateIDs)
 	}
 
 	return &pbds.GetTemplateAndNonTemplateCICountResp{
 		ConfigItemCount:         uint64(count),
-		TemplateConfigItemCount: uint64(len(binding.Spec.TemplateIDs)),
+		TemplateConfigItemCount: uint64(templateConfigItemCount),
 	}, nil
 }
