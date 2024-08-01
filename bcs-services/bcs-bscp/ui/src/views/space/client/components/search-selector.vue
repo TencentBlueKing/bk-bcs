@@ -969,6 +969,7 @@
       height: 32px;
       padding-left: 12px;
       line-height: 32px;
+      cursor: pointer;
       &:hover {
         background: #f5f7fa;
       }

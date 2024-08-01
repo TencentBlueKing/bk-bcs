@@ -17,6 +17,7 @@ type BKAIAgentConf struct {
 	Enable     bool                `yaml:"enable"`
 	Host       string              `yaml:"host"`
 	Path       string              `yaml:"path"`
+	StreamPath string              `yaml:"stream_path"`
 	Assistants []BKAIAssistantConf `yaml:"assistants"`
 }
 

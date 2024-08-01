@@ -353,6 +353,7 @@
       border-radius: 2px;
       color: #979ba5;
       font-size: 12px;
+      cursor: pointer;
       .arrow-icon {
         font-size: 16px;
       }

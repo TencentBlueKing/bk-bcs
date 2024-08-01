@@ -85,19 +85,19 @@ func (d *Daemon) autoAllocateTcClusterCidr(error chan<- error) {
 				errLocal := checkClusterAutoScaleCidrValidate(clusters[i])
 				if errLocal != nil {
 					blog.Errorf("autoAllocateTcClusterCidr checkClusterAutoScaleCidrValidate[%s:%s:%s] failed: %v",
-						clusterList[i].GetRegion(), clusterList[i].GetVpcID(), clusterList[i].GetClusterID(), errLocal)
+						clusters[i].GetRegion(), clusters[i].GetVpcID(), clusters[i].GetClusterID(), errLocal)
 					continue
 				}
 
 				errLocal = allocateSubnetsToCluster(d.ctx, d.model, clusters[i])
 				if errLocal != nil {
 					blog.Errorf("autoAllocateTcClusterCidr allocateSubnetsToCluster[%s:%s:%s] failed: %v",
-						clusterList[i].GetRegion(), clusterList[i].GetVpcID(), clusterList[i].GetClusterID(), errLocal)
+						clusters[i].GetRegion(), clusters[i].GetVpcID(), clusters[i].GetClusterID(), errLocal)
 					continue
 				}
 
-				blog.Errorf("autoAllocateTcClusterCidr[%s:%s:%s] successful",
-					clusterList[i].GetRegion(), clusterList[i].GetVpcID(), clusterList[i].GetClusterID())
+				blog.Infof("autoAllocateTcClusterCidr[%s:%s:%s] successful",
+					clusters[i].GetRegion(), clusters[i].GetVpcID(), clusters[i].GetClusterID())
 			}
 
 		}(clusters)
@@ -115,8 +115,12 @@ func checkClusterAutoScaleCidrValidate(cluster cmproto.Cluster) error {
 		return fmt.Errorf("%s cluster[%s] platform not enable vpc-cni", errStr, cluster.GetClusterID())
 	}
 
-	if cluster.GetNetworkSettings().GetStatus() == common.StatusRunning {
+	if cluster.GetNetworkSettings().GetStatus() == common.StatusInitialization {
 		return fmt.Errorf("%s cluster[%s] doing enable/disable vpc-cni", errStr, cluster.GetClusterID())
+	}
+
+	if cluster.GetNetworkSettings().GetStatus() == common.TaskStatusFailure {
+		return fmt.Errorf("%s cluster[%s] enable/disable vpc-cni failure", errStr, cluster.GetClusterID())
 	}
 
 	if cluster.GetNetworkSettings().GetSubnetSource() == nil ||

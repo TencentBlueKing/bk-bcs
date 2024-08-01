@@ -16,6 +16,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	helmrelease "helm.sh/helm/v3/pkg/release"
@@ -110,6 +111,8 @@ func (r *ReleasePreviewAction) getReleasePreview() (*helmmanager.ReleasePreview,
 	if err != nil {
 		return nil, fmt.Errorf("get release preview, get contents failed, %s", err.Error())
 	}
+	// 过滤掉不支持的参数
+	r.req.Args = filtArgs(r.req.GetArgs())
 	result, err := release.InstallRelease(r.releaseHandler, contextx.GetProjectIDFromCtx(r.ctx), projectCode,
 		r.req.GetClusterID(), r.req.GetName(), r.req.GetNamespace(), r.req.GetChart(), r.req.GetVersion(),
 		r.createBy, username, r.req.GetArgs(), nil, contents, r.req.GetValues(), true, true, true)
@@ -119,6 +122,25 @@ func (r *ReleasePreviewAction) getReleasePreview() (*helmmanager.ReleasePreview,
 	newRelease := result.Release
 
 	return r.generateReleasePreview(currentRelease.Transfer2Release(), newRelease)
+}
+
+// 过滤掉不支持的参数
+func filtArgs(args []string) []string {
+	// 黑名单参数
+	filtContent := map[string]struct{}{
+		"--force": {},
+	}
+	result := []string{}
+	for _, value := range args {
+		s := strings.Split(value, "=")
+		if len(s) > 0 {
+			if _, ok := filtContent[s[0]]; ok {
+				continue
+			}
+			result = append(result, value)
+		}
+	}
+	return result
 }
 
 func (r *ReleasePreviewAction) generateReleasePreview(oldRelease,

@@ -10000,7 +10000,7 @@ func (m *CreateTemplateMetadataReq) validate(all bool) error {
 
 	// no validation rules for IsDraft
 
-	// no validation rules for BaseVersion
+	// no validation rules for DraftVersion
 
 	// no validation rules for DraftContent
 
@@ -10148,7 +10148,7 @@ func (m *UpdateTemplateMetadataReq) validate(all bool) error {
 
 	// no validation rules for IsDraft
 
-	// no validation rules for BaseVersion
+	// no validation rules for DraftVersion
 
 	// no validation rules for DraftContent
 

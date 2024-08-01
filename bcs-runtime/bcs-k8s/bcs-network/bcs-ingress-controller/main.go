@@ -256,7 +256,7 @@ func main() {
 	mgr.Add(webhookServer) // nolint
 
 	// init cloud loadbalance backend status collector
-	collector := cloudcollector.NewCloudCollector(lbClient, mgr.GetClient())
+	collector := cloudcollector.NewCloudCollector(lbClient, mgr.GetClient(), opts.HealthCheckIntervalSecs)
 	go collector.Start()
 	metrics.Registry.MustRegister(collector)
 

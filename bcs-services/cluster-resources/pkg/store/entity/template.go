@@ -32,7 +32,7 @@ type Template struct {
 	VersionMode   int                `json:"versionMode" bson:"versionMode"`
 	Version       string             `json:"version" bson:"version"`
 	IsDraft       bool               `json:"isDraft" bson:"isDraft"`
-	BaseVersion   string             `json:"baseVersion" bson:"baseVersion"`
+	DraftVersion  string             `json:"draftVersion" bson:"draftVersion"`
 	DraftContent  string             `json:"draftContent" bson:"draftContent"`
 }
 
@@ -47,6 +47,7 @@ func (t *Template) ToMap() map[string]interface{} {
 	m["projectCode"] = t.ProjectCode
 	m["description"] = t.Description
 	m["templateSpace"] = t.TemplateSpace
+	m["templateSpaceID"] = ""
 	m["resourceType"] = t.ResourceType
 	m["creator"] = t.Creator
 	m["updator"] = t.Updator
@@ -55,8 +56,9 @@ func (t *Template) ToMap() map[string]interface{} {
 	m["tags"] = t.Tags
 	m["versionMode"] = t.VersionMode
 	m["version"] = t.Version
+	m["versionID"] = ""
 	m["isDraft"] = t.IsDraft
-	m["baseVersion"] = t.BaseVersion
+	m["draftVersion"] = t.DraftVersion
 	m["draftContent"] = t.DraftContent
 	return m
 }

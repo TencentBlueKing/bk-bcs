@@ -14,10 +14,13 @@
 package aiagent
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
 	"strings"
 
 	"k8s.io/klog/v2"
@@ -42,20 +45,23 @@ type AssistantResponseData struct {
 }
 
 // Assistant ai assistant
-func Assistant(ctx context.Context, bk_ticket, role, input string) (string, error) {
+func Assistant(ctx context.Context, bk_ticket, role, input, username string, stream bool) (interface{}, error) {
 	if !config.G.BKAIAgent.Enable {
 		return "", errors.New("assistant is not enabled")
 	}
 	for _, v := range config.G.BKAIAgent.Assistants {
 		if v.Role == role {
-			return BKAssistant(ctx, bk_ticket, v.Prompt, input)
+			if stream {
+				return BKAssistantStream(ctx, bk_ticket, v.Prompt, input, username)
+			}
+			return BKAssistant(ctx, bk_ticket, v.Prompt, input, username)
 		}
 	}
 	return "", errors.New("assistant not found")
 }
 
 // BKAssistant ai assistant
-func BKAssistant(ctx context.Context, bk_ticket, prompt, input string) (string, error) {
+func BKAssistant(ctx context.Context, bk_ticket, prompt, input, username string) (string, error) {
 
 	out := &AssistantResponse{}
 
@@ -67,10 +73,12 @@ func BKAssistant(ctx context.Context, bk_ticket, prompt, input string) (string, 
 			"input": input,
 			"chat_history": []map[string]interface{}{
 				{"role": "user", "content": prompt},
+				// hunyuan 必须要有一对对话，因此这里加一条历史记录
+				{"role": "assistant", "content": "ok"},
 			},
 		},
 		"context": map[string]interface{}{
-			"executor": "bcs",
+			"executor": username,
 		},
 	}
 
@@ -93,4 +101,44 @@ func BKAssistant(ctx context.Context, bk_ticket, prompt, input string) (string, 
 		return "", errors.New(out.Message)
 	}
 	return out.Data.Ouputs.Output, nil
+}
+
+// BKAssistantStream ai assistant stream
+func BKAssistantStream(ctx context.Context, bk_ticket, prompt, input, username string) (io.ReadCloser, error) {
+
+	url := fmt.Sprintf("%s/%s", strings.TrimRight(config.G.BKAIAgent.Host, "/"),
+		strings.TrimLeft(config.G.BKAIAgent.StreamPath, "/"))
+
+	body := map[string]interface{}{
+		"inputs": map[string]interface{}{
+			"input": input,
+			"chat_history": []map[string]interface{}{
+				{"role": "user", "content": prompt},
+				// hunyuan 必须要有一对对话，因此这里加一条历史记录
+				{"role": "assistant", "content": "ok"},
+			},
+		},
+		"context": map[string]interface{}{
+			"executor": username,
+		},
+	}
+	jsonData, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+
+	authHeader := fmt.Sprintf("{\"bk_ticket\": \"%s\", \"bk_app_code\": \"%s\", \"bk_app_secret\": \"%s\"}",
+		bk_ticket, config.G.Base.AppCode, config.G.Base.AppSecret)
+	req, err := http.NewRequest("POST", url, bytes.NewReader(jsonData))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("X-Bkapi-Authorization", authHeader)
+	req.Header.Set("Content-Type", "application/json")
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	return resp.Body, nil
 }

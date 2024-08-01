@@ -14,6 +14,8 @@
 package web
 
 import (
+	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/go-chi/render"
@@ -23,6 +25,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/component/notice"
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/i18n"
+	"github.com/Tencent/bk-bcs/bcs-ui/pkg/middleware"
 )
 
 // GetCurrentAnnouncements 获取当前公告
@@ -41,8 +44,9 @@ func (s *WebServer) GetCurrentAnnouncements(w http.ResponseWriter, r *http.Reque
 
 // AssistantRequest assistant request
 type AssistantRequest struct {
-	Role  string `json:"role"`
-	Input string `json:"input"`
+	Role   string `json:"role"`
+	Input  string `json:"input"`
+	Stream bool   `json:"stream"`
 }
 
 // Bind request
@@ -52,36 +56,59 @@ func (a *AssistantRequest) Bind(r *http.Request) error {
 
 // Assistant ai assistant
 func (s *WebServer) Assistant(w http.ResponseWriter, r *http.Request) {
-	okResponse := &OKResponse{
+	resp := &OKResponse{
 		Message:   "success",
 		RequestID: r.Header.Get("x-request-id"),
 	}
-	data := &AssistantRequest{}
-	if err := render.Bind(r, data); err != nil {
-		okResponse.Code = http.StatusBadRequest
-		okResponse.Message = err.Error()
-		render.JSON(w, r, okResponse)
+	req := &AssistantRequest{}
+	if err := render.Bind(r, req); err != nil {
+		resp.Code = http.StatusBadRequest
+		resp.Message = err.Error()
+		render.JSON(w, r, resp)
 		return
 	}
 
 	// 用户登录鉴权
-	bk_ticket := GetBKTicketByRequest(r)
-	if bk_ticket == "" {
-		okResponse.Code = 401
-		okResponse.Message = "user is invalid"
-		render.JSON(w, r, okResponse)
+	bk_ticket := middleware.MustGetBKTicketFromContext(r.Context())
+	user := middleware.MustGetUserFromContext(r.Context())
+
+	out, err := aiagent.Assistant(r.Context(), bk_ticket, req.Role, req.Input, user.UserName, req.Stream)
+	if err != nil {
+		resp.Code = http.StatusBadRequest
+		resp.Message = err.Error()
+		render.JSON(w, r, resp)
 		return
 	}
 
-	out, err := aiagent.Assistant(r.Context(), GetBKTicketByRequest(r), data.Role, data.Input)
-	if err != nil {
-		okResponse.Code = http.StatusBadRequest
-		okResponse.Message = err.Error()
-		render.JSON(w, r, okResponse)
+	if req.Stream {
+		w.Header().Set("Content-Type", "text/event-stream")
+		w.Header().Set("Transfer-Encoding", "chunked")
+		buf := make([]byte, 4096)
+		data := out.(io.ReadCloser)
+		defer data.Close()
+		for {
+			n, err := data.Read(buf)
+			if n > 0 {
+				_, writeErr := w.Write(buf[:n])
+				if writeErr != nil {
+					http.Error(w, "Error writing response", http.StatusInternalServerError)
+					return
+				}
+			}
+			if err != nil {
+				if err != io.EOF {
+					http.Error(w, fmt.Sprintf("Error reading from API, err %s", err), http.StatusInternalServerError)
+					return
+				}
+				break
+			}
+		}
+		// r = r.WithContext(context.WithValue(r.Context(), render.ContentTypeCtxKey, render.ContentTypeEventStream))
+		// render.DefaultResponder(w, r, out)
 		return
 	}
-	okResponse.Data = map[string]interface{}{
+	resp.Data = map[string]interface{}{
 		"output": out,
 	}
-	render.JSON(w, r, okResponse)
+	render.JSON(w, r, resp)
 }

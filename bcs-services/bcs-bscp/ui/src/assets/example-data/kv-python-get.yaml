@@ -12,6 +12,5 @@ def main(key):
         print(pair.value)
 
 if __name__ == "__main__":
-    # 请将 {{ YOUR_KEY }} 替换为您的实际 Key
-    key = {{ .Bk_Bscp_Variable_Python_Key }}
+    key = {{ .Bk_Bscp_Variable_KeyName }}
     main(key)
