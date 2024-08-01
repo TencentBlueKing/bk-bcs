@@ -159,6 +159,20 @@ func (t *TemplateVersionAction) List(
 	sort.Sort(entity.VersionsSortByVersion(templateVersion))
 
 	m := make([]map[string]interface{}, 0)
+	// append draft version
+	if tmp.IsDraft {
+		draftVersion := &entity.TemplateVersion{
+			ProjectCode:   tmp.ProjectCode,
+			TemplateSpace: tmp.TemplateSpace,
+			TemplateName:  tmp.Name,
+			Version:       tmp.DraftVersion,
+			Content:       tmp.DraftContent,
+			Creator:       tmp.Updator,
+			CreateAt:      tmp.UpdateAt,
+			Draft:         true,
+		}
+		m = append(m, draftVersion.ToMap())
+	}
 	for _, value := range templateVersion {
 		if value.Version == tmp.Version {
 			value.Latest = true

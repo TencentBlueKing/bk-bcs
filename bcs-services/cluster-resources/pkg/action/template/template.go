@@ -526,9 +526,6 @@ func (t *TemplateAction) PreviewTemplateFile(ctx context.Context, req *clusterRe
 	if errr := t.checkClusterAccess(ctx, req.GetClusterID(), req.GetNamespace(), manifests); errr != nil {
 		return nil, errr
 	}
-	if errr := perm.Validate(ctx, "", crAction.Create, p.ID, req.GetClusterID(), req.GetNamespace()); errr != nil {
-		return nil, errr
-	}
 
 	// dry-run deploy templates
 	dryRunMsg := ""
