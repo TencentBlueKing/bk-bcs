@@ -174,7 +174,6 @@
     try {
       pending.value = true;
       const templateIds = props.value.map((item) => item.id);
-      const appIds = citedList.value.map((item) => item.app_id);
       await addTemplateToPackage(
         spaceId.value,
         currentTemplateSpace.value,
@@ -183,7 +182,6 @@
         isAcrossChecked.value,
         typeof currentPkg.value === 'string' ? 0 : currentPkg.value,
         currentPkg.value === 'no_specified',
-        appIds,
       );
       emits('added');
       close();

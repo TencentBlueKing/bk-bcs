@@ -187,7 +187,6 @@
   const handleConfirm = async () => {
     try {
       pending.value = true;
-      const appIds = checkedPkgs.value.map((item) => item.template_id);
       await moveOutTemplateFromPackage(
         spaceId.value,
         currentTemplateSpace.value,
@@ -196,7 +195,6 @@
         isAcrossChecked.value,
         typeof props.currentPkg === 'string' ? 0 : props.currentPkg,
         props.currentPkg === 'no_specified',
-        appIds,
       );
       emits('movedOut');
       close();

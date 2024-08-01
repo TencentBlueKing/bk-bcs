@@ -221,9 +221,12 @@
   const selectedIds = computed(() => {
     return (selections.value as IGroupItem[]).filter((item) => item.released_apps_num === 0).map((item) => item.id);
   });
-  // 是否提供跨页全选的功能
+  // 是否提供跨页全选功能
   const arrowShow = computed(() => {
-    return isCategorizedView.value || pagination.value.limit >= groupList.value.length;
+    return (
+      isCategorizedView.value ||
+      (pagination.value.limit < groupList.value.length && filterFailureTableData.value.length !== 0)
+    );
   });
 
   const { selectType, selections, renderSelection, renderTableTip, handleRowCheckChange, handleClearSelection } =

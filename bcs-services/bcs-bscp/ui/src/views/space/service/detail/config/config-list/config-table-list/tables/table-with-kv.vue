@@ -268,16 +268,10 @@
   // });
 
   // 跨页全选
-  // const filterFailureTableData = computed(() => groupList.value.filter((item) => item.released_apps_num < 1));
   const filterFailureCurTableData = computed(() => configList.value.filter((item) => item.kv_state !== 'DELETE'));
-  // const selectedIds = computed(() => {
-  //   return (selections.value as IGroupItem[]).filter((item) => item.released_apps_num === 0).map((item) => item.id);
-  // });
-  const arrowShow = computed(() => pagination.value.limit < pagination.value.count);
-
+  const arrowShow = computed(() => pagination.value.limit < pagination.value.count && filterDisableCount.value !== 0);
   const { selectType, selections, renderSelection, renderTableTip, handleRowCheckChange, handleClearSelection } =
     useTableAcrossCheck({
-      // dataCount: toRef(pagination.value, 'count'), // 总数，不含禁用
       dataCount: filterDisableCount, // 总数，不含禁用row
       curPageData: filterFailureCurTableData, // 当前页数据，不含禁用row
       rowKey: ['id'],
@@ -376,7 +370,7 @@
         state.allConfigCount = res.count;
       });
       configStore.$patch((state) => {
-        state.filterDisableCount = Number(res.conflict_number);
+        state.filterDisableCount = Number(res.exclusion_count);
       });
       pagination.value.count = res.count;
     } catch (e) {

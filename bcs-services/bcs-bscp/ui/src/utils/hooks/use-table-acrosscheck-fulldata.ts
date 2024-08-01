@@ -23,7 +23,7 @@ export default function useTableAcrossCheck({
     return h(AcrossCheck, {
       value: selectType.value,
       disabled: !tableData.value.length,
-      arrowShow: !arrowShow?.value,
+      arrowShow: arrowShow?.value,
       onChange: handleSelectTypeChange,
     });
   };

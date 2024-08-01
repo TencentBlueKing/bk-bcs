@@ -287,13 +287,21 @@
   // });
 
   // 当前页数据，不含禁用
-  const filterFailureCurTableData = computed(() => scriptsData.value.filter((item) => item.bound_num === 0));
+  const filterFailureCurTableData = computed(() => {
+    return scriptsData.value
+      .filter((item) => item.bound_num === 0)
+      .map((item) => ({
+        ...item,
+        id: item.hook?.id,
+      }));
+  });
+
   const arrowShow = computed(() => pagination.value.limit < pagination.value.count);
   const { selectType, selections, renderSelection, renderTableTip, handleRowCheckChange, handleClearSelection } =
     useTableAcrossCheck({
       dataCount: filterDisableCount,
       curPageData: filterFailureCurTableData, // 当前页数据，不含禁用
-      rowKey: ['published_revision_id'],
+      rowKey: ['id'],
       arrowShow,
     });
 
@@ -310,7 +318,7 @@
     selections,
     () => {
       isAcrossChecked.value = [CheckType.HalfAcrossChecked, CheckType.AcrossChecked].includes(selectType.value);
-      selectedIds.value = selections.value.map((item) => item.published_revision_id);
+      selectedIds.value = selections.value.map((item) => item.id);
     },
     {
       deep: true,
@@ -344,7 +352,7 @@
     });
     pagination.value.count = res.count;
     scriptStore.$patch((state) => {
-      state.filterDisableCount = Number(res.uncited_count); // 待更新
+      state.filterDisableCount = Number(res.exclusion_count);
     });
     scriptsLoading.value = false;
   };
@@ -384,10 +392,10 @@
   //   }
   // };
   const handleSelectionChange = (row: IScriptItem) => {
-    const isSelected = selections.value.some((item) => item.published_revision_id === row.published_revision_id);
+    const isSelected = selections.value.some((item) => item.hook.id === row.hook.id);
     // 根据选择类型决定传递的状态
     const shouldBeChecked = isAcrossChecked.value ? isSelected : !isSelected;
-    handleRowCheckChange(shouldBeChecked, row);
+    handleRowCheckChange(shouldBeChecked, { ...row, id: row.hook.id });
   };
 
   // 全选
@@ -557,10 +565,10 @@
   const isChecked = (row: IScriptItem) => {
     if (![CheckType.AcrossChecked, CheckType.HalfAcrossChecked].includes(selectType.value)) {
       // 当前页状态传递
-      return selections.value.some((item) => item.published_revision_id === row.published_revision_id);
+      return selections.value.some((item) => item.hook?.id === row.hook?.id);
     }
     // 跨页状态传递
-    return !selections.value.some((item) => item.published_revision_id === row.published_revision_id);
+    return !selections.value.some((item) => item.hook?.id === row.hook?.id);
   };
 </script>
 <style lang="scss" scoped>
