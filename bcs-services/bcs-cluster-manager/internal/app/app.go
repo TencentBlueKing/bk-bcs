@@ -829,7 +829,8 @@ func (cm *ClusterManager) initCommonHandler(router *mux.Router) error {
 	commonWebService := new(restful.WebService).
 		Consumes(restful.MIME_XML, restful.MIME_JSON).
 		Produces(restful.MIME_JSON, restful.MIME_XML)
-	commonWebService.Route(commonWebService.GET("/clustermanager/v1/common/downloadtaskrecords").To(commonHandler.DownloadTaskRecords))
+	commonWebService.Route(commonWebService.GET("/clustermanager/v1/common/downloadtaskrecords").
+		To(commonHandler.DownloadTaskRecords))
 	commonContainer.Add(commonWebService)
 	router.Handle(commonHandlerURL, commonContainer)
 	blog.Infof("register common handler to path %s", commonHandlerURL)

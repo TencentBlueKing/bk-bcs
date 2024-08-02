@@ -32,6 +32,11 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
+const (
+	// ParameterValTrue parameter value true
+	ParameterValTrue = "true"
+)
+
 // Validate local implementation
 var Validate = validator.New()
 
@@ -50,14 +55,13 @@ func NewCommonHandler(model store.ClusterManagerModel, locker lock.DistributedLo
 }
 
 // DownloadTaskRecords download task records
-func (h *Handler) DownloadTaskRecords(request *restful.Request, response *restful.Response) {
+func (h *Handler) DownloadTaskRecords(request *restful.Request, response *restful.Response) { // nolint
 	blog.V(3).Infof("xreq %s, host %s, url %s, src %s",
 		utils.GetXRequestIDFromHTTPRequest(request.Request),
 		request.Request.Host,
 		request.Request.URL,
 		request.Request.RemoteAddr)
 	start := time.Now()
-	code := 200
 
 	resourceType := request.QueryParameter("resourceType")
 	resourceID := request.QueryParameter("resourceID")
@@ -83,12 +87,12 @@ func (h *Handler) DownloadTaskRecords(request *restful.Request, response *restfu
 	}
 	simpleStr := request.QueryParameter("simple")
 	simple := false
-	if simpleStr == "true" {
+	if simpleStr == ParameterValTrue {
 		simple = true
 	}
 	taskIDNullStr := request.QueryParameter("taskIDNull")
 	taskIDNull := false
-	if taskIDNullStr == "true" {
+	if taskIDNullStr == ParameterValTrue {
 		taskIDNull = true
 	}
 	clusterID := request.QueryParameter("clusterID")
@@ -97,7 +101,7 @@ func (h *Handler) DownloadTaskRecords(request *restful.Request, response *restfu
 	taskType := request.QueryParameter("taskType")
 	v2Str := request.QueryParameter("v2")
 	v2 := false
-	if v2Str == "true" {
+	if v2Str == ParameterValTrue {
 		v2 = true
 	}
 	ipList := request.QueryParameter("ipList")
@@ -128,11 +132,10 @@ func (h *Handler) DownloadTaskRecords(request *restful.Request, response *restfu
 	operRsp := &cmproto.ListOperationLogsResponse{}
 	operationlog.NewListOperationLogsAction(h.model).Handle(context.Background(), operReq, operRsp)
 	if operRsp.Code != common.BcsErrClusterManagerSuccess {
-		code = httpCodeClientError
 		message := fmt.Sprintf("get operation log failed, err %s", operRsp.Message)
 		blog.Warnf("get operation log failed, err %s", operRsp.Message)
 		WriteClientError(response, common.BcsErrClusterManagerStoreOperationFailed, message)
-		metrics.ReportAPIRequestMetric("DownloadTaskRecords", "http", strconv.Itoa(code), start)
+		metrics.ReportAPIRequestMetric("DownloadTaskRecords", "http", strconv.Itoa(httpCodeClientError), start)
 		return
 	}
 
@@ -145,11 +148,10 @@ func (h *Handler) DownloadTaskRecords(request *restful.Request, response *restfu
 		recordRsp := &cmproto.TaskRecordsResponse{}
 		operationlog.NewTaskRecordsAction(h.model).Handle(context.Background(), recordReq, recordRsp)
 		if recordRsp.Code != common.BcsErrClusterManagerSuccess {
-			code = httpCodeClientError
 			message := fmt.Sprintf("get operation log failed, err %s", recordRsp.Message)
 			blog.Warnf("get operation log failed, err %s", recordRsp.Message)
 			WriteClientError(response, common.BcsErrClusterManagerStoreOperationFailed, message)
-			metrics.ReportAPIRequestMetric("DownloadTaskRecords", "http", strconv.Itoa(code), start)
+			metrics.ReportAPIRequestMetric("DownloadTaskRecords", "http", strconv.Itoa(httpCodeClientError), start)
 			return
 		}
 
@@ -173,5 +175,5 @@ func (h *Handler) DownloadTaskRecords(request *restful.Request, response *restfu
 	filename := fmt.Sprintf("bcs-cluster-manager-taskrecords-%s.log", time.Now().Format("20060102150405"))
 	response.AddHeader("Content-Type", "application/octet-stream")
 	response.AddHeader("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
-	response.Write([]byte(str))
+	response.Write([]byte(str)) // nolint
 }
