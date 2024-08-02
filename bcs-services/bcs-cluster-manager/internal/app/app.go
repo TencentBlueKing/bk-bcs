@@ -78,7 +78,9 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/gse"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/install/addons"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/install/helm"
+	installTypes "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/install/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/job"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/nodeman"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/passcc"
@@ -384,7 +386,19 @@ func (cm *ClusterManager) initRemoteClient() error { // nolint
 	}
 
 	// init helm client
-	err = helm.SetHelmManagerClient(&helm.Options{
+	err = helm.SetHelmManagerClient(&installTypes.Options{
+		Enable:          cm.opt.Helm.Enable,
+		GateWay:         cm.opt.Helm.GateWay,
+		Token:           cm.opt.Helm.Token,
+		Module:          cm.opt.Helm.Module,
+		EtcdRegistry:    cm.microRegistry,
+		ClientTLSConfig: cm.clientTLSConfig,
+	})
+	if err != nil {
+		return err
+	}
+	// init addons client
+	err = addons.SetAddonsClient(&installTypes.Options{
 		Enable:          cm.opt.Helm.Enable,
 		GateWay:         cm.opt.Helm.GateWay,
 		Token:           cm.opt.Helm.Token,
@@ -450,23 +464,6 @@ func (cm *ClusterManager) initBKOpsClient() error {
 	}
 
 	return nil
-}
-
-// init helm client
-func (cm *ClusterManager) initHelmClient() error { // nolint
-	err := helm.SetHelmManagerClient(&helm.Options{
-		Enable:          cm.opt.Helm.Enable,
-		GateWay:         cm.opt.Helm.GateWay,
-		Token:           cm.opt.Helm.Token,
-		Module:          cm.opt.Helm.Module,
-		EtcdRegistry:    cm.microRegistry,
-		ClientTLSConfig: cm.clientTLSConfig,
-	})
-	if err != nil {
-		return err
-	}
-
-	return err
 }
 
 // init iam client for perm
@@ -1071,6 +1068,7 @@ func (cm *ClusterManager) close() {
 	closeCtx, closeCancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer closeCancel()
 	helm.GetHelmManagerClient().Stop()
+	addons.GetAddonsClient().Stop()
 	cm.extraServer.Shutdown(closeCtx) // nolint
 	cm.httpServer.Shutdown(closeCtx)  // nolint
 	cm.daemon.Stop()

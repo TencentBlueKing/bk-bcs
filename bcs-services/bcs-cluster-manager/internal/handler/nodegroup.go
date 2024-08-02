@@ -34,7 +34,7 @@ func (cm *ClusterManager) CreateNodeGroup(ctx context.Context,
 		return err
 	}
 	start := time.Now()
-	ca := nodegroup.NewCreateAction(cm.model)
+	ca := nodegroup.NewCreateAction(cm.model, cm.locker)
 	ca.Handle(ctx, req, resp)
 	metrics.ReportAPIRequestMetric("CreateNodeGroup", "grpc", strconv.Itoa(int(resp.Code)), start)
 	blog.Infof("reqID: %s, action: CreateNodeGroup, req %v, resp %v", reqID, req, resp)

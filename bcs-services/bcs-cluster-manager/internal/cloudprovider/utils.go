@@ -54,6 +54,8 @@ const (
 	CordonNodesAction = "cordonNodes"
 	// WatchTask watch component common job
 	WatchTask = "watchjob"
+	// InstallImagePullSecretAddonAction imagePull component common job
+	InstallImagePullSecretAddonAction = "installImagePullSecret"
 	// RemoveHostFromCmdbAction remove host action
 	RemoveHostFromCmdbAction = "removeHostFromCmdb"
 	// CheckNodeIpsInCmdbAction check node if in cmdb

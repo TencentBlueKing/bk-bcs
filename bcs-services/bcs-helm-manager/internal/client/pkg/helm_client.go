@@ -57,4 +57,7 @@ type ReleaseClient interface {
 	Upgrade(ctx context.Context, req *helmmanager.UpgradeReleaseV1Req) error
 	Rollback(ctx context.Context, req *helmmanager.RollbackReleaseV1Req) error
 	GetReleaseHistory(ctx context.Context, req *helmmanager.GetReleaseHistoryReq) ([]*helmmanager.ReleaseHistory, error)
+	ReleasePreview(ctx context.Context, req *helmmanager.ReleasePreviewReq) (*helmmanager.ReleasePreview, error)
+	GetReleaseManifest(ctx context.Context, req *helmmanager.GetReleaseManifestReq) (
+		map[string]*helmmanager.FileContent, error)
 }

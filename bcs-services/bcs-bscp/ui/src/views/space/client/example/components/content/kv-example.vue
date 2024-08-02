@@ -3,7 +3,7 @@
     <form-option
       ref="fileOptionRef"
       :directory-show="false"
-      :http-config-show="props.kvName === 'http'"
+      :http-config-show="props.kvName === 'http' || (props.kvName === 'python' && activeTab === 0)"
       @update-option-data="(data) => getOptionData(data)" />
     <div class="preview-container">
       <div class="kv-handle-content">
@@ -82,7 +82,7 @@
         if (!activeTab.value) {
           return {
             topTip: `${t('用于主动获取配置项值的场景，此方法不会监听服务器端的配置更改，有关Python SDK的部署环境和依赖组件，请参阅白皮书中的')} <a href="${url}" target="_blank">${t('BSCP Python SDK依赖说明')}</a>`,
-            codePreviewHeight: 356,
+            codePreviewHeight: 336,
           };
         }
         // watch
@@ -158,9 +158,7 @@
   watch(
     () => props.kvName,
     (newV) => {
-      if (newV === 'http') {
-        tabArr.value = ['Shell', 'Python'];
-      }
+      tabArr.value = newV === 'http' ? ['Shell', 'Python'] : [t('Get方法'), t('Watch方法')];
       codeVal.value = '';
       nextTick(() => handleTab());
     },
@@ -210,16 +208,7 @@
   const updateReplaceVal = () => {
     let updateString = replaceVal.value;
     let feedAddrVal = (window as any).GRPC_ADDR;
-    if (props.kvName === 'python') {
-      updateString = updateString.replace(
-        '请将 {{ YOUR_KEY }} 替换为您的实际 Key',
-        t('请将 {{ YOUR_KEY }} 替换为您的实际 Key'),
-      );
-    }
     if (props.kvName === 'http') {
-      // http的两个label特殊处理
-      // const replaceStr = optionData.value.labelArr.length > 0 ? 'labels=' : '# labels=';
-      // updateString = updateString.replace('{{ .Bk_Bscp_Variable_Start_Leabels }}', replaceStr);
       // http的host特殊处理
       feedAddrVal = (window as any).HTTP_ADDR;
     }

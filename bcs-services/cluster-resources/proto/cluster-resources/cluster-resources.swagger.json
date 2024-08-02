@@ -9910,7 +9910,7 @@
           "type": "boolean",
           "title": "是否草稿"
         },
-        "baseVersion": {
+        "draftVersion": {
           "type": "string",
           "title": "基于模板文件版本"
         },
@@ -10871,7 +10871,7 @@
           "type": "boolean",
           "title": "是否草稿"
         },
-        "baseVersion": {
+        "draftVersion": {
           "type": "string",
           "title": "基于模板文件版本"
         },

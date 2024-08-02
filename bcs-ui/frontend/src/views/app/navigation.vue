@@ -196,16 +196,16 @@ export default defineComponent({
     const appName = computed(() => config.i18n.name);
     const langs = ref([
       {
-        icon: 'bk-icon icon-english',
-        name: 'English',
-        id: 'en-US',
-        locale: 'en',
-      },
-      {
         icon: 'bk-icon icon-chinese',
         name: '中文',
         id: 'zh-CN', // bcs 前端语言标识
         locale: 'zh-cn', // cookie标识
+      },
+      {
+        icon: 'bk-icon icon-english',
+        name: 'English',
+        id: 'en-US',
+        locale: 'en',
       },
     ]);
     const curLang = computed(() => langs.value.find(item => item.id === $i18n.locale) || { id: 'zh-CN', icon: 'bk-icon icon-chinese' });
@@ -307,8 +307,14 @@ export default defineComponent({
     const handleChangeLang = async (item) => {
       // $i18n.locale = item.id;// 后面 $router.go(0) 会重新加载界面，这里会导致一瞬间被切换了，然后界面再刷新
       langRef.value?.hide();
+
+      // 设置cookie过期时间为366天
+      const date = new Date();
+      date.setTime(date.getTime() + 366 * 24 * 60 * 60 * 1000);
+      const expiresStr = date.toUTCString();
+
       // 修改cookie
-      setCookie('blueking_language', item.locale, window.BK_DOMAIN);
+      setCookie('blueking_language', item.locale, window.BK_DOMAIN, expiresStr);
       // 修改用户管理语言
       jsonp(
         `${window.BK_USER_HOST}/api/c/compapi/v2/usermanage/fe_update_user_language/?language=${item.locale}`,

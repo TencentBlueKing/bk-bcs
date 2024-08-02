@@ -638,12 +638,10 @@
   en: TerminationGracePeriodSecs
 - msgID: 数据卷
   en: Volume
-- msgID: "将作为 Pod & Selector 标签"
-  en: "Will be used as pod & selector label"
 - msgID: 无集群查看权限
   en: "no cluster view permission"
-- msgID: 检查共享集群命名空间权限失败
-  en: "checking shared cluster namespace permissions failed"
+- msgID: 命名空间为空
+  en: "namespace is empty"
 - msgID: "命名空间 %s 在该共享集群中不属于指定项目"
   en: "namespace %s not belong to project in this shared cluster"
 - msgID: "创建 %s 需要指定 metadata.namespace"

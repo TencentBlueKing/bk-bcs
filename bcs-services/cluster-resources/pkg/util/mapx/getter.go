@@ -53,7 +53,7 @@ func getItems(obj map[string]interface{}, paths []string) (interface{}, error) {
 // Get 若指定值不存在，则返回默认值
 func Get(obj map[string]interface{}, paths interface{}, _default interface{}) interface{} {
 	ret, err := GetItems(obj, paths)
-	if err != nil {
+	if err != nil || ret == nil {
 		return _default
 	}
 	return ret

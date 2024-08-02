@@ -7771,6 +7771,12 @@
           "type": "string",
           "description": "vpcDomain内部域名配置",
           "title": "vpcDomain"
+        },
+        "disableCheckGroupResource": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "cloud是否关闭节点池资源quota校验开关",
+          "title": "disableCheckGroupResource"
         }
       },
       "description": "用于记录云公共配置信息",

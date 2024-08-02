@@ -31,15 +31,16 @@ import (
 // RegisterCommonActions register common actions
 func RegisterCommonActions() map[string]interface{} {
 	return map[string]interface{}{
-		cloudprovider.BKSOPTask:                  RunBKsopsJob,
-		cloudprovider.UnCordonNodesAction:        UnCordonNodesTask,
-		cloudprovider.CordonNodesAction:          CordonNodesTask,
-		cloudprovider.WatchTask:                  EnsureWatchComponentTask,
-		cloudprovider.InstallGseAgentAction:      InstallGSEAgentTask,
-		cloudprovider.TransferHostModuleAction:   TransferHostModuleTask,
-		cloudprovider.RemoveHostFromCmdbAction:   RemoveHostFromCMDBTask,
-		cloudprovider.JobFastExecuteScriptAction: JobExecuteScriptTask,
-		cloudprovider.EnsureAutoScalerAction:     EnsureAutoScalerTask,
+		cloudprovider.BKSOPTask:                         RunBKsopsJob,
+		cloudprovider.UnCordonNodesAction:               UnCordonNodesTask,
+		cloudprovider.CordonNodesAction:                 CordonNodesTask,
+		cloudprovider.WatchTask:                         EnsureWatchComponentTask,
+		cloudprovider.InstallImagePullSecretAddonAction: EnsureInstallImageSecretTask,
+		cloudprovider.InstallGseAgentAction:             InstallGSEAgentTask,
+		cloudprovider.TransferHostModuleAction:          TransferHostModuleTask,
+		cloudprovider.RemoveHostFromCmdbAction:          RemoveHostFromCMDBTask,
+		cloudprovider.JobFastExecuteScriptAction:        JobExecuteScriptTask,
+		cloudprovider.EnsureAutoScalerAction:            EnsureAutoScalerTask,
 
 		cloudprovider.InstallVclusterAction:              InstallVclusterTask,
 		cloudprovider.DeleteVclusterAction:               UnInstallVclusterTask,

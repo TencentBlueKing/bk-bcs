@@ -3363,6 +3363,11 @@ message CloudConfigInfo {
       title: "vpcDomain",
       description: "vpcDomain内部域名配置"
     }];
+  bool disableCheckGroupResource = 8[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "disableCheckGroupResource",
+      description: "cloud是否关闭节点池资源quota校验开关"
+    }];
 }
 
 // CloudNetworkInfo storage for cloud network info

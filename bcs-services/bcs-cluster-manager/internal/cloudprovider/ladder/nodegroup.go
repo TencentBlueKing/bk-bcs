@@ -21,6 +21,10 @@ import (
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/daemon"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/resource"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 var groupMgr sync.Once
@@ -359,6 +363,94 @@ func (ng *NodeGroup) SwitchAutoScalingOptionStatus(scalingOption *proto.ClusterA
 }
 
 // CheckResourcePoolQuota check resource pool quota when revise group limit
-func (ng *NodeGroup) CheckResourcePoolQuota(region, instanceType string, groupId string) error {
+func (ng *NodeGroup) CheckResourcePoolQuota(group *proto.NodeGroup, scaleUpNum uint32) error {
+	cloud, err := cloudprovider.GetCloudByProvider(cloudName)
+	if err == nil && cloud.GetConfInfo().GetDisableCheckGroupResource() {
+		return nil
+	}
+
+	if !utils.StringInSlice(group.GetNodeGroupType(), []string{common.Normal.String(), ""}) {
+		return nil
+	}
+
+	if group.GetExtraInfo() != nil && utils.StringContainInSlice(group.ExtraInfo[resource.ResourcePoolType],
+		[]string{resource.SelfPool, resource.CrPool}) {
+		return nil
+	}
+
+	if group.GetRegion() == "" || group.GetLaunchTemplate().GetInstanceType() == "" || scaleUpNum <= 0 {
+		return nil
+	}
+
+	// 获取当前资源池的使用情况 & 超卖情况
+	pools, err := daemon.GetRegionDevicePoolDetail(cloudprovider.GetStorageModel(), group.GetRegion(),
+		group.GetLaunchTemplate().GetInstanceType(), nil)
+	if err != nil {
+		return fmt.Errorf("get region %s instanceType %s device pool detail failed, %s",
+			group.GetRegion(), group.GetLaunchTemplate().GetInstanceType(), err.Error())
+	}
+
+	resourceZones := make([]string, 0)
+	for _, pool := range pools {
+		blog.Infof("cloud[%s] CheckResourcePoolQuota pool[%s] region[%s] zone[%s] instanceType[%s] poolTotal[%v] "+
+			"poolAvailable[%v] groupQuota[%v] groupUsed[%v]", cloudName, pool.PoolId, pool.Region, pool.Zone,
+			pool.InstanceType, pool.Total, pool.Available, pool.GroupQuota, pool.GroupUsed)
+
+		resourceZones = append(resourceZones, pool.Zone)
+	}
+
+	anyZone := func() bool {
+		if group.GetAutoScaling().GetZones() == nil {
+			return true
+		}
+
+		if len(group.GetAutoScaling().GetZones()) == 1 && group.GetAutoScaling().GetZones()[0] == "" {
+			return true
+		}
+
+		return false
+	}()
+
+	// nodegroup config any zone
+	if anyZone {
+		var (
+			poolTotal  int32
+			groupQuota int32
+		)
+		for i := range pools {
+			poolTotal += pools[i].Total
+			groupQuota += int32(pools[i].GroupQuota)
+		}
+
+		blog.Infof("cloud[%s] CheckResourcePoolQuota[%s] anyZone poolTotal[%v] groupQuota[%v] scaleUpNum[%v]",
+			cloudName, group.GetNodeGroupID(), poolTotal, groupQuota, scaleUpNum)
+
+		if groupQuota+int32(scaleUpNum) > poolTotal {
+			return fmt.Errorf("anyZone region[%s] instanceType[%s] poolQuota insufficient",
+				group.GetRegion(), group.GetLaunchTemplate().GetInstanceType())
+		}
+
+		return nil
+	}
+
+	// 预测分配
+	zoneNum := daemon.AllocateZoneResource(group.GetNodeGroupID(), group.GetRegion(),
+		group.GetLaunchTemplate().GetInstanceType(), group.GetAutoScaling().GetZones(), resourceZones, int(scaleUpNum))
+
+	blog.Infof("cloud[%s] CheckResourcePoolQuota[%s] zoneNum[%+v]", cloudName, group.GetNodeGroupID(), zoneNum)
+
+	errors := utils.NewMultiError()
+	// 检验配额是否充足
+	for i := range pools {
+		num, ok := zoneNum[pools[i].Zone]
+		if ok && num > 0 && (pools[i].GroupQuota+num) > int(pools[i].Total) {
+			errors.Append(fmt.Errorf("region[%s] zone[%s] instanceType[%s] poolQuota insufficient",
+				group.GetRegion(), pools[i].Zone, group.GetLaunchTemplate().GetInstanceType()))
+		}
+	}
+	if errors.HasErrors() {
+		return errors
+	}
+
 	return nil
 }

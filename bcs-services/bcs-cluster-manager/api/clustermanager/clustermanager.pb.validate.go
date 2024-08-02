@@ -9427,6 +9427,8 @@ func (m *CloudConfigInfo) validate(all bool) error {
 
 	// no validation rules for VpcDomain
 
+	// no validation rules for DisableCheckGroupResource
+
 	if len(errors) > 0 {
 		return CloudConfigInfoMultiError(errors)
 	}

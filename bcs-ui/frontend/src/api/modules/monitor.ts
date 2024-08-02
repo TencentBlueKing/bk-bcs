@@ -25,6 +25,7 @@ export const clusterNodeCpuRequestUsage = request('get', '/nodes/$nodeIP/cpu_req
 export const clusterNodeMemoryRequestUsage = request('get', '/nodes/$nodeIP/memory_request_usage'); // 节点内存装箱率
 export const clusterNodeMetric = request('get', '/nodes/$nodeIP/$metric');// 节点指标（自定义参数）
 export const clusterNodeOverview = request('get', '/nodes/$nodeIP/overview');
+export const clusterAllNodeOverview = request('post', '/nodes/overviews');
 export const clusterPodMetric = request('post', '/namespaces/$namespaceId/pods/$metric');
 export const clusterContainersMetric = request('get', '/namespaces/$namespaceId/pods/$podId/containers/$containerId/$metric');
 

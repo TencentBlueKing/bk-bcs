@@ -10,19 +10,8 @@
  * limitations under the License.
  */
 
-package helm
-
-import (
-	"crypto/tls"
-)
-
-const (
-	// ModuleHelmManager default discovery helmmanager module
-	ModuleHelmManager = "helmmanager.bkbcs.tencent.com"
-
-	// PubicRepo public repo
-	PubicRepo = "public-repo"
-)
+// Package types xxx
+package types
 
 var (
 	// operator default operator
@@ -61,19 +50,3 @@ var (
 	// FailedUninstall xxx
 	FailedUninstall = "failed-uninstall"
 )
-
-// Config for bcsapi
-type Config struct {
-	// bcsapi host, available like 127.0.0.1:8080
-	Hosts []string
-	// tls configuratio
-	TLSConfig *tls.Config
-	// AuthToken for permission verification
-	AuthToken string
-	// clusterID for Kubernetes/Mesos operation
-	ClusterID string
-	// Header for request header
-	Header map[string]string
-	// InnerClientName for bcs inner auth, like bcs-cluster-manager
-	InnerClientName string
-}

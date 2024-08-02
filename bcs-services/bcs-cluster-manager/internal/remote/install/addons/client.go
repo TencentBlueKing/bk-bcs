@@ -10,12 +10,11 @@
  * limitations under the License.
  */
 
-// Package helm xxx
-package helm
+// Package addons xxx
+package addons
 
 import (
 	"context"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/helmmanager"
@@ -26,13 +25,13 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
-// helmClient helm-manager client
-var helmClient *HelmClient
+// addonsClient addons client
+var addonsClient *AddonsClient
 
-// SetHelmManagerClient set global helm-manager client
-func SetHelmManagerClient(opts *types.Options) error {
+// SetAddonsClient set global addons client
+func SetAddonsClient(opts *types.Options) error {
 	var err error
-	helmClient, err = NewHelmClient(opts)
+	addonsClient, err = NewAddonsClient(opts)
 	if err != nil {
 		return err
 	}
@@ -40,59 +39,59 @@ func SetHelmManagerClient(opts *types.Options) error {
 	return nil
 }
 
-// GetHelmManagerClient get helm manager client
-func GetHelmManagerClient() *HelmClient {
-	return helmClient
+// GetAddonsClient get addon client
+func GetAddonsClient() *AddonsClient {
+	return addonsClient
 }
 
-// HelmClient client for helmmanager
-type HelmClient struct { // nolint
+// AddonsClient client for addons
+type AddonsClient struct { // nolint
 	opts      *types.Options
 	discovery *discovery.ModuleDiscovery
 	ctx       context.Context
 	cancel    context.CancelFunc
 }
 
-// NewHelmClient init helm manager and start discovery module(helmmanager)
-func NewHelmClient(opts *types.Options) (*HelmClient, error) {
+// NewAddonsClient init addon client and start discovery module
+func NewAddonsClient(opts *types.Options) (*AddonsClient, error) {
 	ok := opts.Validate()
 	if !ok {
 		return nil, nil
 	}
 
-	helmClient := &HelmClient{
+	addonsLocalClient := &AddonsClient{
 		opts: opts,
 	}
-	helmClient.ctx, helmClient.cancel = context.WithCancel(context.Background())
+	addonsLocalClient.ctx, addonsLocalClient.cancel = context.WithCancel(context.Background())
 
 	if len(opts.GateWay) == 0 {
-		helmClient.discovery = discovery.NewModuleDiscovery(opts.Module, opts.EtcdRegistry)
-		err := helmClient.discovery.Start()
+		addonsLocalClient.discovery = discovery.NewModuleDiscovery(opts.Module, opts.EtcdRegistry)
+		err := addonsLocalClient.discovery.Start()
 		if err != nil {
 			blog.Errorf("start discovery[%s] client failed: %v", types.ModuleHelmManager, err)
 			return nil, err
 		}
 	}
 
-	return helmClient, nil
+	return addonsLocalClient, nil
 }
 
-// GetHelmManagerClient get helm client
-func (hm *HelmClient) GetHelmManagerClient() (helmmanager.HelmManagerClient, func(), error) {
-	if hm == nil {
+// GetAddonsClient get addons client
+func (ac *AddonsClient) GetAddonsClient() (helmmanager.ClusterAddonsClient, func(), error) {
+	if ac == nil {
 		return nil, nil, types.ErrNotInited
 	}
 
 	conf := &bcsapi.Config{
-		TLSConfig:       hm.opts.ClientTLSConfig,
+		TLSConfig:       ac.opts.ClientTLSConfig,
 		InnerClientName: common.ClusterManager,
 	}
 
-	if len(hm.opts.GateWay) != 0 {
-		conf.Hosts = []string{hm.opts.GateWay}
-		conf.AuthToken = hm.opts.Token
+	if len(ac.opts.GateWay) != 0 {
+		conf.Hosts = []string{ac.opts.GateWay}
+		conf.AuthToken = ac.opts.Token
 	} else {
-		nodeServer, err := hm.discovery.GetRandomServiceNode()
+		nodeServer, err := ac.discovery.GetRandomServiceNode()
 		if err != nil {
 			return nil, nil, err
 		}
@@ -100,19 +99,19 @@ func (hm *HelmClient) GetHelmManagerClient() (helmmanager.HelmManagerClient, fun
 		conf.Hosts = endpoints
 	}
 
-	blog.Infof("GetHelmManagerClient config[%+v]", *conf)
+	blog.Infof("GetAddonsClient config[%+v]", *conf)
 
-	cli, closeCon := helmmanager.NewHelmClient(conf)
+	cli, closeCon := helmmanager.NewHelmAddonsClient(conf)
 	return cli, closeCon, nil
 }
 
-// Stop stop HelmManagerClient
-func (hm *HelmClient) Stop() {
-	if hm == nil {
+// Stop stop addonsClient
+func (ac *AddonsClient) Stop() {
+	if ac == nil {
 		return
 	}
-	if hm.discovery != nil {
-		hm.discovery.Stop()
+	if ac.discovery != nil {
+		ac.discovery.Stop()
 	}
-	hm.cancel()
+	ac.cancel()
 }

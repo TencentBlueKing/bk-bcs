@@ -52,15 +52,15 @@ var messageKeyToIndex = map[string]int{
 	"decompression failed %s":             5,
 	"default_val %s is not a number type": 33,
 	"detecting file conflicts failed %s":  7,
-	"hook is nil":                         32,
-	"hook name %s already exists":         21,
-	"id is required":                      0,
-	"id should not be set":                25,
-	"invalid argument":                    24,
-	"invalid name, length should <= 128":  30,
+	"get template binding relationships through business and service IDs failed, err: %s": 20,
+	"hook is nil":                        32,
+	"hook name %s already exists":        21,
+	"id is required":                     0,
+	"id should not be set":               25,
+	"invalid argument":                   24,
+	"invalid name, length should <= 128": 30,
 	"invalid name, length should >= 9 and must start with prefix bk_bscp_ (ignore case)":                                         29,
 	"invalid name: %s, only allows to include english、numbers、underscore (_), and must start with prefix bk_bscp_ (ignore case)": 31,
-	"obtain template binding relationships through business and service IDs":                                                     20,
 	"obtain the number of configuration items":                                                                                   19,
 	"read file failed %s":                           1,
 	"revision not set":                              28,
@@ -83,14 +83,14 @@ var enIndex = []uint32{ // 36 elements
 	0x00000115, 0x00000126, 0x00000145, 0x00000191,
 	0x000001d5, 0x000001f6, 0x00000211, 0x0000025b,
 	0x0000026f, 0x0000029c, 0x000002f3, 0x00000307,
-	0x00000330, 0x00000377, 0x00000396, 0x000003c7,
-	0x000003db, 0x000003ec, 0x00000401, 0x0000040e,
-	0x00000421, 0x00000432, 0x00000485, 0x000004a8,
+	0x00000330, 0x00000387, 0x000003a6, 0x000003d7,
+	0x000003eb, 0x000003fc, 0x00000411, 0x0000041e,
+	0x00000431, 0x00000442, 0x00000495, 0x000004b8,
 	// Entry 20 - 3F
-	0x0000052a, 0x00000536, 0x0000055d, 0x0000057e,
+	0x0000053a, 0x00000546, 0x0000056d, 0x0000058e,
 } // Size: 168 bytes
 
-const enData string = "" + // Size: 1406 bytes
+const enData string = "" + // Size: 1422 bytes
 	"\x02id is required\x02read file failed %[1]s\x02create directory failed " +
 	"%[1]s\x02create temporary directory failed %[1]s\x02decompress the file." +
 	" The size of file %[1]s exceeds the maximum limit of %[2]s\x02decompress" +
@@ -103,15 +103,16 @@ const enData string = "" + // Size: 1406 bytes
 	"\x02batch delete failed\x02template variable name must start with %[1]s" +
 	"\x02the length of template variable ids is %[1]d, it must be within the " +
 	"range of [1,%[2]d]\x02app %[1]d not found\x02obtain the number of config" +
-	"uration items\x02obtain template binding relationships through business " +
-	"and service IDs\x02hook name %[1]s already exists\x02same template varia" +
-	"ble name %[1]s already exists\x02db operation failed\x02invalid argument" +
-	"\x02id should not be set\x02spec not set\x02attachment not set\x02revisi" +
-	"on not set\x02invalid name, length should >= 9 and must start with prefi" +
-	"x bk_bscp_ (ignore case)\x02invalid name, length should <= 128\x02invali" +
-	"d name: %[1]s, only allows to include english、numbers、underscore (_), an" +
-	"d must start with prefix bk_bscp_ (ignore case)\x02hook is nil\x02defaul" +
-	"t_val %[1]s is not a number type\x02unsupported variable type: %[1]s"
+	"uration items\x02get template binding relationships through business and" +
+	" service IDs failed, err: %[1]s\x02hook name %[1]s already exists\x02sam" +
+	"e template variable name %[1]s already exists\x02db operation failed\x02" +
+	"invalid argument\x02id should not be set\x02spec not set\x02attachment n" +
+	"ot set\x02revision not set\x02invalid name, length should >= 9 and must " +
+	"start with prefix bk_bscp_ (ignore case)\x02invalid name, length should " +
+	"<= 128\x02invalid name: %[1]s, only allows to include english、numbers、un" +
+	"derscore (_), and must start with prefix bk_bscp_ (ignore case)\x02hook " +
+	"is nil\x02default_val %[1]s is not a number type\x02unsupported variable" +
+	" type: %[1]s"
 
 var zhIndex = []uint32{ // 36 elements
 	// Entry 0 - 1F
@@ -120,23 +121,23 @@ var zhIndex = []uint32{ // 36 elements
 	0x0000010c, 0x00000119, 0x00000134, 0x00000177,
 	0x000001ab, 0x000001c7, 0x000001e0, 0x00000220,
 	0x00000233, 0x0000025d, 0x000002a3, 0x000002c0,
-	0x000002d6, 0x00000306, 0x00000323, 0x0000034d,
-	0x0000035c, 0x00000369, 0x0000037e, 0x00000392,
-	0x000003ac, 0x000003c4, 0x00000418, 0x00000439,
+	0x000002d6, 0x000002d6, 0x000002f3, 0x0000031d,
+	0x0000032c, 0x00000339, 0x0000034e, 0x00000362,
+	0x0000037c, 0x00000394, 0x000003e8, 0x00000409,
 	// Entry 20 - 3F
-	0x000004b4, 0x000004c4, 0x000004e9, 0x0000050a,
+	0x00000484, 0x00000494, 0x000004b9, 0x000004da,
 } // Size: 168 bytes
 
-const zhData string = "" + // Size: 1290 bytes
+const zhData string = "" + // Size: 1242 bytes
 	"\x02id不能为空\x02读取文件失败: %[1]s\x02创建文件目录失败: %[1]s\x02创建临时目录失败: %[1]s\x02解压文" +
 	"件失败，文件 %[1]s 的大小超过了最大限制阈值 %[2]s\x02解压文件失败：%[1]s\x02上传文件失败：%[1]s\x02检测文" +
 	"件冲突失败: %[1]s\x02上传完成\x02上传完成, %[1]d 失败\x02解压文件失败，超过了文件数量最大限制阈值 %[1]d" +
 	"\x02上传失败，请确保文件大小不超过 %[1]s\x02批量删除配置项失败\x02批量删除群组失败\x02脚本id列表的长度为%[1]d, 长" +
 	"度范围必须为[1,%[2]d]\x02批量删除失败\x02模版变量名必须以%[1]s前缀开头\x02全局变量id列表的长度为%[1]d, 长" +
-	"度范围必须为[1,%[2]d]\x02ID为%[1]d的服务不存在\x02获取配置项数量\x02通过业务和服务ID获取模板绑定关系\x02脚" +
-	"本名称 %[1]s 已存在\x02同名的模版变量名称%[1]s已存在\x02db操作失败\x02无效参数\x02id不应该被设置\x02sp" +
-	"ec没有被设置\x02attachment没有被设置\x02revision没有被设置\x02无效名称，长度应该>=9且必须以bk_bscp_前" +
-	"缀开头（忽略大小写）\x02无效名称，长度应该<=128\x02无效名称：%[1]s，只允许英文、数字、下划线（_），且必须以bk_bscp" +
-	"_前缀开头（忽略大小写）\x02脚本不存在\x02default_val %[1]s 不是数字类型\x02不支持的变量类型：%[1]s"
+	"度范围必须为[1,%[2]d]\x02ID为%[1]d的服务不存在\x02获取配置项数量\x02脚本名称 %[1]s 已存在\x02同名的模" +
+	"版变量名称%[1]s已存在\x02db操作失败\x02无效参数\x02id不应该被设置\x02spec没有被设置\x02attachment" +
+	"没有被设置\x02revision没有被设置\x02无效名称，长度应该>=9且必须以bk_bscp_前缀开头（忽略大小写）\x02无效名称，" +
+	"长度应该<=128\x02无效名称：%[1]s，只允许英文、数字、下划线（_），且必须以bk_bscp_前缀开头（忽略大小写）\x02脚本不" +
+	"存在\x02default_val %[1]s 不是数字类型\x02不支持的变量类型：%[1]s"
 
-	// Total table size 3032 bytes (2KiB); checksum: D17D1708
+	// Total table size 3000 bytes (2KiB); checksum: DEEDFD78

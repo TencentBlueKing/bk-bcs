@@ -10,16 +10,4 @@
  * limitations under the License.
  */
 
-package web
-
-import "net/http"
-
-// GetBKTicketByRequest get the bk_ticket by request
-func GetBKTicketByRequest(r *http.Request) string {
-	cookie, err := r.Cookie("bk_ticket")
-	if err == nil && cookie != nil {
-		return cookie.Value
-	}
-
-	return ""
-}
+package addons

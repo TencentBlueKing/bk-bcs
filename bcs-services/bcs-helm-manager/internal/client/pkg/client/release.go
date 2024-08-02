@@ -48,6 +48,10 @@ const (
 	urlReleaseDetailV1Rollback = "/projects/%s/clusters/%s/namespaces/%s/releases/%s/rollback"
 	// urlReleaseHistoryGet
 	urlReleaseHistoryGet = "/projects/%s/clusters/%s/namespaces/%s/releases/%s/history"
+	// urlReleasePreview
+	urlReleasePreview = "/projects/%s/clusters/%s/namespaces/%s/releases/%s/preview"
+	// urlReleaseManifestGet
+	urlReleaseManifestGet = "/projects/%s/clusters/%s/namespaces/%s/releases/%s/revisions/%d/manifest"
 )
 
 // Release return a pkg.ReleaseClient instance
@@ -393,6 +397,102 @@ func (rl *release) GetReleaseHistory(ctx context.Context, req *helmmanager.GetRe
 
 	if r.GetCode() != resultCodeSuccess {
 		return nil, fmt.Errorf("rollback release get result code %d, message: %s", r.GetCode(), r.GetMessage())
+	}
+
+	return r.Data, nil
+}
+
+// ReleasePreview release preview
+func (rl *release) ReleasePreview(ctx context.Context, req *helmmanager.ReleasePreviewReq) (
+	*helmmanager.ReleasePreview, error) {
+	if req == nil {
+		return nil, fmt.Errorf("release preview request is empty")
+	}
+
+	projectCode := req.GetProjectCode()
+	if projectCode == "" {
+		return nil, fmt.Errorf("release preview projectCode can not be empty")
+	}
+	clusterID := req.GetClusterID()
+	if clusterID == "" {
+		return nil, fmt.Errorf("release preview clusterID can not be empty")
+	}
+	namespace := req.GetNamespace()
+	if namespace == "" {
+		return nil, fmt.Errorf("release preview namespace can not be empty")
+	}
+	name := req.GetName()
+	if name == "" {
+		return nil, fmt.Errorf("release preview name can not be empty")
+	}
+
+	data, _ := json.Marshal(req)
+	resp, err := rl.post(
+		ctx,
+		urlPrefix+fmt.Sprintf(urlReleasePreview, projectCode, clusterID, namespace, name),
+		nil,
+		data,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	var r helmmanager.ReleasePreviewResp
+	if err = unmarshalPB(resp.Reply, &r); err != nil {
+		return nil, err
+	}
+
+	if r.GetCode() != resultCodeSuccess {
+		return nil, fmt.Errorf("release preview get result code %d, message: %s", r.GetCode(), r.GetMessage())
+	}
+
+	return r.Data, nil
+}
+
+// GetReleaseManifest get release manifest
+func (rl *release) GetReleaseManifest(ctx context.Context, req *helmmanager.GetReleaseManifestReq) (
+	map[string]*helmmanager.FileContent, error) {
+	if req == nil {
+		return nil, fmt.Errorf("get release manifest request is empty")
+	}
+
+	projectCode := req.GetProjectCode()
+	if projectCode == "" {
+		return nil, fmt.Errorf("get release manifest projectCode can not be empty")
+	}
+	clusterID := req.GetClusterID()
+	if clusterID == "" {
+		return nil, fmt.Errorf("get release manifest clusterID can not be empty")
+	}
+	namespace := req.GetNamespace()
+	if namespace == "" {
+		return nil, fmt.Errorf("get release manifest namespace can not be empty")
+	}
+	name := req.GetName()
+	if name == "" {
+		return nil, fmt.Errorf("get release manifest name can not be empty")
+	}
+	// 上层做了校验
+	revision := *req.Revision
+
+	data, _ := json.Marshal(req)
+	resp, err := rl.get(
+		ctx,
+		urlPrefix+fmt.Sprintf(urlReleaseManifestGet, projectCode, clusterID, namespace, name, revision),
+		nil,
+		data,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	var r helmmanager.GetReleaseManifestResp
+	if err = unmarshalPB(resp.Reply, &r); err != nil {
+		return nil, err
+	}
+
+	if r.GetCode() != resultCodeSuccess {
+		return nil, fmt.Errorf("get release manifest get result code %d, message: %s", r.GetCode(), r.GetMessage())
 	}
 
 	return r.Data, nil

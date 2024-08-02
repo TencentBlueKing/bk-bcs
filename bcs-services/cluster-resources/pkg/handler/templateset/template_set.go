@@ -131,11 +131,11 @@ func (h *Handler) ListTemplateMetadata(
 func (h *Handler) CreateTemplateMetadata(
 	ctx context.Context, in *clusterRes.CreateTemplateMetadataReq, out *clusterRes.CommonResp) error {
 	action := template.NewTemplateAction(h.model)
-	id, err := action.Create(ctx, in)
+	id, versionID, err := action.Create(ctx, in)
 	if err != nil {
 		return err
 	}
-	if out.Data, err = pbstruct.Map2pbStruct(map[string]interface{}{"id": id}); err != nil {
+	if out.Data, err = pbstruct.Map2pbStruct(map[string]interface{}{"id": id, "versionID": versionID}); err != nil {
 		return err
 	}
 	return nil
