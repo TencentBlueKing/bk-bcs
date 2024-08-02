@@ -20,26 +20,42 @@ export default defineStore('global', () => {
     resources: [],
   });
   const appGlobalConfig = ref({
-    name: '服务配置中心',
-    nameEn: 'BSCP',
+    name: '',
+    nameEn: '',
     appLogo: '',
-    favicon: `${(window as any).BK_STATIC_URL}/favicon.ico`,
-    brandName: '蓝鲸',
-    brandNameEn: 'BlueKing',
+    favicon: '',
+    brandName: '',
+    brandNameEn: '',
     footerCopyrightContent: '',
     i18n: {
-      name: localT('服务配置中心'),
-      brandName: localT('蓝鲸'),
-      footerInfoHTML: `<a href="https://wpa1.qq.com/KziXGWJs?_type=wpa&qidian=true" target="_blank">${localT('技术支持')}</a> |
-      <a href="https://bk.tencent.com/s-mart/community/" target="_blank">${localT('社区论坛')}</a> |
-      <a href="https://bk.tencent.com/index/" target="_blank">${localT('产品官网')}</a>`,
+      name: '',
+      brandName: '',
+      footerInfoHTML: '',
     },
   });
 
   const getAppGlobalConfig = async () => {
+    const defaultConfig = {
+      name: '服务配置中心',
+      nameEn: 'BSCP',
+      appLogo: '',
+      favicon: `${(window as any).BK_STATIC_URL}/favicon.ico`,
+      brandName: '蓝鲸',
+      brandNameEn: 'BlueKing',
+      footerCopyrightContent: '',
+      i18n: {
+        name: localT('服务配置中心'),
+        brandName: localT('蓝鲸'),
+        footerInfoHTML: `<a href="https://wpa1.qq.com/KziXGWJs?_type=wpa&qidian=true" target="_blank">${localT('技术支持')}</a> |
+        <a href="https://bk.tencent.com/s-mart/community/" target="_blank">${localT('社区论坛')}</a> |
+        <a href="https://bk.tencent.com/index/" target="_blank">${localT('产品官网')}</a>`,
+      },
+    };
     if ((window as any).BK_SHARED_RES_BASE_JS_URL) {
-      const config = await getPlatformConfig((window as any).BK_SHARED_RES_BASE_JS_URL, { version: bscpVersion.value });
+      const config = await getPlatformConfig((window as any).BK_SHARED_RES_BASE_JS_URL, defaultConfig);
       appGlobalConfig.value = config;
+    } else {
+      appGlobalConfig.value = defaultConfig;
     }
     setShortcutIcon(appGlobalConfig.value.favicon);
     setDocumentTitle(appGlobalConfig.value.i18n);

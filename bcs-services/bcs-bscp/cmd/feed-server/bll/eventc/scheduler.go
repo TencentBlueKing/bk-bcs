@@ -328,12 +328,15 @@ func (sch *Scheduler) buildEvent(inst *sfs.InstanceSpec, ciList []*types.Release
 	for _, one := range ciList {
 		cis := one.ConfigItemSpec
 		// filter out mismatched config items
-		isMatch := lo.SomeBy(inst.Match, func(scope string) bool {
-			ok, _ := tools.MatchConfigItem(scope, cis.Path, cis.Name)
-			return ok
-		})
-		if !isMatch {
-			continue
+		// if inst.Match is empty, then all the config items are matched.
+		if len(inst.Match) > 0 {
+			isMatch := lo.SomeBy(inst.Match, func(scope string) bool {
+				ok, _ := tools.MatchConfigItem(scope, cis.Path, cis.Name)
+				return ok
+			})
+			if !isMatch {
+				continue
+			}
 		}
 		m := &sfs.ConfigItemMetaV1{
 			ID:       one.ID,

@@ -306,10 +306,20 @@
             "fuzzy": true
         },
         {
-            "id": "obtain template binding relationships through business and service IDs",
-            "message": "obtain template binding relationships through business and service IDs",
-            "translation": "obtain template binding relationships through business and service IDs",
+            "id": "get template binding relationships through business and service IDs failed, err: {Err}",
+            "message": "get template binding relationships through business and service IDs failed, err: {Err}",
+            "translation": "get template binding relationships through business and service IDs failed, err: {Err}",
             "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
             "fuzzy": true
         },
         {

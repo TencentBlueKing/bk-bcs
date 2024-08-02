@@ -146,6 +146,7 @@
   import CryptoJS from 'crypto-js';
   import { TextFill, Done, Info, Error } from 'bkui-vue/lib/icon';
   import BkMessage from 'bkui-vue/lib/message';
+  import { cloneDeep } from 'lodash';
   import { IConfigEditParams, IFileConfigContentSummary } from '../../../../../../../../types/config';
   import { IVariableEditParams } from '../../../../../../../../types/variable';
   import { updateConfigContent, downloadConfigContent } from '../../../../../../../api/config';
@@ -312,13 +313,15 @@
     () => props.content,
     () => {
       if (props.config.file_type === 'binary') {
-        fileContent.value = props.content as IFileConfigContentSummary;
+        fileContent.value = cloneDeep(props.content as IFileConfigContentSummary);
         if (props.isEdit) {
-          uploadFile.value = {
-            file: { ...fileContent.value },
-            status: 'success',
-          };
-          uploadFileSignature.value = fileContent.value.signature;
+          if (fileContent.value.signature) {
+            uploadFile.value = {
+              file: { ...fileContent.value },
+              status: 'success',
+            };
+            uploadFileSignature.value = fileContent.value.signature;
+          }
         }
       } else {
         stringContent.value = props.content as string;
