@@ -624,18 +624,26 @@ export function throttle(fn, delay) {
   };
 }
 
-export function setCookie(name: string, value: string) {
-  const { host } = location;
-  if (host.split('.').length === 1) {
-    document.cookie = `${name}=${value}; path=/`;
-  } else {
-    const domainParts = host.split('.');
-    if (domainParts.length > 2) {
-      const domain = domainParts.slice(domainParts.length - 1 - 2, domainParts.length - 1);
-      document.cookie = `${name}=${value}; path=/; domain=.${domain.join('.')}`;
-    }
-    document.cookie = `${name}=${value}`;
+/**
+ * 设置浏览器Cookie的函数
+ * @param key Cookie的键
+ * @param value Cookie的值
+ * @param domain Cookie所适用的域名
+ * @param expires Cookie的过期时间  Sat, 02 Aug 2025 07:02:43 GMT
+ */
+export function setCookie(key: string, value: string, domain?: string, expires?: string): void {
+  const expiresStr = expires ? `; expires=${expires}` : '';
+
+  // 构建Cookie字符串
+  let cookieString = `${encodeURIComponent(key)}=${encodeURIComponent(value)}${expiresStr}; path=/`;
+
+  // 如果提供了domain，则将其添加到Cookie字符串中
+  if (domain) {
+    cookieString += `; domain=${domain}`;
   }
+
+  // 设置Cookie
+  document.cookie = cookieString;
 }
 
 export function compareVersion(v1, v2) {

@@ -135,6 +135,7 @@ import $router from '@/router';
 import $store from '@/store';
 import SystemLog from '@/views/app/log.vue';
 import ProjectSelector from '@/views/app/project-selector.vue';
+import jsonp from 'jsonp';
 
 export default defineComponent({
   name: 'NewNavigation',
@@ -151,16 +152,16 @@ export default defineComponent({
     const appName = computed(() => config.i18n.name);
     const langs = ref([
       {
-        icon: 'bk-icon icon-english',
-        name: 'English',
-        id: 'en-US',
-        locale: 'en',
-      },
-      {
         icon: 'bk-icon icon-chinese',
         name: '中文',
         id: 'zh-CN',
         locale: 'zh-CN', // cookie标识
+      },
+      {
+        icon: 'bk-icon icon-english',
+        name: 'English',
+        id: 'en-US',
+        locale: 'en',
       },
     ]);
     const curLang = computed(() => langs.value.find(item => item.id === $i18n.locale) || { id: 'zh-CN', icon: 'bk-icon icon-chinese' });
@@ -237,12 +238,23 @@ export default defineComponent({
     const langRef = ref();
     const handleChangeLang = async (item) => {
       // $i18n.locale = item.id;// 后面 $router.go(0) 会重新加载界面，这里会导致一瞬间被切换了，然后界面再刷新
-      setCookie('blueking_language', item.locale);
       langRef.value?.hide();
-      await switchLanguage({
-        lang: item.locale,
-      });
-      await $router.go(0);
+
+      // 设置cookie过期时间为366天
+      const date = new Date();
+      date.setTime(date.getTime() + 366 * 24 * 60 * 60 * 1000);
+      const expiresStr = date.toUTCString();
+
+      // 修改cookie
+      setCookie('blueking_language', item.locale, window.BK_DOMAIN, expiresStr);
+      // 修改用户管理语言
+      jsonp(
+        `${window.BK_USER_HOST}/api/c/compapi/v2/usermanage/fe_update_user_language/?language=${item.locale}`,
+        { param: 'callback', timeout: 100 },
+        () => {
+          $router.go(0);
+        },
+      );
     };
     // 帮助文档
     const handleGotoHelp  = () => {
