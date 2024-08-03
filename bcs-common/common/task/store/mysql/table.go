@@ -43,7 +43,6 @@ type TaskRecords struct {
 	ForceTerminate      bool              `json:"forceTerminate"`
 	Start               time.Time         `json:"start"`
 	End                 time.Time         `json:"end"`
-	LastUpdate          time.Time         `json:"lastUpdate"`
 	ExecutionTime       uint32            `json:"executionTime"`
 	MaxExecutionSeconds uint32            `json:"maxExecutionSeconds"`
 	Creator             string            `json:"creator" gorm:"type:varchar(255)"`
@@ -69,7 +68,6 @@ type StepRecords struct {
 	RetryCount          uint32            `json:"retryCount"`
 	Start               time.Time         `json:"start"`
 	End                 time.Time         `json:"end"`
-	LastUpdate          time.Time         `json:"lastUpdate"`
 	ExecutionTime       uint32            `json:"executionTime"`
 	MaxExecutionSeconds uint32            `json:"maxExecutionSeconds"`
 }
@@ -94,6 +92,6 @@ func (t *StepRecords) ToStep() *types.Step {
 		End:                 t.End,
 		ExecutionTime:       t.ExecutionTime,
 		MaxExecutionSeconds: t.MaxExecutionSeconds,
-		LastUpdate:          t.LastUpdate,
+		LastUpdate:          t.UpdatedAt,
 	}
 }

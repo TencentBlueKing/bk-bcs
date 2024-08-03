@@ -21,7 +21,6 @@ func GetStepRecords(t *types.Task) []*StepRecords {
 			End:                 step.End,
 			ExecutionTime:       step.ExecutionTime,
 			MaxExecutionSeconds: step.MaxExecutionSeconds,
-			LastUpdate:          step.LastUpdate,
 		}
 		records = append(records, record)
 	}
@@ -51,7 +50,6 @@ func GetTaskRecord(t *types.Task) *TaskRecords {
 		ExecutionTime:       t.ExecutionTime,
 		MaxExecutionSeconds: t.MaxExecutionSeconds,
 		Creator:             t.Creator,
-		LastUpdate:          t.LastUpdate,
 		Updater:             t.Updater,
 	}
 	return record
@@ -74,7 +72,7 @@ func ToTask(task *TaskRecords, steps []*StepRecords) *types.Task {
 		ExecutionTime:       task.ExecutionTime,
 		MaxExecutionSeconds: task.MaxExecutionSeconds,
 		Creator:             task.Creator,
-		LastUpdate:          task.LastUpdate,
+		LastUpdate:          task.UpdatedAt,
 		Updater:             task.Updater,
 	}
 
@@ -101,13 +99,15 @@ func getUpdateTaskRecord(t *types.Task) *TaskRecords {
 
 func getUpdateStepRecord(t *types.Step) *StepRecords {
 	record := &StepRecords{
-		Params:        t.Params,
-		Status:        t.Status,
-		Message:       t.Message,
-		Start:         t.Start,
-		End:           t.End,
-		ExecutionTime: t.ExecutionTime,
-		RetryCount:    t.RetryCount,
+		Params:              t.Params,
+		Extras:              t.Extras,
+		Status:              t.Status,
+		Message:             t.Message,
+		Start:               t.Start,
+		End:                 t.End,
+		ExecutionTime:       t.ExecutionTime,
+		RetryCount:          t.RetryCount,
+		MaxExecutionSeconds: t.MaxExecutionSeconds,
 	}
 	return record
 }
