@@ -15,6 +15,7 @@ package task
 
 import (
 	"context"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -23,6 +24,7 @@ import (
 	hellostep "github.com/Tencent/bk-bcs/bcs-common/common/task/steps/hello"
 	istep "github.com/Tencent/bk-bcs/bcs-common/common/task/steps/iface"
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/store/mem"
+	mysqlstore "github.com/Tencent/bk-bcs/bcs-common/common/task/store/mysql"
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
 )
 
@@ -36,6 +38,52 @@ func TestDoWork(t *testing.T) {
 	mgr := TaskManager{
 		ctx:         context.Background(),
 		store:       mem.New(),
+		stepWorkers: istep.GetRegisters(),
+	}
+	mgr.initGlobalStorage()
+
+	info := &types.TaskInfo{
+		TaskType: "example-test",
+		TaskName: "example",
+		Creator:  "bcs",
+	}
+
+	steps := []*types.Step{
+		types.NewStep("hello", "test"),
+		types.NewStep("sum", "test1").AddParam(hellostep.SumA.String(), "1").AddParam(hellostep.SumB.String(), "2"),
+	}
+
+	task := types.NewTask(info)
+	task.Steps = steps
+
+	require.NoError(t, GetGlobalStorage().CreateTask(context.Background(), task))
+
+	for _, s := range steps {
+		err := mgr.doWork(task.TaskID, s.Name)
+		assert.NoError(t, err)
+	}
+}
+
+func TestDoWorkWithMySQL(t *testing.T) {
+	if os.Getenv("MYSQL_DSN") == "" {
+		t.Skip("skip test without mysql dsn")
+	}
+
+	// 使用结构体注册
+	istep.Register("hello", hellostep.NewHello())
+
+	// 使用函数注册
+	istep.Register("sum", istep.StepWorkerFunc(hellostep.Sum))
+
+	store, err := mysqlstore.New(os.Getenv("MYSQL_DSN"))
+	require.NoError(t, err)
+
+	ctx := context.Background()
+	require.NoError(t, store.EnsureTable(ctx))
+
+	mgr := TaskManager{
+		ctx:         context.Background(),
+		store:       store,
 		stepWorkers: istep.GetRegisters(),
 	}
 	mgr.initGlobalStorage()
