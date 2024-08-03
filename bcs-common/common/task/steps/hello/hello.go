@@ -25,3 +25,11 @@ func (s *hello) DoWork(ctx context.Context, work *istep.Work) error {
 	}
 	return nil
 }
+
+func init() {
+	// 使用结构体注册
+	istep.Register("hello", NewHello())
+
+	// 使用函数注册
+	istep.Register("sum", istep.StepWorkerFunc(Sum))
+}
