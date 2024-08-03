@@ -93,6 +93,7 @@ func (m *TaskManager) Init(cfg *ManagerConfig) error {
 	if cfg.ServerConfig == nil {
 		cfg.ServerConfig = &config.Config{
 			ResultsExpireIn: 3600 * 48,
+			NoUnixSignals:   true,
 		}
 	}
 	m.cfg = cfg
@@ -420,6 +421,7 @@ func (m *TaskManager) doWork(taskID string, stepName string) error {
 
 // Stop running
 func (m *TaskManager) Stop() {
+	// should set NoUnixSignals
 	m.worker.Quit()
 	m.cancel()
 }
