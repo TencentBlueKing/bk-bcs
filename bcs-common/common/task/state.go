@@ -64,7 +64,8 @@ func getTaskStateAndCurrentStep(taskId, stepName string,
 type State struct {
 	task        *types.Task
 	currentStep string
-	callBack    func(isSuccess bool, task *types.Task)
+
+	callBack func(isSuccess bool, task *types.Task)
 }
 
 // NewState return state relative to task
@@ -107,60 +108,7 @@ func (s *State) isReadyToStep(stepName string) (*types.Step, error) {
 		return nil, nil
 	}
 
-	// not first time to execute current step
-	if stepName == s.task.GetCurrentStep() {
-		if curStep.GetStatus() == types.TaskStatusFailure {
-			curStep.AddRetryCount(1)
-		}
-
-		nowTime := time.Now()
-		curStep = curStep.SetStartTime(nowTime).
-			SetStatus(types.TaskStatusRunning).
-			SetMessage("step ready to run").
-			SetLastUpdate(nowTime)
-
-		// update Task in storage
-		if err := GetGlobalStorage().UpdateTask(context.Background(), s.task); err != nil {
-			return nil, err
-		}
-		return curStep, nil
-	}
-
-	// first time to execute step
-	for _, step := range s.task.Steps {
-
-		// find current step
-		if step.Name == stepName {
-			// step already success
-			if step.GetStatus() == types.TaskStatusSuccess {
-				return nil, fmt.Errorf("task %s step %s already success", s.task.GetTaskID(), stepName)
-			}
-			// set current step
-			nowTime := time.Now()
-			s.task.SetCurrentStep(stepName)
-			step = step.SetStartTime(nowTime).
-				SetStatus(types.TaskStatusRunning).
-				SetMessage("step ready to run").
-				SetLastUpdate(nowTime)
-
-			// update Task in storage
-			if err := GetGlobalStorage().UpdateTask(context.Background(), s.task); err != nil {
-				return nil, fmt.Errorf("update task %s step %s status error", s.task.GetTaskID(), stepName)
-			}
-			return step, nil
-		}
-
-		// skip step if step allow skipOnFailed
-		if step.SkipOnFailed {
-			continue
-		}
-		// previous step execute failure
-		if step.GetStatus() != types.TaskStatusSuccess {
-			break
-		}
-	}
-	// previous step execute failure
-	return nil, fmt.Errorf("step %s is not ready", stepName)
+	return curStep, nil
 }
 
 // updateStepSuccess update step status to success

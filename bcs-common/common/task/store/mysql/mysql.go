@@ -14,55 +14,67 @@ package mysql
 
 import (
 	"context"
+	"fmt"
 	"net/url"
 	"strconv"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/store/iface"
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
 )
 
 type mysqlStore struct {
-	dsn   string
-	debug bool
-	db    *gorm.DB
+	dsn       string
+	showDebug bool
+	db        *gorm.DB
 }
 
 // New init mysql iface.Store
 func New(dsn string) (iface.Store, error) {
-	store := &mysqlStore{dsn: dsn, debug: false}
+	store := &mysqlStore{showDebug: false}
+	store.initDsn(dsn)
 
-	u, err := url.Parse(dsn)
+	// 是否显示sql语句
+	level := logger.Warn
+	if store.showDebug {
+		level = logger.Info
+	}
+
+	db, err := gorm.Open(mysql.Open(store.dsn),
+		&gorm.Config{Logger: logger.Default.LogMode(level)},
+	)
 	if err != nil {
 		return nil, err
+	}
+	store.db = db
+
+	return store, nil
+}
+
+// initDsn 解析debug参数是否开启sql显示, 任意异常都原样不动
+func (s *mysqlStore) initDsn(raw string) {
+	u, err := url.Parse(raw)
+	if err != nil {
+		return
 	}
 	query := u.Query()
 
 	// 是否开启debug
 	debugStr := query.Get("debug")
 	if debugStr != "" {
-		debug, e := strconv.ParseBool(debugStr)
-		if e != nil {
-			return nil, e
+		debug, err := strconv.ParseBool(debugStr)
+		if err != nil {
+			return
 		}
-		store.debug = debug
+		s.showDebug = debug
 		query.Del("debug")
 		u.RawQuery = query.Encode()
 	}
 
-	refinedDsn := u.String()
-	db, err := gorm.Open(mysql.Open(refinedDsn))
-	if err != nil {
-		return nil, err
-	}
-	store.db = db
-	if store.debug {
-		db.Debug()
-	}
-
-	return store, nil
+	s.dsn = u.String()
 }
 
 // EnsureTable 创建db表
@@ -95,7 +107,24 @@ func (s *mysqlStore) ListTask(ctx context.Context, opt *iface.ListOption) ([]typ
 }
 
 func (s *mysqlStore) UpdateTask(ctx context.Context, task *types.Task) error {
-	return nil
+	return s.db.Transaction(func(tx *gorm.DB) error {
+		updateTask := getUpdateTaskRecord(task)
+		fmt.Println("lei", updateTask)
+		if err := tx.Model(&TaskRecords{}).Where("task_id = ?", task.TaskID).Updates(updateTask).Error; err != nil {
+			return err
+		}
+		for _, step := range task.Steps {
+			if step.Name != task.CurrentStep {
+				continue
+			}
+			updateStep := getUpdateStepRecord(step)
+			fmt.Println("lei1", updateStep)
+			if err := tx.Where("task_id = ? AND name= ?", task.TaskID, step.Name).Updates(updateStep).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
 }
 
 func (s *mysqlStore) DeleteTask(ctx context.Context, taskID string) error {

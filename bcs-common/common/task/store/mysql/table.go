@@ -61,8 +61,7 @@ type StepRecords struct {
 	TaskID              string            `json:"taskID" gorm:"type:varchar(255);index:idx_task_id"` // 索引
 	Name                string            `json:"name" gorm:"type:varchar(255)"`
 	Alias               string            `json:"alias" gorm:"type:varchar(255)"`
-	Input               map[string]string `json:"input" gorm:"type:text;serializer:json"`
-	Output              map[string]string `json:"output" gorm:"type:text;serializer:json"`
+	Params              map[string]string `json:"input" gorm:"type:text;serializer:json"`
 	Extras              string            `json:"extras" gorm:"type:text"`
 	Status              string            `json:"status" gorm:"type:varchar(255)"`
 	Message             string            `json:"message" gorm:"type:varchar(255)"`
@@ -80,89 +79,21 @@ func (t *StepRecords) TableName() string {
 	return "task_step_records"
 }
 
-func GetStepRecords(t *types.Task) []*StepRecords {
-
-	records := make([]*StepRecords, 0, len(t.Steps))
-	for _, step := range t.Steps {
-		record := &StepRecords{
-			TaskID:              t.TaskID,
-			Name:                step.Name,
-			Alias:               step.Alias,
-			Extras:              step.Extras,
-			Status:              step.Status,
-			Message:             step.Message,
-			SkipOnFailed:        step.SkipOnFailed,
-			RetryCount:          step.RetryCount,
-			Start:               step.Start,
-			End:                 step.End,
-			ExecutionTime:       step.ExecutionTime,
-			MaxExecutionSeconds: step.MaxExecutionSeconds,
-			LastUpdate:          step.LastUpdate,
-		}
-		records = append(records, record)
-	}
-
-	return records
-}
-func GetTaskRecord(t *types.Task) *TaskRecords {
-	stepSequence := make([]string, 0, len(t.Steps))
-	for i := range t.Steps {
-		stepSequence = append(stepSequence, t.Steps[i].Name)
-	}
-
-	record := &TaskRecords{
-		TaskID:              t.TaskID,
-		TaskType:            t.TaskType,
-		TaskName:            t.TaskName,
-		CurrentStep:         t.CurrentStep,
-		StepSequence:        stepSequence,
-		CallBackFuncName:    t.CallBackFuncName,
-		CommonParams:        t.CommonParams,
-		ExtraJson:           t.ExtraJson,
+// ToStep 类型转换
+func (t *StepRecords) ToStep() *types.Step {
+	return &types.Step{
+		Name:                t.Name,
+		Alias:               t.Alias,
+		Params:              t.Params,
+		Extras:              t.Extras,
 		Status:              t.Status,
 		Message:             t.Message,
-		ForceTerminate:      t.ForceTerminate,
+		SkipOnFailed:        t.SkipOnFailed,
+		RetryCount:          t.RetryCount,
 		Start:               t.Start,
 		End:                 t.End,
 		ExecutionTime:       t.ExecutionTime,
 		MaxExecutionSeconds: t.MaxExecutionSeconds,
-		Creator:             t.Creator,
 		LastUpdate:          t.LastUpdate,
-		Updater:             t.Updater,
 	}
-	return record
-}
-
-func ToTask(task *TaskRecords, steps []*StepRecords) *types.Task {
-	t := &types.Task{
-		TaskID:              task.TaskID,
-		TaskType:            task.TaskType,
-		TaskName:            task.TaskName,
-		CurrentStep:         task.CurrentStep,
-		CallBackFuncName:    task.CallBackFuncName,
-		CommonParams:        task.CommonParams,
-		ExtraJson:           task.ExtraJson,
-		Status:              task.Status,
-		Message:             task.Message,
-		ForceTerminate:      task.ForceTerminate,
-		Start:               task.Start,
-		End:                 task.End,
-		ExecutionTime:       task.ExecutionTime,
-		MaxExecutionSeconds: task.MaxExecutionSeconds,
-		Creator:             task.Creator,
-		LastUpdate:          task.LastUpdate,
-		Updater:             task.Updater,
-	}
-	t.Steps = make([]*types.Step, 0, len(steps))
-	for _, step := range steps {
-		t.Steps = append(t.Steps, &types.Step{
-			Name:         step.Name,
-			Alias:        step.Alias,
-			Extras:       step.Extras,
-			Status:       step.Status,
-			Message:      step.Message,
-			SkipOnFailed: step.SkipOnFailed,
-		})
-	}
-	return t
 }
