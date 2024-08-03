@@ -34,7 +34,7 @@ type mysqlStore struct {
 
 // New init mysql iface.Store
 func New(dsn string) (iface.Store, error) {
-	store := &mysqlStore{showDebug: false}
+	store := &mysqlStore{dsn: dsn, showDebug: false}
 	store.initDsn(dsn)
 
 	// 是否显示sql语句

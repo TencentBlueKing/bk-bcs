@@ -108,7 +108,25 @@ func (s *State) isReadyToStep(stepName string) (*types.Step, error) {
 		return nil, nil
 	}
 
+	// not first time to execute current step
+	if curStep.GetStatus() == types.TaskStatusFailure {
+		curStep.AddRetryCount(1)
+	}
+
+	nowTime := time.Now()
+	curStep = curStep.SetStartTime(nowTime).
+		SetStatus(types.TaskStatusRunning).
+		SetMessage("step ready to run").
+		SetLastUpdate(nowTime)
+
+	s.task.SetCurrentStep(stepName).SetStatus(types.TaskStatusRunning)
+
+	// update Task in storage
+	if err := GetGlobalStorage().UpdateTask(context.Background(), s.task); err != nil {
+		return nil, err
+	}
 	return curStep, nil
+
 }
 
 // updateStepSuccess update step status to success

@@ -19,6 +19,7 @@ func NewHello() iface.StepWorkerInterface {
 // DoWork for worker exec task
 func (s *hello) DoWork(ctx context.Context, work *istep.Work) error {
 	fmt.Println("Hello")
+	// time.Sleep(30 * time.Second)
 	if err := work.AddCommonParams("name", "hello"); err != nil {
 		return err
 	}

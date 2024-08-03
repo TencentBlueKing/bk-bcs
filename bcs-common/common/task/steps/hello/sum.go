@@ -16,6 +16,8 @@ var (
 
 // Sum ...
 func Sum(ctx context.Context, step *istep.Work) error {
+	// time.Sleep(30 * time.Second)
+
 	a, ok := step.GetParam(SumA.String())
 	if !ok {
 		return fmt.Errorf("%w: param=%s", istep.ErrParamNotFound, SumA.String())
