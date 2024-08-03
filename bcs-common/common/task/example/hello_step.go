@@ -14,9 +14,10 @@
 package main
 
 import (
+	"context"
 	"fmt"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/task"
+	istep "github.com/Tencent/bk-bcs/bcs-common/common/task/steps/iface"
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
 )
 
@@ -44,20 +45,16 @@ func (s HelloStep) GetName() string {
 }
 
 // DoWork for worker exec task
-func (s HelloStep) DoWork(task *types.Task) error {
-	_, ok := task.GetStep(s.GetName())
-	if !ok {
-		return fmt.Errorf("task %s step %s not exist", task.GetTaskID(), s.GetName())
-	}
-
-	// get step params && handle business logic
-
-	fmt.Printf("%s %s %s\n", task.GetTaskID(), task.GetTaskType(), task.GetTaskName())
+func (s HelloStep) DoWork(ctx context.Context, step *istep.Work) error {
+	fmt.Printf("%s %s %s\n", step.GetTaskID(), step.GetTaskType(), step.GetTaskName())
 	return nil
 }
 
+func (s HelloStep) Close(err error) {
+}
+
 // BuildStep build step
-func (s HelloStep) BuildStep(kvs []task.KeyValue, opts ...types.StepOption) *types.Step {
+func (s HelloStep) BuildStep(kvs []istep.KeyValue, opts ...types.StepOption) *types.Step {
 	step := types.NewStep(s.GetName(), s.Alias(), opts...)
 
 	// build step paras
@@ -66,4 +63,9 @@ func (s HelloStep) BuildStep(kvs []task.KeyValue, opts ...types.StepOption) *typ
 	}
 
 	return step
+}
+
+func init() {
+	// register step
+	istep.Register(method, NewHelloStep())
 }

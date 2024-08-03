@@ -11,7 +11,7 @@
  */
 
 // Package store implements task storage
-package store
+package mongo
 
 import (
 	"context"
@@ -20,6 +20,8 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/task/store/iface"
+	istore "github.com/Tencent/bk-bcs/bcs-common/common/task/store/iface"
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
@@ -64,7 +66,7 @@ type ModelTask struct {
 }
 
 // New create Task model
-func New(db drivers.DB, tablePrefix string) *ModelTask {
+func New(db drivers.DB, tablePrefix string) istore.Store {
 	return &ModelTask{
 		tableName: tablePrefix + "_" + TableName,
 		indexes:   taskIndexes,
@@ -73,13 +75,13 @@ func New(db drivers.DB, tablePrefix string) *ModelTask {
 }
 
 // ensure table
-func (m *ModelTask) ensureTable(ctx context.Context) error {
+func (m *ModelTask) EnsureTable(ctx context.Context, dst ...any) error {
 	m.isTableEnsuredMutex.RLock()
 	if m.isTableEnsured {
 		m.isTableEnsuredMutex.RUnlock()
 		return nil
 	}
-	if err := EnsureTable(ctx, m.db, m.tableName, m.indexes); err != nil {
+	if err := ensureTable(ctx, m.db, m.tableName, m.indexes); err != nil {
 		m.isTableEnsuredMutex.RUnlock()
 		return err
 	}
@@ -96,7 +98,7 @@ func (m *ModelTask) CreateTask(ctx context.Context, task *types.Task) error {
 	if task == nil {
 		return fmt.Errorf("task to be created cannot be empty")
 	}
-	if err := m.ensureTable(ctx); err != nil {
+	if err := m.EnsureTable(ctx); err != nil {
 		return err
 	}
 
@@ -108,7 +110,7 @@ func (m *ModelTask) CreateTask(ctx context.Context, task *types.Task) error {
 
 // UpdateTask update task
 func (m *ModelTask) UpdateTask(ctx context.Context, task *types.Task) error {
-	if err := m.ensureTable(ctx); err != nil {
+	if err := m.EnsureTable(ctx); err != nil {
 		return err
 	}
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
@@ -122,7 +124,7 @@ func (m *ModelTask) UpdateTask(ctx context.Context, task *types.Task) error {
 
 // PatchTask update task partially
 func (m *ModelTask) PatchTask(ctx context.Context, taskID string, patchs map[string]interface{}) error {
-	if err := m.ensureTable(ctx); err != nil {
+	if err := m.EnsureTable(ctx); err != nil {
 		return err
 	}
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
@@ -134,7 +136,7 @@ func (m *ModelTask) PatchTask(ctx context.Context, taskID string, patchs map[str
 
 // DeleteTask delete task
 func (m *ModelTask) DeleteTask(ctx context.Context, taskID string) error {
-	if err := m.ensureTable(ctx); err != nil {
+	if err := m.EnsureTable(ctx); err != nil {
 		return err
 	}
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
@@ -149,7 +151,7 @@ func (m *ModelTask) DeleteTask(ctx context.Context, taskID string) error {
 
 // GetTask get task
 func (m *ModelTask) GetTask(ctx context.Context, taskID string) (*types.Task, error) {
-	if err := m.ensureTable(ctx); err != nil {
+	if err := m.EnsureTable(ctx); err != nil {
 		return nil, err
 	}
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
@@ -163,9 +165,9 @@ func (m *ModelTask) GetTask(ctx context.Context, taskID string) (*types.Task, er
 }
 
 // ListTask list clusters
-func (m *ModelTask) ListTask(ctx context.Context, cond *operator.Condition, opt *ListOption) ([]types.Task, error) {
+func (m *ModelTask) ListTask(ctx context.Context, opt *iface.ListOption) ([]types.Task, error) {
 	taskList := make([]types.Task, 0)
-	finder := m.db.Table(m.tableName).Find(cond)
+	finder := m.db.Table(m.tableName).Find(operator.EmptyCondition)
 	if len(opt.Sort) != 0 {
 		finder = finder.WithSort(MapInt2MapIf(opt.Sort))
 	}

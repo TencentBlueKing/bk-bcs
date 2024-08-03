@@ -11,7 +11,7 @@
  */
 
 // Package store implements task storage
-package store
+package mongo
 
 import (
 	"context"
@@ -20,7 +20,7 @@ import (
 )
 
 // EnsureTable ensure object database table and table indexes
-func EnsureTable(ctx context.Context, db drivers.DB, tableName string, indexes []drivers.Index) error {
+func ensureTable(ctx context.Context, db drivers.DB, tableName string, indexes []drivers.Index) error {
 	hasTable, err := db.HasTable(ctx, tableName)
 	if err != nil {
 		return err
