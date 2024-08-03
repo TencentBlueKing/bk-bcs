@@ -58,18 +58,19 @@ type TaskManager struct { // nolint
 
 // ManagerConfig options for manager
 type ManagerConfig struct {
-	ModuleName string
-	CallBacks  []istep.CallbackInterface
-	WorkerNum  int
-	Broker     ibroker.Broker
-	Backend    ibackend.Backend
-	Lock       ilock.Lock
-	Store      istore.Store
+	ModuleName   string
+	CallBacks    []istep.CallbackInterface
+	WorkerNum    int
+	Broker       ibroker.Broker
+	Backend      ibackend.Backend
+	Lock         ilock.Lock
+	Store        istore.Store
+	ServerConfig *config.Config
 }
 
 // NewTaskManager create new manager
-func NewTaskManager() *TaskManager {
-	ctx, cancel := context.WithCancel(context.Background())
+func NewTaskManager(ctx context.Context) *TaskManager {
+	ctx, cancel := context.WithCancel(ctx)
 
 	m := &TaskManager{
 		ctx:         ctx,
@@ -87,6 +88,12 @@ func (m *TaskManager) Init(cfg *ManagerConfig) error {
 	err := m.validate(cfg)
 	if err != nil {
 		return err
+	}
+
+	if cfg.ServerConfig == nil {
+		cfg.ServerConfig = &config.Config{
+			ResultsExpireIn: 3600 * 48,
+		}
 	}
 	m.cfg = cfg
 	m.store = cfg.Store
@@ -142,11 +149,7 @@ func (m *TaskManager) validate(c *ManagerConfig) error {
 }
 
 func (m *TaskManager) initServer() error {
-	serverConfig := &config.Config{
-		ResultsExpireIn: 3600 * 48,
-	}
-
-	m.server = machinery.NewServer(serverConfig, m.cfg.Broker, m.cfg.Backend, m.cfg.Lock)
+	m.server = machinery.NewServer(m.cfg.ServerConfig, m.cfg.Broker, m.cfg.Backend, m.cfg.Lock)
 
 	return nil
 }
@@ -187,6 +190,10 @@ func (m *TaskManager) Run() {
 			return
 		}
 	}()
+}
+
+func (m *TaskManager) Launch() error {
+	return m.worker.Launch()
 }
 
 // GetTaskWithID get task by taskid
@@ -231,7 +238,6 @@ func (m *TaskManager) RetryAt(task *types.Task, stepName string) error {
 // Dispatch dispatch task
 func (m *TaskManager) Dispatch(task *types.Task) error {
 	if err := GetGlobalStorage().CreateTask(context.Background(), task); err != nil {
-		fmt.Println(err)
 		return err
 	}
 
