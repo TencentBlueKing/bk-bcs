@@ -20,27 +20,26 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
 )
 
-// BaseModel 基础模型
-type BaseModel struct {
-	ID        uint `gorm:"primarykey"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt gorm.DeletedAt `gorm:"index"`
-}
+/**
+字段规范:
+1. 字段名使用驼峰命名法，表字段使用 _ 分隔
+2. bool/int/float/datetime 等类型使用默认字段类型
+3. string 类型必须指定类型和长度，字段是索引的，设置为 varchar(191)
+**/
 
 // TaskRecords 任务记录
 type TaskRecords struct {
-	BaseModel
+	gorm.Model
 	TaskID              string            `json:"taskID" gorm:"type:varchar(255);uniqueIndex:idx_task_id"` // 唯一索引
 	TaskType            string            `json:"taskType" gorm:"type:varchar(255)"`
 	TaskName            string            `json:"taskName" gorm:"type:varchar(255)"`
 	CurrentStep         string            `json:"currentStep" gorm:"type:varchar(255)"`
-	StepSequence        []string          `json:"stepSequence" gorm:"serializer:json"`
+	StepSequence        []string          `json:"stepSequence" gorm:"type:text;serializer:json"`
 	CallBackFuncName    string            `json:"callBackFuncName" gorm:"type:varchar(255)"`
-	CommonParams        map[string]string `json:"commonParams" gorm:"serializer:json"`
-	ExtraJson           string            `json:"extraJson"`
+	CommonParams        map[string]string `json:"commonParams" gorm:"type:text;serializer:json"`
+	ExtraJson           string            `json:"extraJson" gorm:"type:text"`
 	Status              string            `json:"status" gorm:"type:varchar(255)"`
-	Message             string            `json:"message"`
+	Message             string            `json:"message" gorm:"type:text"`
 	ForceTerminate      bool              `json:"forceTerminate"`
 	Start               time.Time         `json:"start"`
 	End                 time.Time         `json:"end"`
@@ -58,13 +57,13 @@ func (t *TaskRecords) TableName() string {
 
 // StepRecords 步骤记录
 type StepRecords struct {
-	BaseModel
+	gorm.Model
 	TaskID              string            `json:"taskID" gorm:"type:varchar(255);index:idx_task_id"` // 索引
 	Name                string            `json:"name" gorm:"type:varchar(255)"`
 	Alias               string            `json:"alias" gorm:"type:varchar(255)"`
-	Input               map[string]string `json:"input" gorm:"serializer:json"`
-	Output              map[string]string `json:"output" gorm:"serializer:json"`
-	Extras              string            `json:"extras"`
+	Input               map[string]string `json:"input" gorm:"type:text;serializer:json"`
+	Output              map[string]string `json:"output" gorm:"type:text;serializer:json"`
+	Extras              string            `json:"extras" gorm:"type:text"`
 	Status              string            `json:"status" gorm:"type:varchar(255)"`
 	Message             string            `json:"message" gorm:"type:varchar(255)"`
 	SkipOnFailed        bool              `json:"skipOnFailed"`
