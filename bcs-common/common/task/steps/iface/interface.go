@@ -20,20 +20,19 @@ import (
 )
 
 // StepWorkerInterface that client must implement
-type StepWorkerInterface1 interface {
-	GetName() string
-	DoWork(task *types.Task) error
+type StepWorkerInterface interface {
+	DoWork(context.Context, *Work) error
 }
 
-type StepWorkerInterface interface {
-	Name() string
-	DoWork(context.Context, *types.Step) error
-	Close(error)
-}
+// The StepWorkerFunc type is an adapter to allow the use of
+// ordinary functions as a Handler. If f is a function
+// with the appropriate signature, HandlerFunc(f) is a
+// Handler that calls f.
+type StepWorkerFunc func(context.Context, *Work) error
 
 // CallbackInterface that client must implement
 type CallbackInterface interface {
-	Name() string
+	GetName() string
 	Callback(isSuccess bool, task *types.Task)
 }
 
@@ -81,4 +80,48 @@ type TaskName string // nolint
 // String xxx
 func (tn TaskName) String() string {
 	return string(tn)
+}
+
+// Task 当前执行的任务
+type Work struct {
+	task *types.Task
+	step *types.Step
+}
+
+// NewWork ...
+func NewWork(t *types.Task, currentStep *types.Step) *Work {
+	return &Work{
+		task: t,
+		step: currentStep,
+	}
+}
+
+// GetTaskID ...
+func (t *Work) GetTaskID() string {
+	return t.task.GetTaskID()
+}
+
+func (t *Work) GetName() string {
+	return t.step.GetName()
+}
+
+func (t *Work) GetTaskType() string {
+	return t.task.GetTaskID()
+}
+
+func (t *Work) AddCommonParams(k, v string) error {
+	_ = t.task.AddCommonParams(k, v)
+	return nil
+}
+
+func (t *Work) GetParam(key string) (string, bool) {
+	return t.step.GetParam(key)
+}
+
+func (t *Work) GetTaskName() string {
+	return t.task.GetTaskID()
+}
+
+func (t *Work) GetStatus() string {
+	return t.step.GetStatus()
 }

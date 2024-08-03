@@ -14,6 +14,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 
@@ -51,22 +52,17 @@ func (s SumStep) GetName() string {
 }
 
 // DoWork for worker exec task
-func (s SumStep) DoWork(task *types.Task) error {
-	step, exist := task.GetStep(s.GetName())
-	if !exist {
-		return fmt.Errorf("task[%s] not exist step[%s]", task.TaskID, s.GetName())
-	}
-
-	a := step.Params[sumA.String()]
-	b := step.Params[sumB.String()]
+func (s SumStep) DoWork(ctx context.Context, step *istep.Work) error {
+	a, _ := step.GetParam(sumA.String())
+	b, _ := step.GetParam(sumB.String())
 
 	a1, _ := strconv.Atoi(a)
 	b1, _ := strconv.Atoi(b)
 
 	c := a1 + b1
-	task.AddCommonParams(sumC.String(), fmt.Sprintf("%v", c))
+	step.AddCommonParams(sumC.String(), fmt.Sprintf("%v", c))
 
-	fmt.Printf("%s %s %s sumC: %v\n", task.GetTaskID(), task.GetTaskType(), step.GetName(), c)
+	fmt.Printf("%s %s %s sumC: %v\n", step.GetTaskID(), step.GetTaskType(), step.GetName(), c)
 
 	return nil
 }
@@ -81,4 +77,9 @@ func (s SumStep) BuildStep(kvs []istep.KeyValue, opts ...types.StepOption) *type
 	}
 
 	return step
+}
+
+func init() {
+	// register step
+	istep.Register(sumMethod, NewSumStep())
 }

@@ -123,7 +123,6 @@ func main() {
 		Store:      store,
 	}
 	// register step worker && callback
-	config.StepWorkers = registerSteps()
 	config.CallBacks = registerCallbacks()
 
 	// init task manager

@@ -58,14 +58,13 @@ type TaskManager struct { // nolint
 
 // ManagerConfig options for manager
 type ManagerConfig struct {
-	ModuleName  string
-	StepWorkers []istep.StepWorkerInterface
-	CallBacks   []istep.CallbackInterface
-	WorkerNum   int
-	Broker      ibroker.Broker
-	Backend     ibackend.Backend
-	Lock        ilock.Lock
-	Store       istore.Store
+	ModuleName string
+	CallBacks  []istep.CallbackInterface
+	WorkerNum  int
+	Broker     ibroker.Broker
+	Backend    ibackend.Backend
+	Lock       ilock.Lock
+	Store      istore.Store
 }
 
 // NewTaskManager create new manager
@@ -73,11 +72,12 @@ func NewTaskManager() *TaskManager {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	m := &TaskManager{
-		ctx:       ctx,
-		cancel:    cancel,
-		lock:      &sync.Mutex{},
-		workerNum: DefaultWorkerConcurrency,
-		cfg:       &ManagerConfig{},
+		ctx:         ctx,
+		cancel:      cancel,
+		lock:        &sync.Mutex{},
+		workerNum:   DefaultWorkerConcurrency,
+		stepWorkers: istep.GetRegisters(), // get all step workers
+		cfg:         &ManagerConfig{},
 	}
 	return m
 }
@@ -104,20 +104,12 @@ func (m *TaskManager) Init(cfg *ManagerConfig) error {
 		m.workerNum = cfg.WorkerNum
 	}
 
-	// save step workers and check duplicate
-	for _, w := range cfg.StepWorkers {
-		if _, ok := m.stepWorkers[w.Name()]; ok {
-			return fmt.Errorf("step [%s] already exists", w.Name())
-		}
-		m.stepWorkers[w.Name()] = w
-	}
-
 	// save callbacks and check duplicate
 	for _, c := range cfg.CallBacks {
-		if _, ok := m.callBackFuncs[c.Name()]; ok {
-			return fmt.Errorf("callback func [%s] already exists", c.Name())
+		if _, ok := m.callBackFuncs[c.GetName()]; ok {
+			return fmt.Errorf("callback func [%s] already exists", c.GetName())
 		}
-		m.callBackFuncs[c.Name()] = c
+		m.callBackFuncs[c.GetName()] = c
 	}
 
 	if err := m.initGlobalStorage(); err != nil {
@@ -144,11 +136,6 @@ func (m *TaskManager) validate(c *ManagerConfig) error {
 	// module name check
 	if c.ModuleName == "" {
 		return fmt.Errorf("module name is empty")
-	}
-
-	// step worker check
-	if c.StepWorkers == nil || len(c.StepWorkers) == 0 {
-		return fmt.Errorf("step worker is empty")
 	}
 
 	return nil
@@ -375,7 +362,8 @@ func (m *TaskManager) doWork(taskID string, stepName string) error {
 	tmpCh := make(chan error, 1)
 	go func() {
 		// call step worker
-		tmpCh <- stepWorker.DoWork(stepCtx, step)
+		work := istep.NewWork(state.GetTask(), step)
+		tmpCh <- stepWorker.DoWork(stepCtx, work)
 	}()
 
 	select {
