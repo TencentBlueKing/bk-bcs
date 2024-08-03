@@ -69,11 +69,11 @@ type Store interface {
 	CreateTask(ctx context.Context, task *types.Task) error
 	ListTask(ctx context.Context, opt *ListOption) ([]types.Task, error)
 	GetTask(ctx context.Context, taskID string) (*types.Task, error)
-	UpdateTask(ctx context.Context, taskID string, opt *UpdateOption) error
+	// UpdateTask(ctx context.Context, taskID string, opt *UpdateOption) error
 	DeleteTask(ctx context.Context, taskID string) error
 	// GetStep(ctx context.Context, taskID string, stepName string) (*types.Step, error)
 	// UpdateStep(ctx context.Context, taskID string, stepName string, opt *UpdateStepOption) error
-	// UpdateTask(ctx context.Context, task *types.Task) error
-	// PatchTask(ctx context.Context, taskID string, patchs map[string]interface{}) error
+	UpdateTask(ctx context.Context, task *types.Task) error
+	PatchTask(ctx context.Context, taskID string, patchs map[string]interface{}) error
 	// WriteStepOutput(ctx context.Context, taskId string, name string, output map[string]string) error
 }

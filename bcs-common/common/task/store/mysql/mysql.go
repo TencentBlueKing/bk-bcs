@@ -90,6 +90,10 @@ func (s *mysqlStore) CreateTask(ctx context.Context, task *types.Task) error {
 	})
 }
 
+func (s *mysqlStore) ListTask(ctx context.Context, opt *iface.ListOption) ([]types.Task, error) {
+	return nil, nil
+}
+
 func (s *mysqlStore) UpdateTask(ctx context.Context, task *types.Task) error {
 	return nil
 }
