@@ -43,3 +43,13 @@ func TransTsToStr(timestamp int64) string {
 	formattedTime := t.Format(time.RFC3339)
 	return formattedTime
 }
+
+// TransStrToTs trans  time string totimestamp
+func TransStrToTs(input string) int64 {
+	t, err := time.Parse(time.RFC3339Nano, input)
+	if err != nil {
+		return 0
+	}
+
+	return t.UnixMilli()
+}
