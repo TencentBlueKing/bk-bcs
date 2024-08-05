@@ -221,7 +221,6 @@
   // 判断是否是压缩包
   const handleCheckIsCompressedFile = (filename: string) => {
     const ext = filename.split('.').pop()!.toLowerCase();
-    console.log(ext);
     return ['zip', 'rar', 'tar', 'gz', 'tgz'].includes(ext);
   };
 </script>

@@ -163,6 +163,33 @@ export const getUnNamedVersionAppsBoundByPackages = (
     .then((res) => res.data);
 
 /**
+ * 检测某个套餐是否超出限制
+ * @param biz_id 业务ID
+ * @param template_space_id 模板空间ID
+ * @param template_set_id 模板套餐Id列表
+ * @param items 导入的配置项列表
+ * @returns
+ */
+export const getCheckTemplateSetReferencesApps = (
+  biz_id: string,
+  template_space_id: number,
+  template_set_ids: number[],
+  items: {
+    name: string;
+    id: number;
+  }[],
+) =>
+  http
+    .post(
+      `/config/biz/${biz_id}/template_spaces/${template_space_id}/template_sets/check_template_set_references_apps`,
+      {
+        template_set_ids,
+        items,
+      },
+    )
+    .then((res) => res.data);
+
+/**
  * 获取当前模板套餐被已生成版本引用的服务引用列表
  * @param biz_id 业务ID
  * @param template_space_id 模板空间ID

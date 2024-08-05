@@ -1,84 +1,86 @@
 <template>
-  <bk-dialog
-    :title="t('上传至套餐')"
-    ext-cls="create-to-pkg-dialog"
-    :confirm-text="t('确认')"
-    :cancel-text="t('取消')"
-    :width="640"
-    :is-show="props.show"
-    :esc-close="false"
-    :quick-close="false"
-    :is-loading="props.pending"
-    :is-disabled="props.pending"
-    @confirm="handleConfirm"
-    @closed="close">
-    <bk-form ref="formRef" form-type="vertical" :model="{ pkgs: selectedPkgs }">
-      <bk-form-item :label="t('模板套餐')" property="pkgs" required>
-        <bk-select multiple :model-value="selectedPkgs" @change="handleSelectPkg">
-          <bk-option v-for="pkg in allOptions" v-show="pkg.id !== 0" :key="pkg.id" :value="pkg.id" :label="pkg.name">
-          </bk-option>
-          <template #extension>
-            <div
-              :class="['no-specified-option', { selected: unSpecifiedSelected }]"
-              @click="handleSelectUnSpecifiedPkg">
-              {{ t('未指定套餐') }}
-              <Done v-if="unSpecifiedSelected" class="selected-icon" />
+  <bk-form ref="formRef" form-type="vertical" :model="{ pkgs: selectedPkgs }">
+    <bk-form-item :label="t('上传至模板套餐')" property="pkgs" required>
+      <bk-select multiple :model-value="selectedPkgs" @change="handleSelectPkg">
+        <bk-option v-for="pkg in allOptions" v-show="pkg.id !== 0" :key="pkg.id" :value="pkg.id" :label="pkg.name">
+        </bk-option>
+        <template #extension>
+          <div :class="['no-specified-option', { selected: unSpecifiedSelected }]" @click="handleSelectUnSpecifiedPkg">
+            {{ t('未指定套餐') }}
+            <Done v-if="unSpecifiedSelected" class="selected-icon" />
+          </div>
+        </template>
+      </bk-select>
+    </bk-form-item>
+  </bk-form>
+  <div v-if="citedList.length">
+    <p class="tips">{{ tips }}</p>
+    <bk-alert
+      v-if="isExceedMaxFileCount"
+      style="margin-bottom: 8px"
+      theme="error"
+      :title="
+        $t('上传后，部分套餐/服务的配置文件数量将超过最大限制 ({n} 个文件)', {
+          n: spaceFeatureFlags.RESOURCE_LIMIT.TmplSetTmplCnt,
+        })
+      " />
+    <bk-loading style="min-height: 100px" :loading="loading">
+      <bk-table
+        v-if="!selectedPkgs.includes(0)"
+        class="cited-app-table"
+        :row-class="getRowCls"
+        :data="citedList"
+        :max-height="maxTableHeight">
+        <bk-table-column :label="t('模板套餐')">
+          <template #default="{ row }">
+            <div v-if="row.template_set_exceeds_limit" class="app-info">
+              <span class="exceeds-limit">{{ row.template_set_name }}</span>
+              <InfoLine class="warn-icon" v-bk-tooltips="{ content: '上传后，该套餐配置文件数量将超过最大限制' }" />
+            </div>
+            <span v-else>{{ row.template_set_name }}</span>
+          </template>
+        </bk-table-column>
+        <bk-table-column :label="t('使用此套餐的服务')">
+          <template #default="{ row }">
+            <div v-if="row.app_exceeds_limit" class="app-info" @click="goToConfigPage(row.app_id)">
+              <div v-overflow-title class="name-text">{{ row.app_name }}</div>
+              <InfoLine class="warn-icon" v-bk-tooltips="{ content: '上传后，该服务配置文件数量将超过最大限制' }" />
+              <LinkToApp class="link-icon" :id="row.app_id" />
+            </div>
+            <div v-else-if="row.app_id" class="app-info" @click="goToConfigPage(row.app_id)">
+              <div v-overflow-title class="name-text">{{ row.app_name }}</div>
+              <LinkToApp class="link-icon" :id="row.app_id" />
             </div>
           </template>
-        </bk-select>
-      </bk-form-item>
-    </bk-form>
-    <div v-if="citedList.length">
-      <p class="tips">{{ tips }}</p>
-      <bk-loading style="min-height: 100px" :loading="loading">
-        <bk-table v-if="!selectedPkgs.includes(0)" :data="citedList" :max-height="maxTableHeight">
-          <bk-table-column :label="t('模板套餐')" prop="template_set_name"></bk-table-column>
-          <bk-table-column :label="t('使用此套餐的服务')">
-            <template #default="{ row }">
-              <div v-if="row.app_id" class="app-info" @click="goToConfigPage(row.app_id)">
-                <div v-overflow-title class="name-text">{{ row.app_name }}</div>
-                <LinkToApp class="link-icon" :id="row.app_id" />
-              </div>
-            </template>
-          </bk-table-column>
-        </bk-table>
-      </bk-loading>
-    </div>
-    <template #footer>
-      <bk-button
-        theme="primary"
-        style="margin-right: 8px"
-        :disabled="props.pending"
-        :loading="props.pending"
-        @click="handleConfirm">
-        {{ t('确认') }}
-      </bk-button>
-      <bk-button @click="close">{{ t('取消') }}</bk-button>
-    </template>
-  </bk-dialog>
+        </bk-table-column>
+      </bk-table>
+    </bk-loading>
+  </div>
 </template>
 <script lang="ts" setup>
-  import { computed, ref, watch } from 'vue';
+  import { computed, ref, onMounted } from 'vue';
   import { useI18n } from 'vue-i18n';
   import { useRouter } from 'vue-router';
   import { storeToRefs } from 'pinia';
-  import { Done } from 'bkui-vue/lib/icon';
+  import { Done, InfoLine } from 'bkui-vue/lib/icon';
   import useGlobalStore from '../../../../../../../../store/global';
   import useTemplateStore from '../../../../../../../../store/template';
   import { IPackagesCitedByApps } from '../../../../../../../../../types/template';
-  import { getUnNamedVersionAppsBoundByPackages } from '../../../../../../../../api/template';
+  import { getCheckTemplateSetReferencesApps } from '../../../../../../../../api/template';
   import LinkToApp from '../../../../components/link-to-app.vue';
 
-  const { spaceId } = storeToRefs(useGlobalStore());
+  const { spaceId, spaceFeatureFlags } = storeToRefs(useGlobalStore());
   const { currentTemplateSpace, currentPkg, packageList } = storeToRefs(useTemplateStore());
   const { t } = useI18n();
 
   const props = defineProps<{
-    show: boolean;
-    pending: boolean;
+    configIdList: {
+      name: string;
+      id: number;
+    }[];
   }>();
 
-  const emits = defineEmits(['update:show', 'confirm']);
+  const emits = defineEmits(['toggleBtnDisabled']);
 
   const router = useRouter();
 
@@ -95,23 +97,23 @@
 
   const maxTableHeight = computed(() => {
     const windowHeight = window.innerHeight;
-    return windowHeight * 0.6 - 200;
+    return windowHeight * 0.6 - 150;
   });
 
   // 未指定套餐选项是否选中
   const unSpecifiedSelected = computed(() => selectedPkgs.value.includes(0));
 
-  watch(
-    () => props.show,
-    (val) => {
-      if (val) {
-        selectedPkgs.value = typeof currentPkg.value === 'number' ? [currentPkg.value] : [];
-        if (selectedPkgs.value.length > 0) {
-          getCitedData();
-        }
-      }
-    },
+  // 套餐或服务是否有超出限制
+  const isExceedMaxFileCount = computed(() =>
+    citedList.value.some((item) => item.app_exceeds_limit || item.template_set_exceeds_limit),
   );
+
+  onMounted(() => {
+    selectedPkgs.value = typeof currentPkg.value === 'number' ? [currentPkg.value] : [];
+    if (selectedPkgs.value.length > 0) {
+      getCitedData();
+    }
+  });
 
   const allOptions = computed(() => {
     const pkgs = packageList.value.map((item) => {
@@ -125,17 +127,14 @@
 
   const getCitedData = async () => {
     loading.value = true;
-    const params = {
-      start: 0,
-      all: true,
-    };
-    const res = await getUnNamedVersionAppsBoundByPackages(
+    const res = await getCheckTemplateSetReferencesApps(
       spaceId.value,
       currentTemplateSpace.value,
       selectedPkgs.value,
-      params,
+      props.configIdList,
     );
-    citedList.value = res.details;
+    citedList.value = res.items;
+    emits('toggleBtnDisabled', isExceedMaxFileCount.value || selectedPkgs.value.length === 0);
     loading.value = false;
   };
 
@@ -143,6 +142,7 @@
     if (val.length === 0) {
       selectedPkgs.value = [];
       citedList.value = [];
+      emits('toggleBtnDisabled', true);
       return;
     }
 
@@ -163,16 +163,6 @@
     }
   };
 
-  const handleConfirm = async () => {
-    const isValid = await formRef.value.validate();
-    if (!isValid) return;
-    emits('confirm', selectedPkgs.value);
-  };
-
-  const close = () => {
-    emits('update:show', false);
-  };
-
   const goToConfigPage = (id: number) => {
     const { href } = router.resolve({
       name: 'service-config',
@@ -180,6 +170,17 @@
     });
     window.open(href, '_blank');
   };
+
+  const getRowCls = (data: IPackagesCitedByApps) => {
+    if (data.app_exceeds_limit || data.template_set_exceeds_limit) {
+      return 'error-row';
+    }
+    return '';
+  };
+
+  defineExpose({
+    selectedPkgs,
+  });
 </script>
 <style lang="scss" scoped>
   .header-wrapper {
@@ -228,7 +229,7 @@
     }
   }
   .tips {
-    margin: 0 0 16px;
+    margin-bottom: 8px;
     font-size: 12px;
     color: #63656e;
   }
@@ -245,6 +246,19 @@
     .link-icon {
       flex-shrink: 0;
       margin-left: 10px;
+    }
+    .warn-icon {
+      margin-left: 10px;
+      color: #ea3636;
+      font-size: 14px;
+    }
+  }
+
+  .cited-app-table {
+    :deep(.bk-table-body) {
+      tr.error-row td {
+        background: #ffeeee !important;
+      }
     }
   }
 </style>

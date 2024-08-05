@@ -9,71 +9,100 @@
     :before-close="handleBeforeClose"
     :quick-close="false"
     @closed="handleClose">
-    <div :class="['select-wrap', { 'en-select-wrap': locale === 'en' }]">
-      <div class="import-type-select">
-        <div class="label">{{ t('导入方式') }}</div>
-        <bk-radio-group v-model="importType">
-          <bk-radio-button label="localFile">{{ t('导入本地文件') }}</bk-radio-button>
-          <bk-radio-button label="otherSpace" :disabled="true">{{ t('从其他空间导入') }}</bk-radio-button>
-        </bk-radio-group>
-      </div>
-      <div v-if="importType === 'localFile'">
-        <ImportFromLocalFile
-          :space-id="spaceId"
-          :current-template-space="currentTemplateSpace"
-          :is-template="true"
-          @change="handleUploadFile"
-          @delete="handleDeleteFile"
-          @uploading="uploadFileLoading = $event"
-          @decompressing="decompressing = $event"
-          @file-processing="fileProcessing = $event" />
-      </div>
-    </div>
-    <bk-loading
-      :loading="decompressing || fileProcessing"
-      :title="loadingText"
-      class="config-table-loading"
-      mode="spin"
-      theme="primary"
-      size="small"
-      :opacity="0.7">
-      <div v-if="importConfigList.length" class="content">
-        <div class="head">
-          <div class="tips">
-            {{ t('共将导入') }} <span style="color: #3a84ff">{{ importConfigList.length }}</span>
-            {{ t('个配置项，其中') }} <span style="color: #ffa519">{{ existConfigList.length }}</span>
-            {{ t('个已存在,导入后将') }}
-            <span style="color: #ffa519">{{ t('覆盖原配置') }}</span>
-          </div>
+    <div v-if="currentStep === 'upload'">
+      <div :class="['select-wrap', { 'en-select-wrap': locale === 'en' }]">
+        <div class="import-type-select">
+          <div class="label">{{ t('导入方式') }}</div>
+          <bk-radio-group v-model="importType">
+            <bk-radio-button label="localFile">{{ t('导入本地文件') }}</bk-radio-button>
+            <bk-radio-button label="otherSpace" :disabled="true">{{ t('从其他空间导入') }}</bk-radio-button>
+          </bk-radio-group>
         </div>
-        <ConfigTable
-          v-if="nonExistConfigList.length"
-          :table-data="nonExistConfigList"
-          :is-exsit-table="false"
-          :expand="expandNonExistTable"
-          @change-expand="expandNonExistTable = !expandNonExistTable"
-          @change="handleTableChange($event, true)" />
-        <ConfigTable
-          v-if="existConfigList.length"
-          :expand="expandExistTable"
-          :table-data="existConfigList"
-          :is-exsit-table="true"
-          @change-expand="expandExistTable = !expandExistTable"
-          @change="handleTableChange($event, false)" />
+        <div v-if="importType === 'localFile'">
+          <ImportFromLocalFile
+            :space-id="spaceId"
+            :current-template-space="currentTemplateSpace"
+            :is-template="true"
+            @change="handleUploadFile"
+            @delete="handleDeleteFile"
+            @uploading="uploadFileLoading = $event"
+            @decompressing="decompressing = $event"
+            @file-processing="fileProcessing = $event" />
+        </div>
       </div>
-    </bk-loading>
-    <template #footer>
-      <bk-button
+      <bk-loading
+        :loading="decompressing || fileProcessing"
+        :title="loadingText"
+        class="config-table-loading"
+        mode="spin"
         theme="primary"
-        style="margin-right: 8px"
-        :disabled="!confirmBtnDisabled"
-        @click="isSelectPkgDialogShow = true">
-        {{ t('导入') }}
-      </bk-button>
-      <bk-button @click="emits('update:show', false)">{{ t('取消') }}</bk-button>
+        size="small"
+        :opacity="0.7">
+        <div v-if="importConfigList.length" class="content">
+          <bk-alert
+            v-if="isExceedMaxFileCount"
+            style="margin-top: 4px"
+            theme="error"
+            :title="
+              $t('配置文件数量超过最大上传限制 ({n} 个文件)', { n: spaceFeatureFlags.RESOURCE_LIMIT.TmplSetTmplCnt })
+            " />
+          <div class="head">
+            <div class="tips">
+              {{ t('共将导入') }} <span style="color: #3a84ff">{{ importConfigList.length }}</span>
+              {{ t('个配置项，其中') }} <span style="color: #ffa519">{{ existConfigList.length }}</span>
+              {{ t('个已存在,导入后将') }}
+              <span style="color: #ffa519">{{ t('覆盖原配置') }}</span>
+            </div>
+          </div>
+          <ConfigTable
+            v-if="nonExistConfigList.length"
+            :table-data="nonExistConfigList"
+            :is-exsit-table="false"
+            :expand="expandNonExistTable"
+            @change-expand="expandNonExistTable = !expandNonExistTable"
+            @change="handleTableChange($event, true)" />
+          <ConfigTable
+            v-if="existConfigList.length"
+            :expand="expandExistTable"
+            :table-data="existConfigList"
+            :is-exsit-table="true"
+            @change-expand="expandExistTable = !expandExistTable"
+            @change="handleTableChange($event, false)" />
+        </div>
+      </bk-loading>
+    </div>
+    <SelectPackage
+      v-else
+      ref="selectedPkgsRef"
+      :config-id-list="importConfigIdList"
+      @toggle-btn-disabled="importBtnDisabled = $event" />
+    <template #footer>
+      <div v-if="currentStep === 'upload'">
+        <bk-button
+          theme="primary"
+          style="margin-right: 8px"
+          :disabled="nextBtnDisabled"
+          @click="currentStep = 'import'">
+          {{ t('下一步') }}
+        </bk-button>
+        <bk-button @click="emits('update:show', false)">{{ t('取消') }}</bk-button>
+      </div>
+      <div v-else>
+        <bk-button style="margin-right: 8px" @click="currentStep = 'upload'">
+          {{ t('上一步') }}
+        </bk-button>
+        <bk-button
+          theme="primary"
+          style="margin-right: 8px"
+          :loading="pending"
+          :disabled="importBtnDisabled"
+          @click="handleImport">
+          {{ t('导入') }}
+        </bk-button>
+        <bk-button @click="emits('update:show', false)">{{ t('取消') }}</bk-button>
+      </div>
     </template>
   </bk-dialog>
-  <SelectPackage v-model:show="isSelectPkgDialogShow" :pending="pending" @confirm="handleImport" />
 </template>
 <script lang="ts" setup>
   import { ref, watch, computed } from 'vue';
@@ -97,7 +126,7 @@
   const templateStore = useTemplateStore();
 
   const emits = defineEmits(['update:show', 'added']);
-  const { spaceId } = storeToRefs(useGlobalStore());
+  const { spaceId, spaceFeatureFlags } = storeToRefs(useGlobalStore());
   const { currentTemplateSpace } = storeToRefs(useTemplateStore());
   const isShow = ref(false);
   const isFormChange = ref(false);
@@ -111,6 +140,9 @@
   const uploadFileLoading = ref(false);
   const decompressing = ref(false); // 后台压缩包解压
   const fileProcessing = ref(false); // 后台文件处理
+  const currentStep = ref('upload');
+  const selectedPkgsRef = ref();
+  const importBtnDisabled = ref(true);
 
   watch(
     () => props.show,
@@ -118,13 +150,29 @@
       clearData();
       isShow.value = val;
       isFormChange.value = false;
+      currentStep.value = 'upload';
     },
   );
 
+
   const importConfigList = computed(() => [...existConfigList.value, ...nonExistConfigList.value]);
 
-  const confirmBtnDisabled = computed(() => {
-    return !uploadFileLoading.value && !decompressing.value && importConfigList.value.length > 0;
+  const nextBtnDisabled = computed(() => {
+    return (
+      uploadFileLoading.value ||
+      decompressing.value ||
+      importConfigList.value.length === 0 ||
+      isExceedMaxFileCount.value
+    );
+  });
+
+  const importConfigIdList = computed(() => {
+    return importConfigList.value.map((item) => {
+      return {
+        name: item.name,
+        id: item.id,
+      };
+    });
   });
 
   const loadingText = computed(() => {
@@ -136,6 +184,10 @@
     }
     return '';
   });
+
+  const isExceedMaxFileCount = computed(
+    () => importConfigList.value.length > spaceFeatureFlags.value.RESOURCE_LIMIT.TmplSetTmplCnt,
+  );
 
   const handleBeforeClose = async () => {
     if (isFormChange.value) {
@@ -150,7 +202,8 @@
     emits('update:show', false);
   };
 
-  const handleImport = async (pkgIds: number[]) => {
+  const handleImport = async () => {
+    const pkgIds = selectedPkgsRef.value.selectedPkgs;
     pending.value = true;
     try {
       const res = await importTemplateBatchAdd(
