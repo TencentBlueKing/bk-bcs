@@ -40,6 +40,13 @@ type repoService struct {
 func (s *repoService) UploadFile(w http.ResponseWriter, r *http.Request) {
 	kt := kit.MustGetKit(r.Context())
 
+	// 检测上传文件的大小
+	_, singleContentLength := getUploadConfig(kt.BizID)
+	if err := checkUploadSize(kt, r, singleContentLength); err != nil {
+		_ = render.Render(w, r, rest.BadRequest(err))
+		return
+	}
+
 	sign, err := repository.GetFileSign(r)
 	if err != nil {
 		render.Render(w, r, rest.BadRequest(err))
