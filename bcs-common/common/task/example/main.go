@@ -113,7 +113,7 @@ func main() {
 
 	}
 
-	btm := task.NewTaskManager(ctx)
+	btm := task.NewTaskManager()
 	config := &task.ManagerConfig{
 		ModuleName: moduleName,
 		WorkerNum:  100,
