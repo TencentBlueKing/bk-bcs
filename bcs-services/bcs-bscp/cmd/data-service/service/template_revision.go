@@ -257,6 +257,7 @@ func (s *Service) doCreateTemplateRevisions(kt *kit.Kit, tx *gen.QueryTx, data [
 		return errf.Errorf(errf.DBOpFailed,
 			i18n.T(kt, fmt.Sprintf("batch create template revisions failed, err: %v, rid: %s", err, kt.Rid)))
 	}
+
 	return nil
 }
 

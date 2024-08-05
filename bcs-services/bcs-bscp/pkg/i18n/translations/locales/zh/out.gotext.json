@@ -170,6 +170,11 @@
             ]
         },
         {
+            "id": "client ids is empty",
+            "message": "client ids is empty",
+            "translation": ""
+        },
+        {
             "id": "batch delete config items failed",
             "message": "batch delete config items failed",
             "translation": "批量删除配置项失败"
@@ -261,6 +266,11 @@
             ]
         },
         {
+            "id": "get the IDs excluded after the specified IDs",
+            "message": "get the IDs excluded after the specified IDs",
+            "translation": "获取排除后的数据失败"
+        },
+        {
             "id": "obtain the number of configuration items",
             "message": "obtain the number of configuration items",
             "translation": "获取配置项数量"
@@ -292,6 +302,174 @@
                     "underlyingType": "string",
                     "argNum": 1,
                     "expr": "req.Spec.Name"
+                }
+            ]
+        },
+        {
+            "id": "get hook referenced IDs",
+            "message": "get hook referenced IDs",
+            "translation": "获取脚本引用的 ID"
+        },
+        {
+            "id": "get app template bindings by template set ids, err: {Err}",
+            "message": "get app template bindings by template set ids, err: {Err}",
+            "translation": "",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "batch update app template binding's failed, err: {Err}",
+            "message": "batch update app template binding's failed, err: {Err}",
+            "translation": "",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "batch add templates to template sets failed, err: {Err}",
+            "message": "batch add templates to template sets failed, err: {Err}",
+            "translation": "",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "get template set data failed, err: {Err}",
+            "message": "get template set data failed, err: {Err}",
+            "translation": "",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "there is no template file under this template set",
+            "message": "there is no template file under this template set",
+            "translation": ""
+        },
+        {
+            "id": "delete template from template sets failed, err: {Err}, rid: {Rid}",
+            "message": "delete template from template sets failed, err: {Err}, rid: {Rid}",
+            "translation": "",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                },
+                {
+                    "id": "Rid",
+                    "string": "%[2]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 2,
+                    "expr": "kt.Rid"
+                }
+            ]
+        },
+        {
+            "id": "list templates by tuple failed, err: {Err}",
+            "message": "list templates by tuple failed, err: {Err}",
+            "translation": "",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "list app template bindings by app ids, err: {Err}",
+            "message": "list app template bindings by app ids, err: {Err}",
+            "translation": "",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "get template set failed, err: {Err}",
+            "message": "get template set failed, err: {Err}",
+            "translation": "",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "list apps by app ids failed, err: {Err}",
+            "message": "list apps by app ids failed, err: {Err}",
+            "translation": "",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "count the number of app configs failed, err: {Err}",
+            "message": "count the number of app configs failed, err: {Err}",
+            "translation": "",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
                 }
             ]
         },

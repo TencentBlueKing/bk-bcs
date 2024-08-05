@@ -115,6 +115,7 @@ const (
 	Config_GetReleasedAppBoundTmplRevision_FullMethodName   = "/pbcs.Config/GetReleasedAppBoundTmplRevision"
 	Config_UpdateAppBoundTmplRevisions_FullMethodName       = "/pbcs.Config/UpdateAppBoundTmplRevisions"
 	Config_DeleteAppBoundTmplSets_FullMethodName            = "/pbcs.Config/DeleteAppBoundTmplSets"
+	Config_RemoveAppBoundTmplSet_FullMethodName             = "/pbcs.Config/RemoveAppBoundTmplSet"
 	Config_CheckAppTemplateBinding_FullMethodName           = "/pbcs.Config/CheckAppTemplateBinding"
 	Config_ListTmplBoundCounts_FullMethodName               = "/pbcs.Config/ListTmplBoundCounts"
 	Config_ListTmplRevisionBoundCounts_FullMethodName       = "/pbcs.Config/ListTmplRevisionBoundCounts"
@@ -127,6 +128,7 @@ const (
 	Config_ListTmplRevisionBoundNamedApps_FullMethodName    = "/pbcs.Config/ListTmplRevisionBoundNamedApps"
 	Config_ListTmplSetBoundUnnamedApps_FullMethodName       = "/pbcs.Config/ListTmplSetBoundUnnamedApps"
 	Config_ListMultiTmplSetBoundUnnamedApps_FullMethodName  = "/pbcs.Config/ListMultiTmplSetBoundUnnamedApps"
+	Config_CheckTemplateSetReferencesApps_FullMethodName    = "/pbcs.Config/CheckTemplateSetReferencesApps"
 	Config_ListTmplSetBoundNamedApps_FullMethodName         = "/pbcs.Config/ListTmplSetBoundNamedApps"
 	Config_ListLatestTmplBoundUnnamedApps_FullMethodName    = "/pbcs.Config/ListLatestTmplBoundUnnamedApps"
 	Config_CreateTemplateVariable_FullMethodName            = "/pbcs.Config/CreateTemplateVariable"
@@ -270,14 +272,14 @@ type ConfigClient interface {
 	ListTemplateRevisions(ctx context.Context, in *ListTemplateRevisionsReq, opts ...grpc.CallOption) (*ListTemplateRevisionsResp, error)
 	GetTemplateRevision(ctx context.Context, in *GetTemplateRevisionReq, opts ...grpc.CallOption) (*GetTemplateRevisionResp, error)
 	// 暂时不对外开发（删除模版后，服务引用的latest版本会回退到上一个老版本）
-	//rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns
-	//(DeleteTemplateRevisionResp) {
+	// rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns
+	// (DeleteTemplateRevisionResp) {
 	//
-	//option (google.api.http) = {
-	//delete :
-	//"/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
-	//};
-	//}
+	// option (google.api.http) = {
+	// delete :
+	// "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
+	// };
+	// }
 	ListTemplateRevisionsByIDs(ctx context.Context, in *ListTemplateRevisionsByIDsReq, opts ...grpc.CallOption) (*ListTemplateRevisionsByIDsResp, error)
 	ListTmplRevisionNamesByTmplIDs(ctx context.Context, in *ListTmplRevisionNamesByTmplIDsReq, opts ...grpc.CallOption) (*ListTmplRevisionNamesByTmplIDsResp, error)
 	CreateTemplateSet(ctx context.Context, in *CreateTemplateSetReq, opts ...grpc.CallOption) (*CreateTemplateSetResp, error)
@@ -296,6 +298,7 @@ type ConfigClient interface {
 	GetReleasedAppBoundTmplRevision(ctx context.Context, in *GetReleasedAppBoundTmplRevisionReq, opts ...grpc.CallOption) (*GetReleasedAppBoundTmplRevisionResp, error)
 	UpdateAppBoundTmplRevisions(ctx context.Context, in *UpdateAppBoundTmplRevisionsReq, opts ...grpc.CallOption) (*UpdateAppBoundTmplRevisionsResp, error)
 	DeleteAppBoundTmplSets(ctx context.Context, in *DeleteAppBoundTmplSetsReq, opts ...grpc.CallOption) (*DeleteAppBoundTmplSetsResp, error)
+	RemoveAppBoundTmplSet(ctx context.Context, in *RemoveAppBoundTmplSetReq, opts ...grpc.CallOption) (*RemoveAppBoundTmplSetResp, error)
 	CheckAppTemplateBinding(ctx context.Context, in *CheckAppTemplateBindingReq, opts ...grpc.CallOption) (*CheckAppTemplateBindingResp, error)
 	ListTmplBoundCounts(ctx context.Context, in *ListTmplBoundCountsReq, opts ...grpc.CallOption) (*ListTmplBoundCountsResp, error)
 	ListTmplRevisionBoundCounts(ctx context.Context, in *ListTmplRevisionBoundCountsReq, opts ...grpc.CallOption) (*ListTmplRevisionBoundCountsResp, error)
@@ -308,6 +311,7 @@ type ConfigClient interface {
 	ListTmplRevisionBoundNamedApps(ctx context.Context, in *ListTmplRevisionBoundNamedAppsReq, opts ...grpc.CallOption) (*ListTmplRevisionBoundNamedAppsResp, error)
 	ListTmplSetBoundUnnamedApps(ctx context.Context, in *ListTmplSetBoundUnnamedAppsReq, opts ...grpc.CallOption) (*ListTmplSetBoundUnnamedAppsResp, error)
 	ListMultiTmplSetBoundUnnamedApps(ctx context.Context, in *ListMultiTmplSetBoundUnnamedAppsReq, opts ...grpc.CallOption) (*ListMultiTmplSetBoundUnnamedAppsResp, error)
+	CheckTemplateSetReferencesApps(ctx context.Context, in *CheckTemplateSetReferencesAppsReq, opts ...grpc.CallOption) (*CheckTemplateSetReferencesAppsResp, error)
 	ListTmplSetBoundNamedApps(ctx context.Context, in *ListTmplSetBoundNamedAppsReq, opts ...grpc.CallOption) (*ListTmplSetBoundNamedAppsResp, error)
 	ListLatestTmplBoundUnnamedApps(ctx context.Context, in *ListLatestTmplBoundUnnamedAppsReq, opts ...grpc.CallOption) (*ListLatestTmplBoundUnnamedAppsResp, error)
 	CreateTemplateVariable(ctx context.Context, in *CreateTemplateVariableReq, opts ...grpc.CallOption) (*CreateTemplateVariableResp, error)
@@ -1183,6 +1187,15 @@ func (c *configClient) DeleteAppBoundTmplSets(ctx context.Context, in *DeleteApp
 	return out, nil
 }
 
+func (c *configClient) RemoveAppBoundTmplSet(ctx context.Context, in *RemoveAppBoundTmplSetReq, opts ...grpc.CallOption) (*RemoveAppBoundTmplSetResp, error) {
+	out := new(RemoveAppBoundTmplSetResp)
+	err := c.cc.Invoke(ctx, Config_RemoveAppBoundTmplSet_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *configClient) CheckAppTemplateBinding(ctx context.Context, in *CheckAppTemplateBindingReq, opts ...grpc.CallOption) (*CheckAppTemplateBindingResp, error) {
 	out := new(CheckAppTemplateBindingResp)
 	err := c.cc.Invoke(ctx, Config_CheckAppTemplateBinding_FullMethodName, in, out, opts...)
@@ -1285,6 +1298,15 @@ func (c *configClient) ListTmplSetBoundUnnamedApps(ctx context.Context, in *List
 func (c *configClient) ListMultiTmplSetBoundUnnamedApps(ctx context.Context, in *ListMultiTmplSetBoundUnnamedAppsReq, opts ...grpc.CallOption) (*ListMultiTmplSetBoundUnnamedAppsResp, error) {
 	out := new(ListMultiTmplSetBoundUnnamedAppsResp)
 	err := c.cc.Invoke(ctx, Config_ListMultiTmplSetBoundUnnamedApps_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) CheckTemplateSetReferencesApps(ctx context.Context, in *CheckTemplateSetReferencesAppsReq, opts ...grpc.CallOption) (*CheckTemplateSetReferencesAppsResp, error) {
+	out := new(CheckTemplateSetReferencesAppsResp)
+	err := c.cc.Invoke(ctx, Config_CheckTemplateSetReferencesApps_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1912,14 +1934,14 @@ type ConfigServer interface {
 	ListTemplateRevisions(context.Context, *ListTemplateRevisionsReq) (*ListTemplateRevisionsResp, error)
 	GetTemplateRevision(context.Context, *GetTemplateRevisionReq) (*GetTemplateRevisionResp, error)
 	// 暂时不对外开发（删除模版后，服务引用的latest版本会回退到上一个老版本）
-	//rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns
-	//(DeleteTemplateRevisionResp) {
+	// rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns
+	// (DeleteTemplateRevisionResp) {
 	//
-	//option (google.api.http) = {
-	//delete :
-	//"/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
-	//};
-	//}
+	// option (google.api.http) = {
+	// delete :
+	// "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
+	// };
+	// }
 	ListTemplateRevisionsByIDs(context.Context, *ListTemplateRevisionsByIDsReq) (*ListTemplateRevisionsByIDsResp, error)
 	ListTmplRevisionNamesByTmplIDs(context.Context, *ListTmplRevisionNamesByTmplIDsReq) (*ListTmplRevisionNamesByTmplIDsResp, error)
 	CreateTemplateSet(context.Context, *CreateTemplateSetReq) (*CreateTemplateSetResp, error)
@@ -1938,6 +1960,7 @@ type ConfigServer interface {
 	GetReleasedAppBoundTmplRevision(context.Context, *GetReleasedAppBoundTmplRevisionReq) (*GetReleasedAppBoundTmplRevisionResp, error)
 	UpdateAppBoundTmplRevisions(context.Context, *UpdateAppBoundTmplRevisionsReq) (*UpdateAppBoundTmplRevisionsResp, error)
 	DeleteAppBoundTmplSets(context.Context, *DeleteAppBoundTmplSetsReq) (*DeleteAppBoundTmplSetsResp, error)
+	RemoveAppBoundTmplSet(context.Context, *RemoveAppBoundTmplSetReq) (*RemoveAppBoundTmplSetResp, error)
 	CheckAppTemplateBinding(context.Context, *CheckAppTemplateBindingReq) (*CheckAppTemplateBindingResp, error)
 	ListTmplBoundCounts(context.Context, *ListTmplBoundCountsReq) (*ListTmplBoundCountsResp, error)
 	ListTmplRevisionBoundCounts(context.Context, *ListTmplRevisionBoundCountsReq) (*ListTmplRevisionBoundCountsResp, error)
@@ -1950,6 +1973,7 @@ type ConfigServer interface {
 	ListTmplRevisionBoundNamedApps(context.Context, *ListTmplRevisionBoundNamedAppsReq) (*ListTmplRevisionBoundNamedAppsResp, error)
 	ListTmplSetBoundUnnamedApps(context.Context, *ListTmplSetBoundUnnamedAppsReq) (*ListTmplSetBoundUnnamedAppsResp, error)
 	ListMultiTmplSetBoundUnnamedApps(context.Context, *ListMultiTmplSetBoundUnnamedAppsReq) (*ListMultiTmplSetBoundUnnamedAppsResp, error)
+	CheckTemplateSetReferencesApps(context.Context, *CheckTemplateSetReferencesAppsReq) (*CheckTemplateSetReferencesAppsResp, error)
 	ListTmplSetBoundNamedApps(context.Context, *ListTmplSetBoundNamedAppsReq) (*ListTmplSetBoundNamedAppsResp, error)
 	ListLatestTmplBoundUnnamedApps(context.Context, *ListLatestTmplBoundUnnamedAppsReq) (*ListLatestTmplBoundUnnamedAppsResp, error)
 	CreateTemplateVariable(context.Context, *CreateTemplateVariableReq) (*CreateTemplateVariableResp, error)
@@ -2287,6 +2311,9 @@ func (UnimplementedConfigServer) UpdateAppBoundTmplRevisions(context.Context, *U
 func (UnimplementedConfigServer) DeleteAppBoundTmplSets(context.Context, *DeleteAppBoundTmplSetsReq) (*DeleteAppBoundTmplSetsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteAppBoundTmplSets not implemented")
 }
+func (UnimplementedConfigServer) RemoveAppBoundTmplSet(context.Context, *RemoveAppBoundTmplSetReq) (*RemoveAppBoundTmplSetResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RemoveAppBoundTmplSet not implemented")
+}
 func (UnimplementedConfigServer) CheckAppTemplateBinding(context.Context, *CheckAppTemplateBindingReq) (*CheckAppTemplateBindingResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CheckAppTemplateBinding not implemented")
 }
@@ -2322,6 +2349,9 @@ func (UnimplementedConfigServer) ListTmplSetBoundUnnamedApps(context.Context, *L
 }
 func (UnimplementedConfigServer) ListMultiTmplSetBoundUnnamedApps(context.Context, *ListMultiTmplSetBoundUnnamedAppsReq) (*ListMultiTmplSetBoundUnnamedAppsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListMultiTmplSetBoundUnnamedApps not implemented")
+}
+func (UnimplementedConfigServer) CheckTemplateSetReferencesApps(context.Context, *CheckTemplateSetReferencesAppsReq) (*CheckTemplateSetReferencesAppsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CheckTemplateSetReferencesApps not implemented")
 }
 func (UnimplementedConfigServer) ListTmplSetBoundNamedApps(context.Context, *ListTmplSetBoundNamedAppsReq) (*ListTmplSetBoundNamedAppsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListTmplSetBoundNamedApps not implemented")
@@ -4117,6 +4147,24 @@ func _Config_DeleteAppBoundTmplSets_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Config_RemoveAppBoundTmplSet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RemoveAppBoundTmplSetReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).RemoveAppBoundTmplSet(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_RemoveAppBoundTmplSet_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).RemoveAppBoundTmplSet(ctx, req.(*RemoveAppBoundTmplSetReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Config_CheckAppTemplateBinding_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CheckAppTemplateBindingReq)
 	if err := dec(in); err != nil {
@@ -4329,6 +4377,24 @@ func _Config_ListMultiTmplSetBoundUnnamedApps_Handler(srv interface{}, ctx conte
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ConfigServer).ListMultiTmplSetBoundUnnamedApps(ctx, req.(*ListMultiTmplSetBoundUnnamedAppsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_CheckTemplateSetReferencesApps_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CheckTemplateSetReferencesAppsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).CheckTemplateSetReferencesApps(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_CheckTemplateSetReferencesApps_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).CheckTemplateSetReferencesApps(ctx, req.(*CheckTemplateSetReferencesAppsReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -5777,6 +5843,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Config_DeleteAppBoundTmplSets_Handler,
 		},
 		{
+			MethodName: "RemoveAppBoundTmplSet",
+			Handler:    _Config_RemoveAppBoundTmplSet_Handler,
+		},
+		{
 			MethodName: "CheckAppTemplateBinding",
 			Handler:    _Config_CheckAppTemplateBinding_Handler,
 		},
@@ -5823,6 +5893,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListMultiTmplSetBoundUnnamedApps",
 			Handler:    _Config_ListMultiTmplSetBoundUnnamedApps_Handler,
+		},
+		{
+			MethodName: "CheckTemplateSetReferencesApps",
+			Handler:    _Config_CheckTemplateSetReferencesApps_Handler,
 		},
 		{
 			MethodName: "ListTmplSetBoundNamedApps",

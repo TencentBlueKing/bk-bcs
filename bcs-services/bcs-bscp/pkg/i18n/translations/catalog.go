@@ -63,20 +63,21 @@ var messageKeyToIndex = map[string]int{
 	"invalid name: %s, only allows to include english、numbers、underscore (_), and must start with prefix bk_bscp_ (ignore case)": 31,
 	"obtain the number of configuration items":                                                                                   19,
 	"read file failed %s":                           1,
-	"revision not set":                              28,
-	"same template variable name %s already exists": 22,
-	"spec not set":                                  26,
-	"template variable name must start with %s":     16,
-	"the length of hook ids is %d, it must be within the range of [1,%d]":              14,
-	"the length of template variable ids is %d, it must be within the range of [1,%d]": 17,
-	"unsupported variable type: %s":                                                    34,
+	"revision not set":                              42,
+	"same template variable name %s already exists": 36,
+	"spec not set":                                  40,
+	"template variable name must start with %s":     17,
+	"the length of hook ids is %d, it must be within the range of [1,%d]":              15,
+	"the length of template variable ids is %d, it must be within the range of [1,%d]": 18,
+	"there is no template file under this template set":                                29,
+	"unsupported variable type: %s":                                                    48,
 	"upload completed":                                                                 8,
 	"upload completed, %d failed":                                                      9,
 	"upload failed, please make sure the file size does not exceed %s":                 11,
 	"upload file failed %s":                                                            6,
 }
 
-var enIndex = []uint32{ // 36 elements
+var enIndex = []uint32{ // 50 elements
 	// Entry 0 - 1F
 	0x00000000, 0x0000000f, 0x00000026, 0x00000044,
 	0x0000006c, 0x000000bb, 0x000000d6, 0x000000ef,
@@ -114,7 +115,7 @@ const enData string = "" + // Size: 1422 bytes
 	"is nil\x02default_val %[1]s is not a number type\x02unsupported variable" +
 	" type: %[1]s"
 
-var zhIndex = []uint32{ // 36 elements
+var zhIndex = []uint32{ // 50 elements
 	// Entry 0 - 1F
 	0x00000000, 0x0000000f, 0x00000029, 0x00000049,
 	0x00000069, 0x000000b6, 0x000000d1, 0x000000ec,

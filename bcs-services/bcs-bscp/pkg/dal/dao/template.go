@@ -61,6 +61,8 @@ type Template interface {
 	BatchUpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, templates []*table.Template) error
 	// ListTemplateByTuple 按照多个字段in查询template 列表
 	ListTemplateByTuple(kit *kit.Kit, data [][]interface{}) ([]*table.Template, error)
+	// ListByExclusionIDs list templates by template exclusion ids.
+	ListByExclusionIDs(kit *kit.Kit, ids []uint32) ([]*table.Template, error)
 }
 
 var _ Template = new(templateDao)
