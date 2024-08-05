@@ -14,7 +14,6 @@ package mysql
 
 import (
 	"context"
-	"fmt"
 	"net/url"
 	"strconv"
 
@@ -109,7 +108,6 @@ func (s *mysqlStore) ListTask(ctx context.Context, opt *iface.ListOption) ([]typ
 func (s *mysqlStore) UpdateTask(ctx context.Context, task *types.Task) error {
 	return s.db.Transaction(func(tx *gorm.DB) error {
 		updateTask := getUpdateTaskRecord(task)
-		fmt.Println("lei", updateTask)
 		if err := tx.Model(&TaskRecords{}).Where("task_id = ?", task.TaskID).Updates(updateTask).Error; err != nil {
 			return err
 		}
@@ -118,7 +116,6 @@ func (s *mysqlStore) UpdateTask(ctx context.Context, task *types.Task) error {
 				continue
 			}
 			updateStep := getUpdateStepRecord(step)
-			fmt.Println("lei1", updateStep)
 			if err := tx.Where("task_id = ? AND name= ?", task.TaskID, step.Name).Updates(updateStep).Error; err != nil {
 				return err
 			}
