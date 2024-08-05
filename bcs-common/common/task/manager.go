@@ -69,8 +69,8 @@ type ManagerConfig struct {
 }
 
 // NewTaskManager create new manager
-func NewTaskManager(ctx context.Context) *TaskManager {
-	ctx, cancel := context.WithCancel(ctx)
+func NewTaskManager() *TaskManager {
+	ctx, cancel := context.WithCancel(context.Background())
 
 	m := &TaskManager{
 		ctx:         ctx,
