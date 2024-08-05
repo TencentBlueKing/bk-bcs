@@ -20,13 +20,12 @@ import (
 
 // CommonFormatRes 通用资源格式化
 func CommonFormatRes(manifest map[string]interface{}) map[string]interface{} {
-	rawCreateTime, _ := mapx.GetItems(manifest, "metadata.creationTimestamp")
-	createTime, _ := rawCreateTime.(string)
+	rawCreateTime := mapx.GetStr(manifest, "metadata.creationTimestamp")
 	createSource, immutable := parseCreateSource(manifest)
 	ret := map[string]interface{}{
 		"namespace":  mapx.GetStr(manifest, []string{"metadata", "namespace"}),
-		"age":        timex.CalcAge(rawCreateTime.(string)),
-		"createTime": createTime,
+		"age":        timex.CalcAge(rawCreateTime),
+		"createTime": rawCreateTime,
 		"editMode": mapx.Get(
 			manifest, []string{"metadata", "annotations", resCsts.EditModeAnnoKey}, resCsts.EditModeYaml,
 		),
