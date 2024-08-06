@@ -14,7 +14,7 @@ export default function usePlatform() {
       nameEn: 'BCS',
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       appLogo: require('@/images/bcs.svg'),
-      brandName: '腾讯蓝鲸智云',
+      brandName: '蓝鲸智云',
       brandNameEn: 'Tencent BlueKing',
       favicon: '/static/images/favicon.icon',
       helperLink: 'wxwork://message?uin=8444252571319680',
