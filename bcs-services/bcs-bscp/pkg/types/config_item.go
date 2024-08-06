@@ -70,3 +70,9 @@ type CIUniqueKey struct {
 	Name string `json:"name"`
 	Path string `json:"path"`
 }
+
+// ListConfigItemCount define the list configuration item statistical structure
+type ListConfigItemCount struct {
+	AppID uint32 `json:"app_id"`
+	Count uint64 `json:"count"`
+}

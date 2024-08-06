@@ -31,6 +31,7 @@ import (
 	pbhook "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/hook"
 	pbds "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/natsort"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
 // CreateHook create a hook
@@ -113,11 +114,35 @@ func (s *Service) BatchDeleteHook(ctx context.Context, req *pbcs.BatchDeleteHook
 		return nil, err
 	}
 
-	idsLen := len(req.Ids)
-	if idsLen == 0 || idsLen > constant.ArrayInputLenLimit {
-		return nil, errf.Errorf(errf.InvalidArgument, i18n.T(grpcKit,
-			"the length of hook ids is %d, it must be within the range of [1,%d]",
-			idsLen, constant.ArrayInputLenLimit))
+	var ids []uint32
+	ids = req.GetIds()
+	if req.ExclusionOperation {
+		var referencedIDs []uint32
+		if !req.Force {
+			// 过滤出绑定的脚本
+			hookReferencedIDs, err := s.client.DS.GetHookReferencedIDs(grpcKit.RpcCtx(), &pbds.GetHookReferencedIDsReq{
+				BizId: req.GetBizId(),
+			})
+			if err != nil {
+				return nil, err
+			}
+			referencedIDs = hookReferencedIDs.GetIds()
+		}
+		result, err := s.client.DS.HookFetchIDsExcluding(grpcKit.RpcCtx(), &pbds.HookFetchIDsExcludingReq{
+			BizId: req.BizId,
+			Ids:   tools.MergeAndDeduplicate(req.GetIds(), referencedIDs),
+		})
+		if err != nil {
+			return nil, err
+		}
+		ids = result.GetIds()
+	} else {
+		idsLen := len(ids)
+		if idsLen == 0 || idsLen > constant.ArrayInputLenLimit {
+			return nil, errf.Errorf(errf.InvalidArgument, i18n.T(grpcKit,
+				"the length of hook ids is %d, it must be within the range of [1,%d]",
+				idsLen, constant.ArrayInputLenLimit))
+		}
 	}
 
 	eg, egCtx := errgroup.WithContext(grpcKit.RpcCtx())
@@ -127,7 +152,7 @@ func (s *Service) BatchDeleteHook(ctx context.Context, req *pbcs.BatchDeleteHook
 	var mux sync.Mutex
 
 	// 使用 data-service 原子接口
-	for _, v := range req.Ids {
+	for _, v := range ids {
 		v := v
 		eg.Go(func() error {
 			r := &pbds.DeleteHookReq{
@@ -159,7 +184,7 @@ func (s *Service) BatchDeleteHook(ctx context.Context, req *pbcs.BatchDeleteHook
 	}
 
 	// 全部失败, 当前API视为失败
-	if len(failedIDs) == len(req.Ids) {
+	if len(failedIDs) == len(ids) {
 		return nil, errf.Errorf(errf.Aborted, i18n.T(grpcKit, "batch delete failed"))
 	}
 
@@ -244,8 +269,9 @@ func (s *Service) ListHooks(ctx context.Context, req *pbcs.ListHooksReq) (*pbcs.
 	}
 
 	resp := &pbcs.ListHooksResp{
-		Count:   rp.Count,
-		Details: details,
+		Count:          rp.Count,
+		Details:        details,
+		ExclusionCount: rp.GetExclusionCount(),
 	}
 
 	return resp, nil

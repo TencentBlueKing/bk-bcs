@@ -132,6 +132,11 @@ func (s *Service) ListHooks(ctx context.Context, req *pbds.ListHooksReq) (*pbds.
 		return nil, err
 	}
 
+	uncitedCount, err := s.dao.Hook().CountNumberUnReferences(kt, req.BizId, opt)
+	if err != nil {
+		return nil, err
+	}
+
 	result := []*pbds.ListHooksResp_Detail{}
 	for _, detail := range details {
 		result = append(result, &pbds.ListHooksResp_Detail{
@@ -143,9 +148,11 @@ func (s *Service) ListHooks(ctx context.Context, req *pbds.ListHooksReq) (*pbds.
 	}
 
 	resp := &pbds.ListHooksResp{
-		Count:   uint32(count),
-		Details: result,
+		Count:          uint32(count),
+		Details:        result,
+		ExclusionCount: uint32(uncitedCount),
 	}
+
 	return resp, nil
 }
 
@@ -388,4 +395,34 @@ func (s *Service) GetReleaseHook(ctx context.Context, req *pbds.GetReleaseHookRe
 	}
 
 	return resp, nil
+}
+
+// HookFetchIDsExcluding 获取指定ID后排除的ID
+func (s *Service) HookFetchIDsExcluding(ctx context.Context, req *pbds.HookFetchIDsExcludingReq) (
+	*pbds.HookFetchIDsExcludingResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	ids, err := s.dao.Hook().FetchIDsExcluding(grpcKit, req.BizId, req.GetIds())
+	if err != nil {
+		return nil, errf.Errorf(errf.DBOpFailed, i18n.T(grpcKit, "get the IDs excluded after the specified IDs"))
+	}
+
+	return &pbds.HookFetchIDsExcludingResp{
+		Ids: ids,
+	}, nil
+}
+
+// GetHookReferencedIDs 获取脚本被引用的IDs
+func (s *Service) GetHookReferencedIDs(ctx context.Context, req *pbds.GetHookReferencedIDsReq) (
+	*pbds.GetHookReferencedIDsResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	ids, err := s.dao.Hook().GetReferencedIDs(grpcKit, req.BizId)
+	if err != nil {
+		return nil, errf.Errorf(errf.DBOpFailed, i18n.T(grpcKit, "get hook referenced IDs"))
+	}
+
+	return &pbds.GetHookReferencedIDsResp{
+		Ids: ids,
+	}, nil
 }
