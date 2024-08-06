@@ -149,8 +149,16 @@
   import { cloneDeep } from 'lodash';
   import { IConfigEditParams, IFileConfigContentSummary } from '../../../../../../../../types/config';
   import { IVariableEditParams } from '../../../../../../../../types/variable';
-  import { updateConfigContent, downloadConfigContent } from '../../../../../../../api/config';
-  import { downloadTemplateContent, updateTemplateContent } from '../../../../../../../api/template';
+  import {
+    updateConfigContent,
+    downloadConfigContent,
+    // getConfigUploadFileIsExist,
+  } from '../../../../../../../api/config';
+  import {
+    downloadTemplateContent,
+    updateTemplateContent,
+    // getTemplateUploadFileIsExist,
+  } from '../../../../../../../api/template';
   import { stringLengthInBytes, byteUnitConverse } from '../../../../../../../utils/index';
   import { fileDownload } from '../../../../../../../utils/file';
   import { CONFIG_FILE_TYPE } from '../../../../../../../constants/config';
@@ -378,7 +386,7 @@
   };
 
   // 选择文件后上传
-  const handleFileUpload = (option: { file: File }) => {
+  const handleFileUpload = async (option: { file: File }) => {
     fileContent.value = option.file;
     uploadFile.value = {
       file: option.file,
@@ -391,12 +399,27 @@
       return;
     }
     isFileChanged.value = true;
+    // const res = await checkFileExist();
+    // if (res.exists) {
+    //   uploadFile.value!.status = 'success';
+    //   fileContent.value = {
+    //     name: option.file.name,
+    //     signature: res.metadata.sha256,
+    //     size: res.metadata.byte_size,
+    //   };
+    //   change();
+    //   return Promise.resolve();
+    // }
     return new Promise((resolve, reject) => {
       emits('update:fileUploading', true);
-
       uploadContent()
         .then((res) => {
           uploadFile.value!.status = 'success';
+          fileContent.value = {
+            name: option.file.name,
+            signature: res.sha256,
+            size: res.byte_size,
+          };
           change();
           resolve(res);
         })
@@ -440,6 +463,16 @@
       },
     );
   };
+
+  // 判断上传的文件是否存在
+  // const checkFileExist = async () => {
+  //   const signature = await getSignature();
+  //   uploadFileSignature.value = signature;
+  //   if (props.isTpl) {
+  //     return getTemplateUploadFileIsExist(props.bkBizId, props.id, signature);
+  //   }
+  //   return getConfigUploadFileIsExist(props.bkBizId, props.id, signature);
+  // };
 
   // 生成文件或文本的sha256
   const getSignature = async () => {
