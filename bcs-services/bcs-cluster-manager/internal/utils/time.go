@@ -14,6 +14,8 @@ package utils
 
 import (
 	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 )
 
 const (
@@ -52,4 +54,10 @@ func TransStrToTs(input string) int64 {
 	}
 
 	return t.UnixMilli()
+}
+
+// MeasureExecutionTime measure func exec time
+func MeasureExecutionTime(start time.Time, name string) {
+	elapsed := time.Since(start)
+	blog.Infof("%s 执行时间: %s\n", name, elapsed)
 }

@@ -1259,7 +1259,7 @@ service ClusterManager {
   }
 
    // Task records
-   rpc TaskRecords(TaskRecordsRequest) returns (TaskRecordsResponse) {
+   rpc ListTaskRecords(ListTaskRecordsRequest) returns (ListTaskRecordsResponse) {
     option (google.api.http) = {
       get : "/clustermanager/v1/taskrecords"
     };
@@ -12210,22 +12210,22 @@ message ListTaskStepLogsRequest {
     }
   };
 
-  uint32 limit = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "limit",
-    description: "每页数量"
-  }, (validate.rules).uint32.gt = 0];
-  uint32 page = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "page",
-    description: "页码"
-  }, (validate.rules).uint32.gt = 0];
-  string taskID = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string taskID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "taskID",
     description: "过滤任务维度的操作审计"
   }];
-  string stepName = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string stepName = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "stepName",
     description: "过滤任务步骤维度的操作审计"
   }];
+  uint32 page = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "page",
+    description: "页码"
+  }, (validate.rules).uint32.gt = 0];
+  uint32 limit = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "limit",
+    description: "每页数量"
+  }, (validate.rules).uint32.gt = 0];
 }
 
 message ListOperationLogsResponse {
@@ -12247,7 +12247,7 @@ message ListOperationLogsResponse {
   }];
 }
 
-message TaskRecordsRequest {
+message ListTaskRecordsRequest {
   option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
     json_schema : {
       title : "ListTaskRecordsRequest"
@@ -12261,7 +12261,7 @@ message TaskRecordsRequest {
   }];
 }
 
-message TaskRecordsResponse {
+message ListTaskRecordsResponse {
   uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "code",
     description : "返回错误码"

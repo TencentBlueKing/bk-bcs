@@ -32,8 +32,8 @@ import (
 type TaskRecordsAction struct {
 	ctx   context.Context
 	model store.ClusterManagerModel
-	req   *cmproto.TaskRecordsRequest
-	resp  *cmproto.TaskRecordsResponse
+	req   *cmproto.ListTaskRecordsRequest
+	resp  *cmproto.ListTaskRecordsResponse
 }
 
 var (
@@ -143,7 +143,7 @@ func (ua *TaskRecordsAction) appendTaskRecords(task *cmproto.Task) error {
 
 // Handle handles task records
 func (ua *TaskRecordsAction) Handle(
-	ctx context.Context, req *cmproto.TaskRecordsRequest, resp *cmproto.TaskRecordsResponse) {
+	ctx context.Context, req *cmproto.ListTaskRecordsRequest, resp *cmproto.ListTaskRecordsResponse) {
 	if req == nil || resp == nil {
 		blog.Errorf("task records failed, req or resp is empty")
 		return

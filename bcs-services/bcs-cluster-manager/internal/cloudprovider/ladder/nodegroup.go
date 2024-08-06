@@ -14,6 +14,7 @@
 package ladder
 
 import (
+	"errors"
 	"fmt"
 	"sync"
 
@@ -426,8 +427,8 @@ func (ng *NodeGroup) CheckResourcePoolQuota(group *proto.NodeGroup, scaleUpNum u
 			cloudName, group.GetNodeGroupID(), poolTotal, groupQuota, scaleUpNum)
 
 		if groupQuota+int32(scaleUpNum) > poolTotal {
-			return fmt.Errorf("anyZone region[%s] instanceType[%s] poolQuota insufficient",
-				group.GetRegion(), group.GetLaunchTemplate().GetInstanceType())
+			return errors.New(fmt.Sprintf("anyZone region[%s] instanceType[%s] ",
+				group.GetRegion(), group.GetLaunchTemplate().GetInstanceType()) + poolInsufficientQuotaMessage.Error())
 		}
 
 		return nil
@@ -439,17 +440,18 @@ func (ng *NodeGroup) CheckResourcePoolQuota(group *proto.NodeGroup, scaleUpNum u
 
 	blog.Infof("cloud[%s] CheckResourcePoolQuota[%s] zoneNum[%+v]", cloudName, group.GetNodeGroupID(), zoneNum)
 
-	errors := utils.NewMultiError()
+	mulErrors := utils.NewMultiError()
 	// 检验配额是否充足
 	for i := range pools {
 		num, ok := zoneNum[pools[i].Zone]
 		if ok && num > 0 && (pools[i].GroupQuota+num) > int(pools[i].Total) {
-			errors.Append(fmt.Errorf("region[%s] zone[%s] instanceType[%s] poolQuota insufficient",
+			mulErrors.Append(fmt.Errorf("region[%s] zone[%s] instanceType[%s]",
 				group.GetRegion(), pools[i].Zone, group.GetLaunchTemplate().GetInstanceType()))
 		}
 	}
-	if errors.HasErrors() {
-		return errors
+	if mulErrors.HasErrors() {
+		mulErrors.Append(poolInsufficientQuotaMessage)
+		return mulErrors
 	}
 
 	return nil

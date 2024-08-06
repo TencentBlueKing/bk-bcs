@@ -46,6 +46,13 @@ func (ua *ListTaskStepLogsAction) validate() error {
 		return err
 	}
 
+	// default page and limit
+	if ua.req.GetPage() <= 0 {
+		ua.req.Page = 0
+	}
+	if ua.req.GetLimit() <= 0 {
+		ua.req.Limit = 10
+	}
 	return nil
 }
 
@@ -61,12 +68,7 @@ func (ua *ListTaskStepLogsAction) fetchTaskStepLogs() error {
 	if len(ua.req.StepName) != 0 {
 		cond["stepname"] = ua.req.StepName
 	}
-
-	resourceCond := operator.NewLeafCondition(operator.Eq, cond)
-
-	conds := []*operator.Condition{resourceCond}
-
-	logsCond := operator.NewBranchCondition(operator.And, conds...)
+	logsCond := operator.NewLeafCondition(operator.Eq, cond)
 
 	// list operation logs
 	count, err := ua.model.CountTaskStepLog(ua.ctx, logsCond)

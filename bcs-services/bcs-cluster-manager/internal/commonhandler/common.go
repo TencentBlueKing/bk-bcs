@@ -142,10 +142,10 @@ func (h *Handler) DownloadTaskRecords(request *restful.Request, response *restfu
 	str := ""
 	for _, task := range operRsp.Data.Results {
 		// 获取任务步骤日志
-		recordReq := &cmproto.TaskRecordsRequest{
+		recordReq := &cmproto.ListTaskRecordsRequest{
 			TaskID: task.TaskID,
 		}
-		recordRsp := &cmproto.TaskRecordsResponse{}
+		recordRsp := &cmproto.ListTaskRecordsResponse{}
 		operationlog.NewTaskRecordsAction(h.model).Handle(context.Background(), recordReq, recordRsp)
 		if recordRsp.Code != common.BcsErrClusterManagerSuccess {
 			message := fmt.Sprintf("get operation log failed, err %s", recordRsp.Message)
