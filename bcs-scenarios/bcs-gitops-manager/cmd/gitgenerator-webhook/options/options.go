@@ -14,6 +14,8 @@
 package options
 
 import (
+	"strings"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
@@ -38,4 +40,15 @@ type Config struct {
 
 	RecoverProjects string `json:"recoverProjects" value:"" usage:""`
 	AdminNamespace  string `json:"adminNamespace" value:"" usage:""`
+
+	PublicProjectsStr string   `json:"publicProjects,omitempty"`
+	PublicProjects    []string `json:"-"`
+}
+
+// Parse parse the options
+func Parse() *Config {
+	cfg := new(Config)
+	conf.Parse(cfg)
+	cfg.PublicProjects = strings.Split(cfg.PublicProjectsStr, ",")
+	return cfg
 }

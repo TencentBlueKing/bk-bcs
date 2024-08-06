@@ -93,6 +93,8 @@ const (
 	SecretUpdate AuditAction = "SecretUpdate"
 	// SecretDelete defines the secret delete action
 	SecretDelete AuditAction = "SecretDelete"
+	// SecretView defines the secret view action
+	SecretView AuditAction = "SecretView"
 	// SecretRollback defines the secret rollback action
 	SecretRollback AuditAction = "SecretRollback"
 )
