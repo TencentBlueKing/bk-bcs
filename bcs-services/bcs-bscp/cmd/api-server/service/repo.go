@@ -46,24 +46,7 @@ func (s *repoService) UploadFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	metadata := &repository.ObjectMetadata{
-		Sha256: sign,
-	}
-
-	// if err is ErrFileContentNotFound, the file does not exist. Do not handle it
-	existObjectMetadata, err := s.provider.Metadata(kt, sign)
-	if err != nil && !errors.Is(err, errf.ErrFileContentNotFound) {
-		render.Render(w, r, rest.BadRequest(err))
-		return
-	}
-
-	if err == nil {
-		metadata.ByteSize = existObjectMetadata.ByteSize
-		render.Render(w, r, rest.OKRender(metadata))
-		return
-	}
-
-	metadata, err = s.provider.Upload(kt, sign, r.Body)
+	metadata, err := s.provider.Upload(kt, sign, r.Body)
 	if err != nil {
 		render.Render(w, r, rest.BadRequest(err))
 		return
@@ -181,13 +164,23 @@ func (s *repoService) FileMetadata(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var exists bool
 	metadata, err := s.provider.Metadata(kt, sign)
-	if err != nil {
+	if err != nil && !errors.Is(err, errf.ErrFileContentNotFound) {
 		render.Render(w, r, rest.BadRequest(err))
 		return
 	}
 
-	render.Render(w, r, rest.OKRender(metadata))
+	if err == nil {
+		exists = true
+	}
+
+	render.Render(w, r, rest.OKRender(
+		&repository.MetadataResponse{
+			Exists:   exists,
+			Metadata: metadata,
+		},
+	))
 }
 
 func newRepoService(settings cc.Repository, authorizer auth.Authorizer) (*repoService, error) {
