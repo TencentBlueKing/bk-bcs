@@ -466,6 +466,7 @@ export default {
   未上线版本的分组: 'Group of unlaunched versions',
   '文件格式错误，请重新选择文本文件上传': 'File format error, please re-select the text file to upload',
   只查看差异项: 'Only view differences',
+  '文件上传准备中，请稍候…': 'File upload is in preparation, please wait...',
 
   // 分组管理
   新增分组: 'New group',

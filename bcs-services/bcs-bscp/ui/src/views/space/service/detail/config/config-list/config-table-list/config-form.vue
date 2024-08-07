@@ -100,7 +100,10 @@
           <TextFill class="file-icon" />
           <div class="file-content">
             <div class="name" :title="uploadFile?.file.name">{{ uploadFile?.file.name }}</div>
-            <div v-if="uploadProgress.status === 'uploading'">
+            <div v-if="uploadFile.status === 'checking'" class="check-status">
+              <Spinner class="spinner-icon" /> {{ $t('文件上传准备中，请稍候…') }}
+            </div>
+            <div v-else-if="uploadProgress.status === 'uploading'">
               <bk-progress
                 :percent="uploadProgress.percent"
                 :theme="uploadFile.status === 'fail' ? 'danger' : 'primary'"
@@ -144,7 +147,7 @@
   import SHA256 from 'crypto-js/sha256';
   import WordArray from 'crypto-js/lib-typedarrays';
   import CryptoJS from 'crypto-js';
-  import { TextFill, Done, Info, Error } from 'bkui-vue/lib/icon';
+  import { TextFill, Done, Info, Error, Spinner } from 'bkui-vue/lib/icon';
   import BkMessage from 'bkui-vue/lib/message';
   import { cloneDeep } from 'lodash';
   import { IConfigEditParams, IFileConfigContentSummary } from '../../../../../../../../types/config';
@@ -152,12 +155,12 @@
   import {
     updateConfigContent,
     downloadConfigContent,
-    // getConfigUploadFileIsExist,
+    getConfigUploadFileIsExist,
   } from '../../../../../../../api/config';
   import {
     downloadTemplateContent,
     updateTemplateContent,
-    // getTemplateUploadFileIsExist,
+    getTemplateUploadFileIsExist,
   } from '../../../../../../../api/template';
   import { stringLengthInBytes, byteUnitConverse } from '../../../../../../../utils/index';
   import { fileDownload } from '../../../../../../../utils/file';
@@ -387,10 +390,11 @@
 
   // 选择文件后上传
   const handleFileUpload = async (option: { file: File }) => {
+    emits('update:fileUploading', true);
     fileContent.value = option.file;
     uploadFile.value = {
       file: option.file,
-      status: 'uploading',
+      status: 'checking',
     };
     const fileSize = option.file.size / 1024 / 1024;
     if (fileSize > props.fileSizeLimit) {
@@ -399,19 +403,24 @@
       return;
     }
     isFileChanged.value = true;
-    // const res = await checkFileExist();
-    // if (res.exists) {
-    //   uploadFile.value!.status = 'success';
-    //   fileContent.value = {
-    //     name: option.file.name,
-    //     signature: res.metadata.sha256,
-    //     size: res.metadata.byte_size,
-    //   };
-    //   change();
-    //   return Promise.resolve();
-    // }
+    if (localVal.value.fileAP === '') {
+      localVal.value.fileAP = `/${option.file.name}`;
+    }
+    // 文件存在 无需重复上传
+    const res = await checkFileExist();
+    if (res.exists) {
+      uploadFile.value!.status = 'success';
+      fileContent.value = {
+        name: option.file.name,
+        signature: res.metadata.sha256,
+        size: res.metadata.byte_size,
+      };
+      change();
+      emits('update:fileUploading', false);
+      return Promise.resolve();
+    }
+    uploadFile.value!.status = 'uploading';
     return new Promise((resolve, reject) => {
-      emits('update:fileUploading', true);
       uploadContent()
         .then((res) => {
           uploadFile.value!.status = 'success';
@@ -440,14 +449,12 @@
   // 上传配置内容
   const uploadContent = async () => {
     uploadProgress.value.status = 'uploading';
-    const signature = await getSignature();
-    uploadFileSignature.value = signature;
     if (props.isTpl) {
       return updateTemplateContent(
         props.bkBizId,
         props.id,
         fileContent.value as File,
-        signature as string,
+        uploadFileSignature.value,
         (progress: number) => {
           uploadProgress.value.percent = progress;
         },
@@ -457,7 +464,7 @@
       props.bkBizId,
       props.id,
       fileContent.value as File,
-      signature as string,
+      uploadFileSignature.value,
       (progress: number) => {
         uploadProgress.value.percent = progress;
       },
@@ -465,14 +472,14 @@
   };
 
   // 判断上传的文件是否存在
-  // const checkFileExist = async () => {
-  //   const signature = await getSignature();
-  //   uploadFileSignature.value = signature;
-  //   if (props.isTpl) {
-  //     return getTemplateUploadFileIsExist(props.bkBizId, props.id, signature);
-  //   }
-  //   return getConfigUploadFileIsExist(props.bkBizId, props.id, signature);
-  // };
+  const checkFileExist = async () => {
+    const signature = await getSignature();
+    uploadFileSignature.value = signature;
+    if (props.isTpl) {
+      return getTemplateUploadFileIsExist(props.bkBizId, props.id, signature);
+    }
+    return getConfigUploadFileIsExist(props.bkBizId, props.id, signature);
+  };
 
   // 生成文件或文本的sha256
   const getSignature = async () => {
@@ -671,6 +678,11 @@
     }
     .file-content {
       width: 400px;
+      line-height: 20px;
+      .spinner-icon {
+        font-size: 14px;
+        color: #3a84ff;
+      }
     }
     .status-icon-area {
       display: flex;
