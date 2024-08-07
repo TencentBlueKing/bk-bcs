@@ -12,6 +12,7 @@
 
 package mongo
 
+// Task ...
 type Task struct {
 	// index for task, client should set this field
 	TaskIndex string `json:"taskIndex" bson:"taskIndex"`

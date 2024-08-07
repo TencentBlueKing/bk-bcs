@@ -21,8 +21,11 @@ import (
 )
 
 var (
+	// SumA istep.ParamKey = "sumA"
 	SumA istep.ParamKey = "sumA"
+	// SumB ...
 	SumB istep.ParamKey = "sumB"
+	// SumC ...
 	SumC istep.ParamKey = "sumC"
 )
 
@@ -51,7 +54,7 @@ func Sum(ctx context.Context, step *istep.Work) error {
 	}
 
 	c := a1 + b1
-	step.AddCommonParams(SumC.String(), fmt.Sprintf("%v", c))
+	_ = step.AddCommonParams(SumC.String(), fmt.Sprintf("%v", c))
 
 	fmt.Printf("%s %s %s sumC: %v\n", step.GetTaskID(), step.GetTaskType(), step.GetName(), c)
 	return nil

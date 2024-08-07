@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package mysql implemented storage interface.
 package mysql
 
 import (

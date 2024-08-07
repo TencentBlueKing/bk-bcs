@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package hello defines the hello step.
 package hello
 
 import (

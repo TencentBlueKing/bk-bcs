@@ -234,7 +234,7 @@ func (m *TaskManager) Dispatch(task *types.Task) error {
 	return m.dispatchAt(task, "")
 }
 
-func (m *TaskManager) transTaskToSignature(task *types.Task, stepNameBegin string) ([]*tasks.Signature, error) {
+func (m *TaskManager) transTaskToSignature(task *types.Task, stepNameBegin string) []*tasks.Signature {
 	var signatures []*tasks.Signature
 
 	for _, step := range task.Steps {
@@ -264,16 +264,12 @@ func (m *TaskManager) transTaskToSignature(task *types.Task, stepNameBegin strin
 		signatures = append(signatures, signature)
 	}
 
-	return signatures, nil
+	return signatures
 }
 
 // dispatchAt task to machinery
 func (m *TaskManager) dispatchAt(task *types.Task, stepNameBegin string) error {
-	signatures, err := m.transTaskToSignature(task, stepNameBegin)
-	if err != nil {
-		blog.Errorf("dispatchAt task %s failed: %v", task.TaskID, err)
-		return err
-	}
+	signatures := m.transTaskToSignature(task, stepNameBegin)
 
 	m.lock.Lock()
 	defer m.lock.Unlock()

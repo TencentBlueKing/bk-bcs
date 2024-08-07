@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-// Package store implements task storage
+// Package mongo implements task storage
 package mongo
 
 import (

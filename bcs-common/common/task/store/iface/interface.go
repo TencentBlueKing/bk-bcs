@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package iface defines the interface for store.
 package iface
 
 import (

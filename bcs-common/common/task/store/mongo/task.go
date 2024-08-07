@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-// Package store implements task storage
+// Package mongo implements task storage
 package mongo
 
 import (
@@ -74,7 +74,7 @@ func New(db drivers.DB, tablePrefix string) istore.Store {
 	}
 }
 
-// ensure table
+// EnsureTable ensure table
 func (m *ModelTask) EnsureTable(ctx context.Context, dst ...any) error {
 	m.isTableEnsuredMutex.RLock()
 	if m.isTableEnsured {

@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package mem implemented storage interface.
 package mem
 
 import (

@@ -69,7 +69,8 @@ func New(ctx context.Context, conf *config.Config) (iface.Broker, error) {
 
 }
 
-// StartConsuming ..
+// nolint
+// StartConsuming ...
 func (b *etcdBroker) StartConsuming(consumerTag string, concurrency int, taskProcessor iface.TaskProcessor) (bool, error) {
 	if concurrency < 1 {
 		concurrency = runtime.NumCPU()
@@ -367,7 +368,13 @@ func (b *etcdBroker) listWatchTasks(ctx context.Context, queue string) error {
 	// Watch
 	watchCtx, watchCancel := context.WithTimeout(ctx, time.Minute*10)
 	defer watchCancel()
-	wc := b.client.Watch(watchCtx, keyPrefix, clientv3.WithPrefix(), clientv3.WithKeysOnly(), clientv3.WithRev(resp.Header.Revision))
+
+	watchOpts := []clientv3.OpOption{
+		clientv3.WithPrefix(),
+		clientv3.WithKeysOnly(),
+		clientv3.WithRev(resp.Header.Revision),
+	}
+	wc := b.client.Watch(watchCtx, keyPrefix, watchOpts...)
 	for wresp := range wc {
 		if wresp.Err() != nil {
 			return watchCtx.Err()

@@ -60,7 +60,7 @@ func (s SumStep) DoWork(ctx context.Context, step *istep.Work) error {
 	b1, _ := strconv.Atoi(b)
 
 	c := a1 + b1
-	step.AddCommonParams(sumC.String(), fmt.Sprintf("%v", c))
+	_ = step.AddCommonParams(sumC.String(), fmt.Sprintf("%v", c))
 
 	fmt.Printf("%s %s %s sumC: %v\n", step.GetTaskID(), step.GetTaskType(), step.GetName(), c)
 

@@ -50,9 +50,6 @@ func (s HelloStep) DoWork(ctx context.Context, step *istep.Work) error {
 	return nil
 }
 
-func (s HelloStep) Close(err error) {
-}
-
 // BuildStep build step
 func (s HelloStep) BuildStep(kvs []istep.KeyValue, opts ...types.StepOption) *types.Step {
 	step := types.NewStep(s.GetName(), s.Alias(), opts...)

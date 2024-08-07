@@ -47,11 +47,12 @@ import (
 
 var (
 	moduleName   = "example"
-	queueAddress = "amqp://guest:guest@127.0.0.1:5672"
+	queueAddress = "amqp://guest:guest@127.0.0.1:5672" // nolint
 	mongoHosts   = []string{"127.0.0.1:27017"}
 	mysqlDSN     = "root:%s@tcp(127.0.0.1:3306)/bk-env-manager-1?charset=utf8mb4&parseTime=True&loc=Local"
 )
 
+// nolint
 func main() {
 	pwd := os.Getenv("MONGO_PASSWORD")
 	if pwd == "" {
@@ -133,7 +134,9 @@ func main() {
 	}
 
 	// run task manager
-	btm.Run()
+	go func() {
+		_ = btm.Run()
+	}()
 
 	// wait task server run
 	time.Sleep(3 * time.Second)
@@ -169,6 +172,7 @@ func main() {
 	fmt.Printf("Got OS shutdown signal, shutting down server gracefully...")
 }
 
+// nolint
 func registerSteps() []istep.StepWorkerInterface {
 	steps := make([]istep.StepWorkerInterface, 0)
 
