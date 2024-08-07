@@ -115,6 +115,9 @@
               <Error v-if="uploadFile.status === 'fail'" class="error-icon" />
               <span :class="[uploadFile.status === 'success' ? 'success-text' : 'error-text']">
                 {{ uploadFile.status === 'success' ? t('上传成功') : `${t('上传失败')} ${uploadFile.errorMessage}` }}
+                <span v-if="uploadFile.status === 'success' && uploadFile.isExist">
+                  {{ $t('( 后台已存在此文件，上传快速完成 )') }}
+                </span>
               </span>
             </div>
           </div>
@@ -142,7 +145,7 @@
   </bk-form>
 </template>
 <script setup lang="ts">
-  import { ref, computed, watch } from 'vue';
+  import { ref, computed, watch, onMounted } from 'vue';
   import { useI18n } from 'vue-i18n';
   import SHA256 from 'crypto-js/sha256';
   import WordArray from 'crypto-js/lib-typedarrays';
@@ -170,6 +173,7 @@
   interface IUploadFile {
     file: any;
     status: string;
+    isExist: boolean;
     errorMessage?: string;
   }
 
@@ -321,27 +325,6 @@
   );
 
   watch(
-    () => props.content,
-    () => {
-      if (props.config.file_type === 'binary') {
-        fileContent.value = cloneDeep(props.content as IFileConfigContentSummary);
-        if (props.isEdit) {
-          if (fileContent.value.signature) {
-            uploadFile.value = {
-              file: { ...fileContent.value },
-              status: 'success',
-            };
-            uploadFileSignature.value = fileContent.value.signature;
-          }
-        }
-      } else {
-        stringContent.value = props.content as string;
-      }
-    },
-    { immediate: true },
-  );
-
-  watch(
     () => props.config,
     () => {
       const { path, name } = props.config;
@@ -350,6 +333,24 @@
     },
     { immediate: true, deep: true },
   );
+
+  onMounted(() => {
+    if (props.config.file_type === 'binary') {
+      fileContent.value = cloneDeep(props.content as IFileConfigContentSummary);
+      if (props.isEdit) {
+        if (fileContent.value.signature) {
+          uploadFile.value = {
+            file: { ...fileContent.value },
+            status: 'success',
+            isExist: false,
+          };
+          uploadFileSignature.value = fileContent.value.signature;
+        }
+      }
+    } else {
+      stringContent.value = props.content as string;
+    }
+  });
 
   // 权限输入框失焦后，校验输入是否合法，如不合法回退到上次输入
   const handlePrivilegeInputBlur = () => {
@@ -395,6 +396,7 @@
     uploadFile.value = {
       file: option.file,
       status: 'checking',
+      isExist: false,
     };
     const fileSize = option.file.size / 1024 / 1024;
     if (fileSize > props.fileSizeLimit) {
@@ -409,7 +411,8 @@
     // 文件存在 无需重复上传
     const res = await checkFileExist();
     if (res.exists) {
-      uploadFile.value!.status = 'success';
+      uploadFile.value.status = 'success';
+      uploadFile.value.isExist = true;
       fileContent.value = {
         name: option.file.name,
         signature: res.metadata.sha256,
@@ -419,7 +422,8 @@
       emits('update:fileUploading', false);
       return Promise.resolve();
     }
-    uploadFile.value!.status = 'uploading';
+    uploadFile.value.status = 'uploading';
+    uploadFile.value.isExist = false;
     return new Promise((resolve, reject) => {
       uploadContent()
         .then((res) => {

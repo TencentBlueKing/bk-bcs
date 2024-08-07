@@ -467,6 +467,7 @@ export default {
   '文件格式错误，请重新选择文本文件上传': 'File format error, please re-select the text file to upload',
   只查看差异项: 'Only view differences',
   '文件上传准备中，请稍候…': 'File upload is in preparation, please wait...',
+  '( 后台已存在此文件，上传快速完成 )': '( The background already has this file, the upload is completed quickly )',
 
   // 分组管理
   新增分组: 'New group',
