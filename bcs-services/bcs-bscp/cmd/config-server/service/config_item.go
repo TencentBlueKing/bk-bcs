@@ -106,13 +106,6 @@ func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbcs.BatchUps
 
 	items := make([]*pbds.BatchUpsertConfigItemsReq_ConfigItem, 0, len(req.Items))
 	for _, item := range req.Items {
-		// validate if file content uploaded.
-		metadata, err := s.client.provider.Metadata(grpcKit, item.Sign)
-		if err != nil {
-			logs.Errorf("validate file content uploaded failed, err: %v, rid: %s", err, grpcKit.Rid)
-			return nil, err
-		}
-
 		items = append(items, &pbds.BatchUpsertConfigItemsReq_ConfigItem{
 			ConfigItemAttachment: &pbci.ConfigItemAttachment{
 				BizId: req.BizId,
@@ -133,7 +126,7 @@ func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbcs.BatchUps
 			ContentSpec: &pbcontent.ContentSpec{
 				Signature: item.Sign,
 				ByteSize:  item.ByteSize,
-				Md5:       metadata.Md5,
+				Md5:       item.Md5,
 			},
 		})
 	}
@@ -689,6 +682,7 @@ func (s *Service) CompareConfigItemConflicts(ctx context.Context, req *pbcs.Comp
 			IsExist:        v.GetIsExist(),
 			Signature:      v.GetSignature(),
 			ByteSize:       v.GetByteSize(),
+			Md5:            v.GetMd5(),
 		})
 	}
 
