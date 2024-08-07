@@ -161,3 +161,26 @@ jobs:
           version: v1.54.2
           args: --timeout=30m
           working-directory: bcs-services/cluster-resources
+
+  bcs-task:
+    name: bcs-task
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: setup go
+        uses: actions/setup-go@v3
+        with:
+          go-version-file: bcs-common/common/task/go.mod
+      - name: go mod tidy check
+        uses: katexochen/go-tidy-check@v2
+        with:
+          modules: bcs-common/common/task/go.mod
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: v1.54.2
+          args: --timeout=30m
+          working-directory: bcs-common/common/task
+      - name: Test
+        run: cd bcs-common/common/task && go test ./...
