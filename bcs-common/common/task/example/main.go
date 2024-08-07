@@ -29,8 +29,8 @@ import (
 	etcdbroker "github.com/Tencent/bk-bcs/bcs-common/common/task/brokers/etcd"
 	etcdlock "github.com/Tencent/bk-bcs/bcs-common/common/task/locks/etcd"
 	istep "github.com/Tencent/bk-bcs/bcs-common/common/task/steps/iface"
-	mongostore "github.com/Tencent/bk-bcs/bcs-common/common/task/store/mongo"
-	mysqlstore "github.com/Tencent/bk-bcs/bcs-common/common/task/store/mysql"
+	mongostore "github.com/Tencent/bk-bcs/bcs-common/common/task/stores/mongo"
+	mysqlstore "github.com/Tencent/bk-bcs/bcs-common/common/task/stores/mysql"
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
 )
 

@@ -22,7 +22,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/task/store/iface"
+	"github.com/Tencent/bk-bcs/bcs-common/common/task/stores/iface"
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
 )
 

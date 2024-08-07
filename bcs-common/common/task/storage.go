@@ -14,7 +14,7 @@
 package task
 
 import (
-	store "github.com/Tencent/bk-bcs/bcs-common/common/task/store/iface"
+	store "github.com/Tencent/bk-bcs/bcs-common/common/task/stores/iface"
 )
 
 var (

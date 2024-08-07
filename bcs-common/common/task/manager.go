@@ -28,7 +28,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
 	istep "github.com/Tencent/bk-bcs/bcs-common/common/task/steps/iface"
-	istore "github.com/Tencent/bk-bcs/bcs-common/common/task/store/iface"
+	istore "github.com/Tencent/bk-bcs/bcs-common/common/task/stores/iface"
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
 )
 

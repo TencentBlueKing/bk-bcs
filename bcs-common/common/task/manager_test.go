@@ -23,8 +23,8 @@ import (
 
 	hellostep "github.com/Tencent/bk-bcs/bcs-common/common/task/steps/hello"
 	istep "github.com/Tencent/bk-bcs/bcs-common/common/task/steps/iface"
-	"github.com/Tencent/bk-bcs/bcs-common/common/task/store/mem"
-	mysqlstore "github.com/Tencent/bk-bcs/bcs-common/common/task/store/mysql"
+	"github.com/Tencent/bk-bcs/bcs-common/common/task/stores/mem"
+	mysqlstore "github.com/Tencent/bk-bcs/bcs-common/common/task/stores/mysql"
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
 )
 

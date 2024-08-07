@@ -22,8 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"go.mongodb.org/mongo-driver/bson"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/task/store/iface"
-	istore "github.com/Tencent/bk-bcs/bcs-common/common/task/store/iface"
+	"github.com/Tencent/bk-bcs/bcs-common/common/task/stores/iface"
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
 )
 
@@ -66,7 +65,7 @@ type ModelTask struct {
 }
 
 // New create Task model
-func New(db drivers.DB, tablePrefix string) istore.Store {
+func New(db drivers.DB, tablePrefix string) iface.Store {
 	return &ModelTask{
 		tableName: tablePrefix + "_" + TableName,
 		indexes:   taskIndexes,
