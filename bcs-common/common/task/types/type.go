@@ -14,6 +14,7 @@
 package types
 
 import (
+	"errors"
 	"time"
 )
 
@@ -43,6 +44,11 @@ const (
 	TaskStatusForceTerminate = "FORCETERMINATE"
 	// TaskStatusNotStarted force task terminate
 	TaskStatusNotStarted = "NOTSTARTED"
+)
+
+var (
+	// ErrNotImplemented not implemented error
+	ErrNotImplemented = errors.New("not implemented")
 )
 
 // Task task definition
