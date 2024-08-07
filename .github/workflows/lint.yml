@@ -175,7 +175,7 @@ jobs:
       - name: go mod tidy check
         uses: katexochen/go-tidy-check@v2
         with:
-          modules: bcs-common/common/task/go.mod
+          modules: bcs-common/common/task
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v3
         with:
