@@ -592,6 +592,11 @@ option (google.api.http) = {
               "{binding_id}/template_sets"
     };
   }
+  rpc RemoveAppBoundTmplSet(RemoveAppBoundTmplSetReq) returns (RemoveAppBoundTmplSetResp) {
+    option (google.api.http) = {
+      delete: "/api/v1/config/biz/{biz_id}/apps/{app_id}/template_set/{template_set_id}"
+    };
+  }
   rpc CheckAppTemplateBinding(CheckAppTemplateBindingReq) returns (CheckAppTemplateBindingResp) {
     option (google.api.http) = {
       post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/template_bindings/"
@@ -2257,6 +2262,14 @@ message DeleteAppBoundTmplSetsReq {
 }
 
 message DeleteAppBoundTmplSetsResp {}
+
+message RemoveAppBoundTmplSetReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  uint32 template_set_id = 3;
+}
+
+message RemoveAppBoundTmplSetResp {}
 
 message CheckAppTemplateBindingReq {
   uint32 biz_id = 1;
