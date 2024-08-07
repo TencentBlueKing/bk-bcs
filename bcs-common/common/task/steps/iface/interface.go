@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-// Package task is a package for task management
+// Package iface is a package for task step interface
 package iface
 
 import (
@@ -107,32 +107,38 @@ func NewWork(t *types.Task, currentStep *types.Step) *Work {
 	}
 }
 
-// GetTaskID ...
+// GetTaskID get task id
 func (t *Work) GetTaskID() string {
 	return t.task.GetTaskID()
 }
 
-func (t *Work) GetName() string {
-	return t.currentStep.GetName()
+// GetTaskName get task name
+func (t *Work) GetTaskName() string {
+	return t.task.GetTaskID()
 }
 
+// GetTaskType get task type
 func (t *Work) GetTaskType() string {
 	return t.task.GetTaskType()
 }
 
+// AddCommonParams add task common params
 func (t *Work) AddCommonParams(k, v string) error {
 	_ = t.task.AddCommonParams(k, v)
 	return nil
 }
 
+// GetName get current step name
+func (t *Work) GetName() string {
+	return t.currentStep.GetName()
+}
+
+// GetParam get current step param
 func (t *Work) GetParam(key string) (string, bool) {
 	return t.currentStep.GetParam(key)
 }
 
-func (t *Work) GetTaskName() string {
-	return t.task.GetTaskID()
-}
-
+// GetStatus get current step status
 func (t *Work) GetStatus() string {
 	return t.currentStep.GetStatus()
 }
