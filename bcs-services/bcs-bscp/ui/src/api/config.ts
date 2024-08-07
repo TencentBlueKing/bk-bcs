@@ -175,6 +175,28 @@ export const downloadConfigContent = (bizId: string, appId: number, signature: s
     .then((res) => res);
 
 /**
+ * 判断上传的配置文件是否已存在
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param data 配置内容
+ * @param signature 文件内容的SHA256值
+ * @returns
+ */
+export const getConfigUploadFileIsExist = (
+  bizId: string,
+  appId: number,
+  signature: string,
+) =>
+  http
+    .get(`/biz/${bizId}/content/metadata`, {
+      headers: {
+        'X-Bscp-App-Id': appId,
+        'X-Bkapi-File-Content-Id': signature,
+      },
+    })
+    .then((res) => res.data);
+
+/**
  * 创建配置版本
  * @param bizId 业务ID
  * @param appId 应用ID

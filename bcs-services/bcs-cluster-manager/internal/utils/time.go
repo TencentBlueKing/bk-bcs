@@ -14,6 +14,8 @@ package utils
 
 import (
 	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 )
 
 const (
@@ -42,4 +44,20 @@ func TransTsToStr(timestamp int64) string {
 	t := TransTsToTime(timestamp)
 	formattedTime := t.Format(time.RFC3339)
 	return formattedTime
+}
+
+// TransStrToTs trans  time string totimestamp
+func TransStrToTs(input string) int64 {
+	t, err := time.Parse(time.RFC3339Nano, input)
+	if err != nil {
+		return 0
+	}
+
+	return t.UnixMilli()
+}
+
+// MeasureExecutionTime measure func exec time
+func MeasureExecutionTime(start time.Time, name string) {
+	elapsed := time.Since(start)
+	blog.Infof("%s 执行时间: %s\n", name, elapsed)
 }

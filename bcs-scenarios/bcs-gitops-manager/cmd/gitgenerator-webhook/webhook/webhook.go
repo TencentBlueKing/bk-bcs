@@ -200,18 +200,19 @@ func (s *AdmissionWebhookServer) checkApplication(ctx context.Context, bs []byte
 	// check app whether belong to appset
 	var repoBelong bool
 	var repoProj string
-	for i := range app.Spec.Sources {
-		appSource := app.Spec.Sources[i]
-		repoUrl := appSource.RepoURL
-		repoProj, repoBelong, err = s.checkRepositoryBelongProject(ctx, repoUrl, proj)
-		if err != nil {
-			return errors.Wrapf(err, "check repo '%s' belong to project '%s' failed", repoUrl, repoProj)
+	if app.Spec.HasMultipleSources() {
+		for i := range app.Spec.Sources {
+			appSource := app.Spec.Sources[i]
+			repoUrl := appSource.RepoURL
+			repoProj, repoBelong, err = s.checkRepositoryBelongProject(ctx, repoUrl, proj)
+			if err != nil {
+				return errors.Wrapf(err, "check repo '%s' belong to project '%s' failed", repoUrl, repoProj)
+			}
+			if !repoBelong {
+				return errors.Errorf("repo '%s' project is '%s', not same as '%s'", repoUrl, repoProj, proj)
+			}
 		}
-		if !repoBelong {
-			return errors.Errorf("repo '%s' project is '%s', not same as '%s'", repoUrl, repoProj, proj)
-		}
-	}
-	if app.Spec.Source != nil {
+	} else {
 		repoUrl := app.Spec.Source.RepoURL
 		repoProj, repoBelong, err = s.checkRepositoryBelongProject(ctx, repoUrl, proj)
 		if err != nil {
@@ -263,10 +264,11 @@ func (s *AdmissionWebhookServer) checkRepositoryBelongProject(ctx context.Contex
 	if repo == nil {
 		return "", false, fmt.Errorf("repo '%s' not found", repoUrl)
 	}
-	if repo.Project != project {
-		return "", false, nil
+	belong := repo.Project == project
+	if !belong {
+		belong = slices.Contains(s.cfg.PublicProjects, repo.Project)
 	}
-	return repo.Project, true, nil
+	return repo.Project, belong, nil
 }
 
 // recoverApplicationOperation 补偿 application.operation 被 argocd 未知删除问题

@@ -473,6 +473,8 @@ export default {
   '上传后，部分套餐/服务的配置文件数量将超过最大限制 ({n} 个文件)': 'After uploading, the number of configuration files in some packages/services will exceed the maximum limit ({n} files)',
   '上传后，该套餐配置文件数量将超过最大限制': 'After uploading, the number of configuration files in the package will exceed the maximum limit',
   '上传后，该服务配置文件数量将超过最大限制': 'After uploading, the number of configuration files in the service will exceed the maximum limit',
+  '文件上传准备中，请稍候…': 'File upload is in preparation, please wait...',
+  '( 后台已存在此文件，上传快速完成 )': '( The background already has this file, the upload is completed quickly )',
 
   // 分组管理
   新增分组: 'New group',

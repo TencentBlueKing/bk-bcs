@@ -14,10 +14,11 @@ package service
 
 import (
 	"context"
-	"fmt"
 
 	"google.golang.org/protobuf/types/known/structpb"
 
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/i18n"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	pbcs "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/config-server"
@@ -85,8 +86,9 @@ func (s *Service) ListClients(ctx context.Context, req *pbcs.ListClientsReq) (
 	}
 
 	resp := &pbcs.ListClientsResp{
-		Count:   items.Count,
-		Details: details,
+		Count:          items.Count,
+		Details:        details,
+		ExclusionCount: items.GetExclusionCount(),
 	}
 
 	return resp, nil
@@ -364,15 +366,18 @@ func (s *Service) RetryClients(ctx context.Context, req *pbcs.RetryClientsReq) (
 		return nil, err
 	}
 
-	if !req.All && len(req.ClientIds) == 0 {
-		return nil, fmt.Errorf("client ids is empty")
+	if !req.ExclusionOperation {
+		if !req.All && len(req.ClientIds) == 0 {
+			return nil, errf.Errorf(errf.InvalidArgument, i18n.T(kt, "client ids is empty"))
+		}
 	}
 
 	_, err := s.client.DS.RetryClients(kt.RpcCtx(), &pbds.RetryClientsReq{
-		BizId:     req.BizId,
-		AppId:     req.AppId,
-		All:       req.All,
-		ClientIds: req.ClientIds,
+		BizId:              req.BizId,
+		AppId:              req.AppId,
+		All:                req.All,
+		ClientIds:          req.ClientIds,
+		ExclusionOperation: req.ExclusionOperation,
 	})
 
 	if err != nil {

@@ -293,6 +293,28 @@ export const downloadTemplateContent = (biz_id: string, templateSpaceId: number,
     .then((res) => res);
 
 /**
+ * 判断上传的配置文件是否已存在
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param data 配置内容
+ * @param signature 文件内容的SHA256值
+ * @returns
+ */
+export const getTemplateUploadFileIsExist = (
+  bizId: string,
+  templateSpaceId: number,
+  signature: string,
+) =>
+  http
+    .get(`/biz/${bizId}/content/metadata`, {
+      headers: {
+        'X-Bscp-Template-Space-Id': templateSpaceId,
+        'X-Bkapi-File-Content-Id': signature,
+      },
+    })
+    .then((res) => res.data);
+
+/**
  * 批量删除模板
  * @param biz_id 业务ID
  * @param template_space_id 空间ID
