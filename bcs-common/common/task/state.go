@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	istep "github.com/Tencent/bk-bcs/bcs-common/common/task/steps/iface"
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
 )

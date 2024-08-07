@@ -23,6 +23,8 @@ import (
 
 	"github.com/RichardKnop/machinery/v2/backends/mongo"
 	"github.com/RichardKnop/machinery/v2/config"
+	bcsmongo "github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/task"
 	etcdbroker "github.com/Tencent/bk-bcs/bcs-common/common/task/brokers/etcd"
 	etcdlock "github.com/Tencent/bk-bcs/bcs-common/common/task/locks/etcd"
@@ -30,7 +32,6 @@ import (
 	mongostore "github.com/Tencent/bk-bcs/bcs-common/common/task/store/mongo"
 	mysqlstore "github.com/Tencent/bk-bcs/bcs-common/common/task/store/mysql"
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
-	bcsmongo "github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
 )
 
 /*

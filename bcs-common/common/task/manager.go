@@ -25,8 +25,8 @@ import (
 	"github.com/RichardKnop/machinery/v2/config"
 	ilock "github.com/RichardKnop/machinery/v2/locks/iface"
 	"github.com/RichardKnop/machinery/v2/tasks"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	istep "github.com/Tencent/bk-bcs/bcs-common/common/task/steps/iface"
 	istore "github.com/Tencent/bk-bcs/bcs-common/common/task/store/iface"
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
@@ -322,7 +322,7 @@ func (m *TaskManager) dispatchAt(task *types.Task, stepNameBegin string) error {
 // registerStepWorkers build machinery workers for all step worker
 func (m *TaskManager) registerStepWorkers() error {
 	allTasks := make(map[string]interface{}, 0)
-	for stepName, _ := range m.stepWorkers {
+	for stepName := range m.stepWorkers {
 		if _, ok := allTasks[stepName]; ok {
 			return fmt.Errorf("task %s already exists", stepName)
 		}

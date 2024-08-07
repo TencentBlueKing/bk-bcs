@@ -24,8 +24,6 @@ import (
 	"sync"
 	"time"
 
-	"golang.org/x/sync/errgroup"
-
 	"github.com/RichardKnop/machinery/v2/brokers/errs"
 	"github.com/RichardKnop/machinery/v2/brokers/iface"
 	"github.com/RichardKnop/machinery/v2/common"
@@ -34,6 +32,7 @@ import (
 	"github.com/RichardKnop/machinery/v2/tasks"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"go.etcd.io/etcd/client/v3/concurrency"
+	"golang.org/x/sync/errgroup"
 )
 
 type etcdBroker struct {

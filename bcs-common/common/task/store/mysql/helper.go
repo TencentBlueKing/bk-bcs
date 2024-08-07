@@ -16,7 +16,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
 )
 
-func GetStepRecords(t *types.Task) []*StepRecords {
+func getStepRecords(t *types.Task) []*StepRecords {
 	records := make([]*StepRecords, 0, len(t.Steps))
 	for _, step := range t.Steps {
 		record := &StepRecords{
@@ -39,7 +39,7 @@ func GetStepRecords(t *types.Task) []*StepRecords {
 
 	return records
 }
-func GetTaskRecord(t *types.Task) *TaskRecords {
+func getTaskRecord(t *types.Task) *TaskRecords {
 	stepSequence := make([]string, 0, len(t.Steps))
 	for i := range t.Steps {
 		stepSequence = append(stepSequence, t.Steps[i].Name)
@@ -67,7 +67,7 @@ func GetTaskRecord(t *types.Task) *TaskRecords {
 	return record
 }
 
-func ToTask(task *TaskRecords, steps []*StepRecords) *types.Task {
+func toTask(task *TaskRecords, steps []*StepRecords) *types.Task {
 	t := &types.Task{
 		TaskID:              task.TaskID,
 		TaskType:            task.TaskType,

@@ -87,12 +87,12 @@ func (s *mysqlStore) EnsureTable(ctx context.Context, dst ...any) error {
 
 func (s *mysqlStore) CreateTask(ctx context.Context, task *types.Task) error {
 	return s.db.Transaction(func(tx *gorm.DB) error {
-		record := GetTaskRecord(task)
+		record := getTaskRecord(task)
 		if err := tx.Create(record).Error; err != nil {
 			return err
 		}
 
-		steps := GetStepRecords(task)
+		steps := getStepRecords(task)
 		if err := tx.CreateInBatches(steps, 100).Error; err != nil {
 			return err
 		}
@@ -145,7 +145,7 @@ func (s *mysqlStore) GetTask(ctx context.Context, taskID string) (*types.Task, e
 	if err := s.db.Where("task_id = ?", taskID).First(&taskRecord).Error; err != nil {
 		return nil, err
 	}
-	return ToTask(&taskRecord, stepRecords), nil
+	return toTask(&taskRecord, stepRecords), nil
 }
 
 func (s *mysqlStore) PatchTask(ctx context.Context, taskID string, patchs map[string]interface{}) error {
