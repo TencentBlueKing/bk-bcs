@@ -67,6 +67,13 @@
       <div
         v-if="importType !== 'configTemplate' && allConfigList.length + allTemplateConfigList.length > 0"
         class="content">
+        <bk-alert
+          v-if="isExceedMaxFileCount"
+          style="margin-top: 4px"
+          theme="error"
+          :title="
+            $t('配置文件数量超过最大上传限制 ({n} 个文件)', { n: spaceFeatureFlags.RESOURCE_LIMIT.AppConfigCnt })
+          " />
         <div class="head">
           <bk-checkbox style="margin-left: 24px" v-model="isClearDraft"> {{ $t('导入前清空草稿区') }} </bk-checkbox>
           <div v-if="!isClearDraft" class="tips">
@@ -172,13 +179,17 @@
   import ConfigTable from '../../../../../../../templates/list/package-detail/operations/add-configs/import-configs/config-table.vue';
   import useModalCloseConfirmation from '../../../../../../../../../utils/hooks/use-modal-close-confirmation';
   import useServiceStore from '../../../../../../../../../store/service';
+  import useGlobalStore from '../../../../../../../../../store/global';
   import { ImportTemplateConfigItem } from '../../../../../../../../../../types/template';
   import TemplateConfigTable from './template-config-table.vue';
   import { cloneDeep } from 'lodash';
+  import { storeToRefs } from 'pinia';
 
   const { t, locale } = useI18n();
 
   const serviceStore = useServiceStore();
+
+  const { spaceFeatureFlags } = storeToRefs(useGlobalStore());
 
   const props = defineProps<{
     show: boolean;
@@ -218,7 +229,8 @@
       return (
         !uploadFileLoading.value &&
         !decompressing.value &&
-        importConfigList.value.length + importTemplateConfigList.value.length > 0
+        importConfigList.value.length + importTemplateConfigList.value.length > 0 &&
+        !isExceedMaxFileCount.value
       );
     }
     return importConfigList.value.length + importTemplateConfigList.value.length > 0 && !hasError.value;
@@ -245,6 +257,10 @@
     }
     return '';
   });
+
+  const isExceedMaxFileCount = computed(
+    () => importConfigList.value.length > spaceFeatureFlags.value.RESOURCE_LIMIT.AppConfigCnt,
+  );
 
   watch(
     () => props.show,
