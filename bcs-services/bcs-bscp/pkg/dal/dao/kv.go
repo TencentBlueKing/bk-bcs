@@ -59,6 +59,10 @@ type Kv interface {
 		newKVStates table.KvState) error
 	// DeleteByStateWithTx deletes kv pairs with a specific state using a transaction
 	DeleteByStateWithTx(kit *kit.Kit, tx *gen.QueryTx, kv *table.Kv) error
+	// FetchIDsExcluding 获取指定ID后排除的ID
+	FetchIDsExcluding(kit *kit.Kit, bizID uint32, appID uint32, ids []uint32) ([]uint32, error)
+	// CountNumberUnDeleted 统计未删除的数量
+	CountNumberUnDeleted(kit *kit.Kit, bizID uint32, opt *types.ListKvOption) (int64, error)
 }
 
 var _ Kv = new(kvDao)
@@ -67,6 +71,38 @@ type kvDao struct {
 	genQ     *gen.Query
 	idGen    IDGenInterface
 	auditDao AuditDao
+}
+
+// CountNumberUnDeleted 统计未删除的数量
+func (dao *kvDao) CountNumberUnDeleted(kit *kit.Kit, bizID uint32, opt *types.ListKvOption) (int64, error) {
+	m := dao.genQ.Kv
+	q := dao.genQ.Kv.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID), m.AppID.Eq(opt.AppID))
+	if opt.SearchKey != "" {
+		searchKey := "(?i)" + opt.SearchKey
+		q = q.Where(q.Where(q.Or(m.Key.Regexp(searchKey)).Or(m.Creator.Regexp(searchKey)).Or(
+			m.Reviser.Regexp(searchKey))))
+	}
+
+	if len(opt.Status) != 0 {
+		q = q.Where(m.KvState.In(opt.Status...))
+	}
+
+	return q.Where(m.BizID.Eq(opt.BizID)).Where(m.KvState.Neq(table.KvStateDelete.String())).Count()
+}
+
+// FetchIDsExcluding 获取指定ID后排除的ID
+func (dao *kvDao) FetchIDsExcluding(kit *kit.Kit, bizID uint32, appID uint32, ids []uint32) ([]uint32, error) {
+	m := dao.genQ.Kv
+	q := dao.genQ.Kv.WithContext(kit.Ctx)
+
+	var result []uint32
+	if err := q.Select(m.ID).
+		Where(m.BizID.Eq(bizID), m.AppID.Eq(appID), m.ID.NotIn(ids...)).
+		Pluck(m.ID, &result); err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 // BatchDeleteWithTx batch delete content instances with transaction.

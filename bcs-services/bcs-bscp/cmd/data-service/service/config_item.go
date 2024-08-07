@@ -216,7 +216,7 @@ func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbds.BatchUps
 
 	// 清空模板绑定关系
 	if req.GetReplaceAll() && len(req.GetBindings()) == 0 {
-		if errA := s.dao.AppTemplateBinding().DeleteByAppIDWithTx(grpcKit, tx, req.GetAppId()); err != nil {
+		if errA := s.dao.AppTemplateBinding().DeleteByAppIDWithTx(grpcKit, tx, req.GetBizId(), req.GetAppId()); err != nil {
 			if rErr := tx.Rollback(); rErr != nil {
 				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
 			}
