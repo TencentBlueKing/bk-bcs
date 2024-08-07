@@ -42,7 +42,7 @@ func getTaskStateAndCurrentStep(taskId, stepName string,
 	}
 	step, err := state.isReadyToStep(stepName)
 	if err != nil {
-		return nil, nil, fmt.Errorf("task %s step %s is not ready, %s", taskId, stepName, err.Error())
+		return nil, nil, fmt.Errorf("task %s step %s is not ready, %w", taskId, stepName, err)
 	}
 
 	if step == nil {

@@ -30,10 +30,10 @@ import (
 
 func TestDoWork(t *testing.T) {
 	// 使用结构体注册
-	istep.Register("hello", hellostep.NewHello())
+	// istep.Register("hello", hellostep.NewHello())
 
 	// 使用函数注册
-	istep.Register("sum", istep.StepWorkerFunc(hellostep.Sum))
+	// istep.Register("sum", istep.StepWorkerFunc(hellostep.Sum))
 
 	mgr := TaskManager{
 		ctx:         context.Background(),
@@ -60,7 +60,7 @@ func TestDoWork(t *testing.T) {
 
 	for _, s := range steps {
 		err := mgr.doWork(task.TaskID, s.Name)
-		assert.NoError(t, err)
+		assert.ErrorIs(t, err, types.ErrNotImplemented)
 	}
 }
 

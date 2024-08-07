@@ -102,7 +102,7 @@ func (t *Task) GetStep(stepName string) (*Step, bool) {
 			return step, true
 		}
 	}
-	return nil, true
+	return nil, false
 }
 
 // AddStep add step to task

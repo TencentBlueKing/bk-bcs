@@ -53,6 +53,8 @@ var (
 
 // Task task definition
 type Task struct {
+	TaskIndex           string            `json:"taskIndex"`
+	TaskIndexType       string            `json:"taskIndexType"`
 	TaskID              string            `json:"taskId"`
 	TaskType            string            `json:"taskType"`
 	TaskName            string            `json:"taskName"`

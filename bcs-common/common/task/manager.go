@@ -182,18 +182,7 @@ func (m *TaskManager) initWorker(workerNum int) error {
 }
 
 // Run start worker
-func (m *TaskManager) Run() {
-	// start worker
-	go func() {
-		if err := m.worker.Launch(); err != nil {
-			errMsg := fmt.Sprintf("task server worker launch failed: %s", err.Error())
-			blog.Infof(errMsg)
-			return
-		}
-	}()
-}
-
-func (m *TaskManager) Launch() error {
+func (m *TaskManager) Run() error {
 	return m.worker.Launch()
 }
 
