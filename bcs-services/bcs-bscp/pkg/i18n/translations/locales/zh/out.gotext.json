@@ -281,51 +281,6 @@
             ]
         },
         {
-            "id": "get reference template set under this app failed, err: {Err}",
-            "message": "get reference template set under this app failed, err: {Err}",
-            "translation": "获取此应用程序下的引用模板集失败，err: {Err}",
-            "placeholders": [
-                {
-                    "id": "Err",
-                    "string": "%[1]s",
-                    "type": "error",
-                    "underlyingType": "interface{Error() string}",
-                    "argNum": 1,
-                    "expr": "err"
-                }
-            ]
-        },
-        {
-            "id": "list template sets by template set ids failed, err: {Err}",
-            "message": "list template sets by template set ids failed, err: {Err}",
-            "translation": "按模板集ID列出模板集失败，err: {Err}",
-            "placeholders": [
-                {
-                    "id": "Err",
-                    "string": "%[1]s",
-                    "type": "error",
-                    "underlyingType": "interface{Error() string}",
-                    "argNum": 1,
-                    "expr": "err"
-                }
-            ]
-        },
-        {
-            "id": "remove the template set bound to the app failed, err: {Err}",
-            "message": "remove the template set bound to the app failed, err: {Err}",
-            "translation": "移除套餐失败，err: {Err}",
-            "placeholders": [
-                {
-                    "id": "Err",
-                    "string": "%[1]s",
-                    "type": "error",
-                    "underlyingType": "interface{Error() string}",
-                    "argNum": 1,
-                    "expr": "err"
-                }
-            ]
-        },
-        {
             "id": "hook name {Name} already exists",
             "message": "hook name {Name} already exists",
             "translation": "脚本名称 {Name} 已存在",

@@ -1694,112 +1694,6 @@ func (s *Service) getReleasedNonTemplateConfigVariables(grpcKit *kit.Kit, bizID,
 	return varsMap, nil
 }
 
-// GetTemplateAndNonTemplateCICount 获取模板和非模板配置项数量
-func (s *Service) GetTemplateAndNonTemplateCICount(ctx context.Context, req *pbds.GetTemplateAndNonTemplateCICountReq) (
-	*pbds.GetTemplateAndNonTemplateCICountResp, error) {
-	kt := kit.FromGrpcContext(ctx)
-
-	count, err := s.dao.ConfigItem().GetConfigItemCount(kt, req.BizId, req.AppId)
-	if err != nil {
-		return nil, errf.Errorf(errf.DBOpFailed, i18n.T(kt, "obtain the number of configuration items"))
-	}
-
-	binding, err := s.dao.AppTemplateBinding().GetAppTemplateBindingByAppID(kt, req.BizId, req.AppId)
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, errf.Errorf(errf.DBOpFailed, i18n.T(kt,
-			"get template binding relationships through business and service IDs failed, err: %s", err))
-	}
-	templateConfigItemCount := 0
-	if binding != nil {
-		templateConfigItemCount = len(binding.Spec.TemplateIDs)
-	}
-
-	return &pbds.GetTemplateAndNonTemplateCICountResp{
-		ConfigItemCount:         uint64(count),
-		TemplateConfigItemCount: uint64(templateConfigItemCount),
-	}, nil
-}
-
-// RemoveAppBoundTmplSet 移除服务绑定的套餐
-func (s *Service) RemoveAppBoundTmplSet(ctx context.Context, req *pbds.RemoveAppBoundTmplSetReq) (
-	*pbbase.EmptyResp, error) {
-
-	kit := kit.FromGrpcContext(ctx)
-
-	// 1. 查询该服务下的引用套餐
-	binding, err := s.dao.AppTemplateBinding().GetAppTemplateBindingByAppID(kit, req.BizId, req.AppId)
-	if err != nil {
-		return nil, errf.Errorf(errf.DBOpFailed,
-			i18n.T(kit, "get reference template set under this app failed, err: %s", err))
-	}
-
-	specBindings := make([]*table.TemplateBinding, 0, len(binding.Spec.Bindings))
-	for _, spec := range binding.Spec.Bindings {
-		revisions := make([]*table.TemplateRevisionBinding, 0)
-		// 只需移除指定的模板套餐
-		if spec.TemplateSetID == req.TemplateSetId {
-			continue
-		}
-		revisions = append(revisions, spec.TemplateRevisions...)
-		specBinding := &table.TemplateBinding{
-			TemplateSetID:     spec.TemplateSetID,
-			TemplateRevisions: revisions,
-		}
-		specBindings = append(specBindings, specBinding)
-	}
-
-	templateIDs, latestTemplateIDs, templateRevisionIDs, templateSetIDs :=
-		[]uint32{}, []uint32{}, []uint32{}, []uint32{}
-	for _, specBinding := range specBindings {
-		for _, v := range specBinding.TemplateRevisions {
-			templateIDs = append(templateIDs, v.TemplateID)
-			if v.IsLatest {
-				latestTemplateIDs = append(latestTemplateIDs, v.TemplateID)
-			}
-			templateRevisionIDs = append(templateRevisionIDs, v.TemplateRevisionID)
-		}
-		templateSetIDs = append(templateSetIDs, specBinding.TemplateSetID)
-	}
-
-	// 根据套餐id获取空间id
-	templateSets, err := s.dao.TemplateSet().ListByIDs(kit, templateSetIDs)
-	if err != nil {
-		return nil, errf.Errorf(errf.DBOpFailed,
-			i18n.T(kit, "list template sets by template set ids failed, err: %s", err))
-	}
-
-	templateSpaceIDs := []uint32{}
-	for _, v := range templateSets {
-		templateSpaceIDs = append(templateSpaceIDs, v.Attachment.TemplateSpaceID)
-	}
-
-	appTemplateBinding := &table.AppTemplateBinding{
-		ID: binding.ID,
-		Spec: &table.AppTemplateBindingSpec{
-			TemplateSpaceIDs:    templateSpaceIDs,
-			TemplateSetIDs:      templateSetIDs,
-			TemplateIDs:         tools.RemoveDuplicates(templateIDs),
-			TemplateRevisionIDs: tools.RemoveDuplicates(templateRevisionIDs),
-			LatestTemplateIDs:   tools.RemoveDuplicates(latestTemplateIDs),
-			Bindings:            specBindings,
-		},
-		Attachment: binding.Attachment,
-		Revision: &table.Revision{
-			Creator:   binding.Revision.Creator,
-			Reviser:   kit.User,
-			CreatedAt: binding.Revision.CreatedAt,
-			UpdatedAt: time.Now().UTC(),
-		},
-	}
-
-	if err = s.dao.AppTemplateBinding().Update(kit, appTemplateBinding); err != nil {
-		return nil, errf.Errorf(errf.DBOpFailed,
-			i18n.T(kit, "remove the template set bound to the app failed, err: %s", err))
-	}
-
-	return &pbbase.EmptyResp{}, nil
-}
-
 // checkExistingPathConflict Check existing path collections for conflicts.
 func checkExistingPathConflict(existing []string) (uint32, map[string]bool) {
 	conflictPaths := make(map[string]bool, len(existing))
@@ -1826,4 +1720,30 @@ func checkExistingPathConflict(existing []string) (uint32, map[string]bool) {
 	}
 
 	return uint32(len(conflictMap)) + conflictNums, conflictPaths
+}
+
+// GetTemplateAndNonTemplateCICount 获取模板和非模板配置项数量
+func (s *Service) GetTemplateAndNonTemplateCICount(ctx context.Context, req *pbds.GetTemplateAndNonTemplateCICountReq) (
+	*pbds.GetTemplateAndNonTemplateCICountResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	count, err := s.dao.ConfigItem().GetConfigItemCount(kt, req.BizId, req.AppId)
+	if err != nil {
+		return nil, errf.Errorf(errf.DBOpFailed, i18n.T(kt, "obtain the number of configuration items"))
+	}
+
+	binding, err := s.dao.AppTemplateBinding().GetAppTemplateBindingByAppID(kt, req.BizId, req.AppId)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, errf.Errorf(errf.DBOpFailed, i18n.T(kt,
+			"get template binding relationships through business and service IDs failed, err: %s", err))
+	}
+	templateConfigItemCount := 0
+	if binding != nil {
+		templateConfigItemCount = len(binding.Spec.TemplateIDs)
+	}
+
+	return &pbds.GetTemplateAndNonTemplateCICountResp{
+		ConfigItemCount:         uint64(count),
+		TemplateConfigItemCount: uint64(templateConfigItemCount),
+	}, nil
 }

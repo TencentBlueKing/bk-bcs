@@ -40,61 +40,57 @@ func init() {
 
 var messageKeyToIndex = map[string]int{
 	"app %d not found":                     18,
-	"attachment not set":                   30,
+	"attachment not set":                   27,
 	"batch delete config items failed":     12,
 	"batch delete failed":                  15,
 	"batch delete groups failed":           13,
 	"create directory failed %s":           2,
 	"create temporary directory failed %s": 3,
-	"db operation failed":                  26,
+	"db operation failed":                  23,
 	"decompress file failed, exceeding the maximum file limit threshold of %d": 10,
 	"decompress the file. The size of file %s exceeds the maximum limit of %s": 4,
-	"decompression failed %s":                                                             5,
-	"default_val %s is not a number type":                                                 36,
-	"detecting file conflicts failed %s":                                                  7,
-	"get reference template set under this app failed, err: %s":                           21,
+	"decompression failed %s":             5,
+	"default_val %s is not a number type": 33,
+	"detecting file conflicts failed %s":  7,
 	"get template binding relationships through business and service IDs failed, err: %s": 20,
-	"hook is nil":                        35,
-	"hook name %s already exists":        24,
+	"hook is nil":                        32,
+	"hook name %s already exists":        21,
 	"id is required":                     0,
-	"id should not be set":               28,
-	"invalid argument":                   27,
-	"invalid name, length should <= 128": 33,
-	"invalid name, length should >= 9 and must start with prefix bk_bscp_ (ignore case)":                                         32,
-	"invalid name: %s, only allows to include english、numbers、underscore (_), and must start with prefix bk_bscp_ (ignore case)": 34,
-	"list template sets by template set ids failed, err: %s":                                                                     22,
+	"id should not be set":               25,
+	"invalid argument":                   24,
+	"invalid name, length should <= 128": 30,
+	"invalid name, length should >= 9 and must start with prefix bk_bscp_ (ignore case)":                                         29,
+	"invalid name: %s, only allows to include english、numbers、underscore (_), and must start with prefix bk_bscp_ (ignore case)": 31,
 	"obtain the number of configuration items":                                                                                   19,
-	"read file failed %s": 1,
-	"remove the template set bound to the app failed, err: %s": 23,
-	"revision not set": 31,
-	"same template variable name %s already exists": 25,
-	"spec not set": 29,
-	"template variable name must start with %s":                                        16,
+	"read file failed %s":                           1,
+	"revision not set":                              28,
+	"same template variable name %s already exists": 22,
+	"spec not set":                                  26,
+	"template variable name must start with %s":     16,
 	"the length of hook ids is %d, it must be within the range of [1,%d]":              14,
 	"the length of template variable ids is %d, it must be within the range of [1,%d]": 17,
-	"unsupported variable type: %s":                                                    37,
+	"unsupported variable type: %s":                                                    34,
 	"upload completed":                                                                 8,
 	"upload completed, %d failed":                                                      9,
 	"upload failed, please make sure the file size does not exceed %s":                 11,
 	"upload file failed %s":                                                            6,
 }
 
-var enIndex = []uint32{ // 39 elements
+var enIndex = []uint32{ // 36 elements
 	// Entry 0 - 1F
 	0x00000000, 0x0000000f, 0x00000026, 0x00000044,
 	0x0000006c, 0x000000bb, 0x000000d6, 0x000000ef,
 	0x00000115, 0x00000126, 0x00000145, 0x00000191,
 	0x000001d5, 0x000001f6, 0x00000211, 0x0000025b,
 	0x0000026f, 0x0000029c, 0x000002f3, 0x00000307,
-	0x00000330, 0x00000387, 0x000003c4, 0x000003fe,
-	0x0000043a, 0x00000459, 0x0000048a, 0x0000049e,
-	0x000004af, 0x000004c4, 0x000004d1, 0x000004e4,
+	0x00000330, 0x00000387, 0x000003a6, 0x000003d7,
+	0x000003eb, 0x000003fc, 0x00000411, 0x0000041e,
+	0x00000431, 0x00000442, 0x00000495, 0x000004b8,
 	// Entry 20 - 3F
-	0x000004f5, 0x00000548, 0x0000056b, 0x000005ed,
-	0x000005f9, 0x00000620, 0x00000641,
-} // Size: 180 bytes
+	0x0000053a, 0x00000546, 0x0000056d, 0x0000058e,
+} // Size: 168 bytes
 
-const enData string = "" + // Size: 1601 bytes
+const enData string = "" + // Size: 1422 bytes
 	"\x02id is required\x02read file failed %[1]s\x02create directory failed " +
 	"%[1]s\x02create temporary directory failed %[1]s\x02decompress the file." +
 	" The size of file %[1]s exceeds the maximum limit of %[2]s\x02decompress" +
@@ -108,45 +104,40 @@ const enData string = "" + // Size: 1601 bytes
 	"\x02the length of template variable ids is %[1]d, it must be within the " +
 	"range of [1,%[2]d]\x02app %[1]d not found\x02obtain the number of config" +
 	"uration items\x02get template binding relationships through business and" +
-	" service IDs failed, err: %[1]s\x02get reference template set under this" +
-	" app failed, err: %[1]s\x02list template sets by template set ids failed" +
-	", err: %[1]s\x02remove the template set bound to the app failed, err: %[" +
-	"1]s\x02hook name %[1]s already exists\x02same template variable name %[1" +
-	"]s already exists\x02db operation failed\x02invalid argument\x02id shoul" +
-	"d not be set\x02spec not set\x02attachment not set\x02revision not set" +
-	"\x02invalid name, length should >= 9 and must start with prefix bk_bscp_" +
-	" (ignore case)\x02invalid name, length should <= 128\x02invalid name: %[" +
-	"1]s, only allows to include english、numbers、underscore (_), and must sta" +
-	"rt with prefix bk_bscp_ (ignore case)\x02hook is nil\x02default_val %[1]" +
-	"s is not a number type\x02unsupported variable type: %[1]s"
+	" service IDs failed, err: %[1]s\x02hook name %[1]s already exists\x02sam" +
+	"e template variable name %[1]s already exists\x02db operation failed\x02" +
+	"invalid argument\x02id should not be set\x02spec not set\x02attachment n" +
+	"ot set\x02revision not set\x02invalid name, length should >= 9 and must " +
+	"start with prefix bk_bscp_ (ignore case)\x02invalid name, length should " +
+	"<= 128\x02invalid name: %[1]s, only allows to include english、numbers、un" +
+	"derscore (_), and must start with prefix bk_bscp_ (ignore case)\x02hook " +
+	"is nil\x02default_val %[1]s is not a number type\x02unsupported variable" +
+	" type: %[1]s"
 
-var zhIndex = []uint32{ // 39 elements
+var zhIndex = []uint32{ // 36 elements
 	// Entry 0 - 1F
 	0x00000000, 0x0000000f, 0x00000029, 0x00000049,
 	0x00000069, 0x000000b6, 0x000000d1, 0x000000ec,
 	0x0000010c, 0x00000119, 0x00000134, 0x00000177,
 	0x000001ab, 0x000001c7, 0x000001e0, 0x00000220,
 	0x00000233, 0x0000025d, 0x000002a3, 0x000002c0,
-	0x000002d6, 0x00000319, 0x00000357, 0x00000388,
-	0x000003a8, 0x000003c5, 0x000003ef, 0x000003fe,
-	0x0000040b, 0x00000420, 0x00000434, 0x0000044e,
+	0x000002d6, 0x000002d6, 0x000002f3, 0x0000031d,
+	0x0000032c, 0x00000339, 0x0000034e, 0x00000362,
+	0x0000037c, 0x00000394, 0x000003e8, 0x00000409,
 	// Entry 20 - 3F
-	0x00000466, 0x000004ba, 0x000004db, 0x00000556,
-	0x00000566, 0x0000058b, 0x000005ac,
-} // Size: 180 bytes
+	0x00000484, 0x00000494, 0x000004b9, 0x000004da,
+} // Size: 168 bytes
 
-const zhData string = "" + // Size: 1452 bytes
+const zhData string = "" + // Size: 1242 bytes
 	"\x02id不能为空\x02读取文件失败: %[1]s\x02创建文件目录失败: %[1]s\x02创建临时目录失败: %[1]s\x02解压文" +
 	"件失败，文件 %[1]s 的大小超过了最大限制阈值 %[2]s\x02解压文件失败：%[1]s\x02上传文件失败：%[1]s\x02检测文" +
 	"件冲突失败: %[1]s\x02上传完成\x02上传完成, %[1]d 失败\x02解压文件失败，超过了文件数量最大限制阈值 %[1]d" +
 	"\x02上传失败，请确保文件大小不超过 %[1]s\x02批量删除配置项失败\x02批量删除群组失败\x02脚本id列表的长度为%[1]d, 长" +
 	"度范围必须为[1,%[2]d]\x02批量删除失败\x02模版变量名必须以%[1]s前缀开头\x02全局变量id列表的长度为%[1]d, 长" +
-	"度范围必须为[1,%[2]d]\x02ID为%[1]d的服务不存在\x02获取配置项数量\x02通过业务和服务ID获取模板绑定关系失败，er" +
-	"r: %[1]s\x02获取此应用程序下的引用模板集失败，err: %[1]s\x02按模板集ID列出模板集失败，err: %[1]s\x02移" +
-	"除套餐失败，err: %[1]s\x02脚本名称 %[1]s 已存在\x02同名的模版变量名称%[1]s已存在\x02db操作失败\x02无" +
-	"效参数\x02id不应该被设置\x02spec没有被设置\x02attachment没有被设置\x02revision没有被设置\x02无效" +
-	"名称，长度应该>=9且必须以bk_bscp_前缀开头（忽略大小写）\x02无效名称，长度应该<=128\x02无效名称：%[1]s，只允许英" +
-	"文、数字、下划线（_），且必须以bk_bscp_前缀开头（忽略大小写）\x02脚本不存在\x02default_val %[1]s 不是数字" +
-	"类型\x02不支持的变量类型：%[1]s"
+	"度范围必须为[1,%[2]d]\x02ID为%[1]d的服务不存在\x02获取配置项数量\x02脚本名称 %[1]s 已存在\x02同名的模" +
+	"版变量名称%[1]s已存在\x02db操作失败\x02无效参数\x02id不应该被设置\x02spec没有被设置\x02attachment" +
+	"没有被设置\x02revision没有被设置\x02无效名称，长度应该>=9且必须以bk_bscp_前缀开头（忽略大小写）\x02无效名称，" +
+	"长度应该<=128\x02无效名称：%[1]s，只允许英文、数字、下划线（_），且必须以bk_bscp_前缀开头（忽略大小写）\x02脚本不" +
+	"存在\x02default_val %[1]s 不是数字类型\x02不支持的变量类型：%[1]s"
 
-	// Total table size 3413 bytes (3KiB); checksum: DC2A458B
+	// Total table size 3000 bytes (2KiB); checksum: DEEDFD78
