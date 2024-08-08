@@ -193,7 +193,7 @@ export default defineComponent({
     const { menusData: menus } = useMenu();
     const { config } = usePlatform();
     const appLogo = computed(() => config.appLogo || logoSvg);
-    const appName = computed(() => config.i18n.name);
+    const appName = computed(() => config.i18n.productName);
     const langs = ref([
       {
         icon: 'bk-icon icon-chinese',
