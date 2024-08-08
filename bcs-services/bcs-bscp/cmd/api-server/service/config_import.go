@@ -225,6 +225,7 @@ func (c *configImport) TemplateConfigFileImport(w http.ResponseWriter, r *http.R
 			FileType: item.File.FileType,
 			Sign:     item.File.Sign,
 			ByteSize: item.File.ByteSize,
+			Md5:      item.File.Md5,
 		}
 		if !ok {
 			newItem.FileMode = string(table.Unix)
@@ -436,6 +437,7 @@ func (c *configImport) ConfigFileImport(w http.ResponseWriter, r *http.Request) 
 			FileType: item.File.FileType,
 			Sign:     item.File.Sign,
 			ByteSize: item.File.ByteSize,
+			Md5:      item.File.Md5,
 		}
 		if !ok {
 			newItem.FileMode = string(table.Unix)
@@ -615,8 +617,16 @@ func (c *configImport) fileScannerHasherUploader(kt *kit.Kit, path, rootDir stri
 	if err != nil {
 		return resp, fmt.Errorf("fiel upload fail filename: %s; err: %s", fileInfo.Name(), err.Error())
 	}
+
+	// 验证文件是否上传成功
+	repoRes, err := c.provider.Metadata(kt, hashString)
+	if err != nil {
+		return resp, fmt.Errorf("fiel upload fail filename: %s; err: %s", fileInfo.Name(), err.Error())
+	}
+
 	resp.ByteSize = uint64(result.ByteSize)
 	resp.Sign = result.Sha256
+	resp.Md5 = repoRes.Md5
 
 	return resp, nil
 }

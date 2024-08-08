@@ -1384,6 +1384,7 @@ func (s *Service) handleNonTemplateConfig(grpcKit *kit.Kit, bizID, appID, otherA
 			IsExist:   conflicts[path.Join(v.ConfigItemSpec.Path, v.ConfigItemSpec.Name)],
 			Signature: v.CommitSpec.Content.OriginSignature,
 			ByteSize:  v.CommitSpec.Content.OriginByteSize,
+			Md5:       v.CommitSpec.Content.Md5,
 		})
 	}
 
