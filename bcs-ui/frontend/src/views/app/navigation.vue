@@ -119,6 +119,7 @@
   </div>
 </template>
 <script lang="ts">
+import jsonp from 'jsonp';
 import { computed, defineComponent, onBeforeUnmount, onMounted, reactive, ref, toRef } from 'vue';
 
 import PopoverSelector from '../../components/popover-selector.vue';
@@ -135,7 +136,6 @@ import $router from '@/router';
 import $store from '@/store';
 import SystemLog from '@/views/app/log.vue';
 import ProjectSelector from '@/views/app/project-selector.vue';
-import jsonp from 'jsonp';
 
 export default defineComponent({
   name: 'NewNavigation',
@@ -149,7 +149,7 @@ export default defineComponent({
     const { menusData: menus } = useMenu();
     const { config, getPlatformInfo } = usePlatform();
     const appLogo = computed(() => config.appLogo || logoSvg);
-    const appName = computed(() => config.i18n.name);
+    const appName = computed(() => config.i18n.productName);
     const langs = ref([
       {
         icon: 'bk-icon icon-chinese',
