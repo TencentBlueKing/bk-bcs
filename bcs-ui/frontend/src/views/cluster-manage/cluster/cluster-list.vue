@@ -73,8 +73,7 @@
     <bk-table-column :label="$t('cluster.labels.nodeCounts')">
       <template #default="{ row }">
         <template
-          v-if="perms[row.clusterID] && perms[row.clusterID].cluster_manage
-            && !row.is_shared && row.clusterType !== 'virtual'">
+          v-if="perms[row.clusterID] && perms[row.clusterID].cluster_manage && row.clusterType !== 'virtual'">
           <LoadingIcon
             v-if="clusterNodesMap[row.clusterID] === undefined">
             {{ $t('generic.status.loading') }}...

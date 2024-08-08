@@ -224,6 +224,7 @@ export default defineComponent({
     const hideSharedCluster = computed(() => $store.state.hideSharedCluster);
     const changeSharedClusterVisible = (v) => {
       $store.commit('updateHideClusterStatus', v);
+      handleGetClusterNodes();
     };
     // 集群状态
     const statusTextMap = {
@@ -475,9 +476,12 @@ export default defineComponent({
     // 集群节点数
     const clusterNodesMap = ref<Record<string, number>>({});
     const handleGetClusterNodes = async () => {
+      const clusterIDs = curClusterList.value.map(item => item.clusterID);
+      if (!clusterIDs.length) return;
+
       clusterNodesMap.value = {};
       const data = await clusterMeta({
-        clusters: curClusterList.value.map(item => item.clusterID),
+        clusters: clusterIDs,
       }).catch(() => []);
       data.map((item) => {
         set(clusterNodesMap.value, item.clusterId, item.clusterNodeNum);
