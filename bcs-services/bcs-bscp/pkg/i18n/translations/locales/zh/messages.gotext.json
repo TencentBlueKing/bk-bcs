@@ -170,6 +170,11 @@
             ]
         },
         {
+            "id": "client ids is empty",
+            "message": "client ids is empty",
+            "translation": "客户端 id 为空"
+        },
+        {
             "id": "batch delete config items failed",
             "message": "batch delete config items failed",
             "translation": "批量删除配置项失败"
@@ -337,6 +342,214 @@
                     "underlyingType": "string",
                     "argNum": 1,
                     "expr": "req.Spec.Name"
+                }
+            ]
+        },
+        {
+            "id": "get excluded hook failed, err: {Err}",
+            "message": "get excluded hook failed, err: {Err}",
+            "translation": "获取排除后的脚本失败，err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "retrieve the referenced script failed, err: {Err}",
+            "message": "retrieve the referenced script failed, err: {Err}",
+            "translation": "检索引用的脚本失败，err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "get excluded kv failed, err: {Err}",
+            "message": "get excluded kv failed, err: {Err}",
+            "translation": "获取排除后的kv失败，err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "get app template bindings by template set ids, err: {Err}",
+            "message": "get app template bindings by template set ids, err: {Err}",
+            "translation": "按模板集ID获取应用程序模板绑定，err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "batch update app template binding's failed, err: {Err}",
+            "message": "batch update app template binding's failed, err: {Err}",
+            "translation": "批量更新应用模板绑定失败，err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "batch add templates to template sets failed, err: {Err}",
+            "message": "batch add templates to template sets failed, err: {Err}",
+            "translation": "模板集批量添加模板失败，err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "get template set data failed, err: {Err}",
+            "message": "get template set data failed, err: {Err}",
+            "translation": "获取模板集数据失败，err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "there is no template file under this template set",
+            "message": "there is no template file under this template set",
+            "translation": "此模板集下没有模板文件"
+        },
+        {
+            "id": "delete template from template sets failed, err: {Err}, rid: {Rid}",
+            "message": "delete template from template sets failed, err: {Err}, rid: {Rid}",
+            "translation": "从模板集中删除模板失败，err: {Err}, rid: {Rid}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                },
+                {
+                    "id": "Rid",
+                    "string": "%[2]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 2,
+                    "expr": "kt.Rid"
+                }
+            ]
+        },
+        {
+            "id": "list templates by tuple failed, err: {Err}",
+            "message": "list templates by tuple failed, err: {Err}",
+            "translation": "列出模板失败，err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "list app template bindings by app ids failed, err: {Err}",
+            "message": "list app template bindings by app ids failed, err: {Err}",
+            "translation": "按服务ID列出应用模板绑定失败，err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "get template set failed, err: {Err}",
+            "message": "get template set failed, err: {Err}",
+            "translation": "获取模板集失败，err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "list apps by app ids failed, err: {Err}",
+            "message": "list apps by app ids failed, err: {Err}",
+            "translation": "按服务ID列出应用程序失败，err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "count the number of app configs failed, err: {Err}",
+            "message": "count the number of app configs failed, err: {Err}",
+            "translation": "统计服务配置数量失败，err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
                 }
             ]
         },

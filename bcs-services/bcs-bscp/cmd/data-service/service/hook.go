@@ -404,7 +404,7 @@ func (s *Service) HookFetchIDsExcluding(ctx context.Context, req *pbds.HookFetch
 
 	ids, err := s.dao.Hook().FetchIDsExcluding(grpcKit, req.BizId, req.GetIds())
 	if err != nil {
-		return nil, errf.Errorf(errf.DBOpFailed, i18n.T(grpcKit, "get the IDs excluded after the specified IDs"))
+		return nil, errf.Errorf(errf.DBOpFailed, i18n.T(grpcKit, "get excluded hook failed, err: %s", err))
 	}
 
 	return &pbds.HookFetchIDsExcludingResp{
@@ -419,7 +419,7 @@ func (s *Service) GetHookReferencedIDs(ctx context.Context, req *pbds.GetHookRef
 
 	ids, err := s.dao.Hook().GetReferencedIDs(grpcKit, req.BizId)
 	if err != nil {
-		return nil, errf.Errorf(errf.DBOpFailed, i18n.T(grpcKit, "get hook referenced IDs"))
+		return nil, errf.Errorf(errf.DBOpFailed, i18n.T(grpcKit, "retrieve the referenced script failed, err: %s", err))
 	}
 
 	return &pbds.GetHookReferencedIDsResp{

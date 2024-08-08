@@ -651,7 +651,7 @@ func (s *Service) KvFetchIDsExcluding(ctx context.Context, req *pbds.KvFetchIDsE
 
 	ids, err := s.dao.Kv().FetchIDsExcluding(kt, req.BizId, req.AppId, req.GetIds())
 	if err != nil {
-		return nil, errf.Errorf(errf.DBOpFailed, i18n.T(kt, "get the IDs excluded after the specified IDs"))
+		return nil, errf.Errorf(errf.DBOpFailed, i18n.T(kt, "get excluded kv failed, err: %s", err))
 	}
 
 	return &pbds.KvFetchIDsExcludingResp{

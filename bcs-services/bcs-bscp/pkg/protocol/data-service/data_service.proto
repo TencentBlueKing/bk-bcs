@@ -187,6 +187,7 @@ service Data {
   rpc ListTmplSetBoundNamedApps(ListTmplSetBoundNamedAppsReq) returns (ListTmplSetBoundNamedAppsResp) {}
   rpc ListLatestTmplBoundUnnamedApps(ListLatestTmplBoundUnnamedAppsReq) returns (ListLatestTmplBoundUnnamedAppsResp) {}
   rpc RemoveAppBoundTmplSet(RemoveAppBoundTmplSetReq) returns (pbbase.EmptyResp) {}
+  rpc CheckTemplateSetReferencesApps(CheckTemplateSetReferencesAppsReq) returns (CheckTemplateSetReferencesAppsResp) {}
 
   // template variable related interface.
   rpc CreateTemplateVariable(CreateTemplateVariableReq) returns (CreateResp) {}
@@ -1547,6 +1548,29 @@ message RemoveAppBoundTmplSetReq {
   uint32 biz_id = 1;
   uint32 app_id = 2;
   uint32 template_set_id = 3;
+}
+
+message CheckTemplateSetReferencesAppsReq {
+  message Item {
+    uint32 id = 1;
+    string name = 2;
+  }
+  uint32 biz_id = 1;
+  uint32 template_space_id = 2;
+  repeated uint32 template_set_ids = 3;
+  repeated Item items = 4;
+}
+
+message CheckTemplateSetReferencesAppsResp {
+  message Item {
+    uint32 template_set_id = 1;
+    string template_set_name = 2;
+    uint32 app_id = 3;
+    string app_name = 4;
+    bool app_exceeds_limit = 5;
+    bool template_set_exceeds_limit = 6;
+  }
+  repeated Item items = 1;
 }
 
 message CreateTemplateVariableReq {
