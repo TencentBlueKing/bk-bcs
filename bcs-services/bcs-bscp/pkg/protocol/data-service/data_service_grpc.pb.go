@@ -147,6 +147,7 @@ const (
 	Data_ListTmplSetBoundNamedApps_FullMethodName         = "/pbds.Data/ListTmplSetBoundNamedApps"
 	Data_ListLatestTmplBoundUnnamedApps_FullMethodName    = "/pbds.Data/ListLatestTmplBoundUnnamedApps"
 	Data_RemoveAppBoundTmplSet_FullMethodName             = "/pbds.Data/RemoveAppBoundTmplSet"
+	Data_CheckTemplateSetReferencesApps_FullMethodName    = "/pbds.Data/CheckTemplateSetReferencesApps"
 	Data_CreateTemplateVariable_FullMethodName            = "/pbds.Data/CreateTemplateVariable"
 	Data_ListTemplateVariables_FullMethodName             = "/pbds.Data/ListTemplateVariables"
 	Data_UpdateTemplateVariable_FullMethodName            = "/pbds.Data/UpdateTemplateVariable"
@@ -340,6 +341,7 @@ type DataClient interface {
 	ListTmplSetBoundNamedApps(ctx context.Context, in *ListTmplSetBoundNamedAppsReq, opts ...grpc.CallOption) (*ListTmplSetBoundNamedAppsResp, error)
 	ListLatestTmplBoundUnnamedApps(ctx context.Context, in *ListLatestTmplBoundUnnamedAppsReq, opts ...grpc.CallOption) (*ListLatestTmplBoundUnnamedAppsResp, error)
 	RemoveAppBoundTmplSet(ctx context.Context, in *RemoveAppBoundTmplSetReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
+	CheckTemplateSetReferencesApps(ctx context.Context, in *CheckTemplateSetReferencesAppsReq, opts ...grpc.CallOption) (*CheckTemplateSetReferencesAppsResp, error)
 	// template variable related interface.
 	CreateTemplateVariable(ctx context.Context, in *CreateTemplateVariableReq, opts ...grpc.CallOption) (*CreateResp, error)
 	ListTemplateVariables(ctx context.Context, in *ListTemplateVariablesReq, opts ...grpc.CallOption) (*ListTemplateVariablesResp, error)
@@ -1464,6 +1466,15 @@ func (c *dataClient) RemoveAppBoundTmplSet(ctx context.Context, in *RemoveAppBou
 	return out, nil
 }
 
+func (c *dataClient) CheckTemplateSetReferencesApps(ctx context.Context, in *CheckTemplateSetReferencesAppsReq, opts ...grpc.CallOption) (*CheckTemplateSetReferencesAppsResp, error) {
+	out := new(CheckTemplateSetReferencesAppsResp)
+	err := c.cc.Invoke(ctx, Data_CheckTemplateSetReferencesApps_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *dataClient) CreateTemplateVariable(ctx context.Context, in *CreateTemplateVariableReq, opts ...grpc.CallOption) (*CreateResp, error) {
 	out := new(CreateResp)
 	err := c.cc.Invoke(ctx, Data_CreateTemplateVariable_FullMethodName, in, out, opts...)
@@ -2087,6 +2098,7 @@ type DataServer interface {
 	ListTmplSetBoundNamedApps(context.Context, *ListTmplSetBoundNamedAppsReq) (*ListTmplSetBoundNamedAppsResp, error)
 	ListLatestTmplBoundUnnamedApps(context.Context, *ListLatestTmplBoundUnnamedAppsReq) (*ListLatestTmplBoundUnnamedAppsResp, error)
 	RemoveAppBoundTmplSet(context.Context, *RemoveAppBoundTmplSetReq) (*base.EmptyResp, error)
+	CheckTemplateSetReferencesApps(context.Context, *CheckTemplateSetReferencesAppsReq) (*CheckTemplateSetReferencesAppsResp, error)
 	// template variable related interface.
 	CreateTemplateVariable(context.Context, *CreateTemplateVariableReq) (*CreateResp, error)
 	ListTemplateVariables(context.Context, *ListTemplateVariablesReq) (*ListTemplateVariablesResp, error)
@@ -2510,6 +2522,9 @@ func (UnimplementedDataServer) ListLatestTmplBoundUnnamedApps(context.Context, *
 }
 func (UnimplementedDataServer) RemoveAppBoundTmplSet(context.Context, *RemoveAppBoundTmplSetReq) (*base.EmptyResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveAppBoundTmplSet not implemented")
+}
+func (UnimplementedDataServer) CheckTemplateSetReferencesApps(context.Context, *CheckTemplateSetReferencesAppsReq) (*CheckTemplateSetReferencesAppsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CheckTemplateSetReferencesApps not implemented")
 }
 func (UnimplementedDataServer) CreateTemplateVariable(context.Context, *CreateTemplateVariableReq) (*CreateResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateTemplateVariable not implemented")
@@ -4773,6 +4788,24 @@ func _Data_RemoveAppBoundTmplSet_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Data_CheckTemplateSetReferencesApps_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CheckTemplateSetReferencesAppsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).CheckTemplateSetReferencesApps(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_CheckTemplateSetReferencesApps_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).CheckTemplateSetReferencesApps(ctx, req.(*CheckTemplateSetReferencesAppsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Data_CreateTemplateVariable_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateTemplateVariableReq)
 	if err := dec(in); err != nil {
@@ -6215,6 +6248,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RemoveAppBoundTmplSet",
 			Handler:    _Data_RemoveAppBoundTmplSet_Handler,
+		},
+		{
+			MethodName: "CheckTemplateSetReferencesApps",
+			Handler:    _Data_CheckTemplateSetReferencesApps_Handler,
 		},
 		{
 			MethodName: "CreateTemplateVariable",
