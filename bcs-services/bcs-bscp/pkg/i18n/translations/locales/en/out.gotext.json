@@ -323,6 +323,57 @@
             "fuzzy": true
         },
         {
+            "id": "get reference template set under this app failed, err: {Err}",
+            "message": "get reference template set under this app failed, err: {Err}",
+            "translation": "get reference template set under this app failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "list template sets by template set ids failed, err: {Err}",
+            "message": "list template sets by template set ids failed, err: {Err}",
+            "translation": "list template sets by template set ids failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "remove the template set bound to the app failed, err: {Err}",
+            "message": "remove the template set bound to the app failed, err: {Err}",
+            "translation": "remove the template set bound to the app failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
             "id": "hook name {Name} already exists",
             "message": "hook name {Name} already exists",
             "translation": "hook name {Name} already exists",

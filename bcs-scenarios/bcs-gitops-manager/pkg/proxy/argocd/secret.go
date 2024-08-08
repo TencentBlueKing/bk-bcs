@@ -105,7 +105,7 @@ func (plugin *SecretPlugin) deleteSecretHandler(r *http.Request) (*http.Request,
 	projectName := mux.Vars(r)["project"]
 	secretName := mux.Vars(r)["path"]
 	_, statusCode, err := plugin.permitChecker.CheckProjectPermission(r.Context(), projectName,
-		permitcheck.ProjectDeleteRSAction)
+		permitcheck.ProjectEditRSAction)
 	if statusCode != http.StatusOK {
 		return r, mw.ReturnErrorResponse(statusCode, errors.Wrapf(err, "check project permission failed"))
 	}
@@ -122,7 +122,7 @@ func (plugin *SecretPlugin) getSecretHandler(r *http.Request) (*http.Request, *m
 	if statusCode != http.StatusOK {
 		return r, mw.ReturnErrorResponse(statusCode, errors.Wrapf(err, "check project permission failed"))
 	}
-	r = plugin.setSecretAudit(r, projectName, secretName, ctxutils.SecretDelete, ctxutils.EmptyData)
+	r = plugin.setSecretAudit(r, projectName, secretName, ctxutils.SecretView, ctxutils.EmptyData)
 	return r, mw.ReturnSecretReverse()
 }
 

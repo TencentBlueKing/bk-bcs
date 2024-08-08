@@ -165,8 +165,7 @@ func (s *Service) handleBatchCreateClients(kt *kit.Kit, clients []*pbclient.Clie
 }
 
 // ListClients list clients
-func (s *Service) ListClients(ctx context.Context, req *pbds.ListClientsReq) (
-	*pbds.ListClientsResp, error) {
+func (s *Service) ListClients(ctx context.Context, req *pbds.ListClientsReq) (*pbds.ListClientsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 
 	items, count, err := s.dao.Client().List(grpcKit, req.BizId, req.AppId,
@@ -178,6 +177,12 @@ func (s *Service) ListClients(ctx context.Context, req *pbds.ListClientsReq) (
 			Limit: uint(req.Limit),
 			All:   req.All,
 		})
+	if err != nil {
+		return nil, err
+	}
+
+	uncitedCount, err := s.dao.Client().CountNumberOlineClients(grpcKit, req.BizId, req.AppId,
+		req.GetLastHeartbeatTime(), req.GetSearch())
 	if err != nil {
 		return nil, err
 	}
@@ -222,8 +227,9 @@ func (s *Service) ListClients(ctx context.Context, req *pbds.ListClientsReq) (
 	}
 
 	resp := &pbds.ListClientsResp{
-		Details: details,
-		Count:   uint32(count),
+		Details:        details,
+		Count:          uint32(count),
+		ExclusionCount: uint32(uncitedCount),
 	}
 
 	return resp, nil
@@ -906,10 +912,6 @@ func formatCpu(number float64) string {
 // RetryClients 重试客户端执行版本变更回调
 func (s *Service) RetryClients(ctx context.Context, req *pbds.RetryClientsReq) (*pbbase.EmptyResp, error) {
 	kit := kit.FromGrpcContext(ctx)
-
-	if !req.All && len(req.ClientIds) == 0 {
-		return nil, fmt.Errorf("client ids is empty")
-	}
 
 	tx := s.dao.GenQuery().Begin()
 

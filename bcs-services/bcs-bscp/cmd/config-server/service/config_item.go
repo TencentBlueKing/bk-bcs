@@ -749,5 +749,31 @@ func (s *Service) GetTemplateAndNonTemplateCICount(ctx context.Context, req *pbc
 	return &pbcs.GetTemplateAndNonTemplateCICountResp{
 		ConfigItemCount:         result.GetConfigItemCount(),
 		TemplateConfigItemCount: result.GetTemplateConfigItemCount(),
-	}, err
+	}, nil
+}
+
+// RemoveAppBoundTmplSet 移除服务绑定的套餐
+func (s *Service) RemoveAppBoundTmplSet(ctx context.Context, req *pbcs.RemoveAppBoundTmplSetReq) (
+	*pbcs.RemoveAppBoundTmplSetResp, error) {
+
+	kit := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.Update, ResourceID: req.AppId}, BizID: req.BizId},
+	}
+	if err := s.authorizer.Authorize(kit, res...); err != nil {
+		return nil, err
+	}
+
+	_, err := s.client.DS.RemoveAppBoundTmplSet(kit.RpcCtx(), &pbds.RemoveAppBoundTmplSetReq{
+		BizId:         req.BizId,
+		AppId:         req.AppId,
+		TemplateSetId: req.TemplateSetId,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &pbcs.RemoveAppBoundTmplSetResp{}, nil
 }

@@ -74,6 +74,12 @@ type TemplateSet interface {
 	// ValidateWillExceedMaxTmplCount 给定一个数 和当前数量相加, 判断是否超过最大限制
 	ValidateWillExceedMaxTmplCount(kt *kit.Kit, tx *gen.QueryTx, bizID,
 		tmplSetID uint32, number int) error
+	// GetByTemplateSetByID get template set by id
+	GetByTemplateSetByID(kit *kit.Kit, bizID, id uint32) (*table.TemplateSet, error)
+	// BatchAddTmplsToTmplSetsWithTx 批量添加至某个套餐中
+	BatchAddTmplsToTmplSetsWithTx(kit *kit.Kit, tx *gen.QueryTx, templateSet []*table.TemplateSet) error
+	// ListByTemplateSpaceIdAndIds list template sets by template set ids and template_space_id.
+	ListByTemplateSpaceIdAndIds(kit *kit.Kit, templateSpaceID uint32, ids []uint32) ([]*table.TemplateSet, error)
 }
 
 var _ TemplateSet = new(templateSetDao)
@@ -82,6 +88,35 @@ type templateSetDao struct {
 	genQ     *gen.Query
 	idGen    IDGenInterface
 	auditDao AuditDao
+}
+
+// ListByTemplateSpaceIdAndIds list template sets by template set ids and template_space_id.
+func (dao *templateSetDao) ListByTemplateSpaceIdAndIds(kit *kit.Kit, templateSpaceID uint32,
+	ids []uint32) ([]*table.TemplateSet, error) {
+
+	m := dao.genQ.TemplateSet
+	q := dao.genQ.TemplateSet.WithContext(kit.Ctx)
+
+	return q.Where(m.TemplateSpaceID.Eq(templateSpaceID), m.ID.In(ids...)).Find()
+}
+
+// BatchAddTmplsToTmplSetsWithTx 批量添加至某个套餐中
+func (dao *templateSetDao) BatchAddTmplsToTmplSetsWithTx(kit *kit.Kit, tx *gen.QueryTx,
+	templateSet []*table.TemplateSet) error {
+	if len(templateSet) == 0 {
+		return nil
+	}
+
+	return tx.TemplateSet.WithContext(kit.Ctx).Save(templateSet...)
+}
+
+// GetByTemplateSetByID get template set by id
+func (dao *templateSetDao) GetByTemplateSetByID(kit *kit.Kit, bizID uint32, id uint32) (
+	*table.TemplateSet, error) {
+	m := dao.genQ.TemplateSet
+	q := dao.genQ.TemplateSet.WithContext(kit.Ctx)
+
+	return q.Where(m.BizID.Eq(bizID), m.ID.Eq(id)).Take()
 }
 
 // Create one template set instance.
@@ -188,6 +223,10 @@ func (dao *templateSetDao) UpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.
 	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareUpdate(g, oldOne)
 	if err := ad.Do(tx.Query); err != nil {
 		return err
+	}
+
+	if len(g.Spec.TemplateIDs) == 0 {
+		g.Spec.TemplateIDs = []uint32{}
 	}
 
 	if _, err := q.Where(m.BizID.Eq(g.Attachment.BizID), m.ID.Eq(g.ID)).

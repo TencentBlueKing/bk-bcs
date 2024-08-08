@@ -5123,6 +5123,27 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "taskID",
+            "description": "taskID. 默认为空, 过滤任务维度的操作审计",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "taskName",
+            "description": "taskName. 默认为空, 过滤任务名称维度的操作审计",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "resourceName",
+            "description": "resourceName. 默认为空, 过滤资源名称维度的操作审计",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -6017,6 +6038,95 @@
             "schema": {
               "$ref": "#/definitions/clustermanagerSkipTaskRequest"
             }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/taskrecords": {
+      "get": {
+        "summary": "查询任务记录列表",
+        "description": "查询任务记录列表",
+        "operationId": "ClusterManager_ListTaskRecords",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerListTaskRecordsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "taskID",
+            "description": "taskID. 默认为空, 过滤任务维度的操作审计",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/tasksteplogs": {
+      "get": {
+        "summary": "查询任务步骤日志列表",
+        "description": "查询任务步骤日志列表",
+        "operationId": "ClusterManager_ListTaskStepLogs",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerListTaskStepLogsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "taskID",
+            "description": "taskID. 过滤任务维度的操作审计",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "stepName",
+            "description": "stepName. 过滤任务步骤维度的操作审计",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "description": "page. 页码",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "limit",
+            "description": "limit. 每页数量",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
           }
         ],
         "tags": [
@@ -7661,6 +7771,12 @@
           "type": "string",
           "description": "vpcDomain内部域名配置",
           "title": "vpcDomain"
+        },
+        "disableCheckGroupResource": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "cloud是否关闭节点池资源quota校验开关",
+          "title": "disableCheckGroupResource"
         }
       },
       "description": "用于记录云公共配置信息",
@@ -14840,6 +14956,33 @@
         "data"
       ]
     },
+    "clustermanagerListTaskRecordsResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/clustermanagerTaskRecordsResponseData",
+          "description": "返回数据",
+          "title": "data"
+        }
+      }
+    },
     "clustermanagerListTaskResponse": {
       "type": "object",
       "properties": {
@@ -14880,6 +15023,52 @@
         "code",
         "message"
       ]
+    },
+    "clustermanagerListTaskStepLogsResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/clustermanagerListTaskStepLogsResponseData",
+          "description": "返回数据",
+          "title": "data"
+        }
+      }
+    },
+    "clustermanagerListTaskStepLogsResponseData": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "format": "int64",
+          "description": "操作日志数量",
+          "title": "count"
+        },
+        "results": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerTaskStepLogDetail"
+          },
+          "description": "返回数据",
+          "title": "results"
+        }
+      }
     },
     "clustermanagerManagedConfig": {
       "type": "object",
@@ -17476,6 +17665,110 @@
       },
       "description": "集群管理，节点管理背后所映射任务信息，主要是关联的自动化步骤（整合云api与蓝鲸标准运维）",
       "title": "Task"
+    },
+    "clustermanagerTaskRecordStep": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "任务名称",
+          "title": "name"
+        },
+        "status": {
+          "type": "string",
+          "description": "任务步骤状态(同上)",
+          "title": "status"
+        },
+        "startTime": {
+          "type": "string",
+          "format": "int64",
+          "description": "任务开始时间戳",
+          "title": "startTime"
+        },
+        "endTime": {
+          "type": "string",
+          "format": "int64",
+          "description": "任务结束时间戳",
+          "title": "endTime"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerTaskRecordStepData"
+          },
+          "description": "任务结束时间戳",
+          "title": "endTime"
+        }
+      }
+    },
+    "clustermanagerTaskRecordStepData": {
+      "type": "object",
+      "properties": {
+        "log": {
+          "type": "string",
+          "description": "当前行内容",
+          "title": "log"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "int64",
+          "description": "时间戳",
+          "title": "timestamp"
+        },
+        "level": {
+          "type": "string",
+          "description": "日志等级(INFO, WARN, ERROR)",
+          "title": "level"
+        }
+      }
+    },
+    "clustermanagerTaskRecordsResponseData": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "description": "任务日志状态(waiting, loading, success, halfSuccess, failed, terminate)",
+          "title": "status"
+        },
+        "step": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerTaskRecordStep"
+          },
+          "description": "任务日志状态(waiting, loading, success, halfSuccess, failed, terminate)",
+          "title": "step"
+        }
+      }
+    },
+    "clustermanagerTaskStepLogDetail": {
+      "type": "object",
+      "properties": {
+        "taskID": {
+          "type": "string",
+          "description": "任务ID",
+          "title": "taskID"
+        },
+        "stepName": {
+          "type": "string",
+          "description": "步骤名称",
+          "title": "stepName"
+        },
+        "level": {
+          "type": "string",
+          "description": "日志等级(INFO, WARN, ERROR)",
+          "title": "level"
+        },
+        "message": {
+          "type": "string",
+          "description": "日志信息",
+          "title": "message"
+        },
+        "createTime": {
+          "type": "string",
+          "description": "发生时间",
+          "title": "createTime"
+        }
+      }
     },
     "clustermanagerTemplateDetailInfo": {
       "type": "object",

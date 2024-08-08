@@ -30,6 +30,7 @@ type TemplateVersion struct {
 	Creator       string             `json:"creator" bson:"creator"`
 	CreateAt      int64              `json:"createAt" bson:"createAt"`
 	Latest        bool               `json:"latest" bson:"-"` // 是否是最新版本，不存储在数据库
+	Draft         bool               `json:"draft" bson:"-"`
 }
 
 // ToMap trans TemplateVersion to map
@@ -53,6 +54,7 @@ func (t *TemplateVersion) ToMap() map[string]interface{} {
 	m["creator"] = t.Creator
 	m["createAt"] = t.CreateAt
 	m["latest"] = t.Latest
+	m["draft"] = t.Draft
 	return m
 }
 

@@ -757,6 +757,18 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "ClusterManager.ListTaskStepLogs",
+			Path:    []string{"/clustermanager/v1/tasksteplogs"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "ClusterManager.ListTaskRecords",
+			Path:    []string{"/clustermanager/v1/taskrecords"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "ClusterManager.CleanDbHistoryData",
 			Path:    []string{"/clustermanager/v1/dbdatas/{dataType}"},
 			Method:  []string{"DELETE"},
@@ -1022,6 +1034,10 @@ type ClusterManagerService interface {
 	ListCloudRuntimeInfo(ctx context.Context, in *ListCloudRuntimeInfoRequest, opts ...client.CallOption) (*ListCloudRuntimeInfoResponse, error)
 	// Operation logs
 	ListOperationLogs(ctx context.Context, in *ListOperationLogsRequest, opts ...client.CallOption) (*ListOperationLogsResponse, error)
+	// Task Step logs
+	ListTaskStepLogs(ctx context.Context, in *ListTaskStepLogsRequest, opts ...client.CallOption) (*ListTaskStepLogsResponse, error)
+	// Task records
+	ListTaskRecords(ctx context.Context, in *ListTaskRecordsRequest, opts ...client.CallOption) (*ListTaskRecordsResponse, error)
 	// CleanDbHistoryData clean DB history data
 	CleanDbHistoryData(ctx context.Context, in *CleanDbHistoryDataRequest, opts ...client.CallOption) (*CleanDbHistoryDataResponse, error)
 	// ** ResourceSchema **
@@ -2272,6 +2288,26 @@ func (c *clusterManagerService) ListOperationLogs(ctx context.Context, in *ListO
 	return out, nil
 }
 
+func (c *clusterManagerService) ListTaskStepLogs(ctx context.Context, in *ListTaskStepLogsRequest, opts ...client.CallOption) (*ListTaskStepLogsResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.ListTaskStepLogs", in)
+	out := new(ListTaskStepLogsResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) ListTaskRecords(ctx context.Context, in *ListTaskRecordsRequest, opts ...client.CallOption) (*ListTaskRecordsResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.ListTaskRecords", in)
+	out := new(ListTaskRecordsResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *clusterManagerService) CleanDbHistoryData(ctx context.Context, in *CleanDbHistoryDataRequest, opts ...client.CallOption) (*CleanDbHistoryDataResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.CleanDbHistoryData", in)
 	out := new(CleanDbHistoryDataResponse)
@@ -2619,6 +2655,10 @@ type ClusterManagerHandler interface {
 	ListCloudRuntimeInfo(context.Context, *ListCloudRuntimeInfoRequest, *ListCloudRuntimeInfoResponse) error
 	// Operation logs
 	ListOperationLogs(context.Context, *ListOperationLogsRequest, *ListOperationLogsResponse) error
+	// Task Step logs
+	ListTaskStepLogs(context.Context, *ListTaskStepLogsRequest, *ListTaskStepLogsResponse) error
+	// Task records
+	ListTaskRecords(context.Context, *ListTaskRecordsRequest, *ListTaskRecordsResponse) error
 	// CleanDbHistoryData clean DB history data
 	CleanDbHistoryData(context.Context, *CleanDbHistoryDataRequest, *CleanDbHistoryDataResponse) error
 	// ** ResourceSchema **
@@ -2779,6 +2819,8 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		GetCloudBandwidthPackages(ctx context.Context, in *GetCloudBandwidthPackagesRequest, out *GetCloudBandwidthPackagesResponse) error
 		ListCloudRuntimeInfo(ctx context.Context, in *ListCloudRuntimeInfoRequest, out *ListCloudRuntimeInfoResponse) error
 		ListOperationLogs(ctx context.Context, in *ListOperationLogsRequest, out *ListOperationLogsResponse) error
+		ListTaskStepLogs(ctx context.Context, in *ListTaskStepLogsRequest, out *ListTaskStepLogsResponse) error
+		ListTaskRecords(ctx context.Context, in *ListTaskRecordsRequest, out *ListTaskRecordsResponse) error
 		CleanDbHistoryData(ctx context.Context, in *CleanDbHistoryDataRequest, out *CleanDbHistoryDataResponse) error
 		ListResourceSchema(ctx context.Context, in *ListResourceSchemaRequest, out *CommonListResp) error
 		GetResourceSchema(ctx context.Context, in *GetResourceSchemaRequest, out *CommonResp) error
@@ -3526,6 +3568,18 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.ListTaskStepLogs",
+		Path:    []string{"/clustermanager/v1/tasksteplogs"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.ListTaskRecords",
+		Path:    []string{"/clustermanager/v1/taskrecords"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.CleanDbHistoryData",
 		Path:    []string{"/clustermanager/v1/dbdatas/{dataType}"},
 		Method:  []string{"DELETE"},
@@ -4136,6 +4190,14 @@ func (h *clusterManagerHandler) ListCloudRuntimeInfo(ctx context.Context, in *Li
 
 func (h *clusterManagerHandler) ListOperationLogs(ctx context.Context, in *ListOperationLogsRequest, out *ListOperationLogsResponse) error {
 	return h.ClusterManagerHandler.ListOperationLogs(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) ListTaskStepLogs(ctx context.Context, in *ListTaskStepLogsRequest, out *ListTaskStepLogsResponse) error {
+	return h.ClusterManagerHandler.ListTaskStepLogs(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) ListTaskRecords(ctx context.Context, in *ListTaskRecordsRequest, out *ListTaskRecordsResponse) error {
+	return h.ClusterManagerHandler.ListTaskRecords(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) CleanDbHistoryData(ctx context.Context, in *CleanDbHistoryDataRequest, out *CleanDbHistoryDataResponse) error {

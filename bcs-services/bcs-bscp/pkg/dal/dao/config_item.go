@@ -65,6 +65,10 @@ type ConfigItem interface {
 	UpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, configItem *table.ConfigItem) error
 	// GetConfigItemCount 获取配置项数量
 	GetConfigItemCount(kit *kit.Kit, bizID uint32, appID uint32) (int64, error)
+	// ListConfigItemCount 展示配置项数量
+	ListConfigItemCount(kit *kit.Kit, bizID uint32, appID []uint32) ([]types.ListConfigItemCount, error)
+	// GetConfigItemCount 获取配置项数量带有事务
+	GetConfigItemCountWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID uint32, appID uint32) (int64, error)
 }
 
 var _ ConfigItem = new(configItemDao)
@@ -74,6 +78,32 @@ type configItemDao struct {
 	idGen    IDGenInterface
 	auditDao AuditDao
 	lock     LockDao
+}
+
+// GetConfigItemCountWithTx 获取配置项数量带有事务
+func (dao *configItemDao) GetConfigItemCountWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID uint32,
+	appID uint32) (int64, error) {
+
+	m := dao.genQ.ConfigItem
+
+	return tx.ConfigItem.WithContext(kit.Ctx).
+		Where(m.BizID.Eq(bizID), m.AppID.Eq(appID)).
+		Count()
+}
+
+// ListConfigItemCount 展示配置项数量
+func (dao *configItemDao) ListConfigItemCount(kit *kit.Kit, bizID uint32, appID []uint32) (
+	[]types.ListConfigItemCount, error) {
+	m := dao.genQ.ConfigItem
+
+	var result []types.ListConfigItemCount
+	err := dao.genQ.ConfigItem.WithContext(kit.Ctx).Select(m.AppID, m.ID.Count().As("count")).
+		Where(m.BizID.Eq(bizID), m.AppID.In(appID...)).Group(m.AppID).Scan(&result)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 // GetConfigItemCount 获取配置项数量

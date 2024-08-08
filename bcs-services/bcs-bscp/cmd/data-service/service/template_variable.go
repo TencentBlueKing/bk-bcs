@@ -214,3 +214,19 @@ func (s *Service) ImportTemplateVariables(ctx context.Context, req *pbds.ImportT
 
 	return &pbds.ImportTemplateVariablesResp{VariableCount: uint32(len(req.Specs))}, nil
 }
+
+// TemplateVariableFetchIDsExcluding 获取模板变量排除指定ID的ID
+func (s *Service) TemplateVariableFetchIDsExcluding(ctx context.Context,
+	req *pbds.TemplateVariableFetchIDsExcludingReq) (*pbds.TemplateVariableFetchIDsExcludingResp, error) {
+
+	kt := kit.FromGrpcContext(ctx)
+
+	ids, err := s.dao.TemplateVariable().FetchIDsExcluding(kt, req.GetBizId(), req.GetIds())
+	if err != nil {
+		return nil, err
+	}
+
+	return &pbds.TemplateVariableFetchIDsExcludingResp{
+		Ids: ids,
+	}, nil
+}

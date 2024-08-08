@@ -23,6 +23,7 @@ import (
 	"github.com/avast/retry-go"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/install"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/install/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
@@ -138,7 +139,7 @@ func (h *HelmInstaller) getChartLatestVersion(project string, repo, chart string
 func (h *HelmInstaller) setRepo() {
 	// default use public-repo
 	if h.isPublicRepo || h.repo == "" {
-		h.repo = PubicRepo
+		h.repo = types.PubicRepo
 	}
 }
 
@@ -187,7 +188,7 @@ func (h *HelmInstaller) Install(clusterID, values string) error {
 		}
 
 		return nil
-	}, retry.Attempts(retryCount), retry.Delay(defaultTimeOut), retry.DelayType(retry.FixedDelay))
+	}, retry.Attempts(types.RetryCount), retry.Delay(types.DefaultTimeOut), retry.DelayType(retry.FixedDelay))
 	if err != nil {
 		return fmt.Errorf("call api HelmInstaller InstallRelease failed: %v, resp: %s", err, utils.ToJSONString(resp))
 	}
@@ -335,8 +336,8 @@ func (h *HelmInstaller) CheckAppStatus(clusterID string, timeout time.Duration, 
 		// 前置检查
 		if pre {
 			switch resp.Data.Status {
-			case DeployedInstall, DeployedRollback, DeployedUpgrade, FailedInstall,
-				FailedRollback, FailedUpgrade, FailedState, FailedUninstall:
+			case types.DeployedInstall, types.DeployedRollback, types.DeployedUpgrade, types.FailedInstall,
+				types.FailedRollback, types.FailedUpgrade, types.FailedState, types.FailedUninstall:
 				return loop.EndLoop
 			default:
 			}
@@ -350,9 +351,9 @@ func (h *HelmInstaller) CheckAppStatus(clusterID string, timeout time.Duration, 
 
 		// 成功状态 / 失败状态 则终止
 		switch resp.Data.Status {
-		case DeployedInstall, DeployedRollback, DeployedUpgrade:
+		case types.DeployedInstall, types.DeployedRollback, types.DeployedUpgrade:
 			return loop.EndLoop
-		case FailedInstall, FailedRollback, FailedUpgrade, FailedState:
+		case types.FailedInstall, types.FailedRollback, types.FailedUpgrade, types.FailedState:
 			return fmt.Errorf("[HelmInstaller] CheckAppStatus[%s] failed: %s", resp.RequestID, resp.Data.Status)
 		default:
 		}

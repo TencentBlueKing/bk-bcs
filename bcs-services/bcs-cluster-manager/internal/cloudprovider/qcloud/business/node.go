@@ -386,7 +386,7 @@ func (ins InstanceInfo) GetNodeFailedReason() string {
 // nolint
 func CheckCvmInstanceState(ctx context.Context, ids []string,
 	opt *cloudprovider.ListNodesOption) (*InstanceList, error) {
-	taskId := cloudprovider.GetTaskIDFromContext(ctx)
+	taskId, stepName := cloudprovider.GetTaskIDAndStepNameFromContext(ctx)
 
 	client, err := api.GetCVMClient(opt.Common)
 	if err != nil {
@@ -507,13 +507,16 @@ func CheckCvmInstanceState(ctx context.Context, ids []string,
 	blog.Infof("CheckCvmInstanceState[%s] success[%v] failure[%v]",
 		taskId, instances.SuccessNodes, instances.FailedNodes)
 
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskId, stepName,
+		fmt.Sprintf("success [%v] failure [%v]", instances.SuccessNodes, instances.FailedNodes))
+
 	return instances, nil
 }
 
 // ModifyInstancesVpcAttribute modify instance vpc attribute
 func ModifyInstancesVpcAttribute(ctx context.Context, vpcId string, ids []string,
 	opt *cloudprovider.CommonOption) error {
-	taskId := cloudprovider.GetTaskIDFromContext(ctx)
+	taskId, stepName := cloudprovider.GetTaskIDAndStepNameFromContext(ctx)
 
 	if vpcId == "" || len(ids) == 0 {
 		return fmt.Errorf("ModifyInstancesVpcAttribute[%s] vpcId/instanceIds empty", taskId)
@@ -574,6 +577,9 @@ func ModifyInstancesVpcAttribute(ctx context.Context, vpcId string, ids []string
 
 		blog.Infof("ModifyInstancesVpcAttribute[%s][%s:%s] instances successful",
 			taskId, vpcId, zone, instanceIds)
+
+		cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskId, stepName,
+			fmt.Sprintf("[%s] instances successful", instanceIds))
 	}
 
 	return nil

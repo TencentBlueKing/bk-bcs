@@ -16,10 +16,12 @@ import (
 	"errors"
 	"fmt"
 
+	rawgen "gorm.io/gen"
 	"gorm.io/gorm"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/utils"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
@@ -39,13 +41,18 @@ type AppTemplateBinding interface {
 	// Delete one app template binding instance.
 	Delete(kit *kit.Kit, atb *table.AppTemplateBinding) error
 	// DeleteByAppIDWithTx delete one app template binding instance by app id with transaction.
-	DeleteByAppIDWithTx(kit *kit.Kit, tx *gen.QueryTx, appID uint32) error
+	DeleteByAppIDWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, appID uint32) error
 	// ListAppTemplateBindingByAppIds 按 AppId 列出应用模板绑定
-	ListAppTemplateBindingByAppIds(kit *kit.Kit, bizID uint32, appID []uint32) ([]*table.AppTemplateBinding, error)
+	ListAppTemplateBindingByAppIds(kit *kit.Kit, bizID uint32, appIDs []uint32) ([]*table.AppTemplateBinding, error)
 	// GetAppTemplateBindingByAppID 通过业务和服务ID获取模板绑定关系
 	GetAppTemplateBindingByAppID(kit *kit.Kit, bizID, appID uint32) (*table.AppTemplateBinding, error)
 	// UpsertWithTx create or update one template variable instance with transaction.
 	UpsertWithTx(kit *kit.Kit, tx *gen.QueryTx, atb *table.AppTemplateBinding) error
+	// GetBindingAppByTemplateSetID 通过套餐ID获取绑定的服务
+	GetBindingAppByTemplateSetID(kit *kit.Kit, bizID uint32, templateSetIDs []uint32) ([]*table.AppTemplateBinding, error)
+	// GetAppTemplateBindingByAppIDWithTx get app template binding with transaction instance through biz id and app id
+	GetAppTemplateBindingByAppIDWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID,
+		appID uint32) (*table.AppTemplateBinding, error)
 }
 
 var _ AppTemplateBinding = new(appTemplateBindingDao)
@@ -54,6 +61,38 @@ type appTemplateBindingDao struct {
 	genQ     *gen.Query
 	idGen    IDGenInterface
 	auditDao AuditDao
+}
+
+// GetAppTemplateBindingByAppIDWithTx get app template binding with transaction instance through biz id and app id
+func (dao *appTemplateBindingDao) GetAppTemplateBindingByAppIDWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID uint32,
+	appID uint32) (*table.AppTemplateBinding, error) {
+
+	m := dao.genQ.AppTemplateBinding
+
+	return tx.AppTemplateBinding.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID), m.AppID.Eq(appID)).Take()
+}
+
+// GetBindingAppByTemplateSetID 通过套餐ID获取绑定的服务
+func (dao *appTemplateBindingDao) GetBindingAppByTemplateSetID(kit *kit.Kit, bizID uint32, templateSetIDs []uint32) (
+	[]*table.AppTemplateBinding, error) {
+
+	m := dao.genQ.AppTemplateBinding
+	q := dao.genQ.AppTemplateBinding.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID))
+
+	conds := make([]rawgen.Condition, 0)
+	for k, v := range templateSetIDs {
+		if k == 0 {
+			conds = append(conds, q.Where(utils.RawCond("JSON_CONTAINS(?,?)", utils.Field{
+				Field: m.TemplateSetIDs,
+			}, fmt.Sprintf("%d", v))))
+		} else {
+			conds = append(conds, q.Or(utils.RawCond("JSON_CONTAINS(?,?)", utils.Field{
+				Field: m.TemplateSetIDs,
+			}, fmt.Sprintf("%d", v))))
+		}
+	}
+
+	return q.Where(conds...).Find()
 }
 
 // BatchUpdateWithTx batch update app template binding's instances with transaction.
@@ -283,10 +322,10 @@ func (dao *appTemplateBindingDao) Delete(kit *kit.Kit, g *table.AppTemplateBindi
 }
 
 // DeleteByAppIDWithTx delete one app template binding instance by app id with transaction.
-func (dao *appTemplateBindingDao) DeleteByAppIDWithTx(kit *kit.Kit, tx *gen.QueryTx, appID uint32) error {
+func (dao *appTemplateBindingDao) DeleteByAppIDWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, appID uint32) error {
 	m := tx.AppTemplateBinding
 	q := tx.AppTemplateBinding.WithContext(kit.Ctx)
-	_, err := q.Where(m.AppID.Eq(appID)).Delete()
+	_, err := q.Where(m.BizID.Eq(bizID), m.AppID.Eq(appID)).Delete()
 	return err
 }
 

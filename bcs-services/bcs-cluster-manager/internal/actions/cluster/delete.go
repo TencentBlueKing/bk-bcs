@@ -759,11 +759,10 @@ func (da *DeleteNodesAction) checkClusterNodeInfoDeletion() ([]string, error) {
 	}
 
 	nodeInnerIPs := make([]string, 0)
-	// filter nodeGroup nodes
+	// not need to filter nodeGroup nodes if only to clean data
 	for i := range nodes {
-		if nodes[i].NodeGroupID == "" {
-			nodeInnerIPs = append(nodeInnerIPs, nodes[i].InnerIP)
-		}
+		// if nodes[i].NodeGroupID == "" {}
+		nodeInnerIPs = append(nodeInnerIPs, nodes[i].InnerIP)
 	}
 
 	return nodeInnerIPs, nil

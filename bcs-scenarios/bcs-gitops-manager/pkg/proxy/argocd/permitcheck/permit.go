@@ -215,8 +215,8 @@ func (c *checker) CheckRepoCreate(ctx context.Context, repo *v1alpha1.Repository
 		return statusCode, errors.Wrapf(err, "get project permission failed")
 	}
 	if v := permits[projectID]; v == nil || !v[ProjectViewRSAction] {
-		return http.StatusForbidden, errors.Errorf("user not have '%s/%s' permission",
-			repo.Project, ProjectViewRSAction)
+		return http.StatusForbidden, errors.Errorf("user '%s' not have '%s/%s' permission",
+			ctxutils.User(ctx).GetUser(), repo.Project, ProjectViewRSAction)
 	}
 	return http.StatusOK, nil
 }
@@ -271,8 +271,8 @@ func (c *checker) UserAllPermissions(ctx context.Context, project string) ([]*Us
 		return nil, http.StatusInternalServerError, errors.Wrapf(err, "get project permission failed")
 	}
 	if v := allPermits[projectID]; v == nil || !v[ProjectViewRSAction] {
-		return nil, http.StatusBadRequest, errors.Errorf("user not have project_view "+
-			"permission for project '%s'", project)
+		return nil, http.StatusBadRequest, errors.Errorf("user '%s' not have project_view "+
+			"permission for project '%s'", ctxutils.User(ctx).GetUser(), project)
 	}
 
 	permitType := []RSType{ProjectRSType, ClusterRSType, RepoRSType, AppRSType, AppSetRSType}
@@ -297,11 +297,12 @@ func (c *checker) checkSingleResourcePermission(ctx context.Context, project str
 			action)
 	}
 	if _, ok := permit.ResourcePerms[resource]; !ok {
-		return nil, http.StatusBadRequest, errors.Errorf("not have permission for resource '%s'", resource)
+		return nil, http.StatusBadRequest, errors.Errorf("user '%s' not have permission for resource '%s'",
+			ctxutils.User(ctx).GetUser(), resource)
 	}
 	if !permit.ResourcePerms[resource][action] {
-		return nil, http.StatusForbidden, errors.Errorf("user not have '%s' permission for resource '%s - %s'",
-			action, string(resourceType), resource)
+		return nil, http.StatusForbidden, errors.Errorf("user '%s' not have '%s' permission for resource '%s/%s'",
+			ctxutils.User(ctx).GetUser(), action, string(resourceType), resource)
 	}
 	if len(resources) != 1 {
 		return nil, http.StatusInternalServerError, errors.Errorf("not get project when query permission")
@@ -329,7 +330,8 @@ func (c *checker) QueryUserPermissions(ctx context.Context, project string, rsTy
 		return nil, nil, http.StatusInternalServerError, errors.Wrapf(err, "get project permission failed")
 	}
 	if v := projPermits[projectID]; v == nil || !v[ProjectViewRSAction] {
-		return nil, nil, statusCode, errors.Errorf("not have project_view permission for project")
+		return nil, nil, statusCode, errors.Errorf("user '%s' not have project_view permission for project",
+			user.GetUser())
 	}
 	return c.queryUserPermissionSingleType(ctx, argoProject, rsType, rsNames, projPermits[projectID])
 }
@@ -638,13 +640,8 @@ func (c *checker) queryUserResourceForAppSets(ctx context.Context, projPermits m
 		},
 		ResourcePerms: make(map[string]map[RSAction]bool),
 	}
-	clusterCreate, err := c.getBCSClusterCreatePermission(ctx, common.GetBCSProjectID(argoProj.Annotations))
-	if err != nil {
-		return nil, nil, http.StatusInternalServerError, errors.Wrapf(err, "check cluster_create permission failed")
-	}
-	// 具备 cluster_create 权限用户默认具备操作 appset 权限
 	result.ActionPerms[AppSetUpdateRSAction] = projPermits[ProjectEditRSAction]
-	result.ActionPerms[AppSetDeleteRSAction] = clusterCreate
+	result.ActionPerms[AppSetDeleteRSAction] = projPermits[ProjectEditRSAction]
 
 	// 获取所有的 appset
 	appSetList, err := c.store.ListApplicationSets(ctx, &appsetpkg.ApplicationSetListQuery{
@@ -662,7 +659,7 @@ func (c *checker) queryUserResourceForAppSets(ctx context.Context, projPermits m
 		}
 		result.ResourcePerms[item.Name] = map[RSAction]bool{
 			AppSetViewRSAction:   true,
-			AppSetDeleteRSAction: clusterCreate,
+			AppSetDeleteRSAction: projPermits[ProjectEditRSAction],
 			// NOTE: 暂时维持 ProjectEdit 权限
 			AppSetUpdateRSAction: projPermits[ProjectEditRSAction],
 		}
@@ -715,7 +712,8 @@ func (c *checker) updateAppSetPermissions(ctx context.Context, project string,
 		return http.StatusInternalServerError, errors.Wrapf(err, "check cluster_create permission failed")
 	}
 	if !clusterCreate {
-		return http.StatusForbidden, errors.Errorf("user not have cluster_create permission")
+		return http.StatusForbidden, errors.Errorf("user '%s' not have cluster_create permission",
+			ctxutils.User(ctx).GetUser())
 	}
 
 	appSets := c.store.AllApplicationSets()

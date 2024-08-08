@@ -47,6 +47,10 @@ const (
 )
 
 var (
+	poolInsufficientQuotaMessage = fmt.Errorf("额度不足, 请联系BCS助手")
+)
+
+var (
 	// BuildCleanNodesInGroupTask: stepName and stepMethod
 	removeNodesFromClusterStep = cloudprovider.StepInfo{
 		StepMethod: fmt.Sprintf("%s-RemoveNodesFromClusterTask", cloudName),

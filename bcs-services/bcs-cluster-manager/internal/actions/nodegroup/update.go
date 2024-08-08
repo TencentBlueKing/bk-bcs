@@ -450,6 +450,21 @@ func (ua *UpdateAction) checkStatus() error {
 	return nil
 }
 
+func (ua *UpdateAction) checkAdjustGroupQuota() error {
+	if ua.req.GetAutoScaling().GetMaxSize() <= ua.group.GetAutoScaling().GetMaxSize() {
+		return nil
+	}
+
+	scaleUpNum := ua.req.GetAutoScaling().GetMaxSize() - ua.group.GetAutoScaling().GetMaxSize()
+	// check resource pool quota
+	err := checkNodeGroupResourceValidate(ua.cloud.GetCloudProvider(), ua.group, scaleUpNum)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // Handle handle update cluster nodeGroup
 func (ua *UpdateAction) Handle(
 	ctx context.Context, req *cmproto.UpdateNodeGroupRequest, resp *cmproto.UpdateNodeGroupResponse) {
@@ -474,6 +489,12 @@ func (ua *UpdateAction) Handle(
 
 	if err := ua.checkStatus(); err != nil {
 		ua.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
+		return
+	}
+
+	// check nodeGroup resize max quota
+	if err := ua.checkAdjustGroupQuota(); err != nil {
+		ua.setResp(common.BcsErrClusterManagerCheckCloudResourceQuotaErr, err.Error())
 		return
 	}
 
