@@ -831,14 +831,21 @@ func (c *configImport) uploadFileMetrics(bizID uint32, resourceID, directory str
 		resourceID, directory).Set(float64(directorySize))
 }
 
-func getUploadConfig(bizID uint32) (int64, int64) {
+func getUploadConfig(bizID uint32) (maxUploadContentLength, maxFileSize int64) {
+	// 默认值
+	resLimit := cc.ApiServer().FeatureFlags.ResourceLimit
+	maxUploadContentLength, maxFileSize = int64(resLimit.Default.MaxUploadContentLength),
+		int64(resLimit.Default.MaxFileSize)
 	if resLimit, ok := cc.ApiServer().FeatureFlags.ResourceLimit.Spec[fmt.Sprintf("%d", bizID)]; ok {
-		if resLimit.MaxUploadContentLength > 0 && resLimit.MaxFileSize > 0 {
-			return int64(resLimit.MaxUploadContentLength), int64(resLimit.MaxFileSize)
+		if resLimit.MaxUploadContentLength > 0 {
+			maxUploadContentLength = int64(resLimit.MaxUploadContentLength)
+		}
+		if resLimit.MaxFileSize > 0 {
+			maxFileSize = int64(resLimit.MaxFileSize)
 		}
 	}
-	resLimit := cc.ApiServer().FeatureFlags.ResourceLimit
-	return int64(resLimit.Default.MaxUploadContentLength), int64(resLimit.Default.MaxFileSize)
+
+	return
 }
 
 func getAppConfigCnt(bizID uint32) int {
