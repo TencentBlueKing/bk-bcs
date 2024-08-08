@@ -19,12 +19,14 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
+	istep "github.com/Tencent/bk-bcs/bcs-common/common/task/steps/iface"
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
 )
 
 // getTaskStateAndCurrentStep get task state and current step
 func getTaskStateAndCurrentStep(taskId, stepName string,
-	callBackFuncs map[string]CallbackInterface) (*State, *types.Step, error) {
+	callBackFuncs map[string]istep.CallbackInterface) (*State, *types.Step, error) {
 	task, err := GetGlobalStorage().GetTask(context.Background(), taskId)
 	if err != nil {
 		return nil, nil, fmt.Errorf("get task %s information failed, %s", taskId, err.Error())
@@ -40,7 +42,7 @@ func getTaskStateAndCurrentStep(taskId, stepName string,
 	}
 	step, err := state.isReadyToStep(stepName)
 	if err != nil {
-		return nil, nil, fmt.Errorf("task %s step %s is not ready, %s", taskId, stepName, err.Error())
+		return nil, nil, fmt.Errorf("task %s step %s is not ready, %w", taskId, stepName, err)
 	}
 
 	if step == nil {
@@ -63,7 +65,8 @@ func getTaskStateAndCurrentStep(taskId, stepName string,
 type State struct {
 	task        *types.Task
 	currentStep string
-	callBack    func(isSuccess bool, task *types.Task)
+
+	callBack func(isSuccess bool, task *types.Task)
 }
 
 // NewState return state relative to task
@@ -107,63 +110,24 @@ func (s *State) isReadyToStep(stepName string) (*types.Step, error) {
 	}
 
 	// not first time to execute current step
-	if stepName == s.task.GetCurrentStep() {
-		if curStep.GetStatus() == types.TaskStatusFailure {
-			curStep.AddRetryCount(1)
-		}
-
-		nowTime := time.Now()
-		curStep = curStep.SetStartTime(nowTime).
-			SetStatus(types.TaskStatusRunning).
-			SetMessage("step ready to run").
-			SetLastUpdate(nowTime)
-
-		// update Task in storage
-		if err := GetGlobalStorage().UpdateTask(context.Background(), s.task); err != nil {
-			return nil, err
-		}
-		return curStep, nil
+	if curStep.GetStatus() == types.TaskStatusFailure {
+		curStep.AddRetryCount(1)
 	}
 
-	// first time to execute step
-	for _, name := range s.task.StepSequence {
-		step, ok := s.task.GetStep(name)
-		if !ok {
-			return nil, fmt.Errorf("step %s is not exist", stepName)
-		}
+	nowTime := time.Now()
+	curStep = curStep.SetStartTime(nowTime).
+		SetStatus(types.TaskStatusRunning).
+		SetMessage("step ready to run").
+		SetLastUpdate(nowTime)
 
-		// find current step
-		if name == stepName {
-			// step already success
-			if step.GetStatus() == types.TaskStatusSuccess {
-				return nil, fmt.Errorf("task %s step %s already success", s.task.GetTaskID(), stepName)
-			}
-			// set current step
-			nowTime := time.Now()
-			s.task.SetCurrentStep(stepName)
-			step = step.SetStartTime(nowTime).
-				SetStatus(types.TaskStatusRunning).
-				SetMessage("step ready to run").
-				SetLastUpdate(nowTime)
+	s.task.SetCurrentStep(stepName).SetStatus(types.TaskStatusRunning)
 
-			// update Task in storage
-			if err := GetGlobalStorage().UpdateTask(context.Background(), s.task); err != nil {
-				return nil, fmt.Errorf("update task %s step %s status error", s.task.GetTaskID(), stepName)
-			}
-			return step, nil
-		}
-
-		// skip step if step allow skipOnFailed
-		if step.SkipOnFailed {
-			continue
-		}
-		// previous step execute failure
-		if step.GetStatus() != types.TaskStatusSuccess {
-			break
-		}
+	// update Task in storage
+	if err := GetGlobalStorage().UpdateTask(context.Background(), s.task); err != nil {
+		return nil, err
 	}
-	// previous step execute failure
-	return nil, fmt.Errorf("step %s is not ready", stepName)
+	return curStep, nil
+
 }
 
 // updateStepSuccess update step status to success
@@ -277,7 +241,12 @@ func (s *State) updateStepFailure(start time.Time, name string, stepErr error, t
 }
 
 func (s *State) isLastStep(stepName string) bool {
-	return stepName == s.task.StepSequence[len(s.task.StepSequence)-1]
+	count := len(s.task.Steps)
+	// 没有step默认返回false
+	if count == 0 {
+		return false
+	}
+	return stepName == s.task.Steps[count-1].Name
 }
 
 // GetCommonParams get common params by key

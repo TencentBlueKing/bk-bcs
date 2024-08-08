@@ -20,17 +20,16 @@ import (
 	"time"
 
 	"github.com/RichardKnop/machinery/v2"
-	"github.com/RichardKnop/machinery/v2/backends/mongo"
-	"github.com/RichardKnop/machinery/v2/brokers/amqp"
+	ibackend "github.com/RichardKnop/machinery/v2/backends/iface"
+	ibroker "github.com/RichardKnop/machinery/v2/brokers/iface"
 	"github.com/RichardKnop/machinery/v2/config"
-	"github.com/RichardKnop/machinery/v2/locks/eager"
+	ilock "github.com/RichardKnop/machinery/v2/locks/iface"
 	"github.com/RichardKnop/machinery/v2/tasks"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/task/store"
+
+	istep "github.com/Tencent/bk-bcs/bcs-common/common/task/steps/iface"
+	istore "github.com/Tencent/bk-bcs/bcs-common/common/task/stores/iface"
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
-	bcsmongo "github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 )
 
 const (
@@ -39,10 +38,6 @@ const (
 )
 
 // BrokerConfig config for go-machinery broker
-type BrokerConfig struct {
-	QueueAddress string `json:"address"`
-	Exchange     string `json:"exchange"`
-}
 
 // TaskManager manager for task server
 type TaskManager struct { // nolint
@@ -51,12 +46,11 @@ type TaskManager struct { // nolint
 	server     *machinery.Server
 	worker     *machinery.Worker
 
-	brokerConfig *BrokerConfig
-	mongoConfig  *bcsmongo.Options
-
 	workerNum     int
-	stepWorkers   map[string]StepWorkerInterface
-	callBackFuncs map[string]CallbackInterface
+	stepWorkers   map[string]istep.StepWorkerInterface
+	callBackFuncs map[string]istep.CallbackInterface
+	cfg           *ManagerConfig
+	store         istore.Store
 
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -64,12 +58,14 @@ type TaskManager struct { // nolint
 
 // ManagerConfig options for manager
 type ManagerConfig struct {
-	ModuleName  string
-	StepWorkers []StepWorkerInterface
-	CallBacks   []CallbackInterface
-	WorkerNum   int
-	Broker      *BrokerConfig
-	Backend     *bcsmongo.Options
+	ModuleName   string
+	CallBacks    []istep.CallbackInterface
+	WorkerNum    int
+	Broker       ibroker.Broker
+	Backend      ibackend.Backend
+	Lock         ilock.Lock
+	Store        istore.Store
+	ServerConfig *config.Config
 }
 
 // NewTaskManager create new manager
@@ -77,10 +73,12 @@ func NewTaskManager() *TaskManager {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	m := &TaskManager{
-		ctx:       ctx,
-		cancel:    cancel,
-		lock:      &sync.Mutex{},
-		workerNum: DefaultWorkerConcurrency,
+		ctx:         ctx,
+		cancel:      cancel,
+		lock:        &sync.Mutex{},
+		workerNum:   DefaultWorkerConcurrency,
+		stepWorkers: istep.GetRegisters(), // get all step workers
+		cfg:         &ManagerConfig{},
 	}
 	return m
 }
@@ -92,27 +90,26 @@ func (m *TaskManager) Init(cfg *ManagerConfig) error {
 		return err
 	}
 
+	if cfg.ServerConfig == nil {
+		cfg.ServerConfig = &config.Config{
+			ResultsExpireIn: 3600 * 48,
+			NoUnixSignals:   true,
+		}
+	}
+	m.cfg = cfg
+	m.store = cfg.Store
+
 	if m.stepWorkers == nil {
-		m.stepWorkers = make(map[string]StepWorkerInterface)
+		m.stepWorkers = make(map[string]istep.StepWorkerInterface)
 	}
 
 	if m.callBackFuncs == nil {
-		m.callBackFuncs = make(map[string]CallbackInterface)
+		m.callBackFuncs = make(map[string]istep.CallbackInterface)
 	}
 
-	m.brokerConfig = cfg.Broker
-	m.mongoConfig = cfg.Backend
 	m.moduleName = cfg.ModuleName
 	if cfg.WorkerNum != 0 {
 		m.workerNum = cfg.WorkerNum
-	}
-
-	// save step workers and check duplicate
-	for _, w := range cfg.StepWorkers {
-		if _, ok := m.stepWorkers[w.GetName()]; ok {
-			return fmt.Errorf("step [%s] already exists", w.GetName())
-		}
-		m.stepWorkers[w.GetName()] = w
 	}
 
 	// save callbacks and check duplicate
@@ -138,75 +135,22 @@ func (m *TaskManager) Init(cfg *ManagerConfig) error {
 	return nil
 }
 
+func (m *TaskManager) initGlobalStorage() error {
+	globalStorage = m.store
+	return nil
+}
+
 func (m *TaskManager) validate(c *ManagerConfig) error {
 	// module name check
 	if c.ModuleName == "" {
 		return fmt.Errorf("module name is empty")
 	}
 
-	// step worker check
-	if c.StepWorkers == nil || len(c.StepWorkers) == 0 {
-		return fmt.Errorf("step worker is empty")
-	}
-
-	// broker config check
-	if c.Broker == nil || c.Broker.Exchange == "" || c.Broker.QueueAddress == "" {
-		return fmt.Errorf("broker config is empty")
-	}
-
-	if c.Backend == nil {
-		return fmt.Errorf("backend config is empty")
-	}
-
-	return nil
-}
-
-func (m *TaskManager) initGlobalStorage() error {
-	mongoDB, err := bcsmongo.NewDB(m.mongoConfig)
-	if err != nil {
-		return fmt.Errorf("init mongo db failed, err %s", err.Error())
-	}
-	if err = mongoDB.Ping(); err != nil {
-		return fmt.Errorf("ping mongo db failed, err %s", err.Error())
-	}
-
-	if m.moduleName == "" {
-		return fmt.Errorf("module name is empty")
-	}
-	modelSet := store.NewModelSet(mongoDB, m.moduleName)
-
-	globalStorage = modelSet
 	return nil
 }
 
 func (m *TaskManager) initServer() error {
-	mongoCli, err := newMongoCli(m.mongoConfig)
-	if err != nil {
-		return err
-	}
-
-	serverConfig := &config.Config{
-		Broker:          m.brokerConfig.QueueAddress,
-		DefaultQueue:    m.brokerConfig.Exchange,
-		ResultsExpireIn: 3600 * 48,
-		MongoDB: &config.MongoDBConfig{
-			Client:   mongoCli,
-			Database: m.mongoConfig.Database,
-		},
-		AMQP: &config.AMQPConfig{
-			Exchange:      m.brokerConfig.Exchange,
-			ExchangeType:  "direct",
-			BindingKey:    m.brokerConfig.Exchange,
-			PrefetchCount: 50,
-		},
-	}
-	broker := amqp.New(serverConfig)
-	backend, err := mongo.New(serverConfig)
-	if err != nil {
-		return fmt.Errorf("task server init mongo backend failed, %s", err.Error())
-	}
-	lock := eager.New()
-	m.server = machinery.NewServer(serverConfig, broker, backend, lock)
+	m.server = machinery.NewServer(m.cfg.ServerConfig, m.cfg.Broker, m.cfg.Backend, m.cfg.Lock)
 
 	return nil
 }
@@ -238,26 +182,13 @@ func (m *TaskManager) initWorker(workerNum int) error {
 }
 
 // Run start worker
-func (m *TaskManager) Run() {
-	// start worker
-	go func() {
-		if err := m.worker.Launch(); err != nil {
-			errMsg := fmt.Sprintf("task server worker launch failed: %s", err.Error())
-			blog.Infof(errMsg)
-			return
-		}
-	}()
+func (m *TaskManager) Run() error {
+	return m.worker.Launch()
 }
 
 // GetTaskWithID get task by taskid
 func (m *TaskManager) GetTaskWithID(ctx context.Context, taskId string) (*types.Task, error) {
 	return GetGlobalStorage().GetTask(ctx, taskId)
-}
-
-// ListTask return tasks with conditions
-func (m *TaskManager) ListTask(ctx context.Context, cond *operator.Condition,
-	opt *store.ListOption) ([]types.Task, error) {
-	return GetGlobalStorage().ListTask(ctx, cond, opt)
 }
 
 // UpdateTask update task
@@ -297,32 +228,25 @@ func (m *TaskManager) RetryAt(task *types.Task, stepName string) error {
 // Dispatch dispatch task
 func (m *TaskManager) Dispatch(task *types.Task) error {
 	if err := GetGlobalStorage().CreateTask(context.Background(), task); err != nil {
-		fmt.Println(err)
 		return err
 	}
 
 	return m.dispatchAt(task, "")
 }
 
-func (m *TaskManager) transTaskToSignature(task *types.Task, stepNameBegin string) ([]*tasks.Signature, error) {
+func (m *TaskManager) transTaskToSignature(task *types.Task, stepNameBegin string) []*tasks.Signature {
 	var signatures []*tasks.Signature
 
-	for _, stepName := range task.StepSequence {
-		_, ok := task.Steps[stepName]
-		if !ok {
-			blog.Errorf("task[%s] transTaskToSignature failed: %s not exist", stepName)
-			return nil, fmt.Errorf("%s not exist", stepName)
-		}
-
+	for _, step := range task.Steps {
 		// skip steps which before begin step, empty str not skip any steps
-		if stepName != "" && stepNameBegin != "" && stepName != stepNameBegin {
+		if step.Name != "" && stepNameBegin != "" && step.Name != stepNameBegin {
 			continue
 		}
 
 		// build signature from step
 		signature := &tasks.Signature{
-			UUID: fmt.Sprintf("%s-%s", task.TaskID, stepName),
-			Name: stepName,
+			UUID: fmt.Sprintf("%s-%s", task.TaskID, step.Name),
+			Name: step.Name,
 			// two parameters: taskID, stepName
 			Args: []tasks.Arg{
 				{
@@ -331,7 +255,7 @@ func (m *TaskManager) transTaskToSignature(task *types.Task, stepNameBegin strin
 				},
 				{
 					Type:  "string",
-					Value: stepName,
+					Value: step.Name,
 				},
 			},
 			IgnoreWhenTaskNotRegistered: true,
@@ -340,16 +264,12 @@ func (m *TaskManager) transTaskToSignature(task *types.Task, stepNameBegin strin
 		signatures = append(signatures, signature)
 	}
 
-	return signatures, nil
+	return signatures
 }
 
 // dispatchAt task to machinery
 func (m *TaskManager) dispatchAt(task *types.Task, stepNameBegin string) error {
-	signatures, err := m.transTaskToSignature(task, stepNameBegin)
-	if err != nil {
-		blog.Errorf("dispatchAt task %s failed: %v", task.TaskID, err)
-		return err
-	}
+	signatures := m.transTaskToSignature(task, stepNameBegin)
 
 	m.lock.Lock()
 	defer m.lock.Unlock()
@@ -387,99 +307,106 @@ func (m *TaskManager) dispatchAt(task *types.Task, stepNameBegin string) error {
 // registerStepWorkers build machinery workers for all step worker
 func (m *TaskManager) registerStepWorkers() error {
 	allTasks := make(map[string]interface{}, 0)
-
-	for stepName, stepWorker := range m.stepWorkers {
-		do := stepWorker.DoWork
-
-		t := func(taskID string, stepName string) error {
-			defer RecoverPrintStack(fmt.Sprintf("%s-%s", taskID, stepName))
-
-			blog.Infof("start to execute task[%s] stepName[%s]", taskID, stepName)
-
-			start := time.Now()
-			state, step, err := getTaskStateAndCurrentStep(taskID, stepName, m.callBackFuncs)
-			if err != nil {
-				blog.Errorf("task[%s] stepName[%s] getTaskStateAndCurrentStep failed: %v",
-					taskID, stepName, err)
-				return err
-			}
-			// step executed success
-			if step == nil {
-				blog.Infof("task[%s] stepName[%s] already exec successful && skip",
-					taskID, stepName, err)
-				return nil
-			}
-
-			// step timeout
-			stepCtx, stepCancel := GetTimeOutCtx(m.ctx, step.MaxExecutionSeconds)
-			defer stepCancel()
-			// task timeout
-			t, _ := state.task.GetStartTime()
-			taskCtx, taskCancel := GetDeadlineCtx(m.ctx, &t, state.task.MaxExecutionSeconds)
-			defer taskCancel()
-
-			tmpCh := make(chan error, 1)
-			go func() {
-				defer RecoverPrintStack(fmt.Sprintf("%s-%s", taskID, stepName))
-				// call step worker
-				tmpCh <- do(state.task)
-			}()
-
-			select {
-			case errLocal := <-tmpCh:
-				blog.Infof("task %s step %s errLocal: %v", taskID, stepName, errLocal)
-
-				// update task & step status
-				if errLocal != nil {
-					if err := state.updateStepFailure(start, step.GetName(), errLocal, false); err != nil {
-						blog.Infof("task %s update step %s to failure failed: %s",
-							taskID, step.GetName(), errLocal.Error())
-					}
-				} else {
-					if err := state.updateStepSuccess(start, step.GetName()); err != nil {
-						blog.Infof("task %s update step %s to success failed: %s",
-							taskID, step.GetName(), err.Error())
-					}
-				}
-
-				if errLocal != nil && !step.GetSkipOnFailed() {
-					return errLocal
-				}
-
-				return nil
-			case <-stepCtx.Done():
-				retErr := fmt.Errorf("task %s step %s timeout", taskID, step.GetName())
-				errLocal := state.updateStepFailure(start, step.GetName(), retErr, false)
-				if errLocal != nil {
-					blog.Infof("update step %s to failure failed: %s", step.GetName(), errLocal.Error())
-				}
-				if !step.GetSkipOnFailed() {
-					return retErr
-				}
-				return nil
-			case <-taskCtx.Done():
-				// task timeOut
-				retErr := fmt.Errorf("task %s exec timeout", taskID)
-				errLocal := state.updateStepFailure(start, step.GetName(), retErr, true)
-				if errLocal != nil {
-					blog.Errorf("update step %s to failure failed: %s", step.GetName(), errLocal.Error())
-				}
-
-				return retErr
-			}
-		}
-
+	for stepName := range m.stepWorkers {
 		if _, ok := allTasks[stepName]; ok {
 			return fmt.Errorf("task %s already exists", stepName)
 		}
-		allTasks[stepName] = t
+		allTasks[stepName] = m.doWork
 	}
 	err := m.server.RegisterTasks(allTasks)
 	return err
 }
 
+// doWork machinery 通用处理函数
+func (m *TaskManager) doWork(taskID string, stepName string) error {
+	defer RecoverPrintStack(fmt.Sprintf("%s-%s", taskID, stepName))
+
+	stepWorker, ok := m.stepWorkers[stepName]
+	if !ok {
+		return fmt.Errorf("step worker %s not found", stepName)
+	}
+
+	blog.Infof("start to execute task[%s] stepName[%s]", taskID, stepName)
+
+	start := time.Now()
+	state, step, err := getTaskStateAndCurrentStep(taskID, stepName, m.callBackFuncs)
+	if err != nil {
+		blog.Errorf("task[%s] stepName[%s] getTaskStateAndCurrentStep failed: %v",
+			taskID, stepName, err)
+		return err
+	}
+	// step executed success
+	if step == nil {
+		blog.Infof("task[%s] stepName[%s] already exec successful && skip",
+			taskID, stepName, err)
+		return nil
+	}
+
+	// step timeout
+	stepCtx, stepCancel := GetTimeOutCtx(m.ctx, step.MaxExecutionSeconds)
+	defer stepCancel()
+
+	// task timeout
+	t, _ := state.task.GetStartTime()
+	taskCtx, taskCancel := GetDeadlineCtx(m.ctx, &t, state.task.MaxExecutionSeconds)
+	defer taskCancel()
+
+	tmpCh := make(chan error, 1)
+	go func() {
+		// call step worker
+		work := istep.NewWork(state.GetTask(), step)
+		tmpCh <- stepWorker.DoWork(stepCtx, work)
+	}()
+
+	select {
+	case errLocal := <-tmpCh:
+		blog.Infof("task %s step %s errLocal: %v", taskID, stepName, errLocal)
+
+		// update task & step status
+		if errLocal != nil {
+			if err := state.updateStepFailure(start, step.GetName(), errLocal, false); err != nil {
+				blog.Infof("task %s update step %s to failure failed: %s",
+					taskID, step.GetName(), errLocal.Error())
+			}
+		} else {
+			if err := state.updateStepSuccess(start, step.GetName()); err != nil {
+				blog.Infof("task %s update step %s to success failed: %s",
+					taskID, step.GetName(), err.Error())
+			}
+		}
+
+		if errLocal != nil && !step.GetSkipOnFailed() {
+			return errLocal
+		}
+
+		return nil
+
+	case <-stepCtx.Done():
+		retErr := fmt.Errorf("task %s step %s timeout", taskID, step.GetName())
+		errLocal := state.updateStepFailure(start, step.GetName(), retErr, false)
+		if errLocal != nil {
+			blog.Infof("update step %s to failure failed: %s", step.GetName(), errLocal.Error())
+		}
+		if !step.GetSkipOnFailed() {
+			return retErr
+		}
+		return nil
+
+	case <-taskCtx.Done():
+		// task timeOut
+		retErr := fmt.Errorf("task %s exec timeout", taskID)
+		errLocal := state.updateStepFailure(start, step.GetName(), retErr, true)
+		if errLocal != nil {
+			blog.Errorf("update step %s to failure failed: %s", step.GetName(), errLocal.Error())
+		}
+
+		return retErr
+	}
+}
+
 // Stop running
 func (m *TaskManager) Stop() {
+	// should set NoUnixSignals
 	m.worker.Quit()
 	m.cancel()
 }

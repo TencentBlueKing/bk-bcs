@@ -14,15 +14,24 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/task"
-	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
+	"github.com/RichardKnop/machinery/v2/backends/mongo"
+	"github.com/RichardKnop/machinery/v2/config"
 	bcsmongo "github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/task"
+	etcdbroker "github.com/Tencent/bk-bcs/bcs-common/common/task/brokers/etcd"
+	etcdlock "github.com/Tencent/bk-bcs/bcs-common/common/task/locks/etcd"
+	istep "github.com/Tencent/bk-bcs/bcs-common/common/task/steps/iface"
+	mongostore "github.com/Tencent/bk-bcs/bcs-common/common/task/stores/mongo"
+	mysqlstore "github.com/Tencent/bk-bcs/bcs-common/common/task/stores/mysql"
+	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
 )
 
 /*
@@ -38,43 +47,96 @@ import (
 
 var (
 	moduleName   = "example"
-	queueAddress = "amqp://guest:guest@127.0.0.1:5672"
+	queueAddress = "amqp://guest:guest@127.0.0.1:5672" // nolint
 	mongoHosts   = []string{"127.0.0.1:27017"}
+	mysqlDSN     = "root:%s@tcp(127.0.0.1:3306)/bk-env-manager-1?charset=utf8mb4&parseTime=True&loc=Local"
 )
 
+// nolint
 func main() {
-	btm := task.NewTaskManager()
+	pwd := os.Getenv("MONGO_PASSWORD")
+	if pwd == "" {
+		pwd = "12345"
+	}
 
+	mongoOpts := &bcsmongo.Options{
+		Hosts:                 mongoHosts,
+		ConnectTimeoutSeconds: 10,
+		Database:              "cluster",
+		Username:              "root",
+		Password:              pwd,
+		MaxPoolSize:           0,
+		MinPoolSize:           0,
+	}
+	mongoDB, err := bcsmongo.NewDB(mongoOpts)
+	if err != nil {
+		panic(err)
+	}
+	mongoCli, err := mongostore.NewMongoCli(mongoOpts)
+	if err != nil {
+		panic(err)
+	}
+
+	ctx := context.Background()
+	serverConfig := &config.Config{
+		DefaultQueue:    "machinery_tasks",
+		Broker:          "http://127.0.0.1:2379",
+		Lock:            "http://127.0.0.1:2379",
+		ResultsExpireIn: 3600 * 48,
+		MongoDB: &config.MongoDBConfig{
+			Client:   mongoCli,
+			Database: mongoOpts.Database,
+		},
+	}
+	broker, err := etcdbroker.New(ctx, serverConfig)
+	if err != nil {
+		panic(err)
+	}
+	lock, err := etcdlock.New(ctx, serverConfig, 3)
+	if err != nil {
+		panic(lock)
+	}
+	backend, err := mongo.New(serverConfig)
+	if err != nil {
+		panic(err)
+	}
+	store := mongostore.New(mongoDB, moduleName)
+
+	if mysqlPwd := os.Getenv("MYSQL_PASSWORD"); mysqlPwd != "" {
+		dns := fmt.Sprintf(mysqlDSN, mysqlPwd)
+		store, err = mysqlstore.New(dns)
+		if err != nil {
+			panic(err)
+		}
+		err = store.EnsureTable(ctx)
+		if err != nil {
+			panic(err)
+		}
+
+	}
+
+	btm := task.NewTaskManager()
 	config := &task.ManagerConfig{
 		ModuleName: moduleName,
 		WorkerNum:  100,
-		Broker: &task.BrokerConfig{
-			QueueAddress: queueAddress,
-			Exchange:     "bcs-cluster-manager",
-		},
-		Backend: &bcsmongo.Options{
-			Hosts:                 mongoHosts,
-			ConnectTimeoutSeconds: 10,
-			Database:              "cluster",
-			Username:              "admin",
-			Password:              "123456",
-			MaxPoolSize:           0,
-			MinPoolSize:           0,
-		},
+		Broker:     broker,
+		Backend:    backend,
+		Lock:       lock,
+		Store:      store,
 	}
 	// register step worker && callback
-	config.StepWorkers = registerSteps()
 	config.CallBacks = registerCallbacks()
 
 	// init task manager
-	err := btm.Init(config)
+	err = btm.Init(config)
 	if err != nil {
-		fmt.Println(err)
-		return
+		panic(err)
 	}
 
 	// run task manager
-	btm.Run()
+	go func() {
+		_ = btm.Run()
+	}()
 
 	// wait task server run
 	time.Sleep(3 * time.Second)
@@ -110,8 +172,9 @@ func main() {
 	fmt.Printf("Got OS shutdown signal, shutting down server gracefully...")
 }
 
-func registerSteps() []task.StepWorkerInterface {
-	steps := make([]task.StepWorkerInterface, 0)
+// nolint
+func registerSteps() []istep.StepWorkerInterface {
+	steps := make([]istep.StepWorkerInterface, 0)
 
 	sum := NewSumStep()
 	steps = append(steps, sum)
@@ -122,8 +185,8 @@ func registerSteps() []task.StepWorkerInterface {
 	return steps
 }
 
-func registerCallbacks() []task.CallbackInterface {
-	callbacks := make([]task.CallbackInterface, 0)
+func registerCallbacks() []istep.CallbackInterface {
+	callbacks := make([]istep.CallbackInterface, 0)
 	callbacks = append(callbacks, &callBack{})
 
 	return callbacks
