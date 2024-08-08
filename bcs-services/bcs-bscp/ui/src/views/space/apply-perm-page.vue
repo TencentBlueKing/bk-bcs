@@ -18,7 +18,7 @@
   import useGlobalStore from '../../store/global';
 
   const { applyPermUrl, applyPermResource } = storeToRefs(useGlobalStore());
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
 
   const noSpaceViewPerm = computed(() => {
     const index = applyPermResource.value.findIndex((item) => item.action === 'find_business_resource');
@@ -28,7 +28,10 @@
   const permTitle = computed(() => {
     if (applyPermResource.value.length > 0) {
       // 暂时只展示最上层权限名称
-      return `${t('无')}${applyPermResource.value[0].action_name}${t('权限')}`;
+      const resource = applyPermResource.value[0];
+      // 权限名称未做国际化，用action字段代替
+      const permissionName = locale.value === 'en' ? ` ${resource.action} ` : resource.action_name;
+      return `${t('无')}${permissionName}${t('权限')}`;
     }
     return t('无访问权限');
   });

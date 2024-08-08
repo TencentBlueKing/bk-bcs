@@ -98,6 +98,8 @@ export interface IPackagesCitedByApps {
   template_set_name: string;
   app_id: number;
   app_name: string;
+  app_exceeds_limit?: boolean;
+  template_set_exceeds_limit?: boolean;
 }
 
 // 模板被服务绑定或套餐引用计数详情

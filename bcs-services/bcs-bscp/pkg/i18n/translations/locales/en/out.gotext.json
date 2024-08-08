@@ -194,6 +194,13 @@
             "fuzzy": true
         },
         {
+            "id": "client ids is empty",
+            "message": "client ids is empty",
+            "translation": "client ids is empty",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
             "id": "batch delete config items failed",
             "message": "batch delete config items failed",
             "translation": "batch delete config items failed",
@@ -323,6 +330,57 @@
             "fuzzy": true
         },
         {
+            "id": "get reference template set under this app failed, err: {Err}",
+            "message": "get reference template set under this app failed, err: {Err}",
+            "translation": "get reference template set under this app failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "list template sets by template set ids failed, err: {Err}",
+            "message": "list template sets by template set ids failed, err: {Err}",
+            "translation": "list template sets by template set ids failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "remove the template set bound to the app failed, err: {Err}",
+            "message": "remove the template set bound to the app failed, err: {Err}",
+            "translation": "remove the template set bound to the app failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
             "id": "hook name {Name} already exists",
             "message": "hook name {Name} already exists",
             "translation": "hook name {Name} already exists",
@@ -335,6 +393,242 @@
                     "underlyingType": "string",
                     "argNum": 1,
                     "expr": "req.Spec.Name"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "get excluded hook failed, err: {Err}",
+            "message": "get excluded hook failed, err: {Err}",
+            "translation": "get excluded hook failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "retrieve the referenced script failed, err: {Err}",
+            "message": "retrieve the referenced script failed, err: {Err}",
+            "translation": "retrieve the referenced script failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "get excluded kv failed, err: {Err}",
+            "message": "get excluded kv failed, err: {Err}",
+            "translation": "get excluded kv failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "get app template bindings by template set ids, err: {Err}",
+            "message": "get app template bindings by template set ids, err: {Err}",
+            "translation": "get app template bindings by template set ids, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "batch update app template binding's failed, err: {Err}",
+            "message": "batch update app template binding's failed, err: {Err}",
+            "translation": "batch update app template binding's failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "batch add templates to template sets failed, err: {Err}",
+            "message": "batch add templates to template sets failed, err: {Err}",
+            "translation": "batch add templates to template sets failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "get template set data failed, err: {Err}",
+            "message": "get template set data failed, err: {Err}",
+            "translation": "get template set data failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "there is no template file under this template set",
+            "message": "there is no template file under this template set",
+            "translation": "there is no template file under this template set",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "delete template from template sets failed, err: {Err}, rid: {Rid}",
+            "message": "delete template from template sets failed, err: {Err}, rid: {Rid}",
+            "translation": "delete template from template sets failed, err: {Err}, rid: {Rid}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                },
+                {
+                    "id": "Rid",
+                    "string": "%[2]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 2,
+                    "expr": "kt.Rid"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "list templates by tuple failed, err: {Err}",
+            "message": "list templates by tuple failed, err: {Err}",
+            "translation": "list templates by tuple failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "list app template bindings by app ids failed, err: {Err}",
+            "message": "list app template bindings by app ids failed, err: {Err}",
+            "translation": "list app template bindings by app ids failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "get template set failed, err: {Err}",
+            "message": "get template set failed, err: {Err}",
+            "translation": "get template set failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "list apps by app ids failed, err: {Err}",
+            "message": "list apps by app ids failed, err: {Err}",
+            "translation": "list apps by app ids failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "count the number of app configs failed, err: {Err}",
+            "message": "count the number of app configs failed, err: {Err}",
+            "translation": "count the number of app configs failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
                 }
             ],
             "fuzzy": true

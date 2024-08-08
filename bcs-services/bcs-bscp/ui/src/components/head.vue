@@ -77,11 +77,11 @@
           <span :class="['bk-bscp-icon', locale === 'zh-cn' ? 'icon-lang-cn' : 'icon-lang-en']"></span>
         </div>
         <template #content>
-          <div class="international-item" @click="switchLanguage('en')">
-            <span class="bk-bscp-icon icon-lang-en"></span> English
-          </div>
           <div class="international-item" @click="switchLanguage('zh-cn')">
             <span class="bk-bscp-icon icon-lang-cn"></span> 中文
+          </div>
+          <div class="international-item" @click="switchLanguage('en')">
+            <span class="bk-bscp-icon icon-lang-en"></span> English
           </div>
         </template>
       </bk-popover>
@@ -610,17 +610,18 @@
     cursor: pointer;
   }
   .international {
-    width: 40px;
-    height: 40px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 20px;
+    cursor: pointer;
     &:hover {
-      background-color: #fff;
+      background-color: rgba(150, 162, 185, 0.3);
       span {
-        color: #3a84ff;
+        color: #ffffff;
       }
     }
   }

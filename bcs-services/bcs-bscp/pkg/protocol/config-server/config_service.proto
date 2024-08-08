@@ -400,20 +400,20 @@ service Config {
   }
   rpc BatchUpdateTemplatePermissions(BatchUpdateTemplatePermissionsReq) returns (BatchUpdateTemplatePermissionsResp) {
     option (google.api.http) = {
-      post: "/api/v1/config/biz/{biz_id}/templates/batch_update_templates_permissions"
+      post: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_set/{template_set_id}/templates/batch_update_templates_permissions"
       body: "*"
     };
   }
   rpc AddTmplsToTmplSets(AddTmplsToTmplSetsReq) returns (AddTmplsToTmplSetsResp) {
     option (google.api.http) = {
-      post: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/"
+      post: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_set/{template_set_id}/"
             "templates/add_to_template_sets"
       body: "*"
     };
   }
   rpc DeleteTmplsFromTmplSets(DeleteTmplsFromTmplSetsReq) returns (DeleteTmplsFromTmplSetsResp) {
     option (google.api.http) = {
-      post: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/"
+      post: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_set/{template_set_id}/"
             "templates/delete_from_template_sets"
       body: "*"
     };
@@ -592,6 +592,11 @@ option (google.api.http) = {
               "{binding_id}/template_sets"
     };
   }
+  rpc RemoveAppBoundTmplSet(RemoveAppBoundTmplSetReq) returns (RemoveAppBoundTmplSetResp) {
+    option (google.api.http) = {
+      delete: "/api/v1/config/biz/{biz_id}/apps/{app_id}/template_set/{template_set_id}"
+    };
+  }
   rpc CheckAppTemplateBinding(CheckAppTemplateBindingReq) returns (CheckAppTemplateBindingResp) {
     option (google.api.http) = {
       post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/template_bindings/"
@@ -671,6 +676,13 @@ option (google.api.http) = {
     option (google.api.http) = {
       get: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/"
            "template_sets/bound_unnamed_app_details"
+    };
+  }
+  rpc CheckTemplateSetReferencesApps(CheckTemplateSetReferencesAppsReq) returns (CheckTemplateSetReferencesAppsResp) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/"
+            "template_sets/check_template_set_references_apps"
+      body: "*"
     };
   }
   rpc ListTmplSetBoundNamedApps(ListTmplSetBoundNamedAppsReq) returns (ListTmplSetBoundNamedAppsResp) {
@@ -1238,6 +1250,7 @@ message BatchUpsertConfigItemsReq {
     string privilege = 8;
     string sign = 9;
     uint64 byte_size = 10;
+    string md5 = 11;
   }
   uint32 biz_id = 1;
   uint32 app_id = 2;
@@ -1522,6 +1535,7 @@ message BatchDeleteHookReq {
   uint32 biz_id = 1;
   repeated uint32 ids = 2;
   bool force = 3;
+  bool exclusion_operation = 4;
 }
 
 message UpdateHookReq {
@@ -1553,6 +1567,7 @@ message ListHooksResp {
   }
   uint32 count = 1;
   repeated Detail details = 2;
+  uint32 exclusion_count = 3;  // 排除禁用的数量
 }
 
 message ListHookTagsReq {
@@ -1823,6 +1838,7 @@ message BatchDeleteTemplateReq {
   uint32 template_space_id = 2;
   string template_ids = 3;
   bool force = 4;
+  bool exclusion_operation = 5;
 }
 
 message BatchDeleteTemplateResp {}
@@ -1858,6 +1874,7 @@ message BatchUpsertTemplatesReq {
     string privilege = 9;
     string sign = 10;
     uint64 byte_size = 11;
+    string md5 = 12;
   }
   uint32 biz_id = 1;
   uint32 template_space_id = 2;
@@ -1875,7 +1892,11 @@ message BatchUpdateTemplatePermissionsReq {
   string user = 3;
   string user_group = 4;
   string privilege = 5;
-  repeated uint32 app_ids = 6;
+  repeated uint32 app_ids = 6;    // 服务ID
+  bool exclusion_operation = 7;   // 是否排除操作
+  uint32 template_set_id = 8;     // 套餐ID, 具体操作的哪个套餐
+  bool no_set_specified = 9;      // 是否未指定套餐, 区分全部套餐和未指定套餐
+  uint32 template_space_id = 10;  // 模板空间ID
 }
 
 message BatchUpdateTemplatePermissionsResp {
@@ -1887,6 +1908,9 @@ message AddTmplsToTmplSetsReq {
   uint32 template_space_id = 2;
   repeated uint32 template_ids = 3;
   repeated uint32 template_set_ids = 4;
+  bool exclusion_operation = 5;
+  uint32 template_set_id = 6;  // 套餐ID, 具体操作的哪个套餐
+  bool no_set_specified = 7;   // 是否未指定套餐, 区分全部套餐和未指定套餐
 }
 
 message AddTmplsToTmplSetsResp {}
@@ -1896,6 +1920,9 @@ message DeleteTmplsFromTmplSetsReq {
   uint32 template_space_id = 2;
   repeated uint32 template_ids = 3;
   repeated uint32 template_set_ids = 4;
+  bool exclusion_operation = 5;
+  uint32 template_set_id = 6;  // 套餐ID, 具体操作的哪个套餐
+  bool no_set_specified = 7;   // 是否未指定套餐, 区分全部套餐和未指定套餐
 }
 
 message DeleteTmplsFromTmplSetsResp {}
@@ -2245,6 +2272,14 @@ message DeleteAppBoundTmplSetsReq {
 
 message DeleteAppBoundTmplSetsResp {}
 
+message RemoveAppBoundTmplSetReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  uint32 template_set_id = 3;
+}
+
+message RemoveAppBoundTmplSetResp {}
+
 message CheckAppTemplateBindingReq {
   uint32 biz_id = 1;
   uint32 app_id = 2;
@@ -2406,6 +2441,29 @@ message ListMultiTmplSetBoundUnnamedAppsReq {
 message ListMultiTmplSetBoundUnnamedAppsResp {
   uint32 count = 1;
   repeated pbtbr.MultiTemplateSetBoundUnnamedAppDetail details = 2;
+}
+
+message CheckTemplateSetReferencesAppsReq {
+  message Item {
+    uint32 id = 1;
+    string name = 2;
+  }
+  uint32 biz_id = 1;
+  uint32 template_space_id = 2;
+  repeated uint32 template_set_ids = 3;
+  repeated Item items = 4;
+}
+
+message CheckTemplateSetReferencesAppsResp {
+  message Item {
+    uint32 template_set_id = 1;
+    string template_set_name = 2;
+    uint32 app_id = 3;
+    string app_name = 4;
+    bool app_exceeds_limit = 5;
+    bool template_set_exceeds_limit = 6;
+  }
+  repeated Item items = 1;
 }
 
 message ListTmplSetBoundNamedAppsReq {
@@ -2721,6 +2779,7 @@ message ListKvsReq {
 message ListKvsResp {
   uint32 count = 1;
   repeated pbkv.Kv details = 2;
+  uint32 exclusion_count = 3;  // 排除删除后的数量
 }
 
 message DeleteKvReq {
@@ -2734,12 +2793,14 @@ message DeleteKvResp {}
 message BatchDeleteBizResourcesReq {
   uint32 biz_id = 1;
   repeated uint32 ids = 2;
+  bool exclusion_operation = 3;
 }
 
 message BatchDeleteAppResourcesReq {
   uint32 biz_id = 1;
   uint32 app_id = 2;
   repeated uint32 ids = 3;
+  bool exclusion_operation = 4;
 }
 
 message BatchDeleteResp {
@@ -2814,6 +2875,7 @@ message ListClientsResp {
   }
   uint32 count = 1;
   repeated Item details = 2;
+  uint32 exclusion_count = 9;  // 排除离线的数量
 }
 
 message ListClientEventsReq {
@@ -2843,6 +2905,7 @@ message RetryClientsReq {
   uint32 app_id = 2;
   repeated uint32 client_ids = 3;
   bool all = 4;
+  bool exclusion_operation = 5;
 }
 
 message RetryClientsResp {}
@@ -2922,6 +2985,7 @@ message CompareConfigItemConflictsResp {
     bool is_exist = 4;
     string signature = 5;
     uint64 byte_size = 6;
+    string md5 = 7;
   }
   message TemplateConfig {
     message TemplateRevisionDetail {

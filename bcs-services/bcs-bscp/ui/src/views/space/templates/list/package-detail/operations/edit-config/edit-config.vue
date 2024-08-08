@@ -163,7 +163,7 @@
   };
 
   const handleBeforeClose = async () => {
-    if (isFormChanged.value) {
+    if (isFormChanged.value || fileUploading.value) {
       const result = await useModalCloseConfirmation();
       return result;
     }

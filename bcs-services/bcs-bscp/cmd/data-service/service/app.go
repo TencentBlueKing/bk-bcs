@@ -200,7 +200,7 @@ func (s *Service) DeleteApp(ctx context.Context, req *pbds.DeleteAppReq) (*pbbas
 
 func (s *Service) deleteAppRelatedResources(grpcKit *kit.Kit, req *pbds.DeleteAppReq, tx *gen.QueryTx) error {
 	// delete app template binding
-	if err := s.dao.AppTemplateBinding().DeleteByAppIDWithTx(grpcKit, tx, req.Id); err != nil {
+	if err := s.dao.AppTemplateBinding().DeleteByAppIDWithTx(grpcKit, tx, req.GetBizId(), req.Id); err != nil {
 		logs.Errorf("delete app template binding failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return err
 	}

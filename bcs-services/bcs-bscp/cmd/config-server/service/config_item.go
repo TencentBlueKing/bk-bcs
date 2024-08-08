@@ -106,13 +106,6 @@ func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbcs.BatchUps
 
 	items := make([]*pbds.BatchUpsertConfigItemsReq_ConfigItem, 0, len(req.Items))
 	for _, item := range req.Items {
-		// validate if file content uploaded.
-		metadata, err := s.client.provider.Metadata(grpcKit, item.Sign)
-		if err != nil {
-			logs.Errorf("validate file content uploaded failed, err: %v, rid: %s", err, grpcKit.Rid)
-			return nil, err
-		}
-
 		items = append(items, &pbds.BatchUpsertConfigItemsReq_ConfigItem{
 			ConfigItemAttachment: &pbci.ConfigItemAttachment{
 				BizId: req.BizId,
@@ -133,7 +126,7 @@ func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbcs.BatchUps
 			ContentSpec: &pbcontent.ContentSpec{
 				Signature: item.Sign,
 				ByteSize:  item.ByteSize,
-				Md5:       metadata.Md5,
+				Md5:       item.Md5,
 			},
 		})
 	}
@@ -689,6 +682,7 @@ func (s *Service) CompareConfigItemConflicts(ctx context.Context, req *pbcs.Comp
 			IsExist:        v.GetIsExist(),
 			Signature:      v.GetSignature(),
 			ByteSize:       v.GetByteSize(),
+			Md5:            v.GetMd5(),
 		})
 	}
 
@@ -749,5 +743,31 @@ func (s *Service) GetTemplateAndNonTemplateCICount(ctx context.Context, req *pbc
 	return &pbcs.GetTemplateAndNonTemplateCICountResp{
 		ConfigItemCount:         result.GetConfigItemCount(),
 		TemplateConfigItemCount: result.GetTemplateConfigItemCount(),
-	}, err
+	}, nil
+}
+
+// RemoveAppBoundTmplSet 移除服务绑定的套餐
+func (s *Service) RemoveAppBoundTmplSet(ctx context.Context, req *pbcs.RemoveAppBoundTmplSetReq) (
+	*pbcs.RemoveAppBoundTmplSetResp, error) {
+
+	kit := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.Update, ResourceID: req.AppId}, BizID: req.BizId},
+	}
+	if err := s.authorizer.Authorize(kit, res...); err != nil {
+		return nil, err
+	}
+
+	_, err := s.client.DS.RemoveAppBoundTmplSet(kit.RpcCtx(), &pbds.RemoveAppBoundTmplSetReq{
+		BizId:         req.BizId,
+		AppId:         req.AppId,
+		TemplateSetId: req.TemplateSetId,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &pbcs.RemoveAppBoundTmplSetResp{}, nil
 }
