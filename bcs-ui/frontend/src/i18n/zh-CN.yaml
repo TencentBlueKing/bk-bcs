@@ -329,6 +329,7 @@ generic:
     copyAll: 复制全部
     retry: 重试
     skip: 跳过
+    detail: 详情
   label:
     key: 键
     value: 值
@@ -379,6 +380,8 @@ generic:
     stop: 停止
     basicConfig: 基本配置
     abnormal: 异常
+    resourceName: 资源名称
+    resourceID: 资源ID
   status:
     part_failure: 部分失败
     support: 支持
@@ -530,6 +533,7 @@ cluster:
     setClusterVar: 设置变量
     skipTask: 确认跳过当前步骤
     retryTask: 确认重试任务
+    opRecord: 操作记录
   button:
     useSharedCluster: 使用共享集群
     addCluster: 添加集群

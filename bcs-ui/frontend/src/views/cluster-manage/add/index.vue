@@ -219,7 +219,7 @@ export default defineComponent({
         subTitle: $i18n.t('cluster.create.type.kubeconfig.subTitle'),
         desc: $i18n.t('cluster.create.type.kubeconfig.desc'),
         type: 'kubeconfig',
-        disabled: _INTERNAL_.value,
+        // disabled: _INTERNAL_.value,
       },
     ]);
     const cardGroupList = computed(() => [
