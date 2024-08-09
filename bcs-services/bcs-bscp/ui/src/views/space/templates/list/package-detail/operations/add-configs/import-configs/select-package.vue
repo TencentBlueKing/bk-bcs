@@ -42,15 +42,18 @@
         </bk-table-column>
         <bk-table-column :label="t('使用此套餐的服务')">
           <template #default="{ row }">
-            <div v-if="row.app_exceeds_limit" class="app-info" @click="goToConfigPage(row.app_id)">
-              <div v-overflow-title class="name-text">{{ row.app_name }}</div>
-              <InfoLine class="warn-icon" v-bk-tooltips="{ content: '上传后，该服务配置文件数量将超过最大限制' }" />
-              <LinkToApp class="link-icon" :id="row.app_id" />
+            <div v-if="row.app_id">
+              <div v-if="row.app_exceeds_limit" class="app-info" @click="goToConfigPage(row.app_id)">
+                <div v-overflow-title class="name-text">{{ row.app_name }}</div>
+                <InfoLine class="warn-icon" v-bk-tooltips="{ content: '上传后，该服务配置文件数量将超过最大限制' }" />
+                <LinkToApp class="link-icon" :id="row.app_id" />
+              </div>
+              <div v-else-if="row.app_id" class="app-info" @click="goToConfigPage(row.app_id)">
+                <div v-overflow-title class="name-text">{{ row.app_name }}</div>
+                <LinkToApp class="link-icon" :id="row.app_id" />
+              </div>
             </div>
-            <div v-else-if="row.app_id" class="app-info" @click="goToConfigPage(row.app_id)">
-              <div v-overflow-title class="name-text">{{ row.app_name }}</div>
-              <LinkToApp class="link-icon" :id="row.app_id" />
-            </div>
+            <span v-else>--</span>
           </template>
         </bk-table-column>
       </bk-table>
