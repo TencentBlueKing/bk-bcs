@@ -224,7 +224,7 @@
   // 是否提供跨页全选功能
   const crossPageSelect = computed(() => {
     return (
-      isCategorizedView.value || (pagination.value.limit < groupList.value.length && selecTableData.value.length !== 0)
+      !isCategorizedView.value && pagination.value.limit < groupList.value.length && selecTableData.value.length !== 0
     );
   });
   const { selectType, selections, renderSelection, renderTableTip, handleRowCheckChange, handleClearSelection } =
