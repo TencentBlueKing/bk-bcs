@@ -176,8 +176,71 @@ func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbds.BatchUps
 		logs.Errorf("check and compare config items failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
+
 	now := time.Now().UTC()
 	tx := s.dao.GenQuery().Begin()
+
+	// 3. 清空草稿区
+	if err = s.clearDraftArea(grpcKit, tx, req.GetBizId(), req.GetAppId(), toDelete, req.GetReplaceAll()); err != nil {
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
+		}
+		return nil, err
+	}
+
+	// 4. 验证是否超出该服务限制
+	binding, err := s.dao.AppTemplateBinding().GetAppTemplateBindingByAppIDWithTx(grpcKit, tx, req.BizId, req.AppId)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
+		}
+		return nil, errf.Errorf(errf.DBOpFailed,
+			i18n.T(grpcKit, fmt.Sprintf("get template info for service binding failed, err: %s", err.Error())))
+	}
+	if err = s.verifyAppLimitHasBeenExceeded(grpcKit, tx, req.BizId, req.AppId, binding,
+		req.GetBindings(), len(toCreate)); err != nil {
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
+		}
+		return nil, err
+	}
+
+	// 5. 处理变量以及新增或编辑
+	vars, err := s.checkConfigItemVars(grpcKit, tx, req.BizId, req.AppId, req.GetVariables())
+	if err != nil {
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
+		}
+		return nil, err
+	}
+	if vars != nil {
+		if err = s.dao.AppTemplateVariable().UpsertWithTx(grpcKit, tx, vars); err != nil {
+			if rErr := tx.Rollback(); rErr != nil {
+				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
+			}
+			return nil, err
+		}
+	}
+
+	// 6. 处理服务和模板绑定的关系以及编辑或新增绑定关系
+	mergedTemplateSet, err := s.mergeCurrentWithHistoryTemplateSet(grpcKit, req.GetBizId(), req.GetAppId(),
+		binding, req.GetBindings())
+	if err != nil {
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
+		}
+		return nil, err
+	}
+	if mergedTemplateSet != nil {
+		if err = s.dao.AppTemplateBinding().UpsertWithTx(grpcKit, tx, mergedTemplateSet); err != nil {
+			if rErr := tx.Rollback(); rErr != nil {
+				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
+			}
+			return nil, err
+		}
+	}
+
+	// 7. 添加非模板配置文件以及文件内容
 	createIds, e := s.doBatchCreateConfigItems(grpcKit, tx, toCreate, now, req.BizId, req.AppId)
 	if e != nil {
 		if rErr := tx.Rollback(); rErr != nil {
@@ -201,79 +264,160 @@ func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbds.BatchUps
 		return nil, e
 	}
 
-	vars, err := s.checkConfigItemVars(grpcKit, req.BizId, req.AppId, req.GetVariables(), req.ReplaceAll)
-	if err != nil {
-		return nil, err
-	}
-	if vars != nil {
-		if err = s.dao.AppTemplateVariable().UpsertWithTx(grpcKit, tx, vars); err != nil {
-			if rErr := tx.Rollback(); rErr != nil {
-				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
-			}
-			return nil, err
-		}
-	}
-
-	// 清空模板绑定关系
-	if req.GetReplaceAll() && len(req.GetBindings()) == 0 {
-		if errA := s.dao.AppTemplateBinding().DeleteByAppIDWithTx(grpcKit, tx, req.GetBizId(), req.GetAppId()); err != nil {
-			if rErr := tx.Rollback(); rErr != nil {
-				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
-			}
-			return nil, errA
-		}
-	}
-
-	atb, err := s.checkTemplateBindings(grpcKit, req.BizId, req.AppId, req.GetBindings(), req.ReplaceAll)
-	if err != nil {
-		return nil, err
-	}
-
-	if atb != nil {
-		if err := s.dao.AppTemplateBinding().UpsertWithTx(grpcKit, tx, atb); err != nil {
-			if rErr := tx.Rollback(); rErr != nil {
-				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
-			}
-			return nil, err
-		}
-	}
-
-	if req.ReplaceAll {
-		// if replace all,delete config items not in batch upsert request.
-		if e := s.doBatchDeleteConfigItems(grpcKit, tx, toDelete, req.BizId, req.AppId); e != nil {
-			if rErr := tx.Rollback(); rErr != nil {
-				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
-			}
-			return nil, e
-		}
-	}
-
-	// validate config items count.
-	if e := s.dao.ConfigItem().ValidateAppCINumber(grpcKit, tx, req.BizId, req.AppId); e != nil {
-		logs.Errorf("validate config items count failed, err: %v, rid: %s", e, grpcKit.Rid)
-		if rErr := tx.Rollback(); rErr != nil {
-			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
-		}
-		return nil, e
-	}
-
 	if e := tx.Commit(); e != nil {
 		logs.Errorf("commit transaction failed, err: %v, rid: %s", e, grpcKit.Rid)
 		return nil, e
 	}
-	// 返回创建和更新的ID
-	mergedID := tools.MergeAndDeduplicate(createIds, updateIds)
 
-	return &pbds.BatchUpsertConfigItemsResp{Ids: mergedID}, nil
+	return &pbds.BatchUpsertConfigItemsResp{Ids: tools.MergeAndDeduplicate(createIds, updateIds)}, nil
+}
+
+// 清空草稿区
+func (s *Service) clearDraftArea(kit *kit.Kit, tx *gen.QueryTx, bizID, appID uint32,
+	deleteConfigItemIDs []uint32, replaceAll bool) error {
+	if !replaceAll {
+		return nil
+	}
+
+	// 1. 删除模板绑定关系
+	if err := s.dao.AppTemplateBinding().DeleteByAppIDWithTx(kit, tx, bizID, appID); err != nil {
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kit.Rid)
+		}
+		return errf.Errorf(errf.DBOpFailed,
+			i18n.T(kit, "delete one app template binding instance by app id failed, err: %s", err))
+	}
+
+	// 2. 删除配置项数据
+	if e := s.doBatchDeleteConfigItems(kit, tx, deleteConfigItemIDs, bizID, appID); e != nil {
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kit.Rid)
+		}
+		return errf.Errorf(errf.DBOpFailed, i18n.T(kit, "batch create contents failed, err: %s", e))
+	}
+
+	// 3. 删除变量数据
+	if e := s.dao.AppTemplateVariable().DeleteWithTx(kit, tx, bizID, appID); e != nil {
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kit.Rid)
+		}
+		return errf.Errorf(errf.DBOpFailed,
+			i18n.T(kit, "delete one app template variable failed, err: %s", e))
+	}
+
+	return nil
+}
+
+// 验证是否已超过服务限制
+// nolint:goconst
+// currentBinding 表示当前未命名版本绑定的套餐数据
+// bindings 待提交的套餐数据
+// createConfigItemNum 待创建的配置项数量
+func (s *Service) verifyAppLimitHasBeenExceeded(kit *kit.Kit, tx *gen.QueryTx, bizID, appID uint32,
+	currentBinding *table.AppTemplateBinding, bindings []*pbds.BatchUpsertConfigItemsReq_TemplateBinding,
+	createConfigItemNum int) error {
+
+	// 待提交的套餐数据
+	betectedTemplateSetIDs := map[uint32]bool{}
+	templateSetIDs := []uint32{}
+	for _, v := range bindings {
+		templateSetIDs = append(templateSetIDs, v.GetTemplateBinding().GetTemplateSetId())
+		betectedTemplateSetIDs[v.GetTemplateBinding().GetTemplateSetId()] = true
+	}
+
+	// 从历史版本或者其他版本导入时关联的套餐
+	templateSet, err := s.dao.TemplateSet().ListByIDs(kit, templateSetIDs)
+	if err != nil {
+		return err
+	}
+	historyTemplateSetNum := 0
+	for _, v := range templateSet {
+		historyTemplateSetNum += len(v.Spec.TemplateIDs)
+	}
+
+	// 当前未命名版本的关联套餐数，但不包含历史或其他历史版本套餐数
+	currentTemplateSetNum := 0
+	if currentBinding != nil {
+		for _, binding := range currentBinding.Spec.Bindings {
+			if !betectedTemplateSetIDs[binding.TemplateSetID] {
+				currentTemplateSetNum += len(binding.TemplateRevisions)
+			}
+		}
+	}
+
+	// 获取当前未命名版本配置项数量
+	configItemCount, err := s.dao.ConfigItem().GetConfigItemCountWithTx(kit, tx, bizID, appID)
+	if err != nil {
+		return err
+	}
+
+	appConfigCnt := getAppConfigCnt(bizID)
+
+	app, err := s.dao.App().GetByID(kit, appID)
+	if err != nil {
+		return errf.Errorf(errf.DBOpFailed, i18n.T(kit, "list apps by app ids failed, err: %s", err))
+	}
+
+	// 只有文件类型的才能绑定套餐
+	if app.Spec.ConfigType != table.File {
+		return errf.Errorf(errf.DBOpFailed, i18n.T(kit, "app %s is not file type", app.Spec.Name))
+	}
+
+	// 非模板配置数+当前套餐配置数+历史套餐配置数+待创建的配置项数
+	if int(configItemCount)+currentTemplateSetNum+historyTemplateSetNum+createConfigItemNum > appConfigCnt {
+		return errf.New(errf.InvalidParameter,
+			fmt.Sprintf("the total number of app %s's config items(including template and non-template)"+
+				"exceeded the limit %d", app.Spec.Name, appConfigCnt))
+	}
+
+	return nil
 }
 
 // 检测变量
-func (s *Service) checkConfigItemVars(kt *kit.Kit, bizID, appID uint32, variables []*pbtv.TemplateVariableSpec,
-	replaceAll bool) (*table.AppTemplateVariable, error) {
-	if len(variables) == 0 {
-		return nil, nil
+func (s *Service) checkConfigItemVars(kt *kit.Kit, tx *gen.QueryTx, bizID, appID uint32,
+	variables []*pbtv.TemplateVariableSpec) (*table.AppTemplateVariable, error) {
+
+	// 获取当前未命名版本中的变量
+	currentVariable, err := s.dao.AppTemplateVariable().GetTemplateVariableWithTx(kt, tx, bizID, appID)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
 	}
-	res := new(table.AppTemplateVariable)
+
+	if len(variables) == 0 {
+		return currentVariable, nil
+	}
+
+	res := &table.AppTemplateVariable{}
+
+	currentTemplateVars := make(map[string]*table.TemplateVariableSpec, 0)
+
+	if currentVariable != nil {
+		res.ID = currentVariable.ID
+		res.Attachment = currentVariable.Attachment
+		res.Revision = &table.Revision{
+			Creator:   currentVariable.Revision.Creator,
+			Reviser:   kt.User,
+			CreatedAt: currentVariable.Revision.CreatedAt,
+			UpdatedAt: time.Now().UTC(),
+		}
+
+		for _, v := range currentVariable.Spec.Variables {
+			currentTemplateVars[v.Name] = v
+		}
+	} else {
+		res.Attachment = &table.AppTemplateVariableAttachment{
+			BizID: bizID,
+			AppID: appID,
+		}
+		res.Revision = &table.Revision{
+			Creator:   kt.User,
+			Reviser:   kt.User,
+			CreatedAt: time.Now().UTC(),
+			UpdatedAt: time.Now().UTC(),
+		}
+	}
+
+	// 待提交的变量
 	newVars := make(map[string]*table.TemplateVariableSpec, 0)
 	for _, vars := range variables {
 		newVars[vars.Name] = &table.TemplateVariableSpec{
@@ -283,53 +427,11 @@ func (s *Service) checkConfigItemVars(kt *kit.Kit, bizID, appID uint32, variable
 			Memo:       vars.Memo,
 		}
 	}
+
+	mergeTemplateVars := mergeTemplateVariables(currentTemplateVars, newVars)
+
 	variableMap := make([]*table.TemplateVariableSpec, 0)
-
-	for _, item := range newVars {
-		variableMap = append(variableMap, item)
-	}
-
-	// 获取原有的变量
-	variable, err := s.dao.AppTemplateVariable().Get(kt, bizID, appID)
-	if err != nil {
-		return nil, err
-	}
-
-	res.Attachment = &table.AppTemplateVariableAttachment{
-		BizID: bizID,
-		AppID: appID,
-	}
-	if variable != nil {
-		res.ID = variable.ID
-		res.Revision = &table.Revision{
-			Reviser:   kt.User,
-			UpdatedAt: time.Now().UTC(),
-		}
-	} else {
-		res.Revision = &table.Revision{
-			Reviser:   kt.User,
-			Creator:   kt.User,
-			CreatedAt: time.Now().UTC(),
-		}
-	}
-
-	if replaceAll || variable == nil {
-		res.Spec = &table.AppTemplateVariableSpec{
-			Variables: variableMap,
-		}
-		return res, nil
-	}
-
-	// 覆盖值等信息
-	resultMap := make(map[string]*table.TemplateVariableSpec, 0)
-	for _, v := range variable.Spec.Variables {
-		resultMap[v.Name] = v
-	}
-	for _, v := range newVars {
-		resultMap[v.Name] = v
-	}
-
-	for _, item := range resultMap {
+	for _, item := range mergeTemplateVars {
 		variableMap = append(variableMap, item)
 	}
 
@@ -340,28 +442,60 @@ func (s *Service) checkConfigItemVars(kt *kit.Kit, bizID, appID uint32, variable
 	return res, nil
 }
 
-// 检测模板绑定
-func (s *Service) checkTemplateBindings(kt *kit.Kit, bizID, appID uint32,
-	bindings []*pbds.BatchUpsertConfigItemsReq_TemplateBinding,
-	replaceAll bool) (*table.AppTemplateBinding, error) {
+func mergeTemplateVariables(map1, map2 map[string]*table.TemplateVariableSpec) map[string]*table.TemplateVariableSpec {
+	// 创建一个新map存储合并结果
+	mergedMap := make(map[string]*table.TemplateVariableSpec)
+
+	// 先将第一组数据拷贝到合并结果中
+	for k, v := range map1 {
+		mergedMap[k] = v
+	}
+
+	// 再将第二组数据拷贝到合并结果中，如果键相同则覆盖
+	for k, v := range map2 {
+		mergedMap[k] = v
+	}
+
+	return mergedMap
+}
+
+// 将当前模板与历史模板集合并
+func (s *Service) mergeCurrentWithHistoryTemplateSet(kit *kit.Kit, bizID, appID uint32,
+	currentBinding *table.AppTemplateBinding, bindings []*pbds.BatchUpsertConfigItemsReq_TemplateBinding) (
+	*table.AppTemplateBinding, error) {
 
 	if len(bindings) == 0 {
-		return nil, nil
+		return currentBinding, nil
 	}
-	// 对比原有数据和现有数据
+
 	appTemplateBinding := &table.AppTemplateBinding{
-		Revision:   &table.Revision{Reviser: kt.User, Creator: kt.User},
-		Attachment: &table.AppTemplateBindingAttachment{BizID: bizID, AppID: appID},
-		Spec:       &table.AppTemplateBindingSpec{},
+		Spec: &table.AppTemplateBindingSpec{},
 	}
 
-	// 通过bizID和appID找到 AppTemplateBinding ID
-	oldATB, err := s.dao.AppTemplateBinding().GetAppTemplateBindingByAppID(kt, bizID, appID)
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, errf.Errorf(errf.DBOpFailed,
-			i18n.T(kt, fmt.Sprintf("get template info for service binding failed %s", err.Error())))
+	// 当前未命名版本存在套餐关系时更新否则新增
+	if currentBinding != nil {
+		appTemplateBinding.ID = currentBinding.ID
+		appTemplateBinding.Attachment = currentBinding.Attachment
+		appTemplateBinding.Revision = &table.Revision{
+			Creator:   currentBinding.Revision.Creator,
+			Reviser:   kit.User,
+			CreatedAt: currentBinding.Revision.CreatedAt,
+			UpdatedAt: time.Now().UTC(),
+		}
+	} else {
+		appTemplateBinding.Attachment = &table.AppTemplateBindingAttachment{
+			BizID: bizID,
+			AppID: appID,
+		}
+		appTemplateBinding.Revision = &table.Revision{
+			Creator:   kit.User,
+			Reviser:   kit.User,
+			CreatedAt: time.Now().UTC(),
+			UpdatedAt: time.Now().UTC(),
+		}
 	}
 
+	// 格式化待提交的数据把 pb 结构转换成 table 结构， 方便做对比
 	templateSpaceIDs, templateSetIDs := []uint32{}, []uint32{}
 	templateRevisions := make(table.TemplateBindings, 0)
 	for _, v := range bindings {
@@ -381,10 +515,10 @@ func (s *Service) checkTemplateBindings(kt *kit.Kit, bizID, appID uint32,
 		})
 	}
 
-	if !replaceAll && oldATB != nil {
-		appTemplateBinding.ID = oldATB.ID
+	// 未命名版本有关联套餐时处理当前套餐和待提交套餐的数据，否则只处理待提交数据
+	if currentBinding != nil {
 		templateSetIDsExist := make(map[uint32]bool)
-		for _, v := range oldATB.Spec.Bindings {
+		for _, v := range currentBinding.Spec.Bindings {
 			templateSetIDsExist[v.TemplateSetID] = true
 		}
 		currentTemplateSetID := []uint32{}
@@ -393,24 +527,22 @@ func (s *Service) checkTemplateBindings(kt *kit.Kit, bizID, appID uint32,
 				currentTemplateSetID = append(currentTemplateSetID, v.TemplateSetID)
 			}
 		}
-		unBindingTemplateSets, err := s.getUnBindingTemplateSets(kt, currentTemplateSetID)
+		unBindingTemplateSets, err := s.getUnBindingTemplateSets(kit, currentTemplateSetID)
 		if err != nil {
 			return nil, err
 		}
-		oldATB.Spec.Bindings = append(oldATB.Spec.Bindings, unBindingTemplateSets...)
-		appTemplateBinding.Spec = mergeTemplateSets(templateRevisions, oldATB.Spec.Bindings)
+		currentBinding.Spec.Bindings = append(currentBinding.Spec.Bindings, unBindingTemplateSets...)
+		appTemplateBinding.Spec = mergeTemplateSets(templateRevisions, currentBinding.Spec.Bindings)
 		appTemplateBinding.Spec.TemplateSpaceIDs = tools.MergeAndDeduplicate(tools.RemoveDuplicates(templateSpaceIDs),
-			tools.RemoveDuplicates(oldATB.Spec.TemplateSpaceIDs))
+			tools.RemoveDuplicates(currentBinding.Spec.TemplateSpaceIDs))
 	} else {
-		unBindingTemplateSets, err := s.getUnBindingTemplateSets(kt, templateSetIDs)
+		// 获取待提交套餐下的当前套餐数据
+		// 待提交版本以前关联的套餐数据可能被更新过
+		unBindingTemplateSets, err := s.getUnBindingTemplateSets(kit, templateSetIDs)
 		if err != nil {
 			return nil, err
 		}
 		appTemplateBinding.Spec = mergeTemplateSets(templateRevisions, unBindingTemplateSets)
-		appTemplateBinding.Spec.TemplateSpaceIDs = tools.RemoveDuplicates(templateSpaceIDs)
-	}
-
-	if replaceAll {
 		appTemplateBinding.Spec.TemplateSpaceIDs = tools.RemoveDuplicates(templateSpaceIDs)
 	}
 
@@ -597,7 +729,7 @@ func (s *Service) doBatchCreateConfigItems(kt *kit.Kit, tx *gen.QueryTx,
 	for i, item := range toCreate {
 		createIds = append(createIds, toCreateConfigItems[i].ID)
 		toCreateContent = append(toCreateContent, &table.Content{
-			Spec: item.ContentSpec.ContentSpec(),
+			Spec: item.GetContentSpec().ContentSpec(),
 			Attachment: &table.ContentAttachment{
 				BizID:        bizID,
 				AppID:        appID,
@@ -608,6 +740,7 @@ func (s *Service) doBatchCreateConfigItems(kt *kit.Kit, tx *gen.QueryTx,
 			},
 		})
 	}
+
 	if err := s.dao.Content().BatchCreateWithTx(kt, tx, toCreateContent); err != nil {
 		logs.Errorf("batch create config items failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
@@ -674,7 +807,7 @@ func (s *Service) doBatchUpdateConfigItemContent(kt *kit.Kit, tx *gen.QueryTx,
 	toCreateContents := []*table.Content{}
 	for _, item := range toUpdate {
 		content := &table.Content{
-			Spec: item.ContentSpec.ContentSpec(),
+			Spec: item.GetContentSpec().ContentSpec(),
 			Attachment: &table.ContentAttachment{
 				BizID:        bizID,
 				AppID:        appID,
@@ -687,6 +820,7 @@ func (s *Service) doBatchUpdateConfigItemContent(kt *kit.Kit, tx *gen.QueryTx,
 		}
 		toCreateContents = append(toCreateContents, content)
 	}
+
 	if err := s.dao.Content().BatchCreateWithTx(kt, tx, toCreateContents); err != nil {
 		logs.Errorf("batch create contents failed, err: %v, rid: %s", err, kt.Rid)
 		return err
@@ -859,7 +993,7 @@ func (s *Service) GetConfigItem(ctx context.Context, req *pbds.GetConfigItemReq)
 }
 
 // ListConfigItems list config items by query condition.
-// nolint:funlen
+// nolint:funlen,gocyclo
 func (s *Service) ListConfigItems(ctx context.Context, req *pbds.ListConfigItemsReq) (*pbds.ListConfigItemsResp,
 	error) {
 	grpcKit := kit.FromGrpcContext(ctx)
@@ -988,7 +1122,8 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbds.ListConfigItems
 // 检测冲突，非模板配置之间对比、非模板配置对比套餐模板配置、空间套餐之间的对比
 // 1. 先把非配置模板 path+name 添加到 existingPaths 中
 // 2. 把所有关联的空间套餐配置都添加到 existingPaths 中
-func (s *Service) compareTemplateConfConflicts(grpcKit *kit.Kit, bizID, appID uint32, existingPaths []string) (uint32, map[string]bool, error) {
+func (s *Service) compareTemplateConfConflicts(grpcKit *kit.Kit, bizID, appID uint32, existingPaths []string) (
+	uint32, map[string]bool, error) {
 
 	tmplRevisions, err := s.ListAppBoundTmplRevisions(grpcKit.RpcCtx(), &pbds.ListAppBoundTmplRevisionsReq{
 		BizId:      bizID,
