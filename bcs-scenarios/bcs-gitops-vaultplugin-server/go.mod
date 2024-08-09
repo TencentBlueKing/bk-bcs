@@ -40,7 +40,6 @@ require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20231124101643-0d25188774c2
 	github.com/Tencent/bk-bcs/bcs-common/pkg/otel v0.0.0-20231124101643-0d25188774c2
 	github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager v0.0.0-20231124101643-0d25188774c2
-	github.com/agiledragon/gomonkey/v2 v2.11.0
 	github.com/argoproj-labs/argocd-vault-plugin v1.17.0
 	github.com/argoproj/argo-cd/v2 v2.9.2
 	github.com/avast/retry-go v3.0.0+incompatible
@@ -51,6 +50,7 @@ require (
 	github.com/prometheus/client_golang v1.17.0
 	github.com/spf13/viper v1.17.0
 	github.com/stretchr/testify v1.8.4
+	github.com/xhd2015/xgo/runtime v1.0.15
 	k8s.io/api v0.28.3
 	k8s.io/apimachinery v0.28.3
 	k8s.io/client-go v0.28.3
