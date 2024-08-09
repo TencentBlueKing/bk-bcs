@@ -260,7 +260,7 @@ func (dao *hookDao) ListHookReferences(kit *kit.Kit, opt *types.ListHookReferenc
 
 	for i := range details {
 		if details[i].ReleaseID == 0 {
-			details[i].ReleaseName = "未命名版本"
+			details[i].ReleaseName = i18n.T(kit, "Unnamed Version")
 		}
 	}
 
