@@ -15,6 +15,7 @@ bcsTokenNotifyTitle="${bcsTokenNotifyTitle:-TKEx(蓝鲸容器平台) API 密钥�
 bcsTokenNotifyContent="${bcsTokenNotifyContent:-你好，{{ .Username \}\}:<br>您的 API 密钥过期时间为: {{ .ExpiredAt \}\}，如有需要请前往 API 密钥页面及时续期。}" \
 bcsTokenNotifyESBEmailPath="${bcsTokenNotifyESBEmailPath:-/api/c/compapi/v2/cmsi/send_mail/}" \
 bcsTokenNotifyESBRtxPath="${bcsTokenNotifyESBRtxPath:-/api/c/compapi/v2/cmsi/send_rtx/}" \
+enableTokenSync="${enableTokenSync:-false}" \
 envsubst | tee ${module}.json
 fi
 

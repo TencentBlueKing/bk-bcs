@@ -83,11 +83,12 @@ type UserMgrConfig struct {
 
 	VerifyClientTLS bool
 
-	DSN            string
-	RedisDSN       string
-	BootStrapUsers []options.BootStrapUser
-	TKE            options.TKEOptions
-	PeerToken      string
+	DSN             string
+	RedisDSN        string
+	EnableTokenSync bool
+	BootStrapUsers  []options.BootStrapUser
+	TKE             options.TKEOptions
+	PeerToken       string
 
 	IAMConfig  options.IAMConfig
 	EtcdConfig registry.CMDOptions

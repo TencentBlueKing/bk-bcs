@@ -32,6 +32,7 @@ type UserManagerOptions struct {
 	JWTKeyConfig
 
 	VerifyClientTLS bool            `json:"verify_client_tls" value:"false" usage:"verify client when brings up a tls server" mapstructure:"verify_client_tls"`
+	EnableTokenSync bool            `json:"enable_token_sync" value:"" usage:"enable sync token to redis periodically"`
 	RedisDSN        string          `json:"redis_dsn" value:"" usage:"dsn for connect to redis"`
 	DSN             string          `json:"mysql_dsn" value:"" usage:"dsn for connect to mysql"`
 	BootStrapUsers  []BootStrapUser `json:"bootstrap_users"`
