@@ -15,7 +15,6 @@ package service
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strconv"
 	"strings"
 	"sync"
@@ -1248,6 +1247,7 @@ func (s *Service) ListLatestTmplBoundUnnamedApps(ctx context.Context,
 }
 
 // CheckTemplateSetReferencesApps 检测模板套餐绑定服务是否超出
+// nolint:funlen
 func (s *Service) CheckTemplateSetReferencesApps(ctx context.Context, req *pbds.CheckTemplateSetReferencesAppsReq) (
 	*pbds.CheckTemplateSetReferencesAppsResp, error) {
 	kit := kit.FromGrpcContext(ctx)
@@ -1269,15 +1269,12 @@ func (s *Service) CheckTemplateSetReferencesApps(ctx context.Context, req *pbds.
 		return nil, err
 	}
 
-	fmt.Println(req.BizId, req.TemplateSetIds)
-
 	exists := map[uint32]bool{}
 	for _, v := range req.TemplateSetIds {
 		exists[v] = true
 	}
 
 	tmplSetAppsMap := make(map[uint32][]uint32)
-
 	appIds := []uint32{}
 	for _, binding := range bindings {
 		appIds = append(appIds, binding.Attachment.AppID)
@@ -1285,6 +1282,13 @@ func (s *Service) CheckTemplateSetReferencesApps(ctx context.Context, req *pbds.
 			if exists[v] {
 				tmplSetAppsMap[v] = append(tmplSetAppsMap[v], binding.Attachment.AppID)
 			}
+		}
+	}
+
+	for _, setId := range req.TemplateSetIds {
+		_, ok := tmplSetAppsMap[setId]
+		if !ok {
+			tmplSetAppsMap[setId] = []uint32{}
 		}
 	}
 
@@ -1323,13 +1327,21 @@ func (s *Service) CheckTemplateSetReferencesApps(ctx context.Context, req *pbds.
 
 	results := make([]*pbds.CheckTemplateSetReferencesAppsResp_Item, 0)
 	for setId, item := range tmplSetAppsMap {
-		for _, appId := range item {
+		if len(item) > 0 {
+			for _, appId := range item {
+				results = append(results, &pbds.CheckTemplateSetReferencesAppsResp_Item{
+					TemplateSetId:           setId,
+					TemplateSetName:         templateSetNames[setId],
+					AppId:                   appId,
+					AppName:                 appNames[appId],
+					AppExceedsLimit:         appReferenceTmplSet[appId],
+					TemplateSetExceedsLimit: templateSet[setId],
+				})
+			}
+		} else {
 			results = append(results, &pbds.CheckTemplateSetReferencesAppsResp_Item{
 				TemplateSetId:           setId,
 				TemplateSetName:         templateSetNames[setId],
-				AppId:                   appId,
-				AppName:                 appNames[appId],
-				AppExceedsLimit:         appReferenceTmplSet[appId],
 				TemplateSetExceedsLimit: templateSet[setId],
 			})
 		}
