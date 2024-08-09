@@ -16,6 +16,7 @@
         :is-tpl="true"
         :bk-biz-id="spaceId"
         :id="currentTemplateSpace"
+        :file-size-limit="spaceFeatureFlags.RESOURCE_LIMIT.maxFileSize"
         @change="handleFormChange" />
     </div>
     <div class="action-btns">
@@ -45,7 +46,7 @@
 
   const templateStore = useTemplateStore();
 
-  const { spaceId } = storeToRefs(useGlobalStore());
+  const { spaceId, spaceFeatureFlags } = storeToRefs(useGlobalStore());
   const { currentTemplateSpace } = storeToRefs(useTemplateStore());
   const { t } = useI18n();
 

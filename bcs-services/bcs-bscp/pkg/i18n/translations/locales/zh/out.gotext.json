@@ -629,6 +629,11 @@
             "translation": "脚本不存在"
         },
         {
+            "id": "Unnamed Version",
+            "message": "Unnamed Version",
+            "translation": "未命名版本"
+        },
+        {
             "id": "default_val {DefaultVal} is not a number type",
             "message": "default_val {DefaultVal} is not a number type",
             "translation": "default_val {DefaultVal} 不是数字类型",

@@ -10,17 +10,5 @@
  * limitations under the License.
  */
 
-// Package task is a package for task management
-package task
-
-import istore "github.com/Tencent/bk-bcs/bcs-common/common/task/stores/iface"
-
-var (
-	// globalStorage used for state and task manager
-	globalStorage istore.Store
-)
-
-// GetGlobalStorage for cluster manager storage tools
-func GetGlobalStorage() istore.Store {
-	return globalStorage
-}
+// Package bksops defines the step implemented.
+package bksops

@@ -39,6 +39,7 @@ func init() {
 }
 
 var messageKeyToIndex = map[string]int{
+	"Unnamed Version":    51,
 	"app %d not found":   19,
 	"attachment not set": 45,
 	"batch add templates to template sets failed, err: %s":                                31,
@@ -54,7 +55,7 @@ var messageKeyToIndex = map[string]int{
 	"decompress file failed, exceeding the maximum file limit threshold of %d":            10,
 	"decompress the file. The size of file %s exceeds the maximum limit of %s":            4,
 	"decompression failed %s":                                                             5,
-	"default_val %s is not a number type":                                                 51,
+	"default_val %s is not a number type":                                                 52,
 	"delete template from template sets failed, err: %v, rid: %s":                         34,
 	"detecting file conflicts failed %s":                                                  7,
 	"get app template bindings by template set ids, err: %s":                              29,
@@ -87,14 +88,14 @@ var messageKeyToIndex = map[string]int{
 	"the length of hook ids is %d, it must be within the range of [1,%d]":              15,
 	"the length of template variable ids is %d, it must be within the range of [1,%d]": 18,
 	"there is no template file under this template set":                                33,
-	"unsupported variable type: %s":                                                    52,
+	"unsupported variable type: %s":                                                    53,
 	"upload completed":                                                                 8,
 	"upload completed, %d failed":                                                      9,
 	"upload failed, please make sure the file size does not exceed %s":                 11,
 	"upload file failed %s":                                                            6,
 }
 
-var enIndex = []uint32{ // 54 elements
+var enIndex = []uint32{ // 55 elements
 	// Entry 0 - 1F
 	0x00000000, 0x0000000f, 0x00000026, 0x00000044,
 	0x0000006c, 0x000000bb, 0x000000d6, 0x000000ef,
@@ -110,10 +111,10 @@ var enIndex = []uint32{ // 54 elements
 	0x00000710, 0x00000741, 0x00000755, 0x00000766,
 	0x0000077b, 0x00000788, 0x0000079b, 0x000007ac,
 	0x000007ff, 0x00000822, 0x000008a4, 0x000008b0,
-	0x000008d7, 0x000008f8,
-} // Size: 240 bytes
+	0x000008c0, 0x000008e7, 0x00000908,
+} // Size: 244 bytes
 
-const enData string = "" + // Size: 2296 bytes
+const enData string = "" + // Size: 2312 bytes
 	"\x02id is required\x02read file failed %[1]s\x02create directory failed " +
 	"%[1]s\x02create temporary directory failed %[1]s\x02decompress the file." +
 	" The size of file %[1]s exceeds the maximum limit of %[2]s\x02decompress" +
@@ -147,10 +148,10 @@ const enData string = "" + // Size: 2296 bytes
 	"with prefix bk_bscp_ (ignore case)\x02invalid name, length should <= 128" +
 	"\x02invalid name: %[1]s, only allows to include english、numbers、undersco" +
 	"re (_), and must start with prefix bk_bscp_ (ignore case)\x02hook is nil" +
-	"\x02default_val %[1]s is not a number type\x02unsupported variable type:" +
-	" %[1]s"
+	"\x02Unnamed Version\x02default_val %[1]s is not a number type\x02unsuppo" +
+	"rted variable type: %[1]s"
 
-var zhIndex = []uint32{ // 54 elements
+var zhIndex = []uint32{ // 55 elements
 	// Entry 0 - 1F
 	0x00000000, 0x0000000f, 0x00000029, 0x00000049,
 	0x00000069, 0x000000b6, 0x000000d1, 0x000000ec,
@@ -166,8 +167,8 @@ var zhIndex = []uint32{ // 54 elements
 	0x0000064e, 0x00000678, 0x00000687, 0x00000694,
 	0x000006a9, 0x000006bd, 0x000006d7, 0x000006ef,
 	0x00000743, 0x00000764, 0x000007df, 0x000007ef,
-	0x00000814, 0x00000835,
-} // Size: 240 bytes
+	0x000007ef, 0x00000814, 0x00000835,
+} // Size: 244 bytes
 
 const zhData string = "" + // Size: 2101 bytes
 	"\x02id不能为空\x02读取文件失败: %[1]s\x02创建文件目录失败: %[1]s\x02创建临时目录失败: %[1]s\x02解压文" +
@@ -188,4 +189,4 @@ const zhData string = "" + // Size: 2101 bytes
 	"\x02无效名称：%[1]s，只允许英文、数字、下划线（_），且必须以bk_bscp_前缀开头（忽略大小写）\x02脚本不存在\x02defau" +
 	"lt_val %[1]s 不是数字类型\x02不支持的变量类型：%[1]s"
 
-	// Total table size 4877 bytes (4KiB); checksum: 444AE15A
+	// Total table size 4901 bytes (4KiB); checksum: A7F6C093

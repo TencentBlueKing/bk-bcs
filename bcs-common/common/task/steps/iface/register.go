@@ -10,17 +10,39 @@
  * limitations under the License.
  */
 
-// Package task is a package for task management
-package task
+package iface
 
-import istore "github.com/Tencent/bk-bcs/bcs-common/common/task/stores/iface"
-
-var (
-	// globalStorage used for state and task manager
-	globalStorage istore.Store
+import (
+	"sync"
 )
 
-// GetGlobalStorage for cluster manager storage tools
-func GetGlobalStorage() istore.Store {
-	return globalStorage
+var (
+	stepMu sync.RWMutex
+	steps  = make(map[string]StepWorkerInterface)
+)
+
+// Register makes a StepWorkerInterface available by the provided name.
+// If Register is called twice with the same name or if StepWorkerInterface is nil,
+// it panics.
+func Register(name string, step StepWorkerInterface) {
+	stepMu.Lock()
+	defer stepMu.Unlock()
+
+	if step == nil {
+		panic("task: Register step is nil")
+	}
+
+	if _, dup := steps[name]; dup {
+		panic("task: Register step twice for work " + name)
+	}
+
+	steps[name] = step
+}
+
+// GetRegisters get all steps instance
+func GetRegisters() map[string]StepWorkerInterface {
+	stepMu.Lock()
+	defer stepMu.Unlock()
+
+	return steps
 }

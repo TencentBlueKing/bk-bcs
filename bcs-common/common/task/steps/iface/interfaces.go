@@ -10,17 +10,35 @@
  * limitations under the License.
  */
 
-// Package task is a package for task management
-package task
+// Package iface is a package for task step interface
+package iface
 
 import (
+	"context"
+	"errors"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
+)
+
+var (
+	// ErrParamNotFound 参数未找到
+	ErrParamNotFound = errors.New("param not found")
 )
 
 // StepWorkerInterface that client must implement
 type StepWorkerInterface interface {
-	GetName() string
-	DoWork(task *types.Task) error
+	DoWork(context.Context, *Work) error
+}
+
+// The StepWorkerFunc type is an adapter to allow the use of
+// ordinary functions as a Handler. If f is a function
+// with the appropriate signature, HandlerFunc(f) is a
+// Handler that calls f.
+type StepWorkerFunc func(context.Context, *Work) error
+
+// DoWork calls f(ctx, w)
+func (f StepWorkerFunc) DoWork(ctx context.Context, w *Work) error {
+	return f(ctx, w)
 }
 
 // CallbackInterface that client must implement
@@ -73,4 +91,54 @@ type TaskName string // nolint
 // String xxx
 func (tn TaskName) String() string {
 	return string(tn)
+}
+
+// Work 当前执行的任务
+type Work struct {
+	task        *types.Task
+	currentStep *types.Step
+}
+
+// NewWork ...
+func NewWork(t *types.Task, currentStep *types.Step) *Work {
+	return &Work{
+		task:        t,
+		currentStep: currentStep,
+	}
+}
+
+// GetTaskID get task id
+func (t *Work) GetTaskID() string {
+	return t.task.GetTaskID()
+}
+
+// GetTaskName get task name
+func (t *Work) GetTaskName() string {
+	return t.task.GetTaskID()
+}
+
+// GetTaskType get task type
+func (t *Work) GetTaskType() string {
+	return t.task.GetTaskType()
+}
+
+// AddCommonParams add task common params
+func (t *Work) AddCommonParams(k, v string) error {
+	_ = t.task.AddCommonParams(k, v)
+	return nil
+}
+
+// GetName get current step name
+func (t *Work) GetName() string {
+	return t.currentStep.GetName()
+}
+
+// GetParam get current step param
+func (t *Work) GetParam(key string) (string, bool) {
+	return t.currentStep.GetParam(key)
+}
+
+// GetStatus get current step status
+func (t *Work) GetStatus() string {
+	return t.currentStep.GetStatus()
 }

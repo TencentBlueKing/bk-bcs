@@ -14,10 +14,11 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/task"
+	istep "github.com/Tencent/bk-bcs/bcs-common/common/task/steps/iface"
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
 )
 
@@ -27,9 +28,9 @@ const (
 )
 
 var (
-	sumA task.ParamKey = "sumA"
-	sumB task.ParamKey = "sumB"
-	sumC task.ParamKey = "sumC"
+	sumA istep.ParamKey = "sumA"
+	sumB istep.ParamKey = "sumB"
+	sumC istep.ParamKey = "sumC"
 )
 
 // NewSumStep sum step
@@ -51,28 +52,23 @@ func (s SumStep) GetName() string {
 }
 
 // DoWork for worker exec task
-func (s SumStep) DoWork(task *types.Task) error {
-	step, exist := task.GetStep(s.GetName())
-	if !exist {
-		return fmt.Errorf("task[%s] not exist step[%s]", task.TaskID, s.GetName())
-	}
-
-	a := step.Params[sumA.String()]
-	b := step.Params[sumB.String()]
+func (s SumStep) DoWork(ctx context.Context, step *istep.Work) error {
+	a, _ := step.GetParam(sumA.String())
+	b, _ := step.GetParam(sumB.String())
 
 	a1, _ := strconv.Atoi(a)
 	b1, _ := strconv.Atoi(b)
 
 	c := a1 + b1
-	task.AddCommonParams(sumC.String(), fmt.Sprintf("%v", c))
+	_ = step.AddCommonParams(sumC.String(), fmt.Sprintf("%v", c))
 
-	fmt.Printf("%s %s %s sumC: %v\n", task.GetTaskID(), task.GetTaskType(), step.GetName(), c)
+	fmt.Printf("%s %s %s sumC: %v\n", step.GetTaskID(), step.GetTaskType(), step.GetName(), c)
 
 	return nil
 }
 
 // BuildStep build step
-func (s SumStep) BuildStep(kvs []task.KeyValue, opts ...types.StepOption) *types.Step {
+func (s SumStep) BuildStep(kvs []istep.KeyValue, opts ...types.StepOption) *types.Step {
 	step := types.NewStep(s.GetName(), s.Alias(), opts...)
 
 	// build step paras
@@ -81,4 +77,9 @@ func (s SumStep) BuildStep(kvs []task.KeyValue, opts ...types.StepOption) *types
 	}
 
 	return step
+}
+
+func init() {
+	// register step
+	istep.Register(sumMethod, NewSumStep())
 }

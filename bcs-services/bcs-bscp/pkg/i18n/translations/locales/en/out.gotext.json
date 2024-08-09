@@ -731,6 +731,13 @@
             "fuzzy": true
         },
         {
+            "id": "Unnamed Version",
+            "message": "Unnamed Version",
+            "translation": "Unnamed Version",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
             "id": "default_val {DefaultVal} is not a number type",
             "message": "default_val {DefaultVal} is not a number type",
             "translation": "default_val {DefaultVal} is not a number type",
