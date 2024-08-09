@@ -24,7 +24,7 @@ const (
 	// Name 网关名
 	Name        = "bk-bscp"
 	env         = "prod"
-	description = "服务配置平台（bk_bscp）API 网关，包含了服务、配置项/模板、版本、分组、发布等相关资源的查询和操作接口"
+	description = "服务配置中心（bk_bscp）API 网关，包含了服务、配置项/模板、版本、分组、发布等相关资源的查询和操作接口"
 )
 
 // ReleaseSwagger 导入swagge 文档
