@@ -141,14 +141,14 @@
   const isSearchEmpty = ref(false);
   const isAcrossChecked = ref(false);
 
-  const arrowShow = computed(() => pagination.value.limit < pagination.value.count);
+  const crossPageSelect = computed(() => pagination.value.limit < pagination.value.count);
 
   const { selectType, selections, renderSelection, renderTableTip, handleRowCheckChange, handleClearSelection } =
     useTableAcrossCheck({
       dataCount: toRef(pagination.value, 'count'),
       curPageData: list, // 当前页数据
       rowKey: ['id'],
-      arrowShow,
+      crossPageSelect,
     });
 
   watch(

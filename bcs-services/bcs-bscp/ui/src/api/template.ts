@@ -300,11 +300,7 @@ export const downloadTemplateContent = (biz_id: string, templateSpaceId: number,
  * @param signature 文件内容的SHA256值
  * @returns
  */
-export const getTemplateUploadFileIsExist = (
-  bizId: string,
-  templateSpaceId: number,
-  signature: string,
-) =>
+export const getTemplateUploadFileIsExist = (bizId: string, templateSpaceId: number, signature: string) =>
   http
     .get(`/biz/${bizId}/content/metadata`, {
       headers: {
@@ -320,7 +316,6 @@ export const getTemplateUploadFileIsExist = (
  * @param template_space_id 空间ID
  * @param template_ids 模板ID列表
  * @param exclusion_operation 是否跨页全选
- * @param no_set_specified 是否未指定套餐，此处固定传true
  * @returns
  */
 export const deleteTemplate = (
@@ -390,7 +385,6 @@ export const moveOutTemplateFromPackage = (
   template_set_ids: number[],
   exclusion_operation: boolean,
   template_set_id: number | string,
-  no_set_specified: boolean,
 ) =>
   http.post(
     `/config/biz/${biz_id}/template_spaces/${template_space_id}/template_set/${template_set_id}/templates/delete_from_template_sets`,
@@ -398,7 +392,6 @@ export const moveOutTemplateFromPackage = (
       template_ids,
       template_set_ids,
       exclusion_operation,
-      no_set_specified,
     },
   );
 
@@ -728,9 +721,9 @@ export const importTemplateBatchAdd = (
  * @param biz_id 业务ID
  * @param template_space_id 空间id
  * @param configData 配置列表
- * @param exclusion_operation: boolean, // 是否跨页
- * @param template_set_id: number | string, // 正在操作的套餐id，全部套餐和未指定传0
- * @param no_set_specified: boolean, // 是否未指定套餐
+ * @param exclusion_operation // 是否跨页
+ * @param template_set_id // 正在操作的套餐id，全部套餐和未指定传0
+ * @param no_set_specified // 是否未指定套餐
  * @returns
  */
 export const batchEditTemplatePermission = (biz_id: string, query: any) =>

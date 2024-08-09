@@ -115,7 +115,6 @@
         [props.currentPkg as number],
         isAcrossChecked.value,
         pkg.id, // 全部配置文件/未指定套餐没有移出套餐选项
-        false, // 未指定套餐没有移出套餐选项
       );
       emits('movedOut');
       close();

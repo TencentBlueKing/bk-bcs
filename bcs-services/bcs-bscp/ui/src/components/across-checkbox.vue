@@ -10,20 +10,18 @@
 </template>
 
 <script lang="ts" setup>
-  const props = defineProps({
-    checked: {
-      type: Boolean,
-      default: false,
+  const props = withDefaults(
+    defineProps<{
+      checked: boolean;
+      disabled?: boolean;
+      handleChange: Function;
+    }>(),
+    {
+      checked: false,
+      disabled: false,
+      handleChange: () => {},
     },
-    disabled: {
-      type: Boolean,
-      default: false,
-    },
-    handleChange: {
-      type: Function,
-      default: () => {},
-    },
-  });
+  );
 
   const handleInputChange = () => {
     props.handleChange();

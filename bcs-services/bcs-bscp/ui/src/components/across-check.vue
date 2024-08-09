@@ -13,7 +13,7 @@
       @change="handleCheckChange">
     </bk-checkbox>
     <bk-popover
-      ref="popover"
+      ref="popoverRef"
       theme="light"
       trigger="click"
       placement="bottom"
@@ -23,7 +23,7 @@
       @after-show="isDropDownShow = true"
       @after-hidden="isDropDownShow = false">
       <angle-down
-        v-show="arrowShow"
+        v-show="crossPageSelect"
         :class="['check-icon', { 'icon-angle-up': isDropDownShow }, { disabled: disabled }]" />
       <template #content>
         <ul class="dropdown-ul">
@@ -41,34 +41,31 @@
   </div>
 </template>
 <script lang="ts" setup>
-  import { computed, ref, toRefs, watch } from 'vue';
+  import { computed, ref, watch } from 'vue';
   import CheckType from '../../types/across-checked';
   import { AngleDown } from 'bkui-vue/lib/icon';
   import { useI18n } from 'vue-i18n';
 
   const { t } = useI18n();
 
-  const props = defineProps({
-    value: {
-      type: Number,
-      default: CheckType.Uncheck,
+  const props = withDefaults(
+    defineProps<{
+      value: number;
+      disabled: boolean;
+      crossPageSelect: boolean;
+    }>(),
+    {
+      value: CheckType.Uncheck,
+      disabled: false,
+      crossPageSelect: true,
     },
-    disabled: {
-      type: Boolean,
-      default: false,
-    },
-    arrowShow: {
-      type: Boolean,
-      default: true,
-    },
-  });
+  );
 
   const emits = defineEmits(['change']);
 
-  const popover = ref<any>(null);
+  const popoverRef = ref();
   const isDropDownShow = ref(false);
-  const { value } = toRefs(props);
-  const localValue = ref(value.value);
+  const localValue = ref(0);
   const checkTypeList = ref([
     {
       id: CheckType.Checked,
@@ -88,7 +85,7 @@
   // const isChecked = computed(() => [CheckType.Checked, CheckType.AcrossChecked].includes(localValue.value));
 
   const setCheckBoxStatus = computed(() => {
-    const status = value.value;
+    const status = props.value;
     switch (status) {
       case CheckType.HalfAcrossChecked:
         return CheckType.HalfAcrossChecked; // 跨页半选
@@ -101,9 +98,12 @@
     }
   });
 
-  watch(value, (newV) => {
-    localValue.value = newV;
-  });
+  watch(
+    () => props.value,
+    (newV) => {
+      localValue.value = newV;
+    },
+  );
 
   const handleCheckChange = (id: number) => {
     localValue.value = id;
@@ -111,7 +111,7 @@
   };
   const handleCheckAll = (id: number) => {
     handleCheckChange(id);
-    popover.value.hide();
+    popoverRef.value.hide();
   };
 </script>
 <style lang="scss" scoped>

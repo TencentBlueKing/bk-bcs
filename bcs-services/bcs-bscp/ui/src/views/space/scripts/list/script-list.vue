@@ -32,7 +32,7 @@
             :bk-biz-id="spaceId"
             :selected-ids="selectedIds"
             :is-across-checked="isAcrossChecked"
-            :filter-disable-count="filterDisableCount"
+            :data-count="selecTableDataCount"
             @deleted="refreshAfterBatchDelete" />
         </div>
         <bk-input
@@ -239,7 +239,7 @@
 
   const { spaceId } = storeToRefs(useGlobalStore());
   const scriptStore = useScriptStore();
-  const { versionListPageShouldOpenEdit, versionListPageShouldOpenView, filterDisableCount } = storeToRefs(scriptStore);
+  const { versionListPageShouldOpenEdit, versionListPageShouldOpenView } = storeToRefs(scriptStore);
   const router = useRouter();
   const { t, locale } = useI18n();
 
@@ -270,6 +270,7 @@
   const tagInputRef = ref();
   const editMemoStr = ref(''); // 编辑描述内容
   const isAcrossChecked = ref(false);
+  const selecTableDataCount = ref(0);
 
   const maxTableHeight = computed(() => {
     const windowHeight = window.innerHeight;
@@ -277,7 +278,7 @@
   });
 
   // 当前页数据，不含禁用
-  const filterFailureCurTableData = computed(() => {
+  const selecTableData = computed(() => {
     return scriptsData.value
       .filter((item) => item.bound_num === 0)
       .map((item) => ({
@@ -286,13 +287,15 @@
       }));
   });
 
-  const arrowShow = computed(() => pagination.value.limit < pagination.value.count && filterDisableCount.value !== 0);
+  const crossPageSelect = computed(
+    () => pagination.value.limit < pagination.value.count && selecTableDataCount.value !== 0,
+  );
   const { selectType, selections, renderSelection, renderTableTip, handleRowCheckChange, handleClearSelection } =
     useTableAcrossCheck({
-      dataCount: filterDisableCount,
-      curPageData: filterFailureCurTableData, // 当前页数据，不含禁用
+      dataCount: selecTableDataCount,
+      curPageData: selecTableData, // 当前页数据，不含禁用
       rowKey: ['id'],
-      arrowShow,
+      crossPageSelect,
     });
 
   const isSearchEmpty = ref(false);
@@ -341,9 +344,7 @@
       item.hook.spec.type = item.hook.spec.type.charAt(0).toUpperCase() + item.hook.spec.type.slice(1);
     });
     pagination.value.count = res.count;
-    scriptStore.$patch((state) => {
-      state.filterDisableCount = Number(res.exclusion_count);
-    });
+    selecTableDataCount.value = Number(res.exclusion_count);
     scriptsLoading.value = false;
   };
 

@@ -1,75 +1,47 @@
 <template>
-  <template v-if="isFullDataMode">
-    <div v-show="selectionsLength" class="selections-style">
-      {{ t('已选择') }}
-      <span class="checked-number">{{ selectionsLength }}</span>
-      <template v-if="locale === 'zh-cn'">条数据</template>
-      <span class="checked-em" v-show="!(selectionsLength === dataLength)" @click="selectTypeChange">
-        {{ t('选择所有') }} {{ dataLength }}
-        <template v-if="locale === 'zh-cn'">条</template>
-      </span>
-      <span class="checked-em" v-show="selectionsLength === dataLength" @click="clearSelection">
-        {{ t('取消选择所有数据') }}
-      </span>
-    </div>
-  </template>
-  <template v-else>
-    <div v-show="selectType !== CheckType.Uncheck" class="selections-style">
-      {{ t('已选择') }}
-      <span class="checked-number">
-        {{ showSelectedLength }}
-      </span>
-      <template v-if="locale === 'zh-cn'">条数据</template>
-      <span class="checked-em" v-show="!(showSelectedLength === dataLength)" @click="selectTypeChange">
-        {{ t('选择所有') }} {{ dataLength }}
-        <template v-if="locale === 'zh-cn'">条</template>
-      </span>
-      <span class="checked-em" v-show="showSelectedLength === dataLength" @click="clearSelection">
-        {{ t('取消选择所有数据') }}
-      </span>
-    </div>
-  </template>
+  <div v-show="selectType !== CheckType.Uncheck" class="selections-style">
+    {{ t('已选择', { count: isFullDataMode ? selectionsLength : showSelectedLength }) }},
+    <span
+      class="checked-em"
+      v-show="(isFullDataMode ? selectionsLength : showSelectedLength) < dataLength"
+      @click="selectTypeChange">
+      {{ t('选择所有', { count: dataLength }) }}
+    </span>
+    <span
+      class="checked-em"
+      v-show="(isFullDataMode ? selectionsLength : showSelectedLength) === dataLength"
+      @click="clearSelection">
+      {{ t('取消选择所有数据') }}
+    </span>
+  </div>
 </template>
 <script lang="ts" setup>
   import { computed } from 'vue';
   import CheckType from '../../types/across-checked';
   import { useI18n } from 'vue-i18n';
 
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
 
-  const props = defineProps({
-    dataLength: {
-      // 不含禁用的数据总数
-      type: Number,
-      default: 0,
+  const props = withDefaults(
+    defineProps<{
+      dataLength: number;
+      selectionsLength: number;
+      isFullDataMode: boolean;
+      selectType: number;
+      crossPageSelect: boolean;
+      handleSelectTypeChange: Function;
+      handleClearSelection: Function;
+    }>(),
+    {
+      dataLength: 0,
+      selectionsLength: 0,
+      isFullDataMode: false,
+      selectType: CheckType.Uncheck,
+      crossPageSelect: true,
+      handleSelectTypeChange: () => {},
+      handleClearSelection: () => {},
     },
-    selectionsLength: {
-      type: Number,
-      default: 0,
-    },
-    isFullDataMode: {
-      // 是否全量数据模式
-      type: Boolean,
-      default: false,
-    },
-    selectType: {
-      type: Number,
-      default: CheckType.Uncheck,
-    },
-    arrowShow: {
-      type: Boolean,
-      default: true,
-    },
-    handleSelectTypeChange: {
-      type: Function,
-      default: () => {},
-    },
-    handleClearSelection: {
-      type: Function,
-      default: () => {},
-    },
-  });
-
+  );
   // 已选择数据长度展示
   const showSelectedLength = computed(() => {
     const { selectType, selectionsLength, dataLength } = props;
@@ -80,7 +52,7 @@
 
   // 根据是否提供全选/跨页全选功能，判断当前页全选/跨页全选
   const selectTypeChange = () => {
-    if (props.arrowShow) {
+    if (props.crossPageSelect) {
       // 跨页全选
       props.handleSelectTypeChange(CheckType.AcrossChecked);
     } else {

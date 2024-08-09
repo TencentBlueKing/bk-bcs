@@ -30,7 +30,7 @@
         <template #prepend>
           <render-table-tip />
         </template>
-        <bk-table-column :min-width="70" :width="70" :label="renderSelection">
+        <bk-table-column :min-width="73" :width="73" :label="renderSelection">
           <template #default="{ row }">
             <across-check-box :checked="isChecked(row)" :handle-change="() => handleSelectionChange(row)" />
           </template>
@@ -237,14 +237,14 @@
   const selectConfigMemo = ref('');
   const configCiteByPkgIds = ref<number[]>([]);
 
-  const arrowShow = computed(() => pagination.value.limit < pagination.value.count);
+  const crossPageSelect = computed(() => pagination.value.limit < pagination.value.count);
 
   const { selectType, selections, renderSelection, renderTableTip, handleRowCheckChange, handleClearSelection } =
     useTableAcrossCheck({
       dataCount: toRef(pagination.value, 'count'),
       curPageData: list, // 当前页数据
       rowKey: ['id'],
-      arrowShow,
+      crossPageSelect,
     });
 
   watch(

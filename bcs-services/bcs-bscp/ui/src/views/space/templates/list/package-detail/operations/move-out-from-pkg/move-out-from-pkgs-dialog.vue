@@ -194,7 +194,6 @@
         selectedPkgs.value,
         isAcrossChecked.value,
         typeof props.currentPkg === 'string' ? 0 : props.currentPkg,
-        props.currentPkg === 'no_specified',
       );
       emits('movedOut');
       close();

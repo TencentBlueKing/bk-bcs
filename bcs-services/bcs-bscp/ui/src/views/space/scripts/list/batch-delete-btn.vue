@@ -9,7 +9,7 @@
     v-model:isShow="isBatchDeleteDialogShow"
     :title="
       t('确认删除所选的 {n} 项脚本？', {
-        n: isAcrossChecked ? filterDisableCount - props.selectedIds.length : props.selectedIds.length,
+        n: isAcrossChecked ? dataCount - props.selectedIds.length : props.selectedIds.length,
       })
     "
     :pending="batchDeletePending"
@@ -32,7 +32,7 @@
     bkBizId: string;
     selectedIds: number[];
     isAcrossChecked: boolean;
-    filterDisableCount: number;
+    dataCount: number;
   }>();
 
   const emits = defineEmits(['deleted']);

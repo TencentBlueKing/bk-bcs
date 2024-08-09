@@ -12,7 +12,6 @@ export default defineStore('client', () => {
     last_heartbeat_time: 1,
     search: {},
   });
-  const filterDisableCount = ref(0);
 
-  return { searchQuery, filterDisableCount };
+  return { searchQuery };
 });

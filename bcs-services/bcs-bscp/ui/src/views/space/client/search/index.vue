@@ -267,7 +267,7 @@
   const { t, locale } = useI18n();
 
   const clientStore = useClientStore();
-  const { searchQuery, filterDisableCount } = storeToRefs(clientStore);
+  const { searchQuery } = storeToRefs(clientStore);
 
   const route = useRoute();
   const router = useRouter();
@@ -292,6 +292,7 @@
   const tableData = ref();
   const tableRef = ref();
   const isAcrossChecked = ref(false);
+  const selecTableDataCount = ref(0);
 
   const releaseChangeStatusFilterList = [
     {
@@ -322,7 +323,7 @@
   const pollTimer = ref(0);
 
   // 当前页数据，不含禁用
-  const processCurrentData = computed(() => {
+  const selecTableData = computed(() => {
     return tableData.value
       .filter(
         (item: any) =>
@@ -335,13 +336,15 @@
         uid: item.client.attachment.uid,
       }));
   });
-  const arrowShow = computed(() => pagination.value.limit < pagination.value.count && filterDisableCount.value !== 0);
+  const crossPageSelect = computed(
+    () => pagination.value.limit < pagination.value.count && selecTableDataCount.value !== 0,
+  );
   const { selectType, selections, renderSelection, renderTableTip, handleRowCheckChange, handleClearSelection } =
     useTableAcrossCheck({
-      dataCount: filterDisableCount,
-      curPageData: processCurrentData, // 当前页数据，不含禁用
+      dataCount: selecTableDataCount,
+      curPageData: selecTableData, // 当前页数据，不含禁用
       rowKey: ['id'],
-      arrowShow,
+      crossPageSelect,
     });
 
   watch(
@@ -551,9 +554,7 @@
         client.labels = Object.entries(JSON.parse(client.spec.labels)).map(([key, value]) => ({ key, value }));
       });
       pagination.value.count = res.data.count;
-      clientStore.$patch((state) => {
-        state.filterDisableCount = Number(res.data.exclusion_count);
-      });
+      selecTableDataCount.value = Number(res.data.exclusion_count);
     } catch (error) {
       console.error(error);
     } finally {

@@ -188,7 +188,7 @@
 
   const configStore = useConfigStore();
   const serviceStore = useServiceStore();
-  const { versionData, filterDisableCount } = storeToRefs(configStore);
+  const { versionData } = storeToRefs(configStore);
   const { checkPermBeforeOperate } = serviceStore;
   const { permCheckLoading, hasEditServicePerm, topIds } = storeToRefs(serviceStore);
   const { t } = useI18n();
@@ -200,7 +200,7 @@
     searchStr: string;
   }>();
 
-  const emits = defineEmits(['clearStr', 'updateSelectedIds']);
+  const emits = defineEmits(['clearStr', 'updateSelectedIds', 'sendTableDataCount']);
 
   const loading = ref(false);
   const configList = ref<IConfigKvType[]>([]);
@@ -220,6 +220,7 @@
   const recoverConfig = ref<IConfigKvType>();
   const isRecoverConfigDialogShow = ref(false);
   const isAcrossChecked = ref(false);
+  const selecTableDataCount = ref(0);
 
   const typeFilterList = computed(() =>
     CONFIG_KV_TYPE.map((item) => ({
@@ -258,14 +259,16 @@
   });
 
   // 跨页全选
-  const filterFailureCurTableData = computed(() => configList.value.filter((item) => item.kv_state !== 'DELETE'));
-  const arrowShow = computed(() => pagination.value.limit < pagination.value.count && filterDisableCount.value !== 0);
+  const selecTableData = computed(() => configList.value.filter((item) => item.kv_state !== 'DELETE'));
+  const crossPageSelect = computed(
+    () => pagination.value.limit < pagination.value.count && selecTableDataCount.value !== 0,
+  );
   const { selectType, selections, renderSelection, renderTableTip, handleRowCheckChange, handleClearSelection } =
     useTableAcrossCheck({
-      dataCount: filterDisableCount, // 总数，不含禁用row
-      curPageData: filterFailureCurTableData, // 当前页数据，不含禁用row
+      dataCount: selecTableDataCount, // 总数，不含禁用row
+      curPageData: selecTableData, // 当前页数据，不含禁用row
       rowKey: ['id'],
-      arrowShow, // 是否提供跨页全选功能
+      crossPageSelect, // 是否提供跨页全选功能
     });
 
   watch(
@@ -359,9 +362,8 @@
       configStore.$patch((state) => {
         state.allConfigCount = res.count;
       });
-      configStore.$patch((state) => {
-        state.filterDisableCount = Number(res.exclusion_count);
-      });
+      selecTableDataCount.value = Number(res.exclusion_count);
+      emits('sendTableDataCount', selecTableDataCount.value);
       pagination.value.count = res.count;
     } catch (e) {
       console.error(e);

@@ -216,24 +216,22 @@
     ),
   );
   // 跨页全选
-  const filterFailureTableData = computed(() => groupList.value.filter((item) => item.released_apps_num < 1));
-  const filterFailureCurTableData = computed(() => tableData.value.filter((item) => item.released_apps_num! < 1));
+  const selecTableData = computed(() => groupList.value.filter((item) => item.released_apps_num < 1));
+  const pageSelectableData = computed(() => tableData.value.filter((item) => item.released_apps_num! < 1));
   const selectedIds = computed(() => {
-    return (selections.value as IGroupItem[]).filter((item) => item.released_apps_num === 0).map((item) => item.id);
+    return selections.value.filter((item) => item.released_apps_num === 0).map((item) => item.id);
   });
   // 是否提供跨页全选功能
-  const arrowShow = computed(() => {
+  const crossPageSelect = computed(() => {
     return (
-      isCategorizedView.value ||
-      (pagination.value.limit < groupList.value.length && filterFailureTableData.value.length !== 0)
+      isCategorizedView.value || (pagination.value.limit < groupList.value.length && selecTableData.value.length !== 0)
     );
   });
-
   const { selectType, selections, renderSelection, renderTableTip, handleRowCheckChange, handleClearSelection } =
     useTableAcrossCheck({
-      tableData: filterFailureTableData, // 全量数据，排除禁用
-      curPageData: filterFailureCurTableData, // 当前页数据，排除禁用
-      arrowShow, // 展示跨页下拉框；按标签分类查看无分页，默认为当前页
+      tableData: selecTableData, // 全量数据，排除禁用
+      curPageData: pageSelectableData, // 当前页数据，排除禁用
+      crossPageSelect, // 展示跨页下拉框；按标签分类查看无分页，默认为当前页
     });
 
   watch(

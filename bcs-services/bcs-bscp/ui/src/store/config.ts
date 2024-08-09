@@ -23,9 +23,6 @@ export default defineStore('config', () => {
   // 非配置模板中存在的冲突文件个数
   const conflictFileCount = ref(0);
 
-  // kv不含禁用的数据总数
-  const filterDisableCount = ref(0);
-
   return {
     allConfigCount,
     versionData,
@@ -33,6 +30,5 @@ export default defineStore('config', () => {
     refreshVersionListFlag,
     publishedVersionId,
     conflictFileCount,
-    filterDisableCount,
   };
 });

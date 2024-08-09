@@ -33,7 +33,7 @@
     v-model:isShow="isBatchDeleteDialogShow"
     :title="
       t('确认删除所选的 {n} 项配置项？', {
-        n: isAcrossChecked ? filterDisableCount - props.selectedIds.length : props.selectedIds.length,
+        n: isAcrossChecked ? dataCount - props.selectedIds.length : props.selectedIds.length,
       })
     "
     :pending="batchDeletePending"
@@ -54,17 +54,13 @@
   import { ref } from 'vue';
   import { AngleDown } from 'bkui-vue/lib/icon';
   import { useI18n } from 'vue-i18n';
-  import { storeToRefs } from 'pinia';
   import Message from 'bkui-vue/lib/message';
   import { batchDeleteServiceConfigs, batchDeleteKv, batchAddConfigList } from '../../../../../../../api/config';
   import DeleteConfirmDialog from '../../../../../../../components/delete-confirm-dialog.vue';
   import EditPermissionDialog from '../../../../../templates/list/package-detail/operations/edit-permission/edit-permission-dialog.vue';
   import { IConfigItem } from '../../../../../../../../types/config';
-  import useConfigStore from '../../../../../../../store/config';
 
   const { t } = useI18n();
-  const configStore = useConfigStore();
-  const { filterDisableCount } = storeToRefs(configStore);
 
   interface IPermissionType {
     privilege: string;
@@ -79,6 +75,7 @@
     isFileType: boolean; // 是否为文件型配置
     selectedItems: IConfigItem[];
     isAcrossChecked: boolean;
+    dataCount: number;
   }>();
 
   const emits = defineEmits(['deleted']);
