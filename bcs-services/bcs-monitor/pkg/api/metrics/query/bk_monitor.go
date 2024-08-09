@@ -202,7 +202,7 @@ func (h BKMonitorHandler) ClusterDiskUsage(c *rest.Context) (promclient.ResultDa
 // nolint
 func (h BKMonitorHandler) ClusterDiskioUsage(c *rest.Context) (promclient.ResultData, error) {
 	promql := `sum(max by(instance) (rate(bkmonitor:node_disk_io_time_seconds_total{bcs_cluster_id="%<clusterID>s"}[2m]))) / ` +
-		`count(max by(instance) (rate(bkmonitor:node_disk_io_time_seconds_total{bcs_cluster_id="%<clusterID>s"}[2m])))`
+		`count(max by(instance) (rate(bkmonitor:node_disk_io_time_seconds_total{bcs_cluster_id="%<clusterID>s"}[2m]))) * 100`
 
 	return h.handleBKMonitorClusterMetric(c, promql)
 }
