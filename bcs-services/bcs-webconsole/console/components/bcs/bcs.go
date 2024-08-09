@@ -74,16 +74,7 @@ func ListClusters(ctx context.Context, projectId string) ([]*Cluster, error) {
 		return nil, err
 	}
 
-	clusters := make([]*Cluster, 0, len(result))
-	for _, cluster := range result {
-		// 过滤掉共享集群
-		if cluster.IsShared {
-			continue
-		}
-		clusters = append(clusters, cluster)
-	}
-
-	return clusters, nil
+	return result, nil
 }
 
 // GetCluster 获取单个集群信息
