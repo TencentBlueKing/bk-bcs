@@ -12,15 +12,20 @@
     @closed="close">
     <template #header>
       <div class="header-wrapper">
-        <div class="title">{{ isMultiple ? t('批量添加至') : t('添加至套餐') }}</div>
+        <div class="title">{{ isMultiple || isAcrossChecked ? t('批量添加至') : t('添加至套餐') }}</div>
         <div v-if="props.value.length === 1" class="config-name">{{ fileAP(props.value[0]) }}</div>
       </div>
     </template>
-    <div v-if="isMultiple" class="selected-mark">
-      {{ t('已选') }} <span class="num">{{ props.value.length }}</span> {{ t('个配置文件') }}
+    <div v-if="isMultiple || isAcrossChecked" class="selected-mark">
+      {{ t('已选') }}
+      <span class="num">{{ isAcrossChecked ? dataCount - props.value.length : props.value.length }}</span>
+      {{ t('个配置文件') }}
     </div>
     <bk-form ref="formRef" form-type="vertical" :model="{ pkgs: selectedPkgs }">
-      <bk-form-item :label="isMultiple ? t('添加至模板套餐') : t('模板套餐')" property="pkgs" required>
+      <bk-form-item
+        :label="isMultiple || isAcrossChecked ? t('添加至模板套餐') : t('模板套餐')"
+        property="pkgs"
+        required>
         <bk-select v-model="selectedPkgs" multiple @change="handPkgsChange" @clear="handleClearPkgs">
           <bk-option
             v-for="pkg in allPackages"
@@ -67,7 +72,7 @@
   import LinkToApp from '../../../components/link-to-app.vue';
 
   const { spaceId } = storeToRefs(useGlobalStore());
-  const { packageList, currentTemplateSpace, currentPkg } = storeToRefs(useTemplateStore());
+  const { packageList, currentTemplateSpace, currentPkg, isAcrossChecked, dataCount } = storeToRefs(useTemplateStore());
   const { t } = useI18n();
 
   const props = defineProps<{
@@ -134,6 +139,7 @@
   };
 
   const getCitedData = async () => {
+    console.log('获取表格');
     loading.value = true;
     const params = {
       start: 0,
@@ -165,11 +171,18 @@
   const handleConfirm = async () => {
     const isValid = await formRef.value.validate();
     if (!isValid) return;
-
     try {
       pending.value = true;
       const templateIds = props.value.map((item) => item.id);
-      await addTemplateToPackage(spaceId.value, currentTemplateSpace.value, templateIds, selectedPkgs.value);
+      await addTemplateToPackage(
+        spaceId.value,
+        currentTemplateSpace.value,
+        templateIds,
+        selectedPkgs.value,
+        isAcrossChecked.value,
+        typeof currentPkg.value === 'string' ? 0 : currentPkg.value,
+        currentPkg.value === 'no_specified',
+      );
       emits('added');
       close();
       Message({

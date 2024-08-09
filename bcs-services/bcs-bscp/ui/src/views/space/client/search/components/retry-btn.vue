@@ -8,6 +8,7 @@
     :is-show="isRetryOpen"
     :is-batch="false"
     :selections="selections"
+    :is-across-checked="false"
     @close="isRetryOpen = false"
     @retried="emits('retried', $event)" />
 </template>

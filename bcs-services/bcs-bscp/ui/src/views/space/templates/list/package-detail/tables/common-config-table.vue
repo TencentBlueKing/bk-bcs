@@ -26,10 +26,15 @@
         :remote-pagination="true"
         :pagination="pagination"
         @page-limit-change="handlePageLimitChange"
-        @page-value-change="refreshList($event, true)"
-        @selection-change="handleSelectionChange"
-        @select-all="handleSelectAll">
-        <bk-table-column type="selection" :min-width="40" :width="40"></bk-table-column>
+        @page-value-change="handlePageChange($event)">
+        <template #prepend>
+          <render-table-tip />
+        </template>
+        <bk-table-column :min-width="73" :width="73" :label="renderSelection">
+          <template #default="{ row }">
+            <across-check-box :checked="isChecked(row)" :handle-change="() => handleSelectionChange(row)" />
+          </template>
+        </bk-table-column>
         <bk-table-column :label="t('配置文件绝对路径')">
           <template #default="{ row }">
             <div v-if="row.spec" v-overflow-title class="config-name" @click="handleViewConfig(row)">
@@ -158,7 +163,7 @@
   </div>
 </template>
 <script lang="ts" setup>
-  import { onMounted, ref, watch, computed } from 'vue';
+  import { onMounted, ref, watch, computed, toRef } from 'vue';
   import { useI18n } from 'vue-i18n';
   import { useRouter } from 'vue-router';
   import { storeToRefs } from 'pinia';
@@ -167,7 +172,9 @@
   import useGlobalStore from '../../../../../../store/global';
   import useTemplateStore from '../../../../../../store/template';
   import { ICommonQuery } from '../../../../../../../types/index';
+  import CheckType from '../../../../../../../types/across-checked';
   import useTablePagination from '../../../../../../utils/hooks/use-table-pagination';
+  import useTableAcrossCheck from '../../../../../../utils/hooks/use-table-acrosscheck';
   import {
     ITemplateCitedCountDetailItem,
     ITemplateCitedByPkgs,
@@ -182,6 +189,7 @@
   import TableEmpty from '../../../../../../components/table/table-empty.vue';
   import DownloadConfig from '../operations/download-config/download-config.vue';
   import DeleteConfigDialog from '../operations/delete-configs/delete-config-dialog.vue';
+  import acrossCheckBox from '../../../../../../components/across-checkbox.vue';
   import ViewConfig from '../operations/view-config/view-config.vue';
   import EditConfig from '../operations/edit-config/edit-config.vue';
 
@@ -189,7 +197,7 @@
   const { t, locale } = useI18n();
   const { spaceId } = storeToRefs(useGlobalStore());
   const templateStore = useTemplateStore();
-  const { currentTemplateSpace, topIds } = storeToRefs(templateStore);
+  const { currentTemplateSpace, topIds, isAcrossChecked } = storeToRefs(templateStore);
   const { pagination, updatePagination } = useTablePagination('commonConfigTable');
 
   const props = defineProps<{
@@ -229,6 +237,16 @@
   const selectConfigMemo = ref('');
   const configCiteByPkgIds = ref<number[]>([]);
 
+  const crossPageSelect = computed(() => pagination.value.limit < pagination.value.count);
+
+  const { selectType, selections, renderSelection, renderTableTip, handleRowCheckChange, handleClearSelection } =
+    useTableAcrossCheck({
+      dataCount: toRef(pagination.value, 'count'),
+      curPageData: list, // 当前页数据
+      rowKey: ['id'],
+      crossPageSelect,
+    });
+
   watch(
     () => props.currentPkg,
     () => {
@@ -236,8 +254,15 @@
       loadConfigList();
     },
   );
+  watch(selections, () => {
+    templateStore.$patch((state) => {
+      state.isAcrossChecked = [CheckType.HalfAcrossChecked, CheckType.AcrossChecked].includes(selectType.value);
+    });
+    emits('update:selectedConfigs', selections.value);
+  });
 
   onMounted(() => {
+    handleClearSelection();
     loadConfigList();
   });
 
@@ -271,6 +296,9 @@
     const res = await props.getConfigList(params);
     list.value = res.details;
     pagination.value.count = res.count;
+    templateStore.$patch((state) => {
+      state.dataCount = res.count;
+    });
     listLoading.value = false;
     const ids = list.value.map((item) => item.id);
     citeByPkgsList.value = [];
@@ -301,9 +329,18 @@
     boundByAppsCountLoading.value = false;
   };
 
-  const refreshList = (current = 1, createConfig = false) => {
+  // 翻页
+  const handlePageChange = (event: number) => {
+    refreshList(event, true, true);
+  };
+
+  const refreshList = (current = 1, createConfig = false, pageChange = false) => {
     isSearchEmpty.value = searchStr.value !== '';
     pagination.value.current = current;
+    // 非跨页全选/半选 需要重置全选状态
+    if (![CheckType.HalfAcrossChecked, CheckType.AcrossChecked].includes(selectType.value) || !pageChange) {
+      handleClearSelection();
+    }
     loadConfigList(createConfig);
   };
 
@@ -318,28 +355,27 @@
     refreshList();
   };
 
-  const handleSearchInputChange = debounce(() => refreshList(), 300);
-  const handleSelectionChange = ({ checked, row }: { checked: boolean; row: ITemplateConfigItem }) => {
-    const configs = props.selectedConfigs.slice();
-    if (checked) {
-      if (!configs.find((item) => item.id === row.id)) {
-        configs.push(row);
-      }
-    } else {
-      const index = configs.findIndex((item) => item.id === row.id);
-      if (index > -1) {
-        configs.splice(index, 1);
-      }
-    }
-    emits('update:selectedConfigs', configs);
+  const handleSearchInputChange = debounce(() => {
+    refreshList();
+  }, 300);
+
+  const handleSelectionChange = (row: ITemplateConfigItem) => {
+    const isSelected = selections.value.some((item) => item.id === row.id);
+    // const isAcrossChecked = [CheckType.AcrossChecked, CheckType.HalfAcrossChecked].includes(selectType.value);
+    const shouldBeChecked = isAcrossChecked.value ? isSelected : !isSelected;
+    // 根据选择类型决定传递的状态
+    handleRowCheckChange(shouldBeChecked, row);
+    emits('update:selectedConfigs', selections.value);
   };
 
-  const handleSelectAll = ({ checked }: { checked: boolean }) => {
-    if (checked) {
-      emits('update:selectedConfigs', list.value);
-    } else {
-      emits('update:selectedConfigs', []);
+  // 选中状态
+  const isChecked = (row: ITemplateConfigItem) => {
+    if (![CheckType.AcrossChecked, CheckType.HalfAcrossChecked].includes(selectType.value)) {
+      // 当前页状态传递
+      return selections.value.some((item) => item.id === row.id);
     }
+    // 跨页状态传递
+    return !selections.value.some((item) => item.id === row.id);
   };
 
   // 添加至套餐

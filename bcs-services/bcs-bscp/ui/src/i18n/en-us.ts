@@ -1011,4 +1011,10 @@ export default {
   '组件类型 / 版本分布': 'Component type / Version distribution',
   下钻: 'Drill down',
   总和: 'Total',
+
+  // 跨页全选
+  跨页全选: 'AcrossChecked',
+  已选择: '{count} item selected',
+  选择所有: 'select all {count} items',
+  取消选择所有数据: 'Unselect all items',
 };
