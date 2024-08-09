@@ -31,6 +31,7 @@ import BkTrace from '@blueking/bk-trace';
 import '@/common/bkmagic';
 import '@/fonts/svg-icon/iconcool';
 import '@/views/app/performance';
+import '@blueking/bkui-library';
 import App from '@/App.vue';
 import { bus } from '@/common/bus';
 import { BCS_UI_PREFIX } from '@/common/constant';

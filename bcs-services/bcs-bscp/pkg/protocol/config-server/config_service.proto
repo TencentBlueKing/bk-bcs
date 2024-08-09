@@ -678,6 +678,13 @@ option (google.api.http) = {
            "template_sets/bound_unnamed_app_details"
     };
   }
+  rpc CheckTemplateSetReferencesApps(CheckTemplateSetReferencesAppsReq) returns (CheckTemplateSetReferencesAppsResp) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/"
+            "template_sets/check_template_set_references_apps"
+      body: "*"
+    };
+  }
   rpc ListTmplSetBoundNamedApps(ListTmplSetBoundNamedAppsReq) returns (ListTmplSetBoundNamedAppsResp) {
     option (google.api.http) = {
       get: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/"
@@ -1243,6 +1250,7 @@ message BatchUpsertConfigItemsReq {
     string privilege = 8;
     string sign = 9;
     uint64 byte_size = 10;
+    string md5 = 11;
   }
   uint32 biz_id = 1;
   uint32 app_id = 2;
@@ -1866,6 +1874,7 @@ message BatchUpsertTemplatesReq {
     string privilege = 9;
     string sign = 10;
     uint64 byte_size = 11;
+    string md5 = 12;
   }
   uint32 biz_id = 1;
   uint32 template_space_id = 2;
@@ -2434,6 +2443,29 @@ message ListMultiTmplSetBoundUnnamedAppsResp {
   repeated pbtbr.MultiTemplateSetBoundUnnamedAppDetail details = 2;
 }
 
+message CheckTemplateSetReferencesAppsReq {
+  message Item {
+    uint32 id = 1;
+    string name = 2;
+  }
+  uint32 biz_id = 1;
+  uint32 template_space_id = 2;
+  repeated uint32 template_set_ids = 3;
+  repeated Item items = 4;
+}
+
+message CheckTemplateSetReferencesAppsResp {
+  message Item {
+    uint32 template_set_id = 1;
+    string template_set_name = 2;
+    uint32 app_id = 3;
+    string app_name = 4;
+    bool app_exceeds_limit = 5;
+    bool template_set_exceeds_limit = 6;
+  }
+  repeated Item items = 1;
+}
+
 message ListTmplSetBoundNamedAppsReq {
   uint32 biz_id = 1;
   uint32 template_space_id = 2;
@@ -2953,6 +2985,7 @@ message CompareConfigItemConflictsResp {
     bool is_exist = 4;
     string signature = 5;
     uint64 byte_size = 6;
+    string md5 = 7;
   }
   message TemplateConfig {
     message TemplateRevisionDetail {

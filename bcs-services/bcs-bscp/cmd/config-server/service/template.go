@@ -15,9 +15,6 @@ package service
 import (
 	"context"
 	"fmt"
-	"sync"
-
-	"golang.org/x/sync/errgroup"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
@@ -475,63 +472,48 @@ func (s *Service) BatchUpsertTemplates(ctx context.Context, req *pbcs.BatchUpser
 	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
+
 	items := make([]*pbds.BatchUpsertTemplatesReq_Item, 0, len(req.Items))
-	var mu sync.Mutex
-	var g errgroup.Group
-	g.SetLimit(constant.MaxConcurrentUpload)
+
 	for _, item := range req.Items {
-		i := item
-		g.Go(func() error {
-			// validate if file content uploaded.
-			metadata, err := s.client.provider.Metadata(grpcKit, i.Sign)
-			if err != nil {
-				logs.Errorf("validate file content uploaded failed, err: %v, rid: %s", err, grpcKit.Rid)
-				return err
-			}
-			mu.Lock()
-			items = append(items, &pbds.BatchUpsertTemplatesReq_Item{
-				Template: &pbtemplate.Template{
-					Id: i.Id,
-					Spec: &pbtemplate.TemplateSpec{
-						Name: i.Name,
-						Path: i.Path,
-						Memo: i.Memo,
+		items = append(items, &pbds.BatchUpsertTemplatesReq_Item{
+			Template: &pbtemplate.Template{
+				Id: item.Id,
+				Spec: &pbtemplate.TemplateSpec{
+					Name: item.Name,
+					Path: item.Path,
+					Memo: item.Memo,
+				},
+				Attachment: &pbtemplate.TemplateAttachment{
+					BizId:           req.BizId,
+					TemplateSpaceId: req.TemplateSpaceId,
+				},
+			},
+			TemplateRevision: &pbtr.TemplateRevision{
+				Spec: &pbtr.TemplateRevisionSpec{
+					Name:     item.Name,
+					Path:     item.Path,
+					FileType: item.FileType,
+					FileMode: item.FileMode,
+					Permission: &pbci.FilePermission{
+						User:      item.User,
+						UserGroup: item.UserGroup,
+						Privilege: item.Privilege,
 					},
-					Attachment: &pbtemplate.TemplateAttachment{
-						BizId:           req.BizId,
-						TemplateSpaceId: req.TemplateSpaceId,
+					ContentSpec: &pbcontent.ContentSpec{
+						Signature: item.Sign,
+						ByteSize:  item.ByteSize,
+						Md5:       item.Md5,
 					},
 				},
-				TemplateRevision: &pbtr.TemplateRevision{
-					Spec: &pbtr.TemplateRevisionSpec{
-						Name:     i.Name,
-						Path:     i.Path,
-						FileType: i.FileType,
-						FileMode: i.FileMode,
-						Permission: &pbci.FilePermission{
-							User:      i.User,
-							UserGroup: i.UserGroup,
-							Privilege: i.Privilege,
-						},
-						ContentSpec: &pbcontent.ContentSpec{
-							Signature: i.Sign,
-							ByteSize:  i.ByteSize,
-							Md5:       metadata.Md5,
-						},
-					},
-					Attachment: &pbtr.TemplateRevisionAttachment{
-						BizId:           req.BizId,
-						TemplateSpaceId: req.TemplateSpaceId,
-					},
+				Attachment: &pbtr.TemplateRevisionAttachment{
+					BizId:           req.BizId,
+					TemplateSpaceId: req.TemplateSpaceId,
 				},
-			})
-			mu.Unlock()
-			return nil
+			},
 		})
 	}
-	if err := g.Wait(); err != nil {
-		return nil, err
-	}
+
 	in := &pbds.BatchUpsertTemplatesReq{Items: items, TemplateSetIds: req.GetTemplateSetIds(), BizId: req.GetBizId()}
 	data, err := s.client.DS.BatchUpsertTemplates(grpcKit.RpcCtx(), in)
 	if err != nil {

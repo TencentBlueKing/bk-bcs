@@ -35,7 +35,7 @@ func genBusinessManagementActionGroups() []client.ActionGroup {
 		},
 		{
 			Name:   "服务密钥",
-			NameEn: "App Credential",
+			NameEn: "APP Credential",
 			Actions: []client.ActionWithID{
 				// {ID: CredentialCreate},
 				// {ID: CredentialView},

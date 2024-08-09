@@ -40,12 +40,12 @@ export default defineStore('global', () => {
       nameEn: 'BSCP',
       appLogo: '',
       favicon: `${(window as any).BK_STATIC_URL}/favicon.ico`,
-      brandName: '蓝鲸',
-      brandNameEn: 'BlueKing',
+      brandName: '蓝鲸智云',
+      brandNameEn: 'Tencent BlueKing',
       footerCopyrightContent: '',
       i18n: {
         name: localT('服务配置中心'),
-        brandName: localT('蓝鲸'),
+        brandName: localT('蓝鲸智云'),
         footerInfoHTML: `<a href="https://wpa1.qq.com/KziXGWJs?_type=wpa&qidian=true" target="_blank">${localT('技术支持')}</a> |
         <a href="https://bk.tencent.com/s-mart/community/" target="_blank">${localT('社区论坛')}</a> |
         <a href="https://bk.tencent.com/index/" target="_blank">${localT('产品官网')}</a>`,

@@ -18,7 +18,7 @@ const (
 	// SystemIDBSCP is bscp in iam's system id.
 	SystemIDBSCP = "bk-bscp"
 	// SystemNameBSCPEn is bscp in iam's system english name.
-	SystemNameBSCPEn = "bscp"
+	SystemNameBSCPEn = "BSCP"
 	// SystemNameBSCP is bscp in iam's system name.
 	SystemNameBSCP = "服务配置中心"
 

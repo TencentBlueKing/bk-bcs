@@ -110,3 +110,6 @@ export const ccTopology = request('get', '/cluster/$clusterId/cc/topology');
 export const underlayNetwork = request('post', '/clusters/$clusterId/networks/underlay');
 
 export const clusterMeta = request('post', '/clusters/-/meta');
+export const clusterOperationLogs = request('get', '/operationlogs');
+export const clusterTaskRecords = request('get', '/taskrecords');
+export const taskLogsDownloadURL = `${process.env.NODE_ENV === 'development' ? '' : window.BCS_API_HOST}/bcsapi/v4/clustermanager/v1/common/downloadtaskrecords`;

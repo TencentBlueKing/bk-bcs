@@ -2,7 +2,7 @@ bcs:
   newVersion: '有版本更新, 是否刷新界面'
   preVersion: 返回旧版
   TKEx:
-    title: TKEx-IEG 容器平台
+    title: 容器管理平台
     welcome: 欢迎使用 TKEx-IEG 容器平台
     article1: TKEx-IEG 是公司 K8S Oteam 指定的 IEG 容器服务平台。
     article2: TKEx-IEG 依托于 TKE，聚焦打造游戏一站式微服务部署治理方案，并基于 IEG 各类游戏的特点，提供游戏特色的容器管理服务。
@@ -329,6 +329,7 @@ generic:
     copyAll: 复制全部
     retry: 重试
     skip: 跳过
+    detail: 详情
   label:
     key: 键
     value: 值
@@ -379,6 +380,8 @@ generic:
     stop: 停止
     basicConfig: 基本配置
     abnormal: 异常
+    resourceName: 资源名称
+    resourceID: 资源ID
   status:
     part_failure: 部分失败
     support: 支持
@@ -530,6 +533,7 @@ cluster:
     setClusterVar: 设置变量
     skipTask: 确认跳过当前步骤
     retryTask: 确认重试任务
+    opRecord: 操作记录
   button:
     useSharedCluster: 使用共享集群
     addCluster: 添加集群

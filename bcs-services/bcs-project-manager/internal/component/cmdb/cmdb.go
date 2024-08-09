@@ -239,10 +239,12 @@ func BatchSearchBusinessByBizIDs(bizIDs []string) map[string]BusinessData {
 			batchBizIDs = append(batchBizIDs, bizIDInt)
 		}
 		condition := "AND"
-		rules := map[string]interface{}{
-			"field":    "bk_biz_id",
-			"operator": "in",
-			"value":    batchBizIDs,
+		rules := []map[string]interface{}{
+			{
+				"field":    "bk_biz_id",
+				"operator": "in",
+				"value":    batchBizIDs,
+			},
 		}
 
 		businesses, err := searchBusinessByIds(condition, rules)
@@ -302,7 +304,7 @@ func GetBusinessTopology(bizID string) ([]BusinessTopologyData, error) {
 	return resp.Data, nil
 }
 
-func searchBusinessByIds(condition string, rules map[string]interface{}) ([]BusinessData, error) {
+func searchBusinessByIds(condition string, rules []map[string]interface{}) ([]BusinessData, error) {
 	timeout := defaultTimeout
 	if config.GlobalConf.CMDB.Timeout != 0 {
 		timeout = config.GlobalConf.CMDB.Timeout
