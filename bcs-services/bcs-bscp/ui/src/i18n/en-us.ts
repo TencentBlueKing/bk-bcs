@@ -1014,7 +1014,7 @@ export default {
 
   // 跨页全选
   跨页全选: 'AcrossChecked',
-  已选择: "{count} item selected",
-  选择所有: "select all {count} items",
-  取消选择所有数据: "Unselect all items",
+  已选择: '{count} item selected',
+  选择所有: 'select all {count} items',
+  取消选择所有数据: 'Unselect all items',
 };
