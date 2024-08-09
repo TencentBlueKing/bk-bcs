@@ -50,6 +50,7 @@ export default defineStore('global', () => {
         <a href="https://bk.tencent.com/s-mart/community/" target="_blank">${localT('社区论坛')}</a> |
         <a href="https://bk.tencent.com/index/" target="_blank">${localT('产品官网')}</a>`,
       },
+      version: bscpVersion.value,
     };
     if ((window as any).BK_SHARED_RES_BASE_JS_URL) {
       const config = await getPlatformConfig((window as any).BK_SHARED_RES_BASE_JS_URL, defaultConfig);
