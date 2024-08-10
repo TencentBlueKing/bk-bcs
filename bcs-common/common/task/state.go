@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/RichardKnop/machinery/v2/log"
 
 	istep "github.com/Tencent/bk-bcs/bcs-common/common/task/steps/iface"
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
@@ -47,7 +47,7 @@ func getTaskStateAndCurrentStep(taskId, stepName string,
 
 	if step == nil {
 		// step successful and skip
-		blog.Infof("task %s step %s already execute successful", taskId, stepName)
+		log.INFO.Printf("task %s step %s already execute successful", taskId, stepName)
 		return state, nil, nil
 	}
 

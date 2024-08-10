@@ -24,8 +24,8 @@ import (
 	ibroker "github.com/RichardKnop/machinery/v2/brokers/iface"
 	"github.com/RichardKnop/machinery/v2/config"
 	ilock "github.com/RichardKnop/machinery/v2/locks/iface"
+	"github.com/RichardKnop/machinery/v2/log"
 	"github.com/RichardKnop/machinery/v2/tasks"
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
 	istep "github.com/Tencent/bk-bcs/bcs-common/common/task/steps/iface"
 	istore "github.com/Tencent/bk-bcs/bcs-common/common/task/stores/iface"
@@ -165,13 +165,13 @@ func (m *TaskManager) initWorker(workerNum int) error {
 	m.worker = m.server.NewWorker("", workerNum)
 
 	preTaskHandler := func(signature *tasks.Signature) {
-		blog.Infof("start task handler for: %s", signature.Name)
+		log.INFO.Printf("start task handler for: %s", signature.Name)
 	}
 	postTaskHandler := func(signature *tasks.Signature) {
-		blog.Infof("end task handler for: %s", signature.Name)
+		log.INFO.Printf("end task handler for: %s", signature.Name)
 	}
 	errorHandler := func(err error) {
-		blog.Infof("task error handler: %s", err)
+		log.INFO.Printf("task error handler: %s", err)
 	}
 
 	m.worker.SetPreTaskHandler(preTaskHandler)
@@ -277,7 +277,7 @@ func (m *TaskManager) dispatchAt(task *types.Task, stepNameBegin string) error {
 	// sending to workers
 	chain, err := tasks.NewChain(signatures...)
 	if err != nil {
-		blog.Errorf("taskManager[%s] DispatchChainTask NewChain failed: %v", task.GetTaskID(), err)
+		log.ERROR.Printf("taskManager[%s] DispatchChainTask NewChain failed: %v", task.GetTaskID(), err)
 		return err
 	}
 
@@ -297,7 +297,7 @@ func (m *TaskManager) dispatchAt(task *types.Task, stepNameBegin string) error {
 				continue
 			}
 			// check results
-			blog.Infof("tracing task %s result %s", t.GetTaskID(), tasks.HumanReadableResults(results))
+			log.INFO.Printf("tracing task %s result %s", t.GetTaskID(), tasks.HumanReadableResults(results))
 		}
 	}(task, chain)
 
@@ -326,18 +326,18 @@ func (m *TaskManager) doWork(taskID string, stepName string) error {
 		return fmt.Errorf("step worker %s not found", stepName)
 	}
 
-	blog.Infof("start to execute task[%s] stepName[%s]", taskID, stepName)
+	log.INFO.Printf("start to execute task[%s] stepName[%s]", taskID, stepName)
 
 	start := time.Now()
 	state, step, err := getTaskStateAndCurrentStep(taskID, stepName, m.callBackFuncs)
 	if err != nil {
-		blog.Errorf("task[%s] stepName[%s] getTaskStateAndCurrentStep failed: %v",
+		log.ERROR.Printf("task[%s] stepName[%s] getTaskStateAndCurrentStep failed: %v",
 			taskID, stepName, err)
 		return err
 	}
 	// step executed success
 	if step == nil {
-		blog.Infof("task[%s] stepName[%s] already exec successful && skip",
+		log.INFO.Printf("task[%s] stepName[%s] already exec successful && skip",
 			taskID, stepName, err)
 		return nil
 	}
@@ -360,17 +360,17 @@ func (m *TaskManager) doWork(taskID string, stepName string) error {
 
 	select {
 	case errLocal := <-tmpCh:
-		blog.Infof("task %s step %s errLocal: %v", taskID, stepName, errLocal)
+		log.INFO.Printf("task %s step %s errLocal: %v", taskID, stepName, errLocal)
 
 		// update task & step status
 		if errLocal != nil {
 			if err := state.updateStepFailure(start, step.GetName(), errLocal, false); err != nil {
-				blog.Infof("task %s update step %s to failure failed: %s",
+				log.INFO.Printf("task %s update step %s to failure failed: %s",
 					taskID, step.GetName(), errLocal.Error())
 			}
 		} else {
 			if err := state.updateStepSuccess(start, step.GetName()); err != nil {
-				blog.Infof("task %s update step %s to success failed: %s",
+				log.INFO.Printf("task %s update step %s to success failed: %s",
 					taskID, step.GetName(), err.Error())
 			}
 		}
@@ -385,7 +385,7 @@ func (m *TaskManager) doWork(taskID string, stepName string) error {
 		retErr := fmt.Errorf("task %s step %s timeout", taskID, step.GetName())
 		errLocal := state.updateStepFailure(start, step.GetName(), retErr, false)
 		if errLocal != nil {
-			blog.Infof("update step %s to failure failed: %s", step.GetName(), errLocal.Error())
+			log.INFO.Printf("update step %s to failure failed: %s", step.GetName(), errLocal.Error())
 		}
 		if !step.GetSkipOnFailed() {
 			return retErr
@@ -397,7 +397,7 @@ func (m *TaskManager) doWork(taskID string, stepName string) error {
 		retErr := fmt.Errorf("task %s exec timeout", taskID)
 		errLocal := state.updateStepFailure(start, step.GetName(), retErr, true)
 		if errLocal != nil {
-			blog.Errorf("update step %s to failure failed: %s", step.GetName(), errLocal.Error())
+			log.ERROR.Printf("update step %s to failure failed: %s", step.GetName(), errLocal.Error())
 		}
 
 		return retErr
