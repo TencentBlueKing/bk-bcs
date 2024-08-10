@@ -33,7 +33,7 @@ type StepExecutor interface {
 // Executor that calls f.
 type StepExecutorFunc func(*Context) error
 
-// Execute calls f(ctx, w)
+// Execute calls f(c)
 func (f StepExecutorFunc) Execute(c *Context) error {
 	return f(c)
 }
@@ -49,7 +49,7 @@ type CallbackExecutor interface {
 // Executor that calls f.
 type CallbackExecutorFunc func(*Context, error)
 
-// Callback calls f(ctx, w)
+// Callback calls f(c, cbErr)
 func (f CallbackExecutorFunc) Callback(c *Context, cbErr error) {
 	f(c, cbErr)
 }
