@@ -42,7 +42,7 @@ func TestDoWork(t *testing.T) {
 	}
 	mgr.initGlobalStorage()
 
-	info := &types.TaskInfo{
+	info := types.TaskInfo{
 		TaskType: "example-test",
 		TaskName: "example",
 		Creator:  "bcs",
@@ -88,7 +88,7 @@ func TestDoWorkWithMySQL(t *testing.T) {
 	}
 	mgr.initGlobalStorage()
 
-	info := &types.TaskInfo{
+	info := types.TaskInfo{
 		TaskType: "example-test",
 		TaskName: "example",
 		Creator:  "bcs",

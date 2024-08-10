@@ -144,7 +144,7 @@ func main() {
 	// build tak && run
 	sum := NewExampleTask("3", "5")
 
-	info := &types.TaskInfo{
+	info := types.TaskInfo{
 		TaskIndex: "example",
 		TaskType:  "example-test",
 		TaskName:  "example",

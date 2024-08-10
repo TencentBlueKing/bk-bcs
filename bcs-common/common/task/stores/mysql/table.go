@@ -32,6 +32,8 @@ type TaskRecords struct {
 	gorm.Model
 	TaskID              string            `json:"taskID" gorm:"type:varchar(255);uniqueIndex:idx_task_id"` // 唯一索引
 	TaskType            string            `json:"taskType" gorm:"type:varchar(255)"`
+	TaskIndex           string            `json:"TaskIndex" gorm:"type:varchar(255)"`
+	TaskIndexType       string            `json:"TaskIndexType" gorm:"type:varchar(255)"`
 	TaskName            string            `json:"taskName" gorm:"type:varchar(255)"`
 	CurrentStep         string            `json:"currentStep" gorm:"type:varchar(255)"`
 	StepSequence        []string          `json:"stepSequence" gorm:"type:text;serializer:json"`

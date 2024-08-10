@@ -46,15 +46,15 @@ func WithTaskMaxExecutionSeconds(timeout uint32) TaskOption {
 
 // TaskInfo task basic info definition
 type TaskInfo struct {
-	// TaskIndex for resource index
-	TaskIndex string
-	TaskType  string
-	TaskName  string
-	Creator   string
+	TaskType      string
+	TaskName      string
+	TaskIndex     string // TaskIndex for resource index
+	TaskIndexType string
+	Creator       string
 }
 
 // NewTask create new task by default
-func NewTask(o *TaskInfo, opts ...TaskOption) *Task {
+func NewTask(o TaskInfo, opts ...TaskOption) *Task {
 	defaultOptions := &TaskOptions{CallBackFuncName: "", MaxExecutionSeconds: 0}
 	for _, opt := range opts {
 		opt(defaultOptions)

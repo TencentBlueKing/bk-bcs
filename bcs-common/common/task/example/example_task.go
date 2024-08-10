@@ -79,7 +79,7 @@ func (st *Example) Steps() []*types.Step {
 }
 
 // BuildTask build task
-func (st *Example) BuildTask(info *types.TaskInfo, opts ...types.TaskOption) (*types.Task, error) {
+func (st *Example) BuildTask(info types.TaskInfo, opts ...types.TaskOption) (*types.Task, error) {
 	t := types.NewTask(info, opts...)
 	if len(st.Steps()) == 0 {
 		return nil, fmt.Errorf("task steps empty")
