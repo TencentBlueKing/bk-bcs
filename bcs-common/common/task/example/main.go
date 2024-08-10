@@ -173,8 +173,8 @@ func main() {
 }
 
 // nolint
-func registerSteps() []istep.StepWorkerInterface {
-	steps := make([]istep.StepWorkerInterface, 0)
+func registerSteps() []istep.StepExecutor {
+	steps := make([]istep.StepExecutor, 0)
 
 	sum := NewSumStep()
 	steps = append(steps, sum)

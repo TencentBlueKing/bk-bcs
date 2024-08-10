@@ -14,10 +14,8 @@
 package hello
 
 import (
-	"context"
 	"fmt"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/task/steps/iface"
 	istep "github.com/Tencent/bk-bcs/bcs-common/common/task/steps/iface"
 )
 
@@ -25,15 +23,15 @@ import (
 type hello struct{}
 
 // NewHello ...
-func NewHello() iface.StepWorkerInterface {
+func NewHello() istep.StepExecutor {
 	return &hello{}
 }
 
 // DoWork for worker exec task
-func (s *hello) DoWork(ctx context.Context, work *istep.Work) error {
+func (s *hello) Execute(c *istep.Context) error {
 	fmt.Println("Hello")
 	// time.Sleep(30 * time.Second)
-	if err := work.AddCommonParams("name", "hello"); err != nil {
+	if err := c.AddCommonParams("name", "hello"); err != nil {
 		return err
 	}
 	return nil
@@ -44,5 +42,5 @@ func init() {
 	istep.Register("hello", NewHello())
 
 	// 使用函数注册
-	istep.Register("sum", istep.StepWorkerFunc(Sum))
+	istep.Register("sum", istep.StepExecutorFunc(Sum))
 }

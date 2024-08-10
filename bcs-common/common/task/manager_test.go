@@ -73,7 +73,7 @@ func TestDoWorkWithMySQL(t *testing.T) {
 	istep.Register("hello", hellostep.NewHello())
 
 	// 使用函数注册
-	istep.Register("sum", istep.StepWorkerFunc(hellostep.Sum))
+	istep.Register("sum", istep.StepExecutorFunc(hellostep.Sum))
 
 	store, err := mysqlstore.New(os.Getenv("MYSQL_DSN"))
 	require.NoError(t, err)

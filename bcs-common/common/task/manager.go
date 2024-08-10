@@ -47,7 +47,7 @@ type TaskManager struct { // nolint
 	worker     *machinery.Worker
 
 	workerNum     int
-	stepWorkers   map[string]istep.StepWorkerInterface
+	stepWorkers   map[string]istep.StepExecutor
 	callBackFuncs map[string]istep.CallbackInterface
 	cfg           *ManagerConfig
 	store         istore.Store
@@ -100,7 +100,7 @@ func (m *TaskManager) Init(cfg *ManagerConfig) error {
 	m.store = cfg.Store
 
 	if m.stepWorkers == nil {
-		m.stepWorkers = make(map[string]istep.StepWorkerInterface)
+		m.stepWorkers = make(map[string]istep.StepExecutor)
 	}
 
 	if m.callBackFuncs == nil {
@@ -354,8 +354,8 @@ func (m *TaskManager) doWork(taskID string, stepName string) error {
 	tmpCh := make(chan error, 1)
 	go func() {
 		// call step worker
-		work := istep.NewWork(state.GetTask(), step)
-		tmpCh <- stepWorker.DoWork(stepCtx, work)
+		execCtx := istep.NewContext(stepCtx, state.GetTask(), step)
+		tmpCh <- stepWorker.Execute(execCtx)
 	}()
 
 	select {
