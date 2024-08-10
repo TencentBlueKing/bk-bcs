@@ -50,8 +50,8 @@ type CallbackExecutor interface {
 type CallbackExecutorFunc func(*Context, error)
 
 // Callback calls f(ctx, w)
-func (f CallbackExecutorFunc) Callback(c *Context, err error) {
-	f(c, err)
+func (f CallbackExecutorFunc) Callback(c *Context, cbErr error) {
+	f(c, cbErr)
 }
 
 // KeyValue key-value paras
