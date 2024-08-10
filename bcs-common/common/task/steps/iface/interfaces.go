@@ -84,7 +84,7 @@ func (tt TaskType) String() string {
 	return string(tt)
 }
 
-// StepName 步骤名称, 必须全局唯一
+// StepName 步骤名称, 通过这个查找Executor, 必须全局唯一
 type StepName string
 
 // TaskName xxx
