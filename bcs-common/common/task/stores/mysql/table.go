@@ -37,7 +37,7 @@ type TaskRecords struct {
 	TaskName            string            `json:"taskName" gorm:"type:varchar(255)"`
 	CurrentStep         string            `json:"currentStep" gorm:"type:varchar(255)"`
 	StepSequence        []string          `json:"stepSequence" gorm:"type:text;serializer:json"`
-	CallBackFuncName    string            `json:"callBackFuncName" gorm:"type:varchar(255)"`
+	CallbackName        string            `json:"callbackName" gorm:"type:varchar(255)"`
 	CommonParams        map[string]string `json:"commonParams" gorm:"type:text;serializer:json"`
 	ExtraJson           string            `json:"extraJson" gorm:"type:text"`
 	Status              string            `json:"status" gorm:"type:varchar(255)"`

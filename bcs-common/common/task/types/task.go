@@ -23,17 +23,17 @@ import (
 
 // TaskOptions xxx
 type TaskOptions struct {
-	CallBackFuncName    string
+	CallbackName        string
 	MaxExecutionSeconds uint32
 }
 
 // TaskOption xxx
 type TaskOption func(opt *TaskOptions)
 
-// WithTaskCallBackFunc xxx
-func WithTaskCallBackFunc(callBackName string) TaskOption {
+// WithTaskCallback xxx
+func WithTaskCallback(callbackName string) TaskOption {
 	return func(opt *TaskOptions) {
-		opt.CallBackFuncName = callBackName
+		opt.CallbackName = callbackName
 	}
 }
 
@@ -55,7 +55,7 @@ type TaskInfo struct {
 
 // NewTask create new task by default
 func NewTask(o TaskInfo, opts ...TaskOption) *Task {
-	defaultOptions := &TaskOptions{CallBackFuncName: "", MaxExecutionSeconds: 0}
+	defaultOptions := &TaskOptions{CallbackName: "", MaxExecutionSeconds: 0}
 	for _, opt := range opts {
 		opt(defaultOptions)
 	}
@@ -74,7 +74,7 @@ func NewTask(o TaskInfo, opts ...TaskOption) *Task {
 		LastUpdate:          now,
 		CommonParams:        make(map[string]string, 0),
 		ExtraJson:           DefaultJsonExtrasContent,
-		CallBackFuncName:    defaultOptions.CallBackFuncName,
+		CallbackName:        defaultOptions.CallbackName,
 		Message:             DefaultTaskMessage,
 		MaxExecutionSeconds: defaultOptions.MaxExecutionSeconds,
 	}
@@ -138,12 +138,12 @@ func (t *Task) AddCommonParams(k, v string) *Task {
 
 // GetCallback set callback function name
 func (t *Task) GetCallback() string {
-	return t.CallBackFuncName
+	return t.CallbackName
 }
 
 // SetCallback set callback function name
-func (t *Task) SetCallback(callBackFuncName string) *Task {
-	t.CallBackFuncName = callBackFuncName
+func (t *Task) SetCallback(callBackName string) *Task {
+	t.CallbackName = callBackName
 	return t
 }
 

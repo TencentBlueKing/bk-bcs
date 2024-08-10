@@ -149,7 +149,7 @@ func main() {
 		Creator:   "bcs",
 	}
 	sumTask, err := sum.BuildTask(info, types.WithTaskMaxExecutionSeconds(0),
-		types.WithTaskCallBackFunc(callBackName))
+		types.WithTaskCallback(callBackName))
 	if err != nil {
 		fmt.Println(err)
 		return

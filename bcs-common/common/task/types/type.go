@@ -60,7 +60,7 @@ type Task struct {
 	TaskName            string            `json:"taskName"`
 	CurrentStep         string            `json:"currentStep"`
 	Steps               []*Step           `json:"steps"`
-	CallBackFuncName    string            `json:"callBackFuncName"`
+	CallbackName        string            `json:"callbackName"`
 	CommonParams        map[string]string `json:"commonParams"`
 	ExtraJson           string            `json:"extraJson"`
 	Status              string            `json:"status"`
