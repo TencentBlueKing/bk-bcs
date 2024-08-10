@@ -46,11 +46,11 @@ type TaskManager struct { // nolint
 	server     *machinery.Server
 	worker     *machinery.Worker
 
-	workerNum     int
-	stepExecutors map[istep.StepName]istep.StepExecutor
-	callBackFuncs map[string]istep.CallbackInterface
-	cfg           *ManagerConfig
-	store         istore.Store
+	workerNum         int
+	stepExecutors     map[istep.StepName]istep.StepExecutor
+	callbackExecutors map[istep.CallbackName]istep.CallbackExecutor
+	cfg               *ManagerConfig
+	store             istore.Store
 
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -59,7 +59,6 @@ type TaskManager struct { // nolint
 // ManagerConfig options for manager
 type ManagerConfig struct {
 	ModuleName   string
-	CallBacks    []istep.CallbackInterface
 	WorkerNum    int
 	Broker       ibroker.Broker
 	Backend      ibackend.Backend
@@ -103,21 +102,11 @@ func (m *TaskManager) Init(cfg *ManagerConfig) error {
 		m.stepExecutors = make(map[istep.StepName]istep.StepExecutor)
 	}
 
-	if m.callBackFuncs == nil {
-		m.callBackFuncs = make(map[string]istep.CallbackInterface)
-	}
+	m.callbackExecutors = istep.GetCallbackRegisters()
 
 	m.moduleName = cfg.ModuleName
 	if cfg.WorkerNum != 0 {
 		m.workerNum = cfg.WorkerNum
-	}
-
-	// save callbacks and check duplicate
-	for _, c := range cfg.CallBacks {
-		if _, ok := m.callBackFuncs[c.GetName()]; ok {
-			return fmt.Errorf("callback func [%s] already exists", c.GetName())
-		}
-		m.callBackFuncs[c.GetName()] = c
 	}
 
 	if err := m.initGlobalStorage(); err != nil {
@@ -330,7 +319,7 @@ func (m *TaskManager) doWork(taskID string, stepName string) error {
 	log.INFO.Printf("start to execute task[%s] stepName[%s]", taskID, stepName)
 
 	start := time.Now()
-	state, step, err := getTaskStateAndCurrentStep(taskID, stepName, m.callBackFuncs)
+	state, step, err := m.getTaskStateAndCurrentStep(taskID, stepName)
 	if err != nil {
 		log.ERROR.Printf("task[%s] stepName[%s] getTaskStateAndCurrentStep failed: %v",
 			taskID, stepName, err)

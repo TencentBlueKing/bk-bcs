@@ -76,6 +76,7 @@ func (t *Context) GetStatus() string {
 	return t.currentStep.GetStatus()
 }
 
+// GetExtras ...
 func (t *Context) GetExtras() string {
 	return t.currentStep.Extras
 }

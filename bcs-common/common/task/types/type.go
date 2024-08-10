@@ -75,6 +75,9 @@ type Task struct {
 	Updater             string            `json:"updater"`
 }
 
+// StepName 步骤名称, 通过这个查找Executor, 必须全局唯一
+type StepName string
+
 // Step step definition
 type Step struct {
 	Name                string            `json:"name"`

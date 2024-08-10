@@ -25,8 +25,7 @@ import (
 )
 
 // getTaskStateAndCurrentStep get task state and current step
-func getTaskStateAndCurrentStep(taskId, stepName string,
-	callBackFuncs map[string]istep.CallbackInterface) (*State, *types.Step, error) {
+func (m *TaskManager) getTaskStateAndCurrentStep(taskId, stepName string) (*State, *types.Step, error) {
 	task, err := GetGlobalStorage().GetTask(context.Background(), taskId)
 	if err != nil {
 		return nil, nil, fmt.Errorf("get task %s information failed, %s", taskId, err.Error())
@@ -52,9 +51,10 @@ func getTaskStateAndCurrentStep(taskId, stepName string,
 	}
 
 	// inject call back func
-	if state.task.GetCallback() != "" && len(callBackFuncs) > 0 {
-		if callback, ok := callBackFuncs[state.task.GetCallback()]; ok {
-			state.callBack = callback.Callback
+	if state.task.GetCallback() != "" && len(m.callbackExecutors) > 0 {
+		name := istep.CallbackName(state.task.GetCallback())
+		if cbExecutor, ok := m.callbackExecutors[name]; ok {
+			state.cbExecutor = cbExecutor
 		}
 	}
 
@@ -65,8 +65,7 @@ func getTaskStateAndCurrentStep(taskId, stepName string,
 type State struct {
 	task        *types.Task
 	currentStep string
-
-	callBack func(isSuccess bool, task *types.Task)
+	cbExecutor  istep.CallbackExecutor
 }
 
 // NewState return state relative to task
@@ -160,9 +159,10 @@ func (s *State) updateStepSuccess(start time.Time, stepName string) error {
 			SetStatus(types.TaskStatusSuccess).
 			SetMessage("task finished successfully")
 
-		// callback
-		if s.callBack != nil {
-			s.callBack(true, s.task)
+			// callback
+		if s.cbExecutor != nil {
+			c := istep.NewContext(context.Background(), s.task, step)
+			s.cbExecutor.Callback(c, nil)
 		}
 	}
 
@@ -210,8 +210,9 @@ func (s *State) updateStepFailure(start time.Time, name string, stepErr error, t
 				SetExecutionTime(taskStartTime, endTime)
 
 			// callback
-			if s.callBack != nil {
-				s.callBack(true, s.task)
+			if s.cbExecutor != nil {
+				c := istep.NewContext(context.Background(), s.task, step)
+				s.cbExecutor.Callback(c, stepErr)
 			}
 		}
 	} else {
@@ -227,8 +228,9 @@ func (s *State) updateStepFailure(start time.Time, name string, stepErr error, t
 		}
 
 		// callback
-		if s.callBack != nil {
-			s.callBack(false, s.task)
+		if s.cbExecutor != nil {
+			c := istep.NewContext(context.Background(), s.task, step)
+			s.cbExecutor.Callback(c, stepErr)
 		}
 	}
 

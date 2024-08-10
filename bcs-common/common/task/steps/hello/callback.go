@@ -19,34 +19,18 @@ import (
 	istep "github.com/Tencent/bk-bcs/bcs-common/common/task/steps/iface"
 )
 
-// hello hello
-type hello struct{}
-
-// NewHello ...
-func NewHello() istep.StepExecutor {
-	return &hello{}
-}
-
-// DoWork for worker exec task
-func (s *hello) Execute(c *istep.Context) error {
-	fmt.Println("Hello")
-	// time.Sleep(30 * time.Second)
-	if err := c.AddCommonParams("name", "hello"); err != nil {
-		return err
+// Callback ...
+func Callback(c *istep.Context, err error) {
+	if err != nil {
+		fmt.Println(err)
 	}
-	return nil
 }
 
-func init() {
-	// 使用结构体注册
-	istep.Register("hello", NewHello())
+type callback struct {
+}
 
-	// 使用函数注册
-	istep.Register("sum", istep.StepExecutorFunc(Sum))
-
-	// 回调使用结构体注册
-	istep.RegisterCallback("callback_fun", &callback{})
-
-	// 回调使用函数注册
-	istep.RegisterCallback("callback", istep.CallbackExecutorFunc(Callback))
+func (cb *callback) Callback(c *istep.Context, err error) {
+	if err != nil {
+		fmt.Println(err)
+	}
 }

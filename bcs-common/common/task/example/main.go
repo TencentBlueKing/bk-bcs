@@ -124,8 +124,6 @@ func main() {
 		Lock:       lock,
 		Store:      store,
 	}
-	// register step worker && callback
-	config.CallBacks = registerCallbacks()
 
 	// init task manager
 	err = btm.Init(config)
@@ -183,11 +181,4 @@ func registerSteps() []istep.StepExecutor {
 	steps = append(steps, hello)
 
 	return steps
-}
-
-func registerCallbacks() []istep.CallbackInterface {
-	callbacks := make([]istep.CallbackInterface, 0)
-	callbacks = append(callbacks, &callBack{})
-
-	return callbacks
 }

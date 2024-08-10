@@ -17,8 +17,9 @@ import (
 )
 
 var (
-	stepMu sync.RWMutex
-	steps  = make(map[StepName]StepExecutor)
+	stepMu    sync.RWMutex
+	steps     = make(map[StepName]StepExecutor)
+	callBacks = make(map[CallbackName]CallbackExecutor)
 )
 
 // Register makes a StepExecutor available by the provided name.
@@ -33,7 +34,7 @@ func Register(name StepName, step StepExecutor) {
 	}
 
 	if _, dup := steps[name]; dup {
-		panic("task: Register step twice for work " + name)
+		panic("task: Register step twice for executor " + name)
 	}
 
 	steps[name] = step
@@ -45,4 +46,28 @@ func GetRegisters() map[StepName]StepExecutor {
 	defer stepMu.Unlock()
 
 	return steps
+}
+
+// RegisterCallback ...
+func RegisterCallback(name CallbackName, cb CallbackExecutor) {
+	stepMu.Lock()
+	defer stepMu.Unlock()
+
+	if cb == nil {
+		panic("task: Register callback is nil")
+	}
+
+	if _, dup := callBacks[name]; dup {
+		panic("task: Register callback twice for executor " + name)
+	}
+
+	callBacks[name] = cb
+}
+
+// GetCallbackRegisters get all steps instance
+func GetCallbackRegisters() map[CallbackName]CallbackExecutor {
+	stepMu.Lock()
+	defer stepMu.Unlock()
+
+	return callBacks
 }

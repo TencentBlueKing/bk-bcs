@@ -30,20 +30,30 @@ type StepExecutor interface {
 }
 
 // The StepExecutorFunc type is an adapter to allow the use of
-// ordinary functions as a Handler. If f is a function
-// with the appropriate signature, HandlerFunc(f) is a
-// Handler that calls f.
+// ordinary functions as a Executor. If f is a function
+// with the appropriate signature, StepExecutorFunc(f) is a
+// Executor that calls f.
 type StepExecutorFunc func(*Context) error
 
-// DoWork calls f(ctx, w)
-func (f StepExecutorFunc) Execute(ctx *Context) error {
-	return f(ctx)
+// Execute calls f(ctx, w)
+func (f StepExecutorFunc) Execute(c *Context) error {
+	return f(c)
 }
 
-// CallbackInterface that client must implement
-type CallbackInterface interface {
-	GetName() string
-	Callback(isSuccess bool, task *types.Task)
+// CallbackExecutor that callback client must implement
+type CallbackExecutor interface {
+	Callback(*Context, error)
+}
+
+// The CallbackExecutorFunc type is an adapter to allow the use of
+// ordinary functions as a Executor. If f is a function
+// with the appropriate signature, CallbackExecutorFunc(f) is a
+// Executor that calls f.
+type CallbackExecutorFunc func(*Context, error)
+
+// Callback calls f(ctx, w)
+func (f CallbackExecutorFunc) Callback(c *Context, err error) {
+	f(c, err)
 }
 
 // TaskBuilder build task
@@ -86,6 +96,9 @@ func (tt TaskType) String() string {
 
 // StepName 步骤名称, 通过这个查找Executor, 必须全局唯一
 type StepName string
+
+// CallbackName 步骤名称, 通过这个查找callback Executor, 必须全局唯一
+type CallbackName string
 
 // TaskName xxx
 type TaskName string // nolint
