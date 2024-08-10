@@ -19,8 +19,18 @@ import (
 // StepName 步骤名称, 通过这个查找Executor, 必须全局唯一
 type StepName string
 
+// String ...
+func (s StepName) String() string {
+	return string(s)
+}
+
 // CallbackName 步骤名称, 通过这个查找callback Executor, 必须全局唯一
 type CallbackName string
+
+// String ...
+func (cb CallbackName) String() string {
+	return string(cb)
+}
 
 var (
 	stepMu    sync.RWMutex
