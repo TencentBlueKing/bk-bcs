@@ -15,8 +15,6 @@ package iface
 
 import (
 	"errors"
-
-	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
 )
 
 var (
@@ -56,22 +54,6 @@ func (f CallbackExecutorFunc) Callback(c *Context, err error) {
 	f(c, err)
 }
 
-// TaskBuilder build task
-type TaskBuilder interface { // nolint
-	Name() string
-	Type() string
-	BuildTask(info types.TaskInfo, opts ...types.TaskOption) (*types.Task, error)
-	Steps(defineSteps []StepBuilder) []*types.Step
-}
-
-// StepBuilder build step
-type StepBuilder interface {
-	Alias() string
-	GetName() string
-	BuildStep(kvs []KeyValue, opts ...types.StepOption) *types.Step
-	DoWork(task *types.Task) error
-}
-
 // KeyValue key-value paras
 type KeyValue struct {
 	Key   ParamKey
@@ -84,26 +66,4 @@ type ParamKey string
 // String xxx
 func (pk ParamKey) String() string {
 	return string(pk)
-}
-
-// TaskType taskType
-type TaskType string // nolint
-
-// String toString
-func (tt TaskType) String() string {
-	return string(tt)
-}
-
-// StepName 步骤名称, 通过这个查找Executor, 必须全局唯一
-type StepName string
-
-// CallbackName 步骤名称, 通过这个查找callback Executor, 必须全局唯一
-type CallbackName string
-
-// TaskName xxx
-type TaskName string // nolint
-
-// String xxx
-func (tn TaskName) String() string {
-	return string(tn)
 }

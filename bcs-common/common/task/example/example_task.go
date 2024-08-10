@@ -26,9 +26,9 @@ import (
 
 var (
 	// ExampleTask task
-	ExampleTask istep.TaskName = "测试任务"
+	ExampleTask types.TaskName = "测试任务"
 	// TestTask task for test
-	TestTask istep.TaskType = "TestTask"
+	TestTask types.TaskType = "TestTask"
 )
 
 // NewExampleTask build example task

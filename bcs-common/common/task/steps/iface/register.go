@@ -16,6 +16,12 @@ import (
 	"sync"
 )
 
+// StepName 步骤名称, 通过这个查找Executor, 必须全局唯一
+type StepName string
+
+// CallbackName 步骤名称, 通过这个查找callback Executor, 必须全局唯一
+type CallbackName string
+
 var (
 	stepMu    sync.RWMutex
 	steps     = make(map[StepName]StepExecutor)

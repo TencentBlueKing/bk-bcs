@@ -75,9 +75,6 @@ type Task struct {
 	Updater             string            `json:"updater"`
 }
 
-// StepName 步骤名称, 通过这个查找Executor, 必须全局唯一
-type StepName string
-
 // Step step definition
 type Step struct {
 	Name                string            `json:"name"`
@@ -93,4 +90,20 @@ type Step struct {
 	ExecutionTime       uint32            `json:"executionTime"`
 	MaxExecutionSeconds uint32            `json:"maxExecutionSeconds"`
 	LastUpdate          time.Time         `json:"lastUpdate"`
+}
+
+// TaskType taskType
+type TaskType string // nolint
+
+// String toString
+func (tt TaskType) String() string {
+	return string(tt)
+}
+
+// TaskName xxx
+type TaskName string // nolint
+
+// String xxx
+func (tn TaskName) String() string {
+	return string(tn)
 }
