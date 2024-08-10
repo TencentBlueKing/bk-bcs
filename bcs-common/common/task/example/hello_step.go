@@ -43,7 +43,7 @@ func (s HelloStep) GetName() string {
 	return method
 }
 
-// DoWork for worker exec task
+// Execute for worker exec task
 func (s HelloStep) Execute(c *istep.Context) error {
 	fmt.Printf("%s %s %s\n", c.GetTaskID(), c.GetTaskType(), c.GetTaskName())
 	return nil

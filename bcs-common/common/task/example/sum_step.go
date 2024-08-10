@@ -50,7 +50,7 @@ func (s SumStep) GetName() string {
 	return sumMethod
 }
 
-// DoWork for worker exec task
+// Execute for worker exec task
 func (s SumStep) Execute(c *istep.Context) error {
 	a, _ := c.GetParam(sumA.String())
 	b, _ := c.GetParam(sumB.String())
