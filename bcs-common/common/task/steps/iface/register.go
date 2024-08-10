@@ -18,13 +18,13 @@ import (
 
 var (
 	stepMu sync.RWMutex
-	steps  = make(map[string]StepExecutor)
+	steps  = make(map[StepName]StepExecutor)
 )
 
 // Register makes a StepExecutor available by the provided name.
 // If Register is called twice with the same name or if StepExecutor is nil,
 // it panics.
-func Register(name string, step StepExecutor) {
+func Register(name StepName, step StepExecutor) {
 	stepMu.Lock()
 	defer stepMu.Unlock()
 
@@ -40,7 +40,7 @@ func Register(name string, step StepExecutor) {
 }
 
 // GetRegisters get all steps instance
-func GetRegisters() map[string]StepExecutor {
+func GetRegisters() map[StepName]StepExecutor {
 	stepMu.Lock()
 	defer stepMu.Unlock()
 

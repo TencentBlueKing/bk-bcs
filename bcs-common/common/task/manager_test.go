@@ -36,9 +36,9 @@ func TestDoWork(t *testing.T) {
 	// istep.Register("sum", istep.StepWorkerFunc(hellostep.Sum))
 
 	mgr := TaskManager{
-		ctx:         context.Background(),
-		store:       mem.New(),
-		stepWorkers: istep.GetRegisters(),
+		ctx:           context.Background(),
+		store:         mem.New(),
+		stepExecutors: istep.GetRegisters(),
 	}
 	mgr.initGlobalStorage()
 
@@ -82,9 +82,9 @@ func TestDoWorkWithMySQL(t *testing.T) {
 	require.NoError(t, store.EnsureTable(ctx))
 
 	mgr := TaskManager{
-		ctx:         context.Background(),
-		store:       store,
-		stepWorkers: istep.GetRegisters(),
+		ctx:           context.Background(),
+		store:         store,
+		stepExecutors: istep.GetRegisters(),
 	}
 	mgr.initGlobalStorage()
 

@@ -47,7 +47,7 @@ type TaskManager struct { // nolint
 	worker     *machinery.Worker
 
 	workerNum     int
-	stepWorkers   map[string]istep.StepExecutor
+	stepExecutors map[istep.StepName]istep.StepExecutor
 	callBackFuncs map[string]istep.CallbackInterface
 	cfg           *ManagerConfig
 	store         istore.Store
@@ -73,12 +73,12 @@ func NewTaskManager() *TaskManager {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	m := &TaskManager{
-		ctx:         ctx,
-		cancel:      cancel,
-		lock:        &sync.Mutex{},
-		workerNum:   DefaultWorkerConcurrency,
-		stepWorkers: istep.GetRegisters(), // get all step workers
-		cfg:         &ManagerConfig{},
+		ctx:           ctx,
+		cancel:        cancel,
+		lock:          &sync.Mutex{},
+		workerNum:     DefaultWorkerConcurrency,
+		stepExecutors: istep.GetRegisters(), // get all step workers
+		cfg:           &ManagerConfig{},
 	}
 	return m
 }
@@ -99,8 +99,8 @@ func (m *TaskManager) Init(cfg *ManagerConfig) error {
 	m.cfg = cfg
 	m.store = cfg.Store
 
-	if m.stepWorkers == nil {
-		m.stepWorkers = make(map[string]istep.StepExecutor)
+	if m.stepExecutors == nil {
+		m.stepExecutors = make(map[istep.StepName]istep.StepExecutor)
 	}
 
 	if m.callBackFuncs == nil {
@@ -307,11 +307,12 @@ func (m *TaskManager) dispatchAt(task *types.Task, stepNameBegin string) error {
 // registerStepWorkers build machinery workers for all step worker
 func (m *TaskManager) registerStepWorkers() error {
 	allTasks := make(map[string]interface{}, 0)
-	for stepName := range m.stepWorkers {
-		if _, ok := allTasks[stepName]; ok {
-			return fmt.Errorf("task %s already exists", stepName)
+	for stepName := range m.stepExecutors {
+		name := string(stepName)
+		if _, ok := allTasks[name]; ok {
+			return fmt.Errorf("task %s already exists", name)
 		}
-		allTasks[stepName] = m.doWork
+		allTasks[name] = m.doWork
 	}
 	err := m.server.RegisterTasks(allTasks)
 	return err
@@ -321,7 +322,7 @@ func (m *TaskManager) registerStepWorkers() error {
 func (m *TaskManager) doWork(taskID string, stepName string) error {
 	defer RecoverPrintStack(fmt.Sprintf("%s-%s", taskID, stepName))
 
-	stepWorker, ok := m.stepWorkers[stepName]
+	stepWorker, ok := m.stepExecutors[istep.StepName(stepName)]
 	if !ok {
 		return fmt.Errorf("step worker %s not found", stepName)
 	}

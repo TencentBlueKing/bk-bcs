@@ -9,7 +9,7 @@ import (
 // TaskBuilder ...
 type TaskBuilder interface { // nolint
 	TaskInfo() types.TaskInfo
-	Steps() ([]*types.Step, error)
+	Steps() ([]*types.Step, error) // Steps init step and define StepSequence
 	BuildTask(t types.Task) (types.Task, error)
 }
 

@@ -84,6 +84,9 @@ func (tt TaskType) String() string {
 	return string(tt)
 }
 
+// StepName xxx
+type StepName string
+
 // TaskName xxx
 type TaskName string // nolint
 
