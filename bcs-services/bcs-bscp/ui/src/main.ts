@@ -13,6 +13,8 @@ import auth from './common/auth';
 import zhCn from 'bkui-vue/dist/locale/zh-cn.esm';
 import en from 'bkui-vue/dist/locale/en.esm';
 import { getCookie } from './utils';
+import 'vue-virtual-scroller/dist/vue-virtual-scroller.css';
+import VirtualScroller from 'vue-virtual-scroller';
 
 auth().then(() => {
   const app = createApp(App);
@@ -42,6 +44,7 @@ auth().then(() => {
     .use(pinia)
     .use(i18n)
     .use(router)
+    .use(VirtualScroller)
     .use(bkui, {
       locale: getCookie('blueking_language') === 'en' ? en : zhCn,
     })

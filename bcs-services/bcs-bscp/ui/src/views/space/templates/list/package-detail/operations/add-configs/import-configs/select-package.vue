@@ -119,8 +119,10 @@
   const unSpecifiedSelected = computed(() => selectedPkgs.value.includes(0));
 
   // 套餐或服务是否有超出限制
-  const isExceedMaxFileCount = computed(() =>
-    citedList.value.some((item) => item.app_exceeds_limit || item.template_set_exceeds_limit),
+  const isExceedMaxFileCount = computed(
+    () =>
+      citedList.value.some((item) => item.app_exceeds_limit || item.template_set_exceeds_limit) &&
+      !unSpecifiedSelected.value,
   );
 
   onMounted(() => {
@@ -176,6 +178,7 @@
     } else {
       selectedPkgs.value = [];
     }
+    emits('toggleBtnDisabled', false);
   };
 
   const goToConfigPage = (id: number) => {
