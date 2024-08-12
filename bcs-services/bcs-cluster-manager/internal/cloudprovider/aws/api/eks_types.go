@@ -82,7 +82,7 @@ type RequestLaunchTemplateData struct {
 	// [EC2-Classic, default VPC] One or more security group names
 	SecurityGroups []*string `locationName:"SecurityGroup" locationNameList:"SecurityGroup" type:"list"`
 	// The tags to apply to the resources during launch
-	TagSpecifications []*TagSpecification `locationName:"TagSpecification" locationNameList:"LaunchTemplateTagSpecificationRequest" type:"list"`
+	TagSpecifications []*LaunchTemplateTagSpecificationRequest `locationName:"TagSpecification" locationNameList:"LaunchTemplateTagSpecificationRequest" type:"list"`
 	// The Base64-encoded user data to make available to the instance
 	UserData *string `type:"string"`
 }
@@ -252,6 +252,15 @@ type LaunchTemplateEbsBlockDeviceRequest struct {
 // you specify a tag, you must specify the resource type to tag, otherwise the
 // request will fail
 type TagSpecification struct {
+	// The type of resource to tag on creation.
+	ResourceType *string `locationName:"resourceType" type:"string" enum:"ResourceType"`
+	// The tags to apply to the resource.
+	Tags []*Tag `locationName:"Tag" locationNameList:"item" type:"list"`
+}
+
+// LaunchTemplateTagSpecificationRequest the tags specification for the resources that are created during instance
+// launch.
+type LaunchTemplateTagSpecificationRequest struct {
 	// The type of resource to tag on creation.
 	ResourceType *string `locationName:"resourceType" type:"string" enum:"ResourceType"`
 	// The tags to apply to the resource.
